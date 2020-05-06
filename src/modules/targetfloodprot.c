@@ -27,8 +27,8 @@ struct TargetFlood {
 
 typedef struct TargetFloodConfig TargetFloodConfig;
 struct TargetFloodConfig {
-	unsigned short cnt[TFP_MAX];
-	long t[TFP_MAX];
+	int cnt[TFP_MAX];
+	int t[TFP_MAX];
 };
 
 /* Forward declarations */
@@ -36,6 +36,7 @@ int targetfloodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *
 int targetfloodprot_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 void targetfloodprot_mdata_free(ModData *m);
 int targetfloodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
+int targetfloodprot_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype);
 
 /* Global variables */
 ModDataInfo *targetfloodprot_client_md = NULL;
@@ -52,11 +53,11 @@ MOD_TEST()
 /** Allocate config and set default configuration */
 void targetfloodprot_defaults(void)
 {
-
 	channelcfg = safe_alloc(sizeof(TargetFloodConfig));
+	privatecfg = safe_alloc(sizeof(TargetFloodConfig));
 
 	/* set::anti-flood::target-flood::channel-privmsg */
-	channelcfg->cnt[TFP_PRIVMSG] = 6; // 60 !!!! ;)
+	channelcfg->cnt[TFP_PRIVMSG] = 60;
 	channelcfg->t[TFP_PRIVMSG] = 5;
 	/* set::anti-flood::target-flood::channel-notice */
 	channelcfg->cnt[TFP_NOTICE] = 15;
@@ -64,6 +65,16 @@ void targetfloodprot_defaults(void)
 	/* set::anti-flood::target-flood::channel-tagmsg */
 	channelcfg->cnt[TFP_TAGMSG] = 20;
 	channelcfg->t[TFP_TAGMSG] = 2;
+
+	/* set::anti-flood::target-flood::private-privmsg */
+	privatecfg->cnt[TFP_PRIVMSG] = 30;
+	privatecfg->t[TFP_PRIVMSG] = 4;
+	/* set::anti-flood::target-flood::private-notice */
+	privatecfg->cnt[TFP_NOTICE] = 15;
+	privatecfg->t[TFP_NOTICE] = 4;
+	/* set::anti-flood::target-flood::private-tagmsg */
+	privatecfg->cnt[TFP_TAGMSG] = 10;
+	privatecfg->t[TFP_TAGMSG] = 2;
 }
 
 MOD_INIT()
@@ -74,6 +85,7 @@ MOD_INIT()
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, targetfloodprot_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, targetfloodprot_can_send_to_channel);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, 0, targetfloodprot_can_send_to_user);
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "targetfloodprot";
@@ -81,7 +93,7 @@ MOD_INIT()
 	mreq.unserialize = NULL;
 	mreq.free = targetfloodprot_mdata_free;
 	mreq.sync = 0;
-	mreq.type = MODDATATYPE_CLIENT;
+	mreq.type = MODDATATYPE_LOCAL_CLIENT;
 	targetfloodprot_client_md = ModDataAdd(modinfo->handle, mreq);
 
 	memset(&mreq, 0, sizeof(mreq));
@@ -126,10 +138,27 @@ int targetfloodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!strcmp(cep->ce_varname, "channel-privmsg"))
+		CheckNull(cep);
+
+		if (!strcmp(cep->ce_varname, "channel-privmsg") ||
+		    !strcmp(cep->ce_varname, "channel-notice") ||
+		    !strcmp(cep->ce_varname, "channel-tagmsg") ||
+		    !strcmp(cep->ce_varname, "private-privmsg") ||
+		    !strcmp(cep->ce_varname, "private-notice") ||
+		    !strcmp(cep->ce_varname, "private-tagmsg"))
 		{
-			CheckNull(cep);
-			// FIXME: deal with all six and check them
+			int cnt = 0, period = 0;
+
+			if (!config_parse_flood(cep->ce_vardata, &cnt, &period) ||
+			    (cnt < 1) || (cnt > 10000) || (period < 1) || (period > 120))
+			{
+				config_error("%s:%i: set::anti-flood::target-flood::%s error. "
+				             "Syntax is '<count>:<period>' (eg 5:60). "
+				             "Count must be 1-10000 and period must be 1-120.",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				             cep->ce_varname);
+				errors++;
+			}
 		} else
 		{
 			config_error("%s:%i: unknown directive set::anti-flood::target-flood:%s",
@@ -157,9 +186,17 @@ int targetfloodprot_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "channel-privmsg"))
-		{
-			// FIXME: deal with all six and check them
-		}
+			config_parse_flood(cep->ce_vardata, &channelcfg->cnt[TFP_PRIVMSG], &channelcfg->t[TFP_PRIVMSG]);
+		else if (!strcmp(cep->ce_varname, "channel-notice"))
+			config_parse_flood(cep->ce_vardata, &channelcfg->cnt[TFP_NOTICE], &channelcfg->t[TFP_NOTICE]);
+		else if (!strcmp(cep->ce_varname, "channel-tagmsg"))
+			config_parse_flood(cep->ce_vardata, &channelcfg->cnt[TFP_TAGMSG], &channelcfg->t[TFP_TAGMSG]);
+		else if (!strcmp(cep->ce_varname, "private-privmsg"))
+			config_parse_flood(cep->ce_vardata, &privatecfg->cnt[TFP_PRIVMSG], &privatecfg->t[TFP_PRIVMSG]);
+		else if (!strcmp(cep->ce_varname, "private-notice"))
+			config_parse_flood(cep->ce_vardata, &privatecfg->cnt[TFP_NOTICE], &privatecfg->t[TFP_NOTICE]);
+		else if (!strcmp(cep->ce_varname, "private-tagmsg"))
+			config_parse_flood(cep->ce_vardata, &privatecfg->cnt[TFP_TAGMSG], &privatecfg->t[TFP_TAGMSG]);
 	}
 
 	return 1;
@@ -198,9 +235,8 @@ int targetfloodprot_can_send_to_channel(Client *client, Channel *channel, Member
 		return HOOK_CONTINUE;
 
 	/* Really, only IRCOps override */
-// commented out for testing so i can flood easily ;)...
-//	if (IsOper(client) && ValidatePermissionsForPath("channel:override:flood",client,NULL,channel,NULL))
-//		return HOOK_CONTINUE;
+	if (IsOper(client) && ValidatePermissionsForPath("immune:target-flood",client,NULL,channel,NULL))
+		return HOOK_CONTINUE;
 
 	what = sendtypetowhat(sendtype);
 
@@ -223,7 +259,53 @@ int targetfloodprot_can_send_to_channel(Client *client, Channel *channel, Member
 	if (flood->cnt[what] >= channelcfg->cnt[what])
 	{
 		/* Flood detected */
-		snprintf(errbuf, sizeof(errbuf), "Channel is being flooded. Message throttled.");
+		snprintf(errbuf, sizeof(errbuf), "Channel is being flooded. Message not delivered.");
+		*errmsg = errbuf;
+		return HOOK_DENY;
+	}
+
+	flood->cnt[what]++;
+	return HOOK_CONTINUE;
+}
+
+int targetfloodprot_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype)
+{
+	TargetFlood *flood;
+	static char errbuf[256];
+	int what;
+
+	/* Check if it is our TARGET ('target'), so yeah
+	 * be aware that 'client' may be remote client in all the code that follows!
+	 */
+	if (!MyUser(target))
+		return HOOK_CONTINUE;
+
+	/* Really, only IRCOps override */
+	if (IsOper(client) && ValidatePermissionsForPath("immune:target-flood",client,target,NULL,NULL))
+		return HOOK_CONTINUE;
+
+	what = sendtypetowhat(sendtype);
+
+	if (moddata_local_client(target, targetfloodprot_client_md).ptr == NULL)
+	{
+		/* Alloc a new entry if it doesn't exist yet */
+		moddata_local_client(target, targetfloodprot_client_md).ptr = safe_alloc(sizeof(TargetFlood));
+	}
+
+	flood = (TargetFlood *)moddata_local_client(target, targetfloodprot_client_md).ptr;
+
+	if ((TStime() - flood->t[what]) >= privatecfg->t[what])
+	{
+		/* Reset due to moving into a new time slot */
+		flood->t[what] = TStime();
+		flood->cnt[what] = 1;
+		return HOOK_CONTINUE; /* forget about it.. */
+	}
+
+	if (flood->cnt[what] >= privatecfg->cnt[what])
+	{
+		/* Flood detected */
+		snprintf(errbuf, sizeof(errbuf), "User is being flooded. Message not delivered.");
 		*errmsg = errbuf;
 		return HOOK_DENY;
 	}
