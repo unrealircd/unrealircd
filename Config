@@ -492,7 +492,7 @@ while [ -z "$TEST" ] ; do
     echo ""
     echo "Do you want to enable remote includes?"
     echo "This allows stuff like this in your configuration file:"
-    echo "include \"http://www.somesite.org/files/opers.conf\";"
+    echo "include \"https://www.somesite.org/files/opers.conf\";"
     echo $n "[$TEST] -> $c"
 	read cc
     if [ -z "$cc" ] ; then
