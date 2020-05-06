@@ -522,7 +522,7 @@ CMD_FUNC(cmd_private)
 */
 CMD_FUNC(cmd_notice)
 {
-	cmd_message(client, recv_mtags, parc, parv, SEND_TYPE_PRIVMSG);
+	cmd_message(client, recv_mtags, parc, parv, SEND_TYPE_NOTICE);
 }
 
 /*
