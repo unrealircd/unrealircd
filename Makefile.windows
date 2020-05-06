@@ -290,7 +290,9 @@ DLL_FILES=SRC/MODULES/CLOAK.DLL \
  SRC/MODULES/USERHOST-TAG.DLL \
  SRC/MODULES/REQUIRE-MODULE.DLL \
  SRC/MODULES/IDENT_LOOKUP.DLL \
- SRC/MODULES/HISTORY.DLL
+ SRC/MODULES/HISTORY.DLL \
+ SRC/MODULES/TARGETFLOODPROT.DLL \
+ SRC/MODULES/TYPING-INDICATOR.DLL
 
 
 ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES 
@@ -1080,5 +1082,11 @@ src/modules/ident_lookup.dll: src/modules/ident_lookup.c $(INCLUDES)
 
 src/modules/history.dll: src/modules/history.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/history.c $(MODLFLAGS)
+
+src/modules/targetfloodprot.dll: src/modules/targetfloodprot.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/targetfloodprot.c $(MODLFLAGS)
+
+src/modules/typing-indicator.dll: src/modules/typing-indicator.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/typing-indicator.c $(MODLFLAGS)
 
 dummy:
