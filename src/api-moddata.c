@@ -125,7 +125,6 @@ void moddata_free_local_client(Client *client)
 	memset(client->moddata, 0, sizeof(client->moddata));
 }
 
-// FIXME: this is never called
 void moddata_free_channel(Channel *channel)
 {
 	ModDataInfo *md;

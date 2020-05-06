@@ -1071,6 +1071,8 @@ int sub1_from_channel(Channel *channel)
 	 * But first we will destroy all kinds of references and lists...
 	 */
 
+	moddata_free_channel(channel);
+
 	while ((lp = channel->invites))
 		del_invite(lp->value.client, channel);
 
