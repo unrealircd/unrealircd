@@ -66,6 +66,10 @@ int antimixedutf8_config_run(ConfigFile *, ConfigEntry *, int);
 #define SCRIPT_UNDEFINED	0
 #define SCRIPT_LATIN		1
 #define SCRIPT_CYRILLIC		2
+#define SCRIPT_CJK		3
+#define SCRIPT_HANGUL		4
+#define SCRIPT_CANADIAN		5
+#define SCRIPT_TELUGU		6
 
 /**** the detection algorithm follows first, the module/config code is at the end ****/
 
@@ -94,6 +98,24 @@ int detect_script(const char *t)
 		return SCRIPT_CYRILLIC;
 	else if ((t[0] == 0xd3) && (t[1] >= 0x80) && (t[1] <= 0xbf))
 		return SCRIPT_CYRILLIC;
+
+	if((t[0] == 0xe4) && (t[1] >= 0xb8) && (t[1] <= 0xbf))
+		return SCRIPT_CJK;
+	else if ((t[0] >= 0xe5) && (t[0] <= 0xe9) && (t[1] >= 0x80) && (t[1] <= 0xbf))
+		return SCRIPT_CJK;
+
+	if((t[0] == 0xea) && (t[1] >= 0xb0) && (t[1] <= 0xbf))
+		return SCRIPT_HANGUL;
+	else if ((t[0] >= 0xeb) && (t[0] <= 0xec) && (t[1] >= 0x80) && (t[1] <= 0xbf))
+		return SCRIPT_HANGUL;
+	else if ((t[0] == 0xed) && (t[1] >= 0x80) && (t[1] <= 0x9f))
+		return SCRIPT_HANGUL;
+
+	if((t[0] == 0xe1) && (t[1] >= 0x90) && (t[1] <= 0x99))
+		return SCRIPT_CANADIAN;
+
+	if((t[0] == 0xe0) && (t[1] >= 0xb0) && (t[1] <= 0xb1))
+		return SCRIPT_TELUGU;
 
 	if ((t[0] >= 'a') && (t[0] <= 'z'))
 		return SCRIPT_LATIN;
