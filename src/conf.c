@@ -2135,6 +2135,7 @@ int	init_conf(char *rootconf, int rehash)
 	postconf();
 	config_status("Configuration loaded.");
 	clicap_post_rehash();
+	unload_all_unused_mtag_handlers();
 	return 0;
 }
 
