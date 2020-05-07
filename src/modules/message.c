@@ -396,13 +396,15 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 					       client->name, cmd, targetstr, text);
 			} else {
 				/* TAGMSG:
-				 * Only send if the message includes any user message tags.
-				 * In other words: disallow empty and useless TAGMSG.
+				 * Only send if the message includes any user message tags
+				 * and if the 'message-tags' module is loaded.
+				 * Do not allow empty and useless TAGMSG.
 				 */
-				if (has_client_mtags(mtags))
+				long CAP_MESSAGE_TAGS = ClientCapabilityBit("message-tags");
+				if (CAP_MESSAGE_TAGS && has_client_mtags(mtags))
 				{
 					sendto_channel(channel, client, client->direction,
-						       prefix, 0, sendflags, mtags,
+						       prefix, CAP_MESSAGE_TAGS, sendflags, mtags,
 						       ":%s TAGMSG %s",
 						       client->name, targetstr);
 				}
