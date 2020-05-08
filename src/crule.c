@@ -306,7 +306,7 @@ int  crule_gettoken(int *next_tokp, char **ruleptr)
 
 void crule_getword(char *word, int *wordlenp, int maxlen, char **ruleptr)
 {
-	char *word_ptr;
+	char *word_ptr, c;
 
 	word_ptr = word;
 	/* Both - and : can appear in hostnames so they must not be 
@@ -315,8 +315,16 @@ void crule_getword(char *word, int *wordlenp, int maxlen, char **ruleptr)
 	while ((isalnum(**ruleptr)) || (**ruleptr == '*') ||
 	    (**ruleptr == '?') || (**ruleptr == '.') || (**ruleptr == '-') ||
 	    (**ruleptr == ':'))
-		*word_ptr++ = *(*ruleptr)++;
-	*word_ptr = '\0';
+	{
+		c = *(*ruleptr)++;
+		if (maxlen > 1) /* >1 instead of >0 so we (possibly) still have room for NUL */
+		{
+			*word_ptr++ = c;
+			maxlen--;
+		}
+	}
+	if (maxlen)
+		*word_ptr = '\0';
 	*wordlenp = word_ptr - word;
 }
 
