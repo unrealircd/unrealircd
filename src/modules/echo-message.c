@@ -66,26 +66,42 @@ MOD_UNLOAD()
 
 int em_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, SendType sendtype)
 {
-	if (MyUser(client) && HasCapabilityFast(client, CAP_ECHO_MESSAGE) && (sendtype != SEND_TYPE_TAGMSG))
+	if (MyUser(client) && HasCapabilityFast(client, CAP_ECHO_MESSAGE))
 	{
-		sendto_prefix_one(client, client, mtags, ":%s %s %s :%s",
-			client->name,
-			sendtype_to_cmd(sendtype),
-			target,
-			text);
+		if (sendtype != SEND_TYPE_TAGMSG)
+		{
+			sendto_prefix_one(client, client, mtags, ":%s %s %s :%s",
+				client->name,
+				sendtype_to_cmd(sendtype),
+				target,
+				text);
+		} else {
+			sendto_prefix_one(client, client, mtags, ":%s %s %s",
+				client->name,
+				sendtype_to_cmd(sendtype),
+				target);
+		}
 	}
 	return 0;
 }
 
 int em_usermsg(Client *client, Client *to, MessageTag *mtags, char *text, SendType sendtype)
 {
-	if (MyUser(client) && HasCapabilityFast(client, CAP_ECHO_MESSAGE) && (sendtype != SEND_TYPE_TAGMSG))
+	if (MyUser(client) && HasCapabilityFast(client, CAP_ECHO_MESSAGE))
 	{
-		sendto_prefix_one(client, client, mtags, ":%s %s %s :%s",
-			client->name,
-			sendtype_to_cmd(sendtype),
-			to->name,
-			text);
+		if (sendtype != SEND_TYPE_TAGMSG)
+		{
+			sendto_prefix_one(client, client, mtags, ":%s %s %s :%s",
+				client->name,
+				sendtype_to_cmd(sendtype),
+				to->name,
+				text);
+		} else {
+			sendto_prefix_one(client, client, mtags, ":%s %s %s",
+				client->name,
+				sendtype_to_cmd(sendtype),
+				to->name);
+		}
 	}
 	return 0;
 }
