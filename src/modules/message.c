@@ -20,17 +20,19 @@
 
 #include "unrealircd.h"
 
+/* Forward declarations */
 char *_StripColors(unsigned char *text);
 char *_StripControlCodes(unsigned char *text);
-
 int ban_version(Client *client, char *text);
-
 CMD_FUNC(cmd_private);
 CMD_FUNC(cmd_notice);
 CMD_FUNC(cmd_tagmsg);
 void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[], SendType sendtype);
 int _can_send_to_channel(Client *client, Channel *channel, char **msgtext, char **errmsg, SendType sendtype);
 int can_send_to_user(Client *client, Client *target, char **msgtext, char **errmsg, SendType sendtype);
+
+/* Variables */
+long CAP_MESSAGE_TAGS = 0; /**< Looked up at MOD_LOAD, may stay 0 if message-tags support is absent */
 
 ModuleHeader MOD_HEADER
   = {
@@ -63,6 +65,8 @@ MOD_INIT()
 /* Is first run when server is 100% ready */
 MOD_LOAD()
 {
+	CAP_MESSAGE_TAGS = ClientCapabilityBit("message-tags");
+
 	return MOD_SUCCESS;
 }
 
@@ -303,6 +307,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 			sendnumeric(client, ERR_TOOMANYTARGETS, targetstr, maxtargets, cmd);
 			break;
 		}
+
 		/* The nicks "ircd" and "irc" are special (and reserved) */
 		if (!strcasecmp(targetstr, "ircd") && MyUser(client))
 			return;
@@ -400,14 +405,15 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 				 * and if the 'message-tags' module is loaded.
 				 * Do not allow empty and useless TAGMSG.
 				 */
-				long CAP_MESSAGE_TAGS = ClientCapabilityBit("message-tags");
-				if (CAP_MESSAGE_TAGS && has_client_mtags(mtags))
+				if (!CAP_MESSAGE_TAGS || !has_client_mtags(mtags))
 				{
-					sendto_channel(channel, client, client->direction,
-						       prefix, CAP_MESSAGE_TAGS, sendflags, mtags,
-						       ":%s TAGMSG %s",
-						       client->name, targetstr);
+					free_message_tags(mtags);
+					continue;
 				}
+				sendto_channel(channel, client, client->direction,
+					       prefix, CAP_MESSAGE_TAGS, sendflags, mtags,
+					       ":%s TAGMSG %s",
+					       client->name, targetstr);
 			}
 
 			RunHook8(HOOKTYPE_CHANMSG, client, channel, sendflags, prefix, targetstr, mtags, text, sendtype);
@@ -471,16 +477,36 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 					sendnumeric(client, RPL_AWAY, target->name, target->user->away);
 
 				new_message(client, recv_mtags, &mtags);
+				if ((sendtype == SEND_TYPE_TAGMSG) && !has_client_mtags(mtags))
+				{
+					free_message_tags(mtags);
+					continue;
+				}
 				labeled_response_inhibit = 1;
 				if (MyUser(target))
 				{
 					/* Deliver to end-user */
-					sendto_prefix_one(target, client, mtags, ":%s %s %s :%s",
-							  client->name, cmd, target->name, text);
+					if (sendtype == SEND_TYPE_TAGMSG)
+					{
+						if (HasCapability(target, "message-tags"))
+						{
+							sendto_prefix_one(target, client, mtags, ":%s %s %s",
+									  client->name, cmd, target->name);
+						}
+					} else {
+						sendto_prefix_one(target, client, mtags, ":%s %s %s :%s",
+								  client->name, cmd, target->name, text);
+					}
 				} else {
 					/* Send to another server */
-					sendto_prefix_one(target, client, mtags, ":%s %s %s :%s",
-							  client->id, cmd, target->id, text);
+					if (sendtype == SEND_TYPE_TAGMSG)
+					{
+						sendto_prefix_one(target, client, mtags, ":%s %s %s",
+								  client->id, cmd, target->id);
+					} else {
+						sendto_prefix_one(target, client, mtags, ":%s %s %s :%s",
+								  client->id, cmd, target->id, text);
+					}
 				}
 				labeled_response_inhibit = 0;
 				RunHook5(HOOKTYPE_USERMSG, client, target, mtags, text, sendtype);
