@@ -67,7 +67,7 @@ struct cfgstruct {
 };
 static struct cfgstruct cfg;
 
-static int channeldb_loaded = 0;
+static long channeldb_next_event = 0;
 
 MOD_TEST()
 {
@@ -80,7 +80,7 @@ MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	LoadPersistentInt(modinfo, channeldb_loaded);
+	LoadPersistentLong(modinfo, channeldb_next_event);
 
 	setcfg();
 
@@ -90,7 +90,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	if (!channeldb_loaded)
+	if (!channeldb_next_event)
 	{
 		/* If this is the first time that our module is loaded, then read the database. */
 		if (!read_channeldb())
@@ -102,9 +102,9 @@ MOD_LOAD()
 			else
 				config_warn("[channeldb] Failed to rename database from %s to %s: %s", cfg.database, fname, strerror(errno));
 		}
-		channeldb_loaded = 1;
+		channeldb_next_event = TStime() + CHANNELDB_SAVE_EVERY;
 	}
-	EventAdd(modinfo->handle, "channeldb_write_channeldb", write_channeldb_evt, NULL, CHANNELDB_SAVE_EVERY*1000, 0);
+	EventAdd(modinfo->handle, "channeldb_write_channeldb", write_channeldb_evt, NULL, 1000, 0);
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
 	{
 		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));
@@ -115,9 +115,8 @@ MOD_LOAD()
 
 MOD_UNLOAD()
 {
-	write_channeldb();
 	freecfg();
-	SavePersistentInt(modinfo, channeldb_loaded);
+	SavePersistentLong(modinfo, channeldb_next_event);
 	return MOD_SUCCESS;
 }
 
@@ -191,6 +190,9 @@ int channeldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 
 EVENT(write_channeldb_evt)
 {
+	if (channeldb_next_event > TStime())
+		return;
+	channeldb_next_event = TStime() + CHANNELDB_SAVE_EVERY;
 	write_channeldb();
 }
 
