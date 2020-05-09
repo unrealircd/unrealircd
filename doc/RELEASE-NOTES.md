@@ -9,6 +9,9 @@ Fixes:
   on wrong key, but was also redirecting on correct key.
 * [except ban { }](https://www.unrealircd.org/docs/Except_ban_block)
   without 'type' was not exempting from gline.
+* Crash when saving channeldb when a parameter channel mode is combined
+  with ```+P``` and that module was loaded after channeldb. This may
+  happen if you use 3rd party parameter channel mode modules.
 
 Enhancements:
 * [Spamfilter](https://www.unrealircd.org/docs/Spamfilter) is now UTF8-aware.
@@ -26,6 +29,11 @@ Enhancements:
     to using the UnrealIRCd-shipped-library version 10.34. The only
     downside to that is that compiling during ```./Config``` may take
     a little longer than usual.
+* [antimixedutf8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8)
+  has been improved to detect CJK and other scripts and this will now
+  catch more mixed UTF8 spam. Note that, if you previously manually
+  set the score very tight (much lower than the default of 10) then you
+  may have to increase it a bit, or not, depending on your network.
 * New flood countermeasure,
   [set::anti-flood::target-flood](https://www.unrealircd.org/docs/Set_block#set%3A%3Aanti-flood%3A%3Atarget-flood),
   which limits flooding to channels and users. This is only meant as a
