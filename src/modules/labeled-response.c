@@ -45,6 +45,7 @@ struct LabeledResponseContext {
 /* Forward declarations */
 int lr_pre_command(Client *from, MessageTag *mtags, char *buf);
 int lr_post_command(Client *from, MessageTag *mtags, char *buf);
+int lr_close_connection(Client *client);
 int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *len);
 void *_labeled_response_save_context(void);
 void _labeled_response_set_context(void *ctx);
@@ -94,6 +95,7 @@ MOD_INIT()
 
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_COMMAND, 2000000000, lr_pre_command);
 	HookAdd(modinfo->handle, HOOKTYPE_POST_COMMAND, -2000000000, lr_post_command);
+	HookAdd(modinfo->handle, HOOKTYPE_CLOSE_CONNECTION, 2000000000, lr_close_connection);
 	HookAdd(modinfo->handle, HOOKTYPE_PACKET, 0, lr_packet);
 
 	return MOD_SUCCESS;
@@ -216,6 +218,16 @@ int lr_post_command(Client *from, MessageTag *mtags, char *buf)
 done:
 	memset(&currentcmd, 0, sizeof(currentcmd));
 	labeled_response_inhibit = labeled_response_inhibit_end = labeled_response_force = 0;
+	return 0;
+}
+
+int lr_close_connection(Client *client)
+{
+	/* It's ok to use NULL here, as we most likely have sent an ERROR
+	 * in which case the latter two arguments are unused anyway.
+	 * And otherwise they are irrelevant.
+	 */
+	lr_post_command(client, NULL, NULL);
 	return 0;
 }
 

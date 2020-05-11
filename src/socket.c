@@ -616,6 +616,7 @@ void completed_connection(int fd, int revents, void *data)
  */
 void close_connection(Client *client)
 {
+	RunHook(HOOKTYPE_CLOSE_CONNECTION, client);
 	/* This function must make MyConnect(client) == FALSE,
 	 * and set client->direction == NULL.
 	 */
