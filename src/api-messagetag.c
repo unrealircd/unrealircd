@@ -109,14 +109,9 @@ MessageTagHandler *MessageTagHandlerAdd(Module *module, MessageTagHandlerInfo *m
  */
 MessageTagHandler *MessageTagHandlerFind(const char *name)
 {
-	MessageTagHandler *m;
-
-	for (m = mtaghandlers; m; m = m->next)
-	{
-		if (!strcasecmp(name, m->name))
-			return m;
-	}
-	return NULL;
+	MessageTagHandler *m = NULL;
+	RunHook2(HOOKTYPE_MTAG_HANDLER, &m, name);
+	return m;
 }
 
 /** Remove the specified message tag handler - modules should not call this.

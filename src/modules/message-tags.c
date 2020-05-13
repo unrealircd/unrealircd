@@ -34,6 +34,9 @@ ModuleHeader MOD_HEADER
 long CAP_MESSAGE_TAGS = 0L;
 char *_mtags_to_string(MessageTag *m, Client *client);
 void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list);
+int find_mtag_handler(MessageTagHandler **m, const char *name);
+
+extern MODVAR MessageTagHandler *mtaghandlers;
 
 MOD_TEST()
 {
@@ -54,6 +57,9 @@ MOD_INIT()
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "message-tags";
 	ClientCapabilityAdd(modinfo->handle, &cap, &CAP_MESSAGE_TAGS);
+
+	HookAdd(modinfo->handle, HOOKTYPE_MTAG_HANDLER, 0, find_mtag_handler);
+
 	return MOD_SUCCESS;
 }
 
@@ -65,6 +71,21 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
+}
+
+int find_mtag_handler(MessageTagHandler **handler, const char *name)
+{
+	MessageTagHandler *m;
+
+	for (m = mtaghandlers; m; m = m->next)
+	{
+		if (!strcasecmp(name, m->name))
+		{
+			*handler = m;
+			return HOOK_CONTINUE;
+		}
+	}
+	return HOOK_CONTINUE;
 }
 
 /** Unescape a message tag (name or value).

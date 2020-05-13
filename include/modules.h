@@ -1010,6 +1010,7 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_SERVER_SYNC 106
 #define HOOKTYPE_ACCOUNT_LOGIN 107
 #define HOOKTYPE_CLOSE_CONNECTION 108
+#define HOOKTYPE_MTAG_HANDLER 109
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -1123,6 +1124,7 @@ char *hooktype_pre_local_quit_chan(Client *client, Channel *channel, char *comme
 int hooktype_ident_lookup(Client *acptr);
 int hooktype_account_login(Client *client, MessageTag *mtags);
 int hooktype_close_connection(Client *client);
+int hooktype_mtag_handler(MessageTagHandler **handler, const char *name);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
@@ -1232,7 +1234,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_IDENT_LOOKUP) && !ValidateHook(hooktype_ident_lookup, func)) || \
         ((hooktype == HOOKTYPE_CONFIGRUN_EX) && !ValidateHook(hooktype_configrun_ex, func)) || \
         ((hooktype == HOOKTYPE_ACCOUNT_LOGIN) && !ValidateHook(hooktype_account_login, func)) || \
-        ((hooktype == HOOKTYPE_CLOSE_CONNECTION) && !ValidateHook(hooktype_close_connection, func)) ) \
+        ((hooktype == HOOKTYPE_CLOSE_CONNECTION) && !ValidateHook(hooktype_close_connection, func)) || \
+        ((hooktype == HOOKTYPE_MTAG_HANDLER) && !ValidateHook(hooktype_mtag_handler, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
