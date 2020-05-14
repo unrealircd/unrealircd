@@ -885,6 +885,7 @@ extern char *certificate_name(SSL *ssl);
 extern void start_of_normal_client_handshake(Client *acptr);
 extern void clicap_pre_rehash(void);
 extern void clicap_post_rehash(void);
+extern void unload_all_unused_mtag_handlers(void);
 extern void send_cap_notify(int add, char *token);
 extern void sendbufto_one(Client *to, char *msg, unsigned int quick);
 extern MODVAR int current_serial;
