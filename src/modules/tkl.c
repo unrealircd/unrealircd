@@ -1208,6 +1208,22 @@ int ban_too_broad(char *usermask, char *hostmask)
 	return 1;
 }
 
+/** Ugly function, only meant to be called by cmd_tkl_line() */
+static int xline_exists(char *type, char *usermask, char *hostmask)
+{
+	char *umask = usermask;
+	int softban = 0;
+	int tpe = tkl_chartotype(type[0]);
+
+	if (*umask == '%')
+	{
+		umask++;
+		softban = 1;
+	}
+
+	return find_tkl_serverban(tpe, umask, hostmask, softban) ? 1 : 0;
+}
+
 /** Intermediate layer between user functions such as KLINE/GLINE
  * and the TKL layer (cmd_tkl).
  * This allows us doing some syntax checking and other helpful
@@ -1431,6 +1447,13 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 		if (!t)
 		{
 			sendnotice(client, "*** [error] The time you specified is out of range");
+			return;
+		}
+
+		/* Some stupid checking */
+		if (xline_exists(type, usermask, hostmask))
+		{
+			sendnotice(client, "ERROR: Ban for %s@%s already exists.", usermask, hostmask);
 			return;
 		}
 
