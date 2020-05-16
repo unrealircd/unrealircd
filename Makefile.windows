@@ -292,7 +292,8 @@ DLL_FILES=SRC/MODULES/CLOAK.DLL \
  SRC/MODULES/IDENT_LOOKUP.DLL \
  SRC/MODULES/HISTORY.DLL \
  SRC/MODULES/TARGETFLOODPROT.DLL \
- SRC/MODULES/TYPING-INDICATOR.DLL
+ SRC/MODULES/TYPING-INDICATOR.DLL \
+ SRC/MODULES/CLIENTTAGDENY.DLL
 
 
 ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES 
@@ -1088,5 +1089,8 @@ src/modules/targetfloodprot.dll: src/modules/targetfloodprot.c $(INCLUDES)
 
 src/modules/typing-indicator.dll: src/modules/typing-indicator.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/typing-indicator.c $(MODLFLAGS)
+
+src/modules/clienttagdeny.dll: src/modules/clienttagdeny.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules /Fesrc/modules src/modules/clienttagdeny.c $(MODLFLAGS)
 
 dummy:
