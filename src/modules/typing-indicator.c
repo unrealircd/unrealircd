@@ -26,7 +26,7 @@ ModuleHeader MOD_HEADER
   = {
 	"typing-indicator",
 	"5.0",
-	"+draft/typing client tag",
+	"+typing client tag",
 	"UnrealIRCd Team",
 	"unrealircd-5",
 	};
@@ -39,6 +39,12 @@ MOD_INIT()
 	MessageTagHandlerInfo mtag;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+
+	memset(&mtag, 0, sizeof(mtag));
+	mtag.name = "+typing";
+	mtag.is_ok = ti_mtag_is_ok;
+	mtag.flags = MTAG_HANDLER_FLAGS_NO_CAP_NEEDED;
+	MessageTagHandlerAdd(modinfo->handle, &mtag);
 
 	memset(&mtag, 0, sizeof(mtag));
 	mtag.name = "+draft/typing";
@@ -83,7 +89,13 @@ void mtag_add_ti(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list,
 
 	if (IsUser(client))
 	{
-		MessageTag *m = find_mtag(recv_mtags, "+draft/typing");
+		m = find_mtag(recv_mtags, "+typing");
+		if (m)
+		{
+			m = duplicate_mtag(m);
+			AddListItem(m, *mtag_list);
+		}
+		m = find_mtag(recv_mtags, "+draft/typing");
 		if (m)
 		{
 			m = duplicate_mtag(m);
