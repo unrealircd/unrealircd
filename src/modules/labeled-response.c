@@ -181,11 +181,12 @@ int lr_post_command(Client *from, MessageTag *mtags, char *buf)
 
 		if (currentcmd.responses == 0)
 		{
-			/* Note: we blindly send recv_mtags back here,
-			 * which is OK now, but may not be OK later.
-			 */
+			MessageTag *m = safe_alloc(sizeof(MessageTag));
+			safe_strdup(m->name, "label");
+			safe_strdup(m->value, currentcmd.label);
 			memset(&currentcmd, 0, sizeof(currentcmd));
-			sendto_one(from, mtags, ":%s ACK", me.name);
+			sendto_one(from, m, ":%s ACK", me.name);
+			free_message_tags(m);
 			goto done;
 		} else
 		if (currentcmd.responses == 1)
@@ -223,10 +224,7 @@ done:
 
 int lr_close_connection(Client *client)
 {
-	/* It's ok to use NULL here, as we most likely have sent an ERROR
-	 * in which case the latter two arguments are unused anyway.
-	 * And otherwise they are irrelevant.
-	 */
+	/* Flush all data before closing connection */
 	lr_post_command(client, NULL, NULL);
 	return 0;
 }
