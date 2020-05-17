@@ -4,11 +4,11 @@ UnrealIRCd 5.0.5-dev Release Notes
 This version is under development. These release notes will change too.
 
 Fixes:
-* Crash on 32-bit machines in tkldb (on start or rehash)
-* Channel mode ```+L #forward``` and ```+k key```: should forward
-  on wrong key, but was also redirecting on correct key.
 * [except ban { }](https://www.unrealircd.org/docs/Except_ban_block)
   without 'type' was not exempting from gline.
+* Channel mode ```+L #forward``` and ```+k key```: should forward
+  on wrong key, but was also redirecting on correct key.
+* Crash on 32-bit machines in tkldb (on start or rehash)
 * Crash when saving channeldb when a parameter channel mode is combined
   with ```+P``` and that module was loaded after channeldb. This may
   happen if you use 3rd party parameter channel mode modules.
@@ -34,6 +34,9 @@ Enhancements:
   catch more mixed UTF8 spam. Note that, if you previously manually
   set the score very tight (much lower than the default of 10) then you
   may have to increase it a bit, or not, depending on your network.
+* Support for IRCv3 [+typing clienttag](https://ircv3.net/specs/client-tags/typing.html),
+  which adds "user is typing" support to channels and PM (if the client
+  supports it).
 * New flood countermeasure,
   [set::anti-flood::target-flood](https://www.unrealircd.org/docs/Set_block#set%3A%3Aanti-flood%3A%3Atarget-flood),
   which limits flooding to channels and users. This is only meant as a
@@ -41,9 +44,6 @@ Enhancements:
   [channel mode +f](https://www.unrealircd.org/docs/Anti-flood_features#Channel_mode_f)
   in channels which give you more customized and fine-grained options
   to deal with low- and medium-rate floods.
-* Support for IRCv3 [+draft/typing](https://ircv3.net/specs/client-tags/typing.html)
-  which adds "user is typing" support to channels and PM (if the client
-  supports it, of course).
 * If a chanop /INVITEs someone, it will now override ban forwards
   such as ```+b ~f:#forward:*!*@*```.
 
@@ -57,6 +57,15 @@ Changes:
   * You can now have a block without ```connect-delay``` but still make
     users bypass the restriction with ```exempt-identified``` and/or
     ```exempt-reputation-score```. Previously this was not possible.
+* We now give an error when an IRCOp tries to place an *LINE that already
+  exists. (Previously we sometimes replaced the existing *LINE and other
+  times we did not)
+
+Module coders / Developers:
+* Breaking API change in ```HOOKTYPE_CAN_SEND_TO_USER``` and
+  ```HOOKTYPE_CAN_SEND_TO_CHANNEL```: the final argument has changed
+  from ```int notice``` to ```SendType sendtype```, which is an
+  enum, since we now have 3 message options (PRIVMSG, NOTICE, TAGMSG).
 
 Upgrading from UnrealIRCd 4?
 -----------------------------
