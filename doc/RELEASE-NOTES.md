@@ -1,7 +1,7 @@
-UnrealIRCd 5.0.5-dev Release Notes
-===============================
+UnrealIRCd 5.0.5-rc1 Release Notes
+===================================
 
-This version is under development. These release notes will change too.
+This is the (internal) release candidate for 5.0.5.
 
 Fixes:
 * [except ban { }](https://www.unrealircd.org/docs/Except_ban_block)
