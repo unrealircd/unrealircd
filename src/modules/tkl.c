@@ -115,6 +115,7 @@ struct TKLTypeTable
  * IMPORTANT IF YOU ARE ADDING A NEW TYPE TO THIS TABLE:
  * - also update eline_syntax()
  * - also check if eline_type_requires_ip() needs to be updated
+ * - update help.conf (HELPOP ELINE)
  * - more?
  */
 TKLTypeTable tkl_types[] = {
