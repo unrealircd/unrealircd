@@ -26,9 +26,8 @@ Enhancements:
     or script is quite a drastic measure.
   * These new features require the PCRE2 10.34 regex library. If you
     have a lower version on your system then UnrealIRCd will fall back
-    to using the UnrealIRCd-shipped-library version 10.34. The only
-    downside to that is that compiling during ```./Config``` may take
-    a little longer than usual.
+    to using the UnrealIRCd-shipped-library. The only downside to that
+    is that compiling during ```./Config``` may take a little longer than usual.
 * [antimixedutf8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8)
   has been improved to detect CJK and other scripts and this will now
   catch more mixed UTF8 spam. Note that, if you previously manually
