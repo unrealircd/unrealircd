@@ -1091,6 +1091,6 @@ src/modules/typing-indicator.dll: src/modules/typing-indicator.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/typing-indicator.c $(MODLFLAGS)
 
 src/modules/clienttagdeny.dll: src/modules/clienttagdeny.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) /Fosrc/modules /Fesrc/modules src/modules/clienttagdeny.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/clienttagdeny.c $(MODLFLAGS)
 
 dummy:
