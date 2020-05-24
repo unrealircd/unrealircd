@@ -973,3 +973,4 @@ extern void update_throttling_timer_settings(void);
 extern int hide_idle_time(Client *client, Client *target);
 extern void lost_server_link(Client *serv, FORMAT_STRING(const char *fmt), ...);
 extern char *sendtype_to_cmd(SendType sendtype);
+extern MODVAR MessageTagHandler *mtaghandlers;

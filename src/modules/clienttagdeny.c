@@ -25,7 +25,6 @@
 char *ct_isupport_param(void);
 int tags_rehash_complete(void);
 
-extern MODVAR MessageTagHandler *mtaghandlers;
 Module *module;
 
 ModuleHeader MOD_HEADER = {
