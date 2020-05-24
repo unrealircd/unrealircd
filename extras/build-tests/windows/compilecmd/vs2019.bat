@@ -3,7 +3,7 @@ rem Build command for Visual Studio 2019
 nmake -f makefile.windows ^
 LIBRESSL_INC_DIR="c:\projects\unrealircd-5-libs\libressl\include" ^
 LIBRESSL_LIB_DIR="c:\projects\unrealircd-5-libs\libressl\lib" ^
-SSLLIB="crypto-45.lib ssl-47.lib" ^
+SSLLIB="crypto-46.lib ssl-48.lib" ^
 USE_REMOTEINC=1 ^
 LIBCURL_INC_DIR="c:\projects\unrealircd-5-libs\curl\include" ^
 LIBCURL_LIB_DIR="c:\projects\unrealircd-5-libs\curl\builds\libcurl-vc-x64-release-dll-ssl-dll-cares-dll-ipv6-obj-lib" ^
