@@ -57,24 +57,24 @@ void targetfloodprot_defaults(void)
 	privatecfg = safe_alloc(sizeof(TargetFloodConfig));
 
 	/* set::anti-flood::target-flood::channel-privmsg */
-	channelcfg->cnt[TFP_PRIVMSG] = 60;
+	channelcfg->cnt[TFP_PRIVMSG] = 45;
 	channelcfg->t[TFP_PRIVMSG] = 5;
 	/* set::anti-flood::target-flood::channel-notice */
 	channelcfg->cnt[TFP_NOTICE] = 15;
-	channelcfg->t[TFP_NOTICE] = 2;
+	channelcfg->t[TFP_NOTICE] = 5;
 	/* set::anti-flood::target-flood::channel-tagmsg */
-	channelcfg->cnt[TFP_TAGMSG] = 20;
-	channelcfg->t[TFP_TAGMSG] = 2;
+	channelcfg->cnt[TFP_TAGMSG] = 15;
+	channelcfg->t[TFP_TAGMSG] = 5;
 
 	/* set::anti-flood::target-flood::private-privmsg */
 	privatecfg->cnt[TFP_PRIVMSG] = 30;
-	privatecfg->t[TFP_PRIVMSG] = 4;
+	privatecfg->t[TFP_PRIVMSG] = 5;
 	/* set::anti-flood::target-flood::private-notice */
-	privatecfg->cnt[TFP_NOTICE] = 15;
-	privatecfg->t[TFP_NOTICE] = 4;
+	privatecfg->cnt[TFP_NOTICE] = 10;
+	privatecfg->t[TFP_NOTICE] = 5;
 	/* set::anti-flood::target-flood::private-tagmsg */
 	privatecfg->cnt[TFP_TAGMSG] = 10;
-	privatecfg->t[TFP_TAGMSG] = 2;
+	privatecfg->t[TFP_TAGMSG] = 5;
 }
 
 MOD_INIT()
