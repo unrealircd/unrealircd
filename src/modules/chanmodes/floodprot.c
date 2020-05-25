@@ -624,7 +624,7 @@ void *cmodef_put_param(void *fld_in, char *param)
 	if (v < fld->per)
 	{
 		int i;
-		for (i=0; v < NUMFLD; i++)
+		for (i=0; i < NUMFLD; i++)
 		{
 			fld->timer[i] = 0;
 			fld->counter[i] = 0;
