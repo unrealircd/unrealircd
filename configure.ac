@@ -129,6 +129,9 @@ AS_IF([test x"$hardening" != x"no"], [
       check_cc_flag([--param ssp-buffer-size=1], [HARDEN_CFLAGS="$HARDEN_CFLAGS --param ssp-buffer-size=1"],
         [], [-fstack-protector-all])])])
 
+  # Added in UnrealIRCd 5.0.5 (default on Ubuntu 19.10)
+  check_cc_flag([-fstack-clash-protection], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fstack-clash-protection"])
+
   # At the link step, we might want -pie (GCC) or -Wl,-pie (Clang on OS X)
   #
   # The linker checks also compile code, so we need to include -fPIE as well.
