@@ -623,10 +623,11 @@ void *cmodef_put_param(void *fld_in, char *param)
 	/* if new 'per xxx seconds' is smaller than current 'per' then reset timers/counters (t, c) */
 	if (v < fld->per)
 	{
-		for (v=0; v < NUMFLD; v++)
+		int i;
+		for (i=0; v < NUMFLD; i++)
 		{
-			fld->timer[v] = 0;
-			fld->counter[v] = 0;
+			fld->timer[i] = 0;
+			fld->counter[i] = 0;
 		}
 	}
 	fld->per = v;
