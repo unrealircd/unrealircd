@@ -1402,7 +1402,7 @@ Optional Features:
   --enable-hardening      Enable compiler and linker options to frustrate
                           memory corruption exploits [yes]
   --disable-prefixaq      Disable chanadmin (+a) and chanowner (+q) prefixes
-  --enable-ssl=           enable ssl will check /usr/local/opt/openssl
+  --enable-ssl=           enable ssl will check /usr/bin/openssl /usr/local/opt/openssl
                           /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg
                           /usr/sfw /usr/local /usr
   --disable-dynamic-linking
@@ -6186,7 +6186,7 @@ if test $enable_ssl != "no"; then :
 
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for OpenSSL" >&5
 $as_echo_n "checking for OpenSSL... " >&6; }
-	for dir in $enable_ssl /usr/local/opt/openssl /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/sfw /usr/local /usr; do
+	for dir in $enable_ssl /usr/bin/openssl /usr/local/opt/openssl /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/sfw /usr/local /usr; do
 		ssldir="$dir"
 		if test -f "$dir/include/openssl/ssl.h"; then
 			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: found in $ssldir/include/openssl" >&5
