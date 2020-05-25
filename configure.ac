@@ -132,6 +132,9 @@ AS_IF([test x"$hardening" != x"no"], [
   # Added in UnrealIRCd 5.0.5 (default on Ubuntu 19.10)
   check_cc_flag([-fstack-clash-protection], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fstack-clash-protection"])
 
+  # Control Flow Enforcement (ROP hardening) - requires CPU hardware support
+  check_cc_flag([-fcf-protection], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fcf-protection"])
+
   # At the link step, we might want -pie (GCC) or -Wl,-pie (Clang on OS X)
   #
   # The linker checks also compile code, so we need to include -fPIE as well.
