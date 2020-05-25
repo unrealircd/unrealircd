@@ -422,7 +422,7 @@ void sendto_channel(Channel *channel, Client *from, Client *skip,
 		continue;
 good:
 		/* Now deal with 'clicap' (if non-zero) */
-		if (clicap && MyUser(acptr) && !HasCapabilityFast(acptr, clicap))
+		if (clicap && MyUser(acptr) && ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
 			continue;
 
 		if (MyUser(acptr))
@@ -558,7 +558,7 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
 				if (acptr->local->serial == current_serial)
 					continue; /* message already sent to this client */
 
-				if (clicap && !HasCapabilityFast(acptr, clicap))
+				if (clicap && ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
 					continue; /* client does not have the specified capability */
 
 				if (acptr == skip)

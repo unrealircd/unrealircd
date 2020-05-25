@@ -98,10 +98,11 @@ void ClearCapability(Client *client, const char *token)
 
 long clicap_allocate_cap(void)
 {
-	long v = 1;
+	long v;
 	ClientCapability *clicap;
 
-	for (v=1; v < LONG_MAX; v = v * 2)
+	/* The first bit (v=1) is used by the "invert" marker */
+	for (v=2; v < LONG_MAX; v = v * 2)
 	{
 		unsigned char found = 0;
 		for (clicap = clicaps; clicap; clicap = clicap->next)

@@ -344,6 +344,8 @@ typedef enum ClientStatus {
 #define PROTO_MTAGS	0x010000	/* Support message tags and big buffers */
 
 /* For client capabilities: */
+#define CAP_INVERT	1L
+
 /** HasCapabilityFast() checks for a token if you know exactly which bit to check */
 #define HasCapabilityFast(cptr, val) ((cptr)->local->caps & (val))
 /** HasCapability() checks for a token by name and is slightly slower */
