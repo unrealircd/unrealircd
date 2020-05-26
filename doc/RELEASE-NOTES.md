@@ -1,7 +1,7 @@
-UnrealIRCd 5.0.5-rc1 Release Notes
-===================================
+UnrealIRCd 5.0.5 Release Notes
+===============================
 
-This is the (internal) release candidate for 5.0.5.
+This release focusses on new features, while also fixing a few bugs.
 
 Fixes:
 * [except ban { }](https://www.unrealircd.org/docs/Except_ban_block)
@@ -11,7 +11,7 @@ Fixes:
 * Crash on 32-bit machines in tkldb (on start or rehash)
 * Crash when saving channeldb when a parameter channel mode is combined
   with ```+P``` and that module was loaded after channeldb. This may
-  happen if you use 3rd party parameter channel mode modules.
+  happen if you use 3rd party modules that add parameter channel modes.
 
 Enhancements:
 * [Spamfilter](https://www.unrealircd.org/docs/Spamfilter) is now UTF8-aware.
@@ -48,9 +48,8 @@ Enhancements:
   such as ```+b ~f:#forward:*!*@*```.
 
 Changes:
-* We now do parallel builds by default (```make -j4```), unless the ```$MAKE```
-  or ```$MAKEFLAGS``` environment variable is set.
-* Translation updates
+* We now do parallel builds by default (```make -j4```) within ./Config,
+  unless the ```$MAKE``` or ```$MAKEFLAGS``` environment variable is set.
 * [set::restrict-commands](https://www.unrealircd.org/docs/Set_block#set%3A%3Arestrict-commands):
   * The ```disable``` option is now removed as it is implied. In other words: if
     you want to disable a command, then simply don't use ```connect-delay```.
@@ -60,6 +59,7 @@ Changes:
 * We now give an error when an IRCOp tries to place an *LINE that already
   exists. (Previously we sometimes replaced the existing *LINE and other
   times we did not)
+* Add Polish HELPOP (help.pl.conf)
 
 Module coders / Developers:
 * Breaking API change in ```HOOKTYPE_CAN_SEND_TO_USER``` and
