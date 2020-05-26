@@ -1,7 +1,7 @@
 UnrealIRCd 5.0.5 Release Notes
 ===============================
 
-This release focusses on new features, while also fixing a few bugs.
+This release mainly focuses on new features, while also fixing a few bugs.
 
 Fixes:
 * [except ban { }](https://www.unrealircd.org/docs/Except_ban_block)
