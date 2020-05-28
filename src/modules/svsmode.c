@@ -407,25 +407,6 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], 
 				if (parv[3])
 				{
 					strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
-					if(MyConnect(target))
-					{
-						/* Notify user */
-						if (parv[3][0] != '0')
-						{
-							sendnumeric(target, RPL_LOGGEDIN,
-								BadPtr(target->name) ? "*" : target->name,
-								BadPtr(target->user->username) ? "*" : target->user->username,
-								BadPtr(target->user->realhost) ? "*" : target->user->realhost,
-								target->user->svid, target->user->svid);
-						}
-						else
-						{
-							sendnumeric(target, RPL_LOGGEDOUT,
-								BadPtr(target->name) ? "*" : target->name,
-								BadPtr(target->user->username) ? "*" : target->user->username,
-								BadPtr(target->user->realhost) ? "*" : target->user->realhost);
-						}
-					}
 					user_account_login(recv_mtags, target);
 				}
 				else
