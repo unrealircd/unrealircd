@@ -407,7 +407,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], 
 				if (parv[3])
 				{
 					strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
-					if(MyConnect(target))
+					if(MyConnect(target) && (parv[3][0] != '0'))
 						/* Notify user */
 						sendnumeric(target, RPL_LOGGEDIN,
 							   BadPtr(target->name) ? "*" : target->name,
