@@ -308,10 +308,19 @@ CMD_FUNC(cmd_whois)
 						sendnumeric(client, RPL_WHOISOPERATOR, name, buf);
 				}
 			}
-
+			
 			if (target->umodes & UMODE_SECURE)
-				sendnumeric(client, RPL_WHOISSECURE, name,
-					"is using a Secure Connection");
+                                sendnumeric(client, RPL_WHOISSECURE, name,
+                                        "is using a Secure Connection");
+                        {
+                                if (MyUser(target))
+                                        sendnumericfmt(client, RPL_WHOISSECURE,
+                                                "%s :is using a Secure Connection (%s)", target->name,
+                                                tls_get_cipher(target->local-ssl));
+                                else
+                                        sendnumeric(client, RPL_WHOISSECURE, name,
+                                                "is using a Secure Connection");
+                        }
 			
 			RunHook2(HOOKTYPE_WHOIS, client, target);
 
