@@ -314,7 +314,7 @@ CMD_FUNC(cmd_whois)
                                 if (MyUser(target))
                                         sendnumericfmt(client, RPL_WHOISSECURE,
                                                 "%s :is using a Secure Connection (%s)", target->name,
-                                                tls_get_cipher(target->local-ssl));
+                                                tls_get_cipher(target->local->ssl));
                                 else
                                         sendnumeric(client, RPL_WHOISSECURE, name,
                                                 "is using a Secure Connection");
