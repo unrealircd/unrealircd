@@ -672,10 +672,7 @@ nickkill2done:
 	// FIXME: some validation would be nice ^
 
 	if (*sstamp != '*')
-	{
 		strlcpy(client->user->svid, sstamp, sizeof(client->user->svid));
-		user_account_login(recv_mtags, client);
-	}
 
 	strlcpy(client->info, realname, sizeof(client->info));
 	strlcpy(client->user->username, username, USERLEN + 1);
@@ -684,6 +681,9 @@ nickkill2done:
 		return;
 	if (!IsULine(serv) && IsSynched(serv))
 		sendto_fconnectnotice(client, 0, NULL);
+
+	if (client->user->svid[0] != '0')
+		user_account_login(recv_mtags, client);
 
 	RunHook(HOOKTYPE_REMOTE_CONNECT, client);
 }
