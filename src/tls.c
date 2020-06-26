@@ -625,7 +625,7 @@ void reinit_ssl(Client *client)
 	{
 		if (link->tls_options)
 		{
-			tmp = init_ctx(link->tls_options, 1);
+			tmp = init_ctx(link->tls_options, 0);
 			if (!tmp)
 			{
 				config_error("SSL Reload partially failed. link::outgoing::tls-options error in link %s { }, see above",
