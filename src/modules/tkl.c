@@ -4391,7 +4391,7 @@ int _place_host_ban(Client *client, BanAction action, char *reason, long duratio
 				client->user ? client->user->realhost : GetIP(client),
 				reason);
 			SetShunned(client);
-			break;
+			return 1;
 		case BAN_ACT_GZLINE:
 		case BAN_ACT_GLINE:
 		case BAN_ACT_SOFT_GLINE:
