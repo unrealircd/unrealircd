@@ -682,6 +682,9 @@ nickkill2done:
 	if (!IsULine(serv) && IsSynched(serv))
 		sendto_fconnectnotice(client, 0, NULL);
 
+	if (client->user->svid[0] != '0')
+		user_account_login(recv_mtags, client);
+
 	RunHook(HOOKTYPE_REMOTE_CONNECT, client);
 }
 
