@@ -37,6 +37,7 @@ char *saslmechlist_serialize(ModData *m);
 void saslmechlist_unserialize(char *str, ModData *m);
 char *sasl_capability_parameter(Client *client);
 int sasl_server_synced(Client *client);
+int sasl_account_login(Client *client, MessageTag *mtags);
 EVENT(sasl_timeout);
 
 /* Macros */
@@ -63,6 +64,29 @@ long CAP_SASL = 0L;
  * implementations, we now truly have a universal authentication mechanism for
  * IRC.
  */
+
+int sasl_account_login(Client *client, MessageTag *mtags)
+{
+	if (!MyConnect(client))
+		return 0;
+	/* Notify user */
+	if (client->user->svid[0] != '0')
+	{
+		sendnumeric(client, RPL_LOGGEDIN,
+			BadPtr(client->name) ? "*" : client->name,
+			BadPtr(client->user->username) ? "*" : client->user->username,
+			BadPtr(client->user->realhost) ? "*" : client->user->realhost,
+			client->user->svid, client->user->svid);
+	}
+	else
+	{
+		sendnumeric(client, RPL_LOGGEDOUT,
+			BadPtr(client->name) ? "*" : client->name,
+			BadPtr(client->user->username) ? "*" : client->user->username,
+			BadPtr(client->user->realhost) ? "*" : client->user->realhost);
+	}
+	return 0;
+}
 
 /*
  * SVSLOGIN message
@@ -93,17 +117,6 @@ CMD_FUNC(cmd_svslogin)
 			make_user(target);
 
 		strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
-
-		if (MyConnect(target))
-		{
-			/* Notify user */
-			sendnumeric(target, RPL_LOGGEDIN,
-				   BadPtr(target->name) ? "*" : target->name,
-				   BadPtr(target->user->username) ? "*" : target->user->username,
-				   BadPtr(target->user->realhost) ? "*" : target->user->realhost,
-				   target->user->svid, target->user->svid);
-		}
-
 		user_account_login(recv_mtags, target);
 	} else {
 		/* It is perfectly normal for target to be NULL as this
@@ -366,6 +379,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, sasl_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_QUIT, 0, sasl_server_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_SYNCED, 0, sasl_server_synced);
+	HookAdd(modinfo->handle, HOOKTYPE_ACCOUNT_LOGIN, 0, sasl_account_login);
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "sasl";
