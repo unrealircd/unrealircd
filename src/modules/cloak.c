@@ -128,6 +128,12 @@ int cloak_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "cloak-method"))
 			return 0;
 
+		if (!ce->ce_vardata)
+		{
+			config_error("%s:%i: set::cloak-method: no method specified. The only supported methods are: 'ip' and 'host'",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
+		} else
 		if (strcmp(ce->ce_vardata, "ip") && strcmp(ce->ce_vardata, "host"))
 		{
 			config_error("%s:%i: set::cloak-method: unknown method '%s'. The only supported methods are: 'ip' and 'host'",

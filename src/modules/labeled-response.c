@@ -93,10 +93,10 @@ MOD_INIT()
 	mtag.clicap_handler = c;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
 
-	HookAdd(modinfo->handle, HOOKTYPE_PRE_COMMAND, 2000000000, lr_pre_command);
-	HookAdd(modinfo->handle, HOOKTYPE_POST_COMMAND, -2000000000, lr_post_command);
-	HookAdd(modinfo->handle, HOOKTYPE_CLOSE_CONNECTION, 2000000000, lr_close_connection);
-	HookAdd(modinfo->handle, HOOKTYPE_PACKET, 0, lr_packet);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_COMMAND, -1000000000, lr_pre_command);
+	HookAdd(modinfo->handle, HOOKTYPE_POST_COMMAND, 1000000000, lr_post_command);
+	HookAdd(modinfo->handle, HOOKTYPE_CLOSE_CONNECTION, 1000000000, lr_close_connection);
+	HookAdd(modinfo->handle, HOOKTYPE_PACKET, 1000000000, lr_packet);
 
 	return MOD_SUCCESS;
 }

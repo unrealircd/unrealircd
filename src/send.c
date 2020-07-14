@@ -993,7 +993,7 @@ void sendto_connectnotice(Client *newuser, int disconnect, char *comment)
 
 		*secure = '\0';
 		if (IsSecure(newuser))
-			snprintf(secure, sizeof(secure), " [secure %s]", SSL_get_cipher(newuser->local->ssl));
+			snprintf(secure, sizeof(secure), " [secure %s]", tls_get_cipher(newuser->local->ssl));
 
 		ircsnprintf(connect, sizeof(connect),
 		    "*** Client connecting: %s (%s@%s) [%s] {%s}%s", newuser->name,

@@ -7975,6 +7975,12 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "who-limit")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, who_limit, "who-limit");
+			if (!config_checkval(cep->ce_vardata,CFG_SIZE))
+			{
+				config_error("%s:%i: set::who-limit: value must be at least 1",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "maxbans")) {
 			CheckNull(cep);

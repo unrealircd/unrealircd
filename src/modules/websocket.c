@@ -78,8 +78,8 @@ MOD_INIT()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, websocket_config_run_ex);
-	HookAdd(modinfo->handle, HOOKTYPE_PACKET, 0, websocket_packet_out);
-	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, 0, websocket_packet_in);
+	HookAdd(modinfo->handle, HOOKTYPE_PACKET, INT_MAX, websocket_packet_out);
+	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, INT_MIN, websocket_packet_in);
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "websocket";

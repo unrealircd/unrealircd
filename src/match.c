@@ -405,7 +405,7 @@ Match *unreal_create_match(MatchType type, char *str, char **error)
 		int options = 0;
 		char buf2[512];
 		
-		options = PCRE2_CASELESS|PCRE2_MATCH_INVALID_UTF;
+		options = PCRE2_CASELESS|PCRE2_NEVER_UTF|PCRE2_NEVER_UCP;
 		
 		m->ext.pcre2_expr = pcre2_compile(str, PCRE2_ZERO_TERMINATED, options, &errorcode, &erroroffset, NULL);
 		if (m->ext.pcre2_expr == NULL)

@@ -1,7 +1,11 @@
-UnrealIRCd 5.0.5 Release Notes
-===============================
+UnrealIRCd 5.0.5.1 Release Notes
+=================================
 
-This release mainly focuses on new features, while also fixing a few bugs.
+Note: 5.0.5.1 reverts the previously introduced UTF8 Spamfilter support.
+Unfortunately we had to do this, due to a bug in the PCRE2 regex library
+that caused a freeze / infinite loop with certain regexes and text.
+
+This 5.0.5 release mainly focuses on new features, while also fixing a few bugs.
 
 Fixes:
 * [except ban { }](https://www.unrealircd.org/docs/Except_ban_block)
@@ -14,21 +18,6 @@ Fixes:
   happen if you use 3rd party modules that add parameter channel modes.
 
 Enhancements:
-* [Spamfilter](https://www.unrealircd.org/docs/Spamfilter) is now UTF8-aware.
-  This means, among other things:
-  * Case insensitive matches work better. For example, with extended
-    Latin, a spamfilter on ```ę``` now also matches ```Ę```.
-  * Other PCRE2 features such as [\p](https://www.pcre.org/current/doc/html/pcre2syntax.html#SEC5)
-    are now available. For example you can now set a spamfilter with the regex
-    ```\p{Arabic}``` to block all Arabic script, or ```\p{Cyrillic}``` to
-    block all Cyrillic script (such as Russian).
-    Please do use these new tools with care. Blocking an entire language
-    or script is quite a drastic measure.
-  * These new features require the PCRE2 10.34 regex library. If you
-    have a lower version on your system then UnrealIRCd will fall back
-    to using the UnrealIRCd-shipped-library version 10.34. The only
-    downside to that is that compiling during ```./Config``` may take
-    a little longer than usual.
 * [antimixedutf8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8)
   has been improved to detect CJK and other scripts and this will now
   catch more mixed UTF8 spam. Note that, if you previously manually
