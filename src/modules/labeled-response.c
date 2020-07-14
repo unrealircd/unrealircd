@@ -277,17 +277,34 @@ int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *le
 				char *batchstr = gen_start_batch();
 				int more_tags_one = currentcmd.firstbuf[0] == '@';
 				int more_tags_two = **msg == '@';
-				snprintf(packet, sizeof(packet),
-				         "%s\r\n"
-				         "@batch=%s%s%s\r\n"
-				         "@batch=%s%s%s",
-				         batchstr,
-				         currentcmd.batch,
-				         more_tags_one ? ";" : " ",
-				         more_tags_one ? currentcmd.firstbuf+1 : currentcmd.firstbuf,
-				         currentcmd.batch,
-				         more_tags_two ? ";" : " ",
-				         more_tags_two ? *msg+1 : *msg);
+
+				if (!strncmp(*msg, "@batch", 6))
+				{
+					/* Special case: current message (*msg) already contains a batch */
+					snprintf(packet, sizeof(packet),
+						 "%s\r\n"
+						 "@batch=%s%s%s\r\n"
+						 "%s",
+						 batchstr,
+						 currentcmd.batch,
+						 more_tags_one ? ";" : " ",
+						 more_tags_one ? currentcmd.firstbuf+1 : currentcmd.firstbuf,
+						 *msg);
+				} else
+				{
+					/* Regular case: current message (*msg) contains no batch yet, add one.. */
+					snprintf(packet, sizeof(packet),
+						 "%s\r\n"
+						 "@batch=%s%s%s\r\n"
+						 "@batch=%s%s%s",
+						 batchstr,
+						 currentcmd.batch,
+						 more_tags_one ? ";" : " ",
+						 more_tags_one ? currentcmd.firstbuf+1 : currentcmd.firstbuf,
+						 currentcmd.batch,
+						 more_tags_two ? ";" : " ",
+						 more_tags_two ? *msg+1 : *msg);
+				}
 				*msg = packet;
 				*len = strlen(*msg);
 			} else {
