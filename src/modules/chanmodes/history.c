@@ -535,7 +535,13 @@ int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv
 		return 0;
 
 	if (MyUser(client))
-		history_request(client, channel->chname, NULL);
+	{
+		HistoryFilter filter;
+		memset(&filter, 0, sizeof(filter));
+		filter.last_lines = cfg.playback_on_join.lines;
+		filter.last_seconds = cfg.playback_on_join.time;
+		history_request(client, channel->chname, &filter);
+	}
 
 	return 0;
 }

@@ -311,7 +311,13 @@ int hbm_history_request(Client *client, char *object, HistoryFilter *filter)
 		sendto_one(client, NULL, ":%s BATCH +%s chathistory %s", me.name, batch, object);
 	}
 
-	redline = TStime() - h->max_time;
+	/* Decide on red line, under this the history is too old.
+	 * Filter can be more strict than history object (but not the other way around):
+	 */
+	if (filter && (filter->last_seconds < h->max_time))
+		redline = TStime() - filter->last_seconds;
+	else
+		redline = TStime() - h->max_time;
 
 	/* Once the filter API expands, the following will change too.
 	 * For now, this is sufficient, since requests are only about lines:
