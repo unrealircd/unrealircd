@@ -1,4 +1,4 @@
-UnrealIRCd 5.0.6-notreleasedyet Release Notes
+UnrealIRCd 5.0.6 Release Notes
 ===============================
 
 Fixes:
@@ -19,10 +19,10 @@ Enhancements:
 * Spanish help conf was added (conf/help/help.es.conf)
 
 Module coders / Developers:
-* In 005 we now announce ```BOT=B``` to indicate the user mode and WHO
-  status flag.
-* HOOKTYPE_ACCOUNT_LOGIN is called for remote users now (also on server syncs)
-* Send RPL_LOGGEDOUT when logging out of services account
+* In ```RPL_ISUPPORT``` we now announce ```BOT=B``` to indicate the user mode and
+  ```WHO``` status flag for bots.
+* ```HOOKTYPE_ACCOUNT_LOGIN``` is called for remote users too now (also on server syncs)
+* Send ```RPL_LOGGEDOUT``` when logging out of services account
 * Fix double batch in message tags when using both labeled-response
   and the ```HISTORY``` command
 
