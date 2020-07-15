@@ -120,6 +120,7 @@ CMD_FUNC(cmd_history)
 		return;
 	}
 
+	memset(&filter, 0, sizeof(filter));
 	filter.last_lines = lines;
 	history_request(client, channel->chname, &filter);
 }

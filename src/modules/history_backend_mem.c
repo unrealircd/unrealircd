@@ -314,7 +314,7 @@ int hbm_history_request(Client *client, char *object, HistoryFilter *filter)
 	/* Decide on red line, under this the history is too old.
 	 * Filter can be more strict than history object (but not the other way around):
 	 */
-	if (filter && (filter->last_seconds < h->max_time))
+	if (filter && filter->last_seconds && (filter->last_seconds < h->max_time))
 		redline = TStime() - filter->last_seconds;
 	else
 		redline = TStime() - h->max_time;
