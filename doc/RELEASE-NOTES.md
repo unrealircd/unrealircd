@@ -4,6 +4,9 @@ UnrealIRCd 5.0.6 Release Notes
 UnrealIRCd 5.0.6 is a small maintenance release for the stable 5.x series.
 For existing 5.x users there is probably little reason to upgrade.
 
+Enhancements:
+* Spanish help conf was added (conf/help/help.es.conf)
+
 Fixes:
 * History playback on join was not obeying the limits from
   [set::history::channel::playback-on-join](https://www.unrealircd.org/docs/Set_block#set::history).
@@ -15,11 +18,8 @@ Fixes:
   the message through.
 * In very specific circumstances a ```REHASH -tls``` would cause outgoing
   linking to fail with the error "called a function you should not call".
-* Crash if empty set::cloak-method
+* Crash if empty [set::cloak-method](https://www.unrealircd.org/docs/Set_block#set::cloak-method)
 * Issues with labeled-response on websockets (partial fix)
-
-Enhancements:
-* Spanish help conf was added (conf/help/help.es.conf)
 
 Module coders / Developers:
 * In ```RPL_ISUPPORT``` we now announce ```BOT=B``` to indicate the user mode and

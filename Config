@@ -326,7 +326,7 @@ echo "We will now ask you a number of questions. You can just press ENTER to acc
 echo ""
 
 # This needs to be updated each release so auto-upgrading works for settings, modules, etc!!:
-UNREALRELEASES="unrealircd-5.0.5 unrealircd-5.0.4 unrealircd-5.0.3.1 unrealircd-5.0.3 unrealircd-5.0.2 unrealircd-5.0.1 unrealircd-5.0.0 unrealircd-5.0.0-rc2 unrealircd-5.0.0-rc1"
+UNREALRELEASES="unrealircd-5.0.5.1 unrealircd-5.0.5 unrealircd-5.0.4 unrealircd-5.0.3.1 unrealircd-5.0.3 unrealircd-5.0.2 unrealircd-5.0.1 unrealircd-5.0.0 unrealircd-5.0.0-rc2 unrealircd-5.0.0-rc1"
 if [ -f "config.settings" ]; then
 	. ./config.settings
 else
