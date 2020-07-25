@@ -1672,6 +1672,7 @@ void config_setdefaultsettings(Configuration *i)
 	i->maxdccallow = 10;
 	safe_strdup(i->channel_command_prefix, "`!.");
 	conf_channelmodes("+nt", &i->modes_on_join, 0);
+	i->conn_modes = set_usermode("+ixw");
 	i->check_target_nick_bans = 1;
 	i->maxbans = 60;
 	i->maxbanlength = 2048;
