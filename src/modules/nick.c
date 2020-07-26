@@ -413,18 +413,6 @@ CMD_FUNC(cmd_nick_local)
 		 */
 		for (mp = client->user->channel; mp; mp = mp->next)
 		{
-			if (!is_skochanop(client, mp->channel) && is_banned(client, mp->channel, BANCHK_NICK, NULL, NULL))
-			{
-				sendnumeric(client, ERR_BANNICKCHANGE,
-				    mp->channel->chname);
-				return;
-			}
-			if (CHECK_TARGET_NICK_BANS && !is_skochanop(client, mp->channel) && is_banned_with_nick(client, mp->channel, BANCHK_NICK, nick, NULL, NULL))
-			{
-				sendnumeric(client, ERR_BANNICKCHANGE, mp->channel->chname);
-				return;
-			}
-
 			for (h = Hooks[HOOKTYPE_CHAN_PERMIT_NICK_CHANGE]; h; h = h->next)
 			{
 				i = (*(h->func.intfunc))(client,mp->channel);
