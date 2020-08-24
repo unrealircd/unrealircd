@@ -310,7 +310,7 @@ int charsys_config_posttest(int *errs)
 		x++;
 	if ((langav & LANGAV_LATIN2W1250) && !(langav & LANGAV_LATIN2) && !(langav & LANGAV_W1250))
 	    x++;
-	if (langav & LANGAV_LATIN_EXT_A_UTF8)
+	if ((langav & LANGAV_LATIN_EXT_A_UTF8) && !(langav & LANGAV_LATIN_UTF8))
         x++;
 	if (x > 1)
 	{
