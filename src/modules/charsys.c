@@ -85,6 +85,7 @@ struct LangList
 /* MUST be alphabetized (first column) */
 static LangList langlist[] = {
 /*	{ "arabic",       "ara", LANGAV_ASCII|LANGAV_ISO8859_6 }, -- TODO: check if this has issues first! */
+	{ "baltic-utf8","bal-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8|LANGAV_LATIN_EXT_A_UTF8},
 	{ "belarussian-utf8", "blr-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_CYRILLIC_UTF8 },
 	{ "belarussian-w1251", "blr", LANGAV_ASCII|LANGAV_W1251 },
 	{ "catalan",      "cat", LANGAV_ASCII|LANGAV_LATIN1 },
@@ -309,6 +310,8 @@ int charsys_config_posttest(int *errs)
 		x++;
 	if ((langav & LANGAV_LATIN2W1250) && !(langav & LANGAV_LATIN2) && !(langav & LANGAV_W1250))
 	    x++;
+	if (langav & LANGAV_LATIN_EXT_A_UTF8)
+        x++;
 	if (x > 1)
 	{
 		if (langav & LANGAV_LATIN_UTF8)
@@ -1135,6 +1138,44 @@ void charsys_add_language(char *name)
 		charsys_addmultibyterange(0x81, 0xa0, 0x80, 0xfe); /* GBK/3 - upper half */
 		charsys_addmultibyterange(0xaa, 0xfe, 0x40, 0x7e); /* GBK/4 - lower half */
 		charsys_addmultibyterange(0xaa, 0xfe, 0x80, 0xa0); /* GBK/4 - upper half */
+	}
+
+	/* [BALTICS] */
+	if (!strcmp(name, "baltic-utf8"))
+	{
+		/* Latvian A a, C c, E e, G g, I i, K k, Š š, U u, Ž ž */
+		charsys_addmultibyterange(0xc4, 0xc4, 0x80, 0x81);
+		charsys_addmultibyterange(0xc4, 0xc4, 0x92, 0x93);
+		charsys_addmultibyterange(0xc4, 0xc4, 0x8c, 0x8d);
+		charsys_addmultibyterange(0xc4, 0xc4, 0x92, 0x93);
+		charsys_addmultibyterange(0xc4, 0xc4, 0xa2, 0xa3);
+		charsys_addmultibyterange(0xc4, 0xc4, 0xaa, 0xab);
+		charsys_addmultibyterange(0xc4, 0xc4, 0xb6, 0xb7);
+		charsys_addmultibyterange(0xc5, 0xc5, 0xa0, 0xa1);
+		charsys_addmultibyterange(0xc5, 0xc5, 0xaa, 0xab);
+		charsys_addmultibyterange(0xc5, 0xc5, 0xbd, 0xbe);
+
+		/* Estonian õ, ä, ö, ü,  Õ, Ä, Ö, Ü */
+		charsys_addmultibyterange(0xc3, 0xc3, 0xb5, 0xb6);
+		charsys_addmultibyterange(0xc3, 0xc3, 0xa4, 0xa4);
+		charsys_addmultibyterange(0xc3, 0xc3, 0xbc, 0xbc);
+		charsys_addmultibyterange(0xc3, 0xc3, 0x95, 0x96);
+		charsys_addmultibyterange(0xc3, 0xc3, 0x84, 0x84);
+		charsys_addmultibyterange(0xc3, 0xc3, 0x9c, 0x9c);
+
+		/* Lithuanian a, c, e, e, i, š, u, u, ž, A, C, E, E, I, Š, U, U, Ž */
+		charsys_addmultibyterange(0xc4, 0xc4, 0x84, 0x85);
+		/* already included in Latvian charset */
+		/* charsys_addmultibyterange(0xc4, 0xc4, 0x8c, 0x8d); */
+		charsys_addmultibyterange(0xc4, 0xc4, 0x96, 0x99);
+		charsys_addmultibyterange(0xc4, 0xc4, 0xae, 0xaf);
+		charsys_addmultibyterange(0xc4, 0xc4, 0xae, 0xaf);
+		/* already included in Latvian charset */
+		/* charsys_addmultibyterange(0xc5, 0xc5, 0xa0, 0xa1); */
+		charsys_addmultibyterange(0xc5, 0xc5, 0xb2, 0xb3);
+		charsys_addmultibyterange(0xc5, 0xc5, 0xaa, 0xab);
+		/* already included in Latvian charset */
+		/* charsys_addmultibyterange(0xc5, 0xc5, 0xbd, 0xbe); */
 	}
 }
 
