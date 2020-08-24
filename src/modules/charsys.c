@@ -73,6 +73,7 @@ char langsinuse[4096];
 #define LANGAV_CYRILLIC_UTF8		0x008000 /* UTF8: cyrillic script */
 #define LANGAV_GREEK_UTF8		0x010000 /* UTF8: greek script */
 #define LANGAV_HEBREW_UTF8		0x020000 /* UTF8: hebrew script */
+#define LANGAV_LATIN_EXT_A_UTF8	0x040000 /* UTF8: Latin Extended-A */
 typedef struct LangList LangList;
 struct LangList
 {
@@ -257,7 +258,7 @@ int charsys_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	if (type != CONFIG_SET)
 		return 0;
-	
+
 	/* We are only interrested in set::allowed-nickchars... */
 	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "allowed-nickchars"))
 		return 0;
@@ -408,7 +409,7 @@ void charsys_finish(void)
 		if (e->next)
 			strlcat(langsinuse, ",", sizeof(langsinuse));
 	}
-	
+
 	/* Free everything */
 	for (e=ilanglist; e; e=e_next)
 	{
@@ -683,7 +684,7 @@ void charsys_add_language(char *name)
 		w1251 = 1;
 	else if (!strcmp(name, "chinese") || !strcmp(name, "gbk"))
 		chinese = 1;
-	
+
 	/* INDIVIDUAL CHARSETS */
 
 	/* [LATIN1] and [LATIN-UTF8] */
@@ -840,7 +841,7 @@ void charsys_add_language(char *name)
 	if (latin1 || !strcmp(name, "swedish"))
 	{
 		/* supplied by Tank */
-		/* ao, Ao, a", A", o", O" */ 
+		/* ao, Ao, a", A", o", O" */
 		charsys_addallowed("Â≈‰ƒˆ÷");
 	}
 	if (latin_utf8 || !strcmp(name, "swedish-utf8"))
@@ -926,7 +927,7 @@ void charsys_add_language(char *name)
 		charsys_addmultibyterange(0xc5, 0xc5, 0x9e, 0x9f);
 		charsys_addmultibyterange(0xc5, 0xc5, 0xa2, 0xa3);
 	}
-	
+
 	if (latin2 || !strcmp(name, "polish"))
 	{
 		/* supplied by k4be */
@@ -1019,7 +1020,7 @@ void charsys_add_language(char *name)
 		charsys_addmultibyterange(0xd1, 0xd1, 0x80, 0x8f);
 		charsys_addmultibyterange(0xd1, 0xd1, 0x91, 0x91);
 	}
-	
+
 	if (w1251 || !strcmp(name, "belarussian-w1251"))
 	{
 		/* supplied by Bock (Samets Anton) & ss:
@@ -1043,7 +1044,7 @@ void charsys_add_language(char *name)
 		charsys_addmultibyterange(0xd1, 0xd1, 0x96, 0x96);
 		charsys_addmultibyterange(0xd1, 0xd1, 0x9e, 0x9e);
 	}
-	
+
 	if (w1251 || !strcmp(name, "ukrainian-w1251"))
 	{
 		/* supplied by Anton Samets & ss:
@@ -1067,7 +1068,7 @@ void charsys_add_language(char *name)
 		charsys_addmultibyterange(0xd2, 0xd2, 0x90, 0x91);
 	}
 
-	/* [GREEK] */	
+	/* [GREEK] */
 	if (!strcmp(name, "greek"))
 	{
 		/* supplied by GSF */
@@ -1190,7 +1191,7 @@ char *charsys_displaychars(void)
 	}
 
 	buf[n] = '\0'; /* there's always room for a NUL */
-	
+
 	return buf;
 }
 
@@ -1204,7 +1205,7 @@ char *charsys_group(int v)
 		return "Greek script";
 	if (v & LANGAV_HEBREW_UTF8)
 		return "Hebrew script";
-	
+
 	return "Other";
 }
 
@@ -1215,7 +1216,7 @@ void charsys_dump_table(char *filter)
 	for (i = 0; langlist[i].directive; i++)
 	{
 		char *charset = langlist[i].directive;
-		
+
 		if (!match_simple(filter, charset))
 			continue; /* skip */
 
