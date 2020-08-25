@@ -73,7 +73,6 @@ char langsinuse[4096];
 #define LANGAV_CYRILLIC_UTF8		0x008000 /* UTF8: cyrillic script */
 #define LANGAV_GREEK_UTF8		0x010000 /* UTF8: greek script */
 #define LANGAV_HEBREW_UTF8		0x020000 /* UTF8: hebrew script */
-#define LANGAV_LATIN_EXT_A_UTF8	0x040000 /* UTF8: Latin Extended-A */
 typedef struct LangList LangList;
 struct LangList
 {
@@ -85,7 +84,6 @@ struct LangList
 /* MUST be alphabetized (first column) */
 static LangList langlist[] = {
 /*	{ "arabic",       "ara", LANGAV_ASCII|LANGAV_ISO8859_6 }, -- TODO: check if this has issues first! */
-	{ "baltic-utf8","bal-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8|LANGAV_LATIN_EXT_A_UTF8},
 	{ "belarussian-utf8", "blr-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_CYRILLIC_UTF8 },
 	{ "belarussian-w1251", "blr", LANGAV_ASCII|LANGAV_W1251 },
 	{ "catalan",      "cat", LANGAV_ASCII|LANGAV_LATIN1 },
@@ -101,6 +99,7 @@ static LangList langlist[] = {
 	{ "danish-utf8",  "dan-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "dutch",        "dut", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "dutch-utf8",   "dut-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
+	{ "estonian-utf8","est-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "french",       "fre", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "french-utf8",  "fre-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "gbk",          "chi-s,chi-t,chi-j", LANGAV_GBK },
@@ -119,6 +118,8 @@ static LangList langlist[] = {
 	{ "latin-utf8",   "cat-utf8,cze-utf8,dan-utf8,dut-utf8,fre-utf8,ger-utf8,hun-utf8,ice-utf8,ita-utf8,pol-utf8,rum-utf8,slo-utf8,spa-utf8,swe-utf8,tur-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "latin1",       "cat,dut,fre,ger,ita,spa,swe", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "latin2",       "hun,pol,rum", LANGAV_ASCII|LANGAV_LATIN2 },
+	{ "latvian-utf8", "lav-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
+	{ "lithuanian-utf8","lit-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "polish",       "pol", LANGAV_ASCII|LANGAV_LATIN2 },
 	{ "polish-utf8",  "pol-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "polish-w1250", "pol-m", LANGAV_ASCII|LANGAV_W1250 },
@@ -310,8 +311,6 @@ int charsys_config_posttest(int *errs)
 		x++;
 	if ((langav & LANGAV_LATIN2W1250) && !(langav & LANGAV_LATIN2) && !(langav & LANGAV_W1250))
 	    x++;
-	if ((langav & LANGAV_LATIN_EXT_A_UTF8) && !(langav & LANGAV_LATIN_UTF8))
-        x++;
 	if (x > 1)
 	{
 		if (langav & LANGAV_LATIN_UTF8)
@@ -1140,10 +1139,10 @@ void charsys_add_language(char *name)
 		charsys_addmultibyterange(0xaa, 0xfe, 0x80, 0xa0); /* GBK/4 - upper half */
 	}
 
-	/* [BALTICS] */
-	if (!strcmp(name, "baltic-utf8"))
+	/* [LATVIAN] */
+	if (latin_utf8 || !strcmp(name, "latvian-utf8"))
 	{
-		/* Latvian A a, C c, E e, G g, I i, K k, Š š, U u, Ž ž */
+		/* A a, C c, E e, G g, I i, K k, Š š, U u, Ž ž */
 		charsys_addmultibyterange(0xc4, 0xc4, 0x80, 0x81);
 		charsys_addmultibyterange(0xc4, 0xc4, 0x92, 0x93);
 		charsys_addmultibyterange(0xc4, 0xc4, 0x8c, 0x8d);
@@ -1154,28 +1153,33 @@ void charsys_add_language(char *name)
 		charsys_addmultibyterange(0xc5, 0xc5, 0xa0, 0xa1);
 		charsys_addmultibyterange(0xc5, 0xc5, 0xaa, 0xab);
 		charsys_addmultibyterange(0xc5, 0xc5, 0xbd, 0xbe);
+	}
 
-		/* Estonian õ, ä, ö, ü,  Õ, Ä, Ö, Ü */
+	/* [ESTONIAN] */
+	if (latin_utf8 || !strcmp(name, "estonian-utf8"))
+	{
+		/* õ, ä, ö, ü,  Õ, Ä, Ö, Ü */
 		charsys_addmultibyterange(0xc3, 0xc3, 0xb5, 0xb6);
 		charsys_addmultibyterange(0xc3, 0xc3, 0xa4, 0xa4);
 		charsys_addmultibyterange(0xc3, 0xc3, 0xbc, 0xbc);
 		charsys_addmultibyterange(0xc3, 0xc3, 0x95, 0x96);
 		charsys_addmultibyterange(0xc3, 0xc3, 0x84, 0x84);
 		charsys_addmultibyterange(0xc3, 0xc3, 0x9c, 0x9c);
+	}
 
-		/* Lithuanian a, c, e, e, i, š, u, u, ž, A, C, E, E, I, Š, U, U, Ž */
+	/* [LITHUANIAN] */
+	if (latin_utf8 || !strcmp(name, "lithuanian-utf8"))
+	{
+		/* a, c, e, e, i, š, u, u, ž, A, C, E, E, I, Š, U, U, Ž */
 		charsys_addmultibyterange(0xc4, 0xc4, 0x84, 0x85);
-		/* already included in Latvian charset */
-		/* charsys_addmultibyterange(0xc4, 0xc4, 0x8c, 0x8d); */
+		charsys_addmultibyterange(0xc4, 0xc4, 0x8c, 0x8d);
 		charsys_addmultibyterange(0xc4, 0xc4, 0x96, 0x99);
 		charsys_addmultibyterange(0xc4, 0xc4, 0xae, 0xaf);
 		charsys_addmultibyterange(0xc4, 0xc4, 0xae, 0xaf);
-		/* already included in Latvian charset */
-		/* charsys_addmultibyterange(0xc5, 0xc5, 0xa0, 0xa1); */
+		charsys_addmultibyterange(0xc5, 0xc5, 0xa0, 0xa1);
 		charsys_addmultibyterange(0xc5, 0xc5, 0xb2, 0xb3);
 		charsys_addmultibyterange(0xc5, 0xc5, 0xaa, 0xab);
-		/* already included in Latvian charset */
-		/* charsys_addmultibyterange(0xc5, 0xc5, 0xbd, 0xbe); */
+		charsys_addmultibyterange(0xc5, 0xc5, 0xbd, 0xbe);
 	}
 }
 
