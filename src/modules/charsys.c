@@ -99,6 +99,7 @@ static LangList langlist[] = {
 	{ "danish-utf8",  "dan-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "dutch",        "dut", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "dutch-utf8",   "dut-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
+	{ "estonian-utf8","est-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "french",       "fre", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "french-utf8",  "fre-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "gbk",          "chi-s,chi-t,chi-j", LANGAV_GBK },
@@ -117,6 +118,8 @@ static LangList langlist[] = {
 	{ "latin-utf8",   "cat-utf8,cze-utf8,dan-utf8,dut-utf8,fre-utf8,ger-utf8,hun-utf8,ice-utf8,ita-utf8,pol-utf8,rum-utf8,slo-utf8,spa-utf8,swe-utf8,tur-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "latin1",       "cat,dut,fre,ger,ita,spa,swe", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "latin2",       "hun,pol,rum", LANGAV_ASCII|LANGAV_LATIN2 },
+	{ "latvian-utf8", "lav-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
+	{ "lithuanian-utf8","lit-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "polish",       "pol", LANGAV_ASCII|LANGAV_LATIN2 },
 	{ "polish-utf8",  "pol-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "polish-w1250", "pol-m", LANGAV_ASCII|LANGAV_W1250 },
@@ -257,7 +260,7 @@ int charsys_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	if (type != CONFIG_SET)
 		return 0;
-	
+
 	/* We are only interrested in set::allowed-nickchars... */
 	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "allowed-nickchars"))
 		return 0;
@@ -408,7 +411,7 @@ void charsys_finish(void)
 		if (e->next)
 			strlcat(langsinuse, ",", sizeof(langsinuse));
 	}
-	
+
 	/* Free everything */
 	for (e=ilanglist; e; e=e_next)
 	{
@@ -683,7 +686,7 @@ void charsys_add_language(char *name)
 		w1251 = 1;
 	else if (!strcmp(name, "chinese") || !strcmp(name, "gbk"))
 		chinese = 1;
-	
+
 	/* INDIVIDUAL CHARSETS */
 
 	/* [LATIN1] and [LATIN-UTF8] */
@@ -840,7 +843,7 @@ void charsys_add_language(char *name)
 	if (latin1 || !strcmp(name, "swedish"))
 	{
 		/* supplied by Tank */
-		/* ao, Ao, a", A", o", O" */ 
+		/* ao, Ao, a", A", o", O" */
 		charsys_addallowed("åÅäÄöÖ");
 	}
 	if (latin_utf8 || !strcmp(name, "swedish-utf8"))
@@ -926,7 +929,7 @@ void charsys_add_language(char *name)
 		charsys_addmultibyterange(0xc5, 0xc5, 0x9e, 0x9f);
 		charsys_addmultibyterange(0xc5, 0xc5, 0xa2, 0xa3);
 	}
-	
+
 	if (latin2 || !strcmp(name, "polish"))
 	{
 		/* supplied by k4be */
@@ -1019,7 +1022,7 @@ void charsys_add_language(char *name)
 		charsys_addmultibyterange(0xd1, 0xd1, 0x80, 0x8f);
 		charsys_addmultibyterange(0xd1, 0xd1, 0x91, 0x91);
 	}
-	
+
 	if (w1251 || !strcmp(name, "belarussian-w1251"))
 	{
 		/* supplied by Bock (Samets Anton) & ss:
@@ -1043,7 +1046,7 @@ void charsys_add_language(char *name)
 		charsys_addmultibyterange(0xd1, 0xd1, 0x96, 0x96);
 		charsys_addmultibyterange(0xd1, 0xd1, 0x9e, 0x9e);
 	}
-	
+
 	if (w1251 || !strcmp(name, "ukrainian-w1251"))
 	{
 		/* supplied by Anton Samets & ss:
@@ -1067,7 +1070,7 @@ void charsys_add_language(char *name)
 		charsys_addmultibyterange(0xd2, 0xd2, 0x90, 0x91);
 	}
 
-	/* [GREEK] */	
+	/* [GREEK] */
 	if (!strcmp(name, "greek"))
 	{
 		/* supplied by GSF */
@@ -1135,6 +1138,49 @@ void charsys_add_language(char *name)
 		charsys_addmultibyterange(0xaa, 0xfe, 0x40, 0x7e); /* GBK/4 - lower half */
 		charsys_addmultibyterange(0xaa, 0xfe, 0x80, 0xa0); /* GBK/4 - upper half */
 	}
+
+	/* [LATVIAN] */
+	if (latin_utf8 || !strcmp(name, "latvian-utf8"))
+	{
+		/* A a, C c, E e, G g, I i, K k, Š š, U u, Ž ž */
+		charsys_addmultibyterange(0xc4, 0xc4, 0x80, 0x81);
+		charsys_addmultibyterange(0xc4, 0xc4, 0x92, 0x93);
+		charsys_addmultibyterange(0xc4, 0xc4, 0x8c, 0x8d);
+		charsys_addmultibyterange(0xc4, 0xc4, 0x92, 0x93);
+		charsys_addmultibyterange(0xc4, 0xc4, 0xa2, 0xa3);
+		charsys_addmultibyterange(0xc4, 0xc4, 0xaa, 0xab);
+		charsys_addmultibyterange(0xc4, 0xc4, 0xb6, 0xb7);
+		charsys_addmultibyterange(0xc5, 0xc5, 0xa0, 0xa1);
+		charsys_addmultibyterange(0xc5, 0xc5, 0xaa, 0xab);
+		charsys_addmultibyterange(0xc5, 0xc5, 0xbd, 0xbe);
+	}
+
+	/* [ESTONIAN] */
+	if (latin_utf8 || !strcmp(name, "estonian-utf8"))
+	{
+		/* õ, ä, ö, ü,  Õ, Ä, Ö, Ü */
+		charsys_addmultibyterange(0xc3, 0xc3, 0xb5, 0xb6);
+		charsys_addmultibyterange(0xc3, 0xc3, 0xa4, 0xa4);
+		charsys_addmultibyterange(0xc3, 0xc3, 0xbc, 0xbc);
+		charsys_addmultibyterange(0xc3, 0xc3, 0x95, 0x96);
+		charsys_addmultibyterange(0xc3, 0xc3, 0x84, 0x84);
+		charsys_addmultibyterange(0xc3, 0xc3, 0x9c, 0x9c);
+	}
+
+	/* [LITHUANIAN] */
+	if (latin_utf8 || !strcmp(name, "lithuanian-utf8"))
+	{
+		/* a, c, e, e, i, š, u, u, ž, A, C, E, E, I, Š, U, U, Ž */
+		charsys_addmultibyterange(0xc4, 0xc4, 0x84, 0x85);
+		charsys_addmultibyterange(0xc4, 0xc4, 0x8c, 0x8d);
+		charsys_addmultibyterange(0xc4, 0xc4, 0x96, 0x99);
+		charsys_addmultibyterange(0xc4, 0xc4, 0xae, 0xaf);
+		charsys_addmultibyterange(0xc4, 0xc4, 0xae, 0xaf);
+		charsys_addmultibyterange(0xc5, 0xc5, 0xa0, 0xa1);
+		charsys_addmultibyterange(0xc5, 0xc5, 0xb2, 0xb3);
+		charsys_addmultibyterange(0xc5, 0xc5, 0xaa, 0xab);
+		charsys_addmultibyterange(0xc5, 0xc5, 0xbd, 0xbe);
+	}
 }
 
 /** This displays all the nick characters that are permitted */
@@ -1190,7 +1236,7 @@ char *charsys_displaychars(void)
 	}
 
 	buf[n] = '\0'; /* there's always room for a NUL */
-	
+
 	return buf;
 }
 
@@ -1204,7 +1250,7 @@ char *charsys_group(int v)
 		return "Greek script";
 	if (v & LANGAV_HEBREW_UTF8)
 		return "Hebrew script";
-	
+
 	return "Other";
 }
 
@@ -1215,7 +1261,7 @@ void charsys_dump_table(char *filter)
 	for (i = 0; langlist[i].directive; i++)
 	{
 		char *charset = langlist[i].directive;
-		
+
 		if (!match_simple(filter, charset))
 			continue; /* skip */
 
