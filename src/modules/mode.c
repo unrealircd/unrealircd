@@ -986,11 +986,16 @@ process_listmode:
 		case MODE_LIMIT:
 			if (what == MODE_ADD)
 			{
+				int v;
 				REQUIRE_PARAMETER()
-				tmp = atoi(param);
-				if (channel->mode.limit == tmp)
+				v = atoi(param);
+				if (v < 0)
+					v = 1; /* setting +l with a negative number makes no sense */
+				if (v > 1000000000)
+					v = 1000000000; /* some kind of limit, 1 billion (mrah...) */
+				if (channel->mode.limit == v)
 					break;
-				channel->mode.limit = tmp;
+				channel->mode.limit = v;
 			}
 			else
 			{
