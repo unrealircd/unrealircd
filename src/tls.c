@@ -577,6 +577,8 @@ void reinit_ssl(Client *client)
 		config_report_ssl_error();
 		return;
 	}
+	if (ctx_server)
+		SSL_CTX_free(ctx_server);
 	ctx_server = tmp; /* activate */
 	
 	tmp = init_ctx(iConf.tls_options, 0);
@@ -586,6 +588,8 @@ void reinit_ssl(Client *client)
 		config_report_ssl_error();
 		return;
 	}
+	if (ctx_client)
+		SSL_CTX_free(ctx_client);
 	ctx_client = tmp; /* activate */
 
 	/* listen::tls-options.... */
@@ -600,6 +604,8 @@ void reinit_ssl(Client *client)
 				config_report_ssl_error();
 				return;
 			}
+			if (listen->ssl_ctx)
+				SSL_CTX_free(listen->ssl_ctx);
 			listen->ssl_ctx = tmp; /* activate */
 		}
 	}
@@ -616,6 +622,8 @@ void reinit_ssl(Client *client)
 				config_report_ssl_error();
 				return;
 			}
+			if (sni->ssl_ctx)
+				SSL_CTX_free(sni->ssl_ctx);
 			sni->ssl_ctx = tmp; /* activate */
 		}
 	}
@@ -633,6 +641,8 @@ void reinit_ssl(Client *client)
 				config_report_ssl_error();
 				return;
 			}
+			if (link->ssl_ctx)
+				SSL_CTX_free(link->ssl_ctx);
 			link->ssl_ctx = tmp; /* activate */
 		}
 	}
