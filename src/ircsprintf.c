@@ -67,23 +67,27 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl)
 				int v = va_arg(vl, int);
 				int i = 0;
 				size_t len;
-				if (v<0)
-				{
-					v*=-1;
-					*str++ = '-';
-					if (str==end) break;
-				}
 				if (v==0)
 				{
 					*str++ = '0';
 					continue;
 				}
-
 				t = scratch_buffer + sizeof(scratch_buffer);
-				while (v)
+				if (v<0)
 				{
-					*--t = (v%10) + '0';
-					v/=10;
+					*str++ = '-';
+					if (str==end) break;
+					while (v)
+					{
+						*--t = '0' - (v%10);
+						v/=10;
+					}
+				} else {
+					while (v)
+					{
+						*--t = (v%10) + '0';
+						v/=10;
+					}
 				}
 
 				len = sizeof(scratch_buffer)-(t-scratch_buffer);
@@ -103,23 +107,28 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl)
 					size_t len;
 
 					format += 2;
-					if (v<0)
-					{
-						v*=-1;
-						*str++ = '-';
-						if (str==end) break;
-					}
+
 					if (v==0)
 					{
 						*str++ = '0';
 						continue;
 					}
-
 					t = scratch_buffer + sizeof(scratch_buffer);
-					while (v)
+					if (v<0)
 					{
-						*--t = (v%10) + '0';
-						v/=10;
+						*str++ = '-';
+						if (str==end) break;
+						while (v)
+						{
+							*--t = '0' - (v%10);
+							v/=10;
+						}
+					} else {
+						while (v)
+						{
+							*--t = (v%10) + '0';
+							v/=10;
+						}
 					}
 
 					len = sizeof(scratch_buffer)-(t-scratch_buffer);
