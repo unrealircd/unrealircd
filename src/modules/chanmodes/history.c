@@ -534,7 +534,8 @@ int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv
 	if (!HistoryEnabled(channel))
 		return 0;
 
-	if (MyUser(client))
+	/* Check also if the client is a bot (+B) */
+	if (MyUser(client) && !IsBot(client))
 	{
 		HistoryFilter filter;
 		memset(&filter, 0, sizeof(filter));
