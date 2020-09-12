@@ -6995,7 +6995,6 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 			}
 		}
 		else if (!strcmp(cepp->ce_varname, "certificate") ||
-		         !strcmp(cepp->ce_varname, "dh") ||
 		         !strcmp(cepp->ce_varname, "key") ||
 		         !strcmp(cepp->ce_varname, "trusted-ca-file"))
 		{
@@ -7011,6 +7010,17 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 				errors++;
 			}
 			safe_free(path);
+		}
+		else if (!strcmp(cepp->ce_varname, "dh"))
+		{
+			/* Support for this undocumented option was silently dropped in 5.0.0.
+			 * Since 5.0.7 we print a warning about it, since you never know
+			 * someone may still have it configured. -- Syzop
+			 */
+			config_warn("%s:%d: Not reading DH file '%s'. UnrealIRCd does not support old DH(E), we use modern ECDHE/EECDH. "
+			            "Just remove the 'dh' directive from your config file to get rid of this warning.",
+				cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+				cepp->ce_vardata ? cepp->ce_vardata : "");
 		}
 		else if (!strcmp(cepp->ce_varname, "outdated-protocols"))
 		{
@@ -7132,7 +7142,6 @@ void free_tls_options(TLSOptions *tlsoptions)
 
 	safe_free(tlsoptions->certificate_file);
 	safe_free(tlsoptions->key_file);
-	safe_free(tlsoptions->dh_file);
 	safe_free(tlsoptions->trusted_ca_file);
 	safe_free(tlsoptions->ciphers);
 	safe_free(tlsoptions->ciphersuites);
@@ -7153,7 +7162,6 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 	{
 		safe_strdup(tlsoptions->certificate_file, tempiConf.tls_options->certificate_file);
 		safe_strdup(tlsoptions->key_file, tempiConf.tls_options->key_file);
-		safe_strdup(tlsoptions->dh_file, tempiConf.tls_options->dh_file);
 		safe_strdup(tlsoptions->trusted_ca_file, tempiConf.tls_options->trusted_ca_file);
 		tlsoptions->protocols = tempiConf.tls_options->protocols;
 		safe_strdup(tlsoptions->ciphers, tempiConf.tls_options->ciphers);
@@ -7224,10 +7232,6 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 						tlsoptions->protocols &= ~option;
 				}
 			}
-		}
-		else if (!strcmp(cepp->ce_varname, "dh"))
-		{
-			convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
 		}
 		else if (!strcmp(cepp->ce_varname, "certificate"))
 		{

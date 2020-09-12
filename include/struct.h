@@ -1464,7 +1464,6 @@ typedef struct TLSOptions TLSOptions;
 struct TLSOptions {
 	char *certificate_file;
 	char *key_file;
-	char *dh_file;
 	char *trusted_ca_file;
 	unsigned int protocols;
 	char *ciphers;

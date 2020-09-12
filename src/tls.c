@@ -230,43 +230,6 @@ static void mylog(char *fmt, ...)
 	ircd_log(LOG_ERROR, "%s", buf);
 }
 
-/** Set DH (Diffie-Hellman) parameters.
- * We don't use this anymore, unless explicitly instructed,
- * as we use the more secure ECDHE/EECDH instead
- * (Ephemeral Elliptic-Curve Diffie-Hellman)
- */
-static int setup_dh_params(SSL_CTX *ctx)
-{
-	DH *dh;
-	BIO *bio;
-	char *dh_file = iConf.tls_options ? iConf.tls_options->dh_file : tempiConf.tls_options->dh_file;
-	/* ^^ because we can be called both before config file initalization or after */
-
-	if (dh_file == NULL)
-		return 1;
-
-	bio = BIO_new_file(dh_file, "r");
-	if (bio == NULL)
-	{
-		config_error("Failed to load DH parameters %s", dh_file);
-		config_report_ssl_error();
-		return 0;
-	}
-
-	dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL);
-	if (dh == NULL)
-	{
-		config_error("Failed to use DH parameters %s", dh_file);
-		config_report_ssl_error();
-		BIO_free(bio);
-		return 0;
-	}
-
-	BIO_free(bio);
-	SSL_CTX_set_tmp_dh(ctx, dh);
-	return 1;
-}
-
 /** Disable SSL/TLS protocols as set by config */
 void disable_ssl_protocols(SSL_CTX *ctx, TLSOptions *tlsoptions)
 {
@@ -381,9 +344,6 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
  #error "Your system has an outdated OpenSSL version. Please upgrade OpenSSL."
 #endif
 	SSL_CTX_set_options(ctx, SSL_OP_NO_TICKET);
-
-	if (!setup_dh_params(ctx))
-		goto fail;
 
 	if (!tlsoptions->certificate_file)
 	{
