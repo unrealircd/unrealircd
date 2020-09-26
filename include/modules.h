@@ -353,7 +353,13 @@ typedef struct {
 
 #define EXTBANTABLESZ		32
 
-typedef enum ExtbanOptions { EXTBOPT_CHSVSMODE=0x1, EXTBOPT_ACTMODIFIER=0x2, EXTBOPT_NOSTACKCHILD=0x4, EXTBOPT_INVEX=0x8, EXTBOPT_TKL=0x10 } ExtbanOptions;
+typedef enum ExtbanOptions {
+        EXTBOPT_CHSVSMODE=0x1,		/**< SVSMODE -b/-e/-I will clear this ban */
+        EXTBOPT_ACTMODIFIER=0x2,	/**< Action modifier (not a matcher). These are extended bans like ~q/~n/~j. */
+        EXTBOPT_NOSTACKCHILD=0x4,	/**< Disallow prefixing with another extban. Eg disallow ~n:~T:censor:xyz */
+        EXTBOPT_INVEX=0x8,		/**< Available for use with +I too */
+        EXTBOPT_TKL=0x10		/**< Available for use in TKL's too (eg: /GLINE ~a:account) */
+} ExtbanOptions;
 
 typedef struct {
 	/** extbans module */
