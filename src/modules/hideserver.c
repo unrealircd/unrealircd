@@ -374,6 +374,7 @@ CMD_OVERRIDE_FUNC(override_links)
 			sendnotice(client, "%s", Settings.links_deny_message);
 		else
 			sendnumeric(client, RPL_ENDOFLINKS, "*");
+		return;
 	}
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
