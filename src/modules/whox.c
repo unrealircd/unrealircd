@@ -497,8 +497,10 @@ static int do_match(Client *client, Client *acptr, char *mask, struct who_format
  *			- pointer to int maxmatches
  *			- format options
  * output		- NONE
- * side effects 	- lists matching invisible clients on specified channel,
+ * side effects 	- lists matching clients on specified channel,
  *			  marks matched clients.
+ *
+ * NOTE: only call this from who_global() due to client marking!
  */
 
 static void who_common_channel(Client *client, Channel *channel,
@@ -513,10 +515,10 @@ static void who_common_channel(Client *client, Channel *channel,
 	{
 		acptr = cm->client;
 
-		if (!IsInvisible(acptr) || IsMarked(acptr))
+		if (IsMarked(acptr))
 			continue;
 
-		if(IsMatch(fmt, WMATCH_OPER) && !IsOper(acptr))
+		if (IsMatch(fmt, WMATCH_OPER) && !IsOper(acptr))
 			continue;
 
 		for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
@@ -562,10 +564,12 @@ static void who_global(Client *client, char *mask, int operspy, struct who_forma
 	Client *acptr;
 	int maxmatches = IsOper(client) ? INT_MAX : WHOLIMIT;
 
-	/* first, list all matching INvisible clients on common channels
-	 * if this is not an operspy who
-	 */
-	if(!operspy)
+	/* Initialize the markers to zero */
+	list_for_each_entry(acptr, &client_list, client_node)
+		ClearMark(acptr);
+
+	/* First, if not operspy, then list all matching clients on common channels */
+	if (!operspy)
 	{
 		Membership *lp;
 
@@ -573,26 +577,22 @@ static void who_global(Client *client, char *mask, int operspy, struct who_forma
 			who_common_channel(client, lp->channel, mask, &maxmatches, fmt);
 	}
 
-	/* second, list all matching visible clients and clear all marks
-	 * on invisible clients
-	 * if this is an operspy who, list all matching clients, no need
-	 * to clear marks
-	 */
+	/* Second, list all matching visible clients. */
 	list_for_each_entry(acptr, &client_list, client_node)
 	{
-		if(!IsUser(acptr))
+		if (!IsUser(acptr))
 			continue;
 
-		if(IsInvisible(acptr) && !operspy)
- 		{
-			ClearMark(acptr);
-			continue;
-		}
-
-		if(IsMatch(fmt, WMATCH_OPER) && !IsOper(acptr))
+		if (IsInvisible(acptr) && !operspy && (client != acptr))
 			continue;
 
-		if(maxmatches > 0)
+		if (IsMarked(acptr))
+			continue;
+
+		if (IsMatch(fmt, WMATCH_OPER) && !IsOper(acptr))
+			continue;
+
+		if (maxmatches > 0)
 		{
 			if (do_match(client, acptr, mask, fmt))
  			{
