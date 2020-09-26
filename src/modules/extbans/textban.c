@@ -93,6 +93,7 @@ MOD_INIT()
 
 	memset(&req, 0, sizeof(ExtbanInfo));
 	req.flag = 'T';
+	req.options = EXTBOPT_NOSTACKCHILD; /* disallow things like ~n:~T, as we only affect text. */
 	req.conv_param = extban_modeT_conv_param;
 	req.is_banned = extban_modeT_is_banned;
 	req.is_ok = extban_modeT_is_ok;
