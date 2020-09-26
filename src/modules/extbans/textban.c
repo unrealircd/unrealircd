@@ -81,6 +81,8 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 char *extban_modeT_conv_param(char *para_in);
+int textban_check_ban(Client *client, Channel *channel, char *ban, char **msg, char **errmsg);
+int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 int extban_modeT_is_banned(Client *client, Channel *channel, char *ban, int type, char **msg, char **errmsg);
 int extban_modeT_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2);
 void parse_word(const char *s, char **word, int *type);
@@ -103,6 +105,8 @@ MOD_INIT()
 		config_error("textban module: adding extban ~T failed! module NOT loaded");
 		return MOD_FAILED;
 	}
+
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, textban_can_send_to_channel);
 
 	return MOD_SUCCESS;
 }
@@ -383,9 +387,54 @@ char *extban_modeT_conv_param(char *para_in)
 	return retbuf;
 }
 
+/** This is the regular "is banned?" routine. We can't use this as we need to be called for voiced users as well */
 int extban_modeT_is_banned(Client *client, Channel *channel, char *ban, int checktype, char **msg, char **errmsg)
 {
-	static char filtered[512]; /* temp buffer */
+	return 0;
+}
+
+/** Check for text bans (censor and block) */
+int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype)
+{
+	Ban *ban;
+
+	/* +h/+o/+a/+q users bypass textbans */
+	if (is_skochanop(client, channel))
+		return HOOK_CONTINUE;
+
+	/* IRCOps with these privileges bypass textbans too */
+	if (op_can_override("channel:override:message:ban", client, channel, NULL))
+		return HOOK_CONTINUE;
+
+	/* Now we have to manually walk the banlist and check if things match */
+	for (ban = channel->banlist; ban; ban=ban->next)
+	{
+		if (!strncmp(ban->banstr, "~T:", 3))
+		{
+			/* ~T ban */
+			if (textban_check_ban(client, channel, ban->banstr, msg, errmsg))
+				return HOOK_DENY;
+		} else
+		if (!strncmp(ban->banstr, "~t:", 3))
+		{
+			/* Stacked ~t:xx:~T ban (timed text ban) */
+			char *p = strchr(ban->banstr+3, ':');
+			if (p && !strncmp(p+1, "~T:", 3))
+			{
+				if (textban_check_ban(client, channel, p+1, msg, errmsg))
+					return HOOK_DENY;
+			}
+		}
+	}
+
+	return HOOK_CONTINUE;
+}
+
+
+int textban_check_ban(Client *client, Channel *channel, char *ban, char **msg, char **errmsg)
+{
+	static char retbuf[512];
+	char filtered[512]; /* temp input buffer */
 	long fl;
 	int cleaned=0;
 	char *p;
@@ -400,8 +449,8 @@ int extban_modeT_is_banned(Client *client, Channel *channel, char *ban, int chec
 	gettimeofday(&tv_alpha, NULL);
 #endif
 
-	/* We only filter on BANCHK_MSG, and we can only filter on non-NULL text of course */
-	if ((checktype != BANCHK_MSG) || (msg == NULL) || (*msg == NULL))
+	/* We can only filter on non-NULL text of course */
+	if ((msg == NULL) || (*msg == NULL))
 		return 0;
 
 	filtered[0] = '\0'; /* NOT needed, but... :P */
@@ -462,7 +511,8 @@ int extban_modeT_is_banned(Client *client, Channel *channel, char *ban, int chec
 		{
 			if (*p != ' ')
 			{
-				*msg = filtered;
+				strlcpy(retbuf, filtered, sizeof(retbuf));
+				*msg = retbuf;
 				return 0; /* allow through, but filtered */
 			}
 		}
