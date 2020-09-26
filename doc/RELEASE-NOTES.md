@@ -1,5 +1,37 @@
-UnrealIRCd 5.0.6 Release Notes
+UnrealIRCd 5.0.7 Release Notes
 ===============================
+
+This is work in progress. This UnrealIRCd version is NOT YET RELEASED.
+
+Enhancements:
+* Add support for ```estonian-utf8```, ```latvian-utf8``` and
+  ```lithuanian-utf8``` in
+  [set::allowed-nickchars](https://www.unrealircd.org/docs/Nick_Character_Sets)
+
+Fixes:
+* When having multiple text bans (```+b ~T:censor```) these caused an empty
+  message.
+* Text bans are now no longer bypassed by voiced users (```+v```).
+* The ```LINKS``` command worked, even when disabled via
+  ```hideserver::disable-links``` in the optional hideserver module.
+* In some cases ```WHO``` did not show your own entry, such as when
+  searching on account name, which was confusing.
+* Memory leak when repeatedly using ```./unrealircd rehash``` or
+  ```/REHASH -tls```.
+* When setting a very high channel limit, it showed a weird MODE ```+l``` value.
+
+Module coders / Developers:
+* None?
+
+Upgrading from UnrealIRCd 4?
+-----------------------------
+
+Are you upgrading from UnrealIRCd 4.x to UnrealIRCd 5?
+Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5). At the
+very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
+
+UnrealIRCd 5.0.6
+-----------------
 
 UnrealIRCd 5.0.6 is a small maintenance release for the stable 5.x series.
 For existing 5.x users there is probably little reason to upgrade.
@@ -28,14 +60,6 @@ Module coders / Developers:
 * Send ```RPL_LOGGEDOUT``` when logging out of services account
 * Fix double batch in message tags when using both labeled-response
   and the ```HISTORY``` command
-
-Upgrading from UnrealIRCd 4?
------------------------------
-
-Are you upgrading from UnrealIRCd 4.x to UnrealIRCd 5?
-Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5). At the
-very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
-
 
 UnrealIRCd 5.0.5.1
 -------------------
