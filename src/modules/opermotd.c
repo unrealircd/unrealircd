@@ -88,5 +88,5 @@ CMD_FUNC(cmd_opermotd)
 			   motdline->line);
 		motdline = motdline->next;
 	}
-	sendnumeric(client, RPL_ENDOFMOTD);
+	sendnumericfmt(client, RPL_ENDOFMOTD, ":End of /OPERMOTD command.");
 }
