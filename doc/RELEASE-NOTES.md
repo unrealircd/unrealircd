@@ -7,6 +7,7 @@ Enhancements:
 * Add support for ```estonian-utf8```, ```latvian-utf8``` and
   ```lithuanian-utf8``` in
   [set::allowed-nickchars](https://www.unrealircd.org/docs/Nick_Character_Sets)
+* Add message tags to ```PONG``` to help fix KiwiIRC timestamp issues.
 
 Fixes:
 * When having multiple text bans (```+b ~T:censor```) these caused an empty

@@ -93,8 +93,13 @@ CMD_FUNC(cmd_ping)
 		}
 	}
 	else
-		sendto_one(client, NULL, ":%s PONG %s :%s", me.name,
+	{
+		MessageTag *mtags = NULL;
+		new_message(&me, recv_mtags, &mtags);
+		sendto_one(client, mtags, ":%s PONG %s :%s", me.name,
 		    (destination) ? destination : me.name, origin);
+		free_message_tags(mtags);
+	}
 }
 
 /*
@@ -188,7 +193,10 @@ CMD_FUNC(cmd_pong)
 				return;
 			} else
 			{
-				sendto_one(target, NULL, ":%s PONG %s %s", client->name, origin, destination);
+				MessageTag *mtags = NULL;
+				new_message(client, recv_mtags, &mtags);
+				sendto_one(target, mtags, ":%s PONG %s %s", client->name, origin, destination);
+				free_message_tags(mtags);
 			}
 		}
 		else
