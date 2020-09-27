@@ -19,6 +19,9 @@ Fixes:
 * Memory leak when repeatedly using ```./unrealircd rehash``` or
   ```/REHASH -tls```.
 * When setting a very high channel limit, it showed a weird MODE ```+l``` value.
+* [Websockets](https://www.unrealircd.org/docs/WebSocket_support) that used
+```labeled-response``` sometimes received multiple IRC messages in one
+websocket packet.
 
 Module coders / Developers:
 * None?
