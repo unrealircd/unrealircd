@@ -8,7 +8,7 @@
 #include "unrealircd.h"
 #include <limits.h>
 
-#define WEBSOCKET_VERSION "1.0.0"
+#define WEBSOCKET_VERSION "1.1.0"
 
 ModuleHeader MOD_HEADER
   = {
@@ -23,10 +23,14 @@ ModuleHeader MOD_HEADER
  #error "In UnrealIRCd char should always be unsigned. Check your compiler"
 #endif
 
+#ifndef WEBSOCKET_SEND_BUFFER_SIZE
+ #define WEBSOCKET_SEND_BUFFER_SIZE 16384
+#endif
+
 typedef struct WebSocketUser WebSocketUser;
 struct WebSocketUser {
 	char get; /**< GET initiated */
-	char handshake_completed; /**< Handshake completed, use data frames */
+	char handshake_completed; /**< Handshake completed, use websocket frames */
 	char *handshake_key; /**< Handshake key (used during handshake) */
 	char *lefttoparse; /**< Leftover buffer to parse */
 	int lefttoparselen; /**< Length of lefttoparse buffer */
@@ -59,8 +63,8 @@ int websocket_handle_handshake(Client *client, char *readbuf, int *length);
 int websocket_complete_handshake(Client *client);
 int websocket_handle_packet_ping(Client *client, char *buf, int len);
 int websocket_handle_packet_pong(Client *client, char *buf, int len);
-int websocket_create_frame(int opcode, char **buf, int *len);
-int websocket_send_frame(Client *client, int opcode, char *buf, int len);
+int websocket_create_packet(int opcode, char **buf, int *len);
+int websocket_send_pong(Client *client, char *buf, int len);
 
 /* Global variables */
 ModDataInfo *websocket_md;
@@ -231,14 +235,14 @@ int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **m
 	if (MyConnect(to) && WSU(to) && WSU(to)->handshake_completed)
 	{
 		if (WEBSOCKET_TYPE(to) == WEBSOCKET_TYPE_BINARY)
-			websocket_create_frame(WSOP_BINARY, msg, length);
+			websocket_create_packet(WSOP_BINARY, msg, length);
 		else if (WEBSOCKET_TYPE(to) == WEBSOCKET_TYPE_TEXT)
 		{
 			/* Some more conversions are needed */
 			char *safe_msg = unrl_utf8_make_valid(*msg);
 			*msg = safe_msg;
 			*length = *msg ? strlen(safe_msg) : 0;
-			websocket_create_frame(WSOP_TEXT, msg, length);
+			websocket_create_packet(WSOP_TEXT, msg, length);
 		}
 		return 0;
 	}
@@ -291,7 +295,7 @@ int websocket_handle_websocket(Client *client, char *readbuf2, int length2)
 }
 
 /** Incoming packet hook.
- * This processes Websocket frames, if this is a websocket connection.
+ * This processes websocket frames, if this is a websocket connection.
  * NOTE The different return values:
  * -1 means: don't touch this client anymore, it has or might have been killed!
  * 0 means: don't process this data, but you can read another packet if you want
@@ -712,7 +716,7 @@ int websocket_handle_packet_ping(Client *client, char *buf, int len)
 		dead_socket(client, "WebSocket: oversized PING request");
 		return -1;
 	}
-	websocket_send_frame(client, WSOP_PONG, buf, len);
+	websocket_send_pong(client, buf, len);
 	client->local->since++; /* lag penalty of 1 second */
 	return 0;
 }
@@ -723,28 +727,18 @@ int websocket_handle_packet_pong(Client *client, char *buf, int len)
 	return 0;
 }
 
-/** Create a frame. Used for OUTGOING data. */
-int websocket_create_frame(int opcode, char **buf, int *len)
+/** Create a simple websocket packet that is ready to be send.
+ * This is the simple version that is used ONLY for WSOP_PONG,
+ * as it does not take \r\n into account.
+ */
+int websocket_create_packet_simple(int opcode, char **buf, int *len)
 {
 	static char sendbuf[8192];
 
 	sendbuf[0] = opcode | 0x80; /* opcode & final */
 
 	if (*len > sizeof(sendbuf) - 8)
-		abort(); /* should never happen (safety) */
-
-	/* strip LF */
-	if (*len > 0)
-	{
-		if (*(*buf + *len - 1) == '\n')
-			*len = *len - 1;
-	}
-	/* strip CR */
-	if (*len > 0)
-	{
-		if (*(*buf + *len - 1) == '\r')
-			*len = *len - 1;
-	}
+		return -1; /* should never happen (safety) */
 
 	if (*len < 126)
 	{
@@ -765,13 +759,91 @@ int websocket_create_frame(int opcode, char **buf, int *len)
 	return 0;
 }
 
-/** Create and send a frame */
-int websocket_send_frame(Client *client, int opcode, char *buf, int len)
+/** Create a websocket packet that is ready to be send.
+ * This is the more complex version that takes into account
+ * stripping off \r and \n, and possibly multi line due to
+ * labeled-response. It is used for WSOP_TEXT and WSOP_BINARY.
+ * The end result is one or more websocket frames,
+ * all in a single packet *buf with size *len.
+ */
+int websocket_create_packet(int opcode, char **buf, int *len)
+{
+	static char sendbuf[WEBSOCKET_SEND_BUFFER_SIZE];
+	char *s = *buf; /* points to start of current line */
+	char *s2; /* used for searching of end of current line */
+	char *lastbyte = *buf + *len - 1; /* points to last byte in *buf that can be safely read */
+	int bytes_to_copy;
+	char newline;
+	char *o = sendbuf; /* points to current byte within 'sendbuf' of output buffer */
+	int bytes_in_sendbuf = 0;
+	int bytes_single_frame;
+
+	/* Sending 0 bytes makes no sense, and the code below may assume >0, so reject this. */
+	if (*len == 0)
+		return -1;
+
+	do {
+		/* Find next \r or \n */
+		for (s2 = s; *s2 && (s2 <= lastbyte); s2++)
+		{
+			if ((*s2 == '\n') || (*s2 == '\r'))
+				break;
+		}
+
+		/* Now 's' points to start of line and 's2' points to beyond end of the line
+		 * (either at \r, \n or beyond the buffer).
+		 */
+		bytes_to_copy = s2 - s;
+
+		if (bytes_to_copy < 126)
+			bytes_single_frame = 2 + bytes_to_copy;
+		else
+			bytes_single_frame = 4 + bytes_to_copy;
+
+		if (bytes_in_sendbuf + bytes_single_frame > sizeof(sendbuf))
+		{
+			/* Overflow. This should never happen. */
+			sendto_ops("[websocket] [BUG] Overflow prevented: %d + %d > %d",
+				bytes_in_sendbuf, bytes_single_frame, (int)sizeof(sendbuf));
+			return -1;
+		}
+
+		/* Create the new frame */
+		o[0] = opcode | 0x80; /* opcode & final */
+
+		if (bytes_to_copy < 126)
+		{
+			/* Short payload */
+			o[1] = (char)bytes_to_copy;
+			memcpy(&o[2], s, bytes_to_copy);
+		} else {
+			/* Long payload */
+			o[1] = 126;
+			o[2] = (char)((bytes_to_copy >> 8) & 0xFF);
+			o[3] = (char)(bytes_to_copy & 0xFF);
+			memcpy(&o[4], s, bytes_to_copy);
+		}
+
+		/* Advance destination pointer and counter */
+		o += bytes_single_frame;
+		bytes_in_sendbuf += bytes_single_frame;
+
+		/* Advance source pointer and skip all trailing \n and \r */
+		for (s = s2; *s && (s <= lastbyte) && ((*s == '\n') || (*s == '\r')); s++);
+	} while(s <= lastbyte);
+
+	*buf = sendbuf;
+	*len = bytes_in_sendbuf;
+	return 0;
+}
+
+/** Create and send a WSOP_PONG frame */
+int websocket_send_pong(Client *client, char *buf, int len)
 {
 	char *b = buf;
 	int l = len;
 
-	if (websocket_create_frame(opcode, &b, &l) < 0)
+	if (websocket_create_packet_simple(WSOP_PONG, &b, &l) < 0)
 		return -1;
 
 	if (DBufLength(&client->local->sendQ) > get_sendq(client))
