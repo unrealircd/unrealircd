@@ -7,7 +7,7 @@ Enhancements:
 * Add support for ```estonian-utf8```, ```latvian-utf8``` and
   ```lithuanian-utf8``` in
   [set::allowed-nickchars](https://www.unrealircd.org/docs/Nick_Character_Sets)
-* Add message tags to ```PONG``` to help fix KiwiIRC timestamp issues.
+* Add message tags to ```PONG``` to help fix timestamp issues in KiwiIRC.
 
 Fixes:
 * When having multiple text bans (```+b ~T:censor```) these caused an empty
@@ -23,6 +23,7 @@ Fixes:
 * [Websockets](https://www.unrealircd.org/docs/WebSocket_support) that used
 ```labeled-response``` sometimes received multiple IRC messages in one
 websocket packet.
+* ```STATS badword``` was not working.
 
 Module coders / Developers:
 * None?

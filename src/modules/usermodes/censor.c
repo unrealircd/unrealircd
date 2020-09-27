@@ -31,6 +31,7 @@ ConfigItem_badword *conf_badword_message = NULL;
 
 static ConfigItem_badword *copy_badword_struct(ConfigItem_badword *ca, int regex, int regflags);
 
+int censor_stats_badwords_user(Client *client, char *para);
 
 MOD_TEST()
 {
@@ -43,11 +44,9 @@ MOD_INIT()
 	ModInfo = modinfo;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-
 	UmodeAdd(modinfo->handle, 'G', UMODE_GLOBAL, 0, NULL, &UMODE_CENSOR);
-
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, 0, censor_can_send_to_user);
-	
+	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, censor_stats_badwords_user);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, censor_config_run);
 	return MOD_SUCCESS;
 }
@@ -254,10 +253,12 @@ int censor_can_send_to_user(Client *client, Client *target, char **text, char **
 	return HOOK_CONTINUE;
 }
 
-// TODO: when stats is modular, make it call this for badwords
-int stats_badwords(Client *client, char *para)
+int censor_stats_badwords_user(Client *client, char *para)
 {
 	ConfigItem_badword *words;
+
+	if (!para || !(!strcmp(para, "b") || !strcasecmp(para, "badword")))
+		return 0;
 
 	for (words = conf_badword_message; words; words = words->next)
 	{
@@ -266,5 +267,5 @@ int stats_badwords(Client *client, char *para)
 		           (words->type & BADW_TYPE_FAST_R) ? "*" : "",
 		           words->action == BADWORD_REPLACE ? (words->replace ? words->replace : "<censored>") : "");
 	}
-	return 0;
+	return 1;
 }

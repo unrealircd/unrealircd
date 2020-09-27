@@ -23,7 +23,7 @@ Cmode_t EXTMODE_CENSOR = 0L;
 int censor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 char *censor_pre_local_part(Client *client, Channel *channel, char *text);
 char *censor_pre_local_quit(Client *client, char *text);
-
+int censor_stats_badwords_channel(Client *client, char *para);
 int censor_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int censor_config_run(ConfigFile *, ConfigEntry *, int);
 
@@ -55,7 +55,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, censor_can_send_to_channel);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, censor_pre_local_part);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, 0, censor_pre_local_quit);
-	
+	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, censor_stats_badwords_channel);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, censor_config_run);
 	return MOD_SUCCESS;
 }
@@ -319,10 +319,12 @@ char *censor_pre_local_quit(Client *client, char *text)
 	return blocked ? NULL : text;
 }
 
-// TODO: when stats is modular, make it call this for badwords
-int stats_badwords(Client *client, char *para)
+int censor_stats_badwords_channel(Client *client, char *para)
 {
 	ConfigItem_badword *words;
+
+	if (!para || !(!strcmp(para, "b") || !strcasecmp(para, "badword")))
+		return 0;
 
 	for (words = conf_badword_channel; words; words = words->next)
 	{
@@ -331,5 +333,5 @@ int stats_badwords(Client *client, char *para)
 		           (words->type & BADW_TYPE_FAST_R) ? "*" : "",
 		           words->action == BADWORD_REPLACE ? (words->replace ? words->replace : "<censored>") : "");
 	}
-	return 0;
+	return 1;
 }
