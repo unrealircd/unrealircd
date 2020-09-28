@@ -1,7 +1,7 @@
-UnrealIRCd 5.0.7 Release Notes
-===============================
+UnrealIRCd 5.0.7-rc1 Release Notes
+===================================
 
-This is work in progress. This UnrealIRCd version is NOT YET RELEASED.
+This is the release candidate for 5.0.7.
 
 Enhancements:
 * Add support for ```estonian-utf8```, ```latvian-utf8``` and
@@ -17,7 +17,7 @@ Fixes:
   ```hideserver::disable-links``` in the optional hideserver module.
 * In some cases ```WHO``` did not show your own entry, such as when
   searching on account name, which was confusing.
-* Memory leak when repeatedly using ```./unrealircd rehash``` or
+* Memory leak when repeatedly using ```./unrealircd reloadtls``` or
   ```/REHASH -tls```.
 * When setting a very high channel limit, it showed a weird MODE ```+l``` value.
 * [Websockets](https://www.unrealircd.org/docs/WebSocket_support) that used
@@ -26,12 +26,17 @@ websocket packet.
 * ```STATS badword``` was not working.
 
 Module coders / Developers:
-* None?
+* No changes, only some small additions to the
+[Doxygen module API docs](https://www.unrealircd.org/api/5/index.html)
 
-Upgrading from UnrealIRCd 4?
------------------------------
+Reminder: UnrealIRCd 4 is End Of Life
+---------------------------------------
 
-Are you upgrading from UnrealIRCd 4.x to UnrealIRCd 5?
+All support for the previous series, UnrealIRCd 4.x, will stop after
+[December 31, 2020](https://www.unrealircd.org/docs/UnrealIRCd_4_EOL).
+If you haven't upgraded yet, do so soon!
+
+Are you upgrading from 4.x to 5.x?
 Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5). At the
 very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
 
