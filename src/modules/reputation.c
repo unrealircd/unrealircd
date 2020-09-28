@@ -480,16 +480,12 @@ ReputationEntry *find_reputation_entry(char *ip)
 	return NULL;
 }
 
-/** Called when the user connects.
- * Locally: very early, just after the TCP/IP connection has
- * been established, before any data.
- * Remote user: early in the HOOKTYPE_REMOTE_CONNECT hook.
- */
-int reputation_set_on_connect(Client *client)
+int reputation_lookup_score_and_set(Client *client)
 {
 	char *ip = client->ip;
 	ReputationEntry *e;
 
+	Reputation(client) = 0; /* (re-)set to zero (yes, important!) */
 	if (ip)
 	{
 		e = find_reputation_entry(ip);
@@ -498,7 +494,17 @@ int reputation_set_on_connect(Client *client)
 			Reputation(client) = e->score; /* SET MODDATA */
 		}
 	}
+	return Reputation(client);
+}
 
+/** Called when the user connects.
+ * Locally: very early, just after the TCP/IP connection has
+ * been established, before any data.
+ * Remote user: early in the HOOKTYPE_REMOTE_CONNECT hook.
+ */
+int reputation_set_on_connect(Client *client)
+{
+	reputation_lookup_score_and_set(client);
 	return 0;
 }
 
@@ -507,9 +513,17 @@ int reputation_pre_lconnect(Client *client)
 	/* User will likely be accepted. Inform other servers about the score
 	 * we have for this user. For more information about this type of
 	 * server to server traffic, see the reputation_server_cmd function.
+	 *
+	 * Note that we use reputation_lookup_score_and_set() here
+	 * and not Reputation(client) because we want to RE-LOOKUP
+	 * the score for the IP in the database. We do this because
+	 * between reputation_set_on_connect() and reputation_pre_lconnect()
+	 * the IP of the user may have been changed due to IP-spoofing
+	 * (WEBIRC).
 	 */
-	ReputationEntry *e = find_reputation_entry(GetIP(client));
-	sendto_server(NULL, 0, 0, NULL, ":%s REPUTATION %s %d", me.id, GetIP(client), e ? (int)e->score : 0);
+	int score = reputation_lookup_score_and_set(client);
+
+	sendto_server(NULL, 0, 0, NULL, ":%s REPUTATION %s %d", me.id, GetIP(client), score);
 
 	return 0;
 }
