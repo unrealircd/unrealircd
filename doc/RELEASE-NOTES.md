@@ -7,7 +7,8 @@ Enhancements:
 * Add support for ```estonian-utf8```, ```latvian-utf8``` and
   ```lithuanian-utf8``` in
   [set::allowed-nickchars](https://www.unrealircd.org/docs/Nick_Character_Sets)
-* Add message tags to ```PONG``` to help fix timestamp issues in KiwiIRC.
+* Add [message tags](https://www.unrealircd.org/docs/Message_tags)
+  to ```PONG``` to help fix timestamp issues in KiwiIRC.
 
 Fixes:
 * When having multiple text bans (```+b ~T:censor```) these caused an empty
@@ -36,7 +37,7 @@ All support for the previous series, UnrealIRCd 4.x, will stop after
 [December 31, 2020](https://www.unrealircd.org/docs/UnrealIRCd_4_EOL).
 If you haven't upgraded yet, do so soon!
 
-Are you upgrading from 4.x to 5.x?
+Upgrading from 4.x to 5.x?
 Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5). At the
 very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
 
