@@ -1,7 +1,9 @@
 UnrealIRCd 5.0.7-rc1 Release Notes
 ===================================
 
-This is the release candidate for 5.0.7.
+This is the release candidate for 5.0.7. If there are any issues
+with this release then please report them on
+[the bug tracker](https://bugs.unrealircd.org/).
 
 Enhancements:
 * Add support for ```estonian-utf8```, ```latvian-utf8``` and
