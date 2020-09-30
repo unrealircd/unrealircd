@@ -4,6 +4,7 @@ In UnrealIRCd 5 we support the following translations:
 * on-line documentation at https://www.unrealircd.org/docs/ (wiki!)
 * help.conf
 * example.conf
+* example.conf
 
 For translating the wiki documentation see this article:
 https://www.unrealircd.org/docs/Translating_UnrealIRCd_wiki_pages
