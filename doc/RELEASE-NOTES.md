@@ -1,9 +1,8 @@
-UnrealIRCd 5.0.7-rc1 Release Notes
-===================================
+UnrealIRCd 5.0.7 Release Notes
+===============================
 
-This is the release candidate for 5.0.7. If there are any issues
-with this release then please report them on
-[the bug tracker](https://bugs.unrealircd.org/).
+UnrealIRCd 5.0.7 consists mainly of fixes for the 5.x stable series,
+with some minor enhancements.
 
 Enhancements:
 * Add support for ```estonian-utf8```, ```latvian-utf8``` and
@@ -11,6 +10,7 @@ Enhancements:
   [set::allowed-nickchars](https://www.unrealircd.org/docs/Nick_Character_Sets)
 * Add [message tags](https://www.unrealircd.org/docs/Message_tags)
   to ```PONG``` to help fix timestamp issues in KiwiIRC.
+* Dutch helpop file (conf/help/help.nl.conf)
 
 Fixes:
 * When having multiple text bans (```+b ~T:censor```), these caused an empty
