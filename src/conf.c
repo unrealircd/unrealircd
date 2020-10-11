@@ -1902,6 +1902,7 @@ void postconf(void)
 	postconf_fixes();
 	do_weird_shun_stuff();
 	isupport_init(); /* for all the 005 values that changed.. */
+	tls_check_expiry(NULL);
 }
 
 int isanyserverlinked(void)

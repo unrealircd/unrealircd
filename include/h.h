@@ -549,10 +549,6 @@ extern void *safe_alloc(size_t size);
 extern char *our_strdup(const char *str);
 extern char *our_strldup(const char *str, size_t max);
 
-extern MODFUNC char  *tls_get_cipher(SSL *ssl);
-extern TLSOptions *get_tls_options_for_client(Client *acptr);
-extern int outdated_tls_client(Client *acptr);
-extern char *outdated_tls_client_build_string(char *pattern, Client *acptr);
 extern long config_checkval(char *value, unsigned short flags);
 extern void config_status(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
 extern void init_random();
@@ -752,6 +748,25 @@ extern MODVAR void (*labeled_response_set_context)(void *ctx);
 extern MODVAR void (*labeled_response_force_end)(void);
 extern MODVAR void (*kick_user)(MessageTag *mtags, Channel *channel, Client *client, Client *victim, char *comment);
 /* /Efuncs */
+
+/* SSL/TLS functions */
+extern int early_init_ssl();
+extern int init_ssl();
+extern int ssl_handshake(Client *);   /* Handshake the accpeted con.*/
+extern int ssl_client_handshake(Client *, ConfigItem_link *); /* and the initiated con.*/
+extern int ircd_SSL_accept(Client *acptr, int fd);
+extern int ircd_SSL_connect(Client *acptr, int fd);
+extern int SSL_smart_shutdown(SSL *ssl);
+extern void ircd_SSL_client_handshake(int, int, void *);
+extern void SSL_set_nonblocking(SSL *s);
+extern SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server);
+extern MODFUNC char  *tls_get_cipher(SSL *ssl);
+extern TLSOptions *get_tls_options_for_client(Client *acptr);
+extern int outdated_tls_client(Client *acptr);
+extern char *outdated_tls_client_build_string(char *pattern, Client *acptr);
+extern int check_certificate_expiry_ctx(SSL_CTX *ctx, char **errstr);
+extern EVENT(tls_check_expiry);
+/* End of SSL/TLS functions */
 
 extern void parse_message_tags_default_handler(Client *client, char **str, MessageTag **mtag_list);
 extern char *mtags_to_string_default_handler(MessageTag *m, Client *client);
