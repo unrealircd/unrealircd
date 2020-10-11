@@ -955,6 +955,9 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 
 	if (sendtype == SEND_TYPE_TAGMSG)
 		return 0; // TODO: some TAGMSG specific limit? (1 of 2)
+	
+	if (is_banned(client, channel, BANCHK_MSG, NULL, NULL))
+		return HOOK_CONTINUE;
 
 	if (ValidatePermissionsForPath("channel:override:flood",client,NULL,channel,NULL) || !IsFloodLimit(channel) || is_skochanop(client, channel))
 		return HOOK_CONTINUE;
