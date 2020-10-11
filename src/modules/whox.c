@@ -351,45 +351,6 @@ CMD_FUNC(cmd_whox)
 		return;
 	}
 
-	/* '/who nick' */
-	if (((acptr = find_person(mask, NULL)) != NULL) &&
-		(!(fmt.matchsel & WMATCH_MODES)) &&
-		(!(fmt.matchsel & WMATCH_OPER) || IsOper(acptr)))
-	{
-		int isinvis = 0;
-		int i = 0;
-		Hook *h;
-
-		isinvis = IsInvisible(acptr);
-		for (lp = acptr->user->channel; lp; lp = lp->next)
-		{
-			member = IsMember(client, lp->channel);
-
-			if (isinvis && !member)
-				continue;
-
-			for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-			{
-				i = (*(h->func.intfunc))(acptr,lp->channel);
-				if (i != 0)
-					break;
-			}
-
-			if (i != 0 && !(is_skochanop(client, lp->channel)) && !(is_skochanop(acptr, lp->channel) || has_voice(acptr,lp->channel)))
-				continue;
-
-			if (member || (!isinvis && PubChannel(lp->channel)))
-				break;
-		}
-		if (lp != NULL)
-			do_who(client, acptr, lp->channel, &fmt);
-		else
-			do_who(client, acptr, NULL, &fmt);
-
-		sendnumeric(client, RPL_ENDOFWHO, orig_mask);
-		return;
-	}
-
 	if (ValidatePermissionsForPath("channel:see:who:secret",client,NULL,NULL,NULL) ||
                 ValidatePermissionsForPath("channel:see:whois",client,NULL,NULL,NULL))
 	{
@@ -561,8 +522,13 @@ static void who_common_channel(Client *client, Channel *channel,
 
 static void who_global(Client *client, char *mask, int operspy, struct who_format *fmt)
 {
+	Client *hunted = NULL;
 	Client *acptr;
 	int maxmatches = IsOper(client) ? INT_MAX : WHOLIMIT;
+
+	/* If searching for a nick explicitly, then include it later on in the result: */
+	if (mask && ((fmt->matchsel & WMATCH_NICK) || (fmt->matchsel == 0)))
+		hunted = find_person(mask, NULL);
 
 	/* Initialize the markers to zero */
 	list_for_each_entry(acptr, &client_list, client_node)
@@ -583,7 +549,7 @@ static void who_global(Client *client, char *mask, int operspy, struct who_forma
 		if (!IsUser(acptr))
 			continue;
 
-		if (IsInvisible(acptr) && !operspy && (client != acptr))
+		if (IsInvisible(acptr) && !operspy && (client != acptr) && (acptr != hunted))
 			continue;
 
 		if (IsMarked(acptr))
