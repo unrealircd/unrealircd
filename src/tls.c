@@ -1339,7 +1339,7 @@ char *outdated_tls_client_build_string(char *pattern, Client *client)
 
 int check_certificate_expiry_ctx(SSL_CTX *ctx, char **errstr)
 {
-#if !defined(HAS_ASN1_TIME_diff)
+#if !defined(HAS_ASN1_TIME_diff) || !defined(HAS_X509_get0_notAfter)
 	return 0;
 #else
 	static char errbuf[512];
