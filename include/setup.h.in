@@ -28,6 +28,9 @@
 /* Define if you have the <glob.h> header file. */
 #undef GLOBH
 
+/* Define if ssl library has ASN1_TIME_diff */
+#undef HAS_ASN1_TIME_diff
+
 /* Define if ssl library has SSL_CTX_set1_curves_list */
 #undef HAS_SSL_CTX_SET1_CURVES_LIST
 

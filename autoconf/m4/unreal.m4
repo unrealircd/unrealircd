@@ -272,3 +272,23 @@ else
 	AC_MSG_RESULT([no])
 fi
 ])
+
+AC_DEFUN([CHECK_ASN1_TIME_diff],
+[
+AC_MSG_CHECKING([for ASN1_TIME_diff in SSL library])
+AC_LANG_PUSH(C)
+SAVE_LIBS="$LIBS"
+LIBS="$LIBS $CRYPTOLIB"
+AC_TRY_LINK([#include <openssl/ssl.h>],
+	[int one, two; ASN1_TIME_diff(&one, &two, NULL, NULL);],
+	has_function=1,
+	has_function=0)
+LIBS="$SAVE_LIBS"
+AC_LANG_POP(C)
+if test $has_function = 1; then
+	AC_MSG_RESULT([yes])
+	AC_DEFINE([HAS_ASN1_TIME_diff], [], [Define if ssl library has ASN1_TIME_diff])
+else
+	AC_MSG_RESULT([no])
+fi
+])

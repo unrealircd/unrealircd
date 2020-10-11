@@ -1339,6 +1339,9 @@ char *outdated_tls_client_build_string(char *pattern, Client *client)
 
 int check_certificate_expiry_ctx(SSL_CTX *ctx, char **errstr)
 {
+#if !defined(HAS_ASN1_TIME_diff)
+	return 0;
+#else
 	static char errbuf[512];
 	SSL *ssl;
 	X509 *cert;
@@ -1386,6 +1389,7 @@ int check_certificate_expiry_ctx(SSL_CTX *ctx, char **errstr)
 	/* All good */
 	SSL_free(ssl);
 	return 0;
+#endif
 }
 
 void check_certificate_expiry_tlsoptions_and_warn(TLSOptions *tlsoptions)
