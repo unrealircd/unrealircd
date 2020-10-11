@@ -5350,6 +5350,8 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 					allow->flags.useip = 1;
 				else if (!strcmp(cepp->ce_varname, "ssl") || !strcmp(cepp->ce_varname, "tls"))
 					allow->flags.tls = 1;
+				else if (!strcmp(cepp->ce_varname, "reject-on-auth-failure"))
+					allow->flags.reject_on_auth_failure = 1;
 			}
 		}
 	}
@@ -5544,6 +5546,8 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "useip"))
 				{}
 				else if (!strcmp(cepp->ce_varname, "ssl") || !strcmp(cepp->ce_varname, "tls"))
+				{}
+				else if (!strcmp(cepp->ce_varname, "reject-on-auth-failure"))
 				{}
 				else if (!strcmp(cepp->ce_varname, "sasl"))
 				{

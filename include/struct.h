@@ -1379,6 +1379,7 @@ struct ConfigFlag_allow {
 	unsigned	noident :1;
 	unsigned	useip :1;
 	unsigned	tls :1;
+	unsigned	reject_on_auth_failure :1;
 };
 
 struct ConfigItem_allow {

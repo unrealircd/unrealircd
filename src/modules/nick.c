@@ -1316,12 +1316,9 @@ int AllowClient(Client *client, char *username)
 
 	for (aconf = conf_allow; aconf; aconf = aconf->next)
 	{
-		if (!aconf->hostname || !aconf->ip)
-			goto attach;
-		if (aconf->auth && !client->local->passwd && !moddata_client_get(client, "certfp"))
-			continue;
 		if (aconf->flags.tls && !IsSecure(client))
 			continue;
+
 		if (hp && hp->h_name)
 		{
 			hname = hp->h_name;
@@ -1376,8 +1373,21 @@ int AllowClient(Client *client, char *username)
 				goto attach;
 		}
 
-		continue;
+		continue; /* No match */
 	attach:
+		/* Check authentication */
+		if (aconf->auth && !Auth_Check(client, aconf->auth, client->local->passwd))
+		{
+			/* Incorrect password/authentication - but was is it required? */
+			if (aconf->flags.reject_on_auth_failure)
+			{
+				exit_client(client, NULL, iConf.reject_message_unauthorized);
+				return 0;
+			} else {
+				continue; /* Continue (this is the default behavior) */
+			}
+		}
+
 		if (!aconf->flags.noident)
 			SetUseIdent(client);
 		if (!aconf->flags.useip && hp)
@@ -1391,12 +1401,6 @@ int AllowClient(Client *client, char *username)
 			/* Already got too many with that ip# */
 			exit_client(client, NULL, iConf.reject_message_too_many_connections);
 			return 0;
-		}
-
-		if (aconf->auth && !Auth_Check(client, aconf->auth, client->local->passwd))
-		{
-			/* Always continue if password was wrong. */
-			continue;
 		}
 
 		if (!((aconf->class->clients + 1) > aconf->class->maxclients))
