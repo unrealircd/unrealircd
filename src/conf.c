@@ -9322,7 +9322,7 @@ int	_test_offchans(ConfigFile *conf, ConfigEntry *ce)
 		return 1;
 	}
 
-	config_warn("set::oficial-channels is deprecated. It often does not do what you want. "
+	config_warn("set::official-channels is deprecated. It often does not do what you want. "
 	            "You're better of creating a channel, setting all modes, topic, etc. to your liking "
 	            "and then making the channel permanent (MODE #channel +P). "
 	            "The channel will then be stored in a database to preserve it between restarts.");
