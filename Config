@@ -142,7 +142,7 @@ if [ "$GENCERTIFICATE" = 1 ]; then
 	sleep 1
 else
 	echo "Ok, not generating SSL certificate. Make sure that the certificate and key"
-	echo "are installed in conf/tls/server.crt.pem and conf/tls/server.key.pem prior to starting the IRCd."
+	echo "are installed in conf/tls/server.cert.pem and conf/tls/server.key.pem prior to starting the IRCd."
 fi
 else
 echo "SSL certificate already exists in configuration directory, no need to regenerate."
