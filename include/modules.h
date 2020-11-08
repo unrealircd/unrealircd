@@ -987,8 +987,6 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_CHANMSG	32
 /** See hooktype_pre_local_topic() */
 #define HOOKTYPE_PRE_LOCAL_TOPIC	33
-/** See hooktype_local_topic() */
-#define HOOKTYPE_LOCAL_TOPIC	34
 /** See hooktype_topic() */
 #define HOOKTYPE_TOPIC	35
 /** See hooktype_pre_local_chanmode() */
@@ -1323,7 +1321,7 @@ int hooktype_remote_kick(Client *client, Client *victim, Channel *channel, Messa
  * @return The return value is ignored (use return 0)
  */
 int hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, SendType sendtype);
-/** Called when a user wants to message another user (function prototype for HOOKTYPE_CAN_SEND_TO_USER).
+/** Called when a user wants to send a message to another user (function prototype for HOOKTYPE_CAN_SEND_TO_USER).
  * @param client		The sender
  * @param target		The recipient
  * @param text			The text to be sent (double pointer!)
@@ -1333,10 +1331,10 @@ int hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, ch
  * @retval HOOK_CONTINUE	Allow the message, unless other modules block it.
  */
 int hooktype_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype);
-/** Called when xxxx (function prototype for HOOKTYPE_CAN_SEND_TO_CHANNEL).
+/** Called when a user wants to send a message to a channel (function prototype for HOOKTYPE_CAN_SEND_TO_CHANNEL).
  * @param client		The sender
  * @param channel		The channel to send to
- * @param membership		The membership struct, so you can see for example op status.
+ * @param member		The membership struct, so you can see for example op status.
  * @param text			The text to be sent (double pointer!)
  * @param errmsg		The error message. If you block the message (HOOK_DENY) then you MUST set this!
  * @param sendtype		The message type, for example SEND_TYPE_PRIVMSG.
@@ -1365,133 +1363,217 @@ int hooktype_usermsg(Client *client, Client *to, MessageTag *mtags, char *text, 
  * @return The return value is ignored (use return 0)
  */
 int hooktype_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, SendType sendtype);
-/** Called when xxxx (function prototype for HOOKTYPE_PRE_LOCAL_TOPIC).
+/** Called when a local user wants to change the channel topic (function prototype for HOOKTYPE_PRE_LOCAL_TOPIC).
  * @param client		The client
- * @return The return value is ignored (use return 0)
+ * @param channel		The channel
+ * @param topic			The new requested topic
+ * @return The new topic (you may also return 'topic'), or NULL if the topic change request should be rejected.
  */
 char *hooktype_pre_local_topic(Client *client, Channel *channel, char *topic);
-/** Called when xxxx (function prototype for HOOKTYPE_LOCAL_TOPIC).
+/** Called when the channel topic is changed (function prototype for HOOKTYPE_TOPIC).
  * @param client		The client
- * @return The return value is ignored (use return 0)
- */
-int hooktype_local_topic(Client *client, Channel *channel, char *topic);
-/** Called when xxxx (function prototype for HOOKTYPE_TOPIC).
- * @param client		The client
+ * @param channel		The channel
+ * @param mtags         	Message tags associated with the event
+ * @param topic			The new topic
  * @return The return value is ignored (use return 0)
  */
 int hooktype_topic(Client *client, Channel *channel, MessageTag *mtags, char *topic);
-/** Called when xxxx (function prototype for HOOKTYPE_PRE_LOCAL_CHANMODE).
+/** Called when a local user changes channel modes, called early (function prototype for HOOKTYPE_PRE_LOCAL_CHANMODE).
+ * WARNING: This does not allow you to stop or reject the channel modes. It only allows you to do stuff -before- the
+ * mode is changed. It is currently only used by the delayjoin module.
  * @param client		The client
+ * @param channel		The channel
+ * @param mtags         	Message tags associated with the event
+ * @param modebuf		The mode buffer, for example "+o"
+ * @param parabuf		The parameter buffer, for example "NiceOp"
+ * @param sendts		Send timestamp
+ * @param samode		Is this an SAMODE?
  * @return The return value is ignored (use return 0)
  */
 int hooktype_pre_local_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-/** Called when xxxx (function prototype for HOOKTYPE_PRE_REMOTE_CHANMODE).
+/** Called when a remote user changes channel modes, called early (function prototype for HOOKTYPE_PRE_REMOTE_CHANMODE).
+ * WARNING: This does not allow you to stop or reject the channel modes. It only allows you to do stuff -before- the
+ * mode is changed. It is currently only used by the delayjoin module.
  * @param client		The client
+ * @param channel		The channel
+ * @param mtags         	Message tags associated with the event
+ * @param modebuf		The mode buffer, for example "+o"
+ * @param parabuf		The parameter buffer, for example "NiceOp"
+ * @param sendts		Send timestamp
+ * @param samode		Is this an SAMODE?
  * @return The return value is ignored (use return 0)
  */
 int hooktype_pre_remote_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-/** Called when xxxx (function prototype for HOOKTYPE_LOCAL_CHANMODE).
+/** Called when a local user changes channel modes (function prototype for HOOKTYPE_LOCAL_CHANMODE).
  * @param client		The client
+ * @param channel		The channel
+ * @param mtags         	Message tags associated with the event
+ * @param modebuf		The mode buffer, for example "+o"
+ * @param parabuf		The parameter buffer, for example "NiceOp"
+ * @param sendts		Send timestamp
+ * @param samode		Is this an SAMODE?
  * @return The return value is ignored (use return 0)
  */
 int hooktype_local_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-/** Called when xxxx (function prototype for HOOKTYPE_REMOTE_CHANMODE).
+/** Called when a remote user changes channel modes (function prototype for HOOKTYPE_REMOTE_CHANMODE).
  * @param client		The client
+ * @param channel		The channel
+ * @param mtags         	Message tags associated with the event
+ * @param modebuf		The mode buffer, for example "+o"
+ * @param parabuf		The parameter buffer, for example "NiceOp"
+ * @param sendts		Send timestamp
+ * @param samode		Is this an SAMODE?
  * @return The return value is ignored (use return 0)
  */
 int hooktype_remote_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-/** Called when xxxx (function prototype for HOOKTYPE_MODECHAR_DEL).
- * @param client		The client
+/** Called when a channel mode is removed by a local or remote user (function prototype for HOOKTYPE_MODECHAR_DEL).
+ * NOTE: This is currently not terribly useful for most modules. It is used by by the floodprot and noknock modules.
+ * @param channel		The channel
+ * @param modechar		The mode character, eg 'k'
  * @return The return value is ignored (use return 0)
  */
 int hooktype_modechar_del(Channel *channel, int modechar);
-/** Called when xxxx (function prototype for HOOKTYPE_MODECHAR_ADD).
- * @param client		The client
+/** Called when a channel mode is set by a local or remote user (function prototype for HOOKTYPE_MODECHAR_ADD).
+ * NOTE: This is currently not terribly useful for most modules. It is used by by the floodprot and noknock modules.
+ * @param channel		The channel
+ * @param modechar		The mode character, eg 'k'
  * @return The return value is ignored (use return 0)
  */
 int hooktype_modechar_add(Channel *channel, int modechar);
-/** Called when xxxx (function prototype for HOOKTYPE_AWAY).
+/** Called when a user sets away status or unsets away status (function prototype for HOOKTYPE_AWAY).
  * @param client		The client
+ * @param mtags         	Message tags associated with the event
+ * @param reason		The away reason, or NULL if away is unset.
  * @return The return value is ignored (use return 0)
  */
 int hooktype_away(Client *client, MessageTag *mtags, char *reason);
-/** Called when xxxx (function prototype for HOOKTYPE_PRE_INVITE).
+/** Called when a user wants to invite another user to a channel (function prototype for HOOKTYPE_PRE_INVITE).
  * @param client		The client
- * @return The return value is ignored (use return 0)
+ * @param acptr			The user who is invited (victim)
+ * @param channel		The channel the user is invited to
+ * @param override		If this was an override (1) or not. Note: pointer to an int!
+ * @retval HOOK_DENY		Deny the invite.
+ * @retval HOOK_ALLOW		Allow the invite (stop processing other modules)
+ * @retval HOOK_CONTINUE	Allow the invite, unless another module blocks it.
  */
 int hooktype_pre_invite(Client *client, Client *acptr, Channel *channel, int *override);
-/** Called when xxxx (function prototype for HOOKTYPE_INVITE).
+/** Called when a user invites another user to a channel (function prototype for HOOKTYPE_INVITE).
  * @param client		The client
+ * @param acptr			The user who is invited (victim)
+ * @param channel		The channel the user is invited to
+ * @param mtags			Message tags associated with the event
  * @return The return value is ignored (use return 0)
  */
-int hooktype_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags);
-/** Called when xxxx (function prototype for HOOKTYPE_PRE_KNOCK).
+int hooktype_invite(Client *client, Client *acptr, Channel *channel, MessageTag *mtags);
+/** Called when a user wants to knock on a channel (function prototype for HOOKTYPE_PRE_KNOCK).
+ * FIXME: where is the knock reason ?
  * @param client		The client
- * @return The return value is ignored (use return 0)
+ * @param channel		The channel to knock on
+ * @retval HOOK_DENY		Deny the knock.
+ * @retval HOOK_ALLOW		Allow the knock (stop processing other modules)
+ * @retval HOOK_CONTINUE	Allow the knock, unless another module blocks it.
  */
 int hooktype_pre_knock(Client *client, Channel *channel);
-/** Called when xxxx (function prototype for HOOKTYPE_KNOCK).
+/** Called when a user knocks on a channel (function prototype for HOOKTYPE_KNOCK).
  * @param client		The client
+ * @param channel		The channel to knock on
+ * @param mtags			Message tags associated with the event
+ * @param comment		The knock reason
  * @return The return value is ignored (use return 0)
  */
 int hooktype_knock(Client *client, Channel *channel, MessageTag *mtags, char *comment);
-/** Called when xxxx (function prototype for HOOKTYPE_WHOIS).
- * @param client		The client
+/** Called when a user whoises someone (function prototype for HOOKTYPE_WHOIS).
+ * @param client		The client issuing the command
+ * @param target		The user who is the target of the /WHOIS.
  * @return The return value is ignored (use return 0)
  */
 int hooktype_whois(Client *client, Client *target);
-/** Called when xxxx (function prototype for HOOKTYPE_WHO_STATUS).
+/** Called to add letters to the WHO status column (function prototype for HOOKTYPE_WHO_STATUS).
+ * If a user does a /WHO request, then WHO will show a number of status flags
+ * such as B to show the user is a bot (see "HELPOP WHO" for the full list).
  * @param client		The client
- * @return The return value is ignored (use return 0)
+ * @param target		The target, the user for which we should display WHO status flags
+ * @param channel		The channel if a channel WHO, or NULL
+ * @param member		The membership information, or NULL
+ * @param status		The current status flags, so far
+ * @param cansee		If 'client' can see 'target' (eg: in same channel or -i)
+ * @return Return 0 if no WHO status flags need to be added, otherwise return the ascii character (eg: return 'B').
  */
 int hooktype_who_status(Client *client, Client *target, Channel *channel, Member *member, char *status, int cansee);
-/** Called when xxxx (function prototype for HOOKTYPE_PRE_KILL).
+/** Called when an IRCOp wants to kill another user (function prototype for HOOKTYPE_PRE_KILL).
  * @param client		The client
- * @return The return value is ignored (use return 0)
+ * @param victim		The user who should be killed
+ * @param reason		The kill reason
+ * @retval EX_DENY		Deny the KICK (unless IRCOp with sufficient override rights).
+ * @retval EX_ALWAYS_DENY	Deny the KICK always (even if IRCOp).
+ * @retval EX_ALLOW		Allow the kick, unless another module blocks it.
  */
-int hooktype_pre_kill(Client *client, Client *victim, char *killpath);
-/** Called when xxxx (function prototype for HOOKTYPE_LOCAL_KILL).
+int hooktype_pre_kill(Client *client, Client *victim, char *reason);
+/** Called when a local user kills another user (function prototype for HOOKTYPE_LOCAL_KILL).
+ * Note that kills from remote IRCOps will show up as regular quits, so use hooktype_remote_quit() and hooktype_local_quit().
  * @param client		The client
+ * @param victim		The victim
+ * @param comment		The kill reason
  * @return The return value is ignored (use return 0)
  */
 int hooktype_local_kill(Client *client, Client *victim, char *comment);
-/** Called when xxxx (function prototype for HOOKTYPE_REHASHFLAG).
- * @param client		The client
+/** Called when an IRCOp /REHASH'es, and passes the parameters (function prototype for HOOKTYPE_REHASHFLAG).
+ * FIXME: shouldn't this be merged with hooktype_rehash() ?
+ * @param client		The client issuing the command, or NULL if rehashing due to system signal.
+ * @param str			The rehash flag (eg: "-all")
  * @return The return value is ignored (use return 0)
  */
 int hooktype_rehashflag(Client *client, char *str);
-/** Called when xxxx (function prototype for HOOKTYPE_CONFIGPOSTTEST).
- * @param client		The client
- * @return The return value is ignored (use return 0)
- */
-int hooktype_configposttest(int *errors);
-/** Called when xxxx (function prototype for HOOKTYPE_REHASH).
- * @param client		The client
+/** Called when the server is rehashing (function prototype for HOOKTYPE_REHASH).
  * @return The return value is ignored (use return 0)
  */
 int hooktype_rehash(void);
-/** Called when xxxx (function prototype for HOOKTYPE_REHASH_COMPLETE).
- * @param client		The client
+/** Called when the server has completed rehashing (function prototype for HOOKTYPE_REHASH_COMPLETE).
  * @return The return value is ignored (use return 0)
  */
 int hooktype_rehash_complete(void);
-/** Called when xxxx (function prototype for HOOKTYPE_CONFIGTEST).
- * @param client		The client
- * @return The return value is ignored (use return 0)
+/** Called when searching for a test function for a specific configuration item (function prototype for HOOKTYPE_CONFIGTEST).
+ * This is part of the configuration API, which is better documented at the
+ * wiki at https://www.unrealircd.org/docs/Dev:Configuration_API
+ * @param cfptr			Configuration file
+ * @param ce			Configuration entry
+ * @param section		One of CONFIG_*, eg: CONFIG_MAIN.
+ * @param errors		Counter for errors
+ * @retval 0			This entry is not for us, we don't know anything about it.
+ * @retval -1			Errors encountered (the number of errors is stored in *errors)
+ * @retval 1			This entry is handled and is without any errors.
  */
 int hooktype_configtest(ConfigFile *cfptr, ConfigEntry *ce, int section, int *errors);
-/** Called when xxxx (function prototype for HOOKTYPE_CONFIGRUN).
- * @param client		The client
- * @return The return value is ignored (use return 0)
+/** Called after all hooktype_configtest() have run, to check for missing config items (function prototype for HOOKTYPE_CONFIGPOSTTEST).
+ * @param errors		The number of errors
+ * @returns In case of errors, return -1.
+ */
+int hooktype_configposttest(int *errors);
+/** Called to run/do the active configuration for this configuration item (function prototype for HOOKTYPE_CONFIGRUN).
+ * This is part of the configuration API, which is better documented at the
+ * wiki at https://www.unrealircd.org/docs/Dev:Configuration_API
+ * @param cfptr			Configuration file
+ * @param ce			Configuration entry
+ * @param section		One of CONFIG_*, eg: CONFIG_MAIN.
+ * @retval 0			This entry is not for us, we don't know anything about it.
+ * @retval 1			This entry is for us, it is now handled, don't call any other modules for it anymore.
  */
 int hooktype_configrun(ConfigFile *cfptr, ConfigEntry *ce, int section);
-/** Called when xxxx (function prototype for HOOKTYPE_CONFIGRUN_EX).
- * @param client		The client
- * @return The return value is ignored (use return 0)
+/** Called to run/do the active configuration for this configuration item - extended version (function prototype for HOOKTYPE_CONFIGRUN_EX).
+ * This particular "extended version" is only used for extending listen { } options, so you probably don't need this one.
+ * Use hooktype_configrun() instead!
+ * @param cfptr			Configuration file
+ * @param ce			Configuration entry
+ * @param section		One of CONFIG_*, eg: CONFIG_MAIN.
+ * @param ptr			Pointer to something
+ * @retval 0			This entry is not for us, we don't know anything about it.
+ * @retval 1			This entry is for us, it is now handled, don't call any other modules for it anymore.
  */
 int hooktype_configrun_ex(ConfigFile *cfptr, ConfigEntry *ce, int section, void *ptr);
-/** Called when xxxx (function prototype for HOOKTYPE_STATS).
- * @param client		The client
+/** Called when a user types /STATS <something> (function prototype for HOOKTYPE_STATS).
+ * This way a module can add a new STATS item, eg 'STATS something'
+ * @param client		The client issuing the command
+ * @param str			The parameter to the STATS command, eg 'something'.
  * @return The return value is ignored (use return 0)
  */
 int hooktype_stats(Client *client, char *str);
@@ -1750,7 +1832,6 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_LOCAL_PART) && !ValidateHook(hooktype_local_part, func)) || \
         ((hooktype == HOOKTYPE_LOCAL_KICK) && !ValidateHook(hooktype_local_kick, func)) || \
         ((hooktype == HOOKTYPE_LOCAL_CHANMODE) && !ValidateHook(hooktype_local_chanmode, func)) || \
-        ((hooktype == HOOKTYPE_LOCAL_TOPIC) && !ValidateHook(hooktype_local_topic, func)) || \
         ((hooktype == HOOKTYPE_LOCAL_OPER) && !ValidateHook(hooktype_local_oper, func)) || \
         ((hooktype == HOOKTYPE_UNKUSER_QUIT) && !ValidateHook(hooktype_unkuser_quit, func)) || \
         ((hooktype == HOOKTYPE_LOCAL_PASS) && !ValidateHook(hooktype_local_pass, func)) || \
