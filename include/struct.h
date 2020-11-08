@@ -285,7 +285,7 @@ typedef enum ClientStatus {
 #define	SetUser(x)		((x)->status = CLIENT_STATUS_USER)
 #define	SetLog(x)		((x)->status = CLIENT_STATUS_LOG)
 
-/* @} */
+/** @} */
 
 /** Used for checking certain properties of clients, such as IsSecure() and IsULine().
  * @defgroup ClientFlags Client flags
@@ -487,7 +487,7 @@ typedef enum ClientStatus {
 #define ClearULine(x)			do { (x)->flags &= ~CLIENT_FLAG_ULINE; } while(0)
 #define ClearVirus(x)			do { (x)->flags &= ~CLIENT_FLAG_VIRUS; } while(0)
 #define ClearIdentLookupSent(x)		do { (x)->flags &= ~CLIENT_FLAG_IDENTLOOKUPSENT; } while(0)
-/* @} */
+/** @} */
 
 
 /* Others that access client structs: */
@@ -829,7 +829,7 @@ struct SWhois {
  *        E.g. parv[3] in the above example is out of bounds.
  */
 #define CMD_FUNC(x) void (x) (Client *client, MessageTag *recv_mtags, int parc, char *parv[])
-/* @} */
+/** @} */
 
 /** Command override function - used by all command override handlers.
  * This is used in the code like <pre>CMD_OVERRIDE_FUNC(ovr_somecmd)</pre> as a function definition.
@@ -1217,7 +1217,7 @@ struct Server {
 	} features;
 };
 
-/* @} */
+/** @} */
 
 struct MessageTag {
 	MessageTag *prev, *next;

@@ -963,18 +963,14 @@ EVENT(throttling_check_expire)
 		char *p = serveropts + strlen(serveropts);
 		Module *mi;
 		t = TStime();
-		if (!Hooks[17] && strchr(serveropts, 'm'))
+		if (!Hooks[HOOKTYPE_USERMSG] && strchr(serveropts, 'm'))
 		{ p = strchr(serveropts, 'm'); *p = '\0'; }
-		if (!Hooks[18] && strchr(serveropts, 'M'))
+		if (!Hooks[HOOKTYPE_CHANMSG] && strchr(serveropts, 'M'))
 		{ p = strchr(serveropts, 'M'); *p = '\0'; }
-		if (!Hooks[49] && !Hooks[51] && strchr(serveropts, 'R'))
-		{ p = strchr(serveropts, 'R'); *p = '\0'; }
-		if (Hooks[17] && !strchr(serveropts, 'm'))
+		if (Hooks[HOOKTYPE_USERMSG] && !strchr(serveropts, 'm'))
 			*p++ = 'm';
-		if (Hooks[18] && !strchr(serveropts, 'M'))
+		if (Hooks[HOOKTYPE_CHANMSG] && !strchr(serveropts, 'M'))
 			*p++ = 'M';
-		if ((Hooks[49] || Hooks[51]) && !strchr(serveropts, 'R'))
-			*p++ = 'R';
 		*p = '\0';
 		for (mi = Modules; mi; mi = mi->next)
 			if (!(mi->options & MOD_OPT_OFFICIAL))

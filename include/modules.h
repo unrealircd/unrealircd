@@ -206,7 +206,7 @@ typedef struct {
 	/** unique flag (like 0x10) */
 	Cmode_t		mode;
 
-	/** Number of paramters (1 or 0) */
+	/** Number of parameters (1 or 0) */
 	int			paracount;
 
 	/** Check access or parameter of the channel mode.
@@ -911,111 +911,222 @@ extern int LoadPersistentLongX(ModuleInfo *modinfo, char *varshortname, long *va
 extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long var);
 #define SavePersistentLong(modinfo, var) SavePersistentLongX(modinfo, #var, var)
 
+/** Hooks trigger on "events", such as a new user connecting, joining a channel, etc.
+ * You are suggested to use CTRL+F on this page to search for any useful hook
+ * in the 'Function Documentation' below.
+ *
+ * Once you have found your hook, you can use it in the code,
+ * see https://www.unrealircd.org/docs/Dev:Hook_API#How_to_have_your_module_.22hook_in.22.
+ *
+ * @defgroup HookAPI Hook API
+ * @{
+ */
+
 /* Hook types */
-#define HOOKTYPE_LOCAL_QUIT	1
-#define HOOKTYPE_LOCAL_NICKCHANGE 2
-#define HOOKTYPE_LOCAL_CONNECT 3
-#define HOOKTYPE_REHASHFLAG 4
-#define HOOKTYPE_PRE_LOCAL_PART 5
-#define HOOKTYPE_CONFIGPOSTTEST 6
-#define HOOKTYPE_REHASH 7
-#define HOOKTYPE_PRE_LOCAL_CONNECT 8
-#define HOOKTYPE_PRE_LOCAL_QUIT 9
-#define HOOKTYPE_SERVER_CONNECT 11
-#define HOOKTYPE_SERVER_QUIT 12
-#define HOOKTYPE_STATS 13
-#define HOOKTYPE_LOCAL_JOIN 14
-#define HOOKTYPE_CONFIGTEST 15
-#define HOOKTYPE_CONFIGRUN 16
-/* If you ever change the number of usermsg & chanmsg, notify Syzop first, kthx! ;p */
-#define HOOKTYPE_USERMSG 17
-#define HOOKTYPE_CHANMSG 18
-#define HOOKTYPE_LOCAL_PART 19
-#define HOOKTYPE_LOCAL_KICK 20
-#define HOOKTYPE_LOCAL_CHANMODE 21
-#define HOOKTYPE_LOCAL_TOPIC 22
-#define HOOKTYPE_LOCAL_OPER 23
-#define HOOKTYPE_UNKUSER_QUIT 24
-#define HOOKTYPE_LOCAL_PASS 25
-#define HOOKTYPE_REMOTE_CONNECT 26
-#define HOOKTYPE_REMOTE_QUIT 27
-#define HOOKTYPE_PRE_LOCAL_JOIN 28
-#define HOOKTYPE_PRE_LOCAL_KICK 29
-#define HOOKTYPE_PRE_LOCAL_TOPIC 30
-#define HOOKTYPE_REMOTE_NICKCHANGE 31
-#define HOOKTYPE_CHANNEL_CREATE 32
-#define HOOKTYPE_CHANNEL_DESTROY 33
-#define HOOKTYPE_REMOTE_CHANMODE 34
-#define HOOKTYPE_TKL_EXCEPT 35
-#define HOOKTYPE_UMODE_CHANGE 36
-#define HOOKTYPE_TOPIC 37
-#define HOOKTYPE_REHASH_COMPLETE 38
-#define HOOKTYPE_TKL_ADD 39
-#define HOOKTYPE_TKL_DEL 40
-#define HOOKTYPE_LOCAL_KILL 41
-#define HOOKTYPE_LOG 42
-#define HOOKTYPE_REMOTE_JOIN 43
-#define HOOKTYPE_REMOTE_PART 44
-#define HOOKTYPE_REMOTE_KICK 45
-#define HOOKTYPE_LOCAL_SPAMFILTER 46
-#define HOOKTYPE_SILENCED 47
-#define HOOKTYPE_POST_SERVER_CONNECT 48
-#define HOOKTYPE_RAWPACKET_IN 49
-#define HOOKTYPE_PACKET 51
-#define HOOKTYPE_HANDSHAKE 52
-#define HOOKTYPE_AWAY 53
-#define HOOKTYPE_INVITE 55
-#define HOOKTYPE_CAN_JOIN 56
-#define HOOKTYPE_CAN_SEND_TO_CHANNEL 57
-#define HOOKTYPE_CAN_KICK 58
-#define HOOKTYPE_FREE_CLIENT 59
-#define HOOKTYPE_FREE_USER 60
-#define HOOKTYPE_PRE_CHANMSG 61
-#define HOOKTYPE_KNOCK 63
-#define HOOKTYPE_MODECHAR_ADD 64
-#define HOOKTYPE_MODECHAR_DEL 65
-#define HOOKTYPE_CAN_JOIN_LIMITEXCEEDED 67
-#define HOOKTYPE_VISIBLE_IN_CHANNEL 68
-#define HOOKTYPE_PRE_LOCAL_CHANMODE 69
-#define HOOKTYPE_PRE_REMOTE_CHANMODE 70
-#define HOOKTYPE_JOIN_DATA 71
-#define HOOKTYPE_PRE_KNOCK 72
-#define HOOKTYPE_PRE_INVITE 73
-#define HOOKTYPE_OPER_INVITE_BAN 74
-#define HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL 75
-#define HOOKTYPE_CHAN_PERMIT_NICK_CHANGE 76
-#define HOOKTYPE_IS_CHANNEL_SECURE 77
-#define HOOKTYPE_SEND_CHANNEL 78
-#define HOOKTYPE_CHANNEL_SYNCED 79
-#define HOOKTYPE_CAN_SAJOIN 80
-#define HOOKTYPE_WHOIS 81
-#define HOOKTYPE_CHECK_INIT 82
-#define HOOKTYPE_WHO_STATUS 83
-#define HOOKTYPE_MODE_DEOP 84
-#define HOOKTYPE_PRE_KILL 85
-#define HOOKTYPE_SEE_CHANNEL_IN_WHOIS 86
-#define HOOKTYPE_DCC_DENIED 87
-#define HOOKTYPE_SERVER_HANDSHAKE_OUT 88
-#define HOOKTYPE_SERVER_SYNCED	89
-#define HOOKTYPE_SECURE_CONNECT 90
-#define HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION 91
-#define HOOKTYPE_REQUIRE_SASL 92
-#define HOOKTYPE_SASL_CONTINUATION 93
-#define HOOKTYPE_SASL_RESULT 94
-#define HOOKTYPE_PLACE_HOST_BAN 95
-#define HOOKTYPE_FIND_TKLINE_MATCH 96
-#define HOOKTYPE_WELCOME 97
-#define HOOKTYPE_PRE_COMMAND 98
-#define HOOKTYPE_POST_COMMAND 99
-#define HOOKTYPE_NEW_MESSAGE 100
-#define HOOKTYPE_IS_HANDSHAKE_FINISHED 101
-#define HOOKTYPE_PRE_LOCAL_QUIT_CHAN 102
-#define HOOKTYPE_IDENT_LOOKUP 103
-#define HOOKTYPE_CONFIGRUN_EX 104
-#define HOOKTYPE_CAN_SEND_TO_USER 105
-#define HOOKTYPE_SERVER_SYNC 106
-#define HOOKTYPE_ACCOUNT_LOGIN 107
-#define HOOKTYPE_CLOSE_CONNECTION 108
+/** See hooktype_pre_local_connect() */
+#define HOOKTYPE_PRE_LOCAL_CONNECT	1
+/** See hooktype_local_connect() */
+#define HOOKTYPE_LOCAL_CONNECT	2
+/** See hooktype_remote_connect() */
+#define HOOKTYPE_REMOTE_CONNECT	3
+/** See hooktype_pre_local_quit() */
+#define HOOKTYPE_PRE_LOCAL_QUIT	4
+/** See hooktype_local_quit() */
+#define HOOKTYPE_LOCAL_QUIT	5
+/** See hooktype_remote_quit() */
+#define HOOKTYPE_REMOTE_QUIT	6
+/** See hooktype_unkuser_quit() */
+#define HOOKTYPE_UNKUSER_QUIT	7
+/** See hooktype_server_connect() */
+#define HOOKTYPE_SERVER_CONNECT	8
+/** See hooktype_server_handshake_out() */
+#define HOOKTYPE_SERVER_HANDSHAKE_OUT	9
+/** See hooktype_server_sync() */
+#define HOOKTYPE_SERVER_SYNC	10
+/** See hooktype_post_server_connect() */
+#define HOOKTYPE_POST_SERVER_CONNECT	11
+/** See hooktype_server_synced() */
+#define HOOKTYPE_SERVER_SYNCED	12
+/** See hooktype_server_quit() */
+#define HOOKTYPE_SERVER_QUIT	13
+/** See hooktype_local_nickchange() */
+#define HOOKTYPE_LOCAL_NICKCHANGE	14
+/** See hooktype_remote_nickchange() */
+#define HOOKTYPE_REMOTE_NICKCHANGE	15
+/** See hooktype_can_join() */
+#define HOOKTYPE_CAN_JOIN	16
+/** See hooktype_pre_local_join() */
+#define HOOKTYPE_PRE_LOCAL_JOIN	17
+/** See hooktype_local_join() */
+#define HOOKTYPE_LOCAL_JOIN	18
+/** See hooktype_remote_join() */
+#define HOOKTYPE_REMOTE_JOIN	19
+/** See hooktype_pre_local_part() */
+#define HOOKTYPE_PRE_LOCAL_PART	20
+/** See hooktype_local_part() */
+#define HOOKTYPE_LOCAL_PART	21
+/** See hooktype_remote_part() */
+#define HOOKTYPE_REMOTE_PART	22
+/** See hooktype_pre_local_kick() */
+#define HOOKTYPE_PRE_LOCAL_KICK	23
+/** See hooktype_can_kick() */
+#define HOOKTYPE_CAN_KICK	24
+/** See hooktype_local_kick() */
+#define HOOKTYPE_LOCAL_KICK	25
+/** See hooktype_remote_kick() */
+#define HOOKTYPE_REMOTE_KICK	26
+/** See hooktype_pre_chanmsg() */
+#define HOOKTYPE_PRE_CHANMSG	28
+/** See hooktype_can_send_to_user() */
+#define HOOKTYPE_CAN_SEND_TO_USER	29
+/** See hooktype_can_send_to_channel() */
+#define HOOKTYPE_CAN_SEND_TO_CHANNEL	30
+/** See hooktype_usermsg() */
+#define HOOKTYPE_USERMSG	31
+/** See hooktype_chanmsg() */
+#define HOOKTYPE_CHANMSG	32
+/** See hooktype_pre_local_topic() */
+#define HOOKTYPE_PRE_LOCAL_TOPIC	33
+/** See hooktype_local_topic() */
+#define HOOKTYPE_LOCAL_TOPIC	34
+/** See hooktype_topic() */
+#define HOOKTYPE_TOPIC	35
+/** See hooktype_pre_local_chanmode() */
+#define HOOKTYPE_PRE_LOCAL_CHANMODE	36
+/** See hooktype_pre_remote_chanmode() */
+#define HOOKTYPE_PRE_REMOTE_CHANMODE	37
+/** See hooktype_local_chanmode() */
+#define HOOKTYPE_LOCAL_CHANMODE	38
+/** See hooktype_remote_chanmode() */
+#define HOOKTYPE_REMOTE_CHANMODE	39
+/** See hooktype_modechar_del() */
+#define HOOKTYPE_MODECHAR_DEL	40
+/** See hooktype_modechar_add() */
+#define HOOKTYPE_MODECHAR_ADD	41
+/** See hooktype_away() */
+#define HOOKTYPE_AWAY	42
+/** See hooktype_pre_invite() */
+#define HOOKTYPE_PRE_INVITE	43
+/** See hooktype_invite() */
+#define HOOKTYPE_INVITE	44
+/** See hooktype_pre_knock() */
+#define HOOKTYPE_PRE_KNOCK	45
+/** See hooktype_knock() */
+#define HOOKTYPE_KNOCK	46
+/** See hooktype_whois() */
+#define HOOKTYPE_WHOIS	47
+/** See hooktype_who_status() */
+#define HOOKTYPE_WHO_STATUS	48
+/** See hooktype_pre_kill() */
+#define HOOKTYPE_PRE_KILL	49
+/** See hooktype_local_kill() */
+#define HOOKTYPE_LOCAL_KILL	50
+/** See hooktype_rehashflag() */
+#define HOOKTYPE_REHASHFLAG	51
+/** See hooktype_configposttest() */
+#define HOOKTYPE_CONFIGPOSTTEST	52
+/** See hooktype_rehash() */
+#define HOOKTYPE_REHASH	53
+/** See hooktype_rehash_complete() */
+#define HOOKTYPE_REHASH_COMPLETE	54
+/** See hooktype_configtest() */
+#define HOOKTYPE_CONFIGTEST	55
+/** See hooktype_configrun() */
+#define HOOKTYPE_CONFIGRUN	56
+/** See hooktype_configrun_ex() */
+#define HOOKTYPE_CONFIGRUN_EX	57
+/** See hooktype_stats() */
+#define HOOKTYPE_STATS	58
+/** See hooktype_local_oper() */
+#define HOOKTYPE_LOCAL_OPER	59
+/** See hooktype_local_pass() */
+#define HOOKTYPE_LOCAL_PASS	60
+/** See hooktype_channel_create() */
+#define HOOKTYPE_CHANNEL_CREATE	61
+/** See hooktype_channel_destroy() */
+#define HOOKTYPE_CHANNEL_DESTROY	62
+/** See hooktype_tkl_except() */
+#define HOOKTYPE_TKL_EXCEPT	63
+/** See hooktype_umode_change() */
+#define HOOKTYPE_UMODE_CHANGE	64
+/** See hooktype_tkl_add() */
+#define HOOKTYPE_TKL_ADD	65
+/** See hooktype_tkl_del() */
+#define HOOKTYPE_TKL_DEL	66
+/** See hooktype_log() */
+#define HOOKTYPE_LOG	67
+/** See hooktype_local_spamfilter() */
+#define HOOKTYPE_LOCAL_SPAMFILTER	68
+/** See hooktype_silenced() */
+#define HOOKTYPE_SILENCED	69
+/** See hooktype_rawpacket_in() */
+#define HOOKTYPE_RAWPACKET_IN	70
+/** See hooktype_packet() */
+#define HOOKTYPE_PACKET	71
+/** See hooktype_handshake() */
+#define HOOKTYPE_HANDSHAKE	72
+/** See hooktype_free_client() */
+#define HOOKTYPE_FREE_CLIENT	73
+/** See hooktype_free_user() */
+#define HOOKTYPE_FREE_USER	74
+/** See hooktype_can_join_limitexceeded() */
+#define HOOKTYPE_CAN_JOIN_LIMITEXCEEDED	75
+/** See hooktype_visible_in_channel() */
+#define HOOKTYPE_VISIBLE_IN_CHANNEL	76
+/** See hooktype_see_channel_in_whois() */
+#define HOOKTYPE_SEE_CHANNEL_IN_WHOIS	77
+/** See hooktype_join_data() */
+#define HOOKTYPE_JOIN_DATA	78
+/** See hooktype_oper_invite_ban() */
+#define HOOKTYPE_OPER_INVITE_BAN	79
+/** See hooktype_view_topic_outside_channel() */
+#define HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL	80
+/** See hooktype_chan_permit_nick_change() */
+#define HOOKTYPE_CHAN_PERMIT_NICK_CHANGE	81
+/** See hooktype_is_channel_secure() */
+#define HOOKTYPE_IS_CHANNEL_SECURE	82
+/** See hooktype_channel_synced() */
+#define HOOKTYPE_CHANNEL_SYNCED	83
+/** See hooktype_can_sajoin() */
+#define HOOKTYPE_CAN_SAJOIN	84
+/** See hooktype_check_init() */
+#define HOOKTYPE_CHECK_INIT	85
+/** See hooktype_mode_deop() */
+#define HOOKTYPE_MODE_DEOP	86
+/** See hooktype_dcc_denied() */
+#define HOOKTYPE_DCC_DENIED	87
+/** See hooktype_secure_connect() */
+#define HOOKTYPE_SECURE_CONNECT	88
+/** See hooktype_can_bypass_channel_message_restriction() */
+#define HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION	89
+/** See hooktype_require_sasl() */
+#define HOOKTYPE_REQUIRE_SASL	90
+/** See hooktype_sasl_continuation() */
+#define HOOKTYPE_SASL_CONTINUATION	91
+/** See hooktype_sasl_result() */
+#define HOOKTYPE_SASL_RESULT	92
+/** See hooktype_place_host_ban() */
+#define HOOKTYPE_PLACE_HOST_BAN	93
+/** See hooktype_find_tkline_match() */
+#define HOOKTYPE_FIND_TKLINE_MATCH	94
+/** See hooktype_welcome() */
+#define HOOKTYPE_WELCOME	95
+/** See hooktype_pre_command() */
+#define HOOKTYPE_PRE_COMMAND	96
+/** See hooktype_post_command() */
+#define HOOKTYPE_POST_COMMAND	97
+/** See hooktype_new_message() */
+#define HOOKTYPE_NEW_MESSAGE	98
+/** See hooktype_is_handshake_finished() */
+#define HOOKTYPE_IS_HANDSHAKE_FINISHED	99
+/** See hooktype_pre_local_quit_chan() */
+#define HOOKTYPE_PRE_LOCAL_QUIT_CHAN	100
+/** See hooktype_ident_lookup() */
+#define HOOKTYPE_IDENT_LOOKUP	101
+/** See hooktype_account_login() */
+#define HOOKTYPE_ACCOUNT_LOGIN	102
+/** See hooktype_close_connection() */
+#define HOOKTYPE_CLOSE_CONNECTION	103
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -1025,110 +1136,592 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
  */
 
 /* Hook prototypes */
-int hooktype_local_connect(Client *client);
-int hooktype_remote_connect(Client *client);
-int hooktype_server_connect(Client *client);
-int hooktype_server_sync(Client *client);
-int hooktype_post_server_connect(Client *client);
-char *hooktype_pre_local_quit(Client *client, char *comment);
-int hooktype_local_quit(Client *client, MessageTag *mtags, char *comment);
-int hooktype_remote_quit(Client *client, MessageTag *mtags, char *comment);
-int hooktype_unkuser_quit(Client *client, MessageTag *mtags, char *comment);
+/** Called when a local user connects, allows pausing or rejecting the user (function prototype for HOOKTYPE_PRE_LOCAL_CONNECT).
+ * @param client		The client
+ * @retval HOOK_DENY		Stop the connection (hold/pause it).
+ * @retval HOOK_ALLOW		Allow the connection (stop processing other modules)
+ * @retval HOOK_CONTINUE	Allow the connection, unless another module blocks it.
+ */
 int hooktype_pre_local_connect(Client *client);
-int hooktype_server_quit(Client *client, MessageTag *mtags);
-int hooktype_local_nickchange(Client *client, char *newnick);
-int hooktype_remote_nickchange(Client *client, char *newnick);
-int hooktype_can_join(Client *client, Channel *channel, char *key, char *parv[]);
-int hooktype_pre_local_join(Client *client, Channel *channel, char *parv[]);
-int hooktype_local_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
-int hooktype_remote_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
-char *hooktype_pre_local_part(Client *client, Channel *channel, char *comment);
-int hooktype_local_part(Client *client, Channel *channel, MessageTag *mtags, char *comment);
-int hooktype_remote_part(Client *client, Channel *channel, MessageTag *mtags, char *comment);
-char *hooktype_pre_local_kick(Client *client, Client *victim, Channel *channel, char *comment);
-int hooktype_can_kick(Client *client, Client *victim, Channel *channel, char *comment, long client_flags, long victim_flags, char **error);
-int hooktype_local_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, char *comment);
-int hooktype_remote_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, char *comment);
-char *hooktype_pre_usermsg(Client *client, Client *to, char *text, SendType sendtype);
-int hooktype_usermsg(Client *client, Client *to, MessageTag *mtags, char *text, SendType sendtype);
-int hooktype_can_send_to_channel(Client *client, Channel *channel, Membership *member, char **text, char **errmsg, SendType sendtype);
-int hooktype_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype);
-int hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, SendType sendtype);
-int hooktype_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, SendType sendtype);
-char *hooktype_pre_local_topic(Client *client, Channel *channel, char *topic);
-int hooktype_local_topic(Client *client, Channel *channel, char *topic);
-int hooktype_topic(Client *client, Channel *channel, MessageTag *mtags, char *topic);
-int hooktype_pre_local_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-int hooktype_pre_remote_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-int hooktype_local_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-int hooktype_remote_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-int hooktype_modechar_del(Channel *channel, int modechar);
-int hooktype_modechar_add(Channel *channel, int modechar);
-int hooktype_away(Client *client, MessageTag *mtags, char *reason);
-int hooktype_pre_invite(Client *client, Client *acptr, Channel *channel, int *override);
-int hooktype_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags);
-int hooktype_pre_knock(Client *client, Channel *channel);
-int hooktype_knock(Client *client, Channel *channel, MessageTag *mtags, char *comment);
-int hooktype_whois(Client *client, Client *target);
-int hooktype_who_status(Client *client, Client *target, Channel *channel, Member *member, char *status, int cansee);
-int hooktype_pre_kill(Client *client, Client *victim, char *killpath);
-int hooktype_local_kill(Client *client, Client *victim, char *comment);
-int hooktype_rehashflag(Client *client, char *str);
-int hooktype_configposttest(int *errors);
-int hooktype_rehash(void);
-int hooktype_stats(Client *client, char *str);
-int hooktype_configtest(ConfigFile *cfptr, ConfigEntry *ce, int section, int *errors);
-int hooktype_configrun(ConfigFile *cfptr, ConfigEntry *ce, int section);
-int hooktype_configrun_ex(ConfigFile *cfptr, ConfigEntry *ce, int section, void *ptr);
-int hooktype_local_oper(Client *client, int add);
-int hooktype_local_pass(Client *client, char *password);
-int hooktype_channel_create(Client *client, Channel *channel);
-int hooktype_channel_destroy(Channel *channel, int *should_destroy);
-int hooktype_tkl_except(Client *cptr, int ban_type);
-int hooktype_umode_change(Client *client, long setflags, long newflags);
-int hooktype_rehash_complete(void);
-int hooktype_tkl_add(Client *client, TKL *tkl);
-int hooktype_tkl_del(Client *client, TKL *tkl);
-int hooktype_log(int flags, char *timebuf, char *buf);
-int hooktype_local_spamfilter(Client *acptr, char *str, char *str_in, int type, char *target, TKL *tkl);
-int hooktype_silenced(Client *client, Client *to, SendType sendtype);
-int hooktype_rawpacket_in(Client *client, char *readbuf, int *length);
-int hooktype_packet(Client *from, Client *to, Client *intended_to, char **msg, int *length);
-int hooktype_handshake(Client *client);
-int hooktype_free_client(Client *acptr);
-int hooktype_free_user(Client *acptr);
-int hooktype_can_join_limitexceeded(Client *client, Channel *channel, char *key, char *parv[]);
-int hooktype_visible_in_channel(Client *client, Channel *channel);
-int hooktype_join_data(Client *who, Channel *channel);
-int hooktype_oper_invite_ban(Client *client, Channel *channel);
-int hooktype_view_topic_outside_channel(Client *client, Channel *channel);
-int hooktype_chan_permit_nick_change(Client *client, Channel *channel);
-int hooktype_is_channel_secure(Channel *channel);
-int hooktype_can_send_to_channel_secure(Client *client, Channel *channel);
-int hooktype_channel_synced(Channel *channel, int merge, int removetheirs, int nomode);
-int hooktype_can_sajoin(Client *target, Channel *channel, Client *client);
-int hooktype_check_init(Client *cptr, char *sockname, size_t size);
-int hooktype_mode_deop(Client *client, Client *victim, Channel *channel, u_int what, int modechar, long my_access, char **badmode);
-int hooktype_see_channel_in_whois(Client *client, Client *target, Channel *channel);
-int hooktype_dcc_denied(Client *client, char *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *denydcc);
+/** Called when a local user connects (function prototype for HOOKTYPE_LOCAL_CONNECT).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_local_connect(Client *client);
+/** Called when a remote user connects (function prototype for HOOKTYPE_REMOTE_CONNECT).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_remote_connect(Client *client);
+/** Called when a local user disconnects, allows changing the quit/disconnect reason (function prototype for HOOKTYPE_PRE_LOCAL_QUIT).
+ * @param client		The client
+ * @param client		The quit/disconnect reason
+ * @return The quit reason (you may also return 'comment' if it should be unchanged) or NULL for an empty reason.
+ */
+char *hooktype_pre_local_quit(Client *client, char *comment);
+/** Called when a local user quits or otherwise disconnects (function prototype for HOOKTYPE_PRE_LOCAL_QUIT).
+ * @param client		The client
+ * @param mtags         	Message tags associated with the quit
+ * @param comment       	The quit/exit reason
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_local_quit(Client *client, MessageTag *mtags, char *comment);
+/** Called when a remote user qutis or otherwise disconnects (function prototype for HOOKTYPE_REMOTE_QUIT).
+ * @param client		The client
+ * @param mtags         	Message tags associated with the quit
+ * @param comment       	The quit/exit reason
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_remote_quit(Client *client, MessageTag *mtags, char *comment);
+/** Called when an unregistered user disconnects, so before the user was fully online (function prototype for HOOKTYPE_UNKUSER_QUIT).
+ * @param client		The client
+ * @param mtags         	Message tags associated with the quit
+ * @param comment       	The quit/exit reason
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_unkuser_quit(Client *client, MessageTag *mtags, char *comment);
+/** Called when a local or remote server connects / links in (function prototype for HOOKTYPE_SERVER_CONNECT).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_server_connect(Client *client);
+/** Called very early when doing an outgoing server connect (function prototype for HOOKTYPE_SERVER_HANDSHAKE_OUT).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_server_handshake_out(Client *client);
+/** Called on new locally connected server, in or out, after all users/channels/TKLs/etc have been synced, but before EOS (function prototype for HOOKTYPE_SERVER_SYNC).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_server_sync(Client *client);
+/** Called when a local or remote server connects / links in, but only after EOS (End Of Sync) has been received or sent (function prototype for HOOKTYPE_POST_SERVER_CONNECT).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_post_server_connect(Client *client);
+/** Called when a local or remote server is linked in and fully synced, after EOS / End Of Sync (function prototype for HOOKTYPE_SERVER_SYNCED).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_server_synced(Client *client);
+/** Called when a local or remote server disconnects (function prototype for HOOKTYPE_SERVER_QUIT).
+ * @param client		The client
+ * @param mtags         	Message tags associated with the disconnect
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_server_quit(Client *client, MessageTag *mtags);
+/** Called when a local user changes the nick name (function prototype for HOOKTYPE_LOCAL_NICKCHANGE).
+ * @param client		The client
+ * @param newnick		The new nick name
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_local_nickchange(Client *client, char *newnick);
+/** Called when a remote user changes the nick name (function prototype for HOOKTYPE_REMOTE_NICKCHANGE).
+ * @param client		The client
+ * @param newnick		The new nick name
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_remote_nickchange(Client *client, char *newnick);
+/** Called when a user wants to join a channel, may the user join? (function prototype for HOOKTYPE_CAN_JOIN).
+ * @param client		The client
+ * @param channel		The channel the user wants to join
+ * @param key			The key supplied by the client
+ * @param parv			The parameters from the JOIN. Normally you should not use this.
+ * @return Return 0 to allow the user, any other value should be an IRC numeric (eg: ERR_BANNEDFROMCHAN).
+ */
+int hooktype_can_join(Client *client, Channel *channel, char *key, char *parv[]);
+/** Called when a user wants to join a channel, may the user join? (function prototype for HOOKTYPE_PRE_LOCAL_JOIN).
+ * FIXME: It's not entirely clear why we have both hooktype_can_join() and hooktype_pre_local_join().
+ * @param client		The client
+ * @param channel		The channel the user wants to join
+ * @param parv			The parameters from the JOIN. May contain channel key in parv[2].
+ * @retval HOOK_DENY		Deny the join.
+ * @retval HOOK_ALLOW		Allow the join (stop processing other modules)
+ * @retval HOOK_CONTINUE	Allow the join, unless another module blocks it.
+ */
+int hooktype_pre_local_join(Client *client, Channel *channel, char *parv[]);
+/** Called when a local user joins a channel (function prototype for HOOKTYPE_LOCAL_JOIN).
+ * @param client		The client
+ * @param channel		The channel the user wants to join
+ * @param mtags         	Message tags associated with the event
+ * @param parv			The parameters from the JOIN. May contain channel key in parv[2].
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_local_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
+/** Called when a remote user joins a channel (function prototype for HOOKTYPE_REMOTE_JOIN).
+ * @param client		The client
+ * @param channel		The channel the user wants to join
+ * @param mtags         	Message tags associated with the event
+ * @param parv			The parameters from the JOIN. May contain channel key in parv[2].
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_remote_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
+/** Called when a local user wants to part a channel (function prototype for HOOKTYPE_PRE_LOCAL_PART).
+ * @param client		The client
+ * @param channel		The channel the user wants to part
+ * @param comment		The PART reason, this may be NULL.
+ * @return The part reason (you may also return 'comment' if it should be unchanged) or NULL for an empty reason.
+ */
+char *hooktype_pre_local_part(Client *client, Channel *channel, char *comment);
+/** Called when a local user parts a channel (function prototype for HOOKTYPE_LOCAL_PART).
+ * @param client		The client
+ * @param channel		The channel the user is leaving
+ * @param mtags         	Message tags associated with the event
+ * @param comment		The PART reason, this may be NULL.
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_local_part(Client *client, Channel *channel, MessageTag *mtags, char *comment);
+/** Called when a remote user parts a channel (function prototype for HOOKTYPE_REMOTE_PART).
+ * @param client		The client
+ * @param channel		The channel the user is leaving
+ * @param mtags         	Message tags associated with the event
+ * @param comment		The PART reason, this may be NULL.
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_remote_part(Client *client, Channel *channel, MessageTag *mtags, char *comment);
+/** Do not use this function, use hooktype_can_kick() instead!
+ */
+char *hooktype_pre_local_kick(Client *client, Client *victim, Channel *channel, char *comment);
+/** Called when a local user wants to kick another user from a channel (function prototype for HOOKTYPE_CAN_KICK).
+ * @param client		The client issuing the command
+ * @param victim		The victim that should be kicked
+ * @param channel		The channel the user should be kicked from
+ * @param comment		The KICK reason, this may be NULL.
+ * @param client_flags		The access flags of 'client', one of CHFL_*, eg CHFL_CHANOP.
+ * @param victim_flags		The access flags of 'victim', one of CHFL_*, eg CHFL_VOICE.
+ * @param error			The error message that should be shown to the user (full IRC protocol line).
+ * @retval EX_DENY		Deny the KICK (unless IRCOp with sufficient override rights).
+ * @retval EX_ALWAYS_DENY	Deny the KICK always (even if IRCOp).
+ * @retval EX_ALLOW		Allow the kick, unless another module blocks it.
+ */
+int hooktype_can_kick(Client *client, Client *victim, Channel *channel, char *comment, long client_flags, long victim_flags, char **error);
+/** Called when a local user is kicked (function prototype for HOOKTYPE_LOCAL_KICK).
+ * @param client		The client issuing the command
+ * @param victim		The victim that should be kicked
+ * @param channel		The channel the user should be kicked from
+ * @param mtags         	Message tags associated with the event
+ * @param comment		The KICK reason, this may be NULL.
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_local_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, char *comment);
+/** Called when a remote user is kicked (function prototype for HOOKTYPE_REMOTE_KICK).
+ * @param client		The client issuing the command
+ * @param victim		The victim that should be kicked
+ * @param channel		The channel the user should be kicked from
+ * @param mtags         	Message tags associated with the event
+ * @param comment		The KICK reason, this may be NULL.
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_remote_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, char *comment);
+/** Called right before a message is sent to the channel (function prototype for HOOKTYPE_PRE_CHANMSG).
+ * This function is only used by delayjoin. It cannot block a message. See hooktype_can_send_to_user() instead!
+ * @param client		The client
+ * @param channel		The channel
+ * @param mtags         	Message tags associated with the event
+ * @param text			The text that will be sent
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, SendType sendtype);
+/** Called when a user wants to message another user (function prototype for HOOKTYPE_CAN_SEND_TO_USER).
+ * @param client		The sender
+ * @param target		The recipient
+ * @param text			The text to be sent (double pointer!)
+ * @param errmsg		The error message. If you block the message (HOOK_DENY) then you MUST set this!
+ * @param sendtype		The message type, for example SEND_TYPE_PRIVMSG.
+ * @retval HOOK_DENY		Deny the message. The 'errmsg' will be sent to the user.
+ * @retval HOOK_CONTINUE	Allow the message, unless other modules block it.
+ */
+int hooktype_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype);
+/** Called when xxxx (function prototype for HOOKTYPE_CAN_SEND_TO_CHANNEL).
+ * @param client		The sender
+ * @param channel		The channel to send to
+ * @param membership		The membership struct, so you can see for example op status.
+ * @param text			The text to be sent (double pointer!)
+ * @param errmsg		The error message. If you block the message (HOOK_DENY) then you MUST set this!
+ * @param sendtype		The message type, for example SEND_TYPE_PRIVMSG.
+ * @retval HOOK_DENY		Deny the message. The 'errmsg' will be sent to the user.
+ * @retval HOOK_CONTINUE	Allow the message, unless other modules block it.
+ */
+int hooktype_can_send_to_channel(Client *client, Channel *channel, Membership *member, char **text, char **errmsg, SendType sendtype);
+/** Called when a message is sent from one user to another user (function prototype for HOOKTYPE_USERMSG).
+ * @param client		The sender
+ * @param to			The recipient
+ * @param mtags         	Message tags associated with the event
+ * @param text			The text
+ * @param sendtype		The message type, for example SEND_TYPE_PRIVMSG.
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_usermsg(Client *client, Client *to, MessageTag *mtags, char *text, SendType sendtype);
+/** Called when a message is sent to a channel (function prototype for HOOKTYPE_CHANMSG).
+ * @param client		The sender
+ * @param channel		The channel
+ * @param sendflags		One of SEND_* (eg SEND_ALL, SKIP_DEAF).
+ * @param prefix		Either zero, one or a combination of PREFIX_*.
+ * @param target		Target string, usually this is "#channel", but it can also contain prefixes like "@#channel"
+ * @param mtags         	Message tags associated with the event
+ * @param text			The text
+ * @param sendtype		The message type, for example SEND_TYPE_PRIVMSG.
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, SendType sendtype);
+/** Called when xxxx (function prototype for HOOKTYPE_PRE_LOCAL_TOPIC).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+char *hooktype_pre_local_topic(Client *client, Channel *channel, char *topic);
+/** Called when xxxx (function prototype for HOOKTYPE_LOCAL_TOPIC).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_local_topic(Client *client, Channel *channel, char *topic);
+/** Called when xxxx (function prototype for HOOKTYPE_TOPIC).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_topic(Client *client, Channel *channel, MessageTag *mtags, char *topic);
+/** Called when xxxx (function prototype for HOOKTYPE_PRE_LOCAL_CHANMODE).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_pre_local_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+/** Called when xxxx (function prototype for HOOKTYPE_PRE_REMOTE_CHANMODE).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_pre_remote_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+/** Called when xxxx (function prototype for HOOKTYPE_LOCAL_CHANMODE).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_local_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+/** Called when xxxx (function prototype for HOOKTYPE_REMOTE_CHANMODE).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_remote_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+/** Called when xxxx (function prototype for HOOKTYPE_MODECHAR_DEL).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_modechar_del(Channel *channel, int modechar);
+/** Called when xxxx (function prototype for HOOKTYPE_MODECHAR_ADD).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_modechar_add(Channel *channel, int modechar);
+/** Called when xxxx (function prototype for HOOKTYPE_AWAY).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_away(Client *client, MessageTag *mtags, char *reason);
+/** Called when xxxx (function prototype for HOOKTYPE_PRE_INVITE).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_pre_invite(Client *client, Client *acptr, Channel *channel, int *override);
+/** Called when xxxx (function prototype for HOOKTYPE_INVITE).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags);
+/** Called when xxxx (function prototype for HOOKTYPE_PRE_KNOCK).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_pre_knock(Client *client, Channel *channel);
+/** Called when xxxx (function prototype for HOOKTYPE_KNOCK).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_knock(Client *client, Channel *channel, MessageTag *mtags, char *comment);
+/** Called when xxxx (function prototype for HOOKTYPE_WHOIS).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_whois(Client *client, Client *target);
+/** Called when xxxx (function prototype for HOOKTYPE_WHO_STATUS).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_who_status(Client *client, Client *target, Channel *channel, Member *member, char *status, int cansee);
+/** Called when xxxx (function prototype for HOOKTYPE_PRE_KILL).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_pre_kill(Client *client, Client *victim, char *killpath);
+/** Called when xxxx (function prototype for HOOKTYPE_LOCAL_KILL).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_local_kill(Client *client, Client *victim, char *comment);
+/** Called when xxxx (function prototype for HOOKTYPE_REHASHFLAG).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_rehashflag(Client *client, char *str);
+/** Called when xxxx (function prototype for HOOKTYPE_CONFIGPOSTTEST).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_configposttest(int *errors);
+/** Called when xxxx (function prototype for HOOKTYPE_REHASH).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_rehash(void);
+/** Called when xxxx (function prototype for HOOKTYPE_REHASH_COMPLETE).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_rehash_complete(void);
+/** Called when xxxx (function prototype for HOOKTYPE_CONFIGTEST).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_configtest(ConfigFile *cfptr, ConfigEntry *ce, int section, int *errors);
+/** Called when xxxx (function prototype for HOOKTYPE_CONFIGRUN).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_configrun(ConfigFile *cfptr, ConfigEntry *ce, int section);
+/** Called when xxxx (function prototype for HOOKTYPE_CONFIGRUN_EX).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_configrun_ex(ConfigFile *cfptr, ConfigEntry *ce, int section, void *ptr);
+/** Called when xxxx (function prototype for HOOKTYPE_STATS).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_stats(Client *client, char *str);
+/** Called when xxxx (function prototype for HOOKTYPE_LOCAL_OPER).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_local_oper(Client *client, int add);
+/** Called when xxxx (function prototype for HOOKTYPE_LOCAL_PASS).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_local_pass(Client *client, char *password);
+/** Called when xxxx (function prototype for HOOKTYPE_CHANNEL_CREATE).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_channel_create(Client *client, Channel *channel);
+/** Called when xxxx (function prototype for HOOKTYPE_CHANNEL_DESTROY).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_channel_destroy(Channel *channel, int *should_destroy);
+/** Called when xxxx (function prototype for HOOKTYPE_TKL_EXCEPT).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_tkl_except(Client *cptr, int ban_type);
+/** Called when xxxx (function prototype for HOOKTYPE_UMODE_CHANGE).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_umode_change(Client *client, long setflags, long newflags);
+/** Called when xxxx (function prototype for HOOKTYPE_TKL_ADD).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_tkl_add(Client *client, TKL *tkl);
+/** Called when xxxx (function prototype for HOOKTYPE_TKL_DEL).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_tkl_del(Client *client, TKL *tkl);
+/** Called when xxxx (function prototype for HOOKTYPE_LOG).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_log(int flags, char *timebuf, char *buf);
+/** Called when xxxx (function prototype for HOOKTYPE_LOCAL_SPAMFILTER).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_local_spamfilter(Client *acptr, char *str, char *str_in, int type, char *target, TKL *tkl);
+/** Called when xxxx (function prototype for HOOKTYPE_SILENCED).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_silenced(Client *client, Client *to, SendType sendtype);
+/** Called when xxxx (function prototype for HOOKTYPE_RAWPACKET_IN).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_rawpacket_in(Client *client, char *readbuf, int *length);
+/** Called when xxxx (function prototype for HOOKTYPE_PACKET).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_packet(Client *from, Client *to, Client *intended_to, char **msg, int *length);
+/** Called when xxxx (function prototype for HOOKTYPE_HANDSHAKE).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_handshake(Client *client);
+/** Called when xxxx (function prototype for HOOKTYPE_FREE_CLIENT).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_free_client(Client *acptr);
+/** Called when xxxx (function prototype for HOOKTYPE_FREE_USER).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_free_user(Client *acptr);
+/** Called when xxxx (function prototype for HOOKTYPE_CAN_JOIN_LIMITEXCEEDED).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_can_join_limitexceeded(Client *client, Channel *channel, char *key, char *parv[]);
+/** Called when xxxx (function prototype for HOOKTYPE_VISIBLE_IN_CHANNEL).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_visible_in_channel(Client *client, Channel *channel);
+/** Called when xxxx (function prototype for HOOKTYPE_SEE_CHANNEL_IN_WHOIS).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_see_channel_in_whois(Client *client, Client *target, Channel *channel);
+/** Called when xxxx (function prototype for HOOKTYPE_JOIN_DATA).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_join_data(Client *who, Channel *channel);
+/** Called when xxxx (function prototype for HOOKTYPE_OPER_INVITE_BAN).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_oper_invite_ban(Client *client, Channel *channel);
+/** Called when xxxx (function prototype for HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_view_topic_outside_channel(Client *client, Channel *channel);
+/** Called when xxxx (function prototype for HOOKTYPE_CHAN_PERMIT_NICK_CHANGE).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_chan_permit_nick_change(Client *client, Channel *channel);
+/** Called when xxxx (function prototype for HOOKTYPE_IS_CHANNEL_SECURE).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_is_channel_secure(Channel *channel);
+/** Called when xxxx (function prototype for HOOKTYPE_CHANNEL_SYNCED).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_channel_synced(Channel *channel, int merge, int removetheirs, int nomode);
+/** Called when xxxx (function prototype for HOOKTYPE_CAN_SAJOIN).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_can_sajoin(Client *target, Channel *channel, Client *client);
+/** Called when xxxx (function prototype for HOOKTYPE_CHECK_INIT).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_check_init(Client *cptr, char *sockname, size_t size);
+/** Called when xxxx (function prototype for HOOKTYPE_MODE_DEOP).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_mode_deop(Client *client, Client *victim, Channel *channel, u_int what, int modechar, long my_access, char **badmode);
+/** Called when xxxx (function prototype for HOOKTYPE_DCC_DENIED).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_dcc_denied(Client *client, char *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *denydcc);
+/** Called when xxxx (function prototype for HOOKTYPE_SECURE_CONNECT).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_secure_connect(Client *client);
+/** Called when xxxx (function prototype for HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_can_bypass_channel_message_restriction(Client *client, Channel *channel, BypassChannelMessageRestrictionType bypass_type);
+/** Called when xxxx (function prototype for HOOKTYPE_REQUIRE_SASL).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_require_sasl(Client *client, char *reason);
+/** Called when xxxx (function prototype for HOOKTYPE_SASL_CONTINUATION).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_sasl_continuation(Client *client, char *buf);
+/** Called when xxxx (function prototype for HOOKTYPE_SASL_RESULT).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_sasl_result(Client *client, int success);
+/** Called when xxxx (function prototype for HOOKTYPE_PLACE_HOST_BAN).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_place_host_ban(Client *client, int action, char *reason, long duration);
+/** Called when xxxx (function prototype for HOOKTYPE_FIND_TKLINE_MATCH).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_find_tkline_match(Client *client, TKL *tk);
+/** Called when xxxx (function prototype for HOOKTYPE_WELCOME).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_welcome(Client *client, int after_numeric);
+/** Called when xxxx (function prototype for HOOKTYPE_PRE_COMMAND).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_pre_command(Client *from, MessageTag *mtags, char *buf);
+/** Called when xxxx (function prototype for HOOKTYPE_POST_COMMAND).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_post_command(Client *from, MessageTag *mtags, char *buf);
+/** Called when xxxx (function prototype for HOOKTYPE_NEW_MESSAGE).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 void hooktype_new_message(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
+/** Called when xxxx (function prototype for HOOKTYPE_IS_HANDSHAKE_FINISHED).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_is_handshake_finished(Client *acptr);
+/** Called when xxxx (function prototype for HOOKTYPE_PRE_LOCAL_QUIT_CHAN).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 char *hooktype_pre_local_quit_chan(Client *client, Channel *channel, char *comment);
+/** Called when xxxx (function prototype for HOOKTYPE_IDENT_LOOKUP).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_ident_lookup(Client *acptr);
+/** Called when xxxx (function prototype for HOOKTYPE_ACCOUNT_LOGIN).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_account_login(Client *client, MessageTag *mtags);
+/** Called when xxxx (function prototype for HOOKTYPE_CLOSE_CONNECTION).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
 int hooktype_close_connection(Client *client);
+
+/** @} */
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
