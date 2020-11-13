@@ -115,6 +115,7 @@ while [ -z "$TEST" ] ; do
 	TEST="No"
     fi
     echo ""
+    echo "UnrealIRCd requires an SSL certificate in order to work."
     echo "Do you want to generate an SSL certificate for the IRCd?"
     echo "Only answer No if you already have one."
     echo $n "[$TEST] -> $c"
@@ -137,6 +138,14 @@ while [ -z "$TEST" ] ; do
     esac
 done
 if [ "$GENCERTIFICATE" = 1 ]; then
+	echo
+	echo "*******************************************************************************"
+	echo "Next you will be asked some questions in order to generate the SSL certificate."
+	echo "IMPORTANT: If you don't own a domain or don't know what to answer, then you can"
+	echo "           simply press ENTER or use fictional names for each question!"
+	echo "*******************************************************************************"
+	echo "Press ENTER to continue"
+	read cc
 	make pem
 	echo "Certificate created successfully."
 	sleep 1
