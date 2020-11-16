@@ -808,6 +808,8 @@ extern char *cm_getparameter_ex(void **p, char mode);
 extern void cm_putparameter_ex(void **p, char mode, char *str);
 extern void cm_freeparameter_ex(void **p, char mode, char *str);
 extern int file_exists(char *file);
+extern time_t get_file_time(char *fname);
+extern long get_file_size(char *fname);
 extern void free_motd(MOTDFile *motd); /* s_serv.c */
 extern void fix_timers(void);
 extern char *chfl_to_sjoin_symbol(int s);

@@ -724,17 +724,6 @@ void outofmemory(size_t bytes)
 	exit(7);
 }
 
-/** Check if the specified file exists */
-int file_exists(char *file)
-{
-	FILE *fd;
-	fd = fopen(file, "r");
-	if (!fd)
-		return 0;
-	fclose(fd);
-	return 1;
-}
-
 /** Returns a unique filename in the specified directory
  * using the specified suffix. The returned value will
  * be of the form <dir>/<random-hex>.<suffix>

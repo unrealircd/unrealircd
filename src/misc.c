@@ -810,7 +810,6 @@ void exit_client(Client *client, MessageTag *recv_mtags, char *comment)
 	exit_one_client(client, recv_mtags, comment);
 
 	free_message_tags(mtags_generated);
-	
 }
 
 /** Initialize the (quite useless) IRC statistics */
@@ -851,7 +850,7 @@ void verify_opercount(Client *orig, char *tag)
 int valid_host(char *host)
 {
 	char *p;
-	
+
 	if (strlen(host) > HOSTLEN)
 		return 0; /* too long hosts are invalid too */
 
@@ -1032,7 +1031,7 @@ int is_autojoin_chan(char *chname)
 			if (!strcasecmp(name, chname))
 				return 1;
 	}
-	
+
 	if (AUTO_JOIN_CHANS)
 	{
 		strlcpy(buf, AUTO_JOIN_CHANS, sizeof(buf));
@@ -1069,7 +1068,7 @@ int char_to_channelflag(char c)
 int mixed_network(void)
 {
 	Client *client;
-	
+
 	list_for_each_entry(client, &server_list, special_node)
 	{
 		if (!IsServer(client) || IsULine(client))
@@ -1083,7 +1082,7 @@ int mixed_network(void)
 void unreal_delete_masks(ConfigItem_mask *m)
 {
 	ConfigItem_mask *m_next;
-	
+
 	for (; m; m = m_next)
 	{
 		m_next = m->next;
@@ -1104,7 +1103,7 @@ static void unreal_add_mask(ConfigItem_mask **head, ConfigEntry *ce)
 		safe_strdup(m->mask, ce->ce_vardata);
 	else
 		safe_strdup(m->mask, ce->ce_varname);
-	
+
 	add_ListItem((ListStruct *)m, (ListStruct **)head);
 }
 
@@ -1137,7 +1136,7 @@ int unreal_mask_match(Client *client, ConfigItem_mask *m)
 				return 1;
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -1191,7 +1190,7 @@ int swhois_add(Client *client, char *tag, int priority, char *swhois, Client *fr
 	safe_strdup(s->setby, tag);
 	s->priority = priority;
 	AddListItemPrio(s, client->user->swhois, s->priority);
-	
+
 	sendto_server(skip, 0, PROTO_EXTSWHOIS, NULL, ":%s SWHOIS %s :%s",
 		from->id, client->id, swhois);
 
@@ -1215,11 +1214,11 @@ int swhois_delete(Client *client, char *tag, char *swhois, Client *from, Client 
 {
 	SWhois *s, *s_next;
 	int ret = -1; /* default to 'not found' */
-	
+
 	for (s = client->user->swhois; s; s = s_next)
 	{
 		s_next = s->next;
-		
+
 		/* If ( same swhois or "*" ) AND same tag */
 		if ( ((!strcmp(s->line, swhois) || !strcmp(swhois, "*")) &&
 		    !strcmp(s->setby, tag)))
@@ -1234,7 +1233,7 @@ int swhois_delete(Client *client, char *tag, char *swhois, Client *from, Client 
 
 			sendto_server(skip, PROTO_EXTSWHOIS, 0, NULL, ":%s SWHOIS %s - %s %d :%s",
 				from->id, client->id, tag, 0, swhois);
-			
+
 			ret = 0;
 		}
 	}
@@ -1891,6 +1890,41 @@ int filename_has_suffix(const char *fname, const char *suffix)
 	if (!strcmp(p, suffix))
 		return 1;
 	return 0;
+}
+
+/** Check if the specified file exists */
+int file_exists(char *file)
+{
+	FILE *fd;
+
+	fd = fopen(file, "r");
+	if (!fd)
+		return 0;
+
+	fclose(fd);
+	return 1;
+}
+
+/** Get the file creation time */
+time_t get_file_time(char *fname)
+{
+	struct stat st;
+
+	if (stat(fname, &st) != 0)
+		return 0;
+
+	return (time_t)st.st_ctime;
+}
+
+/** Get the size of a file */
+long get_file_size(char *fname)
+{
+	struct stat st;
+
+	if (stat(fname, &st) != 0)
+		return -1;
+
+	return (long)st.st_size;
 }
 
 /** Add a line to a MultiLine list */

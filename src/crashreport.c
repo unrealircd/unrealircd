@@ -13,17 +13,6 @@ extern void StartUnrealAgain(void);
 
 extern char *getosname(void);
 
-
-time_t get_file_time(char *fname)
-{
-	struct stat st;
-	
-	if (stat(fname, &st) != 0)
-		return 0;
-
-	return (time_t)st.st_ctime;
-}
-
 char *find_best_coredump(void)
 {
 	static char best_fname[512];
@@ -560,17 +549,6 @@ int running_interactive(void)
 #define REPORT_ASK		0
 #define REPORT_AUTO		1
 
-
-int getfilesize(char *fname)
-{
-	struct stat st;
-	
-	if (stat(fname, &st) != 0)
-		return -1;
-	
-	return (int)st.st_size;
-}
-
 #define CRASH_REPORT_HOST "crash.unrealircd.org"
 
 SSL_CTX *crashreport_init_ssl(void)
@@ -614,7 +592,7 @@ int crashreport_send(char *fname)
 	int xfr = 0;
 	char *errstr = NULL;
 	
-	filesize = getfilesize(fname);
+	filesize = get_file_size(fname);
 	if (filesize < 0)
 		return 0;
 	
