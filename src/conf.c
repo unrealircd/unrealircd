@@ -10646,6 +10646,7 @@ void link_generator(void)
 	       "    outgoing {\n"
 	       "        hostname %s;\n"
 	       "        port %d;\n"
+	       "        options { tls; autoconnect; }\n"
 	       "    }\n"
 	       "    password \"%s\" { spkifp; }\n"
 	       "    class servers;\n"
