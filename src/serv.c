@@ -32,7 +32,6 @@
 /* for uname(), is POSIX so should be OK... */
 #include <sys/utsname.h>
 #endif
-extern void s_die();
 
 MODVAR int  max_connection_count = 1, max_client_count = 1;
 extern int do_garbage_collect;
