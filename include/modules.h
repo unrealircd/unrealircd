@@ -1633,135 +1633,198 @@ int hooktype_configrun_ex(ConfigFile *cfptr, ConfigEntry *ce, int section, void 
  */
 int hooktype_stats(Client *client, char *str);
 
-/** Called when xxxx (function prototype for HOOKTYPE_LOCAL_OPER).
+/** Called when a user becomes IRCOp or is no longer an IRCOp (function prototype for HOOKTYPE_LOCAL_OPER).
  * @param client		The client
+ * @param add			1 if the user becomes IRCOp, 0 if the user is no longer IRCOp
  * @return The return value is ignored (use return 0)
  */
 int hooktype_local_oper(Client *client, int add);
 
-/** Called when xxxx (function prototype for HOOKTYPE_LOCAL_PASS).
+/** Called when a client sends a PASS command (function prototype for HOOKTYPE_LOCAL_PASS).
  * @param client		The client
+ * @param password		The password supplied by the client
  * @return The return value is ignored (use return 0)
  */
 int hooktype_local_pass(Client *client, char *password);
 
-/** Called when xxxx (function prototype for HOOKTYPE_CHANNEL_CREATE).
+/** Called when a channel is created (function prototype for HOOKTYPE_CHANNEL_CREATE).
  * @param client		The client
+ * @param channel		The channel that just got created
+ * @note This function is not used much, use hooktype_local_join() and hooktype_remote_join() instead.
  * @return The return value is ignored (use return 0)
  */
 int hooktype_channel_create(Client *client, Channel *channel);
 
-/** Called when xxxx (function prototype for HOOKTYPE_CHANNEL_DESTROY).
- * @param client		The client
+/** Called when a channel is completely destroyed (function prototype for HOOKTYPE_CHANNEL_DESTROY).
+ * @param channel		The channel that is about to be destroyed
+ * @param should_destroy	Module can set this to 1 to prevent destriction
+ * @note A channel is usually destroyed due to the last user leaving. But in some cases
+ *       a channel is created and then immediately destroyed within nanoseconds. Just so you know.
  * @return The return value is ignored (use return 0)
  */
 int hooktype_channel_destroy(Channel *channel, int *should_destroy);
 
-/** Called when xxxx (function prototype for HOOKTYPE_TKL_EXCEPT).
+/** Called when a user matches a TKL and is pending to be killed (function prototype for HOOKTYPE_TKL_EXCEPT).
  * @param client		The client
- * @return The return value is ignored (use return 0)
+ * @param ban_type		The TKL type, one of TKL_*. For example TKL_GLOBAL|TKL_KILL for a gline.
+ * @retval 0 Ban/kill the user.
+ * @retval 1 User is exempt, do NOT kill or ban.
  */
-int hooktype_tkl_except(Client *cptr, int ban_type);
+int hooktype_tkl_except(Client *client, int ban_type);
 
-/** Called when xxxx (function prototype for HOOKTYPE_UMODE_CHANGE).
+/** Called when the user modes of a user change (function prototype for HOOKTYPE_UMODE_CHANGE).
  * @param client		The client
+ * @param setflags		The current user modes
+ * @param newflags		The new user modes
+ * @note The user mode can be changed due to a MODE by the user itself, by a server, or by SVSMODE/SVS2MODE from Services.
  * @return The return value is ignored (use return 0)
  */
 int hooktype_umode_change(Client *client, long setflags, long newflags);
 
-/** Called when xxxx (function prototype for HOOKTYPE_TKL_ADD).
- * @param client		The client
+/** Called when a new TKL is added (function prototype for HOOKTYPE_TKL_ADD).
+ * @param client		The client adding the TKL (this can be &me)
+ * @param tkl			The TKL entry
  * @return The return value is ignored (use return 0)
  */
 int hooktype_tkl_add(Client *client, TKL *tkl);
 
-/** Called when xxxx (function prototype for HOOKTYPE_TKL_DEL).
- * @param client		The client
+/** Called when removing an existing TKL (function prototype for HOOKTYPE_TKL_DEL).
+ * @param client		The client removing the TKL (this can be &me)
+ * @param tkl			The TKL entry
  * @return The return value is ignored (use return 0)
  */
 int hooktype_tkl_del(Client *client, TKL *tkl);
 
-/** Called when xxxx (function prototype for HOOKTYPE_LOG).
- * @param client		The client
+/** Called when something is logged via the ircd_log() function (function prototype for HOOKTYPE_LOG).
+ * @param flags			One of LOG_*, such as LOG_ERROR.
+ * @param timebuf		The time buffer, such as "[2030-01-01 12:00:00]"
+ * @param buf			The text to be logged
  * @return The return value is ignored (use return 0)
  */
 int hooktype_log(int flags, char *timebuf, char *buf);
 
-/** Called when xxxx (function prototype for HOOKTYPE_LOCAL_SPAMFILTER).
+/** Called when a local user matches a spamfilter (function prototype for HOOKTYPE_LOCAL_SPAMFILTER).
  * @param client		The client
+ * @param str			The text that matched, this may be stripped from color and control codes.
+ * @param str_in		The original text
+ * @param target		The spamfilter type, one of SPAMF_*, such as SPAMF_CHANMSG.
+ * @param destination		The destination, such as the name of another client or channel
+ * @param tkl			The spamfilter TKL entry that matched
  * @return The return value is ignored (use return 0)
  */
-int hooktype_local_spamfilter(Client *acptr, char *str, char *str_in, int type, char *target, TKL *tkl);
+int hooktype_local_spamfilter(Client *client, char *str, char *str_in, int type, char *target, TKL *tkl);
 
-/** Called when xxxx (function prototype for HOOKTYPE_SILENCED).
- * @param client		The client
+/** Called when a user sends something to a user that has the sender silenced (function prototype for HOOKTYPE_SILENCED).
+ * UnrealIRCd support a SILENCE list. If the target user has added someone on the silence list, eg via SILENCE +BadUser,
+ * and then 'BadUser' tries to send a message to this user, this hook will be triggered.
+ * @param client		The client trying to send a message/notice
+ * @param target		The intended recipient of the message
+ * @param sendtype		Indicating if it is a PRIVMSG, NOTICE or something else.
+ * @note This function is rarely used.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_silenced(Client *client, Client *to, SendType sendtype);
+int hooktype_silenced(Client *client, Client *target, SendType sendtype);
 
-/** Called when xxxx (function prototype for HOOKTYPE_RAWPACKET_IN).
+/** Called on every incoming packet (function prototype for HOOKTYPE_RAWPACKET_IN).
+ * This is quite invasive, so only use this if you cannot do the same via some other means (eg overrides or hooks).
+ * The typical use cases are things like: handling an entirely different protocol (eg: websocket module),
+ * or old stuff like codepage conversions, basically: things that work on entire packets.
  * @param client		The client
+ * @param readbuf		The buffer
+ * @param length		The length of the buffer
+ * @note If you want to alter the buffer contents then replace 'readbuf' with your own buffer and set 'length' appropriately.
  * @return The return value is ignored (use return 0)
  */
 int hooktype_rawpacket_in(Client *client, char *readbuf, int *length);
 
-/** Called when xxxx (function prototype for HOOKTYPE_PACKET).
- * @param client		The client
+/** Called when a packet is received or sent (function prototype for HOOKTYPE_PACKET).
+ * @param client		The locally connected sender, this can be &me
+ * @param to			The locally connected recipient, this can be &me
+ * @param intended_to		The originally intended recipient, this could be a remote user
+ * @param msg			The buffer
+ * @param length		The length of the buffer
+ * @note When reading a packet, 'client' will indicate the locally connected user and 'to' will be &me.
+ *       When sending a pcket, 'client' will be &me and 'to' will be the locally connected user.
+ *       If you want to alter the buffer contents then replace 'msg' with your own buffer and set 'length' appropriately.
  * @return The return value is ignored (use return 0)
  */
 int hooktype_packet(Client *from, Client *to, Client *intended_to, char **msg, int *length);
 
-/** Called when xxxx (function prototype for HOOKTYPE_HANDSHAKE).
+/** Called very early when a client connects (function prototype for HOOKTYPE_HANDSHAKE).
+ * This is called as soon as the socket is connected and the client is being set up,
+ * so before the client has sent any application data, and certainly before it is
+ * known whether this client will become a user or a server.
  * @param client		The client
  * @return The return value is ignored (use return 0)
  */
 int hooktype_handshake(Client *client);
 
-/** Called when xxxx (function prototype for HOOKTYPE_FREE_CLIENT).
+/** Called when a client structure is freed (function prototype for HOOKTYPE_FREE_CLIENT).
+ * @param client		The client
+ * @note Normally you use hooktype_local_quit(), hooktype_remote_quit() and hooktype_unkuser_quit() for this.
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_free_client(Client *client);
+
+/** Called when the user structure, client->user, is being freed (function prototype for HOOKTYPE_FREE_USER).
  * @param client		The client
  * @return The return value is ignored (use return 0)
  */
-int hooktype_free_client(Client *acptr);
+int hooktype_free_user(Client *client);
 
-/** Called when xxxx (function prototype for HOOKTYPE_FREE_USER).
+/** Called when +l limit is exceeded when joining (function prototype for HOOKTYPE_CAN_JOIN_LIMITEXCEEDED).
  * @param client		The client
- * @return The return value is ignored (use return 0)
- */
-int hooktype_free_user(Client *acptr);
-
-/** Called when xxxx (function prototype for HOOKTYPE_CAN_JOIN_LIMITEXCEEDED).
- * @param client		The client
- * @return The return value is ignored (use return 0)
+ * @param channel		The channel
+ * @param key			The channel key
+ * @param parv			The join parameters
+ * @note I don't think this works?
+ * @return Unclear..
  */
 int hooktype_can_join_limitexceeded(Client *client, Channel *channel, char *key, char *parv[]);
 
-/** Called when xxxx (function prototype for HOOKTYPE_VISIBLE_IN_CHANNEL).
+/** Called to check if the user is visible in the channel (function prototype for HOOKTYPE_VISIBLE_IN_CHANNEL).
+ * For example, the delayjoin module (+d/+D) will 'return 0' here if the user is hidden due to delayed join.
  * @param client		The client
- * @return The return value is ignored (use return 0)
+ * @param channel		The channel
+ * @retval 0 The user is NOT visible
+ * @retval 1 The user is visible
  */
 int hooktype_visible_in_channel(Client *client, Channel *channel);
 
-/** Called when xxxx (function prototype for HOOKTYPE_SEE_CHANNEL_IN_WHOIS).
- * @param client		The client
- * @return The return value is ignored (use return 0)
+/** Called to check if the channel of a user should be shown in WHOIS/WHO (function prototype for HOOKTYPE_SEE_CHANNEL_IN_WHOIS).
+ * @param client		The client ASKING, eg doing the /WHOIS.
+ * @param target		The client who is being interrogated
+ * @param channel		The channel that 'client' is in
+ * @retval 0 The channel should NOT be visible
+ * @retval 1 Show the channel
  */
 int hooktype_see_channel_in_whois(Client *client, Client *target, Channel *channel);
 
-/** Called when xxxx (function prototype for HOOKTYPE_JOIN_DATA).
- * @param client		The client
+/** Called when a user is added to a channel (function prototype for HOOKTYPE_JOIN_DATA).
+ * Note that normally you use hooktype_local_join() and hooktype_remote_join() for this.
+ * This function only exists so it is easy to work with dynamic data, and even
+ * that is an old idea now that we have the moddata system.
+ * @param client		The client joining
+ * @param channel		The channel the client joined to
  * @return The return value is ignored (use return 0)
  */
 int hooktype_join_data(Client *who, Channel *channel);
 
-/** Called when xxxx (function prototype for HOOKTYPE_OPER_INVITE_BAN).
+/** Should the user be able to bypass bans? (function prototype for HOOKTYPE_OPER_INVITE_BAN).
  * @param client		The client
- * @return The return value is ignored (use return 0)
+ * @param channel		The channel
+ * @note The actual meaning of this hook is more complex, you are unlikely to use it, anyway.
+ * @retval HOOK_DENY		Deny the join if the user is also banned
+ * @retval HOOK_CONTINUE	Obey the normal rules
  */
 int hooktype_oper_invite_ban(Client *client, Channel *channel);
 
-/** Called when xxxx (function prototype for HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL).
- * @param client		The client
- * @return The return value is ignored (use return 0)
+/** Should a user be able to view the topic when not in the channel? (function prototype for HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL).
+ * @param client		The client requesting the topic
+ * @param channel		The channel
+ * @note This visibility check is only partially implemented. Do not count on it.
+ * @retval HOOK_DENY		Deny the topic request
+ * @retval HOOK_CONTINUE	Obey the normal rules
  */
 int hooktype_view_topic_outside_channel(Client *client, Channel *channel);
 
