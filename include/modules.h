@@ -911,12 +911,11 @@ extern int LoadPersistentLongX(ModuleInfo *modinfo, char *varshortname, long *va
 extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long var);
 #define SavePersistentLong(modinfo, var) SavePersistentLongX(modinfo, #var, var)
 
-/** Hooks trigger on "events", such as a new user connecting, joining a channel, etc.
- * You are suggested to use CTRL+F on this page to search for any useful hook
- * in the 'Function Documentation' below.
- *
- * Once you have found your hook, you can use it in the code,
- * see https://www.unrealircd.org/docs/Dev:Hook_API#How_to_have_your_module_.22hook_in.22.
+/** Hooks trigger on "events", such as a new user connecting or joining a channel,
+ * see https://www.unrealircd.org/docs/Dev:Hook_API for background info.
+ * You are suggested to use CTRL+F on this page to search for any useful hook,
+ * see also the example session on how to find and use a hook at
+ * https://www.unrealircd.org/docs/Dev:Hook_API#Example_session_finding_and_using_a_hook
  *
  * @defgroup HookAPI Hook API
  * @{
@@ -1828,139 +1827,230 @@ int hooktype_oper_invite_ban(Client *client, Channel *channel);
  */
 int hooktype_view_topic_outside_channel(Client *client, Channel *channel);
 
-/** Called when xxxx (function prototype for HOOKTYPE_CHAN_PERMIT_NICK_CHANGE).
+/** Is a user permitted to change its nickname? (function prototype for HOOKTYPE_CHAN_PERMIT_NICK_CHANGE).
+ * This is called for each channel the user is in. This is used by the +N (nonickchange) channel mode.
  * @param client		The client
- * @return The return value is ignored (use return 0)
+ * @param channel		The channel the user is in
+ * @retval HOOK_DENY		Deny the nick change
+ * @retval HOOK_CONTINUE	Obey the normal rules (allow it, unless denied by something else)
  */
 int hooktype_chan_permit_nick_change(Client *client, Channel *channel);
 
-/** Called when xxxx (function prototype for HOOKTYPE_IS_CHANNEL_SECURE).
- * @param client		The client
- * @return The return value is ignored (use return 0)
+/** Is the channel considered "secure"? (function prototype for HOOKTYPE_IS_CHANNEL_SECURE).
+ * This is used by the +z/+Z modules.
+ * @param channel		The channel
+ * @retval 0			No, the channel is not secure
+ * @retval 1			Yes, the channel is secure
  */
 int hooktype_is_channel_secure(Channel *channel);
 
-/** Called when xxxx (function prototype for HOOKTYPE_CHANNEL_SYNCED).
- * @param client		The client
- * @return The return value is ignored (use return 0)
+/** Called after a channel is synced due to netmerge (function prototype for HOOKTYPE_CHANNEL_SYNCED).
+ * When a server connects channel status is exchanged in order to synchronize the two sides of channels.
+ * After each SJOIN command this function is called to check if anything special
+ * needs to be join. At the moment this function is only used by channel mode +z
+ * which will kick out any insecure users if we are the "loosing" side of a split.
+ * @param channel		The channel
+ * @param merge			Set to 1 if merging due to equal timestamps on both sides, 0 otherwise
+ * @param removetheirs		Set to 1 if the other side is the loosing side and we are the winning side.
+ * @param nomode		Set to 1 if this is a SJOIN without modes (rare? services?)
+ * @retval HOOK_DENY		Deny the channel merge. Important: only return this after you have destroyed the channel!
+ * @retval HOOK_CONTINUE	Continue normally
  */
 int hooktype_channel_synced(Channel *channel, int merge, int removetheirs, int nomode);
 
-/** Called when xxxx (function prototype for HOOKTYPE_CAN_SAJOIN).
- * @param client		The client
- * @return The return value is ignored (use return 0)
+/** Can the target client be SAJOIN'ed to a particular channel? (function prototype for HOOKTYPE_CAN_SAJOIN).
+ * @param target		The client that should be joined
+ * @param channel		The channel that the client should be joined to
+ * @param client		The client issuing the request (usually IRCOp)
+ * @retval HOOK_DENY		Deny the SAJOIN
+ * @retval HOOK_CONTINUE	Allow the SAJOIN, unless blocked by something else
  */
 int hooktype_can_sajoin(Client *target, Channel *channel, Client *client);
 
-/** Called when xxxx (function prototype for HOOKTYPE_CHECK_INIT).
+/** Called when the hostname is initialized for a client (function prototype for HOOKTYPE_CHECK_INIT).
+ * This is a very specific call, it is only meant for the WEBIRC module.
  * @param client		The client
- * @return The return value is ignored (use return 0)
+ * @param sockname		The socket name
+ * @param size			The size of the socket name? :D
+ * @retval HOOK_CONTINUE	Proceed normally
+ * @retval HOOK_DENY		Reject the connection(?)
  */
-int hooktype_check_init(Client *cptr, char *sockname, size_t size);
+int hooktype_check_init(Client *client, char *sockname, size_t size);
 
-/** Called when xxxx (function prototype for HOOKTYPE_MODE_DEOP).
- * @param client		The client
- * @return The return value is ignored (use return 0)
+/** May the target user be deoped? (function prototype for HOOKTYPE_MODE_DEOP).
+ * This is for example used by the +S (Services bot) user mode to block deop requests to services bots.
+ * @param client		The client issuing the command
+ * @param victim		The victim that should be deoped (MODE -o)
+ * @param channel		The channel
+ * @param what			Always MODE_DEL at the moment
+ * @param modechar		The mode character: q/a/o/h/v
+ * @param my_access		Cached result of get_access(), so one of CHFL_*, for example CHFL_CHANOP.
+ * @param badmode		The error string that should be sent to the client
+ * @retval HOOK_CONTINUE	Proceed normally (allow it)
+ * @retval HOOK_DENY		Reject the mode change
+ * @retval HOOK_ALWAYS_DENY	Reject the mode change, even if IRCOp/Services/..
  */
 int hooktype_mode_deop(Client *client, Client *victim, Channel *channel, u_int what, int modechar, long my_access, char **badmode);
 
-/** Called when xxxx (function prototype for HOOKTYPE_DCC_DENIED).
- * @param client		The client
+/** Called when a DCC request was denied by the IRCd (function prototype for HOOKTYPE_DCC_DENIED).
+ * @param client		The client who tried to send a file
+ * @param target		The intended recipient
+ * @param realfile		The original file name, may contain strange characters or be very long
+ * @param displayfile		The file name for displaying purposes, properly filtered.
+ * @param denydcc		The deny dcc { ] rule that triggered.
  * @return The return value is ignored (use return 0)
  */
 int hooktype_dcc_denied(Client *client, char *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *denydcc);
 
-/** Called when xxxx (function prototype for HOOKTYPE_SECURE_CONNECT).
+/** Called in the user accept procedure, when setting the +z user mode (function prototype for HOOKTYPE_SECURE_CONNECT).
+ * This is only meant to be used by the WEBIRC module, so it can do -z for fake secure users.
  * @param client		The client
  * @return The return value is ignored (use return 0)
  */
 int hooktype_secure_connect(Client *client);
 
-/** Called when xxxx (function prototype for HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION).
- * @param client		The client
- * @return The return value is ignored (use return 0)
+/** Can the user bypass a particular channel message restriction? (function prototype for HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION).
+ * This is for example used to bypass +S (stripcolor) via ~m:color:*!*@a.b.c.d if the user matches that extban.
+ * @param client		The client (sender)
+ * @param channel		The channel
+ * @param bypass_type		The restriction to bypass, for example BYPASS_CHANMSG_COLOR
+ * @retval HOOK_ALLOW		Allow to bypass the restriction
+ * @retval HOOK_CONTINUE	Continue as normal, obey normal rules, deny bypassing the restriction.
  */
 int hooktype_can_bypass_channel_message_restriction(Client *client, Channel *channel, BypassChannelMessageRestrictionType bypass_type);
 
 /** Called when xxxx (function prototype for HOOKTYPE_REQUIRE_SASL).
+ * FIXME: this hook is never called!?
  * @param client		The client
  * @return The return value is ignored (use return 0)
  */
 int hooktype_require_sasl(Client *client, char *reason);
 
-/** Called when xxxx (function prototype for HOOKTYPE_SASL_CONTINUATION).
- * @param client		The client
- * @return The return value is ignored (use return 0)
+/** Called when a SASL continuation response is received (function prototype for HOOKTYPE_SASL_CONTINUATION).
+ * This is only used by the authprompt module, it unlikely that you need it.
+ * @param client		The client for which the SASL authentication is taking place
+ * @param buf			The AUTHENTICATE buffer
+ * @retval HOOK_CONTINUE	Continue as normal
+ * @retval HOOK_DENY		Do not handle the SASL request, or at least don't show the response to the client.
  */
 int hooktype_sasl_continuation(Client *client, char *buf);
 
-/** Called when xxxx (function prototype for HOOKTYPE_SASL_RESULT).
- * @param client		The client
- * @return The return value is ignored (use return 0)
+/** Called when a SASL result response is received (function prototype for HOOKTYPE_SASL_RESULT).
+ * This is only used by the authprompt module.
+ * @param client		The client for which the SASL authentication is taking place
+ * @param successs		Whether the SASL authentication was successful (1) or not (0)
+ * @retval HOOK_CONTINUE	Continue as normal
+ * @retval HOOK_DENY		Do not handle the SASL response, or at least don't show the response to the client.
  */
 int hooktype_sasl_result(Client *client, int success);
 
-/** Called when xxxx (function prototype for HOOKTYPE_PLACE_HOST_BAN).
- * @param client		The client
- * @return The return value is ignored (use return 0)
+/** Called when a TKL ban should be added on the host (function prototype for HOOKTYPE_PLACE_HOST_BAN).
+ * This is called for automated bans such as spamfilter hits, flooding, etc.
+ * This hook can be used to prevent the ban, or as used by the authprompt to delay it.
+ * @param client		The client that should be banned
+ * @param action		The TKL type, such as BAN_ACT_GLINE
+ * @param reason		The ban reason
+ * @param duration		The duration of the ban, 0 for permanent ban
+ * @return The magic value 99 is used to exempt the user (=do not ban!), otherwise the ban is added.
  */
 int hooktype_place_host_ban(Client *client, int action, char *reason, long duration);
 
-/** Called when xxxx (function prototype for HOOKTYPE_FIND_TKLINE_MATCH).
+/** Called when a TKL ban is hit by this user (function prototype for HOOKTYPE_FIND_TKLINE_MATCH).
+ * This is called when an existing TKL entry is hit by the user.
+ * To prevent an automated ban to be added on a host/ip, see hooktype_place_host_ban().
  * @param client		The client
- * @return The return value is ignored (use return 0)
+ * @param tkl			The TKL entry
+ * @return The magic value 99 is used to exempt the user (=do not kill!), otherwise the ban is executed.
  */
 int hooktype_find_tkline_match(Client *client, TKL *tk);
 
-/** Called when xxxx (function prototype for HOOKTYPE_WELCOME).
+/** Called when the user connects for each welcome numeric (function prototype for HOOKTYPE_WELCOME).
+ * This can be used to send some additional notice or data to the user at a step of your choosing.
+ * This is called before all numerics with 'after_numeric' set to 0, and then after numeric
+ * 001, 002, 003, 005, 396, 266, 376. In the last call, 'after_numeric' is 999 when all initial
+ * numerics have been sent but before the user is auto-joined to channels (if any).
  * @param client		The client
+ * @param after_numeric		Which numeric has just been sent
  * @return The return value is ignored (use return 0)
  */
 int hooktype_welcome(Client *client, int after_numeric);
 
-/** Called when xxxx (function prototype for HOOKTYPE_PRE_COMMAND).
- * @param client		The client
+/** Called right before parsing a line and client command (function prototype for HOOKTYPE_PRE_COMMAND).
+ * This is only used by labeled-reponse. If you think this hook is useful then you
+ * should probably use the CommandOverride API instead!
+ * @param client		The direct local client connection from which the line is received.
+ * @param mtags			Message tags, if any.
+ * @param buf			The buffer (without message tags)
  * @return The return value is ignored (use return 0)
  */
 int hooktype_pre_command(Client *from, MessageTag *mtags, char *buf);
 
-/** Called when xxxx (function prototype for HOOKTYPE_POST_COMMAND).
- * @param client		The client
+/** Called right after finishing a client command (function prototype for HOOKTYPE_POST_COMMAND).
+ * This is only used by labeled-reponse. If you think this hook is useful then you
+ * should probably use the CommandOverride API instead!
+ * @param client		The direct local client connection from which the line is received.
+ * @param mtags			Message tags, if any.
+ * @param buf			The buffer (without message tags)
  * @return The return value is ignored (use return 0)
  */
 int hooktype_post_command(Client *from, MessageTag *mtags, char *buf);
 
-/** Called when xxxx (function prototype for HOOKTYPE_NEW_MESSAGE).
- * @param client		The client
+/** Called when new_message() is executed (function prototype for HOOKTYPE_NEW_MESSAGE).
+ * When a new message with message tags is prepared, code in UnrealIRCd
+ * and in modules will call new_message(). From that function this hook
+ * is also called. The purpose of this hook is so you can add additional
+ * message tags that belong the user. For example it is used
+ * by the account-tag module to add account=xyz information, see that module for a good example.
+ * @param sender		The client from which the message will be sent
+ * @param recv_mtags		The message tags as originally received before, or NULL if completely new.
+ * @param mtag_list		The newly created message tag list that we are building
+ * @param signature		Special signature when used through new_message_special()
  * @return The return value is ignored (use return 0)
  */
 void hooktype_new_message(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
 
-/** Called when xxxx (function prototype for HOOKTYPE_IS_HANDSHAKE_FINISHED).
+/** Is the client handshake finished? (function prototype for HOOKTYPE_IS_HANDSHAKE_FINISHED).
+ * This is called by the is_handshake_finished() function to check if the user
+ * can be accepted on IRC, or if there are still other checks/input pending.
+ * This can be used to "hold" a user temporarily until something happens, such
+ * as the user typing a password or waiting for a remote access check to return a result.
+ * For an example usage, see the cap module, which uses it to "hold" the connection
+ * if a "CAP LS" has been sent and no "CAP END" has been received yet.
  * @param client		The client
- * @return The return value is ignored (use return 0)
+ * @retval 1			Yes, the handshake is finished, as far as we are concerned.
+ * @retval 0			No, the handshake is not yet finished, do not allow the user in yet.
  */
-int hooktype_is_handshake_finished(Client *acptr);
+int hooktype_is_handshake_finished(Client *client);
 
-/** Called when xxxx (function prototype for HOOKTYPE_PRE_LOCAL_QUIT_CHAN).
+/** Called upon a local client quit, allows altering the quit message on a per-channel basis (function prototype for HOOKTYPE_PRE_LOCAL_QUIT_CHAN).
+ * If you don't need to change the quit message on a per-channel basis, but want to change it regardless of channels, then use hooktype_pre_local_quit().
+ * If you don't need to change the quit message at all, then use hooktype_local_quit() and hooktype_remote_quit() instead.
  * @param client		The client
- * @return The return value is ignored (use return 0)
+ * @param channel		The channel
+ * @param comment		The quit message
+ * @return The original quit message (comment), the new quit message (pointing to your own static buffer), or NULL (no quit message)
  */
 char *hooktype_pre_local_quit_chan(Client *client, Channel *channel, char *comment);
 
-/** Called when xxxx (function prototype for HOOKTYPE_IDENT_LOOKUP).
+/** Called when an ident lookup should be made (function prototype for HOOKTYPE_IDENT_LOOKUP).
+ * This is used by the ident_lookup module.
  * @param client		The client
  * @return The return value is ignored (use return 0)
  */
-int hooktype_ident_lookup(Client *acptr);
+int hooktype_ident_lookup(Client *client);
 
-/** Called when xxxx (function prototype for HOOKTYPE_ACCOUNT_LOGIN).
+/** Called when someone logs in/out a services account (function prototype for HOOKTYPE_ACCOUNT_LOGIN).
+ * The account name can be found in client->user->svid. It will be the string "0" if the user is logged out.
  * @param client		The client
+ * @param mtags         	Message tags associated with the event
  * @return The return value is ignored (use return 0)
  */
 int hooktype_account_login(Client *client, MessageTag *mtags);
 
-/** Called when xxxx (function prototype for HOOKTYPE_CLOSE_CONNECTION).
+/** Called when closing the connection of a local user (function prototype for HOOKTYPE_CLOSE_CONNECTION).
+ * This is called from close_connection(). Note that a lot of client information
+ * has already been freed, so normally you should use the quit/exit functions instead:
+ * hooktype_local_quit(), hooktype_remote_quit() and hooktype_unkuser_quit().
  * @param client		The client
  * @return The return value is ignored (use return 0)
  */
