@@ -2,7 +2,7 @@
 
 ## Supported Versions
 * The latest *stable* release of the 5.x branch
-* The latest *oldstable* release of the 4.x branch
+* The latest *oldstable* release of the 4.x branch (until 2020-12-31)
 
 See also [UnrealIRCd releases](https://www.unrealircd.org/docs/UnrealIRCd_releases) for information on older versions and End Of Life dates.
 
