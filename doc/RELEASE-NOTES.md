@@ -38,6 +38,42 @@ Upgrading from 4.x to 5.x?
 Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5). At the
 very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
 
+UnrealIRCd 5.0.7
+-----------------
+
+UnrealIRCd 5.0.7 consists mainly of fixes for the 5.x stable series,
+with some minor enhancements.
+
+Enhancements:
+* Add support for ```estonian-utf8```, ```latvian-utf8``` and
+  ```lithuanian-utf8``` in
+  [set::allowed-nickchars](https://www.unrealircd.org/docs/Nick_Character_Sets)
+* Add [message tags](https://www.unrealircd.org/docs/Message_tags)
+  to ```PONG``` to help fix timestamp issues in KiwiIRC.
+* Dutch helpop file (conf/help/help.nl.conf)
+
+Fixes:
+* When having multiple text bans (```+b ~T:censor```), these caused an empty
+  message.
+* Text bans are now no longer bypassed by voiced users (```+v```).
+* [Websockets](https://www.unrealircd.org/docs/WebSocket_support) that used
+```labeled-response``` sometimes received multiple IRC messages in one
+websocket packet.
+* The reputation score of [WEBIRC users](https://www.unrealircd.org/docs/WebIRC_block)
+  was previously the score of the WEBIRC IP rather than the end-user IP.
+* ```STATS badword``` was not working.
+* When setting a very high channel limit, it showed a weird MODE ```+l``` value.
+* The ```LINKS``` command worked, even when disabled via
+  ```hideserver::disable-links``` in the optional hideserver module.
+* In some cases ```WHO``` did not show your own entry, such as when
+  searching on account name, which was confusing.
+* Memory leak when repeatedly using ```./unrealircd reloadtls``` or
+  ```/REHASH -tls```.
+
+Module coders / Developers:
+* No changes, only some small additions to the
+[Doxygen module API docs](https://www.unrealircd.org/api/5/index.html)
+
 UnrealIRCd 5.0.6
 -----------------
 
