@@ -269,14 +269,7 @@ EVENT(garbage_collect)
 		loop.do_garbage_collect = 0;
 }
 
-/*
-** try_connections
-**
-**	Scan through configuration and try new connections.
-**	Returns the calendar time when the next call to this
-**	function should be made latest. (No harm done if this
-**	is called earlier or later...)
-*/
+/** Perform autoconnect to servers that are not linked yet. */
 EVENT(try_connections)
 {
 	ConfigItem_link *aconf;
@@ -287,7 +280,7 @@ EVENT(try_connections)
 
 	for (aconf = conf_link; aconf; aconf = aconf->next)
 	{
-		/* We're only interested in autoconnect blocks that are valid (and ignore temporary link blocks) */
+		/* We're only interested in autoconnect blocks that are valid. Also, we ignore temporary link blocks. */
 		if (!(aconf->outgoing.options & CONNECT_AUTO) || !aconf->outgoing.hostname || (aconf->flag.temporary == 1))
 			continue;
 
@@ -296,6 +289,7 @@ EVENT(try_connections)
 		/* Only do one connection attempt per <connfreq> seconds (for the same server) */
 		if ((aconf->hold > TStime()))
 			continue;
+
 		confrq = class->connfreq;
 		aconf->hold = TStime() + confrq;
 
@@ -380,8 +374,7 @@ int match_tkls(Client *client)
 	return 0;
 }
 
-/** Time out connections that are still in handshake.
- */
+/** Time out connections that are still in handshake. */
 EVENT(handshake_timeout)
 {
 	Client *client, *next;
@@ -466,11 +459,7 @@ void check_ping(Client *client)
 	return;
 }
 
-/*
- * Check registered connections for PING timeout.
- * XXX: also does some other stuff still, need to sort this.  --nenolod
- * Perhaps it would be wise to ping servers as well mr nenolod, just an idea -- Syzop
- */
+/** Check registered connections for ping timeout. Also, check for server bans. */
 EVENT(check_pings)
 {
 	Client *client, *next;
@@ -493,6 +482,7 @@ EVENT(check_pings)
 	/* done */
 }
 
+/** Check for clients that are pending to be terminated */
 EVENT(check_deadsockets)
 {
 	Client *client, *next;
