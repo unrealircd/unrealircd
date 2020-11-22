@@ -866,6 +866,12 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		/* Check G/Z lines before shuns -- kill before quite -- codemastr */
 		if (find_tkline_match(client, 0))
 		{
+			if (!IsDead(client) && client->local->class)
+			{
+				/* Fix client count bug, in case that it was a hold such as via authprompt */
+				client->local->class->clients--;
+				client->local->class = NULL;
+			}
 			ircstats.is_ref++;
 			return 0;
 		}
@@ -892,7 +898,17 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		{
 			i = (*(h->func.intfunc))(client);
 			if (i == HOOK_DENY)
+			{
+				if (!IsDead(client) && client->local->class)
+				{
+					/* Fix client count bug, in case that
+					 * the HOOK_DENY was only meant temporarily.
+					 */
+					client->local->class->clients--;
+					client->local->class = NULL;
+				}
 				return 0;
+			}
 			if (i == HOOK_ALLOW)
 				break;
 		}
