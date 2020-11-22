@@ -1,38 +1,31 @@
-UnrealIRCd 5.0.7 Release Notes
-===============================
+UnrealIRCd 5.0.8-git Release Notes
+===================================
 
-UnrealIRCd 5.0.7 consists mainly of fixes for the 5.x stable series,
-with some minor enhancements.
+UnrealIRCd 5.0.8 is work in progress and so are these release notes.
 
 Enhancements:
-* Add support for ```estonian-utf8```, ```latvian-utf8``` and
-  ```lithuanian-utf8``` in
-  [set::allowed-nickchars](https://www.unrealircd.org/docs/Nick_Character_Sets)
-* Add [message tags](https://www.unrealircd.org/docs/Message_tags)
-  to ```PONG``` to help fix timestamp issues in KiwiIRC.
-* Dutch helpop file (conf/help/help.nl.conf)
+* Warn when the SSL/TLS server certificate is expired or expires soon
+  (within 7 days).
+
+* New option allow::options::reject-on-auth-failure if you want to
+  stop matching on a passworded allow block, see the
+  [allow password documentation](https://www.unrealircd.org/docs/Allow_block#password)
+  for more information. Most people won't use this.
 
 Fixes:
-* When having multiple text bans (```+b ~T:censor```), these caused an empty
-  message.
-* Text bans are now no longer bypassed by voiced users (```+v```).
-* [Websockets](https://www.unrealircd.org/docs/WebSocket_support) that used
-```labeled-response``` sometimes received multiple IRC messages in one
-websocket packet.
-* The reputation score of [WEBIRC users](https://www.unrealircd.org/docs/WebIRC_block)
-  was previously the score of the WEBIRC IP rather than the end-user IP.
-* ```STATS badword``` was not working.
-* When setting a very high channel limit, it showed a weird MODE ```+l``` value.
-* The ```LINKS``` command worked, even when disabled via
-  ```hideserver::disable-links``` in the optional hideserver module.
-* In some cases ```WHO``` did not show your own entry, such as when
-  searching on account name, which was confusing.
-* Memory leak when repeatedly using ```./unrealircd reloadtls``` or
-  ```/REHASH -tls```.
+* The ```WHO``` command searched on nick name even if it was told
+  to search on a specific account name via WHOX options.
+* Some typos in the Config script and a warning
+* Counting clients twice in some circumstances
+
+Changes:
+* Support for $(DESTDIR) in 'make install' if packaging for a distro
 
 Module coders / Developers:
-* No changes, only some small additions to the
-[Doxygen module API docs](https://www.unrealircd.org/api/5/index.html)
+* The [Doxygen module API docs](https://www.unrealircd.org/api/5/index.html)
+  have been improved, in particular the 
+  [Hook API](https://www.unrealircd.org/api/5/group__HookAPI.html)
+  is now 100% documented.
 
 Reminder: UnrealIRCd 4 is End Of Life
 ---------------------------------------
