@@ -164,7 +164,7 @@ void mark_data_to_send(Client *to)
 	}
 }
 
-/** All functions used to send data to clients, channels, etc.
+/** Send data to clients, servers, channels, IRCOps, etc.
  * @defgroup SendFunctions Send functions
  * @{
  */

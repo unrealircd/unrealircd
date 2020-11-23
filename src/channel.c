@@ -28,7 +28,16 @@
 long opermode = 0;
 /** Lazy way to signal an SAJOIN MODE */
 long sajoinmode = 0;
-/** List of all channels on the server */
+/** List of all channels on the server.
+ * @ingroup ListFunctions
+ * @section ex1 Example
+ * This code will list all channels on the network.
+ * @code
+ * sendnotice(client, "List of all channels:");
+ * for (channel = channels; channel; channel=channel->nextch)
+ *     sendnotice(client, "Channel %s", channel->name);
+ * @endcode
+ */
 Channel *channels = NULL;
 
 /* some buffers for rebuilding channel/nick lists with comma's */

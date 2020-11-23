@@ -500,7 +500,7 @@ Client *hash_find_server(const char *server, Client *def)
 	return def;
 }
 
-/** These are the functions to search for a client, user (person), server and channel.
+/** Find a client, user (person), server or channel by name.
  * If you are looking for "other find functions", then the alphabetical index of functions
  * at 'f' is your best bet: https://www.unrealircd.org/api/5/globals_func_f.html#index_f
  * @defgroup FindFunctions Find functions

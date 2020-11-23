@@ -430,11 +430,62 @@ SINLINE void list_splice_tail_init(struct list_head *list,
 	     pos != (head); \
 	     pos = n, n = pos->prev)
 
-/**
- * list_for_each_entry	-	iterate over list of given type
- * @pos:	the type * to use as a loop cursor.
- * @head:	the head for your list.
- * @member:	the name of the list_struct within the struct.
+/** Walk through client lists (with examples).
+ * @param	pos	The variable to use as a loop cursor
+ * @param	head	The head of your list
+ * @param	member	The name of the list_struct within the struct.
+ * @ingroup ListFunctions
+ * @section Examples
+ * @subsection client_list List all clients
+ * @code
+ * CMD_FUNC(cmd_listallclients)
+ * {
+ *     Client *acptr;
+ *     sendnotice(client, "List of all clients:");
+ *     list_for_each_entry(acptr, &client_list, client_node)
+ *         sendnotice(client, "Client %s", acptr->name);
+ * }
+ * @endcode
+ * @subsection lclient_list List all LOCAL clients
+ * @code
+ * CMD_FUNC(cmd_listalllocalclients)
+ * {
+ *     Client *acptr;
+ *     sendnotice(client, "List of all local clients:");
+ *     list_for_each_entry(acptr, &lclient_list, lclient_node)
+ *         sendnotice(client, "Client %s", acptr->name);
+ * }
+ * @endcode
+ * @subsection global_server_list List all servers
+ * @code
+ * CMD_FUNC(cmd_listallservers)
+ * {
+ *     Client *acptr;
+ *     sendnotice(client, "List of all servers:");
+ *     list_for_each_entry(acptr, &global_server_list, client_node)
+ *         sendnotice(client, "Server %s", acptr->name);
+ * }
+ * @endcode
+ * @subsection server_list List all LOCALLY connected servers
+ * @code
+ * CMD_FUNC(cmd_listallservers)
+ * {
+ *     Client *acptr;
+ *     sendnotice(client, "List of all LOCAL servers:");
+ *     list_for_each_entry(acptr, &server_list, special_node)
+ *         sendnotice(client, "Server %s", acptr->name);
+ * }
+ * @endcode
+ * @subsection oper_list List all LOCALLY connected IRCOps
+ * @code
+ * CMD_FUNC(cmd_listlocalircops)
+ * {
+ *     Client *acptr;
+ *     sendnotice(client, "List of all LOCAL IRCOps:");
+ *     list_for_each_entry(acptr, &oper_list, special_node)
+ *         sendnotice(client, "User %s", acptr->name);
+ * }
+ * @endcode
  */
 #define list_for_each_entry(pos, head, member)				\
 	for (pos = list_entry((head)->next, typeof(*pos), member);	\
@@ -514,12 +565,16 @@ SINLINE void list_splice_tail_init(struct list_head *list,
 	for (; &pos->member != (head);	\
 	     pos = list_entry(pos->member.next, typeof(*pos), member))
 
-/**
- * list_for_each_entry_safe - iterate over list of given type safe against removal of list entry
- * @pos:	the type * to use as a loop cursor.
- * @n:		another type * to use as temporary storage
- * @head:	the head for your list.
- * @member:	the name of the list_struct within the struct.
+/** Walk through client lists - special 'safe' version.
+ * This is a special version, in case clients are removed from the list
+ * while the list is iterated. It is unlikely that you need to use this
+ * from modules, so use list_for_each_entry() instead.
+ * Examples are also in list_for_each_entry().
+ * @param	pos	The variable to use as a loop cursor
+ * @param	n	Variable to be used for temporary storage
+ * @param	head	The head of your list
+ * @param	member	The name of the list_struct within the struct.
+ * @ingroup ListFunctions
  */
 #define list_for_each_entry_safe(pos, n, head, member)			\
 	for (pos = list_entry((head)->next, typeof(*pos), member),	\

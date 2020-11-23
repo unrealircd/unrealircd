@@ -25,7 +25,9 @@
  */
 #include "unrealircd.h"
 
-/** This is the message tags API (message-tags)
+/** This is the message tags API (message-tags).
+ * For an overview of message tags in general (not the API)
+ * see https://www.unrealircd.org/docs/Message_tags
  * @defgroup MessagetagAPI Message tag API
  * @{
  */

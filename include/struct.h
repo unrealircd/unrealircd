@@ -792,7 +792,8 @@ struct SWhois {
 	char *setby;
 };
 
-/** The command API - used by modules and the core.
+/** The command API - used by modules and the core to add commands, overrides, etc.
+ * See also https://www.unrealircd.org/docs/Dev:Command_API for a higher level overview and example.
  * @defgroup CommandAPI Command API
  * @{
  */
