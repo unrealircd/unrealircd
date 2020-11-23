@@ -164,7 +164,13 @@ void mark_data_to_send(Client *to)
 	}
 }
 
+/** All functions used to send data to clients, channels, etc.
+ * @defgroup SendFunctions Send functions
+ * @{
+ */
+
 /** Send a message to a single client.
+ * This function is used a lot, it is the most-used send function.
  * @param to		The client to send to
  * @param mtags		Any message tags associated with this message (can be NULL)
  * @param pattern	The format string / pattern to use.
@@ -180,8 +186,8 @@ void sendto_one(Client *to, MessageTag *mtags, FORMAT_STRING(const char *pattern
 
 /** Send a message to a single client - va_list variant.
  * This function is similar to sendto_one() except that it
- * doesn't use varargs but a va_list instead.
- * Generally this is NOT used outside send.c, so not by modules.
+ * doesn't use varargs but uses a va_list instead.
+ * Generally this function is NOT used outside send.c, so not by modules.
  * @param to		The client to send to
  * @param mtags		Any message tags associated with this message (can be NULL)
  * @param pattern	The format string / pattern to use.
@@ -363,9 +369,9 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 }
 
 /** A single function to send data to a channel.
- * Previously there were 6, now there is 1. This means there
- * are likely some parameters that you will pass as NULL or 0
- * but at least we can all use one single function.
+ * Previously there were 6 different functions to send channel data,
+ * now there is 1 single function. This also means that you most
+ * likely will pass NULL or 0 as some parameters.
  * @param channel       The channel to send to
  * @param from        The source of the message
  * @param skip        The client to skip (can be NULL).
@@ -593,11 +599,15 @@ static int match_it(Client *one, char *mask, int what)
 	}
 }
 
-/*
- * sendto_match_butone
- *
- * Send to all clients which match the mask in a way defined on 'what';
- * either by user hostname or user servername.
+/** Send to all clients which match the mask.
+ * This function is rarely used.
+ * @param one		The client to skip
+ * @param from		The sender
+ * @param mask		The mask
+ * @param what		One of MATCH_HOST or MATCH_SERVER
+ * @param mtags		Message tags associated with the message
+ * @param pattern	Format string
+ * @param ...		Parameters to the format string
  */
 void sendto_match_butone(Client *one, Client *from, char *mask, int what,
                          MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
@@ -641,10 +651,9 @@ void sendto_match_butone(Client *one, Client *from, char *mask, int what,
 	}
 }
 
-/*
- * sendto_ops
- *
- *	Send to *local* ops only.
+/** Send a message to all locally connected IRCOps
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
  */
 void sendto_ops(FORMAT_STRING(const char *pattern), ...)
 {
@@ -664,10 +673,98 @@ void sendto_ops(FORMAT_STRING(const char *pattern), ...)
 		}
 }
 
-/*
- * sendto_umode
- *
- *  Send to specified umode
+/* Hmm.. so local sending is called sendto_ops() and local+remote is sendto_ops_butone(),
+ * that is weird naming... (TODO fix some day in a new major series)
+ */
+
+/** Send a message to all IRCOps (local and remote), except one.
+ * @param one		Skip sending the message to this client/direction
+ * @param from		The sender (can not be NULL)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ */
+void sendto_ops_butone(Client *one, Client *from, FORMAT_STRING(const char *pattern), ...)
+{
+	va_list vl;
+	Client *acptr;
+
+	++current_serial;
+	list_for_each_entry(acptr, &client_list, client_node)
+	{
+		if (!SendWallops(acptr))
+			continue;
+		if (acptr->direction->local->serial == current_serial)	/* sent message along it already ? */
+			continue;
+		if (acptr->direction == one)
+			continue;	/* ...was the one I should skip */
+		acptr->direction->local->serial = current_serial;
+
+		va_start(vl, pattern);
+		vsendto_prefix_one(acptr->direction, from, NULL, pattern, vl);
+		va_end(vl);
+	}
+}
+
+/** This function does exactly the same as sendto_ops() in practice in 5.x.
+ * There used to be a difference between sendto_ops() and sendto_realops()
+ * with regards to user-settable snomasks, but this is no longer the case.
+ * TODO: remove this function in some future cleanup
+ */
+void sendto_realops(FORMAT_STRING(const char *pattern), ...)
+{
+	va_list vl;
+	Client *acptr;
+	char nbuf[1024];
+
+	list_for_each_entry(acptr, &oper_list, special_node)
+	{
+		ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ", me.name, acptr->name);
+		strlcat(nbuf, pattern, sizeof nbuf);
+
+		va_start(vl, pattern);
+		vsendto_one(acptr, NULL, nbuf, vl);
+		va_end(vl);
+	}
+}
+
+/** Send a message to all locally connected IRCOps and also log the error.
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ */
+void sendto_ops_and_log(FORMAT_STRING(const char *pattern), ...)
+{
+	va_list vl;
+	char buf[1024];
+
+	va_start(vl, pattern);
+	ircvsnprintf(buf, sizeof(buf), pattern, vl);
+	va_end(vl);
+
+	ircd_log(LOG_ERROR, "%s", buf);
+	sendto_umode(UMODE_OPER, "%s", buf);
+}
+
+/** This function does exactly the same as sendto_ops_and_log()
+ * TODO: remove this function in some future cleanup
+ */
+void sendto_realops_and_log(FORMAT_STRING(const char *fmt), ...)
+{
+	va_list vl;
+	static char buf[2048];
+
+	va_start(vl, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, vl);
+	va_end(vl);
+
+	sendto_realops("%s", buf);
+	ircd_log(LOG_ERROR, "%s", buf);
+}
+
+
+/** Send a message to all locally connected users with specified user mode.
+ * @param umodes	The umode that the recipient should have set (one of UMODE_)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
  */
 void sendto_umode(int umodes, FORMAT_STRING(const char *pattern), ...)
 {
@@ -687,10 +784,10 @@ void sendto_umode(int umodes, FORMAT_STRING(const char *pattern), ...)
 		}
 }
 
-/*
- * sendto_umode_global
- *
- * Send to specified umode *GLOBALLY* (on all servers)
+/** Send a message to all users with specified user mode (local & remote users).
+ * @param umodes	The umode that the recipient should have set (one of UMODE_*)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
  */
 void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 {
@@ -734,10 +831,10 @@ void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 	}
 }
 
-/** Send to specified snomask - local / operonly.
- * @param snomask Snomask to send to (can be a bitmask [AND])
- * @param pattern printf-style pattern, followed by parameters.
- * This function does not send snomasks to non-opers.
+/** Send a message to all locally connected users with specified snomask.
+ * @param snomask	The snomask that the recipient should have set (one of SNO_*)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
  */
 void sendto_snomask(int snomask, FORMAT_STRING(const char *pattern), ...)
 {
@@ -756,10 +853,10 @@ void sendto_snomask(int snomask, FORMAT_STRING(const char *pattern), ...)
 	}
 }
 
-/** Send to specified snomask - global / operonly.
- * @param snomask Snomask to send to (can be a bitmask [AND])
- * @param pattern printf-style pattern, followed by parameters
- * This function does not send snomasks to non-opers.
+/** Send a message to all users with specified snomask (local and remote users).
+ * @param snomask	The snomask that the recipient should have set (one of SNO_*)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
  */
 void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...)
 {
@@ -788,10 +885,10 @@ void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...)
 	sendto_server(NULL, 0, 0, NULL, ":%s SENDSNO %s :%s", me.id, snobuf, nbuf);
 }
 
-/*
- * send_cap_notify
- *
- * Send CAP DEL or CAP NEW to clients supporting this.
+/** Send CAP DEL and CAP NEW notification to clients supporting it.
+ * This function is mostly meant to be used by the CAP and SASL modules.
+ * @param add		Whether the CAP token is added (1) or removed (0)
+ * @param token		The CAP token
  */
 void send_cap_notify(int add, char *token)
 {
@@ -826,33 +923,6 @@ void send_cap_notify(int add, char *token)
 					me.name, (*client->name ? client->name : "*"), token);
 			}
 		}
-	}
-}
-
-/* ** sendto_ops_butone
-**	Send message to all operators.
-** one - client not to send message to
-** from- client which message is from *NEVER* NULL!!
-*/
-void sendto_ops_butone(Client *one, Client *from, FORMAT_STRING(const char *pattern), ...)
-{
-	va_list vl;
-	Client *acptr;
-
-	++current_serial;
-	list_for_each_entry(acptr, &client_list, client_node)
-	{
-		if (!SendWallops(acptr))
-			continue;
-		if (acptr->direction->local->serial == current_serial)	/* sent message along it already ? */
-			continue;
-		if (acptr->direction == one)
-			continue;	/* ...was the one I should skip */
-		acptr->direction->local->serial = current_serial;
-
-		va_start(vl, pattern);
-		vsendto_prefix_one(acptr->direction, from, NULL, pattern, vl);
-		va_end(vl);
 	}
 }
 
@@ -908,6 +978,32 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, con
 	return len;
 }
 
+/** Send a message to a client, expand the sender prefix.
+ * This is similar to sendto_one() except that it will expand the source part :%s
+ * to :nick!user@host if needed, while with sendto_one() it will be :nick.
+ * @param to		The client to send to
+ * @param mtags		Any message tags associated with this message (can be NULL)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ */
+void sendto_prefix_one(Client *to, Client *from, MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
+{
+	va_list vl;
+	va_start(vl, pattern);
+	vsendto_prefix_one(to, from, mtags, pattern, vl);
+	va_end(vl);
+}
+
+/** Send a message to a single client, expand the sender prefix - va_list variant.
+ * This is similar to vsendto_one() except that it will expand the source part :%s
+ * to :nick!user@host if needed, while with sendto_one() it will be :nick.
+ * This function is also similar to sendto_prefix_one(), but this is the va_list
+ * variant.
+ * @param to		The client to send to
+ * @param mtags		Any message tags associated with this message (can be NULL)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ */
 void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl)
 {
 	char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
@@ -926,60 +1022,6 @@ void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char 
 		snprintf(sendbuf2, sizeof(sendbuf2), "@%s %s", mtags_str, sendbuf);
 		sendbufto_one(to, sendbuf2, 0);
 	}
-}
-
-/*
- * sendto_prefix_one
- *
- * to - destination client
- * from - client which message is from
- *
- * NOTE: NEITHER OF THESE SHOULD *EVER* BE NULL!!
- * -avalon
- */
-
-void sendto_prefix_one(Client *to, Client *from, MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
-{
-	va_list vl;
-	va_start(vl, pattern);
-	vsendto_prefix_one(to, from, mtags, pattern, vl);
-	va_end(vl);
-}
-
-/*
- * sendto_realops
- *
- *	Send to *local* ops only but NOT +s nonopers.
- */
-void sendto_realops(FORMAT_STRING(const char *pattern), ...)
-{
-	va_list vl;
-	Client *acptr;
-	char nbuf[1024];
-
-	list_for_each_entry(acptr, &oper_list, special_node)
-	{
-		ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ", me.name, acptr->name);
-		strlcat(nbuf, pattern, sizeof nbuf);
-
-		va_start(vl, pattern);
-		vsendto_one(acptr, NULL, nbuf, vl);
-		va_end(vl);
-	}
-}
-
-/* Sends a message to all (local) opers AND logs to the ircdlog (as LOG_ERROR) */
-void sendto_realops_and_log(FORMAT_STRING(const char *fmt), ...)
-{
-va_list vl;
-static char buf[2048];
-
-	va_start(vl, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, vl);
-	va_end(vl);
-
-	sendto_realops("%s", buf);
-	ircd_log(LOG_ERROR, "%s", buf);
 }
 
 void sendto_connectnotice(Client *newuser, int disconnect, char *comment)
@@ -1102,6 +1144,11 @@ void sendto_one_nickcmd(Client *server, Client *client, char *umodes)
  * has a % in their nick, which is a safe assumption since % is illegal.
  */
  
+/** Send a server notice to a client.
+ * @param to		The client to send to
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ */
 void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...)
 {
 	static char realpattern[1024];
@@ -1115,25 +1162,23 @@ void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...)
 	va_end(vl);
 }
 
-/** Send MultiLine list as a notice, one for each line */
+/** Send MultiLine list as a notice, one for each line.
+ * @param client	The client to send to
+ * @param m		The MultiLine list.
+ */
 void sendnotice_multiline(Client *client, MultiLine *m)
 {
 	for (; m; m = m->next)
 		sendnotice(client, "%s", m->line);
 }
-void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...)
-{
-	static char realpattern[1024];
-	va_list vl;
 
-	ircsnprintf(realpattern, sizeof(realpattern), ":%s %d %s :%s", me.name, RPL_TEXT, to->name, pattern);
 
-	va_start(vl, pattern);
-	vsendto_one(to, NULL, realpattern, vl);
-	va_end(vl);
-}
-
-/** Send numeric to IRC client */
+/** Send numeric message to a client.
+ * @param to		The recipient
+ * @param numeric	The numeric, one of RPL_* or ERR_*, see src/numeric.c
+ * @param ...		The parameters for the numeric
+ * @note Be sure to provide the correct number and type of parameters that belong to the numeric. Check src/numeric.c when in doubt!
+ */
 void sendnumeric(Client *to, int numeric, ...)
 {
 	va_list vl;
@@ -1146,7 +1191,15 @@ void sendnumeric(Client *to, int numeric, ...)
 	va_end(vl);
 }
 
-/** Send numeric to IRC client */
+/** Send numeric message to a client - format to user specific needs.
+ * This will ignore the numeric definition of src/numeric.c and always send ":me.name numeric clientname "
+ * followed by the pattern and format string you choose.
+ * @param to		The recipient
+ * @param numeric	The numeric, one of RPL_* or ERR_*, see src/numeric.c
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ * @note Don't forget to add a colon if you need it (eg `:%%s`), this is a common mistake.
+ */
 void sendnumericfmt(Client *to, int numeric, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
@@ -1159,7 +1212,27 @@ void sendnumericfmt(Client *to, int numeric, FORMAT_STRING(const char *pattern),
 	va_end(vl);
 }
 
-/** Send raw data directly to socket, bypassing everything.
+/** Send text numeric message to a client (RPL_TEXT).
+ * Because this generic output numeric is commonly used it got a special function for it.
+ * @param to		The recipient
+ * @param numeric	The numeric, one of RPL_* or ERR_*, see src/numeric.c
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ * @note Don't forget to add a colon if you need it (eg `:%%s`), this is a common mistake.
+ */
+void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...)
+{
+	static char realpattern[1024];
+	va_list vl;
+
+	ircsnprintf(realpattern, sizeof(realpattern), ":%s %d %s :%s", me.name, RPL_TEXT, to->name, pattern);
+
+	va_start(vl, pattern);
+	vsendto_one(to, NULL, realpattern, vl);
+	va_end(vl);
+}
+
+/* Send raw data directly to socket, bypassing everything.
  * Looks like an interesting function to call? NO! STOP!
  * Don't use this function. It may only be used by the initial
  * Z-Line check via the codepath to banned_client().
@@ -1186,17 +1259,4 @@ void send_raw_direct(Client *user, FORMAT_STRING(FORMAT_STRING(const char *patte
 	(void)send(user->local->fd, sendbuf, sendlen, 0);
 }
 
-/** Send a message to all locally connected IRCOps and log the error.
- */
-void sendto_ops_and_log(FORMAT_STRING(const char *pattern), ...)
-{
-	va_list vl;
-	char buf[1024];
-
-	va_start(vl, pattern);
-	ircvsnprintf(buf, sizeof(buf), pattern, vl);
-	va_end(vl);
-
-	ircd_log(LOG_ERROR, "%s", buf);
-	sendto_umode(UMODE_OPER, "%s", buf);
-}
+/** @} */

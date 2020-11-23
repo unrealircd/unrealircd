@@ -163,7 +163,6 @@ extern MODVAR struct list_head global_server_list;
 extern MODVAR struct list_head dead_list;
 extern RealCommand *find_command(char *cmd, int flags);
 extern RealCommand *find_command_simple(char *cmd);
-extern Channel *find_channel(char *, Channel *);
 extern Membership *find_membership_link(Membership *lp, Channel *ptr);
 extern Member *find_member_link(Member *, Client *);
 extern int remove_user_from_channel(Client *, Channel *);
@@ -336,7 +335,7 @@ extern void del_queries(char *);
 #define WATCH_HASH_TABLE_SIZE 32768
 #define WHOWAS_HASH_TABLE_SIZE 32768
 #define THROTTLING_HASH_TABLE_SIZE 8192
-#define find_channel hash_find_channel
+#define hash_find_channel find_channel
 extern uint64_t siphash(const char *in, const char *k);
 extern uint64_t siphash_raw(const char *in, size_t len, const char *k);
 extern uint64_t siphash_nocase(const char *in, const char *k);
@@ -359,7 +358,7 @@ extern Channel *hash_get_chan_bucket(uint64_t);
 extern Client *hash_find_client(const char *, Client *);
 extern Client *hash_find_id(const char *, Client *);
 extern Client *hash_find_nickatserver(const char *, Client *);
-extern Channel *hash_find_channel(char *name, Channel *channel);
+extern Channel *find_channel(char *name, Channel *channel);
 extern Client *hash_find_server(const char *, Client *);
 extern struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_TABLE_SIZE];
 

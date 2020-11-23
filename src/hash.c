@@ -500,11 +500,21 @@ Client *hash_find_server(const char *server, Client *def)
 	return def;
 }
 
+/** These are the functions to search for a client, user (person), server and channel.
+ * If you are looking for "other find functions", then the alphabetical index of functions
+ * at 'f' is your best bet: https://www.unrealircd.org/api/5/globals_func_f.html#index_f
+ * @defgroup FindFunctions Find functions
+ * @{
+ */
+
 /** Find a client by name.
+ * This searches in the list of all types of clients, user/person, servers or an unregistered clients.
+ * If you know what type of client to search for, then use find_server() or find_person() instead!
  * @param name        The name to search for (eg: "nick" or "irc.example.net")
  * @param requester   The client that is searching for this name
  * @note  If 'requester' is a server or NULL, then we also check
  *        the ID table, otherwise not.
+ * @returns If the client is found then the Client is returned, otherwise NULL.
  */
 Client *find_client(char *name, Client *requester)
 {
@@ -525,6 +535,7 @@ Client *find_client(char *name, Client *requester)
  * @param requester   The client searching for the name.
  * @note  If 'requester' is a server or NULL, then we also check
  *        the ID table, otherwise not.
+ * @returns If the server is found then the Client is returned, otherwise NULL.
  */
 Client *find_server(char *name, Client *requester)
 {
@@ -539,13 +550,14 @@ Client *find_server(char *name, Client *requester)
 	return NULL;
 }
 
-/** Find a person.
+/** Find a person (a user).
  * @param name        The name to search for (eg: "nick" or "001ABCDEFG")
  * @param requester   The client that is searching for this name
  * @note  If 'requester' is a server or NULL, then we also check
  *        the ID table, otherwise not.
+ * @returns If the user is found then the Client is returned, otherwise NULL.
  */
-Client *find_person(char *name, Client *requester)
+Client *find_person(char *name, Client *requester) /* TODO: this should have been called find_user() to be consistent */
 {
 	Client *c2ptr;
 
@@ -558,10 +570,12 @@ Client *find_person(char *name, Client *requester)
 }
 
 
-/*
- * hash_find_channel
+/** Find a channel by name.
+ * @param name			The channel name to search for
+ * @param default_result	If the channel is not found, this value is returned.
+ * @returns If the channel exists then the Channel is returned, otherwise default_result is returned.
  */
-Channel *hash_find_channel(char *name, Channel *channel)
+Channel *find_channel(char *name, Channel *default_result)
 {
 	unsigned int hashv;
 	Channel *tmp;
@@ -573,8 +587,10 @@ Channel *hash_find_channel(char *name, Channel *channel)
 		if (smycmp(name, tmp->chname) == 0)
 			return tmp;
 	}
-	return channel;
+	return default_result;
 }
+
+/** @} */
 
 Channel *hash_get_chan_bucket(uint64_t hashv)
 {
