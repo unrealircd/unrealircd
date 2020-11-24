@@ -165,16 +165,28 @@ void mark_data_to_send(Client *to)
 }
 
 /** Send data to clients, servers, channels, IRCOps, etc.
+ * There are a lot of send functions. The most commonly functions
+ * are: sendto_one() to send to an individual user,
+ * sendnumeric() to send a numeric to an individual user
+ * and sendto_channel() to send a message to a channel.
  * @defgroup SendFunctions Send functions
  * @{
  */
 
 /** Send a message to a single client.
- * This function is used a lot, it is the most-used send function.
+ * This function is used quite a lot, after sendnumeric() it is the most-used send function.
  * @param to		The client to send to
  * @param mtags		Any message tags associated with this message (can be NULL)
  * @param pattern	The format string / pattern to use.
  * @param ...		Format string parameters.
+ * @section sendto_one_examples Examples
+ * @subsection sendto_one_mode_r Send "MODE -r"
+ * This will send the `:serv.er.name MODE yournick -r` message.
+ * Note that it will send only this message to illustrate the sendto_one() function.
+ * It does *not* set anyone actually -r.
+ * @code
+ * sendto_one(client, NULL, ":%s MODE %s :-r", me.name, client->name);
+ * @endcode
  */
 void sendto_one(Client *to, MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
 {
@@ -386,6 +398,36 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
  * @param mtags       The message tags to attach to this message
  * @param pattern     The pattern (eg: ":%s PRIVMSG %s :%s")
  * @param ...         The parameters for the pattern.
+ * @note For all channel messages, it is important to attach the correct
+ *       message tags (mtags) via a new_message() call, as can be seen
+ *       in the example.
+ * @section sendto_channel_examples Examples
+ * @subsection sendto_channel_privmsg Send a PRIVMSG to a channel
+ * This command will send the message "Hello everyone!!!" to the channel when executed.
+ * @code
+ * CMD_FUNC(cmd_sayhello)
+ * {
+ *     MessageTag *mtags = NULL;
+ *     Channel *channel = NULL;
+ *     if ((parc < 2) || BadPtr(parv[1]))
+ *     {
+ *         sendnumeric(client, ERR_NEEDMOREPARAMS, "SAYHELLO");
+ *         return;
+ *     }
+ *     channel = find_channel(parv[1], NULL);
+ *     if (!channel)
+ *     {
+ *         sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);
+ *         return;
+ *     }
+ *     new_message(client, recv_mtags, &mtags);
+ *     sendto_channel(channel, client, client->direction, 0, 0,
+ *                    SEND_LOCAL|SEND_REMOTE, mtags,
+ *                    ":%s PRIVMSG %s :Hello everyone!!!",
+ *                    client->name, channel->name);
+ *     free_message_tags(mtags);
+ * }
+ * @endcode
  */
 void sendto_channel(Channel *channel, Client *from, Client *skip,
                     int prefix, long clicap, int sendflags,
@@ -1178,6 +1220,17 @@ void sendnotice_multiline(Client *client, MultiLine *m)
  * @param numeric	The numeric, one of RPL_* or ERR_*, see src/numeric.c
  * @param ...		The parameters for the numeric
  * @note Be sure to provide the correct number and type of parameters that belong to the numeric. Check src/numeric.c when in doubt!
+ * @section sendnumeric_examples Examples
+ * @subsection sendnumeric_permission_denied Send "Permission Denied" numeric
+ * This numeric has no parameter, so is simple:
+ * @code
+ * sendnumeric(client, ERR_NOPRIVILEGES);
+ * @endcode
+ * @subsection sendnumeric_notenoughparameters Send "Not enough parameters" numeric
+ * This numeric requires 1 parameter: the name of the command.
+ * @code
+ * sendnumeric(client, ERR_NEEDMOREPARAMS, "SOMECOMMAND");
+ * @endcode
  */
 void sendnumeric(Client *to, int numeric, ...)
 {

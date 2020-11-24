@@ -30,7 +30,7 @@ long opermode = 0;
 long sajoinmode = 0;
 /** List of all channels on the server.
  * @ingroup ListFunctions
- * @section ex1 Example
+ * @section channels_example Example
  * This code will list all channels on the network.
  * @code
  * sendnotice(client, "List of all channels:");
@@ -1153,7 +1153,7 @@ void set_channel_mlock(Client *client, Channel *channel, const char *newmlock, i
  * @in modebuf_in Buffer pointing to mode characters (eg: +snk-l)
  * @in parabuf_in Buffer pointing to all parameters (eg: key 123)
  * @retval Returns 1 if we have valid data to return, 0 if at end of mode line.
- * @section ex1 Example:
+ * @section parse_chanmode_example Example:
  * @code
  * ParseMode pm;
  * int ret;
