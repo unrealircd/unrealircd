@@ -26,7 +26,9 @@
 
 #include "unrealircd.h"
 
-/** This is the extended channel mode API
+/** This is the extended channel mode API,
+ * see also https://www.unrealircd.org/docs/Dev:Channel_Mode_API
+ * for more information.
  * @defgroup ChannelModeAPI Channel mode API
  * @{
  */
