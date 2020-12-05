@@ -1088,7 +1088,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 			  bootopt |= BOOT_TTY;
 			  break;
 		  case 'v':
-			  (void)printf("%s build %s\n", version, buildid);
+			  (void)printf("%s\n", version);
 #else
 		  case 'v':
 			  if (!IsService) {
