@@ -6,7 +6,10 @@ UnrealIRCd 5.0.8 is work in progress and so are these release notes.
 Enhancements:
 * Warn when the SSL/TLS server certificate is expired or expires soon
   (within 7 days).
-
+* Only send the first 1000 matches on ```STATS gline``` or a
+  similar command. This to prevent the IRCOp from being flooded off.
+  This value can be changed via
+  [set::max-stats-matches](https://www.unrealircd.org/docs/Set_block#set::max-stats-matches)
 * New option allow::options::reject-on-auth-failure if you want to
   stop matching on a passworded allow block, see the
   [allow password documentation](https://www.unrealircd.org/docs/Allow_block#password)
@@ -20,6 +23,9 @@ Fixes:
 
 Changes:
 * Support for $(DESTDIR) in 'make install' if packaging for a distro
+* Mention the ban reason in Q-line server notices
+* Add self-test to module manager and improve the error message in case
+  the IRCd source directory does not exist.
 
 Module coders / Developers:
 * The [Doxygen module API docs](https://www.unrealircd.org/api/5/index.html)
