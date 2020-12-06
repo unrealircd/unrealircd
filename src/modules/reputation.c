@@ -682,6 +682,107 @@ int count_reputation_records(void)
 	return total;
 }
 
+void reputation_channel_query(Client *client, Channel *channel)
+{
+	Member *m;
+	char buf[512];
+	char tbuf[256];
+	const char **nicks;
+	int *scores;
+	int cnt = 0, i, j;
+	ReputationEntry *e;
+
+	sendtxtnumeric(client, "Users and reputation scores for %s:", channel->chname);
+
+	/* Step 1: build a list of nicks and their reputation */
+	nicks = safe_alloc((channel->users+1) * sizeof(char *));
+	scores = safe_alloc((channel->users+1) * sizeof(int));
+	for (m = channel->members; m; m = m->next)
+	{
+		nicks[cnt] = m->client->name;
+		if (m->client->ip)
+		{
+			e = find_reputation_entry(m->client->ip);
+			if (e)
+				scores[cnt] = e->score;
+		}
+		if (++cnt > channel->users)
+		{
+			sendto_ops("[BUG] reputation_channel_query() expected %d users but %d (or more) were present in %s",
+				channel->users, cnt, channel->chname);
+#ifdef DEBUGMODE
+			abort();
+#endif
+			break; /* safety net */
+		}
+	}
+
+	/* Step 2: lazy selection sort */
+	for (i = 0; i < cnt && nicks[i]; i++)
+	{
+		for (j = i+1; j < cnt && nicks[j]; j++)
+		{
+			if (scores[i] < scores[j])
+			{
+				const char *nick_tmp;
+				int score_tmp;
+				nick_tmp = nicks[i];
+				score_tmp = scores[i];
+				nicks[i] = nicks[j];
+				scores[i] = scores[j];
+				nicks[j] = nick_tmp;
+				scores[j] = score_tmp;
+			}
+		}
+	}
+
+	/* Step 3: send the (ordered) list to the user */
+	*buf = '\0';
+	for (i = 0; i < cnt && nicks[i]; i++)
+	{
+		snprintf(tbuf, sizeof(tbuf), "%s\00314(%d)\003 ", nicks[i], scores[i]);
+		if ((strlen(tbuf)+strlen(buf) > 400) || !nicks[i+1])
+		{
+			sendtxtnumeric(client, "%s%s", buf, tbuf);
+			*buf = '\0';
+		} else {
+			strlcat(buf, tbuf, sizeof(buf));
+		}
+	}
+	sendtxtnumeric(client, "End of list.");
+	safe_free(nicks);
+	safe_free(scores);
+}
+
+void reputation_list_query(Client *client, int maxscore)
+{
+	Client *target;
+	ReputationEntry *e;
+
+	sendtxtnumeric(client, "Users and reputation scores <%d:", maxscore);
+
+	list_for_each_entry(target, &client_list, client_node)
+	{
+		int score = 0;
+
+		if (!IsUser(target) || IsULine(target) || !target->ip)
+			continue;
+
+		e = find_reputation_entry(target->ip);
+		if (e)
+			score = e->score;
+		if (score >= maxscore)
+			continue;
+		sendtxtnumeric(client, "%s!%s@%s [%s] \017(score: %d)",
+			target->name,
+			target->user->username,
+			target->user->realhost,
+			target->ip,
+			score);
+	}
+	sendtxtnumeric(client, "End of list.");
+}
+
 CMD_FUNC(reputation_user_cmd)
 {
 	ReputationEntry *e;
@@ -709,13 +810,45 @@ CMD_FUNC(reputation_user_cmd)
 		}
 		sendnotice(client, "Current number of records (IP's): %d", count_reputation_records());
 		sendnotice(client, "-");
-		sendnotice(client, "For more specific information, use: /REPUTATION [nick|IP-address]");
+		sendnotice(client, "Available commands:");
+		sendnotice(client, "/REPUTATION [nick]     Show reputation info about nick name");
+		sendnotice(client, "/REPUTATION [ip]       Show reputation info about IP address");
+		sendnotice(client, "/REPUTATION [channel]  List users in channel along with their reputation score");
+		sendnotice(client, "/REPUTATION <NN        List users with reputation score below value NN");
 		return;
 	}
 	
 	if (strchr(parv[1], '.') || strchr(parv[1], ':'))
 	{
 		ip = parv[1];
+	} else
+	if (parv[1][0] == '#')
+	{
+		Channel *channel = find_channel(parv[1], NULL);
+		if (!channel)
+		{
+			sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);
+			return;
+		}
+		/* corner case: ircop without proper permissions and not in channel */
+		if (!ValidatePermissionsForPath("channel:see:names:invisible",client,NULL,NULL,NULL) && !get_access(client,channel))
+		{
+			sendnumeric(client, ERR_NOTONCHANNEL, channel->chname);
+			return;
+		}
+		reputation_channel_query(client, channel);
+		return;
+	} else
+	if (parv[1][0] == '<')
+	{
+		int max = atoi(parv[1] + 1);
+		if (max < 1)
+		{
+			sendnotice(client, "REPUTATION: Invalid search value specified. Use for example '/REPUTATION <5' to search on less-than-five");
+			return;
+		}
+		reputation_list_query(client, max);
+		return;
 	} else {
 		Client *target = find_person(parv[1], NULL);
 		if (!target)

@@ -10,6 +10,12 @@ Enhancements:
   similar command. This to prevent the IRCOp from being flooded off.
   This value can be changed via
   [set::max-stats-matches](https://www.unrealircd.org/docs/Set_block#set::max-stats-matches)
+* The reputation command (IRCOp-only) has been extended to make it
+  easier to look for potential troublemakers:
+  * ```REPUTATION Nick``` shows reputation about the nick name
+  * ```REPUTATION IP``` shows reputation about the IP address
+  * ```REPUTATION #channel``` lists users in channel with their reputation score
+  * ```REPUTATION <NN``` lists users with reputation scores below value NN
 * New option allow::options::reject-on-auth-failure if you want to
   stop matching on a passworded allow block, see the
   [allow password documentation](https://www.unrealircd.org/docs/Allow_block#password)
