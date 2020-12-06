@@ -417,7 +417,10 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		/* If you're a user, and this command does not permit users or opers, deny */
 		if ((flags & CMD_USER) && !(cmptr->flags & CMD_USER) && !(cmptr->flags & CMD_OPER))
 		{
-			sendnumeric(cptr, ERR_NOTFORUSERS, cmptr->cmd);
+			if (cmptr->flags & CMD_UNREGISTERED)
+				sendnumeric(cptr, ERR_ALREADYREGISTRED); /* only for unregistered phase */
+			else
+				sendnumeric(cptr, ERR_NOTFORUSERS, cmptr->cmd); /* really never for users */
 			return;
 		}
 
