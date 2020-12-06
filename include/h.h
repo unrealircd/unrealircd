@@ -697,7 +697,7 @@ extern MODVAR int (*find_shun)(Client *cptr);
 extern MODVAR int (*find_spamfilter_user)(Client *client, int flags);
 extern MODVAR TKL *(*find_qline)(Client *cptr, char *nick, int *ishold);
 extern MODVAR TKL *(*find_tkline_match_zap)(Client *cptr);
-extern MODVAR void (*tkl_stats)(Client *cptr, int type, char *para);
+extern MODVAR void (*tkl_stats)(Client *cptr, int type, char *para, int *cnt);
 extern MODVAR void (*tkl_sync)(Client *client);
 extern MODVAR void (*cmd_tkl)(Client *client, MessageTag *recv_mtags, int parc, char *parv[]);
 extern MODVAR int (*place_host_ban)(Client *client, BanAction action, char *reason, long duration);

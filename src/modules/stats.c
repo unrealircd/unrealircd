@@ -462,22 +462,25 @@ int stats_denylinkall(Client *client, char *para)
 
 int stats_gline(Client *client, char *para)
 {
-	tkl_stats(client, TKL_GLOBAL|TKL_KILL, para);
-	tkl_stats(client, TKL_GLOBAL|TKL_ZAP, para);
+	int cnt = 0;
+	tkl_stats(client, TKL_GLOBAL|TKL_KILL, para, &cnt);
+	tkl_stats(client, TKL_GLOBAL|TKL_ZAP, para, &cnt);
 	return 0;
 }
 
 int stats_spamfilter(Client *client, char *para)
 {
-	tkl_stats(client, TKL_SPAMF, para);
-	tkl_stats(client, TKL_GLOBAL|TKL_SPAMF, para);
+	int cnt = 0;
+	tkl_stats(client, TKL_SPAMF, para, &cnt);
+	tkl_stats(client, TKL_GLOBAL|TKL_SPAMF, para, &cnt);
 	return 0;
 }
 
 int stats_except(Client *client, char *para)
 {
-	tkl_stats(client, TKL_EXCEPTION, para);
-	tkl_stats(client, TKL_EXCEPTION|TKL_GLOBAL, para);
+	int cnt = 0;
+	tkl_stats(client, TKL_EXCEPTION, para, &cnt);
+	tkl_stats(client, TKL_EXCEPTION|TKL_GLOBAL, para, &cnt);
 	return 0;
 }
 
@@ -564,8 +567,9 @@ int stats_port(Client *client, char *para)
 
 int stats_bannick(Client *client, char *para)
 {
-	tkl_stats(client, TKL_NAME, para);
-	tkl_stats(client, TKL_GLOBAL|TKL_NAME, para);
+	int cnt = 0;
+	tkl_stats(client, TKL_NAME, para, &cnt);
+	tkl_stats(client, TKL_GLOBAL|TKL_NAME, para, &cnt);
 	return 0;
 }
 
@@ -699,8 +703,9 @@ int stats_denylinkauto(Client *client, char *para)
 
 int stats_kline(Client *client, char *para)
 {
-	tkl_stats(client, TKL_KILL, NULL);
-	tkl_stats(client, TKL_ZAP, NULL);
+	int cnt = 0;
+	tkl_stats(client, TKL_KILL, NULL, &cnt);
+	tkl_stats(client, TKL_ZAP, NULL, &cnt);
 	return 0;
 }
 
@@ -720,7 +725,8 @@ int stats_banrealname(Client *client, char *para)
 
 int stats_sqline(Client *client, char *para)
 {
-	tkl_stats(client, TKL_NAME|TKL_GLOBAL, para);
+	int cnt = 0;
+	tkl_stats(client, TKL_NAME|TKL_GLOBAL, para, &cnt);
 	return 0;
 }
 
@@ -741,7 +747,8 @@ int stats_chanrestrict(Client *client, char *para)
 
 int stats_shun(Client *client, char *para)
 {
-	tkl_stats(client, TKL_GLOBAL|TKL_SHUN, para);
+	int cnt = 0;
+	tkl_stats(client, TKL_GLOBAL|TKL_SHUN, para, &cnt);
 	return 0;
 }
 

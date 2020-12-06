@@ -39,6 +39,8 @@ int tkl_config_test_ban(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_ban(ConfigFile *, ConfigEntry *, int);
 int tkl_config_test_except(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_except(ConfigFile *, ConfigEntry *, int);
+int tkl_config_test_set(ConfigFile *, ConfigEntry *, int, int *);
+int tkl_config_run_set(ConfigFile *, ConfigEntry *, int);
 CMD_FUNC(cmd_gline);
 CMD_FUNC(cmd_shun);
 CMD_FUNC(cmd_tempshun);
@@ -76,7 +78,7 @@ int _find_shun(Client *client);
 int _find_spamfilter_user(Client *client, int flags);
 TKL *_find_qline(Client *client, char *nick, int *ishold);
 TKL *_find_tkline_match_zap(Client *client);
-void _tkl_stats(Client *client, int type, char *para);
+void _tkl_stats(Client *client, int type, char *para, int *cnt);
 void _tkl_sync(Client *client);
 CMD_FUNC(_cmd_tkl);
 int _place_host_ban(Client *client, BanAction action, char *reason, long duration);
@@ -142,12 +144,15 @@ TKLTypeTable tkl_types[] = {
 };
 #define ALL_VALID_EXCEPTION_TYPES "kline, gline, zline, gzline, spamfilter, shun, qline, blacklist, connect-flood, unknown-data-flood, antirandom, antimixedutf8, ban-version"
 
+int max_stats_matches = 1000;
+
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_spamfilter);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_ban);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_except);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_set);
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_HASH, _tkl_hash);
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_TYPETOCHAR, TO_INTFUNC(_tkl_typetochar));
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_CHARTOTYPE, TO_INTFUNC(_tkl_chartotype));
@@ -190,6 +195,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_match_spamfilter);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_ban);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_except);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_set);
 	CommandAdd(modinfo->handle, "GLINE", cmd_gline, 3, CMD_OPER);
 	CommandAdd(modinfo->handle, "SHUN", cmd_shun, 3, CMD_OPER);
 	CommandAdd(modinfo->handle, "TEMPSHUN", cmd_tempshun, 2, CMD_OPER);
@@ -900,6 +906,44 @@ int tkl_config_run_except(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	}
 
 	return 1;
+}
+
+int tkl_config_test_set(ConfigFile *cf, ConfigEntry *ce, int configtype, int *errs)
+{
+	int errors = 0;
+
+	/* We are only interested in set { } blocks */
+	if (configtype != CONFIG_SET)
+		return 0;
+
+	if (!strcmp(ce->ce_varname, "max-stats-matches"))
+	{
+		if (!ce->ce_vardata)
+		{
+			config_error("%s:%i: set::max-stats-matches: no value specified",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
+		}
+		// allow any other value, including 0 and negative.
+		*errs = errors;
+		return errors ? -1 : 1;
+	}
+	return 0;
+}
+
+int tkl_config_run_set(ConfigFile *cf, ConfigEntry *ce, int configtype)
+{
+	/* We are only interested in set { } blocks */
+	if (configtype != CONFIG_SET)
+		return 0;
+
+	if (!strcmp(ce->ce_varname, "max-stats-matches"))
+	{
+		max_stats_matches = atoi(ce->ce_vardata);
+		return 1;
+	}
+
+	return 0;
 }
 
 /** Return unique spamfilter id for TKL */
@@ -3298,7 +3342,7 @@ static void parse_stats_params(char *para, TKLFlag *flag)
 /** Does this TKL entry match the search terms?
  * This is a helper function for tkl_stats().
  */
-void tkl_stats_matcher(Client *client, int type, char *para, TKLFlag *tklflags, TKL *tkl)
+int tkl_stats_matcher(Client *client, int type, char *para, TKLFlag *tklflags, TKL *tkl)
 {
 	/***** First, handle the selection ******/
 
@@ -3306,66 +3350,66 @@ void tkl_stats_matcher(Client *client, int type, char *para, TKLFlag *tklflags, 
 	{
 		if (tklflags->flags & BY_SETBY)
 			if (!match_simple(tklflags->set_by, tkl->set_by))
-				return;
+				return 0;
 		if (tklflags->flags & NOT_BY_SETBY)
 			if (match_simple(tklflags->set_by, tkl->set_by))
-				return;
+				return 0;
 		if (TKLIsServerBan(tkl))
 		{
 			if (tklflags->flags & BY_MASK)
 			{
 				if (!match_simple(tklflags->mask, make_user_host(tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask)))
-					return;
+					return 0;
 			}
 			if (tklflags->flags & NOT_BY_MASK)
 			{
 				if (match_simple(tklflags->mask, make_user_host(tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask)))
-					return;
+					return 0;
 			}
 			if (tklflags->flags & BY_REASON)
 				if (!match_simple(tklflags->reason, tkl->ptr.serverban->reason))
-					return;
+					return 0;
 			if (tklflags->flags & NOT_BY_REASON)
 				if (match_simple(tklflags->reason, tkl->ptr.serverban->reason))
-					return;
+					return 0;
 		} else
 		if (TKLIsNameBan(tkl))
 		{
 			if (tklflags->flags & BY_MASK)
 			{
 				if (!match_simple(tklflags->mask, tkl->ptr.nameban->name))
-					return;
+					return 0;
 			}
 			if (tklflags->flags & NOT_BY_MASK)
 			{
 				if (match_simple(tklflags->mask, tkl->ptr.nameban->name))
-					return;
+					return 0;
 			}
 			if (tklflags->flags & BY_REASON)
 				if (!match_simple(tklflags->reason, tkl->ptr.nameban->reason))
-					return;
+					return 0;
 			if (tklflags->flags & NOT_BY_REASON)
 				if (match_simple(tklflags->reason, tkl->ptr.nameban->reason))
-					return;
+					return 0;
 		} else
 		if (TKLIsBanException(tkl))
 		{
 			if (tklflags->flags & BY_MASK)
 			{
 				if (!match_simple(tklflags->mask, make_user_host(tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask)))
-					return;
+					return 0;
 			}
 			if (tklflags->flags & NOT_BY_MASK)
 			{
 				if (match_simple(tklflags->mask, make_user_host(tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask)))
-					return;
+					return 0;
 			}
 			if (tklflags->flags & BY_REASON)
 				if (!match_simple(tklflags->reason, tkl->ptr.banexception->reason))
-					return;
+					return 0;
 			if (tklflags->flags & NOT_BY_REASON)
 				if (match_simple(tklflags->reason, tkl->ptr.banexception->reason))
-					return;
+					return 0;
 		}
 	}
 
@@ -3444,15 +3488,23 @@ void tkl_stats_matcher(Client *client, int type, char *para, TKLFlag *tklflags, 
 			   tkl->ptr.banexception->bantypes,
 			   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
 			   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.banexception->reason);
+	} else
+	{
+		/* That's weird, unknown TKL type */
+		return 0;
 	}
+	return 1;
 }
 
 /* TKL Stats. This is used by /STATS gline and all the others */
-void _tkl_stats(Client *client, int type, char *para)
+void _tkl_stats(Client *client, int type, char *para, int *cnt)
 {
 	TKL *tk;
 	TKLFlag tklflags;
 	int index, index2;
+
+	if ((max_stats_matches > 0) && (*cnt >= max_stats_matches))
+		return;
 
 	if (!BadPtr(para))
 		parse_stats_params(para, &tklflags);
@@ -3467,7 +3519,16 @@ void _tkl_stats(Client *client, int type, char *para)
 			{
 				if (type && tk->type != type)
 					continue;
-				tkl_stats_matcher(client, type, para, &tklflags, tk);
+				if (tkl_stats_matcher(client, type, para, &tklflags, tk))
+				{
+					*cnt += 1;
+					if ((max_stats_matches > 0) && (*cnt >= max_stats_matches))
+					{
+						sendnumeric(client, ERR_TOOMANYMATCHES, "STATS", "too many matches (set::max-stats-matches)");
+						sendnotice(client, "Consider searching on something more specific, eg '/STATS gline +m *.nl'. See '/STATS' (without parameters) for help.");
+						return;
+					}
+				}
 			}
 		}
 	}
@@ -3479,7 +3540,16 @@ void _tkl_stats(Client *client, int type, char *para)
 		{
 			if (type && tk->type != type)
 				continue;
-			tkl_stats_matcher(client, type, para, &tklflags, tk);
+			if (tkl_stats_matcher(client, type, para, &tklflags, tk))
+			{
+				*cnt += 1;
+				if ((max_stats_matches > 0) && (*cnt >= max_stats_matches))
+				{
+					sendnumeric(client, ERR_TOOMANYMATCHES, "STATS", "too many matches (set::max-stats-matches)");
+					sendnotice(client, "Consider searching on something more specific, eg '/STATS gline +m *.nl'. See '/STATS' (without parameters) for help.");
+					return;
+				}
+			}
 		}
 	}
 
