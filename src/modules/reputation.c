@@ -687,7 +687,7 @@ void reputation_channel_query(Client *client, Channel *channel)
 	Member *m;
 	char buf[512];
 	char tbuf[256];
-	const char **nicks;
+	char **nicks;
 	int *scores;
 	int cnt = 0, i, j;
 	ReputationEntry *e;
@@ -724,7 +724,7 @@ void reputation_channel_query(Client *client, Channel *channel)
 		{
 			if (scores[i] < scores[j])
 			{
-				const char *nick_tmp;
+				char *nick_tmp;
 				int score_tmp;
 				nick_tmp = nicks[i];
 				score_tmp = scores[i];
