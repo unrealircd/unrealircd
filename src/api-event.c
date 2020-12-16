@@ -240,5 +240,5 @@ void SetupEvents(void)
 	EventAdd(NULL, "check_deadsockets", check_deadsockets, NULL, 1000, 0);
 	EventAdd(NULL, "handshake_timeout", handshake_timeout, NULL, 1000, 0);
 	EventAdd(NULL, "try_connections", try_connections, NULL, 2000, 0);
-	EventAdd(NULL, "tls_check_expiry", tls_check_expiry, NULL, 86400/2, 0);
+	EventAdd(NULL, "tls_check_expiry", tls_check_expiry, NULL, (86400/2)*1000, 0);
 }
