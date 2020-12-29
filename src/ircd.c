@@ -540,18 +540,10 @@ static int bad_command(const char *argv0)
 	if (!argv0)
 		argv0 = "unrealircd";
 
-	(void)printf
-	    ("Usage: %s [-f <config>] [-F]\n"
-	     "\n"
-	     "UnrealIRCd\n"
-	     " -f <config>     Load configuration from <config> instead of the default\n"
-	     "                 (%s).\n"
-	     " -F              Don't fork() when starting up. Use this when running\n"
-	     "                 UnrealIRCd under gdb or when playing around with settings\n"
-	     "                 on a non-production setup.\n"
-	     "\n",
-	     argv0, CONFIGFILE);
-	(void)printf("Server not started\n\n");
+	printf("ERROR: Incorrect command line argument encountered.\n"
+	       "This is the unrealircd BINARY. End-users should NOT call this binary directly.\n"
+	       "Please run the SCRIPT instead: %s/unrealircd\n", SCRIPTDIR);
+	printf("Server not started\n\n");
 #else
 	if (!IsService) {
 		MessageBox(NULL,
