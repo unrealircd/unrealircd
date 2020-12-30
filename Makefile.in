@@ -230,6 +230,8 @@ install: all
 		$(INSTALL) -m 0600 server.key.pem $(DESTDIR)@CONFDIR@/tls ; \
 		$(INSTALL) -m 0600 server.cert.pem $(DESTDIR)@CONFDIR@/tls ; \
 	fi
+	@rm -f $(DESTDIR)@SCRIPTDIR@/source
+	ln -s @BUILDDIR@ $(DESTDIR)@SCRIPTDIR@/source
 	@echo ''
 	@echo '* UnrealIRCd is now installed.'
 	
