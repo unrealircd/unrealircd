@@ -69,7 +69,8 @@ static int	_conf_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_help		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_offchans		(ConfigFile *conf, ConfigEntry *ce);
-static int	_conf_sni			(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_sni		(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_security_group	(ConfigFile *conf, ConfigEntry *ce);
 
 /*
  * Validation commands
@@ -101,7 +102,8 @@ static int	_test_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_help		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_offchans		(ConfigFile *conf, ConfigEntry *ce);
-static int	_test_sni			(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_sni		(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_security_group	(ConfigFile *conf, ConfigEntry *ce);
 
 /* This MUST be alphabetized */
 static ConfigCommand _ConfigCommands[] = {
@@ -126,6 +128,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "oper", 		_conf_oper,		_test_oper	},
 	{ "operclass",		_conf_operclass,	_test_operclass	},
 	{ "require", 		_conf_require,		_test_require	},
+	{ "security-group",	_conf_security_group,	_test_security_group	},
 	{ "set",		_conf_set,		_test_set	},
 	{ "sni",		_conf_sni,		_test_sni	},
 	{ "tld",		_conf_tld,		_test_tld	},
@@ -254,6 +257,7 @@ ConfigItem_include	*conf_include = NULL;
 ConfigItem_blacklist_module	*conf_blacklist_module = NULL;
 ConfigItem_help		*conf_help = NULL;
 ConfigItem_offchans	*conf_offchans = NULL;
+SecurityGroup		*securitygroups = NULL;
 
 MODVAR Configuration		iConf;
 MODVAR Configuration		tempiConf;
@@ -2073,6 +2077,7 @@ int	init_conf(char *rootconf, int rehash)
 		callbacks_switchover();
 		efunctions_switchover();
 		set_targmax_defaults();
+		set_security_group_defaults();
 		if (rehash)
 		{
 			Hook *h;
@@ -10047,6 +10052,91 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 	}
 
 	return errors;
+}
+
+int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
+{
+	int errors = 0;
+	ConfigEntry *cep;
+
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: security-group block needs a name, eg: security-group web-users {",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	} else {
+		if (!strcasecmp(ce->ce_vardata, "unknown-users"))
+		{
+			config_error("%s:%i: The 'unknown-users' group is a special group that is the "
+			             "inverse of 'known-users', you cannot create or adjust it in the "
+			             "config file, as it is created automatically by UnrealIRCd.",
+			             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
+			return errors;
+		}
+		if (!security_group_valid_name(ce->ce_vardata))
+		{
+			config_error("%s:%i: security-group block name '%s' contains invalid characters or is too long. "
+			             "Only letters, numbers, underscore and hyphen are allowed.",
+			             ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+	}
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "webirc"))
+		{
+			CheckNull(cep);
+		} else
+		if (!strcmp(cep->ce_varname, "identified"))
+		{
+			CheckNull(cep);
+		} else
+		if (!strcmp(cep->ce_varname, "reputation-score"))
+		{
+			int v;
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
+			if ((v < 1) || (v > 10000))
+			{
+				config_error("%s:%i: security-group::reputation-score needs to be a value of 1-10000",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		} else
+		{
+			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				"security-group", cep->ce_varname);
+			errors++;
+			continue;
+		}
+	}
+
+	return errors;
+}
+
+int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	SecurityGroup *s = add_security_group(ce->ce_vardata, 1);
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "webirc"))
+			s->webirc = config_checkval(cep->ce_vardata, CFG_YESNO);
+		else if (!strcmp(cep->ce_varname, "identified"))
+			s->identified = config_checkval(cep->ce_vardata, CFG_YESNO);
+		else if (!strcmp(cep->ce_varname, "reputation-score"))
+			s->reputation_score = atoi(cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "priority"))
+		{
+			s->priority = atoi(cep->ce_vardata);
+			DelListItem(s, securitygroups);
+			AddListItemPrio(s, securitygroups, s->priority);
+		}
+	}
+	return 1;
 }
 
 #ifdef USE_LIBCURL

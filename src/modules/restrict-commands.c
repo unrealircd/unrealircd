@@ -27,8 +27,6 @@ ModuleHeader MOD_HEADER = {
 	"unrealircd-5",
 };
 
-#define GetReputation(client) (moddata_client_get(client, "reputation") ? atoi(moddata_client_get(client, "reputation")) : 0)
-
 typedef struct RestrictedCommand RestrictedCommand;
 struct RestrictedCommand {
 	RestrictedCommand *prev, *next;

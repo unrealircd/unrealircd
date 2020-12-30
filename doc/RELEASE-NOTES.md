@@ -4,6 +4,11 @@ UnrealIRCd 5.0.8-git Release Notes
 UnrealIRCd 5.0.8 is work in progress and so are these release notes.
 
 Enhancements:
+* Support for [security groups](https://www.unrealircd.org/docs/Security-group_block),
+  of which two groups always exist by default: known-users and unknown-users.
+* New extended ban ```~G:securitygroupname```. Typical usage would be
+  ```MODE #chan +b ~G:unknown-users``` which will ban all users from the channel
+  that are not identified to services and have a reputation score below 25.
 * Warn when the SSL/TLS server certificate is expired or expires soon
   (within 7 days).
 * Only send the first 1000 matches on ```STATS gline``` or a
@@ -19,7 +24,7 @@ Enhancements:
 * New option allow::options::reject-on-auth-failure if you want to
   stop matching on a passworded allow block, see the
   [allow password documentation](https://www.unrealircd.org/docs/Allow_block#password)
-  for more information. Most people won't use this.
+  for more information. Note that most people won't use this.
 
 Fixes:
 * The ```WHO``` command searched on nick name even if it was told

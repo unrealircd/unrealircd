@@ -108,6 +108,7 @@ typedef struct ConfigItem_include ConfigItem_include;
 typedef struct ConfigItem_blacklist_module ConfigItem_blacklist_module;
 typedef struct ConfigItem_help ConfigItem_help;
 typedef struct ConfigItem_offchans ConfigItem_offchans;
+typedef struct SecurityGroup SecurityGroup;
 typedef struct ListStruct ListStruct;
 typedef struct ListStructPrio ListStructPrio;
 
@@ -497,6 +498,9 @@ typedef enum ClientStatus {
 #define IsLoggedIn(x)	(IsRegNick(x) || (x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid))) /* registered nick (+r) or just logged into services (may be -r) */
 #define IsSynched(x)	(x->serv->flags.synced)
 #define IsServerSent(x) (x->serv && x->serv->flags.server_sent)
+
+/* And more that access client stuff - but actually modularized */
+#define GetReputation(client) (moddata_client_get(client, "reputation") ? atoi(moddata_client_get(client, "reputation")) : 0) /**< Get reputation value for a client */
 
 /* PROTOCTL (Server protocol) stuff */
 #ifndef DEBUGMODE
@@ -1717,6 +1721,15 @@ struct ConfigItem_offchans {
 	char *topic;
 };
 
+#define SECURITYGROUPLEN 48
+struct SecurityGroup {
+	SecurityGroup *prev, *next;
+	int priority;
+	char name[SECURITYGROUPLEN+1];
+	int identified;
+	int reputation_score;
+	int webirc;
+};
 
 #define HM_HOST 1
 #define HM_IPV4 2

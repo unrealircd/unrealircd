@@ -726,3 +726,136 @@ int hide_idle_time(Client *client, Client *target)
 			return 0;
 	}
 }
+
+/** Check if the name of the security-group contains only valid characters.
+ * @param name	The name of the group
+ * @returns 1 if name is valid, 0 if not (eg: illegal characters)
+ */
+int security_group_valid_name(char *name)
+{
+	char *p;
+	if (strlen(name) > SECURITYGROUPLEN)
+		return 0; /* Too long */
+	for (p = name; *p; p++)
+	{
+		if (!isalnum(*p) && !strchr("_-", *p))
+			return 0; /* Character not allowed */
+	}
+	return 1;
+}
+
+/** Find a security-group.
+ * @param name	The name of the security group
+ * @returns A SecurityGroup struct, or NULL if not found.
+ */
+SecurityGroup *find_security_group(char *name)
+{
+	SecurityGroup *s;
+	for (s = securitygroups; s; s = s->next)
+		if (!strcasecmp(name, s->name))
+			return s;
+	return NULL;
+}
+
+/** Checks if a security-group exists.
+ * This function takes the 'unknown-users' magic group into account as well.
+ * @param name	The name of the security group
+ * @returns 1 if it exists, 0 if not
+ */
+int security_group_exists(char *name)
+{
+	if (!strcmp(name, "unknown-users") || find_security_group(name))
+		return 1;
+	return 0;
+}
+
+/** Add a new security-group and add it to the list, but search for existing one first.
+ * @param name	The name of the security group
+ * @returns A SecurityGroup struct (already added to the 'securitygroups' linked list)
+ */
+SecurityGroup *add_security_group(char *name, int priority)
+{
+	SecurityGroup *s = find_security_group(name);
+
+	/* Existing? */
+	if (s)
+		return s;
+
+	/* Otherwise, create a new entry */
+	s = safe_alloc(sizeof(SecurityGroup));
+	strlcpy(s->name, name, sizeof(s->name));
+	s->priority = priority;
+	AddListItemPrio(s, securitygroups, priority);
+	return s;
+}
+
+/** Free a SecurityGroup struct */
+void free_security_group(SecurityGroup *s)
+{
+	/* atm there is nothing else to free,
+	 * but who knows this may change in the future
+	 */
+	safe_free(s);
+}
+
+/** Initialize the default security-group blocks */
+void set_security_group_defaults(void)
+{
+	SecurityGroup *s, *s_next;
+
+	/* First free all security groups */
+	for (s = securitygroups; s; s = s_next)
+	{
+		s_next = s->next;
+		free_security_group(s);
+	}
+	securitygroups = NULL;
+
+	/* Default group: known-users */
+	s = add_security_group("known-users", 100);
+	s->identified = 1;
+	s->reputation_score = 25;
+	s->webirc = 0;
+}
+
+/** Returns 1 if the user is OK as far as the security-group is concerned.
+ * @param client	The client to check
+ * @param s		The security-group to check against
+ * @retval 1 if user is allowed by security-group, 0 if not.
+ */
+int user_allowed_by_security_group(Client *client, SecurityGroup *s)
+{
+	if (s->identified && IsLoggedIn(client))
+		return 1;
+	if (s->webirc && moddata_client_get(client, "webirc"))
+		return 1;
+	if (s->reputation_score && (GetReputation(client) >= s->reputation_score))
+		return 1;
+	return 0;
+}
+
+/** Returns 1 if the user is OK as far as the security-group is concerned - "by name" version.
+ * @param client	The client to check
+ * @param secgroupname	The name of the security-group to check against
+ * @retval 1 if user is allowed by security-group, 0 if not.
+ */
+int user_allowed_by_security_group_name(Client *client, char *secgroupname)
+{
+	SecurityGroup *s;
+
+	/* Handle the magical 'unknown-users' case. */
+	if (!strcmp(secgroupname, "unknown-users"))
+	{
+		/* This is simply the inverse of 'known-users' */
+		s = find_security_group("known-users");
+		if (!s)
+			return 0; /* that's weird!? pretty impossible. */
+		return !user_allowed_by_security_group(client, s);
+	}
+
+	/* Find the group and evaluate it */
+	s = find_security_group(secgroupname);
+	if (!s)
+		return 0; /* security group not found: no match */
+	return user_allowed_by_security_group(client, s);
+}
