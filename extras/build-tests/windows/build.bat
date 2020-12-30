@@ -37,6 +37,11 @@ rem And we re-run the exact same command:
 call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
+rem Compile dependencies for unrealircd-tests -- this doesn't belong here though..
+curl -fsS -o src\modules\third\fakereputation.c https://raw.githubusercontent.com/unrealircd/unrealircd-tests/master/serverconfig/unrealircd/modules/fakereputation.c
+call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat CUSTOMMODULE MODULEFILE=fakereputation
+if %ERRORLEVEL% NEQ 0 EXIT /B 1
+
 rem Convert c:\dev to c:\projects\unrealircd-5-libs
 rem TODO: should use environment variable in innosetup script?
 sed -i "s/c:\\dev\\unrealircd-5-libs/c:\\projects\\unrealircd-5-libs/gi" src\windows\unrealinst.iss
