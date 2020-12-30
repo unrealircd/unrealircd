@@ -6,7 +6,7 @@
 
 [Setup]
 AppName=UnrealIRCd 5
-AppVerName=UnrealIRCd 5.0.8-git
+AppVerName=UnrealIRCd 5.0.8-rc1
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=https://www.unrealircd.org
 AppSupportURL=https://www.unrealircd.org
@@ -68,6 +68,7 @@ Source: "src\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags
 Source: "src\modules\usermodes\*.dll"; DestDir: "{app}\modules\usermodes"; Flags: ignoreversion
 Source: "src\modules\snomasks\*.dll"; DestDir: "{app}\modules\snomasks"; Flags: ignoreversion
 Source: "src\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ignoreversion
+Source: "src\modules\third\*.dll"; DestDir: "{app}\modules\third"; Flags: ignoreversion skipifsourcedoesntexist
 
 Source: "c:\dev\unrealircd-5-libs\pcre2\bin\pcre*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "c:\dev\unrealircd-5-libs\argon2\vs2015\build\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion

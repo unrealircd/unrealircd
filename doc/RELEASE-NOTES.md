@@ -1,7 +1,9 @@
-UnrealIRCd 5.0.8-git Release Notes
+UnrealIRCd 5.0.8-rc1 Release Notes
 ===================================
 
-UnrealIRCd 5.0.8 is work in progress and so are these release notes.
+This is the release candidate for UnrealIRCd 5.0.8. Please report any issues
+you encounter on https://bugs.unrealircd.org/ so they can be fixed before
+the real 5.0.8 stable release.
 
 Enhancements:
 * Support for [security groups](https://www.unrealircd.org/docs/Security-group_block),
@@ -37,6 +39,9 @@ Changes:
 * Mention the ban reason in Q-line server notices
 * Add self-test to module manager and improve the error message in case
   the IRCd source directory does not exist.
+* Print out a more helpful error if you run the unrealircd binary
+  rather than the unrealircd script with an argument like 'mkpasswd' etc.
+* On *NIX create a symlink 'source' to the UnrealIRCd source
 
 Module coders / Developers:
 * The [Doxygen module API docs](https://www.unrealircd.org/api/5/index.html)
