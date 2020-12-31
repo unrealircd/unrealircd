@@ -49,16 +49,16 @@ Module coders / Developers:
   [Hook API](https://www.unrealircd.org/api/5/group__HookAPI.html)
   is now 100% documented.
 
-Reminder: UnrealIRCd 4 is End Of Life
----------------------------------------
+Reminder: UnrealIRCd 4 is no longer supported
+----------------------------------------------
 
-All support for the previous series, UnrealIRCd 4.x, will stop after
-[December 31, 2020](https://www.unrealircd.org/docs/UnrealIRCd_4_EOL).
-If you haven't upgraded yet, do so soon!
+UnrealIRCd 4.x is [no longer supported](https://www.unrealircd.org/docs/UnrealIRCd_4_EOL).
+Admins must upgrade to UnrealIRCd 5.
 
 Upgrading from 4.x to 5.x?
-Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5). At the
-very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
+Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5).
+Or, at the very least, check out
+[Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
 
 UnrealIRCd 5.0.7
 -----------------
