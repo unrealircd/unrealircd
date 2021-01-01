@@ -816,6 +816,17 @@ void set_security_group_defaults(void)
 	s->identified = 1;
 	s->reputation_score = 25;
 	s->webirc = 0;
+
+	/* Default group: tls-and-known-users */
+	s = add_security_group("tls-and-known-users", 200);
+	s->identified = 1;
+	s->reputation_score = 25;
+	s->webirc = 0;
+	s->tls = 1;
+
+	/* Default group: tls-users */
+	s = add_security_group("tls-users", 300);
+	s->tls = 1;
 }
 
 /** Returns 1 if the user is OK as far as the security-group is concerned.
@@ -830,6 +841,8 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 	if (s->webirc && moddata_client_get(client, "webirc"))
 		return 1;
 	if (s->reputation_score && (GetReputation(client) >= s->reputation_score))
+		return 1;
+	if (s->tls && (IsSecureConnect(client) || IsSecure(client)))
 		return 1;
 	return 0;
 }
