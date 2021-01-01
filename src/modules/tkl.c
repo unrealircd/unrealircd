@@ -1313,7 +1313,7 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 		mask++;
 	}
 
-	if (strchr(mask, '!'))
+	if ((*mask != '~') && strchr(mask, '!'))
 	{
 		sendnotice(client, "[error] Cannot have '!' in masks.");
 		return;
@@ -1634,7 +1634,7 @@ CMD_FUNC(cmd_eline)
 		reason = parv[4];
 	}
 
-	if (strchr(mask, '!'))
+	if ((*mask != '~') && strchr(mask, '!'))
 	{
 		sendnotice(client, "[error] Cannot have '!' in masks.");
 		return;
