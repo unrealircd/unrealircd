@@ -343,9 +343,9 @@ CMD_FUNC(cmd_protoctl)
 				         (long long)(TStime() - t));
 				snprintf(msg, sizeof(msg),
 				         "Rejecting link %s: our clock is %lld seconds ahead. "
-				         "Correct time is very important in IRC. Please "
-				         "verify the clock on both %s (them) and %s (us), "
-				         "fix it and then try linking again",
+				         "Please verify the clock on both %s (them) and %s (us). "
+				         "Correct time is very important for IRC servers, "
+				         "see https://www.unrealircd.org/docs/FAQ#fix-your-clock",
 				         get_client_name(client, TRUE),
 				         (long long)(TStime() - t),
 				         client->name, me.name);
@@ -359,9 +359,9 @@ CMD_FUNC(cmd_protoctl)
 				         (long long)(t - TStime()));
 				snprintf(msg, sizeof(msg),
 				         "Rejecting link %s: our clock is %lld seconds behind. "
-				         "Correct time is very important in IRC. Please "
-				         "verify the clock on both %s (them) and %s (us), "
-				         "fix it and then try linking again",
+				         "Please verify the clock on both %s (them) and %s (us). "
+				         "Correct time is very important for IRC servers, "
+				         "see https://www.unrealircd.org/docs/FAQ#fix-your-clock",
 					get_client_name(client, TRUE),
 					(long long)(t - TStime()),
 					client->name, me.name);
