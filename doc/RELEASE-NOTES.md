@@ -1,28 +1,32 @@
-UnrealIRCd 5.0.8-rc1 Release Notes
-===================================
+UnrealIRCd 5.0.8-draft Release Notes
+===============================
 
-This is the release candidate for UnrealIRCd 5.0.8. Please report any issues
-you encounter on https://bugs.unrealircd.org/ so they can be fixed before
-the real 5.0.8 stable release.
+The main purpose of this release is to enhance the
+[reputation](https://www.unrealircd.org/docs/Reputation_score)
+functionality. There have also been some other changes and minor
+bug fixes. For more information, see below.
 
 Enhancements:
 * Support for [security groups](https://www.unrealircd.org/docs/Security-group_block),
-  of which two groups always exist by default: known-users and unknown-users.
+  of which four groups always exist by default: known-users, unknown-users,
+  tls-users and tls-and-known-users.
 * New extended ban ```~G:securitygroupname```. Typical usage would be
-  ```MODE #chan +b ~G:unknown-users``` which will ban all users from the channel
-  that are not identified to services and have a reputation score below 25.
-* Warn when the SSL/TLS server certificate is expired or expires soon
-  (within 7 days).
-* Only send the first 1000 matches on ```STATS gline``` or a
-  similar command. This to prevent the IRCOp from being flooded off.
-  This value can be changed via
-  [set::max-stats-matches](https://www.unrealircd.org/docs/Set_block#set::max-stats-matches)
+  ```MODE #chan +b ~G:unknown-users``` which will ban all users from the
+  channel that are not identified to services and have a reputation
+  score below 25 (by default). The exact settings can be tweaked in the
+  [security group block](https://www.unrealircd.org/docs/Security-group_block)
 * The reputation command (IRCOp-only) has been extended to make it
   easier to look for potential troublemakers:
   * ```REPUTATION Nick``` shows reputation about the nick name
   * ```REPUTATION IP``` shows reputation about the IP address
   * ```REPUTATION #channel``` lists users in channel with their reputation score
   * ```REPUTATION <NN``` lists users with reputation scores below value NN
+* Only send the first 1000 matches on ```STATS gline``` or a
+  similar command. This to prevent the IRCOp from being flooded off.
+  This value can be changed via
+  [set::max-stats-matches](https://www.unrealircd.org/docs/Set_block#set::max-stats-matches)
+* Warn when the SSL/TLS server certificate is expired or expires soon
+  (within 7 days).
 * New option allow::options::reject-on-auth-failure if you want to
   stop matching on a passworded allow block, see the
   [allow password documentation](https://www.unrealircd.org/docs/Allow_block#password)
