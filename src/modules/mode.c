@@ -1367,6 +1367,9 @@ int paracount_for_chanmode_from_server(Client *client, u_int what, char mode)
 	if (mode == '&')
 		return 0; /* & indicates bounce, it is not an actual mode character */
 
+	if (mode == 'F')
+		return (what == MODE_ADD) ? 1 : 0; /* Future compatibility */
+
 	/* If we end up here it means we have no idea if it is a parameter-eating or paramless
 	 * channel mode. That's actually pretty bad. This shouldn't happen since CHANMODES=
 	 * is sent since 2003 and the (often also required) EAUTH PROTOCTL is in there since 2010.

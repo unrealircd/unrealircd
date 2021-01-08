@@ -1,4 +1,4 @@
-UnrealIRCd 5.0.8-draft Release Notes
+UnrealIRCd 5.0.8 Release Notes
 ===============================
 
 The main purpose of this release is to enhance the
@@ -14,7 +14,7 @@ Enhancements:
   ```MODE #chan +b ~G:unknown-users``` which will ban all users from the
   channel that are not identified to services and have a reputation
   score below 25 (by default). The exact settings can be tweaked in the
-  [security group block](https://www.unrealircd.org/docs/Security-group_block)
+  [security group block](https://www.unrealircd.org/docs/Security-group_block).
 * The reputation command (IRCOp-only) has been extended to make it
   easier to look for potential troublemakers:
   * ```REPUTATION Nick``` shows reputation about the nick name
