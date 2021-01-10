@@ -1,5 +1,23 @@
-UnrealIRCd 5.0.8 Release Notes
+UnrealIRCd 5.0.9-git Release Notes
 ===============================
+
+You are looking at the bleeding edge -git version.
+Releases can be downloaded from https://www.unrealircd.org/
+
+Reminder: UnrealIRCd 4 is no longer supported
+----------------------------------------------
+
+UnrealIRCd 4.x is [no longer supported](https://www.unrealircd.org/docs/UnrealIRCd_4_EOL).
+Admins must upgrade to UnrealIRCd 5.
+
+Upgrading from 4.x to 5.x?
+Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5).
+Or, at the very least, check out
+[Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
+
+
+UnrealIRCd 5.0.8
+-----------------
 
 The main purpose of this release is to enhance the
 [reputation](https://www.unrealircd.org/docs/Reputation_score)
@@ -52,17 +70,6 @@ Module coders / Developers:
   have been improved, in particular the 
   [Hook API](https://www.unrealircd.org/api/5/group__HookAPI.html)
   is now 100% documented.
-
-Reminder: UnrealIRCd 4 is no longer supported
-----------------------------------------------
-
-UnrealIRCd 4.x is [no longer supported](https://www.unrealircd.org/docs/UnrealIRCd_4_EOL).
-Admins must upgrade to UnrealIRCd 5.
-
-Upgrading from 4.x to 5.x?
-Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5).
-Or, at the very least, check out
-[Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
 
 UnrealIRCd 5.0.7
 -----------------
