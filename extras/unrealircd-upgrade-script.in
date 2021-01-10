@@ -23,6 +23,19 @@ function warn()
 	read xyz
 }
 
+function bigwarn()
+{
+	echo
+	echo "[!!!] WARNING: $*"
+	echo "Check https://www.unrealircd.org/docs/FAQ#upgrade-verify-failed !"
+	echo "Type 'IGNORE' in uppercase to continue if you think it is safe."
+	echo "Type anything else to abort."
+	read answer
+	if [ "$answer" != "IGNORE" ]; then
+		exit 1
+	fi
+}
+
 function fail()
 {
 	echo
@@ -60,17 +73,19 @@ cd .. || fail "Could not cd back"
 export UNREALVER BUILDDIR SCRIPTDIR DOCDIR TMPDIR
 
 # Download the install script
-wget -O unrealircd-upgrade-script.stage2 "https://www.unrealircd.org/downloads/unrealircd-upgrade-script.stage2" || fail "Could not download online installer"
+wget -O unrealircd-upgrade-script.stage2 "https://www.unrealircd.org/downloads/unrealircd-upgrade-script.stage2?from=$UNREALVER" || fail "Could not download online installer"
 wget -O unrealircd-upgrade-script.stage2.asc "https://www.unrealircd.org/downloads/unrealircd-upgrade-script.stage2.asc" || fail "Could not download online installer signature"
 
 # GPG verification - if available
-if gpgv --version 1>/dev/null 2>&1; then
+if gpg --version 1>/dev/null 2>&1; then
 	if [ -f "$DOCDIR/KEYS" ]; then
-		if gpgv --keyring $DOCDIR/KEYS unrealircd-latest.tar.gz.asc unrealircd-latest.tar.gz; then
+		gpg --import "$DOCDIR/KEYS"
+		echo
+		if gpg --batch --exit-on-status-write-error --verify unrealircd-upgrade-script.stage2.asc unrealircd-upgrade-script.stage2; then
 			echo "GPG: Verification succeeded. Download is genuine."
 			export NOGPG=0
 		else
-			warn "GPG/PGP verification failed. This could be a security issue."
+			bigwarn "GPG/PGP verification failed. This could be a security issue."
 			export NOGPG=1
 		fi
 	else
@@ -78,9 +93,9 @@ if gpgv --version 1>/dev/null 2>&1; then
 		export NOGPG=1
 	fi
 else
-	echo "WARNING: The GnuPG (GPG/PGP) verification tool 'gpgv' is not installed."
-	echo "Consider running 'sudo apt install gpgv' or 'yum install gnupg2'"
-	echo "When 'gpgv' is installed then the UnrealIRCd upgrade script can"
+	echo "WARNING: The GnuPG (GPG/PGP) verification tool 'gpg' is not installed."
+	echo "Consider running 'sudo apt install gpg' or 'yum install gnupg2'"
+	echo "When 'gpg' is installed then the UnrealIRCd upgrade script can"
 	echo "verify the digital signature of the download file."
 	warn "Unable to check download integrity"
 	export NOGPG=1
