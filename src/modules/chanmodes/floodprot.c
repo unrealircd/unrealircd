@@ -1256,7 +1256,7 @@ void do_floodprot_action(Channel *channel, int what)
 		/* First the notice to the chanops */
 		mtags = NULL;
 		new_message(&me, NULL, &mtags);
-		ircsnprintf(comment, sizeof(comment), "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
+		ircsnprintf(comment, sizeof(comment), "*** Channel %s detected (limit is %d per %d seconds), setting mode +%c",
 			text, chp->limit[what], chp->per, m);
 		ircsnprintf(target, sizeof(target), "%%%s", channel->chname);
 		sendto_channel(channel, &me, NULL, PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
