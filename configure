@@ -7984,7 +7984,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/snomasks/Makefile src/modules/extbans/Makefile src/modules/third/Makefile unrealircd"
+ac_config_files="$ac_config_files Makefile src/Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/snomasks/Makefile src/modules/extbans/Makefile src/modules/third/Makefile extras/unrealircd-upgrade-script unrealircd"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -8685,6 +8685,7 @@ do
     "src/modules/snomasks/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/snomasks/Makefile" ;;
     "src/modules/extbans/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/extbans/Makefile" ;;
     "src/modules/third/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/third/Makefile" ;;
+    "extras/unrealircd-upgrade-script") CONFIG_FILES="$CONFIG_FILES extras/unrealircd-upgrade-script" ;;
     "unrealircd") CONFIG_FILES="$CONFIG_FILES unrealircd" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;

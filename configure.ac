@@ -730,6 +730,7 @@ AC_CONFIG_FILES([Makefile
 	src/modules/snomasks/Makefile
 	src/modules/extbans/Makefile
 	src/modules/third/Makefile
+	extras/unrealircd-upgrade-script
 	unrealircd])
 AC_OUTPUT
 chmod 0700 unrealircd

@@ -286,6 +286,8 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 	else
 		echo "Patch applied successfully. You must now restart your IRC server."
 	fi
+elif [ "$1" = "upgrade" ] ; then
+	@BINDIR@/unrealircd-upgrade-script $*
 elif [ "$1" = "genlinkblock" ] ; then
 	@BINDIR@/unrealircd -L
 else
@@ -298,8 +300,11 @@ else
 	echo "unrealircd start         Start the IRC Server"
 	echo "unrealircd stop          Stop (kill) the IRC Server"
 	echo "unrealircd rehash        Reload the configuration file"
-	echo "unrealircd reloadtls     Reload the SSL/TLS certificate and settings"
+	echo "unrealircd reloadtls     Reload the SSL/TLS certificates"
 	echo "unrealircd restart       Restart the IRC Server (stop+start)"
+	echo "unrealircd upgrade       Upgrade UnrealIRCd to the latest version"
+	echo "unrealircd upgrade-conf  Upgrade the configuration file from UnrealIRCd"
+	echo "                         3.2.x/4.x to 5.x format"
 	echo "unrealircd mkpasswd      Hash a password"
 	echo "unrealircd version       Display the UnrealIRCd version"
 	echo "unrealircd module        Install and uninstall 3rd party modules"
@@ -307,6 +312,4 @@ else
 	echo "                         is running. If not, the server is started."
 	echo "unrealircd gencloak      Display 3 random cloak keys"
 	echo "unrealircd spkifp        Display SPKI Fingerprint"
-	echo "unrealircd upgrade-conf  Upgrade the configuration file from UnrealIRCd"
-	echo "                         3.2.x/4.x to 5.x format"
 fi
