@@ -95,6 +95,7 @@ TKL *_find_tkl_banexception(int type, char *usermask, char *hostmask, int softba
 TKL *_find_tkl_nameban(int type, char *name, int hold);
 TKL *_find_tkl_spamfilter(int type, char *match_string, BanAction action, unsigned short target);
 int _find_tkl_exception(int ban_type, Client *client);
+static void add_default_exempts(void);
 
 /* Externals (only for us :D) */
 extern int MODVAR spamf_ugly_vchanoverride;
@@ -205,6 +206,7 @@ MOD_INIT()
 	CommandAdd(modinfo->handle, "SPAMFILTER", cmd_spamfilter, 7, CMD_OPER);
 	CommandAdd(modinfo->handle, "ELINE", cmd_eline, 4, CMD_OPER);
 	CommandAdd(modinfo->handle, "TKL", _cmd_tkl, MAXPARA, CMD_OPER|CMD_SERVER);
+	add_default_exempts();
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -2635,6 +2637,18 @@ void _tkl_del_line(TKL *tkl)
 
 	/* Finally, free the entry */
 	free_tkl(tkl);
+}
+
+/** Add some default ban exceptions - for localhost */
+static void add_default_exempts(void)
+{
+	/* The exempted ban types are only ones that will affect other connections as well,
+	 * such as gline, and not policy decissions such as maxperip exempt or bypass qlines.
+	 * Currently the list is: gline, kline, gzline, zline, shun, blacklist,
+	 *                        connect-flood, unknown-data-flood.
+	 */
+	tkl_add_banexception(TKL_EXCEPTION, "*", "127.*", "localhost is always exempt",
+	                     "-default-", 0, TStime(), 0, "GkZzsbcd", TKL_FLAG_CONFIG);
 }
 
 /*
