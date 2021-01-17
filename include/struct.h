@@ -499,7 +499,8 @@ typedef enum ClientStatus {
 #define	IsNotSpoof(x)	((x)->local->nospoof == 0)
 #define GetHost(x)	(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
 #define GetIP(x)	(x->ip ? x->ip : "255.255.255.255")
-#define IsLoggedIn(x)	(IsRegNick(x) || (x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid))) /* registered nick (+r) or just logged into services (may be -r) */
+#define IsLoggedInWithAccount(x) (x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid))
+#define IsLoggedIn(x)	(IsRegNick(x) || IsLoggedInWithAccount(x)) /* registered nick (+r) or just logged into services (may be -r) */
 #define IsSynched(x)	(x->serv->flags.synced)
 #define IsServerSent(x) (x->serv && x->serv->flags.server_sent)
 

@@ -335,7 +335,7 @@ CMD_FUNC(cmd_whois)
 			 * display services account name if it's actually a services account name and
 			 * not a legacy timestamp.  --nenolod
 			 */
-			if (!isdigit(*target->user->svid))
+			if (IsLoggedInWithAccount(target))
 				sendnumeric(client, RPL_WHOISLOGGEDIN, name, target->user->svid);
 
 			/*

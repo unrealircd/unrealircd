@@ -424,8 +424,8 @@ static int do_match(Client *client, Client *acptr, char *mask, struct who_format
 		return 1;
 
 	/* match account */
-	if (IsMatch(fmt, WMATCH_ACCOUNT) && !BadPtr(acptr->user->svid) &&
-		!isdigit(*acptr->user->svid) && match_simple(mask, acptr->user->svid))
+	if (IsMatch(fmt, WMATCH_ACCOUNT) && IsLoggedInWithAccount(acptr)
+		&& match_simple(mask, acptr->user->svid))
 	{
 		return 1;
 	}

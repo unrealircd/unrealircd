@@ -4397,8 +4397,7 @@ void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *cli
 
 	if (ban_target == BAN_TARGET_ACCOUNT)
 	{
-		if (client->user && client->user->svid &&
-		    strcmp(client->user->svid, "0") &&
+		if (IsLoggedInWithAccount(client) &&
 		    (*client->user->svid != ':'))
 		{
 			/* Place a ban on ~a:Accountname */
