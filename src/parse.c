@@ -105,7 +105,7 @@ void parse_client_queued(Client *client)
 		return; /* we delay processing of data until identd has replied */
 
 	if (!IsUser(client) && !IsServer(client) && (iConf.handshake_delay > 0) &&
-	    (TStime() - client->local->firsttime < iConf.handshake_delay))
+	    !IsNoHandshakeDelay(client) && (TStime() - client->local->firsttime < iConf.handshake_delay))
 	{
 		return; /* we delay processing of data until set::handshake-delay is reached */
 	}

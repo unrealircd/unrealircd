@@ -321,6 +321,7 @@ typedef enum ClientStatus {
 #define CLIENT_FLAG_DCCBLOCK		0x04000000	/**< Block all DCC send requests */
 #define CLIENT_FLAG_MAP			0x08000000	/**< Show this entry in /MAP (only used in map module) */
 #define CLIENT_FLAG_PINGWARN		0x10000000	/**< Server ping warning (remote server slow with responding to PINGs) */
+#define CLIENT_FLAG_NOHANDSHAKEDELAY	0x20000000	/**< No handshake delay */
 /** @} */
 
 #define SNO_DEFOPER "+kscfvGqobS"
@@ -421,6 +422,7 @@ typedef enum ClientStatus {
 #define IsOutgoing(x)			((x)->flags & CLIENT_FLAG_OUTGOING)
 #define IsPingSent(x)			((x)->flags & CLIENT_FLAG_PINGSENT)
 #define IsPingWarning(x)		((x)->flags & CLIENT_FLAG_PINGWARN)
+#define IsNoHandshakeDelay(x)		((x)->flags & CLIENT_FLAG_NOHANDSHAKEDELAY)
 #define IsProtoctlReceived(x)		((x)->flags & CLIENT_FLAG_PROTOCTL)
 #define IsQuarantined(x)		((x)->flags & CLIENT_FLAG_QUARANTINE)
 #define IsShunned(x)			((x)->flags & CLIENT_FLAG_SHUNNED)
@@ -451,6 +453,7 @@ typedef enum ClientStatus {
 #define SetOutgoing(x)			do { (x)->flags |= CLIENT_FLAG_OUTGOING; } while(0)
 #define SetPingSent(x)			do { (x)->flags |= CLIENT_FLAG_PINGSENT; } while(0)
 #define SetPingWarning(x)		do { (x)->flags |= CLIENT_FLAG_PINGWARN; } while(0)
+#define SetNoHandshakeDelay(x)		do { (x)->flags |= CLIENT_FLAG_NOHANDSHAKEDELAY; } while(0)
 #define SetProtoctlReceived(x)		do { (x)->flags |= CLIENT_FLAG_PROTOCTL; } while(0)
 #define SetQuarantined(x)		do { (x)->flags |= CLIENT_FLAG_QUARANTINE; } while(0)
 #define SetShunned(x)			do { (x)->flags |= CLIENT_FLAG_SHUNNED; } while(0)
@@ -480,6 +483,7 @@ typedef enum ClientStatus {
 #define ClearOutgoing(x)		do { (x)->flags &= ~CLIENT_FLAG_OUTGOING; } while(0)
 #define ClearPingSent(x)		do { (x)->flags &= ~CLIENT_FLAG_PINGSENT; } while(0)
 #define ClearPingWarning(x)		do { (x)->flags &= ~CLIENT_FLAG_PINGWARN; } while(0)
+#define ClearNoHandshakeDelay(x)	do { (x)->flags &= ~CLIENT_FLAG_NOHANDSHAKEDELAY; } while(0)
 #define ClearProtoctlReceived(x)	do { (x)->flags &= ~CLIENT_FLAG_PROTOCTL; } while(0)
 #define ClearQuarantined(x)		do { (x)->flags &= ~CLIENT_FLAG_QUARANTINE; } while(0)
 #define ClearShunned(x)			do { (x)->flags &= ~CLIENT_FLAG_SHUNNED; } while(0)
