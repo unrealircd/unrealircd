@@ -1374,10 +1374,6 @@ void config_error(FORMAT_STRING(const char *format), ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-#ifdef _WIN32
-	if (!loop.ircd_booted)
-		win_log("[error] %s", buffer);
-#endif
 	ircd_log(LOG_ERROR, "config error: %s", buffer);
 	sendto_realops("error: %s", buffer);
 	if (remote_rehash_client)
@@ -1437,10 +1433,6 @@ void config_status(FORMAT_STRING(const char *format), ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-#ifdef _WIN32
-	if (!loop.ircd_booted)
-		win_log("* %s", buffer);
-#endif
 	ircd_log(LOG_ERROR, "%s", buffer);
 	sendto_realops("%s", buffer);
 	if (remote_rehash_client)
@@ -1458,10 +1450,6 @@ void config_warn(FORMAT_STRING(const char *format), ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-#ifdef _WIN32
-	if (!loop.ircd_booted)
-		win_log("[warning] %s", buffer);
-#endif
 	ircd_log(LOG_ERROR, "[warning] %s", buffer);
 	sendto_realops("[warning] %s", buffer);
 	if (remote_rehash_client)
@@ -1554,24 +1542,6 @@ int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *e
 	}
 	close(fd);
 	return 0;
-}
-
-void config_progress(FORMAT_STRING(const char *format), ...)
-{
-	va_list		ap;
-	char		buffer[1024];
-	char		*ptr;
-
-	va_start(ap, format);
-	vsnprintf(buffer, 1023, format, ap);
-	va_end(ap);
-	if ((ptr = strchr(buffer, '\n')) != NULL)
-		*ptr = '\0';
-#ifdef _WIN32
-	if (!loop.ircd_booted)
-		win_log("* %s", buffer);
-#endif
-	sendto_realops("%s", buffer);
 }
 
 int config_is_blankorempty(ConfigEntry *cep, const char *block)

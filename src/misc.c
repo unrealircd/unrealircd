@@ -137,7 +137,13 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 	strlcat(buf, "\n", sizeof(buf));
 
 	if (!loop.ircd_forked && (flags & LOG_ERROR))
+	{
+#ifdef _WIN32
+		win_log("* %s", buf);
+#else
 		fprintf(stderr, "%s", buf);
+#endif
+	}
 
 	/* In case of './unrealircd configtest': don't write to log file, only to stderr */
 	if (loop.config_test)

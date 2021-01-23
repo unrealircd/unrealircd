@@ -1043,6 +1043,7 @@ void win_log(FORMAT_STRING(const char *format), ...)
 			char *tbuf = safe_alloc(strlen(errors) + strlen(buf) + 1);
 			strcpy(tbuf, errors);
 			strcat(tbuf, buf);
+			safe_free(errors);
 			errors = tbuf;
 		}
 		else 
