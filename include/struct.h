@@ -1180,7 +1180,7 @@ struct User {
 	Link *invited;			/**< Channels has the user been invited to (linked list) */
 	Link *dccallow;			/**< DCCALLOW list (linked list) */
 	char *away;			/**< AWAY message, or NULL if not away */
-	char svid[SVIDLEN + 1];		/**< Unique value assigned by services (SVID) */
+	char svid[SVIDLEN + 1];		/**< Services account name or ID (SVID) */
 	unsigned short joined;		/**< Number of channels joined */
 	char username[USERLEN + 1];	/**< Username, the user portion in nick!user@host. */
 	char realhost[HOSTLEN + 1];	/**< Realhost, the real host of the user (IP or hostname) - usually this is not shown to other users */
