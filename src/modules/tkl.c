@@ -1533,8 +1533,8 @@ void eline_syntax(Client *client)
 	sendnotice(client, "8: Bypass antimixedutf8 module");
 	sendnotice(client, "v: Bypass ban version { } blocks");
 	sendnotice(client, "Examples:");
-	sendnotice(client, "/ELINE *@unrealircd.org kGf 0 This user is exempt");
-	sendnotice(client, "/ELINE ~S:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef kGf 0 Trusted user with this certificate fingerprint");
+	sendnotice(client, "/ELINE *@unrealircd.org kGF 0 This user is exempt");
+	sendnotice(client, "/ELINE ~S:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef kGF 0 Trusted user with this certificate fingerprint");
 	sendnotice(client, "-");
 	sendnotice(client, "To get a list of all current ELINEs, type: /STATS except");
 }
