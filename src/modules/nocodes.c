@@ -23,8 +23,8 @@
 ModuleHeader MOD_HEADER
 = {
 	"nocodes",	/* Name of module */
-	"1.2", /* Version */
-	"Strip/block bold/underline/reverse - by Syzop", /* Short description of module */
+	"1.3", /* Version */
+	"Strip/block color/bold/underline/italic/reverse - by Syzop", /* Short description of module */
 	"UnrealIRCd Team", /* Author */
 	"unrealircd-5",
 };
@@ -95,7 +95,7 @@ int nocodes_can_send_to_channel(Client *client, Channel *channel, Membership *lp
 				break;
 		}
 
-		*errmsg = "Control codes (bold/underline/reverse) are not permitted in this channel";
+		*errmsg = "Control codes (color/bold/underline/italic/reverse) are not permitted in this channel";
 		return HOOK_DENY;
 	}
 	return HOOK_CONTINUE;
