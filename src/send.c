@@ -1069,21 +1069,16 @@ void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char 
 void sendto_connectnotice(Client *newuser, int disconnect, char *comment)
 {
 	Client *acptr;
-	char connect[512], secure[256];
+	char connect[512];
 
 	if (!disconnect)
 	{
 		RunHook(HOOKTYPE_LOCAL_CONNECT, newuser);
 
-		*secure = '\0';
-		if (IsSecure(newuser))
-			snprintf(secure, sizeof(secure), " [secure %s]", tls_get_cipher(newuser->local->ssl));
-
 		ircsnprintf(connect, sizeof(connect),
-		    "*** Client connecting: %s (%s@%s) [%s] {%s}%s", newuser->name,
+		    "*** Client connecting: %s (%s@%s) [%s] %s", newuser->name,
 		    newuser->user->username, newuser->user->realhost, newuser->ip,
-		    newuser->local->class ? newuser->local->class->name : "0",
-		    secure);
+		    get_connect_extinfo(newuser));
 	}
 	else
 	{
@@ -1101,18 +1096,14 @@ void sendto_connectnotice(Client *newuser, int disconnect, char *comment)
 void sendto_fconnectnotice(Client *newuser, int disconnect, char *comment)
 {
 	Client *acptr;
-	char connect[512], secure[256];
+	char connect[512];
 
 	if (!disconnect)
 	{
-		*secure = '\0';
-		if (IsSecureConnect(newuser))
-			strcpy(secure, " [secure]"); /* will we ever expand this? */
-
 		ircsnprintf(connect, sizeof(connect),
-		    "*** Client connecting: %s (%s@%s) [%s] {0}%s", newuser->name,
+		    "*** Client connecting: %s (%s@%s) [%s] %s", newuser->name,
 		    newuser->user->username, newuser->user->realhost, newuser->ip ? newuser->ip : "0",
-		    secure);
+		    get_connect_extinfo(newuser));
 	}
 	else
 	{

@@ -999,3 +999,6 @@ extern void free_security_group(SecurityGroup *s);
 extern void set_security_group_defaults(void);
 extern int user_allowed_by_security_group(Client *client, SecurityGroup *s);
 extern int user_allowed_by_security_group_name(Client *client, char *secgroupname);
+extern void nvplist_add(NameValuePrioList **lst, int priority, char *name, char *value);
+extern void nvplist_add_fmt(NameValuePrioList **lst, int priority, char *name, FORMAT_STRING(const char *format), ...) __attribute__((format(printf,4,5)));
+extern char *get_connect_extinfo(Client *client);

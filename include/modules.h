@@ -1124,12 +1124,12 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_ACCOUNT_LOGIN	102
 /** See hooktype_close_connection() */
 #define HOOKTYPE_CLOSE_CONNECTION	103
-
+/** See hooktype_connect_extinfo() */
+#define HOOKTYPE_CONNECT_EXTINFO	104
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
  * 2) Add a hook prototype (see below)
  * 3) Add type checking (even more below)
- * 4) Document the hook at https://www.unrealircd.org/docs/Dev:Hook_API
  */
 
 /* Hook prototypes */
@@ -2056,6 +2056,15 @@ int hooktype_account_login(Client *client, MessageTag *mtags);
  */
 int hooktype_close_connection(Client *client);
 
+/** Called when a user connects to add extra information (function prototype for HOOKTYPE_CONNECT_EXTINFO).
+ * If you want to use this, then use the nvplist_add() or nvplist_add_fmt() function
+ * to add the information to the list. See also get_connect_extinfo() for inspiration.
+ * @param client		The client
+ * @param list			The name/value/prio list that you can add information to
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_connect_extinfo(Client *client, NameValuePrioList **list);
+
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2164,7 +2173,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_IDENT_LOOKUP) && !ValidateHook(hooktype_ident_lookup, func)) || \
         ((hooktype == HOOKTYPE_CONFIGRUN_EX) && !ValidateHook(hooktype_configrun_ex, func)) || \
         ((hooktype == HOOKTYPE_ACCOUNT_LOGIN) && !ValidateHook(hooktype_account_login, func)) || \
-        ((hooktype == HOOKTYPE_CLOSE_CONNECTION) && !ValidateHook(hooktype_close_connection, func)) ) \
+        ((hooktype == HOOKTYPE_CLOSE_CONNECTION) && !ValidateHook(hooktype_close_connection, func)) || \
+        ((hooktype == HOOKTYPE_CONNECT_EXTINFO) && !ValidateHook(hooktype_connect_extinfo, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

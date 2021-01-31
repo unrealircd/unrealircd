@@ -4,6 +4,33 @@ UnrealIRCd 5.0.9-git Release Notes
 You are looking at the bleeding edge -git version.
 Releases can be downloaded from https://www.unrealircd.org/
 
+Enhancements:
+* Fix "Client connecting" notice to contain more information:
+  * The format changed slightly, instead of ```{clients}``` it
+    now shows ```[class: clients]```
+  * SSL/TLS information is still shown via ```[secure]```
+  * New: ```[reputation: NNN]``` to show the current
+    [reputation score](https://www.unrealircd.org/docs/Reputation_score)
+  * New: ```[account: abcdef]``` to show the services account,
+    but only if [SASL](https://www.unrealircd.org/docs/SASL) was used.
+* In the log file the format also changed slightly:
+  * IP information is now added as ```[127.0.0.1]``` in both the
+    connect and disconnect log messages.
+  * The vhost is logged as ```[vhost: xyz]``` instead of ```[VHOST xyz]```
+  * All the other values are now logged as well on-connect,
+    similar to the "Client connecting" notice, so: secure, reputation,
+    account (if applicable).
+
+Fixes:
+* Windows: some warnings and error messages on boot were previously
+  missing.
+
+Changes:
+* Disable [handshake delay](https://www.unrealircd.org/docs/Set_block#set::handshake-delay)
+  for users that are exempt from blacklist checking.
+* Always exempt 127.* from gline, kline, etc.
+* Add doc/KEYS which contains the public key(s) used to sign UnrealIRCd releases
+
 Reminder: UnrealIRCd 4 is no longer supported
 ----------------------------------------------
 

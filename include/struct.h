@@ -1018,6 +1018,21 @@ struct IRCCounts {
 /** The /LUSERS stats information */
 extern MODVAR IRCCounts irccounts;
 
+typedef struct NameValueList NameValueList;
+struct NameValueList {
+	NameValueList *prev, *next;
+	char *name;
+	char *value;
+};
+
+typedef struct NameValuePrioList NameValuePrioList;
+struct NameValuePrioList {
+	NameValuePrioList *prev, *next;
+	int priority;
+	char *name;
+	char *value;
+};
+
 #include "modules.h"
 
 /** A "real" command (internal interface, not for modules) */
@@ -1230,13 +1245,6 @@ struct Server {
 
 struct MessageTag {
 	MessageTag *prev, *next;
-	char *name;
-	char *value;
-};
-
-typedef struct NameValueList NameValueList;
-struct NameValueList {
-	NameValueList *prev, *next;
 	char *name;
 	char *value;
 };

@@ -760,14 +760,14 @@ void exit_client(Client *client, MessageTag *recv_mtags, char *comment)
 			hash_del_watch_list(client);
 			on_for = TStime() - client->local->firsttime;
 			if (IsHidden(client))
-				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s [VHOST %s] (%s)",
+				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s [%s] [vhost: %s] (%s)",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
 					client->name, client->user->username,
-					client->user->realhost, client->user->virthost, comment);
+					client->user->realhost, GetIP(client), client->user->virthost, comment);
 			else
-				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s (%s)",
+				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s [%s] (%s)",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
-					client->name, client->user->username, client->user->realhost, comment);
+					client->name, client->user->username, client->user->realhost, GetIP(client), comment);
 		} else
 		if (IsUnknown(client))
 		{
@@ -1963,4 +1963,28 @@ char *sendtype_to_cmd(SendType sendtype)
 	if (sendtype == SEND_TYPE_TAGMSG)
 		return "TAGMSG";
 	return NULL;
+}
+
+void nvplist_add(NameValuePrioList **lst, int priority, char *name, char *value)
+{
+	va_list vl;
+	NameValuePrioList *e = safe_alloc(sizeof(NameValuePrioList));
+	safe_strdup(e->name, name);
+	if (value && *value)
+		safe_strdup(e->value, value);
+	AddListItemPrio(e, *lst, priority);
+}
+
+void nvplist_add_fmt(NameValuePrioList **lst, int priority, char *name, FORMAT_STRING(const char *format), ...)
+{
+	char value[512];
+	va_list vl;
+	*value = '\0';
+	if (format)
+	{
+		va_start(vl, format);
+		vsnprintf(value, sizeof(value), format, vl);
+		va_end(vl);
+	}
+	nvplist_add(lst, priority, name, value);
 }

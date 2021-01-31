@@ -679,13 +679,14 @@ nickkill2done:
 	register_user(client, client->name, username, umodes, virthost, ip);
 	if (IsDead(client))
 		return;
-	if (!IsULine(serv) && IsSynched(serv))
-		sendto_fconnectnotice(client, 0, NULL);
 
 	if (client->user->svid[0] != '0')
 		user_account_login(recv_mtags, client);
 
 	RunHook(HOOKTYPE_REMOTE_CONNECT, client);
+
+	if (!IsULine(serv) && IsSynched(serv))
+		sendto_fconnectnotice(client, 0, NULL);
 }
 
 /** The NICK command.
@@ -945,11 +946,14 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		}
 
 		if (IsHidden(client))
-			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [VHOST %s]", nick,
-				user->username, user->realhost, user->virthost);
-		else
-			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s", nick, user->username,
-				user->realhost);
+		{
+			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [%s] [vhost: %s] %s",
+				nick, user->username, user->realhost, GetIP(client), user->virthost, get_connect_extinfo(client));
+		} else
+		{
+			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [%s] %s",
+				nick, user->username, user->realhost, GetIP(client), get_connect_extinfo(client));
+		}
 
 		RunHook2(HOOKTYPE_WELCOME, client, 0);
 		sendnumeric(client, RPL_WELCOME, ircnetwork, nick, user->username, user->realhost);

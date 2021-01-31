@@ -872,3 +872,46 @@ int user_allowed_by_security_group_name(Client *client, char *secgroupname)
 		return 0; /* security group not found: no match */
 	return user_allowed_by_security_group(client, s);
 }
+
+/** Return extended information about user for the "Client connecting" line.
+ * @returns A string such as "[secure] [reputation: 5]", never returns NULL.
+ */
+char *get_connect_extinfo(Client *client)
+{
+	static char retbuf[512];
+	char tmp[512];
+	NameValuePrioList *list = NULL, *e;
+
+	/* From modules... */
+	RunHook2(HOOKTYPE_CONNECT_EXTINFO, client, &list);
+
+	/* And some built-in: */
+
+	/* "class": this should be first */
+	if (MyUser(client) && client->local->class)
+		nvplist_add(&list, -100000, "class", client->local->class->name);
+
+	/* "secure": SSL/TLS */
+	if (MyUser(client) && IsSecure(client))
+		nvplist_add(&list, -1000, "secure", tls_get_cipher(client->local->ssl));
+	else if (!MyUser(client) && IsSecureConnect(client))
+		nvplist_add(&list, -1000, "secure", NULL);
+
+	/* services account? */
+	if (IsLoggedIn(client))
+		nvplist_add(&list, -500, "account", client->user->svid);
+
+	*retbuf = '\0';
+	for (e = list; e; e = e->next)
+	{
+		if (e->value)
+			snprintf(tmp, sizeof(tmp), "[%s: %s] ", e->name, e->value);
+		else
+			snprintf(tmp, sizeof(tmp), "[%s] ", e->name);
+		strlcat(retbuf, tmp, sizeof(retbuf));
+	}
+	/* Cut off last space (unless empty string) */
+	if (*buf)
+		buf[strlen(buf)-1] = '\0';
+	return retbuf;
+}
