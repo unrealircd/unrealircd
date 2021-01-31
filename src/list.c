@@ -550,7 +550,7 @@ NameList *find_name_list(NameList *list, char *name)
 	return NULL;
 }
 
-/** Find an entry in a NameList by running match_simpl() on it.
+/** Find an entry in a NameList by running match_simple() on it.
  * @ingroup ListFunctions
  */
 NameList *find_name_list_match(NameList *list, char *name)
