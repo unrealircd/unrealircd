@@ -5,7 +5,7 @@ You are looking at the bleeding edge -git version.
 Releases can be downloaded from https://www.unrealircd.org/
 
 Enhancements:
-* Fix "Client connecting" notice to contain more information:
+* Changes to the "Client connecting" notice on IRC (for IRCOps):
   * The format changed slightly, instead of ```{clients}``` it
     now shows ```[class: clients]```
   * SSL/TLS information is still shown via ```[secure]```
@@ -20,15 +20,15 @@ Enhancements:
   * All the other values are now logged as well on-connect,
     similar to the "Client connecting" notice, so: secure, reputation,
     account (if applicable).
+* Disable [handshake delay](https://www.unrealircd.org/docs/Set_block#set::handshake-delay)
+  for users that are exempt from blacklist checking.
+* Always exempt 127.* from gline, kline, etc.
 
 Fixes:
 * Windows: some warnings and error messages on boot were previously
   missing.
 
 Changes:
-* Disable [handshake delay](https://www.unrealircd.org/docs/Set_block#set::handshake-delay)
-  for users that are exempt from blacklist checking.
-* Always exempt 127.* from gline, kline, etc.
 * Add doc/KEYS which contains the public key(s) used to sign UnrealIRCd releases
 
 Reminder: UnrealIRCd 4 is no longer supported
