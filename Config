@@ -707,7 +707,7 @@ while [ -z "$TEST" ] ; do
 	echo "What is the maximum number of sockets (and file descriptors) that"
 	echo "UnrealIRCd may use?"
 	echo "It is recommended to leave this at the default setting 'auto',"
-	echo "which at present results in a limit of up to 8192, depending on"
+	echo "which at present results in a limit of up to 16384, depending on"
 	echo "the system. When you boot UnrealIRCd later you will always see"
 	echo "the effective limit."
 	echo $n "[$TEST] -> $c"

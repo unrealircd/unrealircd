@@ -162,11 +162,11 @@
       (defined(HAVE_POLL) || defined(HAVE_EPOLL) || defined(HAVE_KQUEUE))
   /* Have poll/epoll/kqueue and either no --with-maxconnections or
    * --with-maxconnections=0, either of which indicates 'automatic' mode.
-   * At the time of writing we will try a limit of 8192.
+   * At the time of writing we will try a limit of 16384.
    * It will automatically be lowered at boottime if we can only use
    * 4096, 2048 or 1024. No problem.
    */
-  #define MAXCONNECTIONS 8192
+  #define MAXCONNECTIONS 16384
  #elif defined(MAXCONNECTIONS_REQUEST) && (MAXCONNECTIONS_REQUEST >= 1)
   /* --with-maxconnections=something */
   #define MAXCONNECTIONS MAXCONNECTIONS_REQUEST
