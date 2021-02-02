@@ -889,17 +889,17 @@ char *get_connect_extinfo(Client *client)
 
 	/* "class": this should be first */
 	if (MyUser(client) && client->local->class)
-		nvplist_add(&list, -100000, "class", client->local->class->name);
+		add_nvplist(&list, -100000, "class", client->local->class->name);
 
 	/* "secure": SSL/TLS */
 	if (MyUser(client) && IsSecure(client))
-		nvplist_add(&list, -1000, "secure", tls_get_cipher(client->local->ssl));
+		add_nvplist(&list, -1000, "secure", tls_get_cipher(client->local->ssl));
 	else if (!MyUser(client) && IsSecureConnect(client))
-		nvplist_add(&list, -1000, "secure", NULL);
+		add_nvplist(&list, -1000, "secure", NULL);
 
 	/* services account? */
 	if (IsLoggedIn(client))
-		nvplist_add(&list, -500, "account", client->user->svid);
+		add_nvplist(&list, -500, "account", client->user->svid);
 
 	*retbuf = '\0';
 	for (e = list; e; e = e->next)
@@ -913,5 +913,9 @@ char *get_connect_extinfo(Client *client)
 	/* Cut off last space (unless empty string) */
 	if (*buf)
 		buf[strlen(buf)-1] = '\0';
+
+	/* Free the list, as it was only used to build retbuf */
+	free_nvplist(list);
+
 	return retbuf;
 }

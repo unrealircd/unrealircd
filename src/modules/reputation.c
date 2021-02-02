@@ -673,7 +673,7 @@ CMD_FUNC(reputationunperm)
 
 int reputation_connect_extinfo(Client *client, NameValuePrioList **list)
 {
-	nvplist_add_fmt(list, 0, "reputation", "%d", GetReputation(client));
+	add_fmt_nvplist(list, 0, "reputation", "%d", GetReputation(client));
 	return 0;
 }
 

@@ -567,3 +567,38 @@ NameList *find_name_list_match(NameList *list, char *name)
 	return NULL;
 }
 
+void add_nvplist(NameValuePrioList **lst, int priority, char *name, char *value)
+{
+	va_list vl;
+	NameValuePrioList *e = safe_alloc(sizeof(NameValuePrioList));
+	safe_strdup(e->name, name);
+	if (value && *value)
+		safe_strdup(e->value, value);
+	AddListItemPrio(e, *lst, priority);
+}
+
+void add_fmt_nvplist(NameValuePrioList **lst, int priority, char *name, FORMAT_STRING(const char *format), ...)
+{
+	char value[512];
+	va_list vl;
+	*value = '\0';
+	if (format)
+	{
+		va_start(vl, format);
+		vsnprintf(value, sizeof(value), format, vl);
+		va_end(vl);
+	}
+	add_nvplist(lst, priority, name, value);
+}
+
+void free_nvplist(NameValuePrioList *lst)
+{
+	NameValuePrioList *e, *e_next;
+	for (e = lst; e; e = e_next)
+	{
+		e_next = e->next;
+		safe_free(e->name);
+		safe_free(e->value);
+		safe_free(e);
+	}
+}

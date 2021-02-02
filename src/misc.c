@@ -1964,27 +1964,3 @@ char *sendtype_to_cmd(SendType sendtype)
 		return "TAGMSG";
 	return NULL;
 }
-
-void nvplist_add(NameValuePrioList **lst, int priority, char *name, char *value)
-{
-	va_list vl;
-	NameValuePrioList *e = safe_alloc(sizeof(NameValuePrioList));
-	safe_strdup(e->name, name);
-	if (value && *value)
-		safe_strdup(e->value, value);
-	AddListItemPrio(e, *lst, priority);
-}
-
-void nvplist_add_fmt(NameValuePrioList **lst, int priority, char *name, FORMAT_STRING(const char *format), ...)
-{
-	char value[512];
-	va_list vl;
-	*value = '\0';
-	if (format)
-	{
-		va_start(vl, format);
-		vsnprintf(value, sizeof(value), format, vl);
-		va_end(vl);
-	}
-	nvplist_add(lst, priority, name, value);
-}
