@@ -504,7 +504,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], 
 	   only if the old flags (setflags) are different than the newly-
 	   set ones */
 	if (setflags != target->umodes)
-		RunHook3(HOOKTYPE_UMODE_CHANGE, client, setflags, target->umodes);
+		RunHook3(HOOKTYPE_UMODE_CHANGE, target, setflags, target->umodes);
 
 	if (show_change)
 	{
