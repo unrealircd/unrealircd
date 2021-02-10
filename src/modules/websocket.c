@@ -6,7 +6,6 @@
  */
    
 #include "unrealircd.h"
-#include <limits.h>
 
 #define WEBSOCKET_VERSION "1.1.0"
 
