@@ -1105,8 +1105,10 @@ void read_packet(int fd, int revents, void *data)
 		for (h = Hooks[HOOKTYPE_RAWPACKET_IN]; h; h = h->next)
 		{
 			processdata = (*(h->func.intfunc))(client, readbuf, &length);
+			if (processdata == 0)
+				break; /* if hook tells to ignore the data, then break now */
 			if (processdata < 0)
-				return;
+				return; /* if hook tells client is dead, return now */
 		}
 
 		if (processdata && !process_packet(client, readbuf, length, 0))
