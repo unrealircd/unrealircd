@@ -27,16 +27,16 @@ ModuleHeader MOD_HEADER = {
 	"unrealircd-5",
 };
 
-#define TKL_DB_MAGIC 0x10101010
+#define TKLDB_MAGIC 0x10101010
 /* Database version */
-#define TKL_DB_VERSION 4999
+#define TKLDB_VERSION 4999
 /* Save tkls to file every <this> seconds */
-#define TKL_DB_SAVE_EVERY 300
+#define TKLDB_SAVE_EVERY 300
 /* The very first save after boot, apply this delta, this
  * so we don't coincide with other (potentially) expensive
  * I/O events like saving channeldb.
  */
-#define TKL_DB_SAVE_EVERY_DELTA +15
+#define TKLDB_SAVE_EVERY_DELTA +15
 
 #ifdef DEBUGMODE
  #define BENCHMARK
@@ -103,7 +103,7 @@ int write_tkline(FILE *fd, const char *tmpfname, TKL *tkl);
 int read_tkldb(void);
 
 /* Globals variables */
-const uint32_t tkl_db_version = TKL_DB_VERSION;
+const uint32_t tkldb_version = TKLDB_VERSION;
 struct cfgstruct {
 	char *database;
 };
@@ -140,7 +140,7 @@ MOD_INIT()
 			else
 				config_warn("[tkldb] Failed to rename database from %s to %s: %s", cfg.database, fname, strerror(errno));
 		}
-		tkldb_next_event = TStime() + TKL_DB_SAVE_EVERY + TKL_DB_SAVE_EVERY_DELTA;
+		tkldb_next_event = TStime() + TKLDB_SAVE_EVERY + TKLDB_SAVE_EVERY_DELTA;
 	}
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkldb_configrun);
 	return MOD_SUCCESS;
@@ -237,7 +237,7 @@ EVENT(write_tkldb_evt)
 {
 	if (tkldb_next_event > TStime())
 		return;
-	tkldb_next_event = TStime() + TKL_DB_SAVE_EVERY;
+	tkldb_next_event = TStime() + TKLDB_SAVE_EVERY;
 	write_tkldb();
 }
 
@@ -263,8 +263,8 @@ int write_tkldb(void)
 		return 0;
 	}
 
-	W_SAFE(write_int32(fd, TKL_DB_MAGIC));
-	W_SAFE(write_data(fd, &tkl_db_version, sizeof(tkl_db_version)));
+	W_SAFE(write_int32(fd, TKLDB_MAGIC));
+	W_SAFE(write_data(fd, &tkldb_version, sizeof(tkldb_version)));
 
 	// Count the *-Lines
 	tklcount = 0;
@@ -442,7 +442,7 @@ int read_tkldb(void)
 
 	/* The database starts with a "magic value" - unless it's some old version or corrupt */
 	R_SAFE(read_data(fd, &magic, sizeof(magic)));
-	if (magic != TKL_DB_MAGIC)
+	if (magic != TKLDB_MAGIC)
 	{
 		config_warn("[tkldb] Database '%s' uses an old and unsupported format OR is corrupt", cfg.database);
 		config_status("If you are upgrading from UnrealIRCd 4 (or 5.0.0-alpha1) then we suggest you to "
@@ -460,10 +460,10 @@ int read_tkldb(void)
 		fclose(fd);
 		return 0;
 	}
-	if (version > tkl_db_version)
+	if (version > tkldb_version)
 	{
 		config_warn("[tkldb] Database '%s' has version %lu while we only support %lu. Did you just downgrade UnrealIRCd? Sorry this is not suported",
-			cfg.database, (unsigned long)tkl_db_version, (unsigned long)version);
+			cfg.database, (unsigned long)tkldb_version, (unsigned long)version);
 		fclose(fd);
 		return 0;
 	}
