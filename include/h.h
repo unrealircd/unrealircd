@@ -885,7 +885,6 @@ extern CMD_FUNC(cmd_rehash);
 extern CMD_FUNC(cmd_die);
 extern CMD_FUNC(cmd_restart);
 extern void cmd_alias(Client *client, MessageTag *recv_mtags, int parc, char *parv[], char *cmd); /* special! */
-extern void ban_flooder(Client *cptr);
 extern char *pcre2_version(void);
 extern int get_terminal_width(void);
 extern int has_common_channels(Client *c1, Client *c2);

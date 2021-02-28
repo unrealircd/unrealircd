@@ -30,6 +30,11 @@ Fixes:
 
 Changes:
 * Add doc/KEYS which contains the public key(s) used to sign UnrealIRCd releases
+* The options set::anti-flood::unknown-flood-* have been renamed and
+integrated in a new block called
+[set::anti-flood::handshake-data-flood](https://www.unrealircd.org/docs/Set_block#set::anti-flood::handshake-data-flood).
+The ban-action can now also be changed. Note that almost nobody will have to
+change this setting since it has a good default.
 
 Reminder: UnrealIRCd 4 is no longer supported
 ----------------------------------------------

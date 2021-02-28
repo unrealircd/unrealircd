@@ -1625,8 +1625,9 @@ void config_setdefaultsettings(Configuration *i)
 {
 	char tmp[512];
 
-	i->unknown_flood_amount = 4;
-	i->unknown_flood_bantime = 600;
+	i->handshake_data_flood_amount = 4096;
+	i->handshake_data_flood_ban_action = BAN_ACT_ZLINE;
+	i->handshake_data_flood_ban_time = 600;
 	safe_strdup(i->oper_snomask, SNO_DEFOPER);
 	i->ident_read_timeout = 7;
 	i->ident_connect_timeout = 3;
@@ -6592,7 +6593,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "reason"))
 			safe_strdup(ca->reason, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "action"))
-			ca ->action = banact_stringtoval(cep->ce_vardata);
+			ca->action = banact_stringtoval(cep->ce_vardata);
 	}
 	AddListItem(ca, conf_ban);
 	return 0;
@@ -7468,11 +7469,20 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "anti-flood")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "unknown-flood-bantime"))
-					tempiConf.unknown_flood_bantime = config_checkval(cepp->ce_vardata,CFG_TIME);
-				else if (!strcmp(cepp->ce_varname, "unknown-flood-amount"))
-					tempiConf.unknown_flood_amount = atol(cepp->ce_vardata);
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "handshake-data-flood"))
+				{
+					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					{
+						if (!strcmp(ceppp->ce_varname, "amount"))
+							tempiConf.handshake_data_flood_amount = config_checkval(ceppp->ce_vardata, CFG_SIZE);
+						else if (!strcmp(ceppp->ce_varname, "ban-time"))
+							tempiConf.handshake_data_flood_ban_time = config_checkval(ceppp->ce_vardata, CFG_TIME);
+						else if (!strcmp(ceppp->ce_varname, "ban-action"))
+							tempiConf.handshake_data_flood_ban_action = banact_stringtoval(ceppp->ce_vardata);
+					}
+				}
 				else if (!strcmp(cepp->ce_varname, "away-count"))
 					tempiConf.away_count = atol(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "away-period"))
@@ -8291,8 +8301,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			need_34_upgrade = 1;
 			continue;
 		}
-		else if (!strcmp(cep->ce_varname, "anti-flood")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+		else if (!strcmp(cep->ce_varname, "anti-flood"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
 				if (!strcmp(cepp->ce_varname, "max-concurrent-conversations"))
 				{
 					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
@@ -8329,15 +8341,56 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					}
 					continue; /* required here, due to checknull directly below */
 				}
-				if (!strcmp(cepp->ce_varname, "unknown-flood-bantime"))
+				else if (!strcmp(cepp->ce_varname, "unknown-flood-amount") ||
+				         !strcmp(cepp->ce_varname, "unknown-flood-bantime"))
 				{
-					CheckNull(cepp);
-					CheckDuplicate(cepp, anti_flood_unknown_flood_bantime, "anti-flood::unknown-flood-bantime");
+					config_error("%s:%i: set::anti-flood::%s: this setting has been moved. "
+					             "See https://www.unrealircd.org/docs/Set_block#set::anti-flood::handshake-data-flood",
+					             cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
+					errors++;
+					continue;
 				}
-				else if (!strcmp(cepp->ce_varname, "unknown-flood-amount"))
+				else if (!strcmp(cepp->ce_varname, "handshake-data-flood"))
 				{
-					CheckNull(cepp);
-					CheckDuplicate(cepp, anti_flood_unknown_flood_amount, "anti-flood::unknown-flood-amount");
+					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					{
+						if (!strcmp(ceppp->ce_varname, "amount"))
+						{
+							long v;
+							CheckNull(ceppp);
+							CheckDuplicate(ceppp, anti_flood_handshake_data_flood_amount, "anti-flood::handshake-data-flood::amount");
+							v = config_checkval(ceppp->ce_vardata, CFG_SIZE);
+							if (v < 1024)
+							{
+								config_error("%s:%i: set::anti-flood::handshake-data-flood::amount must be at least 1024 bytes",
+									ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+								errors++;
+							}
+						} else
+						if (!strcmp(ceppp->ce_varname, "ban-action"))
+						{
+							CheckNull(ceppp);
+							CheckDuplicate(ceppp, anti_flood_handshake_data_flood_ban_action, "anti-flood::handshake-data-flood::ban-action");
+							if (!banact_stringtoval(ceppp->ce_vardata))
+							{
+								config_error("%s:%i: set::anti-flood::handshake-data-flood::ban-action has unknown action type '%s'",
+									ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum,
+									ceppp->ce_vardata);
+								errors++;
+							}
+						} else
+						if (!strcmp(ceppp->ce_varname, "ban-time"))
+						{
+							CheckNull(ceppp);
+							CheckDuplicate(ceppp, anti_flood_handshake_data_flood_ban_time, "anti-flood::handshake-data-flood::ban-time");
+						} else
+						{
+							config_error_unknownopt(ceppp->ce_fileptr->cf_filename,
+								ceppp->ce_varlinenum, "set::anti-flood::handshake-data-flood",
+								ceppp->ce_varname);
+							errors++;
+						}
+					}
 				}
 				else if (!strcmp(cepp->ce_varname, "away-count"))
 				{

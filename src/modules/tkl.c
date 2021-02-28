@@ -123,27 +123,27 @@ struct TKLTypeTable
  */
 TKLTypeTable tkl_types[] = {
 	/* <config name> <letter> <TKL_xxx type>               <logging name> <tkl option?> <exempt option?> */
-	{ "gline",              'G', TKL_KILL       | TKL_GLOBAL, "G-Line",             1, 1 },
-	{ "kline",              'k', TKL_KILL,                    "K-Line",             1, 1 },
-	{ "gzline",             'Z', TKL_ZAP        | TKL_GLOBAL, "Global Z-Line",      1, 1 },
-	{ "zline",              'z', TKL_ZAP,                     "Z-Line",             1, 1 },
-	{ "spamfilter",         'F', TKL_SPAMF      | TKL_GLOBAL, "Spamfilter",         1, 1 },
-	{ "qline",              'Q', TKL_NAME       | TKL_GLOBAL, "Q-Line",             1, 1 },
-	{ "except",             'E', TKL_EXCEPTION  | TKL_GLOBAL, "Exception",          1, 0 },
-	{ "shun",               's', TKL_SHUN       | TKL_GLOBAL, "Shun",               1, 1 },
-	{ "local-qline",        'q', TKL_NAME,                    "Local Q-Line",       1, 0 },
-	{ "local-spamfilter",   'e', TKL_EXCEPTION,               "Local Exception",    1, 0 },
-	{ "local-exception",    'f', TKL_SPAMF,                   "Local Spamfilter",   1, 0 },
-	{ "blacklist",          'b', TKL_BLACKLIST,               "Blacklist",          0, 1 },
-	{ "connect-flood",      'c', TKL_CONNECT_FLOOD,           "Connect flood",      0, 1 },
-	{ "maxperip",           'm', TKL_MAXPERIP,                "Max-per-IP",         0, 1 },
-	{ "unknown-data-flood", 'd', TKL_UNKNOWN_DATA_FLOOD,      "Unknown data flood", 0, 1 },
-	{ "antirandom",         'r', TKL_ANTIRANDOM,              "Antirandom",         0, 1 },
-	{ "antimixedutf8",      '8', TKL_ANTIMIXEDUTF8,           "Antimixedutf8",      0, 1 },
-	{ "ban-version",        'v', TKL_BAN_VERSION,             "Ban Version",        0, 1 },
-	{ NULL,                 '\0', 0,                          NULL,                 0, 0 },
+	{ "gline",                'G', TKL_KILL       | TKL_GLOBAL, "G-Line",               1, 1 },
+	{ "kline",                'k', TKL_KILL,                    "K-Line",               1, 1 },
+	{ "gzline",               'Z', TKL_ZAP        | TKL_GLOBAL, "Global Z-Line",        1, 1 },
+	{ "zline",                'z', TKL_ZAP,                     "Z-Line",               1, 1 },
+	{ "spamfilter",           'F', TKL_SPAMF      | TKL_GLOBAL, "Spamfilter",           1, 1 },
+	{ "qline",                'Q', TKL_NAME       | TKL_GLOBAL, "Q-Line",               1, 1 },
+	{ "except",               'E', TKL_EXCEPTION  | TKL_GLOBAL, "Exception",            1, 0 },
+	{ "shun",                 's', TKL_SHUN       | TKL_GLOBAL, "Shun",                 1, 1 },
+	{ "local-qline",          'q', TKL_NAME,                    "Local Q-Line",         1, 0 },
+	{ "local-spamfilter",     'e', TKL_EXCEPTION,               "Local Exception",      1, 0 },
+	{ "local-exception",      'f', TKL_SPAMF,                   "Local Spamfilter",     1, 0 },
+	{ "blacklist",            'b', TKL_BLACKLIST,               "Blacklist",            0, 1 },
+	{ "connect-flood",        'c', TKL_CONNECT_FLOOD,           "Connect flood",        0, 1 },
+	{ "maxperip",             'm', TKL_MAXPERIP,                "Max-per-IP",           0, 1 },
+	{ "handshake-data-flood", 'd', TKL_HANDSHAKE_DATA_FLOOD,    "Handshake data flood", 0, 1 },
+	{ "antirandom",           'r', TKL_ANTIRANDOM,              "Antirandom",           0, 1 },
+	{ "antimixedutf8",        '8', TKL_ANTIMIXEDUTF8,           "Antimixedutf8",        0, 1 },
+	{ "ban-version",          'v', TKL_BAN_VERSION,             "Ban Version",          0, 1 },
+	{ NULL,                   '\0', 0,                          NULL,                   0, 0 },
 };
-#define ALL_VALID_EXCEPTION_TYPES "kline, gline, zline, gzline, spamfilter, shun, qline, blacklist, connect-flood, unknown-data-flood, antirandom, antimixedutf8, ban-version"
+#define ALL_VALID_EXCEPTION_TYPES "kline, gline, zline, gzline, spamfilter, shun, qline, blacklist, connect-flood, handshake-data-flood, antirandom, antimixedutf8, ban-version"
 
 int max_stats_matches = 1000;
 
@@ -1527,7 +1527,7 @@ void eline_syntax(Client *client)
 	sendnotice(client, "F: Spamfilter");
 	sendnotice(client, "b: Blacklist checking");
 	sendnotice(client, "c: Connect flood (bypass set::anti-flood::connect-flood))");
-	sendnotice(client, "d: Unknown data flood (no ZLINE on too much data before registration)");
+	sendnotice(client, "d: Handshake data flood (no ZLINE on too much data before registration)");
 	sendnotice(client, "m: Bypass allow::maxperip restriction");
 	sendnotice(client, "r: Bypass antirandom module");
 	sendnotice(client, "8: Bypass antimixedutf8 module");
@@ -2645,7 +2645,7 @@ static void add_default_exempts(void)
 	/* The exempted ban types are only ones that will affect other connections as well,
 	 * such as gline, and not policy decissions such as maxperip exempt or bypass qlines.
 	 * Currently the list is: gline, kline, gzline, zline, shun, blacklist,
-	 *                        connect-flood, unknown-data-flood.
+	 *                        connect-flood, handshake-data-flood.
 	 */
 	tkl_add_banexception(TKL_EXCEPTION, "*", "127.*", "localhost is always exempt",
 	                     "-default-", 0, TStime(), 0, "GkZzsbcd", TKL_FLAG_CONFIG);

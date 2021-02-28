@@ -880,7 +880,7 @@ typedef void (*OverrideCmdFunc)(CommandOverride *ovr, Client *client, MessageTag
 #define TKL_BLACKLIST		0x0001000
 #define TKL_CONNECT_FLOOD	0x0002000
 #define TKL_MAXPERIP		0x0004000
-#define TKL_UNKNOWN_DATA_FLOOD	0x0008000
+#define TKL_HANDSHAKE_DATA_FLOOD	0x0008000
 #define TKL_ANTIRANDOM          0x0010000
 #define TKL_ANTIMIXEDUTF8       0x0020000
 #define TKL_BAN_VERSION         0x0040000

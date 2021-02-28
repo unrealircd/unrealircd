@@ -113,8 +113,9 @@ struct Configuration {
 	char *restrict_channelmodes;
 	char *restrict_extendedbans;
 	char *channel_command_prefix;
-	long unknown_flood_bantime;
-	long unknown_flood_amount;
+	long handshake_data_flood_amount;
+	long handshake_data_flood_ban_time;
+	int handshake_data_flood_ban_action;
 	struct ChMode modes_on_join;
 	int level_on_join;
 	unsigned char away_count;
@@ -230,8 +231,6 @@ extern MODVAR int ipv6_disabled;
 #define THROTTLING_PERIOD		iConf.throttle_period
 #define THROTTLING_COUNT		iConf.throttle_count
 #define USE_BAN_VERSION			iConf.use_ban_version
-#define UNKNOWN_FLOOD_BANTIME		iConf.unknown_flood_bantime
-#define UNKNOWN_FLOOD_AMOUNT		iConf.unknown_flood_amount
 #define MODES_ON_JOIN			iConf.modes_on_join.mode
 #define LEVEL_ON_JOIN			iConf.level_on_join
 
@@ -326,8 +325,9 @@ struct SetCheck {
 	unsigned has_restrict_channelmodes:1;
 	unsigned has_restrict_extendedbans:1;
 	unsigned has_channel_command_prefix:1;
-	unsigned has_anti_flood_unknown_flood_bantime:1;
-	unsigned has_anti_flood_unknown_flood_amount:1;
+	unsigned has_anti_flood_handshake_data_flood_amount:1;
+	unsigned has_anti_flood_handshake_data_flood_ban_action:1;
+	unsigned has_anti_flood_handshake_data_flood_ban_time:1;
 	unsigned has_modes_on_join:1;
 	unsigned has_level_on_join:1;
 	unsigned has_anti_flood_away_count:1;
