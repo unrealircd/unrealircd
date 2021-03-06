@@ -216,7 +216,7 @@ int write_channeldb(void)
 #endif
 
 	// Write to a tempfile first, then rename it if everything succeeded
-	snprintf(tmpfname, sizeof(tmpfname), "%s.tmp", cfg.database);
+	snprintf(tmpfname, sizeof(tmpfname), "%s.%x.tmp", cfg.database, getrandom32());
 	fd = fopen(tmpfname, "wb");
 	if (!fd)
 	{

@@ -401,7 +401,7 @@ void save_db(void)
 #endif
 
 	/* We write to a temporary file. Only to rename it later if everything was ok */
-	snprintf(tmpfname, sizeof(tmpfname), "%s.tmp", cfg.database);
+	snprintf(tmpfname, sizeof(tmpfname), "%s.%x.tmp", cfg.database, getrandom32());
 	
 	fd = fopen(tmpfname, "w");
 	if (!fd)
