@@ -4687,6 +4687,12 @@ int _match_spamfilter(Client *client, char *str_in, int target, char *destinatio
 	if (!client->user || ValidatePermissionsForPath("immune:server-ban:spamfilter",client,NULL,NULL,NULL) || IsULine(client))
 		return 0;
 
+	/* Client exempt from spamfilter checking?
+	 * Let's check that early: going through elines is likely faster than running the regex(es).
+	 */
+	if (find_tkl_exception(TKL_SPAMF, client))
+		return 0;
+
 	for (tkl = tklines[tkl_hash('F')]; tkl; tkl = tkl->next)
 	{
 		if (!(tkl->ptr.spamfilter->target & target))
