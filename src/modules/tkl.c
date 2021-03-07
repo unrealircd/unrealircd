@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 int tkl_config_test_spamfilter(ConfigFile *, ConfigEntry *, int, int *);
-int tkl_config_match_spamfilter(ConfigFile *, ConfigEntry *, int);
+int tkl_config_run_spamfilter(ConfigFile *, ConfigEntry *, int);
 int tkl_config_test_ban(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_ban(ConfigFile *, ConfigEntry *, int);
 int tkl_config_test_except(ConfigFile *, ConfigEntry *, int, int *);
@@ -193,7 +193,7 @@ MOD_TEST()
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_match_spamfilter);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamfilter);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_ban);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_except);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_set);
@@ -439,7 +439,7 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 }
 
 /** Process a spamfilter { } block in the configuration file */
-int tkl_config_match_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
+int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
@@ -493,7 +493,7 @@ int tkl_config_match_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	                    target,
 	                    action,
 	                    m,
-	                    me.name,
+	                    "-config-",
 	                    0,
 	                    TStime(),
 	                    bantime,
