@@ -20,6 +20,12 @@ Enhancements:
   * All the other values are now logged as well on-connect,
     similar to the "Client connecting" notice, so: secure, reputation,
     account (if applicable).
+* New option [allow::global-maxperip](https://www.unrealircd.org/docs/Allow_block):
+  this imposes a global (network-wide) restriction on the number of
+  connections per IP address.
+  If you don't have a global-maxperip setting in the allow block then it
+  will default to maxperip plus one. So, if you currently have an
+  allow::maxperip of 3 then global-maxperip will be 4.
 * Disable [handshake delay](https://www.unrealircd.org/docs/Set_block#set::handshake-delay)
   for users that are exempt from blacklist checking.
 * Always exempt 127.* from gline, kline, etc.

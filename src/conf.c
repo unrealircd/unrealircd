@@ -5304,6 +5304,8 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "maxperip"))
 			allow->maxperip = atoi(cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "global-maxperip"))
+			allow->global_maxperip = atoi(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "redirect-server"))
 			safe_strdup(allow->server, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "redirect-port"))
@@ -5339,6 +5341,14 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	if (!allow->ip)
 		safe_strdup(allow->ip, "*@NOMATCH");
 
+	/* Default: global-maxperip = maxperip+1 */
+	if (allow->global_maxperip == 0)
+		allow->global_maxperip = allow->maxperip+1;
+
+	/* global-maxperip < maxperip makes no sense */
+	if (allow->global_maxperip < allow->maxperip)
+		allow->global_maxperip = allow->maxperip;
+
 	AddListItem(allow, conf_allow);
 	return 1;
 }
@@ -5348,7 +5358,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp;
 	int		errors = 0;
 	Hook *h;
-	char has_ip = 0, has_hostname = 0, has_maxperip = 0, has_password = 0, has_class = 0;
+	char has_ip = 0, has_hostname = 0, has_maxperip = 0, has_global_maxperip = 0, has_password = 0, has_class = 0;
 	char has_redirectserver = 0, has_redirectport = 0, has_options = 0;
 	int hostname_possible_silliness = 0;
 
@@ -5421,9 +5431,26 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_maxperip = 1;
-			if ((v <= 0) || (v > 65535))
+			if ((v <= 0) || (v > 1000000))
 			{
-				config_error("%s:%i: allow::maxperip with illegal value (must be 1-65535)",
+				config_error("%s:%i: allow::maxperip with illegal value (must be 1-1000000)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "global-maxperip"))
+		{
+			int v = atoi(cep->ce_vardata);
+			if (has_global_maxperip)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "allow::global-maxperip");
+				continue;
+			}
+			has_global_maxperip = 1;
+			if ((v <= 0) || (v > 1000000))
+			{
+				config_error("%s:%i: allow::global-maxperip with illegal value (must be 1-1000000)",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}

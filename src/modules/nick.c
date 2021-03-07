@@ -1282,17 +1282,24 @@ int check_init(Client *client, char *sockn, size_t size)
 int exceeds_maxperip(Client *client, ConfigItem_allow *aconf)
 {
 	Client *acptr;
-	int cnt = 1;
+	int local_cnt = 1;
+	int global_cnt = 1;
 
 	if (find_tkl_exception(TKL_MAXPERIP, client))
 		return 0; /* exempt */
 
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry(acptr, &client_list, client_node)
 	{
 		if (IsUser(acptr) && !strcmp(GetIP(acptr), GetIP(client)))
 		{
-			cnt++;
-			if (cnt > aconf->maxperip)
+			if (MyUser(acptr))
+			{
+				local_cnt++;
+				if (local_cnt > aconf->maxperip)
+					return 1;
+			}
+			global_cnt++;
+			if (global_cnt > aconf->global_maxperip)
 				return 1;
 		}
 	}
@@ -1416,7 +1423,7 @@ int AllowClient(Client *client, char *username)
 			strlcpy(uhost, sockhost, sizeof(uhost));
 		set_sockhost(client, uhost);
 
-		if (aconf->maxperip && exceeds_maxperip(client, aconf))
+		if (exceeds_maxperip(client, aconf))
 		{
 			/* Already got too many with that ip# */
 			exit_client(client, NULL, iConf.reject_message_too_many_connections);

@@ -244,7 +244,7 @@ static char *replies[] = {
 #endif
 /* 213    RPL_STATSCLINE */ "%c %s * %s %d %d %s",
 /* 214    RPL_STATSOLDNLINE */ "%c %s * %s %d %d %s",
-/* 215    RPL_STATSILINE */ "I %s * %s %d %s %s %d",
+/* 215    RPL_STATSILINE */ "I %s %s %d %d %s %s %d",
 /* 216    RPL_STATSKLINE */ "%s %s %s",
 /* 217    RPL_STATSQLINE */ "%c %s %ld %ld %s :%s",
 /* 218    RPL_STATSYLINE */ "Y %s %d %d %d %d %d",

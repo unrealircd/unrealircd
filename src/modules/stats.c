@@ -488,9 +488,15 @@ int stats_allow(Client *client, char *para)
 {
 	ConfigItem_allow *allows;
 	for (allows = conf_allow; allows; allows = allows->next)
-		sendnumeric(client, RPL_STATSILINE, allows->ip, allows->hostname, allows->maxperip,
-			allows->class->name, allows->server ? allows->server
-			: defserv, allows->port ? allows->port : 6667);
+	{
+		sendnumeric(client, RPL_STATSILINE,
+		            allows->ip, allows->hostname,
+		            allows->maxperip,
+		            allows->global_maxperip,
+		            allows->class->name,
+		            allows->server ? allows->server : defserv,
+		            allows->port ? allows->port : 6667);
+	}
 	return 0;
 }
 

@@ -1399,15 +1399,19 @@ struct ConfigFlag_allow {
 	unsigned	reject_on_auth_failure :1;
 };
 
+/** allow { } block settings */
 struct ConfigItem_allow {
-	ConfigItem_allow	*prev, *next;
-	ConfigFlag			flag;
-	char				*ip, *hostname, *server;
-	AuthConfig		*auth;	
-	unsigned short		maxperip;
-	int					port;
-	ConfigItem_class	*class;
-	ConfigFlag_allow	flags;
+	ConfigItem_allow *prev, *next;
+	ConfigFlag flag;
+	char *ip;
+	char *hostname;
+	char *server;
+	AuthConfig *auth;
+	int maxperip; /**< Maximum connections permitted per IP address (locally) */
+	int global_maxperip; /**< Maximum connections permitted per IP address (globally) */
+	int port;
+	ConfigItem_class *class;
+	ConfigFlag_allow flags;
 	unsigned short ipv6_clone_mask;
 };
 
