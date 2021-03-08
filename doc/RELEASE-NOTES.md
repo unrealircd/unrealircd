@@ -32,6 +32,7 @@ Enhancements:
 * You can now have dated logfiles thanks to strftime formatting.
   For example ```log "ircd.%Y-%m-%d.log" { }``` will create a log
   file like called ircd.2020-01-31.log, a new one every day.
+* The Windows build now supports TLSv1.3 too.
 
 Fixes:
 * Windows: some warnings and error messages on boot were previously
