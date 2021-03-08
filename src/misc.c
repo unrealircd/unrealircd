@@ -162,7 +162,7 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 #endif
 		if (logs->flags & flags)
 		{
-			if (stat(logs->file, &fstats) != -1 && logs->maxsize && fstats.st_size >= logs->maxsize)
+			if (logs->maxsize && (stat(logs->file, &fstats) != -1) && fstats.st_size >= logs->maxsize)
 			{
 				char oldlog[512];
 				if (logs->logfd == -1)
