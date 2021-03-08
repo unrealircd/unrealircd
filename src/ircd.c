@@ -1123,7 +1123,11 @@ int InitUnrealIRCd(int argc, char *argv[])
 		  case 'K':
 			  {
 			  	char *p = NULL;
-			  	chdir(TMPDIR);
+			  	if (chdir(TMPDIR) < 0)
+			  	{
+			  		fprintf(stderr, "Could not change to directory '%s'\n", TMPDIR);
+			  		exit(1);
+			  	}
 			  	fprintf(stderr, "Starting crash test!\n");
 			  	*p = 'a';
 			  	fprintf(stderr, "It is impossible to get here\n");
