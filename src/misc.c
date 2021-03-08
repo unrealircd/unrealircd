@@ -168,11 +168,7 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 				if (logs->logfd == -1)
 				{
 					/* Try to open, so we can write the 'Max file size reached' message. */
-#ifndef _WIN32
 					logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
-#else
-					logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
-#endif
 				}
 				if (logs->logfd != -1)
 				{
@@ -195,11 +191,7 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 					continue;
 			}
 			else if (logs->logfd == -1) {
-#ifndef _WIN32
 				logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
-#else
-				logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
-#endif
 				if (logs->logfd == -1)
 				{
 					if (!loop.ircd_booted)
