@@ -292,7 +292,7 @@ int crash_report_asan_log(FILE *reportfd, char *coredump)
 	coretime = get_file_time(coredump);
 	asantime = get_file_time(asan_log);
 
-	fprintf(reportfd, "ASan log file found '%s' which is %ld newer than core file\n",
+	fprintf(reportfd, "ASan log file found '%s' which is %ld seconds older than core file\n",
 		asan_log,
 		(long)((long)(coretime) - (long)asantime));
 
@@ -719,6 +719,15 @@ void mark_coredump_as_read(char *coredump)
 
 static int report_pref = REPORT_ASK;
 
+void report_crash_not_sent(char *fname)
+{
+		printf("Crash report will not be sent to UnrealIRCd Team.\n"
+		       "\n"
+		       "Feel free to read the report at %s and delete it.\n"
+		       "Or, if you change your mind, you can submit it anyway at https://bugs.unrealircd.org/\n"
+		       " (if you do, please set the option 'View Status' at the end of the bug report page to 'private'!!)\n", fname);
+}
+
 void report_crash(void)
 {
 	char *coredump, *fname;
@@ -761,8 +770,8 @@ void report_crash(void)
 		
 	if (report_pref == REPORT_NEVER)
 	{
-		printf("Crash report will not be sent to UnrealIRCd Team.\n\n");
-		printf("Feel free to read the report at %s and if you change your mind you can submit it anyway at https://bugs.unrealircd.org/\n", fname);
+		report_crash_not_sent(fname);
+		return;
 	} else
 	if (report_pref == REPORT_ASK)
 	{
@@ -780,8 +789,7 @@ void report_crash(void)
 			
 			if (answer && (toupper(*answer) == 'N'))
 			{
-				printf("Ok, not sending bug report.\n\n");
-				printf("Feel free to read the report at %s and if you change your mind you can submit it anyway at https://bugs.unrealircd.org/\n", fname);
+				report_crash_not_sent(fname);
 				return;
 			}
 			if (answer && (toupper(*answer) == 'Y'))

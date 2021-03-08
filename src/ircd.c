@@ -1120,6 +1120,15 @@ int InitUnrealIRCd(int argc, char *argv[])
 			  generate_cloakkeys();
 			  exit(0);
 #endif
+		  case 'K':
+			  {
+			  	char *p = NULL;
+			  	chdir(TMPDIR);
+			  	fprintf(stderr, "Starting crash test!\n");
+			  	*p = 'a';
+			  	fprintf(stderr, "It is impossible to get here\n");
+			  	exit(0);
+			  }
 		  case 'U':
 		      if (chdir(CONFDIR) < 0)
 	{
