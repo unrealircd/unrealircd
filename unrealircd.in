@@ -310,6 +310,7 @@ else
 	echo "unrealircd module        Install and uninstall 3rd party modules"
 	echo "unrealircd croncheck     For use in crontab: this checks if the server"
 	echo "                         is running. If not, the server is started."
+	echo "unrealircd genlinkblock  Generate link { } block for the other side."
 	echo "unrealircd gencloak      Display 3 random cloak keys"
 	echo "unrealircd spkifp        Display SPKI Fingerprint"
 fi
