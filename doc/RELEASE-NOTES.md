@@ -29,6 +29,9 @@ Enhancements:
 * Disable [handshake delay](https://www.unrealircd.org/docs/Set_block#set::handshake-delay)
   for users that are exempt from blacklist checking.
 * Always exempt 127.* from gline, kline, etc.
+* You can now have dated logfiles thanks to strftime formatting.
+  For example ```log "ircd.%Y-%m-%d.log" { }``` will create a log
+  file like called ircd.2020-01-31.log, a new one every day.
 
 Fixes:
 * Windows: some warnings and error messages on boot were previously

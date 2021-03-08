@@ -158,13 +158,28 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 			continue;
 
 #ifdef HAVE_SYSLOG
-		if (!strcasecmp(logs->file, "syslog"))
+		if (logs->file && !strcasecmp(logs->file, "syslog"))
 		{
 			syslog(LOG_INFO, "%s", buf);
 			written++;
 			continue;
 		}
 #endif
+
+		/* This deals with dynamic log file names, such as ircd.%Y-%m-%d.log */
+		if (logs->filefmt)
+		{
+			char *fname = unreal_strftime(logs->filefmt);
+			if (logs->file && (logs->logfd != -1) && strcmp(logs->file, fname))
+			{
+				/* We are logging already and need to switch over */
+				fd_close(logs->logfd);
+				logs->logfd = -1;
+			}
+			safe_strdup(logs->file, fname);
+		}
+
+		/* log::maxsize code */
 		if (logs->maxsize && (stat(logs->file, &fstats) != -1) && fstats.st_size >= logs->maxsize)
 		{
 			char oldlog[512];
@@ -184,16 +199,17 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 				}
 				fd_close(logs->logfd);
 			}
+			logs->logfd = -1;
 
 			/* Rename log file to xxxxxx.old */
 			snprintf(oldlog, sizeof(oldlog), "%s.old", logs->file);
+			unlink(oldlog); /* windows rename cannot overwrite, so unlink here.. ;) */
 			rename(logs->file, oldlog);
-
-			logs->logfd = fd_fileopen(logs->file, O_CREAT|O_WRONLY|O_TRUNC);
-			if (logs->logfd == -1)
-				continue;
 		}
-		else if (logs->logfd == -1) {
+
+		/* generic code for opening log if not open yet.. */
+		if (logs->logfd == -1)
+		{
 			logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
 			if (logs->logfd == -1)
 			{
@@ -210,9 +226,8 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 				continue;
 			}
 		}
-		/* this shouldn't happen, but lets not waste unnecessary syscalls... */
-		if (logs->logfd == -1)
-			continue;
+
+		/* Now actually WRITE to the log... */
 		if (write(logs->logfd, timebuf, strlen(timebuf)) < 0)
 		{
 			/* Let's ignore any write errors for this one. Next write() will catch it... */

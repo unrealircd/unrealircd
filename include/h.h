@@ -1002,3 +1002,4 @@ extern void add_nvplist(NameValuePrioList **lst, int priority, char *name, char 
 extern void add_fmt_nvplist(NameValuePrioList **lst, int priority, char *name, FORMAT_STRING(const char *format), ...) __attribute__((format(printf,4,5)));
 extern void free_nvplist(NameValuePrioList *lst);
 extern char *get_connect_extinfo(Client *client);
+extern char *unreal_strftime(char *str);

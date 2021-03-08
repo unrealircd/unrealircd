@@ -1646,7 +1646,8 @@ struct ConfigItem_allow_dcc {
 struct ConfigItem_log {
 	ConfigItem_log *prev, *next;
 	ConfigFlag flag;
-	char *file;
+	char *file; /**< Filename to log to (either generated or specified) */
+	char *filefmt; /**< Filename with dynamic % stuff */
 	long maxsize;
 	int  flags;
 	int  logfd;

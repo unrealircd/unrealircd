@@ -6094,7 +6094,10 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 
 	ca = safe_alloc(sizeof(ConfigItem_log));
 	ca->logfd = -1;
-	safe_strdup(ca->file, ce->ce_vardata);
+	if (strchr(ce->ce_vardata, '%'))
+		safe_strdup(ca->filefmt, ce->ce_vardata);
+	else
+		safe_strdup(ca->file, ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -6120,6 +6123,7 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 	int fd, errors = 0;
 	ConfigEntry *cep, *cepp;
 	char has_flags = 0, has_maxsize = 0;
+	char *fname;
 
 	if (!ce->ce_vardata)
 	{
@@ -6190,21 +6194,25 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 			continue;
 		}
 	}
+
 	if (!has_flags)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			"log::flags");
 		errors++;
 	}
-	if ((fd = fd_fileopen(ce->ce_vardata, O_WRONLY|O_CREAT)) == -1)
+
+	fname = unreal_strftime(ce->ce_vardata);
+	if ((fd = fd_fileopen(fname, O_WRONLY|O_CREAT)) == -1)
 	{
 		config_error("%s:%i: Couldn't open logfile (%s) for writing: %s",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			ce->ce_vardata, strerror(errno));
+			fname, strerror(errno));
 		errors++;
-	}
-	else
+	} else
+	{
 		fd_close(fd);
+	}
 
 	return errors;
 }

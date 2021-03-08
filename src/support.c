@@ -1293,3 +1293,17 @@ int get_terminal_width(void)
 	return w.ws_col;
 #endif
 }
+
+/** Like strftime() but easier. */
+char *unreal_strftime(char *str)
+{
+	time_t t;
+	struct tm *tmp;
+	static char buf[512];
+
+	t = time(NULL);
+	tmp = localtime(&t);
+	if (!tmp || !strftime(buf, sizeof(buf), str, tmp))
+		return str;
+	return buf;
+}
