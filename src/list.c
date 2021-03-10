@@ -577,6 +577,20 @@ void add_nvplist(NameValuePrioList **lst, int priority, char *name, char *value)
 	AddListItemPrio(e, *lst, priority);
 }
 
+NameValuePrioList *find_nvplist(NameValuePrioList *list, char *name)
+{
+	NameValuePrioList *e;
+
+	for (e = list; e; e = e->next)
+	{
+		if (!strcasecmp(e->name, name))
+		{
+			return e;
+		}
+	}
+	return NULL;
+}
+
 void add_fmt_nvplist(NameValuePrioList **lst, int priority, char *name, FORMAT_STRING(const char *format), ...)
 {
 	char value[512];
