@@ -1,8 +1,9 @@
-UnrealIRCd 5.0.9-git Release Notes
-===============================
+UnrealIRCd 5.0.9-rc1 Release Notes
+===================================
 
-You are looking at the bleeding edge -git version.
-Releases can be downloaded from https://www.unrealircd.org/
+This is the release candidate for UnrealIRCd 5.0.9.
+Please report any issues you encounter on https://bugs.unrealircd.org/
+so they can be fixed before the real 5.0.9 stable release.
 
 Enhancements:
 * Changes to the "Client connecting" notice on IRC (for IRCOps):
@@ -26,8 +27,8 @@ Enhancements:
   If you don't have a global-maxperip setting in the allow block then it
   will default to maxperip plus one. So, if you currently have an
   allow::maxperip of 3 then global-maxperip will be 4.
-* Disable [handshake delay](https://www.unrealircd.org/docs/Set_block#set::handshake-delay)
-  for users that are exempt from blacklist checking.
+* [Handshake delay](https://www.unrealircd.org/docs/Set_block#set::handshake-delay)
+  is automatically disabled for users that are exempt from blacklist checking.
 * Always exempt 127.* from gline, kline, etc.
 * You can now have dated logfiles thanks to strftime formatting.
   For example ```log "ircd.%Y-%m-%d.log" { }``` will create a log
@@ -45,6 +46,10 @@ integrated in a new block called
 [set::anti-flood::handshake-data-flood](https://www.unrealircd.org/docs/Set_block#set::anti-flood::handshake-data-flood).
 The ban-action can now also be changed. Note that almost nobody will have to
 change this setting since it has a good default.
+* On *NIX bump the default maximum connections from 8192 to 16384.
+That is, when in "auto" mode, which is like for 99% of the users.
+Note that the system may still limit the actual number of connections
+to a lower value, epending on the value of ```ulimit -n -H```.
 
 Reminder: UnrealIRCd 4 is no longer supported
 ----------------------------------------------
