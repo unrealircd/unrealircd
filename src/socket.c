@@ -703,10 +703,7 @@ void set_ipv6_opts(int fd)
 }
 
 /** This sets the *OS* socket buffers.
- * Note that setting these high is not always a good idea.
- * For example for regular users we keep the receive buffer tight
- * so we detect a high receive queue (Excess Flood) properly.
- * See include/fdlist.h for more information
+ * This shouldn't be needed anymore, but I've left the function here.
  */
 void set_socket_buffers(int fd, int rcvbuf, int sndbuf)
 {
@@ -726,17 +723,24 @@ void set_sock_opts(int fd, Client *client, int ipv6)
 
 	if (ipv6)
 		set_ipv6_opts(fd);
+
 #ifdef SO_REUSEADDR
 	opt = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (void *)&opt, sizeof(opt)) < 0)
 			report_error("setsockopt(SO_REUSEADDR) %s:%s", client);
 #endif
+
 #if defined(SO_USELOOPBACK) && !defined(_WIN32)
 	opt = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_USELOOPBACK, (void *)&opt, sizeof(opt)) < 0)
 		report_error("setsockopt(SO_USELOOPBACK) %s:%s", client);
 #endif
-	set_socket_buffers(fd, USER_SOCKET_RECEIVE_BUFFER, USER_SOCKET_SEND_BUFFER);
+
+	/* Previously we also called set_socket_buffers() to set some
+	 * specific buffer limits. This is no longer needed on modern OS's.
+	 * Setting it explicitly actually slows things down.
+	 */
+
 	/* Set to non blocking: */
 #if !defined(_WIN32)
 	if ((opt = fcntl(fd, F_GETFL, 0)) == -1)

@@ -244,11 +244,6 @@ Server *make_server(Client *client)
 		del_from_id_hash_table(client->id, client);
 		*client->id = '\0';
 	}
-	if (MyConnect(client) && (client->local->fd >= 0))
-	{
-		/* Give servers a large socket buffer for performance */
-		set_socket_buffers(client->local->fd, SERVER_SOCKET_RECEIVE_BUFFER, SERVER_SOCKET_SEND_BUFFER);
-	}
 	return client->serv;
 }
 
