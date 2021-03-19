@@ -1,9 +1,7 @@
-UnrealIRCd 5.0.9-rc1 Release Notes
-===================================
+UnrealIRCd 5.0.9 Release Notes
+===============================
 
-This is the release candidate for UnrealIRCd 5.0.9.
-Please report any issues you encounter on https://bugs.unrealircd.org/
-so they can be fixed before the real 5.0.9 stable release.
+This release comes with several nice feature enhancements. There are no major bug fixes.
 
 Enhancements:
 * Changes to the "Client connecting" notice on IRC (for IRCOps):
