@@ -10151,6 +10151,10 @@ int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 		{
 			CheckNull(cep);
 		} else
+		if (!strcmp(cep->ce_varname, "tls"))
+		{
+			CheckNull(cep);
+		} else
 		if (!strcmp(cep->ce_varname, "reputation-score"))
 		{
 			int v;
@@ -10185,6 +10189,8 @@ int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
 			s->webirc = config_checkval(cep->ce_vardata, CFG_YESNO);
 		else if (!strcmp(cep->ce_varname, "identified"))
 			s->identified = config_checkval(cep->ce_vardata, CFG_YESNO);
+		else if (!strcmp(cep->ce_varname, "tls"))
+			s->tls = config_checkval(cep->ce_vardata, CFG_YESNO);
 		else if (!strcmp(cep->ce_varname, "reputation-score"))
 			s->reputation_score = atoi(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "priority"))
