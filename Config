@@ -95,8 +95,19 @@ fi
 if [ "x$MAKE" = "x" ]; then
 	if [ "x$MAKEFLAGS" = "x" ]; then
 		if make --version 2>&1|grep -q "GNU Make"; then
-			echo "Running with 4 concurrent build processes by default (make -j4)."
-			export MAKE='make -j4'
+			LOWMEM=0
+			if [ -f /proc/meminfo ]; then
+				FREEKB="`cat /proc/meminfo |grep MemAvailable|awk '{ print $2 }'`"
+				if [ "$FREEKB" != "" -a "$FREEKB" -lt 768000 ]; then
+					LOWMEM=1
+				fi
+			fi
+			if [ "$LOWMEM" = 0 ]; then
+				echo "Running with 4 concurrent build processes by default (make -j4)."
+				export MAKE='make -j4'
+			else
+				echo "System detected with less than 750MB available memory, not forcing parallel build."
+			fi
 		fi
 	fi
 fi
