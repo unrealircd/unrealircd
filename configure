@@ -7301,7 +7301,7 @@ cd c-ares-$cares_version
 save_cflags="$CFLAGS"
 CFLAGS="$orig_cflags"
 export CFLAGS
-./configure --prefix=$cur_dir/extras/c-ares --libdir=$PRIVATELIBDIR --enable-shared || exit 1
+./configure --prefix=$cur_dir/extras/c-ares --libdir=$PRIVATELIBDIR --enable-shared --disable-tests || exit 1
 CFLAGS="$save_cflags"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling c-ares resolver library" >&5
 $as_echo "compiling c-ares resolver library" >&6; }
