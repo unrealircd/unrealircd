@@ -1,7 +1,11 @@
-UnrealIRCd 5.0.9 Release Notes
+UnrealIRCd 5.0.9.1 Release Notes
 ===============================
 
-This release comes with several nice feature enhancements. There are no major bug fixes.
+Note: the only change between 5.0.9 and 5.0.9.1 is:
+* Build improvements on *NIX (faster compiling and lower memory requirements)
+* Windows version is unchanged and still 5.0.9
+
+The 5.0.9 release comes with several nice feature enhancements. There are no major bug fixes.
 
 Enhancements:
 * Changes to the "Client connecting" notice on IRC (for IRCOps):
