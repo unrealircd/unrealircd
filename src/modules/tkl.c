@@ -109,6 +109,7 @@ struct TKLTypeTable
 	char *log_name;           /**< Used for logging and server notices */
 	unsigned tkltype:1;       /**< Is a type available in cmd_tkl() and friends */
 	unsigned exceptiontype:1; /**< Is a type available for exceptions */
+	unsigned needip:1;        /**< When using this exempt option, only IP addresses are permitted (processed before DNS/ident lookups etc) */
 };
 
 /** This table which defines all TKL types and TKL exception types.
@@ -117,31 +118,30 @@ struct TKLTypeTable
  *
  * IMPORTANT IF YOU ARE ADDING A NEW TYPE TO THIS TABLE:
  * - also update eline_syntax()
- * - also check if eline_type_requires_ip() needs to be updated
  * - update help.conf (HELPOP ELINE)
  * - more?
  */
 TKLTypeTable tkl_types[] = {
-	/* <config name> <letter> <TKL_xxx type>               <logging name> <tkl option?> <exempt option?> */
-	{ "gline",                'G', TKL_KILL       | TKL_GLOBAL, "G-Line",               1, 1 },
-	{ "kline",                'k', TKL_KILL,                    "K-Line",               1, 1 },
-	{ "gzline",               'Z', TKL_ZAP        | TKL_GLOBAL, "Global Z-Line",        1, 1 },
-	{ "zline",                'z', TKL_ZAP,                     "Z-Line",               1, 1 },
-	{ "spamfilter",           'F', TKL_SPAMF      | TKL_GLOBAL, "Spamfilter",           1, 1 },
-	{ "qline",                'Q', TKL_NAME       | TKL_GLOBAL, "Q-Line",               1, 1 },
-	{ "except",               'E', TKL_EXCEPTION  | TKL_GLOBAL, "Exception",            1, 0 },
-	{ "shun",                 's', TKL_SHUN       | TKL_GLOBAL, "Shun",                 1, 1 },
-	{ "local-qline",          'q', TKL_NAME,                    "Local Q-Line",         1, 0 },
-	{ "local-spamfilter",     'e', TKL_EXCEPTION,               "Local Exception",      1, 0 },
-	{ "local-exception",      'f', TKL_SPAMF,                   "Local Spamfilter",     1, 0 },
-	{ "blacklist",            'b', TKL_BLACKLIST,               "Blacklist",            0, 1 },
-	{ "connect-flood",        'c', TKL_CONNECT_FLOOD,           "Connect flood",        0, 1 },
-	{ "maxperip",             'm', TKL_MAXPERIP,                "Max-per-IP",           0, 1 },
-	{ "handshake-data-flood", 'd', TKL_HANDSHAKE_DATA_FLOOD,    "Handshake data flood", 0, 1 },
-	{ "antirandom",           'r', TKL_ANTIRANDOM,              "Antirandom",           0, 1 },
-	{ "antimixedutf8",        '8', TKL_ANTIMIXEDUTF8,           "Antimixedutf8",        0, 1 },
-	{ "ban-version",          'v', TKL_BAN_VERSION,             "Ban Version",          0, 1 },
-	{ NULL,                   '\0', 0,                          NULL,                   0, 0 },
+	/* <config name> <letter> <TKL_xxx type>               <logging name> <tkl option?> <exempt option?> <need ip address?> */
+	{ "gline",                'G', TKL_KILL       | TKL_GLOBAL, "G-Line",               1, 1, 0 },
+	{ "kline",                'k', TKL_KILL,                    "K-Line",               1, 1, 0 },
+	{ "gzline",               'Z', TKL_ZAP        | TKL_GLOBAL, "Global Z-Line",        1, 1, 1 },
+	{ "zline",                'z', TKL_ZAP,                     "Z-Line",               1, 1, 1 },
+	{ "spamfilter",           'F', TKL_SPAMF      | TKL_GLOBAL, "Spamfilter",           1, 1, 0 },
+	{ "qline",                'Q', TKL_NAME       | TKL_GLOBAL, "Q-Line",               1, 1, 0 },
+	{ "except",               'E', TKL_EXCEPTION  | TKL_GLOBAL, "Exception",            1, 0, 0 },
+	{ "shun",                 's', TKL_SHUN       | TKL_GLOBAL, "Shun",                 1, 1, 0 },
+	{ "local-qline",          'q', TKL_NAME,                    "Local Q-Line",         1, 0, 0 },
+	{ "local-spamfilter",     'e', TKL_EXCEPTION,               "Local Exception",      1, 0, 0 },
+	{ "local-exception",      'f', TKL_SPAMF,                   "Local Spamfilter",     1, 0, 0 },
+	{ "blacklist",            'b', TKL_BLACKLIST,               "Blacklist",            0, 1, 1 },
+	{ "connect-flood",        'c', TKL_CONNECT_FLOOD,           "Connect flood",        0, 1, 1 },
+	{ "maxperip",             'm', TKL_MAXPERIP,                "Max-per-IP",           0, 1, 0 },
+	{ "handshake-data-flood", 'd', TKL_HANDSHAKE_DATA_FLOOD,    "Handshake data flood", 0, 1, 1 },
+	{ "antirandom",           'r', TKL_ANTIRANDOM,              "Antirandom",           0, 1, 0 },
+	{ "antimixedutf8",        '8', TKL_ANTIMIXEDUTF8,           "Antimixedutf8",        0, 1, 0 },
+	{ "ban-version",          'v', TKL_BAN_VERSION,             "Ban Version",          0, 1, 0 },
+	{ NULL,                   '\0', 0,                          NULL,                   0, 0, 0 },
 };
 #define ALL_VALID_EXCEPTION_TYPES "kline, gline, zline, gzline, spamfilter, shun, qline, blacklist, connect-flood, handshake-data-flood, antirandom, antimixedutf8, ban-version"
 
@@ -1543,14 +1543,14 @@ void eline_syntax(Client *client)
  * exception to be placed on *@ip rather than
  * user@host or *@host. For eg zlines.
  */
-int eline_type_requires_ip(char *bantypes)
+TKLTypeTable *eline_type_requires_ip(char *bantypes)
 {
-	if (strchr(bantypes, 'z') || strchr(bantypes, 'Z') ||
-	    strchr(bantypes, 'c') ||
-	    strchr(bantypes, 'b') ||
-	    strchr(bantypes, 'd'))
-		return 1;
-	return 0;
+	int i;
+
+	for (i=0; tkl_types[i].config_name; i++)
+		if (tkl_types[i].needip && strchr(bantypes, tkl_types[i].letter))
+			return &tkl_types[i];
+	return NULL;
 }
 
 /** Checks a string to see if it contains invalid ban exception types */
@@ -1590,6 +1590,7 @@ CMD_FUNC(cmd_eline)
 		"-",			/*9  reason */
 		NULL
 	};
+	TKLTypeTable *t;
 
 	if (IsServer(client))
 		return;
@@ -1673,11 +1674,11 @@ CMD_FUNC(cmd_eline)
 			mask[3] = '\0';
 			usermask = mask; /* eg ~S: */
 			hostmask = mask2buf;
-			if (eline_type_requires_ip(bantypes))
+			if ((t = eline_type_requires_ip(bantypes)))
 			{
-				sendnotice(client, "ERROR: Ban exceptions with type z/Z/c/b do not work on extended server bans. "
-				                   "This is because checking (g)zlines, connect-flood and blacklists is done BEFORE "
-				                   "extended bans can be checked.");
+				sendnotice(client, "ERROR: Ban exception with type '%c' does not work on extended server bans. "
+				                   "This is because checking for %s takes places BEFORE "
+				                   "extended bans can be checked.", t->letter, t->log_name);
 				return;
 			}
 		} else {
@@ -1724,25 +1725,31 @@ CMD_FUNC(cmd_eline)
 				sendnotice(client, "[error] For technical reasons you cannot start the host with a ':', sorry");
 				return;
 			}
-			if (add && eline_type_requires_ip(bantypes))
+			if (add && ((t = eline_type_requires_ip(bantypes))))
 			{
 				/* Trying to exempt a user from a (G)ZLINE,
 				 * make sure the user isn't specifying a host then.
 				 */
 				if (strcmp(usermask, "*"))
 				{
-					sendnotice(client, "ERROR: Ban exceptions with type z/Z/c/b need to be placed at \037*\037@ipmask, not \037user\037@ipmask. "
-							 "This is because checking (g)zlines, connect-flood and blacklists is done BEFORE any dns and ident lookups.");
+					sendnotice(client, "ERROR: Ban exception with type '%c' need to be placed at \037*\037@ipmask, not \037user\037@ipmask. "
+					                   "This is because checking %s takes places (possibly) BEFORE any dns and ident lookups.",
+					                   t->letter,
+					                   t->log_name);
 					return;
 				}
 				for (p=hostmask; *p; p++)
+				{
 					if (isalpha(*p) && !isxdigit(*p))
 					{
-						sendnotice(client, "ERROR: Ban exceptions with type z/Z/c/b need to be placed at *@\037ipmask\037, not *@\037hostmask\037. "
-								 "(so for example *@192.168.* is ok, but *@*.aol.com is not). "
-								 "This is because checking (g)zlines, connect-flood and blacklists is done BEFORE any dns and ident lookups.");
+						sendnotice(client, "ERROR: Ban exception with type '%c' needs to be placed at *@\037ipmask\037, not *@\037hostmask\037. "
+						                   "(so for example *@192.168.* is OK, but *@*.aol.com is not). "
+						                   "This is because checking %s takes places (possibly) BEFORE any dns and ident lookups.",
+						                   t->letter,
+						                   t->log_name);
 						return;
 					}
+				}
 			}
 		}
 		else
