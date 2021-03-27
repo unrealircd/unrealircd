@@ -1363,6 +1363,15 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 			mask[3] = '\0';
 			usermask = mask; /* eg ~S: */
 			hostmask = mask2buf;
+
+			if (((*type == 'z') || (*type == 'Z')))
+			{
+				sendnotice(client, "ERROR: (g)zlines must be placed at *@\037IPMASK\037. "
+				                   "Extended server bans don't work here because (g)zlines are processed"
+				                   "BEFORE dns and ident lookups are done and before reading any client data. "
+				                   "If you want to use extended server bans then use a KLINE/GLINE instead.");
+				return;
+			}
 		} else {
 			/* Delete: allow any attempt */
 			strlcpy(mask2buf, mask+3, sizeof(mask2buf));
