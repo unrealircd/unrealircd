@@ -35,6 +35,7 @@ ModuleHeader MOD_HEADER
 #define FIELD_OPLEVEL	0x1000 /* meaningless and stupid, but whatever */
 #define FIELD_REALHOST	0x2000
 #define FIELD_MODES	0x4000
+#define FIELD_REPUTATION	0x8000
 
 #define WMATCH_NICK	0x0001
 #define WMATCH_USER	0x0002
@@ -261,6 +262,7 @@ CMD_FUNC(cmd_whox)
 				case 'a': fmt.fields |= FIELD_ACCOUNT; break;
 				case 'm': fmt.fields |= FIELD_MODES; break;
 				case 'o': fmt.fields |= FIELD_OPLEVEL; break;
+				case 'R': fmt.fields |= FIELD_REPUTATION; break;
 				case ',':
 					s++;
 					fmt.querytype = s;
@@ -814,6 +816,13 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 			append_format(str, sizeof str, &pos, " %s", (!isdigit(*acptr->user->svid)) ? acptr->user->svid : "0");
 		if (HasField(fmt, FIELD_OPLEVEL))
 			append_format(str, sizeof str, &pos, " %s", (channel && is_skochanop(acptr, channel)) ? "999" : "n/a");
+		if (HasField(fmt, FIELD_REPUTATION))
+		{
+			if (IsOper(client))
+				append_format(str, sizeof str, &pos, " %d", GetReputation(acptr));
+			else
+				append_format(str, sizeof str, &pos, " %s", "*");
+		}
 		if (HasField(fmt, FIELD_INFO))
 			append_format(str, sizeof str, &pos, " :%s", acptr->info);
 
