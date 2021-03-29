@@ -760,6 +760,13 @@ fi
 rm -f config.settings
 cat > config.settings << __EOF__
 #
+# These are the settings saved from running './Config'.
+# Note that it is not recommended to edit config.settings by hand!
+# Chances are you misunderstand what a variable does or what the
+# supported values are. You better just re-run the ./Config script
+# and answer appropriately there, to get a correct config.settings
+# file.
+#
 BASEPATH="$BASEPATH"
 BINDIR="$BINDIR"
 DATADIR="$DATADIR"
