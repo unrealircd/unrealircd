@@ -650,6 +650,13 @@ if [ "$REMOTEINC" = "1" ] ; then
 				CURLDIR=`eval echo $cc` # modified
 			fi
 		done
+		if [ "x$CURLDIR" != "x" ]; then
+			"$CURLDIR/bin/curl-config" --libs 1>/dev/null 2>&1
+			if [ "$?" != 0 ]; then
+				echo "Curl from $CURLDIR seems unusable ($CURLDIR/bin/curl-config does not exist)"
+				CURLDIR=""
+			fi
+		fi
 	fi
 fi
 
