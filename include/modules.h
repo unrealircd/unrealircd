@@ -493,6 +493,22 @@ struct HistoryFilter {
     int last_seconds;
 };
 
+/** History log lines, used by HistoryResult among others */
+typedef struct HistoryLogLine HistoryLogLine;
+struct HistoryLogLine {
+	HistoryLogLine *prev, *next;
+	time_t t;
+	MessageTag *mtags;
+	char line[1];
+};
+
+typedef struct HistoryResult HistoryResult;
+struct HistoryResult {
+        char *object;					/**< Name of the history object, eg '#test' */
+        HistoryLogLine *log;				/**< The resulting log lines */
+        HistoryLogLine *log_tail;			/**< Last entry in the log lines */
+};
+
 /** History Backend */
 typedef struct HistoryBackend HistoryBackend;
 struct HistoryBackend {
@@ -500,7 +516,7 @@ struct HistoryBackend {
 	char *name;                                   /**< The name of the history backend (eg: "mem") */
 	int (*history_set_limit)(char *object, int max_lines, long max_time); /**< Impose a limit on a history object */
 	int (*history_add)(char *object, MessageTag *mtags, char *line); /**< Add to history */
-	int (*history_request)(Client *acptr, char *object, HistoryFilter *filter);  /**< Request history */
+	HistoryResult *(*history_request)(char *object, HistoryFilter *filter);  /**< Request history */
 	int (*history_destroy)(char *object);  /**< Destroy history of this object completely */
 	Module *owner;                                /**< Module introducing this */
 	char unloaded;                                /**< Internal flag to indicate module is being unloaded */
@@ -513,7 +529,7 @@ typedef struct {
 	char *name;
 	int (*history_set_limit)(char *object, int max_lines, long max_time);
 	int (*history_add)(char *object, MessageTag *mtags, char *line);
-	int (*history_request)(Client *acptr, char *object, HistoryFilter *filter);
+	HistoryResult *(*history_request)(char *object, HistoryFilter *filter);
 	int (*history_destroy)(char *object);
 } HistoryBackendInfo;
 

@@ -41,14 +41,6 @@ ModuleHeader MOD_HEADER
 #define HISTORY_TIMER_EVERY	(HISTORY_MAX_OFF_SECS/HISTORY_SPREAD)
 
 /* Definitions (structs, etc.) */
-typedef struct HistoryLogLine HistoryLogLine;
-struct HistoryLogLine {
-	HistoryLogLine *prev, *next;
-	time_t t;
-	MessageTag *mtags;
-	char line[1];
-};
-
 typedef struct HistoryLogObject HistoryLogObject;
 struct HistoryLogObject {
 	HistoryLogObject *prev, *next;
@@ -68,7 +60,7 @@ HistoryLogObject *history_hash_table[HISTORY_BACKEND_MEM_HASH_TABLE_SIZE];
 /* Forward declarations */
 int hbm_history_add(char *object, MessageTag *mtags, char *line);
 int hbm_history_cleanup(HistoryLogObject *h);
-int hbm_history_request(Client *client, char *object, HistoryFilter *filter);
+HistoryResult *hbm_history_request(char *object, HistoryFilter *filter);
 int hbm_history_destroy(char *object);
 int hbm_history_set_limit(char *object, int max_lines, long max_time);
 EVENT(history_mem_clean);
@@ -263,53 +255,27 @@ int hbm_history_add(char *object, MessageTag *mtags, char *line)
 	return 0;
 }
 
-int can_receive_history(Client *client)
+HistoryLogLine *duplicate_log_line(HistoryLogLine *l)
 {
-	if (HasCapability(client, "server-time"))
-		return 1;
-	return 0;
+	HistoryLogLine *n = safe_alloc(sizeof(HistoryLogLine) + strlen(l->line));
+	strcpy(n->line, l->line); /* safe, see memory allocation above ^ */
+	hbm_duplicate_mtags(n, l->mtags);
+	return n;
 }
 
-void hbm_send_line(Client *client, HistoryLogLine *l, char *batchid)
+HistoryResult *hbm_history_request(char *object, HistoryFilter *filter)
 {
-	if (can_receive_history(client))
-	{
-		if (BadPtr(batchid))
-		{
-			sendto_one(client, l->mtags, "%s", l->line);
-		} else {
-			MessageTag *m = safe_alloc(sizeof(MessageTag));
-			m->name = "batch";
-			m->value = batchid;
-			AddListItem(m, l->mtags);
-			sendto_one(client, l->mtags, "%s", l->line);
-			DelListItem(m, l->mtags);
-			safe_free(m);
-		}
-	} else {
-		/* without server-time, log playback is a bit annoying, so skip it? */
-	}
-}
-
-int hbm_history_request(Client *client, char *object, HistoryFilter *filter)
-{
+	HistoryResult *r;
 	HistoryLogObject *h = hbm_find_object(object);
 	HistoryLogLine *l;
-	char batch[BATCHLEN+1];
 	long redline; /* Imaginary timestamp. Before the red line, history is too old. */
 	int lines_sendable = 0, lines_to_skip = 0, cnt = 0;
 
-	if (!h || !can_receive_history(client))
-		return 0;
+	if (!h)
+		return NULL; /* nothing found */
 
-	batch[0] = '\0';
-
-	if (HasCapability(client, "batch"))
-	{
-		/* Start a new batch */
-		generate_batch_id(batch);
-		sendto_one(client, NULL, ":%s BATCH +%s chathistory %s", me.name, batch, object);
-	}
+	r = safe_alloc(sizeof(HistoryResult));
+	safe_strdup(r->object, object);
 
 	/* Decide on red line, under this the history is too old.
 	 * Filter can be more strict than history object (but not the other way around):
@@ -336,13 +302,24 @@ int hbm_history_request(Client *client, char *object, HistoryFilter *filter)
 		 * taken into account in hbm_history_add.
 		 */
 		if (l->t >= redline && (++cnt > lines_to_skip))
-			hbm_send_line(client, l, batch);
+		{
+			/* Add to result */
+			HistoryLogLine *n = duplicate_log_line(l);
+			if (!r->log)
+			{
+				/* First item */
+				r->log = r->log_tail = n;
+			} else
+			{
+				/* Quick append to tail */
+				r->log_tail->next = n;
+				n->prev = r->log_tail;
+				r->log_tail = n; /* we are the new tail */
+			}
+		}
 	}
 
-	/* End of batch */
-	if (*batch)
-		sendto_one(client, NULL, ":%s BATCH -%s", me.name, batch);
-	return 1;
+	return r;
 }
 
 /** Clean up expired entries */
