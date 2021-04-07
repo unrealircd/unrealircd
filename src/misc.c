@@ -1187,6 +1187,7 @@ char *our_strcasestr(char *haystack, char *needle)
  * @param tag		A tag used internally and for server-to-server traffic,
  *			not visible to end-users.
  * @param priority	Priority - for ordering multiple swhois entries
+ *                      (lower number = further up in the swhoises list in WHOIS)
  * @param swhois	The actual special whois title (string) you want to add to the user
  * @param from		Who added this entry
  * @param skip		Which server(-side) to skip broadcasting this entry to.
