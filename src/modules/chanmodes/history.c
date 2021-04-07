@@ -534,13 +534,19 @@ int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv
 	if (!HistoryEnabled(channel))
 		return 0;
 
-	if (MyUser(client))
+	if (MyUser(client) && can_receive_history(client))
 	{
 		HistoryFilter filter;
+		HistoryResult *r;
 		memset(&filter, 0, sizeof(filter));
 		filter.last_lines = cfg.playback_on_join.lines;
 		filter.last_seconds = cfg.playback_on_join.time;
-		history_request(client, channel->chname, &filter);
+		r = history_request(channel->chname, &filter);
+		if (r)
+		{
+			history_send_result(client, r);
+			free_history_result(r);
+		}
 	}
 
 	return 0;
