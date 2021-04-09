@@ -499,6 +499,7 @@ AC_ARG_WITH(operoverride-verify, [AS_HELP_STRING([--with-operoverride-verify], [
 		[AC_DEFINE([OPEROVERRIDE_VERIFY], [], [Define if you want opers to have to use /invite to join +s/+p channels])])])
 AC_ARG_WITH(system-pcre2, [AS_HELP_STRING([--without-system-pcre2], [Use the system pcre2 package instead of bundled, discovered using pkg-config])], [], [with_system_pcre2=yes])
 AC_ARG_WITH(system-argon2, [AS_HELP_STRING([--without-system-argon2], [Use bundled version instead of system argon2 library. Normally autodetected via pkg-config])], [], [with_system_argon2=yes])
+AC_ARG_WITH(system-sodium, [AS_HELP_STRING([--without-system-sodium], [Use bundled version instead of system sodium library. Normally autodetected via pkg-config])], [], [with_system_sodium=yes])
 AC_ARG_WITH(system-cares, [AS_HELP_STRING([--without-system-cares], [Use bundled version instead of system c-ares. Normally autodetected via pkg-config.])], [], [with_system_cares=yes])
 CHECK_SSL
 CHECK_SSL_CTX_SET1_CURVES_LIST
@@ -622,6 +623,55 @@ ARGON2_CFLAGS="-I$cur_dir/extras/argon2/include"
 AC_SUBST(ARGON2_CFLAGS)
 ARGON2_LIBS="-L$PRIVATELIBDIR -largon2"
 AC_SUBST(ARGON2_LIBS)
+cd $cur_dir
+])
+
+dnl Use system sodium when available, unless --without-system-sodium
+has_system_sodium="no"
+AS_IF([test "x$with_system_sodium" = "xyes"],[
+PKG_CHECK_MODULES([SODIUM], [libsodium >= 1.0.16],[has_system_sodium=yes
+AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libsodium*])],[has_system_sodium=no])])
+
+AS_IF([test "$has_system_sodium" = "no"],[
+dnl REMEMBER TO CHANGE WITH A NEW SODIUM RELEASE!
+sodium_version="1.0.18"
+AC_MSG_RESULT(extracting sodium library)
+cur_dir=`pwd`
+cd extras
+dnl remove old sodium directory to force a recompile...
+dnl and remove its installation prefix just to clean things up.
+rm -rf sodium-$sodium_version sodium
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz libsodium.tar.gz
+else
+	cp libsodium.tar.gz libsodium.tar.gz.bak
+	gunzip -f libsodium.tar.gz
+	cp libsodium.tar.gz.bak libsodium.tar.gz
+	tar xf libsodium.tar
+fi
+AC_MSG_RESULT(compiling sodium library)
+cd libsodium-$sodium_version
+save_cflags="$CFLAGS"
+CFLAGS="$orig_cflags"
+export CFLAGS
+./configure --prefix=$cur_dir/extras/sodium --libdir=$PRIVATELIBDIR --enable-shared --disable-static || exit 1
+CFLAGS="$save_cflags"
+AC_MSG_RESULT(compiling sodium resolver library)
+$ac_cv_prog_MAKER || exit 1
+AC_MSG_RESULT(installing sodium resolver library)
+$ac_cv_prog_MAKER install || exit 1
+SODIUM_CFLAGS="-I$cur_dir/extras/sodium/include"
+AC_SUBST(SODIUM_CFLAGS)
+SODIUM_LIBS=
+dnl See c-ares's compilation section for more info on this hack.
+dnl ensure that we're linking against the bundled version
+dnl (we only reach this code if linking against the bundled version is desired).
+AS_IF([test -n "$ac_cv_path_PKGCONFIG"],
+       [SODIUM_LIBS="`$ac_cv_path_PKGCONFIG --libs libsodium.pc`"])
+dnl For when pkg-config isn't available
+AS_IF([test -z "$SODIUM_LIBS"],
+       [SODIUM_LIBS="-L$PRIVATELIBDIR -lsodium"])
+AC_SUBST(SODIUM_LIBS)
 cd $cur_dir
 ])
 

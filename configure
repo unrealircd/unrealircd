@@ -641,6 +641,8 @@ build_cpu
 build
 CARES_LIBS
 CARES_CFLAGS
+SODIUM_LIBS
+SODIUM_CFLAGS
 ARGON2_LIBS
 ARGON2_CFLAGS
 PCRE2_LIBS
@@ -750,6 +752,7 @@ with_no_operoverride
 with_operoverride_verify
 with_system_pcre2
 with_system_argon2
+with_system_sodium
 with_system_cares
 enable_ssl
 enable_dynamic_linking
@@ -773,6 +776,8 @@ PCRE2_CFLAGS
 PCRE2_LIBS
 ARGON2_CFLAGS
 ARGON2_LIBS
+SODIUM_CFLAGS
+SODIUM_LIBS
 CARES_CFLAGS
 CARES_LIBS'
 
@@ -1450,6 +1455,8 @@ Optional Packages:
                           discovered using pkg-config
   --without-system-argon2 Use bundled version instead of system argon2
                           library. Normally autodetected via pkg-config
+  --without-system-sodium Use bundled version instead of system sodium
+                          library. Normally autodetected via pkg-config
   --without-system-cares  Use bundled version instead of system c-ares.
                           Normally autodetected via pkg-config.
 
@@ -1473,6 +1480,9 @@ Some influential environment variables:
   ARGON2_CFLAGS
               C compiler flags for ARGON2, overriding pkg-config
   ARGON2_LIBS linker flags for ARGON2, overriding pkg-config
+  SODIUM_CFLAGS
+              C compiler flags for SODIUM, overriding pkg-config
+  SODIUM_LIBS linker flags for SODIUM, overriding pkg-config
   CARES_CFLAGS
               C compiler flags for CARES, overriding pkg-config
   CARES_LIBS  linker flags for CARES, overriding pkg-config
@@ -6265,6 +6275,14 @@ else
 fi
 
 
+# Check whether --with-system-sodium was given.
+if test "${with_system_sodium+set}" = set; then :
+  withval=$with_system_sodium;
+else
+  with_system_sodium=yes
+fi
+
+
 # Check whether --with-system-cares was given.
 if test "${with_system_cares+set}" = set; then :
   withval=$with_system_cares;
@@ -7195,6 +7213,129 @@ cp -av $cur_dir/extras/argon2/lib/* $PRIVATELIBDIR/
 ARGON2_CFLAGS="-I$cur_dir/extras/argon2/include"
 
 ARGON2_LIBS="-L$PRIVATELIBDIR -largon2"
+
+cd $cur_dir
+
+fi
+
+has_system_sodium="no"
+if test "x$with_system_sodium" = "xyes"; then :
+
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SODIUM" >&5
+$as_echo_n "checking for SODIUM... " >&6; }
+
+if test -n "$SODIUM_CFLAGS"; then
+    pkg_cv_SODIUM_CFLAGS="$SODIUM_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libsodium >= 1.0.16\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libsodium >= 1.0.16") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_SODIUM_CFLAGS=`$PKG_CONFIG --cflags "libsodium >= 1.0.16" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$SODIUM_LIBS"; then
+    pkg_cv_SODIUM_LIBS="$SODIUM_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libsodium >= 1.0.16\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libsodium >= 1.0.16") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_SODIUM_LIBS=`$PKG_CONFIG --libs "libsodium >= 1.0.16" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        SODIUM_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libsodium >= 1.0.16" 2>&1`
+        else
+	        SODIUM_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libsodium >= 1.0.16" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$SODIUM_PKG_ERRORS" >&5
+
+	has_system_sodium=no
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	has_system_sodium=no
+else
+	SODIUM_CFLAGS=$pkg_cv_SODIUM_CFLAGS
+	SODIUM_LIBS=$pkg_cv_SODIUM_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	has_system_sodium=yes
+if test "x$PRIVATELIBDIR" != "x"; then :
+  rm -f "$PRIVATELIBDIR/"libsodium*
+fi
+fi
+fi
+
+if test "$has_system_sodium" = "no"; then :
+
+sodium_version="1.0.18"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting sodium library" >&5
+$as_echo "extracting sodium library" >&6; }
+cur_dir=`pwd`
+cd extras
+rm -rf sodium-$sodium_version sodium
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz libsodium.tar.gz
+else
+	cp libsodium.tar.gz libsodium.tar.gz.bak
+	gunzip -f libsodium.tar.gz
+	cp libsodium.tar.gz.bak libsodium.tar.gz
+	tar xf libsodium.tar
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling sodium library" >&5
+$as_echo "compiling sodium library" >&6; }
+cd libsodium-$sodium_version
+save_cflags="$CFLAGS"
+CFLAGS="$orig_cflags"
+export CFLAGS
+./configure --prefix=$cur_dir/extras/sodium --libdir=$PRIVATELIBDIR --enable-shared --disable-static || exit 1
+CFLAGS="$save_cflags"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling sodium resolver library" >&5
+$as_echo "compiling sodium resolver library" >&6; }
+$ac_cv_prog_MAKER || exit 1
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: installing sodium resolver library" >&5
+$as_echo "installing sodium resolver library" >&6; }
+$ac_cv_prog_MAKER install || exit 1
+SODIUM_CFLAGS="-I$cur_dir/extras/sodium/include"
+
+SODIUM_LIBS=
+if test -n "$ac_cv_path_PKGCONFIG"; then :
+  SODIUM_LIBS="`$ac_cv_path_PKGCONFIG --libs libsodium.pc`"
+fi
+if test -z "$SODIUM_LIBS"; then :
+  SODIUM_LIBS="-L$PRIVATELIBDIR -lsodium"
+fi
 
 cd $cur_dir
 

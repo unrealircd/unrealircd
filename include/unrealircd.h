@@ -35,3 +35,4 @@
 #ifdef USE_LIBCURL
  #include <curl/curl.h>
 #endif
+#include <sodium.h>
