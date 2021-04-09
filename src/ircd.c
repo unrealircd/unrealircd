@@ -19,6 +19,7 @@
  */
 
 #include "unrealircd.h"
+#include <ares.h>
 
 #ifdef __FreeBSD__
 char *malloc_options = "h" MALLOC_FLAGS_EXTRA;
@@ -1215,11 +1216,13 @@ int InitUnrealIRCd(int argc, char *argv[])
 	fprintf(stderr, "UnrealIRCd is brought to you by Bram Matthys (Syzop), Gottem and i\n\n");
 
 	fprintf(stderr, "Using the following libraries:\n");
-	fprintf(stderr, "* %s\n", pcre2_version());
 	fprintf(stderr, "* %s\n", SSLeay_version(SSLEAY_VERSION));
+	fprintf(stderr, "* libsodium %s\n", sodium_version_string());
 #ifdef USE_LIBCURL
 	fprintf(stderr, "* %s\n", curl_version());
 #endif
+	fprintf(stderr, "* c-ares %s\n", ares_version(NULL));
+	fprintf(stderr, "* %s\n", pcre2_version());
 #endif
 	check_user_limit();
 #ifndef _WIN32

@@ -28,6 +28,7 @@
 /* s_serv.c 2.55 2/7/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
 
 #include "unrealircd.h"
+#include <ares.h>
 #ifndef _WIN32
 /* for uname(), is POSIX so should be OK... */
 #include <sys/utsname.h>
@@ -176,10 +177,12 @@ CMD_FUNC(cmd_version)
 		if (ValidatePermissionsForPath("server:info",client,NULL,NULL,NULL))
 		{
 			sendnotice(client, "%s", SSLeay_version(SSLEAY_VERSION));
-			sendnotice(client, "%s", pcre2_version());
+			sendnotice(client, "libsodium %s", sodium_version_string());
 #ifdef USE_LIBCURL
 			sendnotice(client, "%s", curl_version());
 #endif
+			sendnotice(client, "c-ares %s", ares_version(NULL));
+			sendnotice(client, "%s", pcre2_version());
 		}
 		if (MyUser(client))
 			send_version(client,RPL_ISUPPORT);
