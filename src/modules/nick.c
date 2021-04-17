@@ -680,7 +680,12 @@ nickkill2done:
 		return;
 
 	if (client->user->svid[0] != '0')
+	{
 		user_account_login(recv_mtags, client);
+		/* no need to check for kill upon user_account_login() here
+		 * since that can only happen for local users.
+		 */
+	}
 
 	RunHook(HOOKTYPE_REMOTE_CONNECT, client);
 

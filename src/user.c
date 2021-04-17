@@ -698,6 +698,12 @@ void make_cloakedhost(Client *client, char *curr, char *buf, size_t buflen)
 /** Called after a user is logged in (or out) of a services account */
 void user_account_login(MessageTag *recv_mtags, Client *client)
 {
+	if (MyConnect(client))
+	{
+		find_shun(client);
+		if (find_tkline_match(client, 0) && IsDead(client))
+			return;
+	}
 	RunHook2(HOOKTYPE_ACCOUNT_LOGIN, client, recv_mtags);
 }
 

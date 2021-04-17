@@ -3068,7 +3068,7 @@ int _find_shun(Client *client)
 		if (!(tkl->type & TKL_SHUN))
 			continue;
 
-		snprintf(uhost, sizeof(uhost), "%s@%s", tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask);
+		tkl_uhost(tkl, uhost, sizeof(uhost), NO_SOFT_PREFIX);
 
 		if (match_user(uhost, client, MATCH_CHECK_REAL))
 		{

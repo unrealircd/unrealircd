@@ -408,6 +408,8 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], 
 				{
 					strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
 					user_account_login(recv_mtags, target);
+					if (MyConnect(target) && IsDead(target))
+						return; /* was killed due to *LINE on ~a probably */
 				}
 				else
 				{

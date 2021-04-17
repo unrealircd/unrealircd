@@ -118,6 +118,8 @@ CMD_FUNC(cmd_svslogin)
 
 		strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
 		user_account_login(recv_mtags, target);
+		if (MyConnect(target) && IsDead(target))
+			return; /* was killed due to *LINE on ~a probably */
 	} else {
 		/* It is perfectly normal for target to be NULL as this
 		 * happens during registration phase (pre-connect).
