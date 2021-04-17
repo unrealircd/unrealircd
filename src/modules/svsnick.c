@@ -95,6 +95,7 @@ CMD_FUNC(cmd_svsnick)
 
 	/* no 'recv_mtags' here, we do not inherit from SVSNICK but generate a new NICK event */
 	new_message(acptr, NULL, &mtags);
+	RunHook3(HOOKTYPE_LOCAL_NICKCHANGE, acptr, mtags, parv[2]);
 	sendto_local_common_channels(acptr, acptr, 0, mtags, ":%s NICK :%s", acptr->name, parv[2]);
 	sendto_one(acptr, mtags, ":%s NICK :%s", acptr->name, parv[2]);
 	sendto_server(NULL, 0, 0, mtags, ":%s NICK %s :%ld", acptr->id, parv[2], atol(parv[3]));
@@ -107,7 +108,6 @@ CMD_FUNC(cmd_svsnick)
 	sendto_snomask(SNO_NICKCHANGE,
 		"*** %s (%s@%s) has been forced to change their nickname to %s", 
 		acptr->name, acptr->user->username, acptr->user->realhost, parv[2]);
-	RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, acptr, parv[2]);
 
 	strlcpy(acptr->name, parv[2], sizeof acptr->name);
 	add_to_client_hash_table(parv[2], acptr);

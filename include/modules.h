@@ -1239,17 +1239,19 @@ int hooktype_server_quit(Client *client, MessageTag *mtags);
 
 /** Called when a local user changes the nick name (function prototype for HOOKTYPE_LOCAL_NICKCHANGE).
  * @param client		The client
+ * @param mtags         	Message tags associated with the event
  * @param newnick		The new nick name
  * @return The return value is ignored (use return 0)
  */
-int hooktype_local_nickchange(Client *client, char *newnick);
+int hooktype_local_nickchange(Client *client, MessageTag *mtags, char *newnick);
 
 /** Called when a remote user changes the nick name (function prototype for HOOKTYPE_REMOTE_NICKCHANGE).
  * @param client		The client
+ * @param mtags         	Message tags associated with the event
  * @param newnick		The new nick name
  * @return The return value is ignored (use return 0)
  */
-int hooktype_remote_nickchange(Client *client, char *newnick);
+int hooktype_remote_nickchange(Client *client, MessageTag *mtags, char *newnick);
 
 /** Called when a user wants to join a channel, may the user join? (function prototype for HOOKTYPE_CAN_JOIN).
  * @param client		The client

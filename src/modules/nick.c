@@ -214,11 +214,10 @@ CMD_FUNC(cmd_nick_remote)
 		sendto_snomask(SNO_FNICKCHANGE, "*** %s (%s@%s) has changed their nickname to %s",
 			client->name, client->user->username, client->user->realhost, nick);
 
-	RunHook2(HOOKTYPE_REMOTE_NICKCHANGE, client, nick);
-
+	new_message(client, recv_mtags, &mtags);
+	RunHook3(HOOKTYPE_REMOTE_NICKCHANGE, client, mtags, nick);
 	client->lastnick = lastnick ? lastnick : TStime();
 	add_history(client, 1);
-	new_message(client, recv_mtags, &mtags);
 	sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
 	    client->id, nick, (long long)client->lastnick);
 	sendto_local_common_channels(client, client, 0, mtags, ":%s NICK :%s", client->name, nick);
@@ -450,10 +449,10 @@ CMD_FUNC(cmd_nick_local)
 		sendto_snomask(SNO_NICKCHANGE, "*** %s (%s@%s) has changed their nickname to %s",
 			client->name, client->user->username, client->user->realhost, nick);
 
-		RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, client, nick);
+		new_message(client, recv_mtags, &mtags);
+		RunHook3(HOOKTYPE_LOCAL_NICKCHANGE, client, mtags, nick);
 		client->lastnick = TStime();
 		add_history(client, 1);
-		new_message(client, recv_mtags, &mtags);
 		sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
 		    client->id, nick, (long long)client->lastnick);
 		sendto_local_common_channels(client, client, 0, mtags, ":%s NICK :%s", client->name, nick);

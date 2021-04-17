@@ -142,7 +142,7 @@ int cmodef_channel_destroy(Channel *channel, int *should_destroy);
 int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, SendType sendtype);
 int floodprot_knock(Client *client, Channel *channel, MessageTag *mtags, char *comment);
-int floodprot_nickchange(Client *client, char *oldnick);
+int floodprot_nickchange(Client *client, MessageTag *mtags, char *oldnick);
 int floodprot_chanmode_del(Channel *channel, int m);
 void memberflood_free(ModData *md);
 int floodprot_stats(Client *client, char *flag);
@@ -967,7 +967,7 @@ int floodprot_knock(Client *client, Channel *channel, MessageTag *mtags, char *c
 	return 0;
 }
 
-int floodprot_nickchange(Client *client, char *oldnick)
+int floodprot_nickchange(Client *client, MessageTag *mtags, char *oldnick)
 {
 	Membership *mp;
 
