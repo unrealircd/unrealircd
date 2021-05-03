@@ -354,11 +354,6 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 			unrealdb_set_error(c, UNREALDB_ERROR_HEADER, "Header contains unknown KDF 0x%x", (int)c->config->kdf);
 			goto unrealdb_open_fail;
 		}
-		if (c->config->cipher != UNREALDB_CIPHER_XCHACHA20) 
-		{
-			unrealdb_set_error(c, UNREALDB_ERROR_HEADER, "Header contains unknown cipher 0x%x", (int)c->config->cipher);
-			goto unrealdb_open_fail;
-		}
 		if (c->config->saltlen > 1024)
 		{
 			unrealdb_set_error(c, UNREALDB_ERROR_HEADER, "Header is corrupt (saltlen=%d)", (int)c->config->saltlen);
@@ -374,6 +369,11 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 		    (fread(&c->config->keylen, 1, sizeof(c->config->keylen), c->fd) != sizeof(c->config->keylen)))
 		{
 			unrealdb_set_error(c, UNREALDB_ERROR_HEADER, "Header is corrupt/unknown/invalid (3)");
+			goto unrealdb_open_fail;
+		}
+		if (c->config->cipher != UNREALDB_CIPHER_XCHACHA20)
+		{
+			unrealdb_set_error(c, UNREALDB_ERROR_HEADER, "Header contains unknown cipher 0x%x", (int)c->config->cipher);
 			goto unrealdb_open_fail;
 		}
 		c->config->key = safe_alloc_sensitive(c->config->keylen);
