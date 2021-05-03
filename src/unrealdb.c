@@ -646,6 +646,16 @@ int unrealdb_write_int16(UnrealDB *c, uint16_t t)
 	return unrealdb_write(c, &t, sizeof(t));
 }
 
+/** Write a single 8 bit character to a database file.
+ * @param c	UnrealDB file struct
+ * @param t	The value to write
+ * @returns 1 on success, 0 on failure.
+ */
+int unrealdb_write_char(UnrealDB *c, char t)
+{
+	return unrealdb_write(c, &t, sizeof(t));
+}
+
 /** Read from an UnrealDB file.
  * This code deals with buffering, block reading, etc. so the caller doesn't
  * have to worry about that.
@@ -812,6 +822,18 @@ int unrealdb_read_str(UnrealDB *c, char **x)
 		return 0;
 	}
 	(*x)[len] = 0;
+	return 1;
+}
+
+/** Read a single 8 bit character from a database file.
+ * @param c	UnrealDB file struct
+ * @param t	The value to read
+ * @returns 1 on success, 0 on failure.
+ */
+int unrealdb_read_char(UnrealDB *c, char *t)
+{
+	if (!unrealdb_read(c, t, sizeof(char)))
+		return 0;
 	return 1;
 }
 
