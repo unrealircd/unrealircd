@@ -61,6 +61,7 @@ static void open_debugfile(), setup_signals();
 extern void init_glines(void);
 extern void tkl_init(void);
 extern void process_clients(void);
+extern void unrealdb_test(void);
 
 #ifndef _WIN32
 MODVAR char **myargv;
@@ -928,6 +929,11 @@ int InitUnrealIRCd(int argc, char *argv[])
 	safe_strdup(configfile, CONFIGFILE);
 
 	init_random(); /* needs to be done very early!! */
+	if (sodium_init() < 0)
+	{
+		fprintf(stderr, "Failed to initialize sodium library -- error accessing random device?\n");
+		exit(-1);
+	}
 
 	memset(&botmotd, '\0', sizeof(MOTDFile));
 	memset(&rules, '\0', sizeof(MOTDFile));
@@ -1071,9 +1077,10 @@ int InitUnrealIRCd(int argc, char *argv[])
 			  exit(0);
 		  }
 #endif
-#if 0
+#if 1
 		case 'S':
-			charsys_dump_table(p ? p : "*");
+			//charsys_dump_table(p ? p : "*");
+			unrealdb_test();
 			exit(0);
 #endif
 #ifndef _WIN32

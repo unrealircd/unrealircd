@@ -545,9 +545,31 @@ extern void *safe_alloc(size_t size);
  */
 #define raw_strldup(str, max) our_strldup(str, max)
 
+extern void *safe_alloc_sensitive(size_t size);
+
+/** Free previously allocate memory pointer - this is the sensitive version which
+ * may ONLY be called on allocations returned by safe_alloc_sensitive() / safe_strdup_sensitive().
+ * This will set the memory to all zeroes before actually deallocating.
+ * It also sets the pointer to NULL, since that would otherwise be common to forget.
+ * @note If you call this function on normally allocated memory (non-sensitive) then we will crash.
+ */
+#define safe_free_sensitive(x) do { if (x) sodium_free(x); x = NULL; } while(0)
+
+/** Free previous memory (if any) and then save a duplicate of the specified string -
+ * This is the 'sensitive' version which should only be used for HIGHLY sensitive data,
+ * as it wastes about 8000 bytes even if you only duplicate a string of 32 bytes (this is by design).
+ * @param dst   The current pointer and the pointer where a new copy of the string will be stored.
+ * @param str   The string you want to copy
+ */
+#define safe_strdup_sensitive(dst,str) do { if (dst) sodium_free(dst); if (!(str)) dst = NULL; else dst = our_strdup_sensitive(str); } while(0)
+
+/** Safely destroy a string in memory (but do not free!) */
+#define destroy_string(str) sodium_memzero(str, strlen(str))
+
 /** @} */
 extern char *our_strdup(const char *str);
 extern char *our_strldup(const char *str, size_t max);
+extern char *our_strdup_sensitive(const char *str);
 
 extern long config_checkval(char *value, unsigned short flags);
 extern void config_status(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
@@ -1007,3 +1029,32 @@ extern NameValuePrioList *find_nvplist(NameValuePrioList *list, char *name);
 extern void free_nvplist(NameValuePrioList *lst);
 extern char *get_connect_extinfo(Client *client);
 extern char *unreal_strftime(char *str);
+/* src/unrealdb.c start */
+extern UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_block);
+extern int unrealdb_close(UnrealDB *c);
+extern char *unrealdb_test_db(const char *filename, char *secret_block);
+extern int unrealdb_write_int64(UnrealDB *c, uint64_t t);
+extern int unrealdb_write_int32(UnrealDB *c, uint32_t t);
+extern int unrealdb_write_int16(UnrealDB *c, uint16_t t);
+extern int unrealdb_write_str(UnrealDB *c, char *x);
+extern int unrealdb_write_data(UnrealDB *c, void *buf, int len);
+extern int unrealdb_read_int64(UnrealDB *c, uint64_t *t);
+extern int unrealdb_read_int32(UnrealDB *c, uint32_t *t);
+extern int unrealdb_read_int16(UnrealDB *c, uint16_t *t);
+extern int unrealdb_read_str(UnrealDB *c, char **x);
+extern int unrealdb_read_data(UnrealDB *c, void *buf, int len);
+extern char *unrealdb_test_secret(char *name);
+extern UnrealDBConfig *unrealdb_copy_config(UnrealDBConfig *src);
+extern UnrealDBConfig *unrealdb_get_config(UnrealDB *db);
+extern void unrealdb_free_config(UnrealDBConfig *c);
+extern UnrealDBError unrealdb_get_error_code(void);
+extern char *unrealdb_get_error_string(void);
+/* src/unrealdb.c end */
+/* secret { } related stuff */
+extern Secret *find_secret(char *secret_name);
+extern void free_secret_cache(SecretCache *c);
+extern void free_secret(Secret *s);
+extern Secret *secrets;
+/* end */
+extern int check_password_strength(char *pass, int min_length, int strict, char **err);
+extern int valid_secret_password(char *pass, char **err);

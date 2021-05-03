@@ -724,6 +724,34 @@ void outofmemory(size_t bytes)
 	exit(7);
 }
 
+/** Allocate sensitive memory - this should only be used for HIGHLY sensitive data, since
+ * it wastes 8192+ bytes even if only asked to allocate for example 32 bytes (this is by design).
+ * @param size How many bytes to allocate
+ * @returns A pointer to the newly allocated memory.
+ * @note If out of memory then the IRCd will exit.
+ */
+void *safe_alloc_sensitive(size_t size)
+{
+	void *p;
+	if (size == 0)
+		return NULL;
+	p = sodium_malloc(((size/32)*32)+32);
+	if (!p)
+		outofmemory(size);
+	memset(p, 0, size);
+	return p;
+}
+
+/** Safely duplicate a string */
+char *our_strdup_sensitive(const char *str)
+{
+	char *ret = safe_alloc_sensitive(strlen(str)+1);
+	if (!ret)
+		outofmemory(strlen(str));
+	strcpy(ret, str); /* safe, see above */
+	return ret;
+}
+
 /** Returns a unique filename in the specified directory
  * using the specified suffix. The returned value will
  * be of the form <dir>/<random-hex>.<suffix>

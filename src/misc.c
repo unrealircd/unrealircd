@@ -1974,3 +1974,68 @@ char *sendtype_to_cmd(SendType sendtype)
 		return "TAGMSG";
 	return NULL;
 }
+
+/** Check password strength.
+ * @param pass		The password to check
+ * @param min_length	The minimum length of the password
+ * @param strict	Whether to require UPPER+lower+digits
+ * @returns 1 if good, 0 if not.
+ */
+int check_password_strength(char *pass, int min_length, int strict, char **err)
+{
+	char has_lowercase=0, has_uppercase=0, has_digit=0;
+	char *p;
+	static char buf[256];
+
+	if (err)
+		*err = NULL;
+
+	if (strlen(pass) < min_length)
+	{
+		if (err)
+		{
+			snprintf(buf, sizeof(buf), "Password must be at least %d characters", min_length);
+			*err = buf;
+		}
+		return 0;
+	}
+
+	for (p=pass; *p; p++)
+	{
+		if (islower(*p))
+			has_lowercase = 1;
+		else if (isupper(*p))
+			has_uppercase = 1;
+		else if (isdigit(*p))
+			has_digit = 1;
+	}
+
+	if (strict)
+	{
+		if (!has_lowercase)
+		{
+			if (err)
+				*err = "Password must contain at least 1 lowercase character";
+			return 0;
+		} else
+		if (!has_uppercase)
+		{
+			if (err)
+				*err = "Password must contain at least 1 UPPERcase character";
+			return 0;
+		} else
+		if (!has_digit)
+		{
+			if (err)
+				*err = "Password must contain at least 1 digit (number)";
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+int valid_secret_password(char *pass, char **err)
+{
+	return check_password_strength(pass, 10, 1, err);
+}

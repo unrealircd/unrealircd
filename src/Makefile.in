@@ -31,7 +31,7 @@ OBJS=dns.o auth.o channel.o crule.o dbuf.o \
 	api-moddata.o api-extban.o api-isupport.o api-command.o \
 	api-clicap.o api-messagetag.o api-history-backend.o api-efunctions.o \
 	api-event.o \
-	crypt_blowfish.o updconf.o crashreport.o modulemanager.o \
+	crypt_blowfish.o unrealdb.o updconf.o crashreport.o modulemanager.o \
 	utf8.o \
 	openssl_hostname_validation.o $(URL)
 
@@ -223,6 +223,9 @@ api-efunctions.o: api-efunctions.c $(INCLUDES)
 
 crypt_blowfish.o: crypt_blowfish.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c crypt_blowfish.c
+
+unrealdb.o: unrealdb.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c unrealdb.c
 
 updconf.o: updconf.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c updconf.c

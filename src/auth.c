@@ -20,7 +20,6 @@
 
 #include "unrealircd.h"
 #include "crypt_blowfish.h"
-#include <argon2.h>
 
 typedef struct AuthTypeList AuthTypeList;
 struct AuthTypeList {

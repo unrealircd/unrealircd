@@ -71,6 +71,7 @@ static int	_conf_help		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_offchans		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_sni		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_security_group	(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_secret		(ConfigFile *conf, ConfigEntry *ce);
 
 /*
  * Validation commands
@@ -104,6 +105,7 @@ static int	_test_help		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_offchans		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_sni		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_security_group	(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_secret		(ConfigFile *conf, ConfigEntry *ce);
 
 /* This MUST be alphabetized */
 static ConfigCommand _ConfigCommands[] = {
@@ -128,6 +130,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "oper", 		_conf_oper,		_test_oper	},
 	{ "operclass",		_conf_operclass,	_test_operclass	},
 	{ "require", 		_conf_require,		_test_require	},
+	{ "secret",		_conf_secret,		_test_secret	},
 	{ "security-group",	_conf_security_group,	_test_security_group	},
 	{ "set",		_conf_set,		_test_set	},
 	{ "sni",		_conf_sni,		_test_sni	},
@@ -258,6 +261,7 @@ ConfigItem_blacklist_module	*conf_blacklist_module = NULL;
 ConfigItem_help		*conf_help = NULL;
 ConfigItem_offchans	*conf_offchans = NULL;
 SecurityGroup		*securitygroups = NULL;
+Secret			*secrets = NULL;
 
 MODVAR Configuration		iConf;
 MODVAR Configuration		tempiConf;
@@ -2705,8 +2709,15 @@ int	config_run()
 			config_status("Running %s", cfptr->cf_filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 		{
-			if (!strcmp(ce->ce_varname, "set") || !strcmp(ce->ce_varname, "class"))
-				continue; // already processed
+			/* These are already processed above (set, class)
+			 * or via config_test() (secret).
+			 */
+			if (!strcmp(ce->ce_varname, "set") ||
+			    !strcmp(ce->ce_varname, "class") ||
+			    !strcmp(ce->ce_varname, "secret"))
+			{
+				continue;
+			}
 
 			if ((cc = config_binary_search(ce->ce_varname))) {
 				if ((cc->conffunc) && (cc->conffunc(cfptr, ce) < 0))
@@ -2793,6 +2804,17 @@ int	config_test()
 	{
 		if (config_verbose > 1)
 			config_status("Testing %s", cfptr->cf_filename);
+		/* First test and run the secret { } blocks */
+		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
+		{
+			if (!strcmp(ce->ce_varname, "secret"))
+			{
+				int n = _test_secret(cfptr, ce);
+				errors += n;
+				if (n == 0)
+					_conf_secret(cfptr, ce);
+			}
+		}
 		/* First test the set { } block */
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 		{
@@ -2803,8 +2825,11 @@ int	config_test()
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 		{
 			/* These are already processed, so skip them here.. */
-			if (!strcmp(ce->ce_varname, "set"))
+			if (!strcmp(ce->ce_varname, "secret") ||
+			    !strcmp(ce->ce_varname, "set"))
+			{
 				continue;
+			}
 			if ((cc = config_binary_search(ce->ce_varname))) {
 				if (cc->testfunc)
 					errors += (cc->testfunc(cfptr, ce));
@@ -10200,6 +10225,209 @@ int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
 			AddListItemPrio(s, securitygroups, s->priority);
 		}
 	}
+	return 1;
+}
+
+Secret *find_secret(char *secret_name)
+{
+	Secret *s;
+	for (s = secrets; s; s = s->next)
+	{
+		if (!strcasecmp(s->name, secret_name))
+			return s;
+	}
+	return NULL;
+}
+
+void free_secret_cache(SecretCache *c)
+{
+	unrealdb_free_config(c->config);
+	safe_free(c);
+}
+
+void free_secret(Secret *s)
+{
+	SecretCache *c, *c_next;
+	for (c = s->cache; c; c = c_next)
+	{
+		c_next = c->next;
+		DelListItem(c, s->cache);
+		free_secret_cache(c);
+	}
+	safe_free(s->name);
+	safe_free_sensitive(s->password);
+	safe_free(s);
+}
+
+char *_conf_secret_read_password(char *fname)
+{
+	char *pwd, *err;
+	int fd, n;
+
+#ifndef _WIN32
+	fd = open(fname, O_RDONLY);
+#else
+	fd = open(fname, _O_RDONLY|_O_BINARY);
+#endif
+	if (fd < 0)
+	{
+		/* This should not happen, as we tested for file exists earlier.. */
+		config_error("Could not open file '%s': %s", fname, strerror(errno));
+		return NULL;
+	}
+
+	pwd = safe_alloc_sensitive(512);
+	n = read(fd, pwd, 511);
+	if (n <= 0)
+	{
+		close(fd);
+		config_error("Could not read from file '%s': %s", fname, strerror(errno));
+		safe_free_sensitive(pwd);
+		return NULL;
+	}
+	close(fd);
+	stripcrlf(pwd);
+	sodium_stackzero(1024);
+	if (!valid_secret_password(pwd, &err))
+	{
+		config_error("Key from file '%s' does not meet password complexity requirements: %s", fname, err);
+		safe_free_sensitive(pwd);
+		return NULL;
+	}
+	return pwd;
+}
+
+int _test_secret(ConfigFile *conf, ConfigEntry *ce)
+{
+	int errors = 0;
+	int has_password = 0, has_password_file = 0;
+	ConfigEntry *cep;
+	char *err;
+
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: secret block needs a name, eg: secret xyz {",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	} else {
+		if (!security_group_valid_name(ce->ce_vardata))
+		{
+			config_error("%s:%i: secret block name '%s' contains invalid characters or is too long. "
+			             "Only letters, numbers, underscore and hyphen are allowed.",
+			             ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+	}
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "password"))
+		{
+			has_password = 1;
+			CheckNull(cep);
+			if (!valid_secret_password(cep->ce_vardata, &err))
+			{
+				config_error("%s:%d: secret::password does not meet password complexity requirements: %s",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum, err);
+				errors++;
+			}
+		} else
+		if (!strcmp(cep->ce_varname, "password-file"))
+		{
+			char *str;
+			has_password_file = 1;
+			CheckNull(cep);
+			str = _conf_secret_read_password(cep->ce_vardata);
+			if (!str)
+			{
+				config_error("%s:%d: secret::password-file: error reading password from file, see error from above.",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+			safe_free_sensitive(str);
+		} else
+		if (!strcmp(cep->ce_varname, "password-url"))
+		{
+			config_error("%s:%d: secret::password-url is not supported yet in this UnrealIRCd version.",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++;
+		} else
+		{
+			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				"secret", cep->ce_varname);
+			errors++;
+			continue;
+		}
+		if (cep->ce_entries)
+		{
+			config_error("%s:%d: secret::%s does not support sub-options (%s)",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				cep->ce_varname, cep->ce_entries->ce_varname);
+			errors++;
+		}
+	}
+
+	if (!has_password && !has_password_file)
+	{
+		config_error("%s:%d: secret { } block must contain 1 of: password OR password-file",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+
+	return errors;
+}
+
+/* NOTE: contrary to all other _conf* stuff, this one actually runs during config_test,
+ * so during the early CONFIG TEST stage rather than CONFIG RUN.
+ * This so all secret { } block configuration is available already during TEST/POSTTEST
+ * stage for modules, so they can check if the password is correct or not.
+ */
+int _conf_secret(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	Secret *s;
+	Secret *existing;
+
+	s = safe_alloc(sizeof(Secret));
+	safe_strdup(s->name, ce->ce_vardata);
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "password"))
+		{
+			safe_strdup_sensitive(s->password, cep->ce_vardata);
+			destroy_string(cep->ce_vardata); /* destroy the original */
+		} else
+		if (!strcmp(cep->ce_varname, "password-file"))
+		{
+			s->password = _conf_secret_read_password(cep->ce_vardata);
+		}
+	}
+
+	/* This may happen if we run twice, due to destroy_string() earlier: */
+	if (BadPtr(s->password))
+	{
+		free_secret(s);
+		return 1;
+	}
+
+	/* If there is an existing secret { } block with this name in memory
+	 * and it has a different password, then free that secret block
+	 */
+	if ((existing = find_secret(s->name)))
+	{
+		if (!strcmp(s->password, existing->password))
+		{
+			free_secret(s);
+			return 1;
+		}
+		/* passwords differ, so free the old existing one,
+		 * including purging the cache for it.
+		 */
+		DelListItem(existing, secrets);
+		free_secret(existing);
+	}
+	AddListItem(s, secrets);
 	return 1;
 }
 

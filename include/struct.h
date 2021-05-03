@@ -109,6 +109,7 @@ typedef struct ConfigItem_blacklist_module ConfigItem_blacklist_module;
 typedef struct ConfigItem_help ConfigItem_help;
 typedef struct ConfigItem_offchans ConfigItem_offchans;
 typedef struct SecurityGroup SecurityGroup;
+typedef struct Secret Secret;
 typedef struct ListStruct ListStruct;
 typedef struct ListStructPrio ListStructPrio;
 
@@ -861,6 +862,91 @@ struct SWhois {
 typedef void (*CmdFunc)(Client *client, MessageTag *mtags, int parc, char *parv[]);
 typedef void (*AliasCmdFunc)(Client *client, MessageTag *mtags, int parc, char *parv[], char *cmd);
 typedef void (*OverrideCmdFunc)(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, char *parv[]);
+
+#include <sodium.h>
+
+/* This is the 'chunk size', the size of encryption blocks.
+ * We choose 4K here since that is a decent amount as of 2021 and
+ * more would not benefit performance anyway.
+ * Note that you cannot change this value easily afterwards
+ * (you cannot read files with a different chunk size).
+ */
+#define UNREALDB_CRYPT_FILE_CHUNK_SIZE 4096
+
+/** The salt length. Don't change. */
+#define UNREALDB_SALT_LEN 16
+
+/** Database modes of operation (read or write) */
+typedef enum UnrealDBMode {
+	UNREALDB_MODE_READ = 0,
+	UNREALDB_MODE_WRITE = 1
+} UnrealDBMode;
+
+typedef enum UnrealDBCipher {
+	UNREALDB_CIPHER_XCHACHA20 = 0x0001
+} UnrealDBCipher;
+
+typedef enum UnrealDBKDF {
+	UNREALDB_KDF_ARGON2ID = 0x0001
+} UnrealDBKDF;
+
+/** Database configuration for a particular file */
+typedef struct UnrealDBConfig {
+	uint16_t kdf;					/**< Key derivation function (always 0x01) */
+	uint16_t t_cost;				/**< Time cost (number of rounds) */
+	uint16_t m_cost; 				/**< Memory cost (in number of bitshifts, eg 15 means 1<<15=32M) */
+	uint16_t p_cost;				/**< Parallel cost (number of concurrent threads) */
+	uint16_t saltlen;				/**< Length of the salt (normally UNREALDB_SALT_LEN) */
+	char *salt;					/**< Salt */
+	uint16_t cipher;				/**< Encryption cipher (always 0x01) */
+	uint16_t keylen;				/**< Key length */
+	char *key;					/**< The key used for encryption/decryption */
+} UnrealDBConfig;
+
+typedef enum UnrealDBError {
+	UNREALDB_ERROR_SUCCESS = 0,			/**< Success, not an error */
+	UNREALDB_ERROR_FILENOTFOUND = 1,		/**< File does not exist */
+	UNREALDB_ERROR_CRYPTED = 2,			/**< File is crypted but no password provided */
+	UNREALDB_ERROR_NOTCRYPTED = 3,			/**< File is not crypted and a password was provided */
+	UNREALDB_ERROR_HEADER = 4,			/**< Header is corrupt, invalid or unknown format */
+	UNREALDB_ERROR_SECRET = 5,			/**< Invalid secret { } block provided - either does not exist or does not meet requirements */
+	UNREALDB_ERROR_PASSWORD = 6,			/**< Invalid password provided */
+	UNREALDB_ERROR_IO = 7,				/**< I/O error */
+	UNREALDB_ERROR_API = 8,				/**< API call violation, eg requesting to write on a file opened for reading */
+	UNREALDB_ERROR_INTERNAL = 9,			/**< Internal error, eg crypto routine returned something unexpected */
+} UnrealDBError;
+
+/** Database handle.
+ * This is returned by unrealdb_open() and used by all other unrealdb_* functions.
+ */
+typedef struct UnrealDB {
+	FILE *fd;					/**< File descriptor */
+	UnrealDBMode mode;				/**< UNREALDB_MODE_READ / UNREALDB_MODE_WRITE */
+	int crypted;					/**< Are we doing any encryption or just plaintext? */
+	uint64_t creationtime;				/**< When this file was created/updates */
+	crypto_secretstream_xchacha20poly1305_state st; /**< Internal state for crypto engine */
+	char buf[UNREALDB_CRYPT_FILE_CHUNK_SIZE];	/**< Buffer used for reading/writing */
+	int buflen;					/**< Length of current data in buffer */
+	UnrealDBError error_code;			/**< Last error code. Whenever this happens we will set this, never overwrite, and block further I/O */
+	char *error_string;				/**< Error string upon failure */
+	UnrealDBConfig *config;				/**< Config */
+} UnrealDB;
+
+/** Used for speeding up reading/writing of DBs (so we don't have to run argon2 repeatedly) */
+typedef struct SecretCache SecretCache;
+struct SecretCache {
+	SecretCache *prev, *next;
+	UnrealDBConfig *config;
+	time_t cache_hit;
+};
+
+/** Used for storing secret { } blocks */
+struct Secret {
+	Secret *prev, *next;
+	char *name;
+	char *password;
+	SecretCache *cache;
+};
 
 
 /* tkl:

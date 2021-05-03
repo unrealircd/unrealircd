@@ -28,6 +28,7 @@ ID_Copyright("(C) Carsten Munk 2001");
 MODVAR Event *events = NULL;
 
 extern EVENT(unrealdns_removeoldrecords);
+extern EVENT(unrealdb_expire_secret_cache);
 
 /** Add an event, a function that will run at regular intervals.
  * @param module	Module that this event belongs to
@@ -241,4 +242,5 @@ void SetupEvents(void)
 	EventAdd(NULL, "handshake_timeout", handshake_timeout, NULL, 1000, 0);
 	EventAdd(NULL, "try_connections", try_connections, NULL, 2000, 0);
 	EventAdd(NULL, "tls_check_expiry", tls_check_expiry, NULL, (86400/2)*1000, 0);
+	EventAdd(NULL, "unrealdb_expire_secret_cache", unrealdb_expire_secret_cache, NULL, 61000, 0);
 }
