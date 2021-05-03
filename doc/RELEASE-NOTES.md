@@ -1,10 +1,31 @@
-UnrealIRCd 5.0.9.1 Release Notes
+UnrealIRCd 5.0.10-git Release Notes
 ===============================
 
-Note: the only change between 5.0.9 and 5.0.9.1 is:
+This is the current development version (git) of UnrealIRCd.
+
+Do *NOT* run on production servers, current code is unstable
+and may cause file corruption.
+
+Reminder: UnrealIRCd 4 is no longer supported
+----------------------------------------------
+
+UnrealIRCd 4.x is [no longer supported](https://www.unrealircd.org/docs/UnrealIRCd_4_EOL).
+Admins must upgrade to UnrealIRCd 5.
+
+Upgrading from 4.x to 5.x?
+Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5).
+Or, at the very least, check out
+[Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
+
+
+UnrealIRCd 5.0.9.1
+-------------------
+The only change between 5.0.9 and 5.0.9.1 is:
 * Build improvements on *NIX (faster compiling and lower memory requirements)
 * Windows version is unchanged and still 5.0.9
 
+UnrealIRCd 5.0.9
+-----------------
 The 5.0.9 release comes with several nice feature enhancements. There are no major bug fixes.
 
 Enhancements:
@@ -52,18 +73,6 @@ change this setting since it has a good default.
 That is, when in "auto" mode, which is like for 99% of the users.
 Note that the system may still limit the actual number of connections
 to a lower value, epending on the value of ```ulimit -n -H```.
-
-Reminder: UnrealIRCd 4 is no longer supported
-----------------------------------------------
-
-UnrealIRCd 4.x is [no longer supported](https://www.unrealircd.org/docs/UnrealIRCd_4_EOL).
-Admins must upgrade to UnrealIRCd 5.
-
-Upgrading from 4.x to 5.x?
-Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5).
-Or, at the very least, check out
-[Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
-
 
 UnrealIRCd 5.0.8
 -----------------
