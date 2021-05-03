@@ -10,13 +10,7 @@ Reminder: UnrealIRCd 4 is no longer supported
 ----------------------------------------------
 
 UnrealIRCd 4.x is [no longer supported](https://www.unrealircd.org/docs/UnrealIRCd_4_EOL).
-Admins must upgrade to UnrealIRCd 5.
-
-Upgrading from 4.x to 5.x?
-Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5).
-Or, at the very least, check out
-[Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
-
+Admins must [upgrade to UnrealIRCd 5](https://www.unrealircd.org/docs/Upgrading_from_4.x).
 
 UnrealIRCd 5.0.9.1
 -------------------
