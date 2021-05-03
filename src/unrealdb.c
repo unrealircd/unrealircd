@@ -279,6 +279,9 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 			c->config->key = safe_alloc_sensitive(c->config->keylen);
 		}
 
+		if (c->config->kdf == 0)
+			abort();
+
 		/* Write KDF and cipher parameters */
 		if ((fwrite(&c->config->kdf, 1, sizeof(c->config->kdf), c->fd) != sizeof(c->config->kdf)) ||
 		    (fwrite(&c->config->t_cost, 1, sizeof(c->config->t_cost), c->fd) != sizeof(c->config->t_cost)) ||
@@ -959,10 +962,15 @@ UnrealDBConfig *unrealdb_copy_config(UnrealDBConfig *src)
 {
 	UnrealDBConfig *dst = safe_alloc(sizeof(UnrealDBConfig));
 
+	dst->kdf = src->kdf;
+	dst->t_cost = src->t_cost;
+	dst->m_cost = src->m_cost;
+	dst->p_cost = src->p_cost;
 	dst->saltlen = src->saltlen;
 	dst->salt = safe_alloc(dst->saltlen);
 	memcpy(dst->salt, src->salt, dst->saltlen);
 
+	dst->cipher = src->cipher;
 	dst->keylen = src->keylen;
 	if (dst->keylen)
 	{
@@ -970,9 +978,6 @@ UnrealDBConfig *unrealdb_copy_config(UnrealDBConfig *src)
 		memcpy(dst->key, src->key, dst->keylen);
 	}
 
-	dst->t_cost = src->t_cost;
-	dst->m_cost = src->m_cost;
-	dst->p_cost = src->p_cost;
 	return dst;
 }
 
