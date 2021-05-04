@@ -469,6 +469,7 @@ int unrealdb_close(UnrealDB *c)
 			if (fwrite(buf_out, 1, out_len, c->fd) != out_len)
 			{
 				/* Final write failed, error condition */
+				unrealdb_set_error(c, UNREALDB_ERROR_IO, "Write error: %s", strerror(errno));
 				fclose(c->fd);
 				unrealdb_free(c);
 				return 0;
@@ -479,6 +480,7 @@ int unrealdb_close(UnrealDB *c)
 	if (fclose(c->fd) != 0)
 	{
 		/* Final close failed, error condition */
+		unrealdb_set_error(c, UNREALDB_ERROR_IO, "Write error: %s", strerror(errno));
 		unrealdb_free(c);
 		return 0;
 	}
@@ -547,7 +549,14 @@ static int unrealdb_write(UnrealDB *c, void *buf, int len)
 	}
 
 	if (!c->crypted)
-		return fwrite(buf, 1, len, c->fd);
+	{
+		if (fwrite(buf, 1, len, c->fd) != len)
+		{
+			unrealdb_set_error(c, UNREALDB_ERROR_IO, "Write error: %s", strerror(errno));
+			return 0;
+		}
+		return 1;
+	}
 
 	do {
 		if (c->buflen + len < UNREALDB_CRYPT_FILE_CHUNK_SIZE)
