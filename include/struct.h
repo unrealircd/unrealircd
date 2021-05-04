@@ -876,7 +876,9 @@ typedef void (*OverrideCmdFunc)(CommandOverride *ovr, Client *client, MessageTag
 /** The salt length. Don't change. */
 #define UNREALDB_SALT_LEN 16
 
-/** Database modes of operation (read or write) */
+/** Database modes of operation (read or write)
+ * @ingroup UnrealDBFunctions
+ */
 typedef enum UnrealDBMode {
 	UNREALDB_MODE_READ = 0,
 	UNREALDB_MODE_WRITE = 1
@@ -903,6 +905,9 @@ typedef struct UnrealDBConfig {
 	char *key;					/**< The key used for encryption/decryption */
 } UnrealDBConfig;
 
+/** Error codes returned by @ref UnrealDBFunctions
+ * @ingroup UnrealDBFunctions
+ */
 typedef enum UnrealDBError {
 	UNREALDB_ERROR_SUCCESS = 0,			/**< Success, not an error */
 	UNREALDB_ERROR_FILENOTFOUND = 1,		/**< File does not exist */
@@ -916,8 +921,9 @@ typedef enum UnrealDBError {
 	UNREALDB_ERROR_INTERNAL = 9,			/**< Internal error, eg crypto routine returned something unexpected */
 } UnrealDBError;
 
-/** Database handle.
- * This is returned by unrealdb_open() and used by all other unrealdb_* functions.
+/** Database handle
+ * This is returned by unrealdb_open() and used by all other @ref UnrealDBFunctions
+ * @ingroup UnrealDBFunctions
  */
 typedef struct UnrealDB {
 	FILE *fd;					/**< File descriptor */

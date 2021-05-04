@@ -265,7 +265,7 @@ int write_channeldb(void)
 		return 0;
 	}
 
-	W_SAFE(unrealdb_write_data(db, &channeldb_version, sizeof(channeldb_version)));
+	W_SAFE(unrealdb_write_int32(db, channeldb_version));
 
 	/* First, count +P channels and write the count to the database */
 	for (channel = channels; channel; channel=channel->nextch)
@@ -376,14 +376,14 @@ int read_listmode(UnrealDB *db, Ban **lst)
 	int i;
 	Ban *e = NULL;
 
-	R_SAFE(unrealdb_read_data(db, &total, sizeof(total)));
+	R_SAFE(unrealdb_read_int32(db, &total));
 
 	for (i = 0; i < total; i++)
 	{
 		e = safe_alloc(sizeof(Ban));
 		R_SAFE(unrealdb_read_str(db, &e->banstr));
 		R_SAFE(unrealdb_read_str(db, &e->who));
-		R_SAFE(unrealdb_read_data(db, &when, sizeof(when)));
+		R_SAFE(unrealdb_read_int64(db, &when));
 		e->when = when;
 		e->next = *lst;
 		*lst = e;
@@ -464,7 +464,7 @@ int read_channeldb(void)
 		}
 	}
 
-	R_SAFE(unrealdb_read_data(db, &version, sizeof(version)));
+	R_SAFE(unrealdb_read_int32(db, &version));
 	if (version > channeldb_version)
 	{
 		config_warn("[channeldb] Database '%s' has a wrong version: expected it to be <= %u but got %u instead", cfg.database, channeldb_version, version);
@@ -472,7 +472,7 @@ int read_channeldb(void)
 		return 0;
 	}
 
-	R_SAFE(unrealdb_read_data(db, &count, sizeof(count)));
+	R_SAFE(unrealdb_read_int64(db, &count));
 
 	for (i=1; i <= count; i++)
 	{
@@ -487,17 +487,17 @@ int read_channeldb(void)
 		mode_lock = NULL;
 		
 		Channel *channel;
-		R_SAFE(unrealdb_read_data(db, &magic, sizeof(magic)));
+		R_SAFE(unrealdb_read_int32(db, &magic));
 		if (magic != MAGIC_CHANNEL_START)
 		{
 			config_error("[channeldb] Corrupt database (%s) - channel magic start is 0x%x. Further reading aborted.", cfg.database, magic);
 			break;
 		}
 		R_SAFE(unrealdb_read_str(db, &chname));
-		R_SAFE(unrealdb_read_data(db, &creationtime, sizeof(creationtime)));
+		R_SAFE(unrealdb_read_int64(db, &creationtime));
 		R_SAFE(unrealdb_read_str(db, &topic));
 		R_SAFE(unrealdb_read_str(db, &topic_nick));
-		R_SAFE(unrealdb_read_data(db, &topic_time, sizeof(topic_time)));
+		R_SAFE(unrealdb_read_int64(db, &topic_time));
 		R_SAFE(unrealdb_read_str(db, &modes1));
 		R_SAFE(unrealdb_read_str(db, &modes2));
 		R_SAFE(unrealdb_read_str(db, &mode_lock));
@@ -512,7 +512,7 @@ int read_channeldb(void)
 		R_SAFE(read_listmode(db, &channel->banlist));
 		R_SAFE(read_listmode(db, &channel->exlist));
 		R_SAFE(read_listmode(db, &channel->invexlist));
-		R_SAFE(unrealdb_read_data(db, &magic, sizeof(magic)));
+		R_SAFE(unrealdb_read_int32(db, &magic));
 		FreeChannelEntry();
 		added++;
 		if (magic != MAGIC_CHANNEL_END)

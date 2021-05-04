@@ -18,18 +18,27 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "unrealircd.h"
 
 /** @file
- * @brief UnrealDB API
+ * @brief Unreal database API - see @ref UnrealDBFunctions
+ */
+
+/**
+ * Read and write to database files - encrypted and unencrypted.
  * This provides functions for dealing with (encrypted) database files.
- * Under the hood it uses libsodium's XChaCha20:
- * https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xchacha20
+ * - File format: https://www.unrealircd.org/docs/Dev:UnrealDB
+ * - KDF: Argon2: https://en.wikipedia.org/wiki/Argon2
+ * - Cipher: XChaCha20 from libsodium: https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xchacha20
+ * @defgroup UnrealDBFunctions Database functions
+ */
+
+/* Benchmarking results:
  * On standard hardware as of 2021 speeds of 150-200 megabytes per second
  * are achieved realisticly for both reading and writing encrypted
  * database files. Of course, YMMV, depending on record sizes, CPU,
  * and I/O speeds of the underlying hardware.
  */
-#include "unrealircd.h"
 
 /* In UnrealIRCd 5.0.10 we don't write the v1 header yet for unencrypted
  * database files, this so users using unencrypted can easily downgrade
@@ -57,27 +66,6 @@ static void unrealdb_add_to_secret_cache(Secret *secr, UnrealDBConfig *cfg);
 
 UnrealDBError unrealdb_last_error_code;
 static char *unrealdb_last_error_string = NULL;
-
-/** Get the error string for last failed unrealdb operation.
- * @returns The error string
- * @note Use the return value only for displaying of errors
- *       to the end-user.
- *       For programmatically checking of error conditions
- *       use unrealdb_get_error_code() instead.
- *       
- */
-char *unrealdb_get_error_string(void)
-{
-	return unrealdb_last_error_string;
-}
-
-/** Get the error code for last failed unrealdb operation
- * @returns An UNREAL_DB_ERROR_*, enum of type UnrealDBError.
- */
-UnrealDBError unrealdb_get_error_code(void)
-{
-	return unrealdb_last_error_code;
-}
 
 /** Set error condition on unrealdb 'c' (internal function).
  * @param c		The unrealdb file handle
@@ -129,6 +117,31 @@ static int unrealdb_kdf(UnrealDB *c, Secret *secr)
 		return 0;
 	}
 	return 1;
+}
+
+/**
+ * @addtogroup UnrealDBFunctions
+ * @{
+ */
+
+/** Get the error string for last failed unrealdb operation.
+ * @returns The error string
+ * @note Use the return value only for displaying of errors
+ *       to the end-user.
+ *       For programmatically checking of error conditions
+ *       use unrealdb_get_error_code() instead.
+ */
+char *unrealdb_get_error_string(void)
+{
+	return unrealdb_last_error_string;
+}
+
+/** Get the error code for last failed unrealdb operation
+ * @returns An UNREAL_DB_ERROR_*
+ */
+UnrealDBError unrealdb_get_error_code(void)
+{
+	return unrealdb_last_error_code;
 }
 
 /** Open an unrealdb file.
@@ -452,6 +465,8 @@ unrealdb_open_fail:
  * @param c	The struct pointing to an unrealdb file
  * @returns 1 if the final close was graceful and 0 if not (eg: out of disk space on final flush).
  *          In all cases the file handle is closed and 'c' is freed.
+ * @note Upon error (NULL return value) you can call unrealdb_get_error_code() and
+ *       unrealdb_get_error_string() to see the actual error.
  */
 int unrealdb_close(UnrealDB *c)
 {
@@ -526,13 +541,18 @@ char *unrealdb_test_db(const char *filename, char *secret_block)
 	return NULL;
 }
 
+/** @} */
+
 /** Write to an unrealdb file.
  * This code uses extra buffering to avoid writing small records
  * and wasting for example a 32 bytes encryption block for a 8 byte write request.
  * @param c		Database file open for writing
  * @param buf		The data to be written (plaintext)
  * @param len		The length of the data to be written
- * @note This is the internal function, api users must use unrealdb_read_data() instead.
+ * @note This is the internal function, api users must use one of the
+ *       following functions instead:
+ *       unrealdb_write_int64(), unrealdb_write_int32(), unrealdb_write_int16(),
+ *       unrealdb_write_char(), unrealdb_write_str().
  */
 static int unrealdb_write(UnrealDB *c, void *buf, int len)
 {
@@ -599,15 +619,10 @@ static int unrealdb_write(UnrealDB *c, void *buf, int len)
 	return 1;
 }
 
-/** Write data to an unrealdb file.
- * @param c		Database file open for writing
- * @param buf		The data to be written (plaintext)
- * @param len		The length of the data to be written
+/**
+ * @addtogroup UnrealDBFunctions
+ * @{
  */
-int unrealdb_write_data(UnrealDB *c, void *buf, int len)
-{
-	return unrealdb_write(c, buf, len);
-}
 
 /** Write a string to a database file.
  * @param c	UnrealDB file struct
@@ -673,13 +688,18 @@ int unrealdb_write_char(UnrealDB *c, char t)
 	return unrealdb_write(c, &t, sizeof(t));
 }
 
+/** @} */
+
 /** Read from an UnrealDB file.
  * This code deals with buffering, block reading, etc. so the caller doesn't
  * have to worry about that.
  * @param c		Database file open for reading
  * @param buf		The data to be read (will be plaintext)
  * @param len		The length of the data to be read
- * @note This is the internal function, api users must use unrealdb_read_data() instead.
+ * @note This is the internal function, api users must use one of the
+ *       following functions instead:
+ *       unrealdb_read_int64(), unrealdb_read_int32(), unrealdb_read_int16(),
+ *       unrealdb_read_char(), unrealdb_read_str().
  */
 static int unrealdb_read(UnrealDB *c, void *buf, int len)
 {
@@ -764,15 +784,10 @@ static int unrealdb_read(UnrealDB *c, void *buf, int len)
 	return 0;
 }
 
-/** Read data from an UnrealDB file.
- * @param c		Database file open for reading
- * @param buf		The data to be read (will be plaintext)
- * @param len		The length of the data to be read
+/**
+ * @addtogroup UnrealDBFunctions
+ * @{
  */
-int unrealdb_read_data(UnrealDB *c, void *buf, int len)
-{
-	return unrealdb_read(c, buf, len);
-}
 
 /** Read a 64 bit integer from a database file.
  * @param c	UnrealDB file struct
@@ -868,6 +883,8 @@ int unrealdb_read_char(UnrealDB *c, char *t)
 		return 0;
 	return 1;
 }
+
+/** @} */
 
 void fatal_error(FORMAT_STRING(const char *pattern), ...)
 {
@@ -981,6 +998,8 @@ void unrealdb_test(void)
 	unrealdb_test_speed(NULL);
 }
 
+/** TODO: document and implement
+ */
 char *unrealdb_test_secret(char *name)
 {
 	// FIXME: check if exists, if not then return an error, with a nice FAQ reference etc.
