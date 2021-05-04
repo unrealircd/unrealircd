@@ -689,7 +689,16 @@ static int unrealdb_read(UnrealDB *c, void *buf, int len)
 	}
 
 	if (!c->crypted)
-		return fread(buf, 1, len, c->fd);
+	{
+		rlen = fread(buf, 1, len, c->fd);
+		if (rlen < len)
+		{
+			unrealdb_set_error(c, UNREALDB_ERROR_IO, "Short read - premature end of file (want:%d, got:%d bytes)",
+				len, (int)rlen);
+			return 0;
+		}
+		return 1;
+	}
 
 	/* First, fill 'buf' up with what we have */
 	if (c->buflen)
