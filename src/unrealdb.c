@@ -234,7 +234,7 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 	secr = find_secret(secret_block);
 	if (!secr)
 	{
-		unrealdb_set_error(c, UNREALDB_ERROR_SECRET, "Secret block '%s' not found or invalid", secr->name);
+		unrealdb_set_error(c, UNREALDB_ERROR_SECRET, "Secret block '%s' not found or invalid", secret_block);
 		goto unrealdb_open_fail;
 	}
 
@@ -378,6 +378,11 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 		{
 			unrealdb_set_error(c, UNREALDB_ERROR_HEADER, "Header contains unknown cipher 0x%x", (int)c->config->cipher);
 			goto unrealdb_open_fail;
+		}
+		if (c->config->keylen > 1024)
+		{
+			unrealdb_set_error(c, UNREALDB_ERROR_HEADER, "Header is corrupt (keylen=%d)", (int)c->config->keylen);
+			goto unrealdb_open_fail; /* Something must be wrong, this makes no sense. */
 		}
 		c->config->key = safe_alloc_sensitive(c->config->keylen);
 

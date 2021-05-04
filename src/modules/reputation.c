@@ -522,6 +522,7 @@ int reputation_load_db_new(UnrealDB *db)
 		e->score = score;
 		e->last_seen = last_seen;
 		add_reputation_entry(e);
+		safe_free(ip);
 	}
 	unrealdb_close(db);
 #ifdef BENCHMARK
