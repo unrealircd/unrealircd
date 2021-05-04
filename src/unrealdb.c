@@ -722,14 +722,20 @@ static int unrealdb_read(UnrealDB *c, void *buf, int len)
 			return 0;
 		}
 
-		if (len > UNREALDB_CRYPT_FILE_CHUNK_SIZE)
+		/* This should be impossible as this is guaranteed not to happen by libsodium */
+		if (out_len > UNREALDB_CRYPT_FILE_CHUNK_SIZE)
+			abort();
+
+		if (len > out_len)
 		{
-			memcpy(buf, c->buf, UNREALDB_CRYPT_FILE_CHUNK_SIZE);
-			buf += UNREALDB_CRYPT_FILE_CHUNK_SIZE;
-			len -= UNREALDB_CRYPT_FILE_CHUNK_SIZE;
+			/* We eat a big block, but want more in next iteration of the loop */
+			memcpy(buf, c->buf, out_len);
+			buf += out_len;
+			len -= out_len;
 		} else {
+			/* This is the only (or last) block we need, we are satisfied */
 			memcpy(buf, c->buf, len);
-			c->buflen = UNREALDB_CRYPT_FILE_CHUNK_SIZE - len;
+			c->buflen = out_len - len;
 			if (c->buflen > 0)
 				memmove(c->buf, c->buf+len, c->buflen);
 			return 1; /* Done */
