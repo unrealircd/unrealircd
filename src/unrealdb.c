@@ -641,19 +641,23 @@ static int unrealdb_write(UnrealDB *c, void *wbuf, int len)
  */
 int unrealdb_write_str(UnrealDB *c, char *x)
 {
-	int stringlen;
 	uint16_t len;
 
 	/* First, make sure the string is not too large (would be very unusual, though) */
-	stringlen = strlen(x);
-	if (stringlen >= 0xffff)
+	if (x)
 	{
-		unrealdb_set_error(c, UNREALDB_ERROR_API,
-		                   "unrealdb_write_str(): string has length %d, while maximum allowed is 65534",
-		                   stringlen);
-		return 0;
+		int stringlen = strlen(x);
+		if (stringlen >= 0xffff)
+		{
+			unrealdb_set_error(c, UNREALDB_ERROR_API,
+					   "unrealdb_write_str(): string has length %d, while maximum allowed is 65534",
+					   stringlen);
+			return 0;
+		}
+		len = stringlen;
+	} else {
+		len = 0xffff;
 	}
-	len = x ? stringlen : 0xffff;
 
 	/* Write length to db as 16 bit integer */
 	if (!unrealdb_write_int16(c, len))
