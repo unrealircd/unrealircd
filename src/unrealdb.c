@@ -547,17 +547,18 @@ char *unrealdb_test_db(const char *filename, char *secret_block)
  * This code uses extra buffering to avoid writing small records
  * and wasting for example a 32 bytes encryption block for a 8 byte write request.
  * @param c		Database file open for writing
- * @param buf		The data to be written (plaintext)
+ * @param wbuf		The data to be written (plaintext)
  * @param len		The length of the data to be written
  * @note This is the internal function, api users must use one of the
  *       following functions instead:
  *       unrealdb_write_int64(), unrealdb_write_int32(), unrealdb_write_int16(),
  *       unrealdb_write_char(), unrealdb_write_str().
  */
-static int unrealdb_write(UnrealDB *c, void *buf, int len)
+static int unrealdb_write(UnrealDB *c, void *wbuf, int len)
 {
 	char buf_out[UNREALDB_CRYPT_FILE_CHUNK_SIZE + crypto_secretstream_xchacha20poly1305_ABYTES];
 	unsigned long long out_len;
+	char *buf = wbuf;
 
 	if (c->error_code)
 		return 0;
@@ -694,19 +695,20 @@ int unrealdb_write_char(UnrealDB *c, char t)
  * This code deals with buffering, block reading, etc. so the caller doesn't
  * have to worry about that.
  * @param c		Database file open for reading
- * @param buf		The data to be read (will be plaintext)
+ * @param rbuf		The data to be read (will be plaintext)
  * @param len		The length of the data to be read
  * @note This is the internal function, api users must use one of the
  *       following functions instead:
  *       unrealdb_read_int64(), unrealdb_read_int32(), unrealdb_read_int16(),
  *       unrealdb_read_char(), unrealdb_read_str().
  */
-static int unrealdb_read(UnrealDB *c, void *buf, int len)
+static int unrealdb_read(UnrealDB *c, void *rbuf, int len)
 {
 	char buf_in[UNREALDB_CRYPT_FILE_CHUNK_SIZE + crypto_secretstream_xchacha20poly1305_ABYTES];
 	unsigned long long out_len;
 	unsigned char tag;
 	size_t rlen;
+	char *buf = rbuf;
 
 	if (c->error_code)
 		return 0;

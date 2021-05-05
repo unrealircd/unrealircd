@@ -173,7 +173,7 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/DISPATCH.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ \
  SRC/API-CLICAP.OBJ SRC/API-MESSAGETAG.OBJ SRC/API-HISTORY-BACKEND.OBJ \
  SRC/API-EXTBAN.OBJ SRC/API-EFUNCTIONS.OBJ SRC/CRYPT_BLOWFISH.OBJ \
- SRC/OPERCLASS.OBJ SRC/UPDCONF.OBJ SRC/CRASHREPORT.OBJ \
+ SRC/OPERCLASS.OBJ SRC/UPDCONF.OBJ SRC/CRASHREPORT.OBJ SRC/UNREALDB.OBJ \
  SRC/OPENSSL_HOSTNAME_VALIDATION.OBJ \
  SRC/UTF8.OBJ $(CURLOBJ)
 
@@ -541,6 +541,12 @@ src/operclass.obj: src/operclass.c $(INCLUDES) ./include/dbuf.h
 
 src/updconf.obj: src/updconf.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/updconf.c
+
+src/crashreport.obj: src/crashreport.c $(INCLUDES) ./include/dbuf.h
+        $(CC) $(CFLAGS) src/crashreport.c
+
+src/unrealdb.obj: src/unrealdb.c $(INCLUDES) ./include/dbuf.h
+        $(CC) $(CFLAGS) src/unrealdb.c
 
 src/utf8.obj: src/utf8.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/utf8.c
