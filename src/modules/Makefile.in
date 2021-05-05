@@ -73,7 +73,8 @@ R_MODULES= \
 	echo-message.so userip-tag.so userhost-tag.so \
 	typing-indicator.so \
 	ident_lookup.so history.so \
-	targetfloodprot.so clienttagdeny.so
+	targetfloodprot.so clienttagdeny.so \
+	display-name.so \
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -639,6 +640,10 @@ targetfloodprot.so: targetfloodprot.c $(INCLUDES)
 clienttagdeny.so: clienttagdeny.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o clienttagdeny.so clienttagdeny.c
+
+display-name.so: display-name.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o display-name.so display-name.c
 
 #############################################################################
 # capabilities
