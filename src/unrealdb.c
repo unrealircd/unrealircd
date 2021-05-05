@@ -60,6 +60,11 @@
 /** Default 'parallelism cost' for Argon2id. */
 #define UNREALDB_ARGON2_DEFAULT_PARALLELISM_COST      2
 
+#ifdef _WIN32
+/* Ignore this warning on Windows as it is a false positive */
+#pragma warning(disable : 6029)
+#endif
+
 /* Forward declarations - only used for internal (static) functions, of course */
 static SecretCache *find_secret_cache(Secret *secr, UnrealDBConfig *cfg);
 static void unrealdb_add_to_secret_cache(Secret *secr, UnrealDBConfig *cfg);
