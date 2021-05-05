@@ -72,6 +72,7 @@ Source: "src\modules\third\*.dll"; DestDir: "{app}\modules\third"; Flags: ignore
 
 Source: "c:\dev\unrealircd-5-libs\pcre2\bin\pcre*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "c:\dev\unrealircd-5-libs\argon2\vs2015\build\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-5-libs\libsodium\bin\x64\Release\v142\dynamic\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "c:\dev\unrealircd-5-libs\c-ares\msvc\cares\dll-release\cares.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "c:\dev\unrealircd-5-libs\libressl\bin\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "c:\dev\unrealircd-5-libs\libressl\bin\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
