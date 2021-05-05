@@ -641,16 +641,31 @@ static int unrealdb_write(UnrealDB *c, void *wbuf, int len)
  */
 int unrealdb_write_str(UnrealDB *c, char *x)
 {
+	int stringlen;
 	uint16_t len;
 
-	len = x ? strlen(x) : 0xffff;
-	if (!unrealdb_write(c, &len, sizeof(len)))
+	/* First, make sure the string is not too large (would be very unusual, though) */
+	stringlen = strlen(x);
+	if (stringlen >= 0xffff)
+	{
+		unrealdb_set_error(c, UNREALDB_ERROR_API,
+		                   "unrealdb_write_str(): string has length %d, while maximum allowed is 65534",
+		                   stringlen);
 		return 0;
+	}
+	len = x ? stringlen : 0xffff;
+
+	/* Write length to db as 16 bit integer */
+	if (!unrealdb_write_int16(c, len))
+		return 0;
+
+	/* Then, write the actual string (if any), without NUL terminator. */
 	if ((len > 0) && (len < 0xffff))
 	{
 		if (!unrealdb_write(c, x, len))
 			return 0;
 	}
+
 	return 1;
 }
 
@@ -661,6 +676,9 @@ int unrealdb_write_str(UnrealDB *c, char *x)
  */
 int unrealdb_write_int64(UnrealDB *c, uint64_t t)
 {
+#ifdef NATIVE_BIG_ENDIAN
+	t = bswap_64(t);
+#endif
 	return unrealdb_write(c, &t, sizeof(t));
 }
 
@@ -671,6 +689,9 @@ int unrealdb_write_int64(UnrealDB *c, uint64_t t)
  */
 int unrealdb_write_int32(UnrealDB *c, uint32_t t)
 {
+#ifdef NATIVE_BIG_ENDIAN
+	t = bswap_32(t);
+#endif
 	return unrealdb_write(c, &t, sizeof(t));
 }
 
@@ -681,6 +702,9 @@ int unrealdb_write_int32(UnrealDB *c, uint32_t t)
  */
 int unrealdb_write_int16(UnrealDB *c, uint16_t t)
 {
+#ifdef NATIVE_BIG_ENDIAN
+	t = bswap_16(t);
+#endif
 	return unrealdb_write(c, &t, sizeof(t));
 }
 
@@ -805,6 +829,9 @@ int unrealdb_read_int64(UnrealDB *c, uint64_t *t)
 {
 	if (!unrealdb_read(c, t, sizeof(uint64_t)))
 		return 0;
+#ifdef NATIVE_BIG_ENDIAN
+	*t = bswap_64(*t);
+#endif
 	return 1;
 }
 
@@ -817,6 +844,9 @@ int unrealdb_read_int32(UnrealDB *c, uint32_t *t)
 {
 	if (!unrealdb_read(c, t, sizeof(uint32_t)))
 		return 0;
+#ifdef NATIVE_BIG_ENDIAN
+	*t = bswap_32(*t);
+#endif
 	return 1;
 }
 
@@ -829,6 +859,9 @@ int unrealdb_read_int16(UnrealDB *c, uint16_t *t)
 {
 	if (!unrealdb_read(c, t, sizeof(uint16_t)))
 		return 0;
+#ifdef NATIVE_BIG_ENDIAN
+	*t = bswap_16(*t);
+#endif
 	return 1;
 }
 
@@ -848,7 +881,7 @@ int unrealdb_read_str(UnrealDB *c, char **x)
 
 	*x = NULL;
 
-	if (!unrealdb_read(c, &len, sizeof(len)))
+	if (!unrealdb_read_int16(c, &len))
 		return 0;
 
 	if (len == 0xffff)

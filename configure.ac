@@ -83,6 +83,18 @@ AC_CHECK_LIB(descrypt, crypt,
 		[AC_DEFINE([HAVE_CRYPT], [], [Define if you have crypt])
 			IRCDLIBS="$IRCDLIBS-lcrypt "])])
 
+dnl Check for big-endian system, even though these hardly exist anymore...
+AS_CASE([$host_cpu],
+  [i?86|amd64|x86_64],
+    [ac_cv_c_bigendian=no]
+)
+AC_C_BIGENDIAN(
+  AC_DEFINE(NATIVE_BIG_ENDIAN, 1, [machine is bigendian]),
+  AC_DEFINE(NATIVE_LITTLE_ENDIAN, 1, [machine is littleendian]),
+  AC_MSG_ERROR([unknown endianness]),
+  AC_MSG_ERROR([universal endianness is not supported - compile separately and use lipo(1)])
+)
+
 dnl HARDENING START
 dnl This is taken from https://github.com/kmcallister/autoharden
 dnl With some very small modifications (to remove C++ checking for instance)

@@ -142,6 +142,12 @@
 /* Define the location of the modules */
 #undef MODULESDIR
 
+/* machine is bigendian */
+#undef NATIVE_BIG_ENDIAN
+
+/* machine is littleendian */
+#undef NATIVE_LITTLE_ENDIAN
+
 /* Set to the nickname history length you want */
 #undef NICKNAMEHISTORYLENGTH
 
@@ -226,3 +232,15 @@
 /* Define if you have libcurl installed to get remote includes and MOTD
    support */
 #undef USE_LIBCURL
+
+/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
+   significant byte first (like Motorola and SPARC, unlike Intel). */
+#if defined AC_APPLE_UNIVERSAL_BUILD
+# if defined __BIG_ENDIAN__
+#  define WORDS_BIGENDIAN 1
+# endif
+#else
+# ifndef WORDS_BIGENDIAN
+#  undef WORDS_BIGENDIAN
+# endif
+#endif
