@@ -31,8 +31,8 @@ ModuleHeader MOD_HEADER
     "unrealircd-5",
     };
 
-int ti_mtag_is_ok(Client *client, char *name, char *value);
-void mtag_add_ti(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
+int dn_mtag_is_ok(Client *client, char *name, char *value);
+void mtag_add_dn(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
 
 MOD_INIT()
 {
@@ -42,11 +42,11 @@ MOD_INIT()
 
     memset(&mtag, 0, sizeof(mtag));
     mtag.name = "+draft/display-name";
-    mtag.is_ok = ti_mtag_is_ok;
+    mtag.is_ok = dn_mtag_is_ok;
     mtag.flags = MTAG_HANDLER_FLAGS_NO_CAP_NEEDED;
     MessageTagHandlerAdd(modinfo->handle, &mtag);
 
-    HookAddVoid(modinfo->handle, HOOKTYPE_NEW_MESSAGE, 0, mtag_add_ti);
+    HookAddVoid(modinfo->handle, HOOKTYPE_NEW_MESSAGE, 0, mtag_add_dn);
 
     return MOD_SUCCESS;
 }
@@ -63,7 +63,7 @@ MOD_UNLOAD()
 
 /** This function verifies if the client sending the mtag is permitted to do so.
  */
-int ti_mtag_is_ok(Client *client, char *name, char *value)
+int dn_mtag_is_ok(Client *client, char *name, char *value)
 {
     /* Require a non-empty parameter */
     if (BadPtr(value))
@@ -73,7 +73,7 @@ int ti_mtag_is_ok(Client *client, char *name, char *value)
     return 1;
 }
 
-void mtag_add_ti(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature)
+void mtag_add_dn(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature)
 {
     MessageTag *m;
 
