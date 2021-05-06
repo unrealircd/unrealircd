@@ -1,6 +1,6 @@
 /*
  *   IRC - Internet Relay Chat, src/modules/display-name.c
- *   (C) 2020 Syzop & The UnrealIRCd Team
+ *   (C) 2021 Syzop & The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
