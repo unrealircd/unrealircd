@@ -74,7 +74,7 @@ R_MODULES= \
 	typing-indicator.so \
 	ident_lookup.so history.so \
 	targetfloodprot.so clienttagdeny.so \
-	display-name.so \
+	display-name.so
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
