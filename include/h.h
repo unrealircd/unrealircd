@@ -809,6 +809,7 @@ extern char *clean_ban_mask(char *, int, Client *);
 extern int find_invex(Channel *channel, Client *client);
 extern void DoMD5(char *mdout, const char *src, unsigned long n);
 extern char *md5hash(char *dst, const char *src, unsigned long n);
+extern char *sha256hash(char *dst, const char *src, unsigned long n);
 extern MODVAR TKL *tklines[TKLISTLEN];
 extern MODVAR TKL *tklines_ip_hash[TKLIPHASHLEN1][TKLIPHASHLEN2];
 extern char *cmdname_by_spamftarget(int target);

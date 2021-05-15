@@ -1786,6 +1786,23 @@ int read_str(FILE *fd, char **x)
 	return 1;
 }
 
+/** Convert binary 'data' of size 'len' to a hexadecimal string 'str'.
+ * The caller is responsible to ensure that 'str' is sufficiently large.
+ */
+void binarytohex(void *data, size_t len, char *str)
+{
+	const char hexchars[16] = "0123456789abcdef";
+	char *datastr = (char *)data;
+	int i, n = 0;
+
+	for (i=0; i<len; i++)
+	{
+		str[n++] = hexchars[(datastr[i] >> 4) & 0xF];
+		str[n++] = hexchars[datastr[i] & 0xF];
+	}
+	str[n] = '\0';
+}
+
 /** Generates an MD5 checksum.
  * @param mdout[out] Buffer to store result in, the result will be 16 bytes in binary
  *                   (not ascii printable!).
@@ -1810,31 +1827,27 @@ void DoMD5(char *mdout, const char *src, unsigned long n)
 char *md5hash(char *dst, const char *src, unsigned long n)
 {
 	char tmp[16];
-	SHA256_CTX hash;
 
 	DoMD5(tmp, src, n);
-	sprintf(dst, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-		tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5], tmp[6], tmp[7], tmp[8],
-		tmp[9], tmp[10], tmp[11], tmp[12], tmp[13], tmp[14], tmp[15]);
-
+	binarytohex(tmp, sizeof(tmp), dst);
 	return dst;
 }
 
-/** Convert binary 'data' of size 'len' to a hexadecimal string 'str'.
- * The caller is responsible to ensure that 'str' is sufficiently large.
+/** Generates a SHA256 checksum - ASCII printable string (0011223344..etc..).
+ * @param dst[out]  Buffer to store result in, which needs to be 65 bytes minimum.
+ * @param src[in]   The input data used to generate the checksum.
+ * @param n[in]     Length of data.
  */
-void binarytohex(void *data, size_t len, char *str)
+char *sha256hash(char *dst, const char *src, unsigned long n)
 {
-	const char hexchars[16] = "0123456789abcdef";
-	char *datastr = (char *)data;
-	int i, n = 0;
+	SHA256_CTX hash;
+	char binaryhash[SHA256_DIGEST_LENGTH];
 
-	for (i=0; i<len; i++)
-	{
-		str[n++] = hexchars[(datastr[i] >> 4) & 0xF];
-		str[n++] = hexchars[datastr[i] & 0xF];
-	}
-	str[n] = '\0';
+	SHA256_Init(&hash);
+	SHA256_Update(&hash, src, n);
+	SHA256_Final(binaryhash, &hash);
+	binarytohex(binaryhash, sizeof(binaryhash), dst);
+	return dst;
 }
 
 /** Calculate the SHA256 checksum of a file */
