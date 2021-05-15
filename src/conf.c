@@ -10297,10 +10297,33 @@ char *_conf_secret_read_password(char *fname)
 	return pwd;
 }
 
+char *_conf_secret_read_prompt(char *blockname)
+{
+	char *pwd, *pwd_prompt;
+	char buf[256];
+
+#ifdef _WIN32
+	/* FIXME: add windows support? should be possible in GUI no? */
+	return NULL;
+#else
+	snprintf(buf, sizeof(buf), "Enter password for secret '%s': ", blockname);
+	pwd_prompt = getpass(buf);
+	if (pwd_prompt)
+	{
+		pwd = safe_alloc_sensitive(512);
+		strlcpy(pwd, pwd_prompt, 512);
+		memset(pwd_prompt, 0, strlen(pwd_prompt)); // zero password out
+		sodium_stackzero(1024);
+		return pwd;
+	}
+	return NULL;
+#endif
+}
+
 int _test_secret(ConfigFile *conf, ConfigEntry *ce)
 {
 	int errors = 0;
-	int has_password = 0, has_password_file = 0;
+	int has_password = 0, has_password_file = 0, has_password_prompt = 0;
 	ConfigEntry *cep;
 	char *err;
 
@@ -10346,6 +10369,32 @@ int _test_secret(ConfigFile *conf, ConfigEntry *ce)
 			}
 			safe_free_sensitive(str);
 		} else
+		if (!strcmp(cep->ce_varname, "password-prompt"))
+		{
+#ifdef _WIN32
+			config_error("%s:%d: secret::password-prompt is not implemented in Windows at the moment, sorry!",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			config_error("Choose a different method to enter passwords or use *NIX");
+			errors++;
+			return errors;
+#endif
+			has_password_prompt = 1;
+			if (loop.ircd_booted && !find_secret(ce->ce_vardata))
+			{
+				config_error("%s:%d: you cannot add a new secret { } block that uses password-prompt and then /REHASH. "
+				             "With 'password-prompt' you can only add such a password on boot.",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				config_error("Either use a different method to enter passwords or restart the IRCd on the console.");
+				errors++;
+			}
+			if (!loop.ircd_booted && !running_interactively())
+			{
+				config_error("ERROR: IRCd is not running interactively, but via a cron job or something similar.");
+				config_error("%s:%d: unable to prompt for password since IRCd is not started in a terminal",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				config_error("Either use a different method to enter passwords or start the IRCd in a terminal/SSH/..");
+			}
+		} else
 		if (!strcmp(cep->ce_varname, "password-url"))
 		{
 			config_error("%s:%d: secret::password-url is not supported yet in this UnrealIRCd version.",
@@ -10367,9 +10416,9 @@ int _test_secret(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	if (!has_password && !has_password_file)
+	if (!has_password && !has_password_file && !has_password_prompt)
 	{
-		config_error("%s:%d: secret { } block must contain 1 of: password OR password-file",
+		config_error("%s:%d: secret { } block must contain 1 of: password OR password-file OR password-prompt",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
@@ -10386,7 +10435,7 @@ int _conf_secret(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	Secret *s;
-	Secret *existing;
+	Secret *existing = find_secret(ce->ce_varname);
 
 	s = safe_alloc(sizeof(Secret));
 	safe_strdup(s->name, ce->ce_vardata);
@@ -10401,6 +10450,19 @@ int _conf_secret(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "password-file"))
 		{
 			s->password = _conf_secret_read_password(cep->ce_vardata);
+		} else
+		if (!strcmp(cep->ce_varname, "password-prompt"))
+		{
+			if (!loop.ircd_booted && running_interactively())
+			{
+				s->password = _conf_secret_read_prompt(ce->ce_vardata);
+				if (!s->password || !valid_secret_password(s->password, NULL))
+				{
+					config_error("Invalid password entered on console (does not meet complexity requirements)");
+					/* This cannot be the correct password, so exit */
+					exit(-1);
+				}
+			}
 		}
 	}
 
@@ -10414,7 +10476,7 @@ int _conf_secret(ConfigFile *conf, ConfigEntry *ce)
 	/* If there is an existing secret { } block with this name in memory
 	 * and it has a different password, then free that secret block
 	 */
-	if ((existing = find_secret(s->name)))
+	if (existing)
 	{
 		if (!strcmp(s->password, existing->password))
 		{
