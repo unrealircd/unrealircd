@@ -2326,6 +2326,7 @@ enum EfunctionType {
 #define CONFIG_REQUIRE 9
 #define CONFIG_LISTEN 10
 #define CONFIG_LISTEN_OPTIONS 11
+#define CONFIG_SET_HISTORY_CHANNEL 12
 
 #define MOD_HEADER Mod_Header
 #define MOD_TEST() DLLFUNC int Mod_Test(ModuleInfo *modinfo)

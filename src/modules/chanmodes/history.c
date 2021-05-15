@@ -205,9 +205,41 @@ int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					}
 				} else
 				{
-					config_error_unknown(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "set::history::channel", cepp->ce_varname);
-					errors++;
+					/* hmm.. I don't like this method. but I just quickly copied it from CONFIG_ALLOW for now... */
+					int used = 0;
+					Hook *h;
+					for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
+					{
+						int value, errs = 0;
+						if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+							&& !(h->owner->options & MOD_OPT_PERM))
+							continue;
+						value = (*(h->func.intfunc))(cf, cepp, CONFIG_SET_HISTORY_CHANNEL, &errs);
+						if (value == 2)
+							used = 1;
+						if (value == 1)
+						{
+							used = 1;
+							break;
+						}
+						if (value == -1)
+						{
+							used = 1;
+							errors += errs;
+							break;
+						}
+						if (value == -2)
+						{
+							used = 1;
+							errors += errs;
+						}
+					}
+					if (!used)
+					{
+						config_error_unknown(cepp->ce_fileptr->cf_filename,
+							cepp->ce_varlinenum, "set::history::channel", cepp->ce_varname);
+						errors++;
+					}
 				}
 			}
 		} else {
@@ -270,6 +302,15 @@ int history_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 						{
 							cfg.max_storage_per_channel.time = config_checkval(cep4->ce_vardata, CFG_TIME);
 						}
+					}
+				} else
+				{
+					Hook *h;
+					for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+					{
+						int value = (*(h->func.intfunc))(cf, cepp, CONFIG_SET_HISTORY_CHANNEL);
+						if (value == 1)
+							break;
 					}
 				}
 			}
