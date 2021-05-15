@@ -280,6 +280,8 @@ int hbm_config_posttest(int *errs)
 		{
 			config_error("[history] %s", errstr);
 			errors++;
+			*errs = errors;
+			return -1;
 		}
 
 		/* Ensure directory exists and is writable */
