@@ -1335,3 +1335,18 @@ char *unreal_strftime(char *str)
 		return str;
 	return buf;
 }
+
+/** Convert a string to lowercase */
+void strtolower_safe(char *dst, char *src, int size)
+{
+	if (!size)
+		return; /* size of 0 is unworkable */
+	size--; /* for \0 */
+
+	for (; *src && size; src++)
+	{
+		*dst++ = tolower(*src);
+		size--;
+	}
+	*dst = '\0';
+}

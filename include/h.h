@@ -1029,6 +1029,7 @@ extern NameValuePrioList *find_nvplist(NameValuePrioList *list, char *name);
 extern void free_nvplist(NameValuePrioList *lst);
 extern char *get_connect_extinfo(Client *client);
 extern char *unreal_strftime(char *str);
+extern void strtolower_safe(char *dst, char *src, int size);
 /* src/unrealdb.c start */
 extern UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_block);
 extern int unrealdb_close(UnrealDB *c);
