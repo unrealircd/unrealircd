@@ -26,6 +26,7 @@
 #else
  #include <sys/resource.h>
  #include <utime.h>
+ #include <dirent.h>
 #endif
 #include <fcntl.h>
 #include <signal.h>

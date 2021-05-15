@@ -6,7 +6,6 @@
 
 #include "unrealircd.h"
 #ifndef _WIN32
-#include <dirent.h>
 
 #define MODULEMANAGER_CONNECT_TIMEOUT	7
 #define MODULEMANAGER_READ_TIMEOUT	20

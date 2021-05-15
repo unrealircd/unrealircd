@@ -4,9 +4,7 @@
  */
 
 #include "unrealircd.h"
-#ifndef _WIN32
-#include <dirent.h>
-#else
+#ifdef _WIN32
 extern void StartUnrealAgain(void);
 #endif
 #include "version.h"

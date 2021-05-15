@@ -30,9 +30,6 @@
 #else
 #include <dlfcn.h>
 #endif
-#ifndef _WIN32
-#include <dirent.h>
-#endif
 #ifndef RTLD_NOW
 #define RTLD_NOW RTLD_LAZY
 #endif
