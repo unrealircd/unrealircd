@@ -2039,3 +2039,21 @@ int valid_secret_password(char *pass, char **err)
 {
 	return check_password_strength(pass, 10, 1, err);
 }
+
+int running_interactively(void)
+{
+#ifndef _WIN32
+	char *s;
+
+	if (!isatty(0))
+		return 0;
+
+	s = getenv("TERM");
+	if (!s || !strcasecmp(s, "dumb") || !strcasecmp(s, "none"))
+		return 0;
+
+	return 1;
+#else
+	return IsService ? 0 : 1;
+#endif
+}

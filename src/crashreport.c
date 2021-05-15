@@ -525,24 +525,6 @@ char *generate_crash_report(char *coredump, int *thirdpartymods)
 	return reportfname;
 }
 
-int running_interactive(void)
-{
-#ifndef _WIN32
-	char *s;
-	
-	if (!isatty(0))
-		return 0;
-	
-	s = getenv("TERM");
-	if (!s || !strcasecmp(s, "dumb") || !strcasecmp(s, "none"))
-		return 0;
-
-	return 1;
-#else
-	return IsService ? 0 : 1;
-#endif
-}
-
 #define REPORT_NEVER	-1
 #define REPORT_ASK		0
 #define REPORT_AUTO		1
@@ -732,7 +714,7 @@ void report_crash(void)
 	int thirdpartymods = 0;
 	int crashed_secs_ago;
 
-	if (!running_interactive() && (report_pref != REPORT_AUTO))
+	if (!running_interactively() && (report_pref != REPORT_AUTO))
 		exit(0); /* don't bother if we run through cron or something similar */
 
 	coredump = find_best_coredump();
@@ -803,7 +785,7 @@ void report_crash(void)
 		return;
 	}
 
-	if (running_interactive())
+	if (running_interactively())
 	{
 		char buf[8192], *line;
 
