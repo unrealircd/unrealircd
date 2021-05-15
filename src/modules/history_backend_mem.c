@@ -971,14 +971,14 @@ char *hbm_history_filename(HistoryLogObject *h)
 	static char fname[512];
 	char oname[OBJECTLEN+1];
 	char hashdata[512];
-	char hash[64];
+	char hash[128];
 
 	if (!cfg.prehash || !cfg.posthash)
 		abort(); /* impossible */
 
 	strtolower_safe(oname, h->name, sizeof(oname));
 	snprintf(hashdata, sizeof(hashdata), "%s %s %s", cfg.prehash, oname, cfg.posthash);
-	md5hash(hash, hashdata, strlen(hashdata));
+	sha256hash(hash, hashdata, strlen(hashdata));
 
 	snprintf(fname, sizeof(fname), "%s/%s.db", cfg.directory, hash);
 	return fname;
