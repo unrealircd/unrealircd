@@ -90,8 +90,11 @@ static int already_loaded = 0;
 int hbm_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int hbm_config_posttest(int *errs);
 int hbm_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
+int hbm_rehash(void);
+int hbm_rehash_complete(void);
 static void setcfg(struct cfgstruct *cfg);
 static void freecfg(struct cfgstruct *cfg);
+static void init_history_storage(ModuleInfo *modinfo);
 int hbm_modechar_del(Channel *channel, int modechar);
 int hbm_history_add(char *object, MessageTag *mtags, char *line);
 int hbm_history_cleanup(HistoryLogObject *h);
@@ -129,6 +132,9 @@ MOD_INIT()
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, hbm_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_MODECHAR_DEL, 0, hbm_modechar_del);
+	HookAdd(modinfo->handle, HOOKTYPE_REHASH, 0, hbm_rehash);
+	HookAdd(modinfo->handle, HOOKTYPE_REHASH_COMPLETE, 0, hbm_rehash_complete);
+
 
 	memset(&history_hash_table, 0, sizeof(history_hash_table));
 	siphash_generate_key(siphashkey_history_backend_mem);
@@ -149,6 +155,7 @@ MOD_LOAD()
 {
 	EventAdd(modinfo->handle, "history_mem_init", history_mem_init, NULL, 1, 1);
 	EventAdd(modinfo->handle, "history_mem_clean", history_mem_clean, NULL, HISTORY_TIMER_EVERY*1000, 0);
+	init_history_storage(modinfo);
 	return MOD_SUCCESS;
 }
 
@@ -282,8 +289,7 @@ int hbm_config_posttest(int *errs)
 		{
 			config_error("[history] %s", errstr);
 			errors++;
-			*errs = errors;
-			return -1;
+			goto hbm_config_posttest_end;
 		}
 
 		/* Ensure directory exists and is writable */
@@ -305,6 +311,9 @@ int hbm_config_posttest(int *errs)
 		}
 	}
 
+hbm_config_posttest_end:
+	freecfg(&test);
+	setcfg(&test);
 	*errs = errors;
 	return errors ? -1 : 1;
 }
@@ -334,6 +343,41 @@ int hbm_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	}
 
 	return 1; /* handled by us */
+}
+
+int hbm_rehash(void)
+{
+	freecfg(&cfg);
+	setcfg(&cfg);
+	return 0;
+}
+
+int hbm_rehash_complete(void)
+{
+	return 0;
+}
+
+char *history_storage_capability_parameter(Client *client)
+{
+	static char buf[128];
+
+	if (cfg.persist)
+		strlcpy(buf, "memory,disk=encrypted", sizeof(buf));
+	else
+		strlcpy(buf, "memory", sizeof(buf));
+
+	return buf;
+}
+
+static void init_history_storage(ModuleInfo *modinfo)
+{
+	ClientCapabilityInfo cap;
+
+	memset(&cap, 0, sizeof(cap));
+	cap.name = "unrealircd.org/history-storage";
+	cap.flags = CLICAP_FLAGS_ADVERTISE_ONLY;
+	cap.parameter = history_storage_capability_parameter;
+	ClientCapabilityAdd(modinfo->handle, &cap, NULL);
 }
 
 uint64_t hbm_hash(char *object)

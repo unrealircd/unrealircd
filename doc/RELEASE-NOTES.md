@@ -20,7 +20,7 @@ Enhancements:
 * Add optional support for
   [persistent channel history](https://www.unrealircd.org/docs/Set_block#Persistent_channel_history):
   * This stores channel history on disk for channels that have
-    both +H and +P set.
+    both ```+H``` and ```+P``` set.
   * If you enable this then we ALWAYS require you to set an
     encryption password, as we do not allow storing of
     channel history in plain text.
@@ -45,8 +45,8 @@ Module coders / Developers:
 * New UnrealDB API and disk format, see
   https://www.unrealircd.org/docs/Dev:UnrealDB
 * We now use libsodium for file encryption routines as well
-  as some helpers to lock/clear passwords.
-* Update ```HOOKTYPE_LOCAL_NICKCHANGE``` and
+  as some helpers to lock/clear passwords in memory.
+* Updated ```HOOKTYPE_LOCAL_NICKCHANGE``` and
   ```HOOKTYPE_REMOTE_NICKCHANGE``` to include an
   ```MessageTag *mtags``` argument in the middle.
   You can use ```#if UNREAL_VERSION_TIME>=202115``` to detect this.
