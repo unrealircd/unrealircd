@@ -820,7 +820,7 @@ static void hbm_read_dbs(void)
 	HANDLE hFile;
 	char xbuf[512];
 
-	snprintf(xbuf, sizeof(xbuf), "%s/*.db");
+	snprintf(xbuf, sizeof(xbuf), "%s/*.db", cfg.directory);
 
 	hFile = FindFirstFile(xbuf, &hData);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -864,7 +864,7 @@ static void hbm_read_dbs(void)
 #endif
 }
 
-#define RESET_VALUES_LOOP(x)	do { \
+#define RESET_VALUES_LOOP()	do { \
 					safe_free(mtag_name); \
 					safe_free(mtag_value); \
 					safe_free(line); \
@@ -874,7 +874,7 @@ static void hbm_read_dbs(void)
 					line_ts = 0; \
 				} while(0)
 
-#define R_SAFE_CLEANUP		do { \
+#define R_SAFE_CLEANUP()	do { \
 					unrealdb_close(db); \
 					RESET_VALUES_LOOP(); \
 					safe_free(prehash); \
@@ -885,7 +885,7 @@ static void hbm_read_dbs(void)
 	do { \
 		if (!(x)) { \
 			config_warn("[history] Read error from database file '%s' (possible corruption): %s", fname, unrealdb_get_error_string()); \
-			R_SAFE_CLEANUP; \
+			R_SAFE_CLEANUP(); \
 			return 0; \
 		} \
 	} while(0)
@@ -951,7 +951,7 @@ static int hbm_read_db(char *fname)
 	{
 		config_warn("[history] Database '%s' does not belong to our 'master.db'. Are you mixing old with new .db files perhaps? This is not supported. File ignored.",
 			fname);
-		R_SAFE_CLEANUP;
+		R_SAFE_CLEANUP();
 		return 0;
 	}
 
@@ -962,7 +962,7 @@ static int hbm_read_db(char *fname)
 	if (!h)
 	{
 		config_warn("Channel %s does not have +H set, deleting history", object);
-		R_SAFE_CLEANUP;
+		R_SAFE_CLEANUP();
 		unlink(fname);
 		return 1; /* No problem */
 	}
@@ -977,7 +977,7 @@ static int hbm_read_db(char *fname)
 		{
 			config_warn("[history] Read error from database file '%s': wrong magic value in entry (0x%lx), expected HISTORYDB_MAGIC_ENTRY_START",
 				fname, (long)magic);
-			R_SAFE_CLEANUP;
+			R_SAFE_CLEANUP();
 			return 0;
 		}
 
@@ -1001,7 +1001,7 @@ static int hbm_read_db(char *fname)
 		{
 			config_warn("[history] Read error from database file '%s': wrong magic value in entry (0x%lx), expected HISTORYDB_MAGIC_ENTRY_END",
 				fname, (long)magic);
-			R_SAFE_CLEANUP;
+			R_SAFE_CLEANUP();
 			return 0;
 		}
 		hbm_history_add(object, mtags, line);
@@ -1015,7 +1015,7 @@ static int hbm_read_db(char *fname)
 	 */
 	h->dirty = 0;
 
-	R_SAFE_CLEANUP;
+	R_SAFE_CLEANUP();
 	return 1;
 }
 
