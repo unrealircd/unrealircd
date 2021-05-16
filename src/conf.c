@@ -10332,6 +10332,7 @@ int _test_secret(ConfigFile *conf, ConfigEntry *ce)
 		config_error("%s:%i: secret block needs a name, eg: secret xyz {",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
+		return errors; /* need to return here since we dereference ce->ce_vardata later.. */
 	} else {
 		if (!security_group_valid_name(ce->ce_vardata))
 		{

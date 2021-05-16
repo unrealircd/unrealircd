@@ -286,9 +286,9 @@ int hbm_config_posttest(int *errs)
 
 		/* Ensure directory exists and is writable */
 #ifdef _WIN32
-		mkdir(test.directory); /* (errors ignored) */
+		(void)mkdir(test.directory); /* (errors ignored) */
 #else
-		mkdir(test.directory, S_IRUSR|S_IWUSR|S_IXUSR); /* (errors ignored) */
+		(void)mkdir(test.directory, S_IRUSR|S_IWUSR|S_IXUSR); /* (errors ignored) */
 #endif
 		if (!file_exists(test.directory))
 		{
@@ -700,6 +700,9 @@ static int hbm_write_masterdb(void)
 	uint32_t mdb_version;
 	char buf[512];
 
+	if (!test.db_secret)
+		abort();
+
 	db = unrealdb_open(test.masterdb, UNREALDB_MODE_WRITE, test.db_secret);
 	if (!db)
 	{
@@ -776,13 +779,13 @@ static void hbm_read_dbs(void)
 				char buf2[512];
 				snprintf(buf2, sizeof(buf2), "%s/bad", cfg.directory);
 #ifdef _WIN32
-				mkdir(buf2); /* (errors ignored) */
+				(void)mkdir(buf2); /* (errors ignored) */
 #else
-				mkdir(buf2, S_IRUSR|S_IWUSR|S_IXUSR); /* (errors ignored) */
+				(void)mkdir(buf2, S_IRUSR|S_IWUSR|S_IXUSR); /* (errors ignored) */
 #endif
 				snprintf(buf2, sizeof(buf2), "%s/bad/%s", cfg.directory, fname);
 				unlink(buf2);
-				rename(buf, buf2);
+				(void)rename(buf, buf2);
 			}
 		}
 
@@ -1012,16 +1015,15 @@ static int hbm_write_db(HistoryLogObject *h)
 	MessageTag *m;
 	Channel *channel;
 
+	if (!cfg.db_secret)
+		abort();
+
 	channel = find_channel(h->name, NULL);
 	if (!channel || !has_channel_mode(channel, 'P'))
 		return 1; /* Don't save this channel, pretend success */
 
 	realfname = hbm_history_filename(h);
 	snprintf(tmpfname, sizeof(tmpfname), "%s.tmp", realfname);
-
-#ifdef DEBUGMODE
-	ircd_log(LOG_ERROR, "Writing to: %s...", tmpfname);
-#endif
 
 	db = unrealdb_open(tmpfname, UNREALDB_MODE_WRITE, cfg.db_secret);
 	if (!db)
