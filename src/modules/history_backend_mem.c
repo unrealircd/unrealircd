@@ -830,16 +830,18 @@ static void hbm_read_dbs(void)
 					line_ts = 0; \
 				} while(0)
 
-#define R_SAFE_CLEANUP(x)	do { \
+#define R_SAFE_CLEANUP		do { \
 					unrealdb_close(db); \
 					RESET_VALUES_LOOP(); \
+					safe_free(prehash); \
+					safe_free(posthash); \
 					safe_free(object); \
 				} while(0)
 #define R_SAFE(x) \
 	do { \
 		if (!(x)) { \
 			config_warn("[history] Read error from database file '%s' (possible corruption): %s", fname, unrealdb_get_error_string()); \
-			R_SAFE_CLEANUP(); \
+			R_SAFE_CLEANUP; \
 			return 0; \
 		} \
 	} while(0)
@@ -852,6 +854,8 @@ static int hbm_read_db(char *fname)
 	// header
 	uint32_t magic = 0;
 	uint32_t version = 0;
+	char *prehash = NULL;
+	char *posthash = NULL;
 	char *object = NULL;
 	uint64_t max_lines = 0;
 	uint64_t max_time = 0;
@@ -896,6 +900,17 @@ static int hbm_read_db(char *fname)
 		return 0;
 	}
 
+	R_SAFE(unrealdb_read_str(db, &prehash));
+	R_SAFE(unrealdb_read_str(db, &posthash));
+
+	if (!prehash || !posthash || strcmp(prehash, cfg.prehash) || strcmp(posthash, cfg.posthash))
+	{
+		config_warn("[history] Database '%s' does not belong to our 'master.db'. Are you mixing old with new .db files perhaps? This is not supported. File ignored.",
+			fname);
+		R_SAFE_CLEANUP;
+		return 0;
+	}
+
 	R_SAFE(unrealdb_read_str(db, &object));
 	R_SAFE(unrealdb_read_int64(db, &max_lines));
 	R_SAFE(unrealdb_read_int64(db, &max_time));
@@ -903,7 +918,7 @@ static int hbm_read_db(char *fname)
 	if (!h)
 	{
 		config_warn("Channel %s does not have +H set, deleting history", object);
-		R_SAFE_CLEANUP();
+		R_SAFE_CLEANUP;
 		unlink(fname);
 		return 1; /* No problem */
 	}
@@ -918,7 +933,7 @@ static int hbm_read_db(char *fname)
 		{
 			config_warn("[history] Read error from database file '%s': wrong magic value in entry (0x%lx), expected HISTORYDB_MAGIC_ENTRY_START",
 				fname, (long)magic);
-			R_SAFE_CLEANUP();
+			R_SAFE_CLEANUP;
 			return 0;
 		}
 
@@ -942,7 +957,7 @@ static int hbm_read_db(char *fname)
 		{
 			config_warn("[history] Read error from database file '%s': wrong magic value in entry (0x%lx), expected HISTORYDB_MAGIC_ENTRY_END",
 				fname, (long)magic);
-			R_SAFE_CLEANUP();
+			R_SAFE_CLEANUP;
 			return 0;
 		}
 		hbm_history_add(object, mtags, line);
@@ -956,7 +971,7 @@ static int hbm_read_db(char *fname)
 	 */
 	h->dirty = 0;
 
-	R_SAFE_CLEANUP();
+	R_SAFE_CLEANUP;
 	return 1;
 }
 
@@ -1055,6 +1070,8 @@ static int hbm_write_db(HistoryLogObject *h)
 
 	W_SAFE(unrealdb_write_int32(db, HISTORYDB_MAGIC_FILE_START));
 	W_SAFE(unrealdb_write_int32(db, 5000)); /* VERSION */
+	W_SAFE(unrealdb_write_str(db, cfg.prehash));
+	W_SAFE(unrealdb_write_str(db, cfg.posthash));
 	W_SAFE(unrealdb_write_str(db, h->name));
 
 	W_SAFE(unrealdb_write_int64(db, h->max_lines));
