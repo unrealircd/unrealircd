@@ -92,6 +92,7 @@ int hbm_config_posttest(int *errs);
 int hbm_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 static void setcfg(struct cfgstruct *cfg);
 static void freecfg(struct cfgstruct *cfg);
+int hbm_modechar_del(Channel *channel, int modechar);
 int hbm_history_add(char *object, MessageTag *mtags, char *line);
 int hbm_history_cleanup(HistoryLogObject *h);
 HistoryResult *hbm_history_request(char *object, HistoryFilter *filter);
@@ -127,6 +128,7 @@ MOD_INIT()
 	setcfg(&cfg);
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, hbm_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_MODECHAR_DEL, 0, hbm_modechar_del);
 
 	memset(&history_hash_table, 0, sizeof(history_hash_table));
 	siphash_generate_key(siphashkey_history_backend_mem);
@@ -379,6 +381,25 @@ void hbm_delete_object_hlo(HistoryLogObject *h)
 	hashv = hbm_hash(h->name);
 	DelListItem(h, history_hash_table[hashv]);
 	safe_free(h);
+}
+
+int hbm_modechar_del(Channel *channel, int modechar)
+{
+	HistoryLogObject *h;
+
+	if ((modechar == 'P') && ((h = hbm_find_object(channel->chname))))
+	{
+		/* Channel went from +P to -P and also has channel history: delete the history file */
+		hbm_delete_db(h);
+
+		h->dirty = 1;
+		/* The reason for marking the entry as 'dirty' is that someone may later
+		 * set the channel +P again. If we would not set the h->dirty=1 then this
+		 * would mean the history log would not get rewritten until someone speaks.
+		 */
+	}
+
+	return 0;
 }
 
 void hbm_duplicate_mtags(HistoryLogLine *l, MessageTag *m)
