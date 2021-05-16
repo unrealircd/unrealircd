@@ -6,6 +6,51 @@ This is the current development version (git) of UnrealIRCd.
 Do *NOT* run on production servers, current code is unstable
 and may cause file corruption.
 
+Enhancements:
+* Add support for database encryption. The way this works
+  is that you define an encryption password in a
+  [secret { } block](https://www.unrealircd.org/docs/Secret_block).
+  Then from the various modules you can refer to this secret
+  block, from
+  [set::reputation::db-secret](https://www.unrealircd.org/docs/Set_block#set::reputation),
+  [set::tkldb::db-secret](https://www.unrealircd.org/docs/Set_block#set::tkldb)
+  and [set::channeldb::db-secret](https://www.unrealircd.org/docs/Set_block#set::channeldb).
+  This way you can encrypt the reputation, TKL and channel
+  database for increased privacy.
+* Add optional support for
+  [persistent channel history](https://www.unrealircd.org/docs/Set_block#Persistent_channel_history):
+  * This stores channel history on disk for channels that have
+    both +H and +P set.
+  * If you enable this then we ALWAYS require you to set an
+    encryption password, as we do not allow storing of
+    channel history in plain text.
+  * If you enable the option, then the history is stored in
+    ```data/history/``` in individual .db files. No channel
+    names are visible in the filenames for optimal privacy.
+  * See [Persistent channel history](https://www.unrealircd.org/docs/Set_block#Persistent_channel_history)
+    on how to enable this. By default it is off.
+* Add c-ares and libsodium version output to boot screen and /VERSION.
+* WHOX now supports displaying the
+  [reputation score](https://www.unrealircd.org/docs/Reputation_score).
+  If you are an IRCOp then you can use e.g. ```WHO * %cuhsnfmdaRr```.
+
+Fixes:
+* Forbid using [extended server bans](https://www.unrealircd.org/docs/Extended_server_bans)
+  in ZLINE/GZLINE since they won't work.
+* Extended server ban ```~a:accname``` was not working for shun, and only
+  partially working for kline/gline.
+* More accurate /ELINE error message.
+
+Module coders / Developers:
+* New UnrealDB API and disk format, see
+  https://www.unrealircd.org/docs/Dev:UnrealDB
+* We now use libsodium for file encryption routines as well
+  as some helpers to lock/clear passwords.
+* Update ```HOOKTYPE_LOCAL_NICKCHANGE``` and
+  ```HOOKTYPE_REMOTE_NICKCHANGE``` to include an
+  ```MessageTag *mtags``` argument in the middle.
+  You can use ```#if UNREAL_VERSION_TIME>=202115``` to detect this.
+
 Reminder: UnrealIRCd 4 is no longer supported
 ----------------------------------------------
 
