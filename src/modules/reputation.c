@@ -1282,7 +1282,7 @@ CMD_FUNC(reputation_cmd)
 {
 	if (MyUser(client))
 		reputation_user_cmd(client, recv_mtags, parc, parv);
-	else if (IsServer(client))
+	else if (IsServer(client) || IsMe(client))
 		reputation_server_cmd(client, recv_mtags, parc, parv);
 }
 
