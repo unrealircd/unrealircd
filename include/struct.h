@@ -662,6 +662,7 @@ struct ListStructPrio {
 						CHECK_PRIO_LIST_ENTRY(list) \
 						CHECK_PRIO_LIST_ENTRY(item) \
 						CHECK_NULL_LIST_ITEM(item) \
+						item->priority = prio; \
 						add_ListItemPrio((ListStructPrio *)item, (ListStructPrio **)&list, prio); \
 					} while(0)
 
