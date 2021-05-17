@@ -3,9 +3,6 @@ UnrealIRCd 5.0.10-git Release Notes
 
 This is the current development version (git) of UnrealIRCd.
 
-Do *NOT* run on production servers, current code is unstable
-and may cause file corruption.
-
 Enhancements:
 * Add support for database encryption. The way this works
   is that you define an encryption password in a
