@@ -10259,7 +10259,7 @@ void free_secret(Secret *s)
 	safe_free(s);
 }
 
-char *_conf_secret_read_password(char *fname)
+char *_conf_secret_read_password_file(char *fname)
 {
 	char *pwd, *err;
 	int fd, n;
@@ -10326,6 +10326,7 @@ int _test_secret(ConfigFile *conf, ConfigEntry *ce)
 	int has_password = 0, has_password_file = 0, has_password_prompt = 0;
 	ConfigEntry *cep;
 	char *err;
+	Secret *existing;
 
 	if (!ce->ce_vardata)
 	{
@@ -10342,6 +10343,8 @@ int _test_secret(ConfigFile *conf, ConfigEntry *ce)
 			errors++;
 		}
 	}
+
+	existing = find_secret(ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -10361,14 +10364,25 @@ int _test_secret(ConfigFile *conf, ConfigEntry *ce)
 			char *str;
 			has_password_file = 1;
 			CheckNull(cep);
-			str = _conf_secret_read_password(cep->ce_vardata);
-			if (!str)
+			convert_to_absolute_path(&cep->ce_vardata, CONFDIR);
+			if (!file_exists(cep->ce_vardata) && existing && existing->password)
 			{
-				config_error("%s:%d: secret::password-file: error reading password from file, see error from above.",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
+				/* Silently ignore the case where a secret block already
+				 * has the password read and now the file is no longer available.
+				 * This so secret::password-file can be used only to boot
+				 * and then the media (eg: USB stick) can be pulled.
+				 */
+			} else
+			{
+				str = _conf_secret_read_password_file(cep->ce_vardata);
+				if (!str)
+				{
+					config_error("%s:%d: secret::password-file: error reading password from file, see error from above.",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					errors++;
+				}
+				safe_free_sensitive(str);
 			}
-			safe_free_sensitive(str);
 		} else
 		if (!strcmp(cep->ce_varname, "password-prompt"))
 		{
@@ -10436,7 +10450,7 @@ int _conf_secret(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	Secret *s;
-	Secret *existing = find_secret(ce->ce_varname);
+	Secret *existing = find_secret(ce->ce_vardata);
 
 	s = safe_alloc(sizeof(Secret));
 	safe_strdup(s->name, ce->ce_vardata);
@@ -10450,7 +10464,17 @@ int _conf_secret(ConfigFile *conf, ConfigEntry *ce)
 		} else
 		if (!strcmp(cep->ce_varname, "password-file"))
 		{
-			s->password = _conf_secret_read_password(cep->ce_vardata);
+			if (!file_exists(cep->ce_vardata) && existing && existing->password)
+			{
+				/* Silently ignore the case where a secret block already
+				 * has the password read and now the file is no longer available.
+				 * This so secret::password-file can be used only to boot
+				 * and then the media (eg: USB stick) can be pulled.
+				 */
+			} else
+			{
+				s->password = _conf_secret_read_password_file(cep->ce_vardata);
+			}
 		} else
 		if (!strcmp(cep->ce_varname, "password-prompt"))
 		{
