@@ -82,6 +82,7 @@ void s_die()
 	Client *client;
 	if (!IsService)
 	{
+		loop.ircd_terminating = 1;
 		unload_all_modules();
 
 		list_for_each_entry(client, &lclient_list, lclient_node)
@@ -96,6 +97,7 @@ void s_die()
 		ControlService(hService, SERVICE_CONTROL_STOP, &status);
 	}
 #else
+	loop.ircd_terminating = 1;
 	unload_all_modules();
 	unlink(conf_files ? conf_files->pid_file : IRCD_PIDFILE);
 	exit(0);
