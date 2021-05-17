@@ -441,7 +441,7 @@ char  *Module_Create(char *path_)
 			}
 		}
 		mod->flags = MODFLAG_TESTING;		
-		AddListItem(mod, Modules);
+		AddListItemPrio(mod, Modules, 0);
 		return NULL;
 	}
 	else
@@ -1184,6 +1184,9 @@ void	unload_all_modules(void)
 	int	(*Mod_Unload)();
 	for (m = Modules; m; m = m->next)
 	{
+#ifdef DEBUGMODE
+		ircd_log(LOG_ERROR, "Unloading %s...", m->header->name);
+#endif
 		irc_dlsym(m->dll, "Mod_Unload", Mod_Unload);
 		if (Mod_Unload)
 			(*Mod_Unload)(&m->modinfo);
@@ -1191,15 +1194,21 @@ void	unload_all_modules(void)
 	}
 }
 
-unsigned int ModuleSetOptions(Module *module, unsigned int options, int action)
+void ModuleSetOptions(Module *module, unsigned int options, int action)
 {
 	unsigned int oldopts = module->options;
 
-	if (action)
-        	module->options |= options;
-        else
-        	module->options &= ~options;
-	return oldopts;
+	if (options == MOD_OPT_UNLOAD_PRIORITY)
+	{
+		DelListItem(module, Modules);
+		AddListItemPrio(module, Modules, action);
+	} else {
+		/* Simple bit flag(s) */
+		if (action)
+			module->options |= options;
+		else
+			module->options &= ~options;
+	}
 }
 
 unsigned int ModuleGetOptions(Module *module)

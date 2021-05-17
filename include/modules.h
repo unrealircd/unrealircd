@@ -630,11 +630,12 @@ typedef struct ModuleObject {
 extern unsigned int ModuleGetError(Module *module);
 extern const char *ModuleGetErrorStr(Module *module);
 extern unsigned int ModuleGetOptions(Module *module);
-extern unsigned int ModuleSetOptions(Module *module, unsigned int options, int action);
+extern void ModuleSetOptions(Module *module, unsigned int options, int action);
 
 struct Module
 {
 	struct Module *prev, *next;
+	int priority;
 	ModuleHeader    *header; /* The module's header */
 #ifdef _WIN32
 	HMODULE dll;		/* Return value of LoadLibrary */
@@ -660,6 +661,7 @@ struct Module
 #define MOD_OPT_OFFICIAL	0x0002 /* Official module, do not set "tainted" */
 #define MOD_OPT_PERM_RELOADABLE	0x0004 /* Module is semi-permanent: it can be re-loaded but not un-loaded */
 #define MOD_OPT_GLOBAL		0x0008 /* Module is required to be loaded globally (i.e. across the entire network) */
+#define MOD_OPT_UNLOAD_PRIORITY	0x1000 /* Module wants a higher or lower unload priority */
 #define MOD_Dep(name, container,module) {#name, (vFP *) &container, module}
 
 /** Event structs */
