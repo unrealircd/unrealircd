@@ -40,7 +40,7 @@ ModuleHeader MOD_HEADER
  * values to spread it even more out: from 16/128 to 60/300 so
  * in case of persistent it will save every 5 minutes.
  */
-#ifdef DEBUGMODE
+#if 0 //was: DEBUGMODE
 #define HISTORY_CLEAN_PER_LOOP HISTORY_BACKEND_MEM_HASH_TABLE_SIZE
 #define HISTORY_TIMER_EVERY 5
 #else
@@ -109,6 +109,7 @@ static int hbm_read_db(char *fname);
 static int hbm_write_masterdb(void);
 static int hbm_write_db(HistoryLogObject *h);
 static void hbm_delete_db(HistoryLogObject *h);
+static void hbm_flush(void);
 
 MOD_TEST()
 {
@@ -178,6 +179,7 @@ EVENT(history_mem_init)
 
 MOD_UNLOAD()
 {
+	hbm_flush();
 	freecfg(&test);
 	freecfg(&cfg);
 	return MOD_SUCCESS;
@@ -1020,6 +1022,26 @@ static int hbm_read_db(char *fname)
 
 	R_SAFE_CLEANUP();
 	return 1;
+}
+
+/** Flush all dirty logs to disk on UnrealIRCd stop */
+static void hbm_flush(void)
+{
+	int hashnum;
+	HistoryLogObject *h;
+
+	if (!cfg.persist)
+		return; /* nothing to flush anyway */
+
+	for (hashnum = 0; hashnum < HISTORY_BACKEND_MEM_HASH_TABLE_SIZE; hashnum++)
+	{
+		for (h = history_hash_table[hashnum]; h; h = h->next)
+		{
+			hbm_history_cleanup(h);
+			if (cfg.persist && h->dirty)
+				hbm_write_db(h);
+		}
+	}
 }
 
 /** Periodically clean the history.
