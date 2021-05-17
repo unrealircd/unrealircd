@@ -431,6 +431,9 @@ int hbm_modechar_del(Channel *channel, int modechar)
 {
 	HistoryLogObject *h;
 
+	if (!cfg.persist)
+		return 0;
+
 	if ((modechar == 'P') && ((h = hbm_find_object(channel->chname))))
 	{
 		/* Channel went from +P to -P and also has channel history: delete the history file */
@@ -1162,6 +1165,14 @@ static int hbm_write_db(HistoryLogObject *h)
 static void hbm_delete_db(HistoryLogObject *h)
 {
 	UnrealDB *db;
-	char *fname = hbm_history_filename(h);
+	char *fname;
+	if (!cfg.persist || !cfg.prehash || !cfg.posthash)
+	{
+#ifdef DEBUGMODE
+		abort(); /* we should not be called, so debug this */
+#endif
+		return;
+	}
+	fname = hbm_history_filename(h);
 	unlink(fname);
 }
