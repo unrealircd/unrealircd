@@ -53,17 +53,34 @@ if [ "$1" = "start" ] ; then
 	# Now check if we need to create a crash report.
 	@BINDIR@/unrealircd -R
 elif [ "$1" = "stop" ] ; then
-	echo "Stopping UnrealIRCd"
+	echo -n "Stopping UnrealIRCd"
 	if [ ! -r $PID_FILE ] ; then
+		echo
 		echo "ERROR: UnrealIRCd is not running"
 		exit 1
 	fi
 	kill -15 `cat $PID_FILE`
 	if [ "$?" != 0 ]; then
+		echo
 		echo "ERROR: UnrealIRCd is not running"
 		exit 1
 	fi
-	sleep 1
+	# Wait for UnrealIRCd to terminate, but wait 10 seconds max
+	n="0"
+	while [ "$n" -lt 10 ]
+	do
+		echo -n "."
+		if [ ! -r $PID_FILE ] ; then
+			break
+		fi
+		if ! kill -0 `cat $PID_FILE`; then
+			break
+		fi
+		n=`expr $n + 1`
+		sleep 1
+	done
+	echo
+	# In case it is still running, kill it for good.
 	if [ -r $PID_FILE ] ; then
 		kill -9 `cat $PID_FILE` 1>/dev/null 2>&1
 	fi
