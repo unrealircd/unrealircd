@@ -450,6 +450,8 @@ void del_ListItem(ListStruct *item, ListStruct **list)
 		item->next->prev = item->prev;
 	if (*list == item)
 		*list = item->next; /* new head */
+	/* And update 'item', prev/next should point nowhere anymore */
+	item->prev = item->next = NULL;
 }
 
 /** Add item to list with a 'priority'.
