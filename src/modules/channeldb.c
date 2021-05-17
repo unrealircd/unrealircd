@@ -94,6 +94,8 @@ MOD_TEST()
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	/* We must unload early, when all channel modes and such are still in place: */
+	ModuleSetOptions(modinfo->handle, MOD_OPT_UNLOAD_PRIORITY, -99999999);
 
 	LoadPersistentLong(modinfo, channeldb_next_event);
 
@@ -130,6 +132,8 @@ MOD_LOAD()
 
 MOD_UNLOAD()
 {
+	if (loop.ircd_terminating)
+		write_channeldb();
 	freecfg(&test);
 	freecfg(&cfg);
 	SavePersistentLong(modinfo, channeldb_next_event);

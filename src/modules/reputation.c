@@ -172,6 +172,7 @@ MOD_INIT()
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
+
 	memset(&ReputationHashTable, 0, sizeof(ReputationHashTable));
 	siphash_generate_key(siphashkey_reputation);
 
@@ -238,7 +239,8 @@ MOD_LOAD()
 
 MOD_UNLOAD()
 {
-	reputation_save_db();
+	if (loop.ircd_terminating)
+		reputation_save_db();
 	reputation_free_config(&test);
 	reputation_free_config(&cfg);
 	return MOD_SUCCESS;

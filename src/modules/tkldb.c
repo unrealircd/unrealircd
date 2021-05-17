@@ -129,6 +129,7 @@ MOD_TEST()
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_UNLOAD_PRIORITY, -9999);
 
 	LoadPersistentLong(modinfo, tkldb_next_event);
 
@@ -162,7 +163,8 @@ MOD_LOAD()
 
 MOD_UNLOAD()
 {
-	write_tkldb();
+	if (loop.ircd_terminating)
+		write_tkldb();
 	freecfg(&test);
 	freecfg(&cfg);
 	SavePersistentLong(modinfo, tkldb_next_event);

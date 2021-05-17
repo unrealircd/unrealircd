@@ -128,6 +128,8 @@ MOD_INIT()
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
+	/* We must unload early, when all channel modes and such are still in place: */
+	ModuleSetOptions(modinfo->handle, MOD_OPT_UNLOAD_PRIORITY, -99999999);
 
 	setcfg(&cfg);
 
@@ -179,7 +181,8 @@ EVENT(history_mem_init)
 
 MOD_UNLOAD()
 {
-	hbm_flush();
+	if (loop.ircd_terminating)
+		hbm_flush();
 	freecfg(&test);
 	freecfg(&cfg);
 	return MOD_SUCCESS;
