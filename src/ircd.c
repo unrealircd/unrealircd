@@ -577,84 +577,6 @@ char buf[1024];
 #endif
 }
 
-/** Ugly version checker that ensures ssl/curl runtime libraries match the
- * version we compiled for.
- */
-static void do_version_check()
-{
-	const char *compiledfor, *runtime;
-	int error = 0;
-	char *p;
-
-	/* OPENSSL:
-	 * Nowadays (since openssl 1.0.0) they retain binary compatibility
-	 * when the first two version numbers are the same: eg 1.0.0 and 1.0.2
-	 */
-	compiledfor = OPENSSL_VERSION_TEXT;
-	runtime = SSLeay_version(SSLEAY_VERSION);
-	p = strchr(compiledfor, '.');
-	if (p)
-	{
-		p = strchr(p+1, '.');
-		if (p)
-		{
-			int versionlen = p - compiledfor + 1;
-
-			if (strncasecmp(compiledfor, runtime, versionlen))
-			{
-				version_check_logerror("OpenSSL version mismatch: compiled for '%s', library is '%s'",
-					compiledfor, runtime);
-				error=1;
-			}
-		}
-	}
-
-
-#ifdef USE_LIBCURL
-	/* Perhaps someone should tell them to do this a bit more easy ;)
-	 * problem is runtime output is like: 'libcurl/7.11.1 c-ares/1.2.0'
-	 * while header output is like: '7.11.1'.
-	 */
-	{
-		char buf[128], *p;
-
-		runtime = curl_version();
-		compiledfor = LIBCURL_VERSION;
-		if (!strncmp(runtime, "libcurl/", 8))
-		{
-			strlcpy(buf, runtime+8, sizeof(buf));
-			p = strchr(buf, ' ');
-			if (p)
-			{
-				*p = '\0';
-				if (strcmp(compiledfor, buf))
-				{
-					version_check_logerror("Curl version mismatch: compiled for '%s', library is '%s'",
-						compiledfor, buf);
-					error = 1;
-				}
-			}
-		}
-	}
-#endif
-
-	if (error)
-	{
-#ifndef _WIN32
-		version_check_logerror("Header<->library mismatches can make UnrealIRCd *CRASH*! "
-		                "Make sure you don't have multiple versions of openssl installed (eg: "
-		                "one in /usr and one in /usr/local). And, if you recently upgraded them, "
-		                "be sure to recompile UnrealIRCd.");
-#else
-		version_check_logerror("Header<->library mismatches can make UnrealIRCd *CRASH*! "
-		                "This should never happen with official Windows builds... unless "
-		                "you overwrote any .dll files with newer/older ones or something.");
-		win_error();
-#endif
-		tainted = 1;
-	}
-}
-
 extern void applymeblock(void);
 
 extern MODVAR Event *events;
@@ -1174,8 +1096,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 			  break;
 		}
 	}
-
-	do_version_check();
 
 #if !defined(_WIN32)
 #ifndef _WIN32
