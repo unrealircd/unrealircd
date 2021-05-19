@@ -122,6 +122,7 @@ CMD_FUNC(cmd_history)
 	}
 
 	memset(&filter, 0, sizeof(filter));
+	filter.cmd = HFC_SIMPLE;
 	filter.last_lines = lines;
 
 	if ((r = history_request(channel->chname, &filter)))

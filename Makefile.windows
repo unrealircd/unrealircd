@@ -304,6 +304,7 @@ DLL_FILES=SRC/MODULES/CLOAK.DLL \
  SRC/MODULES/REQUIRE-MODULE.DLL \
  SRC/MODULES/IDENT_LOOKUP.DLL \
  SRC/MODULES/HISTORY.DLL \
+ SRC/MODULES/CHATHISTORY.DLL \
  SRC/MODULES/TARGETFLOODPROT.DLL \
  SRC/MODULES/TYPING-INDICATOR.DLL \
  SRC/MODULES/CLIENTTAGDENY.DLL
@@ -1105,6 +1106,9 @@ src/modules/ident_lookup.dll: src/modules/ident_lookup.c $(INCLUDES)
 
 src/modules/history.dll: src/modules/history.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/history.c $(MODLFLAGS)
+
+src/modules/chathistory.dll: src/modules/chathistory.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/chathistory.c $(MODLFLAGS)
 
 src/modules/targetfloodprot.dll: src/modules/targetfloodprot.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/targetfloodprot.c $(MODLFLAGS)

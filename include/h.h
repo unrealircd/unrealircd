@@ -972,6 +972,7 @@ extern int history_destroy(char *object);
 extern int can_receive_history(Client *client);
 extern void history_send_result(Client *client, HistoryResult *r);
 extern void free_history_result(HistoryResult *r);
+extern void free_history_filter(HistoryFilter *f);
 extern void special_delayed_unloading(void);
 extern int write_int64(FILE *fd, uint64_t t);
 extern int write_int32(FILE *fd, uint32_t t);

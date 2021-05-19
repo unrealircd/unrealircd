@@ -580,6 +580,7 @@ int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv
 		HistoryFilter filter;
 		HistoryResult *r;
 		memset(&filter, 0, sizeof(filter));
+		filter.cmd = HFC_SIMPLE;
 		filter.last_lines = cfg.playback_on_join.lines;
 		filter.last_seconds = cfg.playback_on_join.time;
 		r = history_request(channel->chname, &filter);

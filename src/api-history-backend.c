@@ -273,3 +273,12 @@ void history_send_result(Client *client, HistoryResult *r)
 	if (*batch)
 		sendto_one(client, NULL, ":%s BATCH -%s", me.name, batch);
 }
+
+void free_history_filter(HistoryFilter *f)
+{
+	safe_free(f->timestamp_a);
+	safe_free(f->msgid_a);
+	safe_free(f->timestamp_b);
+	safe_free(f->msgid_b);
+	safe_free(f);
+}

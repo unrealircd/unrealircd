@@ -486,11 +486,27 @@ typedef struct {
 
 /** @} */
 
+/** Filter for history: the command / type of the request */
+typedef enum HistoryFilterCommand {
+        HFC_SIMPLE=1,		/**< Simple history request for lines / unixtime */
+        HFC_BEFORE=2,		/**< CHATHISTORY BEFORE */
+        HFC_AFTER=3,		/**< CHATHISTORY AFTER */
+        HFC_LATEST=4,		/**< CHATHISTORY LATEST */
+        HFC_AROUND=5,		/**< CHATHISTORY AROUND */
+        HFC_BETWEEN=6		/**< CHATHISTORY BETWEEN */
+} HistoryFilterCommand;
+
 /** Filter for history get requests */
 typedef struct HistoryFilter HistoryFilter;
 struct HistoryFilter {
-    int last_lines;
-    int last_seconds;
+        HistoryFilterCommand cmd;	/**< Filter command, one of HistoryFilterCommand */
+        int last_lines;			/**< Used by HFC_SIMPLE */
+        int last_seconds;		/**< Used by HFC_SIMPLE */
+        char *timestamp_a;		/**< First parameter of HFC_* (either this or msgid_a) */
+        char *msgid_a;			/**< First parameter of HFC_* (either this or timestamp_a) */
+        char *timestamp_b;		/**< Second parameter of HFC_BETWEEN (either this or msgid_b) */
+        char *msgid_b;			/**< Second parameter of HFC_BETWEEN (either this or timestamp_b) */
+        int limit;			/**< Maximum number of lines to return */
 };
 
 /** History log lines, used by HistoryResult among others */

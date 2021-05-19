@@ -593,19 +593,159 @@ HistoryLogLine *duplicate_log_line(HistoryLogLine *l)
 	return n;
 }
 
-HistoryResult *hbm_history_request(char *object, HistoryFilter *filter)
+/** Quickly append a new line 'n' to result 'r' */
+static void hbm_result_append_line(HistoryResult *r, HistoryLogLine *n)
 {
-	HistoryResult *r;
-	HistoryLogObject *h = hbm_find_object(object);
+	if (!r->log)
+	{
+		/* First item */
+		r->log = r->log_tail = n;
+	} else
+	{
+		/* Quick append to tail */
+		r->log_tail->next = n;
+		n->prev = r->log_tail;
+		r->log_tail = n; /* we are the new tail */
+	}
+}
+
+/** Quickly prepend a new line 'n' to result 'r' */
+static void hbm_result_prepend_line(HistoryResult *r, HistoryLogLine *n)
+{
+	if (!r->log)
+		r->log_tail = n;
+	AddListItem(n, r->log);
+}
+
+/** Put lines in HistoryResult that are after a certain msgid or
+ *  timestamp (excluding said msgid/timestamp).
+ * @param r		The history result set that we will use
+ * @param h		The history log object
+ * @param filter	The filter that applies
+ * @returns Number of lines written, note that this could be zero,
+ *          which is a perfectly valid result.
+ */
+static int hbm_return_after(HistoryResult *r, HistoryLogObject *h, HistoryFilter *filter)
+{
+	HistoryLogLine *l, *n;
+	int written = 0;
+	int started = 0;
+
+	for (l = h->head; l; l = l->next)
+	{
+		/* Not started yet? Check if this is the starting point... */
+		if (!started)
+		{
+			MessageTag *m;
+			if (filter->timestamp_a && ((m = find_mtag(l->mtags, "time"))) && (strcmp(m->value, filter->timestamp_a) > 0))
+			{
+				started = 1;
+			} else
+			if (filter->msgid_a && ((m = find_mtag(l->mtags, "msgid"))) && !strcmp(m->value, filter->msgid_a))
+			{
+				started = 1;
+				continue;
+			}
+		}
+		if (started)
+		{
+			// TODO: check for timestamp_b / timestamp_b which define a 'stop' boundary
+			n = duplicate_log_line(l);
+			hbm_result_append_line(r, n);
+			if (++written >= filter->limit)
+				break;
+		}
+	}
+
+	return written;
+}
+
+/** Put lines in HistoryResult that before after a certain msgid or
+ *  timestamp (excluding said msgid/timestamp).
+ * @param r		The history result set that we will use
+ * @param h		The history log object
+ * @param filter	The filter that applies
+ * @returns Number of lines written, note that this could be zero,
+ *          which is a perfectly valid result.
+ */
+static int hbm_return_before(HistoryResult *r, HistoryLogObject *h, HistoryFilter *filter)
+{
+	HistoryLogLine *l, *n;
+	int written = 0;
+	int started = 0;
+
+	for (l = h->tail; l; l = l->prev)
+	{
+		/* Not started yet? Check if this is the starting point... */
+		if (!started)
+		{
+			MessageTag *m;
+			if (filter->timestamp_a && ((m = find_mtag(l->mtags, "time"))) && (strcmp(m->value, filter->timestamp_a) < 0))
+			{
+				started = 1;
+			} else
+			if (filter->msgid_a && ((m = find_mtag(l->mtags, "msgid"))) && !strcmp(m->value, filter->msgid_a))
+			{
+				started = 1;
+				continue;
+			}
+		}
+		if (started)
+		{
+			// TODO: check for timestamp_b / timestamp_b which define a 'stop' boundary
+			n = duplicate_log_line(l);
+			hbm_result_prepend_line(r, n);
+			if (++written >= filter->limit)
+				break;
+		}
+	}
+
+	return written;
+}
+
+/** Put lines in HistoryResult that are 'latest'
+ * @param r		The history result set that we will use
+ * @param h		The history log object
+ * @param filter	The filter that applies
+ * @returns Number of lines written, note that this could be zero,
+ *          which is a perfectly valid result.
+ */
+static int hbm_return_latest(HistoryResult *r, HistoryLogObject *h, HistoryFilter *filter)
+{
+	HistoryLogLine *l, *n;
+	int written = 0;
+	MessageTag *m;
+
+	for (l = h->tail; l; l = l->prev)
+	{
+		if (filter->timestamp_a && ((m = find_mtag(l->mtags, "time"))) && (strcmp(m->value, filter->timestamp_a) <= 0))
+			break; /* Stop now */
+		else
+		if (filter->msgid_a && ((m = find_mtag(l->mtags, "msgid"))) && !strcmp(m->value, filter->msgid_a))
+			break; /* Stop now */
+
+		n = duplicate_log_line(l);
+		hbm_result_prepend_line(r, n);
+		if (++written >= filter->limit)
+			break;
+	}
+
+	return written;
+}
+
+/** Put lines in HistoryResult based on a 'simple' request, that is: maximum lines or time
+ * @param r		The history result set that we will use
+ * @param h		The history log object
+ * @param filter	The filter that applies
+ * @returns Number of lines written, note that this could be zero,
+ *          which is a perfectly valid result.
+ */
+static int hbm_return_simple(HistoryResult *r, HistoryLogObject *h, HistoryFilter *filter)
+{
 	HistoryLogLine *l;
-	long redline; /* Imaginary timestamp. Before the red line, history is too old. */
 	int lines_sendable = 0, lines_to_skip = 0, cnt = 0;
-
-	if (!h)
-		return NULL; /* nothing found */
-
-	r = safe_alloc(sizeof(HistoryResult));
-	safe_strdup(r->object, object);
+	long redline;
+	int written = 0;
 
 	/* Decide on red line, under this the history is too old.
 	 * Filter can be more strict than history object (but not the other way around):
@@ -635,18 +775,71 @@ HistoryResult *hbm_history_request(char *object, HistoryFilter *filter)
 		{
 			/* Add to result */
 			HistoryLogLine *n = duplicate_log_line(l);
-			if (!r->log)
-			{
-				/* First item */
-				r->log = r->log_tail = n;
-			} else
-			{
-				/* Quick append to tail */
-				r->log_tail->next = n;
-				n->prev = r->log_tail;
-				r->log_tail = n; /* we are the new tail */
-			}
+			hbm_result_append_line(r, n);
+			written++;
 		}
+	}
+
+	return written;
+}
+
+HistoryResult *hbm_history_request(char *object, HistoryFilter *filter)
+{
+	HistoryResult *r;
+	HistoryLogObject *h = hbm_find_object(object);
+	HistoryLogLine *l;
+	int lines_sendable = 0, lines_to_skip = 0, cnt = 0;
+	long redline;
+
+	if (!h)
+		return NULL; /* nothing found */
+
+	/* Check if we need to remove some history entries due to 'time'.
+	 * No need to worry about 'count' as that is being taken care off
+	 * by hbm_history_add().
+	 */
+	if (h->oldest_t < TStime() - h->max_time)
+		hbm_history_cleanup(h);
+
+	r = safe_alloc(sizeof(HistoryResult));
+	safe_strdup(r->object, object);
+
+	switch(filter->cmd)
+	{
+		case HFC_BEFORE:
+			hbm_return_before(r, h, filter);
+			break;
+		case HFC_AFTER:
+			hbm_return_after(r, h, filter);
+			break;
+		case HFC_LATEST:
+			hbm_return_latest(r, h, filter);
+			break;
+		case HFC_AROUND:
+		{
+			int n = 0;
+			int orig_limit = filter->limit;
+
+			/* First request 50% above the search term */
+			if (filter->limit > 1)
+				filter->limit = filter->limit / 2;
+			n = hbm_return_before(r, h, filter);
+			/* Then the remainder (50% or more) below the search term.
+			 *
+			 * Ok, well, unless the original limit was 1 and we already
+			 * sent 1 line, then we may not send anything anymore..
+			 */
+			filter->limit = orig_limit - n;
+			if (filter->limit > 0)
+				hbm_return_after(r, h, filter);
+			break;
+		}
+		case HFC_SIMPLE:
+			hbm_return_simple(r, h, filter);
+			break;
+		default:
+			// unhandled
+			break;
 	}
 
 	return r;
