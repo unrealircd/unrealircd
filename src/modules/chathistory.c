@@ -63,6 +63,10 @@ CMD_FUNC(cmd_chathistory)
 
 	memset(&filter, 0, sizeof(filter));
 
+	/* This command is only for local users */
+	if (!MyUser(client))
+		return;
+
 	if ((parc < 5) || BadPtr(parv[4]))
 	{
 		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS :Insufficient parameters", me.name);
