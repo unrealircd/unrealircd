@@ -156,16 +156,37 @@ CMD_FUNC(cmd_chathistory)
 		return;
 	}
 
-	if (strcmp(parv[1], "TARGETS"))
+	if (!strcmp(parv[1], "TARGETS"))
 	{
-		/* For anything other than "CHATHISTORY TARGETS" we look up the target: */
-		channel = find_channel(parv[2], NULL);
-		if (!channel || !IsMember(client, channel) || !has_channel_mode(channel, 'H'))
+		Membership *mp;
+		int limit;
+
+		filter = safe_alloc(sizeof(HistoryFilter));
+		/* Below this point, instead of 'return', use 'goto end' */
+
+		if (!chathistory_token(parv[2], "timestamp", &filter->timestamp_a))
 		{
-			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_TARGET %s %s :Messages could not be retrieved",
-				me.name, parv[1], parv[2]);
-			return;
+			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %s :Invalid parameter, must be timestamp=xxx",
+				me.name, parv[1], parv[3]);
+			goto end;
 		}
+		if (!chathistory_token(parv[3], "timestamp", &filter->timestamp_b))
+		{
+			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %s :Invalid parameter, must be timestamp=xxx",
+				me.name, parv[1], parv[4]);
+			goto end;
+		}
+		limit = atoi(parv[4]);
+		chathistory_targets(client, filter, limit);
+		goto end;
+	}
+
+	channel = find_channel(parv[2], NULL);
+	if (!channel || !IsMember(client, channel) || !has_channel_mode(channel, 'H'))
+	{
+		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_TARGET %s %s :Messages could not be retrieved",
+			me.name, parv[1], parv[2]);
+		return;
 	}
 
 	filter = safe_alloc(sizeof(HistoryFilter));
@@ -243,27 +264,6 @@ CMD_FUNC(cmd_chathistory)
 			goto end;
 		}
 		filter->limit = atoi(parv[5]);
-	} else
-	if (!strcmp(parv[1], "TARGETS"))
-	{
-		Membership *mp;
-		int limit;
-
-		if (!chathistory_token(parv[2], "timestamp", &filter->timestamp_a))
-		{
-			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %s :Invalid parameter, must be timestamp=xxx",
-				me.name, parv[1], parv[3]);
-			goto end;
-		}
-		if (!chathistory_token(parv[3], "timestamp", &filter->timestamp_b))
-		{
-			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %s :Invalid parameter, must be timestamp=xxx",
-				me.name, parv[1], parv[4]);
-			goto end;
-		}
-		limit = atoi(parv[4]);
-		chathistory_targets(client, filter, limit);
-		goto end;
 	} else {
 		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s :Invalid subcommand", me.name, parv[1]);
 		goto end;
