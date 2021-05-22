@@ -263,6 +263,7 @@ CMD_FUNC(cmd_chathistory)
 		}
 		limit = atoi(parv[4]);
 		chathistory_targets(client, filter, limit);
+		goto end;
 	} else {
 		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s :Invalid subcommand", me.name, parv[1]);
 		goto end;
