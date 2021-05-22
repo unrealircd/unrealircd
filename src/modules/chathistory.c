@@ -140,6 +140,25 @@ CMD_FUNC(cmd_chathistory)
 			goto end;
 		}
 		filter->limit = atoi(parv[4]);
+	} else
+	if (!strcmp(parv[1], "BETWEEN"))
+	{
+		filter->cmd = HFC_BETWEEN;
+		if (!chathistory_token(parv[3], "timestamp", &filter->timestamp_a) &&
+		    !chathistory_token(parv[3], "msgid", &filter->msgid_a))
+		{
+			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %s :Invalid parameter, must be timestamp=xxx or msgid=xxx",
+				me.name, parv[1], parv[3]);
+			goto end;
+		}
+		if (!chathistory_token(parv[4], "timestamp", &filter->timestamp_b) &&
+		    !chathistory_token(parv[4], "msgid", &filter->msgid_b))
+		{
+			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %s :Invalid parameter, must be timestamp=xxx or msgid=xxx",
+				me.name, parv[1], parv[4]);
+			goto end;
+		}
+		filter->limit = atoi(parv[5]);
 	} else {
 		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s :Invalid subcommand", me.name, parv[1]);
 		goto end;

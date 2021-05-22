@@ -630,13 +630,13 @@ static int hbm_return_after(HistoryResult *r, HistoryLogObject *h, HistoryFilter
 	HistoryLogLine *l, *n;
 	int written = 0;
 	int started = 0;
+	MessageTag *m;
 
 	for (l = h->head; l; l = l->next)
 	{
 		/* Not started yet? Check if this is the starting point... */
 		if (!started)
 		{
-			MessageTag *m;
 			if (filter->timestamp_a && ((m = find_mtag(l->mtags, "time"))) && (strcmp(m->value, filter->timestamp_a) > 0))
 			{
 				started = 1;
@@ -649,7 +649,17 @@ static int hbm_return_after(HistoryResult *r, HistoryLogObject *h, HistoryFilter
 		}
 		if (started)
 		{
-			// TODO: check for timestamp_b / timestamp_b which define a 'stop' boundary
+			/* Check if we need to stop */
+			if (filter->timestamp_b && ((m = find_mtag(l->mtags, "time"))) && (strcmp(m->value, filter->timestamp_b) >= 0))
+			{
+				break;
+			} else
+			if (filter->msgid_b && ((m = find_mtag(l->mtags, "msgid"))) && !strcmp(m->value, filter->msgid_b))
+			{
+				break;
+			}
+
+			/* Add line to the return buffer */
 			n = duplicate_log_line(l);
 			hbm_result_append_line(r, n);
 			if (++written >= filter->limit)
@@ -673,13 +683,13 @@ static int hbm_return_before(HistoryResult *r, HistoryLogObject *h, HistoryFilte
 	HistoryLogLine *l, *n;
 	int written = 0;
 	int started = 0;
+	MessageTag *m;
 
 	for (l = h->tail; l; l = l->prev)
 	{
 		/* Not started yet? Check if this is the starting point... */
 		if (!started)
 		{
-			MessageTag *m;
 			if (filter->timestamp_a && ((m = find_mtag(l->mtags, "time"))) && (strcmp(m->value, filter->timestamp_a) < 0))
 			{
 				started = 1;
@@ -692,7 +702,17 @@ static int hbm_return_before(HistoryResult *r, HistoryLogObject *h, HistoryFilte
 		}
 		if (started)
 		{
-			// TODO: check for timestamp_b / timestamp_b which define a 'stop' boundary
+			/* Check if we need to stop */
+			if (filter->timestamp_b && ((m = find_mtag(l->mtags, "time"))) && (strcmp(m->value, filter->timestamp_b) < 0))
+			{
+				break;
+			} else
+			if (filter->msgid_b && ((m = find_mtag(l->mtags, "msgid"))) && !strcmp(m->value, filter->msgid_b))
+			{
+				break;
+			}
+
+			/* Add line to the return buffer */
 			n = duplicate_log_line(l);
 			hbm_result_prepend_line(r, n);
 			if (++written >= filter->limit)
@@ -783,6 +803,132 @@ static int hbm_return_simple(HistoryResult *r, HistoryLogObject *h, HistoryFilte
 	return written;
 }
 
+/** Put lines in HistoryResult that are 'around' a certain point.
+ * @param r		The history result set that we will use
+ * @param h		The history log object
+ * @param filter	The filter that applies
+ * @returns Number of lines written, note that this could be zero,
+ *          which is a perfectly valid result.
+ */
+static int hbm_return_around(HistoryResult *r, HistoryLogObject *h, HistoryFilter *filter)
+{
+	int n = 0;
+	int orig_limit = filter->limit;
+
+	/* First request 50% above the search term */
+	if (filter->limit > 1)
+		filter->limit = filter->limit / 2;
+	n = hbm_return_before(r, h, filter);
+	/* Then the remainder (50% or more) below the search term.
+	 *
+	 * Ok, well, unless the original limit was 1 and we already
+	 * sent 1 line, then we may not send anything anymore..
+	 */
+	filter->limit = orig_limit - n;
+	if (filter->limit > 0)
+		n += hbm_return_after(r, h, filter);
+
+	return n;
+}
+
+/** Figure out the direction (forwards or backwards) for CHATHISTORY BETWEEN request
+ * @param h		The history log object
+ * @param filter	The filter that applies
+ * @returns 0 for backward searching, 1 for forward searching, -1 for invalid / not found
+ */
+static int hbm_return_between_figure_out_direction(HistoryLogObject *h, HistoryFilter *filter)
+{
+	HistoryLogLine *l;
+	int found_a = 0;
+	int found_b = 0;
+	MessageTag *m;
+
+	/* Two timestamps? Then we can easily tell the direction. */
+	if (filter->timestamp_a && filter->timestamp_b)
+		return (strcmp(filter->timestamp_a, filter->timestamp_b) <= 0) ? 1 : 0;
+
+	for (l = h->head; l; l = l->next)
+	{
+		if (!found_a)
+		{
+			if (filter->timestamp_a && ((m = find_mtag(l->mtags, "time"))) && (strcmp(m->value, filter->timestamp_a) >= 0))
+			{
+				found_a = 1;
+			} else
+			if (filter->msgid_a && ((m = find_mtag(l->mtags, "msgid"))) && !strcmp(m->value, filter->msgid_a))
+			{
+				found_a = 1;
+			}
+			if (found_a)
+			{
+				if (found_b)
+				{
+					/* B was found before A? Then the result is: backwards */
+					return 0;
+				}
+				if (filter->timestamp_b && (m = find_mtag(l->mtags, "time")) && m->value)
+				{
+					/* We can already resolve the direction now: */
+					char *timestamp_a = m->value;
+					return (strcmp(timestamp_a, filter->timestamp_b) <= 0) ? 1 : 0;
+				}
+			}
+		}
+		if (!found_b)
+		{
+			if (filter->timestamp_b && ((m = find_mtag(l->mtags, "time"))) && (strcmp(m->value, filter->timestamp_b) >= 0))
+			{
+				found_b = 1;
+			} else
+			if (filter->msgid_b && ((m = find_mtag(l->mtags, "msgid"))) && !strcmp(m->value, filter->msgid_b))
+			{
+				found_b = 1;
+			}
+			if (found_b)
+			{
+				if (found_a)
+				{
+					/* A was found before B? Then the result is: forwards */
+					return 1;
+				}
+				if (filter->timestamp_a && (m = find_mtag(l->mtags, "time")) && m->value)
+				{
+					/* We can already resolve the direction now: */
+					char *timestamp_b = m->value;
+					return (strcmp(filter->timestamp_a, timestamp_b) <= 0) ? 1 : 0;
+				}
+			}
+		}
+	}
+
+	/* Neither points were found OR
+	 * one of the point is a msgid that could not be found.
+	 */
+	return -1; /* Result: invalid */
+}
+
+/** Put lines in HistoryResult that are 'between' two points.
+ * @param r		The history result set that we will use
+ * @param h		The history log object
+ * @param filter	The filter that applies
+ * @returns Number of lines written, note that this could be zero,
+ *          which is a perfectly valid result.
+ */
+static int hbm_return_between(HistoryResult *r, HistoryLogObject *h, HistoryFilter *filter)
+{
+	int direction;
+
+	direction = hbm_return_between_figure_out_direction(h, filter);
+
+	if (direction == 1)
+		return hbm_return_after(r, h, filter);
+	else if (direction == 0)
+		return hbm_return_before(r, h, filter);
+	/* else direction is -1 which means not found / invalid */
+
+	return 0;
+}
+
 HistoryResult *hbm_history_request(char *object, HistoryFilter *filter)
 {
 	HistoryResult *r;
@@ -816,24 +962,11 @@ HistoryResult *hbm_history_request(char *object, HistoryFilter *filter)
 			hbm_return_latest(r, h, filter);
 			break;
 		case HFC_AROUND:
-		{
-			int n = 0;
-			int orig_limit = filter->limit;
-
-			/* First request 50% above the search term */
-			if (filter->limit > 1)
-				filter->limit = filter->limit / 2;
-			n = hbm_return_before(r, h, filter);
-			/* Then the remainder (50% or more) below the search term.
-			 *
-			 * Ok, well, unless the original limit was 1 and we already
-			 * sent 1 line, then we may not send anything anymore..
-			 */
-			filter->limit = orig_limit - n;
-			if (filter->limit > 0)
-				hbm_return_after(r, h, filter);
+			hbm_return_around(r, h, filter);
 			break;
-		}
+		case HFC_BETWEEN:
+			hbm_return_between(r, h, filter);
+			break;
 		case HFC_SIMPLE:
 			hbm_return_simple(r, h, filter);
 			break;
