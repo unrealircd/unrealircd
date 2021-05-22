@@ -19,7 +19,7 @@ CMD_FUNC(cmd_chathistory);
 /* Global variables */
 long CAP_CHATHISTORY = 0L;
 
-// TODO: change to 50 and move to config:
+/* TODO: consider moving to config file */
 #define CHATHISTORY_LIMIT 50
 
 MOD_INIT()
@@ -37,6 +37,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	ISupportSetFmt(modinfo->handle, "CHATHISTORY", "%d", CHATHISTORY_LIMIT);
 	return MOD_SUCCESS;
 }
 
