@@ -572,7 +572,14 @@ int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix,
 
 int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[])
 {
+	/* Only for +H channels */
 	if (!HistoryEnabled(channel))
+		return 0;
+
+	/* No history-on-join for clients that implement CHATHISTORY,
+	 * they will pull history themselves if they need it.
+	 */
+	if (HasCapability(client, "draft/chathistory") || HasCapability(client, "chathistory"))
 		return 0;
 
 	if (MyUser(client) && can_receive_history(client))

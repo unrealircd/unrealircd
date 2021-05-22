@@ -16,16 +16,22 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 CMD_FUNC(cmd_chathistory);
 
+/* Global variables */
+long CAP_CHATHISTORY = 0L;
+
 // TODO: change to 50 and move to config:
 #define CHATHISTORY_LIMIT 50
 
 MOD_INIT()
 {
-	HistoryBackendInfo hbi;
+	ClientCapabilityInfo c;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	CommandAdd(modinfo->handle, "CHATHISTORY", cmd_chathistory, MAXPARA, CMD_USER);
 
+	memset(&c, 0, sizeof(c));
+	c.name = "draft/chathistory";
+	ClientCapabilityAdd(modinfo->handle, &c, &CAP_CHATHISTORY);
 	return MOD_SUCCESS;
 }
 
