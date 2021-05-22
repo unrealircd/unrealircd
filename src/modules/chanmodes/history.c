@@ -410,6 +410,24 @@ int history_chanmode_is_ok(Client *client, Channel *channel, char mode, char *pa
 	return EX_DENY;
 }
 
+static void history_chanmode_helper(char *buf, size_t bufsize, int lines, long t)
+{
+	if ((t % 86400) == 0)
+	{
+		/* Can be represented in full days, eg "1d" */
+		snprintf(buf, bufsize, "%d:%ldd", lines, t / 86400);
+	} else
+	if ((t % 3600) == 0)
+	{
+		/* Can be represented in hours, eg "8h" */
+		snprintf(buf, bufsize, "%d:%ldh", lines, t / 3600);
+	} else
+	{
+		/* Otherwise, stick to minutes */
+		snprintf(buf, bufsize, "%d:%ldm", lines, t / 60);
+	}
+}
+
 /** Convert channel parameter to something proper.
  * NOTE: client may be NULL if called for e.g. set::modes-playback-on-join
  */
@@ -422,7 +440,7 @@ char *history_chanmode_conv_param(char *param, Client *client)
 	if (!history_parse_chanmode(param, &lines, &t))
 		return NULL;
 
-	snprintf(buf, sizeof(buf), "%d:%ldm", lines, t / 60);
+	history_chanmode_helper(buf, sizeof(buf), lines, t);
 	return buf;
 }
 
@@ -457,13 +475,7 @@ char *history_chanmode_get_param(void *h_in)
 	if (!h_in)
 		return NULL;
 
-	/* For now we convert the time to minutes for displaying purposes
-	 * and show it as eg 5:10m.
-	 * In a later release we can have a go at converting to '1h', '1d'
-	 * and such, but not before most people run 5.0.2+ as otherwise you
-	 * get desyncs in channel history retention times.
-	 */
-	snprintf(buf, sizeof(buf), "%d:%ldm", h->max_lines, h->max_time / 60);
+	history_chanmode_helper(buf, sizeof(buf), h->max_lines, h->max_time);
 	return buf;
 }
 
