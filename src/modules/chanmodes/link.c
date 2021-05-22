@@ -48,7 +48,7 @@ typedef enum {
 int cmodeL_is_ok(Client *client, Channel *channel, char mode, char *para, int type, int what);
 void *cmodeL_put_param(void *r_in, char *param);
 char *cmodeL_get_param(void *r_in);
-char *cmodeL_conv_param(char *param_in, Client *client);
+char *cmodeL_conv_param(char *param_in, Client *client, Channel *channel);
 void cmodeL_free_param(void *r);
 void *cmodeL_dup_struct(void *r_in);
 int cmodeL_sjoin_check(Channel *channel, void *ourx, void *theirx);
@@ -171,7 +171,7 @@ char *cmodeL_get_param(void *r_in)
 /** Convert parameter to something proper.
  * NOTE: client may be NULL
  */
-char *cmodeL_conv_param(char *param, Client *client)
+char *cmodeL_conv_param(char *param, Client *client, Channel *channel)
 {
 	char *p;
 

@@ -19,10 +19,12 @@ struct ConfigHistoryExt {
 	int lines; /**< number of lines */
 	long time; /**< seconds */
 };
-struct {
+typedef struct cfgstruct cfgstruct;
+struct cfgstruct {
 	ConfigHistoryExt playback_on_join; /**< Maximum number of lines & time to playback on-join */
-	ConfigHistoryExt max_storage_per_channel; /**< Maximum number of lines & time to record */
-} cfg;
+	ConfigHistoryExt max_storage_per_channel_registered; /**< Maximum number of lines & time to record for +r channels*/
+	ConfigHistoryExt max_storage_per_channel_unregistered; /**< Maximum number of lines & time to record for -r channels */
+};
 
 typedef struct HistoryChanMode HistoryChanMode;
 struct HistoryChanMode {
@@ -30,19 +32,24 @@ struct HistoryChanMode {
 	unsigned long max_time; /**< Maximum number of time (in seconds) to record */
 };
 
+/* Global variables */
 Cmode_t EXTMODE_HISTORY = 0L;
+static cfgstruct cfg;
+static cfgstruct test;
+
 #define HistoryEnabled(channel)    (channel->mode.extmode & EXTMODE_HISTORY)
 
 /* Forward declarations */
-static void init_config(void);
+static void init_config(cfgstruct *cfg);
 int history_config_test(ConfigFile *, ConfigEntry *, int, int *);
+int history_config_posttest(int *);
 int history_config_run(ConfigFile *, ConfigEntry *, int);
 int history_chanmode_change(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
 static int compare_history_modes(HistoryChanMode *a, HistoryChanMode *b);
 int history_chanmode_is_ok(Client *client, Channel *channel, char mode, char *para, int type, int what);
 void *history_chanmode_put_param(void *r_in, char *param);
 char *history_chanmode_get_param(void *r_in);
-char *history_chanmode_conv_param(char *param, Client *client);
+char *history_chanmode_conv_param(char *param, Client *client, Channel *channel);
 void history_chanmode_free_param(void *r);
 void *history_chanmode_dup_struct(void *r_in);
 int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx);
@@ -52,7 +59,10 @@ int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv
 
 MOD_TEST()
 {
+	init_config(&test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, history_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, history_config_posttest);
+
 	return MOD_SUCCESS;
 }
 
@@ -75,7 +85,7 @@ MOD_INIT()
 	creq.sjoin_check = history_chanmode_sjoin_check;
 	CmodeAdd(modinfo->handle, creq, &EXTMODE_HISTORY);
 
-	init_config();
+	init_config(&cfg);
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, history_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CHANMODE, 0, history_chanmode_change);
@@ -96,14 +106,16 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-static void init_config(void)
+static void init_config(cfgstruct *cfg)
 {
 	/* Set default values */
-	memset(&cfg, 0, sizeof(cfg));
-	cfg.playback_on_join.lines = 15;
-	cfg.playback_on_join.time = 86400;
-	cfg.max_storage_per_channel.lines = 200;
-	cfg.max_storage_per_channel.time = 86400*7;
+	memset(cfg, 0, sizeof(cfgstruct));
+	cfg->playback_on_join.lines = 15;
+	cfg->playback_on_join.time = 86400;
+	cfg->max_storage_per_channel_unregistered.lines = 200;
+	cfg->max_storage_per_channel_unregistered.time = 86400*31;
+	cfg->max_storage_per_channel_registered.lines = 5000;
+	cfg->max_storage_per_channel_registered.time = 86400*31;
 }
 
 #define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
@@ -111,9 +123,9 @@ static void init_config(void)
 int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
-	ConfigEntry *cep, *cepp, *cep4;
-	int on_join_lines=0, maximum_storage_lines=0;
-	long on_join_time=0L, maximum_storage_time=0L;
+	ConfigEntry *cep, *cepp, *cep4, *cep5;
+	int on_join_lines=0, maximum_storage_lines_registered=0, maximum_storage_lines_unregistered=0;
+	long on_join_time=0L, maximum_storage_time_registered=0L, maximum_storage_time_unregistered=0L;
 
 	/* We only care about set::history */
 	if ((type != CONFIG_SET) || strcmp(ce->ce_varname, "history"))
@@ -142,7 +154,7 @@ int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 								errors++;
 								continue;
 							}
-							on_join_lines = v;
+							test.playback_on_join.lines = v;
 						} else
 						if (!strcmp(cep4->ce_varname, "time"))
 						{
@@ -156,7 +168,7 @@ int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 								errors++;
 								continue;
 							}
-							on_join_time = v;
+							test.playback_on_join.time = v;
 						} else
 						{
 							config_error_unknown(cep4->ce_fileptr->cf_filename,
@@ -169,37 +181,87 @@ int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				{
 					for (cep4 = cepp->ce_entries; cep4; cep4 = cep4->ce_next)
 					{
-						if (!strcmp(cep4->ce_varname, "lines"))
+						if (!strcmp(cep4->ce_varname, "registered"))
 						{
-							int v;
-							CheckNull(cep4);
-							v = atoi(cep4->ce_vardata);
-							if (v < 1)
+							for (cep5 = cep4->ce_entries; cep5; cep5 = cep5->ce_next)
 							{
-								config_error("%s:%i: set::history::channel::max-storage-per-channel::lines must be a positive number.",
-								             cep4->ce_fileptr->cf_filename, cep4->ce_varlinenum);
-								errors++;
-								continue;
+								if (!strcmp(cep5->ce_varname, "lines"))
+								{
+									int v;
+									CheckNull(cep5);
+									v = atoi(cep5->ce_vardata);
+									if (v < 1)
+									{
+										config_error("%s:%i: set::history::channel::max-storage-per-channel::registered::lines must be a positive number.",
+											     cep5->ce_fileptr->cf_filename, cep5->ce_varlinenum);
+										errors++;
+										continue;
+									}
+									test.max_storage_per_channel_registered.lines = v;
+								} else
+								if (!strcmp(cep5->ce_varname, "time"))
+								{
+									long v;
+									CheckNull(cep5);
+									v = config_checkval(cep5->ce_vardata, CFG_TIME);
+									if (v < 1)
+									{
+										config_error("%s:%i: set::history::channel::max-storage-per-channel::registered::time must be a positive number.",
+											     cep5->ce_fileptr->cf_filename, cep5->ce_varlinenum);
+										errors++;
+										continue;
+									}
+									test.max_storage_per_channel_registered.time = v;
+								} else
+								{
+									config_error_unknown(cep5->ce_fileptr->cf_filename,
+										cep5->ce_varlinenum, "set::history::channel::max-storage-per-channel::registered", cep5->ce_varname);
+									errors++;
+								}
 							}
-							maximum_storage_lines = v;
 						} else
-						if (!strcmp(cep4->ce_varname, "time"))
+						if (!strcmp(cep4->ce_varname, "unregistered"))
 						{
-							long v;
-							CheckNull(cep4);
-							v = config_checkval(cep4->ce_vardata, CFG_TIME);
-							if (v < 1)
+							for (cep5 = cep4->ce_entries; cep5; cep5 = cep5->ce_next)
 							{
-								config_error("%s:%i: set::history::channel::max-storage-per-channel::time must be a positive number.",
-								             cep4->ce_fileptr->cf_filename, cep4->ce_varlinenum);
-								errors++;
-								continue;
+								if (!strcmp(cep5->ce_varname, "lines"))
+								{
+									int v;
+									CheckNull(cep5);
+									v = atoi(cep5->ce_vardata);
+									if (v < 1)
+									{
+										config_error("%s:%i: set::history::channel::max-storage-per-channel::unregistered::lines must be a positive number.",
+											     cep5->ce_fileptr->cf_filename, cep5->ce_varlinenum);
+										errors++;
+										continue;
+									}
+									test.max_storage_per_channel_unregistered.lines = v;
+								} else
+								if (!strcmp(cep5->ce_varname, "time"))
+								{
+									long v;
+									CheckNull(cep5);
+									v = config_checkval(cep5->ce_vardata, CFG_TIME);
+									if (v < 1)
+									{
+										config_error("%s:%i: set::history::channel::max-storage-per-channel::unregistered::time must be a positive number.",
+											     cep5->ce_fileptr->cf_filename, cep5->ce_varlinenum);
+										errors++;
+										continue;
+									}
+									test.max_storage_per_channel_unregistered.time = v;
+								} else
+								{
+									config_error_unknown(cep5->ce_fileptr->cf_filename,
+										cep5->ce_varlinenum, "set::history::channel::max-storage-per-channel::unregistered", cep5->ce_varname);
+									errors++;
+								}
 							}
-							maximum_storage_time = v;
 						} else
 						{
-							config_error_unknown(cep4->ce_fileptr->cf_filename,
-								cep4->ce_varlinenum, "set::history::channel::max-storage-per-channel", cep4->ce_varname);
+							config_error_unknown(cep->ce_fileptr->cf_filename,
+								cep->ce_varlinenum, "set::history::max-storage-per-channel", cep->ce_varname);
 							errors++;
 						}
 					}
@@ -249,23 +311,25 @@ int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		}
 	}
 
-	if ((on_join_time && maximum_storage_time) && (on_join_time > maximum_storage_time))
-	{
-		config_error("set::history::channel::playback-on-join::time cannot be higher than set::history::channel::max-storage-per-channel::time. Either set the playback-on-join::time lower or the maximum::time higher.");
-		errors++;
-	}
-	if ((on_join_lines && maximum_storage_lines) && (on_join_lines > maximum_storage_lines))
-	{
-		config_error("set::history::channel::playback-on-join::lines cannot be higher than set::history::channel::max-storage-per-channel::lines. Either set the playback-on-join::lines lower or the maximum::lines higher.");
-		errors++;
-	}
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+int history_config_posttest(int *errs)
+{
+	int errors = 0;
+
+	/* We could check here for on join lines / on join time being bigger than max storage but..
+	 * not really important.
+	 */
+
 	*errs = errors;
 	return errors ? -1 : 1;
 }
 
 int history_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
-	ConfigEntry *cep, *cepp, *cep4;
+	ConfigEntry *cep, *cepp, *cep4, *cep5;
 
 	if ((type != CONFIG_SET) || strcmp(ce->ce_varname, "history"))
 		return 0;
@@ -294,13 +358,33 @@ int history_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 				{
 					for (cep4 = cepp->ce_entries; cep4; cep4 = cep4->ce_next)
 					{
-						if (!strcmp(cep4->ce_varname, "lines"))
+						if (!strcmp(cep4->ce_varname, "registered"))
 						{
-							cfg.max_storage_per_channel.lines = atoi(cep4->ce_vardata);
+							for (cep5 = cep4->ce_entries; cep5; cep5 = cep5->ce_next)
+							{
+								if (!strcmp(cep5->ce_varname, "lines"))
+								{
+									cfg.max_storage_per_channel_registered.lines = atoi(cep5->ce_vardata);
+								} else
+								if (!strcmp(cep5->ce_varname, "time"))
+								{
+									cfg.max_storage_per_channel_registered.time = config_checkval(cep5->ce_vardata, CFG_TIME);
+								}
+							}
 						} else
-						if (!strcmp(cep4->ce_varname, "time"))
+						if (!strcmp(cep4->ce_varname, "unregistered"))
 						{
-							cfg.max_storage_per_channel.time = config_checkval(cep4->ce_vardata, CFG_TIME);
+							for (cep5 = cep4->ce_entries; cep5; cep5 = cep5->ce_next)
+							{
+								if (!strcmp(cep5->ce_varname, "lines"))
+								{
+									cfg.max_storage_per_channel_unregistered.lines = atoi(cep5->ce_vardata);
+								} else
+								if (!strcmp(cep5->ce_varname, "time"))
+								{
+									cfg.max_storage_per_channel_unregistered.time = config_checkval(cep5->ce_vardata, CFG_TIME);
+								}
+							}
 						}
 					}
 				} else
@@ -325,7 +409,7 @@ int history_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
  * @param lines: The number of lines (the X in +H X:Y)
  * @param t:     The time value (the Y in +H X:Y)
   */
-int history_parse_chanmode(char *param, int *lines, long *t)
+int history_parse_chanmode(Channel *channel, char *param, int *lines, long *t)
 {
 	char buf[64], *p, *q;
 	char contains_non_digit = 0;
@@ -368,12 +452,20 @@ int history_parse_chanmode(char *param, int *lines, long *t)
 		return 0;
 
 	/* Check imposed configuration limits... */
-	if (*lines > cfg.max_storage_per_channel.lines)
-		*lines = cfg.max_storage_per_channel.lines;
+	if (!channel || has_channel_mode(channel, 'r'))
+	{
+		if (*lines > cfg.max_storage_per_channel_registered.lines)
+			*lines = cfg.max_storage_per_channel_registered.lines;
 
-	if (*t > cfg.max_storage_per_channel.time)
-		*t = cfg.max_storage_per_channel.time;
+		if (*t > cfg.max_storage_per_channel_registered.time)
+			*t = cfg.max_storage_per_channel_registered.time;
+	} else {
+		if (*lines > cfg.max_storage_per_channel_unregistered.lines)
+			*lines = cfg.max_storage_per_channel_unregistered.lines;
 
+		if (*t > cfg.max_storage_per_channel_unregistered.time)
+			*t = cfg.max_storage_per_channel_unregistered.time;
+	}
 	return 1;
 }
 
@@ -396,7 +488,7 @@ int history_chanmode_is_ok(Client *client, Channel *channel, char mode, char *pa
 		int lines = 0;
 		long t = 0L;
 
-		if (!history_parse_chanmode(param, &lines, &t))
+		if (!history_parse_chanmode(channel, param, &lines, &t))
 		{
 			sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'H', "Invalid syntax for MODE +H. Use +H lines:period. The period must be in minutes (eg: 10) or a time value (eg: 1h).");
 			return EX_DENY;
@@ -431,13 +523,13 @@ static void history_chanmode_helper(char *buf, size_t bufsize, int lines, long t
 /** Convert channel parameter to something proper.
  * NOTE: client may be NULL if called for e.g. set::modes-playback-on-join
  */
-char *history_chanmode_conv_param(char *param, Client *client)
+char *history_chanmode_conv_param(char *param, Client *client, Channel *channel)
 {
 	static char buf[64];
 	int lines = 0;
 	long t = 0L;
 
-	if (!history_parse_chanmode(param, &lines, &t))
+	if (!history_parse_chanmode(channel, param, &lines, &t))
 		return NULL;
 
 	history_chanmode_helper(buf, sizeof(buf), lines, t);
@@ -451,7 +543,7 @@ void *history_chanmode_put_param(void *mode_in, char *param)
 	int lines = 0;
 	long t = 0L;
 
-	if (!history_parse_chanmode(param, &lines, &t))
+	if (!history_parse_chanmode(NULL, param, &lines, &t))
 		return NULL;
 
 	if (!h)

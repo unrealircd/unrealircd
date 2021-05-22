@@ -132,7 +132,7 @@ uint64_t gen_floodprot_msghash(char *text);
 int cmodef_is_ok(Client *client, Channel *channel, char mode, char *para, int type, int what);
 void *cmodef_put_param(void *r_in, char *param);
 char *cmodef_get_param(void *r_in);
-char *cmodef_conv_param(char *param_in, Client *client);
+char *cmodef_conv_param(char *param_in, Client *client, Channel *channel);
 void cmodef_free_param(void *r);
 void *cmodef_dup_struct(void *r_in);
 int cmodef_sjoin_check(Channel *channel, void *ourx, void *theirx);
@@ -596,7 +596,7 @@ char *cmodef_get_param(void *r_in)
 /** Convert parameter to something proper.
  * NOTE: client may be NULL if called for e.g. set::modes-on-join
  */
-char *cmodef_conv_param(char *param_in, Client *client)
+char *cmodef_conv_param(char *param_in, Client *client, Channel *channel)
 {
 	static char retbuf[256];
 	char param[256];

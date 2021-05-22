@@ -1293,7 +1293,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 			if (handler->is_ok(client, channel, mode, param, EXCHK_PARAM, what) == FALSE)
 				return paracnt; /* rejected by is_ok */
 
-			morphed = handler->conv_param(param, client);
+			morphed = handler->conv_param(param, client, channel);
 			if (!morphed)
 				return paracnt; /* rejected by conv_param */
 
@@ -1303,12 +1303,12 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 				char *now, *requested;
 				char flag = handler->flag;
 				now = cm_getparameter(channel, flag);
-				requested = handler->conv_param(param, client);
+				requested = handler->conv_param(param, client, channel);
 				if (now && requested && !strcmp(now, requested))
 					return paracnt; /* ignore... */
 			}
 			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "+%c%s",
-				handler->flag, handler->conv_param(param, client));
+				handler->flag, handler->conv_param(param, client, channel));
 			(*pcount)++;
 			param = morphed; /* set param to converted parameter. */
 		}

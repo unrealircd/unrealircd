@@ -241,14 +241,15 @@ typedef struct {
 	 *
 	 * This function pointer is NULL (unused) for modes without parameters.
 	 * @param para		The input parameter.
-	 * @param client	The client that the mode request came from (can be NULL)
+	 * @param client	The client that the mode request came from (can be NULL!)
+	 * @param channel	The channel that the mode request came from (can be NULL!)
 	 * @returns pointer to output string (temporary storage)
 	 * @note The 'client' field will be NULL if for example called for set::modes-on-join.
-	 * @note You should probably not use 'client' in most cases.
+	 * @note You should probably not use 'client' or 'channel' in most cases.
 	 *       In particular you MUST NOT SEND ERRORS to the client.
 	 *       This should be done in is_ok() and not in conv_param().
 	 */
-	char *(*conv_param)(char *para, Client *client);
+	char *(*conv_param)(char *para, Client *client, Channel *channel);
 
 	/** Free and remove parameter from list.
 	 * This function pointer is NULL (unused) for modes without parameters.
@@ -309,7 +310,7 @@ typedef struct {
 	int		(*is_ok)(Client *,Channel *, char mode, char *para, int, int);
 	void *	(*put_param)(void *, char *);
 	char *		(*get_param)(void *);
-	char *		(*conv_param)(char *, Client *);
+	char *		(*conv_param)(char *, Client *, Channel *);
 	void		(*free_param)(void *);
 	void *	(*dup_struct)(void *);
 	int		(*sjoin_check)(Channel *, void *, void *);

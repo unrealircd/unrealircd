@@ -540,7 +540,7 @@ void conf_channelmodes(char *modes, struct ChMode *store, int warn)
 					{
 						if (!param)
 							break;
-						param = Channelmode_Table[i].conv_param(param, NULL);
+						param = Channelmode_Table[i].conv_param(param, NULL, NULL);
 						if (!param)
 							break; /* invalid parameter fmt, do not set mode. */
 						store->extparams[i] = raw_strdup(param);
