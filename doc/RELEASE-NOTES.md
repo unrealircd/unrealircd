@@ -47,6 +47,9 @@ Module coders / Developers:
   ```HOOKTYPE_REMOTE_NICKCHANGE``` to include an
   ```MessageTag *mtags``` argument in the middle.
   You can use ```#if UNREAL_VERSION_TIME>=202115``` to detect this.
+* Updated channel mode ```conv_param``` function to
+  include a ```Channel *channel``` argument at the end.
+  You can use ```#if UNREAL_VERSION_TIME>=202120``` to detect this.
 
 Reminder: UnrealIRCd 4 is no longer supported
 ----------------------------------------------
