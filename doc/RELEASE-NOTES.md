@@ -3,6 +3,11 @@ UnrealIRCd 5.0.10-git Release Notes
 
 This is the current development version (git) of UnrealIRCd.
 
+This UnrealIRCd release focusses on channel history. A way to store channel
+history encrypted on disk has been added (to preserve between server restarts)
+and the IRCv3 CHATHISTORY command has been implemented to allow fetching
+thousands of lines of channel history.
+
 Enhancements:
 * Add support for database encryption. The way this works
   is that you define an encryption password in a
@@ -26,6 +31,16 @@ Enhancements:
     names are visible in the filenames for optimal privacy.
   * See [Persistent channel history](https://www.unrealircd.org/docs/Set_block#Persistent_channel_history)
     on how to enable this. By default it is off.
+* Add optional support for IRCv3
+  [draft/chathistory](https://ircv3.net/specs/extensions/chathistory).
+  This module can be loaded via ```loadmodule "chathistory";```
+* The maximums for channel mode ```+H``` have been raised and are now
+  different for ```+r``` (registered) and ```-r``` channels. For unregistered
+  channels the limit is now 200 lines / 31 days. For registered channels
+  the limit is 5000 lines / 31 days. The old limit for both was 200 lines / 7 days.
+  These maximums can be changed in the now slightly different
+  [set::history::channel::max-storage-per-channel](https://www.unrealircd.org/docs/Set_block#set::history)
+  block.
 * Add c-ares and libsodium version output to boot screen and /VERSION.
 * WHOX now supports displaying the
   [reputation score](https://www.unrealircd.org/docs/Reputation_score).
@@ -37,6 +52,17 @@ Fixes:
 * Extended server ban ```~a:accname``` was not working for shun, and only
   partially working for kline/gline.
 * More accurate /ELINE error message.
+
+Changed:
+* Channel mode ```+H``` always showed time in minutes (```m```) until now.
+  From now on it will show it in minutes (```m```), hours (```h```) or
+  days (```d```) depending on the actual value. Eg ```+H 50:7d```.
+* If you ran ```./unrealircd stop``` we used to wait only 1 second.
+  From now on we will wait up to 10 seconds max. This gives UnrealIRCd
+  plenty of time to write database files.
+
+Removed:
+* Version check for curl and openssl as nowadays they have ABI guarantees.
 
 Module coders / Developers:
 * New UnrealDB API and disk format, see
@@ -50,6 +76,16 @@ Module coders / Developers:
 * Updated channel mode ```conv_param``` function to
   include a ```Channel *channel``` argument at the end.
   You can use ```#if UNREAL_VERSION_TIME>=202120``` to detect this.
+* New: ```ModuleSetOptions(modinfo->handle, MOD_OPT_UNLOAD_PRIORITY, priority);```.
+  This can be used for modules to indicate they wish to be unloaded
+  before or after others. It is used by for example the channel
+  and history modules so they can save their databases before
+  chanmode modules or other modules get unloaded.
+* New CAP [```draft/chathistory```](https://ircv3.net/specs/extensions/chathistory).
+  If a client REQ's this CAP then UnrealIRCd won't send history on-join as
+  it assumes the client will fetch it when they feel the need for it.
+* New informative CAP:
+  [unrealircd.org/history-backend](https://www.unrealircd.org/history-backend)
 
 Reminder: UnrealIRCd 4 is no longer supported
 ----------------------------------------------
