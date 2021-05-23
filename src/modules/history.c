@@ -116,7 +116,7 @@ CMD_FUNC(cmd_history)
 	if (!HasCapability(client, "server-time"))
 	{
 		sendnotice(client, "Your IRC client does not support the 'server-time' capability");
-		sendnotice(client, "https://ircv3.net/specs/extensions/server-time-3.2.html");
+		sendnotice(client, "https://ircv3.net/specs/extensions/server-time");
 		sendnotice(client, "History request refused.");
 		return;
 	}

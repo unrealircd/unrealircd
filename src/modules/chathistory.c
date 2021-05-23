@@ -1,6 +1,9 @@
 /* src/modules/chathistory.c - IRCv3 CHATHISTORY command.
  * (C) Copyright 2021 Bram Matthys (Syzop) and the UnrealIRCd team
  * License: GPLv2
+ *
+ * This implements the "CHATHISTORY" command, the CAP and 005 token.
+ * https://ircv3.net/specs/extensions/chathistory
  */
 #include "unrealircd.h"
 
@@ -152,7 +155,7 @@ CMD_FUNC(cmd_chathistory)
 	if (!HasCapability(client, "server-time"))
 	{
 		sendnotice(client, "Your IRC client does not support the 'server-time' capability");
-		sendnotice(client, "https://ircv3.net/specs/extensions/server-time-3.2.html");
+		sendnotice(client, "https://ircv3.net/specs/extensions/server-time");
 		sendnotice(client, "History request refused.");
 		return;
 	}
