@@ -56,6 +56,7 @@ int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int history_channel_destroy(Channel *channel, int *should_destroy);
 int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, SendType sendtype);
 int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
+CMD_OVERRIDE_FUNC(override_mode);
 
 MOD_TEST()
 {
@@ -98,6 +99,11 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	CommandOverrideAdd(modinfo->handle, "MODE", override_mode);
+	CommandOverrideAdd(modinfo->handle, "SVSMODE", override_mode);
+	CommandOverrideAdd(modinfo->handle, "SVS2MODE", override_mode);
+	CommandOverrideAdd(modinfo->handle, "SAMODE", override_mode);
+	CommandOverrideAdd(modinfo->handle, "SJOIN", override_mode);
 	return MOD_SUCCESS;
 }
 
@@ -703,4 +709,90 @@ int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv
 	}
 
 	return 0;
+}
+
+/** Check if a channel went from +r to -r and adjust +H if needed.
+ * This does not only override "MODE" but also "SAMODE", "SJOIN" and more.
+ */
+CMD_OVERRIDE_FUNC(override_mode)
+{
+	Channel *channel;
+	int had_r = 0;
+
+	/* We only bother checking for this corner case if the -r
+	 * comes from a server directly linked to us, this normally
+	 * means: we are the server that services are linked to.
+	 */
+	if ((IsServer(client) && client->local) ||
+	    (IsUser(client) && client->srvptr && client->srvptr->local))
+	{
+		/* Now check if the channel is currently +r */
+		if ((parc >= 2) && !BadPtr(parv[1]) && ((channel = find_channel(parv[1], NULL))) &&
+		    has_channel_mode(channel, 'r'))
+		{
+			had_r = 1;
+		}
+	}
+	CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+
+	/* If..
+	 * - channel was +r
+	 * - re-lookup the channel and check that it still
+	 *   exists (as it may have been destroyed)
+	 * - and is now -r
+	 * - and has +H set
+	 * then...
+	 */
+	if (had_r &&
+	    ((channel = find_channel(parv[1], NULL))) &&
+	    !has_channel_mode(channel, 'r') &&
+	    HistoryEnabled(channel))
+	{
+		/* Check if limit is higher than allowed for unregistered channels */
+		HistoryChanMode *settings = (HistoryChanMode *)GETPARASTRUCT(channel, 'H');
+		int changed = 0;
+
+		if (!settings)
+			return; /* Weird */
+
+		if (settings->max_lines > cfg.max_storage_per_channel_unregistered.lines)
+		{
+			settings->max_lines = cfg.max_storage_per_channel_unregistered.lines;
+			changed = 1;
+		}
+
+		if (settings->max_time > cfg.max_storage_per_channel_unregistered.time)
+		{
+			settings->max_time = cfg.max_storage_per_channel_unregistered.time;
+			changed = 1;
+		}
+
+		if (changed)
+		{
+			MessageTag *mtags = NULL;
+			char *params = history_chanmode_get_param(settings);
+
+			if (!params)
+				return; /* Weird */
+
+			strlcpy(modebuf, "+H", sizeof(modebuf));
+			strlcpy(parabuf, params, sizeof(modebuf));
+
+			new_message(&me, NULL, &mtags);
+
+			sendto_channel(channel, &me, &me, 0, 0, SEND_LOCAL, mtags,
+				       ":%s MODE %s %s %s",
+				       me.name, channel->chname, modebuf, parabuf);
+			sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s %lld",
+				me.id, channel->chname, modebuf, parabuf,
+				(long long)channel->creationtime);
+
+			/* Activate this hook just like cmd_mode.c */
+			RunHook7(HOOKTYPE_REMOTE_CHANMODE, &me, channel, mtags, modebuf, parabuf, 0, 0);
+
+			free_message_tags(mtags);
+
+			*modebuf = *parabuf = '\0';
+		}
+	}
 }
