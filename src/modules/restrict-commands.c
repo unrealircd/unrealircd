@@ -179,9 +179,9 @@ int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			if (!strcmp(cep2->ce_varname, "connect-delay"))
 			{
 				long v = config_checkval(cep2->ce_vardata, CFG_TIME);
-				if ((v < 10) || (v > 3600))
+				if ((v < 1) || (v > 3600))
 				{
-					config_error("%s:%i: set::restrict-commands::%s::connect-delay should be in range 10-3600", cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname);
+					config_error("%s:%i: set::restrict-commands::%s::connect-delay should be in range 1-3600", cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname);
 					errors++;
 				}
 				continue;
