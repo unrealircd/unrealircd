@@ -451,7 +451,7 @@ int authprompt_sasl_continuation(Client *client, char *buf)
 			sendto_one(agent, NULL, ":%s SASL %s %s C %s",
 				me.id, AGENT_SID(agent), client->id, SEUSER(client)->authmsg);
 		}
-		SEUSER(client)->authmsg = NULL;
+		safe_free(SEUSER(client)->authmsg);
 	}
 	return 1; /* inhibit displaying of message */
 }
