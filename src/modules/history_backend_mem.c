@@ -80,9 +80,9 @@ struct HistoryLogObject {
 /* Global variables */
 struct cfgstruct cfg;
 struct cfgstruct test;
-static char siphashkey_history_backend_mem[SIPHASH_KEY_LENGTH];
-HistoryLogObject *history_hash_table[HISTORY_BACKEND_MEM_HASH_TABLE_SIZE];
-static int already_loaded = 0;
+static char *siphashkey_history_backend_mem = NULL;
+HistoryLogObject **history_hash_table;
+static long already_loaded = 0;
 static char *hbm_prehash = NULL;
 static char *hbm_posthash = NULL;
 
@@ -94,7 +94,7 @@ int hbm_rehash(void);
 int hbm_rehash_complete(void);
 static void setcfg(struct cfgstruct *cfg);
 static void freecfg(struct cfgstruct *cfg);
-static void hbm_init_hashes(void);
+static void hbm_init_hashes(ModuleInfo *m);
 static void init_history_storage(ModuleInfo *modinfo);
 int hbm_modechar_del(Channel *channel, int modechar);
 int hbm_history_add(char *object, MessageTag *mtags, char *line);
@@ -111,10 +111,12 @@ static int hbm_write_masterdb(void);
 static int hbm_write_db(HistoryLogObject *h);
 static void hbm_delete_db(HistoryLogObject *h);
 static void hbm_flush(void);
+void hbm_generic_free(ModData *m);
+void hbm_free_all_history(ModData *m);
 
 MOD_TEST()
 {
-	hbm_init_hashes();
+	hbm_init_hashes(modinfo);
 	memset(&cfg, 0, sizeof(cfg));
 	memset(&test, 0, sizeof(test));
 	setcfg(&test);
@@ -129,20 +131,28 @@ MOD_INIT()
 	HistoryBackendInfo hbi;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
 	/* We must unload early, when all channel modes and such are still in place: */
 	ModuleSetOptions(modinfo->handle, MOD_OPT_UNLOAD_PRIORITY, -99999999);
 
 	setcfg(&cfg);
+
+	LoadPersistentLong(modinfo, already_loaded);
+	LoadPersistentPointer(modinfo, siphashkey_history_backend_mem, hbm_generic_free);
+	LoadPersistentPointer(modinfo, history_hash_table, hbm_free_all_history);
+	if (history_hash_table == NULL)
+		history_hash_table = safe_alloc(sizeof(HistoryLogObject *) * HISTORY_BACKEND_MEM_HASH_TABLE_SIZE);
+	/* hbm_prehash & hbm_posthash already loaded in MOD_TEST through hbm_init_hashes() */
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, hbm_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_MODECHAR_DEL, 0, hbm_modechar_del);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH, 0, hbm_rehash);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH_COMPLETE, 0, hbm_rehash_complete);
 
-
-	memset(&history_hash_table, 0, sizeof(history_hash_table));
-	siphash_generate_key(siphashkey_history_backend_mem);
+	if (siphashkey_history_backend_mem == NULL)
+	{
+		siphashkey_history_backend_mem = safe_alloc(SIPHASH_KEY_LENGTH);
+		siphash_generate_key(siphashkey_history_backend_mem);
+	}
 
 	memset(&hbi, 0, sizeof(hbi));
 	hbi.name = "mem";
@@ -158,6 +168,13 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	/* Need to save these here already (after conf reading these are set),
+	 * as on next round the module reads it in TEST which happens before
+	 * the saving in MOD_UNLOAD:
+	 */
+	SavePersistentPointer(modinfo, hbm_prehash);
+	SavePersistentPointer(modinfo, hbm_posthash);
+
 	EventAdd(modinfo->handle, "history_mem_init", history_mem_init, NULL, 1, 1);
 	EventAdd(modinfo->handle, "history_mem_clean", history_mem_clean, NULL, HISTORY_TIMER_EVERY*1000, 0);
 	init_history_storage(modinfo);
@@ -187,6 +204,11 @@ MOD_UNLOAD()
 		hbm_flush();
 	freecfg(&test);
 	freecfg(&cfg);
+	SavePersistentPointer(modinfo, hbm_prehash);
+	SavePersistentPointer(modinfo, hbm_posthash);
+	SavePersistentPointer(modinfo, history_hash_table);
+	SavePersistentPointer(modinfo, siphashkey_history_backend_mem);
+	SavePersistentLong(modinfo, already_loaded);
 	return MOD_SUCCESS;
 }
 
@@ -217,15 +239,19 @@ static void freecfg(struct cfgstruct *cfg)
 	safe_free(cfg->db_secret);
 }
 
-static void hbm_init_hashes(void)
+static void hbm_init_hashes(ModuleInfo *modinfo)
 {
 	char buf[256];
+
+	LoadPersistentPointer(modinfo, hbm_prehash, hbm_generic_free);
+	LoadPersistentPointer(modinfo, hbm_posthash, hbm_generic_free);
 
 	if (!hbm_prehash)
 	{
 		gen_random_alnum(buf, 128);
 		safe_strdup(hbm_prehash, buf);
 	}
+
 	if (!hbm_posthash)
 	{
 		gen_random_alnum(buf, 128);
@@ -1396,6 +1422,29 @@ static void hbm_flush(void)
 	}
 }
 
+/** Free all history.
+ * This is only called when the module is unloaded for good, so
+ * when UnrealIRCd is terminating or someone comments the module out
+ * and/or switches history backends.
+ */
+void hbm_free_all_history(ModData *m)
+{
+	int hashnum;
+	HistoryLogObject *h, *h_next;
+
+	for (hashnum = 0; hashnum < HISTORY_BACKEND_MEM_HASH_TABLE_SIZE; hashnum++)
+	{
+		for (h = history_hash_table[hashnum]; h; h = h_next)
+		{
+			h_next = h->next;
+			hbm_history_destroy(h->name);
+		}
+	}
+
+	/* And free the hash table pointer */
+	safe_free(m->ptr);
+}
+
 /** Periodically clean the history.
  * Instead of doing all channels in 1 go, we do a limited number
  * of channels each call, hence the 'static int' and the do { } while
@@ -1549,4 +1598,9 @@ static void hbm_delete_db(HistoryLogObject *h)
 	}
 	fname = hbm_history_filename(h);
 	unlink(fname);
+}
+
+void hbm_generic_free(ModData *m)
+{
+	safe_free(m->ptr);
 }

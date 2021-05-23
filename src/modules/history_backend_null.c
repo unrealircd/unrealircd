@@ -30,7 +30,6 @@ MOD_INIT()
 	HistoryBackendInfo hbi;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
 
 	memset(&hbi, 0, sizeof(hbi));
 	hbi.name = "mem";
