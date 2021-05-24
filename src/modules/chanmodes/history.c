@@ -152,9 +152,9 @@ int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 							int v;
 							CheckNull(cep4);
 							v = atoi(cep4->ce_vardata);
-							if ((v < 1) || (v > 1000000000))
+							if ((v < 0) || (v > 1000))
 							{
-								config_error("%s:%i: set::history::channel::playback-on-join::lines must be between 1 and 1000. "
+								config_error("%s:%i: set::history::channel::playback-on-join::lines must be between 0 and 1000. "
 								             "Recommended values are 10-50. Got: %d.",
 								             cep4->ce_fileptr->cf_filename, cep4->ce_varlinenum, v);
 								errors++;
@@ -167,9 +167,9 @@ int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 							long v;
 							CheckNull(cep4);
 							v = config_checkval(cep4->ce_vardata, CFG_TIME);
-							if (v < 1)
+							if (v < 0)
 							{
-								config_error("%s:%i: set::history::channel::playback-on-join::time must be a positive number.",
+								config_error("%s:%i: set::history::channel::playback-on-join::time must be zero or more.",
 								             cep4->ce_fileptr->cf_filename, cep4->ce_varlinenum);
 								errors++;
 								continue;
@@ -683,7 +683,7 @@ int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix,
 int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[])
 {
 	/* Only for +H channels */
-	if (!HistoryEnabled(channel))
+	if (!HistoryEnabled(channel) || !cfg.playback_on_join.lines || !cfg.playback_on_join.time)
 		return 0;
 
 	/* No history-on-join for clients that implement CHATHISTORY,
