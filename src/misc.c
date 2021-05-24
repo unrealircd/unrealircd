@@ -2070,3 +2070,18 @@ int running_interactively(void)
 	return IsService ? 0 : 1;
 #endif
 }
+
+/** Skip whitespace (if any) */
+void skip_whitespace(char **p)
+{
+	for (; **p == ' ' || **p == '\t'; *p = *p + 1);
+}
+
+/** Keep reading '*p' until we hit any of the 'stopchars'.
+ * Actually behaves like strstr() but then hit the end
+ * of the string (\0) i guess?
+ */
+void read_until(char **p, char *stopchars)
+{
+	for (; **p && !strchr(stopchars, **p); *p = *p + 1);
+}
