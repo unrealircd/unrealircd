@@ -708,6 +708,34 @@ void report_crash_not_sent(char *fname)
 		       " (if you do, please set the option 'View Status' at the end of the bug report page to 'private'!!)\n", fname);
 }
 
+/** This checks if there are indications that 3rd party modules are
+ * loaded. This is used to provide a small warning to the user that
+ * the crash may be likely due to that.
+ */
+int check_third_party_mods_present(void)
+{
+#ifndef _WIN32
+	struct dirent *dir;
+	DIR *fd = opendir(TMPDIR);
+
+	if (!fd)
+		return 0;
+
+	/* We search for files like tmp/FC5C3116.third.somename.so */
+	while ((dir = readdir(fd)))
+	{
+		char *fname = dir->d_name;
+		if (strstr(fname, ".third.") && strstr(fname, ".so"))
+		{
+			closedir(fd);
+			return 1;
+		}
+	}
+	closedir(fd);
+#endif
+	return 0;
+}
+
 void report_crash(void)
 {
 	char *coredump, *fname;
@@ -730,6 +758,8 @@ void report_crash(void)
 	if (!fname)
 		return;
 
+	if (thirdpartymods == 0)
+		thirdpartymods = check_third_party_mods_present();
 #ifndef _WIN32
 	printf("The IRCd has been started now (and is running), but it did crash %d seconds ago.\n", crashed_secs_ago);
 	printf("Crash report generated in: %s\n\n", fname);
@@ -741,10 +771,10 @@ void report_crash(void)
                "by someone other than the UnrealIRCd team). If you installed new 3rd party\n"
                "module(s) in the past few weeks we suggest to unload these modules and see if\n"
                "the crash issue dissapears. If so, that module is probably to blame.\n"
-               "If you keep crashing without 3rd party modules then please do report it to\n"
-               "the UnrealIRCd team.\n"
-               "The reason we ask you to do this is because more than 95%% of the crash issues\n"
-               "reported nowadays are caused by 3rd party modules and not by an UnrealIRCd bug.\n"
+               "If you keep crashing without any 3rd party modules loaded then please do report\n"
+               "it to the UnrealIRCd team.\n"
+               "The reason we ask you to do this is because MORE THAN 95%% OF ALL CRASH ISSUES\n"
+               "ARE CAUSED BY 3RD PARTY MODULES and not by an UnrealIRCd bug.\n"
                "\n");
 	}
 		
@@ -758,7 +788,9 @@ void report_crash(void)
 		char answerbuf[64], *answer;
 		printf("Shall I send a crash report to the UnrealIRCd developers?\n");
 		if (!thirdpartymods)
-		    printf("Crash reports help us greatly with fixing bugs that affect you and others\n");
+			printf("Crash reports help us greatly with fixing bugs that affect you and others\n");
+		else
+			printf("NOTE: If the crash is caused by a 3rd party module then UnrealIRCd devs can't fix that.\n");
 		printf("\n");
 		
 		do
