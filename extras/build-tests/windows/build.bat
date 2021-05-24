@@ -78,10 +78,25 @@ if %ERRORLEVEL% NEQ 0 EXIT /B 1
 cd unrealircd-tests
 dir
 
+rem All tests except db:
 "C:\Program Files\Git\bin\bash.exe" ./runwin
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
+rem Test unencrypted db's:
+"C:\Program Files\Git\bin\bash.exe" ./runwin -boot tests/db/writing/*
+if %ERRORLEVEL% NEQ 0 EXIT /B 1
+"C:\Program Files\Git\bin\bash.exe" ./runwin -keepdbs -boot tests/db/reading/*
+if %ERRORLEVEL% NEQ 0 EXIT /B 1
+
+rem Test encrypted db's:
+"C:\Program Files\Git\bin\bash.exe" ./runwin -include db_crypted.conf -boot tests/db/writing/*
+if %ERRORLEVEL% NEQ 0 EXIT /B 1
+"C:\Program Files\Git\bin\bash.exe" ./runwin -include db_crypted.conf -keepdbs -boot tests/db/reading/*
+if %ERRORLEVEL% NEQ 0 EXIT /B 1
+
 goto end
+
+
 
 :installerfailed
 type setup.log
