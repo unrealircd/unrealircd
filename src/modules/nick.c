@@ -298,7 +298,7 @@ CMD_FUNC(cmd_nick_local)
 	{
 		/* Local client changing nick: check spamfilter */
 		spamfilter_build_user_string(spamfilter_user, nick, client);
-		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, 0, NULL))
+		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, "NICK", NULL, 0, NULL))
 			return;
 	}
 
@@ -883,7 +883,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		find_shun(client);
 
 		spamfilter_build_user_string(spamfilter_user, client->name, client);
-		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, 0, &savetkl))
+		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, NULL, 0, &savetkl))
 		{
 			if (savetkl && ((savetkl->ptr.spamfilter->action == BAN_ACT_VIRUSCHAN) ||
 			                (savetkl->ptr.spamfilter->action == BAN_ACT_SOFT_VIRUSCHAN)))

@@ -370,7 +370,7 @@ int match_tkls(Client *client)
 
 	if (loop.do_bancheck_spamf_away && IsUser(client) &&
 	    client->user->away != NULL &&
-	    match_spamfilter(client, client->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL))
+	    match_spamfilter(client, client->user->away, SPAMF_AWAY, "AWAY", NULL, SPAMFLAG_NOWARN, NULL))
 	{
 		return 1;
 	}

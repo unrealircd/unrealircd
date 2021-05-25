@@ -81,16 +81,17 @@ typedef struct {
 } SpamfilterTargetTable;
 
 SpamfilterTargetTable spamfiltertargettable[] = {
-	{ SPAMF_CHANMSG,	'c',	"channel",			"PRIVMSG" },
-	{ SPAMF_USERMSG,	'p',	"private",			"PRIVMSG" },
+	{ SPAMF_CHANMSG,	'c',	"channel",		"PRIVMSG" },
+	{ SPAMF_USERMSG,	'p',	"private",		"PRIVMSG" },
 	{ SPAMF_USERNOTICE,	'n',	"private-notice",	"NOTICE" },
 	{ SPAMF_CHANNOTICE,	'N',	"channel-notice",	"NOTICE" },
-	{ SPAMF_PART,		'P',	"part",				"PART" },
-	{ SPAMF_QUIT,		'q',	"quit",				"QUIT" },
-	{ SPAMF_DCC,		'd',	"dcc",				"PRIVMSG" },
-	{ SPAMF_USER,		'u',	"user",				"NICK" },
-	{ SPAMF_AWAY,		'a',	"away",				"AWAY" },
-	{ SPAMF_TOPIC,		't',	"topic",			"TOPIC" },
+	{ SPAMF_PART,		'P',	"part",			"PART" },
+	{ SPAMF_QUIT,		'q',	"quit",			"QUIT" },
+	{ SPAMF_DCC,		'd',	"dcc",			"PRIVMSG" },
+	{ SPAMF_USER,		'u',	"user",			"NICK" },
+	{ SPAMF_AWAY,		'a',	"away",			"AWAY" },
+	{ SPAMF_TOPIC,		't',	"topic",		"TOPIC" },
+	{ SPAMF_MTAG,		'T',	"message-tag",		"message-tag" },
 	{ 0, 0, 0, 0 }
 };
 

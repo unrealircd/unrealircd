@@ -117,8 +117,14 @@ int can_send_to_user(Client *client, Client *target, char **msgtext, char **errm
 	}
 
 	// Possible FIXME: make match_spamfilter also use errmsg, or via a wrapper? or use same numeric?
-	if (MyUser(client) && match_spamfilter(client, *msgtext, (sendtype == SEND_TYPE_NOTICE ? SPAMF_USERNOTICE : SPAMF_USERMSG), target->name, 0, NULL))
-		return 0;
+	if (MyUser(client))
+	{
+		int spamtype = (sendtype == SEND_TYPE_NOTICE ? SPAMF_USERNOTICE : SPAMF_USERMSG);
+		char *cmd = sendtype_to_cmd(sendtype);
+
+		if (match_spamfilter(client, *msgtext, spamtype, cmd, target->name, 0, NULL))
+			return 0;
+	}
 
 	n = HOOK_CONTINUE;
 	for (h = Hooks[HOOKTYPE_CAN_SEND_TO_USER]; h; h = h->next)
@@ -379,8 +385,13 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 			if ((*parv[2] == '\001') && strncmp(&parv[2][1], "ACTION ", 7))
 				sendflags |= SKIP_CTCP;
 
-			if (MyUser(client) && match_spamfilter(client, text, (sendtype == SEND_TYPE_NOTICE ? SPAMF_CHANNOTICE : SPAMF_CHANMSG), channel->chname, 0, NULL))
-				return;
+			if (MyUser(client))
+			{
+				int spamtype = (sendtype == SEND_TYPE_NOTICE ? SPAMF_USERNOTICE : SPAMF_USERMSG);
+
+				if (match_spamfilter(client, text, spamtype, cmd, channel->chname, 0, NULL))
+					return;
+			}
 
 			new_message(client, recv_mtags, &mtags);
 

@@ -485,6 +485,11 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		}
 	}
 	para[++i] = NULL;
+
+	/* Check if one of the message tags are rejected by spamfilter */
+	if (MyConnect(from) && !IsServer(from) && match_spamfilter_mtags(from, mtags, cmptr ? cmptr->cmd : NULL))
+		return;
+
 	if (cmptr == NULL)
 	{
 		do_numeric(numeric, from, mtags, i, para);
@@ -494,6 +499,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 	if (IsUser(cptr) && (cmptr->flags & CMD_RESETIDLE))
 		cptr->local->last = TStime();
 
+	/* Now ready to execute the command */
 #ifndef DEBUGMODE
 	if (cmptr->flags & CMD_ALIAS)
 	{

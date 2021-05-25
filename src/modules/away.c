@@ -86,7 +86,7 @@ CMD_FUNC(cmd_away)
 	}
 
 	/* Check spamfilters */
-	if (MyUser(client) && match_spamfilter(client, new_reason, SPAMF_AWAY, NULL, 0, NULL))
+	if (MyUser(client) && match_spamfilter(client, new_reason, SPAMF_AWAY, "AWAY", NULL, 0, NULL))
 		return;
 
 	/* Check set::anti-flood::away-flood */

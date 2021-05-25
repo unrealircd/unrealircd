@@ -992,12 +992,13 @@ struct Secret {
 #define SPAMF_USERMSG		0x0002 /* p */
 #define SPAMF_USERNOTICE	0x0004 /* n */
 #define SPAMF_CHANNOTICE	0x0008 /* N */
-#define SPAMF_PART			0x0010 /* P */
-#define SPAMF_QUIT			0x0020 /* q */
-#define SPAMF_DCC			0x0040 /* d */
-#define SPAMF_USER			0x0080 /* u */
-#define SPAMF_AWAY			0x0100 /* a */
-#define SPAMF_TOPIC			0x0200 /* t */
+#define SPAMF_PART		0x0010 /* P */
+#define SPAMF_QUIT		0x0020 /* q */
+#define SPAMF_DCC		0x0040 /* d */
+#define SPAMF_USER		0x0080 /* u */
+#define SPAMF_AWAY		0x0100 /* a */
+#define SPAMF_TOPIC		0x0200 /* t */
+#define SPAMF_MTAG		0x0400 /* m */
 
 /* Other flags only for function calls: */
 #define SPAMFLAG_NOWARN		0x0001

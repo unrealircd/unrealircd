@@ -89,7 +89,7 @@ CMD_FUNC(cmd_setname)
 		/* set the new name before we check, but don't send to servers unless it is ok */
 		strcpy(client->info, parv[1]);
 		spamfilter_build_user_string(spamfilter_user, client->name, client);
-		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, 0, NULL))
+		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, "SETNAME", NULL, 0, NULL))
 		{
 			/* Was rejected by spamfilter, restore the realname */
 			strcpy(client->info, tmpinfo);

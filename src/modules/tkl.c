@@ -82,7 +82,9 @@ void _tkl_stats(Client *client, int type, char *para, int *cnt);
 void _tkl_sync(Client *client);
 CMD_FUNC(_cmd_tkl);
 int _place_host_ban(Client *client, BanAction action, char *reason, long duration);
-int _match_spamfilter(Client *client, char *str_in, int type, char *target, int flags, TKL **rettk);
+int _match_spamfilter(Client *client, char *str_in, int type, char *cmd, char *target, int flags, TKL **rettk);
+int _match_spamfilter_mtags(Client *client, MessageTag *mtags, char *cmd);
+int check_mtag_spamfilters_present(void);
 int _join_viruschan(Client *client, TKL *tk, int type);
 void _spamfilter_build_user_string(char *buf, char *nick, Client *client);
 int _match_user(char *rmask, Client *client, int options);
@@ -146,6 +148,7 @@ TKLTypeTable tkl_types[] = {
 #define ALL_VALID_EXCEPTION_TYPES "kline, gline, zline, gzline, spamfilter, shun, qline, blacklist, connect-flood, handshake-data-flood, antirandom, antimixedutf8, ban-version"
 
 int max_stats_matches = 1000;
+int mtag_spamfilters_present = 0; /**< Are any spamfilters with type SPAMF_MTAG present? */
 
 MOD_TEST()
 {
@@ -179,6 +182,7 @@ MOD_TEST()
 	EfunctionAddVoid(modinfo->handle, EFUNC_CMD_TKL, _cmd_tkl);
 	EfunctionAdd(modinfo->handle, EFUNC_PLACE_HOST_BAN, _place_host_ban);
 	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER, _match_spamfilter);
+	EfunctionAdd(modinfo->handle, EFUNC_MATCH_SPAMFILTER_MTAGS, _match_spamfilter_mtags);
 	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER_VIRUSCHAN, _join_viruschan);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SPAMFILTER_BUILD_USER_STRING, _spamfilter_build_user_string);
 	EfunctionAdd(modinfo->handle, EFUNC_MATCH_USER, _match_user);
@@ -213,6 +217,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	check_mtag_spamfilters_present();
 	EventAdd(modinfo->handle, "tklexpire", tkl_check_expire, NULL, 5000, 0);
 	return MOD_SUCCESS;
 }
@@ -2383,6 +2388,9 @@ TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction action, Matc
 	index = tkl_hash(tkl_typetochar(type));
 	AddListItem(tkl, tklines[index]);
 
+	if (target & SPAMF_MTAG)
+		mtag_spamfilters_present = 1;
+
 	return tkl;
 }
 
@@ -2653,6 +2661,7 @@ void _tkl_del_line(TKL *tkl)
 
 	/* Finally, free the entry */
 	free_tkl(tkl);
+	check_mtag_spamfilters_present();
 }
 
 /** Add some default ban exceptions - for localhost */
@@ -3130,7 +3139,7 @@ int _find_spamfilter_user(Client *client, int flags)
 		return 0;
 
 	spamfilter_build_user_string(spamfilter_user, client->name, client);
-	return match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, flags, NULL);
+	return match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, NULL, flags, NULL);
 }
 
 /** Check a spamfilter against all local users and print a message.
@@ -4670,6 +4679,7 @@ int _join_viruschan(Client *client, TKL *tkl, int type)
 /** match_spamfilter: executes the spamfilter on the input string.
  * @param str		The text (eg msg text, notice text, part text, quit text, etc
  * @param target	The spamfilter target (SPAMF_*)
+ * @param cmd		The command (eg: "PRIVMSG")
  * @param destination	The destination as a text string (eg: "somenick", can be NULL.. eg for away)
  * @param flags		Any flags (SPAMFLAG_*)
  * @param rettkl	Pointer to an aTKLline struct, _used for special circumstances only_
@@ -4677,7 +4687,7 @@ int _join_viruschan(Client *client, TKL *tkl, int type)
  * 1 if spamfilter matched and it should be blocked (or client exited), 0 if not matched.
  * In case of 1, be sure to check IsDead(client)..
  */
-int _match_spamfilter(Client *client, char *str_in, int target, char *destination, int flags, TKL **rettkl)
+int _match_spamfilter(Client *client, char *str_in, int target, char *cmd, char *destination, int flags, TKL **rettkl)
 {
 	TKL *tkl;
 	TKL *winner_tkl = NULL;
@@ -4691,6 +4701,9 @@ int _match_spamfilter(Client *client, char *str_in, int target, char *destinatio
 
 	if (rettkl)
 		*rettkl = NULL; /* initialize to NULL */
+
+	if (!cmd)
+		cmd = cmdname_by_spamftarget(target);
 
 	if (target == SPAMF_USER)
 		str = str_in;
@@ -4771,7 +4784,7 @@ int _match_spamfilter(Client *client, char *str_in, int target, char *destinatio
 			ircsnprintf(buf, sizeof(buf), "[Spamfilter] %s!%s@%s matches filter '%s': [%s%s: '%s'] [%s]",
 				client->name, client->user->username, client->user->realhost,
 				tkl->ptr.spamfilter->match->str,
-				cmdname_by_spamftarget(target), destinationbuf, str,
+				cmd, destinationbuf, str,
 				unreal_decodespace(tkl->ptr.spamfilter->tkl_reason));
 
 			sendto_snomask_global(SNO_SPAMF, "%s", buf);
@@ -4823,6 +4836,12 @@ int _match_spamfilter(Client *client, char *str_in, int target, char *destinatio
 					me.name, client->name, destination, reason);
 				break;
 			}
+			case SPAMF_MTAG:
+			{
+				sendnumericfmt(client, ERR_CANNOTDOCOMMAND, "%s :Command blocked: %s",
+					cmd, reason);
+				break;
+			}
 			case SPAMF_DCC:
 			{
 				char errmsg[512];
@@ -4853,7 +4872,7 @@ int _match_spamfilter(Client *client, char *str_in, int target, char *destinatio
 	if ((tkl->ptr.spamfilter->action == BAN_ACT_WARN) || (tkl->ptr.spamfilter->action == BAN_ACT_SOFT_WARN))
 	{
 		if ((target != SPAMF_USER) && (target != SPAMF_QUIT))
-			sendnumeric(client, RPL_SPAMCMDFWD, cmdname_by_spamftarget(target), reason);
+			sendnumeric(client, RPL_SPAMCMDFWD, cmd, reason);
 		return 0;
 	} else
 	if ((tkl->ptr.spamfilter->action == BAN_ACT_DCCBLOCK) || (tkl->ptr.spamfilter->action == BAN_ACT_SOFT_DCCBLOCK))
@@ -4889,6 +4908,60 @@ int _match_spamfilter(Client *client, char *str_in, int target, char *destinatio
 	}
 
 	return 0; /* NOTREACHED */
+}
+
+/** Check message-tag spamfilters.
+ * @param client	The client
+ * @param mtags		Message tags sent by client
+ * @param cmd		Command to be executed (can be NULL)
+ * @retval Return 1 to stop processing the command (ignore it) or 0 to allow/continue as normal
+ */
+int _match_spamfilter_mtags(Client *client, MessageTag *mtags, char *cmd)
+{
+	MessageTag *m;
+	char buf[4096];
+	char *str;
+
+	/* This is a shortcut: if there are no spamfilters present
+	 * on message tags then we can return immediately.
+	 * Saves a lot of CPU and it is quite likely too!
+	 */
+	if (mtag_spamfilters_present == 0)
+		return 0;
+
+	for (m = mtags; m; m = m->next)
+	{
+		if (m->value)
+		{
+			snprintf(buf, sizeof(buf), "%s=%s", m->name, m->value);
+			str = buf;
+		} else {
+			str = m->name;
+		}
+		if (match_spamfilter(client, str, SPAMF_MTAG, cmd, NULL, 0, NULL))
+			return 1;
+	}
+	return 0;
+}
+
+/** Updates 'mtag_spamfilters_present' based on if any spamfilters
+ * are present with the SPAMF_MTAG target.
+ */
+int check_mtag_spamfilters_present(void)
+{
+	TKL *tkl;
+
+	for (tkl = tklines[tkl_hash('F')]; tkl; tkl = tkl->next)
+	{
+		if (tkl->ptr.spamfilter->target & SPAMF_MTAG)
+		{
+			mtag_spamfilters_present = 1;
+			return 1;
+		}
+	}
+
+	mtag_spamfilters_present = 0;
+	return 0;
 }
 
 /** CIDR function to compare the first 'mask' bits.
