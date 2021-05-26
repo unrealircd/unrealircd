@@ -45,6 +45,11 @@ Enhancements:
 * WHOX now supports displaying the
   [reputation score](https://www.unrealircd.org/docs/Reputation_score).
   If you are an IRCOp then you can use e.g. ```WHO * %cuhsnfmdaRr```.
+* Add ability to [spamfilter](https://www.unrealircd.org/docs/Spamfilter)
+  message tags via the new 'T' target. Right now it would be unusual
+  to use this, but some day when we have more
+  [message tags](https://www.unrealircd.org/docs/Message_tags) it
+  may come in handy.
 
 Fixes:
 * Forbid using [extended server bans](https://www.unrealircd.org/docs/Extended_server_bans)
