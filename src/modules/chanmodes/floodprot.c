@@ -28,13 +28,13 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
     };
 
-#define FLD_CTCP	0 /* c */
-#define FLD_JOIN	1 /* j */
-#define FLD_KNOCK	2 /* k */
-#define FLD_MSG		3 /* m */
-#define FLD_NICK	4 /* n */
-#define FLD_TEXT	5 /* t */
-#define FLD_REPEAT	6 /* r */
+#define CHFLD_CTCP	0 /* c */
+#define CHFLD_JOIN	1 /* j */
+#define CHFLD_KNOCK	2 /* k */
+#define CHFLD_MSG		3 /* m */
+#define CHFLD_NICK	4 /* n */
+#define CHFLD_TEXT	5 /* t */
+#define CHFLD_REPEAT	6 /* r */
 
 #define NUMFLD	7 /* 7 flood types */
 
@@ -58,13 +58,13 @@ typedef struct FloodType {
  * IMPORTANT: MUST be in alphabetic order!!
  */
 FloodType floodtypes[] = {
-	{ 'c', FLD_CTCP,	"CTCPflood",		'C',	"mM",	0, },
-	{ 'j', FLD_JOIN,	"joinflood",		'i',	"R",	0, },
-	{ 'k', FLD_KNOCK,	"knockflood",		'K',	"",	0, },
-	{ 'm', FLD_MSG,		"msg/noticeflood",	'm',	"M",	0, },
-	{ 'n', FLD_NICK,	"nickflood",		'N',	"",	0, },
-	{ 't', FLD_TEXT,	"msg/noticeflood",	'\0',	"bd",	1, },
-	{ 'r', FLD_REPEAT,	"repeating",		'\0',	"bd",	1, },
+	{ 'c', CHFLD_CTCP,	"CTCPflood",		'C',	"mM",	0, },
+	{ 'j', CHFLD_JOIN,	"joinflood",		'i',	"R",	0, },
+	{ 'k', CHFLD_KNOCK,	"knockflood",		'K',	"",	0, },
+	{ 'm', CHFLD_MSG,		"msg/noticeflood",	'm',	"M",	0, },
+	{ 'n', CHFLD_NICK,	"nickflood",		'N',	"",	0, },
+	{ 't', CHFLD_TEXT,	"msg/noticeflood",	'\0',	"bd",	1, },
+	{ 'r', CHFLD_REPEAT,	"repeating",		'\0',	"bd",	1, },
 };
 
 #define MODEF_DEFAULT_UNSETTIME		cfg.modef_default_unsettime
@@ -753,7 +753,7 @@ int floodprot_join(Client *client, Channel *channel, MessageTag *mtags, char *pa
 	    (client->srvptr->serv->boottime && (TStime() - client->srvptr->serv->boottime >= MODEF_BOOT_DELAY)) &&
 	    !IsULine(client))
 	{
-	    do_floodprot(channel, client, FLD_JOIN);
+	    do_floodprot(channel, client, CHFLD_JOIN);
 	}
 	return 0;
 }
@@ -842,7 +842,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 
 	chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
 
-	if (!chp || !(chp->limit[FLD_TEXT] || chp->limit[FLD_REPEAT]))
+	if (!chp || !(chp->limit[CHFLD_TEXT] || chp->limit[CHFLD_REPEAT]))
 		return HOOK_CONTINUE;
 
 	if (moddata_membership(mb, mdflood).ptr == NULL)
@@ -859,7 +859,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 		memberflood->firstmsg = TStime();
 		memberflood->nmsg = 1;
 		memberflood->nmsg_repeat = 1;
-		if (chp->limit[FLD_REPEAT])
+		if (chp->limit[CHFLD_REPEAT])
 		{
 			memberflood->lastmsg = gen_floodprot_msghash(*msg);
 			memberflood->prevmsg = 0;
@@ -868,7 +868,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 	}
 
 	/* Anti-repeat ('r') */
-	if (chp->limit[FLD_REPEAT])
+	if (chp->limit[CHFLD_REPEAT])
 	{
 		msghash = gen_floodprot_msghash(*msg);
 		if (memberflood->lastmsg)
@@ -876,7 +876,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 			if ((memberflood->lastmsg == msghash) || (memberflood->prevmsg == msghash))
 			{
 				memberflood->nmsg_repeat++;
-				if (memberflood->nmsg_repeat > chp->limit[FLD_REPEAT])
+				if (memberflood->nmsg_repeat > chp->limit[CHFLD_REPEAT])
 					is_flooding_repeat = 1;
 			}
 			memberflood->prevmsg = memberflood->lastmsg;
@@ -884,11 +884,11 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 		memberflood->lastmsg = msghash;
 	}
 
-	if (chp->limit[FLD_TEXT])
+	if (chp->limit[CHFLD_TEXT])
 	{
 		/* increase msgs */
 		memberflood->nmsg++;
-		if (memberflood->nmsg > chp->limit[FLD_TEXT])
+		if (memberflood->nmsg > chp->limit[CHFLD_TEXT])
 			is_flooding_text = 1;
 	}
 
@@ -903,11 +903,11 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 		if (is_flooding_repeat)
 		{
 			snprintf(errbuf, sizeof(errbuf), "Flooding (Your last message is too similar to previous ones)");
-			flood_type = FLD_REPEAT;
+			flood_type = CHFLD_REPEAT;
 		} else
 		{
-			snprintf(errbuf, sizeof(errbuf), "Flooding (Limit is %i lines per %i seconds)", chp->limit[FLD_TEXT], chp->per);
-			flood_type = FLD_TEXT;
+			snprintf(errbuf, sizeof(errbuf), "Flooding (Limit is %i lines per %i seconds)", chp->limit[CHFLD_TEXT], chp->per);
+			flood_type = CHFLD_TEXT;
 		}
 
 		if (chp->action[flood_type] == 'd')
@@ -952,10 +952,10 @@ int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, int 
 
 	/* HINT: don't be so stupid to reorder the items in the if's below.. you'll break things -- Syzop. */
 
-	do_floodprot(channel, client, FLD_MSG);
+	do_floodprot(channel, client, CHFLD_MSG);
 
 	if ((text[0] == '\001') && strncmp(text+1, "ACTION ", 7))
-		do_floodprot(channel, client, FLD_CTCP);
+		do_floodprot(channel, client, CHFLD_CTCP);
 
 	return 0;
 }
@@ -963,7 +963,7 @@ int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, int 
 int floodprot_knock(Client *client, Channel *channel, MessageTag *mtags, char *comment)
 {
 	if (IsFloodLimit(channel) && !IsULine(client))
-		do_floodprot(channel, client, FLD_KNOCK);
+		do_floodprot(channel, client, CHFLD_KNOCK);
 	return 0;
 }
 
@@ -980,7 +980,7 @@ int floodprot_nickchange(Client *client, MessageTag *mtags, char *oldnick)
 		if (channel && IsFloodLimit(channel) &&
 		    !(mp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANADMIN)))
 		{
-			do_floodprot(channel, client, FLD_NICK);
+			do_floodprot(channel, client, CHFLD_NICK);
 		}
 	}
 	return 0;
@@ -1001,27 +1001,27 @@ int floodprot_chanmode_del(Channel *channel, int modechar)
 	switch(modechar)
 	{
 		case 'C':
-			chp->counter[FLD_CTCP] = 0;
+			chp->counter[CHFLD_CTCP] = 0;
 			break;
 		case 'N':
-			chp->counter[FLD_NICK] = 0;
+			chp->counter[CHFLD_NICK] = 0;
 			break;
 		case 'm':
-			chp->counter[FLD_MSG] = 0;
-			chp->counter[FLD_CTCP] = 0;
+			chp->counter[CHFLD_MSG] = 0;
+			chp->counter[CHFLD_CTCP] = 0;
 			break;
 		case 'K':
-			chp->counter[FLD_KNOCK] = 0;
+			chp->counter[CHFLD_KNOCK] = 0;
 			break;
 		case 'i':
-			chp->counter[FLD_JOIN] = 0;
+			chp->counter[CHFLD_JOIN] = 0;
 			break;
 		case 'M':
-			chp->counter[FLD_MSG] = 0;
-			chp->counter[FLD_CTCP] = 0;
+			chp->counter[CHFLD_MSG] = 0;
+			chp->counter[CHFLD_CTCP] = 0;
 			break;
 		case 'R':
-			chp->counter[FLD_JOIN] = 0;
+			chp->counter[CHFLD_JOIN] = 0;
 			break;
 		default:
 			break;
