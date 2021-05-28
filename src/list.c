@@ -197,17 +197,7 @@ ClientUser *make_user(Client *client)
 #ifdef	DEBUGMODE
 		users.inuse++;
 #endif
-		user->swhois = NULL;
-		user->away = NULL;
-		user->flood.away_t = 0;
-		user->flood.away_c = 0;
-		user->joined = 0;
-		user->channel = NULL;
-		user->invited = NULL;
-		user->server = NULL;
 		strlcpy(user->svid, "0", sizeof(user->svid));
-		user->whowas = NULL;
-		user->snomask = 0;
 		if (client->ip)
 		{
 			/* initially set client->user->realhost to IP */
