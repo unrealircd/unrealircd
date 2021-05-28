@@ -312,7 +312,7 @@ extern int find_str_match_link(Link *, char *);
 extern void free_str_list(Link *);
 extern Link *make_link();
 extern Ban *make_ban();
-extern ClientUser *make_user(Client *);
+extern User *make_user(Client *);
 extern Server *make_server();
 extern Client *make_client(Client *, Client *);
 extern Member *find_channel_link(Member *, Channel *);

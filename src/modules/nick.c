@@ -725,7 +725,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
 	int i, xx;
 	Hook *h;
-	ClientUser *user = client->user;
+	User *user = client->user;
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
 		"+",		/*1  +|- */

@@ -121,7 +121,7 @@ typedef struct Watch Watch;
 typedef struct Client Client;
 typedef struct LocalClient LocalClient;
 typedef struct Channel Channel;
-typedef struct User ClientUser;
+typedef struct User User;
 typedef struct Server Server;
 typedef struct Link Link;
 typedef struct Ban Ban;
@@ -1222,7 +1222,7 @@ struct Client {
 	struct list_head lclient_node;		/**< For local client list (lclient_list) */
 	struct list_head special_node;		/**< For special lists (server || unknown || oper) */
 	LocalClient *local;			/**< Additional information regarding locally connected clients */
-	ClientUser *user;			/**< Additional information, if this client is a user */
+	User *user;				/**< Additional information, if this client is a user */
 	Server *serv;				/**< Additional information, if this is a server */
 	ClientStatus status;			/**< Client status, one of CLIENT_STATUS_* */
 	struct list_head client_hash;		/**< For name hash table (clientTable) */

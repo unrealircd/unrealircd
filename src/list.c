@@ -76,7 +76,7 @@ void initlists(void)
 
 	client_pool = mp_pool_new(sizeof(Client), 512 * 1024);
 	local_client_pool = mp_pool_new(sizeof(LocalClient), 512 * 1024);
-	user_pool = mp_pool_new(sizeof(ClientUser), 512 * 1024);
+	user_pool = mp_pool_new(sizeof(User), 512 * 1024);
 	link_pool = mp_pool_new(sizeof(Link), 512 * 1024);
 }
 
@@ -184,15 +184,15 @@ void free_client(Client *client)
 ** 'make_user' add's an User information block to a client
 ** if it was not previously allocated.
 */
-ClientUser *make_user(Client *client)
+User *make_user(Client *client)
 {
-	ClientUser *user;
+	User *user;
 
 	user = client->user;
 	if (!user)
 	{
 		user = mp_pool_get(user_pool);
-		memset(user, 0, sizeof(ClientUser));
+		memset(user, 0, sizeof(User));
 
 #ifdef	DEBUGMODE
 		users.inuse++;
