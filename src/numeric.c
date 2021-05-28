@@ -478,7 +478,7 @@ static char *replies[] = {
 /* 435 */ NULL, /* bahamut */
 /* 436    ERR_NICKCOLLISION */ "%s :Nickname collision KILL",
 /* 437    ERR_BANNICKCHANGE */ "%s :Cannot change nickname while banned on channel",
-/* 438    ERR_NCHANGETOOFAST */ "%s :Nick change too fast. Please wait %d seconds",
+/* 438    ERR_NCHANGETOOFAST */ "%s :Nick change too fast. Please try again later.",
 /* 439    ERR_TARGETTOOFAST */ "%s :Message target change too fast. Please wait %ld seconds",
 /* 440    ERR_SERVICESDOWN */  "%s :Services are currently down. Please try again later.",
 /* 441    ERR_USERNOTINCHANNEL */ "%s %s :They aren't on that channel",

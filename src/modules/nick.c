@@ -274,19 +274,6 @@ CMD_FUNC(cmd_nick_local)
 		return;
 	}
 
-	/* set::anti-flood::nick-flood */
-	if (client->user && !ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL))
-	{
-		if ((client->user->flood.nick_c >= NICK_COUNT) &&
-		    (TStime() - client->user->flood.nick_t < NICK_PERIOD))
-		{
-			/* Throttle... */
-			sendnumeric(client, ERR_NCHANGETOOFAST, nick,
-				(int)(NICK_PERIOD - (TStime() - client->user->flood.nick_t)));
-			return;
-		}
-	}
-
 	/* Check for collisions / in use */
 	if (!strcasecmp("ircd", nick) || !strcasecmp("irc", nick))
 	{
@@ -319,6 +306,16 @@ CMD_FUNC(cmd_nick_local)
 			return;	/* NICK message ignored */
 		}
 		/* fallthrough for ircops that have sufficient privileges */
+	}
+
+	/* set::anti-flood::nick-flood */
+	if (client->user &&
+	    !ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL) &&
+	    flood_limit_exceeded(client, FLD_NICK))
+	{
+		/* Throttle... */
+		sendnumeric(client, ERR_NCHANGETOOFAST, nick);
+		return;
 	}
 
 	if (!ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL))
@@ -438,13 +435,6 @@ CMD_FUNC(cmd_nick_local)
 				return;
 			}
 		}
-
-		if (TStime() - client->user->flood.nick_t >= NICK_PERIOD)
-		{
-			client->user->flood.nick_t = TStime();
-			client->user->flood.nick_c = 1;
-		} else
-			client->user->flood.nick_c++;
 
 		sendto_snomask(SNO_NICKCHANGE, "*** %s (%s@%s) has changed their nickname to %s",
 			client->name, client->user->username, client->user->realhost, nick);

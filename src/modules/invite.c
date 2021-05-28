@@ -166,25 +166,16 @@ CMD_FUNC(cmd_invite)
 		return;
 	}
 
-	if (MyConnect(client))
+	if (MyUser(client))
 	{
 		if (target_limit_exceeded(client, target, target->name))
 			return;
 
-		if (!ValidatePermissionsForPath("immune:invite-flood",client,NULL,NULL,NULL))
+		if (!ValidatePermissionsForPath("immune:invite-flood",client,NULL,NULL,NULL) &&
+		    flood_limit_exceeded(client, FLD_INVITE))
 		{
-			if ((client->user->flood.invite_t + INVITE_PERIOD) <= timeofday)
-			{
-				client->user->flood.invite_c = 0;
-				client->user->flood.invite_t = timeofday;
-			}
-			if (client->user->flood.invite_c <= INVITE_COUNT)
-				client->user->flood.invite_c++;
-			if (client->user->flood.invite_c > INVITE_COUNT)
-			{
-				sendnumeric(client, RPL_TRYAGAIN, "INVITE");
-				return;
-			}
+			sendnumeric(client, RPL_TRYAGAIN, "INVITE");
+			return;
 		}
 
 		if (!override)

@@ -1,6 +1,7 @@
 /************************************************************************
  *   Unreal Internet Relay Chat Daemon, include/dynconf.h
- *   Copyright (C) 1999 Carsten Munk
+ *   Copyright (C) 1999-2003 Carsten Munk
+ *   Copyright (C) 2003-2021 Bram Matthys
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -21,6 +22,11 @@
 
 
 #define DYNCONF_H
+
+typedef struct FloodSettings {
+	int limit[MAXFLOODOPTIONS];
+	long period[MAXFLOODOPTIONS];
+} FloodSettings;
 
 typedef struct NetworkConfiguration NetworkConfiguration;
 struct NetworkConfiguration {
@@ -118,14 +124,7 @@ struct Configuration {
 	int handshake_data_flood_ban_action;
 	struct ChMode modes_on_join;
 	int level_on_join;
-	unsigned char away_count;
-	long away_period;
-	unsigned char nick_count;
-	long nick_period;
-	unsigned char invite_count;
-	long invite_period;
-	unsigned char knock_count;
-	long knock_period;
+	FloodSettings *floodsettings;
 	unsigned char max_concurrent_conversations_users;
 	unsigned char max_concurrent_conversations_new_user_every;
 	int ident_connect_timeout;
@@ -233,15 +232,6 @@ extern MODVAR int ipv6_disabled;
 #define USE_BAN_VERSION			iConf.use_ban_version
 #define MODES_ON_JOIN			iConf.modes_on_join.mode
 #define LEVEL_ON_JOIN			iConf.level_on_join
-
-#define AWAY_PERIOD			iConf.away_period
-#define AWAY_COUNT			iConf.away_count
-#define NICK_PERIOD			iConf.nick_period
-#define NICK_COUNT			iConf.nick_count
-#define KNOCK_PERIOD			iConf.knock_period
-#define KNOCK_COUNT			iConf.knock_count
-#define INVITE_PERIOD			iConf.invite_period
-#define INVITE_COUNT			iConf.invite_count
 
 #define IDENT_CONNECT_TIMEOUT	iConf.ident_connect_timeout
 #define IDENT_READ_TIMEOUT		iConf.ident_read_timeout

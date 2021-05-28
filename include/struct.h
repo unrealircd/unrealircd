@@ -1210,6 +1210,23 @@ extern void unload_all_unused_moddata(void);
 #define TLSFLAG_NOSTARTTLS	0x8
 #define TLSFLAG_DISABLECLIENTCERT 0x10
 
+/** Flood counters for local clients */
+typedef struct FloodCounter {
+	int count;
+	long t;
+} FloodCounter;
+
+/** This is the list of different flood counters that we keep for local clients. */
+typedef enum FloodOption {
+	FLD_NICK	= 0,	/**< nick-flood */
+	FLD_JOIN	= 1,	/**< join-flood */
+	FLD_AWAY	= 2,	/**< away-flood */
+	FLD_INVITE	= 3,	/**< invite-flood */
+	FLD_KNOCK	= 4,	/**< knock-flood */
+} FloodOption;
+#define MAXFLOODOPTIONS 10
+
+
 /** This shows the Client struct (any client), the User struct (a user), Server (a server) that are commonly accessed both in the core and by 3rd party coders.
  * @defgroup CommonStructs Common structs
  * @{
@@ -1289,6 +1306,7 @@ struct LocalClient {
 	struct hostent *hostp;		/**< Host record for this client (used by DNS code) */
 	char sockhost[HOSTLEN + 1];	/**< Hostname from the socket */
 	u_short port;			/**< Remote TCP port of client */
+	FloodCounter flood[MAXFLOODOPTIONS];
 };
 
 /** User information (persons, not servers), you use client->user to access these (see also @link Client @endlink).
@@ -1311,11 +1329,9 @@ struct User {
 	char *operlogin;		/**< Which oper { } block was used to oper up, otherwise NULL - used by oper::maxlogins */
 	struct {
 		time_t nick_t;		/**< For set::anti-flood::nick-flood: time */
-		time_t away_t;		/**< For set::anti-flood::away-flood: time */
 		time_t knock_t;		/**< For set::anti-flood::knock-flood: time */
 		time_t invite_t;	/**< For set::anti-flood::invite-flood: time */
 		unsigned char nick_c;	/**< For set::anti-flood::nick-flood: counter */
-		unsigned char away_c;	/**< For set::anti-flood::away-flood: counter */
 		unsigned char knock_c;	/**< For set::anti-flood::knock-flood: counter */
 		unsigned char invite_c;	/**< For set::anti-flood::invite-flood: counter */
 	} flood;			/**< Anti-flood counters */

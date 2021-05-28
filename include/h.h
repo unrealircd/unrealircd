@@ -1065,3 +1065,4 @@ extern Secret *secrets;
 /* end */
 extern int check_password_strength(char *pass, int min_length, int strict, char **err);
 extern int valid_secret_password(char *pass, char **err);
+extern int flood_limit_exceeded(Client *client, FloodOption opt);

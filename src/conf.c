@@ -362,6 +362,36 @@ char *x;
 	return 1;
 }
 
+/** Parses a value like '5:60s' into a flood setting that we can store.
+ * @param str		The string to parse (eg: '5:60s')
+ * @param settings	The FloodSettings block to store the result in
+ * @param opt		The option (eg: FLD_AWAY)
+ * @returns 1 if OK, 0 for parse error.
+ */
+int config_parse_flood_generic(const char *str, FloodSettings *settings, FloodOption opt)
+{
+	char buf[64], *p;
+
+	/* Work on a copy so we don't destroy 'str' */
+	strlcpy(buf, str, sizeof(buf));
+
+	/* Initialize to zero first */
+	settings->limit[opt] = 0;
+	settings->period[opt] = 0;
+
+	p = strchr(buf, ':');
+
+	/* 'blah', ':blah', '1:' */
+	if (!p || (p == buf) || (*(p+1) == '\0'))
+		return 0;
+
+	*p++ = '\0';
+	settings->limit[opt] = atoi(buf);
+	settings->period[opt] = config_checkval(p, CFG_TIME);
+
+	return 1;
+}
+
 long config_checkval(char *orig, unsigned short flags) {
 	char *value = raw_strdup(orig);
 	char *text;
@@ -1635,11 +1665,6 @@ void config_setdefaultsettings(Configuration *i)
 	safe_strdup(i->oper_snomask, SNO_DEFOPER);
 	i->ident_read_timeout = 7;
 	i->ident_connect_timeout = 3;
-	i->nick_count = 3; i->nick_period = 60; /* NICK flood protection: max 3 per 60s */
-	i->away_count = 4; i->away_period = 120; /* AWAY flood protection: max 4 per 120s */
-	i->invite_count = 4; i->invite_period = 60; /* INVITE flood protection: max 4 per 60s */
-	i->knock_count = 4; i->knock_period = 120; /* KNOCK protection: max 4 per 120s */
-	i->throttle_count = 3; i->throttle_period = 60; /* throttle protection: max 3 per 60s */
 	i->ban_version_tkl_time = 86400; /* 1d */
 	i->spamfilter_ban_time = 86400; /* 1d */
 	safe_strdup(i->spamfilter_ban_reason, "Spam/advertising");
@@ -1677,6 +1702,14 @@ void config_setdefaultsettings(Configuration *i)
 	i->sasl_timeout = 15;
 	i->handshake_delay = -1;
 	i->broadcast_channel_messages = BROADCAST_CHANNEL_MESSAGES_AUTO;
+
+	/* Flood options */
+	i->throttle_count = 3; i->throttle_period = 60; /* throttle protection: max 3 per 60s */
+	i->floodsettings = safe_alloc(sizeof(FloodCounter) * MAXFLOODOPTIONS);
+	config_parse_flood_generic("3:60", i->floodsettings, FLD_NICK); /* NICK flood protection: max 3 per 60s */
+	config_parse_flood_generic("4:120", i->floodsettings, FLD_AWAY); /* AWAY flood protection: max 4 per 120s */
+	config_parse_flood_generic("4:60", i->floodsettings, FLD_INVITE); /* INVITE flood protection: max 4 per 60s */
+	config_parse_flood_generic("4:120", i->floodsettings, FLD_KNOCK); /* KNOCK protection: max 4 per 120s */
 
 	/* SSL/TLS options */
 	i->tls_options = safe_alloc(sizeof(TLSOptions));
@@ -7543,44 +7576,21 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 							tempiConf.handshake_data_flood_ban_action = banact_stringtoval(ceppp->ce_vardata);
 					}
 				}
-				else if (!strcmp(cepp->ce_varname, "away-count"))
-					tempiConf.away_count = atol(cepp->ce_vardata);
-				else if (!strcmp(cepp->ce_varname, "away-period"))
-					tempiConf.away_period = config_checkval(cepp->ce_vardata, CFG_TIME);
 				else if (!strcmp(cepp->ce_varname, "away-flood"))
 				{
-					int cnt, period;
-					config_parse_flood(cepp->ce_vardata, &cnt, &period);
-					tempiConf.away_count = cnt;
-					tempiConf.away_period = period;
+					config_parse_flood_generic(cepp->ce_vardata, tempiConf.floodsettings, FLD_AWAY);
 				}
 				else if (!strcmp(cepp->ce_varname, "nick-flood"))
 				{
-					int cnt, period;
-					config_parse_flood(cepp->ce_vardata, &cnt, &period);
-					tempiConf.nick_count = cnt;
-					tempiConf.nick_period = period;
-				}
-				else if (!strcmp(cepp->ce_varname, "away-flood"))
-				{
-					int cnt, period;
-					config_parse_flood(cepp->ce_vardata, &cnt, &period);
-					tempiConf.away_count = cnt;
-					tempiConf.away_period = period;
+					config_parse_flood_generic(cepp->ce_vardata, tempiConf.floodsettings, FLD_NICK);
 				}
 				else if (!strcmp(cepp->ce_varname, "invite-flood"))
 				{
-					int cnt, period;
-					config_parse_flood(cepp->ce_vardata, &cnt, &period);
-					tempiConf.invite_count = cnt;
-					tempiConf.invite_period = period;
+					config_parse_flood_generic(cepp->ce_vardata, tempiConf.floodsettings, FLD_INVITE);
 				}
 				else if (!strcmp(cepp->ce_varname, "knock-flood"))
 				{
-					int cnt, period;
-					config_parse_flood(cepp->ce_vardata, &cnt, &period);
-					tempiConf.knock_count = cnt;
-					tempiConf.knock_period = period;
+					config_parse_flood_generic(cepp->ce_vardata, tempiConf.floodsettings, FLD_KNOCK);
 				}
 				else if (!strcmp(cepp->ce_varname, "connect-flood"))
 				{

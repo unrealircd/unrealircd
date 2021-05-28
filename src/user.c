@@ -925,3 +925,36 @@ char *get_connect_extinfo(Client *client)
 
 	return retbuf;
 }
+
+/** Is the flood limit exceeded for an option? eg for away-flood.
+ * @param client	The client to check flood for (local user)
+ * @param opt		The flood option (eg FLD_AWAY)
+ * @note This increments the flood counter as well.
+ * @returns 1 if exceeded, 0 if not.
+ */
+int flood_limit_exceeded(Client *client, FloodOption opt)
+{
+	if (!MyUser(client))
+		return 0;
+
+	if ((opt < 0) || (opt >= MAXFLOODOPTIONS))
+		abort();
+
+	/* Is the protection enabled at all? */
+	if (iConf.floodsettings->limit[opt] == 0)
+		return 0;
+
+	/* Ok, let's do the flood check */
+	if ((client->local->flood[opt].t + iConf.floodsettings->period[opt]) <= timeofday)
+	{
+		/* Time exceeded, reset */
+		client->local->flood[opt].count = 0;
+		client->local->flood[opt].t = timeofday;
+	}
+	if (client->local->flood[opt].count <= iConf.floodsettings->limit[opt])
+		client->local->flood[opt].count++;
+	if (client->local->flood[opt].count > iConf.floodsettings->limit[opt])
+		return 1; /* Flood limit hit! */
+
+	return 0;
+}
