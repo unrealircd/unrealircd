@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/reply.c
+ *   IRC - Internet Relay Chat, src/modules/reply-tag.c
  *   (C) 2021 Syzop & The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
@@ -19,6 +19,8 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+/* This implements https://ircv3.net/specs/client-tags/reply */
 
 #include "unrealircd.h"
 
