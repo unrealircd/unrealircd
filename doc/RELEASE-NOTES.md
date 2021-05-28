@@ -50,6 +50,11 @@ Enhancements:
   to use this, but some day when we have more
   [message tags](https://www.unrealircd.org/docs/Message_tags) it
   may come in handy.
+* Support [+draft/reply](https://ircv3.net/specs/client-tags/reply) IRCv3
+  client tag. Can be used by bots (and others) to indicate to what message
+  people are replying to. This module, reply-tag, is loaded by default.
+* Send [draft/bot](https://ircv3.net/specs/extensions/bot-mode) IRCv3
+  message tag if the user has mode ```+B``` set.
 
 Fixes:
 * Forbid using [extended server bans](https://www.unrealircd.org/docs/Extended_server_bans)
