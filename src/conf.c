@@ -1707,6 +1707,7 @@ void config_setdefaultsettings(Configuration *i)
 	i->throttle_count = 3; i->throttle_period = 60; /* throttle protection: max 3 per 60s */
 	i->floodsettings = safe_alloc(sizeof(FloodCounter) * MAXFLOODOPTIONS);
 	config_parse_flood_generic("3:60", i->floodsettings, FLD_NICK); /* NICK flood protection: max 3 per 60s */
+	config_parse_flood_generic("3:90", i->floodsettings, FLD_JOIN); /* NICK flood protection: max 3 per 90s */
 	config_parse_flood_generic("4:120", i->floodsettings, FLD_AWAY); /* AWAY flood protection: max 4 per 120s */
 	config_parse_flood_generic("4:60", i->floodsettings, FLD_INVITE); /* INVITE flood protection: max 4 per 60s */
 	config_parse_flood_generic("4:120", i->floodsettings, FLD_KNOCK); /* KNOCK protection: max 4 per 120s */
@@ -7584,6 +7585,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					config_parse_flood_generic(cepp->ce_vardata, tempiConf.floodsettings, FLD_NICK);
 				}
+				else if (!strcmp(cepp->ce_varname, "join-flood"))
+				{
+					config_parse_flood_generic(cepp->ce_vardata, tempiConf.floodsettings, FLD_JOIN);
+				}
 				else if (!strcmp(cepp->ce_varname, "invite-flood"))
 				{
 					config_parse_flood_generic(cepp->ce_vardata, tempiConf.floodsettings, FLD_INVITE);
@@ -8502,6 +8507,20 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					    (cnt < 1) || (cnt > 255) || (period < 5))
 					{
 						config_error("%s:%i: set::anti-flood::nick-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+						             "count should be 1-255, period should be greater than 4",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						errors++;
+					}
+				}
+				else if (!strcmp(cepp->ce_varname, "join-flood"))
+				{
+					int cnt, period;
+					CheckNull(cepp);
+
+					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
+					    (cnt < 1) || (cnt > 255) || (period < 5))
+					{
+						config_error("%s:%i: join-flood error. Syntax is '<count>:<period>' (eg 5:60), "
 						             "count should be 1-255, period should be greater than 4",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						errors++;
