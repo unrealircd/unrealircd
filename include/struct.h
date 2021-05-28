@@ -241,6 +241,14 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
  */
 #define SIPHASH_KEY_LENGTH 16
 
+/** The length of a standard 'msgid' tag (note that special
+ * msgid tags will be longer).
+ * The 22 alphanumeric characters provide slightly more
+ * than 128 bits of randomness (62^22 > 2^128).
+ * See mtag_add_or_inherit_msgid() for more information.
+ */
+#define MSGIDLEN	22
+
 /** This specifies the current client status or the client type - see @link ClientStatus @endlink in particular.
  * You may think "server" or "client" are the only choices here, but there are many more
  * such as states where the user is in the middle of an SSL/TLS handshake.
