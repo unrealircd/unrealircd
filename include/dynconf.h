@@ -325,17 +325,8 @@ struct SetCheck {
 	unsigned has_restrict_channelmodes:1;
 	unsigned has_restrict_extendedbans:1;
 	unsigned has_channel_command_prefix:1;
-	unsigned has_anti_flood_handshake_data_flood_amount:1;
-	unsigned has_anti_flood_handshake_data_flood_ban_action:1;
-	unsigned has_anti_flood_handshake_data_flood_ban_time:1;
 	unsigned has_modes_on_join:1;
 	unsigned has_level_on_join:1;
-	unsigned has_anti_flood_away_count:1;
-	unsigned has_anti_flood_away_period:1;
-	unsigned has_anti_flood_nick_flood:1;
-	unsigned has_anti_flood_connect_flood:1;
-	unsigned has_anti_flood_invite_flood:1;
-	unsigned has_anti_flood_knock_flood:1;
 	unsigned has_ident_connect_timeout:1;
 	unsigned has_ident_read_timeout:1;
 	unsigned has_default_bantime:1;
