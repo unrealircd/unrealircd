@@ -71,6 +71,7 @@ R_MODULES= \
 	account-tag.so labeled-response.so link-security.so \
 	message-ids.so plaintext-policy.so server-time.so sts.so \
 	echo-message.so userip-tag.so userhost-tag.so \
+	bot-tag.so \
 	reply-tag.so typing-indicator.so \
 	ident_lookup.so history.so chathistory.so \
 	targetfloodprot.so clienttagdeny.so
@@ -611,6 +612,10 @@ userip-tag.so: userip-tag.c $(INCLUDES)
 userhost-tag.so: userhost-tag.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o userhost-tag.so userhost-tag.c
+
+bot-tag.so: bot-tag.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o bot-tag.so bot-tag.c
 
 reply-tag.so: reply-tag.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
