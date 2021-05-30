@@ -942,18 +942,21 @@ char *get_connect_extinfo(Client *client)
 
 /** Log a message that flood protection kicked in for the client.
  * This sends to the +f snomask at the moment.
- * FIXME: we should provide an option to log this too?
  * @param client	The client to check flood for (local user)
  * @param opt		The flood option (eg FLD_AWAY)
  */
 void flood_limit_exceeded_log(Client *client, char *floodname)
 {
-	sendto_snomask_global(SNO_FLOOD, "Flood blocked (%s) from %s!%s@%s [%s]",
+	char buf[1024];
+
+	snprintf(buf, sizeof(buf), "Flood blocked (%s) from %s!%s@%s [%s]",
 		floodname,
 		client->name,
 		client->user->username,
 		client->user->realhost,
 		GetIP(client));
+	ircd_log(LOG_FLOOD, "%s", buf);
+	sendto_snomask_global(SNO_FLOOD, "%s", buf);
 }
 
 /** Is the flood limit exceeded for an option? eg for away-flood.

@@ -212,6 +212,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define LOG_CHGCMDS 0x0100
 #define LOG_OVERRIDE 0x0200
 #define LOG_SPAMFILTER 0x0400
+#define LOG_FLOOD 0x0800
 
 /*
 ** 'offsetof' is defined in ANSI-C. The following definition

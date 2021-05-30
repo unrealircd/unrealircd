@@ -163,6 +163,7 @@ static NameValue _LogFlags[] = {
 	{ LOG_CHGCMDS, "chg-commands" },
 	{ LOG_CLIENT, "connects" },
 	{ LOG_ERROR, "errors" },
+	{ LOG_FLOOD, "flood" },
 	{ LOG_KILL, "kills" },
 	{ LOG_KLINE, "kline" },
 	{ LOG_OPER, "oper" },
