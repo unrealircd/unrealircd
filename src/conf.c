@@ -1868,11 +1868,11 @@ static void make_default_logblock(void)
 {
 	ConfigItem_log *ca = safe_alloc(sizeof(ConfigItem_log));
 
-	config_status("No log { } block found -- using default: errors will be logged to 'ircd.log'");
+	config_status("No log { } block found -- logging everything to 'ircd.log'");
 
 	safe_strdup(ca->file, "ircd.log");
 	convert_to_absolute_path(&ca->file, LOGDIR);
-	ca->flags |= LOG_ERROR;
+	ca->flags |= LOG_CHGCMDS|LOG_CLIENT|LOG_ERROR|LOG_KILL|LOG_KLINE|LOG_OPER|LOG_OVERRIDE|LOG_SACMDS|LOG_SERVER|LOG_SPAMFILTER|LOG_TKL;
 	ca->logfd = -1;
 	AddListItem(ca, conf_log);
 }

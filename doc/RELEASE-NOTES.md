@@ -86,6 +86,9 @@ Changed:
 * If you ran ```./unrealircd stop``` we used to wait only 1 second.
   From now on we will wait up to 10 seconds max. This gives UnrealIRCd
   plenty of time to write database files.
+* If you have zero [log blocks](https://www.unrealircd.org/docs/Log_block)
+  then we already automatically logged errors to ircd.log.
+  From now on we will log everything (not only errors) to that file.
 
 Removed:
 * Version check for curl and openssl as nowadays they have ABI guarantees.
