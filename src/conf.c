@@ -3223,16 +3223,14 @@ char *pretty_time_val(long timeval)
 	buf[0] = 0;
 
 	if (timeval/86400)
-		snprintf(buf, sizeof(buf), "%ld day%s ", timeval/86400, timeval/86400 != 1 ? "s" : "");
+		snprintf(buf, sizeof(buf), "%ldd", timeval/86400);
 	if ((timeval/3600) % 24)
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%ld hour%s ", (timeval/3600)%24, (timeval/3600)%24 != 1 ? "s" : "");
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%ldh", (timeval/3600)%24);
 	if ((timeval/60)%60)
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%ld minute%s ", (timeval/60)%60, (timeval/60)%60 != 1 ? "s" : "");
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%ldm", (timeval/60)%60);
 	if ((timeval%60))
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%ld second%s", timeval%60, timeval%60 != 1 ? "s" : "");
-	/* Strip space at the end (if any) */
-	if (*buf && (buf[strlen(buf)-1] == ' '))
-		buf[strlen(buf)-1] = '\0';
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%lds", timeval%60);
+
 	return buf;
 }
 
