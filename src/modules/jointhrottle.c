@@ -97,8 +97,7 @@ MOD_UNLOAD()
 static int isjthrottled(Client *client, Channel *channel)
 {
 	JoinFlood *e;
-	int num = iConf.floodsettings->limit[FLD_JOIN];
-	int t = iConf.floodsettings->period[FLD_JOIN];
+	FloodSettings *settings = get_floodsettings_for_user(client, FLD_JOIN);
 
 	if (!MyUser(client))
 		return 0;
@@ -114,7 +113,8 @@ static int isjthrottled(Client *client, Channel *channel)
 	/* Ok... now the actual check:
 	 * if ([timer valid] && [one more join would exceed num])
 	 */
-	if (((TStime() - e->firstjoin) < t) && (e->numjoins == num))
+	if (((TStime() - e->firstjoin) < settings->period[FLD_JOIN]) &&
+	    (e->numjoins >= settings->limit[FLD_JOIN]))
 		return 1; /* Throttled */
 
 	return 0;

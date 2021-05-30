@@ -23,10 +23,14 @@
 
 #define DYNCONF_H
 
-typedef struct FloodSettings {
+typedef struct FloodSettings FloodSettings;
+
+struct FloodSettings {
+	FloodSettings *prev, *next;
+	char *name;
 	int limit[MAXFLOODOPTIONS];
 	long period[MAXFLOODOPTIONS];
-} FloodSettings;
+};
 
 typedef struct NetworkConfiguration NetworkConfiguration;
 struct NetworkConfiguration {
@@ -125,8 +129,6 @@ struct Configuration {
 	struct ChMode modes_on_join;
 	int level_on_join;
 	FloodSettings *floodsettings;
-	unsigned char max_concurrent_conversations_users;
-	unsigned char max_concurrent_conversations_new_user_every;
 	int ident_connect_timeout;
 	int ident_read_timeout;
 	long default_bantime;

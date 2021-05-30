@@ -1217,12 +1217,14 @@ typedef struct FloodCounter {
 } FloodCounter;
 
 /** This is the list of different flood counters that we keep for local clients. */
+/* IMPORTANT: If you change this, update floodoption_names[] in src/user.c too !!!!!!!!!!!! */
 typedef enum FloodOption {
-	FLD_NICK	= 0,	/**< nick-flood */
-	FLD_JOIN	= 1,	/**< join-flood */
-	FLD_AWAY	= 2,	/**< away-flood */
-	FLD_INVITE	= 3,	/**< invite-flood */
-	FLD_KNOCK	= 4,	/**< knock-flood */
+	FLD_NICK		= 0,	/**< nick-flood */
+	FLD_JOIN		= 1,	/**< join-flood */
+	FLD_AWAY		= 2,	/**< away-flood */
+	FLD_INVITE		= 3,	/**< invite-flood */
+	FLD_KNOCK		= 4,	/**< knock-flood */
+	FLD_CONVERSATIONS	= 5,	/**< max-concurrent-conversations */
 } FloodOption;
 #define MAXFLOODOPTIONS 10
 

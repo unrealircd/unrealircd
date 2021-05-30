@@ -362,22 +362,113 @@ char *x;
 	return 1;
 }
 
+/** Find an anti-flood settings block by name.
+ * @param name		The name of the set::anti-flood block
+ * @returns The FloodSettings block if found, or NULL if not found.
+ */
+FloodSettings *find_floodsettings_block_ex(Configuration *conf, const char *name)
+{
+	FloodSettings *f;
+
+	for (f = conf->floodsettings; f; f = f->next)
+		if (!strcmp(f->name, name))
+			return f;
+
+	return NULL;
+}
+
+/** Find an anti-flood settings block by name.
+ * @param name		The name of the set::anti-flood block
+ * @returns The FloodSettings block if found, or NULL if not found.
+ */
+FloodSettings *find_floodsettings_block(const char *name)
+{
+	return find_floodsettings_block_ex(&iConf, name);
+}
+
+/** Check if 'name' is in the array 'list'.
+ * @param name		The name to check
+ * @param list		The char *list[] with the list of valid names.
+ * @returns 1 if found, 0 if not
+ * @note The array in list must end in a NULL element!
+ */
+int text_in_array(const char *name, const char *list[])
+{
+	int i;
+
+	for (i=0; list[i]; i++)
+		if (!strcmp(name, list[i]))
+			return 1;
+
+	return 0; /* Not found */
+}
+
+int flood_option_is_old(const char *name)
+{
+	const char *opts[] =
+	{
+		"max-concurrent-conversations",
+		"unknown-flood-amount",
+		"unknown-flood-bantime",
+		"handshake-data-flood",
+		"away-count",
+		"away-period",
+		"away-flood",
+		"nick-flood",
+		"join-flood",
+		"invite-flood",
+		"knock-flood",
+		"connect-flood",
+		"target-flood",
+		NULL
+	};
+
+	return text_in_array(name, opts);
+}
+
+int flood_option_is_for_everyone(const char *name)
+{
+	const char *opts[] =
+	{
+		"connect-flood",
+		"handshake-data-flood",
+		"unknown-flood",
+		"target-flood",
+		NULL
+	};
+
+	return text_in_array(name, opts);
+}
+
+
 /** Parses a value like '5:60s' into a flood setting that we can store.
  * @param str		The string to parse (eg: '5:60s')
  * @param settings	The FloodSettings block to store the result in
  * @param opt		The option (eg: FLD_AWAY)
  * @returns 1 if OK, 0 for parse error.
  */
-int config_parse_flood_generic(const char *str, FloodSettings *settings, FloodOption opt)
+int config_parse_flood_generic(const char *str, Configuration *conf, char *blockname, FloodOption opt)
 {
 	char buf[64], *p;
+	FloodSettings *settings = find_floodsettings_block_ex(conf, blockname);
+
+	/* Create a new anti-flood block if it doesn't exist */
+	if (!settings)
+	{
+		settings = safe_alloc(sizeof(FloodSettings));
+		safe_strdup(settings->name, blockname);
+		AddListItem(settings, conf->floodsettings);
+	}
+
+	if (!strcmp(str, "unlimited") || !strcmp(str, "max"))
+	{
+		settings->limit[opt] = -1;
+		settings->period[opt] = 0;
+		return 1;
+	}
 
 	/* Work on a copy so we don't destroy 'str' */
 	strlcpy(buf, str, sizeof(buf));
-
-	/* Initialize to zero first */
-	settings->limit[opt] = 0;
-	settings->period[opt] = 0;
 
 	p = strchr(buf, ':');
 
@@ -386,6 +477,7 @@ int config_parse_flood_generic(const char *str, FloodSettings *settings, FloodOp
 		return 0;
 
 	*p++ = '\0';
+
 	settings->limit[opt] = atoi(buf);
 	settings->period[opt] = config_checkval(p, CFG_TIME);
 
@@ -1659,9 +1751,6 @@ void config_setdefaultsettings(Configuration *i)
 {
 	char tmp[512];
 
-	i->handshake_data_flood_amount = 4096;
-	i->handshake_data_flood_ban_action = BAN_ACT_ZLINE;
-	i->handshake_data_flood_ban_time = 600;
 	safe_strdup(i->oper_snomask, SNO_DEFOPER);
 	i->ident_read_timeout = 7;
 	i->ident_connect_timeout = 3;
@@ -1704,13 +1793,26 @@ void config_setdefaultsettings(Configuration *i)
 	i->broadcast_channel_messages = BROADCAST_CHANNEL_MESSAGES_AUTO;
 
 	/* Flood options */
+	/* - everyone */
 	i->throttle_count = 3; i->throttle_period = 60; /* throttle protection: max 3 per 60s */
-	i->floodsettings = safe_alloc(sizeof(FloodCounter) * MAXFLOODOPTIONS);
-	config_parse_flood_generic("3:60", i->floodsettings, FLD_NICK); /* NICK flood protection: max 3 per 60s */
-	config_parse_flood_generic("3:90", i->floodsettings, FLD_JOIN); /* NICK flood protection: max 3 per 90s */
-	config_parse_flood_generic("4:120", i->floodsettings, FLD_AWAY); /* AWAY flood protection: max 4 per 120s */
-	config_parse_flood_generic("4:60", i->floodsettings, FLD_INVITE); /* INVITE flood protection: max 4 per 60s */
-	config_parse_flood_generic("4:120", i->floodsettings, FLD_KNOCK); /* KNOCK protection: max 4 per 120s */
+	i->handshake_data_flood_amount = 4096;
+	i->handshake_data_flood_ban_action = BAN_ACT_ZLINE;
+	i->handshake_data_flood_ban_time = 600;
+	// (targetflood is in the targetflood module)
+	/* - known-users */
+	config_parse_flood_generic("3:60", i, "known-users", FLD_NICK); /* NICK flood protection: max 3 per 60s */
+	config_parse_flood_generic("3:90", i, "known-users", FLD_JOIN); /* JOIN flood protection: max 3 per 90s */
+	config_parse_flood_generic("4:120", i, "known-users", FLD_AWAY); /* AWAY flood protection: max 4 per 120s */
+	config_parse_flood_generic("4:60", i, "known-users", FLD_INVITE); /* INVITE flood protection: max 4 per 60s */
+	config_parse_flood_generic("4:120", i, "known-users", FLD_KNOCK); /* KNOCK protection: max 4 per 120s */
+	config_parse_flood_generic("10:15", i, "known-users", FLD_CONVERSATIONS); /* 10 users, new user every 15s */
+	/* - unknown-users */
+	config_parse_flood_generic("2:60", i, "unknown-users", FLD_NICK); /* NICK flood protection: max 2 per 60s */
+	config_parse_flood_generic("2:90", i, "unknown-users", FLD_JOIN); /* JOIN flood protection: max 2 per 90s */
+	config_parse_flood_generic("4:120", i, "unknown-users", FLD_AWAY); /* AWAY flood protection: max 4 per 120s */
+	config_parse_flood_generic("2:60", i, "unknown-users", FLD_INVITE); /* INVITE flood protection: max 2 per 60s */
+	config_parse_flood_generic("2:120", i, "unknown-users", FLD_KNOCK); /* KNOCK protection: max 2 per 120s */
+	config_parse_flood_generic("4:15", i, "unknown-users", FLD_CONVERSATIONS); /* 4 users, new user every 15s */
 
 	/* SSL/TLS options */
 	i->tls_options = safe_alloc(sizeof(TLSOptions));
@@ -1750,9 +1852,6 @@ void config_setdefaultsettings(Configuration *i)
 	i->topic_setter = SETTER_NICK;
 	i->ban_setter = SETTER_NICK;
 	i->ban_setter_sync = 1;
-
-	i->max_concurrent_conversations_users = 10;
-	i->max_concurrent_conversations_new_user_every = 15;
 
 	i->allowed_channelchars = ALLOWED_CHANNELCHARS_UTF8;
 
@@ -7368,7 +7467,7 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 
 int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep, *cepp, *ceppp;
+	ConfigEntry *cep, *cepp, *ceppp, *cep4;
 	Hook *h;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -7563,66 +7662,75 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "anti-flood")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
-				if (!strcmp(cepp->ce_varname, "handshake-data-flood"))
+				for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
 				{
-					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					if (!strcmp(ceppp->ce_varname, "handshake-data-flood"))
 					{
-						if (!strcmp(ceppp->ce_varname, "amount"))
-							tempiConf.handshake_data_flood_amount = config_checkval(ceppp->ce_vardata, CFG_SIZE);
-						else if (!strcmp(ceppp->ce_varname, "ban-time"))
-							tempiConf.handshake_data_flood_ban_time = config_checkval(ceppp->ce_vardata, CFG_TIME);
-						else if (!strcmp(ceppp->ce_varname, "ban-action"))
-							tempiConf.handshake_data_flood_ban_action = banact_stringtoval(ceppp->ce_vardata);
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "away-flood"))
-				{
-					config_parse_flood_generic(cepp->ce_vardata, tempiConf.floodsettings, FLD_AWAY);
-				}
-				else if (!strcmp(cepp->ce_varname, "nick-flood"))
-				{
-					config_parse_flood_generic(cepp->ce_vardata, tempiConf.floodsettings, FLD_NICK);
-				}
-				else if (!strcmp(cepp->ce_varname, "join-flood"))
-				{
-					config_parse_flood_generic(cepp->ce_vardata, tempiConf.floodsettings, FLD_JOIN);
-				}
-				else if (!strcmp(cepp->ce_varname, "invite-flood"))
-				{
-					config_parse_flood_generic(cepp->ce_vardata, tempiConf.floodsettings, FLD_INVITE);
-				}
-				else if (!strcmp(cepp->ce_varname, "knock-flood"))
-				{
-					config_parse_flood_generic(cepp->ce_vardata, tempiConf.floodsettings, FLD_KNOCK);
-				}
-				else if (!strcmp(cepp->ce_varname, "connect-flood"))
-				{
-					int cnt, period;
-					config_parse_flood(cepp->ce_vardata, &cnt, &period);
-					tempiConf.throttle_count = cnt;
-					tempiConf.throttle_period = period;
-				}
-				if (!strcmp(cepp->ce_varname, "max-concurrent-conversations"))
-				{
-					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
-					{
-						if (!strcmp(ceppp->ce_varname, "users"))
+						for (cep4 = ceppp->ce_entries; cep4; cep4 = cep4->ce_next)
 						{
-							tempiConf.max_concurrent_conversations_users = atoi(ceppp->ce_vardata);
-						} else
-						if (!strcmp(ceppp->ce_varname, "new-user-every"))
-						{
-							tempiConf.max_concurrent_conversations_new_user_every = config_checkval(ceppp->ce_vardata, CFG_TIME);
+							if (!strcmp(cep4->ce_varname, "amount"))
+								tempiConf.handshake_data_flood_amount = config_checkval(cep4->ce_vardata, CFG_SIZE);
+							else if (!strcmp(cep4->ce_varname, "ban-time"))
+								tempiConf.handshake_data_flood_ban_time = config_checkval(cep4->ce_vardata, CFG_TIME);
+							else if (!strcmp(cep4->ce_varname, "ban-action"))
+								tempiConf.handshake_data_flood_ban_action = banact_stringtoval(cep4->ce_vardata);
 						}
 					}
-				}
-				else
-				{
-					for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+					else if (!strcmp(ceppp->ce_varname, "away-flood"))
 					{
-						int value = (*(h->func.intfunc))(conf,cepp,CONFIG_SET_ANTI_FLOOD);
-						if (value == 1)
-							break;
+						config_parse_flood_generic(ceppp->ce_vardata, &tempiConf, cepp->ce_varname, FLD_AWAY);
+					}
+					else if (!strcmp(ceppp->ce_varname, "nick-flood"))
+					{
+						config_parse_flood_generic(ceppp->ce_vardata, &tempiConf, cepp->ce_varname, FLD_NICK);
+					}
+					else if (!strcmp(ceppp->ce_varname, "join-flood"))
+					{
+						config_parse_flood_generic(ceppp->ce_vardata, &tempiConf, cepp->ce_varname, FLD_JOIN);
+					}
+					else if (!strcmp(ceppp->ce_varname, "invite-flood"))
+					{
+						config_parse_flood_generic(ceppp->ce_vardata, &tempiConf, cepp->ce_varname, FLD_INVITE);
+					}
+					else if (!strcmp(ceppp->ce_varname, "knock-flood"))
+					{
+						config_parse_flood_generic(ceppp->ce_vardata, &tempiConf, cepp->ce_varname, FLD_KNOCK);
+					}
+					else if (!strcmp(ceppp->ce_varname, "connect-flood"))
+					{
+						int cnt, period;
+						config_parse_flood(ceppp->ce_vardata, &cnt, &period);
+						tempiConf.throttle_count = cnt;
+						tempiConf.throttle_period = period;
+					}
+					if (!strcmp(ceppp->ce_varname, "max-concurrent-conversations"))
+					{
+						/* We use a hack here to make it fit our storage format */
+						char buf[64];
+						int users=0;
+						long every=0;
+						for (cep4 = ceppp->ce_entries; cep4; cep4 = cep4->ce_next)
+						{
+							if (!strcmp(cep4->ce_varname, "users"))
+							{
+								users = atoi(cep4->ce_vardata);
+							} else
+							if (!strcmp(cep4->ce_varname, "new-user-every"))
+							{
+								every = config_checkval(cep4->ce_vardata, CFG_TIME);
+							}
+						}
+						snprintf(buf, sizeof(buf), "%d:%ld", users, every);
+						config_parse_flood_generic(buf, &tempiConf, cepp->ce_varname, FLD_CONVERSATIONS);
+					}
+					else
+					{
+						for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+						{
+							int value = (*(h->func.intfunc))(conf,ceppp,CONFIG_SET_ANTI_FLOOD);
+							if (value == 1)
+								break;
+						}
 					}
 				}
 			}
@@ -7914,7 +8022,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep, *cepp, *ceppp;
+	ConfigEntry *cep, *cepp, *ceppp, *cep4;
 	int tempi;
 	int errors = 0;
 	Hook *h;
@@ -8376,232 +8484,282 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "anti-flood"))
 		{
+			int anti_flood_warned_old = 0;
+
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
-				if (!strcmp(cepp->ce_varname, "max-concurrent-conversations"))
+				/* Test for old options: */
+				if (flood_option_is_old(cepp->ce_varname))
 				{
-					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					/* Warn only once per block: */
+					if (anti_flood_warned_old == 0)
+					{
+						config_error("%s:%d: the set::anti-flood block has been reorganized to be more flexible. "
+							     "See https://www.unrealircd.org/docs/FAQ#new-anti-flood-block for how to update your block. "
+							     "Or simply remove all the anti-flood options from the conf to use UnrealIRCds defaults.",
+							     cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						anti_flood_warned_old = 1;
+						errors++;
+					}
+					continue;
+				}
+
+				for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+				{
+					int everyone = !strcmp(cepp->ce_varname, "everyone") ? 1 : 0;
+					int for_everyone = flood_option_is_for_everyone(ceppp->ce_varname);
+
+					if (everyone && !for_everyone)
+					{
+						config_error("%s:%i: %s cannot be in the set::anti-flood::everyone block. "
+						             "You can put it in 'known-users' or 'unknown-users' instead.",
+							ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum,
+							ceppp->ce_varname);
+						errors++;
+						continue;
+					} else
+					if (!everyone && for_everyone)
+					{
+						config_error("%s:%i: %s must be in the set::anti-flood::everyone block, not anywhere else.",
+							ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum,
+							ceppp->ce_varname);
+						errors++;
+						continue;
+					}
+
+					/* Now comes the actual config check for each element... */
+					if (!strcmp(ceppp->ce_varname, "max-concurrent-conversations"))
+					{
+						for (cep4 = ceppp->ce_entries; cep4; cep4 = cep4->ce_next)
+						{
+							CheckNull(cep4);
+							if (!strcmp(cep4->ce_varname, "users"))
+							{
+								int v = atoi(cep4->ce_vardata);
+								if ((v < 1) || (v > MAXCCUSERS))
+								{
+									config_error("%s:%i: set::anti-flood::max-concurrent-conversations::users: "
+										     "value should be between 1 and %d",
+										     cep4->ce_fileptr->cf_filename, cep4->ce_varlinenum, MAXCCUSERS);
+									errors++;
+								}
+							} else
+							if (!strcmp(cep4->ce_varname, "new-user-every"))
+							{
+								long v = config_checkval(cep4->ce_vardata, CFG_TIME);
+								if ((v < 1) || (v > 120))
+								{
+									config_error("%s:%i: set::anti-flood::max-concurrent-conversations::new-user-every: "
+										     "value should be between 1 and 120 seconds",
+										     cep4->ce_fileptr->cf_filename, cep4->ce_varlinenum);
+									errors++;
+								}
+							} else
+							{
+								config_error_unknownopt(cep4->ce_fileptr->cf_filename,
+									cep4->ce_varlinenum, "set::anti-flood",
+									cep4->ce_varname);
+								errors++;
+							}
+						}
+						continue; /* required here, due to checknull directly below */
+					}
+					else if (!strcmp(ceppp->ce_varname, "unknown-flood-amount") ||
+						 !strcmp(ceppp->ce_varname, "unknown-flood-bantime"))
+					{
+						config_error("%s:%i: set::anti-flood::%s: this setting has been moved. "
+							     "See https://www.unrealircd.org/docs/Set_block#set::anti-flood::handshake-data-flood",
+							     ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, ceppp->ce_varname);
+						errors++;
+						continue;
+					}
+					else if (!strcmp(ceppp->ce_varname, "handshake-data-flood"))
+					{
+						for (cep4 = ceppp->ce_entries; cep4; cep4 = cep4->ce_next)
+						{
+							if (!strcmp(cep4->ce_varname, "amount"))
+							{
+								long v;
+								CheckNull(cep4);
+								v = config_checkval(cep4->ce_vardata, CFG_SIZE);
+								if (v < 1024)
+								{
+									config_error("%s:%i: set::anti-flood::handshake-data-flood::amount must be at least 1024 bytes",
+										cep4->ce_fileptr->cf_filename, cep4->ce_varlinenum);
+									errors++;
+								}
+							} else
+							if (!strcmp(cep4->ce_varname, "ban-action"))
+							{
+								CheckNull(cep4);
+								if (!banact_stringtoval(cep4->ce_vardata))
+								{
+									config_error("%s:%i: set::anti-flood::handshake-data-flood::ban-action has unknown action type '%s'",
+										cep4->ce_fileptr->cf_filename, cep4->ce_varlinenum,
+										cep4->ce_vardata);
+									errors++;
+								}
+							} else
+							if (!strcmp(cep4->ce_varname, "ban-time"))
+							{
+								CheckNull(cep4);
+							} else
+							{
+								config_error_unknownopt(cep4->ce_fileptr->cf_filename,
+									cep4->ce_varlinenum, "set::anti-flood::handshake-data-flood",
+									cep4->ce_varname);
+								errors++;
+							}
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "away-count"))
+					{
+						int temp = atol(ceppp->ce_vardata);
+						CheckNull(ceppp);
+						if (temp < 1 || temp > 255)
+						{
+							config_error("%s:%i: set::anti-flood::away-count must be between 1 and 255",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "away-period"))
 					{
 						CheckNull(ceppp);
-						if (!strcmp(ceppp->ce_varname, "users"))
+						int temp = config_checkval(ceppp->ce_vardata, CFG_TIME);
+						if (temp < 10)
 						{
-							int v = atoi(ceppp->ce_vardata);
-							if ((v < 1) || (v > MAXCCUSERS))
-							{
-								config_error("%s:%i: set::anti-flood::max-concurrent-conversations::users: "
-								             "value should be between 1 and %d",
-								             ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, MAXCCUSERS);
-								errors++;
-							}
-						} else
-						if (!strcmp(ceppp->ce_varname, "new-user-every"))
+							config_error("%s:%i: set::anti-flood::away-period must be greater than 9",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "away-flood"))
+					{
+						int cnt, period;
+						CheckNull(ceppp);
+						if (!config_parse_flood(ceppp->ce_vardata, &cnt, &period) ||
+						    (cnt < 1) || (cnt > 255) || (period < 10))
 						{
-							long v = config_checkval(ceppp->ce_vardata, CFG_TIME);
-							if ((v < 1) || (v > 120))
+							config_error("%s:%i: set::anti-flood::away-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+								     "count should be 1-255, period should be greater than 9",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "nick-flood"))
+					{
+						int cnt, period;
+						CheckNull(ceppp);
+						if (!config_parse_flood(ceppp->ce_vardata, &cnt, &period) ||
+						    (cnt < 1) || (cnt > 255) || (period < 5))
+						{
+							config_error("%s:%i: set::anti-flood::nick-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+								     "count should be 1-255, period should be greater than 4",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "join-flood"))
+					{
+						int cnt, period;
+						CheckNull(ceppp);
+
+						if (!config_parse_flood(ceppp->ce_vardata, &cnt, &period) ||
+						    (cnt < 1) || (cnt > 255) || (period < 5))
+						{
+							config_error("%s:%i: join-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+								     "count should be 1-255, period should be greater than 4",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "invite-flood"))
+					{
+						int cnt, period;
+						CheckNull(ceppp);
+						if (!config_parse_flood(ceppp->ce_vardata, &cnt, &period) ||
+						    (cnt < 1) || (cnt > 255) || (period < 5))
+						{
+							config_error("%s:%i: set::anti-flood::invite-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+								     "count should be 1-255, period should be greater than 4",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "knock-flood"))
+					{
+						int cnt, period;
+						CheckNull(ceppp);
+						if (!config_parse_flood(ceppp->ce_vardata, &cnt, &period) ||
+						    (cnt < 1) || (cnt > 255) || (period < 5))
+						{
+							config_error("%s:%i: set::anti-flood::knock-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+								     "count should be 1-255, period should be greater than 4",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "connect-flood"))
+					{
+						int cnt, period;
+						CheckNull(ceppp);
+						if (strcmp(cepp->ce_varname, "everyone"))
+						{
+							config_error("%s:%i: connect-flood must be in the set::anti-flood::everyone block, not anywhere else.",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+							continue;
+						}
+						if (!config_parse_flood(ceppp->ce_vardata, &cnt, &period) ||
+						    (cnt < 1) || (cnt > 255) || (period < 1) || (period > 3600))
+						{
+							config_error("%s:%i: set::anti-flood::connect-flood: Syntax is '<count>:<period>' (eg 5:60), "
+								     "count should be 1-255, period should be 1-3600",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else
+					{
+						/* hmm.. I don't like this method. but I just quickly copied it from CONFIG_ALLOW for now... */
+						int used = 0;
+						Hook *h;
+						for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
+						{
+							int value, errs = 0;
+							if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+								&& !(h->owner->options & MOD_OPT_PERM))
+								continue;
+							value = (*(h->func.intfunc))(conf,ceppp,CONFIG_SET_ANTI_FLOOD,&errs);
+							if (value == 2)
+								used = 1;
+							if (value == 1)
 							{
-								config_error("%s:%i: set::anti-flood::max-concurrent-conversations::new-user-every: "
-								             "value should be between 1 and 120 seconds",
-								             ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
-								errors++;
+								used = 1;
+								break;
 							}
-						} else
+							if (value == -1)
+							{
+								used = 1;
+								errors += errs;
+								break;
+							}
+							if (value == -2)
+							{
+								used = 1;
+								errors += errs;
+							}
+						}
+						if (!used)
 						{
 							config_error_unknownopt(ceppp->ce_fileptr->cf_filename,
 								ceppp->ce_varlinenum, "set::anti-flood",
 								ceppp->ce_varname);
 							errors++;
 						}
+						continue;
 					}
-					continue; /* required here, due to checknull directly below */
-				}
-				else if (!strcmp(cepp->ce_varname, "unknown-flood-amount") ||
-				         !strcmp(cepp->ce_varname, "unknown-flood-bantime"))
-				{
-					config_error("%s:%i: set::anti-flood::%s: this setting has been moved. "
-					             "See https://www.unrealircd.org/docs/Set_block#set::anti-flood::handshake-data-flood",
-					             cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
-					errors++;
-					continue;
-				}
-				else if (!strcmp(cepp->ce_varname, "handshake-data-flood"))
-				{
-					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
-					{
-						if (!strcmp(ceppp->ce_varname, "amount"))
-						{
-							long v;
-							CheckNull(ceppp);
-							v = config_checkval(ceppp->ce_vardata, CFG_SIZE);
-							if (v < 1024)
-							{
-								config_error("%s:%i: set::anti-flood::handshake-data-flood::amount must be at least 1024 bytes",
-									ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
-								errors++;
-							}
-						} else
-						if (!strcmp(ceppp->ce_varname, "ban-action"))
-						{
-							CheckNull(ceppp);
-							if (!banact_stringtoval(ceppp->ce_vardata))
-							{
-								config_error("%s:%i: set::anti-flood::handshake-data-flood::ban-action has unknown action type '%s'",
-									ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum,
-									ceppp->ce_vardata);
-								errors++;
-							}
-						} else
-						if (!strcmp(ceppp->ce_varname, "ban-time"))
-						{
-							CheckNull(ceppp);
-						} else
-						{
-							config_error_unknownopt(ceppp->ce_fileptr->cf_filename,
-								ceppp->ce_varlinenum, "set::anti-flood::handshake-data-flood",
-								ceppp->ce_varname);
-							errors++;
-						}
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "away-count"))
-				{
-					int temp = atol(cepp->ce_vardata);
-					CheckNull(cepp);
-					if (temp < 1 || temp > 255)
-					{
-						config_error("%s:%i: set::anti-flood::away-count must be between 1 and 255",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "away-period"))
-				{
-					CheckNull(cepp);
-					int temp = config_checkval(cepp->ce_vardata, CFG_TIME);
-					if (temp < 10)
-					{
-						config_error("%s:%i: set::anti-flood::away-period must be greater than 9",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "away-flood"))
-				{
-					int cnt, period;
-					CheckNull(cepp);
-					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
-					    (cnt < 1) || (cnt > 255) || (period < 10))
-					{
-						config_error("%s:%i: set::anti-flood::away-flood error. Syntax is '<count>:<period>' (eg 5:60), "
-						             "count should be 1-255, period should be greater than 9",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "nick-flood"))
-				{
-					int cnt, period;
-					CheckNull(cepp);
-					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
-					    (cnt < 1) || (cnt > 255) || (period < 5))
-					{
-						config_error("%s:%i: set::anti-flood::nick-flood error. Syntax is '<count>:<period>' (eg 5:60), "
-						             "count should be 1-255, period should be greater than 4",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "join-flood"))
-				{
-					int cnt, period;
-					CheckNull(cepp);
-
-					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
-					    (cnt < 1) || (cnt > 255) || (period < 5))
-					{
-						config_error("%s:%i: join-flood error. Syntax is '<count>:<period>' (eg 5:60), "
-						             "count should be 1-255, period should be greater than 4",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "invite-flood"))
-				{
-					int cnt, period;
-					CheckNull(cepp);
-					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
-					    (cnt < 1) || (cnt > 255) || (period < 5))
-					{
-						config_error("%s:%i: set::anti-flood::invite-flood error. Syntax is '<count>:<period>' (eg 5:60), "
-						             "count should be 1-255, period should be greater than 4",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "knock-flood"))
-				{
-					int cnt, period;
-					CheckNull(cepp);
-					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
-					    (cnt < 1) || (cnt > 255) || (period < 5))
-					{
-						config_error("%s:%i: set::anti-flood::knock-flood error. Syntax is '<count>:<period>' (eg 5:60), "
-						             "count should be 1-255, period should be greater than 4",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "connect-flood"))
-				{
-					int cnt, period;
-					CheckNull(cepp);
-					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
-					    (cnt < 1) || (cnt > 255) || (period < 1) || (period > 3600))
-					{
-						config_error("%s:%i: set::anti-flood::connect-flood: Syntax is '<count>:<period>' (eg 5:60), "
-						             "count should be 1-255, period should be 1-3600",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else
-				{
-					/* hmm.. I don't like this method. but I just quickly copied it from CONFIG_ALLOW for now... */
-					int used = 0;
-					Hook *h;
-					for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
-					{
-						int value, errs = 0;
-						if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
-							&& !(h->owner->options & MOD_OPT_PERM))
-							continue;
-						value = (*(h->func.intfunc))(conf,cepp,CONFIG_SET_ANTI_FLOOD,&errs);
-						if (value == 2)
-							used = 1;
-						if (value == 1)
-						{
-							used = 1;
-							break;
-						}
-						if (value == -1)
-						{
-							used = 1;
-							errors += errs;
-							break;
-						}
-						if (value == -2)
-						{
-							used = 1;
-							errors += errs;
-						}
-					}
-					if (!used)
-					{
-						config_error_unknownopt(cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum, "set::anti-flood",
-							cepp->ce_varname);
-						errors++;
-					}
-					continue;
 				}
 			}
 		}

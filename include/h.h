@@ -1066,3 +1066,6 @@ extern Secret *secrets;
 extern int check_password_strength(char *pass, int min_length, int strict, char **err);
 extern int valid_secret_password(char *pass, char **err);
 extern int flood_limit_exceeded(Client *client, FloodOption opt);
+extern FloodSettings *find_floodsettings_block(const char *name);
+extern FloodSettings *get_floodsettings_for_user(Client *client, FloodOption opt);
+extern MODVAR char *floodoption_names[];

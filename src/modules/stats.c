@@ -772,9 +772,33 @@ int stats_officialchannels(Client *client, char *para)
 
 #define SafePrint(x)   ((x) ? (x) : "")
 
+/** Helper for stats_set() */
+static void stats_set_anti_flood(Client *client, FloodSettings *f)
+{
+	int i;
+
+	for (i=0; floodoption_names[i]; i++)
+	{
+		if (i == FLD_CONVERSATIONS)
+		{
+			sendtxtnumeric(client, "anti-flood::%s::%s: %d users, new user every %s",
+				f->name, floodoption_names[i],
+				(int)f->limit[i], pretty_time_val(f->period[i]));
+		}
+		else
+		{
+			sendtxtnumeric(client, "anti-flood::%s::%s: %d per %s",
+				f->name, floodoption_names[i],
+				(int)f->limit[i], pretty_time_val(f->period[i]));
+		}
+	}
+}
+
 int stats_set(Client *client, char *para)
 {
 	char *uhallow;
+	SecurityGroup *s;
+	FloodSettings *f;
 
 	if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
 	{
@@ -875,6 +899,14 @@ int stats_set(Client *client, char *para)
 	sendtxtnumeric(client, "anti-flood::handshake-data-flood::amount: %ld bytes", iConf.handshake_data_flood_amount);
 	sendtxtnumeric(client, "anti-flood::handshake-data-flood::ban-action: %s", banact_valtostring(iConf.handshake_data_flood_ban_action));
 	sendtxtnumeric(client, "anti-flood::handshake-data-flood::ban-time: %s", pretty_time_val(iConf.handshake_data_flood_ban_time));
+
+	/* set::anti-flood */
+	for (s = securitygroups; s; s = s->next)
+		if ((f = find_floodsettings_block(s->name)))
+			stats_set_anti_flood(client, f);
+	f = find_floodsettings_block("unknown-users");
+	stats_set_anti_flood(client, f);
+
 	//if (AWAY_PERIOD)
 	//	sendtxtnumeric(client, "anti-flood::away-flood: %d per %s", AWAY_COUNT, pretty_time_val(AWAY_PERIOD));
 	//sendtxtnumeric(client, "anti-flood::nick-flood: %d per %s", NICK_COUNT, pretty_time_val(NICK_PERIOD));
