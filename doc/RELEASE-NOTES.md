@@ -12,14 +12,14 @@ It also contains a breaking change, meaning (almost) everyone will need
 to change a few things in their configuration file.
 
 Breaking change:
-* The set:anti-flood block has been redone so you can have different limits
+* The set::anti-flood block has been redone so you can have different limits
   for "unknown-users" and "known-users".
-  As a reminder, by default, "known-users" are users who are identified
-  to services OR are on an IP that has been connected for over 2 hours
-  in the past X days, the exact definition of "known-users" is in the
-  [security-group block](https://www.unrealircd.org/docs/Security-group_block).
-  See [here](https://www.unrealircd.org/docs/FAQ#new-anti-flood-block)
-  for more information on the layout of the new anti-flood block.
+  * As a reminder, by default, "known-users" are users who are identified
+    to services OR are on an IP that has been connected for over 2 hours
+    in the past X days. The exact definition of "known-users" is in the
+    [security-group block](https://www.unrealircd.org/docs/Security-group_block).
+  * See [here](https://www.unrealircd.org/docs/FAQ#new-anti-flood-block)
+    for more information on the layout of the new set::anti-flood block.
 
 Enhancements:
 * Add support for database encryption. The way this works
