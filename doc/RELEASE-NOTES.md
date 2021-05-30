@@ -13,7 +13,7 @@ to change a few things in their configuration file.
 
 Breaking change:
 * The set::anti-flood block has been redone so you can have different limits
-  for "unknown-users" and "known-users".
+  for ''unknown-users'' and ''known-users''.
   * As a reminder, by default, "known-users" are users who are identified
     to services OR are on an IP that has been connected for over 2 hours
     in the past X days. The exact definition of "known-users" is in the
@@ -22,7 +22,7 @@ Breaking change:
     for more information on the layout of the new set::anti-flood block.
   * All violatons of target-flood, nick-flood, join-flood, away-flood,
     invite-flood, knock-flood, max-concurrent-conversations are now
-    reported to opers with the snomask 'f' (flood).
+    reported to opers with the snomask ```f``` (flood).
 
 Enhancements:
 * Add support for database encryption. The way this works
@@ -87,7 +87,7 @@ Changed:
   From now on we will wait up to 10 seconds max. This gives UnrealIRCd
   plenty of time to write database files.
 * If you have zero [log blocks](https://www.unrealircd.org/docs/Log_block)
-  then we already automatically logged errors to ircd.log.
+  then we already automatically logged errors to ```ircd.log```.
   From now on we will log everything (not only errors) to that file.
 
 Removed:
