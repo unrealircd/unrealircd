@@ -969,9 +969,6 @@ int flood_limit_exceeded(Client *client, FloodOption opt)
 	if (!MyUser(client))
 		return 0;
 
-	if ((opt < 0) || (opt >= MAXFLOODOPTIONS))
-		abort();
-
 	f = get_floodsettings_for_user(client, opt);
 	if (f->limit[opt] <= 0)
 		return 0; /* No limit set or unlimited */
