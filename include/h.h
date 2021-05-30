@@ -1069,3 +1069,4 @@ extern int flood_limit_exceeded(Client *client, FloodOption opt);
 extern FloodSettings *find_floodsettings_block(const char *name);
 extern FloodSettings *get_floodsettings_for_user(Client *client, FloodOption opt);
 extern MODVAR char *floodoption_names[];
+extern void flood_limit_exceeded_log(Client *client, char *floodname);

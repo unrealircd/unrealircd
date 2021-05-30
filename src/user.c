@@ -179,6 +179,7 @@ int target_limit_exceeded(Client *client, void *target, const char *name)
 		client->local->nexttarget += 2; /* punish them some more */
 		client->local->since += 2; /* lag them up as well */
 
+		flood_limit_exceeded_log(client, "max-concurrent-conversations");
 		sendnumeric(client, ERR_TARGETTOOFAST, name, client->local->nexttarget - TStime());
 
 		return 1;
@@ -939,6 +940,22 @@ char *get_connect_extinfo(Client *client)
 	return retbuf;
 }
 
+/** Log a message that flood protection kicked in for the client.
+ * This sends to the +f snomask at the moment.
+ * FIXME: we should provide an option to log this too?
+ * @param client	The client to check flood for (local user)
+ * @param opt		The flood option (eg FLD_AWAY)
+ */
+void flood_limit_exceeded_log(Client *client, char *floodname)
+{
+	sendto_snomask_global(SNO_FLOOD, "Flood blocked (%s) from %s!%s@%s [%s]",
+		floodname,
+		client->name,
+		client->user->username,
+		client->user->realhost,
+		GetIP(client));
+}
+
 /** Is the flood limit exceeded for an option? eg for away-flood.
  * @param client	The client to check flood for (local user)
  * @param opt		The flood option (eg FLD_AWAY)
@@ -972,7 +989,10 @@ int flood_limit_exceeded(Client *client, FloodOption opt)
 	if (client->local->flood[opt].count <= f->limit[opt])
 		client->local->flood[opt].count++;
 	if (client->local->flood[opt].count > f->limit[opt])
+	{
+		flood_limit_exceeded_log(client, floodoption_names[opt]);
 		return 1; /* Flood limit hit! */
+	}
 
 	return 0;
 }

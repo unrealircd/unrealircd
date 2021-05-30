@@ -20,6 +20,9 @@ Breaking change:
     [security-group block](https://www.unrealircd.org/docs/Security-group_block).
   * See [here](https://www.unrealircd.org/docs/FAQ#new-anti-flood-block)
     for more information on the layout of the new set::anti-flood block.
+  * All violatons of target-flood, nick-flood, join-flood, away-flood,
+    invite-flood, knock-flood, max-concurrent-conversations are now
+    reported to opers with the snomask 'f' (flood).
 
 Enhancements:
 * Add support for database encryption. The way this works

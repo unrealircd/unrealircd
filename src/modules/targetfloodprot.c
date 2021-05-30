@@ -259,6 +259,7 @@ int targetfloodprot_can_send_to_channel(Client *client, Channel *channel, Member
 	if (flood->cnt[what] >= channelcfg->cnt[what])
 	{
 		/* Flood detected */
+		flood_limit_exceeded_log(client, "target-flood-channel");
 		snprintf(errbuf, sizeof(errbuf), "Channel is being flooded. Message not delivered.");
 		*errmsg = errbuf;
 		return HOOK_DENY;
@@ -305,6 +306,7 @@ int targetfloodprot_can_send_to_user(Client *client, Client *target, char **text
 	if (flood->cnt[what] >= privatecfg->cnt[what])
 	{
 		/* Flood detected */
+		flood_limit_exceeded_log(client, "target-flood-user");
 		snprintf(errbuf, sizeof(errbuf), "User is being flooded. Message not delivered.");
 		*errmsg = errbuf;
 		return HOOK_DENY;
