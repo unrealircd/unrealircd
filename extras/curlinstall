@@ -90,7 +90,7 @@ cd "$OUTD" || exit 1
 
 echo "Building and installing libcurl"
 CPPFLAGS="-I$ARESPATH/include" ./configure --prefix=$UNREALDIR/extras/curl --libdir=$LIBDIR --enable-shared \
- --disable-thread --enable-ares=$ARESPATH --disable-ipv6
+ --enable-ares=$ARESPATH --with-openssl
 cp -R $ARESPATH/lib ares
 make && make install
 
