@@ -18,6 +18,12 @@
 
 # some bits edited by baafie on March 17 2004, every change marked.
 
+echo "This is UnrealIRCd from git branch 'unreal50'"
+echo "You are looking at an incomplete release that cannot be used."
+echo ""
+echo "Please use branch 'unreal52' instead (or later)"
+echo ""
+exit 1
 
 RUN_CONFIGURE () {
 ARG=" "
