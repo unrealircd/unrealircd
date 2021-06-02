@@ -96,7 +96,7 @@
  * an insane amount of log output which can be very useful for debugging.
  * You should *NEVER* enable this setting on production servers.
  */
-/* #undef	DEBUGMODE */
+#define DEBUGMODE
 
 /* Similarly, DEBUG_IOENGINE can be used to debug the I/O engine. */
 /* #undef	DEBUG_IOENGINE */

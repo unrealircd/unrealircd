@@ -40,11 +40,11 @@
  * and I/O speeds of the underlying hardware.
  */
 
-/* In UnrealIRCd 5.0.10 we don't write the v1 header yet for unencrypted
+/* In UnrealIRCd 5.2.0 we don't write the v1 header yet for unencrypted
  * database files, this so users using unencrypted can easily downgrade
  * to 5.0.9 and lower should there be any need to do so.
  * We DO support READING encypted, unencrypted v1, and unencrypted raw (v0)
- * in 5.0.10, though.
+ * in 5.2.0, though.
  * Presumably in 2022 or so we will stop writing v0 by default and change
  * this #undef to a #define to write v1.
  */

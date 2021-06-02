@@ -1,15 +1,7 @@
-UnrealIRCd 5.X.Y-git Release Notes
+UnrealIRCd 5.2.0-git Release Notes
 ===============================
 
 This is the current development version (git) of UnrealIRCd.
-
-This UnrealIRCd release focusses on channel history. A way to store channel
-history encrypted on disk has been added (to preserve between server restarts)
-and the IRCv3 CHATHISTORY command has been implemented to allow fetching
-thousands of lines of channel history.
-
-It also contains a breaking change, meaning (almost) everyone will need
-to change a few things in their configuration file.
 
 Breaking change:
 * The set::anti-flood block has been redone so you can have different limits
