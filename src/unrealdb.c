@@ -163,7 +163,7 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 	UnrealDB *c = safe_alloc_sensitive(sizeof(UnrealDB));
 	char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
 	char buf[32]; /* don't change this */
-	Secret *secr;
+	Secret *secr=NULL;
 	SecretCache *dbcache;
 	int cached = 0;
 	char *err;
