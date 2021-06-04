@@ -63,6 +63,14 @@ Enhancements:
   people are replying to. This module, reply-tag, is loaded by default.
 * Send [draft/bot](https://ircv3.net/specs/extensions/bot-mode) IRCv3
   message tag if the user has mode ```+B``` set.
+* [Websockets](https://www.unrealircd.org/docs/WebSocket_support):
+  add support for clients to negotiate an explicit type via
+  ```Sec-WebSocket-Protocol```, instead of only the default type from
+  [listen::websocket::type](https://www.unrealircd.org/docs/WebSocket_support#2._Enable_websocket_on_the_port).
+  This is based on an IRCv3 websocket draft specification.
+  Note that UnrealIRCd refuses type text if your configuration allows
+  non-UTF8 characters in channel or nick names because it would lead
+  to security and compatibility issues.
 
 Fixes:
 * Forbid using [extended server bans](https://www.unrealircd.org/docs/Extended_server_bans)
