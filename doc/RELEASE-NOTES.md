@@ -1,7 +1,13 @@
-UnrealIRCd 5.2.0-git Release Notes
+UnrealIRCd 5.2.0-rc1 Release Notes
 ===============================
 
-This is the current development version (git) of UnrealIRCd.
+This is the first release candidate for UnrealIRCd 5.2.0. This is a major
+release with lots of new features. We welcome anyone to test and report
+issues to https://bugs.unrealircd.org/.
+
+The two main features are: an improved and more flexible anti-flood block
+and channel history which can now be stored encrypted on disk and allows
+clients to fetch hundreds/thousands of lines.
 
 Breaking change:
 * The set::anti-flood block has been redone so you can have different limits
@@ -39,9 +45,8 @@ Enhancements:
     names are visible in the filenames for optimal privacy.
   * See [Persistent channel history](https://www.unrealircd.org/docs/Set_block#Persistent_channel_history)
     on how to enable this. By default it is off.
-* Add optional support for IRCv3
+* Add support for IRCv3
   [draft/chathistory](https://ircv3.net/specs/extensions/chathistory).
-  This module can be loaded via ```loadmodule "chathistory";```
 * The maximums for channel mode ```+H``` have been raised and are now
   different for ```+r``` (registered) and ```-r``` channels. For unregistered
   channels the limit is now 200 lines / 31 days. For registered channels
