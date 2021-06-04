@@ -176,6 +176,23 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 		goto unrealdb_open_fail;
 	}
 
+	/* Do this check early, before we try to create any file */
+	if (secret_block != NULL)
+	{
+		secr = find_secret(secret_block);
+		if (!secr)
+		{
+			unrealdb_set_error(c, UNREALDB_ERROR_SECRET, "Secret block '%s' not found or invalid", secret_block);
+			goto unrealdb_open_fail;
+		}
+
+		if (!valid_secret_password(secr->password, &err))
+		{
+			unrealdb_set_error(c, UNREALDB_ERROR_SECRET, "Password in secret block '%s' does not meet complexity requirements", secr->name);
+			goto unrealdb_open_fail;
+		}
+	}
+
 	c->mode = mode;
 	c->fd = fopen(filename, (c->mode == UNREALDB_MODE_WRITE) ? "wb" : "rb");
 	if (!c->fd)
@@ -248,19 +265,6 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 	}
 
 	c->crypted = 1;
-
-	secr = find_secret(secret_block);
-	if (!secr)
-	{
-		unrealdb_set_error(c, UNREALDB_ERROR_SECRET, "Secret block '%s' not found or invalid", secret_block);
-		goto unrealdb_open_fail;
-	}
-
-	if (!valid_secret_password(secr->password, &err))
-	{
-		unrealdb_set_error(c, UNREALDB_ERROR_SECRET, "Password in secret block '%s' does not meet complexity requirements", secr->name);
-		goto unrealdb_open_fail;
-	}
 
 	if (c->mode == UNREALDB_MODE_WRITE)
 	{
