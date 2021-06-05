@@ -447,6 +447,7 @@ extern void		Auth_FreeAuthConfig(AuthConfig *as);
 extern int		Auth_Check(Client *cptr, AuthConfig *as, char *para);
 extern char   		*Auth_Hash(int type, char *para);
 extern int   		Auth_CheckError(ConfigEntry *ce);
+extern int              Auth_AutoDetectHashType(char *hash);
 
 extern void make_cloakedhost(Client *client, char *curr, char *buf, size_t buflen);
 extern int  channel_canjoin(Client *client, char *name);

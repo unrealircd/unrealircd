@@ -10513,8 +10513,18 @@ int _test_secret(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!strcmp(cep->ce_varname, "password"))
 		{
+			int n;
 			has_password = 1;
 			CheckNull(cep);
+			if (cep->ce_entries ||
+			    (((n = Auth_AutoDetectHashType(cep->ce_vardata))) && ((n == AUTHTYPE_BCRYPT) || (n == AUTHTYPE_ARGON2))))
+			{
+				config_error("%s:%d: you cannot use hashed passwords here, see "
+				             "https://www.unrealircd.org/docs/Secret_block#secret-plaintext",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
 			if (!valid_secret_password(cep->ce_vardata, &err))
 			{
 				config_error("%s:%d: secret::password does not meet password complexity requirements: %s",
