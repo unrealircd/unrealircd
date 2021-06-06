@@ -8485,22 +8485,24 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "anti-flood"))
 		{
-			int anti_flood_warned_old = 0;
+			int anti_flood_old = 0;
+			int anti_flood_old_and_default = 0;
 
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				/* Test for old options: */
 				if (flood_option_is_old(cepp->ce_varname))
 				{
-					/* Warn only once per block: */
-					if (anti_flood_warned_old == 0)
+					/* Special code if the user is using 100% of the defaults */
+					if (cepp->ce_vardata &&
+					    ((!strcmp(cepp->ce_varname, "nick-flood") && !strcmp(cepp->ce_vardata, "3:60")) ||
+					     (!strcmp(cepp->ce_varname, "connect-flood") && cepp->ce_vardata && !strcmp(cepp->ce_vardata, "3:60")) ||
+					     (!strcmp(cepp->ce_varname, "away-flood") && cepp->ce_vardata && !strcmp(cepp->ce_vardata, "4:120"))))
 					{
-						config_error("%s:%d: the set::anti-flood block has been reorganized to be more flexible. "
-							     "See https://www.unrealircd.org/docs/FAQ#new-anti-flood-block for how to update your block. "
-							     "Or simply remove all the anti-flood options from the conf to use UnrealIRCds defaults.",
-							     cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						anti_flood_warned_old = 1;
-						errors++;
+						anti_flood_old_and_default = 1;
+					} else
+					{
+						anti_flood_old = 1;
 					}
 					continue;
 				}
@@ -8762,6 +8764,26 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						continue;
 					}
 				}
+			}
+			/* Now the warnings: */
+			if (anti_flood_old == 1)
+			{
+				config_warn("%s:%d: the set::anti-flood block has been reorganized to be more flexible. "
+				            "Your custom anti-flood settings have NOT been read.",
+				            cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				config_warn("See https://www.unrealircd.org/docs/Anti-flood_settings for the new block style,");
+				config_warn("OR: simply remove all the anti-flood options from the conf to get rid of this "
+				            "warning and use the built-in defaults.");
+			} else
+			if (anti_flood_old_and_default == 1)
+			{
+				config_warn("%s:%d: the set::anti-flood block has been reorganized to be more flexible.",
+					    cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				config_warn("To fix this warning, delete the anti-flood block from your configuration file "
+				            "(file %s around line %d), this will make UnrealIRCd use the built-in defaults.",
+				            cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				config_warn("If you want to learn more about the new functionality you can visit "
+				            "https://www.unrealircd.org/docs/Anti-flood_settings");
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "options")) {

@@ -9,20 +9,18 @@ The two main features are: an improved and more flexible anti-flood block
 and channel history which can now be stored encrypted on disk and allows
 clients to fetch hundreds/thousands of lines.
 
-Breaking change:
+Enhancements:
 * The set::anti-flood block has been redone so you can have different limits
   for ''unknown-users'' and ''known-users''.
   * As a reminder, by default, "known-users" are users who are identified
     to services OR are on an IP that has been connected for over 2 hours
     in the past X days. The exact definition of "known-users" is in the
     [security-group block](https://www.unrealircd.org/docs/Security-group_block).
-  * See [here](https://www.unrealircd.org/docs/FAQ#new-anti-flood-block)
+  * See [here](https://www.unrealircd.org/docs/Anti-flood_settings)
     for more information on the layout of the new set::anti-flood block.
   * All violatons of target-flood, nick-flood, join-flood, away-flood,
     invite-flood, knock-flood, max-concurrent-conversations are now
     reported to opers with the snomask ```f``` (flood).
-
-Enhancements:
 * Add support for database encryption. The way this works
   is that you define an encryption password in a
   [secret { } block](https://www.unrealircd.org/docs/Secret_block).
