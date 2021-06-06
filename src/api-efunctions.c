@@ -307,9 +307,9 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_TKL_SYNCH, tkl_sync, NULL);
 	efunc_init_function(EFUNC_CMD_TKL, cmd_tkl, NULL);
 	efunc_init_function(EFUNC_PLACE_HOST_BAN, place_host_ban, NULL);
-	efunc_init_function(EFUNC_DOSPAMFILTER, match_spamfilter, NULL);
+	efunc_init_function(EFUNC_MATCH_SPAMFILTER, match_spamfilter, NULL);
 	efunc_init_function(EFUNC_MATCH_SPAMFILTER_MTAGS, match_spamfilter_mtags, NULL);
-	efunc_init_function(EFUNC_DOSPAMFILTER_VIRUSCHAN, join_viruschan, NULL);
+	efunc_init_function(EFUNC_JOIN_VIRUSCHAN, join_viruschan, NULL);
 	efunc_init_function(EFUNC_STRIPCOLORS, StripColors, NULL);
 	efunc_init_function(EFUNC_STRIPCONTROLCODES, StripControlCodes, NULL);
 	efunc_init_function(EFUNC_SPAMFILTER_BUILD_USER_STRING, spamfilter_build_user_string, NULL);
