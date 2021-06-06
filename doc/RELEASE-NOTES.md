@@ -11,8 +11,8 @@ clients to fetch hundreds/thousands of lines.
 
 Enhancements:
 * The set::anti-flood block has been redone so you can have different limits
-  for ''unknown-users'' and ''known-users''.
-  * As a reminder, by default, "known-users" are users who are identified
+  for *unknown-users* and *known-users*.
+  * As a reminder, by default, *known-users* are users who are identified
     to services OR are on an IP that has been connected for over 2 hours
     in the past X days. The exact definition of "known-users" is in the
     [security-group block](https://www.unrealircd.org/docs/Security-group_block).
