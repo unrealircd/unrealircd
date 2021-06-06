@@ -3009,8 +3009,8 @@ int	config_test()
 					if (strchr(ce->ce_varname, ':'))
 					{
 						config_error("You cannot use :: in a directive, you have to write them out. "
-						             "For example 'set::anti-flood::nick-flood 3:60' needs to be written as: "
-						             "set { anti-flood { nick-flood 3:60; } }");
+						             "For example 'set::auto-join #something' needs to be written as: "
+						             "set { auto-join \"#something\"; }");
 						config_error("See also https://www.unrealircd.org/docs/Set_block#Syntax_used_in_this_documentation");
 					}
 				}
@@ -8569,7 +8569,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						 !strcmp(ceppp->ce_varname, "unknown-flood-bantime"))
 					{
 						config_error("%s:%i: set::anti-flood::%s: this setting has been moved. "
-							     "See https://www.unrealircd.org/docs/Set_block#set::anti-flood::handshake-data-flood",
+							     "See https://www.unrealircd.org/docs/Anti-flood_settings#handshake-data-flood",
 							     ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, ceppp->ce_varname);
 						errors++;
 						continue;
