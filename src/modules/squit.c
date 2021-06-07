@@ -144,15 +144,6 @@ CMD_FUNC(cmd_squit)
 		sendto_umode_global(UMODE_OPER, "Received SQUIT %s from %s (%s)",
 		    target->name, get_client_name(client, FALSE), comment);
 	}
-	if (IsOper(client))
-	{
-		/*
-		 * It was manually /squit'ed by a human being(we hope),
-		 * there is a very good chance they don't want us to
-		 * reconnect right away.  -Cabal95
-		 */
-		SetSQuit(target);
-	}
 
-	exit_client(target, recv_mtags, comment);
+	exit_client_ex(target, client->direction, recv_mtags, comment);
 }

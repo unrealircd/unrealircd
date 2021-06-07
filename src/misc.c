@@ -584,7 +584,7 @@ static void recurse_send_quits(Client *cptr, Client *client, Client *from, Clien
 		recurse_send_quits(cptr, acptr, from, to, mtags, comment, splitstr);
 	}
 
-	if (cptr == client && to != from)
+	if (cptr == client && to != from && !(to->direction && (to->direction == from)))
 		sendto_one(to, mtags, "SQUIT %s :%s", client->name, comment);
 }
 
@@ -701,6 +701,16 @@ static void exit_one_client(Client *client, MessageTag *mtags_i, const char *com
  */
 void exit_client(Client *client, MessageTag *recv_mtags, char *comment)
 {
+	return exit_client_ex(client, client->direction, recv_mtags, comment);
+}
+
+/** Exit this IRC client, and all the dependents (users, servers) if this is a server.
+ * @param client        The client to exit.
+ * @param recv_mtags  Message tags to use as a base (if any).
+ * @param comment     The (s)quit message
+ */
+void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char *comment)
+{
 	long long on_for;
 	ConfigItem_listen *listen_conf;
 	MessageTag *mtags_generated = NULL;
@@ -813,7 +823,7 @@ void exit_client(Client *client, MessageTag *recv_mtags, char *comment)
 		else
 			ircsnprintf(splitstr, sizeof splitstr, "%s %s", client->srvptr->name, client->name);
 
-		remove_dependents(client, client->direction, recv_mtags, comment, splitstr);
+		remove_dependents(client, origin, recv_mtags, comment, splitstr);
 
 		RunHook2(HOOKTYPE_SERVER_QUIT, client, recv_mtags);
 	}
