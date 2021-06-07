@@ -234,8 +234,8 @@ int targetfloodprot_can_send_to_channel(Client *client, Channel *channel, Member
 	if (!MyUser(client))
 		return HOOK_CONTINUE;
 
-	/* IRCOps and U-Lines override */
-	if (IsULine(client) || (IsOper(client) && ValidatePermissionsForPath("immune:target-flood",client,NULL,channel,NULL)))
+	/* U-Lines, servers and IRCOps override */
+	if (IsULine(client) || !IsUser(client) || (IsOper(client) && ValidatePermissionsForPath("immune:target-flood",client,NULL,channel,NULL)))
 		return HOOK_CONTINUE;
 
 	what = sendtypetowhat(sendtype);
@@ -281,8 +281,8 @@ int targetfloodprot_can_send_to_user(Client *client, Client *target, char **text
 	if (!MyUser(target))
 		return HOOK_CONTINUE;
 
-	/* IRCOps and U-Lines override */
-	if (IsULine(client) || (IsOper(client) && ValidatePermissionsForPath("immune:target-flood",client,target,NULL,NULL)))
+	/* U-Lines, servers and IRCOps override */
+	if (IsULine(client) || !IsUser(client) || (IsOper(client) && ValidatePermissionsForPath("immune:target-flood",client,target,NULL,NULL)))
 		return HOOK_CONTINUE;
 
 	what = sendtypetowhat(sendtype);
