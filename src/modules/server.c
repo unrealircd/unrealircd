@@ -179,6 +179,7 @@ void _send_protoctl_servers(Client *client, int response)
 {
 	char buf[512];
 	Client *acptr;
+	int sendit = 1;
 
 	sendto_one(client, NULL, "PROTOCTL EAUTH=%s,%d,%s%s,%s",
 		me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", version);
@@ -188,15 +189,24 @@ void _send_protoctl_servers(Client *client, int response)
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
 		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%s,", acptr->id);
+		sendit = 1;
 		if (strlen(buf) > sizeof(buf)-12)
-			break; /* prevent overflow/cutoff if you have a network with more than 90 servers or something. */
+		{
+			if (buf[strlen(buf)-1] == ',')
+				buf[strlen(buf)-1] = '\0';
+			sendto_one(client, NULL, "%s", buf);
+			/* We use the asterisk here too for continuation lines */
+			ircsnprintf(buf, sizeof(buf), "PROTOCTL SERVERS=*");
+			sendit = 0;
+		}
 	}
 	
 	/* Remove final comma (if any) */
 	if (buf[strlen(buf)-1] == ',')
 		buf[strlen(buf)-1] = '\0';
 
-	sendto_one(client, NULL, "%s", buf);
+	if (sendit)
+		sendto_one(client, NULL, "%s", buf);
 }
 
 void _send_server_message(Client *client)
