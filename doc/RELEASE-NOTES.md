@@ -1,4 +1,4 @@
-UnrealIRCd 5.2.0-notreleasedyet Release Notes
+UnrealIRCd 5.2.0 Release Notes
 ===============================
 
 This is UnrealIRCd 5.2.0, a release with lots of new features.
@@ -17,7 +17,7 @@ UnrealIRCd 5.2.0 is mostly a feature release.
 Admins wishing to take a conservative approach don't need to rush an
 upgrade from 5.0.x to 5.2.0, they can wait for a 5.2.1 or 5.2.2 release.
 
-If you are upgrading from 5.0.9 or 5.0.9.1 then feel free to try the new
+If you are upgrading from 5.0.9(.1) to 5.2.0 then feel free to try the new
 ```./unrealircd upgrade``` command.
 
 The only configuration change is in the set::anti-flood block (as explained
