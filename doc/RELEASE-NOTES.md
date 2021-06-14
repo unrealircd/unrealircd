@@ -1,15 +1,23 @@
-UnrealIRCd 5.2.0-rc1 Release Notes
+UnrealIRCd 5.2.0-notreleasedyet Release Notes
 ===============================
 
-This is the first release candidate for UnrealIRCd 5.2.0. This is a major
-release with lots of new features. We welcome anyone to test and report
-issues to https://bugs.unrealircd.org/.
-
-The two main features are: an improved and more flexible anti-flood block
+This is UnrealIRCd 5.2.0, a release with lots of new features.
+The two main new features are: an improved and more flexible anti-flood block
 and channel history which can now be stored encrypted on disk and allows
 clients to fetch hundreds/thousands of lines.
 
-Enhancements:
+About the 5.2.x series
+-----------------------
+UnrealIRCd 5.2.0 is the direct successor to 5.0.9/5.0.9.1.
+There will be [no further 5.0.x releases](https://www.unrealircd.org/docs/FAQ#About_the_new_5.2.x_series),
+in particular there will be no 5.0.10.
+
+Admins running 5.0.x don't need to rush to 5.2.0, though. This is
+mostly a feature release. More conservative admins may wish to
+delay upgrading until a 5.2.1 or 5.2.2 release.
+
+Enhancements
+-------------
 * The set::anti-flood block has been redone so you can have different limits
   for *unknown-users* and *known-users*.
   * As a reminder, by default, *known-users* are users who are identified
@@ -77,7 +85,8 @@ Enhancements:
 * [set::restrict-commands](https://www.unrealircd.org/docs/Set_block#set::restrict-commands):
   new option *exempt-tls* which allows SSL/TLS users to bypass a restriction.
 
-Fixes:
+Fixes
+------
 * Server squiting the wrong side. Often harmless, but when (re)connecting
   rapidly to multiple servers with autoconnect this could cause the
   network to fall apart.
@@ -87,7 +96,8 @@ Fixes:
   partially working for kline/gline.
 * More accurate /ELINE error message.
 
-Changed:
+Changed
+--------
 * Channel mode ```+H``` always showed time in minutes (```m```) until now.
   From now on it will show it in minutes (```m```), hours (```h```) or
   days (```d```) depending on the actual value. Eg ```+H 50:7d```.
@@ -98,10 +108,12 @@ Changed:
   then we already automatically logged errors to ```ircd.log```.
   From now on we will log everything (not only errors) to that file.
 
-Removed:
+Removed
+--------
 * Version check for curl and openssl as nowadays they have ABI guarantees.
 
-Module coders / Developers:
+Module coders / Developers
+---------------------------
 * New UnrealDB API and disk format, see
   https://www.unrealircd.org/docs/Dev:UnrealDB
 * We now use libsodium for file encryption routines as well
