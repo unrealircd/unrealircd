@@ -6,15 +6,22 @@ The two main new features are: an improved and more flexible anti-flood block
 and channel history which can now be stored encrypted on disk and allows
 clients to fetch hundreds/thousands of lines.
 
-About the 5.2.x series
------------------------
+Upgrading and the 5.0.x series
+-------------------------------
 UnrealIRCd 5.2.0 is the direct successor to 5.0.9/5.0.9.1.
 There will be [no further 5.0.x releases](https://www.unrealircd.org/docs/FAQ#About_the_new_5.2.x_series),
 in particular there will be no 5.0.10.
 
-Admins running 5.0.x don't need to rush to 5.2.0, though. This is
-mostly a feature release. More conservative admins may wish to
-delay upgrading until a 5.2.1 or 5.2.2 release.
+Only four bugs that affect a limited number of people/networks were fixed.
+UnrealIRCd 5.2.0 is mostly a feature release.
+Admins wishing to take a conservative approach don't need to rush an
+upgrade from 5.0.x to 5.2.0, they can wait for a 5.2.1 or 5.2.2 release.
+
+The only configuration change is in the set::anti-flood block (as explained
+further down under *Enhancements*). Simply start UnrealIRCd and you will
+get clear instructions if anything needs to be changed (and what).
+This process is really minor, the server will usually tell you to just
+delete a few old lines from the configuration file.
 
 Enhancements
 -------------
@@ -26,7 +33,7 @@ Enhancements
     [security-group block](https://www.unrealircd.org/docs/Security-group_block).
   * See [here](https://www.unrealircd.org/docs/Anti-flood_settings)
     for more information on the layout of the new set::anti-flood block.
-  * All violatons of target-flood, nick-flood, join-flood, away-flood,
+  * All violations of target-flood, nick-flood, join-flood, away-flood,
     invite-flood, knock-flood, max-concurrent-conversations are now
     reported to opers with the snomask ```f``` (flood).
 * Add support for database encryption. The way this works
@@ -65,14 +72,14 @@ Enhancements
   [reputation score](https://www.unrealircd.org/docs/Reputation_score).
   If you are an IRCOp then you can use e.g. ```WHO * %cuhsnfmdaRr```.
 * Add ability to [spamfilter](https://www.unrealircd.org/docs/Spamfilter)
-  message tags via the new 'T' target. Right now it would be unusual
+  message tags via the new ```T``` target. Right now it would be unusual
   to use this, but some day when we have more
   [message tags](https://www.unrealircd.org/docs/Message_tags) it
   may come in handy.
-* Support [+draft/reply](https://ircv3.net/specs/client-tags/reply) IRCv3
+* Support [```+draft/reply```](https://ircv3.net/specs/client-tags/reply) IRCv3
   client tag. Can be used by bots (and others) to indicate to what message
   people are replying to. This module, reply-tag, is loaded by default.
-* Send [draft/bot](https://ircv3.net/specs/extensions/bot-mode) IRCv3
+* Send [```draft/bot```](https://ircv3.net/specs/extensions/bot-mode) IRCv3
   message tag if the user has mode ```+B``` set.
 * [Websockets](https://www.unrealircd.org/docs/WebSocket_support):
   add support for clients to negotiate an explicit type via
@@ -91,7 +98,7 @@ Fixes
   rapidly to multiple servers with autoconnect this could cause the
   network to fall apart.
 * Forbid using [extended server bans](https://www.unrealircd.org/docs/Extended_server_bans)
-  in ZLINE/GZLINE since they won't work.
+  in ZLINE/GZLINE since they won't work there.
 * Extended server ban ```~a:accname``` was not working for shun, and only
   partially working for kline/gline.
 * More accurate /ELINE error message.
@@ -129,12 +136,12 @@ Module coders / Developers
   This can be used for modules to indicate they wish to be unloaded
   before or after others. It is used by for example the channel
   and history modules so they can save their databases before
-  chanmode modules or other modules get unloaded.
+  channel mode modules or other modules get unloaded.
 * New CAP [```draft/chathistory```](https://ircv3.net/specs/extensions/chathistory).
   If a client REQ's this CAP then UnrealIRCd won't send history on-join as
   it assumes the client will fetch it when they feel the need for it.
 * New informative CAP:
-  [unrealircd.org/history-backend](https://www.unrealircd.org/history-backend)
+  [```unrealircd.org/history-backend```](https://www.unrealircd.org/history-backend)
 
 Reminder: UnrealIRCd 4 is no longer supported
 ----------------------------------------------
@@ -187,7 +194,7 @@ Fixes:
   missing.
 
 Changes:
-* Add doc/KEYS which contains the public key(s) used to sign UnrealIRCd releases
+* Add ```doc/KEYS``` which contains the public key(s) used to sign UnrealIRCd releases
 * The options set::anti-flood::unknown-flood-* have been renamed and
 integrated in a new block called
 [set::anti-flood::handshake-data-flood](https://www.unrealircd.org/docs/Set_block#set::anti-flood::handshake-data-flood).
