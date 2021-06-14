@@ -17,9 +17,12 @@ UnrealIRCd 5.2.0 is mostly a feature release.
 Admins wishing to take a conservative approach don't need to rush an
 upgrade from 5.0.x to 5.2.0, they can wait for a 5.2.1 or 5.2.2 release.
 
+If you are upgrading from 5.0.9 or 5.0.9.1 then feel free to try the new
+```./unrealircd upgrade``` command.
+
 The only configuration change is in the set::anti-flood block (as explained
-further down under *Enhancements*). Simply start UnrealIRCd and you will
-get clear instructions if anything needs to be changed (and what).
+further down under *Enhancements*). When starting UnrealIRCd will give you
+clear instructions if anything needs to be changed (and what).
 This process is really minor, the server will usually tell you to just
 delete a few old lines from the configuration file.
 
