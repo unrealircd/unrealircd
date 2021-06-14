@@ -701,7 +701,7 @@ static void exit_one_client(Client *client, MessageTag *mtags_i, const char *com
  */
 void exit_client(Client *client, MessageTag *recv_mtags, char *comment)
 {
-	return exit_client_ex(client, client->direction, recv_mtags, comment);
+	exit_client_ex(client, client->direction, recv_mtags, comment);
 }
 
 /** Exit this IRC client, and all the dependents (users, servers) if this is a server.
