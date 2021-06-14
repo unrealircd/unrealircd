@@ -74,8 +74,13 @@ Enhancements:
   Note that UnrealIRCd refuses type text if your configuration allows
   non-UTF8 characters in channel or nick names because it would lead
   to security and compatibility issues.
+* [set::restrict-commands](https://www.unrealircd.org/docs/Set_block#set::restrict-commands):
+  new option *exempt-tls* which allows SSL/TLS users to bypass a restriction.
 
 Fixes:
+* Server squiting the wrong side. Often harmless, but when (re)connecting
+  rapidly to multiple servers with autoconnect this could cause the
+  network to fall apart.
 * Forbid using [extended server bans](https://www.unrealircd.org/docs/Extended_server_bans)
   in ZLINE/GZLINE since they won't work.
 * Extended server ban ```~a:accname``` was not working for shun, and only
