@@ -387,7 +387,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 
 			if (MyUser(client))
 			{
-				int spamtype = (sendtype == SEND_TYPE_NOTICE ? SPAMF_USERNOTICE : SPAMF_USERMSG);
+				int spamtype = (sendtype == SEND_TYPE_NOTICE ? SPAMF_CHANNOTICE : SPAMF_CHANMSG);
 
 				if (match_spamfilter(client, text, spamtype, cmd, channel->chname, 0, NULL))
 					return;
