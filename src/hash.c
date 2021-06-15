@@ -465,7 +465,7 @@ Client *hash_find_nickatserver(const char *str, Client *def)
 	if (serv)
 		*serv++ = '\0';
 
-	client = find_client(nick, NULL);
+	client = find_person(nick, NULL);
 	if (!client)
 		return NULL; /* client not found */
 	

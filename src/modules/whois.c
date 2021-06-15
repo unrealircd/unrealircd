@@ -103,15 +103,8 @@ CMD_FUNC(cmd_whois)
 		if (wilds)
 			continue;
 
-		if ((target = find_client(nick, NULL)))
+		if ((target = find_person(nick, NULL)))
 		{
-			if (IsServer(target))
-				continue;
-			/*
-			 * I'm always last :-) and target->next == NULL!!
-			 */
-			if (IsMe(target))
-				break;
 			/*
 			 * 'Rules' established for sending a WHOIS reply:
 			 * - only send replies about common or public channels
