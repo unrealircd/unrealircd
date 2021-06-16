@@ -1,5 +1,15 @@
-UnrealIRCd 5.2.0 Release Notes
-===============================
+UnrealIRCd 5.2.0.1 Release Notes
+=================================
+
+About 5.2.0.1
+--------------
+5.2.0.1 fixes an issue with spamfilter that was present in 5.2.0.
+In channels spamfilters were processed for type ```p``` instead of ```c```.
+Existing 5.2.0 users on *NIX can upgrade without restart by running
+```./unrealircd hot-patch wrongspamfilter520```
+
+UnrealIRCd 5.2.0 is out!
+-------------------------
 
 This is UnrealIRCd 5.2.0, a release with lots of new features.
 The two main new features are: an improved and more flexible anti-flood block
