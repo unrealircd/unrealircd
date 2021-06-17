@@ -1734,7 +1734,8 @@ struct ConfigItem_deny_dcc {
 struct ConfigItem_deny_link {
 	ConfigItem_deny_link *prev, *next;
 	ConfigFlag_except flag;
-	char *mask, *rule, *prettyrule;
+	ConfigItem_mask  *mask;
+	char *rule, *prettyrule;
 };
 
 struct ConfigItem_deny_version {

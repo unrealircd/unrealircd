@@ -1166,6 +1166,25 @@ int unreal_mask_match(Client *client, ConfigItem_mask *m)
 	return 0;
 }
 
+/** Check if a string matches any of the masks in the mask list */
+int unreal_mask_match_string(const char *name, ConfigItem_mask *m)
+{
+	for (; m; m = m->next)
+	{
+		/* With special support for '!' prefix (negative matching like "!192.168.*") */
+		if (m->mask[0] == '!')
+		{
+			if (!match_simple(m->mask+1, name))
+				return 1;
+		} else {
+			if (match_simple(m->mask+1, name))
+				return 1;
+		}
+	}
+
+	return 0;
+}
+
 /** Our own strcasestr implementation because strcasestr is
  * often not available or is not working correctly.
  */

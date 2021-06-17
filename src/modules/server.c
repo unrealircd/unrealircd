@@ -597,7 +597,7 @@ CMD_FUNC(cmd_server)
 	/* Process deny server { } restrictions */
 	for (deny = conf_deny_link; deny; deny = deny->next)
 	{
-		if (deny->flag.type == CRULE_ALL && match_simple(deny->mask, servername)
+		if (deny->flag.type == CRULE_ALL && unreal_mask_match_string(servername, deny->mask)
 			&& crule_eval(deny->rule))
 		{
 			sendto_ops_and_log("Refused connection from %s. Rejected by deny link { } block.",
