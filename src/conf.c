@@ -2614,7 +2614,7 @@ void	config_rehash()
 	for (deny_link_ptr = conf_deny_link; deny_link_ptr; deny_link_ptr = (ConfigItem_deny_link *) next) {
 		next = (ListStruct *)deny_link_ptr->next;
 		safe_free(deny_link_ptr->prettyrule);
-		safe_free(deny_link_ptr->mask);
+		unreal_delete_masks(deny_link_ptr->mask);
 		crule_free(&deny_link_ptr->rule);
 		DelListItem(deny_link_ptr, conf_deny_link);
 		safe_free(deny_link_ptr);
@@ -9993,7 +9993,7 @@ int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!strcmp(cep->ce_varname, "mask"))
 		{
-			safe_strdup(deny->mask, cep->ce_vardata);
+			unreal_add_masks(&deny->mask, cep);
 		}
 		else if (!strcmp(cep->ce_varname, "rule"))
 		{
@@ -10136,64 +10136,73 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 		char has_mask = 0, has_rule = 0, has_type = 0;
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
-			if (config_is_blankorempty(cep, "deny link"))
+			if (!cep->ce_entries)
 			{
-				errors++;
-				continue;
-			}
-			if (!strcmp(cep->ce_varname, "mask"))
-			{
-				if (has_mask)
+				if (config_is_blankorempty(cep, "deny link"))
 				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "deny link::mask");
-					continue;
-				}
-				has_mask = 1;
-			}
-			else if (!strcmp(cep->ce_varname, "rule"))
-			{
-				int val = 0;
-				if (has_rule)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "deny link::rule");
-					continue;
-				}
-				has_rule = 1;
-				if ((val = crule_test(cep->ce_vardata)))
-				{
-					config_error("%s:%i: deny link::rule contains an invalid expression: %s",
-						cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum,
-						crule_errstring(val));
 					errors++;
-				}
-			}
-			else if (!strcmp(cep->ce_varname, "type"))
-			{
-				if (has_type)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "deny link::type");
 					continue;
 				}
-				has_type = 1;
-				if (!strcmp(cep->ce_vardata, "auto"))
-				;
-				else if (!strcmp(cep->ce_vardata, "all"))
-				;
-				else {
-					config_status("%s:%i: unknown deny link type",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				else if (!strcmp(cep->ce_varname, "rule"))
+				{
+					int val = 0;
+					if (has_rule)
+					{
+						config_warn_duplicate(cep->ce_fileptr->cf_filename,
+							cep->ce_varlinenum, "deny link::rule");
+						continue;
+					}
+					has_rule = 1;
+					if ((val = crule_test(cep->ce_vardata)))
+					{
+						config_error("%s:%i: deny link::rule contains an invalid expression: %s",
+							cep->ce_fileptr->cf_filename,
+							cep->ce_varlinenum,
+							crule_errstring(val));
+						errors++;
+					}
+				}
+				else if (!strcmp(cep->ce_varname, "type"))
+				{
+					if (has_type)
+					{
+						config_warn_duplicate(cep->ce_fileptr->cf_filename,
+							cep->ce_varlinenum, "deny link::type");
+						continue;
+					}
+					has_type = 1;
+					if (!strcmp(cep->ce_vardata, "auto"))
+					;
+					else if (!strcmp(cep->ce_vardata, "all"))
+					;
+					else {
+						config_status("%s:%i: unknown deny link type",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+						errors++;
+					}
+				}
+				else
+				{
+					config_error_unknown(cep->ce_fileptr->cf_filename,
+						cep->ce_varlinenum, "deny link", cep->ce_varname);
 					errors++;
 				}
 			}
 			else
 			{
-				config_error_unknown(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "deny link", cep->ce_varname);
-				errors++;
+				// Sections
+				if (!strcmp(cep->ce_varname, "mask"))
+				{
+					if (cep->ce_vardata || cep->ce_entries)
+						has_mask = 1;
+				}
+				else
+				{
+					config_error_unknown(cep->ce_fileptr->cf_filename,
+						cep->ce_varlinenum, "deny link", cep->ce_varname);
+					errors++;
+					continue;
+				}
 			}
 		}
 		if (!has_mask)

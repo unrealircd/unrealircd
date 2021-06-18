@@ -117,7 +117,7 @@ CMD_FUNC(cmd_connect)
 	/* Evaluate deny link */
 	for (deny = conf_deny_link; deny; deny = deny->next)
 	{
-		if (deny->flag.type == CRULE_ALL && match_simple(deny->mask, aconf->servername)
+		if (deny->flag.type == CRULE_ALL && unreal_mask_match_string(aconf->servername, deny->mask)
 			&& crule_eval(deny->rule))
 		{
 			sendnotice(client, "*** Connect: Disallowed by connection rule");
