@@ -273,49 +273,6 @@ EVENT(garbage_collect)
 		loop.do_garbage_collect = 0;
 }
 
-/** Perform autoconnect to servers that are not linked yet. */
-EVENT(try_connections)
-{
-	ConfigItem_link *aconf;
-	ConfigItem_deny_link *deny;
-	Client *client;
-	int  confrq;
-	ConfigItem_class *class;
-
-	for (aconf = conf_link; aconf; aconf = aconf->next)
-	{
-		/* We're only interested in autoconnect blocks that are valid. Also, we ignore temporary link blocks. */
-		if (!(aconf->outgoing.options & CONNECT_AUTO) || !aconf->outgoing.hostname || (aconf->flag.temporary == 1))
-			continue;
-
-		class = aconf->class;
-
-		/* Only do one connection attempt per <connfreq> seconds (for the same server) */
-		if ((aconf->hold > TStime()))
-			continue;
-
-		confrq = class->connfreq;
-		aconf->hold = TStime() + confrq;
-
-		client = find_client(aconf->servername, NULL);
-		if (client)
-			continue; /* Server already connected (or connecting) */
-
-		if (class->clients >= class->maxclients)
-			continue; /* Class is full */
-
-		/* Check connect rules to see if we're allowed to try the link */
-		for (deny = conf_deny_link; deny; deny = deny->next)
-			if (unreal_mask_match_string(aconf->servername, deny->mask) && crule_eval(deny->rule))
-				break;
-
-		if (!deny && connect_server(aconf, NULL, NULL) == 0)
-			sendto_ops_and_log("Trying to activate link with server %s[%s]...",
-				aconf->servername, aconf->outgoing.hostname);
-
-	}
-}
-
 /** Does this user match any TKL's? */
 int match_tkls(Client *client)
 {

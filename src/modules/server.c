@@ -23,6 +23,7 @@
 #include "unrealircd.h"
 
 /* Forward declarations */
+EVENT(try_connections);
 void send_channel_modes_sjoin3(Client *to, Channel *channel);
 CMD_FUNC(cmd_server);
 CMD_FUNC(cmd_sid);
@@ -32,6 +33,7 @@ void _send_server_message(Client *client);
 void _introduce_user(Client *to, Client *acptr);
 int _check_deny_version(Client *cptr, char *software, int protocol, char *flags);
 void _broadcast_sinfo(Client *acptr, Client *to, Client *except);
+int server_sync(Client *cptr, ConfigItem_link *conf);
 
 /* Global variables */
 static char buf[BUFSIZE];
@@ -71,6 +73,8 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	EventAdd(modinfo->handle, "try_connections", try_connections, NULL, 2000, 0);
+
 	return MOD_SUCCESS;
 }
 
@@ -79,7 +83,48 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int server_sync(Client *cptr, ConfigItem_link *conf);
+/** Perform autoconnect to servers that are not linked yet. */
+EVENT(try_connections)
+{
+	ConfigItem_link *aconf;
+	ConfigItem_deny_link *deny;
+	Client *client;
+	int  confrq;
+	ConfigItem_class *class;
+
+	for (aconf = conf_link; aconf; aconf = aconf->next)
+	{
+		/* We're only interested in autoconnect blocks that are valid. Also, we ignore temporary link blocks. */
+		if (!(aconf->outgoing.options & CONNECT_AUTO) || !aconf->outgoing.hostname || (aconf->flag.temporary == 1))
+			continue;
+
+		class = aconf->class;
+
+		/* Only do one connection attempt per <connfreq> seconds (for the same server) */
+		if ((aconf->hold > TStime()))
+			continue;
+
+		confrq = class->connfreq;
+		aconf->hold = TStime() + confrq;
+
+		client = find_client(aconf->servername, NULL);
+		if (client)
+			continue; /* Server already connected (or connecting) */
+
+		if (class->clients >= class->maxclients)
+			continue; /* Class is full */
+
+		/* Check connect rules to see if we're allowed to try the link */
+		for (deny = conf_deny_link; deny; deny = deny->next)
+			if (unreal_mask_match_string(aconf->servername, deny->mask) && crule_eval(deny->rule))
+				break;
+
+		if (!deny && connect_server(aconf, NULL, NULL) == 0)
+			sendto_ops_and_log("Trying to activate link with server %s[%s]...",
+				aconf->servername, aconf->outgoing.hostname);
+
+	}
+}
 
 /** Check deny version { } blocks.
  * @param cptr		Client (a server)
