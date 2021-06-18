@@ -10143,7 +10143,10 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 					errors++;
 					continue;
 				}
-				else if (!strcmp(cep->ce_varname, "rule"))
+				else if (!strcmp(cep->ce_varname, "mask"))
+				{
+					has_mask = 1;
+				} else if (!strcmp(cep->ce_varname, "rule"))
 				{
 					int val = 0;
 					if (has_rule)
