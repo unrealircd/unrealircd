@@ -1147,40 +1147,98 @@ void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce)
 	}
 }
 
-/** Check if a client matches any of the masks in the mask list */
-int unreal_mask_match(Client *client, ConfigItem_mask *m)
+/** Check if a client matches any of the masks in the mask list.
+ * The following rules apply:
+ * - If you have only negating entries, like '!abc' and '!def', then
+ *   we assume an implicit * rule first, since that is clearly what
+ *   the user wants.
+ * - If you have a mix, like '*.com', '!irc1*', '!irc2*' then the
+ *   implicit * is dropped and we assume you only want to match *.com,
+ *   with the exception of irc1*.com and irc2*.com.
+ * - If you only have normal entries without ! then things are
+ *   as they always are.
+ * @param client	The client to run the mask match against
+ * @param mask		The mask entry from the config file
+ * @returns 1 on match, 0 on non-match.
+ */
+int unreal_mask_match(Client *client, ConfigItem_mask *mask)
 {
-	for (; m; m = m->next)
+	int retval = 1;
+	ConfigItem_mask *m;
+
+	if (!mask)
+		return 0; /* Empty mask block is no match */
+
+	/* First check normal matches (without ! prefix) */
+	for (m = mask; m; m = m->next)
 	{
-		/* With special support for '!' prefix (negative matching like "!192.168.*") */
-		if (m->mask[0] == '!')
+		if (m->mask[0] != '!')
 		{
-			if (!match_user(m->mask+1, client, MATCH_CHECK_REAL))
-				return 1;
-		} else {
+			retval = 0; /* no implicit * */
 			if (match_user(m->mask, client, MATCH_CHECK_REAL))
-				return 1;
+			{
+				retval = 1;
+				break;
+			}
 		}
 	}
 
-	return 0;
+	if (retval)
+	{
+		/* We matched. Check for exceptions (with ! prefix) */
+		for (m = mask; m; m = m->next)
+		{
+			if ((m->mask[0] == '!') && match_user(m->mask+1, client, MATCH_CHECK_REAL))
+				return 0;
+		}
+	}
+
+	return retval;
 }
 
-/** Check if a string matches any of the masks in the mask list */
-int unreal_mask_match_string(const char *name, ConfigItem_mask *m)
+/** Check if a string matches any of the masks in the mask list.
+ * The following rules apply:
+ * - If you have only negating entries, like '!abc' and '!def', then
+ *   we assume an implicit * rule first, since that is clearly what
+ *   the user wants.
+ * - If you have a mix, like '*.com', '!irc1*', '!irc2*' then the
+ *   implicit * is dropped and we assume you only want to match *.com,
+ *   with the exception of irc1*.com and irc2*.com.
+ * - If you only have normal entries without ! then things are
+ *   as they always are.
+ * @param name	The name to run the mask matching on
+ * @param mask	The mask entry from the config file
+ * @returns 1 on match, 0 on non-match.
+ */
+int unreal_mask_match_string(const char *name, ConfigItem_mask *mask)
 {
-	int retval = 0;
+	int retval = 1;
+	ConfigItem_mask *m;
 
-	for (; m; m = m->next)
+	if (!mask)
+		return 0; /* Empty mask block is no match */
+
+	/* First check normal matches (without ! prefix) */
+	for (m = mask; m; m = m->next)
 	{
-		/* With special support for '!' prefix (negative matching like "!192.168.*") */
-		if (m->mask[0] == '!')
+		if (m->mask[0] != '!')
 		{
-			if (match_simple(m->mask+1, name))
-				return 0;
-		} else {
+			retval = 0; /* no implicit * */
 			if (match_simple(m->mask, name))
+			{
 				retval = 1;
+				break;
+			}
+		}
+	}
+
+	if (retval)
+	{
+		/* We matched. Check for exceptions (with ! prefix) */
+		for (m = mask; m; m = m->next)
+		{
+			if ((m->mask[0] == '!') && match_simple(m->mask+1, name))
+				return 0;
 		}
 	}
 
