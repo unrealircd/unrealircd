@@ -2540,8 +2540,7 @@ void	config_rehash()
 	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) next)
 	{
 		next = (ListStruct *)allow_ptr->next;
-		safe_free(allow_ptr->ip);
-		safe_free(allow_ptr->hostname);
+		unreal_delete_masks(allow_ptr->mask);
 		Auth_FreeAuthConfig(allow_ptr->auth);
 		DelListItem(allow_ptr, conf_allow);
 		safe_free(allow_ptr);
@@ -5439,12 +5438,10 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!strcmp(cep->ce_varname, "ip"))
+		if (!strcmp(cep->ce_varname, "mask") || !strcmp(cep->ce_varname, "ip") || !strcmp(cep->ce_varname, "hostname"))
 		{
-			safe_strdup(allow->ip, cep->ce_vardata);
+			unreal_add_masks(&allow->mask, cep);
 		}
-		else if (!strcmp(cep->ce_varname, "hostname"))
-			safe_strdup(allow->hostname, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "password"))
 			allow->auth = AuthBlockToAuthConfig(cep);
 		else if (!strcmp(cep->ce_varname, "class"))
@@ -5492,12 +5489,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	if (!allow->hostname)
-		safe_strdup(allow->hostname, "*@NOMATCH");
-
-	if (!allow->ip)
-		safe_strdup(allow->ip, "*@NOMATCH");
-
 	/* Default: global-maxperip = maxperip+1 */
 	if (allow->global_maxperip == 0)
 		allow->global_maxperip = allow->maxperip+1;
@@ -5515,7 +5506,8 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp;
 	int		errors = 0;
 	Hook *h;
-	char has_ip = 0, has_hostname = 0, has_maxperip = 0, has_global_maxperip = 0, has_password = 0, has_class = 0;
+	char has_ip = 0, has_hostname = 0, has_mask = 0;
+	char has_maxperip = 0, has_global_maxperip = 0, has_password = 0, has_class = 0;
 	char has_redirectserver = 0, has_redirectport = 0, has_options = 0;
 	int hostname_possible_silliness = 0;
 
@@ -5563,7 +5555,9 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (strcmp(cep->ce_varname, "options") && config_is_blankorempty(cep, "allow"))
+		if (strcmp(cep->ce_varname, "options") &&
+		    strcmp(cep->ce_varname, "mask") &&
+		    config_is_blankorempty(cep, "allow"))
 		{
 			errors++;
 			continue;
@@ -5577,6 +5571,22 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_ip = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "hostname"))
+		{
+			if (has_hostname)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "allow::hostname");
+				continue;
+			}
+			has_hostname = 1;
+			if (!strcmp(cep->ce_vardata, "*@*") || !strcmp(cep->ce_vardata, "*"))
+				hostname_possible_silliness = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "mask"))
+		{
+			has_mask = 1;
 		}
 		else if (!strcmp(cep->ce_varname, "maxperip"))
 		{
@@ -5635,18 +5645,6 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				config_warn("%s:%d: allow::ipv6-clone-mask was given a very small value.",
 					    cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			}
-		}
-		else if (!strcmp(cep->ce_varname, "hostname"))
-		{
-			if (has_hostname)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "allow::hostname");
-				continue;
-			}
-			has_hostname = 1;
-			if (!strcmp(cep->ce_vardata, "*@*") || !strcmp(cep->ce_vardata, "*"))
-				hostname_possible_silliness = 1;
 		}
 		else if (!strcmp(cep->ce_varname, "password"))
 		{
@@ -5736,25 +5734,45 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	if (!has_ip && !has_hostname)
+	if (has_mask && (has_ip || has_hostname))
 	{
-		config_error("%s:%d: allow block needs an allow::ip or allow::hostname",
+		config_error("%s:%d: The allow block uses allow::mask, but you also have an allow::ip and allow::hostname.",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_error("Please delete your allow::ip and allow::hostname entries and/or integrate them into allow::mask");
+	} else
+	if (has_ip)
+	{
+		config_warn("%s:%d: The allow block uses allow::mask nowadays. Rename your allow::ip item to allow::mask.",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_warn("See https://www.unrealircd.org/docs/FAQ#allow-mask for more information");
+	} else
+	if (has_hostname)
+	{
+		config_warn("%s:%d: The allow block uses allow::mask nowadays. Rename your allow::hostname item to allow::mask.",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_warn("See https://www.unrealircd.org/docs/FAQ#allow-mask for more information");
+	} else
+	if (!has_mask)
+	{
+		config_error("%s:%d: allow block needs an allow::mask",
 				 ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
 
 	if (has_ip && has_hostname)
 	{
-		config_warn("%s:%d: allow block has both allow::ip and allow::hostname which is no longer permitted.",
-		            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_error("%s:%d: allow block has both allow::ip and allow::hostname, this is no longer permitted.",
+		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_error("Please integrate your allow::ip and allow::hostname items into a single allow::mask block");
 		need_34_upgrade = 1;
+		errors++;
 	} else
 	if (hostname_possible_silliness)
 	{
-		config_warn("%s:%d: allow block contains 'hostname *;'. This means means that users "
-		            "without a valid hostname (unresolved IP's) will be unable to connect. "
-		            "You most likely want to use 'ip *;' instead.",
-		            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_error("%s:%d: allow block contains 'hostname *;'. This means means that users "
+		             "without a valid hostname (unresolved IP's) will be unable to connect. "
+		             "You most likely want to use 'mask *;' instead.",
+		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 	}
 
 	if (!has_class)

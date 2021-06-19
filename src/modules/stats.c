@@ -493,15 +493,20 @@ int stats_except(Client *client, char *para)
 int stats_allow(Client *client, char *para)
 {
 	ConfigItem_allow *allows;
+	ConfigItem_mask *m;
+
 	for (allows = conf_allow; allows; allows = allows->next)
 	{
-		sendnumeric(client, RPL_STATSILINE,
-		            allows->ip, allows->hostname,
-		            allows->maxperip,
-		            allows->global_maxperip,
-		            allows->class->name,
-		            allows->server ? allows->server : defserv,
-		            allows->port ? allows->port : 6667);
+		for (m = allows->mask; m; m = m->next)
+		{
+			sendnumeric(client, RPL_STATSILINE,
+				    m->mask, "-",
+				    allows->maxperip,
+				    allows->global_maxperip,
+				    allows->class->name,
+				    allows->server ? allows->server : defserv,
+				    allows->port ? allows->port : 6667);
+		}
 	}
 	return 0;
 }

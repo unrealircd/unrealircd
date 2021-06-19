@@ -1524,8 +1524,7 @@ struct ConfigFlag_allow {
 struct ConfigItem_allow {
 	ConfigItem_allow *prev, *next;
 	ConfigFlag flag;
-	char *ip;
-	char *hostname;
+	ConfigItem_mask *mask;
 	char *server;
 	AuthConfig *auth;
 	int maxperip; /**< Maximum connections permitted per IP address (locally) */

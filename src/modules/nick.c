@@ -1321,6 +1321,18 @@ int AllowClient(Client *client, char *username)
 		return 0;
 
 	hp = client->local->hostp;
+	if (hp && hp->h_name)
+		set_sockhost(client, hp->h_name);
+	else if (!strcmp(sockhost, "localhost"))
+		set_sockhost(client, "localhost"); /* yeah, special case :D */
+
+	/* SET HOSTNAME: We set client->user->realhost early here
+	 * because we are going to run some checks.
+	 * Note that later on this may be reversed from hostname to IP if
+	 * allow::options::useip is set.
+	 * Also, register_user() contains more stringent hostname checks later on.
+	 */
+	strlcpy(client->user->realhost, client->local->sockhost, sizeof(client->local->sockhost));
 
 	if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_user == POLICY_DENY))
 	{
@@ -1340,62 +1352,9 @@ int AllowClient(Client *client, char *username)
 		if (aconf->flags.tls && !IsSecure(client))
 			continue;
 
-		if (hp && hp->h_name)
-		{
-			hname = hp->h_name;
-			strlcpy(fullname, hname, sizeof(fullname));
-			Debug((DEBUG_DNS, "a_il: %s->%s", sockhost, fullname));
-			if (strchr(aconf->hostname, '@'))
-			{
-				if (aconf->flags.noident)
-					strlcpy(uhost, username, sizeof(uhost));
-				else
-					strlcpy(uhost, client->ident, sizeof(uhost));
-				strlcat(uhost, "@", sizeof(uhost));
-			}
-			else
-				*uhost = '\0';
-			strlcat(uhost, fullname, sizeof(uhost));
-			if (match_simple(aconf->hostname, uhost))
-				goto attach;
-		}
+		if (!unreal_mask_match(client, aconf->mask))
+			continue;
 
-		if (strchr(aconf->ip, '@'))
-		{
-			if (aconf->flags.noident)
-				strlcpy(uhost, username, sizeof(uhost));
-			else
-				strlcpy(uhost, client->ident, sizeof(uhost));
-			strlcat(uhost, "@", sizeof(uhost));
-		}
-		else
-			*uhost = '\0';
-		strlcat(uhost, sockhost, sizeof(uhost));
-		/* Check the IP */
-		if (match_user(aconf->ip, client, MATCH_CHECK_IP))
-			goto attach;
-
-		/* Hmm, localhost is a special case, hp == NULL and sockhost contains
-		 * 'localhost' instead of an ip... -- Syzop. */
-		if (!strcmp(sockhost, "localhost"))
-		{
-			if (strchr(aconf->hostname, '@'))
-			{
-				if (aconf->flags.noident)
-					strlcpy(uhost, username, sizeof(uhost));
-				else
-					strlcpy(uhost, client->ident, sizeof(uhost));
-				strlcat(uhost, "@localhost", sizeof(uhost));
-			}
-			else
-				strcpy(uhost, "localhost");
-
-			if (match_simple(aconf->hostname, uhost))
-				goto attach;
-		}
-
-		continue; /* No match */
-	attach:
 		/* Check authentication */
 		if (aconf->auth && !Auth_Check(client, aconf->auth, client->local->passwd))
 		{
@@ -1411,11 +1370,9 @@ int AllowClient(Client *client, char *username)
 
 		if (!aconf->flags.noident)
 			SetUseIdent(client);
-		if (!aconf->flags.useip && hp)
-			strlcpy(uhost, fullname, sizeof(uhost));
-		else
-			strlcpy(uhost, sockhost, sizeof(uhost));
-		set_sockhost(client, uhost);
+
+		if (aconf->flags.useip)
+			set_sockhost(client, GetIP(client));
 
 		if (exceeds_maxperip(client, aconf))
 		{
