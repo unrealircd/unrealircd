@@ -1175,7 +1175,7 @@ int unreal_mask_match(Client *client, ConfigItem_mask *mask)
 		if (m->mask[0] != '!')
 		{
 			retval = 0; /* no implicit * */
-			if (match_user(m->mask, client, MATCH_CHECK_REAL))
+			if (match_user(m->mask, client, MATCH_CHECK_REAL|MATCH_CHECK_EXTENDED))
 			{
 				retval = 1;
 				break;
@@ -1188,7 +1188,7 @@ int unreal_mask_match(Client *client, ConfigItem_mask *mask)
 		/* We matched. Check for exceptions (with ! prefix) */
 		for (m = mask; m; m = m->next)
 		{
-			if ((m->mask[0] == '!') && match_user(m->mask+1, client, MATCH_CHECK_REAL))
+			if ((m->mask[0] == '!') && match_user(m->mask+1, client, MATCH_CHECK_REAL|MATCH_CHECK_EXTENDED))
 				return 0;
 		}
 	}
