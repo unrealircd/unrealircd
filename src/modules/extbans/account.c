@@ -75,8 +75,6 @@ char *extban_account_conv_param(char *para)
 	acc = retbuf+3;
 	if (!*acc)
 		return NULL; /* don't allow "~a:" */
-	if (!strcmp(acc, "0"))
-		return NULL; /* ~a:0 would mean ban all non-regged, but we already have +R for that. */
 
 	return retbuf;
 }
@@ -85,7 +83,18 @@ int extban_account_is_banned(Client *client, Channel *channel, char *banin, int 
 {
 	char *ban = banin+3;
 
-	if (!strcasecmp(ban, client->user->svid))
+	/* ~a:0 is special and matches all unauthenticated users */
+	if (!strcmp(ban, "0") && !IsLoggedIn(client))
+		return 1;
+
+	/* ~a:* matches all authenticated users
+	 * (Yes this special code is needed because svid
+	 *  is 0 or * for unauthenticated users)
+	 */
+	if (!strcmp(ban, "*") && IsLoggedIn(client))
+		return 1;
+
+	if (match_simple(ban, client->user->svid))
 		return 1;
 
 	return 0;
