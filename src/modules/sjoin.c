@@ -221,7 +221,7 @@ CMD_FUNC(cmd_sjoin)
 	modebuf[1] = '\0';
 
 	/* Grab current modes -> modebuf & parabuf */
-	channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel);
+	channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel, 1);
 
 	/* Do we need to remove all our modes, bans/exempt/inves lists and -vhoaq our users? */
 	if (removeours)
@@ -711,7 +711,8 @@ getnick:
 		 */
 		for (i=0; i <= Channelmode_highest; i++)
 		{
-			if ((Channelmode_Table[i].flag) &&
+			if (Channelmode_Table[i].flag &&
+			    !Channelmode_Table[i].local &&
 			    (oldmode.extmode & Channelmode_Table[i].mode) &&
 			    !(channel->mode.extmode & Channelmode_Table[i].mode))
 			{

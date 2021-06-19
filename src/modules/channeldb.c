@@ -343,7 +343,7 @@ int write_channel_entry(UnrealDB *db, const char *tmpfname, Channel *channel)
 	W_SAFE(unrealdb_write_str(db, channel->topic_nick));
 	W_SAFE(unrealdb_write_int64(db, channel->topic_time));
 	/* Basic channel modes (eg: +sntkl key 55) */
-	channel_modes(&me, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel);
+	channel_modes(&me, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel, 1);
 	W_SAFE(unrealdb_write_str(db, modebuf));
 	W_SAFE(unrealdb_write_str(db, parabuf));
 	/* Mode lock */

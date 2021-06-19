@@ -294,7 +294,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 			channel->mode.mode = MODES_ON_JOIN;
 
 			*modebuf = *parabuf = 0;
-			channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel);
+			channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel, 0);
 			/* This should probably be in the SJOIN stuff */
 			new_message_special(&me, recv_mtags, &mtags_mode, ":%s MODE %s %s %s", me.name, channel->chname, modebuf, parabuf);
 			sendto_server(NULL, 0, 0, mtags_mode, ":%s MODE %s %s %s %lld",

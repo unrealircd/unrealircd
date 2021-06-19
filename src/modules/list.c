@@ -273,7 +273,7 @@ CMD_FUNC(cmd_list)
 				  if (channel && (ShowChannel(client, channel) || ValidatePermissionsForPath("channel:see:list:secret",client,NULL,channel,NULL))) {
 #ifdef LIST_SHOW_MODES
 					modebuf[0] = '[';
-					channel_modes(client, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), channel);
+					channel_modes(client, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), channel, 0);
 					if (modebuf[2] == '\0')
 						modebuf[0] = '\0';
 					else
@@ -403,7 +403,7 @@ int send_list(Client *client)
 				}
 #ifdef LIST_SHOW_MODES
 				modebuf[0] = '[';
-				channel_modes(client, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), channel);
+				channel_modes(client, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), channel, 0);
 				if (modebuf[2] == '\0')
 					modebuf[0] = '\0';
 				else

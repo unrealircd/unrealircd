@@ -133,7 +133,7 @@ CMD_FUNC(cmd_mode)
 		*modebuf = *parabuf = '\0';
 
 		modebuf[1] = '\0';
-		channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel);
+		channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel, 0);
 		sendnumeric(client, RPL_CHANNELMODEIS, channel->chname, modebuf, parabuf);
 		sendnumeric(client, RPL_CREATIONTIME, channel->chname, channel->creationtime);
 		return;

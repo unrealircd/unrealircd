@@ -1174,7 +1174,7 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 	/* First we'll send channel, channel modes and members and status */
 
 	*modebuf = *parabuf = '\0';
-	channel_modes(to, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel);
+	channel_modes(to, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel, 1);
 
 	if (!modebuf[1])
 		nomode = 1;
