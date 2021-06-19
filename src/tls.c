@@ -487,6 +487,12 @@ fail:
 	return NULL;
 }
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+MODVAR EVP_MD *sha256_function; /**< SHA256 function for EVP_DigestInit_ex() call */
+MODVAR EVP_MD *sha1_function; /**< SHA1 function for EVP_DigestInit_ex() call */
+MODVAR EVP_MD *md5_function; /**< MD5 function for EVP_DigestInit_ex() call */
+#endif
+
 /** Early initalization of SSL/TLS subsystem - called on startup */
 int early_init_ssl(void)
 {
@@ -495,6 +501,29 @@ int early_init_ssl(void)
 
 	/* This is used to track (SSL *) <--> (Client *) relationships: */
 	ssl_client_index = SSL_get_ex_new_index(0, "ssl_client", NULL, NULL, NULL);
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	sha256_function = EVP_MD_fetch(NULL, "SHA2-256", NULL);
+	if (!sha256_function)
+	{
+		fprintf(stderr, "Could not find SHA256 algorithm in SSL library\n");
+		exit(6);
+	}
+
+	sha1_function = EVP_MD_fetch(NULL, "SHA1", NULL);
+	if (!sha1_function)
+	{
+		fprintf(stderr, "Could not find SHA1 algorithm in SSL library\n");
+		exit(6);
+	}
+
+	md5_function = EVP_MD_fetch(NULL, "MD5", NULL);
+	if (!md5_function)
+	{
+		fprintf(stderr, "Could not find MD5 algorithm in SSL library\n");
+		exit(6);
+	}
+#endif
 	return 1;
 }
 
@@ -892,6 +921,16 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *clien
 			ssl_func = "undefined SSL func";
 	}
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	/* Fetch additional error information from OpenSSL 3.0.0+ */
+	two = ERR_reason_error_string(additional_errno);
+	if (two && *two)
+	{
+		snprintf(additional_info, sizeof(additional_info), ": %s", two);
+	} else {
+		*additional_info = '\0';
+	}
+#else
 	/* Fetch additional error information from OpenSSL. This is new as of Nov 2017 (4.0.16+) */
 	one = ERR_func_error_string(additional_errno);
 	two = ERR_reason_error_string(additional_errno);
@@ -901,6 +940,7 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *clien
 	} else {
 		*additional_info = '\0';
 	}
+#endif
 
 	ssl_errstr = ssl_error_str(ssl_error, my_errno);
 
@@ -1169,6 +1209,8 @@ int cipher_check(SSL_CTX *ctx, char **errstr)
 /** Check if a certificate (or actually: key) is weak */
 int certificate_quality_check(SSL_CTX *ctx, char **errstr)
 {
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+	// FIXME: this only works on OpenSSL <3.0.0
 	SSL *ssl;
 	X509 *cert;
 	EVP_PKEY *public_key;
@@ -1225,6 +1267,7 @@ int certificate_quality_check(SSL_CTX *ctx, char **errstr)
 		return 0;
 	}
 
+#endif
 	return 1;
 }
 
@@ -1258,7 +1301,6 @@ char *spki_fingerprint_ex(X509 *x509_cert)
 	unsigned char *der_cert = NULL, *p;
 	int der_cert_len, n;
 	static char retbuf[256];
-	SHA256_CTX ckctx;
 	unsigned char checksum[SHA256_DIGEST_LENGTH];
 
 	memset(retbuf, 0, sizeof(retbuf));
@@ -1274,9 +1316,7 @@ char *spki_fingerprint_ex(X509 *x509_cert)
 			/* The DER encoded SPKI is stored in 'der_cert' with length 'der_cert_len'.
 			 * Now we need to create an SHA256 hash out of it.
 			 */
-			SHA256_Init(&ckctx);
-			SHA256_Update(&ckctx, der_cert, der_cert_len);
-			SHA256_Final(checksum, &ckctx);
+			sha256hash_binary(checksum, der_cert, der_cert_len);
 
 			/* And convert the binary to a base64 string... */
 			n = b64_encode(checksum, SHA256_DIGEST_LENGTH, retbuf, sizeof(retbuf));

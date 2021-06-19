@@ -1893,19 +1893,31 @@ void binarytohex(void *data, size_t len, char *str)
 	str[n] = '\0';
 }
 
-/** Generates an MD5 checksum.
+/** Generates an MD5 checksum - binary version.
  * @param mdout[out] Buffer to store result in, the result will be 16 bytes in binary
  *                   (not ascii printable!).
  * @param src[in]    The input data used to generate the checksum.
  * @param n[in]      Length of data.
+ * @deprecated       The MD5 algorithm is deprecated and insecure,
+ *                   so only use this if absolutely needed.
  */
 void DoMD5(char *mdout, const char *src, unsigned long n)
 {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	unsigned int md_len;
+	EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+	if (EVP_DigestInit_ex(mdctx, md5_function, NULL) != 1)
+		abort();
+	EVP_DigestUpdate(mdctx, src, n);
+	EVP_DigestFinal_ex(mdctx, mdout, &md_len);
+	EVP_MD_CTX_free(mdctx);
+#else
 	MD5_CTX hash;
 
 	MD5_Init(&hash);
 	MD5_Update(&hash, src, n);
 	MD5_Final(mdout, &hash);
+#endif
 }
 
 /** Generates an MD5 checksum - ASCII printable string (0011223344..etc..).
@@ -1913,6 +1925,8 @@ void DoMD5(char *mdout, const char *src, unsigned long n)
  *                  32 characters + nul terminator, so needs to be at least 33 characters.
  * @param src[in]   The input data used to generate the checksum.
  * @param n[in]     Length of data.
+ * @deprecated      The MD5 algorithm is deprecated and insecure,
+ *                  so only use this if absolutely needed.
  */
 char *md5hash(char *dst, const char *src, unsigned long n)
 {
@@ -1923,6 +1937,32 @@ char *md5hash(char *dst, const char *src, unsigned long n)
 	return dst;
 }
 
+/** Generates a SHA256 checksum - binary version.
+ * Most people will want to use sha256hash() instead which outputs hex.
+ * @param dst[out]  Buffer to store result in, which needs to be 32 bytes in length
+ *                  (SHA256_DIGEST_LENGTH).
+ * @param src[in]   The input data used to generate the checksum.
+ * @param n[in]     Length of data.
+ */
+void sha256hash_binary(char *dst, const char *src, unsigned long n)
+{
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	unsigned int md_len;
+	EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+	if (EVP_DigestInit_ex(mdctx, sha256_function, NULL) != 1)
+		abort();
+	EVP_DigestUpdate(mdctx, src, n);
+	EVP_DigestFinal_ex(mdctx, dst, &md_len);
+	EVP_MD_CTX_free(mdctx);
+#else
+	SHA256_CTX hash;
+
+	SHA256_Init(&hash);
+	SHA256_Update(&hash, src, n);
+	SHA256_Final(dst, &hash);
+#endif
+}
+
 /** Generates a SHA256 checksum - ASCII printable string (0011223344..etc..).
  * @param dst[out]  Buffer to store result in, which needs to be 65 bytes minimum.
  * @param src[in]   The input data used to generate the checksum.
@@ -1930,12 +1970,9 @@ char *md5hash(char *dst, const char *src, unsigned long n)
  */
 char *sha256hash(char *dst, const char *src, unsigned long n)
 {
-	SHA256_CTX hash;
 	char binaryhash[SHA256_DIGEST_LENGTH];
 
-	SHA256_Init(&hash);
-	SHA256_Update(&hash, src, n);
-	SHA256_Final(binaryhash, &hash);
+	sha256hash_binary(binaryhash, src, n);
 	binarytohex(binaryhash, sizeof(binaryhash), dst);
 	return dst;
 }
@@ -1949,20 +1986,66 @@ char *sha256sum_file(const char *fname)
 	char binaryhash[SHA256_DIGEST_LENGTH];
 	static char hexhash[SHA256_DIGEST_LENGTH*2+1];
 	int n;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	unsigned int md_len;
+	EVP_MD_CTX *mdctx;
+
+	mdctx = EVP_MD_CTX_new();
+	if (EVP_DigestInit_ex(mdctx, sha256_function, NULL) != 1)
+		abort();
+#else
+	SHA256_Init(&hash);
+#endif
 
 	fd = fopen(fname, "rb");
 	if (!fd)
 		return NULL;
 
-	SHA256_Init(&hash);
 	while ((n = fread(buf, 1, sizeof(buf), fd)) > 0)
 	{
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+		EVP_DigestUpdate(mdctx, buf, n);
+#else
 		SHA256_Update(&hash, buf, n);
+#endif
 	}
 	fclose(fd);
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	EVP_DigestFinal_ex(mdctx, binaryhash, &md_len);
+	EVP_MD_CTX_free(mdctx);
+#else
 	SHA256_Final(binaryhash, &hash);
+#endif
 	binarytohex(binaryhash, sizeof(binaryhash), hexhash);
 	return hexhash;
+}
+
+/** Generates a SHA1 checksum - binary version.
+ * @param dst[out]  Buffer to store result in, which needs to be 32 bytes in length
+ *                  (SHA1_DIGEST_LENGTH).
+ * @param src[in]   The input data used to generate the checksum.
+ * @param n[in]     Length of data.
+ * @deprecated      The SHA1 algorithm is deprecated and insecure,
+ *                  so only use this if absolutely needed.
+ */
+void sha1hash_binary(char *dst, const char *src, unsigned long n)
+{
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	unsigned int md_len;
+	EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+	if (EVP_DigestInit_ex(mdctx, sha1_function, NULL) != 1)
+		abort();
+	EVP_DigestUpdate(mdctx, src, n);
+	EVP_DigestFinal_ex(mdctx, dst, &md_len);
+	EVP_MD_CTX_free(mdctx);
+#else
+	SHA_CTX hash;
+
+	SHA1_Init(&hash);
+	SHA1_Update(&hash, src, n);
+	SHA1_Final(dst, &hash);
+#endif
 }
 
 /** Remove a suffix from a filename, eg ".c" (if it is present) */

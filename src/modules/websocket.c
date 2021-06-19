@@ -589,16 +589,12 @@ int websocket_handle_handshake(Client *client, char *readbuf, int *length)
 int websocket_handshake_send_response(Client *client)
 {
 	char buf[512], hashbuf[64];
-	SHA_CTX hash;
 	char sha1out[20]; /* 160 bits */
 
 	WSU(client)->handshake_completed = 1;
 
 	snprintf(buf, sizeof(buf), "%s%s", WSU(client)->handshake_key, WEBSOCKET_MAGIC_KEY);
-	SHA1_Init(&hash);
-	SHA1_Update(&hash, buf, strlen(buf));
-	SHA1_Final(sha1out, &hash);
-
+	sha1hash_binary(sha1out, buf, strlen(buf));
 	b64_encode(sha1out, sizeof(sha1out), hashbuf, sizeof(hashbuf));
 
 	snprintf(buf, sizeof(buf),

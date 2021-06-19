@@ -791,6 +791,9 @@ extern int outdated_tls_client(Client *acptr);
 extern char *outdated_tls_client_build_string(char *pattern, Client *acptr);
 extern int check_certificate_expiry_ctx(SSL_CTX *ctx, char **errstr);
 extern EVENT(tls_check_expiry);
+extern MODVAR EVP_MD *sha256_function;
+extern MODVAR EVP_MD *sha1_function;
+extern MODVAR EVP_MD *md5_function;
 /* End of SSL/TLS functions */
 
 extern void parse_message_tags_default_handler(Client *client, char **str, MessageTag **mtag_list);
@@ -813,6 +816,8 @@ extern int find_invex(Channel *channel, Client *client);
 extern void DoMD5(char *mdout, const char *src, unsigned long n);
 extern char *md5hash(char *dst, const char *src, unsigned long n);
 extern char *sha256hash(char *dst, const char *src, unsigned long n);
+extern void sha256hash_binary(char *dst, const char *src, unsigned long n);
+extern void sha1hash_binary(char *dst, const char *src, unsigned long n);
 extern MODVAR TKL *tklines[TKLISTLEN];
 extern MODVAR TKL *tklines_ip_hash[TKLIPHASHLEN1][TKLIPHASHLEN2];
 extern char *cmdname_by_spamftarget(int target);
