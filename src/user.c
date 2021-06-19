@@ -866,7 +866,7 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 		return 1;
 	if (s->reputation_score && (GetReputation(client) >= s->reputation_score))
 		return 1;
-	if (s->tls && (IsSecureConnect(client) || IsSecure(client)))
+	if (s->tls && (IsSecureConnect(client) || (MyConnect(client) && IsSecure(client))))
 		return 1;
 	return 0;
 }
