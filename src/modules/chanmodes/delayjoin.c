@@ -27,6 +27,7 @@ int visible_in_channel(Client *client, Channel *channel);
 int moded_check_part(Client *client, Channel *channel);
 int moded_join(Client *client, Channel *channel);
 int moded_part(Client *client, Channel *channel, MessageTag *mtags, char *comment);
+int moded_quit(Client *client, MessageTag *mtags, char *comment);
 int deny_all(Client *client, Channel *channel, char mode, char *para, int checkt, int what);
 int moded_chanmode(Client *client, Channel *channel,
                    MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
@@ -76,6 +77,8 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_JOIN_DATA, 0, moded_join);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PART, 0, moded_part);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_PART, 0, moded_part);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, moded_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_QUIT, 0, moded_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CHANMODE, 0, moded_chanmode);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_REMOTE_CHANMODE, 0, moded_chanmode);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, moded_prechanmsg);
@@ -276,6 +279,22 @@ int moded_part(Client *client, Channel *channel, MessageTag *mtags, char *commen
 {
 	if (channel_is_delayed(channel) || channel_is_post_delayed(channel))
 		clear_user_invisible(channel, client);
+
+	return 0;
+}
+
+int moded_quit(Client *client, MessageTag *mtags, char *comment)
+{
+	Membership *membership;
+	Channel *channel;
+
+	for (membership = client->user->channel; membership; membership=membership->next)
+	{
+		channel = membership->channel;
+		/* Identical to moded_part() */
+		if (channel_is_delayed(channel) || channel_is_post_delayed(channel))
+			clear_user_invisible(channel, client);
+	}
 
 	return 0;
 }
