@@ -53,6 +53,7 @@ MOD_INIT()
 	req.paracount = 0;
 	req.is_ok = deny_all;
 	req.flag = 'd';
+	req.local = 1;
 	CmodePostDelayed = CmodeAdd(modinfo->handle, req, &EXTMODE_POST_DELAYED);
 
 	memset(&mreq, 0, sizeof(mreq));
