@@ -897,13 +897,49 @@ int user_allowed_by_security_group_name(Client *client, char *secgroupname)
 	return user_allowed_by_security_group(client, s);
 }
 
+/** Get comma separated list of matching security groups for 'client'.
+ * This is usually only used for displaying purposes.
+ * @returns string like "unknown-users,tls-users" from a static buffer.
+ */
+char *get_security_groups(Client *client)
+{
+	SecurityGroup *s;
+	static char buf[512];
+
+	*buf = '\0';
+
+	/* We put known-users or unknown-users at the beginning.
+	 * The latter is special and doesn't actually exist
+	 * in the linked list, hence the special code here,
+	 * and again later in the for loop to skip it.
+	 */
+	if (user_allowed_by_security_group_name(client, "known-users"))
+		strlcat(buf, "known-users,", sizeof(buf));
+	else
+		strlcat(buf, "unknown-users,", sizeof(buf));
+
+	for (s = securitygroups; s; s = s->next)
+	{
+		if (strcmp(s->name, "known-users") &&
+		    user_allowed_by_security_group(client, s))
+		{
+			strlcat(buf, s->name, sizeof(buf));
+			strlcat(buf, ",", sizeof(buf));
+		}
+	}
+
+	if (*buf)
+		buf[strlen(buf)-1] = '\0';
+	return buf;
+}
+
 /** Return extended information about user for the "Client connecting" line.
  * @returns A string such as "[secure] [reputation: 5]", never returns NULL.
  */
 char *get_connect_extinfo(Client *client)
 {
 	static char retbuf[512];
-	char tmp[512];
+	char tmp[512], *secgroups;
 	NameValuePrioList *list = NULL, *e;
 
 	/* From modules... */
@@ -924,6 +960,11 @@ char *get_connect_extinfo(Client *client)
 	/* services account? */
 	if (IsLoggedIn(client))
 		add_nvplist(&list, -500, "account", client->user->svid);
+
+	/* security groups */
+	secgroups = get_security_groups(client);
+	if (secgroups)
+		add_nvplist(&list, 100, "security-groups", secgroups);
 
 	*retbuf = '\0';
 	for (e = list; e; e = e->next)
