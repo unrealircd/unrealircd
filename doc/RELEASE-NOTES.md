@@ -1,12 +1,9 @@
-UnrealIRCd 5.2.0.1 Release Notes
+UnrealIRCd 5.2.1-git Release Notes
 =================================
 
-About 5.2.0.1
---------------
-5.2.0.1 fixes an issue with spamfilter that was present in 5.2.0.
-In channels spamfilters were processed for type ```p``` instead of ```c```.
-Existing 5.2.0 users on *NIX can upgrade without restart by running
-```./unrealircd hot-patch wrongspamfilter520```
+About 5.2.1-git
+----------------
+This is work in progress, bleeding edge git.
 
 UnrealIRCd 5.2.0 is out!
 -------------------------
