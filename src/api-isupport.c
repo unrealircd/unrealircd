@@ -118,7 +118,6 @@ void isupport_init(void)
 	ISupportSetFmt(NULL, "MAXLIST", "b:%d,e:%d,I:%d", MAXBANS, MAXBANS, MAXBANS);
 	ISupportSetFmt(NULL, "CHANLIMIT", "#:%d", MAXCHANNELSPERUSER);
 	ISupportSetFmt(NULL, "MAXCHANNELS", "%d", MAXCHANNELSPERUSER);
-	ISupportSet(NULL, "HCN", NULL);
 	ISupportSet(NULL, "SAFELIST", NULL);
 	ISupportSet(NULL, "NAMESX", NULL);
 	if (UHNAMES_ENABLED)
