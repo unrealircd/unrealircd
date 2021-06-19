@@ -5,13 +5,31 @@ About 5.2.1-git
 ----------------
 This is work in progress, bleeding edge git.
 
-UnrealIRCd 5.2.0 is out!
--------------------------
+Enhancements:
+* The allow block now uses allow::mask instead of allow::ip and
+  allow::hostname. Users upgrading will receive a warning but the
+  server will continue to boot.
+* New documentation for [mask items](https://www.unrealircd.org/docs/Mask_item)
+  in the configuration file to show how it works with 1 or more mask
+  items in a block. Also support for negative matching has been
+  improved and we now support
+  [extended server ban syntax](https://www.unrealircd.org/docs/Extended_server_bans).
+* Combining the new options from above you can do things like:
+  * ```allow { mask ~a:TrustedUser; class flooders; maxperip 100; }```
+  If TrustedUser authenticates to services using
+  [SASL](https://www.unrealircd.org/docs/SASL) then he gets in the
+  special class "flooders" with a maxperip of 100.
+  * ```allow { mask { ~S:112233etc; ~S:anotherone; }; class clients; maxperip 10; }```
+  Users matching one of these
+  [certificate fingerprints](https://www.unrealircd.org/docs/Extended_server_bans)
+  get a high maximum per ip of 10.
 
-This is UnrealIRCd 5.2.0, a release with lots of new features.
-The two main new features are: an improved and more flexible anti-flood block
-and channel history which can now be stored encrypted on disk and allows
-clients to fetch hundreds/thousands of lines.
+UnrealIRCd 5.2.0
+-----------------
+
+The two main new features in 5.2.0 are: an improved and more flexible
+anti-flood block and channel history which can now be stored encrypted
+on disk and allows clients to fetch hundreds/thousands of lines.
 
 Upgrading and the 5.0.x series
 -------------------------------
