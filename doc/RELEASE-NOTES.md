@@ -23,6 +23,13 @@ Enhancements:
   Users matching one of these
   [certificate fingerprints](https://www.unrealircd.org/docs/Extended_server_bans)
   get a high maximum per ip of 10.
+* New block [set::server-linking](https://www.unrealircd.org/docs/Set_block#set::server-linking)
+  * For link blocks with autoconnect we now default to the strategy
+    'sequential', meaning we will try the 1st link block first,
+    then the 2nd, then the 3rd, then the 1st again, etc.
+  * We now have different and lower timeouts for the connect and
+    the handshake. So we give up a bit more early on servers that
+    are currently down or extremely lagged.
 
 UnrealIRCd 5.2.0
 -----------------

@@ -6481,7 +6481,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 	if (!link->hub && !link->leaf)
 		safe_strdup(link->hub, "*");
 
-	AddListItem(link, conf_link);
+	AppendListItem(link, conf_link);
 	return 0;
 }
 

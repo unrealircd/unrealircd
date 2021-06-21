@@ -51,10 +51,12 @@ void _introduce_user(Client *to, Client *acptr);
 int _check_deny_version(Client *cptr, char *software, int protocol, char *flags);
 void _broadcast_sinfo(Client *acptr, Client *to, Client *except);
 int server_sync(Client *cptr, ConfigItem_link *conf);
+void server_generic_free(ModData *m);
 
 /* Global variables */
 static char buf[BUFSIZE];
 static cfgstruct cfg;
+static char *last_autoconnect_server = NULL;
 
 ModuleHeader MOD_HEADER
   = {
@@ -81,6 +83,7 @@ MOD_TEST()
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	LoadPersistentPointer(modinfo, last_autoconnect_server, server_generic_free);
 	server_config_setdefaults(&cfg);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, server_config_run);
 	CommandAdd(modinfo->handle, "SERVER", cmd_server, MAXPARA, CMD_UNREGISTERED|CMD_SERVER);
@@ -93,7 +96,12 @@ MOD_LOAD()
 {
 	EventAdd(modinfo->handle, "server_autoconnect", server_autoconnect, NULL, 2000, 0);
 	EventAdd(modinfo->handle, "server_handshake_timeout", server_handshake_timeout, NULL, 1000, 0);
+	return MOD_SUCCESS;
+}
 
+MOD_UNLOAD()
+{
+	SavePersistentPointer(modinfo, last_autoconnect_server);
 	return MOD_SUCCESS;
 }
 
@@ -105,8 +113,8 @@ AutoConnectStrategy autoconnect_strategy_strtoval(char *str)
 {
 	if (!strcmp(str, "parallel"))
 		return AUTOCONNECT_PARALLEL;
-//	if (!strcmp(str, "sequential"))
-//		return AUTOCONNECT_SEQUENTIAL;
+	if (!strcmp(str, "sequential"))
+		return AUTOCONNECT_SEQUENTIAL;
 	return -1;
 }
 
@@ -129,14 +137,9 @@ char *autoconnect_strategy_valtostr(AutoConnectStrategy val)
 
 void server_config_setdefaults(cfgstruct *cfg)
 {
-	cfg->autoconnect_strategy = AUTOCONNECT_PARALLEL;
+	cfg->autoconnect_strategy = AUTOCONNECT_SEQUENTIAL;
 	cfg->connect_timeout = 10;
 	cfg->handshake_timeout = 20;
-}
-
-MOD_UNLOAD()
-{
-	return MOD_SUCCESS;
 }
 
 int server_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
@@ -234,48 +237,212 @@ int server_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 1;
 }
 
+int server_needs_linking(ConfigItem_link *aconf)
+{
+	ConfigItem_deny_link *deny;
+	Client *client;
+	ConfigItem_class *class;
 
+	/* We're only interested in autoconnect blocks that are valid. Also, we ignore temporary link blocks. */
+	if (!(aconf->outgoing.options & CONNECT_AUTO) || !aconf->outgoing.hostname || (aconf->flag.temporary == 1))
+		return 0;
+
+	class = aconf->class;
+
+	/* Never do more than one connection attempt per <connfreq> seconds (for the same server) */
+	if ((aconf->hold > TStime()))
+		return 0;
+
+	aconf->hold = TStime() + class->connfreq;
+
+	client = find_client(aconf->servername, NULL);
+	if (client)
+		return 0; /* Server already connected (or connecting) */
+
+	if (class->clients >= class->maxclients)
+		return 0; /* Class is full */
+
+	/* Check connect rules to see if we're allowed to try the link */
+	for (deny = conf_deny_link; deny; deny = deny->next)
+		if (unreal_mask_match_string(aconf->servername, deny->mask) && crule_eval(deny->rule))
+			return 0;
+
+	/* Yes, this server is a linking candidate */
+	return 1;
+}
+
+void server_autoconnect_parallel(void)
+{
+	ConfigItem_link *aconf;
+
+	for (aconf = conf_link; aconf; aconf = aconf->next)
+	{
+		if (!server_needs_linking(aconf))
+			continue;
+
+		if (connect_server(aconf, NULL, NULL) == 0)
+		{
+			sendto_ops_and_log("Trying to activate link with server %s[%s]...",
+				aconf->servername, aconf->outgoing.hostname);
+		}
+	}
+}
+
+/** Find first (valid) autoconnect server in link blocks.
+ * This function should not be used directly. It is a helper function
+ * for find_next_autoconnect_server().
+ */
+ConfigItem_link *find_first_autoconnect_server(void)
+{
+	ConfigItem_link *aconf;
+
+	for (aconf = conf_link; aconf; aconf = aconf->next)
+	{
+		if (!server_needs_linking(aconf))
+			continue;
+		return aconf; /* found! */
+	}
+	return NULL; /* none */
+}
+
+/** Find next server that we should try to autoconnect to.
+ * Taking into account that we last tried server 'current'.
+ * @param current	Server the previous autoconnect attempt was made to
+ * @returns A link block, or NULL if no servers are suitable.
+ */
+ConfigItem_link *find_next_autoconnect_server(char *current)
+{
+	ConfigItem_link *aconf;
+
+	/* If the current autoconnect server is NULL then
+	 * just find whichever valid server is first.
+	 */
+	if (current == NULL)
+		return find_first_autoconnect_server();
+
+	/* Next code is a bit convulted, it would have
+	 * been easier if conf_link was a circular list ;)
+	 */
+
+	/* Otherwise, walk the list up to 'current' */
+	for (aconf = conf_link; aconf; aconf = aconf->next)
+	{
+		if (!strcmp(aconf->servername, current))
+			break;
+	}
+
+	/* If the 'current' server dissapeared, then let's
+	 * just pick the first one from the list.
+	 * It is a rare event to have the link { } block
+	 * removed of a server that we just happened to
+	 * try to link to before, so we can afford to do
+	 * it this way.
+	 */
+	if (!aconf)
+		return find_first_autoconnect_server();
+
+	/* Check the remainder for the list, in other words:
+	 * check all servers after 'current' if they are
+	 * ready for an outgoing connection attempt...
+	 */
+	for (aconf = aconf->next; aconf; aconf = aconf->next)
+	{
+		if (!server_needs_linking(aconf))
+			continue;
+		return aconf; /* found! */
+	}
+
+	/* If we get here then there are no valid servers
+	 * after 'current', so now check for before 'current'
+	 * (and including 'current', since we may
+	 *  have to autoconnect to that one again,
+	 *  eg if it is the only autoconnect server)...
+	 */
+	for (aconf = conf_link; aconf; aconf = aconf->next)
+	{
+		if (!server_needs_linking(aconf))
+		{
+			if (!strcmp(aconf->servername, current))
+				break; /* need to stop here */
+			continue;
+		}
+		return aconf; /* found! */
+	}
+
+	return NULL; /* none */
+}
+
+/** Check if we are currently connecting to a server (outgoing).
+ * This function takes into account not only an outgoing TCP/IP connect
+ * or TLS handshake, but also if we are 'somewhat connected' to that
+ * server but have not completed the full sync, eg we may still need
+ * to receive SIDs or other sync data.
+ * NOTE: This implicitly assumes that outgoing links only go to
+ *       servers that will (eventually) send "EOS".
+ *       Should be a reasonable assumption given that in nearly all
+ *       cases we only connect to UnrealIRCd servers for the outgoing
+ *       case, as services are "always" incoming links.
+ * @returns 1 if an outgoing link is in progress, 0 if not.
+ */
+int current_outgoing_link_in_process(void)
+{
+	Client *client;
+
+	list_for_each_entry(client, &unknown_list, lclient_node)
+	{
+		if (client->serv && *client->serv->by && client->local->firsttime &&
+		    (IsConnecting(client) || IsTLSConnectHandshake(client) || !IsSynched(client)))
+		{
+			return 1;
+		}
+	}
+
+	list_for_each_entry(client, &server_list, special_node)
+	{
+		if (client->serv && *client->serv->by && client->local->firsttime &&
+		    (IsConnecting(client) || IsTLSConnectHandshake(client) || !IsSynched(client)))
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+void server_autoconnect_sequential(void)
+{
+	ConfigItem_link *aconf;
+
+	if (current_outgoing_link_in_process())
+		return;
+
+	/* We are currently not in the process of doing an outgoing connect,
+	 * let's see if we need to connect to somewhere...
+	 */
+	aconf = find_next_autoconnect_server(last_autoconnect_server);
+	if (aconf == NULL)
+		return; /* No server to connect to at this time */
+
+	/* Start outgoing link attempt */
+	safe_strdup(last_autoconnect_server, aconf->servername);
+	if (connect_server(aconf, NULL, NULL) == 0)
+	{
+		sendto_ops_and_log("Trying to activate link with server %s[%s]...",
+			aconf->servername, aconf->outgoing.hostname);
+	}
+}
 
 /** Perform autoconnect to servers that are not linked yet. */
 EVENT(server_autoconnect)
 {
-	ConfigItem_link *aconf;
-	ConfigItem_deny_link *deny;
-	Client *client;
-	int  confrq;
-	ConfigItem_class *class;
-
-	for (aconf = conf_link; aconf; aconf = aconf->next)
+	switch (cfg.autoconnect_strategy)
 	{
-		/* We're only interested in autoconnect blocks that are valid. Also, we ignore temporary link blocks. */
-		if (!(aconf->outgoing.options & CONNECT_AUTO) || !aconf->outgoing.hostname || (aconf->flag.temporary == 1))
-			continue;
-
-		class = aconf->class;
-
-		/* Only do one connection attempt per <connfreq> seconds (for the same server) */
-		if ((aconf->hold > TStime()))
-			continue;
-
-		confrq = class->connfreq;
-		aconf->hold = TStime() + confrq;
-
-		client = find_client(aconf->servername, NULL);
-		if (client)
-			continue; /* Server already connected (or connecting) */
-
-		if (class->clients >= class->maxclients)
-			continue; /* Class is full */
-
-		/* Check connect rules to see if we're allowed to try the link */
-		for (deny = conf_deny_link; deny; deny = deny->next)
-			if (unreal_mask_match_string(aconf->servername, deny->mask) && crule_eval(deny->rule))
-				break;
-
-		if (!deny && connect_server(aconf, NULL, NULL) == 0)
-			sendto_ops_and_log("Trying to activate link with server %s[%s]...",
-				aconf->servername, aconf->outgoing.hostname);
-
+		case AUTOCONNECT_PARALLEL:
+			server_autoconnect_parallel();
+			break;
+		case AUTOCONNECT_SEQUENTIAL:
+			server_autoconnect_sequential();
+			break;
 	}
 }
 
@@ -1525,4 +1692,9 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 		sendto_one(to, mtags, "%s", buf);
 
 	free_message_tags(mtags);
+}
+
+void server_generic_free(ModData *m)
+{
+	safe_free(m->ptr);
 }
