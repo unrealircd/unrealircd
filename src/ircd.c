@@ -345,11 +345,7 @@ EVENT(handshake_timeout)
 		if (client->local->firsttime && ((TStime() - client->local->firsttime) > iConf.handshake_timeout))
 		{
 			if (client->serv && *client->serv->by)
-			{
-				/* If this is a handshake timeout to an outgoing server then notify ops & log it */
-				sendto_ops_and_log("Connection handshake timeout while trying to link to server '%s' (%s)",
-					client->name, client->ip?client->ip:"<unknown ip>");
-			}
+				continue; /* handled by server module */
 
 			exit_client(client, NULL, "Registration Timeout");
 			continue;
