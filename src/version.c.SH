@@ -4,7 +4,10 @@ echo "Extracting src/version.c..."
 
 #id=`grep '$Id: Changes,v' ../Changes`
 #id=`echo $id |sed 's/.* Changes\,v \(.*\) .* Exp .*/\1/'`
-id="5.2.1-git"
+if [ -d ../.git ]; then
+	SUFFIX="-$(git rev-parse --short HEAD)"
+fi
+id="5.2.1-git$SUFFIX"
 echo "$id"
 
 if test -r version.c
