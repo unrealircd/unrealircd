@@ -101,6 +101,10 @@ CMD_FUNC(cmd_md)
 
 	if (!strcmp(type, "client"))
 	{
+		// dont allow certfp spoofing
+		if (!strcmp(varname, "certfp"))
+			return;
+
 		Client *target = find_client(objname, NULL);
 		md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
 		if (!md || !md->unserialize || !target)
