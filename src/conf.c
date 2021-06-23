@@ -1807,6 +1807,7 @@ void config_setdefaultsettings(Configuration *i)
 	config_parse_flood_generic("4:60", i, "known-users", FLD_INVITE); /* INVITE flood protection: max 4 per 60s */
 	config_parse_flood_generic("4:120", i, "known-users", FLD_KNOCK); /* KNOCK protection: max 4 per 120s */
 	config_parse_flood_generic("10:15", i, "known-users", FLD_CONVERSATIONS); /* 10 users, new user every 15s */
+	config_parse_flood_generic("180:750", i, "known-users", FLD_LAG_PENALTY); /* 180 bytes / 750 msec */
 	/* - unknown-users */
 	config_parse_flood_generic("2:60", i, "unknown-users", FLD_NICK); /* NICK flood protection: max 2 per 60s */
 	config_parse_flood_generic("2:90", i, "unknown-users", FLD_JOIN); /* JOIN flood protection: max 2 per 90s */
@@ -1814,6 +1815,7 @@ void config_setdefaultsettings(Configuration *i)
 	config_parse_flood_generic("2:60", i, "unknown-users", FLD_INVITE); /* INVITE flood protection: max 2 per 60s */
 	config_parse_flood_generic("2:120", i, "unknown-users", FLD_KNOCK); /* KNOCK protection: max 2 per 120s */
 	config_parse_flood_generic("4:15", i, "unknown-users", FLD_CONVERSATIONS); /* 4 users, new user every 15s */
+	config_parse_flood_generic("90:1000", i, "unknown-users", FLD_LAG_PENALTY); /* 90 bytes / 1000 msec */
 
 	/* SSL/TLS options */
 	i->tls_options = safe_alloc(sizeof(TLSOptions));
@@ -7681,6 +7683,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "anti-flood")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
+				int lag_penalty = -1;
+				int lag_penalty_bytes = -1;
 				for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
 				{
 					if (!strcmp(ceppp->ce_varname, "handshake-data-flood"))
@@ -7714,6 +7718,16 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					else if (!strcmp(ceppp->ce_varname, "knock-flood"))
 					{
 						config_parse_flood_generic(ceppp->ce_vardata, &tempiConf, cepp->ce_varname, FLD_KNOCK);
+					}
+					else if (!strcmp(ceppp->ce_varname, "lag-penalty"))
+					{
+						lag_penalty = atoi(ceppp->ce_vardata);
+					}
+					else if (!strcmp(ceppp->ce_varname, "lag-penalty-bytes"))
+					{
+						lag_penalty_bytes = config_checkval(ceppp->ce_vardata, CFG_SIZE);
+						if (lag_penalty_bytes <= 0)
+							lag_penalty_bytes = INT_MAX;
 					}
 					else if (!strcmp(ceppp->ce_varname, "connect-flood"))
 					{
@@ -7751,6 +7765,13 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 								break;
 						}
 					}
+				}
+				if ((lag_penalty != -1) && (lag_penalty_bytes != -1))
+				{
+					/* We use a hack here to make it fit our storage format */
+					char buf[64];
+					snprintf(buf, sizeof(buf), "%d:%d", lag_penalty_bytes, lag_penalty);
+					config_parse_flood_generic(buf, &tempiConf, cepp->ce_varname, FLD_LAG_PENALTY);
 				}
 			}
 		}
@@ -8508,6 +8529,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
+				int has_lag_penalty = 0;
+				int has_lag_penalty_bytes = 0;
+
 				/* Test for old options: */
 				if (flood_option_is_old(cepp->ce_varname))
 				{
@@ -8721,6 +8745,24 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 							errors++;
 						}
 					}
+					else if (!strcmp(ceppp->ce_varname, "lag-penalty"))
+					{
+						int v;
+						CheckNull(ceppp);
+						v = atoi(ceppp->ce_vardata);
+						has_lag_penalty = 1;
+						if ((v < 0) || (v > 10000))
+						{
+							config_error("%s:%i: set::anti-flood::%s::lag-penalty: value is in milliseconds and should be between 0 and 10000",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, cepp->ce_varname);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "lag-penalty-bytes"))
+					{
+						has_lag_penalty_bytes = 1;
+						CheckNull(ceppp);
+					}
 					else if (!strcmp(ceppp->ce_varname, "connect-flood"))
 					{
 						int cnt, period;
@@ -8781,6 +8823,12 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						}
 						continue;
 					}
+				}
+				if (has_lag_penalty+has_lag_penalty_bytes == 1)
+				{
+					config_error("%s:%i: set::anti-flood::%s: if you use lag-penalty then you must also add an lag-penalty-bytes item (and vice-versa)",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
+					errors++;
 				}
 			}
 			/* Now the warnings: */

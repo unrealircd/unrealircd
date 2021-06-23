@@ -1086,5 +1086,6 @@ MODVAR char *floodoption_names[] = {
 	"invite-flood",
 	"knock-flood",
 	"max-concurrent-conversations",
+	"lag-penalty",
 	NULL
 };

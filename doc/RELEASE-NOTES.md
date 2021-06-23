@@ -33,6 +33,14 @@ Enhancements:
 * New [security-group block](https://www.unrealircd.org/docs/Security-group_block)
   item called *include-mask*. This can be used to put clients matching
   a [mask](https://www.unrealircd.org/docs/Mask_item) into a security group.
+* New option *lag-penalty* and *lag-penalty-bytes* in the
+  [set::anti-flood block](https://www.unrealircd.org/docs/Anti-flood_settings).
+  * *known-users* can now executes commands at a slightly faster rate than
+    *unknown-users*.
+  * It can further be used to allow really trusted users/bots to execute
+    commands at even higher rates, such as 20 commands per second,
+    without making them IRCOp. This explained in
+    [FAQ: How to allow users to send more commands per second](https://www.unrealircd.org/docs/FAQ#high-command-rate).
 
 UnrealIRCd 5.2.0
 -----------------

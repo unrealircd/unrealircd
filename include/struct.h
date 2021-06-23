@@ -1225,6 +1225,7 @@ typedef enum FloodOption {
 	FLD_INVITE		= 3,	/**< invite-flood */
 	FLD_KNOCK		= 4,	/**< knock-flood */
 	FLD_CONVERSATIONS	= 5,	/**< max-concurrent-conversations */
+	FLD_LAG_PENALTY		= 6,	/**< lag-penalty / lag-penalty-bytes */
 } FloodOption;
 #define MAXFLOODOPTIONS 10
 
@@ -1268,6 +1269,7 @@ struct LocalClient {
 	int fd;				/**< File descriptor, can be <0 if socket has been closed already. */
 	SSL *ssl;			/**< OpenSSL/LibreSSL struct for SSL/TLS connection */
 	time_t since;			/**< Time when user will next be allowed to send something (actually since<currenttime+10) */
+	int since_msec;			/**< Used for calculating 'since' penalty (modulo) */
 	time_t firsttime;		/**< Time user was created (connected on IRC) */
 	time_t lasttime;		/**< Last time any message was received */
 	dbuf sendQ;			/**< Outgoing send queue (data to be sent) */

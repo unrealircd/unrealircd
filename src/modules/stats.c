@@ -796,6 +796,14 @@ static void stats_set_anti_flood(Client *client, FloodSettings *f)
 				f->name, floodoption_names[i],
 				(int)f->limit[i], pretty_time_val(f->period[i]));
 		}
+		if (i == FLD_LAG_PENALTY)
+		{
+			sendtxtnumeric(client, "anti-flood::%s::lag-penalty: %d msec",
+				f->name, (int)f->period[i]);
+			sendtxtnumeric(client, "anti-flood::%s::lag-penalty-bytes: %d",
+				f->name,
+				f->limit[i] == INT_MAX ? 0 : (int)f->limit[i]);
+		}
 		else
 		{
 			sendtxtnumeric(client, "anti-flood::%s::%s: %d per %s",
