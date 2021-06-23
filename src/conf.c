@@ -10407,6 +10407,9 @@ int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		} else
+		if (!strcmp(cep->ce_varname, "include-mask"))
+		{
+		} else
 		{
 			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				"security-group", cep->ce_varname);
@@ -10438,6 +10441,10 @@ int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
 			s->priority = atoi(cep->ce_vardata);
 			DelListItem(s, securitygroups);
 			AddListItemPrio(s, securitygroups, s->priority);
+		}
+		else if (!strcmp(cep->ce_varname, "include-mask"))
+		{
+			unreal_add_masks(&s->include_mask, cep);
 		}
 	}
 	return 1;

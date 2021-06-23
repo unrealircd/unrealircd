@@ -812,9 +812,7 @@ SecurityGroup *add_security_group(char *name, int priority)
 /** Free a SecurityGroup struct */
 void free_security_group(SecurityGroup *s)
 {
-	/* atm there is nothing else to free,
-	 * but who knows this may change in the future
-	 */
+	unreal_delete_masks(s->include_mask);
 	safe_free(s);
 }
 
@@ -867,6 +865,8 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 	if (s->reputation_score && (GetReputation(client) >= s->reputation_score))
 		return 1;
 	if (s->tls && (IsSecureConnect(client) || (MyConnect(client) && IsSecure(client))))
+		return 1;
+	if (s->include_mask && unreal_mask_match(client, s->include_mask))
 		return 1;
 	return 0;
 }

@@ -30,6 +30,9 @@ Enhancements:
   * We now have different and lower timeouts for the connect and
     the handshake. So we give up a bit more early on servers that
     are currently down or extremely lagged.
+* New [security-group block](https://www.unrealircd.org/docs/Security-group_block)
+  item called *include-mask*. This can be used to put clients matching
+  a [mask](https://www.unrealircd.org/docs/Mask_item) into a security group.
 
 UnrealIRCd 5.2.0
 -----------------

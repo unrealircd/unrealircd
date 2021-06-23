@@ -1868,6 +1868,7 @@ struct SecurityGroup {
 	int reputation_score;
 	int webirc;
 	int tls;
+	ConfigItem_mask *include_mask;
 };
 
 #define HM_HOST 1
