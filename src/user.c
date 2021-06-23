@@ -1021,9 +1021,6 @@ int flood_limit_exceeded(Client *client, FloodOption opt)
 	if (f->limit[opt] <= 0)
 		return 0; /* No limit set or unlimited */
 
-	ircd_log(LOG_ERROR, "Checking flood_limit_exceeded() for '%s', type %d with max %d:%ld...",
-		client->name, (int)opt, (int)f->limit[opt], (long)f->period[opt]);
-
 	/* Ok, let's do the flood check */
 	if ((client->local->flood[opt].t + f->period[opt]) <= timeofday)
 	{
