@@ -319,10 +319,10 @@ static char *replies[] = {
 /* 287 */ NULL, /* aircd, quakenet */
 /* 288 */ NULL, /* aircd, quakenet */
 /* 289 */ NULL, /* aircd, quakenet */
-/* 290 */ NULL, /* aircd, quakenet */
+/* 290	HELP(OP) header */ NULL, /* aircd, quakenet */ 
 /* 291 */ NULL, /* aircd, quakenet */
-/* 292 */ NULL, /* aircd */
-/* 293 */ NULL, /* aircd */
+/* 292	HELP(OP) attached info */ NULL, /* aircd */
+/* 293	HELP(OP) end of attached info */ NULL, /* aircd */
 /* 294    RPL_HELPFWD */ ":Your help-request has been forwarded to Help Operators",
 /* 295    RPL_HELPIGN */ ":Your address has been ignored from forwarding",
 /* 296 */ NULL, /* aircd */
