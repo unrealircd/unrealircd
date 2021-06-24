@@ -62,11 +62,12 @@ MOD_UNLOAD()
 ** cmd_ping
 **	parv[1] = origin
 **	parv[2] = destination
+**	parv[3] = (optional) cookie
 */
 CMD_FUNC(cmd_ping)
 {
 	Client *target;
-	char *origin, *destination;
+	char *origin, *destination, *cookie;
 
 	if (parc < 2 || BadPtr(parv[1]))
 	{
@@ -76,6 +77,7 @@ CMD_FUNC(cmd_ping)
 
 	origin = parv[1];
 	destination = parv[2];	/* Will get NULL or pointer (parc >= 2!!) */
+	cookie = (parc >= 3 && !BadPtr(parv[3])) ? parv[3] : "";
 
 	if (!MyUser(client))
 		origin = client->name;
@@ -85,7 +87,7 @@ CMD_FUNC(cmd_ping)
 		if (MyUser(client))
 			origin = client->name; /* Make sure origin is not spoofed */
 		if ((target = find_server_quick(destination)) && (target != &me))
-			sendto_one(target, NULL, ":%s PING %s :%s", client->name, origin, destination);
+			sendto_one(target, NULL, ":%s PING %s %s %s", client->name, origin, destination, cookie);
 		else
 		{
 			sendnumeric(client, ERR_NOSUCHSERVER, destination);
@@ -96,8 +98,8 @@ CMD_FUNC(cmd_ping)
 	{
 		MessageTag *mtags = NULL;
 		new_message(&me, recv_mtags, &mtags);
-		sendto_one(client, mtags, ":%s PONG %s :%s", me.name,
-		    (destination) ? destination : me.name, origin);
+		sendto_one(client, mtags, ":%s PONG %s %s %s", me.name,
+		    (destination) ? destination : me.name, origin, cookie);
 		free_message_tags(mtags);
 	}
 }
@@ -154,11 +156,12 @@ CMD_FUNC(cmd_nospoof)
 ** cmd_pong
 **	parv[1] = origin
 **	parv[2] = destination
+**	parv[3] = (optional) cookie
 */
 CMD_FUNC(cmd_pong)
 {
 	Client *target;
-	char *origin, *destination;
+	char *origin, *destination, *cookie;
 
 	if (!IsRegistered(client))
 	{
@@ -174,6 +177,7 @@ CMD_FUNC(cmd_pong)
 
 	origin = parv[1];
 	destination = parv[2];
+	cookie = (parc >= 3 && !BadPtr(parv[3])) ? parv[3] : "";
 	ClearPingSent(client);
 	ClearPingWarning(client);
 
@@ -195,7 +199,7 @@ CMD_FUNC(cmd_pong)
 			{
 				MessageTag *mtags = NULL;
 				new_message(client, recv_mtags, &mtags);
-				sendto_one(target, mtags, ":%s PONG %s %s", client->name, origin, destination);
+				sendto_one(target, mtags, ":%s PONG %s %s %s", client->name, origin, destination, cookie);
 				free_message_tags(mtags);
 			}
 		}
