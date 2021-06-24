@@ -56,7 +56,7 @@ MOD_UNLOAD()
 
 #define HDR(str) sendto_one(client, NULL, ":%s 290 %s :%s", me.name, client->name, str);
 #define SND(str) sendto_one(client, NULL, ":%s 292 %s :%s", me.name, client->name, str);
-#define HND(str) sendto_one(client, NULL, ":%s 292 %s :%s", me.name, client->name, str);
+#define HND(str) sendto_one(client, NULL, ":%s 293 %s :%s", me.name, client->name, str);
 
 ConfigItem_help *find_Help(char *command)
 {
