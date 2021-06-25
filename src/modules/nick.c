@@ -534,6 +534,26 @@ CMD_FUNC(cmd_uid)
 		return;
 	}
 
+	if (!valid_uid(parv[6]))
+	{
+		ircstats.is_kill++;
+		sendto_umode(UMODE_OPER, "Bad UID: %s From: %s %s",
+		    parv[6], client->name, get_client_name(client, FALSE));
+		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
+		sendto_one(client, NULL, ":%s KILL %s :Bad UID", me.id, parv[6]);
+		return;
+	}
+
+	if (strncmp(parv[6], client->id, 3))
+	{
+		ircstats.is_kill++;
+		sendto_umode(UMODE_OPER, "Bad UID: %s From: %s %s",
+		    parv[6], client->name, get_client_name(client, FALSE));
+		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
+		sendto_one(client, NULL, ":%s KILL %s :Bad UID: UID must contain SID", me.id, parv[6]);
+		return;
+	}
+
 	/* Kill quarantined opers early... */
 	if (IsQuarantined(client->direction) && strchr(parv[8], 'o'))
 	{
