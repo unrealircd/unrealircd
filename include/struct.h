@@ -182,7 +182,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define READBUFSIZE	8192	/* for the read buffer */
 #define	MAXRECIPIENTS 	20
 #define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
-#define IDLEN		10
+#define IDLEN		12
 #define SIDLEN           3
 #define SWHOISLEN	256
 #define UMODETABLESZ (sizeof(long) * 8)
