@@ -80,6 +80,7 @@ moddataadd_isok:
 	m->serialize = req.serialize;
 	m->unserialize = req.unserialize;
 	m->sync = req.sync;
+	m->remote_write = req.remote_write;
 	m->owner = module;
 	
 	if (new_struct)

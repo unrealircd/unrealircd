@@ -151,6 +151,7 @@ struct ModDataInfo {
 	char *(*serialize)(ModData *m); /**< Function which converts the data to a string. May return NULL if 'm' contains no data (since for example m->ptr may be NULL). */
 	void (*unserialize)(char *str, ModData *m); /**< Function which converts the string back to data */
 	int sync; /**< Send in netsynch (when servers connect) */
+	int remote_write; /**< Allow remote servers to set/unset this moddata, even if it they target one of our own clients */
 };
 
 #define moddata_client(acptr, md)    acptr->moddata[md->slot]
