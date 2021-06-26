@@ -87,7 +87,7 @@ void mtag_add_account(Client *client, MessageTag *recv_mtags, MessageTag **mtag_
 {
 	MessageTag *m;
 
-	if (client && client->user && (*client->user->svid != '*') && !isdigit(*client->user->svid))
+	if (IsLoggedIn(client))
 	{
 		m = safe_alloc(sizeof(MessageTag));
 		safe_strdup(m->name, "account");

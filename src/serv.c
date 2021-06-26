@@ -1274,6 +1274,31 @@ int valid_sid(char *name)
 	return 1;
 }
 
+/** Check if the supplied name is a valid UID, as in: syntax. */
+int valid_uid(char *name)
+{
+	char *p;
+
+	/* Enforce at least some minimum length */
+	if (strlen(name) < 6)
+		return 0;
+
+	/* UID cannot be larger than IDLEN or it would be cut off later */
+	if (strlen(name) > IDLEN)
+		return 0;
+
+	/* Must start with a digit */
+	if (!isdigit(*name))
+		return 0;
+
+	/* For all the remaining characters: digit or uppercase character */
+	for (p = name+1; *p; p++)
+		if (!isdigit(*p) && !isupper(*p))
+			return 0;
+
+	return 1;
+}
+
 /** Initialize the TKL subsystem */
 void tkl_init(void)
 {

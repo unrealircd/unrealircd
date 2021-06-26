@@ -42,6 +42,15 @@ Enhancements:
     without making them IRCOp. This explained in
     [FAQ: How to allow users to send more commands per second](https://www.unrealircd.org/docs/FAQ#high-command-rate).
 
+Module coders / Developers:
+* In the UID command we now validate the UID (parameter 6) to start with
+  the SID and contains digits and uppercase only.
+* Servers can no longer change moddata of remote clients.
+  That is, it is disabled by default, but modules can still allow it for
+  certain moddata via mreq.remote_write=1.
+  You can use ```#if UNREAL_VERSION_TIME >= 202125``` to detect
+  if this new .remote_write option is available.
+
 UnrealIRCd 5.2.0
 -----------------
 

@@ -33,6 +33,7 @@ struct {
 	int enabled;
 	MultiLine *message;
 	MultiLine *fail_message;
+	MultiLine *unconfirmed_message;
 } cfg;
 
 /** User struct */
@@ -133,12 +134,18 @@ static void config_postdefaults(void)
 	{
 		addmultiline(&cfg.fail_message, "Authentication failed.");
 	}
+	if (!cfg.unconfirmed_message)
+	{
+		addmultiline(&cfg.unconfirmed_message, "You are trying to use an unconfirmed services account.");
+		addmultiline(&cfg.unconfirmed_message, "This services account can only be used after it has been activated/confirmed.");
+	}
 }
 
 static void free_config(void)
 {
 	freemultiline(cfg.message);
 	freemultiline(cfg.fail_message);
+	freemultiline(cfg.unconfirmed_message);
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
 
@@ -169,6 +176,9 @@ int authprompt_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		{
 		} else
 		if (!strcmp(cep->ce_varname, "fail-message"))
+		{
+		} else
+		if (!strcmp(cep->ce_varname, "unconfirmed-message"))
 		{
 		} else
 		{
@@ -205,6 +215,10 @@ int authprompt_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		if (!strcmp(cep->ce_varname, "fail-message"))
 		{
 			addmultiline(&cfg.fail_message, cep->ce_vardata);
+		} else
+		if (!strcmp(cep->ce_varname, "unconfirmed-message"))
+		{
+			addmultiline(&cfg.unconfirmed_message, cep->ce_vardata);
 		}
 	}
 	return 1;
@@ -465,6 +479,12 @@ int authprompt_sasl_result(Client *client, int success)
 	if (!success)
 	{
 		sendnotice_multiline(client, cfg.fail_message);
+		return 1;
+	}
+
+	if (client->user && !IsLoggedIn(client))
+	{
+		sendnotice_multiline(client, cfg.unconfirmed_message);
 		return 1;
 	}
 

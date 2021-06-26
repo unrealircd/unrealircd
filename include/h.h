@@ -1007,6 +1007,7 @@ extern int should_show_connect_info(Client *client);
 extern void send_invalid_channelname(Client *client, char *channelname);
 extern int is_extended_ban(const char *str);
 extern int valid_sid(char *name);
+extern int valid_uid(char *name);
 extern void parse_client_queued(Client *client);
 extern char *sha256sum_file(const char *fname);
 extern char *filename_strip_suffix(const char *fname, const char *suffix);

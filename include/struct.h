@@ -182,7 +182,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define READBUFSIZE	8192	/* for the read buffer */
 #define	MAXRECIPIENTS 	20
 #define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
-#define IDLEN		10
+#define IDLEN		12
 #define SIDLEN           3
 #define SWHOISLEN	256
 #define UMODETABLESZ (sizeof(long) * 8)
@@ -368,7 +368,6 @@ typedef enum ClientStatus {
 #define IsDeaf(x)               ((x)->umodes & UMODE_DEAF)
 #define	IsOper(x)		((x)->umodes & UMODE_OPER)
 #define	IsInvisible(x)		((x)->umodes & UMODE_INVISIBLE)
-#define IsARegNick(x)		((x)->umodes & (UMODE_REGNICK))
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
 #define	SendWallops(x)		(!IsMe(x) && IsUser(x) && ((x)->umodes & UMODE_WALLOP))
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
@@ -508,7 +507,7 @@ typedef enum ClientStatus {
 #define	IsNotSpoof(x)	((x)->local->nospoof == 0)
 #define GetHost(x)	(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
 #define GetIP(x)	(x->ip ? x->ip : "255.255.255.255")
-#define IsLoggedIn(x)	(IsRegNick(x) || (x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid))) /* registered nick (+r) or just logged into services (may be -r) */
+#define IsLoggedIn(x)	(x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid)) /**< Logged into services */
 #define IsSynched(x)	(x->serv->flags.synced)
 #define IsServerSent(x) (x->serv && x->serv->flags.server_sent)
 

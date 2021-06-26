@@ -617,7 +617,7 @@ static void make_who_status(Client *client, Client *acptr, Channel *channel,
 	else
 		status[i++] = 'H';
 
-	if (IsARegNick(acptr))
+	if (IsRegNick(acptr))
 		status[i++] = 'r';
 
 	if (IsSecureConnect(acptr))

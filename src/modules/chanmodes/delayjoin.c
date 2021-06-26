@@ -221,7 +221,7 @@ void clear_user_invisible_announce(Channel *channel, Client *client, MessageTag 
 
 	ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
 		client->name, client->user->username, GetHost(client), channel->chname,
-		!isdigit(*client->user->svid) ? client->user->svid : "*",
+		IsLoggedIn(client) ? client->user->svid : "*",
 		client->info);
 
 	new_message_special(client, recv_mtags, &mtags, ":%s JOIN %s", client->name, channel->chname);
@@ -343,7 +343,7 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, cha
 							sendto_one(user, mtags, ":%s!%s@%s JOIN %s %s :%s",
 							           i->client->name, i->client->user->username, GetHost(i->client),
 							           channel->chname,
-							           !isdigit(*i->client->user->svid) ? i->client->user->svid : "*",
+							           IsLoggedIn(i->client) ? i->client->user->svid : "*",
 							           i->client->info);
 						} else {
 							sendto_one(user, mtags, ":%s!%s@%s JOIN :%s", i->client->name, i->client->user->username, GetHost(i->client), channel->chname);
