@@ -426,8 +426,7 @@ static int do_match(Client *client, Client *acptr, char *mask, struct who_format
 		return 1;
 
 	/* match account */
-	if (IsMatch(fmt, WMATCH_ACCOUNT) && !BadPtr(acptr->user->svid) &&
-		!isdigit(*acptr->user->svid) && match_simple(mask, acptr->user->svid))
+	if (IsMatch(fmt, WMATCH_ACCOUNT) && IsLoggedIn(acptr) && match_simple(mask, acptr->user->svid))
 	{
 		return 1;
 	}
@@ -813,7 +812,7 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 				(int)((MyUser(acptr) && !hide_idle_time(client, acptr)) ? (TStime() - acptr->local->last) : 0));
 		}
 		if (HasField(fmt, FIELD_ACCOUNT))
-			append_format(str, sizeof str, &pos, " %s", (!isdigit(*acptr->user->svid)) ? acptr->user->svid : "0");
+			append_format(str, sizeof str, &pos, " %s", IsLoggedIn(acptr) ? acptr->user->svid : "0");
 		if (HasField(fmt, FIELD_OPLEVEL))
 			append_format(str, sizeof str, &pos, " %s", (channel && is_skochanop(acptr, channel)) ? "999" : "n/a");
 		if (HasField(fmt, FIELD_REPUTATION))

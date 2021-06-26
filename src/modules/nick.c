@@ -689,7 +689,7 @@ nickkill2done:
 	if (IsDead(client))
 		return;
 
-	if (client->user->svid[0] != '0')
+	if (IsLoggedIn(client))
 	{
 		user_account_login(recv_mtags, client);
 		/* no need to check for kill upon user_account_login() here

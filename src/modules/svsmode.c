@@ -406,8 +406,18 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], 
 			case 'd':
 				if (parv[3])
 				{
+					int was_logged_in = IsLoggedIn(target) ? 1 : 0;
 					strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
-					user_account_login(recv_mtags, target);
+					if (!was_logged_in && !IsLoggedIn(target))
+					{
+						/* We don't care about users going from not logged in
+						 * to not logged in, which is something that can happen
+						 * from 0 to 123456, eg from no account to unconfirmed account.
+						 */
+					} else {
+						/* LOGIN or LOGOUT (or account change) */
+						user_account_login(recv_mtags, target);
+					}
 					if (MyConnect(target) && IsDead(target))
 						return; /* was killed due to *LINE on ~a probably */
 				}
