@@ -141,7 +141,7 @@ CMD_FUNC(cmd_whois)
 					target->user->realhost, target->ip ? target->ip : "");
 			}
 
-			if (IsARegNick(target))
+			if (IsRegNick(target))
 				sendnumeric(client, RPL_WHOISREGNICK, name);
 			
 			found = 1;

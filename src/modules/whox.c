@@ -688,7 +688,7 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
  	else
  		status[i++] = 'H';
 
-	if (IsARegNick(acptr))
+	if (IsRegNick(acptr))
 		status[i++] = 'r';
 
 	if (IsSecureConnect(acptr))
