@@ -42,7 +42,10 @@ Enhancements:
     without making them IRCOp. This explained in
     [FAQ: How to allow users to send more commands per second](https://www.unrealircd.org/docs/FAQ#high-command-rate).
 
-Module coders / Developers:
+Module coders / IRC protocol:
+* We now assume all services set the SVID field. If your services only sets
+  umode ```+r``` and does not use ```SVSLOGIN``` or ```SVSMODE nick +d SVID```
+  then users will not be recognized as authenticated anymore.
 * In the UID command we now validate the UID (parameter 6) to start with
   the SID and contains digits and uppercase only.
 * Servers can no longer change moddata of remote clients.
