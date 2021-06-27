@@ -537,7 +537,7 @@ getnick:
 			if (strlen(uid_sjsby_buf) + strlen(prefix) + IDLEN > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
-				sendto_server(client, 0, PROTO_SJSBY, recv_mtags, "%s", uid_sjsby_buf);
+				sendto_server(client, PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
 				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld %s :", client->id, (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_sjsby_buf) + strlen(prefix) + strlen(acptr->id) > BUFSIZE - 5)
