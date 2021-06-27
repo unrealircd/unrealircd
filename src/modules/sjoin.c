@@ -29,7 +29,7 @@ CMD_FUNC(cmd_sjoin);
 ModuleHeader MOD_HEADER
   = {
 	"sjoin",
-	"5.0",
+	"5.1",
 	"command /sjoin", 
 	"UnrealIRCd Team",
 	"unrealircd-5",
