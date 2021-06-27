@@ -1308,7 +1308,8 @@ void SocketLoop(void *dummy)
 		}
 		if (doreloadcert)
 		{
-			reinit_ssl(NULL);
+			reinit_tls();
+			sendto_realops_and_log("Reloading all SSL related data (./unrealircd reloadtls)");
 			doreloadcert = 0;
 		}
 	}

@@ -902,7 +902,7 @@ extern long get_mode_bitbychar(char m);
 extern long find_user_mode(char mode);
 extern void start_listeners(void);
 extern void buildvarstring(const char *inbuf, char *outbuf, size_t len, const char *name[], const char *value[]);
-extern void reinit_ssl(Client *);
+extern void reinit_tls(void);
 extern CMD_FUNC(cmd_error);
 extern CMD_FUNC(cmd_dns);
 extern CMD_FUNC(cmd_info);

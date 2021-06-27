@@ -636,7 +636,15 @@ CMD_FUNC(cmd_rehash)
 			}
 			if (match_simple("-ssl*", parv[1]) || match_simple("-tls*", parv[1]))
 			{
-				reinit_ssl(client);
+				if (IsUser(client))
+				{
+					sendto_realops_and_log("%s (%s@%s) requested a reload of all SSL related data (/rehash -tls)",
+					                       client->name, client->user->username, client->user->realhost);
+				} else {
+					sendto_realops_and_log("%s requested a reload of all SSL related data (/rehash -tls)",
+					                       client->name);
+				}
+				reinit_tls();
 				return;
 			}
 			if (match_simple("-o*motd", parv[1]))

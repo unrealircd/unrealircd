@@ -2018,6 +2018,10 @@ void postconf(void)
 	do_weird_shun_stuff();
 	isupport_init(); /* for all the 005 values that changed.. */
 	tls_check_expiry(NULL);
+
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+	reinit_tls();
+#endif
 }
 
 int isanyserverlinked(void)

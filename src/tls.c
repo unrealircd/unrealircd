@@ -218,19 +218,6 @@ static int ssl_hostname_callback(SSL *ssl, int *unk, void *arg)
 	return SSL_TLSEXT_ERR_OK;
 }
 
-/** Special logging function for SSL/TLS (? make more generic?) */
-static void mylog(char *fmt, ...)
-{
-	va_list vl;
-	static char buf[2048];
-
-	va_start(vl, fmt);
-	ircvsnprintf(buf, sizeof(buf), fmt, vl);
-	va_end(vl);
-	sendto_realops("[SSL rehash] %s", buf);
-	ircd_log(LOG_ERROR, "%s", buf);
-}
-
 /** Disable SSL/TLS protocols as set by config */
 void disable_ssl_protocols(SSL_CTX *ctx, TLSOptions *tlsoptions)
 {
@@ -544,21 +531,12 @@ int init_ssl(void)
 
 /** Reinitialize SSL/TLS server and client contexts - after REHASH -tls
  */
-void reinit_ssl(Client *client)
+void reinit_tls(void)
 {
 	SSL_CTX *tmp;
 	ConfigItem_listen *listen;
 	ConfigItem_sni *sni;
 	ConfigItem_link *link;
-
-	if (!client)
-		mylog("Reloading all SSL related data (./unrealircd reloadtls)");
-	else if (IsUser(client))
-		mylog("%s (%s@%s) requested a reload of all SSL related data (/rehash -tls)",
-			client->name, client->user->username, client->user->realhost);
-	else
-		mylog("%s requested a reload of all SSL related data (/rehash -tls)",
-			client->name);
 
 	tmp = init_ctx(iConf.tls_options, 1);
 	if (!tmp)
