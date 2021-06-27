@@ -85,7 +85,7 @@ CMD_FUNC(cmd_ping)
 		if (MyUser(client))
 			origin = client->name; /* Make sure origin is not spoofed */
 		if ((target = find_server_quick(destination)) && (target != &me))
-			sendto_one(target, NULL, ":%s PING %s :%s", client->name, origin, destination);
+			sendto_one(target, recv_mtags, ":%s PING %s :%s", client->name, origin, destination);
 		else
 		{
 			sendnumeric(client, ERR_NOSUCHSERVER, destination);
