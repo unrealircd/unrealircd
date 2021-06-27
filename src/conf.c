@@ -2020,7 +2020,8 @@ void postconf(void)
 	tls_check_expiry(NULL);
 
 #if OPENSSL_VERSION_NUMBER >= 0x10101000L
-	reinit_tls();
+	if (loop.ircd_rehashing)
+		reinit_tls();
 #endif
 }
 
