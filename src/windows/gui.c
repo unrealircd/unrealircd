@@ -167,16 +167,22 @@ LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	return CallWindowProc((WNDPROC)lpfnOldWndProc, hWnd, Message, wParam, lParam);
 }
 
-int CloseUnreal(HWND hWnd)
+int DoCloseUnreal(HWND hWnd)
+{
+	ircd_log(LOG_ERROR, "Stopping UnrealIRCd...");
+	loop.ircd_terminating = 1;
+	unload_all_modules();
+	DestroyWindow(hWnd);
+	TerminateProcess(GetCurrentProcess(), 0);
+	exit(0); /* in case previous fails (possible?) */
+}
+
+int AskCloseUnreal(HWND hWnd)
 {
 	if (MessageBox(hWnd, "Close UnrealIRCd?", "Are you sure?", MB_YESNO|MB_ICONQUESTION) == IDNO)
 		 return 0;
-	else 
-	{
-		DestroyWindow(hWnd);
-		TerminateProcess(GetCurrentProcess(), 0);
-		exit(0); /* in case previous fails (possible?) */
-	}
+	DoCloseUnreal(hWnd);
+	exit(0);
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -328,7 +334,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			return 0;
 		}
 		case WM_CLOSE: 
-			return CloseUnreal(hDlg);
+			return DoCloseUnreal(hDlg);
 		case WM_USER: 
 		{
 			switch(LOWORD(lParam)) 
@@ -520,7 +526,16 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				return 0;
 			}
 			else if ((p.x >= 336) && (p.x <= 411) && (p.y >= TOOLBAR_START) && (p.y <= TOOLBAR_STOP)) 
-				return CloseUnreal(hDlg);
+				return AskCloseUnreal(hDlg);
+		}
+		case WM_SYSCOMMAND:
+		{
+			if (wParam == SC_CLOSE)
+			{
+				AskCloseUnreal(hDlg);
+				return 1;
+			}
+			break;
 		}
 		case WM_COMMAND: 
 		{
@@ -561,7 +576,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					ShowDialog(&hStatusWnd, hInst, "Status", hDlg,StatusDLG);
 					break;
 				case IDM_SHUTDOWN:
-					return CloseUnreal(hDlg);
+					return AskCloseUnreal(hDlg);
 				case IDM_RHALL:
 					MessageBox(NULL, "Rehashing all files", "Rehashing", MB_OK);
 					sendto_realops("Rehashing all files via the console");
