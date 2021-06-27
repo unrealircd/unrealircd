@@ -254,6 +254,9 @@ check_cc_flag([-Waddress], [CFLAGS="$CFLAGS -Wno-address"])
 dnl This one breaks our TO_INTFUNC() that is used in m_tkl for tkl_typetochar
 check_cc_flag([-Wcast-function-type], [CFLAGS="$CFLAGS -Wno-cast-function-type"])
 
+AS_IF([$CC --version | grep -q "clang version 3."],
+        [CFLAGS="$CFLAGS -Wno-tautological-compare"])
+
 dnl End of -W... compiler checks.
 
 
