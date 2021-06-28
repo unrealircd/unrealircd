@@ -2094,17 +2094,16 @@ int filename_has_suffix(const char *fname, const char *suffix)
 	return 0;
 }
 
-/** Check if the specified file exists */
+/** Check if the specified file or directory exists */
 int file_exists(char *file)
 {
-	FILE *fd;
-
-	fd = fopen(file, "r");
-	if (!fd)
-		return 0;
-
-	fclose(fd);
-	return 1;
+#ifdef _WIN32
+	if (_access(file, 0) == 0)
+#else
+	if (access(file, 0) == 0)
+#endif
+		return 1;
+	return 0;
 }
 
 /** Get the file creation time */
