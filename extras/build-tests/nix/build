@@ -28,6 +28,12 @@ if lsb_release -av 2>&1|egrep 'Debian.*jessie'; then
 	echo 'EXTRAPARA="--enable-werror --disable-asan"' >>config.settings
 fi
 
+# If SSLDIR is set the environment, this overrides config.settings
+# Used for example in the openssl3 build tests.
+if [ "$SSLDIR" != ""]; then
+	echo 'SSLDIR="'"$SSLDIR"'"' >>config.settings
+fi
+
 # Read config.settings, this makes a couple of variables available to us.
 . ./config.settings
 if [ "$SSLDIR" != "" ]; then
