@@ -30,7 +30,7 @@ fi
 
 # If SSLDIR is set the environment, this overrides config.settings
 # Used for example in the openssl3 build tests.
-if [ "$SSLDIR" != ""]; then
+if [ "$SSLDIR" != "" ]; then
 	echo 'SSLDIR="'"$SSLDIR"'"' >>config.settings
 fi
 
