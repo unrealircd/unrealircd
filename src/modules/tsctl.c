@@ -64,8 +64,10 @@ CMD_FUNC(cmd_tsctl)
 
 	if (parv[1] && !strcasecmp(parv[1], "alltime"))
 	{
-		sendnotice(client, "*** Server=%s TStime=%lld",
-			me.name, (long long)TStime());
+		struct timeval currenttime_tv;
+		gettimeofday(&currenttime_tv, NULL);
+		sendnotice(client, "*** Server=%s TStime=%lld.%ld",
+			me.name, (long long)currenttime_tv.tv_sec, (long)currenttime_tv.tv_usec);
 		sendto_server(client, 0, 0, NULL, ":%s TSCTL alltime", client->id);
 		return;
 	}
