@@ -266,7 +266,7 @@ pem:	extras/tls.cnf
               -config extras/tls.cnf -sha256 -out server.req.pem \
               -key server.key.pem -nodes
 	@echo "Generating self-signed certificate..."
-	$(OPENSSLPATH) req -x509 -days 3650 -sha256 -in server.req.pem \
+	$(OPENSSLPATH) req -x509 -days 3650 -sha256 -nodes -in server.req.pem \
                -key server.key.pem -out server.cert.pem
 	@echo "Setting permissions on server.*.pem files..."
 	chmod o-rwx server.req.pem server.key.pem server.cert.pem
