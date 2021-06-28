@@ -22,8 +22,25 @@
 
 #include "unrealircd.h"
 
+/* Definitions */
+typedef enum AutoConnectStrategy {
+	AUTOCONNECT_PARALLEL = 0,
+	AUTOCONNECT_SEQUENTIAL = 1
+} AutoConnectStrategy;
+
+typedef struct cfgstruct cfgstruct;
+struct cfgstruct {
+	AutoConnectStrategy autoconnect_strategy;
+	long connect_timeout;
+	long handshake_timeout;
+};
+
 /* Forward declarations */
-EVENT(try_connections);
+void server_config_setdefaults(cfgstruct *cfg);
+int server_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int server_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
+EVENT(server_autoconnect);
+EVENT(server_handshake_timeout);
 void send_channel_modes_sjoin3(Client *to, Channel *channel);
 CMD_FUNC(cmd_server);
 CMD_FUNC(cmd_sid);
@@ -34,11 +51,12 @@ void _introduce_user(Client *to, Client *acptr);
 int _check_deny_version(Client *cptr, char *software, int protocol, char *flags);
 void _broadcast_sinfo(Client *acptr, Client *to, Client *except);
 int server_sync(Client *cptr, ConfigItem_link *conf);
+void server_generic_free(ModData *m);
 
 /* Global variables */
 static char buf[BUFSIZE];
-
-#define MSG_SERVER 	"SERVER"	
+static cfgstruct cfg;
+static char *last_autoconnect_server = NULL;
 
 ModuleHeader MOD_HEADER
   = {
@@ -58,71 +76,408 @@ MOD_TEST()
 	EfunctionAddVoid(modinfo->handle, EFUNC_INTRODUCE_USER, _introduce_user);
 	EfunctionAdd(modinfo->handle, EFUNC_CHECK_DENY_VERSION, _check_deny_version);
 	EfunctionAddVoid(modinfo->handle, EFUNC_BROADCAST_SINFO, _broadcast_sinfo);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, server_config_test);
 	return MOD_SUCCESS;
 }
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SERVER, cmd_server, MAXPARA, CMD_UNREGISTERED|CMD_SERVER);
-	CommandAdd(modinfo->handle, "SID", cmd_sid, MAXPARA, CMD_SERVER);
-
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	LoadPersistentPointer(modinfo, last_autoconnect_server, server_generic_free);
+	server_config_setdefaults(&cfg);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, server_config_run);
+	CommandAdd(modinfo->handle, "SERVER", cmd_server, MAXPARA, CMD_UNREGISTERED|CMD_SERVER);
+	CommandAdd(modinfo->handle, "SID", cmd_sid, MAXPARA, CMD_SERVER);
 
 	return MOD_SUCCESS;
 }
 
 MOD_LOAD()
 {
-	EventAdd(modinfo->handle, "try_connections", try_connections, NULL, 2000, 0);
-
+	EventAdd(modinfo->handle, "server_autoconnect", server_autoconnect, NULL, 2000, 0);
+	EventAdd(modinfo->handle, "server_handshake_timeout", server_handshake_timeout, NULL, 1000, 0);
 	return MOD_SUCCESS;
 }
 
 MOD_UNLOAD()
 {
+	SavePersistentPointer(modinfo, last_autoconnect_server);
 	return MOD_SUCCESS;
 }
 
-/** Perform autoconnect to servers that are not linked yet. */
-EVENT(try_connections)
+/** Convert 'str' to a AutoConnectStrategy value.
+ * @param str	The string, eg "parallel"
+ * @returns a valid AutoConnectStrategy value or -1 if not found.
+ */
+AutoConnectStrategy autoconnect_strategy_strtoval(char *str)
 {
-	ConfigItem_link *aconf;
+	if (!strcmp(str, "parallel"))
+		return AUTOCONNECT_PARALLEL;
+	if (!strcmp(str, "sequential"))
+		return AUTOCONNECT_SEQUENTIAL;
+	return -1;
+}
+
+/** Convert an AutoConnectStrategy value to a string.
+ * @param val	The value to convert to a string
+ * @returns a string, such as "parallel".
+ */
+char *autoconnect_strategy_valtostr(AutoConnectStrategy val)
+{
+	switch (val)
+	{
+		case AUTOCONNECT_PARALLEL:
+			return "parallel";
+		case AUTOCONNECT_SEQUENTIAL:
+			return "sequential";
+		default:
+			return "???";
+	}
+}
+
+void server_config_setdefaults(cfgstruct *cfg)
+{
+	cfg->autoconnect_strategy = AUTOCONNECT_SEQUENTIAL;
+	cfg->connect_timeout = 10;
+	cfg->handshake_timeout = 20;
+}
+
+int server_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
+	int errors = 0;
+	ConfigEntry *cep;
+
+	if (type != CONFIG_SET)
+		return 0;
+
+	/* We are only interrested in set::server-linking.. */
+	if (!ce || strcmp(ce->ce_varname, "server-linking"))
+		return 0;
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: blank set::server-linking::%s without value",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			errors++;
+			continue;
+		} else
+		if (!strcmp(cep->ce_varname, "autoconnect-strategy"))
+		{
+			if (autoconnect_strategy_strtoval(cep->ce_vardata) < 0)
+			{
+				config_error("%s:%i: set::server-linking::autoconnect-strategy: invalid value '%s'. "
+				             "Should be one of: parallel",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+				errors++;
+				continue;
+			}
+		} else
+		if (!strcmp(cep->ce_varname, "connect-timeout"))
+		{
+			long v = config_checkval(cep->ce_vardata, CFG_TIME);
+			if ((v < 5) || (v > 30))
+			{
+				config_error("%s:%i: set::server-linking::connect-timeout should be between 5 and 60 seconds",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
+		} else
+		if (!strcmp(cep->ce_varname, "handshake-timeout"))
+		{
+			long v = config_checkval(cep->ce_vardata, CFG_TIME);
+			if ((v < 10) || (v > 120))
+			{
+				config_error("%s:%i: set::server-linking::handshake-timeout should be between 10 and 120 seconds",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
+		} else
+		{
+			config_error("%s:%i: unknown directive set::server-linking::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			errors++;
+			continue;
+		}
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+int server_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+{
+	ConfigEntry *cep;
+
+	if (type != CONFIG_SET)
+		return 0;
+
+	/* We are only interrested in set::server-linking.. */
+	if (!ce || strcmp(ce->ce_varname, "server-linking"))
+		return 0;
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "autoconnect-strategy"))
+		{
+			cfg.autoconnect_strategy = autoconnect_strategy_strtoval(cep->ce_vardata);
+		} else
+		if (!strcmp(cep->ce_varname, "connect-timeout"))
+		{
+			cfg.connect_timeout = config_checkval(cep->ce_vardata, CFG_TIME);
+		} else
+		if (!strcmp(cep->ce_varname, "handshake-timeout"))
+		{
+			cfg.handshake_timeout = config_checkval(cep->ce_vardata, CFG_TIME);
+		}
+	}
+	return 1;
+}
+
+int server_needs_linking(ConfigItem_link *aconf)
+{
 	ConfigItem_deny_link *deny;
 	Client *client;
-	int  confrq;
 	ConfigItem_class *class;
+
+	/* We're only interested in autoconnect blocks that are valid. Also, we ignore temporary link blocks. */
+	if (!(aconf->outgoing.options & CONNECT_AUTO) || !aconf->outgoing.hostname || (aconf->flag.temporary == 1))
+		return 0;
+
+	class = aconf->class;
+
+	/* Never do more than one connection attempt per <connfreq> seconds (for the same server) */
+	if ((aconf->hold > TStime()))
+		return 0;
+
+	aconf->hold = TStime() + class->connfreq;
+
+	client = find_client(aconf->servername, NULL);
+	if (client)
+		return 0; /* Server already connected (or connecting) */
+
+	if (class->clients >= class->maxclients)
+		return 0; /* Class is full */
+
+	/* Check connect rules to see if we're allowed to try the link */
+	for (deny = conf_deny_link; deny; deny = deny->next)
+		if (unreal_mask_match_string(aconf->servername, deny->mask) && crule_eval(deny->rule))
+			return 0;
+
+	/* Yes, this server is a linking candidate */
+	return 1;
+}
+
+void server_autoconnect_parallel(void)
+{
+	ConfigItem_link *aconf;
 
 	for (aconf = conf_link; aconf; aconf = aconf->next)
 	{
-		/* We're only interested in autoconnect blocks that are valid. Also, we ignore temporary link blocks. */
-		if (!(aconf->outgoing.options & CONNECT_AUTO) || !aconf->outgoing.hostname || (aconf->flag.temporary == 1))
+		if (!server_needs_linking(aconf))
 			continue;
 
-		class = aconf->class;
-
-		/* Only do one connection attempt per <connfreq> seconds (for the same server) */
-		if ((aconf->hold > TStime()))
-			continue;
-
-		confrq = class->connfreq;
-		aconf->hold = TStime() + confrq;
-
-		client = find_client(aconf->servername, NULL);
-		if (client)
-			continue; /* Server already connected (or connecting) */
-
-		if (class->clients >= class->maxclients)
-			continue; /* Class is full */
-
-		/* Check connect rules to see if we're allowed to try the link */
-		for (deny = conf_deny_link; deny; deny = deny->next)
-			if (unreal_mask_match_string(aconf->servername, deny->mask) && crule_eval(deny->rule))
-				break;
-
-		if (!deny && connect_server(aconf, NULL, NULL) == 0)
+		if (connect_server(aconf, NULL, NULL) == 0)
+		{
 			sendto_ops_and_log("Trying to activate link with server %s[%s]...",
 				aconf->servername, aconf->outgoing.hostname);
+		}
+	}
+}
 
+/** Find first (valid) autoconnect server in link blocks.
+ * This function should not be used directly. It is a helper function
+ * for find_next_autoconnect_server().
+ */
+ConfigItem_link *find_first_autoconnect_server(void)
+{
+	ConfigItem_link *aconf;
+
+	for (aconf = conf_link; aconf; aconf = aconf->next)
+	{
+		if (!server_needs_linking(aconf))
+			continue;
+		return aconf; /* found! */
+	}
+	return NULL; /* none */
+}
+
+/** Find next server that we should try to autoconnect to.
+ * Taking into account that we last tried server 'current'.
+ * @param current	Server the previous autoconnect attempt was made to
+ * @returns A link block, or NULL if no servers are suitable.
+ */
+ConfigItem_link *find_next_autoconnect_server(char *current)
+{
+	ConfigItem_link *aconf;
+
+	/* If the current autoconnect server is NULL then
+	 * just find whichever valid server is first.
+	 */
+	if (current == NULL)
+		return find_first_autoconnect_server();
+
+	/* Next code is a bit convulted, it would have
+	 * been easier if conf_link was a circular list ;)
+	 */
+
+	/* Otherwise, walk the list up to 'current' */
+	for (aconf = conf_link; aconf; aconf = aconf->next)
+	{
+		if (!strcmp(aconf->servername, current))
+			break;
+	}
+
+	/* If the 'current' server dissapeared, then let's
+	 * just pick the first one from the list.
+	 * It is a rare event to have the link { } block
+	 * removed of a server that we just happened to
+	 * try to link to before, so we can afford to do
+	 * it this way.
+	 */
+	if (!aconf)
+		return find_first_autoconnect_server();
+
+	/* Check the remainder for the list, in other words:
+	 * check all servers after 'current' if they are
+	 * ready for an outgoing connection attempt...
+	 */
+	for (aconf = aconf->next; aconf; aconf = aconf->next)
+	{
+		if (!server_needs_linking(aconf))
+			continue;
+		return aconf; /* found! */
+	}
+
+	/* If we get here then there are no valid servers
+	 * after 'current', so now check for before 'current'
+	 * (and including 'current', since we may
+	 *  have to autoconnect to that one again,
+	 *  eg if it is the only autoconnect server)...
+	 */
+	for (aconf = conf_link; aconf; aconf = aconf->next)
+	{
+		if (!server_needs_linking(aconf))
+		{
+			if (!strcmp(aconf->servername, current))
+				break; /* need to stop here */
+			continue;
+		}
+		return aconf; /* found! */
+	}
+
+	return NULL; /* none */
+}
+
+/** Check if we are currently connecting to a server (outgoing).
+ * This function takes into account not only an outgoing TCP/IP connect
+ * or TLS handshake, but also if we are 'somewhat connected' to that
+ * server but have not completed the full sync, eg we may still need
+ * to receive SIDs or other sync data.
+ * NOTE: This implicitly assumes that outgoing links only go to
+ *       servers that will (eventually) send "EOS".
+ *       Should be a reasonable assumption given that in nearly all
+ *       cases we only connect to UnrealIRCd servers for the outgoing
+ *       case, as services are "always" incoming links.
+ * @returns 1 if an outgoing link is in progress, 0 if not.
+ */
+int current_outgoing_link_in_process(void)
+{
+	Client *client;
+
+	list_for_each_entry(client, &unknown_list, lclient_node)
+	{
+		if (client->serv && *client->serv->by && client->local->firsttime &&
+		    (IsConnecting(client) || IsTLSConnectHandshake(client) || !IsSynched(client)))
+		{
+			return 1;
+		}
+	}
+
+	list_for_each_entry(client, &server_list, special_node)
+	{
+		if (client->serv && *client->serv->by && client->local->firsttime &&
+		    (IsConnecting(client) || IsTLSConnectHandshake(client) || !IsSynched(client)))
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+void server_autoconnect_sequential(void)
+{
+	ConfigItem_link *aconf;
+
+	if (current_outgoing_link_in_process())
+		return;
+
+	/* We are currently not in the process of doing an outgoing connect,
+	 * let's see if we need to connect to somewhere...
+	 */
+	aconf = find_next_autoconnect_server(last_autoconnect_server);
+	if (aconf == NULL)
+		return; /* No server to connect to at this time */
+
+	/* Start outgoing link attempt */
+	safe_strdup(last_autoconnect_server, aconf->servername);
+	if (connect_server(aconf, NULL, NULL) == 0)
+	{
+		sendto_ops_and_log("Trying to activate link with server %s[%s]...",
+			aconf->servername, aconf->outgoing.hostname);
+	}
+}
+
+/** Perform autoconnect to servers that are not linked yet. */
+EVENT(server_autoconnect)
+{
+	switch (cfg.autoconnect_strategy)
+	{
+		case AUTOCONNECT_PARALLEL:
+			server_autoconnect_parallel();
+			break;
+		case AUTOCONNECT_SEQUENTIAL:
+			server_autoconnect_sequential();
+			break;
+	}
+}
+
+EVENT(server_handshake_timeout)
+{
+	Client *client, *next;
+
+	list_for_each_entry_safe(client, next, &unknown_list, lclient_node)
+	{
+		/* We are only interested in outgoing server connects */
+		if (!client->serv || !*client->serv->by || !client->local->firsttime)
+			continue;
+
+		/* Handle set::server-linking::connect-timeout */
+		if ((IsConnecting(client) || IsTLSConnectHandshake(client)) &&
+		    ((TStime() - client->local->firsttime) >= cfg.connect_timeout))
+		{
+			/* If this is a connect timeout to an outgoing server then notify ops & log it */
+			sendto_ops_and_log("Connect timeout while trying to link to server '%s' (%s)",
+			                   client->name, client->ip?client->ip:"<unknown ip>");
+
+			exit_client(client, NULL, "Connection timeout");
+			continue;
+		}
+
+		/* Handle set::server-linking::handshake-timeout */
+		if ((TStime() - client->local->firsttime) >= cfg.handshake_timeout)
+		{
+			/* If this is a handshake timeout to an outgoing server then notify ops & log it */
+			sendto_ops_and_log("Connection handshake timeout while trying to link to server '%s' (%s)",
+			                   client->name, client->ip?client->ip:"<unknown ip>");
+
+			exit_client(client, NULL, "Handshake Timeout");
+			continue;
+		}
 	}
 }
 
@@ -1174,7 +1529,7 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 	/* First we'll send channel, channel modes and members and status */
 
 	*modebuf = *parabuf = '\0';
-	channel_modes(to, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel);
+	channel_modes(to, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel, 1);
 
 	if (!modebuf[1])
 		nomode = 1;
@@ -1337,4 +1692,9 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 		sendto_one(to, mtags, "%s", buf);
 
 	free_message_tags(mtags);
+}
+
+void server_generic_free(ModData *m)
+{
+	safe_free(m->ptr);
 }

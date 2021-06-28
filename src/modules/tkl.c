@@ -134,8 +134,8 @@ TKLTypeTable tkl_types[] = {
 	{ "except",               'E', TKL_EXCEPTION  | TKL_GLOBAL, "Exception",            1, 0, 0 },
 	{ "shun",                 's', TKL_SHUN       | TKL_GLOBAL, "Shun",                 1, 1, 0 },
 	{ "local-qline",          'q', TKL_NAME,                    "Local Q-Line",         1, 0, 0 },
-	{ "local-spamfilter",     'e', TKL_EXCEPTION,               "Local Exception",      1, 0, 0 },
-	{ "local-exception",      'f', TKL_SPAMF,                   "Local Spamfilter",     1, 0, 0 },
+	{ "local-exception",      'e', TKL_EXCEPTION,               "Local Exception",      1, 0, 0 },
+	{ "local-spamfilter",     'f', TKL_SPAMF,                   "Local Spamfilter",     1, 0, 0 },
 	{ "blacklist",            'b', TKL_BLACKLIST,               "Blacklist",            0, 1, 1 },
 	{ "connect-flood",        'c', TKL_CONNECT_FLOOD,           "Connect flood",        0, 1, 1 },
 	{ "maxperip",             'm', TKL_MAXPERIP,                "Max-per-IP",           0, 1, 0 },
@@ -4422,9 +4422,7 @@ void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *cli
 
 	if (ban_target == BAN_TARGET_ACCOUNT)
 	{
-		if (client->user && client->user->svid &&
-		    strcmp(client->user->svid, "0") &&
-		    (*client->user->svid != ':'))
+		if (IsLoggedIn(client) && (*client->user->svid != ':'))
 		{
 			/* Place a ban on ~a:Accountname */
 			strlcpy(username, "~a:", sizeof(username));

@@ -69,8 +69,9 @@ int sasl_account_login(Client *client, MessageTag *mtags)
 {
 	if (!MyConnect(client))
 		return 0;
+
 	/* Notify user */
-	if (client->user->svid[0] != '0')
+	if (IsLoggedIn(client))
 	{
 		sendnumeric(client, RPL_LOGGEDIN,
 			BadPtr(client->name) ? "*" : client->name,

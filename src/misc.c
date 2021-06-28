@@ -1147,42 +1147,102 @@ void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce)
 	}
 }
 
-/** Check if a client matches any of the masks in the mask list */
-int unreal_mask_match(Client *client, ConfigItem_mask *m)
+/** Check if a client matches any of the masks in the mask list.
+ * The following rules apply:
+ * - If you have only negating entries, like '!abc' and '!def', then
+ *   we assume an implicit * rule first, since that is clearly what
+ *   the user wants.
+ * - If you have a mix, like '*.com', '!irc1*', '!irc2*' then the
+ *   implicit * is dropped and we assume you only want to match *.com,
+ *   with the exception of irc1*.com and irc2*.com.
+ * - If you only have normal entries without ! then things are
+ *   as they always are.
+ * @param client	The client to run the mask match against
+ * @param mask		The mask entry from the config file
+ * @returns 1 on match, 0 on non-match.
+ */
+int unreal_mask_match(Client *client, ConfigItem_mask *mask)
 {
-	for (; m; m = m->next)
+	int retval = 1;
+	ConfigItem_mask *m;
+
+	if (!mask)
+		return 0; /* Empty mask block is no match */
+
+	/* First check normal matches (without ! prefix) */
+	for (m = mask; m; m = m->next)
 	{
-		/* With special support for '!' prefix (negative matching like "!192.168.*") */
-		if (m->mask[0] == '!')
+		if (m->mask[0] != '!')
 		{
-			if (!match_user(m->mask+1, client, MATCH_CHECK_REAL))
-				return 1;
-		} else {
-			if (match_user(m->mask, client, MATCH_CHECK_REAL))
-				return 1;
+			retval = 0; /* no implicit * */
+			if (match_user(m->mask, client, MATCH_CHECK_REAL|MATCH_CHECK_EXTENDED))
+			{
+				retval = 1;
+				break;
+			}
 		}
 	}
 
-	return 0;
+	if (retval)
+	{
+		/* We matched. Check for exceptions (with ! prefix) */
+		for (m = mask; m; m = m->next)
+		{
+			if ((m->mask[0] == '!') && match_user(m->mask+1, client, MATCH_CHECK_REAL|MATCH_CHECK_EXTENDED))
+				return 0;
+		}
+	}
+
+	return retval;
 }
 
-/** Check if a string matches any of the masks in the mask list */
-int unreal_mask_match_string(const char *name, ConfigItem_mask *m)
+/** Check if a string matches any of the masks in the mask list.
+ * The following rules apply:
+ * - If you have only negating entries, like '!abc' and '!def', then
+ *   we assume an implicit * rule first, since that is clearly what
+ *   the user wants.
+ * - If you have a mix, like '*.com', '!irc1*', '!irc2*' then the
+ *   implicit * is dropped and we assume you only want to match *.com,
+ *   with the exception of irc1*.com and irc2*.com.
+ * - If you only have normal entries without ! then things are
+ *   as they always are.
+ * @param name	The name to run the mask matching on
+ * @param mask	The mask entry from the config file
+ * @returns 1 on match, 0 on non-match.
+ */
+int unreal_mask_match_string(const char *name, ConfigItem_mask *mask)
 {
-	for (; m; m = m->next)
+	int retval = 1;
+	ConfigItem_mask *m;
+
+	if (!mask)
+		return 0; /* Empty mask block is no match */
+
+	/* First check normal matches (without ! prefix) */
+	for (m = mask; m; m = m->next)
 	{
-		/* With special support for '!' prefix (negative matching like "!192.168.*") */
-		if (m->mask[0] == '!')
+		if (m->mask[0] != '!')
 		{
-			if (!match_simple(m->mask+1, name))
-				return 1;
-		} else {
-			if (match_simple(m->mask+1, name))
-				return 1;
+			retval = 0; /* no implicit * */
+			if (match_simple(m->mask, name))
+			{
+				retval = 1;
+				break;
+			}
 		}
 	}
 
-	return 0;
+	if (retval)
+	{
+		/* We matched. Check for exceptions (with ! prefix) */
+		for (m = mask; m; m = m->next)
+		{
+			if ((m->mask[0] == '!') && match_simple(m->mask+1, name))
+				return 0;
+		}
+	}
+
+	return retval;
 }
 
 /** Our own strcasestr implementation because strcasestr is
@@ -1833,19 +1893,31 @@ void binarytohex(void *data, size_t len, char *str)
 	str[n] = '\0';
 }
 
-/** Generates an MD5 checksum.
+/** Generates an MD5 checksum - binary version.
  * @param mdout[out] Buffer to store result in, the result will be 16 bytes in binary
  *                   (not ascii printable!).
  * @param src[in]    The input data used to generate the checksum.
  * @param n[in]      Length of data.
+ * @deprecated       The MD5 algorithm is deprecated and insecure,
+ *                   so only use this if absolutely needed.
  */
 void DoMD5(char *mdout, const char *src, unsigned long n)
 {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	unsigned int md_len;
+	EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+	if (EVP_DigestInit_ex(mdctx, md5_function, NULL) != 1)
+		abort();
+	EVP_DigestUpdate(mdctx, src, n);
+	EVP_DigestFinal_ex(mdctx, mdout, &md_len);
+	EVP_MD_CTX_free(mdctx);
+#else
 	MD5_CTX hash;
 
 	MD5_Init(&hash);
 	MD5_Update(&hash, src, n);
 	MD5_Final(mdout, &hash);
+#endif
 }
 
 /** Generates an MD5 checksum - ASCII printable string (0011223344..etc..).
@@ -1853,6 +1925,8 @@ void DoMD5(char *mdout, const char *src, unsigned long n)
  *                  32 characters + nul terminator, so needs to be at least 33 characters.
  * @param src[in]   The input data used to generate the checksum.
  * @param n[in]     Length of data.
+ * @deprecated      The MD5 algorithm is deprecated and insecure,
+ *                  so only use this if absolutely needed.
  */
 char *md5hash(char *dst, const char *src, unsigned long n)
 {
@@ -1863,6 +1937,32 @@ char *md5hash(char *dst, const char *src, unsigned long n)
 	return dst;
 }
 
+/** Generates a SHA256 checksum - binary version.
+ * Most people will want to use sha256hash() instead which outputs hex.
+ * @param dst[out]  Buffer to store result in, which needs to be 32 bytes in length
+ *                  (SHA256_DIGEST_LENGTH).
+ * @param src[in]   The input data used to generate the checksum.
+ * @param n[in]     Length of data.
+ */
+void sha256hash_binary(char *dst, const char *src, unsigned long n)
+{
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	unsigned int md_len;
+	EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+	if (EVP_DigestInit_ex(mdctx, sha256_function, NULL) != 1)
+		abort();
+	EVP_DigestUpdate(mdctx, src, n);
+	EVP_DigestFinal_ex(mdctx, dst, &md_len);
+	EVP_MD_CTX_free(mdctx);
+#else
+	SHA256_CTX hash;
+
+	SHA256_Init(&hash);
+	SHA256_Update(&hash, src, n);
+	SHA256_Final(dst, &hash);
+#endif
+}
+
 /** Generates a SHA256 checksum - ASCII printable string (0011223344..etc..).
  * @param dst[out]  Buffer to store result in, which needs to be 65 bytes minimum.
  * @param src[in]   The input data used to generate the checksum.
@@ -1870,12 +1970,9 @@ char *md5hash(char *dst, const char *src, unsigned long n)
  */
 char *sha256hash(char *dst, const char *src, unsigned long n)
 {
-	SHA256_CTX hash;
 	char binaryhash[SHA256_DIGEST_LENGTH];
 
-	SHA256_Init(&hash);
-	SHA256_Update(&hash, src, n);
-	SHA256_Final(binaryhash, &hash);
+	sha256hash_binary(binaryhash, src, n);
 	binarytohex(binaryhash, sizeof(binaryhash), dst);
 	return dst;
 }
@@ -1889,20 +1986,66 @@ char *sha256sum_file(const char *fname)
 	char binaryhash[SHA256_DIGEST_LENGTH];
 	static char hexhash[SHA256_DIGEST_LENGTH*2+1];
 	int n;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	unsigned int md_len;
+	EVP_MD_CTX *mdctx;
+
+	mdctx = EVP_MD_CTX_new();
+	if (EVP_DigestInit_ex(mdctx, sha256_function, NULL) != 1)
+		abort();
+#else
+	SHA256_Init(&hash);
+#endif
 
 	fd = fopen(fname, "rb");
 	if (!fd)
 		return NULL;
 
-	SHA256_Init(&hash);
 	while ((n = fread(buf, 1, sizeof(buf), fd)) > 0)
 	{
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+		EVP_DigestUpdate(mdctx, buf, n);
+#else
 		SHA256_Update(&hash, buf, n);
+#endif
 	}
 	fclose(fd);
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	EVP_DigestFinal_ex(mdctx, binaryhash, &md_len);
+	EVP_MD_CTX_free(mdctx);
+#else
 	SHA256_Final(binaryhash, &hash);
+#endif
 	binarytohex(binaryhash, sizeof(binaryhash), hexhash);
 	return hexhash;
+}
+
+/** Generates a SHA1 checksum - binary version.
+ * @param dst[out]  Buffer to store result in, which needs to be 32 bytes in length
+ *                  (SHA1_DIGEST_LENGTH).
+ * @param src[in]   The input data used to generate the checksum.
+ * @param n[in]     Length of data.
+ * @deprecated      The SHA1 algorithm is deprecated and insecure,
+ *                  so only use this if absolutely needed.
+ */
+void sha1hash_binary(char *dst, const char *src, unsigned long n)
+{
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	unsigned int md_len;
+	EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+	if (EVP_DigestInit_ex(mdctx, sha1_function, NULL) != 1)
+		abort();
+	EVP_DigestUpdate(mdctx, src, n);
+	EVP_DigestFinal_ex(mdctx, dst, &md_len);
+	EVP_MD_CTX_free(mdctx);
+#else
+	SHA_CTX hash;
+
+	SHA1_Init(&hash);
+	SHA1_Update(&hash, src, n);
+	SHA1_Final(dst, &hash);
+#endif
 }
 
 /** Remove a suffix from a filename, eg ".c" (if it is present) */

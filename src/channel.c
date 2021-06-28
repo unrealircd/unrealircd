@@ -74,12 +74,6 @@ CoreChannelModeTable corechannelmodetable[] = {
 /** The advertised supported channel modes in the 004 numeric */
 char cmodestring[512];
 
-/* Some forward declarations */
-char *clean_ban_mask(char *, int, Client *);
-void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel);
-int sub1_from_channel(Channel *);
-void del_invite(Client *, Channel *);
-
 /** Returns 1 if the IRCOp can override or is a remote connection */
 inline int op_can_override(char *acl, Client *client,Channel *channel,void* extra)
 {
@@ -642,41 +636,58 @@ long get_mode_bitbychar(char m)
 }
 
 /** Write the "simple" list of channel modes for channel channel onto buffer mbuf with the parameters in pbuf.
+ * @param client		The client requesting the mode list (can be NULL)
+ * @param mbuf			Modes will be stored here
+ * @param pbuf			Mode parameters will be stored here
+ * @param mbuf_size		Length of the mbuf buffer
+ * @param pbuf_size		Length of the pbuf buffer
+ * @param channel		The channel to fetch modes from
+ * @param hide_local_modes	If set to 1 then we will hide local channel modes like Z and d
+ *				(eg: if you intend to send the buffer to a remote server)
  */
 /* TODO: this function has many security issues and needs an audit, maybe even a recode */
-void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel)
+void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel, int hide_local_modes)
 {
 	CoreChannelModeTable *tab = &corechannelmodetable[0];
-	int ismember;
+	int ismember = 0;
 	int i;
 
 	if (!(mbuf_size && pbuf_size)) return;
 
-	ismember = (IsMember(client, channel) || IsServer(client) || IsMe(client) || IsULine(client)) ? 1 : 0;
+	if (!client || IsMember(client, channel) || IsServer(client) || IsMe(client) || IsULine(client))
+		ismember = 1;
 
 	*pbuf = '\0';
 
 	*mbuf++ = '+';
 	mbuf_size--;
+
 	/* Paramless first */
 	while (mbuf_size && tab->mode != 0x0)
 	{
 		if ((channel->mode.mode & tab->mode))
+		{
 			if (!tab->parameters) {
 				*mbuf++ = tab->flag;
 				mbuf_size--;
 			}
+		}
 		tab++;
 	}
 	for (i=0; i <= Channelmode_highest; i++)
 	{
-		if (!mbuf_size) break;
-		if (Channelmode_Table[i].flag && !Channelmode_Table[i].paracount &&
-		    (channel->mode.extmode & Channelmode_Table[i].mode)) {
+		if (!mbuf_size)
+			break;
+		if (Channelmode_Table[i].flag &&
+		    !Channelmode_Table[i].paracount &&
+		    !(hide_local_modes && Channelmode_Table[i].local) &&
+		    (channel->mode.extmode & Channelmode_Table[i].mode))
+		{
 			*mbuf++ = Channelmode_Table[i].flag;
 			mbuf_size--;
 		}
 	}
+
 	if (channel->mode.limit)
 	{
 		if (mbuf_size) {
@@ -704,9 +715,12 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 
 	for (i=0; i <= Channelmode_highest; i++)
 	{
-		if (Channelmode_Table[i].flag && Channelmode_Table[i].paracount &&
-		    (channel->mode.extmode & Channelmode_Table[i].mode)) {
-		        char flag = Channelmode_Table[i].flag;
+		if (Channelmode_Table[i].flag &&
+		    Channelmode_Table[i].paracount &&
+		    !(hide_local_modes && Channelmode_Table[i].local) &&
+		    (channel->mode.extmode & Channelmode_Table[i].mode))
+		{
+			char flag = Channelmode_Table[i].flag;
 			if (mbuf_size) {
 				*mbuf++ = flag;
 				mbuf_size--;
@@ -721,11 +735,12 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 	}
 
 	/* Remove the trailing space from the parameters -- codemastr */
-	if (*pbuf) pbuf[strlen(pbuf)-1]=0;
+	if (*pbuf)
+		pbuf[strlen(pbuf)-1]='\0';
 
-	if (!mbuf_size) mbuf--;
+	if (!mbuf_size)
+		mbuf--;
 	*mbuf++ = '\0';
-	return;
 }
 
 /** Make a pretty mask from the input string - only used by SILENCE

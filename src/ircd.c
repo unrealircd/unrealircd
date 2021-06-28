@@ -345,11 +345,7 @@ EVENT(handshake_timeout)
 		if (client->local->firsttime && ((TStime() - client->local->firsttime) > iConf.handshake_timeout))
 		{
 			if (client->serv && *client->serv->by)
-			{
-				/* If this is a handshake timeout to an outgoing server then notify ops & log it */
-				sendto_ops_and_log("Connection handshake timeout while trying to link to server '%s' (%s)",
-					client->name, client->ip?client->ip:"<unknown ip>");
-			}
+				continue; /* handled by server module */
 
 			exit_client(client, NULL, "Registration Timeout");
 			continue;
@@ -876,6 +872,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	dbuf_init();
 	initlists();
 
+	early_init_ssl();
 #ifdef USE_LIBCURL
 	url_init();
 #endif
@@ -1127,7 +1124,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	(void)chmod(CPATH, DEFAULT_PERMISSIONS);
 #endif
 	init_dynconf();
-	early_init_ssl();
 	/*
 	 * Add default class
 	 */
@@ -1312,7 +1308,8 @@ void SocketLoop(void *dummy)
 		}
 		if (doreloadcert)
 		{
-			reinit_ssl(NULL);
+			reinit_tls();
+			sendto_realops_and_log("Reloading all SSL related data (./unrealircd reloadtls)");
 			doreloadcert = 0;
 		}
 	}

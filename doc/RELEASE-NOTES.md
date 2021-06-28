@@ -1,20 +1,65 @@
-UnrealIRCd 5.2.0.1 Release Notes
+UnrealIRCd 5.2.1-git Release Notes
 =================================
 
-About 5.2.0.1
---------------
-5.2.0.1 fixes an issue with spamfilter that was present in 5.2.0.
-In channels spamfilters were processed for type ```p``` instead of ```c```.
-Existing 5.2.0 users on *NIX can upgrade without restart by running
-```./unrealircd hot-patch wrongspamfilter520```
+About 5.2.1-git
+----------------
+This is work in progress, bleeding edge git.
 
-UnrealIRCd 5.2.0 is out!
--------------------------
+Enhancements:
+* The allow block now uses allow::mask instead of allow::ip and
+  allow::hostname. Users upgrading will receive a warning but the
+  server will continue to boot.
+* New documentation for [mask items](https://www.unrealircd.org/docs/Mask_item)
+  in the configuration file to show how it works with 1 or more mask
+  items in a block. Also support for negative matching has been
+  improved and we now support
+  [extended server ban syntax](https://www.unrealircd.org/docs/Extended_server_bans).
+* Combining the new options from above you can do things like:
+  * ```allow { mask ~a:TrustedUser; class flooders; maxperip 100; }```
+  If TrustedUser authenticates to services using
+  [SASL](https://www.unrealircd.org/docs/SASL) then he gets in the
+  special class "flooders" with a maxperip of 100.
+  * ```allow { mask { ~S:112233etc; ~S:anotherone; }; class clients; maxperip 10; }```
+  Users matching one of these
+  [certificate fingerprints](https://www.unrealircd.org/docs/Extended_server_bans)
+  get a high maximum per ip of 10.
+* New block [set::server-linking](https://www.unrealircd.org/docs/Set_block#set::server-linking)
+  * For link blocks with autoconnect we now default to the strategy
+    'sequential', meaning we will try the 1st link block first,
+    then the 2nd, then the 3rd, then the 1st again, etc.
+  * We now have different and lower timeouts for the connect and
+    the handshake. So we give up a bit more early on servers that
+    are currently down or extremely lagged.
+* New [security-group block](https://www.unrealircd.org/docs/Security-group_block)
+  item called *include-mask*. This can be used to put clients matching
+  a [mask](https://www.unrealircd.org/docs/Mask_item) into a security group.
+* New option *lag-penalty* and *lag-penalty-bytes* in the
+  [set::anti-flood block](https://www.unrealircd.org/docs/Anti-flood_settings).
+  * *known-users* can now executes commands at a slightly faster rate than
+    *unknown-users*.
+  * It can further be used to allow really trusted users/bots to execute
+    commands at even higher rates, such as 20 commands per second,
+    without making them IRCOp. This explained in
+    [FAQ: How to allow users to send more commands per second](https://www.unrealircd.org/docs/FAQ#high-command-rate).
 
-This is UnrealIRCd 5.2.0, a release with lots of new features.
-The two main new features are: an improved and more flexible anti-flood block
-and channel history which can now be stored encrypted on disk and allows
-clients to fetch hundreds/thousands of lines.
+Module coders / IRC protocol:
+* We now assume all services set the SVID field. If your services only sets
+  umode ```+r``` and does not use ```SVSLOGIN``` or ```SVSMODE nick +d SVID```
+  then users will not be recognized as authenticated anymore.
+* In the UID command we now validate the UID (parameter 6) to start with
+  the SID and contains digits and uppercase only.
+* Servers can no longer change moddata of remote clients.
+  That is, it is disabled by default, but modules can still allow it for
+  certain moddata via mreq.remote_write=1.
+  You can use ```#if UNREAL_VERSION_TIME >= 202125``` to detect
+  if this new .remote_write option is available.
+
+UnrealIRCd 5.2.0
+-----------------
+
+The two main new features in 5.2.0 are: an improved and more flexible
+anti-flood block and channel history which can now be stored encrypted
+on disk and allows clients to fetch hundreds/thousands of lines.
 
 Upgrading and the 5.0.x series
 -------------------------------

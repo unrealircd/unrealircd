@@ -141,7 +141,7 @@ CMD_FUNC(cmd_whois)
 					target->user->realhost, target->ip ? target->ip : "");
 			}
 
-			if (IsARegNick(target))
+			if (IsRegNick(target))
 				sendnumeric(client, RPL_WHOISREGNICK, name);
 			
 			found = 1;
@@ -328,7 +328,7 @@ CMD_FUNC(cmd_whois)
 			 * display services account name if it's actually a services account name and
 			 * not a legacy timestamp.  --nenolod
 			 */
-			if (!isdigit(*target->user->svid))
+			if (IsLoggedIn(target))
 				sendnumeric(client, RPL_WHOISLOGGEDIN, name, target->user->svid);
 
 			/*

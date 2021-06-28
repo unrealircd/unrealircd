@@ -636,7 +636,15 @@ CMD_FUNC(cmd_rehash)
 			}
 			if (match_simple("-ssl*", parv[1]) || match_simple("-tls*", parv[1]))
 			{
-				reinit_ssl(client);
+				if (IsUser(client))
+				{
+					sendto_realops_and_log("%s (%s@%s) requested a reload of all SSL related data (/rehash -tls)",
+					                       client->name, client->user->username, client->user->realhost);
+				} else {
+					sendto_realops_and_log("%s requested a reload of all SSL related data (/rehash -tls)",
+					                       client->name);
+				}
+				reinit_tls();
 				return;
 			}
 			if (match_simple("-o*motd", parv[1]))
@@ -1271,6 +1279,31 @@ int valid_sid(char *name)
 		return 0;
 	if (!isdigit(name[2]) && !isupper(name[2]))
 		return 0;
+	return 1;
+}
+
+/** Check if the supplied name is a valid UID, as in: syntax. */
+int valid_uid(char *name)
+{
+	char *p;
+
+	/* Enforce at least some minimum length */
+	if (strlen(name) < 6)
+		return 0;
+
+	/* UID cannot be larger than IDLEN or it would be cut off later */
+	if (strlen(name) > IDLEN)
+		return 0;
+
+	/* Must start with a digit */
+	if (!isdigit(*name))
+		return 0;
+
+	/* For all the remaining characters: digit or uppercase character */
+	for (p = name+1; *p; p++)
+		if (!isdigit(*p) && !isupper(*p))
+			return 0;
+
 	return 1;
 }
 

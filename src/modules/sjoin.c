@@ -29,7 +29,7 @@ CMD_FUNC(cmd_sjoin);
 ModuleHeader MOD_HEADER
   = {
 	"sjoin",
-	"5.0",
+	"5.1",
 	"command /sjoin", 
 	"UnrealIRCd Team",
 	"unrealircd-5",
@@ -221,7 +221,7 @@ CMD_FUNC(cmd_sjoin)
 	modebuf[1] = '\0';
 
 	/* Grab current modes -> modebuf & parabuf */
-	channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel);
+	channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel, 1);
 
 	/* Do we need to remove all our modes, bans/exempt/inves lists and -vhoaq our users? */
 	if (removeours)
@@ -537,7 +537,7 @@ getnick:
 			if (strlen(uid_sjsby_buf) + strlen(prefix) + IDLEN > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
-				sendto_server(client, 0, PROTO_SJSBY, recv_mtags, "%s", uid_sjsby_buf);
+				sendto_server(client, PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
 				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld %s :", client->id, (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_sjsby_buf) + strlen(prefix) + strlen(acptr->id) > BUFSIZE - 5)
@@ -711,7 +711,8 @@ getnick:
 		 */
 		for (i=0; i <= Channelmode_highest; i++)
 		{
-			if ((Channelmode_Table[i].flag) &&
+			if (Channelmode_Table[i].flag &&
+			    !Channelmode_Table[i].local &&
 			    (oldmode.extmode & Channelmode_Table[i].mode) &&
 			    !(channel->mode.extmode & Channelmode_Table[i].mode))
 			{

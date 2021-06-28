@@ -27,6 +27,7 @@ int visible_in_channel(Client *client, Channel *channel);
 int moded_check_part(Client *client, Channel *channel);
 int moded_join(Client *client, Channel *channel);
 int moded_part(Client *client, Channel *channel, MessageTag *mtags, char *comment);
+int moded_quit(Client *client, MessageTag *mtags, char *comment);
 int deny_all(Client *client, Channel *channel, char mode, char *para, int checkt, int what);
 int moded_chanmode(Client *client, Channel *channel,
                    MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
@@ -52,6 +53,7 @@ MOD_INIT()
 	req.paracount = 0;
 	req.is_ok = deny_all;
 	req.flag = 'd';
+	req.local = 1;
 	CmodePostDelayed = CmodeAdd(modinfo->handle, req, &EXTMODE_POST_DELAYED);
 
 	memset(&mreq, 0, sizeof(mreq));
@@ -76,6 +78,8 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_JOIN_DATA, 0, moded_join);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PART, 0, moded_part);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_PART, 0, moded_part);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, moded_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_QUIT, 0, moded_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CHANMODE, 0, moded_chanmode);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_REMOTE_CHANMODE, 0, moded_chanmode);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, moded_prechanmsg);
@@ -217,7 +221,7 @@ void clear_user_invisible_announce(Channel *channel, Client *client, MessageTag 
 
 	ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
 		client->name, client->user->username, GetHost(client), channel->chname,
-		!isdigit(*client->user->svid) ? client->user->svid : "*",
+		IsLoggedIn(client) ? client->user->svid : "*",
 		client->info);
 
 	new_message_special(client, recv_mtags, &mtags, ":%s JOIN %s", client->name, channel->chname);
@@ -280,6 +284,22 @@ int moded_part(Client *client, Channel *channel, MessageTag *mtags, char *commen
 	return 0;
 }
 
+int moded_quit(Client *client, MessageTag *mtags, char *comment)
+{
+	Membership *membership;
+	Channel *channel;
+
+	for (membership = client->user->channel; membership; membership=membership->next)
+	{
+		channel = membership->channel;
+		/* Identical to moded_part() */
+		if (channel_is_delayed(channel) || channel_is_post_delayed(channel))
+			clear_user_invisible(channel, client);
+	}
+
+	return 0;
+}
+
 int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, char *modebuf, char *parabuf, time_t sendts, int samode)
 {
 	long CAP_EXTENDED_JOIN = ClientCapabilityBit("extended-join");
@@ -323,7 +343,7 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, cha
 							sendto_one(user, mtags, ":%s!%s@%s JOIN %s %s :%s",
 							           i->client->name, i->client->user->username, GetHost(i->client),
 							           channel->chname,
-							           !isdigit(*i->client->user->svid) ? i->client->user->svid : "*",
+							           IsLoggedIn(i->client) ? i->client->user->svid : "*",
 							           i->client->info);
 						} else {
 							sendto_one(user, mtags, ":%s!%s@%s JOIN :%s", i->client->name, i->client->user->username, GetHost(i->client), channel->chname);

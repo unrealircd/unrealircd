@@ -182,7 +182,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define READBUFSIZE	8192	/* for the read buffer */
 #define	MAXRECIPIENTS 	20
 #define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
-#define IDLEN		10
+#define IDLEN		12
 #define SIDLEN           3
 #define SWHOISLEN	256
 #define UMODETABLESZ (sizeof(long) * 8)
@@ -368,7 +368,6 @@ typedef enum ClientStatus {
 #define IsDeaf(x)               ((x)->umodes & UMODE_DEAF)
 #define	IsOper(x)		((x)->umodes & UMODE_OPER)
 #define	IsInvisible(x)		((x)->umodes & UMODE_INVISIBLE)
-#define IsARegNick(x)		((x)->umodes & (UMODE_REGNICK))
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
 #define	SendWallops(x)		(!IsMe(x) && IsUser(x) && ((x)->umodes & UMODE_WALLOP))
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
@@ -508,7 +507,7 @@ typedef enum ClientStatus {
 #define	IsNotSpoof(x)	((x)->local->nospoof == 0)
 #define GetHost(x)	(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
 #define GetIP(x)	(x->ip ? x->ip : "255.255.255.255")
-#define IsLoggedIn(x)	(IsRegNick(x) || (x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid))) /* registered nick (+r) or just logged into services (may be -r) */
+#define IsLoggedIn(x)	(x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid)) /**< Logged into services */
 #define IsSynched(x)	(x->serv->flags.synced)
 #define IsServerSent(x) (x->serv && x->serv->flags.server_sent)
 
@@ -1225,6 +1224,7 @@ typedef enum FloodOption {
 	FLD_INVITE		= 3,	/**< invite-flood */
 	FLD_KNOCK		= 4,	/**< knock-flood */
 	FLD_CONVERSATIONS	= 5,	/**< max-concurrent-conversations */
+	FLD_LAG_PENALTY		= 6,	/**< lag-penalty / lag-penalty-bytes */
 } FloodOption;
 #define MAXFLOODOPTIONS 10
 
@@ -1268,6 +1268,7 @@ struct LocalClient {
 	int fd;				/**< File descriptor, can be <0 if socket has been closed already. */
 	SSL *ssl;			/**< OpenSSL/LibreSSL struct for SSL/TLS connection */
 	time_t since;			/**< Time when user will next be allowed to send something (actually since<currenttime+10) */
+	int since_msec;			/**< Used for calculating 'since' penalty (modulo) */
 	time_t firsttime;		/**< Time user was created (connected on IRC) */
 	time_t lasttime;		/**< Last time any message was received */
 	dbuf sendQ;			/**< Outgoing send queue (data to be sent) */
@@ -1524,8 +1525,7 @@ struct ConfigFlag_allow {
 struct ConfigItem_allow {
 	ConfigItem_allow *prev, *next;
 	ConfigFlag flag;
-	char *ip;
-	char *hostname;
+	ConfigItem_mask *mask;
 	char *server;
 	AuthConfig *auth;
 	int maxperip; /**< Maximum connections permitted per IP address (locally) */
@@ -1869,6 +1869,7 @@ struct SecurityGroup {
 	int reputation_score;
 	int webirc;
 	int tls;
+	ConfigItem_mask *include_mask;
 };
 
 #define HM_HOST 1

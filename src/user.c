@@ -812,9 +812,7 @@ SecurityGroup *add_security_group(char *name, int priority)
 /** Free a SecurityGroup struct */
 void free_security_group(SecurityGroup *s)
 {
-	/* atm there is nothing else to free,
-	 * but who knows this may change in the future
-	 */
+	unreal_delete_masks(s->include_mask);
 	safe_free(s);
 }
 
@@ -866,7 +864,9 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 		return 1;
 	if (s->reputation_score && (GetReputation(client) >= s->reputation_score))
 		return 1;
-	if (s->tls && (IsSecureConnect(client) || IsSecure(client)))
+	if (s->tls && (IsSecureConnect(client) || (MyConnect(client) && IsSecure(client))))
+		return 1;
+	if (s->include_mask && unreal_mask_match(client, s->include_mask))
 		return 1;
 	return 0;
 }
@@ -897,13 +897,49 @@ int user_allowed_by_security_group_name(Client *client, char *secgroupname)
 	return user_allowed_by_security_group(client, s);
 }
 
+/** Get comma separated list of matching security groups for 'client'.
+ * This is usually only used for displaying purposes.
+ * @returns string like "unknown-users,tls-users" from a static buffer.
+ */
+char *get_security_groups(Client *client)
+{
+	SecurityGroup *s;
+	static char buf[512];
+
+	*buf = '\0';
+
+	/* We put known-users or unknown-users at the beginning.
+	 * The latter is special and doesn't actually exist
+	 * in the linked list, hence the special code here,
+	 * and again later in the for loop to skip it.
+	 */
+	if (user_allowed_by_security_group_name(client, "known-users"))
+		strlcat(buf, "known-users,", sizeof(buf));
+	else
+		strlcat(buf, "unknown-users,", sizeof(buf));
+
+	for (s = securitygroups; s; s = s->next)
+	{
+		if (strcmp(s->name, "known-users") &&
+		    user_allowed_by_security_group(client, s))
+		{
+			strlcat(buf, s->name, sizeof(buf));
+			strlcat(buf, ",", sizeof(buf));
+		}
+	}
+
+	if (*buf)
+		buf[strlen(buf)-1] = '\0';
+	return buf;
+}
+
 /** Return extended information about user for the "Client connecting" line.
  * @returns A string such as "[secure] [reputation: 5]", never returns NULL.
  */
 char *get_connect_extinfo(Client *client)
 {
 	static char retbuf[512];
-	char tmp[512];
+	char tmp[512], *secgroups;
 	NameValuePrioList *list = NULL, *e;
 
 	/* From modules... */
@@ -924,6 +960,11 @@ char *get_connect_extinfo(Client *client)
 	/* services account? */
 	if (IsLoggedIn(client))
 		add_nvplist(&list, -500, "account", client->user->svid);
+
+	/* security groups */
+	secgroups = get_security_groups(client);
+	if (secgroups)
+		add_nvplist(&list, 100, "security-groups", secgroups);
 
 	*retbuf = '\0';
 	for (e = list; e; e = e->next)
@@ -979,9 +1020,6 @@ int flood_limit_exceeded(Client *client, FloodOption opt)
 	f = get_floodsettings_for_user(client, opt);
 	if (f->limit[opt] <= 0)
 		return 0; /* No limit set or unlimited */
-
-	ircd_log(LOG_ERROR, "Checking flood_limit_exceeded() for '%s', type %d with max %d:%ld...",
-		client->name, (int)opt, (int)f->limit[opt], (long)f->period[opt]);
 
 	/* Ok, let's do the flood check */
 	if ((client->local->flood[opt].t + f->period[opt]) <= timeofday)
@@ -1048,5 +1086,6 @@ MODVAR char *floodoption_names[] = {
 	"invite-flood",
 	"knock-flood",
 	"max-concurrent-conversations",
+	"lag-penalty",
 	NULL
 };

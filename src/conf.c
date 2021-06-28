@@ -1807,6 +1807,7 @@ void config_setdefaultsettings(Configuration *i)
 	config_parse_flood_generic("4:60", i, "known-users", FLD_INVITE); /* INVITE flood protection: max 4 per 60s */
 	config_parse_flood_generic("4:120", i, "known-users", FLD_KNOCK); /* KNOCK protection: max 4 per 120s */
 	config_parse_flood_generic("10:15", i, "known-users", FLD_CONVERSATIONS); /* 10 users, new user every 15s */
+	config_parse_flood_generic("180:750", i, "known-users", FLD_LAG_PENALTY); /* 180 bytes / 750 msec */
 	/* - unknown-users */
 	config_parse_flood_generic("2:60", i, "unknown-users", FLD_NICK); /* NICK flood protection: max 2 per 60s */
 	config_parse_flood_generic("2:90", i, "unknown-users", FLD_JOIN); /* JOIN flood protection: max 2 per 90s */
@@ -1814,6 +1815,7 @@ void config_setdefaultsettings(Configuration *i)
 	config_parse_flood_generic("2:60", i, "unknown-users", FLD_INVITE); /* INVITE flood protection: max 2 per 60s */
 	config_parse_flood_generic("2:120", i, "unknown-users", FLD_KNOCK); /* KNOCK protection: max 2 per 120s */
 	config_parse_flood_generic("4:15", i, "unknown-users", FLD_CONVERSATIONS); /* 4 users, new user every 15s */
+	config_parse_flood_generic("90:1000", i, "unknown-users", FLD_LAG_PENALTY); /* 90 bytes / 1000 msec */
 
 	/* SSL/TLS options */
 	i->tls_options = safe_alloc(sizeof(TLSOptions));
@@ -2016,6 +2018,11 @@ void postconf(void)
 	do_weird_shun_stuff();
 	isupport_init(); /* for all the 005 values that changed.. */
 	tls_check_expiry(NULL);
+
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+	if (loop.ircd_rehashing)
+		reinit_tls();
+#endif
 }
 
 int isanyserverlinked(void)
@@ -2540,8 +2547,7 @@ void	config_rehash()
 	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) next)
 	{
 		next = (ListStruct *)allow_ptr->next;
-		safe_free(allow_ptr->ip);
-		safe_free(allow_ptr->hostname);
+		unreal_delete_masks(allow_ptr->mask);
 		Auth_FreeAuthConfig(allow_ptr->auth);
 		DelListItem(allow_ptr, conf_allow);
 		safe_free(allow_ptr);
@@ -5439,12 +5445,10 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!strcmp(cep->ce_varname, "ip"))
+		if (!strcmp(cep->ce_varname, "mask") || !strcmp(cep->ce_varname, "ip") || !strcmp(cep->ce_varname, "hostname"))
 		{
-			safe_strdup(allow->ip, cep->ce_vardata);
+			unreal_add_masks(&allow->mask, cep);
 		}
-		else if (!strcmp(cep->ce_varname, "hostname"))
-			safe_strdup(allow->hostname, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "password"))
 			allow->auth = AuthBlockToAuthConfig(cep);
 		else if (!strcmp(cep->ce_varname, "class"))
@@ -5492,12 +5496,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	if (!allow->hostname)
-		safe_strdup(allow->hostname, "*@NOMATCH");
-
-	if (!allow->ip)
-		safe_strdup(allow->ip, "*@NOMATCH");
-
 	/* Default: global-maxperip = maxperip+1 */
 	if (allow->global_maxperip == 0)
 		allow->global_maxperip = allow->maxperip+1;
@@ -5515,7 +5513,8 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp;
 	int		errors = 0;
 	Hook *h;
-	char has_ip = 0, has_hostname = 0, has_maxperip = 0, has_global_maxperip = 0, has_password = 0, has_class = 0;
+	char has_ip = 0, has_hostname = 0, has_mask = 0;
+	char has_maxperip = 0, has_global_maxperip = 0, has_password = 0, has_class = 0;
 	char has_redirectserver = 0, has_redirectport = 0, has_options = 0;
 	int hostname_possible_silliness = 0;
 
@@ -5563,7 +5562,9 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (strcmp(cep->ce_varname, "options") && config_is_blankorempty(cep, "allow"))
+		if (strcmp(cep->ce_varname, "options") &&
+		    strcmp(cep->ce_varname, "mask") &&
+		    config_is_blankorempty(cep, "allow"))
 		{
 			errors++;
 			continue;
@@ -5577,6 +5578,22 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_ip = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "hostname"))
+		{
+			if (has_hostname)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "allow::hostname");
+				continue;
+			}
+			has_hostname = 1;
+			if (!strcmp(cep->ce_vardata, "*@*") || !strcmp(cep->ce_vardata, "*"))
+				hostname_possible_silliness = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "mask"))
+		{
+			has_mask = 1;
 		}
 		else if (!strcmp(cep->ce_varname, "maxperip"))
 		{
@@ -5635,18 +5652,6 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				config_warn("%s:%d: allow::ipv6-clone-mask was given a very small value.",
 					    cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			}
-		}
-		else if (!strcmp(cep->ce_varname, "hostname"))
-		{
-			if (has_hostname)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "allow::hostname");
-				continue;
-			}
-			has_hostname = 1;
-			if (!strcmp(cep->ce_vardata, "*@*") || !strcmp(cep->ce_vardata, "*"))
-				hostname_possible_silliness = 1;
 		}
 		else if (!strcmp(cep->ce_varname, "password"))
 		{
@@ -5736,25 +5741,45 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	if (!has_ip && !has_hostname)
+	if (has_mask && (has_ip || has_hostname))
 	{
-		config_error("%s:%d: allow block needs an allow::ip or allow::hostname",
+		config_error("%s:%d: The allow block uses allow::mask, but you also have an allow::ip and allow::hostname.",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_error("Please delete your allow::ip and allow::hostname entries and/or integrate them into allow::mask");
+	} else
+	if (has_ip)
+	{
+		config_warn("%s:%d: The allow block uses allow::mask nowadays. Rename your allow::ip item to allow::mask.",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_warn("See https://www.unrealircd.org/docs/FAQ#allow-mask for more information");
+	} else
+	if (has_hostname)
+	{
+		config_warn("%s:%d: The allow block uses allow::mask nowadays. Rename your allow::hostname item to allow::mask.",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_warn("See https://www.unrealircd.org/docs/FAQ#allow-mask for more information");
+	} else
+	if (!has_mask)
+	{
+		config_error("%s:%d: allow block needs an allow::mask",
 				 ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
 
 	if (has_ip && has_hostname)
 	{
-		config_warn("%s:%d: allow block has both allow::ip and allow::hostname which is no longer permitted.",
-		            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_error("%s:%d: allow block has both allow::ip and allow::hostname, this is no longer permitted.",
+		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_error("Please integrate your allow::ip and allow::hostname items into a single allow::mask block");
 		need_34_upgrade = 1;
+		errors++;
 	} else
 	if (hostname_possible_silliness)
 	{
-		config_warn("%s:%d: allow block contains 'hostname *;'. This means means that users "
-		            "without a valid hostname (unresolved IP's) will be unable to connect. "
-		            "You most likely want to use 'ip *;' instead.",
-		            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_error("%s:%d: allow block contains 'hostname *;'. This means means that users "
+		             "without a valid hostname (unresolved IP's) will be unable to connect. "
+		             "You most likely want to use 'mask *;' instead.",
+		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 	}
 
 	if (!has_class)
@@ -6463,7 +6488,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 	if (!link->hub && !link->leaf)
 		safe_strdup(link->hub, "*");
 
-	AddListItem(link, conf_link);
+	AppendListItem(link, conf_link);
 	return 0;
 }
 
@@ -7663,6 +7688,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "anti-flood")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
+				int lag_penalty = -1;
+				int lag_penalty_bytes = -1;
 				for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
 				{
 					if (!strcmp(ceppp->ce_varname, "handshake-data-flood"))
@@ -7696,6 +7723,16 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					else if (!strcmp(ceppp->ce_varname, "knock-flood"))
 					{
 						config_parse_flood_generic(ceppp->ce_vardata, &tempiConf, cepp->ce_varname, FLD_KNOCK);
+					}
+					else if (!strcmp(ceppp->ce_varname, "lag-penalty"))
+					{
+						lag_penalty = atoi(ceppp->ce_vardata);
+					}
+					else if (!strcmp(ceppp->ce_varname, "lag-penalty-bytes"))
+					{
+						lag_penalty_bytes = config_checkval(ceppp->ce_vardata, CFG_SIZE);
+						if (lag_penalty_bytes <= 0)
+							lag_penalty_bytes = INT_MAX;
 					}
 					else if (!strcmp(ceppp->ce_varname, "connect-flood"))
 					{
@@ -7733,6 +7770,13 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 								break;
 						}
 					}
+				}
+				if ((lag_penalty != -1) && (lag_penalty_bytes != -1))
+				{
+					/* We use a hack here to make it fit our storage format */
+					char buf[64];
+					snprintf(buf, sizeof(buf), "%d:%d", lag_penalty_bytes, lag_penalty);
+					config_parse_flood_generic(buf, &tempiConf, cepp->ce_varname, FLD_LAG_PENALTY);
 				}
 			}
 		}
@@ -8490,6 +8534,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
+				int has_lag_penalty = 0;
+				int has_lag_penalty_bytes = 0;
+
 				/* Test for old options: */
 				if (flood_option_is_old(cepp->ce_varname))
 				{
@@ -8703,6 +8750,24 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 							errors++;
 						}
 					}
+					else if (!strcmp(ceppp->ce_varname, "lag-penalty"))
+					{
+						int v;
+						CheckNull(ceppp);
+						v = atoi(ceppp->ce_vardata);
+						has_lag_penalty = 1;
+						if ((v < 0) || (v > 10000))
+						{
+							config_error("%s:%i: set::anti-flood::%s::lag-penalty: value is in milliseconds and should be between 0 and 10000",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, cepp->ce_varname);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "lag-penalty-bytes"))
+					{
+						has_lag_penalty_bytes = 1;
+						CheckNull(ceppp);
+					}
 					else if (!strcmp(ceppp->ce_varname, "connect-flood"))
 					{
 						int cnt, period;
@@ -8763,6 +8828,12 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						}
 						continue;
 					}
+				}
+				if (has_lag_penalty+has_lag_penalty_bytes == 1)
+				{
+					config_error("%s:%i: set::anti-flood::%s: if you use lag-penalty then you must also add an lag-penalty-bytes item (and vice-versa)",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
+					errors++;
 				}
 			}
 			/* Now the warnings: */
@@ -10389,6 +10460,9 @@ int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		} else
+		if (!strcmp(cep->ce_varname, "include-mask"))
+		{
+		} else
 		{
 			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				"security-group", cep->ce_varname);
@@ -10420,6 +10494,10 @@ int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
 			s->priority = atoi(cep->ce_vardata);
 			DelListItem(s, securitygroups);
 			AddListItemPrio(s, securitygroups, s->priority);
+		}
+		else if (!strcmp(cep->ce_varname, "include-mask"))
+		{
+			unreal_add_masks(&s->include_mask, cep);
 		}
 	}
 	return 1;

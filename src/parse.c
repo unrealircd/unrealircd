@@ -573,13 +573,24 @@ static void ban_handshake_data_flooder(Client *client)
  */
 void parse_addlag(Client *client, int cmdbytes)
 {
+	FloodSettings *settings = get_floodsettings_for_user(client, FLD_LAG_PENALTY);
+
 	if (!IsServer(client) && !IsNoFakeLag(client) &&
 #ifdef FAKELAG_CONFIGURABLE
 	    !(client->local->class && (client->local->class->options & CLASS_OPT_NOFAKELAG)) &&
 #endif
 	    !ValidatePermissionsForPath("immune:lag",client,NULL,NULL,NULL))
 	{
-		client->local->since += (1 + cmdbytes/90);
+		int lag_penalty = settings->period[FLD_LAG_PENALTY];
+		int lag_penalty_bytes = settings->limit[FLD_LAG_PENALTY];
+
+		client->local->since_msec += (1 + (cmdbytes/lag_penalty_bytes)) * lag_penalty;
+
+		/* This code takes into account not only the msecs we just calculated
+		 * but also any leftover msec from previous lagging up.
+		 */
+		client->local->since += (client->local->since_msec / 1000);
+		client->local->since_msec = client->local->since_msec % 1000;
 	}
 }
 

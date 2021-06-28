@@ -198,7 +198,7 @@ void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mta
 
 	ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
 		client->name, client->user->username, GetHost(client), channel->chname,
-		!isdigit(*client->user->svid) ? client->user->svid : "*",
+		IsLoggedIn(client) ? client->user->svid : "*",
 		client->info);
 
 	for (lp = channel->members; lp; lp = lp->next)
@@ -294,7 +294,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 			channel->mode.mode = MODES_ON_JOIN;
 
 			*modebuf = *parabuf = 0;
-			channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel);
+			channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel, 0);
 			/* This should probably be in the SJOIN stuff */
 			new_message_special(&me, recv_mtags, &mtags_mode, ":%s MODE %s %s %s", me.name, channel->chname, modebuf, parabuf);
 			sendto_server(NULL, 0, 0, mtags_mode, ":%s MODE %s %s %s %lld",
@@ -722,7 +722,7 @@ void _userhost_changed(Client *client)
 
 			ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
 				client->name, client->user->username, GetHost(client), channel->chname,
-				!isdigit(*client->user->svid) ? client->user->svid : "*",
+				IsLoggedIn(client) ? client->user->svid : "*",
 				client->info);
 
 			modes = get_chmodes_for_user(client, flags);

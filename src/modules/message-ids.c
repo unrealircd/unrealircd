@@ -146,9 +146,7 @@ void mtag_add_or_inherit_msgid(Client *sender, MessageTag *recv_mtags, MessageTa
 		char newbuf[256];
 		memset(&binaryhash, 0, sizeof(binaryhash));
 		memset(&b64hash, 0, sizeof(b64hash));
-		SHA256_Init(&hash);
-		SHA256_Update(&hash, signature, strlen(signature));
-		SHA256_Final(binaryhash, &hash);
+		sha256hash_binary(binaryhash, signature, strlen(signature));
 		b64_encode(binaryhash, sizeof(binaryhash)/2, b64hash, sizeof(b64hash));
 		b64hash[22] = '\0'; /* cut off at '=' */
 		snprintf(newbuf, sizeof(newbuf), "%s-%s", prefix, b64hash);
