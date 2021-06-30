@@ -108,7 +108,7 @@ static void unrealdns_sock_state_cb(void *data, ares_socket_t fd, int read, int 
  */
 static int unrealdns_sock_create_cb(ares_socket_t fd, int type, void *data)
 {
-	fd_open(fd, "DNS Resolver Socket");
+	fd_open(fd, "DNS Resolver Socket", 0);
 	return ARES_SUCCESS;
 }
 

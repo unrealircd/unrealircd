@@ -15,12 +15,13 @@ typedef struct fd_entry {
 	void *data;
 	time_t deadline;
 	unsigned char is_open;
+	unsigned char is_file;
 	unsigned int backend_flags;
 } FDEntry;
 
 extern MODVAR FDEntry fd_table[MAXCONNECTIONS + 1];
 
-extern int fd_open(int fd, const char *desc);
+extern int fd_open(int fd, const char *desc, int file);
 extern void fd_close(int fd);
 extern int fd_unmap(int fd);
 extern void fd_unnotify(int fd);

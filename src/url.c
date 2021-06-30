@@ -336,7 +336,7 @@ static int url_socket_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *so
 		
 		if (!fde->is_open)
 		{
-			fd_open(s, "CURL transfer");
+			fd_open(s, "CURL transfer", 0);
 		}
 
 		if (what == CURL_POLL_IN || what == CURL_POLL_INOUT)
