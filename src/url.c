@@ -324,10 +324,7 @@ static int url_socket_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *so
 	Debug((DEBUG_DEBUG, "url_socket_cb: %d (%s)", (int)s, (what == CURL_POLL_REMOVE)?"remove":"add-or-modify"));
 	if (what == CURL_POLL_REMOVE)
 	{
-		/* Socket is going to be closed *BY CURL*.. so don't call fd_close() but fd_unmap().
-		 * Otherwise we (or actually, they) may end up closing the wrong fd.
-		 */
-		fd_unmap(s);
+		fd_close(s);
 	}
 	else
 	{
@@ -336,7 +333,11 @@ static int url_socket_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *so
 		
 		if (!fde->is_open)
 		{
-			fd_open(s, "CURL transfer", 0);
+			/* NOTE: We use FDCLOSE_NONE here because cURL will take
+			 * care of the closing of the socket. So *WE* must never
+			 * close the socket ourselves.
+			 */
+			fd_open(s, "CURL transfer", FDCLOSE_NONE);
 		}
 
 		if (what == CURL_POLL_IN || what == CURL_POLL_INOUT)

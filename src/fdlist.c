@@ -25,12 +25,13 @@
 FDEntry fd_table[MAXCONNECTIONS + 1];
 
 /** Notify I/O engine that a file descriptor opened.
- * @param fd	The file descriptor
- * @param desc	Description for in the fd table
- * @param file	Set to 1 if the fd is a file, 0 otherwise (eg: socket)
+ * @param fd		The file descriptor
+ * @param desc		Description for in the fd table
+ * @param close_method	Tell what a subsequent call to fd_close() should do,
+ *                      eg close the socket, file or don't close anything.
  * @returns The file descriptor 'fd' or -1 in case of fatal error.
  */
-int fd_open(int fd, const char *desc, int file)
+int fd_open(int fd, const char *desc, FDCloseMethod close_method)
 {
 	FDEntry *fde;
 
@@ -52,7 +53,7 @@ int fd_open(int fd, const char *desc, int file)
 	fde->fd = fd;
 	fde->is_open = 1;
 	fde->backend_flags = 0;
-	fde->is_file = file;
+	fde->close_method = close_method;
 	strlcpy(fde->desc, desc, FD_DESC_SZ);
 
 	return fde->fd;
@@ -78,16 +79,21 @@ int fd_fileopen(const char *path, unsigned int flags)
 
 	snprintf(comment, sizeof comment, "File: %s", unreal_getfilename(pathbuf));
 
-	return fd_open(fd, comment, 1);
+	return fd_open(fd, comment, FDCLOSE_FILE);
 }
 
 /** Internal function to unmap and optionally close the fd.
  */
-int fd_close_ex(int fd, int close_fd)
+/** Remove file descriptor from our table and possibly close the fd.
+ * The fd is closed (or not) according to the method specified in fd_open().
+ * @param fd	The file descriptor
+ * @returns 1 on success, 0 on failure
+ */
+int fd_close(int fd)
 {
 	FDEntry *fde;
 	unsigned int befl;
-	int is_file = 0;
+	FDCloseMethod close_method;
 
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
 	{
@@ -115,7 +121,7 @@ int fd_close_ex(int fd, int close_fd)
 	}
 
 	befl = fde->backend_flags;
-	is_file = fde->is_file;
+	close_method = fde->close_method;
 	memset(fde, 0, sizeof(FDEntry));
 
 	fde->fd = fd;
@@ -125,35 +131,20 @@ int fd_close_ex(int fd, int close_fd)
 		fd_refresh(fd);
 
 	/* Finally, close the file or socket if requested to do so */
-	if (close_fd)
+	switch (close_method)
 	{
-		if (is_file)
-			close(fd);
-		else
+		case FDCLOSE_SOCKET:
 			CLOSE_SOCK(fd);
+			break;
+		case FDCLOSE_FILE:
+			close(fd);
+			break;
+		case FDCLOSE_NONE:
+		default:
+			break;
 	}
 
 	return 1;
-}
-
-/** Unmap file descriptor.
- * That is: remove it from our list, but don't actually do any
- * close() or closesocket() call.
- * @param fd	The file descriptor
- * @returns 1 on success, 0 on failure
- */
-int fd_unmap(int fd)
-{
-	return fd_close_ex(fd, 0);
-}
-
-/** Close file descriptor.
- * That is: remove it from our list AND call close() or closesocket().
- * @param fd	The file descriptor
- */
-void fd_close(int fd)
-{
-	fd_close_ex(fd, 1);
 }
 
 /* Deregister I/O notification for this file descriptor */
@@ -182,7 +173,7 @@ int fd_socket(int family, int type, int protocol, const char *desc)
 	if (fd < 0)
 		return -1;
 
-	return fd_open(fd, desc, 0);
+	return fd_open(fd, desc, FDCLOSE_SOCKET);
 }
 
 int fd_accept(int sockfd)
@@ -194,7 +185,7 @@ int fd_accept(int sockfd)
 	if (fd < 0)
 		return -1;
 
-	return fd_open(fd, buf, 0);
+	return fd_open(fd, buf, FDCLOSE_SOCKET);
 }
 
 void fd_desc(int fd, const char *desc)

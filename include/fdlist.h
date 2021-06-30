@@ -7,6 +7,8 @@
 
 typedef void (*IOCallbackFunc)(int fd, int revents, void *data);
 
+typedef enum FDCloseMethod { FDCLOSE_SOCKET=0, FDCLOSE_FILE=1, FDCLOSE_NONE=3 } FDCloseMethod;
+
 typedef struct fd_entry {
 	int fd;
 	char desc[FD_DESC_SZ];
@@ -15,15 +17,14 @@ typedef struct fd_entry {
 	void *data;
 	time_t deadline;
 	unsigned char is_open;
-	unsigned char is_file;
+	FDCloseMethod close_method;
 	unsigned int backend_flags;
 } FDEntry;
 
 extern MODVAR FDEntry fd_table[MAXCONNECTIONS + 1];
 
-extern int fd_open(int fd, const char *desc, int file);
-extern void fd_close(int fd);
-extern int fd_unmap(int fd);
+extern int fd_open(int fd, const char *desc, FDCloseMethod close_method);
+extern int fd_close(int fd);
 extern void fd_unnotify(int fd);
 extern int fd_socket(int family, int type, int protocol, const char *desc);
 extern int fd_accept(int sockfd);

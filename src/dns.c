@@ -87,10 +87,7 @@ static void unrealdns_sock_state_cb(void *data, ares_socket_t fd, int read, int 
 
 	if (!read && !write)
 	{
-		/* Socket is going to be closed *BY C-ARES*..
-		 * so don't call fd_close() but fd_unmap().
-		 */
-		fd_unmap(fd);
+		fd_close(fd);
 		return;
 	}
 	
@@ -108,7 +105,11 @@ static void unrealdns_sock_state_cb(void *data, ares_socket_t fd, int read, int 
  */
 static int unrealdns_sock_create_cb(ares_socket_t fd, int type, void *data)
 {
-	fd_open(fd, "DNS Resolver Socket", 0);
+	/* NOTE: We use FDCLOSE_NONE here because c-ares
+	 * will take care of the closing. So *WE* must
+	 * never close the socket.
+	 */
+	fd_open(fd, "DNS Resolver Socket", FDCLOSE_NONE);
 	return ARES_SUCCESS;
 }
 
