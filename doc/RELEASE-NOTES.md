@@ -41,18 +41,44 @@ Enhancements:
     commands at even higher rates, such as 20 commands per second,
     without making them IRCOp. This explained in
     [FAQ: How to allow users to send more commands per second](https://www.unrealircd.org/docs/FAQ#high-command-rate).
+* The [REHASH](https://www.unrealircd.org/docs/Rehashing_the_IRCd) command
+  is now sufficient to reload SSL/TLS certificates. You no longer need to
+  use ```REHASH -tls```. The same is true for ```./unrealircd rehash```
+  which now also does the extra steps in ```./unrealircd reloadtls```.
+  The commands will stay, though, in case you only want to reload the
+  TLS certificates and not rehash the entire configuration file.
+* Support for OpenSSL 3.0.0
+* Show microseconds in ```TSCTL ALLTIME```
+* The git version id is now shown in the ```INFO``` command (ReleaseId).
+* ```~a:*``` now matches all authenticated users and ```~a:0``` matches
+  all unauthenticated users.
+* Allow multiple masks in the [deny link { } block](https://www.unrealircd.org/docs/Deny_link_block)
+
+Fixes:
+* When server syncing larger channels we could accidentally skip over or
+  forget to send a few users. These users would then not be shown on the
+  other side of the link but are actually in the channel (ghosts)
+* When using autoconnect on (very) big networks, the network no longer breaks down
+  (with the new default strategy 'sequential')
+* Channel mode ```+d``` (so after ```-D```) never took QUITs into account
+  properly. This should now fix things, so the channel goes ```-d```
+  immediately once it is no longer needed.
+* Windows log file maximum size exceeded did not start a new log file
+* Give a better error message when trying to use an unconfirmed account
+  with [authprompt](https://www.unrealircd.org/docs/Set_block#set::authentication-prompt).
 
 Module coders / IRC protocol:
 * We now assume all services set the SVID field. If your services only sets
   umode ```+r``` and does not use ```SVSLOGIN``` or ```SVSMODE nick +d SVID```
   then users will not be recognized as authenticated anymore.
-* In the UID command we now validate the UID (parameter 6) to start with
+* In the ```UID``` command we now validate the UID (parameter 6) to start with
   the SID and contains digits and uppercase only.
 * Servers can no longer change moddata of remote clients.
   That is, it is disabled by default, but modules can still allow it for
   certain moddata via mreq.remote_write=1.
   You can use ```#if UNREAL_VERSION_TIME >= 202125``` to detect
   if this new .remote_write option is available.
+* Removed ```HCN``` from 005, since nobody uses this anyway.
 
 UnrealIRCd 5.2.0
 -----------------
