@@ -11376,7 +11376,7 @@ void link_generator(void)
 
 	if (!port)
 	{
-		printf("You don't have any listen { } blocks that are serversonly.\n");
+		printf("You don't have any listen { } blocks that are serversonly (and have tls enabled).\n");
 		printf("It is recommended to have at least one. Add this to your configuration file:\n");
 		printf("listen { ip *; port 6900; options { tls; serversonly; }; };\n");
 		exit(1);
