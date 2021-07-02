@@ -1142,10 +1142,18 @@ static int hbm_read_masterdb(void)
 	}
 
 	/* Now, safely switch over.. */
-	safe_free(hbm_prehash);
-	safe_free(hbm_posthash);
-	hbm_prehash = prehash;
-	hbm_posthash = posthash;
+	if (hbm_prehash && !strcmp(hbm_prehash, prehash) && hbm_posthash && !strcmp(hbm_posthash, posthash))
+	{
+		/* Identical sets */
+		safe_free(prehash);
+		safe_free(posthash);
+	} else {
+		/* Diffferent */
+		safe_free(hbm_prehash);
+		safe_free(hbm_posthash);
+		hbm_prehash = prehash;
+		hbm_posthash = posthash;
+	}
 
 	return 1;
 }

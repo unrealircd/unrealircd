@@ -55,6 +55,9 @@ Enhancements:
 * Allow multiple masks in the [deny link { } block](https://www.unrealircd.org/docs/Deny_link_block)
 
 Fixes:
+* If using persistent channel history: if you had ANY rehash error (often
+  completely unrelated to channel history) and you then rehashed again
+  UnrealIRCd would crash.
 * When server syncing larger channels we could accidentally skip over or
   forget to send a few users. These users would then not be shown on the
   other side of the link but are actually in the channel (ghosts)
