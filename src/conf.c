@@ -441,6 +441,12 @@ int flood_option_is_for_everyone(const char *name)
 	return text_in_array(name, opts);
 }
 
+/** Free a FloodSettings struct */
+void free_floodsettings(FloodSettings *f)
+{
+	safe_free(f->name);
+	safe_free(f);
+}
 
 /** Parses a value like '5:60s' into a flood setting that we can store.
  * @param str		The string to parse (eg: '5:60s')
@@ -1702,6 +1708,8 @@ ConfigCommand *config_binary_search(char *cmd) {
 
 void	free_iConf(Configuration *i)
 {
+	FloodSettings *f, *f_next;
+
 	safe_free(i->dns_bindip);
 	safe_free(i->link_bindip);
 	safe_free(i->kline_address);
@@ -1744,6 +1752,13 @@ void	free_iConf(Configuration *i)
 	safe_free(i->network.x_helpchan);
 	safe_free(i->network.x_stats_server);
 	safe_free(i->network.x_sasl_server);
+	// anti-flood:
+	for (f = i->floodsettings; f; f = f_next)
+	{
+		f_next = f->next;
+		free_floodsettings(f);
+	}
+	i->floodsettings = NULL;
 }
 
 int	config_test();
