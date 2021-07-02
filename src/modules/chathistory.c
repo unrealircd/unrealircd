@@ -16,6 +16,14 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
 };
 
+/* Structs */
+typedef struct ChatHistoryTarget ChatHistoryTarget;
+struct ChatHistoryTarget {
+	ChatHistoryTarget *prev, *next;
+	char *datetime;
+	char *object;
+};
+
 /* Forward declarations */
 CMD_FUNC(cmd_chathistory);
 
@@ -65,15 +73,68 @@ int chathistory_token(char *str, char *token, char **store)
 	return 0;
 }
 
-static int chathistory_targets_send_line(Client *client, HistoryResult *r, char *batchid)
+static void add_chathistory_target_list(ChatHistoryTarget *new, ChatHistoryTarget **list)
+{
+	ChatHistoryTarget *x, *last = NULL;
+
+	if (!*list)
+	{
+		/* We are the only item. Easy. */
+		*list = new;
+		return;
+	}
+
+	for (x = *list; x; x = x->next)
+	{
+		last = x;
+		if (strcmp(new->datetime, x->datetime) >= 0)
+			break;
+	}
+
+	if (x)
+	{
+		if (x->prev)
+		{
+			/* We will insert ourselves just before this item */
+			new->prev = x->prev;
+			new->next = x;
+			x->prev->next = new;
+			x->prev = new;
+		} else {
+			/* We are the new head */
+			*list = new;
+			new->next = x;
+			x->prev = new;
+		}
+	} else
+	{
+		/* We are the last item */
+		last->next = new;
+		new->prev = last;
+	}
+}
+
+static void add_chathistory_target(ChatHistoryTarget **list, HistoryResult *r)
+{
+	MessageTag *m;
+	time_t ts;
+	char *datetime;
+	ChatHistoryTarget *e;
+
+	if (!r->log || !((m = find_mtag(r->log->mtags, "time"))) || !m->value)
+		return;
+	datetime = m->value;
+
+	e = safe_alloc(sizeof(ChatHistoryTarget));
+	safe_strdup(e->datetime, datetime);
+	safe_strdup(e->object, r->object);
+	add_chathistory_target_list(e, list);
+}
+
+static void chathistory_targets_send_line(Client *client, ChatHistoryTarget *r, char *batchid)
 {
 	MessageTag *mtags = NULL;
 	MessageTag *m;
-	char *ts;
-
-	if (!r->log || !((m = find_mtag(r->log->mtags, "time"))) || !m->value)
-		return 0;
-	ts = m->value;
 
 	if (!BadPtr(batchid))
 	{
@@ -83,12 +144,10 @@ static int chathistory_targets_send_line(Client *client, HistoryResult *r, char 
 	}
 
 	sendto_one(client, mtags, ":%s CHATHISTORY TARGETS %s %s",
-		me.name, r->object, ts);
+		me.name, r->object, r->datetime);
 
 	if (mtags)
 		free_message_tags(mtags);
-
-	return 1;
 }
 
 void chathistory_targets(Client *client, HistoryFilter *filter, int limit)
@@ -97,14 +156,9 @@ void chathistory_targets(Client *client, HistoryFilter *filter, int limit)
 	HistoryResult *r;
 	char batch[BATCHLEN+1];
 	int sent = 0;
+	ChatHistoryTarget *targets = NULL, *targets_next;
 
-	batch[0] = '\0';
-	if (HasCapability(client, "batch"))
-	{
-		/* Start a new batch */
-		generate_batch_id(batch);
-		sendto_one(client, NULL, ":%s BATCH +%s draft/chathistory-targets", me.name, batch);
-	}
+	/* 1. Grab all information we need */
 
 	filter->cmd = HFC_BEFORE;
 	if (strcmp(filter->timestamp_a, filter->timestamp_b) < 0)
@@ -120,13 +174,31 @@ void chathistory_targets(Client *client, HistoryFilter *filter, int limit)
 	{
 		Channel *channel = mp->channel;
 		r = history_request(channel->chname, filter);
-		if (r->log && chathistory_targets_send_line(client, r, batch))
+		if (r)
 		{
-			if (++sent >= limit)
-				break; /* We are done */
+			add_chathistory_target(&targets, r);
+			free_history_result(r);
 		}
-		free_history_result(r);
-		r = NULL;
+	}
+
+	/* 2. Now send it to the client */
+
+	batch[0] = '\0';
+	if (HasCapability(client, "batch"))
+	{
+		/* Start a new batch */
+		generate_batch_id(batch);
+		sendto_one(client, NULL, ":%s BATCH +%s draft/chathistory-targets", me.name, batch);
+	}
+
+	for (; targets; targets = targets_next)
+	{
+		targets_next = targets->next;
+		if (++sent < limit)
+			chathistory_targets_send_line(client, targets, batch);
+		safe_free(targets->datetime);
+		safe_free(targets->object);
+		safe_free(targets);
 	}
 
 	/* End of batch */
