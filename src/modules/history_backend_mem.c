@@ -235,6 +235,7 @@ static void setcfg(struct cfgstruct *cfg)
 
 static void freecfg(struct cfgstruct *cfg)
 {
+	safe_free(cfg->masterdb);
 	safe_free(cfg->directory);
 	safe_free(cfg->db_secret);
 }

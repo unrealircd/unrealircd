@@ -117,6 +117,8 @@ MOD_LOAD()
 
 MOD_UNLOAD()
 {
+	safe_free(channelcfg);
+	safe_free(privatecfg);
 	return MOD_SUCCESS;
 }
 
