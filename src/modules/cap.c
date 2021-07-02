@@ -300,6 +300,7 @@ static void cap_req(Client *client, const char *arg)
 		 */
 		if (buflen + plen + strlen(cap->name) + 6 >= BUFSIZE)
 		{
+			pbuf[0][plen-1] = '\0'; // Remove trailing space
 			pbuf[1][0] = '\0';
 			plen = 0;
 			i = 1;
@@ -331,6 +332,9 @@ static void cap_req(Client *client, const char *arg)
 		sendto_one(client, NULL, ":%s CAP %s NAK :%s", me.name, BadPtr(client->name) ? "*" : client->name, arg);
 		return;
 	}
+
+	if (plen > 0)
+		pbuf[i][plen-1] = '\0'; // Remove trailing space
 
 	if (i)
 	{
