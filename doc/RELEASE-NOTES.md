@@ -1,14 +1,13 @@
-UnrealIRCd 5.2.1-git Release Notes
-=================================
+UnrealIRCd 5.2.1-rc1 Release Notes
+===================================
 
-About 5.2.1-git
-----------------
-This is work in progress, bleeding edge git.
+This is the release candidate for UnrealIRCd 5.2.1.
+We welcome anyone to test and report issues to https://bugs.unrealircd.org/.
 
 Enhancements:
-* The allow block now uses allow::mask instead of allow::ip and
-  allow::hostname. Users upgrading will receive a warning but the
-  server will continue to boot.
+* The [allow block](https://www.unrealircd.org/docs/Allow_block)
+  now uses allow::mask instead of allow::ip and allow::hostname.
+  Users upgrading will receive a warning but the server will continue to boot.
 * New documentation for [mask items](https://www.unrealircd.org/docs/Mask_item)
   in the configuration file to show how it works with 1 or more mask
   items in a block. Also support for negative matching has been
@@ -49,13 +48,13 @@ Enhancements:
   TLS certificates and not rehash the entire configuration file.
 * Support for OpenSSL 3.0.0
 * Show microseconds in ```TSCTL ALLTIME```
-* The git version id is now shown in the ```INFO``` command (ReleaseId).
-* ```~a:*``` now matches all authenticated users and ```~a:0``` matches
-  all unauthenticated users.
+* The git version id is now shown in the ```INFO``` command on *NIX (ReleaseId).
+* [Extban](https://www.unrealircd.org/docs/Extended_bans) ```~a:*``` now matches
+  all authenticated users and ```~a:0``` matches all unauthenticated users.
 * Allow multiple masks in the [deny link { } block](https://www.unrealircd.org/docs/Deny_link_block)
 
 Fixes:
-* If using persistent channel history: if you had ANY rehash error (often
+* When using persistent channel history: if you had ANY rehash error (often
   completely unrelated to channel history) and you then rehashed again
   UnrealIRCd would crash.
 * When server syncing larger channels we could accidentally skip over or
