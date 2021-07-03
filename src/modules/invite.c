@@ -287,7 +287,12 @@ CMD_FUNC(cmd_invite)
 	/* Notify the person who got invited */
 	if (!is_silenced(client, target))
 	{
-		sendto_prefix_one(target, client, NULL, ":%s INVITE %s :%s", client->name,
+		MessageTag *mtags = NULL;
+
+		new_message(client, NULL, &mtags);
+		sendto_prefix_one(target, client, mtags, ":%s INVITE %s :%s", client->name,
 			target->name, channel->chname);
+
+		free_message_tags(mtags);
 	}
 }
