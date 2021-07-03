@@ -32,8 +32,8 @@ static char *para[MAXPARA + 2];
 static int do_numeric(int, Client *, MessageTag *, int, char **);
 static void cancel_clients(Client *, Client *, char *);
 static void remove_unknown(Client *, char *);
-static void parse2(Client *client, Client **fromptr, MessageTag *mtags, char *ch);
-static void parse_addlag(Client *client, int cmdbytes);
+static void parse2(Client *client, Client **fromptr, MessageTag *mtags, int mtags_bytes, char *ch);
+static void parse_addlag(Client *client, int command_bytes, int mtags_bytes);
 static int client_lagged_up(Client *client);
 static void ban_handshake_data_flooder(Client *client);
 
@@ -175,6 +175,7 @@ void parse(Client *cptr, char *buffer, int length)
 	char *ch;
 	int i, ret;
 	MessageTag *mtags = NULL;
+	int mtags_bytes = 0;
 
 	/* Take extreme care in this function, as messages can be up to READBUFSIZE
 	 * in size, which is 8192 at the time of writing.
@@ -218,13 +219,16 @@ void parse(Client *cptr, char *buffer, int length)
 	/* Now, parse message tags, if any */
 	if (*ch == '@')
 	{
+		char *start = ch;
 		parse_message_tags(cptr, &ch, &mtags);
+		if (ch - start > 0)
+			mtags_bytes = ch - start;
 		/* Skip whitespace again */
 		for (; *ch == ' '; ch++)
 			;
 	}
 
-	parse2(cptr, &from, mtags, ch);
+	parse2(cptr, &from, mtags, mtags_bytes, ch);
 
 	if (IsDead(cptr))
 		RunHook3(HOOKTYPE_POST_COMMAND, NULL, mtags, ch);
@@ -236,13 +240,14 @@ void parse(Client *cptr, char *buffer, int length)
 }
 
 /** Parse the remaining line - helper function for parse().
- * @param cptr   The client from which the message was received
- * @param from   The sender, this may be changed by parse2() when
- *               the message has a sender, eg :xyz PRIVMSG ..
- * @param mtags  Message tags received for this message.
- * @param ch     The incoming line received (buffer), excluding message tags.
+ * @param cptr   	The client from which the message was received
+ * @param from   	The sender, this may be changed by parse2() when
+ *               	the message has a sender, eg :xyz PRIVMSG ..
+ * @param mtags  	Message tags received for this message.
+ * @param mtags_bytes	The length of all message tags.
+ * @param ch		The incoming line received (buffer), excluding message tags.
  */
-static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
+static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_bytes, char *ch)
 {
 	Client *from = cptr;
 	char *s;
@@ -351,7 +356,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		numeric = (*ch - '0') * 100 + (*(ch + 1) - '0') * 10 + (*(ch + 2) - '0');
 		paramcount = MAXPARA;
 		ircstats.is_num++;
-		parse_addlag(cptr, bytes);
+		parse_addlag(cptr, bytes, mtags_bytes);
 	}
 	else
 	{
@@ -377,7 +382,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		if (!cmptr || !(cmptr->flags & CMD_NOLAG))
 		{
 			/* Add fake lag (doing this early in the code, so we don't forget) */
-			parse_addlag(cptr, bytes);
+			parse_addlag(cptr, bytes, mtags_bytes);
 		}
 		if (!cmptr)
 		{
@@ -568,10 +573,11 @@ static void ban_handshake_data_flooder(Client *client)
  * be able to flood at full speed causing potentially many Mbits or even
  * GBits of data to be sent out to other clients.
  *
- * @param client    The client.
- * @param cmdbytes  Number of bytes in the command.
+ * @param client	The client.
+ * @param command_bytes	Command length in bytes (excluding message tagss)
+ * @param mtags_bytes	Length of message tags in bytes
  */
-void parse_addlag(Client *client, int cmdbytes)
+void parse_addlag(Client *client, int command_bytes, int mtags_bytes)
 {
 	FloodSettings *settings = get_floodsettings_for_user(client, FLD_LAG_PENALTY);
 
@@ -584,7 +590,7 @@ void parse_addlag(Client *client, int cmdbytes)
 		int lag_penalty = settings->period[FLD_LAG_PENALTY];
 		int lag_penalty_bytes = settings->limit[FLD_LAG_PENALTY];
 
-		client->local->since_msec += (1 + (cmdbytes/lag_penalty_bytes)) * lag_penalty;
+		client->local->since_msec += (1 + (command_bytes/lag_penalty_bytes) + (mtags_bytes/lag_penalty_bytes)) * lag_penalty;
 
 		/* This code takes into account not only the msecs we just calculated
 		 * but also any leftover msec from previous lagging up.
