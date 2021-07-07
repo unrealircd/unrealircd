@@ -62,6 +62,9 @@ Fixes:
   other side of the link but are actually in the channel (ghosts)
 * When using autoconnect on (very) big networks, the network no longer breaks down
   (with the new default strategy 'sequential')
+* The default ban exemption on ```127.*``` was too broad. It also matched
+  hostnames that started with it, allowing such users to bypass
+  gline/kline/shun (but not zline/gzline).
 * Channel mode ```+d``` (so after ```-D```) never took QUITs into account
   properly. This should now fix things, so the channel goes ```-d```
   immediately once it is no longer needed.
