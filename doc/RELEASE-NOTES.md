@@ -1,8 +1,9 @@
-UnrealIRCd 5.2.1-rc1 Release Notes
+UnrealIRCd 5.2.1 Release Notes
 ===================================
 
-This is the release candidate for UnrealIRCd 5.2.1.
-We welcome anyone to test and report issues to https://bugs.unrealircd.org/.
+This is UnrealIRCd 5.2.1. Even though only a month has passed since 5.2.0,
+this release comes with several new features and some major bug fixes.
+Please report any issues to https://bugs.unrealircd.org/.
 
 Enhancements:
 * The [allow block](https://www.unrealircd.org/docs/Allow_block)
