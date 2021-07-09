@@ -393,9 +393,16 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 			return;
 		}
 
-		/* fatal error while resolving */
-		sendto_ops_and_log("Unable to resolve hostname '%s', when trying to connect to server %s.",
-			r->name, r->linkblock->servername);
+		if (r->ipv4fallback) {
+			/* ipv6-only domain but we couldn't connect over ipv6 and fell back to ipv4 */
+			sendto_ops_and_log("Couldn't connect to server %s.", r->linkblock->servername);
+		 }
+		else
+		{
+			/* fatal error while resolving */
+			sendto_ops_and_log("Unable to resolve hostname '%s', when trying to connect to server %s.",
+								r->name, r->linkblock->servername);
+		}
 		r->linkblock->refcount--;
 		unrealdns_freeandremovereq(r);
 		return;
@@ -424,6 +431,15 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 			sendto_ops_and_log("Trying to activate link with server %s[%s]...", r->linkblock->servername, ip);
 			break;
 		case -1:
+			/* The three most common errors when ipv6 is down or does not exist */
+			if (r->ipv6 && (ERRNO == P_ENETUNREACH || ERRNO == P_ETIMEDOUT || ERRNO == P_EHOSTUNREACH))
+			{
+				/* We couldn't connect over v6, let's give it a try over v4 */
+				r->ipv6 = 0;
+				r->ipv4fallback = 1;
+				ares_gethostbyname(resolver_channel, r->name, AF_INET, unrealdns_cb_nametoip_link, r);
+				return;
+			}
 			sendto_ops_and_log("Couldn't connect to server %s[%s].", r->linkblock->servername, ip);
 			break;
 		case -2:
