@@ -106,7 +106,7 @@ CMD_FUNC(cmd_md)
 		if (!md || !md->unserialize || !target)
 			return;
 
-		if (MyConnect(target) && !md->remote_write && strcmp(md->name,"saslmechlist") != 0 && strcmp(client->name,target->name) != 0)
+		if (MyConnect(target) && !md->remote_write)
 		{
 			ircd_log(LOG_ERROR, "Remote server '%s' tried to write moddata '%s' of a client from ours '%s' -- attempt blocked.",
 			         client->name, md->name, target->name);
