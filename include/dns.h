@@ -19,6 +19,7 @@ struct DNSReq {
 	DNSReq *prev, *next;
 	char *name; /**< Name being resolved (only for DNSREQ_LINKCONF and DNSREQ_CONNECT) */
 	char ipv6; /**< Resolving for ipv6 or ipv4? */
+	char ipv4fallback; /**< Are we falling back to ipv4 after failing to connect over v6? */
 	DNSReqType type; /**< DNS Request type (DNSREQ_*) */
 	Client *client; /**< Client the request is for, NULL if client died OR unavailable */
 	ConfigItem_link *linkblock; /**< Linkblock */
