@@ -397,8 +397,9 @@ MOD_INIT()
 	mreq.unserialize = saslmechlist_unserialize;
 	mreq.sync = 1;
 	mreq.type = MODDATATYPE_CLIENT;
+	mreq.remote_write = 1;
 	ModDataAdd(modinfo->handle, mreq);
-
+	
 	EventAdd(modinfo->handle, "sasl_timeout", sasl_timeout, NULL, 2000, 0);
 
 	return MOD_SUCCESS;
