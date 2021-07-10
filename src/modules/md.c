@@ -72,6 +72,22 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
+/** Check if client may write to this MD object */
+int md_access_check(Client *client, ModDataInfo *md, Client *target)
+{
+	if ((client == target) && md->self_write)
+		return 1;
+
+	if (MyConnect(target) && !md->remote_write)
+	{
+		ircd_log(LOG_ERROR, "Remote server '%s' tried to write moddata '%s' of a client from ours '%s' -- attempt blocked.",
+			 client->name, md->name, target->name);
+		return 0;
+	}
+
+	return 1;
+}
+
 /** Set ModData command.
  *  Syntax: MD <type> <object name> <variable name> <value>
  * Example: MD client Syzop sslfp 123456789
@@ -106,12 +122,8 @@ CMD_FUNC(cmd_md)
 		if (!md || !md->unserialize || !target)
 			return;
 
-		if (MyConnect(target) && !md->remote_write)
-		{
-			ircd_log(LOG_ERROR, "Remote server '%s' tried to write moddata '%s' of a client from ours '%s' -- attempt blocked.",
-			         client->name, md->name, target->name);
+		if (!md_access_check(client, md, target))
 			return;
-		}
 
 		if (value)
 			md->unserialize(value, &moddata_client(target, md));
@@ -170,12 +182,8 @@ CMD_FUNC(cmd_md)
 		if (!md || !md->unserialize)
 			return;
 
-		if (MyConnect(target) && !md->remote_write)
-		{
-			ircd_log(LOG_ERROR, "Remote server '%s' tried to write moddata '%s' of a client from ours '%s' -- attempt blocked.",
-			         client->name, md->name, target->name);
+		if (!md_access_check(client, md, target))
 			return;
-		}
 
 		if (value)
 			md->unserialize(value, &moddata_member(m, md));
@@ -217,12 +225,8 @@ CMD_FUNC(cmd_md)
 		if (!md || !md->unserialize)
 			return;
 
-		if (MyConnect(target) && !md->remote_write)
-		{
-			ircd_log(LOG_ERROR, "Remote server '%s' tried to write moddata '%s' of a client from ours '%s' -- attempt blocked.",
-			         client->name, md->name, target->name);
+		if (!md_access_check(client, md, target))
 			return;
-		}
 
 		if (value)
 			md->unserialize(value, &moddata_membership(m, md));

@@ -1,9 +1,15 @@
-UnrealIRCd 5.2.1 Release Notes
+UnrealIRCd 5.2.2-git Release Notes
 ===================================
+This is git, latest bleeding edge. It is not meant to be used on production servers.
+
+UnrealIRCd 5.2.1 Release Notes
+===============================
 
 This is UnrealIRCd 5.2.1. Even though only a month has passed since 5.2.0,
 this release comes with several new features and some major bug fixes.
 Please report any issues to https://bugs.unrealircd.org/.
+
+(5.2.1.1 fixes an issue with SASL services autodetection and mechlist in 5.2.1)
 
 Enhancements:
 * The [allow block](https://www.unrealircd.org/docs/Allow_block)
