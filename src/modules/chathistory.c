@@ -258,10 +258,29 @@ CMD_FUNC(cmd_chathistory)
 	}
 
 	channel = find_channel(parv[2], NULL);
-	if (!channel || !IsMember(client, channel) || !has_channel_mode(channel, 'H'))
+	if (!channel || !IsMember(client, channel))
 	{
 		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_TARGET %s %s :Messages could not be retrieved",
 			me.name, parv[1], parv[2]);
+		return;
+	}
+
+	if (!has_channel_mode(channel, 'H'))
+	/* empty history = empty batch */
+	{
+		char batch[BATCHLEN+1];
+
+		batch[0] = '\0';
+		if (HasCapability(client, "batch"))
+		{
+			/* Start a new batch */
+			generate_batch_id(batch);
+			sendto_one(client, NULL, ":%s BATCH +%s chathistory %s", me.name, batch, channel->chname);
+		}
+
+		/* End of batch */
+		if (*batch)
+			sendto_one(client, NULL, ":%s BATCH -%s", me.name, batch);
 		return;
 	}
 
