@@ -232,7 +232,7 @@ CMD_FUNC(cmd_chathistory)
 		return;
 	}
 
-	if (!strcmp(parv[1], "TARGETS"))
+	if (!strcasecmp(parv[1], "TARGETS"))
 	{
 		Membership *mp;
 		int limit;
@@ -268,7 +268,7 @@ CMD_FUNC(cmd_chathistory)
 	filter = safe_alloc(sizeof(HistoryFilter));
 	/* Below this point, instead of 'return', use 'goto end', which takes care of the freeing of 'filter' and 'history' */
 
-	if (!strcmp(parv[1], "BEFORE"))
+	if (!strcasecmp(parv[1], "BEFORE"))
 	{
 		filter->cmd = HFC_BEFORE;
 		if (!chathistory_token(parv[3], "timestamp", &filter->timestamp_a) &&
@@ -280,7 +280,7 @@ CMD_FUNC(cmd_chathistory)
 		}
 		filter->limit = atoi(parv[4]);
 	} else
-	if (!strcmp(parv[1], "AFTER"))
+	if (!strcasecmp(parv[1], "AFTER"))
 	{
 		filter->cmd = HFC_AFTER;
 		if (!chathistory_token(parv[3], "timestamp", &filter->timestamp_a) &&
@@ -292,7 +292,7 @@ CMD_FUNC(cmd_chathistory)
 		}
 		filter->limit = atoi(parv[4]);
 	} else
-	if (!strcmp(parv[1], "LATEST"))
+	if (!strcasecmp(parv[1], "LATEST"))
 	{
 		filter->cmd = HFC_LATEST;
 		if (!chathistory_token(parv[3], "timestamp", &filter->timestamp_a) &&
@@ -305,7 +305,7 @@ CMD_FUNC(cmd_chathistory)
 		}
 		filter->limit = atoi(parv[4]);
 	} else
-	if (!strcmp(parv[1], "AROUND"))
+	if (!strcasecmp(parv[1], "AROUND"))
 	{
 		filter->cmd = HFC_AROUND;
 		if (!chathistory_token(parv[3], "timestamp", &filter->timestamp_a) &&
@@ -317,7 +317,7 @@ CMD_FUNC(cmd_chathistory)
 		}
 		filter->limit = atoi(parv[4]);
 	} else
-	if (!strcmp(parv[1], "BETWEEN"))
+	if (!strcasecmp(parv[1], "BETWEEN"))
 	{
 		filter->cmd = HFC_BETWEEN;
 		if (BadPtr(parv[5]))
