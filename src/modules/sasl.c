@@ -25,7 +25,7 @@
 ModuleHeader MOD_HEADER
   = {
 	"sasl",
-	"5.0",
+	"5.2.1",
 	"SASL", 
 	"UnrealIRCd Team",
 	"unrealircd-5",
@@ -396,6 +396,7 @@ MOD_INIT()
 	mreq.serialize = saslmechlist_serialize;
 	mreq.unserialize = saslmechlist_unserialize;
 	mreq.sync = 1;
+	mreq.self_write = 1;
 	mreq.type = MODDATATYPE_CLIENT;
 	ModDataAdd(modinfo->handle, mreq);
 

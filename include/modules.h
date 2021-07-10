@@ -152,6 +152,7 @@ struct ModDataInfo {
 	void (*unserialize)(char *str, ModData *m); /**< Function which converts the string back to data */
 	int sync; /**< Send in netsynch (when servers connect) */
 	int remote_write; /**< Allow remote servers to set/unset this moddata, even if it they target one of our own clients */
+	int self_write; /**< Allow remote servers to set/unset moddata of their own server object (irc1.example.net writing the MD object of irc1.example.net) */
 };
 
 #define moddata_client(acptr, md)    acptr->moddata[md->slot]
