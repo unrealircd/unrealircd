@@ -73,5 +73,8 @@ CMD_FUNC(cmd_wallops)
 		return;
 	}
 
+	if (MyUser(client))
+		sendto_one(client, NULL, ":%s WALLOPS :%s", client->name, message);
+
 	sendto_ops_butone(client->direction, client, ":%s WALLOPS :%s", client->name, message);
 }
