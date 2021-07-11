@@ -258,9 +258,23 @@ CMD_FUNC(cmd_chathistory)
 	}
 
 	channel = find_channel(parv[2], NULL);
-	if (!channel || !IsMember(client, channel) || !has_channel_mode(channel, 'H'))
+	if (!channel)
 	{
-		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_TARGET %s %s :Messages could not be retrieved",
+		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_TARGET %s %s :Messages could not be retrieved, not an existing channel",
+			me.name, parv[1], parv[2]);
+		return;
+	}
+
+	if (!IsMember(client, channel))
+	{
+		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_TARGET %s %s :Messages could not be retrieved, you are not a member",
+			me.name, parv[1], parv[2]);
+		return;
+	}
+
+	if (!has_channel_mode(channel, 'H'))
+	{
+		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_TARGET %s %s :Messages could not be retrieved, channel does not have mode +H",
 			me.name, parv[1], parv[2]);
 		return;
 	}
