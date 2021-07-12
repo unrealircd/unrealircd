@@ -6302,6 +6302,10 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 		{
 			ca->maxsize = config_checkval(cep->ce_vardata,CFG_SIZE);
 		}
+		else if (!strcmp(cep->ce_varname, "type"))
+		{
+			ca->type = log_type_stringtoval(cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "flags"))
 		{
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
@@ -6316,7 +6320,8 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 
 }
 
-int _test_log(ConfigFile *conf, ConfigEntry *ce) {
+int _test_log(ConfigFile *conf, ConfigEntry *ce)
+{
 	int fd, errors = 0;
 	ConfigEntry *cep, *cepp;
 	char has_flags = 0, has_maxsize = 0;
@@ -6380,6 +6385,23 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 			{
 				config_error_empty(cep->ce_fileptr->cf_filename,
 					cep->ce_varlinenum, "log", cep->ce_varname);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "type"))
+		{
+			if (!cep->ce_vardata)
+			{
+				config_error_empty(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "log", cep->ce_varname);
+				errors++;
+				continue;
+			}
+			if (!log_type_stringtoval(cep->ce_vardata))
+			{
+				config_error("%s:%i: unknown log type '%s'",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_vardata);
 				errors++;
 			}
 		}

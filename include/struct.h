@@ -241,6 +241,13 @@ typedef enum LogLevel {
 	ULOG_FATAL = 3
 } LogLevel;
 
+/** Logging types (text, json, etc) */
+typedef enum LogType {
+	LOG_TYPE_INVALID = 0,
+	LOG_TYPE_TEXT = 1,
+	LOG_TYPE_JSON = 2,
+} LogType;
+
 /*
 ** 'offsetof' is defined in ANSI-C. The following definition
 ** is not absolutely portable (I have been told), but so far
@@ -1794,12 +1801,13 @@ struct ConfigItem_allow_dcc {
 
 struct ConfigItem_log {
 	ConfigItem_log *prev, *next;
-	ConfigFlag flag;
-	char *file; /**< Filename to log to (either generated or specified) */
-	char *filefmt; /**< Filename with dynamic % stuff */
-	long maxsize;
-	int  flags;
-	int  logfd;
+	ConfigFlag flag;	/**< Eh, is this used? */
+	LogType type;		/**< Log type, eg text or json */
+	char *file;		/**< Filename to log to (either generated or specified) */
+	char *filefmt;		/**< Filename with dynamic % stuff */
+	long maxsize;		/**< Maximum file size to allow, after which we rotate logs */
+	int flags;		/**< What to log */
+	int logfd;		/**< The file descriptor (internal) */
 };
 
 struct ConfigItem_unknown {

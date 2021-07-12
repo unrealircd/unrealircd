@@ -1080,6 +1080,8 @@ extern FloodSettings *get_floodsettings_for_user(Client *client, FloodOption opt
 extern MODVAR char *floodoption_names[];
 extern void flood_limit_exceeded_log(Client *client, char *floodname);
 /* logging */
+extern LogType log_type_stringtoval(char *str);
+extern char *log_type_valtostring(LogType v);
 #ifdef DEBUGMODE
 #define unreal_log(...) do_unreal_log(__VA_ARGS__, log_data_source(__FILE__, __LINE__, __FUNCTION__), NULL)
 #else

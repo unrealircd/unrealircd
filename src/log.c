@@ -26,6 +26,28 @@
 
 #include "unrealircd.h"
 
+LogType log_type_stringtoval(char *str)
+{
+	if (!strcmp(str, "json"))
+		return LOG_TYPE_JSON;
+	if (!strcmp(str, "text"))
+		return LOG_TYPE_TEXT;
+	return LOG_TYPE_INVALID;
+}
+
+char *log_type_valtostring(LogType v)
+{
+	switch(v)
+	{
+		case LOG_TYPE_TEXT:
+			return "text";
+		case LOG_TYPE_JSON:
+			return "json";
+		default:
+			return "???";
+	}
+}
+
 // TODO: validate that all 'key' values are lowercase+underscore+digits in all functions below.
 
 void json_expand_client(json_t *j, char *key, Client *client, int detail)
@@ -244,13 +266,21 @@ literal:
 	*o = '\0';
 }
 
+/** Do the actual writing to log files */
+void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
+{
+	ircd_log(LOG_ERROR, "STD-STR: %s %s %s %s", loglevel_to_string(loglevel), subsystem, event_id, msg);
+	ircd_log(LOG_ERROR, "JSON-STR: %s", json_serialized);
+}
+
+/* Logging function, called by the unreal_log() macro. */
 void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
                 Client *client,
                 char *msg, ...)
 {
 	va_list vl;
 	LogData *d;
-	char *str;
+	char *json_serialized;
 	json_t *j = NULL;
 	json_t *j_details = NULL;
 	char msgbuf[1024];
@@ -308,12 +338,14 @@ void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
 
 	/* Now merge the details into root object 'j': */
 	json_object_update_missing(j, j_details);
+	/* Generate the JSON */
+	json_serialized = json_dumps(j, 0);
 
-	str = json_dumps(j, 0);
-	ircd_log(LOG_ERROR, "STD-STR: %s %s %s %s", loglevel_to_string(loglevel), subsystem, event_id, msgbuf);
-	ircd_log(LOG_ERROR, "JSON-STR: %s", str);
-	free(str);
+	/* Now call the actual loggers */
+	do_unreal_log_loggers(loglevel, subsystem, event_id, msgbuf, json_serialized);
 
+	/* Free everything */
+	safe_free(json_serialized);
 	json_decref(j_details);
 	json_decref(j);
 }
