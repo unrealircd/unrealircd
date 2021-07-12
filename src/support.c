@@ -140,7 +140,6 @@ char *inetntop(int af, const void *in, char *out, size_t size)
 		if (*(op - 1) == ':')
 			*op++ = '0';
 		*op = '\0';
-		Debug((DEBUG_DNS, "Expanding `%s' -> `%s'", tmp, out));
 	}
 	return out;
 }

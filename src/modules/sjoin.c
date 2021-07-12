@@ -463,7 +463,6 @@ getnick:
 			continue;
 		if (nick[0] == '\0')
 			continue;
-		Debug((DEBUG_DEBUG, "Got nick: %s", nick));
 		if (!(modeflags & CHFL_BAN) && !(modeflags & CHFL_EXCEPT) && !(modeflags & CHFL_INVEX))
 		{
 			Client *acptr;
@@ -634,7 +633,6 @@ getnick:
 	}
 
 	/* Send out any possible remainder.. */
-	Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to ", ts, parabuf, parv[parc - 1]));
 	sendto_server(client, 0, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
 	sendto_server(client, PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
 
@@ -843,12 +841,10 @@ getnick:
 
 					case EXSJ_THEYWON:
 						parax = cm_getparameter(channel, flag);
-						Debug((DEBUG_DEBUG, "sjoin: they won: '%s'", parax));
 						Addit(Channelmode_Table[i].flag, parax);
 						break;
 
 					case EXSJ_SAME:
-						Debug((DEBUG_DEBUG, "sjoin: equal"));
 						break;
 
 					case EXSJ_MERGE:

@@ -280,10 +280,8 @@
 #define	IRCD_PIDFILE PIDFILE
 
 #ifdef DEBUGMODE
- #define Debug(x) debug x
  #define LOGFILE LPATH
 #else
- #define Debug(x) ;
  #define LOGFILE "/dev/null"
 #endif
 

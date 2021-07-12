@@ -101,8 +101,6 @@ void report_error(char *text, Client *client)
 	
 	host = (client) ? get_client_name(client, FALSE) : "";
 
-	Debug((DEBUG_ERROR, text, host, STRERROR(errtmp)));
-
 	/*
 	 * Get the *real* error from the socket (well try to anyway..).
 	 * This may only work when SO_DEBUG is enabled but its worth the
@@ -151,8 +149,6 @@ void report_baderror(char *text, Client *client)
 	int  err, len = sizeof(err);
 
 	host = (client) ? get_client_name(client, FALSE) : "";
-
-	Debug((DEBUG_ERROR, text, host, STRERROR(errtmp)));
 
 	/*
 	 * Get the *real* error from the socket (well try to anyway..).
@@ -932,7 +928,6 @@ refuse_client:
 		if (ctx)
 		{
 			SetTLSAcceptHandshake(client);
-			Debug((DEBUG_DEBUG, "Starting TLS accept handshake for %s", client->local->sockhost));
 			if ((client->local->ssl = SSL_new(ctx)) == NULL)
 			{
 				goto refuse_client;
@@ -943,7 +938,6 @@ refuse_client:
 			SSL_set_ex_data(client->local->ssl, ssl_client_index, client);
 			if (!ircd_SSL_accept(client, fd))
 			{
-				Debug((DEBUG_DEBUG, "Failed TLS accept handshake in instance 1: %s", client->local->sockhost));
 				SSL_set_shutdown(client->local->ssl, SSL_RECEIVED_SHUTDOWN);
 				SSL_smart_shutdown(client->local->ssl);
 				SSL_free(client->local->ssl);
@@ -1275,8 +1269,6 @@ int connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	sendto_realops("connect_server() CONTINUED (%s:%d), aconf %p, refcount: %d, TEMP: %s",
 		__FILE__, __LINE__, aconf, aconf->refcount, aconf->flag.temporary ? "YES" : "NO");
 #endif
-	Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
-		client->name, client->serv->conf->servername, client->serv->conf->refcount));
 	if (by && IsUser(by))
 		strlcpy(client->serv->by, by->name, sizeof(client->serv->by));
 	else

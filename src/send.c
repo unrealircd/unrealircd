@@ -78,7 +78,6 @@ int dead_socket(Client *to, char *notice)
 	if (!IsUser(to) && !IsUnknown(to) && !IsClosing(to))
 		sendto_ops_and_log("Link to server %s (%s) closed: %s",
 			to->name, to->ip?to->ip:"<no-ip>", notice);
-	Debug((DEBUG_ERROR, "dead_socket: %s - %s", notice, get_client_name(to, FALSE)));
 	safe_strdup(to->local->error_str, notice);
 	return -1;
 }
@@ -248,8 +247,6 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 	Hook *h;
 	Client *intended_to = to;
 	
-	Debug((DEBUG_ERROR, "Sending [%s] to %s", msg, to->name));
-
 	if (to->direction)
 		to = to->direction;
 	if (IsDeadSocket(to))
@@ -259,11 +256,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 	{
 		/* This is normal when 'to' was being closed (via exit_client
 		 *  and close_connection) --Run
-		 * Print the debug message anyway...
 		 */
-		Debug((DEBUG_ERROR,
-		    "Local socket %s with negative fd %d... AARGH!", to->name,
-		    to->local->fd));
 		return;
 	}
 

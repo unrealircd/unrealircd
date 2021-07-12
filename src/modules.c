@@ -299,7 +299,6 @@ char  *Module_Create(char *path_)
 	char *expectedmodversion = our_mod_version;
 	unsigned int expectedcompilerversion = our_compiler_version;
 	long modsys_ver = 0;
-	Debug((DEBUG_DEBUG, "Attempting to load module from %s", path_));
 
 	path = Module_TransformPath(path_);
 

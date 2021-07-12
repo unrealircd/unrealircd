@@ -536,8 +536,6 @@ int fast_badword_replace(ConfigItem_badword *badword, char *line, char *buf, int
 	int run = 1;
 	int cleaned = 0;
 
-	Debug((DEBUG_NOTICE, "replacing %s -> %s in '%s'", badword->word, replacew, line));
-
 	while(run) {
 		pold = our_strcasestr(pold, badword->word);
 		if (!pold)

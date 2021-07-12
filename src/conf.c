@@ -2511,13 +2511,10 @@ void	config_rehash()
 		next = (ListStruct *)link_ptr->next;
 		if (link_ptr->refcount == 0)
 		{
-			Debug((DEBUG_ERROR, "s_conf: deleting block %s (refcount 0)", link_ptr->servername));
 			delete_linkblock(link_ptr);
 		}
 		else
 		{
-			Debug((DEBUG_ERROR, "s_conf: marking block %s (refcount %d) as temporary",
-				link_ptr->servername, link_ptr->refcount));
 			link_ptr->flag.temporary = 1;
 		}
 	}
@@ -10840,8 +10837,6 @@ void link_cleanup(ConfigItem_link *link_ptr)
 
 void delete_linkblock(ConfigItem_link *link_ptr)
 {
-	Debug((DEBUG_ERROR, "delete_linkblock: deleting %s, refcount=%d",
-		link_ptr->servername, link_ptr->refcount));
 	if (link_ptr->class)
 	{
 		link_ptr->class->xrefcount--;
@@ -10860,8 +10855,6 @@ void delete_linkblock(ConfigItem_link *link_ptr)
 
 void delete_classblock(ConfigItem_class *class_ptr)
 {
-	Debug((DEBUG_ERROR, "delete_classblock: deleting %s, clients=%d, xrefcount=%d",
-		class_ptr->name, class_ptr->clients, class_ptr->xrefcount));
 	safe_free(class_ptr->name);
 	DelListItem(class_ptr, conf_class);
 	safe_free(class_ptr);

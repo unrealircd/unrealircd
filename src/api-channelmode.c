@@ -223,7 +223,6 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 	}
 	if (i == EXTCMODETABLESZ)
 	{
-		Debug((DEBUG_DEBUG, "CmodeAdd failed, no space"));
 		if (module)
 			module->errorcode = MODERR_NOSPACE;
 		return NULL;
@@ -243,7 +242,6 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 			{
 				if (paraslot == MAXPARAMMODES - 1)
 				{
-					Debug((DEBUG_DEBUG, "CmodeAdd failed, no space for parameter"));
 					if (module)
 						module->errorcode = MODERR_NOSPACE;
 					return NULL;

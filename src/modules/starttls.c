@@ -97,14 +97,13 @@ CMD_FUNC(cmd_starttls)
 	send_queued(client);
 
 	SetStartTLSHandshake(client);
-	Debug((DEBUG_DEBUG, "Starting SSL handshake (due to STARTTLS) for %s", client->local->sockhost));
 	if ((client->local->ssl = SSL_new(ctx)) == NULL)
 		goto fail;
 	SetTLS(client);
 	SSL_set_fd(client->local->ssl, client->local->fd);
 	SSL_set_nonblocking(client->local->ssl);
-	if (!ircd_SSL_accept(client, client->local->fd)) {
-		Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", client->local->sockhost));
+	if (!ircd_SSL_accept(client, client->local->fd))
+	{
 		SSL_set_shutdown(client->local->ssl, SSL_RECEIVED_SHUTDOWN);
 		SSL_smart_shutdown(client->local->ssl);
 		SSL_free(client->local->ssl);

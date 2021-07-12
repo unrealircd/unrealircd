@@ -189,8 +189,6 @@ void parse(Client *cptr, char *buffer, int length)
 			return;
 	}
 
-	Debug((DEBUG_ERROR, "Parsing: %s (from %s)", buffer, (*cptr->name ? cptr->name : "*")));
-
 	if (IsDeadSocket(cptr))
 		return;
 
@@ -407,8 +405,6 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 					sendto_one(from, NULL, ":%s %d %s %s :Unknown command",
 					                       me.name, ERR_UNKNOWNCOMMAND,
 					                       from->name, ch);
-					Debug((DEBUG_ERROR, "Unknown (%s) from %s",
-					    ch, get_client_name(cptr, TRUE)));
 				}
 			}
 			ircstats.is_unco++;

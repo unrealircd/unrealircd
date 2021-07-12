@@ -1406,11 +1406,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 	if (!cptr->serv->conf)
 		cptr->serv->conf = aconf; /* Only set serv->conf to aconf if not set already! Bug #0003913 */
 	if (incoming)
-	{
 		cptr->serv->conf->refcount++;
-		Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
-			cptr->name, cptr->serv->conf->servername, cptr->serv->conf->refcount));
-	}
 	cptr->serv->conf->class->clients++;
 	cptr->local->class = cptr->serv->conf->class;
 	RunHook(HOOKTYPE_SERVER_CONNECT, cptr);

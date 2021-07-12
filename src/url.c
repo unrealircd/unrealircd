@@ -321,7 +321,6 @@ static void url_socket_pollcb(int fd, int revents, void *data)
 
 static int url_socket_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *sockp)
 {
-	Debug((DEBUG_DEBUG, "url_socket_cb: %d (%s)", (int)s, (what == CURL_POLL_REMOVE)?"remove":"add-or-modify"));
 	if (what == CURL_POLL_REMOVE)
 	{
 		fd_close(s);

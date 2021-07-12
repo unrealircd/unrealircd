@@ -189,8 +189,6 @@ Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*
 		Usermode_Table[i].flag = ch;
 		Usermode_Table[i].allowed = allowed;
 		Usermode_Table[i].unset_on_deoper = unset_on_deoper;
-		Debug((DEBUG_DEBUG, "UmodeAdd(%c) returning %04lx",
-			ch, Usermode_Table[i].mode));
 		/* Update usermode table highest */
 		for (j = 0; j < UMODETABLESZ; j++)
 			if (Usermode_Table[i].flag)
@@ -214,7 +212,6 @@ Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*
 	}
 	else
 	{
-		Debug((DEBUG_DEBUG, "UmodeAdd failed, no space"));
 		if (module)
 			module->errorcode = MODERR_NOSPACE;
 		return NULL;
@@ -309,7 +306,6 @@ Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(Client *client, int 
 	}
 	else
 	{
-		Debug((DEBUG_DEBUG, "SnomaskAdd failed, no space"));
 		*mode = 0;
 		if (module)
 			module->errorcode = MODERR_NOSPACE;

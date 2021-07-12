@@ -179,7 +179,6 @@ void server_reboot(char *mesg)
 	int i;
 	Client *client;
 	sendto_realops("Aieeeee!!!  Restarting server... %s", mesg);
-	Debug((DEBUG_NOTICE, "Restarting server... %s", mesg));
 
 	list_for_each_entry(client, &lclient_list, lclient_node)
 		(void) send_queued(client);
@@ -206,12 +205,6 @@ void server_reboot(char *mesg)
 		CleanUp();
 		WinExec(cmdLine, SW_SHOWDEFAULT);
 	}
-#endif
-#ifndef _WIN32
-	Debug((DEBUG_FATAL, "Couldn't restart server: %s", strerror(errno)));
-#else
-	Debug((DEBUG_FATAL, "Couldn't restart server: %s",
-	    strerror(GetLastError())));
 #endif
 	unload_all_modules();
 #ifdef _WIN32
@@ -360,9 +353,6 @@ void check_ping(Client *client)
 	int ping = 0;
 
 	ping = client->local->class ? client->local->class->pingfreq : iConf.handshake_timeout;
-	Debug((DEBUG_DEBUG, "c(%s)=%d p %d a %lld", client->name,
-		client->status, ping,
-		(long long)(TStime() - client->local->lasttime)));
 
 	/* If ping is less than or equal to the last time we received a command from them */
 	if (ping > (TStime() - client->local->lasttime))
@@ -386,9 +376,6 @@ void check_ping(Client *client)
 			ircd_log(LOG_ERROR, "No response from %s, closing link",
 			         get_client_name(client, FALSE));
 		}
-		if (IsTLSAcceptHandshake(client))
-			Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%lld-%lld > %lld)", client->local->sockhost,
-				(long long)TStime(), (long long)client->local->since, (long long)ping));
 		ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %lld seconds",
 			(long long) (TStime() - client->local->lasttime));
 		exit_client(client, NULL, scratch);
@@ -549,40 +536,19 @@ void fix_timers(void)
 	list_for_each_entry(client, &lclient_list, lclient_node)
 	{
 		if (client->local->since > TStime())
-		{
-			Debug((DEBUG_DEBUG, "fix_timers(): %s: client->local->since %ld -> %ld",
-				client->name, client->local->since, TStime()));
 			client->local->since = TStime();
-		}
 		if (client->local->lasttime > TStime())
-		{
-			Debug((DEBUG_DEBUG, "fix_timers(): %s: client->local->lasttime %ld -> %ld",
-				client->name, client->local->lasttime, TStime()));
 			client->local->lasttime = TStime();
-		}
 		if (client->local->last > TStime())
-		{
-			Debug((DEBUG_DEBUG, "fix_timers(): %s: client->local->last %ld -> %ld",
-				client->name, client->local->last, TStime()));
 			client->local->last = TStime();
-		}
 
 		/* users */
 		if (MyUser(client))
 		{
 			if (client->local->nextnick > TStime())
-			{
-				Debug((DEBUG_DEBUG, "fix_timers(): %s: client->local->nextnick %ld -> %ld",
-					client->name, client->local->nextnick, TStime()));
 				client->local->nextnick = TStime();
-			}
 			if (client->local->nexttarget > TStime())
-			{
-				Debug((DEBUG_DEBUG, "fix_timers(): %s: client->local->nexttarget %ld -> %ld",
-					client->name, client->local->nexttarget, TStime()));
 				client->local->nexttarget = TStime();
-			}
-
 		}
 	}
 
@@ -611,7 +577,6 @@ void fix_timers(void)
 				thr->since = TStime();
 		}
 	}
-	Debug((DEBUG_DEBUG, "fix_timers(): removed %d throttling item(s)", cnt));
 
 	/* Make sure autoconnect for servers still works (lnk->hold) */
 	for (lnk = conf_link; lnk; lnk = lnk->next)
@@ -621,7 +586,6 @@ void fix_timers(void)
 		if (lnk->hold > TStime() + t)
 		{
 			lnk->hold = TStime() + (t / 2); /* compromise */
-			Debug((DEBUG_DEBUG, "fix_timers(): link '%s' hold-time adjusted to %ld", lnk->servername, lnk->hold));
 		}
 	}
 }
@@ -1243,7 +1207,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 
 	fix_timers();
 	write_pidfile();
-	Debug((DEBUG_NOTICE, "Server ready..."));
 	init_throttling();
 	loop.ircd_booted = 1;
 #if defined(HAVE_SETPROCTITLE)
@@ -1366,9 +1329,6 @@ static void open_debugfile(void)
 		else
 # endif
 			strlcpy(client->name, "FD2-Pipe", sizeof(client->name));
-		Debug((DEBUG_FATAL,
-		    "Debug: File <%s> Level: %d at %s", client->name,
-		    client->local->port, myctime(time(NULL))));
 	}
 #endif
 }

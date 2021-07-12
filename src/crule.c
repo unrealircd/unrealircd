@@ -372,11 +372,6 @@ char *crule_parse(char *rule)
 	}
 	if (ruleroot != NULL)
 		crule_free((char **)&ruleroot);
-#if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-	Debug((DEBUG_ERROR, "%s in rule: %s", crule_errstr[errcode], rule));
-#else
-	(void)fprintf(stderr, "%s in rule: %s\n", crule_errstr[errcode], rule);
-#endif
 	return NULL;
 }
 

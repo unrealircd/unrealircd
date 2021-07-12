@@ -605,12 +605,9 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char
 		if (client->serv && client->serv->conf)
 		{
 			client->serv->conf->refcount--;
-			Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
-				client->name, client->serv->conf->servername, client->serv->conf->refcount));
 			if (!client->serv->conf->refcount
 			  && client->serv->conf->flag.temporary)
 			{
-				Debug((DEBUG_ERROR, "deleting temporary block %s", client->serv->conf->servername));
 				delete_linkblock(client->serv->conf);
 				client->serv->conf = NULL;
 			}

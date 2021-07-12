@@ -1335,8 +1335,6 @@ int AllowClient(Client *client, char *username)
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
 
-	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]", client->name, client->local->sockhost));
-
 	if (!check_init(client, sockhost, sizeof(sockhost)))
 		return 0;
 

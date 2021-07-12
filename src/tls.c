@@ -702,11 +702,9 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 			--OpenFiles;
 			return;
 		case 0: 
-			Debug((DEBUG_DEBUG, "SetTLSConnectHandshake(%s)", get_client_name(client, TRUE)));
 			SetTLSConnectHandshake(client);
 			return;
 		case 1:
-			Debug((DEBUG_DEBUG, "SSL_init_finished should finish this job (%s)", get_client_name(client, TRUE)));
 			return;
 		default:
 			return;
@@ -986,7 +984,6 @@ int client_starttls(Client *client)
 
 	if (ircd_SSL_connect(client, client->local->fd) < 0)
 	{
-		Debug((DEBUG_DEBUG, "Failed SSL connect handshake in instance 1: %s", client->name));
 		SSL_set_shutdown(client->local->ssl, SSL_RECEIVED_SHUTDOWN);
 		SSL_smart_shutdown(client->local->ssl);
 		SSL_free(client->local->ssl);

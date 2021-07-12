@@ -43,7 +43,6 @@ MOD_UNLOAD()
 
 static void ident_lookup_failed(Client *client)
 {
-	Debug((DEBUG_NOTICE, "ident_lookup_failed() for %p", client));
 	ircstats.is_abad++;
 	if (client->local->authfd != -1)
 	{
