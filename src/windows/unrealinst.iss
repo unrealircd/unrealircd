@@ -5,15 +5,15 @@
 #define USE_CURL
 
 [Setup]
-AppName=UnrealIRCd 5
-AppVerName=UnrealIRCd 5.2.2-git
+AppName=UnrealIRCd 6
+AppVerName=UnrealIRCd 6.0.0-git
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=https://www.unrealircd.org
 AppSupportURL=https://www.unrealircd.org
 AppUpdatesURL=https://www.unrealircd.org
 AppMutex=UnrealMutex,Global\UnrealMutex
-DefaultDirName={pf}\UnrealIRCd 5
-DefaultGroupName=UnrealIRCd 5
+DefaultDirName={pf}\UnrealIRCd 6
+DefaultGroupName=UnrealIRCd 6
 AllowNoIcons=yes
 LicenseFile=src\windows\gplplusssl.rtf
 Compression=lzma

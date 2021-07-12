@@ -60,7 +60,7 @@ taskkill -im unrealircd.exe -f
 sleep 2
 rem Just a safety measure so we don't end up testing
 rem some old version...
-del "C:\Program Files\UnrealIRCd 5\bin\unrealircd.exe"
+del "C:\Program Files\UnrealIRCd 6\bin\unrealircd.exe"
 
 echo Running installer...
 start /WAIT unrealircd-dev-build.exe /VERYSILENT /LOG=setup.log
