@@ -269,8 +269,161 @@ literal:
 /** Do the actual writing to log files */
 void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
 {
-	ircd_log(LOG_ERROR, "STD-STR: %s %s %s %s", loglevel_to_string(loglevel), subsystem, event_id, msg);
-	ircd_log(LOG_ERROR, "JSON-STR: %s", json_serialized);
+	static int last_log_file_warning = 0;
+	static char recursion_trap=0;
+	ConfigItem_log *l;
+	char text_buf[2048], timebuf[128];
+	struct stat fstats;
+	int n;
+	int write_error;
+
+	/* Trap infinite recursions to avoid crash if log file is unavailable,
+	 * this will also avoid calling ircd_log from anything else called
+	 */
+	if (recursion_trap == 1)
+		return;
+
+	recursion_trap = 1;
+
+	/* NOTE: past this point you CANNOT just 'return'.
+	 * You must set 'recursion_trap = 0;' before 'return'!
+	 */
+
+	snprintf(timebuf, sizeof(timebuf), "[%s] ", myctime(TStime()));
+	snprintf(text_buf, sizeof(text_buf), "%s %s %s: %s\n",
+	         loglevel_to_string(loglevel), subsystem, event_id, msg);
+
+	//RunHook3(HOOKTYPE_LOG, flags, timebuf, text_buf); // FIXME: call with more parameters and possibly not even 'text_buf' at all
+
+	if (!loop.ircd_forked && (loglevel >= ULOG_ERROR))
+	{
+#ifdef _WIN32
+		win_log("* %s", text_buf);
+#else
+		fprintf(stderr, "%s", text_buf);
+#endif
+	}
+
+	/* In case of './unrealircd configtest': don't write to log file, only to stderr */
+	if (loop.config_test)
+	{
+		recursion_trap = 0;
+		return;
+	}
+
+	for (l = conf_log; l; l = l->next)
+	{
+		// FIXME: implement the proper log filters (eg what 'flags' previously was)
+		//if (!(l->flags & flags))
+		//	continue;
+
+#ifdef HAVE_SYSLOG
+		if (l->file && !strcasecmp(l->file, "syslog"))
+		{
+			syslog(LOG_INFO, "%s", text_buf);
+			continue;
+		}
+#endif
+
+		/* This deals with dynamic log file names, such as ircd.%Y-%m-%d.log */
+		if (l->filefmt)
+		{
+			char *fname = unreal_strftime(l->filefmt);
+			if (l->file && (l->logfd != -1) && strcmp(l->file, fname))
+			{
+				/* We are logging already and need to switch over */
+				fd_close(l->logfd);
+				l->logfd = -1;
+			}
+			safe_strdup(l->file, fname);
+		}
+
+		/* log::maxsize code */
+		if (l->maxsize && (stat(l->file, &fstats) != -1) && fstats.st_size >= l->maxsize)
+		{
+			char oldlog[512];
+			if (l->logfd == -1)
+			{
+				/* Try to open, so we can write the 'Max file size reached' message. */
+				l->logfd = fd_fileopen(l->file, O_CREAT|O_APPEND|O_WRONLY);
+			}
+			if (l->logfd != -1)
+			{
+				if (write(l->logfd, "Max file size reached, starting new log file\n", 45) < 0)
+				{
+					/* We already handle the unable to write to log file case for normal data.
+					 * I think we can get away with not handling this one.
+					 */
+					;
+				}
+				fd_close(l->logfd);
+			}
+			l->logfd = -1;
+
+			/* Rename log file to xxxxxx.old */
+			snprintf(oldlog, sizeof(oldlog), "%s.old", l->file);
+			unlink(oldlog); /* windows rename cannot overwrite, so unlink here.. ;) */
+			rename(l->file, oldlog);
+		}
+
+		/* generic code for opening log if not open yet.. */
+		if (l->logfd == -1)
+		{
+			l->logfd = fd_fileopen(l->file, O_CREAT|O_APPEND|O_WRONLY);
+			if (l->logfd == -1)
+			{
+				if (!loop.ircd_booted)
+				{
+					config_status("WARNING: Unable to write to '%s': %s", l->file, strerror(ERRNO));
+				} else {
+					if (last_log_file_warning + 300 < TStime())
+					{
+						config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", l->file, strerror(ERRNO));
+						last_log_file_warning = TStime();
+					}
+				}
+				continue;
+			}
+		}
+
+		/* Now actually WRITE to the log... */
+		write_error = 0;
+		if (l->type == LOG_TYPE_JSON)
+		{
+			n = write(l->logfd, json_serialized, strlen(json_serialized));
+			if (n < strlen(text_buf))
+				write_error = 1;
+			else
+				write(l->logfd, "\n", 1); // FIXME: no.. we should do it this way..... and why do we use direct I/O at all?
+		} else
+		{
+			// FIXME: don't write in 2 stages, waste of slow system calls
+			if (write(l->logfd, timebuf, strlen(timebuf)) < 0)
+			{
+				/* Let's ignore any write errors for this one. Next write() will catch it... */
+				;
+			}
+			n = write(l->logfd, text_buf, strlen(text_buf));
+			if (n < strlen(text_buf))
+				write_error = 1;
+		}
+
+		if (write_error)
+		{
+			if (!loop.ircd_booted)
+			{
+				config_status("WARNING: Unable to write to '%s': %s", l->file, strerror(ERRNO));
+			} else {
+				if (last_log_file_warning + 300 < TStime())
+				{
+					config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", l->file, strerror(ERRNO));
+					last_log_file_warning = TStime();
+				}
+			}
+		}
+	}
+
+	recursion_trap = 0;
 }
 
 /* Logging function, called by the unreal_log() macro. */
