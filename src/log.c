@@ -253,7 +253,6 @@ void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
 	char *str;
 	json_t *j = NULL;
 	json_t *j_details = NULL;
-	const char *fmt_name[32], *fmt_value[32];
 	char msgbuf[1024];
 
 	/* TODO: Enforcement:
@@ -263,8 +262,6 @@ void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
 	 * - msg may not contain percent signs (%) as that is an obvious indication something is wrong?
 	 *   or maybe a temporary restriction while upgrading that can be removed later ;)
 	 */
-	memset(&fmt_name, 0, sizeof(fmt_name));
-	memset(&fmt_value, 0, sizeof(fmt_value));
 
 	j = json_object();
 	j_details = json_object();
@@ -306,11 +303,6 @@ void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
 		}
 		log_data_free(d);
 	}
-	// todo: use a special buildvarstring() so we don't end up strdup'ing lots of stuff that is unused anyway
-	fmt_name[0] = "client";
-	fmt_value[0] = client ? client->name : "";
-	*msgbuf = '\0';
-	//buildvarstring(msg, msgbuf, sizeof(msgbuf), fmt_name, fmt_value);
 	buildlogstring(msg, msgbuf, sizeof(msgbuf), j_details);
 	json_object_set_new(j, "msg", json_string(msgbuf));
 
