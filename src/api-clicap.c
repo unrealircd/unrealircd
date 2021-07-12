@@ -102,7 +102,7 @@ long clicap_allocate_cap(void)
 	ClientCapability *clicap;
 
 	/* The first bit (v=1) is used by the "invert" marker */
-	for (v=2; v < LONG_MAX; v = v * 2)
+	for (v=2; v; v <<= 1)
 	{
 		unsigned char found = 0;
 		for (clicap = clicaps; clicap; clicap = clicap->next)
