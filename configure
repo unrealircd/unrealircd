@@ -639,6 +639,8 @@ build_os
 build_vendor
 build_cpu
 build
+JANSSON_LIBS
+JANSSON_CFLAGS
 CARES_LIBS
 CARES_CFLAGS
 SODIUM_LIBS
@@ -754,6 +756,7 @@ with_system_pcre2
 with_system_argon2
 with_system_sodium
 with_system_cares
+with_system_jansson
 enable_ssl
 enable_dynamic_linking
 enable_werror
@@ -779,7 +782,9 @@ ARGON2_LIBS
 SODIUM_CFLAGS
 SODIUM_LIBS
 CARES_CFLAGS
-CARES_LIBS'
+CARES_LIBS
+JANSSON_CFLAGS
+JANSSON_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1459,6 +1464,9 @@ Optional Packages:
                           library. Normally autodetected via pkg-config
   --without-system-cares  Use bundled version instead of system c-ares.
                           Normally autodetected via pkg-config.
+  --without-system-jansson
+                          Use bundled version instead of system jansson.
+                          Normally autodetected via pkg-config.
 
 Some influential environment variables:
   CC          C compiler command
@@ -1486,6 +1494,10 @@ Some influential environment variables:
   CARES_CFLAGS
               C compiler flags for CARES, overriding pkg-config
   CARES_LIBS  linker flags for CARES, overriding pkg-config
+  JANSSON_CFLAGS
+              C compiler flags for JANSSON, overriding pkg-config
+  JANSSON_LIBS
+              linker flags for JANSSON, overriding pkg-config
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -6528,6 +6540,14 @@ else
 fi
 
 
+# Check whether --with-system-jansson was given.
+if test "${with_system_jansson+set}" = set; then :
+  withval=$with_system_jansson;
+else
+  with_system_jansson=yes
+fi
+
+
 # Check whether --enable-ssl was given.
 if test "${enable_ssl+set}" = set; then :
   enableval=$enable_ssl;
@@ -7719,6 +7739,130 @@ fi
 cd $cur_dir
 
 fi
+
+has_system_jansson="no"
+if test "x$with_system_jansson" = "xyes"; then :
+
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for JANSSON" >&5
+$as_echo_n "checking for JANSSON... " >&6; }
+
+if test -n "$JANSSON_CFLAGS"; then
+    pkg_cv_JANSSON_CFLAGS="$JANSSON_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"jansson >= 2.0.0\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "jansson >= 2.0.0") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_JANSSON_CFLAGS=`$PKG_CONFIG --cflags "jansson >= 2.0.0" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$JANSSON_LIBS"; then
+    pkg_cv_JANSSON_LIBS="$JANSSON_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"jansson >= 2.0.0\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "jansson >= 2.0.0") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_JANSSON_LIBS=`$PKG_CONFIG --libs "jansson >= 2.0.0" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        JANSSON_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "jansson >= 2.0.0" 2>&1`
+        else
+	        JANSSON_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "jansson >= 2.0.0" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$JANSSON_PKG_ERRORS" >&5
+
+	has_system_jansson=no
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	has_system_jansson=no
+else
+	JANSSON_CFLAGS=$pkg_cv_JANSSON_CFLAGS
+	JANSSON_LIBS=$pkg_cv_JANSSON_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	has_system_jansson=yes
+if test "x$PRIVATELIBDIR" != "x"; then :
+  rm -f "$PRIVATELIBDIR/"libjansson*
+fi
+fi
+fi
+
+if test "$has_system_jansson" = "no"; then :
+
+jansson_version="2.13.1"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting jansson library" >&5
+$as_echo "extracting jansson library" >&6; }
+cur_dir=`pwd`
+cd extras
+rm -rf jansson-$jansson_version jansson
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz jansson.tar.gz
+else
+	cp jansson.tar.gz jansson.tar.gz.bak
+	gunzip -f jansson.tar.gz
+	cp jansson.tar.gz.bak jansson.tar.gz
+	tar xf jansson.tar
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling jansson library" >&5
+$as_echo "compiling jansson library" >&6; }
+cd jansson-$jansson_version
+save_cflags="$CFLAGS"
+CFLAGS="$orig_cflags"
+export CFLAGS
+./configure --prefix=$cur_dir/extras/jansson --libdir=$PRIVATELIBDIR --enable-shared --disable-static --enable-opt || exit 1
+CFLAGS="$save_cflags"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling jansson resolver library" >&5
+$as_echo "compiling jansson resolver library" >&6; }
+$ac_cv_prog_MAKER || exit 1
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: installing jansson resolver library" >&5
+$as_echo "installing jansson resolver library" >&6; }
+$ac_cv_prog_MAKER install || exit 1
+JANSSON_CFLAGS="-I$cur_dir/extras/jansson/include"
+
+JANSSON_LIBS=
+if test -n "$ac_cv_path_PKGCONFIG"; then :
+  JANSSON_LIBS="`$ac_cv_path_PKGCONFIG --libs jansson.pc`"
+fi
+if test -z "$JANSSON_LIBS"; then :
+  JANSSON_LIBS="-L$PRIVATELIBDIR -ljansson"
+fi
+
+cd $cur_dir
+
+fi
+
 
 # Make sure we can run config.sub.
 $SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||

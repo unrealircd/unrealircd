@@ -516,6 +516,7 @@ AC_ARG_WITH(system-pcre2, [AS_HELP_STRING([--without-system-pcre2], [Use the sys
 AC_ARG_WITH(system-argon2, [AS_HELP_STRING([--without-system-argon2], [Use bundled version instead of system argon2 library. Normally autodetected via pkg-config])], [], [with_system_argon2=yes])
 AC_ARG_WITH(system-sodium, [AS_HELP_STRING([--without-system-sodium], [Use bundled version instead of system sodium library. Normally autodetected via pkg-config])], [], [with_system_sodium=yes])
 AC_ARG_WITH(system-cares, [AS_HELP_STRING([--without-system-cares], [Use bundled version instead of system c-ares. Normally autodetected via pkg-config.])], [], [with_system_cares=yes])
+AC_ARG_WITH(system-jansson, [AS_HELP_STRING([--without-system-jansson], [Use bundled version instead of system jansson. Normally autodetected via pkg-config.])], [], [with_system_jansson=yes])
 CHECK_SSL
 CHECK_SSL_CTX_SET1_CURVES_LIST
 CHECK_SSL_CTX_SET_MIN_PROTO_VERSION
@@ -765,6 +766,57 @@ fi
 AC_SUBST(CARES_LIBS)
 cd $cur_dir
 ])
+
+dnl Use system jansson when available, unless --without-system-jansson
+has_system_jansson="no"
+AS_IF([test "x$with_system_jansson" = "xyes"],[
+PKG_CHECK_MODULES([JANSSON], [jansson >= 2.0.0],[has_system_jansson=yes
+AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libjansson*])],[has_system_jansson=no])])
+
+AS_IF([test "$has_system_jansson" = "no"],[
+dnl REMEMBER TO CHANGE WITH A NEW JANSSON RELEASE!
+jansson_version="2.13.1"
+AC_MSG_RESULT(extracting jansson library)
+cur_dir=`pwd`
+cd extras
+dnl remove old jansson directory to force a recompile...
+dnl and remove its installation prefix just to clean things up.
+rm -rf jansson-$jansson_version jansson
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz jansson.tar.gz
+else
+	cp jansson.tar.gz jansson.tar.gz.bak
+	gunzip -f jansson.tar.gz
+	cp jansson.tar.gz.bak jansson.tar.gz
+	tar xf jansson.tar
+fi
+AC_MSG_RESULT(compiling jansson library)
+cd jansson-$jansson_version
+save_cflags="$CFLAGS"
+CFLAGS="$orig_cflags"
+export CFLAGS
+./configure --prefix=$cur_dir/extras/jansson --libdir=$PRIVATELIBDIR --enable-shared --disable-static --enable-opt || exit 1
+CFLAGS="$save_cflags"
+AC_MSG_RESULT(compiling jansson resolver library)
+$ac_cv_prog_MAKER || exit 1
+AC_MSG_RESULT(installing jansson resolver library)
+$ac_cv_prog_MAKER install || exit 1
+JANSSON_CFLAGS="-I$cur_dir/extras/jansson/include"
+AC_SUBST(JANSSON_CFLAGS)
+JANSSON_LIBS=
+dnl See c-ares's compilation section for more info on this hack.
+dnl ensure that we're linking against the bundled version
+dnl (we only reach this code if linking against the bundled version is desired).
+AS_IF([test -n "$ac_cv_path_PKGCONFIG"],
+       [JANSSON_LIBS="`$ac_cv_path_PKGCONFIG --libs jansson.pc`"])
+dnl ^^^ FIXME FIXME this is likely incorrect the .pc etc
+dnl For when pkg-config isn't available
+AS_IF([test -z "$JANSSON_LIBS"],
+       [JANSSON_LIBS="-L$PRIVATELIBDIR -ljansson"])
+AC_SUBST(JANSSON_LIBS)
+cd $cur_dir
+])
+
 
 AX_PTHREAD()
 

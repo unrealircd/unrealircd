@@ -1079,3 +1079,15 @@ extern FloodSettings *find_floodsettings_block(const char *name);
 extern FloodSettings *get_floodsettings_for_user(Client *client, FloodOption opt);
 extern MODVAR char *floodoption_names[];
 extern void flood_limit_exceeded_log(Client *client, char *floodname);
+/* logging */
+#ifdef DEBUGMODE
+#define unreal_log(...) do_unreal_log(__VA_ARGS__, log_data_source(__FILE__, __LINE__, __FUNCTION__), NULL)
+#else
+#define unreal_log(...) do_unreal_log(__VA_ARGS__, NULL)
+#endif
+extern void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id, Client *client, char *msg, ...);
+extern LogData *log_data_string(const char *key, const char *str);
+extern LogData *log_data_integer(const char *key, int64_t integer);
+extern LogData *log_data_client(const char *key, Client *client);
+extern LogData *log_data_source(const char *file, int line, const char *function);
+/* end of logging */

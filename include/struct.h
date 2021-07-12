@@ -39,6 +39,7 @@
 #include <openssl/rand.h>
 #include <openssl/md5.h>
 #include <openssl/ripemd.h>
+#include <jansson.h>
 #include "common.h"
 #include "sys.h"
 #include <stdio.h>
@@ -213,6 +214,32 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define LOG_OVERRIDE 0x0200
 #define LOG_SPAMFILTER 0x0400
 #define LOG_FLOOD 0x0800
+
+typedef enum LogFieldType {
+	LOG_FIELD_INTEGER, // and unsigned?
+	LOG_FIELD_STRING,
+	LOG_FIELD_CLIENT,
+	LOG_FIELD_OBJECT
+} LogFieldType;
+
+typedef struct LogData {
+	LogFieldType type;
+	char *key;
+	union {
+		int64_t integer;
+		char *string;
+		Client *client;
+		json_t *object;
+	} value;
+} LogData;
+
+/** New log levels for unreal_log() */
+typedef enum LogLevel {
+	ULOG_INFO = 0,
+	ULOG_WARN = 1,
+	ULOG_ERROR = 2,
+	ULOG_FATAL = 3
+} LogLevel;
 
 /*
 ** 'offsetof' is defined in ANSI-C. The following definition

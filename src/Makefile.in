@@ -32,7 +32,7 @@ OBJS=dns.o auth.o channel.o crule.o dbuf.o \
 	api-clicap.o api-messagetag.o api-history-backend.o api-efunctions.o \
 	api-event.o \
 	crypt_blowfish.o unrealdb.o updconf.o crashreport.o modulemanager.o \
-	utf8.o \
+	utf8.o log.o \
 	openssl_hostname_validation.o $(URL)
 
 SRC=$(OBJS:%.o=%.c)
@@ -238,6 +238,9 @@ modulemanager.o: modulemanager.c $(INCLUDES)
 
 utf8.o: utf8.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c utf8.c
+
+log.o: log.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c log.c
 
 openssl_hostname_validation.o: openssl_hostname_validation.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c openssl_hostname_validation.c
