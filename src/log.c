@@ -48,6 +48,158 @@ char *log_type_valtostring(LogType v)
 	}
 }
 
+/***** CONFIGURATION ******/
+
+int config_test_log(ConfigFile *conf, ConfigEntry *ce)
+{
+	int fd, errors = 0;
+	ConfigEntry *cep, *cepp;
+	char has_flags = 0, has_maxsize = 0;
+	char *fname;
+
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: log block without filename",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return 1;
+	}
+	if (!ce->ce_entries)
+	{
+		config_error("%s:%i: empty log block",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return 1;
+	}
+
+	/* Convert to absolute path (if needed) unless it's "syslog" */
+	if (strcmp(ce->ce_vardata, "syslog"))
+		convert_to_absolute_path(&ce->ce_vardata, LOGDIR);
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "flags"))
+		{
+			if (has_flags)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "log::flags");
+				continue;
+			}
+			has_flags = 1;
+			if (!cep->ce_entries)
+			{
+				config_error_empty(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "log", cep->ce_varname);
+				errors++;
+				continue;
+			}
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				// FIXME: old flags shit
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "maxsize"))
+		{
+			if (has_maxsize)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "log::maxsize");
+				continue;
+			}
+			has_maxsize = 1;
+			if (!cep->ce_vardata)
+			{
+				config_error_empty(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "log", cep->ce_varname);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "type"))
+		{
+			if (!cep->ce_vardata)
+			{
+				config_error_empty(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "log", cep->ce_varname);
+				errors++;
+				continue;
+			}
+			if (!log_type_stringtoval(cep->ce_vardata))
+			{
+				config_error("%s:%i: unknown log type '%s'",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_vardata);
+				errors++;
+			}
+		}
+		else
+		{
+			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				"log", cep->ce_varname);
+			errors++;
+			continue;
+		}
+	}
+
+	if (!has_flags)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"log::flags");
+		errors++;
+	}
+
+	fname = unreal_strftime(ce->ce_vardata);
+	if ((fd = fd_fileopen(fname, O_WRONLY|O_CREAT)) == -1)
+	{
+		config_error("%s:%i: Couldn't open logfile (%s) for writing: %s",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			fname, strerror(errno));
+		errors++;
+	} else
+	{
+		fd_close(fd);
+	}
+
+	return errors;
+}
+
+int config_run_log(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep, *cepp;
+	ConfigItem_log *ca;
+
+	ca = safe_alloc(sizeof(ConfigItem_log));
+	ca->logfd = -1;
+	if (strchr(ce->ce_vardata, '%'))
+		safe_strdup(ca->filefmt, ce->ce_vardata);
+	else
+		safe_strdup(ca->file, ce->ce_vardata);
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "maxsize"))
+		{
+			ca->maxsize = config_checkval(cep->ce_vardata,CFG_SIZE);
+		}
+		else if (!strcmp(cep->ce_varname, "type"))
+		{
+			ca->type = log_type_stringtoval(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "flags"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				// FIXME: old flags shit
+			}
+		}
+	}
+	AddListItem(ca, conf_log);
+	return 1;
+
+}
+
+
+
+/***** RUNTIME *****/
+
 // TODO: validate that all 'key' values are lowercase+underscore+digits in all functions below.
 
 void json_expand_client(json_t *j, char *key, Client *client, int detail)

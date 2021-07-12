@@ -1080,6 +1080,8 @@ extern FloodSettings *get_floodsettings_for_user(Client *client, FloodOption opt
 extern MODVAR char *floodoption_names[];
 extern void flood_limit_exceeded_log(Client *client, char *floodname);
 /* logging */
+extern int config_test_log(ConfigFile *conf, ConfigEntry *ce);
+extern int config_run_log(ConfigFile *conf, ConfigEntry *ce);
 extern LogType log_type_stringtoval(char *str);
 extern char *log_type_valtostring(LogType v);
 #ifdef DEBUGMODE
