@@ -526,11 +526,11 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 			{
 				if (!loop.ircd_booted)
 				{
-					config_status("WARNING: Unable to write to '%s': %s", l->file, strerror(ERRNO));
+					config_status("WARNING: Unable to write to '%s': %s", l->file, strerror(errno));
 				} else {
 					if (last_log_file_warning + 300 < TStime())
 					{
-						config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", l->file, strerror(ERRNO));
+						config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", l->file, strerror(errno));
 						last_log_file_warning = TStime();
 					}
 				}
@@ -564,11 +564,11 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 		{
 			if (!loop.ircd_booted)
 			{
-				config_status("WARNING: Unable to write to '%s': %s", l->file, strerror(ERRNO));
+				config_status("WARNING: Unable to write to '%s': %s", l->file, strerror(errno));
 			} else {
 				if (last_log_file_warning + 300 < TStime())
 				{
-					config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", l->file, strerror(ERRNO));
+					config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", l->file, strerror(errno));
 					last_log_file_warning = TStime();
 				}
 			}
