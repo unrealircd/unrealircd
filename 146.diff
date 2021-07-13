@@ -1,0 +1,67 @@
+diff --git a/src/modules/labeled-response.c b/src/modules/labeled-response.c
+index 56e9183dd..413b302e0 100644
+--- a/src/modules/labeled-response.c
++++ b/src/modules/labeled-response.c
+@@ -47,6 +47,7 @@ int lr_pre_command(Client *from, MessageTag *mtags, char *buf);
+ int lr_post_command(Client *from, MessageTag *mtags, char *buf);
+ int lr_close_connection(Client *client);
+ int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *len);
++void lr_new_message(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
+ void *_labeled_response_save_context(void);
+ void _labeled_response_set_context(void *ctx);
+ void _labeled_response_force_end(void);
+@@ -97,6 +98,7 @@ MOD_INIT()
+ 	HookAdd(modinfo->handle, HOOKTYPE_POST_COMMAND, 1000000000, lr_post_command);
+ 	HookAdd(modinfo->handle, HOOKTYPE_CLOSE_CONNECTION, 1000000000, lr_close_connection);
+ 	HookAdd(modinfo->handle, HOOKTYPE_PACKET, 1000000000, lr_packet);
++	HookAddVoid(modinfo->handle, HOOKTYPE_NEW_MESSAGE, 0, lr_new_message);
+ 
+ 	return MOD_SUCCESS;
+ }
+@@ -333,6 +335,20 @@ int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *le
+ 	return 0;
+ }
+ 
++void lr_new_message(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature)
++{
++	/* Locally processed messages already have the label! */
++	if (currentcmd.client) return;
++	MessageTag *m;
++	
++	m = find_mtag(recv_mtags, "label");
++	if (m)
++	{
++		m = duplicate_mtag(m);
++		AddListItem(m, *mtag_list);
++	}
++}
++
+ /** This function verifies if the client sending the
+  * tag is permitted to do so and uses a permitted syntax.
+  */
+diff --git a/src/modules/pingpong.c b/src/modules/pingpong.c
+index 42b577da0..cf73735f9 100644
+--- a/src/modules/pingpong.c
++++ b/src/modules/pingpong.c
+@@ -85,7 +85,7 @@ CMD_FUNC(cmd_ping)
+ 		if (MyUser(client))
+ 			origin = client->name; /* Make sure origin is not spoofed */
+ 		if ((target = find_server_quick(destination)) && (target != &me))
+-			sendto_one(target, NULL, ":%s PING %s :%s", client->name, origin, destination);
++			sendto_one(target, recv_mtags, ":%s PING %s :%s", client->name, origin, destination);
+ 		else
+ 		{
+ 			sendnumeric(client, ERR_NOSUCHSERVER, destination);
+diff --git a/src/modules/tsctl.c b/src/modules/tsctl.c
+index 8d9a08976..4a46ab00d 100644
+--- a/src/modules/tsctl.c
++++ b/src/modules/tsctl.c
+@@ -68,7 +68,7 @@ CMD_FUNC(cmd_tsctl)
+ 		gettimeofday(&currenttime_tv, NULL);
+ 		sendnotice(client, "*** Server=%s TStime=%lld.%ld",
+ 			me.name, (long long)currenttime_tv.tv_sec, (long)currenttime_tv.tv_usec);
+-		sendto_server(client, 0, 0, NULL, ":%s TSCTL alltime", client->id);
++		sendto_server(client, 0, 0, recv_mtags, ":%s TSCTL alltime", client->id);
+ 		return;
+ 	}
+ }
