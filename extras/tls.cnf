@@ -1,8 +1,13 @@
 # create RSA certs - Server
 
 [ req ]
+<<<<<<< HEAD:src/ssl.cnf
+default_bits = 4096
+encrypt_key = yes
+=======
 # Note: RSA bits is ignored, as we use ECC now
 default_bits = 2048
+>>>>>>> unreal52:extras/tls.cnf
 distinguished_name = req_dn
 x509_extensions = cert_type
 

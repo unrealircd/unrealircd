@@ -7,7 +7,11 @@ dnl src/windows/unrealinst.iss
 dnl doc/Config.header
 dnl src/version.c.SH
 
+<<<<<<< HEAD
+AC_INIT([unrealircd], [3.2.10.7], [http://bugs.unrealircd.org/], [], [http://unrealircd.org/])
+=======
 AC_INIT([unrealircd], [5.2.2-git], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
+>>>>>>> unreal52
 AC_CONFIG_SRCDIR([src/ircd.c])
 AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])
@@ -81,6 +85,18 @@ AC_CHECK_LIB(descrypt, crypt,
 		IRCDLIBS="$IRCDLIBS-ldescrypt "],
 	[AC_CHECK_LIB(crypt, crypt,
 		[AC_DEFINE([HAVE_CRYPT], [], [Define if you have crypt])
+<<<<<<< HEAD
+			IRCDLIBS="$IRCDLIBS-lcrypt "
+			MKPASSWDLIBS="-lcrypt"])])
+AC_CHECK_LIB(socket, socket,
+	[IRCDLIBS="$IRCDLIBS-lsocket "
+		SOCKLIB="-lsocket"])
+AC_CHECK_LIB(nsl, inet_ntoa,
+	[IRCDLIBS="$IRCDLIBS-lnsl "
+		INETLIB="-lnsl"])
+AC_CHECK_LIB(crypto, RAND_egd,
+		AC_DEFINE(HAVE_RAND_EGD, 1, [Define if the libcrypto has RAND_egd]))
+=======
 			IRCDLIBS="$IRCDLIBS-lcrypt "])])
 
 dnl Check for big-endian system, even though these hardly exist anymore...
@@ -258,6 +274,7 @@ AS_IF([$CC --version | grep -q "clang version 3."],
         [CFLAGS="$CFLAGS -Wno-tautological-compare"])
 
 dnl End of -W... compiler checks.
+>>>>>>> unreal52
 
 
 dnl module checking based on Hyb7's module checking code
@@ -270,7 +287,10 @@ AC_DEFINE(STATIC_LINKING)
 ])])
 
 hold_cflags=$CFLAGS
+<<<<<<< HEAD
+=======
 DYNAMIC_LDFLAGS=""
+>>>>>>> unreal52
 CFLAGS="$CFLAGS -Wl,-export-dynamic"
 AC_CACHE_CHECK(if we need the -export-dynamic flag, ac_cv_export_dynamic, [
 AC_TRY_LINK(, [int i];, ac_cv_export_dynamic=yes, ac_cv_export_dynamic=no)])
@@ -700,7 +720,11 @@ AS_IF([test "$has_system_cares" = "no"], [
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
 dnl NOTE: when changing this here, ALSO change it in extras/curlinstall
 dnl       and in the comment in this file around line 400!
+<<<<<<< HEAD
+cares_version="1.10.0"
+=======
 cares_version="1.17.1"
+>>>>>>> unreal52
 AC_MSG_RESULT(extracting c-ares resolver library)
 cur_dir=`pwd`
 cd extras

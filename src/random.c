@@ -450,7 +450,20 @@ void init_random()
 	int fd;
 #endif
 
+<<<<<<< HEAD
+	arc4_init();
+
+	/* Grab non-OS specific "random" data */
+#ifdef USE_SSL
+ #if OPENSSL_VERSION_NUMBER >= 0x000907000 && defined(HAVE_RAND_EGD)
+	if (EGD_PATH) {
+		n = RAND_query_egd_bytes(EGD_PATH, rdat.egd, sizeof(rdat.egd));
+	}
+ #endif
+#endif
+=======
 	_rs_stir();
+>>>>>>> unreal52
 
 	/* Grab OS specific "random" data */
 #ifndef _WIN32

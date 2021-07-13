@@ -66,7 +66,12 @@
 #define UNREAL_VERSION_MINOR 1
 
 /* Version suffix such as a beta marker or release candidate marker. (e.g.:
+<<<<<<< HEAD:include/win32/setup.h
+   -rc2 for unrealircd-3.2.9-rc2) */
+#define UNREAL_VERSION_SUFFIX ".7"
+=======
    -rcX for unrealircd-3.2.9-rcX) */
 #define UNREAL_VERSION_SUFFIX ""
+>>>>>>> unreal52:include/windows/setup.h
 
 #endif

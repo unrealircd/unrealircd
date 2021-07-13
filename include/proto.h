@@ -36,12 +36,19 @@ extern void sendto_one(Client *, MessageTag *mtags, FORMAT_STRING(const char *),
 extern void sendto_realops(FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,1,2)));
 
 /* ircd.c */
+<<<<<<< HEAD
+EVENT(e_check_fdlists);
+EVENT(garbage_collect);
+EVENT(loop_event);
+EVENT(deprecated_notice);
+=======
 extern EVENT(garbage_collect);
 extern EVENT(loop_event);
 extern EVENT(check_pings);
 extern EVENT(handshake_timeout);
 extern EVENT(check_deadsockets);
 extern EVENT(try_connections);
+>>>>>>> unreal52
 /* support.c */
 extern char *my_itoa(int i);
 

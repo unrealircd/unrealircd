@@ -3,18 +3,36 @@
  * (that is publicly exposed anyway).
  */
 #include "config.h"
+<<<<<<< HEAD
+=======
 #include <assert.h>
+>>>>>>> unreal52
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
 #include "msg.h"
+<<<<<<< HEAD
+=======
 #include "mempool.h"
+>>>>>>> unreal52
 #include "proto.h"
 #include "channel.h"
 #include <time.h>
 #include <sys/stat.h>
 #include <stdio.h>
+<<<<<<< HEAD
+#include <stdlib.h>
+#include <string.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
+#include <fcntl.h>
+#include "h.h"
+#ifdef _WIN32
+#include "version.h"
+#endif
+=======
 #include <string.h>
 #ifdef GLOBH
  #include <glob.h>
@@ -37,3 +55,4 @@
  #include <curl/curl.h>
 #endif
 #include <argon2.h>
+>>>>>>> unreal52

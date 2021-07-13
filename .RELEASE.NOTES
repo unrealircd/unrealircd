@@ -1,0 +1,164 @@
+Unreal3.2.10.7 Release Notes
+=============================
+
+==[ UNREALIRCD 3.2.X IS DEPRECATED ]==
+You are currently viewing the release notes of UnrealIRCd 3.2.10.7.
+UnrealIRCd 3.2.* will no longer be supported after December 31, 2016.
+You should upgrade to UnrealIRCd 4 before that date.
+See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated
+
+==[ GENERAL INFORMATION ]==
+- If you are upgrading on *NIX, then make sure you run 'make clean' and
+  './Config' first, before running 'make'.
+- The official UnrealIRCd 3.2.x documentation is available online at
+  https://www.vulnscan.org/UnrealIRCd/unreal32docs.html
+  FAQ: https://www.vulnscan.org/UnrealIRCd/faq/
+  Read them before asking for help.
+- Report bugs at https://bugs.unrealircd.org/
+- The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a
+  SUMMARY of the changes in this release. See the file 'Changes' for a
+  complete list of all changes.
+
+==[ .7 RELEASE ]==
+The following issue was fixed in 3.2.10.7:
+- Fix SASL EXTERNAL security issue
+
+==[ .6 RELEASE ]==
+The following has been addressed in 3.2.10.6:
+- Add notes regarding deprecation of 3.2.x series
+- Build with latest OpenSSL to fix crash issue (Windows)
+- Don't show vcredist dialog if installed (Windows installer)
+
+==[ .5 RELEASE ]==
+The following issues have been fixed in 3.2.10.5:
+- Crash when SASL is enabled (set::sasl-server)
+- A compile problem with LibreSSL
+
+==[ .4 RELEASE ]==
+Two major issues were fixed:
+- Compile problems when using clang instead of gcc (such as on FreeBSD & OS X)
+- For services who allow you to log in by account name but still allow you to
+  use a different nick: when you're logged in you are now considered
+  registered as far as mode +M and +R are concerned.
+  Tech: whenever services set SVID and it's not * and does not start with a
+  number, then we consider this user to be 'logged in'.
+  Whenever a user is set +r (s)he is also considered 'logged in'.
+  This way it's compatible with both older and new services and doesn't
+  (or shouldn't) introduce security issues with older services using
+  servicetimestamp for nick tracking or other means.
+Additionally:
+- curl-ca-bundle.crt has been updated to use latest certificates
+- The Windows libraries (OpenSSL, curl, ..) have been updated.
+
+==[ .3 RELEASE ]==
+The following issues have been fixed in 3.2.10.3:
+- Crash when SASL is enabled and ping-cookie is disabled
+- Compile issue with remote include
+- OS X compile problems
+- ./unreal backtrace not always working well
+Changes:
+- For silenced users we now only check the current nick!user@host
+- Server to server links now use latest TLS (eg: v1.2) instead of SSLv3
+New:
+- Added set::spamfilter::stop-on-first-match (default yes). You can change
+  this to 'no' to have UnrealIRCd continue processing all spamfilters even
+  after the first match. The spamfilter with the 'gravest action' wins
+  (eg: gzline wins from block).
+
+==[ .2 RELEASE ]==
+The following major issues were present in 3.2.10 & 3.2.10.1 and have
+been fixed in this version:
+- A remote crash issue when compiled with SSL (NULL pointer dereference)
+- A second issue that can potentially lead to a crash (read-after-free)
+
+In addition to these 3.2.10.x fixes there were also some other bugs fixed,
+mostly in the area of server linking and flood hardening.
+
+The external libraries of the Windows version have been updated (openssl,
+c-ares, zlib). The bundled c-ares source (for *NIX) has been updated too.
+
+==[ .1 RELEASE ]==
+The following bugs in version 3.2.10 were fixed in this 3.2.10.1 release:
+- Windows only: outgoing connects from Windows caused severe linking issues,
+  including killing of (ghost) users on the Windows server.
+- An issue where user modes were stripped from remote clients, this caused
+  a problem for Anope BotServ bots.
+- A compile problem on OpenBSD.
+- '/REHASH -global' did not rehash all servers.
+- Some documentation updates.
+
+==[ 3.2.10 RELEASE ]==
+Below is a summary of all changes with respect to 3.2.9:
+
+==[ NEW ]==
+- Improved socket engine. This brings some performance improvements and
+  also makes it easier to configure a system to hold more than 1024
+  clients (no more editing of header files on Linux!).
+- ESVID support: services can communicate the account name of the user
+  back to the IRCd. This only works on ESVID-capable services:
+  - Extban ~a:<accountname>: matches users who are logged in to services
+    with that account name.
+  - Show account name in /WHOIS
+- CAP support: this enables clients to enable certain features more easily.
+  Can be disabled through set::options::disable-cap.
+- Now that STARTTLS is advertised in CAP it is likely to be used more often.
+- away-notify: informs clients of AWAY state changes of users on the same
+  channels, for clients that support this.
+- account-notify: similar to away-notify, inform clients of changes in the
+  login status and account name used by other clients on the same channels.
+- SASL support. To use this, and if your services support this, you point
+  set::sasl-server to your services server.
+- Server-side MLOCK support: the IRCd will prevent channel mode changes
+  depending on the MLOCK setting in services. Requires special support
+  from services for this feature.
+- User Mode +I (IRCOp only): hide idle time
+- auth-method 'sslclientcertfp': authenticate users using an SSL client
+  certificate by the SHA256 fingerprint of that certificate.
+  The documentation has a new section (3.19) called 'Authentication Types'
+  which contains an (improved) example of how to use SSL client certificate
+  authentication instead of regular passwords.
+- oper::require-modes: an optional setting, which can be used to require
+  users to have certain user modes (such as 'z') before they can /OPER up.
+- allow/deny channel: you can now optionally specify a class here as an
+  extra filter.
+- doc/example.es.conf: Spanish translation of example configuration file.
+- There have also been some behavior changes, which can be considered NEW,
+  see next section (CHANGED).
+
+==[ CHANGED ]==
+- Anti-spoof protection (ping cookies) can now be enabled/disabled at
+  run-time through set::ping-cookie [yes|no]. The default is 'yes' (enabled).
+- A quit with 'Ping timeout' now shows the number of seconds since the ping.
+- Print out a warning if we can't write to a log file.
+- Refuse to boot if we can't write to ANY log file.
+- Windows: if an SSL certificate exists, then uncheck the 'generate SSL
+  certificate' checkbox by default.
+- *NIX with SSL: We now ask in ./Config if you want to generate an SSL
+  certificate. The certificate is then copied when you run 'make install'.
+
+==[ MAJOR BUGS FIXED ]==
+- Windows SSL crash (this issue was already fixed in 3.2.9-SSL-fix)
+- Other than that, none?
+
+==[ MINOR BUGS FIXED ]==
+- Various compile problems, in particular with remote includes enabled.
+- Windows: the installer sometimes insisted that the Visual C++ 2008
+  redistributable package was not installed, when it actually was there.
+- Windows: MOTD file date/time was always showing up as 1/1/1970.
+- And more... see Changelog
+
+==[ REMOVED / DROPPED ]==
+- Windows 9X is no longer supported
+- The networks/ directory has been removed
+
+==[ KNOWN ISSUES ]==
+- Regexes: Be careful with backreferences (\1, etc), certain regexes can
+  slow the IRCd down considerably and even bring it to a near-halt.
+  In the spamfilter user target it's usually safe though.
+  Slow spamfilter detection can help prevent the slowdown/freeze, but
+  might not work in worst-case scenario's.
+- Regexes: Possessive quantifiers such as, for example, "++" (not to be
+  confused with "+") are not safe to use, they can easily freeze the IRCd.
+
+==[ ADDITIONAL INFO ]==
+- See Changelog for more details

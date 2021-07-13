@@ -287,6 +287,23 @@ else
 	n="-n"
 fi
 
+date|grep 2015 1>/dev/null 2>&1
+if [ "$?" -ne 0 ]; then
+	echo "*** WARNING ***"
+	echo "UnrealIRCd 3.2.x will no longer be supported after December 31, 2016."
+	echo "You should upgrade to UnrealIRCd 4 before that date."
+	echo "See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated"
+	echo $n . $c
+	sleep 1
+	echo $n . $c
+	sleep 1
+	echo $n . $c
+	sleep 1
+	echo $n . $c
+	sleep 1
+	echo ""
+	sleep 1
+fi
 
 #parse arguments
 IMPORTEDSETTINGS=""
@@ -319,6 +336,19 @@ while [ $# -ge 1 ] ; do
 	shift 1
 done
 
+<<<<<<< HEAD
+date|grep 2015 1>/dev/null 2>&1
+if [ "$?" -ne 0 ]; then
+	echo $n "[Enter to continue]"
+	read cc
+fi
+
+if [ -f "config.settings" -a -z "$NOCACHE" ] ; then
+    . ./config.settings
+fi
+
+=======
+>>>>>>> unreal52
 if [ "$PREADVANCED" = "1" ] ; then
 	ADVANCED="1"
 elif [ "$ADVANCED" = "1" ]; then

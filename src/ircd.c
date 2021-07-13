@@ -273,8 +273,32 @@ EVENT(garbage_collect)
 		loop.do_garbage_collect = 0;
 }
 
+<<<<<<< HEAD
+EVENT(deprecated_notice)
+{
+	/* Send a warning to opers currently online every week after November 1, 2016 */
+	if (TStime() > 1477954800)
+	{
+		sendto_realops("[WARNING] UnrealIRCd 3.2.x is no longer supported after December 31, 2016. "
+					   "See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated");
+		ircd_log(LOG_ERROR, "[WARNING] UnrealIRCd 3.2.x is no longer supported after December 31, 2016. "
+		               "See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated");
+	}
+}
+
+/*
+** try_connections
+**
+**	Scan through configuration and try new connections.
+**	Returns the calendar time when the next call to this
+**	function should be made latest. (No harm done if this
+**	is called earlier or later...)
+*/
+static TS try_connections(TS currenttime)
+=======
 /** Does this user match any TKL's? */
 int match_tkls(Client *client)
+>>>>>>> unreal52
 {
 	ConfigItem_ban *bconf = NULL;
 	char banbuf[1024];
@@ -1164,9 +1188,24 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifdef _WIN32
 		win_error(); /* display error dialog box */
 #endif
+<<<<<<< HEAD
+	if (time(NULL) > 1459461600)
+	{
+		fprintf(stderr, "WARNING: UnrealIRCd 3.2.x is no longer supported after December 31, 2016.\n"
+		                "See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated\n");
+	}
+	open_debugfile();
+#ifndef NO_FDLIST
+	init_fdlist(&serv_fdlist);
+	init_fdlist(&busycli_fdlist);
+	init_fdlist(&default_fdlist);
+	init_fdlist(&oper_fdlist);
+	init_fdlist(&unknown_fdlist);
+=======
 		exit(9);
 	}
 	if (loop.config_test)
+>>>>>>> unreal52
 	{
 		ircd_log(LOG_ERROR, "Configuration test passed OK");
 		fflush(stderr);

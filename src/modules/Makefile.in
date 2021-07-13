@@ -83,11 +83,22 @@ RM=@RM@
 all: build
 
 build: $(MODULES)
+<<<<<<< HEAD
+
+custommodule: $(MODULEFILE).c
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o $(MODULEFILE).so $(MODULEFILE).c $(EXLIBS)
+
+commands.so: l_commands.c $(COMMANDS) $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -o commands.so l_commands.c \
+	$(COMMANDS)
+=======
 	cd chanmodes; $(MAKE) all
 	cd usermodes; $(MAKE) all
 	cd snomasks; $(MAKE) all
 	cd extbans; $(MAKE) all
 	cd third; $(MAKE) all
+>>>>>>> unreal52
 
 #############################################################################
 #             .so's section

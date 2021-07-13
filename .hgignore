@@ -1,0 +1,35 @@
+syntax: regexp
+
+# particular targets
+^ircdcron/ircdchk$
+^ircdcron/ircd\.cron$
+^src/ircd$
+^src/include$
+^src/version\.c$
+^unreal$
+^server\.(cert|key|req)\.pem$
+
+# extras archives and builds
+^extras/[^/]*\.(bak|tar)$
+^extras/[^/]*\d/
+^extras/(c-ares|regexp)/
+
+# running unrealircd from the source directory
+^ircd\.(log|pid|tune)$
+^ssl\.rnd$
+
+# General
+\.(o|so|orig|rej)$
+~$
+(^|/)core(\.\d+)?$
+
+# autotools
+^aclocal\.m4$
+^autom4te\.cache/
+^config\.(status|log)$
+
+# not quite autotools
+^config\.settings$
+^include/setup\.h$
+^Makefile$
+^src/modules/Makefile$

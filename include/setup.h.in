@@ -85,11 +85,16 @@
 /* Define if you have pstat */
 #undef HAVE_PSTAT
 
+<<<<<<< HEAD
+/* Define if the libcrypto has RAND_egd */
+#undef HAVE_RAND_EGD
+=======
 /* Define if you have POSIX threads libraries and header files. */
 #undef HAVE_PTHREAD
 
 /* Have PTHREAD_PRIO_INHERIT. */
 #undef HAVE_PTHREAD_PRIO_INHERIT
+>>>>>>> unreal52
 
 /* Define if you have setproctitle */
 #undef HAVE_SETPROCTITLE

@@ -170,10 +170,14 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	USERLEN		10
 #define	REALLEN	 	50
 #define SVIDLEN		30
+<<<<<<< HEAD
+#define	TOPICLEN	307
+=======
 #define MAXTOPICLEN	360	/* absolute maximum permitted topic length (above this = potential desync) */
 #define MAXAWAYLEN	360	/* absolute maximum permitted away length (above this = potential desync) */
 #define MAXKICKLEN	360	/* absolute maximum kick length (above this = only cutoff danger) */
 #define MAXQUITLEN	395	/* absolute maximum quit length (above this = only cutoff danger) */
+>>>>>>> unreal52
 #define	CHANNELLEN	32
 #define	PASSWDLEN 	256	/* some insane large limit (previously: 20, 32, 48) */
 #define	KEYLEN		23
@@ -369,7 +373,58 @@ typedef enum ClientStatus {
 #define	IsOper(x)		((x)->umodes & UMODE_OPER)
 #define	IsInvisible(x)		((x)->umodes & UMODE_INVISIBLE)
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
+<<<<<<< HEAD
+#define IsLoggedIn(x)		(IsRegNick(x) || (x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid))) /* registered nick (+r) or just logged into services (may be -r) */
+#define IsRegNickMsg(x)		((x)->umodes & UMODE_RGSTRONLY)
+#define IsNoCTCP(x)		((x)->umodes & UMODE_NOCTCP)
+#define IsWebTV(x)		((x)->umodes & UMODE_WEBTV)
+#define	IsPerson(x)		((x)->user && IsClient(x))
+#define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
+#define	SendWallops(x)		(!IsMe(x) && IsPerson(x) && ((x)->umodes & UMODE_WALLOP))
+#define	SendServNotice(x)	(((x)->user) && ((x)->user->snomask & SNO_SNOTICE))
+#define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
+// #define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
+#define	IsLocal(x)		((x)->flags & FLAGS_LOCAL)
+#define	IsDead(x)		((x)->flags & FLAGS_DEADSOCKET)
+#define GotProtoctl(x)		((x)->flags & FLAGS_PROTOCTL)
+#define IsBlocked(x)		((x)->flags & FLAGS_BLOCKED)
+#define IsOutgoing(x)		((x)->flags & FLAGS_OUTGOING)
+#define GotNetInfo(x) 		((x)->flags & FLAGS_NETINFO)
+#define SetNetInfo(x)		((x)->flags |= FLAGS_NETINFO)
+#define IsCGIIRC(x)			((x)->flags & FLAGS_CGIIRC)
+#define SetEAuth(x)		((x)->flags |= FLAGS_EAUTH)
+#define IsEAuth(x)		((x)->flags & FLAGS_EAUTH)
+#define IsShunned(x)		((x)->flags & FLAGS_SHUNNED)
+#define SetShunned(x)		((x)->flags |= FLAGS_SHUNNED)
+#define ClearShunned(x)		((x)->flags &= ~FLAGS_SHUNNED)
+#define IsVirus(x)			((x)->flags & FLAGS_VIRUS)
+#define SetVirus(x)			((x)->flags |= FLAGS_VIRUS)
+#define ClearVirus(x)		((x)->flags &= ~FLAGS_VIRUS)
+#ifdef USE_SSL
+#define IsSecure(x)		((x)->flags & FLAGS_SSL)
+#else
+#define IsSecure(x)		(0)
+#endif
+
+#ifdef ZIP_LINKS
+#define IsZipped(x) 	((x)->flags & FLAGS_ZIP)
+#define IsZipStart(x)	(((x)->flags & FLAGS_ZIP) && ((x)->zip->first == 1))
+#else
+#define IsZipped(x)		(0)
+#define IsZipStart(x)	(0)
+#endif
+
+/* Fake lag exception */
+#define IsNoFakeLag(x)      ((x)->flags & FLAGS_NOFAKELAG)
+#define SetNoFakeLag(x)     ((x)->flags |= FLAGS_NOFAKELAG)
+#define ClearNoFakeLag(x)   ((x)->flags &= ~FLAGS_NOFAKELAG)
+
+#define IsHybNotice(x)		((x)->flags & FLAGS_HYBNOTICE)
+#define SetHybNotice(x)         ((x)->flags |= FLAGS_HYBNOTICE)
+#define ClearHybNotice(x)	((x)->flags &= ~FLAGS_HYBNOTICE)
+=======
 #define	SendWallops(x)		(!IsMe(x) && IsUser(x) && ((x)->umodes & UMODE_WALLOP))
+>>>>>>> unreal52
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
 #define IsSetHost(x)		((x)->umodes & UMODE_SETHOST)
 #define IsHideOper(x)		((x)->umodes & UMODE_HIDEOPER)
@@ -866,6 +921,16 @@ struct SWhois {
  */
 #define CMD_OVERRIDE_FUNC(x) void (x)(CommandOverride *ovr, Client *client, MessageTag *recv_mtags, int parc, char *parv[])
 
+<<<<<<< HEAD
+	/*
+	 * svid: a value that is assigned by services to this user record.
+	 * in previous versions of Unreal, this was strictly a timestamp value,
+	 * which is less useful in the modern world of IRC where nicks are grouped to
+	 * accounts, so it is now a string.
+	 */
+	char svid[SVIDLEN + 1];
+=======
+>>>>>>> unreal52
 
 
 typedef void (*CmdFunc)(Client *client, MessageTag *mtags, int parc, char *parv[]);
@@ -1477,6 +1542,23 @@ struct ConfigFlag_tld
 #define CONF_BAN_TYPE_AKILL	1
 #define CONF_BAN_TYPE_TEMPORARY 2
 
+<<<<<<< HEAD
+/* Ban actions. These must be ordered by severity (!) */
+#define BAN_ACT_GZLINE		1100
+#define BAN_ACT_GLINE		1000
+#define BAN_ACT_ZLINE		 900
+#define BAN_ACT_KLINE		 800
+#define BAN_ACT_SHUN		 700
+#define BAN_ACT_KILL		 600
+#define BAN_ACT_TEMPSHUN	 500
+#define BAN_ACT_VIRUSCHAN	 400
+#define BAN_ACT_DCCBLOCK	 300
+#define BAN_ACT_BLOCK		 200
+#define BAN_ACT_WARN		 100
+
+
+=======
+>>>>>>> unreal52
 #define CRULE_ALL		0
 #define CRULE_AUTO		1
 

@@ -138,6 +138,25 @@ extern ConfigItem_help 	*find_Help(char *command);
 extern OperPermission ValidatePermissionsForPath(char *path, Client *client, Client *victim, Channel *channel, void *extra);
 extern void OperClassValidatorDel(OperClassValidator *validator);
 
+<<<<<<< HEAD
+extern MODVAR int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
+    R_do_id, R_fin_id, R_fail_id;
+
+#endif
+extern aCommand *find_Command(char *cmd, short token, int flags);
+extern aCommand *find_Command_simple(char *cmd);
+extern aChannel *find_channel(char *, aChannel *);
+extern Membership *find_membership_link(Membership *lp, aChannel *ptr);
+extern Member *find_member_link(Member *, aClient *);
+extern void remove_user_from_channel(aClient *, aChannel *);
+extern char *base64enc(long);
+extern long base64dec(char *);
+extern void add_server_to_table(aClient *);
+extern void remove_server_from_table(aClient *);
+extern void iNAH_host(aClient *sptr, char *host);
+extern void set_snomask(aClient *sptr, char *snomask);
+extern char *get_sno_str(aClient *sptr);
+=======
 extern ConfigItem_ban  *find_ban_ip(Client *client);
 extern void add_ListItem(ListStruct *, ListStruct **);
 extern void append_ListItem(ListStruct *item, ListStruct **list);
@@ -172,6 +191,7 @@ extern void iNAH_host(Client *client, char *host);
 extern void set_snomask(Client *client, char *snomask);
 extern char *get_snomask_string(Client *client);
 extern int check_tkls(Client *cptr);
+>>>>>>> unreal52
 /* for services */
 extern void send_user_joins(Client *, Client *);
 extern int valid_channelname(const char *);
@@ -845,6 +865,15 @@ extern void free_motd(MOTDFile *motd); /* s_serv.c */
 extern void fix_timers(void);
 extern char *chfl_to_sjoin_symbol(int s);
 extern char chfl_to_chanmode(int s);
+<<<<<<< HEAD
+extern void add_pending_net(aClient *sptr, char *str);
+extern void free_pending_net(aClient *sptr);
+extern aPendingNet *find_pending_net_by_numeric_butone(int numeric, aClient *exempt);
+extern aClient *find_pending_net_duplicates(aClient *cptr, aClient **srv, int *numeric);
+extern aClient *find_non_pending_net_duplicates(aClient *cptr);
+extern MODVAR char serveropts[];
+extern MODVAR char *IsupportStrings[];
+=======
 extern void add_pending_net(Client *client, char *str);
 extern void free_pending_net(Client *client);
 extern Client *find_non_pending_net_duplicates(Client *cptr);
@@ -1079,3 +1108,4 @@ extern FloodSettings *find_floodsettings_block(const char *name);
 extern FloodSettings *get_floodsettings_for_user(Client *client, FloodOption opt);
 extern MODVAR char *floodoption_names[];
 extern void flood_limit_exceeded_log(Client *client, char *floodname);
+>>>>>>> unreal52

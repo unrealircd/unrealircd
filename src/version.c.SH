@@ -4,10 +4,14 @@ echo "Extracting src/version.c..."
 
 #id=`grep '$Id: Changes,v' ../Changes`
 #id=`echo $id |sed 's/.* Changes\,v \(.*\) .* Exp .*/\1/'`
+<<<<<<< HEAD
+id="3.2.10.7"
+=======
 if [ -d ../.git ]; then
 	SUFFIX="-$(git rev-parse --short HEAD)"
 fi
 id="5.2.2-git$SUFFIX"
+>>>>>>> unreal52
 echo "$id"
 
 if test -r version.c
@@ -126,6 +130,10 @@ char *unrealcredits[] =
 	"IRC-IRC.de Community - irc.irc-irc.de,",
 	"Mike Meisner - www.hottubcoverdepot.com, CubaChat - irc.cubachat.org,",
 	"BluePromoCode - www.bluepromocode.com, DontPayFull - www.dontpayfull.com",
+<<<<<<< HEAD
+	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
+	"The UnrealIRCd Team would like to thank:",
+=======
 	"Anikwa - ukblabberbox.co.uk, xShellz - www.xshellz.com, wico,",
 	"Magnolia Road Internet Cooperative, FrostWire - www.frostwire.com,",
 	"Bundeld Inc. - couponlawn.com, Chameleon John - www.chameleonjohn.com,",
@@ -138,6 +146,7 @@ char *unrealcredits[] =
 	"Coyote Traffic - www.coyotetraffic.com, www.emailextractor14lite.com,",
 	"bet365 Bonus Code - williamspromocodes.co.uk/bet365-bonus-code-sports/,",
 	"Valerie Amelia Pond",
+>>>>>>> unreal52
 	" ",
 	"==========================[ Supporters ]==========================",
 	"Our support staff: Cronus, Jobe, SpaceDog, Stealth",

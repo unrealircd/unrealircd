@@ -3,6 +3,12 @@ URL="https://www.unrealircd.org/files/curl-latest.tar.gz"
 OUTF="curl-latest.tar.gz"
 OUTD="curl-latest"
 ARESPATH="`pwd`/extras/c-ares"
+<<<<<<< HEAD:curlinstall
+CARESVERSION="1.10.0"
+if [ ! -f "Unreal.nfo" ]; then
+	echo "Please run this program from your UnrealIRCd directory"
+	echo "(usually $HOME/Unreal3.2 or something like that)"
+=======
 UNREALDIR="`pwd`"
 CARESVERSION="1.17.1"
 LIBDIR="$1"
@@ -10,6 +16,7 @@ LIBDIR="$1"
 if [ "x$1" = "x" ]; then
 	echo "You should (no longer) run this program directly."
 	echo "It will be invoked by ./Config"
+>>>>>>> unreal52:extras/curlinstall
 	exit 1
 fi
 

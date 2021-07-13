@@ -18,8 +18,37 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+<<<<<<< HEAD
+#include "setup.h"
+#include "config.h"
+
+#ifdef USE_POLL
+# ifndef _WIN32
+#  include <poll.h>
+#  ifndef POLLRDHUP
+#   define POLLRDHUP 0
+#  endif
+# else
+#  define poll WSAPoll
+#  define POLLRDHUP POLLHUP
+# endif
+#endif
+
+#include <string.h>
+#include <stdio.h>
+#include <struct.h>
+
+#include "proto.h"
+#include "h.h"
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <curl/curl.h>
+
+#ifdef USE_SSL
+=======
 #include "unrealircd.h"
 
+>>>>>>> unreal52
 extern char *SSLKeyPasswd;
 
 #ifndef _WIN32

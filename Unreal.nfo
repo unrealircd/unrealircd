@@ -1,0 +1,77 @@
+===============================================
+=            UnrealIRCd v3.2.10.7             =
+===============================================
+ This release was brought to you by:
+
+  Head coder:
+  ============
+  * Syzop
+
+  Coders:
+  ========
+  * binki
+
+  Contributors:
+  =============
+  * Heero
+  * nenolod
+  * Adam
+  * warg
+  * Stealth
+  * WolfSage
+  * katsklaw
+  * darkex
+  * fspijkerman
+  * fbi
+  * Apocalypse
+
+  Previous coders:
+  ================
+  * Stskeeps
+  * codemastr
+  * Many more..
+
+  Internet Presence:
+  * http://www.unrealircd.com/
+ 
+ UnrealIRCd Bugtracker (Where to report bugs, make suggestions, and submit patches)
+ ===================================================================================
+ http://bugs.unrealircd.org/
+
+ To get support
+ ================
+ Before asking others for help you MUST:
+ * read the docs (doc/unreal32docs.html or online: http://unrealircd.com/unreal32docs.html)
+ * check the FAQ (http://vulnscan.org/UnrealIrcd/faq/)
+
+ Means of support:
+ * IRC: /server irc.unrealircd.com 6667 - /join #unreal-support
+   [Note: Follow the bot's instructions in order to get voice.
+          Please be patient after asking questions, we may be busy
+          or we're away. Don't repeat questions, we will have heard
+	  you first time.
+	  READ THE TOPIC before you ask anything. We give support
+	  on a free basis. We are volunteering to help you, but we
+	  are humans like you. We sometimes just need some peace.]
+ * Forum: http://forums.unrealircd.com/
+
+ Development version
+ ====================
+ To access the latest development version of UnrealIRCd you need to use mercurial (hg).
+ Note that because you are accessing a development version it may not compile, the
+ server may crash, or other problems can occur since the code is likely to be only
+ lightly tested (or not at all). On the other hand, using the development version may
+ help you to get rid of that single nasty bug that is haunting you, plus if you test
+ it and give us feedback (report bugs) then you actually help us with developing Unreal.
+
+ The command to grab the development version is:
+ hg clone http://hg.unrealircd.org/unreal
+
+ If you get something like 'hg: command not found' then you need to install mercurial.
+ Most *NIX systems have such a 'mercurial' package, but if you don't, or you are on
+ Windows or Mac OS X, then see http://mercurial.selenic.com/
+
+ Want to discuss, chat, etc?
+ =============================
+ * IRC: /server irc.unrealircd.com 6667 - /join #chat
+   (NOT for support! If you want support then use #unreal-support instead!)
