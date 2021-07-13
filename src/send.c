@@ -18,266 +18,244 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* -- Jto -- 16 Jun 1990
- * Added Armin's PRIVMSG patches...
+/* send.c 2.32 2/28/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
+
+/** @file
+ * @brief The sending functions to users, channels, servers.
  */
 
-#ifndef CLEAN_COMPILE
-static char sccsid[] =
-    "@(#)send.c	2.32 2/28/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen";
-#endif
+#include "unrealircd.h"
 
-#include "struct.h"
-#include "numeric.h"
-#include "common.h"
-#include "sys.h"
-#include "h.h"
-#include "msg.h"
-#include <stdarg.h>
-#include <stdio.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <string.h>
-
-void vsendto_one(aClient *to, char *pattern, va_list vl);
-void sendbufto_one(aClient *to, char *msg, unsigned int quick);
-int vmakebuf_local_withprefix(char *buf, struct Client *from, const char *pattern, va_list vl);
+/* Some forward declarions are needed */
+void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl);
+void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl);
+static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, const char *pattern, va_list vl);
 
 #define ADD_CRLF(buf, len) { if (len > 510) len = 510; \
                              buf[len++] = '\r'; buf[len++] = '\n'; buf[len] = '\0'; } while(0)
 
-#ifndef NO_FDLIST
-extern fdlist serv_fdlist;
-extern fdlist oper_fdlist;
-#endif
-
-#define NEWLINE	"\r\n"
-
+/* These are two local (static) buffers used by the various send functions */
 static char sendbuf[2048];
-static char tcmd[2048];
-static char ccmd[2048];
-static char xcmd[2048];
-static char wcmd[2048];
+static char sendbuf2[4096];
 
-/* this array is used to ensure we send a msg only once to a remote 
-** server.  like, when we are sending a message to all channel members
-** send the message to those that are directly connected to us and once 
-** to each server that has these members.  the servers then forward the
-** message to other servers and to those channel members that are directly
-** connected to them
-*/
-static int sentalong[MAXCONNECTIONS];
+/** This is used to ensure no duplicate messages are sent
+ * to the same server uplink/direction. In send functions
+ * that deliver to multiple users or servers the value is
+ * increased by 1 and then for each delivery in the loop
+ * it is checked if to->direction->local->serial == current_serial
+ * and if so, sending is skipped.
+ */
+MODVAR int  current_serial;
 
-void vsendto_prefix_one(struct Client *to, struct Client *from,
-    const char *pattern, va_list vl);
-
-MODVAR int  sentalong_marker;
-MODVAR int  sendanyways = 0;
-/*
-** dead_link
-**	An error has been detected. The link *must* be closed,
-**	but *cannot* call ExitClient (m_bye) from here.
-**	Instead, mark it with FLAGS_DEADSOCKET. This should
-**	generate ExitClient from the main loop.
-**
-**	notice will be the quit message. notice will also be
-**	sent to failops in case 'to' is a server.
-*/
-static int dead_link(aClient *to, char *notice)
+/** Mark the socket as "dead".
+ * This is used when exit_client() cannot be used from the
+ * current code because doing so would be (too) unexpected.
+ * The socket is closed later in the main loop.
+ * NOTE: this function is becoming less important, now that
+ *       exit_client() will not actively free the client.
+ *       Still, sometimes we need to use dead_socket()
+ *       since we don't want to be doing IsDead() checks after
+ *       each and every sendto...().
+ * @param to		Client to mark as dead
+ * @param notice	The quit reason to use
+ */
+int dead_socket(Client *to, char *notice)
 {
-	
-	to->flags |= FLAGS_DEADSOCKET;
-	/*
-	 * If because of BUFFERPOOL problem then clean dbuf's now so that
-	 * notices don't hurt operators below.
+	DBufClear(&to->local->recvQ);
+	DBufClear(&to->local->sendQ);
+
+	if (IsDeadSocket(to))
+		return -1; /* already pending to be closed */
+
+	SetDeadSocket(to);
+
+	/* We may get here because of the 'CPR' in check_deadsockets().
+	 * In which case, we return -1 as well.
 	 */
-	DBufClear(&to->recvQ);
-	DBufClear(&to->sendQ);
+	if (to->local->error_str)
+		return -1; /* don't overwrite & don't send multiple times */
 	
-	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
-		(void)sendto_failops_whoare_opers("Closing link: %s - %s",
-			notice, get_client_name(to, FALSE));
-	Debug((DEBUG_ERROR, "dead_link: %s - %s", notice, get_client_name(to, FALSE)));
-	to->error_str = strdup(notice);
+	if (!IsUser(to) && !IsUnknown(to) && !IsClosing(to))
+		sendto_ops_and_log("Link to server %s (%s) closed: %s",
+			to->name, to->ip?to->ip:"<no-ip>", notice);
+	Debug((DEBUG_ERROR, "dead_socket: %s - %s", notice, get_client_name(to, FALSE)));
+	safe_strdup(to->local->error_str, notice);
 	return -1;
 }
 
-/*
-** flush_connections
-**	Used to empty all output buffers for all connections. Should only
-**	be called once per scan of connections. There should be a select in
-**	here perhaps but that means either forcing a timeout or doing a poll.
-**	When flushing, all we do is empty the obuffer array for each local
-**	client and try to send it. if we cant send it, it goes into the sendQ
-**	-avalon
-*/
-void flush_connections(aClient* cptr)
+/** This is a callback function from the event loop.
+ * All it does is call send_queued().
+ */
+void send_queued_cb(int fd, int revents, void *data)
 {
-	int  i;
-	aClient *acptr;
+	Client *to = data;
 
-	if (&me == cptr)
-	{
-		for (i = LastSlot; i >= 0; i--)
-			if ((acptr = local[i]) && !(acptr->flags & FLAGS_BLOCKED)
-			    && ((DBufLength(&acptr->sendQ) > 0)
-#ifdef ZIP_LINKS
-				|| (IsZipped(acptr) && acptr->zip->outcount)
-#endif /* ZIP_LINKS */
-				) )
-				send_queued(acptr);
-	}
-	else if (cptr->fd >= 0 && !(cptr->flags & FLAGS_BLOCKED)
-	    && ((DBufLength(&cptr->sendQ) > 0)
-#ifdef ZIP_LINKS
-		|| (IsZipped(cptr) && cptr->zip->outcount)
-#endif /* ZIP_LINKS */
-		) )
-		send_queued(cptr);
+	if (IsDeadSocket(to))
+		return;
 
+	send_queued(to);
 }
-/* flush an fdlist intelligently */
-#ifndef NO_FDLIST
-void flush_fdlist_connections(fdlist * listp)
-{
-	int  i, fd;
-	aClient *cptr;
 
-	for (fd = listp->entry[i = 1]; i <= listp->last_entry;
-	    fd = listp->entry[++i])
-		if ((cptr = local[fd]) && !(cptr->flags & FLAGS_BLOCKED)
-		    && DBufLength(&cptr->sendQ) > 0)
-			send_queued(cptr);
-}
-#endif
-
-/*
-** send_queued
-**	This function is called from the main select-loop (or whatever)
-**	when there is a chance the some output would be possible. This
-**	attempts to empty the send queue as far as possible...
-*/
-int  send_queued(aClient *to)
+/** This function is called when queued data might be ready to be
+ * sent to the client. It is called from the event loop and also
+ * a couple of other places (such as when closing the connection).
+ */
+int send_queued(Client *to)
 {
-	char *msg;
 	int  len, rlen;
-#ifdef ZIP_LINKS
-	int more = 0;
-#endif
-	if (IsBlocked(to))
-		return -1;		/* Can't write to already blocked socket */
+	dbufbuf *block;
+	int want_read;
 
-	/*
-	   ** Once socket is marked dead, we cannot start writing to it,
-	   ** even if the error is removed...
-	 */
-	if (IsDead(to))
-	{
-		/*
-		   ** Actually, we should *NEVER* get here--something is
-		   ** not working correct if send_queued is called for a
-		   ** dead socket... --msa
-		 */
+	/* We NEVER write to dead sockets. */
+	if (IsDeadSocket(to))
 		return -1;
-	}
-#ifdef ZIP_LINKS
-	/*
-	** Here, we must make sure than nothing will be left in to->zip->outbuf
-	** This buffer needs to be compressed and sent if all the sendQ is sent
-	*/
-	if ((IsZipped(to)) && to->zip->outcount) {
-		if (DBufLength(&to->sendQ) > 0) {
-			more = 1;
-		} else {
-			msg = zip_buffer(to, NULL, &len, 1);
-			if (len == -1)
-				return dead_link(to, "fatal error in zip_buffer()");
-			if (!dbuf_put(&to->sendQ, msg, len))
-				return dead_link(to, "Buffer allocation error");
-		}
-	}
-#endif
-	while (DBufLength(&to->sendQ) > 0)
+
+	while (DBufLength(&to->local->sendQ) > 0)
 	{
-		msg = dbuf_map(&to->sendQ, &len);
-		/* Returns always len > 0 */
-		if ((rlen = deliver_it(to, msg, len)) < 0)
+		block = container_of(to->local->sendQ.dbuf_list.next, dbufbuf, dbuf_node);
+		len = block->size;
+
+		/* Deliver it and check for fatal error.. */
+		if ((rlen = deliver_it(to, block->data, len, &want_read)) < 0)
 		{
 			char buf[256];
 			snprintf(buf, 256, "Write error: %s", STRERROR(ERRNO));
-			return dead_link(to, buf);
+			return dead_socket(to, buf);
 		}
-		(void)dbuf_delete(&to->sendQ, rlen);
-		to->lastsq = DBufLength(&to->sendQ) / 1024;
-		if (rlen < len)
+		dbuf_delete(&to->local->sendQ, rlen);
+		to->local->lastsq = DBufLength(&to->local->sendQ) / 1024;
+		if (want_read)
 		{
-			/* If we can't write full message, mark the socket
-			 * as "blocking" and stop trying. -Donwulff */
-			SetBlocked(to);
+			/* SSL_write indicated that it cannot write data at this
+			 * time and needs to READ data first. Let's stop talking
+			 * to the user and ask to notify us when there's data
+			 * to read.
+			 */
+			fd_setselect(to->local->fd, FD_SELECT_READ, send_queued_cb, to);
+			fd_setselect(to->local->fd, FD_SELECT_WRITE, NULL, to);
 			break;
 		}
-#ifdef ZIP_LINKS
-		if (DBufLength(&to->sendQ) == 0 && more) {
-			/*
-			** The sendQ is now empty, compress what's left
-			** uncompressed and try to send it too
-			*/
-			more = 0;
-			msg = zip_buffer(to, NULL, &len, 1);
-			if (len == -1)
-				return dead_link(to, "fatal error in zip_buffer()");
-			if (!dbuf_put(&to->sendQ, msg, len))
-				return dead_link(to, "Buffer allocation error");
+		/* Restore handling of reads towards read_packet(), since
+		 * it may be overwritten in an earlier call to send_queued(),
+		 * to handle reads by send_queued_cb(), see directly above.
+		 */
+		fd_setselect(to->local->fd, FD_SELECT_READ, read_packet, to);
+		if (rlen < len)
+		{
+			/* incomplete write due to EWOULDBLOCK, reschedule */
+			fd_setselect(to->local->fd, FD_SELECT_WRITE, send_queued_cb, to);
+			break;
 		}
-#endif
 	}
+	
+	/* Nothing left to write, stop asking for write-ready notification. */
+	if ((DBufLength(&to->local->sendQ) == 0) && (to->local->fd >= 0))
+		fd_setselect(to->local->fd, FD_SELECT_WRITE, NULL, to);
 
-	return (IsDead(to)) ? -1 : 0;
+	return (IsDeadSocket(to)) ? -1 : 0;
 }
 
-/*
- *  send message to single client
+/** Mark "to" with "there is data to be send" */
+void mark_data_to_send(Client *to)
+{
+	if (!IsDeadSocket(to) && (to->local->fd >= 0) && (DBufLength(&to->local->sendQ) > 0))
+	{
+		fd_setselect(to->local->fd, FD_SELECT_WRITE, send_queued_cb, to);
+	}
+}
+
+/** Send data to clients, servers, channels, IRCOps, etc.
+ * There are a lot of send functions. The most commonly functions
+ * are: sendto_one() to send to an individual user,
+ * sendnumeric() to send a numeric to an individual user
+ * and sendto_channel() to send a message to a channel.
+ * @defgroup SendFunctions Send functions
+ * @{
  */
-void sendto_one(aClient *to, char *pattern, ...)
+
+/** Send a message to a single client.
+ * This function is used quite a lot, after sendnumeric() it is the most-used send function.
+ * @param to		The client to send to
+ * @param mtags		Any message tags associated with this message (can be NULL)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ * @section sendto_one_examples Examples
+ * @subsection sendto_one_mode_r Send "MODE -r"
+ * This will send the `:serv.er.name MODE yournick -r` message.
+ * Note that it will send only this message to illustrate the sendto_one() function.
+ * It does *not* set anyone actually -r.
+ * @code
+ * sendto_one(client, NULL, ":%s MODE %s :-r", me.name, client->name);
+ * @endcode
+ */
+void sendto_one(Client *to, MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	va_start(vl, pattern);
-	vsendto_one(to, pattern, vl);
+	vsendto_one(to, mtags, pattern, vl);
 	va_end(vl);
 }
 
-void vsendto_one(aClient *to, char *pattern, va_list vl)
+/** Send a message to a single client - va_list variant.
+ * This function is similar to sendto_one() except that it
+ * doesn't use varargs but uses a va_list instead.
+ * Generally this function is NOT used outside send.c, so not by modules.
+ * @param to		The client to send to
+ * @param mtags		Any message tags associated with this message (can be NULL)
+ * @param pattern	The format string / pattern to use.
+ * @param vl		Format string parameters.
+ */
+void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl)
 {
-	ircvsprintf(sendbuf, pattern, vl);
-	sendbufto_one(to, sendbuf, 0);
+	char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
+
+	ircvsnprintf(sendbuf, sizeof(sendbuf), pattern, vl);
+
+	if (BadPtr(mtags_str))
+	{
+		/* Simple message without message tags */
+		sendbufto_one(to, sendbuf, 0);
+	} else {
+		/* Message tags need to be prepended */
+		snprintf(sendbuf2, sizeof(sendbuf2), "@%s %s", mtags_str, sendbuf);
+		sendbufto_one(to, sendbuf2, 0);
+	}
 }
 
 
-/* sendbufto_one:
- * to: the client to which the buffer should be send
- * msg: the message
- * quick: normally set to 0, see later.
- * NOTES:
- * - neither to or msg can be NULL
- * - if quick is set to 0, the length is calculated, the string is cutoff
- *   at 510 bytes if needed, and \r\n is added if needed.
- *   if quick is >0 it is assumed the message has \r\n and 'quick' is used
- *   as length. Of course you should be very careful with that.
+/** Send a line buffer to the client.
+ * This function is used (usually indirectly) for pretty much all
+ * cases where a line needs to be sent to a client.
+ * @param to    The client to which the buffer should be send.
+ * @param msg   The message.
+ * @param quick Normally set to 0, see the notes.
+ * @note
+ * - Neither 'to' or 'msg' may be NULL.
+ * - If quick is set to 0 then the length is calculated,
+ *   the string is cut off at 510 bytes if needed, and
+ *   CR+LF is added if needed.
+ *   If quick is >0 then it is assumed the message already
+ *   is within boundaries and passed all safety checks and
+ *   contains CR+LF at the end. This if, for example, used in
+ *   channel broadcasts to save some CPU cycles. It is NOT
+ *   recommended as normal usage since you need to be very
+ *   careful to take everything into account, including side-
+ *   effects not mentioned here.
  */
-void sendbufto_one(aClient *to, char *msg, unsigned int quick)
+void sendbufto_one(Client *to, char *msg, unsigned int quick)
 {
-	int  len;
+	int len;
 	Hook *h;
+	Client *intended_to = to;
 	
 	Debug((DEBUG_ERROR, "Sending [%s] to %s", msg, to->name));
 
-	if (to->from)
-		to = to->from;
-	if (IsDead(to))
+	if (to->direction)
+		to = to->direction;
+	if (IsDeadSocket(to))
 		return;		/* This socket has already
 				   been marked as dead */
-	if (to->fd < 0)
+	if (to->local->fd < 0)
 	{
 		/* This is normal when 'to' was being closed (via exit_client
 		 *  and close_connection) --Run
@@ -285,27 +263,61 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 		 */
 		Debug((DEBUG_ERROR,
 		    "Local socket %s with negative fd %d... AARGH!", to->name,
-		    to->fd));
+		    to->local->fd));
 		return;
 	}
 
+	/* Unless 'quick' is set, we do some safety checks,
+	 * cut the string off at the appropriate place and add
+	 * CR+LF if needed (nearly always).
+	 */
 	if (!quick)
 	{
-		len = strlen(msg);
-		if (!len || (msg[len - 1] != '\n'))
+		char *p = msg;
+		if (*msg == '@')
+		{
+			/* The message includes one or more message tags:
+			 * Spec-wise the rules allow about 8K for message tags
+			 * and then 512 bytes for the remainder of the message.
+			 * Since we do not allow user tags and only permit a
+			 * limited set of tags we can have our own limits for
+			 * the outgoing messages that we generate: a maximum of
+			 * 500 bytes for message tags and 512 for the remainder.
+			 * These limits will never be hit unless there is a bug
+			 * somewhere.
+			 */
+			p = strchr(msg+1, ' ');
+			if (!p)
+			{
+				ircd_log(LOG_ERROR, "[BUG] sendbufto_one(): Malformed message: %s",
+					msg);
+				return;
+			}
+			if (p - msg > 500)
+			{
+				ircd_log(LOG_ERROR, "[BUG] sendbufto_one(): Spec-wise legal, but massively oversized message-tag (len %d)",
+				         (int)(p - msg));
+				return;
+			}
+			p++; /* skip space character */
+		}
+		len = strlen(p);
+		if (!len || (p[len - 1] != '\n'))
 		{
 			if (len > 510)
 				len = 510;
-			msg[len++] = '\r';
-			msg[len++] = '\n';
-			msg[len] = '\0';
+			p[len++] = '\r';
+			p[len++] = '\n';
+			p[len] = '\0';
 		}
-	} else
+		len = strlen(msg); /* (note: we could use pointer jugling to avoid a strlen here) */
+	} else {
 		len = quick;
+	}
 
-	if (len > 512)
+	if (len >= 1024)
 	{
-		ircd_log(LOG_ERROR, "sendbufto_one: len=%u, quick=%u", len, quick);
+		ircd_log(LOG_ERROR, "sendbufto_one: len=%d, quick=%u", len, quick);
 		abort();
 	}
 
@@ -320,952 +332,294 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 		sendto_ops("%s", tmp_msg); /* recursion? */
 		return;
 	}
-        for(h = Hooks[HOOKTYPE_PACKET]; h; h = h->next) {
-		(*(h->func.intfunc))(&me, to, &msg, &len);
-		if(!msg) return;
+
+	for (h = Hooks[HOOKTYPE_PACKET]; h; h = h->next)
+	{
+		(*(h->func.intfunc))(&me, to, intended_to, &msg, &len);
+		if (!msg)
+			return;
 	}
-	if (DBufLength(&to->sendQ) > get_sendq(to))
+
+#if defined(DEBUGMODE) && defined(RAWCMDLOGGING)
+	{
+		char copy[512], *p;
+		strlcpy(copy, msg, len > sizeof(copy) ? sizeof(copy) : len);
+		p = strchr(copy, '\n');
+		if (p) *p = '\0';
+		p = strchr(copy, '\r');
+		if (p) *p = '\0';
+		ircd_log(LOG_ERROR, "-> %s: %s", to->name, copy);
+	}
+#endif
+
+	if (DBufLength(&to->local->sendQ) > get_sendq(to))
 	{
 		if (IsServer(to))
 			sendto_ops("Max SendQ limit exceeded for %s: %u > %d",
-			    get_client_name(to, FALSE), DBufLength(&to->sendQ),
+			    get_client_name(to, FALSE), DBufLength(&to->local->sendQ),
 			    get_sendq(to));
-		dead_link(to, "Max SendQ exceeded");
+		dead_socket(to, "Max SendQ exceeded");
 		return;
 	}
 
-#ifdef ZIP_LINKS
-	/*
-	** data is first stored in to->zip->outbuf until
-	** it's big enough to be compressed and stored in the sendq.
-	** send_queued is then responsible to never let the sendQ
-	** be empty and to->zip->outbuf not empty.
-	*/
-	if (IsZipped(to))
-		msg = zip_buffer(to, msg, &len, 0);
-	
-	if (len && !dbuf_put(&to->sendQ, msg, len))
-#else
-	if (!dbuf_put(&to->sendQ, msg, len))
-#endif
-	{
-		dead_link(to, "Buffer allocation error");
-		return;
-	}
+	dbuf_put(&to->local->sendQ, msg, len);
+
 	/*
 	 * Update statistics. The following is slightly incorrect
 	 * because it counts messages even if queued, but bytes
 	 * only really sent. Queued bytes get updated in SendQueued.
 	 */
-	to->sendM += 1;
-	me.sendM += 1;
-	if (to->listener != &me)
-		to->listener->sendM += 1;
-	/*
-	 * This little bit is to stop the sendQ from growing too large when
-	 * there is no need for it to. Thus we call send_queued() every time
-	 * 2k has been added to the queue since the last non-fatal write.
-	 * Also stops us from deliberately building a large sendQ and then
-	 * trying to flood that link with data (possible during the net
-	 * relinking done by servers with a large load).
+	// FIXME: something is wrong here, I think we do double counts, either in message or in traffic, I forgot.. CHECK !!!!
+	to->local->sendM += 1;
+	me.local->sendM += 1;
+
+	/* Previously we ran send_queued() here directly, but that is
+	 * a bad idea, CPU-wise. So now we just mark the client indicating
+	 * that there is data to send.
 	 */
-	if (DBufLength(&to->sendQ) / 1024 > to->lastsq)
-		send_queued(to);
+	mark_data_to_send(to);
 }
 
-void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
-    char *pattern, ...)
+/** A single function to send data to a channel.
+ * Previously there were 6 different functions to send channel data,
+ * now there is 1 single function. This also means that you most
+ * likely will pass NULL or 0 as some parameters.
+ * @param channel       The channel to send to
+ * @param from        The source of the message
+ * @param skip        The client to skip (can be NULL).
+ *                    Note that if you specify a remote link then
+ *                    you usually mean xyz->direction and not xyz.
+ * @param prefix      Any combination of PREFIX_* (can be 0 for all)
+ * @param clicap      Client capability the recipient should have
+ *                    (this only works for local clients, we will
+ *                     always send the message to remote clients and
+ *                     assume the server there will handle it)
+ * @param sendflags   Determines whether to send the message to local/remote users
+ * @param mtags       The message tags to attach to this message
+ * @param pattern     The pattern (eg: ":%s PRIVMSG %s :%s")
+ * @param ...         The parameters for the pattern.
+ * @note For all channel messages, it is important to attach the correct
+ *       message tags (mtags) via a new_message() call, as can be seen
+ *       in the example.
+ * @section sendto_channel_examples Examples
+ * @subsection sendto_channel_privmsg Send a PRIVMSG to a channel
+ * This command will send the message "Hello everyone!!!" to the channel when executed.
+ * @code
+ * CMD_FUNC(cmd_sayhello)
+ * {
+ *     MessageTag *mtags = NULL;
+ *     Channel *channel = NULL;
+ *     if ((parc < 2) || BadPtr(parv[1]))
+ *     {
+ *         sendnumeric(client, ERR_NEEDMOREPARAMS, "SAYHELLO");
+ *         return;
+ *     }
+ *     channel = find_channel(parv[1], NULL);
+ *     if (!channel)
+ *     {
+ *         sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);
+ *         return;
+ *     }
+ *     new_message(client, recv_mtags, &mtags);
+ *     sendto_channel(channel, client, client->direction, 0, 0,
+ *                    SEND_LOCAL|SEND_REMOTE, mtags,
+ *                    ":%s PRIVMSG %s :Hello everyone!!!",
+ *                    client->name, channel->name);
+ *     free_message_tags(mtags);
+ * }
+ * @endcode
+ */
+void sendto_channel(Channel *channel, Client *from, Client *skip,
+                    int prefix, long clicap, int sendflags,
+                    MessageTag *mtags,
+                    FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	Member *lp;
-	aClient *acptr;
-	int  i;
+	Client *acptr;
 
-	va_start(vl, pattern);
-
-	++sentalong_marker;
-	for (lp = chptr->members; lp; lp = lp->next)
+	++current_serial;
+	for (lp = channel->members; lp; lp = lp->next)
 	{
-		acptr = lp->cptr;
-		/* skip the one and deaf clients (unless sendanyways is set) */
-		if (acptr->from == one || (IsDeaf(acptr) && !(sendanyways == 1)))
+		acptr = lp->client;
+
+		/* Skip sending to 'skip' */
+		if ((acptr == skip) || (acptr->direction == skip))
 			continue;
-		if (MyConnect(acptr))	/* (It is always a client) */
-			vsendto_prefix_one(acptr, from, pattern, vl);
-		else if (sentalong[(i = acptr->from->slot)] != sentalong_marker)
-		{
-			sentalong[i] = sentalong_marker;
-			/*
-			 * Burst messages comes here..
-			 */
-			va_start(vl, pattern);
-			vsendto_prefix_one(acptr, from, pattern, vl);
-			va_end(vl);
-		}
-	}
-	va_end(vl);
-}
-
-void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
-	int	prefix,
-    char *pattern, ...)
-{
-	va_list vl;
-	Member *lp;
-	aClient *acptr;
-	int  i;
-
-	va_start(vl, pattern);
-
-	++sentalong_marker;
-	for (lp = chptr->members; lp; lp = lp->next)
-	{
-		acptr = lp->cptr;
-		if (acptr->from == one)
-			continue;	/* ...was the one I should skip
-					   or user not not a channel op */
-	        if ((prefix & PREFIX_HALFOP) && (lp->flags & CHFL_HALFOP))
+		/* Don't send to deaf clients (unless 'senddeaf' is set) */
+		if (IsDeaf(acptr) && (sendflags & SKIP_DEAF))
+			continue;
+		/* Don't send to NOCTCP clients */
+		if (has_user_mode(acptr, 'T') && (sendflags & SKIP_CTCP))
+			continue;
+		/* Now deal with 'prefix' (if non-zero) */
+		if (!prefix)
+			goto good;
+		if ((prefix & PREFIX_HALFOP) && (lp->flags & CHFL_HALFOP))
 			goto good;
 		if ((prefix & PREFIX_VOICE) && (lp->flags & CHFL_VOICE))
 			goto good;
 		if ((prefix & PREFIX_OP) && (lp->flags & CHFL_CHANOP))
 			goto good;
 #ifdef PREFIX_AQ
-		if ((prefix & PREFIX_ADMIN) && (lp->flags & CHFL_CHANPROT))
+		if ((prefix & PREFIX_ADMIN) && (lp->flags & CHFL_CHANADMIN))
 			goto good;
 		if ((prefix & PREFIX_OWNER) && (lp->flags & CHFL_CHANOWNER))
 			goto good;
 #endif
 		continue;
-		
-		good:
-		i = acptr->from->slot;
-		if (MyConnect(acptr) && IsRegisteredUser(acptr))
+good:
+		/* Now deal with 'clicap' (if non-zero) */
+		if (clicap && MyUser(acptr) && ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
+			continue;
+
+		if (MyUser(acptr))
 		{
-#ifdef SECURECHANMSGSONLYGOTOSECURE
-			if (chptr->mode.mode & MODE_ONLYSECURE)
-				if (!IsSecure(acptr))
-					continue;
-#endif
-			va_start(vl, pattern);
-			vsendto_prefix_one(acptr, from, pattern, vl);
-			va_end(vl);
-			sentalong[i] = sentalong_marker;
-		}
-		else
-		{
-			/* Now check whether a message has been sent to this
-			 * remote link already */
-			if (sentalong[i] != sentalong_marker)
+			/* Local client */
+			if (sendflags & SEND_LOCAL)
 			{
-#ifdef SECURECHANMSGSONLYGOTOSECURE
-				if (chptr->mode.mode & MODE_ONLYSECURE)
-					if (!IsSecure(acptr->from))
-						continue;
-#endif
 				va_start(vl, pattern);
-				vsendto_prefix_one(acptr, from, pattern, vl);
+				vsendto_prefix_one(acptr, from, mtags, pattern, vl);
 				va_end(vl);
-				sentalong[i] = sentalong_marker;
 			}
-		}
-		va_end(vl);
-	}
-	va_end(vl);
-	return;
-}
-
-void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chptr,
-	int	prefix,
-    char *cmd, char *tok, char *nick, char *text, char do_send_check)
-{
-	Member *lp;
-	aClient *acptr;
-	int  i;
-	char is_ctcp = 0;
-	unsigned int tlen, clen, xlen, wlen = 0;
-	char *p;
-
-	/* For servers with token capability */
-	p = ircsprintf(tcmd, ":%s %s %s :%s", from->name, tok, nick, text);
-	tlen = (int)(p - tcmd);
-	ADD_CRLF(tcmd, tlen);
-
-	/* For dumb servers without tokens */
-	p = ircsprintf(ccmd, ":%s %s %s :%s", from->name, cmd, nick, text);
-	clen = (int)(p - ccmd);
-	ADD_CRLF(ccmd, clen);
-
-	/* For our users... */
-	if (IsPerson(from))
-		p = ircsprintf(xcmd, ":%s!%s@%s %s %s :%s",
-			from->name, from->user->username, GetHost(from), cmd, nick, text);
-	else
-		p = ircsprintf(xcmd, ":%s %s %s :%s", from->name, cmd, nick, text);
-	xlen = (int)(p - xcmd);
-	ADD_CRLF(xcmd, xlen);
-
-	/* For our webtv friends... */
-	if (!strcmp(cmd, "NOTICE"))
-	{
-		char *chan = strchr(nick, '#'); /* impossible to become NULL? */
-		if (IsPerson(from))
-			p = ircsprintf(wcmd, ":%s!%s@%s %s %s :%s",
-				from->name, from->user->username, GetHost(from), MSG_PRIVATE, chan, text);
-		else
-			p = ircsprintf(wcmd, ":%s %s %s :%s", from->name, MSG_PRIVATE, chan, text);
-		wlen = (int)(p - wcmd);
-		ADD_CRLF(wcmd, wlen);
-	}
-
-	if (do_send_check && *text == 1 && myncmp(text+1,"ACTION ",7) && myncmp(text+1,"DCC ",4))
-		is_ctcp = 1;
-
-
-	++sentalong_marker;
-	for (lp = chptr->members; lp; lp = lp->next)
-	{
-		acptr = lp->cptr;
-		if (acptr->from == one)
-			continue;	/* ...was the one I should skip
-					   or user not not a channel op */
-        if (prefix == PREFIX_ALL)
-           	goto good;
-        if ((prefix & PREFIX_HALFOP) && (lp->flags & CHFL_HALFOP))
-			goto good;
-		if ((prefix & PREFIX_VOICE) && (lp->flags & CHFL_VOICE))
-			goto good;
-		if ((prefix & PREFIX_OP) && (lp->flags & CHFL_CHANOP))
-			goto good;
-#ifdef PREFIX_AQ
-		if ((prefix & PREFIX_ADMIN) && (lp->flags & CHFL_CHANPROT))
-			goto good;
-		if ((prefix & PREFIX_OWNER) && (lp->flags & CHFL_CHANOWNER))
-			goto good;
-#endif
-		continue;
-		
-		good:
-		i = acptr->from->slot;
-		if (IsDeaf(acptr) && !sendanyways)
-			continue;
-		if (MyConnect(acptr) && IsRegisteredUser(acptr))
-		{
-			if (IsNoCTCP(acptr) && !IsOper(from) && is_ctcp)
-				continue;
-
-			if (IsWebTV(acptr) && wlen)
-				sendbufto_one(acptr, wcmd, wlen);
-			else
-				sendbufto_one(acptr, xcmd, xlen);
-			sentalong[i] = sentalong_marker;
 		}
 		else
 		{
-			/* Now check whether a message has been sent to this
-			 * remote link already */
-			if (sentalong[i] != sentalong_marker)
+			/* Remote client */
+			if (sendflags & SEND_REMOTE)
 			{
-				if (IsToken(acptr->from))
-					sendbufto_one(acptr, tcmd, tlen);
-				else
-					sendbufto_one(acptr, ccmd, clen);
-				sentalong[i] = sentalong_marker;
-			}
-		}
-	}
-	return;
-}
-
-/* weird channelmode +mu crap:
- * - local: deliver msgs to chanops (and higher) like <IRC> SrcNick: hi all
- * - remote: deliver msgs to every server once (if needed) with real sourcenick.
- * The problem is we can't send to remote servers with sourcenick (prefix) 'IRC'
- * because that's a virtual user... Fun... -- Syzop.
- */
-void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
-{
-	Member *lp;
-	aClient *acptr;
-	int  i;
-	int remote = MyClient(from) ? 0 : 1;
-
-	sprintf(tcmd, ":%s %s %s :%s", from->name, TOK_PRIVATE, chptr->chname, text); /* token */
-	sprintf(ccmd, ":%s %s %s :%s", from->name, MSG_PRIVATE, chptr->chname, text); /* msg */
-	sprintf(xcmd, ":IRC!IRC@%s PRIVMSG %s :%s: %s", me.name, chptr->chname, from->name, text); /* local */
-
-	++sentalong_marker;
-	for (lp = chptr->members; lp; lp = lp->next)
-	{
-		acptr = lp->cptr;
-
-		if (IsDeaf(acptr) && !sendanyways)
-			continue;
-		if (!(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
-			continue;
-		if (remote && (acptr->from == from->from)) /* don't send it back to where it came from */
-			continue;
-		i = acptr->from->slot;
-		if (MyConnect(acptr) && IsRegisteredUser(acptr))
-		{
-			sendto_one(acptr, "%s", xcmd);
-			sentalong[i] = sentalong_marker;
-		}
-		else
-		{
-			/* Now check whether a message has been sent to this
-			 * remote link already */
-			if (sentalong[i] != sentalong_marker)
-			{
-				if (IsToken(acptr->from))
-					sendto_one(acptr, "%s", tcmd);
-				else
-					sendto_one(acptr, "%s", ccmd);
-				sentalong[i] = sentalong_marker;
-			}
-		}
-	}
-	return;
-}
-
-
-/*
-   sendto_chanops_butone -Stskeeps
-*/
-
-void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...)
-{
-	va_list vl;
-	Member *lp;
-	aClient *acptr;
-
-	va_start(vl, pattern);
-	for (lp = chptr->members; lp; lp = lp->next)
-	{
-		acptr = lp->cptr;
-		if (acptr == one || !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
-			continue;	/* ...was the one I should skip
-					   or user not not a channel op */
-		if (MyConnect(acptr) && IsRegisteredUser(acptr))
-		{
-			va_start(vl, pattern);
-			vsendto_one(acptr, pattern, vl);
-			va_end(vl);
-		}
-	}
-	va_end(vl);
-}
-
-/*
- * sendto_server_butone
- *
- * Send a message to all connected servers except the client 'one'.
- */
-void sendto_serv_butone(aClient *one, char *pattern, ...)
-{
-	va_list vl;
-	int  i;
-	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
-
-	va_start(vl, pattern);
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
-	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
-			continue;
-		va_start(vl, pattern);
-
-#ifdef NO_FDLIST
-		if (IsServer(cptr))
-#endif
-			vsendto_one(cptr, pattern, vl);
-		va_end(vl);
-	}
-	va_end(vl);
-	return;
-}
-
-/*
- * sendto_server_butone_token
- *
- * Send a message to all connected servers except the client 'one'.
- * with capab to tokenize
- */
-
-void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
-    char *token, char *pattern, ...)
-{
-	va_list vl;
-	int  i;
-	aClient *cptr;
-	aClient *acptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
-	static char buff[2048];
-	static char pref[100];
-	va_start(vl, pattern);
-
-	pref[0] = '\0';
-	if (strchr(prefix, '.'))
-	{
-		acptr = (aClient *) find_server_quick(prefix);
-		if (acptr->serv->numeric)
-		{
-			strcpy(pref, base64enc(acptr->serv->numeric));
-		}
-	}
-	strcpy(tcmd, token);
-	strcpy(ccmd, command);
-	strcat(tcmd, " ");
-	strcat(ccmd, " ");
-	ircvsprintf(buff, pattern, vl);
-	strcat(tcmd, buff);
-	strcat(ccmd, buff);
-
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
-	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
-			continue;
-#ifdef NO_FDLIST
-		if (IsServer(cptr))
-#endif
-			if (IsToken(cptr))
-			{
-				if (SupportNS(cptr) && pref[0])
+				/* Message already sent to remote link? */
+				if (acptr->direction->local->serial != current_serial)
 				{
-					sendto_one(cptr, "@%s %s",
-						pref, tcmd);
-				}
-					else
-				{
-					sendto_one(cptr, ":%s %s",
-						prefix, tcmd);
+					va_start(vl, pattern);
+					vsendto_prefix_one(acptr, from, mtags, pattern, vl);
+					va_end(vl);
+
+					acptr->direction->local->serial = current_serial;
 				}
 			}
-			else
-			{
-				if (SupportNS(cptr) && pref[0])
-				{
-					sendto_one(cptr, "@%s %s",
-						pref, ccmd);
-				}
-				else
-				{
-					sendto_one(cptr, ":%s %s", prefix,
-					    ccmd);
-				}
-			}
-	}
-	va_end(vl);
-	return;
-}
-
-/*
- * sendto_server_butone_token_opt
- *
- * Send a message to all connected servers except the client 'one'.
- * with capab to tokenize, opt
- */
-
-void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *command,
-    char *token, char *pattern, ...)
-{
-	va_list vl;
-	int  i;
-	aClient *cptr;
-	aClient *acptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
-	static char tcmd[2048];
-	static char ccmd[2048];
-	static char buff[2048];
-	static char pref[100];
-
-	va_start(vl, pattern);
-
-	pref[0] = '\0';
-	if (strchr(prefix, '.'))
-	{
-		acptr = (aClient *) find_server_quick(prefix);
-		if (acptr && acptr->serv)
-			if (acptr->serv->numeric)
-			{
-				strcpy(pref, base64enc(acptr->serv->numeric));
-			}
-	}
-
-	strcpy(tcmd, token);
-	strcpy(ccmd, command);
-	strcat(tcmd, " ");
-	strcat(ccmd, " ");
-	ircvsprintf(buff, pattern, vl);
-	strcat(tcmd, buff);
-	strcat(ccmd, buff);
-
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
-	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
-			continue;
-#ifdef NO_FDLIST
-		if (IsServer(cptr))
-#endif
-
-		if ((opt & OPT_NOT_SJOIN) && SupportSJOIN(cptr))
-			continue;
-		if ((opt & OPT_NOT_NICKv2) && SupportNICKv2(cptr))
-			continue;
-		if ((opt & OPT_NOT_SJOIN2) && SupportSJOIN2(cptr))
-			continue;
-		if ((opt & OPT_NOT_UMODE2) && SupportUMODE2(cptr))
-			continue;
-		if ((opt & OPT_NOT_SJ3) && SupportSJ3(cptr))
-			continue;
-		if ((opt & OPT_NICKv2) && !SupportNICKv2(cptr))
-			continue;
-		if ((opt & OPT_SJOIN) && !SupportSJOIN(cptr))
-			continue;
-		if ((opt & OPT_SJOIN2) && !SupportSJOIN2(cptr))
-			continue;
-		if ((opt & OPT_UMODE2) && !SupportUMODE2(cptr))
-			continue;
-		if ((opt & OPT_SJ3) && !SupportSJ3(cptr))
-			continue;
-		if ((opt & OPT_SJB64) && !(cptr->proto & PROTO_SJB64))
-			continue;
-		if ((opt & OPT_NOT_SJB64) && (cptr->proto & PROTO_SJB64))
-			continue;
-		if ((opt & OPT_VHP) && !(cptr->proto & PROTO_VHP))
-			continue;
-		if ((opt & OPT_NOT_VHP) && (cptr->proto & PROTO_VHP))
-			continue;
-		if ((opt & OPT_TKLEXT) && !(cptr->proto & PROTO_TKLEXT))
-			continue;
-		if ((opt & OPT_NOT_TKLEXT) && (cptr->proto & PROTO_TKLEXT))
-			continue;
-		if ((opt & OPT_NICKIP) && !(cptr->proto & PROTO_TKLEXT))
-			continue;
-		if ((opt & OPT_NOT_NICKIP) && (cptr->proto & PROTO_NICKIP))
-			continue;
-
-		if (IsToken(cptr))
-		{
-			if (SupportNS(cptr) && pref[0])
-			{
-				sendto_one(cptr, "@%s %s",
-					pref, tcmd);
-			}
-				else
-			{
-				sendto_one(cptr, ":%s %s",
-					prefix, tcmd);
-			}
 		}
-		else
+	}
+
+	if (sendflags & SEND_REMOTE)
+	{
+		/* For the remaining uplinks that we have not sent a message to yet...
+		 * broadcast-channel-messages=never: don't send it to them
+		 * broadcast-channel-messages=always: always send it to them
+		 * broadcast-channel-messages=auto: send it to them if the channel is set +H (history)
+		 */
+
+		if ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_ALWAYS) ||
+		    ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_AUTO) && has_channel_mode(channel, 'H')))
 		{
-			if (SupportNS(cptr) && pref[0])
+			list_for_each_entry(acptr, &server_list, special_node)
 			{
-				sendto_one(cptr, "@%s %s",
-					pref, ccmd);
-			}
-			else
-			{
-				sendto_one(cptr, ":%s %s", prefix,
-				    ccmd);
+				if ((acptr == skip) || (acptr->direction == skip))
+					continue; /* still obey this rule.. */
+				if (acptr->direction->local->serial != current_serial)
+				{
+					va_start(vl, pattern);
+					vsendto_prefix_one(acptr, from, mtags, pattern, vl);
+					va_end(vl);
+
+					acptr->direction->local->serial = current_serial;
+				}
 			}
 		}
 	}
-	va_end(vl);
-	return;
 }
 
-/*
- * sendto_serv_butone_quit
- *
- * Send a message to all connected servers except the client 'one'.
- * BUT, don't send to NOQUIT servers.
+/** Send a message to a server, taking into account server options if needed.
+ * @param one		The client to skip (can be NULL)
+ * @param servercaps	Server capabilities which must be present (OR'd together, if multiple)
+ * @param noservercaps	Server capabilities which must NOT be present (OR'd together, if multiple)
+ * @param mtags		The message tags to attach to this message.
+ * @param format	The format string / pattern, such as ":%s NICK %s".
+ * @param ...		The parameters for the format string
  */
-void sendto_serv_butone_quit(aClient *one, char *pattern, ...)
+void sendto_server(Client *one, unsigned long servercaps, unsigned long noservercaps, MessageTag *mtags, FORMAT_STRING(const char *format), ...)
 {
-	va_list vl;
-	int  i;
-	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
-	va_start(vl, pattern);
+	Client *acptr;
 
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
+	/* noone to send to.. */
+	if (list_empty(&server_list))
+		return;
+
+	list_for_each_entry(acptr, &server_list, special_node)
 	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
-			continue;
-		va_start(vl, pattern);
+		va_list vl;
 
-#ifdef NO_FDLIST
-		if (IsServer(cptr) && !DontSendQuit(cptr))
-#else
-		if (!DontSendQuit(cptr))
-#endif
-			vsendto_one(cptr, pattern, vl);
+		if (one && acptr == one->direction)
+			continue;
+
+		if (servercaps && !CHECKSERVERPROTO(acptr, servercaps))
+			continue;
+
+		if (noservercaps && CHECKSERVERPROTO(acptr, noservercaps))
+			continue;
+
+		va_start(vl, format);
+		vsendto_one(acptr, mtags, format, vl);
 		va_end(vl);
 	}
-	va_end(vl);
-	return;
 }
 
-/*
- * sendto_serv_butone_sjoin
- *
- * Send a message to all connected servers except the client 'one'.
- * BUT, don't send to SJOIN servers.
+/** Send a message to all local users on all channels where
+ * the user 'user' is on.
+ * This is used for events such as a nick change and quit.
+ * @param user        The user and source of the message.
+ * @param skip        The client to skip (can be NULL)
+ * @param clicap      Client capability the recipient should have
+ *                    (this only works for local clients, we will
+ *                     always send the message to remote clients and
+ *                     assume the server there will handle it)
+ * @param mtags       The message tags to attach to this message.
+ * @param pattern     The pattern (eg: ":%s NICK %s").
+ * @param ...         The parameters for the pattern.
  */
-void sendto_serv_butone_sjoin(aClient *one, char *pattern, ...)
+void sendto_local_common_channels(Client *user, Client *skip, long clicap, MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	int  i;
-	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
-	va_start(vl, pattern);
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
-	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
-			continue;
-		va_start(vl, pattern);
-
-#ifdef NO_FDLIST
-		if (IsServer(cptr) && !SupportSJOIN(cptr))
-#else
-		if (!SupportSJOIN(cptr))
-#endif
-			vsendto_one(cptr, pattern, vl);
-		va_end(vl);
-	}
-	va_end(vl);
-	return;
-}
-
-/*
- * sendto_serv_sjoin
- *
- * Send a message to all connected servers except the client 'one'.
- * BUT only send to SJOIN servers.
- */
-void sendto_serv_sjoin(aClient *one, char *pattern, ...)
-{
-	va_list vl;
-	int  i;
-	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
-	va_start(vl, pattern);
-
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
-	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
-			continue;
-		va_start(vl, pattern);
-
-#ifdef NO_FDLIST
-		if (IsServer(cptr) && SupportSJOIN(cptr))
-#else
-		if (SupportSJOIN(cptr))
-#endif
-			vsendto_one(cptr, pattern, vl);
-		va_end(vl);
-	}
-	va_end(vl);
-	return;
-}
-
-/*
- * sendto_serv_butone_nickv2
- *
- * Send a message to all connected servers except the client 'one'.
- * BUT, don't send to NICKv2 servers.
- */
-void sendto_serv_butone_nickv2(aClient *one, char *pattern, ...)
-{
-	va_list vl;
-	int  i;
-	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
-	va_start(vl, pattern);
-
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
-	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
-			continue;
-		va_start(vl, pattern);
-
-#ifdef NO_FDLIST
-		if (IsServer(cptr) && !SupportNICKv2(cptr))
-#else
-		if (!SupportNICKv2(cptr))
-#endif
-			vsendto_one(cptr, pattern, vl);
-		va_end(vl);
-	}
-	va_end(vl);
-	return;
-}
-
-/*
- * sendto_serv_nickv2
- *
- * Send a message to all connected servers except the client 'one'.
- * BUT only send to NICKv2 servers.
- */
-void sendto_serv_nickv2(aClient *one, char *pattern, ...)
-{
-	va_list vl;
-	int  i;
-	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
-	va_start(vl, pattern);
-
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
-	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
-			continue;
-		va_start(vl, pattern);
-
-#ifdef NO_FDLIST
-		if (IsServer(cptr) && SupportNICKv2(cptr))
-#else
-		if (SupportNICKv2(cptr))
-#endif
-			vsendto_one(cptr, pattern, vl);
-		va_end(vl);
-	}
-	va_end(vl);
-	return;
-}
-
-
-/*
- * sendto_serv_nickv2_token
- *
- * Send a message to all connected servers except the client 'one'.
- * BUT only send to NICKv2 servers. As of Unreal3.1 it uses two patterns now
- * one for non token and one for tokens */
-void sendto_serv_nickv2_token(aClient *one, char *pattern, char *tokpattern,
-    ...)
-{
-	va_list vl;
-	int  i;
-	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
-	va_start(vl, tokpattern);
-
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
-	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
-			continue;
-		va_start(vl, tokpattern);
-
-#ifdef NO_FDLIST
-		if (IsServer(cptr) && SupportNICKv2(cptr) && !IsToken(cptr))
-#else
-		if (SupportNICKv2(cptr) && !IsToken(cptr))
-#endif
-			vsendto_one(cptr, pattern, vl);
-		else
-#ifdef NO_FDLIST
-		if (IsServer(cptr) && SupportNICKv2(cptr) && IsToken(cptr))
-#else
-		if (SupportNICKv2(cptr) && IsToken(cptr))
-#endif
-			vsendto_one(cptr, tokpattern, vl);
-		va_end(vl);
-	}
-	va_end(vl);
-	return;
-}
-
-/*
- * sendto_common_channels()
- *
- * Sends a message to all people (including user) on local server who are
- * in same channel with user.
- */
-void sendto_common_channels(aClient *user, char *pattern, ...)
-{
-	va_list vl;
-
 	Membership *channels;
 	Member *users;
-	aClient *cptr;
-	int sendlen;
+	Client *acptr;
 
 	/* We now create the buffer _before_ we send it to the clients. -- Syzop */
 	*sendbuf = '\0';
 	va_start(vl, pattern);
-	sendlen = vmakebuf_local_withprefix(sendbuf, user, pattern, vl);
+	vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, user, pattern, vl);
 	va_end(vl);
 
-	++sentalong_marker;
-	if (user->fd >= 0)
-		sentalong[user->slot] = sentalong_marker;
-	if (user->user)
-		for (channels = user->user->channel; channels; channels = channels->next)
-			for (users = channels->chptr->members; users; users = users->next)
-			{
-				cptr = users->cptr;
-				if (!MyConnect(cptr) || (cptr->slot < 0) || (sentalong[cptr->slot] == sentalong_marker))
-					continue;
-				if ((channels->chptr->mode.mode & MODE_AUDITORIUM) &&
-				    !(is_chanownprotop(user, channels->chptr) || is_chanownprotop(cptr, channels->chptr)))
-					continue;
-				sentalong[cptr->slot] = sentalong_marker;
-				sendbufto_one(cptr, sendbuf, sendlen);
-			}
+	++current_serial;
 
-	if (MyConnect(user))
-		sendbufto_one(user, sendbuf, sendlen);
-
-	return;
-}
-
-/*
- * sendto_common_channels_local_butone()
- *
- * Sends a message to all people on local server who are
- * in same channel with user and have the specified capability.
- */
-void sendto_common_channels_local_butone(aClient *user, int cap, char *pattern, ...)
-{
-	va_list vl;
-
-	Membership *channels;
-	Member *users;
-	aClient *cptr;
-	int sendlen;
-
-	/* We now create the buffer _before_ we send it to the clients. -- Syzop */
-	*sendbuf = '\0';
-	va_start(vl, pattern);
-	sendlen = vmakebuf_local_withprefix(sendbuf, user, pattern, vl);
-	va_end(vl);
-
-	++sentalong_marker;
-	if (user->fd >= 0)
-		sentalong[user->slot] = sentalong_marker;
 	if (user->user)
 	{
 		for (channels = user->user->channel; channels; channels = channels->next)
-			for (users = channels->chptr->members; users; users = users->next)
-			{
-				cptr = users->cptr;
-				if (!MyConnect(cptr) || (cptr->slot < 0) || (sentalong[cptr->slot] == sentalong_marker) ||
-				    !CHECKPROTO(cptr, cap))
-					continue;
-				if ((channels->chptr->mode.mode & MODE_AUDITORIUM) &&
-				    !(is_chanownprotop(user, channels->chptr) || is_chanownprotop(cptr, channels->chptr)))
-					continue;
-				sentalong[cptr->slot] = sentalong_marker;
-				sendbufto_one(cptr, sendbuf, sendlen);
-			}
-	}
-
-	return;
-}
-
-/*
- * sendto_channel_butserv
- *
- * Send a message to all members of a channel that are connected to this
- * server.
- */
-
-void sendto_channel_butserv(aChannel *chptr, aClient *from, char *pattern, ...)
-{
-	va_list vl;
-	Member *lp;
-	aClient *acptr;
-	int sendlen;
-
-	/* We now create the buffer _before_ we send it to the clients. Rather than
-	 * rebuilding the buffer 1000 times for a 1000 local-users channel. -- Syzop
-	 */
-	*sendbuf = '\0';
-	va_start(vl, pattern);
-	sendlen = vmakebuf_local_withprefix(sendbuf, from, pattern, vl);
-	va_end(vl);
-
-	for (lp = chptr->members; lp; lp = lp->next)
-		if (MyConnect(acptr = lp->cptr))
-			sendbufto_one(acptr, sendbuf, sendlen);
-
-	return;
-}
-
-void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one, char *pattern, ...)
-{
-	va_list vl;
-	Member *lp;
-	aClient *acptr;
-
-	for (va_start(vl, pattern), lp = chptr->members; lp; lp = lp->next)
-	{
-		if (lp->cptr == one)
-			continue;
-		if (MyConnect(acptr = lp->cptr))
 		{
-			va_start(vl, pattern);
-			vsendto_prefix_one(acptr, from, pattern, vl);
-			va_end(vl);
+			for (users = channels->channel->members; users; users = users->next)
+			{
+				acptr = users->client;
+
+				if (!MyConnect(acptr))
+					continue; /* only process local clients */
+
+				if (acptr->local->serial == current_serial)
+					continue; /* message already sent to this client */
+
+				if (clicap && ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
+					continue; /* client does not have the specified capability */
+
+				if (acptr == skip)
+					continue; /* the one to skip */
+
+				if (!user_can_see_member(acptr, user, channels->channel))
+					continue; /* the sending user (quit'ing or nick changing) is 'invisible' -- skip */
+
+				acptr->local->serial = current_serial;
+				sendto_one(acptr, mtags, "%s", sendbuf);
+			}
 		}
 	}
-	va_end(vl);
-	return;
 }
 
 /*
@@ -1275,285 +629,293 @@ void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one,
 ** addition -- Armin, 8jun90 (gruner@informatik.tu-muenchen.de)
 */
 
-static int match_it(one, mask, what)
-	aClient *one;
-	char *mask;
-	int  what;
+static int match_it(Client *one, char *mask, int what)
 {
 	switch (what)
 	{
-	  case MATCH_HOST:
-		  return (match(mask, one->user->realhost) == 0);
-	  case MATCH_SERVER:
-	  default:
-		  return (match(mask, one->user->server) == 0);
+		case MATCH_HOST:
+			return match_simple(mask, one->user->realhost);
+		case MATCH_SERVER:
+		default:
+			return match_simple(mask, one->user->server);
 	}
 }
 
-/*
- * sendto_match_servs
- *
- * send to all servers which match the mask at the end of a channel name
- * (if there is a mask present) or to all if no mask.
+/** Send to all clients which match the mask.
+ * This function is rarely used.
+ * @param one		The client to skip
+ * @param from		The sender
+ * @param mask		The mask
+ * @param what		One of MATCH_HOST or MATCH_SERVER
+ * @param mtags		Message tags associated with the message
+ * @param pattern	Format string
+ * @param ...		Parameters to the format string
  */
-void sendto_match_servs(aChannel *chptr, aClient *from, char *format, ...)
+void sendto_match_butone(Client *one, Client *from, char *mask, int what,
+                         MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	int  i;
-	aClient *cptr;
-	char *mask;
-
-	va_start(vl, format);
-
-	if (chptr)
-	{
-		if (*chptr->chname == '&')
-			return;
-		if ((mask = (char *)rindex(chptr->chname, ':')))
-			mask++;
-	}
-	else
-		mask = (char *)NULL;
-
-	for (i = 0; i <= LastSlot; i++)
-	{
-		if (!(cptr = local[i]))
-			continue;
-		if ((cptr == from) || !IsServer(cptr))
-			continue;
-		if (!BadPtr(mask) && IsServer(cptr) && match(mask, cptr->name))
-			continue;
-		va_start(vl, format);
-		vsendto_one(cptr, format, vl);
-		va_end(vl);
-	}
-	va_end(vl);
-}
-
-/*
- * sendto_match_butone
- *
- * Send to all clients which match the mask in a way defined on 'what';
- * either by user hostname or user servername.
- */
-void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
-    char *pattern, ...)
-{
-	va_list vl;
-	int  i;
-	aClient *cptr, *acptr;
+	Client *acptr;
 	char cansendlocal, cansendglobal;
 
-	va_start(vl, pattern);
 	if (MyConnect(from))
 	{
-		cansendlocal = (OPCanLNotice(from)) ? 1 : 0;
-		cansendglobal = (OPCanGNotice(from)) ? 1 : 0;
+		cansendlocal = (ValidatePermissionsForPath("chat:notice:local",from,NULL,NULL,NULL)) ? 1 : 0;
+		cansendglobal = (ValidatePermissionsForPath("chat:notice:global",from,NULL,NULL,NULL)) ? 1 : 0;
 	}
 	else
 		cansendlocal = cansendglobal = 1;
 
-	for (i = 0; i <= LastSlot; i++)
+	/* To servers... */
+	if (cansendglobal)
 	{
-		if (!(cptr = local[i]))
-			continue;	/* that clients are not mine */
-		if (cptr == one)	/* must skip the origin !! */
-			continue;
-		if (IsServer(cptr))
-		{
-			if (!cansendglobal)
-				continue;
-			for (acptr = client; acptr; acptr = acptr->next)
-				if (IsRegisteredUser(acptr)
-				    && match_it(acptr, mask, what)
-				    && acptr->from == cptr)
-					break;
-			/* a person on that server matches the mask, so we
-			   ** send *one* msg to that server ...
-			 */
-			if (acptr == NULL)
-				continue;
-			/* ... but only if there *IS* a matching person */
-		}
-		/* my client, does he match ? */
-		else if (!cansendlocal || (!(IsRegisteredUser(cptr) &&
-		    match_it(cptr, mask, what))))
-			continue;
+		char buf[512];
+
 		va_start(vl, pattern);
-		vsendto_prefix_one(cptr, from, pattern, vl);
+		ircvsnprintf(buf, sizeof(buf), pattern, vl);
+		va_end(vl);
+
+		sendto_server(one, 0, 0, mtags, "%s", buf);
+	}
+
+	/* To local clients... */
+	if (cansendlocal)
+	{
+		list_for_each_entry(acptr, &lclient_list, lclient_node)
+		{
+			if (!IsMe(acptr) && (acptr != one) && IsUser(acptr) && match_it(acptr, mask, what))
+			{
+				va_start(vl, pattern);
+				vsendto_prefix_one(acptr, from, mtags, pattern, vl);
+				va_end(vl);
+			}
+		}
+	}
+}
+
+/** Send a message to all locally connected IRCOps
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ */
+void sendto_ops(FORMAT_STRING(const char *pattern), ...)
+{
+	va_list vl;
+	Client *acptr;
+	char nbuf[1024];
+
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
+		if (!IsServer(acptr) && !IsMe(acptr) && SendServNotice(acptr))
+		{
+			ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ", me.name, acptr->name);
+			strlcat(nbuf, pattern, sizeof nbuf);
+
+			va_start(vl, pattern);
+			vsendto_one(acptr, NULL, nbuf, vl);
+			va_end(vl);
+		}
+}
+
+/* Hmm.. so local sending is called sendto_ops() and local+remote is sendto_ops_butone(),
+ * that is weird naming... (TODO fix some day in a new major series)
+ */
+
+/** Send a message to all IRCOps (local and remote), except one.
+ * @param one		Skip sending the message to this client/direction
+ * @param from		The sender (can not be NULL)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ */
+void sendto_ops_butone(Client *one, Client *from, FORMAT_STRING(const char *pattern), ...)
+{
+	va_list vl;
+	Client *acptr;
+
+	++current_serial;
+	list_for_each_entry(acptr, &client_list, client_node)
+	{
+		if (!SendWallops(acptr))
+			continue;
+		if (acptr->direction->local->serial == current_serial)	/* sent message along it already ? */
+			continue;
+		if (acptr->direction == one)
+			continue;	/* ...was the one I should skip */
+		acptr->direction->local->serial = current_serial;
+
+		va_start(vl, pattern);
+		vsendto_prefix_one(acptr->direction, from, NULL, pattern, vl);
 		va_end(vl);
 	}
-	va_end(vl);
-	return;
 }
 
-/*
- * sendto_all_butone.
- *
- * Send a message to all connections except 'one'. The basic wall type
- * message generator.
+/** This function does exactly the same as sendto_ops() in practice in 5.x.
+ * There used to be a difference between sendto_ops() and sendto_realops()
+ * with regards to user-settable snomasks, but this is no longer the case.
+ * TODO: remove this function in some future cleanup
  */
-
-void sendto_all_butone(aClient *one, aClient *from, char *pattern, ...)
+void sendto_realops(FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	int  i;
-	aClient *cptr;
-
-	for (va_start(vl, pattern), i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsMe(cptr) && one != cptr)
-		{
-			va_start(vl, pattern);
-			vsendto_prefix_one(cptr, from, pattern, vl);
-			va_end(vl);
-		}
-	va_end(vl);
-	return;
-}
-
-/*
- * sendto_ops
- *
- *	Send to *local* ops only.
- */
-void sendto_ops(char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
+	Client *acptr;
 	char nbuf[1024];
 
-	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) && SendServNotice(cptr))
-		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ", me.name, cptr->name);
-			(void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
-			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
-			va_end(vl);
-		}
-	va_end(vl);
-	return;
+	list_for_each_entry(acptr, &oper_list, special_node)
+	{
+		ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ", me.name, acptr->name);
+		strlcat(nbuf, pattern, sizeof nbuf);
+
+		va_start(vl, pattern);
+		vsendto_one(acptr, NULL, nbuf, vl);
+		va_end(vl);
+	}
 }
 
-/*
- * sendto_failops
- *
- *      Send to *local* mode +g ops only.
+/** Send a message to all locally connected IRCOps and also log the error.
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
  */
-void sendto_failops(char *pattern, ...)
+void sendto_ops_and_log(FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	aClient *cptr;
-	int  i;
+	char buf[1024];
+
+	va_start(vl, pattern);
+	ircvsnprintf(buf, sizeof(buf), pattern, vl);
+	va_end(vl);
+
+	ircd_log(LOG_ERROR, "%s", buf);
+	sendto_umode(UMODE_OPER, "%s", buf);
+}
+
+/** This function does exactly the same as sendto_ops_and_log()
+ * TODO: remove this function in some future cleanup
+ */
+void sendto_realops_and_log(FORMAT_STRING(const char *fmt), ...)
+{
+	va_list vl;
+	static char buf[2048];
+
+	va_start(vl, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, vl);
+	va_end(vl);
+
+	sendto_realops("%s", buf);
+	ircd_log(LOG_ERROR, "%s", buf);
+}
+
+
+/** Send a message to all locally connected users with specified user mode.
+ * @param umodes	The umode that the recipient should have set (one of UMODE_)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ */
+void sendto_umode(int umodes, FORMAT_STRING(const char *pattern), ...)
+{
+	va_list vl;
+	Client *acptr;
 	char nbuf[1024];
 
-	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    SendFailops(cptr))
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
+		if (IsUser(acptr) && (acptr->umodes & umodes) == umodes)
 		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Global -- ",
-			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
+			ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :", me.name, acptr->name);
+			strlcat(nbuf, pattern, sizeof nbuf);
+
 			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
+			vsendto_one(acptr, NULL, nbuf, vl);
 			va_end(vl);
 		}
-	va_end(vl);
-	return;
 }
 
-/*
- * sendto_umode
- *
- *  Send to specified umode
+/** Send a message to all users with specified user mode (local & remote users).
+ * @param umodes	The umode that the recipient should have set (one of UMODE_*)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
  */
-void sendto_umode(int umodes, char *pattern, ...)
+void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	aClient *cptr;
-	int  i;
+	Client *acptr;
 	char nbuf[1024];
-	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
+	int i;
+	char modestr[128];
+	char *p;
+
+	/* Convert 'umodes' (int) to 'modestr' (string) */
+	*modestr = '\0';
+	p = modestr;
+	for(i = 0; i <= Usermode_highest; i++)
+	{
+		if (!Usermode_Table[i].flag)
+			continue;
+		if (umodes & Usermode_Table[i].mode)
+			*p++ = Usermode_Table[i].flag;
+	}
+	*p = '\0';
+
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	{
+		if (IsUser(acptr) && (acptr->umodes & umodes) == umodes)
 		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :",
-			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
+			ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :", me.name, acptr->name);
+			strlcat(nbuf, pattern, sizeof nbuf);
+
 			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
+			vsendto_one(acptr, NULL, nbuf, vl);
+			va_end(vl);
+		} else
+		if (IsServer(acptr) && *modestr)
+		{
+			snprintf(nbuf, sizeof(nbuf), ":%s SENDUMODE %s :%s", me.id, modestr, pattern);
+			va_start(vl, pattern);
+			vsendto_one(acptr, NULL, nbuf, vl);
 			va_end(vl);
 		}
-	va_end(vl);
-	return;
+	}
 }
 
-/*
- * sendto_umode_raw
- *
- *  Send to specified umode , raw, not a notice
+/** Send a message to all locally connected users with specified snomask.
+ * @param snomask	The snomask that the recipient should have set (one of SNO_*)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
  */
-void sendto_umode_raw(int umodes, char *pattern, ...)
+void sendto_snomask(int snomask, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	aClient *cptr;
-	int  i;
-	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
-		{
-			va_start(vl, pattern);
-			vsendto_one(cptr, pattern, vl);
-			va_end(vl);
-		}
-	va_end(vl);
-	return;
-}
-/** Send to specified snomask - local / operonly.
- * @param snomask Snomask to send to (can be a bitmask [AND])
- * @param pattern printf-style pattern, followed by parameters.
- * This function does not send snomasks to non-opers.
- */
-void sendto_snomask(int snomask, char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i, j;
+	Client *acptr;
 	char nbuf[2048];
 
 	va_start(vl, pattern);
-	ircvsprintf(nbuf, pattern, vl);
+	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
 	va_end(vl);
 
-	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
-		if (((cptr = local[i])) && (cptr->user->snomask & snomask))
-			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+	list_for_each_entry(acptr, &oper_list, special_node)
+	{
+		if (acptr->user->snomask & snomask)
+			sendnotice(acptr, "%s", nbuf);
+	}
 }
 
-/** Send to specified snomask - global / operonly.
- * @param snomask Snomask to send to (can be a bitmask [AND])
- * @param pattern printf-style pattern, followed by parameters
- * This function does not send snomasks to non-opers.
+/** Send a message to all users with specified snomask (local and remote users).
+ * @param snomask	The snomask that the recipient should have set (one of SNO_*)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
  */
-void sendto_snomask_global(int snomask, char *pattern, ...)
+void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	aClient *cptr;
-	int  i, j;
+	Client *acptr;
+	int  i;
 	char nbuf[2048], snobuf[32], *p;
 
 	va_start(vl, pattern);
-	ircvsprintf(nbuf, pattern, vl);
+	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
 	va_end(vl);
 
-	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
-		if (((cptr = local[i])) && (cptr->user->snomask & snomask))
-			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+	list_for_each_entry(acptr, &oper_list, special_node)
+	{
+		if (acptr->user->snomask & snomask)
+			sendnotice(acptr, "%s", nbuf);
+	}
 
 	/* Build snomasks-to-send-to buffer */
 	snobuf[0] = '\0';
@@ -1562,243 +924,48 @@ void sendto_snomask_global(int snomask, char *pattern, ...)
 			*p++ = Snomask_Table[i].flag;
 	*p = '\0';
 
-	sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO,
-		"%s :%s", snobuf, nbuf);
+	sendto_server(NULL, 0, 0, NULL, ":%s SENDSNO %s :%s", me.id, snobuf, nbuf);
 }
 
-/** Send to specified snomask - local.
- * @param snomask Snomask to send to (can be a bitmask [AND])
- * @param pattern printf-style pattern, followed by parameters.
- * This function also delivers to non-opers w/the snomask if needed.
+/** Send CAP DEL and CAP NEW notification to clients supporting it.
+ * This function is mostly meant to be used by the CAP and SASL modules.
+ * @param add		Whether the CAP token is added (1) or removed (0)
+ * @param token		The CAP token
  */
-void sendto_snomask_normal(int snomask, char *pattern, ...)
+void send_cap_notify(int add, char *token)
 {
-	va_list vl;
-	aClient *cptr;
-	int  i;
-	char nbuf[2048];
+	Client *client;
+	ClientCapability *clicap = ClientCapabilityFindReal(token);
+	long CAP_NOTIFY = ClientCapabilityBit("cap-notify");
 
-	va_start(vl, pattern);
-	ircvsprintf(nbuf, pattern, vl);
-	va_end(vl);
-
-	for (i = LastSlot; i >= 0; i--)
-		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->user->snomask & snomask))
-			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
-}
-
-/** Send to specified snomask - global.
- * @param snomask Snomask to send to (can be a bitmask [AND])
- * @param pattern printf-style pattern, followed by parameters
- * This function also delivers to non-opers w/the snomask if needed.
- */
-void sendto_snomask_normal_global(int snomask, char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
-	char nbuf[2048], snobuf[32], *p;
-
-	va_start(vl, pattern);
-	ircvsprintf(nbuf, pattern, vl);
-	va_end(vl);
-
-	for (i = LastSlot; i >= 0; i--)
-		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->user->snomask & snomask))
-			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
-
-	/* Build snomasks-to-send-to buffer */
-	snobuf[0] = '\0';
-	for (i = 0, p=snobuf; i<= Snomask_highest; i++)
-		if (snomask & Snomask_Table[i].mode)
-			*p++ = Snomask_Table[i].flag;
-	*p = '\0';
-
-	sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO,
-		"%s :%s", snobuf, nbuf);
-}
-
-
-/*
- * sendto_failops_whoare_opers
- *
- *      Send to *local* mode +g ops only who are also +o.
- */
-void sendto_failops_whoare_opers(char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
-	char nbuf[1024];
-
-	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    SendFailops(cptr) && IsAnOper(cptr))
-		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Global -- ",
-			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
-			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
-			va_end(vl);
-		}
-	va_end(vl);
-	return;
-}
-/*
- * sendto_locfailops
- *
- *      Send to *local* mode +g ops only who are also +o.
- */
-void sendto_locfailops(char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
-	char nbuf[1024];
-
-	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    SendFailops(cptr) && IsAnOper(cptr))
-		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** LocOps -- ",
-			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
-			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
-			va_end(vl);
-		}
-	va_end(vl);
-	return;
-}
-/*
- * sendto_opers
- *
- *	Send to *local* ops only. (all +O or +o people)
- */
-void sendto_opers(char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
-	char nbuf[1024];
-
-	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    IsAnOper(cptr))
-		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Oper -- ",
-			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
-			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
-			va_end(vl);
-		}
-	va_end(vl);
-	return;
-}
-
-/* ** sendto_ops_butone
-**	Send message to all operators.
-** one - client not to send message to
-** from- client which message is from *NEVER* NULL!!
-*/
-void sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
-{
-	va_list vl;
-	int  i;
-	aClient *cptr;
-
-	va_start(vl, pattern);
-
-	++sentalong_marker;
-	for (cptr = client; cptr; cptr = cptr->next)
+	list_for_each_entry(client, &lclient_list, lclient_node)
 	{
-		if (!SendWallops(cptr))
-			continue;
-		i = cptr->from->slot;	/* find connection oper is on */
-		if (sentalong[i] == sentalong_marker)	/* sent message along it already ? */
-			continue;
-		if (cptr->from == one)
-			continue;	/* ...was the one I should skip */
-		sentalong[i] = sentalong_marker;
-		va_start(vl, pattern);
-		vsendto_prefix_one(cptr->from, from, pattern, vl);
-		va_end(vl);
+		if (HasCapabilityFast(client, CAP_NOTIFY))
+		{
+			if (add)
+			{
+				char *args = NULL;
+				if (clicap)
+				{
+					if (clicap->visible && !clicap->visible(client))
+						continue; /* invisible CAP, so don't announce it */
+					if (clicap->parameter && (client->local->cap_protocol >= 302))
+						args = clicap->parameter(client);
+				}
+				if (!args)
+				{
+					sendto_one(client, NULL, ":%s CAP %s NEW :%s",
+						me.name, (*client->name ? client->name : "*"), token);
+				} else {
+					sendto_one(client, NULL, ":%s CAP %s NEW :%s=%s",
+						me.name, (*client->name ? client->name : "*"), token, args);
+				}
+			} else {
+				sendto_one(client, NULL, ":%s CAP %s DEL :%s",
+					me.name, (*client->name ? client->name : "*"), token);
+			}
+		}
 	}
-	va_end(vl);
-	return;
-}
-
-/*
-** sendto_ops_butone
-**	Send message to all operators regardless of whether they are +w or
-**	not..
-** one - client not to send message to
-** from- client which message is from *NEVER* NULL!!
-*/
-void sendto_opers_butone(aClient *one, aClient *from, char *pattern, ...)
-{
-	va_list vl;
-	int  i;
-	aClient *cptr;
-
-	va_start(vl, pattern);
-
-	++sentalong_marker;
-	for (cptr = client; cptr; cptr = cptr->next)
-	{
-		if (!IsAnOper(cptr))
-			continue;
-		i = cptr->from->slot;	/* find connection oper is on */
-		if (sentalong[i] == sentalong_marker)	/* sent message along it already ? */
-			continue;
-		if (cptr->from == one)
-			continue;	/* ...was the one I should skip */
-		sentalong[i] = sentalong_marker;
-		va_start(vl, pattern);
-		vsendto_prefix_one(cptr->from, from, pattern, vl);
-		va_end(vl);
-	}
-	va_end(vl);
-	return;
-}
-/*
-** sendto_ops_butme
-**	Send message to all operators except local ones
-** from- client which message is from *NEVER* NULL!!
-*/
-void sendto_ops_butme(aClient *from, char *pattern, ...)
-{
-	va_list vl;
-	int  i;
-	aClient *cptr;
-
-	va_start(vl, pattern);
-
-	++sentalong_marker;
-	for (cptr = client; cptr; cptr = cptr->next)
-	{
-		if (!SendWallops(cptr))
-			continue;
-		i = cptr->from->slot;	/* find connection oper is on */
-		if (sentalong[i] == sentalong_marker)	/* sent message along it already ? */
-			continue;
-		if (!strcmp(cptr->user->server, me.name))	/* a locop */
-			continue;
-		sentalong[i] = sentalong_marker;
-		va_start(vl, pattern);
-		vsendto_prefix_one(cptr->from, from, pattern, vl);
-		va_end(vl);
-	}
-	va_end(vl);
-	return;
 }
 
 /* Prepare buffer based on format string and 'from' for LOCAL delivery.
@@ -1806,22 +973,25 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
  * is a person, taking into account the rules for hidden/cloaked host.
  * NOTE: Do not send this prepared buffer to remote clients or servers,
  *       they do not want or need the expanded prefix. In that case, simply
- *       use ircvsprintf() directly.
+ *       use ircvsnprintf() directly.
  */
-int vmakebuf_local_withprefix(char *buf, struct Client *from, const char *pattern, va_list vl)
+static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, const char *pattern, va_list vl)
 {
-int len;
+	int len;
 
-	if (from && from->user)
+	/* This expands the ":%s " part of the pattern
+	 * into ":nick!user@host ".
+	 * In case of a non-person (server) it doesn't do
+	 * anything since no expansion is needed.
+	 */
+	if (from && from->user && !strncmp(pattern, ":%s ", 4))
 	{
-		char *par;
-
-		par = va_arg(vl, char *); /* eat first parameter */
+		va_arg(vl, char *); /* eat first parameter */
 
 		*buf = ':';
 		strcpy(buf+1, from->name);
 
-		if (IsPerson(from))
+		if (IsUser(from))
 		{
 			char *username = from->user->username;
 			char *host = GetHost(from);
@@ -1837,406 +1007,300 @@ int len;
 				strcat(buf, host);
 			}
 		}
-
-		/* Assuming 'pattern' always starts with ":%s ..." */
-		if (!strcmp(&pattern[3], "%s"))
-			strcpy(buf + strlen(buf), va_arg(vl, char *)); /* This can speed things up by 30% -- Syzop */
-		else
-			ircvsprintf(buf + strlen(buf), &pattern[3], vl);
+		/* Now build the remaining string */
+		ircvsnprintf(buf + strlen(buf), buflen - strlen(buf), &pattern[3], vl);
 	}
 	else
-		ircvsprintf(buf, pattern, vl);
+	{
+		ircvsnprintf(buf, buflen, pattern, vl);
+	}
 
 	len = strlen(buf);
 	ADD_CRLF(buf, len);
 	return len;
 }
 
-void vsendto_prefix_one(struct Client *to, struct Client *from,
-    const char *pattern, va_list vl)
+/** Send a message to a client, expand the sender prefix.
+ * This is similar to sendto_one() except that it will expand the source part :%s
+ * to :nick!user@host if needed, while with sendto_one() it will be :nick.
+ * @param to		The client to send to
+ * @param mtags		Any message tags associated with this message (can be NULL)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ */
+void sendto_prefix_one(Client *to, Client *from, MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
 {
-	if (to && from && MyClient(to) && from->user)
-		vmakebuf_local_withprefix(sendbuf, from, pattern, vl);
+	va_list vl;
+	va_start(vl, pattern);
+	vsendto_prefix_one(to, from, mtags, pattern, vl);
+	va_end(vl);
+}
+
+/** Send a message to a single client, expand the sender prefix - va_list variant.
+ * This is similar to vsendto_one() except that it will expand the source part :%s
+ * to :nick!user@host if needed, while with sendto_one() it will be :nick.
+ * This function is also similar to sendto_prefix_one(), but this is the va_list
+ * variant.
+ * @param to		The client to send to
+ * @param mtags		Any message tags associated with this message (can be NULL)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ */
+void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl)
+{
+	char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
+
+	if (to && from && MyUser(to) && from->user)
+		vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, from, pattern, vl);
 	else
-		ircvsprintf(sendbuf, pattern, vl);
+		ircvsnprintf(sendbuf, sizeof(sendbuf), pattern, vl);
 
-	sendbufto_one(to, sendbuf, 0);
+	if (BadPtr(mtags_str))
+	{
+		/* Simple message without message tags */
+		sendbufto_one(to, sendbuf, 0);
+	} else {
+		/* Message tags need to be prepended */
+		snprintf(sendbuf2, sizeof(sendbuf2), "@%s %s", mtags_str, sendbuf);
+		sendbufto_one(to, sendbuf2, 0);
+	}
 }
 
-/*
- * sendto_prefix_one
- *
- * to - destination client
- * from - client which message is from
- *
- * NOTE: NEITHER OF THESE SHOULD *EVER* BE NULL!!
- * -avalon
- */
-
-void sendto_prefix_one(aClient *to, aClient *from, const char *pattern, ...)
+void sendto_connectnotice(Client *newuser, int disconnect, char *comment)
 {
-	va_list vl;
-	va_start(vl, pattern);
-	vsendto_prefix_one(to, from, pattern, vl);
-	va_end(vl);
-}
-
-/*
- * sendto_realops
- *
- *	Send to *local* ops only but NOT +s nonopers.
- */
-void sendto_realops(char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
-#ifndef NO_FDLIST
-	int  j;
-#endif
-	char nbuf[1024];
-
-	va_start(vl, pattern);
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
-#endif
-#ifdef NO_FDLIST
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    IsOper(cptr))
-#else
-		if ((cptr = local[i]))
-#endif
-		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
-			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
-			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
-			va_end(vl);
-		}
-	va_end(vl);
-	return;
-}
-
-void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment)
-{
-	aClient *cptr;
-	int  i, j;
-	char connectd[1024];
-	char connecth[1024];
+	Client *acptr;
+	char connect[512];
 
 	if (!disconnect)
 	{
-		RunHook(HOOKTYPE_LOCAL_CONNECT, sptr);
-		ircsprintf(connectd,
-		    "*** Notice -- Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
-		    sptr->listener->port, nick, user->username, user->realhost,
-		    sptr->class ? sptr->class->name : "",
-#ifdef USE_SSL
-		IsSecure(sptr) ? "[secure " : "",
-		IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->ssl) : "",
-		IsSecure(sptr) ? "]" : "");
-#else
-		"", "", "");
-#endif
-		ircsprintf(connecth,
-		    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%s}", nick,
-		    user->username, user->realhost, Inet_ia2p(&sptr->ip),
-		    sptr->class ? sptr->class->name : "0");
+		RunHook(HOOKTYPE_LOCAL_CONNECT, newuser);
+
+		ircsnprintf(connect, sizeof(connect),
+		    "*** Client connecting: %s (%s@%s) [%s] %s", newuser->name,
+		    newuser->user->username, newuser->user->realhost, newuser->ip,
+		    get_connect_extinfo(newuser));
 	}
-	else 
+	else
 	{
-		ircsprintf(connectd, "*** Notice -- Client exiting: %s (%s@%s) [%s]",
-			nick, user->username, user->realhost, comment);
-		ircsprintf(connecth, "*** Notice -- Client exiting: %s (%s@%s) [%s] [%s]",
-			nick, user->username, user->realhost, comment, Inet_ia2p(&sptr->ip));
+		ircsnprintf(connect, sizeof(connect), "*** Client exiting: %s (%s@%s) [%s] (%s)",
+			newuser->name, newuser->user->username, newuser->user->realhost, newuser->ip, comment);
 	}
 
-	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
-		if (((cptr = local[i])) && (cptr->user->snomask & SNO_CLIENT))
-		{
-			if (IsHybNotice(cptr))
-				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
-				    cptr->name, connecth);
-			else
-				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
-				    cptr->name, connectd);
-
-		}
+	list_for_each_entry(acptr, &oper_list, special_node)
+	{
+		if (acptr->user->snomask & SNO_CLIENT)
+			sendnotice(acptr, "%s", connect);
+	}
 }
 
-void sendto_fconnectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment)
+void sendto_fconnectnotice(Client *newuser, int disconnect, char *comment)
 {
-	aClient *cptr;
-	int  i, j;
-	char connectd[1024];
-	char connecth[1024];
+	Client *acptr;
+	char connect[512];
 
 	if (!disconnect)
 	{
-		ircsprintf(connectd, "*** Notice -- Client connecting at %s: %s (%s@%s)",
-			    user->server, nick, user->username, user->realhost);
-		ircsprintf(connecth,
-		    "*** Notice -- Client connecting at %s: %s (%s@%s) [%s] {0}", user->server, nick,
-		    user->username, user->realhost, user->ip_str ? user->ip_str : "0");
+		ircsnprintf(connect, sizeof(connect),
+		    "*** Client connecting: %s (%s@%s) [%s] %s", newuser->name,
+		    newuser->user->username, newuser->user->realhost, newuser->ip ? newuser->ip : "0",
+		    get_connect_extinfo(newuser));
 	}
-	else 
+	else
 	{
-		ircsprintf(connectd, "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",
-			   user->server, nick, user->username, user->realhost, comment);
-		ircsprintf(connecth, "*** Notice -- Client exiting at %s: %s (%s@%s) [%s] [%s]",
-			user->server, nick, user->username, user->realhost, comment,
-			user->ip_str ? user->ip_str : "0");
+		ircsnprintf(connect, sizeof(connect), "*** Client exiting: %s (%s@%s) [%s] (%s)",
+			newuser->name, newuser->user->username, newuser->user->realhost,
+			newuser->ip ? newuser->ip : "0", comment);
 	}
 
-	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
-		if (((cptr = local[i])) && (cptr->user->snomask & SNO_FCLIENT))
-		{
-			if (IsHybNotice(cptr))
-				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
-				    cptr->name, connecth);
-			else
-				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
-				    cptr->name, connectd);
-
-		}
+	list_for_each_entry(acptr, &oper_list, special_node)
+	{
+		if (acptr->user->snomask & SNO_FCLIENT)
+			sendto_one(acptr, NULL, ":%s NOTICE %s :%s", newuser->user->server, acptr->name, connect);
+	}
 }
 
-/*
- * sendto_server_butone_nickcmd
- *
- * Send a message to all connected servers except the client 'one'.
+/** Introduce user to all other servers, except the one to skip.
+ * @param one    Server to skip (can be NULL)
+ * @param client Client to introduce
+ * @param umodes User modes of client
  */
-void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
-			char *nick, int hopcount,
-    long lastnick, char *username, char *realhost, char *server,
-    char *svid, char *info, char *umodes, char *virthost)
+void sendto_serv_butone_nickcmd(Client *one, Client *client, char *umodes)
 {
-	int  i;
-	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
+	Client *acptr;
 
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
+	list_for_each_entry(acptr, &server_list, special_node)
 	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
+		if (one && acptr == one->direction)
 			continue;
-#ifdef NO_FDLIST
-		if (IsServer(cptr))
-#endif
-		{
-			char *vhost;
-			if (SupportVHP(cptr))
-			{
-				if (IsHidden(sptr))
-					vhost = sptr->user->virthost;
-				else
-					vhost = sptr->user->realhost;
-			}
-			else
-			{
-				if (IsHidden(sptr) && sptr->umodes & UMODE_SETHOST)
-					vhost = sptr->user->virthost;
-				else
-					vhost = "*";
-			}
-				
-			if (SupportNICKv2(cptr))
-			{
-				if (sptr->srvptr->serv->numeric && SupportNS(cptr))
-					sendto_one(cptr,
-						(cptr->proto & PROTO_SJB64) ?
-					    /* Ugly double %s to prevent excessive spaces */
-					    "%s %s %d %B %s %s %b %s %s %s %s%s%s%s:%s"
-					    :
-					    "%s %s %d %lu %s %s %b %s %s %s %s%s%s%s:%s"
-					    ,
-					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
-					    hopcount, (long)lastnick, username, realhost,
-					    (long)(sptr->srvptr->serv->numeric),
-					    svid, umodes, vhost,
-					    SupportCLK(cptr) ? getcloak(sptr) : "",
-					    SupportCLK(cptr) ? " " : "",
-					    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
-					    SupportNICKIP(cptr) ? " " : "",
-					    info);
-				else
-					sendto_one(cptr,
-					    "%s %s %d %d %s %s %s %s %s %s %s%s%s%s:%s",
-					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
-					    hopcount, lastnick, username, realhost,
-					    SupportNS(cptr) && sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric) : server,
-					    svid, umodes, vhost,
-					    SupportCLK(cptr) ? getcloak(sptr) : "",
-					    SupportCLK(cptr) ? " " : "",
-					    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
-					    SupportNICKIP(cptr) ? " " : "",
-					    info);
-
-			}
-			else
-			{
-				sendto_one(cptr, "%s %s %d %d %s %s %s %s :%s",
-				    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
-				    nick, hopcount, lastnick, username,
-				    realhost,
-				    server, svid, info);
-				if (strcmp(umodes, "+"))
-				{
-					sendto_one(cptr, ":%s %s %s :%s",
-					    nick,
-					    (IsToken(cptr) ? TOK_MODE :
-					    MSG_MODE), nick, umodes);
-				}
-				if (IsHidden(sptr) && (sptr->umodes & UMODE_SETHOST))
-				{
-					sendto_one(cptr, ":%s %s %s",
-					    nick,
-					    (IsToken(cptr) ? TOK_SETHOST :
-					    MSG_SETHOST), virthost);
-				}
-				else if (SupportVHP(cptr))
-				{
-					sendto_one(cptr, ":%s %s %s",
-					    nick,
-					    (IsToken(cptr) ? TOK_SETHOST :
-					     MSG_SETHOST), (IsHidden(sptr) ? virthost :
-					     realhost));
-				}
-			}
-		}
+		
+		sendto_one_nickcmd(acptr, client, umodes);
 	}
-	return;
 }
 
-/*
- * sendto_one_nickcmd
- *
+/** Introduce user to a server.
+ * @param server  Server to send to (locally connected!)
+ * @param client  Client to introduce
+ * @param umodes  User modes of client
  */
-void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
+void sendto_one_nickcmd(Client *server, Client *client, char *umodes)
 {
-	if (SupportNICKv2(cptr))
+	char *vhost;
+
+	if (!*umodes)
+		umodes = "+";
+
+	if (SupportVHP(server))
 	{
-		char *vhost;
-		if (SupportVHP(cptr))
-		{
-			if (IsHidden(sptr))
-				vhost = sptr->user->virthost;
-			else
-				vhost = sptr->user->realhost;
-		}
+		if (IsHidden(client))
+			vhost = client->user->virthost;
 		else
-		{
-			if (IsHidden(sptr) && sptr->umodes & UMODE_SETHOST)
-				vhost = sptr->user->virthost;
-			else
-				vhost = "*";
-		}
-		if (sptr->srvptr->serv->numeric && SupportNS(cptr))
-			sendto_one(cptr,
-				(cptr->proto & PROTO_SJB64) ?
-			    /* Ugly double %s to prevent excessive spaces */
-			    "%s %s %d %B %s %s %b %s %s %s %s%s:%s"
-			    :
-			    "%s %s %d %lu %s %s %b %s %s %s %s%s:%s"
-			    ,
-			    (IsToken(cptr) ? TOK_NICK : MSG_NICK), sptr->name,
-			    sptr->hopcount+1, (long)sptr->lastnick, sptr->user->username, 
-			    sptr->user->realhost, (long)(sptr->srvptr->serv->numeric),
-			    sptr->user->svid, umodes, vhost,
-			    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
-			    SupportNICKIP(cptr) ? " " : "", sptr->info);
-		else
-			sendto_one(cptr,
-			    "%s %s %d %d %s %s %s %lu %s %s %s%s:%s",
-			    (IsToken(cptr) ? TOK_NICK : MSG_NICK), sptr->name,
-			    sptr->hopcount+1, sptr->lastnick, sptr->user->username, 
-			    sptr->user->realhost, SupportNS(cptr) && 
-			    sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric)
-			    : sptr->user->server, sptr->user->svid, umodes, vhost,
-			    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
-			    SupportNICKIP(cptr) ? " " : "", sptr->info);
+			vhost = client->user->realhost;
 	}
 	else
 	{
-		sendto_one(cptr, "%s %s %d %d %s %s %s %s :%s",
-		    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
-		    sptr->name, sptr->hopcount+1, sptr->lastnick, sptr->user->username,
-		    sptr->user->realhost, sptr->user->server, sptr->user->svid, 
-		    sptr->info);
-		if (strcmp(umodes, "+"))
-		{
-			sendto_one(cptr, ":%s %s %s :%s",
-			    sptr->name, (IsToken(cptr) ? TOK_MODE :
-			    MSG_MODE), sptr->name, umodes);
-		}
-		if (IsHidden(sptr) && (sptr->umodes & UMODE_SETHOST))
-		{
-			sendto_one(cptr, ":%s %s %s",
-			    sptr->name, (IsToken(cptr) ? TOK_SETHOST :
-			    MSG_SETHOST), sptr->user->virthost);
-		}
-		else if (SupportVHP(cptr))
-		{
-			sendto_one(cptr, ":%s %s %s", sptr->name, 
-			    (IsToken(cptr) ? TOK_SETHOST : MSG_SETHOST),
-			    (IsHidden(sptr) ? sptr->user->virthost :
-			    sptr->user->realhost));
-		}
+		if (IsHidden(client) && client->umodes & UMODE_SETHOST)
+			vhost = client->user->virthost;
+		else
+			vhost = "*";
 	}
-	return;
-}
 
-void	sendto_message_one(aClient *to, aClient *from, char *sender,
-			char *cmd, char *nick, char *msg)
-{
-        if(IsServer(to->from) && IsToken(to->from)) {
-          if(*cmd == 'P') cmd = TOK_PRIVATE;
-          if(*cmd == 'N') cmd = TOK_NOTICE;
-        }
-        sendto_prefix_one(to, from, ":%s %s %s :%s",
-                         sender, cmd, nick, msg);
+	sendto_one(server, NULL,
+		":%s UID %s %d %lld %s %s %s %s %s %s %s %s :%s",
+		client->srvptr->id, client->name, client->hopcount,
+		(long long)client->lastnick,
+		client->user->username, client->user->realhost, client->id,
+		client->user->svid, umodes, vhost, getcloak(client),
+		encode_ip(client->ip), client->info);
 }
 
 /* sidenote: sendnotice() and sendtxtnumeric() assume no client or server
  * has a % in their nick, which is a safe assumption since % is illegal.
  */
  
-void sendnotice(aClient *to, char *pattern, ...)
+/** Send a server notice to a client.
+ * @param to		The client to send to
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ */
+void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...)
 {
-static char realpattern[1024];
-va_list vl;
-char *name = *to->name ? to->name : "*";
+	static char realpattern[1024];
+	va_list vl;
+	char *name = *to->name ? to->name : "*";
 
-	if (!IsWebTV(to))
-		ircsprintf(realpattern, ":%s NOTICE %s :%s", me.name, name, pattern);
-	else
-		ircsprintf(realpattern, ":%s PRIVMSG %s :%s", me.name, name, pattern);
+	ircsnprintf(realpattern, sizeof(realpattern), ":%s NOTICE %s :%s", me.name, name, pattern);
 
 	va_start(vl, pattern);
-	vsendto_one(to, realpattern, vl);
+	vsendto_one(to, NULL, realpattern, vl);
 	va_end(vl);
 }
 
-void sendtxtnumeric(aClient *to, char *pattern, ...)
+/** Send MultiLine list as a notice, one for each line.
+ * @param client	The client to send to
+ * @param m		The MultiLine list.
+ */
+void sendnotice_multiline(Client *client, MultiLine *m)
 {
-static char realpattern[1024];
-va_list vl;
+	for (; m; m = m->next)
+		sendnotice(client, "%s", m->line);
+}
 
-	if (!IsWebTV(to))
-		ircsprintf(realpattern, ":%s %d %s :%s", me.name, RPL_TEXT, to->name, pattern);
-	else
-		ircsprintf(realpattern, ":%s PRIVMSG %s :%s", me.name, to->name, pattern);
 
-	va_start(vl, pattern);
-	vsendto_one(to, realpattern, vl);
+/** Send numeric message to a client.
+ * @param to		The recipient
+ * @param numeric	The numeric, one of RPL_* or ERR_*, see src/numeric.c
+ * @param ...		The parameters for the numeric
+ * @note Be sure to provide the correct number and type of parameters that belong to the numeric. Check src/numeric.c when in doubt!
+ * @section sendnumeric_examples Examples
+ * @subsection sendnumeric_permission_denied Send "Permission Denied" numeric
+ * This numeric has no parameter, so is simple:
+ * @code
+ * sendnumeric(client, ERR_NOPRIVILEGES);
+ * @endcode
+ * @subsection sendnumeric_notenoughparameters Send "Not enough parameters" numeric
+ * This numeric requires 1 parameter: the name of the command.
+ * @code
+ * sendnumeric(client, ERR_NEEDMOREPARAMS, "SOMECOMMAND");
+ * @endcode
+ */
+void sendnumeric(Client *to, int numeric, ...)
+{
+	va_list vl;
+	char pattern[512];
+
+	snprintf(pattern, sizeof(pattern), ":%s %.3d %s %s", me.name, numeric, to->name[0] ? to->name : "*", rpl_str(numeric));
+
+	va_start(vl, numeric);
+	vsendto_one(to, NULL, pattern, vl);
 	va_end(vl);
 }
+
+/** Send numeric message to a client - format to user specific needs.
+ * This will ignore the numeric definition of src/numeric.c and always send ":me.name numeric clientname "
+ * followed by the pattern and format string you choose.
+ * @param to		The recipient
+ * @param numeric	The numeric, one of RPL_* or ERR_*, see src/numeric.c
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ * @note Don't forget to add a colon if you need it (eg `:%%s`), this is a common mistake.
+ */
+void sendnumericfmt(Client *to, int numeric, FORMAT_STRING(const char *pattern), ...)
+{
+	va_list vl;
+	char realpattern[512];
+
+	snprintf(realpattern, sizeof(realpattern), ":%s %.3d %s %s", me.name, numeric, to->name[0] ? to->name : "*", pattern);
+
+	va_start(vl, pattern);
+	vsendto_one(to, NULL, realpattern, vl);
+	va_end(vl);
+}
+
+/** Send text numeric message to a client (RPL_TEXT).
+ * Because this generic output numeric is commonly used it got a special function for it.
+ * @param to		The recipient
+ * @param numeric	The numeric, one of RPL_* or ERR_*, see src/numeric.c
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ * @note Don't forget to add a colon if you need it (eg `:%%s`), this is a common mistake.
+ */
+void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...)
+{
+	static char realpattern[1024];
+	va_list vl;
+
+	ircsnprintf(realpattern, sizeof(realpattern), ":%s %d %s :%s", me.name, RPL_TEXT, to->name, pattern);
+
+	va_start(vl, pattern);
+	vsendto_one(to, NULL, realpattern, vl);
+	va_end(vl);
+}
+
+/* Send raw data directly to socket, bypassing everything.
+ * Looks like an interesting function to call? NO! STOP!
+ * Don't use this function. It may only be used by the initial
+ * Z-Line check via the codepath to banned_client().
+ * YOU SHOULD NEVER USE THIS FUNCTION.
+ * If you want to send raw data (without formatting) to a client
+ * then have a look at sendbufto_one() instead.
+ *
+ * Side-effects:
+ * Too many to list here. Only in the early accept code the
+ * "if's" and side-effects are under control.
+ *
+ * By the way, did I already mention that you SHOULD NOT USE THIS
+ * FUNCTION? ;)
+ */
+void send_raw_direct(Client *user, FORMAT_STRING(FORMAT_STRING(const char *pattern)), ...)
+{
+	va_list vl;
+	int sendlen;
+
+	*sendbuf = '\0';
+	va_start(vl, pattern);
+	sendlen = vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, user, pattern, vl);
+	va_end(vl);
+	(void)send(user->local->fd, sendbuf, sendlen, 0);
+}
+
+/** @} */

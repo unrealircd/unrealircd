@@ -25,29 +25,27 @@
 #include <time.h>
 #ifdef _WIN32
 #include <malloc.h>
-#ifdef INET6
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#endif
 #include <windows.h>
-#ifndef INET6
-#include <winsock.h>
-#endif
-#include <process.h>
 #include <io.h>
+#include <direct.h>
 #endif
 #include "types.h"
 #include "config.h"
-#ifdef	PARAMH
+#ifndef _WIN32
 #include <sys/param.h>
+#include <stdbool.h>
+#else
+typedef int bool;
+#define false 0
+#define true 1
 #endif
 
-#if !defined(IN_ADDR)
 #include "sys.h"
-#endif
 
 #include "ircsprintf.h"
-
+#include "list.h"
 
 #ifdef DEVELOP_CVS
 #define ID_Copyright(x) static char id_copyright[] = x
@@ -59,7 +57,13 @@
 
 #define BMAGIC 0x4675636B596F754661736369737473
 
-#define BASE_VERSION "Unreal"
+#ifdef _WIN32
+#define DEADBEEF_ADDR 0xDEADBEEFDEADBEEF
+#else
+#define DEADBEEF_ADDR 0xDEADBEEF
+#endif
+
+#define BASE_VERSION "UnrealIRCd"
 #ifndef _WIN32
 #define FDwrite(x,y,z) write(x, y, z)
 #else
@@ -84,19 +88,6 @@
 #define UNSURE (2)
 #endif
 
-#if 0
-#ifndef	MALLOCH
-char *malloc(), *calloc();
-void free();
-#else
-#include MALLOCH
-#endif
-#endif
-
-#define TS time_t
-
-
-extern int match(const char *, const char *);
 #define mycmp(a,b) \
  ( (toupper(a[0])!=toupper(b[0])) || smycmp((a)+1,(b)+1) )
 extern int smycmp(const char *, const char *);
@@ -104,38 +95,13 @@ extern int smycmp(const char *, const char *);
 extern int myncmp(const char *, const char *, int);
 #endif
 
-#ifdef NEED_STRTOK
-extern char *strtok2(char *, char *);
-#endif
-#ifdef NEED_STRTOKEN
 extern char *strtoken(char **, char *, char *);
-#endif
-#ifdef NEED_INET_ADDR
-extern unsigned long inet_addr(char *);
-#endif
 
-#if defined(NEED_INET_NTOA) || defined(NEED_INET_NETOF) && !defined(_WIN32)
-#include <netinet/in.h>
-#endif
-#ifdef NEED_INET_NTOA
-extern char *inet_ntoa(struct IN_ADDR);
-#endif
-
-#ifdef NEED_INET_NETOF
-extern int inet_netof(struct IN_ADDR);
-#endif
-
-#ifndef HAVE_INET_NTOP
-const char *inet_ntop(int, const void *, char *, size_t);
-#endif
-
-#ifndef HAVE_INET_PTON
-int inet_pton(int af, const char *src, void *dst);
-#endif
-
-MODVAR int  global_count, max_global_count;
+extern MODVAR int  global_count, max_global_count;
 extern char *myctime(time_t);
-extern char *strtoken(char **, char *, char *);
+#ifdef _WIN32
+extern int gettimeofday(struct timeval *tp, void *tzp);
+#endif
 
 #define PRECISE_CHECK
 
@@ -146,22 +112,11 @@ extern char *strtoken(char **, char *, char *);
 #define MIN(a, b)	((a) < (b) ? (a) : (b))
 #endif
 
-#define DupString(x,y) do{int l=strlen(y);x=MyMalloc(l+1);(void)memcpy(x,y, l+1);}while(0)
-
 extern MODVAR u_char tolowertab[], touppertab[];
-
-#if defined(NICK_GB2312) || defined(NICK_GBK) || defined(NICK_GBK_JAP)
-#define USE_LOCALE
-#include <ctype.h>
-#endif
-
-#ifndef USE_LOCALE
 #undef tolower
 #define tolower(c) (tolowertab[(u_char)(c)])
-
 #undef toupper
 #define toupper(c) (touppertab[(u_char)(c)])
-
 #undef isalpha
 #undef isdigit
 #undef isxdigit
@@ -174,7 +129,6 @@ extern MODVAR u_char tolowertab[], touppertab[];
 #undef isupper
 #undef isspace
 #undef iscntrl
-#endif
 extern MODVAR unsigned char char_atribs[];
 
 #define PRINT 1
@@ -194,7 +148,6 @@ extern MODVAR unsigned char char_atribs[];
 #endif
 
 #define isallowed(c) (char_atribs[(u_char)(c)]&ALLOW)
-#ifndef USE_LOCALE
 #define	iscntrl(c) (char_atribs[(u_char)(c)]&CNTRL)
 #define isalpha(c) (char_atribs[(u_char)(c)]&ALPHA)
 #define isspace(c) (char_atribs[(u_char)(c)]&SPACE)
@@ -208,29 +161,7 @@ extern MODVAR unsigned char char_atribs[];
 #define isascii(c) ((u_char)(c) >= 0 && (u_char)(c) <= 0x7f)
 #define isgraph(c) ((char_atribs[(u_char)(c)]&PRINT) && ((u_char)(c) != 0x32))
 #define ispunct(c) (!(char_atribs[(u_char)(c)]&(CNTRL|ALPHA|DIGIT)))
-#endif
 #define iswseperator(c) (!isalnum(c) && !((u_char)c >= 128))
-
-#ifndef MALLOCD
-#define MyFree free
-#define MyMalloc malloc
-#define MyRealloc realloc
-#else
-#define MyFree(x) do {debug(DEBUG_MALLOC, "%s:%i: free %02x", __FILE__, __LINE__, x); free(x); } while(0)
-#define MyMalloc(x) StsMalloc(x, __FILE__, __LINE__)
-#define MyRealloc realloc
-static char *StsMalloc(size_t size, char *file, long line)
-{
-	void *x;
-	
-	x = malloc(size);
-	debug(DEBUG_MALLOC, "%s:%i: malloc %02x", file, line, x);
-	return x;
-}
-
-#endif
-
-extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 /*
  * Protocol support text.  DO NO CHANGE THIS unless you know what
@@ -239,17 +170,10 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 /* IRCu/Hybrid/Unreal way now :) -Stskeeps */
 
-#ifdef EXTCMODE
- #define EXPAR1	extchmstr[0]
- #define EXPAR2	extchmstr[1]
- #define EXPAR3	extchmstr[2]
- #define EXPAR4	extchmstr[3]
-#else
- #define EXPAR1 ""
- #define EXPAR2 ""
- #define EXPAR3 ""
- #define EXPAR4 ""
-#endif /* EXTCMODE */
+#define EXPAR1	extchmstr[0]
+#define EXPAR2	extchmstr[1]
+#define EXPAR3	extchmstr[2]
+#define EXPAR4	extchmstr[3]
 
 #ifdef PREFIX_AQ
 #define CHPFIX        "(qaohv)~&@%+"
@@ -259,28 +183,9 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 #define CHPAR1        "beIqa"
 #endif /* PREFIX_AQ */
 
-#define CHPAR2        "kfL"
+#define CHPAR2        "k"
 #define CHPAR3        "l"
-#define CHPAR4        "psmntirRcOAQKVCuzNSM"
-
-
-/* Server-Server PROTOCTL -Stskeeps
- * This is the FIRST line only, please check send_proto() for more. -- Syzop
- * Also take MAXPARA into account !
- */
-#define PROTOCTL_SERVER "NOQUIT" \
-                        " TOKEN" \
-                        " NICKv2" \
-                        " SJOIN" \
-                        " SJOIN2" \
-                        " UMODE2" \
-                        " VL" \
-                        " SJ3" \
-                        " NS" \
-                        " SJB64" \
-                        " TKLEXT" \
-                        " NICKIP" \
-                        " ESVID"
+#define CHPAR4        "psmntir"
 
 #ifdef _WIN32
 /*
@@ -301,7 +206,7 @@ extern int lu_noninv, lu_inv, lu_serv, lu_oper,
     lu_unknown, lu_channel, lu_lu, lu_lulocal, lu_lserv,
     lu_clu, lu_mlu, lu_cglobalu, lu_mglobalu;
 
-MODVAR TS   now;
+extern MODVAR time_t now;
 
 #ifndef _WIN32
 #if defined(__STDC__)

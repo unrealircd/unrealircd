@@ -2,15 +2,16 @@ dnl Process this file with autoconf to produce a configure script.
 
 dnl When updating the version, remember to update the following files
 dnl appropriately:
-dnl
-dnl include/win32/setup.h
-dnl src/win32/unrealinst.iss
-dnl docs/unreal32docs*.html
-dnl Unreal.nfo
-dnl .CHANGES.NEW
+dnl include/windows/setup.h
+dnl src/windows/unrealinst.iss
+dnl doc/Config.header
 dnl src/version.c.SH
 
+<<<<<<< HEAD
 AC_INIT([unrealircd], [3.2.10.7], [http://bugs.unrealircd.org/], [], [http://unrealircd.org/])
+=======
+AC_INIT([unrealircd], [5.2.2-git], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
+>>>>>>> unreal52
 AC_CONFIG_SRCDIR([src/ircd.c])
 AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])
@@ -21,70 +22,70 @@ if test "x$enable_dynamic_linking" = "x"; then
 	exit 1
 fi
 
+dnl Save CFLAGS, use this when building the libraries like c-ares
+orig_cflags="$CFLAGS"
+
+dnl Save build directory early on (used in our m4 macros too)
+BUILDDIR_NOW="`pwd`"
+
 dnl Calculate the versions. Perhaps the use of expr is a little too extravagant
-# Generation version number (e.g.: 3 for Unreal3*)
-UNREAL_VERSION_GENERATION=["`expr $PACKAGE_VERSION : '\([^.]*\)\.[^.]*\.[^.-_]*'`"]
-AC_DEFINE_UNQUOTED([UNREAL_VERSION_GENERATION], [$UNREAL_VERSION_GENERATION], [Generation version number (e.g.: 3 for Unreal3*)])
+# Generation version number (e.g.: X in X.Y.Z)
+UNREAL_VERSION_GENERATION=["5"]
+AC_DEFINE_UNQUOTED([UNREAL_VERSION_GENERATION], [$UNREAL_VERSION_GENERATION], [Generation version number (e.g.: X for X.Y.Z)])
 
-# Major version number (e.g.: 2 for Unreal3.2*)
-UNREAL_VERSION_MAJOR=["`expr $PACKAGE_VERSION : '[0-9]*\.\([0-9]*\)\.[0-9]*'`"]
-AC_DEFINE_UNQUOTED([UNREAL_VERSION_MAJOR], [$UNREAL_VERSION_MAJOR], [Major version number (e.g.: 2 for Unreal3.2*)])
+# Major version number (e.g.: Y in X.Y.Z)
+UNREAL_VERSION_MAJOR=["2"]
+AC_DEFINE_UNQUOTED([UNREAL_VERSION_MAJOR], [$UNREAL_VERSION_MAJOR], [Major version number (e.g.: Y for X.Y.Z)])
 
-# Minor version number (e.g.: 1 for Unreal3.2.1)
-UNREAL_VERSION_MINOR=["`expr $PACKAGE_VERSION : '[0-9]*\.[0-9]*\.\([0-9]*\)'`"]
-AC_DEFINE_UNQUOTED([UNREAL_VERSION_MINOR], [$UNREAL_VERSION_MINOR], [Minor version number (e.g.: 1 for Unreal3.2.1)])
+# Minor version number (e.g.: Z in X.Y.Z)
+UNREAL_VERSION_MINOR=["2"]
+AC_DEFINE_UNQUOTED([UNREAL_VERSION_MINOR], [$UNREAL_VERSION_MINOR], [Minor version number (e.g.: Z for X.Y.Z)])
 
 # The version suffix such as a beta marker or release candidate
-# marker. (e.g.: -rc2 for unrealircd-3.2.9-rc2). This macro is a
+# marker. (e.g.: -rcX for unrealircd-3.2.9-rcX). This macro is a
 # string instead of an integer because it contains arbitrary data.
-UNREAL_VERSION_SUFFIX=["`expr $PACKAGE_VERSION : '[0-9]*\.[0-9]*\.[0-9]*\(.*\)'`"]
-AC_DEFINE_UNQUOTED([UNREAL_VERSION_SUFFIX], ["$UNREAL_VERSION_SUFFIX"], [Version suffix such as a beta marker or release candidate marker. (e.g.: -rc2 for unrealircd-3.2.9-rc2)])
-
-AC_PROG_CC
-if test "$ac_cv_prog_gcc" = "yes"; then
-CFLAGS="$CFLAGS -funsigned-char"
-AC_CACHE_CHECK(if gcc has a working -pipe, ac_cv_pipe, [
-	save_cflags="$CFLAGS"
-	CFLAGS="$CFLAGS -pipe"
-	AC_TRY_COMPILE(,, ac_cv_pipe="yes", ac_cv_pipe="no")
-	CFLAGS="$save_cflags"
-])
-if test "$ac_cv_pipe" = "yes"; then
-CFLAGS="-pipe $CFLAGS"
-fi
-fi
-
-dnl (the gcc flag detection trick is taken from xemacs/Vin Shelton)
-
-dnl UnrealIRCd might not be strict-aliasing safe at this time
-case "`$CC -v --help 2>&1`" in
-	*-fstrict-aliasing* ) CFLAGS="$CFLAGS -fno-strict-aliasing" ;;
-esac
-
-dnl Pointer signedness warnings are really a pain and 99.9% of the time
-dnl they are of absolutely no use whatsoever. IMO the person who decided
-dnl to enable this without -Wall should be shot on sight.
-case "`$CC -v --help 2>&1`" in
-	*-Wpointer-sign* ) CFLAGS="$CFLAGS -Wno-pointer-sign" ;;
-esac
+UNREAL_VERSION_SUFFIX=["-git"]
+AC_DEFINE_UNQUOTED([UNREAL_VERSION_SUFFIX], ["$UNREAL_VERSION_SUFFIX"], [Version suffix such as a beta marker or release candidate marker. (e.g.: -rcX for unrealircd-3.2.9-rcX)])
 
 AC_PATH_PROG(RM,rm)
 AC_PATH_PROG(CP,cp)
 AC_PATH_PROG(TOUCH,touch)
 AC_PATH_PROG(OPENSSLPATH,openssl)
+AS_IF([test x"$OPENSSLPATH" = "x"],
+[
+echo ""
+echo "Apparently you do not have both the openssl binary and openssl development libraries installed."
+echo "The following packages are required:"
+echo "1) The library package is often called 'openssl-dev', 'openssl-devel' or 'libssl-dev'"
+echo "2) The binary package is usually called 'openssl'."
+echo "NOTE: you or your system administrator needs to install the library AND the binary package."
+echo "After doing so, simply re-run ./Config"
+exit 1
+])
+
 AC_PATH_PROG(INSTALL,install)
-AC_CHECK_PROG(MAKER, gmake, gmake, make)
-AC_PATH_PROG(GMAKE,gmake)
 AC_PATH_PROG(GUNZIP, gunzip)
 AC_PATH_PROG(PKGCONFIG, pkg-config)
+
+dnl Check for compiler
+AC_PROG_CC_C99
+AS_IF([test "$ac_cv_prog_cc_c99" = "no"],
+	[AC_MSG_ERROR([No C99 compiler was found. Please install gcc or clang and other build tools. Eg, on Debian/Ubuntu you probably want to run the following as root: apt-get install build-essential ])])
+
+dnl Check for make moved down, so the above compiler check takes precedence.
+AC_CHECK_PROG(MAKER, gmake, gmake, make)
+AC_PATH_PROG(GMAKE,gmake)
+AS_IF([$MAKER --version | grep -q "GNU Make"],
+        [GNUMAKE="0"],
+        [AC_MSG_ERROR([It seems your system does not have make/gmake installed. If you are on Linux then install make, otherwise install gmake.])])
 
 dnl Checks for libraries.
 AC_CHECK_LIB(descrypt, crypt,
 	[AC_DEFINE([HAVE_CRYPT], [], [Define if you have crypt])
-		IRCDLIBS="$IRCDLIBS-ldescrypt "
-		MKPASSWDLIBS="-ldescrypt"],
+		IRCDLIBS="$IRCDLIBS-ldescrypt "],
 	[AC_CHECK_LIB(crypt, crypt,
 		[AC_DEFINE([HAVE_CRYPT], [], [Define if you have crypt])
+<<<<<<< HEAD
 			IRCDLIBS="$IRCDLIBS-lcrypt "
 			MKPASSWDLIBS="-lcrypt"])])
 AC_CHECK_LIB(socket, socket,
@@ -95,9 +96,186 @@ AC_CHECK_LIB(nsl, inet_ntoa,
 		INETLIB="-lnsl"])
 AC_CHECK_LIB(crypto, RAND_egd,
 		AC_DEFINE(HAVE_RAND_EGD, 1, [Define if the libcrypto has RAND_egd]))
+=======
+			IRCDLIBS="$IRCDLIBS-lcrypt "])])
 
-AC_SUBST(IRCDLIBS)
-AC_SUBST(MKPASSWDLIBS)
+dnl Check for big-endian system, even though these hardly exist anymore...
+AS_CASE([$host_cpu],
+  [i?86|amd64|x86_64],
+    [ac_cv_c_bigendian=no]
+)
+AC_C_BIGENDIAN(
+  AC_DEFINE(NATIVE_BIG_ENDIAN, 1, [machine is bigendian]),
+  AC_DEFINE(NATIVE_LITTLE_ENDIAN, 1, [machine is littleendian]),
+  AC_MSG_ERROR([unknown endianness]),
+  AC_MSG_ERROR([universal endianness is not supported - compile separately and use lipo(1)])
+)
+
+dnl HARDENING START
+dnl This is taken from https://github.com/kmcallister/autoharden
+dnl With some very small modifications (to remove C++ checking for instance)
+# We want to check for compiler flag support, but there is no way to make
+# clang's "argument unused" warning fatal.  So we invoke the compiler through a
+# wrapper script that greps for this message.
+saved_CC="$CC"
+saved_CXX="$CXX"
+saved_LD="$LD"
+flag_wrap="$srcdir/extras/wrap-compiler-for-flag-check"
+CC="$flag_wrap $CC"
+CXX="$flag_wrap $CXX"
+LD="$flag_wrap $LD"
+
+# We use the same hardening flags for C and C++.  We must check that each flag
+# is supported by both compilers.
+AC_DEFUN([check_cc_flag],
+ [AC_LANG_PUSH(C)
+  AX_CHECK_COMPILE_FLAG([$1], [$2], [$3], [-Werror $4])
+  AC_LANG_POP(C)])
+
+AC_DEFUN([check_link_flag],
+ [AX_CHECK_LINK_FLAG([$1], [$2], [$3], [-Werror $4])])
+
+AC_ARG_ENABLE([hardening],
+  [AS_HELP_STRING([--enable-hardening],
+    [Enable compiler and linker options to frustrate memory corruption exploits @<:@yes@:>@])],
+  [hardening="$enableval"],
+  [hardening="yes"])
+
+HARDEN_CFLAGS=""
+HARDEN_LDFLAGS=""
+AS_IF([test x"$hardening" != x"no"], [
+  check_cc_flag([-fno-strict-overflow], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fno-strict-overflow"])
+
+  # This one will likely succeed, even on platforms where it does nothing.
+  check_cc_flag([-D_FORTIFY_SOURCE=2], [HARDEN_CFLAGS="$HARDEN_CFLAGS -D_FORTIFY_SOURCE=2"])
+
+  check_cc_flag([-fstack-protector-all],
+   [check_link_flag([-fstack-protector-all],
+     [HARDEN_CFLAGS="$HARDEN_CFLAGS -fstack-protector-all"
+      check_cc_flag([-Wstack-protector], [HARDEN_CFLAGS="$HARDEN_CFLAGS -Wstack-protector"],
+        [], [-fstack-protector-all])
+      check_cc_flag([--param ssp-buffer-size=1], [HARDEN_CFLAGS="$HARDEN_CFLAGS --param ssp-buffer-size=1"],
+        [], [-fstack-protector-all])])])
+
+  # Added in UnrealIRCd 5.0.5 (default on Ubuntu 19.10)
+  check_cc_flag([-fstack-clash-protection], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fstack-clash-protection"])
+
+  # Control Flow Enforcement (ROP hardening) - requires CPU hardware support
+  check_cc_flag([-fcf-protection], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fcf-protection"])
+
+  # At the link step, we might want -pie (GCC) or -Wl,-pie (Clang on OS X)
+  #
+  # The linker checks also compile code, so we need to include -fPIE as well.
+  check_cc_flag([-fPIE],
+   [check_link_flag([-fPIE -pie],
+     [HARDEN_BINCFLAGS="-fPIE"
+      HARDEN_BINLDFLAGS="-pie"],
+     [check_link_flag([-fPIE -Wl,-pie],
+       [HARDEN_BINCFLAGS="-fPIE"
+        HARDEN_BINLDFLAGS="-Wl,-pie"])])])
+
+  check_link_flag([-Wl,-z,relro],
+   [HARDEN_LDFLAGS="$HARDEN_LDFLAGS -Wl,-z,relro"
+    check_link_flag([-Wl,-z,now], [HARDEN_LDFLAGS="$HARDEN_LDFLAGS -Wl,-z,now"])])])
+AC_SUBST([HARDEN_CFLAGS])
+AC_SUBST([HARDEN_LDFLAGS])
+AC_SUBST([HARDEN_BINCFLAGS])
+AC_SUBST([HARDEN_BINLDFLAGS])
+
+# End of flag tests.
+CC="$saved_CC"
+CXX="$saved_CXX"
+LD="$saved_LD"
+dnl HARDENING END
+
+dnl UnrealIRCd might not be strict-aliasing safe at this time
+check_cc_flag([-fno-strict-aliasing], [CFLAGS="$CFLAGS -fno-strict-aliasing"])
+
+dnl UnrealIRCd should be able to compile with -fno-common
+dnl This also makes ASan (if it is in use) able to instrument these variables.
+check_cc_flag([-fno-common], [CFLAGS="$CFLAGS -fno-common"])
+
+dnl Previously -funsigned-char was in a config check. It would always
+dnl be enabled with gcc and clang. We now unconditionally enable it,
+dnl skipping the check. This will cause an error if someone uses a
+dnl non-gcc/non-clang compiler that does not support -funsigned-char
+dnl which is good. After all, we really depend on it.
+dnl UnrealIRCd should never be compiled without char being unsigned.
+CFLAGS="$CFLAGS -funsigned-char"
+
+dnl Compiler -W checks...
+
+dnl We should be able to turn this on unconditionally:
+CFLAGS="$CFLAGS -Wall"
+
+dnl More warnings (if the compiler supports it):
+check_cc_flag([-Wextra], [CFLAGS="$CFLAGS -Wextra"])
+check_cc_flag([-Waggregate-return], [CFLAGS="$CFLAGS -Waggregate-return"])
+dnl The following few are more experimental, if they have false positives we'll have
+dnl to disable them:
+dnl Can't use this, too bad: check_cc_flag([-Wlogical-op], [CFLAGS="$CFLAGS -Wlogical-op"])
+check_cc_flag([-Wduplicated-cond], [CFLAGS="$CFLAGS -Wduplicated-cond"])
+check_cc_flag([-Wduplicated-branches], [CFLAGS="$CFLAGS -Wduplicated-branches"])
+
+dnl And now to filter out certain warnings:
+dnl [!] NOTE REGARDING THE check_cc_flag used by these:
+dnl We check for the -Woption even though we are going to use -Wno-option.
+dnl This is due to the following (odd) gcc behavior:
+dnl "When an unrecognized warning option is requested (e.g.,
+dnl  -Wunknown-warning), GCC emits a diagnostic stating that the option is not
+dnl  recognized.  However, if the -Wno- form is used, the behavior is slightly
+dnl  different: no diagnostic is produced for -Wno-unknown-warning unless
+dnl  other diagnostics are being produced.  This allows the use of new -Wno-
+dnl  options with old compilers, but if something goes wrong, the compiler
+dnl  warns that an unrecognized option is present."
+dnl Since we don't want to use any unrecognized -Wno-option, we test for
+dnl -Woption instead.
+
+dnl Pointer signedness warnings are really a pain and 99.9% of the time
+dnl they are of absolutely no use whatsoever. IMO the person who decided
+dnl to enable this without -Wall should be shot on sight.
+check_cc_flag([-Wpointer-sign], [CFLAGS="$CFLAGS -Wno-pointer-sign"])
+
+dnl This is purely for charsys.c... I like it so we can easily read
+dnl this for non-utf8. We can remove it once we ditch non-utf8 some day
+dnl of course, or decide to ignore me and encode them.
+check_cc_flag([-Winvalid-source-encoding], [CFLAGS="$CFLAGS -Wno-invalid-source-encoding"])
+
+check_cc_flag([-Wformat-zero-length], [CFLAGS="$CFLAGS -Wno-format-zero-length"])
+
+check_cc_flag([-Wformat-truncation], [CFLAGS="$CFLAGS -Wno-format-truncation"])
+
+dnl While it can be useful to occasionally to compile with warnings about
+dnl unused variables and parameters, we often 'think ahead' when coding things
+dnl so they may be useless now but not later. Similarly, for variables, we
+dnl don't always care about a variable that may still be present in a build
+dnl without DEBUGMODE. Unused variables are optimized out anyway.
+check_cc_flag([-Wunused], [CFLAGS="$CFLAGS -Wno-unused"])
+check_cc_flag([-Wunused-parameter], [CFLAGS="$CFLAGS -Wno-unused-parameter"])
+check_cc_flag([-Wunused-but-set-parameter], [CFLAGS="$CFLAGS -Wno-unused-but-set-parameter"])
+
+dnl We use this and this warning is meaningless since 'char' is always unsigned
+dnl in UnrealIRCd compiles (-funsigned-char).
+check_cc_flag([-Wchar-subscripts], [CFLAGS="$CFLAGS -Wno-char-subscripts"])
+
+check_cc_flag([-Wsign-compare], [CFLAGS="$CFLAGS -Wno-sign-compare"])
+
+dnl Don't warn about empty body, we use this, eg via Debug(()) or in if's.
+check_cc_flag([-Wempty-body], [CFLAGS="$CFLAGS -Wno-empty-body"])
+
+dnl This one fails with ircstrdup(var, staticstring)
+dnl Shame we have to turn it off completely...
+check_cc_flag([-Waddress], [CFLAGS="$CFLAGS -Wno-address"])
+
+dnl This one breaks our TO_INTFUNC() that is used in m_tkl for tkl_typetochar
+check_cc_flag([-Wcast-function-type], [CFLAGS="$CFLAGS -Wno-cast-function-type"])
+
+AS_IF([$CC --version | grep -q "clang version 3."],
+        [CFLAGS="$CFLAGS -Wno-tautological-compare"])
+
+dnl End of -W... compiler checks.
+>>>>>>> unreal52
+
 
 dnl module checking based on Hyb7's module checking code
 AC_DEFUN([AC_ENABLE_DYN],
@@ -109,11 +287,16 @@ AC_DEFINE(STATIC_LINKING)
 ])])
 
 hold_cflags=$CFLAGS
+<<<<<<< HEAD
+=======
+DYNAMIC_LDFLAGS=""
+>>>>>>> unreal52
 CFLAGS="$CFLAGS -Wl,-export-dynamic"
 AC_CACHE_CHECK(if we need the -export-dynamic flag, ac_cv_export_dynamic, [
 AC_TRY_LINK(, [int i];, ac_cv_export_dynamic=yes, ac_cv_export_dynamic=no)])
-if test "$ac_cv_export_dynamic" = "no"; then
 CFLAGS=$hold_cflags
+if test "$ac_cv_export_dynamic" = "yes"; then
+	DYNAMIC_LDFLAGS="-Wl,-export-dynamic"
 fi
 
 AC_CACHE_CHECK(for compiler option to produce PIC,ac_cv_pic,[
@@ -154,233 +337,45 @@ if test "$ac_cv_underscore" = "yes"; then
 	AC_DEFINE([UNDERSCORE], [], [Define if your system prepends an underscore to symbols])
 fi
 
-MODULEFLAGS=$ac_cv_pic
+MODULEFLAGS="$ac_cv_pic $DYNAMIC_LDFLAGS"
 dnl DYNAMIC_LINKING is not meant to be defined in include/setup.h, it's 
 dnl defined in the Makefiles using -D. Having it defined globally will
 dnl only cause braindamage and symbol collisions :-D.
 dnl AC_DEFINE([DYNAMIC_LINKING], [], [Link dynamically as opposed to statically. (Dynamic linking is the only supported method of linking atm)])
 ])
-AC_DEFUN([AC_ENABLE_INET6],[
-	AC_CACHE_CHECK([if your system has IPv6 support], [ac_cv_ip6], [
-		save_libs="$LIBS"
-		LIBS="$LIBS $SOCKLIB"
-		AC_TRY_RUN([
+
+AC_CACHE_CHECK([if your system has IPv6 support], [ac_cv_ip6], [
+AC_TRY_RUN([
 #include <sys/types.h>
 #include <sys/socket.h>
 int main() {
-if (socket(AF_INET6, SOCK_STREAM, 0) < 0)
-exit(1);
-exit(0);
+int s = socket(AF_INET6, SOCK_STREAM, 0);
+exit(0); /* We only check if the code compiles, that's enough. We can deal with missing runtime IPv6 */
 }
-			],
-			[ac_cv_ip6=yes],
-			[ac_cv_ip6=no])
-		])
-	if test "$ac_cv_ip6" = "no"; then
-		AC_MSG_ERROR([Your system does not support IPv6 so it will not be enabled])
-	else
-		AC_DEFINE([INET6], [], [Define if you want IPv6 enabled])
-		dnl in6addr_any detection code taken from ratbox
-		AC_MSG_CHECKING([for struct in6addr_any])
-		AC_COMPILE_IFELSE(
-			[AC_LANG_PROGRAM(
-				[[#define IN_AUTOCONF
-				#include <sys/types.h>
-				#include <sys/socket.h>
-				#include <netinet/in.h>]],
-				[[struct in6_addr a = in6addr_any;]]
-			)],
-			[AC_MSG_RESULT(yes)],
-				[
-				AC_MSG_RESULT([no])
-				AC_DEFINE([NO_IN6ADDR_ANY], [1], [Define to 1 if your system has no in6addr_any.])
-				]
-			)
-	fi
-	LIBS="$save_libs"
+],
+	[ac_cv_ip6=yes],
+	[ac_cv_ip6=no])
 ])
+if test "$ac_cv_ip6" = "no"; then
+	AC_MSG_ERROR([Your system does not support IPv6])
+fi
 
-AC_CHECK_HEADER(sys/param.h,
-	AC_DEFINE([PARAMH], [], [Define if you have the <sys/param.h> header file.]))
-AC_CHECK_HEADER(stdlib.h,
-	AC_DEFINE([STDLIBH], [], [Define if you have the <stdlib.h> header file.]))
-AC_CHECK_HEADER(stddef.h,
-	AC_DEFINE([STDDEFH], [], [Define if you have the <stddef.h> header file.]))
 AC_CHECK_HEADER(sys/syslog.h,
 	AC_DEFINE([SYSSYSLOGH], [], [Define if you have the <sys/syslog.h> header file.]))
-AC_CHECK_HEADER(unistd.h,
-	AC_DEFINE([UNISTDH], [], [Define if you have the <unistd.h> header file.]))
-AC_CHECK_HEADER(string.h,
-	AC_DEFINE([STRINGH], [], [Define if you have the <string.h> header file.]))
-AC_CHECK_HEADER(strings.h,
-	AC_DEFINE([STRINGSH], [], [Define if you have the <strings.h> header file.]))
-AC_CHECK_HEADER(malloc.h,
-	AC_DEFINE([MALLOCH], [<malloc.h>], [Define to <malloc.h> you need malloc.h.]))
 AC_CHECK_HEADER(sys/rusage.h,
 	AC_DEFINE([RUSAGEH], [], [Define if you have the <sys/rusage.h> header file.]))
 AC_CHECK_HEADER(glob.h,
 	AC_DEFINE([GLOBH], [], [Define if you have the <glob.h> header file.]))
 AC_CHECK_HEADERS([stdint.h inttypes.h])
-dnl Checks for typedefs, structures, and compiler characteristics.
-AC_C_CONST
-AC_C_INLINE
 
-AC_TYPE_MODE_T
-AC_TYPE_SIZE_T
-AC_TYPE_INTPTR_T
-
-AC_HEADER_TIME
-AC_STRUCT_TM
-AC_TYPE_UID_T
-unreal_CHECK_TYPE_SIZES
-
-dnl in the future, it would be nice to avoid AC_TRY_RUN to allow
-dnl better support for crosscompiling.
-AC_CACHE_CHECK([what kind of nonblocking sockets you have], [ac_cv_nonblocking],[
-save_libs="$LIBS"
-LIBS="$LIBS $SOCKLIB"
-AC_TRY_RUN([
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/file.h>
-#include <signal.h>
-alarmed() {
-exit(1);
-}
-int main() {
-#ifdef O_NONBLOCK
-char b[12], x[32];
-int f, l = sizeof(x);
-f = socket(AF_INET, SOCK_DGRAM, 0);
-if (f >= 0 && !(fcntl(f, F_SETFL, O_NONBLOCK))) {
-signal(SIGALRM, alarmed);
-alarm(3);
-recvfrom(f, b, 12, 0, (struct sockaddr *)x, &l);
-alarm(0);
-exit(0);
-}
-#endif
-exit(1);
-}
-],ac_cv_nonblocking=O_NONBLOCK,[
-AC_TRY_RUN([
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/file.h>
-#include <signal.h>
-alarmed() {
-exit(0);
-}
-int main() {
-#ifdef O_NDELAY
-char b[12], x[32];
-int f, l = sizeof(x);
-f = socket(AF_INET, SOCK_DGRAM, 0);
-if (f >= 0 && !(fcntl(f, F_SETFL, O_NDELAY))) {
-signal(SIGALRM, alarmed);
-alarm(3);
-recvfrom(f, b, 12, 0, (struct sockaddr *)x, &l);
-alarm(0);
-exit(0);
-}
-#endif
-exit(1);
-}],ac_cv_nonblocking=O_NDELAY,[
-AC_TRY_RUN([
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/file.h>
-#include <signal.h>
-alarmed() {
-exit(1);
-}
-int main() {
-#ifdef FIONBIO
-char b[12], x[32];
-int f, l = sizeof(x);
-f = socket(AF_INET, SOCK_DGRAM, 0);
-if (f >= 0 && !(fcntl(f, F_SETFL, FIONBIO))) {
-signal(SIGALRM, alarmed);
-alarm(3);
-recvfrom(f, b, 12, 0, (struct sockaddr *)x, &l);
-alarm(0);
-exit(0);
-}
-#endif
-exit(1);
-], ac_cv_nonblocking=FIONBIO,ac_cv_nonblocking=none)])])])
-if test "$ac_cv_nonblocking" = "O_NONBLOCK"; then
-	AC_DEFINE([NBLOCK_POSIX], [], [Define if you have O_NONBLOCK])
-elif test "$ac_cv_nonblocking" = "O_NDELAY"; then
-	AC_DEFINE([NBLOCK_BSD], [], [Define if you have O_NDELAY])
-elif test "$ac_cv_nonblocking" = "FIONBIO"; then
-	AC_DEFINE([NBLOCK_SYSV], [], [Define if you have FIONBIO])
-fi
-LIBS="$save_libs"
 dnl Checks for library functions.
-AC_PROG_GCC_TRADITIONAL
-AC_FUNC_SETPGRP
-AC_FUNC_SETVBUF_REVERSED
-AC_FUNC_ALLOCA
-AC_CHECK_FUNCS(snprintf,
-	AC_DEFINE([HAVE_SNPRINTF], [], [Define if you have snprintf]))
-AC_CHECK_FUNCS(vsnprintf,
-	AC_DEFINE([HAVE_VSNPRINTF], [], [Define if you have vsnprintf]))
 AC_CHECK_FUNCS(strlcpy,
 	AC_DEFINE([HAVE_STRLCPY], [], [Define if you have strlcpy. Otherwise, an internal implementation will be used!]))
 AC_CHECK_FUNCS(strlcat,
 	AC_DEFINE([HAVE_STRLCAT], [], [Define if you have strlcat]))
 AC_CHECK_FUNCS(strlncat,
 	AC_DEFINE([HAVE_STRLNCAT], [], [Define if you have strlncat]))
-AC_CHECK_FUNCS(inet_pton,
-	AC_DEFINE([HAVE_INET_PTON], [], [Define if you have inet_pton]))
-AC_CHECK_FUNCS(inet_ntop,
-	AC_DEFINE([HAVE_INET_NTOP], [], [Define if you have inet_ntop]))
-dnl Check if it supports C99 style variable length arrays
-AC_CACHE_CHECK([if C99 variable length arrays are supported], [ac_cv_varlen_arrays], [
-AC_TRY_COMPILE(,[
-int main() {
-int i = 5;
-int a[i];
-a[0] = 1;
-return 0;
-}], ac_cv_varlen_arrays=yes, ac_cv_varlen_arrays=no)
-])
-if test "$ac_cv_varlen_arrays" = "yes" ; then
-	AC_DEFINE([HAVE_C99_VARLEN_ARRAY], [], [Define if you have a compiler with C99 variable length array support])
-fi
 
-dnl This check doesn't need to be in ./configure, we can
-dnl write the sourcecode to actually handle the return value
-dnl of setrlimit if necessary... -- ohnobinki
-AC_CACHE_CHECK([if we can set the core size to unlimited], [ac_cv_force_core], [
-AC_TRY_RUN([
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-int main() {
-struct rlimit corelim;
-corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
-if (setrlimit(RLIMIT_CORE, &corelim))
-exit(1);
-exit(0);
-}
-],ac_cv_force_core=yes,ac_cv_force_core=no)
-])
-if test "$ac_cv_force_core" = "yes"; then
-	AC_DEFINE([FORCE_CORE], [], [Define if you can set the core size to unlimited])
-fi
-AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([gettimeofday],
-	[AC_DEFINE([GETTIMEOFDAY], [], [Define if you have gettimeofday])],
-	[AC_CHECK_FUNCS([lrand48],
-		[AC_DEFINE([LRADN48], [], [Define if you have lrand48])])])
 AC_CHECK_FUNCS([getrusage],
 	[AC_DEFINE([GETRUSAGE_2], [], [Define if you have getrusage])],
 	[AC_CHECK_FUNCS([times],
@@ -400,71 +395,14 @@ AC_CHECK_FUNCS([setproctitle],
 	]
 )
 
-
-AC_CACHE_CHECK([what type of signals you have], [ac_cv_sigtype], [
-AC_TRY_RUN([
-#include <signal.h>
-int main() {
-sigaction(SIGTERM, (struct sigaction *)0L, (struct sigaction *)0L);
-}
-], ac_cv_sigtype=POSIX, [
-AC_TRY_RUN([
-#include <signal.h>
-int	calls = 0;
-void	handler()
-{
-if (calls)
-return;
-calls++;
-kill(getpid(), SIGTERM);
-sleep(1);
-}
-
-int main() {
-signal(SIGTERM, handler);
-kill(getpid(), SIGTERM);
-exit(0);
-}
-], ac_cv_sigtype=BSD,ac_cv_sigtype=SYSV)])])
-
-if test "$ac_cv_sigtype" = "POSIX"; then
-	AC_DEFINE([POSIX_SIGNALS], [], [Define if you have POSIX signals])
-elif test "$ac_cv_sigtype" = "BSD"; then
-	AC_DEFINE([BSD_RELIABLE_SIGNALS], [], [Define if you have BSD signals])
-else
-	AC_DEFINE([SYSV_UNRELIABLE_SIGNALS], [], [Define if you have SYSV signals])
-fi 
-AC_CHECK_FUNCS(strtoken,,AC_DEFINE([NEED_STRTOKEN], [], [Define if you need the strtoken function.]))
-AC_CHECK_FUNCS(strtok,,AC_DEFINE([NEED_STRTOK], [], [Define if you need the strtok function.]))
-AC_CHECK_FUNCS(strerror,,AC_DEFINE([NEED_STRERROR], [], [Define if you need the strerror function.]))
-AC_CHECK_FUNCS(index,,AC_DEFINE([NOINDEX], [], [Define if you do not have the index function.]))
-AC_CHECK_FUNCS(strtoul,,STRTOUL="strtoul.o")
-AC_CHECK_FUNCS(bcopy,,AC_DEFINE([NEED_BCOPY], [], [Define if you don't have bcopy]))
-AC_CHECK_FUNCS(bcmp,,AC_DEFINE([NEED_BCMP], [], [Define if you don't have bcmp]))
-AC_CHECK_FUNCS(bzero,,AC_DEFINE([NEED_BZERO], [], [Define if you need bzero]))
-AC_CHECK_FUNCS(strcasecmp,AC_DEFINE([GOT_STRCASECMP], [], [Define if you have strcasecmp]))
-save_libs="$LIBS"
-LIBS="$LIBS $SOCKLIB $INETLIB"
-AC_CHECK_FUNCS(inet_addr,,AC_DEFINE([NEED_INET_ADDR], [], [Define if you need inet_addr]))
-AC_CHECK_FUNCS(inet_ntoa,,AC_DEFINE([NEED_INET_NTOA], [], [Define if you need inet_ntoa]))
-AC_CHECK_FUNCS(inet_netof,,AC_DEFINE([NEED_INET_NETOF], [], [Define if you need inet_netof]))
-LIBS="$save_libs"
+AC_CHECK_FUNCS(explicit_bzero,AC_DEFINE([HAVE_EXPLICIT_BZERO], [], [Define if you have explicit_bzero]))
 AC_CHECK_FUNCS(syslog,AC_DEFINE([HAVE_SYSLOG], [], [Define if you have syslog]))
-AC_SUBST(STRTOUL)
 AC_SUBST(CRYPTOLIB)
 AC_SUBST(MODULEFLAGS)
-AC_ARG_WITH(listen, [AS_HELP_STRING([--with-listen=backlog],[Specify the listen backlog value])],
-	[AC_DEFINE_UNQUOTED([LISTEN_SIZE], [$withval], [Set to the listen backlog size you want])],
-	[AC_DEFINE([LISTEN_SIZE], [5], [Set to the listen backlog size you want])])
+AC_SUBST(DYNAMIC_LDFLAGS)
 AC_ARG_WITH(nick-history, [AS_HELP_STRING([--with-nick-history=length],[Specify the length of the nickname history])],
 	[AC_DEFINE_UNQUOTED([NICKNAMEHISTORYLENGTH], [$withval], [Set to the nickname history length you want])],
 	[AC_DEFINE([NICKNAMEHISTORYLENGTH], [2000], [Set to the nickname history length you want])])
-AC_ARG_WITH([sendq], [AS_HELP_STRING([--with-sendq=maxsendq],[Specify the max sendq for the server])],
-	[AC_DEFINE_UNQUOTED([MAXSENDQLENGTH], [$withval], [Set to the max sendq you want])],
-	[AC_DEFINE([MAXSENDQLENGTH], [3000000], [Set to the max sendq you want])])
-AC_ARG_WITH(bufferpool, [AS_HELP_STRING([--with-bufferpool=size],[Specify the size of the buffer pool])],
-	[AC_DEFINE_UNQUOTED([BUFFERPOOL],[($withval * MAXSENDQLENGTH)], [Set to the bufferpool size you want])],
-	[AC_DEFINE([BUFFERPOOL],[(18 * MAXSENDQLENGTH)], [Set to the bufferpool size you want])])
 AC_ARG_WITH(permissions, [AS_HELP_STRING([--with-permissions=permissions], [Specify the default permissions for
 configuration files])],
 	dnl We have an apparently out-of-place 0 here because of a MacOSX bug and because
@@ -472,27 +410,113 @@ configuration files])],
 	dnl (#3189)
 	[AC_DEFINE_UNQUOTED([DEFAULT_PERMISSIONS], [0$withval], [The default permissions for configuration files. Set to 0 to prevent unrealircd from calling chmod() on the files.])],
 	[AC_DEFINE([DEFAULT_PERMISSIONS], [0600], [The default permissions for configuration files. Set to 0 to prevent unrealircd from calling chmod() on the files.])]) 
-AC_ARG_WITH(dpath, [AS_HELP_STRING([--with-dpath=path],[Specify the path where configuration files are stored])],
-	[AC_DEFINE_UNQUOTED([DPATH], ["$withval"], [Define the location of the configuration files])
-		IRCDDIR="$withval"],
-	[AC_DEFINE_UNQUOTED([DPATH], ["`pwd`"], [Define the location of the configuration files])
-		IRCDDIR="`pwd`"])
 
-AC_ARG_WITH(fd-setsize, [AS_HELP_STRING([--with-fd-setsize=size], [Specify the max file descriptors to use])],
-	[ac_fd=$withval],
-	[ac_fd=1024])
-AC_DEFINE_UNQUOTED([MAXCONNECTIONS], [$ac_fd], [Set to the max connections you want])
-
-dnl It would be nice if this could just respect --bindir like every other
-dnl program does someday... -- ohnobinki
-AC_ARG_WITH(spath, [AS_HELP_STRING([--with-spath],[Specify the location of the executable])],
-	[AC_DEFINE_UNQUOTED([SPATH], ["$withval"], [Define the location of the executable])
+AC_ARG_WITH(bindir, [AS_HELP_STRING([--with-bindir=path],[Specify the directory for the unrealircd binary])],
+	[AC_DEFINE_UNQUOTED([BINDIR], ["$withval"], [Define the directory where the unrealircd binary is located])
 		BINDIR="$withval"],
-	[AC_DEFINE_UNQUOTED([SPATH], ["`pwd`/src/ircd"], [Define the location of the executable])
-		BINDIR="`pwd`/src/ircd"])
+	[AC_DEFINE_UNQUOTED([BINDIR], ["$HOME/unrealircd/bin"], [Define the directory where the unrealircd binary is located])
+		BINDIR="$HOME/unrealircd/bin"])
+
+AC_ARG_WITH(scriptdir, [AS_HELP_STRING([--with-scriptdir=path],[Specify the directory for the unrealircd start-stop script])],
+	[AC_DEFINE_UNQUOTED([SCRIPTDIR], ["$withval"], [Define the directory where the unrealircd start stop scripts is located])
+		SCRIPTDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([SCRIPTDIR], ["$HOME/unrealircd"], [Define the directory where the unrealircd start stop scripts is located])
+		SCRIPTDIR="$HOME/unrealircd"])
+
+AC_ARG_WITH(confdir, [AS_HELP_STRING([--with-confdir=path],[Specify the directory where configuration files are stored])],
+	[AC_DEFINE_UNQUOTED([CONFDIR], ["$withval"], [Define the location of the configuration files])
+		CONFDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([CONFDIR], ["$HOME/unrealircd/conf"], [Define the location of the configuration files])
+		CONFDIR="$HOME/unrealircd/conf"])
+
+dnl We have to pass the builddir as well, for the module manager
+AC_ARG_WITH(builddir, [AS_HELP_STRING([--with-builddir=path],[Specify the build directory])],
+	[AC_DEFINE_UNQUOTED([BUILDDIR], ["$withval"], [Define the build directory])
+		BUILDDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([BUILDDIR], ["$BUILDDIR_NOW"], [Specify the build directory])
+		BUILDDIR="$BUILDDIR_NOW"])
+
+AC_ARG_WITH(modulesdir, [AS_HELP_STRING([--with-modulesdir=path],[Specify the directory for loadable modules])],
+	[AC_DEFINE_UNQUOTED([MODULESDIR], ["$withval"], [Define the location of the modules])
+		MODULESDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([MODULESDIR], ["$HOME/unrealircd/modules"], [Define the location of the modules])
+		MODULESDIR="$HOME/unrealircd/modules"])
+
+AC_ARG_WITH(logdir, [AS_HELP_STRING([--with-logdir=path],[Specify the directory where log files are stored])],
+	[AC_DEFINE_UNQUOTED([LOGDIR], ["$withval"], [Define the location of the log files])
+		LOGDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([LOGDIR], ["$HOME/unrealircd/logs"], [Define the location of the log files])
+		LOGDIR="$HOME/unrealircd/logs"])
+
+AC_ARG_WITH(cachedir, [AS_HELP_STRING([--with-cachedir=path],[Specify the directory where cached files are stored])],
+	[AC_DEFINE_UNQUOTED([CACHEDIR], ["$withval"], [Define the location of the cached remote include files])
+		CACHEDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([CACHEDIR], ["$HOME/unrealircd/cache"], [Define the location of the cached remote include files])
+		CACHEDIR="$HOME/unrealircd/cache"])
+
+AC_ARG_WITH(tmpdir, [AS_HELP_STRING([--with-tmpdir=path],[Specify the directory where private temporary files are stored. Should not be readable or writable by others, so not /tmp!!])],
+	[AC_DEFINE_UNQUOTED([TMPDIR], ["$withval"], [Define the location of private temporary files])
+		TMPDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([TMPDIR], ["$HOME/unrealircd/tmp"], [Define the location of private temporary files])
+		TMPDIR="$HOME/unrealircd/tmp"])
+
+AC_ARG_WITH(datadir, [AS_HELP_STRING([--with-datadir=path],[Specify the directory where permanent data is stored])],
+	[AC_DEFINE_UNQUOTED([PERMDATADIR], ["$withval"], [Define the location of permanent data files])
+		PERMDATADIR="$withval"],
+	[AC_DEFINE_UNQUOTED([DATADIR], ["$HOME/unrealircd/data"], [Define the location of permanent data files])
+		PERMDATADIR="$HOME/unrealircd/data"])
+
+AC_ARG_WITH(docdir, [AS_HELP_STRING([--with-docdir=path],[Specify the directory where documentation is stored])],
+	[AC_DEFINE_UNQUOTED([DOCDIR], ["$withval"], [Define the location of the documentation])
+		DOCDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([DOCDIR], ["$HOME/unrealircd/doc"], [Define the location of the documentation])
+		DOCDIR="$HOME/unrealircd/doc"])
+
+AC_ARG_WITH(pidfile, [AS_HELP_STRING([--with-pidfile=path],[Specify the path of the pid file])],
+	[AC_DEFINE_UNQUOTED([PIDFILE], ["$withval"], [Define the path of the pid file])
+		PIDFILE="$withval"],
+	[AC_DEFINE_UNQUOTED([PIDFILE], ["$HOME/unrealircd/data/unrealircd.pid"], [Define the path of the pid file])
+		PIDFILE="$HOME/unrealircd/data/unrealircd.pid"])
+
+dnl Ensure that this “feature” can be disabled as it makes it harder to package unrealircd.
+dnl Users have always been able to specify “./configure LDFLAGS=-Wl,-rpath,/path/to/blah”—binki
+AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify the directory where private libraries are stored. Disable when building a package for a distro])],
+	[],
+	[with_privatelibdir="yes"])
+AS_IF([test "x$with_privatelibdir" = "xno"],
+	[PRIVATELIBDIR=],
+	[test "x$with_privatelibdir" = "xyes"],
+	[PRIVATELIBDIR="$HOME/unrealircd/lib"],
+	[PRIVATELIBDIR="$with_privatelibdir"])
+AS_IF([test "x$PRIVATELIBDIR" = "x"],
+	[LDFLAGS_PRIVATELIBS=""],
+	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$PRIVATELIBDIR"], [Define the location of private libraries])
+		LDFLAGS_PRIVATELIBS="-Wl,-rpath,$PRIVATELIBDIR"
+		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
+		export LDFLAGS])
+
+AC_SUBST(BUILDDIR)
+AC_SUBST(BINDIR)
+AC_SUBST(SCRIPTDIR)
+AC_SUBST(CONFDIR)
+AC_SUBST(MODULESDIR)
+AC_SUBST(LOGDIR)
+AC_SUBST(CACHEDIR)
+AC_SUBST(TMPDIR)
+dnl Why o why PERMDATADIR and not DATADIR you ask?
+dnl well, Because DATADIR conflicts with the Windows SDK header files.. amazing.
+AC_SUBST(PERMDATADIR)
+AC_SUBST(DOCDIR)
+AC_SUBST(PIDFILE)
+AC_SUBST(LDFLAGS_PRIVATELIBS)
+
+AC_ARG_WITH(maxconnections, [AS_HELP_STRING([--with-maxconnections=size], [Specify the max file descriptors to use])],
+	[ac_fd=$withval],
+	[ac_fd=0])
+AC_DEFINE_UNQUOTED([MAXCONNECTIONS_REQUEST], [$ac_fd], [Set to the maximum number of connections you want])
 
 AC_ARG_ENABLE([prefixaq],
-	[AS_HELP_STRING([--disable-prefixaq],[Enable chanadmin (+a) and chanowner (+q) prefixes])],
+	[AS_HELP_STRING([--disable-prefixaq],[Disable chanadmin (+a) and chanowner (+q) prefixes])],
 	[],
 	[enable_prefixaq=yes])
 AS_IF([test $enable_prefixaq = "yes"],
@@ -502,117 +526,205 @@ AC_ARG_WITH(showlistmodes,
 	[AS_HELP_STRING([--with-showlistmodes], [Specify whether modes are shown in /list])],
 	[AS_IF([test $withval = "yes"],
 		[AC_DEFINE([LIST_SHOW_MODES], [], [Define if you want modes shown in /list])])])
-AC_ARG_WITH(topicisnuhost, [AS_HELP_STRING([--with-topicisnuhost], [Display nick!user@host as the topic setter])],
-	[AS_IF([test $withval = "yes"],
-		[AC_DEFINE([TOPIC_NICK_IS_NUHOST], [], [Define if you want nick!user@host shown for the topic setter])])])
-AC_ARG_WITH(shunnotices, [AS_HELP_STRING([--with-shunnotices], [Notify a user when he/she is no longer shunned])],
-	[AS_IF([test $withval = "yes"],
-		[AC_DEFINE([SHUN_NOTICES], [], [Define if you want users to be notified when their shun is removed])])])
 AC_ARG_WITH(no-operoverride, [AS_HELP_STRING([--with-no-operoverride], [Disable OperOverride])],
 	[AS_IF([test $withval = "yes"],
 		[AC_DEFINE([NO_OPEROVERRIDE], [], [Define if you want OperOverride disabled])])])
-AC_ARG_WITH(disableusermod, [AS_HELP_STRING([--with-disableusermod], [Disable /set* and /chg*])],
-	[AS_IF([test $withval = "yes"],
-		[AC_DEFINE([DISABLE_USERMOD], [], [Define if you want to disable /set* and /chg*])])])
 AC_ARG_WITH(operoverride-verify, [AS_HELP_STRING([--with-operoverride-verify], [Require opers to invite themselves to +s/+p channels])],
 	[AS_IF([test $withval = "yes"],
 		[AC_DEFINE([OPEROVERRIDE_VERIFY], [], [Define if you want opers to have to use /invite to join +s/+p channels])])])
-AC_ARG_WITH(disable-extendedban-stacking, [AS_HELP_STRING([--with-disable-extendedban-stacking], [Disable extended ban stacking])],
-       [AS_IF([test $withval = "yes"],
-       		[AC_DEFINE([DISABLE_STACKED_EXTBANS], [], [Define to disable extended ban stacking (~q:~c:\#chan, etc)])])])
-AC_ARG_WITH(system-tre, [AS_HELP_STRING([--with-system-tre], [Use the system tre package instead of bundled, discovered using pkg-config])], [], [with_system_tre=no])
-AC_ARG_WITH(system-cares, [AS_HELP_STRING([--with-system-cares], [Use the system c-ares (at least version 1.6.0) package instead of bundled c-ares, discovered using pkg-config])], [], [with_system_cares=no])
+AC_ARG_WITH(system-pcre2, [AS_HELP_STRING([--without-system-pcre2], [Use the system pcre2 package instead of bundled, discovered using pkg-config])], [], [with_system_pcre2=yes])
+AC_ARG_WITH(system-argon2, [AS_HELP_STRING([--without-system-argon2], [Use bundled version instead of system argon2 library. Normally autodetected via pkg-config])], [], [with_system_argon2=yes])
+AC_ARG_WITH(system-sodium, [AS_HELP_STRING([--without-system-sodium], [Use bundled version instead of system sodium library. Normally autodetected via pkg-config])], [], [with_system_sodium=yes])
+AC_ARG_WITH(system-cares, [AS_HELP_STRING([--without-system-cares], [Use bundled version instead of system c-ares. Normally autodetected via pkg-config.])], [], [with_system_cares=yes])
 CHECK_SSL
-CHECK_ZLIB
+CHECK_SSL_CTX_SET1_CURVES_LIST
+CHECK_SSL_CTX_SET_MIN_PROTO_VERSION
+CHECK_SSL_CTX_SET_SECURITY_LEVEL
+CHECK_ASN1_TIME_diff
+CHECK_X509_get0_notAfter
 AC_ARG_ENABLE(dynamic-linking, [AS_HELP_STRING([--disable-dynamic-linking], [Make the IRCd statically link with shared objects rather than dynamically (noone knows if disabling dynamic linking actually does anything or not)])],
 	[enable_dynamic_linking=$enableval], [enable_dynamic_linking="yes"])
 AS_IF([test $enable_dynamic_linking = "yes"],
 	[AC_ENABLE_DYN],
 	[AC_DEFINE([STATIC_LINKING], [], [Link... statically(?) (defining this macro will probably cause the build tofail)])])
 
-AC_ARG_ENABLE([inet6], [AS_HELP_STRING([--enable-inet6], [Make the IRCd support IPv6])],
-	[AS_IF([test $enableval = "yes"],
-		[AC_ENABLE_INET6])])
-AC_SUBST(IRCDDIR)
-AC_SUBST(BINDIR)
-AC_MSG_CHECKING([if FD_SETSIZE is large enough to allow $ac_fd file descriptors])
-AC_COMPILE_IFELSE([
-#include <sys/types.h>
-#include <sys/time.h>
-int main() {
-#if FD_SETSIZE < $ac_fd
-#error FD_SETSIZE is smaller than $ac_fd
-#endif
-exit(0);
-}
-], AC_MSG_RESULT([yes]), [
-# must be passed on the commandline to avoid a ``warning, you redefined something''
-FD_SETSIZE="-DFD_SETSIZE=$ac_fd"
-AC_MSG_RESULT(no)
-])
-AC_SUBST([FD_SETSIZE])
+AC_ARG_ENABLE([werror],
+  [AS_HELP_STRING([--enable-werror],
+    [Turn compilation warnings into errors (-Werror)])],
+  [ac_cv_werror="$enableval"],
+  [ac_cv_werror="no"])
 
-case `uname -s` in
-	*SunOS*|*solaris*)
-		AC_DEFINE([_SOLARIS], [], [Define if you are compiling unrealircd on Sun's (or Oracle's?) Solaris])
-		IRCDLIBS="$IRCDLIBS -lresolv "
-		;;
-esac
+AC_ARG_ENABLE([asan],
+  [AS_HELP_STRING([--enable-asan],
+    [Enable address sanitizer and other debugging options, not recommended for production servers!])],
+  [ac_cv_asan="$enableval"],
+  [ac_cv_asan="no"])
+
+AC_CHECK_FUNCS([poll],
+	AC_DEFINE([HAVE_POLL], [], [Define if you have poll]))
+AC_CHECK_FUNCS([epoll_create epoll_ctl epoll_wait],
+	AC_DEFINE([HAVE_EPOLL], [], [Define if you have epoll]))
+AC_CHECK_FUNCS([kqueue kevent],
+	AC_DEFINE([HAVE_KQUEUE], [], [Define if you have kqueue]))
 
 dnl c-ares needs PATH_SEPARATOR set or it will
 dnl fail on certain solaris boxes. We might as
 dnl well set it here.
 export PATH_SEPARATOR
 
-AS_IF([test "x$with_system_tre" = "xno"],[
-dnl REMEMBER TO CHANGE WITH A NEW TRE RELEASE!
-tre_version="0.8.0"
-AC_MSG_RESULT(extracting TRE regex library)
+dnl Use system pcre2 when available, unless --without-system-pcre2.
+has_system_pcre2="no"
+AS_IF([test "x$with_system_pcre2" = "xyes"],[
+PKG_CHECK_MODULES([PCRE2], libpcre2-8 >= 10.00,[has_system_pcre2=yes
+AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libpcre2*])],[has_system_pcre2=no])])
+
+AS_IF([test "$has_system_pcre2" = "no"], [
+dnl REMEMBER TO CHANGE WITH A NEW PCRE2 RELEASE!
+pcre2_version="10.36"
+AC_MSG_RESULT(extracting PCRE2 regex library)
 cur_dir=`pwd`
 cd extras
-dnl remove old tre directory to force a recompile...
+dnl remove old pcre2 directory to force a recompile...
 dnl and remove its installation prefix just to clean things up.
-rm -rf tre-$tre_version rege[]xp
+rm -rf pcre2-$pcre2_version pcre2
 if test "x$ac_cv_path_GUNZIP" = "x" ; then
-	tar xfz tre.tar.gz
+	tar xfz pcre2.tar.gz
 else
-	cp tre.tar.gz tre.tar.gz.bak
-	gunzip -f tre.tar.gz
-	cp tre.tar.gz.bak tre.tar.gz
-	tar xf tre.tar
+	cp pcre2.tar.gz pcre2.tar.gz.bak
+	gunzip -f pcre2.tar.gz
+	cp pcre2.tar.gz.bak pcre2.tar.gz
+	tar xf pcre2.tar
 fi
-AC_MSG_RESULT(configuring TRE regex library)
-cd tre-$tre_version
-./configure --disable-agrep --disable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp || exit 1
-AC_MSG_RESULT(compiling TRE regex library)
+AC_MSG_RESULT(configuring PCRE2 regex library)
+cd pcre2-$pcre2_version
+./configure --enable-jit --enable-shared --disable-unicode --prefix=$cur_dir/extras/pcre2 --libdir=$PRIVATELIBDIR || exit 1
+AC_MSG_RESULT(compiling PCRE2 regex library)
 $ac_cv_prog_MAKER || exit 1
-AC_MSG_RESULT(installing TRE regex library)
+AC_MSG_RESULT(installing PCRE2 regex library)
 $ac_cv_prog_MAKER install || exit 1
-TRE_CFLAGS="-I$cur_dir/extras/regexp/include"
-AC_SUBST(TRE_CFLAGS)
-
-TRE_LIBS=
+PCRE2_CFLAGS="-I$cur_dir/extras/pcre2/include"
+AC_SUBST(PCRE2_CFLAGS)
+PCRE2_LIBS=
 dnl See c-ares's compilation section for more info on this hack.
-dnl ensure that we're linking against the bundled version of tre
+dnl ensure that we're linking against the bundled version of pcre2
 dnl (we only reach this code if linking against the bundled version is desired).
 AS_IF([test -n "$ac_cv_path_PKGCONFIG"],
-       [TRE_LIBS="`$ac_cv_path_PKGCONFIG --static --libs tre.pc | sed -e ['s,-L\([^ ]*regex[^ ]*lib\)\( .*\)-ltre,\1/libtre.a \2,']`"])
+       [PCRE2_LIBS="`$ac_cv_path_PKGCONFIG --libs libpcre2-8.pc`"])
 dnl For when pkg-config isn't available -- or for when pkg-config
-dnl doesn't see the tre.pc file somehow... (#3982)
-AS_IF([test -z "$TRE_LIBS"],
-       [TRE_LIBS="../extras/regexp/lib/libtre.a"])
-AC_SUBST(TRE_LIBS)
+dnl doesn't see the libpcre2-8.pc file somehow... (#3982)
+AS_IF([test -z "$PCRE2_LIBS"],
+       [PCRE2_LIBS="$PRIVATELIBDIR/libpcre2-8.so"])
+AC_SUBST(PCRE2_LIBS)
 cd $cur_dir
-],[
-dnl use pkgconfig for tre:
-PKG_CHECK_MODULES([TRE], tre >= 0.7.5)
 ])
 
-AS_IF([test "x$with_system_cares" = "xno"],[
+dnl Use system argon2 when available, unless --without-system-argon2
+has_system_argon2="no"
+AS_IF([test "x$with_system_argon2" = "xyes"],[
+PKG_CHECK_MODULES([ARGON2], [libargon2 >= 0~20161029],[has_system_argon2=yes
+AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libargon2*])],[has_system_argon2=no])])
+
+AS_IF([test "$has_system_argon2" = "no"],[
+dnl REMEMBER TO CHANGE WITH A NEW ARGON2 RELEASE!
+argon2_version="20181209"
+AC_MSG_RESULT(extracting Argon2 library)
+cur_dir=`pwd`
+cd extras
+dnl remove old argon2 directory to force a recompile...
+dnl and remove its installation prefix just to clean things up.
+rm -rf argon2-$argon2_version argon2
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz argon2-$argon2_version.tar.gz
+else
+	cp argon2-$argon2_version.tar.gz argon2-$argon2_version.tar.gz.bak
+	gunzip -f argon2-$argon2_version.tar.gz
+	cp argon2-$argon2_version.tar.gz.bak argon2-$argon2_version.tar.gz
+	tar xf argon2-$argon2_version.tar
+fi
+AC_MSG_RESULT(compiling Argon2 library)
+cd argon2-$argon2_version
+$ac_cv_prog_MAKER || exit 1
+AC_MSG_RESULT(installing Argon2 library)
+$ac_cv_prog_MAKER install PREFIX=$cur_dir/extras/argon2 || exit 1
+# We need to manually copy the libs to PRIVATELIBDIR because
+# there is no way to tell make install in libargon2 to do so.
+# BUT FIRST, delete the old library so it becomes an unlink+create
+# operation rather than overwriting the existing file which would
+# lead to a crash of the currently running IRCd.
+rm -f "$PRIVATELIBDIR/"libargon2*
+# Now copy the new library files:
+cp -av $cur_dir/extras/argon2/lib/* $PRIVATELIBDIR/
+ARGON2_CFLAGS="-I$cur_dir/extras/argon2/include"
+AC_SUBST(ARGON2_CFLAGS)
+ARGON2_LIBS="-L$PRIVATELIBDIR -largon2"
+AC_SUBST(ARGON2_LIBS)
+cd $cur_dir
+])
+
+dnl Use system sodium when available, unless --without-system-sodium
+has_system_sodium="no"
+AS_IF([test "x$with_system_sodium" = "xyes"],[
+PKG_CHECK_MODULES([SODIUM], [libsodium >= 1.0.16],[has_system_sodium=yes
+AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libsodium*])],[has_system_sodium=no])])
+
+AS_IF([test "$has_system_sodium" = "no"],[
+dnl REMEMBER TO CHANGE WITH A NEW SODIUM RELEASE!
+sodium_version="1.0.18"
+AC_MSG_RESULT(extracting sodium library)
+cur_dir=`pwd`
+cd extras
+dnl remove old sodium directory to force a recompile...
+dnl and remove its installation prefix just to clean things up.
+rm -rf sodium-$sodium_version sodium
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz libsodium.tar.gz
+else
+	cp libsodium.tar.gz libsodium.tar.gz.bak
+	gunzip -f libsodium.tar.gz
+	cp libsodium.tar.gz.bak libsodium.tar.gz
+	tar xf libsodium.tar
+fi
+AC_MSG_RESULT(compiling sodium library)
+cd libsodium-$sodium_version
+save_cflags="$CFLAGS"
+CFLAGS="$orig_cflags"
+export CFLAGS
+./configure --prefix=$cur_dir/extras/sodium --libdir=$PRIVATELIBDIR --enable-shared --disable-static --enable-opt || exit 1
+CFLAGS="$save_cflags"
+AC_MSG_RESULT(compiling sodium resolver library)
+$ac_cv_prog_MAKER || exit 1
+AC_MSG_RESULT(installing sodium resolver library)
+$ac_cv_prog_MAKER install || exit 1
+SODIUM_CFLAGS="-I$cur_dir/extras/sodium/include"
+AC_SUBST(SODIUM_CFLAGS)
+SODIUM_LIBS=
+dnl See c-ares's compilation section for more info on this hack.
+dnl ensure that we're linking against the bundled version
+dnl (we only reach this code if linking against the bundled version is desired).
+AS_IF([test -n "$ac_cv_path_PKGCONFIG"],
+       [SODIUM_LIBS="`$ac_cv_path_PKGCONFIG --libs libsodium.pc`"])
+dnl For when pkg-config isn't available
+AS_IF([test -z "$SODIUM_LIBS"],
+       [SODIUM_LIBS="-L$PRIVATELIBDIR -lsodium"])
+AC_SUBST(SODIUM_LIBS)
+cd $cur_dir
+])
+
+dnl Use system c-ares when available, unless --without-system-cares.
+has_system_cares="no"
+AS_IF([test "x$with_system_cares" = "xyes"],[
+PKG_CHECK_MODULES([CARES], libcares >= 1.6.0,[has_system_cares=yes
+AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libcares*])],[has_system_cares=no])])
+
+AS_IF([test "$has_system_cares" = "no"], [
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
-dnl NOTE: when changing this here, ALSO change it in ./curlinstall
+dnl NOTE: when changing this here, ALSO change it in extras/curlinstall
 dnl       and in the comment in this file around line 400!
+<<<<<<< HEAD
 cares_version="1.10.0"
+=======
+cares_version="1.17.1"
+>>>>>>> unreal52
 AC_MSG_RESULT(extracting c-ares resolver library)
 cur_dir=`pwd`
 cd extras
@@ -628,20 +740,24 @@ else
 fi
 AC_MSG_RESULT(configuring c-ares library)
 cd c-ares-$cares_version
-./configure --prefix=$cur_dir/extras/c-ares --disable-shared || exit 1
+save_cflags="$CFLAGS"
+CFLAGS="$orig_cflags"
+export CFLAGS
+./configure --prefix=$cur_dir/extras/c-ares --libdir=$PRIVATELIBDIR --enable-shared --disable-tests || exit 1
+CFLAGS="$save_cflags"
 AC_MSG_RESULT(compiling c-ares resolver library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing c-ares resolver library)
 $ac_cv_prog_MAKER install || exit 1
 CARES_CFLAGS="-I$cur_dir/extras/c-ares/include"
 AC_SUBST(CARES_CFLAGS)
-CARES_LIBS="-L../extras/c-ares/lib"
+CARES_LIBS="-L$PRIVATELIBDIR"
 
 dnl Set default library parameters for when pkg-config is not available
 dnl Ugly cd'ing out of extras/c-ares-xxx ;)
 dnl Note: must be a full path, not relative path.
 cd ../..
-CARESLIBSALT="`pwd`/extras/c-ares/lib/libcares.a"
+CARESLIBSALT="$PRIVATELIBDIR/libcares.so"
 cd -
 case `uname -s` in
 	*FreeBSD*)
@@ -656,35 +772,54 @@ case `uname -s` in
 esac
 
 dnl Use pkg-config for c-ares libraries, and if not available use defaults
-dnl from above. Also, if pkg-config returns an empty result (ex: on fbsd
-dnl or older versions it might be missing --static) then also use defaults.
+dnl from above (also if pkg-config returns an empty result).
 if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
 	CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
 else
 	CARES_LIBSPRE="$CARES_LIBS"
-	dnl the sed expression forces an absolute path to the .a file to be generated
+	dnl the sed expression forces an absolute path to the .so file to be generated
 	dnl because this is what libtool would do. If this wasn't done and /usr/lib*/libcares.so
 	dnl exists, then unrealircd would still try to link against the system c-ares.
 	dnl The [] quotation is needed because the sed expression has [] in it.
-	[CARES_LIBS="$CARES_LIBS `$ac_cv_path_PKGCONFIG --static --libs libcares.pc | sed -e 's,-L\([^ ]\+lib\) -lcares,\1/libcares.a,'`"]
+	[CARES_LIBS="$CARES_LIBS `$ac_cv_path_PKGCONFIG --libs libcares.pc | sed -e 's,-L\([^ ]\+lib\) -lcares,\1/libcares.so,'`"]
 	if test "$CARES_LIBS" = "$CARES_LIBSPRE " ; then
 		CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
 	fi
 fi
 AC_SUBST(CARES_LIBS)
 cd $cur_dir
-],[
-dnl use pkg-config for system c-ares:
-PKG_CHECK_MODULES([CARES], libcares >= 1.6.0)
 ])
+
+AX_PTHREAD()
 
 CHECK_LIBCURL
 
+UNRLINCDIR="`pwd`/include"
+
+dnl Moved to the very end to ensure it doesn't affect any libs or tests.
+if test "$ac_cv_werror" = "yes" ; then
+	CFLAGS="$CFLAGS -Werror"
+fi
+
+dnl Address sanitizer build
+if test "$ac_cv_asan" = "yes" ; then
+	CFLAGS="$CFLAGS -O1 -fno-inline -fsanitize=address -fno-omit-frame-pointer -DNOCLOSEFD"
+	IRCDLIBS="-fsanitize=address $IRCDLIBS"
+fi
+
+AC_SUBST(IRCDLIBS)
+
+AC_SUBST(UNRLINCDIR)
+
 AC_CONFIG_FILES([Makefile
+	src/Makefile
 	src/modules/Makefile
-	unreal
-	ircdcron/ircdchk
-	ircdcron/ircd.cron])
+	src/modules/chanmodes/Makefile
+	src/modules/usermodes/Makefile
+	src/modules/snomasks/Makefile
+	src/modules/extbans/Makefile
+	src/modules/third/Makefile
+	extras/unrealircd-upgrade-script
+	unrealircd])
 AC_OUTPUT
-chmod 0700 unreal
-chmod 0700 ircdcron/ircdchk
+chmod 0700 unrealircd

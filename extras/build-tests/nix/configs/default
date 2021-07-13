@@ -1,0 +1,24 @@
+#
+BASEPATH=$HOME/unrealircd
+BINDIR=$HOME/unrealircd/bin
+DATADIR=$HOME/unrealircd/data
+CONFDIR=$HOME/unrealircd/conf
+MODULESDIR=$HOME/unrealircd/modules
+LOGDIR=$HOME/unrealircd/logs
+CACHEDIR=$HOME/unrealircd/cache
+DOCDIR=$HOME/unrealircd/doc
+TMPDIR=$HOME/unrealircd/tmp
+PRIVATELIBDIR=$HOME/unrealircd/lib
+PREFIXAQ="1"
+MAXCONNECTIONS="1024"
+NICKNAMEHISTORYLENGTH="2000"
+DEFPERM="0600"
+SSLDIR=""
+REMOTEINC=""
+CURLDIR=""
+SHOWLISTMODES="1"
+NOOPEROVERRIDE=""
+OPEROVERRIDEVERIFY=""
+GENCERTIFICATE="0"
+EXTRAPARA="--enable-werror --enable-asan"
+ADVANCED=""

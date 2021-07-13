@@ -1,4 +1,3 @@
-
 /************************************************************************
 *   IRC - Internet Relay Chat, src/whowas.c
 *   Copyright (C) 1990 Markku Savela
@@ -18,18 +17,11 @@
 *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "h.h"
-#include "hash.h"
-#include "proto.h"
-#include "msg.h"
-#include <string.h>
+#include "unrealircd.h"
 
-/* externally defined functions */
-unsigned int hash_whowas_name(char *);	/* defined in hash.c */
+// FIXME: move this to cmd_whowas,
+// Consider making add_history an efunc? Or via a hook?
+// Some users may not want to load cmd_whowas at all.
 
 /* internally defined function */
 static void add_whowas_to_clist(aWhowas **, aWhowas *);
@@ -38,13 +30,11 @@ static void add_whowas_to_list(aWhowas **, aWhowas *);
 static void del_whowas_from_list(aWhowas **, aWhowas *);
 
 aWhowas MODVAR WHOWAS[NICKNAMEHISTORYLENGTH];
-aWhowas MODVAR *WHOWASHASH[WW_MAX];
+aWhowas MODVAR *WHOWASHASH[WHOWAS_HASH_TABLE_SIZE];
 
-MODVAR int  whowas_next = 0;
-#define AllocCpy(x,y) x = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
-#define SafeFree(x) if (x) { MyFree((x)); (x) = NULL; }
+MODVAR int whowas_next = 0;
 
-void add_history(aClient *cptr, int online)
+void add_history(Client *client, int online)
 {
 	aWhowas *new;
 
@@ -52,42 +42,40 @@ void add_history(aClient *cptr, int online)
 
 	if (new->hashv != -1)
 	{
-		SafeFree(new->name);
-		SafeFree(new->hostname);
-		SafeFree(new->virthost);
-		SafeFree(new->realname);
-		SafeFree(new->username);
+		safe_free(new->name);
+		safe_free(new->hostname);
+		safe_free(new->virthost);
+		safe_free(new->realname);
+		safe_free(new->username);
 		new->servername = NULL;
 
 		if (new->online)
 			del_whowas_from_clist(&(new->online->user->whowas), new);
 		del_whowas_from_list(&WHOWASHASH[new->hashv], new);
 	}
-	new->hashv = hash_whowas_name(cptr->name);
+	new->hashv = hash_whowas_name(client->name);
 	new->logoff = TStime();
-	new->umodes = cptr->umodes;
-	AllocCpy(new->name, cptr->name);
-	AllocCpy(new->username, cptr->user->username);
-	AllocCpy(new->hostname, cptr->user->realhost);
-	if (cptr->user->virthost)
-	{
-		AllocCpy(new->virthost, cptr->user->virthost);
-	}
+	new->umodes = client->umodes;
+	safe_strdup(new->name, client->name);
+	safe_strdup(new->username, client->user->username);
+	safe_strdup(new->hostname, client->user->realhost);
+	if (client->user->virthost)
+		safe_strdup(new->virthost, client->user->virthost);
 	else
-		new->virthost = strdup("");
-	new->servername = cptr->user->server;
-	AllocCpy(new->realname, cptr->info);
+		safe_strdup(new->virthost, "");
+	new->servername = client->user->server;
+	safe_strdup(new->realname, client->info);
 
 	/* Its not string copied, a pointer to the scache hash is copied
 	   -Dianora
 	 */
-	/*  strncpyzt(new->servername, cptr->user->server,HOSTLEN); */
-	new->servername = cptr->user->server;
+	/*  strlcpy(new->servername, client->user->server,HOSTLEN); */
+	new->servername = client->user->server;
 
 	if (online)
 	{
-		new->online = cptr;
-		add_whowas_to_clist(&(cptr->user->whowas), new);
+		new->online = client;
+		add_whowas_to_clist(&(client->user->whowas), new);
 	}
 	else
 		new->online = NULL;
@@ -97,19 +85,19 @@ void add_history(aClient *cptr, int online)
 		whowas_next = 0;
 }
 
-void off_history(aClient *cptr)
+void off_history(Client *client)
 {
 	aWhowas *temp, *next;
 
-	for (temp = cptr->user->whowas; temp; temp = next)
+	for (temp = client->user->whowas; temp; temp = next)
 	{
 		next = temp->cnext;
 		temp->online = NULL;
-		del_whowas_from_clist(&(cptr->user->whowas), temp);
+		del_whowas_from_clist(&(client->user->whowas), temp);
 	}
 }
 
-aClient *get_history(char *nick, time_t timelimit)
+Client *get_history(char *nick, time_t timelimit)
 {
 	aWhowas *temp;
 	int  blah;
@@ -154,10 +142,10 @@ void initwhowas()
 
 	for (i = 0; i < NICKNAMEHISTORYLENGTH; i++)
 	{
-		bzero((char *)&WHOWAS[i], sizeof(aWhowas));
+		memset(&WHOWAS[i], 0, sizeof(aWhowas));
 		WHOWAS[i].hashv = -1;
 	}
-	for (i = 0; i < WW_MAX; i++)
+	for (i = 0; i < WHOWAS_HASH_TABLE_SIZE; i++)
 		WHOWASHASH[i] = NULL;
 }
 
@@ -189,7 +177,6 @@ static void add_whowas_to_list(aWhowas ** bucket, aWhowas * whowas)
 
 static void del_whowas_from_list(aWhowas ** bucket, aWhowas * whowas)
 {
-
 	if (whowas->prev)
 		whowas->prev->next = whowas->next;
 	else

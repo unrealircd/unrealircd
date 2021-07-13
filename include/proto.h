@@ -22,55 +22,54 @@
 
 #ifndef proto_h
 #define proto_h
-/* channel.c */
-int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *param, TS creationtime);
-void make_cmodestr(void);
-
 /* lusers.c */
-void init_ircstats(void);
+extern void init_irccounts(void);
 
 /* match.c */
-char *collapse(char *pattern);
+extern char *collapse(char *pattern);
 
 /* scache.c */
-void clear_scache_hash_table(void);
+extern void clear_scache_hash_table(void);
 
 /* send.c */
-void sendto_one(aClient *, char *, ...) __attribute__((format(printf,2,3)));
-void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...) __attribute__((format(printf,3,4)));
-void sendto_realops(char *pattern, ...) __attribute__((format(printf,1,2)));
-void sendto_serv_butone_token(aClient *one, char *prefix, char *command, 
-                              char *token, char *pattern, ...) __attribute__((format(printf,5,6)));
-void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, 
-                                  char *command, char *token, char *pattern, ...) __attribute__((format(printf,6,7)));
-void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...) __attribute__((format(printf,3,4))); 
+extern void sendto_one(Client *, MessageTag *mtags, FORMAT_STRING(const char *), ...) __attribute__((format(printf,3,4)));
+extern void sendto_realops(FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,1,2)));
 
-/* fdlist.c */
-EVENT(lcf_check);
-EVENT(htm_calc);
 /* ircd.c */
+<<<<<<< HEAD
 EVENT(e_check_fdlists);
 EVENT(garbage_collect);
 EVENT(loop_event);
 EVENT(deprecated_notice);
+=======
+extern EVENT(garbage_collect);
+extern EVENT(loop_event);
+extern EVENT(check_pings);
+extern EVENT(handshake_timeout);
+extern EVENT(check_deadsockets);
+extern EVENT(try_connections);
+>>>>>>> unreal52
 /* support.c */
-char *my_itoa(int i);
+extern char *my_itoa(int i);
 
 /* s_serv.c */
-void load_tunefile(void);
+extern void load_tunefile(void);
 extern EVENT(save_tunefile);
-extern void read_motd(const char *filename, aMotdFile *motd);
+extern void read_motd(const char *filename, MOTDFile *motd);
 
 /* s_user.c */
-int  check_for_target_limit(aClient *sptr, void *target, const char *name);
-void make_umodestr(void);
+extern int target_limit_exceeded(Client *client, void *target, const char *name);
+extern void make_umodestr(void);
+extern char *get_usermode_string(Client *acptr);
 
-/* webtv.c */
-int  is_halfop(aClient *cptr, aChannel *chptr);
-int  is_chanprot(aClient *cptr, aChannel *chptr);
-char *convert_time(time_t ltime);
-char *get_mode_str(aClient *acptr);
+/* s_misc.c */
+extern char *convert_time(time_t ltime);
 
 /* whowas.c */
-void initwhowas(void);
+extern void initwhowas(void);
+
+/* uid.c */
+extern void uid_init(void);
+extern const char *uid_get(void);
+
 #endif /* proto_h */

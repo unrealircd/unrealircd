@@ -22,8 +22,8 @@
 #include "version.h"
 
 /* What all this is for? Well, it's simple...
- * Example: When someone compiles a module with zip support, but the
- * core was not compiled with zip support, then the module will read
+ * Example: When someone compiles a module with ssl support, but the
+ * core was not compiled with ssl support, then the module will read
  * things incorrect in the struct because the module sees an extra
  * field half-way the struct but in the core that field does not exist,
  * hence all data is shifted 4 bytes causing all kinds of odd crashes,
@@ -32,48 +32,19 @@
  * options that cause binary incompatability (eg: changing nicklen),
  * we just take the most common ones...
  *
- * NOTE: On win32 we allow ssl and zip inconsistencies because we
+ * NOTE: On win32 we allow ssl inconsistencies because we
  *       explicitly use "padding" in the structs: we add a useless
  *       placeholder so everything is still aligned correctly.
  *       In the process of doing so, we waste several bytes per-user,
  *       but this prevents (most) binary incompatability problems
  *       making it easier for module coders to ship dll's.
  */
- #if defined(USE_SSL) && !defined(_WIN32)
+ #ifndef _WIN32
   #define MYTOKEN_SSL "/SSL"
  #else
   #define MYTOKEN_SSL ""
  #endif
- #if defined(ZIP_LINKS) && !defined(_WIN32)
-  #define MYTOKEN_ZIP "/ZIP"
- #else
-  #define MYTOKEN_ZIP ""
- #endif
- #if !defined(EXTCMODE)
-  #define MYTOKEN_EXTCMODE "/NOEXTC"
- #else
-  #define MYTOKEN_EXTCMODE ""
- #endif
- #if !defined(JOINTHROTTLE)
-  #define MYTOKEN_JOINTHROTTLE "/NOJTHR"
- #else
-  #define MYTOKEN_JOINTHROTTLE ""
- #endif
- #if !defined(NO_FLOOD_AWAY)
-  #define MYTOKEN_NOFLDAWAY "/NONFA"
- #else
-  #define MYTOKEN_NOFLDAWAY ""
- #endif
- #if !defined(NEWCHFLOODPROT)
-  #define MYTOKEN_NEWCHF "/NOCHF"
- #else
-  #define MYTOKEN_NEWCHF ""
- #endif
- #ifdef INET6
-  #define MYTOKEN_INET6 "/IPV6"
- #else
-  #define MYTOKEN_INET6 ""
- #endif
+ #define MYTOKEN_NEWCHF "/NOCHF"
 
 #ifdef __GNUC__
  #if defined(__GNUC_PATCHLEVEL__)
@@ -87,13 +58,11 @@
   
 
 #ifdef UNREALCORE
-  char our_mod_version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH6 PATCH7 PATCH8 PATCH9 \
-                               MYTOKEN_SSL MYTOKEN_ZIP MYTOKEN_EXTCMODE MYTOKEN_JOINTHROTTLE \
-                               MYTOKEN_NOFLDAWAY MYTOKEN_NEWCHF MYTOKEN_INET6;
+  char our_mod_version[] = BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH6 PATCH7 PATCH8 PATCH9 \
+                               MYTOKEN_SSL MYTOKEN_NEWCHF;
   unsigned int our_compiler_version = GCCVER;
 #else
-  DLLFUNC char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH6 PATCH7 PATCH8 PATCH9 \
-                               MYTOKEN_SSL MYTOKEN_ZIP MYTOKEN_EXTCMODE MYTOKEN_JOINTHROTTLE \
-                               MYTOKEN_NOFLDAWAY MYTOKEN_NEWCHF MYTOKEN_INET6;
+  DLLFUNC char Mod_Version[] = BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH6 PATCH7 PATCH8 PATCH9 \
+                               MYTOKEN_SSL MYTOKEN_NEWCHF;
   DLLFUNC unsigned int compiler_version = GCCVER;
 #endif

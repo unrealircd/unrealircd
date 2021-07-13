@@ -25,24 +25,6 @@
 /* PATH_MAX */
 #include <limits.h>
 
-/* alloca stuff */
-#ifdef _WIN32
-# include <malloc.h>
-# define alloca _alloca
-#else /* _WIN32 */
-# ifdef HAVE_ALLOCA
-#  if defined(_AIX) && !defined(__GNUC__)
-    #pragma alloca
-#  endif /* _AIX */
-#  if defined(HAVE_ALLOCA_H)
-#   include <alloca.h>
-#  endif /* HAVE_ALLOCA_H */
-#  if defined(__GNUC__) && !defined(HAVE_ALLOCA_H) && !defined(alloca)
-#   define alloca __builtin_alloca
-#  endif /* __GNUC__ */
-# endif /* HAVE_ALLOCA */
-#endif /* !_WIN32 */
-
 #ifdef ISC202
 #include <net/errno.h>
 #else
@@ -55,20 +37,13 @@
 #include <sys/param.h>
 #else
 #include <stdarg.h>
+#include <process.h>
 #endif
-
-#ifdef	UNISTDH
-#include <unistd.h>
-#endif
-#ifdef	STDLIBH
 #include <stdlib.h>
-#endif
-#ifdef	STRINGSH
+#ifndef _WIN32
+#include <unistd.h>
 #include <strings.h>
-#else
-# ifdef	STRINGH
-# include <string.h>
-# endif
+#include <sys/resource.h>
 #endif
 
 /* get intptr_t if the system provides it -- otherwise, ./configure will define it for us */
@@ -83,55 +58,28 @@
 #ifdef SSL
 #include <openssl/ssl.h>
 #endif
-#ifdef INET6
+#ifndef _WIN32
 #include <netinet/in.h>
 #include <sys/socket.h>
-#endif
-#ifdef _WIN32
-#define _WIN32_WINNT 0x0501
+#include <arpa/inet.h>
+#else
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #endif
-#ifndef GOT_STRCASECMP
-#define	strcasecmp	mycmp
-#define	strncasecmp	myncmp
-#endif
 
-#ifdef NOINDEX
-#define   index   strchr
-#define   rindex  strrchr
-/*
-extern	char	*index(char *, char);
-extern	char	*rindex(char *, char);
-*/
+#ifndef _WIN32
+#include <sys/time.h>
 #endif
-#ifdef NOBCOPY
-#define bcopy(x,y,z)	memcpy(y,x,z)
-#define bcmp(x,y,z)	memcmp(x,y,z)
-#define bzero(p,s)	memset(p,0,s)
-#endif
-
-#ifdef AIX
-#include <sys/select.h>
-#endif
-#if defined(HPUX )|| defined(AIX) || defined(_WIN32)
 #include <time.h>
-#ifdef AIX
-#include <sys/time.h>
-#endif
-#else
-#include <sys/time.h>
-#endif
-#ifdef NEXT
-#define VOIDSIG int		/* whether signal() returns int of void */
-#else
-#define VOIDSIG void		/* whether signal() returns int of void */
-#endif
 
-#ifdef _SOLARIS
-#define OPT_TYPE char		/* opt type for get/setsockopt */
-#else
-#define OPT_TYPE void
+#ifndef _WIN32
+#include <sys/wait.h>
+#ifndef WEXITSTATUS
+#define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
+#endif
+#ifndef WIFEXITED
+#define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
+#endif
 #endif
 
 /*
@@ -149,7 +97,7 @@ extern	char	*rindex(char *, char);
 #endif
 
 #ifndef _WIN32
-extern VOIDSIG dummy();
+extern void dummy();
 #endif
 
 #ifdef	NO_U_TYPES
@@ -163,74 +111,12 @@ typedef unsigned int u_int;
 #define MYOSNAME OSName
 extern char OSName[256];
 #define PATH_MAX MAX_PATH
+#define getpid _getpid
 #else
 #define MYOSNAME getosname()
 #endif
-#ifdef DEBUGMODE
-// #define ircsprintf sprintf
-//#define ircvsprintf vsprintf
-#endif
 
-#ifdef _WIN32
-typedef unsigned short u_int16_t;
-#endif
-
-/*
- *  IPv4 or IPv6 structures?
- */
-
-# define MYDUMMY_SIZE 128
-
-
-#ifdef INET6
-
-# define AND16(x) ((x)[0]&(x)[1]&(x)[2]&(x)[3]&(x)[4]&(x)[5]&(x)[6]&(x)[7]&(x)[8]&(x)[9]&(x)[10]&(x)[11]&(x)[12]&(x)[13]&(x)[14]&(x)[15])
-# define WHOSTENTP(x) ((x)[0]|(x)[1]|(x)[2]|(x)[3]|(x)[4]|(x)[5]|(x)[6]|(x)[7]|(x)[8]|(x)[9]|(x)[10]|(x)[11]|(x)[12]|(x)[13]|(x)[14]|(x)[15])
-
-# define	AFINET		AF_INET6
-# define	SOCKADDR_IN	sockaddr_in6
-# define	SOCKADDR	sockaddr
-# define	SIN_FAMILY	sin6_family
-# define	SIN_PORT	sin6_port
-# define	SIN_ADDR	sin6_addr
-# define	S_ADDR		s6_addr
-# define	IN_ADDR		in6_addr
-
-// # ifndef uint32_t
-//#  define uint32_t __u32
-// # endif
-
-char mydummy[MYDUMMY_SIZE];
-char mydummy2[MYDUMMY_SIZE];
-
-# if defined(linux) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(bsdi)
-#  ifndef s6_laddr
-#   define s6_laddr        s6_addr32
-#  endif
-# endif
-
-# if defined(linux) && defined(NO_IN6ADDR_ANY)
-static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0
-};
-
-# endif
-
-# define IRCDCONF_DELIMITER '%'
-
-#else
-# define	AFINET		AF_INET
-# define	SOCKADDR_IN	sockaddr_in
-# define	SOCKADDR	sockaddr
-# define	SIN_FAMILY	sin_family
-# define	SIN_PORT	sin_port
-# define	SIN_ADDR	sin_addr
-# define	S_ADDR		s_addr
-# define	IN_ADDR		in_addr
-
-# define WHOSTENTP(x) (x)
-# define IRCDCONF_DELIMITER ':'
-#endif
+#define MYDUMMY_SIZE 128
 
 /*
  * Socket, File, and Error portability macros
@@ -253,6 +139,7 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define P_EWORKING		EINPROGRESS
 #define P_EINTR         EINTR
 #define P_ETIMEDOUT     ETIMEDOUT
+#define P_ENETUNREACH	ENETUNREACH
 #define P_ENOTSOCK	ENOTSOCK
 #define P_EIO		EIO
 #define P_ECONNABORTED	ECONNABORTED
@@ -282,6 +169,7 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define P_EWORKING		WSAEWOULDBLOCK
 #define P_EINTR         WSAEINTR
 #define P_ETIMEDOUT     WSAETIMEDOUT
+#define P_ENETUNREACH	WSAENETUNREACH
 #define P_ENOTSOCK	WSAENOTSOCK
 #define P_EIO		EIO
 #define P_ECONNABORTED	WSAECONNABORTED
@@ -292,6 +180,61 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 #ifndef __GNUC__
 #define __attribute__(x) /* nothing */
+#endif
+
+#undef FORMAT_STRING
+#if _MSC_VER >= 1400
+# include <sal.h>
+# if _MSC_VER > 1400
+#  define FORMAT_STRING(p) _Printf_format_string_ p
+# else
+#  define FORMAT_STRING(p) __format_string p
+# endif /* FORMAT_STRING */
+#else
+# define FORMAT_STRING(p) p
+#endif /* _MSC_VER */
+
+/* A normal abort() on windows causes the crucial stack frame to be missing
+ * from the stack trace, IOTW: you don't see where abort() was called!
+ * It's silly but this works:
+ */
+#ifdef _WIN32
+ #define abort()  do { char *crash = NULL; *crash = 'x'; exit(1); } while(0)
+#endif
+
+#ifndef SOMAXCONN
+# define LISTEN_SIZE	(5)
+#else
+# define LISTEN_SIZE	(SOMAXCONN)
+#endif
+
+/*
+ * Try and find the correct name to use with getrlimit() for setting the max.
+ * number of files allowed to be open by this process.
+ */
+#ifdef RLIMIT_FDMAX
+# define RLIMIT_FD_MAX   RLIMIT_FDMAX
+#else
+# ifdef RLIMIT_NOFILE
+#  define RLIMIT_FD_MAX RLIMIT_NOFILE
+# else
+#  ifdef RLIMIT_OPEN_MAX
+#   define RLIMIT_FD_MAX RLIMIT_OPEN_MAX
+#  else
+#   undef RLIMIT_FD_MAX
+#  endif
+# endif
+#endif
+
+#ifdef NATIVE_BIG_ENDIAN
+ #if defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__)
+  #include <sys/endian.h>
+  #define bswap_64 bswap64
+  #define bswap_32 bswap32
+  #define bswap_16 bswap16
+ #else
+  #include <byteswap.h>
+ #endif
 #endif
 
 #endif /* __sys_include__ */

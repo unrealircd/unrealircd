@@ -1,90 +1,57 @@
 /* Unreal Internet Relay Chat Daemon, src/channel.c
- *   Copyright (C) 1990 Jarkko Oikarinen and
- *                      University of Oulu, Co Center
+ * (C) Copyright 1990 Jarkko Oikarinen and
+ *                    University of Oulu, Co Center
+ * (C) Copyright 1999-present The UnrealIRCd team
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 1, or (at your option)
- *   any later version.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 1, or (at your option)
+ * any later version.
  *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
- * 23 Jun 1999
- * Changing unsigned int modes to long
- * --- Sts - 28 May 1999
-    Incorporated twilight mode system
-*/
-/* -- Jto -- 09 Jul 1990
- * Bug fix
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* -- Jto -- 03 Jun 1990
- * Moved m_channel() and related functions from s_msg.c to here
- * Many changes to start changing into string channels...
+/** @file
+ * @brief Various important (common) channel functions.
  */
 
-/* -- Jto -- 24 May 1990
- * Moved is_full() from list.c
- */
+#include "unrealircd.h"
 
-
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "channel.h"
-#include "msg.h"		/* For TOK_*** and MSG_*** strings  */
-#include "hash.h"		/* For CHANNELHASHSIZE */
-#include "h.h"
-#include "proto.h"
-#include <string.h>
-
-ID_Copyright
-    ("(C) 1990 University of Oulu, Computing Center and Jarkko Oikarinen");
-
+/** Lazy way to signal an OperOverride MODE */
 long opermode = 0;
-aChannel *channel = NullChn;
-extern char backupbuf[];
-extern ircstats IRCstats;
-
-#ifndef NO_FDLIST
-extern int lifesux;
-#endif
-
-/* Some forward declarations */
-void add_invite(aClient *, aChannel *);
-char *clean_ban_mask(char *, int, aClient *);
-void channel_modes(aClient *, char *, char *, aChannel *);
-int check_channelmask(aClient *, aClient *, char *);
-
-void sub1_from_channel(aChannel *);
-
-void clean_channelname(char *);
-void del_invite(aClient *, aChannel *);
-
-#ifdef NEWCHFLOODPROT
-void chanfloodtimer_del(aChannel *chptr, char mflag, long mbit);
-void chanfloodtimer_stopchantimers(aChannel *chptr);
-#endif
-
-/*
- * some buffers for rebuilding channel/nick lists with ,'s
+/** Lazy way to signal an SAJOIN MODE */
+long sajoinmode = 0;
+/** List of all channels on the server.
+ * @ingroup ListFunctions
+ * @section channels_example Example
+ * This code will list all channels on the network.
+ * @code
+ * sendnotice(client, "List of all channels:");
+ * for (channel = channels; channel; channel=channel->nextch)
+ *     sendnotice(client, "Channel %s", channel->name);
+ * @endcode
  */
-static char nickbuf[BUFSIZE], buf[BUFSIZE];
-MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
-#include "sjoin.h"
+Channel *channels = NULL;
 
-#define MODESYS_LINKOK		/* We do this for a TEST  */
-aCtab cFlagTab[] = {
-	{MODE_LIMIT, 'l', 0, 1},
+/* some buffers for rebuilding channel/nick lists with comma's */
+static char buf[BUFSIZE];
+/** Mode buffer (eg: "+sntkl") */
+MODVAR char modebuf[BUFSIZE];
+/** Parameter buffer (eg: "key 123") */
+MODVAR char parabuf[BUFSIZE];
+
+/** This describes the letters, modes and options for core channel modes.
+ * These are +ntmispklr and also the list modes +vhoaq and +beI.
+ */
+CoreChannelModeTable corechannelmodetable[] = {
+	{MODE_LIMIT, 'l', 1, 1},
 	{MODE_VOICE, 'v', 1, 1},
 	{MODE_HALFOP, 'h', 0, 1},
 	{MODE_CHANOP, 'o', 0, 1},
@@ -96,43 +63,22 @@ aCtab cFlagTab[] = {
 	{MODE_INVITEONLY, 'i', 1, 0},
 	{MODE_KEY, 'k', 1, 1},
 	{MODE_RGSTR, 'r', 0, 0},
-	{MODE_RGSTRONLY, 'R', 0, 0},
-	{MODE_NOCOLOR, 'c', 0, 0},
-	{MODE_CHANPROT, 'a', 0, 1},
+	{MODE_CHANADMIN, 'a', 0, 1},
 	{MODE_CHANOWNER, 'q', 0, 1},
-	{MODE_OPERONLY, 'O', 0, 0},
-	{MODE_ADMONLY, 'A', 0, 0},
-	{MODE_LINK, 'L', 0, 1},
-	{MODE_NOKICKS, 'Q', 0, 0},
 	{MODE_BAN, 'b', 1, 1},
-	{MODE_STRIP, 'S', 0, 0},	/* works? */
-	{MODE_EXCEPT, 'e', 1, 0},	/* exception ban */
-	{MODE_INVEX, 'I', 1, 0},	/* exception ban */
-	{MODE_NOKNOCK, 'K', 0, 0},	/* knock knock (no way!) */
-	{MODE_NOINVITE, 'V', 0, 0},	/* no invites */
-	{MODE_FLOODLIMIT, 'f', 0, 1},	/* flood limiter */
-	{MODE_MODREG, 'M', 0, 0},	/* Need umode +r to talk */
-	{MODE_NOCTCP, 'C', 0, 0},	/* no CTCPs */
-	{MODE_AUDITORIUM, 'u', 0, 0},
-	{MODE_ONLYSECURE, 'z', 0, 0},
-	{MODE_NONICKCHANGE, 'N', 0, 0},
-	{0x0, 0x0, 0x0}
+	{MODE_EXCEPT, 'e', 1, 1},	/* exception ban */
+	{MODE_INVEX, 'I', 1, 1},	/* invite-only exception */
+	{0x0, 0x0, 0x0, 0x0}
 };
 
-
-#define	BADOP_BOUNCE	1
-#define	BADOP_USER	2
-#define	BADOP_SERVER	3
-#define	BADOP_OVERRIDE	4
-
+/** The advertised supported channel modes in the 004 numeric */
 char cmodestring[512];
 
-inline int op_can_override(aClient *sptr)
+/** Returns 1 if the IRCOp can override or is a remote connection */
+inline int op_can_override(char *acl, Client *client,Channel *channel,void* extra)
 {
 #ifndef NO_OPEROVERRIDE
-	if (!IsOper(sptr))
-		return 0;
-	if (MyClient(sptr) && !OPCanOverride(sptr))
+	if (MyUser(client) && !(ValidatePermissionsForPath(acl,client,NULL,channel,extra)))
 		return 0;
 	return 1;
 #else
@@ -140,30 +86,10 @@ inline int op_can_override(aClient *sptr)
 #endif
 }
 
-void make_cmodestr(void)
+/** Returns 1 if a half-op can set this channel mode */
+int Halfop_mode(long mode)
 {
-	char *p = &cmodestring[0];
-	aCtab *tab = &cFlagTab[0];
-#ifdef EXTCMODE
-	int i;
-#endif
-	while (tab->mode != 0x0)
-	{
-		*p = tab->flag;
-		p++;
-		tab++;
-	}
-#ifdef EXTCMODE
-	for (i=0; i <= Channelmode_highest; i++)
-		if (Channelmode_Table[i].flag)
-			*p++ = Channelmode_Table[i].flag;
-#endif
-	*p = '\0';
-}
-
-int  Halfop_mode(long mode)
-{
-	aCtab *tab = &cFlagTab[0];
+	CoreChannelModeTable *tab = &corechannelmodetable[0];
 
 	while (tab->mode != 0x0)
 	{
@@ -175,9 +101,7 @@ int  Halfop_mode(long mode)
 }
 
 
-/*
- * return the length (>=0) of a chain of links.
- */
+/** Returns the length (entry count) of a +beI list */
 static int list_length(Link *lp)
 {
 	int  count = 0;
@@ -187,43 +111,46 @@ static int list_length(Link *lp)
 	return count;
 }
 
-Member	*find_member_link(Member *lp, aClient *ptr)
+/** Find client in a Member linked list (eg: channel->members) */
+Member *find_member_link(Member *lp, Client *ptr)
 {
 	if (ptr)
+	{
 		while (lp)
 		{
-			if (lp->cptr == ptr)
+			if (lp->client == ptr)
 				return (lp);
 			lp = lp->next;
-		}	
+		}
+	}
 	return NULL;
 }
 
-Membership *find_membership_link(Membership *lp, aChannel *ptr)
+/** Find channel in a Membership linked list (eg: client->user->channel) */
+Membership *find_membership_link(Membership *lp, Channel *ptr)
 {
 	if (ptr)
 		while (lp)
 		{
-			if (lp->chptr == ptr)
+			if (lp->channel == ptr)
 				return (lp);
 			lp = lp->next;
 		}
 	return NULL;
 }
-/* 
- * Member functions
-*/
-Member	*make_member(void)
+
+/** Allocate and return an empty Member struct */
+static Member *make_member(void)
 {
 	Member *lp;
 	unsigned int	i;
 
 	if (freemember == NULL)
 	{
-		for (i = 1; i <= (4072/sizeof(Member)); ++i)		
+		for (i = 1; i <= (4072/sizeof(Member)); ++i)
 		{
-			lp = (Member *)MyMalloc(sizeof(Member));
-			lp->cptr = NULL;
+			lp = safe_alloc(sizeof(Member));
+			lp->client = NULL;
 			lp->flags = 0;
 			lp->next = freemember;
 			freemember = lp;
@@ -235,103 +162,69 @@ Member	*make_member(void)
 	return lp;
 }
 
-void	free_member(Member *lp)
+/** Free a Member struct */
+static void free_member(Member *lp)
 {
-	if (lp)
-	{
-		lp->next = freemember;
-		lp->cptr = NULL;
-		lp->flags = 0;
-		freemember = lp;
-	}
+	if (!lp)
+		return;
+	moddata_free_member(lp);
+	memset(lp, 0, sizeof(Member));
+	lp->next = freemember;
+	lp->client = NULL;
+	lp->flags = 0;
+	freemember = lp;
 }
 
-/* 
- * Membership functions
-*/
-Membership	*make_membership(int local)
+/** Allocate and return an empty Membership struct */
+static Membership *make_membership(void)
 {
-	Membership *lp = NULL;
-	MembershipL *lp2 = NULL;
+	Membership *m = NULL;
 	unsigned int	i;
 
-	if (!local)
+	if (freemembership == NULL)
 	{
-		if (freemembership == NULL)
+		for (i = 1; i <= (4072/sizeof(Membership)); i++)
 		{
-			for (i = 1; i <= (4072/sizeof(Membership)); i++)
-			{
-				lp = (Membership *)MyMalloc(sizeof(Membership));
-				lp->next = freemembership;
-				freemembership = lp;
-			}
-			lp = freemembership;
-			freemembership = lp->next;
+			m = safe_alloc(sizeof(Membership));
+			m->next = freemembership;
+			freemembership = m;
 		}
-		else
-		{
-			lp = freemembership;
-			freemembership = freemembership->next;
-		}
-		bzero(lp, sizeof(Membership));
+		m = freemembership;
+		freemembership = m->next;
 	}
 	else
 	{
-		if (freemembershipL == NULL)
-		{
-			for (i = 1; i <= (4072/sizeof(MembershipL)); i++)		
-			{
-				lp2 = (MembershipL *)MyMalloc(sizeof(MembershipL));
-				lp2->next = (Membership *) freemembershipL;
-				freemembershipL = lp2;
-			}
-			lp2 = freemembershipL;
-			freemembershipL = (MembershipL *) lp2->next;
-			Debug((DEBUG_ERROR, "floodmode::alloc gotone"));
-		}
-		else
-		{
-			lp2 = freemembershipL;
-			freemembershipL = (MembershipL *) freemembershipL->next;
-			Debug((DEBUG_ERROR, "floodmode::freelist gotone"));
-		}
-		Debug((DEBUG_ERROR, "floodmode:: bzeroing"));	
-		bzero(lp2, sizeof(MembershipL));
+		m = freemembership;
+		freemembership = freemembership->next;
 	}
-	if (local)
-	{
-		return ((Membership *) lp2);
-	}
-	return lp;
+	memset(m, 0, sizeof(Membership));
+	return m;
 }
 
-void	free_membership(Membership *lp, int local)
+/** Free a Membership struct */
+static void free_membership(Membership *m)
 {
-	if (lp)
+	if (m)
 	{
-		if (!local)
-		{
-			lp->next = freemembership;
-			freemembership = lp;
-		}
-		else
-		{
-			lp->next = (Membership *) freemembershipL;
-			freemembershipL = (MembershipL *) lp;
-		}
+		moddata_free_membership(m);
+		memset(m, 0, sizeof(Membership));
+		m->next = freemembership;
+		freemembership = m;
 	}
 }
 
-/*
-** find_chasing
-**	Find the client structure for a nick name (user) using history
-**	mechanism if necessary. If the client is not found, an error
-**	message (NO SUCH NICK) is generated. If the client was found
-**	through the history, chasing will be 1 and otherwise 0.
-*/
-aClient *find_chasing(aClient *sptr, char *user, int *chasing)
+/** Find a client by nickname, hunt for older nick names if not found.
+ * This can be handy, for example for /KILL nick, if 'nick' keeps
+ * nick-changing and you are slow with typing.
+ * @param client	The requestor
+ * @param user		The nick name (or server name)
+ * @param chasing	This will be set to 1 if the client was found
+ *			only after searching through the nick history.
+ * @returns The client (if found) or NULL (if not found).
+ */
+Client *find_chasing(Client *client, char *user, int *chasing)
 {
-	aClient *who = find_client(user, (aClient *)NULL);
+	Client *who = find_client(user, NULL);
 
 	if (chasing)
 		*chasing = 0;
@@ -344,8 +237,7 @@ aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 	}
 	if (!(who = get_history(user, (long)KILLCHASETIMELIMIT)))
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK),
-		    me.name, sptr->name, user);
+		sendnumeric(client, ERR_NOSUCHNICK, user);
 		return NULL;
 	}
 	if (chasing)
@@ -355,67 +247,112 @@ aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 	else return NULL;
 }
 
-/*
- * add_listmode - Add a listmode (+beI) with the specified banid to
- *                the specified channel.
- */
+/** Return 1 if the bans are identical, taking into account special handling for extbans */
+int identical_ban(char *one, char *two)
+{
+	if (is_extended_ban(one))
+	{
+		/* compare the first 3 characters case-sensitive and if identical then compare
+		 * the remainder of the string case-insensitive.
+		 */
+		if (!strncmp(one, two, 3) && !strcasecmp(one+3, two+3))
+			return 1;
+	} else {
+		if (!mycmp(one, two))
+			return 1;
+	}
+	return 0;
+}
 
-int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
+/** Add a listmode (+beI) with the specified banid to
+ *  the specified channel. (Extended version with
+ *  set by nick and set on timestamp)
+ */
+int add_listmode_ex(Ban **list, Client *client, Channel *channel, char *banid, char *setby, time_t seton)
 {
 	Ban *ban;
 	int cnt = 0, len;
+	int do_not_add = 0;
 
-	if (MyClient(cptr))
-		(void)collapse(banid);
-	
+	if (MyUser(client))
+		collapse(banid);
+
 	len = strlen(banid);
 	if (!*list && ((len > MAXBANLENGTH) || (MAXBANS < 1)))
 	{
-		sendto_one(cptr, err_str(ERR_BANLISTFULL),
-			me.name, cptr->name, chptr->chname, banid);
-		return -1;
+		if (MyUser(client))
+		{
+			/* Only send the error to local clients */
+			sendnumeric(client, ERR_BANLISTFULL, channel->chname, banid);
+		}
+		do_not_add = 1;
 	}
 	for (ban = *list; ban; ban = ban->next)
 	{
 		len += strlen(ban->banstr);
-		if (MyClient(cptr))
-			if ((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
-			{
-				sendto_one(cptr, err_str(ERR_BANLISTFULL),
-				    me.name, cptr->name, chptr->chname, banid);
-				return -1;
-			}
-			else
-			{
-#ifdef SOCALLEDSMARTBANNING
-			  /* Temp workaround added in b19. -- Syzop */
-			  if (!mycmp(ban->banstr, banid) || (!strchr(banid, '\\') && !strchr(ban->banstr, '\\')))
-				if (!match(ban->banstr, banid))
-					return -1;
-#endif
-			  if (!mycmp(ban->banstr, banid))
-			  	return -1;
-			}
-		else if (!mycmp(ban->banstr, banid))
-			return -1;
-
+		/* Check MAXBANLENGTH / MAXBANS only for local clients
+		 * and 'me' (for +b's set during +f).
+		 */
+		if ((MyUser(client) || IsMe(client)) && ((len > MAXBANLENGTH) || (++cnt >= MAXBANS)))
+		{
+			do_not_add = 1;
+		}
+		if (identical_ban(ban->banstr, banid))
+			break; /* update existing ban (potentially) */
 	}
-	ban = make_ban();
-	bzero((char *)ban, sizeof(Ban));
-	ban->next = *list;
-	ban->banstr = (char *)MyMalloc(strlen(banid) + 1);
-	(void)strcpy(ban->banstr, banid);
-	ban->who = (char *)MyMalloc(strlen(cptr->name) + 1);
-	(void)strcpy(ban->who, cptr->name);
-	ban->when = TStime();
-	*list = ban;
+
+	/* Create a new ban if needed */
+	if (!ban)
+	{
+		if (do_not_add)
+		{
+			/* The banlist is full and trying to add a new ban.
+			 * This is not permitted.
+			 */
+			if (MyUser(client))
+			{
+				/* Only send the error to local clients */
+				sendnumeric(client, ERR_BANLISTFULL, channel->chname, banid);
+			}
+			return -1;
+		}
+		ban = make_ban();
+		ban->next = *list;
+		*list = ban;
+	}
+
+	if ((ban->when > 0) && (seton >= ban->when))
+	{
+		/* Trying to add the same ban while an older version
+		 * or identical version of the ban already exists.
+		 */
+		return -1;
+	}
+
+	/* Update/set if this ban is new or older than existing one */
+	safe_strdup(ban->banstr, banid); /* cAsE may differ, use oldest version of it */
+	safe_strdup(ban->who, setby);
+	ban->when = seton;
 	return 0;
 }
-/*
- * del_listmode - delete a listmode (+beI) from a channel
- *                that matches the specified banid.
+
+/** Add a listmode (+beI) with the specified banid to
+ *  the specified channel. (Simplified version)
  */
-int del_listmode(Ban **list, aChannel *chptr, char *banid)
+int add_listmode(Ban **list, Client *client, Channel *channel, char *banid)
+{
+	char *setby = client->name;
+	char nuhbuf[NICKLEN+USERLEN+HOSTLEN+4];
+
+	if (IsUser(client) && (iConf.ban_setter == SETTER_NICK_USER_HOST))
+		setby = make_nick_user_host_r(nuhbuf, client->name, client->user->username, GetHost(client));
+
+	return add_listmode_ex(list, client, channel, banid, setby, TStime());
+}
+
+/** Delete a listmode (+beI) from a channel that matches the specified banid.
+ */
+int del_listmode(Ban **list, Channel *channel, char *banid)
 {
 	Ban **ban;
 	Ban *tmp;
@@ -424,12 +361,12 @@ int del_listmode(Ban **list, aChannel *chptr, char *banid)
 		return -1;
 	for (ban = list; *ban; ban = &((*ban)->next))
 	{
-		if (mycmp(banid, (*ban)->banstr) == 0)
+		if (identical_ban(banid, (*ban)->banstr))
 		{
 			tmp = *ban;
 			*ban = tmp->next;
-			MyFree(tmp->banstr);
-			MyFree(tmp->who);
+			safe_free(tmp->banstr);
+			safe_free(tmp->who);
 			free_ban(tmp);
 			return 0;
 		}
@@ -437,42 +374,37 @@ int del_listmode(Ban **list, aChannel *chptr, char *banid)
 	return -1;
 }
 
-/*
- * IsMember - returns 1 if a person is joined
- * Moved to struct.h
- */
-
-/* Those pointers can be used by extended ban modules so they
- * don't have to do 4 make_nick_user_host()'s all the time:
- */
-char *ban_realhost = NULL, *ban_virthost = NULL, *ban_cloakhost = NULL, *ban_ip = NULL;
-
 /** is_banned - Check if a user is banned on a channel.
- * @param sptr   Client to check (can be remote client)
- * @param chptr  Channel to check
+ * @param client   Client to check (can be remote client)
+ * @param channel  Channel to check
  * @param type   Type of ban to check for (BANCHK_*)
+ * @param msg    Message, only for some BANCHK_* types, otherwise NULL
+ * @param errmsg Error message returned, could be NULL (which does not
+ *               indicate absence of an error).
  * @returns      A pointer to the ban struct if banned, otherwise NULL.
  * @comments     Simple wrapper for is_banned_with_nick()
  */
-inline Ban *is_banned(aClient *sptr, aChannel *chptr, int type)
+inline Ban *is_banned(Client *client, Channel *channel, int type, char **msg, char **errmsg)
 {
-	return is_banned_with_nick(sptr, chptr, type, sptr->name);
+	return is_banned_with_nick(client, channel, type, NULL, msg, errmsg);
 }
 
-/** ban_check_mask - Checks if the current user in ban checking (ban_ip, etc) matches the specified n!u@h mask -or- run an extended ban.
- * @param sptr         Client to check (can be remote client)
- * @param chptr        Channel to check
+/** ban_check_mask - Checks if the user matches the specified n!u@h mask -or- run an extended ban.
+ * @param client         Client to check (can be remote client)
+ * @param channel        Channel to check
  * @param banstr       Mask string to check user
  * @param type         Type of ban to check for (BANCHK_*)
+ * @param msg          Message, only for some BANCHK_* types, otherwise NULL.
+ * @param errmsg       Error message, could be NULL
  * @param no_extbans   0 to check extbans, nonzero to disable extban checking.
  * @returns            Nonzero if the mask/extban succeeds. Zero if it doesn't.
  * @comments           This is basically extracting the mask and extban check from is_banned_with_nick, but with being a bit more strict in what an extban is.
  *                     Strange things could happen if this is called outside standard ban checking.
  */
-inline int ban_check_mask(aClient *sptr, aChannel *chptr, char *banstr, int type, int no_extbans)
+inline int ban_check_mask(Client *client, Channel *channel, char *banstr, int type, char **msg, char **errmsg, int no_extbans)
 {
 	Extban *extban = NULL;
-	if (!no_extbans && banstr[0] == '~' && banstr[1] != '\0' && banstr[2] == ':')
+	if (!no_extbans && is_extended_ban(banstr))
 	{
 		/* Is an extended ban. */
 		extban = findmod_by_bantype(banstr[1]);
@@ -482,332 +414,190 @@ inline int ban_check_mask(aClient *sptr, aChannel *chptr, char *banstr, int type
 		}
 		else
 		{
-			return extban->is_banned(sptr, chptr, banstr, type);
+			return extban->is_banned(client, channel, banstr, type, msg, errmsg);
 		}
 	}
 	else
 	{
 		/* Is a n!u@h mask. */
-		return extban_is_banned_helper(banstr);
+		return match_user(banstr, client, MATCH_CHECK_ALL);
 	}
 }
 
 /** is_banned_with_nick - Check if a user is banned on a channel.
- * @param sptr   Client to check (can be remote client)
- * @param chptr  Channel to check
+ * @param client   Client to check (can be remote client)
+ * @param channel  Channel to check
  * @param type   Type of ban to check for (BANCHK_*)
- * @param nick   Nick of the user
+ * @param nick   Nick of the user (or NULL, to default to client->name)
+ * @param msg    Message, only for some BANCHK_* types, otherwise NULL
  * @returns      A pointer to the ban struct if banned, otherwise NULL.
  */
-Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
+Ban *is_banned_with_nick(Client *client, Channel *channel, int type, char *nick, char **msg, char **errmsg)
 {
-	Ban *tmp, *tmp2;
-	char *s;
-	static char realhost[NICKLEN + USERLEN + HOSTLEN + 24];
-	static char cloakhost[NICKLEN + USERLEN + HOSTLEN + 24];
-	static char virthost[NICKLEN + USERLEN + HOSTLEN + 24];
-	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 24];
-	Extban *extban;
+	Ban *ban, *ex;
+	char savednick[NICKLEN+1];
 
-	if (!IsPerson(sptr) || !chptr->banlist)
-		return NULL;
-
-	ban_realhost = realhost;
-	ban_ip = ban_virthost = ban_cloakhost = NULL;
-
-	/* Might it be possible in the future to include the possiblity for SupportNICKIP(sptr->from), SupportCLK(sptr->from)? -- aquanight */
-	/* Nope, because servers not directly connected to the server in question have no idea about the capabilities at all.
-	 * However, there's no need for a MyConnect() requirement, just check if GetIP() is non-NULL and
-	 * if sptr->user->cloakedhost contains anything... -- Syzop
+	/* It's not really doable to pass 'nick' to all the ban layers,
+	 * including extbans (with stacking) and so on. Or at least not
+	 * without breaking several module API's.
+	 * So, instead, we temporarily set 'client->name' to 'nick' and
+	 * restore it to the orginal value at the end of this function.
+	 * This is possible because all these layers never send a message
+	 * to 'client' and only indicate success/failure.
+	 * Note that all this ONLY happens if is_banned_with_nick() is called
+	 * with a non-NULL nick. That doesn't happen much. In UnrealIRCd
+	 * only in case of '/NICK newnick'. This fixes #5165.
 	 */
-	if (GetIP(sptr))
+	if (nick)
 	{
-		make_nick_user_host_r(nuip, nick, sptr->user->username, GetIP(sptr));
-		ban_ip = nuip;
-	}
-	
-	if (*sptr->user->cloakedhost)
-	{
-		make_nick_user_host_r(cloakhost, nick, sptr->user->username, sptr->user->cloakedhost);
-		ban_cloakhost = cloakhost;
+		strlcpy(savednick, client->name, sizeof(savednick));
+		strlcpy(client->name, nick, sizeof(client->name));
 	}
 
-	if (IsSetHost(sptr) && strcmp(sptr->user->realhost, sptr->user->virthost))
-	{
-		make_nick_user_host_r(virthost, nick, sptr->user->username, sptr->user->virthost);
-		ban_virthost = virthost;
-	}
-
-
-	make_nick_user_host_r(realhost, nick, sptr->user->username, sptr->user->realhost);
-
-	/* We now check +b first, if a +b is found we then see if there is a +e.
+	/* We check +b first, if a +b is found we then see if there is a +e.
 	 * If a +e was found we return NULL, if not, we return the ban.
 	 */
-	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
-	{
-		if (!ban_check_mask(sptr, chptr, tmp->banstr, type, 0))
-			continue;
 
-		/* Ban found, now check for +e */
-		for (tmp2 = chptr->exlist; tmp2; tmp2 = tmp2->next)
-		{
-			if (ban_check_mask(sptr, chptr, tmp2->banstr, type, 0))
-				return NULL; /* except matched */
-		}
-		break; /* ban found and not on except */
+	for (ban = channel->banlist; ban; ban = ban->next)
+	{
+		if (ban_check_mask(client, channel, ban->banstr, type, msg, errmsg, 0))
+			break;
 	}
 
-	return (tmp);
-}
-
-int extban_is_banned_helper(char *buf)
-{
-	if ((match(buf, ban_realhost) == 0) ||
-	    (ban_virthost && (match(buf, ban_virthost) == 0)) ||
-	    (ban_ip && (match(buf, ban_ip) == 0)) ||
-	    (ban_cloakhost && (match(buf, ban_cloakhost) == 0)) )
-		return 1;
-	
-	return 0;
-}
-
-/*
- * Checks if the "user" IRC is banned, used by +mu.
- */
-static int is_irc_banned(aChannel *chptr)
-{
-	Ban *tmp;
-	/* Check for this user, ident/host are "illegal" on purpose */
-	char *check = "IRC!\001@\001";
-	
-	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
-		if (match(tmp->banstr, check) == 0)
+	if (ban)
+	{
+		/* Ban found, now check for +e */
+		for (ex = channel->exlist; ex; ex = ex->next)
 		{
-			/* Ban found, now check for +e */
-			for (tmp = chptr->exlist; tmp; tmp = tmp->next)
-				if (match(tmp->banstr, check) == 0)
-					return 0; /* In exception list */
-			return 1;
+			if (ban_check_mask(client, channel, ex->banstr, type, msg, errmsg, 0))
+			{
+				/* except matched */
+				ban = NULL;
+				break;
+			}
 		}
-	return 0;
+		/* user is not on except, 'ban' stays non-NULL. */
+	}
+
+	if (nick)
+	{
+		/* Restore the nick */
+		strlcpy(client->name, savednick, sizeof(client->name));
+	}
+
+	return ban;
 }
 
-/*
- * adds a user to a channel by adding another link to the channels member
- * chain.
+/** Add user to the channel.
+ * This adds both the Member struct to the channel->members linked list
+ * and also the Membership struct to the client->user->channel linked list.
+ * @note This does NOT send the JOIN, it only does the linked list stuff.
  */
-void add_user_to_channel(aChannel *chptr, aClient *who, int flags)
+void add_user_to_channel(Channel *channel, Client *who, int flags)
 {
-	Member *ptr;
-	Membership *ptr2;
+	Member *m;
+	Membership *mb;
 
 	if (who->user)
 	{
-		ptr = make_member();
-		ptr->cptr = who;
-		ptr->flags = flags;
-		ptr->next = chptr->members;
-		chptr->members = ptr;
-		chptr->users++;
+		m = make_member();
+		m->client = who;
+		m->flags = flags;
+		m->next = channel->members;
+		channel->members = m;
+		channel->users++;
 
-		ptr2 = make_membership(MyClient(who));
-		/* we should make this more efficient --stskeeps 
-		   is now, as we only use it in membership */
-		ptr2->chptr = chptr;
-		ptr2->next = who->user->channel;
-		ptr2->flags = flags;
-		who->user->channel = ptr2;
+		mb = make_membership();
+		mb->channel = channel;
+		mb->next = who->user->channel;
+		mb->flags = flags;
+		who->user->channel = mb;
 		who->user->joined++;
+		RunHook2(HOOKTYPE_JOIN_DATA, who, channel);
 	}
 }
 
-void remove_user_from_channel(aClient *sptr, aChannel *chptr)
+/** Remove the user from the channel.
+ * This doesn't send any PART etc. It does the free'ing of
+ * membership etc. It will also DESTROY the channel if the
+ * user was the last user (and the channel is not +P),
+ * via sub1_from_channel(), that is.
+ */
+int remove_user_from_channel(Client *client, Channel *channel)
 {
-	Member **curr; Membership **curr2;
-	Member *tmp; Membership *tmp2;
-	Member *lp = chptr->members;
+	Member **m;
+	Member *m2;
+	Membership **mb;
+	Membership *mb2;
 
-	/* find 1st entry in list that is not user */
-	for (; lp && (lp->cptr == sptr); lp = lp->next);
-	for (;;)
+	/* Update channel->members list */
+	for (m = &channel->members; (m2 = *m); m = &m2->next)
 	{
-		for (curr = &chptr->members; (tmp = *curr); curr = &tmp->next)
-			if (tmp->cptr == sptr)
-			{
-				*curr = tmp->next;
-				free_member(tmp);
-				break;
-			}
-		for (curr2 = &sptr->user->channel; (tmp2 = *curr2); curr2 = &tmp2->next)
-			if (tmp2->chptr == chptr)
-			{
-				*curr2 = tmp2->next;
-				free_membership(tmp2, MyClient(sptr));
-				break;
-			}
-		sptr->user->joined--;
-		if (lp)
+		if (m2->client == client)
+		{
+			*m = m2->next;
+			free_member(m2);
 			break;
-		if (chptr->members)
-			sptr = chptr->members->cptr;
-		else
-			break;
-		sub1_from_channel(chptr);
+		}
 	}
-	sub1_from_channel(chptr);
+
+	/* Update client->user->channel list */
+	for (mb = &client->user->channel; (mb2 = *mb); mb = &mb2->next)
+	{
+		if (mb2->channel == channel)
+		{
+			*mb = mb2->next;
+			free_membership(mb2);
+			break;
+		}
+	}
+
+	/* Update user record to reflect 1 less joined */
+	client->user->joined--;
+
+	/* Now sub1_from_channel() will deal with the channel record
+	 * and destroy the channel if needed.
+	 */
+	return sub1_from_channel(channel);
 }
 
-long get_access(aClient *cptr, aChannel *chptr)
+/** Get channel access flags (CHFL_*) for a client in a channel.
+ * @param client	The client
+ * @param channel	The channel
+ * @returns One or more of CHFL_* (eg: CHFL_CHANOP|CHFL_CHANADMIN)
+ * @note If the user is not found, then 0 is returned.
+ *       If the user has no access rights, then 0 is returned as well.
+ */
+long get_access(Client *client, Channel *channel)
 {
 	Membership *lp;
-	if (chptr)
-		if ((lp = find_membership_link(cptr->user->channel, chptr)))
+	if (channel && IsUser(client))
+		if ((lp = find_membership_link(client->user->channel, channel)))
 			return lp->flags;
 	return 0;
 }
 
-int  is_chan_op(aClient *cptr, aChannel *chptr)
+/** Returns 1 if channel has this channel mode set and 0 if not */
+int has_channel_mode(Channel *channel, char mode)
 {
-	Membership *lp;
-/* chanop/halfop ? */
-	if (IsServer(cptr))
-		return 1;
-	if (chptr)
-		if ((lp = find_membership_link(cptr->user->channel, chptr)))
-#ifdef PREFIX_AQ
-			return ((lp->flags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER)));
-#else
-			return ((lp->flags & CHFL_CHANOP));
-#endif
+	CoreChannelModeTable *tab = &corechannelmodetable[0];
+	int i;
 
-	return 0;
-}
-
-int  has_voice(aClient *cptr, aChannel *chptr)
-{
-	Membership *lp;
-
-	if (IsServer(cptr))
-		return 1;
-	if (chptr)
-		if ((lp = find_membership_link(cptr->user->channel, chptr)))
-			return (lp->flags & CHFL_VOICE);
-
-	return 0;
-}
-int  is_halfop(aClient *cptr, aChannel *chptr)
-{
-	Membership *lp;
-
-	if (IsServer(cptr))
-		return 1;
-	if (chptr)
-		if ((lp = find_membership_link(cptr->user->channel, chptr)))
-			if (!(lp->flags & CHFL_CHANOP))
-				return (lp->flags & CHFL_HALFOP);
-
-	return 0;
-}
-
-int  is_chanowner(aClient *cptr, aChannel *chptr)
-{
-	Membership *lp;
-
-	if (IsServer(cptr))
-		return 1;
-	if (chptr)
-		if ((lp = find_membership_link(cptr->user->channel, chptr)))
-			return (lp->flags & CHFL_CHANOWNER);
-
-	return 0;
-}
-
-int is_chanownprotop(aClient *cptr, aChannel *chptr) {
-	Membership *lp;
-		
-	if (IsServer(cptr))
-		return 1;
-	if (chptr)
-		if ((lp = find_membership_link(cptr->user->channel, chptr)))
-			if (lp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP))
-				return 1;
-	return 0;
-}
-
-int is_skochanop(aClient *cptr, aChannel *chptr) {
-	Membership *lp;
-		
-	if (IsServer(cptr))
-		return 1;
-	if (chptr)
-		if ((lp = find_membership_link(cptr->user->channel, chptr)))
-#ifdef PREFIX_AQ
-			if (lp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP|CHFL_HALFOP))
-#else
-			if (lp->flags & (CHFL_CHANOP|CHFL_HALFOP))
-#endif
-				return 1;
-	return 0;
-}
-
-int  is_chanprot(aClient *cptr, aChannel *chptr)
-{
-	Membership *lp;
-
-	if (chptr)
-		if ((lp = find_membership_link(cptr->user->channel, chptr)))
-			return (lp->flags & CHFL_CHANPROT);
-
-	return 0;
-}
-
-#define CANNOT_SEND_MODERATED 1
-#define CANNOT_SEND_NOPRIVMSGS 2
-#define CANNOT_SEND_NOCOLOR 3
-#define CANNOT_SEND_BAN 4
-#define CANNOT_SEND_NOCTCP 5
-#define CANNOT_SEND_MODREG 6
-#define CANNOT_SEND_SWEAR 7 /* This isn't actually used here */
-#define CANNOT_SEND_NOTICE 8 
-
-int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
-{
-	Membership *lp;
-	int  member;
-	/* 
-	 * #0000053 by |savage|, speedup 
-	*/
-	
-	if (!MyClient(cptr))
+	/* Extended channel modes */
+	for (i=0; i <= Channelmode_highest; i++)
 	{
-		if (IsClient(cptr))
-		{
-			/* channelmode +mu is a special case.. sux!. -- Syzop */		
-
-			lp = find_membership_link(cptr->user->channel, chptr);
-			if ((chptr->mode.mode & MODE_MODERATED) && (chptr->mode.mode & MODE_AUDITORIUM) &&
-			    !IsOper(cptr) &&
-		        (!lp || !(lp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANPROT))) &&
-		        !is_irc_banned(chptr))
-		    {
-				sendto_chmodemucrap(cptr, chptr, msgtext);
-				return (CANNOT_SEND_MODERATED);
-			}
-		}
-		return 0;
+		if ((Channelmode_Table[i].flag == mode) && (channel->mode.extmode & Channelmode_Table[i].mode))
+			return 1;
 	}
 
-	if (chptr->mode.mode & MODE_NOCOLOR)
+	/* Built-in channel modes */
+	while (tab->mode != 0x0)
 	{
-		/* A bit faster */
-		char *c;
-		for (c = msgtext; *c; c++)
-		{
-			if (*c == 3 || *c == 27 || *c == 4 || *c == 22) /* mirc color, ansi, rgb, reverse */
-				return (CANNOT_SEND_NOCOLOR);
-		}
+		if ((channel->mode.mode & tab->mode) && (tab->flag == mode))
+			return 1;
+		tab++;
 	}
+<<<<<<< HEAD
 	member = IsMember(cptr, chptr);
 	if (chptr->mode.mode & MODE_NOPRIVMSGS && !member)
 		return (CANNOT_SEND_NOPRIVMSGS);
@@ -839,222 +629,178 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 	   (!lp || !(lp->flags & (CHFL_CHANOP | CHFL_CHANOWNER | CHFL_CHANPROT))))
 		return (CANNOT_SEND_NOTICE);
 #endif
+=======
+>>>>>>> unreal52
 
+	/* Special handling for +l (needed??) */
+	if (channel->mode.limit && (mode == 'l'))
+		return 1;
 
-	/* Makes opers able to talk thru bans -Stskeeps suggested by The_Cat */
-	if (IsOper(cptr))
-		return 0;
+	/* Special handling for +k (needed??) */
+	if (channel->mode.key[0] && (mode == 'k'))
+		return 1;
 
-	if ((!lp
-	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
-	    CHFL_HALFOP | CHFL_CHANPROT))) && MyClient(cptr)
-	    && is_banned(cptr, chptr, BANCHK_MSG))
-		return (CANNOT_SEND_BAN);
+	return 0; /* Not found */
+}
 
+/** Get the extended channel mode 'bit' value (eg: 0x20) by character (eg: 'Z') */
+Cmode_t get_extmode_bitbychar(char m)
+{
+        int extm;
+        for (extm=0; extm <= Channelmode_highest; extm++)
+        {
+                if (Channelmode_Table[extm].flag == m)
+                        return Channelmode_Table[extm].mode;
+        }
+        return 0;
+}
+
+/** Get the extended channel mode character (eg: 'Z') by the 'bit' value (eg: 0x20) */
+long get_mode_bitbychar(char m)
+{
+	CoreChannelModeTable *tab = &corechannelmodetable[0];
+
+	while(tab->mode != 0x0)
+	{
+		if (tab->flag == m)
+			return tab->mode;
+		tab++;;
+	}
 	return 0;
 }
 
-/* [just a helper for channel_modef_string()] */
-static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a, unsigned char r)
-{
-char *p;
-char tmpbuf[16], *p2 = tmpbuf;
-
-	ircsprintf(buf, "%hd", l);
-	p = buf + strlen(buf);
-	*p++ = t;
-	if (a && ((a != tdef) || r))
-	{
-		*p++ = '#';
-		*p++ = a;
-		if (r)
-		{
-			sprintf(tmpbuf, "%hd", (short)r);
-			while ((*p = *p2++))
-				p++;
-		}
-	}
-	*p++ = ',';
-	return p;
-}
-
-/** returns the channelmode +f string (ie: '[5k,40j]:10') */
-char *channel_modef_string(ChanFloodProt *x)
-{
-static char retbuf[512]; /* overkill :p */
-char *p = retbuf;
-	*p++ = '[';
-
-	/* (alphabetized) */
-	if (x->l[FLD_CTCP])
-		p = chmodefstrhelper(p, 'c', 'C', x->l[FLD_CTCP], x->a[FLD_CTCP], x->r[FLD_CTCP]);
-	if (x->l[FLD_JOIN])
-		p = chmodefstrhelper(p, 'j', 'i', x->l[FLD_JOIN], x->a[FLD_JOIN], x->r[FLD_JOIN]);
-	if (x->l[FLD_KNOCK])
-		p = chmodefstrhelper(p, 'k', 'K', x->l[FLD_KNOCK], x->a[FLD_KNOCK], x->r[FLD_KNOCK]);
-	if (x->l[FLD_MSG])
-		p = chmodefstrhelper(p, 'm', 'm', x->l[FLD_MSG], x->a[FLD_MSG], x->r[FLD_MSG]);
-	if (x->l[FLD_NICK])
-		p = chmodefstrhelper(p, 'n', 'N', x->l[FLD_NICK], x->a[FLD_NICK], x->r[FLD_NICK]);
-	if (x->l[FLD_TEXT])
-		p = chmodefstrhelper(p, 't', '\0', x->l[FLD_TEXT], x->a[FLD_TEXT], x->r[FLD_TEXT]);
-
-	if (*(p - 1) == ',')
-		p--;
-	*p++ = ']';
-	ircsprintf(p, ":%hd", x->per);
-	return retbuf;
-}
-
-/*
- * write the "simple" list of channel modes for channel chptr onto buffer mbuf
- * with the parameters in pbuf.
+/** Write the "simple" list of channel modes for channel channel onto buffer mbuf with the parameters in pbuf.
+ * @param client		The client requesting the mode list (can be NULL)
+ * @param mbuf			Modes will be stored here
+ * @param pbuf			Mode parameters will be stored here
+ * @param mbuf_size		Length of the mbuf buffer
+ * @param pbuf_size		Length of the pbuf buffer
+ * @param channel		The channel to fetch modes from
+ * @param hide_local_modes	If set to 1 then we will hide local channel modes like Z and d
+ *				(eg: if you intend to send the buffer to a remote server)
  */
-void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
+/* TODO: this function has many security issues and needs an audit, maybe even a recode */
+void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel, int hide_local_modes)
 {
-	aCtab *tab = &cFlagTab[0];
-	char bcbuf[1024];
-	int ismember;
-#ifdef EXTCMODE
+	CoreChannelModeTable *tab = &corechannelmodetable[0];
+	int ismember = 0;
 	int i;
-#endif
 
-	ismember = (IsMember(cptr, chptr) || IsServer(cptr) || IsULine(cptr)) ? 1 : 0;
+	if (!(mbuf_size && pbuf_size)) return;
+
+	if (!client || IsMember(client, channel) || IsServer(client) || IsMe(client) || IsULine(client))
+		ismember = 1;
 
 	*pbuf = '\0';
 
 	*mbuf++ = '+';
+	mbuf_size--;
+
 	/* Paramless first */
-	while (tab->mode != 0x0)
+	while (mbuf_size && tab->mode != 0x0)
 	{
-		if ((chptr->mode.mode & tab->mode))
-			if (!tab->parameters)
+		if ((channel->mode.mode & tab->mode))
+		{
+			if (!tab->parameters) {
 				*mbuf++ = tab->flag;
+				mbuf_size--;
+			}
+		}
 		tab++;
 	}
-#ifdef EXTCMODE
 	for (i=0; i <= Channelmode_highest; i++)
 	{
-		if (Channelmode_Table[i].flag && !Channelmode_Table[i].paracount &&
-		    (chptr->mode.extmode & Channelmode_Table[i].mode))
+		if (!mbuf_size)
+			break;
+		if (Channelmode_Table[i].flag &&
+		    !Channelmode_Table[i].paracount &&
+		    !(hide_local_modes && Channelmode_Table[i].local) &&
+		    (channel->mode.extmode & Channelmode_Table[i].mode))
+		{
 			*mbuf++ = Channelmode_Table[i].flag;
-	}
-#endif
-	if (chptr->mode.limit)
-	{
-		*mbuf++ = 'l';
-		if (ismember)
-			(void)ircsprintf(pbuf, "%d ", chptr->mode.limit);
-	}
-	if (*chptr->mode.key)
-	{
-		*mbuf++ = 'k';
-		if (ismember)
-		{
-			/* FIXME: hope pbuf is long enough */
-			(void)snprintf(bcbuf, sizeof bcbuf, "%s ", chptr->mode.key);
-			(void)strcat(pbuf, bcbuf);
-		}
-	}
-	if (*chptr->mode.link)
-	{
-		*mbuf++ = 'L';
-		if (ismember)
-		{
-			/* FIXME: is pbuf long enough?  */
-			(void)snprintf(bcbuf, sizeof bcbuf, "%s ", chptr->mode.link);
-			(void)strcat(pbuf, bcbuf);
-		}
-	}
-	/* if we add more parameter modes, add a space to the strings here --Stskeeps */
-#ifdef NEWCHFLOODPROT
-	if (chptr->mode.floodprot)
-#else
-	if (chptr->mode.per)
-#endif
-	{
-		*mbuf++ = 'f';
-		if (ismember)
-		{
-#ifdef NEWCHFLOODPROT
-			ircsprintf(bcbuf, "%s ", channel_modef_string(chptr->mode.floodprot));
-#else
-			if (chptr->mode.kmode == 1)
-				ircsprintf(bcbuf, "*%i:%i ", chptr->mode.msgs, chptr->mode.per);
-			else
-				ircsprintf(bcbuf, "%i:%i ", chptr->mode.msgs, chptr->mode.per);
-#endif
-			(void)strcat(pbuf, bcbuf);
+			mbuf_size--;
 		}
 	}
 
-#ifdef EXTCMODE
+	if (channel->mode.limit)
+	{
+		if (mbuf_size) {
+			*mbuf++ = 'l';
+			mbuf_size--;
+		}
+		if (ismember) {
+			ircsnprintf(pbuf, pbuf_size, "%d ", channel->mode.limit);
+			pbuf_size-=strlen(pbuf);
+			pbuf+=strlen(pbuf);
+		}
+	}
+	if (*channel->mode.key)
+	{
+		if (mbuf_size) {
+			*mbuf++ = 'k';
+			mbuf_size--;
+		}
+		if (ismember && pbuf_size) {
+			ircsnprintf(pbuf, pbuf_size, "%s ", channel->mode.key);
+			pbuf_size-=strlen(pbuf);
+			pbuf+=strlen(pbuf);
+		}
+	}
+
 	for (i=0; i <= Channelmode_highest; i++)
 	{
-		if (Channelmode_Table[i].flag && Channelmode_Table[i].paracount &&
-		    (chptr->mode.extmode & Channelmode_Table[i].mode))
+		if (Channelmode_Table[i].flag &&
+		    Channelmode_Table[i].paracount &&
+		    !(hide_local_modes && Channelmode_Table[i].local) &&
+		    (channel->mode.extmode & Channelmode_Table[i].mode))
 		{
-			*mbuf++ = Channelmode_Table[i].flag;
+			char flag = Channelmode_Table[i].flag;
+			if (mbuf_size) {
+				*mbuf++ = flag;
+				mbuf_size--;
+			}
 			if (ismember)
 			{
-				strcat(pbuf, Channelmode_Table[i].get_param(extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[i].flag)));
-				strcat(pbuf, " ");
+				ircsnprintf(pbuf, pbuf_size, "%s ", cm_getparameter(channel, flag));
+				pbuf_size-=strlen(pbuf);
+				pbuf+=strlen(pbuf);
 			}
 		}
 	}
-#endif
 
 	/* Remove the trailing space from the parameters -- codemastr */
 	if (*pbuf)
-		pbuf[strlen(pbuf)-1]=0;
+		pbuf[strlen(pbuf)-1]='\0';
 
+	if (!mbuf_size)
+		mbuf--;
 	*mbuf++ = '\0';
-	return;
 }
 
-
-int  DoesOp(char *modebuf)
-{
-	modebuf--;		/* Is it possible that a mode starts with o and not +o ? */
-	while (*++modebuf)
-		if (*modebuf == 'h' || *modebuf == 'o'
-		    || *modebuf == 'v' || *modebuf == 'q')
-			return (1);
-	return 0;
-}
-
-int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *param, TS creationtime)
-{
-	if ((IsServer(cptr) && DoesOp(mode) && creationtime) ||
-	    IsULine(cptr))
-		sendto_one(cptr, ":%s %s %s %s %s %lu", from,
-		    (IsToken(cptr) ? TOK_MODE : MSG_MODE), name, mode,
-		    param, creationtime);
-	else
-		sendto_one(cptr, ":%s %s %s %s %s", from,
-		    (IsToken(cptr) ? TOK_MODE : MSG_MODE), name, mode, param);
-	return 0;
-}
-
+/** Make a pretty mask from the input string - only used by SILENCE
+ */
 char *pretty_mask(char *mask)
 {
 	char *cp;
 	char *user;
 	char *host;
 
-	if ((user = index((cp = mask), '!')))
+	if ((user = strchr((cp = mask), '!')))
 		*user++ = '\0';
-	if ((host = rindex(user ? user : cp, '@')))
+	if ((host = strrchr(user ? user : cp, '@')))
 	{
 		*host++ = '\0';
 		if (!user)
 			return make_nick_user_host(NULL, cp, host);
 	}
-	else if (!user && index(cp, '.'))
+	else if (!user && strchr(cp, '.'))
 		return make_nick_user_host(NULL, NULL, cp);
 	return make_nick_user_host(cp, user, host);
 }
 
+/** Trim a string - rather than cutting it off sharply, this adds a * at the end.
+ * So "toolong" becomes "toolon*"
+ */
 char *trim_str(char *str, int len)
 {
 	int l;
@@ -1068,42 +814,56 @@ char *trim_str(char *str, int len)
 	return str;
 }
 
-/* clean_ban_mask:	makes a proper banmask
- * RETURNS: pointer to correct banmask or NULL in case of error
- * NOTES:
- * - A pointer is returned to a static buffer, which is overwritten
- *   on next clean_ban_mask or make_nick_user_host call.
- * - mask is fragged in some cases, this could be bad.
+/** Make a proper ban mask.
+ * This takes user input (eg: "nick") and converts it to a mask suitable
+ * in the +beI lists (eg: "nick!*@*"). It also deals with extended bans,
+ * in which case it will call the extban->conv_param() function.
+ * @param mask		The ban mask
+ * @param what		MODE_DEL or MODE_ADD
+ * @param client	The client adding/removing this ban mask
+ * @returns pointer to correct banmask or NULL in case of error
+ * @note A pointer is returned to a static buffer, which is overwritten
+ *       on next clean_ban_mask or make_nick_user_host call.
  */
-char *clean_ban_mask(char *mask, int what, aClient *cptr)
+char *clean_ban_mask(char *mask, int what, Client *client)
 {
-	char *cp;
+	char *cp, *x;
 	char *user;
 	char *host;
 	Extban *p;
+	static char maskbuf[512];
 
-	cp = index(mask, ' ');
+	/* Work on a copy */
+	strlcpy(maskbuf, mask, sizeof(maskbuf));
+	mask = maskbuf;
+
+	cp = strchr(mask, ' ');
 	if (cp)
 		*cp = '\0';
 
-	/* Strip any ':' at beginning coz that desynchs clients/banlists */
+	/* Strip any ':' at beginning since that would cause a desync */
 	for (; (*mask && (*mask == ':')); mask++);
 	if (!*mask)
 		return NULL;
 
+	/* Forbid ASCII <= 32 in all bans */
+	for (x = mask; *x; x++)
+		if (*x <= ' ')
+			return NULL;
+
 	/* Extended ban? */
-	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
+	if (is_extended_ban(mask))
 	{
-		if (RESTRICT_EXTENDEDBANS && MyClient(cptr) && !IsAnOper(cptr))
+		if (RESTRICT_EXTENDEDBANS && MyUser(client) && !ValidatePermissionsForPath("immune:restrict-extendedbans",client,NULL,NULL,NULL))
 		{
 			if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))
 			{
-				sendnotice(cptr, "Setting/removing of extended bans has been disabled");
+				sendnotice(client, "Setting/removing of extended bans has been disabled");
 				return NULL;
 			}
 			if (strchr(RESTRICT_EXTENDEDBANS, mask[1]))
 			{
-				sendnotice(cptr, "Setting/removing of extended bantypes '%s' has been disabled",
+				sendnotice(client, "Setting/removing of extended bantypes '%s' has been disabled",
 					RESTRICT_EXTENDEDBANS);
 				return NULL;
 			}
@@ -1114,18 +874,18 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 			/* extended bantype not supported, what to do?
 			 * Here are the rules:
 			 * - if from a remote client/server: allow it (easy upgrading,
-			 *   no desynch)
+			 *   no desync)
 			 * - if from a local client trying to REMOVE the extban,
 			 *   allow it too (so you don't get "unremovable" extbans).
 			 */
-			if (!MyClient(cptr) || (what == MODE_DEL))
+			if (!MyUser(client) || (what == MODE_DEL))
 				return mask; /* allow it */
 			return NULL; /* reject */
 		}
 		if (p->conv_param)
 			return p->conv_param(mask);
 		/* else, do some basic sanity checks and cut it off at 80 bytes */
-		if ((cp[1] != ':') || (cp[2] == '\0'))
+		if ((mask[1] != ':') || (mask[2] == '\0'))
 		    return NULL; /* require a ":<char>" after extban type */
 		if (strlen(mask) > 80)
 			mask[80] = '\0';
@@ -1135,224 +895,193 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 	if ((*mask == '~') && !strchr(mask, '@'))
 		return NULL; /* not an extended ban and not a ~user@host ban either. */
 
-	if ((user = index((cp = mask), '!')))
+	if ((user = strchr((cp = mask), '!')))
 		*user++ = '\0';
-	if ((host = rindex(user ? user : cp, '@')))
+	if ((host = strrchr(user ? user : cp, '@')))
 	{
 		*host++ = '\0';
 
 		if (!user)
-			return make_nick_user_host(NULL, trim_str(cp,USERLEN), 
-				trim_str(host,HOSTLEN));
+			return make_nick_user_host(NULL, trim_str(cp,USERLEN), trim_str(host,HOSTLEN));
 	}
-	else if (!user && index(cp, '.'))
+	else if (!user && strchr(cp, '.'))
 		return make_nick_user_host(NULL, NULL, trim_str(cp,HOSTLEN));
-	return make_nick_user_host(trim_str(cp,NICKLEN), trim_str(user,USERLEN), 
-		trim_str(host,HOSTLEN));
+	return make_nick_user_host(trim_str(cp,NICKLEN), trim_str(user,USERLEN), trim_str(host,HOSTLEN));
 }
 
-int find_invex(aChannel *chptr, aClient *sptr)
+/** Check if 'client' matches an invite exception (+I) on 'channel' */
+int find_invex(Channel *channel, Client *client)
 {
-	/* This routine is basically a copy-paste of is_banned_with_nick, with modifications, for invex */
 	Ban *inv;
-	char *s;
-	static char realhost[NICKLEN + USERLEN + HOSTLEN + 24];
-	static char cloakhost[NICKLEN + USERLEN + HOSTLEN + 24];
-	static char virthost[NICKLEN + USERLEN + HOSTLEN + 24];
-	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 24];
-	Extban *extban;
 
-	if (!IsPerson(sptr) || !chptr->invexlist)
-		return 0;
-
-	ban_realhost = realhost;
-	ban_ip = ban_virthost = ban_cloakhost = NULL;
-
-	if (GetIP(sptr))
-	{
-		make_nick_user_host_r(nuip, sptr->name, sptr->user->username, GetIP(sptr));
-		ban_ip = nuip;
-	}
-	
-	if (*sptr->user->cloakedhost)
-	{
-		make_nick_user_host_r(cloakhost, sptr->name, sptr->user->username, sptr->user->cloakedhost);
-		ban_cloakhost = cloakhost;
-	}
-
-	if (IsSetHost(sptr) && strcmp(sptr->user->realhost, sptr->user->virthost))
-	{
-		make_nick_user_host_r(virthost, sptr->name, sptr->user->username, sptr->user->virthost);
-		ban_virthost = virthost;
-	}
-
-
-	make_nick_user_host_r(realhost, sptr->name, sptr->user->username, sptr->user->realhost);
-
-	for (inv = chptr->invexlist; inv; inv = inv->next)
-		if (ban_check_mask(sptr, chptr, inv->banstr, BANCHK_JOIN, 0))
+	for (inv = channel->invexlist; inv; inv = inv->next)
+		if (ban_check_mask(client, channel, inv->banstr, BANCHK_JOIN, NULL, NULL, 0))
 			return 1;
 
 	return 0;
 }
 
-/*
-** Remove bells and commas from channel name
-*/
-
-void clean_channelname(char *cn)
+/** Remove unwanted characters from channel name.
+ * You must call this before creating a new channel,
+ * eg in case of /JOIN.
+ */
+int valid_channelname(const char *cname)
 {
-	u_char *ch = (u_char *)cn;
+	const char *p;
 
-
-	for (; *ch; ch++)
-		/* Don't allow any control chars, the space, the comma,
-		 * or the "non-breaking space" in channel names.
-		 * Might later be changed to a system where the list of
-		 * allowed/non-allowed chars for channels was a define
-		 * or some such.
-		 *   --Wizzu
-		 */
-		if (*ch < 33 || *ch == ',' || *ch == 160)
-		{
-			*ch = '\0';
-			return;
-		}
-}
-
-/*
-** Return -1 if mask is present and doesnt match our server name.
-*/
-int check_channelmask(aClient *sptr, aClient *cptr, char *chname)
-{
-	char *s;
-
-	s = rindex(chname, ':');
-	if (!s)
+	/* Channel name must start with a dash */
+	if (*cname != '#')
 		return 0;
 
-	s++;
-	if (match(s, me.name) || (IsServer(cptr) && match(s, cptr->name)))
+	if (strlen(cname) > CHANNELLEN)
+		return 0;
+
+	if ((iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY) || !iConf.allowed_channelchars)
 	{
-		if (MyClient(sptr))
-			sendto_one(sptr, err_str(ERR_BADCHANMASK),
-			    me.name, sptr->name, chname);
-		return -1;
+		/* The default up to and including UnrealIRCd 4 */
+		for (p = cname; *p; p++)
+		{
+			if (*p < 33 || *p == ',' || *p == ':')
+				return 0;
+		}
+	} else
+	if (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ASCII)
+	{
+		/* The strict setting: only allow ASCII 32-128, except some chars */
+		for (p = cname; *p; p++)
+		{
+			if (*p < 33 || *p == ',' || *p == ':' || *p > 127)
+				return 0;
+		}
+	} else
+	if (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_UTF8)
+	{
+		/* Only allow UTF8, and also disallow some chars */
+		for (p = cname; *p; p++)
+		{
+			if (*p < 33 || *p == ',' || *p == ':')
+				return 0;
+		}
+		/* And run it through the UTF8 validator */
+		if (!unrl_utf8_validate(cname, (const char **)&p))
+			return 0;
+	} else
+	{
+		/* Impossible */
+		abort();
 	}
-	return 0;
+	return 1; /* Valid */
 }
 
-/*
-**  Get Channel block for i (and allocate a new channel
-**  block, if it didn't exists before).
-*/
-aChannel *get_channel(aClient *cptr, char *chname, int flag)
+/** Get existing channel 'chname' or create a new one.
+ * @param client	User creating or searching this channel
+ * @param chname	Channel name
+ * @param flag		If set to 'CREATE' then the channel is
+ *			created if it does not exist.
+ * @returns Pointer to channel (new or existing).
+ * @note Be sure to call valid_channelname() first before
+ *       you blindly call this function!
+ */
+Channel *get_channel(Client *client, char *chname, int flag)
 {
-	aChannel *chptr;
+	Channel *channel;
 	int  len;
 
 	if (BadPtr(chname))
 		return NULL;
 
 	len = strlen(chname);
-	if (MyClient(cptr) && len > CHANNELLEN)
+	if (MyUser(client) && len > CHANNELLEN)
 	{
 		len = CHANNELLEN;
 		*(chname + CHANNELLEN) = '\0';
 	}
-	if ((chptr = find_channel(chname, (aChannel *)NULL)))
-		return (chptr);
+	if ((channel = find_channel(chname, NULL)))
+		return (channel);
 	if (flag == CREATE)
 	{
-		chptr = (aChannel *)MyMalloc(sizeof(aChannel) + len);
-		bzero((char *)chptr, sizeof(aChannel));
-		strncpyzt(chptr->chname, chname, len + 1);
-		if (channel)
-			channel->prevch = chptr;
-		chptr->topic = NULL;
-		chptr->topic_nick = NULL;
-		chptr->prevch = NULL;
-		chptr->nextch = channel;
-		chptr->creationtime = MyClient(cptr) ? TStime() : (TS)0;
-		channel = chptr;
-		(void)add_to_channel_hash_table(chname, chptr);
-		IRCstats.channels++;
-		RunHook2(HOOKTYPE_CHANNEL_CREATE, cptr, chptr);
+		channel = safe_alloc(sizeof(Channel) + len);
+		strlcpy(channel->chname, chname, len + 1);
+		if (channels)
+			channels->prevch = channel;
+		channel->topic = NULL;
+		channel->topic_nick = NULL;
+		channel->prevch = NULL;
+		channel->nextch = channels;
+		channel->creationtime = MyUser(client) ? TStime() : 0;
+		channels = channel;
+		add_to_channel_hash_table(chname, channel);
+		irccounts.channels++;
+		RunHook2(HOOKTYPE_CHANNEL_CREATE, client, channel);
 	}
-	return chptr;
+	return channel;
 }
 
-/*
- * Slight changes in routine, now working somewhat symmetrical:
- *   First try to remove the client & channel pair to avoid duplicates
- *   Second check client & channel invite-list lengths and remove tail
- *   Finally add new invite-links to both client and channel
- * Should U-lined clients have higher limits?   -Donwulff
+/** Register an invite from someone to a channel - so they can bypass +i etc.
+ * @param from		The person sending the invite
+ * @param to		The person who is invited to join
+ * @param channel	The channel
+ * @param mtags		Message tags associated with this INVITE command
  */
-
-void add_invite(aClient *cptr, aChannel *chptr)
+void add_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags)
 {
 	Link *inv, *tmp;
 
-	del_invite(cptr, chptr);
-	/*
-	 * delete last link in chain if the list is max length
-	 */
-	if (list_length(cptr->user->invited) >= MAXCHANNELSPERUSER)
+	del_invite(to, channel);
+	/* If too many invite entries then delete the oldest one */
+	if (list_length(to->user->invited) >= MAXCHANNELSPERUSER)
 	{
-/*		This forgets the channel side of invitation     -Vesa
-		inv = cptr->user->invited;
-		cptr->user->invited = inv->next;
-		free_link(inv);
-*/
-		for (tmp = cptr->user->invited; tmp->next; tmp = tmp->next)
+		for (tmp = to->user->invited; tmp->next; tmp = tmp->next)
 			;
-		del_invite(cptr, tmp->value.chptr);
+		del_invite(to, tmp->value.channel);
 
 	}
 	/* We get pissy over too many invites per channel as well now,
 	 * since otherwise mass-inviters could take up some major
 	 * resources -Donwulff
 	 */
-	if (list_length(chptr->invites) >= MAXCHANNELSPERUSER)
+	if (list_length(channel->invites) >= MAXCHANNELSPERUSER)
 	{
-		for (tmp = chptr->invites; tmp->next; tmp = tmp->next)
+		for (tmp = channel->invites; tmp->next; tmp = tmp->next)
 			;
-		del_invite(tmp->value.cptr, chptr);
+		del_invite(tmp->value.client, channel);
 	}
 	/*
 	 * add client to the beginning of the channel invite list
 	 */
 	inv = make_link();
-	inv->value.cptr = cptr;
-	inv->next = chptr->invites;
-	chptr->invites = inv;
+	inv->value.client = to;
+	inv->next = channel->invites;
+	channel->invites = inv;
 	/*
 	 * add channel to the beginning of the client invite list
 	 */
 	inv = make_link();
-	inv->value.chptr = chptr;
-	inv->next = cptr->user->invited;
-	cptr->user->invited = inv;
+	inv->value.channel = channel;
+	inv->next = to->user->invited;
+	to->user->invited = inv;
+
+	RunHook4(HOOKTYPE_INVITE, from, to, channel, mtags);
 }
 
-/*
- * Delete Invite block from channel invite list and client invite list
+/** Delete a previous invite of someone to a channel.
+ * @param client	The client who was invited
+ * @param channel	The channel to which the person was invited
  */
-void del_invite(aClient *cptr, aChannel *chptr)
+void del_invite(Client *client, Channel *channel)
 {
 	Link **inv, *tmp;
 
-	for (inv = &(chptr->invites); (tmp = *inv); inv = &tmp->next)
-		if (tmp->value.cptr == cptr)
+	for (inv = &(channel->invites); (tmp = *inv); inv = &tmp->next)
+		if (tmp->value.client == client)
 		{
 			*inv = tmp->next;
 			free_link(tmp);
 			break;
 		}
 
-	for (inv = &(cptr->user->invited); (tmp = *inv); inv = &tmp->next)
-		if (tmp->value.chptr == chptr)
+	for (inv = &(client->user->invited); (tmp = *inv); inv = &tmp->next)
+		if (tmp->value.channel == channel)
 		{
 			*inv = tmp->next;
 			free_link(tmp);
@@ -1360,528 +1089,353 @@ void del_invite(aClient *cptr, aChannel *chptr)
 		}
 }
 
-/*
-**  Subtract one user from channel i (and free channel
-**  block, if channel became empty).
-*/
-void sub1_from_channel(aChannel *chptr)
+/** Is the user 'client' invited to channel 'channel' by a chanop?
+ * @param client	The client who was invited
+ * @param channel	The channel to which the person was invited
+ */
+int is_invited(Client *client, Channel *channel)
+{
+	Link *lp;
+
+	for (lp = client->user->invited; lp; lp = lp->next)
+		if (lp->value.channel == channel)
+			return 1;
+	return 0;
+}
+
+/** Subtract one user from channel i. Free the channel if it became empty.
+ * @param channel The channel
+ * @returns 1 if the channel was freed, 0 if the channel still exists.
+ */
+int sub1_from_channel(Channel *channel)
 {
 	Ban *ban;
 	Link *lp;
+	int should_destroy = 1;
 
-        /* if (--chptr->users <= 0) */
-	if (chptr->users == 0 || --chptr->users == 0)
-	{
-		/*
-		 * Now, find all invite links from channel structure
-		 */
-		RunHook(HOOKTYPE_CHANNEL_DESTROY, chptr);
-		while ((lp = chptr->invites))
-			del_invite(lp->value.cptr, chptr);
-
-		while (chptr->banlist)
-		{
-			ban = chptr->banlist;
-			chptr->banlist = ban->next;
-			MyFree(ban->banstr);
-			MyFree(ban->who);
-			free_ban(ban);
-		}
-		while (chptr->exlist)
-		{
-			ban = chptr->exlist;
-			chptr->exlist = ban->next;
-			MyFree(ban->banstr);
-			MyFree(ban->who);
-			free_ban(ban);
-		}
-		while (chptr->invexlist)
-		{
-			ban = chptr->invexlist;
-			chptr->invexlist = ban->next;
-			MyFree(ban->banstr);
-			MyFree(ban->who);
-			free_ban(ban);
-		}
-#ifdef EXTCMODE
-		/* free extcmode params */
-		extcmode_free_paramlist(chptr->mode.extmodeparam);
-		chptr->mode.extmodeparam = NULL;
-#endif
-#ifdef NEWCHFLOODPROT
-		chanfloodtimer_stopchantimers(chptr);
-		if (chptr->mode.floodprot)
-			MyFree(chptr->mode.floodprot);
-#endif
-#ifdef JOINTHROTTLE
-		cmodej_delchannelentries(chptr);
-#endif
-		if (chptr->mode_lock)
-			MyFree(chptr->mode_lock);
-		if (chptr->topic)
-			MyFree(chptr->topic);
-		if (chptr->topic_nick)
-			MyFree(chptr->topic_nick);
-		if (chptr->prevch)
-			chptr->prevch->nextch = chptr->nextch;
-		else
-			channel = chptr->nextch;
-		if (chptr->nextch)
-			chptr->nextch->prevch = chptr->prevch;
-		(void)del_from_channel_hash_table(chptr->chname, chptr);
-		IRCstats.channels--;
-		MyFree((char *)chptr);
-	}
-}
-
-int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
-{
-	Membership *lp;
-	MembershipL *lp2;
-	int c_limit, t_limit, banthem;
-
-	if (!MyClient(sptr))
-		return 0;
-	if (IsOper(sptr) || IsULine(sptr))
-		return 0;
-	if (is_skochanop(sptr, chptr))
+	--channel->users;
+	if (channel->users > 0)
 		return 0;
 
-	if (!(lp = find_membership_link(sptr->user->channel, chptr)))
+	/* No users in the channel anymore */
+	channel->users = 0; /* to be sure */
+
+	/* If the channel is +P then this hook will actually stop destruction. */
+	RunHook2(HOOKTYPE_CHANNEL_DESTROY, channel, &should_destroy);
+	if (!should_destroy)
 		return 0;
 
-	lp2 = (MembershipL *) lp;
-
-#ifdef NEWCHFLOODPROT
-	if (!chptr->mode.floodprot || !chptr->mode.floodprot->l[FLD_TEXT])
-		return 0;
-	c_limit = chptr->mode.floodprot->l[FLD_TEXT];
-	t_limit = chptr->mode.floodprot->per;
-	banthem = (chptr->mode.floodprot->a[FLD_TEXT] == 'b') ? 1 : 0;
-#else
-	if ((chptr->mode.msgs < 1) || (chptr->mode.per < 1))
-		return 0;
-	c_limit = chptr->mode.msgs;
-	t_limit = chptr->mode.per;
-	banthem = chptr->mode.kmode;
-#endif
-	/* if current - firstmsgtime >= mode.per, then reset,
-	 * if nummsg > mode.msgs then kick/ban
+	/* We are now going to destroy the channel.
+	 * But first we will destroy all kinds of references and lists...
 	 */
-	Debug((DEBUG_ERROR, "Checking for flood +f: firstmsg=%d (%ds ago), new nmsgs: %d, limit is: %d:%d",
-		lp2->flood.firstmsg, TStime() - lp2->flood.firstmsg, lp2->flood.nmsg + 1,
-		c_limit, t_limit));
-	if ((TStime() - lp2->flood.firstmsg) >= t_limit)
+
+	moddata_free_channel(channel);
+
+	while ((lp = channel->invites))
+		del_invite(lp->value.client, channel);
+
+	while (channel->banlist)
 	{
-		/* reset */
-		lp2->flood.firstmsg = TStime();
-		lp2->flood.nmsg = 1;
-		return 0; /* forget about it.. */
+		ban = channel->banlist;
+		channel->banlist = ban->next;
+		safe_free(ban->banstr);
+		safe_free(ban->who);
+		free_ban(ban);
+	}
+	while (channel->exlist)
+	{
+		ban = channel->exlist;
+		channel->exlist = ban->next;
+		safe_free(ban->banstr);
+		safe_free(ban->who);
+		free_ban(ban);
+	}
+	while (channel->invexlist)
+	{
+		ban = channel->invexlist;
+		channel->invexlist = ban->next;
+		safe_free(ban->banstr);
+		safe_free(ban->who);
+		free_ban(ban);
 	}
 
-	/* increase msgs */
-	lp2->flood.nmsg++;
+	/* free extcmode params */
+	extcmode_free_paramlist(channel->mode.extmodeparams);
 
-	if ((lp2->flood.nmsg) > c_limit)
-	{
-		char comment[1024], mask[1024];
-		ircsprintf(comment,
-		    "Flooding (Limit is %i lines per %i seconds)",
-		    c_limit, t_limit);
-		if (banthem)
-		{		/* ban. */
-			ircsprintf(mask, "*!*@%s", GetHost(sptr));
-			add_listmode(&chptr->banlist, &me, chptr, mask);
-			sendto_serv_butone(&me, ":%s MODE %s +b %s 0",
-			    me.name, chptr->chname, mask);
-			sendto_channel_butserv(chptr, &me,
-			    ":%s MODE %s +b %s", me.name, chptr->chname, mask);
-		}
-		sendto_channel_butserv(chptr, &me,
-		    ":%s KICK %s %s :%s", me.name,
-		    chptr->chname, sptr->name, comment);
-		sendto_serv_butone_token(cptr, me.name,
-			MSG_KICK, TOK_KICK, 
-			"%s %s :%s",
-		   chptr->chname, sptr->name, comment);
-		remove_user_from_channel(sptr, chptr);
-		return 1;
-	}
-	return 0;
+	safe_free(channel->mode_lock);
+	safe_free(channel->topic);
+	safe_free(channel->topic_nick);
+
+	if (channel->prevch)
+		channel->prevch->nextch = channel->nextch;
+	else
+		channels = channel->nextch;
+
+	if (channel->nextch)
+		channel->nextch->prevch = channel->prevch;
+	del_from_channel_hash_table(channel->chname, channel);
+
+	irccounts.channels--;
+	safe_free(channel);
+	return 1;
 }
 
-void send_user_joins(aClient *cptr, aClient *user)
-{
-	Membership *lp;
-	aChannel *chptr;
-	int  cnt = 0, len = 0, clen;
-	char *mask;
-
-	snprintf(buf, sizeof buf, ":%s %s ", user->name,	
-	    (IsToken(cptr) ? TOK_JOIN : MSG_JOIN));
-	len = strlen(buf);
-
-	for (lp = user->user->channel; lp; lp = lp->next)
-	{
-		chptr = lp->chptr;
-		if ((mask = index(chptr->chname, ':')))
-			if (match(++mask, cptr->name))
-				continue;
-		if (*chptr->chname == '&')
-			continue;
-		clen = strlen(chptr->chname);
-		if (clen + 1 + len > BUFSIZE - 3)
-		{
-			if (cnt)
-			{
-				buf[len - 1] = '\0';
-				sendto_one(cptr, "%s", buf);
-			}
-			snprintf(buf, sizeof buf, ":%s %s ", user->name,
-			    (IsToken(cptr) ? TOK_JOIN : MSG_JOIN));
-			len = strlen(buf);
-			cnt = 0;
-		}
-		(void)strlcpy(buf + len, chptr->chname, sizeof buf-len);
-		cnt++;
-		len += clen;
-		if (lp->next)
-		{
-			len++;
-			(void)strlcat(buf, ",", sizeof buf);
-		}
-	}
-	if (*buf && cnt)
-		sendto_one(cptr, "%s", buf);
-
-	return;
-}
-
-/*
- * rejoin_doparts:
- * sends a PART to all channels (to local users only)
+/** Set channel mode lock on the channel, these are modes that users cannot change.
+ * @param client	The client or server issueing the MLOCK
+ * @param channel	The channel that will be MLOCK'ed
+ * @param newmlock	The MLOCK string: list of mode characters that are locked
  */
-void rejoin_doparts(aClient *sptr, char did_parts[])
+void set_channel_mlock(Client *client, Channel *channel, const char *newmlock, int propagate)
 {
-	Membership *tmp;
-	aChannel *chptr;
-	char *comment = "Rejoining because of user@host change";
-	int i = 0;
-
-	for (tmp = sptr->user->channel; tmp; tmp = tmp->next)
-	{
-		chptr = tmp->chptr;
-		if (!chptr)
-			continue; /* Possible? */
-
-		/* If the user is banned, don't do it */
-		if (is_banned(sptr, chptr, BANCHK_JOIN))
-		{
-			did_parts[i++] = 0;
-			continue;
-		}
-		did_parts[i++] = 1;
-
-		if ((chptr->mode.mode & MODE_AUDITORIUM) &&
-		    !(tmp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)))
-		{
-			sendto_chanops_butone(sptr, chptr, ":%s!%s@%s PART %s :%s", sptr->name, sptr->user->username, GetHost(sptr), chptr->chname, comment);
-		} else
-			sendto_channel_butserv_butone(chptr, sptr, sptr, ":%s PART %s :%s", sptr->name, chptr->chname, comment);
-	}
-}
-
-/*
- * rejoin_dojoinandmode:
- * sends a JOIN and a MODE (if needed) to restore qaohv modes (to local users only)
- */
-void rejoin_dojoinandmode(aClient *sptr, char did_parts[])
-{
-	Membership *tmp;
-	aChannel *chptr;
-	int i, j = 0, n, flags;
-	char flagbuf[8]; /* For holding "qohva" and "*~@%+" */
-
-	for (tmp = sptr->user->channel; tmp; tmp = tmp->next)
-	{
-		flags = tmp->flags;
-		chptr = tmp->chptr;
-		if (!chptr)
-			continue; /* Is it possible? */
-
-		/* If the user is banned, don't do it */
-		if (!did_parts[j++])
-			continue;
-
-		if ((chptr->mode.mode & MODE_AUDITORIUM) && 
-		    !(flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)))
-		{
-			sendto_chanops_butone(sptr, chptr, ":%s!%s@%s JOIN :%s", sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
-		} else
-			sendto_channel_butserv_butone(chptr, sptr, sptr, ":%s JOIN :%s", sptr->name, chptr->chname);
-
-		/* Set the modes (if any) */
-		if (flags)
-		{
-			char *p = flagbuf;
-			if (flags & MODE_CHANOP)
-				*p++ = 'o';
-			if (flags & MODE_VOICE)
-				*p++ = 'v';
-			if (flags & MODE_HALFOP)
-				*p++ = 'h';
-			if (flags & MODE_CHANOWNER)
-				*p++ = 'q';
-			if (flags & MODE_CHANPROT)
-				*p++ = 'a';
-			*p = '\0';
-			parabuf[0] = '\0';
-			n = strlen(flagbuf);
-			if (n)
-			{
-				for (i=0; i < n; i++)
-				{
-					strcat(parabuf, sptr->name);
-					if (i < n - 1)
-						strcat(parabuf, " ");
-				}
-				sendto_channel_butserv_butone(chptr, &me, sptr, ":%s MODE %s +%s %s",
-					me.name, chptr->chname, flagbuf, parabuf);
-			}
-		}
-	}
-}
-
-#ifdef NEWCHFLOODPROT
-MODVAR RemoveFld *removefld_list = NULL;
-
-RemoveFld *chanfloodtimer_find(aChannel *chptr, char mflag)
-{
-RemoveFld *e;
-
-	for (e=removefld_list; e; e=e->next)
-	{
-		if ((e->chptr == chptr) && (e->m == mflag))
-			return e;
-	}
-	return NULL;
-}
-
-/*
- * Adds a "remove channelmode set by +f" timer.
- * chptr	Channel
- * mflag	Mode flag, eg 'C'
- * mbit		Mode bitflag, eg MODE_NOCTCP
- * when		when it should be removed
- * NOTES:
- * - This function takes care of overwriting of any previous timer
- *   for the same modechar.
- * - The function takes care of chptr->mode.floodprot->timer_flags,
- *   do not modify it yourself.
- * - chptr->mode.floodprot is asumed to be non-NULL.
- */
-void chanfloodtimer_add(aChannel *chptr, char mflag, long mbit, time_t when)
-{
-RemoveFld *e = NULL;
-unsigned char add=1;
-
-	if (chptr->mode.floodprot->timer_flags & mbit)
-	{
-		/* Already exists... */
-		e = chanfloodtimer_find(chptr, mflag);
-		if (e)
-			add = 0;
-	}
-
-	if (add)
-		e = MyMallocEx(sizeof(RemoveFld));
-
-	e->chptr = chptr;
-	e->m = mflag;
-	e->when = when;
-
-	if (add)
-		AddListItem(e, removefld_list);
-
-	chptr->mode.floodprot->timer_flags |= mbit;
-}
-
-void chanfloodtimer_del(aChannel *chptr, char mflag, long mbit)
-{
-RemoveFld *e;
-
-	if (chptr->mode.floodprot && !(chptr->mode.floodprot->timer_flags & mbit))
-		return; /* nothing to remove.. */
-	e = chanfloodtimer_find(chptr, mflag);
-	if (!e)
-		return;
-
-	DelListItem(e, removefld_list);
-
-	if (chptr->mode.floodprot)
-		chptr->mode.floodprot->timer_flags &= ~mbit;
-}
-
-long get_chanbitbychar(char m)
-{
-aCtab *tab = &cFlagTab[0];
-	while(tab->mode != 0x0)
-	{
-		if (tab->flag == m)
-			return tab->mode;
-		tab++;;
-	}
-	return 0;
-}
-
-EVENT(modef_event)
-{
-RemoveFld *e = removefld_list;
-time_t now;
-long mode;
-
-	now = TStime();
-	
-	while(e)
-	{
-		if (e->when <= now)
-		{
-			/* Remove chanmode... */
-#ifdef NEWFLDDBG
-			sendto_realops("modef_event: chan %s mode -%c EXPIRED", e->chptr->chname, e->m);
-#endif
-			mode = get_chanbitbychar(e->m);
-			if (e->chptr->mode.mode & mode)
-			{
-				sendto_serv_butone(&me, ":%s MODE %s -%c 0", me.name, e->chptr->chname, e->m);
-				sendto_channel_butserv(e->chptr, &me, ":%s MODE %s -%c", me.name, e->chptr->chname, e->m);
-				e->chptr->mode.mode &= ~mode;
-			}
-			
-			/* And delete... */
-			e = (RemoveFld *)DelListItem(e, removefld_list);
-		} else {
-#ifdef NEWFLDDBG
-			sendto_realops("modef_event: chan %s mode -%c about %d seconds",
-				e->chptr->chname, e->m, e->when - now);
-#endif
-			e = e->next;
-		}
-	}
-}
-
-void init_modef()
-{
-	EventAddEx(NULL, "modef_event", 10, 0, modef_event, NULL);
-}
-
-void chanfloodtimer_stopchantimers(aChannel *chptr)
-{
-RemoveFld *e = removefld_list;
-	while(e)
-	{
-		if (e->chptr == chptr)
-			e = (RemoveFld *)DelListItem(e, removefld_list);
-		else
-			e = e->next;
-	}
-}
-
-
-
-int do_chanflood(ChanFloodProt *chp, int what)
-{
-
-	if (!chp || !chp->l[what]) /* no +f or not restricted */
-		return 0;
-	if (TStime() - chp->t[what] >= chp->per)
-	{
-		chp->t[what] = TStime();
-		chp->c[what] = 1;
-	} else
-	{
-		chp->c[what]++;
-		if ((chp->c[what] > chp->l[what]) &&
-		    (TStime() - chp->t[what] < chp->per))
-		{
-			/* reset it too (makes it easier for chanops to handle the situation) */
-			/*
-			 *XXchp->t[what] = TStime();
-			 *XXchp->c[what] = 1;
-			 * 
-			 * BAD.. there are some situations where we might 'miss' a flood
-			 * because of this. The reset has been moved to -i,-m,-N,-C,etc.
-			*/
-			return 1; /* flood detected! */
-		}
-	}
-	return 0;
-}
-
-void do_chanflood_action(aChannel *chptr, int what, char *text)
-{
-long modeflag = 0;
-aCtab *tab = &cFlagTab[0];
-char m;
-
-	m = chptr->mode.floodprot->a[what];
-	if (!m)
-		return;
-
-	/* [TODO: add extended channel mode support] */
-	
-	while(tab->mode != 0x0)
-	{
-		if (tab->flag == m)
-		{
-			modeflag = tab->mode;
-			break;
-		}
-		tab++;
-	}
-
-	if (!modeflag)
-		return;
-		
-	if (!(chptr->mode.mode & modeflag))
-	{
-		char comment[1024], target[CHANNELLEN + 8];
-		ircsprintf(comment, "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
-			text, chptr->mode.floodprot->l[what], chptr->mode.floodprot->per, m);
-		ircsprintf(target, "%%%s", chptr->chname);
-		sendto_channelprefix_butone_tok(NULL, &me, chptr,
-			PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-			MSG_NOTICE, TOK_NOTICE, target, comment, 0);
-		sendto_serv_butone(&me, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
-		sendto_channel_butserv(chptr, &me, ":%s MODE %s +%c", me.name, chptr->chname, m);
-		chptr->mode.mode |= modeflag;
-		if (chptr->mode.floodprot->r[what]) /* Add remove-chanmode timer... */
-		{
-			chanfloodtimer_add(chptr, m, modeflag, TStime() + ((long)chptr->mode.floodprot->r[what] * 60) - 5);
-			/* (since the chanflood timer event is called every 10s, we do -5 here so the accurancy will
-			 *  be -5..+5, without it it would be 0..+10.)
-			 */
-		}
-	}
-}
-#endif
-
-/* set_channel_mlock()
- *
- * inputs	- client, source, channel, params
- * output	- 
- * side effects - channel mlock is changed / MLOCK is propagated
- */
-void set_channel_mlock(aClient *cptr, aClient *sptr, aChannel *chptr, const char *newmlock, int propagate)
-{
-	if (chptr->mode_lock)
-		MyFree(chptr->mode_lock);
-	chptr->mode_lock = (newmlock != NULL) ? strdup(newmlock) : NULL;
+	safe_strdup(channel->mode_lock, newmlock);
 
 	if (propagate)
 	{
-		sendto_serv_butone_token(cptr, cptr->name, MSG_MLOCK, TOK_MLOCK, "%B %s :%s",
-					 chptr->creationtime, chptr->chname,
-					 BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
+		sendto_server(client, 0, 0, NULL, ":%s MLOCK %lld %s :%s",
+			      client->id, (long long)channel->creationtime, channel->chname,
+			      BadPtr(channel->mode_lock) ? "" : channel->mode_lock);
 	}
+}
+
+/** Parse a channelmode line.
+ * @in pm A ParseMode struct, used to return values and to maintain internal state.
+ * @in modebuf_in Buffer pointing to mode characters (eg: +snk-l)
+ * @in parabuf_in Buffer pointing to all parameters (eg: key 123)
+ * @retval Returns 1 if we have valid data to return, 0 if at end of mode line.
+ * @section parse_chanmode_example Example:
+ * @code
+ * ParseMode pm;
+ * int ret;
+ * for (ret = parse_chanmode(&pm, modebuf, parabuf); ret; ret = parse_chanmode(&pm, NULL, NULL))
+ * {
+ *         ircd_log(LOG_ERROR, "Got %c%c %s",
+ *                  pm.what == MODE_ADD ? '+' : '-',
+ *                  pm.modechar,
+ *                  pm.param ? pm.param : "");
+ * }
+ * @endcode
+ */
+int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
+{
+	if (modebuf_in)
+	{
+		/* Initialize */
+		memset(pm, 0, sizeof(ParseMode));
+		pm->modebuf = modebuf_in;
+		pm->parabuf = parabuf_in;
+		pm->what = MODE_ADD;
+	}
+
+	while(1)
+	{
+		if (*pm->modebuf == '\0')
+			return 0;
+		else if (*pm->modebuf == '+')
+		{
+			pm->what = MODE_ADD;
+			pm->modebuf++;
+			continue;
+		}
+		else if (*pm->modebuf == '-')
+		{
+			pm->what = MODE_DEL;
+			pm->modebuf++;
+			continue;
+		}
+		else
+		{
+			CoreChannelModeTable *tab = &corechannelmodetable[0];
+			int i;
+			int eatparam = 0;
+
+			/* Set some defaults */
+			pm->extm = NULL;
+			pm->modechar = *pm->modebuf;
+			pm->param = NULL;
+
+			while (tab->mode != 0x0)
+			{
+				if (tab->flag == *pm->modebuf)
+					break;
+				tab++;
+			}
+
+			if (tab->mode)
+			{
+				/* INTERNAL MODE */
+				if (tab->parameters)
+				{
+					if ((pm->what == MODE_DEL) && (tab->flag == 'l'))
+						eatparam = 0; /* -l is special: no parameter required */
+					else
+						eatparam = 1; /* all other internal parameter modes do require a parameter on unset */
+				}
+			} else {
+				/* EXTENDED CHANNEL MODE */
+				int found = 0;
+				for (i=0; i <= Channelmode_highest; i++)
+					if (Channelmode_Table[i].flag == *pm->modebuf)
+					{
+						found = 1;
+						break;
+					}
+				if (!found)
+				{
+					/* Not found. Will be ignored, just move on.. */
+					pm->modebuf++;
+					continue;
+				}
+				pm->extm = &Channelmode_Table[i];
+				if (Channelmode_Table[i].paracount == 1)
+				{
+					if (pm->what == MODE_ADD)
+						eatparam = 1;
+					else if (Channelmode_Table[i].unset_with_param)
+						eatparam = 1;
+					/* else 0 (if MODE_DEL && !unset_with_param) */
+				}
+			}
+
+			if (eatparam)
+			{
+				/* Hungry.. */
+				if (pm->parabuf && *pm->parabuf)
+				{
+					char *start, *end;
+					for (; *pm->parabuf == ' '; pm->parabuf++); /* skip whitespace */
+					start = pm->parabuf;
+					if (*pm->parabuf == '\0')
+					{
+						pm->modebuf++;
+						continue; /* invalid, got mode but no parameter available */
+					}
+					end = strchr(start, ' ');
+					/* copy start .. end (where end may be null, then just copy all) */
+					if (end)
+					{
+						pm->parabuf = end + 1; /* point to next param, or \0 */
+						if (end - start + 1 > sizeof(pm->buf))
+							end = start + sizeof(pm->buf); /* 'never' reached */
+						strlcpy(pm->buf, start, end - start + 1);
+					}
+					else
+					{
+						strlcpy(pm->buf, start, sizeof(pm->buf));
+						pm->parabuf = pm->parabuf + strlen(pm->parabuf); /* point to \0 at end */
+					}
+					pm->param = pm->buf;
+				} else {
+					pm->modebuf++;
+					continue; /* invalid, got mode but no parameter available */
+				}
+			}
+		}
+		pm->modebuf++; /* advance pointer */
+		return 1;
+	}
+}
+
+/** Returns 1 if both clients are at least in 1 same channel */
+int has_common_channels(Client *c1, Client *c2)
+{
+	Membership *lp;
+
+	for (lp = c1->user->channel; lp; lp = lp->next)
+	{
+		if (IsMember(c2, lp->channel) && user_can_see_member(c1, c2, lp->channel))
+			return 1;
+	}
+	return 0;
+}
+
+/** Returns 1 if user 'user' can see channel member 'target'.
+ * This may return 0 if the user is 'invisible' due to mode +D rules.
+ * NOTE: Membership is unchecked, assumed membership of both.
+ */
+int user_can_see_member(Client *user, Client *target, Channel *channel)
+{
+	Hook *h;
+	int j = 0;
+
+	if (user == target)
+		return 1;
+
+	for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+	{
+		j = (*(h->func.intfunc))(target,channel);
+		if (j != 0)
+			break;
+	}
+
+	/* We must ensure that user is allowed to "see" target */
+	if (j != 0 && !(is_skochanop(target, channel) || has_voice(target,channel)) && !is_skochanop(user, channel))
+		return 0;
+
+	return 1;
+}
+
+/** Returns 1 if user 'target' is invisible in channel 'channel'.
+ * This may return 0 if the user is 'invisible' due to mode +D rules.
+ */
+int invisible_user_in_channel(Client *target, Channel *channel)
+{
+	Hook *h;
+	int j = 0;
+
+	for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+	{
+		j = (*(h->func.intfunc))(target,channel);
+		if (j != 0)
+			break;
+	}
+
+	/* We must ensure that user is allowed to "see" target */
+	if (j != 0 && !(is_skochanop(target, channel) || has_voice(target,channel)))
+		return 1;
+
+	return 0;
+}
+
+/** Send a message to the user that (s)he is using an invalid channel name.
+ * This is usually called after an if (MyUser(client) && !valid_channelname(name)).
+ * @param client      The client to send the message to.
+ * @param channelname The (invalid) channel that the user tried to join.
+ */
+void send_invalid_channelname(Client *client, char *channelname)
+{
+	char *reason;
+
+	if (*channelname != '#')
+	{
+		reason = "Channel name must start with a hash mark (#)";
+	} else
+	if (strlen(channelname) > CHANNELLEN)
+	{
+		reason = "Channel name is too long";
+	} else {
+		switch(iConf.allowed_channelchars)
+		{
+			case ALLOWED_CHANNELCHARS_ASCII:
+				reason = "Channel name contains illegal characters (must be ASCII)";
+				break;
+			case ALLOWED_CHANNELCHARS_UTF8:
+				reason = "Channel name contains illegal characters (must be valid UTF8)";
+				break;
+			case ALLOWED_CHANNELCHARS_ANY:
+			default:
+				reason = "Channel name contains illegal characters";
+		}
+	}
+
+	sendnumeric(client, ERR_FORBIDDENCHANNEL, channelname, reason);
+}
+
+/** Is the provided string possibly an extended ban?
+ * Note that it still may not exist, it just tests the first part.
+ */
+int is_extended_ban(const char *str)
+{
+	if ((str[0] == '~') && (str[1] != '\0') && (str[2] == ':'))
+		return 1;
+	return 0;
 }

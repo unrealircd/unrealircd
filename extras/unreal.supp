@@ -1,0 +1,10 @@
+{
+   arc4_rnd1
+   Memcheck:Value8
+   fun:getrandom8
+}
+{
+   arc4_rnd2
+   Memcheck:Value8
+   fun:add_entropy_configfile
+}

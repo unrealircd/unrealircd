@@ -18,54 +18,30 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- * $Id$
  */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "channel.h"
-#include "version.h"
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
+#define UNREALCORE
+#include "unrealircd.h"
 #ifdef _WIN32
-#include <io.h>
 #define RTLD_NOW 0
-const char *our_dlerror(void);
 #elif defined(HPUX)
 #include <dl.h>
 #define RTLD_NOW BIND_IMMEDIATE
 #else
 #include <dlfcn.h>
 #endif
-#include <fcntl.h>
-#ifndef _WIN32
-#include <dirent.h>
-#endif
-#include "h.h"
-#include "proto.h"
 #ifndef RTLD_NOW
 #define RTLD_NOW RTLD_LAZY
 #endif
-#define UNREALCORE
 #include "modversion.h"
 
 Hook	   	*Hooks[MAXHOOKTYPES];
 Hooktype	Hooktypes[MAXCUSTOMHOOKS];
 Callback	*Callbacks[MAXCALLBACKS];	/* Callback objects for modules, used for rehashing etc (can be multiple) */
 Callback	*RCallbacks[MAXCALLBACKS];	/* 'Real' callback function, used for callback function calls */
-Efunction	*Efunctions[MAXEFUNCTIONS];	/* Efunction objects (used for rehashing) */
 MODVAR Module          *Modules = NULL;
 MODVAR Versionflag     *Versionflags = NULL;
 
-int     Module_Depend_Resolve(Module *p, char *path);
 Module *Module_make(ModuleHeader *header, 
 #ifdef _WIN32
        HMODULE mod
@@ -74,122 +50,44 @@ Module *Module_make(ModuleHeader *header,
 #endif
        );
 
-typedef struct {
-	char *name;
-	void **funcptr;
-} EfunctionsList;
-
-/* Efuncs */
-int (*do_join)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
-int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
-void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
-void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
-    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
-int (*m_umode)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-int (*register_user)(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
-int (*tkl_hash)(unsigned int c);
-char (*tkl_typetochar)(int type);
-aTKline *(*tkl_add_line)(int type, char *usermask, char *hostmask, char *reason, char *setby,
-    TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason);
-aTKline *(*tkl_del_line)(aTKline *tkl);
-void (*tkl_check_local_remove_shun)(aTKline *tmp);
-aTKline *(*tkl_expire)(aTKline * tmp);
-EVENT((*tkl_check_expire));
-int (*find_tkline_match)(aClient *cptr, int xx);
-int (*find_shun)(aClient *cptr);
-int(*find_spamfilter_user)(aClient *sptr, int flags);
-aTKline *(*find_qline)(aClient *cptr, char *nick, int *ishold);
-int  (*find_tkline_match_zap)(aClient *cptr);
-void (*tkl_stats)(aClient *cptr, int type, char *para);
-void (*tkl_synch)(aClient *sptr);
-int (*m_tkl)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
-int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
-int (*dospamfilter_viruschan)(aClient *sptr, aTKline *tk, int type);
-int  (*find_tkline_match_zap_ex)(aClient *cptr, aTKline **rettk);
-void (*send_list)(aClient *cptr, int numsend);
-char *(*stripbadwords_channel)(char *str, int *blocked);
-char *(*stripbadwords_message)(char *str, int *blocked);
-char *(*stripbadwords_quit)(char *str, int *blocked);
-unsigned char *(*StripColors)(unsigned char *text);
-const char *(*StripControlCodes)(unsigned char *text);
-void (*spamfilter_build_user_string)(char *buf, char *nick, aClient *acptr);
-int (*is_silenced)(aClient *sptr, aClient *acptr);
-void (*send_protoctl_servers)(aClient *sptr, int response);
-int (*verify_link)(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
-void (*send_server_message)(aClient *sptr);
-
-static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
-/* 00 */	{NULL, NULL},
-/* 01 */	{"do_join", (void *)&do_join},
-/* 02 */	{"join_channel", (void *)&join_channel},
-/* 03 */	{"can_join", (void *)&can_join},
-/* 04 */	{"do_mode", (void *)&do_mode},
-/* 05 */	{"set_mode", (void *)&set_mode},
-/* 06 */	{"m_umode", (void *)&m_umode},
-/* 07 */	{"register_user", (void *)&register_user},
-/* 08 */	{"tkl_hash", (void *)&tkl_hash},
-/* 09 */	{"tkl_typetochar", (void *)&tkl_typetochar},
-/* 10 */	{"tkl_add_line", (void *)&tkl_add_line},
-/* 11 */	{"tkl_del_line", (void *)&tkl_del_line},
-/* 12 */	{"tkl_check_local_remove_shun", (void *)&tkl_check_local_remove_shun},
-/* 13 */	{"tkl_expire", (void *)&tkl_expire},
-/* 14 */	{"tkl_check_expire", (void *)&tkl_check_expire},
-/* 15 */	{"find_tkline_match", (void *)&find_tkline_match},
-/* 16 */	{"find_shun", (void *)&find_shun},
-/* 17 */	{"find_spamfilter_user", (void *)&find_spamfilter_user},
-/* 18 */	{"find_qline", (void *)&find_qline},
-/* 19 */	{"find_tkline_match_zap", (void *)&find_tkline_match_zap},
-/* 20 */	{"tkl_stats", (void *)&tkl_stats},
-/* 21 */	{"tkl_synch", (void *)&tkl_synch},
-/* 22 */	{"m_tkl", (void *)&m_tkl},
-/* 23 */	{"place_host_ban", (void *)&place_host_ban},
-/* 24 */	{"dospamfilter", (void *)&dospamfilter},
-/* 25 */	{"dospamfilter_viruschan", (void *)&dospamfilter_viruschan},
-/* 26 */	{"find_tkline_match_zap_ex", (void *)&find_tkline_match_zap_ex},
-/* 27 */	{"send_list", (void *)&send_list},
-/* 28 */	{"stripbadwords_channel", (void *)&stripbadwords_channel},
-/* 29 */	{"stripbadwords_message", (void *)&stripbadwords_message},
-/* 30 */	{"stripbadwords_quit", (void *)&stripbadwords_quit},
-/* 31 */	{"StripColors", (void *)&StripColors},
-/* 32 */	{"StripControlCodes", (void *)&StripControlCodes},
-/* 33 */	{"spamfilter_build_user_string", (void *)&spamfilter_build_user_string},
-/* 34 */	{"is_silenced", (void *)&is_silenced},
-/* 35 */	{"send_protoctl_servers", (void *)&send_protoctl_servers},
-/* 36 */	{"verify_link", (void *)&verify_link},
-/* 37 */	{"send_server_message", (void *)&send_server_message},
-/* 38 */	{NULL, NULL}
-};
-
-
 #ifdef UNDERSCORE
-void *obsd_dlsym(void *handle, char *symbol) {
-    char *obsdsymbol = (char*)MyMalloc(strlen(symbol) + 2);
-    void *symaddr = NULL;
+/* dlsym for OpenBSD */
+void *obsd_dlsym(void *handle, char *symbol)
+{
+	size_t buflen = strlen(symbol) + 2;
+	char *obsdsymbol = safe_alloc(buflen);
+	void *symaddr = NULL;
 
-    if (obsdsymbol) {
-       sprintf(obsdsymbol, "_%s", symbol);
-       symaddr = dlsym(handle, obsdsymbol);
-       free(obsdsymbol);
-    }
+	if (obsdsymbol)
+	{
+		ircsnprintf(obsdsymbol, buflen, "_%s", symbol);
+		symaddr = dlsym(handle, obsdsymbol);
+		safe_free(obsdsymbol);
+	}
 
-    return symaddr;
+	return symaddr;
 }
 #endif
 
+void deletetmp(char *path)
+{
+#ifndef NOREMOVETMP
+	if (!loop.config_test)
+		remove(path);
+#endif
+}
 
 void DeleteTempModules(void)
 {
 	char tempbuf[PATH_MAX+1];
 #ifndef _WIN32
-	DIR *fd = opendir("tmp");
+	DIR *fd = opendir(TMPDIR);
 	struct dirent *dir;
 
 	if (!fd) /* Ouch.. this is NOT good!! */
 	{
-		config_error("Unable to open 'tmp' directory: %s, please create one with the appropriate permissions",
-			strerror(errno));
+		config_error("Unable to open temp directory %s: %s, please create one with the appropriate permissions",
+			TMPDIR, strerror(errno));
 		if (!loop.ircd_booted)
 			exit(7);
 		return; 
@@ -197,44 +95,40 @@ void DeleteTempModules(void)
 
 	while ((dir = readdir(fd)))
 	{
-		if (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, ".."))
+		char *fname = dir->d_name;
+		if (!strcmp(fname, ".") || !strcmp(fname, ".."))
 			continue;
-		strcpy(tempbuf, "tmp/");
-		strcat(tempbuf, dir->d_name);
-		remove(tempbuf);
+		if (!strstr(fname, ".so") && !strstr(fname, ".conf") &&
+		    (strstr(fname, "core") || strstr(fname, "unrealircd_asan.")))
+			continue; /* core dump or ASan log */
+		ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, fname);
+		deletetmp(tempbuf);
 	}
 	closedir(fd);
 #else
 	WIN32_FIND_DATA hData;
-	HANDLE hFile = FindFirstFile("tmp/*", &hData);
+	HANDLE hFile;
+	
+	snprintf(tempbuf, sizeof(tempbuf), "%s/*", TMPDIR);
+	
+	hFile = FindFirstFile(tempbuf, &hData);
 	if (hFile != INVALID_HANDLE_VALUE)
 	{
 		if (strcmp(hData.cFileName, ".") || strcmp(hData.cFileName, ".."))
 		{
-			strcpy(tempbuf, "tmp/");
-			strcat(tempbuf, hData.cFileName);
-			remove(tempbuf);
+			ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, hData.cFileName);
+			deletetmp(tempbuf);
 		}
 	}
 	while (FindNextFile(hFile, &hData))
 	{
 		if (!strcmp(hData.cFileName, ".") || !strcmp(hData.cFileName, ".."))
 			continue;
-		strcpy(tempbuf, "tmp/");
-		strcat(tempbuf, hData.cFileName);
-		remove(tempbuf);
+		ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, hData.cFileName);
+		deletetmp(tempbuf);
 	}
 	FindClose(hFile);
 #endif	
-}
-
-void Module_Init(void)
-{
-	bzero(Hooks, sizeof(Hooks));
-	bzero(Hooktypes, sizeof(Hooktypes));
-	bzero(Callbacks, sizeof(Callback));
-	bzero(RCallbacks, sizeof(Callback));
-	bzero(Efunctions, sizeof(Efunction));
 }
 
 Module *Module_Find(char *name)
@@ -257,35 +151,18 @@ Module *Module_Find(char *name)
 
 int parse_modsys_version(char *version)
 {
-	int betaversion, tag;
-	if (!strcmp(version, "3.2.3"))
-		return 0x32300;
-	if (sscanf(version, "3.2-b%d-%d", &betaversion, &tag)) 
-	{
-		switch (betaversion)
-		{
-			case 5:
-				return 0x320b5;
-			case 6:
-				return 0x320b6;
-			case 7:
-				return 0x320b7;
-			case 8:
-				return 0x320b8;
-			default:
-				return 0;
-		}
-	}
+	if (!strcmp(version, "unrealircd-5"))
+		return 0x500000;
 	return 0;
 }
 
-void make_compiler_string(char *buf, unsigned int ver)
+void make_compiler_string(char *buf, size_t buflen, unsigned int ver)
 {
 unsigned int maj, min, plevel;
 
 	if (ver == 0)
 	{
-		strcpy(buf, "0");
+		strlcpy(buf, "0", buflen);
 		return;
 	}
 	
@@ -294,9 +171,107 @@ unsigned int maj, min, plevel;
 	plevel = ver & 0xff;
 	
 	if (plevel == 0)
-		sprintf(buf, "%d.%d", maj, min);
+		snprintf(buf, buflen, "%d.%d", maj, min);
 	else
-		sprintf(buf, "%d.%d.%d", maj, min, plevel);
+		snprintf(buf, buflen, "%d.%d.%d", maj, min, plevel);
+}
+
+/** Transform a loadmodule path like "third/la" to
+ * something like "/home/xyz/unrealircd/modules/third/la.so
+ * (and other tricks)
+ */
+char *Module_TransformPath(char *path_)
+{
+	static char path[1024];
+
+	/* Prefix the module path with MODULESDIR, unless it's an absolute path
+	 * (we check for "/", "\" and things like "C:" to detect absolute paths).
+	 */
+	if ((*path_ != '/') && (*path_ != '\\') && !(*path_ && (path_[1] == ':')))
+	{
+		snprintf(path, sizeof(path), "%s/%s", MODULESDIR, path_);
+	} else {
+		strlcpy(path, path_, sizeof(path));
+	}
+
+	/* Auto-suffix .dll / .so */
+	if (!strstr(path, MODULE_SUFFIX))
+		strlcat(path, MODULE_SUFFIX, sizeof(path));
+
+	return path;
+}
+
+/** This function is the inverse of Module_TransformPath() */
+char *Module_GetRelPath(char *fullpath)
+{
+	static char buf[512];
+	char prefix[512];
+	char *s = fullpath;
+
+	/* Strip the prefix */
+	snprintf(prefix, sizeof(prefix), "%s/", MODULESDIR);
+	if (!strncasecmp(fullpath, prefix, strlen(prefix)))
+		s += strlen(prefix);
+	strlcpy(buf, s, sizeof(buf));
+
+	/* Strip the suffix */
+	s = strstr(buf, MODULE_SUFFIX);
+	if (s)
+		*s = '\0';
+
+	return buf;
+}
+
+/** Validate a modules' ModuleHeader.
+ * @returns Error message is returned, or NULL if everything is OK.
+ */
+static char *validate_mod_header(char *relpath, ModuleHeader *mod_header)
+{
+	char *p;
+	static char buf[256];
+
+	if (!mod_header->name || !mod_header->version || !mod_header->author || !mod_header->description)
+		return "NULL values encountered in Mod_Header struct members";
+
+	/* Validate module name */
+	if (strcmp(mod_header->name, relpath))
+	{
+		snprintf(buf, sizeof(buf), "Module has path '%s' but uses name '%s' in MOD_HEADER. These should be the same!",
+			relpath, mod_header->name);
+		return buf;
+	}
+	/* This too, just to be sure.. we never ever want other characters
+	 * than these, since it may break the S2S SMOD command or /MODULE
+	 * output etc.
+	 */
+	for (p = mod_header->name; *p; p++)
+		if (!isalnum(*p) && !strchr("._-/", *p))
+			return "ModuleHeader.name contains illegal characters (must be: a-zA-Z0-9._-/)";
+
+	/* Validate version, even more strict */
+	if (!isdigit(mod_header->version[0]))
+		return "ModuleHeader.version must start with a digit";
+	for (p = mod_header->version; *p; p++)
+		if (!isalnum(*p) && !strchr("._-", *p))
+			return "ModuleHeader.version contains illegal characters (must be: a-zA-Z0-9._-)";
+
+	/* Author and description are not checked, has no constraints */
+
+	return NULL; /* SUCCESS */
+}
+
+int module_already_in_testing(char *relpath)
+{
+	Module *m;
+	for (m = Modules; m; m = m->next)
+	{
+		if (!(m->options & MOD_OPT_PERM) &&
+		    (!(m->flags & MODFLAG_TESTING) || (m->flags & MODFLAG_DELAYED)))
+			continue;
+		if (!strcmp(m->relpath, relpath))
+			return 1;
+	}
+	return 0;
 }
 
 /*
@@ -304,7 +279,6 @@ unsigned int maj, min, plevel;
 */
 char  *Module_Create(char *path_)
 {
-#ifndef STATIC_LINKING
 #ifdef _WIN32
 	HMODULE 	Mod;
 #else /* _WIN32 */
@@ -317,47 +291,50 @@ char  *Module_Create(char *path_)
 	char    *Mod_Version;
 	unsigned int *compiler_version;
 	static char 	errorbuf[1024];
-	char 		*path, *tmppath;
+	char 		*path, *relpath, *tmppath;
 	ModuleHeader    *mod_header = NULL;
 	int		ret = 0;
+	char		*reterr;
 	Module          *mod = NULL, **Mod_Handle = NULL;
 	char *expectedmodversion = our_mod_version;
 	unsigned int expectedcompilerversion = our_compiler_version;
 	long modsys_ver = 0;
-	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
-	       path_));
-	path = path_;
+	Debug((DEBUG_DEBUG, "Attempting to load module from %s", path_));
 
-	
-	tmppath = unreal_mktemp("tmp", unreal_getfilename(path));
-	if (!tmppath)
-		return "Unable to create temporary file!";
-#ifndef _WIN32
-	if(!strchr(path, '/'))
-#else
-	if (!strchr(path, '\\') && !strchr(path, '/'))
-#endif
-	{
-		path = MyMalloc(strlen(path) + 3);
-		strcpy(path, "./");
-		strcat(path, path_);
-	}
+	path = Module_TransformPath(path_);
+
+	relpath = Module_GetRelPath(path);
+	if (module_already_in_testing(relpath))
+		return 0;
 
 	if (!file_exists(path))
 	{
 		snprintf(errorbuf, sizeof(errorbuf), "Cannot open module file: %s", strerror(errno));
 		return errorbuf;
 	}
-	/* For OpenBSD, do not do a hardlinkink attempt first because it checks inode
-	 * numbers to see if a certain module is already loaded. -- Syzop
-	 * EDIT (2009): Looks like Linux got smart too, from now on we always copy....
-	 */
-	ret = unreal_copyfileex(path, tmppath, 0);
-	if (!ret)
+
+	if (loop.config_test)
 	{
-		snprintf(errorbuf, sizeof(errorbuf), "Failed to copy module file.");
-		return errorbuf;
+		/* For './unrealircd configtest' we don't have to do any copying and shit */
+		tmppath = path;
+	} else {
+		tmppath = unreal_mktemp(TMPDIR, unreal_getmodfilename(path));
+		if (!tmppath)
+			return "Unable to create temporary file!";
+
+		/* We have to copy the module, because otherwise the dynamic loader
+		 * will not load the new .so if we rehash while holding the original .so
+		 * We used to hardlink here instead of copy, but then OpenBSD and Linux
+		 * got smart and detected that, so now we always copy.
+		 */
+		ret = unreal_copyfileex(path, tmppath, 0);
+		if (!ret)
+		{
+			snprintf(errorbuf, sizeof(errorbuf), "Failed to copy module file.");
+			return errorbuf;
+		}
 	}
+
 	if ((Mod = irc_dlopen(tmppath, RTLD_NOW)))
 	{
 		/* We have engaged the borg cube. Scan for lifesigns. */
@@ -368,7 +345,7 @@ char  *Module_Create(char *path_)
 			         "Module was compiled for '%s', we were configured for '%s'. SOLUTION: Recompile the module(s).",
 			         Mod_Version, expectedmodversion);
 			irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return errorbuf;
 		}
 		if (!Mod_Version)
@@ -376,33 +353,33 @@ char  *Module_Create(char *path_)
 			snprintf(errorbuf, sizeof(errorbuf),
 				"Module is lacking Mod_Version. Perhaps a very old one you forgot to recompile?");
 			irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return errorbuf;
 		}
 		irc_dlsym(Mod, "compiler_version", compiler_version);
 		if (compiler_version && ( ((*compiler_version) & 0xffff00) != (expectedcompilerversion & 0xffff00) ) )
 		{
 			char theyhad[64], wehave[64];
-			make_compiler_string(theyhad, *compiler_version);
-			make_compiler_string(wehave, expectedcompilerversion);
+			make_compiler_string(theyhad, sizeof(theyhad), *compiler_version);
+			make_compiler_string(wehave, sizeof(wehave), expectedcompilerversion);
 			snprintf(errorbuf, sizeof(errorbuf),
 			         "Module was compiled with GCC %s, core was compiled with GCC %s. SOLUTION: Recompile your UnrealIRCd and all its modules by doing a 'make clean; ./Config -quick && make'.",
 			         theyhad, wehave);
 			irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return errorbuf;
 		}
 		irc_dlsym(Mod, "Mod_Header", mod_header);
 		if (!mod_header)
 		{
 			irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return ("Unable to locate Mod_Header");
 		}
 		if (!mod_header->modversion)
 		{
 			irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return ("Lacking mod_header->modversion");
 		}
 		if (!(modsys_ver = parse_modsys_version(mod_header->modversion)))
@@ -410,26 +387,26 @@ char  *Module_Create(char *path_)
 			snprintf(errorbuf, 1023, "Unsupported module system version '%s'",
 				   mod_header->modversion);
 			irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return(errorbuf);
 		}
-		if (!mod_header->name || !mod_header->version ||
-		    !mod_header->description)
+		if ((reterr = validate_mod_header(relpath, mod_header)))
 		{
 			irc_dlclose(Mod);
-			remove(tmppath);
-			return("Lacking sane header pointer");
+			deletetmp(tmppath);
+			return(reterr);
 		}
 		if (Module_Find(mod_header->name))
 		{
 		        irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return (NULL);
 		}
 		mod = (Module *)Module_make(mod_header, Mod);
-		mod->tmp_file = strdup(tmppath);
+		safe_strdup(mod->tmp_file, tmppath);
 		mod->mod_sys_version = modsys_ver;
 		mod->compiler_version = compiler_version ? *compiler_version : 0;
+		safe_strdup(mod->relpath, relpath);
 
 		irc_dlsym(Mod, "Mod_Init", Mod_Init);
 		if (!Mod_Init)
@@ -449,39 +426,22 @@ char  *Module_Create(char *path_)
 			Module_free(mod);
 			return ("Unable to locate Mod_Load"); 
 		}
-		if (Module_Depend_Resolve(mod, path) == -1)
-		{
-			Module_free(mod);
-			return ("Dependancy problem");
-		}
 		irc_dlsym(Mod, "Mod_Handle", Mod_Handle);
 		if (Mod_Handle)
 			*Mod_Handle = mod;
 		irc_dlsym(Mod, "Mod_Test", Mod_Test);
 		if (Mod_Test)
 		{
-			if (mod->mod_sys_version >= 0x320b8) {
-				if ((ret = (*Mod_Test)(&mod->modinfo)) < MOD_SUCCESS) {
-					ircsprintf(errorbuf, "Mod_Test returned %i",
-						   ret);
-					/* We EXPECT the module to have cleaned up it's mess */
-		        		Module_free(mod);
-					return (errorbuf);
-				}
-			}
-			else {
-				if ((ret = (*Mod_Test)(0)) < MOD_SUCCESS)
-				{
-					snprintf(errorbuf, 1023, "Mod_Test returned %i",
-						   ret);
-					/* We EXPECT the module to have cleaned up it's mess */
-				        Module_free(mod);
-					return (errorbuf);
-				}
+			if ((ret = (*Mod_Test)(&mod->modinfo)) < MOD_SUCCESS) {
+				ircsnprintf(errorbuf, sizeof(errorbuf), "Mod_Test returned %i",
+					   ret);
+				/* We EXPECT the module to have cleaned up its mess */
+				Module_free(mod);
+				return (errorbuf);
 			}
 		}
 		mod->flags = MODFLAG_TESTING;		
-		AddListItem(mod, Modules);
+		AddListItemPrio(mod, Modules, 0);
 		return NULL;
 	}
 	else
@@ -489,14 +449,6 @@ char  *Module_Create(char *path_)
 		/* Return the error .. */
 		return ((char *)irc_dlerror());
 	}
-	
-	if (path != path_)
-		free(path);				     
-	
-#else /* !STATIC_LINKING */
-	return "We don't support dynamic linking";
-#endif
-	
 }
 
 void Module_DelayChildren(Module *m)
@@ -519,7 +471,7 @@ Module *Module_make(ModuleHeader *header,
 {
 	Module *modp = NULL;
 	
-	modp = (Module *)MyMallocEx(sizeof(Module));
+	modp = safe_alloc(sizeof(Module));
 	modp->header = header;
 	modp->dll = mod;
 	modp->flags = MODFLAG_NONE;
@@ -545,26 +497,78 @@ void Init_all_testing_modules(void)
 		if (!(mi->flags & MODFLAG_TESTING))
 			continue;
 		irc_dlsym(mi->dll, "Mod_Init", Mod_Init);
-		if (mi->mod_sys_version >= 0x320b8) {
-			if ((ret = (*Mod_Init)(&mi->modinfo)) < MOD_SUCCESS) {
-				config_error("Error loading %s: Mod_Init returned %i",
-					mi->header->name, ret);
-		        	Module_free(mi);
-				continue;
-			}
+		if ((ret = (*Mod_Init)(&mi->modinfo)) < MOD_SUCCESS) {
+			config_error("Error loading %s: Mod_Init returned %i",
+			    mi->header->name, ret);
+			Module_free(mi);
+			continue;
 		}
-		else {
-			if ((ret = (*Mod_Init)(0)) < MOD_SUCCESS)
-			{
-				config_error("Error loading %s: Mod_Init returned %i",
-					mi->header->name, ret);
-			        Module_free(mi);
-				continue;
-			}
-		}		
 		mi->flags = MODFLAG_INIT;
 	}
 }	
+
+void FreeModObj(ModuleObject *obj, Module *m)
+{
+	if (obj->type == MOBJ_EVENT) {
+		EventDel(obj->object.event);
+	}
+	else if (obj->type == MOBJ_HOOK) {
+		HookDel(obj->object.hook);
+	}
+	else if (obj->type == MOBJ_COMMAND) {
+		CommandDel(obj->object.command);
+	}
+	else if (obj->type == MOBJ_HOOKTYPE) {
+		//HooktypeDel(obj->object.hooktype, m); -- reinstate if we audited this code
+	}
+	else if (obj->type == MOBJ_VERSIONFLAG) {
+		VersionflagDel(obj->object.versionflag, m);
+	}
+	else if (obj->type == MOBJ_SNOMASK) {
+		SnomaskDel(obj->object.snomask);
+	}
+	else if (obj->type == MOBJ_UMODE) {
+		UmodeDel(obj->object.umode);
+	}
+	else if (obj->type == MOBJ_CMODE) {
+		CmodeDel(obj->object.cmode);
+	}
+	else if (obj->type == MOBJ_COMMANDOVERRIDE) {
+		CommandOverrideDel(obj->object.cmdoverride);
+	}
+	else if (obj->type == MOBJ_EXTBAN) {
+		ExtbanDel(obj->object.extban);
+	}
+	else if (obj->type == MOBJ_CALLBACK) {
+		CallbackDel(obj->object.callback);
+	}
+	else if (obj->type == MOBJ_EFUNCTION) {
+		EfunctionDel(obj->object.efunction);
+	}
+	else if (obj->type == MOBJ_ISUPPORT) {
+		ISupportDel(obj->object.isupport);
+	}
+	else if (obj->type == MOBJ_MODDATA) {
+		ModDataDel(obj->object.moddata);
+	}
+	else if (obj->type == MOBJ_VALIDATOR) {
+		OperClassValidatorDel(obj->object.validator);
+	}
+	else if (obj->type == MOBJ_CLICAP) {
+		ClientCapabilityDel(obj->object.clicap);
+	}
+	else if (obj->type == MOBJ_MTAG) {
+		MessageTagHandlerDel(obj->object.mtag);
+	}
+	else if (obj->type == MOBJ_HISTORY_BACKEND) {
+		HistoryBackendDel(obj->object.history_backend);
+	}
+	else
+	{
+		ircd_log(LOG_ERROR, "FreeModObj() called for unknown object");
+		abort();
+	}
+}
 
 void Unload_all_loaded_modules(void)
 {
@@ -582,7 +586,7 @@ void Unload_all_loaded_modules(void)
 		irc_dlsym(mi->dll, "Mod_Unload", Mod_Unload);
 		if (Mod_Unload)
 		{
-			ret = (*Mod_Unload)(0);
+			ret = (*Mod_Unload)(&mi->modinfo);
 			if (ret == MOD_DELAY)
 			{
 				mi->flags |= MODFLAG_DELAYED;
@@ -591,61 +595,20 @@ void Unload_all_loaded_modules(void)
 		}
 		for (objs = mi->objects; objs; objs = objnext) {
 			objnext = objs->next;
-			if (objs->type == MOBJ_EVENT) {
-				LockEventSystem();
-				EventDel(objs->object.event);
-				UnlockEventSystem();
-			}
-			else if (objs->type == MOBJ_HOOK) {
-				HookDel(objs->object.hook);
-			}
-			else if (objs->type == MOBJ_COMMAND) {
-				CommandDel(objs->object.command);
-			}
-			else if (objs->type == MOBJ_HOOKTYPE) {
-				HooktypeDel(objs->object.hooktype, mi);
-			}
-			else if (objs->type == MOBJ_VERSIONFLAG) {
-				VersionflagDel(objs->object.versionflag, mi);
-			}
-			else if (objs->type == MOBJ_SNOMASK) {
-				SnomaskDel(objs->object.snomask);
-			}
-			else if (objs->type == MOBJ_UMODE) {
-				UmodeDel(objs->object.umode);
-			}
-			else if (objs->type == MOBJ_CMODE) {
-				CmodeDel(objs->object.cmode);
-			}
-			else if (objs->type == MOBJ_CMDOVERRIDE) {
-				CmdoverrideDel(objs->object.cmdoverride);
-			}
-			else if (objs->type == MOBJ_EXTBAN) {
-				ExtbanDel(objs->object.extban);
-			}
-			else if (objs->type == MOBJ_CALLBACK) {
-				CallbackDel(objs->object.callback);
-			}
-			else if (objs->type == MOBJ_EFUNCTION) {
-				EfunctionDel(objs->object.efunction);
-			}
-			else if (objs->type == MOBJ_ISUPPORT) {
-				IsupportDel(objs->object.isupport);
-			}
+			FreeModObj(objs, mi);
 		}
 		for (child = mi->children; child; child = childnext)
 		{
 			childnext = child->next;
 			DelListItem(child,mi->children);
-			MyFree(child);
+			safe_free(child);
 		}
 		DelListItem(mi,Modules);
 		irc_dlclose(mi->dll);
-#ifndef DEBUGMODE
-		remove(mi->tmp_file);
-#endif
-		MyFree(mi->tmp_file);
-		MyFree(mi);
+		deletetmp(mi->tmp_file);
+		safe_free(mi->tmp_file);
+		safe_free(mi->relpath);
+		safe_free(mi);
 	}
 }
 
@@ -662,59 +625,20 @@ void Unload_all_testing_modules(void)
 			continue;
 		for (objs = mi->objects; objs; objs = objnext) {
 			objnext = objs->next;
-			if (objs->type == MOBJ_EVENT) {
-				LockEventSystem();
-				EventDel(objs->object.event);
-				UnlockEventSystem();
-			}
-			else if (objs->type == MOBJ_HOOK) {
-				HookDel(objs->object.hook);
-			}
-			else if (objs->type == MOBJ_COMMAND) {
-				CommandDel(objs->object.command);
-			}
-			else if (objs->type == MOBJ_HOOKTYPE) {
-				HooktypeDel(objs->object.hooktype, mi);
-			}
-			else if (objs->type == MOBJ_VERSIONFLAG) {
-				VersionflagDel(objs->object.versionflag, mi);
-			}
-			else if (objs->type == MOBJ_SNOMASK) {
-				SnomaskDel(objs->object.snomask);
-			}
-			else if (objs->type == MOBJ_UMODE) {
-				UmodeDel(objs->object.umode);
-			}
-			else if (objs->type == MOBJ_CMODE) {
-				CmodeDel(objs->object.cmode);
-			}
-			else if (objs->type == MOBJ_CMDOVERRIDE) {
-				CmdoverrideDel(objs->object.cmdoverride);
-			}
-			else if (objs->type == MOBJ_EXTBAN) {
-				ExtbanDel(objs->object.extban);
-			}
-			else if (objs->type == MOBJ_CALLBACK) {
-				CallbackDel(objs->object.callback);
-			}
-			else if (objs->type == MOBJ_EFUNCTION) {
-				EfunctionDel(objs->object.efunction);
-			}
-			else if (objs->type == MOBJ_ISUPPORT) {
-				IsupportDel(objs->object.isupport);
-			}
+			FreeModObj(objs, mi);
 		}
 		for (child = mi->children; child; child = childnext)
 		{
 			childnext = child->next;
 			DelListItem(child,mi->children);
-			MyFree(child);
+			safe_free(child);
 		}
 		DelListItem(mi,Modules);
 		irc_dlclose(mi->dll);
-		remove(mi->tmp_file);
-		MyFree(mi->tmp_file);
-		MyFree(mi);
+		deletetmp(mi->tmp_file);
+		safe_free(mi->tmp_file);
+		safe_free(mi->relpath);
+		safe_free(mi);
 	}
 }
 
@@ -733,52 +657,11 @@ int    Module_free(Module *mod)
 	{
 		sendto_realops("Unloading child module %s",
 			      cp->child->header->name);
-		Module_Unload(cp->child->header->name, 0);
+		Module_Unload(cp->child->header->name);
 	}
 	for (objs = mod->objects; objs; objs = next) {
 		next = objs->next;
-		if (objs->type == MOBJ_EVENT) {
-			LockEventSystem();
-			EventDel(objs->object.event);
-			UnlockEventSystem();
-		}
-		else if (objs->type == MOBJ_HOOK) {
-			HookDel(objs->object.hook);
-		}
-		else if (objs->type == MOBJ_COMMAND) {
-			CommandDel(objs->object.command);
-		}
-		else if (objs->type == MOBJ_HOOKTYPE) {
-			HooktypeDel(objs->object.hooktype, mod);
-		}
-		else if (objs->type == MOBJ_VERSIONFLAG) {
-			VersionflagDel(objs->object.versionflag, mod);
-		}
-		else if (objs->type == MOBJ_SNOMASK) {
-			SnomaskDel(objs->object.snomask);
-		}
-		else if (objs->type == MOBJ_UMODE) {
-			UmodeDel(objs->object.umode);
-		}
-		else if (objs->type == MOBJ_CMODE) {
-			CmodeDel(objs->object.cmode);
-		}
-		else if (objs->type == MOBJ_CMDOVERRIDE) {
-			CmdoverrideDel(objs->object.cmdoverride);
-		}
-		else if (objs->type == MOBJ_EXTBAN) {
-			ExtbanDel(objs->object.extban);
-		}
-		else if (objs->type == MOBJ_CALLBACK) {
-			CallbackDel(objs->object.callback);
-		}
-		else if (objs->type == MOBJ_EFUNCTION) {
-			EfunctionDel(objs->object.efunction);
-		}
-		else if (objs->type == MOBJ_ISUPPORT) {
-			IsupportDel(objs->object.isupport);
-		}
-
+		FreeModObj(objs, mod);
 	}
 	for (p = Modules; p; p = p->next)
 	{
@@ -788,7 +671,7 @@ int    Module_free(Module *mod)
 			if (cp->child == mod)
 			{
 				DelListItem(mod, p->children);
-				MyFree(cp);
+				safe_free(cp);
 				/* We can assume there can be only one. */
 				break;
 			}
@@ -796,21 +679,21 @@ int    Module_free(Module *mod)
 	}
 	DelListItem(mod, Modules);
 	irc_dlclose(mod->dll);
-	MyFree(mod->tmp_file);
-	MyFree(mod);
+	safe_free(mod->tmp_file);
+	safe_free(mod->relpath);
+	safe_free(mod);
 	return 1;
 }
 
 /*
  *  Module_Unload ()
  *     char *name        Internal module name
- *     int unload        If /module unload
  *  Returns:
  *     -1                Not able to locate module, severe failure, anything
  *      1                Module unloaded
  *      2                Module wishes delayed unloading, has placed event
  */
-int     Module_Unload(char *name, int unload)
+int Module_Unload(char *name)
 {
 	Module *m;
 	int    (*Mod_Unload)();
@@ -829,7 +712,7 @@ int     Module_Unload(char *name, int unload)
 	{
 		return -1;
 	}
-	ret = (*Mod_Unload)(unload);
+	ret = (*Mod_Unload)(&m->modinfo);
 	if (ret == MOD_DELAY)
 	{
 		m->flags |= MODFLAG_DELAYED;
@@ -846,82 +729,8 @@ int     Module_Unload(char *name, int unload)
 	return 1;
 }
 
-vFP Module_SymEx(
-#ifdef _WIN32
-	HMODULE mod
-#else
-	void *mod
-#endif
-	, char *name)
+void module_loadall(void)
 {
-#ifndef STATIC_LINKING
-	vFP	fp;
-
-	if (!name)
-		return NULL;
-	
-	irc_dlsym(mod, name, fp);
-	if (fp)
-		return (fp);
-	return NULL;
-#endif
-	
-}
-
-vFP Module_Sym(char *name)
-{
-#ifndef STATIC_LINKING
-	vFP	fp;
-	Module *mi;
-	
-	if (!name)
-		return NULL;
-
-	/* Run through all modules and check for symbols */
-	for (mi = Modules; mi; mi = mi->next)
-	{
-		if (!(mi->flags & MODFLAG_TESTING) || (mi->flags & MODFLAG_DELAYED))
-			continue;
-		irc_dlsym(mi->dll, name, fp);
-		if (fp)
-			return (fp);
-	}
-	return NULL;
-#endif
-}
-
-vFP Module_SymX(char *name, Module **mptr)
-{
-#ifndef STATIC_LINKING
-	vFP	fp;
-	Module *mi;
-	
-	if (!name)
-		return NULL;
-	
-	/* Run through all modules and check for symbols */
-	for (mi = Modules; mi; mi = mi->next)
-	{
-		if (!(mi->flags & MODFLAG_TESTING) || (mi->flags & MODFLAG_DELAYED))
-			continue;
-		irc_dlsym(mi->dll, name, fp);
-		if (fp)
-		{
-			*mptr = mi;
-			return (fp);
-		}
-	}
-	*mptr = NULL;
-	return NULL;
-#endif
-}
-
-
-
-
-void	module_loadall(int module_load)
-{
-#ifndef STATIC_LINKING
 	iFP	fp;
 	Module *mi, *next;
 	
@@ -938,7 +747,7 @@ void	module_loadall(int module_load)
 			continue;
 		irc_dlsym(mi->dll, "Mod_Load", fp);
 		/* Call the module_load */
-		if ((*fp)(module_load) != MOD_SUCCESS)
+		if ((*fp)(&mi->modinfo) != MOD_SUCCESS)
 		{
 			config_status("cannot load module %s", mi->header->name);
 			Module_free(mi);
@@ -946,10 +755,9 @@ void	module_loadall(int module_load)
 		else
 			mi->flags = MODFLAG_LOADED;
 	}
-#endif
 }
 
-inline int	Module_IsAlreadyChild(Module *parent, Module *child)
+int	Module_IsAlreadyChild(Module *parent, Module *child)
 {
 	ModuleChild *mcp;
 	
@@ -961,72 +769,16 @@ inline int	Module_IsAlreadyChild(Module *parent, Module *child)
 	return 0;
 }
 
-inline void	Module_AddAsChild(Module *parent, Module *child)
+void	Module_AddAsChild(Module *parent, Module *child)
 {
 	ModuleChild	*childp = NULL;
 	
-	childp = (ModuleChild *) MyMallocEx(sizeof(ModuleChild));
+	childp = safe_alloc(sizeof(ModuleChild));
 	childp->child = child;
 	AddListItem(childp, parent->children);
 }
 
-int	Module_Depend_Resolve(Module *p, char *path)
-{
-	Mod_SymbolDepTable *d = p->header->symdep;
-	Module		   *parental = NULL;
-	
-	if (d == NULL)
-		return 0;
-#ifndef STATIC_LINKING
-	while (d->pointer)
-	{
-		if ((*(d->pointer) = Module_SymEx(p->dll, d->symbol)))
-		{
-			d++;
-			continue;
-		}
-		*(d->pointer) = Module_SymX(d->symbol, &parental);
-		if (!*(d->pointer))
-		{
-			/* If >= 3.2.3 */
-			if (p->mod_sys_version >= 0x32300)
-			{
-				char tmppath[PATH_MAX], curpath[PATH_MAX];
-
-				unreal_getpathname(path, curpath);
-				snprintf(tmppath, PATH_MAX, "%s/%s.%s", curpath, d->module,
-					MOD_EXTENSION);
-				config_progress("Unable to resolve symbol %s, attempting to load %s to find it", d->symbol, tmppath);
-				Module_Create(tmppath);
-			}
-			else
-			{
-				config_progress("Unable to resolve symbol %s, attempting to load %s to find it", d->symbol, d->module);
-				Module_Create(d->module);
-			}
-			*(d->pointer) = Module_SymX(d->symbol, &parental);
-			if (!*(d->pointer)) {
-				config_progress("module dependancy error: cannot resolve symbol %s",
-					d->symbol);
-				return -1;
-			}
-			
-		}
-		if (!Module_IsAlreadyChild(parental, p))
-			Module_AddAsChild(parental, p);
-		d++;	
-	}
-	return 0;
-#else
-	while (d->pointer)
-	{
-		*((vFP *)d->pointer) = (vFP) d->realfunc;
-		d++;
-	}
-#endif
-}
-
-/* m_module.
+/* cmd_module.
  * by Stskeeps, codemastr, Syzop.
  * Changed it so it's now public for users too, as quite some people
  * (and users) requested they should have the right to see what kind 
@@ -1035,46 +787,65 @@ int	Module_Depend_Resolve(Module *p, char *path)
  * I do not consider this sensitive information, but just in case
  * I stripped the version string for non-admins (eg: normal users). -- Syzop
  */
-int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(cmd_module)
 {
-	Module          *mi;
+	Module *mi;
 	int i;
 	char tmp[1024], *p;
-	aCommand *mptr;
-#ifdef DEBUGMODE
-	Efunction *e;
-#endif
+	RealCommand *mptr;
+	int all = 0;
 
-	/* Opers can do /module <servername> */
-        if ((parc > 1) && (hunt_server_token(cptr, sptr, MSG_MODULE, TOK_MODULE, ":%s", 1, parc,
-             parv) != HUNTED_ISME))
-		return 0;	
-	if (!Modules)
-	{
-		sendto_one(sptr, ":%s NOTICE %s :*** No modules loaded", me.name, sptr->name);
-		return 1;
-	}
-	
+	if ((parc > 1) && !strcmp(parv[1], "-all"))
+		all = 1;
+
+	if (MyUser(client) && !IsOper(client) && all)
+		client->local->since += 7; /* Lag them up. Big list. */
+
+	if ((parc > 2) && (hunt_server(client, recv_mtags, ":%s MODULE %s :%s", 2, parc, parv) != HUNTED_ISME))
+		return;
+
+	if ((parc == 2) && (parv[1][0] != '-') && (hunt_server(client, recv_mtags, ":%s MODULE :%s", 1, parc, parv) != HUNTED_ISME))
+		return;
+
+	if (all)
+		sendtxtnumeric(client, "Showing ALL loaded modules:");
+	else
+		sendtxtnumeric(client, "Showing loaded 3rd party modules (use \"MODULE -all\" to show all modules):");
+
 	for (mi = Modules; mi; mi = mi->next)
 	{
+		/* Skip official modules unless "MODULE -all" */
+		if (!all && (mi->options & MOD_OPT_OFFICIAL))
+			continue;
+
 		tmp[0] = '\0';
 		if (mi->flags & MODFLAG_DELAYED)
-			strcat(tmp, "[Unloading] ");
+			strlcat(tmp, "[Unloading] ", sizeof(tmp));
+		if (mi->options & MOD_OPT_PERM_RELOADABLE)
+			strlcat(tmp, "[PERM-BUT-RELOADABLE] ", sizeof(tmp));
 		if (mi->options & MOD_OPT_PERM)
-			strcat(tmp, "[PERM] ");
+			strlcat(tmp, "[PERM] ", sizeof(tmp));
 		if (!(mi->options & MOD_OPT_OFFICIAL))
-			strcat(tmp, "[3RD] ");
-		if (!IsOper(sptr))
-			sendto_one(sptr, ":%s NOTICE %s :*** %s (%s)%s", me.name, sptr->name,
-				mi->header->name, mi->header->description,
-				mi->options & MOD_OPT_OFFICIAL ? "" : " [3RD]");
+			strlcat(tmp, "[3RD] ", sizeof(tmp));
+		if (!ValidatePermissionsForPath("server:module",client,NULL,NULL,NULL))
+			sendtxtnumeric(client, "*** %s - %s - by %s %s",
+				mi->header->name,
+				mi->header->description,
+				mi->header->author,
+				mi->options & MOD_OPT_OFFICIAL ? "" : "[3RD]");
 		else
-			sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s) %s", me.name, sptr->name,
-				mi->header->name, mi->header->version, mi->header->description, tmp);
+			sendtxtnumeric(client, "*** %s %s - %s - by %s %s",
+				mi->header->name,
+				mi->header->version,
+				mi->header->description,
+				mi->header->author,
+				tmp);
 	}
 
-	if (!IsOper(sptr))
-		return 0;
+	sendtxtnumeric(client, "End of module list");
+
+	if (!ValidatePermissionsForPath("server:module",client,NULL,NULL,NULL))
+		return;
 
 	tmp[0] = '\0';
 	p = tmp;
@@ -1082,16 +853,16 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		if (!Hooks[i])
 			continue;
-		sprintf(p, "%d ", i);
+		ircsnprintf(p, sizeof(tmp) - strlen(tmp), "%d ", i);
 		p += strlen(p);
-		if (p > tmp+380)
+		if (p > tmp + 380)
 		{
-			sendto_one(sptr, ":%s NOTICE %s :Hooks: %s", me.name, sptr->name, tmp);
+			sendtxtnumeric(client, "Hooks: %s", tmp);
 			tmp[0] = '\0';
 			p = tmp;
 		}
 	}
-	sendto_one(sptr, ":%s NOTICE %s :Hooks: %s ", me.name, sptr->name, tmp);
+	sendtxtnumeric(client, "Hooks: %s ", tmp);
 
 	tmp[0] = '\0';
 	p = tmp;
@@ -1100,39 +871,23 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
 			if (mptr->overriders)
 			{
-				sprintf(p, "%s ", mptr->cmd);
+				ircsnprintf(p, sizeof(tmp)-strlen(tmp), "%s ", mptr->cmd);
 				p += strlen(p);
 				if (p > tmp+380)
 				{
-					sendto_one(sptr, ":%s NOTICE %s :Override: %s", me.name, sptr->name, tmp);
+					sendtxtnumeric(client, "Override: %s", tmp);
 					tmp[0] = '\0';
 					p = tmp;
 				}
 			}
 	}
-	sendto_one(sptr, ":%s NOTICE %s :Override: %s", me.name, sptr->name, tmp);
-
-#ifdef DEBUGMODE
-	sendnotice(sptr, "Efunctions dump:");
-	for (i=0; i < MAXEFUNCTIONS; i++)
-		if ((e = Efunctions[i]))
-		{
-			sendnotice(sptr, "type=%d, name=%s, pointer=%p %s, owner=%s",
-				e->type,
-				efunction_table[e->type].name ? efunction_table[e->type].name : "<null>",
-				e->func.voidfunc,
-				*efunction_table[e->type].funcptr == e->func.voidfunc ? " [ACTIVE]" : "",
-				e->owner ? e->owner->header->name : "<null>");
-		}
-#endif
-	
-	return 1;
+	sendtxtnumeric(client, "Override: %s", tmp);
 }
 
 Hooktype *HooktypeFind(char *string) {
 	Hooktype *hooktype;
 	for (hooktype = Hooktypes; hooktype->string ;hooktype++) {
-		if (!stricmp(hooktype->string, string))
+		if (!strcasecmp(hooktype->string, string))
 			return hooktype;
 	}
 	return NULL;
@@ -1162,11 +917,11 @@ Versionflag *VersionflagAdd(Module *module, char flag)
 		}
 		if (!child)
 		{
-			parent = MyMallocEx(sizeof(ModuleChild));
+			parent = safe_alloc(sizeof(ModuleChild));
 			parent->child = module;
 			if (module) {
 				ModuleObject *vflagobj;
-				vflagobj = MyMallocEx(sizeof(ModuleObject));
+				vflagobj = safe_alloc(sizeof(ModuleObject));
 				vflagobj->type = MOBJ_VERSIONFLAG;
 				vflagobj->object.versionflag = vflag;
 				AddListItem(vflagobj, module->objects);
@@ -1176,14 +931,14 @@ Versionflag *VersionflagAdd(Module *module, char flag)
 		}
 		return vflag;
 	}
-	vflag = MyMallocEx(sizeof(Versionflag));
+	vflag = safe_alloc(sizeof(Versionflag));
 	vflag->flag = flag;
-	parent = MyMallocEx(sizeof(ModuleChild));
+	parent = safe_alloc(sizeof(ModuleChild));
 	parent->child = module;
 	if (module)
 	{
 		ModuleObject *vflagobj;
-		vflagobj = MyMallocEx(sizeof(ModuleObject));
+		vflagobj = safe_alloc(sizeof(ModuleObject));
 		vflagobj->type = MOBJ_VERSIONFLAG;
 		vflagobj->object.versionflag = vflag;
 		AddListItem(vflagobj, module->objects);
@@ -1206,7 +961,7 @@ void VersionflagDel(Versionflag *vflag, Module *module)
 		if (owner->child == module)
 		{
 			DelListItem(owner,vflag->parents);
-			MyFree(owner);
+			safe_free(owner);
 			break;
 		}
 	}
@@ -1216,7 +971,7 @@ void VersionflagDel(Versionflag *vflag, Module *module)
 		for (objs = module->objects; objs; objs = objs->next) {
 			if (objs->type == MOBJ_VERSIONFLAG && objs->object.versionflag == vflag) {
 				DelListItem(objs,module->objects);
-				MyFree(objs);
+				safe_free(objs);
 				break;
 			}
 		}
@@ -1225,94 +980,15 @@ void VersionflagDel(Versionflag *vflag, Module *module)
 	{
 		flag_del(vflag->flag);
 		DelListItem(vflag, Versionflags);
-		MyFree(vflag);
+		safe_free(vflag);
 	}
 }
-		
-Hooktype *HooktypeAdd(Module *module, char *string, int *type) {
-	Hooktype *hooktype;
-	int i;
-	ModuleChild *parent;
-	ModuleObject *hooktypeobj;
-	if ((hooktype = HooktypeFind(string))) {
-		ModuleChild *child;
-		for (child = hooktype->parents; child; child = child->next) {
-			if (child->child == module)
-				break;
-		}
-		if (!child) {
-			parent = MyMallocEx(sizeof(ModuleChild));
-			parent->child = module;
-			if (module) {
-				hooktypeobj = MyMallocEx(sizeof(ModuleObject));
-				hooktypeobj->type = MOBJ_HOOKTYPE;
-				hooktypeobj->object.hooktype = hooktype;
-				AddListItem(hooktypeobj, module->objects);
-				module->errorcode = MODERR_NOERROR;
-			}
-			AddListItem(parent,hooktype->parents);
-		}
-		*type = hooktype->id;
-		return hooktype;
-	}
-	for (hooktype = Hooktypes, i = 0; hooktype->string; hooktype++, i++) ;
 
-	if (i >= 39)
-	{
-		if (module)
-			module->errorcode = MODERR_NOSPACE;
-		return NULL;
-	}
-
-	Hooktypes[i].id = i+41;
-	Hooktypes[i].string = strdup(string);
-	parent = MyMallocEx(sizeof(ModuleChild));
-	parent->child = module;
-	if (module) {
-		hooktypeobj = MyMallocEx(sizeof(ModuleObject));
-		hooktypeobj->type = MOBJ_HOOKTYPE;
-		hooktypeobj->object.hooktype = &Hooktypes[i];
-		AddListItem(hooktypeobj,module->objects);
-		module->errorcode = MODERR_NOERROR;
-	}
-	AddListItem(parent,Hooktypes[i].parents);
-	*type = i+41;
-	return &Hooktypes[i];
-}
-
-void HooktypeDel(Hooktype *hooktype, Module *module) {
-	ModuleChild *child;
-	ModuleObject *objs;
-	for (child = hooktype->parents; child; child = child->next) {
-		if (child->child == module) {
-			DelListItem(child,hooktype->parents);
-			MyFree(child);
-			break;
-		}
-	}
-	if (module) {
-		for (objs = module->objects; objs; objs = objs->next) {
-			if (objs->type == MOBJ_HOOKTYPE && objs->object.hooktype == hooktype) {
-				DelListItem(objs,module->objects);
-				MyFree(objs);
-				break;
-			}
-		}
-	}
-	if (!hooktype->parents) {
-		MyFree(hooktype->string);
-		hooktype->string = NULL;
-		hooktype->id = 0;
-		hooktype->parents = NULL;
-	}
-}
-		
-	
-Hook	*HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)(), char *(*cfunc)())
+Hook *HookAddMain(Module *module, int hooktype, int priority, int (*func)(), void (*vfunc)(), char *(*cfunc)())
 {
 	Hook *p;
 	
-	p = (Hook *) MyMallocEx(sizeof(Hook));
+	p = (Hook *) safe_alloc(sizeof(Hook));
 	if (func)
 		p->func.intfunc = func;
 	if (vfunc)
@@ -1321,14 +997,18 @@ Hook	*HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)(), 
 		p->func.pcharfunc = cfunc;
 	p->type = hooktype;
 	p->owner = module;
-	AddListItem(p, Hooks[hooktype]);
+	p->priority = priority;
+
 	if (module) {
-		ModuleObject *hookobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *hookobj = (ModuleObject *)safe_alloc(sizeof(ModuleObject));
 		hookobj->object.hook = p;
 		hookobj->type = MOBJ_HOOK;
 		AddListItem(hookobj, module->objects);
 		module->errorcode = MODERR_NOERROR;
 	}
+	
+	AddListItemPrio(p, Hooks[hooktype], p->priority);
+
 	return p;
 }
 
@@ -1344,12 +1024,12 @@ Hook *HookDel(Hook *hook)
 				for (hookobj = p->owner->objects; hookobj; hookobj = hookobj->next) {
 					if (hookobj->type == MOBJ_HOOK && hookobj->object.hook == p) {
 						DelListItem(hookobj, hook->owner->objects);
-						MyFree(hookobj);
+						safe_free(hookobj);
 						break;
 					}
 				}
 			}
-			MyFree(p);
+			safe_free(p);
 			return q;
 		}
 	}
@@ -1360,7 +1040,7 @@ Callback	*CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfun
 {
 	Callback *p;
 	
-	p = (Callback *) MyMallocEx(sizeof(Callback));
+	p = safe_alloc(sizeof(Callback));
 	if (func)
 		p->func.intfunc = func;
 	if (vfunc)
@@ -1371,7 +1051,7 @@ Callback	*CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfun
 	p->owner = module;
 	AddListItem(p, Callbacks[cbtype]);
 	if (module) {
-		ModuleObject *cbobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *cbobj = safe_alloc(sizeof(ModuleObject));
 		cbobj->object.callback = p;
 		cbobj->type = MOBJ_CALLBACK;
 		AddListItem(cbobj, module->objects);
@@ -1394,82 +1074,24 @@ Callback *CallbackDel(Callback *cb)
 				for (cbobj = p->owner->objects; cbobj; cbobj = cbobj->next) {
 					if ((cbobj->type == MOBJ_CALLBACK) && (cbobj->object.callback == p)) {
 						DelListItem(cbobj, cb->owner->objects);
-						MyFree(cbobj);
+						safe_free(cbobj);
 						break;
 					}
 				}
 			}
-			MyFree(p);
+			safe_free(p);
 			return q;
 		}
 	}
 	return NULL;
 }
 
-Efunction	*EfunctionAddMain(Module *module, int eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())
+CommandOverride *CommandOverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc function)
 {
-Efunction *p;
-
-	if (!module || !(module->options & MOD_OPT_OFFICIAL))
-	{
-		module->errorcode = MODERR_INVALID;
-		return NULL;
-	}
+	RealCommand *p;
+	CommandOverride *ovr;
 	
-	p = (Efunction *) MyMallocEx(sizeof(Efunction));
-	if (func)
-		p->func.intfunc = func;
-	if (vfunc)
-		p->func.voidfunc = vfunc;
-	if (pvfunc)
-		p->func.pvoidfunc = pvfunc;
-	if (cfunc)
-		p->func.pcharfunc = cfunc;
-	p->type = eftype;
-	p->owner = module;
-	AddListItem(p, Efunctions[eftype]);
-	if (module) {
-		ModuleObject *cbobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
-		cbobj->object.efunction = p;
-		cbobj->type = MOBJ_EFUNCTION;
-		AddListItem(cbobj, module->objects);
-		module->errorcode = MODERR_NOERROR;
-	}
-	return p;
-}
-
-Efunction *EfunctionDel(Efunction *cb)
-{
-Efunction *p, *q;
-	for (p = Efunctions[cb->type]; p; p = p->next) {
-		if (p == cb) {
-			q = p->next;
-			DelListItem(p, Efunctions[cb->type]);
-			if (*efunction_table[cb->type].funcptr == p)
-				*efunction_table[cb->type].funcptr = NULL;
-			if (p->owner) {
-				ModuleObject *cbobj;
-				for (cbobj = p->owner->objects; cbobj; cbobj = cbobj->next) {
-					if ((cbobj->type == MOBJ_EFUNCTION) && (cbobj->object.efunction == p)) {
-						DelListItem(cbobj, cb->owner->objects);
-						MyFree(cbobj);
-						break;
-					}
-				}
-			}
-			MyFree(p);
-			return q;
-		}
-	}
-	return NULL;
-}
-
-Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
-{
-	aCommand *p;
-	Cmdoverride *ovr;
-	
-	if (!(p = find_Command_simple(name)))
+	if (!(p = find_command_simple(name)))
 	{
 		if (module)
 			module->errorcode = MODERR_NOTFOUND;
@@ -1484,41 +1106,37 @@ Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
 			return NULL;
 		}
 	}
-	ovr = MyMallocEx(sizeof(Cmdoverride));
+	ovr = safe_alloc(sizeof(CommandOverride));
 	ovr->func = function;
 	ovr->owner = module; /* TODO: module objects */
+	ovr->priority = priority;
 	if (module)
 	{
-		ModuleObject *cmdoverobj = MyMallocEx(sizeof(ModuleObject));
-		cmdoverobj->type = MOBJ_CMDOVERRIDE;
+		ModuleObject *cmdoverobj = safe_alloc(sizeof(ModuleObject));
+		cmdoverobj->type = MOBJ_COMMANDOVERRIDE;
 		cmdoverobj->object.cmdoverride = ovr;
 		AddListItem(cmdoverobj, module->objects);
 		module->errorcode = MODERR_NOERROR;
 	}
 	ovr->command = p;
-	if (!p->overriders)
-		p->overridetail = ovr;
-	AddListItem(ovr, p->overriders);
+	AddListItemPrio(ovr, p->overriders, ovr->priority);
 	if (p->friend)
 	{
-		if (!p->friend->overriders)
-			p->friend->overridetail = ovr;
 		AddListItem(ovr, p->friend->overriders);
 	}
 	return ovr;
 }
 
-void CmdoverrideDel(Cmdoverride *cmd)
+CommandOverride *CommandOverrideAdd(Module *module, char *name, OverrideCmdFunc function)
 {
-	if (!cmd->next)
-		cmd->command->overridetail = cmd->prev;
+	return CommandOverrideAddEx(module, name, 0, function);
+}
+
+void CommandOverrideDel(CommandOverride *cmd)
+{
 	DelListItem(cmd, cmd->command->overriders);
-	if (!cmd->command->overriders)
-		cmd->command->overridetail = NULL;
 	if (cmd->command->friend)
 	{
-		if (!cmd->prev)
-			cmd->command->friend->overridetail = NULL;
 		DelListItem(cmd, cmd->command->friend->overriders);
 	}
 	if (cmd->owner)
@@ -1526,40 +1144,37 @@ void CmdoverrideDel(Cmdoverride *cmd)
 		ModuleObject *obj;
 		for (obj = cmd->owner->objects; obj; obj = obj->next)
 		{
-			if (obj->type != MOBJ_CMDOVERRIDE)
+			if (obj->type != MOBJ_COMMANDOVERRIDE)
 				continue;
 			if (obj->object.cmdoverride == cmd)
 			{
 				DelListItem(obj, cmd->owner->objects);
-				MyFree(obj);
+				safe_free(obj);
 				break;
 			}
 		}
 	}
-	MyFree(cmd);
+	safe_free(cmd);
 }
 
-int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[])
+void CallCommandOverride(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, char *parv[])
 {
-	if (ovr->prev)
-		return ovr->prev->func(ovr->prev, cptr, sptr, parc, parv);
-	return ovr->command->func(cptr, sptr, parc, parv);
+	if (ovr->next)
+		ovr->next->func(ovr->next, client, mtags, parc, parv);
+	else
+		ovr->command->func(client, mtags, parc, parv);
 }
 
 EVENT(e_unload_module_delayed)
 {
-	char	*name = strdup(data);
-	int	i; 
-	i = Module_Unload(name, 0);
-	if (i == -1)
-	{
-		sendto_realops("Failed to unload '%s'", name);
-	}
+	char *name = (char *)data;
+	int i; 
+	i = Module_Unload(name);
 	if (i == 1)
-	{
 		sendto_realops("Unloaded module %s", name);
-	}
-	free(name);
+	safe_free(name);
+	extcmodes_check_for_changes();
+	umodes_check_for_changes();
 	return;
 }
 
@@ -1569,19 +1184,31 @@ void	unload_all_modules(void)
 	int	(*Mod_Unload)();
 	for (m = Modules; m; m = m->next)
 	{
+#ifdef DEBUGMODE
+		ircd_log(LOG_ERROR, "Unloading %s...", m->header->name);
+#endif
 		irc_dlsym(m->dll, "Mod_Unload", Mod_Unload);
 		if (Mod_Unload)
-			(*Mod_Unload)(0);
-		remove(m->tmp_file);
+			(*Mod_Unload)(&m->modinfo);
+		deletetmp(m->tmp_file);
 	}
 }
 
-unsigned int ModuleSetOptions(Module *module, unsigned int options)
+void ModuleSetOptions(Module *module, unsigned int options, int action)
 {
 	unsigned int oldopts = module->options;
 
-	module->options = options;
-	return oldopts;
+	if (options == MOD_OPT_UNLOAD_PRIORITY)
+	{
+		DelListItem(module, Modules);
+		AddListItemPrio(module, Modules, action);
+	} else {
+		/* Simple bit flag(s) */
+		if (action)
+			module->options |= options;
+		else
+			module->options &= ~options;
+	}
 }
 
 unsigned int ModuleGetOptions(Module *module)
@@ -1623,22 +1250,11 @@ int cnt = 0;
 }
 
 /** Ensure that all required callbacks are in place and meet
- * all specified requirements (eg: a cloaking module should
- * be loaded).
+ * all specified requirements
  */
 int callbacks_check(void)
 {
 int i;
-
-	if ((!num_callbacks(CALLBACKTYPE_CLOAK) && !num_callbacks(CALLBACKTYPE_CLOAK_EX)) || !num_callbacks(CALLBACKTYPE_CLOAKKEYCSUM))
-	{
-#ifndef _WIN32
-		config_error("ERROR: No cloaking module loaded. (hint: you probably want to load cloak.so)");
-#else
-		config_error("ERROR: No cloaking module loaded. (hint: you probably want to load modules\\cloak.dll)");
-#endif
-		return -1;
-	}
 
 	for (i=0; i < MAXCALLBACKS; i++)
 	{
@@ -1674,76 +1290,6 @@ int i;
 			}
 }
 
-static int num_efunctions(int eftype)
-{
-Efunction *e;
-int cnt = 0;
-
-#ifdef DEBUGMODE
-	if ((eftype < 0) || (eftype >= MAXEFUNCTIONS))
-		abort();
-#endif
-
-	for (e = Efunctions[eftype]; e; e = e->next)
-		if (!e->willberemoved)
-			cnt++;
-			
-	return cnt;
-}
-
-
-/** Ensure that all efunctions are present. */
-int efunctions_check(void)
-{
-int i, n, errors=0;
-
-	for (i=0; i < MAXEFUNCTIONS; i++)
-		if (efunction_table[i].name)
-		{
-			n = num_efunctions(i);
-			if ((n != 1) && (errors > 10))
-			{
-				config_error("[--efunction errors truncated to prevent flooding--]");
-				break;
-			}
-			if (n < 1)
-			{
-				config_error("ERROR: efunction '%s' not found, you probably did not "
-				             "load commands.so properly (or not all required m_* modules)",
-				             efunction_table[i].name);
-				errors++;
-			} else
-			if (n > 1)
-			{
-				config_error("ERROR: efunction '%s' was found %d times, perhaps you "
-				             "loaded commands.so twice or commands.so and a/the m_*.so module(s)",
-				             efunction_table[i].name, n);
-				errors++;
-			}
-		}
-	return errors ? -1 : 0;
-}
-
-void efunctions_switchover(void)
-{
-Efunction *e;
-int i;
-
-	/* Now set the real efunction, and tag the new one
-	 * as 'willberemoved' if needed.
-	 */
-
-	for (i=0; i < MAXEFUNCTIONS; i++)
-		for (e = Efunctions[i]; e; e = e->next)
-			if (!e->willberemoved)
-			{
-				*efunction_table[i].funcptr = e->func.voidfunc;  /* This is the new one. */
-				if (!(e->owner->options & MOD_OPT_PERM))
-					e->willberemoved = 1;
-				break;
-			}
-}
-
 #ifdef _WIN32
 const char *our_dlerror(void)
 {
@@ -1751,10 +1297,164 @@ const char *our_dlerror(void)
 	DWORD err = GetLastError();
 	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, NULL, err,
 		0, errbuf, 512, NULL);
-	if (err == 126) /* FIXME: find the correct code for 126  */
+	if (err == ERROR_MOD_NOT_FOUND)
 		strlcat(errbuf, " This could be because the DLL depends on another DLL, for example if you "
 		               "are trying to load a 3rd party module which was compiled with a different compiler version.",
 		               sizeof(errbuf));
 	return errbuf;
 }
 #endif
+
+/** Check if a module is loaded.
+ * @param name Name of the module by relative path (eg: 'extbans/timedban')
+ * @returns 1 if module is loaded, 0 if not.
+ * @note  The name is checked against the module name,
+ *        this can be a problem if two modules have the same name.
+ */
+int is_module_loaded(char *name)
+{
+	Module *mi;
+	for (mi = Modules; mi; mi = mi->next)
+	{
+		if (mi->flags & MODFLAG_DELAYED)
+			continue; /* unloading (delayed) */
+
+		if (!strcasecmp(mi->relpath, name))
+			return 1;
+	}
+	return 0;
+}
+
+static char *mod_var_name(ModuleInfo *modinfo, char *varshortname)
+{
+	static char fullname[512];
+	snprintf(fullname, sizeof(fullname), "%s:%s", modinfo->handle->header->name, varshortname);
+	return fullname;
+}
+
+int LoadPersistentPointerX(ModuleInfo *modinfo, char *varshortname, void **var, void (*free_variable)(ModData *m))
+{
+	ModDataInfo *m;
+	char *fullname = mod_var_name(modinfo, varshortname);
+
+	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
+	if (m)
+	{
+		*var = moddata_local_variable(m).ptr;
+		return 1;
+	} else {
+		ModDataInfo mreq;
+		memset(&mreq, 0, sizeof(mreq));
+		mreq.type = MODDATATYPE_LOCAL_VARIABLE;
+		mreq.name = fullname;
+		mreq.free = free_variable;
+		m = ModDataAdd(modinfo->handle, mreq);
+		moddata_local_variable(m).ptr = NULL;
+		return 0;
+	}
+}
+
+void SavePersistentPointerX(ModuleInfo *modinfo, char *varshortname, void *var)
+{
+	ModDataInfo *m;
+	char *fullname = mod_var_name(modinfo, varshortname);
+
+	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
+	moddata_local_variable(m).ptr = var;
+}
+
+int LoadPersistentIntX(ModuleInfo *modinfo, char *varshortname, int *var)
+{
+	ModDataInfo *m;
+	char *fullname = mod_var_name(modinfo, varshortname);
+
+	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
+	if (m)
+	{
+		*var = moddata_local_variable(m).i;
+		return 1;
+	} else {
+		ModDataInfo mreq;
+		memset(&mreq, 0, sizeof(mreq));
+		mreq.type = MODDATATYPE_LOCAL_VARIABLE;
+		mreq.name = fullname;
+		mreq.free = NULL;
+		m = ModDataAdd(modinfo->handle, mreq);
+		moddata_local_variable(m).i = 0;
+		return 0;
+	}
+}
+
+void SavePersistentIntX(ModuleInfo *modinfo, char *varshortname, int var)
+{
+	ModDataInfo *m;
+	char *fullname = mod_var_name(modinfo, varshortname);
+
+	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
+	moddata_local_variable(m).i = var;
+}
+
+int LoadPersistentLongX(ModuleInfo *modinfo, char *varshortname, long *var)
+{
+	ModDataInfo *m;
+	char *fullname = mod_var_name(modinfo, varshortname);
+
+	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
+	if (m)
+	{
+		*var = moddata_local_variable(m).l;
+		return 1;
+	} else {
+		ModDataInfo mreq;
+		memset(&mreq, 0, sizeof(mreq));
+		mreq.type = MODDATATYPE_LOCAL_VARIABLE;
+		mreq.name = fullname;
+		mreq.free = NULL;
+		m = ModDataAdd(modinfo->handle, mreq);
+		moddata_local_variable(m).l = 0;
+		return 0;
+	}
+}
+
+void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long var)
+{
+	ModDataInfo *m;
+	char *fullname = mod_var_name(modinfo, varshortname);
+
+	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
+	moddata_local_variable(m).l = var;
+}
+
+extern int module_has_moddata(Module *mod);
+extern int module_has_extcmode_param_mode(Module *mod);
+
+/** Special hack for unloading modules with moddata and parameter extcmodes */
+void special_delayed_unloading(void)
+{
+	Module *m, *m2;
+	extern Module *Modules;
+
+	for (m = Modules; m; m = m->next)
+	{
+		if (!(m->flags & MODFLAG_LOADED))
+			continue;
+		if ((m->options & MOD_OPT_PERM) || (m->options & MOD_OPT_PERM_RELOADABLE))
+			continue;
+		if (module_has_moddata(m) || module_has_extcmode_param_mode(m))
+		{
+			int found = 0;
+			for (m2 = Modules; m2; m2 = m2->next)
+			{
+				if ((m != m2) && !strcmp(m->header->name, m2->header->name))
+					found = 1;
+			}
+			if (!found)
+			{
+				char *name = strdup(m->header->name);
+				config_warn("Delaying module unloading of '%s' for a millisecond...", name);
+				m->flags |= MODFLAG_DELAYED;
+				EventAdd(NULL, "e_unload_module_delayed", e_unload_module_delayed, name, 0, 1);
+			}
+		}
+	}
+}

@@ -1,4 +1,0 @@
-clean:
-default:
-all:
-	echo "."

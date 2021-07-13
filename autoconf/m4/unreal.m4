@@ -65,11 +65,9 @@ AC_DEFUN([CHECK_LIBCURL],
 		CURLLIBS="`$CURLCONFIG --libs`"
 
 		dnl This test must be this way because of #3981
-		AS_IF([$CURLCONFIG --features | grep -q -e AsynchDNS],
+		AS_IF([$CURLCONFIG --libs | grep -q -e ares],
 			[CURLUSESCARES="1"],
 			[CURLUSESCARES="0"])
-		AS_IF([test "$CURLUSESCARES" = "0"],
-			[AC_MSG_WARN([cURL seems compiled without c-ares support. Your IRCd will possibly stall when REHASHing!])])
 
 		dnl sanity warnings
 		AS_IF([test -z "${CURLLIBS}"],
@@ -88,12 +86,13 @@ AC_DEFUN([CHECK_LIBCURL],
 		dnl wants bundled c-ares + system libcURL, then we should filter out c-ares
 		dnl flags. _Only_ in that case should we mess with the flags. -- ohnobinki
 
-		AS_IF([test "x$with_system_cares" = "xno" && test "x$HOME/curl" != "x$enable_curl" && test "x/usr/share/unreal-curl" != "x$enable_curl" && test "$CURLUSESCARES" != "0" ],
+		AS_IF([test "x$has_system_cares" = "xno" && test "x$BUILDDIR/extras/curl" != "x$enable_curl" && test "$CURLUSESCARES" != "0" ],
 		[
 			AC_MSG_ERROR([[
 
   You have decided to build unrealIRCd with libcURL (remote includes) support.
-  However, you have disabled system-installed c-ares support (--with-system-cares).
+  However, you have system-installed c-ares support has either been disabled
+  (--without-system-cares) or is unavailable.
   Because UnrealIRCd will use a bundled copy of c-ares which may be incompatible
   with the system-installed libcURL, this is a bad idea which may result in error
   messages looking like:
@@ -106,25 +105,6 @@ AC_DEFUN([CHECK_LIBCURL],
 ]])
 		])
 
-		AS_IF([test "x`echo $CURLLIBS |grep ares`" != x && test "x$with_system_cares" = "xno"],
-		[
-			dnl Attempt one: Linux sed
-			[XCURLLIBS="`echo "$CURLLIBS"|sed -r 's/[^ ]*ares[^ ]*//g' 2>/dev/null`"]
-			AS_IF([test "x$XCURLLIBS" = "x"],
-			[
-				dnl Attempt two: FreeBSD (and others?) sed
-				[XCURLLIBS="`echo "$CURLLIBS"|sed -E 's/[^ ]*ares[^ ]*//g' 2>/dev/null`"]
-				AS_IF([test x"$XCURLLIBS" = x],
-				[
-					AC_MSG_ERROR([sed appears to be broken. It is needed for a remote includes compile hack.])
-				])
-			])
-			CURLLIBS="$XCURLLIBS"
-
-			IRCDLIBS_CURL_CARES="$CARES_LIBS"
-			CFLAGS_CURL_CARES="$CARES_CFLAGS"
-		])
-		
 		dnl Make sure that linking against cURL works rather than letting the user
 		dnl find out after compiling most of his program. ~ohnobinki
 		IRCDLIBS="$IRCDLIBS $CURLLIBS"
@@ -160,13 +140,13 @@ dnl the following 2 macros are based on CHECK_SSL by Mark Ethan Trostler <trostl
 AC_DEFUN([CHECK_SSL],
 [
 AC_ARG_ENABLE(ssl,
-	[AC_HELP_STRING([--enable-ssl=],[enable ssl will check /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/sfw /usr/local /usr])],
+	[AC_HELP_STRING([--enable-ssl=],[enable ssl will check /usr/local/opt/openssl /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/sfw /usr/local /usr])],
 	[],
 	[enable_ssl=no])
 AS_IF([test $enable_ssl != "no"],
 	[ 
-	AC_MSG_CHECKING([for openssl])
-	for dir in $enable_ssl /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/sfw /usr/local /usr; do
+	AC_MSG_CHECKING([for OpenSSL])
+	for dir in $enable_ssl /usr/local/opt/openssl /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/sfw /usr/local /usr; do
 		ssldir="$dir"
 		if test -f "$dir/include/openssl/ssl.h"; then
 			AC_MSG_RESULT([found in $ssldir/include/openssl])
@@ -189,65 +169,146 @@ AS_IF([test $enable_ssl != "no"],
 		AC_MSG_RESULT(not found)
 		echo ""
 		echo "Apparently you do not have both the openssl binary and openssl development libraries installed."
-		echo "You have two options:"
-		echo "a) Install the needed binaries and libraries"
-		echo "   and run ./Config"
-		echo "OR"
-		echo "b) If you don't need SSL..."
-		echo "   Run ./Config and say 'no' when asked about SSL"
-		echo "   (or pass --disable-ssl to ./configure)"
-		echo ""
+		echo "The following packages are required:"
+		echo "1) The library package is often called 'openssl-dev', 'openssl-devel' or 'libssl-dev'"
+		echo "2) The binary package is usually called 'openssl'."
+		echo "NOTE: you or your system administrator needs to install the library AND the binary package."
+		echo "After doing so, simply re-run ./Config"
 		exit 1
 	else
 		CRYPTOLIB="-lssl -lcrypto";
 		if test ! "$ssldir" = "/usr" ; then
 			LDFLAGS="$LDFLAGS -L$ssldir/lib";
+			dnl check if binary path exists
+			if test -f "$ssldir/bin/openssl"; then
+			    OPENSSLPATH="$ssldir/bin/openssl";
+			fi
 		fi
-		AC_DEFINE([USE_SSL], [], [Define if you want to allow SSL connections])
+		dnl linking require -ldl?
+		AC_MSG_CHECKING([OpenSSL linking with -ldl])
+		SAVE_LIBS="$LIBS"
+		LIBS="$LIBS $CRYPTOLIB -ldl"
+		AC_TRY_LINK([#include <openssl/err.h>], [ERR_clear_error();],
+		[
+			AC_MSG_RESULT(yes)
+			CRYPTOLIB="$CRYPTOLIB -ldl"
+		],
+		[
+			AC_MSG_RESULT(no)
+
+			dnl linking require both -ldl and -lpthread?
+			AC_MSG_CHECKING([OpenSSL linking with -ldl and -lpthread])
+			LIBS="$SAVE_LIBS $CRYPTOLIB -ldl -lpthread"
+			AC_TRY_LINK([#include <openssl/err.h>], [ERR_clear_error();],
+			[
+				AC_MSG_RESULT(yes)
+				CRYPTOLIB="$CRYPTOLIB -ldl -lpthread"
+			],
+			[
+				AC_MSG_RESULT(no)
+			])
+		])
+		LIBS="$SAVE_LIBS"
 	fi
 	])
 ])
 
-AC_DEFUN([CHECK_ZLIB],
+AC_DEFUN([CHECK_SSL_CTX_SET1_CURVES_LIST],
 [
-AC_ARG_ENABLE([ziplinks],
-	[AC_HELP_STRING([--enable-ziplinks=DIR],[enable ziplinks. will check /usr/local /usr /usr/pkg. Note that SSL does its own compression, so you won't need this for SSL links.])],
-	[],
-	[enable_ziplinks=no])
-AS_IF([test $enable_ziplinks != "no"],
-	[
-	AC_MSG_CHECKING([for zlib])
-	for dir in $enable_ziplinks /usr/local /usr /usr/pkg; do
-		zlibdir="$dir"
-		if test -f "$dir/include/zlib.h"; then
-			AC_MSG_RESULT(found in $zlibdir)
-			found_zlib="yes";
-			if test "$zlibdir" != "/usr" ; then
-				CFLAGS="$CFLAGS -I$zlibdir/include";
-			fi
-			AC_DEFINE([ZIP_LINKS], [], [Define if you have zlib and want zip links support.])
-		break
-		fi
-	done
-	if test x_$found_zlib != x_yes; then
-		AC_MSG_RESULT([not found])
-		echo ""
-		echo "Apparently you do not have the zlib development library installed."
-		echo "You have two options:"
-		echo "a) Install the zlib development library"
-		echo "   and run ./Config"
-		echo "OR"
-		echo "b) If you don't need compressed links..."
-		echo "   Run ./Config and say 'no' when asked about ziplinks support"
-		echo ""
-		exit 1
-	else
-		IRCDLIBS="$IRCDLIBS -lz"
-		if test "$zlibdir" != "/usr" ; then
-			LDFLAGS="$LDFLAGS -L$zlibdir/lib"
-		fi
-		HAVE_ZLIB=yes
-	fi
-	AC_SUBST([HAVE_ZLIB])
-	])
+AC_MSG_CHECKING([for SSL_CTX_set1_curves_list in SSL library])
+AC_LANG_PUSH(C)
+SAVE_LIBS="$LIBS"
+LIBS="$LIBS $CRYPTOLIB"
+AC_TRY_LINK([#include <openssl/ssl.h>],
+	[SSL_CTX *ctx = NULL; SSL_CTX_set1_curves_list(ctx, "test");],
+	has_function=1,
+	has_function=0)
+LIBS="$SAVE_LIBS"
+AC_LANG_POP(C)
+if test $has_function = 1; then
+	AC_MSG_RESULT([yes])
+	AC_DEFINE([HAS_SSL_CTX_SET1_CURVES_LIST], [], [Define if ssl library has SSL_CTX_set1_curves_list])
+else
+	AC_MSG_RESULT([no])
+fi
+])
+
+AC_DEFUN([CHECK_SSL_CTX_SET_MIN_PROTO_VERSION],
+[
+AC_MSG_CHECKING([for SSL_CTX_set_min_proto_version in SSL library])
+AC_LANG_PUSH(C)
+SAVE_LIBS="$LIBS"
+LIBS="$LIBS $CRYPTOLIB"
+AC_TRY_LINK([#include <openssl/ssl.h>],
+	[SSL_CTX *ctx = NULL; SSL_CTX_set_min_proto_version(ctx, TLS1_VERSION);],
+	has_function=1,
+	has_function=0)
+LIBS="$SAVE_LIBS"
+AC_LANG_POP(C)
+if test $has_function = 1; then
+	AC_MSG_RESULT([yes])
+	AC_DEFINE([HAS_SSL_CTX_SET_MIN_PROTO_VERSION], [], [Define if ssl library has SSL_CTX_set_min_proto_version])
+else
+	AC_MSG_RESULT([no])
+fi
+])
+
+AC_DEFUN([CHECK_SSL_CTX_SET_SECURITY_LEVEL],
+[
+AC_MSG_CHECKING([for SSL_CTX_set_security_level in SSL library])
+AC_LANG_PUSH(C)
+SAVE_LIBS="$LIBS"
+LIBS="$LIBS $CRYPTOLIB"
+AC_TRY_LINK([#include <openssl/ssl.h>],
+	[SSL_CTX *ctx = NULL; SSL_CTX_set_security_level(ctx, 1);],
+	has_function=1,
+	has_function=0)
+LIBS="$SAVE_LIBS"
+AC_LANG_POP(C)
+if test $has_function = 1; then
+	AC_MSG_RESULT([yes])
+	AC_DEFINE([HAS_SSL_CTX_SET_SECURITY_LEVEL], [], [Define if ssl library has SSL_CTX_set_security_level])
+else
+	AC_MSG_RESULT([no])
+fi
+])
+
+AC_DEFUN([CHECK_ASN1_TIME_diff],
+[
+AC_MSG_CHECKING([for ASN1_TIME_diff in SSL library])
+AC_LANG_PUSH(C)
+SAVE_LIBS="$LIBS"
+LIBS="$LIBS $CRYPTOLIB"
+AC_TRY_LINK([#include <openssl/ssl.h>],
+	[int one, two; ASN1_TIME_diff(&one, &two, NULL, NULL);],
+	has_function=1,
+	has_function=0)
+LIBS="$SAVE_LIBS"
+AC_LANG_POP(C)
+if test $has_function = 1; then
+	AC_MSG_RESULT([yes])
+	AC_DEFINE([HAS_ASN1_TIME_diff], [], [Define if ssl library has ASN1_TIME_diff])
+else
+	AC_MSG_RESULT([no])
+fi
+])
+
+AC_DEFUN([CHECK_X509_get0_notAfter],
+[
+AC_MSG_CHECKING([for X509_get0_notAfter in SSL library])
+AC_LANG_PUSH(C)
+SAVE_LIBS="$LIBS"
+LIBS="$LIBS $CRYPTOLIB"
+AC_TRY_LINK([#include <openssl/ssl.h>],
+	[X509_get0_notAfter(NULL);],
+	has_function=1,
+	has_function=0)
+LIBS="$SAVE_LIBS"
+AC_LANG_POP(C)
+if test $has_function = 1; then
+	AC_MSG_RESULT([yes])
+	AC_DEFINE([HAS_X509_get0_notAfter], [], [Define if ssl library has X509_get0_notAfter])
+else
+	AC_MSG_RESULT([no])
+fi
 ])

@@ -20,30 +20,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "config.h"
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "channel.h"
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <fcntl.h>
-#include "h.h"
-#ifdef _WIN32
-#include "version.h"
-#endif
+#include "unrealircd.h"
 
 static char *cloak_key1 = NULL, *cloak_key2 = NULL, *cloak_key3 = NULL;
 static char cloak_checksum[64];
 static int nokeys = 1;
+
+int CLOAK_IP_ONLY = 0;
 
 #undef KEY1
 #undef KEY2
@@ -52,11 +35,11 @@ static int nokeys = 1;
 #define KEY2 cloak_key2
 #define KEY3 cloak_key3
 
-DLLFUNC char *hidehost(char *host);
-DLLFUNC char *cloakcsum();
-DLLFUNC int cloak_config_test(ConfigFile *, ConfigEntry *, int, int *);
-DLLFUNC int cloak_config_run(ConfigFile *, ConfigEntry *, int);
-DLLFUNC int cloak_config_posttest(int *);
+char *hidehost(Client *client, char *host);
+char *cloakcsum();
+int cloak_config_test(ConfigFile *, ConfigEntry *, int, int *);
+int cloak_config_run(ConfigFile *, ConfigEntry *, int);
+int cloak_config_posttest(int *);
 
 static char *hidehost_ipv4(char *host);
 static char *hidehost_ipv6(char *host);
@@ -65,18 +48,17 @@ static inline unsigned int downsample(char *i);
 
 Callback *cloak = NULL, *cloak_csum = NULL;
 
-ModuleHeader MOD_HEADER(cloak)
-  = {
-  "cloak",
-  "v1.0",
-  "Official cloaking module (md5)",
-  "3.2-b8-1",
-  NULL
-  };
+ModuleHeader MOD_HEADER = {
+	"cloak",
+	"1.0",
+	"Official cloaking module (md5)",
+	"UnrealIRCd Team",
+	"unrealircd-5",
+};
 
-DLLFUNC int MOD_TEST(cloak)(ModuleInfo *modinfo)
+MOD_TEST()
 {
-	cloak = CallbackAddPCharEx(modinfo->handle, CALLBACKTYPE_CLOAK, hidehost);
+	cloak = CallbackAddPCharEx(modinfo->handle, CALLBACKTYPE_CLOAK_EX, hidehost);
 	if (!cloak)
 	{
 		config_error("cloak: Error while trying to install cloaking callback!");
@@ -88,30 +70,30 @@ DLLFUNC int MOD_TEST(cloak)(ModuleInfo *modinfo)
 		config_error("cloak: Error while trying to install cloaking checksum callback!");
 		return MOD_FAILED;
 	}
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGTEST, cloak_config_test);
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, cloak_config_posttest);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, cloak_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, cloak_config_posttest);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(cloak)(ModuleInfo *modinfo)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGRUN, cloak_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, cloak_config_run);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(cloak)(int module_load)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(cloak)(int module_unload)
+MOD_UNLOAD()
 {
 	if (cloak_key1)
 	{
-		MyFree(cloak_key1);
-		MyFree(cloak_key2);
-		MyFree(cloak_key3);
+		safe_free(cloak_key1);
+		safe_free(cloak_key2);
+		safe_free(cloak_key3);
 	}
 	return MOD_SUCCESS;
 }
@@ -134,11 +116,34 @@ char *p;
 }
 
 
-DLLFUNC int cloak_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int cloak_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
-ConfigEntry *cep;
-int keycnt = 0, errors = 0;
-char *keys[3];
+	ConfigEntry *cep;
+	int keycnt = 0, errors = 0;
+	char *keys[3];
+
+	if (type == CONFIG_SET)
+	{
+		/* set::cloak-method */
+		if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "cloak-method"))
+			return 0;
+
+		if (!ce->ce_vardata)
+		{
+			config_error("%s:%i: set::cloak-method: no method specified. The only supported methods are: 'ip' and 'host'",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
+		} else
+		if (strcmp(ce->ce_vardata, "ip") && strcmp(ce->ce_vardata, "host"))
+		{
+			config_error("%s:%i: set::cloak-method: unknown method '%s'. The only supported methods are: 'ip' and 'host'",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+
+		*errs = errors;
+		return errors ? -1 : 1;
+	}
 
 	if (type != CONFIG_CLOAKKEYS)
 		return 0;
@@ -185,7 +190,7 @@ char *keys[3];
 	return errors ? -1 : 1;
 }
 
-DLLFUNC int cloak_config_posttest(int *errs)
+int cloak_config_posttest(int *errs)
 {
 int errors = 0;
 
@@ -199,26 +204,39 @@ int errors = 0;
 	return errors ? -1 : 1;
 }
 
-DLLFUNC int cloak_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+int cloak_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 ConfigEntry *cep;
 char buf[512], result[16];
+
+	if (type == CONFIG_SET)
+	{
+		/* set::cloak-method */
+		if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "cloak-method"))
+			return 0;
+
+		if (!strcmp(ce->ce_vardata, "ip"))
+			CLOAK_IP_ONLY = 1;
+
+		return 0;
+	}
 
 	if (type != CONFIG_CLOAKKEYS)
 		return 0;
 
 	/* config test should ensure this goes fine... */
 	cep = ce->ce_entries;
-	cloak_key1 = strdup(cep->ce_varname);
+	safe_strdup(cloak_key1, cep->ce_varname);
 	cep = cep->ce_next;
-	cloak_key2 = strdup(cep->ce_varname);
+	safe_strdup(cloak_key2, cep->ce_varname);
 	cep = cep->ce_next;
-	cloak_key3 = strdup(cep->ce_varname);
+	safe_strdup(cloak_key3, cep->ce_varname);
 
 	/* Calculate checksum */
-	sprintf(buf, "%s:%s:%s", KEY1, KEY2, KEY3);
+	ircsnprintf(buf, sizeof(buf), "%s:%s:%s", KEY1, KEY2, KEY3);
 	DoMD5(result, buf, strlen(buf));
-	ircsprintf(cloak_checksum, "MD5:%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
+	ircsnprintf(cloak_checksum, sizeof(cloak_checksum),
+		"MD5:%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
 		(u_int)(result[0] & 0xf), (u_int)(result[0] >> 4),
 		(u_int)(result[1] & 0xf), (u_int)(result[1] >> 4),
 		(u_int)(result[2] & 0xf), (u_int)(result[2] >> 4),
@@ -238,26 +256,25 @@ char buf[512], result[16];
 	return 1;
 }
 
-DLLFUNC char *hidehost(char *host)
+char *hidehost(Client *client, char *host)
 {
-char *p;
+	char *p;
+	int host_type;
 
-	/* IPv6 ? */	
-	if (strchr(host, ':'))
-		return hidehost_ipv6(host);
+	if (CLOAK_IP_ONLY)
+		host = GetIP(client);
 
-	/* Is this a IPv4 IP? */
-	for (p = host; *p; p++)
-		if (!isdigit(*p) && !(*p == '.'))
-			break;
-	if (!(*p))
+	host_type = is_valid_ip(host);
+
+	if (host_type == 4)
 		return hidehost_ipv4(host);
-	
-	/* Normal host */
-	return hidehost_normalhost(host);
+	else if (host_type == 6)
+		return hidehost_ipv6(host);
+	else
+		return hidehost_normalhost(host);
 }
 
-DLLFUNC char *cloakcsum()
+char *cloakcsum()
 {
 	return cloak_checksum;
 }
@@ -298,30 +315,30 @@ unsigned int alpha, beta, gamma;
 	sscanf(host, "%u.%u.%u.%u", &a, &b, &c, &d);
 
 	/* ALPHA... */
-	ircsprintf(buf, "%s:%s:%s", KEY2, host, KEY3);
+	ircsnprintf(buf, sizeof(buf), "%s:%s:%s", KEY2, host, KEY3);
 	DoMD5(res, buf, strlen(buf));
-	strcpy(res+16, KEY1); /* first 16 bytes are filled, append our key.. */
+	strlcpy(res+16, KEY1, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
 	DoMD5(res2, res, n);
 	alpha = downsample(res2);
 
 	/* BETA... */
-	ircsprintf(buf, "%s:%d.%d.%d:%s", KEY3, a, b, c, KEY1);
+	ircsnprintf(buf, sizeof(buf), "%s:%d.%d.%d:%s", KEY3, a, b, c, KEY1);
 	DoMD5(res, buf, strlen(buf));
-	strcpy(res+16, KEY2); /* first 16 bytes are filled, append our key.. */
+	strlcpy(res+16, KEY2, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
 	DoMD5(res2, res, n);
 	beta = downsample(res2);
 
 	/* GAMMA... */
-	ircsprintf(buf, "%s:%d.%d:%s", KEY1, a, b, KEY2);
+	ircsnprintf(buf, sizeof(buf), "%s:%d.%d:%s", KEY1, a, b, KEY2);
 	DoMD5(res, buf, strlen(buf));
-	strcpy(res+16, KEY3); /* first 16 bytes are filled, append our key.. */
+	strlcpy(res+16, KEY3, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
 	DoMD5(res2, res, n);
 	gamma = downsample(res2);
 
-	ircsprintf(result, "%X.%X.%X.IP", alpha, beta, gamma);
+	ircsnprintf(result, sizeof(result), "%X.%X.%X.IP", alpha, beta, gamma);
 	return result;
 }
 
@@ -346,30 +363,30 @@ unsigned int alpha, beta, gamma;
 		&a, &b, &c, &d, &e, &f, &g, &h);
 
 	/* ALPHA... */
-	ircsprintf(buf, "%s:%s:%s", KEY2, host, KEY3);
+	ircsnprintf(buf, sizeof(buf), "%s:%s:%s", KEY2, host, KEY3);
 	DoMD5(res, buf, strlen(buf));
-	strcpy(res+16, KEY1); /* first 16 bytes are filled, append our key.. */
+	strlcpy(res+16, KEY1, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
 	DoMD5(res2, res, n);
 	alpha = downsample(res2);
 
 	/* BETA... */
-	ircsprintf(buf, "%s:%x:%x:%x:%x:%x:%x:%x:%s", KEY3, a, b, c, d, e, f, g, KEY1);
+	ircsnprintf(buf, sizeof(buf), "%s:%x:%x:%x:%x:%x:%x:%x:%s", KEY3, a, b, c, d, e, f, g, KEY1);
 	DoMD5(res, buf, strlen(buf));
-	strcpy(res+16, KEY2); /* first 16 bytes are filled, append our key.. */
+	strlcpy(res+16, KEY2, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
 	DoMD5(res2, res, n);
 	beta = downsample(res2);
 
 	/* GAMMA... */
-	ircsprintf(buf, "%s:%x:%x:%x:%x:%s", KEY1, a, b, c, d, KEY2);
+	ircsnprintf(buf, sizeof(buf), "%s:%x:%x:%x:%x:%s", KEY1, a, b, c, d, KEY2);
 	DoMD5(res, buf, strlen(buf));
-	strcpy(res+16, KEY3); /* first 16 bytes are filled, append our key.. */
+	strlcpy(res+16, KEY3, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
 	DoMD5(res2, res, n);
 	gamma = downsample(res2);
 
-	ircsprintf(result, "%X:%X:%X:IP", alpha, beta, gamma);
+	ircsnprintf(result, sizeof(result), "%X:%X:%X:IP", alpha, beta, gamma);
 	return result;
 }
 
@@ -379,9 +396,9 @@ char *p;
 static char buf[512], res[512], res2[512], result[HOSTLEN+1];
 unsigned int alpha, n;
 
-	ircsprintf(buf, "%s:%s:%s", KEY1, host, KEY2);
+	ircsnprintf(buf, sizeof(buf), "%s:%s:%s", KEY1, host, KEY2);
 	DoMD5(res, buf, strlen(buf));
-	strcpy(res+16, KEY3); /* first 16 bytes are filled, append our key.. */
+	strlcpy(res+16, KEY3, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
 	DoMD5(res2, res, n);
 	alpha = downsample(res2);
@@ -395,14 +412,14 @@ unsigned int alpha, n;
 	{
 		unsigned int len;
 		p++;
-		ircsprintf(result, "%s-%X.", hidden_host, alpha);
+		ircsnprintf(result, sizeof(result), "%s-%X.", hidden_host, alpha);
 		len = strlen(result) + strlen(p);
 		if (len <= HOSTLEN)
-			strcat(result, p);
+			strlcat(result, p, sizeof(result));
 		else
-			strcat(result, p + (len - HOSTLEN));
+			strlcat(result, p + (len - HOSTLEN), sizeof(result));
 	} else
-		ircsprintf(result,  "%s-%X", hidden_host, alpha);
+		ircsnprintf(result, sizeof(result),  "%s-%X", hidden_host, alpha);
 
 	return result;
 }

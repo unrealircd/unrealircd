@@ -1,0 +1,60 @@
+#!/bin/bash
+#
+# This script fires up a two-server IRC network and runs the test framework
+#
+
+# Exit on error:
+set -e
+
+# Verbose:
+set -x
+
+# Kill old instances
+killall -9 unrealircd || true
+# Remove old junk
+rm -rf cipherscan/ unrealircd-tests/
+
+if [ ! -d ~/cipherscan ]; then
+	# Install 'cipherscan'
+	git clone -q https://github.com/mozilla/cipherscan
+fi
+
+# Install 'unrealircd-tests'
+git clone -q https://github.com/unrealircd/unrealircd-tests.git
+cd unrealircd-tests
+
+# FreeBSD has various issues with the tests from us and others,
+# better set a flag to keep it simple:
+FREEBSD=0
+if uname -a|grep -q FreeBSD; then
+	FREEBSD=1
+fi
+
+# Run the test framework, testing both services:
+if [ "$FREEBSD" = 1 ]; then
+	# FreeBSD runs without services since they fail mysteriously:
+	./run -services none || exit 1
+else
+	# Linux tests both with anope and atheme services:
+	./run -services anope || exit 1
+	./run -services atheme || exit 1
+fi
+
+# Database writing/reading tests
+## unencrypted:
+./run -services none -boot tests/db/writing/* || exit 1
+./run -services none -keepdbs -boot tests/db/reading/* || exit 1
+## encrypted:
+./run -services none -include db_crypted.conf -boot tests/db/writing/* || exit 1
+./run -services none -include db_crypted.conf -keepdbs -boot tests/db/reading/* || exit 1
+
+# Do cipherscan test at the end
+# Has problems on non-Linux-64-bit, so we skip there:
+if [ "$FREEBSD" = 0 -a "$HOSTNAME" != "ub18-ia32" ]; then
+	sleep 2
+	cd ../extras/tests/tls
+	./tls-tests
+	cd -
+fi
+
+killall -15 unrealircd atheme-services services anope || true

@@ -36,6 +36,7 @@
 #define RPL_ISUPPORT	     005
 
 #define RPL_REDIR	     10
+#define RPL_YOURID           42
 
 #define RPL_REMOTEISUPPORT 105
 
@@ -59,15 +60,14 @@
 #define ERR_NOTEXTTOSEND     412
 #define ERR_NOTOPLEVEL       413
 #define ERR_WILDTOPLEVEL     414
+#define ERR_TOOMANYMATCHES   416
 
 #define ERR_UNKNOWNCOMMAND   421
 #define	ERR_NOMOTD           422
 #define	ERR_NOADMININFO      423
 #define	ERR_FILEERROR        424
 #define ERR_NOOPERMOTD	     425
-#ifdef NO_FLOOD_AWAY
 #define ERR_TOOMANYAWAY	     429
-#endif
 #define ERR_NONICKNAMEGIVEN  431
 #define ERR_ERRONEUSNICKNAME 432
 #define ERR_NICKNAMEINUSE    433
@@ -86,6 +86,7 @@
 #define	ERR_SUMMONDISABLED   445
 #define ERR_USERSDISABLED    446
 #define ERR_NONICKCHANGE     447
+#define ERR_FORBIDDENCHANNEL 448
 
 
 #define ERR_NOTREGISTERED    451
@@ -123,7 +124,7 @@
 
 #define ERR_NONONREG	     486
 #define ERR_NOTFORUSERS	    487
-#define ERR_HTMDISABLED		 488
+
 #define ERR_SECUREONLYCHAN   489
 #define ERR_NOSWEAR	     490
 #define ERR_NOOPERHOST       491
@@ -147,6 +148,7 @@
 #define ERR_OPERONLY		 520
 #define ERR_LISTSYNTAX       521
 
+#define ERR_CANTSENDTOUSER	531
 /*
  * Numberic replies from server commands.
  * These are currently in the range 200-399.
@@ -243,6 +245,7 @@
 #define	RPL_USERS            393
 #define	RPL_ENDOFUSERS       394
 #define	RPL_NOUSERS          395
+#define RPL_HOSTHIDDEN       396
 
 #define RPL_TRACELINK        200
 #define RPL_TRACECONNECTING  201
@@ -307,12 +310,14 @@
 #define	RPL_ADMINEMAIL       259
 
 #define	RPL_TRACELOG         261
+#define RPL_TRYAGAIN         263
 #define RPL_LOCALUSERS       265
 #define RPL_GLOBALUSERS      266
 
 #define RPL_SILELIST         271
 #define RPL_ENDOFSILELIST    272
 #define RPL_STATSDLINE       275
+#define RPL_WHOISCERTFP      276
 
 #define RPL_HELPHDR	     290
 #define RPL_HELPOP	     291
@@ -386,5 +391,6 @@
 #define ERR_SASLTOOLONG         905
 #define ERR_SASLABORTED         906
 #define ERR_SASLALREADY         907
+#define RPL_SASLMECHS           908
 
 #define ERR_NUMERICERR       999

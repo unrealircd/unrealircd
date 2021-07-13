@@ -1,0 +1,129 @@
+#************************************************************************
+#*   IRC - Internet Relay Chat, src/modules/chanmodes/Makefile
+#*   Copyright (C) The UnrealIRCd Team
+#*
+#*   This program is free software; you can redistribute it and/or modify
+#*   it under the terms of the GNU General Public License as published by
+#*   the Free Software Foundation; either version 1, or (at your option)
+#*   any later version.
+#*
+#*   This program is distributed in the hope that it will be useful,
+#*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#*   GNU General Public License for more details.
+#*
+#*   You should have received a copy of the GNU General Public License
+#*   along with this program; if not, write to the Free Software
+#*   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#*/
+
+CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
+
+INCLUDES = ../../include/channel.h \
+	../../include/common.h ../../include/config.h ../../include/dbuf.h \
+	../../include/dynconf.h ../../include/fdlist.h ../../include/h.h \
+	../../include/ircsprintf.h \
+	../../include/license.h \
+	../../include/modules.h ../../include/modversion.h ../../include/msg.h \
+	../../include/numeric.h ../../include/proto.h ../../include/dns.h \
+	../../include/resource.h ../../include/setup.h \
+	../../include/struct.h ../../include/sys.h \
+	../../include/types.h ../../include/url.h \
+	../../include/version.h ../../include/whowas.h
+
+R_MODULES= \
+	nocolor.so stripcolor.so issecure.so permanent.so floodprot.so \
+	noctcp.so link.so censor.so delayjoin.so noknock.so noinvite.so operonly.so \
+	nonotice.so regonly.so nonickchange.so nokick.so regonlyspeak.so \
+	secureonly.so history.so
+
+MODULES=$(R_MODULES)
+MODULEFLAGS=@MODULEFLAGS@
+RM=@RM@
+
+all: build
+
+build: $(MODULES)
+
+clean:
+	$(RM) -f *.o *.so *~ core
+
+#############################################################################
+#             .so's section
+#############################################################################
+
+issecure.so: issecure.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o issecure.so issecure.c
+
+nocolor.so: nocolor.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o nocolor.so nocolor.c
+
+stripcolor.so: stripcolor.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o stripcolor.so stripcolor.c
+
+permanent.so: permanent.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o permanent.so permanent.c
+
+floodprot.so: floodprot.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o floodprot.so floodprot.c
+
+noctcp.so: noctcp.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o noctcp.so noctcp.c
+
+link.so: link.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o link.so link.c
+
+censor.so: censor.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o censor.so censor.c
+
+delayjoin.so: delayjoin.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o delayjoin.so delayjoin.c
+
+noknock.so: noknock.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o noknock.so noknock.c
+		
+noinvite.so: noinvite.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o noinvite.so noinvite.c
+		
+operonly.so: operonly.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o operonly.so operonly.c
+		
+nonotice.so: nonotice.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o nonotice.so nonotice.c
+		
+regonly.so: regonly.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o regonly.so regonly.c
+		
+nonickchange.so: nonickchange.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o nonickchange.so nonickchange.c
+		
+nokick.so: nokick.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o nokick.so nokick.c
+		
+regonlyspeak.so: regonlyspeak.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o regonlyspeak.so regonlyspeak.c
+		
+secureonly.so: secureonly.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o secureonly.so secureonly.c
+
+history.so: history.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o history.so history.c

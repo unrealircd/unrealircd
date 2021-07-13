@@ -1,6 +1,6 @@
 /************************************************************************
  *   IRC - Internet Relay Chat, random.c
- *   (C) 2004-2010 Bram Matthys (Syzop) and the UnrealIRCd Team
+ *   (C) 2004-2019 Bram Matthys (Syzop) and the UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers. 
@@ -21,137 +21,411 @@
  *
  */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "channel.h"
-#include "version.h"
-#include <time.h>
-#ifdef _WIN32
-#include <sys/timeb.h>
-#endif
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <fcntl.h>
-#include "h.h"
+#include "unrealircd.h"
 
-/*
- * Based on Arc4 random number generator for FreeBSD/OpenBSD.
- * Copyright 1996 David Mazieres <dm@lcs.mit.edu>.
- *
- * Modification and redistribution in source and binary forms is
- * permitted provided that due credit is given to the author and the
- * OpenBSD project (for instance by leaving this copyright notice
- * intact).
- *
- * This code is derived from section 17.1 of Applied Cryptography, second edition.
- *
- * *BSD code modified by Syzop to suit our needs (unreal'ized, windows, etc)
+#ifndef HAVE_ARC4RANDOM
+
+#define KEYSTREAM_ONLY
+
+/* chacha_private.h from openssh/openssh-portable
+ * "chacha-merged.c version 20080118
+ *  D. J. Bernstein
+ *  Public domain."
  */
 
-struct arc4_stream {
-	u_char i;
-	u_char j;
-	u_char s[256];
-};
+/* $OpenBSD: chacha_private.h,v 1.2 2013/10/04 07:02:27 djm Exp $ */
 
-static struct arc4_stream rs;
+typedef unsigned char u8;
+typedef unsigned int u32;
 
-static void arc4_init(void)
+typedef struct
 {
-int n;
+  u32 input[16]; /* could be compressed */
+} chacha_ctx;
 
-	for (n = 0; n < 256; n++)
-		rs.s[n] = n;
-	rs.i = 0;
-	rs.j = 0;
+#define U8C(v) (v##U)
+#define U32C(v) (v##U)
+
+#define U8V(v) ((u8)(v) & U8C(0xFF))
+#define U32V(v) ((u32)(v) & U32C(0xFFFFFFFF))
+
+#define ROTL32(v, n) \
+  (U32V((v) << (n)) | ((v) >> (32 - (n))))
+
+#define U8TO32_LITTLE(p) \
+  (((u32)((p)[0])      ) | \
+   ((u32)((p)[1]) <<  8) | \
+   ((u32)((p)[2]) << 16) | \
+   ((u32)((p)[3]) << 24))
+
+#define U32TO8_LITTLE(p, v) \
+  do { \
+    (p)[0] = U8V((v)      ); \
+    (p)[1] = U8V((v) >>  8); \
+    (p)[2] = U8V((v) >> 16); \
+    (p)[3] = U8V((v) >> 24); \
+  } while (0)
+
+#define ROTATE(v,c) (ROTL32(v,c))
+#define XOR(v,w) ((v) ^ (w))
+#define PLUS(v,w) (U32V((v) + (w)))
+#define PLUSONE(v) (PLUS((v),1))
+
+#define QUARTERROUND(a,b,c,d) \
+  a = PLUS(a,b); d = ROTATE(XOR(d,a),16); \
+  c = PLUS(c,d); b = ROTATE(XOR(b,c),12); \
+  a = PLUS(a,b); d = ROTATE(XOR(d,a), 8); \
+  c = PLUS(c,d); b = ROTATE(XOR(b,c), 7);
+
+static const char sigma[16] = "expand 32-byte k";
+static const char tau[16] = "expand 16-byte k";
+
+static void
+chacha_keysetup(chacha_ctx *x,const u8 *k,u32 kbits,u32 ivbits)
+{
+  const char *constants;
+
+  x->input[4] = U8TO32_LITTLE(k + 0);
+  x->input[5] = U8TO32_LITTLE(k + 4);
+  x->input[6] = U8TO32_LITTLE(k + 8);
+  x->input[7] = U8TO32_LITTLE(k + 12);
+  if (kbits == 256) { /* recommended */
+    k += 16;
+    constants = sigma;
+  } else { /* kbits == 128 */
+    constants = tau;
+  }
+  x->input[8] = U8TO32_LITTLE(k + 0);
+  x->input[9] = U8TO32_LITTLE(k + 4);
+  x->input[10] = U8TO32_LITTLE(k + 8);
+  x->input[11] = U8TO32_LITTLE(k + 12);
+  x->input[0] = U8TO32_LITTLE(constants + 0);
+  x->input[1] = U8TO32_LITTLE(constants + 4);
+  x->input[2] = U8TO32_LITTLE(constants + 8);
+  x->input[3] = U8TO32_LITTLE(constants + 12);
 }
 
-static inline void arc4_doaddrandom(u_char *dat, int datlen)
+static void
+chacha_ivsetup(chacha_ctx *x,const u8 *iv)
 {
-int n;
-u_char si;
-#ifdef DEBUGMODE
-int i;
-char outbuf[512], *p = outbuf;
-	*p = '\0';
-	for (i=0; i < datlen; i++)
-	{
-		sprintf(p, "%.2X/", dat[i]);
-		p += 3;
-		if (p > outbuf + 500)
-		{
-			strcpy(p, "....");
-			break;
-		}
-	}
-	if (strlen(outbuf) > 0)
-		outbuf[strlen(outbuf)-1] = '\0';
-	Debug((DEBUG_DEBUG, "arc4_addrandom() called, datlen=%d, data dump: %s", datlen, outbuf));
+  x->input[12] = 0;
+  x->input[13] = 0;
+  x->input[14] = U8TO32_LITTLE(iv + 0);
+  x->input[15] = U8TO32_LITTLE(iv + 4);
+}
+
+static void
+chacha_encrypt_bytes(chacha_ctx *x,const u8 *m,u8 *c,u32 bytes)
+{
+  u32 x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
+  u32 j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
+  u8 *ctarget = NULL;
+  u8 tmp[64];
+  u_int i;
+
+  if (!bytes) return;
+
+  j0 = x->input[0];
+  j1 = x->input[1];
+  j2 = x->input[2];
+  j3 = x->input[3];
+  j4 = x->input[4];
+  j5 = x->input[5];
+  j6 = x->input[6];
+  j7 = x->input[7];
+  j8 = x->input[8];
+  j9 = x->input[9];
+  j10 = x->input[10];
+  j11 = x->input[11];
+  j12 = x->input[12];
+  j13 = x->input[13];
+  j14 = x->input[14];
+  j15 = x->input[15];
+
+  for (;;) {
+    if (bytes < 64) {
+      for (i = 0;i < bytes;++i) tmp[i] = m[i];
+      m = tmp;
+      ctarget = c;
+      c = tmp;
+    }
+    x0 = j0;
+    x1 = j1;
+    x2 = j2;
+    x3 = j3;
+    x4 = j4;
+    x5 = j5;
+    x6 = j6;
+    x7 = j7;
+    x8 = j8;
+    x9 = j9;
+    x10 = j10;
+    x11 = j11;
+    x12 = j12;
+    x13 = j13;
+    x14 = j14;
+    x15 = j15;
+    for (i = 20;i > 0;i -= 2) {
+      QUARTERROUND( x0, x4, x8,x12)
+      QUARTERROUND( x1, x5, x9,x13)
+      QUARTERROUND( x2, x6,x10,x14)
+      QUARTERROUND( x3, x7,x11,x15)
+      QUARTERROUND( x0, x5,x10,x15)
+      QUARTERROUND( x1, x6,x11,x12)
+      QUARTERROUND( x2, x7, x8,x13)
+      QUARTERROUND( x3, x4, x9,x14)
+    }
+    x0 = PLUS(x0,j0);
+    x1 = PLUS(x1,j1);
+    x2 = PLUS(x2,j2);
+    x3 = PLUS(x3,j3);
+    x4 = PLUS(x4,j4);
+    x5 = PLUS(x5,j5);
+    x6 = PLUS(x6,j6);
+    x7 = PLUS(x7,j7);
+    x8 = PLUS(x8,j8);
+    x9 = PLUS(x9,j9);
+    x10 = PLUS(x10,j10);
+    x11 = PLUS(x11,j11);
+    x12 = PLUS(x12,j12);
+    x13 = PLUS(x13,j13);
+    x14 = PLUS(x14,j14);
+    x15 = PLUS(x15,j15);
+
+#ifndef KEYSTREAM_ONLY
+    x0 = XOR(x0,U8TO32_LITTLE(m + 0));
+    x1 = XOR(x1,U8TO32_LITTLE(m + 4));
+    x2 = XOR(x2,U8TO32_LITTLE(m + 8));
+    x3 = XOR(x3,U8TO32_LITTLE(m + 12));
+    x4 = XOR(x4,U8TO32_LITTLE(m + 16));
+    x5 = XOR(x5,U8TO32_LITTLE(m + 20));
+    x6 = XOR(x6,U8TO32_LITTLE(m + 24));
+    x7 = XOR(x7,U8TO32_LITTLE(m + 28));
+    x8 = XOR(x8,U8TO32_LITTLE(m + 32));
+    x9 = XOR(x9,U8TO32_LITTLE(m + 36));
+    x10 = XOR(x10,U8TO32_LITTLE(m + 40));
+    x11 = XOR(x11,U8TO32_LITTLE(m + 44));
+    x12 = XOR(x12,U8TO32_LITTLE(m + 48));
+    x13 = XOR(x13,U8TO32_LITTLE(m + 52));
+    x14 = XOR(x14,U8TO32_LITTLE(m + 56));
+    x15 = XOR(x15,U8TO32_LITTLE(m + 60));
 #endif
 
-	rs.i--;
-	for (n = 0; n < 256; n++) {
-		rs.i = (rs.i + 1);
-		si = rs.s[rs.i];
-		rs.j = (rs.j + si + dat[n % datlen]);
-		rs.s[rs.i] = rs.s[rs.j];
-		rs.s[rs.j] = si;
+    j12 = PLUSONE(j12);
+    if (!j12) {
+      j13 = PLUSONE(j13);
+      /* stopping at 2^70 bytes per nonce is user's responsibility */
+    }
+
+    U32TO8_LITTLE(c + 0,x0);
+    U32TO8_LITTLE(c + 4,x1);
+    U32TO8_LITTLE(c + 8,x2);
+    U32TO8_LITTLE(c + 12,x3);
+    U32TO8_LITTLE(c + 16,x4);
+    U32TO8_LITTLE(c + 20,x5);
+    U32TO8_LITTLE(c + 24,x6);
+    U32TO8_LITTLE(c + 28,x7);
+    U32TO8_LITTLE(c + 32,x8);
+    U32TO8_LITTLE(c + 36,x9);
+    U32TO8_LITTLE(c + 40,x10);
+    U32TO8_LITTLE(c + 44,x11);
+    U32TO8_LITTLE(c + 48,x12);
+    U32TO8_LITTLE(c + 52,x13);
+    U32TO8_LITTLE(c + 56,x14);
+    U32TO8_LITTLE(c + 60,x15);
+
+    if (bytes <= 64) {
+      if (bytes < 64) {
+        for (i = 0;i < bytes;++i) ctarget[i] = c[i];
+      }
+      x->input[12] = j12;
+      x->input[13] = j13;
+      return;
+    }
+    bytes -= 64;
+    c += 64;
+#ifndef KEYSTREAM_ONLY
+    m += 64;
+#endif
+  }
+}
+
+/* The following is taken from arc4random.c
+ * from openssh/openssh-portable/, which has an ISC license,
+ * which is GPL compatible.
+ */
+
+/* OPENBSD ORIGINAL: lib/libc/crypto/arc4random.c */
+/* $OpenBSD: arc4random.c,v 1.25 2013/10/01 18:34:57 markus Exp $	*/
+/*
+ * Copyright (c) 1996, David Mazieres <dm@uun.org>
+ * Copyright (c) 2008, Damien Miller <djm@openbsd.org>
+ * Copyright (c) 2013, Markus Friedl <markus@openbsd.org>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+/* Modified for UnrealIRCd by Bram Matthys ("Syzop") in 2019.
+ * Things like taking out #if(n)def's for openssl (which we always
+ * compile with), re-indenting, removing various stuff, etc.
+ */
+
+
+
+#define KEYSZ	32
+#define IVSZ	8
+#define BLOCKSZ	64
+#define RSBUFSZ	(16*BLOCKSZ)
+static int rs_initialized;
+static chacha_ctx rs;		/* chacha context for random keystream */
+static u_char rs_buf[RSBUFSZ];	/* keystream blocks */
+static size_t rs_have;		/* valid bytes at end of rs_buf */
+static size_t rs_count;		/* bytes till reseed */
+
+static inline void _rs_rekey(u_char *dat, size_t datlen);
+
+static inline void _rs_init(u_char *buf, size_t n)
+{
+	if (n < KEYSZ + IVSZ)
+		return;
+	chacha_keysetup(&rs, buf, KEYSZ * 8, 0);
+	chacha_ivsetup(&rs, buf + KEYSZ);
+}
+
+static void _rs_stir(void)
+{
+	u_char rnd[KEYSZ + IVSZ];
+
+	if (RAND_bytes(rnd, sizeof(rnd)) <= 0)
+	{
+		ircd_log(LOG_ERROR, "Couldn't obtain random bytes (error 0x%lx)",
+		    (unsigned long)ERR_get_error());
+		abort();
+	}
+
+	if (!rs_initialized) {
+		rs_initialized = 1;
+		_rs_init(rnd, sizeof(rnd));
+	} else
+		_rs_rekey(rnd, sizeof(rnd));
+#ifdef HAVE_EXPLICIT_BZERO
+	explicit_bzero(rnd, sizeof(rnd));
+#else
+	/* Not terribly important in this case */
+	memset(rnd, 0, sizeof(rnd));
+#endif
+	/* invalidate rs_buf */
+	rs_have = 0;
+	memset(rs_buf, 0, RSBUFSZ);
+
+	rs_count = 1600000;
+}
+
+static inline void _rs_stir_if_needed(size_t len)
+{
+	if (rs_count <= len || !rs_initialized) {
+		_rs_stir();
+	} else
+		rs_count -= len;
+}
+
+static inline void _rs_rekey(u_char *dat, size_t datlen)
+{
+#ifndef KEYSTREAM_ONLY
+	memset(rs_buf, 0,RSBUFSZ);
+#endif
+	/* fill rs_buf with the keystream */
+	chacha_encrypt_bytes(&rs, rs_buf, rs_buf, RSBUFSZ);
+	/* mix in optional user provided data */
+	if (dat) {
+		size_t i, m;
+
+		m = MIN(datlen, KEYSZ + IVSZ);
+		for (i = 0; i < m; i++)
+			rs_buf[i] ^= dat[i];
+	}
+	/* immediately reinit for backtracking resistance */
+	_rs_init(rs_buf, KEYSZ + IVSZ);
+	memset(rs_buf, 0, KEYSZ + IVSZ);
+	rs_have = RSBUFSZ - KEYSZ - IVSZ;
+}
+
+static inline void _rs_random_buf(void *_buf, size_t n)
+{
+	u_char *buf = (u_char *)_buf;
+	size_t m;
+
+	_rs_stir_if_needed(n);
+	while (n > 0) {
+		if (rs_have > 0) {
+			m = MIN(n, rs_have);
+			memcpy(buf, rs_buf + RSBUFSZ - rs_have, m);
+			memset(rs_buf + RSBUFSZ - rs_have, 0, m);
+			buf += m;
+			n -= m;
+			rs_have -= m;
+		}
+		if (rs_have == 0)
+			_rs_rekey(NULL, 0);
 	}
 }
 
-static inline void arc4_addrandom(void *dat, int datlen)
+static inline void _rs_random_u32(uint32_t *val)
 {
-	arc4_doaddrandom((unsigned char *)dat, datlen);
+	_rs_stir_if_needed(sizeof(*val));
+	if (rs_have < sizeof(*val))
+		_rs_rekey(NULL, 0);
+	memcpy(val, rs_buf + RSBUFSZ - rs_have, sizeof(*val));
+	memset(rs_buf + RSBUFSZ - rs_have, 0, sizeof(*val));
+	rs_have -= sizeof(*val);
 	return;
 }
 
-
-u_char getrandom8()
+void arc4random_stir(void)
 {
-u_char si, sj;
-
-	rs.i = (rs.i + 1);
-	si = rs.s[rs.i];
-	rs.j = (rs.j + si);
-	sj = rs.s[rs.j];
-	rs.s[rs.i] = sj;
-	rs.s[rs.j] = si;
-	return (rs.s[(si + sj) & 0xff]);
+	_rs_stir();
 }
 
-u_int16_t getrandom16()
+void arc4random_doaddrandom(u_char *dat, int datlen)
 {
-u_int16_t val;
-	val = getrandom8(rs) << 8;
-	val |= getrandom8(rs);
-	return val;
+	int m;
+
+	if (!rs_initialized)
+		_rs_stir();
+	while (datlen > 0) {
+		m = MIN(datlen, KEYSZ + IVSZ);
+		_rs_rekey(dat, m);
+		dat += m;
+		datlen -= m;
+	}
 }
 
-u_int32_t getrandom32()
-{
-u_int32_t val;
+#endif /* !HAVE_ARC4RANDOM */
 
-	val = getrandom8(rs) << 24;
-	val |= getrandom8(rs) << 16;
-	val |= getrandom8(rs) << 8;
-	val |= getrandom8(rs);
-	return val;
+/* UnrealIRCd-specific functions follow */
+
+static void arc4_addrandom(void *dat, int datlen)
+{
+	arc4random_doaddrandom((unsigned char *)dat, datlen);
+	return;
 }
 
-void add_entropy_configfile(struct stat st, char *buf)
+void add_entropy_configfile(struct stat *st, char *buf)
 {
-unsigned char mdbuf[16];
+	unsigned char mdbuf[16];
 
-	arc4_addrandom(&st.st_size, sizeof(st.st_size));
-	arc4_addrandom(&st.st_mtime, sizeof(st.st_mtime));
+	arc4_addrandom(&st->st_size, sizeof(st->st_size));
+	arc4_addrandom(&st->st_mtime, sizeof(st->st_mtime));
 	DoMD5(mdbuf, buf, strlen(buf));
 	arc4_addrandom(&mdbuf, sizeof(mdbuf));
 }
@@ -162,27 +436,21 @@ unsigned char mdbuf[16];
  */
 void init_random()
 {
-struct {
-#ifdef USE_SSL
-	char egd[32];			/* from EGD */
-#endif
+	struct {
 #ifndef _WIN32
-	struct timeval nowt;	/* time */
-	char rnd[32];			/* /dev/urandom */
+		struct timeval nowt;		/* time */
+		char rnd[32];			/* /dev/urandom */
 #else
-	MEMORYSTATUS mstat;		/* memory status */
-	struct _timeb nowt;		/* time */
+		struct _timeb nowt;		/* time */
+		MEMORYSTATUS mstat;		/* memory status */
 #endif
-} rdat;
-
-int n;
+	} rdat;
 
 #ifndef _WIN32
-int fd;
-#else
-MEMORYSTATUS mstat;
+	int fd;
 #endif
 
+<<<<<<< HEAD
 	arc4_init();
 
 	/* Grab non-OS specific "random" data */
@@ -193,17 +461,20 @@ MEMORYSTATUS mstat;
 	}
  #endif
 #endif
+=======
+	_rs_stir();
+>>>>>>> unreal52
 
 	/* Grab OS specific "random" data */
 #ifndef _WIN32
 	gettimeofday(&rdat.nowt, NULL);
 	fd = open("/dev/urandom", O_RDONLY);
-	if (fd) {
-		n = read(fd, &rdat.rnd, sizeof(rdat.rnd));
+	if (fd >= 0)
+	{
+		int n = read(fd, &rdat.rnd, sizeof(rdat.rnd));
 		Debug((DEBUG_INFO, "init_random: read from /dev/urandom returned %d", n));
 		close(fd);
 	}
-	/* TODO: more!?? */
 #else
 	_ftime(&rdat.nowt);
 	GlobalMemoryStatus (&rdat.mstat);
@@ -212,4 +483,51 @@ MEMORYSTATUS mstat;
 	arc4_addrandom(&rdat, sizeof(rdat));
 
 	/* NOTE: addtional entropy is added by add_entropy_* function(s) */
+}
+
+uint32_t arc4random(void)
+{
+	uint32_t val;
+
+	_rs_random_u32(&val);
+	return val;
+}
+
+/** Get 8 bits (1 byte) of randomness */
+u_char getrandom8()
+{
+	return arc4random() & 0xff;
+}
+
+/** Get 16 bits (2 bytes) of randomness */
+uint16_t getrandom16()
+{
+	return arc4random() & 0xffff;
+}
+
+/** Get 32 bits (4 bytes) of randomness */
+uint32_t getrandom32()
+{
+	return arc4random();
+}
+
+/** Generate an alphanumeric string (eg: XzHe5G).
+ * @param buf      The buffer
+ * @param numbytes The number of random bytes.
+ * @note  Note that numbytes+1 bytes are written to buf.
+ *        In other words, numbytes does NOT include the NUL byte.
+ */
+void gen_random_alnum(char *buf, int numbytes)
+{
+	for (; numbytes > 0; numbytes--)
+	{
+		unsigned char v = getrandom8() % (26+26+10);
+		if (v < 26)
+			*buf++ = 'a'+v;
+		else if (v < 52)
+			*buf++ = 'A'+(v-26);
+		else
+			*buf++ = '0'+(v-52);
+	}
+	*buf = '\0';
 }

@@ -1,0 +1,19 @@
+#!/bin/sh
+echo ""
+echo "Checking for updates for third party modules..."
+# We can't use the "unrealircd" script, since possibly the ircd
+# has not been installed to it's final location.. yet.
+# So this is basically "unrealircd module upgrade --no-install":
+../../ircd -m upgrade --no-install
+echo ""
+echo "Building all third party modules..."
+for x in *.c
+do
+if [ "$x" != "*.c" ]; then
+	x="`echo $x|sed 's/\.c//'`"
+	if [ ! -f $x.so -o $x.c -nt $x.so ]; then
+		echo "Building 3rd party module $x..."
+		make custommodule MODULEFILE=$x || (echo "*****"; echo "Building 3rd party module $x failed."; echo "Contact the module author of the $x module (not the UnrealIRCd team), or simply delete the $PWD/$x.c file"; echo "*****"; exit 1)
+	fi
+fi
+done

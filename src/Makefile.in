@@ -1,0 +1,249 @@
+#************************************************************************
+#*   IRC - Internet Relay Chat, src/Makefile
+#*   Copyright (C) 1990 Jarkko Oikarinen
+#*
+#*   This program is free software; you can redistribute it and/or modify
+#*   it under the terms of the GNU General Public License as published by
+#*   the Free Software Foundation; either version 1, or (at your option)
+#*   any later version.
+#*
+#*   This program is distributed in the hope that it will be useful,
+#*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#*   GNU General Public License for more details.
+#*
+#*   You should have received a copy of the GNU General Public License
+#*   along with this program; if not, write to the Free Software
+#*   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#*   
+#*   $Id$
+#*/
+
+CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
+
+OBJS=dns.o auth.o channel.o crule.o dbuf.o \
+	fdlist.o hash.o ircd.o ircsprintf.o list.o \
+	match.o modules.o parse.o mempool.o operclass.o \
+	conf_preprocessor.o conf.o debug.o dispatch.o numeric.o \
+	misc.o serv.o aliases.o socket.o \
+	tls.o user.o scache.o send.o support.o \
+	version.o whowas.o random.o api-usermode.o api-channelmode.o \
+	api-moddata.o api-extban.o api-isupport.o api-command.o \
+	api-clicap.o api-messagetag.o api-history-backend.o api-efunctions.o \
+	api-event.o \
+	crypt_blowfish.o unrealdb.o updconf.o crashreport.o modulemanager.o \
+	utf8.o \
+	openssl_hostname_validation.o $(URL)
+
+SRC=$(OBJS:%.o=%.c)
+
+# Flags specific for the ircd binary (and it's object files)...
+# .. but NOT for modules.
+BINCFLAGS=@HARDEN_BINCFLAGS@
+BINLDFLAGS=@DYNAMIC_LDFLAGS@ @HARDEN_BINLDFLAGS@
+
+INCLUDES = ../include/channel.h \
+	../include/common.h ../include/config.h ../include/dbuf.h \
+	../include/dynconf.h ../include/fdlist.h ../include/h.h \
+	../include/ircsprintf.h \
+	../include/license.h \
+	../include/modules.h ../include/modversion.h ../include/msg.h \
+	../include/numeric.h ../include/proto.h \
+	../include/resource.h ../include/setup.h \
+	../include/struct.h ../include/sys.h \
+	../include/types.h ../include/url.h \
+	../include/version.h ../include/whowas.h \
+	../include/openssl_hostname_validation.h
+
+all: build
+
+build:
+	# Force build of 'ircd', before we start building any modules:
+	$(MAKE) ircd
+	$(MAKE) mods
+
+custommodule:
+	+cd modules/third; $(MAKE) MODULEFILE=$(MODULEFILE) 'EXLIBS=$(EXLIBS)' custommodule
+
+ircd: $(OBJS)
+	$(CC) $(CFLAGS) $(BINCFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(BINLDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
+
+mods:
+	@if [ ! -r include ] ; then \
+		ln -s ../include include; \
+	fi
+	@if [ ! -r modules ] ; then \
+		echo "You havent done cvs update -P -d"; \
+	fi
+	+cd modules; $(MAKE) all
+
+version.c: version.c.SH
+	$(SHELL) version.c.SH
+
+version.o: version.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c version.c
+
+parse.o: parse.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c parse.c
+
+socket.o: socket.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c socket.c
+
+dispatch.o: dispatch.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c dispatch.c
+
+dbuf.o: dbuf.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c dbuf.c
+
+auth.o: auth.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c auth.c
+
+send.o: send.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c send.c
+
+tls.o: tls.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c tls.c
+
+match.o: match.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c match.c
+
+modules.o: modules.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c modules.c
+
+mempool.o: mempool.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c mempool.c
+
+support.o: support.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c support.c
+
+userload.o: userload.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c userload.c
+
+aliases.o: aliases.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c aliases.c
+
+clean:
+	$(RM) -f *.o *.so *~ core ircd version.c; \
+	cd modules; make clean
+
+cleandir: clean
+
+depend:
+	makedepend -I${INCLUDEDIR} ${SRC}
+
+channel.o: channel.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c channel.c
+
+ircd.o: ircd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c ircd.c
+
+list.o: list.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c list.c
+
+dns.o: dns.c $(INCLUDES) ../include/dns.h
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c dns.c
+
+fdlist.o: fdlist.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c fdlist.c
+
+conf_preprocessor.o: conf_preprocessor.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c conf_preprocessor.c
+
+conf.o: conf.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c conf.c
+
+debug.o: debug.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c debug.c
+
+numeric.o: numeric.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c numeric.c
+
+misc.o: misc.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c misc.c
+
+scache.o: scache.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c scache.c
+
+ircsprintf.o: ircsprintf.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c ircsprintf.c
+
+user.o: user.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c user.c
+
+serv.o: serv.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c serv.c
+
+whowas.o: whowas.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c whowas.c
+
+hash.o: hash.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c hash.c
+
+crule.o: crule.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c crule.c
+
+random.o: random.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c random.c
+
+operclass.o: operclass.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c operclass.c
+
+api-usermode.o: api-usermode.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-usermode.c
+
+api-event.o: api-event.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-event.c
+
+api-channelmode.o: api-channelmode.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-channelmode.c
+
+api-moddata.o: api-moddata.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-moddata.c
+
+api-extban.o: api-extban.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-extban.c
+
+api-command.o: api-command.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-command.c
+
+api-isupport.o: api-isupport.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-isupport.c
+
+api-clicap.o: api-clicap.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-clicap.c
+
+api-messagetag.o: api-messagetag.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-messagetag.c
+
+api-history-backend.o: api-history-backend.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-history-backend.c
+
+api-efunctions.o: api-efunctions.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-efunctions.c
+
+crypt_blowfish.o: crypt_blowfish.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c crypt_blowfish.c
+
+unrealdb.o: unrealdb.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c unrealdb.c
+
+updconf.o: updconf.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c updconf.c
+
+crashreport.o: crashreport.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c crashreport.c
+
+modulemanager.o: modulemanager.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c modulemanager.c
+
+utf8.o: utf8.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c utf8.c
+
+openssl_hostname_validation.o: openssl_hostname_validation.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c openssl_hostname_validation.c
+
+url.o: url.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c url.c
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+

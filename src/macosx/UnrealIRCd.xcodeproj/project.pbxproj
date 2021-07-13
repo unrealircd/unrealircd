@@ -1,0 +1,463 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1F101A741B59EF2F00FE6A5B /* logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F101A721B59EF2F00FE6A5B /* logo.png */; };
+		1F101A751B59EF2F00FE6A5B /* logo@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F101A731B59EF2F00FE6A5B /* logo@2x.png */; };
+		1F1E10F61B5A43CD00D69F41 /* DaemonModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1E10F51B5A43CD00D69F41 /* DaemonModel.swift */; };
+		1F1E10F81B5A43D800D69F41 /* ConfigurationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1E10F71B5A43D800D69F41 /* ConfigurationModel.swift */; };
+		1F1E10FA1B5A43EE00D69F41 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1E10F91B5A43EE00D69F41 /* AppModel.swift */; };
+		1F67373F1B5B93CC00C213D8 /* ChangeNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F67373E1B5B93CC00C213D8 /* ChangeNotifier.swift */; };
+		1FE784F51B3DF0DD006CB6DD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE784F41B3DF0DD006CB6DD /* AppDelegate.swift */; };
+		1FE784F71B3DF0DD006CB6DD /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE784F61B3DF0DD006CB6DD /* ViewController.swift */; };
+		1FE784F91B3DF0DD006CB6DD /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FE784F81B3DF0DD006CB6DD /* Images.xcassets */; };
+		1FE784FC1B3DF0DD006CB6DD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1FE784FA1B3DF0DD006CB6DD /* Main.storyboard */; };
+		1FE785081B3DF0DD006CB6DD /* UnrealIRCdTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE785071B3DF0DD006CB6DD /* UnrealIRCdTests.swift */; };
+		1FFB26B51B5BABFF00FF2D71 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFB26B41B5BABFF00FF2D71 /* WindowController.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1FE785021B3DF0DD006CB6DD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FE784E71B3DF0DD006CB6DD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1FE784EE1B3DF0DD006CB6DD;
+			remoteInfo = UnrealIRCd;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		1F101A721B59EF2F00FE6A5B /* logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = logo.png; sourceTree = "<group>"; };
+		1F101A731B59EF2F00FE6A5B /* logo@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "logo@2x.png"; sourceTree = "<group>"; };
+		1F1E10F51B5A43CD00D69F41 /* DaemonModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DaemonModel.swift; sourceTree = "<group>"; };
+		1F1E10F71B5A43D800D69F41 /* ConfigurationModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigurationModel.swift; sourceTree = "<group>"; };
+		1F1E10F91B5A43EE00D69F41 /* AppModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		1F67373E1B5B93CC00C213D8 /* ChangeNotifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChangeNotifier.swift; sourceTree = "<group>"; };
+		1FE784EF1B3DF0DD006CB6DD /* UnrealIRCd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UnrealIRCd.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1FE784F31B3DF0DD006CB6DD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1FE784F41B3DF0DD006CB6DD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		1FE784F61B3DF0DD006CB6DD /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		1FE784F81B3DF0DD006CB6DD /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		1FE784FB1B3DF0DD006CB6DD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		1FE785011B3DF0DD006CB6DD /* UnrealIRCdTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UnrealIRCdTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1FE785061B3DF0DD006CB6DD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1FE785071B3DF0DD006CB6DD /* UnrealIRCdTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnrealIRCdTests.swift; sourceTree = "<group>"; };
+		1FFB26B41B5BABFF00FF2D71 /* WindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1FE784EC1B3DF0DD006CB6DD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1FE784FE1B3DF0DD006CB6DD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1FE784E61B3DF0DD006CB6DD = {
+			isa = PBXGroup;
+			children = (
+				1FE784F11B3DF0DD006CB6DD /* UnrealIRCd */,
+				1FE785041B3DF0DD006CB6DD /* UnrealIRCdTests */,
+				1FE784F01B3DF0DD006CB6DD /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1FE784F01B3DF0DD006CB6DD /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1FE784EF1B3DF0DD006CB6DD /* UnrealIRCd.app */,
+				1FE785011B3DF0DD006CB6DD /* UnrealIRCdTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1FE784F11B3DF0DD006CB6DD /* UnrealIRCd */ = {
+			isa = PBXGroup;
+			children = (
+				1FE784F41B3DF0DD006CB6DD /* AppDelegate.swift */,
+				1FE784F61B3DF0DD006CB6DD /* ViewController.swift */,
+				1FE784F81B3DF0DD006CB6DD /* Images.xcassets */,
+				1FE784FA1B3DF0DD006CB6DD /* Main.storyboard */,
+				1FE784F21B3DF0DD006CB6DD /* Supporting Files */,
+				1F1E10F51B5A43CD00D69F41 /* DaemonModel.swift */,
+				1F1E10F71B5A43D800D69F41 /* ConfigurationModel.swift */,
+				1F1E10F91B5A43EE00D69F41 /* AppModel.swift */,
+				1F67373E1B5B93CC00C213D8 /* ChangeNotifier.swift */,
+				1FFB26B41B5BABFF00FF2D71 /* WindowController.swift */,
+			);
+			path = UnrealIRCd;
+			sourceTree = "<group>";
+		};
+		1FE784F21B3DF0DD006CB6DD /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				1F101A721B59EF2F00FE6A5B /* logo.png */,
+				1F101A731B59EF2F00FE6A5B /* logo@2x.png */,
+				1FE784F31B3DF0DD006CB6DD /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		1FE785041B3DF0DD006CB6DD /* UnrealIRCdTests */ = {
+			isa = PBXGroup;
+			children = (
+				1FE785071B3DF0DD006CB6DD /* UnrealIRCdTests.swift */,
+				1FE785051B3DF0DD006CB6DD /* Supporting Files */,
+			);
+			path = UnrealIRCdTests;
+			sourceTree = "<group>";
+		};
+		1FE785051B3DF0DD006CB6DD /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				1FE785061B3DF0DD006CB6DD /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1FE784EE1B3DF0DD006CB6DD /* UnrealIRCd */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1FE7850B1B3DF0DD006CB6DD /* Build configuration list for PBXNativeTarget "UnrealIRCd" */;
+			buildPhases = (
+				1FE784EB1B3DF0DD006CB6DD /* Sources */,
+				1FE784EC1B3DF0DD006CB6DD /* Frameworks */,
+				1FE784ED1B3DF0DD006CB6DD /* Resources */,
+				1F91FBDA1B58D9EB00A60151 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = UnrealIRCd;
+			productName = UnrealIRCd;
+			productReference = 1FE784EF1B3DF0DD006CB6DD /* UnrealIRCd.app */;
+			productType = "com.apple.product-type.application";
+		};
+		1FE785001B3DF0DD006CB6DD /* UnrealIRCdTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1FE7850E1B3DF0DD006CB6DD /* Build configuration list for PBXNativeTarget "UnrealIRCdTests" */;
+			buildPhases = (
+				1FE784FD1B3DF0DD006CB6DD /* Sources */,
+				1FE784FE1B3DF0DD006CB6DD /* Frameworks */,
+				1FE784FF1B3DF0DD006CB6DD /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1FE785031B3DF0DD006CB6DD /* PBXTargetDependency */,
+			);
+			name = UnrealIRCdTests;
+			productName = UnrealIRCdTests;
+			productReference = 1FE785011B3DF0DD006CB6DD /* UnrealIRCdTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1FE784E71B3DF0DD006CB6DD /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 0700;
+				LastUpgradeCheck = 0630;
+				ORGANIZATIONNAME = "UnrealIRCd Team";
+				TargetAttributes = {
+					1FE784EE1B3DF0DD006CB6DD = {
+						CreatedOnToolsVersion = 6.3.2;
+					};
+					1FE785001B3DF0DD006CB6DD = {
+						CreatedOnToolsVersion = 6.3.2;
+						TestTargetID = 1FE784EE1B3DF0DD006CB6DD;
+					};
+				};
+			};
+			buildConfigurationList = 1FE784EA1B3DF0DD006CB6DD /* Build configuration list for PBXProject "UnrealIRCd" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 1FE784E61B3DF0DD006CB6DD;
+			productRefGroup = 1FE784F01B3DF0DD006CB6DD /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1FE784EE1B3DF0DD006CB6DD /* UnrealIRCd */,
+				1FE785001B3DF0DD006CB6DD /* UnrealIRCdTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1FE784ED1B3DF0DD006CB6DD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1FE784F91B3DF0DD006CB6DD /* Images.xcassets in Resources */,
+				1F101A751B59EF2F00FE6A5B /* logo@2x.png in Resources */,
+				1FE784FC1B3DF0DD006CB6DD /* Main.storyboard in Resources */,
+				1F101A741B59EF2F00FE6A5B /* logo.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1FE784FF1B3DF0DD006CB6DD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1F91FBDA1B58D9EB00A60151 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1FE784EB1B3DF0DD006CB6DD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1F1E10F81B5A43D800D69F41 /* ConfigurationModel.swift in Sources */,
+				1FE784F71B3DF0DD006CB6DD /* ViewController.swift in Sources */,
+				1FE784F51B3DF0DD006CB6DD /* AppDelegate.swift in Sources */,
+				1FFB26B51B5BABFF00FF2D71 /* WindowController.swift in Sources */,
+				1F1E10FA1B5A43EE00D69F41 /* AppModel.swift in Sources */,
+				1F1E10F61B5A43CD00D69F41 /* DaemonModel.swift in Sources */,
+				1F67373F1B5B93CC00C213D8 /* ChangeNotifier.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1FE784FD1B3DF0DD006CB6DD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1FE785081B3DF0DD006CB6DD /* UnrealIRCdTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1FE785031B3DF0DD006CB6DD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1FE784EE1B3DF0DD006CB6DD /* UnrealIRCd */;
+			targetProxy = 1FE785021B3DF0DD006CB6DD /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		1FE784FA1B3DF0DD006CB6DD /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1FE784FB1B3DF0DD006CB6DD /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		1FE785091B3DF0DD006CB6DD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		1FE7850A1B3DF0DD006CB6DD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		1FE7850C1B3DF0DD006CB6DD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = UnrealIRCd/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		1FE7850D1B3DF0DD006CB6DD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = UnrealIRCd/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		1FE7850F1B3DF0DD006CB6DD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = UnrealIRCdTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/UnrealIRCd.app/Contents/MacOS/UnrealIRCd";
+			};
+			name = Debug;
+		};
+		1FE785101B3DF0DD006CB6DD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = UnrealIRCdTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/UnrealIRCd.app/Contents/MacOS/UnrealIRCd";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1FE784EA1B3DF0DD006CB6DD /* Build configuration list for PBXProject "UnrealIRCd" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1FE785091B3DF0DD006CB6DD /* Debug */,
+				1FE7850A1B3DF0DD006CB6DD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1FE7850B1B3DF0DD006CB6DD /* Build configuration list for PBXNativeTarget "UnrealIRCd" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1FE7850C1B3DF0DD006CB6DD /* Debug */,
+				1FE7850D1B3DF0DD006CB6DD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1FE7850E1B3DF0DD006CB6DD /* Build configuration list for PBXNativeTarget "UnrealIRCdTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1FE7850F1B3DF0DD006CB6DD /* Debug */,
+				1FE785101B3DF0DD006CB6DD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 1FE784E71B3DF0DD006CB6DD /* Project object */;
+}

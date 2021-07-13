@@ -4,7 +4,14 @@ echo "Extracting src/version.c..."
 
 #id=`grep '$Id: Changes,v' ../Changes`
 #id=`echo $id |sed 's/.* Changes\,v \(.*\) .* Exp .*/\1/'`
+<<<<<<< HEAD
 id="3.2.10.7"
+=======
+if [ -d ../.git ]; then
+	SUFFIX="-$(git rev-parse --short HEAD)"
+fi
+id="5.2.2-git$SUFFIX"
+>>>>>>> unreal52
 echo "$id"
 
 if test -r version.c
@@ -16,6 +23,9 @@ else
 fi
 
 generation=`expr $generation + 1`
+export LANG=C
+export LC_TIME=C
+export LC_ALL=C
 creation=`date | \
 awk '{if (NF == 6) \
          { print $1 " "  $2 " " $3 " "  $6 " at " $4 " " $5 } \
@@ -54,7 +64,7 @@ cat >version.c <<!SUB!THIS!
 
 char *generation = "$generation";
 char *creation = "$creation";
-#define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
+#define IRCDTOTALVERSION BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 char *version = IRCDTOTALVERSION;
 char *buildid = "$id";
 /* moved to s_serv.c */
@@ -63,11 +73,12 @@ char *infotext[] =
 
 char *unrealcredits[] =
 {
-	"=-=--=-=-=-=-=-=-=-=-=[" IRCDTOTALVERSION " Credits]=-=-=-=-=-=-=-=-=-=-=-",
+	"==================[ " IRCDTOTALVERSION " Credits ]===================",
 	"The people on this list are people who have helped us with the",
 	"development of UnrealIRCd and who have made remarkable",
 	"contributions to the project.",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=[Donations]=-=-=-=-=-=-=-=-=-=-=-=-=-=",
+	" ",
+	"==========================[ Donations ]==========================",
 	"BlueFlame^, [Real] - ChatFIRST.com, Jameno123 - ByteHosting,",
 	"Internet Services, Interlink Access Corp, Jan Knutar, ThePlayer,",
 	"Headband, noriko, powerstorm.net, RedMaxima, IronHelix, xnet.org,",
@@ -119,55 +130,44 @@ char *unrealcredits[] =
 	"IRC-IRC.de Community - irc.irc-irc.de,",
 	"Mike Meisner - www.hottubcoverdepot.com, CubaChat - irc.cubachat.org,",
 	"BluePromoCode - www.bluepromocode.com, DontPayFull - www.dontpayfull.com",
+<<<<<<< HEAD
 	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
 	"The UnrealIRCd Team would like to thank:",
+=======
+	"Anikwa - ukblabberbox.co.uk, xShellz - www.xshellz.com, wico,",
+	"Magnolia Road Internet Cooperative, FrostWire - www.frostwire.com,",
+	"Bundeld Inc. - couponlawn.com, Chameleon John - www.chameleonjohn.com,",
+	"Ecigsopedia.com - www.ecigsopedia.com/halo-cigs-coupon,",
+	"Hello Voucher Card - www.hellovouchercard.co.uk, Knoji - knoji.com,",
+	"EveryCloud - www.everycloudtech.com, CouponRaven - couponraven.com,",
+	"Dealspotr - dealspotr.com, GuitarFella.com, Coupofy - Coupofy.com,",
+	"Underfloor Heating Systems - www.underfloorheatingsystems.co.uk,",
+	"Project Free TV - newprojectfreetv.com, companyaccountscheck.com,",
+	"Coyote Traffic - www.coyotetraffic.com, www.emailextractor14lite.com,",
+	"bet365 Bonus Code - williamspromocodes.co.uk/bet365-bonus-code-sports/,",
+	"Valerie Amelia Pond",
+>>>>>>> unreal52
 	" ",
-	"Nutcais - Phil Hawkins",
-	"- the original shell for Unreal development, useful comments,",
-	"  and supporting the project all through its life. Thanks for",
-	"  helping to get this project to take off.",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-[Hosting]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
-	"Current hosters:",
-	"http://www.vulnscan.org/  All WWW sites",
-	"http://FTCNetworks.com/   IRCd shell",
-	"Below are people who have donated hosting in the past:",
-	"Phil Veale - email@phillipveale.com - http://www.tiefighter.org",
-	"- Donating webhosting for the project amongst other things",
-	"Alcatraz Media - http://www.alcatrazmedia.com",
-	"- Donating more webhosting for the project",
-	"cknight^",
-	"- Donating a FreeBSD box to the Unreal project to host some stuff",
-	"KIREnet.com - http://www.kirenet.com",
-	"- Donating hosting for the above box on their line",
-	"Digital Intensity Webhosting - http://www.digital-intensity.net",
-	"- Creating and donating hosting for the first UnrealIRCd forums",
-	"HawkSites Webhosting - http://www.hawksites.com",
-	"- Donating hosting for the forums",
-	"UGCentral - http://www.ugcentral.com/",
-	"- Donating hosting of the forums and the main site",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=[Supporters]=-=-=-=-=-=-=-=-=-=-=-=-=-=",
-	"Cronus, fez, henk, jewles, Jobe, seraphim, SpaceDog, Stealth, warg",
+	"==========================[ Supporters ]==========================",
+	"Our support staff: Cronus, Jobe, SpaceDog, Stealth",
 	" ",
 	"Thanks to former supporters and anyone who has helped without",
 	"officially joining the staff.",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-[Coders]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
-	"Syzop <syzop@unrealircd.com> - Head Coder / Project leader",
-	"binki <binki@unrealircd.com> - Coder",
+	" ",
+	"===========================[ Coders ]=============================",
+	"Syzop <syzop@unrealircd.org> - Head Coder / Project leader",
+	"Gottem <gottem@unrealircd.org> - Coder",
+	"i <i@unrealircd.org> - Coder",
+	" ",
 	"For a full list of coders & contributors, see /INFO (/QUOTE INFO)",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
-	"Stskeeps would primarily like to thank Julie for her support",
-	"through the years.",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
-	"This IRCd is dedicated to those who have kept us rocking and", 
-	"in good mood all through the years we've struggled with this",
-	"project. Unreal3.0 and up is dedicated to Morrigan.",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
+	" ",
+	"==================================================================",
 	"Finally, we would like to thank everyone else who has helped",
 	"UnrealIRCd in any way: reporting bugs, testing releases, helping",
 	"others, recommending UnrealIRCd to friends, or simply just by",
 	"running UnrealIRCd to ensure that we are and will continue to be",
 	"the most used IRC daemon in the world.",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
+	"==================================================================",
 	0
 }; 
 
@@ -205,7 +205,7 @@ char unreallogo[] =
 95,124,92,95,95,95,47,92,95,124,32,
 92,95,124,32,92,95,95,95,95,47,92,
 95,95,44,95,124,10,0,85,110,114,
-101,97,108,0};
+101,97,108,73,82,67,100,0};
 
 char *dalinfotext[] =
     {

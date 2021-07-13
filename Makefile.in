@@ -20,7 +20,7 @@
 #*/
 
 CC=@CC@
-INCLUDEDIR=../include
+INCLUDEDIR=@UNRLINCDIR@
 NETWORKSDIR=
 FROMDOS=/home/cmunk/bin/4dos
 
@@ -34,11 +34,11 @@ FROMDOS=/home/cmunk/bin/4dos
 #
 
 #XCFLAGS=-O -g -export-dynamic
-IRCDLIBS=@IRCDLIBS@ @TRE_LIBS@ @CARES_LIBS@
+IRCDLIBS=@IRCDLIBS@ @PCRE2_LIBS@ @ARGON2_LIBS@ @CARES_LIBS@ @SODIUM_LIBS@ @PTHREAD_LIBS@
 CRYPTOLIB=@CRYPTOLIB@
 OPENSSLINCLUDES=
 
-XCFLAGS=@TRE_CFLAGS@ @CARES_CFLAGS@ @CFLAGS@
+XCFLAGS=@PTHREAD_CFLAGS@ @PCRE2_CFLAGS@ @ARGON2_CFLAGS@ @CARES_CFLAGS@ @SODIUM_CFLAGS@ @CFLAGS@ @HARDEN_CFLAGS@ @CPPFLAGS@
 #
 # use the following on MIPS:
 #CFLAGS= -systype bsd43 -DSYSTYPE_BSD43 -I$(INCLUDEDIR)
@@ -89,32 +89,14 @@ XCFLAGS=@TRE_CFLAGS@ @CARES_CFLAGS@ @CFLAGS@
 #          you are not defining CMDLINE_CONFIG 
 IRCDMODE = 711
 
-# [CHANGEME]
-# IRCDDIR must be the same as DPATH in include/config.h
-#
-IRCDDIR=@IRCDDIR@
-
-
 URL=@URL@
-
-# [CHANGEME]
-# If you get a link-time error dealing with strtoul, comment out
-# this line.
-# STRTOUL=	strtoul.o
-STRTOUL=@STRTOUL@
-
-# [CHANGEME]
-# If you get crashes around a specific number of clients, and that
-# client load comes close or a little over the system-defined value of
-# FD_SETSIZE, override it here and see what happens. You may override
-# the system FD_SETSIZE by setting the FD_SETSIZE Makefile variable to
-# -DFD_SETSIZE=<some number>.
-FD_SETSIZE=@FD_SETSIZE@
 
 # Where is your openssl binary
 OPENSSLPATH=@OPENSSLPATH@
 
-CFLAGS=-I$(INCLUDEDIR) $(XCFLAGS) @LDFLAGS@ $(FD_SETSIZE)
+CFLAGS=-I$(INCLUDEDIR) $(XCFLAGS)
+XLDFLAGS=@LDFLAGS_PRIVATELIBS@ @HARDEN_LDFLAGS@ @LDFLAGS@
+LDFLAGS=$(XLDFLAGS)
 
 SHELL=/bin/sh
 SUBDIRS=src
@@ -129,9 +111,9 @@ all:	build
 MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'LDFLAGS=${LDFLAGS}' 'IRCDMODE=${IRCDMODE}' \
 		'RES=${RES}' 'BINDIR=${BINDIR}' 'INSTALL=${INSTALL}' \
-		'INCLUDEDIR=${INCLUDEDIR}' 'IRCDDIR=${IRCDDIR}' \
+		'INCLUDEDIR=${INCLUDEDIR}' \
 		'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
-		'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
+		'SHELL=${SHELL}' \
 		'CRYPTOLIB=${CRYPTOLIB}' \
 		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' \
 		'URL=${URL}'
@@ -151,19 +133,10 @@ build: Makefile
 		echo "Building $$i";\
 		( cd $$i; ${MAKE} ${MAKEARGS} build; ) \
 	done
-	@echo ' __________________________________________________ '
-	@echo '| Compile is now complete.                         |'
-	@echo '| You should now read the documentation and learn  |'
-	@echo '| how to configure your IRCd.                      |'
-	@echo '|                                                  |'
-	@echo '| If you really like UnrealIRCd, and would like to |'
-	@echo '| make a donation, please read the Donation file in|'
-	@echo '| this archive. :)                                 |'
-	@echo '|                                                  |'
-	@echo '| Thanks for using Unreal IRCd! If you are in need |' 
-	@echo '| for any kind of help regarding the IRCd please   |'
-	@echo '| read the Unreal.nfo file.                        |' 
-	@echo '|__________________________________________________|'
+	@echo ''
+	@echo '* UnrealIRCd compiled successfully'
+	@echo '* YOU ARE NOT DONE YET! Run "make install" to install UnrealIRCd !'
+	@echo ''
 
 clean:
 	$(RM) -f *~ \#* core *.orig include/*.orig
@@ -178,26 +151,12 @@ clean:
 cleandir: clean
 	rm -rf include/setup.h Makefile Settings
 
-makex:
-	chmod +x Config newnet ircd ircdcron/ircdchk killircd
-	chmod +x rehash ircdreg
-
-fromdos: cleandir
-	$(FROMDOS) -dv *
-	$(FROMDOS) -dv src/*
-	$(FROMDOS) -dv include/*
-	$(FROMDOS) -dv doc/*
-	$(FROMDOS) -dv crypt/*
-	$(FROMDOS) -dv ircdcron/*
-makedist: makex
-	echo "Stamping.."
-
-stamp: makedist
-	echo "/* Auto created release stamping */" > include/stamp.h
-	echo "#define RELEASEID2 \"`date +%s`\"" >> include/stamp.h
-	echo "#define RELEASESTUFF \"`hostname`\"" >> include/stamp.h
-	echo "" >> include/stamp.h
-
+distclean: cleandir
+	rm -rf extras/*.bak extras/*.tar extras/c-ares
+	rm -rf extras/c-ares-* extras/tre-*
+	rm -rf config.log config.settings *.pem ircd.* unrealircd
+	rm -rf Makefile config.status
+	
 depend:
 	@+for i in $(SUBDIRS); do \
 		echo "Making dependencies in $$i";\
@@ -205,34 +164,106 @@ depend:
 	done
 
 install: all
-	$(INSTALL) -m 0700 -d $(IRCDDIR)
-	$(INSTALL) -m 0700 src/ircd $(BINDIR) 2>/dev/null || { $(INSTALL) -m 0700 -d "$$(dirname '$(BINDIR)')"; $(INSTALL) -m 0700 src/ircd $(BINDIR); }
-	$(INSTALL) -m 0700 -d $(IRCDDIR)/doc
-	$(INSTALL) -m 0600 doc/Authors doc/example.conf doc/coding-guidelines doc/tao.of.irc doc/unreal32docs.html $(IRCDDIR)/doc
-	$(INSTALL) -m 0700 -d $(IRCDDIR)/aliases
-	$(INSTALL) -m 0600 aliases/*.conf $(IRCDDIR)/aliases
-	$(TOUCH) $(IRCDDIR)/unrealircd.conf
-	chmod 0600 $(IRCDDIR)/unrealircd.conf
-	$(INSTALL) -m 0600 spamfilter.conf dccallow.conf $(IRCDDIR)
-	$(INSTALL) -m 0600 badwords.*.conf help.conf LICENSE Donation $(IRCDDIR)
-	$(INSTALL) -m 0700 unreal $(IRCDDIR)
-	$(INSTALL) -m 0700 -d $(IRCDDIR)/modules
-	$(INSTALL) -m 0700 src/modules/*.so $(IRCDDIR)/modules
-	$(INSTALL) -m 0700 -d $(IRCDDIR)/ircdcron
-	$(INSTALL) -m 0600 ircdcron/ircd.cron $(IRCDDIR)/ircdcron
-	$(INSTALL) -m 0700 ircdcron/ircdchk $(IRCDDIR)/ircdcron
-	-@if [ ! -f "$(IRCDDIR)/curl-ca-bundle.crt" ] ; then \
-		$(INSTALL) -m 0700 curl-ca-bundle.crt $(IRCDDIR) ; \
+	$(INSTALL) -m 0700 -d $(DESTDIR)@BINDIR@
+	$(INSTALL) -m 0700 src/ircd $(DESTDIR)@BINDIR@/unrealircd
+	$(INSTALL) -m 0700 extras/unrealircd-upgrade-script $(DESTDIR)@BINDIR@/unrealircd-upgrade-script
+	$(INSTALL) -m 0700 -d $(DESTDIR)@DOCDIR@
+	$(INSTALL) -m 0600 doc/Authors doc/coding-guidelines doc/tao.of.irc doc/KEYS doc/RELEASE-NOTES.md $(DESTDIR)@DOCDIR@
+	$(INSTALL) -m 0700 -d $(DESTDIR)@CONFDIR@
+	$(INSTALL) -m 0600 doc/conf/*.default.conf $(DESTDIR)@CONFDIR@
+	$(INSTALL) -m 0600 doc/conf/*.optional.conf $(DESTDIR)@CONFDIR@
+	-@if [ ! -f "$(DESTDIR)@CONFDIR@/modules.sources.list" ] ; then \
+		$(INSTALL) -m 0600 doc/conf/modules.sources.list $(DESTDIR)@CONFDIR@ ; \
 	fi
-	-@if [ server.cert.pem -nt "$(IRCDDIR)/server.cert.pem" ] ; then \
-		$(INSTALL) -m 0600 server.req.pem $(IRCDDIR) ; \
-		$(INSTALL) -m 0600 server.key.pem $(IRCDDIR) ; \
-		$(INSTALL) -m 0600 server.cert.pem $(IRCDDIR) ; \
+	-@if [ ! -f "$(DESTDIR)@CONFDIR@/spamfilter.conf" ] ; then \
+		$(INSTALL) -m 0600 doc/conf/spamfilter.conf $(DESTDIR)@CONFDIR@ ; \
+	fi
+	-@extras/patches/patch_spamfilter_conf "$(DESTDIR)@CONFDIR@"
+	-@if [ ! -f "$(DESTDIR)@CONFDIR@/badwords.conf" ] ; then \
+		$(INSTALL) -m 0600 doc/conf/badwords.conf $(DESTDIR)@CONFDIR@ ; \
+	fi
+	-@if [ ! -f "$(DESTDIR)@CONFDIR@/dccallow.conf" ] ; then \
+		$(INSTALL) -m 0600 doc/conf/dccallow.conf $(DESTDIR)@CONFDIR@ ; \
+	fi
+	$(INSTALL) -m 0700 -d $(DESTDIR)@CONFDIR@/aliases
+	$(INSTALL) -m 0600 doc/conf/aliases/*.conf $(DESTDIR)@CONFDIR@/aliases
+	$(INSTALL) -m 0700 -d $(DESTDIR)@CONFDIR@/help
+	$(INSTALL) -m 0600 doc/conf/help/*.conf $(DESTDIR)@CONFDIR@/help
+	$(INSTALL) -m 0700 -d $(DESTDIR)@CONFDIR@/examples
+	$(INSTALL) -m 0600 doc/conf/examples/*.conf $(DESTDIR)@CONFDIR@/examples
+	$(INSTALL) -m 0700 unrealircd $(DESTDIR)@SCRIPTDIR@
+	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@
+	@rm -f $(DESTDIR)@MODULESDIR@/*.so 1>/dev/null 2>&1
+	$(INSTALL) -m 0700 src/modules/*.so $(DESTDIR)@MODULESDIR@
+	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/usermodes
+	@rm -f $(DESTDIR)@MODULESDIR@/usermodes/*.so 1>/dev/null 2>&1
+	$(INSTALL) -m 0700 src/modules/usermodes/*.so $(DESTDIR)@MODULESDIR@/usermodes
+	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/chanmodes
+	@rm -f $(DESTDIR)@MODULESDIR@/chanmodes/*.so 1>/dev/null 2>&1
+	$(INSTALL) -m 0700 src/modules/chanmodes/*.so $(DESTDIR)@MODULESDIR@/chanmodes
+	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/snomasks
+	@rm -f $(DESTDIR)@MODULESDIR@/snomasks/*.so 1>/dev/null 2>&1
+	$(INSTALL) -m 0700 src/modules/snomasks/*.so $(DESTDIR)@MODULESDIR@/snomasks
+	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/extbans
+	@rm -f $(DESTDIR)@MODULESDIR@/extbans/*.so 1>/dev/null 2>&1
+	$(INSTALL) -m 0700 src/modules/extbans/*.so $(DESTDIR)@MODULESDIR@/extbans
+	@#If the conf/ssl directory exists then rename it here to conf/tls
+	@#and add a symlink for backwards compatibility (so that f.e. certbot
+	@#doesn't randomly fail after an upgrade to U5).
+	-@if [ -d "$(DESTDIR)@CONFDIR@/ssl" ] ; then \
+		mv "$(DESTDIR)@CONFDIR@/ssl" "$(DESTDIR)@CONFDIR@/tls" ; \
+		ln -s "$(DESTDIR)@CONFDIR@/tls" "$(DESTDIR)@CONFDIR@/ssl" ; \
+	fi
+	$(INSTALL) -m 0700 -d $(DESTDIR)@CONFDIR@/tls
+	$(INSTALL) -m 0600 doc/conf/tls/curl-ca-bundle.crt $(DESTDIR)@CONFDIR@/tls
+	@# delete modules/cap directory, to avoid confusing with U4 to U5 upgrades:
+	rm -rf $(DESTDIR)@MODULESDIR@/cap
+	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/third
+	@rm -f $(DESTDIR)@MODULESDIR@/third/*.so 1>/dev/null 2>&1
+	@#This step can fail with zero files, so we ignore exit status:
+	-$(INSTALL) -m 0700 src/modules/third/*.so $(DESTDIR)@MODULESDIR@/third
+	$(INSTALL) -m 0700 -d $(DESTDIR)@TMPDIR@
+	$(INSTALL) -m 0700 -d $(DESTDIR)@CACHEDIR@
+	$(INSTALL) -m 0700 -d $(DESTDIR)@PERMDATADIR@
+	$(INSTALL) -m 0700 -d $(DESTDIR)@LOGDIR@
+	-@if [ ! -f "$(DESTDIR)@CONFDIR@/tls/server.cert.pem" ] ; then \
+		$(INSTALL) -m 0600 server.req.pem $(DESTDIR)@CONFDIR@/tls ; \
+		$(INSTALL) -m 0600 server.key.pem $(DESTDIR)@CONFDIR@/tls ; \
+		$(INSTALL) -m 0600 server.cert.pem $(DESTDIR)@CONFDIR@/tls ; \
+	fi
+	@rm -f $(DESTDIR)@SCRIPTDIR@/source
+	ln -s @BUILDDIR@ $(DESTDIR)@SCRIPTDIR@/source
+	@echo ''
+	@echo '* UnrealIRCd is now installed.'
+	
+	-@if [ "@SCRIPTDIR@/bin" = "@BINDIR@" ] ; then \
+		echo '* Leave this directory and run "cd @SCRIPTDIR@" now' ; \
+	fi
+	@echo '* Directory layout:'
+	-@if [ "@SCRIPTDIR@/bin" = "@BINDIR@" ] ; then \
+		echo ' * Base directory: @SCRIPTDIR@' ; \
+	fi
+	@echo '  * Configuration files: @CONFDIR@'
+	@echo '  * Log files: @LOGDIR@'
+	@echo '  * Modules: @MODULESDIR@'
+	@echo '* To start/stop UnrealIRCd run: @SCRIPTDIR@/unrealircd"'
+	@echo ''
+	@echo '* Consult the documentation online at:'
+	@echo '  * https://www.unrealircd.org/docs/'
+	@echo '  * https://www.unrealircd.org/docs/FAQ'
+	@echo '* You may also wish to install a cron job to ensure UnrealIRCd is always running:'
+	@echo '  * https://www.unrealircd.org/docs/Cron_job'
+	@echo ''
+	-@if [ "@SCRIPTDIR@/bin" = "@BINDIR@" ] ; then \
+		echo 'Again, be sure to change to the @SCRIPTDIR@ directory!' ; \
 	fi
 
-pem:	src/ssl.cnf
-	@echo "Generating certificate request .. "
+pem:	extras/tls.cnf
+	@echo "Generating server key..."
+	$(OPENSSLPATH) ecparam -out server.key.pem -name secp384r1 -genkey
+	@echo "Generating certificate request..."
 	$(OPENSSLPATH) req -new \
+<<<<<<< HEAD
               -config src/ssl.cnf -sha256 -out server.req.pem \
               -keyout server.key.pem -nodes
 	@echo "Generating self-signed certificate .. "
@@ -242,19 +273,16 @@ pem:	src/ssl.cnf
 	$(OPENSSLPATH) x509 -subject -dates -sha256 -fingerprint -noout \
 		-in server.cert.pem
 	@echo "Setting o-rwx & g-rwx for files... "
+=======
+              -config extras/tls.cnf -sha256 -out server.req.pem \
+              -key server.key.pem -nodes
+	@echo "Generating self-signed certificate..."
+	$(OPENSSLPATH) req -x509 -days 3650 -sha256 -nodes -in server.req.pem \
+               -key server.key.pem -out server.cert.pem
+	@echo "Setting permissions on server.*.pem files..."
+>>>>>>> unreal52
 	chmod o-rwx server.req.pem server.key.pem server.cert.pem
 	chmod g-rwx server.req.pem server.key.pem server.cert.pem
-	@echo "Done!. If you want to encrypt the private key, run"
-	@echo "make encpem"
-
-encpem: server.key.pem
-	@echo "Encrypting server key .."
-	$(OPENSSLPATH) rsa -in server.key.pem -out server.key.c.pem -des3
-	-@if [ -f server.key.c.pem ] ; then \
-		echo "Replacing unencrypted with encrypted .." ; \
-		cp server.key.c.pem server.key.pem ; \
-		rm -f server.key.c.pem ; \
-	fi
 
 Makefile: config.status Makefile.in
 	./config.status

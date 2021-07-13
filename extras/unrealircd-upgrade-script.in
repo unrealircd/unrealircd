@@ -1,0 +1,105 @@
+#!/bin/bash
+#
+# This is stage 1 of the UnrealIRCd upgrade script
+# It downloads stage 2 online, verifies the integrity, and then
+# passes control to it to proceed with the rest of the upgrade.
+#
+# This is a bash script, so it is less cross-platform than
+# the rest of UnrealIRCd. We also mostly assume Linux here.
+#
+
+BUILDDIR="@BUILDDIR@"
+SCRIPTDIR="@SCRIPTDIR@"
+DOCDIR="@DOCDIR@"
+TMPDIR="@TMPDIR@"
+
+function warn()
+{
+	echo
+	echo "WARNING: $*"
+	echo "This is for your information only. It is possible to continue."
+	echo "Press ENTER to continue, or CTRL+C to abort."
+	echo "If in doubt, see https://www.unrealircd.org/docs/FAQ#upgrade-verify-failed"
+	read xyz
+}
+
+function bigwarn()
+{
+	echo
+	echo "[!!!] WARNING: $*"
+	echo "Check https://www.unrealircd.org/docs/FAQ#upgrade-verify-failed !"
+	echo "Type 'IGNORE' in uppercase to continue if you think it is safe."
+	echo "Type anything else to abort."
+	read answer
+	if [ "$answer" != "IGNORE" ]; then
+		exit 1
+	fi
+}
+
+function fail()
+{
+	echo
+	echo "ERROR: $*"
+	echo "NOTE: Your existing UnrealIRCd is backed up to $BACKUPDIR"
+	echo "Perhaps check out the FAQ for common problems:"
+	echo "https://www.unrealircd.org/docs/FAQ#upgrade-failed"
+	echo "Otherwise, follow the manual upgrade procedure from"
+	echo "https://www.unrealircd.org/docs/Upgrading"
+	exit 1
+}
+
+if [ ! -d "$BUILDDIR" ]; then
+	echo "UnrealIRCd source not found at $BUILDDIR."
+	echo "Sorry, then it is not possible to know your existing settings and thus we cannot upgrade."
+	echo "Follow the manual upgrade procedure from https://www.unrealircd.org/docs/Upgrading"
+	exit 1
+fi
+
+if ! wget --help 1>/dev/null 2>&1; then
+	echo "The tool 'wget' is missing, which is used by this script."
+	echo "On Linux consider running 'sudo apt install wget' or 'sudo yum install wget'"
+	echo "and run this script again."
+	echo "Or, don't use this script and follow the manual upgrade procedure from"
+	echo "https://www.unrealircd.org/docs/Upgrading"
+	exit 1
+fi
+
+# Weird way to get version, but ok.
+cd "$BUILDDIR" || fail "Could not cd to builddir"
+UNREALVER="`./configure --version|head -n1|awk '{ print $3 }'`"
+cd .. || fail "Could not cd back"
+
+# Set and export all variables with settings
+export UNREALVER BUILDDIR SCRIPTDIR DOCDIR TMPDIR
+
+# Download the install script
+wget -O unrealircd-upgrade-script.stage2 "https://www.unrealircd.org/downloads/unrealircd-upgrade-script.stage2?from=$UNREALVER" || fail "Could not download online installer"
+wget -O unrealircd-upgrade-script.stage2.asc "https://www.unrealircd.org/downloads/unrealircd-upgrade-script.stage2.asc" || fail "Could not download online installer signature"
+
+# GPG verification - if available
+if gpg --version 1>/dev/null 2>&1; then
+	if [ -f "$DOCDIR/KEYS" ]; then
+		gpg --import "$DOCDIR/KEYS"
+		echo
+		if gpg --batch --exit-on-status-write-error --verify unrealircd-upgrade-script.stage2.asc unrealircd-upgrade-script.stage2; then
+			echo "GPG: Verification succeeded. Download is genuine."
+			export NOGPG=0
+		else
+			bigwarn "GPG/PGP verification failed. This could be a security issue."
+			export NOGPG=1
+		fi
+	else
+		warn "Unable to check download integrity with GPG/PGP. Missing $DOCDIR/KEYS file."
+		export NOGPG=1
+	fi
+else
+	echo "WARNING: The GnuPG (GPG/PGP) verification tool 'gpg' is not installed."
+	echo "Consider running 'sudo apt install gpg' or 'yum install gnupg2'"
+	echo "When 'gpg' is installed then the UnrealIRCd upgrade script can"
+	echo "verify the digital signature of the download file."
+	warn "Unable to check download integrity"
+	export NOGPG=1
+fi
+
+chmod +x unrealircd-upgrade-script.stage2
+./unrealircd-upgrade-script.stage2 $*

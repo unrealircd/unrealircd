@@ -17,164 +17,315 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <string.h>
-#include <limits.h>
-#include "numeric.h"
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "hash.h"
-#include "h.h"
-#include "proto.h"
+#include "unrealircd.h"
 
-ID_Copyright("(C) 1991 Darren Reed");
-ID_Notes("2.10 7/3/93");
-
-static aHashEntry clientTable[U_MAX];
-static aHashEntry channelTable[CH_MAX];
-
-/*
- * look in whowas.c for the missing ...[WW_MAX]; entry - Dianora */
-/*
- * Hashing.
- * 
- * The server uses a chained hash table to provide quick and efficient
- * hash table mantainence (providing the hash function works evenly
- * over the input range).  The hash table is thus not susceptible to
- * problems of filling all the buckets or the need to rehash. It is
- * expected that the hash table would look somehting like this during
- * use: +-----+    +-----+    +-----+   +-----+ 
- *   ---| 224 |----| 225 |----| 226 |---| 227 |--- 
- *      +-----+    +-----+    +-----+   +-----+ 
- *         |          |          | 
- *      +-----+    +-----+    +-----+ 
- *      |  A  |    |  C  |    |  D  | 
- *      +-----+    +-----+    +-----+ 
- *         | 
- *      +-----+ 
- *      |  B  | 
- *      +-----+
- * 
- * A - GOPbot, B - chang, C - hanuaway, D - *.mu.OZ.AU
- * 
- * The order shown above is just one instant of the server.  Each time a
- * lookup is made on an entry in the hash table and it is found, the
- * entry is moved to the top of the chain.
- * 
- * ^^^^^^^^^^^^^^^^ **** Not anymore - Dianora
- * 
+/* Next #define's, the siphash_raw() and siphash_nocase() functions are based
+ * on the SipHash reference C implementation to which the following applies:
+ * Copyright (c) 2012-2016 Jean-Philippe Aumasson
+ *  <jeanphilippe.aumasson@gmail.com>
+ * Copyright (c) 2012-2014 Daniel J. Bernstein <djb@cr.yp.to>
+ * Further enhancements were made by:
+ * Copyright (c) 2017 Salvatore Sanfilippo <antirez@gmail.com>
+ * To the extent possible under law, the author(s) have dedicated all copyright
+ * and related and neighboring rights to this software to the public domain
+ * worldwide. This software is distributed without any warranty.
+ * You should have received a copy of the CC0 Public Domain Dedication along
+ * with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+ *
+ * In addition to above, Bram Matthys (Syzop), did some minor enhancements,
+ * such as dropping the uint8_t stuff (in UnrealIRCd char is always unsigned)
+ * and getting rid of the length argument.
+ *
+ * The end result are simple functions for API end-users and we encourage
+ * everyone to use these two hash functions everywhere in UnrealIRCd.
  */
-/* Take equal propotions from the size of int on all arcitechtures */
-#define BITS_IN_int             ( sizeof(int) * CHAR_BIT )
-#define THREE_QUARTERS          ((int) ((BITS_IN_int * 3) / 4))
-#define ONE_EIGHTH              ((int) (BITS_IN_int / 8))
-#define HIGH_BITS               ( ~((unsigned int)(~0) >> ONE_EIGHTH ))
 
-unsigned int hash_nn_name(const char *hname)
-{
-	unsigned int hash_value, i;
+#define ROTL(x, b) (uint64_t)(((x) << (b)) | ((x) >> (64 - (b))))
 
-	for (hash_value = 0; *hname; ++hname)
-	{
-		/* Shift hash-value by one eights of int for adding every letter */
-		hash_value = (hash_value << ONE_EIGHTH) + tolower(*hname);
-		/* If the next shift would cause an overflow... */
-		if ((i = hash_value & HIGH_BITS) != 0)
-			/* Then wrap the upper quarter of bits back to the value */
-			hash_value = (hash_value ^
-			    (i >> THREE_QUARTERS)) & ~HIGH_BITS;
-	}
+#define U32TO8_LE(p, v)                                                        \
+    (p)[0] = (char)((v));                                                   \
+    (p)[1] = (char)((v) >> 8);                                              \
+    (p)[2] = (char)((v) >> 16);                                             \
+    (p)[3] = (char)((v) >> 24);
 
-	return (hash_value);
-}
+#define U64TO8_LE(p, v)                                                        \
+    U32TO8_LE((p), (uint32_t)((v)));                                           \
+    U32TO8_LE((p) + 4, (uint32_t)((v) >> 32));
 
+#define U8TO64_LE(p)                                                           \
+    (((uint64_t)((p)[0])) | ((uint64_t)((p)[1]) << 8) |                        \
+     ((uint64_t)((p)[2]) << 16) | ((uint64_t)((p)[3]) << 24) |                 \
+     ((uint64_t)((p)[4]) << 32) | ((uint64_t)((p)[5]) << 40) |                 \
+     ((uint64_t)((p)[6]) << 48) | ((uint64_t)((p)[7]) << 56))
 
-unsigned hash_nick_name(char *nname)
-{
-	unsigned hash = 0;
-	int  hash2 = 0;
-	int  ret;
-	char lower;
+#define U8TO64_LE_NOCASE(p)                                                    \
+    (((uint64_t)(tolower((p)[0]))) |                                           \
+     ((uint64_t)(tolower((p)[1])) << 8) |                                      \
+     ((uint64_t)(tolower((p)[2])) << 16) |                                     \
+     ((uint64_t)(tolower((p)[3])) << 24) |                                     \
+     ((uint64_t)(tolower((p)[4])) << 32) |                                              \
+     ((uint64_t)(tolower((p)[5])) << 40) |                                              \
+     ((uint64_t)(tolower((p)[6])) << 48) |                                              \
+     ((uint64_t)(tolower((p)[7])) << 56))
 
-	while (*nname)
-	{
-		lower = tolower(*nname);
-		hash = (hash << 1) + lower;
-		hash2 = (hash2 >> 1) + lower;
-		nname++;
-	}
-	ret = ((hash & U_MAX_INITIAL_MASK) << BITS_PER_COL) +
-	    (hash2 & BITS_PER_COL_MASK);
-	return ret;
-}
-/*
- * hash_channel_name
- * 
- * calculate a hash value on at most the first 30 characters of the
- * channel name. Most names are short than this or dissimilar in this
- * range. There is little or no point hashing on a full channel name
- * which maybe 255 chars long.
+#define SIPROUND                                                               \
+    do {                                                                       \
+        v0 += v1;                                                              \
+        v1 = ROTL(v1, 13);                                                     \
+        v1 ^= v0;                                                              \
+        v0 = ROTL(v0, 32);                                                     \
+        v2 += v3;                                                              \
+        v3 = ROTL(v3, 16);                                                     \
+        v3 ^= v2;                                                              \
+        v0 += v3;                                                              \
+        v3 = ROTL(v3, 21);                                                     \
+        v3 ^= v0;                                                              \
+        v2 += v1;                                                              \
+        v1 = ROTL(v1, 17);                                                     \
+        v1 ^= v2;                                                              \
+        v2 = ROTL(v2, 32);                                                     \
+    } while (0)
+
+/** Generic hash function in UnrealIRCd - raw version.
+ * Note that you probably want siphash() or siphash_nocase() instead.
+ * @param in    The data to hash
+ * @param inlen The length of the data
+ * @param k     The key to use for hashing (SIPHASH_KEY_LENGTH bytes,
+ *              which is actually 16, not NUL terminated)
+ * @returns Hash result as a 64 bit unsigned integer.
+ * @note  The key (k) should be random and must stay the same for
+ *        as long as you use the function for your specific hash table.
+ *        Simply use the following on boot: siphash_generate_key(k);
+ *
+ *        This siphash_raw() version is meant for non-strings,
+ *        such as raw IP address structs and such.
  */
-unsigned int  hash_channel_name(char *name)
+uint64_t siphash_raw(const char *in, size_t inlen, const char *k)
 {
-	unsigned char *hname = (unsigned char *)name;
-	unsigned int hash = 0;
-	int  hash2 = 0;
-	char lower;
-	int  i = 30;
+    uint64_t hash;
+    char *out = (char*) &hash;
+    uint64_t v0 = 0x736f6d6570736575ULL;
+    uint64_t v1 = 0x646f72616e646f6dULL;
+    uint64_t v2 = 0x6c7967656e657261ULL;
+    uint64_t v3 = 0x7465646279746573ULL;
+    uint64_t k0 = U8TO64_LE(k);
+    uint64_t k1 = U8TO64_LE(k + 8);
+    uint64_t m;
+    const char *end = in + inlen - (inlen % sizeof(uint64_t));
+    const int left = inlen & 7;
+    uint64_t b = ((uint64_t)inlen) << 56;
+    v3 ^= k1;
+    v2 ^= k0;
+    v1 ^= k1;
+    v0 ^= k0;
 
-	while (*hname && --i)
-	{
-		lower = tolower(*hname);
-		hash = (hash << 1) + lower;
-		hash2 = (hash2 >> 1) + lower;
-		hname++;
-	}
-	return ((hash & CH_MAX_INITIAL_MASK) << BITS_PER_COL) +
-	    (hash2 & BITS_PER_COL_MASK);
+    for (; in != end; in += 8) {
+        m = U8TO64_LE(in);
+        v3 ^= m;
+
+        SIPROUND;
+        SIPROUND;
+
+        v0 ^= m;
+    }
+
+    switch (left) {
+    case 7: b |= ((uint64_t)in[6]) << 48; /* fallthrough */
+    case 6: b |= ((uint64_t)in[5]) << 40; /* fallthrough */
+    case 5: b |= ((uint64_t)in[4]) << 32; /* fallthrough */
+    case 4: b |= ((uint64_t)in[3]) << 24; /* fallthrough */
+    case 3: b |= ((uint64_t)in[2]) << 16; /* fallthrough */
+    case 2: b |= ((uint64_t)in[1]) << 8;  /* fallthrough */
+    case 1: b |= ((uint64_t)in[0]); break;
+    case 0: break;
+    }
+
+    v3 ^= b;
+
+    SIPROUND;
+    SIPROUND;
+
+    v0 ^= b;
+    v2 ^= 0xff;
+
+    SIPROUND;
+    SIPROUND;
+    SIPROUND;
+    SIPROUND;
+
+    b = v0 ^ v1 ^ v2 ^ v3;
+    U64TO8_LE(out, b);
+
+    return hash;
 }
 
-unsigned int hash_whowas_name(char *name)
-{
-	unsigned char *nname = (unsigned char *)name;
-	unsigned int hash = 0;
-	int  hash2 = 0;
-	int  ret;
-	char lower;
-
-	while (*nname)
-	{
-		lower = tolower(*nname);
-		hash = (hash << 1) + lower;
-		hash2 = (hash2 >> 1) + lower;
-		nname++;
-	}
-	ret = ((hash & WW_MAX_INITIAL_MASK) << BITS_PER_COL) +
-	    (hash2 & BITS_PER_COL_MASK);
-	return ret;
-}
-/*
- * clear_*_hash_table
- * 
- * Nullify the hashtable and its contents so it is completely empty.
+/** Generic hash function in UnrealIRCd - case insensitive.
+ * This deals with IRC case-insensitive matches, which is
+ * what you need for things like nicks and channels.
+ * @param str   The string to hash (NUL-terminated)
+ * @param k     The key to use for hashing (SIPHASH_KEY_LENGTH bytes,
+ *              which is actually 16, not NUL terminated)
+ * @returns Hash result as a 64 bit unsigned integer.
+ * @note  The key (k) should be random and must stay the same for
+ *        as long as you use the function for your specific hash table.
+ *        Simply use the following on boot: siphash_generate_key(k);
  */
-void clear_client_hash_table(void)
+uint64_t siphash_nocase(const char *in, const char *k)
 {
-	memset((char *)clientTable, '\0', sizeof(aHashEntry) * U_MAX);
+    uint64_t hash;
+    char *out = (char*) &hash;
+    size_t inlen = strlen(in);
+    uint64_t v0 = 0x736f6d6570736575ULL;
+    uint64_t v1 = 0x646f72616e646f6dULL;
+    uint64_t v2 = 0x6c7967656e657261ULL;
+    uint64_t v3 = 0x7465646279746573ULL;
+    uint64_t k0 = U8TO64_LE(k);
+    uint64_t k1 = U8TO64_LE(k + 8);
+    uint64_t m;
+    const char *end = in + inlen - (inlen % sizeof(uint64_t));
+    const int left = inlen & 7;
+    uint64_t b = ((uint64_t)inlen) << 56;
+    v3 ^= k1;
+    v2 ^= k0;
+    v1 ^= k1;
+    v0 ^= k0;
+
+    for (; in != end; in += 8) {
+        m = U8TO64_LE_NOCASE(in);
+        v3 ^= m;
+
+        SIPROUND;
+        SIPROUND;
+
+        v0 ^= m;
+    }
+
+    switch (left) {
+    case 7: b |= ((uint64_t)tolower(in[6])) << 48; /* fallthrough */
+    case 6: b |= ((uint64_t)tolower(in[5])) << 40; /* fallthrough */
+    case 5: b |= ((uint64_t)tolower(in[4])) << 32; /* fallthrough */
+    case 4: b |= ((uint64_t)tolower(in[3])) << 24; /* fallthrough */
+    case 3: b |= ((uint64_t)tolower(in[2])) << 16; /* fallthrough */
+    case 2: b |= ((uint64_t)tolower(in[1])) << 8;  /* fallthrough */
+    case 1: b |= ((uint64_t)tolower(in[0])); break;
+    case 0: break;
+    }
+
+    v3 ^= b;
+
+    SIPROUND;
+    SIPROUND;
+
+    v0 ^= b;
+    v2 ^= 0xff;
+
+    SIPROUND;
+    SIPROUND;
+    SIPROUND;
+    SIPROUND;
+
+    b = v0 ^ v1 ^ v2 ^ v3;
+    U64TO8_LE(out, b);
+
+    return hash;
 }
 
-void clear_channel_hash_table(void)
+/* End of imported code */
+
+/** Generic hash function in UnrealIRCd.
+ * @param str   The string to hash (NUL-terminated)
+ * @param k     The key to use for hashing (SIPHASH_KEY_LENGTH bytes,
+ *              which is actually 16, not NUL terminated)
+ * @returns Hash result as a 64 bit unsigned integer.
+ * @note  The key (k) should be random and must stay the same for
+ *        as long as you use the function for your specific hash table.
+ *        Simply use the following on boot: siphash_generate_key(k);
+ */
+uint64_t siphash(const char *in, const char *k)
 {
-	memset((char *)channelTable, '\0', sizeof(aHashEntry) * CH_MAX);
+    size_t inlen = strlen(in);
+
+    return siphash_raw(in, inlen, k);
+}
+/** Generate a key that is used by siphash() and siphash_nocase().
+ * @param k   The key, this must be a char array of size 16.
+ */
+void siphash_generate_key(char *k)
+{
+	int i;
+	for (i = 0; i < 16; i++)
+		k[i] = getrandom8();
 }
 
+static struct list_head clientTable[NICK_HASH_TABLE_SIZE];
+static struct list_head idTable[NICK_HASH_TABLE_SIZE];
+static Channel *channelTable[CHAN_HASH_TABLE_SIZE];
+static Watch *watchTable[WATCH_HASH_TABLE_SIZE];
+
+static char siphashkey_nick[SIPHASH_KEY_LENGTH];
+static char siphashkey_chan[SIPHASH_KEY_LENGTH];
+static char siphashkey_watch[SIPHASH_KEY_LENGTH];
+static char siphashkey_whowas[SIPHASH_KEY_LENGTH];
+static char siphashkey_throttling[SIPHASH_KEY_LENGTH];
+
+extern char unreallogo[];
+
+/** Initialize all hash tables */
+void init_hash(void)
+{
+	int i;
+
+	siphash_generate_key(siphashkey_nick);
+	siphash_generate_key(siphashkey_chan);
+	siphash_generate_key(siphashkey_watch);
+	siphash_generate_key(siphashkey_whowas);
+	siphash_generate_key(siphashkey_throttling);
+
+	for (i = 0; i < NICK_HASH_TABLE_SIZE; i++)
+		INIT_LIST_HEAD(&clientTable[i]);
+
+	for (i = 0; i < NICK_HASH_TABLE_SIZE; i++)
+		INIT_LIST_HEAD(&idTable[i]);
+
+	memset(channelTable, 0, sizeof(channelTable));
+	memset(watchTable, 0, sizeof(watchTable));
+
+	memset(ThrottlingHash, 0, sizeof(ThrottlingHash));
+	/* do not call init_throttling() here, as
+	 * config file has not been read yet.
+	 * The hash table is ready, anyway.
+	 */
+
+	if (strcmp(BASE_VERSION, &unreallogo[337]))
+		loop.tainted = 1;
+}
+
+uint64_t hash_client_name(const char *name)
+{
+	return siphash_nocase(name, siphashkey_nick) % NICK_HASH_TABLE_SIZE;
+}
+
+uint64_t hash_channel_name(const char *name)
+{
+	return siphash_nocase(name, siphashkey_chan) % CHAN_HASH_TABLE_SIZE;
+}
+
+uint64_t hash_watch_nick_name(const char *name)
+{
+	return siphash_nocase(name, siphashkey_watch) % WATCH_HASH_TABLE_SIZE;
+}
+
+uint64_t hash_whowas_name(const char *name)
+{
+	return siphash_nocase(name, siphashkey_whowas) % WHOWAS_HASH_TABLE_SIZE;
+}
 
 /*
  * add_to_client_hash_table
  */
-int  add_to_client_hash_table(char *name, aClient *cptr)
+int add_to_client_hash_table(char *name, Client *client)
 {
-	unsigned int  hashv;
+	unsigned int hashv;
 	/*
 	 * If you see this, you have probably found your way to why changing the 
 	 * base version made the IRCd become weird. This has been the case in all
@@ -190,314 +341,302 @@ int  add_to_client_hash_table(char *name, aClient *cptr)
 	*/
 	if (loop.tainted)
 		return 0;
-	hashv = hash_nick_name(name);
-	cptr->hnext = (aClient *)clientTable[hashv].list;
-	clientTable[hashv].list = (void *)cptr;
-	clientTable[hashv].links++;
-	clientTable[hashv].hits++;
+	hashv = hash_client_name(name);
+	list_add(&client->client_hash, &clientTable[hashv]);
 	return 0;
 }
+
+/*
+ * add_to_client_hash_table
+ */
+int add_to_id_hash_table(char *name, Client *client)
+{
+	unsigned int hashv;
+	hashv = hash_client_name(name);
+	list_add(&client->id_hash, &idTable[hashv]);
+	return 0;
+}
+
 /*
  * add_to_channel_hash_table
  */
-int  add_to_channel_hash_table(char *name, aChannel *chptr)
+int add_to_channel_hash_table(char *name, Channel *channel)
 {
-	unsigned int  hashv;
+	unsigned int hashv;
 
 	hashv = hash_channel_name(name);
-	chptr->hnextch = (aChannel *)channelTable[hashv].list;
-	channelTable[hashv].list = (void *)chptr;
-	channelTable[hashv].links++;
-	channelTable[hashv].hits++;
+	channel->hnextch = channelTable[hashv];
+	channelTable[hashv] = channel;
 	return 0;
 }
 /*
  * del_from_client_hash_table
  */
-int  del_from_client_hash_table(char *name, aClient *cptr)
+int del_from_client_hash_table(char *name, Client *client)
 {
-	aClient *tmp, *prev = NULL;
-	unsigned int  hashv;
+	if (!list_empty(&client->client_hash))
+		list_del(&client->client_hash);
 
-	hashv = hash_nick_name(name);
-	for (tmp = (aClient *)clientTable[hashv].list; tmp; tmp = tmp->hnext)
-	{
-		if (tmp == cptr)
-		{
-			if (prev)
-				prev->hnext = tmp->hnext;
-			else
-				clientTable[hashv].list = (void *)tmp->hnext;
-			tmp->hnext = NULL;
-			if (clientTable[hashv].links > 0)
-			{
-				clientTable[hashv].links--;
-				return 1;
-			}
-			else
-				/*
-				 * Should never actually return from here and if we do it
-				 * is an error/inconsistency in the hash table.
-				 */
-				return -1;
-		}
-		prev = tmp;
-	}
+	INIT_LIST_HEAD(&client->client_hash);
+
 	return 0;
 }
+
+int del_from_id_hash_table(char *name, Client *client)
+{
+	if (!list_empty(&client->id_hash))
+		list_del(&client->id_hash);
+
+	INIT_LIST_HEAD(&client->id_hash);
+
+	return 0;
+}
+
 /*
  * del_from_channel_hash_table
  */
-int  del_from_channel_hash_table(char *name, aChannel *chptr)
+void del_from_channel_hash_table(char *name, Channel *channel)
 {
-	aChannel *tmp, *prev = NULL;
-	unsigned int  hashv;
+	Channel *tmp, *prev = NULL;
+	unsigned int hashv;
 
 	hashv = hash_channel_name(name);
-	for (tmp = (aChannel *)channelTable[hashv].list; tmp;
-	    tmp = tmp->hnextch)
+	for (tmp = channelTable[hashv]; tmp; tmp = tmp->hnextch)
 	{
-		if (tmp == chptr)
+		if (tmp == channel)
 		{
 			if (prev)
 				prev->hnextch = tmp->hnextch;
 			else
-				channelTable[hashv].list = (void *)tmp->hnextch;
+				channelTable[hashv] = tmp->hnextch;
 			tmp->hnextch = NULL;
-			if (channelTable[hashv].links > 0)
-			{
-				channelTable[hashv].links--;
-				return 1;
-			}
-			else
-				return -1;
+			return; /* DONE */
 		}
 		prev = tmp;
 	}
-	return 0;
+	return; /* NOTFOUND */
 }
 
 /*
  * hash_find_client
  */
-aClient *hash_find_client(char *name, aClient *cptr)
+Client *hash_find_client(const char *name, Client *client)
 {
-	aClient *tmp;
-	aHashEntry *tmp3;
-	unsigned int  hashv;
+	Client *tmp;
+	unsigned int hashv;
 
-	hashv = hash_nick_name(name);
-	tmp3 = &clientTable[hashv];
-	/*
-	 * Got the bucket, now search the chain.
-	 */
-	for (tmp = (aClient *)tmp3->list; tmp; tmp = tmp->hnext)
+	hashv = hash_client_name(name);
+	list_for_each_entry(tmp, &clientTable[hashv], client_hash)
+	{
 		if (smycmp(name, tmp->name) == 0)
-		{
-			return (tmp);
-		}
-	return (cptr);
-	/*
-	 * If the member of the hashtable we found isnt at the top of its
-	 * chain, put it there.  This builds a most-frequently used order
-	 * into the chains of the hash table, giving speedier lookups on
-	 * those nicks which are being used currently.  This same block of
-	 * code is also used for channels and servers for the same
-	 * performance reasons.
-	 * 
-	 * I don't believe it does.. it only wastes CPU, lets try it and
-	 * see....
-	 * 
-	 * - Dianora
-	 */
+			return tmp;
+	}
+
+	return client;
+}
+
+Client *hash_find_id(const char *name, Client *client)
+{
+	Client *tmp;
+	unsigned int hashv;
+
+	hashv = hash_client_name(name);
+	list_for_each_entry(tmp, &idTable[hashv], id_hash)
+	{
+		if (smycmp(name, tmp->id) == 0)
+			return tmp;
+	}
+
+	return client;
 }
 
 /*
- * hash_find_nickserver
+ * hash_find_nickatserver
  */
-aClient *hash_find_nickserver(char *name, aClient *cptr)
+Client *hash_find_nickatserver(const char *str, Client *def)
 {
-	aClient *tmp;
-	aHashEntry *tmp3;
-	unsigned int  hashv;
 	char *serv;
+	char nick[NICKLEN+HOSTLEN+1];
+	Client *client;
+	
+	strlcpy(nick, str, sizeof(nick)); /* let's work on a copy */
 
-	serv = (char *)strchr(name, '@');
-	*serv++ = '\0';
-	hashv = hash_nick_name(name);
-	tmp3 = &clientTable[hashv];
-	/*
-	 * Got the bucket, now search the chain.
-	 */
-	for (tmp = (aClient *)tmp3->list; tmp; tmp = tmp->hnext)
-		if (smycmp(name, tmp->name) == 0 && tmp->user &&
-		    smycmp(serv, tmp->user->server) == 0)
-		{
-			*--serv = '\0';
-			return (tmp);
-		}
+	serv = strchr(nick, '@');
+	if (serv)
+		*serv++ = '\0';
 
-	*--serv = '\0';
-	return (cptr);
+	client = find_person(nick, NULL);
+	if (!client)
+		return NULL; /* client not found */
+	
+	if (!serv)
+		return client; /* validated: was just 'nick' and not 'nick@serv' */
+
+	/* Now validate the server portion */
+	if (client->user && !smycmp(serv, client->user->server))
+		return client; /* validated */
+	
+	return def;
 }
 /*
  * hash_find_server
  */
-aClient *hash_find_server(char *server, aClient *cptr)
+Client *hash_find_server(const char *server, Client *def)
 {
-	aClient *tmp;
-#if 0
-	char *t;
-	char ch;
-#endif
-	aHashEntry *tmp3;
+	Client *tmp;
+	unsigned int hashv;
 
-	unsigned int  hashv;
-
-	hashv = hash_nick_name(server);
-	tmp3 = &clientTable[hashv];
-
-	for (tmp = (aClient *)tmp3->list; tmp; tmp = tmp->hnext)
+	hashv = hash_client_name(server);
+	list_for_each_entry(tmp, &clientTable[hashv], client_hash)
 	{
 		if (!IsServer(tmp) && !IsMe(tmp))
 			continue;
 		if (smycmp(server, tmp->name) == 0)
 		{
-			return (tmp);
+			return tmp;
 		}
 	}
 
-	/*
-	 * Whats happening in this next loop ? Well, it takes a name like
-	 * foo.bar.edu and proceeds to earch for *.edu and then *.bar.edu.
-	 * This is for checking full server names against masks although it
-	 * isnt often done this way in lieu of using matches().
-	 */
-
-	/* why in god's name would we ever want to do something like this?
-	 * commented out, probably to be removed sooner or later - lucas 
-	 */
-
-#if 0
-	t = ((char *)server + strlen(server));
-
-	for (;;)
-	{
-		t--;
-		for (; t > server; t--)
-			if (*(t + 1) == '.')
-				break;
-		if (*t == '*' || t == server)
-			break;
-		ch = *t;
-		*t = '*';
-		/*
-		 * Dont need to check IsServer() here since nicknames cant have
-		 * *'s in them anyway.
-		 */
-		if (((tmp = hash_find_client(t, cptr))) != cptr)
-		{
-			*t = ch;
-			return (tmp);
-		}
-		*t = ch;
-	}
-#endif
-	return (cptr);
+	return def;
 }
 
-/*
- * hash_find_channel
+/** Find a client, user (person), server or channel by name.
+ * If you are looking for "other find functions", then the alphabetical index of functions
+ * at 'f' is your best bet: https://www.unrealircd.org/api/5/globals_func_f.html#index_f
+ * @defgroup FindFunctions Find functions
+ * @{
  */
-aChannel *hash_find_channel(char *name, aChannel *chptr)
+
+/** Find a client by name.
+ * This searches in the list of all types of clients, user/person, servers or an unregistered clients.
+ * If you know what type of client to search for, then use find_server() or find_person() instead!
+ * @param name        The name to search for (eg: "nick" or "irc.example.net")
+ * @param requester   The client that is searching for this name
+ * @note  If 'requester' is a server or NULL, then we also check
+ *        the ID table, otherwise not.
+ * @returns If the client is found then the Client is returned, otherwise NULL.
+ */
+Client *find_client(char *name, Client *requester)
 {
-	unsigned int  hashv;
-	aChannel *tmp;
-	aHashEntry *tmp3;
+	if (requester == NULL || IsServer(requester))
+	{
+		Client *client;
+
+		if ((client = hash_find_id(name, NULL)) != NULL)
+			return client;
+	}
+
+	return hash_find_client(name, NULL);
+}
+
+/** Find a server by name.
+ * @param name        The server name to search for (eg: 'irc.example.net'
+ *                    or '001')
+ * @param requester   The client searching for the name.
+ * @note  If 'requester' is a server or NULL, then we also check
+ *        the ID table, otherwise not.
+ * @returns If the server is found then the Client is returned, otherwise NULL.
+ */
+Client *find_server(char *name, Client *requester)
+{
+	if (name)
+	{
+		Client *client;
+
+		if ((client = find_client(name, NULL)) != NULL && (IsServer(client) || IsMe(client)))
+			return client;
+	}
+
+	return NULL;
+}
+
+/** Find a person (a user).
+ * @param name        The name to search for (eg: "nick" or "001ABCDEFG")
+ * @param requester   The client that is searching for this name
+ * @note  If 'requester' is a server or NULL, then we also check
+ *        the ID table, otherwise not.
+ * @returns If the user is found then the Client is returned, otherwise NULL.
+ */
+Client *find_person(char *name, Client *requester) /* TODO: this should have been called find_user() to be consistent */
+{
+	Client *c2ptr;
+
+	c2ptr = find_client(name, requester);
+
+	if (c2ptr && IsUser(c2ptr) && c2ptr->user)
+		return c2ptr;
+
+	return NULL;
+}
+
+
+/** Find a channel by name.
+ * @param name			The channel name to search for
+ * @param default_result	If the channel is not found, this value is returned.
+ * @returns If the channel exists then the Channel is returned, otherwise default_result is returned.
+ */
+Channel *find_channel(char *name, Channel *default_result)
+{
+	unsigned int hashv;
+	Channel *tmp;
 
 	hashv = hash_channel_name(name);
-	tmp3 = &channelTable[hashv];
 
-	for (tmp = (aChannel *)tmp3->list; tmp; tmp = tmp->hnextch)
+	for (tmp = channelTable[hashv]; tmp; tmp = tmp->hnextch)
+	{
 		if (smycmp(name, tmp->chname) == 0)
-		{
-			return (tmp);
-		}
-	return chptr;
+			return tmp;
+	}
+	return default_result;
 }
-aChannel *hash_get_chan_bucket(unsigned int hashv)
+
+/** @} */
+
+Channel *hash_get_chan_bucket(uint64_t hashv)
 {
-	if (hashv > CH_MAX)
+	if (hashv > CHAN_HASH_TABLE_SIZE)
 		return NULL;
-	return (aChannel *)channelTable[hashv].list;
+	return channelTable[hashv];
 }
-
-/*
- * Rough figure of the datastructures for notify:
- *
- * NOTIFY HASH      cptr1
- *   |                |- nick1
- * nick1-|- cptr1     |- nick2
- *   |   |- cptr2                cptr3
- *   |   |- cptr3   cptr2          |- nick1
- *   |                |- nick1
- * nick2-|- cptr2     |- nick2
- *       |- cptr1
- *
- * add-to-notify-hash-table:
- * del-from-notify-hash-table:
- * hash-del-notify-list:
- * hash-check-notify:
- * hash-get-notify:
- */
-
-static   aWatch  *watchTable[WATCHHASHSIZE];
 
 void  count_watch_memory(int *count, u_long *memory)
 {
-	int   i = WATCHHASHSIZE;
-	aWatch  *anptr;
-	
-	
-	while (i--) {
+	int i = WATCH_HASH_TABLE_SIZE;
+	Watch *anptr;
+
+	while (i--)
+	{
 		anptr = watchTable[i];
-		while (anptr) {
+		while (anptr)
+		{
 			(*count)++;
-			(*memory) += sizeof(aWatch)+strlen(anptr->nick);
+			(*memory) += sizeof(Watch)+strlen(anptr->nick);
 			anptr = anptr->hnext;
 		}
 	}
 }
-extern char unreallogo[];
-void  clear_watch_hash_table(void)
-{
-	   memset((char *)watchTable, '\0', sizeof(watchTable));
-	   if (strcmp(BASE_VERSION, &unreallogo[337]))
-		loop.tainted = 1;
-}
-
 
 /*
  * add_to_watch_hash_table
  */
-int   add_to_watch_hash_table(char *nick, aClient *cptr, int awaynotify)
+int add_to_watch_hash_table(char *nick, Client *client, int awaynotify)
 {
-	unsigned int   hashv;
-	aWatch  *anptr;
+	unsigned int hashv;
+	Watch  *anptr;
 	Link  *lp;
 	
 	
 	/* Get the right bucket... */
-	hashv = hash_nick_name(nick)%WATCHHASHSIZE;
+	hashv = hash_watch_nick_name(nick);
 	
 	/* Find the right nick (header) in the bucket, or NULL... */
-	if ((anptr = (aWatch *)watchTable[hashv]))
+	if ((anptr = (Watch *)watchTable[hashv]))
 	  while (anptr && mycmp(anptr->nick, nick))
 		 anptr = anptr->hnext;
 	
 	/* If found NULL (no header for this nick), make one... */
 	if (!anptr) {
-		anptr = (aWatch *)MyMalloc(sizeof(aWatch)+strlen(nick));
+		anptr = (Watch *)safe_alloc(sizeof(Watch)+strlen(nick));
 		anptr->lasttime = timeofday;
 		strcpy(anptr->nick, nick);
 		
@@ -508,23 +647,23 @@ int   add_to_watch_hash_table(char *nick, aClient *cptr, int awaynotify)
 	}
 	/* Is this client already on the watch-list? */
 	if ((lp = anptr->watch))
-	  while (lp && (lp->value.cptr != cptr))
+	  while (lp && (lp->value.client != client))
 		 lp = lp->next;
 	
 	/* No it isn't, so add it in the bucket and client addint it */
 	if (!lp) {
 		lp = anptr->watch;
 		anptr->watch = make_link();
-		anptr->watch->value.cptr = cptr;
+		anptr->watch->value.client = client;
 		anptr->watch->flags = awaynotify;
 		anptr->watch->next = lp;
 		
 		lp = make_link();
-		lp->next = cptr->watch;
+		lp->next = client->local->watch;
 		lp->value.wptr = anptr;
 		lp->flags = awaynotify;
-		cptr->watch = lp;
-		cptr->watches++;
+		client->local->watch = lp;
+		client->local->watches++;
 	}
 	
 	return 0;
@@ -533,23 +672,22 @@ int   add_to_watch_hash_table(char *nick, aClient *cptr, int awaynotify)
 /*
  *  hash_check_watch
  */
-int   hash_check_watch(aClient *cptr, int reply)
+int hash_check_watch(Client *client, int reply)
 {
-	unsigned int   hashv;
-	aWatch  *anptr;
+	unsigned int hashv;
+	Watch  *anptr;
 	Link  *lp;
 	int awaynotify = 0;
 	
 	if ((reply == RPL_GONEAWAY) || (reply == RPL_NOTAWAY) || (reply == RPL_REAWAY))
 		awaynotify = 1;
-	
-	
+
 	/* Get us the right bucket */
-	hashv = hash_nick_name(cptr->name)%WATCHHASHSIZE;
+	hashv = hash_watch_nick_name(client->name);
 	
 	/* Find the right header in this bucket */
-	if ((anptr = (aWatch *)watchTable[hashv]))
-	  while (anptr && mycmp(anptr->nick, cptr->name))
+	if ((anptr = (Watch *)watchTable[hashv]))
+	  while (anptr && mycmp(anptr->nick, client->name))
 		 anptr = anptr->hnext;
 	if (!anptr)
 	  return 0;   /* This nick isn't on watch */
@@ -562,43 +700,33 @@ int   hash_check_watch(aClient *cptr, int reply)
 	{
 		if (!awaynotify)
 		{
-			/* Most common: LOGON or LOGOFF */
-			if (IsWebTV(lp->value.cptr))
-				sendto_one(lp->value.cptr, ":IRC!IRC@%s PRIVMSG %s :%s (%s@%s) "
-					" %s IRC",
-					me.name, lp->value.cptr->name, cptr->name,
-				    	(IsPerson(cptr) ? cptr->user->username : "<N/A>"),
-					(IsPerson(cptr) ?
-				    	(IsHidden(cptr) ? cptr->user->virthost : cptr->
-				    	user->realhost) : "<N/A>"), reply == RPL_LOGON ? 
-					"is now on" : "has left");
-			else
-				sendto_one(lp->value.cptr, rpl_str(reply), me.name,
-				    lp->value.cptr->name, cptr->name,
-				    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
-				    (IsPerson(cptr) ?
-				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
-				    user->realhost) : "<N/A>"), anptr->lasttime, cptr->info);
-		} else
+			sendnumeric(lp->value.client, reply,
+			    client->name,
+			    (IsUser(client) ? client->user->username : "<N/A>"),
+			    (IsUser(client) ?
+			    (IsHidden(client) ? client->user->virthost : client->
+			    user->realhost) : "<N/A>"), anptr->lasttime, client->info);
+		}
+		else
 		{
 			/* AWAY or UNAWAY */
 			if (!lp->flags)
 				continue; /* skip away/unaway notification for users not interested in them */
 
 			if (reply == RPL_NOTAWAY)
-				sendto_one(lp->value.cptr, rpl_str(reply), me.name,
-				    lp->value.cptr->name, cptr->name,
-				    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
-				    (IsPerson(cptr) ?
-				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
-				    user->realhost) : "<N/A>"), cptr->user->lastaway);
+				sendnumeric(lp->value.client, reply,
+				    client->name,
+				    (IsUser(client) ? client->user->username : "<N/A>"),
+				    (IsUser(client) ?
+				    (IsHidden(client) ? client->user->virthost : client->
+				    user->realhost) : "<N/A>"), client->user->lastaway);
 			else /* RPL_GONEAWAY / RPL_REAWAY */
-				sendto_one(lp->value.cptr, rpl_str(reply), me.name,
-				    lp->value.cptr->name, cptr->name,
-				    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
-				    (IsPerson(cptr) ?
-				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
-				    user->realhost) : "<N/A>"), cptr->user->lastaway, cptr->user->away);
+				sendnumeric(lp->value.client, reply,
+				    client->name,
+				    (IsUser(client) ? client->user->username : "<N/A>"),
+				    (IsUser(client) ?
+				    (IsHidden(client) ? client->user->virthost : client->
+				    user->realhost) : "<N/A>"), client->user->lastaway, client->user->away);
 		}
 	}
 	
@@ -608,16 +736,15 @@ int   hash_check_watch(aClient *cptr, int reply)
 /*
  * hash_get_watch
  */
-aWatch  *hash_get_watch(char *name)
+Watch  *hash_get_watch(char *nick)
 {
-	unsigned int   hashv;
-	aWatch  *anptr;
+	unsigned int hashv;
+	Watch  *anptr;
 	
+	hashv = hash_watch_nick_name(nick);
 	
-	hashv = hash_nick_name(name)%WATCHHASHSIZE;
-	
-	if ((anptr = (aWatch *)watchTable[hashv]))
-	  while (anptr && mycmp(anptr->nick, name))
+	if ((anptr = (Watch *)watchTable[hashv]))
+	  while (anptr && mycmp(anptr->nick, nick))
 		 anptr = anptr->hnext;
 	
 	return anptr;
@@ -626,18 +753,17 @@ aWatch  *hash_get_watch(char *name)
 /*
  * del_from_watch_hash_table
  */
-int   del_from_watch_hash_table(char *nick, aClient *cptr)
+int del_from_watch_hash_table(char *nick, Client *client)
 {
-	unsigned int   hashv;
-	aWatch  *anptr, *nlast = NULL;
+	unsigned int hashv;
+	Watch  *anptr, *nlast = NULL;
 	Link  *lp, *last = NULL;
-	
-	
+
 	/* Get the bucket for this nick... */
-	hashv = hash_nick_name(nick)%WATCHHASHSIZE;
+	hashv = hash_watch_nick_name(nick);
 	
 	/* Find the right header, maintaining last-link pointer... */
-	if ((anptr = (aWatch *)watchTable[hashv]))
+	if ((anptr = (Watch *)watchTable[hashv]))
 	  while (anptr && mycmp(anptr->nick, nick)) {
 		  nlast = anptr;
 		  anptr = anptr->hnext;
@@ -647,7 +773,7 @@ int   del_from_watch_hash_table(char *nick, aClient *cptr)
 	
 	/* Find this client from the list of notifies... with last-ptr. */
 	if ((lp = anptr->watch))
-	  while (lp && (lp->value.cptr != cptr)) {
+	  while (lp && (lp->value.client != client)) {
 		  last = lp;
 		  lp = lp->next;
 	  }
@@ -663,7 +789,7 @@ int   del_from_watch_hash_table(char *nick, aClient *cptr)
 	
 	/* Do the same regarding the links in client-record... */
 	last = NULL;
-	if ((lp = cptr->watch))
+	if ((lp = client->local->watch))
 	  while (lp && (lp->value.wptr != anptr)) {
 		  last = lp;
 		  lp = lp->next;
@@ -677,10 +803,10 @@ int   del_from_watch_hash_table(char *nick, aClient *cptr)
 	  sendto_ops("WATCH debug error: del_from_watch_hash_table "
 					 "found a watch entry with no client "
 					 "counterpoint processing nick %s on client %p!",
-					 nick, cptr->user);
+					 nick, client->user);
 	else {
 		if (!last) /* First one matched */
-		  cptr->watch = lp->next;
+		  client->local->watch = lp->next;
 		else
 		  last->next = lp->next;
 		free_link(lp);
@@ -691,11 +817,11 @@ int   del_from_watch_hash_table(char *nick, aClient *cptr)
 		  watchTable[hashv] = anptr->hnext;
 		else
 		  nlast->hnext = anptr->hnext;
-		MyFree(anptr);
+		safe_free(anptr);
 	}
 	
 	/* Update count of notifies on nick */
-	cptr->watches--;
+	client->local->watches--;
 	
 	return 0;
 }
@@ -703,22 +829,22 @@ int   del_from_watch_hash_table(char *nick, aClient *cptr)
 /*
  * hash_del_watch_list
  */
-int   hash_del_watch_list(aClient *cptr)
+int   hash_del_watch_list(Client *client)
 {
 	unsigned int   hashv;
-	aWatch  *anptr;
+	Watch  *anptr;
 	Link  *np, *lp, *last;
 	
 	
-	if (!(np = cptr->watch))
+	if (!(np = client->local->watch))
 	  return 0;   /* Nothing to do */
 	
-	cptr->watch = NULL; /* Break the watch-list for client */
+	client->local->watch = NULL; /* Break the watch-list for client */
 	while (np) {
 		/* Find the watch-record from hash-table... */
 		anptr = np->value.wptr;
 		last = NULL;
-		for (lp = anptr->watch; lp && (lp->value.cptr != cptr);
+		for (lp = anptr->watch; lp && (lp->value.client != client);
 			  lp = lp->next)
 		  last = lp;
 		
@@ -727,7 +853,7 @@ int   hash_del_watch_list(aClient *cptr)
 		  sendto_ops("WATCH Debug error: hash_del_watch_list "
 						 "found a WATCH entry with no table "
 						 "counterpoint processing client %s!",
-						 cptr->name);
+						 client->name);
 		else {
 			/* Fix the watch-list and remove entry */
 			if (!last)
@@ -741,9 +867,9 @@ int   hash_del_watch_list(aClient *cptr)
 			 * remove it. Need to find the last-pointer!
 			 */
 			if (!anptr->watch) {
-				aWatch  *np2, *nl;
+				Watch  *np2, *nl;
 				
-				hashv = hash_nick_name(anptr->nick)%WATCHHASHSIZE;
+				hashv = hash_watch_nick_name(anptr->nick);
 				
 				nl = NULL;
 				np2 = watchTable[hashv];
@@ -756,7 +882,7 @@ int   hash_del_watch_list(aClient *cptr)
 				  nl->hnext = anptr->hnext;
 				else
 				  watchTable[hashv] = anptr->hnext;
-				MyFree(anptr);
+				safe_free(anptr);
 			}
 		}
 		
@@ -765,80 +891,87 @@ int   hash_del_watch_list(aClient *cptr)
 		free_link(lp); /* Free the previous */
 	}
 	
-	cptr->watches = 0;
+	client->local->watches = 0;
 	
 	return 0;
 }
 
-/*
- * Throttling
- * -by Stskeeps
-*/
+/* Throttling - originally by Stskeeps */
 
-#ifdef THROTTLING
+/* Note that we call this set::anti-flood::connect-flood nowadays */
 
-struct	MODVAR ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
+struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_TABLE_SIZE];
 
-void	init_throttling_hash()
+void update_throttling_timer_settings(void)
 {
-long v;
-	bzero(ThrottlingHash, sizeof(ThrottlingHash));	
+	long v;
+	EventInfo eInfo;
+
 	if (!THROTTLING_PERIOD)
-		v = 120;
-	else
 	{
-		v = THROTTLING_PERIOD/2;
-		if (v > 5)
-			v = 5; /* accuracy, please */
+		v = 120*1000;
+	} else
+	{
+		v = (THROTTLING_PERIOD*1000)/2;
+		if (v > 5000)
+			v = 5000; /* run at least every 5s */
+		if (v < 1000)
+			v = 1000; /* run at max once every 1s */
 	}
-	EventAddEx(NULL, "bucketcleaning", v, 0, e_clean_out_throttling_buckets, NULL);
+
+	memset(&eInfo, 0, sizeof(eInfo));
+	eInfo.flags = EMOD_EVERY;
+	eInfo.every_msec = v;
+	EventMod(EventFind("throttling_check_expire"), &eInfo);
 }
 
-int	hash_throttling(struct IN_ADDR *in)
+void init_throttling()
 {
-#ifdef INET6
-	u_char *cp;
-	unsigned int alpha, beta;
-#endif
-#ifndef INET6
-	return ((unsigned int)in->s_addr % THROTTLING_HASH_SIZE); 
-#else
-	cp = (u_char *) &in->s6_addr;
-	memcpy(&alpha, cp + 8, sizeof(alpha));
-	memcpy(&beta, cp + 12, sizeof(beta));
-	return ((alpha ^ beta) % THROTTLING_HASH_SIZE);
-#endif
+	EventAdd(NULL, "throttling_check_expire", throttling_check_expire, NULL, 123456, 0);
+	/* Note: the every_ms value (123,456) will be adjusted on boot and rehash
+	 * via the update_throttling_timer_settings() function.
+	 */
 }
 
-struct	ThrottlingBucket	*find_throttling_bucket(struct IN_ADDR *in)
+uint64_t hash_throttling(char *ip)
 {
-	int			hash = 0;
+	return siphash(ip, siphashkey_throttling) % THROTTLING_HASH_TABLE_SIZE;
+}
+
+struct ThrottlingBucket *find_throttling_bucket(Client *client)
+{
+	int hash = 0;
 	struct ThrottlingBucket *p;
-	hash = hash_throttling(in);
+	hash = hash_throttling(client->ip);
 	
 	for (p = ThrottlingHash[hash]; p; p = p->next)
 	{
-		if (bcmp(in, &p->in, sizeof(struct IN_ADDR)) == 0)
-			return(p);
+		if (!strcmp(p->ip, client->ip))
+			return p;
 	}
+	
 	return NULL;
 }
 
-EVENT(e_clean_out_throttling_buckets)
+EVENT(throttling_check_expire)
 {
-	struct ThrottlingBucket *n;
+	struct ThrottlingBucket *n, *n_next;
 	int	i;
-	struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
 	static time_t t = 0;
 		
-	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
-		for (n = ThrottlingHash[i]; n; n = n->next)
+	for (i = 0; i < THROTTLING_HASH_TABLE_SIZE; i++)
+	{
+		for (n = ThrottlingHash[i]; n; n = n_next)
+		{
+			n_next = n->next;
 			if ((TStime() - n->since) > (THROTTLING_PERIOD ? THROTTLING_PERIOD : 15))
 			{
-				z.next = (struct ThrottlingBucket *) DelListItem(n, ThrottlingHash[i]);
-				MyFree(n);
-				n = &z;
+				DelListItem(n, ThrottlingHash[i]);
+				safe_free(n->ip);
+				safe_free(n);
 			}
+		}
+	}
 
 	if (!t || (TStime() - t > 30))
 	{
@@ -846,18 +979,14 @@ EVENT(e_clean_out_throttling_buckets)
 		char *p = serveropts + strlen(serveropts);
 		Module *mi;
 		t = TStime();
-		if (!Hooks[17] && strchr(serveropts, 'm'))
+		if (!Hooks[HOOKTYPE_USERMSG] && strchr(serveropts, 'm'))
 		{ p = strchr(serveropts, 'm'); *p = '\0'; }
-		if (!Hooks[18] && strchr(serveropts, 'M'))
+		if (!Hooks[HOOKTYPE_CHANMSG] && strchr(serveropts, 'M'))
 		{ p = strchr(serveropts, 'M'); *p = '\0'; }
-		if (!Hooks[49] && !Hooks[51] && strchr(serveropts, 'R'))
-		{ p = strchr(serveropts, 'R'); *p = '\0'; }
-		if (Hooks[17] && !strchr(serveropts, 'm'))
+		if (Hooks[HOOKTYPE_USERMSG] && !strchr(serveropts, 'm'))
 			*p++ = 'm';
-		if (Hooks[18] && !strchr(serveropts, 'M'))
+		if (Hooks[HOOKTYPE_CHANMSG] && !strchr(serveropts, 'M'))
 			*p++ = 'M';
-		if ((Hooks[49] || Hooks[51]) && !strchr(serveropts, 'R'))
-			*p++ = 'R';
 		*p = '\0';
 		for (mi = Modules; mi; mi = mi->next)
 			if (!(mi->options & MOD_OPT_OFFICIAL))
@@ -867,48 +996,39 @@ EVENT(e_clean_out_throttling_buckets)
 	return;
 }
 
-void	add_throttling_bucket(struct IN_ADDR *in)
+void add_throttling_bucket(Client *client)
 {
-	int	hash;
-	struct	ThrottlingBucket	*n;
-	
-	n = MyMalloc(sizeof(struct ThrottlingBucket));	
+	int hash;
+	struct ThrottlingBucket *n;
+
+	n = safe_alloc(sizeof(struct ThrottlingBucket));	
 	n->next = n->prev = NULL; 
-	bcopy(in, &n->in, sizeof(struct IN_ADDR));
+	safe_strdup(n->ip, client->ip);
 	n->since = TStime();
 	n->count = 1;
-	hash = hash_throttling(in);
+	hash = hash_throttling(client->ip);
 	AddListItem(n, ThrottlingHash[hash]);
 	return;
 }
 
-void	del_throttling_bucket(struct ThrottlingBucket *bucket)
-{
-	int	hash;
-	hash = hash_throttling(&bucket->in);
-	DelListItem(bucket, ThrottlingHash[hash]);
-	MyFree(bucket);
-	return;
-}
-
-/** Checks wether the user is connect-flooding.
+/** Checks whether the user is connect-flooding.
  * @retval 0 Denied, throttled.
  * @retval 1 Allowed, but known in the list.
  * @retval 2 Allowed, not in list or is an exception.
  * @see add_connection()
  */
-int	throttle_can_connect(aClient *sptr, struct IN_ADDR *in)
+int throttle_can_connect(Client *client)
 {
 	struct ThrottlingBucket *b;
 
 	if (!THROTTLING_PERIOD || !THROTTLING_COUNT)
 		return 2;
 
-	if (!(b = find_throttling_bucket(in)))
+	if (!(b = find_throttling_bucket(client)))
 		return 1;
 	else
 	{
-		if (Find_except(sptr, Inet_ia2p(in), CONF_EXCEPT_THROTTLE))
+		if (find_tkl_exception(TKL_CONNECT_FLOOD, client))
 			return 2;
 		if (b->count+1 > (THROTTLING_COUNT ? THROTTLING_COUNT : 3))
 			return 0;
@@ -916,5 +1036,3 @@ int	throttle_can_connect(aClient *sptr, struct IN_ADDR *in)
 		return 2;
 	}
 }
-
-#endif

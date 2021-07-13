@@ -40,7 +40,7 @@
 #include <string.h>
 
 char *collapse(char *pattern);
-extern aClient *client, *local[];
+extern Client *client;
 
 ID_Copyright("(C) Tony Vincell");
 
@@ -49,15 +49,12 @@ ID_Copyright("(C) Tony Vincell");
 #include <stdio.h>
 #include <string.h>
 #define BadPtr(x) (!(x) || (*(x) == '\0'))
-#define DupString(x,y) do{x=(char *)MyMalloc(strlen(y)+1);(void)strcpy(x,y);}while(0)
-#define mycmp strcasecmp
 #endif
 
 #if defined(CR_DEBUG) || defined(CR_CHKCONF)
-#define MyMalloc malloc
-#undef MyFree
+#undef safe_free
 #undef free
-#define MyFree free
+#define safe_free free
 #endif
 
 /* some constants and shared data types */
@@ -145,14 +142,13 @@ struct crule_funclistent crule_funclist[] = {
 int  crule_connected(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-	aClient *acptr;
-	Link *lp;
+	Client *client;
 
-	/* taken from m_links */
+	/* taken from cmd_links */
 	/* Faster this way -- codemastr*/
-	for (lp = Servers; lp; lp = lp->next) {
-		acptr = lp->value.cptr;
-		if (match((char *)crulearg[0], acptr->name))
+	list_for_each_entry(client, &global_server_list, client_node)
+	{
+		if (!match_simple((char *)crulearg[0], client->name))
 			continue;
 		return (1);
 	}
@@ -163,15 +159,15 @@ int  crule_connected(int numargs, void *crulearg[])
 int  crule_directcon(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-	int  i;
-	aClient *acptr;
+	Client *client;
 
-	/* adapted from m_trace and exit_one_client */
-	for (i = 0; i <= LastSlot; i++)
+	/* adapted from cmd_trace and exit_one_client */
+	/* XXX: iterate server_list when added */
+	list_for_each_entry(client, &lclient_list, lclient_node)
 	{
-		if (!(acptr = local[i]) || !IsServer(acptr))
+		if (!IsServer(client))
 			continue;
-		if (match((char *)crulearg[0], acptr->name))
+		if (!match_simple((char *)crulearg[0], client->name))
 			continue;
 		return (1);
 	}
@@ -182,16 +178,15 @@ int  crule_directcon(int numargs, void *crulearg[])
 int  crule_via(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-	aClient *acptr;
-	Link *lp;
+	Client *client;
 
-	/* adapted from m_links */
+	/* adapted from cmd_links */
 	/* Faster this way -- codemastr */
-	for (lp = Servers; lp; lp = lp->next) {
-		acptr = lp->value.cptr;
-		if (match((char *)crulearg[1], acptr->name))
+	list_for_each_entry(client, &global_server_list, client_node)
+	{
+		if (!match_simple((char *)crulearg[1], client->name))
 			continue;
-		if (match((char *)crulearg[0], (local[acptr->slot])->name))
+		if (!match_simple((char *)crulearg[0], client->serv->up))
 			continue;
 		return (1);
 	}
@@ -202,16 +197,17 @@ int  crule_via(int numargs, void *crulearg[])
 int  crule_directop(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-	int  i;
-	aClient *acptr;
+	Client *client;
 
-	/* adapted from m_trace */
-	for (i = 0; i <= LastSlot; i++)
+	/* adapted from cmd_trace */
+	list_for_each_entry(client, &lclient_list, lclient_node)
 	{
-		if (!(acptr = local[i]) || !IsAnOper(acptr))
+		if (!IsOper(client))
 			continue;
+
 		return (1);
 	}
+
 	return (0);
 #endif
 }
@@ -310,7 +306,7 @@ int  crule_gettoken(int *next_tokp, char **ruleptr)
 
 void crule_getword(char *word, int *wordlenp, int maxlen, char **ruleptr)
 {
-	char *word_ptr;
+	char *word_ptr, c;
 
 	word_ptr = word;
 	/* Both - and : can appear in hostnames so they must not be 
@@ -319,8 +315,16 @@ void crule_getword(char *word, int *wordlenp, int maxlen, char **ruleptr)
 	while ((isalnum(**ruleptr)) || (**ruleptr == '*') ||
 	    (**ruleptr == '?') || (**ruleptr == '.') || (**ruleptr == '-') ||
 	    (**ruleptr == ':'))
-		*word_ptr++ = *(*ruleptr)++;
-	*word_ptr = '\0';
+	{
+		c = *(*ruleptr)++;
+		if (maxlen > 1) /* >1 instead of >0 so we (possibly) still have room for NUL */
+		{
+			*word_ptr++ = c;
+			maxlen--;
+		}
+	}
+	if (maxlen)
+		*word_ptr = '\0';
 	*wordlenp = word_ptr - word;
 }
 
@@ -389,7 +393,7 @@ int  crule_parseorexpr(crule_treeptr *orrootp, int *next_tokp, char **ruleptr)
 		if ((errcode == CR_NOERR) && (*next_tokp == CR_OR))
 		{
 			orptr =
-			    (crule_treeptr) MyMalloc(sizeof(crule_treeelem));
+			    (crule_treeptr) safe_alloc(sizeof(crule_treeelem));
 #ifdef CR_DEBUG
 			(void)fprintf(stderr, "allocating or element at %ld\n", orptr);
 #endif
@@ -443,7 +447,7 @@ int  crule_parseandexpr(crule_treeptr *androotp, int *next_tokp, char **ruleptr)
 		if ((errcode == CR_NOERR) && (*next_tokp == CR_AND))
 		{
 			andptr =
-			    (crule_treeptr) MyMalloc(sizeof(crule_treeelem));
+			    (crule_treeptr) safe_alloc(sizeof(crule_treeelem));
 #ifdef CR_DEBUG
 			(void)fprintf(stderr, "allocating and element at %ld\n", andptr);
 #endif
@@ -517,7 +521,7 @@ int  crule_parseprimary(crule_treeptr *primrootp, int *next_tokp, char **ruleptr
 			  break;
 		  case CR_NOT:
 			  *insertionp =
-			      (crule_treeptr) MyMalloc(sizeof(crule_treeelem));
+			      (crule_treeptr) safe_alloc(sizeof(crule_treeelem));
 #ifdef CR_DEBUG
 			  (void)fprintf(stderr,
 			      "allocating primary element at %ld\n",
@@ -564,14 +568,14 @@ int  crule_parsefunction(crule_treeptr *funcrootp, int *next_tokp, char **rulept
 	{
 		for (funcnum = 0;; funcnum++)
 		{
-			if (mycmp(crule_funclist[funcnum].name, funcname) == 0)
+			if (strcasecmp(crule_funclist[funcnum].name, funcname) == 0)
 				break;
 			if (crule_funclist[funcnum].name[0] == '\0')
 				return (CR_UNKNWFUNC);
 		}
 		if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
 			return (errcode);
-		*funcrootp = (crule_treeptr) MyMalloc(sizeof(crule_treeelem));
+		*funcrootp = (crule_treeptr) safe_alloc(sizeof(crule_treeelem));
 #ifdef CR_DEBUG
 		(void)fprintf(stderr, "allocating function element at %ld\n",
 		    *funcrootp);
@@ -630,13 +634,12 @@ int  crule_parsearglist(crule_treeptr argrootp, int *next_tokp, char **ruleptr)
 			  break;
 		  default:
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-			  (void)collapse(currarg);
+			  collapse(currarg);
 #endif
-			  if (!BadPtr(currarg))
+			  if (*currarg)
 			  {
-				  DupString(argelemp, currarg);
-				  argrootp->arg[argrootp->numargs++] =
-				      (void *)argelemp;
+				  safe_strdup(argelemp, currarg);
+				  argrootp->arg[argrootp->numargs++] = (void *)argelemp;
 			  }
 			  if (*next_tokp != CR_COMMA)
 				  return (CR_NOERR);
@@ -676,12 +679,12 @@ void crule_free(char **elem)
 	{
 		numargs = (*((crule_treeptr *) elem))->numargs;
 		for (arg = 0; arg < numargs; arg++)
-			MyFree((char *)(*((crule_treeptr *) elem))->arg[arg]);
+			safe_free_raw((char *)(*((crule_treeptr *) elem))->arg[arg]);
 	}
 #ifdef CR_DEBUG
 	(void)fprintf(stderr, "freeing element at %ld\n", *elem);
 #endif
-	MyFree(*elem);
+	safe_free(*elem);
 	*elem = NULL;
 }
 

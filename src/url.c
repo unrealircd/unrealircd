@@ -1,6 +1,7 @@
 /*
  *   Unreal Internet Relay Chat Daemon, src/url.c
  *   (C) 2003 Dominick Meglio and the UnrealIRCd Team
+ *   (C) 2012 William Pitcock <nenolod@dereferenced.org>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -17,6 +18,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+<<<<<<< HEAD
 #include "setup.h"
 #include "config.h"
 
@@ -43,8 +45,11 @@
 #include <curl/curl.h>
 
 #ifdef USE_SSL
+=======
+#include "unrealircd.h"
+
+>>>>>>> unreal52
 extern char *SSLKeyPasswd;
-#endif
 
 #ifndef _WIN32
 extern uid_t irc_uid;
@@ -52,16 +57,6 @@ extern gid_t irc_gid;
 #endif
 
 CURLM *multihandle;
-
-#ifdef USE_POLL
-/* Maximum concurrent transfers. with poll support the remote include
- * transfers are no longer included in the MAXCONNECTIONS count.
- */
-#define MAXTRANSFERS	256
-static struct pollfd url_pollfds[MAXTRANSFERS];
-static int url_pollfdcount = 0;
-#endif
-
 
 /* Stores information about the async transfer.
  * Used to maintain information about the transfer
@@ -87,10 +82,42 @@ typedef struct
 int url_is_valid(const char *string)
 {
 	if (strstr(string, "telnet://") == string ||
-            strstr(string, "ldap://") == string ||
- 	    strstr(string, "dict://") == string)
+	    strstr(string, "ldap://") == string ||
+	    strstr(string, "dict://") == string)
+	{
 		return 0;
+	}
 	return (strstr(string, "://") != NULL);
+}
+
+/** A displayable URL for in error messages and such.
+ * This leaves out any authentication information (user:pass)
+ * the URL may contain.
+ */
+const char *displayurl(const char *url)
+{
+	static char buf[512];
+	char *proto, *rest;
+
+	/* protocol://user:pass@host/etc.. */
+	rest = strchr(url, '@');
+
+	if (!rest)
+		return url; /* contains no auth information */
+
+	rest++; /* now points to the rest (remainder) of the URL */
+
+	proto = strstr(url, "://");
+	if (!proto || (proto > rest) || (proto == url))
+		return url; /* incorrectly formatted, just show entire URL. */
+
+	/* funny, we don't ship strlncpy.. */
+	*buf = '\0';
+	strlncat(buf, url, sizeof(buf), proto - url);
+	strlcat(buf, "://***:***@", sizeof(buf));
+	strlcat(buf, rest, sizeof(buf));
+
+	return buf;
 }
 
 /*
@@ -102,52 +129,53 @@ char *url_getfilename(const char *url)
 {
 	const char *c, *start;
 
-        if ((c = strstr(url, "://")))
-                c += 3;
-        else
-                c = url;
+	if ((c = strstr(url, "://")))
+		c += 3;
+	else
+		c = url;
 
-        while (*c && *c != '/')
-                c++;
+	while (*c && *c != '/')
+		c++;
 
-        if (*c == '/')
-        {
-                c++;
-                if (!*c || *c == '?')
-                        return strdup("-");
-                start = c;
-                while (*c && *c != '?')
-                        c++;
-                if (!*c)
-                        return strdup(start);
-                else
-                {
-                        char *file = malloc(c-start+1);
-                        strlcpy(file, start, c-start+1);
-                        return file;
-                }
-                return strdup("-");
+	if (*c == '/')
+	{
+		c++;
+		if (!*c || *c == '?')
+			return raw_strdup("-");
+		start = c;
+		while (*c && *c != '?')
+			c++;
+		if (!*c)
+			return raw_strdup(start);
+		else
+			return raw_strldup(start, c-start+1);
 
-        }
-        return strdup("-");
+	}
+	return raw_strdup("-");
 }
 
-#ifdef USE_SSL
 /*
  * Sets up all of the SSL options necessary to support HTTPS/FTPS
  * transfers.
  */
-static void set_curl_ssl_options(CURL *curl)
+static void set_curl_tls_options(CURL *curl)
 {
-	if (USE_EGD)
-		curl_easy_setopt(curl, CURLOPT_EGDSOCKET, EGD_PATH);
-	curl_easy_setopt(curl, CURLOPT_SSLCERT, SSL_SERVER_CERT_PEM);
+	char buf[512];
+	
+#if 0
+	/* This would only be necessary if you use client certificates over HTTPS and such.
+	 * But this information is not known yet since the configuration file has not been
+	 * parsed yet at this point.
+	 */
+	curl_easy_setopt(curl, CURLOPT_SSLCERT, iConf.tls_options->certificate_file);
 	if (SSLKeyPasswd)
 		curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD, SSLKeyPasswd);
-	curl_easy_setopt(curl, CURLOPT_SSLKEY, SSL_SERVER_KEY_PEM);
-	curl_easy_setopt(curl, CURLOPT_CAINFO, "curl-ca-bundle.crt");
-}
+	curl_easy_setopt(curl, CURLOPT_SSLKEY, iConf.tls_options->key_file);
 #endif
+
+	snprintf(buf, sizeof(buf), "%s/tls/curl-ca-bundle.crt", CONFDIR);
+	curl_easy_setopt(curl, CURLOPT_CAINFO, buf);
+}
 
 /*
  * Used by CURLOPT_WRITEFUNCTION to actually write the data to
@@ -174,14 +202,13 @@ char *download_file(const char *url, char **error)
 	CURLcode res;
 	char *file = url_getfilename(url);
 	char *filename = unreal_getfilename(file);
-	char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
+	char *tmp = unreal_mktemp(TMPDIR, filename ? filename : "download.conf");
 	FILE *fd;
 
 
 	if (!curl)
 	{
-		if (file)
-			free(file);
+		safe_free(file);
 		strlcpy(errorbuf, "curl_easy_init() failed", sizeof(errorbuf));
 		*error = errorbuf;
 		return NULL;
@@ -191,8 +218,7 @@ char *download_file(const char *url, char **error)
 	if (!fd)
 	{
 		snprintf(errorbuf, CURL_ERROR_SIZE, "Cannot write to %s: %s", tmp, strerror(errno));
-		if (file)
-			free(file);
+		safe_free(file);
 		*error = errorbuf;
 		return NULL;
 	}
@@ -208,20 +234,23 @@ char *download_file(const char *url, char **error)
  	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
  	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
 #endif
+	/* We need to set CURLOPT_FORBID_REUSE because otherwise libcurl does not
+	 * notify us (or not in time) about FD close/opens, thus we end up closing and
+	 * screwing up another innocent FD, like a listener (BAD!). In my view a bug, but
+	 * mailing list archives seem to indicate curl devs have a different opinion
+	 * on these matters...
+	 * Actually I don't know for sure if this option alone fixes 100% of the cases
+	 * but at least I can't crash my server anymore.
+	 * As a side-effect we also fix useless CLOSE_WAIT connections.
+	 */
+	curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1);
 
-#ifdef USE_SSL
-	set_curl_ssl_options(curl);
-#endif
-	bzero(errorbuf, CURL_ERROR_SIZE);
+	set_curl_tls_options(curl);
+	memset(errorbuf, 0, CURL_ERROR_SIZE);
 	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorbuf);
 	res = curl_easy_perform(curl);
 	fclose(fd);
-#if defined(IRC_USER) && defined(IRC_GROUP)
-	if (!loop.ircd_booted)
-		chown(tmp, irc_uid, irc_gid);
-#endif
-	if (file)
-		free(file);
+	safe_free(file);
 	if (res == CURLE_OK)
 	{
 		long last_mod;
@@ -231,7 +260,7 @@ char *download_file(const char *url, char **error)
 
 		if (last_mod != -1)
 			unreal_setfilemodtime(tmp, last_mod);
-		return strdup(tmp);
+		return raw_strdup(tmp);
 	}
 	else
 	{
@@ -242,410 +271,40 @@ char *download_file(const char *url, char **error)
 	}
 }
 
-#ifdef USE_POLL
-/* Add a new socket to the poll array, or modify an existing entry */
-void url_socket_addormod(curl_socket_t s, int what)
-{
-struct pollfd *pfd;
-short events=0;
-int i;
-
-	/* convert 'what' from CURL language to 'events' in POSIX language... */
-	if (what == CURL_POLL_IN)
-		events |= POLLIN; /* read */
-	else if (what == CURL_POLL_OUT)
-		events |= POLLOUT; /* write */
-	else if (what == CURL_POLL_INOUT)
-		events |= (POLLIN|POLLOUT); /* both */
-
-	/* Check if the entry already exists... */
-	for (i=0; i < url_pollfdcount; i++)
-	{
-		pfd = &url_pollfds[i];
-		if (pfd->fd == s)
-		{
-			/* Modify existing entry */
-			pfd->events = events;
-			return;
-		}
-	}
-	
-	/* If we get here, the socket does not exist yet. Add it! */
-	if (url_pollfdcount+1 == MAXTRANSFERS)
-	{
-		/* There's no room for any new fd. Throw up an error.
-		 * Since no data will ever be transfered for this session, it wil
-		 * eventually timeout. That's ok, better than a crash...
-		 */
-		ircd_log(LOG_ERROR, "Remote includes: too many concurrent transfers (%d)!!", MAXTRANSFERS);
-		sendto_realops("Remote includes: too many concurrent transfers (%d)!!", MAXTRANSFERS);
-		return;
-	}
-	pfd = &url_pollfds[url_pollfdcount];
-	pfd->fd = s;
-	pfd->events = events;
-	url_pollfdcount++;
-}
-
-void url_socket_remove(curl_socket_t s)
-{
-int i;
-struct pollfd *pfd;
-
-	for (i=0; i < url_pollfdcount; i++)
-	{
-		pfd = &url_pollfds[i];
-		if (pfd->fd == s)
-		{
-			/* Tag for deletion. But don't actually delete it as we may be in the poll result loop... */
-			pfd->fd = -1;
-			pfd->events = 0;
-			break;
-		}
-	}
-}
-
-static int url_socket_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *sockp)
-{
-	Debug((DEBUG_DEBUG, "url_socket_cb: %d (%s)", (int)s, (what == CURL_POLL_REMOVE)?"remove":"add-or-modify"));
-	if (what == CURL_POLL_REMOVE)
-		url_socket_remove(s);
-	else
-		url_socket_addormod(s, what);
-
-	return 0;
-}
-#endif
-
 /*
- * Initializes the URL system
- */
-void url_init(void)
-{
-	curl_global_init(CURL_GLOBAL_ALL);
-	multihandle = curl_multi_init();
-#ifdef USE_POLL
-	curl_multi_setopt(multihandle, CURLMOPT_SOCKETFUNCTION, url_socket_cb);
-	memset(&url_pollfds, 0, sizeof(url_pollfds));
-#endif
-}
-
-/*
- * Handles asynchronous downloading of a file. This function allows
- * a download to be made transparently without the caller having any
- * knowledge of how libcurl works. The specified callback function is
- * called when the download completes, or the download fails. The 
- * callback function is defined as:
+ * Interface for new-style evented I/O.
  *
- * void callback(const char *url, const char *filename, char *errorbuf, int cached, void *data);
- *  - url will contain the original URL used to download the file.
- *  - filename will contain the name of the file (if successful, NULL on error or if cached).
- *        This file will be cleaned up after the callback returns, so save a copy to support caching.
- *  - errorbuf will contain the error message (if failed, NULL otherwise).
- *  - cached 1 if the specified cachetime is >= the current file on the server,
- *        if so, errorbuf will be NULL, filename will contain the path to the file.
- *  - data will be the value of callback_data, allowing you to figure
- *        out how to use the data contained in the downloaded file ;-).
- *        Make sure that if you access the contents of this pointer, you
- *        know that this pointer will persist. A download could take more
- *        than 10 seconds to happen and the config file can be rehashed
- *        multiple times during that time.
+ * url_socket_pollcb is the callback from our eventing system into
+ * cURL.
+ *
+ * The other callbacks are for cURL notifying our event system what
+ * it wants to do.
  */
-void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data)
+static void url_check_multi_handles(void)
 {
-	static char errorbuf[CURL_ERROR_SIZE];
-	CURL *curl = curl_easy_init();
-	if (curl)
-	{
-		char *file = url_getfilename(url);
-		char *filename = unreal_getfilename(file);
-        	char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
-		FileHandle *handle = MyMallocEx(sizeof(FileHandle));
-		handle->fd = fopen(tmp, "wb");
-		if (!handle->fd)
-		{
-			snprintf(errorbuf, sizeof(errorbuf), "Cannot create '%s': %s", tmp, strerror(ERRNO));
-			callback(url, NULL, errorbuf, 0, callback_data);
-			if (file)
-				MyFree(file);
-			MyFree(handle);
-			return;
-		}
-		handle->callback = callback;
-		handle->callback_data = callback_data;
-		handle->cachetime = cachetime;
-		handle->url = strdup(url);
-		strlcpy(handle->filename, tmp, sizeof(handle->filename));
-		if (file)
-			free(file);
-
-		curl_easy_setopt(curl, CURLOPT_URL, url);
-                curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
-                curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->fd);
-		curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
-#ifdef USE_SSL
-		set_curl_ssl_options(curl);
-#endif
-		bzero(handle->errorbuf, CURL_ERROR_SIZE);
-		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, handle->errorbuf);
-		curl_easy_setopt(curl, CURLOPT_PRIVATE, (char *)handle);
-		curl_easy_setopt(curl, CURLOPT_FILETIME, 1);
-		if (cachetime)
-		{
-			curl_easy_setopt(curl, CURLOPT_TIMECONDITION, CURL_TIMECOND_IFMODSINCE);
-			curl_easy_setopt(curl, CURLOPT_TIMEVALUE, cachetime);
-		}
-		curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
-		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 45);
-		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15);
-#if LIBCURL_VERSION_NUM >= 0x070f01
-	 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
- 		curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
-#endif
-
-
-		curl_multi_add_handle(multihandle, curl);
-	}
-}
-
-#ifdef USE_POLL
-/** This function scans through the poll array and moves data around so any
- * entries with -1 fd's will no longer be there.
- * There's room for improvement here ;)
- */
-void fix_poll_array(void)
-{
-int i;
-struct pollfd *pfd;
-size_t sz;
-
-	for (i = 0; i < url_pollfdcount; i++)
-	{
-		if (url_pollfds[i].fd == -1)
-		{
-			if (i < MAXTRANSFERS-1)
-			{
-				/* move the memory to the left, so we overwrite the -1 entry... */
-				sz = &url_pollfds[MAXTRANSFERS-1] - &url_pollfds[i];
-				memmove(&url_pollfds[i], &url_pollfds[i+1], sz);
-				url_pollfdcount--;
-			}
-			/* nullify last entry */
-			memset(&url_pollfds[MAXTRANSFERS-1], 0, sizeof(struct pollfd));
-		}
-	}
-}
-
-/*
- * Called in the select loop. Handles the transferring of any
- * queued asynchronous transfers.
- * This function is for when poll support is enabled.
- * Some extra logic has been implemented to run the loop again if we
- * expect more data (similar to the original non-poll version), but
- * now we ensure that we will not spend too much time in this function
- * since otherwise with a fast data transfer we would still stall the
- * ircd, which defeats the whole asynchronous idea... -- Syzop
- */
-void url_do_transfers_async(void)
-{
-int nfds; /* number of file descriptors active (result) */
-int i;
-struct pollfd *pfd; /* just a pointer to make it easy to work with individual pollfd structs */
-int dummy;
-int r;
-int msgs_left;
-CURLMsg *msg;
-long timeout;
-int didanything;
-int iterations = 0;
-#ifndef _WIN32
-struct timeval tv_start, tv_now;
-#else
-struct _timeb tv_start, tv_now;
-#endif
-long totalduration = 0;
-
-#ifndef _WIN32
-	gettimeofday(&tv_start, NULL);
-#else
-	_ftime(&tv_start);
-#endif
-
-	do {
-		didanything = 0;
-		iterations++;
-
-		if (url_pollfdcount > 0)
-			nfds = poll(url_pollfds, url_pollfdcount, 50);
-		else
-			nfds = 0;
-
-		if (nfds > 0)
-		{
-			for (i = 0; i < url_pollfdcount; i++)
-			{
-				int action = 0;
-				int dummy = 0; /* not interested.. */
-
-				pfd = &url_pollfds[i];
-				
-				if (pfd->fd == -1)
-					continue; /* race condition */
-				
-				if (pfd->revents & POLLIN)
-					action |= CURL_CSELECT_IN;
-				if (pfd->revents & POLLOUT)
-					action |= CURL_CSELECT_OUT;
-				
-				Debug((DEBUG_DEBUG, "url_do_transfers_async() -> curl_multi_socket_action: socket %d (act: 0x%x)", (int)pfd->fd, (int)action));
-				r = curl_multi_socket_action(multihandle, pfd->fd, action, &dummy);
-				if (r == CURLM_OK)
-					didanything = 1;
-			}
-		}
-
-		fix_poll_array();
-
-		/* Handle timeouts. This also initiates the whole transfer process. */
-		r = curl_multi_socket_action(multihandle, CURL_SOCKET_TIMEOUT, 0, &dummy);
-
-		/* now, check the status of things & deal with the results.
-		 * this could also be called in each socket callbacks, but I figured
-		 * we could just as well do them here all at once...
-		 */
-		
-		while ((msg = curl_multi_info_read(multihandle, &msgs_left))) {
-			if (msg->msg == CURLMSG_DONE)
-			{
-				FileHandle *handle;
-				long code;
-				long last_mod;
-				CURL *easyhand = msg->easy_handle;
-				curl_easy_getinfo(easyhand, CURLINFO_RESPONSE_CODE, &code);
-				curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char*)&handle);
-				curl_easy_getinfo(easyhand, CURLINFO_FILETIME, &last_mod);
-				fclose(handle->fd);
-	#if defined(IRC_USER) && defined(IRC_GROUP)
-				if (!loop.ircd_booted)
-					chown(handle->filename, irc_uid, irc_gid);
-	#endif
-				if (msg->data.result == CURLE_OK)
-				{
-					if (code == 304 || (last_mod != -1 && last_mod <= handle->cachetime))
-					{
-						handle->callback(handle->url, NULL, NULL, 1, handle->callback_data);
-						remove(handle->filename);
-
-					}
-					else
-					{
-						if (last_mod != -1)
-							unreal_setfilemodtime(handle->filename, last_mod);
-
-						handle->callback(handle->url, handle->filename, NULL, 0, handle->callback_data);
-						remove(handle->filename);
-					}
-				}
-				else
-				{
-					handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
-					remove(handle->filename);
-				}
-				free(handle->url);
-				free(handle);
-				curl_multi_remove_handle(multihandle, easyhand);
-				/* NOTE: after curl_multi_remove_handle() you cannot use
-				 * 'msg' anymore because it has freed by curl (as of v7.11.0),
-				 * therefore 'easyhand' is used... fun! -- Syzop
-				 */
-				curl_easy_cleanup(easyhand);
-			}
-		}
-#ifdef DEBUGMODE
-		if (didanything == 1)
-			Debug((DEBUG_DEBUG, "another url_do_transfers_async iteration.. yay!"));
-#endif
-
-	if (didanything)
-	{
-#ifndef _WIN32
-		gettimeofday(&tv_now, NULL);
-		totalduration += ((tv_now.tv_sec - tv_start.tv_sec) * 1000000) + tv_now.tv_usec - tv_start.tv_usec;
-#else
-		_ftime(&tv_now);
-		totalduration += ((tv_now.tv_time - tv_start.tv_time) * 1000000) + ((tv_now.millitm - tv_start.millitm) * 1000); /* note: reduced accuracy */
-#endif
-		Debug((DEBUG_DEBUG, "url_do_transfers_async: totalduration is now %ld", totalduration));
-	}
-
-	} while(didanything && (totalduration < 250000)); /* repeat our loop if we did anything AND if we have spent less than 0.25s (250000usec) */
-}
-#else
-/* NON-POLL */
-
-/*
- * Called in the select loop. Handles the transferring of any
- * queued asynchronous transfers.
- * This is the select (NON-POLL) variant, which is no longer the default!
- */
-void url_do_transfers_async(void)
-{
-	int cont;
-	int msgs_left;
 	CURLMsg *msg;
-	while(CURLM_CALL_MULTI_PERFORM == curl_multi_perform(multihandle, &cont))
-		;
+	int msgs_left;
 
-	while(cont) {
-		struct timeval timeout;
-		int rc;
-
-		fd_set fdread, fdwrite, fdexcep;
-		int maxfd;
-		FD_ZERO(&fdread);
-		FD_ZERO(&fdwrite);
-		FD_ZERO(&fdexcep);
-		timeout.tv_sec = 1;
-		timeout.tv_usec = 0;
-
-		curl_multi_fdset(multihandle, &fdread, &fdwrite, &fdexcep, &maxfd);
-
-		rc = select(maxfd+1, &fdread, &fdwrite, &fdexcep, &timeout);
-
-		switch(rc) {
-			case -1:
-			case 0:
-				cont = 0;
-				break;
-			default:
-				while(CURLM_CALL_MULTI_PERFORM == 
-					curl_multi_perform(multihandle, &cont))
-					;
-		}
-	}
-
-	while ((msg = curl_multi_info_read(multihandle, &msgs_left))) {
+	while ((msg = curl_multi_info_read(multihandle, &msgs_left)) != NULL)
+	{
 		if (msg->msg == CURLMSG_DONE)
 		{
 			FileHandle *handle;
 			long code;
 			long last_mod;
 			CURL *easyhand = msg->easy_handle;
+
 			curl_easy_getinfo(easyhand, CURLINFO_RESPONSE_CODE, &code);
-			curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char*)&handle);
+			curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char **) &handle);
 			curl_easy_getinfo(easyhand, CURLINFO_FILETIME, &last_mod);
 			fclose(handle->fd);
-#if defined(IRC_USER) && defined(IRC_GROUP)
-			if (!loop.ircd_booted)
-				chown(handle->filename, irc_uid, irc_gid);
-#endif
+
 			if (msg->data.result == CURLE_OK)
 			{
 				if (code == 304 || (last_mod != -1 && last_mod <= handle->cachetime))
 				{
 					handle->callback(handle->url, NULL, NULL, 1, handle->callback_data);
 					remove(handle->filename);
-
 				}
 				else
 				{
@@ -661,9 +320,11 @@ void url_do_transfers_async(void)
 				handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
 				remove(handle->filename);
 			}
-			free(handle->url);
-			free(handle);
+
+			safe_free(handle->url);
+			safe_free(handle);
 			curl_multi_remove_handle(multihandle, easyhand);
+
 			/* NOTE: after curl_multi_remove_handle() you cannot use
 			 * 'msg' anymore because it has freed by curl (as of v7.11.0),
 			 * therefore 'easyhand' is used... fun! -- Syzop
@@ -672,4 +333,156 @@ void url_do_transfers_async(void)
 		}
 	}
 }
+
+static void url_socket_pollcb(int fd, int revents, void *data)
+{
+	int flags = 0;
+	int dummy;
+
+	if (revents & FD_SELECT_READ)
+		flags |= CURL_CSELECT_IN;
+	if (revents & FD_SELECT_WRITE)
+		flags |= CURL_CSELECT_OUT;
+
+	curl_multi_socket_action(multihandle, fd, flags, &dummy);
+	url_check_multi_handles();
+}
+
+static int url_socket_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *sockp)
+{
+	Debug((DEBUG_DEBUG, "url_socket_cb: %d (%s)", (int)s, (what == CURL_POLL_REMOVE)?"remove":"add-or-modify"));
+	if (what == CURL_POLL_REMOVE)
+	{
+		fd_close(s);
+	}
+	else
+	{
+		FDEntry *fde = &fd_table[s];
+		int flags = 0;
+		
+		if (!fde->is_open)
+		{
+			/* NOTE: We use FDCLOSE_NONE here because cURL will take
+			 * care of the closing of the socket. So *WE* must never
+			 * close the socket ourselves.
+			 */
+			fd_open(s, "CURL transfer", FDCLOSE_NONE);
+		}
+
+		if (what == CURL_POLL_IN || what == CURL_POLL_INOUT)
+			flags |= FD_SELECT_READ;
+
+		if (what == CURL_POLL_OUT || what == CURL_POLL_INOUT)
+			flags |= FD_SELECT_WRITE;
+
+		fd_setselect(s, flags, url_socket_pollcb, NULL);
+	}
+
+	return 0;
+}
+
+/* Handle timeouts. */
+static EVENT(curl_socket_timeout)
+{
+	int dummy;
+
+	curl_multi_socket_action(multihandle, CURL_SOCKET_TIMEOUT, 0, &dummy);
+	url_check_multi_handles();
+}
+
+static Event *curl_socket_timeout_hdl = NULL;
+
+/*
+ * Initializes the URL system
+ */
+void url_init(void)
+{
+	curl_global_init(CURL_GLOBAL_ALL);
+	multihandle = curl_multi_init();
+
+	curl_multi_setopt(multihandle, CURLMOPT_SOCKETFUNCTION, url_socket_cb);
+	curl_socket_timeout_hdl = EventAdd(NULL, "curl_socket_timeout", curl_socket_timeout, NULL, 500, 0);
+}
+
+/*
+ * Handles asynchronous downloading of a file. This function allows
+ * a download to be made transparently without the caller having any
+ * knowledge of how libcurl works. The specified callback function is
+ * called when the download completes, or the download fails. The 
+ * callback function is defined as:
+ *
+ * void callback(const char *url, const char *filename, char *errorbuf, int cached, void *data);
+ *  - url will contain the original URL used to download the file.
+ *  - filename will contain the name of the file (if successful, NULL on error or if cached).
+ *    This file will be cleaned up after the callback returns, so save a copy to support caching.
+ *  - errorbuf will contain the error message (if failed, NULL otherwise).
+ *  - cached 1 if the specified cachetime is >= the current file on the server,
+ *    if so, errorbuf will be NULL, filename will contain the path to the file.
+ *  - data will be the value of callback_data, allowing you to figure
+ *    out how to use the data contained in the downloaded file ;-).
+ *    Make sure that if you access the contents of this pointer, you
+ *    know that this pointer will persist. A download could take more
+ *    than 10 seconds to happen and the config file can be rehashed
+ *    multiple times during that time.
+ */
+void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data)
+{
+	static char errorbuf[CURL_ERROR_SIZE];
+	CURL *curl = curl_easy_init();
+	if (curl)
+	{
+		char *file = url_getfilename(url);
+		char *filename = unreal_getfilename(file);
+		char *tmp = unreal_mktemp(TMPDIR, filename ? filename : "download.conf");
+		FileHandle *handle = safe_alloc(sizeof(FileHandle));
+		handle->fd = fopen(tmp, "wb");
+		if (!handle->fd)
+		{
+			snprintf(errorbuf, sizeof(errorbuf), "Cannot create '%s': %s", tmp, strerror(ERRNO));
+			callback(url, NULL, errorbuf, 0, callback_data);
+			safe_free(file);
+			safe_free(handle);
+			return;
+		}
+		handle->callback = callback;
+		handle->callback_data = callback_data;
+		handle->cachetime = cachetime;
+		safe_strdup(handle->url, url);
+		strlcpy(handle->filename, tmp, sizeof(handle->filename));
+		safe_free(file);
+
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->fd);
+		curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+		set_curl_tls_options(curl);
+		memset(handle->errorbuf, 0, CURL_ERROR_SIZE);
+		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, handle->errorbuf);
+		curl_easy_setopt(curl, CURLOPT_PRIVATE, (char *)handle);
+		curl_easy_setopt(curl, CURLOPT_FILETIME, 1);
+		/* We need to set CURLOPT_FORBID_REUSE because otherwise libcurl does not
+		 * notify us (or not in time) about FD close/opens, thus we end up closing and
+		 * screwing up another innocent FD, like a listener (BAD!). In my view a bug, but
+		 * mailing list archives seem to indicate curl devs have a different opinion
+		 * on these matters...
+		 * Actually I don't know for sure if this option alone fixes 100% of the cases
+		 * but at least I can't crash my server anymore.
+		 * As a side-effect we also fix useless CLOSE_WAIT connections.
+		 */
+		curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1);
+		if (cachetime)
+		{
+			curl_easy_setopt(curl, CURLOPT_TIMECONDITION, CURL_TIMECOND_IFMODSINCE);
+			curl_easy_setopt(curl, CURLOPT_TIMEVALUE, cachetime);
+		}
+		curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 45);
+		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15);
+#if LIBCURL_VERSION_NUM >= 0x070f01
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
 #endif
+
+		curl_multi_add_handle(multihandle, curl);
+	}
+}

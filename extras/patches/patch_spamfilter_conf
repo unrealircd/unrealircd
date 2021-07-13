@@ -1,0 +1,40 @@
+#!/bin/sh
+#
+# This script tries to upgrade spamfilter.conf from an old
+# version that uses 'posix' spamfilters to a bit more recent
+# version with examples using 'regex' spamfilters.
+# This so fewer users end up with a headache when upgrading
+# to UnrealIRCd 4.2.3+.
+#
+
+if [ -f spamfilter.conf.patch ]; then
+	F="`pwd`/spamfilter.conf.patch"
+elif [ -f extras/patches/spamfilter.conf.patch ]; then
+	F="`pwd`/extras/patches/spamfilter.conf.patch"
+else
+	echo "WARNING: spamfilter.conf.patch not found"
+	exit 0
+fi
+
+if [ ! -f "$F" ]; then
+	echo "WARNING: spamfilter.conf.patch not found in round two"
+	exit 0
+fi
+
+if [ "$1" = "" ]; then
+	echo "ERROR: No target confdir specified."
+	exit 0
+fi
+
+if [ ! -f "$1/spamfilter.conf" ]; then
+	echo "WARNING: no spamfilter.conf found in $1 -- strange"
+	exit 0
+fi
+
+cd "$1" || exit 1
+cat "$F"|patch -p0 --dry-run -N 1>/dev/null 2>&1
+if [ "$?" = 0 ]; then
+	# Patch succeeded, patch now!
+	echo "Upgrading examples in your spamfilter.conf..."
+	cat "$F"|patch -p0 -N
+fi

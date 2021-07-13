@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# Exit on any failure:
+set -e
+
+# Verbose:
+set -x
+
+if [ "$1" != "" ]; then
+	BUILDCONFIG="$*"
+fi
+
+if [[ "$OSTYPE" == "freebsd"* ]]; then
+	export MAKE="gmake -j4"
+else
+	export MAKE="make -j4"
+fi
+
+export CPPFLAGS="-DFAKELAG_CONFIGURABLE -DNOREMOVETMP"
+
+# !! skipped for now: extras/build-tests/nix/select-config $BUILDCONFIG !!
+# !! temporary use this:
+cp extras/build-tests/nix/configs/default ./config.settings
+
+# Debian 8 workaround:
+if lsb_release -av 2>&1|egrep 'Debian.*jessie'; then
+	echo "Disabling ASan due to false positives on deb8"
+	echo 'EXTRAPARA="--enable-werror --disable-asan"' >>config.settings
+fi
+
+# If SSLDIR is set the environment, this overrides config.settings
+# Used for example in the openssl3 build tests.
+if [ "$SSLDIR" != "" ]; then
+	echo 'SSLDIR="'"$SSLDIR"'"' >>config.settings
+fi
+
+# Read config.settings, this makes a couple of variables available to us.
+. ./config.settings
+if [ "$SSLDIR" != "" ]; then
+	# In case we build local openssl/libressl
+	export LD_LIBRARY_PATH="$SSLDIR/lib"
+fi
+./Config -quick || (tail -n 5000 config.log; exit 1)
+$MAKE
+yes ''|make pem
+make
+./unrealircd module install third/dumpcmds
+make install
+
+set +x
+echo ""
+echo "***********************************************"
+echo "UnrealIRCd build & install successful."
+echo "***********************************************"
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+	otool -L ~/unrealircd/bin/unrealircd
+else
+	ldd ~/unrealircd/bin/unrealircd
+fi
+
+if [ "$BUILDCONFIG" = "local-curl" ]; then
+	# We broke the system significantly earlier that build tests
+	# won't work (eg: 'git' is uninstallable). Don't bother
+	# running the tests. I don't expect a 'local-curl' specific
+	# bug anyway.
+	exit 0
+fi
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+	# 'rake' doesn't work. have to figure that one out..
+	echo "Not running test on OS X for now"
+	exit 0
+fi
+
+echo ""
+echo ""
+#echo "Now running UnrealIRCd test framework..."
+#set -x
+#extras/build-tests/nix/run-tests

@@ -26,11 +26,7 @@
 
 #define	MODEBUFLEN	200
 
-#define NullChn	((aChannel *)0)
-
-#define ChannelExists(n)	(find_channel(n, NullChn) != NullChn)
-
-#define IsULine(sptr)	(sptr->flags & FLAGS_ULINE)
+#define ChannelExists(n)	(find_channel(n, NULL))
 
 /* NOTE: Timestamps will be added to MODE-commands, so never make
  * RESYNCMODES and MODEPARAMS higher than MAXPARA-3. DALnet servers

@@ -1,0 +1,108 @@
+#************************************************************************
+#*   IRC - Internet Relay Chat, src/modules/chanmodes/Makefile
+#*   Copyright (C) Carsten V. Munk 2001 & The UnrealIRCd Team
+#*
+#*   This program is free software; you can redistribute it and/or modify
+#*   it under the terms of the GNU General Public License as published by
+#*   the Free Software Foundation; either version 1, or (at your option)
+#*   any later version.
+#*
+#*   This program is distributed in the hope that it will be useful,
+#*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#*   GNU General Public License for more details.
+#*
+#*   You should have received a copy of the GNU General Public License
+#*   along with this program; if not, write to the Free Software
+#*   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#*/
+
+CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
+
+INCLUDES = ../../include/channel.h \
+	../../include/common.h ../../include/config.h ../../include/dbuf.h \
+	../../include/dynconf.h ../../include/fdlist.h ../../include/h.h \
+	../../include/ircsprintf.h \
+	../../include/license.h \
+	../../include/modules.h ../../include/modversion.h ../../include/msg.h \
+	../../include/numeric.h ../../include/proto.h ../../include/dns.h \
+	../../include/resource.h ../../include/setup.h \
+	../../include/struct.h ../../include/sys.h \
+	../../include/types.h ../../include/url.h \
+	../../include/version.h ../../include/whowas.h
+
+R_MODULES= \
+	join.so quiet.so nickchange.so inchannel.so realname.so \
+	account.so operclass.so certfp.so textban.so msgbypass.so \
+	timedban.so partmsg.so securitygroup.so
+
+MODULES=$(R_MODULES)
+MODULEFLAGS=@MODULEFLAGS@
+RM=@RM@
+
+all: build
+
+build: $(MODULES)
+
+clean:
+	$(RM) -f *.o *.so *~ core
+
+#############################################################################
+#             .so's section
+#############################################################################
+
+skel.so: skel.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o skel.so skel.c
+
+join.so: join.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o join.so join.c
+
+quiet.so: quiet.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o quiet.so quiet.c
+
+nickchange.so: nickchange.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o nickchange.so nickchange.c
+
+inchannel.so: inchannel.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o inchannel.so inchannel.c
+
+realname.so: realname.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o realname.so realname.c
+
+account.so: account.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o account.so account.c
+
+operclass.so: operclass.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o operclass.so operclass.c
+
+certfp.so: certfp.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o certfp.so certfp.c
+
+textban.so: textban.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o textban.so textban.c
+
+msgbypass.so: msgbypass.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o msgbypass.so msgbypass.c
+
+timedban.so: timedban.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o timedban.so timedban.c
+
+partmsg.so: partmsg.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o partmsg.so partmsg.c
+
+securitygroup.so: securitygroup.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o securitygroup.so securitygroup.c

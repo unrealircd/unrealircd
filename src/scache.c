@@ -1,20 +1,13 @@
+/* License: GPLv1 */
 
-/* $Id$ */
+/** @file
+ * @brief String cache - only used for server names.
+ */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "h.h"
-#include "proto.h"
-#include <string.h>
+#include "unrealircd.h"
 
-static int hash(char *);	/*
-
-				 * keep it hidden here 
-				 */
 /*
- * ircd used to store full servernames in anUser as well as in the
+ * ircd used to store full servernames in User as well as in the
  * whowas info.  there can be some 40k such structures alive at any
  * given time, while the number of unique server names a server sees in
  * its lifetime is at most a few hundred.  by tokenizing server names
@@ -28,10 +21,11 @@ static int hash(char *);	/*
 
 #define SCACHE_HASH_SIZE 257
 
-typedef struct scache_entry {
+typedef struct SCACHE SCACHE;
+struct SCACHE {
 	char name[HOSTLEN + 1];
-	struct scache_entry *next;
-} SCACHE;
+	SCACHE *next;
+};
 
 static SCACHE *scache_hash[SCACHE_HASH_SIZE];
 
@@ -57,14 +51,16 @@ static int hash(char *string)
 
 	return hash_value % SCACHE_HASH_SIZE;
 }
-/*
+
+/** Add a string to the string cache.
  * this takes a server name, and returns a pointer to the same string
  * (up to case) in the server name token list, adding it to the list if
  * it's not there.  care must be taken not to call this with
  * user-supplied arguments that haven't been verified to be a valid,
  * existing, servername.  use the hash in list.c for those.  -orabidoo
+ * @param name	A valid server name
+ * @returns Pointer to the server name
  */
-
 char *find_or_add(char *name)
 {
 	int  hash_index;
@@ -88,80 +84,16 @@ char *find_or_add(char *name)
 	 */
 	if ((ptr = scache_hash[hash_index]))
 	{
-		newptr = scache_hash[hash_index] =
-		    (SCACHE *) MyMalloc(sizeof(SCACHE));
-		strncpyzt(newptr->name, name, HOSTLEN);
+		newptr = scache_hash[hash_index] = safe_alloc(sizeof(SCACHE));
+		strlcpy(newptr->name, name, sizeof(newptr->name));
 		newptr->next = ptr;
 		return (newptr->name);
 	}
 	else
 	{
-		ptr = scache_hash[hash_index] =
-		    (SCACHE *) MyMalloc(sizeof(SCACHE));
-		strncpyzt(ptr->name, name, HOSTLEN);
+		ptr = scache_hash[hash_index] = safe_alloc(sizeof(SCACHE));
+		strlcpy(ptr->name, name, sizeof(newptr->name));
 		ptr->next = (SCACHE *) NULL;
 		return (ptr->name);
 	}
-}
-
-char *find_by_hash(int hash)
-{
-	SCACHE *ptr;
-
-	ptr = scache_hash[hash];
-	if (ptr)
-		return (ptr->name);
-	else
-		return NULL;
-}
-
-
-
-/*
- * Added so s_debug could check memory usage in here -Dianora 
- */
-
-void count_scache(int *number_servers_cached, u_long *mem_servers_cached)
-{
-	SCACHE *scache_ptr;
-	int  i;
-
-	*number_servers_cached = 0;
-	*mem_servers_cached = 0;
-
-	for (i = 0; i < SCACHE_HASH_SIZE; i++)
-	{
-		scache_ptr = scache_hash[i];
-		while (scache_ptr)
-		{
-			*number_servers_cached = *number_servers_cached + 1;
-			*mem_servers_cached = *mem_servers_cached +
-			    (strlen(scache_ptr->name) + sizeof(SCACHE *));
-
-			scache_ptr = scache_ptr->next;
-		}
-	}
-}
-/*
- * list all server names in scache very verbose 
- */
-
-void list_scache(aClient *sptr)
-{
-	int  hash_index;
-	SCACHE *ptr;
-
-	for (hash_index = 0; hash_index < SCACHE_HASH_SIZE; hash_index++)
-	{
-		ptr = scache_hash[hash_index];
-		while (ptr)
-		{
-			if (ptr->name)
-				sendto_one(sptr,
-				    ":%s NOTICE %s :server=%s hash=%i",
-				    me.name, sptr->name, ptr->name, hash_index);
-			ptr = ptr->next;
-		}
-	}
-
 }

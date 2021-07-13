@@ -1,0 +1,75 @@
+# Ignore configure step
+aclocal.m4
+autom4te.cache
+config.log
+conftest.*
+config.settings
+extras/pcre2*
+extras/c-ares*
+config.status
+extras/ircdcron/ircd.cron
+extras/ircdcron/ircdchk
+src/modules/snomasks/Makefile
+src/modules/chanmodes/Makefile
+src/modules/extbans/Makefile
+src/modules/usermodes/Makefile
+src/modules/Makefile
+src/modules/third/Makefile
+/Makefile
+/src/Makefile
+/unrealircd
+include/setup.h
+
+# Ignore tags file
+tags
+
+# Ignore editor files
+*\#*
+*~
+
+# Ignore SSL Stuff
+server.cert.pem
+server.key.pem
+server.req.pem
+tls.rnd
+
+# Ignores for platform stuff
+.DS_Store
+
+# Ignores for build artifacts
+*.so
+*.o
+*.dSYM
+*.dylib
+src/ircd
+src/version.c
+src/include
+
+# Ignores for mac stuff
+## Various settings
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+
+## Other
+*.xccheckout
+*.moved-aside
+*.xcuserstate
+*.xcscmblueprint
+
+## Obj-C/Swift specific
+*.hmap
+*.ipa
+
+src/macosx/build/
+DerivedData
+src/macosx/pods/
+
+# Doxygen generated files
+doc/doxygen/

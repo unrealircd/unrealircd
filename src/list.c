@@ -18,37 +18,10 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* -- Jto -- 20 Jun 1990
- * extern void free() fixed as suggested by
- * gruner@informatik.tu-muenchen.de
- */
+#include "unrealircd.h"
 
-/* -- Jto -- 03 Jun 1990
- * Added chname initialization...
- */
-
-/* -- Jto -- 24 May 1990
- * Moved is_full() to channel.c
- */
-
-/* -- Jto -- 10 May 1990
- * Added #include <sys.h>
- * Changed memset(xx,0,yy) into bzero(xx,yy)
- */
-
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "h.h"
-#include "proto.h"
-#include "numeric.h"
-#ifdef	DBMALLOC
-#include "malloc.h"
-#endif
-#include <string.h>
 void free_link(Link *);
 Link *make_link();
-extern ircstats IRCstats;
 
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
@@ -57,41 +30,58 @@ ID_Notes("2.24 4/20/94");
 #ifdef	DEBUGMODE
 static struct liststats {
 	int  inuse;
-} cloc, crem, users, servs, links, classs, aconfs;
+} cloc, crem, users, servs, links;
 
 #endif
-
-void outofmemory();
 
 MODVAR int  flinks = 0;
 MODVAR int  freelinks = 0;
 MODVAR Link *freelink = NULL;
 MODVAR Member *freemember = NULL;
 MODVAR Membership *freemembership = NULL;
-MODVAR MembershipL *freemembershipL = NULL;
 MODVAR int  numclients = 0;
+
+// TODO: Document whether servers are included or excluded in these lists...
+
+MODVAR struct list_head unknown_list;		/**< Local clients in handshake (may become a user or server later) */
+MODVAR struct list_head lclient_list;		/**< Local clients (users only, right?) */
+MODVAR struct list_head client_list;		/**< All clients - local and remote (not in handshake) */
+MODVAR struct list_head server_list;		/**< Locally connected servers */
+MODVAR struct list_head oper_list;		/**< Locally connected IRC Operators */
+MODVAR struct list_head global_server_list;	/**< All servers (local and remote) */
+MODVAR struct list_head dead_list;		/**< All dead clients (local and remote) that will soon be freed in the main loop */
+
+static mp_pool_t *client_pool = NULL;
+static mp_pool_t *local_client_pool = NULL;
+static mp_pool_t *user_pool = NULL;
+static mp_pool_t *link_pool = NULL;
 
 void initlists(void)
 {
 #ifdef	DEBUGMODE
-	bzero((char *)&cloc, sizeof(cloc));
-	bzero((char *)&crem, sizeof(crem));
-	bzero((char *)&users, sizeof(users));
-	bzero((char *)&servs, sizeof(servs));
-	bzero((char *)&links, sizeof(links));
-	bzero((char *)&classs, sizeof(classs));
+	memset(&cloc, 0, sizeof(cloc));
+	memset(&crem, 0, sizeof(crem));
+	memset(&users, 0, sizeof(users));
+	memset(&servs, 0, sizeof(servs));
+	memset(&links, 0, sizeof(links));
 #endif
-}
 
-void outofmemory(void)
-{
-	Debug((DEBUG_FATAL, "Out of memory: restarting server..."));
-	restart("Out of Memory");
-}
+	INIT_LIST_HEAD(&client_list);
+	INIT_LIST_HEAD(&lclient_list);
+	INIT_LIST_HEAD(&server_list);
+	INIT_LIST_HEAD(&oper_list);
+	INIT_LIST_HEAD(&unknown_list);
+	INIT_LIST_HEAD(&global_server_list);
+	INIT_LIST_HEAD(&dead_list);
 
+	client_pool = mp_pool_new(sizeof(Client), 512 * 1024);
+	local_client_pool = mp_pool_new(sizeof(LocalClient), 512 * 1024);
+	user_pool = mp_pool_new(sizeof(User), 512 * 1024);
+	link_pool = mp_pool_new(sizeof(Link), 512 * 1024);
+}
 
 /*
-** Create a new aClient structure and set it to initial state.
+** Create a new Client structure and set it to initial state.
 **
 **	from == NULL,	create local client (a client connected
 **			to a socket).
@@ -100,132 +90,151 @@ void outofmemory(void)
 **			associated with the client defined by
 **			'from'). ('from' is a local client!!).
 */
-aClient *make_client(aClient *from, aClient *servr)
+Client *make_client(Client *from, Client *servr)
 {
-	aClient *cptr = NULL;
-	unsigned size = CLIENT_REMOTE_SIZE;
-
-	/*
-	 * Check freelists first to see if we can grab a client without
-	 * having to call malloc.
-	 */
-	if (!from)
-		size = CLIENT_LOCAL_SIZE;
-
-	if (!(cptr = (aClient *)MyMalloc(size)))
-		outofmemory();
-	bzero((char *)cptr, (int)size);
+	Client *client = mp_pool_get(client_pool);
+	memset(client, 0, sizeof(Client));
 
 #ifdef	DEBUGMODE
-	if (size == CLIENT_LOCAL_SIZE)
+	if (!from)
 		cloc.inuse++;
 	else
 		crem.inuse++;
 #endif
 
-	/* Note:  structure is zero (calloc) */
-	cptr->from = from ? from : cptr;	/* 'from' of local client is self! */
-	cptr->next = NULL;	/* For machines with NON-ZERO NULL pointers >;) */
-	cptr->prev = NULL;
-	cptr->hnext = NULL;
-	cptr->user = NULL;
-	cptr->serv = NULL;
-	cptr->srvptr = servr;
-	cptr->status = STAT_UNKNOWN;
-	
-	(void)strcpy(cptr->username, "unknown");
-	if (size == CLIENT_LOCAL_SIZE)
+	/* Note: all fields are already NULL/0, no need to set here */
+	client->direction = from ? from : client;	/* 'from' of local client is self! */
+	client->srvptr = servr;
+	client->status = CLIENT_STATUS_UNKNOWN;
+
+	INIT_LIST_HEAD(&client->client_node);
+	INIT_LIST_HEAD(&client->client_hash);
+	INIT_LIST_HEAD(&client->id_hash);
+
+	strcpy(client->ident, "unknown");
+	if (!from)
 	{
-		cptr->since = cptr->lasttime =
-		    cptr->lastnick = cptr->firsttime = TStime();
-		cptr->class = NULL;
-		cptr->passwd = NULL;
-		cptr->sockhost[0] = '\0';
-		cptr->buffer[0] = '\0';
-		cptr->authfd = -1;
-		cptr->fd = -1;
-	} else {
-		cptr->fd = -256;
+		/* Local client */
+		const char *id;
+		
+		client->local = mp_pool_get(local_client_pool);
+		memset(client->local, 0, sizeof(LocalClient));
+		
+		INIT_LIST_HEAD(&client->lclient_node);
+		INIT_LIST_HEAD(&client->special_node);
+
+		client->local->since = client->local->lasttime =
+		client->lastnick = client->local->firsttime =
+		client->local->last = TStime();
+		client->local->class = NULL;
+		client->local->passwd = NULL;
+		client->local->sockhost[0] = '\0';
+		client->local->authfd = -1;
+		client->local->fd = -1;
+
+		dbuf_queue_init(&client->local->recvQ);
+		dbuf_queue_init(&client->local->sendQ);
+
+		while (hash_find_id((id = uid_get()), NULL) != NULL)
+			;
+		strlcpy(client->id, id, sizeof client->id);
+		add_to_id_hash_table(client->id, client);
 	}
-	return (cptr);
+	return client;
 }
 
-void free_client(aClient *cptr)
+void free_client(Client *client)
 {
-	if (MyConnect(cptr))
+	if (!list_empty(&client->client_node))
+		list_del(&client->client_node);
+
+	if (MyConnect(client))
 	{
-		if (cptr->passwd)
-			MyFree((char *)cptr->passwd);
-		if (cptr->error_str)
-			MyFree(cptr->error_str);
-#ifdef ZIP_LINKS
-		if (cptr->zip)
-			zip_free(cptr);
-#endif
-		if (cptr->hostp)
-			unreal_free_hostent(cptr->hostp);
+		if (!list_empty(&client->lclient_node))
+			list_del(&client->lclient_node);
+		if (!list_empty(&client->special_node))
+			list_del(&client->special_node);
+
+		RunHook(HOOKTYPE_FREE_CLIENT, client);
+		if (client->local)
+		{
+			safe_free(client->local->passwd);
+			safe_free(client->local->error_str);
+			if (client->local->hostp)
+				unreal_free_hostent(client->local->hostp);
+			
+			mp_pool_release(client->local);
+		}
+		if (*client->id)
+		{
+			/* This is already del'd in exit_one_client, so we
+			 * only have it here in case a shortcut was taken,
+			 * such as from add_connection() to free_client().
+			 */
+			del_from_id_hash_table(client->id, client);
+		}
 	}
-	MyFree((char *)cptr);
+	
+	safe_free(client->ip);
+
+	mp_pool_release(client);
 }
 
 /*
 ** 'make_user' add's an User information block to a client
 ** if it was not previously allocated.
 */
-anUser *make_user(aClient *cptr)
+User *make_user(Client *client)
 {
-	anUser *user;
+	User *user;
 
-	user = cptr->user;
+	user = client->user;
 	if (!user)
 	{
-		user = (anUser *)MyMallocEx(sizeof(anUser));
+		user = mp_pool_get(user_pool);
+		memset(user, 0, sizeof(User));
+
 #ifdef	DEBUGMODE
 		users.inuse++;
 #endif
-		user->swhois = NULL;
-		user->away = NULL;
-#ifdef NO_FLOOD_AWAY
-		user->flood.away_t = 0;
-		user->flood.away_c = 0;
-#endif
-		user->refcnt = 1;
-		user->joined = 0;
-		user->channel = NULL;
-		user->invited = NULL;
-		user->silence = NULL;
-		user->server = NULL;
 		strlcpy(user->svid, "0", sizeof(user->svid));
-		user->lopt = NULL;
-		user->whowas = NULL;
-		user->snomask = 0;
-		*user->realhost = '\0';
+		if (client->ip)
+		{
+			/* initially set client->user->realhost to IP */
+			strlcpy(user->realhost, client->ip, sizeof(user->realhost));
+		} else {
+			*user->realhost = '\0';
+		}
 		user->virthost = NULL;
-		user->ip_str = NULL;
-		cptr->user = user;		
+		client->user = user;		
 	}
 	return user;
 }
 
-aServer *make_server(aClient *cptr)
+Server *make_server(Client *client)
 {
-
-	aServer *serv = cptr->serv;
+	Server *serv = client->serv;
 
 	if (!serv)
 	{
-		serv = (aServer *)MyMallocEx(sizeof(aServer));
+		serv = safe_alloc(sizeof(Server));
 #ifdef	DEBUGMODE
 		servs.inuse++;
 #endif
-		serv->user = NULL;
 		*serv->by = '\0';
-		serv->numeric = 0;
 		serv->users = 0;
 		serv->up = NULL;
-		cptr->serv = serv;
+		client->serv = serv;
 	}
-	return cptr->serv;
+	if (strlen(client->id) > 3)
+	{
+		/* Probably the auto-generated UID for a server that
+		 * still uses the old protocol (without SID).
+		 */
+		del_from_id_hash_table(client->id, client);
+		*client->id = '\0';
+	}
+	return client->serv;
 }
 
 /*
@@ -233,105 +242,109 @@ aServer *make_server(aClient *cptr)
 **	Decrease user reference count by one and realease block,
 **	if count reaches 0
 */
-void free_user(anUser *user, aClient *cptr)
+void free_user(Client *client)
 {
-	if (--user->refcnt <= 0)
+	RunHook(HOOKTYPE_FREE_USER, client);
+	safe_free(client->user->away);
+	if (client->user->swhois)
 	{
-		if (user->away)
-			MyFree(user->away);
-		if (user->swhois)
-			MyFree(user->swhois);
-		if (user->virthost)
-			MyFree(user->virthost);
-		if (user->ip_str)
-			MyFree(user->ip_str);
-		if (user->operlogin)
-			MyFree(user->operlogin);
-		/*
-		 * sanity check
-		 */
-		if (user->joined || user->refcnt < 0 ||
-		    user->invited || user->channel)
-			sendto_realops("* %p user (%s!%s@%s) %p %p %p %d %d *",
-			    cptr, cptr ? cptr->name : "<noname>",
-			    user->username, user->realhost, user,
-			    user->invited, user->channel, user->joined,
-			    user->refcnt);
-		MyFree(user);
-#ifdef	DEBUGMODE
-		users.inuse--;
-#endif
+		SWhois *s, *s_next;
+		for (s = client->user->swhois; s; s = s_next)
+		{
+			s_next = s->next;
+			safe_free(s->line);
+			safe_free(s->setby);
+			safe_free(s);
+		}
+		client->user->swhois = NULL;
 	}
+	safe_free(client->user->virthost);
+	safe_free(client->user->operlogin);
+	mp_pool_release(client->user);
+#ifdef	DEBUGMODE
+	users.inuse--;
+#endif
+	client->user = NULL;
 }
 
 /*
  * taken the code from ExitOneClient() for this and placed it here.
  * - avalon
  */
-void remove_client_from_list(aClient *cptr)
+void remove_client_from_list(Client *client)
 {
-	if (IsServer(cptr))
+	list_del(&client->client_node);
+	if (MyConnect(client))
 	{
-		remove_server_from_table(cptr);
-		IRCstats.servers--;
+		if (!list_empty(&client->lclient_node))
+			list_del(&client->lclient_node);
+		if (!list_empty(&client->special_node))
+			list_del(&client->special_node);
 	}
-	if (IsClient(cptr))
+	if (IsServer(client))
 	{
-		if (IsInvisible(cptr))
-		{
-			IRCstats.invisible--;
-		}
-		if (IsOper(cptr) && !IsHideOper(cptr))
-		{
-			IRCstats.operators--;
-			VERIFY_OPERCOUNT(cptr, "rmvlist");
-		}
-		IRCstats.clients--;
-		if (cptr->srvptr && cptr->srvptr->serv)
-			cptr->srvptr->serv->users--;
+		irccounts.servers--;
 	}
-	if (IsUnknown(cptr) || IsConnecting(cptr) || IsHandshake(cptr)
-#ifdef USE_SSL
-		|| IsSSLHandshake(cptr)
-#endif
+	if (IsUser(client))
+	{
+		if (IsInvisible(client))
+		{
+			irccounts.invisible--;
+		}
+		if (IsOper(client) && !IsHideOper(client))
+		{
+			irccounts.operators--;
+			VERIFY_OPERCOUNT(client, "rmvlist");
+		}
+		irccounts.clients--;
+		if (client->srvptr && client->srvptr->serv)
+			client->srvptr->serv->users--;
+	}
+	if (IsUnknown(client) || IsConnecting(client) || IsHandshake(client)
+		|| IsTLSHandshake(client)
 	)
-		IRCstats.unknown--;
-	checklist();
-	if (cptr->prev)
-		cptr->prev->next = cptr->next;
-	else
+		irccounts.unknown--;
+
+	if (IsUser(client))	/* Only persons can have been added before */
 	{
-		client = cptr->next;
-		if (client)
-			client->prev = NULL;
-	}
-	if (cptr->next)
-		cptr->next->prev = cptr->prev;
-	if (IsPerson(cptr))	/* Only persons can have been added before */
-	{
-		add_history(cptr, 0);
-		off_history(cptr);	/* Remove all pointers to cptr */
+		add_history(client, 0);
+		off_history(client);	/* Remove all pointers to client */
 	}
 	
-	if (cptr->user)
-		(void)free_user(cptr->user, cptr);
-	if (cptr->serv)
+	if (client->user)
+		free_user(client);
+	if (client->serv)
 	{
-		if (cptr->serv->user)
-			free_user(cptr->serv->user, cptr);
-		MyFree((char *)cptr->serv);
+		safe_free(client->serv->features.usermodes);
+		safe_free(client->serv->features.chanmodes[0]);
+		safe_free(client->serv->features.chanmodes[1]);
+		safe_free(client->serv->features.chanmodes[2]);
+		safe_free(client->serv->features.chanmodes[3]);
+		safe_free(client->serv->features.software);
+		safe_free(client->serv->features.nickchars);
+		safe_free(client->serv);
 #ifdef	DEBUGMODE
 		servs.inuse--;
 #endif
 	}
 #ifdef	DEBUGMODE
-	if (cptr->fd == -2)
+	if (client->local && client->local->fd == -2)
 		cloc.inuse--;
 	else
 		crem.inuse--;
 #endif
-	(void)free_client(cptr);
+	if (!list_empty(&client->client_node))
+		abort();
+	if (!list_empty(&client->client_hash))
+		abort();
+	if (!list_empty(&client->id_hash))
+		abort();
 	numclients--;
+	/* Add to killed clients list */
+	list_add(&client->client_node, &dead_list);
+	// THIS IS NOW DONE IN THE MAINLOOP --> free_client(client);
+	SetDead(client);
+	SetDeadSocket(client);
 	return;
 }
 
@@ -341,108 +354,29 @@ void remove_client_from_list(aClient *cptr)
  * in this file, shouldnt they ?  after all, this is list.c, isnt it ?
  * -avalon
  */
-void add_client_to_list(aClient *cptr)
+void add_client_to_list(Client *client)
 {
-	/*
-	 * since we always insert new clients to the top of the list,
-	 * this should mean the "me" is the bottom most item in the list.
-	 */
-	cptr->next = client;
-	client = cptr;
-	if (cptr->next)
-		cptr->next->prev = cptr;
-	return;
+	list_add(&client->client_node, &client_list);
 }
 
-/*
- * Look for ptr in the linked listed pointed to by link.
+/** Make a new link entry.
+ * @note  When you no longer need it, call free_link()
+ *        NEVER call free() or safe_free() on it.
  */
-Link *find_user_link(Link *lp, aClient *ptr)
-{
-	if (ptr)
-		while (lp)
-		{
-			if (lp->value.cptr == ptr)
-				return (lp);
-			lp = lp->next;
-		}
-	return NULL;
-}
-
-/* Based on find_str_link() from bahamut -- codemastr */
-int find_str_match_link(Link *lp, char *charptr)
-{
-	if (!charptr)
-		return 0;
-	for (; lp; lp = lp->next) {
-		if(!match(lp->value.cp, charptr))
-			return 1;
-	}
-	return 0;
-}
-
-void free_str_list(Link *lp)
-{
-	Link *next;
-
-
-	while (lp)
-	{
-		next = lp->next;
-		MyFree((char *)lp->value.cp);
-		free_link(lp);
-		lp = next;
-	}
-
-	return;
-}
-
-
-#define	LINKSIZE	(4072/sizeof(Link))
-
 Link *make_link(void)
 {
-	Link *lp;
-	int  i;
-
-	/* "caching" slab-allocator... ie. we're allocating one pages
-	   (hopefully - upped to the Linux default, not dbuf.c) worth of 
-	   link-structures at time to avoid all the malloc overhead.
-	   All links left free from this process or separately freed 
-	   by a call to free_link() are moved over to freelink-list.
-	   Impact? Let's see... -Donwulff */
-	/* Impact is a huge memory leak -Stskeeps
-	   hope this implementation works a little bit better */
-	if (freelink == NULL)
-	{
-		for (i = 1; i <= LINKSIZE; i++)
-		{
-			lp = (Link *)MyMalloc(sizeof(Link));
-			lp->next = freelink;
-			freelink = lp;
-		}
-		freelinks = freelinks + LINKSIZE;
-		lp = freelink;
-		freelink = lp->next;
-		freelinks--;
-	}
-	else
-	{
-		lp = freelink;
-		freelink = freelink->next;
-		freelinks--;
-	}
+	Link *l = mp_pool_get(link_pool);
+	memset(l, 0, sizeof(Link));
 #ifdef	DEBUGMODE
 	links.inuse++;
 #endif
-	return lp;
+	return l;
 }
 
+/** Releases a link that was previously created with make_link() */
 void free_link(Link *lp)
 {
-	lp->next = freelink;
-	freelink = lp;
-	freelinks++;
+	mp_pool_release(lp);
 
 #ifdef	DEBUGMODE
 	links.inuse--;
@@ -453,7 +387,7 @@ Ban *make_ban(void)
 {
 	Ban *lp;
 
-	lp = (Ban *) MyMalloc(sizeof(Ban));
+	lp = safe_alloc(sizeof(Ban));
 #ifdef	DEBUGMODE
 	links.inuse++;
 #endif
@@ -462,72 +396,14 @@ Ban *make_ban(void)
 
 void free_ban(Ban *lp)
 {
-	MyFree((char *)lp);
+	safe_free(lp);
 #ifdef	DEBUGMODE
 	links.inuse--;
 #endif
 }
 
-aClass *make_class(void)
+void add_ListItem(ListStruct *item, ListStruct **list)
 {
-	aClass *tmp;
-
-	tmp = (aClass *)MyMalloc(sizeof(aClass));
-#ifdef	DEBUGMODE
-	classs.inuse++;
-#endif
-	return tmp;
-}
-
-void free_class(aClass *tmp)
-{
-	MyFree((char *)tmp);
-#ifdef	DEBUGMODE
-	classs.inuse--;
-#endif
-}
-
-#ifdef	DEBUGMODE
-void send_listinfo(aClient *cptr, char *name)
-{
-	int  inuse = 0, mem = 0, tmp = 0;
-
-	sendto_one(cptr, ":%s %d %s :Local: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, inuse += cloc.inuse,
-	    tmp = cloc.inuse * CLIENT_LOCAL_SIZE);
-	mem += tmp;
-	sendto_one(cptr, ":%s %d %s :Remote: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name,
-	    crem.inuse, tmp = crem.inuse * CLIENT_REMOTE_SIZE);
-	mem += tmp;
-	inuse += crem.inuse;
-	sendto_one(cptr, ":%s %d %s :Users: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, users.inuse,
-	    tmp = users.inuse * sizeof(anUser));
-	mem += tmp;
-	inuse += users.inuse,
-	    sendto_one(cptr, ":%s %d %s :Servs: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, servs.inuse,
-	    tmp = servs.inuse * sizeof(aServer));
-	mem += tmp;
-	inuse += servs.inuse,
-	    sendto_one(cptr, ":%s %d %s :Links: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, links.inuse,
-	    tmp = links.inuse * sizeof(Link));
-	mem += tmp;
-	inuse += links.inuse,
-	    sendto_one(cptr, ":%s %d %s :Classes: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, classs.inuse,
-	    tmp = classs.inuse * sizeof(aClass));
-	mem += tmp;
-	inuse += aconfs.inuse,
-	    sendto_one(cptr, ":%s %d %s :Totals: inuse %d %d",
-	    me.name, RPL_STATSDEBUG, name, inuse, mem);
-}
-
-#endif
-
-void add_ListItem(ListStruct *item, ListStruct **list) {
 	item->next = *list;
 	item->prev = NULL;
 	if (*list)
@@ -535,177 +411,195 @@ void add_ListItem(ListStruct *item, ListStruct **list) {
 	*list = item;
 }
 
-ListStruct *del_ListItem(ListStruct *item, ListStruct **list) {
-	ListStruct *l, *ret;
+/* (note that if you end up using this, you should probably
+ *  use a circular linked list instead)
+ */
+void append_ListItem(ListStruct *item, ListStruct **list)
+{
+	ListStruct *l;
 
-	for (l = *list; l; l = l->next) {
-		if (l == item) {
-			ret = item->next;
-			if (l->prev)
-				l->prev->next = l->next;
-			else
-				*list = l->next;
-			if (l->next)
-				l->next->prev = l->prev;
-			return ret;
+	if (!*list)
+	{
+		*list = item;
+		return;
+	}
+
+	for (l = *list; l->next; l = l->next);
+	l->next = item;
+	item->prev = l;
+}
+
+void del_ListItem(ListStruct *item, ListStruct **list)
+{
+	if (!item)
+		return;
+
+	if (item->prev)
+		item->prev->next = item->next;
+	if (item->next)
+		item->next->prev = item->prev;
+	if (*list == item)
+		*list = item->next; /* new head */
+	/* And update 'item', prev/next should point nowhere anymore */
+	item->prev = item->next = NULL;
+}
+
+/** Add item to list with a 'priority'.
+ * If there are multiple items with the same priority then it will be
+ * added as the last item within.
+ */
+void add_ListItemPrio(ListStructPrio *new, ListStructPrio **list, int priority)
+{
+	ListStructPrio *x, *last = NULL;
+	
+	if (!*list)
+	{
+		/* We are the only item. Easy. */
+		*list = new;
+		return;
+	}
+	
+	for (x = *list; x; x = x->next)
+	{
+		last = x;
+		if (x->priority >= priority)
+			break;
+	}
+
+	if (x)
+	{
+		if (x->prev)
+		{
+			/* We will insert ourselves just before this item */
+			new->prev = x->prev;
+			new->next = x;
+			x->prev->next = new;
+			x->prev = new;
+		} else {
+			/* We are the new head */
+			*list = new;
+			new->next = x;
+			x->prev = new;
+		}
+	} else
+	{
+		/* We are the last item */
+		last->next = new;
+		new->prev = last;
+	}
+}
+
+/* NameList functions */
+
+void _add_name_list(NameList **list, char *name)
+{
+	NameList *e = safe_alloc(sizeof(NameList)+strlen(name));
+	strcpy(e->name, name); /* safe, allocated above */
+	AddListItem(e, *list);
+}
+
+void _free_entire_name_list(NameList *n)
+{
+	NameList *n_next;
+
+	for (; n; n = n_next)
+	{
+		n_next = n->next;
+		safe_free(n);
+	}
+}
+
+void _del_name_list(NameList **list, char *name)
+{
+	NameList *e = find_name_list(*list, name);
+	if (e)
+	{
+		DelListItem(e, *list);
+		safe_free(e);
+		return;
+	}
+}
+
+/** Find an entry in a NameList - case insensitive comparisson.
+ * @ingroup ListFunctions
+ */
+NameList *find_name_list(NameList *list, char *name)
+{
+	NameList *e;
+
+	for (e = list; e; e = e->next)
+	{
+		if (!strcasecmp(e->name, name))
+		{
+			return e;
 		}
 	}
 	return NULL;
 }
 
-#ifdef JOINTHROTTLE
-/** Adds a aJFlood entry to user & channel and returns entry.
- * NOTE: Does not check for already-existing-entry
+/** Find an entry in a NameList by running match_simple() on it.
+ * @ingroup ListFunctions
  */
-aJFlood *cmodej_addentry(aClient *cptr, aChannel *chptr)
+NameList *find_name_list_match(NameList *list, char *name)
 {
-aJFlood *e;
+	NameList *e;
 
-#ifdef DEBUGMODE
-	if (!IsPerson(cptr))
-		abort();
-
-	for (e=cptr->user->jflood; e; e=e->next_u)
-		if (e->chptr == chptr)
-			abort();
-
-	for (e=chptr->jflood; e; e=e->next_c)
-		if (e->cptr == cptr)
-			abort();
-#endif
-
-	e = MyMallocEx(sizeof(aJFlood));
-	e->cptr = cptr;
-	e->chptr = chptr;
-	e->prev_u = e->prev_c = NULL;
-	e->next_u = cptr->user->jflood;
-	e->next_c = chptr->jflood;
-	if (cptr->user->jflood)
-		cptr->user->jflood->prev_u = e;
-	if (chptr->jflood)
-		chptr->jflood->prev_c = e;
-	cptr->user->jflood = chptr->jflood = e;
-
-	return e;
-}
-
-/** Removes an individual entry from list and frees it.
- */
-void cmodej_delentry(aJFlood *e)
-{
-	/* remove from user.. */
-	if (e->prev_u)
-		e->prev_u->next_u = e->next_u;
-	else
-		e->cptr->user->jflood = e->next_u; /* new head */
-	if (e->next_u)
-		e->next_u->prev_u = e->prev_u;
-
-	/* remove from channel.. */
-	if (e->prev_c)
-		e->prev_c->next_c = e->next_c;
-	else
-		e->chptr->jflood = e->next_c; /* new head */
-	if (e->next_c)
-		e->next_c->prev_c = e->prev_c;
-
-	/* actually free it */
-	MyFree(e);
-}
-
-/** Removes all entries belonging to user from all lists and free them. */
-void cmodej_deluserentries(aClient *cptr)
-{
-aJFlood *e, *e_next;
-
-	for (e=cptr->user->jflood; e; e=e_next)
+	for (e = list; e; e = e->next)
 	{
-		e_next = e->next_u;
-
-		/* remove from channel.. */
-		if (e->prev_c)
-			e->prev_c->next_c = e->next_c;
-		else
-			e->chptr->jflood = e->next_c; /* new head */
-		if (e->next_c)
-			e->next_c->prev_c = e->prev_c;
-
-		/* actually free it */
-		MyFree(e);
-	}
-	cptr->user->jflood = NULL;
-}
-
-/** Removes all entries belonging to channel from all lists and free them. */
-void cmodej_delchannelentries(aChannel *chptr)
-{
-aJFlood *e, *e_next;
-
-	for (e=chptr->jflood; e; e=e_next)
-	{
-		e_next = e->next_c;
-		
-		/* remove from user.. */
-		if (e->prev_u)
-			e->prev_u->next_u = e->next_u;
-		else
-			e->cptr->user->jflood = e->next_u; /* new head */
-		if (e->next_u)
-			e->next_u->prev_u = e->prev_u;
-
-		/* actually free it */
-		MyFree(e);
-	}
-	chptr->jflood = NULL;
-}
-
-/** Regulary cleans up cmode-j user/chan structs */
-EVENT(cmodej_cleanup_structs)
-{
-aJFlood *e, *e_next;
-int i;
-aClient *cptr;
-aChannel *chptr;
-int t;
-CmodeParam *cmp;
-#ifdef DEBUGMODE
-int freed=0;
-#endif
-
-	for (chptr = channel; chptr; chptr=chptr->nextch)
-	{
-		if (!chptr->jflood)
-			continue;
-		t=0;
-		/* t will be kept at 0 if not found or if mode not set,
-		 * but DO still check since there are entries left as indicated by ->jflood!
-		 */
-		if (chptr->mode.extmode & EXTMODE_JOINTHROTTLE)
+		if (match_simple(e->name, name))
 		{
-			for (cmp = chptr->mode.extmodeparam; cmp; cmp=cmp->next)
-				if (cmp->flag == 'j')
-					t = ((aModejEntry *)cmp)->t;
-		}
-
-		for (e = chptr->jflood; e; e = e_next)
-		{
-			e_next = e->next_c;
-			
-			if (e->firstjoin + t < TStime())
-			{
-				cmodej_delentry(e);
-#ifdef DEBUGMODE
-				freed++;
-#endif
-			}
+			return e;
 		}
 	}
-
-#ifdef DEBUGMODE
-	if (freed)
-		ircd_log(LOG_ERROR, "cmodej_cleanup_structs: %d entries freed [%d bytes]", freed, freed * sizeof(aJFlood));
-#endif
+	return NULL;
 }
 
-#endif		
-	
+void add_nvplist(NameValuePrioList **lst, int priority, char *name, char *value)
+{
+	va_list vl;
+	NameValuePrioList *e = safe_alloc(sizeof(NameValuePrioList));
+	safe_strdup(e->name, name);
+	if (value && *value)
+		safe_strdup(e->value, value);
+	AddListItemPrio(e, *lst, priority);
+}
+
+NameValuePrioList *find_nvplist(NameValuePrioList *list, char *name)
+{
+	NameValuePrioList *e;
+
+	for (e = list; e; e = e->next)
+	{
+		if (!strcasecmp(e->name, name))
+		{
+			return e;
+		}
+	}
+	return NULL;
+}
+
+void add_fmt_nvplist(NameValuePrioList **lst, int priority, char *name, FORMAT_STRING(const char *format), ...)
+{
+	char value[512];
+	va_list vl;
+	*value = '\0';
+	if (format)
+	{
+		va_start(vl, format);
+		vsnprintf(value, sizeof(value), format, vl);
+		va_end(vl);
+	}
+	add_nvplist(lst, priority, name, value);
+}
+
+void free_nvplist(NameValuePrioList *lst)
+{
+	NameValuePrioList *e, *e_next;
+	for (e = lst; e; e = e_next)
+	{
+		e_next = e->next;
+		safe_free(e->name);
+		safe_free(e->value);
+		safe_free(e);
+	}
+}

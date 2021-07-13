@@ -1,0 +1,323 @@
+#!/bin/sh
+
+PID_FILE="@PIDFILE@"
+PID_BACKUP="@PIDFILE@.bak"
+if [ ! -f @BINDIR@/unrealircd ]; then
+	echo "ERROR: Could not find the IRCd binary (@BINDIR@/unrealircd)"
+	echo "This could mean two things:"
+	echo "1) You forgot to run 'make install' after running 'make'"
+	echo "2) You answered a ./Config question incorrectly"
+	exit
+fi
+if [ "$1" = "start" ] ; then
+	echo "Starting UnrealIRCd"
+	if [ -r $PID_FILE ] ; then
+		mv -f $PID_FILE $PID_BACKUP
+	fi
+	# When built with --with-asan, ASan does not dump core by default because
+	# older gcc/clang might dump a 16TB core file. We explicitly enable it here.
+	export ASAN_OPTIONS="abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1:log_path=@TMPDIR@/unrealircd_asan:detect_leaks=0"
+
+	# Check if ~/Unrealxxx/unrealircd.conf exists but the file
+	# ~/unrealircd/conf/unrealircd.conf does not.
+	# If so, then assume a user-build and give the user a nice hint...
+	if [ ! -f @CONFDIR@/unrealircd.conf -a -f @BUILDDIR@/unrealircd.conf ]; then
+		echo ""
+		echo "There is no unrealircd.conf in @CONFDIR@"
+		echo "However I did find an unrealircd.conf in @BUILDDIR@"
+		echo "With UnrealIRCd 4 you should no longer run the IRCd from @BUILDDIR@."
+		echo "You should 'cd @SCRIPTDIR@' and work from there."
+		echo "See https://www.unrealircd.org/docs/UnrealIRCd_files_and_directories"
+		exit 1
+	fi
+	if [ ! -f @CONFDIR@/unrealircd.conf ]; then
+		echo ""
+		echo "The configuration file does not exist (@CONFDIR@/unrealircd.conf)."
+		echo "Create one using the example configuration file, see the documentation:"
+		echo "https://www.unrealircd.org/docs/Installing_from_source#Creating_a_configuration_file"
+		exit 1
+	fi
+	@BINDIR@/unrealircd
+	if [ $? -ne 0 ] ; then
+		echo "====================================================="
+		echo "UnrealIRCd failed to start. Check above for possible errors."
+		echo "If you don't understand the problem, then have a look at our:"
+		echo "* FAQ (Frequently Asked Questions): https://www.unrealircd.org/docs/FAQ"
+		echo "* Documentation: https://www.unrealircd.org/docs/"
+		echo "====================================================="
+		if [ -r $PID_BACKUP ] ; then
+			mv -f $PID_BACKUP $PID_FILE
+		fi
+		exit 1
+	fi
+	# Now check if we need to create a crash report.
+	@BINDIR@/unrealircd -R
+elif [ "$1" = "stop" ] ; then
+	echo -n "Stopping UnrealIRCd"
+	if [ ! -r $PID_FILE ] ; then
+		echo
+		echo "ERROR: UnrealIRCd is not running"
+		exit 1
+	fi
+	kill -15 `cat $PID_FILE`
+	if [ "$?" != 0 ]; then
+		echo
+		echo "ERROR: UnrealIRCd is not running"
+		exit 1
+	fi
+	# Wait for UnrealIRCd to terminate, but wait 10 seconds max
+	n="0"
+	while [ "$n" -lt 10 ]
+	do
+		echo -n "."
+		if [ ! -r $PID_FILE ] ; then
+			break
+		fi
+		if ! kill -0 `cat $PID_FILE`; then
+			break
+		fi
+		n=`expr $n + 1`
+		sleep 1
+	done
+	echo
+	# In case it is still running, kill it for good.
+	if [ -r $PID_FILE ] ; then
+		kill -9 `cat $PID_FILE` 1>/dev/null 2>&1
+	fi
+elif [ "$1" = "rehash" ] ; then
+	echo "Rehashing UnrealIRCd"
+	if [ ! -r $PID_FILE ] ; then
+		echo "ERROR: UnrealIRCd is not running"
+		exit 1
+	fi
+	kill -1 `cat $PID_FILE`
+	if [ "$?" != 0 ]; then
+		echo "ERROR: UnrealIRCd is not running"
+		exit 1
+	fi
+elif [ "$1" = "restart" ] ; then
+	echo "Restarting UnrealIRCd"
+	$0 stop
+	$0 start
+elif [ "$1" = "croncheck" ] ; then
+	if [ -r $PID_FILE ] ; then
+		kill -CHLD `cat $PID_FILE` 1>/dev/null 2>&1
+		if [ "$?" = 0 ]; then
+			# IRCd is running, bail out silently.
+			exit 0
+		fi
+	fi
+	# PID file not found or found but stale
+	echo "UnrealIRCd is not running. Starting now..."
+	$0 start
+elif [ "$1" = "configtest" ] ; then
+	@BINDIR@/unrealircd -c
+elif [ "$1" = "module" ] ; then
+	shift
+	@BINDIR@/unrealircd -m $*
+elif [ "$1" = "reloadtls" ] ; then
+	echo "Reloading SSL/TLS certificates"
+	if [ ! -r $PID_FILE ] ; then
+		echo "ERROR: UnrealIRCd is not running"
+		exit 1
+	fi
+	kill -USR1 `cat $PID_FILE`
+	if [ "$?" != 0 ]; then
+		echo "ERROR: UnrealIRCd is not running"
+		exit 1
+	fi
+elif [ "$1" = "mkpasswd" ] ; then
+	@BINDIR@/unrealircd -P $2 $3
+elif [ "$1" = "version" ] ; then
+	@BINDIR@/unrealircd -v
+elif [ "$1" = "gencloak" ] ; then
+	@BINDIR@/unrealircd -k
+elif [ "$1" = "upgrade-conf" ] ; then
+	@BINDIR@/unrealircd -U
+elif [ "$1" = "backtrace" ] ; then
+	cd @TMPDIR@
+
+	modpath="@MODULESDIR@"
+
+	# Find the corefile
+	echo "Core files available:"
+	n="0"
+	for i in `echo *core*`
+	do
+		ls -l $i
+		n=`expr $n + 1`
+	done
+
+	if [ "$n" -gt 1 ]; then
+		echo "Type the name of the core file you want to research:"
+		read corefile
+	elif [ "$i" = "*core*" -o "$n" -eq 0 ]; then
+		echo 'No core files found... Nothing to do'
+		echo ''
+		echo 'If you are sure UnrealIRCd crashed, then verify that unreal'
+		echo 'has permission to dump core (type "ulimit -c unlimited" and see'
+		echo 'if you get permission denied errors). Also verify that you did'
+		echo 'not run out of quota.'
+		echo 'If all that is ok, then it might be that UnrealIRCd did not crash but'
+		echo 'got killed by the OS (eg: cpu/mem resource limits), the syadmin,'
+		echo 'or an automated process.'
+		exit 1
+	else
+		corefile="$i"
+	fi
+
+	if [ ! -f "$corefile" ]; then
+		echo "Core file '$corefile' not found"
+	fi
+	if [ ! -s "$corefile" ]; then
+		echo 'Seems the corefile is 0 bytes'
+		echo 'This usually means you need to relax the core file resource limit'
+		echo '(type "ulimit -c unlimited"), or you might have ran out of quota.'
+		exit 1
+	fi
+
+	# This is needed for the script below and is probably also helpful for the
+	# bug report since you usually want to paste this to the development team.
+	export LANG=C
+	export LC_ALL=C
+
+	# The tmp/*.so files are often already deleted. Here we have some
+	# (ugly) scripting to recreate the tmp/*.so links to the modules *.so files...
+	echo 'info sharedlibrary'|gdb @BINDIR@/unrealircd $corefile 2>/dev/null|\
+	grep No|grep tmp/|awk '{ print $2 }'|\
+	awk -F '.' "{ system(\"[ -f $modpath/\" \$2 \"/\" \$3 \".so ] && ln -s $modpath/\" \$2 \"/\" \$3 \".so \" \$0 \" || ln -s $modpath/\" \$2 \".so \" \$0) }"
+	
+	echo ""
+	echo "=================== START HERE ======================"
+	echo "BACKTRACE:"
+
+cat >@TMPDIR@/gdb.commands << __EOF__
+bt
+echo \n
+frame
+echo \n
+x/s backupbuf
+echo \n
+bt 3 full
+quit
+__EOF__
+
+	gdb -batch -x @TMPDIR@/gdb.commands @BINDIR@/unrealircd $corefile
+	rm -f @TMPDIR@/gdb.commands
+	echo "GCC: `gcc -v 2>&1|tail -n 1`"
+	echo "UNAME: `uname -a`"
+	echo "UNREAL: `$0 version`"
+	echo "CORE: `ls -al $corefile`"
+	echo "===================  STOP HERE ======================"
+	echo ""
+	echo "Copy the parts between the START HERE and STOP HERE marker"
+	echo "and report it on https://bugs.unrealircd.org/"
+	echo ""
+	echo 'But before you do, note the following:'
+	echo '1. We do not support modifications of any unrealircd code'
+	echo '   (except for config.h changes).'
+	echo '2. If you are using 3rd party modules we might request you'
+	echo '   to run without them and verify you still crash. This is'
+	echo '   to eleminate any loss of time due to bugs made by others'
+	echo '3. Use a reasonably recent UnrealIRCd version. We fix (crash)bugs'
+	echo '   all the time so your bug might as well be fixed already.'
+	echo ""
+	echo "Thanks!"
+elif [ "$1" = "spki" -o "$1" = "spkifp" ] ; then
+	CERT="@CONFDIR@/tls/server.cert.pem"
+	if [ "$2" != "" ]; then
+		CERT="$2"
+	fi
+	if [ ! -f "$CERT" ]; then
+		echo "Could not open certificate: $CERT"
+		exit 1
+	fi
+	openssl x509 -noout -in "$CERT" -pubkey | openssl asn1parse -noout -inform pem -out @TMPDIR@/tmp.public.key
+	HASH="`openssl dgst -sha256 -binary @TMPDIR@/tmp.public.key | openssl enc -base64`"
+	rm -f @TMPDIR@/tmp.public.key
+	if [ "$HASH" = "" ]; then
+		echo "Sorry, something went wrong when generating the SPKI fingerprint."
+		echo "Is the 'openssl' tool properly installed?"
+		exit 1
+	fi
+	echo "The SPKI fingerprint for certificate $CERT is:"
+	echo "$HASH"
+	echo ""
+	echo "You normally add this password on the other side of the link as:"
+	echo "password \"$HASH\" { spkifp; };"
+	echo ""
+elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
+	if [ ! -d "@BUILDDIR@" ]; then
+		echo "UnrealIRCd source not found. Sorry, it is not possible to patch."
+		exit 1
+	fi
+	if [ "$2" = "" ]; then
+		echo "Argument required: ./unrealircd <hot-patch|cold-patch> <name-of-patch>"
+		exit 1
+	fi
+	if ! wget --help 1>/dev/null 2>&1; then
+		echo "The tool 'wget' is missing, which is used by this script."
+		echo "On Linux consider running 'apt install wget' or a similar command."
+		exit 1
+	fi
+	cd "@BUILDDIR@" || exit 1
+
+	# Weird way to get version, but ok.
+	UNREALVER="`./configure --version|head -n1|awk '{ print $3 }'`"
+	wget -O patch "https://www.unrealircd.org/patch?type=$1&patch=$2&version=$UNREALVER" || exit 1
+
+	# A patch file of 0 bytes means the patch is not needed
+	if [ -f patch -a ! -s patch ]; then
+		echo "This UnrealIRCd version does not require that patch"
+	fi
+
+	if patch --dry-run -p1 -R <patch 1>/dev/null 2>&1; then
+		echo "Patch already applied. Nothing to do."
+		exit 1
+	fi
+
+	if ! patch -p1 <patch; then
+		echo "Patch failed to apply"
+		exit 1
+	fi
+
+	echo "Patch applied successfully. Now recompiling..."
+	make || gmake || exit 1
+	make install || gmake install || exit 1
+
+	cd -
+	if [ "$1" = "hot-patch" ]; then
+		echo "Patch applied successfully and installed. Rehashing your IRCd..."
+		./unrealircd rehash
+		echo "Done! All should be good now."
+	else
+		echo "Patch applied successfully. You must now restart your IRC server."
+	fi
+elif [ "$1" = "upgrade" ] ; then
+	@BINDIR@/unrealircd-upgrade-script $*
+elif [ "$1" = "genlinkblock" ] ; then
+	@BINDIR@/unrealircd -L
+else
+	if [ "$1" = "" ]; then
+		echo "This script expects a parameter. Use:"
+	else
+		echo "Unrecognized parameter '$1'. Use:"
+	fi
+	echo "unrealircd configtest    Test the configuration file"
+	echo "unrealircd start         Start the IRC Server"
+	echo "unrealircd stop          Stop (kill) the IRC Server"
+	echo "unrealircd rehash        Reload the configuration file"
+	echo "unrealircd reloadtls     Reload the SSL/TLS certificates"
+	echo "unrealircd restart       Restart the IRC Server (stop+start)"
+	echo "unrealircd upgrade       Upgrade UnrealIRCd to the latest version"
+	echo "unrealircd upgrade-conf  Upgrade the configuration file from UnrealIRCd"
+	echo "                         3.2.x/4.x to 5.x format"
+	echo "unrealircd mkpasswd      Hash a password"
+	echo "unrealircd version       Display the UnrealIRCd version"
+	echo "unrealircd module        Install and uninstall 3rd party modules"
+	echo "unrealircd croncheck     For use in crontab: this checks if the server"
+	echo "                         is running. If not, the server is started."
+	echo "unrealircd genlinkblock  Generate link { } block for the other side."
+	echo "unrealircd gencloak      Display 3 random cloak keys"
+	echo "unrealircd spkifp        Display SPKI Fingerprint"
+fi
