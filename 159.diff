@@ -1,0 +1,13 @@
+diff --git a/src/modules/wallops.c b/src/modules/wallops.c
+index 869e930eb..9d8acc95c 100644
+--- a/src/modules/wallops.c
++++ b/src/modules/wallops.c
+@@ -73,5 +73,8 @@ CMD_FUNC(cmd_wallops)
+ 		return;
+ 	}
+ 
++	if (MyUser(client))
++		sendto_one(client, NULL, ":%s WALLOPS :%s", client->name, message);
++
+ 	sendto_ops_butone(client->direction, client, ":%s WALLOPS :%s", client->name, message);
+ }
