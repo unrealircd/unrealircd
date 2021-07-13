@@ -1,4 +1,4 @@
-UnrealIRCd 5.2.2-git Release Notes
+UnrealIRCd 6.6.6-git Release Notes
 ===================================
 This is git, latest bleeding edge. It is not meant to be used on production servers.
 

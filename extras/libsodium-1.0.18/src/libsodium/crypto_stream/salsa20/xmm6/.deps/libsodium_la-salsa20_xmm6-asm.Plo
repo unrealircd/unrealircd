@@ -1,0 +1,4 @@
+crypto_stream/salsa20/xmm6/libsodium_la-salsa20_xmm6-asm.lo: \
+ crypto_stream/salsa20/xmm6/salsa20_xmm6-asm.S /usr/include/stdc-predef.h
+
+/usr/include/stdc-predef.h:
