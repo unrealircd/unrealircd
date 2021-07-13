@@ -1,0 +1,96 @@
+crypto_scalarmult/curve25519/libsodium_la-scalarmult_curve25519.lo: \
+ crypto_scalarmult/curve25519/scalarmult_curve25519.c \
+ /usr/include/stdc-predef.h include/sodium/crypto_scalarmult_curve25519.h \
+ /usr/lib/gcc/x86_64-linux-gnu/8/include/stddef.h include/sodium/export.h \
+ /usr/lib/gcc/x86_64-linux-gnu/8/include/stdint.h /usr/include/stdint.h \
+ /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+ /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+ /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+ /usr/include/x86_64-linux-gnu/bits/long-double.h \
+ /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+ /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+ /usr/include/x86_64-linux-gnu/bits/types.h \
+ /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+ /usr/include/x86_64-linux-gnu/bits/wchar.h \
+ /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+ /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+ /usr/lib/gcc/x86_64-linux-gnu/8/include-fixed/limits.h \
+ /usr/lib/gcc/x86_64-linux-gnu/8/include-fixed/syslimits.h \
+ /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+ /usr/include/linux/limits.h \
+ /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
+ include/sodium/private/implementations.h \
+ crypto_scalarmult/curve25519/scalarmult_curve25519.h \
+ include/sodium/runtime.h \
+ crypto_scalarmult/curve25519/sandy2x/curve25519_sandy2x.h \
+ crypto_scalarmult/curve25519/ref10/x25519_ref10.h \
+ crypto_scalarmult/curve25519/ref10/../scalarmult_curve25519.h
+
+/usr/include/stdc-predef.h:
+
+include/sodium/crypto_scalarmult_curve25519.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/8/include/stddef.h:
+
+include/sodium/export.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/8/include/stdint.h:
+
+/usr/include/stdint.h:
+
+/usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
+
+/usr/include/features.h:
+
+/usr/include/x86_64-linux-gnu/sys/cdefs.h:
+
+/usr/include/x86_64-linux-gnu/bits/wordsize.h:
+
+/usr/include/x86_64-linux-gnu/bits/long-double.h:
+
+/usr/include/x86_64-linux-gnu/gnu/stubs.h:
+
+/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
+
+/usr/include/x86_64-linux-gnu/bits/types.h:
+
+/usr/include/x86_64-linux-gnu/bits/typesizes.h:
+
+/usr/include/x86_64-linux-gnu/bits/wchar.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdint-uintn.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/8/include-fixed/limits.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/8/include-fixed/syslimits.h:
+
+/usr/include/limits.h:
+
+/usr/include/x86_64-linux-gnu/bits/posix1_lim.h:
+
+/usr/include/x86_64-linux-gnu/bits/local_lim.h:
+
+/usr/include/linux/limits.h:
+
+/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
+
+/usr/include/x86_64-linux-gnu/bits/xopen_lim.h:
+
+/usr/include/x86_64-linux-gnu/bits/uio_lim.h:
+
+include/sodium/private/implementations.h:
+
+crypto_scalarmult/curve25519/scalarmult_curve25519.h:
+
+include/sodium/runtime.h:
+
+crypto_scalarmult/curve25519/sandy2x/curve25519_sandy2x.h:
+
+crypto_scalarmult/curve25519/ref10/x25519_ref10.h:
+
+crypto_scalarmult/curve25519/ref10/../scalarmult_curve25519.h:

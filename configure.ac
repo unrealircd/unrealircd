@@ -7,7 +7,7 @@ dnl src/windows/unrealinst.iss
 dnl doc/Config.header
 dnl src/version.c.SH
 
-AC_INIT([unrealircd], [5.2.2-git], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
+AC_INIT([unrealircd], [6.6.6-git], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
 AC_CONFIG_SRCDIR([src/ircd.c])
 AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])
@@ -26,15 +26,15 @@ BUILDDIR_NOW="`pwd`"
 
 dnl Calculate the versions. Perhaps the use of expr is a little too extravagant
 # Generation version number (e.g.: X in X.Y.Z)
-UNREAL_VERSION_GENERATION=["5"]
+UNREAL_VERSION_GENERATION=["6"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_GENERATION], [$UNREAL_VERSION_GENERATION], [Generation version number (e.g.: X for X.Y.Z)])
 
 # Major version number (e.g.: Y in X.Y.Z)
-UNREAL_VERSION_MAJOR=["2"]
+UNREAL_VERSION_MAJOR=["6"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_MAJOR], [$UNREAL_VERSION_MAJOR], [Major version number (e.g.: Y for X.Y.Z)])
 
 # Minor version number (e.g.: Z in X.Y.Z)
-UNREAL_VERSION_MINOR=["2"]
+UNREAL_VERSION_MINOR=["6"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_MINOR], [$UNREAL_VERSION_MINOR], [Minor version number (e.g.: Z for X.Y.Z)])
 
 # The version suffix such as a beta marker or release candidate
