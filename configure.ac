@@ -195,6 +195,8 @@ CFLAGS="$CFLAGS -Wall"
 dnl More warnings (if the compiler supports it):
 check_cc_flag([-Wextra], [CFLAGS="$CFLAGS -Wextra"])
 check_cc_flag([-Waggregate-return], [CFLAGS="$CFLAGS -Waggregate-return"])
+check_cc_flag([-Wformat-nonliteral], [CFLAGS="$CFLAGS -Wformat-nonliteral"])
+
 dnl The following few are more experimental, if they have false positives we'll have
 dnl to disable them:
 dnl Can't use this, too bad: check_cc_flag([-Wlogical-op], [CFLAGS="$CFLAGS -Wlogical-op"])

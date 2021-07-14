@@ -61,6 +61,10 @@ extern MOTDLine *find_file(char *, short);
 
 void reread_motdsandrules();
 
+/* Temporarily ignore for this function. FIXME later!!! */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+
 /** Send a message upstream if necessary and check if it's for us.
  * @param client	The sender
  * @param mtags		Message tags associated with this message
@@ -116,6 +120,8 @@ int hunt_server(Client *client, MessageTag *mtags, char *command, int server, in
 
 	return HUNTED_PASS;
 }
+
+#pragma GCC diagnostic pop
 
 #ifndef _WIN32
 /** Grab operating system name on Windows (outdated) */

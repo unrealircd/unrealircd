@@ -114,8 +114,8 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 	ircvsnprintf(buf, sizeof(buf), format, vl);
 	va_end(vl);
 
-	// FIXME: escape 'buf' !!!
-	do_unreal_log(ULOG_ERROR, "unknown", "UNKNOWN", NULL, buf, NULL);
+	// This is a stupid escape trick, we better use a different method / other function
+	unreal_log(ULOG_ERROR, "unknown", "UNKNOWN", NULL, "$_data", log_data_string("_data", buf));
 }
 
 /** Returns the date in rather long string */

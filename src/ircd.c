@@ -502,21 +502,6 @@ char chess[] = {
 	85, 110, 114, 101, 97, 108, 0
 };
 
-static void version_check_logerror(char *fmt, ...)
-{
-va_list va;
-char buf[1024];
-
-	va_start(va, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, va);
-	va_end(va);
-#ifndef _WIN32
-	fprintf(stderr, "[!!!] %s\n", buf);
-#else
-	win_log("[!!!] %s", buf);
-#endif
-}
-
 extern void applymeblock(void);
 
 extern MODVAR Event *events;

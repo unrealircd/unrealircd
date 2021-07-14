@@ -1035,11 +1035,11 @@ int stats_linkinfoall(Client *client, char *para)
 int stats_linkinfoint(Client *client, char *para, int all)
 {
 #ifndef DEBUGMODE
-	static char Sformat[] = "SendQ SendM SendBytes RcveM RcveBytes Open_since :Idle";
-	static char Lformat[] = "%s%s %u %u %u %u %u %u :%u";
+	#define Sformat "SendQ SendM SendBytes RcveM RcveBytes Open_since :Idle"
+	#define Lformat "%s%s %u %u %u %u %u %lld :%lld"
 #else
-	static char Sformat[] = "SendQ SendM SendBytes RcveM RcveBytes Open_since CPU :Idle";
-	static char Lformat[] = "%s%s %u %u %u %u %u %u %s";
+	#define Sformat "SendQ SendM SendBytes RcveM RcveBytes Open_since CPU :Idle"
+	#define Lformat "%s%s %u %u %u %u %u %lld %s"
 	char pbuf[96];		/* Should be enough for to ints */
 #endif
 	int remote = 0;
@@ -1090,8 +1090,9 @@ int stats_linkinfoint(Client *client, char *para, int all)
 		}
 
 #ifdef DEBUGMODE
-		ircsnprintf(pbuf, sizeof(pbuf), "%ld :%ld", (long)acptr->local->cputime,
-		      (long)(acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->last : 0);
+		ircsnprintf(pbuf, sizeof(pbuf), "%lld :%lld",
+			(long long)acptr->local->cputime,
+			(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->last : 0));
 #endif
 		if (ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
 		{
@@ -1104,10 +1105,9 @@ int stats_linkinfoint(Client *client, char *para, int all)
 				(int)acptr->local->sendM, (int)acptr->local->sendK,
 				(int)acptr->local->receiveM,
 				(int)acptr->local->receiveK,
-			 	TStime() - acptr->local->firsttime,
+				(long long)(TStime() - acptr->local->firsttime),
 #ifndef DEBUGMODE
-				(acptr->user && MyConnect(acptr)) ?
-				TStime() - acptr->local->last : 0);
+				(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->last : 0));
 #else
 				pbuf);
 #endif
@@ -1123,10 +1123,9 @@ int stats_linkinfoint(Client *client, char *para, int all)
 				(int)acptr->local->sendM, (int)acptr->local->sendK,
 				(int)acptr->local->receiveM,
 				(int)acptr->local->receiveK,
-				TStime() - acptr->local->firsttime,
+				(long long)((TStime() - acptr->local->firsttime)),
 #ifndef DEBUGMODE
-				(acptr->user && MyConnect(acptr)) ?
-				TStime() - acptr->local->last : 0);
+				(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->last : 0));
 #else
 				pbuf);
 #endif

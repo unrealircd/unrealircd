@@ -17,7 +17,7 @@
 # define FORMAT_STRING(p) p
 #endif
 
-extern char *ircvsnprintf(char *str, size_t size, const char *format, va_list);
+extern char *ircvsnprintf(char *str, size_t size, const char *format, va_list) __attribute__((format(printf,3,0)));
 extern char *ircsnprintf(char *str, size_t size, FORMAT_STRING(const char *format), ...) __attribute__((format(printf,3,4)));
 
 #endif

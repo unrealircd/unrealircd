@@ -319,6 +319,8 @@ char *loglevel_to_string(LogLevel loglevel)
 	}
 }
 
+#define validvarcharacter(x)	(isalnum((x)) || ((x) == '_'))
+
 /** Build a string and replace $variables where needed.
  * See src/modules/blacklist.c for an example.
  * @param inbuf		The input string
@@ -351,7 +353,7 @@ void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details
 			if (*i == '$')
 				goto literal;
 
-			if (!isalnum(*i))
+			if (!validvarcharacter(*i))
 			{
 				/* What do we do with things like '$/' ? -- treat literal */
 				i--;
@@ -359,7 +361,7 @@ void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details
 			}
 
 			/* find termination */
-			for (p=i; isalnum(*p) || ((*p == '.') && isalnum(p[1])); p++);
+			for (p=i; validvarcharacter(*p) || ((*p == '.') && validvarcharacter(p[1])); p++);
 
 			/* find variable name in list */
 			*varname = '\0';

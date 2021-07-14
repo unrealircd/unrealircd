@@ -84,6 +84,7 @@ static int convert_classical_who_request(Client *client, int *parc, char *parv[]
 char *whox_md_serialize(ModData *m);
 void whox_md_unserialize(char *str, ModData *m);
 void whox_md_free(ModData *md);
+static void append_format(char *buf, size_t bufsize, size_t *pos, const char *fmt, ...) __attribute__((format(printf,4,5)));
 
 MOD_INIT()
 {

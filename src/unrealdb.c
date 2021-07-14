@@ -68,6 +68,7 @@
 /* Forward declarations - only used for internal (static) functions, of course */
 static SecretCache *find_secret_cache(Secret *secr, UnrealDBConfig *cfg);
 static void unrealdb_add_to_secret_cache(Secret *secr, UnrealDBConfig *cfg);
+static void unrealdb_set_error(UnrealDB *c, UnrealDBError errcode, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,3,4)));
 
 UnrealDBError unrealdb_last_error_code;
 static char *unrealdb_last_error_string = NULL;
@@ -934,6 +935,7 @@ int unrealdb_read_char(UnrealDB *c, char *t)
 
 /** @} */
 
+#if 0
 void fatal_error(FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
@@ -1045,6 +1047,7 @@ void unrealdb_test(void)
 	fprintf(stderr, "**** TESTING UNENCRYPTED ****\n");
 	unrealdb_test_speed(NULL);
 }
+#endif
 
 /** TODO: document and implement
  */

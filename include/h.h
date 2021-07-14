@@ -1024,7 +1024,7 @@ extern void user_account_login(MessageTag *recv_mtags, Client *client);
 extern void link_generator(void);
 extern void update_throttling_timer_settings(void);
 extern int hide_idle_time(Client *client, Client *target);
-extern void lost_server_link(Client *serv, FORMAT_STRING(const char *fmt), ...);
+extern void lost_server_link(Client *serv, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,2,3)));
 extern char *sendtype_to_cmd(SendType sendtype);
 extern MODVAR MessageTagHandler *mtaghandlers;
 extern int security_group_valid_name(char *name);
@@ -1089,7 +1089,7 @@ extern char *log_type_valtostring(LogType v);
 #else
 #define unreal_log(...) do_unreal_log(__VA_ARGS__, NULL)
 #endif
-extern void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id, Client *client, char *msg, ...);
+extern void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id, Client *client, char *msg, ...) __attribute__((format(printf,5,0)));
 extern LogData *log_data_string(const char *key, const char *str);
 extern LogData *log_data_integer(const char *key, int64_t integer);
 extern LogData *log_data_client(const char *key, Client *client);

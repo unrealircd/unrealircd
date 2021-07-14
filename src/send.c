@@ -26,10 +26,13 @@
 
 #include "unrealircd.h"
 
+/* Temporarily ignore these for this entire file. FIXME later: */
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+
 /* Some forward declarions are needed */
-void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl);
-void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl);
-static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, const char *pattern, va_list vl);
+void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl) __attribute__((format(printf,3,0)));
+void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl) __attribute__((format(printf,4,0)));
+static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, const char *pattern, va_list vl) __attribute__((format(printf,4,0)));
 
 #define ADD_CRLF(buf, len) { if (len > 510) len = 510; \
                              buf[len++] = '\r'; buf[len++] = '\n'; buf[len] = '\0'; } while(0)
