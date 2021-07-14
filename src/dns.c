@@ -394,8 +394,9 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 		}
 
 		/* fatal error while resolving */
-		sendto_ops_and_log("Unable to resolve hostname '%s', when trying to connect to server %s.",
-			r->name, r->linkblock->servername);
+		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_RESOLVING", NULL,
+			   "Unable to resolve hostname $link_block.hostname, when trying to connect to server $link_block.",
+			   log_data_link_block(r->linkblock));
 		r->linkblock->refcount--;
 		unrealdns_freeandremovereq(r);
 		return;
@@ -418,22 +419,9 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 	safe_strdup(r->linkblock->connect_ip, ip);
 	he2 = unreal_create_hostent(he->h_name, ip);
 
-	switch ((n = connect_server(r->linkblock, r->client, he2)))
-	{
-		case 0:
-			sendto_ops_and_log("Trying to activate link with server %s[%s]...", r->linkblock->servername, ip);
-			break;
-		case -1:
-			sendto_ops_and_log("Couldn't connect to server %s[%s].", r->linkblock->servername, ip);
-			break;
-		case -2:
-			/* Should not happen since he is not NULL */
-			sendto_ops_and_log("Hostname %s is unknown for server %s (!?).", r->linkblock->outgoing.hostname, r->linkblock->servername);
-			break;
-		default:
-			sendto_ops_and_log("Connection to server %s failed: %s", r->linkblock->servername, STRERROR(n));
-	}
-	
+	/* Try to connect to the server */
+	connect_server(r->linkblock, r->client, he2);
+
 	unrealdns_freeandremovereq(r);
 	/* DONE */
 }

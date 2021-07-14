@@ -288,11 +288,7 @@ void server_autoconnect_parallel(void)
 		if (!server_needs_linking(aconf))
 			continue;
 
-		if (connect_server(aconf, NULL, NULL) == 0)
-		{
-			sendto_ops_and_log("Trying to activate link with server %s[%s]...",
-				aconf->servername, aconf->outgoing.hostname);
-		}
+		connect_server(aconf, NULL, NULL);
 	}
 }
 
@@ -433,11 +429,7 @@ void server_autoconnect_sequential(void)
 
 	/* Start outgoing link attempt */
 	safe_strdup(last_autoconnect_server, aconf->servername);
-	if (connect_server(aconf, NULL, NULL) == 0)
-	{
-		sendto_ops_and_log("Trying to activate link with server %s[%s]...",
-			aconf->servername, aconf->outgoing.hostname);
-	}
+	connect_server(aconf, NULL, NULL);
 }
 
 /** Perform autoconnect to servers that are not linked yet. */

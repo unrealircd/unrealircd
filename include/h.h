@@ -217,7 +217,7 @@ extern void add_local_domain(char *, int);
 extern int check_server_init(Client *);
 extern void close_connection(Client *);
 extern void close_unbound_listeners();
-extern int connect_server(ConfigItem_link *, Client *, struct hostent *);
+extern void connect_server(ConfigItem_link *, Client *, struct hostent *);
 extern void get_my_name(Client *, char *, int);
 extern int get_sockerr(Client *);
 extern int inetport(ConfigItem_listen *, char *, int, int);
@@ -1094,4 +1094,6 @@ extern LogData *log_data_string(const char *key, const char *str);
 extern LogData *log_data_integer(const char *key, int64_t integer);
 extern LogData *log_data_client(const char *key, Client *client);
 extern LogData *log_data_source(const char *file, int line, const char *function);
+extern LogData *log_data_socket_error(int fd);
+extern LogData *log_data_link_block(ConfigItem_link *link);
 /* end of logging */

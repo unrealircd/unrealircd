@@ -294,6 +294,62 @@ LogData *log_data_source(const char *file, int line, const char *function)
 	return d;
 }
 
+LogData *log_data_socket_error(int fd)
+{
+	/* First, grab the error number very early here: */
+#ifndef _WIN32
+	int sockerr = errno;
+#else
+	int sockerr = WSAGetLastError();
+#endif
+	int v;
+	int len = sizeof(v);
+	LogData *d;
+	json_t *j;
+
+#ifdef SO_ERROR
+	/* Try to get the "real" error from the underlying socket.
+	 * If we succeed then we will override "sockerr" with it.
+	 */
+	if ((fd >= 0) && !getsockopt(fd, SOL_SOCKET, SO_ERROR, (void *)&v, &len) && v)
+		sockerr = v;
+#endif
+
+	d = safe_alloc(sizeof(LogData));
+	d->type = LOG_FIELD_OBJECT;
+	safe_strdup(d->key, "socket_error");
+	d->value.object = j = json_object();
+	json_object_set_new(j, "error_code", json_integer(sockerr));
+	json_object_set_new(j, "error_string", json_string(STRERROR(sockerr)));
+	return d;
+}
+
+LogData *log_data_link_block(ConfigItem_link *link)
+{
+	LogData *d = safe_alloc(sizeof(LogData));
+	json_t *j;
+	char *bind_ip;
+
+	d->type = LOG_FIELD_OBJECT;
+	safe_strdup(d->key, "link_block");
+	d->value.object = j = json_object();
+	json_object_set_new(j, "name", json_string(link->servername));
+	json_object_set_new(j, "hostname", json_string(link->outgoing.hostname));
+	json_object_set_new(j, "ip", json_string(link->connect_ip));
+	json_object_set_new(j, "port", json_integer(link->outgoing.port));
+
+	if (!link->outgoing.bind_ip && iConf.link_bindip)
+		bind_ip = iConf.link_bindip;
+	else
+		bind_ip = link->outgoing.bind_ip;
+	if (!bind_ip)
+		bind_ip = "*";
+	json_object_set_new(j, "bind_ip", json_string(bind_ip));
+
+	return d;
+}
+
+
 void log_data_free(LogData *d)
 {
 	if (d->type == LOG_FIELD_STRING)
@@ -336,6 +392,12 @@ const char *json_get_value(json_t *t)
 
 	return NULL;
 }
+
+// TODO: if in the function below we keep adding auto expanshion shit,
+// like we currently have $client automatically expanding to $client.name
+// and $socket_error to $socket_error.error_string,
+// if this gets more than we should use some kind of array for it,
+// especially for the hardcoded name shit like $socket_error.
 
 /** Build a string and replace $variables where needed.
  * See src/modules/blacklist.c for an example.
@@ -393,6 +455,13 @@ void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details
 				{
 					/* Fetch explicit object.key */
 					t = json_object_get(t, varp);
+					if (t)
+						output = json_get_value(t);
+				} else
+				if (!strcmp(varname, "socket_error"))
+				{
+					/* Fetch socket_error.error_string */
+					t = json_object_get(t, "error_string");
 					if (t)
 						output = json_get_value(t);
 				} else

@@ -189,8 +189,10 @@ static void listener_accept(int listener_fd, int revents, void *data)
 			 * Of course the underlying cause of this issue should be investigated, as this
 			 * is very much a workaround.
 			 */
-			report_baderror("Cannot accept connections %s:%s", NULL);
-			sendto_realops("[BUG] Restarting listener on %s:%d due to fatal errors (see previous message)", listener->ip, listener->port);
+			unreal_log(ULOG_FATAL, "listen", "ACCEPT_ERROR", NULL, "Cannot accept incoming connection on IP \"$listen_ip\" port $listen_port: $socket_error",
+				   log_data_socket_error(listener->fd),
+				   log_data_string("listen_ip", listener->ip),
+				   log_data_integer("listen_port", listener->port));
 			close_listener(listener);
 			start_listeners();
 		}
@@ -206,7 +208,9 @@ static void listener_accept(int listener_fd, int revents, void *data)
 		ircstats.is_ref++;
 		if (last_allinuse < TStime() - 15)
 		{
-			sendto_ops_and_log("All connections in use. ([@%s/%u])", listener->ip, listener->port);
+			unreal_log(ULOG_FATAL, "listen", "ACCEPT_ERROR_MAXCLIENTS", NULL, "Cannot accept incoming connection on IP \"$listen_ip\" port $listen_port: All connections in use",
+				   log_data_string("listen_ip", listener->ip),
+				   log_data_integer("listen_port", listener->port));
 			last_allinuse = TStime();
 		}
 
@@ -251,13 +255,20 @@ int unreal_listen(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 	listener->fd = fd_socket(ipv6 ? AF_INET6 : AF_INET, SOCK_STREAM, 0, "Listener socket");
 	if (listener->fd < 0)
 	{
-		report_baderror("Cannot open stream socket() %s:%s", NULL);
+		unreal_log(ULOG_FATAL, "listen", "LISTEN_SOCKET_ERROR", NULL,
+		           "Could not listen on IP \"$listen_ip\" on port $listen_port: $socket_error",
+			   log_data_socket_error(-1),
+			   log_data_string("listen_ip", ip),
+			   log_data_integer("listen_port", port));
 		return -1;
 	}
 
 	if (++OpenFiles >= maxclients)
 	{
-		sendto_ops_and_log("No more connections allowed (%s)", listener->ip);
+		unreal_log(ULOG_FATAL, "listen", "LISTEN_ERROR_MAXCLIENTS", NULL,
+		           "Could not listen on IP \"$listen_ip\" on port $listen_port: all connections in use",
+		           log_data_string("listen_ip", ip),
+		           log_data_integer("listen_port", port));
 		fd_close(listener->fd);
 		listener->fd = -1;
 		--OpenFiles;
@@ -268,10 +279,11 @@ int unreal_listen(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 
 	if (!unreal_bind(listener->fd, ip, port, ipv6))
 	{
-		char buf[512];
-		ircsnprintf(buf, sizeof(buf), "Error binding stream socket to IP %s port %d", ip, port);
-		strlcat(buf, " - %s:%s", sizeof(buf));
-		report_baderror(buf, NULL);
+		unreal_log(ULOG_FATAL, "listen", "LISTEN_BIND_ERROR", NULL,
+		           "Could not listen on IP \"$listen_ip\" on port $listen_port: $socket_error",
+		           log_data_socket_error(listener->fd),
+		           log_data_string("listen_ip", ip),
+		           log_data_integer("listen_port", port));
 		fd_close(listener->fd);
 		listener->fd = -1;
 		--OpenFiles;
@@ -280,7 +292,11 @@ int unreal_listen(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 
 	if (listen(listener->fd, LISTEN_SIZE) < 0)
 	{
-		report_error("listen failed for %s:%s", NULL);
+		unreal_log(ULOG_FATAL, "listen", "LISTEN_LISTEN_ERROR", NULL,
+		           "Could not listen on IP \"$listen_ip\" on port $listen_port: $socket_error",
+		           log_data_socket_error(listener->fd),
+		           log_data_string("listen_ip", ip),
+		           log_data_integer("listen_port", port));
 		fd_close(listener->fd);
 		listener->fd = -1;
 		--OpenFiles;
@@ -715,6 +731,8 @@ void set_socket_buffers(int fd, int rcvbuf, int sndbuf)
 	setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (void *)&opt, sizeof(opt));
 }
 
+// TODO: the unreal_log() for socket errors do not expand client in regular msgs. should we?
+
 /** Set the appropriate socket options */
 void set_sock_opts(int fd, Client *client, int ipv6)
 {
@@ -726,13 +744,21 @@ void set_sock_opts(int fd, Client *client, int ipv6)
 #ifdef SO_REUSEADDR
 	opt = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (void *)&opt, sizeof(opt)) < 0)
-			report_error("setsockopt(SO_REUSEADDR) %s:%s", client);
+	{
+		unreal_log(ULOG_WARN, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
+		           "Could not setsockopt(SO_REUSEADDR): $socket_error",
+			   log_data_socket_error(-1));
+	}
 #endif
 
 #if defined(SO_USELOOPBACK) && !defined(_WIN32)
 	opt = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_USELOOPBACK, (void *)&opt, sizeof(opt)) < 0)
-		report_error("setsockopt(SO_USELOOPBACK) %s:%s", client);
+	{
+		unreal_log(ULOG_WARN, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
+		           "Could not setsockopt(SO_USELOOPBACK): $socket_error",
+			   log_data_socket_error(-1));
+	}
 #endif
 
 	/* Previously we also called set_socket_buffers() to set some
@@ -746,14 +772,18 @@ void set_sock_opts(int fd, Client *client, int ipv6)
 	{
 		if (client)
 		{
-			report_error("fcntl(fd, F_GETFL) failed for %s:%s", client);
+			unreal_log(ULOG_WARN, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
+				   "Could not get socket options (F_GETFL): $socket_error",
+				   log_data_socket_error(-1));
 		}
 	}
 	else if (fcntl(fd, F_SETFL, opt | O_NONBLOCK) == -1)
 	{
 		if (client)
 		{
-			report_error("fcntl(fd, F_SETL, nonb) failed for %s:%s", client);
+			unreal_log(ULOG_WARN, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
+				   "Could not get socket options (F_SETFL): $socket_error",
+				   log_data_socket_error(-1));
 		}
 	}
 #else
@@ -762,7 +792,9 @@ void set_sock_opts(int fd, Client *client, int ipv6)
 	{
 		if (client)
 		{
-			report_error("ioctlsocket(fd,FIONBIO) failed for %s:%s", client);
+			unreal_log(ULOG_WARN, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
+				   "Could not ioctlsocket FIONBIO: $socket_error",
+				   log_data_socket_error(-1));
 		}
 	}
 #endif
@@ -876,7 +908,11 @@ Client *add_connection(ConfigItem_listen *listener, int fd)
 		 */
 		if (ERRNO != P_ENOTCONN)
 		{
-			report_error("Failed to accept new client %s :%s", client);
+			unreal_log(ULOG_ERROR, "listen", "ACCEPT_ERROR", NULL,
+			           "Failed to accept new client: unable to get IP address: $socket_error",
+				   log_data_socket_error(fd),
+				   log_data_string("listen_ip", listener->ip),
+				   log_data_integer("listen_port", listener->port));
 		}
 refuse_client:
 			ircstats.is_ref++;
@@ -1194,9 +1230,8 @@ static int connect_server_helper(ConfigItem_link *, Client *);
  * @param aconf		Configuration attached to this server
  * @param by		The user initiating the connection (can be NULL)
  * @param hp		The address to connect to.
- * @returns <0 on error, 0 on success. Rather confusing.
  */
-int connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
+void connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 {
 	Client *client;
 
@@ -1206,7 +1241,15 @@ int connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 #endif
 
 	if (!aconf->outgoing.hostname)
-		return -1; /* This is an incoming-only link block. Caller shouldn't call us. */
+	{
+		/* Actually the caller should make sure that this doesn't happen,
+		 * so this error may never be triggered:
+		 */
+		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_NO_OUTGOING", NULL,
+		           "Connect to $link_block failed: link block is for incoming only (no link::outgoing::hostname set)",
+		           log_data_link_block(aconf));
+		return;
+	}
 		
 	if (!hp)
 	{
@@ -1238,7 +1281,11 @@ int connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 			 */
 			aconf->refcount++;
 			unrealdns_gethostbyname_link(aconf->outgoing.hostname, aconf, ipv4_explicit_bind);
-			return -2;
+			unreal_log(ULOG_INFO, "link", "LINK_RESOLVING", NULL,
+				   "Resolving hostname $link_block.hostname...",
+				   log_data_link_block(aconf));
+			/* Going to resolve the hostname, in the meantime we return (asynchronous operation) */
+			return;
 		}
 	}
 	client = make_client(NULL, &me);
@@ -1251,18 +1298,17 @@ int connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 
 	if (!connect_server_helper(aconf, client))
 	{
-		int errtmp = ERRNO;
-		report_error("Connect to host %s failed: %s", client);
-		if (by && IsUser(by) && !MyUser(by))
-			sendnotice(by, "*** Connect to host %s failed.", client->name);
+		/* TODO:
+		 * For /connect's issued by remote opers we used to also
+		 * send the error message to them, this was removed during
+		 * the U6 recode but would still be nice to have.
+		 */
 		fd_close(client->local->fd);
 		--OpenFiles;
 		client->local->fd = -2;
 		free_client(client);
-		SET_ERRNO(errtmp);
-		if (ERRNO == P_EINTR)
-			SET_ERRNO(P_ETIMEDOUT);
-		return -1;
+		/* Fatal error */
+		return;
 	}
 	/* The socket has been connected or connect is in progress. */
 	make_server(client);
@@ -1292,10 +1338,13 @@ int connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	else
 		fd_setselect(client->local->fd, FD_SELECT_WRITE, completed_connection, client);
 
-	return 0;
+	unreal_log(ULOG_INFO, "link", "LINK_CONNECTING", client,
+		   "Trying to activate link with server $client ($link_block.ip:$link_block.port)...",
+		   log_data_link_block(aconf));
 }
 
 /** Helper function for connect_server() to prepare the actual bind()'ing and connect().
+ * This will also take care of logging/sending error messages.
  * @param aconf		Configuration entry of the server.
  * @param client	The client entry that we will use and fill in.
  * @returns 1 on success, 0 on failure.
@@ -1306,7 +1355,12 @@ static int connect_server_helper(ConfigItem_link *aconf, Client *client)
 	char buf[BUFSIZE];
 
 	if (!aconf->connect_ip)
+	{
+		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_NOIP", client,
+		           "Connect to $client failed: no IP address to connect to",
+		           log_data_link_block(aconf));
 		return 0; /* handled upstream or shouldn't happen */
+	}
 	
 	if (strchr(aconf->connect_ip, ':'))
 		SetIPV6(client);
@@ -1319,16 +1373,22 @@ static int connect_server_helper(ConfigItem_link *aconf, Client *client)
 	{
 		if (ERRNO == P_EMFILE)
 		{
-			sendto_realops("opening stream socket to server %s: No more sockets",
-				get_client_name(client, TRUE));
+			unreal_log(ULOG_ERROR, "link", "LINK_ERROR_MAXCLIENTS", client,
+				   "Connect to $client failed: no more sockets available",
+				   log_data_link_block(aconf));
 			return 0;
 		}
-		report_baderror("opening stream socket to server %s:%s", client);
+		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_SOCKET", client,
+			   "Connect to $client failed: could not create socket: $socket_error",
+			   log_data_socket_error(-1),
+			   log_data_link_block(aconf));
 		return 0;
 	}
 	if (++OpenFiles >= maxclients)
 	{
-		sendto_ops_and_log("No more connections allowed (%s)", client->name);
+		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_MAXCLIENTS", client,
+			   "Connect to $client failed: no more connections available",
+			   log_data_link_block(aconf));
 		return 0;
 	}
 
@@ -1343,15 +1403,27 @@ static int connect_server_helper(ConfigItem_link *aconf, Client *client)
 	{
 		if (!unreal_bind(client->local->fd, bindip, 0, IsIPV6(client)))
 		{
-			report_baderror("Error binding to local port for %s:%s -- "
-			                "Your link::outgoing::bind-ip is probably incorrect.", client);
+			unreal_log(ULOG_ERROR, "link", "LINK_ERROR_SOCKET_BIND", client,
+				   "Connect to $client failed: could not bind socket to $link_block.bind_ip: $socket_error -- "
+				   "Your link::outgoing::bind-ip is probably incorrect.",
+				   log_data_socket_error(client->local->fd),
+				   log_data_link_block(aconf));
 			return 0;
 		}
 	}
 
 	set_sock_opts(client->local->fd, client, IsIPV6(client));
 
-	return unreal_connect(client->local->fd, client->ip, aconf->outgoing.port, IsIPV6(client));
+	if (!unreal_connect(client->local->fd, client->ip, aconf->outgoing.port, IsIPV6(client)))
+	{
+			unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
+				   "Connect to $client ($link_block.ip:$link_block.port) failed: $socket_error",
+				   log_data_socket_error(client->local->fd),
+				   log_data_link_block(aconf));
+		return 0;
+	}
+
+	return 1;
 }
 
 /** Checks if the system is IPv6 capable.

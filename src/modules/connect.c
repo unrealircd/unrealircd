@@ -134,22 +134,5 @@ CMD_FUNC(cmd_connect)
 		    get_client_name(client, FALSE));
 	}
 
-	switch (retval = connect_server(aconf, client, NULL))
-	{
-	  case 0:
-		  sendnotice(client, "*** Trying to activate link with server %s[%s]...",
-		      aconf->servername, aconf->outgoing.hostname);
-		  break;
-	  case -1:
-		  sendnotice(client, "*** Couldn't connect to %s[%s]",
-		  	aconf->servername, aconf->outgoing.hostname);
-		  break;
-	  case -2:
-		  sendnotice(client, "*** Resolving hostname '%s'...",
-		  	aconf->outgoing.hostname);
-		  break;
-	  default:
-		  sendnotice(client, "*** Connection to %s[%s] failed: %s",
-		  	aconf->servername, aconf->outgoing.hostname, STRERROR(retval));
-	}
+	connect_server(aconf, client, NULL);
 }
