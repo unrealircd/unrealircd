@@ -550,6 +550,12 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 		return;
 	}
 
+	/* Log to all ircops for now */
+	// FIXME: obviously there should be snomask filtering here ;)
+	// TODO: don't show loglevel for simple INFO messages?
+	if (strncmp(msg, "->", 2) && strncmp(msg, "<-", 2))
+		sendto_realops("[%s] %s", loglevel_to_string(loglevel), msg);
+
 	for (l = conf_log; l; l = l->next)
 	{
 		// FIXME: implement the proper log filters (eg what 'flags' previously was)
