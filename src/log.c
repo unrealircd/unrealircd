@@ -321,6 +321,22 @@ char *loglevel_to_string(LogLevel loglevel)
 
 #define validvarcharacter(x)	(isalnum((x)) || ((x) == '_'))
 
+const char *json_get_value(json_t *t)
+{
+	static char buf[32];
+
+	if (json_is_string(t))
+		return json_string_value(t);
+
+	if (json_is_integer(t))
+	{
+		snprintf(buf, sizeof(buf), "%lld", (long long)json_integer_value(t));
+		return buf;
+	}
+
+	return NULL;
+}
+
 /** Build a string and replace $variables where needed.
  * See src/modules/blacklist.c for an example.
  * @param inbuf		The input string
@@ -378,17 +394,17 @@ void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details
 					/* Fetch explicit object.key */
 					t = json_object_get(t, varp);
 					if (t)
-						output = json_string_value(t);
+						output = json_get_value(t);
 				} else
 				if (json_is_object(t))
 				{
 					/* Fetch object.name */
 					t = json_object_get(t, "name");
 					if (t)
-						output = json_string_value(t);
+						output = json_get_value(t);
 				} else
 				{
-					output = json_string_value(t);
+					output = json_get_value(t);
 				}
 				if (output)
 				{
