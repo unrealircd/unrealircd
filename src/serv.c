@@ -1323,29 +1323,42 @@ void tkl_init(void)
 /** Called when a server link is lost.
  * Used for logging only, API users can use the HOOKTYPE_SERVER_QUIT hook.
  */
-void lost_server_link(Client *client, FORMAT_STRING(const char *fmt), ...)
+void lost_server_link(Client *client, char *tls_error_string)
 {
-	va_list vl;
-	static char buf[1024], buf2[512];
-
-	va_start(vl, fmt);
-	vsnprintf(buf2, sizeof(buf2), fmt, vl);
-	va_end(vl);
-
 	if (IsServer(client))
 	{
 		/* An already established link is now lost. */
 		// FIXME: we used to broadcast this GLOBALLY.. not anymore since the U6 rewrite.. is that what we want?
-		unreal_log(ULOG_ERROR, "link", "LINK_DISCONNECTED", client,
-			   "Lost server link to $client ($link_block.ip:$link_block.port): $socket_error",
-			   log_data_socket_error(client->local->fd),
-			   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
+		if (tls_error_string)
+		{
+			/* TLS */
+			unreal_log(ULOG_ERROR, "link", "LINK_DISCONNECTED", client,
+				   "Lost server link to $client ($link_block.ip:$link_block.port): $tls_error_string",
+				   log_data_string("tls_error_string", tls_error_string),
+				   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
+		} else {
+			/* NON-TLS */
+			unreal_log(ULOG_ERROR, "link", "LINK_DISCONNECTED", client,
+				   "Lost server link to $client ($link_block.ip:$link_block.port): $socket_error",
+				   log_data_socket_error(client->local->fd),
+				   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
+		}
 	} else {
 		/* A link attempt failed (it was never a fully connected server) */
 		/* We send these to local ops only */
-		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
-			   "Unable to link with server $client ($link_block.ip:$link_block.port): $socket_error",
-			   log_data_socket_error(client->local->fd),
-			   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
+		if (tls_error_string)
+		{
+			/* TLS */
+			unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
+				   "Unable to link with server $client ($link_block.ip:$link_block.port): $tls_error_string",
+				   log_data_string("tls_error_string", tls_error_string),
+				   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
+		} else {
+			/* non-TLS */
+			unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
+				   "Unable to link with server $client ($link_block.ip:$link_block.port): $socket_error",
+				   log_data_socket_error(client->local->fd),
+				   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
+		}
 	}
 }

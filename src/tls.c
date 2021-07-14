@@ -867,6 +867,7 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *clien
 	char *ssl_errstr, *ssl_func;
 	unsigned long additional_errno = ERR_get_error();
 	char additional_info[256];
+	char buf[512];
 	const char *one, *two;
 
 	if (IsDeadSocket(client))
@@ -941,12 +942,14 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *clien
 			         (client->serv && client->serv->conf) ? client->serv->conf->outgoing.port : -1,
 			         client->name);
 		}
-		lost_server_link(client, "%s: %s%s%s", ssl_func, ssl_errstr, additional_info, extra);
+		snprintf(buf, sizeof(buf), "%s: %s%s%s", ssl_func, ssl_errstr, additional_info, extra);
+		lost_server_link(client, buf);
 	} else
 	if (IsServer(client) || (client->serv && client->serv->conf))
 	{
 		/* Either a trusted fully established server (incoming) or an outgoing server link (established or not) */
-		lost_server_link(client, "%s: %s%s", ssl_func, ssl_errstr, additional_info);
+		snprintf(buf, sizeof(buf), "%s: %s%s", ssl_func, ssl_errstr, additional_info);
+		lost_server_link(client, buf);
 	}
 
 	if (errtmp)
