@@ -22,9 +22,22 @@
 
 #include "unrealircd.h"
 
+#define MSG_INVITE 	"INVITE"
+
+#define CLIENT_INVITES(client)		(moddata_client(client, userInvitesMD).ptr)
+#define CHANNEL_INVITES(channel)	(moddata_channel(channel, channelInvitesMD).ptr)
+
+ModDataInfo *userInvitesMD;
+ModDataInfo *channelInvitesMD;
+
 CMD_FUNC(cmd_invite);
 
-#define MSG_INVITE 	"INVITE"	
+void invite_free(ModData *md);
+void add_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags);
+void del_invite(Client *client, Channel *channel);
+static int invite_channel_destroy(Channel *channel, int *should_destroy);
+int invite_user_quit(Client *client, MessageTag *mtags, char *comment);
+int invite_user_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
 
 ModuleHeader MOD_HEADER
   = {
@@ -37,8 +50,39 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_INVITE, cmd_invite, MAXPARA, CMD_USER|CMD_SERVER);
+	ModDataInfo mreq;
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+
+	CommandAdd(modinfo->handle, MSG_INVITE, cmd_invite, MAXPARA, CMD_USER|CMD_SERVER);	
+	
+	memset(&mreq, 0 , sizeof(mreq));
+	mreq.type = MODDATATYPE_CLIENT;
+	mreq.name = "invite",
+	mreq.free = invite_free;
+	userInvitesMD = ModDataAdd(modinfo->handle, mreq);
+	if (!userInvitesMD)
+	{
+		config_error("[%s] Failed to request user invite moddata: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));
+		return MOD_FAILED;
+	}
+	
+	memset(&mreq, 0 , sizeof(mreq));
+	mreq.type = MODDATATYPE_CHANNEL;
+	mreq.name = "invite",
+	mreq.free = invite_free;
+	channelInvitesMD = ModDataAdd(modinfo->handle, mreq);
+	if (!channelInvitesMD)
+	{
+		config_error("[%s] Failed to request channel invite moddata: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));
+		return MOD_FAILED;
+	}
+	
+	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 1000000, invite_channel_destroy);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_QUIT, 0, invite_user_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, invite_user_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, invite_user_join);
+	
 	return MOD_SUCCESS;
 }
 
@@ -52,12 +96,43 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
+void invite_free(ModData *md)
+{
+	Link *invites = md->ptr;
+	if(!invites)
+		return; // was not set
+	free_link(invites);
+}
+
+static int invite_channel_destroy(Channel *channel, int *should_destroy)
+{
+	Link *lp;
+	while ((lp = CHANNEL_INVITES(channel)))
+		del_invite(lp->value.client, channel);
+	return 0;
+}
+
+int invite_user_quit(Client *client, MessageTag *mtags, char *comment)
+{
+	Link *lp;
+	/* Clean up invitefield */
+	while ((lp = CLIENT_INVITES(client)))
+		del_invite(client, lp->value.channel);
+	return 0;
+}
+
+int invite_user_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[])
+{
+	del_invite(client, channel);
+	return 0;
+}
+
 /* Send the user their list of active invites */
 void send_invite_list(Client *client)
 {
 	Link *inv;
 
-	for (inv = client->user->invited; inv; inv = inv->next)
+	for (inv = CLIENT_INVITES(client); inv; inv = inv->next)
 	{
 		sendnumeric(client, RPL_INVITELIST,
 			   inv->value.channel->chname);	
@@ -296,3 +371,76 @@ CMD_FUNC(cmd_invite)
 		free_message_tags(mtags);
 	}
 }
+
+/** Register an invite from someone to a channel - so they can bypass +i etc.
+ * @param from		The person sending the invite
+ * @param to		The person who is invited to join
+ * @param channel	The channel
+ * @param mtags		Message tags associated with this INVITE command
+ */
+void add_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags)
+{
+	Link *inv, *tmp;
+
+	del_invite(to, channel);
+	/* If too many invite entries then delete the oldest one */
+	if (list_length(CLIENT_INVITES(to)) >= MAXCHANNELSPERUSER)
+	{
+		for (tmp = CLIENT_INVITES(to); tmp->next; tmp = tmp->next)
+			;
+		del_invite(to, tmp->value.channel);
+
+	}
+	/* We get pissy over too many invites per channel as well now,
+	 * since otherwise mass-inviters could take up some major
+	 * resources -Donwulff
+	 */
+	if (list_length(CHANNEL_INVITES(channel)) >= MAXCHANNELSPERUSER)
+	{
+		for (tmp = CHANNEL_INVITES(channel); tmp->next; tmp = tmp->next)
+			;
+		del_invite(tmp->value.client, channel);
+	}
+	/*
+	 * add client to the beginning of the channel invite list
+	 */
+	inv = make_link();
+	inv->value.client = to;
+	inv->next = CHANNEL_INVITES(channel);
+	CHANNEL_INVITES(channel) = inv;
+	/*
+	 * add channel to the beginning of the client invite list
+	 */
+	inv = make_link();
+	inv->value.channel = channel;
+	inv->next = CLIENT_INVITES(to);
+	CLIENT_INVITES(to) = inv;
+
+	RunHook4(HOOKTYPE_INVITE, from, to, channel, mtags);
+}
+
+/** Delete a previous invite of someone to a channel.
+ * @param client	The client who was invited
+ * @param channel	The channel to which the person was invited
+ */
+void del_invite(Client *client, Channel *channel)
+{
+	Link **inv, *tmp;
+
+	for (inv = (Link **)&CHANNEL_INVITES(channel); (tmp = *inv); inv = &tmp->next)
+		if (tmp->value.client == client)
+		{
+			*inv = tmp->next;
+			free_link(tmp);
+			break;
+		}
+
+	for (inv = (Link **)&CLIENT_INVITES(client); (tmp = *inv); inv = &tmp->next)
+		if (tmp->value.channel == channel)
+		{
+			*inv = tmp->next;
+			free_link(tmp);
+			break;
+		}
+}
+

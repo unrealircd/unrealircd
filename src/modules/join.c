@@ -262,7 +262,6 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 			sendto_server(client, 0, 0, NULL, ":%s MODE %s + %lld",
 			    me.id, channel->chname, (long long)channel->creationtime);
 		}
-		del_invite(client, channel);
 
 		if (channel->topic)
 		{

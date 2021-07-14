@@ -100,17 +100,6 @@ int Halfop_mode(long mode)
 	return TRUE;
 }
 
-
-/** Returns the length (entry count) of a +beI list */
-static int list_length(Link *lp)
-{
-	int  count = 0;
-
-	for (; lp; lp = lp->next)
-		count++;
-	return count;
-}
-
 /** Find client in a Member linked list (eg: channel->members) */
 Member *find_member_link(Member *lp, Client *ptr)
 {
@@ -983,77 +972,10 @@ Channel *get_channel(Client *client, char *chname, int flag)
 	return channel;
 }
 
-/** Register an invite from someone to a channel - so they can bypass +i etc.
- * @param from		The person sending the invite
- * @param to		The person who is invited to join
- * @param channel	The channel
- * @param mtags		Message tags associated with this INVITE command
- */
-void add_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags)
-{
-	Link *inv, *tmp;
+#warning create hook or efunc
 
-	del_invite(to, channel);
-	/* If too many invite entries then delete the oldest one */
-	if (list_length(to->user->invited) >= MAXCHANNELSPERUSER)
-	{
-		for (tmp = to->user->invited; tmp->next; tmp = tmp->next)
-			;
-		del_invite(to, tmp->value.channel);
-
-	}
-	/* We get pissy over too many invites per channel as well now,
-	 * since otherwise mass-inviters could take up some major
-	 * resources -Donwulff
-	 */
-	if (list_length(channel->invites) >= MAXCHANNELSPERUSER)
-	{
-		for (tmp = channel->invites; tmp->next; tmp = tmp->next)
-			;
-		del_invite(tmp->value.client, channel);
-	}
-	/*
-	 * add client to the beginning of the channel invite list
-	 */
-	inv = make_link();
-	inv->value.client = to;
-	inv->next = channel->invites;
-	channel->invites = inv;
-	/*
-	 * add channel to the beginning of the client invite list
-	 */
-	inv = make_link();
-	inv->value.channel = channel;
-	inv->next = to->user->invited;
-	to->user->invited = inv;
-
-	RunHook4(HOOKTYPE_INVITE, from, to, channel, mtags);
-}
-
-/** Delete a previous invite of someone to a channel.
- * @param client	The client who was invited
- * @param channel	The channel to which the person was invited
- */
-void del_invite(Client *client, Channel *channel)
-{
-	Link **inv, *tmp;
-
-	for (inv = &(channel->invites); (tmp = *inv); inv = &tmp->next)
-		if (tmp->value.client == client)
-		{
-			*inv = tmp->next;
-			free_link(tmp);
-			break;
-		}
-
-	for (inv = &(client->user->invited); (tmp = *inv); inv = &tmp->next)
-		if (tmp->value.channel == channel)
-		{
-			*inv = tmp->next;
-			free_link(tmp);
-			break;
-		}
-}
+#define CLIENT_INVITES(client) (moddata_client(client, findmoddata_byname("invite", MODDATATYPE_CLIENT)).ptr)
+#define CHANNEL_INVITES(channel) (moddata_channel(channel, findmoddata_byname("invite", MODDATATYPE_CHANNEL)).ptr)
 
 /** Is the user 'client' invited to channel 'channel' by a chanop?
  * @param client	The client who was invited
@@ -1063,7 +985,7 @@ int is_invited(Client *client, Channel *channel)
 {
 	Link *lp;
 
-	for (lp = client->user->invited; lp; lp = lp->next)
+	for (lp = CLIENT_INVITES(client); lp; lp = lp->next)
 		if (lp->value.channel == channel)
 			return 1;
 	return 0;
@@ -1096,9 +1018,6 @@ int sub1_from_channel(Channel *channel)
 	 */
 
 	moddata_free_channel(channel);
-
-	while ((lp = channel->invites))
-		del_invite(lp->value.client, channel);
 
 	while (channel->banlist)
 	{

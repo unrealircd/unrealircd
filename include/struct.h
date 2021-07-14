@@ -1350,7 +1350,6 @@ struct LocalClient {
  */
 struct User {
 	Membership *channel;		/**< Channels that the user is in (linked list) */
-	Link *invited;			/**< Channels has the user been invited to (linked list) */
 	Link *dccallow;			/**< DCCALLOW list (linked list) */
 	char *away;			/**< AWAY message, or NULL if not away */
 	char svid[SVIDLEN + 1];		/**< Services account name or ID (SVID) */
@@ -2016,7 +2015,6 @@ struct Channel {
 	time_t topic_time;			/**< Time at which the topic was last set */
 	int users;				/**< Number of users in the channel */
 	Member *members;			/**< List of channel members (users in the channel) */
-	Link *invites;				/**< List of outstanding /INVITE's from ops */
 	Ban *banlist;				/**< List of bans (+b) */
 	Ban *exlist;				/**< List of ban exceptions (+e) */
 	Ban *invexlist;				/**< List of invite exceptions (+I) */
