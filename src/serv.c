@@ -1323,7 +1323,7 @@ void tkl_init(void)
 /** Called when a server link is lost.
  * Used for logging only, API users can use the HOOKTYPE_SERVER_QUIT hook.
  */
-void lost_server_link(Client *serv, FORMAT_STRING(const char *fmt), ...)
+void lost_server_link(Client *client, FORMAT_STRING(const char *fmt), ...)
 {
 	va_list vl;
 	static char buf[1024], buf2[512];
@@ -1332,19 +1332,20 @@ void lost_server_link(Client *serv, FORMAT_STRING(const char *fmt), ...)
 	vsnprintf(buf2, sizeof(buf2), fmt, vl);
 	va_end(vl);
 
-	if (IsServer(serv))
+	if (IsServer(client))
 	{
-		/* An already established link is now lost. Broadcast this to all opers. */
-		snprintf(buf, sizeof(buf), "Lost server link to %s: %s",
-			get_client_name(serv, FALSE), buf2);
-		sendto_umode_global(UMODE_OPER, "%s", buf);
+		/* An already established link is now lost. */
+		// FIXME: we used to broadcast this GLOBALLY.. not anymore since the U6 rewrite.. is that what we want?
+		unreal_log(ULOG_ERROR, "link", "LINK_DISCONNECTED", client,
+			   "Lost server link to $client ($link_block.ip:$link_block.port): $socket_error",
+			   log_data_socket_error(client->local->fd),
+			   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
 	} else {
-		/* A link attempt failed. Only send this to local opers (can be noisy every xx seconds). */
-		snprintf(buf, sizeof(buf), "Unable to link with server %s: %s",
-			get_client_name(serv, FALSE), buf2);
-		sendto_umode(UMODE_OPER, "%s", buf);
+		/* A link attempt failed (it was never a fully connected server) */
+		/* We send these to local ops only */
+		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
+			   "Unable to link with server $client ($link_block.ip:$link_block.port): $socket_error",
+			   log_data_socket_error(client->local->fd),
+			   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
 	}
-
-	/* Always log! */
-	ircd_log(LOG_ERROR, "%s", buf);
 }
