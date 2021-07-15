@@ -24,7 +24,7 @@
 
 #define MSG_INVITE 	"INVITE"
 
-#define CLIENT_INVITES(client)		(moddata_client(client, userInvitesMD).ptr)
+#define CLIENT_INVITES(client)		(moddata_local_client(client, userInvitesMD).ptr)
 #define CHANNEL_INVITES(channel)	(moddata_channel(channel, channelInvitesMD).ptr)
 
 ModDataInfo *userInvitesMD;
@@ -57,7 +57,7 @@ MOD_INIT()
 	CommandAdd(modinfo->handle, MSG_INVITE, cmd_invite, MAXPARA, CMD_USER|CMD_SERVER);	
 	
 	memset(&mreq, 0 , sizeof(mreq));
-	mreq.type = MODDATATYPE_CLIENT;
+	mreq.type = MODDATATYPE_LOCAL_CLIENT;
 	mreq.name = "invite",
 	mreq.free = invite_free;
 	userInvitesMD = ModDataAdd(modinfo->handle, mreq);
@@ -79,7 +79,6 @@ MOD_INIT()
 	}
 	
 	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 1000000, invite_channel_destroy);
-	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_QUIT, 0, invite_user_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, invite_user_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, invite_user_join);
 	
