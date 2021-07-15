@@ -32,6 +32,7 @@
 
 ModDataInfo *userInvitesMD;
 ModDataInfo *channelInvitesMD;
+long CAP_INVITE_NOTIFY = 0L;
 
 CMD_FUNC(cmd_invite);
 
@@ -54,12 +55,23 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
+	ClientCapabilityInfo cap;
+	ClientCapability *c;
 	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	CommandAdd(modinfo->handle, MSG_INVITE, cmd_invite, MAXPARA, CMD_USER|CMD_SERVER);	
-	
+
+	memset(&cap, 0, sizeof(cap));
+	cap.name = "invite-notify";
+	c = ClientCapabilityAdd(modinfo->handle, &cap, &CAP_INVITE_NOTIFY);
+	if (!c)
+	{
+		config_error("[%s] Failed to request invite-notify cap: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));
+		return MOD_FAILED;
+	}
+
 	memset(&mreq, 0 , sizeof(mreq));
 	mreq.type = MODDATATYPE_LOCAL_CLIENT;
 	mreq.name = "invite",
@@ -192,10 +204,15 @@ void invite_process(Client *client, Client *target, Channel *channel, MessageTag
 		if (override == 0)
 		{
 			sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-				0, SEND_LOCAL, mtags,
+				CAP_INVITE_NOTIFY | CAP_INVERT, SEND_LOCAL, mtags,
 				":%s NOTICE @%s :%s invited %s into the channel.",
 				me.name, channel->chname, client->name, target->name);
 		}
+		/* always send IRCv3 invite-notify if possible */
+		sendto_channel(channel, client, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+			CAP_INVITE_NOTIFY, SEND_LOCAL, mtags,
+			":%s INVITE %s %s",
+			client->name, target->name, channel->chname);
 	}
 
 	/* add to list and notify the person who got invited */
