@@ -453,16 +453,6 @@ CMD_FUNC(cmd_invite)
 			return;
 	}
 
-	/* always notify chanops in case of override */
-
-	if (override == 1)
-	{
-		MessageTag *mtags = NULL;
-		new_message(&me, recv_mtags, &mtags);
-
-		free_message_tags(mtags);
-	}
-
 	/* allowed to proceed */
 	invite_process(client, target, channel, recv_mtags, override);
 }
