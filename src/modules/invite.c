@@ -27,6 +27,9 @@
 #define CLIENT_INVITES(client)		(moddata_local_client(client, userInvitesMD).ptr)
 #define CHANNEL_INVITES(channel)	(moddata_channel(channel, channelInvitesMD).ptr)
 
+/* TODO make it configurable */
+#define INVITE_ALWAYS_NOTIFY	1
+
 ModDataInfo *userInvitesMD;
 ModDataInfo *channelInvitesMD;
 
@@ -163,49 +166,134 @@ int invite_is_invited(Client *client, Channel *channel, int *invited)
 	return 0;
 }
 
+void invite_process(Client *client, Client *target, Channel *channel, MessageTag *recv_mtags, int override)
+{
+	MessageTag *mtags = NULL;
+
+	new_message(client, recv_mtags, &mtags);
+
+	/* broadcast to other servers */
+	sendto_server(client, 0, 0, mtags, ":%s INVITE %s %s %d", client->id, target->id, channel->chname, override);
+
+	/* send chanops notifications */
+	if (IsUser(client) && (is_chan_op(client, channel)
+	    || IsULine(client)
+	    || ValidatePermissionsForPath("channel:override:invite:self",client,NULL,channel,NULL)
+	    || INVITE_ALWAYS_NOTIFY
+	    ))
+	{
+		if (override == 1)
+		{
+			sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+				0, SEND_LOCAL, mtags,
+				":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
+				me.name, channel->chname, client->name);
+		}
+		if (override == 0)
+		{
+			sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+				0, SEND_LOCAL, mtags,
+				":%s NOTICE @%s :%s invited %s into the channel.",
+				me.name, channel->chname, client->name, target->name);
+		}
+	}
+
+	/* add to list and notify the person who got invited */
+	if (MyConnect(target))
+	{
+		if (IsUser(client) && (is_chan_op(client, channel)
+			|| IsULine(client)
+			|| ValidatePermissionsForPath("channel:override:invite:self",client,NULL,channel,NULL)
+			))
+		{
+			add_invite(client, target, channel, mtags);
+		}
+
+		if (!is_silenced(client, target))
+		{
+			sendto_prefix_one(target, client, mtags, ":%s INVITE %s :%s", client->name,
+				target->name, channel->chname);
+		}
+	}
+	free_message_tags(mtags);
+}
+
 /*
 ** cmd_invite
 **	parv[1] - user to invite
-**	parv[2] - channel number
+**	parv[2] - channel name
+**  parv[3] - override (S2S only)
 */
 CMD_FUNC(cmd_invite)
 {
-	Client *target;
-	Channel *channel;
+	Client *target = NULL;
+	Channel *channel = NULL;
 	int override = 0;
 	int i = 0;
+	int params_ok = 0;
 	Hook *h;
 
+	if (parc >= 3 && *parv[1] != '\0')
+	{
+		params_ok = 1;
+		target = find_person(parv[1], NULL);
+		channel = find_channel(parv[2], NULL);
+	}
+	
+	if (!MyConnect(client))
+	/*** remote invite ***/
+	{
+		/* the client or channel may be already gone */
+		if (!target)
+		{
+			sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
+			return;
+		}
+		if (!channel)
+		{
+			sendnumeric(client, ERR_NOSUCHCHANNEL, parv[2]);
+			return;
+		}
+		if(parc >= 4 && !BadPtr(parv[3]))
+		{
+			override = atoi(parv[3]);
+		}
+
+		/* no further checks */
+
+		invite_process(client, target, channel, recv_mtags, override);
+		return;
+	}
+
+	/*** local invite ***/
+
+	/* the client requested own invite list */
 	if (parc == 1)
 	{
 		send_invite_list(client);
 		return;
 	}
-	
-	if (parc < 3 || *parv[1] == '\0')
+
+	/* notify user about bad parameters */
+	if (!params_ok)
 	{
 		sendnumeric(client, ERR_NEEDMOREPARAMS, "INVITE");
 		return;
 	}
 
-	if (!(target = find_person(parv[1], NULL)))
+	if (!target)
 	{
 		sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
 		return;
 	}
 
-	if (MyConnect(client) && !valid_channelname(parv[2]))
+	if (!channel)
 	{
 		sendnumeric(client, ERR_NOSUCHCHANNEL, parv[2]);
 		return;
 	}
 
-	if (!(channel = find_channel(parv[2], NULL)))
-	{
-		sendnumeric(client, ERR_NOSUCHCHANNEL, parv[2]);
-		return;
-	}
-
+	/* proceed with the command */
 	for (h = Hooks[HOOKTYPE_PRE_INVITE]; h; h = h->next)
 	{
 		i = (*(h->func.intfunc))(client,target,channel,&override);
@@ -264,30 +352,26 @@ CMD_FUNC(cmd_invite)
 		return;
 	}
 
-	if (MyUser(client))
+	if (target_limit_exceeded(client, target, target->name))
+		return;
+
+	if (!ValidatePermissionsForPath("immune:invite-flood",client,NULL,NULL,NULL) &&
+	    flood_limit_exceeded(client, FLD_INVITE))
 	{
-		if (target_limit_exceeded(client, target, target->name))
-			return;
-
-		if (!ValidatePermissionsForPath("immune:invite-flood",client,NULL,NULL,NULL) &&
-		    flood_limit_exceeded(client, FLD_INVITE))
-		{
-			sendnumeric(client, RPL_TRYAGAIN, "INVITE");
-			return;
-		}
-
-		if (!override)
-		{
-			sendnumeric(client, RPL_INVITING, target->name, channel->chname);
-			if (target->user->away)
-			{
-				sendnumeric(client, RPL_AWAY, target->name, target->user->away);
-			}
-		}
+		sendnumeric(client, RPL_TRYAGAIN, "INVITE");
+		return;
 	}
 
+	if (!override)
+	{
+		sendnumeric(client, RPL_INVITING, target->name, channel->chname);
+		if (target->user->away)
+		{
+			sendnumeric(client, RPL_AWAY, target->name, target->user->away);
+		}
+	}
+	else
 	/* Send OperOverride messages */
-	if (override && MyConnect(target))
 	{
 		if (is_banned(client, channel, BANCHK_JOIN, NULL, NULL))
 		{
@@ -352,47 +436,18 @@ CMD_FUNC(cmd_invite)
 			return;
 	}
 
-	if (MyConnect(target))
-	{
-		if (IsUser(client) 
-		    && (is_chan_op(client, channel)
-		    || IsULine(client)
-		    || ValidatePermissionsForPath("channel:override:invite:self",client,NULL,channel,NULL)
-		    ))
-		{
-			MessageTag *mtags = NULL;
+	/* always notify chanops in case of override */
 
-			new_message(&me, NULL, &mtags);
-			if (override == 1)
-			{
-				sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-				               0, SEND_ALL, mtags,
-				               ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
-				               me.name, channel->chname, client->name);
-			} else
-			if (override == 0)
-			{
-				sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-				               0, SEND_ALL, mtags,
-				               ":%s NOTICE @%s :%s invited %s into the channel.",
-				               me.name, channel->chname, client->name, target->name);
-			}
-			add_invite(client, target, channel, mtags);
-			free_message_tags(mtags);
-		}
-	}
-
-	/* Notify the person who got invited */
-	if (!is_silenced(client, target))
+	if (override == 1)
 	{
 		MessageTag *mtags = NULL;
-
-		new_message(client, NULL, &mtags);
-		sendto_prefix_one(target, client, mtags, ":%s INVITE %s :%s", client->name,
-			target->name, channel->chname);
+		new_message(&me, recv_mtags, &mtags);
 
 		free_message_tags(mtags);
 	}
+
+	/* allowed to proceed */
+	invite_process(client, target, channel, recv_mtags, override);
 }
 
 /** Register an invite from someone to a channel - so they can bypass +i etc.
