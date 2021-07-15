@@ -38,6 +38,7 @@ void del_invite(Client *client, Channel *channel);
 static int invite_channel_destroy(Channel *channel, int *should_destroy);
 int invite_user_quit(Client *client, MessageTag *mtags, char *comment);
 int invite_user_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
+int invite_is_invited(Client *client, Channel *channel, int *invited);
 
 ModuleHeader MOD_HEADER
   = {
@@ -81,6 +82,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 1000000, invite_channel_destroy);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, invite_user_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, invite_user_join);
+	HookAdd(modinfo->handle, HOOKTYPE_IS_INVITED, 0, invite_is_invited);
 	
 	return MOD_SUCCESS;
 }
@@ -143,6 +145,22 @@ void send_invite_list(Client *client)
 			   inv->value.channel->chname);	
 	}
 	sendnumeric(client, RPL_ENDOFINVITELIST);
+}
+
+int invite_is_invited(Client *client, Channel *channel, int *invited)
+{
+	Link *lp;
+	
+	if(!MyConnect(client))
+		return 0; // not handling invite lists for remote clients
+
+	for (lp = CLIENT_INVITES(client); lp; lp = lp->next)
+		if (lp->value.channel == channel)
+		{
+			*invited = 1;
+			return 0;
+		}
+	return 0;
 }
 
 /*

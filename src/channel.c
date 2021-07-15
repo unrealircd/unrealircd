@@ -972,26 +972,15 @@ Channel *get_channel(Client *client, char *chname, int flag)
 	return channel;
 }
 
-#warning create hook or efunc
-
-#define CLIENT_INVITES(client) (moddata_local_client(client, findmoddata_byname("invite", MODDATATYPE_LOCAL_CLIENT)).ptr)
-#define CHANNEL_INVITES(channel) (moddata_channel(channel, findmoddata_byname("invite", MODDATATYPE_CHANNEL)).ptr)
-
 /** Is the user 'client' invited to channel 'channel' by a chanop?
  * @param client	The client who was invited
  * @param channel	The channel to which the person was invited
  */
 int is_invited(Client *client, Channel *channel)
 {
-	Link *lp;
-	
-	if(!MyConnect(client))
-		return 0; // not handling invite lists for remote clients
-
-	for (lp = CLIENT_INVITES(client); lp; lp = lp->next)
-		if (lp->value.channel == channel)
-			return 1;
-	return 0;
+	int invited = 0;
+	RunHook3(HOOKTYPE_IS_INVITED, client, channel, &invited);
+	return invited;
 }
 
 /** Subtract one user from channel i. Free the channel if it became empty.

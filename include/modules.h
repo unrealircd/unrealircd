@@ -1163,6 +1163,8 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_CLOSE_CONNECTION	103
 /** See hooktype_connect_extinfo() */
 #define HOOKTYPE_CONNECT_EXTINFO	104
+/** See hooktype_is_invited() */
+#define HOOKTYPE_IS_INVITED	105
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
  * 2) Add a hook prototype (see below)
@@ -2104,6 +2106,15 @@ int hooktype_close_connection(Client *client);
  */
 int hooktype_connect_extinfo(Client *client, NameValuePrioList **list);
 
+/** Called when a user wants to join a channel that require invitation.
+ * Use hook priorities to enforce a specific policy, especially denying the invitation.
+ * @param client		The client
+ * @param channel		The channel client is willing to join
+ * @param invited		Set to 0 for user who should not be invited, set to 1 if the user is invited.
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_is_invited(Client *client, Channel *channel, int *invited);
+
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2213,7 +2224,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_CONFIGRUN_EX) && !ValidateHook(hooktype_configrun_ex, func)) || \
         ((hooktype == HOOKTYPE_ACCOUNT_LOGIN) && !ValidateHook(hooktype_account_login, func)) || \
         ((hooktype == HOOKTYPE_CLOSE_CONNECTION) && !ValidateHook(hooktype_close_connection, func)) || \
-        ((hooktype == HOOKTYPE_CONNECT_EXTINFO) && !ValidateHook(hooktype_connect_extinfo, func)) ) \
+        ((hooktype == HOOKTYPE_CONNECT_EXTINFO) && !ValidateHook(hooktype_connect_extinfo, func)) || \
+        ((hooktype == HOOKTYPE_IS_INVITED) && !ValidateHook(hooktype_is_invited, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
