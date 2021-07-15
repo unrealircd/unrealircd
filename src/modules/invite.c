@@ -97,10 +97,16 @@ MOD_UNLOAD()
 
 void invite_free(ModData *md)
 {
-	Link *invites = md->ptr;
-	if(!invites)
+	Link **inv, *tmp;
+
+	if(!md->ptr)
 		return; // was not set
-	free_link(invites);
+
+	for (inv = (Link **)md->ptr; (tmp = *inv); inv = &tmp->next)
+	{
+		*inv = tmp->next;
+		free_link(tmp);
+	}
 }
 
 static int invite_channel_destroy(Channel *channel, int *should_destroy)
