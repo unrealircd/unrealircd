@@ -263,7 +263,12 @@ void unload_all_unused_caps(void)
 	}
 }
 
-#define MAXCLICAPS 64
+#define ADVERTISEONLYCAPS 16
+/* Advertise only caps are not counted anywhere, this only provides space in rehash temporary storage arrays.
+ * If exceeded, the caps just won't be stored and will be re-added safely. --k4be
+ */
+
+#define MAXCLICAPS ((int)(sizeof(long)*8 - 1 + ADVERTISEONLYCAPS)) /* how many cap bits will fit in `long`? */
 static char *old_caps[MAXCLICAPS]; /**< List of old CAP names - used for /rehash */
 int old_caps_proto[MAXCLICAPS]; /**< List of old CAP protocol values - used for /rehash */
 
@@ -324,7 +329,7 @@ void clicap_post_rehash(void)
 	/* Let's deal with CAP DEL first:
 	 * Go through the old caps and see what's missing now.
 	 */
-	for (i = 0; old_caps[i]; i++)
+	for (i = 0; i < MAXCLICAPS && old_caps[i]; i++)
 	{
 		name = old_caps[i];
 		found = 0;
@@ -351,7 +356,7 @@ void clicap_post_rehash(void)
 	{
 		name = clicap->name;
 		found = 0;
-		for (i = 0; old_caps[i]; i++)
+		for (i = 0; i < MAXCLICAPS && old_caps[i]; i++)
 		{
 			if (!strcmp(old_caps[i], name))
 			{
@@ -368,6 +373,6 @@ void clicap_post_rehash(void)
 	}
 
 	/* Now free the old caps. */
-	for (i = 0; old_caps[i]; i++)
+	for (i = 0; i < MAXCLICAPS && old_caps[i]; i++)
 		safe_free(old_caps[i]);
 }
