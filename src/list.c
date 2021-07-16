@@ -383,6 +383,16 @@ void free_link(Link *lp)
 #endif
 }
 
+/** Returns the length (entry count) of a +beI list */
+int list_length(Link *lp)
+{
+	int  count = 0;
+
+	for (; lp; lp = lp->next)
+		count++;
+	return count;
+}
+
 Ban *make_ban(void)
 {
 	Ban *lp;
