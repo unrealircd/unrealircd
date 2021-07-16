@@ -23,8 +23,13 @@
 #include "unrealircd.h"
 
 CMD_FUNC(cmd_setname);
+char *setname_isupport_param(void);
 
 #define MSG_SETNAME 	"SETNAME"	/* setname */
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
+long CAP_SETNAME = 0L;
 
 ModuleHeader MOD_HEADER
   = {
@@ -37,13 +42,27 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SETNAME, cmd_setname, 1, CMD_USER);
+	ClientCapabilityInfo cap;
+	ClientCapability *c;
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+
+	CommandAdd(modinfo->handle, MSG_SETNAME, cmd_setname, 1, CMD_USER);
+
+	memset(&cap, 0, sizeof(cap));
+	cap.name = "setname";
+	c = ClientCapabilityAdd(modinfo->handle, &cap, &CAP_SETNAME);
+	if (!c)
+	{
+		config_error("[%s] Failed to request setname cap: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));
+		return MOD_FAILED;
+	}
+
 	return MOD_SUCCESS;
 }
 
 MOD_LOAD()
 {
+	ISupportAdd(modinfo->handle, "NAMELEN", setname_isupport_param());
 	return MOD_SUCCESS;
 }
 
@@ -52,12 +71,15 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
+char *setname_isupport_param(void){
+	return STR(REALLEN);
+}
+
 /* cmd_setname - 12/05/1999 - Stskeeps
  * :prefix SETNAME :gecos
  * parv[1] - gecos
  * D: This will set your gecos to be <x> (like (/setname :The lonely wanderer))
-   yes it is experimental but anyways ;P
-    FREEDOM TO THE USERS! ;) 
+   this is now compatible with IRCv3 SETNAME --k4be
 */ 
 CMD_FUNC(cmd_setname)
 {
@@ -65,6 +87,7 @@ CMD_FUNC(cmd_setname)
 	char tmpinfo[REALLEN + 1];
 	char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
 	ConfigItem_ban *bconf;
+	MessageTag *mtags = NULL;
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
@@ -74,10 +97,17 @@ CMD_FUNC(cmd_setname)
 
 	if (strlen(parv[1]) > REALLEN)
 	{
-		if (MyConnect(client))
+		if (!MyConnect(client))
+			return;
+		if (HasCapabilityFast(client, CAP_SETNAME))
 		{
-			sendnotice(client, "*** /SetName Error: \"Real names\" may maximum be %i characters of length",
-				REALLEN);
+			new_message(client, recv_mtags, &mtags);
+			sendto_one(client, mtags, ":%s FAIL SETNAME INVALID_REALNAME :\"Real names\" may maximum be %i characters of length", me.name, REALLEN);
+			free_message_tags(mtags);
+		}
+		else
+		{
+			sendnotice(client, "*** /SetName Error: \"Real names\" may maximum be %i characters of length", REALLEN);
 		}
 		return;
 	}
@@ -92,6 +122,12 @@ CMD_FUNC(cmd_setname)
 		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, "SETNAME", NULL, 0, NULL))
 		{
 			/* Was rejected by spamfilter, restore the realname */
+			if (HasCapabilityFast(client, CAP_SETNAME))
+			{
+				new_message(client, recv_mtags, &mtags);
+				sendto_one(client, mtags, "%s FAIL SETNAME CANNOT_CHANGE_REALNAME :Rejected by server", me.name);
+				free_message_tags(mtags);
+			}
 			strcpy(client->info, tmpinfo);
 			return;
 		}
@@ -108,11 +144,17 @@ CMD_FUNC(cmd_setname)
 		strcpy(client->info, parv[1]);
 	}
 
-	sendto_server(client, 0, 0, NULL, ":%s SETNAME :%s", client->id, parv[1]);
+	new_message(client, recv_mtags, &mtags);
+	sendto_local_common_channels(client, client, CAP_SETNAME, mtags, ":%s SETNAME :%s", client->name, client->info);
+	sendto_server(client, 0, 0, mtags, ":%s SETNAME :%s", client->id, parv[1]);
 
+	/* notify the sender */
 	if (MyConnect(client))
 	{
-		sendnotice(client, "Your \"real name\" is now set to be %s - you have to set it manually to undo it",
-		           parv[1]);
+		if (HasCapabilityFast(client, CAP_SETNAME))
+			sendto_prefix_one(client, client, mtags, ":%s SETNAME :%s", client->name, client->info);
+		else
+			sendnotice(client, "Your \"real name\" is now set to be %s - you have to set it manually to undo it", parv[1]);
 	}
+	free_message_tags(mtags);
 }
