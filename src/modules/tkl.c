@@ -827,7 +827,7 @@ void config_create_tkl_except(char *mask, char *bantypes)
 
 	if ((*usermask == ':') || (*hostmask == ':'))
 	{
-		config_error("Cannot add illegal ban '%s': for a given user@host neither"
+		config_error("Cannot add illegal ban '%s': for a given user@host - neither "
 		             "user nor host may start with a : character (semicolon)", mask);
 		return;
 	}
