@@ -339,6 +339,7 @@ int parse_quoted_string(char *buf, char *dest, size_t destlen)
 	return 1;
 }
 
+#undef CheckNull
 #define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", m->name, (x)->ce_varlinenum); return 0; }
 
 /** Parse a module { } line from a module (not repo!!) */

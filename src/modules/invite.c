@@ -27,16 +27,16 @@
 #define CLIENT_INVITES(client)		(moddata_local_client(client, userInvitesMD).ptr)
 #define CHANNEL_INVITES(channel)	(moddata_channel(channel, channelInvitesMD).ptr)
 
-/* TODO make it configurable */
-#define INVITE_ALWAYS_NOTIFY	1
-
 ModDataInfo *userInvitesMD;
 ModDataInfo *channelInvitesMD;
 long CAP_INVITE_NOTIFY = 0L;
+int invite_always_notify = 0;
 
 CMD_FUNC(cmd_invite);
 
 void invite_free(ModData *md);
+int invite_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int invite_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 void add_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags);
 void del_invite(Client *client, Channel *channel);
 static int invite_channel_destroy(Channel *channel, int *should_destroy);
@@ -52,6 +52,12 @@ ModuleHeader MOD_HEADER
 	"UnrealIRCd Team",
 	"unrealircd-5",
     };
+
+MOD_TEST()
+{
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, invite_config_test);
+	return MOD_SUCCESS;
+}
 
 MOD_INIT()
 {
@@ -93,7 +99,9 @@ MOD_INIT()
 		config_error("[%s] Failed to request channel invite moddata: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
-	
+
+	invite_always_notify = 0; /* the default */
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, invite_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 1000000, invite_channel_destroy);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, invite_user_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, invite_user_join);
@@ -124,6 +132,39 @@ void invite_free(ModData *md)
 		*inv = tmp->next;
 		free_link(tmp);
 	}
+}
+
+int invite_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
+	int errors = 0;
+
+	if (type != CONFIG_SET)
+		return 0;
+
+	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "normal-user-invite-notification"))
+		return 0;
+
+	do
+		CheckNull(ce)
+	while (0);
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+int invite_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+{
+	ConfigEntry *cep;
+
+	if (type != CONFIG_SET)
+		return 0;
+
+	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "normal-user-invite-notification"))
+		return 0;
+
+	invite_always_notify = config_checkval(ce->ce_vardata, CFG_YESNO);
+
+	return 1;
 }
 
 static int invite_channel_destroy(Channel *channel, int *should_destroy)
@@ -191,7 +232,7 @@ void invite_process(Client *client, Client *target, Channel *channel, MessageTag
 	if (IsUser(client) && (is_chan_op(client, channel)
 	    || IsULine(client)
 	    || ValidatePermissionsForPath("channel:override:invite:self",client,NULL,channel,NULL)
-	    || INVITE_ALWAYS_NOTIFY
+	    || invite_always_notify
 	    ))
 	{
 		if (override == 1)

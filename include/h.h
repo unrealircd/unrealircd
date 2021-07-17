@@ -582,6 +582,11 @@ extern uint16_t getrandom16();
 extern uint32_t getrandom32();
 extern void gen_random_alnum(char *buf, int numbytes);
 
+/* Check config entry for empty/missing parameter */
+#define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
+/* as above, but accepting empty string */
+#define CheckNullAllowEmpty(x) if ((!(x)->ce_vardata)) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
+
 extern MODVAR char extchmstr[4][64];
 
 extern int extcmode_default_requirechop(Client *, Channel *, char, char *, int, int);

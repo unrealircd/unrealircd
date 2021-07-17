@@ -6959,8 +6959,6 @@ int _test_require(ConfigFile *conf, ConfigEntry *ce)
 	return errors;
 }
 
-#define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
-#define CheckNullAllowEmpty(x) if ((!(x)->ce_vardata)) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
 #define CheckDuplicate(cep, name, display) if (settings.has_##name) { config_warn_duplicate((cep)->ce_fileptr->cf_filename, cep->ce_varlinenum, "set::" display); continue; } else settings.has_##name = 1
 
 void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
