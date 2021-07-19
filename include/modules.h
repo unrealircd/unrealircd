@@ -1165,6 +1165,10 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_CONNECT_EXTINFO	104
 /** See hooktype_is_invited() */
 #define HOOKTYPE_IS_INVITED	105
+/** See hooktype_post_local_nickchange() */
+#define HOOKTYPE_POST_LOCAL_NICKCHANGE	106
+/** See hooktype_post_remote_nickchange() */
+#define HOOKTYPE_POST_REMOTE_NICKCHANGE	107
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
  * 2) Add a hook prototype (see below)
@@ -1523,9 +1527,10 @@ int hooktype_modechar_add(Channel *channel, int modechar);
  * @param client		The client
  * @param mtags         	Message tags associated with the event
  * @param reason		The away reason, or NULL if away is unset.
+ * @param already_as_away	Set to 1 if the user only changed their away reason.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_away(Client *client, MessageTag *mtags, char *reason);
+int hooktype_away(Client *client, MessageTag *mtags, char *reason, int already_as_away);
 
 /** Called when a user wants to invite another user to a channel (function prototype for HOOKTYPE_PRE_INVITE).
  * @param client		The client
@@ -2115,6 +2120,20 @@ int hooktype_connect_extinfo(Client *client, NameValuePrioList **list);
  */
 int hooktype_is_invited(Client *client, Channel *channel, int *invited);
 
+/** Called after a local user has changed the nick name (function prototype for HOOKTYPE_POST_LOCAL_NICKCHANGE).
+ * @param client		The client
+ * @param mtags         	Message tags associated with the event
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_post_local_nickchange(Client *client, MessageTag *mtags);
+
+/** Called after a remote user has changed the nick name (function prototype for HOOKTYPE_POST_REMOTE_NICKCHANGE).
+ * @param client		The client
+ * @param mtags         	Message tags associated with the event
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_post_remote_nickchange(Client *client, MessageTag *mtags);
+
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2225,7 +2244,9 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_ACCOUNT_LOGIN) && !ValidateHook(hooktype_account_login, func)) || \
         ((hooktype == HOOKTYPE_CLOSE_CONNECTION) && !ValidateHook(hooktype_close_connection, func)) || \
         ((hooktype == HOOKTYPE_CONNECT_EXTINFO) && !ValidateHook(hooktype_connect_extinfo, func)) || \
-        ((hooktype == HOOKTYPE_IS_INVITED) && !ValidateHook(hooktype_is_invited, func)) ) \
+        ((hooktype == HOOKTYPE_IS_INVITED) && !ValidateHook(hooktype_is_invited, func)) || \
+        ((hooktype == HOOKTYPE_POST_LOCAL_NICKCHANGE) && !ValidateHook(hooktype_post_local_nickchange, func)) || \
+        ((hooktype == HOOKTYPE_POST_REMOTE_NICKCHANGE) && !ValidateHook(hooktype_post_remote_nickchange, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

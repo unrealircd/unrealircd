@@ -334,7 +334,6 @@ extern void del_queries(char *);
 /* Hash stuff */
 #define NICK_HASH_TABLE_SIZE 32768
 #define CHAN_HASH_TABLE_SIZE 32768
-#define WATCH_HASH_TABLE_SIZE 32768
 #define WHOWAS_HASH_TABLE_SIZE 32768
 #define THROTTLING_HASH_TABLE_SIZE 8192
 #define hash_find_channel find_channel
@@ -350,12 +349,6 @@ extern int add_to_id_hash_table(char *, Client *);
 extern int del_from_id_hash_table(char *, Client *);
 extern int add_to_channel_hash_table(char *, Channel *);
 extern void del_from_channel_hash_table(char *, Channel *);
-extern int add_to_watch_hash_table(char *, Client *, int);
-extern int del_from_watch_hash_table(char *, Client *);
-extern int hash_check_watch(Client *, int);
-extern int hash_del_watch_list(Client *);
-extern void count_watch_memory(int *, u_long *);
-extern Watch *hash_get_watch(char *);
 extern Channel *hash_get_chan_bucket(uint64_t);
 extern Client *hash_find_client(const char *, Client *);
 extern Client *hash_find_id(const char *, Client *);

@@ -260,11 +260,9 @@ void siphash_generate_key(char *k)
 static struct list_head clientTable[NICK_HASH_TABLE_SIZE];
 static struct list_head idTable[NICK_HASH_TABLE_SIZE];
 static Channel *channelTable[CHAN_HASH_TABLE_SIZE];
-static Watch *watchTable[WATCH_HASH_TABLE_SIZE];
 
 static char siphashkey_nick[SIPHASH_KEY_LENGTH];
 static char siphashkey_chan[SIPHASH_KEY_LENGTH];
-static char siphashkey_watch[SIPHASH_KEY_LENGTH];
 static char siphashkey_whowas[SIPHASH_KEY_LENGTH];
 static char siphashkey_throttling[SIPHASH_KEY_LENGTH];
 
@@ -277,7 +275,6 @@ void init_hash(void)
 
 	siphash_generate_key(siphashkey_nick);
 	siphash_generate_key(siphashkey_chan);
-	siphash_generate_key(siphashkey_watch);
 	siphash_generate_key(siphashkey_whowas);
 	siphash_generate_key(siphashkey_throttling);
 
@@ -288,7 +285,6 @@ void init_hash(void)
 		INIT_LIST_HEAD(&idTable[i]);
 
 	memset(channelTable, 0, sizeof(channelTable));
-	memset(watchTable, 0, sizeof(watchTable));
 
 	memset(ThrottlingHash, 0, sizeof(ThrottlingHash));
 	/* do not call init_throttling() here, as
@@ -308,11 +304,6 @@ uint64_t hash_client_name(const char *name)
 uint64_t hash_channel_name(const char *name)
 {
 	return siphash_nocase(name, siphashkey_chan) % CHAN_HASH_TABLE_SIZE;
-}
-
-uint64_t hash_watch_nick_name(const char *name)
-{
-	return siphash_nocase(name, siphashkey_watch) % WATCH_HASH_TABLE_SIZE;
 }
 
 uint64_t hash_whowas_name(const char *name)
@@ -597,303 +588,6 @@ Channel *hash_get_chan_bucket(uint64_t hashv)
 	if (hashv > CHAN_HASH_TABLE_SIZE)
 		return NULL;
 	return channelTable[hashv];
-}
-
-void  count_watch_memory(int *count, u_long *memory)
-{
-	int i = WATCH_HASH_TABLE_SIZE;
-	Watch *anptr;
-
-	while (i--)
-	{
-		anptr = watchTable[i];
-		while (anptr)
-		{
-			(*count)++;
-			(*memory) += sizeof(Watch)+strlen(anptr->nick);
-			anptr = anptr->hnext;
-		}
-	}
-}
-
-/*
- * add_to_watch_hash_table
- */
-int add_to_watch_hash_table(char *nick, Client *client, int awaynotify)
-{
-	unsigned int hashv;
-	Watch  *anptr;
-	Link  *lp;
-	
-	
-	/* Get the right bucket... */
-	hashv = hash_watch_nick_name(nick);
-	
-	/* Find the right nick (header) in the bucket, or NULL... */
-	if ((anptr = (Watch *)watchTable[hashv]))
-	  while (anptr && mycmp(anptr->nick, nick))
-		 anptr = anptr->hnext;
-	
-	/* If found NULL (no header for this nick), make one... */
-	if (!anptr) {
-		anptr = (Watch *)safe_alloc(sizeof(Watch)+strlen(nick));
-		anptr->lasttime = timeofday;
-		strcpy(anptr->nick, nick);
-		
-		anptr->watch = NULL;
-		
-		anptr->hnext = watchTable[hashv];
-		watchTable[hashv] = anptr;
-	}
-	/* Is this client already on the watch-list? */
-	if ((lp = anptr->watch))
-	  while (lp && (lp->value.client != client))
-		 lp = lp->next;
-	
-	/* No it isn't, so add it in the bucket and client addint it */
-	if (!lp) {
-		lp = anptr->watch;
-		anptr->watch = make_link();
-		anptr->watch->value.client = client;
-		anptr->watch->flags = awaynotify;
-		anptr->watch->next = lp;
-		
-		lp = make_link();
-		lp->next = client->local->watch;
-		lp->value.wptr = anptr;
-		lp->flags = awaynotify;
-		client->local->watch = lp;
-		client->local->watches++;
-	}
-	
-	return 0;
-}
-
-/*
- *  hash_check_watch
- */
-int hash_check_watch(Client *client, int reply)
-{
-	unsigned int hashv;
-	Watch  *anptr;
-	Link  *lp;
-	int awaynotify = 0;
-	
-	if ((reply == RPL_GONEAWAY) || (reply == RPL_NOTAWAY) || (reply == RPL_REAWAY))
-		awaynotify = 1;
-
-	/* Get us the right bucket */
-	hashv = hash_watch_nick_name(client->name);
-	
-	/* Find the right header in this bucket */
-	if ((anptr = (Watch *)watchTable[hashv]))
-	  while (anptr && mycmp(anptr->nick, client->name))
-		 anptr = anptr->hnext;
-	if (!anptr)
-	  return 0;   /* This nick isn't on watch */
-	
-	/* Update the time of last change to item */
-	anptr->lasttime = TStime();
-	
-	/* Send notifies out to everybody on the list in header */
-	for (lp = anptr->watch; lp; lp = lp->next)
-	{
-		if (!awaynotify)
-		{
-			sendnumeric(lp->value.client, reply,
-			    client->name,
-			    (IsUser(client) ? client->user->username : "<N/A>"),
-			    (IsUser(client) ?
-			    (IsHidden(client) ? client->user->virthost : client->
-			    user->realhost) : "<N/A>"), anptr->lasttime, client->info);
-		}
-		else
-		{
-			/* AWAY or UNAWAY */
-			if (!lp->flags)
-				continue; /* skip away/unaway notification for users not interested in them */
-
-			if (reply == RPL_NOTAWAY)
-				sendnumeric(lp->value.client, reply,
-				    client->name,
-				    (IsUser(client) ? client->user->username : "<N/A>"),
-				    (IsUser(client) ?
-				    (IsHidden(client) ? client->user->virthost : client->
-				    user->realhost) : "<N/A>"), client->user->lastaway);
-			else /* RPL_GONEAWAY / RPL_REAWAY */
-				sendnumeric(lp->value.client, reply,
-				    client->name,
-				    (IsUser(client) ? client->user->username : "<N/A>"),
-				    (IsUser(client) ?
-				    (IsHidden(client) ? client->user->virthost : client->
-				    user->realhost) : "<N/A>"), client->user->lastaway, client->user->away);
-		}
-	}
-	
-	return 0;
-}
-
-/*
- * hash_get_watch
- */
-Watch  *hash_get_watch(char *nick)
-{
-	unsigned int hashv;
-	Watch  *anptr;
-	
-	hashv = hash_watch_nick_name(nick);
-	
-	if ((anptr = (Watch *)watchTable[hashv]))
-	  while (anptr && mycmp(anptr->nick, nick))
-		 anptr = anptr->hnext;
-	
-	return anptr;
-}
-
-/*
- * del_from_watch_hash_table
- */
-int del_from_watch_hash_table(char *nick, Client *client)
-{
-	unsigned int hashv;
-	Watch  *anptr, *nlast = NULL;
-	Link  *lp, *last = NULL;
-
-	/* Get the bucket for this nick... */
-	hashv = hash_watch_nick_name(nick);
-	
-	/* Find the right header, maintaining last-link pointer... */
-	if ((anptr = (Watch *)watchTable[hashv]))
-	  while (anptr && mycmp(anptr->nick, nick)) {
-		  nlast = anptr;
-		  anptr = anptr->hnext;
-	  }
-	if (!anptr)
-	  return 0;   /* No such watch */
-	
-	/* Find this client from the list of notifies... with last-ptr. */
-	if ((lp = anptr->watch))
-	  while (lp && (lp->value.client != client)) {
-		  last = lp;
-		  lp = lp->next;
-	  }
-	if (!lp)
-	  return 0;   /* No such client to watch */
-	
-	/* Fix the linked list under header, then remove the watch entry */
-	if (!last)
-	  anptr->watch = lp->next;
-	else
-	  last->next = lp->next;
-	free_link(lp);
-	
-	/* Do the same regarding the links in client-record... */
-	last = NULL;
-	if ((lp = client->local->watch))
-	  while (lp && (lp->value.wptr != anptr)) {
-		  last = lp;
-		  lp = lp->next;
-	  }
-	
-	/*
-	 * Give error on the odd case... probobly not even neccessary
-	 * No error checking in ircd is unneccessary ;) -Cabal95
-	 */
-	if (!lp)
-	  sendto_ops("WATCH debug error: del_from_watch_hash_table "
-					 "found a watch entry with no client "
-					 "counterpoint processing nick %s on client %p!",
-					 nick, client->user);
-	else {
-		if (!last) /* First one matched */
-		  client->local->watch = lp->next;
-		else
-		  last->next = lp->next;
-		free_link(lp);
-	}
-	/* In case this header is now empty of notices, remove it */
-	if (!anptr->watch) {
-		if (!nlast)
-		  watchTable[hashv] = anptr->hnext;
-		else
-		  nlast->hnext = anptr->hnext;
-		safe_free(anptr);
-	}
-	
-	/* Update count of notifies on nick */
-	client->local->watches--;
-	
-	return 0;
-}
-
-/*
- * hash_del_watch_list
- */
-int   hash_del_watch_list(Client *client)
-{
-	unsigned int   hashv;
-	Watch  *anptr;
-	Link  *np, *lp, *last;
-	
-	
-	if (!(np = client->local->watch))
-	  return 0;   /* Nothing to do */
-	
-	client->local->watch = NULL; /* Break the watch-list for client */
-	while (np) {
-		/* Find the watch-record from hash-table... */
-		anptr = np->value.wptr;
-		last = NULL;
-		for (lp = anptr->watch; lp && (lp->value.client != client);
-			  lp = lp->next)
-		  last = lp;
-		
-		/* Not found, another "worst case" debug error */
-		if (!lp)
-		  sendto_ops("WATCH Debug error: hash_del_watch_list "
-						 "found a WATCH entry with no table "
-						 "counterpoint processing client %s!",
-						 client->name);
-		else {
-			/* Fix the watch-list and remove entry */
-			if (!last)
-			  anptr->watch = lp->next;
-			else
-			  last->next = lp->next;
-			free_link(lp);
-			
-			/*
-			 * If this leaves a header without notifies,
-			 * remove it. Need to find the last-pointer!
-			 */
-			if (!anptr->watch) {
-				Watch  *np2, *nl;
-				
-				hashv = hash_watch_nick_name(anptr->nick);
-				
-				nl = NULL;
-				np2 = watchTable[hashv];
-				while (np2 != anptr) {
-					nl = np2;
-					np2 = np2->hnext;
-				}
-				
-				if (nl)
-				  nl->hnext = anptr->hnext;
-				else
-				  watchTable[hashv] = anptr->hnext;
-				safe_free(anptr);
-			}
-		}
-		
-		lp = np; /* Save last pointer processed */
-		np = np->next; /* Jump to the next pointer */
-		free_link(lp); /* Free the previous */
-	}
-	
-	client->local->watches = 0;
-	
-	return 0;
 }
 
 /* Throttling - originally by Stskeeps */
