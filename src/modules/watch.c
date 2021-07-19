@@ -45,11 +45,10 @@ int watch_user_connect(Client *client);
 
 int add_to_watch_hash_table(char *nick, Client *client, int awaynotify);
 int hash_check_watch(Client *client, int reply);
-Watch  *hash_get_watch(char *nick);
+Watch *hash_get_watch(char *nick);
 int del_from_watch_hash_table(char *nick, Client *client);
-int   hash_del_watch_list(Client *client);
+int hash_del_watch_list(Client *client);
 uint64_t hash_watch_nick_name(const char *name);
-void  count_watch_memory(int *count, u_long *memory);
 
 ModuleHeader MOD_HEADER
   = {
@@ -59,6 +58,18 @@ ModuleHeader MOD_HEADER
 	"UnrealIRCd Team",
 	"unrealircd-5",
     };
+
+MOD_TEST()
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+
+	EfunctionAdd(modinfo->handle, EFUNC_WATCH_ADD, add_to_watch_hash_table);
+	EfunctionAdd(modinfo->handle, EFUNC_WATCH_DEL, del_from_watch_hash_table);
+	EfunctionAdd(modinfo->handle, EFUNC_WATCH_DEL_LIST, hash_del_watch_list);
+	EfunctionAddPVoid(modinfo->handle, EFUNC_WATCH_GET, TO_PVOIDFUNC(hash_get_watch));
+	EfunctionAdd(modinfo->handle, EFUNC_WATCH_CHECK, hash_check_watch);
+	return MOD_SUCCESS;
+}
 
 MOD_INIT()
 {	
@@ -503,7 +514,7 @@ int hash_check_watch(Client *client, int reply)
 /*
  * hash_get_watch
  */
-Watch  *hash_get_watch(char *nick)
+Watch *hash_get_watch(char *nick)
 {
 	unsigned int hashv;
 	Watch  *anptr;
@@ -666,22 +677,5 @@ int   hash_del_watch_list(Client *client)
 uint64_t hash_watch_nick_name(const char *name)
 {
 	return siphash_nocase(name, siphashkey_watch) % WATCH_HASH_TABLE_SIZE;
-}
-
-void  count_watch_memory(int *count, u_long *memory)
-{
-	int i = WATCH_HASH_TABLE_SIZE;
-	Watch *anptr;
-
-	while (i--)
-	{
-		anptr = watchTable[i];
-		while (anptr)
-		{
-			(*count)++;
-			(*memory) += sizeof(Watch)+strlen(anptr->nick);
-			anptr = anptr->hnext;
-		}
-	}
 }
 

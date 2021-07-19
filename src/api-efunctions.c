@@ -121,6 +121,11 @@ void *(*labeled_response_save_context)(void);
 void (*labeled_response_set_context)(void *ctx);
 void (*labeled_response_force_end)(void);
 void (*kick_user)(MessageTag *mtags, Channel *channel, Client *client, Client *victim, char *comment);
+int (*watch_add)(char *nick, Client *client, int awaynotify);
+int (*watch_del)(char *nick, Client *client);
+int (*watch_del_list)(Client *client);
+Watch *(*watch_get)(char *nick);
+int (*watch_check)(Client *client, int reply);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())
 {
@@ -277,6 +282,12 @@ void efunctions_switchover(void)
 
 void efunc_init_function_(EfunctionType what, char *name, void *func, void *default_func)
 {
+	if (what >= MAXEFUNCTIONS)
+	{
+		/* increase MAXEFUNCTIONS if you ever encounter that --k4be */
+		ircd_log(LOG_ERROR, "Too many efunctions!");
+		abort();
+	}
 	safe_strdup(efunction_table[what].name, name);
 	efunction_table[what].funcptr = func;
 	efunction_table[what].deffunc = default_func;
@@ -365,4 +376,10 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_LABELED_RESPONSE_SET_CONTEXT, labeled_response_set_context, labeled_response_set_context_default_handler);
 	efunc_init_function(EFUNC_LABELED_RESPONSE_FORCE_END, labeled_response_force_end, labeled_response_force_end_default_handler);
 	efunc_init_function(EFUNC_KICK_USER, kick_user, NULL);
+	efunc_init_function(EFUNC_WATCH_ADD, watch_add, NULL);
+	efunc_init_function(EFUNC_WATCH_DEL, watch_del, NULL);
+	efunc_init_function(EFUNC_WATCH_DEL_LIST, watch_del_list, NULL);
+	efunc_init_function(EFUNC_WATCH_GET, watch_get, NULL);
+	efunc_init_function(EFUNC_WATCH_CHECK, watch_check, NULL);
 }
+
