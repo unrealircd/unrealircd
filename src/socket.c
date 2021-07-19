@@ -1126,7 +1126,7 @@ void read_packet(int fd, int revents, void *data)
 			if (IsServer(client) || client->serv) /* server or outgoing connection */
 				lost_server_link(client, NULL);
 
-			exit_client(client, NULL, "Read error");
+			exit_client(client, NULL, ERRNO ? "Read error" : "Connection closed");
 			return;
 		}
 
