@@ -197,7 +197,7 @@ CMD_FUNC(cmd_watch)
 		if (*s == 'C' || *s == 'c')
 		{
 			watch_del_list(client);
-
+#warning remove only my entries
 			continue;
 		}
 
@@ -216,7 +216,9 @@ CMD_FUNC(cmd_watch)
 			
 			/*
 			 * Send a list of how many users they have on their WATCH list
-			 * and how many WATCH lists they are on.
+			 * and how many WATCH lists they are on. This will also include
+			 * other WATCH types if present - we're not checking for
+			 * WATCH_FLAG_TYPE_*.
 			 */
 			watch = watch_get(client->name);
 			if (watch)
@@ -241,6 +243,8 @@ CMD_FUNC(cmd_watch)
 			    strlen(buf);
 			while ((lp = lp->next))
 			{
+				if (!(lp->flags & WATCH_FLAG_TYPE_WATCH))
+					continue; /* this one is not ours */
 				if (count + strlen(lp->value.wptr->nick) + 1 >
 				    BUFSIZE - 2)
 				{
@@ -271,6 +275,8 @@ CMD_FUNC(cmd_watch)
 
 			while (lp)
 			{
+				if (!(lp->flags & WATCH_FLAG_TYPE_WATCH))
+					continue; /* this one is not ours */
 				if ((target = find_person(lp->value.wptr->nick, NULL)))
 				{
 					sendnumeric(client, RPL_NOWON, target->name,
