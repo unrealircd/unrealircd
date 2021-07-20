@@ -309,7 +309,8 @@ DLL_FILES=SRC/MODULES/CLOAK.DLL \
  SRC/MODULES/CHATHISTORY.DLL \
  SRC/MODULES/TARGETFLOODPROT.DLL \
  SRC/MODULES/TYPING-INDICATOR.DLL \
- SRC/MODULES/CLIENTTAGDENY.DLL
+ SRC/MODULES/CLIENTTAGDENY.DLL \
+ SRC/MODULES/WATCH-BACKEND.DLL
 
 
 ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES 
@@ -1126,5 +1127,8 @@ src/modules/typing-indicator.dll: src/modules/typing-indicator.c $(INCLUDES)
 
 src/modules/clienttagdeny.dll: src/modules/clienttagdeny.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/clienttagdeny.c $(MODLFLAGS)
+	
+src/modules/watch-backend.dll: src/modules/watch-backend.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/watch-backend.c $(MODLFLAGS)
 
 dummy:
