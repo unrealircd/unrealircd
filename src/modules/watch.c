@@ -32,6 +32,7 @@ int watch_away(Client *client, MessageTag *mtags, char *reason, int already_as_a
 int watch_nickchange(Client *client, MessageTag *mtags, char *newnick);
 int watch_post_nickchange(Client *client, MessageTag *mtags);
 int watch_user_connect(Client *client);
+int watch_notification(Client *client, Watch *watch, Link *lp, int reply);
 
 ModuleHeader MOD_HEADER
   = {
@@ -56,6 +57,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_POST_REMOTE_NICKCHANGE, 0, watch_post_nickchange);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, watch_user_connect);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, 0, watch_user_connect);
+	HookAdd(modinfo->handle, HOOKTYPE_WATCH_NOTIFICATION, 0, watch_notification);
 
 	return MOD_SUCCESS;
 }
@@ -165,7 +167,9 @@ CMD_FUNC(cmd_watch)
 					continue;
 				}
 
-				watch_add(s + 1, client, awaynotify);
+				watch_add(s + 1, client,
+					WATCH_FLAG_TYPE_WATCH | (awaynotify ? WATCH_FLAG_AWAYNOTIFY : 0)
+					);
 			}
 
 			show_watch(client, s + 1, RPL_NOWON, RPL_NOWOFF, awaynotify);
@@ -205,7 +209,7 @@ CMD_FUNC(cmd_watch)
 		if ((*s == 'S' || *s == 's') && !did_s)
 		{
 			Link *lp;
-			Watch *anptr;
+			Watch *watch;
 			int  count = 0;
 			
 			did_s = 1;
@@ -214,9 +218,9 @@ CMD_FUNC(cmd_watch)
 			 * Send a list of how many users they have on their WATCH list
 			 * and how many WATCH lists they are on.
 			 */
-			anptr = watch_get(client->name);
-			if (anptr)
-				for (lp = anptr->watch, count = 1;
+			watch = watch_get(client->name);
+			if (watch)
+				for (lp = watch->watch, count = 1;
 				    (lp = lp->next); count++)
 					;
 			sendnumeric(client, RPL_WATCHSTAT, WATCHES(client), count);
@@ -337,6 +341,50 @@ int watch_user_connect(Client *client)
 {
 	watch_check(client, RPL_LOGON);
 
+	return 0;
+}
+
+int watch_notification(Client *client, Watch *watch, Link *lp, int reply)
+{
+	int awaynotify = 0;
+	
+	if (!(lp->flags & WATCH_FLAG_TYPE_WATCH))
+		return 0;
+	
+	if ((reply == RPL_GONEAWAY) || (reply == RPL_NOTAWAY) || (reply == RPL_REAWAY))
+		awaynotify = 1;
+
+	if (!awaynotify)
+	{
+		sendnumeric(lp->value.client, reply,
+		    client->name,
+		    (IsUser(client) ? client->user->username : "<N/A>"),
+		    (IsUser(client) ?
+		    (IsHidden(client) ? client->user->virthost : client->
+		    user->realhost) : "<N/A>"), watch->lasttime, client->info);
+	}
+	else
+	{
+		/* AWAY or UNAWAY */
+		if (!(lp->flags & WATCH_FLAG_AWAYNOTIFY))
+			return 0; /* skip away/unaway notification for users not interested in them */
+
+		if (reply == RPL_NOTAWAY)
+			sendnumeric(lp->value.client, reply,
+			    client->name,
+			    (IsUser(client) ? client->user->username : "<N/A>"),
+			    (IsUser(client) ?
+			    (IsHidden(client) ? client->user->virthost : client->
+			    user->realhost) : "<N/A>"), client->user->lastaway);
+		else /* RPL_GONEAWAY / RPL_REAWAY */
+			sendnumeric(lp->value.client, reply,
+			    client->name,
+			    (IsUser(client) ? client->user->username : "<N/A>"),
+			    (IsUser(client) ?
+			    (IsHidden(client) ? client->user->virthost : client->
+			    user->realhost) : "<N/A>"), client->user->lastaway, client->user->away);
+	}
+	
 	return 0;
 }
 

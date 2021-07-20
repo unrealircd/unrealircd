@@ -1169,6 +1169,8 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_POST_LOCAL_NICKCHANGE	106
 /** See hooktype_post_remote_nickchange() */
 #define HOOKTYPE_POST_REMOTE_NICKCHANGE	107
+/** See hooktype_watch_notify() */
+#define HOOKTYPE_WATCH_NOTIFICATION 108
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
  * 2) Add a hook prototype (see below)
@@ -2134,6 +2136,15 @@ int hooktype_post_local_nickchange(Client *client, MessageTag *mtags);
  */
 int hooktype_post_remote_nickchange(Client *client, MessageTag *mtags);
 
+/** Called when a user changed its state in a way that should trigger a WATCH notification (function prototype for HOOKTYPE_WATCH_NOTIFY).
+ * @param client		The client whose state has changed
+ * @param watch			The watch list entry
+ * @param lp         	The associated watch list entry for WATCHing user
+ * @param reply			The numeric that is supposed to be sent as a notification (module-defined)
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_watch_notification(Client *client, Watch *watch, Link *lp, int reply);
+
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2246,7 +2257,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_CONNECT_EXTINFO) && !ValidateHook(hooktype_connect_extinfo, func)) || \
         ((hooktype == HOOKTYPE_IS_INVITED) && !ValidateHook(hooktype_is_invited, func)) || \
         ((hooktype == HOOKTYPE_POST_LOCAL_NICKCHANGE) && !ValidateHook(hooktype_post_local_nickchange, func)) || \
-        ((hooktype == HOOKTYPE_POST_REMOTE_NICKCHANGE) && !ValidateHook(hooktype_post_remote_nickchange, func)) ) \
+        ((hooktype == HOOKTYPE_POST_REMOTE_NICKCHANGE) && !ValidateHook(hooktype_post_remote_nickchange, func)) || \
+        ((hooktype == HOOKTYPE_WATCH_NOTIFICATION) && !ValidateHook(hooktype_watch_notification, func)) )\
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

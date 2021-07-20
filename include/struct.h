@@ -1969,6 +1969,14 @@ struct Mode {
 	char key[KEYLEN + 1];			/**< The +k key in effect (eg: secret), if any - otherwise NULL */
 };
 
+/* flags for Link if used to contain Watch --k4be */
+
+/* WATCH type */
+#define WATCH_FLAG_TYPE_WATCH	(1<<0) /* added via /WATCH command */
+
+/* behaviour switches */
+#define WATCH_FLAG_AWAYNOTIFY	(1<<8) /* should send AWAY notifications */
+
 /* Used for notify-hash buckets... -Donwulff */
 
 struct Watch {

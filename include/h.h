@@ -769,7 +769,7 @@ extern MODVAR void *(*labeled_response_save_context)(void);
 extern MODVAR void (*labeled_response_set_context)(void *ctx);
 extern MODVAR void (*labeled_response_force_end)(void);
 extern MODVAR void (*kick_user)(MessageTag *mtags, Channel *channel, Client *client, Client *victim, char *comment);
-extern MODVAR int (*watch_add)(char *nick, Client *client, int awaynotify);
+extern MODVAR int (*watch_add)(char *nick, Client *client, int flags);
 extern MODVAR int (*watch_del)(char *nick, Client *client);
 extern MODVAR int (*watch_del_list)(Client *client);
 extern MODVAR Watch *(*watch_get)(char *nick);
