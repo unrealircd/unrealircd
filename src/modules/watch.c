@@ -228,20 +228,16 @@ CMD_FUNC(cmd_watch)
 			 * Send a list of everybody in their WATCH list. Be careful
 			 * not to buffer overflow.
 			 */
-			if ((lp = WATCH(client)) == NULL)
-			{
-				sendnumeric(client, RPL_ENDOFWATCHLIST, *s);
-				continue;
-			}
+			lp = WATCH(client);
 			*buf = '\0';
-			strlcpy(buf, lp->value.wptr->nick, sizeof buf);
-			count =
-			    strlen(client->name) + strlen(me.name) + 10 +
-			    strlen(buf);
-			while ((lp = lp->next))
+			count = strlen(client->name) + strlen(me.name) + 10;
+			while (lp)
 			{
 				if (!(lp->flags & WATCH_FLAG_TYPE_WATCH))
+				{
+					lp = lp->next;
 					continue; /* this one is not ours */
+				}
 				if (count + strlen(lp->value.wptr->nick) + 1 >
 				    BUFSIZE - 2)
 				{
@@ -252,8 +248,12 @@ CMD_FUNC(cmd_watch)
 				strcat(buf, " ");
 				strcat(buf, lp->value.wptr->nick);
 				count += (strlen(lp->value.wptr->nick) + 1);
+				
+				lp = lp->next;
 			}
-			sendnumeric(client, RPL_WATCHLIST, buf);
+			if (*buf)
+				/* anything to send */
+				sendnumeric(client, RPL_WATCHLIST, buf);
 
 			sendnumeric(client, RPL_ENDOFWATCHLIST, *s);
 			continue;
@@ -273,7 +273,10 @@ CMD_FUNC(cmd_watch)
 			while (lp)
 			{
 				if (!(lp->flags & WATCH_FLAG_TYPE_WATCH))
+				{
+					lp = lp->next;
 					continue; /* this one is not ours */
+				}
 				if ((target = find_person(lp->value.wptr->nick, NULL)))
 				{
 					sendnumeric(client, RPL_NOWON, target->name,

@@ -1130,5 +1130,8 @@ src/modules/clienttagdeny.dll: src/modules/clienttagdeny.c $(INCLUDES)
 	
 src/modules/watch-backend.dll: src/modules/watch-backend.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/watch-backend.c $(MODLFLAGS)
+	
+src/modules/monitor.dll: src/modules/monitor.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/monitor.c $(MODLFLAGS)
 
 dummy:

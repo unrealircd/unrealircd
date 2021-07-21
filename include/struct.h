@@ -1973,6 +1973,7 @@ struct Mode {
 
 /* WATCH type */
 #define WATCH_FLAG_TYPE_WATCH	(1<<0) /* added via /WATCH command */
+#define WATCH_FLAG_TYPE_MONITOR	(1<<1) /* added via /MONITOR command */
 
 /* behaviour switches */
 #define WATCH_FLAG_AWAYNOTIFY	(1<<8) /* should send AWAY notifications */

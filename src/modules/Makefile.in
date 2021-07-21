@@ -74,7 +74,8 @@ R_MODULES= \
 	bot-tag.so \
 	reply-tag.so typing-indicator.so \
 	ident_lookup.so history.so chathistory.so \
-	targetfloodprot.so clienttagdeny.so watch-backend.so
+	targetfloodprot.so clienttagdeny.so watch-backend.so \
+	monitor.so
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -652,10 +653,14 @@ targetfloodprot.so: targetfloodprot.c $(INCLUDES)
 clienttagdeny.so: clienttagdeny.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o clienttagdeny.so clienttagdeny.c
-		
+
 watch-backend.so: watch-backend.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o watch-backend.so watch-backend.c
+
+monitor.so: monitor.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o monitor.so monitor.c
 
 #############################################################################
 # capabilities
