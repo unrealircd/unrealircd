@@ -25,8 +25,6 @@
 #define MSG_WATCH 	"WATCH"
 
 CMD_FUNC(cmd_watch);
-void dummy_free(ModData *md);
-void watch_free(ModData *md);
 int watch_user_quit(Client *client, MessageTag *mtags, char *comment);
 int watch_away(Client *client, MessageTag *mtags, char *reason, int already_as_away);
 int watch_nickchange(Client *client, MessageTag *mtags, char *newnick);
