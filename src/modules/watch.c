@@ -184,7 +184,7 @@ CMD_FUNC(cmd_watch)
 		{
 			if (!*(s+1))
 				continue;
-			watch_del(s + 1, client);
+			watch_del(s + 1, client, WATCH_FLAG_TYPE_WATCH);
 			show_watch(client, s + 1, RPL_WATCHOFF, RPL_WATCHOFF, 0);
 
 			continue;
@@ -196,8 +196,7 @@ CMD_FUNC(cmd_watch)
 		 */
 		if (*s == 'C' || *s == 'c')
 		{
-			watch_del_list(client);
-#warning remove only my entries
+			watch_del_list(client, WATCH_FLAG_TYPE_WATCH);
 			continue;
 		}
 
@@ -311,11 +310,6 @@ int watch_user_quit(Client *client, MessageTag *mtags, char *comment)
 {
 	if (IsUser(client))
 		watch_check(client, RPL_LOGOFF);
-
-	if (MyConnect(client))
-		/* Clean out list and watch structures -Donwulff */
-		watch_del_list(client);
-
 	return 0;
 }
 

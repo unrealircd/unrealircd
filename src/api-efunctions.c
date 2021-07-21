@@ -122,8 +122,8 @@ void (*labeled_response_set_context)(void *ctx);
 void (*labeled_response_force_end)(void);
 void (*kick_user)(MessageTag *mtags, Channel *channel, Client *client, Client *victim, char *comment);
 int (*watch_add)(char *nick, Client *client, int flags);
-int (*watch_del)(char *nick, Client *client);
-int (*watch_del_list)(Client *client);
+int (*watch_del)(char *nick, Client *client, int flags);
+int (*watch_del_list)(Client *client, int flags);
 Watch *(*watch_get)(char *nick);
 int (*watch_check)(Client *client, int reply);
 
