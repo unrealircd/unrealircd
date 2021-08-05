@@ -46,6 +46,8 @@ int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
 int (*tkl_chartotype)(char c);
 char *(*tkl_type_string)(TKL *tk);
+char *(*tkl_type_config_string)(TKL *tk);
+char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options);
 TKL *(*tkl_add_serverban)(int type, char *usermask, char *hostmask, char *reason, char *setby,
                               time_t expire_at, time_t set_at, int soft, int flags);
 TKL *(*tkl_add_nameban)(int type, char *name, int hold, char *reason, char *setby,
@@ -343,6 +345,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_MTAGS_TO_STRING, mtags_to_string, &mtags_to_string_default_handler);
 	efunc_init_function(EFUNC_TKL_CHARTOTYPE, tkl_chartotype, NULL);
 	efunc_init_function(EFUNC_TKL_TYPE_STRING, tkl_type_string, NULL);
+	efunc_init_function(EFUNC_TKL_TYPE_CONFIG_STRING, tkl_type_config_string, NULL);
 	efunc_init_function(EFUNC_CAN_SEND_TO_CHANNEL, can_send_to_channel, NULL);
 	efunc_init_function(EFUNC_BROADCAST_MD_GLOBALVAR, broadcast_md_globalvar, NULL);
 	efunc_init_function(EFUNC_BROADCAST_MD_GLOBALVAR_CMD, broadcast_md_globalvar_cmd, NULL);
@@ -365,4 +368,5 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_LABELED_RESPONSE_SET_CONTEXT, labeled_response_set_context, labeled_response_set_context_default_handler);
 	efunc_init_function(EFUNC_LABELED_RESPONSE_FORCE_END, labeled_response_force_end, labeled_response_force_end_default_handler);
 	efunc_init_function(EFUNC_KICK_USER, kick_user, NULL);
+	efunc_init_function(EFUNC_TKL_UHOST, tkl_uhost, NULL);
 }

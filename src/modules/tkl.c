@@ -55,6 +55,7 @@ char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);
 int tkl_banexception_chartotype(char c);
 char *_tkl_type_string(TKL *tk);
+char *_tkl_type_config_string(TKL *tk);
 char *tkl_banexception_configname_to_chars(char *name);
 TKL *_tkl_add_serverban(int type, char *usermask, char *hostmask, char *reason, char *set_by,
                             time_t expire_at, time_t set_at, int soft, int flags);
@@ -71,6 +72,7 @@ void _sendnotice_tkl_add(TKL *tkl);
 void _free_tkl(TKL *tkl);
 void _tkl_del_line(TKL *tkl);
 static void _tkl_check_local_remove_shun(TKL *tmp);
+char *_tkl_uhost(TKL *tkl, char *buf, size_t buflen, int options);
 void tkl_expire_entry(TKL * tmp);
 EVENT(tkl_check_expire);
 int _find_tkline_match(Client *client, int skip_soft);
@@ -161,6 +163,7 @@ MOD_TEST()
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_TYPETOCHAR, TO_INTFUNC(_tkl_typetochar));
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_CHARTOTYPE, TO_INTFUNC(_tkl_chartotype));
 	EfunctionAddPChar(modinfo->handle, EFUNC_TKL_TYPE_STRING, _tkl_type_string);
+	EfunctionAddPChar(modinfo->handle, EFUNC_TKL_TYPE_CONFIG_STRING, _tkl_type_config_string);
 	EfunctionAddPVoid(modinfo->handle, EFUNC_TKL_ADD_SERVERBAN, TO_PVOIDFUNC(_tkl_add_serverban));
 	EfunctionAddPVoid(modinfo->handle, EFUNC_TKL_ADD_BANEXCEPTION, TO_PVOIDFUNC(_tkl_add_banexception));
 	EfunctionAddPVoid(modinfo->handle, EFUNC_TKL_ADD_NAMEBAN, TO_PVOIDFUNC(_tkl_add_nameban));
@@ -191,6 +194,7 @@ MOD_TEST()
 	EfunctionAddVoid(modinfo->handle, EFUNC_SENDNOTICE_TKL_ADD, _sendnotice_tkl_add);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SENDNOTICE_TKL_DEL, _sendnotice_tkl_del);
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_TKL_EXCEPTION, _find_tkl_exception);
+	EfunctionAddPChar(modinfo->handle, EFUNC_TKL_UHOST, _tkl_uhost);
 	return MOD_SUCCESS;
 }
 
@@ -2123,8 +2127,9 @@ int _tkl_hash(unsigned int c)
 	else if ((c >= 'A') && (c <= 'Z'))
 		return c-'A';
 	else {
-		sendto_realops("[BUG] tkl_hash() called with out of range parameter (c = '%c') !!!", c);
-		ircd_log(LOG_ERROR, "[BUG] tkl_hash() called with out of range parameter (c = '%c') !!!", c);
+		unreal_log(ULOG_ERROR, "bug", "TKL_HASH_INVALID", NULL,
+		           "tkl_hash() called with out of range parameter (c = '$tkl_char') !!!",
+		           log_data_char("tkl_char", c));
 		return 0;
 	}
 #else
@@ -2141,8 +2146,9 @@ char _tkl_typetochar(int type)
 	for (i=0; tkl_types[i].config_name; i++)
 		if ((tkl_types[i].type == type) && tkl_types[i].tkltype)
 			return tkl_types[i].letter;
-	sendto_realops("[BUG]: tkl_typetochar(): unknown type 0x%x !!!", type);
-	ircd_log(LOG_ERROR, "[BUG] tkl_typetochar(): unknown type 0x%x !!!", type);
+	unreal_log(ULOG_ERROR, "bug", "TKL_TYPETOCHAR_INVALID", NULL,
+	           "tkl_typetochar(): unknown type $tkl_type!!!",
+	           log_data_integer("tkl_type", type));
 	return 0;
 }
 
@@ -2201,13 +2207,13 @@ char *tkl_banexception_configname_to_chars(char *name)
 char *_tkl_type_string(TKL *tkl)
 {
 	static char txt[256];
+	int i;
 
 	*txt = '\0';
 
 	if (TKLIsServerBan(tkl) && (tkl->ptr.serverban->subtype == TKL_SUBTYPE_SOFT))
 		strlcpy(txt, "Soft ", sizeof(txt));
 
-	int i;
 	for (i=0; tkl_types[i].config_name; i++)
 	{
 		if ((tkl_types[i].type == tkl->type) && tkl_types[i].tkltype)
@@ -2219,6 +2225,18 @@ char *_tkl_type_string(TKL *tkl)
 
 	strlcpy(txt, "Unknown *-Line", sizeof(txt));
 	return txt;
+}
+
+/** Short config string, lowercase alnum with possibly hyphens (eg: 'kline') */
+char *_tkl_type_config_string(TKL *tkl)
+{
+	int i;
+
+	for (i=0; tkl_types[i].config_name; i++)
+		if ((tkl_types[i].type == tkl->type) && tkl_types[i].tkltype)
+			return tkl_types[i].config_name;
+
+	return "???";
 }
 
 int tkl_banexception_matches_type(TKL *except, int bantype)
@@ -2746,7 +2764,7 @@ void _tkl_check_local_remove_shun(TKL *tmp)
  * that can be used in oper notices like expiring kline, added kline, etc.
  */
 #define NO_SOFT_PREFIX	1
-char *tkl_uhost(TKL *tkl, char *buf, size_t buflen, int options)
+char *_tkl_uhost(TKL *tkl, char *buf, size_t buflen, int options)
 {
 	if (TKLIsServerBan(tkl))
 	{
@@ -2784,56 +2802,29 @@ char *tkl_uhost(TKL *tkl, char *buf, size_t buflen, int options)
  */
 void tkl_expire_entry(TKL *tkl)
 {
-	char *whattype = tkl_type_string(tkl);
-
-	if (!tkl)
-		return;
-
-	if (tkl->type & TKL_SPAMF)
-	{
-		/* Impossible */
-	} else
 	if (TKLIsServerBan(tkl))
 	{
-		char uhostbuf[BUFSIZE];
-		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
-		sendto_snomask(SNO_TKL,
-		    "*** Expiring %s (%s) made by %s (Reason: %s) set %lld seconds ago",
-		    whattype, uhost, tkl->set_by, tkl->ptr.serverban->reason,
-		    (long long)(TStime() - tkl->set_at));
-		ircd_log
-		    (LOG_TKL, "Expiring %s (%s) made by %s (Reason: %s) set %lld seconds ago",
-		    whattype, uhost, tkl->set_by, tkl->ptr.serverban->reason,
-		    (long long)(TStime() - tkl->set_at));
+		unreal_log(ULOG_INFO, "tkl", "TKL_EXPIRE", NULL,
+		           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] set $tkl.set_at_delta seconds ago",
+		           log_data_tkl("tkl", tkl));
 	}
 	else if (TKLIsNameBan(tkl))
 	{
 		if (!tkl->ptr.nameban->hold)
 		{
-			sendto_snomask(SNO_TKL,
-				"*** Expiring %s (%s) made by %s (Reason: %s) set %lld seconds ago",
-				whattype, tkl->ptr.nameban->name, tkl->set_by, tkl->ptr.nameban->reason,
-				(long long)(TStime() - tkl->set_at));
-			ircd_log
-				(LOG_TKL, "Expiring %s (%s) made by %s (Reason: %s) set %lld seconds ago",
-				whattype, tkl->ptr.nameban->name, tkl->set_by, tkl->ptr.nameban->reason,
-				(long long)(TStime() - tkl->set_at));
+			unreal_log(ULOG_INFO, "tkl", "TKL_EXPIRE", NULL,
+			           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] set $tkl.set_at_delta seconds ago",
+				   log_data_tkl("tkl", tkl));
 		}
 	}
 	else if (TKLIsBanException(tkl))
 	{
-		char uhostbuf[BUFSIZE];
-		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
-		sendto_snomask(SNO_TKL,
-		    "*** Expiring %s (%s) for types '%s' made by %s (Reason: %s) set %lld seconds ago",
-		    whattype, uhost, tkl->ptr.banexception->bantypes, tkl->set_by, tkl->ptr.banexception->reason,
-		    (long long)(TStime() - tkl->set_at));
-		ircd_log
-		    (LOG_TKL, "Expiring %s (%s) for types '%s' made by %s (Reason: %s) set %lld seconds ago",
-		    whattype, uhost, tkl->ptr.banexception->bantypes, tkl->set_by, tkl->ptr.banexception->reason,
-		    (long long)(TStime() - tkl->set_at));
+		unreal_log(ULOG_INFO, "tkl", "TKL_EXPIRE", NULL,
+			   "Expiring $tkl.type_string '$tkl' [type: $tkl.exception_types] [reason: $tkl.reason] [by: $tkl.set_by] set $tkl.set_at_delta seconds ago",
+			   log_data_tkl("tkl", tkl));
 	}
 
+	// FIXME: so.. this isn't logged? or what?
 	if (tkl->type & TKL_SHUN)
 		tkl_check_local_remove_shun(tkl);
 
@@ -3827,66 +3818,32 @@ void _sendnotice_tkl_add(TKL *tkl)
 
 	if (TKLIsServerBan(tkl))
 	{
-		char uhostbuf[BUFSIZE];
-		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
-		if (tkl->expire_at != 0)
-		{
-			ircsnprintf(buf, sizeof(buf), "%s added for %s on %s GMT (from %s to expire at %s GMT: %s)",
-				tkl_type_str, uhost,
-				set_at, tkl->set_by, expire_at, tkl->ptr.serverban->reason);
-		} else {
-			ircsnprintf(buf, sizeof(buf), "Permanent %s added for %s on %s GMT (from %s: %s)",
-				tkl_type_str, uhost,
-				set_at, tkl->set_by, tkl->ptr.serverban->reason);
-		}
+		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
+			   "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [expires: $tkl.expire_at_string]",
+			   log_data_tkl("tkl", tkl));
 	} else
 	if (TKLIsNameBan(tkl))
 	{
-		if (tkl->expire_at > 0)
-		{
-			ircsnprintf(buf, sizeof(buf), "%s added for %s on %s GMT (from %s to expire at %s GMT: %s)",
-				tkl_type_str, tkl->ptr.nameban->name, set_at, tkl->set_by, expire_at, tkl->ptr.nameban->reason);
-		} else {
-			ircsnprintf(buf, sizeof(buf), "Permanent %s added for %s on %s GMT (from %s: %s)",
-				tkl_type_str, tkl->ptr.nameban->name, set_at, tkl->set_by, tkl->ptr.nameban->reason);
-		}
+		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
+			   "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [expires: $tkl.expire_at_string]",
+			   log_data_tkl("tkl", tkl));
 	} else
 	if (TKLIsSpamfilter(tkl))
 	{
-		/* Spamfilter */
-		ircsnprintf(buf, sizeof(buf),
-		            "Spamfilter added: '%s' [type: %s] [target: %s] [action: %s] [reason: %s] on %s GMT (from %s)",
-		            tkl->ptr.spamfilter->match->str,
-			    unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type),
-		            spamfilter_target_inttostring(tkl->ptr.spamfilter->target),
-		            banact_valtostring(tkl->ptr.spamfilter->action),
-		            unreal_decodespace(tkl->ptr.spamfilter->tkl_reason),
-		            set_at,
-		            tkl->set_by);
+		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
+			   "Spamfilter added: '$tkl' [type: $tkl.match_type] [targets: $tkl.spamfilter_targets] "
+			   "[action: $tkl.ban_action] [reason: $tkl.reason] [by: $tkl.set_by]",
+			   log_data_tkl("tkl", tkl));
 	} else
 	if (TKLIsBanException(tkl))
 	{
-		char uhostbuf[BUFSIZE];
-		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
-		if (tkl->expire_at != 0)
-		{
-			ircsnprintf(buf, sizeof(buf), "%s added for %s for types '%s' on %s GMT (from %s to expire at %s GMT: %s)",
-				tkl_type_str, uhost,
-				tkl->ptr.banexception->bantypes,
-				set_at, tkl->set_by, expire_at, tkl->ptr.banexception->reason);
-		} else {
-			ircsnprintf(buf, sizeof(buf), "Permanent %s added for %s for types '%s' on %s GMT (from %s: %s)",
-				tkl_type_str, uhost,
-				tkl->ptr.banexception->bantypes,
-				set_at, tkl->set_by, tkl->ptr.banexception->reason);
-		}
+		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
+			   "$tkl.type_string added: '$tkl' [types: $tkl.exception_types] [by: $tkl.set_by] [expires: $tkl.expire_at_string]",
+			   log_data_tkl("tkl", tkl));
 	} else
 	{
 		ircsnprintf(buf, sizeof(buf), "[BUG] %s added but type unhandled in sendnotice_tkl_add()!!!", tkl_type_str);
 	}
-
-	sendto_snomask(SNO_TKL, "*** %s", buf);
-	ircd_log(LOG_TKL, "%s", buf);
 }
 
 /** Send a notice to opers about the TKL that is being deleted */
@@ -3907,40 +3864,36 @@ void _sendnotice_tkl_del(char *removed_by, TKL *tkl)
 
 	if (TKLIsServerBan(tkl))
 	{
-		char uhostbuf[BUFSIZE];
-		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
-		ircsnprintf(buf, sizeof(buf),
-			       "%s removed %s %s (set at %s - reason: %s)",
-			       removed_by, tkl_type_str, uhost,
-			       set_at, tkl->ptr.serverban->reason);
+		unreal_log(ULOG_INFO, "tkl", "TKL_DEL", NULL,
+			   "$tkl.type_string removed: '$tkl' [reason: $tkl.reason] [by: $removed_by] [set at: $tkl.set_at_string]",
+			   log_data_tkl("tkl", tkl),
+			   log_data_string("removed_by", removed_by));
 	} else
 	if (TKLIsNameBan(tkl))
 	{
-		ircsnprintf(buf, sizeof(buf),
-			"%s removed %s %s (set at %s - reason: %s)",
-			removed_by, tkl_type_str, tkl->ptr.nameban->name, set_at, tkl->ptr.nameban->reason);
+		unreal_log(ULOG_INFO, "tkl", "TKL_DEL", NULL,
+			   "$tkl.type_string removed: '$tkl' [reason: $tkl.reason] [by: $removed_by] [set at: $tkl.set_at_string]",
+			   log_data_tkl("tkl", tkl),
+			   log_data_string("removed_by", removed_by));
 	} else
 	if (TKLIsSpamfilter(tkl))
 	{
-		ircsnprintf(buf, sizeof(buf),
-			"%s removed Spamfilter '%s' (set at %s)",
-			removed_by, tkl->ptr.spamfilter->match->str, set_at);
+		unreal_log(ULOG_INFO, "tkl", "TKL_DEL", NULL,
+			   "Spamfilter removed: '$tkl' [type: $tkl.match_type] [targets: $tkl.spamfilter_targets] "
+			   "[action: $tkl.ban_action] [reason: $tkl.reason] [by: $removed_by] [set at: $tkl.set_at_string]",
+			   log_data_tkl("tkl", tkl),
+			   log_data_string("removed_by", removed_by));
 	} else
 	if (TKLIsBanException(tkl))
 	{
-		char uhostbuf[BUFSIZE];
-		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
-		ircsnprintf(buf, sizeof(buf),
-			       "%s removed exception on %s (set at %s - reason: %s)",
-			       removed_by, uhost,
-			       set_at, tkl->ptr.banexception->reason);
+		unreal_log(ULOG_INFO, "tkl", "TKL_DEL", NULL,
+			   "$tkl.type_string removed: '$tkl' [types: $tkl.exception_types] [by: $removed_by] [set at: $tkl.set_at_string]",
+			   log_data_tkl("tkl", tkl),
+			   log_data_string("removed_by", removed_by));
 	} else
 	{
 		ircsnprintf(buf, sizeof(buf), "[BUG] %s added but type unhandled in sendnotice_tkl_del()!!!!!", tkl_type_str);
 	}
-
-	sendto_snomask(SNO_TKL, "*** %s", buf);
-	ircd_log(LOG_TKL, "%s", buf);
 }
 
 /** Add a TKL using the TKL layer. See cmd_tkl for parv[] and protocol documentation. */

@@ -701,6 +701,7 @@ extern MODVAR int (*tkl_hash)(unsigned int c);
 extern MODVAR char (*tkl_typetochar)(int type);
 extern MODVAR int (*tkl_chartotype)(char c);
 extern MODVAR char *(*tkl_type_string)(TKL *tk);
+extern MODVAR char *(*tkl_type_config_string)(TKL *tk);
 extern MODVAR TKL *(*tkl_add_serverban)(int type, char *usermask, char *hostmask, char *reason, char *setby,
                                             time_t expire_at, time_t set_at, int soft, int flags);
 extern MODVAR TKL *(*tkl_add_banexception)(int type, char *usermask, char *hostmask, char *reason, char *set_by,
@@ -776,6 +777,7 @@ extern MODVAR void *(*labeled_response_save_context)(void);
 extern MODVAR void (*labeled_response_set_context)(void *ctx);
 extern MODVAR void (*labeled_response_force_end)(void);
 extern MODVAR void (*kick_user)(MessageTag *mtags, Channel *channel, Client *client, Client *victim, char *comment);
+extern MODVAR char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options);
 /* /Efuncs */
 
 /* SSL/TLS functions */
@@ -1098,9 +1100,11 @@ extern char *log_type_valtostring(LogType v);
 extern void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id, Client *client, char *msg, ...) __attribute__((format(printf,5,0)));
 extern void do_unreal_log_raw(LogLevel loglevel, char *subsystem, char *event_id, Client *client, char *msg, ...);
 extern LogData *log_data_string(const char *key, const char *str);
+extern LogData *log_data_char(const char *key, const char c);
 extern LogData *log_data_integer(const char *key, int64_t integer);
 extern LogData *log_data_client(const char *key, Client *client);
 extern LogData *log_data_source(const char *file, int line, const char *function);
 extern LogData *log_data_socket_error(int fd);
 extern LogData *log_data_link_block(ConfigItem_link *link);
+extern LogData *log_data_tkl(const char *key, TKL *tkl);
 /* end of logging */

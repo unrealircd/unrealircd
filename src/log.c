@@ -268,6 +268,17 @@ LogData *log_data_string(const char *key, const char *str)
 	return d;
 }
 
+LogData *log_data_char(const char *key, const char c)
+{
+	LogData *d = safe_alloc(sizeof(LogData));
+	d->type = LOG_FIELD_STRING;
+	safe_strdup(d->key, key);
+	d->value.string = safe_alloc(2);
+	d->value.string[0] = c;
+	d->value.string[1] = '\0';
+	return d;
+}
+
 LogData *log_data_integer(const char *key, int64_t integer)
 {
 	LogData *d = safe_alloc(sizeof(LogData));
@@ -355,6 +366,63 @@ LogData *log_data_link_block(ConfigItem_link *link)
 	return d;
 }
 
+
+LogData *log_data_tkl(const char *key, TKL *tkl)
+{
+	char buf[BUFSIZE];
+	LogData *d = safe_alloc(sizeof(LogData));
+	json_t *j;
+
+	d->type = LOG_FIELD_OBJECT;
+	safe_strdup(d->key, key);
+	d->value.object = j = json_object();
+
+	json_object_set_new(j, "type", json_string(tkl_type_config_string(tkl))); // Eg 'kline'
+	json_object_set_new(j, "type_string", json_string(tkl_type_string(tkl))); // Eg 'Soft K-Line'
+	json_object_set_new(j, "set_by", json_string(tkl->set_by));
+	json_object_set_new(j, "set_at", json_integer(tkl->set_at));
+	json_object_set_new(j, "expire_at", json_integer(tkl->expire_at));
+	*buf = '\0';
+	short_date(tkl->set_at, buf);
+	strlcat(buf, " GMT", sizeof(buf));
+	json_object_set_new(j, "set_at_string", json_string(buf));
+	if (tkl->expire_at <= 0)
+	{
+		json_object_set_new(j, "expire_at_string", json_string("Never"));
+	} else {
+		*buf = '\0';
+		short_date(tkl->expire_at, buf);
+		strlcat(buf, " GMT", sizeof(buf));
+		json_object_set_new(j, "expire_at_string", json_string(buf));
+	}
+	json_object_set_new(j, "set_at_delta", json_integer(TStime() - tkl->set_at));
+	if (TKLIsServerBan(tkl))
+	{
+		json_object_set_new(j, "name", json_string(tkl_uhost(tkl, buf, sizeof(buf), 0)));
+		json_object_set_new(j, "reason", json_string(tkl->ptr.serverban->reason));
+	} else
+	if (TKLIsNameBan(tkl))
+	{
+		json_object_set_new(j, "name", json_string(tkl->ptr.nameban->name));
+		json_object_set_new(j, "reason", json_string(tkl->ptr.nameban->reason));
+	} else
+	if (TKLIsBanException(tkl))
+	{
+		json_object_set_new(j, "name", json_string(tkl_uhost(tkl, buf, sizeof(buf), 0)));
+		json_object_set_new(j, "reason", json_string(tkl->ptr.banexception->reason));
+		json_object_set_new(j, "exception_types", json_string(tkl->ptr.banexception->bantypes));
+	} else
+	if (TKLIsSpamfilter(tkl))
+	{
+		json_object_set_new(j, "name", json_string(tkl->ptr.spamfilter->match->str));
+		json_object_set_new(j, "match_type", json_string(unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type)));
+		json_object_set_new(j, "ban_action", json_string(banact_valtostring(tkl->ptr.spamfilter->action)));
+		json_object_set_new(j, "spamfilter_targets", json_string(spamfilter_target_inttostring(tkl->ptr.spamfilter->target)));
+		json_object_set_new(j, "reason", json_string(tkl->ptr.spamfilter->tkl_reason));
+	}
+
+	return d;
+}
 
 void log_data_free(LogData *d)
 {
