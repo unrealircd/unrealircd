@@ -22,7 +22,7 @@
 /* Change to #define to benchmark. Note that this will add random
  * reputation entries so should never be used on production servers!!!
  */
-#undef BENCHMARK
+#define BENCHMARK
 #undef TEST
 
 /* Benchmark results (2GHz Xeon Skylake, compiled with -O2, Linux):
@@ -81,9 +81,10 @@ ModuleHeader MOD_HEADER
 
 #define WARN_WRITE_ERROR(fname) \
 	do { \
-		sendto_realops_and_log("[reputation] Error writing to temporary database file " \
-		                       "'%s': %s (DATABASE NOT SAVED)", \
-		                       fname, unrealdb_get_error_string()); \
+		unreal_log(ULOG_ERROR, "reputation", "REPUTATION_FILE_WRITE_ERROR", NULL, \
+			   "[reputation] Error writing to temporary database file $filename: $system_error", \
+			   log_data_string("filename", fname), \
+			   log_data_string("system_error", unrealdb_get_error_string())); \
 	} while(0)
 
 #define W_SAFE(x) \
@@ -465,8 +466,9 @@ void reputation_load_db_old(void)
 
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
-	ircd_log(LOG_ERROR, "Reputation benchmark: LOAD DB: %lld microseconds",
-		(long long)(((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
+	unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_BENCHMARK", NULL,
+	           "Reputation benchmark: LOAD DB: $time_msec microseconds",
+	           log_data_integer("time_msec", ((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
 #endif
 }
 
@@ -529,8 +531,9 @@ int reputation_load_db_new(UnrealDB *db)
 	unrealdb_close(db);
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
-	ircd_log(LOG_ERROR, "Reputation benchmark: LOAD DB: %lld microseconds",
-		(long long)(((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
+	unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_BENCHMARK", NULL,
+	           "Reputation benchmark: LOAD DB: $time_msec microseconds",
+	           log_data_integer("time_msec", ((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
 #endif
 	return 1;
 }
@@ -656,8 +659,9 @@ write_fail:
 
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
-	ircd_log(LOG_ERROR, "Reputation benchmark: SAVE DB: %lld microseconds",
-		(long long)(((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
+	unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_BENCHMARK", NULL,
+	           "Reputation benchmark: SAVE DB: $time_msec microseconds",
+	           log_data_integer("time_msec", ((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
 #endif
 
 	return 1;
@@ -677,7 +681,7 @@ int reputation_save_db(void)
 #endif
 
 #ifdef TEST
-	sendto_realops("REPUTATION IS RUNNING IN TEST MODE. SAVING DB'S...");
+	unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_TEST", NULL, "Reputation in running in test mode. Saving DB's....");
 #endif
 
 	/* Comment this out after one or more releases (means you cannot downgrade to <=5.0.9.1 anymore) */
@@ -741,8 +745,9 @@ int reputation_save_db(void)
 
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
-	ircd_log(LOG_ERROR, "Reputation benchmark: SAVE DB: %lld microseconds",
-		(long long)(((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
+	unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_BENCHMARK", NULL,
+	           "Reputation benchmark: SAVE DB: $time_msec microseconds",
+	           log_data_integer("time_msec", ((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
 #endif
 	return 1;
 }
@@ -924,8 +929,11 @@ EVENT(delete_old_records)
 			if (is_reputation_expired(e))
 			{
 #ifdef DEBUGMODE
-				ircd_log(LOG_ERROR, "Deleting expired entry for '%s' (score %hd, last seen %lld seconds ago)",
-				         e->ip, e->score, (long long)(TStime() - e->last_seen));
+				unreal_log(ULOG_INFO, "reputation", "REPUTATION_EXPIRY", NULL,
+				           "Deleting expired entry for $ip (score $score, last seen $time_delta seconds ago)",
+				           log_data_string("ip", e->ip),
+				           log_data_integer("score", e->score),
+				           log_data_integer("time_delta", TStime() - e->last_seen));
 #endif
 				DelListItem(e, ReputationHashTable[i]);
 				safe_free(e);
@@ -935,8 +943,9 @@ EVENT(delete_old_records)
 
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
-	ircd_log(LOG_ERROR, "Reputation benchmark: EXPIRY IN MEM: %lld microseconds",
-		(long long)(((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
+	unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_BENCHMARK", NULL,
+	           "Reputation benchmark: EXPIRY IN MEM: $time_msec microseconds",
+	           log_data_integer("time_msec", ((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
 #endif
 }
 
@@ -1005,8 +1014,11 @@ void reputation_channel_query(Client *client, Channel *channel)
 		}
 		if (++cnt > channel->users)
 		{
-			sendto_ops("[BUG] reputation_channel_query() expected %d users but %d (or more) were present in %s",
-				channel->users, cnt, channel->chname);
+			unreal_log(ULOG_WARN, "bug", "REPUTATION_CHANNEL_QUERY_BUG", client,
+				   "[BUG] reputation_channel_query() expected $expected_users users, but $found_users (or more) users were present in $channel",
+				   log_data_integer("expected_users", channel->users),
+				   log_data_integer("found_users", cnt),
+				   log_data_string("channel", channel->chname));
 #ifdef DEBUGMODE
 			abort();
 #endif
@@ -1239,8 +1251,11 @@ CMD_FUNC(reputation_server_cmd)
 		 */
 		sendto_one(client, NULL, ":%s REPUTATION %s *%d", me.id, parv[1], e->score);
 #ifdef DEBUGMODE
-		ircd_log(LOG_ERROR, "[reputation] Score for '%s' from %s is %d, but we have %d, sending back %d",
-			ip, client->name, score, e->score, e->score);
+		unreal_log(ULOG_INFO, "reputation", "REPUTATION_DIFFERS", client,
+			   "Reputation score for for $ip from $client is $their_score, but we have $score, sending back $score",
+			   log_data_string("ip", e->ip),
+			   log_data_integer("their_score", score),
+			   log_data_integer("score", e->score));
 #endif
 		score = e->score; /* Update for propagation in the non-client direction */
 	}
@@ -1249,8 +1264,11 @@ CMD_FUNC(reputation_server_cmd)
 	if (e && (score > e->score))
 	{
 #ifdef DEBUGMODE
-		ircd_log(LOG_ERROR, "[reputation] Score for '%s' from %s is %d, but we have %d, updating our score to %d",
-			ip, client->name, score, e->score, score);
+		unreal_log(ULOG_INFO, "reputation", "REPUTATION_DIFFERS", client,
+			   "Reputation score for for $ip from $client is $their_score, but we have $score, updating our score to $score",
+			   log_data_string("ip", e->ip),
+			   log_data_integer("their_score", score),
+			   log_data_integer("score", e->score));
 #endif
 		e->score = score;
 	}
@@ -1259,8 +1277,11 @@ CMD_FUNC(reputation_server_cmd)
 	if (!e && (score > 0))
 	{
 #ifdef DEBUGMODE
-		ircd_log(LOG_ERROR, "[reputation] Score for '%s' from %s is %d, we had no entry, adding it",
-			ip, client->name, score);
+		unreal_log(ULOG_INFO, "reputation", "REPUTATION_NEW", client,
+			   "Reputation score for for $ip from $client is $their_score, we had no entry, adding it",
+			   log_data_string("ip", e->ip),
+			   log_data_integer("their_score", score),
+			   log_data_integer("score", e->score));
 #endif
 		e = safe_alloc(sizeof(ReputationEntry)+strlen(ip));
 		strcpy(e->ip, ip); /* safe, see alloc above */
