@@ -203,7 +203,9 @@ void parse(Client *cptr, char *buffer, int length)
 	strlcpy(backupbuf, buffer, sizeof(backupbuf));
 
 #if defined(DEBUGMODE) && defined(RAWCMDLOGGING)
-	ircd_log(LOG_ERROR, "<- %s: %s", cptr->name, backupbuf);
+	unreal_log(ULOG_INFO, "traffic", "TRAFFIC_IN", cptr,
+		   "<- $client: $data",
+		   log_data_string("data", backupbuf));
 #endif
 
 	/* This poisons unused para elements that code should never access */

@@ -248,22 +248,17 @@ void json_expand_channel(json_t *j, char *key, Channel *channel, int detail)
 	json_object_set_new(child, "name", json_string(channel->chname));
 }
 
-char *timestamp_iso8601(time_t v)
+char *timestamp_iso8601_now(void)
 {
 	struct timeval t;
 	struct tm *tm;
 	time_t sec;
 	static char buf[64];
 
-	if (v == 0)
-	{
-		gettimeofday(&t, NULL);
-		sec = t.tv_sec;
-		tm = gmtime(&sec);
-	} else {
-		memset(&t, 0, sizeof(t));
-		tm = gmtime(&v);
-	}
+	gettimeofday(&t, NULL);
+	sec = t.tv_sec;
+	tm = gmtime(&sec);
+
 	snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
 		tm->tm_year + 1900,
 		tm->tm_mon + 1,
@@ -272,6 +267,32 @@ char *timestamp_iso8601(time_t v)
 		tm->tm_min,
 		tm->tm_sec,
 		(int)(t.tv_usec / 1000));
+
+	return buf;
+}
+
+char *timestamp_iso8601(time_t v)
+{
+	struct tm *tm;
+	static char buf[64];
+
+	if (v == 0)
+		return NULL;
+
+	tm = gmtime(&v);
+
+	if (tm == NULL)
+		return NULL;
+
+	snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
+		tm->tm_year + 1900,
+		tm->tm_mon + 1,
+		tm->tm_mday,
+		tm->tm_hour,
+		tm->tm_min,
+		tm->tm_sec,
+		0);
+
 	return buf;
 }
 
@@ -391,6 +412,13 @@ LogData *log_data_link_block(ConfigItem_link *link)
 	return d;
 }
 
+json_t *json_timestamp(time_t v)
+{
+	char *ts = timestamp_iso8601(v);
+	if (ts)
+		return json_string(ts);
+	return json_null();
+}
 
 LogData *log_data_tkl(const char *key, TKL *tkl)
 {
@@ -405,8 +433,8 @@ LogData *log_data_tkl(const char *key, TKL *tkl)
 	json_object_set_new(j, "type", json_string(tkl_type_config_string(tkl))); // Eg 'kline'
 	json_object_set_new(j, "type_string", json_string(tkl_type_string(tkl))); // Eg 'Soft K-Line'
 	json_object_set_new(j, "set_by", json_string(tkl->set_by));
-	json_object_set_new(j, "set_at", json_string(timestamp_iso8601(tkl->set_at)));
-	json_object_set_new(j, "expire_at", json_string(timestamp_iso8601(tkl->expire_at)));
+	json_object_set_new(j, "set_at", json_timestamp(tkl->set_at));
+	json_object_set_new(j, "expire_at", json_timestamp(tkl->expire_at));
 	*buf = '\0';
 	short_date(tkl->set_at, buf);
 	strlcat(buf, " GMT", sizeof(buf));
@@ -653,14 +681,11 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 	/* Log to all ircops for now */
 	// FIXME: obviously there should be snomask filtering here ;)
 	// TODO: don't show loglevel for simple INFO messages?
-	if (strncmp(msg, "->", 2) && strncmp(msg, "<-", 2))
-	{
-		snomask = log_to_snomask(loglevel, subsystem, event_id);
-		if (snomask == SNO_ALL)
-			sendto_realops("[%s] %s.%s %s", loglevel_to_string(loglevel), subsystem, event_id, msg);
-		else
-			sendto_snomask(snomask, "[%s] %s.%s %s", loglevel_to_string(loglevel), subsystem, event_id, msg);
-	}
+	snomask = log_to_snomask(loglevel, subsystem, event_id);
+	if (snomask == SNO_ALL)
+		sendto_realops("[%s] %s.%s %s", loglevel_to_string(loglevel), subsystem, event_id, msg);
+	else if (snomask > 0)
+		sendto_snomask(snomask, "[%s] %s.%s %s", loglevel_to_string(loglevel), subsystem, event_id, msg);
 
 	for (l = conf_log; l; l = l->next)
 	{
@@ -739,7 +764,7 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 
 		/* Now actually WRITE to the log... */
 		write_error = 0;
-		if (l->type == LOG_TYPE_JSON)
+		if ((l->type == LOG_TYPE_JSON) && strcmp(subsystem, "traffic"))
 		{
 			n = write(l->logfd, json_serialized, strlen(json_serialized));
 			if (n < strlen(text_buf))
@@ -747,6 +772,7 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 			else
 				write(l->logfd, "\n", 1); // FIXME: no.. we should do it this way..... and why do we use direct I/O at all?
 		} else
+		if (l->type == LOG_TYPE_TEXT)
 		{
 			// FIXME: don't write in 2 stages, waste of slow system calls
 			if (write(l->logfd, timebuf, strlen(timebuf)) < 0)
@@ -817,7 +843,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	j = json_object();
 	j_details = json_object();
 
-	json_object_set_new(j, "timestamp", json_string(timestamp_iso8601(0)));
+	json_object_set_new(j, "timestamp", json_string(timestamp_iso8601_now()));
 	json_object_set_new(j, "level", json_string(loglevel_to_string(loglevel)));
 	json_object_set_new(j, "subsystem", json_string(subsystem));
 	json_object_set_new(j, "event_id", json_string(event_id));
@@ -837,7 +863,10 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 				json_object_set_new(j_details, d->key, json_integer(d->value.integer));
 				break;
 			case LOG_FIELD_STRING:
-				json_object_set_new(j_details, d->key, json_string(d->value.string));
+				if (d->value.string)
+					json_object_set_new(j_details, d->key, json_string(d->value.string));
+				else
+					json_object_set_new(j_details, d->key, json_null());
 				break;
 			case LOG_FIELD_CLIENT:
 				json_expand_client(j_details, d->key, d->value.client, 0);
@@ -910,7 +939,7 @@ void add_log_snomask(Configuration *i, char *subsystem, long snomask)
 	LogSnomask *l = safe_alloc(sizeof(LogSnomask));
 	safe_strdup(l->subsystem, subsystem);
 	l->snomask = snomask;
-	AddListItem(l, i->log_snomasks);
+	AppendListItem(l, i->log_snomasks);
 }
 
 void log_snomask_free(LogSnomask *l)
@@ -933,6 +962,7 @@ void log_snomask_free_settings(Configuration *i)
 void log_snomask_setdefaultsettings(Configuration *i)
 {
 	add_log_snomask(i, "linking", SNO_ALL);
+	add_log_snomask(i, "traffic", 0);
 	add_log_snomask(i, "*", SNO_ALL);
 }
 
@@ -947,6 +977,8 @@ long log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id)
 		{
 			if (l->snomask == SNO_ALL)
 				return SNO_ALL; /* return early */
+			if (l->snomask == 0)
+				return 0; /* return early */
 			snomask |= l->snomask;
 		}
 	}
