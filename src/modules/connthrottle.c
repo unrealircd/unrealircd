@@ -360,16 +360,18 @@ EVENT(connthrottle_evt)
 
 	if (ucounter->rejected_clients)
 	{
-		snprintf(buf, sizeof(buf),
-		         "[ConnThrottle] Stats for this server past 60 secs: Connections rejected: %d. Accepted: %d known user(s), %d SASL, %d WEBIRC and %d new user(s).",
-		         ucounter->rejected_clients,
-		         ucounter->allowed_score,
-		         ucounter->allowed_sasl,
-			 ucounter->allowed_webirc,
-		         ucounter->allowed_other);
-
-		sendto_realops("%s", buf);
-		ircd_log(LOG_ERROR, "%s", buf);
+		unreal_log(ULOG_INFO, "connthrottle", "CONNTHROTLE_REPORT", NULL,
+		           "ConnThrottle] Stats for this server past 60 secs: "
+		           "Connections rejected: $num_rejected. "
+		           "Accepted: $num_accepted_known_users known user(s), "
+		           "$num_accepted_sasl SASL, "
+		           "$num_accepted_webirc WEBIRC and "
+		           "$num_accepted_unknown_users new user(s).",
+		           log_data_integer("num_rejected", ucounter->rejected_clients),
+		           log_data_integer("num_accepted_known_users", ucounter->allowed_score),
+		           log_data_integer("num_accepted_sasl", ucounter->allowed_sasl),
+		           log_data_integer("num_accepted_webirc", ucounter->allowed_webirc),
+		           log_data_integer("num_accepted_unknown_users", ucounter->allowed_other));
 	}
 
 	/* Reset stats for next message */
@@ -436,8 +438,8 @@ int ct_pre_lconnect(Client *client)
 		/* We send the LARGE banner if throttling was activated */
 		if (!ucounter->throttling_previous_minute && !ucounter->throttling_banner_displayed)
 		{
-			ircd_log(LOG_ERROR, "[ConnThrottle] Connection throttling has been ACTIVATED due to a HIGH CONNECTION RATE.");
-			sendto_realops("[ConnThrottle] Connection throttling has been ACTIVATED due to a HIGH CONNECTION RATE.");
+			unreal_log(ULOG_WARN, "connthrottle", "CONNTHROTLE_ACTIVATED", NULL,
+			           "[ConnThrottle] Connection throttling has been ACTIVATED due to a HIGH CONNECTION RATE.");
 			sendto_realops("[ConnThrottle] Users with IP addresses that have not been seen before will be rejected above the set connection rate. Known users can still get in.");
 			sendto_realops("[ConnThrottle] For more information see https://www.unrealircd.org/docs/ConnThrottle");
 			ucounter->throttling_banner_displayed = 1;
@@ -602,8 +604,8 @@ CMD_FUNC(ct_throttle)
 			return;
 		}
 		ucounter->disabled = 1;
-		sendto_realops("[connthrottle] %s (%s@%s) DISABLED the connthrottle module.",
-			client->name, client->user->username, client->user->realhost);
+		unreal_log(ULOG_WARN, "connthrottle", "CONNTHROTLE_MODULE_DISABLED", client,
+			   "[ConnThrottle] $client.nuh DISABLED the connthrottle module.");
 	} else
 	if (!strcasecmp(parv[1], "ON"))
 	{
@@ -612,15 +614,15 @@ CMD_FUNC(ct_throttle)
 			sendnotice(client, "Already ON");
 			return;
 		}
-		sendto_realops("[connthrottle] %s (%s@%s) ENABLED the connthrottle module.",
-			client->name, client->user->username, client->user->realhost);
+		unreal_log(ULOG_WARN, "connthrottle", "CONNTHROTLE_MODULE_ENABLED", client,
+			   "[ConnThrottle] $client.nuh ENABLED the connthrottle module.");
 		ucounter->disabled = 0;
 	} else
 	if (!strcasecmp(parv[1], "RESET"))
 	{
 		memset(ucounter, 0, sizeof(UCounter));
-		sendto_realops("[connthrottle] %s (%s@%s) did a RESET on the stats/counters!!",
-			client->name, client->user->username, client->user->realhost);
+		unreal_log(ULOG_WARN, "connthrottle", "CONNTHROTLE_RESET", client,
+			   "[ConnThrottle] $client.nuh did a RESET on the statistics/counters.");
 	} else
 	{
 		sendnotice(client, "Unknown option '%s'", parv[1]);
