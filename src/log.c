@@ -494,6 +494,8 @@ char *loglevel_to_string(LogLevel loglevel)
 {
 	switch(loglevel)
 	{
+		case ULOG_DEBUG:
+			return "debug";
 		case ULOG_INFO:
 			return "info";
 		case ULOG_WARN:
