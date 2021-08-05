@@ -26,6 +26,11 @@
 
 #include "unrealircd.h"
 
+#define SNO_ALL INT_MAX
+
+/* Forward declarations */
+long log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id);
+
 LogType log_type_stringtoval(char *str)
 {
 	if (!strcmp(str, "json"))
@@ -515,6 +520,7 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 	struct stat fstats;
 	int n;
 	int write_error;
+	long snomask;
 
 	/* Trap infinite recursions to avoid crash if log file is unavailable,
 	 * this will also avoid calling ircd_log from anything else called
@@ -554,7 +560,13 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 	// FIXME: obviously there should be snomask filtering here ;)
 	// TODO: don't show loglevel for simple INFO messages?
 	if (strncmp(msg, "->", 2) && strncmp(msg, "<-", 2))
-		sendto_realops("[%s] %s", loglevel_to_string(loglevel), msg);
+	{
+		snomask = log_to_snomask(loglevel, subsystem, event_id);
+		if (snomask == SNO_ALL)
+			sendto_realops("[%s] %s.%s %s", loglevel_to_string(loglevel), subsystem, event_id, msg);
+		else
+			sendto_snomask(snomask, "[%s] %s.%s %s", loglevel_to_string(loglevel), subsystem, event_id, msg);
+	}
 
 	for (l = conf_log; l; l = l->next)
 	{
@@ -776,4 +788,52 @@ void logtest(void)
 	unreal_log(ULOG_INFO, "test", "TEST", &me, "More data!", log_data_string("fun", "yes lots of fun"));
 	unreal_log(ULOG_INFO, "test", "TEST", &me, "More data, fun: $fun!", log_data_string("fun", "yes lots of fun"), log_data_integer("some_integer", 1337));
 	unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", &me, "Client $client used SAJOIN to join $target to y!", log_data_client("target", &me));
+}
+
+void add_log_snomask(Configuration *i, char *subsystem, long snomask)
+{
+	LogSnomask *l = safe_alloc(sizeof(LogSnomask));
+	safe_strdup(l->subsystem, subsystem);
+	l->snomask = snomask;
+	AddListItem(l, i->log_snomasks);
+}
+
+void log_snomask_free(LogSnomask *l)
+{
+	safe_free(l->subsystem);
+	safe_free(l);
+}
+
+void log_snomask_free_settings(Configuration *i)
+{
+	LogSnomask *l, *l_next;
+	for (l = i->log_snomasks; l; l = l_next)
+	{
+		l_next = l->next;
+		log_snomask_free(l);
+	}
+	i->log_snomasks = NULL;
+}
+
+void log_snomask_setdefaultsettings(Configuration *i)
+{
+	add_log_snomask(i, "linking", SNO_ALL);
+	add_log_snomask(i, "*", SNO_ALL);
+}
+
+long log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id)
+{
+	LogSnomask *l;
+	long snomask = 0;
+
+	for (l = iConf.log_snomasks; l; l = l->next)
+	{
+		if (match_simple(l->subsystem, subsystem))
+		{
+			if (l->snomask == SNO_ALL)
+				return SNO_ALL; /* return early */
+			snomask |= l->snomask;
+		}
+	}
+	return snomask;
 }

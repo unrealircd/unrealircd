@@ -248,6 +248,13 @@ typedef enum LogType {
 	LOG_TYPE_JSON = 2,
 } LogType;
 
+typedef struct LogSnomask LogSnomask;
+struct LogSnomask {
+	LogSnomask *prev, *next;
+	char *subsystem;
+	long snomask;
+};
+
 /*
 ** 'offsetof' is defined in ANSI-C. The following definition
 ** is not absolutely portable (I have been told), but so far

@@ -195,9 +195,9 @@ extern void unload_all_unused_umodes(void);
 extern void unload_all_unused_extcmodes(void);
 extern void unload_all_unused_caps(void);
 extern void unload_all_unused_history_backends(void);
-
+extern void log_snomask_setdefaultsettings(Configuration *i);
+extern void log_snomask_free_settings(Configuration *i);
 int reloadable_perm_module_unloaded(void);
-
 int tls_tests(void);
 
 /* Conf sub-sub-functions */
@@ -1741,6 +1741,7 @@ void	free_iConf(Configuration *i)
 		free_floodsettings(f);
 	}
 	i->floodsettings = NULL;
+	log_snomask_free_settings(i);
 }
 
 int	config_test();
@@ -1749,6 +1750,7 @@ void config_setdefaultsettings(Configuration *i)
 {
 	char tmp[512];
 
+	log_snomask_setdefaultsettings(i);
 	safe_strdup(i->oper_snomask, SNO_DEFOPER);
 	i->ident_read_timeout = 7;
 	i->ident_connect_timeout = 3;
