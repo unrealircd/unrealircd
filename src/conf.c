@@ -2232,7 +2232,7 @@ int	init_conf(char *rootconf, int rehash)
 	}
 	else
 	{
-		config_error("IRCd configuration failed to load");
+		unreal_log(ULOG_ERROR, "config", "CONFIG_NOT_LOADED", NULL, "IRCd configuration failed to load");
 		Unload_all_testing_modules();
 		unload_notloaded_includes();
 		config_free(conf);
@@ -2252,7 +2252,7 @@ int	init_conf(char *rootconf, int rehash)
 		RunHook0(HOOKTYPE_REHASH_COMPLETE);
 	}
 	postconf();
-	config_status("Configuration loaded.");
+	unreal_log(ULOG_INFO, "config", "CONFIG_LOADED", NULL, "Configuration loaded");
 	clicap_post_rehash();
 	unload_all_unused_mtag_handlers();
 	return 0;
