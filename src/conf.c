@@ -1489,7 +1489,7 @@ void config_error(FORMAT_STRING(const char *format), ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-	unreal_log_raw(ULOG_ERROR, "config", "CONFIG_ERROR_GENERIC", NULL, buffer, NULL);
+	unreal_log_raw(ULOG_ERROR, "config", "CONFIG_ERROR_GENERIC", NULL, buffer);
 	if (remote_rehash_client)
 		sendnotice(remote_rehash_client, "error: %s", buffer);
 	/* We cannot live with this */
@@ -1547,7 +1547,7 @@ void config_status(FORMAT_STRING(const char *format), ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-	unreal_log_raw(ULOG_INFO, "config", "CONFIG_INFO_GENERIC", NULL, buffer, NULL);
+	unreal_log_raw(ULOG_INFO, "config", "CONFIG_INFO_GENERIC", NULL, buffer);
 	if (remote_rehash_client)
 		sendnotice(remote_rehash_client, "%s", buffer);
 }
@@ -1563,7 +1563,7 @@ void config_warn(FORMAT_STRING(const char *format), ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-	unreal_log_raw(ULOG_WARN, "config", "CONFIG_WARNING_GENERIC", NULL, buffer, NULL);
+	unreal_log_raw(ULOG_WARN, "config", "CONFIG_WARNING_GENERIC", NULL, buffer);
 	if (remote_rehash_client)
 		sendnotice(remote_rehash_client, "[warning] %s", buffer);
 }
