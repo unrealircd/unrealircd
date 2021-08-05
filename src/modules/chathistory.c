@@ -173,7 +173,7 @@ void chathistory_targets(Client *client, HistoryFilter *filter, int limit)
 	for (mp = client->user->channel; mp; mp = mp->next)
 	{
 		Channel *channel = mp->channel;
-		r = history_request(channel->chname, filter);
+		r = history_request(channel->name, filter);
 		if (r)
 		{
 			add_chathistory_target(&targets, r);
@@ -369,7 +369,7 @@ CMD_FUNC(cmd_chathistory)
 	if (filter->limit > CHATHISTORY_LIMIT)
 		filter->limit = CHATHISTORY_LIMIT;
 
-	if ((r = history_request(channel->chname, filter)))
+	if ((r = history_request(channel->name, filter)))
 		history_send_result(client, r);
 
 end:

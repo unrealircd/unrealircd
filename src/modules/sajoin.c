@@ -230,8 +230,8 @@ CMD_FUNC(cmd_sajoin)
 					new_message(target, NULL, &mtags);
 					sendto_channel(channel, target, NULL, 0, 0, SEND_LOCAL, mtags,
 					               ":%s PART %s :%s",
-					               target->name, channel->chname, "Left all channels");
-					sendto_server(NULL, 0, 0, mtags, ":%s PART %s :Left all channels", target->name, channel->chname);
+					               target->name, channel->name, "Left all channels");
+					sendto_server(NULL, 0, 0, mtags, ":%s PART %s :Left all channels", target->name, channel->name);
 					if (MyConnect(target))
 						RunHook4(HOOKTYPE_LOCAL_PART, target, channel, mtags, "Left all channels");
 					free_message_tags(mtags);

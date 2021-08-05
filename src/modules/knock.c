@@ -106,19 +106,19 @@ CMD_FUNC(cmd_knock)
 	/* IsMember bugfix by codemastr */
 	if (IsMember(client, channel) == 1)
 	{
-		sendnumeric(client, ERR_CANNOTKNOCK, channel->chname, "You're already there!");
+		sendnumeric(client, ERR_CANNOTKNOCK, channel->name, "You're already there!");
 		return;
 	}
 
 	if (!(channel->mode.mode & MODE_INVITEONLY))
 	{
-		sendnumeric(client, ERR_CANNOTKNOCK, channel->chname, "Channel is not invite only!");
+		sendnumeric(client, ERR_CANNOTKNOCK, channel->name, "Channel is not invite only!");
 		return;
 	}
 
 	if (is_banned(client, channel, BANCHK_JOIN, NULL, NULL))
 	{
-		sendnumeric(client, ERR_CANNOTKNOCK, channel->chname, "You're banned!");
+		sendnumeric(client, ERR_CANNOTKNOCK, channel->name, "You're banned!");
 		return;
 	}
 
@@ -145,14 +145,14 @@ CMD_FUNC(cmd_knock)
 	sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 	               0, SEND_LOCAL, mtags,
 	               ":%s NOTICE @%s :[Knock] by %s!%s@%s (%s)",
-	               me.name, channel->chname,
+	               me.name, channel->name,
 	               client->name, client->user->username, GetHost(client),
 	               reason);
 
-	sendto_server(client, 0, 0, mtags, ":%s KNOCK %s :%s", client->id, channel->chname, reason);
+	sendto_server(client, 0, 0, mtags, ":%s KNOCK %s :%s", client->id, channel->name, reason);
 
 	if (MyUser(client))
-		sendnotice(client, "Knocked on %s", channel->chname);
+		sendnotice(client, "Knocked on %s", channel->name);
 
         RunHook4(HOOKTYPE_KNOCK, client, channel, mtags, parv[2]);
 

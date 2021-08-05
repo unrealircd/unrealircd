@@ -112,11 +112,11 @@ static int secureonly_kick_insecure_users(Channel *channel)
 				       prefix, 0,
 				       SEND_LOCAL, mtags,
 				       ":%s KICK %s %s :%s",
-				       me.name, channel->chname, client->name, comment);
+				       me.name, channel->name, client->name, comment);
 
-			sendto_prefix_one(client, &me, mtags, ":%s KICK %s %s :%s", me.name, channel->chname, client->name, comment);
+			sendto_prefix_one(client, &me, mtags, ":%s KICK %s %s :%s", me.name, channel->name, client->name, comment);
 
-			sendto_server(NULL, 0, 0, mtags, ":%s KICK %s %s :%s", me.id, channel->chname, client->id, comment);
+			sendto_server(NULL, 0, 0, mtags, ":%s KICK %s %s :%s", me.id, channel->name, client->id, comment);
 
 			free_message_tags(mtags);
 
@@ -168,7 +168,7 @@ int secureonly_check_sajoin(Client *target, Channel *channel, Client *requester)
 	if (IsSecureOnly(channel) && !IsSecure(target))
 	{
 		sendnotice(requester, "You cannot SAJOIN %s to %s because the channel is +z and the user is not connected via SSL/TLS",
-			target->name, channel->chname);
+			target->name, channel->name);
 		return HOOK_DENY;
 	}
 
@@ -182,7 +182,7 @@ int secureonly_specialcheck(Client *client, Channel *channel, char *parv[])
 {
 	if ((channel->users == 0) && (iConf.modes_on_join.extmodes & EXTCMODE_SECUREONLY) && !IsSecure(client) && !IsOper(client))
 	{
-		sendnumeric(client, ERR_SECUREONLYCHAN, channel->chname);
+		sendnumeric(client, ERR_SECUREONLYCHAN, channel->name);
 		return HOOK_DENY;
 	}
 	return HOOK_CONTINUE;

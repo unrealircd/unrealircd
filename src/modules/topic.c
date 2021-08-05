@@ -57,12 +57,12 @@ void topicoverride(Client *client, Channel *channel, char *topic)
 	sendto_snomask(SNO_EYES,
 	    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
 	    client->name, client->user->username, client->user->realhost,
-	    channel->chname, topic);
+	    channel->name, topic);
 
 	/* Logging implementation added by XeRXeS */
 	ircd_log(LOG_OVERRIDE, "OVERRIDE: %s (%s@%s) TOPIC %s \'%s\'",
 		client->name, client->user->username, client->user->realhost,
-		channel->chname, topic);
+		channel->name, topic);
 }
 
 /** Query or change the channel topic.
@@ -149,12 +149,12 @@ CMD_FUNC(cmd_topic)
 		}
 
 		if (!channel->topic)
-			sendnumeric(client, RPL_NOTOPIC, channel->chname);
+			sendnumeric(client, RPL_NOTOPIC, channel->name);
 		else
 		{
 			sendnumeric(client, RPL_TOPIC,
-			    channel->chname, channel->topic);
-			sendnumeric(client, RPL_TOPICWHOTIME, channel->chname,
+			    channel->name, channel->topic);
+			sendnumeric(client, RPL_TOPICWHOTIME, channel->name,
 			    channel->topic_nick, channel->topic_time);
 		}
 		return;
@@ -175,11 +175,11 @@ CMD_FUNC(cmd_topic)
 			new_message(client, recv_mtags, &mtags);
 			RunHook4(HOOKTYPE_TOPIC, client, channel, mtags, topic);
 			sendto_server(client, 0, 0, mtags, ":%s TOPIC %s %s %lld :%s",
-			    client->id, channel->chname, channel->topic_nick,
+			    client->id, channel->name, channel->topic_nick,
 			    (long long)channel->topic_time, channel->topic);
 			sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 				       ":%s TOPIC %s :%s",
-				       client->name, channel->chname, channel->topic);
+				       client->name, channel->name, channel->topic);
 			free_message_tags(mtags);
 		}
 		return;
@@ -196,7 +196,7 @@ CMD_FUNC(cmd_topic)
 		{
 			if (MyUser(client) && !ValidatePermissionsForPath("channel:override:topic", client, NULL, channel, NULL))
 			{
-				sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->chname);
+				sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 				return;
 			}
 			topicoverride(client, channel, topic);
@@ -211,7 +211,7 @@ CMD_FUNC(cmd_topic)
 
 			if (MyUser(client) && !ValidatePermissionsForPath("channel:override:topic", client, NULL, channel, NULL))
 			{
-				ircsnprintf(buf, sizeof(buf), "You cannot change the topic on %s while being banned", channel->chname);
+				ircsnprintf(buf, sizeof(buf), "You cannot change the topic on %s while being banned", channel->name);
 				sendnumeric(client, ERR_CANNOTDOCOMMAND, "TOPIC",  buf);
 				return;
 			}
@@ -230,7 +230,7 @@ CMD_FUNC(cmd_topic)
 				topicoverride(client, channel, topic);
 			} else {
 				/* With +m and -t, only voice and higher may change the topic */
-				ircsnprintf(buf, sizeof(buf), "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", channel->chname);
+				ircsnprintf(buf, sizeof(buf), "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", channel->name);
 				sendnumeric(client, ERR_CANNOTDOCOMMAND, "TOPIC",  buf);
 				return;
 			}
@@ -242,7 +242,7 @@ CMD_FUNC(cmd_topic)
 			Hook *tmphook;
 			int n;
 
-			if (match_spamfilter(client, topic, SPAMF_TOPIC, "TOPIC", channel->chname, 0, NULL))
+			if (match_spamfilter(client, topic, SPAMF_TOPIC, "TOPIC", channel->name, 0, NULL))
 				return;
 
 			for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_TOPIC]; tmphook; tmphook = tmphook->next) {
@@ -272,10 +272,10 @@ CMD_FUNC(cmd_topic)
 	new_message(client, recv_mtags, &mtags);
 	RunHook4(HOOKTYPE_TOPIC, client, channel, mtags, topic);
 	sendto_server(client, 0, 0, mtags, ":%s TOPIC %s %s %lld :%s",
-	    client->id, channel->chname, channel->topic_nick,
+	    client->id, channel->name, channel->topic_nick,
 	    (long long)channel->topic_time, channel->topic);
 	sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 		       ":%s TOPIC %s :%s",
-		       client->name, channel->chname, channel->topic);
+		       client->name, channel->name, channel->topic);
 	free_message_tags(mtags);
 }

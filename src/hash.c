@@ -584,7 +584,7 @@ Channel *find_channel(char *name, Channel *default_result)
 
 	for (tmp = channelTable[hashv]; tmp; tmp = tmp->hnextch)
 	{
-		if (smycmp(name, tmp->chname) == 0)
+		if (smycmp(name, tmp->name) == 0)
 			return tmp;
 	}
 	return default_result;

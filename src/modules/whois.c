@@ -196,7 +196,7 @@ CMD_FUNC(cmd_whois)
 				if (showchannel)
 				{
 					long access;
-					if (len + strlen(channel->chname) > (size_t)BUFSIZE - 4 - mlen)
+					if (len + strlen(channel->name) > (size_t)BUFSIZE - 4 - mlen)
 					{
 						sendto_one(client, NULL,
 						    ":%s %d %s %s :%s",
@@ -258,8 +258,8 @@ CMD_FUNC(cmd_whois)
 					}
 					if (len)
 						*(buf + len) = '\0';
-					strcpy(buf + len, channel->chname);
-					len += strlen(channel->chname);
+					strcpy(buf + len, channel->name);
+					len += strlen(channel->name);
 					strcat(buf + len, " ");
 					len++;
 				}

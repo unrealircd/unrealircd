@@ -272,7 +272,7 @@ int add_listmode_ex(Ban **list, Client *client, Channel *channel, char *banid, c
 		if (MyUser(client))
 		{
 			/* Only send the error to local clients */
-			sendnumeric(client, ERR_BANLISTFULL, channel->chname, banid);
+			sendnumeric(client, ERR_BANLISTFULL, channel->name, banid);
 		}
 		do_not_add = 1;
 	}
@@ -301,7 +301,7 @@ int add_listmode_ex(Ban **list, Client *client, Channel *channel, char *banid, c
 			if (MyUser(client))
 			{
 				/* Only send the error to local clients */
-				sendnumeric(client, ERR_BANLISTFULL, channel->chname, banid);
+				sendnumeric(client, ERR_BANLISTFULL, channel->name, banid);
 			}
 			return -1;
 		}
@@ -956,7 +956,7 @@ Channel *get_channel(Client *client, char *chname, int flag)
 	if (flag == CREATE)
 	{
 		channel = safe_alloc(sizeof(Channel) + len);
-		strlcpy(channel->chname, chname, len + 1);
+		strlcpy(channel->name, chname, len + 1);
 		if (channels)
 			channels->prevch = channel;
 		channel->topic = NULL;
@@ -1050,7 +1050,7 @@ int sub1_from_channel(Channel *channel)
 
 	if (channel->nextch)
 		channel->nextch->prevch = channel->prevch;
-	del_from_channel_hash_table(channel->chname, channel);
+	del_from_channel_hash_table(channel->name, channel);
 
 	irccounts.channels--;
 	safe_free(channel);
@@ -1069,7 +1069,7 @@ void set_channel_mlock(Client *client, Channel *channel, const char *newmlock, i
 	if (propagate)
 	{
 		sendto_server(client, 0, 0, NULL, ":%s MLOCK %lld %s :%s",
-			      client->id, (long long)channel->creationtime, channel->chname,
+			      client->id, (long long)channel->creationtime, channel->name,
 			      BadPtr(channel->mode_lock) ? "" : channel->mode_lock);
 	}
 }

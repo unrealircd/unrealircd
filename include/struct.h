@@ -1902,7 +1902,7 @@ struct ConfigItem_help {
 
 struct ConfigItem_offchans {
 	ConfigItem_offchans *prev, *next;
-	char chname[CHANNELLEN+1];
+	char name[CHANNELLEN+1];
 	char *topic;
 };
 
@@ -2032,7 +2032,7 @@ struct Channel {
 	Ban *invexlist;				/**< List of invite exceptions (+I) */
 	char *mode_lock;			/**< Mode lock (MLOCK) applied to channel - usually by Services */
 	ModData moddata[MODDATA_MAX_CHANNEL];	/**< Channel attached module data, used by the ModData system */
-	char chname[1];				/**< Channel name */
+	char name[1];				/**< Channel name */
 };
 
 /** user/channel member struct (channel->members).

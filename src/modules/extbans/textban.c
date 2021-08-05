@@ -275,7 +275,7 @@ int extban_modeT_is_ok(Client *client, Channel *channel, char *para, int checkt,
 	    ((n = counttextbans(channel)) >= MAX_EXTBANT_PER_CHAN))
 	{
 		/* We check the # of bans in the channel, may not exceed MAX_EXTBANT_PER_CHAN */
-		sendnumeric(client, ERR_BANLISTFULL, channel->chname, para);
+		sendnumeric(client, ERR_BANLISTFULL, channel->name, para);
 		sendnotice(client, "Too many textbans for this channel");
 		return 0;
 	}
@@ -500,7 +500,7 @@ int textban_check_ban(Client *client, Channel *channel, char *ban, char **msg, c
 	gettimeofday(&tv_beta, NULL);
 	ircd_log(LOG_ERROR, "TextBan Timing: %ld microseconds (%s / %s / %d)",
 		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec),
-		client->name, channel->chname, strlen(*msg));
+		client->name, channel->name, strlen(*msg));
 #endif
 
 	if (cleaned)

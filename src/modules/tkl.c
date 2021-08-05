@@ -4581,7 +4581,7 @@ int _join_viruschan(Client *client, TKL *tkl, int type)
 	if (channel)
 	{
 		MessageTag *mtags = NULL;
-		ircsnprintf(chbuf, sizeof(chbuf), "@%s", channel->chname);
+		ircsnprintf(chbuf, sizeof(chbuf), "@%s", channel->name);
 		ircsnprintf(buf, sizeof(buf), "[Spamfilter] %s matched filter '%s' [%s] [%s]",
 			client->name, tkl->ptr.spamfilter->match->str, cmdname_by_spamftarget(type),
 			unreal_decodespace(tkl->ptr.spamfilter->tkl_reason));

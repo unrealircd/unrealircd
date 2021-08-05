@@ -247,7 +247,7 @@ void json_expand_channel(json_t *j, char *key, Channel *channel, int detail)
 {
 	json_t *child = json_object();
 	json_object_set_new(j, key, child);
-	json_object_set_new(child, "name", json_string(channel->chname));
+	json_object_set_new(child, "name", json_string(channel->name));
 }
 
 char *timestamp_iso8601_now(void)

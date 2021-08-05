@@ -84,7 +84,7 @@ void _kick_user(MessageTag *initial_mtags, Channel *channel, Client *client, Cli
 		new_message(client, NULL, &initial_mtags);
 	}
 
-	new_message_special(client, initial_mtags, &mtags, ":%s KICK %s %s", client->name, channel->chname, victim->name);
+	new_message_special(client, initial_mtags, &mtags, ":%s KICK %s %s", client->name, channel->name, victim->name);
 	/* The same message is actually sent at 5 places below (though max 4 at most) */
 
 	if (MyUser(client))
@@ -99,22 +99,22 @@ void _kick_user(MessageTag *initial_mtags, Channel *channel, Client *client, Cli
 			       PREFIX_HALFOP|PREFIX_OP|PREFIX_OWNER|PREFIX_ADMIN, 0,
 			       SEND_LOCAL, mtags,
 			       ":%s KICK %s %s :%s",
-			       client->name, channel->chname, victim->name, comment);
+			       client->name, channel->name, victim->name, comment);
 
 		if (MyUser(victim))
 		{
 			sendto_prefix_one(victim, client, mtags, ":%s KICK %s %s :%s",
-				client->name, channel->chname, victim->name, comment);
+				client->name, channel->name, victim->name, comment);
 		}
 	} else {
 		/* NORMAL */
 		sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 			       ":%s KICK %s %s :%s",
-			       client->name, channel->chname, victim->name, comment);
+			       client->name, channel->name, victim->name, comment);
 	}
 
 	sendto_server(client, 0, 0, mtags, ":%s KICK %s %s :%s",
-	    client->id, channel->chname, victim->id, comment);
+	    client->id, channel->name, victim->id, comment);
 
 	free_message_tags(mtags);
 	if (initial_mtags_generated)
@@ -178,7 +178,7 @@ CMD_FUNC(cmd_kick)
 		if (MyUser(client) && !IsULine(client) && !op_can_override("channel:override:kick:no-ops",client,channel,NULL)
 		    && !(client_flags & CHFL_ISOP) && !(client_flags & CHFL_HALFOP))
 		{
-			sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->chname);
+			sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 			continue;
 		}
 
@@ -250,10 +250,10 @@ CMD_FUNC(cmd_kick)
 					sendto_snomask(SNO_EYES,
 						"*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
 						client->name, client->user->username, client->user->realhost,
-						channel->chname, who->name, comment);
+						channel->name, who->name, comment);
 					ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
 						client->name, client->user->username, client->user->realhost,
-						channel->chname, who->name, comment);
+						channel->name, who->name, comment);
 					goto attack; /* all other checks don't matter anymore (and could cause double msgs) */
 				} else {
 					/* Not an oper overriding */
@@ -277,12 +277,12 @@ CMD_FUNC(cmd_kick)
 					sendto_snomask(SNO_EYES,
 					    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
 					    client->name, client->user->username, client->user->realhost,
-					    channel->chname, who->name, comment);
+					    channel->name, who->name, comment);
 
 					/* Logging Implementation added by XeRXeS */
 					ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
 						client->name, client->user->username, client->user->realhost,
-						channel->chname, who->name, comment);
+						channel->name, who->name, comment);
 
 					goto attack;
 				}	/* is_chan_op */
@@ -299,12 +299,12 @@ CMD_FUNC(cmd_kick)
 					sendto_snomask(SNO_EYES,
 					    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
 					    client->name, client->user->username, client->user->realhost,
-					    channel->chname, who->name, comment);
+					    channel->name, who->name, comment);
 
 					/* Logging Implementation added by XeRXeS */
 					ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
 						client->name, client->user->username, client->user->realhost,
-						channel->chname, who->name, comment);
+						channel->name, who->name, comment);
 
 					goto attack;
 				}

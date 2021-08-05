@@ -91,13 +91,13 @@ CMD_FUNC(cmd_history)
 
 	if (!IsMember(client, channel))
 	{
-		sendnumeric(client, ERR_NOTONCHANNEL, channel->chname);
+		sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
 		return;
 	}
 
 	if (!has_channel_mode(channel, 'H'))
 	{
-		sendnotice(client, "Channel %s does not have channel mode +H set", channel->chname);
+		sendnotice(client, "Channel %s does not have channel mode +H set", channel->name);
 		return;
 	}
 
@@ -125,7 +125,7 @@ CMD_FUNC(cmd_history)
 	filter.cmd = HFC_SIMPLE;
 	filter.last_lines = lines;
 
-	if ((r = history_request(channel->chname, &filter)))
+	if ((r = history_request(channel->name, &filter)))
 	{
 		history_send_result(client, r);
 		free_history_result(r);

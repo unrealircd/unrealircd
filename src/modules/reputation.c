@@ -998,7 +998,7 @@ void reputation_channel_query(Client *client, Channel *channel)
 	int cnt = 0, i, j;
 	ReputationEntry *e;
 
-	sendtxtnumeric(client, "Users and reputation scores for %s:", channel->chname);
+	sendtxtnumeric(client, "Users and reputation scores for %s:", channel->name);
 
 	/* Step 1: build a list of nicks and their reputation */
 	nicks = safe_alloc((channel->users+1) * sizeof(char *));
@@ -1018,7 +1018,7 @@ void reputation_channel_query(Client *client, Channel *channel)
 				   "[BUG] reputation_channel_query() expected $expected_users users, but $found_users (or more) users were present in $channel",
 				   log_data_integer("expected_users", channel->users),
 				   log_data_integer("found_users", cnt),
-				   log_data_string("channel", channel->chname));
+				   log_data_string("channel", channel->name));
 #ifdef DEBUGMODE
 			abort();
 #endif
@@ -1142,7 +1142,7 @@ CMD_FUNC(reputation_user_cmd)
 		/* corner case: ircop without proper permissions and not in channel */
 		if (!ValidatePermissionsForPath("channel:see:names:invisible",client,NULL,NULL,NULL) && !get_access(client,channel))
 		{
-			sendnumeric(client, ERR_NOTONCHANNEL, channel->chname);
+			sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
 			return;
 		}
 		reputation_channel_query(client, channel);

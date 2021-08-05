@@ -9503,7 +9503,7 @@ int	_conf_offchans(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		ConfigItem_offchans *of = safe_alloc(sizeof(ConfigItem_offchans));
-		strlcpy(of->chname, cep->ce_varname, CHANNELLEN+1);
+		strlcpy(of->name, cep->ce_varname, CHANNELLEN+1);
 		for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 		{
 			if (!strcmp(cepp->ce_varname, "topic"))

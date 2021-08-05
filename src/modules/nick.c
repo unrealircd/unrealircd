@@ -412,12 +412,12 @@ CMD_FUNC(cmd_nick_local)
 			if (!is_skochanop(client, mp->channel) && is_banned(client, mp->channel, BANCHK_NICK, NULL, NULL))
 			{
 				sendnumeric(client, ERR_BANNICKCHANGE,
-				    mp->channel->chname);
+				    mp->channel->name);
 				return;
 			}
 			if (CHECK_TARGET_NICK_BANS && !is_skochanop(client, mp->channel) && is_banned_with_nick(client, mp->channel, BANCHK_NICK, nick, NULL, NULL))
 			{
-				sendnumeric(client, ERR_BANNICKCHANGE, mp->channel->chname);
+				sendnumeric(client, ERR_BANNICKCHANGE, mp->channel->name);
 				return;
 			}
 
@@ -431,7 +431,7 @@ CMD_FUNC(cmd_nick_local)
 			if (i == HOOK_DENY)
 			{
 				sendnumeric(client, ERR_NONICKCHANGE,
-				    mp->channel->chname);
+				    mp->channel->name);
 				return;
 			}
 		}

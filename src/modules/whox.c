@@ -761,7 +761,7 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 		else
 			host = GetHost(acptr);
 		sendnumeric(client, RPL_WHOREPLY,
-			channel ? channel->chname : "*",
+			channel ? channel->name : "*",
 			acptr->user->username, host,
 			hide ? "*" : acptr->user->server,
 			acptr->name, status, hide ? 0 : acptr->hopcount, acptr->info);
@@ -773,7 +773,7 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 		if (HasField(fmt, FIELD_QUERYTYPE))
 			append_format(str, sizeof str, &pos, " %s", fmt->querytype);
 		if (HasField(fmt, FIELD_CHANNEL))
-			append_format(str, sizeof str, &pos, " %s", channel ? channel->chname : "*");
+			append_format(str, sizeof str, &pos, " %s", channel ? channel->name : "*");
 		if (HasField(fmt, FIELD_USER))
 			append_format(str, sizeof str, &pos, " %s", acptr->user->username);
 		if (HasField(fmt, FIELD_IP))

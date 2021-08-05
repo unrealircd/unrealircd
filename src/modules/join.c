@@ -146,7 +146,7 @@ int _can_join(Client *client, Channel *channel, char *key, char *parv[])
 #ifndef NO_OPEROVERRIDE
 #ifdef OPEROVERRIDE_VERIFY
         if (ValidatePermissionsForPath("channel:override:privsecret",client,NULL,channel,NULL) && (channel->mode.mode & MODE_SECRET ||
-            channel->mode.mode & MODE_PRIVATE) && !is_autojoin_chan(channel->chname))
+            channel->mode.mode & MODE_PRIVATE) && !is_autojoin_chan(channel->name))
                 return (ERR_OPERSPVERIFY);
 #endif
 #endif
@@ -194,10 +194,10 @@ void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mta
 	long CAP_AWAY_NOTIFY = ClientCapabilityBit("away-notify");
 
 	ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN :%s",
-		client->name, client->user->username, GetHost(client), channel->chname);
+		client->name, client->user->username, GetHost(client), channel->name);
 
 	ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
-		client->name, client->user->username, GetHost(client), channel->chname,
+		client->name, client->user->username, GetHost(client), channel->name,
 		IsLoggedIn(client) ? client->user->svid : "*",
 		client->info);
 
@@ -237,7 +237,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 	char *parv[] = { 0, 0 };
 
 	/* Same way as in SJOIN */
-	new_message_special(client, recv_mtags, &mtags, ":%s JOIN %s", client->name, channel->chname);
+	new_message_special(client, recv_mtags, &mtags, ":%s JOIN %s", client->name, channel->name);
 
 	new_message(&me, recv_mtags, &mtags_sjoin);
 
@@ -247,7 +247,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 
 	sendto_server(client, 0, 0, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
 		me.id, (long long)channel->creationtime,
-		channel->chname, chfl_to_sjoin_symbol(flags), client->id);
+		channel->name, chfl_to_sjoin_symbol(flags), client->id);
 
 	if (MyUser(client))
 	{
@@ -260,13 +260,13 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 		{
 			channel->creationtime = TStime();
 			sendto_server(client, 0, 0, NULL, ":%s MODE %s + %lld",
-			    me.id, channel->chname, (long long)channel->creationtime);
+			    me.id, channel->name, (long long)channel->creationtime);
 		}
 
 		if (channel->topic)
 		{
-			sendnumeric(client, RPL_TOPIC, channel->chname, channel->topic);
-			sendnumeric(client, RPL_TOPICWHOTIME, channel->chname, channel->topic_nick,
+			sendnumeric(client, RPL_TOPIC, channel->name, channel->topic);
+			sendnumeric(client, RPL_TOPICWHOTIME, channel->name, channel->topic_nick,
 			    channel->topic_time);
 		}
 		
@@ -295,15 +295,15 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 			*modebuf = *parabuf = 0;
 			channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel, 0);
 			/* This should probably be in the SJOIN stuff */
-			new_message_special(&me, recv_mtags, &mtags_mode, ":%s MODE %s %s %s", me.name, channel->chname, modebuf, parabuf);
+			new_message_special(&me, recv_mtags, &mtags_mode, ":%s MODE %s %s %s", me.name, channel->name, modebuf, parabuf);
 			sendto_server(NULL, 0, 0, mtags_mode, ":%s MODE %s %s %s %lld",
-			    me.id, channel->chname, modebuf, parabuf, (long long)channel->creationtime);
-			sendto_one(client, mtags_mode, ":%s MODE %s %s %s", me.name, channel->chname, modebuf, parabuf);
+			    me.id, channel->name, modebuf, parabuf, (long long)channel->creationtime);
+			sendto_one(client, mtags_mode, ":%s MODE %s %s %s", me.name, channel->name, modebuf, parabuf);
 			free_message_tags(mtags_mode);
 		}
 
 		parv[0] = client->name;
-		parv[1] = channel->chname;
+		parv[1] = channel->name;
 		do_cmd(client, NULL, "NAMES", 2, parv);
 
 		RunHook4(HOOKTYPE_LOCAL_JOIN, client, channel, mtags, parv);
@@ -441,8 +441,8 @@ void _do_join(Client *client, int parc, char *parv[])
 
 				sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s PART %s :%s",
-				               client->name, channel->chname, "Left all channels");
-				sendto_server(client, 0, 0, mtags, ":%s PART %s :Left all channels", client->name, channel->chname);
+				               client->name, channel->name, "Left all channels");
+				sendto_server(client, 0, 0, mtags, ":%s PART %s :Left all channels", client->name, channel->name);
 
 				if (MyConnect(client))
 					RunHook4(HOOKTYPE_LOCAL_PART, client, channel, mtags, "Left all channels");
@@ -713,20 +713,20 @@ void _userhost_changed(Client *client)
 			/* Prepare buffers for PART, JOIN, MODE */
 			ircsnprintf(partbuf, sizeof(partbuf), ":%s!%s@%s PART %s :%s",
 						remember_nick, remember_user, remember_host,
-						channel->chname,
+						channel->name,
 						"Changing host");
 
 			ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN %s",
-						client->name, client->user->username, GetHost(client), channel->chname);
+						client->name, client->user->username, GetHost(client), channel->name);
 
 			ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
-				client->name, client->user->username, GetHost(client), channel->chname,
+				client->name, client->user->username, GetHost(client), channel->name,
 				IsLoggedIn(client) ? client->user->svid : "*",
 				client->info);
 
 			modes = get_chmodes_for_user(client, flags);
 			if (!BadPtr(modes))
-				ircsnprintf(modebuf, sizeof(modebuf), ":%s MODE %s %s", me.name, channel->chname, modes);
+				ircsnprintf(modebuf, sizeof(modebuf), ":%s MODE %s %s", me.name, channel->name, modes);
 
 			for (lp = channel->members; lp; lp = lp->next)
 			{

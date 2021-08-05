@@ -602,7 +602,7 @@ static void do_channel_who(Client *client, Channel *channel, char *mask)
 			continue;
 
 		make_who_status(client, acptr, channel, cm, status, cansee);
-		send_who_reply(client, acptr, channel->chname, status, "");
+		send_who_reply(client, acptr, channel->name, status, "");
     }
 }
 
@@ -857,7 +857,7 @@ static char *first_visible_channel(Client *client, Client *acptr, int *flg)
 			*flg |= FVC_HIDDEN;
 
 		if (showchannel)
-			return channel->chname;
+			return channel->name;
 	}
 
 	/* no channels that they can see */

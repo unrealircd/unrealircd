@@ -231,7 +231,7 @@ void channel_svsmode(Client *client, int parc, char *parv[])
 				if (what != MODE_DEL)
 				{
 					sendto_realops("Warning! Received SVS(2)MODE with +%c for %s from %s, which is invalid!!",
-						*m, channel->chname, client->name);
+						*m, channel->name, client->name);
 					continue;
 				}
 				channel_flags = char_to_channelflag(*m);
@@ -268,7 +268,7 @@ void channel_svsmode(Client *client, int parc, char *parv[])
 				break;
 			default:
 				sendto_realops("Warning! Invalid mode `%c' used with 'SVSMODE %s %s %s' (from %s %s)",
-					       *m, channel->chname, parv[2], parv[3] ? parv[3] : "",
+					       *m, channel->name, parv[2], parv[3] ? parv[3] : "",
 					       client->direction->name, client->name);
 				break;
 		}
@@ -283,8 +283,8 @@ void channel_svsmode(Client *client, int parc, char *parv[])
 
 		sendto_channel(channel, client, client, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
-		               client->name, channel->chname,  modebuf, parabuf);
-		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", client->id, channel->chname, modebuf, parabuf);
+		               client->name, channel->name,  modebuf, parabuf);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", client->id, channel->name, modebuf, parabuf);
 
 		/* Activate this hook just like cmd_mode.c */
 		RunHook7(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, 0);
@@ -598,8 +598,8 @@ void add_send_mode_param(Channel *channel, Client *from, char what, char mode, c
 		new_message(from, NULL, &mtags);
 		sendto_channel(channel, from, from, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
-		               from->name, channel->chname, modebuf, parabuf);
-		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", from->id, channel->chname, modebuf, parabuf);
+		               from->name, channel->name, modebuf, parabuf);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", from->id, channel->name, modebuf, parabuf);
 		free_message_tags(mtags);
 		send = 0;
 		*parabuf = 0;

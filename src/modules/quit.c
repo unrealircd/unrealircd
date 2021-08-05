@@ -124,7 +124,7 @@ CMD_FUNC(cmd_quit)
 					int ret;
 
 					parx[0] = NULL;
-					parx[1] = channel->chname;
+					parx[1] = channel->name;
 					parx[2] = newcomment;
 					parx[3] = NULL;
 

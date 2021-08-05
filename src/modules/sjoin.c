@@ -82,9 +82,9 @@ void send_local_chan_mode(MessageTag *recv_mtags, Client *client, Channel *chann
 {
 	MessageTag *mtags = NULL;
 
-	new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, channel->chname, modebuf, parabuf);
+	new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, channel->name, modebuf, parabuf);
 	sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
-	               ":%s MODE %s %s %s", client->name, channel->chname, modebuf, parabuf);
+	               ":%s MODE %s %s %s", client->name, channel->name, modebuf, parabuf);
 	if (MyConnect(client))
 		RunHook7(HOOKTYPE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, -1);
 	else
@@ -213,7 +213,7 @@ CMD_FUNC(cmd_sjoin)
 		if (ts != 0)
 			sendto_ops
 			    ("Warning! Possible desync: SJOIN for channel %s has a fishy timestamp (%lld) [%s/%s]",
-			    channel->chname, (long long)ts, client->name, client->direction->name);
+			    channel->name, (long long)ts, client->name, client->direction->name);
 	}
 
 	parabuf[0] = '\0';
@@ -366,7 +366,7 @@ CMD_FUNC(cmd_sjoin)
 			{
 				/* this obviously should never happen */
 				sendto_ops("Malformed SJOIN piece from %s for channel %s: %s",
-					client->name, channel->chname, tp);
+					client->name, channel->name, tp);
 				continue;
 			}
 			*end++ = '\0';
@@ -376,7 +376,7 @@ CMD_FUNC(cmd_sjoin)
 			{
 				/* missing setby parameter */
 				sendto_ops("Malformed SJOIN piece from %s for channel %s: %s",
-					client->name, channel->chname, tp);
+					client->name, channel->name, tp);
 				continue;
 			}
 			*p++ = '\0';
@@ -485,11 +485,11 @@ getnick:
 			
 				sendto_one(client, NULL,
 				    ":%s KICK %s %s :Fake direction",
-				    me.id, channel->chname, acptr->name);
+				    me.id, channel->name, acptr->name);
 				sendto_realops
 				    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
 				    nick, client->srvptr->name,
-				    client->name, channel->chname);
+				    client->name, channel->name);
 				continue;
 			}
 
@@ -506,7 +506,7 @@ getnick:
 
 				add_user_to_channel(channel, acptr, modeflags);
 				RunHook4(HOOKTYPE_REMOTE_JOIN, acptr, channel, recv_mtags, NULL);
-				new_message_special(acptr, recv_mtags, &mtags, ":%s JOIN %s", acptr->name, channel->chname);
+				new_message_special(acptr, recv_mtags, &mtags, ":%s JOIN %s", acptr->name, channel->name);
 				send_join_to_local_users(acptr, channel, mtags);
 				free_message_tags(mtags);
 			}
@@ -527,7 +527,7 @@ getnick:
 				{
 					ircd_log(LOG_ERROR, "Oversized SJOIN: '%s' + '%s%s'",
 						uid_buf, prefix, acptr->id);
-					sendto_realops("Oversized SJOIN for %s -- see ircd log", channel->chname);
+					sendto_realops("Oversized SJOIN for %s -- see ircd log", channel->name);
 					continue;
 				}
 			}
@@ -543,7 +543,7 @@ getnick:
 				{
 					ircd_log(LOG_ERROR, "Oversized SJOIN: '%s' + '%s%s'",
 						uid_sjsby_buf, prefix, acptr->id);
-					sendto_realops("Oversized SJOIN for %s -- see ircd log", channel->chname);
+					sendto_realops("Oversized SJOIN for %s -- see ircd log", channel->name);
 					continue;
 				}
 			}
@@ -602,7 +602,7 @@ getnick:
 				{
 					ircd_log(LOG_ERROR, "Oversized SJOIN: '%s' + '%s%s'",
 						uid_buf, prefix, nick);
-					sendto_realops("Oversized SJOIN for %s -- see ircd log", channel->chname);
+					sendto_realops("Oversized SJOIN for %s -- see ircd log", channel->name);
 					continue;
 				}
 			}
@@ -623,7 +623,7 @@ getnick:
 				if (strlen(uid_sjsby_buf) + strlen(scratch_buf) > BUFSIZE - 5)
 				{
 					ircd_log(LOG_ERROR, "Oversized SJOIN: '%s' + '%s'", uid_sjsby_buf, scratch_buf);
-					sendto_realops("Oversized SJOIN for %s -- see ircd log", channel->chname);
+					sendto_realops("Oversized SJOIN for %s -- see ircd log", channel->name);
 					continue;
 				}
 			}
@@ -886,7 +886,7 @@ getnick:
 		new_message(client, NULL, &mtags);
 		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, NULL,
 			":%s NOTICE %s :*** TS for %s changed from %lld to %lld",
-			me.name, channel->chname, channel->chname,
+			me.name, channel->name, channel->name,
 			(long long)oldts, (long long)channel->creationtime);
 		free_message_tags(mtags);
 	}

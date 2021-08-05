@@ -335,7 +335,7 @@ int write_channel_entry(UnrealDB *db, const char *tmpfname, Channel *channel)
 {
 	W_SAFE(unrealdb_write_int32(db, MAGIC_CHANNEL_START));
 	/* Channel name */
-	W_SAFE(unrealdb_write_str(db, channel->chname));
+	W_SAFE(unrealdb_write_str(db, channel->name));
 	/* Channel creation time */
 	W_SAFE(unrealdb_write_int64(db, channel->creationtime));
 	/* Topic (topic, setby, seton) */

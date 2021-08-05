@@ -1468,7 +1468,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 			send_channel_modes_sjoin3(cptr, channel);
 			if (channel->topic_time)
 				sendto_one(cptr, NULL, "TOPIC %s %s %lld :%s",
-				    channel->chname, channel->topic_nick,
+				    channel->name, channel->topic_nick,
 				    (long long)channel->topic_time, channel->topic);
 			send_moddata_channel(cptr, channel);
 		}
@@ -1517,7 +1517,7 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 	int prebuflen = 0; /* points to after the <sjointoken> <TS> <chan> <fixmodes> <fixparas <..>> : part */
 	int sent = 0; /* we need this so we send at least 1 message about the channel (eg if +P and no members, no bans, #4459) */
 
-	if (*channel->chname != '#')
+	if (*channel->name != '#')
 		return;
 
 	nomode = 0;
@@ -1546,19 +1546,19 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 	{
 		ircsnprintf(buf, sizeof(buf),
 		    ":%s SJOIN %lld %s :", me.id,
-		    (long long)channel->creationtime, channel->chname);
+		    (long long)channel->creationtime, channel->name);
 	}
 	if (nopara && !nomode)
 	{
 		ircsnprintf(buf, sizeof(buf),
 		    ":%s SJOIN %lld %s %s :", me.id,
-		    (long long)channel->creationtime, channel->chname, modebuf);
+		    (long long)channel->creationtime, channel->name, modebuf);
 	}
 	if (!nopara && !nomode)
 	{
 		ircsnprintf(buf, sizeof(buf),
 		    ":%s SJOIN %lld %s %s %s :", me.id,
-		    (long long)channel->creationtime, channel->chname, modebuf, parabuf);
+		    (long long)channel->creationtime, channel->name, modebuf, parabuf);
 	}
 
 	prebuflen = strlen(buf);
