@@ -572,10 +572,7 @@ CMD_FUNC(cmd_rehash)
 			}
 			unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [by: $client.nuh]");
 			remote_rehash_client = client;
-			reread_motdsandrules();
-			// TODO: clean this next line up, wtf man.
-			rehash(client, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
-			return;
+			/* fallthrough... so we deal with this the same way as local rehashes */
 		}
 		parv[1] = parv[2];
 	} else {
@@ -591,16 +588,6 @@ CMD_FUNC(cmd_rehash)
 			parv[1] = parv[2];
 			parv[2] = NULL;
 			parc--;
-			/* Only netadmins may use /REHASH -global, which is because:
-			 * a) it makes sense
-			 * b) remote servers don't support remote rehashes by non-netadmins
-			 */
-			if (!ValidatePermissionsForPath("server:rehash",client,NULL,NULL,NULL))
-			{
-				sendnumeric(client, ERR_NOPRIVILEGES);
-				sendnotice(client, "'/REHASH -global' requires you to have server::rehash permissions");
-				return;
-			}
 			if (parv[1] && *parv[1] != '-')
 			{
 				sendnotice(client, "You cannot specify a server name after /REHASH -global, for obvious reasons");
@@ -622,13 +609,6 @@ CMD_FUNC(cmd_rehash)
 
 	if (!BadPtr(parv[1]) && strcasecmp(parv[1], "-all"))
 	{
-
-		if (!ValidatePermissionsForPath("server:rehash",client,NULL,NULL,NULL))
-		{
-			sendnumeric(client, ERR_NOPRIVILEGES);
-			return;
-		}
-
 		if (*parv[1] == '-')
 		{
 			if (!strncasecmp("-gar", parv[1], 4))
@@ -664,9 +644,7 @@ CMD_FUNC(cmd_rehash)
 
 	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
 	sendnumeric(client, RPL_REHASHING, configfile);
-	// TODO: fix next line - occurence #2
-	x = rehash(client, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
-	reread_motdsandrules();
+	x = rehash(client, 0);
 }
 
 /** RESTART command - restart the server (discouraged command)

@@ -10795,8 +10795,7 @@ int	rehash_internal(Client *client, int sig)
 	loop.ircd_rehashing = 1; /* double checking.. */
 	if (init_conf(configfile, 1) == 0)
 		run_configuration();
-	if (sig == 1)
-		reread_motdsandrules();
+	reread_motdsandrules();
 	unload_all_unused_snomasks();
 	unload_all_unused_umodes();
 	unload_all_unused_extcmodes();
