@@ -52,7 +52,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-void log_sapart(Client *client, Client *target, char *channels, char *comment)
+static void log_sapart(Client *client, Client *target, char *channels, char *comment)
 {
 	if (comment)
 	{
@@ -111,13 +111,12 @@ CMD_FUNC(cmd_sapart)
 		return;
 	}
 
-	/* Broadcast */
+	/* Broadcast so other servers can log it appropriately as an SAPART */
 	if (parv[3])
 		sendto_server(client, 0, 0, recv_mtags, ":%s SAPART %s %s :%s", client->id, target->id, parv[2], comment);
 	else
 		sendto_server(client, 0, 0, recv_mtags, ":%s SAPART %s %s", client->id, target->id, parv[2]);
 
-	/* Relay it on, if it's not my target */
 	if (!MyUser(target))
 	{
 		log_sapart(client, target, parv[2], comment);
