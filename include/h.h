@@ -1102,6 +1102,7 @@ extern void do_unreal_log_raw(LogLevel loglevel, char *subsystem, char *event_id
 extern LogData *log_data_string(const char *key, const char *str);
 extern LogData *log_data_char(const char *key, const char c);
 extern LogData *log_data_integer(const char *key, int64_t integer);
+extern LogData *log_data_timestamp(const char *key, time_t ts);
 extern LogData *log_data_client(const char *key, Client *client);
 extern LogData *log_data_source(const char *file, int line, const char *function);
 extern LogData *log_data_socket_error(int fd);

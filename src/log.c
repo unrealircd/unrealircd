@@ -248,16 +248,22 @@ void json_expand_channel(json_t *j, char *key, Channel *channel, int detail)
 	json_object_set_new(child, "name", json_string(channel->chname));
 }
 
-char *timestamp_iso8601(void)
+char *timestamp_iso8601(time_t v)
 {
 	struct timeval t;
 	struct tm *tm;
 	time_t sec;
 	static char buf[64];
 
-	gettimeofday(&t, NULL);
-	sec = t.tv_sec;
-	tm = gmtime(&sec);
+	if (v == 0)
+	{
+		gettimeofday(&t, NULL);
+		sec = t.tv_sec;
+		tm = gmtime(&sec);
+	} else {
+		memset(&t, 0, sizeof(t));
+		tm = gmtime(&v);
+	}
 	snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
 		tm->tm_year + 1900,
 		tm->tm_mon + 1,
@@ -295,6 +301,15 @@ LogData *log_data_integer(const char *key, int64_t integer)
 	d->type = LOG_FIELD_INTEGER;
 	safe_strdup(d->key, key);
 	d->value.integer = integer;
+	return d;
+}
+
+LogData *log_data_timestamp(const char *key, time_t ts)
+{
+	LogData *d = safe_alloc(sizeof(LogData));
+	d->type = LOG_FIELD_STRING;
+	safe_strdup(d->key, key);
+	safe_strdup(d->value.string, timestamp_iso8601(ts));
 	return d;
 }
 
@@ -390,8 +405,8 @@ LogData *log_data_tkl(const char *key, TKL *tkl)
 	json_object_set_new(j, "type", json_string(tkl_type_config_string(tkl))); // Eg 'kline'
 	json_object_set_new(j, "type_string", json_string(tkl_type_string(tkl))); // Eg 'Soft K-Line'
 	json_object_set_new(j, "set_by", json_string(tkl->set_by));
-	json_object_set_new(j, "set_at", json_integer(tkl->set_at));
-	json_object_set_new(j, "expire_at", json_integer(tkl->expire_at));
+	json_object_set_new(j, "set_at", json_string(timestamp_iso8601(tkl->set_at)));
+	json_object_set_new(j, "expire_at", json_string(timestamp_iso8601(tkl->expire_at)));
 	*buf = '\0';
 	short_date(tkl->set_at, buf);
 	strlcat(buf, " GMT", sizeof(buf));
@@ -802,7 +817,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	j = json_object();
 	j_details = json_object();
 
-	json_object_set_new(j, "timestamp", json_string(timestamp_iso8601()));
+	json_object_set_new(j, "timestamp", json_string(timestamp_iso8601(0)));
 	json_object_set_new(j, "level", json_string(loglevel_to_string(loglevel)));
 	json_object_set_new(j, "subsystem", json_string(subsystem));
 	json_object_set_new(j, "event_id", json_string(event_id));

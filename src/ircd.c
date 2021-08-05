@@ -649,8 +649,8 @@ void detect_timeshift_and_warn(void)
 		unreal_log(ULOG_WARN, "system", "SYSTEM_CLOCK_JUMP_BACKWARDS", NULL,
 		           "System clock jumped back in time ~$time_delta seconds ($time_from -> $time_to)",
 		           log_data_integer("time_delta", tdiff),
-		           log_data_integer("time_from", oldtimeofday),
-		           log_data_integer("time_to", timeofday));
+		           log_data_timestamp("time_from", oldtimeofday),
+		           log_data_timestamp("time_to", timeofday));
 		sendto_realops("Incorrect time for IRC servers is a serious problem. "
 			       "Time being set backwards (system clock changed) is "
 			       "even more serious and can cause clients to freeze, channels to be "
@@ -665,8 +665,8 @@ void detect_timeshift_and_warn(void)
 		unreal_log(ULOG_WARN, "system", "SYSTEM_CLOCK_JUMP_FORWARDS", NULL,
 		           "System clock jumped ~$time_delta seconds forward ($time_from -> $time_to)",
 		           log_data_integer("time_delta", tdiff),
-		           log_data_integer("time_from", oldtimeofday),
-		           log_data_integer("time_to", timeofday));
+		           log_data_timestamp("time_from", oldtimeofday),
+		           log_data_timestamp("time_to", timeofday));
 		sendto_realops("Incorrect time for IRC servers is a serious problem. "
 			       "Time being adjusted (by changing the system clock) "
 			       "more than a few seconds forward/backward can lead to serious issues.");
@@ -683,8 +683,8 @@ void detect_timeshift_and_warn(void)
 			unreal_log(ULOG_WARN, "system", "SYSTEM_CLOCK_JUMP_BACKWARDS_PREVIOUSLY", NULL,
 				   "The system clock previously went backwards. Waiting for time to be OK again. This will be in $time_delta seconds.",
 				   log_data_integer("time_delta", highesttimeofday - timeofday),
-				   log_data_integer("time_from", highesttimeofday),
-				   log_data_integer("time_to", timeofday));
+				   log_data_timestamp("time_from", highesttimeofday),
+				   log_data_timestamp("time_to", timeofday));
 			lasthighwarn = timeofday;
 		}
 	} else {
