@@ -234,11 +234,15 @@ typedef struct LogData {
 } LogData;
 
 /** New log levels for unreal_log() */
+/* Note: the reason for these high numbers is so we can easily catch
+ * if someone makes a mistake to use LOG_INFO (from syslog.h) instead
+ * of the ULOG_xxx levels.
+ */
 typedef enum LogLevel {
-	ULOG_INFO = 0,
-	ULOG_WARN = 1,
-	ULOG_ERROR = 2,
-	ULOG_FATAL = 3
+	ULOG_INFO = 1000,
+	ULOG_WARN = 2000,
+	ULOG_ERROR = 3000,
+	ULOG_FATAL = 4000
 } LogLevel;
 
 /** Logging types (text, json, etc) */
