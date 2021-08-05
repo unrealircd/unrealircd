@@ -994,14 +994,9 @@ void flood_limit_exceeded_log(Client *client, char *floodname)
 {
 	char buf[1024];
 
-	snprintf(buf, sizeof(buf), "Flood blocked (%s) from %s!%s@%s [%s]",
-		floodname,
-		client->name,
-		client->user->username,
-		client->user->realhost,
-		GetIP(client));
-	ircd_log(LOG_FLOOD, "%s", buf);
-	sendto_snomask_global(SNO_FLOOD, "%s", buf);
+	unreal_log(ULOG_INFO, "flood", "FLOOD_BLOCKED", client,
+	           "Flood blocked ($flood_type) from $client.nuh [$client.ip]",
+	           log_data_string("flood_type", floodname));
 }
 
 /** Is the flood limit exceeded for an option? eg for away-flood.
