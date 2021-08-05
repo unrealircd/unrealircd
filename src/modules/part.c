@@ -106,7 +106,7 @@ CMD_FUNC(cmd_part)
 			break;
 		}
 
-		channel = get_channel(client, name, 0);
+		channel = find_channel(name, NULL);
 		if (!channel)
 		{
 			sendnumeric(client, ERR_NOSUCHCHANNEL, name);
