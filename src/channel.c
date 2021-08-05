@@ -937,26 +937,41 @@ int valid_channelname(const char *cname)
  * @note Be sure to call valid_channelname() first before
  *       you blindly call this function!
  */
-Channel *get_channel(Client *client, char *chname, int flag)
+Channel *get_channel(Client *client, char *name, int flag)
 {
 	Channel *channel;
 	int  len;
+	char *p;
 
-	if (BadPtr(chname))
+	if (BadPtr(name))
 		return NULL;
 
-	len = strlen(chname);
-	if (MyUser(client) && len > CHANNELLEN)
+	/* Copied from valid_channelname(), the minimal requirements */
+	for (p = name; *p; p++)
+	{
+		if (*p < 33 || *p == ',' || *p == ':')
+		{
+			*p = '\0';
+			break;
+		}
+	}
+
+	/* Cut off oversized */
+	len = strlen(name);
+	if (len > CHANNELLEN)
 	{
 		len = CHANNELLEN;
-		*(chname + CHANNELLEN) = '\0';
+		*(name + CHANNELLEN) = '\0';
 	}
-	if ((channel = find_channel(chname, NULL)))
+
+	/* Exists? Return it */
+	if ((channel = find_channel(name, NULL)))
 		return (channel);
+
 	if (flag == CREATE)
 	{
-		channel = safe_alloc(sizeof(Channel) + len);
-		strlcpy(channel->name, chname, len + 1);
+		channel = safe_alloc(sizeof(Channel));
+		strlcpy(channel->name, name, sizeof(channel->name));
 		if (channels)
 			channels->prevch = channel;
 		channel->topic = NULL;
@@ -965,7 +980,7 @@ Channel *get_channel(Client *client, char *chname, int flag)
 		channel->nextch = channels;
 		channel->creationtime = MyUser(client) ? TStime() : 0;
 		channels = channel;
-		add_to_channel_hash_table(chname, channel);
+		add_to_channel_hash_table(channel->name, channel);
 		irccounts.channels++;
 		RunHook2(HOOKTYPE_CHANNEL_CREATE, client, channel);
 	}
