@@ -1090,10 +1090,13 @@ extern LogType log_type_stringtoval(char *str);
 extern char *log_type_valtostring(LogType v);
 #ifdef DEBUGMODE
 #define unreal_log(...) do_unreal_log(__VA_ARGS__, log_data_source(__FILE__, __LINE__, __FUNCTION__), NULL)
+#define unreal_log_raw(...) do_unreal_log_raw(__VA_ARGS__, log_data_source(__FILE__, __LINE__, __FUNCTION__), NULL)
 #else
 #define unreal_log(...) do_unreal_log(__VA_ARGS__, NULL)
+#define unreal_log_raw(...) do_unreal_log_raw(__VA_ARGS__, NULL)
 #endif
 extern void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id, Client *client, char *msg, ...) __attribute__((format(printf,5,0)));
+extern void do_unreal_log_raw(LogLevel loglevel, char *subsystem, char *event_id, Client *client, char *msg, ...);
 extern LogData *log_data_string(const char *key, const char *str);
 extern LogData *log_data_integer(const char *key, int64_t integer);
 extern LogData *log_data_client(const char *key, Client *client);

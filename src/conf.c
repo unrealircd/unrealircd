@@ -1489,6 +1489,7 @@ void config_error(FORMAT_STRING(const char *format), ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
+	unreal_log_raw(ULOG_ERROR, "config", "CONFIG_ERROR_GENERIC", NULL, buffer, NULL);
 	ircd_log(LOG_ERROR, "config error: %s", buffer);
 	sendto_realops("error: %s", buffer);
 	if (remote_rehash_client)

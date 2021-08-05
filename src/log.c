@@ -30,6 +30,7 @@
 
 /* Forward declarations */
 long log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id);
+void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id, Client *client, int expand_msg, char *msg, va_list vl);
 
 LogType log_type_stringtoval(char *str)
 {
@@ -685,10 +686,27 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 
 /* Logging function, called by the unreal_log() macro. */
 void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
-                Client *client,
-                char *msg, ...)
+                   Client *client, char *msg, ...)
 {
 	va_list vl;
+	va_start(vl, msg);
+	do_unreal_log_internal(loglevel, subsystem, event_id, client, 1, msg, vl);
+	va_end(vl);
+}
+
+/* Logging function, called by the unreal_log_raw() macro. */
+void do_unreal_log_raw(LogLevel loglevel, char *subsystem, char *event_id,
+                       Client *client, char *msg, ...)
+{
+	va_list vl;
+	va_start(vl, msg);
+	do_unreal_log_internal(loglevel, subsystem, event_id, client, 0, msg, vl);
+	va_end(vl);
+}
+
+void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
+                            Client *client, int expand_msg, char *msg, va_list vl)
+{
 	LogData *d;
 	char *json_serialized;
 	json_t *j = NULL;
@@ -718,7 +736,6 @@ void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
 	if (client)
 		json_expand_client(j_details, "client", client, 0);
 	/* Additional details (if any) */
-	va_start(vl, msg);
 	while ((d = va_arg(vl, LogData *)))
 	{
 		switch(d->type)
@@ -743,7 +760,12 @@ void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
 		}
 		log_data_free(d);
 	}
-	buildlogstring(msg, msgbuf, sizeof(msgbuf), j_details);
+
+	if (expand_msg)
+		buildlogstring(msg, msgbuf, sizeof(msgbuf), j_details);
+	else
+		strlcpy(msgbuf, msg, sizeof(msgbuf));
+
 	json_object_set_new(j, "msg", json_string(msgbuf));
 
 	/* Now merge the details into root object 'j': */
