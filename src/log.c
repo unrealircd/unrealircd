@@ -210,6 +210,7 @@ int config_run_log(ConfigFile *conf, ConfigEntry *ce)
 
 void json_expand_client(json_t *j, char *key, Client *client, int detail)
 {
+	char buf[BUFSIZE+1];
 	json_t *child = json_object();
 	json_object_set_new(j, key, child);
 
@@ -226,6 +227,15 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 		json_object_set_new(child, "host", json_string(GetIP(client)));
 
 	json_object_set_new(child, "ip", json_string(GetIP(client)));
+
+	if (client->user)
+	{
+		snprintf(buf, sizeof(buf), "%s!%s@%s", client->name, client->user->username, client->user->realhost);
+		json_object_set_new(child, "nuh", json_string(buf));
+	} else {
+		snprintf(buf, sizeof(buf), "%s@%s", client->name, GetIP(client));
+		json_object_set_new(child, "nuh", json_string(buf));
+	}
 
 	if (IsLoggedIn(client))
 		json_object_set_new(child, "account", json_string(client->user->svid));
@@ -418,7 +428,7 @@ LogData *log_data_tkl(const char *key, TKL *tkl)
 		json_object_set_new(j, "match_type", json_string(unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type)));
 		json_object_set_new(j, "ban_action", json_string(banact_valtostring(tkl->ptr.spamfilter->action)));
 		json_object_set_new(j, "spamfilter_targets", json_string(spamfilter_target_inttostring(tkl->ptr.spamfilter->target)));
-		json_object_set_new(j, "reason", json_string(tkl->ptr.spamfilter->tkl_reason));
+		json_object_set_new(j, "reason", json_string(unreal_decodespace(tkl->ptr.spamfilter->tkl_reason)));
 	}
 
 	return d;

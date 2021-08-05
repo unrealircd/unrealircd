@@ -3152,45 +3152,13 @@ int spamfilter_check_users(TKL *tkl)
 				continue; /* No match */
 
 			/* matched! */
-			ircsnprintf(buf, sizeof(buf), "[Spamfilter] %s!%s@%s matches filter '%s': [%s: '%s'] [%s]",
-				client->name, client->user->username, client->user->realhost,
-				tkl->ptr.spamfilter->match->str,
-				"user", spamfilter_user,
-				unreal_decodespace(tkl->ptr.spamfilter->tkl_reason));
+			unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
+			           "[Spamfilter] $client.nuh matches filter '$tkl': [cmd: $command: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
+				   log_data_tkl("tkl", tkl),
+				   log_data_string("command", "USER"),
+				   log_data_string("str", spamfilter_user));
 
-			sendto_snomask_global(SNO_SPAMF, "%s", buf);
-			ircd_log(LOG_SPAMFILTER, "%s", buf);
 			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, client, spamfilter_user, spamfilter_user, SPAMF_USER, NULL, tkl);
-			matches++;
-		}
-	}
-
-	return matches;
-}
-
-/** Similarly to previous, but match against all global users.
- * FUNCTION IS UNUSED !!
- */
-int spamfilter_check_all_users(Client *from, TKL *tkl)
-{
-	char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
-	int matches = 0;
-	Client *acptr;
-
-	list_for_each_entry(acptr, &client_list, client_node)
-	{
-		if (IsUser(acptr))
-		{
-			spamfilter_build_user_string(spamfilter_user, acptr->name, acptr);
-			if (!unreal_match(tkl->ptr.spamfilter->match, spamfilter_user))
-				continue; /* No match */
-
-			/* matched! */
-			sendnotice(from, "[Spamfilter] %s!%s@%s matches filter '%s': [%s: '%s'] [%s]",
-				acptr->name, acptr->user->username, acptr->user->realhost,
-				tkl->ptr.spamfilter->match->str,
-				"user", spamfilter_user,
-				unreal_decodespace(tkl->ptr.spamfilter->tkl_reason));
 			matches++;
 		}
 	}
@@ -4704,22 +4672,26 @@ int _match_spamfilter(Client *client, char *str_in, int target, char *cmd, char 
 
 		if ((SPAMFILTER_DETECTSLOW_FATAL > 0) && (ms_past > SPAMFILTER_DETECTSLOW_FATAL))
 		{
-			sendto_realops("[Spamfilter] WARNING: Too slow spamfilter detected (took %ld msec to execute) "
-			               "-- spamfilter will be \002REMOVED!\002: %s", ms_past, tkl->ptr.spamfilter->match->str);
+			unreal_log(ULOG_ERROR, "tkl", "SPAMFILTER_SLOW_FATAL", NULL,
+			           "[Spamfilter] WARNING: Too slow spamfilter detected (took $msec_time msec to execute) "
+			           "-- spamfilter will be \002REMOVED!\002: $tkl",
+			           log_data_tkl("tkl", tkl),
+			           log_data_integer("msec_time", ms_past));
 			tkl_del_line(tkl);
 			return 0; /* Act as if it didn't match, even if it did.. it's gone now anyway.. */
 		} else
 		if ((SPAMFILTER_DETECTSLOW_WARN > 0) && (ms_past > SPAMFILTER_DETECTSLOW_WARN))
 		{
-			sendto_realops("[Spamfilter] WARNING: SLOW Spamfilter detected (took %ld msec to execute): %s",
-				ms_past, tkl->ptr.spamfilter->match->str);
+			unreal_log(ULOG_WARN, "tkl", "SPAMFILTER_SLOW_WARN", NULL,
+			           "[Spamfilter] WARNING: Slow spamfilter detected (took $msec_time msec to execute): $tkl",
+			           log_data_tkl("tkl", tkl),
+			           log_data_integer("msec_time", ms_past));
 		}
 #endif
 
 		if (ret)
 		{
 			/* We have a match! */
-			char buf[1024];
 			char destinationbuf[48];
 
 			if (destination) {
@@ -4732,14 +4704,13 @@ int _match_spamfilter(Client *client, char *str_in, int target, char *cmd, char 
 			if (!winner_tkl && destination && target_is_spamexcept(destination))
 				return 0; /* No problem! */
 
-			ircsnprintf(buf, sizeof(buf), "[Spamfilter] %s!%s@%s matches filter '%s': [%s%s: '%s'] [%s]",
-				client->name, client->user->username, client->user->realhost,
-				tkl->ptr.spamfilter->match->str,
-				cmd, destinationbuf, str,
-				unreal_decodespace(tkl->ptr.spamfilter->tkl_reason));
+			unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
+			           "[Spamfilter] $client.nuh matches filter '$tkl': [cmd: $command$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
+				   log_data_tkl("tkl", tkl),
+				   log_data_string("command", cmd),
+				   log_data_string("destination", destinationbuf),
+				   log_data_string("str", str));
 
-			sendto_snomask_global(SNO_SPAMF, "%s", buf);
-			ircd_log(LOG_SPAMFILTER, "%s", buf);
 			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, client, str, str_in, target, destination, tkl);
 
 			/* If we should stop after the first match, we end here... */
