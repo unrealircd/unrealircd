@@ -52,6 +52,24 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
+void log_sapart(Client *client, Client *target, char *channels, char *comment)
+{
+	if (comment)
+	{
+		unreal_log(ULOG_INFO, "sacmds", "SAPART_COMMAND", client, "SAPART: $client used SAPART to make $target join $channels ($reason)",
+			   log_data_client("target", target),
+			   log_data_string("channels", channels),
+			   log_data_string("reason", comment));
+	}
+	else
+	{
+		unreal_log(ULOG_INFO, "sacmds", "SAPART_COMMAND", client, "SAPART: $client used SAPART to make $target join $channels",
+			   log_data_client("target", target),
+			   log_data_string("channels", channels));
+	}
+}
+
+
 /* cmd_sapart() - Lamego - Wed Jul 21 20:04:48 1999
    Copied off PTlink IRCd (C) PTlink coders team.
    Coded for Sadmin by Stskeeps
@@ -93,25 +111,21 @@ CMD_FUNC(cmd_sapart)
 		return;
 	}
 
+	/* Broadcast */
+	if (parv[3])
+		sendto_server(client, 0, 0, recv_mtags, ":%s SAPART %s %s :%s", client->id, target->id, parv[2], comment);
+	else
+		sendto_server(client, 0, 0, recv_mtags, ":%s SAPART %s %s", client->id, target->id, parv[2]);
+
 	/* Relay it on, if it's not my target */
 	if (!MyUser(target))
 	{
-		if (comment)
-		{
-			sendto_one(target, NULL, ":%s SAPART %s %s :%s", client->id, target->id, parv[2], comment);
-			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
-			         client->name, target->name, parv[2], comment);
-		}
-		else
-		{
-			sendto_one(target, NULL, ":%s SAPART %s %s", client->id, target->id, parv[2]);
-			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
-			         client->name, target->name, parv[2]);
-		}
+		log_sapart(client, target, parv[2], comment);
 		return;
 	}
 
-	/* Now works like cmd_join */
+	/* 'target' is our client... */
+
 	*jbuf = 0;
 	for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p, NULL, ","))
 	{
@@ -156,25 +170,14 @@ CMD_FUNC(cmd_sapart)
 		strlcat(commentx, comment, 512);
 	}
 
+	log_sapart(client, target, parv[2], comment);
+
 	parv[0] = target->name; // nick
 	parv[1] = parv[2]; // chan
 	parv[2] = comment ? commentx : NULL; // comment
-	if (comment)
-	{
-		sendnotice(target, "*** You were forced to part %s (%s)", parv[1], commentx);
-		sendto_umode_global(UMODE_OPER, "%s used SAPART to make %s part %s (%s)",
-				    client->name, target->name, parv[1], comment);
-		ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
-			client->name, target->name, parv[1], comment);
-	}
-	else
-	{
-		sendnotice(target, "*** You were forced to part %s", parv[1]);
-		sendto_umode_global(UMODE_OPER, "%s used SAPART to make %s part %s",
-				    client->name, target->name, parv[1]);
-		ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
-			client->name, target->name, parv[1]);
-	}
+
+	/* Now, do the actual parting: */
 	do_cmd(target, NULL, "PART", comment ? 3 : 2, parv);
-	/* target may be killed now due to the part reason @ spamfilter */
+
+	/* NOTE: target may be killed now due to the part reason @ spamfilter */
 }
