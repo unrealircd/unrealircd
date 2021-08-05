@@ -210,7 +210,7 @@ void channel_svsmode(Client *client, int parc, char *parv[])
 	if ((parc < 3) || BadPtr(parv[2]))
 		return;
 
-	if (!(channel = find_channel(parv[1], NULL)))
+	if (!(channel = find_channel(parv[1])))
 		return;
 
 	for(m = parv[2]; *m; m++)

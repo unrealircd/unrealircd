@@ -269,7 +269,7 @@ CMD_FUNC(cmd_list)
 			  }
 			  else	/* Just a normal channel */
 			  {
-				  channel = find_channel(name, NULL);
+				  channel = find_channel(name);
 				  if (channel && (ShowChannel(client, channel) || ValidatePermissionsForPath("channel:see:list:secret",client,NULL,channel,NULL))) {
 #ifdef LIST_SHOW_MODES
 					modebuf[0] = '[';
@@ -343,7 +343,7 @@ int send_list(Client *client)
 		ConfigItem_offchans *x;
 		for (x = conf_offchans; x; x = x->next)
 		{
-			if (find_channel(x->name, NULL))
+			if (find_channel(x->name))
 				continue; /* exists, >0 users.. will be sent later */
 			sendnumeric(client, RPL_LIST, x->name,
 			    0,

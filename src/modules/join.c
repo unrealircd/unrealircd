@@ -383,7 +383,7 @@ void _do_join(Client *client, int parc, char *parv[])
 		if (MyConnect(client) && !valid_channelname(name))
 		{
 			send_invalid_channelname(client, name);
-			if (IsOper(client) && find_channel(name, NULL))
+			if (IsOper(client) && find_channel(name))
 			{
 				/* Give IRCOps a bit more information */
 				sendnotice(client, "Channel '%s' is unjoinable because it contains illegal characters. "
@@ -513,7 +513,7 @@ void _do_join(Client *client, int parc, char *parv[])
 			    !strcasecmp(name, SPAMFILTER_VIRUSCHAN) &&
 			    !ValidatePermissionsForPath("immune:server-ban:viruschan",client,NULL,NULL,NULL) && !spamf_ugly_vchanoverride)
 			{
-				Channel *channel = find_channel(name, NULL);
+				Channel *channel = find_channel(name);
 				
 				if (!channel || !is_invited(client, channel))
 				{

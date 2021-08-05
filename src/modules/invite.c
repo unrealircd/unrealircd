@@ -295,7 +295,7 @@ CMD_FUNC(cmd_invite)
 	{
 		params_ok = 1;
 		target = find_person(parv[1], NULL);
-		channel = find_channel(parv[2], NULL);
+		channel = find_channel(parv[2]);
 	}
 	
 	if (!MyConnect(client))

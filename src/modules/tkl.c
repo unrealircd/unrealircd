@@ -4577,7 +4577,7 @@ int _join_viruschan(Client *client, TKL *tkl, int type)
 	sendnotice(client, "You are now restricted to talking in %s: %s",
 		SPAMFILTER_VIRUSCHAN, unreal_decodespace(tkl->ptr.spamfilter->tkl_reason));
 
-	channel = find_channel(SPAMFILTER_VIRUSCHAN, NULL);
+	channel = find_channel(SPAMFILTER_VIRUSCHAN);
 	if (channel)
 	{
 		MessageTag *mtags = NULL;

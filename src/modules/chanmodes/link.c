@@ -129,7 +129,7 @@ int cmodeL_is_ok(Client *client, Channel *channel, char mode, char *para, int ty
 			return EX_DENY;
 		}
 
-		if (find_channel(para, NULL) == channel)
+		if (find_channel(para) == channel)
 		{
 			if (MyUser(client))
 				sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'L',

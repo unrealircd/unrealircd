@@ -257,7 +257,7 @@ CMD_FUNC(cmd_chathistory)
 		goto end;
 	}
 
-	channel = find_channel(parv[2], NULL);
+	channel = find_channel(parv[2]);
 	if (!channel)
 	{
 		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_TARGET %s %s :Messages could not be retrieved, not an existing channel",

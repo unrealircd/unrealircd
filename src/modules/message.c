@@ -334,7 +334,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 		prefix = 0;
 
 		/* Message to channel */
-		if (p2 && (channel = find_channel(p2, NULL)))
+		if (p2 && (channel = find_channel(p2)))
 		{
 			prefix = prefix_string_to_values(targetstr, p2);
 			if (prefix)

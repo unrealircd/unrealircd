@@ -97,7 +97,7 @@ CMD_FUNC(cmd_names)
 		}
 	}
 
-	channel = find_channel(para, NULL);
+	channel = find_channel(para);
 
 	if (!channel || (!ShowChannel(client, channel) && !ValidatePermissionsForPath("channel:see:names:secret",client,NULL,channel,NULL)))
 	{

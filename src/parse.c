@@ -725,7 +725,7 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s",
 				    client->name, numeric, buffer);
 		}
-		else if ((channel = find_channel(nick, NULL)))
+		else if ((channel = find_channel(nick)))
 		{
 			sendto_channel(channel, client, client->direction,
 			               0, 0, SEND_ALL, recv_mtags,

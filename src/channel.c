@@ -960,7 +960,7 @@ Channel *make_channel(char *name)
 	}
 
 	/* Exists? Return it. */
-	if ((channel = find_channel(name, NULL)))
+	if ((channel = find_channel(name)))
 		return channel;
 
 	channel = safe_alloc(sizeof(Channel));

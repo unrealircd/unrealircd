@@ -97,7 +97,7 @@ CMD_FUNC(cmd_knock)
 		return;
 	}
 
-	if (!(channel = find_channel(parv[1], NULL)))
+	if (!(channel = find_channel(parv[1])))
 	{
 		sendnumeric(client, ERR_CANNOTKNOCK, parv[1], "Channel does not exist!");
 		return;

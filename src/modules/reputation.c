@@ -1133,7 +1133,7 @@ CMD_FUNC(reputation_user_cmd)
 	} else
 	if (parv[1][0] == '#')
 	{
-		Channel *channel = find_channel(parv[1], NULL);
+		Channel *channel = find_channel(parv[1]);
 		if (!channel)
 		{
 			sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);

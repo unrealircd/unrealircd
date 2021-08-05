@@ -180,7 +180,7 @@ CMD_FUNC(cmd_sjoin)
 
 	ts = (time_t)atol(parv[1]);
 
-	channel = find_channel(parv[2], NULL);
+	channel = find_channel(parv[2]);
 	if (!channel)
 	{
 		channel = make_channel(parv[2]);

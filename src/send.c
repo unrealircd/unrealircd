@@ -412,7 +412,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
  *         sendnumeric(client, ERR_NEEDMOREPARAMS, "SAYHELLO");
  *         return;
  *     }
- *     channel = find_channel(parv[1], NULL);
+ *     channel = find_channel(parv[1]);
  *     if (!channel)
  *     {
  *         sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);

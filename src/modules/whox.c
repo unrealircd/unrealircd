@@ -342,7 +342,7 @@ CMD_FUNC(cmd_whox)
 		Channel *channel = NULL;
 
 		/* List all users on a given channel */
-		if ((channel = find_channel(orig_mask, NULL)) != NULL)
+		if ((channel = find_channel(orig_mask)) != NULL)
 		{
 			if (IsMember(client, channel) || operspy)
 				do_who_on_channel(client, channel, 1, operspy, &fmt);

@@ -727,7 +727,7 @@ CMD_OVERRIDE_FUNC(override_mode)
 	    (IsUser(client) && client->srvptr && client->srvptr->local))
 	{
 		/* Now check if the channel is currently +r */
-		if ((parc >= 2) && !BadPtr(parv[1]) && ((channel = find_channel(parv[1], NULL))) &&
+		if ((parc >= 2) && !BadPtr(parv[1]) && ((channel = find_channel(parv[1]))) &&
 		    has_channel_mode(channel, 'r'))
 		{
 			had_r = 1;
@@ -744,7 +744,7 @@ CMD_OVERRIDE_FUNC(override_mode)
 	 * then...
 	 */
 	if (had_r &&
-	    ((channel = find_channel(parv[1], NULL))) &&
+	    ((channel = find_channel(parv[1]))) &&
 	    !has_channel_mode(channel, 'r') &&
 	    HistoryEnabled(channel))
 	{

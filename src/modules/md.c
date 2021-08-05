@@ -138,7 +138,7 @@ CMD_FUNC(cmd_md)
 	} else
 	if (!strcmp(type, "channel"))
 	{
-		Channel *channel = find_channel(objname, NULL);
+		Channel *channel = find_channel(objname);
 		md = findmoddata_byname(varname, MODDATATYPE_CHANNEL);
 		if (!md || !md->unserialize || !channel)
 			return;
@@ -166,7 +166,7 @@ CMD_FUNC(cmd_md)
 			return;
 		*p++ = '\0';
 
-		channel = find_channel(objname, NULL);
+		channel = find_channel(objname);
 		if (!channel)
 			return;
 
@@ -213,7 +213,7 @@ CMD_FUNC(cmd_md)
 		if (!target)
 			return;
 
-		channel = find_channel(p, NULL);
+		channel = find_channel(p);
 		if (!channel)
 			return;
 

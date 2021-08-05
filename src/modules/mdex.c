@@ -104,7 +104,7 @@ CMD_FUNC(cmd_mdex)
 		} else
 		if (!strcmp(type, "channel"))
 		{
-			Channel *channel = find_channel(objname, NULL);
+			Channel *channel = find_channel(objname);
 			md = findmoddata_byname(varname, MODDATATYPE_CHANNEL);
 			if (!md || !md->unserialize || !md->free || !channel)
 				return 0;
@@ -130,7 +130,7 @@ CMD_FUNC(cmd_mdex)
 				return 0;
 			*p++ = '\0';
 
-			channel = find_channel(objname, NULL);
+			channel = find_channel(objname);
 			if (!channel)
 				return 0;
 			
@@ -172,7 +172,7 @@ CMD_FUNC(cmd_mdex)
 			if (!target)
 				return 0;
 			
-			channel = find_channel(p, NULL);
+			channel = find_channel(p);
 			if (!channel)
 				return 0;
 
@@ -212,7 +212,7 @@ CMD_FUNC(cmd_mdex)
 		} else
 		if (!strcmp(type, "channel"))
 		{
-			Channel *channel = find_channel(objname, NULL);
+			Channel *channel = find_channel(objname);
 			char *str;
 			
 			md = findmoddata_byname(varname, MODDATATYPE_CHANNEL);
@@ -237,7 +237,7 @@ CMD_FUNC(cmd_mdex)
 				return 0;
 			*p++ = '\0';
 
-			channel = find_channel(objname, NULL);
+			channel = find_channel(objname);
 			if (!channel)
 				return 0;
 			
@@ -276,7 +276,7 @@ CMD_FUNC(cmd_mdex)
 			if (!target)
 				return 0;
 			
-			channel = find_channel(p, NULL);
+			channel = find_channel(p);
 			if (!channel)
 				return 0;
 

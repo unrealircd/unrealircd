@@ -1533,7 +1533,7 @@ static int hbm_write_db(HistoryLogObject *h)
 	if (!cfg.db_secret)
 		abort();
 
-	channel = find_channel(h->name, NULL);
+	channel = find_channel(h->name);
 	if (!channel || !has_channel_mode(channel, 'P'))
 		return 1; /* Don't save this channel, pretend success */
 

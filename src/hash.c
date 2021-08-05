@@ -572,22 +572,20 @@ Client *find_person(char *name, Client *requester) /* TODO: this should have bee
 
 /** Find a channel by name.
  * @param name			The channel name to search for
- * @param default_result	If the channel is not found, this value is returned.
- * @returns If the channel exists then the Channel is returned, otherwise default_result is returned.
+ * @returns If the channel exists then the Channel is returned, otherwise NULL.
  */
-Channel *find_channel(char *name, Channel *default_result)
+Channel *find_channel(char *name)
 {
 	unsigned int hashv;
-	Channel *tmp;
+	Channel *channel;
 
 	hashv = hash_channel_name(name);
 
-	for (tmp = channelTable[hashv]; tmp; tmp = tmp->hnextch)
-	{
-		if (smycmp(name, tmp->name) == 0)
-			return tmp;
-	}
-	return default_result;
+	for (channel = channelTable[hashv]; channel; channel = channel->hnextch)
+		if (smycmp(name, channel->name) == 0)
+			return channel;
+
+	return NULL;
 }
 
 /** @} */

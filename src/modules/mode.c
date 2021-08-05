@@ -105,7 +105,7 @@ CMD_FUNC(cmd_mode)
 	{
 		if (*parv[1] == '#')
 		{
-			channel = find_channel(parv[1], NULL);
+			channel = find_channel(parv[1]);
 			if (!channel)
 			{
 				cmd_umode(client, recv_mtags, parc, parv);
@@ -1932,7 +1932,7 @@ CMD_FUNC(cmd_mlock)
 	t = (time_t) atol(parv[1]);
 
 	/* Now, try to find the channel in question */
-	channel = find_channel(parv[2], NULL);
+	channel = find_channel(parv[2]);
 	if (!channel)
 		return;
 

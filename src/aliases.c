@@ -106,7 +106,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 	else if (alias->type == ALIAS_CHANNEL)
 	{
 		Channel *channel;
-		if ((channel = find_channel(alias->nick, NULL)))
+		if ((channel = find_channel(alias->nick)))
 		{
 			char *msg = parv[1];
 			char *errmsg = NULL;
@@ -241,7 +241,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 				else if (format->type == ALIAS_CHANNEL)
 				{
 					Channel *channel;
-					if ((channel = find_channel(format->nick, NULL)))
+					if ((channel = find_channel(format->nick)))
 					{
 						char *msg = output;
 						char *errmsg = NULL;

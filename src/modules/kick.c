@@ -166,7 +166,7 @@ CMD_FUNC(cmd_kick)
 	for (; (name = strtoken(&p, parv[1], ",")); parv[1] = NULL)
 	{
 		long client_flags = 0;
-		channel = find_channel(name, NULL);
+		channel = find_channel(name);
 		if (!channel)
 		{
 			sendnumeric(client, ERR_NOSUCHCHANNEL, name);
