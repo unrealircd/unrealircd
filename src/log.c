@@ -239,6 +239,9 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 		json_object_set_new(child, "nuh", json_string(client->name));
 	}
 
+	if (*client->info)
+		json_object_set_new(child, "info", json_string(client->info));
+
 	if (IsLoggedIn(client))
 		json_object_set_new(child, "account", json_string(client->user->svid));
 }
