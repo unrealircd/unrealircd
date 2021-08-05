@@ -928,26 +928,29 @@ int valid_channelname(const char *cname)
 	return 1; /* Valid */
 }
 
-/** Get existing channel 'chname' or create a new one.
- * @param client	User creating or searching this channel
- * @param chname	Channel name
+/** Create channel 'name' (or if it exists, return the existing one)
+ * @param name		Channel name
  * @param flag		If set to 'CREATE' then the channel is
  *			created if it does not exist.
  * @returns Pointer to channel (new or existing).
  * @note Be sure to call valid_channelname() first before
  *       you blindly call this function!
  */
-Channel *get_channel(Client *client, char *name, int flag)
+Channel *make_channel(char *name)
 {
 	Channel *channel;
-	int  len;
+	int len;
 	char *p;
+	char namebuf[CHANNELLEN+1];
 
 	if (BadPtr(name))
 		return NULL;
 
+	/* Copy and silently truncate */
+	strlcpy(namebuf, name, sizeof(namebuf));
+
 	/* Copied from valid_channelname(), the minimal requirements */
-	for (p = name; *p; p++)
+	for (p = namebuf; *p; p++)
 	{
 		if (*p < 33 || *p == ',' || *p == ':')
 		{
@@ -956,34 +959,25 @@ Channel *get_channel(Client *client, char *name, int flag)
 		}
 	}
 
-	/* Cut off oversized */
-	len = strlen(name);
-	if (len > CHANNELLEN)
-	{
-		len = CHANNELLEN;
-		*(name + CHANNELLEN) = '\0';
-	}
-
-	/* Exists? Return it */
+	/* Exists? Return it. */
 	if ((channel = find_channel(name, NULL)))
-		return (channel);
+		return channel;
 
-	if (flag == CREATE)
-	{
-		channel = safe_alloc(sizeof(Channel));
-		strlcpy(channel->name, name, sizeof(channel->name));
-		if (channels)
-			channels->prevch = channel;
-		channel->topic = NULL;
-		channel->topic_nick = NULL;
-		channel->prevch = NULL;
-		channel->nextch = channels;
-		channel->creationtime = MyUser(client) ? TStime() : 0;
-		channels = channel;
-		add_to_channel_hash_table(channel->name, channel);
-		irccounts.channels++;
-		RunHook2(HOOKTYPE_CHANNEL_CREATE, client, channel);
-	}
+	channel = safe_alloc(sizeof(Channel));
+	strlcpy(channel->name, name, sizeof(channel->name));
+	if (channels)
+		channels->prevch = channel;
+	channel->topic = NULL;
+	channel->topic_nick = NULL;
+	channel->prevch = NULL;
+	channel->nextch = channels;
+	channel->creationtime = TStime();
+	channels = channel;
+	add_to_channel_hash_table(channel->name, channel);
+	irccounts.channels++;
+
+	RunHook(HOOKTYPE_CHANNEL_CREATE, channel);
+
 	return channel;
 }
 

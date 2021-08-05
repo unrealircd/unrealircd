@@ -133,10 +133,10 @@ CMD_FUNC(cmd_sapart)
 			sendnumeric(client, ERR_TOOMANYTARGETS, name, maxtargets, "SAPART");
 			break;
 		}
-		if (!(channel = get_channel(target, name, 0)))
+
+		if (!(channel = find_channel(name, NULL)))
 		{
-			sendnumeric(client, ERR_NOSUCHCHANNEL,
-				name);
+			sendnumeric(client, ERR_NOSUCHCHANNEL, name);
 			continue;
 		}
 

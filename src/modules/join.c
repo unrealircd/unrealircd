@@ -524,7 +524,7 @@ void _do_join(Client *client, int parc, char *parv[])
 			}
 		}
 
-		channel = get_channel(client, name, CREATE);
+		channel = make_channel(name);
 		if (channel && (lp = find_membership_link(client->user->channel, channel)))
 			continue;
 

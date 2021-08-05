@@ -1688,12 +1688,11 @@ int hooktype_local_oper(Client *client, int add);
 int hooktype_local_pass(Client *client, char *password);
 
 /** Called when a channel is created (function prototype for HOOKTYPE_CHANNEL_CREATE).
- * @param client		The client
  * @param channel		The channel that just got created
  * @note This function is not used much, use hooktype_local_join() and hooktype_remote_join() instead.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_channel_create(Client *client, Channel *channel);
+int hooktype_channel_create(Channel *channel);
 
 /** Called when a channel is completely destroyed (function prototype for HOOKTYPE_CHANNEL_DESTROY).
  * @param channel		The channel that is about to be destroyed

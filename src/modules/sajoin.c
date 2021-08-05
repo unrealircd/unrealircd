@@ -183,7 +183,7 @@ CMD_FUNC(cmd_sajoin)
 				continue;
 			}
 
-			channel = get_channel(target, name, 0);
+			channel = make_channel(name);
 
 			/* If this _specific_ channel is not permitted, skip it */
 			if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sajoin",client,target,channel,NULL))
@@ -241,7 +241,7 @@ CMD_FUNC(cmd_sajoin)
 				continue;
 			}
 			flags = (ChannelExists(name)) ? CHFL_DEOPPED : LEVEL_ON_JOIN;
-			channel = get_channel(target, name, CREATE);
+			channel = make_channel(name);
 			if (channel && (lp = find_membership_link(target->user->channel, channel)))
 				continue;
 

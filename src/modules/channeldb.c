@@ -506,7 +506,7 @@ int read_channeldb(void)
 		R_SAFE(unrealdb_read_str(db, &modes2));
 		R_SAFE(unrealdb_read_str(db, &mode_lock));
 		/* If we got this far, we can create/initialize the channel with the above */
-		channel = get_channel(&me, chname, CREATE);
+		channel = make_channel(chname);
 		channel->creationtime = creationtime;
 		safe_strdup(channel->topic, topic);
 		safe_strdup(channel->topic_nick, topic_nick);

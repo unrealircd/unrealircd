@@ -178,9 +178,15 @@ CMD_FUNC(cmd_sjoin)
 	if (parc < 5)
 		nomode = 1;
 
-	channel = get_channel(client, parv[2], CREATE);
-
 	ts = (time_t)atol(parv[1]);
+
+	channel = find_channel(parv[2], NULL);
+	if (!channel)
+	{
+		channel = make_channel(parv[2]);
+		channel->creationtime = ts;
+		oldts = -1;
+	}
 
 	if (channel->creationtime > ts)
 	{
@@ -197,12 +203,7 @@ CMD_FUNC(cmd_sjoin)
 		merge = 1;
 	}
 
-	if (channel->creationtime == 0)
-	{
-		oldts = -1;
-		channel->creationtime = ts;
-	}
-	else
+	if (channel->creationtime > 0)
 	{
 		oldts = channel->creationtime;
 	}
