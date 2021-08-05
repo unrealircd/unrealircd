@@ -295,9 +295,9 @@ CMD_FUNC(cmd_sajoin)
 				ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %c%s",
 					client->name, target->name, sjmode, jbuf);
 			}
-			unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", client, "SAJOIN: $client used SAJOIN to make $target join $channel",
+			unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", client, "SAJOIN: $client used SAJOIN to make $target join $channels",
 				   log_data_client("target", target),
-				   log_data_string("channel", jbuf));
+				   log_data_string("channels", jbuf));
 		}
 	}
 }
