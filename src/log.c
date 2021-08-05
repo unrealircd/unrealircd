@@ -232,9 +232,11 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 	{
 		snprintf(buf, sizeof(buf), "%s!%s@%s", client->name, client->user->username, client->user->realhost);
 		json_object_set_new(child, "nuh", json_string(buf));
-	} else {
-		snprintf(buf, sizeof(buf), "%s@%s", client->name, GetIP(client));
+	} else if (client->ip) {
+		snprintf(buf, sizeof(buf), "%s@%s", client->name, client->ip);
 		json_object_set_new(child, "nuh", json_string(buf));
+	} else {
+		json_object_set_new(child, "nuh", json_string(client->name));
 	}
 
 	if (IsLoggedIn(client))

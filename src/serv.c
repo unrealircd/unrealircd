@@ -425,10 +425,10 @@ CMD_FUNC(cmd_error)
 		return;
 	}
 
-	sendto_umode_global(UMODE_OPER, "ERROR from server %s: %s",
-	                    get_client_name(client, FALSE), para);
-	ircd_log(LOG_ERROR, "ERROR from server %s: %s",
-	                    get_client_name(client, FALSE), para);
+	unreal_log(ULOG_ERROR, "link", "LINK_ERROR_MESSAGE", client,
+	           "Error from $client: $error_message",
+	           log_data_string("error_message", para),
+	           client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
 }
 
 /** Save the tunefile (such as: highest seen connection count) */
@@ -439,11 +439,11 @@ EVENT(save_tunefile)
 	tunefile = fopen(conf_files->tune_file, "w");
 	if (!tunefile)
 	{
-#if !defined(_WIN32) && !defined(_AMIGA)
-		sendto_ops("Unable to write tunefile.. %s", strerror(errno));
-#else
-		sendto_ops("Unable to write tunefile..");
-#endif
+		char *errstr = strerror(errno);
+		unreal_log(ULOG_WARN, "config", "WRITE_TUNE_FILE_FAILED", NULL,
+		           "Unable to write tunefile '$filename': $system_error",
+		           log_data_string("filename", conf_files->tune_file),
+		           log_data_string("system_error", errstr));
 		return;
 	}
 	fprintf(tunefile, "0\n");
@@ -461,13 +461,15 @@ void load_tunefile(void)
 	if (!tunefile)
 		return;
 	fprintf(stderr, "Loading tunefile..\n");
-	if (!fgets(buf, sizeof(buf), tunefile))
-	    fprintf(stderr, "Warning: error while reading the timestamp offset from the tunefile%s%s\n",
-		errno? ": ": "", errno? strerror(errno): "");
-
-	if (!fgets(buf, sizeof(buf), tunefile))
-	    fprintf(stderr, "Warning: error while reading the peak user count from the tunefile%s%s\n",
-		errno? ": ": "", errno? strerror(errno): "");
+	/* We ignore the first line, hence the weird looking double fgets here... */
+	if (!fgets(buf, sizeof(buf), tunefile) || !fgets(buf, sizeof(buf), tunefile))
+	{
+		char *errstr = strerror(errno);
+		unreal_log(ULOG_WARN, "config", "READ_TUNE_FILE_FAILED", NULL,
+		           "Unable to read tunefile '$filename': $system_error",
+		           log_data_string("filename", conf_files->tune_file),
+		           log_data_string("system_error", errstr));
+	}
 	irccounts.me_max = atol(buf);
 	fclose(tunefile);
 }
@@ -568,7 +570,7 @@ CMD_FUNC(cmd_rehash)
 				sendnotice(client, "A rehash is already in progress");
 				return;
 			}
-			sendto_umode_global(UMODE_OPER, "%s is remotely rehashing server %s config file", client->name, me.name);
+			unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [by: $client.nuh]");
 			remote_rehash_client = client;
 			reread_motdsandrules();
 			// TODO: clean this next line up, wtf man.
@@ -642,45 +644,8 @@ CMD_FUNC(cmd_rehash)
 			}
 			if (match_simple("-ssl*", parv[1]) || match_simple("-tls*", parv[1]))
 			{
-				if (IsUser(client))
-				{
-					sendto_realops_and_log("%s (%s@%s) requested a reload of all SSL related data (/rehash -tls)",
-					                       client->name, client->user->username, client->user->realhost);
-				} else {
-					sendto_realops_and_log("%s requested a reload of all SSL related data (/rehash -tls)",
-					                       client->name);
-				}
+				unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD_TLS", client, "Reloading all TLS related data. [by: $client.nuh]");
 				reinit_tls();
-				return;
-			}
-			if (match_simple("-o*motd", parv[1]))
-			{
-				if (MyUser(client))
-					sendto_ops("Rehashing OPERMOTD on request of %s", client->name);
-				else
-					sendto_umode_global(UMODE_OPER, "Remotely rehashing OPERMOTD on request of %s", client->name);
-				read_motd(conf_files->opermotd_file, &opermotd);
-				RunHook2(HOOKTYPE_REHASHFLAG, client, parv[1]);
-				return;
-			}
-			if (match_simple("-b*motd", parv[1]))
-			{
-				if (MyUser(client))
-					sendto_ops("Rehashing BOTMOTD on request of %s", client->name);
-				else
-					sendto_umode_global(UMODE_OPER, "Remotely rehashing BOTMOTD on request of %s", client->name);
-				read_motd(conf_files->botmotd_file, &botmotd);
-				RunHook2(HOOKTYPE_REHASHFLAG, client, parv[1]);
-				return;
-			}
-			if (!strncasecmp("-motd", parv[1], 5) || !strncasecmp("-rules", parv[1], 6))
-			{
-				if (MyUser(client))
-					sendto_ops("Rehashing all MOTDs and RULES on request of %s", client->name);
-				else
-					sendto_umode_global(UMODE_OPER, "Remotely rehasing all MOTDs and RULES on request of %s", client->name);
-				rehash_motdrules();
-				RunHook2(HOOKTYPE_REHASHFLAG, client, parv[1]);
 				return;
 			}
 			RunHook2(HOOKTYPE_REHASHFLAG, client, parv[1]);
@@ -691,10 +656,10 @@ CMD_FUNC(cmd_rehash)
 	{
 		if (loop.ircd_rehashing)
 		{
-			sendnotice(client, "A rehash is already in progress");
+			sendnotice(client, "ERROR: A rehash is already in progress");
 			return;
 		}
-		sendto_ops("%s is rehashing server config file", client->name);
+		unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [by: $client.nuh]");
 	}
 
 	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
@@ -745,7 +710,6 @@ CMD_FUNC(cmd_restart)
 			reason = parv[2];
 		}
 	}
-	sendto_ops("Server is Restarting by request of %s", client->name);
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
@@ -1050,7 +1014,8 @@ CMD_FUNC(cmd_die)
 	}
 
 	/* Let the +s know what is going on */
-	sendto_ops("Server Terminating by request of %s", client->name);
+	unreal_log(ULOG_INFO, "main", "UNREALIRCD_STOP", client,
+	           "Terminating server by request of $client.nuh");
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
@@ -1245,10 +1210,10 @@ void charsys_check_for_changes(void)
 
 	if (strcmp(langsinuse, previous_langsinuse))
 	{
-		ircd_log(LOG_ERROR, "Permitted nick characters changed at runtime: %s -> %s",
-			previous_langsinuse, langsinuse);
-		sendto_realops("Permitted nick characters changed at runtime: %s -> %s",
-			previous_langsinuse, langsinuse);
+		unreal_log(ULOG_INFO, "charsys", "NICKCHARS_CHANGED", NULL,
+		           "Permitted nick characters changed at runtime: $old_nickchars -> $new_nickchars",
+		           log_data_string("old_nickchars", previous_langsinuse),
+		           log_data_string("new_nickchars", langsinuse));
 		/* Broadcast change to all (locally connected) servers */
 		sendto_server(NULL, 0, 0, NULL, "PROTOCTL NICKCHARS=%s", langsinuse);
 	}

@@ -1130,7 +1130,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON);
 #endif
 	run_configuration();
-	unreal_log(ULOG_INFO, "main", "UNREALIRCD_STARTED", NULL, "UnrealIRCd started.");
+	unreal_log(ULOG_INFO, "main", "UNREALIRCD_START", NULL, "UnrealIRCd started.");
 
 	read_motd(conf_files->botmotd_file, &botmotd);
 	read_motd(conf_files->rules_file, &rules);
