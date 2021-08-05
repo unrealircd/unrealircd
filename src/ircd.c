@@ -178,7 +178,9 @@ void server_reboot(char *mesg)
 {
 	int i;
 	Client *client;
-	sendto_realops("Aieeeee!!!  Restarting server... %s", mesg);
+	unreal_log(ULOG_INFO, "main", "UNREALIRCD_RESTARTING", NULL,
+	           "Restarting server: $reason",
+	           log_data_string("reason", mesg));
 
 	list_for_each_entry(client, &lclient_list, lclient_node)
 		(void) send_queued(client);
@@ -371,10 +373,9 @@ void check_ping(Client *client)
 		if (IsServer(client) || IsConnecting(client) ||
 		    IsHandshake(client) || IsTLSConnectHandshake(client))
 		{
-			sendto_umode_global(UMODE_OPER, "No response from %s, closing link",
-			                    get_client_name(client, FALSE));
-			ircd_log(LOG_ERROR, "No response from %s, closing link",
-			         get_client_name(client, FALSE));
+			unreal_log(ULOG_ERROR, "link", "LINK_DISCONNECTED", client,
+			           "Lost server link to $client ($link_block.ip:$link_block.port): No response (Ping timeout)",
+			           client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
 		}
 		ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %lld seconds",
 			(long long) (TStime() - client->local->lasttime));
@@ -396,8 +397,10 @@ void check_ping(Client *client)
 		(TStime() - client->local->lasttime) >= (ping + PINGWARNING))
 	{
 		SetPingWarning(client);
-		sendto_realops("Warning, no response from %s for %d seconds",
-			get_client_name(client, FALSE), PINGWARNING);
+		unreal_log(ULOG_WARN, "link", "LINK_UNRELIABLE", client,
+			   "Warning, no response from $client for $time_delta seconds",
+			   log_data_integer("time_delta", PINGWARNING),
+			   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
 	}
 
 	return;
@@ -436,9 +439,6 @@ EVENT(check_deadsockets)
 		/* No need to notify opers here. It's already done when dead socket is set */
 		if (IsDeadSocket(client))
 		{
-#ifdef DEBUGMODE
-			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", client->local->fd, client->name);
-#endif
 			ClearDeadSocket(client); /* CPR. So we send the error. */
 			exit_client(client, NULL, client->local->error_str ? client->local->error_str : "Dead socket");
 			continue;
@@ -450,9 +450,6 @@ EVENT(check_deadsockets)
 		/* No need to notify opers here. It's already done when dead socket is set */
 		if (IsDeadSocket(client))
 		{
-#ifdef DEBUGMODE
-			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", client->local->fd, client->name);
-#endif
 			ClearDeadSocket(client); /* CPR. So we send the error. */
 			exit_client(client, NULL, client->local->error_str ? client->local->error_str : "Dead socket");
 			continue;
@@ -645,38 +642,35 @@ void detect_timeshift_and_warn(void)
 	if (oldtimeofday == 0)
 		oldtimeofday = timeofday; /* pretend everything is ok the first time.. */
 
-	if (mytdiff(timeofday, oldtimeofday) < NEGATIVE_SHIFT_WARN) {
+	if (mytdiff(timeofday, oldtimeofday) < NEGATIVE_SHIFT_WARN)
+	{
 		/* tdiff = # of seconds of time set backwards (positive number! eg: 60) */
 		time_t tdiff = oldtimeofday - timeofday;
-		ircd_log(LOG_ERROR, "WARNING: Time running backwards! Clock set back ~%lld seconds (%lld -> %lld)",
-			(long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
-		ircd_log(LOG_ERROR, "[TimeShift] Resetting a few timers to prevent IRCd freeze!");
-		sendto_realops("WARNING: Time running backwards! Clock set back ~%lld seconds (%lld -> %lld)",
-			(long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
+		unreal_log(ULOG_WARN, "system", "SYSTEM_CLOCK_JUMP_BACKWARDS", NULL,
+		           "System clock jumped back in time ~$time_delta seconds ($time_from -> $time_to)",
+		           log_data_integer("time_delta", tdiff),
+		           log_data_integer("time_from", oldtimeofday),
+		           log_data_integer("time_to", timeofday));
 		sendto_realops("Incorrect time for IRC servers is a serious problem. "
 			       "Time being set backwards (system clock changed) is "
 			       "even more serious and can cause clients to freeze, channels to be "
 			       "taken over, and other issues.");
-		sendto_realops("Please be sure your clock is always synchronized before "
-			       "the IRCd is started!");
-		sendto_realops("[TimeShift] Resetting a few timers to prevent IRCd freeze!");
+		sendto_realops("Please be sure your clock is always synchronized before the IRCd is started!");
 		fix_timers();
 	} else
 	if (mytdiff(timeofday, oldtimeofday) > POSITIVE_SHIFT_WARN) /* do not set too low or you get false positives */
 	{
 		/* tdiff = # of seconds of time set forward (eg: 60) */
 		time_t tdiff = timeofday - oldtimeofday;
-		ircd_log(LOG_ERROR, "WARNING: Time jumped ~%lld seconds ahead! (%lld -> %lld)",
-			(long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
-		ircd_log(LOG_ERROR, "[TimeShift] Resetting some timers!");
-		sendto_realops("WARNING: Time jumped ~%lld seconds ahead! (%lld -> %lld)",
-			(long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
+		unreal_log(ULOG_WARN, "system", "SYSTEM_CLOCK_JUMP_FORWARDS", NULL,
+		           "System clock jumped ~$time_delta seconds forward ($time_from -> $time_to)",
+		           log_data_integer("time_delta", tdiff),
+		           log_data_integer("time_from", oldtimeofday),
+		           log_data_integer("time_to", timeofday));
 		sendto_realops("Incorrect time for IRC servers is a serious problem. "
 			       "Time being adjusted (by changing the system clock) "
 			       "more than a few seconds forward/backward can lead to serious issues.");
-		sendto_realops("Please be sure your clock is always synchronized before "
-			       "the IRCd is started!");
-		sendto_realops("[TimeShift] Resetting some timers!");
+		sendto_realops("Please be sure your clock is always synchronized before the IRCd is started!");
 		fix_timers();
 	}
 
@@ -686,13 +680,11 @@ void detect_timeshift_and_warn(void)
 			lasthighwarn = timeofday;
 		if (timeofday - lasthighwarn > 300)
 		{
-			ircd_log(LOG_ERROR, "[TimeShift] The (IRCd) clock was set backwards. "
-				"Waiting for time to be OK again. This will be in %lld seconds",
-				(long long)(highesttimeofday - timeofday));
-			sendto_realops("[TimeShift] The (IRCd) clock was set backwards. Timers, nick- "
-				       "and channel-timestamps are possibly incorrect. This message will "
-				       "repeat itself until we catch up with the original time, which will be "
-				       "in %lld seconds", (long long)(highesttimeofday - timeofday));
+			unreal_log(ULOG_WARN, "system", "SYSTEM_CLOCK_JUMP_BACKWARDS_PREVIOUSLY", NULL,
+				   "The system clock previously went backwards. Waiting for time to be OK again. This will be in $time_delta seconds.",
+				   log_data_integer("time_delta", highesttimeofday - timeofday),
+				   log_data_integer("time_from", highesttimeofday),
+				   log_data_integer("time_to", timeofday));
 			lasthighwarn = timeofday;
 		}
 	} else {
@@ -1121,7 +1113,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	}
 	if (loop.config_test)
 	{
-		ircd_log(LOG_ERROR, "Configuration test passed OK");
+		unreal_log(ULOG_INFO, "config", "CONFIG_PASSED", NULL, "Configuration test passed OK");
 		fflush(stderr);
 		exit(0);
 	}
@@ -1138,7 +1130,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON);
 #endif
 	run_configuration();
-	ircd_log(LOG_ERROR, "UnrealIRCd started.");
+	unreal_log(ULOG_INFO, "main", "UNREALIRCD_STARTED", NULL, "UnrealIRCd started.");
 
 	read_motd(conf_files->botmotd_file, &botmotd);
 	read_motd(conf_files->rules_file, &rules);
@@ -1260,8 +1252,8 @@ void SocketLoop(void *dummy)
 		}
 		if (doreloadcert)
 		{
+			unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD_TLS", NULL, "Reloading all SSL related data (./unrealircd reloadtls)");
 			reinit_tls();
-			sendto_realops_and_log("Reloading all SSL related data (./unrealircd reloadtls)");
 			doreloadcert = 0;
 		}
 	}
