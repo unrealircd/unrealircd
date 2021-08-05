@@ -47,6 +47,8 @@ MODVAR char modebuf[BUFSIZE];
 /** Parameter buffer (eg: "key 123") */
 MODVAR char parabuf[BUFSIZE];
 
+static mp_pool_t *channel_pool = NULL;
+
 /** This describes the letters, modes and options for core channel modes.
  * These are +ntmispklr and also the list modes +vhoaq and +beI.
  */
@@ -928,6 +930,11 @@ int valid_channelname(const char *cname)
 	return 1; /* Valid */
 }
 
+void initlist_channels(void)
+{
+	channel_pool = mp_pool_new(sizeof(Channel), 512 * 1024);
+}
+
 /** Create channel 'name' (or if it exists, return the existing one)
  * @param name		Channel name
  * @param flag		If set to 'CREATE' then the channel is
@@ -963,10 +970,14 @@ Channel *make_channel(char *name)
 	if ((channel = find_channel(name)))
 		return channel;
 
-	channel = safe_alloc(sizeof(Channel));
+	channel = mp_pool_get(channel_pool);
+	memset(channel, 0, sizeof(Channel));
+
 	strlcpy(channel->name, name, sizeof(channel->name));
+
 	if (channels)
 		channels->prevch = channel;
+
 	channel->topic = NULL;
 	channel->topic_nick = NULL;
 	channel->prevch = NULL;
@@ -1062,7 +1073,7 @@ int sub1_from_channel(Channel *channel)
 	del_from_channel_hash_table(channel->name, channel);
 
 	irccounts.channels--;
-	safe_free(channel);
+	mp_pool_release(channel);
 	return 1;
 }
 

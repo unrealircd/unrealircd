@@ -812,6 +812,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	mp_pool_init();
 	dbuf_init();
 	initlists();
+	initlist_channels();
 
 	early_init_ssl();
 #ifdef USE_LIBCURL
