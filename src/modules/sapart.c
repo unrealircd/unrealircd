@@ -171,6 +171,11 @@ CMD_FUNC(cmd_sapart)
 
 	log_sapart(client, target, parv[2], comment);
 
+	if (comment)
+		sendnotice(target, "*** You were forced to part %s (%s)", parv[2], commentx);
+	else
+		sendnotice(target, "*** You were forced to part %s", parv[2]);
+
 	parv[0] = target->name; // nick
 	parv[1] = parv[2]; // chan
 	parv[2] = comment ? commentx : NULL; // comment
