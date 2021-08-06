@@ -33,11 +33,21 @@ static int valid_event_id(const char *s);
 static int valid_subsystem(const char *s);
 LogLevel log_level_stringtoval(const char *str);
 void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id, Client *client, int expand_msg, char *msg, va_list vl);
+char *timestamp_iso8601_now(void);
+char *timestamp_iso8601(time_t v);
 
 json_t *json_string_possibly_null(char *s)
 {
 	if (s)
 		return json_string(s);
+	return json_null();
+}
+
+json_t *json_timestamp(time_t v)
+{
+	char *ts = timestamp_iso8601(v);
+	if (ts)
+		return json_string(ts);
 	return json_null();
 }
 
@@ -390,13 +400,14 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 {
 	char buf[BUFSIZE+1];
 	json_t *child = json_object();
+	json_t *user = NULL;
 	json_object_set_new(j, key, child);
+
+	/* First the information that is available for ALL client types: */
 
 	json_object_set_new(child, "name", json_string(client->name));
 
-	if (client->user)
-		json_object_set_new(child, "username", json_string(client->user->username));
-
+	/* hostname is available for all, it just depends a bit on whether it is DNS or IP */
 	if (client->user && *client->user->realhost)
 		json_object_set_new(child, "hostname", json_string(client->user->realhost));
 	else if (client->local && *client->local->sockhost)
@@ -404,8 +415,10 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 	else
 		json_object_set_new(child, "hostname", json_string(GetIP(client)));
 
+	/* same for ip, is there for all (well, some services pseudo-users may not have one) */
 	json_object_set_new(child, "ip", json_string_possibly_null(client->ip));
 
+	// FIXME: 'nuh' should be something more generic, like $client.detail, want to use it for all types!
 	if (client->user)
 	{
 		snprintf(buf, sizeof(buf), "%s!%s@%s", client->name, client->user->username, client->user->realhost);
@@ -417,19 +430,62 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 		json_object_set_new(child, "nuh", json_string(client->name));
 	}
 
-	if (*client->info)
-		json_object_set_new(child, "info", json_string(client->info));
+	if (client->local && client->local->firsttime)
+		json_object_set_new(child, "connected_since", json_timestamp(client->local->firsttime));
 
-	if (client->srvptr && client->srvptr->name)
-		json_object_set_new(child, "servername", json_string(client->srvptr->name));
-
-	if (IsLoggedIn(client))
-		json_object_set_new(child, "account", json_string(client->user->svid));
-
-	if (IsUser(client))
+	if (client->user)
 	{
-		json_object_set_new(child, "reputation", json_integer(GetReputation(client)));
-		json_expand_client_security_groups(child, client);
+		/* client.user */
+		user = json_object();
+		json_object_set_new(child, "user", user);
+
+		json_object_set_new(user, "username", json_string(client->user->username));
+		if (!BadPtr(client->info))
+			json_object_set_new(user, "realname", json_string(client->info));
+		if (client->srvptr && client->srvptr->name)
+			json_object_set_new(user, "servername", json_string(client->srvptr->name));
+		if (IsLoggedIn(client))
+			json_object_set_new(user, "account", json_string(client->user->svid));
+		json_object_set_new(user, "reputation", json_integer(GetReputation(client)));
+		json_expand_client_security_groups(user, client);
+	} else
+	if (IsServer(client))
+	{
+		/* client.server */
+
+		/* Whenever a server is expanded, which is rare,
+		 * we should probably expand as much as info as possible:
+		 */
+		json_t *server = json_object();
+		json_t *features;
+
+		/* client.server */
+		json_object_set_new(child, "server", server);
+		if (client->srvptr && client->srvptr->name)
+			json_object_set_new(server, "uplink", json_string(client->srvptr->name));
+		json_object_set_new(server, "num_users", json_integer(client->serv->users));
+		json_object_set_new(server, "boot_time", json_timestamp(client->serv->boottime));
+		json_object_set_new(server, "synced", json_boolean(client->serv->flags.synced));
+
+		/* client.server.features */
+		features = json_object();
+		json_object_set_new(server, "features", features);
+		if (!BadPtr(client->serv->features.software))
+			json_object_set_new(features, "software", json_string(client->serv->features.software));
+		json_object_set_new(features, "protocol", json_integer(client->serv->features.protocol));
+		if (!BadPtr(client->serv->features.usermodes))
+			json_object_set_new(features, "usermodes", json_string(client->serv->features.usermodes));
+		if (!BadPtr(client->serv->features.chanmodes[0]))
+		{
+			/* client.server.features.chanmodes (array) */
+			int i;
+			json_t *chanmodes = json_array();
+			json_object_set_new(features, "chanmodes", chanmodes);
+			for (i=0; i < 4; i++)
+				json_array_append_new(chanmodes, json_string_possibly_null(client->serv->features.chanmodes[i]));
+		}
+		if (!BadPtr(client->serv->features.nickchars))
+			json_object_set_new(features, "nick_character_sets", json_string(client->serv->features.nickchars));
 	}
 }
 
@@ -602,14 +658,6 @@ LogData *log_data_link_block(ConfigItem_link *link)
 	json_object_set_new(j, "bind_ip", json_string(bind_ip));
 
 	return d;
-}
-
-json_t *json_timestamp(time_t v)
-{
-	char *ts = timestamp_iso8601(v);
-	if (ts)
-		return json_string(ts);
-	return json_null();
 }
 
 LogData *log_data_tkl(const char *key, TKL *tkl)

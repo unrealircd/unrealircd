@@ -628,7 +628,7 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char
 			long connected_time = TStime() - client->local->firsttime;
 			RunHook3(HOOKTYPE_LOCAL_QUIT, client, recv_mtags, comment);
 			unreal_log(ULOG_INFO, "connect", "LOCAL_CLIENT_DISCONNECT", client,
-				   "Client exiting: $client ($client.username@$client.hostname) [$client.ip] ($reason)",
+				   "Client exiting: $client ($client.user.username@$client.hostname) [$client.ip] ($reason)",
 				   log_data_string("extended_client_info", get_connect_extinfo(client)),
 				   log_data_string("reason", comment),
 				   log_data_integer("connected_time", connected_time));

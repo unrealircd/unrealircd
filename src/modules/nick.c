@@ -958,7 +958,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		}
 
 		unreal_log(ULOG_INFO, "connect", "LOCAL_CLIENT_CONNECT", client,
-		           "Client connecting: $client ($client.username@$client.hostname) [$client.ip] $extended_client_info",
+		           "Client connecting: $client ($client.user.username@$client.hostname) [$client.ip] $extended_client_info",
 		           log_data_string("extended_client_info", get_connect_extinfo(client)));
 
 		RunHook2(HOOKTYPE_WELCOME, client, 0);
