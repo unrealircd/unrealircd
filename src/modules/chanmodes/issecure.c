@@ -143,17 +143,17 @@ void issecure_unset(Channel *channel, Client *client, MessageTag *recv_mtags, in
 	if (notice)
 	{
 		mtags = NULL;
-		new_message_special(&me, recv_mtags, &mtags, "NOTICE %s :setting -Z", channel->chname);
+		new_message_special(&me, recv_mtags, &mtags, "NOTICE %s :setting -Z", channel->name);
 		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 		               ":%s NOTICE %s :User '%s' joined and is not connected through SSL/TLS, setting channel -Z (insecure)",
-		               me.id, channel->chname, client->name);
+		               me.id, channel->name, client->name);
 		free_message_tags(mtags);
 	}
 		
 	channel->mode.extmode &= ~EXTCMODE_ISSECURE;
 	mtags = NULL;
-	new_message_special(&me, recv_mtags, &mtags, "MODE %s -Z", channel->chname);
-	sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s -Z", me.name, channel->chname);
+	new_message_special(&me, recv_mtags, &mtags, "MODE %s -Z", channel->name);
+	sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s -Z", me.name, channel->name);
 	free_message_tags(mtags);
 }
 
@@ -168,7 +168,7 @@ void issecure_set(Channel *channel, Client *client, MessageTag *recv_mtags, int 
 	MessageTag *mtags;
 
 	mtags = NULL;
-	new_message_special(&me, recv_mtags, &mtags, "NOTICE %s :setting +Z", channel->chname);
+	new_message_special(&me, recv_mtags, &mtags, "NOTICE %s :setting +Z", channel->name);
 	if (notice && client)
 	{
 		/* note that we have to skip 'client', since when this call is being made
@@ -176,23 +176,23 @@ void issecure_set(Channel *channel, Client *client, MessageTag *recv_mtags, int 
 		 */
 		sendto_channel(channel, &me, client, 0, 0, SEND_LOCAL, NULL,
 		               ":%s NOTICE %s :Now all users in the channel are connected through SSL/TLS, setting channel +Z (secure)",
-		               me.name, channel->chname);
+		               me.name, channel->name);
 	} else if (notice)
 	{
 		/* note the missing word 'now' in next line */
 		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, NULL,
 		               ":%s NOTICE %s :All users in the channel are connected through SSL/TLS, setting channel +Z (secure)",
-		               me.name, channel->chname);
+		               me.name, channel->name);
 	}
 	free_message_tags(mtags);
 
 	channel->mode.extmode |= EXTCMODE_ISSECURE;
 
 	mtags = NULL;
-	new_message_special(&me, recv_mtags, &mtags, "MODE %s +Z", channel->chname);
+	new_message_special(&me, recv_mtags, &mtags, "MODE %s +Z", channel->name);
 	sendto_channel(channel, &me, client, 0, 0, SEND_LOCAL, mtags,
 	               ":%s MODE %s +Z",
-	               me.name, channel->chname);
+	               me.name, channel->name);
 	free_message_tags(mtags);
 }
 

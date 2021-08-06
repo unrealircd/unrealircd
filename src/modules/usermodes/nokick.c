@@ -91,7 +91,7 @@ int nokick_can_kick(Client *client, Client *target, Channel *channel, char *comm
 
 		sendnotice(target,
 			"*** umode q: %s tried to kick you from channel %s (%s)",
-			client->name, channel->chname, comment);
+			client->name, channel->name, comment);
 		
 		return EX_ALWAYS_DENY;
 	}

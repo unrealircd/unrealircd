@@ -68,7 +68,7 @@ CMD_FUNC(cmd_samode)
 		return;
 	}
 
-	channel = find_channel(parv[1], NULL);
+	channel = find_channel(parv[1]);
 	if (!channel)
 	{
 		sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);

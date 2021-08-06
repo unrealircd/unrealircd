@@ -27,9 +27,7 @@ ModuleHeader MOD_HEADER = {
 #define MAGIC_CHANNEL_START	0x11111111
 #define MAGIC_CHANNEL_END	0x22222222
 
-#ifdef DEBUGMODE
- #define BENCHMARK
-#endif
+// #undef BENCHMARK
 
 #define WARN_WRITE_ERROR(fname) \
 	do { \
@@ -335,7 +333,7 @@ int write_channel_entry(UnrealDB *db, const char *tmpfname, Channel *channel)
 {
 	W_SAFE(unrealdb_write_int32(db, MAGIC_CHANNEL_START));
 	/* Channel name */
-	W_SAFE(unrealdb_write_str(db, channel->chname));
+	W_SAFE(unrealdb_write_str(db, channel->name));
 	/* Channel creation time */
 	W_SAFE(unrealdb_write_int64(db, channel->creationtime));
 	/* Topic (topic, setby, seton) */
@@ -506,7 +504,7 @@ int read_channeldb(void)
 		R_SAFE(unrealdb_read_str(db, &modes2));
 		R_SAFE(unrealdb_read_str(db, &mode_lock));
 		/* If we got this far, we can create/initialize the channel with the above */
-		channel = get_channel(&me, chname, CREATE);
+		channel = make_channel(chname);
 		channel->creationtime = creationtime;
 		safe_strdup(channel->topic, topic);
 		safe_strdup(channel->topic_nick, topic_nick);

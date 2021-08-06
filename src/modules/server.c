@@ -51,7 +51,8 @@ void _send_server_message(Client *client);
 void _introduce_user(Client *to, Client *acptr);
 int _check_deny_version(Client *cptr, char *software, int protocol, char *flags);
 void _broadcast_sinfo(Client *acptr, Client *to, Client *except);
-int server_sync(Client *cptr, ConfigItem_link *conf);
+int server_sync(Client *cptr, ConfigItem_link *conf, int incoming);
+void tls_link_notification_verify(Client *acptr, ConfigItem_link *aconf);
 void server_generic_free(ModData *m);
 int server_post_connect(Client *client);
 
@@ -463,8 +464,8 @@ EVENT(server_handshake_timeout)
 		    ((TStime() - client->local->firsttime) >= cfg.connect_timeout))
 		{
 			/* If this is a connect timeout to an outgoing server then notify ops & log it */
-			sendto_ops_and_log("Connect timeout while trying to link to server '%s' (%s)",
-			                   client->name, client->ip?client->ip:"<unknown ip>");
+			unreal_log(ULOG_INFO, "link", "LINK_CONNECT_TIMEOUT", client,
+			           "Connect timeout while trying to link to server '$client' ($client.ip)");
 
 			exit_client(client, NULL, "Connection timeout");
 			continue;
@@ -474,8 +475,8 @@ EVENT(server_handshake_timeout)
 		if ((TStime() - client->local->firsttime) >= cfg.handshake_timeout)
 		{
 			/* If this is a handshake timeout to an outgoing server then notify ops & log it */
-			sendto_ops_and_log("Connection handshake timeout while trying to link to server '%s' (%s)",
-			                   client->name, client->ip?client->ip:"<unknown ip>");
+			unreal_log(ULOG_INFO, "link", "LINK_HANDSHAKE_TIMEOUT", client,
+			           "Connect handshake timeout while trying to link to server '$client' ($client.ip)");
 
 			exit_client(client, NULL, "Handshake Timeout");
 			continue;
@@ -880,6 +881,7 @@ CMD_FUNC(cmd_server)
 	ConfigItem_link *aconf = NULL;
 	ConfigItem_deny_link *deny;
 	char *flags = NULL, *protocol = NULL, *inf = NULL, *num = NULL;
+	int incoming;
 
 	if (IsUser(client))
 	{
@@ -943,11 +945,10 @@ CMD_FUNC(cmd_server)
 
 	if (strlen(client->id) != 3)
 	{
-		sendto_umode_global(UMODE_OPER, "Server %s is using old unsupported protocol from UnrealIRCd 3.2.x or earlier. " 
-		                                "See https://www.unrealircd.org/docs/FAQ#old-server-protocol",
-		                                servername);
-		ircd_log(LOG_ERROR, "Server using old unsupported protocol from UnrealIRCd 3.2.x or earlier. "
-		                    "See https://www.unrealircd.org/docs/FAQ#old-server-protocol");
+		unreal_log(ULOG_ERROR, "link", "LINK_OLD_PROTOCOL", client,
+		           "Server link $servername rejected. Server is using an old and unsupported protocol from UnrealIRCd 3.2.x or earlier. "
+		           "See https://www.unrealircd.org/docs/FAQ#old-server-protocol",
+		           log_data_string("servername", servername));
 		exit_client(client, NULL, "Server using old unsupported protocol from UnrealIRCd 3.2.x or earlier. "
 		                          "See https://www.unrealircd.org/docs/FAQ#old-server-protocol");
 		return;
@@ -956,8 +957,10 @@ CMD_FUNC(cmd_server)
 	hop = atol(parv[2]);
 	if (hop != 1)
 	{
-		sendto_umode_global(UMODE_OPER, "Directly linked server %s provided a hopcount of %d, while 1 was expected",
-		                                servername, hop);
+		unreal_log(ULOG_ERROR, "link", "LINK_REJECTED_INVALID_HOPCOUNT", client,
+		           "Server link $servername rejected. Directly linked server provided a hopcount of $hopcount, while 1 was expected.",
+		           log_data_string("servername", servername),
+		           log_data_integer("hopcount", hop));
 		exit_client(client, NULL, "Invalid SERVER message, hop count must be 1");
 		return;
 	}
@@ -1002,8 +1005,9 @@ CMD_FUNC(cmd_server)
 		if (deny->flag.type == CRULE_ALL && unreal_mask_match_string(servername, deny->mask)
 			&& crule_eval(deny->rule))
 		{
-			sendto_ops_and_log("Refused connection from %s. Rejected by deny link { } block.",
-				get_client_host(client));
+			unreal_log(ULOG_ERROR, "link", "LINK_REJECTED_DENY_LINK_BLOCK", client,
+			           "Server link $servername rejected by deny link { } block.",
+			           log_data_string("servername", servername));
 			exit_client(client, NULL, "Disallowed by connection rule");
 			return;
 		}
@@ -1015,7 +1019,81 @@ CMD_FUNC(cmd_server)
 	ircsnprintf(descbuf, sizeof descbuf, "Server: %s", servername);
 	fd_desc(client->local->fd, descbuf);
 
-	server_sync(client, aconf);
+	incoming = IsUnknown(client) ? 1 : 0;
+
+	if (client->local->passwd)
+		safe_free(client->local->passwd);
+
+	/* Set up server structure */
+	free_pending_net(client);
+	SetServer(client);
+	irccounts.me_servers++;
+	irccounts.servers++;
+	irccounts.unknown--;
+	list_move(&client->client_node, &global_server_list);
+	list_move(&client->lclient_node, &lclient_list);
+	list_add(&client->special_node, &server_list);
+
+	if (find_uline(client->name))
+	{
+		if (client->serv && client->serv->features.software && !strncmp(client->serv->features.software, "UnrealIRCd-", 11))
+		{
+			unreal_log(ULOG_ERROR, "link", "BAD_ULINES", client,
+			           "Bad ulines! Server $client matches your ulines { } block, but this server "
+			           "is an UnrealIRCd server. UnrealIRCd servers should never be ulined as it "
+			           "causes security issues. Ulines should only be added for services! "
+			           "See https://www.unrealircd.org/docs/FAQ#bad-ulines.");
+			exit_client(client, NULL, "Bad ulines. See https://www.unrealircd.org/docs/FAQ#bad-ulines");
+		}
+		SetULine(client);
+	}
+
+	find_or_add(client->name);
+
+	if (IsSecure(client))
+	{
+		unreal_log(ULOG_INFO, "link", "SERVER_LINKED", client,
+		           "Server linked: $me -> $client [secure: $tls_cipher]",
+		           log_data_string("tls_cipher", tls_get_cipher(client->local->ssl)),
+		           log_data_client("me", &me));
+		tls_link_notification_verify(client, aconf);
+	}
+	else
+	{
+		unreal_log(ULOG_INFO, "link", "SERVER_LINKED", client,
+		           "Server linked: $me -> $client",
+		           log_data_client("me", &me));
+		/* Print out a warning if linking to a non-TLS server unless it's localhost.
+		 * Yeah.. there are still other cases when non-TLS links are fine (eg: local IP
+		 * of the same machine), we won't bother with detecting that. -- Syzop
+		 */
+		if (!IsLocalhost(client) && (iConf.plaintext_policy_server == POLICY_WARN))
+		{
+			sendto_realops("\002WARNING:\002 This link is unencrypted (not SSL/TLS). We highly recommend to use "
+			               "SSL/TLS for server linking. See https://www.unrealircd.org/docs/Linking_servers");
+		}
+		if (IsSecure(client) && (iConf.outdated_tls_policy_server == POLICY_WARN) && outdated_tls_client(client))
+		{
+			sendto_realops("\002WARNING:\002 This link is using an outdated SSL/TLS protocol or cipher (%s).",
+			               tls_get_cipher(client->local->ssl));
+		}
+	}
+
+	add_to_client_hash_table(client->name, client);
+	/* doesnt duplicate client->serv if allocted this struct already */
+	make_server(client);
+	client->serv->up = me.name;
+	client->srvptr = &me;
+	if (!client->serv->conf)
+		client->serv->conf = aconf; /* Only set serv->conf to aconf if not set already! Bug #0003913 */
+	if (incoming)
+		client->serv->conf->refcount++;
+	client->serv->conf->class->clients++;
+	client->local->class = client->serv->conf->class;
+
+	RunHook(HOOKTYPE_SERVER_CONNECT, client);
+
+	server_sync(client, aconf, incoming);
 }
 
 /** Remote server command (SID).
@@ -1165,7 +1243,6 @@ CMD_FUNC(cmd_sid)
 	make_server(acptr);
 	acptr->serv->up = find_or_add(acptr->srvptr->name);
 	SetServer(acptr);
-	ircd_log(LOG_SERVER, "SERVER %s (from %s)", acptr->name, acptr->srvptr->name);
 	/* If this server is U-lined, or the parent is, then mark it as U-lined */
 	if (IsULine(client) || find_uline(acptr->name))
 		SetULine(acptr);
@@ -1175,6 +1252,8 @@ CMD_FUNC(cmd_sid)
 	add_to_client_hash_table(acptr->name, acptr);
 	add_to_id_hash_table(acptr->id, acptr);
 	list_move(&acptr->client_node, &global_server_list);
+
+	unreal_log(ULOG_INFO, "link", "SERVER_LINKED", acptr, "Server linked: $client (via $client.server)");
 
 	RunHook(HOOKTYPE_SERVER_CONNECT, acptr);
 
@@ -1211,6 +1290,156 @@ void _introduce_user(Client *to, Client *acptr)
 			}
 		}
 	}
+}
+
+#define SafeStr(x)    ((x && *(x)) ? (x) : "*")
+
+/** Broadcast SINFO.
+ * @param cptr   The server to send the information about.
+ * @param to     The server to send the information TO (NULL for broadcast).
+ * @param except The direction NOT to send to.
+ * This function takes into account that the server may not
+ * provide all of the detailed info. If any information is
+ * absent we will send 0 for numbers and * for NULL strings.
+ */
+void _broadcast_sinfo(Client *acptr, Client *to, Client *except)
+{
+	char chanmodes[128], buf[512];
+
+	if (acptr->serv->features.chanmodes[0])
+	{
+		snprintf(chanmodes, sizeof(chanmodes), "%s,%s,%s,%s",
+			 acptr->serv->features.chanmodes[0],
+			 acptr->serv->features.chanmodes[1],
+			 acptr->serv->features.chanmodes[2],
+			 acptr->serv->features.chanmodes[3]);
+	} else {
+		strlcpy(chanmodes, "*", sizeof(chanmodes));
+	}
+
+	snprintf(buf, sizeof(buf), "%lld %d %s %s %s :%s",
+		      (long long)acptr->serv->boottime,
+		      acptr->serv->features.protocol,
+		      SafeStr(acptr->serv->features.usermodes),
+		      chanmodes,
+		      SafeStr(acptr->serv->features.nickchars),
+		      SafeStr(acptr->serv->features.software));
+
+	if (to)
+	{
+		/* Targetted to one server */
+		sendto_one(to, NULL, ":%s SINFO %s", acptr->id, buf);
+	} else {
+		/* Broadcast (except one side...) */
+		sendto_server(except, 0, 0, NULL, ":%s SINFO %s", acptr->id, buf);
+	}
+}
+
+/** Sync all information with server 'client'.
+ * Eg: users, channels, everything.
+ * @param client	The newly linked in server
+ * @param aconf		The link block that belongs to this server
+ * @note This function (via cmd_server) is called from both sides, so
+ *       from the incoming side and the outgoing side.
+ */
+int server_sync(Client *client, ConfigItem_link *aconf, int incoming)
+{
+	Client *acptr;
+
+	if (incoming)
+	{
+		/* If this is an incomming connection, then we have just received
+		 * their stuff and now send our PASS, PROTOCTL and SERVER messages back.
+		 */
+		if (!IsEAuth(client)) /* if eauth'd then we already sent the passwd */
+			sendto_one(client, NULL, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
+
+		send_proto(client, aconf);
+		send_server_message(client);
+	}
+
+	/* Broadcast new server to the rest of the network */
+	sendto_server(client, 0, 0, NULL, ":%s SID %s 2 %s :%s",
+		    client->srvptr->id, client->name, client->id, client->info);
+
+	/* Broadcast the just-linked-in featureset to other servers on our side */
+	broadcast_sinfo(client, NULL, client);
+
+	/* Send moddata of &me (if any, likely minimal) */
+	send_moddata_client(client, &me);
+
+	list_for_each_entry_reverse(acptr, &global_server_list, client_node)
+	{
+		/* acptr->direction == acptr for acptr == client */
+		if (acptr->direction == client)
+			continue;
+
+		if (IsServer(acptr))
+		{
+			sendto_one(client, NULL, ":%s SID %s %d %s :%s",
+			    acptr->srvptr->id,
+			    acptr->name, acptr->hopcount + 1,
+			    acptr->id, acptr->info);
+
+			/* Also signal to the just-linked server which
+			 * servers are fully linked.
+			 * Now you might ask yourself "Why don't we just
+			 * assume every server you get during link phase
+			 * is fully linked?", well.. there's a race condition
+			 * if 2 servers link (almost) at the same time,
+			 * then you would think the other one is fully linked
+			 * while in fact he was not.. -- Syzop.
+			 */
+			if (acptr->serv->flags.synced)
+				sendto_one(client, NULL, ":%s EOS", acptr->id);
+			/* Send SINFO of our servers to their side */
+			broadcast_sinfo(acptr, client, NULL);
+			send_moddata_client(client, acptr); /* send moddata of server 'acptr' (if any, likely minimal) */
+		}
+	}
+
+	/* Synching nick information */
+	list_for_each_entry_reverse(acptr, &client_list, client_node)
+	{
+		/* acptr->direction == acptr for acptr == client */
+		if (acptr->direction == client)
+			continue;
+		if (IsUser(acptr))
+			introduce_user(client, acptr);
+	}
+	/*
+	   ** Last, pass all channels plus statuses
+	 */
+	{
+		Channel *channel;
+		for (channel = channels; channel; channel = channel->nextch)
+		{
+			send_channel_modes_sjoin3(client, channel);
+			if (channel->topic_time)
+				sendto_one(client, NULL, "TOPIC %s %s %lld :%s",
+				    channel->name, channel->topic_nick,
+				    (long long)channel->topic_time, channel->topic);
+			send_moddata_channel(client, channel);
+		}
+	}
+	
+	/* Send ModData for all member(ship) structs */
+	send_moddata_members(client);
+	
+	/* pass on TKLs */
+	tkl_sync(client);
+
+	RunHook(HOOKTYPE_SERVER_SYNC, client);
+
+	sendto_one(client, NULL, "NETINFO %i %lld %i %s 0 0 0 :%s",
+	    irccounts.global_max, (long long)TStime(), UnrealProtocol,
+	    CLOAK_KEYCRC,
+	    ircnetwork);
+
+	/* Send EOS (End Of Sync) to the just linked server... */
+	sendto_one(client, NULL, ":%s EOS", me.id);
+	RunHook(HOOKTYPE_POST_SERVER_CONNECT, client);
+	return 0;
 }
 
 void tls_link_notification_verify(Client *acptr, ConfigItem_link *aconf)
@@ -1272,231 +1501,6 @@ void tls_link_notification_verify(Client *acptr, ConfigItem_link *aconf)
 	}
 }
 
-#define SafeStr(x)    ((x && *(x)) ? (x) : "*")
-
-/** Broadcast SINFO.
- * @param cptr   The server to send the information about.
- * @param to     The server to send the information TO (NULL for broadcast).
- * @param except The direction NOT to send to.
- * This function takes into account that the server may not
- * provide all of the detailed info. If any information is
- * absent we will send 0 for numbers and * for NULL strings.
- */
-void _broadcast_sinfo(Client *acptr, Client *to, Client *except)
-{
-	char chanmodes[128], buf[512];
-
-	if (acptr->serv->features.chanmodes[0])
-	{
-		snprintf(chanmodes, sizeof(chanmodes), "%s,%s,%s,%s",
-			 acptr->serv->features.chanmodes[0],
-			 acptr->serv->features.chanmodes[1],
-			 acptr->serv->features.chanmodes[2],
-			 acptr->serv->features.chanmodes[3]);
-	} else {
-		strlcpy(chanmodes, "*", sizeof(chanmodes));
-	}
-
-	snprintf(buf, sizeof(buf), "%lld %d %s %s %s :%s",
-		      (long long)acptr->serv->boottime,
-		      acptr->serv->features.protocol,
-		      SafeStr(acptr->serv->features.usermodes),
-		      chanmodes,
-		      SafeStr(acptr->serv->features.nickchars),
-		      SafeStr(acptr->serv->features.software));
-
-	if (to)
-	{
-		/* Targetted to one server */
-		sendto_one(to, NULL, ":%s SINFO %s", acptr->id, buf);
-	} else {
-		/* Broadcast (except one side...) */
-		sendto_server(except, 0, 0, NULL, ":%s SINFO %s", acptr->id, buf);
-	}
-}
-
-int	server_sync(Client *cptr, ConfigItem_link *aconf)
-{
-	char		*inpath = get_client_name(cptr, TRUE);
-	Client		*acptr;
-	int incoming = IsUnknown(cptr) ? 1 : 0;
-
-	ircd_log(LOG_SERVER, "SERVER %s", cptr->name);
-
-	if (cptr->local->passwd)
-	{
-		safe_free(cptr->local->passwd);
-		cptr->local->passwd = NULL;
-	}
-	if (incoming)
-	{
-		/* If this is an incomming connection, then we have just received
-		 * their stuff and now send our stuff back.
-		 */
-		if (!IsEAuth(cptr)) /* if eauth'd then we already sent the passwd */
-			sendto_one(cptr, NULL, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
-
-		send_proto(cptr, aconf);
-		send_server_message(cptr);
-	}
-
-	/* Set up server structure */
-	free_pending_net(cptr);
-	SetServer(cptr);
-	irccounts.me_servers++;
-	irccounts.servers++;
-	irccounts.unknown--;
-	list_move(&cptr->client_node, &global_server_list);
-	list_move(&cptr->lclient_node, &lclient_list);
-	list_add(&cptr->special_node, &server_list);
-	if (find_uline(cptr->name))
-	{
-		if (cptr->serv && cptr->serv->features.software && !strncmp(cptr->serv->features.software, "UnrealIRCd-", 11))
-		{
-			sendto_realops("\002WARNING:\002 Bad ulines! It seems your server is misconfigured: "
-			               "your ulines { } block is matching an UnrealIRCd server (%s). "
-			               "This is not correct and will cause security issues. "
-			               "ULines should only be added for services! "
-			               "See https://www.unrealircd.org/docs/FAQ#bad-ulines",
-			               cptr->name);
-		}
-		SetULine(cptr);
-	}
-	find_or_add(cptr->name);
-	if (IsSecure(cptr))
-	{
-		sendto_umode_global(UMODE_OPER,
-			"(\2link\2) Secure link %s -> %s established (%s)",
-			me.name, inpath, tls_get_cipher(cptr->local->ssl));
-		tls_link_notification_verify(cptr, aconf);
-	}
-	else
-	{
-		sendto_umode_global(UMODE_OPER,
-			"(\2link\2) Link %s -> %s established",
-			me.name, inpath);
-		/* Print out a warning if linking to a non-TLS server unless it's localhost.
-		 * Yeah.. there are still other cases when non-TLS links are fine (eg: local IP
-		 * of the same machine), we won't bother with detecting that. -- Syzop
-		 */
-		if (!IsLocalhost(cptr) && (iConf.plaintext_policy_server == POLICY_WARN))
-		{
-			sendto_realops("\002WARNING:\002 This link is unencrypted (not SSL/TLS). We highly recommend to use "
-			               "SSL/TLS for server linking. See https://www.unrealircd.org/docs/Linking_servers");
-		}
-		if (IsSecure(cptr) && (iConf.outdated_tls_policy_server == POLICY_WARN) && outdated_tls_client(cptr))
-		{
-			sendto_realops("\002WARNING:\002 This link is using an outdated SSL/TLS protocol or cipher (%s).",
-			               tls_get_cipher(cptr->local->ssl));
-		}
-	}
-	add_to_client_hash_table(cptr->name, cptr);
-	/* doesnt duplicate cptr->serv if allocted this struct already */
-	make_server(cptr);
-	cptr->serv->up = me.name;
-	cptr->srvptr = &me;
-	if (!cptr->serv->conf)
-		cptr->serv->conf = aconf; /* Only set serv->conf to aconf if not set already! Bug #0003913 */
-	if (incoming)
-		cptr->serv->conf->refcount++;
-	cptr->serv->conf->class->clients++;
-	cptr->local->class = cptr->serv->conf->class;
-	RunHook(HOOKTYPE_SERVER_CONNECT, cptr);
-
-	/* Broadcast new server to the rest of the network */
-	sendto_server(cptr, 0, 0, NULL, ":%s SID %s 2 %s :%s",
-		    cptr->srvptr->id, cptr->name, cptr->id, cptr->info);
-
-	/* Broadcast the just-linked-in featureset to other servers on our side */
-	broadcast_sinfo(cptr, NULL, cptr);
-
-	/* Send moddata of &me (if any, likely minimal) */
-	send_moddata_client(cptr, &me);
-
-	list_for_each_entry_reverse(acptr, &global_server_list, client_node)
-	{
-		/* acptr->direction == acptr for acptr == cptr */
-		if (acptr->direction == cptr)
-			continue;
-
-		if (IsServer(acptr))
-		{
-			sendto_one(cptr, NULL, ":%s SID %s %d %s :%s",
-			    acptr->srvptr->id,
-			    acptr->name, acptr->hopcount + 1,
-			    acptr->id, acptr->info);
-
-			/* Also signal to the just-linked server which
-			 * servers are fully linked.
-			 * Now you might ask yourself "Why don't we just
-			 * assume every server you get during link phase
-			 * is fully linked?", well.. there's a race condition
-			 * if 2 servers link (almost) at the same time,
-			 * then you would think the other one is fully linked
-			 * while in fact he was not.. -- Syzop.
-			 */
-			if (acptr->serv->flags.synced)
-			{
-				sendto_one(cptr, NULL, ":%s EOS", acptr->id);
-#ifdef DEBUGMODE
-				ircd_log(LOG_ERROR, "[EOSDBG] server_sync: sending to uplink '%s' with src %s...",
-					cptr->name, acptr->name);
-#endif
-			}
-			/* Send SINFO of our servers to their side */
-			broadcast_sinfo(acptr, cptr, NULL);
-			send_moddata_client(cptr, acptr); /* send moddata of server 'acptr' (if any, likely minimal) */
-		}
-	}
-
-	/* Synching nick information */
-	list_for_each_entry_reverse(acptr, &client_list, client_node)
-	{
-		/* acptr->direction == acptr for acptr == cptr */
-		if (acptr->direction == cptr)
-			continue;
-		if (IsUser(acptr))
-			introduce_user(cptr, acptr);
-	}
-	/*
-	   ** Last, pass all channels plus statuses
-	 */
-	{
-		Channel *channel;
-		for (channel = channels; channel; channel = channel->nextch)
-		{
-			send_channel_modes_sjoin3(cptr, channel);
-			if (channel->topic_time)
-				sendto_one(cptr, NULL, "TOPIC %s %s %lld :%s",
-				    channel->chname, channel->topic_nick,
-				    (long long)channel->topic_time, channel->topic);
-			send_moddata_channel(cptr, channel);
-		}
-	}
-	
-	/* Send ModData for all member(ship) structs */
-	send_moddata_members(cptr);
-	
-	/* pass on TKLs */
-	tkl_sync(cptr);
-
-	RunHook(HOOKTYPE_SERVER_SYNC, cptr);
-
-	sendto_one(cptr, NULL, "NETINFO %i %lld %i %s 0 0 0 :%s",
-	    irccounts.global_max, (long long)TStime(), UnrealProtocol,
-	    CLOAK_KEYCRC,
-	    ircnetwork);
-
-	/* Send EOS (End Of Sync) to the just linked server... */
-	sendto_one(cptr, NULL, ":%s EOS", me.id);
-#ifdef DEBUGMODE
-	ircd_log(LOG_ERROR, "[EOSDBG] server_sync: sending to justlinked '%s' with src ME...",
-			cptr->name);
-#endif
-	RunHook(HOOKTYPE_POST_SERVER_CONNECT, cptr);
-	return 0;
-}
-
 /** This will send "to" a full list of the modes for channel channel,
  *
  * Half of it recoded by Syzop: the whole buffering and size checking stuff
@@ -1517,7 +1521,7 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 	int prebuflen = 0; /* points to after the <sjointoken> <TS> <chan> <fixmodes> <fixparas <..>> : part */
 	int sent = 0; /* we need this so we send at least 1 message about the channel (eg if +P and no members, no bans, #4459) */
 
-	if (*channel->chname != '#')
+	if (*channel->name != '#')
 		return;
 
 	nomode = 0;
@@ -1546,19 +1550,19 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 	{
 		ircsnprintf(buf, sizeof(buf),
 		    ":%s SJOIN %lld %s :", me.id,
-		    (long long)channel->creationtime, channel->chname);
+		    (long long)channel->creationtime, channel->name);
 	}
 	if (nopara && !nomode)
 	{
 		ircsnprintf(buf, sizeof(buf),
 		    ":%s SJOIN %lld %s %s :", me.id,
-		    (long long)channel->creationtime, channel->chname, modebuf);
+		    (long long)channel->creationtime, channel->name, modebuf);
 	}
 	if (!nopara && !nomode)
 	{
 		ircsnprintf(buf, sizeof(buf),
 		    ":%s SJOIN %lld %s %s %s :", me.id,
-		    (long long)channel->creationtime, channel->chname, modebuf, parabuf);
+		    (long long)channel->creationtime, channel->name, modebuf, parabuf);
 	}
 
 	prebuflen = strlen(buf);

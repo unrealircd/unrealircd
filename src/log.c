@@ -26,6 +26,21 @@
 
 #include "unrealircd.h"
 
+#define SNO_ALL INT_MAX
+
+/* Forward declarations */
+static int valid_event_id(const char *s);
+static int valid_subsystem(const char *s);
+long log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id);
+void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id, Client *client, int expand_msg, char *msg, va_list vl);
+
+json_t *json_string_possibly_null(char *s)
+{
+	if (s)
+		return json_string(s);
+	return json_null();
+}
+
 LogType log_type_stringtoval(char *str)
 {
 	if (!strcmp(str, "json"))
@@ -168,6 +183,7 @@ int config_run_log(ConfigFile *conf, ConfigEntry *ce)
 
 	ca = safe_alloc(sizeof(ConfigItem_log));
 	ca->logfd = -1;
+	ca->type = LOG_TYPE_TEXT; /* default */
 	if (strchr(ce->ce_vardata, '%'))
 		safe_strdup(ca->filefmt, ce->ce_vardata);
 	else
@@ -202,8 +218,30 @@ int config_run_log(ConfigFile *conf, ConfigEntry *ce)
 
 // TODO: validate that all 'key' values are lowercase+underscore+digits in all functions below.
 
+void json_expand_client_security_groups(json_t *parent, Client *client)
+{
+	SecurityGroup *s;
+	json_t *child = json_array();
+	json_object_set_new(parent, "security-groups", child);
+
+	/* We put known-users or unknown-users at the beginning.
+	 * The latter is special and doesn't actually exist
+	 * in the linked list, hence the special code here,
+	 * and again later in the for loop to skip it.
+	 */
+	if (user_allowed_by_security_group_name(client, "known-users"))
+		json_array_append_new(child, json_string("known-users"));
+	else
+		json_array_append_new(child, json_string("unknown-users"));
+
+	for (s = securitygroups; s; s = s->next)
+		if (strcmp(s->name, "known-users") && user_allowed_by_security_group(client, s))
+			json_array_append_new(child, json_string(s->name));
+}
+
 void json_expand_client(json_t *j, char *key, Client *client, int detail)
 {
+	char buf[BUFSIZE+1];
 	json_t *child = json_object();
 	json_object_set_new(j, key, child);
 
@@ -213,26 +251,49 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 		json_object_set_new(child, "username", json_string(client->user->username));
 
 	if (client->user && *client->user->realhost)
-		json_object_set_new(child, "host", json_string(client->user->realhost));
+		json_object_set_new(child, "hostname", json_string(client->user->realhost));
 	else if (client->local && *client->local->sockhost)
-		json_object_set_new(child, "host", json_string(client->local->sockhost));
+		json_object_set_new(child, "hostname", json_string(client->local->sockhost));
 	else
-		json_object_set_new(child, "host", json_string(GetIP(client)));
+		json_object_set_new(child, "hostname", json_string(GetIP(client)));
 
-	json_object_set_new(child, "ip", json_string(GetIP(client)));
+	json_object_set_new(child, "ip", json_string_possibly_null(client->ip));
+
+	if (client->user)
+	{
+		snprintf(buf, sizeof(buf), "%s!%s@%s", client->name, client->user->username, client->user->realhost);
+		json_object_set_new(child, "nuh", json_string(buf));
+	} else if (client->ip) {
+		snprintf(buf, sizeof(buf), "%s@%s", client->name, client->ip);
+		json_object_set_new(child, "nuh", json_string(buf));
+	} else {
+		json_object_set_new(child, "nuh", json_string(client->name));
+	}
+
+	if (*client->info)
+		json_object_set_new(child, "info", json_string(client->info));
+
+	if (client->srvptr && client->srvptr->name)
+		json_object_set_new(child, "servername", json_string(client->srvptr->name));
 
 	if (IsLoggedIn(client))
 		json_object_set_new(child, "account", json_string(client->user->svid));
+
+	if (IsUser(client))
+	{
+		json_object_set_new(child, "reputation", json_integer(GetReputation(client)));
+		json_expand_client_security_groups(child, client);
+	}
 }
 
 void json_expand_channel(json_t *j, char *key, Channel *channel, int detail)
 {
 	json_t *child = json_object();
 	json_object_set_new(j, key, child);
-	json_object_set_new(child, "name", json_string(channel->chname));
+	json_object_set_new(child, "name", json_string(channel->name));
 }
 
-char *timestamp_iso8601(void)
+char *timestamp_iso8601_now(void)
 {
 	struct timeval t;
 	struct tm *tm;
@@ -242,6 +303,7 @@ char *timestamp_iso8601(void)
 	gettimeofday(&t, NULL);
 	sec = t.tv_sec;
 	tm = gmtime(&sec);
+
 	snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
 		tm->tm_year + 1900,
 		tm->tm_mon + 1,
@@ -250,6 +312,32 @@ char *timestamp_iso8601(void)
 		tm->tm_min,
 		tm->tm_sec,
 		(int)(t.tv_usec / 1000));
+
+	return buf;
+}
+
+char *timestamp_iso8601(time_t v)
+{
+	struct tm *tm;
+	static char buf[64];
+
+	if (v == 0)
+		return NULL;
+
+	tm = gmtime(&v);
+
+	if (tm == NULL)
+		return NULL;
+
+	snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
+		tm->tm_year + 1900,
+		tm->tm_mon + 1,
+		tm->tm_mday,
+		tm->tm_hour,
+		tm->tm_min,
+		tm->tm_sec,
+		0);
+
 	return buf;
 }
 
@@ -262,12 +350,32 @@ LogData *log_data_string(const char *key, const char *str)
 	return d;
 }
 
+LogData *log_data_char(const char *key, const char c)
+{
+	LogData *d = safe_alloc(sizeof(LogData));
+	d->type = LOG_FIELD_STRING;
+	safe_strdup(d->key, key);
+	d->value.string = safe_alloc(2);
+	d->value.string[0] = c;
+	d->value.string[1] = '\0';
+	return d;
+}
+
 LogData *log_data_integer(const char *key, int64_t integer)
 {
 	LogData *d = safe_alloc(sizeof(LogData));
 	d->type = LOG_FIELD_INTEGER;
 	safe_strdup(d->key, key);
 	d->value.integer = integer;
+	return d;
+}
+
+LogData *log_data_timestamp(const char *key, time_t ts)
+{
+	LogData *d = safe_alloc(sizeof(LogData));
+	d->type = LOG_FIELD_STRING;
+	safe_strdup(d->key, key);
+	safe_strdup(d->value.string, timestamp_iso8601(ts));
 	return d;
 }
 
@@ -349,6 +457,70 @@ LogData *log_data_link_block(ConfigItem_link *link)
 	return d;
 }
 
+json_t *json_timestamp(time_t v)
+{
+	char *ts = timestamp_iso8601(v);
+	if (ts)
+		return json_string(ts);
+	return json_null();
+}
+
+LogData *log_data_tkl(const char *key, TKL *tkl)
+{
+	char buf[BUFSIZE];
+	LogData *d = safe_alloc(sizeof(LogData));
+	json_t *j;
+
+	d->type = LOG_FIELD_OBJECT;
+	safe_strdup(d->key, key);
+	d->value.object = j = json_object();
+
+	json_object_set_new(j, "type", json_string(tkl_type_config_string(tkl))); // Eg 'kline'
+	json_object_set_new(j, "type_string", json_string(tkl_type_string(tkl))); // Eg 'Soft K-Line'
+	json_object_set_new(j, "set_by", json_string(tkl->set_by));
+	json_object_set_new(j, "set_at", json_timestamp(tkl->set_at));
+	json_object_set_new(j, "expire_at", json_timestamp(tkl->expire_at));
+	*buf = '\0';
+	short_date(tkl->set_at, buf);
+	strlcat(buf, " GMT", sizeof(buf));
+	json_object_set_new(j, "set_at_string", json_string(buf));
+	if (tkl->expire_at <= 0)
+	{
+		json_object_set_new(j, "expire_at_string", json_string("Never"));
+	} else {
+		*buf = '\0';
+		short_date(tkl->expire_at, buf);
+		strlcat(buf, " GMT", sizeof(buf));
+		json_object_set_new(j, "expire_at_string", json_string(buf));
+	}
+	json_object_set_new(j, "set_at_delta", json_integer(TStime() - tkl->set_at));
+	if (TKLIsServerBan(tkl))
+	{
+		json_object_set_new(j, "name", json_string(tkl_uhost(tkl, buf, sizeof(buf), 0)));
+		json_object_set_new(j, "reason", json_string(tkl->ptr.serverban->reason));
+	} else
+	if (TKLIsNameBan(tkl))
+	{
+		json_object_set_new(j, "name", json_string(tkl->ptr.nameban->name));
+		json_object_set_new(j, "reason", json_string(tkl->ptr.nameban->reason));
+	} else
+	if (TKLIsBanException(tkl))
+	{
+		json_object_set_new(j, "name", json_string(tkl_uhost(tkl, buf, sizeof(buf), 0)));
+		json_object_set_new(j, "reason", json_string(tkl->ptr.banexception->reason));
+		json_object_set_new(j, "exception_types", json_string(tkl->ptr.banexception->bantypes));
+	} else
+	if (TKLIsSpamfilter(tkl))
+	{
+		json_object_set_new(j, "name", json_string(tkl->ptr.spamfilter->match->str));
+		json_object_set_new(j, "match_type", json_string(unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type)));
+		json_object_set_new(j, "ban_action", json_string(banact_valtostring(tkl->ptr.spamfilter->action)));
+		json_object_set_new(j, "spamfilter_targets", json_string(spamfilter_target_inttostring(tkl->ptr.spamfilter->target)));
+		json_object_set_new(j, "reason", json_string(unreal_decodespace(tkl->ptr.spamfilter->tkl_reason)));
+	}
+
+	return d;
+}
 
 void log_data_free(LogData *d)
 {
@@ -362,9 +534,11 @@ char *loglevel_to_string(LogLevel loglevel)
 {
 	switch(loglevel)
 	{
+		case ULOG_DEBUG:
+			return "debug";
 		case ULOG_INFO:
 			return "info";
-		case ULOG_WARN:
+		case ULOG_WARNING:
 			return "warn";
 		case ULOG_ERROR:
 			return "error";
@@ -376,6 +550,28 @@ char *loglevel_to_string(LogLevel loglevel)
 }
 
 #define validvarcharacter(x)	(isalnum((x)) || ((x) == '_'))
+#define valideventidcharacter(x)	(isupper((x)) || isdigit((x)) || ((x) == '_'))
+#define validsubsystemcharacter(x)	(islower((x)) || isdigit((x)) || ((x) == '_'))
+
+static int valid_event_id(const char *s)
+{
+	if (!*s)
+		return 0;
+	for (; *s; s++)
+		if (!valideventidcharacter(*s))
+			return 0;
+	return 1;
+}
+
+static int valid_subsystem(const char *s)
+{
+	if (!*s)
+		return 0;
+	for (; *s; s++)
+		if (!validsubsystemcharacter(*s))
+			return 0;
+	return 1;
+}
 
 const char *json_get_value(json_t *t)
 {
@@ -515,6 +711,7 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 	struct stat fstats;
 	int n;
 	int write_error;
+	long snomask;
 
 	/* Trap infinite recursions to avoid crash if log file is unavailable,
 	 * this will also avoid calling ircd_log from anything else called
@@ -553,8 +750,11 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 	/* Log to all ircops for now */
 	// FIXME: obviously there should be snomask filtering here ;)
 	// TODO: don't show loglevel for simple INFO messages?
-	if (strncmp(msg, "->", 2) && strncmp(msg, "<-", 2))
-		sendto_realops("[%s] %s", loglevel_to_string(loglevel), msg);
+	snomask = log_to_snomask(loglevel, subsystem, event_id);
+	if (snomask == SNO_ALL)
+		sendto_realops("[%s] %s.%s %s", loglevel_to_string(loglevel), subsystem, event_id, msg);
+	else if (snomask > 0)
+		sendto_snomask(snomask, "[%s] %s.%s %s", loglevel_to_string(loglevel), subsystem, event_id, msg);
 
 	for (l = conf_log; l; l = l->next)
 	{
@@ -633,7 +833,7 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 
 		/* Now actually WRITE to the log... */
 		write_error = 0;
-		if (l->type == LOG_TYPE_JSON)
+		if ((l->type == LOG_TYPE_JSON) && strcmp(subsystem, "traffic"))
 		{
 			n = write(l->logfd, json_serialized, strlen(json_serialized));
 			if (n < strlen(text_buf))
@@ -641,6 +841,7 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 			else
 				write(l->logfd, "\n", 1); // FIXME: no.. we should do it this way..... and why do we use direct I/O at all?
 		} else
+		if (l->type == LOG_TYPE_TEXT)
 		{
 			// FIXME: don't write in 2 stages, waste of slow system calls
 			if (write(l->logfd, timebuf, strlen(timebuf)) < 0)
@@ -673,15 +874,33 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 
 /* Logging function, called by the unreal_log() macro. */
 void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
-                Client *client,
-                char *msg, ...)
+                   Client *client, char *msg, ...)
 {
 	va_list vl;
+	va_start(vl, msg);
+	do_unreal_log_internal(loglevel, subsystem, event_id, client, 1, msg, vl);
+	va_end(vl);
+}
+
+/* Logging function, called by the unreal_log_raw() macro. */
+void do_unreal_log_raw(LogLevel loglevel, char *subsystem, char *event_id,
+                       Client *client, char *msg, ...)
+{
+	va_list vl;
+	va_start(vl, msg);
+	do_unreal_log_internal(loglevel, subsystem, event_id, client, 0, msg, vl);
+	va_end(vl);
+}
+
+void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
+                            Client *client, int expand_msg, char *msg, va_list vl)
+{
 	LogData *d;
 	char *json_serialized;
 	json_t *j = NULL;
 	json_t *j_details = NULL;
 	char msgbuf[1024];
+	char *loglevel_string = loglevel_to_string(loglevel);
 
 	/* TODO: Enforcement:
 	 * - loglevel must be valid
@@ -690,12 +909,20 @@ void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
 	 * - msg may not contain percent signs (%) as that is an obvious indication something is wrong?
 	 *   or maybe a temporary restriction while upgrading that can be removed later ;)
 	 */
+	if (!strcmp(loglevel_string, "???"))
+		abort();
+	if (!valid_subsystem(subsystem))
+		abort();
+	if (!valid_event_id(event_id))
+		abort();
+	if (expand_msg && strchr(msg, '%'))
+		abort();
 
 	j = json_object();
 	j_details = json_object();
 
-	json_object_set_new(j, "timestamp", json_string(timestamp_iso8601()));
-	json_object_set_new(j, "level", json_string(loglevel_to_string(loglevel)));
+	json_object_set_new(j, "timestamp", json_string(timestamp_iso8601_now()));
+	json_object_set_new(j, "level", json_string(loglevel_string));
 	json_object_set_new(j, "subsystem", json_string(subsystem));
 	json_object_set_new(j, "event_id", json_string(event_id));
 
@@ -706,7 +933,6 @@ void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
 	if (client)
 		json_expand_client(j_details, "client", client, 0);
 	/* Additional details (if any) */
-	va_start(vl, msg);
 	while ((d = va_arg(vl, LogData *)))
 	{
 		switch(d->type)
@@ -715,7 +941,10 @@ void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
 				json_object_set_new(j_details, d->key, json_integer(d->value.integer));
 				break;
 			case LOG_FIELD_STRING:
-				json_object_set_new(j_details, d->key, json_string(d->value.string));
+				if (d->value.string)
+					json_object_set_new(j_details, d->key, json_string(d->value.string));
+				else
+					json_object_set_new(j_details, d->key, json_null());
 				break;
 			case LOG_FIELD_CLIENT:
 				json_expand_client(j_details, d->key, d->value.client, 0);
@@ -731,7 +960,12 @@ void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
 		}
 		log_data_free(d);
 	}
-	buildlogstring(msg, msgbuf, sizeof(msgbuf), j_details);
+
+	if (expand_msg)
+		buildlogstring(msg, msgbuf, sizeof(msgbuf), j_details);
+	else
+		strlcpy(msgbuf, msg, sizeof(msgbuf));
+
 	json_object_set_new(j, "msg", json_string(msgbuf));
 
 	/* Now merge the details into root object 'j': */
@@ -776,4 +1010,55 @@ void logtest(void)
 	unreal_log(ULOG_INFO, "test", "TEST", &me, "More data!", log_data_string("fun", "yes lots of fun"));
 	unreal_log(ULOG_INFO, "test", "TEST", &me, "More data, fun: $fun!", log_data_string("fun", "yes lots of fun"), log_data_integer("some_integer", 1337));
 	unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", &me, "Client $client used SAJOIN to join $target to y!", log_data_client("target", &me));
+}
+
+void add_log_snomask(Configuration *i, char *subsystem, long snomask)
+{
+	LogSnomask *l = safe_alloc(sizeof(LogSnomask));
+	safe_strdup(l->subsystem, subsystem);
+	l->snomask = snomask;
+	AppendListItem(l, i->log_snomasks);
+}
+
+void log_snomask_free(LogSnomask *l)
+{
+	safe_free(l->subsystem);
+	safe_free(l);
+}
+
+void log_snomask_free_settings(Configuration *i)
+{
+	LogSnomask *l, *l_next;
+	for (l = i->log_snomasks; l; l = l_next)
+	{
+		l_next = l->next;
+		log_snomask_free(l);
+	}
+	i->log_snomasks = NULL;
+}
+
+void log_snomask_setdefaultsettings(Configuration *i)
+{
+	add_log_snomask(i, "linking", SNO_ALL);
+	add_log_snomask(i, "traffic", 0);
+	add_log_snomask(i, "*", SNO_ALL);
+}
+
+long log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id)
+{
+	LogSnomask *l;
+	long snomask = 0;
+
+	for (l = iConf.log_snomasks; l; l = l->next)
+	{
+		if (match_simple(l->subsystem, subsystem))
+		{
+			if (l->snomask == SNO_ALL)
+				return SNO_ALL; /* return early */
+			if (l->snomask == 0)
+				return 0; /* return early */
+			snomask |= l->snomask;
+		}
+	}
+	return snomask;
 }

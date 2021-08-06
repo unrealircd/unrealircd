@@ -104,7 +104,7 @@ void set_post_delayed(Channel *channel)
 	channel->mode.extmode |= EXTMODE_POST_DELAYED;
 
 	new_message(&me, NULL, &mtags);
-	sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +d", me.name, channel->chname);
+	sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +d", me.name, channel->name);
 	free_message_tags(mtags);
 }
 
@@ -115,7 +115,7 @@ void clear_post_delayed(Channel *channel)
 	channel->mode.extmode &= ~EXTMODE_POST_DELAYED;
 
 	new_message(&me, NULL, &mtags);
-	sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s -d", me.name, channel->chname);
+	sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s -d", me.name, channel->name);
 	free_message_tags(mtags);
 }
 
@@ -217,14 +217,14 @@ void clear_user_invisible_announce(Channel *channel, Client *client, MessageTag 
 	clear_user_invisible(channel, client);
 
 	ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN %s",
-				client->name, client->user->username, GetHost(client), channel->chname);
+				client->name, client->user->username, GetHost(client), channel->name);
 
 	ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
-		client->name, client->user->username, GetHost(client), channel->chname,
+		client->name, client->user->username, GetHost(client), channel->name,
 		IsLoggedIn(client) ? client->user->svid : "*",
 		client->info);
 
-	new_message_special(client, recv_mtags, &mtags, ":%s JOIN %s", client->name, channel->chname);
+	new_message_special(client, recv_mtags, &mtags, ":%s JOIN %s", client->name, channel->name);
 	for (i = channel->members; i; i = i->next)
 	{
 		Client *acptr = i->client;
@@ -337,16 +337,16 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, cha
 					if (moded_user_invisible(i->client, channel))
 					{
 						MessageTag *mtags = NULL;
-						new_message_special(i->client, recv_mtags, &mtags, ":%s JOIN %s", i->client->name, channel->chname);
+						new_message_special(i->client, recv_mtags, &mtags, ":%s JOIN %s", i->client->name, channel->name);
 						if (HasCapabilityFast(user, CAP_EXTENDED_JOIN))
 						{
 							sendto_one(user, mtags, ":%s!%s@%s JOIN %s %s :%s",
 							           i->client->name, i->client->user->username, GetHost(i->client),
-							           channel->chname,
+							           channel->name,
 							           IsLoggedIn(i->client) ? i->client->user->svid : "*",
 							           i->client->info);
 						} else {
-							sendto_one(user, mtags, ":%s!%s@%s JOIN :%s", i->client->name, i->client->user->username, GetHost(i->client), channel->chname);
+							sendto_one(user, mtags, ":%s!%s@%s JOIN :%s", i->client->name, i->client->user->username, GetHost(i->client), channel->name);
 						}
 						free_message_tags(mtags);
 					}
@@ -374,8 +374,8 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, cha
 					if (moded_user_invisible(i->client, channel))
 					{
 						MessageTag *mtags = NULL;
-						new_message_special(i->client, recv_mtags, &mtags, ":%s PART %s", i->client->name, channel->chname);
-						sendto_one(user, mtags, ":%s!%s@%s PART :%s", i->client->name, i->client->user->username, GetHost(i->client), channel->chname);
+						new_message_special(i->client, recv_mtags, &mtags, ":%s PART %s", i->client->name, channel->name);
+						sendto_one(user, mtags, ":%s!%s@%s PART :%s", i->client->name, i->client->user->username, GetHost(i->client), channel->name);
 						free_message_tags(mtags);
 					}
 				}

@@ -317,11 +317,13 @@ extern Ban *make_ban();
 extern User *make_user(Client *);
 extern Server *make_server();
 extern Client *make_client(Client *, Client *);
+extern Channel *make_channel(char *name);
 extern Member *find_channel_link(Member *, Channel *);
 extern char *pretty_mask(char *);
 extern void add_client_to_list(Client *);
 extern void remove_client_from_list(Client *);
-extern void initlists();
+extern void initlists(void);
+extern void initlist_channels(void);
 extern struct hostent *get_res(char *);
 extern struct hostent *gethost_byaddr(char *, Link *);
 extern struct hostent *gethost_byname(char *, Link *);
@@ -336,7 +338,6 @@ extern void del_queries(char *);
 #define CHAN_HASH_TABLE_SIZE 32768
 #define WHOWAS_HASH_TABLE_SIZE 32768
 #define THROTTLING_HASH_TABLE_SIZE 8192
-#define hash_find_channel find_channel
 extern uint64_t siphash(const char *in, const char *k);
 extern uint64_t siphash_raw(const char *in, size_t len, const char *k);
 extern uint64_t siphash_nocase(const char *in, const char *k);
@@ -353,7 +354,7 @@ extern Channel *hash_get_chan_bucket(uint64_t);
 extern Client *hash_find_client(const char *, Client *);
 extern Client *hash_find_id(const char *, Client *);
 extern Client *hash_find_nickatserver(const char *, Client *);
-extern Channel *find_channel(char *name, Channel *channel);
+extern Channel *find_channel(char *name);
 extern Client *hash_find_server(const char *, Client *);
 extern struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_TABLE_SIZE];
 
@@ -638,7 +639,6 @@ extern int spamfilter_getconftargets(char *s);
 extern void remove_oper_snomasks(Client *client);
 extern void remove_oper_modes(Client *client);
 extern char *spamfilter_inttostring_long(int v);
-extern Channel *get_channel(Client *cptr, char *chname, int flag);
 extern MODVAR char backupbuf[];
 extern int is_invited(Client *client, Channel *channel);
 extern void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel, int hide_local_modes);
@@ -694,6 +694,7 @@ extern MODVAR int (*tkl_hash)(unsigned int c);
 extern MODVAR char (*tkl_typetochar)(int type);
 extern MODVAR int (*tkl_chartotype)(char c);
 extern MODVAR char *(*tkl_type_string)(TKL *tk);
+extern MODVAR char *(*tkl_type_config_string)(TKL *tk);
 extern MODVAR TKL *(*tkl_add_serverban)(int type, char *usermask, char *hostmask, char *reason, char *setby,
                                             time_t expire_at, time_t set_at, int soft, int flags);
 extern MODVAR TKL *(*tkl_add_banexception)(int type, char *usermask, char *hostmask, char *reason, char *set_by,
@@ -774,6 +775,7 @@ extern MODVAR int (*watch_del)(char *nick, Client *client, int flags);
 extern MODVAR int (*watch_del_list)(Client *client, int flags);
 extern MODVAR Watch *(*watch_get)(char *nick);
 extern MODVAR int (*watch_check)(Client *client, int reply);
+extern MODVAR char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options);
 /* /Efuncs */
 
 /* SSL/TLS functions */
@@ -1088,14 +1090,20 @@ extern LogType log_type_stringtoval(char *str);
 extern char *log_type_valtostring(LogType v);
 #ifdef DEBUGMODE
 #define unreal_log(...) do_unreal_log(__VA_ARGS__, log_data_source(__FILE__, __LINE__, __FUNCTION__), NULL)
+#define unreal_log_raw(...) do_unreal_log_raw(__VA_ARGS__, log_data_source(__FILE__, __LINE__, __FUNCTION__), NULL)
 #else
 #define unreal_log(...) do_unreal_log(__VA_ARGS__, NULL)
+#define unreal_log_raw(...) do_unreal_log_raw(__VA_ARGS__, NULL)
 #endif
 extern void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id, Client *client, char *msg, ...) __attribute__((format(printf,5,0)));
+extern void do_unreal_log_raw(LogLevel loglevel, char *subsystem, char *event_id, Client *client, char *msg, ...);
 extern LogData *log_data_string(const char *key, const char *str);
+extern LogData *log_data_char(const char *key, const char c);
 extern LogData *log_data_integer(const char *key, int64_t integer);
+extern LogData *log_data_timestamp(const char *key, time_t ts);
 extern LogData *log_data_client(const char *key, Client *client);
 extern LogData *log_data_source(const char *file, int line, const char *function);
 extern LogData *log_data_socket_error(int fd);
 extern LogData *log_data_link_block(ConfigItem_link *link);
+extern LogData *log_data_tkl(const char *key, TKL *tkl);
 /* end of logging */

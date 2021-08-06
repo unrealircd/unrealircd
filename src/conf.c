@@ -195,9 +195,9 @@ extern void unload_all_unused_umodes(void);
 extern void unload_all_unused_extcmodes(void);
 extern void unload_all_unused_caps(void);
 extern void unload_all_unused_history_backends(void);
-
+extern void log_snomask_setdefaultsettings(Configuration *i);
+extern void log_snomask_free_settings(Configuration *i);
 int reloadable_perm_module_unloaded(void);
-
 int tls_tests(void);
 
 /* Conf sub-sub-functions */
@@ -1489,8 +1489,7 @@ void config_error(FORMAT_STRING(const char *format), ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-	ircd_log(LOG_ERROR, "config error: %s", buffer);
-	sendto_realops("error: %s", buffer);
+	unreal_log_raw(ULOG_ERROR, "config", "CONFIG_ERROR_GENERIC", NULL, buffer);
 	if (remote_rehash_client)
 		sendnotice(remote_rehash_client, "error: %s", buffer);
 	/* We cannot live with this */
@@ -1548,8 +1547,7 @@ void config_status(FORMAT_STRING(const char *format), ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-	ircd_log(LOG_ERROR, "%s", buffer);
-	sendto_realops("%s", buffer);
+	unreal_log_raw(ULOG_INFO, "config", "CONFIG_INFO_GENERIC", NULL, buffer);
 	if (remote_rehash_client)
 		sendnotice(remote_rehash_client, "%s", buffer);
 }
@@ -1565,8 +1563,7 @@ void config_warn(FORMAT_STRING(const char *format), ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-	ircd_log(LOG_ERROR, "[warning] %s", buffer);
-	sendto_realops("[warning] %s", buffer);
+	unreal_log_raw(ULOG_WARNING, "config", "CONFIG_WARNING_GENERIC", NULL, buffer);
 	if (remote_rehash_client)
 		sendnotice(remote_rehash_client, "[warning] %s", buffer);
 }
@@ -1741,6 +1738,7 @@ void	free_iConf(Configuration *i)
 		free_floodsettings(f);
 	}
 	i->floodsettings = NULL;
+	log_snomask_free_settings(i);
 }
 
 int	config_test();
@@ -1749,6 +1747,7 @@ void config_setdefaultsettings(Configuration *i)
 {
 	char tmp[512];
 
+	log_snomask_setdefaultsettings(i);
 	safe_strdup(i->oper_snomask, SNO_DEFOPER);
 	i->ident_read_timeout = 7;
 	i->ident_connect_timeout = 3;
@@ -1872,6 +1871,7 @@ static void make_default_logblock(void)
 	safe_strdup(ca->file, "ircd.log");
 	convert_to_absolute_path(&ca->file, LOGDIR);
 	ca->flags |= LOG_CHGCMDS|LOG_CLIENT|LOG_ERROR|LOG_KILL|LOG_KLINE|LOG_OPER|LOG_OVERRIDE|LOG_SACMDS|LOG_SERVER|LOG_SPAMFILTER|LOG_TKL;
+	ca->type = LOG_TYPE_TEXT;
 	ca->logfd = -1;
 	AddListItem(ca, conf_log);
 }
@@ -2233,7 +2233,7 @@ int	init_conf(char *rootconf, int rehash)
 	}
 	else
 	{
-		config_error("IRCd configuration failed to load");
+		unreal_log(ULOG_ERROR, "config", "CONFIG_NOT_LOADED", NULL, "IRCd configuration failed to load");
 		Unload_all_testing_modules();
 		unload_notloaded_includes();
 		config_free(conf);
@@ -2253,7 +2253,7 @@ int	init_conf(char *rootconf, int rehash)
 		RunHook0(HOOKTYPE_REHASH_COMPLETE);
 	}
 	postconf();
-	config_status("Configuration loaded.");
+	unreal_log(ULOG_INFO, "config", "CONFIG_LOADED", NULL, "Configuration loaded");
 	clicap_post_rehash();
 	unload_all_unused_mtag_handlers();
 	return 0;
@@ -9504,7 +9504,7 @@ int	_conf_offchans(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		ConfigItem_offchans *of = safe_alloc(sizeof(ConfigItem_offchans));
-		strlcpy(of->chname, cep->ce_varname, CHANNELLEN+1);
+		strlcpy(of->name, cep->ce_varname, CHANNELLEN+1);
 		for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 		{
 			if (!strcmp(cepp->ce_varname, "topic"))
@@ -10796,8 +10796,7 @@ int	rehash_internal(Client *client, int sig)
 	loop.ircd_rehashing = 1; /* double checking.. */
 	if (init_conf(configfile, 1) == 0)
 		run_configuration();
-	if (sig == 1)
-		reread_motdsandrules();
+	reread_motdsandrules();
 	unload_all_unused_snomasks();
 	unload_all_unused_umodes();
 	unload_all_unused_extcmodes();

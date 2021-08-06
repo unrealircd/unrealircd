@@ -481,7 +481,7 @@ int hbm_modechar_del(Channel *channel, int modechar)
 	if (!cfg.persist)
 		return 0;
 
-	if ((modechar == 'P') && ((h = hbm_find_object(channel->chname))))
+	if ((modechar == 'P') && ((h = hbm_find_object(channel->name))))
 	{
 		/* Channel went from +P to -P and also has channel history: delete the history file */
 		hbm_delete_db(h);
@@ -1533,7 +1533,7 @@ static int hbm_write_db(HistoryLogObject *h)
 	if (!cfg.db_secret)
 		abort();
 
-	channel = find_channel(h->name, NULL);
+	channel = find_channel(h->name);
 	if (!channel || !has_channel_mode(channel, 'P'))
 		return 1; /* Don't save this channel, pretend success */
 

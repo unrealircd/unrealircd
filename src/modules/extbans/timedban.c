@@ -398,7 +398,7 @@ EVENT(timedban_timeout)
 		 * is too costly. So we stick with this. It should be
 		 * good enough. Alternative would be some channel->id value.
 		 */
-		if (((unsigned int)channel->chname[1] % TIMEDBAN_TIMER_ITERATION_SPLIT) != current_iteration)
+		if (((unsigned int)channel->name[1] % TIMEDBAN_TIMER_ITERATION_SPLIT) != current_iteration)
 			continue; /* not this time, maybe next */
 
 		*mbuf = *pbuf = '\0';
@@ -433,8 +433,8 @@ EVENT(timedban_timeout)
 		{
 			MessageTag *mtags = NULL;
 			new_message(&me, NULL, &mtags);
-			sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s %s %s", me.name, channel->chname, mbuf, pbuf);
-			sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s 0", me.id, channel->chname, mbuf, pbuf);
+			sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s %s %s", me.name, channel->name, mbuf, pbuf);
+			sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s 0", me.id, channel->name, mbuf, pbuf);
 			free_message_tags(mtags);
 			*pbuf = 0;
 		}
@@ -484,8 +484,8 @@ void add_send_mode_param(Channel *channel, Client *from, char what, char mode, c
 		MessageTag *mtags = NULL;
 
 		new_message(&me, NULL, &mtags);
-		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s %s %s", me.name, channel->chname, mbuf, pbuf);
-		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s 0", me.id, channel->chname, mbuf, pbuf);
+		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s %s %s", me.name, channel->name, mbuf, pbuf);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s 0", me.id, channel->name, mbuf, pbuf);
 		free_message_tags(mtags);
 		send = 0;
 		*pbuf = 0;

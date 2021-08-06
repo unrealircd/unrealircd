@@ -97,7 +97,7 @@ CMD_FUNC(cmd_names)
 		}
 	}
 
-	channel = find_channel(para, NULL);
+	channel = find_channel(para);
 
 	if (!channel || (!ShowChannel(client, channel) && !ValidatePermissionsForPath("channel:see:names:secret",client,NULL,channel,NULL)))
 	{
@@ -117,7 +117,7 @@ CMD_FUNC(cmd_names)
 
 	idx = 1;
 	buf[idx++] = ' ';
-	for (s = channel->chname; *s; s++)
+	for (s = channel->name; *s; s++)
 		buf[idx++] = *s;
 	buf[idx++] = ' ';
 	buf[idx++] = ':';

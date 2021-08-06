@@ -129,7 +129,7 @@ int cmodeL_is_ok(Client *client, Channel *channel, char mode, char *para, int ty
 			return EX_DENY;
 		}
 
-		if (find_channel(para, NULL) == channel)
+		if (find_channel(para) == channel)
 		{
 			if (MyUser(client))
 				sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'L',
@@ -335,8 +335,8 @@ int link_doforward(Client *client, Channel *channel, char *linked, linkType type
 
 	sendto_one(client, NULL,
 	           ":%s %d %s %s %s :[Link] Cannot join channel %s (%s) -- transferring you to %s",
-	           me.name, ERR_LINKCHANNEL, client->name, channel->chname, linked,
-	           channel->chname, desc, linked);
+	           me.name, ERR_LINKCHANNEL, client->name, channel->name, linked,
+	           channel->name, desc, linked);
 	parv[0] = client->name;
 	parv[1] = linked;
 	parv[2] = NULL;

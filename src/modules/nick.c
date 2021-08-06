@@ -413,12 +413,12 @@ CMD_FUNC(cmd_nick_local)
 			if (!is_skochanop(client, mp->channel) && is_banned(client, mp->channel, BANCHK_NICK, NULL, NULL))
 			{
 				sendnumeric(client, ERR_BANNICKCHANGE,
-				    mp->channel->chname);
+				    mp->channel->name);
 				return;
 			}
 			if (CHECK_TARGET_NICK_BANS && !is_skochanop(client, mp->channel) && is_banned_with_nick(client, mp->channel, BANCHK_NICK, nick, NULL, NULL))
 			{
-				sendnumeric(client, ERR_BANNICKCHANGE, mp->channel->chname);
+				sendnumeric(client, ERR_BANNICKCHANGE, mp->channel->name);
 				return;
 			}
 
@@ -432,7 +432,7 @@ CMD_FUNC(cmd_nick_local)
 			if (i == HOOK_DENY)
 			{
 				sendnumeric(client, ERR_NONICKCHANGE,
-				    mp->channel->chname);
+				    mp->channel->name);
 				return;
 			}
 		}
@@ -734,7 +734,6 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
 	int i, xx;
 	Hook *h;
-	User *user = client->user;
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
 		"+",		/*1  +|- */
@@ -773,18 +772,18 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 			/* if host contained invalid ASCII _OR_ the DNS reply is an IP-like reply
 			 * (like: 1.2.3.4 or ::ffff:1.2.3.4), then reject it and use IP instead.
 			 */
-			if (*tmpstr || !*user->realhost || (isdigit(*client->local->sockhost) && (client->local->sockhost > tmpstr && isdigit(*(tmpstr - 1))) )
+			if (*tmpstr || !*client->user->realhost || (isdigit(*client->local->sockhost) && (client->local->sockhost > tmpstr && isdigit(*(tmpstr - 1))) )
 			    || (client->local->sockhost[0] == ':'))
 				strlcpy(client->local->sockhost, client->ip, sizeof(client->local->sockhost));
 		}
 		if (client->local->sockhost[0])
 		{
-			strlcpy(user->realhost, client->local->sockhost, sizeof(client->local->sockhost)); /* SET HOSTNAME */
+			strlcpy(client->user->realhost, client->local->sockhost, sizeof(client->local->sockhost)); /* SET HOSTNAME */
 		} else {
 			sendto_realops("[HOSTNAME BUG] client->local->sockhost is empty for user %s (%s, %s)",
-				client->name, client->ip ? client->ip : "<null>", user->realhost);
+				client->name, client->ip ? client->ip : "<null>", client->user->realhost);
 			ircd_log(LOG_ERROR, "[HOSTNAME BUG] client->local->sockhost is empty for user %s (%s, %s)",
-				client->name, client->ip ? client->ip : "<null>", user->realhost);
+				client->name, client->ip ? client->ip : "<null>", client->user->realhost);
 		}
 
 		/*
@@ -801,21 +800,21 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		 * Moved the noident stuff here. -OnyxDragon
 		 */
 
-		/* because username may point to user->username */
+		/* because username may point to client->user->username */
 		strlcpy(temp, username, USERLEN + 1);
 
 		if (!IsUseIdent(client))
-			strlcpy(user->username, temp, USERLEN + 1);
+			strlcpy(client->user->username, temp, USERLEN + 1);
 		else if (IsIdentSuccess(client))
-			strlcpy(user->username, client->ident, USERLEN+1);
+			strlcpy(client->user->username, client->ident, USERLEN+1);
 		else
 		{
 			if (IDENT_CHECK == 0) {
-				strlcpy(user->username, temp, USERLEN+1);
+				strlcpy(client->user->username, temp, USERLEN+1);
 			}
 			else {
-				*user->username = '~';
-				strlcpy((user->username + 1), temp, sizeof(user->username)-1);
+				*client->user->username = '~';
+				strlcpy((client->user->username + 1), temp, sizeof(client->user->username)-1);
 				noident = 1;
 			}
 
@@ -836,7 +835,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		 * problems so just ban them. (Using the nick could introduce
 		 * hostile chars) -- codemastr
 		 */
-		for (u2 = user->username + noident; *u2; u2++)
+		for (u2 = client->user->username + noident; *u2; u2++)
 		{
 			if (isallowed(*u2))
 				*u1++ = *u2;
@@ -854,7 +853,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		}
 		*u1 = '\0';
 		*ubad = '\0';
-		if (strlen(stripuser) != strlen(user->username + noident))
+		if (strlen(stripuser) != strlen(client->user->username + noident))
 		{
 			if (stripuser[0] == '\0')
 			{
@@ -862,10 +861,10 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 				return 0;
 			}
 
-			strlcpy(olduser, user->username + noident, USERLEN+1);
-			strlcpy(user->username + 1, stripuser, sizeof(user->username)-1);
-			user->username[0] = '~';
-			user->username[USERLEN] = '\0';
+			strlcpy(olduser, client->user->username + noident, USERLEN+1);
+			strlcpy(client->user->username + 1, stripuser, sizeof(client->user->username)-1);
+			client->user->username[0] = '~';
+			client->user->username[USERLEN] = '\0';
 		}
 		else
 			u1 = NULL;
@@ -929,15 +928,15 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	}
 	else
 	{
-		strlcpy(user->username, username, USERLEN+1);
+		strlcpy(client->user->username, username, USERLEN+1);
 	}
 	SetUser(client);
 	irccounts.clients++;
 	if (client->srvptr && client->srvptr->serv)
 		client->srvptr->serv->users++;
 
-	make_cloakedhost(client, user->realhost, user->cloakedhost, sizeof(user->cloakedhost));
-	safe_strdup(user->virthost, user->cloakedhost);
+	make_cloakedhost(client, client->user->realhost, client->user->cloakedhost, sizeof(client->user->cloakedhost));
+	safe_strdup(client->user->virthost, client->user->cloakedhost);
 
 	if (MyConnect(client))
 	{
@@ -958,18 +957,12 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 			RunHook(HOOKTYPE_SECURE_CONNECT, client);
 		}
 
-		if (IsHidden(client))
-		{
-			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [%s] [vhost: %s] %s",
-				nick, user->username, user->realhost, GetIP(client), user->virthost, get_connect_extinfo(client));
-		} else
-		{
-			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [%s] %s",
-				nick, user->username, user->realhost, GetIP(client), get_connect_extinfo(client));
-		}
+		unreal_log(ULOG_INFO, "connect", "LOCAL_CLIENT_CONNECT", client,
+		           "Client connecting: $client ($client.username@$client.hostname) [$client.ip] $extended_client_info",
+		           log_data_string("extended_client_info", get_connect_extinfo(client)));
 
 		RunHook2(HOOKTYPE_WELCOME, client, 0);
-		sendnumeric(client, RPL_WELCOME, ircnetwork, nick, user->username, user->realhost);
+		sendnumeric(client, RPL_WELCOME, ircnetwork, nick, client->user->username, client->user->realhost);
 
 		RunHook2(HOOKTYPE_WELCOME, client, 1);
 		sendnumeric(client, RPL_YOURHOST, me.name, version);
@@ -988,7 +981,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 
 		if (IsHidden(client))
 		{
-			sendnumeric(client, RPL_HOSTHIDDEN, user->virthost);
+			sendnumeric(client, RPL_HOSTHIDDEN, client->user->virthost);
 			RunHook2(HOOKTYPE_WELCOME, client, 396);
 		}
 
@@ -1035,12 +1028,12 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 
 		/* Remote client */
 		/* The following two cases probably cannot happen anymore? at all? */
-		if (!(acptr = find_server_quick(user->server)))
+		if (!(acptr = find_server_quick(client->user->server)))
 		{
 			sendto_ops("Bad USER [%s] :%s USER %s %s : No such server",
-			           client->name, nick, user->username, user->server);
+			           client->name, nick, client->user->username, client->user->server);
 			sendto_one(client, NULL, ":%s KILL %s :No such server: %s",
-			    me.id, client->id, user->server);
+			    me.id, client->id, client->user->server);
 			SetKilled(client);
 			exit_client(client, NULL, "USER without prefix(2.8) or wrong prefix");
 			return 0;
@@ -1048,7 +1041,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		else if (acptr->direction != client->direction)
 		{
 			sendto_ops("Bad User [%s] :%s USER %s %s, != %s[%s]",
-			    client->name, nick, user->username, user->server,
+			    client->name, nick, client->user->username, client->user->server,
 			    acptr->name, acptr->direction->name);
 			sendto_one(client, NULL, ":%s KILL %s :Wrong user-server-direction",
 			    me.id, client->id);
@@ -1088,8 +1081,8 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		/* For remote clients we recalculate the cloakedhost here because
 		 * it may depend on the IP address (bug #5064).
 		 */
-		make_cloakedhost(client, user->realhost, user->cloakedhost, sizeof(user->cloakedhost));
-		safe_strdup(user->virthost, user->cloakedhost);
+		make_cloakedhost(client, client->user->realhost, client->user->cloakedhost, sizeof(client->user->cloakedhost));
+		safe_strdup(client->user->virthost, client->user->cloakedhost);
 
 		/* Set the umodes */
 		tkllayer[0] = nick;
@@ -1112,12 +1105,12 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	if (MyConnect(client))
 	{
 		broadcast_moddata_client(client);
-		sendto_connectnotice(client, 0, NULL); /* moved down, for modules. */
+		RunHook(HOOKTYPE_LOCAL_CONNECT, client);
 		if (buf[0] != '\0' && buf[1] != '\0')
 			sendto_one(client, NULL, ":%s MODE %s :%s", client->name,
 			    client->name, buf);
-		if (user->snomask)
-			sendnumeric(client, RPL_SNOMASK, get_snomask_string_raw(user->snomask));
+		if (client->user->snomask)
+			sendnumeric(client, RPL_SNOMASK, get_snomask_string_raw(client->user->snomask));
 
 		if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_user == POLICY_WARN))
 			sendnotice_multiline(client, iConf.plaintext_policy_user_message);

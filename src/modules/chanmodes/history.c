@@ -623,9 +623,9 @@ int history_chanmode_change(Client *client, Channel *channel, MessageTag *mtags,
 	/* If so, grab the settings, and communicate them */
 	settings = (HistoryChanMode *)GETPARASTRUCT(channel, 'H');
 	if (settings)
-		history_set_limit(channel->chname, settings->max_lines, settings->max_time);
+		history_set_limit(channel->name, settings->max_lines, settings->max_time);
 	else
-		history_destroy(channel->chname);
+		history_destroy(channel->name);
 
 	return 0;
 }
@@ -636,7 +636,7 @@ int history_channel_destroy(Channel *channel, int *should_destroy)
 	if (*should_destroy == 0)
 		return 0; /* channel will not be destroyed */
 
-	history_destroy(channel->chname);
+	history_destroy(channel->name);
 
 	return 0;
 }
@@ -672,10 +672,10 @@ int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix,
 	snprintf(buf, sizeof(buf), ":%s %s %s :%s",
 		source,
 		sendtype_to_cmd(sendtype),
-		channel->chname,
+		channel->name,
 		text);
 
-	history_add(channel->chname, mtags, buf);
+	history_add(channel->name, mtags, buf);
 
 	return 0;
 }
@@ -700,7 +700,7 @@ int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv
 		filter.cmd = HFC_SIMPLE;
 		filter.last_lines = cfg.playback_on_join.lines;
 		filter.last_seconds = cfg.playback_on_join.time;
-		r = history_request(channel->chname, &filter);
+		r = history_request(channel->name, &filter);
 		if (r)
 		{
 			history_send_result(client, r);
@@ -727,7 +727,7 @@ CMD_OVERRIDE_FUNC(override_mode)
 	    (IsUser(client) && client->srvptr && client->srvptr->local))
 	{
 		/* Now check if the channel is currently +r */
-		if ((parc >= 2) && !BadPtr(parv[1]) && ((channel = find_channel(parv[1], NULL))) &&
+		if ((parc >= 2) && !BadPtr(parv[1]) && ((channel = find_channel(parv[1]))) &&
 		    has_channel_mode(channel, 'r'))
 		{
 			had_r = 1;
@@ -744,7 +744,7 @@ CMD_OVERRIDE_FUNC(override_mode)
 	 * then...
 	 */
 	if (had_r &&
-	    ((channel = find_channel(parv[1], NULL))) &&
+	    ((channel = find_channel(parv[1]))) &&
 	    !has_channel_mode(channel, 'r') &&
 	    HistoryEnabled(channel))
 	{
@@ -782,9 +782,9 @@ CMD_OVERRIDE_FUNC(override_mode)
 
 			sendto_channel(channel, &me, &me, 0, 0, SEND_LOCAL, mtags,
 				       ":%s MODE %s %s %s",
-				       me.name, channel->chname, modebuf, parabuf);
+				       me.name, channel->name, modebuf, parabuf);
 			sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s %lld",
-				me.id, channel->chname, modebuf, parabuf,
+				me.id, channel->name, modebuf, parabuf,
 				(long long)channel->creationtime);
 
 			/* Activate this hook just like cmd_mode.c */

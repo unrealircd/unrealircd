@@ -81,8 +81,7 @@ void ssl_info_callback(const SSL *ssl, int where, int ret)
 			e->n++;
 			if (e->n >= HANDSHAKE_LIMIT_COUNT)
 			{
-				ircd_log(LOG_ERROR, "TLS Handshake flood detected from %s -- killed", get_client_name(client, TRUE));
-				sendto_realops("TLS Handshake flood detected from %s -- killed", get_client_name(client, TRUE));
+				unreal_log(LOG_INFO, "flood", "TLS_HANDSHAKE_FLOOD", client, "TLS Handshake flood detected from $client -- killed");
 				dead_socket(client, "TLS Handshake flood detected");
 			}
 		}

@@ -203,7 +203,9 @@ void parse(Client *cptr, char *buffer, int length)
 	strlcpy(backupbuf, buffer, sizeof(backupbuf));
 
 #if defined(DEBUGMODE) && defined(RAWCMDLOGGING)
-	ircd_log(LOG_ERROR, "<- %s: %s", cptr->name, backupbuf);
+	unreal_log(ULOG_INFO, "traffic", "TRAFFIC_IN", cptr,
+		   "<- $client: $data",
+		   log_data_string("data", backupbuf));
 #endif
 
 	/* This poisons unused para elements that code should never access */
@@ -723,7 +725,7 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s",
 				    client->name, numeric, buffer);
 		}
-		else if ((channel = find_channel(nick, NULL)))
+		else if ((channel = find_channel(nick)))
 		{
 			sendto_channel(channel, client, client->direction,
 			               0, 0, SEND_ALL, recv_mtags,

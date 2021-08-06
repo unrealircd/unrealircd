@@ -336,10 +336,10 @@ static void unload_extcmode_commit(Cmode *cmode)
 				new_message(&me, NULL, &mtags);
 				sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 					       ":%s MODE %s -%c",
-					       me.name, channel->chname, cmode->flag);
+					       me.name, channel->name, cmode->flag);
 				sendto_server(NULL, 0, 0, mtags,
 					":%s MODE %s -%c 0",
-					me.id, channel->chname, cmode->flag);
+					me.id, channel->name, cmode->flag);
 				free_message_tags(mtags);
 
 				channel->mode.extmode &= ~cmode->mode;
@@ -360,17 +360,17 @@ static void unload_extcmode_commit(Cmode *cmode)
 					char *param = cmode->get_param(GETPARASTRUCT(channel, cmode->flag));
 					sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 						       ":%s MODE %s -%c %s",
-						       me.name, channel->chname, cmode->flag, param);
+						       me.name, channel->name, cmode->flag, param);
 					sendto_server(NULL, 0, 0, mtags,
 						":%s MODE %s -%c %s 0",
-						me.id, channel->chname, cmode->flag, param);
+						me.id, channel->name, cmode->flag, param);
 				} else {
 					sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 						       ":%s MODE %s -%c",
-						       me.name, channel->chname, cmode->flag);
+						       me.name, channel->name, cmode->flag);
 					sendto_server(NULL, 0, 0, mtags,
 						":%s MODE %s -%c 0",
-						me.id, channel->chname, cmode->flag);
+						me.id, channel->name, cmode->flag);
 				}
 				free_message_tags(mtags);
 

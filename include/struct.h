@@ -234,11 +234,16 @@ typedef struct LogData {
 } LogData;
 
 /** New log levels for unreal_log() */
+/* Note: the reason for these high numbers is so we can easily catch
+ * if someone makes a mistake to use LOG_INFO (from syslog.h) instead
+ * of the ULOG_xxx levels.
+ */
 typedef enum LogLevel {
-	ULOG_INFO = 0,
-	ULOG_WARN = 1,
-	ULOG_ERROR = 2,
-	ULOG_FATAL = 3
+	ULOG_DEBUG = 1000,
+	ULOG_INFO = 2000,
+	ULOG_WARNING = 3000,
+	ULOG_ERROR = 4000,
+	ULOG_FATAL = 5000
 } LogLevel;
 
 /** Logging types (text, json, etc) */
@@ -247,6 +252,13 @@ typedef enum LogType {
 	LOG_TYPE_TEXT = 1,
 	LOG_TYPE_JSON = 2,
 } LogType;
+
+typedef struct LogSnomask LogSnomask;
+struct LogSnomask {
+	LogSnomask *prev, *next;
+	char *subsystem;
+	long snomask;
+};
 
 /*
 ** 'offsetof' is defined in ANSI-C. The following definition
@@ -1888,7 +1900,7 @@ struct ConfigItem_help {
 
 struct ConfigItem_offchans {
 	ConfigItem_offchans *prev, *next;
-	char chname[CHANNELLEN+1];
+	char name[CHANNELLEN+1];
 	char *topic;
 };
 
@@ -2027,7 +2039,7 @@ struct Channel {
 	Ban *invexlist;				/**< List of invite exceptions (+I) */
 	char *mode_lock;			/**< Mode lock (MLOCK) applied to channel - usually by Services */
 	ModData moddata[MODDATA_MAX_CHANNEL];	/**< Channel attached module data, used by the ModData system */
-	char chname[1];				/**< Channel name */
+	char name[CHANNELLEN+1];		/**< Channel name */
 };
 
 /** user/channel member struct (channel->members).

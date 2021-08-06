@@ -47,6 +47,8 @@ MODVAR char modebuf[BUFSIZE];
 /** Parameter buffer (eg: "key 123") */
 MODVAR char parabuf[BUFSIZE];
 
+static mp_pool_t *channel_pool = NULL;
+
 /** This describes the letters, modes and options for core channel modes.
  * These are +ntmispklr and also the list modes +vhoaq and +beI.
  */
@@ -272,7 +274,7 @@ int add_listmode_ex(Ban **list, Client *client, Channel *channel, char *banid, c
 		if (MyUser(client))
 		{
 			/* Only send the error to local clients */
-			sendnumeric(client, ERR_BANLISTFULL, channel->chname, banid);
+			sendnumeric(client, ERR_BANLISTFULL, channel->name, banid);
 		}
 		do_not_add = 1;
 	}
@@ -301,7 +303,7 @@ int add_listmode_ex(Ban **list, Client *client, Channel *channel, char *banid, c
 			if (MyUser(client))
 			{
 				/* Only send the error to local clients */
-				sendnumeric(client, ERR_BANLISTFULL, channel->chname, banid);
+				sendnumeric(client, ERR_BANLISTFULL, channel->name, banid);
 			}
 			return -1;
 		}
@@ -928,47 +930,65 @@ int valid_channelname(const char *cname)
 	return 1; /* Valid */
 }
 
-/** Get existing channel 'chname' or create a new one.
- * @param client	User creating or searching this channel
- * @param chname	Channel name
+void initlist_channels(void)
+{
+	channel_pool = mp_pool_new(sizeof(Channel), 512 * 1024);
+}
+
+/** Create channel 'name' (or if it exists, return the existing one)
+ * @param name		Channel name
  * @param flag		If set to 'CREATE' then the channel is
  *			created if it does not exist.
  * @returns Pointer to channel (new or existing).
  * @note Be sure to call valid_channelname() first before
  *       you blindly call this function!
  */
-Channel *get_channel(Client *client, char *chname, int flag)
+Channel *make_channel(char *name)
 {
 	Channel *channel;
-	int  len;
+	int len;
+	char *p;
+	char namebuf[CHANNELLEN+1];
 
-	if (BadPtr(chname))
+	if (BadPtr(name))
 		return NULL;
 
-	len = strlen(chname);
-	if (MyUser(client) && len > CHANNELLEN)
+	/* Copy and silently truncate */
+	strlcpy(namebuf, name, sizeof(namebuf));
+
+	/* Copied from valid_channelname(), the minimal requirements */
+	for (p = namebuf; *p; p++)
 	{
-		len = CHANNELLEN;
-		*(chname + CHANNELLEN) = '\0';
+		if (*p < 33 || *p == ',' || *p == ':')
+		{
+			*p = '\0';
+			break;
+		}
 	}
-	if ((channel = find_channel(chname, NULL)))
-		return (channel);
-	if (flag == CREATE)
-	{
-		channel = safe_alloc(sizeof(Channel) + len);
-		strlcpy(channel->chname, chname, len + 1);
-		if (channels)
-			channels->prevch = channel;
-		channel->topic = NULL;
-		channel->topic_nick = NULL;
-		channel->prevch = NULL;
-		channel->nextch = channels;
-		channel->creationtime = MyUser(client) ? TStime() : 0;
-		channels = channel;
-		add_to_channel_hash_table(chname, channel);
-		irccounts.channels++;
-		RunHook2(HOOKTYPE_CHANNEL_CREATE, client, channel);
-	}
+
+	/* Exists? Return it. */
+	if ((channel = find_channel(name)))
+		return channel;
+
+	channel = mp_pool_get(channel_pool);
+	memset(channel, 0, sizeof(Channel));
+
+	strlcpy(channel->name, name, sizeof(channel->name));
+
+	if (channels)
+		channels->prevch = channel;
+
+	channel->topic = NULL;
+	channel->topic_nick = NULL;
+	channel->prevch = NULL;
+	channel->nextch = channels;
+	channel->creationtime = TStime();
+	channels = channel;
+	add_to_channel_hash_table(channel->name, channel);
+	irccounts.channels++;
+
+	RunHook(HOOKTYPE_CHANNEL_CREATE, channel);
+
 	return channel;
 }
 
@@ -1050,10 +1070,10 @@ int sub1_from_channel(Channel *channel)
 
 	if (channel->nextch)
 		channel->nextch->prevch = channel->prevch;
-	del_from_channel_hash_table(channel->chname, channel);
+	del_from_channel_hash_table(channel->name, channel);
 
 	irccounts.channels--;
-	safe_free(channel);
+	mp_pool_release(channel);
 	return 1;
 }
 
@@ -1069,7 +1089,7 @@ void set_channel_mlock(Client *client, Channel *channel, const char *newmlock, i
 	if (propagate)
 	{
 		sendto_server(client, 0, 0, NULL, ":%s MLOCK %lld %s :%s",
-			      client->id, (long long)channel->creationtime, channel->chname,
+			      client->id, (long long)channel->creationtime, channel->name,
 			      BadPtr(channel->mode_lock) ? "" : channel->mode_lock);
 	}
 }

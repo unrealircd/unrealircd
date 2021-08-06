@@ -74,7 +74,7 @@ int noknock_check (Client *client, Channel *channel)
 {
 	if (MyUser(client) && IsNoKnock(channel))
 	{
-		sendnumeric(client, ERR_CANNOTKNOCK, channel->chname, "No knocks are allowed! (+K)");
+		sendnumeric(client, ERR_CANNOTKNOCK, channel->name, "No knocks are allowed! (+K)");
 		return HOOK_DENY;
 	}
 

@@ -745,7 +745,7 @@ void set_sock_opts(int fd, Client *client, int ipv6)
 	opt = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (void *)&opt, sizeof(opt)) < 0)
 	{
-		unreal_log(ULOG_WARN, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
+		unreal_log(ULOG_WARNING, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
 		           "Could not setsockopt(SO_REUSEADDR): $socket_error",
 			   log_data_socket_error(-1));
 	}
@@ -755,7 +755,7 @@ void set_sock_opts(int fd, Client *client, int ipv6)
 	opt = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_USELOOPBACK, (void *)&opt, sizeof(opt)) < 0)
 	{
-		unreal_log(ULOG_WARN, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
+		unreal_log(ULOG_WARNING, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
 		           "Could not setsockopt(SO_USELOOPBACK): $socket_error",
 			   log_data_socket_error(-1));
 	}
@@ -772,7 +772,7 @@ void set_sock_opts(int fd, Client *client, int ipv6)
 	{
 		if (client)
 		{
-			unreal_log(ULOG_WARN, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
+			unreal_log(ULOG_WARNING, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
 				   "Could not get socket options (F_GETFL): $socket_error",
 				   log_data_socket_error(-1));
 		}
@@ -781,7 +781,7 @@ void set_sock_opts(int fd, Client *client, int ipv6)
 	{
 		if (client)
 		{
-			unreal_log(ULOG_WARN, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
+			unreal_log(ULOG_WARNING, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
 				   "Could not get socket options (F_SETFL): $socket_error",
 				   log_data_socket_error(-1));
 		}
@@ -792,7 +792,7 @@ void set_sock_opts(int fd, Client *client, int ipv6)
 	{
 		if (client)
 		{
-			unreal_log(ULOG_WARN, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
+			unreal_log(ULOG_WARNING, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
 				   "Could not ioctlsocket FIONBIO: $socket_error",
 				   log_data_socket_error(-1));
 		}

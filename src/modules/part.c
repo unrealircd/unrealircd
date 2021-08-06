@@ -106,7 +106,7 @@ CMD_FUNC(cmd_part)
 			break;
 		}
 
-		channel = get_channel(client, name, 0);
+		channel = find_channel(name);
 		if (!channel)
 		{
 			sendnumeric(client, ERR_NOSUCHCHANNEL, name);
@@ -155,11 +155,11 @@ CMD_FUNC(cmd_part)
 		}
 
 		/* Create a new message, this one is actually used by 8 calls (though at most 4 max) */
-		new_message_special(client, recv_mtags, &mtags, ":%s PART %s", client->name, channel->chname);
+		new_message_special(client, recv_mtags, &mtags, ":%s PART %s", client->name, channel->name);
 
 		/* Send to other servers... */
 		sendto_server(client, 0, 0, mtags, ":%s PART %s :%s",
-			client->id, channel->chname, comment ? comment : "");
+			client->id, channel->name, comment ? comment : "");
 
 		if (invisible_user_in_channel(client, channel))
 		{
@@ -170,11 +170,11 @@ CMD_FUNC(cmd_part)
 					       PREFIX_HALFOP|PREFIX_OP|PREFIX_OWNER|PREFIX_ADMIN, 0,
 					       SEND_LOCAL, mtags,
 					       ":%s PART %s",
-					       client->name, channel->chname);
+					       client->name, channel->name);
 				if (MyUser(client))
 				{
 					sendto_one(client, mtags, ":%s!%s@%s PART %s",
-						client->name, client->user->username, GetHost(client), channel->chname);
+						client->name, client->user->username, GetHost(client), channel->name);
 				}
 			}
 			else
@@ -183,13 +183,13 @@ CMD_FUNC(cmd_part)
 					       PREFIX_HALFOP|PREFIX_OP|PREFIX_OWNER|PREFIX_ADMIN, 0,
 					       SEND_LOCAL, mtags,
 					       ":%s PART %s %s",
-					       client->name, channel->chname, comment);
+					       client->name, channel->name, comment);
 				if (MyUser(client))
 				{
 					sendto_one(client, mtags,
 						":%s!%s@%s PART %s %s",
 						client->name, client->user->username, GetHost(client),
-						channel->chname, comment);
+						channel->name, comment);
 				}
 			}
 		}
@@ -200,11 +200,11 @@ CMD_FUNC(cmd_part)
 			{
 				sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s PART %s",
-				               client->name, channel->chname);
+				               client->name, channel->name);
 			} else {
 				sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s PART %s :%s",
-				               client->name, channel->chname, comment);
+				               client->name, channel->name, comment);
 			}
 		}
 

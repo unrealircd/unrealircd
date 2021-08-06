@@ -515,7 +515,7 @@ int dccdeny_can_send_to_channel(Client *client, Channel *channel, Membership *lp
 	{
 		char *err = NULL;
 		char *filename = get_dcc_filename(*msg);
-		if (filename && !can_dcc(client, channel->chname, NULL, filename, &err))
+		if (filename && !can_dcc(client, channel->name, NULL, filename, &err))
 		{
 			if (!IsDead(client) && (sendtype != SEND_TYPE_NOTICE))
 			{

@@ -52,6 +52,13 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
+static void log_sajoin(Client *client, Client *target, char *channels)
+{
+	unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", client, "SAJOIN: $client used SAJOIN to make $target join $channels",
+		   log_data_client("target", target),
+		   log_data_string("channels", channels));
+}
+
 /* cmd_sajoin() - Lamego - Wed Jul 21 20:04:48 1999
    Copied off PTlink IRCd (C) PTlink coders team.
    Coded for Sadmin by Stskeeps
@@ -89,19 +96,17 @@ CMD_FUNC(cmd_sajoin)
 		return;
 	}
 
+	/* Broadcast so other servers can log it appropriately as an SAJOIN */
+	sendto_server(client, 0, 0, recv_mtags, ":%s SAPART %s %s", client->id, target->id, parv[2]);
+
 	/* If it's not for our client, then simply pass on the message... */
 	if (!MyUser(target))
 	{
-		sendto_one(target, NULL, ":%s SAJOIN %s %s", client->id, target->id, parv[2]);
-
-		/* Logging function added by XeRXeS */
-		ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
-			client->name, target->name, parv[2]);
-		unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", client, "SAJOIN: %s used SAJOIN to make %s join %s",
-		           log_data_client("target", target),
-		           log_data_string("channel", parv[2]));
+		log_sajoin(client, target, parv[2]);
 		return;
 	}
+
+	/* 'target' is our client... */
 
 	/* Can't this just use do_join() or something with a parameter to bypass some checks?
 	 * This duplicate code is damn ugly. Ah well..
@@ -178,7 +183,7 @@ CMD_FUNC(cmd_sajoin)
 				continue;
 			}
 
-			channel = get_channel(target, name, 0);
+			channel = make_channel(name);
 
 			/* If this _specific_ channel is not permitted, skip it */
 			if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sajoin",client,target,channel,NULL))
@@ -225,8 +230,8 @@ CMD_FUNC(cmd_sajoin)
 					new_message(target, NULL, &mtags);
 					sendto_channel(channel, target, NULL, 0, 0, SEND_LOCAL, mtags,
 					               ":%s PART %s :%s",
-					               target->name, channel->chname, "Left all channels");
-					sendto_server(NULL, 0, 0, mtags, ":%s PART %s :Left all channels", target->name, channel->chname);
+					               target->name, channel->name, "Left all channels");
+					sendto_server(NULL, 0, 0, mtags, ":%s PART %s :Left all channels", target->name, channel->name);
 					if (MyConnect(target))
 						RunHook4(HOOKTYPE_LOCAL_PART, target, channel, mtags, "Left all channels");
 					free_message_tags(mtags);
@@ -236,7 +241,7 @@ CMD_FUNC(cmd_sajoin)
 				continue;
 			}
 			flags = (ChannelExists(name)) ? CHFL_DEOPPED : LEVEL_ON_JOIN;
-			channel = get_channel(target, name, CREATE);
+			channel = make_channel(name);
 			if (channel && (lp = find_membership_link(target->user->channel, channel)))
 				continue;
 
@@ -281,23 +286,10 @@ CMD_FUNC(cmd_sajoin)
 		if (did_anything)
 		{
 			if (!sjmode)
-			{
 				sendnotice(target, "*** You were forced to join %s", jbuf);
-				sendto_umode_global(UMODE_OPER, "%s used SAJOIN to make %s join %s", client->name, target->name, jbuf);
-				/* Logging function added by XeRXeS */
-				ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
-					client->name, target->name, jbuf);
-			}
 			else
-			{
 				sendnotice(target, "*** You were forced to join %s with '%c'", jbuf, sjmode);
-				sendto_umode_global(UMODE_OPER, "%s used SAJOIN to make %s join %c%s", client->name, target->name, sjmode, jbuf);
-				ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %c%s",
-					client->name, target->name, sjmode, jbuf);
-			}
-			unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", client, "SAJOIN: $client used SAJOIN to make $target join $channel",
-				   log_data_client("target", target),
-				   log_data_string("channel", jbuf));
+			log_sajoin(client, target, jbuf);
 		}
 	}
 }

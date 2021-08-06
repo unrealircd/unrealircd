@@ -344,7 +344,9 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 		if (p) *p = '\0';
 		p = strchr(copy, '\r');
 		if (p) *p = '\0';
-		ircd_log(LOG_ERROR, "-> %s: %s", to->name, copy);
+		unreal_log(ULOG_INFO, "traffic", "TRAFFIC_OUT", to,
+		           "-> $client: $data",
+		           log_data_string("data", copy));
 	}
 #endif
 
@@ -410,7 +412,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
  *         sendnumeric(client, ERR_NEEDMOREPARAMS, "SAYHELLO");
  *         return;
  *     }
- *     channel = find_channel(parv[1], NULL);
+ *     channel = find_channel(parv[1]);
  *     if (!channel)
  *     {
  *         sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);

@@ -114,8 +114,7 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 	ircvsnprintf(buf, sizeof(buf), format, vl);
 	va_end(vl);
 
-	// This is a stupid escape trick, we better use a different method / other function
-	unreal_log(ULOG_ERROR, "unknown", "UNKNOWN", NULL, "$_data", log_data_string("_data", buf));
+	unreal_log_raw(ULOG_ERROR, "unknown", "UNKNOWN", NULL, buf);
 }
 
 /** Returns the date in rather long string */
@@ -626,18 +625,14 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char
 		SetClosing(client);
 		if (IsUser(client))
 		{
+			long connected_time = TStime() - client->local->firsttime;
 			RunHook3(HOOKTYPE_LOCAL_QUIT, client, recv_mtags, comment);
-			sendto_connectnotice(client, 1, comment);
-			on_for = TStime() - client->local->firsttime;
-			if (IsHidden(client))
-				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s [%s] [vhost: %s] (%s)",
-					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
-					client->name, client->user->username,
-					client->user->realhost, GetIP(client), client->user->virthost, comment);
-			else
-				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s [%s] (%s)",
-					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
-					client->name, client->user->username, client->user->realhost, GetIP(client), comment);
+			unreal_log(ULOG_INFO, "connect", "LOCAL_CLIENT_DISCONNECT", client,
+				   "Client exiting: $client ($client.username@$client.hostname) [$client.ip] ($reason)",
+				   log_data_string("extended_client_info", get_connect_extinfo(client)),
+				   log_data_string("reason", comment),
+				   log_data_integer("connected_time", connected_time));
+
 		} else
 		if (IsUnknown(client))
 		{

@@ -155,7 +155,7 @@ CMD_FUNC(cmd_who)
 		return;
 	}
 
-	if ((target_channel = find_channel(mask, NULL)) != NULL)
+	if ((target_channel = find_channel(mask)) != NULL)
 	{
 		do_channel_who(client, target_channel, mask);
 		sendnumeric(client, RPL_ENDOFWHO, mask);
@@ -163,7 +163,7 @@ CMD_FUNC(cmd_who)
 	}
 
 	if (wfl.channel && wfl.want_channel == WHO_WANT && 
-	    (target_channel = find_channel(wfl.channel, NULL)) != NULL)
+	    (target_channel = find_channel(wfl.channel)) != NULL)
 	{
 		do_channel_who(client, target_channel, mask);
 		sendnumeric(client, RPL_ENDOFWHO, mask);
@@ -418,7 +418,7 @@ static int can_see(Client *requester, Client *target, Channel *channel)
 		/* if they only want people on a certain channel. */
 		if (wfl.want_channel != WHO_DONTCARE)
  		{
-			Channel *chan = find_channel(wfl.channel, NULL);
+			Channel *chan = find_channel(wfl.channel);
 			if (!chan && wfl.want_channel == WHO_WANT)
 				return WHO_CANTSEE;
 			if ((wfl.want_channel == WHO_WANT) && !IsMember(target, chan))
@@ -602,7 +602,7 @@ static void do_channel_who(Client *client, Channel *channel, char *mask)
 			continue;
 
 		make_who_status(client, acptr, channel, cm, status, cansee);
-		send_who_reply(client, acptr, channel->chname, status, "");
+		send_who_reply(client, acptr, channel->name, status, "");
     }
 }
 
@@ -857,7 +857,7 @@ static char *first_visible_channel(Client *client, Client *acptr, int *flg)
 			*flg |= FVC_HIDDEN;
 
 		if (showchannel)
-			return channel->chname;
+			return channel->name;
 	}
 
 	/* no channels that they can see */

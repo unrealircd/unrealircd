@@ -173,7 +173,7 @@ void chathistory_targets(Client *client, HistoryFilter *filter, int limit)
 	for (mp = client->user->channel; mp; mp = mp->next)
 	{
 		Channel *channel = mp->channel;
-		r = history_request(channel->chname, filter);
+		r = history_request(channel->name, filter);
 		if (r)
 		{
 			add_chathistory_target(&targets, r);
@@ -257,7 +257,7 @@ CMD_FUNC(cmd_chathistory)
 		goto end;
 	}
 
-	channel = find_channel(parv[2], NULL);
+	channel = find_channel(parv[2]);
 	if (!channel)
 	{
 		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_TARGET %s %s :Messages could not be retrieved, not an existing channel",
@@ -369,7 +369,7 @@ CMD_FUNC(cmd_chathistory)
 	if (filter->limit > CHATHISTORY_LIMIT)
 		filter->limit = CHATHISTORY_LIMIT;
 
-	if ((r = history_request(channel->chname, filter)))
+	if ((r = history_request(channel->name, filter)))
 		history_send_result(client, r);
 
 end:

@@ -269,7 +269,7 @@ CMD_FUNC(cmd_list)
 			  }
 			  else	/* Just a normal channel */
 			  {
-				  channel = find_channel(name, NULL);
+				  channel = find_channel(name);
 				  if (channel && (ShowChannel(client, channel) || ValidatePermissionsForPath("channel:see:list:secret",client,NULL,channel,NULL))) {
 #ifdef LIST_SHOW_MODES
 					modebuf[0] = '[';
@@ -343,9 +343,9 @@ int send_list(Client *client)
 		ConfigItem_offchans *x;
 		for (x = conf_offchans; x; x = x->next)
 		{
-			if (find_channel(x->chname, NULL))
+			if (find_channel(x->name))
 				continue; /* exists, >0 users.. will be sent later */
-			sendnumeric(client, RPL_LIST, x->chname,
+			sendnumeric(client, RPL_LIST, x->name,
 			    0,
 #ifdef LIST_SHOW_MODES
 			    "",
@@ -366,11 +366,11 @@ int send_list(Client *client)
 					continue;
 
 				/* set::hide-list { deny-channel } */
-				if (!IsOper(client) && iConf.hide_list && find_channel_allowed(client, channel->chname))
+				if (!IsOper(client) && iConf.hide_list && find_channel_allowed(client, channel->name))
 					continue;
 
 				/* Similarly, hide unjoinable channels for non-ircops since it would be confusing */
-				if (!IsOper(client) && !valid_channelname(channel->chname))
+				if (!IsOper(client) && !valid_channelname(channel->name))
 					continue;
 
 				/* Much more readable like this -- codemastr */
@@ -394,11 +394,11 @@ int send_list(Client *client)
 						continue;
 
 					/* Must not be on nolist (if it exists) */
-					if (lopt->nolist && find_name_list_match(lopt->nolist, channel->chname))
+					if (lopt->nolist && find_name_list_match(lopt->nolist, channel->name))
 						continue;
 
 					/* Must be on yeslist (if it exists) */
-					if (lopt->yeslist && !find_name_list_match(lopt->yeslist, channel->chname))
+					if (lopt->yeslist && !find_name_list_match(lopt->yeslist, channel->name))
 						continue;
 				}
 #ifdef LIST_SHOW_MODES
@@ -412,7 +412,7 @@ int send_list(Client *client)
 				if (!ValidatePermissionsForPath("channel:see:list:secret",client,NULL,channel,NULL))
 					sendnumeric(client, RPL_LIST,
 					    ShowChannel(client,
-					    channel) ? channel->chname :
+					    channel) ? channel->name :
 					    "*", channel->users,
 #ifdef LIST_SHOW_MODES
 					    ShowChannel(client, channel) ?
@@ -422,7 +422,7 @@ int send_list(Client *client)
 					    channel) ? (channel->topic ?
 					    channel->topic : "") : "");
 				else
-					sendnumeric(client, RPL_LIST, channel->chname,
+					sendnumeric(client, RPL_LIST, channel->name,
 					    channel->users,
 #ifdef LIST_SHOW_MODES
 					    modebuf,

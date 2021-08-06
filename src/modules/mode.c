@@ -105,7 +105,7 @@ CMD_FUNC(cmd_mode)
 	{
 		if (*parv[1] == '#')
 		{
-			channel = find_channel(parv[1], NULL);
+			channel = find_channel(parv[1]);
 			if (!channel)
 			{
 				cmd_umode(client, recv_mtags, parc, parv);
@@ -134,8 +134,8 @@ CMD_FUNC(cmd_mode)
 
 		modebuf[1] = '\0';
 		channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel, 0);
-		sendnumeric(client, RPL_CHANNELMODEIS, channel->chname, modebuf, parabuf);
-		sendnumeric(client, RPL_CREATIONTIME, channel->chname, channel->creationtime);
+		sendnumeric(client, RPL_CHANNELMODEIS, channel->name, modebuf, parabuf);
+		sendnumeric(client, RPL_CREATIONTIME, channel->name, channel->creationtime);
 		return;
 	}
 
@@ -154,8 +154,8 @@ CMD_FUNC(cmd_mode)
 				return;
 			/* send ban list */
 			for (ban = channel->banlist; ban; ban = ban->next)
-				sendnumeric(client, RPL_BANLIST, channel->chname, ban->banstr, ban->who, ban->when);
-			sendnumeric(client, RPL_ENDOFBANLIST, channel->chname);
+				sendnumeric(client, RPL_BANLIST, channel->name, ban->banstr, ban->who, ban->when);
+			sendnumeric(client, RPL_ENDOFBANLIST, channel->name);
 			return;
 		}
 
@@ -165,8 +165,8 @@ CMD_FUNC(cmd_mode)
 				return;
 			/* send exban list */
 			for (ban = channel->exlist; ban; ban = ban->next)
-				sendnumeric(client, RPL_EXLIST, channel->chname, ban->banstr, ban->who, ban->when);
-			sendnumeric(client, RPL_ENDOFEXLIST, channel->chname);
+				sendnumeric(client, RPL_EXLIST, channel->name, ban->banstr, ban->who, ban->when);
+			sendnumeric(client, RPL_ENDOFEXLIST, channel->name);
 			return;
 		}
 
@@ -175,8 +175,8 @@ CMD_FUNC(cmd_mode)
 			if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteinvexlist",client,NULL,channel,NULL))
 				return;
 			for (ban = channel->invexlist; ban; ban = ban->next)
-				sendnumeric(client, RPL_INVEXLIST, channel->chname, ban->banstr, ban->who, ban->when);
-			sendnumeric(client, RPL_ENDOFINVEXLIST, channel->chname);
+				sendnumeric(client, RPL_INVEXLIST, channel->name, ban->banstr, ban->who, ban->when);
+			sendnumeric(client, RPL_ENDOFINVEXLIST, channel->name);
 			return;
 		}
 
@@ -190,9 +190,9 @@ CMD_FUNC(cmd_mode)
 			for (member = channel->members; member; member = member->next)
 			{
 				if (is_chanowner(member->client, channel))
-					sendnumeric(client, RPL_QLIST, channel->chname, member->client->name);
+					sendnumeric(client, RPL_QLIST, channel->name, member->client->name);
 			}
-			sendnumeric(client, RPL_ENDOFQLIST, channel->chname);
+			sendnumeric(client, RPL_ENDOFQLIST, channel->name);
 			return;
 		}
 
@@ -206,9 +206,9 @@ CMD_FUNC(cmd_mode)
 			for (member = channel->members; member; member = member->next)
 			{
 				if (is_chanadmin(member->client, channel))
-					sendnumeric(client, RPL_ALIST, channel->chname, member->client->name);
+					sendnumeric(client, RPL_ALIST, channel->name, member->client->name);
 			}
-			sendnumeric(client, RPL_ENDOFALIST, channel->chname);
+			sendnumeric(client, RPL_ENDOFALIST, channel->name);
 			return;
 		}
 	}
@@ -239,11 +239,11 @@ CMD_FUNC(cmd_mode)
 	{
 		if (MyUser(client))
 		{
-			sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->chname);
+			sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 			return;
 		}
 		sendto_one(client, NULL, ":%s MODE %s -oh %s %s 0",
-		    me.name, channel->chname, client->name, client->name);
+		    me.name, channel->name, client->name, client->name);
 		/* Tell the other server that the user is
 		 * de-opped.  Fix op desyncs. */
 		bounce_mode(channel, client, parc - 2, parv + 2);
@@ -259,7 +259,7 @@ CMD_FUNC(cmd_mode)
 			/* !!! */
 			sendto_snomask(SNO_EYES,
 			    "*** TS bounce for %s - %lld(ours) %lld(theirs)",
-			    channel->chname, (long long)channel->creationtime,
+			    channel->name, (long long)channel->creationtime,
 			    (long long)sendts);
 			bounce_mode(channel, client, parc - 2, parv + 2);
 		}
@@ -317,7 +317,7 @@ static void mode_cutoff2(Client *client, Channel *channel, int *parc_out, char *
 	/* Calculate length of MODE if it would go through fully as-is */
 	/* :nick!user@host MODE #channel +something param1 param2 etc... */
 	len = strlen(client->name) + strlen(client->user->username) + strlen(GetHost(client)) +
-	      strlen(channel->chname) + 11;
+	      strlen(channel->name) + 11;
 
 	len += strlen(parv[2]);
 
@@ -376,9 +376,9 @@ static void bounce_mode(Channel *channel, Client *client, int parc, char *parv[]
 
 	if (channel->creationtime)
 		sendto_one(client, NULL, ":%s MODE %s &%s %s %lld", me.id,
-		    channel->chname, modebuf, parabuf, (long long)channel->creationtime);
+		    channel->name, modebuf, parabuf, (long long)channel->creationtime);
 	else
-		sendto_one(client, NULL, ":%s MODE %s &%s %s", me.id, channel->chname,
+		sendto_one(client, NULL, ":%s MODE %s &%s %s", me.id, channel->name,
 		    modebuf, parabuf);
 
 	/* the '&' denotes a bounce so servers won't bounce a bounce */
@@ -424,9 +424,9 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 				{
 					sendto_realops(
 						"Warning! Possible desync: MODE for channel %s ('%s %s') has fishy timestamp (%lld) (from %s/%s)",
-						channel->chname, modebuf, parabuf, (long long)sendts, client->direction->name, client->name);
+						channel->name, modebuf, parabuf, (long long)sendts, client->direction->name, client->name);
 					ircd_log(LOG_ERROR, "Possible desync: MODE for channel %s ('%s %s') has fishy timestamp (%lld) (from %s/%s)",
-						channel->chname, modebuf, parabuf, (long long)sendts, client->direction->name, client->name);
+						channel->name, modebuf, parabuf, (long long)sendts, client->direction->name, client->name);
 				}
 				/* new chan or our timestamp is wrong */
 				/* now works for double-bounce prevention */
@@ -437,7 +437,7 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 				/* theirs is wrong but we let it pass anyway */
 				sendts = channel->creationtime;
 				sendto_one(client, NULL, ":%s MODE %s + %lld", me.name,
-				    channel->chname, (long long)channel->creationtime);
+				    channel->name, (long long)channel->creationtime);
 			}
 		}
 		if (sendts == -1 && channel->creationtime)
@@ -452,11 +452,11 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 			if (channel->creationtime)
 			{
 				sendto_server(client, 0, 0, NULL, ":%s MODE %s %s+ %lld",
-				    me.id, channel->chname, isbounce ? "&" : "",
+				    me.id, channel->name, isbounce ? "&" : "",
 				    (long long)channel->creationtime);
 			} else {
 				sendto_server(client, 0, 0, NULL, ":%s MODE %s %s+",
-				    me.id, channel->chname, isbounce ? "&" : "");
+				    me.id, channel->name, isbounce ? "&" : "");
 			}
 			free_message_tags(mtags);
 			return; /* nothing to send */
@@ -472,12 +472,12 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 			sendto_snomask(SNO_EYES,
 			    "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
 			    client->name, client->user->username, client->user->realhost,
-			    channel->chname, modebuf, parabuf);
+			    channel->name, modebuf, parabuf);
 
 			/* Logging Implementation added by XeRXeS */
 			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) MODE %s %s %s",
 				client->name, client->user->username, client->user->realhost,
-				channel->chname, modebuf, parabuf);
+				channel->name, modebuf, parabuf);
 		}
 
 		sendts = 0;
@@ -495,7 +495,7 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 	{
 		if (!sajoinmode)
 			sendto_umode_global(UMODE_OPER, "%s used SAMODE %s (%s%s%s)",
-				client->name, channel->chname, modebuf, *parabuf ? " " : "", parabuf);
+				client->name, channel->name, modebuf, *parabuf ? " " : "", parabuf);
 
 		client = &me;
 		sendts = 0;
@@ -503,13 +503,13 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 
 	sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 	               ":%s MODE %s %s %s",
-	               client->name, channel->chname, modebuf, parabuf);
+	               client->name, channel->name, modebuf, parabuf);
 
 	if (IsServer(client) && sendts != -1)
 	{
 		sendto_server(client, 0, 0, mtags,
 		              ":%s MODE %s %s%s %s %lld",
-		              client->id, channel->chname,
+		              client->id, channel->name,
 		              isbounce ? "&" : "", modebuf, parabuf,
 		              (long long)sendts);
 	} else
@@ -518,12 +518,12 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 		/* SAMODE is a special case: always send a TS of 0 (omitting TS==desync) */
 		sendto_server(client, 0, 0, mtags,
 		              ":%s MODE %s %s %s 0",
-		              client->id, channel->chname, modebuf, parabuf);
+		              client->id, channel->name, modebuf, parabuf);
 	} else
 	{
 		sendto_server(client, 0, 0, mtags,
 		              ":%s MODE %s %s%s %s",
-		              client->id, channel->chname, isbounce ? "&" : "", modebuf, parabuf);
+		              client->id, channel->name, isbounce ? "&" : "", modebuf, parabuf);
 		/* tell them it's not a timestamp, in case the last param
 		   ** is a number. */
 	}
@@ -778,7 +778,7 @@ int  do_mode_char(Channel *channel, long modetype, char modechar, char *param,
 		case MODE_RGSTR:
 			if (!IsServer(client) && !IsULine(client))
 			{
-				sendnumeric(client, ERR_ONLYSERVERSCANCHANGE, channel->chname);
+				sendnumeric(client, ERR_ONLYSERVERSCANCHANGE, channel->name);
 				break;
 			}
 			goto setmode;
@@ -813,7 +813,7 @@ int  do_mode_char(Channel *channel, long modetype, char modechar, char *param,
 			{
 					if (MyUser(client) && !op_can_override("channel:override:mode",client,channel,&modetype))
 					{
-						sendnumeric(client, ERR_CHANOWNPRIVNEEDED, channel->chname);
+						sendnumeric(client, ERR_CHANOWNPRIVNEEDED, channel->name);
 						break;
 					}
 					if (!is_half_op(client, channel)) /* htrig will take care of halfop override notices */
@@ -828,7 +828,7 @@ int  do_mode_char(Channel *channel, long modetype, char modechar, char *param,
 			{
 					if (MyUser(client) && !op_can_override("channel:override:mode",client,channel,&modetype))
 					{
-						sendnumeric(client, ERR_CHANOWNPRIVNEEDED, channel->chname);
+						sendnumeric(client, ERR_CHANOWNPRIVNEEDED, channel->name);
 						break;
 					}
 					if (!is_half_op(client, channel)) /* htrig will take care of halfop override notices */
@@ -847,7 +847,7 @@ process_listmode:
 				break;
 			if (!(membership = find_membership_link(target->user->channel, channel)))
 			{
-				sendnumeric(client, ERR_USERNOTINCHANNEL, target->name, channel->chname);
+				sendnumeric(client, ERR_USERNOTINCHANNEL, target->name, channel->name);
 				break;
 			}
 			member = find_member_link(channel->members, target);
@@ -1458,7 +1458,7 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 					{
 						if (!sent_mlock_warning)
 						{
-							sendnumeric(client, ERR_MLOCKRESTRICTED, channel->chname, *curchr, channel->mode_lock);
+							sendnumeric(client, ERR_MLOCKRESTRICTED, channel->name, *curchr, channel->mode_lock);
 							sent_mlock_warning++;
 						}
 						continue;
@@ -1566,13 +1566,13 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 		{
 			sendto_snomask(SNO_EYES, "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
 			               client->name, client->user->username, client->user->realhost,
-			               channel->chname, modebuf, parabuf);
+			               channel->name, modebuf, parabuf);
 		}
 
 		/* Logging Implementation added by XeRXeS */
 		ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) MODE %s %s %s",
 		         client->name, client->user->username, client->user->realhost,
-		         channel->chname, modebuf, parabuf);
+		         channel->name, modebuf, parabuf);
 
 		htrig = 0;
 		opermode = 0; /* stop double override notices... but is this ok??? -- Syzop */
@@ -1932,7 +1932,7 @@ CMD_FUNC(cmd_mlock)
 	t = (time_t) atol(parv[1]);
 
 	/* Now, try to find the channel in question */
-	channel = find_channel(parv[2], NULL);
+	channel = find_channel(parv[2]);
 	if (!channel)
 		return;
 

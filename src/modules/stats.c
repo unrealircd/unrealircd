@@ -776,7 +776,7 @@ int stats_officialchannels(Client *client, char *para)
 
 	for (x = conf_offchans; x; x = x->next)
 	{
-		sendtxtnumeric(client, "%s %s", x->chname, x->topic ? x->topic : "");
+		sendtxtnumeric(client, "%s %s", x->name, x->topic ? x->topic : "");
 	}
 	return 0;
 }

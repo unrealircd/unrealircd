@@ -928,9 +928,9 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 			{
 				mtags = NULL;
 				new_message(&me, NULL, &mtags);
-				sendto_server(NULL, 0, 0, mtags, ":%s MODE %s +b %s 0", me.id, channel->chname, mask);
+				sendto_server(NULL, 0, 0, mtags, ":%s MODE %s +b %s 0", me.id, channel->name, mask);
 				sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
-				    ":%s MODE %s +b %s", me.name, channel->chname, mask);
+				    ":%s MODE %s +b %s", me.name, channel->name, mask);
 				free_message_tags(mtags);
 			} /* else.. ban list is full */
 		}
@@ -1081,7 +1081,7 @@ void floodprottimer_add(Channel *channel, char mflag, time_t when)
 		if (strlen(chp->timers_running)+1 >= sizeof(chp->timers_running))
 		{
 			sendto_realops_and_log("floodprottimer_add: too many timers running for %s (%s)!!!",
-				channel->chname, chp->timers_running);
+				channel->name, chp->timers_running);
 			return;
 		}
 		strccat(chp->timers_running, mflag); /* bounds already checked ^^ */
@@ -1140,7 +1140,7 @@ EVENT(modef_event)
 			long mode = 0;
 			Cmode_t extmode = 0;
 #ifdef NEWFLDDBG
-			sendto_realops("modef_event: chan %s mode -%c EXPIRED", e->channel->chname, e->m);
+			sendto_realops("modef_event: chan %s mode -%c EXPIRED", e->channel->name, e->m);
 #endif
 			mode = get_mode_bitbychar(e->m);
 			if (mode == 0)
@@ -1152,10 +1152,10 @@ EVENT(modef_event)
 				MessageTag *mtags = NULL;
 
 				new_message(&me, NULL, &mtags);
-				sendto_server(NULL, 0, 0, mtags, ":%s MODE %s -%c 0", me.id, e->channel->chname, e->m);
+				sendto_server(NULL, 0, 0, mtags, ":%s MODE %s -%c 0", me.id, e->channel->name, e->m);
 				sendto_channel(e->channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s MODE %s -%c",
-				               me.name, e->channel->chname, e->m);
+				               me.name, e->channel->name, e->m);
 				free_message_tags(mtags);
 
 				e->channel->mode.mode &= ~mode;
@@ -1168,7 +1168,7 @@ EVENT(modef_event)
 		} else {
 #ifdef NEWFLDDBG
 			sendto_realops("modef_event: chan %s mode -%c about %d seconds",
-				e->channel->chname, e->m, e->when - now);
+				e->channel->name, e->m, e->when - now);
 #endif
 		}
 	}
@@ -1258,7 +1258,7 @@ void do_floodprot_action(Channel *channel, int what)
 		new_message(&me, NULL, &mtags);
 		ircsnprintf(comment, sizeof(comment), "*** Channel %s detected (limit is %d per %d seconds), setting mode +%c",
 			text, chp->limit[what], chp->per, m);
-		ircsnprintf(target, sizeof(target), "%%%s", channel->chname);
+		ircsnprintf(target, sizeof(target), "%%%s", channel->name);
 		sendto_channel(channel, &me, NULL, PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 		               0, SEND_ALL, mtags,
 		               ":%s NOTICE %s :%s", me.name, target, comment);
@@ -1267,8 +1267,8 @@ void do_floodprot_action(Channel *channel, int what)
 		/* Then the MODE broadcast */
 		mtags = NULL;
 		new_message(&me, NULL, &mtags);
-		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s +%c 0", me.id, channel->chname, m);
-		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +%c", me.name, channel->chname, m);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s +%c 0", me.id, channel->name, m);
+		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +%c", me.name, channel->name, m);
 		free_message_tags(mtags);
 
 		/* Actually set the mode internally */

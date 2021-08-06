@@ -40,7 +40,7 @@ typedef struct JoinFlood JoinFlood;
 
 struct JoinFlood {
 	JoinFlood *prev, *next;
-	char chname[CHANNELLEN+1];
+	char name[CHANNELLEN+1];
 	time_t firstjoin;
 	unsigned short numjoins;
 };
@@ -104,7 +104,7 @@ static int isjthrottled(Client *client, Channel *channel)
 
 	/* Grab user<->chan entry.. */
 	for (e = moddata_local_client(client, jointhrottle_md).ptr; e; e=e->next)
-		if (!strcasecmp(e->chname, channel->chname))
+		if (!strcasecmp(e->name, channel->name))
 			break;
 	
 	if (!e)
@@ -129,7 +129,7 @@ static void jointhrottle_increase_usercounter(Client *client, Channel *channel)
 		
 	/* Grab user<->chan entry.. */
 	for (e = moddata_local_client(client, jointhrottle_md).ptr; e; e=e->next)
-		if (!strcasecmp(e->chname, channel->chname))
+		if (!strcasecmp(e->name, channel->name))
 			break;
 	
 	if (!e)
@@ -175,12 +175,12 @@ JoinFlood *jointhrottle_addentry(Client *client, Channel *channel)
 		abort();
 
 	for (e=moddata_local_client(client, jointhrottle_md).ptr; e; e=e->next)
-		if (!strcasecmp(e->chname, channel->chname))
+		if (!strcasecmp(e->name, channel->name))
 			abort(); /* already exists -- should never happen */
 #endif
 
 	e = safe_alloc(sizeof(JoinFlood));
-	strlcpy(e->chname, channel->chname, sizeof(e->chname));
+	strlcpy(e->name, channel->name, sizeof(e->name));
 
 	/* Insert our new entry as (new) head */
 	if (moddata_local_client(client, jointhrottle_md).ptr)
@@ -213,7 +213,7 @@ EVENT(jointhrottle_cleanup_structs)
 				continue; /* still valid entry */
 #ifdef DEBUGMODE
 			ircd_log(LOG_ERROR, "jointhrottle_cleanup_structs(): freeing %s/%s (%ld[%ld], %ld)",
-				client->name, jf->chname, jf->firstjoin, (long)(TStime() - jf->firstjoin),
+				client->name, jf->name, jf->firstjoin, (long)(TStime() - jf->firstjoin),
 				iConf.floodsettings->period[FLD_JOIN]);
 #endif
 			if (moddata_local_client(client, jointhrottle_md).ptr == jf)

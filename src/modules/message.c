@@ -244,14 +244,14 @@ int can_send_to_prefix(Client *client, Channel *channel, int prefix)
 	 */
 	if (!lp || !(lp->flags & (CHFL_VOICE|CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)))
 	{
-		sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->chname);
+		sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 		return 0;
 	}
 
 	if (!(prefix & PREFIX_OP) && ((prefix & PREFIX_OWNER) || (prefix & PREFIX_ADMIN)) &&
 	    !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)))
 	{
-		sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->chname);
+		sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 		return 0;
 	}
 
@@ -334,7 +334,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 		prefix = 0;
 
 		/* Message to channel */
-		if (p2 && (channel = find_channel(p2, NULL)))
+		if (p2 && (channel = find_channel(p2)))
 		{
 			prefix = prefix_string_to_values(targetstr, p2);
 			if (prefix)
@@ -345,15 +345,15 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 				 * Eg: @&~#chan becomes @#chan
 				 */
 				pfixchan[0] = prefix_values_to_char(prefix);
-				strlcpy(pfixchan+1, channel->chname, sizeof(pfixchan)-1);
+				strlcpy(pfixchan+1, channel->name, sizeof(pfixchan)-1);
 				targetstr = pfixchan;
 			} else {
 				/* Replace target so the privmsg always goes to the "official" channel name */
-				strlcpy(pfixchan, channel->chname, sizeof(pfixchan));
+				strlcpy(pfixchan, channel->name, sizeof(pfixchan));
 				targetstr = pfixchan;
 			}
 
-			if (IsVirus(client) && strcasecmp(channel->chname, SPAMFILTER_VIRUSCHAN))
+			if (IsVirus(client) && strcasecmp(channel->name, SPAMFILTER_VIRUSCHAN))
 			{
 				sendnotice(client, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
 				continue;
@@ -372,7 +372,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 					if (IsDead(client))
 						return;
 					if (!IsDead(client) && (sendtype != SEND_TYPE_NOTICE) && errmsg)
-						sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname, errmsg, p2);
+						sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->name, errmsg, p2);
 					continue; /* skip delivery to this target */
 				}
 			}
@@ -389,7 +389,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 			{
 				int spamtype = (sendtype == SEND_TYPE_NOTICE ? SPAMF_CHANNOTICE : SPAMF_CHANMSG);
 
-				if (match_spamfilter(client, text, spamtype, cmd, channel->chname, 0, NULL))
+				if (match_spamfilter(client, text, spamtype, cmd, channel->name, 0, NULL))
 					return;
 			}
 

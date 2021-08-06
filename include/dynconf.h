@@ -176,6 +176,7 @@ struct Configuration {
 	BroadcastChannelMessagesOption broadcast_channel_messages;
 	AllowedChannelChars allowed_channelchars;
 	HideIdleTimePolicy hide_idle_time;
+	LogSnomask *log_snomasks;
 };
 
 extern MODVAR Configuration iConf;
