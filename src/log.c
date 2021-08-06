@@ -819,7 +819,7 @@ void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details
 	char *o;
 	int left = len - 1;
 	int cnt, found;
-	char varname[256], *varp;
+	char varname[256], *varp, *varpp;
 	json_t *t;
 
 #ifdef DEBUGMODE
@@ -852,15 +852,22 @@ void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details
 			strlncat(varname, i, sizeof(varname), p - i);
 			varp = strchr(varname, '.');
 			if (varp)
-				*varp++ = '\0';
+				*varp = '\0';
 			t = json_object_get(details, varname);
 			if (t)
 			{
 				const char *output = NULL;
 				if (varp)
 				{
-					/* Fetch explicit object.key */
-					t = json_object_get(t, varp);
+					char *varpp;
+					do {
+						varpp = strchr(varp+1, '.');
+						if (varpp)
+							*varpp = '\0';
+						/* Fetch explicit object.key */
+						t = json_object_get(t, varp+1);
+						varp = varpp;
+					} while(t && varpp);
 					if (t)
 						output = json_get_value(t);
 				} else
