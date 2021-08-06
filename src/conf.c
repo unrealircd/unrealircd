@@ -1871,6 +1871,7 @@ static void make_default_logblock(void)
 	safe_strdup(ca->file, "ircd.log");
 	convert_to_absolute_path(&ca->file, LOGDIR);
 	ca->flags |= LOG_CHGCMDS|LOG_CLIENT|LOG_ERROR|LOG_KILL|LOG_KLINE|LOG_OPER|LOG_OVERRIDE|LOG_SACMDS|LOG_SERVER|LOG_SPAMFILTER|LOG_TKL;
+	ca->type = LOG_TYPE_TEXT;
 	ca->logfd = -1;
 	AddListItem(ca, conf_log);
 }

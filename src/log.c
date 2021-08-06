@@ -181,6 +181,7 @@ int config_run_log(ConfigFile *conf, ConfigEntry *ce)
 
 	ca = safe_alloc(sizeof(ConfigItem_log));
 	ca->logfd = -1;
+	ca->type = LOG_TYPE_TEXT; /* default */
 	if (strchr(ce->ce_vardata, '%'))
 		safe_strdup(ca->filefmt, ce->ce_vardata);
 	else
