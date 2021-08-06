@@ -215,6 +215,27 @@ int config_run_log(ConfigFile *conf, ConfigEntry *ce)
 
 // TODO: validate that all 'key' values are lowercase+underscore+digits in all functions below.
 
+void json_expand_client_security_groups(json_t *parent, Client *client)
+{
+	SecurityGroup *s;
+	json_t *child = json_array();
+	json_object_set_new(parent, "security-groups", child);
+
+	/* We put known-users or unknown-users at the beginning.
+	 * The latter is special and doesn't actually exist
+	 * in the linked list, hence the special code here,
+	 * and again later in the for loop to skip it.
+	 */
+	if (user_allowed_by_security_group_name(client, "known-users"))
+		json_array_append_new(child, json_string("known-users"));
+	else
+		json_array_append_new(child, json_string("unknown-users"));
+
+	for (s = securitygroups; s; s = s->next)
+		if (strcmp(s->name, "known-users") && user_allowed_by_security_group(client, s))
+			json_array_append_new(child, json_string(s->name));
+}
+
 void json_expand_client(json_t *j, char *key, Client *client, int detail)
 {
 	char buf[BUFSIZE+1];
@@ -227,11 +248,11 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 		json_object_set_new(child, "username", json_string(client->user->username));
 
 	if (client->user && *client->user->realhost)
-		json_object_set_new(child, "host", json_string(client->user->realhost));
+		json_object_set_new(child, "hostname", json_string(client->user->realhost));
 	else if (client->local && *client->local->sockhost)
-		json_object_set_new(child, "host", json_string(client->local->sockhost));
+		json_object_set_new(child, "hostname", json_string(client->local->sockhost));
 	else
-		json_object_set_new(child, "host", json_string(GetIP(client)));
+		json_object_set_new(child, "hostname", json_string(GetIP(client)));
 
 	json_object_set_new(child, "ip", json_string_possibly_null(client->ip));
 
@@ -254,6 +275,12 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 
 	if (IsLoggedIn(client))
 		json_object_set_new(child, "account", json_string(client->user->svid));
+
+	if (IsUser(client))
+	{
+		json_object_set_new(child, "reputation", json_integer(GetReputation(client)));
+		json_expand_client_security_groups(child, client);
+	}
 }
 
 void json_expand_channel(json_t *j, char *key, Channel *channel, int detail)
