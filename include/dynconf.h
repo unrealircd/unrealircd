@@ -177,6 +177,10 @@ struct Configuration {
 	AllowedChannelChars allowed_channelchars;
 	HideIdleTimePolicy hide_idle_time;
 	LogSnomask *log_snomasks;
+	LogDestination *logging_snomasks;
+	LogDestination *logging_all_ircops;
+	LogDestination *logging_global;
+	LogDestination *logging_channels;
 };
 
 extern MODVAR Configuration iConf;

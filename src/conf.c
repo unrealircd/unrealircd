@@ -7911,8 +7911,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				if (!strcmp(cepp->ce_varname, "policy"))
 					tempiConf.hide_idle_time = hideidletime_strtoval(cepp->ce_vardata);
 			}
-		}
-		else
+		} else if (!strcmp(cep->ce_varname, "logging"))
+		{
+			config_run_set_logging(conf, cep);
+		} else
 		{
 			int value;
 			for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
@@ -9280,7 +9282,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
-		else
+		else if (!strcmp(cep->ce_varname, "logging"))
+		{
+			errors += config_test_set_logging(conf, cep);
+		} else
 		{
 			int used = 0;
 			for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)

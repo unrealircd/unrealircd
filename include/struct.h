@@ -239,6 +239,7 @@ typedef struct LogData {
  * of the ULOG_xxx levels.
  */
 typedef enum LogLevel {
+	ULOG_INVALID = 0,
 	ULOG_DEBUG = 1000,
 	ULOG_INFO = 2000,
 	ULOG_WARNING = 3000,
@@ -258,6 +259,23 @@ struct LogSnomask {
 	LogSnomask *prev, *next;
 	char *subsystem;
 	long snomask;
+};
+
+#define LOG_CATEGORY_LEN	32
+#define LOG_EVENT_ID_LEN	64
+typedef struct LogSource LogSource;
+struct LogSource {
+	LogSource *prev, *next;
+	LogLevel loglevel;
+	char subsystem[LOG_CATEGORY_LEN+1];
+	char event_id[LOG_EVENT_ID_LEN+1];
+};
+
+typedef struct LogDestination LogDestination;
+struct LogDestination {
+	LogDestination *prev, *next;
+	char destination[CHANNELLEN+1];
+	LogSource *sources;
 };
 
 /*
