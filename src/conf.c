@@ -1563,7 +1563,7 @@ void config_warn(FORMAT_STRING(const char *format), ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-	unreal_log_raw(ULOG_WARN, "config", "CONFIG_WARNING_GENERIC", NULL, buffer);
+	unreal_log_raw(ULOG_WARNING, "config", "CONFIG_WARNING_GENERIC", NULL, buffer);
 	if (remote_rehash_client)
 		sendnotice(remote_rehash_client, "[warning] %s", buffer);
 }

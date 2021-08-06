@@ -397,7 +397,7 @@ void check_ping(Client *client)
 		(TStime() - client->local->lasttime) >= (ping + PINGWARNING))
 	{
 		SetPingWarning(client);
-		unreal_log(ULOG_WARN, "link", "LINK_UNRELIABLE", client,
+		unreal_log(ULOG_WARNING, "link", "LINK_UNRELIABLE", client,
 			   "Warning, no response from $client for $time_delta seconds",
 			   log_data_integer("time_delta", PINGWARNING),
 			   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
@@ -646,7 +646,7 @@ void detect_timeshift_and_warn(void)
 	{
 		/* tdiff = # of seconds of time set backwards (positive number! eg: 60) */
 		time_t tdiff = oldtimeofday - timeofday;
-		unreal_log(ULOG_WARN, "system", "SYSTEM_CLOCK_JUMP_BACKWARDS", NULL,
+		unreal_log(ULOG_WARNING, "system", "SYSTEM_CLOCK_JUMP_BACKWARDS", NULL,
 		           "System clock jumped back in time ~$time_delta seconds ($time_from -> $time_to)",
 		           log_data_integer("time_delta", tdiff),
 		           log_data_timestamp("time_from", oldtimeofday),
@@ -662,7 +662,7 @@ void detect_timeshift_and_warn(void)
 	{
 		/* tdiff = # of seconds of time set forward (eg: 60) */
 		time_t tdiff = timeofday - oldtimeofday;
-		unreal_log(ULOG_WARN, "system", "SYSTEM_CLOCK_JUMP_FORWARDS", NULL,
+		unreal_log(ULOG_WARNING, "system", "SYSTEM_CLOCK_JUMP_FORWARDS", NULL,
 		           "System clock jumped ~$time_delta seconds forward ($time_from -> $time_to)",
 		           log_data_integer("time_delta", tdiff),
 		           log_data_timestamp("time_from", oldtimeofday),
@@ -680,7 +680,7 @@ void detect_timeshift_and_warn(void)
 			lasthighwarn = timeofday;
 		if (timeofday - lasthighwarn > 300)
 		{
-			unreal_log(ULOG_WARN, "system", "SYSTEM_CLOCK_JUMP_BACKWARDS_PREVIOUSLY", NULL,
+			unreal_log(ULOG_WARNING, "system", "SYSTEM_CLOCK_JUMP_BACKWARDS_PREVIOUSLY", NULL,
 				   "The system clock previously went backwards. Waiting for time to be OK again. This will be in $time_delta seconds.",
 				   log_data_integer("time_delta", highesttimeofday - timeofday),
 				   log_data_timestamp("time_from", highesttimeofday),

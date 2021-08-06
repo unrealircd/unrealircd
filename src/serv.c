@@ -440,7 +440,7 @@ EVENT(save_tunefile)
 	if (!tunefile)
 	{
 		char *errstr = strerror(errno);
-		unreal_log(ULOG_WARN, "config", "WRITE_TUNE_FILE_FAILED", NULL,
+		unreal_log(ULOG_WARNING, "config", "WRITE_TUNE_FILE_FAILED", NULL,
 		           "Unable to write tunefile '$filename': $system_error",
 		           log_data_string("filename", conf_files->tune_file),
 		           log_data_string("system_error", errstr));
@@ -465,7 +465,7 @@ void load_tunefile(void)
 	if (!fgets(buf, sizeof(buf), tunefile) || !fgets(buf, sizeof(buf), tunefile))
 	{
 		char *errstr = strerror(errno);
-		unreal_log(ULOG_WARN, "config", "READ_TUNE_FILE_FAILED", NULL,
+		unreal_log(ULOG_WARNING, "config", "READ_TUNE_FILE_FAILED", NULL,
 		           "Unable to read tunefile '$filename': $system_error",
 		           log_data_string("filename", conf_files->tune_file),
 		           log_data_string("system_error", errstr));

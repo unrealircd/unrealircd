@@ -1014,7 +1014,7 @@ void reputation_channel_query(Client *client, Channel *channel)
 		}
 		if (++cnt > channel->users)
 		{
-			unreal_log(ULOG_WARN, "bug", "REPUTATION_CHANNEL_QUERY_BUG", client,
+			unreal_log(ULOG_WARNING, "bug", "REPUTATION_CHANNEL_QUERY_BUG", client,
 				   "[BUG] reputation_channel_query() expected $expected_users users, but $found_users (or more) users were present in $channel",
 				   log_data_integer("expected_users", channel->users),
 				   log_data_integer("found_users", cnt),

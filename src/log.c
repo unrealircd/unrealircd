@@ -498,7 +498,7 @@ char *loglevel_to_string(LogLevel loglevel)
 			return "debug";
 		case ULOG_INFO:
 			return "info";
-		case ULOG_WARN:
+		case ULOG_WARNING:
 			return "warn";
 		case ULOG_ERROR:
 			return "error";

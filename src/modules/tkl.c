@@ -4682,7 +4682,7 @@ int _match_spamfilter(Client *client, char *str_in, int target, char *cmd, char 
 		} else
 		if ((SPAMFILTER_DETECTSLOW_WARN > 0) && (ms_past > SPAMFILTER_DETECTSLOW_WARN))
 		{
-			unreal_log(ULOG_WARN, "tkl", "SPAMFILTER_SLOW_WARN", NULL,
+			unreal_log(ULOG_WARNING, "tkl", "SPAMFILTER_SLOW_WARN", NULL,
 			           "[Spamfilter] WARNING: Slow spamfilter detected (took $msec_time msec to execute): $tkl",
 			           log_data_tkl("tkl", tkl),
 			           log_data_integer("msec_time", ms_past));

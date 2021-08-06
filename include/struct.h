@@ -241,7 +241,7 @@ typedef struct LogData {
 typedef enum LogLevel {
 	ULOG_DEBUG = 1000,
 	ULOG_INFO = 2000,
-	ULOG_WARN = 3000,
+	ULOG_WARNING = 3000,
 	ULOG_ERROR = 4000,
 	ULOG_FATAL = 5000
 } LogLevel;
