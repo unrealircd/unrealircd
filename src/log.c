@@ -32,6 +32,13 @@
 long log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id);
 void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id, Client *client, int expand_msg, char *msg, va_list vl);
 
+json_t *json_string_possibly_null(char *s)
+{
+	if (s)
+		return json_string(s);
+	return json_null();
+}
+
 LogType log_type_stringtoval(char *str)
 {
 	if (!strcmp(str, "json"))
@@ -226,7 +233,7 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 	else
 		json_object_set_new(child, "host", json_string(GetIP(client)));
 
-	json_object_set_new(child, "ip", json_string(GetIP(client)));
+	json_object_set_new(child, "ip", json_string_possibly_null(client->ip));
 
 	if (client->user)
 	{
@@ -241,6 +248,9 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 
 	if (*client->info)
 		json_object_set_new(child, "info", json_string(client->info));
+
+	if (client->srvptr && client->srvptr->name)
+		json_object_set_new(child, "servername", json_string(client->srvptr->name));
 
 	if (IsLoggedIn(client))
 		json_object_set_new(child, "account", json_string(client->user->svid));
