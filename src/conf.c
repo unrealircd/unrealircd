@@ -9362,7 +9362,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	}
 
 	if ((ret = Module_Create(ce->ce_vardata))) {
-		config_status("%s:%i: loadmodule %s: failed to load: %s",
+		config_error("%s:%i: loadmodule %s: failed to load: %s",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			ce->ce_vardata, ret);
 		return -1;
