@@ -1038,11 +1038,12 @@ CMD_FUNC(cmd_server)
 	{
 		if (client->serv && client->serv->features.software && !strncmp(client->serv->features.software, "UnrealIRCd-", 11))
 		{
-			unreal_log(ULOG_WARNING, "link", "BAD_ULINES", client,
+			unreal_log(ULOG_ERROR, "link", "BAD_ULINES", client,
 			           "Bad ulines! Server $client matches your ulines { } block, but this server "
 			           "is an UnrealIRCd server. UnrealIRCd servers should never be ulined as it "
 			           "causes security issues. Ulines should only be added for services! "
 			           "See https://www.unrealircd.org/docs/FAQ#bad-ulines.");
+			exit_client(client, NULL, "Bad ulines. See https://www.unrealircd.org/docs/FAQ#bad-ulines");
 		}
 		SetULine(client);
 	}
