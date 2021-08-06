@@ -51,7 +51,8 @@ void _send_server_message(Client *client);
 void _introduce_user(Client *to, Client *acptr);
 int _check_deny_version(Client *cptr, char *software, int protocol, char *flags);
 void _broadcast_sinfo(Client *acptr, Client *to, Client *except);
-int server_sync(Client *cptr, ConfigItem_link *conf);
+int server_sync(Client *cptr, ConfigItem_link *conf, int incoming);
+void tls_link_notification_verify(Client *acptr, ConfigItem_link *aconf);
 void server_generic_free(ModData *m);
 int server_post_connect(Client *client);
 
@@ -880,6 +881,7 @@ CMD_FUNC(cmd_server)
 	ConfigItem_link *aconf = NULL;
 	ConfigItem_deny_link *deny;
 	char *flags = NULL, *protocol = NULL, *inf = NULL, *num = NULL;
+	int incoming;
 
 	if (IsUser(client))
 	{
@@ -1017,7 +1019,80 @@ CMD_FUNC(cmd_server)
 	ircsnprintf(descbuf, sizeof descbuf, "Server: %s", servername);
 	fd_desc(client->local->fd, descbuf);
 
-	server_sync(client, aconf);
+	incoming = IsUnknown(client) ? 1 : 0;
+
+	if (client->local->passwd)
+		safe_free(client->local->passwd);
+
+	/* Set up server structure */
+	free_pending_net(client);
+	SetServer(client);
+	irccounts.me_servers++;
+	irccounts.servers++;
+	irccounts.unknown--;
+	list_move(&client->client_node, &global_server_list);
+	list_move(&client->lclient_node, &lclient_list);
+	list_add(&client->special_node, &server_list);
+
+	if (find_uline(client->name))
+	{
+		if (client->serv && client->serv->features.software && !strncmp(client->serv->features.software, "UnrealIRCd-", 11))
+		{
+			unreal_log(ULOG_WARNING, "link", "BAD_ULINES", client,
+			           "Bad ulines! Server $client matches your ulines { } block, but this server "
+			           "is an UnrealIRCd server. UnrealIRCd servers should never be ulined as it "
+			           "causes security issues. Ulines should only be added for services! "
+			           "See https://www.unrealircd.org/docs/FAQ#bad-ulines.");
+		}
+		SetULine(client);
+	}
+
+	find_or_add(client->name);
+
+	if (IsSecure(client))
+	{
+		unreal_log(ULOG_INFO, "link", "SERVER_LINKED", client,
+		           "Server linked: $me -> $client [secure: $tls_cipher]",
+		           log_data_string("tls_cipher", tls_get_cipher(client->local->ssl)),
+		           log_data_client("me", &me));
+		tls_link_notification_verify(client, aconf);
+	}
+	else
+	{
+		unreal_log(ULOG_INFO, "link", "SERVER_LINKED", client,
+		           "Server linked: $me -> $client",
+		           log_data_client("me", &me));
+		/* Print out a warning if linking to a non-TLS server unless it's localhost.
+		 * Yeah.. there are still other cases when non-TLS links are fine (eg: local IP
+		 * of the same machine), we won't bother with detecting that. -- Syzop
+		 */
+		if (!IsLocalhost(client) && (iConf.plaintext_policy_server == POLICY_WARN))
+		{
+			sendto_realops("\002WARNING:\002 This link is unencrypted (not SSL/TLS). We highly recommend to use "
+			               "SSL/TLS for server linking. See https://www.unrealircd.org/docs/Linking_servers");
+		}
+		if (IsSecure(client) && (iConf.outdated_tls_policy_server == POLICY_WARN) && outdated_tls_client(client))
+		{
+			sendto_realops("\002WARNING:\002 This link is using an outdated SSL/TLS protocol or cipher (%s).",
+			               tls_get_cipher(client->local->ssl));
+		}
+	}
+
+	add_to_client_hash_table(client->name, client);
+	/* doesnt duplicate client->serv if allocted this struct already */
+	make_server(client);
+	client->serv->up = me.name;
+	client->srvptr = &me;
+	if (!client->serv->conf)
+		client->serv->conf = aconf; /* Only set serv->conf to aconf if not set already! Bug #0003913 */
+	if (incoming)
+		client->serv->conf->refcount++;
+	client->serv->conf->class->clients++;
+	client->local->class = client->serv->conf->class;
+
+	RunHook(HOOKTYPE_SERVER_CONNECT, client);
+
+	server_sync(client, aconf, incoming);
 }
 
 /** Remote server command (SID).
@@ -1216,65 +1291,6 @@ void _introduce_user(Client *to, Client *acptr)
 	}
 }
 
-void tls_link_notification_verify(Client *acptr, ConfigItem_link *aconf)
-{
-	char *spki_fp;
-	char *tls_fp;
-	char *errstr = NULL;
-	int verify_ok;
-
-	if (!MyConnect(acptr) || !acptr->local->ssl || !aconf)
-		return;
-
-	if ((aconf->auth->type == AUTHTYPE_TLS_CLIENTCERT) ||
-	    (aconf->auth->type == AUTHTYPE_TLS_CLIENTCERTFP) ||
-	    (aconf->auth->type == AUTHTYPE_SPKIFP))
-	{
-		/* Link verified by certificate or SPKI */
-		return;
-	}
-
-	if (aconf->verify_certificate)
-	{
-		/* Link verified by trust chain */
-		return;
-	}
-
-	tls_fp = moddata_client_get(acptr, "certfp");
-	spki_fp = spki_fingerprint(acptr);
-	if (!tls_fp || !spki_fp)
-		return; /* wtf ? */
-
-	/* Only bother the user if we are linking to UnrealIRCd 4.0.16+,
-	 * since only for these versions we can give precise instructions.
-	 */
-	if (!acptr->serv || acptr->serv->features.protocol < 4016)
-		return;
-
-	sendto_realops("You may want to consider verifying this server link.");
-	sendto_realops("More information about this can be found on https://www.unrealircd.org/Link_verification");
-
-	verify_ok = verify_certificate(acptr->local->ssl, aconf->servername, &errstr);
-	if (errstr && strstr(errstr, "not valid for hostname"))
-	{
-		sendto_realops("Unfortunately the certificate of server '%s' has a name mismatch:", acptr->name);
-		sendto_realops("%s", errstr);
-		sendto_realops("This isn't a fatal error but it will prevent you from using verify-certificate yes;");
-	} else
-	if (!verify_ok)
-	{
-		sendto_realops("In short: in the configuration file, change the 'link %s {' block to use this as a password:", acptr->name);
-		sendto_realops("password \"%s\" { spkifp; };", spki_fp);
-		sendto_realops("And follow the instructions on the other side of the link as well (which will be similar, but will use a different hash)");
-	} else
-	{
-		sendto_realops("In short: in the configuration file, add the following to your 'link %s {' block:", acptr->name);
-		sendto_realops("verify-certificate yes;");
-		sendto_realops("Alternatively, you could use SPKI fingerprint verification. Then change the password in the link block to be:");
-		sendto_realops("password \"%s\" { spkifp; };", spki_fp);
-	}
-}
-
 #define SafeStr(x)    ((x && *(x)) ? (x) : "*")
 
 /** Broadcast SINFO.
@@ -1325,18 +1341,14 @@ void _broadcast_sinfo(Client *acptr, Client *to, Client *except)
  * @note This function (via cmd_server) is called from both sides, so
  *       from the incoming side and the outgoing side.
  */
-int server_sync(Client *client, ConfigItem_link *aconf)
+int server_sync(Client *client, ConfigItem_link *aconf, int incoming)
 {
 	Client *acptr;
-	int incoming = IsUnknown(client) ? 1 : 0;
-
-	if (client->local->passwd)
-		safe_free(client->local->passwd);
 
 	if (incoming)
 	{
 		/* If this is an incomming connection, then we have just received
-		 * their stuff and now send our stuff back.
+		 * their stuff and now send our PASS, PROTOCTL and SERVER messages back.
 		 */
 		if (!IsEAuth(client)) /* if eauth'd then we already sent the passwd */
 			sendto_one(client, NULL, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
@@ -1344,74 +1356,6 @@ int server_sync(Client *client, ConfigItem_link *aconf)
 		send_proto(client, aconf);
 		send_server_message(client);
 	}
-
-	/* Set up server structure */
-	free_pending_net(client);
-	SetServer(client);
-	irccounts.me_servers++;
-	irccounts.servers++;
-	irccounts.unknown--;
-	list_move(&client->client_node, &global_server_list);
-	list_move(&client->lclient_node, &lclient_list);
-	list_add(&client->special_node, &server_list);
-
-	if (find_uline(client->name))
-	{
-		if (client->serv && client->serv->features.software && !strncmp(client->serv->features.software, "UnrealIRCd-", 11))
-		{
-			unreal_log(ULOG_WARNING, "link", "BAD_ULINES", client,
-			           "Bad ulines! Server $client matches your ulines { } block, but this server "
-			           "is an UnrealIRCd server. UnrealIRCd servers should never be ulined as it "
-			           "causes security issues. Ulines should only be added for services! "
-			           "See https://www.unrealircd.org/docs/FAQ#bad-ulines.");
-		}
-		SetULine(client);
-	}
-
-	find_or_add(client->name);
-
-	if (IsSecure(client))
-	{
-		unreal_log(ULOG_INFO, "link", "SERVER_LINKED", client,
-		           "Server linked: $me -> $client [secure: $tls_cipher]",
-		           log_data_string("tls_cipher", tls_get_cipher(client->local->ssl)),
-		           log_data_client("me", &me));
-		tls_link_notification_verify(client, aconf);
-	}
-	else
-	{
-		unreal_log(ULOG_INFO, "link", "SERVER_LINKED", client,
-		           "Server linked: $me -> $client",
-		           log_data_client("me", &me));
-		/* Print out a warning if linking to a non-TLS server unless it's localhost.
-		 * Yeah.. there are still other cases when non-TLS links are fine (eg: local IP
-		 * of the same machine), we won't bother with detecting that. -- Syzop
-		 */
-		if (!IsLocalhost(client) && (iConf.plaintext_policy_server == POLICY_WARN))
-		{
-			sendto_realops("\002WARNING:\002 This link is unencrypted (not SSL/TLS). We highly recommend to use "
-			               "SSL/TLS for server linking. See https://www.unrealircd.org/docs/Linking_servers");
-		}
-		if (IsSecure(client) && (iConf.outdated_tls_policy_server == POLICY_WARN) && outdated_tls_client(client))
-		{
-			sendto_realops("\002WARNING:\002 This link is using an outdated SSL/TLS protocol or cipher (%s).",
-			               tls_get_cipher(client->local->ssl));
-		}
-	}
-
-	add_to_client_hash_table(client->name, client);
-	/* doesnt duplicate client->serv if allocted this struct already */
-	make_server(client);
-	client->serv->up = me.name;
-	client->srvptr = &me;
-	if (!client->serv->conf)
-		client->serv->conf = aconf; /* Only set serv->conf to aconf if not set already! Bug #0003913 */
-	if (incoming)
-		client->serv->conf->refcount++;
-	client->serv->conf->class->clients++;
-	client->local->class = client->serv->conf->class;
-
-	RunHook(HOOKTYPE_SERVER_CONNECT, client);
 
 	/* Broadcast new server to the rest of the network */
 	sendto_server(client, 0, 0, NULL, ":%s SID %s 2 %s :%s",
@@ -1495,6 +1439,65 @@ int server_sync(Client *client, ConfigItem_link *aconf)
 	sendto_one(client, NULL, ":%s EOS", me.id);
 	RunHook(HOOKTYPE_POST_SERVER_CONNECT, client);
 	return 0;
+}
+
+void tls_link_notification_verify(Client *acptr, ConfigItem_link *aconf)
+{
+	char *spki_fp;
+	char *tls_fp;
+	char *errstr = NULL;
+	int verify_ok;
+
+	if (!MyConnect(acptr) || !acptr->local->ssl || !aconf)
+		return;
+
+	if ((aconf->auth->type == AUTHTYPE_TLS_CLIENTCERT) ||
+	    (aconf->auth->type == AUTHTYPE_TLS_CLIENTCERTFP) ||
+	    (aconf->auth->type == AUTHTYPE_SPKIFP))
+	{
+		/* Link verified by certificate or SPKI */
+		return;
+	}
+
+	if (aconf->verify_certificate)
+	{
+		/* Link verified by trust chain */
+		return;
+	}
+
+	tls_fp = moddata_client_get(acptr, "certfp");
+	spki_fp = spki_fingerprint(acptr);
+	if (!tls_fp || !spki_fp)
+		return; /* wtf ? */
+
+	/* Only bother the user if we are linking to UnrealIRCd 4.0.16+,
+	 * since only for these versions we can give precise instructions.
+	 */
+	if (!acptr->serv || acptr->serv->features.protocol < 4016)
+		return;
+
+	sendto_realops("You may want to consider verifying this server link.");
+	sendto_realops("More information about this can be found on https://www.unrealircd.org/Link_verification");
+
+	verify_ok = verify_certificate(acptr->local->ssl, aconf->servername, &errstr);
+	if (errstr && strstr(errstr, "not valid for hostname"))
+	{
+		sendto_realops("Unfortunately the certificate of server '%s' has a name mismatch:", acptr->name);
+		sendto_realops("%s", errstr);
+		sendto_realops("This isn't a fatal error but it will prevent you from using verify-certificate yes;");
+	} else
+	if (!verify_ok)
+	{
+		sendto_realops("In short: in the configuration file, change the 'link %s {' block to use this as a password:", acptr->name);
+		sendto_realops("password \"%s\" { spkifp; };", spki_fp);
+		sendto_realops("And follow the instructions on the other side of the link as well (which will be similar, but will use a different hash)");
+	} else
+	{
+		sendto_realops("In short: in the configuration file, add the following to your 'link %s {' block:", acptr->name);
+		sendto_realops("verify-certificate yes;");
+		sendto_realops("Alternatively, you could use SPKI fingerprint verification. Then change the password in the link block to be:");
+		sendto_realops("password \"%s\" { spkifp; };", spki_fp);
+	}
 }
 
 /** This will send "to" a full list of the modes for channel channel,
