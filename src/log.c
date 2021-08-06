@@ -218,7 +218,7 @@ int config_test_set_logging(ConfigFile *conf, ConfigEntry *ce)
 	for (ce = ce->ce_entries; ce; ce = ce->ce_next)
 	{
 		if (!strcmp(ce->ce_varname, "snomask") ||
-		    !strcmp(ce->ce_varname, "all-ircops") ||
+		    !strcmp(ce->ce_varname, "all-opers") ||
 		    !strcmp(ce->ce_varname, "global") ||
 		    !strcmp(ce->ce_varname, "channel"))
 		{
@@ -333,7 +333,7 @@ int config_run_set_logging(ConfigFile *conf, ConfigEntry *ce)
 			d->sources = sources;
 			AddListItem(d, tempiConf.logging_channels);
 		} else
-		if (!strcmp(ce->ce_varname, "all-ircops"))
+		if (!strcmp(ce->ce_varname, "all-opers"))
 		{
 			LogDestination *d = safe_alloc(sizeof(LogDestination));
 			/* destination stays empty */
