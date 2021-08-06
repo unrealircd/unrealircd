@@ -22,9 +22,15 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(cmd_watch);
+#define MSG_WATCH 	"WATCH"
 
-#define MSG_WATCH 	"WATCH"	
+CMD_FUNC(cmd_watch);
+int watch_user_quit(Client *client, MessageTag *mtags, char *comment);
+int watch_away(Client *client, MessageTag *mtags, char *reason, int already_as_away);
+int watch_nickchange(Client *client, MessageTag *mtags, char *newnick);
+int watch_post_nickchange(Client *client, MessageTag *mtags);
+int watch_user_connect(Client *client);
+int watch_notification(Client *client, Watch *watch, Link *lp, int reply);
 
 ModuleHeader MOD_HEADER
   = {
@@ -36,9 +42,21 @@ ModuleHeader MOD_HEADER
     };
 
 MOD_INIT()
-{
-	CommandAdd(modinfo->handle, MSG_WATCH, cmd_watch, 1, CMD_USER);
+{	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	
+	CommandAdd(modinfo->handle, MSG_WATCH, cmd_watch, 1, CMD_USER);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, watch_user_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_QUIT, 0, watch_user_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_AWAY, 0, watch_away);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_NICKCHANGE, 0, watch_nickchange);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_NICKCHANGE, 0, watch_nickchange);
+	HookAdd(modinfo->handle, HOOKTYPE_POST_LOCAL_NICKCHANGE, 0, watch_post_nickchange);
+	HookAdd(modinfo->handle, HOOKTYPE_POST_REMOTE_NICKCHANGE, 0, watch_post_nickchange);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, watch_user_connect);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, 0, watch_user_connect);
+	HookAdd(modinfo->handle, HOOKTYPE_WATCH_NOTIFICATION, 0, watch_notification);
+
 	return MOD_SUCCESS;
 }
 
@@ -86,6 +104,9 @@ static void show_watch(Client *client, char *name, int rpl1, int rpl2, int awayn
 
 static char buf[BUFSIZE];
 
+#define WATCHES(client) (moddata_local_client(client, watchCounterMD).i)
+#define WATCH(client) (moddata_local_client(client, watchListMD).ptr)
+
 /*
  * cmd_watch
  */
@@ -109,6 +130,17 @@ CMD_FUNC(cmd_watch)
 		parv[1] = def;
 	}
 
+
+	ModDataInfo *watchCounterMD = findmoddata_byname("watchCount", MODDATATYPE_LOCAL_CLIENT);
+	ModDataInfo *watchListMD = findmoddata_byname("watchList", MODDATATYPE_LOCAL_CLIENT);
+	
+	if (!watchCounterMD || !watchListMD)
+	{
+		ircd_log(LOG_WARNING, "watch: moddata not available. Check `watch-backend` module.");
+		sendnotice(client, "WATCH command is not available at this moment. Please try again later.");
+		return;
+	}
+
 	for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, NULL, " "))
 	{
 		if ((user = strchr(s, '!')))
@@ -127,13 +159,15 @@ CMD_FUNC(cmd_watch)
 				continue;
 			if (do_nick_name(s + 1))
 			{
-				if (client->local->watches >= MAXWATCH)
+				if (WATCHES(client) >= MAXWATCH)
 				{
 					sendnumeric(client, ERR_TOOMANYWATCH, s + 1);
 					continue;
 				}
 
-				add_to_watch_hash_table(s + 1, client, awaynotify);
+				watch_add(s + 1, client,
+					WATCH_FLAG_TYPE_WATCH | (awaynotify ? WATCH_FLAG_AWAYNOTIFY : 0)
+					);
 			}
 
 			show_watch(client, s + 1, RPL_NOWON, RPL_NOWOFF, awaynotify);
@@ -148,7 +182,7 @@ CMD_FUNC(cmd_watch)
 		{
 			if (!*(s+1))
 				continue;
-			del_from_watch_hash_table(s + 1, client);
+			watch_del(s + 1, client, WATCH_FLAG_TYPE_WATCH);
 			show_watch(client, s + 1, RPL_WATCHOFF, RPL_WATCHOFF, 0);
 
 			continue;
@@ -160,8 +194,7 @@ CMD_FUNC(cmd_watch)
 		 */
 		if (*s == 'C' || *s == 'c')
 		{
-			hash_del_watch_list(client);
-
+			watch_del_list(client, WATCH_FLAG_TYPE_WATCH);
 			continue;
 		}
 
@@ -173,38 +206,38 @@ CMD_FUNC(cmd_watch)
 		if ((*s == 'S' || *s == 's') && !did_s)
 		{
 			Link *lp;
-			Watch *anptr;
+			Watch *watch;
 			int  count = 0;
 			
 			did_s = 1;
 			
 			/*
 			 * Send a list of how many users they have on their WATCH list
-			 * and how many WATCH lists they are on.
+			 * and how many WATCH lists they are on. This will also include
+			 * other WATCH types if present - we're not checking for
+			 * WATCH_FLAG_TYPE_*.
 			 */
-			anptr = hash_get_watch(client->name);
-			if (anptr)
-				for (lp = anptr->watch, count = 1;
+			watch = watch_get(client->name);
+			if (watch)
+				for (lp = watch->watch, count = 1;
 				    (lp = lp->next); count++)
 					;
-			sendnumeric(client, RPL_WATCHSTAT, client->local->watches, count);
+			sendnumeric(client, RPL_WATCHSTAT, WATCHES(client), count);
 
 			/*
 			 * Send a list of everybody in their WATCH list. Be careful
 			 * not to buffer overflow.
 			 */
-			if ((lp = client->local->watch) == NULL)
-			{
-				sendnumeric(client, RPL_ENDOFWATCHLIST, *s);
-				continue;
-			}
+			lp = WATCH(client);
 			*buf = '\0';
-			strlcpy(buf, lp->value.wptr->nick, sizeof buf);
-			count =
-			    strlen(client->name) + strlen(me.name) + 10 +
-			    strlen(buf);
-			while ((lp = lp->next))
+			count = strlen(client->name) + strlen(me.name) + 10;
+			while (lp)
 			{
+				if (!(lp->flags & WATCH_FLAG_TYPE_WATCH))
+				{
+					lp = lp->next;
+					continue; /* this one is not ours */
+				}
 				if (count + strlen(lp->value.wptr->nick) + 1 >
 				    BUFSIZE - 2)
 				{
@@ -215,8 +248,12 @@ CMD_FUNC(cmd_watch)
 				strcat(buf, " ");
 				strcat(buf, lp->value.wptr->nick);
 				count += (strlen(lp->value.wptr->nick) + 1);
+				
+				lp = lp->next;
 			}
-			sendnumeric(client, RPL_WATCHLIST, buf);
+			if (*buf)
+				/* anything to send */
+				sendnumeric(client, RPL_WATCHLIST, buf);
 
 			sendnumeric(client, RPL_ENDOFWATCHLIST, *s);
 			continue;
@@ -229,12 +266,17 @@ CMD_FUNC(cmd_watch)
 		 */
 		if ((*s == 'L' || *s == 'l') && !did_l)
 		{
-			Link *lp = client->local->watch;
+			Link *lp = WATCH(client);
 
 			did_l = 1;
 
 			while (lp)
 			{
+				if (!(lp->flags & WATCH_FLAG_TYPE_WATCH))
+				{
+					lp = lp->next;
+					continue; /* this one is not ours */
+				}
 				if ((target = find_person(lp->value.wptr->nick, NULL)))
 				{
 					sendnumeric(client, RPL_NOWON, target->name,
@@ -264,3 +306,86 @@ CMD_FUNC(cmd_watch)
 		 */
 	}
 }
+
+int watch_user_quit(Client *client, MessageTag *mtags, char *comment)
+{
+	if (IsUser(client))
+		watch_check(client, RPL_LOGOFF);
+	return 0;
+}
+
+int watch_away(Client *client, MessageTag *mtags, char *reason, int already_as_away)
+{
+	if (reason)
+		watch_check(client, already_as_away ? RPL_REAWAY : RPL_GONEAWAY);
+	else
+		watch_check(client, RPL_NOTAWAY);
+
+	return 0;
+}
+
+int watch_nickchange(Client *client, MessageTag *mtags, char *newnick)
+{
+	watch_check(client, RPL_LOGOFF);
+
+	return 0;
+}
+
+int watch_post_nickchange(Client *client, MessageTag *mtags)
+{
+	watch_check(client, RPL_LOGON);
+
+	return 0;
+}
+
+int watch_user_connect(Client *client)
+{
+	watch_check(client, RPL_LOGON);
+
+	return 0;
+}
+
+int watch_notification(Client *client, Watch *watch, Link *lp, int reply)
+{
+	int awaynotify = 0;
+	
+	if (!(lp->flags & WATCH_FLAG_TYPE_WATCH))
+		return 0;
+	
+	if ((reply == RPL_GONEAWAY) || (reply == RPL_NOTAWAY) || (reply == RPL_REAWAY))
+		awaynotify = 1;
+
+	if (!awaynotify)
+	{
+		sendnumeric(lp->value.client, reply,
+		    client->name,
+		    (IsUser(client) ? client->user->username : "<N/A>"),
+		    (IsUser(client) ?
+		    (IsHidden(client) ? client->user->virthost : client->
+		    user->realhost) : "<N/A>"), watch->lasttime, client->info);
+	}
+	else
+	{
+		/* AWAY or UNAWAY */
+		if (!(lp->flags & WATCH_FLAG_AWAYNOTIFY))
+			return 0; /* skip away/unaway notification for users not interested in them */
+
+		if (reply == RPL_NOTAWAY)
+			sendnumeric(lp->value.client, reply,
+			    client->name,
+			    (IsUser(client) ? client->user->username : "<N/A>"),
+			    (IsUser(client) ?
+			    (IsHidden(client) ? client->user->virthost : client->
+			    user->realhost) : "<N/A>"), client->user->lastaway);
+		else /* RPL_GONEAWAY / RPL_REAWAY */
+			sendnumeric(lp->value.client, reply,
+			    client->name,
+			    (IsUser(client) ? client->user->username : "<N/A>"),
+			    (IsUser(client) ?
+			    (IsHidden(client) ? client->user->virthost : client->
+			    user->realhost) : "<N/A>"), client->user->lastaway, client->user->away);
+	}
+	
+	return 0;
+}
+

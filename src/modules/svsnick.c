@@ -103,7 +103,6 @@ CMD_FUNC(cmd_svsnick)
 
 	add_history(acptr, 1);
 	del_from_client_hash_table(acptr->name, acptr);
-	hash_check_watch(acptr, RPL_LOGOFF);
 
 	sendto_snomask(SNO_NICKCHANGE,
 		"*** %s (%s@%s) has been forced to change their nickname to %s", 
@@ -111,5 +110,5 @@ CMD_FUNC(cmd_svsnick)
 
 	strlcpy(acptr->name, parv[2], sizeof acptr->name);
 	add_to_client_hash_table(parv[2], acptr);
-	hash_check_watch(acptr, RPL_LOGON);
+	RunHook2(HOOKTYPE_POST_LOCAL_NICKCHANGE, acptr, mtags);
 }

@@ -336,7 +336,6 @@ extern void del_queries(char *);
 /* Hash stuff */
 #define NICK_HASH_TABLE_SIZE 32768
 #define CHAN_HASH_TABLE_SIZE 32768
-#define WATCH_HASH_TABLE_SIZE 32768
 #define WHOWAS_HASH_TABLE_SIZE 32768
 #define THROTTLING_HASH_TABLE_SIZE 8192
 extern uint64_t siphash(const char *in, const char *k);
@@ -351,12 +350,6 @@ extern int add_to_id_hash_table(char *, Client *);
 extern int del_from_id_hash_table(char *, Client *);
 extern int add_to_channel_hash_table(char *, Channel *);
 extern void del_from_channel_hash_table(char *, Channel *);
-extern int add_to_watch_hash_table(char *, Client *, int);
-extern int del_from_watch_hash_table(char *, Client *);
-extern int hash_check_watch(Client *, int);
-extern int hash_del_watch_list(Client *);
-extern void count_watch_memory(int *, u_long *);
-extern Watch *hash_get_watch(char *);
 extern Channel *hash_get_chan_bucket(uint64_t);
 extern Client *hash_find_client(const char *, Client *);
 extern Client *hash_find_id(const char *, Client *);
@@ -777,6 +770,11 @@ extern MODVAR void *(*labeled_response_save_context)(void);
 extern MODVAR void (*labeled_response_set_context)(void *ctx);
 extern MODVAR void (*labeled_response_force_end)(void);
 extern MODVAR void (*kick_user)(MessageTag *mtags, Channel *channel, Client *client, Client *victim, char *comment);
+extern MODVAR int (*watch_add)(char *nick, Client *client, int flags);
+extern MODVAR int (*watch_del)(char *nick, Client *client, int flags);
+extern MODVAR int (*watch_del_list)(Client *client, int flags);
+extern MODVAR Watch *(*watch_get)(char *nick);
+extern MODVAR int (*watch_check)(Client *client, int reply);
 extern MODVAR char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options);
 /* /Efuncs */
 

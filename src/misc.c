@@ -543,8 +543,6 @@ static void exit_one_client(Client *client, MessageTag *mtags_i, const char *com
 	}
 	if (*client->name)
 		del_from_client_hash_table(client->name, client);
-	if (IsUser(client))
-		hash_check_watch(client, RPL_LOGOFF);
 	if (remote_rehash_client == client)
 		remote_rehash_client = NULL; /* client did a /REHASH and QUIT before rehash was complete */
 	remove_client_from_list(client);
@@ -634,8 +632,7 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char
 				   log_data_string("extended_client_info", get_connect_extinfo(client)),
 				   log_data_string("reason", comment),
 				   log_data_integer("connected_time", connected_time));
-			/* Clean out list and watch structures -Donwulff */
-			hash_del_watch_list(client);
+
 		} else
 		if (IsUnknown(client))
 		{

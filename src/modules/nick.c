@@ -227,12 +227,11 @@ CMD_FUNC(cmd_nick_remote)
 
 	/* Finally set new nick name. */
 	del_from_client_hash_table(client->name, client);
-	hash_check_watch(client, RPL_LOGOFF);
 
 	strcpy(client->name, nick);
 	add_to_client_hash_table(nick, client);
 
-	hash_check_watch(client, RPL_LOGON);
+	RunHook2(HOOKTYPE_POST_REMOTE_NICKCHANGE, client, mtags);
 }
 
 CMD_FUNC(cmd_nick_local)
@@ -243,7 +242,8 @@ CMD_FUNC(cmd_nick_local)
 	char nick[NICKLEN + 2], descbuf[BUFSIZE];
 	Membership *mp;
 	long lastnick = 0l;
-	int  differ = 1, update_watch = 1;
+	int  differ = 1;
+	int newuser = 0;
 	unsigned char removemoder = (client->umodes & UMODE_REGNICK) ? 1 : 0;
 	Hook *h;
 	int i = 0;
@@ -353,6 +353,8 @@ CMD_FUNC(cmd_nick_local)
 	/* New local client? */
 	if (!client->name[0])
 	{
+		newuser = 1;
+
 		if (iConf.ping_cookie)
 		{
 			/*
@@ -389,7 +391,6 @@ CMD_FUNC(cmd_nick_local)
 				 */
 			} else {
 				/* New user! */
-				update_watch = 0; /* already done in register_user() */
 				strlcpy(nick, client->name, sizeof(nick)); /* don't ask, but I need this. do not remove! -- Syzop */
 			}
 		}
@@ -456,8 +457,6 @@ CMD_FUNC(cmd_nick_local)
 	}
 
 	del_from_client_hash_table(client->name, client);
-	if (update_watch && IsUser(client))
-		hash_check_watch(client, RPL_LOGOFF);
 
 	strlcpy(client->name, nick, sizeof(client->name));
 	add_to_client_hash_table(nick, client);
@@ -466,11 +465,11 @@ CMD_FUNC(cmd_nick_local)
 	snprintf(descbuf, sizeof(descbuf), "Client: %s", nick);
 	fd_desc(client->local->fd, descbuf);
 
-	if (update_watch && IsUser(client))
-		hash_check_watch(client, RPL_LOGON);
-
 	if (removemoder && MyUser(client))
 		sendto_one(client, NULL, ":%s MODE %s :-r", me.name, client->name);
+
+	if (MyUser(client) && !newuser)
+		RunHook2(HOOKTYPE_POST_LOCAL_NICKCHANGE, client, recv_mtags);
 }
 
 /*
@@ -1099,7 +1098,6 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 			safe_strdup(client->user->virthost, virthost);
 	}
 
-	hash_check_watch(client, RPL_LOGON);	/* Uglier hack */
 	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
 
 	sendto_serv_butone_nickcmd(client->direction, client, (*buf == '\0' ? "+" : buf));

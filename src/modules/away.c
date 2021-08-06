@@ -73,10 +73,9 @@ CMD_FUNC(cmd_away)
 
 			new_message(client, recv_mtags, &mtags);
 			sendto_server(client, 0, 0, mtags, ":%s AWAY", client->name);
-			hash_check_watch(client, RPL_NOTAWAY);
 			sendto_local_common_channels(client, client, ClientCapabilityBit("away-notify"), mtags,
 			                             ":%s AWAY", client->name);
-			RunHook3(HOOKTYPE_AWAY, client, mtags, NULL);
+			RunHook4(HOOKTYPE_AWAY, client, mtags, NULL, 0);
 			free_message_tags(mtags);
 		}
 
@@ -125,13 +124,11 @@ CMD_FUNC(cmd_away)
 	if (MyConnect(client))
 		sendnumeric(client, RPL_NOWAWAY);
 
-	hash_check_watch(client, already_as_away ? RPL_REAWAY : RPL_GONEAWAY);
-
 	sendto_local_common_channels(client, client,
 	                             ClientCapabilityBit("away-notify"), mtags,
 	                             ":%s AWAY :%s", client->name, client->user->away);
 
-	RunHook3(HOOKTYPE_AWAY, client, mtags, client->user->away);
+	RunHook4(HOOKTYPE_AWAY, client, mtags, client->user->away, already_as_away);
 
 	free_message_tags(mtags);
 

@@ -24,7 +24,7 @@
 #define MAXCUSTOMHOOKS  30
 #define MAXHOOKTYPES	150
 #define MAXCALLBACKS	30
-#define MAXEFUNCTIONS	90
+#define MAXEFUNCTIONS	128
 #if defined(_WIN32)
  #define MOD_EXTENSION "dll"
  #define DLLFUNC	_declspec(dllexport)
@@ -1165,6 +1165,12 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_CONNECT_EXTINFO	104
 /** See hooktype_is_invited() */
 #define HOOKTYPE_IS_INVITED	105
+/** See hooktype_post_local_nickchange() */
+#define HOOKTYPE_POST_LOCAL_NICKCHANGE	106
+/** See hooktype_post_remote_nickchange() */
+#define HOOKTYPE_POST_REMOTE_NICKCHANGE	107
+/** See hooktype_watch_notify() */
+#define HOOKTYPE_WATCH_NOTIFICATION 108
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
  * 2) Add a hook prototype (see below)
@@ -1523,9 +1529,10 @@ int hooktype_modechar_add(Channel *channel, int modechar);
  * @param client		The client
  * @param mtags         	Message tags associated with the event
  * @param reason		The away reason, or NULL if away is unset.
+ * @param already_as_away	Set to 1 if the user only changed their away reason.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_away(Client *client, MessageTag *mtags, char *reason);
+int hooktype_away(Client *client, MessageTag *mtags, char *reason, int already_as_away);
 
 /** Called when a user wants to invite another user to a channel (function prototype for HOOKTYPE_PRE_INVITE).
  * @param client		The client
@@ -2114,6 +2121,29 @@ int hooktype_connect_extinfo(Client *client, NameValuePrioList **list);
  */
 int hooktype_is_invited(Client *client, Channel *channel, int *invited);
 
+/** Called after a local user has changed the nick name (function prototype for HOOKTYPE_POST_LOCAL_NICKCHANGE).
+ * @param client		The client
+ * @param mtags         	Message tags associated with the event
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_post_local_nickchange(Client *client, MessageTag *mtags);
+
+/** Called after a remote user has changed the nick name (function prototype for HOOKTYPE_POST_REMOTE_NICKCHANGE).
+ * @param client		The client
+ * @param mtags         	Message tags associated with the event
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_post_remote_nickchange(Client *client, MessageTag *mtags);
+
+/** Called when a user changed its state in a way that should trigger a WATCH notification (function prototype for HOOKTYPE_WATCH_NOTIFY).
+ * @param client		The client whose state has changed
+ * @param watch			The watch list entry
+ * @param lp         	The associated watch list entry for WATCHing user
+ * @param reply			The numeric that is supposed to be sent as a notification (module-defined)
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_watch_notification(Client *client, Watch *watch, Link *lp, int reply);
+
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2224,7 +2254,10 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_ACCOUNT_LOGIN) && !ValidateHook(hooktype_account_login, func)) || \
         ((hooktype == HOOKTYPE_CLOSE_CONNECTION) && !ValidateHook(hooktype_close_connection, func)) || \
         ((hooktype == HOOKTYPE_CONNECT_EXTINFO) && !ValidateHook(hooktype_connect_extinfo, func)) || \
-        ((hooktype == HOOKTYPE_IS_INVITED) && !ValidateHook(hooktype_is_invited, func)) ) \
+        ((hooktype == HOOKTYPE_IS_INVITED) && !ValidateHook(hooktype_is_invited, func)) || \
+        ((hooktype == HOOKTYPE_POST_LOCAL_NICKCHANGE) && !ValidateHook(hooktype_post_local_nickchange, func)) || \
+        ((hooktype == HOOKTYPE_POST_REMOTE_NICKCHANGE) && !ValidateHook(hooktype_post_remote_nickchange, func)) || \
+        ((hooktype == HOOKTYPE_WATCH_NOTIFICATION) && !ValidateHook(hooktype_watch_notification, func)) )\
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
@@ -2335,6 +2368,11 @@ enum EfunctionType {
 	EFUNC_LABELED_RESPONSE_SET_CONTEXT,
 	EFUNC_LABELED_RESPONSE_FORCE_END,
 	EFUNC_KICK_USER,
+	EFUNC_WATCH_ADD,
+	EFUNC_WATCH_DEL,
+	EFUNC_WATCH_DEL_LIST,
+	EFUNC_WATCH_GET,
+	EFUNC_WATCH_CHECK,
 	EFUNC_TKL_UHOST,
 };
 

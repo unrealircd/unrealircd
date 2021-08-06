@@ -1353,8 +1353,6 @@ struct LocalClient {
 	u_short sendB;			/**< Statistics: counters to count upto 1-k lots of bytes */
 	u_short receiveB;		/**< Statistics: sent and received (???) */
 	short lastsq;			/**< # of 2k blocks when sendqueued called last */
-	Link *watch;			/**< Watch notification list (WATCH) for this user */
-	u_short watches;		/**< Number of entries in the watch list */
 	ModData moddata[MODDATA_MAX_LOCAL_CLIENT];	/**< LocalClient attached module data, used by the ModData system */
 #ifdef DEBUGMODE
 	time_t cputime;			/**< Something with debugging (why is this a time_t? TODO) */
@@ -2000,6 +1998,15 @@ struct Mode {
 	int  limit;				/**< The +l limit in effect (eg: 40), if any - otherwise 0 */
 	char key[KEYLEN + 1];			/**< The +k key in effect (eg: secret), if any - otherwise NULL */
 };
+
+/* flags for Link if used to contain Watch --k4be */
+
+/* WATCH type */
+#define WATCH_FLAG_TYPE_WATCH	(1<<0) /* added via /WATCH command */
+#define WATCH_FLAG_TYPE_MONITOR	(1<<1) /* added via /MONITOR command */
+
+/* behaviour switches */
+#define WATCH_FLAG_AWAYNOTIFY	(1<<8) /* should send AWAY notifications */
 
 /* Used for notify-hash buckets... -Donwulff */
 
