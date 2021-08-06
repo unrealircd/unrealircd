@@ -880,7 +880,7 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, char
 
 	//RunHook3(HOOKTYPE_LOG, flags, timebuf, text_buf); // FIXME: call with more parameters and possibly not even 'text_buf' at all
 
-	if (!loop.ircd_forked && (loglevel >= ULOG_ERROR))
+	if (!loop.ircd_forked && (loglevel > ULOG_DEBUG))
 	{
 #ifdef _WIN32
 		win_log("* %s", text_buf);
