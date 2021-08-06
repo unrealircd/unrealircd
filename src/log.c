@@ -224,6 +224,12 @@ int config_test_set_logging(ConfigFile *conf, ConfigEntry *ce)
 		{
 			/* TODO: Validate the subsystem lightly */
 		} else
+		{
+			config_error_unknownopt(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "set::logging", ce->ce_varname);
+			errors++;
+			continue;
+		}
+
 		if (!strcmp(ce->ce_varname, "snomask"))
 		{
 			/* We need to validate the parameter here as well */
