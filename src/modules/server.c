@@ -463,8 +463,8 @@ EVENT(server_handshake_timeout)
 		    ((TStime() - client->local->firsttime) >= cfg.connect_timeout))
 		{
 			/* If this is a connect timeout to an outgoing server then notify ops & log it */
-			sendto_ops_and_log("Connect timeout while trying to link to server '%s' (%s)",
-			                   client->name, client->ip?client->ip:"<unknown ip>");
+			unreal_log(ULOG_INFO, "link", "LINK_CONNECT_TIMEOUT", client,
+			           "Connect timeout while trying to link to server '$client' ($client.ip)");
 
 			exit_client(client, NULL, "Connection timeout");
 			continue;
@@ -474,8 +474,8 @@ EVENT(server_handshake_timeout)
 		if ((TStime() - client->local->firsttime) >= cfg.handshake_timeout)
 		{
 			/* If this is a handshake timeout to an outgoing server then notify ops & log it */
-			sendto_ops_and_log("Connection handshake timeout while trying to link to server '%s' (%s)",
-			                   client->name, client->ip?client->ip:"<unknown ip>");
+			unreal_log(ULOG_INFO, "link", "LINK_HANDSHAKE_TIMEOUT", client,
+			           "Connect handshake timeout while trying to link to server '$client' ($client.ip)");
 
 			exit_client(client, NULL, "Handshake Timeout");
 			continue;
@@ -943,11 +943,10 @@ CMD_FUNC(cmd_server)
 
 	if (strlen(client->id) != 3)
 	{
-		sendto_umode_global(UMODE_OPER, "Server %s is using old unsupported protocol from UnrealIRCd 3.2.x or earlier. " 
-		                                "See https://www.unrealircd.org/docs/FAQ#old-server-protocol",
-		                                servername);
-		ircd_log(LOG_ERROR, "Server using old unsupported protocol from UnrealIRCd 3.2.x or earlier. "
-		                    "See https://www.unrealircd.org/docs/FAQ#old-server-protocol");
+		unreal_log(ULOG_ERROR, "link", "LINK_OLD_PROTOCOL", client,
+		           "Server link $servername rejected. Server is using an old and unsupported protocol from UnrealIRCd 3.2.x or earlier. "
+		           "See https://www.unrealircd.org/docs/FAQ#old-server-protocol",
+		           log_data_string("servername", servername));
 		exit_client(client, NULL, "Server using old unsupported protocol from UnrealIRCd 3.2.x or earlier. "
 		                          "See https://www.unrealircd.org/docs/FAQ#old-server-protocol");
 		return;
@@ -956,8 +955,10 @@ CMD_FUNC(cmd_server)
 	hop = atol(parv[2]);
 	if (hop != 1)
 	{
-		sendto_umode_global(UMODE_OPER, "Directly linked server %s provided a hopcount of %d, while 1 was expected",
-		                                servername, hop);
+		unreal_log(ULOG_ERROR, "link", "LINK_REJECTED_INVALID_HOPCOUNT", client,
+		           "Server link $servername rejected. Directly linked server provided a hopcount of $hopcount, while 1 was expected.",
+		           log_data_string("servername", servername),
+		           log_data_integer("hopcount", hop));
 		exit_client(client, NULL, "Invalid SERVER message, hop count must be 1");
 		return;
 	}
@@ -1002,8 +1003,9 @@ CMD_FUNC(cmd_server)
 		if (deny->flag.type == CRULE_ALL && unreal_mask_match_string(servername, deny->mask)
 			&& crule_eval(deny->rule))
 		{
-			sendto_ops_and_log("Refused connection from %s. Rejected by deny link { } block.",
-				get_client_host(client));
+			unreal_log(ULOG_ERROR, "link", "LINK_REJECTED_DENY_LINK_BLOCK", client,
+			           "Server link $servername rejected by deny link { } block.",
+			           log_data_string("servername", servername));
 			exit_client(client, NULL, "Disallowed by connection rule");
 			return;
 		}
@@ -1165,7 +1167,6 @@ CMD_FUNC(cmd_sid)
 	make_server(acptr);
 	acptr->serv->up = find_or_add(acptr->srvptr->name);
 	SetServer(acptr);
-	ircd_log(LOG_SERVER, "SERVER %s (from %s)", acptr->name, acptr->srvptr->name);
 	/* If this server is U-lined, or the parent is, then mark it as U-lined */
 	if (IsULine(client) || find_uline(acptr->name))
 		SetULine(acptr);
@@ -1175,6 +1176,8 @@ CMD_FUNC(cmd_sid)
 	add_to_client_hash_table(acptr->name, acptr);
 	add_to_id_hash_table(acptr->id, acptr);
 	list_move(&acptr->client_node, &global_server_list);
+
+	unreal_log(ULOG_INFO, "link", "SERVER_LINKED", acptr, "Server linked: $client (via $client.server)");
 
 	RunHook(HOOKTYPE_SERVER_CONNECT, acptr);
 
@@ -1315,13 +1318,10 @@ void _broadcast_sinfo(Client *acptr, Client *to, Client *except)
 	}
 }
 
-int	server_sync(Client *cptr, ConfigItem_link *aconf)
+int server_sync(Client *cptr, ConfigItem_link *aconf)
 {
-	char		*inpath = get_client_name(cptr, TRUE);
-	Client		*acptr;
+	Client *acptr;
 	int incoming = IsUnknown(cptr) ? 1 : 0;
-
-	ircd_log(LOG_SERVER, "SERVER %s", cptr->name);
 
 	if (cptr->local->passwd)
 	{
@@ -1353,28 +1353,28 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 	{
 		if (cptr->serv && cptr->serv->features.software && !strncmp(cptr->serv->features.software, "UnrealIRCd-", 11))
 		{
-			sendto_realops("\002WARNING:\002 Bad ulines! It seems your server is misconfigured: "
-			               "your ulines { } block is matching an UnrealIRCd server (%s). "
-			               "This is not correct and will cause security issues. "
-			               "ULines should only be added for services! "
-			               "See https://www.unrealircd.org/docs/FAQ#bad-ulines",
-			               cptr->name);
+			unreal_log(ULOG_WARNING, "link", "BAD_ULINES", cptr,
+			           "Bad ulines! Server $client matches your ulines { } block, but this server "
+			           "is an UnrealIRCd server. UnrealIRCd servers should never be ulined as it "
+			           "causes security issues. Ulines should only be added for services! "
+			           "See https://www.unrealircd.org/docs/FAQ#bad-ulines.");
 		}
 		SetULine(cptr);
 	}
 	find_or_add(cptr->name);
 	if (IsSecure(cptr))
 	{
-		sendto_umode_global(UMODE_OPER,
-			"(\2link\2) Secure link %s -> %s established (%s)",
-			me.name, inpath, tls_get_cipher(cptr->local->ssl));
+		unreal_log(ULOG_INFO, "link", "SERVER_LINKED", cptr,
+		           "Server linked: $me -> $client [secure: $tls_cipher]",
+		           log_data_string("tls_cipher", tls_get_cipher(cptr->local->ssl)),
+		           log_data_client("me", &me));
 		tls_link_notification_verify(cptr, aconf);
 	}
 	else
 	{
-		sendto_umode_global(UMODE_OPER,
-			"(\2link\2) Link %s -> %s established",
-			me.name, inpath);
+		unreal_log(ULOG_INFO, "link", "SERVER_LINKED", cptr,
+		           "Server linked: $me -> $client",
+		           log_data_client("me", &me));
 		/* Print out a warning if linking to a non-TLS server unless it's localhost.
 		 * Yeah.. there are still other cases when non-TLS links are fine (eg: local IP
 		 * of the same machine), we won't bother with detecting that. -- Syzop
@@ -1436,13 +1436,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 			 * while in fact he was not.. -- Syzop.
 			 */
 			if (acptr->serv->flags.synced)
-			{
 				sendto_one(cptr, NULL, ":%s EOS", acptr->id);
-#ifdef DEBUGMODE
-				ircd_log(LOG_ERROR, "[EOSDBG] server_sync: sending to uplink '%s' with src %s...",
-					cptr->name, acptr->name);
-#endif
-			}
 			/* Send SINFO of our servers to their side */
 			broadcast_sinfo(acptr, cptr, NULL);
 			send_moddata_client(cptr, acptr); /* send moddata of server 'acptr' (if any, likely minimal) */
@@ -1489,10 +1483,6 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 
 	/* Send EOS (End Of Sync) to the just linked server... */
 	sendto_one(cptr, NULL, ":%s EOS", me.id);
-#ifdef DEBUGMODE
-	ircd_log(LOG_ERROR, "[EOSDBG] server_sync: sending to justlinked '%s' with src ME...",
-			cptr->name);
-#endif
 	RunHook(HOOKTYPE_POST_SERVER_CONNECT, cptr);
 	return 0;
 }
