@@ -959,15 +959,9 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 			RunHook(HOOKTYPE_SECURE_CONNECT, client);
 		}
 
-		if (IsHidden(client))
-		{
-			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [%s] [vhost: %s] %s",
-				nick, user->username, user->realhost, GetIP(client), user->virthost, get_connect_extinfo(client));
-		} else
-		{
-			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [%s] %s",
-				nick, user->username, user->realhost, GetIP(client), get_connect_extinfo(client));
-		}
+		unreal_log(ULOG_INFO, "connect", "LOCAL_CLIENT_CONNECT", client,
+		           "Client connecting: $client ($client.username@$client.hostname) [$client.ip] $extended_client_info",
+		           log_data_string("extended_client_info", get_connect_extinfo(client)));
 
 		RunHook2(HOOKTYPE_WELCOME, client, 0);
 		sendnumeric(client, RPL_WELCOME, ircnetwork, nick, user->username, user->realhost);
@@ -1114,7 +1108,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	if (MyConnect(client))
 	{
 		broadcast_moddata_client(client);
-		sendto_connectnotice(client, 0, NULL); /* moved down, for modules. */
+		RunHook(HOOKTYPE_LOCAL_CONNECT, client);
 		if (buf[0] != '\0' && buf[1] != '\0')
 			sendto_one(client, NULL, ":%s MODE %s :%s", client->name,
 			    client->name, buf);

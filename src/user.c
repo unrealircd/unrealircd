@@ -947,7 +947,11 @@ char *get_connect_extinfo(Client *client)
 
 	/* And some built-in: */
 
-	/* "class": this should be first */
+	/* "vhost": this should be first */
+	if (IsHidden(client))
+		add_nvplist(&list, -1000000, "vhost", client->user->virthost);
+
+	/* "class": second */
 	if (MyUser(client) && client->local->class)
 		add_nvplist(&list, -100000, "class", client->local->class->name);
 
