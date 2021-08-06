@@ -1318,16 +1318,21 @@ void _broadcast_sinfo(Client *acptr, Client *to, Client *except)
 	}
 }
 
+/** Sync all information with server 'client'.
+ * Eg: users, channels, everything.
+ * @param client	The newly linked in server
+ * @param aconf		The link block that belongs to this server
+ * @note This function (via cmd_server) is called from both sides, so
+ *       from the incoming side and the outgoing side.
+ */
 int server_sync(Client *client, ConfigItem_link *aconf)
 {
 	Client *acptr;
 	int incoming = IsUnknown(client) ? 1 : 0;
 
 	if (client->local->passwd)
-	{
 		safe_free(client->local->passwd);
-		client->local->passwd = NULL;
-	}
+
 	if (incoming)
 	{
 		/* If this is an incomming connection, then we have just received
@@ -1349,6 +1354,7 @@ int server_sync(Client *client, ConfigItem_link *aconf)
 	list_move(&client->client_node, &global_server_list);
 	list_move(&client->lclient_node, &lclient_list);
 	list_add(&client->special_node, &server_list);
+
 	if (find_uline(client->name))
 	{
 		if (client->serv && client->serv->features.software && !strncmp(client->serv->features.software, "UnrealIRCd-", 11))
@@ -1361,7 +1367,9 @@ int server_sync(Client *client, ConfigItem_link *aconf)
 		}
 		SetULine(client);
 	}
+
 	find_or_add(client->name);
+
 	if (IsSecure(client))
 	{
 		unreal_log(ULOG_INFO, "link", "SERVER_LINKED", client,
@@ -1390,6 +1398,7 @@ int server_sync(Client *client, ConfigItem_link *aconf)
 			               tls_get_cipher(client->local->ssl));
 		}
 	}
+
 	add_to_client_hash_table(client->name, client);
 	/* doesnt duplicate client->serv if allocted this struct already */
 	make_server(client);
@@ -1401,6 +1410,7 @@ int server_sync(Client *client, ConfigItem_link *aconf)
 		client->serv->conf->refcount++;
 	client->serv->conf->class->clients++;
 	client->local->class = client->serv->conf->class;
+
 	RunHook(HOOKTYPE_SERVER_CONNECT, client);
 
 	/* Broadcast new server to the rest of the network */
