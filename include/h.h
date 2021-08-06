@@ -1086,6 +1086,8 @@ extern void flood_limit_exceeded_log(Client *client, char *floodname);
 /* logging */
 extern int config_test_log(ConfigFile *conf, ConfigEntry *ce);
 extern int config_run_log(ConfigFile *conf, ConfigEntry *ce);
+extern int config_test_set_logging(ConfigFile *conf, ConfigEntry *ce);
+extern int config_run_set_logging(ConfigFile *conf, ConfigEntry *ce);
 extern LogType log_type_stringtoval(char *str);
 extern char *log_type_valtostring(LogType v);
 #ifdef DEBUGMODE

@@ -31,7 +31,7 @@
 /* Forward declarations */
 static int valid_event_id(const char *s);
 static int valid_subsystem(const char *s);
-long log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id);
+LogLevel log_level_stringtoval(const char *str);
 void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id, Client *client, int expand_msg, char *msg, va_list vl);
 
 json_t *json_string_possibly_null(char *s)
@@ -59,7 +59,7 @@ char *log_type_valtostring(LogType v)
 		case LOG_TYPE_JSON:
 			return "json";
 		default:
-			return "???";
+			return NULL;
 	}
 }
 
@@ -209,8 +209,149 @@ int config_run_log(ConfigFile *conf, ConfigEntry *ce)
 	}
 	AddListItem(ca, conf_log);
 	return 1;
-
 }
+
+int config_test_set_logging(ConfigFile *conf, ConfigEntry *ce)
+{
+	int errors = 0;
+
+	for (ce = ce->ce_entries; ce; ce = ce->ce_next)
+	{
+		if (!strcmp(ce->ce_varname, "snomask") ||
+		    !strcmp(ce->ce_varname, "all-opers") ||
+		    !strcmp(ce->ce_varname, "global") ||
+		    !strcmp(ce->ce_varname, "channel"))
+		{
+			/* TODO: Validate the subsystem lightly */
+		} else
+		if (!strcmp(ce->ce_varname, "snomask"))
+		{
+			/* We need to validate the parameter here as well */
+			if (!ce->ce_vardata)
+			{
+				config_error_blank(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "set::logging::snomask");
+				errors++;
+			} else
+			if ((strlen(ce->ce_vardata) != 1) || !(islower(ce->ce_vardata[0]) || isupper(ce->ce_vardata[0])))
+			{
+				config_error("%s:%d: snomask must be a single letter",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				errors++;
+			}
+		}
+		if (!strcmp(ce->ce_varname, "channel"))
+		{
+			/* We need to validate the parameter here as well */
+			if (!ce->ce_vardata)
+			{
+				config_error_blank(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "set::logging::channel");
+				errors++;
+			} else
+			if (!valid_channelname(ce->ce_vardata))
+			{
+				config_error("%s:%d: Invalid channel name '%s'",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+				errors++;
+			}
+		}
+	}
+
+	return errors;
+}
+
+LogSource *add_log_source(const char *str)
+{
+	LogSource *ls;
+	char buf[256];
+	char *p;
+	LogLevel loglevel = ULOG_INVALID;
+	char *subsystem = NULL;
+	char *event_id = NULL;
+	strlcpy(buf, str, sizeof(buf));
+	p = strchr(buf, '.');
+	if (p)
+		*p++ = '\0';
+	loglevel = log_level_stringtoval(buf);
+	if (loglevel == ULOG_INVALID)
+	{
+		if (isupper(*buf))
+			event_id = buf;
+		else
+			subsystem = buf;
+	}
+	if (p)
+	{
+		if (isupper(*p))
+		{
+			event_id = p;
+		} else
+		if (loglevel == ULOG_INVALID)
+		{
+			loglevel = log_level_stringtoval(p);
+			if ((loglevel == ULOG_INVALID) && !subsystem)
+				subsystem = p;
+		} else if (!subsystem)
+		{
+			subsystem = p;
+		}
+	}
+	ls = safe_alloc(sizeof(LogSource));
+	ls->loglevel = loglevel;
+	if (!BadPtr(subsystem))
+		strlcpy(ls->subsystem, subsystem, sizeof(ls->subsystem));
+	if (!BadPtr(event_id))
+		strlcpy(ls->event_id, event_id, sizeof(ls->event_id));
+
+	return ls;
+}
+
+int config_run_set_logging(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+
+	for (ce = ce->ce_entries; ce; ce = ce->ce_next)
+	{
+		LogSource *sources = NULL;
+		LogSource *s;
+
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			s = add_log_source(cep->ce_varname);
+			AddListItem(s, sources);
+		}
+		if (!strcmp(ce->ce_varname, "snomask"))
+		{
+			LogDestination *d = safe_alloc(sizeof(LogDestination));
+			strlcpy(d->destination, ce->ce_vardata, sizeof(d->destination)); /* destination is the snomask */
+			d->sources = sources;
+			AddListItem(d, tempiConf.logging_snomasks);
+		} else
+		if (!strcmp(ce->ce_varname, "channel"))
+		{
+			LogDestination *d = safe_alloc(sizeof(LogDestination));
+			strlcpy(d->destination, ce->ce_vardata, sizeof(d->destination)); /* destination is the channel */
+			d->sources = sources;
+			AddListItem(d, tempiConf.logging_channels);
+		} else
+		if (!strcmp(ce->ce_varname, "all-opers"))
+		{
+			LogDestination *d = safe_alloc(sizeof(LogDestination));
+			/* destination stays empty */
+			d->sources = sources;
+			AddListItem(d, tempiConf.logging_all_ircops);
+		} else
+		if (!strcmp(ce->ce_varname, "global"))
+		{
+			LogDestination *d = safe_alloc(sizeof(LogDestination));
+			/* destination stays empty */
+			d->sources = sources;
+			AddListItem(d, tempiConf.logging_global);
+		}
+	}
+
+	return 0;
+}
+
 
 
 
@@ -530,7 +671,7 @@ void log_data_free(LogData *d)
 	safe_free(d);
 }
 
-char *loglevel_to_string(LogLevel loglevel)
+char *log_level_valtostring(LogLevel loglevel)
 {
 	switch(loglevel)
 	{
@@ -545,8 +686,23 @@ char *loglevel_to_string(LogLevel loglevel)
 		case ULOG_FATAL:
 			return "fatal";
 		default:
-			return "???";
+			return NULL;
 	}
+}
+
+LogLevel log_level_stringtoval(const char *str)
+{
+	if (!strcmp(str, "info"))
+		return ULOG_INFO;
+	if (!strcmp(str, "warn"))
+		return ULOG_WARNING;
+	if (!strcmp(str, "error"))
+		return ULOG_ERROR;
+	if (!strcmp(str, "fatal"))
+		return ULOG_FATAL;
+	if (!strcmp(str, "debug"))
+		return ULOG_DEBUG;
+	return ULOG_INVALID;
 }
 
 #define validvarcharacter(x)	(isalnum((x)) || ((x) == '_'))
@@ -702,10 +858,9 @@ literal:
 }
 
 /** Do the actual writing to log files */
-void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
+void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
 {
 	static int last_log_file_warning = 0;
-	static char recursion_trap=0;
 	ConfigItem_log *l;
 	char text_buf[2048], timebuf[128];
 	struct stat fstats;
@@ -713,21 +868,9 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 	int write_error;
 	long snomask;
 
-	/* Trap infinite recursions to avoid crash if log file is unavailable,
-	 * this will also avoid calling ircd_log from anything else called
-	 */
-	if (recursion_trap == 1)
-		return;
-
-	recursion_trap = 1;
-
-	/* NOTE: past this point you CANNOT just 'return'.
-	 * You must set 'recursion_trap = 0;' before 'return'!
-	 */
-
 	snprintf(timebuf, sizeof(timebuf), "[%s] ", myctime(TStime()));
 	snprintf(text_buf, sizeof(text_buf), "%s %s %s: %s\n",
-	         loglevel_to_string(loglevel), subsystem, event_id, msg);
+	         log_level_valtostring(loglevel), subsystem, event_id, msg);
 
 	//RunHook3(HOOKTYPE_LOG, flags, timebuf, text_buf); // FIXME: call with more parameters and possibly not even 'text_buf' at all
 
@@ -742,19 +885,7 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 
 	/* In case of './unrealircd configtest': don't write to log file, only to stderr */
 	if (loop.config_test)
-	{
-		recursion_trap = 0;
 		return;
-	}
-
-	/* Log to all ircops for now */
-	// FIXME: obviously there should be snomask filtering here ;)
-	// TODO: don't show loglevel for simple INFO messages?
-	snomask = log_to_snomask(loglevel, subsystem, event_id);
-	if (snomask == SNO_ALL)
-		sendto_realops("[%s] %s.%s %s", loglevel_to_string(loglevel), subsystem, event_id, msg);
-	else if (snomask > 0)
-		sendto_snomask(snomask, "[%s] %s.%s %s", loglevel_to_string(loglevel), subsystem, event_id, msg);
 
 	for (l = conf_log; l; l = l->next)
 	{
@@ -868,28 +999,116 @@ void do_unreal_log_loggers(LogLevel loglevel, char *subsystem, char *event_id, c
 			}
 		}
 	}
-
-	recursion_trap = 0;
 }
+
+int log_sources_match(LogSource *ls, LogLevel loglevel, char *subsystem, char *event_id)
+{
+	// NOTE: This routine works by exclusion, so a bad struct would
+	//       cause everything to match!!
+	for (; ls; ls = ls->next)
+	{
+		if (*ls->subsystem && strcmp(ls->subsystem, subsystem))
+			continue;
+		if (*ls->event_id && strcmp(ls->event_id, event_id))
+			continue;
+		if ((ls->loglevel != ULOG_INVALID) && (ls->loglevel != loglevel))
+			continue;
+		return 1; /* MATCH */
+	}
+	return 0;
+}
+
+/** Convert loglevel/subsystem/event_id to a snomask.
+ * @returns The snomask letters (may be more than one),
+ *          an asterisk (for all ircops), or NULL (no delivery)
+ */
+char *log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id)
+{
+	LogDestination *ld;
+	static char snomasks[64];
+
+	/* At the top right now. TODO: "nomatch" support */
+	if (log_sources_match(iConf.logging_all_ircops->sources, loglevel, subsystem, event_id))
+		return "*";
+
+	*snomasks = '\0';
+	for (ld = iConf.logging_snomasks; ld; ld = ld->next)
+	{
+		if (log_sources_match(ld->sources, loglevel, subsystem, event_id))
+			strlcat(snomasks, ld->destination, sizeof(snomasks));
+	}
+
+	return *snomasks ? snomasks : NULL;
+}
+
+/** Do the actual writing to log files */
+void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
+{
+	Client *client;
+	char *snomask_destinations;
+	char *client_snomasks;
+	char *p;
+
+	/* If not fully booted then we don't have a logging to snomask mapping so can't do much.. */
+	if (!loop.ircd_booted)
+		return;
+
+	snomask_destinations = log_to_snomask(loglevel, subsystem, event_id);
+
+	/* Zero destinations? Then return. */
+	if (snomask_destinations == NULL)
+		return;
+
+	/* All ircops? Simple case. */
+	if (!strcmp(snomask_destinations, "*"))
+	{
+		sendto_realops("[%s] %s.%s %s", log_level_valtostring(loglevel), subsystem, event_id, msg);
+		return;
+	}
+
+	/* To specific snomasks... */
+	list_for_each_entry(client, &oper_list, special_node)
+	{
+		client_snomasks = get_snomask_string(client);
+		for (p = snomask_destinations; *p; p++)
+		{
+			if (strchr(client_snomasks, *p))
+			{
+				sendnotice(client, "[%s] %s.%s %s", log_level_valtostring(loglevel), subsystem, event_id, msg);
+				break;
+			}
+		}
+	}
+}
+
+static int unreal_log_recursion_trap = 0;
 
 /* Logging function, called by the unreal_log() macro. */
 void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
                    Client *client, char *msg, ...)
 {
+	if (unreal_log_recursion_trap)
+		return;
+	unreal_log_recursion_trap = 1;
 	va_list vl;
 	va_start(vl, msg);
 	do_unreal_log_internal(loglevel, subsystem, event_id, client, 1, msg, vl);
 	va_end(vl);
+	unreal_log_recursion_trap = 0;
 }
 
 /* Logging function, called by the unreal_log_raw() macro. */
 void do_unreal_log_raw(LogLevel loglevel, char *subsystem, char *event_id,
                        Client *client, char *msg, ...)
 {
+	if (unreal_log_recursion_trap)
+		return;
+	unreal_log_recursion_trap = 1;
 	va_list vl;
 	va_start(vl, msg);
 	do_unreal_log_internal(loglevel, subsystem, event_id, client, 0, msg, vl);
 	va_end(vl);
+	unreal_log_recursion_trap = 0;
 }
 
 void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
@@ -900,7 +1119,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	json_t *j = NULL;
 	json_t *j_details = NULL;
 	char msgbuf[1024];
-	char *loglevel_string = loglevel_to_string(loglevel);
+	char *loglevel_string = log_level_valtostring(loglevel);
 
 	/* TODO: Enforcement:
 	 * - loglevel must be valid
@@ -909,7 +1128,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	 * - msg may not contain percent signs (%) as that is an obvious indication something is wrong?
 	 *   or maybe a temporary restriction while upgrading that can be removed later ;)
 	 */
-	if (!strcmp(loglevel_string, "???"))
+	if (loglevel_string == NULL)
 		abort();
 	if (!valid_subsystem(subsystem))
 		abort();
@@ -973,8 +1192,12 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	/* Generate the JSON */
 	json_serialized = json_dumps(j, 0);
 
-	/* Now call the actual loggers */
-	do_unreal_log_loggers(loglevel, subsystem, event_id, msgbuf, json_serialized);
+	/* Now call the disk loggers */
+	do_unreal_log_disk(loglevel, subsystem, event_id, msgbuf, json_serialized);
+
+	/* And the ircops stuff */
+	do_unreal_log_ircops(loglevel, subsystem, event_id, msgbuf, json_serialized);
+
 
 	/* Free everything */
 	safe_free(json_serialized);
@@ -1042,23 +1265,4 @@ void log_snomask_setdefaultsettings(Configuration *i)
 	add_log_snomask(i, "linking", SNO_ALL);
 	add_log_snomask(i, "traffic", 0);
 	add_log_snomask(i, "*", SNO_ALL);
-}
-
-long log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id)
-{
-	LogSnomask *l;
-	long snomask = 0;
-
-	for (l = iConf.log_snomasks; l; l = l->next)
-	{
-		if (match_simple(l->subsystem, subsystem))
-		{
-			if (l->snomask == SNO_ALL)
-				return SNO_ALL; /* return early */
-			if (l->snomask == 0)
-				return 0; /* return early */
-			snomask |= l->snomask;
-		}
-	}
-	return snomask;
 }
