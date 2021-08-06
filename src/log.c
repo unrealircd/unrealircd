@@ -1028,7 +1028,7 @@ char *log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id)
 	static char snomasks[64];
 
 	/* At the top right now. TODO: "nomatch" support */
-	if (log_sources_match(iConf.logging_all_ircops->sources, loglevel, subsystem, event_id))
+	if (iConf.logging_all_ircops && log_sources_match(iConf.logging_all_ircops->sources, loglevel, subsystem, event_id))
 		return "*";
 
 	*snomasks = '\0';
@@ -1053,11 +1053,20 @@ void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, ch
 	if (!loop.ircd_booted)
 		return;
 
+	/* Never send these */
+	if (!strcmp(subsystem, "traffic"))
+		return;
+
 	snomask_destinations = log_to_snomask(loglevel, subsystem, event_id);
 
-	/* Zero destinations? Then return. */
+	/* Zero destinations? Then return.
+	 * XXX temporarily log to all ircops until we ship with default conf ;)
+	 */
 	if (snomask_destinations == NULL)
+	{
+		sendto_realops("[%s] %s.%s %s", log_level_valtostring(loglevel), subsystem, event_id, msg);
 		return;
+	}
 
 	/* All ircops? Simple case. */
 	if (!strcmp(snomask_destinations, "*"))
