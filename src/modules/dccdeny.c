@@ -104,62 +104,62 @@ int dccdeny_configtest_deny_dcc(ConfigFile *cf, ConfigEntry *ce, int type, int *
 	char has_filename = 0, has_reason = 0, has_soft = 0;
 
 	/* We are only interested in deny dcc { } */
-	if ((type != CONFIG_DENY) || strcmp(ce->ce_vardata, "dcc"))
+	if ((type != CONFIG_DENY) || strcmp(ce->value, "dcc"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (config_is_blankorempty(cep, "deny dcc"))
 		{
 			errors++;
 			continue;
 		}
-		if (!strcmp(cep->ce_varname, "filename"))
+		if (!strcmp(cep->name, "filename"))
 		{
 			if (has_filename)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "deny dcc::filename");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "deny dcc::filename");
 				continue;
 			}
 			has_filename = 1;
 		}
-		else if (!strcmp(cep->ce_varname, "reason"))
+		else if (!strcmp(cep->name, "reason"))
 		{
 			if (has_reason)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "deny dcc::reason");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "deny dcc::reason");
 				continue;
 			}
 			has_reason = 1;
 		}
-		else if (!strcmp(cep->ce_varname, "soft"))
+		else if (!strcmp(cep->name, "soft"))
 		{
 			if (has_soft)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "deny dcc::soft");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "deny dcc::soft");
 				continue;
 			}
 			has_soft = 1;
 		}
 		else
 		{
-			config_error_unknown(cep->ce_fileptr->cf_filename,
-				cep->ce_varlinenum, "deny dcc", cep->ce_varname);
+			config_error_unknown(cep->file->filename,
+				cep->line_number, "deny dcc", cep->name);
 			errors++;
 		}
 	}
 	if (!has_filename)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"deny dcc::filename");
 		errors++;
 	}
 	if (!has_reason)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"deny dcc::reason");
 		errors++;
 	}
@@ -174,46 +174,46 @@ int dccdeny_configtest_allow_dcc(ConfigFile *cf, ConfigEntry *ce, int type, int 
 	int errors = 0, has_filename = 0, has_soft = 0;
 
 	/* We are only interested in allow dcc { } */
-	if ((type != CONFIG_ALLOW) || strcmp(ce->ce_vardata, "dcc"))
+	if ((type != CONFIG_ALLOW) || strcmp(ce->value, "dcc"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (config_is_blankorempty(cep, "allow dcc"))
 		{
 			errors++;
 			continue;
 		}
-		if (!strcmp(cep->ce_varname, "filename"))
+		if (!strcmp(cep->name, "filename"))
 		{
 			if (has_filename)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "allow dcc::filename");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "allow dcc::filename");
 				continue;
 			}
 			has_filename = 1;
 		}
-		else if (!strcmp(cep->ce_varname, "soft"))
+		else if (!strcmp(cep->name, "soft"))
 		{
 			if (has_soft)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "allow dcc::soft");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "allow dcc::soft");
 				continue;
 			}
 			has_soft = 1;
 		}
 		else
 		{
-			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"allow dcc", cep->ce_varname);
+			config_error_unknown(cep->file->filename, cep->line_number,
+				"allow dcc", cep->name);
 			errors++;
 		}
 	}
 	if (!has_filename)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"allow dcc::filename");
 		errors++;
 	}
@@ -228,23 +228,23 @@ int dccdeny_configrun_deny_dcc(ConfigFile *cf, ConfigEntry *ce, int type)
 	ConfigEntry 	    	*cep;
 
 	/* We are only interested in deny dcc { } */
-	if ((type != CONFIG_DENY) || strcmp(ce->ce_vardata, "dcc"))
+	if ((type != CONFIG_DENY) || strcmp(ce->value, "dcc"))
 		return 0;
 
 	deny = safe_alloc(sizeof(ConfigItem_deny_dcc));
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "filename"))
+		if (!strcmp(cep->name, "filename"))
 		{
-			safe_strdup(deny->filename, cep->ce_vardata);
+			safe_strdup(deny->filename, cep->value);
 		}
-		else if (!strcmp(cep->ce_varname, "reason"))
+		else if (!strcmp(cep->name, "reason"))
 		{
-			safe_strdup(deny->reason, cep->ce_vardata);
+			safe_strdup(deny->reason, cep->value);
 		}
-		else if (!strcmp(cep->ce_varname, "soft"))
+		else if (!strcmp(cep->name, "soft"))
 		{
-			int x = config_checkval(cep->ce_vardata,CFG_YESNO);
+			int x = config_checkval(cep->value,CFG_YESNO);
 			if (x == 1)
 				deny->flag.type = DCCDENY_SOFT;
 		}
@@ -266,18 +266,18 @@ int dccdeny_configrun_allow_dcc(ConfigFile *cf, ConfigEntry *ce, int type)
 	ConfigEntry *cep;
 
 	/* We are only interested in allow dcc { } */
-	if ((type != CONFIG_ALLOW) || strcmp(ce->ce_vardata, "dcc"))
+	if ((type != CONFIG_ALLOW) || strcmp(ce->value, "dcc"))
 		return 0;
 
 	allow = safe_alloc(sizeof(ConfigItem_allow_dcc));
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "filename"))
-			safe_strdup(allow->filename, cep->ce_vardata);
-		else if (!strcmp(cep->ce_varname, "soft"))
+		if (!strcmp(cep->name, "filename"))
+			safe_strdup(allow->filename, cep->value);
+		else if (!strcmp(cep->name, "soft"))
 		{
-			int x = config_checkval(cep->ce_vardata,CFG_YESNO);
+			int x = config_checkval(cep->value,CFG_YESNO);
 			if (x)
 				allow->flag.type = DCCDENY_SOFT;
 		}

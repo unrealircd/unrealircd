@@ -226,26 +226,26 @@ int charsys_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		return 0;
 
 	/* We are only interrested in set::allowed-nickchars... */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "allowed-nickchars"))
+	if (!ce || !ce->name || strcmp(ce->name, "allowed-nickchars"))
 		return 0;
 
-	if (ce->ce_vardata)
+	if (ce->value)
 	{
 		config_error("%s:%i: set::allowed-nickchars: please use 'allowed-nickchars { name; };' "
 					 "and not 'allowed-nickchars name;'",
-					 ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+					 ce->file->filename, ce->line_number);
 		/* Give up immediately. Don't bother the user with any other errors. */
 		errors++;
 		*errs = errors;
 		return -1;
 	}
 
-	for (cep = ce->ce_entries; cep; cep=cep->ce_next)
+	for (cep = ce->items; cep; cep=cep->next)
 	{
-		if (!charsys_test_language(cep->ce_varname))
+		if (!charsys_test_language(cep->name))
 		{
 			config_error("%s:%i: set::allowed-nickchars: Unknown (sub)language '%s'",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, cep->ce_varname);
+				ce->file->filename, ce->line_number, cep->name);
 			errors++;
 		}
 	}
@@ -262,11 +262,11 @@ int charsys_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		return 0;
 
 	/* We are only interrested in set::allowed-nickchars... */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "allowed-nickchars"))
+	if (!ce || !ce->name || strcmp(ce->name, "allowed-nickchars"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-		charsys_add_language(cep->ce_varname);
+	for (cep = ce->items; cep; cep = cep->next)
+		charsys_add_language(cep->name);
 
 	return 1;
 }

@@ -577,9 +577,9 @@ extern uint32_t getrandom32();
 extern void gen_random_alnum(char *buf, int numbytes);
 
 /* Check config entry for empty/missing parameter */
-#define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
+#define CheckNull(x) if ((!(x)->value) || (!(*((x)->value)))) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); errors++; continue; }
 /* as above, but accepting empty string */
-#define CheckNullAllowEmpty(x) if ((!(x)->ce_vardata)) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
+#define CheckNullAllowEmpty(x) if ((!(x)->value)) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); errors++; continue; }
 
 extern MODVAR char extchmstr[4][64];
 

@@ -72,83 +72,83 @@ int config_test_log(ConfigFile *conf, ConfigEntry *ce)
 	char has_flags = 0, has_maxsize = 0;
 	char *fname;
 
-	if (!ce->ce_vardata)
+	if (!ce->value)
 	{
 		config_error("%s:%i: log block without filename",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			ce->file->filename, ce->line_number);
 		return 1;
 	}
-	if (!ce->ce_entries)
+	if (!ce->items)
 	{
 		config_error("%s:%i: empty log block",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			ce->file->filename, ce->line_number);
 		return 1;
 	}
 
 	/* Convert to absolute path (if needed) unless it's "syslog" */
-	if (strcmp(ce->ce_vardata, "syslog"))
-		convert_to_absolute_path(&ce->ce_vardata, LOGDIR);
+	if (strcmp(ce->value, "syslog"))
+		convert_to_absolute_path(&ce->value, LOGDIR);
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "flags"))
+		if (!strcmp(cep->name, "flags"))
 		{
 			if (has_flags)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "log::flags");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "log::flags");
 				continue;
 			}
 			has_flags = 1;
-			if (!cep->ce_entries)
+			if (!cep->items)
 			{
-				config_error_empty(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "log", cep->ce_varname);
+				config_error_empty(cep->file->filename,
+					cep->line_number, "log", cep->name);
 				errors++;
 				continue;
 			}
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
 				// FIXME: old flags shit
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "maxsize"))
+		else if (!strcmp(cep->name, "maxsize"))
 		{
 			if (has_maxsize)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "log::maxsize");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "log::maxsize");
 				continue;
 			}
 			has_maxsize = 1;
-			if (!cep->ce_vardata)
+			if (!cep->value)
 			{
-				config_error_empty(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "log", cep->ce_varname);
+				config_error_empty(cep->file->filename,
+					cep->line_number, "log", cep->name);
 				errors++;
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "type"))
+		else if (!strcmp(cep->name, "type"))
 		{
-			if (!cep->ce_vardata)
+			if (!cep->value)
 			{
-				config_error_empty(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "log", cep->ce_varname);
+				config_error_empty(cep->file->filename,
+					cep->line_number, "log", cep->name);
 				errors++;
 				continue;
 			}
-			if (!log_type_stringtoval(cep->ce_vardata))
+			if (!log_type_stringtoval(cep->value))
 			{
 				config_error("%s:%i: unknown log type '%s'",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-					cep->ce_vardata);
+					cep->file->filename, cep->line_number,
+					cep->value);
 				errors++;
 			}
 		}
 		else
 		{
-			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"log", cep->ce_varname);
+			config_error_unknown(cep->file->filename, cep->line_number,
+				"log", cep->name);
 			errors++;
 			continue;
 		}
@@ -156,16 +156,16 @@ int config_test_log(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!has_flags)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"log::flags");
 		errors++;
 	}
 
-	fname = unreal_strftime(ce->ce_vardata);
+	fname = unreal_strftime(ce->value);
 	if ((fd = fd_fileopen(fname, O_WRONLY|O_CREAT)) == -1)
 	{
 		config_error("%s:%i: Couldn't open logfile (%s) for writing: %s",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->file->filename, ce->line_number,
 			fname, strerror(errno));
 		errors++;
 	} else
@@ -184,24 +184,24 @@ int config_run_log(ConfigFile *conf, ConfigEntry *ce)
 	ca = safe_alloc(sizeof(ConfigItem_log));
 	ca->logfd = -1;
 	ca->type = LOG_TYPE_TEXT; /* default */
-	if (strchr(ce->ce_vardata, '%'))
-		safe_strdup(ca->filefmt, ce->ce_vardata);
+	if (strchr(ce->value, '%'))
+		safe_strdup(ca->filefmt, ce->value);
 	else
-		safe_strdup(ca->file, ce->ce_vardata);
+		safe_strdup(ca->file, ce->value);
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "maxsize"))
+		if (!strcmp(cep->name, "maxsize"))
 		{
-			ca->maxsize = config_checkval(cep->ce_vardata,CFG_SIZE);
+			ca->maxsize = config_checkval(cep->value,CFG_SIZE);
 		}
-		else if (!strcmp(cep->ce_varname, "type"))
+		else if (!strcmp(cep->name, "type"))
 		{
-			ca->type = log_type_stringtoval(cep->ce_vardata);
+			ca->type = log_type_stringtoval(cep->value);
 		}
-		else if (!strcmp(cep->ce_varname, "flags"))
+		else if (!strcmp(cep->name, "flags"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
 				// FIXME: old flags shit
 			}
@@ -215,48 +215,48 @@ int config_test_set_logging(ConfigFile *conf, ConfigEntry *ce)
 {
 	int errors = 0;
 
-	for (ce = ce->ce_entries; ce; ce = ce->ce_next)
+	for (ce = ce->items; ce; ce = ce->next)
 	{
-		if (!strcmp(ce->ce_varname, "snomask") ||
-		    !strcmp(ce->ce_varname, "all-opers") ||
-		    !strcmp(ce->ce_varname, "global") ||
-		    !strcmp(ce->ce_varname, "channel"))
+		if (!strcmp(ce->name, "snomask") ||
+		    !strcmp(ce->name, "all-opers") ||
+		    !strcmp(ce->name, "global") ||
+		    !strcmp(ce->name, "channel"))
 		{
 			/* TODO: Validate the subsystem lightly */
 		} else
 		{
-			config_error_unknownopt(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "set::logging", ce->ce_varname);
+			config_error_unknownopt(ce->file->filename, ce->line_number, "set::logging", ce->name);
 			errors++;
 			continue;
 		}
 
-		if (!strcmp(ce->ce_varname, "snomask"))
+		if (!strcmp(ce->name, "snomask"))
 		{
 			/* We need to validate the parameter here as well */
-			if (!ce->ce_vardata)
+			if (!ce->value)
 			{
-				config_error_blank(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "set::logging::snomask");
+				config_error_blank(ce->file->filename, ce->line_number, "set::logging::snomask");
 				errors++;
 			} else
-			if ((strlen(ce->ce_vardata) != 1) || !(islower(ce->ce_vardata[0]) || isupper(ce->ce_vardata[0])))
+			if ((strlen(ce->value) != 1) || !(islower(ce->value[0]) || isupper(ce->value[0])))
 			{
 				config_error("%s:%d: snomask must be a single letter",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+					ce->file->filename, ce->line_number);
 				errors++;
 			}
 		}
-		if (!strcmp(ce->ce_varname, "channel"))
+		if (!strcmp(ce->name, "channel"))
 		{
 			/* We need to validate the parameter here as well */
-			if (!ce->ce_vardata)
+			if (!ce->value)
 			{
-				config_error_blank(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "set::logging::channel");
+				config_error_blank(ce->file->filename, ce->line_number, "set::logging::channel");
 				errors++;
 			} else
-			if (!valid_channelname(ce->ce_vardata))
+			if (!valid_channelname(ce->value))
 			{
 				config_error("%s:%d: Invalid channel name '%s'",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+					ce->file->filename, ce->line_number, ce->value);
 				errors++;
 			}
 		}
@@ -315,38 +315,38 @@ int config_run_set_logging(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 
-	for (ce = ce->ce_entries; ce; ce = ce->ce_next)
+	for (ce = ce->items; ce; ce = ce->next)
 	{
 		LogSource *sources = NULL;
 		LogSource *s;
 
-		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		for (cep = ce->items; cep; cep = cep->next)
 		{
-			s = add_log_source(cep->ce_varname);
+			s = add_log_source(cep->name);
 			AddListItem(s, sources);
 		}
-		if (!strcmp(ce->ce_varname, "snomask"))
+		if (!strcmp(ce->name, "snomask"))
 		{
 			LogDestination *d = safe_alloc(sizeof(LogDestination));
-			strlcpy(d->destination, ce->ce_vardata, sizeof(d->destination)); /* destination is the snomask */
+			strlcpy(d->destination, ce->value, sizeof(d->destination)); /* destination is the snomask */
 			d->sources = sources;
 			AddListItem(d, tempiConf.logging_snomasks);
 		} else
-		if (!strcmp(ce->ce_varname, "channel"))
+		if (!strcmp(ce->name, "channel"))
 		{
 			LogDestination *d = safe_alloc(sizeof(LogDestination));
-			strlcpy(d->destination, ce->ce_vardata, sizeof(d->destination)); /* destination is the channel */
+			strlcpy(d->destination, ce->value, sizeof(d->destination)); /* destination is the channel */
 			d->sources = sources;
 			AddListItem(d, tempiConf.logging_channels);
 		} else
-		if (!strcmp(ce->ce_varname, "all-opers"))
+		if (!strcmp(ce->name, "all-opers"))
 		{
 			LogDestination *d = safe_alloc(sizeof(LogDestination));
 			/* destination stays empty */
 			d->sources = sources;
 			AddListItem(d, tempiConf.logging_all_ircops);
 		} else
-		if (!strcmp(ce->ce_varname, "global"))
+		if (!strcmp(ce->name, "global"))
 		{
 			LogDestination *d = safe_alloc(sizeof(LogDestination));
 			/* destination stays empty */

@@ -125,19 +125,19 @@ int cloak_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (type == CONFIG_SET)
 	{
 		/* set::cloak-method */
-		if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "cloak-method"))
+		if (!ce || !ce->name || strcmp(ce->name, "cloak-method"))
 			return 0;
 
-		if (!ce->ce_vardata)
+		if (!ce->value)
 		{
 			config_error("%s:%i: set::cloak-method: no method specified. The only supported methods are: 'ip' and 'host'",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				ce->file->filename, ce->line_number);
 			errors++;
 		} else
-		if (strcmp(ce->ce_vardata, "ip") && strcmp(ce->ce_vardata, "host"))
+		if (strcmp(ce->value, "ip") && strcmp(ce->value, "host"))
 		{
 			config_error("%s:%i: set::cloak-method: unknown method '%s'. The only supported methods are: 'ip' and 'host'",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+				ce->file->filename, ce->line_number, ce->value);
 			errors++;
 		}
 
@@ -149,41 +149,41 @@ int cloak_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		return 0;
 
 	nokeys = 0;
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
 		keycnt++;
 		/* TODO: check randomness */
-		if (check_badrandomness(cep->ce_varname))
+		if (check_badrandomness(cep->name))
 		{
 			config_error("%s:%i: set::cloak-keys: (key %d) Keys should be mixed a-zA-Z0-9, "
-			             "like \"a2JO6fh3Q6w4oN3s7\"", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, keycnt);
+			             "like \"a2JO6fh3Q6w4oN3s7\"", cep->file->filename, cep->line_number, keycnt);
 			errors++;
 		}
-		if (strlen(cep->ce_varname) < 5)
+		if (strlen(cep->name) < 5)
 		{
 			config_error("%s:%i: set::cloak-keys: (key %d) Each key should be at least 5 characters",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, keycnt);
+				cep->file->filename, cep->line_number, keycnt);
 			errors++;
 		}
-		if (strlen(cep->ce_varname) > 100)
+		if (strlen(cep->name) > 100)
 		{
 			config_error("%s:%i: set::cloak-keys: (key %d) Each key should be less than 100 characters",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, keycnt);
+				cep->file->filename, cep->line_number, keycnt);
 			errors++;
 		}
 		if (keycnt < 4)
-			keys[keycnt-1] = cep->ce_varname;
+			keys[keycnt-1] = cep->name;
 	}
 	if (keycnt != 3)
 	{
 		config_error("%s:%i: set::cloak-keys: we want 3 values, not %i!",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, keycnt);
+			ce->file->filename, ce->line_number, keycnt);
 		errors++;
 	}
 	if ((keycnt == 3) && (!strcmp(keys[0], keys[1]) || !strcmp(keys[1], keys[2])))
 	{
 		config_error("%s:%i: set::cloak-keys: All your 3 keys should be RANDOM, they should not be equal",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			ce->file->filename, ce->line_number);
 		errors++;
 	}
 	*errs = errors;
@@ -212,10 +212,10 @@ char buf[512], result[16];
 	if (type == CONFIG_SET)
 	{
 		/* set::cloak-method */
-		if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "cloak-method"))
+		if (!ce || !ce->name || strcmp(ce->name, "cloak-method"))
 			return 0;
 
-		if (!strcmp(ce->ce_vardata, "ip"))
+		if (!strcmp(ce->value, "ip"))
 			CLOAK_IP_ONLY = 1;
 
 		return 0;
@@ -225,12 +225,12 @@ char buf[512], result[16];
 		return 0;
 
 	/* config test should ensure this goes fine... */
-	cep = ce->ce_entries;
-	safe_strdup(cloak_key1, cep->ce_varname);
-	cep = cep->ce_next;
-	safe_strdup(cloak_key2, cep->ce_varname);
-	cep = cep->ce_next;
-	safe_strdup(cloak_key3, cep->ce_varname);
+	cep = ce->items;
+	safe_strdup(cloak_key1, cep->name);
+	cep = cep->next;
+	safe_strdup(cloak_key2, cep->name);
+	cep = cep->next;
+	safe_strdup(cloak_key3, cep->name);
 
 	/* Calculate checksum */
 	ircsnprintf(buf, sizeof(buf), "%s:%s:%s", KEY1, KEY2, KEY3);

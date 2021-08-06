@@ -123,7 +123,7 @@ MOD_UNLOAD()
 }
 
 #ifndef CheckNull
- #define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
+ #define CheckNull(x) if ((!(x)->value) || (!(*((x)->value)))) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); errors++; continue; }
 #endif
 
 int targetfloodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
@@ -135,36 +135,36 @@ int targetfloodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *
 		return 0;
 
 	/* We are only interrested in set::anti-flood::target-flood.. */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "target-flood"))
+	if (!ce || !ce->name || strcmp(ce->name, "target-flood"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
 		CheckNull(cep);
 
-		if (!strcmp(cep->ce_varname, "channel-privmsg") ||
-		    !strcmp(cep->ce_varname, "channel-notice") ||
-		    !strcmp(cep->ce_varname, "channel-tagmsg") ||
-		    !strcmp(cep->ce_varname, "private-privmsg") ||
-		    !strcmp(cep->ce_varname, "private-notice") ||
-		    !strcmp(cep->ce_varname, "private-tagmsg"))
+		if (!strcmp(cep->name, "channel-privmsg") ||
+		    !strcmp(cep->name, "channel-notice") ||
+		    !strcmp(cep->name, "channel-tagmsg") ||
+		    !strcmp(cep->name, "private-privmsg") ||
+		    !strcmp(cep->name, "private-notice") ||
+		    !strcmp(cep->name, "private-tagmsg"))
 		{
 			int cnt = 0, period = 0;
 
-			if (!config_parse_flood(cep->ce_vardata, &cnt, &period) ||
+			if (!config_parse_flood(cep->value, &cnt, &period) ||
 			    (cnt < 1) || (cnt > 10000) || (period < 1) || (period > 120))
 			{
 				config_error("%s:%i: set::anti-flood::target-flood::%s error. "
 				             "Syntax is '<count>:<period>' (eg 5:60). "
 				             "Count must be 1-10000 and period must be 1-120.",
-				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				             cep->ce_varname);
+				             cep->file->filename, cep->line_number,
+				             cep->name);
 				errors++;
 			}
 		} else
 		{
 			config_error("%s:%i: unknown directive set::anti-flood::target-flood:%s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				cep->file->filename, cep->line_number, cep->name);
 			errors++;
 			continue;
 		}
@@ -182,23 +182,23 @@ int targetfloodprot_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		return 0;
 
 	/* We are only interrested in set::anti-flood::target-flood.. */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "target-flood"))
+	if (!ce || !ce->name || strcmp(ce->name, "target-flood"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "channel-privmsg"))
-			config_parse_flood(cep->ce_vardata, &channelcfg->cnt[TFP_PRIVMSG], &channelcfg->t[TFP_PRIVMSG]);
-		else if (!strcmp(cep->ce_varname, "channel-notice"))
-			config_parse_flood(cep->ce_vardata, &channelcfg->cnt[TFP_NOTICE], &channelcfg->t[TFP_NOTICE]);
-		else if (!strcmp(cep->ce_varname, "channel-tagmsg"))
-			config_parse_flood(cep->ce_vardata, &channelcfg->cnt[TFP_TAGMSG], &channelcfg->t[TFP_TAGMSG]);
-		else if (!strcmp(cep->ce_varname, "private-privmsg"))
-			config_parse_flood(cep->ce_vardata, &privatecfg->cnt[TFP_PRIVMSG], &privatecfg->t[TFP_PRIVMSG]);
-		else if (!strcmp(cep->ce_varname, "private-notice"))
-			config_parse_flood(cep->ce_vardata, &privatecfg->cnt[TFP_NOTICE], &privatecfg->t[TFP_NOTICE]);
-		else if (!strcmp(cep->ce_varname, "private-tagmsg"))
-			config_parse_flood(cep->ce_vardata, &privatecfg->cnt[TFP_TAGMSG], &privatecfg->t[TFP_TAGMSG]);
+		if (!strcmp(cep->name, "channel-privmsg"))
+			config_parse_flood(cep->value, &channelcfg->cnt[TFP_PRIVMSG], &channelcfg->t[TFP_PRIVMSG]);
+		else if (!strcmp(cep->name, "channel-notice"))
+			config_parse_flood(cep->value, &channelcfg->cnt[TFP_NOTICE], &channelcfg->t[TFP_NOTICE]);
+		else if (!strcmp(cep->name, "channel-tagmsg"))
+			config_parse_flood(cep->value, &channelcfg->cnt[TFP_TAGMSG], &channelcfg->t[TFP_TAGMSG]);
+		else if (!strcmp(cep->name, "private-privmsg"))
+			config_parse_flood(cep->value, &privatecfg->cnt[TFP_PRIVMSG], &privatecfg->t[TFP_PRIVMSG]);
+		else if (!strcmp(cep->name, "private-notice"))
+			config_parse_flood(cep->value, &privatecfg->cnt[TFP_NOTICE], &privatecfg->t[TFP_NOTICE]);
+		else if (!strcmp(cep->name, "private-tagmsg"))
+			config_parse_flood(cep->value, &privatecfg->cnt[TFP_TAGMSG], &privatecfg->t[TFP_TAGMSG]);
 	}
 
 	return 1;

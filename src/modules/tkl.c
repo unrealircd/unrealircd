@@ -241,130 +241,130 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	int match_type = 0;
 
 	/* We are only interested in spamfilter { } blocks */
-	if ((type != CONFIG_MAIN) || strcmp(ce->ce_varname, "spamfilter"))
+	if ((type != CONFIG_MAIN) || strcmp(ce->name, "spamfilter"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "target"))
+		if (!strcmp(cep->name, "target"))
 		{
 			if (has_target)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "spamfilter::target");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "spamfilter::target");
 				continue;
 			}
 			has_target = 1;
-			if (cep->ce_vardata)
+			if (cep->value)
 			{
-				if (!spamfilter_getconftargets(cep->ce_vardata))
+				if (!spamfilter_getconftargets(cep->value))
 				{
 					config_error("%s:%i: unknown spamfiler target type '%s'",
-						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+						cep->file->filename, cep->line_number, cep->value);
 					errors++;
 				}
 			}
-			else if (cep->ce_entries)
+			else if (cep->items)
 			{
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				for (cepp = cep->items; cepp; cepp = cepp->next)
 				{
-					if (!spamfilter_getconftargets(cepp->ce_varname))
+					if (!spamfilter_getconftargets(cepp->name))
 					{
 						config_error("%s:%i: unknown spamfiler target type '%s'",
-							cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum, cepp->ce_varname);
+							cepp->file->filename,
+							cepp->line_number, cepp->name);
 						errors++;
 					}
 				}
 			}
 			else
 			{
-				config_error_empty(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "spamfilter", cep->ce_varname);
+				config_error_empty(cep->file->filename,
+					cep->line_number, "spamfilter", cep->name);
 				errors++;
 			}
 			continue;
 		}
-		if (!cep->ce_vardata)
+		if (!cep->value)
 		{
-			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"spamfilter", cep->ce_varname);
+			config_error_empty(cep->file->filename, cep->line_number,
+				"spamfilter", cep->name);
 			errors++;
 			continue;
 		}
-		if (!strcmp(cep->ce_varname, "reason"))
+		if (!strcmp(cep->name, "reason"))
 		{
 			if (has_reason)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "spamfilter::reason");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "spamfilter::reason");
 				continue;
 			}
 			has_reason = 1;
-			reason = cep->ce_vardata;
+			reason = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "match"))
+		else if (!strcmp(cep->name, "match"))
 		{
 			if (has_match)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "spamfilter::match");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "spamfilter::match");
 				continue;
 			}
 			has_match = 1;
-			match = cep->ce_vardata;
+			match = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "action"))
+		else if (!strcmp(cep->name, "action"))
 		{
 			if (has_action)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "spamfilter::action");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "spamfilter::action");
 				continue;
 			}
 			has_action = 1;
-			if (!banact_stringtoval(cep->ce_vardata))
+			if (!banact_stringtoval(cep->value))
 			{
 				config_error("%s:%i: spamfilter::action has unknown action type '%s'",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+					cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "ban-time"))
+		else if (!strcmp(cep->name, "ban-time"))
 		{
 			if (has_bantime)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "spamfilter::ban-time");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "spamfilter::ban-time");
 				continue;
 			}
 			has_bantime = 1;
 		}
-		else if (!strcmp(cep->ce_varname, "match-type"))
+		else if (!strcmp(cep->name, "match-type"))
 		{
 			if (has_match_type)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "spamfilter::match-type");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "spamfilter::match-type");
 				continue;
 			}
-			if (!strcasecmp(cep->ce_vardata, "posix"))
+			if (!strcasecmp(cep->value, "posix"))
 			{
 				config_error("%s:%i: this spamfilter uses match-type 'posix' which is no longer supported. "
 				             "You must switch over to match-type 'regex' instead. "
 				             "See https://www.unrealircd.org/docs/FAQ#spamfilter-posix-deprecated",
-				             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				             ce->file->filename, ce->line_number);
 				errors++;
 				*errs = errors;
 				return -1; /* return now, otherwise there will be issues */
 			}
-			match_type = unreal_match_method_strtoval(cep->ce_vardata);
+			match_type = unreal_match_method_strtoval(cep->value);
 			if (match_type == 0)
 			{
 				config_error("%s:%i: spamfilter::match-type: unknown match type '%s', "
 				             "should be one of: 'simple', 'regex' or 'posix'",
-				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				             cep->ce_vardata);
+				             cep->file->filename, cep->line_number,
+				             cep->value);
 				errors++;
 				continue;
 			}
@@ -372,8 +372,8 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		}
 		else
 		{
-			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"spamfilter", cep->ce_varname);
+			config_error_unknown(cep->file->filename, cep->line_number,
+				"spamfilter", cep->name);
 			errors++;
 			continue;
 		}
@@ -388,8 +388,8 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		if (!m)
 		{
 			config_error("%s:%i: spamfilter::match contains an invalid regex: %s",
-				ce->ce_fileptr->cf_filename,
-				ce->ce_varlinenum,
+				ce->file->filename,
+				ce->line_number,
 				err);
 			errors++;
 		} else
@@ -400,19 +400,19 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 
 	if (!has_match)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"spamfilter::match");
 		errors++;
 	}
 	if (!has_target)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"spamfilter::target");
 		errors++;
 	}
 	if (!has_action)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"spamfilter::action");
 		errors++;
 	}
@@ -420,12 +420,12 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	{
 		config_error("%s:%i: spamfilter block problem: match + reason field are together over 505 bytes, "
 		             "please choose a shorter regex or reason",
-		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		             ce->file->filename, ce->line_number);
 		errors++;
 	}
 	if (!has_match_type)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"spamfilter::match-type");
 		errors++;
 	}
@@ -460,40 +460,40 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	Match *m;
 
 	/* We are only interested in spamfilter { } blocks */
-	if ((type != CONFIG_MAIN) || strcmp(ce->ce_varname, "spamfilter"))
+	if ((type != CONFIG_MAIN) || strcmp(ce->name, "spamfilter"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "match"))
+		if (!strcmp(cep->name, "match"))
 		{
-			word = cep->ce_vardata;
+			word = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "target"))
+		else if (!strcmp(cep->name, "target"))
 		{
-			if (cep->ce_vardata)
-				target = spamfilter_getconftargets(cep->ce_vardata);
+			if (cep->value)
+				target = spamfilter_getconftargets(cep->value);
 			else
 			{
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-					target |= spamfilter_getconftargets(cepp->ce_varname);
+				for (cepp = cep->items; cepp; cepp = cepp->next)
+					target |= spamfilter_getconftargets(cepp->name);
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "action"))
+		else if (!strcmp(cep->name, "action"))
 		{
-			action = banact_stringtoval(cep->ce_vardata);
+			action = banact_stringtoval(cep->value);
 		}
-		else if (!strcmp(cep->ce_varname, "reason"))
+		else if (!strcmp(cep->name, "reason"))
 		{
-			banreason = cep->ce_vardata;
+			banreason = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "ban-time"))
+		else if (!strcmp(cep->name, "ban-time"))
 		{
-			bantime = config_checkval(cep->ce_vardata, CFG_TIME);
+			bantime = config_checkval(cep->value, CFG_TIME);
 		}
-		else if (!strcmp(cep->ce_varname, "match-type"))
+		else if (!strcmp(cep->name, "match-type"))
 		{
-			match_type = unreal_match_method_strtoval(cep->ce_vardata);
+			match_type = unreal_match_method_strtoval(cep->value);
 		}
 	}
 
@@ -522,35 +522,35 @@ int tkl_config_test_ban(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (type != CONFIG_BAN)
 		return 0;
 
-	if (strcmp(ce->ce_vardata, "nick") && strcmp(ce->ce_vardata, "user") &&
-	    strcmp(ce->ce_vardata, "ip"))
+	if (strcmp(ce->value, "nick") && strcmp(ce->value, "user") &&
+	    strcmp(ce->value, "ip"))
 	{
 		return 0;
 	}
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (config_is_blankorempty(cep, "ban"))
 		{
 			errors++;
 			continue;
 		}
-		if (!strcmp(cep->ce_varname, "mask"))
+		if (!strcmp(cep->name, "mask"))
 		{
 			if (has_mask)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "ban::mask");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "ban::mask");
 				continue;
 			}
 			has_mask = 1;
 		}
-		else if (!strcmp(cep->ce_varname, "reason"))
+		else if (!strcmp(cep->name, "reason"))
 		{
 			if (has_reason)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "ban::reason");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "ban::reason");
 				continue;
 			}
 			has_reason = 1;
@@ -558,23 +558,23 @@ int tkl_config_test_ban(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		else
 		{
 			config_error("%s:%i: unknown directive ban %s::%s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				ce->ce_vardata,
-				cep->ce_varname);
+				cep->file->filename, cep->line_number,
+				ce->value,
+				cep->name);
 			errors++;
 		}
 	}
 
 	if (!has_mask)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"ban::mask");
 		errors++;
 	}
 
 	if (!has_reason)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"ban::reason");
 		errors++;
 	}
@@ -596,18 +596,18 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	if (configtype != CONFIG_BAN)
 		return 0;
 
-	if (strcmp(ce->ce_vardata, "nick") && strcmp(ce->ce_vardata, "user") &&
-	    strcmp(ce->ce_vardata, "ip"))
+	if (strcmp(ce->value, "nick") && strcmp(ce->value, "user") &&
+	    strcmp(ce->value, "ip"))
 	{
 		return 0;
 	}
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "mask"))
+		if (!strcmp(cep->name, "mask"))
 		{
 			char buf[512], *p;
-			strlcpy(buf, cep->ce_vardata, sizeof(buf));
+			strlcpy(buf, cep->value, sizeof(buf));
 			if (is_extended_ban(buf))
 			{
 				char *str;
@@ -617,7 +617,7 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 				if (!extban || !(extban->options & EXTBOPT_TKL))
 				{
 					config_warn("%s:%d: Invalid or unsupported extended server ban requested: %s",
-						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, buf);
+						cep->file->filename, cep->line_number, buf);
 					goto tcrb_end;
 				}
 				/* is_ok() is not called, since there is no client, similar to like remote bans set */
@@ -625,7 +625,7 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 				if (!str || (strlen(str) <= 4))
 				{
 					config_warn("%s:%d: Extended server ban has a problem: %s",
-						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, buf);
+						cep->file->filename, cep->line_number, buf);
 					goto tcrb_end;
 				}
 				strlcpy(buf2, str+3, sizeof(buf2));
@@ -641,13 +641,13 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 					safe_strdup(usermask, buf);
 					safe_strdup(hostmask, p);
 				} else {
-					safe_strdup(hostmask, cep->ce_vardata);
+					safe_strdup(hostmask, cep->value);
 				}
 			}
 		} else
-		if (!strcmp(cep->ce_varname, "reason"))
+		if (!strcmp(cep->name, "reason"))
 		{
-			safe_strdup(reason, cep->ce_vardata);
+			safe_strdup(reason, cep->value);
 		}
 	}
 
@@ -657,11 +657,11 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	if (!reason)
 		safe_strdup(reason, "-");
 
-	if (!strcmp(ce->ce_vardata, "nick"))
+	if (!strcmp(ce->value, "nick"))
 		tkltype = TKL_NAME;
-	else if (!strcmp(ce->ce_vardata, "user"))
+	else if (!strcmp(ce->value, "user"))
 		tkltype = TKL_KILL;
-	else if (!strcmp(ce->ce_vardata, "ip"))
+	else if (!strcmp(ce->value, "ip"))
 		tkltype = TKL_ZAP;
 	else
 		abort(); /* impossible */
@@ -689,82 +689,82 @@ int tkl_config_test_except(ConfigFile *cf, ConfigEntry *ce, int configtype, int 
 		return 0;
 
 	/* These are the types that we handle */
-	if (strcmp(ce->ce_vardata, "ban") && strcmp(ce->ce_vardata, "throttle") &&
-	    strcmp(ce->ce_vardata, "tkl") && strcmp(ce->ce_vardata, "blacklist") &&
-	    strcmp(ce->ce_vardata, "spamfilter"))
+	if (strcmp(ce->value, "ban") && strcmp(ce->value, "throttle") &&
+	    strcmp(ce->value, "tkl") && strcmp(ce->value, "blacklist") &&
+	    strcmp(ce->value, "spamfilter"))
 	{
 		return 0;
 	}
 
-	if (!strcmp(ce->ce_vardata, "tkl"))
+	if (!strcmp(ce->value, "tkl"))
 	{
 		config_error("%s:%d: except tkl { } has been renamed to except ban { }",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			ce->file->filename, ce->line_number);
 		config_status("Please rename your block in the configuration file.");
 		*errs = 1;
 		return -1;
 	}
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "mask"))
+		if (!strcmp(cep->name, "mask"))
 		{
-			if (cep->ce_entries)
+			if (cep->items)
 			{
 				/* mask { *@1.1.1.1; *@2.2.2.2; *@3.3.3.3; }; */
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				for (cepp = cep->items; cepp; cepp = cepp->next)
 				{
-					if (!cepp->ce_varname)
+					if (!cepp->name)
 					{
-						config_error_empty(cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum, "except ban", "mask");
+						config_error_empty(cepp->file->filename,
+							cepp->line_number, "except ban", "mask");
 						errors++;
 						continue;
 					}
 					has_mask = 1;
 				}
 			} else
-			if (cep->ce_vardata)
+			if (cep->value)
 			{
 				/* mask *@1.1.1.1; */
-				if (!cep->ce_vardata)
+				if (!cep->value)
 				{
-					config_error_empty(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "except ban", "mask");
+					config_error_empty(cep->file->filename,
+						cep->line_number, "except ban", "mask");
 					errors++;
 					continue;
 				}
 				has_mask = 1;
 			}
 		} else
-		if (!strcmp(cep->ce_varname, "type"))
+		if (!strcmp(cep->name, "type"))
 		{
-			if (cep->ce_entries)
+			if (cep->items)
 			{
 				/* type { x; y; z; }; */
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-					if (!tkl_banexception_configname_to_chars(cepp->ce_varname))
+				for (cepp = cep->items; cepp; cepp = cepp->next)
+					if (!tkl_banexception_configname_to_chars(cepp->name))
 					{
 						config_error("%s:%d: except ban::type '%s' unknown. Must be one of: %s",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname,
+							cepp->file->filename, cepp->line_number, cepp->name,
 							ALL_VALID_EXCEPTION_TYPES);
 						errors++;
 					}
 			} else
-			if (cep->ce_vardata)
+			if (cep->value)
 			{
 				/* type x; */
-				if (!tkl_banexception_configname_to_chars(cep->ce_vardata))
+				if (!tkl_banexception_configname_to_chars(cep->value))
 				{
 					config_error("%s:%d: except ban::type '%s' unknown. Must be one of: %s",
-						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata,
+						cep->file->filename, cep->line_number, cep->value,
 						ALL_VALID_EXCEPTION_TYPES);
 					errors++;
 				}
 			}
 		} else {
-			config_error_unknown(cep->ce_fileptr->cf_filename,
-				cep->ce_varlinenum, "except", cep->ce_varname);
+			config_error_unknown(cep->file->filename,
+				cep->line_number, "except", cep->name);
 			errors++;
 			continue;
 		}
@@ -772,7 +772,7 @@ int tkl_config_test_except(ConfigFile *cf, ConfigEntry *ce, int configtype, int 
 
 	if (!has_mask)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"except ban::mask");
 		errors++;
 	}
@@ -850,9 +850,9 @@ int tkl_config_run_except(ConfigFile *cf, ConfigEntry *ce, int configtype)
 		return 0;
 
 	/* These are the types that we handle */
-	if (strcmp(ce->ce_vardata, "ban") && strcmp(ce->ce_vardata, "throttle") &&
-	    strcmp(ce->ce_vardata, "blacklist") &&
-	    strcmp(ce->ce_vardata, "spamfilter"))
+	if (strcmp(ce->value, "ban") && strcmp(ce->value, "throttle") &&
+	    strcmp(ce->value, "blacklist") &&
+	    strcmp(ce->value, "spamfilter"))
 	{
 		return 0;
 	}
@@ -860,23 +860,23 @@ int tkl_config_run_except(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	*bantypes = '\0';
 
 	/* First configure all the types */
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "type"))
+		if (!strcmp(cep->name, "type"))
 		{
-			if (cep->ce_entries)
+			if (cep->items)
 			{
 				/* type { x; y; z; }; */
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				for (cepp = cep->items; cepp; cepp = cepp->next)
 				{
-					char *str = tkl_banexception_configname_to_chars(cepp->ce_varname);
+					char *str = tkl_banexception_configname_to_chars(cepp->name);
 					strlcat(bantypes, str, sizeof(bantypes));
 				}
 			} else
-			if (cep->ce_vardata)
+			if (cep->value)
 			{
 				/* type x; */
-				char *str = tkl_banexception_configname_to_chars(cep->ce_vardata);
+				char *str = tkl_banexception_configname_to_chars(cep->value);
 				strlcat(bantypes, str, sizeof(bantypes));
 			}
 		}
@@ -885,33 +885,33 @@ int tkl_config_run_except(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	if (!*bantypes)
 	{
 		/* Default setting if no 'type' is specified: */
-		if (!strcmp(ce->ce_vardata, "ban"))
+		if (!strcmp(ce->value, "ban"))
 			strlcpy(bantypes, "kGzZs", sizeof(bantypes));
-		else if (!strcmp(ce->ce_vardata, "throttle"))
+		else if (!strcmp(ce->value, "throttle"))
 			strlcpy(bantypes, "c", sizeof(bantypes));
-		else if (!strcmp(ce->ce_vardata, "blacklist"))
+		else if (!strcmp(ce->value, "blacklist"))
 			strlcpy(bantypes, "b", sizeof(bantypes));
-		else if (!strcmp(ce->ce_vardata, "spamfilter"))
+		else if (!strcmp(ce->value, "spamfilter"))
 			strlcpy(bantypes, "f", sizeof(bantypes));
 		else
 			abort(); /* someone can't code */
 	}
 
 	/* Now walk through all mask entries */
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "mask"))
+		if (!strcmp(cep->name, "mask"))
 		{
-			if (cep->ce_entries)
+			if (cep->items)
 			{
 				/* mask { *@1.1.1.1; *@2.2.2.2; *@3.3.3.3; }; */
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-					config_create_tkl_except(cepp->ce_varname, bantypes);
+				for (cepp = cep->items; cepp; cepp = cepp->next)
+					config_create_tkl_except(cepp->name, bantypes);
 			} else
-			if (cep->ce_vardata)
+			if (cep->value)
 			{
 				/* mask *@1.1.1.1; */
-				config_create_tkl_except(cep->ce_vardata, bantypes);
+				config_create_tkl_except(cep->value, bantypes);
 			}
 		}
 	}
@@ -927,12 +927,12 @@ int tkl_config_test_set(ConfigFile *cf, ConfigEntry *ce, int configtype, int *er
 	if (configtype != CONFIG_SET)
 		return 0;
 
-	if (!strcmp(ce->ce_varname, "max-stats-matches"))
+	if (!strcmp(ce->name, "max-stats-matches"))
 	{
-		if (!ce->ce_vardata)
+		if (!ce->value)
 		{
 			config_error("%s:%i: set::max-stats-matches: no value specified",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				ce->file->filename, ce->line_number);
 			errors++;
 		}
 		// allow any other value, including 0 and negative.
@@ -948,9 +948,9 @@ int tkl_config_run_set(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	if (configtype != CONFIG_SET)
 		return 0;
 
-	if (!strcmp(ce->ce_varname, "max-stats-matches"))
+	if (!strcmp(ce->name, "max-stats-matches"))
 	{
-		max_stats_matches = atoi(ce->ce_vardata);
+		max_stats_matches = atoi(ce->value);
 		return 1;
 	}
 

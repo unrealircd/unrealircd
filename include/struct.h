@@ -1486,20 +1486,28 @@ struct ConditionalConfig
 	char *opt; /**< Only for IF_VALUE */
 };
 
+/** Configuration file (config parser) */
 struct ConfigFile
 {
-        char            *cf_filename;
-        ConfigEntry     *cf_entries;
-        ConfigFile     *cf_next;
+	char *filename;		/**< Filename of configuration file */
+	ConfigEntry *items;	/**< All items in the configuration file */
+	ConfigFile *next;	/**< Next configuration file */
 };
 
+/** Configuration entry (config parser) */
 struct ConfigEntry
 {
-        ConfigFile	*ce_fileptr;
-        int 	 	ce_varlinenum, ce_fileposstart, ce_fileposend, ce_sectlinenum;
-        char 		*ce_varname, *ce_vardata;
-        ConfigEntry     *ce_entries, *ce_prevlevel, *ce_next;
-        ConditionalConfig *ce_cond;
+	ConfigFile *file;		/**< To which configfile does this belong? */
+	int line_number;		/**< Line number of the variable name (this one is usually used for errors) */
+	int file_position_start;	/**< Position (byte) within configuration file of the start of the block, rarely used */
+	int file_position_end;		/**< Position (byte) within configuration file of the end of the block, rarely used */
+	int section_linenumber;		/**< Line number of the section (only used internally for parse errors) */
+	char *name;			/**< Variable name */
+	char *value;			/**< Variable value, can be NULL */
+	ConfigEntry *items;		/**< Items (children), can be NULL */
+	ConfigEntry *parent;		/**< Parent item, can be NULL */
+	ConfigEntry *next;		/**< Next ConfigEntry */
+	ConditionalConfig *conditional_config;	/**< Used for conditional config by the main parser */
 };
 
 struct ConfigFlag 
@@ -1846,10 +1854,10 @@ struct ConfigItem_unknown {
 struct ConfigItem_unknown_ext {
 	ConfigItem_unknown_ext *prev, *next;
 	ConfigFlag flag;
-	char *ce_varname, *ce_vardata;
-	ConfigFile      *ce_fileptr;
-	int             ce_varlinenum;
-	ConfigEntry     *ce_entries;
+	char *name, *value;
+	ConfigFile      *configfile;
+	int             linenumber;
+	ConfigEntry     *items;
 };
 
 

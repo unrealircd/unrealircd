@@ -79,89 +79,89 @@ int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (type != CONFIG_MAIN)
 		return 0;
 	
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "badword"))
+	if (!ce || !ce->name || strcmp(ce->name, "badword"))
 		return 0; /* not interested */
 
-	if (!ce->ce_vardata)
+	if (!ce->value)
 	{
 		config_error("%s:%i: badword without type",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			ce->file->filename, ce->line_number);
 		return 1;
 	}
-	else if (strcmp(ce->ce_vardata, "message") && strcmp(ce->ce_vardata, "all")) {
+	else if (strcmp(ce->value, "message") && strcmp(ce->value, "all")) {
 /*			config_error("%s:%i: badword with unknown type",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum); -- can't do that.. */
+				ce->file->filename, ce->line_number); -- can't do that.. */
 		return 0; /* unhandled */
 	}
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (config_is_blankorempty(cep, "badword"))
 		{
 			errors++;
 			continue;
 		}
-		if (!strcmp(cep->ce_varname, "word"))
+		if (!strcmp(cep->name, "word"))
 		{
 			char *errbuf;
 			if (has_word)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "badword::word");
+				config_warn_duplicate(cep->file->filename, 
+					cep->line_number, "badword::word");
 				continue;
 			}
 			has_word = 1;
-			if ((errbuf = badword_config_check_regex(cep->ce_vardata,1,1)))
+			if ((errbuf = badword_config_check_regex(cep->value,1,1)))
 			{
 				config_error("%s:%i: badword::%s contains an invalid regex: %s",
-					cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum,
-					cep->ce_varname, errbuf);
+					cep->file->filename,
+					cep->line_number,
+					cep->name, errbuf);
 				errors++;
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "replace"))
+		else if (!strcmp(cep->name, "replace"))
 		{
 			if (has_replace)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "badword::replace");
+				config_warn_duplicate(cep->file->filename, 
+					cep->line_number, "badword::replace");
 				continue;
 			}
 			has_replace = 1;
 		}
-		else if (!strcmp(cep->ce_varname, "action"))
+		else if (!strcmp(cep->name, "action"))
 		{
 			if (has_action)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "badword::action");
+				config_warn_duplicate(cep->file->filename, 
+					cep->line_number, "badword::action");
 				continue;
 			}
 			has_action = 1;
-			if (!strcmp(cep->ce_vardata, "replace"))
+			if (!strcmp(cep->value, "replace"))
 				action = 'r';
-			else if (!strcmp(cep->ce_vardata, "block"))
+			else if (!strcmp(cep->value, "block"))
 				action = 'b';
 			else
 			{
 				config_error("%s:%d: Unknown badword::action '%s'",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-					cep->ce_vardata);
+					cep->file->filename, cep->line_number,
+					cep->value);
 				errors++;
 			}
 				
 		}
 		else
 		{
-			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"badword", cep->ce_varname);
+			config_error_unknown(cep->file->filename, cep->line_number,
+				"badword", cep->name);
 			errors++;
 		}
 	}
 
 	if (!has_word)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"badword::word");
 		errors++;
 	}
@@ -170,7 +170,7 @@ int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		if (has_replace && action == 'b')
 		{
 			config_error("%s:%i: badword::action is block but badword::replace exists",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				ce->file->filename, ce->line_number);
 			errors++;
 		}
 	}
@@ -188,41 +188,41 @@ int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (type != CONFIG_MAIN)
 		return 0;
 	
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "badword"))
+	if (!ce || !ce->name || strcmp(ce->name, "badword"))
 		return 0; /* not interested */
 
-	if (strcmp(ce->ce_vardata, "message") && strcmp(ce->ce_vardata, "all"))
+	if (strcmp(ce->value, "message") && strcmp(ce->value, "all"))
 	        return 0; /* not for us */
 
 	ca = safe_alloc(sizeof(ConfigItem_badword));
 	ca->action = BADWORD_REPLACE;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "action"))
+		if (!strcmp(cep->name, "action"))
 		{
-			if (!strcmp(cep->ce_vardata, "block"))
+			if (!strcmp(cep->value, "block"))
 			{
 				ca->action = BADWORD_BLOCK;
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "replace"))
+		else if (!strcmp(cep->name, "replace"))
 		{
-			safe_strdup(ca->replace, cep->ce_vardata);
+			safe_strdup(ca->replace, cep->value);
 		}
-		else if (!strcmp(cep->ce_varname, "word"))
+		else if (!strcmp(cep->name, "word"))
 		{
 			word = cep;
 		}
 	}
 
-	badword_config_process(ca, word->ce_vardata);
+	badword_config_process(ca, word->value);
 
-	if (!strcmp(ce->ce_vardata, "message"))
+	if (!strcmp(ce->value, "message"))
 	{
 		AddListItem(ca, conf_badword_message);
 	} else
-	if (!strcmp(ce->ce_vardata, "all"))
+	if (!strcmp(ce->value, "all"))
 	{
 		AddListItem(ca, conf_badword_message);
 		return 0; /* pretend we didn't see it, so other modules can handle 'all' as well */

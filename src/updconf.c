@@ -200,8 +200,8 @@ char *i, *o;
 
 void replace_section(ConfigEntry *ce, char *buf)
 {
-	remove_section(ce->ce_fileposstart, ce->ce_fileposend);
-	insert_section(ce->ce_fileposstart, buf);
+	remove_section(ce->file_position_start, ce->file_position_end);
+	insert_section(ce->file_position_start, buf);
 }
 
 static char buf[8192];
@@ -215,22 +215,22 @@ int upgrade_me_block(ConfigEntry *ce)
 
 	char sid[16];
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "sid"))
+		if (!strcmp(cep->name, "sid"))
 			return 0; /* no upgrade needed */
-		else if (!cep->ce_vardata)
+		else if (!cep->value)
 		{
-			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"me", cep->ce_varname);
+			config_error_empty(cep->file->filename, cep->line_number,
+				"me", cep->name);
 			return 0;
 		}
-		else if (!strcmp(cep->ce_varname, "name"))
-			name = cep->ce_vardata;
-		else if (!strcmp(cep->ce_varname, "info"))
-			info = cep->ce_vardata;
-		else if (!strcmp(cep->ce_varname, "numeric"))
-			numeric = atoi(cep->ce_vardata);
+		else if (!strcmp(cep->name, "name"))
+			name = cep->value;
+		else if (!strcmp(cep->name, "info"))
+			info = cep->value;
+		else if (!strcmp(cep->name, "numeric"))
+			numeric = atoi(cep->value);
 	}
 	
 	if (!name || !info || !numeric)
@@ -280,56 +280,56 @@ int upgrade_link_block(ConfigEntry *ce)
 	int need_incoming = 0, need_outgoing = 0;
 
 	/* ripped from test_link */
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "incoming") || !strcmp(cep->ce_varname, "outgoing"))
+		if (!strcmp(cep->name, "incoming") || !strcmp(cep->name, "outgoing"))
 			return 0; /* no upgrade needed */
-		else if (!strcmp(cep->ce_varname, "options"))
+		else if (!strcmp(cep->name, "options"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				if (!strcmp(cepp->ce_varname, "ssl"))
+				if (!strcmp(cepp->name, "ssl"))
 					options_ssl = 1;
-				if (!strcmp(cepp->ce_varname, "autoconnect"))
+				if (!strcmp(cepp->name, "autoconnect"))
 					options_autoconnect = 1;
-				if (!strcmp(cepp->ce_varname, "nohostcheck"))
+				if (!strcmp(cepp->name, "nohostcheck"))
 					options_nohostcheck = 1;
-				if (!strcmp(cepp->ce_varname, "quarantine"))
+				if (!strcmp(cepp->name, "quarantine"))
 					options_quarantine = 1;
 			}
 		}
-		else if (!cep->ce_vardata)
+		else if (!cep->value)
 		{
-			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"link", cep->ce_varname);
+			config_error_empty(cep->file->filename, cep->line_number,
+				"link", cep->name);
 			return 0;
 		}
-		else if (!strcmp(cep->ce_varname, "username"))
-			username = cep->ce_vardata;
-		else if (!strcmp(cep->ce_varname, "hostname"))
-			hostname = cep->ce_vardata;
-		else if (!strcmp(cep->ce_varname, "bind-ip"))
-			bind_ip = cep->ce_vardata;
-		else if (!strcmp(cep->ce_varname, "port"))
-			port = cep->ce_vardata;
-		else if (!strcmp(cep->ce_varname, "password-receive"))
+		else if (!strcmp(cep->name, "username"))
+			username = cep->value;
+		else if (!strcmp(cep->name, "hostname"))
+			hostname = cep->value;
+		else if (!strcmp(cep->name, "bind-ip"))
+			bind_ip = cep->value;
+		else if (!strcmp(cep->name, "port"))
+			port = cep->value;
+		else if (!strcmp(cep->name, "password-receive"))
 		{
-			password_receive = cep->ce_vardata;
-			if (cep->ce_entries)
-				password_receive_authmethod = cep->ce_entries->ce_varname;
+			password_receive = cep->value;
+			if (cep->items)
+				password_receive_authmethod = cep->items->name;
 		}
-		else if (!strcmp(cep->ce_varname, "password-connect"))
-			password_connect = cep->ce_vardata;
-		else if (!strcmp(cep->ce_varname, "class"))
-			class = cep->ce_vardata;
-		else if (!strcmp(cep->ce_varname, "hub"))
-			hub = cep->ce_vardata;
-		else if (!strcmp(cep->ce_varname, "leaf"))
-			leaf = cep->ce_vardata;
-		else if (!strcmp(cep->ce_varname, "leafdepth"))
-			leaf_depth = atoi(cep->ce_vardata);
-		else if (!strcmp(cep->ce_varname, "ciphers"))
-			ciphers = cep->ce_vardata;
+		else if (!strcmp(cep->name, "password-connect"))
+			password_connect = cep->value;
+		else if (!strcmp(cep->name, "class"))
+			class = cep->value;
+		else if (!strcmp(cep->name, "hub"))
+			hub = cep->value;
+		else if (!strcmp(cep->name, "leaf"))
+			leaf = cep->value;
+		else if (!strcmp(cep->name, "leafdepth"))
+			leaf_depth = atoi(cep->value);
+		else if (!strcmp(cep->name, "ciphers"))
+			ciphers = cep->value;
 	}
 	
 	if (!username || !hostname || !class || !password_receive ||
@@ -352,7 +352,7 @@ int upgrade_link_block(ConfigEntry *ce)
 		need_outgoing = 1;
 	}
 
-	snprintf(buf, sizeof(buf), "link %s {\n", ce->ce_vardata);
+	snprintf(buf, sizeof(buf), "link %s {\n", ce->value);
 	
 	if (need_incoming)
 	{
@@ -396,7 +396,7 @@ int upgrade_link_block(ConfigEntry *ce)
 			/* Prompt user ? */
 			config_warn("Link block '%s' has a different connect/receive password. "
 			            "This is no longer supported in UnrealIRCd 4.x",
-			            ce->ce_vardata);
+			            ce->value);
 			
 			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
 			         "\tpassword \"%s\"; /* WARNING: password changed due to 4.x upgrade */\n",
@@ -439,7 +439,7 @@ int upgrade_link_block(ConfigEntry *ce)
 	
 	replace_section(ce, buf);
 	
-	config_status("- link block '%s' upgraded", ce->ce_vardata);
+	config_status("- link block '%s' upgraded", ce->value);
 	return 1;
 }
 
@@ -453,15 +453,15 @@ int upgrade_from_subblock(ConfigEntry *ce)
 
 	memset(list, 0, sizeof(list));
 	
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!cep->ce_vardata)
+		if (!cep->value)
 			continue;
-		else if (!strcmp(cep->ce_varname, "userhost"))
+		else if (!strcmp(cep->name, "userhost"))
 		{
 			if (listcnt == MAXFROMENTRIES)
 				break; // no room, sorry.
-			list[listcnt++] = cep->ce_vardata;
+			list[listcnt++] = cep->value;
 		}
 	}
 	
@@ -489,13 +489,13 @@ int upgrade_from_subblock(ConfigEntry *ce)
 
 	replace_section(ce, buf);
 	
-	config_status("- %s::from::userhost sub-block upgraded", ce->ce_prevlevel ? ce->ce_prevlevel->ce_varname : "???");
+	config_status("- %s::from::userhost sub-block upgraded", ce->parent ? ce->parent->name : "???");
 	return 1;
 }
 
 int upgrade_loadmodule(ConfigEntry *ce)
 {
-	char *file = ce->ce_vardata;
+	char *file = ce->value;
 	char tmp[512], *p, *newfile;
 	
 	if (!file)
@@ -548,7 +548,7 @@ int upgrade_loadmodule(ConfigEntry *ce)
 
 int upgrade_include(ConfigEntry *ce)
 {
-	char *file = ce->ce_vardata;
+	char *file = ce->value;
 	static int badwords_upgraded_already = 0;
 	
 	if (!file)
@@ -604,43 +604,43 @@ int upgrade_spamfilter_block(ConfigEntry *ce)
 
 	memset(target, 0, sizeof(target));
 		
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "match") || !strcmp(cep->ce_varname, "match-type"))
+		if (!strcmp(cep->name, "match") || !strcmp(cep->name, "match-type"))
 			return 0; /* no upgrade needed */
-		else if (!strcmp(cep->ce_varname, "target"))
+		else if (!strcmp(cep->name, "target"))
 		{
-			if (cep->ce_vardata)
+			if (cep->value)
 			{
-				target[0] = cep->ce_vardata;
+				target[0] = cep->value;
 			}
-			else if (cep->ce_entries)
+			else if (cep->items)
 			{
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				for (cepp = cep->items; cepp; cepp = cepp->next)
 				{
 					if (targetcnt == MAXSPFTARGETS)
 						break;
-					target[targetcnt++] = cepp->ce_varname;
+					target[targetcnt++] = cepp->name;
 				}
 			}
 		}
-		else if (!cep->ce_vardata)
+		else if (!cep->value)
 			continue; /* invalid */
-		else if (!strcmp(cep->ce_varname, "regex"))
+		else if (!strcmp(cep->name, "regex"))
 		{
-			regex = cep->ce_vardata;
+			regex = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "action"))
+		else if (!strcmp(cep->name, "action"))
 		{
-			action = cep->ce_vardata;
+			action = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "reason"))
+		else if (!strcmp(cep->name, "reason"))
 		{
-			reason = cep->ce_vardata;
+			reason = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "ban-time"))
+		else if (!strcmp(cep->name, "ban-time"))
 		{
-			ban_time = cep->ce_vardata;
+			ban_time = cep->value;
 		}
 	}
 
@@ -719,60 +719,60 @@ int upgrade_allow_block(ConfigEntry *ce)
 	memset(options, 0, sizeof(options));
 	*comment = *options_str = '\0';
 		
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "options"))
+		if (!strcmp(cep->name, "options"))
 		{
-			if (cep->ce_vardata)
+			if (cep->value)
 			{
-				options[0] = cep->ce_vardata;
+				options[0] = cep->value;
 				optionscnt = 1;
 			}
-			else if (cep->ce_entries)
+			else if (cep->items)
 			{
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				for (cepp = cep->items; cepp; cepp = cepp->next)
 				{
 					if (optionscnt == MAXOPTIONS)
 						break;
-					options[optionscnt++] = cepp->ce_varname;
+					options[optionscnt++] = cepp->name;
 				}
 			}
 		}
-		else if (!cep->ce_vardata)
+		else if (!cep->value)
 			continue; /* invalid */
-		else if (!strcmp(cep->ce_varname, "hostname"))
+		else if (!strcmp(cep->name, "hostname"))
 		{
-			hostname = cep->ce_vardata;
+			hostname = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "ip"))
+		else if (!strcmp(cep->name, "ip"))
 		{
-			ip = cep->ce_vardata;
+			ip = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "maxperip"))
+		else if (!strcmp(cep->name, "maxperip"))
 		{
-			maxperip = cep->ce_vardata;
+			maxperip = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "ipv6-clone-mask"))
+		else if (!strcmp(cep->name, "ipv6-clone-mask"))
 		{
-			ipv6_clone_mask = cep->ce_vardata;
+			ipv6_clone_mask = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "password"))
+		else if (!strcmp(cep->name, "password"))
 		{
-			password = cep->ce_vardata;
-			if (cep->ce_entries)
-				password_type = cep->ce_entries->ce_varname;
+			password = cep->value;
+			if (cep->items)
+				password_type = cep->items->name;
 		}
-		else if (!strcmp(cep->ce_varname, "class"))
+		else if (!strcmp(cep->name, "class"))
 		{
-			class = cep->ce_vardata;
+			class = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "redirect-server"))
+		else if (!strcmp(cep->name, "redirect-server"))
 		{
-			redirect_server = cep->ce_vardata;
+			redirect_server = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "redirect-port"))
+		else if (!strcmp(cep->name, "redirect-port"))
 		{
-			redirect_port = atoi(cep->ce_vardata);
+			redirect_port = atoi(cep->value);
 		}
 	}
 
@@ -931,25 +931,25 @@ int upgrade_listen_block(ConfigEntry *ce)
 	memset(options, 0, sizeof(options));
 	*options_str = '\0';
 
-	if (!ce->ce_vardata)
+	if (!ce->value)
 		return 0; /* already upgraded */
 
-	strlcpy(copy, ce->ce_vardata, sizeof(copy));
+	strlcpy(copy, ce->value, sizeof(copy));
 	ipport_separate(copy, &ip, &port);
 	if (!ip || !*ip || !port || !*port)
 		return 0; /* invalid conf */
 	
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "options"))
+		if (!strcmp(cep->name, "options"))
 		{
-			if (cep->ce_entries)
+			if (cep->items)
 			{
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				for (cepp = cep->items; cepp; cepp = cepp->next)
 				{
 					if (optionscnt == MAXOPTIONS)
 						break;
-					options[optionscnt++] = cepp->ce_varname;
+					options[optionscnt++] = cepp->name;
 				}
 			}
 		}
@@ -996,25 +996,25 @@ int upgrade_cgiirc_block(ConfigEntry *ce)
 	char *password = NULL, *password_type = NULL;
 	char mask[USERLEN+HOSTLEN+8];
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!cep->ce_vardata)
+		if (!cep->value)
 		{
-			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"cgiirc", cep->ce_varname);
+			config_error_empty(cep->file->filename, cep->line_number,
+				"cgiirc", cep->name);
 			return 0;
 		}
-		else if (!strcmp(cep->ce_varname, "type"))
-			type = cep->ce_vardata;
-		else if (!strcmp(cep->ce_varname, "username"))
-			username = cep->ce_vardata;
-		else if (!strcmp(cep->ce_varname, "hostname"))
-			hostname = cep->ce_vardata;
-		else if (!strcmp(cep->ce_varname, "password"))
+		else if (!strcmp(cep->name, "type"))
+			type = cep->value;
+		else if (!strcmp(cep->name, "username"))
+			username = cep->value;
+		else if (!strcmp(cep->name, "hostname"))
+			hostname = cep->value;
+		else if (!strcmp(cep->name, "password"))
 		{
-			password = cep->ce_vardata;
-			if (cep->ce_entries)
-				password_type = cep->ce_entries->ce_varname;
+			password = cep->value;
+			if (cep->items)
+				password_type = cep->items->name;
 		}
 	}
 	
@@ -1102,21 +1102,21 @@ int upgrade_oper_block(ConfigEntry *ce)
 	memset(flags, 0, sizeof(flags));
 	*maskbuf = '\0';
 
-	name = ce->ce_vardata;
+	name = ce->value;
 	
 	if (!name)
 		return 0; /* oper block without a name = invalid */
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "operclass"))
+		if (!strcmp(cep->name, "operclass"))
 			return 0; /* already 4.x conf */
-		else if (!strcmp(cep->ce_varname, "flags"))
+		else if (!strcmp(cep->name, "flags"))
 		{
-			if (cep->ce_vardata) /* short options (flag letters) */
+			if (cep->value) /* short options (flag letters) */
 			{
 				char *p;
-				for (p = cep->ce_vardata; *p; p++)
+				for (p = cep->value; *p; p++)
 				{
 					if (flagscnt == MAXOPTIONS)
 						break;
@@ -1131,77 +1131,77 @@ int upgrade_oper_block(ConfigEntry *ce)
 					}
 				}
 			}
-			else if (cep->ce_entries) /* long options (flags written out) */
+			else if (cep->items) /* long options (flags written out) */
 			{
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				for (cepp = cep->items; cepp; cepp = cepp->next)
 				{
 					if (flagscnt == MAXOPTIONS)
 						break;
-					flags[flagscnt++] = cepp->ce_varname;
+					flags[flagscnt++] = cepp->name;
 				}
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "from"))
+		else if (!strcmp(cep->name, "from"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				if (!strcmp(cepp->ce_varname, "userhost") && cepp->ce_vardata)
+				if (!strcmp(cepp->name, "userhost") && cepp->value)
 				{
 					if (fromlistcnt == MAXFROMENTRIES)
 						break; // no room, sorry.
-					fromlist[fromlistcnt++] = cepp->ce_vardata;
+					fromlist[fromlistcnt++] = cepp->value;
 				}
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "mask"))
+		else if (!strcmp(cep->name, "mask"))
 		{
 			/* processing mask here means we can also upgrade 3.4-alphaX oper blocks.. */
-			if (cep->ce_vardata)
+			if (cep->value)
 			{
 				if (fromlistcnt == MAXFROMENTRIES)
 					break; // no room, sorry.
-				fromlist[fromlistcnt++] = cep->ce_vardata;
+				fromlist[fromlistcnt++] = cep->value;
 			} else
 			{
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				for (cepp = cep->items; cepp; cepp = cepp->next)
 				{
 					if (fromlistcnt == MAXFROMENTRIES)
 						break; // no room, sorry.
-					fromlist[fromlistcnt++] = cepp->ce_varname;
+					fromlist[fromlistcnt++] = cepp->name;
 				}
 			}
 		}
-		else if (!cep->ce_vardata)
+		else if (!cep->value)
 			continue; /* invalid */
-		else if (!strcmp(cep->ce_varname, "password"))
+		else if (!strcmp(cep->name, "password"))
 		{
-			password = cep->ce_vardata;
-			if (cep->ce_entries)
-				password_type = cep->ce_entries->ce_varname;
+			password = cep->value;
+			if (cep->items)
+				password_type = cep->items->name;
 		}
-		else if (!strcmp(cep->ce_varname, "require-modes"))
+		else if (!strcmp(cep->name, "require-modes"))
 		{
-			require_modes = cep->ce_vardata;
+			require_modes = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "class"))
+		else if (!strcmp(cep->name, "class"))
 		{
-			class = cep->ce_vardata;
+			class = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "swhois"))
+		else if (!strcmp(cep->name, "swhois"))
 		{
-			swhois = cep->ce_vardata;
+			swhois = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "snomasks"))
+		else if (!strcmp(cep->name, "snomasks"))
 		{
-			snomask = cep->ce_vardata;
+			snomask = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "modes"))
+		else if (!strcmp(cep->name, "modes"))
 		{
-			modes = cep->ce_vardata;
+			modes = cep->value;
 		}
-		else if (!strcmp(cep->ce_varname, "maxlogins"))
+		else if (!strcmp(cep->name, "maxlogins"))
 		{
-			maxlogins = atoi(cep->ce_vardata);
+			maxlogins = atoi(cep->value);
 		}
 	}
 
@@ -1354,38 +1354,38 @@ void update_read_settings(char *cfgfile)
 		needs_operclass_default_conf = 0;
 
 	/* This needs to be read early, as the rest may depend on it */
-	for (ce = cf->cf_entries; ce; ce = ce->ce_next)
+	for (ce = cf->items; ce; ce = ce->next)
 	{
-		if (!strcmp(ce->ce_varname, "set"))
+		if (!strcmp(ce->name, "set"))
 		{
-			for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+			for (cep = ce->items; cep; cep = cep->next)
 			{
-				if (!strcmp(cep->ce_varname, "hosts"))
+				if (!strcmp(cep->name, "hosts"))
 				{
-					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+					for (cepp = cep->items; cepp; cepp = cepp->next)
 					{
-						if (!cepp->ce_vardata)
+						if (!cepp->value)
 							continue;
-						if (!strcmp(cepp->ce_varname, "local")) {
-							safe_strdup(upgrade.locop_host, cepp->ce_vardata);
+						if (!strcmp(cepp->name, "local")) {
+							safe_strdup(upgrade.locop_host, cepp->value);
 						}
-						else if (!strcmp(cepp->ce_varname, "global")) {
-							safe_strdup(upgrade.oper_host, cepp->ce_vardata);
+						else if (!strcmp(cepp->name, "global")) {
+							safe_strdup(upgrade.oper_host, cepp->value);
 						}
-						else if (!strcmp(cepp->ce_varname, "coadmin")) {
-							safe_strdup(upgrade.coadmin_host, cepp->ce_vardata);
+						else if (!strcmp(cepp->name, "coadmin")) {
+							safe_strdup(upgrade.coadmin_host, cepp->value);
 						}
-						else if (!strcmp(cepp->ce_varname, "admin")) {
-							safe_strdup(upgrade.admin_host, cepp->ce_vardata);
+						else if (!strcmp(cepp->name, "admin")) {
+							safe_strdup(upgrade.admin_host, cepp->value);
 						}
-						else if (!strcmp(cepp->ce_varname, "servicesadmin")) {
-							safe_strdup(upgrade.sadmin_host, cepp->ce_vardata);
+						else if (!strcmp(cepp->name, "servicesadmin")) {
+							safe_strdup(upgrade.sadmin_host, cepp->value);
 						}
-						else if (!strcmp(cepp->ce_varname, "netadmin")) {
-							safe_strdup(upgrade.netadmin_host, cepp->ce_vardata);
+						else if (!strcmp(cepp->name, "netadmin")) {
+							safe_strdup(upgrade.netadmin_host, cepp->value);
 						}
-						else if (!strcmp(cepp->ce_varname, "host-on-oper-up")) {
-							upgrade.host_on_oper_up = config_checkval(cepp->ce_vardata,CFG_YESNO);
+						else if (!strcmp(cepp->name, "host-on-oper-up")) {
+							upgrade.host_on_oper_up = config_checkval(cepp->value,CFG_YESNO);
 						}
 					}
 				}
@@ -1423,108 +1423,108 @@ again:
 		return 0;
 	}
 
-	for (ce = cf->cf_entries; ce; ce = ce->ce_next)
+	for (ce = cf->items; ce; ce = ce->next)
 	{
 		/*printf("%s%s%s\n",
-			ce->ce_varname,
-			ce->ce_vardata ? " " : "",
-			ce->ce_vardata ? ce->ce_vardata : ""); */
+			ce->name,
+			ce->value ? " " : "",
+			ce->value ? ce->value : ""); */
 		
-		if (!strcmp(ce->ce_varname, "loadmodule"))
+		if (!strcmp(ce->name, "loadmodule"))
 		{
 			if (upgrade_loadmodule(ce))
 				goto again;
 		}
-		if (!strcmp(ce->ce_varname, "include"))
+		if (!strcmp(ce->name, "include"))
 		{
 			if (upgrade_include(ce))
 				goto again;
 		}
-		if (!strcmp(ce->ce_varname, "me"))
+		if (!strcmp(ce->name, "me"))
 		{
 			if (upgrade_me_block(ce))
 				goto again;
 		}
-		if (!strcmp(ce->ce_varname, "link"))
+		if (!strcmp(ce->name, "link"))
 		{
 			if (upgrade_link_block(ce))
 				goto again;
 		}
-		if (!strcmp(ce->ce_varname, "oper"))
+		if (!strcmp(ce->name, "oper"))
 		{
 			if (upgrade_oper_block(ce))
 				goto again;
 		}
-		if (!strcmp(ce->ce_varname, "vhost"))
+		if (!strcmp(ce->name, "vhost"))
 		{
-			for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+			for (cep = ce->items; cep; cep = cep->next)
 			{
-				if (!strcmp(cep->ce_varname, "from"))
+				if (!strcmp(cep->name, "from"))
 				{
 					if (upgrade_from_subblock(cep))
 						goto again;
 				}
 			}
 		}
-		if (!strcmp(ce->ce_varname, "spamfilter"))
+		if (!strcmp(ce->name, "spamfilter"))
 		{
 			if (upgrade_spamfilter_block(ce))
 				goto again;
 		}
-		if (!strcmp(ce->ce_varname, "allow") && !ce->ce_vardata) /* 'allow' block for clients, not 'allow channel' etc.. */
+		if (!strcmp(ce->name, "allow") && !ce->value) /* 'allow' block for clients, not 'allow channel' etc.. */
 		{
 			if (upgrade_allow_block(ce))
 				goto again;
 		}
-		if (!strcmp(ce->ce_varname, "listen"))
+		if (!strcmp(ce->name, "listen"))
 		{
 			if (upgrade_listen_block(ce))
 				goto again;
 		}
-		if (!strcmp(ce->ce_varname, "cgiirc"))
+		if (!strcmp(ce->name, "cgiirc"))
 		{
 			if (upgrade_cgiirc_block(ce))
 				goto again;
 		}
-		if (!strcmp(ce->ce_varname, "set"))
+		if (!strcmp(ce->name, "set"))
 		{
-			for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+			for (cep = ce->items; cep; cep = cep->next)
 			{
-				if (!strcmp(cep->ce_varname, "throttle"))
+				if (!strcmp(cep->name, "throttle"))
 				{
 					int n = 0, t = 0;
-					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+					for (cepp = cep->items; cepp; cepp = cepp->next)
 					{
-						if (!cepp->ce_vardata)
+						if (!cepp->value)
 							continue;
-						if (!strcmp(cepp->ce_varname, "period"))
-							t = config_checkval(cepp->ce_vardata, CFG_TIME);
-						else if (!strcmp(cepp->ce_varname, "connections"))
-							n = atoi(cepp->ce_vardata);
+						if (!strcmp(cepp->name, "period"))
+							t = config_checkval(cepp->value, CFG_TIME);
+						else if (!strcmp(cepp->name, "connections"))
+							n = atoi(cepp->value);
 					}
 
-					remove_section(cep->ce_fileposstart, cep->ce_fileposend);
+					remove_section(cep->file_position_start, cep->file_position_end);
 					snprintf(buf, sizeof(buf), "anti-flood { connect-flood %d:%d; };\n",
 					         n, t);
 						
-					insert_section(cep->ce_fileposstart, buf);
+					insert_section(cep->file_position_start, buf);
 					goto again;
 				} else
-				if (!strcmp(cep->ce_varname, "hosts"))
+				if (!strcmp(cep->name, "hosts"))
 				{
 					config_status("- removed set::hosts. we now use oper::vhost for this.");
-					remove_section(cep->ce_fileposstart, cep->ce_fileposend); /* hmm something is wrong here */
+					remove_section(cep->file_position_start, cep->file_position_end); /* hmm something is wrong here */
 					goto again;
 				} else
-				if (!strcmp(cep->ce_varname, "dns"))
+				if (!strcmp(cep->name, "dns"))
 				{
-					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-						if (!strcmp(cepp->ce_varname, "nameserver") ||
-						    !strcmp(cepp->ce_varname, "timeout") ||
-						    !strcmp(cepp->ce_varname, "retries"))
+					for (cepp = cep->items; cepp; cepp = cepp->next)
+						if (!strcmp(cepp->name, "nameserver") ||
+						    !strcmp(cepp->name, "timeout") ||
+						    !strcmp(cepp->name, "retries"))
 						{
-							config_status("- removed set::dns::%s. this option is never used.", cepp->ce_varname);
-							remove_section(cepp->ce_fileposstart, cepp->ce_fileposend);
+							config_status("- removed set::dns::%s. this option is never used.", cepp->name);
+							remove_section(cepp->file_position_start, cepp->file_position_end);
 							goto again;
 						}
 				}
@@ -1541,8 +1541,8 @@ again:
 
 static int already_included(char *fname, ConfigFile *cf)
 {
-	for (; cf; cf = cf->cf_next)
-		if (!strcmp(cf->cf_filename, fname))
+	for (; cf; cf = cf->next)
+		if (!strcmp(cf->filename, fname))
 			return 1;
 
 	return 0;
@@ -1553,8 +1553,8 @@ static void add_include_list(char *fname, ConfigFile **cf)
 	ConfigFile *n = safe_alloc(sizeof(ConfigFile));
 	
 //	config_status("INCLUDE: %s", fname);
-	safe_strdup(n->cf_filename, fname);
-	n->cf_next = *cf;
+	safe_strdup(n->filename, fname);
+	n->next = *cf;
 	*cf = n;
 }
 
@@ -1572,18 +1572,18 @@ void build_include_list_ex(char *fname, ConfigFile **cf_list)
 	if (!cf)
 		return;
 
-	for (ce = cf->cf_entries; ce; ce = ce->ce_next)
-		if (!strcmp(ce->ce_varname, "include"))
+	for (ce = cf->items; ce; ce = ce->next)
+		if (!strcmp(ce->name, "include"))
 		{
-			if ((ce->ce_vardata[0] != '/') && (ce->ce_vardata[0] != '\\') && strcmp(ce->ce_vardata, CPATH))
+			if ((ce->value[0] != '/') && (ce->value[0] != '\\') && strcmp(ce->value, CPATH))
 			{
-				char *str = safe_alloc(strlen(ce->ce_vardata) + strlen(CONFDIR) + 4);
-				sprintf(str, "%s/%s", CONFDIR, ce->ce_vardata);
-				safe_free(ce->ce_vardata);
-				ce->ce_vardata = str;
+				char *str = safe_alloc(strlen(ce->value) + strlen(CONFDIR) + 4);
+				sprintf(str, "%s/%s", CONFDIR, ce->value);
+				safe_free(ce->value);
+				ce->value = str;
 			}
-			if (!already_included(ce->ce_vardata, *cf_list))
-				build_include_list_ex(ce->ce_vardata, cf_list);
+			if (!already_included(ce->value, *cf_list))
+				build_include_list_ex(ce->value, cf_list);
 		}
 	
 	config_free(cf);
@@ -1636,18 +1636,18 @@ void update_conf(void)
 	files = build_include_list(mainconf);
 
 	/* We need to read some original settings first, before we touch anything... */
-	for (cf = files; cf; cf = cf->cf_next)
+	for (cf = files; cf; cf = cf->next)
 	{
-		update_read_settings(cf->cf_filename);
+		update_read_settings(cf->filename);
 	}
 	
 	/* Now go upgrade... */
-	for (cf = files; cf; cf = cf->cf_next)
+	for (cf = files; cf; cf = cf->next)
 	{
-		if (!file_exists(cf->cf_filename))
+		if (!file_exists(cf->filename))
 			continue; /* skip silently. errors were already shown earlier by build_include_list anyway. */
-		configfile = cf->cf_filename;
-		config_status("Checking '%s'...", cf->cf_filename);
+		configfile = cf->filename;
+		config_status("Checking '%s'...", cf->filename);
 		snprintf(configfiletmp, sizeof(configfiletmp), "%s.tmp", configfile);
 		unlink(configfiletmp);
 		if (!unreal_copyfileex(configfile, configfiletmp, 0))

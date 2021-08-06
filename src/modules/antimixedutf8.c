@@ -286,45 +286,45 @@ int antimixedutf8_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 		return 0;
 	
 	/* We are only interrested in set::antimixedutf8... */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "antimixedutf8"))
+	if (!ce || !ce->name || strcmp(ce->name, "antimixedutf8"))
 		return 0;
 	
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!cep->ce_vardata)
+		if (!cep->value)
 		{
 			config_error("%s:%i: set::antimixedutf8::%s with no value",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				cep->file->filename, cep->line_number, cep->name);
 			errors++;
 		} else
-		if (!strcmp(cep->ce_varname, "score"))
+		if (!strcmp(cep->name, "score"))
 		{
-			int v = atoi(cep->ce_vardata);
+			int v = atoi(cep->value);
 			if ((v < 1) || (v > 99))
 			{
 				config_error("%s:%i: set::antimixedutf8::score: must be between 1 - 99 (got: %d)",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v);
+					cep->file->filename, cep->line_number, v);
 				errors++;
 			}
 		} else
-		if (!strcmp(cep->ce_varname, "ban-action"))
+		if (!strcmp(cep->name, "ban-action"))
 		{
-			if (!banact_stringtoval(cep->ce_vardata))
+			if (!banact_stringtoval(cep->value))
 			{
 				config_error("%s:%i: set::antimixedutf8::ban-action: unknown action '%s'",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+					cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			}
 		} else
-		if (!strcmp(cep->ce_varname, "ban-reason"))
+		if (!strcmp(cep->name, "ban-reason"))
 		{
 		} else
-		if (!strcmp(cep->ce_varname, "ban-time"))
+		if (!strcmp(cep->name, "ban-time"))
 		{
 		} else
 		{
 			config_error("%s:%i: unknown directive set::antimixedutf8::%s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				cep->file->filename, cep->line_number, cep->name);
 			errors++;
 		}
 	}
@@ -340,26 +340,26 @@ int antimixedutf8_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		return 0;
 	
 	/* We are only interrested in set::antimixedutf8... */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "antimixedutf8"))
+	if (!ce || !ce->name || strcmp(ce->name, "antimixedutf8"))
 		return 0;
 	
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "score"))
+		if (!strcmp(cep->name, "score"))
 		{
-			cfg.score = atoi(cep->ce_vardata);
+			cfg.score = atoi(cep->value);
 		} else
-		if (!strcmp(cep->ce_varname, "ban-action"))
+		if (!strcmp(cep->name, "ban-action"))
 		{
-			cfg.ban_action = banact_stringtoval(cep->ce_vardata);
+			cfg.ban_action = banact_stringtoval(cep->value);
 		} else
-		if (!strcmp(cep->ce_varname, "ban-reason"))
+		if (!strcmp(cep->name, "ban-reason"))
 		{
-			safe_strdup(cfg.ban_reason, cep->ce_vardata);
+			safe_strdup(cfg.ban_reason, cep->value);
 		} else
-		if (!strcmp(cep->ce_varname, "ban-time"))
+		if (!strcmp(cep->name, "ban-time"))
 		{
-			cfg.ban_time = config_checkval(cep->ce_vardata, CFG_TIME);
+			cfg.ban_time = config_checkval(cep->value, CFG_TIME);
 		}
 	}
 	return 1;

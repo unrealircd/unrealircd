@@ -244,53 +244,53 @@ int floodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (type != CONFIG_SET)
 		return 0;
 
-	if (!strcmp(ce->ce_varname, "modef-default-unsettime"))
+	if (!strcmp(ce->name, "modef-default-unsettime"))
 	{
-		if (!ce->ce_vardata)
+		if (!ce->value)
 		{
-			config_error_empty(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				"set", ce->ce_varname);
+			config_error_empty(ce->file->filename, ce->line_number,
+				"set", ce->name);
 			errors++;
 		} else {
-			int v = atoi(ce->ce_vardata);
+			int v = atoi(ce->value);
 			if ((v <= 0) || (v > 255))
 			{
 				config_error("%s:%i: set::modef-default-unsettime: value '%d' out of range (should be 1-255)",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, v);
+					ce->file->filename, ce->line_number, v);
 				errors++;
 			}
 		}
 	} else
-	if (!strcmp(ce->ce_varname, "modef-max-unsettime"))
+	if (!strcmp(ce->name, "modef-max-unsettime"))
 	{
-		if (!ce->ce_vardata)
+		if (!ce->value)
 		{
-			config_error_empty(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				"set", ce->ce_varname);
+			config_error_empty(ce->file->filename, ce->line_number,
+				"set", ce->name);
 			errors++;
 		} else {
-			int v = atoi(ce->ce_vardata);
+			int v = atoi(ce->value);
 			if ((v <= 0) || (v > 255))
 			{
 				config_error("%s:%i: set::modef-max-unsettime: value '%d' out of range (should be 1-255)",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, v);
+					ce->file->filename, ce->line_number, v);
 				errors++;
 			}
 		}
 	} else
-	if (!strcmp(ce->ce_varname, "modef-boot-delay"))
+	if (!strcmp(ce->name, "modef-boot-delay"))
 	{
-		if (!ce->ce_vardata)
+		if (!ce->value)
 		{
-			config_error_empty(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				"set", ce->ce_varname);
+			config_error_empty(ce->file->filename, ce->line_number,
+				"set", ce->name);
 			errors++;
 		} else {
-			long v = config_checkval(ce->ce_vardata, CFG_TIME);
+			long v = config_checkval(ce->value, CFG_TIME);
 			if ((v < 0) || (v > 600))
 			{
 				config_error("%s:%i: set::modef-boot-delay: value '%ld' out of range (should be 0-600)",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, v);
+					ce->file->filename, ce->line_number, v);
 				errors++;
 			}
 		}
@@ -309,12 +309,12 @@ int floodprot_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (type != CONFIG_SET)
 		return 0;
 
-	if (!strcmp(ce->ce_varname, "modef-default-unsettime"))
-		cfg.modef_default_unsettime = (unsigned char)atoi(ce->ce_vardata);
-	else if (!strcmp(ce->ce_varname, "modef-max-unsettime"))
-		cfg.modef_max_unsettime = (unsigned char)atoi(ce->ce_vardata);
-	else if (!strcmp(ce->ce_varname, "modef-boot-delay"))
-		cfg.modef_boot_delay = config_checkval(ce->ce_vardata, CFG_TIME);
+	if (!strcmp(ce->name, "modef-default-unsettime"))
+		cfg.modef_default_unsettime = (unsigned char)atoi(ce->value);
+	else if (!strcmp(ce->name, "modef-max-unsettime"))
+		cfg.modef_max_unsettime = (unsigned char)atoi(ce->value);
+	else if (!strcmp(ce->name, "modef-boot-delay"))
+		cfg.modef_boot_delay = config_checkval(ce->value, CFG_TIME);
 	else
 		return 0; /* not handled by us */
 

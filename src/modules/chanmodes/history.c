@@ -124,7 +124,7 @@ static void init_config(cfgstruct *cfg)
 	cfg->max_storage_per_channel_registered.time = 86400*31;
 }
 
-#define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
+#define CheckNull(x) if ((!(x)->value) || (!(*((x)->value)))) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); errors++; continue; }
 
 int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
@@ -134,140 +134,140 @@ int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	long on_join_time=0L, maximum_storage_time_registered=0L, maximum_storage_time_unregistered=0L;
 
 	/* We only care about set::history */
-	if ((type != CONFIG_SET) || strcmp(ce->ce_varname, "history"))
+	if ((type != CONFIG_SET) || strcmp(ce->name, "history"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "channel"))
+		if (!strcmp(cep->name, "channel"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				if (!strcmp(cepp->ce_varname, "playback-on-join"))
+				if (!strcmp(cepp->name, "playback-on-join"))
 				{
-					for (cep4 = cepp->ce_entries; cep4; cep4 = cep4->ce_next)
+					for (cep4 = cepp->items; cep4; cep4 = cep4->next)
 					{
-						if (!strcmp(cep4->ce_varname, "lines"))
+						if (!strcmp(cep4->name, "lines"))
 						{
 							int v;
 							CheckNull(cep4);
-							v = atoi(cep4->ce_vardata);
+							v = atoi(cep4->value);
 							if ((v < 0) || (v > 1000))
 							{
 								config_error("%s:%i: set::history::channel::playback-on-join::lines must be between 0 and 1000. "
 								             "Recommended values are 10-50. Got: %d.",
-								             cep4->ce_fileptr->cf_filename, cep4->ce_varlinenum, v);
+								             cep4->file->filename, cep4->line_number, v);
 								errors++;
 								continue;
 							}
 							test.playback_on_join.lines = v;
 						} else
-						if (!strcmp(cep4->ce_varname, "time"))
+						if (!strcmp(cep4->name, "time"))
 						{
 							long v;
 							CheckNull(cep4);
-							v = config_checkval(cep4->ce_vardata, CFG_TIME);
+							v = config_checkval(cep4->value, CFG_TIME);
 							if (v < 0)
 							{
 								config_error("%s:%i: set::history::channel::playback-on-join::time must be zero or more.",
-								             cep4->ce_fileptr->cf_filename, cep4->ce_varlinenum);
+								             cep4->file->filename, cep4->line_number);
 								errors++;
 								continue;
 							}
 							test.playback_on_join.time = v;
 						} else
 						{
-							config_error_unknown(cep4->ce_fileptr->cf_filename,
-								cep4->ce_varlinenum, "set::history::channel::playback-on-join", cep4->ce_varname);
+							config_error_unknown(cep4->file->filename,
+								cep4->line_number, "set::history::channel::playback-on-join", cep4->name);
 							errors++;
 						}
 					}
 				} else
-				if (!strcmp(cepp->ce_varname, "max-storage-per-channel"))
+				if (!strcmp(cepp->name, "max-storage-per-channel"))
 				{
-					for (cep4 = cepp->ce_entries; cep4; cep4 = cep4->ce_next)
+					for (cep4 = cepp->items; cep4; cep4 = cep4->next)
 					{
-						if (!strcmp(cep4->ce_varname, "registered"))
+						if (!strcmp(cep4->name, "registered"))
 						{
-							for (cep5 = cep4->ce_entries; cep5; cep5 = cep5->ce_next)
+							for (cep5 = cep4->items; cep5; cep5 = cep5->next)
 							{
-								if (!strcmp(cep5->ce_varname, "lines"))
+								if (!strcmp(cep5->name, "lines"))
 								{
 									int v;
 									CheckNull(cep5);
-									v = atoi(cep5->ce_vardata);
+									v = atoi(cep5->value);
 									if (v < 1)
 									{
 										config_error("%s:%i: set::history::channel::max-storage-per-channel::registered::lines must be a positive number.",
-											     cep5->ce_fileptr->cf_filename, cep5->ce_varlinenum);
+											     cep5->file->filename, cep5->line_number);
 										errors++;
 										continue;
 									}
 									test.max_storage_per_channel_registered.lines = v;
 								} else
-								if (!strcmp(cep5->ce_varname, "time"))
+								if (!strcmp(cep5->name, "time"))
 								{
 									long v;
 									CheckNull(cep5);
-									v = config_checkval(cep5->ce_vardata, CFG_TIME);
+									v = config_checkval(cep5->value, CFG_TIME);
 									if (v < 1)
 									{
 										config_error("%s:%i: set::history::channel::max-storage-per-channel::registered::time must be a positive number.",
-											     cep5->ce_fileptr->cf_filename, cep5->ce_varlinenum);
+											     cep5->file->filename, cep5->line_number);
 										errors++;
 										continue;
 									}
 									test.max_storage_per_channel_registered.time = v;
 								} else
 								{
-									config_error_unknown(cep5->ce_fileptr->cf_filename,
-										cep5->ce_varlinenum, "set::history::channel::max-storage-per-channel::registered", cep5->ce_varname);
+									config_error_unknown(cep5->file->filename,
+										cep5->line_number, "set::history::channel::max-storage-per-channel::registered", cep5->name);
 									errors++;
 								}
 							}
 						} else
-						if (!strcmp(cep4->ce_varname, "unregistered"))
+						if (!strcmp(cep4->name, "unregistered"))
 						{
-							for (cep5 = cep4->ce_entries; cep5; cep5 = cep5->ce_next)
+							for (cep5 = cep4->items; cep5; cep5 = cep5->next)
 							{
-								if (!strcmp(cep5->ce_varname, "lines"))
+								if (!strcmp(cep5->name, "lines"))
 								{
 									int v;
 									CheckNull(cep5);
-									v = atoi(cep5->ce_vardata);
+									v = atoi(cep5->value);
 									if (v < 1)
 									{
 										config_error("%s:%i: set::history::channel::max-storage-per-channel::unregistered::lines must be a positive number.",
-											     cep5->ce_fileptr->cf_filename, cep5->ce_varlinenum);
+											     cep5->file->filename, cep5->line_number);
 										errors++;
 										continue;
 									}
 									test.max_storage_per_channel_unregistered.lines = v;
 								} else
-								if (!strcmp(cep5->ce_varname, "time"))
+								if (!strcmp(cep5->name, "time"))
 								{
 									long v;
 									CheckNull(cep5);
-									v = config_checkval(cep5->ce_vardata, CFG_TIME);
+									v = config_checkval(cep5->value, CFG_TIME);
 									if (v < 1)
 									{
 										config_error("%s:%i: set::history::channel::max-storage-per-channel::unregistered::time must be a positive number.",
-											     cep5->ce_fileptr->cf_filename, cep5->ce_varlinenum);
+											     cep5->file->filename, cep5->line_number);
 										errors++;
 										continue;
 									}
 									test.max_storage_per_channel_unregistered.time = v;
 								} else
 								{
-									config_error_unknown(cep5->ce_fileptr->cf_filename,
-										cep5->ce_varlinenum, "set::history::channel::max-storage-per-channel::unregistered", cep5->ce_varname);
+									config_error_unknown(cep5->file->filename,
+										cep5->line_number, "set::history::channel::max-storage-per-channel::unregistered", cep5->name);
 									errors++;
 								}
 							}
 						} else
 						{
-							config_error_unknown(cep->ce_fileptr->cf_filename,
-								cep->ce_varlinenum, "set::history::max-storage-per-channel", cep->ce_varname);
+							config_error_unknown(cep->file->filename,
+								cep->line_number, "set::history::max-storage-per-channel", cep->name);
 							errors++;
 						}
 					}
@@ -304,15 +304,15 @@ int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					}
 					if (!used)
 					{
-						config_error_unknown(cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum, "set::history::channel", cepp->ce_varname);
+						config_error_unknown(cepp->file->filename,
+							cepp->line_number, "set::history::channel", cepp->name);
 						errors++;
 					}
 				}
 			}
 		} else {
-			config_error_unknown(cep->ce_fileptr->cf_filename,
-				cep->ce_varlinenum, "set::history", cep->ce_varname);
+			config_error_unknown(cep->file->filename,
+				cep->line_number, "set::history", cep->name);
 			errors++;
 		}
 	}
@@ -337,58 +337,58 @@ int history_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep, *cepp, *cep4, *cep5;
 
-	if ((type != CONFIG_SET) || strcmp(ce->ce_varname, "history"))
+	if ((type != CONFIG_SET) || strcmp(ce->name, "history"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "channel"))
+		if (!strcmp(cep->name, "channel"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				if (!strcmp(cepp->ce_varname, "playback-on-join"))
+				if (!strcmp(cepp->name, "playback-on-join"))
 				{
-					for (cep4 = cepp->ce_entries; cep4; cep4 = cep4->ce_next)
+					for (cep4 = cepp->items; cep4; cep4 = cep4->next)
 					{
-						if (!strcmp(cep4->ce_varname, "lines"))
+						if (!strcmp(cep4->name, "lines"))
 						{
-							cfg.playback_on_join.lines = atoi(cep4->ce_vardata);
+							cfg.playback_on_join.lines = atoi(cep4->value);
 						} else
-						if (!strcmp(cep4->ce_varname, "time"))
+						if (!strcmp(cep4->name, "time"))
 						{
-							cfg.playback_on_join.time = config_checkval(cep4->ce_vardata, CFG_TIME);
+							cfg.playback_on_join.time = config_checkval(cep4->value, CFG_TIME);
 						}
 					}
 				} else
-				if (!strcmp(cepp->ce_varname, "max-storage-per-channel"))
+				if (!strcmp(cepp->name, "max-storage-per-channel"))
 				{
-					for (cep4 = cepp->ce_entries; cep4; cep4 = cep4->ce_next)
+					for (cep4 = cepp->items; cep4; cep4 = cep4->next)
 					{
-						if (!strcmp(cep4->ce_varname, "registered"))
+						if (!strcmp(cep4->name, "registered"))
 						{
-							for (cep5 = cep4->ce_entries; cep5; cep5 = cep5->ce_next)
+							for (cep5 = cep4->items; cep5; cep5 = cep5->next)
 							{
-								if (!strcmp(cep5->ce_varname, "lines"))
+								if (!strcmp(cep5->name, "lines"))
 								{
-									cfg.max_storage_per_channel_registered.lines = atoi(cep5->ce_vardata);
+									cfg.max_storage_per_channel_registered.lines = atoi(cep5->value);
 								} else
-								if (!strcmp(cep5->ce_varname, "time"))
+								if (!strcmp(cep5->name, "time"))
 								{
-									cfg.max_storage_per_channel_registered.time = config_checkval(cep5->ce_vardata, CFG_TIME);
+									cfg.max_storage_per_channel_registered.time = config_checkval(cep5->value, CFG_TIME);
 								}
 							}
 						} else
-						if (!strcmp(cep4->ce_varname, "unregistered"))
+						if (!strcmp(cep4->name, "unregistered"))
 						{
-							for (cep5 = cep4->ce_entries; cep5; cep5 = cep5->ce_next)
+							for (cep5 = cep4->items; cep5; cep5 = cep5->next)
 							{
-								if (!strcmp(cep5->ce_varname, "lines"))
+								if (!strcmp(cep5->name, "lines"))
 								{
-									cfg.max_storage_per_channel_unregistered.lines = atoi(cep5->ce_vardata);
+									cfg.max_storage_per_channel_unregistered.lines = atoi(cep5->value);
 								} else
-								if (!strcmp(cep5->ce_varname, "time"))
+								if (!strcmp(cep5->name, "time"))
 								{
-									cfg.max_storage_per_channel_unregistered.time = config_checkval(cep5->ce_vardata, CFG_TIME);
+									cfg.max_storage_per_channel_unregistered.time = config_checkval(cep5->value, CFG_TIME);
 								}
 							}
 						}

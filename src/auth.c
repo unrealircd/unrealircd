@@ -163,25 +163,25 @@ int Auth_CheckError(ConfigEntry *ce)
 	AuthenticationType type = AUTHTYPE_PLAINTEXT;
 	X509 *x509_filecert = NULL;
 	FILE *x509_f = NULL;
-	if (!ce->ce_vardata)
+	if (!ce->value)
 	{
 		config_error("%s:%i: authentication module failure: missing parameter",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			ce->file->filename, ce->line_number);
 		return -1;
 	}
-	if (ce->ce_entries && ce->ce_entries->ce_next)
+	if (ce->items && ce->items->next)
 	{
 		config_error("%s:%i: you may not have multiple authentication methods",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			ce->file->filename, ce->line_number);
 		return -1;
 	}
 
-	type = Auth_FindType(ce->ce_vardata, ce->ce_entries ? ce->ce_entries->ce_varname : NULL);
+	type = Auth_FindType(ce->value, ce->items ? ce->items->name : NULL);
 	if (type == -1)
 	{
 		config_error("%s:%i: authentication module failure: %s is not an implemented/enabled authentication method",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			ce->ce_entries->ce_varname);
+			ce->file->filename, ce->line_number,
+			ce->items->name);
 		return -1;
 	}
 
@@ -189,19 +189,19 @@ int Auth_CheckError(ConfigEntry *ce)
 	{
 		case AUTHTYPE_UNIXCRYPT:
 			/* If our data is like 1 or none, we just let em through .. */
-			if (strlen(ce->ce_vardata) < 2)
+			if (strlen(ce->value) < 2)
 			{
 				config_error("%s:%i: authentication module failure: AUTHTYPE_UNIXCRYPT: no salt (crypt strings will always be >2 in length)",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+					ce->file->filename, ce->line_number);
 				return -1;
 			}
 			break;
 		case AUTHTYPE_TLS_CLIENTCERT:
-			convert_to_absolute_path(&ce->ce_vardata, CONFDIR);
-			if (!(x509_f = fopen(ce->ce_vardata, "r")))
+			convert_to_absolute_path(&ce->value, CONFDIR);
+			if (!(x509_f = fopen(ce->value, "r")))
 			{
 				config_error("%s:%i: authentication module failure: AUTHTYPE_TLS_CLIENTCERT: error opening file %s: %s",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata, strerror(errno));
+					ce->file->filename, ce->line_number, ce->value, strerror(errno));
 				return -1;
 			}
 			x509_filecert = PEM_read_X509(x509_f, NULL, NULL, NULL);
@@ -209,7 +209,7 @@ int Auth_CheckError(ConfigEntry *ce)
 			if (!x509_filecert)
 			{
 				config_error("%s:%i: authentication module failure: AUTHTYPE_TLS_CLIENTCERT: PEM_read_X509 errored in file %s (format error?)",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+					ce->file->filename, ce->line_number, ce->value);
 				return -1;
 			}
 			X509_free(x509_filecert);
@@ -226,19 +226,19 @@ int Auth_CheckError(ConfigEntry *ce)
 	 * with normally at least 5000 rounds (unless deliberately weakened
 	 * by the user).
 	 */
-	if ((type == AUTHTYPE_UNIXCRYPT) && strncmp(ce->ce_vardata, "$5", 2) &&
-	    strncmp(ce->ce_vardata, "$6", 2) && !strstr(ce->ce_vardata, "$rounds"))
+	if ((type == AUTHTYPE_UNIXCRYPT) && strncmp(ce->value, "$5", 2) &&
+	    strncmp(ce->value, "$6", 2) && !strstr(ce->value, "$rounds"))
 	{
 		config_warn("%s:%i: Using simple crypt for authentication is not recommended. "
 		            "Consider using the more secure auth-type 'argon2' instead. "
 		            "See https://www.unrealircd.org/docs/Authentication_types for the complete list.",
-                            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+                            ce->file->filename, ce->line_number);
 		/* do not return, not an error. */
 	}
-	if ((type == AUTHTYPE_PLAINTEXT) && (strlen(ce->ce_vardata) > PASSWDLEN))
+	if ((type == AUTHTYPE_PLAINTEXT) && (strlen(ce->value) > PASSWDLEN))
 	{
 		config_error("%s:%i: passwords length may not exceed %d",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, PASSWDLEN);
+			ce->file->filename, ce->line_number, PASSWDLEN);
 		return -1;
 	}
 	return 1;
@@ -252,12 +252,12 @@ AuthConfig *AuthBlockToAuthConfig(ConfigEntry *ce)
 	AuthenticationType type = AUTHTYPE_PLAINTEXT;
 	AuthConfig *as = NULL;
 
-	type = Auth_FindType(ce->ce_vardata, ce->ce_entries ? ce->ce_entries->ce_varname : NULL);
+	type = Auth_FindType(ce->value, ce->items ? ce->items->name : NULL);
 	if (type == AUTHTYPE_INVALID)
 		type = AUTHTYPE_PLAINTEXT;
 
 	as = safe_alloc(sizeof(AuthConfig));
-	safe_strdup(as->data, ce->ce_vardata);
+	safe_strdup(as->data, ce->value);
 	as->type = type;
 	return as;
 }

@@ -160,54 +160,54 @@ int server_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		return 0;
 
 	/* We are only interrested in set::server-linking.. */
-	if (!ce || strcmp(ce->ce_varname, "server-linking"))
+	if (!ce || strcmp(ce->name, "server-linking"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!cep->ce_vardata)
+		if (!cep->value)
 		{
 			config_error("%s:%i: blank set::server-linking::%s without value",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				cep->file->filename, cep->line_number, cep->name);
 			errors++;
 			continue;
 		} else
-		if (!strcmp(cep->ce_varname, "autoconnect-strategy"))
+		if (!strcmp(cep->name, "autoconnect-strategy"))
 		{
-			if (autoconnect_strategy_strtoval(cep->ce_vardata) < 0)
+			if (autoconnect_strategy_strtoval(cep->value) < 0)
 			{
 				config_error("%s:%i: set::server-linking::autoconnect-strategy: invalid value '%s'. "
 				             "Should be one of: parallel",
-				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+				             cep->file->filename, cep->line_number, cep->value);
 				errors++;
 				continue;
 			}
 		} else
-		if (!strcmp(cep->ce_varname, "connect-timeout"))
+		if (!strcmp(cep->name, "connect-timeout"))
 		{
-			long v = config_checkval(cep->ce_vardata, CFG_TIME);
+			long v = config_checkval(cep->value, CFG_TIME);
 			if ((v < 5) || (v > 30))
 			{
 				config_error("%s:%i: set::server-linking::connect-timeout should be between 5 and 60 seconds",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					cep->file->filename, cep->line_number);
 				errors++;
 				continue;
 			}
 		} else
-		if (!strcmp(cep->ce_varname, "handshake-timeout"))
+		if (!strcmp(cep->name, "handshake-timeout"))
 		{
-			long v = config_checkval(cep->ce_vardata, CFG_TIME);
+			long v = config_checkval(cep->value, CFG_TIME);
 			if ((v < 10) || (v > 120))
 			{
 				config_error("%s:%i: set::server-linking::handshake-timeout should be between 10 and 120 seconds",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					cep->file->filename, cep->line_number);
 				errors++;
 				continue;
 			}
 		} else
 		{
 			config_error("%s:%i: unknown directive set::server-linking::%s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				cep->file->filename, cep->line_number, cep->name);
 			errors++;
 			continue;
 		}
@@ -225,22 +225,22 @@ int server_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		return 0;
 
 	/* We are only interrested in set::server-linking.. */
-	if (!ce || strcmp(ce->ce_varname, "server-linking"))
+	if (!ce || strcmp(ce->name, "server-linking"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "autoconnect-strategy"))
+		if (!strcmp(cep->name, "autoconnect-strategy"))
 		{
-			cfg.autoconnect_strategy = autoconnect_strategy_strtoval(cep->ce_vardata);
+			cfg.autoconnect_strategy = autoconnect_strategy_strtoval(cep->value);
 		} else
-		if (!strcmp(cep->ce_varname, "connect-timeout"))
+		if (!strcmp(cep->name, "connect-timeout"))
 		{
-			cfg.connect_timeout = config_checkval(cep->ce_vardata, CFG_TIME);
+			cfg.connect_timeout = config_checkval(cep->value, CFG_TIME);
 		} else
-		if (!strcmp(cep->ce_varname, "handshake-timeout"))
+		if (!strcmp(cep->name, "handshake-timeout"))
 		{
-			cfg.handshake_timeout = config_checkval(cep->ce_vardata, CFG_TIME);
+			cfg.handshake_timeout = config_checkval(cep->value, CFG_TIME);
 		}
 	}
 	return 1;

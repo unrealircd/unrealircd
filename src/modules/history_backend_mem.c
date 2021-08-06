@@ -265,40 +265,40 @@ int hbm_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
 
-	if ((type != CONFIG_SET_HISTORY_CHANNEL) || !ce || !ce->ce_varname)
+	if ((type != CONFIG_SET_HISTORY_CHANNEL) || !ce || !ce->name)
 		return 0;
 
-	if (!strcmp(ce->ce_varname, "persist"))
+	if (!strcmp(ce->name, "persist"))
 	{
-		if (!ce->ce_vardata)
+		if (!ce->value)
 		{
 			config_error("%s:%i: missing parameter",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				ce->file->filename, ce->line_number);
 			errors++;
 		} else {
-			test.persist = config_checkval(ce->ce_vardata, CFG_YESNO);
+			test.persist = config_checkval(ce->value, CFG_YESNO);
 		}
 	} else
-	if (!strcmp(ce->ce_varname, "db-secret"))
+	if (!strcmp(ce->name, "db-secret"))
 	{
 		char *err;
-		if ((err = unrealdb_test_secret(ce->ce_vardata)))
+		if ((err = unrealdb_test_secret(ce->value)))
 		{
-			config_error("%s:%i: set::history::channel::db-secret: %s", ce->ce_fileptr->cf_filename, ce->ce_varlinenum, err);
+			config_error("%s:%i: set::history::channel::db-secret: %s", ce->file->filename, ce->line_number, err);
 			errors++;
 		}
-		safe_strdup(test.db_secret, ce->ce_vardata);
+		safe_strdup(test.db_secret, ce->value);
 	} else
-	if (!strcmp(ce->ce_varname, "directory")) // or "path" ?
+	if (!strcmp(ce->name, "directory")) // or "path" ?
 	{
-		if (!ce->ce_vardata)
+		if (!ce->value)
 		{
 			config_error("%s:%i: missing parameter",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				ce->file->filename, ce->line_number);
 			errors++;
 		} else
 		{
-			safe_strdup(test.directory, ce->ce_vardata);
+			safe_strdup(test.directory, ce->value);
 			hbm_set_masterdb_filename(&test);
 		}
 	} else
@@ -368,22 +368,22 @@ hbm_config_posttest_end:
 /** Configure ourselves based on the set::history::channel settings */
 int hbm_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
-	if ((type != CONFIG_SET_HISTORY_CHANNEL) || !ce || !ce->ce_varname)
+	if ((type != CONFIG_SET_HISTORY_CHANNEL) || !ce || !ce->name)
 		return 0;
 
-	if (!strcmp(ce->ce_varname, "persist"))
+	if (!strcmp(ce->name, "persist"))
 	{
-		cfg.persist = config_checkval(ce->ce_vardata, CFG_YESNO);
+		cfg.persist = config_checkval(ce->value, CFG_YESNO);
 	} else
-	if (!strcmp(ce->ce_varname, "directory")) // or "path" ?
+	if (!strcmp(ce->name, "directory")) // or "path" ?
 	{
-		safe_strdup(cfg.directory, ce->ce_vardata);
+		safe_strdup(cfg.directory, ce->value);
 		convert_to_absolute_path(&cfg.directory, PERMDATADIR);
 		hbm_set_masterdb_filename(&cfg);
 	} else
-	if (!strcmp(ce->ce_varname, "db-secret"))
+	if (!strcmp(ce->name, "db-secret"))
 	{
-		safe_strdup(cfg.db_secret, ce->ce_vardata);
+		safe_strdup(cfg.db_secret, ce->value);
 	} else
 	{
 		return 0; /* unknown option to us, let another module handle it */

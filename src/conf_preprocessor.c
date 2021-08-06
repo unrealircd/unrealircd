@@ -382,29 +382,29 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 
 void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, PreprocessorPhase phase)
 {
-	ConfigEntry *ce, *ce_next, *ce_prev;
+	ConfigEntry *ce, *next, *ce_prev;
 	ConfigEntry *cep, *cep_next, *cep_prev;
 
 	ce_prev = NULL;
-	for (ce = *ce_list; ce; ce = ce_next)
+	for (ce = *ce_list; ce; ce = next)
 	{
-		ce_next = ce->ce_next;
+		next = ce->next;
 		/* This is for an @if before a block start */
-		if (!preprocessor_resolve_if(ce->ce_cond, phase))
+		if (!preprocessor_resolve_if(ce->conditional_config, phase))
 		{
 			/* Delete this entry */
 			if (ce == *ce_list)
 			{
 				/* we are head, so new head */
-				*ce_list = ce->ce_next; /* can be NULL now */
+				*ce_list = ce->next; /* can be NULL now */
 			} else {
 				/* non-head */
-				ce_prev->ce_next = ce->ce_next; /* can be NULL now */
+				ce_prev->next = ce->next; /* can be NULL now */
 			}
 			config_entry_free(ce);
 			continue;
 		}
-		preprocessor_resolve_conditionals_ce(&ce->ce_entries, phase);
+		preprocessor_resolve_conditionals_ce(&ce->items, phase);
 		ce_prev = ce;
 	}
 }
@@ -413,8 +413,8 @@ void preprocessor_resolve_conditionals_all(PreprocessorPhase phase)
 {
 	ConfigFile *cfptr;
 
-	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
-		preprocessor_resolve_conditionals_ce(&cfptr->cf_entries, phase);
+	for (cfptr = conf; cfptr; cfptr = cfptr->next)
+		preprocessor_resolve_conditionals_ce(&cfptr->items, phase);
 }
 
 /** Frees the list of config_defines, so all @defines */
@@ -502,7 +502,7 @@ void preprocessor_replace_defines(char **item, ConfigEntry *ce)
 				if ((limit > 2) && ((*varend == '\0') || strchr("\t ,.", *varend)))
 				{
 					config_warn("%s:%d: Variable %s used here but there's no @define for it earlier.",
-						    ce->ce_fileptr->cf_filename, ce->ce_varlinenum, varname);
+						    ce->file->filename, ce->line_number, varname);
 				}
 #endif
 				value = varname; /* not found? then use varname, including the '$' */

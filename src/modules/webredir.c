@@ -116,36 +116,36 @@ int webredir_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		return 0;
 
 	/* We are only interrested in set::webredir... */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "webredir"))
+	if (!ce || !ce->name || strcmp(ce->name, "webredir"))
 		return 0;
 
 	nowebredir = 0;
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!cep->ce_vardata)
+		if (!cep->value)
 		{
 			config_error("%s:%i: set::webredir::%s with no value",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				cep->file->filename, cep->line_number, cep->name);
 			errors++;
 		}
-		else if (!strcmp(cep->ce_varname, "url"))
+		else if (!strcmp(cep->name, "url"))
 		{
-			if (!*cep->ce_vardata || strchr(cep->ce_vardata, ' '))
+			if (!*cep->value || strchr(cep->value, ' '))
 			{
 				config_error("%s:%i: set::webredir::%s with empty value",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+					cep->file->filename, cep->line_number, cep->name);
 				errors++;
 			}
-			if (!strstr(cep->ce_vardata, "://") || !strcmp(cep->ce_vardata, "https://..."))
+			if (!strstr(cep->value, "://") || !strcmp(cep->value, "https://..."))
 			{
 				config_error("%s:%i: set::webredir::url needs to be a valid URL",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					cep->file->filename, cep->line_number);
 				errors++;
 			}
 			if (has_url)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "set::webredir::url");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "set::webredir::url");
 				continue;
 			}
 			has_url = 1;
@@ -153,14 +153,14 @@ int webredir_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		else
 		{
 			config_error("%s:%i: unknown directive set::webredir::%s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				cep->file->filename, cep->line_number, cep->name);
 			errors++;
 		}
 	}
 
 	if (!has_url)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"set::webredir::url");
 		errors++;
 	}
@@ -177,14 +177,14 @@ int webredir_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		return 0;
 	
 	/* We are only interrested in set::webredir... */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "webredir"))
+	if (!ce || !ce->name || strcmp(ce->name, "webredir"))
 		return 0;
 	
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "url"))
+		if (!strcmp(cep->name, "url"))
 		{
-			safe_strdup(cfg.url, cep->ce_vardata);
+			safe_strdup(cfg.url, cep->value);
 		}
 	}
 	return 1;

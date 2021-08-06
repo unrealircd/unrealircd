@@ -251,192 +251,192 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (!ce)
 		return 0;
 	
-	if (strcmp(ce->ce_varname, "blacklist"))
+	if (strcmp(ce->name, "blacklist"))
 		return 0; /* not interested in non-blacklist stuff.. */
 	
-	if (!ce->ce_vardata)
+	if (!ce->value)
 	{
 		config_error("%s:%i: blacklist block without name (use: blacklist somename { })",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			ce->file->filename, ce->line_number);
 		*errs = 1;
 		return -1;
 	}
 
 	/* Now actually go parse the blacklist { } block */
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "dns"))
+		if (!strcmp(cep->name, "dns"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				if (!strcmp(cepp->ce_varname, "reply"))
+				if (!strcmp(cepp->name, "reply"))
 				{
 					if (has_dns_reply)
 					{
 						/* this is an error (not a warning) */
 						config_error("%s:%i: blacklist block may contain only one blacklist::dns::reply item. "
 									 "You can specify multiple replies by using: reply { 1; 2; 4; };",
-									 cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+									 cepp->file->filename, cepp->line_number);
 						errors++;
 						continue;
 					}
-					if (!cepp->ce_vardata && !cepp->ce_entries)
+					if (!cepp->value && !cepp->items)
 					{
-						config_error_blank(cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, "blacklist::dns::reply");
+						config_error_blank(cepp->file->filename, cepp->line_number, "blacklist::dns::reply");
 						errors++;
 						continue;
 					}
 					has_dns_reply = 1; /* we have a reply. now whether it's actually valid is another story.. */
-					if (cepp->ce_vardata && cepp->ce_entries)
+					if (cepp->value && cepp->items)
 					{
 						config_error("%s:%i: blacklist::dns::reply must be either using format 'reply 1;' or "
 									 "'reply { 1; 2; 4; }; but not both formats at the same time.",
-									 cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+									 cepp->file->filename, cepp->line_number);
 						errors++;
 						continue;
 					}
-					if (cepp->ce_vardata)
+					if (cepp->value)
 					{
-						if (atoi(cepp->ce_vardata) <= 0)
+						if (atoi(cepp->value) <= 0)
 						{
 							config_error("%s:%i: blacklist::dns::reply must be >0",
-								cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+								cepp->file->filename, cepp->line_number);
 							errors++;
 							continue;
 						}
 					}
-					if (cepp->ce_entries)
+					if (cepp->items)
 					{
-						for (ceppp = cepp->ce_entries; ceppp; ceppp=ceppp->ce_next)
+						for (ceppp = cepp->items; ceppp; ceppp=ceppp->next)
 						{
-							if (atoi(ceppp->ce_varname) <= 0)
+							if (atoi(ceppp->name) <= 0)
 							{
 								config_error("%s:%i: all items in blacklist::dns::reply must be >0",
-									cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+									cepp->file->filename, cepp->line_number);
 								errors++;
 							}
 						}
 					}
 				} else
-				if (!cepp->ce_vardata)
+				if (!cepp->value)
 				{
-					config_error_empty(cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
-						"blacklist::dns", cepp->ce_varname);
+					config_error_empty(cepp->file->filename, cepp->line_number,
+						"blacklist::dns", cepp->name);
 					errors++;
 					continue;
 				} else
-				if (!strcmp(cepp->ce_varname, "name"))
+				if (!strcmp(cepp->name, "name"))
 				{
 					if (has_dns_name)
 					{
-						config_warn_duplicate(cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum, "blacklist::dns::name");
+						config_warn_duplicate(cepp->file->filename,
+							cepp->line_number, "blacklist::dns::name");
 					}
 					has_dns_name = 1;
 				} else
-				if (!strcmp(cepp->ce_varname, "type"))
+				if (!strcmp(cepp->name, "type"))
 				{
 					if (has_dns_type)
 					{
-						config_warn_duplicate(cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum, "blacklist::dns::type");
+						config_warn_duplicate(cepp->file->filename,
+							cepp->line_number, "blacklist::dns::type");
 					}
 					has_dns_type = 1;
-					if (!strcmp(cepp->ce_vardata, "record"))
+					if (!strcmp(cepp->value, "record"))
 						;
-					else if (!strcmp(cepp->ce_vardata, "bitmask"))
+					else if (!strcmp(cepp->value, "bitmask"))
 						;
 					else
 					{
 						config_error("%s:%i: unknown blacklist::dns::type '%s', must be either 'record' or 'bitmask'",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_vardata);
+							cepp->file->filename, cepp->line_number, cepp->value);
 						errors++;
 					}
 				}
 			}
 		} else
-		if (!cep->ce_vardata)
+		if (!cep->value)
 		{
-			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"blacklist", cep->ce_varname);
+			config_error_empty(cep->file->filename, cep->line_number,
+				"blacklist", cep->name);
 			errors++;
 			continue;
 		}
-		else if (!strcmp(cep->ce_varname, "action"))
+		else if (!strcmp(cep->name, "action"))
 		{
 			if (has_action)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "blacklist::action");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "blacklist::action");
 				continue;
 			}
 			has_action = 1;
-			if (!banact_stringtoval(cep->ce_vardata))
+			if (!banact_stringtoval(cep->value))
 			{
 				config_error("%s:%i: blacklist::action has unknown action type '%s'",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+					cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "ban-time"))
+		else if (!strcmp(cep->name, "ban-time"))
 		{
 			if (has_ban_time)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "blacklist::ban-time");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "blacklist::ban-time");
 				continue;
 			}
 			has_ban_time = 1;
 		} else
-		if (!strcmp(cep->ce_varname, "reason"))
+		if (!strcmp(cep->name, "reason"))
 		{
 			if (has_reason)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "blacklist::reason");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "blacklist::reason");
 				continue;
 			}
 			has_reason = 1;
 		}
 		else
 		{
-			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"blacklist", cep->ce_varname);
+			config_error_unknown(cep->file->filename, cep->line_number,
+				"blacklist", cep->name);
 			errors++;
 		}
 	}
 
 	if (!has_action)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"blacklist::action");
 		errors++;
 	}
 
 	if (!has_reason)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"blacklist::reason");
 		errors++;
 	}
 
 	if (!has_dns_name)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"blacklist::dns::name");
 		errors++;
 	}
 
 	if (!has_dns_type)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"blacklist::dns::type");
 		errors++;
 	}
 
 	if (!has_dns_reply)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"blacklist::dns::reply");
 		errors++;
 	}
@@ -453,11 +453,11 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (type != CONFIG_MAIN)
 		return 0;
 	
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "blacklist"))
+	if (!ce || !ce->name || strcmp(ce->name, "blacklist"))
 		return 0; /* not interested */
 
 	d = safe_alloc(sizeof(Blacklist));
-	safe_strdup(d->name, ce->ce_vardata);
+	safe_strdup(d->name, ce->value);
 	/* set some defaults. TODO: use set::blacklist or something ? */
 	d->action = BAN_ACT_KILL;
 	safe_strdup(d->reason, "Your IP is on a DNS Blacklist");
@@ -468,28 +468,28 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	d->backend = safe_alloc(sizeof(BlacklistBackend));
 	d->backend->dns = safe_alloc(sizeof(DNSBL));
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "dns"))
+		if (!strcmp(cep->name, "dns"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				if (!strcmp(cepp->ce_varname, "reply"))
+				if (!strcmp(cepp->name, "reply"))
 				{
-					if (cepp->ce_vardata)
+					if (cepp->value)
 					{
 						/* single reply */
 						d->backend->dns->reply = safe_alloc(sizeof(int)*2);
-						d->backend->dns->reply[0] = atoi(cepp->ce_vardata);
+						d->backend->dns->reply[0] = atoi(cepp->value);
 						d->backend->dns->reply[1] = 0;
 					} else
-					if (cepp->ce_entries)
+					if (cepp->items)
 					{
 						/* (potentially) multiple reply values */
 						int cnt = 0;
-						for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+						for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
 						{
-							if (ceppp->ce_varname)
+							if (ceppp->name)
 								cnt++;
 						}
 						
@@ -499,37 +499,37 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 						d->backend->dns->reply = safe_alloc(sizeof(int)*(cnt+1));
 						
 						cnt = 0;
-						for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+						for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
 						{
-							d->backend->dns->reply[cnt++] = atoi(ceppp->ce_varname);
+							d->backend->dns->reply[cnt++] = atoi(ceppp->name);
 						}
 						d->backend->dns->reply[cnt] = 0;
 					}
 				} else
-				if (!strcmp(cepp->ce_varname, "type"))
+				if (!strcmp(cepp->name, "type"))
 				{
-					if (!strcmp(cepp->ce_vardata, "record"))
+					if (!strcmp(cepp->value, "record"))
 						d->backend->dns->type = DNSBL_RECORD;
-					else if (!strcmp(cepp->ce_vardata, "bitmask"))
+					else if (!strcmp(cepp->value, "bitmask"))
 						d->backend->dns->type = DNSBL_BITMASK;
 				} else
-				if (!strcmp(cepp->ce_varname, "name"))
+				if (!strcmp(cepp->name, "name"))
 				{
-					safe_strdup(d->backend->dns->name, cepp->ce_vardata);
+					safe_strdup(d->backend->dns->name, cepp->value);
 				}
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "action"))
+		else if (!strcmp(cep->name, "action"))
 		{
-			d->action = banact_stringtoval(cep->ce_vardata);
+			d->action = banact_stringtoval(cep->value);
 		}
-		else if (!strcmp(cep->ce_varname, "reason"))
+		else if (!strcmp(cep->name, "reason"))
 		{
-			safe_strdup(d->reason, cep->ce_vardata);
+			safe_strdup(d->reason, cep->value);
 		}
-		else if (!strcmp(cep->ce_varname, "ban-time"))
+		else if (!strcmp(cep->name, "ban-time"))
 		{
-			d->ban_time = config_checkval(cep->ce_vardata, CFG_TIME);
+			d->ban_time = config_checkval(cep->value, CFG_TIME);
 		}
 	}
 

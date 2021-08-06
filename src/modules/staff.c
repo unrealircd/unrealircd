@@ -161,9 +161,9 @@ static int download_staff_file(ConfigEntry *ce)
 		return 0;
 
 	Download.is_url = 1;
-	safe_strdup(Download.url, ce->ce_vardata);
+	safe_strdup(Download.url, ce->value);
 
-	file = url_getfilename(ce->ce_vardata);
+	file = url_getfilename(ce->value);
 	filename = unreal_getfilename(file);
 	/* TODO: handle NULL returns */
 	safe_strdup(Download.file, filename);
@@ -176,11 +176,11 @@ static int download_staff_file(ConfigEntry *ce)
 		if (config_verbose > 0)
 			config_status("Downloading %s", displayurl(Download.url));
 
-		if (!(file = download_file(ce->ce_vardata, &error)))
+		if (!(file = download_file(ce->value, &error)))
 		{
 			config_error("%s:%i: test: error downloading '%s': %s",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				displayurl(ce->ce_vardata), error);
+				ce->file->filename, ce->line_number,
+				displayurl(ce->value), error);
 			return -1;
 		}
 
@@ -198,7 +198,7 @@ static int download_staff_file(ConfigEntry *ce)
 	{
 		/* I know, stat shouldn't fail... */
 		config_error("%s:%i: could not get the creation time of %s: stat() returned %d: %s",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->file->filename, ce->line_number,
 			Download.file, ret, strerror(errno));
 		return -1;
 	}
@@ -272,16 +272,16 @@ static int cb_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	if (type == CONFIG_SET)
 	{
-		if (!strcmp(ce->ce_varname, "staff-file"))
+		if (!strcmp(ce->name, "staff-file"))
 		{
 #ifdef USE_LIBCURL
-			if (url_is_valid(ce->ce_vardata))
+			if (url_is_valid(ce->value))
 			{
 				/* TODO: hm, relax this one? */
-				if (!(file = url_getfilename(ce->ce_vardata)) || !(filename = unreal_getfilename(file)))
+				if (!(file = url_getfilename(ce->value)) || !(filename = unreal_getfilename(file)))
 				{
 					config_error("%s:%i: invalid filename in URL",
-						ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+						ce->file->filename, ce->line_number);
 					errors++;
 				}
 				safe_free(file);
@@ -300,21 +300,21 @@ static int cb_conf(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	if (type == CONFIG_SET)
 	{
-		if (!strcmp(ce->ce_varname, "staff-file"))
+		if (!strcmp(ce->name, "staff-file"))
 		{
 #ifdef USE_LIBCURL
 			if (!Download.in_progress)
 			{
-				safe_strdup(staff_file, ce->ce_vardata);
-				if (url_is_valid(ce->ce_vardata))
+				safe_strdup(staff_file, ce->value);
+				if (url_is_valid(ce->value))
 				{
 					download_staff_file(ce);
 				}
 				else
 #endif
 				{
-					convert_to_absolute_path(&ce->ce_vardata, CONFDIR);
-					read_motd(ce->ce_vardata, &staff);
+					convert_to_absolute_path(&ce->value, CONFDIR);
+					read_motd(ce->value, &staff);
 				}
 #ifdef USE_LIBCURL
 			}

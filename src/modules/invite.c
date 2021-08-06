@@ -141,7 +141,7 @@ int invite_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (type != CONFIG_SET)
 		return 0;
 
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "normal-user-invite-notification"))
+	if (!ce || !ce->name || strcmp(ce->name, "normal-user-invite-notification"))
 		return 0;
 
 	do
@@ -159,10 +159,10 @@ int invite_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (type != CONFIG_SET)
 		return 0;
 
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "normal-user-invite-notification"))
+	if (!ce || !ce->name || strcmp(ce->name, "normal-user-invite-notification"))
 		return 0;
 
-	invite_always_notify = config_checkval(ce->ce_vardata, CFG_YESNO);
+	invite_always_notify = config_checkval(ce->value, CFG_YESNO);
 
 	return 1;
 }

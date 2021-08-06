@@ -118,35 +118,35 @@ static int cb_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	if (type == CONFIG_MAIN)
 	{
-		if (!strcmp(ce->ce_varname, "hideserver"))
+		if (!strcmp(ce->name, "hideserver"))
 		{
-			for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+			for (cep = ce->items; cep; cep = cep->next)
 			{
-				if (!strcmp(cep->ce_varname, "hide"))
+				if (!strcmp(cep->name, "hide"))
 				{
 					/* No checking needed */
 				}
-				else if (!cep->ce_vardata)
+				else if (!cep->value)
 				{
 					config_error("%s:%i: %s::%s without value",
-						cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum,
-						ce->ce_varname, cep->ce_varname);
+						cep->file->filename,
+						cep->line_number,
+						ce->name, cep->name);
 					errors++;
 					continue;
 				}
-				else if (!strcmp(cep->ce_varname, "disable-map"))
+				else if (!strcmp(cep->name, "disable-map"))
 					;
-				else if (!strcmp(cep->ce_varname, "disable-links"))
+				else if (!strcmp(cep->name, "disable-links"))
 					;
-				else if (!strcmp(cep->ce_varname, "map-deny-message"))
+				else if (!strcmp(cep->name, "map-deny-message"))
 					;
-				else if (!strcmp(cep->ce_varname, "links-deny-message"))
+				else if (!strcmp(cep->name, "links-deny-message"))
 					;
 				else
 				{
 					config_error("%s:%i: unknown directive hideserver::%s",
-						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+						cep->file->filename, cep->line_number, cep->name);
 					errors++;
 				}
 			}
@@ -165,31 +165,31 @@ static int cb_conf(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	if (type == CONFIG_MAIN)
 	{
-		if (!strcmp(ce->ce_varname, "hideserver"))
+		if (!strcmp(ce->name, "hideserver"))
 		{
-			for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+			for (cep = ce->items; cep; cep = cep->next)
 			{
-				if (!strcmp(cep->ce_varname, "disable-map"))
-					Settings.disable_map = config_checkval(cep->ce_vardata, CFG_YESNO);
-				else if (!strcmp(cep->ce_varname, "disable-links"))
-					Settings.disable_links = config_checkval(cep->ce_vardata, CFG_YESNO);
-				else if (!strcmp(cep->ce_varname, "map-deny-message"))
+				if (!strcmp(cep->name, "disable-map"))
+					Settings.disable_map = config_checkval(cep->value, CFG_YESNO);
+				else if (!strcmp(cep->name, "disable-links"))
+					Settings.disable_links = config_checkval(cep->value, CFG_YESNO);
+				else if (!strcmp(cep->name, "map-deny-message"))
 				{
-					safe_strdup(Settings.map_deny_message, cep->ce_vardata);
+					safe_strdup(Settings.map_deny_message, cep->value);
 				}
-				else if (!strcmp(cep->ce_varname, "links-deny-message"))
+				else if (!strcmp(cep->name, "links-deny-message"))
 				{
-					safe_strdup(Settings.links_deny_message, cep->ce_vardata);
+					safe_strdup(Settings.links_deny_message, cep->value);
 				}
-				else if (!strcmp(cep->ce_varname, "hide"))
+				else if (!strcmp(cep->name, "hide"))
 				{
-					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+					for (cepp = cep->items; cepp; cepp = cepp->next)
 					{
-						if (!strcasecmp(cepp->ce_varname, me.name))
+						if (!strcasecmp(cepp->name, me.name))
 							continue;
 
 						ca = safe_alloc(sizeof(ConfigItem_ulines));
-						safe_strdup(ca->servername, cepp->ce_varname);
+						safe_strdup(ca->servername, cepp->name);
 						AddListItem(ca, HiddenServers);
 					}
 				}

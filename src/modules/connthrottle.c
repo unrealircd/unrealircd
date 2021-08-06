@@ -147,7 +147,7 @@ int ct_config_posttest(int *errs)
 }
 
 #ifndef CheckNull
- #define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
+ #define CheckNull(x) if ((!(x)->value) || (!(*((x)->value)))) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); errors++; continue; }
 #endif
 /** Test the set::connthrottle configuration */
 int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
@@ -159,113 +159,113 @@ int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		return 0;
 	
 	/* We are only interrested in set::connthrottle.. */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "connthrottle"))
+	if (!ce || !ce->name || strcmp(ce->name, "connthrottle"))
 		return 0;
 	
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "known-users"))
+		if (!strcmp(cep->name, "known-users"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
 				CheckNull(cepp);
-				if (!strcmp(cepp->ce_varname, "minimum-reputation-score"))
+				if (!strcmp(cepp->name, "minimum-reputation-score"))
 				{
-					int cnt = atoi(cepp->ce_vardata);
+					int cnt = atoi(cepp->value);
 					if (cnt < 1)
 					{
 						config_error("%s:%i: set::connthrottle::known-users::minimum-reputation-score should be at least 1",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+							cepp->file->filename, cepp->line_number);
 						errors++;
 						continue;
 					}
 				} else
-				if (!strcmp(cepp->ce_varname, "sasl-bypass"))
+				if (!strcmp(cepp->name, "sasl-bypass"))
 				{
 				} else
-				if (!strcmp(cepp->ce_varname, "webirc-bypass"))
+				if (!strcmp(cepp->name, "webirc-bypass"))
 				{
 				} else
 				{
-					config_error_unknown(cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
-					                     "set::connthrottle::known-users", cepp->ce_varname);
+					config_error_unknown(cepp->file->filename, cepp->line_number,
+					                     "set::connthrottle::known-users", cepp->name);
 					errors++;
 				}
 			}
 		} else
-		if (!strcmp(cep->ce_varname, "new-users"))
+		if (!strcmp(cep->name, "new-users"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
 				CheckNull(cepp);
-				if (!strcmp(cepp->ce_varname, "local-throttle"))
+				if (!strcmp(cepp->name, "local-throttle"))
 				{
 					int cnt, period;
-					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
+					if (!config_parse_flood(cepp->value, &cnt, &period) ||
 					    (cnt < 1) || (cnt > 2000000000) || (period > 2000000000))
 					{
 						config_error("%s:%i: set::connthrottle::new-users::local-throttle error. "
 							     "Syntax is <count>:<period> (eg 6:60), "
 							     "and count and period should be non-zero.",
-							     cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+							     cepp->file->filename, cepp->line_number);
 						errors++;
 						continue;
 					}
 				} else
-				if (!strcmp(cepp->ce_varname, "global-throttle"))
+				if (!strcmp(cepp->name, "global-throttle"))
 				{
 					int cnt, period;
-					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
+					if (!config_parse_flood(cepp->value, &cnt, &period) ||
 					    (cnt < 1) || (cnt > 2000000000) || (period > 2000000000))
 					{
 						config_error("%s:%i: set::connthrottle::new-users::global-throttle error. "
 							     "Syntax is <count>:<period> (eg 6:60), "
 							     "and count and period should be non-zero.",
-							     cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+							     cepp->file->filename, cepp->line_number);
 						errors++;
 						continue;
 					}
 				} else
 				{
-					config_error_unknown(cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
-					                     "set::connthrottle::new-users", cepp->ce_varname);
+					config_error_unknown(cepp->file->filename, cepp->line_number,
+					                     "set::connthrottle::new-users", cepp->name);
 					errors++;
 				}
 			}
 		} else
-		if (!strcmp(cep->ce_varname, "disabled-when"))
+		if (!strcmp(cep->name, "disabled-when"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
 				CheckNull(cepp);
-				if (!strcmp(cepp->ce_varname, "start-delay"))
+				if (!strcmp(cepp->name, "start-delay"))
 				{
-					int cnt = config_checkval(cepp->ce_vardata, CFG_TIME);
+					int cnt = config_checkval(cepp->value, CFG_TIME);
 					if ((cnt < 0) || (cnt > 3600))
 					{
 						config_error("%s:%i: set::connthrottle::disabled-when::start-delay should be in range 0-3600",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+							cepp->file->filename, cepp->line_number);
 						errors++;
 						continue;
 					}
 				} else
-				if (!strcmp(cepp->ce_varname, "reputation-gathering"))
+				if (!strcmp(cepp->name, "reputation-gathering"))
 				{
 				} else
 				{
-					config_error_unknown(cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
-					                     "set::connthrottle::disabled-when", cepp->ce_varname);
+					config_error_unknown(cepp->file->filename, cepp->line_number,
+					                     "set::connthrottle::disabled-when", cepp->name);
 					errors++;
 				}
 			}
 		} else
-		if (!strcmp(cep->ce_varname, "reason"))
+		if (!strcmp(cep->name, "reason"))
 		{
 			CheckNull(cep);
 		} else
 		{
 			config_error("%s:%i: unknown directive set::connthrottle::%s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				cep->file->filename, cep->line_number, cep->name);
 			errors++;
 			continue;
 		}
@@ -284,48 +284,48 @@ int ct_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		return 0;
 	
 	/* We are only interrested in set::connthrottle.. */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "connthrottle"))
+	if (!ce || !ce->name || strcmp(ce->name, "connthrottle"))
 		return 0;
 	
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "known-users"))
+		if (!strcmp(cep->name, "known-users"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				if (!strcmp(cepp->ce_varname, "minimum-reputation-score"))
-					cfg.minimum_reputation_score = atoi(cepp->ce_vardata);
-				else if (!strcmp(cepp->ce_varname, "sasl-bypass"))
-					cfg.sasl_bypass = config_checkval(cepp->ce_vardata, CFG_YESNO);
-				else if (!strcmp(cepp->ce_varname, "webirc-bypass"))
-					cfg.webirc_bypass = config_checkval(cepp->ce_vardata, CFG_YESNO);
+				if (!strcmp(cepp->name, "minimum-reputation-score"))
+					cfg.minimum_reputation_score = atoi(cepp->value);
+				else if (!strcmp(cepp->name, "sasl-bypass"))
+					cfg.sasl_bypass = config_checkval(cepp->value, CFG_YESNO);
+				else if (!strcmp(cepp->name, "webirc-bypass"))
+					cfg.webirc_bypass = config_checkval(cepp->value, CFG_YESNO);
 			}
 		} else
-		if (!strcmp(cep->ce_varname, "new-users"))
+		if (!strcmp(cep->name, "new-users"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				if (!strcmp(cepp->ce_varname, "local-throttle"))
-					config_parse_flood(cepp->ce_vardata, &cfg.local.count, &cfg.local.period);
-				else if (!strcmp(cepp->ce_varname, "global-throttle"))
-					config_parse_flood(cepp->ce_vardata, &cfg.global.count, &cfg.global.period);
+				if (!strcmp(cepp->name, "local-throttle"))
+					config_parse_flood(cepp->value, &cfg.local.count, &cfg.local.period);
+				else if (!strcmp(cepp->name, "global-throttle"))
+					config_parse_flood(cepp->value, &cfg.global.count, &cfg.global.period);
 			}
 		} else
-		if (!strcmp(cep->ce_varname, "disabled-when"))
+		if (!strcmp(cep->name, "disabled-when"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				if (!strcmp(cepp->ce_varname, "start-delay"))
-					cfg.start_delay = config_checkval(cepp->ce_vardata, CFG_TIME);
-				else if (!strcmp(cepp->ce_varname, "reputation-gathering"))
-					cfg.reputation_gathering = config_checkval(cepp->ce_vardata, CFG_TIME);
+				if (!strcmp(cepp->name, "start-delay"))
+					cfg.start_delay = config_checkval(cepp->value, CFG_TIME);
+				else if (!strcmp(cepp->name, "reputation-gathering"))
+					cfg.reputation_gathering = config_checkval(cepp->value, CFG_TIME);
 			}
 		} else
-		if (!strcmp(cep->ce_varname, "reason"))
+		if (!strcmp(cep->name, "reason"))
 		{
 			safe_free(cfg.reason);
-			cfg.reason = safe_alloc(strlen(cep->ce_vardata)+16);
-			sprintf(cfg.reason, "Throttled: %s", cep->ce_vardata);
+			cfg.reason = safe_alloc(strlen(cep->value)+16);
+			sprintf(cfg.reason, "Throttled: %s", cep->value);
 		}
 	}
 	return 1;

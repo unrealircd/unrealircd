@@ -970,10 +970,10 @@ static void unreal_add_mask(ConfigItem_mask **head, ConfigEntry *ce)
 	ConfigItem_mask *m = safe_alloc(sizeof(ConfigItem_mask));
 
 	/* Since we allow both mask "xyz"; and mask { abc; def; };... */
-	if (ce->ce_vardata)
-		safe_strdup(m->mask, ce->ce_vardata);
+	if (ce->value)
+		safe_strdup(m->mask, ce->value);
 	else
-		safe_strdup(m->mask, ce->ce_varname);
+		safe_strdup(m->mask, ce->name);
 
 	add_ListItem((ListStruct *)m, (ListStruct **)head);
 }
@@ -981,10 +981,10 @@ static void unreal_add_mask(ConfigItem_mask **head, ConfigEntry *ce)
 /** Add mask entries from config */
 void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce)
 {
-	if (ce->ce_entries)
+	if (ce->items)
 	{
 		ConfigEntry *cep;
-		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		for (cep = ce->items; cep; cep = cep->next)
 			unreal_add_mask(head, cep);
 	} else
 	{

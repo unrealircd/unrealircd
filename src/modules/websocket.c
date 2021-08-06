@@ -115,7 +115,7 @@ MOD_UNLOAD()
 }
 
 #ifndef CheckNull
- #define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
+ #define CheckNull(x) if ((!(x)->value) || (!(*((x)->value)))) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); errors++; continue; }
 #endif
 
 int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
@@ -129,16 +129,16 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		return 0;
 
 	/* We are only interrested in listen::options::websocket.. */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "websocket"))
+	if (!ce || !ce->name || strcmp(ce->name, "websocket"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "type"))
+		if (!strcmp(cep->name, "type"))
 		{
 			CheckNull(cep);
 			has_type = 1;
-			if (!strcmp(cep->ce_vardata, "text"))
+			if (!strcmp(cep->value, "text"))
 			{
 				if (non_utf8_nick_chars_in_use && !errored_once_nick)
 				{
@@ -153,19 +153,19 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					errors++;
 				}
 			}
-			else if (!strcmp(cep->ce_vardata, "binary"))
+			else if (!strcmp(cep->value, "binary"))
 			{
 			}
 			else
 			{
 				config_error("%s:%i: listen::options::websocket::type must be either 'binary' or 'text' (not '%s')",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+					cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			}
 		} else
 		{
 			config_error("%s:%i: unknown directive listen::options::websocket::%s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				cep->file->filename, cep->line_number, cep->name);
 			errors++;
 			continue;
 		}
@@ -174,7 +174,7 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (!has_type)
 	{
 		config_error("%s:%i: websocket set, but type unspecified. Use something like: listen { ip *; port 443; websocket { type text; } }",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			ce->file->filename, ce->line_number);
 		errors++;
 	}
 
@@ -192,18 +192,18 @@ int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr
 		return 0;
 
 	/* We are only interrested in listen::options::websocket.. */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "websocket"))
+	if (!ce || !ce->name || strcmp(ce->name, "websocket"))
 		return 0;
 
 	l = (ConfigItem_listen *)ptr;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "type"))
+		if (!strcmp(cep->name, "type"))
 		{
-			if (!strcmp(cep->ce_vardata, "binary"))
+			if (!strcmp(cep->value, "binary"))
 				l->websocket_options = WEBSOCKET_TYPE_BINARY;
-			else if (!strcmp(cep->ce_vardata, "text"))
+			else if (!strcmp(cep->value, "text"))
 			{
 				l->websocket_options = WEBSOCKET_TYPE_TEXT;
 				if ((tempiConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY) && !warned_once_channel)

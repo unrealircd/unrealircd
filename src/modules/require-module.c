@@ -187,50 +187,50 @@ int reqmods_configtest_deny(ConfigFile *cf, ConfigEntry *ce, int type, int *errs
 	int has_name, has_reason;
 
 	// We are only interested in deny module { }
-	if (strcmp(ce->ce_vardata, "module"))
+	if (strcmp(ce->value, "module"))
 		return 0;
 
 	has_name = has_reason = 0;
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strlen(cep->ce_varname))
+		if (!strlen(cep->name))
 		{
-			config_error("%s:%i: blank directive for deny module { } block", cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			config_error("%s:%i: blank directive for deny module { } block", cep->file->filename, cep->line_number);
 			errors++;
 			continue;
 		}
 
-		if (!cep->ce_vardata || !strlen(cep->ce_vardata))
+		if (!cep->value || !strlen(cep->value))
 		{
-			config_error("%s:%i: blank %s without value for deny module { } block", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			config_error("%s:%i: blank %s without value for deny module { } block", cep->file->filename, cep->line_number, cep->name);
 			errors++;
 			continue;
 		}
 
-		if (!strcmp(cep->ce_varname, "name"))
+		if (!strcmp(cep->name, "name"))
 		{
 			if (has_name)
 			{
-				config_error("%s:%i: duplicate %s for deny module { } block", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				config_error("%s:%i: duplicate %s for deny module { } block", cep->file->filename, cep->line_number, cep->name);
 				continue;
 			}
 
 			// We do a loose check here because a module might not be fully loaded yet
-			if (find_modptr_byname(cep->ce_vardata, 0))
+			if (find_modptr_byname(cep->value, 0))
 			{
-				config_error("[require-module] Module '%s' was specified as denied but we've actually loaded it ourselves", cep->ce_vardata);
+				config_error("[require-module] Module '%s' was specified as denied but we've actually loaded it ourselves", cep->value);
 				errors++;
 			}
 			has_name = 1;
 			continue;
 		}
 
-		if (!strcmp(cep->ce_varname, "reason")) // Optional
+		if (!strcmp(cep->name, "reason")) // Optional
 		{
 			// Still check for duplicate directives though
 			if (has_reason)
 			{
-				config_error("%s:%i: duplicate %s for deny module { } block", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				config_error("%s:%i: duplicate %s for deny module { } block", cep->file->filename, cep->line_number, cep->name);
 				errors++;
 				continue;
 			}
@@ -238,13 +238,13 @@ int reqmods_configtest_deny(ConfigFile *cf, ConfigEntry *ce, int type, int *errs
 			continue;
 		}
 
-		config_error("%s:%i: unknown directive %s for deny module { } block", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+		config_error("%s:%i: unknown directive %s for deny module { } block", cep->file->filename, cep->line_number, cep->name);
 		errors++;
 	}
 
 	if (!has_name)
 	{
-		config_error("%s:%i: missing required 'name' directive for deny module { } block", ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_error("%s:%i: missing required 'name' directive for deny module { } block", ce->file->filename, ce->line_number);
 		errors++;
 	}
 
@@ -257,21 +257,21 @@ int reqmods_configrun_deny(ConfigFile *cf, ConfigEntry *ce, int type)
 	ConfigEntry *cep;
 	DenyMod *dmod;
 
-	if (strcmp(ce->ce_vardata, "module"))
+	if (strcmp(ce->value, "module"))
 		return 0;
 
 	dmod = safe_alloc(sizeof(DenyMod));
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "name"))
+		if (!strcmp(cep->name, "name"))
 		{
-			safe_strdup(dmod->name, cep->ce_vardata);
+			safe_strdup(dmod->name, cep->value);
 			continue;
 		}
 
-		if (!strcmp(cep->ce_varname, "reason"))
+		if (!strcmp(cep->name, "reason"))
 		{
-			safe_strdup(dmod->reason, cep->ce_vardata);
+			safe_strdup(dmod->reason, cep->value);
 			continue;
 		}
 	}
@@ -290,37 +290,37 @@ int reqmods_configtest_require(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	int has_name, has_minversion;
 
 	// We are only interested in require module { }
-	if (strcmp(ce->ce_vardata, "module"))
+	if (strcmp(ce->value, "module"))
 		return 0;
 
 	has_name = has_minversion = 0;
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strlen(cep->ce_varname))
+		if (!strlen(cep->name))
 		{
-			config_error("%s:%i: blank directive for require module { } block", cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			config_error("%s:%i: blank directive for require module { } block", cep->file->filename, cep->line_number);
 			errors++;
 			continue;
 		}
 
-		if (!cep->ce_vardata || !strlen(cep->ce_vardata))
+		if (!cep->value || !strlen(cep->value))
 		{
-			config_error("%s:%i: blank %s without value for require module { } block", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			config_error("%s:%i: blank %s without value for require module { } block", cep->file->filename, cep->line_number, cep->name);
 			errors++;
 			continue;
 		}
 
-		if (!strcmp(cep->ce_varname, "name"))
+		if (!strcmp(cep->name, "name"))
 		{
 			if (has_name)
 			{
-				config_error("%s:%i: duplicate %s for require module { } block", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				config_error("%s:%i: duplicate %s for require module { } block", cep->file->filename, cep->line_number, cep->name);
 				continue;
 			}
 
-			if (!find_modptr_byname(cep->ce_vardata, 0))
+			if (!find_modptr_byname(cep->value, 0))
 			{
-				config_error("[require-module] Module '%s' was specified as required but we didn't even load it ourselves (maybe double check the name?)", cep->ce_vardata);
+				config_error("[require-module] Module '%s' was specified as required but we didn't even load it ourselves (maybe double check the name?)", cep->value);
 				errors++;
 			}
 
@@ -329,12 +329,12 @@ int reqmods_configtest_require(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			continue;
 		}
 
-		if (!strcmp(cep->ce_varname, "min-version")) // Optional
+		if (!strcmp(cep->name, "min-version")) // Optional
 		{
 			// Still check for duplicate directives though
 			if (has_minversion)
 			{
-				config_error("%s:%i: duplicate %s for require module { } block", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				config_error("%s:%i: duplicate %s for require module { } block", cep->file->filename, cep->line_number, cep->name);
 				errors++;
 				continue;
 			}
@@ -343,13 +343,13 @@ int reqmods_configtest_require(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		}
 
 		// Reason directive is not used for require module { }, so error on that too
-		config_error("%s:%i: unknown directive %s for require module { } block", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+		config_error("%s:%i: unknown directive %s for require module { } block", cep->file->filename, cep->line_number, cep->name);
 		errors++;
 	}
 
 	if (!has_name)
 	{
-		config_error("%s:%i: missing required 'name' directive for require module { } block", ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_error("%s:%i: missing required 'name' directive for require module { } block", ce->file->filename, ce->line_number);
 		errors++;
 	}
 
@@ -364,28 +364,28 @@ int reqmods_configrun_require(ConfigFile *cf, ConfigEntry *ce, int type)
 	ReqMod *rmod;
 	char *name, *minversion;
 
-	if (strcmp(ce->ce_vardata, "module"))
+	if (strcmp(ce->value, "module"))
 		return 0;
 
 	name = minversion = NULL;
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "name"))
+		if (!strcmp(cep->name, "name"))
 		{
-			if (!(mod = find_modptr_byname(cep->ce_vardata, 0)))
+			if (!(mod = find_modptr_byname(cep->value, 0)))
 			{
 				// Something went very wrong :D
-				config_warn("[require-module] [BUG?] Passed configtest_require() but not configrun_require() for module '%s' (seems to not be loaded after all)", cep->ce_vardata);
+				config_warn("[require-module] [BUG?] Passed configtest_require() but not configrun_require() for module '%s' (seems to not be loaded after all)", cep->value);
 				continue;
 			}
 
-			name = cep->ce_vardata;
+			name = cep->value;
 			continue;
 		}
 
-		if (!strcmp(cep->ce_varname, "min-version"))
+		if (!strcmp(cep->name, "min-version"))
 		{
-			minversion = cep->ce_vardata;
+			minversion = cep->value;
 			continue;
 		}
 	}

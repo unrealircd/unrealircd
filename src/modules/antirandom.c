@@ -575,64 +575,64 @@ int antirandom_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		return 0;
 	
 	/* We are only interrested in set::antirandom... */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "antirandom"))
+	if (!ce || !ce->name || strcmp(ce->name, "antirandom"))
 		return 0;
 	
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "except-hosts"))
+		if (!strcmp(cep->name, "except-hosts"))
 		{
 		} else
-		if (!strcmp(cep->ce_varname, "except-webirc"))
+		if (!strcmp(cep->name, "except-webirc"))
 		{
 			/* This should normally be UNDER the generic 'set::antirandom::%s with no value'
 			 * stuff but I put it here because people may think it's a hostlist and then
 			 * the error can be a tad confusing. -- Syzop
 			 */
-			if (!cep->ce_vardata)
+			if (!cep->value)
 			{
 				config_error("%s:%i: set::antirandom::except-webirc should be 'yes' or 'no'",
-				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				             cep->file->filename, cep->line_number);
 				errors++;
 			}
 		} else
-		if (!cep->ce_vardata)
+		if (!cep->value)
 		{
 			config_error("%s:%i: set::antirandom::%s with no value",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				cep->file->filename, cep->line_number, cep->name);
 			errors++;
 		} else
-		if (!strcmp(cep->ce_varname, "threshold"))
+		if (!strcmp(cep->name, "threshold"))
 		{
 			req.threshold = 1;
 		} else
-		if (!strcmp(cep->ce_varname, "ban-action"))
+		if (!strcmp(cep->name, "ban-action"))
 		{
-			if (!banact_stringtoval(cep->ce_vardata))
+			if (!banact_stringtoval(cep->value))
 			{
 				config_error("%s:%i: set::antirandom::ban-action: unknown action '%s'",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+					cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			} else
 				req.ban_action = 1;
 		} else
-		if (!strcmp(cep->ce_varname, "ban-reason"))
+		if (!strcmp(cep->name, "ban-reason"))
 		{
 			req.ban_reason = 1;
 		} else
-		if (!strcmp(cep->ce_varname, "ban-time"))
+		if (!strcmp(cep->name, "ban-time"))
 		{
 			req.ban_time = 1;
 		} else
-		if (!strcmp(cep->ce_varname, "convert-to-lowercase"))
+		if (!strcmp(cep->name, "convert-to-lowercase"))
 		{
 		} else
-		if (!strcmp(cep->ce_varname, "show-failedconnects"))
+		if (!strcmp(cep->name, "show-failedconnects"))
 		{
 		} else
 		{
 			config_error("%s:%i: unknown directive set::antirandom::%s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				cep->file->filename, cep->line_number, cep->name);
 			errors++;
 		}
 	}
@@ -648,43 +648,43 @@ int antirandom_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		return 0;
 	
 	/* We are only interrested in set::antirandom... */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "antirandom"))
+	if (!ce || !ce->name || strcmp(ce->name, "antirandom"))
 		return 0;
 	
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "except-hosts"))
+		if (!strcmp(cep->name, "except-hosts"))
 		{
-			for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
+			for (cep2 = cep->items; cep2; cep2 = cep2->next)
 				unreal_add_masks(&cfg.except_hosts, cep2);
 		} else
-		if (!strcmp(cep->ce_varname, "except-webirc"))
+		if (!strcmp(cep->name, "except-webirc"))
 		{
-			cfg.except_webirc = config_checkval(cep->ce_vardata, CFG_YESNO);
+			cfg.except_webirc = config_checkval(cep->value, CFG_YESNO);
 		} else
-		if (!strcmp(cep->ce_varname, "threshold"))
+		if (!strcmp(cep->name, "threshold"))
 		{
-			cfg.threshold = atoi(cep->ce_vardata);
+			cfg.threshold = atoi(cep->value);
 		} else
-		if (!strcmp(cep->ce_varname, "ban-action"))
+		if (!strcmp(cep->name, "ban-action"))
 		{
-			cfg.ban_action = banact_stringtoval(cep->ce_vardata);
+			cfg.ban_action = banact_stringtoval(cep->value);
 		} else
-		if (!strcmp(cep->ce_varname, "ban-reason"))
+		if (!strcmp(cep->name, "ban-reason"))
 		{
-			safe_strdup(cfg.ban_reason, cep->ce_vardata);
+			safe_strdup(cfg.ban_reason, cep->value);
 		} else
-		if (!strcmp(cep->ce_varname, "ban-time"))
+		if (!strcmp(cep->name, "ban-time"))
 		{
-			cfg.ban_time = config_checkval(cep->ce_vardata, CFG_TIME);
+			cfg.ban_time = config_checkval(cep->value, CFG_TIME);
 		} else
-		if (!strcmp(cep->ce_varname, "convert-to-lowercase"))
+		if (!strcmp(cep->name, "convert-to-lowercase"))
 		{
-			cfg.convert_to_lowercase = config_checkval(cep->ce_vardata, CFG_YESNO);
+			cfg.convert_to_lowercase = config_checkval(cep->value, CFG_YESNO);
 		}
-		if (!strcmp(cep->ce_varname, "show-failedconnects"))
+		if (!strcmp(cep->name, "show-failedconnects"))
 		{
-			cfg.show_failedconnects = config_checkval(cep->ce_vardata, CFG_YESNO);
+			cfg.show_failedconnects = config_checkval(cep->value, CFG_YESNO);
 		}
 	}
 	return 1;

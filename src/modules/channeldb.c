@@ -166,34 +166,34 @@ int channeldb_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (type != CONFIG_SET)
 		return 0;
 
-	if (!ce || strcmp(ce->ce_varname, "channeldb"))
+	if (!ce || strcmp(ce->name, "channeldb"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!cep->ce_vardata)
+		if (!cep->value)
 		{
-			config_error("%s:%i: blank set::channeldb::%s without value", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			config_error("%s:%i: blank set::channeldb::%s without value", cep->file->filename, cep->line_number, cep->name);
 			errors++;
 		} else
-		if (!strcmp(cep->ce_varname, "database"))
+		if (!strcmp(cep->name, "database"))
 		{
-			convert_to_absolute_path(&cep->ce_vardata, PERMDATADIR);
-			safe_strdup(test.database, cep->ce_vardata);
+			convert_to_absolute_path(&cep->value, PERMDATADIR);
+			safe_strdup(test.database, cep->value);
 		} else
-		if (!strcmp(cep->ce_varname, "db-secret"))
+		if (!strcmp(cep->name, "db-secret"))
 		{
 			char *err;
-			if ((err = unrealdb_test_secret(cep->ce_vardata)))
+			if ((err = unrealdb_test_secret(cep->value)))
 			{
-				config_error("%s:%i: set::channeldb::db-secret: %s", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, err);
+				config_error("%s:%i: set::channeldb::db-secret: %s", cep->file->filename, cep->line_number, err);
 				errors++;
 				continue;
 			}
-			safe_strdup(test.db_secret, cep->ce_vardata);
+			safe_strdup(test.db_secret, cep->value);
 		} else
 		{
-			config_error("%s:%i: unknown directive set::channeldb::%s", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			config_error("%s:%i: unknown directive set::channeldb::%s", cep->file->filename, cep->line_number, cep->name);
 			errors++;
 		}
 	}
@@ -225,15 +225,15 @@ int channeldb_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (type != CONFIG_SET)
 		return 0;
 
-	if (!ce || strcmp(ce->ce_varname, "channeldb"))
+	if (!ce || strcmp(ce->name, "channeldb"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "database"))
-			safe_strdup(cfg.database, cep->ce_vardata);
-		else if (!strcmp(cep->ce_varname, "db-secret"))
-			safe_strdup(cfg.db_secret, cep->ce_vardata);
+		if (!strcmp(cep->name, "database"))
+			safe_strdup(cfg.database, cep->value);
+		else if (!strcmp(cep->name, "db-secret"))
+			safe_strdup(cfg.db_secret, cep->value);
 	}
 	return 1;
 }

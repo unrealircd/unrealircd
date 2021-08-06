@@ -158,32 +158,32 @@ int authprompt_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		return 0;
 
 	/* We are only interrested in set::authentication-prompt... */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "authentication-prompt"))
+	if (!ce || !ce->name || strcmp(ce->name, "authentication-prompt"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!cep->ce_vardata)
+		if (!cep->value)
 		{
 			config_error("%s:%i: set::authentication-prompt::%s with no value",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				cep->file->filename, cep->line_number, cep->name);
 			errors++;
 		} else
-		if (!strcmp(cep->ce_varname, "enabled"))
+		if (!strcmp(cep->name, "enabled"))
 		{
 		} else
-		if (!strcmp(cep->ce_varname, "message"))
+		if (!strcmp(cep->name, "message"))
 		{
 		} else
-		if (!strcmp(cep->ce_varname, "fail-message"))
+		if (!strcmp(cep->name, "fail-message"))
 		{
 		} else
-		if (!strcmp(cep->ce_varname, "unconfirmed-message"))
+		if (!strcmp(cep->name, "unconfirmed-message"))
 		{
 		} else
 		{
 			config_error("%s:%i: unknown directive set::authentication-prompt::%s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				cep->file->filename, cep->line_number, cep->name);
 			errors++;
 		}
 	}
@@ -199,26 +199,26 @@ int authprompt_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		return 0;
 
 	/* We are only interrested in set::authentication-prompt... */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "authentication-prompt"))
+	if (!ce || !ce->name || strcmp(ce->name, "authentication-prompt"))
 		return 0;
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "enabled"))
+		if (!strcmp(cep->name, "enabled"))
 		{
-			cfg.enabled = config_checkval(cep->ce_vardata, CFG_YESNO);
+			cfg.enabled = config_checkval(cep->value, CFG_YESNO);
 		} else
-		if (!strcmp(cep->ce_varname, "message"))
+		if (!strcmp(cep->name, "message"))
 		{
-			addmultiline(&cfg.message, cep->ce_vardata);
+			addmultiline(&cfg.message, cep->value);
 		} else
-		if (!strcmp(cep->ce_varname, "fail-message"))
+		if (!strcmp(cep->name, "fail-message"))
 		{
-			addmultiline(&cfg.fail_message, cep->ce_vardata);
+			addmultiline(&cfg.fail_message, cep->value);
 		} else
-		if (!strcmp(cep->ce_varname, "unconfirmed-message"))
+		if (!strcmp(cep->name, "unconfirmed-message"))
 		{
-			addmultiline(&cfg.unconfirmed_message, cep->ce_vardata);
+			addmultiline(&cfg.unconfirmed_message, cep->value);
 		}
 	}
 	return 1;

@@ -154,82 +154,82 @@ int webirc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (!ce)
 		return 0;
 	
-	if (!strcmp(ce->ce_varname, "cgiirc"))
+	if (!strcmp(ce->name, "cgiirc"))
 	{
 		config_error("%s:%i: the cgiirc block has been renamed to webirc and "
 		             "the syntax has changed in UnrealIRCd 4",
-		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		             ce->file->filename, ce->line_number);
 		need_34_upgrade = 1;
 		*errs = 1;
 		return -1;
 	}
 
-	if (strcmp(ce->ce_varname, "webirc"))
+	if (strcmp(ce->name, "webirc"))
 		return 0; /* not interested in non-webirc stuff.. */
 
 	/* Now actually go parse the webirc { } block */
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!cep->ce_vardata)
+		if (!cep->value)
 		{
-			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"webirc", cep->ce_varname);
+			config_error_empty(cep->file->filename, cep->line_number,
+				"webirc", cep->name);
 			errors++;
 			continue;
 		}
-		if (!strcmp(cep->ce_varname, "mask"))
+		if (!strcmp(cep->name, "mask"))
 		{
-			if (cep->ce_vardata || cep->ce_entries)
+			if (cep->value || cep->items)
 				has_mask = 1;
 		}
-		else if (!strcmp(cep->ce_varname, "password"))
+		else if (!strcmp(cep->name, "password"))
 		{
 			if (has_password)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "webirc::password");
+				config_warn_duplicate(cep->file->filename, 
+					cep->line_number, "webirc::password");
 				continue;
 			}
 			has_password = 1;
 			if (Auth_CheckError(cep) < 0)
 				errors++;
 		}
-		else if (!strcmp(cep->ce_varname, "type"))
+		else if (!strcmp(cep->name, "type"))
 		{
 			if (has_type)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "webirc::type");
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "webirc::type");
 			}
 			has_type = 1;
-			if (!strcmp(cep->ce_vardata, "webirc"))
+			if (!strcmp(cep->value, "webirc"))
 				webirc_type = WEBIRC_WEBIRC;
-			else if (!strcmp(cep->ce_vardata, "old"))
+			else if (!strcmp(cep->value, "old"))
 				webirc_type = WEBIRC_PASS;
 			else
 			{
 				config_error("%s:%i: unknown webirc::type '%s', should be either 'webirc' or 'old'",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+					cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			}
 		}
 		else
 		{
-			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"webirc", cep->ce_varname);
+			config_error_unknown(cep->file->filename, cep->line_number,
+				"webirc", cep->name);
 			errors++;
 		}
 	}
 	if (!has_mask)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"webirc::mask");
 		errors++;
 	}
 
 	if (!has_password && (webirc_type == WEBIRC_WEBIRC))
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+		config_error_missing(ce->file->filename, ce->line_number,
 			"webirc::password");
 		errors++;
 	}
@@ -239,7 +239,7 @@ int webirc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		config_error("%s:%i: webirc block has type set to 'old' but has a password set. "
 		             "Passwords are not used with type 'old'. Either remove the password or "
 		             "use the 'webirc' method instead.",
-		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		             ce->file->filename, ce->line_number);
 		errors++;
 	}
 
@@ -255,23 +255,23 @@ int webirc_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (type != CONFIG_MAIN)
 		return 0;
 	
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "webirc"))
+	if (!ce || !ce->name || strcmp(ce->name, "webirc"))
 		return 0; /* not interested */
 
 	webirc = safe_alloc(sizeof(ConfigItem_webirc));
 	webirc->type = WEBIRC_WEBIRC; /* default */
 
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->ce_varname, "mask"))
+		if (!strcmp(cep->name, "mask"))
 			unreal_add_masks(&webirc->mask, cep);
-		else if (!strcmp(cep->ce_varname, "password"))
+		else if (!strcmp(cep->name, "password"))
 			webirc->auth = AuthBlockToAuthConfig(cep);
-		else if (!strcmp(cep->ce_varname, "type"))
+		else if (!strcmp(cep->name, "type"))
 		{
-			if (!strcmp(cep->ce_vardata, "webirc"))
+			if (!strcmp(cep->value, "webirc"))
 				webirc->type = WEBIRC_WEBIRC;
-			else if (!strcmp(cep->ce_vardata, "old"))
+			else if (!strcmp(cep->value, "old"))
 				webirc->type = WEBIRC_PASS;
 			else
 				abort();
