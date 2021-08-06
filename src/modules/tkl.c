@@ -3153,7 +3153,7 @@ int spamfilter_check_users(TKL *tkl)
 
 			/* matched! */
 			unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
-			           "[Spamfilter] $client.nuh matches filter '$tkl': [cmd: $command: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
+			           "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
 				   log_data_tkl("tkl", tkl),
 				   log_data_string("command", "USER"),
 				   log_data_string("str", spamfilter_user));
@@ -4705,7 +4705,7 @@ int _match_spamfilter(Client *client, char *str_in, int target, char *cmd, char 
 				return 0; /* No problem! */
 
 			unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
-			           "[Spamfilter] $client.nuh matches filter '$tkl': [cmd: $command$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
+			           "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
 				   log_data_tkl("tkl", tkl),
 				   log_data_string("command", cmd),
 				   log_data_string("destination", destinationbuf),

@@ -418,16 +418,18 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 	/* same for ip, is there for all (well, some services pseudo-users may not have one) */
 	json_object_set_new(child, "ip", json_string_possibly_null(client->ip));
 
-	// FIXME: 'nuh' should be something more generic, like $client.detail, want to use it for all types!
+	/* client.details is always available: it is nick!user@host, nick@host, server@host
+	 * server@ip, or just server.
+	 */
 	if (client->user)
 	{
 		snprintf(buf, sizeof(buf), "%s!%s@%s", client->name, client->user->username, client->user->realhost);
-		json_object_set_new(child, "nuh", json_string(buf));
+		json_object_set_new(child, "details", json_string(buf));
 	} else if (client->ip) {
 		snprintf(buf, sizeof(buf), "%s@%s", client->name, client->ip);
-		json_object_set_new(child, "nuh", json_string(buf));
+		json_object_set_new(child, "details", json_string(buf));
 	} else {
-		json_object_set_new(child, "nuh", json_string(client->name));
+		json_object_set_new(child, "details", json_string(client->name));
 	}
 
 	if (client->local && client->local->firsttime)

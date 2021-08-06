@@ -116,7 +116,7 @@ CMD_FUNC(cmd_oper)
 	{
 		sendnotice_multiline(client, iConf.plaintext_policy_oper_message);
 		unreal_log(ULOG_WARNING, "oper", "OPER_FAILED", client,
-		           "Failed OPER attempt by $client.nuh [reason: $reason] [oper-block: $oper_block]",
+		           "Failed OPER attempt by $client.details [reason: $reason] [oper-block: $oper_block]",
 		           log_data_string("reason", "Not using TLS"),
 		           log_data_string("fail_type", "NO_TLS"),
 		           log_data_string("oper_block", parv[1]));
@@ -129,7 +129,7 @@ CMD_FUNC(cmd_oper)
 	{
 		sendnotice(client, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_oper_message, client));
 		unreal_log(ULOG_WARNING, "oper", "OPER_FAILED", client,
-		           "Failed OPER attempt by $client.nuh [reason: $reason] [oper-block: $oper_block]",
+		           "Failed OPER attempt by $client.details [reason: $reason] [oper-block: $oper_block]",
 		           log_data_string("reason", "Outdated TLS protocol or cipher"),
 		           log_data_string("fail_type", "OUTDATED_TLS_PROTOCOL_OR_CIPHER"),
 		           log_data_string("oper_block", parv[1]));
@@ -141,7 +141,7 @@ CMD_FUNC(cmd_oper)
 	{
 		sendnumeric(client, ERR_NOOPERHOST);
 		unreal_log(ULOG_WARNING, "oper", "OPER_FAILED", client,
-		           "Failed OPER attempt by $client.nuh [reason: $reason] [oper-block: $oper_block]",
+		           "Failed OPER attempt by $client.details [reason: $reason] [oper-block: $oper_block]",
 		           log_data_string("reason", "Unknown oper operblock_name"),
 		           log_data_string("fail_type", "UNKNOWN_OPER_NAME"),
 		           log_data_string("oper_block", parv[1]));
@@ -157,7 +157,7 @@ CMD_FUNC(cmd_oper)
 	{
 		sendnumeric(client, ERR_NOOPERHOST);
 		unreal_log(ULOG_ERROR, "oper", "OPER_FAILED", client,
-		           "Failed OPER attempt by $client.nuh [reason: $reason] [oper-block: $oper_block]",
+		           "Failed OPER attempt by $client.details [reason: $reason] [oper-block: $oper_block]",
 		           log_data_string("reason", "Host does not match"),
 		           log_data_string("fail_type", "NO_HOST_MATCH"),
 		           log_data_string("oper_block", parv[1]));
@@ -172,7 +172,7 @@ CMD_FUNC(cmd_oper)
 			sendnotice(client,
 			    "*** Your attempt has been logged.");
 		unreal_log(ULOG_ERROR, "oper", "OPER_FAILED", client,
-		           "Failed OPER attempt by $client.nuh [reason: $reason] [oper-block: $oper_block]",
+		           "Failed OPER attempt by $client.details [reason: $reason] [oper-block: $oper_block]",
 		           log_data_string("reason", "Authentication failed"),
 		           log_data_string("fail_type", "AUTHENTICATION_FAILED"),
 		           log_data_string("oper_block", parv[1]));
@@ -190,7 +190,7 @@ CMD_FUNC(cmd_oper)
 	{
 		sendnumericfmt(client, ERR_NOOPERHOST, ":You are missing user modes required to OPER");
 		unreal_log(ULOG_WARNING, "oper", "OPER_FAILED", client,
-		           "Failed OPER attempt by $client.nuh [reason: $reason] [oper-block: $oper_block]",
+		           "Failed OPER attempt by $client.details [reason: $reason] [oper-block: $oper_block]",
 		           log_data_string("reason", "Not matching oper::require-modes"),
 		           log_data_string("fail_type", "REQUIRE_MODES_NOT_SATISFIED"),
 		           log_data_string("oper_block", parv[1]));
@@ -202,7 +202,7 @@ CMD_FUNC(cmd_oper)
 	{
 		sendnotice(client, "ERROR: There is a non-existant oper::operclass specified for your oper block");
 		unreal_log(ULOG_WARNING, "oper", "OPER_FAILED", client,
-		           "Failed OPER attempt by $client.nuh [reason: $reason] [oper-block: $oper_block]",
+		           "Failed OPER attempt by $client.details [reason: $reason] [oper-block: $oper_block]",
 		           log_data_string("reason", "Config error: invalid oper::operclass"),
 		           log_data_string("fail_type", "OPER_OPERCLASS_INVALID"),
 		           log_data_string("oper_block", parv[1]));
@@ -215,7 +215,7 @@ CMD_FUNC(cmd_oper)
 		sendnotice(client, "Your maximum number of concurrent oper logins has been reached (%d)",
 			operblock->maxlogins);
 		unreal_log(ULOG_WARNING, "oper", "OPER_FAILED", client,
-		           "Failed OPER attempt by $client.nuh [reason: $reason] [oper-block: $oper_block]",
+		           "Failed OPER attempt by $client.details [reason: $reason] [oper-block: $oper_block]",
 		           log_data_string("reason", "oper::maxlogins limit reached"),
 		           log_data_string("fail_type", "OPER_MAXLOGINS_LIMIT"),
 		           log_data_string("oper_block", parv[1]));
@@ -261,7 +261,7 @@ CMD_FUNC(cmd_oper)
 	}
 
 	unreal_log(ULOG_INFO, "oper", "OPER_SUCCESS", client,
-		   "$client.nuh is now an IRC Operator [oper-block: $oper_block]",
+		   "$client.details is now an IRC Operator [oper-block: $oper_block]",
 		   log_data_string("oper_block", parv[1]));
 
 	/* set oper snomasks */
@@ -315,7 +315,7 @@ CMD_FUNC(cmd_oper)
 	{
 		sendnotice_multiline(client, iConf.plaintext_policy_oper_message);
 		unreal_log(ULOG_WARNING, "oper", "OPER_UNSAFE", client,
-			   "Insecure (non-TLS) connection used to OPER up by $client.nuh [oper-block: $oper_block]",
+			   "Insecure (non-TLS) connection used to OPER up by $client.details [oper-block: $oper_block]",
 			   log_data_string("oper_block", parv[1]),
 		           log_data_string("warn_type", "NO_TLS"));
 	}
@@ -325,7 +325,7 @@ CMD_FUNC(cmd_oper)
 	{
 		sendnotice(client, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_oper_message, client));
 		unreal_log(ULOG_WARNING, "oper", "OPER_UNSAFE", client,
-			   "Outdated TLS protocol/cipher used to OPER up by $client.nuh [oper-block: $oper_block]",
+			   "Outdated TLS protocol/cipher used to OPER up by $client.details [oper-block: $oper_block]",
 			   log_data_string("oper_block", parv[1]),
 		           log_data_string("warn_type", "OUTDATED_TLS_PROTOCOL_OR_CIPHER"));
 	}

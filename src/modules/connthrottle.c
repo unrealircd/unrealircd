@@ -605,7 +605,7 @@ CMD_FUNC(ct_throttle)
 		}
 		ucounter->disabled = 1;
 		unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTLE_MODULE_DISABLED", client,
-			   "[ConnThrottle] $client.nuh DISABLED the connthrottle module.");
+			   "[ConnThrottle] $client.details DISABLED the connthrottle module.");
 	} else
 	if (!strcasecmp(parv[1], "ON"))
 	{
@@ -615,14 +615,14 @@ CMD_FUNC(ct_throttle)
 			return;
 		}
 		unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTLE_MODULE_ENABLED", client,
-			   "[ConnThrottle] $client.nuh ENABLED the connthrottle module.");
+			   "[ConnThrottle] $client.details ENABLED the connthrottle module.");
 		ucounter->disabled = 0;
 	} else
 	if (!strcasecmp(parv[1], "RESET"))
 	{
 		memset(ucounter, 0, sizeof(UCounter));
 		unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTLE_RESET", client,
-			   "[ConnThrottle] $client.nuh did a RESET on the statistics/counters.");
+			   "[ConnThrottle] $client.details did a RESET on the statistics/counters.");
 	} else
 	{
 		sendnotice(client, "Unknown option '%s'", parv[1]);

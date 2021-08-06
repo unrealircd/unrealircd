@@ -570,7 +570,7 @@ CMD_FUNC(cmd_rehash)
 				sendnotice(client, "A rehash is already in progress");
 				return;
 			}
-			unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [by: $client.nuh]");
+			unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [by: $client.details]");
 			remote_rehash_client = client;
 			/* fallthrough... so we deal with this the same way as local rehashes */
 		}
@@ -624,7 +624,7 @@ CMD_FUNC(cmd_rehash)
 			}
 			if (match_simple("-ssl*", parv[1]) || match_simple("-tls*", parv[1]))
 			{
-				unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD_TLS", client, "Reloading all TLS related data. [by: $client.nuh]");
+				unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD_TLS", client, "Reloading all TLS related data. [by: $client.details]");
 				reinit_tls();
 				return;
 			}
@@ -639,7 +639,7 @@ CMD_FUNC(cmd_rehash)
 			sendnotice(client, "ERROR: A rehash is already in progress");
 			return;
 		}
-		unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [by: $client.nuh]");
+		unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [by: $client.details]");
 	}
 
 	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
@@ -993,7 +993,7 @@ CMD_FUNC(cmd_die)
 
 	/* Let the +s know what is going on */
 	unreal_log(ULOG_INFO, "main", "UNREALIRCD_STOP", client,
-	           "Terminating server by request of $client.nuh");
+	           "Terminating server by request of $client.details");
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{

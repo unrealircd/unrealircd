@@ -999,7 +999,7 @@ void flood_limit_exceeded_log(Client *client, char *floodname)
 	char buf[1024];
 
 	unreal_log(ULOG_INFO, "flood", "FLOOD_BLOCKED", client,
-	           "Flood blocked ($flood_type) from $client.nuh [$client.ip]",
+	           "Flood blocked ($flood_type) from $client.details [$client.ip]",
 	           log_data_string("flood_type", floodname));
 }
 
