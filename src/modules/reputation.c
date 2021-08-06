@@ -22,7 +22,7 @@
 /* Change to #define to benchmark. Note that this will add random
  * reputation entries so should never be used on production servers!!!
  */
-#define BENCHMARK
+#undef BENCHMARK
 #undef TEST
 
 /* Benchmark results (2GHz Xeon Skylake, compiled with -O2, Linux):

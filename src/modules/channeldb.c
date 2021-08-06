@@ -27,9 +27,7 @@ ModuleHeader MOD_HEADER = {
 #define MAGIC_CHANNEL_START	0x11111111
 #define MAGIC_CHANNEL_END	0x22222222
 
-#ifdef DEBUGMODE
- #define BENCHMARK
-#endif
+// #undef BENCHMARK
 
 #define WARN_WRITE_ERROR(fname) \
 	do { \

@@ -38,8 +38,7 @@ ModuleHeader MOD_HEADER = {
  */
 #define TKLDB_SAVE_EVERY_DELTA +15
 
-#ifdef DEBUGMODE
- #define BENCHMARK
+// #undef BENCHMARK
 /* Benchmark results (2GHz Xeon Skylake, compiled with -O2, Linux):
  * 100,000 zlines:
  * - load db: 510 ms
@@ -48,7 +47,6 @@ ModuleHeader MOD_HEADER = {
  * which executes every 5 minutes.
  * Of course, exact figures will depend on the machine.
  */
-#endif
 
 #define FreeTKLRead() \
  	do { \
