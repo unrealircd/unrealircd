@@ -29,6 +29,8 @@
 #define SNO_ALL INT_MAX
 
 /* Forward declarations */
+static int valid_event_id(const char *s);
+static int valid_subsystem(const char *s);
 long log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id);
 void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id, Client *client, int expand_msg, char *msg, va_list vl);
 
@@ -548,6 +550,28 @@ char *loglevel_to_string(LogLevel loglevel)
 }
 
 #define validvarcharacter(x)	(isalnum((x)) || ((x) == '_'))
+#define valideventidcharacter(x)	(isupper((x)) || isdigit((x)) || ((x) == '_'))
+#define validsubsystemcharacter(x)	(islower((x)) || isdigit((x)) || ((x) == '_'))
+
+static int valid_event_id(const char *s)
+{
+	if (!*s)
+		return 0;
+	for (; *s; s++)
+		if (!valideventidcharacter(*s))
+			return 0;
+	return 1;
+}
+
+static int valid_subsystem(const char *s)
+{
+	if (!*s)
+		return 0;
+	for (; *s; s++)
+		if (!validsubsystemcharacter(*s))
+			return 0;
+	return 1;
+}
 
 const char *json_get_value(json_t *t)
 {
@@ -876,6 +900,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	json_t *j = NULL;
 	json_t *j_details = NULL;
 	char msgbuf[1024];
+	char *loglevel_string = loglevel_to_string(loglevel);
 
 	/* TODO: Enforcement:
 	 * - loglevel must be valid
@@ -884,12 +909,20 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	 * - msg may not contain percent signs (%) as that is an obvious indication something is wrong?
 	 *   or maybe a temporary restriction while upgrading that can be removed later ;)
 	 */
+	if (!strcmp(loglevel_string, "???"))
+		abort();
+	if (!valid_subsystem(subsystem))
+		abort();
+	if (!valid_event_id(event_id))
+		abort();
+	if (expand_msg && strchr(msg, '%'))
+		abort();
 
 	j = json_object();
 	j_details = json_object();
 
 	json_object_set_new(j, "timestamp", json_string(timestamp_iso8601_now()));
-	json_object_set_new(j, "level", json_string(loglevel_to_string(loglevel)));
+	json_object_set_new(j, "level", json_string(loglevel_string));
 	json_object_set_new(j, "subsystem", json_string(subsystem));
 	json_object_set_new(j, "event_id", json_string(event_id));
 
