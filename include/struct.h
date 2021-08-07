@@ -277,7 +277,7 @@ struct Log {
 };
 
 /** This is used for deciding the <index> in logs[<index>] and temp_logs[<index>] */
-typedef enum LogDestination { LOG_DEST_SNOMASK=0, LOG_DEST_OPER=1, LOG_DEST_GLOBAL=2, LOG_DEST_CHANNEL=3, LOG_DEST_OTHER=4 } LogDestination;
+typedef enum LogDestination { LOG_DEST_SNOMASK=0, LOG_DEST_OPER=1, LOG_DEST_REMOTE=2, LOG_DEST_CHANNEL=3, LOG_DEST_OTHER=4 } LogDestination;
 #define NUM_LOG_DESTINATIONS 5
 
 /*

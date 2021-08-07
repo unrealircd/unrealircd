@@ -33,9 +33,6 @@ Log *logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 
 /* Forward declarations */
-static int valid_event_id(const char *s);
-static int valid_subsystem(const char *s);
-LogLevel log_level_stringtoval(const char *str);
 void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id, Client *client, int expand_msg, char *msg, va_list vl);
 char *timestamp_iso8601_now(void);
 char *timestamp_iso8601(time_t v);
@@ -227,7 +224,7 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 						}
 					}
 				} else
-				if (!strcmp(cep->name, "global"))
+				if (!strcmp(cep->name, "remote"))
 				{
 					destinations++;
 				} else // TODO: re-add syslog support too
@@ -309,12 +306,12 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 					log->sources = sources;
 					AddListItem(log, temp_logs[LOG_DEST_CHANNEL]);
 				} else
-				if (!strcmp(cep->name, "global"))
+				if (!strcmp(cep->name, "remote"))
 				{
 					Log *log = safe_alloc(sizeof(Log));
 					/* destination stays empty */
 					log->sources = sources;
-					AddListItem(log, temp_logs[LOG_DEST_GLOBAL]);
+					AddListItem(log, temp_logs[LOG_DEST_REMOTE]);
 				} else
 				if (!strcmp(cep->name, "file"))
 				{
@@ -743,7 +740,7 @@ LogLevel log_level_stringtoval(const char *str)
 #define valideventidcharacter(x)	(isupper((x)) || isdigit((x)) || ((x) == '_'))
 #define validsubsystemcharacter(x)	(islower((x)) || isdigit((x)) || ((x) == '_'))
 
-static int valid_event_id(const char *s)
+int valid_event_id(const char *s)
 {
 	if (!*s)
 		return 0;
@@ -753,7 +750,7 @@ static int valid_event_id(const char *s)
 	return 1;
 }
 
-static int valid_subsystem(const char *s)
+int valid_subsystem(const char *s)
 {
 	if (!*s)
 		return 0;
@@ -1131,6 +1128,25 @@ void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, ch
 	}
 }
 
+void do_unreal_log_remote(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
+{
+	Log *l;
+	int found = 0;
+
+	for (l = logs[LOG_DEST_REMOTE]; l; l = l->next)
+	{
+		if (log_sources_match(l->sources, loglevel, subsystem, event_id))
+		{
+			found = 1;
+			break;
+		}
+	}
+	if (found == 0)
+		return;
+
+	do_unreal_log_remote_deliver(loglevel, subsystem, event_id, msg, json_serialized);
+}
+
 static int unreal_log_recursion_trap = 0;
 
 /* Logging function, called by the unreal_log() macro. */
@@ -1247,6 +1263,8 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 
 	/* And the ircops stuff */
 	do_unreal_log_ircops(loglevel, subsystem, event_id, msgbuf, json_serialized);
+
+	do_unreal_log_remote(loglevel, subsystem, event_id, msgbuf, json_serialized);
 
 	/* Free everything */
 	safe_free(json_serialized);

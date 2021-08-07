@@ -1492,6 +1492,11 @@ void labeled_response_force_end_default_handler(void)
 {
 }
 
+/** Ad default handler for if the slog module is not loaded */
+void do_unreal_log_remote_deliver_default_handler(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
+{
+}
+
 /** my_timegm: mktime()-like function which will use GMT/UTC.
  * Strangely enough there is no standard function for this.
  * On some *NIX OS's timegm() may be available, sometimes only

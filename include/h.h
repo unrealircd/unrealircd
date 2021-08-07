@@ -776,6 +776,7 @@ extern MODVAR int (*watch_del_list)(Client *client, int flags);
 extern MODVAR Watch *(*watch_get)(char *nick);
 extern MODVAR int (*watch_check)(Client *client, int reply);
 extern MODVAR char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options);
+extern MODVAR void (*do_unreal_log_remote_deliver)(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized);
 /* /Efuncs */
 
 /* SSL/TLS functions */
@@ -808,6 +809,7 @@ extern void labeled_response_force_end_default_handler(void);
 extern int add_silence_default_handler(Client *client, const char *mask, int senderr);
 extern int del_silence_default_handler(Client *client, const char *mask);
 extern int is_silenced_default_handler(Client *client, Client *acptr);
+extern void do_unreal_log_remote_deliver_default_handler(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized);
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;
 extern MODVAR int max_connection_count;
@@ -1107,4 +1109,9 @@ extern LogData *log_data_socket_error(int fd);
 extern LogData *log_data_link_block(ConfigItem_link *link);
 extern LogData *log_data_tkl(const char *key, TKL *tkl);
 extern void log_blocks_switchover(void);
+extern LogLevel log_level_stringtoval(const char *str);
+extern char *log_level_valtostring(LogLevel loglevel);
+extern LogLevel log_level_stringtoval(const char *str);
+extern int valid_event_id(const char *s);
+extern int valid_subsystem(const char *s);
 /* end of logging */

@@ -2374,6 +2374,7 @@ enum EfunctionType {
 	EFUNC_WATCH_GET,
 	EFUNC_WATCH_CHECK,
 	EFUNC_TKL_UHOST,
+	EFUNC_DO_UNREAL_LOG_REMOTE_DELIVER,
 };
 
 /* Module flags */
