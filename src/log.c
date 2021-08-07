@@ -719,6 +719,25 @@ char *log_level_valtostring(LogLevel loglevel)
 	}
 }
 
+char *log_level_color(LogLevel loglevel)
+{
+	switch(loglevel)
+	{
+		case ULOG_DEBUG:
+			return "\0030,01";
+		case ULOG_INFO:
+			return "\00303";
+		case ULOG_WARNING:
+			return "\00307";
+		case ULOG_ERROR:
+			return "\00304";
+		case ULOG_FATAL:
+			return "\00313";
+		default:
+			return "";
+	}
+}
+
 LogLevel log_level_stringtoval(const char *str)
 {
 	if (!strcmp(str, "info"))
@@ -1077,6 +1096,8 @@ char *log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id)
 	return *snomasks ? snomasks : NULL;
 }
 
+#define COLOR_NONE "\xf"
+#define COLOR_DARKGREY "\00314"
 /** Do the actual writing to log files */
 void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
 {
@@ -1084,6 +1105,7 @@ void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, ch
 	char *snomask_destinations;
 	char *client_snomasks;
 	char *p;
+	char found;
 
 	/* If not fully booted then we don't have a logging to snomask mapping so can't do much.. */
 	if (!loop.ircd_booted)
@@ -1098,31 +1120,38 @@ void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, ch
 	/* Zero destinations? Then return.
 	 * XXX temporarily log to all ircops until we ship with default conf ;)
 	 */
-	if (snomask_destinations == NULL)
-	{
-		sendto_realops("[%s] %s.%s %s", log_level_valtostring(loglevel), subsystem, event_id, msg);
-		return;
-	}
 
-	/* All ircops? Simple case. */
-	if (!strcmp(snomask_destinations, "*"))
-	{
-		sendto_realops("[%s] %s.%s %s", log_level_valtostring(loglevel), subsystem, event_id, msg);
-		return;
-	}
+	/* All ircops? Then we set snomask_destinations to NULL */
+	if (snomask_destinations && !strcmp(snomask_destinations, "*"))
+		snomask_destinations = NULL;
 
 	/* To specific snomasks... */
 	list_for_each_entry(client, &oper_list, special_node)
 	{
-		client_snomasks = get_snomask_string(client);
-		for (p = snomask_destinations; *p; p++)
+		if (snomask_destinations)
 		{
-			if (strchr(client_snomasks, *p))
+			found = 0;
+			client_snomasks = get_snomask_string(client);
+			for (p = snomask_destinations; *p; p++)
 			{
-				sendnotice(client, "[%s] %s.%s %s", log_level_valtostring(loglevel), subsystem, event_id, msg);
-				break;
+				if (strchr(client_snomasks, *p))
+				{
+					found = 1;
+					break;
+				}
 			}
+			if (!found)
+				continue;
 		}
+		//sendnotice(client, "[%s] %s.%s %s", log_level_valtostring(loglevel), subsystem, event_id, msg);
+		/*sendnotice(client, "%s[%s]%s %s%s.%s%s %s",
+			log_level_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
+			COLOR_DARKGREY, subsystem, event_id, COLOR_NONE,
+			msg);*/
+		sendnotice(client, "%s%s.%s%s %s[%s]%s %s",
+			COLOR_DARKGREY, subsystem, event_id, COLOR_NONE,
+			log_level_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
+			msg);
 	}
 }
 
