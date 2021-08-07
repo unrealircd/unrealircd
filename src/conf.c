@@ -1857,11 +1857,6 @@ void config_setdefaultsettings(Configuration *i)
 	i->who_limit = 100;
 }
 
-static void make_default_logblock(void)
-{
-	// FIXME: move or don't move :)
-}
-
 /** Similar to config_setdefaultsettings but this one is applied *AFTER*
  * the entire configuration has been ran (sometimes this is the only way it can be done..).
  * NOTE: iConf is thus already populated with (non-default) values. Only overwrite if necessary!
@@ -1952,9 +1947,6 @@ void postconf_defaults(void)
 				safe_strdup(tk->set_by, conf_me->name ? conf_me->name : "~server~");
 		}
 	}
-
-	if (!conf_log)
-		make_default_logblock();
 }
 
 void postconf_fixes(void)
