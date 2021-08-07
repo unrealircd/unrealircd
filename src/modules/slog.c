@@ -34,8 +34,6 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 CMD_FUNC(cmd_slog);
 void _do_unreal_log_remote_deliver(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized);
-int s2s_json_mtag_is_ok(Client *client, char *name, char *value);
-int s2s_json_mtag_can_send(Client *target);
 
 MOD_TEST()
 {
@@ -46,18 +44,9 @@ MOD_TEST()
 
 MOD_INIT()
 {	
-	MessageTagHandlerInfo mtag;
-
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	CommandAdd(modinfo->handle, "SLOG", cmd_slog, MAXPARA, CMD_SERVER);
-
-	memset(&mtag, 0, sizeof(mtag));
-	mtag.name = "s2s/json";
-	mtag.is_ok = s2s_json_mtag_is_ok;
-	mtag.can_send = s2s_json_mtag_can_send;
-	mtag.flags = MTAG_HANDLER_FLAGS_NO_CAP_NEEDED;
-	MessageTagHandlerAdd(modinfo->handle, &mtag);
 
 	return MOD_SUCCESS;
 }
@@ -102,7 +91,7 @@ CMD_FUNC(cmd_slog)
 		return;
 	msg = parv[4];
 
-	m = find_mtag(recv_mtags, "s2s/json");
+	m = find_mtag(recv_mtags, "unrealircd.org/json-log");
 	if (m)
 		json_incoming = m->value;
 
@@ -151,7 +140,7 @@ void _do_unreal_log_remote_deliver(LogLevel loglevel, char *subsystem, char *eve
 {
 	MessageTag *mtags = safe_alloc(sizeof(MessageTag));
 
-	safe_strdup(mtags->name, "s2s/json");
+	safe_strdup(mtags->name, "unrealircd.org/json-log");
 	safe_strdup(mtags->value, json_serialized);
 
 	sendto_server(NULL, 0, 0, mtags, ":%s SLOG %s %s %s :%s",
@@ -159,23 +148,4 @@ void _do_unreal_log_remote_deliver(LogLevel loglevel, char *subsystem, char *eve
 	              log_level_valtostring(loglevel), subsystem, event_id, msg);
 
 	free_message_tags(mtags);
-}
-
-/** This function verifies if the client sending
- * We simply allow from servers without any syntax checking.
- */
-int s2s_json_mtag_is_ok(Client *client, char *name, char *value)
-{
-	if (IsServer(client) || IsMe(client))
-		return 1;
-
-	return 0;
-}
-
-/** Outgoing filter for this message tag */
-int s2s_json_mtag_can_send(Client *target)
-{
-	if (IsServer(target))
-		return 1;
-	return 0;
 }
