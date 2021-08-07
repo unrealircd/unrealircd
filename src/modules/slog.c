@@ -78,8 +78,12 @@ CMD_FUNC(cmd_slog)
 	char *subsystem;
 	char *event_id;
 	char *msg;
+	char *json_incoming = NULL;
 	char *json_serialized = NULL;
 	MessageTag *m;
+	json_t *j, *jt;
+	json_error_t jerr;
+	const char *original_timestamp;
 
 	if ((parc < 4) || BadPtr(parv[4]))
 	{
@@ -100,13 +104,42 @@ CMD_FUNC(cmd_slog)
 
 	m = find_mtag(recv_mtags, "s2s/json");
 	if (m)
-		json_serialized = m->value;
+		json_incoming = m->value;
 
-	/* Call our "from remote" logger */
+	if (!json_incoming)
+		return;
+	// Was previously: unreal_log_raw(loglevel, subsystem, event_id, NULL, msg); // WRONG: this may re-broadcast too, so twice, including back to direction!!!
+
+	/* Validate the JSON */
+	j = json_loads(json_incoming, JSON_REJECT_DUPLICATES, &jerr);
+	if (!j)
+	{
+		unreal_log(ULOG_INFO, "log", "REMOTE_LOG_INVALID_FORMAT", client,
+		           "Received malformed JSON in server-to-server log message (SLOG) from $client",
+		           log_data_string("bad_json_serialized", json_incoming));
+		return;
+	}
+
+	/* Set "timestamp", and save the original one in "original_timestamp" (if it existed) */
+	jt = json_object_get(j, "timestamp");
+	if (jt)
+	{
+		original_timestamp = json_string_value(jt);
+		if (original_timestamp)
+			json_object_set_new(j, "original_timestamp", json_string(original_timestamp));
+	}
+	json_object_set_new(j, "timestamp", json_string(timestamp_iso8601_now()));
+	json_object_set_new(j, "log_source", json_string(client->name));
+
+	/* Re-serialize the result */
+	json_serialized = json_dumps(j, 0);
+
 	if (json_serialized)
-		do_unreal_log_internal_from_remote(loglevel, subsystem, event_id, msg, json_serialized ? json_serialized : "");
-	else
-		unreal_log_raw(loglevel, subsystem, event_id, NULL, msg); // WRONG: this may re-broadcast too, so twice, including back to direction!!!
+		do_unreal_log_internal_from_remote(loglevel, subsystem, event_id, msg, json_serialized);
+
+	/* Free the JSON that we worked on */
+	safe_free(json_serialized);
+	json_decref(j);
 
 	/* And broadcast to the other servers */
 	sendto_server(client, 0, 0, recv_mtags, ":%s SLOG %s %s %s :%s",
