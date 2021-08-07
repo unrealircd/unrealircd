@@ -311,10 +311,14 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 		len = quick;
 	}
 
-	if (len >= 1024)
+	if (len >= 10240)
 	{
 		ircd_log(LOG_ERROR, "sendbufto_one: len=%d, quick=%u", len, quick);
+#ifdef DEBUGMODE
 		abort();
+#else
+		return;
+#endif
 	}
 
 	if (IsMe(to))
