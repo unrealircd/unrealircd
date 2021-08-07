@@ -289,9 +289,9 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 					msg);
 				return;
 			}
-			if (p - msg > 500)
+			if (p - msg > 4094)
 			{
-				ircd_log(LOG_ERROR, "[BUG] sendbufto_one(): Spec-wise legal, but massively oversized message-tag (len %d)",
+				ircd_log(LOG_ERROR, "[BUG] sendbufto_one(): Oversized message-tag (len %d)",
 				         (int)(p - msg));
 				return;
 			}
