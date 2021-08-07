@@ -1279,3 +1279,8 @@ void log_blocks_switchover(void)
 	memcpy(logs, temp_logs, sizeof(logs));
 	memset(temp_logs, 0, sizeof(temp_logs));
 }
+
+/* TODO: if logging to the same file from multiple log { }
+ * blocks, then we would have opened the file twice.
+ * Better to use an extra layer to keep track of files.
+ */
