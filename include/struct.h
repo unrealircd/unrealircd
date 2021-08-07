@@ -254,13 +254,6 @@ typedef enum LogType {
 	LOG_TYPE_JSON = 2,
 } LogType;
 
-typedef struct LogSnomask LogSnomask;
-struct LogSnomask {
-	LogSnomask *prev, *next;
-	char *subsystem;
-	long snomask;
-};
-
 #define LOG_CATEGORY_LEN	32
 #define LOG_EVENT_ID_LEN	64
 typedef struct LogSource LogSource;
@@ -282,6 +275,10 @@ struct Log {
 	int type;
 	int logfd;
 };
+
+/** This is used for deciding the <index> in logs[<index>] and temp_logs[<index>] */
+typedef enum LogDestination { LOG_DEST_SNOMASK=0, LOG_DEST_OPER=1, LOG_DEST_GLOBAL=2, LOG_DEST_CHANNEL=3, LOG_DEST_OTHER=4 } LogDestination;
+#define NUM_LOG_DESTINATIONS 5
 
 /*
 ** 'offsetof' is defined in ANSI-C. The following definition

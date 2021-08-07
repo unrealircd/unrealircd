@@ -28,6 +28,10 @@
 
 #define SNO_ALL INT_MAX
 
+/* Variables */
+Log *logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
+Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
+
 /* Forward declarations */
 static int valid_event_id(const char *s);
 static int valid_subsystem(const char *s);
@@ -35,6 +39,7 @@ LogLevel log_level_stringtoval(const char *str);
 void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id, Client *client, int expand_msg, char *msg, va_list vl);
 char *timestamp_iso8601_now(void);
 char *timestamp_iso8601(time_t v);
+void log_blocks_switchover(void);
 
 json_t *json_string_possibly_null(char *s)
 {
@@ -293,23 +298,23 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 					strlcpy(log->destination, cep->value, sizeof(log->destination)); /* destination is the snomask */
 					log->sources = sources;
 					if (!strcmp(cep->value, "all"))
-						AddListItem(log, tempiConf.logs[LOG_DEST_OPER]);
+						AddListItem(log, temp_logs[LOG_DEST_OPER]);
 					else
-						AddListItem(log, tempiConf.logs[LOG_DEST_SNOMASK]);
+						AddListItem(log, temp_logs[LOG_DEST_SNOMASK]);
 				} else
 				if (!strcmp(cep->name, "channel"))
 				{
 					Log *d = safe_alloc(sizeof(Log));
 					strlcpy(log->destination, cep->value, sizeof(log->destination)); /* destination is the channel */
 					log->sources = sources;
-					AddListItem(log, tempiConf.logs[LOG_DEST_CHANNEL]);
+					AddListItem(log, temp_logs[LOG_DEST_CHANNEL]);
 				} else
 				if (!strcmp(cep->name, "global"))
 				{
 					Log *log = safe_alloc(sizeof(Log));
 					/* destination stays empty */
 					log->sources = sources;
-					AddListItem(log, tempiConf.logs[LOG_DEST_GLOBAL]);
+					AddListItem(log, temp_logs[LOG_DEST_GLOBAL]);
 				} else
 				if (!strcmp(cep->name, "file"))
 				{
@@ -332,7 +337,7 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 							log->type = log_type_stringtoval(cepp->value);
 						}
 					}
-					AddListItem(log, tempiConf.logs[LOG_DEST_OTHER]);
+					AddListItem(log, temp_logs[LOG_DEST_OTHER]);
 				}
 			}
 		}
@@ -923,7 +928,7 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, char
 	if (loop.config_test)
 		return;
 
-	for (l = iConf.logs[LOG_DEST_OTHER]; l; l = l->next)
+	for (l = logs[LOG_DEST_OTHER]; l; l = l->next)
 	{
 		// FIXME: implement the proper log filters (eg what 'flags' previously was)
 		//if (!(l->flags & flags))
@@ -1064,11 +1069,11 @@ char *log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id)
 	static char snomasks[64];
 
 	/* At the top right now. TODO: "nomatch" support */
-	if (iConf.logs[LOG_DEST_OPER] && log_sources_match(iConf.logs[LOG_DEST_OPER]->sources, loglevel, subsystem, event_id))
+	if (logs[LOG_DEST_OPER] && log_sources_match(logs[LOG_DEST_OPER]->sources, loglevel, subsystem, event_id))
 		return "*";
 
 	*snomasks = '\0';
-	for (ld = iConf.logs[LOG_DEST_SNOMASK]; ld; ld = ld->next)
+	for (ld = logs[LOG_DEST_SNOMASK]; ld; ld = ld->next)
 	{
 		if (log_sources_match(ld->sources, loglevel, subsystem, event_id))
 			strlcat(snomasks, ld->destination, sizeof(snomasks));
@@ -1243,71 +1248,34 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	/* And the ircops stuff */
 	do_unreal_log_ircops(loglevel, subsystem, event_id, msgbuf, json_serialized);
 
-
 	/* Free everything */
 	safe_free(json_serialized);
 	json_decref(j_details);
 	json_decref(j);
 }
 
-void simpletest(void)
+void free_log_block(Log *l)
 {
-	char *str;
-	json_t *j = json_object();
-	json_t *j_client = json_array();
-
-	json_object_set_new(j, "id", json_integer(1));
-	json_object_set_new(j, "data", j_client);
-	json_array_append_new(j_client, json_integer(1));
-	json_array_append_new(j_client, json_integer(2));
-	json_array_append_new(j_client, json_integer(3));
-
-	str = json_dumps(j, 0);
-	printf("RESULT:\n%s\n", str);
-	free(str);
-
-	json_decref(j);
-}
-
-void logtest(void)
-{
-	strcpy(me.name, "irc.test.net");
-	unreal_log(ULOG_INFO, "test", "TEST", &me, "Hello there!");
-	unreal_log(ULOG_INFO, "test", "TEST", &me, "Hello there i like $client!");
-	unreal_log(ULOG_INFO, "test", "TEST", &me, "Hello there i like $client with IP $client.ip!");
-	unreal_log(ULOG_INFO, "test", "TEST", &me, "More data!", log_data_string("fun", "yes lots of fun"));
-	unreal_log(ULOG_INFO, "test", "TEST", &me, "More data, fun: $fun!", log_data_string("fun", "yes lots of fun"), log_data_integer("some_integer", 1337));
-	unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", &me, "Client $client used SAJOIN to join $target to y!", log_data_client("target", &me));
-}
-
-void add_log_snomask(Configuration *i, char *subsystem, long snomask)
-{
-	LogSnomask *l = safe_alloc(sizeof(LogSnomask));
-	safe_strdup(l->subsystem, subsystem);
-	l->snomask = snomask;
-	AppendListItem(l, i->log_snomasks);
-}
-
-void log_snomask_free(LogSnomask *l)
-{
-	safe_free(l->subsystem);
-	safe_free(l);
-}
-
-void log_snomask_free_settings(Configuration *i)
-{
-	LogSnomask *l, *l_next;
-	for (l = i->log_snomasks; l; l = l_next)
+	Log *l_next;
+	for (; l; l = l_next)
 	{
 		l_next = l->next;
-		log_snomask_free(l);
+		if (l->logfd > 0)
+		{
+			fd_close(l->logfd);
+			l->logfd = -1;
+		}
+		safe_free(l->file);
+		safe_free(l->filefmt);
+		safe_free(l);
 	}
-	i->log_snomasks = NULL;
 }
 
-void log_snomask_setdefaultsettings(Configuration *i)
+void log_blocks_switchover(void)
 {
-	add_log_snomask(i, "linking", SNO_ALL);
-	add_log_snomask(i, "traffic", 0);
-	add_log_snomask(i, "*", SNO_ALL);
+	int i;
+	for (i=0; i < NUM_LOG_DESTINATIONS; i++)
+		free_log_block(logs[i]);
+	memcpy(logs, temp_logs, sizeof(logs));
+	memset(temp_logs, 0, sizeof(temp_logs));
 }

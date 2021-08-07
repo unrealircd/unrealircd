@@ -897,15 +897,10 @@ int InitUnrealIRCd(int argc, char *argv[])
 			  exit(0);
 		  }
 #endif
-#if 1
+#if 0
 		case 'S':
-			//charsys_dump_table(p ? p : "*");
+			charsys_dump_table(p ? p : "*");
 			//unrealdb_test();
-			{
-			extern void logtest(void);
-			logtest();
-			exit(0);
-			}
 #endif
 #ifndef _WIN32
 		  case 't':

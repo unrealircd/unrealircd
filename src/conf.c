@@ -195,8 +195,6 @@ extern void unload_all_unused_umodes(void);
 extern void unload_all_unused_extcmodes(void);
 extern void unload_all_unused_caps(void);
 extern void unload_all_unused_history_backends(void);
-extern void log_snomask_setdefaultsettings(Configuration *i);
-extern void log_snomask_free_settings(Configuration *i);
 int reloadable_perm_module_unloaded(void);
 int tls_tests(void);
 
@@ -237,8 +235,6 @@ ConfigItem_deny_channel *conf_deny_channel = NULL;
 ConfigItem_allow_channel *conf_allow_channel = NULL;
 ConfigItem_deny_link	*conf_deny_link = NULL;
 ConfigItem_deny_version *conf_deny_version = NULL;
-Log			*logs[5] = { NULL, NULL, NULL, NULL, NULL };
-Log			*temp_logs[5] = { NULL, NULL, NULL, NULL, NULL };
 ConfigItem_alias	*conf_alias = NULL;
 ConfigItem_include	*conf_include = NULL;
 ConfigItem_blacklist_module	*conf_blacklist_module = NULL;
@@ -1739,7 +1735,6 @@ void	free_iConf(Configuration *i)
 		free_floodsettings(f);
 	}
 	i->floodsettings = NULL;
-	log_snomask_free_settings(i);
 }
 
 int	config_test();
@@ -1748,7 +1743,6 @@ void config_setdefaultsettings(Configuration *i)
 {
 	char tmp[512];
 
-	log_snomask_setdefaultsettings(i);
 	safe_strdup(i->oper_snomask, SNO_DEFOPER);
 	i->ident_read_timeout = 7;
 	i->ident_connect_timeout = 3;
@@ -2786,6 +2780,7 @@ void config_switchover(void)
 	free_iConf(&iConf);
 	memcpy(&iConf, &tempiConf, sizeof(iConf));
 	memset(&tempiConf, 0, sizeof(tempiConf));
+	log_blocks_switchover();
 }
 
 int	config_run()

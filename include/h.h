@@ -1086,8 +1086,6 @@ extern void flood_limit_exceeded_log(Client *client, char *floodname);
 /* logging */
 extern int config_test_log(ConfigFile *conf, ConfigEntry *ce);
 extern int config_run_log(ConfigFile *conf, ConfigEntry *ce);
-extern int config_test_logx(ConfigFile *conf, ConfigEntry *ce);
-extern int config_run_logx(ConfigFile *conf, ConfigEntry *ce);
 extern LogType log_type_stringtoval(char *str);
 extern char *log_type_valtostring(LogType v);
 #ifdef DEBUGMODE
@@ -1108,4 +1106,5 @@ extern LogData *log_data_source(const char *file, int line, const char *function
 extern LogData *log_data_socket_error(int fd);
 extern LogData *log_data_link_block(ConfigItem_link *link);
 extern LogData *log_data_tkl(const char *key, TKL *tkl);
+extern void log_blocks_switchover(void);
 /* end of logging */
