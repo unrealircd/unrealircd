@@ -1070,9 +1070,9 @@ int log_sources_match(LogSource *ls, LogLevel loglevel, char *subsystem, char *e
 	//       cause everything to match!!
 	for (; ls; ls = ls->next)
 	{
-		if (*ls->subsystem && strcmp(ls->subsystem, subsystem))
-			continue;
 		if (*ls->event_id && strcmp(ls->event_id, event_id))
+			continue;
+		if (*ls->subsystem && strcmp(ls->subsystem, subsystem))
 			continue;
 		if ((ls->loglevel != ULOG_INVALID) && (ls->loglevel != loglevel))
 			continue;
