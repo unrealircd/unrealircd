@@ -121,7 +121,7 @@ CMD_FUNC(cmd_slog)
 	json_object_set_new(j, "log_source", json_string(client->name));
 
 	/* Re-serialize the result */
-	json_serialized = json_dumps(j, 0);
+	json_serialized = json_dumps(j, JSON_COMPACT);
 
 	if (json_serialized)
 		do_unreal_log_internal_from_remote(loglevel, subsystem, event_id, msg, json_serialized);

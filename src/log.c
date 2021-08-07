@@ -1297,7 +1297,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	/* Now merge the details into root object 'j': */
 	json_object_update_missing(j, j_details);
 	/* Generate the JSON */
-	json_serialized = json_dumps(j, 0);
+	json_serialized = json_dumps(j, JSON_COMPACT);
 
 	/* Now call the disk loggers */
 	do_unreal_log_disk(loglevel, subsystem, event_id, msgbuf, json_serialized);
