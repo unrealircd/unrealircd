@@ -1099,6 +1099,7 @@ extern char *log_type_valtostring(LogType v);
 #endif
 extern void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id, Client *client, char *msg, ...) __attribute__((format(printf,5,0)));
 extern void do_unreal_log_raw(LogLevel loglevel, char *subsystem, char *event_id, Client *client, char *msg, ...);
+extern void do_unreal_log_internal_from_remote(LogLevel loglevel, char *subsystem, char *event_id, char *msgbuf, char *json_serialized);
 extern LogData *log_data_string(const char *key, const char *str);
 extern LogData *log_data_char(const char *key, const char c);
 extern LogData *log_data_integer(const char *key, int64_t integer);

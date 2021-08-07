@@ -34,6 +34,8 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 CMD_FUNC(cmd_slog);
 void _do_unreal_log_remote_deliver(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized);
+int s2s_json_mtag_is_ok(Client *client, char *name, char *value);
+int s2s_json_mtag_can_send(Client *target);
 
 MOD_TEST()
 {
@@ -44,8 +46,19 @@ MOD_TEST()
 
 MOD_INIT()
 {	
+	MessageTagHandlerInfo mtag;
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+
 	CommandAdd(modinfo->handle, "SLOG", cmd_slog, MAXPARA, CMD_SERVER);
+
+	memset(&mtag, 0, sizeof(mtag));
+	mtag.name = "s2s/json";
+	mtag.is_ok = s2s_json_mtag_is_ok;
+	mtag.can_send = s2s_json_mtag_can_send;
+	mtag.flags = MTAG_HANDLER_FLAGS_NO_CAP_NEEDED;
+	MessageTagHandlerAdd(modinfo->handle, &mtag);
+
 	return MOD_SUCCESS;
 }
 
@@ -65,6 +78,8 @@ CMD_FUNC(cmd_slog)
 	char *subsystem;
 	char *event_id;
 	char *msg;
+	char *json_serialized = NULL;
+	MessageTag *m;
 
 	if ((parc < 4) || BadPtr(parv[4]))
 	{
@@ -83,12 +98,51 @@ CMD_FUNC(cmd_slog)
 		return;
 	msg = parv[4];
 
-	unreal_log_raw(loglevel, subsystem, event_id, NULL, msg);
+	m = find_mtag(recv_mtags, "s2s/json");
+	if (m)
+		json_serialized = m->value;
+
+	/* Call our "from remote" logger */
+	if (json_serialized)
+		do_unreal_log_internal_from_remote(loglevel, subsystem, event_id, msg, json_serialized ? json_serialized : "");
+	else
+		unreal_log_raw(loglevel, subsystem, event_id, NULL, msg); // WRONG: this may re-broadcast too, so twice, including back to direction!!!
+
+	/* And broadcast to the other servers */
+	sendto_server(client, 0, 0, recv_mtags, ":%s SLOG %s %s %s :%s",
+	              client->id,
+	              parv[1], parv[2], parv[3], parv[4]);
 }
 
 void _do_unreal_log_remote_deliver(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
 {
-	sendto_server(NULL, 0, 0, NULL, ":%s SLOG %s %s %s :%s",
+	MessageTag *mtags = safe_alloc(sizeof(MessageTag));
+
+	safe_strdup(mtags->name, "s2s/json");
+	safe_strdup(mtags->value, json_serialized);
+
+	sendto_server(NULL, 0, 0, mtags, ":%s SLOG %s %s %s :%s",
 	              me.id,
 	              log_level_valtostring(loglevel), subsystem, event_id, msg);
+
+	free_message_tags(mtags);
+}
+
+/** This function verifies if the client sending
+ * We simply allow from servers without any syntax checking.
+ */
+int s2s_json_mtag_is_ok(Client *client, char *name, char *value)
+{
+	if (IsServer(client) || IsMe(client))
+		return 1;
+
+	return 0;
+}
+
+/** Outgoing filter for this message tag */
+int s2s_json_mtag_can_send(Client *target)
+{
+	if (IsServer(target))
+		return 1;
+	return 0;
 }

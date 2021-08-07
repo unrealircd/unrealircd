@@ -1266,11 +1266,30 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 
 	do_unreal_log_remote(loglevel, subsystem, event_id, msgbuf, json_serialized);
 
+	// NOTE: code duplication further down!
+
 	/* Free everything */
 	safe_free(json_serialized);
 	json_decref(j_details);
 	json_decref(j);
 }
+
+void do_unreal_log_internal_from_remote(LogLevel loglevel, char *subsystem, char *event_id,
+                                        char *msgbuf, char *json_serialized)
+{
+	if (unreal_log_recursion_trap)
+		return;
+	unreal_log_recursion_trap = 1;
+
+	/* Call the disk loggers */
+	do_unreal_log_disk(loglevel, subsystem, event_id, msgbuf, json_serialized);
+
+	/* And the ircops stuff */
+	do_unreal_log_ircops(loglevel, subsystem, event_id, msgbuf, json_serialized);
+
+	unreal_log_recursion_trap = 0;
+}
+
 
 void free_log_block(Log *l)
 {
