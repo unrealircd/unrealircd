@@ -67,6 +67,8 @@ typedef enum BanTarget { BAN_TARGET_IP=1, BAN_TARGET_USERIP=2, BAN_TARGET_HOST=3
 
 typedef enum HideIdleTimePolicy { HIDE_IDLE_TIME_NEVER=1, HIDE_IDLE_TIME_ALWAYS=2, HIDE_IDLE_TIME_USERMODE=3, HIDE_IDLE_TIME_OPER_USERMODE=4 } HideIdleTimePolicy;
 
+typedef enum LogDestination { LOG_DEST_SNOMASK=0, LOG_DEST_OPER=1, LOG_DEST_GLOBAL=2, LOG_DEST_CHANNEL=3, LOG_DEST_DISK=4 } LogDestination;
+
 /** The set { } block configuration */
 typedef struct Configuration Configuration;
 struct Configuration {
@@ -177,10 +179,7 @@ struct Configuration {
 	AllowedChannelChars allowed_channelchars;
 	HideIdleTimePolicy hide_idle_time;
 	LogSnomask *log_snomasks;
-	LogDestination *logging_snomasks;
-	LogDestination *logging_all_ircops;
-	LogDestination *logging_global;
-	LogDestination *logging_channels;
+	Log *logs[5];
 };
 
 extern MODVAR Configuration iConf;

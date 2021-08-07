@@ -271,9 +271,9 @@ struct LogSource {
 	char event_id[LOG_EVENT_ID_LEN+1];
 };
 
-typedef struct LogDestination LogDestination;
-struct LogDestination {
-	LogDestination *prev, *next;
+typedef struct Log Log;
+struct Log {
+	Log *prev, *next;
 	char destination[CHANNELLEN+1];
 	LogSource *sources;
 };

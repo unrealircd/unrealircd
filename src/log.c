@@ -221,60 +221,6 @@ int config_run_log(ConfigFile *conf, ConfigEntry *ce)
 	return 1;
 }
 
-int config_test_set_logging(ConfigFile *conf, ConfigEntry *ce)
-{
-	int errors = 0;
-
-	for (ce = ce->items; ce; ce = ce->next)
-	{
-		if (!strcmp(ce->name, "snomask") ||
-		    !strcmp(ce->name, "all-opers") ||
-		    !strcmp(ce->name, "global") ||
-		    !strcmp(ce->name, "channel"))
-		{
-			/* TODO: Validate the subsystem lightly */
-		} else
-		{
-			config_error_unknownopt(ce->file->filename, ce->line_number, "set::logging", ce->name);
-			errors++;
-			continue;
-		}
-
-		if (!strcmp(ce->name, "snomask"))
-		{
-			/* We need to validate the parameter here as well */
-			if (!ce->value)
-			{
-				config_error_blank(ce->file->filename, ce->line_number, "set::logging::snomask");
-				errors++;
-			} else
-			if ((strlen(ce->value) != 1) || !(islower(ce->value[0]) || isupper(ce->value[0])))
-			{
-				config_error("%s:%d: snomask must be a single letter",
-					ce->file->filename, ce->line_number);
-				errors++;
-			}
-		}
-		if (!strcmp(ce->name, "channel"))
-		{
-			/* We need to validate the parameter here as well */
-			if (!ce->value)
-			{
-				config_error_blank(ce->file->filename, ce->line_number, "set::logging::channel");
-				errors++;
-			} else
-			if (!valid_channelname(ce->value))
-			{
-				config_error("%s:%d: Invalid channel name '%s'",
-					ce->file->filename, ce->line_number, ce->value);
-				errors++;
-			}
-		}
-	}
-
-	return errors;
-}
-
 LogSource *add_log_source(const char *str)
 {
 	LogSource *ls;
@@ -321,47 +267,162 @@ LogSource *add_log_source(const char *str)
 	return ls;
 }
 
-int config_run_set_logging(ConfigFile *conf, ConfigEntry *ce)
+int config_test_logx(ConfigFile *conf, ConfigEntry *block)
 {
-	ConfigEntry *cep;
+	int errors = 0;
+	int any_sources = 0;
+	ConfigEntry *ce, *cep;
+	int destinations = 0;
 
-	for (ce = ce->items; ce; ce = ce->next)
+	for (ce = block->items; ce; ce = ce->next)
 	{
-		LogSource *sources = NULL;
-		LogSource *s;
-
-		for (cep = ce->items; cep; cep = cep->next)
+		if (!strcmp(ce->name, "source"))
 		{
-			s = add_log_source(cep->name);
-			AddListItem(s, sources);
+			for (cep = ce->items; cep; cep = cep->next)
+			{
+				/* TODO: Validate the sources lightly for formatting issues */
+				any_sources = 1;
+			}
 		}
-		if (!strcmp(ce->name, "snomask"))
+		if (!strcmp(ce->name, "destination"))
 		{
-			LogDestination *d = safe_alloc(sizeof(LogDestination));
-			strlcpy(d->destination, ce->value, sizeof(d->destination)); /* destination is the snomask */
-			d->sources = sources;
-			AddListItem(d, tempiConf.logging_snomasks);
-		} else
-		if (!strcmp(ce->name, "channel"))
+			for (cep = ce->items; cep; cep = cep->next)
+			{
+				if (!strcmp(cep->name, "snomask"))
+				{
+					destinations++;
+					/* We need to validate the parameter here as well */
+					if (!cep->value)
+					{
+						config_error_blank(cep->file->filename, cep->line_number, "set::logging::snomask");
+						errors++;
+					} else
+					if (!strcmp(cep->value, "all"))
+					{
+						/* Fine */
+					} else
+					if ((strlen(cep->value) != 1) || !(islower(cep->value[0]) || isupper(cep->value[0])))
+					{
+						config_error("%s:%d: snomask must be a single letter or 'all'",
+							cep->file->filename, cep->line_number);
+						errors++;
+					}
+				} else
+				if (!strcmp(cep->name, "channel"))
+				{
+					destinations++;
+					/* We need to validate the parameter here as well */
+					if (!cep->value)
+					{
+						config_error_blank(cep->file->filename, cep->line_number, "set::logging::channel");
+						errors++;
+					} else
+					if (!valid_channelname(cep->value))
+					{
+						config_error("%s:%d: Invalid channel name '%s'",
+							cep->file->filename, cep->line_number, cep->value);
+						errors++;
+					}
+				} else
+				if (!strcmp(cep->name, "file"))
+				{
+					destinations++;
+					if (!cep->value)
+					{
+						config_error_blank(cep->file->filename, cep->line_number, "set::logging::file");
+						errors++;
+						continue;
+					}
+				} else
+				if (!strcmp(cep->name, "global"))
+				{
+					destinations++;
+				} else
+				{
+					config_error_unknownopt(cep->file->filename, cep->line_number, "log::destination", cep->name);
+					errors++;
+					continue;
+				}
+			}
+		}
+	}
+
+	if (!any_sources)
+	{
+		config_error("%s:%d: log block contains no sources. Old log block perhaps?",
+			block->file->filename, block->line_number);
+		errors++;
+	}
+	if (destinations == 0)
+	{
+		config_error("%s:%d: log block contains no destinations. Old log block perhaps?",
+			block->file->filename, block->line_number);
+		errors++;
+	}
+	if (destinations > 1)
+	{
+		config_error("%s:%d: log block contains multiple destinations. This is not support... YET!",
+			block->file->filename, block->line_number);
+		errors++;
+	}
+	return errors;
+}
+
+int config_run_logx(ConfigFile *conf, ConfigEntry *block)
+{
+	ConfigEntry *ce, *cep;
+	LogSource *sources = NULL;
+	Log *log = safe_alloc(sizeof(Log));
+	int type;
+
+	// TODO: we may allow multiple destination entries later, then we need to 'clone' sources
+	//       or work with reference counts.
+
+	/* First, gather the source... */
+	for (ce = block->items; ce; ce = ce->next)
+	{
+		if (!strcmp(ce->name, "source"))
 		{
-			LogDestination *d = safe_alloc(sizeof(LogDestination));
-			strlcpy(d->destination, ce->value, sizeof(d->destination)); /* destination is the channel */
-			d->sources = sources;
-			AddListItem(d, tempiConf.logging_channels);
-		} else
-		if (!strcmp(ce->name, "all-opers"))
+			LogSource *s;
+			for (cep = ce->items; cep; cep = cep->next)
+			{
+				s = add_log_source(cep->name);
+				AddListItem(s, sources);
+			}
+		}
+	}
+
+	/* Now deal with destinations... */
+	for (ce = block->items; ce; ce = ce->next)
+	{
+		if (!strcmp(ce->name, "destination"))
 		{
-			LogDestination *d = safe_alloc(sizeof(LogDestination));
-			/* destination stays empty */
-			d->sources = sources;
-			AddListItem(d, tempiConf.logging_all_ircops);
-		} else
-		if (!strcmp(ce->name, "global"))
-		{
-			LogDestination *d = safe_alloc(sizeof(LogDestination));
-			/* destination stays empty */
-			d->sources = sources;
-			AddListItem(d, tempiConf.logging_global);
+			for (cep = ce->items; cep; cep = cep->next)
+			{
+				if (!strcmp(cep->name, "snomask"))
+				{
+					strlcpy(log->destination, cep->value, sizeof(log->destination)); /* destination is the snomask */
+					log->sources = sources;
+					if (!strcmp(cep->value, "all"))
+						AddListItem(log, tempiConf.logs[LOG_DEST_OPER]);
+					else
+						AddListItem(log, tempiConf.logs[LOG_DEST_SNOMASK]);
+				} else
+				if (!strcmp(cep->name, "channel"))
+				{
+					Log *d = safe_alloc(sizeof(Log));
+					strlcpy(log->destination, cep->value, sizeof(log->destination)); /* destination is the channel */
+					log->sources = sources;
+					AddListItem(log, tempiConf.logs[LOG_DEST_CHANNEL]);
+				} else
+				if (!strcmp(cep->name, "global"))
+				{
+					Log *d = safe_alloc(sizeof(Log));
+					/* destination stays empty */
+					log->sources = sources;
+					AddListItem(log, tempiConf.logs[LOG_DEST_GLOBAL]);
+				}
+			}
 		}
 	}
 
@@ -1087,15 +1148,15 @@ int log_sources_match(LogSource *ls, LogLevel loglevel, char *subsystem, char *e
  */
 char *log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id)
 {
-	LogDestination *ld;
+	Log *ld;
 	static char snomasks[64];
 
 	/* At the top right now. TODO: "nomatch" support */
-	if (iConf.logging_all_ircops && log_sources_match(iConf.logging_all_ircops->sources, loglevel, subsystem, event_id))
+	if (iConf.logs[LOG_DEST_OPER] && log_sources_match(iConf.logs[LOG_DEST_OPER]->sources, loglevel, subsystem, event_id))
 		return "*";
 
 	*snomasks = '\0';
-	for (ld = iConf.logging_snomasks; ld; ld = ld->next)
+	for (ld = iConf.logs[LOG_DEST_SNOMASK]; ld; ld = ld->next)
 	{
 		if (log_sources_match(ld->sources, loglevel, subsystem, event_id))
 			strlcat(snomasks, ld->destination, sizeof(snomasks));

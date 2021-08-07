@@ -123,6 +123,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "listen", 		_conf_listen,		_test_listen	},
 	{ "loadmodule",		NULL,		 	_test_loadmodule},
 	{ "log",		config_run_log,		config_test_log	},
+	{ "logx",		config_run_logx,	config_test_logx	},
 	{ "me", 		_conf_me,		_test_me	},
 	{ "official-channels", 	_conf_offchans,		_test_offchans	},
 	{ "oper", 		_conf_oper,		_test_oper	},
@@ -2797,6 +2798,14 @@ int	config_post_test()
 	return errors;
 }
 
+/** Make the "read" config the "live" config */
+void config_switchover(void)
+{
+	free_iConf(&iConf);
+	memcpy(&iConf, &tempiConf, sizeof(iConf));
+	memset(&tempiConf, 0, sizeof(tempiConf));
+}
+
 int	config_run()
 {
 	ConfigEntry 	*ce;
@@ -2888,9 +2897,7 @@ int	config_run()
 	listen_cleanup();
 	close_unbound_listeners();
 	loop.do_bancheck = 1;
-	free_iConf(&iConf);
-	memcpy(&iConf, &tempiConf, sizeof(iConf));
-	memset(&tempiConf, 0, sizeof(tempiConf));
+	config_switchover();
 	update_throttling_timer_settings();
 
 	/* initialize conf_files with defaults if the block isn't set: */
@@ -7911,9 +7918,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				if (!strcmp(cepp->name, "policy"))
 					tempiConf.hide_idle_time = hideidletime_strtoval(cepp->value);
 			}
-		} else if (!strcmp(cep->name, "logging"))
-		{
-			config_run_set_logging(conf, cep);
 		} else
 		{
 			int value;
@@ -9281,10 +9285,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 			}
-		}
-		else if (!strcmp(cep->name, "logging"))
-		{
-			errors += config_test_set_logging(conf, cep);
 		} else
 		{
 			int used = 0;
