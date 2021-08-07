@@ -1106,6 +1106,7 @@ void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, ch
 	char *client_snomasks;
 	char *p;
 	char found;
+	MessageTag *mtags = NULL;
 
 	/* If not fully booted then we don't have a logging to snomask mapping so can't do much.. */
 	if (!loop.ircd_booted)
@@ -1124,6 +1125,14 @@ void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, ch
 	/* All ircops? Then we set snomask_destinations to NULL */
 	if (snomask_destinations && !strcmp(snomask_destinations, "*"))
 		snomask_destinations = NULL;
+
+	/* Prepare message tag for those who have CAP unrealircd.org/json-log */
+	if (json_serialized)
+	{
+		mtags = safe_alloc(sizeof(MessageTag));
+		safe_strdup(mtags->name, "unrealircd.org/json-log");
+		safe_strdup(mtags->value, json_serialized);
+	}
 
 	/* To specific snomasks... */
 	list_for_each_entry(client, &oper_list, special_node)
@@ -1148,11 +1157,15 @@ void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, ch
 			log_level_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
 			COLOR_DARKGREY, subsystem, event_id, COLOR_NONE,
 			msg);*/
-		sendnotice(client, "%s%s.%s%s %s[%s]%s %s",
+		sendto_one(client, mtags, ":%s NOTICE %s :%s%s.%s%s %s[%s]%s %s",
+			me.name, client->name,
 			COLOR_DARKGREY, subsystem, event_id, COLOR_NONE,
 			log_level_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
 			msg);
 	}
+
+	if (mtags)
+		free_message_tags(mtags);
 }
 
 void do_unreal_log_remote(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)

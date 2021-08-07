@@ -31,21 +31,30 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
     };
 
+/* Variables */
+long CAP_JSON_LOG = 0L;
+
 /* Forward declarations */
 int json_log_mtag_is_ok(Client *client, char *name, char *value);
 int json_log_mtag_can_send(Client *target);
 
 MOD_INIT()
-{	
+{
+	ClientCapabilityInfo cap;
+	ClientCapability *c;
 	MessageTagHandlerInfo mtag;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+
+	memset(&cap, 0, sizeof(cap));
+	cap.name = "unrealircd.org/json-log";
+	c = ClientCapabilityAdd(modinfo->handle, &cap, &CAP_JSON_LOG);
 
 	memset(&mtag, 0, sizeof(mtag));
 	mtag.name = "unrealircd.org/json-log";
 	mtag.is_ok = json_log_mtag_is_ok;
 	mtag.can_send = json_log_mtag_can_send;
-	mtag.flags = MTAG_HANDLER_FLAGS_NO_CAP_NEEDED;
+	mtag.clicap_handler = c;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
 
 	return MOD_SUCCESS;
@@ -75,7 +84,7 @@ int json_log_mtag_is_ok(Client *client, char *name, char *value)
 /** Outgoing filter for this message tag */
 int json_log_mtag_can_send(Client *target)
 {
-	if (IsServer(target) || IsOper(target))
+	if (IsServer(target) || (target->local && IsOper(target) && HasCapabilityFast(target, CAP_JSON_LOG)))
 		return 1;
 	return 0;
 }
