@@ -123,7 +123,6 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "listen", 		_conf_listen,		_test_listen	},
 	{ "loadmodule",		NULL,		 	_test_loadmodule},
 	{ "log",		config_run_log,		config_test_log	},
-	{ "logx",		config_run_logx,	config_test_logx	},
 	{ "me", 		_conf_me,		_test_me	},
 	{ "official-channels", 	_conf_offchans,		_test_offchans	},
 	{ "oper", 		_conf_oper,		_test_oper	},
@@ -238,7 +237,8 @@ ConfigItem_deny_channel *conf_deny_channel = NULL;
 ConfigItem_allow_channel *conf_allow_channel = NULL;
 ConfigItem_deny_link	*conf_deny_link = NULL;
 ConfigItem_deny_version *conf_deny_version = NULL;
-ConfigItem_log		*conf_log = NULL;
+Log			*logs[5] = { NULL, NULL, NULL, NULL, NULL };
+Log			*temp_logs[5] = { NULL, NULL, NULL, NULL, NULL };
 ConfigItem_alias	*conf_alias = NULL;
 ConfigItem_include	*conf_include = NULL;
 ConfigItem_blacklist_module	*conf_blacklist_module = NULL;
@@ -1865,16 +1865,7 @@ void config_setdefaultsettings(Configuration *i)
 
 static void make_default_logblock(void)
 {
-	ConfigItem_log *ca = safe_alloc(sizeof(ConfigItem_log));
-
-	config_status("No log { } block found -- logging everything to 'ircd.log'");
-
-	safe_strdup(ca->file, "ircd.log");
-	convert_to_absolute_path(&ca->file, LOGDIR);
-	ca->flags |= LOG_CHGCMDS|LOG_CLIENT|LOG_ERROR|LOG_KILL|LOG_KLINE|LOG_OPER|LOG_OVERRIDE|LOG_SACMDS|LOG_SERVER|LOG_SPAMFILTER|LOG_TKL;
-	ca->type = LOG_TYPE_TEXT;
-	ca->logfd = -1;
-	AddListItem(ca, conf_log);
+	// FIXME: move or don't move :)
 }
 
 /** Similar to config_setdefaultsettings but this one is applied *AFTER*
@@ -2467,7 +2458,6 @@ void	config_rehash()
 	ConfigItem_allow_channel	*allow_channel_ptr;
 	ConfigItem_admin		*admin_ptr;
 	ConfigItem_deny_version		*deny_version_ptr;
-	ConfigItem_log			*log_ptr;
 	ConfigItem_alias		*alias_ptr;
 	ConfigItem_help			*help_ptr;
 	ConfigItem_offchans		*of_ptr;
@@ -2657,14 +2647,6 @@ void	config_rehash()
 		Auth_FreeAuthConfig(conf_drpass->dieauth);
 		conf_drpass->dieauth = NULL;
 		safe_free(conf_drpass);
-	}
-	for (log_ptr = conf_log; log_ptr; log_ptr = (ConfigItem_log *)next) {
-		next = (ListStruct *)log_ptr->next;
-		if (log_ptr->logfd != -1)
-			fd_close(log_ptr->logfd);
-		safe_free(log_ptr->file);
-		DelListItem(log_ptr, conf_log);
-		safe_free(log_ptr);
 	}
 	for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)next) {
 		RealCommand *cmptr = find_command(alias_ptr->alias, 0);

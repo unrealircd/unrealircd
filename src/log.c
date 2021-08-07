@@ -75,152 +75,6 @@ char *log_type_valtostring(LogType v)
 
 /***** CONFIGURATION ******/
 
-int config_test_log(ConfigFile *conf, ConfigEntry *ce)
-{
-	int fd, errors = 0;
-	ConfigEntry *cep, *cepp;
-	char has_flags = 0, has_maxsize = 0;
-	char *fname;
-
-	if (!ce->value)
-	{
-		config_error("%s:%i: log block without filename",
-			ce->file->filename, ce->line_number);
-		return 1;
-	}
-	if (!ce->items)
-	{
-		config_error("%s:%i: empty log block",
-			ce->file->filename, ce->line_number);
-		return 1;
-	}
-
-	/* Convert to absolute path (if needed) unless it's "syslog" */
-	if (strcmp(ce->value, "syslog"))
-		convert_to_absolute_path(&ce->value, LOGDIR);
-
-	for (cep = ce->items; cep; cep = cep->next)
-	{
-		if (!strcmp(cep->name, "flags"))
-		{
-			if (has_flags)
-			{
-				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "log::flags");
-				continue;
-			}
-			has_flags = 1;
-			if (!cep->items)
-			{
-				config_error_empty(cep->file->filename,
-					cep->line_number, "log", cep->name);
-				errors++;
-				continue;
-			}
-			for (cepp = cep->items; cepp; cepp = cepp->next)
-			{
-				// FIXME: old flags shit
-			}
-		}
-		else if (!strcmp(cep->name, "maxsize"))
-		{
-			if (has_maxsize)
-			{
-				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "log::maxsize");
-				continue;
-			}
-			has_maxsize = 1;
-			if (!cep->value)
-			{
-				config_error_empty(cep->file->filename,
-					cep->line_number, "log", cep->name);
-				errors++;
-			}
-		}
-		else if (!strcmp(cep->name, "type"))
-		{
-			if (!cep->value)
-			{
-				config_error_empty(cep->file->filename,
-					cep->line_number, "log", cep->name);
-				errors++;
-				continue;
-			}
-			if (!log_type_stringtoval(cep->value))
-			{
-				config_error("%s:%i: unknown log type '%s'",
-					cep->file->filename, cep->line_number,
-					cep->value);
-				errors++;
-			}
-		}
-		else
-		{
-			config_error_unknown(cep->file->filename, cep->line_number,
-				"log", cep->name);
-			errors++;
-			continue;
-		}
-	}
-
-	if (!has_flags)
-	{
-		config_error_missing(ce->file->filename, ce->line_number,
-			"log::flags");
-		errors++;
-	}
-
-	fname = unreal_strftime(ce->value);
-	if ((fd = fd_fileopen(fname, O_WRONLY|O_CREAT)) == -1)
-	{
-		config_error("%s:%i: Couldn't open logfile (%s) for writing: %s",
-			ce->file->filename, ce->line_number,
-			fname, strerror(errno));
-		errors++;
-	} else
-	{
-		fd_close(fd);
-	}
-
-	return errors;
-}
-
-int config_run_log(ConfigFile *conf, ConfigEntry *ce)
-{
-	ConfigEntry *cep, *cepp;
-	ConfigItem_log *ca;
-
-	ca = safe_alloc(sizeof(ConfigItem_log));
-	ca->logfd = -1;
-	ca->type = LOG_TYPE_TEXT; /* default */
-	if (strchr(ce->value, '%'))
-		safe_strdup(ca->filefmt, ce->value);
-	else
-		safe_strdup(ca->file, ce->value);
-
-	for (cep = ce->items; cep; cep = cep->next)
-	{
-		if (!strcmp(cep->name, "maxsize"))
-		{
-			ca->maxsize = config_checkval(cep->value,CFG_SIZE);
-		}
-		else if (!strcmp(cep->name, "type"))
-		{
-			ca->type = log_type_stringtoval(cep->value);
-		}
-		else if (!strcmp(cep->name, "flags"))
-		{
-			for (cepp = cep->items; cepp; cepp = cepp->next)
-			{
-				// FIXME: old flags shit
-			}
-		}
-	}
-	AddListItem(ca, conf_log);
-	return 1;
-}
-
 LogSource *add_log_source(const char *str)
 {
 	LogSource *ls;
@@ -267,11 +121,11 @@ LogSource *add_log_source(const char *str)
 	return ls;
 }
 
-int config_test_logx(ConfigFile *conf, ConfigEntry *block)
+int config_test_log(ConfigFile *conf, ConfigEntry *block)
 {
 	int errors = 0;
 	int any_sources = 0;
-	ConfigEntry *ce, *cep;
+	ConfigEntry *ce, *cep, *cepp;
 	int destinations = 0;
 
 	for (ce = block->items; ce; ce = ce->next)
@@ -333,11 +187,45 @@ int config_test_logx(ConfigFile *conf, ConfigEntry *block)
 						errors++;
 						continue;
 					}
+					convert_to_absolute_path(&cep->value, LOGDIR);
+					for (cepp = cep->items; cepp; cepp = cepp->next)
+					{
+						if (!strcmp(cepp->name, "type"))
+						{
+							if (!cepp->value)
+							{
+								config_error_empty(cepp->file->filename,
+									cepp->line_number, "log", cepp->name);
+								errors++;
+								continue;
+							}
+							if (!log_type_stringtoval(cepp->value))
+							{
+								config_error("%s:%i: unknown log type '%s'",
+									cepp->file->filename, cepp->line_number,
+									cepp->value);
+								errors++;
+							}
+						} else
+						if (!strcmp(cepp->name, "maxsize"))
+						{
+							if (!cepp->value)
+							{
+								config_error_empty(cepp->file->filename,
+									cepp->line_number, "log", cepp->name);
+								errors++;
+							}
+						} else
+						{
+							config_error_unknown(cepp->file->filename, cepp->line_number, "log::destination::file", cepp->name);
+							errors++;
+						}
+					}
 				} else
 				if (!strcmp(cep->name, "global"))
 				{
 					destinations++;
-				} else
+				} else // TODO: re-add syslog support too
 				{
 					config_error_unknownopt(cep->file->filename, cep->line_number, "log::destination", cep->name);
 					errors++;
@@ -368,9 +256,9 @@ int config_test_logx(ConfigFile *conf, ConfigEntry *block)
 	return errors;
 }
 
-int config_run_logx(ConfigFile *conf, ConfigEntry *block)
+int config_run_log(ConfigFile *conf, ConfigEntry *block)
 {
-	ConfigEntry *ce, *cep;
+	ConfigEntry *ce, *cep, *cepp;
 	LogSource *sources = NULL;
 	Log *log = safe_alloc(sizeof(Log));
 	int type;
@@ -401,6 +289,7 @@ int config_run_logx(ConfigFile *conf, ConfigEntry *block)
 			{
 				if (!strcmp(cep->name, "snomask"))
 				{
+					Log *log = safe_alloc(sizeof(Log));
 					strlcpy(log->destination, cep->value, sizeof(log->destination)); /* destination is the snomask */
 					log->sources = sources;
 					if (!strcmp(cep->value, "all"))
@@ -417,10 +306,33 @@ int config_run_logx(ConfigFile *conf, ConfigEntry *block)
 				} else
 				if (!strcmp(cep->name, "global"))
 				{
-					Log *d = safe_alloc(sizeof(Log));
+					Log *log = safe_alloc(sizeof(Log));
 					/* destination stays empty */
 					log->sources = sources;
 					AddListItem(log, tempiConf.logs[LOG_DEST_GLOBAL]);
+				} else
+				if (!strcmp(cep->name, "file"))
+				{
+					Log *log = safe_alloc(sizeof(Log));
+					log->sources = sources;
+					log->logfd = -1;
+					log->type = LOG_TYPE_TEXT; /* default */
+					if (strchr(cep->value, '%'))
+						safe_strdup(log->filefmt, cep->value);
+					else
+						safe_strdup(log->file, cep->value);
+					for (cepp = cep->items; cepp; cepp = cepp->next)
+					{
+						if (!strcmp(cepp->name, "maxsize"))
+						{
+							log->maxsize = config_checkval(cepp->value,CFG_SIZE);
+						}
+						else if (!strcmp(cepp->name, "type"))
+						{
+							log->type = log_type_stringtoval(cepp->value);
+						}
+					}
+					AddListItem(log, tempiConf.logs[LOG_DEST_OTHER]);
 				}
 			}
 		}
@@ -985,7 +897,7 @@ literal:
 void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
 {
 	static int last_log_file_warning = 0;
-	ConfigItem_log *l;
+	Log *l;
 	char text_buf[2048], timebuf[128];
 	struct stat fstats;
 	int n;
@@ -1011,7 +923,7 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, char
 	if (loop.config_test)
 		return;
 
-	for (l = conf_log; l; l = l->next)
+	for (l = iConf.logs[LOG_DEST_OTHER]; l; l = l->next)
 	{
 		// FIXME: implement the proper log filters (eg what 'flags' previously was)
 		//if (!(l->flags & flags))

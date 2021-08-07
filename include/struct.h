@@ -274,8 +274,13 @@ struct LogSource {
 typedef struct Log Log;
 struct Log {
 	Log *prev, *next;
-	char destination[CHANNELLEN+1];
 	LogSource *sources;
+	char destination[CHANNELLEN+1];
+	char *file;
+	char *filefmt;
+	long maxsize;
+	int type;
+	int logfd;
 };
 
 /*
