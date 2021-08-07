@@ -34,8 +34,6 @@ Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 
 /* Forward declarations */
 void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id, Client *client, int expand_msg, char *msg, va_list vl);
-char *timestamp_iso8601_now(void);
-char *timestamp_iso8601(time_t v);
 void log_blocks_switchover(void);
 
 json_t *json_string_possibly_null(char *s)
@@ -1210,6 +1208,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	json_object_set_new(j, "level", json_string(loglevel_string));
 	json_object_set_new(j, "subsystem", json_string(subsystem));
 	json_object_set_new(j, "event_id", json_string(event_id));
+	json_object_set_new(j, "log_source", json_string(*me.name ? me.name : "local"));
 
 	/* We put all the rest in j_details because we want to enforce
 	 * a certain ordering of the JSON output. We will merge these

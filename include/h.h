@@ -1115,4 +1115,6 @@ extern char *log_level_valtostring(LogLevel loglevel);
 extern LogLevel log_level_stringtoval(const char *str);
 extern int valid_event_id(const char *s);
 extern int valid_subsystem(const char *s);
+extern char *timestamp_iso8601_now(void);
+extern char *timestamp_iso8601(time_t v);
 /* end of logging */
