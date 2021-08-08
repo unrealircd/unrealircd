@@ -793,27 +793,6 @@ skip_host_check:
 		}
 	}
 
-	if ((acptr = find_server(client->name, NULL)))
-	{
-		if (IsMe(acptr))
-		{
-			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_SERVER_EXISTS", client,
-			           "Link with server $client.details denied: "
-			           "Server is trying to link with my name ($me_name)",
-			           log_data_string("me_name", me.name),
-			           log_data_link_block(link));
-			exit_client(client, NULL, "Server Exists (server trying to link with same name as myself)");
-		} else {
-			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_SERVER_EXISTS", client,
-				   "Link with server $client.details denied: "
-				   "A server with this name already exists via $existing_client.server.uplink",
-				   log_data_client("existing_client", acptr),
-			           log_data_link_block(link));
-			exit_client(acptr, NULL, "Server Exists");
-		}
-		return 0;
-	}
-
 	if ((bconf = find_ban(NULL, client->name, CONF_BAN_SERVER)))
 	{
 		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_SERVER_BAN", client,
@@ -854,6 +833,31 @@ skip_host_check:
 		exit_client(client, NULL, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
 		return 0;
 	}
+	/* This one is at the end, because it causes us to delink another server,
+	 * so we want to be (reasonably) sure that this one will succeed before
+	 * breaking the other one.
+	 */
+	if ((acptr = find_server(client->name, NULL)))
+	{
+		if (IsMe(acptr))
+		{
+			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_SERVER_EXISTS", client,
+			           "Link with server $client.details denied: "
+			           "Server is trying to link with my name ($me_name)",
+			           log_data_string("me_name", me.name),
+			           log_data_link_block(link));
+			exit_client(client, NULL, "Server Exists (server trying to link with same name as myself)");
+			return 0;
+		} else {
+			unreal_log(ULOG_ERROR, "link", "LINK_DROPPED_REINTRODUCED", client,
+				   "Link with server $client.details causes older link "
+				   "with same server via $existing_client.server.uplink to be dropped.",
+				   log_data_client("existing_client", acptr),
+			           log_data_link_block(link));
+			exit_client_ex(acptr, client->direction, NULL, "Old link dropped, resyncing");
+		}
+	}
+
 	if (link_out)
 		*link_out = link;
 	return 1;
