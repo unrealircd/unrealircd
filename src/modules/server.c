@@ -1711,7 +1711,7 @@ void server_generic_free(ModData *m)
 
 int server_post_connect(Client *client) {
 	if (cfg.autoconnect_strategy == AUTOCONNECT_SEQUENTIAL_FALLBACK && last_autoconnect_server
-		&& !strcmp(last_autoconnect_server, client->serv->conf->servername))
+		&& !strcmp(last_autoconnect_server, client->name))
 	{
 		last_autoconnect_server = NULL;
 	}
