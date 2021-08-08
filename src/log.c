@@ -225,6 +225,34 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 				if (!strcmp(cep->name, "remote"))
 				{
 					destinations++;
+				} else
+				if (!strcmp(cep->name, "syslog"))
+				{
+					destinations++;
+					for (cepp = cep->items; cepp; cepp = cepp->next)
+					{
+						if (!strcmp(cepp->name, "type"))
+						{
+							if (!cepp->value)
+							{
+								config_error_empty(cepp->file->filename,
+									cepp->line_number, "log", cepp->name);
+								errors++;
+								continue;
+							}
+							if (!log_type_stringtoval(cepp->value))
+							{
+								config_error("%s:%i: unknown log type '%s'",
+									cepp->file->filename, cepp->line_number,
+									cepp->value);
+								errors++;
+							}
+						} else
+						{
+							config_error_unknown(cepp->file->filename, cepp->line_number, "log::destination::syslog", cepp->name);
+							errors++;
+						}
+					}
 				} else // TODO: re-add syslog support too
 				{
 					config_error_unknownopt(cep->file->filename, cep->line_number, "log::destination", cep->name);
@@ -311,13 +339,15 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 					log->sources = sources;
 					AddListItem(log, temp_logs[LOG_DEST_REMOTE]);
 				} else
-				if (!strcmp(cep->name, "file"))
+				if (!strcmp(cep->name, "file") || !strcmp(cep->name, "syslog"))
 				{
 					Log *log = safe_alloc(sizeof(Log));
 					log->sources = sources;
 					log->logfd = -1;
 					log->type = LOG_TYPE_TEXT; /* default */
-					if (strchr(cep->value, '%'))
+					if (!strcmp(cep->name, "syslog"))
+						safe_strdup(log->file, "syslog");
+					else if (strchr(cep->value, '%'))
 						safe_strdup(log->filefmt, cep->value);
 					else
 						safe_strdup(log->file, cep->value);
@@ -953,8 +983,15 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, Mult
 #ifdef HAVE_SYSLOG
 		if (l->file && !strcasecmp(l->file, "syslog"))
 		{
-			for (m = msg; m; m = m->next)
-				syslog(LOG_INFO, "%s %s.%s%s: %s", log_level_valtostring(loglevel), subsystem, event_id, m->next?"+":"", m->line);
+			if (l->type == LOG_TYPE_JSON)
+			{
+				syslog(LOG_INFO, "%s", json_serialized);
+			} else
+			if (l->type == LOG_TYPE_TEXT)
+			{
+				for (m = msg; m; m = m->next)
+					syslog(LOG_INFO, "%s %s.%s%s: %s", log_level_valtostring(loglevel), subsystem, event_id, m->next?"+":"", m->line);
+			}
 			continue;
 		}
 #endif
