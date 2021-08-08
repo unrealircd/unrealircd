@@ -777,7 +777,7 @@ extern MODVAR int (*watch_del_list)(Client *client, int flags);
 extern MODVAR Watch *(*watch_get)(char *nick);
 extern MODVAR int (*watch_check)(Client *client, int reply);
 extern MODVAR char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options);
-extern MODVAR void (*do_unreal_log_remote_deliver)(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized);
+extern MODVAR void (*do_unreal_log_remote_deliver)(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized);
 /* /Efuncs */
 
 /* SSL/TLS functions */
@@ -1101,7 +1101,7 @@ extern char *log_type_valtostring(LogType v);
 #endif
 extern void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id, Client *client, char *msg, ...) __attribute__((format(printf,5,0)));
 extern void do_unreal_log_raw(LogLevel loglevel, char *subsystem, char *event_id, Client *client, char *msg, ...);
-extern void do_unreal_log_internal_from_remote(LogLevel loglevel, char *subsystem, char *event_id, char *msgbuf, char *json_serialized);
+extern void do_unreal_log_internal_from_remote(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized);
 extern LogData *log_data_string(const char *key, const char *str);
 extern LogData *log_data_char(const char *key, const char c);
 extern LogData *log_data_integer(const char *key, int64_t integer);

@@ -33,7 +33,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 CMD_FUNC(cmd_slog);
-void _do_unreal_log_remote_deliver(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized);
+void _do_unreal_log_remote_deliver(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized);
 
 MOD_TEST()
 {
@@ -70,6 +70,7 @@ CMD_FUNC(cmd_slog)
 	char *json_incoming = NULL;
 	char *json_serialized = NULL;
 	MessageTag *m;
+	MultiLine *mmsg = NULL;
 	json_t *j, *jt;
 	json_error_t jerr;
 	const char *original_timestamp;
@@ -103,11 +104,22 @@ CMD_FUNC(cmd_slog)
 	j = json_loads(json_incoming, JSON_REJECT_DUPLICATES, &jerr);
 	if (!j)
 	{
-		unreal_log(ULOG_INFO, "log", "REMOTE_LOG_INVALID_FORMAT", client,
+		unreal_log(ULOG_INFO, "log", "REMOTE_LOG_INVALID", client,
 		           "Received malformed JSON in server-to-server log message (SLOG) from $client",
 		           log_data_string("bad_json_serialized", json_incoming));
 		return;
 	}
+
+	jt = json_object_get(j, "msg");
+	if (!jt)
+	{
+		unreal_log(ULOG_INFO, "log", "REMOTE_LOG_INVALID", client,
+		           "Missing 'msg' in JSON in server-to-server log message (SLOG) from $client",
+		           log_data_string("bad_json_serialized", json_incoming));
+		json_decref(j);
+		return;
+	}
+	mmsg = line2multiline(msg);
 
 	/* Set "timestamp", and save the original one in "original_timestamp" (if it existed) */
 	jt = json_object_get(j, "timestamp");
@@ -124,28 +136,34 @@ CMD_FUNC(cmd_slog)
 	json_serialized = json_dumps(j, JSON_COMPACT);
 
 	if (json_serialized)
-		do_unreal_log_internal_from_remote(loglevel, subsystem, event_id, msg, json_serialized);
+		do_unreal_log_internal_from_remote(loglevel, subsystem, event_id, mmsg, json_serialized);
 
-	/* Free the JSON that we worked on */
-	safe_free(json_serialized);
-	json_decref(j);
-
-	/* And broadcast to the other servers */
+	/* Broadcast to the other servers */
 	sendto_server(client, 0, 0, recv_mtags, ":%s SLOG %s %s %s :%s",
 	              client->id,
 	              parv[1], parv[2], parv[3], parv[4]);
+
+	/* Free everything */
+	safe_free(json_serialized);
+	json_decref(j);
+	safe_free_multiline(mmsg);
 }
 
-void _do_unreal_log_remote_deliver(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
+void _do_unreal_log_remote_deliver(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized)
 {
 	MessageTag *mtags = safe_alloc(sizeof(MessageTag));
 
 	safe_strdup(mtags->name, "unrealircd.org/json-log");
 	safe_strdup(mtags->value, json_serialized);
 
+	/* Note that we only send the first line (msg->line),
+	 * even for a multi-line event.
+	 * If the recipient really wants to see everything then
+	 * they can use the JSON data.
+	 */
 	sendto_server(NULL, 0, 0, mtags, ":%s SLOG %s %s %s :%s",
 	              me.id,
-	              log_level_valtostring(loglevel), subsystem, event_id, msg);
+	              log_level_valtostring(loglevel), subsystem, event_id, msg->line);
 
 	free_message_tags(mtags);
 }

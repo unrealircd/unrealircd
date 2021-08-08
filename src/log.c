@@ -913,29 +913,31 @@ literal:
 }
 
 /** Do the actual writing to log files */
-void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
+void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized)
 {
 	static int last_log_file_warning = 0;
 	Log *l;
-	char text_buf[2048], timebuf[128];
+	char timebuf[128];
 	struct stat fstats;
 	int n;
 	int write_error;
 	long snomask;
+	MultiLine *m;
 
 	snprintf(timebuf, sizeof(timebuf), "[%s] ", myctime(TStime()));
-	snprintf(text_buf, sizeof(text_buf), "%s %s %s: %s\n",
-	         log_level_valtostring(loglevel), subsystem, event_id, msg);
 
 	//RunHook3(HOOKTYPE_LOG, flags, timebuf, text_buf); // FIXME: call with more parameters and possibly not even 'text_buf' at all
 
 	if (!loop.ircd_forked && (loglevel > ULOG_DEBUG))
 	{
+		for (m = msg; m; m = m->next)
+		{
 #ifdef _WIN32
-		win_log("* %s", text_buf);
+			win_log("* %s %s.%s%s: %s\n", log_level_valtostring(loglevel), subsystem, event_id, m->next?"+":"", m->line);
 #else
-		fprintf(stderr, "%s", text_buf);
+			fprintf(stderr, "%s %s.%s%s: %s\n", log_level_valtostring(loglevel), subsystem, event_id, m->next?"+":"", m->line);
 #endif
+		}
 	}
 
 	/* In case of './unrealircd configtest': don't write to log file, only to stderr */
@@ -951,7 +953,8 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, char
 #ifdef HAVE_SYSLOG
 		if (l->file && !strcasecmp(l->file, "syslog"))
 		{
-			syslog(LOG_INFO, "%s", text_buf);
+			for (m = msg; m; m = m->next)
+				syslog(LOG_INFO, "%s %s.%s%s: %s", log_level_valtostring(loglevel), subsystem, event_id, m->next?"+":"", m->line);
 			continue;
 		}
 #endif
@@ -1022,7 +1025,7 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, char
 		if ((l->type == LOG_TYPE_JSON) && strcmp(subsystem, "traffic"))
 		{
 			n = write(l->logfd, json_serialized, strlen(json_serialized));
-			if (n < strlen(text_buf))
+			if (n < strlen(json_serialized))
 				write_error = 1;
 			else
 				write(l->logfd, "\n", 1); // FIXME: no.. we should do it this way..... and why do we use direct I/O at all?
@@ -1035,9 +1038,17 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, char
 				/* Let's ignore any write errors for this one. Next write() will catch it... */
 				;
 			}
-			n = write(l->logfd, text_buf, strlen(text_buf));
-			if (n < strlen(text_buf))
-				write_error = 1;
+			for (m = msg; m; m = m->next)
+			{
+				char text_buf[1024];
+				snprintf(text_buf, sizeof(text_buf), "%s %s.%s%s: %s\n", log_level_valtostring(loglevel), subsystem, event_id, m->next?"+":"", m->line);
+				n = write(l->logfd, text_buf, strlen(text_buf));
+				if (n < strlen(text_buf))
+				{
+					write_error = 1;
+					break;
+				}
+			}
 		}
 
 		if (write_error)
@@ -1099,7 +1110,7 @@ char *log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id)
 #define COLOR_NONE "\xf"
 #define COLOR_DARKGREY "\00314"
 /** Do the actual writing to log files */
-void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
+void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized)
 {
 	Client *client;
 	char *snomask_destinations;
@@ -1107,6 +1118,7 @@ void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, ch
 	char *p;
 	char found;
 	MessageTag *mtags = NULL;
+	MultiLine *m;
 
 	/* If not fully booted then we don't have a logging to snomask mapping so can't do much.. */
 	if (!loop.ircd_booted)
@@ -1157,18 +1169,25 @@ void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, ch
 			log_level_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
 			COLOR_DARKGREY, subsystem, event_id, COLOR_NONE,
 			msg);*/
-		sendto_one(client, mtags, ":%s NOTICE %s :%s%s.%s%s %s[%s]%s %s",
-			me.name, client->name,
-			COLOR_DARKGREY, subsystem, event_id, COLOR_NONE,
-			log_level_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
-			msg);
+		for (m = msg; m; m = m->next)
+		{
+			char subsystem_and_event_id[256];
+			snprintf(subsystem_and_event_id, sizeof(subsystem_and_event_id), "%s%s.%s%s%s",
+			         COLOR_DARKGREY, subsystem, event_id, COLOR_NONE, m->next?"+":"");
+			sendto_one(client, mtags, ":%s NOTICE %s :%s %s[%s]%s %s",
+				me.name, client->name,
+				subsystem_and_event_id,
+				log_level_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
+				m->line);
+			// FIXME: only send json once ;)
+		}
 	}
 
 	if (mtags)
 		free_message_tags(mtags);
 }
 
-void do_unreal_log_remote(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
+void do_unreal_log_remote(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized)
 {
 	Log *l;
 	int found = 0;
@@ -1226,6 +1245,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	json_t *j_details = NULL;
 	char msgbuf[1024];
 	char *loglevel_string = log_level_valtostring(loglevel);
+	MultiLine *mmsg;
 
 	/* TODO: Enforcement:
 	 * - loglevel must be valid
@@ -1299,34 +1319,38 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	/* Generate the JSON */
 	json_serialized = json_dumps(j, JSON_COMPACT);
 
+	/* Convert the message buffer to MultiLine */
+	mmsg = line2multiline(msgbuf);
+
 	/* Now call the disk loggers */
-	do_unreal_log_disk(loglevel, subsystem, event_id, msgbuf, json_serialized);
+	do_unreal_log_disk(loglevel, subsystem, event_id, mmsg, json_serialized);
 
 	/* And the ircops stuff */
-	do_unreal_log_ircops(loglevel, subsystem, event_id, msgbuf, json_serialized);
+	do_unreal_log_ircops(loglevel, subsystem, event_id, mmsg, json_serialized);
 
-	do_unreal_log_remote(loglevel, subsystem, event_id, msgbuf, json_serialized);
+	do_unreal_log_remote(loglevel, subsystem, event_id, mmsg, json_serialized);
 
 	// NOTE: code duplication further down!
 
 	/* Free everything */
 	safe_free(json_serialized);
+	safe_free_multiline(mmsg);
 	json_decref(j_details);
 	json_decref(j);
 }
 
 void do_unreal_log_internal_from_remote(LogLevel loglevel, char *subsystem, char *event_id,
-                                        char *msgbuf, char *json_serialized)
+                                        MultiLine *msg, char *json_serialized)
 {
 	if (unreal_log_recursion_trap)
 		return;
 	unreal_log_recursion_trap = 1;
 
 	/* Call the disk loggers */
-	do_unreal_log_disk(loglevel, subsystem, event_id, msgbuf, json_serialized);
+	do_unreal_log_disk(loglevel, subsystem, event_id, msg, json_serialized);
 
 	/* And the ircops stuff */
-	do_unreal_log_ircops(loglevel, subsystem, event_id, msgbuf, json_serialized);
+	do_unreal_log_ircops(loglevel, subsystem, event_id, msg, json_serialized);
 
 	unreal_log_recursion_trap = 0;
 }

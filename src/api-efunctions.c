@@ -128,7 +128,7 @@ int (*watch_del)(char *nick, Client *client, int flags);
 int (*watch_del_list)(Client *client, int flags);
 Watch *(*watch_get)(char *nick);
 int (*watch_check)(Client *client, int reply);
-void (*do_unreal_log_remote_deliver)(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized);
+void (*do_unreal_log_remote_deliver)(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())
 {
