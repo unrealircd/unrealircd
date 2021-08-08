@@ -61,12 +61,33 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
+/** Server to server logging command.
+ * This way remote servers can send a log message to all servers.
+ * The message is broadcasted on to the rest of the network.
+ * Syntax:
+ * parv[1]: loglevel (eg "info")
+ * parv[2]: subsystem (eg: "link")
+ * parv[3]: event ID (eg: "LINK_DENIED_AUTH_FAILED")
+ * parv[4]: log message (only the first line!)
+ * We also require the "unrealircd.org/json-log" message tag to be present
+ * and to contain a valid UnrealIRCd JSON log.
+ * In fact, for sending the log message to disk and everything, we ignore
+ * the message in parv[4] and use the "msg" in the JSON itself.
+ * This because the "msg" in the JSON can be multi-line (can contain \n's)
+ * while the message in parv[4] will only be the first line.
+ *
+ * Why not skip parv[4] altogether and not send it all?
+ * I think it is still useful to send these, both for easy watching
+ * at server to server traffic, and also so (services) servers don't have
+ * to implement a full JSON parser.
+ */
 CMD_FUNC(cmd_slog)
 {
 	LogLevel loglevel;
 	char *subsystem;
 	char *event_id;
 	char *msg;
+	const char *msg_in_json;
 	char *json_incoming = NULL;
 	char *json_serialized = NULL;
 	MessageTag *m;
@@ -111,7 +132,7 @@ CMD_FUNC(cmd_slog)
 	}
 
 	jt = json_object_get(j, "msg");
-	if (!jt)
+	if (!jt || !(msg_in_json = json_string_value(jt)))
 	{
 		unreal_log(ULOG_INFO, "log", "REMOTE_LOG_INVALID", client,
 		           "Missing 'msg' in JSON in server-to-server log message (SLOG) from $client",
@@ -119,7 +140,7 @@ CMD_FUNC(cmd_slog)
 		json_decref(j);
 		return;
 	}
-	mmsg = line2multiline(msg);
+	mmsg = line2multiline(msg_in_json);
 
 	/* Set "timestamp", and save the original one in "original_timestamp" (if it existed) */
 	jt = json_object_get(j, "timestamp");
