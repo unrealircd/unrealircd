@@ -979,6 +979,7 @@ extern void new_message_special(Client *sender, MessageTag *recv_mtags, MessageT
 extern void generate_batch_id(char *str);
 extern MessageTag *find_mtag(MessageTag *mtags, const char *token);
 extern MessageTag *duplicate_mtag(MessageTag *mtag);
+#define safe_free_message_tags(x) do { if (x) free_message_tags(x); x = NULL; } while(0)
 extern void free_message_tags(MessageTag *m);
 extern time_t server_time_to_unix_time(const char *tbuf);
 extern int history_set_limit(char *object, int max_lines, long max_t);

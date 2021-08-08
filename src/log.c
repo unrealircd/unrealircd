@@ -1032,16 +1032,16 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, Mult
 		} else
 		if (l->type == LOG_TYPE_TEXT)
 		{
-			// FIXME: don't write in 2 stages, waste of slow system calls
-			if (write(l->logfd, timebuf, strlen(timebuf)) < 0)
-			{
-				/* Let's ignore any write errors for this one. Next write() will catch it... */
-				;
-			}
 			for (m = msg; m; m = m->next)
 			{
 				char text_buf[1024];
 				snprintf(text_buf, sizeof(text_buf), "%s %s.%s%s: %s\n", log_level_valtostring(loglevel), subsystem, event_id, m->next?"+":"", m->line);
+				// FIXME: don't write in 2 stages, waste of slow system calls
+				if (write(l->logfd, timebuf, strlen(timebuf)) < 0)
+				{
+					/* Let's ignore any write errors for this one. Next write() will catch it... */
+					;
+				}
 				n = write(l->logfd, text_buf, strlen(text_buf));
 				if (n < strlen(text_buf))
 				{
@@ -1110,14 +1110,14 @@ char *log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id)
 #define COLOR_NONE "\xf"
 #define COLOR_DARKGREY "\00314"
 /** Do the actual writing to log files */
-void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized)
+void do_unreal_log_opers(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized)
 {
 	Client *client;
 	char *snomask_destinations;
 	char *client_snomasks;
 	char *p;
 	char found;
-	MessageTag *mtags = NULL;
+	MessageTag *mtags = NULL, *mtags_loop;
 	MultiLine *m;
 
 	/* If not fully booted then we don't have a logging to snomask mapping so can't do much.. */
@@ -1169,22 +1169,22 @@ void do_unreal_log_ircops(LogLevel loglevel, char *subsystem, char *event_id, Mu
 			log_level_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
 			COLOR_DARKGREY, subsystem, event_id, COLOR_NONE,
 			msg);*/
+		mtags_loop = mtags;
 		for (m = msg; m; m = m->next)
 		{
 			char subsystem_and_event_id[256];
 			snprintf(subsystem_and_event_id, sizeof(subsystem_and_event_id), "%s%s.%s%s%s",
-			         COLOR_DARKGREY, subsystem, event_id, COLOR_NONE, m->next?"+":"");
-			sendto_one(client, mtags, ":%s NOTICE %s :%s %s[%s]%s %s",
+			         COLOR_DARKGREY, subsystem, event_id, m->next?"+":"", COLOR_NONE);
+			sendto_one(client, mtags_loop, ":%s NOTICE %s :%s %s[%s]%s %s",
 				me.name, client->name,
 				subsystem_and_event_id,
 				log_level_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
 				m->line);
-			// FIXME: only send json once ;)
+			mtags_loop = NULL; /* this way we only send the JSON in the first msg */
 		}
 	}
 
-	if (mtags)
-		free_message_tags(mtags);
+	safe_free_message_tags(mtags);
 }
 
 void do_unreal_log_remote(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized)
@@ -1326,7 +1326,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	do_unreal_log_disk(loglevel, subsystem, event_id, mmsg, json_serialized);
 
 	/* And the ircops stuff */
-	do_unreal_log_ircops(loglevel, subsystem, event_id, mmsg, json_serialized);
+	do_unreal_log_opers(loglevel, subsystem, event_id, mmsg, json_serialized);
 
 	do_unreal_log_remote(loglevel, subsystem, event_id, mmsg, json_serialized);
 
@@ -1350,7 +1350,7 @@ void do_unreal_log_internal_from_remote(LogLevel loglevel, char *subsystem, char
 	do_unreal_log_disk(loglevel, subsystem, event_id, msg, json_serialized);
 
 	/* And the ircops stuff */
-	do_unreal_log_ircops(loglevel, subsystem, event_id, msg, json_serialized);
+	do_unreal_log_opers(loglevel, subsystem, event_id, msg, json_serialized);
 
 	unreal_log_recursion_trap = 0;
 }
