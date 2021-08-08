@@ -1252,7 +1252,8 @@ CMD_FUNC(cmd_sid)
 	add_to_id_hash_table(acptr->id, acptr);
 	list_move(&acptr->client_node, &global_server_list);
 
-	unreal_log(ULOG_INFO, "link", "SERVER_LINKED", acptr, "Server linked: $client (via $client.server)");
+	unreal_log(ULOG_INFO, "link", "SERVER_LINKED_REMOTE", client,
+		   "Server linked: $client (via $client.server.uplink)");
 
 	RunHook(HOOKTYPE_SERVER_CONNECT, acptr);
 
