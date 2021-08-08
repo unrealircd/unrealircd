@@ -1023,6 +1023,7 @@ extern int filename_has_suffix(const char *fname, const char *suffix);
 extern void addmultiline(MultiLine **l, char *line);
 extern void freemultiline(MultiLine *l);
 #define safe_free_multiline(x) do { if (x) freemultiline(x); x = NULL; } while(0)
+extern MultiLine *line2multiline(const char *str);
 extern void sendnotice_multiline(Client *client, MultiLine *m);
 extern void unreal_del_quotes(char *i);
 extern char *unreal_add_quotes(char *str);

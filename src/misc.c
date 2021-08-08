@@ -2015,6 +2015,25 @@ void freemultiline(MultiLine *l)
 	}
 }
 
+/** Convert a line regular string containing \n's to a MultiLine linked list */
+MultiLine *line2multiline(const char *str)
+{
+	static char buf[8192];
+	char *p, *p2;
+	MultiLine *ml = NULL;
+
+	strlcpy(buf, str, sizeof(buf));
+	p = buf;
+	do {
+		p2 = strchr(p, '\n');
+		if (p2)
+			*p2++ = '\0';
+		addmultiline(&ml, p);
+		p = p2;
+	} while(p2 && *p2);
+	return ml;
+}
+
 /** Convert a sendtype to a command string */
 char *sendtype_to_cmd(SendType sendtype)
 {
