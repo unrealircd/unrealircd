@@ -563,6 +563,23 @@ void exit_client(Client *client, MessageTag *recv_mtags, char *comment)
  * @param recv_mtags  Message tags to use as a base (if any).
  * @param comment     The (s)quit message
  */
+void exit_client_fmt(Client *client, MessageTag *recv_mtags, FORMAT_STRING(const char *pattern), ...)
+{
+	char comment[512];
+
+	va_list vl;
+	va_start(vl, pattern);
+	vsnprintf(comment, sizeof(comment), pattern, vl);
+	va_end(vl);
+
+	exit_client_ex(client, client->direction, recv_mtags, comment);
+}
+
+/** Exit this IRC client, and all the dependents (users, servers) if this is a server.
+ * @param client        The client to exit.
+ * @param recv_mtags  Message tags to use as a base (if any).
+ * @param comment     The (s)quit message
+ */
 void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char *comment)
 {
 	long long on_for;

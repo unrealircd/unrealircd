@@ -285,6 +285,7 @@ extern char *myctime(time_t);
 extern char *short_date(time_t, char *buf);
 extern char *long_date(time_t);
 extern void exit_client(Client *client, MessageTag *recv_mtags, char *comment);
+extern void exit_client_fmt(Client *client, MessageTag *recv_mtags, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 3, 4)));
 extern void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char *comment);
 extern void initstats(), tstats(Client *, char *);
 extern char *check_string(char *);
