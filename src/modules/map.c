@@ -170,6 +170,4 @@ CMD_FUNC(cmd_map)
 		dump_map(client, &me, "*", 0, longest);
 
 	sendnumeric(client, RPL_MAPEND);
-
-	unreal_log(ULOG_INFO, "test", "TEST_CODE", client, "Hi there this a multi-line message\nThis is the second line\nAnd this is the third line, goodbye!\n");
 }
