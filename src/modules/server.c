@@ -885,8 +885,7 @@ CMD_FUNC(cmd_server)
 
 	if (parc < 4 || (!*parv[3]))
 	{
-		sendto_one(client, NULL, "ERROR :Not enough SERVER parameters");
-		exit_client(client, NULL,  "Not enough parameters");
+		exit_client(client, NULL,  "Not enough SERVER parameters");
 		return;
 	}
 
@@ -911,18 +910,12 @@ CMD_FUNC(cmd_server)
 
 	if (!valid_server_name(servername))
 	{
-		sendto_one(client, NULL, "ERROR :Bogus server name (%s)", servername);
-		sendto_snomask
-		    (SNO_JUNK,
-		    "WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
-		    servername, get_client_name(client, TRUE));
 		exit_client(client, NULL, "Bogus server name");
 		return;
 	}
 
 	if (!client->local->passwd)
 	{
-		sendto_one(client, NULL, "ERROR :Missing password");
 		exit_client(client, NULL, "Missing password");
 		return;
 	}
@@ -1108,7 +1101,7 @@ CMD_FUNC(cmd_sid)
 	ConfigItem_ban *bconf;
 	int 	hop;
 	char	*servername = parv[1];
-	Client *cptr = client->direction; /* lazy, since this function may be removed soon */
+	Client *direction = client->direction; /* lazy, since this function may be removed soon */
 
 	/* Only allow this command from server sockets */
 	if (!IsServer(client->direction))
@@ -1119,7 +1112,25 @@ CMD_FUNC(cmd_sid)
 
 	if (parc < 4 || BadPtr(parv[3]))
 	{
-		sendto_one(client, NULL, "ERROR :Not enough SID parameters");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "SID");
+		return;
+	}
+
+	/* The SID check is done early because we do all the killing by SID,
+	 * so we want to know if that won't work first.
+	 */
+	if (!valid_sid(parv[3]))
+	{
+		unreal_log(ULOG_ERROR, "link", "REMOTE_LINK_DENIED_INVALID_SID", client,
+			   "Denied remote server $servername which was introduced by $client: "
+			   "Invalid SID.",
+			   log_data_string("servername", servername),
+			   log_data_string("sid", parv[3]));
+		/* Since we cannot SQUIT via SID (since it is invalid), this gives
+		 * us huge doubts about the accuracy of the uplink, so in this case
+		 * we terminate the entire uplink.
+		 */
+		exit_client(client, NULL, "Trying to introduce a server with an invalid SID");
 		return;
 	}
 
@@ -1130,25 +1141,31 @@ CMD_FUNC(cmd_sid)
 
 		if (IsMe(acptr))
 		{
-			sendto_ops_and_log("Link %s rejected, server trying to link with my name (%s)",
-				get_client_name(client, TRUE), me.name);
+			/* This should never happen, not even due to a race condition.
+			 * We cannot send SQUIT here either since it is unclear what
+			 * side would be squitted.
+			 * As said, not really important, as this does not happen anyway.
+			 */
+			unreal_log(ULOG_ERROR, "link", "REMOTE_LINK_DENIED_DUPLICATE_SERVER_IS_ME", client,
+			           "Denied remote server $servername which was introduced by $client: "
+			           "Server is using our servername, this should be impossible!",
+			           log_data_string("servername", servername));
 			sendto_one(client, NULL, "ERROR: Server %s exists (it's me!)", me.name);
 			exit_client(client, NULL, "Server Exists");
 			return;
 		}
 
-		// FIXME: verify this code:
+		unreal_log(ULOG_ERROR, "link", "REMOTE_LINK_DENIED_DUPLICATE_SERVER", client,
+			   "Denied remote server $servername which was introduced by $client: "
+			   "Already linked via $other_client.uplink.",
+			   log_data_string("servername", servername),
+			   log_data_client("other_client", acptr));
+		// FIXME: oldest should die.
+		// FIXME: code below looks wrong, it checks direction TS instead of anything else
 		acptr = acptr->direction;
-		ocptr = (cptr->local->firsttime > acptr->local->firsttime) ? acptr : cptr;
-		acptr = (cptr->local->firsttime > acptr->local->firsttime) ? cptr : acptr;
-		sendto_one(acptr, NULL,
-		    "ERROR :Server %s already exists from %s",
-		    servername,
-		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
-		sendto_ops_and_log
-		    ("Link %s cancelled, server %s already exists from %s",
-		    get_client_name(acptr, TRUE), servername,
-		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
+		ocptr = (direction->local->firsttime > acptr->local->firsttime) ? acptr : direction;
+		acptr = (direction->local->firsttime > acptr->local->firsttime) ? direction : acptr;
+		// FIXME: Wait, this kills entire acptr? Without sending SQUIT even :D
 		exit_client(acptr, NULL, "Server Exists");
 		return;
 	}
@@ -1156,61 +1173,73 @@ CMD_FUNC(cmd_sid)
 	/* Check deny server { } */
 	if ((bconf = find_ban(NULL, servername, CONF_BAN_SERVER)))
 	{
-		sendto_ops_and_log("Cancelling link %s, banned server %s",
-			get_client_name(cptr, TRUE), servername);
-		sendto_one(cptr, NULL, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
-		exit_client(cptr, NULL, "Brought in banned server");
+		unreal_log(ULOG_ERROR, "link", "REMOTE_LINK_DENIED_SERVER_BAN", client,
+		           "Denied remote server $servername which was introduced by $client: "
+		           "Server is banned ($ban_reason)",
+		           log_data_string("ban_reason", bconf->reason));
+		/* Before UnrealIRCd 6 this would SQUIT the server who introduced
+		 * this server. That seems a bit of an overreaction, so we now
+		 * send a SQUIT instead.
+		 */
+		sendto_one(client, NULL, "SQUIT %s :Banned server: %s", parv[3], bconf->reason);
 		return;
 	}
 
 	/* OK, let us check the data now */
 	if (!valid_server_name(servername))
 	{
-		sendto_ops_and_log("Link %s introduced server with bad server name '%s' -- disconnecting",
-		                   client->name, servername);
-		exit_client(cptr, NULL, "Introduced server with bad server name");
+		unreal_log(ULOG_ERROR, "link", "REMOTE_LINK_DENIED_INVALID_SERVERNAME", client,
+			   "Denied remote server $servername which was introduced by $client: "
+			   "Invalid server name.",
+			   log_data_string("servername", servername));
+		sendto_one(client, NULL, "SQUIT %s :Invalid servername", parv[3]);
 		return;
 	}
 
-	hop = atol(parv[2]);
+	hop = atoi(parv[2]);
 	if (hop < 2)
 	{
-		sendto_ops_and_log("Server %s introduced server %s with hop count of %d, while >1 was expected",
-		                   client->name, servername, hop);
-		exit_client(cptr, NULL, "ERROR :Invalid hop count");
+		unreal_log(ULOG_ERROR, "link", "REMOTE_LINK_DENIED_INVALID_HOP_COUNT", client,
+			   "Denied remote server $servername which was introduced by $client: "
+			   "Invalid server name.",
+			   log_data_string("servername", servername),
+			   log_data_integer("hop_count", hop));
+		sendto_one(client, NULL, "SQUIT %s :Invalid hop count (%d)", parv[3], hop);
 		return;
 	}
 
-	if (!valid_sid(parv[3]))
+	if (!client->direction->serv->conf)
 	{
-		sendto_ops_and_log("Server %s introduced server %s with invalid SID '%s' -- disconnecting",
-		                   client->name, servername, parv[3]);
-		exit_client(cptr, NULL, "ERROR :Invalid SID");
+		unreal_log(ULOG_ERROR, "link", "BUG_LOST_CONFIG", client,
+			   "[BUG] Lost link conf record for link $direction.",
+			   log_data_client("direction", direction));
+		exit_client(client->direction, NULL, "BUG: lost link configuration");
 		return;
 	}
 
-	if (!cptr->serv->conf)
-	{
-		sendto_ops_and_log("Internal error: lost conf for %s!!, dropping link", cptr->name);
-		exit_client(cptr, NULL, "Internal error: lost configuration");
-		return;
-	}
-
-	aconf = cptr->serv->conf;
+	aconf = client->direction->serv->conf;
 
 	if (!aconf->hub)
 	{
-		sendto_ops_and_log("Link %s cancelled, is Non-Hub but introduced Leaf %s",
-			cptr->name, servername);
-		exit_client(cptr, NULL, "Non-Hub Link");
+		unreal_log(ULOG_ERROR, "link", "REMOTE_LINK_DENIED_NO_HUB", client,
+			   "Denied remote server $servername which was introduced by $client: "
+			   "Server may not introduce this server ($direction is not a hub).",
+			   log_data_string("servername", servername),
+			   log_data_client("direction", client->direction));
+		sendto_one(client, NULL, "SQUIT %s :Server is not permitted to be a hub: %s",
+			parv[3], client->direction->name);
 		return;
 	}
 
 	if (!match_simple(aconf->hub, servername))
 	{
-		sendto_ops_and_log("Link %s cancelled, linked in %s, which hub config disallows",
-			cptr->name, servername);
-		exit_client(cptr, NULL, "Not matching hub configuration");
+		unreal_log(ULOG_ERROR, "link", "REMOTE_LINK_DENIED_NO_MATCHING_HUB", client,
+			   "Denied remote server $servername which was introduced by $client: "
+			   "Server may not introduce this server ($direction hubmask does not allow it).",
+			   log_data_string("servername", servername),
+			   log_data_client("direction", client->direction));
+		sendto_one(client, NULL, "SQUIT %s :Hub config for %s does not allow introducing this server",
+			parv[3], client->direction->name);
 		return;
 	}
 
@@ -1218,23 +1247,31 @@ CMD_FUNC(cmd_sid)
 	{
 		if (!match_simple(aconf->leaf, servername))
 		{
-			sendto_ops_and_log("Link %s(%s) cancelled, disallowed by leaf configuration",
-				cptr->name, servername);
-			exit_client(cptr, NULL, "Disallowed by leaf configuration");
+			unreal_log(ULOG_ERROR, "link", "REMOTE_LINK_DENIED_NO_MATCHING_LEAF", client,
+				   "Denied remote server $servername which was introduced by $client: "
+				   "Server may not introduce this server ($direction leaf config does not allow it).",
+				   log_data_string("servername", servername),
+				   log_data_client("direction", client->direction));
+			sendto_one(client, NULL, "SQUIT %s :Leaf config for %s does not allow introducing this server",
+				parv[3], client->direction->name);
 			return;
 		}
 	}
 
 	if (aconf->leaf_depth && (hop > aconf->leaf_depth))
 	{
-		sendto_ops_and_log("Link %s(%s) cancelled, too deep depth",
-			cptr->name, servername);
-		exit_client(cptr, NULL, "Too deep link depth (leaf)");
+		unreal_log(ULOG_ERROR, "link", "REMOTE_LINK_DENIED_LEAF_DEPTH", client,
+			   "Denied remote server $servername which was introduced by $client: "
+			   "Server may not introduce this server ($direction leaf depth config does not allow it).",
+			   log_data_string("servername", servername),
+			   log_data_client("direction", client->direction));
+		sendto_one(client, NULL, "SQUIT %s :Leaf depth config for %s does not allow introducing this server",
+			parv[3], client->direction->name);
 		return;
 	}
 
 	/* All approved, add the server */
-	acptr = make_client(cptr, find_server(client->name, cptr));
+	acptr = make_client(direction, find_server(client->name, direction));
 	strlcpy(acptr->name, servername, sizeof(acptr->name));
 	acptr->hopcount = hop;
 	strlcpy(acptr->id, parv[3], sizeof(acptr->id));
