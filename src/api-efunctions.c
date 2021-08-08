@@ -76,7 +76,7 @@ unsigned char *(*StripColors)(unsigned char *text);
 const char *(*StripControlCodes)(unsigned char *text);
 void (*spamfilter_build_user_string)(char *buf, char *nick, Client *client);
 void (*send_protoctl_servers)(Client *client, int response);
-int (*verify_link)(Client *client, char *servername, ConfigItem_link **link_out);
+int (*verify_link)(Client *client, ConfigItem_link **link_out);
 void (*introduce_user)(Client *to, Client *client);
 void (*send_server_message)(Client *client);
 void (*broadcast_md_client)(ModDataInfo *mdi, Client *client, ModData *md);

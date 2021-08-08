@@ -45,7 +45,7 @@ EVENT(server_handshake_timeout);
 void send_channel_modes_sjoin3(Client *to, Channel *channel);
 CMD_FUNC(cmd_server);
 CMD_FUNC(cmd_sid);
-int _verify_link(Client *client, char *servername, ConfigItem_link **link_out);
+int _verify_link(Client *client, ConfigItem_link **link_out);
 void _send_protoctl_servers(Client *client, int response);
 void _send_server_message(Client *client);
 void _introduce_user(Client *to, Client *acptr);
@@ -634,11 +634,10 @@ void _send_server_message(Client *client)
  * This does authentication and authorization checks.
  * @param cptr The client directly connected to us (cptr).
  * @param client The client which (originally) issued the server command (client).
- * @param servername The server name provided by the client.
  * @param link_out Pointer-to-pointer-to-link block. Will be set when auth OK. Caller may pass NULL if he doesn't care.
  * @returns This function returns 1 on successful authentication, 0 otherwise - in which case the client has been killed.
  */
-int _verify_link(Client *client, char *servername, ConfigItem_link **link_out)
+int _verify_link(Client *client, ConfigItem_link **link_out)
 {
 	char xerrmsg[256];
 	ConfigItem_link *link;
@@ -664,12 +663,6 @@ int _verify_link(Client *client, char *servername, ConfigItem_link **link_out)
 		return 0;
 	}
 
-	/* First check if the server is in the list */
-	if (!servername) {
-		strcpy(xerrmsg, "Null servername");
-		goto errlink;
-	}
-	
 	if (client->serv && client->serv->conf)
 	{
 		/* This is an outgoing connect so we already know what link block we are
@@ -677,17 +670,15 @@ int _verify_link(Client *client, char *servername, ConfigItem_link **link_out)
 		 */
 
 		/* Actually we still need to double check the servername to avoid confusion. */
-		if (strcasecmp(servername, client->serv->conf->servername))
+		if (strcasecmp(client->name, client->serv->conf->servername))
 		{
-			ircsnprintf(xerrmsg, sizeof(xerrmsg), "Outgoing connect from link block '%s' but server "
-				"introduced himself as '%s'. Server name mismatch.",
-				client->serv->conf->servername,
-				servername);
-
-			sendto_one(client, NULL, "ERROR :%s", xerrmsg);
-			sendto_ops_and_log("Outgoing link aborted to %s(%s@%s) (%s) %s",
-				client->serv->conf->servername, client->ident, client->local->sockhost, xerrmsg, inpath);
-			exit_client(client, NULL, xerrmsg);
+			unreal_log(ULOG_INFO, "link", "LINK_SERVERNAME_MISMATCH", client,
+			           "Link from server $client.details denied: "
+			           "outgoing connect from link block '$link_block' but server "
+			           "introduced itself as '$client'. Server name mismatch.",
+			           log_data_link_block(client->serv->conf));
+			exit_client_fmt(client, NULL, "Servername (%s) does not match name in my link block (%s)",
+			                client->name, client->serv->conf->servername);
 			return 0;
 		}
 		link = client->serv->conf;
@@ -695,23 +686,23 @@ int _verify_link(Client *client, char *servername, ConfigItem_link **link_out)
 	} else {
 		/* Hunt the linkblock down ;) */
 		for(link = conf_link; link; link = link->next)
-			if (match_simple(link->servername, servername))
+			if (match_simple(link->servername, client->name))
 				break;
 	}
 	
 	if (!link)
 	{
-		ircsnprintf(xerrmsg, sizeof(xerrmsg), "No link block named '%s'", servername);
+		ircsnprintf(xerrmsg, sizeof(xerrmsg), "No link block named '%s'", client->name);
 		goto errlink;
 	}
 	
 	if (!link->incoming.mask)
 	{
-		ircsnprintf(xerrmsg, sizeof(xerrmsg), "Link block '%s' exists but has no link::incoming::mask", servername);
+		ircsnprintf(xerrmsg, sizeof(xerrmsg), "Link block '%s' exists but has no link::incoming::mask", client->name);
 		goto errlink;
 	}
 
-	link = find_link(servername, client);
+	link = find_link(client->name, client);
 
 	if (!link)
 	{
@@ -720,10 +711,10 @@ errlink:
 		/* Send the "simple" error msg to the server */
 		sendto_one(client, NULL,
 		    "ERROR :Link denied (No link block found named '%s' or link::incoming::mask did not match your IP %s) %s",
-		    servername, GetIP(client), inpath);
+		    client->name, GetIP(client), inpath);
 		/* And send the "verbose" error msg only to locally connected ircops */
 		sendto_ops_and_log("Link denied for %s(%s@%s) (%s) %s",
-		    servername, client->ident, client->local->sockhost, xerrmsg, inpath);
+		    client->name, client->ident, client->local->sockhost, xerrmsg, inpath);
 		exit_client(client, NULL, "Link denied (No link block found with your server name or link::incoming::mask did not match)");
 		return 0;
 	}
@@ -743,31 +734,31 @@ skip_host_check:
 		    ((link->auth->type != AUTHTYPE_PLAINTEXT) && client->local->passwd && strcmp(client->local->passwd, "*")))
 		{
 			sendto_ops_and_log("Link denied for '%s' (Authentication failed due to different password types on both sides of the link) %s",
-				servername, inpath);
+				client->name, inpath);
 			sendto_ops_and_log("Read https://www.unrealircd.org/docs/FAQ#auth-fail-mixed for more information");
 		} else
 		if (link->auth->type == AUTHTYPE_SPKIFP)
 		{
 			sendto_ops_and_log("Link denied for '%s' (Authentication failed [spkifp mismatch]) %s",
-				servername, inpath);
+				client->name, inpath);
 		} else
 		if (link->auth->type == AUTHTYPE_TLS_CLIENTCERT)
 		{
 			sendto_ops_and_log("Link denied for '%s' (Authentication failed [tlsclientcert mismatch]) %s",
-				servername, inpath);
+				client->name, inpath);
 		} else
 		if (link->auth->type == AUTHTYPE_TLS_CLIENTCERTFP)
 		{
 			sendto_ops_and_log("Link denied for '%s' (Authentication failed [tlsclientcertfp mismatch]) %s",
-				servername, inpath);
+				client->name, inpath);
 		} else
 		{
 			sendto_ops_and_log("Link denied for '%s' (Authentication failed [Bad password?]) %s",
-				servername, inpath);
+				client->name, inpath);
 		}
 		sendto_one(client, NULL,
 		    "ERROR :Link '%s' denied (Authentication failed) %s",
-		    servername, inpath);
+		    client->name, inpath);
 		exit_client(client, NULL, "Link denied (Authentication failed)");
 		return 0;
 	}
@@ -781,9 +772,9 @@ skip_host_check:
 		{
 			sendto_one(client, NULL,
 				"ERROR :Link '%s' denied (Not using SSL/TLS) %s",
-				servername, inpath);
+				client->name, inpath);
 			sendto_ops_and_log("Link denied for '%s' (Not using SSL/TLS and verify-certificate is on) %s",
-				servername, inpath);
+				client->name, inpath);
 			exit_client(client, NULL, "Link denied (Not using SSL/TLS)");
 			return 0;
 		}
@@ -791,9 +782,9 @@ skip_host_check:
 		{
 			sendto_one(client, NULL,
 				"ERROR :Link '%s' denied (Certificate verification failed) %s",
-				servername, inpath);
+				client->name, inpath);
 			sendto_ops_and_log("Link denied for '%s' (Certificate verification failed) %s",
-				servername, inpath);
+				client->name, inpath);
 			sendto_ops_and_log("Reason for certificate verification failure: %s", errstr);
 			exit_client(client, NULL, "Link denied (Certificate verification failed)");
 			return 0;
@@ -804,7 +795,7 @@ skip_host_check:
 	 * Third phase, we check that the server does not exist
 	 * already
 	 */
-	if ((acptr = find_server(servername, NULL)))
+	if ((acptr = find_server(client->name, NULL)))
 	{
 		/* Found. Bad. Quit. */
 
@@ -822,16 +813,16 @@ skip_host_check:
 		acptr = (client->local->firsttime > acptr->local->firsttime) ? client : acptr;
 		sendto_one(acptr, NULL,
 		    "ERROR :Server %s already exists from %s",
-		    servername,
+		    client->name,
 		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
 		sendto_ops_and_log
 		    ("Link %s cancelled, server %s already exists from %s",
-		    get_client_name(acptr, TRUE), servername,
+		    get_client_name(acptr, TRUE), client->name,
 		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
 		exit_client(acptr, NULL, "Server Exists");
 		return 0;
 	}
-	if ((bconf = find_ban(NULL, servername, CONF_BAN_SERVER)))
+	if ((bconf = find_ban(NULL, client->name, CONF_BAN_SERVER)))
 	{
 		sendto_ops_and_log
 			("Cancelling link %s, banned server",
@@ -934,14 +925,20 @@ CMD_FUNC(cmd_server)
 		return;
 	}
 
-	if (!verify_link(client, servername, &aconf))
+	/* We set the client->name early here, even though it is not authenticated yet.
+	 * Reason is that it makes the notices and logging more useful.
+	 * This should be safe as it is not in the server linked list yet or hash table.
+	 * CMTSRV941 -- Syzop.
+	 */
+	strlcpy(client->name, servername, sizeof(client->name));
+
+	if (!verify_link(client, &aconf))
 		return; /* Rejected */
 
 	/* From this point the server is authenticated, so we can be more verbose
 	 * with notices to ircops and in exit_client() and such.
 	 */
 
-	strlcpy(client->name, servername, sizeof(client->name));
 
 	if (strlen(client->id) != 3)
 	{

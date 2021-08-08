@@ -1204,15 +1204,18 @@ int valid_server_name(char *name)
 {
 	char *p;
 
+	if (!*name)
+		return 0; /* empty name */
+
 	if (strlen(name) >= HOSTLEN)
-		return 0;
+		return 0; /* oversized */
 
 	for (p = name; *p; p++)
 		if ((*p <= ' ') || (*p > '~'))
-			return 0;
+			return 0; /* forbidden chars */
 
 	if (!strchr(name, '.'))
-		return 0;
+		return 0; /* no dot */
 
 	return 1;
 }

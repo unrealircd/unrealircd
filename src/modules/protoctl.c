@@ -236,7 +236,7 @@ CMD_FUNC(cmd_protoctl)
 			}
 			
 			servername = strtoken(&p, buf, ",");
-			if (!servername || (strlen(servername) > HOSTLEN) || !strchr(servername, '.'))
+			if (!valid_server_name(servername))
 			{
 				sendto_one(client, NULL, "ERROR :Bogus server name in EAUTH (%s)", servername ? servername : "");
 				sendto_snomask
@@ -258,7 +258,12 @@ CMD_FUNC(cmd_protoctl)
 				}
 			}
 			
-			if (!verify_link(client, servername, &aconf))
+			/* Set client->name but don't add to hash list, this gives better
+			 * log messages and should be safe. See CMTSRV941 in server.c.
+			 */
+			strlcpy(client->name, servername, sizeof(client->name));
+
+			if (!verify_link(client, &aconf))
 				return;
 
 			/* note: software, protocol and flags may be NULL */
@@ -267,11 +272,6 @@ CMD_FUNC(cmd_protoctl)
 
 			SetEAuth(client);
 			make_server(client); /* allocate and set client->serv */
-			/* Set client->name but don't add to hash list. The real work on
-			 * that is done in cmd_server. We just set it here for display
-			 * purposes of error messages (such as reject due to clock).
-			 */
-			strlcpy(client->name, servername, sizeof(client->name));
 			if (protocol)
 				client->serv->features.protocol = atoi(protocol);
 			if (software)
