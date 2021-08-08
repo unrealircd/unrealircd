@@ -629,6 +629,7 @@ void _send_server_message(Client *client)
 		client->serv->flags.server_sent = 1;
 }
 
+#define LINK_DEFAULT_ERROR_MSG "Link denied (No link block found with your server name or link::incoming::mask did not match)"
 
 /** Verify server link.
  * This does authentication and authorization checks.
@@ -639,7 +640,6 @@ void _send_server_message(Client *client)
  */
 int _verify_link(Client *client, ConfigItem_link **link_out)
 {
-	char xerrmsg[256];
 	ConfigItem_link *link;
 	char *inpath = get_client_name(client, TRUE);
 	Client *acptr = NULL, *ocptr = NULL;
@@ -654,11 +654,10 @@ int _verify_link(Client *client, ConfigItem_link **link_out)
 	if (link_out)
 		*link_out = NULL;
 	
-	strcpy(xerrmsg, "No matching link configuration");
-
 	if (!client->local->passwd)
 	{
-		sendto_one(client, NULL, "ERROR :Missing password");
+		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_NO_PASSWORD", client,
+			   "Link with server $client.details denied: No password provided. Protocol error.");
 		exit_client(client, NULL, "Missing password");
 		return 0;
 	}
@@ -672,9 +671,9 @@ int _verify_link(Client *client, ConfigItem_link **link_out)
 		/* Actually we still need to double check the servername to avoid confusion. */
 		if (strcasecmp(client->name, client->serv->conf->servername))
 		{
-			unreal_log(ULOG_INFO, "link", "LINK_SERVERNAME_MISMATCH", client,
-			           "Link from server $client.details denied: "
-			           "outgoing connect from link block '$link_block' but server "
+			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_SERVERNAME_MISMATCH", client,
+			           "Link with server $client.details denied: "
+			           "Outgoing connect from link block '$link_block' but server "
 			           "introduced itself as '$client'. Server name mismatch.",
 			           log_data_link_block(client->serv->conf));
 			exit_client_fmt(client, NULL, "Servername (%s) does not match name in my link block (%s)",
@@ -692,35 +691,34 @@ int _verify_link(Client *client, ConfigItem_link **link_out)
 	
 	if (!link)
 	{
-		ircsnprintf(xerrmsg, sizeof(xerrmsg), "No link block named '%s'", client->name);
-		goto errlink;
+		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_UNKNOWN_SERVER", client,
+		           "Link with server $client.details denied: No link block named '$client'");
+		exit_client(client, NULL, LINK_DEFAULT_ERROR_MSG);
+		return 0;
 	}
 	
 	if (!link->incoming.mask)
 	{
-		ircsnprintf(xerrmsg, sizeof(xerrmsg), "Link block '%s' exists but has no link::incoming::mask", client->name);
-		goto errlink;
+		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_NO_INCOMING", client,
+		           "Link with server $client.details denied: Link block exists, but there is no link::incoming::mask set.",
+		           log_data_link_block(link));
+		exit_client(client, NULL, LINK_DEFAULT_ERROR_MSG);
+		return 0;
 	}
 
 	link = find_link(client->name, client);
 
 	if (!link)
 	{
-		ircsnprintf(xerrmsg, sizeof(xerrmsg), "Server is in link block but link::incoming::mask didn't match");
-errlink:
-		/* Send the "simple" error msg to the server */
-		sendto_one(client, NULL,
-		    "ERROR :Link denied (No link block found named '%s' or link::incoming::mask did not match your IP %s) %s",
-		    client->name, GetIP(client), inpath);
-		/* And send the "verbose" error msg only to locally connected ircops */
-		sendto_ops_and_log("Link denied for %s(%s@%s) (%s) %s",
-		    client->name, client->ident, client->local->sockhost, xerrmsg, inpath);
-		exit_client(client, NULL, "Link denied (No link block found with your server name or link::incoming::mask did not match)");
+		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_INCOMING_MASK_MISMATCH", client,
+		           "Link with server $client.details denied: Server is in link block but link::incoming::mask didn't match",
+		           log_data_link_block(link));
+		exit_client(client, NULL, LINK_DEFAULT_ERROR_MSG);
 		return 0;
 	}
 
 skip_host_check:
-	/* Now for checking passwords */
+	/* Try to authenticate the server... */
 	if (!Auth_Check(client, link->auth, client->local->passwd))
 	{
 		/* Let's help admins a bit with a good error message in case
@@ -733,32 +731,39 @@ skip_host_check:
 		if (((link->auth->type == AUTHTYPE_PLAINTEXT) && client->local->passwd && !strcmp(client->local->passwd, "*")) ||
 		    ((link->auth->type != AUTHTYPE_PLAINTEXT) && client->local->passwd && strcmp(client->local->passwd, "*")))
 		{
-			sendto_ops_and_log("Link denied for '%s' (Authentication failed due to different password types on both sides of the link) %s",
-				client->name, inpath);
-			sendto_ops_and_log("Read https://www.unrealircd.org/docs/FAQ#auth-fail-mixed for more information");
+			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_AUTH_FAILED", client,
+			           "Link with server $client.details denied: Authentication failed: $auth_failure_msg",
+			           log_data_string("auth_failure_msg", "different password types on both sides of the link\n"
+			                                               "Read https://www.unrealircd.org/docs/FAQ#auth-fail-mixed for more information"),
+			           log_data_link_block(link));
 		} else
 		if (link->auth->type == AUTHTYPE_SPKIFP)
 		{
-			sendto_ops_and_log("Link denied for '%s' (Authentication failed [spkifp mismatch]) %s",
-				client->name, inpath);
+			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_AUTH_FAILED", client,
+			           "Link with server $client.details denied: Authentication failed: $auth_failure_msg",
+			           log_data_string("auth_failure_msg", "spkifp mismatch"),
+			           log_data_link_block(link));
 		} else
 		if (link->auth->type == AUTHTYPE_TLS_CLIENTCERT)
 		{
-			sendto_ops_and_log("Link denied for '%s' (Authentication failed [tlsclientcert mismatch]) %s",
-				client->name, inpath);
+			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_AUTH_FAILED", client,
+			           "Link with server $client.details denied: Authentication failed: $auth_failure_msg",
+			           log_data_string("auth_failure_msg", "tlsclientcert mismatch"),
+			           log_data_link_block(link));
 		} else
 		if (link->auth->type == AUTHTYPE_TLS_CLIENTCERTFP)
 		{
-			sendto_ops_and_log("Link denied for '%s' (Authentication failed [tlsclientcertfp mismatch]) %s",
-				client->name, inpath);
+			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_AUTH_FAILED", client,
+			           "Link with server $client.details denied: Authentication failed: $auth_failure_msg",
+			           log_data_string("auth_failure_msg", "certfp mismatch"),
+			           log_data_link_block(link));
 		} else
 		{
-			sendto_ops_and_log("Link denied for '%s' (Authentication failed [Bad password?]) %s",
-				client->name, inpath);
+			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_AUTH_FAILED", client,
+			           "Link with server $client.details denied: Authentication failed: $auth_failure_msg",
+			           log_data_string("auth_failure_msg", "bad password"),
+			           log_data_link_block(link));
 		}
-		sendto_one(client, NULL,
-		    "ERROR :Link '%s' denied (Authentication failed) %s",
-		    client->name, inpath);
 		exit_client(client, NULL, "Link denied (Authentication failed)");
 		return 0;
 	}
@@ -770,85 +775,82 @@ skip_host_check:
 
 		if (!IsTLS(client))
 		{
-			sendto_one(client, NULL,
-				"ERROR :Link '%s' denied (Not using SSL/TLS) %s",
-				client->name, inpath);
-			sendto_ops_and_log("Link denied for '%s' (Not using SSL/TLS and verify-certificate is on) %s",
-				client->name, inpath);
+			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_VERIFY_CERTIFICATE_FAILED", client,
+			           "Link with server $client.details denied: verify-certificate failed: $certificate_failure_msg",
+			           log_data_string("certificate_failure_msg", "not using TLS"),
+			           log_data_link_block(link));
 			exit_client(client, NULL, "Link denied (Not using SSL/TLS)");
 			return 0;
 		}
 		if (!verify_certificate(client->local->ssl, link->servername, &errstr))
 		{
-			sendto_one(client, NULL,
-				"ERROR :Link '%s' denied (Certificate verification failed) %s",
-				client->name, inpath);
-			sendto_ops_and_log("Link denied for '%s' (Certificate verification failed) %s",
-				client->name, inpath);
-			sendto_ops_and_log("Reason for certificate verification failure: %s", errstr);
+			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_VERIFY_CERTIFICATE_FAILED", client,
+			           "Link with server $client.details denied: verify-certificate failed: $certificate_failure_msg",
+			           log_data_string("certificate_failure_msg", errstr),
+			           log_data_link_block(link));
 			exit_client(client, NULL, "Link denied (Certificate verification failed)");
 			return 0;
 		}
 	}
 
-	/*
-	 * Third phase, we check that the server does not exist
-	 * already
-	 */
 	if ((acptr = find_server(client->name, NULL)))
 	{
-		/* Found. Bad. Quit. */
-
 		if (IsMe(acptr))
 		{
-			sendto_ops_and_log("Link %s rejected, server trying to link with my name (%s)",
-				get_client_name(client, TRUE), me.name);
-			sendto_one(client, NULL, "ERROR: Server %s exists (it's me!)", me.name);
-			exit_client(client, NULL, "Server Exists");
-			return 0;
+			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_SERVER_EXISTS", client,
+			           "Link with server $client.details denied: "
+			           "Server is trying to link with my name ($me_name)",
+			           log_data_string("me_name", me.name),
+			           log_data_link_block(link));
+			exit_client(client, NULL, "Server Exists (server trying to link with same name as myself)");
+		} else {
+			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_SERVER_EXISTS", client,
+				   "Link with server $client.details denied: "
+				   "A server with this name already exists via $existing_client.server.uplink",
+				   log_data_client("existing_client", acptr),
+			           log_data_link_block(link));
+			exit_client(acptr, NULL, "Server Exists");
 		}
-
-		acptr = acptr->direction;
-		ocptr = (client->local->firsttime > acptr->local->firsttime) ? acptr : client;
-		acptr = (client->local->firsttime > acptr->local->firsttime) ? client : acptr;
-		sendto_one(acptr, NULL,
-		    "ERROR :Server %s already exists from %s",
-		    client->name,
-		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
-		sendto_ops_and_log
-		    ("Link %s cancelled, server %s already exists from %s",
-		    get_client_name(acptr, TRUE), client->name,
-		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
-		exit_client(acptr, NULL, "Server Exists");
 		return 0;
 	}
+
 	if ((bconf = find_ban(NULL, client->name, CONF_BAN_SERVER)))
 	{
-		sendto_ops_and_log
-			("Cancelling link %s, banned server",
-			get_client_name(client, TRUE));
-		sendto_one(client, NULL, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
-		exit_client(client, NULL, "Banned server");
+		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_SERVER_BAN", client,
+		           "Link with server $client.details denied: "
+		           "Server is banned ($ban_reason)",
+		           log_data_string("ban_reason", bconf->reason),
+		           log_data_link_block(link));
+		exit_client_fmt(client, NULL, "Banned server: %s", bconf->reason);
 		return 0;
 	}
+
 	if (link->class->clients + 1 > link->class->maxclients)
 	{
-		sendto_ops_and_log("Cancelling link %s, full class",
-				get_client_name(client, TRUE));
+		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_CLASS_FULL", client,
+		           "Link with server $client.details denied: "
+		           "class '$link_block.class' is full",
+		           log_data_link_block(link));
 		exit_client(client, NULL, "Full class");
 		return 0;
 	}
 	if (!IsLocalhost(client) && (iConf.plaintext_policy_server == POLICY_DENY) && !IsSecure(client))
 	{
-		sendto_one(client, NULL, "ERROR :Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
-		sendto_ops_and_log("Rejected insecure server %s. See https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS", client->name);
+		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_NO_TLS", client,
+		           "Link with server $client.details denied: "
+		           "Server needs to use TLS (set::plaintext-policy::server is 'deny')\n"
+		           "See https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS",
+		           log_data_link_block(link));
 		exit_client(client, NULL, "Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
 		return 0;
 	}
 	if (IsSecure(client) && (iConf.outdated_tls_policy_server == POLICY_DENY) && outdated_tls_client(client))
 	{
-		sendto_one(client, NULL, "ERROR :Server is using an outdated SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
-		sendto_ops_and_log("Rejected server %s using outdated %s. See https://www.unrealircd.org/docs/FAQ#server-outdated-tls", tls_get_cipher(client->local->ssl), client->name);
+		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_OUTDATED_TLS", client,
+		           "Link with server $client.details denied: "
+		           "Server is using an outdated SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')\n"
+		           "See https://www.unrealircd.org/docs/FAQ#server-outdated-tls",
+		           log_data_link_block(link));
 		exit_client(client, NULL, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
 		return 0;
 	}
