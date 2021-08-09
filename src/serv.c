@@ -460,7 +460,6 @@ void load_tunefile(void)
 	tunefile = fopen(conf_files->tune_file, "r");
 	if (!tunefile)
 		return;
-	fprintf(stderr, "Loading tunefile..\n");
 	/* We ignore the first line, hence the weird looking double fgets here... */
 	if (!fgets(buf, sizeof(buf), tunefile) || !fgets(buf, sizeof(buf), tunefile))
 	{

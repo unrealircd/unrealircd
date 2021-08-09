@@ -322,12 +322,16 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 		if (cached)
 		{
 #ifdef DEBUGMODE
-			ircd_log(LOG_ERROR, "[UnrealDB] unrealdb_open(): Cache hit for '%s' while writing", secr->name);
+			unreal_log(ULOG_DEBUG, "unrealdb", "DEBUG_UNREALDB_CACHE_HIT", NULL,
+			           "Cache hit for '$secret_block' while writing",
+			           log_data_string("secret_block", secr->name));
 #endif
 		} else
 		{
 #ifdef DEBUGMODE
-			ircd_log(LOG_ERROR, "[UnrealDB] unrealdb_open(): Need to run argon2 '%s' while writing", secr->name);
+			unreal_log(ULOG_DEBUG, "unrealdb", "DEBUG_UNREALDB_CACHE_MISS", NULL,
+			           "Cache miss for '$secret_block' while writing, need to run argon2",
+			           log_data_string("secret_block", secr->name));
 #endif
 			if (!unrealdb_kdf(c, secr))
 			{
@@ -415,11 +419,15 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 			/* Use cached key, no need to run expensive argon2.. */
 			memcpy(c->config->key, dbcache->config->key, c->config->keylen);
 #ifdef DEBUGMODE
-			ircd_log(LOG_ERROR, "[UnrealDB] unrealdb_open(): Cache hit for '%s' while reading", secr->name);
+			unreal_log(ULOG_DEBUG, "unrealdb", "DEBUG_UNREALDB_CACHE_HIT", NULL,
+			           "Cache hit for '$secret_block' while reading",
+			           log_data_string("secret_block", secr->name));
 #endif
 		} else {
 #ifdef DEBUGMODE
-			ircd_log(LOG_ERROR, "[UnrealDB] unrealdb_open(): Need to run argon2 for '%s' while reading", secr->name);
+			unreal_log(ULOG_DEBUG, "unrealdb", "DEBUG_UNREALDB_CACHE_MISS", NULL,
+			           "Cache miss for '$secret_block' while reading, need to run argon2",
+			           log_data_string("secret_block", secr->name));
 #endif
 			if (!unrealdb_kdf(c, secr))
 			{

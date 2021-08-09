@@ -1096,9 +1096,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 		exit(-4);
 	}
 
-#ifndef _WIN32
-	fprintf(stderr, "Initializing TLS..\n");
-#endif
 	if (!init_ssl())
 	{
 		config_error("Failed to load SSL/TLS (see errors above). UnrealIRCd can not start.");
@@ -1107,17 +1104,14 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 		exit(9);
 	}
+	unreal_log(ULOG_INFO, "config", "CONFIG_PASSED", NULL, "Configuration test passed OK");
 	if (loop.config_test)
 	{
-		unreal_log(ULOG_INFO, "config", "CONFIG_PASSED", NULL, "Configuration test passed OK");
 		fflush(stderr);
 		exit(0);
 	}
 	if (loop.boot_function)
 		loop.boot_function();
-#ifndef _WIN32
-	fprintf(stderr, "Dynamic configuration initialized.. booting IRCd.\n");
-#endif
 	open_debugfile();
 	me.local->port = 6667; /* pointless? */
 	init_sys();
