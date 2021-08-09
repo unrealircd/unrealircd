@@ -179,8 +179,9 @@ void fd_select(time_t delay)
 #endif
 	if (num < 0)
 	{
-		extern void report_baderror(char *text, Client *client);
-		report_baderror("select %s:%s", &me);
+		unreal_log(LOG_FATAL, "io", "SELECT_ERROR", NULL,
+		           "select() returned error ($socket_error) -- SERIOUS TROUBLE!",
+		           log_data_socket_error(-1));
 		/* DEBUG the actual problem: */
 		memcpy(&work_read_fds, &read_fds, sizeof(fd_set));
 		memcpy(&work_write_fds, &write_fds, sizeof(fd_set));

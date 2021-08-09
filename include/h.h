@@ -225,7 +225,6 @@ extern void check_user_limit(void);
 extern void init_modef();
 extern int verify_hostname(char *name);
 
-extern void report_error(char *, Client *);
 extern int setup_ping();
 
 extern void set_channel_mlock(Client *, Channel *, const char *, int);
