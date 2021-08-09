@@ -1111,6 +1111,7 @@ extern LogData *log_data_source(const char *file, int line, const char *function
 extern LogData *log_data_socket_error(int fd);
 extern LogData *log_data_link_block(ConfigItem_link *link);
 extern LogData *log_data_tkl(const char *key, TKL *tkl);
+extern LogData *log_data_tls_error(void);
 extern void log_blocks_switchover(void);
 extern LogLevel log_level_stringtoval(const char *str);
 extern char *log_level_valtostring(LogLevel loglevel);

@@ -655,6 +655,54 @@ LogData *log_data_socket_error(int fd)
 	return d;
 }
 
+/** Populate log with the TLS error(s) stack */
+LogData *log_data_tls_error(void)
+{
+	LogData *d;
+	json_t *j;
+	json_t *error_stack;
+	json_t *name = NULL;
+	json_t *jt;
+	unsigned long e;
+	char buf[512];
+	static char all_errors[8192];
+
+	d = safe_alloc(sizeof(LogData));
+	d->type = LOG_FIELD_OBJECT;
+	safe_strdup(d->key, "tls_error");
+	d->value.object = j = json_object();
+
+	error_stack = json_array();
+	json_object_set_new(j, "error_stack", error_stack);
+	*all_errors = '\0';
+
+	do {
+		json_t *obj;
+
+		e = ERR_get_error();
+		if (e == 0)
+			break;
+		ERR_error_string_n(e, buf, sizeof(buf));
+
+		obj = json_object();
+		json_object_set_new(obj, "code", json_integer(e));
+		json_object_set_new(obj, "string", json_string_unreal(buf));
+		json_array_append_new(error_stack, obj);
+
+		if (name == NULL)
+		{
+			/* Set tls_error.name to the first error that was encountered */
+			json_object_set_new(j, "name", json_string_unreal(buf));
+		}
+		strlcat(all_errors, buf, sizeof(all_errors));
+		strlcat(all_errors, "\n", sizeof(all_errors));
+	} while(e);
+
+	json_object_set_new(j, "all", json_string_unreal(all_errors));
+
+	return d;
+}
+
 LogData *log_data_link_block(ConfigItem_link *link)
 {
 	LogData *d = safe_alloc(sizeof(LogData));
