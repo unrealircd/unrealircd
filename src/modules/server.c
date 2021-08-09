@@ -827,9 +827,10 @@ skip_host_check:
 	{
 		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_OUTDATED_TLS", client,
 		           "Link with server $client.details denied: "
-		           "Server is using an outdated SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')\n"
+		           "Server is using an outdated SSL/TLS protocol or cipher ($tls_cipher) and set::outdated-tls-policy::server is 'deny'.\n"
 		           "See https://www.unrealircd.org/docs/FAQ#server-outdated-tls",
-		           log_data_link_block(link));
+		           log_data_link_block(link),
+			   log_data_string("tls_cipher", tls_get_cipher(client->local->ssl)));
 		exit_client(client, NULL, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
 		return 0;
 	}
@@ -898,10 +899,11 @@ CMD_FUNC(cmd_server)
 	/* Remote 'SERVER' command is not possible on a 100% SID network */
 	if (!MyConnect(client))
 	{
-		char buf[256];
-		sendto_umode_global(UMODE_OPER, "Server %s introduced %s which is using old unsupported protocol from UnrealIRCd 3.2.x or earlier. " 
-		                                "See https://www.unrealircd.org/docs/FAQ#old-server-protocol",
-		                                client->direction->name, servername);
+		unreal_log(ULOG_ERROR, "link", "LINK_OLD_PROTOCOL", client,
+		           "Server link $client tried to introduce $servername using SERVER command. "
+		           "Server is using an old and unsupported protocol from UnrealIRCd 3.2.x or earlier. "
+		           "See https://www.unrealircd.org/docs/FAQ#old-server-protocol",
+		           log_data_string("servername", servername));
 		exit_client(client->direction, NULL, "Introduced another server with unsupported protocol");
 		return;
 	}
@@ -1065,13 +1067,19 @@ CMD_FUNC(cmd_server)
 		 */
 		if (!IsLocalhost(client) && (iConf.plaintext_policy_server == POLICY_WARN))
 		{
-			sendto_realops("\002WARNING:\002 This link is unencrypted (not SSL/TLS). We highly recommend to use "
-			               "SSL/TLS for server linking. See https://www.unrealircd.org/docs/Linking_servers");
+			unreal_log(ULOG_WARNING, "link", "LINK_WARNING_NO_TLS", client,
+				   "Link with server $client.details is unencrypted (not TLS). "
+				   "We highly recommend to use TLS for server linking. "
+				   "See https://www.unrealircd.org/docs/Linking_servers",
+				   log_data_link_block(aconf));
 		}
 		if (IsSecure(client) && (iConf.outdated_tls_policy_server == POLICY_WARN) && outdated_tls_client(client))
 		{
-			sendto_realops("\002WARNING:\002 This link is using an outdated SSL/TLS protocol or cipher (%s).",
-			               tls_get_cipher(client->local->ssl));
+			unreal_log(ULOG_WARNING, "link", "LINK_WARNING_OUTDATED_TLS", client,
+				   "Link with server $client.details is using an outdated "
+				   "TLS protocol or cipher ($tls_cipher).",
+				   log_data_link_block(aconf),
+				   log_data_string("tls_cipher", tls_get_cipher(client->local->ssl)));
 		}
 	}
 
@@ -1483,14 +1491,14 @@ int server_sync(Client *client, ConfigItem_link *aconf, int incoming)
 	return 0;
 }
 
-void tls_link_notification_verify(Client *acptr, ConfigItem_link *aconf)
+void tls_link_notification_verify(Client *client, ConfigItem_link *aconf)
 {
 	char *spki_fp;
 	char *tls_fp;
 	char *errstr = NULL;
 	int verify_ok;
 
-	if (!MyConnect(acptr) || !acptr->local->ssl || !aconf)
+	if (!MyConnect(client) || !client->local->ssl || !aconf)
 		return;
 
 	if ((aconf->auth->type == AUTHTYPE_TLS_CLIENTCERT) ||
@@ -1507,38 +1515,51 @@ void tls_link_notification_verify(Client *acptr, ConfigItem_link *aconf)
 		return;
 	}
 
-	tls_fp = moddata_client_get(acptr, "certfp");
-	spki_fp = spki_fingerprint(acptr);
+	tls_fp = moddata_client_get(client, "certfp");
+	spki_fp = spki_fingerprint(client);
 	if (!tls_fp || !spki_fp)
 		return; /* wtf ? */
 
 	/* Only bother the user if we are linking to UnrealIRCd 4.0.16+,
 	 * since only for these versions we can give precise instructions.
 	 */
-	if (!acptr->serv || acptr->serv->features.protocol < 4016)
+	if (!client->serv || client->serv->features.protocol < 4016)
 		return;
 
-	sendto_realops("You may want to consider verifying this server link.");
-	sendto_realops("More information about this can be found on https://www.unrealircd.org/Link_verification");
 
-	verify_ok = verify_certificate(acptr->local->ssl, aconf->servername, &errstr);
+	verify_ok = verify_certificate(client->local->ssl, aconf->servername, &errstr);
 	if (errstr && strstr(errstr, "not valid for hostname"))
 	{
-		sendto_realops("Unfortunately the certificate of server '%s' has a name mismatch:", acptr->name);
-		sendto_realops("%s", errstr);
-		sendto_realops("This isn't a fatal error but it will prevent you from using verify-certificate yes;");
+		unreal_log(ULOG_INFO, "link", "HINT_VERIFY_LINK", client,
+		          "You may want to consider verifying this server link.\n"
+		          "More information about this can be found on https://www.unrealircd.org/Link_verification\n"
+		          "Unfortunately the certificate of server '$client' has a name mismatch:\n"
+		          "$tls_verify_error\n"
+		          "This isn't a fatal error but it will prevent you from using verify-certificate yes;",
+		          log_data_link_block(aconf),
+		          log_data_string("tls_verify_error", errstr));
 	} else
 	if (!verify_ok)
 	{
-		sendto_realops("In short: in the configuration file, change the 'link %s {' block to use this as a password:", acptr->name);
-		sendto_realops("password \"%s\" { spkifp; };", spki_fp);
-		sendto_realops("And follow the instructions on the other side of the link as well (which will be similar, but will use a different hash)");
+		unreal_log(ULOG_INFO, "link", "HINT_VERIFY_LINK", client,
+		          "You may want to consider verifying this server link.\n"
+		          "More information about this can be found on https://www.unrealircd.org/Link_verification\n"
+		          "In short: in the configuration file, change the 'link $client {' block to use this as a password:\n"
+		          "password \"$spki_fingerprint\" { spkifp; };\n"
+		          "And follow the instructions on the other side of the link as well (which will be similar, but will use a different hash)",
+		          log_data_link_block(aconf),
+		          log_data_string("spki_fingerprint", spki_fp));
 	} else
 	{
-		sendto_realops("In short: in the configuration file, add the following to your 'link %s {' block:", acptr->name);
-		sendto_realops("verify-certificate yes;");
-		sendto_realops("Alternatively, you could use SPKI fingerprint verification. Then change the password in the link block to be:");
-		sendto_realops("password \"%s\" { spkifp; };", spki_fp);
+		unreal_log(ULOG_INFO, "link", "HINT_VERIFY_LINK", client,
+		          "You may want to consider verifying this server link.\n"
+		          "More information about this can be found on https://www.unrealircd.org/Link_verification\n"
+		          "In short: in the configuration file, add the following to your 'link $client {' block:\n"
+		          "verify-certificate yes;\n"
+		          "Alternatively, you could use SPKI fingerprint verification. Then change the password in the link block to be:\n"
+		          "password \"$spki_fingerprint\" { spki_fp; };",
+		          log_data_link_block(aconf),
+		          log_data_string("spki_fingerprint", spki_fp));
 	}
 }
 
