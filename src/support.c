@@ -1321,6 +1321,9 @@ int get_terminal_width(void)
 #endif
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+
 /** Like strftime() but easier. */
 char *unreal_strftime(char *str)
 {
@@ -1334,6 +1337,8 @@ char *unreal_strftime(char *str)
 		return str;
 	return buf;
 }
+
+#pragma GCC diagnostic pop
 
 /** Convert a string to lowercase */
 void strtolower_safe(char *dst, char *src, int size)

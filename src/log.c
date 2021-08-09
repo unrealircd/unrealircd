@@ -1078,9 +1078,12 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, Mult
 		{
 			n = write(l->logfd, json_serialized, strlen(json_serialized));
 			if (n < strlen(json_serialized))
+			{
 				write_error = 1;
-			else
-				write(l->logfd, "\n", 1); // FIXME: no.. we should do it this way..... and why do we use direct I/O at all?
+			} else {
+				if (write(l->logfd, "\n", 1) < 1) // FIXME: no.. we should do it this way..... and why do we use direct I/O at all?
+					write_error = 1;
+			}
 		} else
 		if (l->type == LOG_TYPE_TEXT)
 		{
