@@ -2143,3 +2143,22 @@ void read_until(char **p, char *stopchars)
 {
 	for (; **p && !strchr(stopchars, **p); *p = *p + 1);
 }
+
+/** Write PID file */
+void write_pidfile(void)
+{
+#ifdef IRCD_PIDFILE
+	int fd;
+	char buff[20];
+	if ((fd = open(conf_files->pid_file, O_CREAT | O_WRONLY, 0600)) < 0)
+	{
+		ircd_log(LOG_ERROR, "Error writing to pid file %s: %s", conf_files->pid_file, strerror(ERRNO));
+		return;
+	}
+	ircsnprintf(buff, sizeof(buff), "%5d\n", (int)getpid());
+	if (write(fd, buff, strlen(buff)) < 0)
+		ircd_log(LOG_ERROR, "Error writing to pid file %s: %s", conf_files->pid_file, strerror(ERRNO));
+	if (close(fd) < 0)
+		ircd_log(LOG_ERROR, "Error writing to pid file %s: %s", conf_files->pid_file, strerror(ERRNO));
+#endif
+}

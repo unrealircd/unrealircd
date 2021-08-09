@@ -1308,3 +1308,41 @@ void lost_server_link(Client *client, char *tls_error_string)
 		}
 	}
 }
+
+/** Reject an insecure (outgoing) server link that isn't SSL/TLS.
+ * This function is void and not int because it can be called from other void functions
+ */
+void reject_insecure_server(Client *client)
+{
+	sendto_umode(UMODE_OPER, "Could not link with server %s with SSL/TLS enabled. "
+	                         "Please check logs on the other side of the link. "
+	                         "If you insist with insecure linking then you can set link::options::outgoing::insecure "
+	                         "(NOT recommended!).",
+	                         client->name);
+	dead_socket(client, "Rejected link without SSL/TLS");
+}
+
+/** Start server handshake - called after the outgoing connection has been established.
+ * @param client	The remote server
+ */
+void start_server_handshake(Client *client)
+{
+	ConfigItem_link *aconf = client->serv ? client->serv->conf : NULL;
+
+	if (!aconf)
+	{
+		/* Should be impossible. */
+		sendto_ops_and_log("Lost configuration for %s in start_server_handshake()", get_client_name(client, FALSE));
+		return;
+	}
+
+	RunHook(HOOKTYPE_SERVER_HANDSHAKE_OUT, client);
+
+	sendto_one(client, NULL, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
+
+	send_protoctl_servers(client, 0);
+	send_proto(client, aconf);
+	/* Sending SERVER message moved to cmd_protoctl, so it's send after the first PROTOCTL
+	 * that we receive from the remote server. -- Syzop
+	 */
+}
