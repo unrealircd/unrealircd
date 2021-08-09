@@ -1099,10 +1099,10 @@ CMD_FUNC(cmd_tempshun)
 			} else
 			{
 				SetShunned(target);
-				ircsnprintf(buf, sizeof(buf), "Temporary shun added on user %s (%s@%s) by %s [%s]",
-					target->name, target->user->username, target->user->realhost,
-					client->name, comment);
-				sendto_snomask_global(SNO_TKL, "%s", buf);
+				unreal_log(ULOG_INFO, "tkl", "TKL_ADD_TEMPSHUN", client,
+					   "Temporary shun added on user $victim.details [reason: $shun_reason] [by: $client]",
+					   log_data_string("shun_reason", comment),
+					   log_data_client("victim", target));
 			}
 		} else {
 			if (!IsShunned(target))
@@ -1110,10 +1110,9 @@ CMD_FUNC(cmd_tempshun)
 				sendnotice(client, "User '%s' is not shunned", target->name);
 			} else {
 				ClearShunned(target);
-				ircsnprintf(buf, sizeof(buf), "Removed temporary shun on user %s (%s@%s) by %s",
-					target->name, target->user->username, target->user->realhost,
-					client->name);
-				sendto_snomask_global(SNO_TKL, "%s", buf);
+				unreal_log(ULOG_INFO, "tkl", "TKL_DEL_TEMPSHUN", client,
+					   "Temporary shun removed from user $victim.details [by: $client]",
+					   log_data_client("victim", target));
 			}
 		}
 	}
@@ -2650,18 +2649,10 @@ void _tkl_del_line(TKL *tkl)
 				}
 			if (!really_found)
 			{
-				ircd_log(LOG_ERROR, "[BUG] [Crash] tkl_del_line() for %s (%d): "
-				                    "NOT found in tklines_ip_hash[%d][%d], "
-				                    "this should never happen!",
-				                    tkl_type_string(tkl),
-				                    tkl->type,
-				                    index, index2);
-				if (TKLIsServerBan(tkl))
-				{
-					ircd_log(LOG_ERROR, "Additional information: the ban was on %s@%s",
-						tkl->ptr.serverban->usermask ? tkl->ptr.serverban->usermask : "<null>",
-						tkl->ptr.serverban->hostmask ? tkl->ptr.serverban->hostmask : "<null>");
-				}
+				unreal_log(ULOG_FATAL, "tkl", "BUG_TKL_DEL_LINE_HASH", NULL,
+				           "[BUG] [Crash] tkl_del_line() for $tkl (type: $tkl.type_string): "
+				           "NOT found in tklines_ip_hash. This should never happen!",
+				           log_data_tkl("tkl", tkl));
 				abort();
 			}
 #endif
@@ -3620,8 +3611,10 @@ void tkl_sync_send_entry(int add, Client *sender, Client *to, TKL *tkl)
 			   tkl->ptr.banexception->reason);
 	} else
 	{
-		sendto_ops_and_log("[BUG] tkl_sync_send_entry() called, but unknown type %d/'%c'",
-			tkl->type, typ);
+		unreal_log(ULOG_FATAL, "tkl", "BUG_TKL_SYNC_SEND_ENTRY", NULL,
+			   "[BUG] tkl_sync_send_entry() called for '%s' but unknown type: $tkl.type_string ($tkl_type_int)",
+			   log_data_tkl("tkl", tkl),
+			   log_data_integer("tkl_type_int", typ));
 		abort();
 	}
 }
@@ -3898,14 +3891,18 @@ CMD_FUNC(cmd_tkl_add)
 	/* Validate set and expiry time */
 	if ((set_at < 0) || !short_date(set_at, NULL))
 	{
-		sendto_realops("Invalid TKL entry from %s, set-at time is out of range (%lld) -- not added. Clock on other server incorrect or bogus entry.",
-			client->name, (long long)set_at);
+		unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
+			"Invalid TKL entry from $client: "
+			"The set-at time is out of range ($set_at). Clock on other server incorrect or bogus entry.",
+			log_data_integer("set_at", set_at));
 		return;
 	}
 	if ((expire_at < 0) || !short_date(expire_at, NULL))
 	{
-		sendto_realops("Invalid TKL entry from %s, expiry time is out of range (%lld) -- not added. Clock on other server incorrect or bogus entry.",
-			client->name, (long long)expire_at);
+		unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
+			"Invalid TKL entry from $client: "
+			"The expire-at time is out of range ($expire_at). Clock on other server incorrect or bogus entry.",
+			log_data_integer("expire_at", expire_at));
 		return;
 	}
 
@@ -3927,9 +3924,11 @@ CMD_FUNC(cmd_tkl_add)
 		 */
 		if (strchr(usermask, '@') || strchr(hostmask, '@'))
 		{
-			sendto_realops("Ignoring TKL entry %s@%s from %s. "
-			               "Invalid usermask '%s' or hostmask '%s'.",
-			               usermask, hostmask, client->name, usermask, hostmask);
+			unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
+				"Invalid TKL entry from $client: "
+				"Invalid user@host $usermask@$hostmask",
+				log_data_string("usermask", usermask),
+				log_data_string("hostmask", hostmask));
 			return;
 		}
 
@@ -3972,9 +3971,11 @@ CMD_FUNC(cmd_tkl_add)
 		 */
 		if (strchr(usermask, '@') || strchr(hostmask, '@'))
 		{
-			sendto_realops("Ignoring TKL exception entry %s@%s from %s. "
-			               "Invalid usermask '%s' or hostmask '%s'.",
-			               usermask, hostmask, client->name, usermask, hostmask);
+			unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
+				"Invalid TKL entry from $client: "
+				"Invalid TKL except user@host $usermask@$hostmask",
+				log_data_string("usermask", usermask),
+				log_data_string("hostmask", hostmask));
 			return;
 		}
 
@@ -4034,38 +4035,42 @@ CMD_FUNC(cmd_tkl_add)
 
 		if (parc < 12)
 		{
-			sendto_realops("Ignoring spamfilter from %s. Running very old UnrealIRCd protocol (3.2.X?)", client->name);
+			unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
+				"Invalid TKL entry from $client: "
+				"Spamfilter with too few parameters. Running very old UnrealIRCd protocol (3.2.X?)");
 			return;
 		}
 
 		match_string = parv[11];
 
-		if (!strcasecmp(parv[10], "posix"))
-		{
-			sendto_realops("Ignoring spamfilter from %s. Spamfilter is of type 'posix' (TRE) which "
-				       "is not supported in UnrealIRCd 5. Suggestion: upgrade the other server.",
-				       client->name);
-			return;
-		}
 		match_method = unreal_match_method_strtoval(parv[10]);
 		if (match_method == 0)
 		{
-			sendto_realops("Ignoring spamfilter '%s' from %s with unknown match type '%s'",
-				match_string, client->name, parv[10]);
+			unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
+				"Invalid TKL entry from $client: "
+				"Spamfilter '$spamfilter_string' has unkown match-type '$spamfilter_type'",
+				log_data_string("spamfilter_string", match_string),
+				log_data_string("spamfilter_type", parv[10]));
 			return;
 		}
 
 		if (!(target = spamfilter_gettargets(parv[3], NULL)))
 		{
-			sendto_realops("Ignoring spamfilter '%s' from %s with unknown target type '%s'",
-				match_string, client->name, parv[3]);
+			unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
+				"Invalid TKL entry from $client: "
+				"Spamfilter '$spamfilter_string' has unkown targets '$spamfilter_targets'",
+				log_data_string("spamfilter_string", match_string),
+				log_data_string("spamfilter_targets", parv[3]));
 			return;
 		}
 
 		if (!(action = banact_chartoval(*parv[4])))
 		{
-			sendto_realops("Ignoring spamfilter '%s' from %s with unknown action type '%s'",
-				match_string, client->name, parv[4]);
+			unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
+				"Invalid TKL entry from $client: "
+				"Spamfilter '$spamfilter_string' has unkown action '$spamfilter_action'",
+				log_data_string("spamfilter_string", match_string),
+				log_data_string("spamfilter_action", parv[4]));
 			return;
 		}
 
@@ -4081,9 +4086,11 @@ CMD_FUNC(cmd_tkl_add)
 			m = unreal_create_match(match_method, match_string, &err);
 			if (!m)
 			{
-				sendto_realops("[TKL ERROR] ERROR: Trying to add a spamfilter which does not compile. "
-					       " ERROR='%s', Spamfilter='%s', from='%s'",
-					       err, match_string, client->name);
+				unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
+					"Invalid TKL entry from $client: "
+					"Spamfilter '$spamfilter_string': regex does not compile: $spamfilter_regex_error",
+					log_data_string("spamfilter_string", match_string),
+					log_data_string("spamfilter_regex_error", err));
 				return;
 			}
 			tkl = tkl_add_spamfilter(type, target, action, m, set_by, expire_at, set_at,
@@ -4214,8 +4221,9 @@ CMD_FUNC(cmd_tkl_del)
 
 		if (parc < 9)
 		{
-			sendto_realops("[BUG] cmd_tkl called with bogus spamfilter removal request [f/F], from=%s, parc=%d",
-				       client->name, parc);
+			unreal_log(ULOG_WARNING, "tkl", "TKL_DEL_INVALID", client,
+				"Invalid TKL deletion request from $client: "
+				"Spamfilter with too few parameters. Running very old UnrealIRCd protocol (3.2.X?)");
 			return; /* bogus */
 		}
 		if (parc >= 12)
@@ -4227,15 +4235,21 @@ CMD_FUNC(cmd_tkl_del)
 
 		if (!(target = spamfilter_gettargets(parv[3], NULL)))
 		{
-			sendto_realops("Ignoring spamfilter deletion request for '%s' from %s with unknown target type '%s'",
-				match_string, client->name, parv[3]);
+			unreal_log(ULOG_WARNING, "tkl", "TKL_DEL_INVALID", client,
+				"Invalid TKL deletion request from $client: "
+				"Spamfilter '$spamfilter_string' has unkown targets '$spamfilter_targets'",
+				log_data_string("spamfilter_string", match_string),
+				log_data_string("spamfilter_targets", parv[3]));
 			return;
 		}
 
 		if (!(action = banact_chartoval(*parv[4])))
 		{
-			sendto_realops("Ignoring spamfilter deletion request for '%s' from %s with unknown action type '%s'",
-				match_string, client->name, parv[4]);
+			unreal_log(ULOG_WARNING, "tkl", "TKL_DEL_INVALID", client,
+				"Invalid TKL deletion request from $client: "
+				"Spamfilter '$spamfilter_string' has unkown action '$spamfilter_action'",
+				log_data_string("spamfilter_string", match_string),
+				log_data_string("spamfilter_action", parv[4]));
 			return;
 		}
 		tkl = find_tkl_spamfilter(type, match_string, action, target);
@@ -4413,11 +4427,10 @@ int _place_host_ban(Client *client, BanAction action, char *reason, long duratio
 	{
 		case BAN_ACT_TEMPSHUN:
 			/* We simply mark this connection as shunned and do not add a ban record */
-			sendto_snomask(SNO_TKL, "Temporary shun added at user %s (%s@%s) [%s]",
-				client->name,
-				client->user ? client->user->username : "unknown",
-				client->user ? client->user->realhost : GetIP(client),
-				reason);
+			unreal_log(ULOG_INFO, "tkl", "TKL_ADD_TEMPSHUN", &me,
+				   "Temporary shun added on user $victim.details [reason: $shun_reason] [by: $client]",
+				   log_data_string("shun_reason", reason),
+				   log_data_client("victim", client));
 			SetShunned(client);
 			return 1;
 		case BAN_ACT_GZLINE:
