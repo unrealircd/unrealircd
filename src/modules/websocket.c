@@ -239,6 +239,8 @@ void websocket_mdata_free(ModData *m)
  */
 int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length)
 {
+	static char utf8buf[510];
+
 	if (MyConnect(to) && WSU(to) && WSU(to)->handshake_completed)
 	{
 		if (WEBSOCKET_TYPE(to) == WEBSOCKET_TYPE_BINARY)
@@ -246,7 +248,7 @@ int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **m
 		else if (WEBSOCKET_TYPE(to) == WEBSOCKET_TYPE_TEXT)
 		{
 			/* Some more conversions are needed */
-			char *safe_msg = unrl_utf8_make_valid(*msg);
+			char *safe_msg = unrl_utf8_make_valid(*msg, utf8buf, sizeof(utf8buf), 1);
 			*msg = safe_msg;
 			*length = *msg ? strlen(safe_msg) : 0;
 			websocket_create_packet(WSOP_TEXT, msg, length);

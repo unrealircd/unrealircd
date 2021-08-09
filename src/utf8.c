@@ -140,38 +140,51 @@ char *unrl_utf8_find_prev_char (const char *begin, const char *p)
 }
 
 /** Return a valid UTF8 string based on the input.
- * @param str The input string, with a maximum of 1024 bytes.
- * @retval Returns a valid UTF8 string (which may be sanitized
- *         or simply the original string if it was OK already)
+ * @param str		The input string
+ * @param outputbuf	The output buffer
+ * @param outputbuflen	Length of the output buffer
+ * @param strictlen	If set to 1 we never return more than
+ *                      outputbuflen-1 characters.
+ *                      If set to 0, we may do that, if the
+ *                      input string was already 100% valid UTF8.
+ * @retval Returns a valid UTF8 string, either the input buffer
+ *         (if it was already valid UTF8) or the output buffer.
+ *         NULL is returned if either 'str' was NULL or outputlen is zero.
+ * @notes The 'outputbuf' is unused if the string is already valid UTF8.
+ *        So don't rely on it being always set, use the returned string.
  */
-char *unrl_utf8_make_valid(const char *str)
+char *unrl_utf8_make_valid(const char *str, char *outputbuf, size_t outputbuflen, int strictlen)
 {
-	static char string[4096]; /* crazy, but lazy, max amplification is x3, so x4 is safe. */
 	const char *remainder, *invalid;
 	int remaining_bytes, valid_bytes, len;
 	int replaced = 0; /**< UTF8 string needed replacement (was invalid) */
 
-	if (!str)
+	if (!str || !outputbuflen)
 		return NULL;
 
 	len = strlen(str);
 
-	if (len >= 1024)
-		abort(); /* better safe than sorry */
-
-	*string = '\0';
+	*outputbuf = '\0';
 	remainder = str;
 	remaining_bytes = len;
 
 	while (remaining_bytes != 0)
 	{
 		if (unrl_utf8_validate(remainder, &invalid))
+		{
+			if (!replaced && strictlen)
+			{
+				/* Caller wants us to go through the 'replaced' branch */
+				strlcpy(outputbuf, str, outputbuflen);
+				replaced = 1;
+			}
 			break;
+		}
 		replaced = 1;
 		valid_bytes = invalid - remainder;
 
-		strlncat(string, remainder, sizeof(string), valid_bytes); /*g_string_append_len(string, remainder, valid_bytes);*/
-		strlcat(string, "\357\277\275", sizeof(string));
+		strlncat(outputbuf, remainder, outputbuflen, valid_bytes); /*g_string_append_len(string, remainder, valid_bytes);*/
+		strlcat(outputbuf, "\357\277\275", outputbuflen);
 
 		remaining_bytes -= valid_bytes + 1;
 		remainder = invalid + 1;
@@ -180,21 +193,25 @@ char *unrl_utf8_make_valid(const char *str)
 	if (!replaced)
 		return (char *)str; /* return original string (no changes needed) */
 
-	/* If output size is too much for an IRC message then cut the string at
-	 * the appropriate place (as in: not to cause invalid UTF8 due to
-	 * cutting half-way a byte sequence).
+	/* If we took up all the space, then backtrack one character and cut
+	 * things off from there. This to ensure that we don't end up with
+	 * invalid UTF8 due to cutting half-way a UTF8 byte sequence.
+	 * NOTE: This may cause us to remove 1 character needlessly at the
+	 *       end even though there was still (some) space. So be it.
 	 */
-	if (strlen(string) >= 510)
+	if (strlen(outputbuf) == outputbuflen-1)
 	{
-		char *cut_at = unrl_utf8_find_prev_char(string, string+509);
+		char *cut_at = unrl_utf8_find_prev_char(outputbuf, outputbuf+outputbuflen-1);
 		if (cut_at)
 			*cut_at = '\0';
 	}
 
-	if (!unrl_utf8_validate(string, NULL))
+#ifdef DEBUGMODE
+	if (!unrl_utf8_validate(outputbuf, NULL))
 		abort(); /* this should never happen, it means our conversion resulted in an invalid UTF8 string */
+#endif
 
-	return string;
+	return outputbuf;
 }
 
 /**************** END OF UTF8 HELPER FUNCTIONS *****************/
@@ -206,12 +223,14 @@ void utf8_test(void)
 	char *res;
 	int cnt = 0;
 	char *heapbuf; /* for strict OOB testing with ASan */
+	char *workbuf = safe_alloc(500);
+	size_t workbuflen = 500;
 
 	while ((fgets(buf, sizeof(buf), stdin)))
 	{
 		stripcrlf(buf);
 		heapbuf = strdup(buf);
-		res = unrl_utf8_make_valid(heapbuf);
+		res = unrl_utf8_make_valid(heapbuf, workbuf, workbuflen, 1);
 		if (heapbuf == res)
 		{
 			printf("    %s\n", res);

@@ -1007,7 +1007,7 @@ extern NameList *find_name_list(NameList *list, char *name);
 extern NameList *find_name_list_match(NameList *list, char *name);
 extern int minimum_msec_since_last_run(struct timeval *tv_old, long minimum);
 extern int unrl_utf8_validate(const char *str, const char **end);
-extern char *unrl_utf8_make_valid(const char *str);
+extern char *unrl_utf8_make_valid(const char *str, char *outputbuf, size_t outputbuflen, int strict_length_check);
 extern void utf8_test(void);
 extern MODVAR int non_utf8_nick_chars_in_use;
 extern void short_motd(Client *client);
