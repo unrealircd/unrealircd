@@ -9396,6 +9396,7 @@ void start_listeners(void)
 	ConfigItem_listen *listenptr;
 	int failed = 0, ports_bound = 0;
 	char boundmsg_ipv4[512], boundmsg_ipv6[512];
+	int last_errno = 0;
 
 	*boundmsg_ipv4 = *boundmsg_ipv6 = '\0';
 
@@ -9406,24 +9407,25 @@ void start_listeners(void)
 		{
 			if (add_listener(listenptr) == -1)
 			{
-				ircd_log(LOG_ERROR, "Failed to bind to %s:%i", listenptr->ip, listenptr->port);
+				/* Error already printed upstream */
 				failed = 1;
+				last_errno = ERRNO;
 			} else {
 				if (loop.ircd_booted)
 				{
-					ircd_log(LOG_ERROR, "UnrealIRCd is now also listening on %s:%d (%s)%s",
-						listenptr->ip, listenptr->port,
-						listenptr->ipv6 ? "IPv6" : "IPv4",
-						listenptr->options & LISTENER_TLS ? " (SSL/TLS)" : "");
+					unreal_log(ULOG_INFO, "listen", "LISTEN_ADDED", NULL,
+					           "UnrealIRCd is now also listening on $listen_ip:$listen_port",
+					           log_data_string("listen_ip", listenptr->ip),
+					           log_data_integer("listen_port", listenptr->port));
 				} else {
 					if (listenptr->ipv6)
 						snprintf(boundmsg_ipv6+strlen(boundmsg_ipv6), sizeof(boundmsg_ipv6)-strlen(boundmsg_ipv6),
 							"%s:%d%s, ", listenptr->ip, listenptr->port,
-							listenptr->options & LISTENER_TLS ? "(SSL/TLS)" : "");
+							listenptr->options & LISTENER_TLS ? "(TLS)" : "");
 					else
 						snprintf(boundmsg_ipv4+strlen(boundmsg_ipv4), sizeof(boundmsg_ipv4)-strlen(boundmsg_ipv4),
 							"%s:%d%s, ", listenptr->ip, listenptr->port,
-							listenptr->options & LISTENER_TLS ? "(SSL/TLS)" : "");
+							listenptr->options & LISTENER_TLS ? "(TLS)" : "");
 				}
 			}
 		}
@@ -9437,18 +9439,33 @@ void start_listeners(void)
 
 	if (ports_bound == 0)
 	{
-		ircd_log(LOG_ERROR, "IRCd could not listen on any ports. If you see 'Address already in use' errors "
-		                    "above then most likely the IRCd is already running (or something else is using the "
-		                    "specified ports). If you are sure the IRCd is not running then verify your "
-		                    "listen blocks, maybe you have to bind to a specific IP rather than \"*\".");
+#ifdef _WIN32
+		if (last_errno == WSAEADDRINUSE)
+#else
+		if (last_errno == EADDRINUSE)
+#endif
+		{
+			/* We can be specific */
+			unreal_log(ULOG_FATAL, "listen", "ALL_LISTEN_PORTS_FAILED", NULL,
+				   "Unable to listen on any ports. "
+				   "Most likely UnrealIRCd is already running.");
+		} else {
+			unreal_log(ULOG_FATAL, "listen", "ALL_LISTEN_PORTS_FAILED", NULL,
+				   "Unable to listen on any ports. "
+				   "Please verify that no other process is using the ports. "
+				   "Also, on some IRCd shells you may have to use listen::bind-ip "
+				   "with a specific IP assigned to you (rather than \"*\").");
+		}
 		exit(-1);
 	}
 
 	if (failed && !loop.ircd_booted)
 	{
-		ircd_log(LOG_ERROR, "Could not listen on all specified addresses/ports. See errors above. "
-		                    "Please fix your listen { } blocks and/or make sure no other programs "
-		                    "are listening on the same port.");
+		unreal_log(ULOG_FATAL, "listen", "SOME_LISTEN_PORTS_FAILED", NULL,
+			   "Unable to listen on all ports (some of them succeeded, some of them failed). "
+			   "Please verify that no other process is using the port(s). "
+			   "Also, on some IRCd shells you may have to use listen::bind-ip "
+			   "with a specific IP assigned to you (rather than \"*\").");
 		exit(-1);
 	}
 
@@ -9459,9 +9476,17 @@ void start_listeners(void)
 		if (strlen(boundmsg_ipv6) > 2)
 			boundmsg_ipv6[strlen(boundmsg_ipv6)-2] = '\0';
 
-		ircd_log(LOG_ERROR, "UnrealIRCd is now listening on the following addresses/ports:");
-		ircd_log(LOG_ERROR, "IPv4: %s", *boundmsg_ipv4 ? boundmsg_ipv4 : "<none>");
-		ircd_log(LOG_ERROR, "IPv6: %s", *boundmsg_ipv6 ? boundmsg_ipv6 : "<none>");
+		if (!*boundmsg_ipv4)
+			strlcpy(boundmsg_ipv4, "<none>", sizeof(boundmsg_ipv4));
+		if (!*boundmsg_ipv6)
+			strlcpy(boundmsg_ipv6, "<none>", sizeof(boundmsg_ipv6));
+
+		unreal_log(ULOG_INFO, "listen", "LISTENING", NULL,
+		           "UnrealIRCd is now listening on the following addresses/ports:\n"
+		           "IPv4: $ipv4_port_list\n"
+		           "IPv6: $ipv6_port_list\n",
+		           log_data_string("ipv4_port_list", boundmsg_ipv4),
+		           log_data_string("ipv6_port_list", boundmsg_ipv6));
 	}
 }
 
@@ -10666,7 +10691,9 @@ static void conf_download_complete(const char *url, const char *file, const char
 	}
 	if (!inc)
 	{
-		ircd_log(LOG_ERROR, "Downloaded remote include which matches no include statement.");
+		unreal_log(ULOG_ERROR, "config", "BUG_CONF_DOWNLOAD_COMPLETE_NOTFOUND", NULL,
+		           "[BUG] Downloaded remote include which matches no include statement: $url_censored",
+		           log_data_string("url_censored", displayurl(url)));
 		return;
 	}
 
@@ -10717,22 +10744,6 @@ int     rehash(Client *client, int sig)
 		return 0;
 	}
 
-	/* Log who or what did the rehash: */
-	if (sig)
-	{
-		ircd_log(LOG_ERROR, "Rehashing configuration file (SIGHUP signal received)");
-	} else
-	if (client && client->user)
-	{
-		ircd_log(LOG_ERROR, "Rehashing configuration file (requested by %s!%s@%s)",
-			client->name, client->user->username, client->user->realhost);
-	} else
-	if (client)
-	{
-		ircd_log(LOG_ERROR, "Rehashing configuration file (requested by %s)",
-			client->name);
-	}
-
 	loop.ircd_rehashing = 1;
 	loop.rehash_save_client = client;
 	loop.rehash_save_sig = sig;
@@ -10763,11 +10774,13 @@ int     rehash(Client *client, int sig)
 #endif
 }
 
-int	rehash_internal(Client *client, int sig)
+int rehash_internal(Client *client, int sig)
 {
 	if (sig == 1)
-		sendto_ops("Got signal SIGHUP, reloading %s file", configfile);
+		unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [./unrealircd rehash]");
+
 	loop.ircd_rehashing = 1; /* double checking.. */
+
 	if (init_conf(configfile, 1) == 0)
 		run_configuration();
 	reread_motdsandrules();
@@ -11122,10 +11135,10 @@ int tls_tests(void)
 {
 	if (have_tls_listeners == 0)
 	{
-		config_error("Your server is not listening on any SSL/TLS ports.");
+		config_error("Your server is not listening on any TLS ports.");
 		config_status("Add this to your unrealircd.conf: listen { ip %s; port 6697; options { tls; }; };",
 		            port_6667_ip ? port_6667_ip : "*");
-		config_status("See https://www.unrealircd.org/docs/FAQ#Your_server_is_not_listening_on_any_SSL_ports");
+		config_status("See https://www.unrealircd.org/docs/FAQ#no-tls-ports");
 		return 0;
 	}
 
@@ -11215,7 +11228,7 @@ void link_generator(void)
 	spkifp = link_generator_spkifp(tlsopt);
 	if (!spkifp)
 	{
-		printf("Could not calculate spkifp. Maybe you have uncommon SSL/TLS options set? Odd...\n");
+		printf("Could not calculate spkifp. Maybe you have uncommon TLS options set? Odd...\n");
 		exit(1);
 	}
 
