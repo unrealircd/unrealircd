@@ -28,6 +28,9 @@
 
 #define SNO_ALL INT_MAX
 
+// TODO: Make configurable at compile time (runtime won't do, as we haven't read the config file)
+#define show_event_id_console 0
+
 /* Variables */
 Log *logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
@@ -1036,18 +1039,31 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, Mult
 		for (m = msg; m; m = m->next)
 		{
 #ifdef _WIN32
-			win_log("* %s.%s%s %s: %s\n", subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
+			if (show_event_id_console)
+				win_log("* %s.%s%s [%s] %s\n", subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
+			else
+				win_log("* [%s] %s\n", log_level_valtostring(loglevel), m->line);
 #else
 			char *t = getenv("TERM");
 			/* Very lazy color detection */
 			if (t && strstr(t, "color"))
 			{
-				fprintf(stderr, "%s%s.%s%s %s[%s]%s %s\n",
-				                log_level_terminal_color(ULOG_INVALID), subsystem, event_id, TERMINAL_COLOR_RESET,
-				                log_level_terminal_color(loglevel), log_level_valtostring(loglevel), TERMINAL_COLOR_RESET,
-				                m->line);
+				if (show_event_id_console)
+				{
+					fprintf(stderr, "%s%s.%s%s %s[%s]%s %s\n",
+							log_level_terminal_color(ULOG_INVALID), subsystem, event_id, TERMINAL_COLOR_RESET,
+							log_level_terminal_color(loglevel), log_level_valtostring(loglevel), TERMINAL_COLOR_RESET,
+							m->line);
+				} else {
+					fprintf(stderr, "%s[%s]%s %s\n",
+							log_level_terminal_color(loglevel), log_level_valtostring(loglevel), TERMINAL_COLOR_RESET,
+							m->line);
+				}
 			} else {
-				fprintf(stderr, "%s.%s%s %s: %s\n", subsystem, event_id, log_level_valtostring(loglevel), m->next?"+":"", m->line);
+				if (show_event_id_console)
+					fprintf(stderr, "%s.%s%s [%s] %s\n", subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
+				else
+					fprintf(stderr, "[%s] %s\n", log_level_valtostring(loglevel), m->line);
 			}
 #endif
 		}
