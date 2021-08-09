@@ -36,18 +36,33 @@ Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id, Client *client, int expand_msg, char *msg, va_list vl);
 void log_blocks_switchover(void);
 
-json_t *json_string_possibly_null(char *s)
+/** Convert a regular string value to a JSON string.
+ * In UnrealIRCd, this must be used instead of json_string()
+ * as we may use non-UTF8 sequences. Also, this takes care
+ * of using json_null() if the string was NULL, which is
+ * usually what we want as well.
+ * @param s	Input string
+ * @returns a json string value or json null value.
+ */
+json_t *json_string_unreal(const char *s)
 {
-	if (s)
-		return json_string(s);
-	return json_null();
+	static char buf[8192];
+	char *verified_s;
+
+	if (s == NULL)
+		return json_null();
+
+	verified_s = unrl_utf8_make_valid(s, buf, sizeof(buf), 0);
+	return json_string(verified_s);
 }
+
+#define json_string __BAD___DO__NOT__USE__JSON__STRING__PLZ
 
 json_t *json_timestamp(time_t v)
 {
 	char *ts = timestamp_iso8601(v);
 	if (ts)
-		return json_string(ts);
+		return json_string_unreal(ts);
 	return json_null();
 }
 
@@ -390,13 +405,13 @@ void json_expand_client_security_groups(json_t *parent, Client *client)
 	 * and again later in the for loop to skip it.
 	 */
 	if (user_allowed_by_security_group_name(client, "known-users"))
-		json_array_append_new(child, json_string("known-users"));
+		json_array_append_new(child, json_string_unreal("known-users"));
 	else
-		json_array_append_new(child, json_string("unknown-users"));
+		json_array_append_new(child, json_string_unreal("unknown-users"));
 
 	for (s = securitygroups; s; s = s->next)
 		if (strcmp(s->name, "known-users") && user_allowed_by_security_group(client, s))
-			json_array_append_new(child, json_string(s->name));
+			json_array_append_new(child, json_string_unreal(s->name));
 }
 
 void json_expand_client(json_t *j, char *key, Client *client, int detail)
@@ -408,18 +423,18 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 
 	/* First the information that is available for ALL client types: */
 
-	json_object_set_new(child, "name", json_string(client->name));
+	json_object_set_new(child, "name", json_string_unreal(client->name));
 
 	/* hostname is available for all, it just depends a bit on whether it is DNS or IP */
 	if (client->user && *client->user->realhost)
-		json_object_set_new(child, "hostname", json_string(client->user->realhost));
+		json_object_set_new(child, "hostname", json_string_unreal(client->user->realhost));
 	else if (client->local && *client->local->sockhost)
-		json_object_set_new(child, "hostname", json_string(client->local->sockhost));
+		json_object_set_new(child, "hostname", json_string_unreal(client->local->sockhost));
 	else
-		json_object_set_new(child, "hostname", json_string(GetIP(client)));
+		json_object_set_new(child, "hostname", json_string_unreal(GetIP(client)));
 
 	/* same for ip, is there for all (well, some services pseudo-users may not have one) */
-	json_object_set_new(child, "ip", json_string_possibly_null(client->ip));
+	json_object_set_new(child, "ip", json_string_unreal(client->ip));
 
 	/* client.details is always available: it is nick!user@host, nick@host, server@host
 	 * server@ip, or just server.
@@ -427,12 +442,12 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 	if (client->user)
 	{
 		snprintf(buf, sizeof(buf), "%s!%s@%s", client->name, client->user->username, client->user->realhost);
-		json_object_set_new(child, "details", json_string(buf));
+		json_object_set_new(child, "details", json_string_unreal(buf));
 	} else if (client->ip) {
 		snprintf(buf, sizeof(buf), "%s@%s", client->name, client->ip);
-		json_object_set_new(child, "details", json_string(buf));
+		json_object_set_new(child, "details", json_string_unreal(buf));
 	} else {
-		json_object_set_new(child, "details", json_string(client->name));
+		json_object_set_new(child, "details", json_string_unreal(client->name));
 	}
 
 	if (client->local && client->local->firsttime)
@@ -444,13 +459,13 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 		user = json_object();
 		json_object_set_new(child, "user", user);
 
-		json_object_set_new(user, "username", json_string(client->user->username));
+		json_object_set_new(user, "username", json_string_unreal(client->user->username));
 		if (!BadPtr(client->info))
-			json_object_set_new(user, "realname", json_string(client->info));
+			json_object_set_new(user, "realname", json_string_unreal(client->info));
 		if (client->srvptr && client->srvptr->name)
-			json_object_set_new(user, "servername", json_string(client->srvptr->name));
+			json_object_set_new(user, "servername", json_string_unreal(client->srvptr->name));
 		if (IsLoggedIn(client))
-			json_object_set_new(user, "account", json_string(client->user->svid));
+			json_object_set_new(user, "account", json_string_unreal(client->user->svid));
 		json_object_set_new(user, "reputation", json_integer(GetReputation(client)));
 		json_expand_client_security_groups(user, client);
 	} else
@@ -467,7 +482,7 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 		/* client.server */
 		json_object_set_new(child, "server", server);
 		if (client->srvptr && client->srvptr->name)
-			json_object_set_new(server, "uplink", json_string(client->srvptr->name));
+			json_object_set_new(server, "uplink", json_string_unreal(client->srvptr->name));
 		json_object_set_new(server, "num_users", json_integer(client->serv->users));
 		json_object_set_new(server, "boot_time", json_timestamp(client->serv->boottime));
 		json_object_set_new(server, "synced", json_boolean(client->serv->flags.synced));
@@ -476,10 +491,10 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 		features = json_object();
 		json_object_set_new(server, "features", features);
 		if (!BadPtr(client->serv->features.software))
-			json_object_set_new(features, "software", json_string(client->serv->features.software));
+			json_object_set_new(features, "software", json_string_unreal(client->serv->features.software));
 		json_object_set_new(features, "protocol", json_integer(client->serv->features.protocol));
 		if (!BadPtr(client->serv->features.usermodes))
-			json_object_set_new(features, "usermodes", json_string(client->serv->features.usermodes));
+			json_object_set_new(features, "usermodes", json_string_unreal(client->serv->features.usermodes));
 		if (!BadPtr(client->serv->features.chanmodes[0]))
 		{
 			/* client.server.features.chanmodes (array) */
@@ -487,10 +502,10 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 			json_t *chanmodes = json_array();
 			json_object_set_new(features, "chanmodes", chanmodes);
 			for (i=0; i < 4; i++)
-				json_array_append_new(chanmodes, json_string_possibly_null(client->serv->features.chanmodes[i]));
+				json_array_append_new(chanmodes, json_string_unreal(client->serv->features.chanmodes[i]));
 		}
 		if (!BadPtr(client->serv->features.nickchars))
-			json_object_set_new(features, "nick_character_sets", json_string(client->serv->features.nickchars));
+			json_object_set_new(features, "nick_character_sets", json_string_unreal(client->serv->features.nickchars));
 	}
 }
 
@@ -498,7 +513,7 @@ void json_expand_channel(json_t *j, char *key, Channel *channel, int detail)
 {
 	json_t *child = json_object();
 	json_object_set_new(j, key, child);
-	json_object_set_new(child, "name", json_string(channel->name));
+	json_object_set_new(child, "name", json_string_unreal(channel->name));
 }
 
 char *timestamp_iso8601_now(void)
@@ -604,9 +619,9 @@ LogData *log_data_source(const char *file, int line, const char *function)
 	d->type = LOG_FIELD_OBJECT;
 	safe_strdup(d->key, "source");
 	d->value.object = j = json_object();
-	json_object_set_new(j, "file", json_string(file));
+	json_object_set_new(j, "file", json_string_unreal(file));
 	json_object_set_new(j, "line", json_integer(line));
-	json_object_set_new(j, "function", json_string(function));
+	json_object_set_new(j, "function", json_string_unreal(function));
 	return d;
 }
 
@@ -636,7 +651,7 @@ LogData *log_data_socket_error(int fd)
 	safe_strdup(d->key, "socket_error");
 	d->value.object = j = json_object();
 	json_object_set_new(j, "error_code", json_integer(sockerr));
-	json_object_set_new(j, "error_string", json_string(STRERROR(sockerr)));
+	json_object_set_new(j, "error_string", json_string_unreal(STRERROR(sockerr)));
 	return d;
 }
 
@@ -649,9 +664,9 @@ LogData *log_data_link_block(ConfigItem_link *link)
 	d->type = LOG_FIELD_OBJECT;
 	safe_strdup(d->key, "link_block");
 	d->value.object = j = json_object();
-	json_object_set_new(j, "name", json_string(link->servername));
-	json_object_set_new(j, "hostname", json_string(link->outgoing.hostname));
-	json_object_set_new(j, "ip", json_string(link->connect_ip));
+	json_object_set_new(j, "name", json_string_unreal(link->servername));
+	json_object_set_new(j, "hostname", json_string_unreal(link->outgoing.hostname));
+	json_object_set_new(j, "ip", json_string_unreal(link->connect_ip));
 	json_object_set_new(j, "port", json_integer(link->outgoing.port));
 
 	if (!link->outgoing.bind_ip && iConf.link_bindip)
@@ -660,7 +675,7 @@ LogData *log_data_link_block(ConfigItem_link *link)
 		bind_ip = link->outgoing.bind_ip;
 	if (!bind_ip)
 		bind_ip = "*";
-	json_object_set_new(j, "bind_ip", json_string(bind_ip));
+	json_object_set_new(j, "bind_ip", json_string_unreal(bind_ip));
 
 	return d;
 }
@@ -675,48 +690,48 @@ LogData *log_data_tkl(const char *key, TKL *tkl)
 	safe_strdup(d->key, key);
 	d->value.object = j = json_object();
 
-	json_object_set_new(j, "type", json_string(tkl_type_config_string(tkl))); // Eg 'kline'
-	json_object_set_new(j, "type_string", json_string(tkl_type_string(tkl))); // Eg 'Soft K-Line'
-	json_object_set_new(j, "set_by", json_string(tkl->set_by));
+	json_object_set_new(j, "type", json_string_unreal(tkl_type_config_string(tkl))); // Eg 'kline'
+	json_object_set_new(j, "type_string", json_string_unreal(tkl_type_string(tkl))); // Eg 'Soft K-Line'
+	json_object_set_new(j, "set_by", json_string_unreal(tkl->set_by));
 	json_object_set_new(j, "set_at", json_timestamp(tkl->set_at));
 	json_object_set_new(j, "expire_at", json_timestamp(tkl->expire_at));
 	*buf = '\0';
 	short_date(tkl->set_at, buf);
 	strlcat(buf, " GMT", sizeof(buf));
-	json_object_set_new(j, "set_at_string", json_string(buf));
+	json_object_set_new(j, "set_at_string", json_string_unreal(buf));
 	if (tkl->expire_at <= 0)
 	{
-		json_object_set_new(j, "expire_at_string", json_string("Never"));
+		json_object_set_new(j, "expire_at_string", json_string_unreal("Never"));
 	} else {
 		*buf = '\0';
 		short_date(tkl->expire_at, buf);
 		strlcat(buf, " GMT", sizeof(buf));
-		json_object_set_new(j, "expire_at_string", json_string(buf));
+		json_object_set_new(j, "expire_at_string", json_string_unreal(buf));
 	}
 	json_object_set_new(j, "set_at_delta", json_integer(TStime() - tkl->set_at));
 	if (TKLIsServerBan(tkl))
 	{
-		json_object_set_new(j, "name", json_string(tkl_uhost(tkl, buf, sizeof(buf), 0)));
-		json_object_set_new(j, "reason", json_string(tkl->ptr.serverban->reason));
+		json_object_set_new(j, "name", json_string_unreal(tkl_uhost(tkl, buf, sizeof(buf), 0)));
+		json_object_set_new(j, "reason", json_string_unreal(tkl->ptr.serverban->reason));
 	} else
 	if (TKLIsNameBan(tkl))
 	{
-		json_object_set_new(j, "name", json_string(tkl->ptr.nameban->name));
-		json_object_set_new(j, "reason", json_string(tkl->ptr.nameban->reason));
+		json_object_set_new(j, "name", json_string_unreal(tkl->ptr.nameban->name));
+		json_object_set_new(j, "reason", json_string_unreal(tkl->ptr.nameban->reason));
 	} else
 	if (TKLIsBanException(tkl))
 	{
-		json_object_set_new(j, "name", json_string(tkl_uhost(tkl, buf, sizeof(buf), 0)));
-		json_object_set_new(j, "reason", json_string(tkl->ptr.banexception->reason));
-		json_object_set_new(j, "exception_types", json_string(tkl->ptr.banexception->bantypes));
+		json_object_set_new(j, "name", json_string_unreal(tkl_uhost(tkl, buf, sizeof(buf), 0)));
+		json_object_set_new(j, "reason", json_string_unreal(tkl->ptr.banexception->reason));
+		json_object_set_new(j, "exception_types", json_string_unreal(tkl->ptr.banexception->bantypes));
 	} else
 	if (TKLIsSpamfilter(tkl))
 	{
-		json_object_set_new(j, "name", json_string(tkl->ptr.spamfilter->match->str));
-		json_object_set_new(j, "match_type", json_string(unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type)));
-		json_object_set_new(j, "ban_action", json_string(banact_valtostring(tkl->ptr.spamfilter->action)));
-		json_object_set_new(j, "spamfilter_targets", json_string(spamfilter_target_inttostring(tkl->ptr.spamfilter->target)));
-		json_object_set_new(j, "reason", json_string(unreal_decodespace(tkl->ptr.spamfilter->tkl_reason)));
+		json_object_set_new(j, "name", json_string_unreal(tkl->ptr.spamfilter->match->str));
+		json_object_set_new(j, "match_type", json_string_unreal(unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type)));
+		json_object_set_new(j, "ban_action", json_string_unreal(banact_valtostring(tkl->ptr.spamfilter->action)));
+		json_object_set_new(j, "spamfilter_targets", json_string_unreal(spamfilter_target_inttostring(tkl->ptr.spamfilter->target)));
+		json_object_set_new(j, "reason", json_string_unreal(unreal_decodespace(tkl->ptr.spamfilter->tkl_reason)));
 	}
 
 	return d;
@@ -1303,11 +1318,11 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	j = json_object();
 	j_details = json_object();
 
-	json_object_set_new(j, "timestamp", json_string(timestamp_iso8601_now()));
-	json_object_set_new(j, "level", json_string(loglevel_string));
-	json_object_set_new(j, "subsystem", json_string(subsystem));
-	json_object_set_new(j, "event_id", json_string(event_id));
-	json_object_set_new(j, "log_source", json_string(*me.name ? me.name : "local"));
+	json_object_set_new(j, "timestamp", json_string_unreal(timestamp_iso8601_now()));
+	json_object_set_new(j, "level", json_string_unreal(loglevel_string));
+	json_object_set_new(j, "subsystem", json_string_unreal(subsystem));
+	json_object_set_new(j, "event_id", json_string_unreal(event_id));
+	json_object_set_new(j, "log_source", json_string_unreal(*me.name ? me.name : "local"));
 
 	/* We put all the rest in j_details because we want to enforce
 	 * a certain ordering of the JSON output. We will merge these
@@ -1325,7 +1340,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 				break;
 			case LOG_FIELD_STRING:
 				if (d->value.string)
-					json_object_set_new(j_details, d->key, json_string(d->value.string));
+					json_object_set_new(j_details, d->key, json_string_unreal(d->value.string));
 				else
 					json_object_set_new(j_details, d->key, json_null());
 				break;
@@ -1349,7 +1364,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	else
 		strlcpy(msgbuf, msg, sizeof(msgbuf));
 
-	json_object_set_new(j, "msg", json_string(msgbuf));
+	json_object_set_new(j, "msg", json_string_unreal(msgbuf));
 
 	/* Now merge the details into root object 'j': */
 	json_object_update_missing(j, j_details);
