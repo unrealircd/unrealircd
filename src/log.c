@@ -813,6 +813,7 @@ char *log_level_valtostring(LogLevel loglevel)
 }
 
 static NameValue log_colors_irc[] = {
+	{ ULOG_INVALID,	"\0030,01" },
 	{ ULOG_DEBUG,	"\0030,01" },
 	{ ULOG_INFO,	"\00303" },
 	{ ULOG_WARNING,	"\00307" },
@@ -820,9 +821,24 @@ static NameValue log_colors_irc[] = {
 	{ ULOG_FATAL,	"\00313" },
 };
 
-char *log_level_color(LogLevel loglevel)
+static NameValue log_colors_terminal[] = {
+	{ ULOG_INVALID,	"\033[90m" },
+	{ ULOG_DEBUG,	"\033[37m" },
+	{ ULOG_INFO,	"\033[92m" },
+	{ ULOG_WARNING,	"\033[93m" },
+	{ ULOG_ERROR,	"\033[91m" },
+	{ ULOG_FATAL,	"\033[95m" },
+};
+#define TERMINAL_COLOR_RESET "\033[0m"
+
+char *log_level_irc_color(LogLevel loglevel)
 {
 	return nv_find_by_value(log_colors_irc, loglevel);
+}
+
+char *log_level_terminal_color(LogLevel loglevel)
+{
+	return nv_find_by_value(log_colors_terminal, loglevel);
 }
 
 LogLevel log_level_stringtoval(const char *str)
@@ -1020,9 +1036,19 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, Mult
 		for (m = msg; m; m = m->next)
 		{
 #ifdef _WIN32
-			win_log("* %s %s.%s%s: %s\n", log_level_valtostring(loglevel), subsystem, event_id, m->next?"+":"", m->line);
+			win_log("* %s.%s%s %s: %s\n", subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
 #else
-			fprintf(stderr, "%s %s.%s%s: %s\n", log_level_valtostring(loglevel), subsystem, event_id, m->next?"+":"", m->line);
+			char *t = getenv("TERM");
+			/* Very lazy color detection */
+			if (t && strstr(t, "color"))
+			{
+				fprintf(stderr, "%s%s.%s%s %s[%s]%s %s\n",
+				                log_level_terminal_color(ULOG_INVALID), subsystem, event_id, TERMINAL_COLOR_RESET,
+				                log_level_terminal_color(loglevel), log_level_valtostring(loglevel), TERMINAL_COLOR_RESET,
+				                m->line);
+			} else {
+				fprintf(stderr, "%s.%s%s %s: %s\n", subsystem, event_id, log_level_valtostring(loglevel), m->next?"+":"", m->line);
+			}
 #endif
 		}
 	}
@@ -1047,7 +1073,7 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, Mult
 			if (l->type == LOG_TYPE_TEXT)
 			{
 				for (m = msg; m; m = m->next)
-					syslog(LOG_INFO, "%s %s.%s%s: %s", log_level_valtostring(loglevel), subsystem, event_id, m->next?"+":"", m->line);
+					syslog(LOG_INFO, "%s.%s%s %s: %s", subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
 			}
 			continue;
 		}
@@ -1132,7 +1158,7 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, Mult
 			for (m = msg; m; m = m->next)
 			{
 				char text_buf[1024];
-				snprintf(text_buf, sizeof(text_buf), "%s %s.%s%s: %s\n", log_level_valtostring(loglevel), subsystem, event_id, m->next?"+":"", m->line);
+				snprintf(text_buf, sizeof(text_buf), "%s.%s%s %s: %s\n", subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
 				// FIXME: don't write in 2 stages, waste of slow system calls
 				if (write(l->logfd, timebuf, strlen(timebuf)) < 0)
 				{
@@ -1261,11 +1287,6 @@ void do_unreal_log_opers(LogLevel loglevel, char *subsystem, char *event_id, Mul
 			if (!found)
 				continue;
 		}
-		//sendnotice(client, "[%s] %s.%s %s", log_level_valtostring(loglevel), subsystem, event_id, msg);
-		/*sendnotice(client, "%s[%s]%s %s%s.%s%s %s",
-			log_level_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
-			COLOR_DARKGREY, subsystem, event_id, COLOR_NONE,
-			msg);*/
 		mtags_loop = mtags;
 		for (m = msg; m; m = m->next)
 		{
@@ -1275,7 +1296,7 @@ void do_unreal_log_opers(LogLevel loglevel, char *subsystem, char *event_id, Mul
 			sendto_one(client, mtags_loop, ":%s NOTICE %s :%s %s[%s]%s %s",
 				me.name, client->name,
 				subsystem_and_event_id,
-				log_level_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
+				log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
 				m->line);
 			mtags_loop = NULL; /* this way we only send the JSON in the first msg */
 		}
