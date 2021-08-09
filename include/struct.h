@@ -412,13 +412,13 @@ typedef enum ClientStatus {
  * Note that client protocol extensions have been moved
  * to the ClientCapability API which uses acptr->local->caps.
  */
-#define PROTO_VL	0x000040	/* Negotiated VL protocol */
-#define PROTO_VHP	0x000100	/* Send hostnames in NICKv2 even if not sethosted */
-#define PROTO_CLK	0x001000	/* Send cloaked host in the NICK command (regardless of +x/-x) */
-#define PROTO_MLOCK	0x002000	/* server supports MLOCK */
-#define PROTO_EXTSWHOIS 0x004000	/* extended SWHOIS support */
-#define PROTO_SJSBY	0x008000	/* SJOIN setby information (TS and nick) */
-#define PROTO_MTAGS	0x010000	/* Support message tags and big buffers */
+#define PROTO_VL	0x000001	/* Negotiated VL protocol */
+#define PROTO_VHP	0x000002	/* Send hostnames in NICKv2 even if not sethosted */
+#define PROTO_CLK	0x000004	/* Send cloaked host in the NICK command (regardless of +x/-x) */
+#define PROTO_MLOCK	0x000008	/* server supports MLOCK */
+#define PROTO_EXTSWHOIS 0x000010	/* extended SWHOIS support */
+#define PROTO_SJSBY	0x000020	/* SJOIN setby information (TS and nick) */
+#define PROTO_MTAGS	0x000040	/* Support message tags and big buffers */
 
 /* For client capabilities: */
 #define CAP_INVERT	1L
