@@ -812,23 +812,17 @@ char *log_level_valtostring(LogLevel loglevel)
 	}
 }
 
+static NameValue log_colors_irc[] = {
+	{ ULOG_DEBUG,	"\0030,01" },
+	{ ULOG_INFO,	"\00303" },
+	{ ULOG_WARNING,	"\00307" },
+	{ ULOG_ERROR,	"\00304" },
+	{ ULOG_FATAL,	"\00313" },
+};
+
 char *log_level_color(LogLevel loglevel)
 {
-	switch(loglevel)
-	{
-		case ULOG_DEBUG:
-			return "\0030,01";
-		case ULOG_INFO:
-			return "\00303";
-		case ULOG_WARNING:
-			return "\00307";
-		case ULOG_ERROR:
-			return "\00304";
-		case ULOG_FATAL:
-			return "\00313";
-		default:
-			return "";
-	}
+	return nv_find_by_value(log_colors_irc, loglevel);
 }
 
 LogLevel log_level_stringtoval(const char *str)
