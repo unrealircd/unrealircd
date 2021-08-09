@@ -163,14 +163,14 @@ int mm_http_request(char *url, char *fname, int follow_redirects)
 	if (BIO_do_connect(socket) != 1)
 	{
 		fprintf(stderr, "ERROR: Could not connect to %s\n", hostandport);
-		config_report_ssl_error();
+		//config_report_ssl_error(); FIXME?
 		goto out2;
 	}
 	
 	if (BIO_do_handshake(socket) != 1)
 	{
 		fprintf(stderr, "ERROR: Could not connect to %s (TLS handshake failed)\n", hostandport);
-		config_report_ssl_error();
+		//config_report_ssl_error(); FIXME?
 		goto out2;
 	}
 

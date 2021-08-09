@@ -126,25 +126,6 @@ char *ssl_error_str(int err, int my_errno)
 	return ssl_errstr;
 }
 
-/** Write official OpenSSL error string to ircd log / sendto_realops, using config_status.
- * Note that you are expected to announce earlier that you actually encountered an SSL error.
- * Also note that multiple error strings may be written out (with a slight chance of including
- * irrelevent ones[?]).
- */
-void config_report_ssl_error()
-{
-unsigned long e;
-char buf[512];
-
-	do {
-		e = ERR_get_error();
-		if (e == 0)
-			break; /* no (more) errors */
-		ERR_error_string_n(e, buf, sizeof(buf));
-		config_status(" %s", buf);
-	} while(e);
-}
-
 /** Ask SSL private key password (rare) */
 int ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 {
@@ -309,8 +290,9 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 
 	if (!ctx)
 	{
-		config_error("Failed to do SSL CTX new");
-		config_report_ssl_error();
+		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+		           "Failed to do SSL_CTX_new() !?\n$tls_error.all",
+		           log_data_tls_error());
 		return NULL;
 	}
 	disable_ssl_protocols(ctx, tlsoptions);
@@ -333,71 +315,70 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 #endif
 	SSL_CTX_set_options(ctx, SSL_OP_NO_TICKET);
 
-	if (!tlsoptions->certificate_file)
-	{
-		config_error("No SSL certificate configured (set::options::ssl::certificate or in a listen block)");
-		config_report_ssl_error();
-		goto fail;
-	}
-
 	if (SSL_CTX_use_certificate_chain_file(ctx, tlsoptions->certificate_file) <= 0)
 	{
-		config_error("Failed to load SSL certificate %s", tlsoptions->certificate_file);
-		config_report_ssl_error();
-		goto fail;
-	}
-
-	if (!tlsoptions->key_file)
-	{
-		config_error("No SSL key configured (set::options::ssl::key or in a listen block)");
-		config_report_ssl_error();
+		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+		           "Failed to load TLS certificate $filename\n$tls_error.all",
+		           log_data_string("filename", tlsoptions->certificate_file),
+		           log_data_tls_error());
 		goto fail;
 	}
 
 	if (SSL_CTX_use_PrivateKey_file(ctx, tlsoptions->key_file, SSL_FILETYPE_PEM) <= 0)
 	{
-		config_error("Failed to load SSL private key %s", tlsoptions->key_file);
-		config_report_ssl_error();
+		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+		           "Failed to load TLS private key $filename\n$tls_error.all",
+		           log_data_string("filename", tlsoptions->key_file),
+		           log_data_tls_error());
 		goto fail;
 	}
 
 	if (!SSL_CTX_check_private_key(ctx))
 	{
-		config_error("Failed to check SSL private key");
-		config_report_ssl_error();
+		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+		           "Check for TLS private key failed $filename\n$tls_error.all",
+		           log_data_string("filename", tlsoptions->key_file),
+		           log_data_tls_error());
 		goto fail;
 	}
 
 	if (SSL_CTX_set_cipher_list(ctx, tlsoptions->ciphers) == 0)
 	{
-		config_error("Failed to set SSL cipher list");
-		config_report_ssl_error();
+		unreal_log(ULOG_ERROR, "config", "TLS_INVALID_CIPHERS_LIST", NULL,
+		           "Failed to set TLS cipher list '$tls_ciphers_list'\n$tls_error.all",
+		           log_data_string("tls_ciphers_list", tlsoptions->ciphers),
+		           log_data_tls_error());
 		goto fail;
 	}
 
 #ifdef SSL_OP_NO_TLSv1_3
 	if (SSL_CTX_set_ciphersuites(ctx, tlsoptions->ciphersuites) == 0)
 	{
-		config_error("Failed to set SSL ciphersuites list");
-		config_report_ssl_error();
+		unreal_log(ULOG_ERROR, "config", "TLS_INVALID_CIPHERSUITES_LIST", NULL,
+		           "Failed to set TLS ciphersuites list '$tls_ciphers_list'\n$tls_error.all",
+		           log_data_string("tls_ciphersuites_list", tlsoptions->ciphersuites),
+		           log_data_tls_error());
 		goto fail;
 	}
 #endif
 
 	if (!cipher_check(ctx, &errstr))
 	{
-		config_error("There is a problem with your SSL/TLS 'ciphers' configuration setting: %s", errstr);
-		config_error("Remove the ciphers setting from your configuration file to use safer defaults, or change the cipher setting.");
-		config_report_ssl_error();
+		unreal_log(ULOG_ERROR, "config", "TLS_CIPHER_CHECK_FAILED", NULL,
+		           "There is a problem with your TLS 'ciphers' configuration setting: $quality_check_error\n"
+		           "Remove the ciphers setting from your configuration file to use safer defaults, or change the cipher setting.",
+		           log_data_string("quality_check_error", errstr));
 		goto fail;
 	}
 
 	if (!certificate_quality_check(ctx, &errstr))
 	{
-		config_error("There is a problem with your SSL/TLS certificate: %s. Please use another certificate/keypair.", errstr);
-		config_error("If you use the standard UnrealIRCd certificates then you can simply run 'make pem' and 'make install' "
-		             "from your UnrealIRCd source directory (eg: ~/unrealircd-5.X.Y/) to create and install new certificates");
-		config_report_ssl_error();
+		unreal_log(ULOG_ERROR, "config", "TLS_CERTIFICATE_CHECK_FAILED", NULL,
+		           "There is a problem with your TLS certificate '$filename': $quality_check_error\n"
+		           "If you use the standard UnrealIRCd certificates then you can simply run 'make pem' and 'make install' "
+		           "from your UnrealIRCd source directory (eg: ~/unrealircd-6.X.Y/) to create and install new certificates",
+		           log_data_string("filename", tlsoptions->certificate_file),
+		           log_data_string("quality_check_error", errstr));
 		goto fail;
 	}
 
@@ -408,8 +389,10 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 	{
 		if (!SSL_CTX_load_verify_locations(ctx, tlsoptions->trusted_ca_file, NULL))
 		{
-			config_error("Failed to load Trusted CA's from %s", tlsoptions->trusted_ca_file);
-			config_report_ssl_error();
+			unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+				   "Failed to load trusted-ca-file $filename\n$tls_error.all",
+				   log_data_string("filename", tlsoptions->trusted_ca_file),
+				   log_data_tls_error());
 			goto fail;
 		}
 	}
@@ -437,22 +420,22 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 #ifdef HAS_SSL_CTX_SET1_CURVES_LIST
 			if (!SSL_CTX_set1_curves_list(ctx, tlsoptions->ecdh_curves))
 			{
-				config_error("Failed to apply ecdh-curves '%s'. "
-				             "To get a list of supported curves with the "
-				             "appropriate names, run "
-				             "'openssl ecparam -list_curves' on the server. "
-				             "Separate multiple curves by colon, "
-				             "for example: ecdh-curves \"secp521r1:secp384r1\".",
-				             tlsoptions->ecdh_curves);
-				config_report_ssl_error();
+				unreal_log(ULOG_ERROR, "config", "TLS_INVALID_ECDH_CURVES_LIST", NULL,
+					   "Failed to set ecdh-curves '$ecdh_curves_list'\n$tls_error.all\n"
+					   "HINT: o get a list of supported curves with the appropriate names, "
+					   "run 'openssl ecparam -list_curves' on the server. "
+					   "Separate multiple curves by colon, for example: "
+					   "ecdh-curves \"secp521r1:secp384r1\".",
+					   log_data_string("ecdh_curves_list", tlsoptions->ecdh_curves),
+					   log_data_tls_error());
 				goto fail;
 			}
 #else
 			/* We try to avoid this in the config code, but better have
 			 * it here too than be sorry if someone screws up:
 			 */
-			config_error("ecdh-curves specified but not supported by library -- BAD!");
-			config_report_ssl_error();
+			unreal_log(ULOG_ERROR, "config", "BUG_ECDH_CURVES", NULL,
+			           "ecdh-curves specified but not supported by library -- BAD!");
 			goto fail;
 #endif
 		}
@@ -541,8 +524,8 @@ void reinit_tls(void)
 	tmp = init_ctx(iConf.tls_options, 1);
 	if (!tmp)
 	{
-		config_error("SSL Reload failed.");
-		config_report_ssl_error();
+		unreal_log(ULOG_ERROR, "config", "TLS_RELOAD_FAILED", NULL,
+		           "TLS Reload failed. See previous errors.");
 		return;
 	}
 	if (ctx_server)
@@ -552,8 +535,8 @@ void reinit_tls(void)
 	tmp = init_ctx(iConf.tls_options, 0);
 	if (!tmp)
 	{
-		config_error("SSL Reload partially failed. Server context is reloaded, client context failed");
-		config_report_ssl_error();
+		unreal_log(ULOG_ERROR, "config", "TLS_RELOAD_FAILED", NULL,
+		           "TLS Reload failed at client context. See previous errors.");
 		return;
 	}
 	if (ctx_client)
@@ -568,8 +551,8 @@ void reinit_tls(void)
 			tmp = init_ctx(listen->tls_options, 1);
 			if (!tmp)
 			{
-				config_error("SSL Reload partially failed. listen::tls-options error, see above");
-				config_report_ssl_error();
+				unreal_log(ULOG_ERROR, "config", "TLS_RELOAD_FAILED", NULL,
+					   "TLS Reload failed at listen::tls-options. See previous errors.");
 				return;
 			}
 			if (listen->ssl_ctx)
@@ -586,8 +569,8 @@ void reinit_tls(void)
 			tmp = init_ctx(sni->tls_options, 1);
 			if (!tmp)
 			{
-				config_error("SSL Reload partially failed. sni::tls-options error, see above");
-				config_report_ssl_error();
+				unreal_log(ULOG_ERROR, "config", "TLS_RELOAD_FAILED", NULL,
+					   "TLS Reload failed at sni::tls-options. See previous errors.");
 				return;
 			}
 			if (sni->ssl_ctx)
@@ -604,9 +587,9 @@ void reinit_tls(void)
 			tmp = init_ctx(link->tls_options, 0);
 			if (!tmp)
 			{
-				config_error("SSL Reload partially failed. link::outgoing::tls-options error in link %s { }, see above",
-					link->servername);
-				config_report_ssl_error();
+				unreal_log(ULOG_ERROR, "config", "TLS_RELOAD_FAILED", NULL,
+					   "TLS Reload failed at link $servername due to outgoing::tls-options. See previous errors.",
+					   log_data_string("servername", link->servername));
 				return;
 			}
 			if (link->ssl_ctx)
@@ -659,14 +642,18 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 
 	if (!ctx)
 	{
-		sendto_realops("Could not start SSL client handshake: SSL was not loaded correctly on this server (failed to load cert or key)");
+		unreal_log(ULOG_ERROR, "config", "TLS_CREATE_SESSION_FAILED", NULL,
+		           "Could not start TLS client handshake (no ctx?): TLS was possibly not loaded correctly on this server!?\n$tls_error.all",
+		           log_data_tls_error());
 		return;
 	}
 
 	client->local->ssl = SSL_new(ctx);
 	if (!client->local->ssl)
 	{
-		sendto_realops("Failed to SSL_new(ctx)");
+		unreal_log(ULOG_ERROR, "config", "TLS_CREATE_SESSION_FAILED", NULL,
+		           "Could not start TLS client handshake: TLS was possibly not loaded correctly on this server!?\n$tls_error.all",
+		           log_data_tls_error());
 		return;
 	}
 
@@ -871,14 +858,7 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *clien
 	const char *one, *two;
 
 	if (IsDeadSocket(client))
-	{
-#ifdef DEBUGMODE
-		/* This is quite possible I guess.. especially if we don't pay attention upstream :p */
-		ircd_log(LOG_ERROR, "Warning: fatal_ssl_error() called for already-dead-socket (%d/%s)",
-			client->local->fd, client->name);
-#endif
 		return -1;
-	}
 
 	switch(where)
 	{
@@ -928,8 +908,11 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *clien
 	 * IRC protocol wasn`t SSL enabled .. --vejeta
 	 */
 	SetDeadSocket(client);
-	sendto_snomask(SNO_JUNK, "Exiting ssl client %s: %s: %s%s",
-		get_client_name(client, TRUE), ssl_func, ssl_errstr, additional_info);
+	unreal_log(ULOG_INFO, "debug", "DEBUG_TLS_FATAL_ERROR", client,
+		   "Exiting TLS client $client: $tls_function: $tls_error_string: $tls_additional_info",
+		   log_data_string("tls_function", ssl_func),
+		   log_data_string("tls_error_string", ssl_errstr),
+		   log_data_string("tls_additional_info", additional_info));
 
 	if (where == SAFE_SSL_CONNECT)
 	{
@@ -1422,8 +1405,10 @@ void check_certificate_expiry_tlsoptions_and_warn(TLSOptions *tlsoptions)
 
 	if (check_certificate_expiry_ctx(ctx, &errstr))
 	{
-		sendto_umode_global(UMODE_OPER, "Warning: TLS certificate '%s': %s", tlsoptions->certificate_file, errstr);
-		ircd_log(LOG_ERROR, "[warning] TLS certificate '%s': %s", tlsoptions->certificate_file, errstr);
+		unreal_log(ULOG_ERROR, "tls", "TLS_CERT_EXPIRING", NULL,
+		           "Warning: TLS certificate '$filename': $error_string",
+		           log_data_string("filename", tlsoptions->certificate_file),
+		           log_data_string("error_string", errstr));
 	}
 	SSL_CTX_free(ctx);
 }
