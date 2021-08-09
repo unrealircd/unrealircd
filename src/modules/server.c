@@ -55,7 +55,8 @@ int server_sync(Client *cptr, ConfigItem_link *conf, int incoming);
 void tls_link_notification_verify(Client *acptr, ConfigItem_link *aconf);
 void server_generic_free(ModData *m);
 int server_post_connect(Client *client);
-
+void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp);
+static int connect_server_helper(ConfigItem_link *, Client *);
 
 /* Global variables */
 static char buf[BUFSIZE];
@@ -80,6 +81,7 @@ MOD_TEST()
 	EfunctionAddVoid(modinfo->handle, EFUNC_INTRODUCE_USER, _introduce_user);
 	EfunctionAdd(modinfo->handle, EFUNC_CHECK_DENY_VERSION, _check_deny_version);
 	EfunctionAddVoid(modinfo->handle, EFUNC_BROADCAST_SINFO, _broadcast_sinfo);
+	EfunctionAddVoid(modinfo->handle, EFUNC_CONNECT_SERVER, _connect_server);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, server_config_test);
 	return MOD_SUCCESS;
 }
@@ -1771,3 +1773,204 @@ int server_post_connect(Client *client) {
 	}
 	return 0;
 }
+
+/** Start an outgoing connection to a server, for server linking.
+ * @param aconf		Configuration attached to this server
+ * @param by		The user initiating the connection (can be NULL)
+ * @param hp		The address to connect to.
+ */
+void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
+{
+	Client *client;
+
+#ifdef DEBUGMODE
+	sendto_realops("connect_server() called with aconf %p, refcount: %d, TEMP: %s",
+		aconf, aconf->refcount, aconf->flag.temporary ? "YES" : "NO");
+#endif
+
+	if (!aconf->outgoing.hostname)
+	{
+		/* Actually the caller should make sure that this doesn't happen,
+		 * so this error may never be triggered:
+		 */
+		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_NO_OUTGOING", NULL,
+		           "Connect to $link_block failed: link block is for incoming only (no link::outgoing::hostname set)",
+		           log_data_link_block(aconf));
+		return;
+	}
+		
+	if (!hp)
+	{
+		/* Remove "cache" */
+		safe_free(aconf->connect_ip);
+	}
+	/*
+	 * If we dont know the IP# for this host and itis a hostname and
+	 * not a ip# string, then try and find the appropriate host record.
+	 */
+	if (!aconf->connect_ip)
+	{
+		if (is_valid_ip(aconf->outgoing.hostname))
+		{
+			/* link::outgoing::hostname is an IP address. No need to resolve host. */
+			safe_strdup(aconf->connect_ip, aconf->outgoing.hostname);
+		} else
+		{
+			/* It's a hostname, let the resolver look it up. */
+			int ipv4_explicit_bind = 0;
+
+			if (aconf->outgoing.bind_ip && (is_valid_ip(aconf->outgoing.bind_ip) == 4))
+				ipv4_explicit_bind = 1;
+			
+			/* We need this 'aconf->refcount++' or else there's a race condition between
+			 * starting resolving the host and the result of the resolver (we could
+			 * REHASH in that timeframe) leading to an invalid (freed!) 'aconf'.
+			 * -- Syzop, bug #0003689.
+			 */
+			aconf->refcount++;
+			unrealdns_gethostbyname_link(aconf->outgoing.hostname, aconf, ipv4_explicit_bind);
+			unreal_log(ULOG_INFO, "link", "LINK_RESOLVING", NULL,
+				   "Resolving hostname $link_block.hostname...",
+				   log_data_link_block(aconf));
+			/* Going to resolve the hostname, in the meantime we return (asynchronous operation) */
+			return;
+		}
+	}
+	client = make_client(NULL, &me);
+	client->local->hostp = hp;
+	/*
+	 * Copy these in so we have something for error detection.
+	 */
+	strlcpy(client->name, aconf->servername, sizeof(client->name));
+	strlcpy(client->local->sockhost, aconf->outgoing.hostname, HOSTLEN + 1);
+
+	if (!connect_server_helper(aconf, client))
+	{
+		/* TODO:
+		 * For /connect's issued by remote opers we used to also
+		 * send the error message to them, this was removed during
+		 * the U6 recode but would still be nice to have.
+		 */
+		fd_close(client->local->fd);
+		--OpenFiles;
+		client->local->fd = -2;
+		free_client(client);
+		/* Fatal error */
+		return;
+	}
+	/* The socket has been connected or connect is in progress. */
+	make_server(client);
+	client->serv->conf = aconf;
+	client->serv->conf->refcount++;
+#ifdef DEBUGMODE
+	sendto_realops("connect_server() CONTINUED (%s:%d), aconf %p, refcount: %d, TEMP: %s",
+		__FILE__, __LINE__, aconf, aconf->refcount, aconf->flag.temporary ? "YES" : "NO");
+#endif
+	if (by && IsUser(by))
+		strlcpy(client->serv->by, by->name, sizeof(client->serv->by));
+	else
+		strlcpy(client->serv->by, "AutoConn.", sizeof client->serv->by);
+	client->serv->up = me.name;
+	SetConnecting(client);
+	SetOutgoing(client);
+	irccounts.unknown++;
+	list_add(&client->lclient_node, &unknown_list);
+	set_sockhost(client, aconf->outgoing.hostname);
+	add_client_to_list(client);
+
+	if (aconf->outgoing.options & CONNECT_TLS)
+	{
+		SetTLSConnectHandshake(client);
+		fd_setselect(client->local->fd, FD_SELECT_WRITE, ircd_SSL_client_handshake, client);
+	}
+	else
+		fd_setselect(client->local->fd, FD_SELECT_WRITE, completed_connection, client);
+
+	unreal_log(ULOG_INFO, "link", "LINK_CONNECTING", client,
+		   "Trying to activate link with server $client ($link_block.ip:$link_block.port)...",
+		   log_data_link_block(aconf));
+}
+
+/** Helper function for connect_server() to prepare the actual bind()'ing and connect().
+ * This will also take care of logging/sending error messages.
+ * @param aconf		Configuration entry of the server.
+ * @param client	The client entry that we will use and fill in.
+ * @returns 1 on success, 0 on failure.
+ */
+static int connect_server_helper(ConfigItem_link *aconf, Client *client)
+{
+	char *bindip;
+	char buf[BUFSIZE];
+
+	if (!aconf->connect_ip)
+	{
+		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_NOIP", client,
+		           "Connect to $client failed: no IP address to connect to",
+		           log_data_link_block(aconf));
+		return 0; /* handled upstream or shouldn't happen */
+	}
+	
+	if (strchr(aconf->connect_ip, ':'))
+		SetIPV6(client);
+	
+	safe_strdup(client->ip, aconf->connect_ip);
+	
+	snprintf(buf, sizeof buf, "Outgoing connection: %s", get_client_name(client, TRUE));
+	client->local->fd = fd_socket(IsIPV6(client) ? AF_INET6 : AF_INET, SOCK_STREAM, 0, buf);
+	if (client->local->fd < 0)
+	{
+		if (ERRNO == P_EMFILE)
+		{
+			unreal_log(ULOG_ERROR, "link", "LINK_ERROR_MAXCLIENTS", client,
+				   "Connect to $client failed: no more sockets available",
+				   log_data_link_block(aconf));
+			return 0;
+		}
+		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_SOCKET", client,
+			   "Connect to $client failed: could not create socket: $socket_error",
+			   log_data_socket_error(-1),
+			   log_data_link_block(aconf));
+		return 0;
+	}
+	if (++OpenFiles >= maxclients)
+	{
+		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_MAXCLIENTS", client,
+			   "Connect to $client failed: no more connections available",
+			   log_data_link_block(aconf));
+		return 0;
+	}
+
+	set_sockhost(client, aconf->outgoing.hostname);
+
+	if (!aconf->outgoing.bind_ip && iConf.link_bindip)
+		bindip = iConf.link_bindip;
+	else
+		bindip = aconf->outgoing.bind_ip;
+
+	if (bindip && strcmp("*", bindip))
+	{
+		if (!unreal_bind(client->local->fd, bindip, 0, IsIPV6(client)))
+		{
+			unreal_log(ULOG_ERROR, "link", "LINK_ERROR_SOCKET_BIND", client,
+				   "Connect to $client failed: could not bind socket to $link_block.bind_ip: $socket_error -- "
+				   "Your link::outgoing::bind-ip is probably incorrect.",
+				   log_data_socket_error(client->local->fd),
+				   log_data_link_block(aconf));
+			return 0;
+		}
+	}
+
+	set_sock_opts(client->local->fd, client, IsIPV6(client));
+
+	if (!unreal_connect(client->local->fd, client->ip, aconf->outgoing.port, IsIPV6(client)))
+	{
+			unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
+				   "Connect to $client ($link_block.ip:$link_block.port) failed: $socket_error",
+				   log_data_socket_error(client->local->fd),
+				   log_data_link_block(aconf));
+		return 0;
+	}
+
+	return 1;
+}
+
