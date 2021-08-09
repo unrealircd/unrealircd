@@ -613,3 +613,37 @@ void free_nvplist(NameValuePrioList *lst)
 		safe_free(e);
 	}
 }
+
+#define nv_find_by_name(stru, name)	do_nv_find_by_name(stru, name, ARRAY_SIZEOF((stru)))
+
+long do_nv_find_by_name(NameValue *table, char *cmd, int numelements)
+{
+	int start = 0;
+	int stop = numelements-1;
+	int mid;
+	while (start <= stop) {
+		mid = (start+stop)/2;
+
+		if (smycmp(cmd,table[mid].name) < 0) {
+			stop = mid-1;
+		}
+		else if (strcmp(cmd,table[mid].name) == 0) {
+			return table[mid].value;
+		}
+		else
+			start = mid+1;
+	}
+	return 0;
+}
+
+#define nv_find_by_value(stru, value)	do_nv_find_by_value(stru, value, ARRAY_SIZEOF((stru)))
+char *do_nv_find_by_value(NameValue *table, long value, int numelements)
+{
+	int i;
+
+	for (i=0; i < numelements; i++)
+		if (table[i].value == value)
+			return table[i].name;
+
+	return NULL;
+}

@@ -1186,6 +1186,15 @@ struct IRCCounts {
 /** The /LUSERS stats information */
 extern MODVAR IRCCounts irccounts;
 
+typedef struct NameValue NameValue;
+/** Name and value list used in a static array, such as in conf.c */
+struct NameValue
+{
+	long value;
+	char *name;
+};
+
+/** Name and value list used in dynamic linked lists */
 typedef struct NameValueList NameValueList;
 struct NameValueList {
 	NameValueList *prev, *next;

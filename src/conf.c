@@ -31,13 +31,6 @@ struct ConfigCommand
 	int 	(*testfunc)(ConfigFile *conf, ConfigEntry *ce);
 };
 
-typedef struct NameValue NameValue;
-struct NameValue
-{
-	long	flag;
-	char	*name;
-};
-
 
 /* Config commands */
 
@@ -2881,25 +2874,6 @@ int	config_run()
 }
 
 
-NameValue *config_binary_flags_search(NameValue *table, char *cmd, int size) {
-	int start = 0;
-	int stop = size-1;
-	int mid;
-	while (start <= stop) {
-		mid = (start+stop)/2;
-
-		if (smycmp(cmd,table[mid].name) < 0) {
-			stop = mid-1;
-		}
-		else if (strcmp(cmd,table[mid].name) == 0) {
-			return &(table[mid]);
-		}
-		else
-			start = mid+1;
-	}
-	return NULL;
-}
-
 int	config_test()
 {
 	ConfigEntry 	*ce;
@@ -4977,10 +4951,10 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				NameValue *ofp;
-				if ((ofp = config_binary_flags_search(_ListenerFlags, cepp->name, ARRAY_SIZEOF(_ListenerFlags))))
+				long v;
+				if ((v = nv_find_by_name(_ListenerFlags, cepp->name)))
 				{
-					tmpflags |= ofp->flag;
+					tmpflags |= v;
 				} else {
 					for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 					{
@@ -5062,7 +5036,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 					for (cepp = cep->items; cepp; cepp = cepp->next)
 					{
 						NameValue *ofp;
-						if (!config_binary_flags_search(_ListenerFlags, cepp->name, ARRAY_SIZEOF(_ListenerFlags)))
+						if (!nv_find_by_name(_ListenerFlags, cepp->name))
 						{
 							for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
 							{
@@ -5142,8 +5116,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 					{
 						for (cepp = cep->items; cepp; cepp = cepp->next)
 						{
-							NameValue *ofp;
-							if (!config_binary_flags_search(_ListenerFlags, cepp->name, ARRAY_SIZEOF(_ListenerFlags)))
+							if (!nv_find_by_name(_ListenerFlags, cepp->name))
 							{
 								for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
 								{
@@ -5234,8 +5207,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			has_options = 1;
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				NameValue *ofp;
-				if (!(ofp = config_binary_flags_search(_ListenerFlags, cepp->name, ARRAY_SIZEOF(_ListenerFlags))))
+				if (!nv_find_by_name(_ListenerFlags, cepp->name))
 				{
 					/* Check if a module knows about this listen::options::something */
 					int used_by_module = 0;
@@ -6242,7 +6214,6 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
 	ConfigItem_link *link = NULL;
-	NameValue *ofp;
 
 	link = safe_alloc(sizeof(ConfigItem_link));
 	safe_strdup(link->servername, ce->value);
@@ -6275,8 +6246,9 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 					link->outgoing.options = 0;
 					for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
 					{
-						if ((ofp = config_binary_flags_search(_LinkFlags, ceppp->name, ARRAY_SIZEOF(_LinkFlags))))
-							link->outgoing.options |= ofp->flag;
+						long v;
+						if ((v = nv_find_by_name(_LinkFlags, ceppp->name)))
+							link->outgoing.options |= v;
 					}
 				}
 				else if (!strcmp(cepp->name, "ssl-options") || !strcmp(cepp->name, "tls-options"))
@@ -6317,8 +6289,9 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			link->options = 0;
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				if ((ofp = config_binary_flags_search(_LinkFlags, cepp->name, ARRAY_SIZEOF(_LinkFlags))))
-					link->options |= ofp->flag;
+				long v;
+				if ((v = nv_find_by_name(_LinkFlags, cepp->name)))
+					link->options |= v;
 			}
 		}
 	}
@@ -7099,13 +7072,15 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 		else if (!strcmp(cepp->name, "options"))
 		{
 			for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
-				if (!config_binary_flags_search(_TLSFlags, ceppp->name, ARRAY_SIZEOF(_TLSFlags)))
+			{
+				if (!nv_find_by_name(_TLSFlags, ceppp->name))
 				{
 					config_error("%s:%i: unknown SSL/TLS option '%s'",
 							 ceppp->file->filename,
 							 ceppp->line_number, ceppp->name);
 					errors ++;
 				}
+			}
 		}
 		else if (!strcmp(cepp->name, "sts-policy"))
 		{
@@ -7304,9 +7279,8 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 			tlsoptions->options = 0;
 			for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
 			{
-				ofl = config_binary_flags_search(_TLSFlags, ceppp->name, ARRAY_SIZEOF(_TLSFlags));
-				if (ofl) /* this should always be true */
-					tlsoptions->options |= ofl->flag;
+				long v = nv_find_by_name(_TLSFlags, ceppp->name);
+				tlsoptions->options |= v;
 			}
 		}
 		else if (!strcmp(cepp->name, "sts-policy"))
