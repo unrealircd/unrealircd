@@ -134,15 +134,11 @@ CMD_FUNC(cmd_chgident)
 	}
 	if (!IsULine(client))
 	{
-		sendto_snomask(SNO_EYES,
-		    "%s changed the virtual ident of %s (%s@%s) to be %s",
-		    client->name, target->name, target->user->username,
-		    GetHost(target), parv[2]);
-		/* Logging ability added by XeRXeS */
-		ircd_log(LOG_CHGCMDS,
-			"CHGIDENT: %s changed the virtual ident of %s (%s@%s) to be %s",
-			client->name, target->name, target->user->username,    
-			GetHost(target), parv[2]);
+		unreal_log(ULOG_INFO, "chgcmds", "CHGIDENT_COMMAND", client,
+		           "CHIDENT: $client changed the username of $target.detail to be $new_username",
+		           log_data_string("change_type", "username"),
+		           log_data_string("new_username", parv[2]),
+		           log_data_client("target", target));
 	}
 
 	sendto_server(client, 0, 0, NULL, ":%s CHGIDENT %s %s",

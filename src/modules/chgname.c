@@ -97,15 +97,11 @@ CMD_FUNC(cmd_chgname)
 	/* Let's log this first */
 	if (!IsULine(client))
 	{
-		sendto_snomask(SNO_EYES,
-		    "%s changed the GECOS of %s (%s@%s) to be %s",
-		    client->name, target->name, target->user->username,
-		    GetHost(target), parv[2]);
-		/* Logging ability added by XeRXeS */
-		ircd_log(LOG_CHGCMDS,
-			"CHGNAME: %s changed the GECOS of %s (%s@%s) to be %s",
-			client->name, target->name, target->user->username,
-			GetHost(target), parv[2]);
+		unreal_log(ULOG_INFO, "chgcmds", "CHGHOST_COMMAND", client,
+		           "CHGHOST: $client changed the realname of $target.detail to be $new_realname",
+		           log_data_string("change_type", "realname"),
+		           log_data_string("new_realname", parv[2]),
+		           log_data_client("target", target));
 	}
 
 	/* set the realname to make ban checking work */

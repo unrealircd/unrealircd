@@ -135,14 +135,11 @@ CMD_FUNC(cmd_chghost)
 
 	if (!IsULine(client))
 	{
-		sendto_snomask(SNO_EYES,
-		    "%s changed the virtual hostname of %s (%s@%s) to be %s",
-		    client->name, target->name, target->user->username,
-		    target->user->realhost, parv[2]);
-		/* Logging added by XeRXeS */
-		ircd_log(LOG_CHGCMDS,                                         
-			"CHGHOST: %s changed the virtual hostname of %s (%s@%s) to be %s",
-			client->name, target->name, target->user->username, target->user->realhost, parv[2]); 
+		unreal_log(ULOG_INFO, "chgcmds", "CHGHOST_COMMAND", client,
+		           "CHGHOST: $client changed the virtual hostname of $target.detail to be $new_hostname",
+		           log_data_string("change_type", "hostname"),
+		           log_data_string("new_hostname", parv[2]),
+		           log_data_client("target", target));
 	}
 
 	target->umodes |= UMODE_HIDE;
