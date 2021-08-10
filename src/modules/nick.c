@@ -480,7 +480,7 @@ CMD_FUNC(cmd_nick_local)
 **      parv[4] = username
 **      parv[5] = hostname
 **      parv[6] = UID
-**	parv[7] = servicestamp
+**	parv[7] = account name (SVID)
 **      parv[8] = umodes
 **	parv[9] = virthost, * if none
 **	parv[10] = cloaked host, * if none
@@ -680,7 +680,7 @@ nickkill2done:
 	// FIXME: some validation would be nice ^
 
 	if (*sstamp != '*')
-		strlcpy(client->user->svid, sstamp, sizeof(client->user->svid));
+		strlcpy(client->user->account, sstamp, sizeof(client->user->account));
 
 	strlcpy(client->info, realname, sizeof(client->info));
 	strlcpy(client->user->username, username, USERLEN + 1);

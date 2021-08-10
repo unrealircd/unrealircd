@@ -300,7 +300,7 @@ void channel_svsmode(Client *client, int parc, char *parv[])
  * This is used by both SVSMODE and SVS2MODE, when dealing with users (not channels).
  * parv[1] - nick to change mode for
  * parv[2] - modes to change
- * parv[3] - Service Stamp (if mode == d)
+ * parv[3] - account name (if mode contains 'd')
  *
  * show_change can be 0 (for svsmode) or 1 (for svs2mode).
  */
@@ -407,7 +407,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], 
 				if (parv[3])
 				{
 					int was_logged_in = IsLoggedIn(target) ? 1 : 0;
-					strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
+					strlcpy(target->user->account, parv[3], sizeof(target->user->account));
 					if (!was_logged_in && !IsLoggedIn(target))
 					{
 						/* We don't care about users going from not logged in
@@ -535,7 +535,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], 
  * cmd_svsmode() added by taz
  * parv[1] - username to change mode for
  * parv[2] - modes to change
- * parv[3] - Service Stamp (if mode == d)
+ * parv[3] - account name (if mode contains 'd')
  */
 CMD_FUNC(cmd_svsmode)
 {
@@ -546,7 +546,7 @@ CMD_FUNC(cmd_svsmode)
  * cmd_svs2mode() added by Potvin
  * parv[1] - username to change mode for
  * parv[2] - modes to change
- * parv[3] - Service Stamp (if mode == d)
+ * parv[3] - account name (if mode contains 'd')
  */
 CMD_FUNC(cmd_svs2mode)
 {

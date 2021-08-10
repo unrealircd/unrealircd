@@ -88,13 +88,13 @@ int extban_account_is_banned(Client *client, Channel *channel, char *banin, int 
 		return 1;
 
 	/* ~a:* matches all authenticated users
-	 * (Yes this special code is needed because svid
+	 * (Yes this special code is needed because account
 	 *  is 0 or * for unauthenticated users)
 	 */
 	if (!strcmp(ban, "*") && IsLoggedIn(client))
 		return 1;
 
-	if (match_simple(ban, client->user->svid))
+	if (match_simple(ban, client->user->account))
 		return 1;
 
 	return 0;

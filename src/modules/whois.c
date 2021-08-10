@@ -329,7 +329,7 @@ CMD_FUNC(cmd_whois)
 			 * not a legacy timestamp.  --nenolod
 			 */
 			if (IsLoggedIn(target))
-				sendnumeric(client, RPL_WHOISLOGGEDIN, name, target->user->svid);
+				sendnumeric(client, RPL_WHOISLOGGEDIN, name, target->user->account);
 
 			/*
 			 * Umode +I hides an oper's idle time from regular users.

@@ -2087,7 +2087,7 @@ char *hooktype_pre_local_quit_chan(Client *client, Channel *channel, char *comme
 int hooktype_ident_lookup(Client *client);
 
 /** Called when someone logs in/out a services account (function prototype for HOOKTYPE_ACCOUNT_LOGIN).
- * The account name can be found in client->user->svid. It will be the string "0" if the user is logged out.
+ * The account name can be found in client->user->account. It will be the string "0" if the user is logged out.
  * @param client		The client
  * @param mtags         	Message tags associated with the event
  * @return The return value is ignored (use return 0)

@@ -1171,7 +1171,7 @@ void sendto_one_nickcmd(Client *server, Client *client, char *umodes)
 		client->srvptr->id, client->name, client->hopcount,
 		(long long)client->lastnick,
 		client->user->username, client->user->realhost, client->id,
-		client->user->svid, umodes, vhost, getcloak(client),
+		client->user->account, umodes, vhost, getcloak(client),
 		encode_ip(client->ip), client->info);
 }
 

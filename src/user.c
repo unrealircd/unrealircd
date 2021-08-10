@@ -963,7 +963,7 @@ char *get_connect_extinfo(Client *client)
 
 	/* services account? */
 	if (IsLoggedIn(client))
-		add_nvplist(&list, -500, "account", client->user->svid);
+		add_nvplist(&list, -500, "account", client->user->account);
 
 	/* security groups */
 	secgroups = get_security_groups(client);

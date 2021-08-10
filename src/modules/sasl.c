@@ -77,7 +77,7 @@ int sasl_account_login(Client *client, MessageTag *mtags)
 			BadPtr(client->name) ? "*" : client->name,
 			BadPtr(client->user->username) ? "*" : client->user->username,
 			BadPtr(client->user->realhost) ? "*" : client->user->realhost,
-			client->user->svid, client->user->svid);
+			client->user->account, client->user->account);
 	}
 	else
 	{
@@ -94,7 +94,7 @@ int sasl_account_login(Client *client, MessageTag *mtags)
  *
  * parv[1]: propagation mask
  * parv[2]: target
- * parv[3]: ESVID
+ * parv[3]: account name (SVID)
  */
 CMD_FUNC(cmd_svslogin)
 {
@@ -117,7 +117,7 @@ CMD_FUNC(cmd_svslogin)
 		if (target->user == NULL)
 			make_user(target);
 
-		strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
+		strlcpy(target->user->account, parv[3], sizeof(target->user->account));
 		user_account_login(recv_mtags, target);
 		if (MyConnect(target) && IsDead(target))
 			return; /* was killed due to *LINE on ~a probably */

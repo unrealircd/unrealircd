@@ -4357,11 +4357,11 @@ void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *cli
 
 	if (ban_target == BAN_TARGET_ACCOUNT)
 	{
-		if (IsLoggedIn(client) && (*client->user->svid != ':'))
+		if (IsLoggedIn(client) && (*client->user->account != ':'))
 		{
 			/* Place a ban on ~a:Accountname */
 			strlcpy(username, "~a:", sizeof(username));
-			strlcpy(hostname, client->user->svid, sizeof(hostname));
+			strlcpy(hostname, client->user->account, sizeof(hostname));
 			*tkl_username = username;
 			*tkl_hostname = hostname;
 			return;

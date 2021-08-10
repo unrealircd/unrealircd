@@ -170,7 +170,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	NICKLEN		30
 #define	USERLEN		10
 #define	REALLEN	 	50
-#define SVIDLEN		30
+#define ACCOUNTLEN		30
 #define MAXTOPICLEN	360	/* absolute maximum permitted topic length (above this = potential desync) */
 #define MAXAWAYLEN	360	/* absolute maximum permitted away length (above this = potential desync) */
 #define MAXKICKLEN	360	/* absolute maximum kick length (above this = only cutoff danger) */
@@ -573,7 +573,7 @@ typedef enum ClientStatus {
 #define	IsNotSpoof(x)	((x)->local->nospoof == 0)
 #define GetHost(x)	(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
 #define GetIP(x)	(x->ip ? x->ip : "255.255.255.255")
-#define IsLoggedIn(x)	(x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid)) /**< Logged into services */
+#define IsLoggedIn(x)	(x->user && (*x->user->account != '*') && !isdigit(*x->user->account)) /**< Logged into services */
 #define IsSynched(x)	(x->serv->flags.synced)
 #define IsServerSent(x) (x->serv && x->serv->flags.server_sent)
 
@@ -1391,7 +1391,7 @@ struct User {
 	Membership *channel;		/**< Channels that the user is in (linked list) */
 	Link *dccallow;			/**< DCCALLOW list (linked list) */
 	char *away;			/**< AWAY message, or NULL if not away */
-	char svid[SVIDLEN + 1];		/**< Services account name or ID (SVID) */
+	char account[ACCOUNTLEN + 1];	/**< Services account name or ID (SVID) - use IsLoggedIn(client) to check if logged in */
 	unsigned short joined;		/**< Number of channels joined */
 	char username[USERLEN + 1];	/**< Username, the user portion in nick!user@host. */
 	char realhost[HOSTLEN + 1];	/**< Realhost, the real host of the user (IP or hostname) - usually this is not shown to other users */

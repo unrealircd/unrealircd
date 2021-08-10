@@ -198,7 +198,7 @@ void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mta
 
 	ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
 		client->name, client->user->username, GetHost(client), channel->name,
-		IsLoggedIn(client) ? client->user->svid : "*",
+		IsLoggedIn(client) ? client->user->account : "*",
 		client->info);
 
 	for (lp = channel->members; lp; lp = lp->next)
@@ -721,7 +721,7 @@ void _userhost_changed(Client *client)
 
 			ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
 				client->name, client->user->username, GetHost(client), channel->name,
-				IsLoggedIn(client) ? client->user->svid : "*",
+				IsLoggedIn(client) ? client->user->account : "*",
 				client->info);
 
 			modes = get_chmodes_for_user(client, flags);

@@ -197,7 +197,7 @@ User *make_user(Client *client)
 #ifdef	DEBUGMODE
 		users.inuse++;
 #endif
-		strlcpy(user->svid, "0", sizeof(user->svid));
+		strlcpy(user->account, "0", sizeof(user->account));
 		if (client->ip)
 		{
 			/* initially set client->user->realhost to IP */

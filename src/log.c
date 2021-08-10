@@ -468,7 +468,7 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 		if (client->srvptr && client->srvptr->name)
 			json_object_set_new(user, "servername", json_string_unreal(client->srvptr->name));
 		if (IsLoggedIn(client))
-			json_object_set_new(user, "account", json_string_unreal(client->user->svid));
+			json_object_set_new(user, "account", json_string_unreal(client->user->account));
 		json_object_set_new(user, "reputation", json_integer(GetReputation(client)));
 		json_expand_client_security_groups(user, client);
 	} else

@@ -70,7 +70,7 @@ int account_notify_account_login(Client *client, MessageTag *recv_mtags)
 				     CAP_ACCOUNT_NOTIFY, mtags,
 				     ":%s ACCOUNT %s",
 				     client->name,
-				     IsLoggedIn(client) ? client->user->svid : "*");
+				     IsLoggedIn(client) ? client->user->account : "*");
 	free_message_tags(mtags);
 	return 0;
 }

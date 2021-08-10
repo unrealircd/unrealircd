@@ -91,7 +91,7 @@ void mtag_add_account(Client *client, MessageTag *recv_mtags, MessageTag **mtag_
 	{
 		m = safe_alloc(sizeof(MessageTag));
 		safe_strdup(m->name, "account");
-		safe_strdup(m->value, client->user->svid);
+		safe_strdup(m->value, client->user->account);
 
 		AddListItem(m, *mtag_list);
 	}
