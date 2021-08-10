@@ -177,7 +177,7 @@ int target_limit_exceeded(Client *client, void *target, const char *name)
 	{
 		/* Target limit reached */
 		client->local->nexttarget += 2; /* punish them some more */
-		client->local->since += 2; /* lag them up as well */
+		add_fake_lag(client, 2000); /* lag them up as well */
 
 		flood_limit_exceeded_log(client, "max-concurrent-conversations");
 		sendnumeric(client, ERR_TARGETTOOFAST, name, client->local->nexttarget - TStime());

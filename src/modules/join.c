@@ -804,8 +804,8 @@ void _userhost_changed(Client *client)
 		 * We give the user a penalty so they don't flood...
 		 */
 		if (impact)
-			client->local->since += 7; /* Resulted in rejoins and such. */
+			add_fake_lag(client, 7000); /* Resulted in rejoins and such. */
 		else
-			client->local->since += 4; /* No rejoins */
+			add_fake_lag(client, 4000); /* No rejoins */
 	}
 }

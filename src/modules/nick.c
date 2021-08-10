@@ -299,7 +299,7 @@ CMD_FUNC(cmd_nick_local)
 		}
 		if (!ValidatePermissionsForPath("immune:server-ban:ban-nick",client,NULL,NULL,nick))
 		{
-			client->local->since += 4; /* lag them up */
+			add_fake_lag(client, 4000); /* lag them up */
 			sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, tklban->ptr.nameban->reason);
 			sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s (%s)",
 			    nick, get_client_name(cptr, FALSE), tklban->ptr.nameban->reason);

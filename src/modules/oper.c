@@ -120,7 +120,7 @@ CMD_FUNC(cmd_oper)
 		           log_data_string("reason", "Not using TLS"),
 		           log_data_string("fail_type", "NO_TLS"),
 		           log_data_string("oper_block", parv[1]));
-		client->local->since += 7;
+		add_fake_lag(client, 7000);
 		return;
 	}
 
@@ -133,7 +133,7 @@ CMD_FUNC(cmd_oper)
 		           log_data_string("reason", "Outdated TLS protocol or cipher"),
 		           log_data_string("fail_type", "OUTDATED_TLS_PROTOCOL_OR_CIPHER"),
 		           log_data_string("oper_block", parv[1]));
-		client->local->since += 7;
+		add_fake_lag(client, 7000);
 		return;
 	}
 
@@ -145,7 +145,7 @@ CMD_FUNC(cmd_oper)
 		           log_data_string("reason", "Unknown oper operblock_name"),
 		           log_data_string("fail_type", "UNKNOWN_OPER_NAME"),
 		           log_data_string("oper_block", parv[1]));
-		client->local->since += 7;
+		add_fake_lag(client, 7000);
 		return;
 	}
 
@@ -161,7 +161,7 @@ CMD_FUNC(cmd_oper)
 		           log_data_string("reason", "Host does not match"),
 		           log_data_string("fail_type", "NO_HOST_MATCH"),
 		           log_data_string("oper_block", parv[1]));
-		client->local->since += 7;
+		add_fake_lag(client, 7000);
 		return;
 	}
 
@@ -176,7 +176,7 @@ CMD_FUNC(cmd_oper)
 		           log_data_string("reason", "Authentication failed"),
 		           log_data_string("fail_type", "AUTHENTICATION_FAILED"),
 		           log_data_string("oper_block", parv[1]));
-		client->local->since += 7;
+		add_fake_lag(client, 7000);
 		return;
 	}
 
@@ -194,7 +194,7 @@ CMD_FUNC(cmd_oper)
 		           log_data_string("reason", "Not matching oper::require-modes"),
 		           log_data_string("fail_type", "REQUIRE_MODES_NOT_SATISFIED"),
 		           log_data_string("oper_block", parv[1]));
-		client->local->since += 7;
+		add_fake_lag(client, 7000);
 		return;
 	}
 
@@ -219,7 +219,7 @@ CMD_FUNC(cmd_oper)
 		           log_data_string("reason", "oper::maxlogins limit reached"),
 		           log_data_string("fail_type", "OPER_MAXLOGINS_LIMIT"),
 		           log_data_string("oper_block", parv[1]));
-		client->local->since += 4;
+		add_fake_lag(client, 4000);
 		return;
 	}
 

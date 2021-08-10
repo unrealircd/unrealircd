@@ -598,6 +598,18 @@ void parse_addlag(Client *client, int command_bytes, int mtags_bytes)
 	}
 }
 
+/* Add extra fake lag to client, such as after a failed oper attempt.
+ */
+void add_fake_lag(Client *client, long msec)
+{
+	if (!MyConnect(client))
+		return;
+
+	client->local->since_msec += msec;
+	client->local->since += (client->local->since_msec / 1000);
+	client->local->since_msec = client->local->since_msec % 1000;
+}
+
 /** Returns 1 if the client is lagged up and data should NOT be parsed.
  * See also parse_addlag() for more information on "fake lag".
  * @param client	The client to check

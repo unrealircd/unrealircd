@@ -69,7 +69,7 @@ CMD_FUNC(cmd_motd)
 	if (hunt_server(client, recv_mtags, ":%s MOTD :%s", 1, parc, parv) != HUNTED_ISME)
 	{
 		if (MyUser(client))
-			client->local->since += 15;
+			add_fake_lag(client, 15000);
 		return;
 	}
 

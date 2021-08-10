@@ -387,7 +387,7 @@ CMD_FUNC(cmd_cap)
 	 * This will speed up connections considerably.
 	 */
 	if (client->local->receiveM > 15)
-		client->local->since++;
+		add_fake_lag(client, 1000);
 
 	if (DISABLE_CAP)
 	{

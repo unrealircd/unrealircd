@@ -73,7 +73,7 @@ CMD_FUNC(cmd_mkpasswd)
 		/* Non-opers /mkpasswd usage: lag them up, and send a notice to eyes snomask.
 		 * This notice is always sent, even in case of bad usage/bad auth methods/etc.
 		 */
-		client->local->since += 7;
+		add_fake_lag(client, 7000);
 		sendto_snomask(SNO_EYES, "*** /mkpasswd used by %s (%s@%s)",
 			client->name, client->user->username, GetHost(client));
 	}

@@ -783,7 +783,7 @@ int websocket_handle_packet_ping(Client *client, char *buf, int len)
 		return -1;
 	}
 	websocket_send_pong(client, buf, len);
-	client->local->since++; /* lag penalty of 1 second */
+	add_fake_lag(client, 1000); /* lag penalty of 1 second */
 	return 0;
 }
 

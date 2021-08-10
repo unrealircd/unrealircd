@@ -1125,3 +1125,4 @@ extern int valid_subsystem(const char *s);
 extern char *timestamp_iso8601_now(void);
 extern char *timestamp_iso8601(time_t v);
 /* end of logging */
+extern void add_fake_lag(Client *client, long msec);

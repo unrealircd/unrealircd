@@ -114,7 +114,7 @@ static void dump_str(Client *client, char **buf)
 		sendto_one(client, NULL, ":%s %03d %s :%s", me.name, RPL_TEXT, client->name, *buf);
 
 	// Let user take 8 seconds to read it
-	client->local->since += 8;
+	add_fake_lag(client, 8000);
 }
 
 static TKLType *find_TKLType_by_flag(char flag)
