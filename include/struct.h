@@ -1836,33 +1836,6 @@ struct ConfigItem_allow_dcc {
 	char			*filename;
 };
 
-struct ConfigItem_log {
-	ConfigItem_log *prev, *next;
-	ConfigFlag flag;	/**< Eh, is this used? */
-	LogType type;		/**< Log type, eg text or json */
-	char *file;		/**< Filename to log to (either generated or specified) */
-	char *filefmt;		/**< Filename with dynamic % stuff */
-	long maxsize;		/**< Maximum file size to allow, after which we rotate logs */
-	int flags;		/**< What to log */
-	int logfd;		/**< The file descriptor (internal) */
-};
-
-struct ConfigItem_unknown {
-	ConfigItem_unknown *prev, *next;
-	ConfigFlag flag;
-	ConfigEntry *ce;
-};
-
-struct ConfigItem_unknown_ext {
-	ConfigItem_unknown_ext *prev, *next;
-	ConfigFlag flag;
-	char *name, *value;
-	ConfigFile      *configfile;
-	int             linenumber;
-	ConfigEntry     *items;
-};
-
-
 typedef enum { 
 	ALIAS_SERVICES=1, ALIAS_STATS, ALIAS_NORMAL, ALIAS_COMMAND, ALIAS_CHANNEL, ALIAS_REAL
 } AliasType;
