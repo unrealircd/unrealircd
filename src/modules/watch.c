@@ -87,7 +87,7 @@ static void show_watch(Client *client, char *name, int rpl1, int rpl2, int awayn
 			sendnumeric(client, RPL_NOWISAWAY,
 			    target->name, target->user->username,
 			    IsHidden(target) ? target->user->virthost : target->user->
-			    realhost, target->user->lastaway);
+			    realhost, target->user->away_since);
 			return;
 		}
 		
@@ -376,14 +376,14 @@ int watch_notification(Client *client, Watch *watch, Link *lp, int reply)
 			    (IsUser(client) ? client->user->username : "<N/A>"),
 			    (IsUser(client) ?
 			    (IsHidden(client) ? client->user->virthost : client->
-			    user->realhost) : "<N/A>"), client->user->lastaway);
+			    user->realhost) : "<N/A>"), client->user->away_since);
 		else /* RPL_GONEAWAY / RPL_REAWAY */
 			sendnumeric(lp->value.client, reply,
 			    client->name,
 			    (IsUser(client) ? client->user->username : "<N/A>"),
 			    (IsUser(client) ?
 			    (IsHidden(client) ? client->user->virthost : client->
-			    user->realhost) : "<N/A>"), client->user->lastaway, client->user->away);
+			    user->realhost) : "<N/A>"), client->user->away_since, client->user->away);
 	}
 	
 	return 0;

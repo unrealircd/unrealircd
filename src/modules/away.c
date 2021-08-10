@@ -107,7 +107,7 @@ CMD_FUNC(cmd_away)
 
 	/* All tests passed. Now marking as away (or still away but changing the away reason) */
 
-	client->user->lastaway = TStime();
+	client->user->away_since = TStime();
 	
 	new_message(client, recv_mtags, &mtags);
 

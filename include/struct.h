@@ -1391,7 +1391,6 @@ struct LocalClient {
 struct User {
 	Membership *channel;		/**< Channels that the user is in (linked list) */
 	Link *dccallow;			/**< DCCALLOW list (linked list) */
-	char *away;			/**< AWAY message, or NULL if not away */
 	char account[ACCOUNTLEN + 1];	/**< Services account name or ID (SVID) - use IsLoggedIn(client) to check if logged in */
 	unsigned short joined;		/**< Number of channels joined */
 	char username[USERLEN + 1];	/**< Username, the user portion in nick!user@host. */
@@ -1411,7 +1410,8 @@ struct User {
 		unsigned char knock_c;	/**< For set::anti-flood::knock-flood: counter */
 		unsigned char invite_c;	/**< For set::anti-flood::invite-flood: counter */
 	} flood;			/**< Anti-flood counters */
-	time_t lastaway;		/**< Last time the user went AWAY */
+	char *away;			/**< AWAY message, or NULL if not away */
+	time_t away_since;		/**< Last time the user went AWAY */
 };
 
 /** Server information (local servers and remote servers), you use client->server to access these (see also @link Client @endlink).
