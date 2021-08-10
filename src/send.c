@@ -125,7 +125,6 @@ int send_queued(Client *to)
 			return dead_socket(to, buf);
 		}
 		dbuf_delete(&to->local->sendQ, rlen);
-		to->local->lastsq = DBufLength(&to->local->sendQ) / 1024;
 		if (want_read)
 		{
 			/* SSL_write indicated that it cannot write data at this

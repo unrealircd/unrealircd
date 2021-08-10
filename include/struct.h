@@ -1363,7 +1363,6 @@ struct LocalClient {
 	long receiveK;			/**< Statistics: total k-bytes received */
 	u_short sendB;			/**< Statistics: counters to count upto 1-k lots of bytes */
 	u_short receiveB;		/**< Statistics: sent and received (???) */
-	short lastsq;			/**< # of 2k blocks when sendqueued called last */
 	ModData moddata[MODDATA_MAX_LOCAL_CLIENT];	/**< LocalClient attached module data, used by the ModData system */
 #ifdef DEBUGMODE
 	time_t cputime;			/**< Something with debugging (why is this a time_t? TODO) */
