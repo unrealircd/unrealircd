@@ -70,7 +70,7 @@ MOD_UNLOAD()
 int bot_whois(Client *requester, Client *acptr)
 {
 	if (IsBot(acptr))
-		sendnumeric(requester, RPL_WHOISBOT, acptr->name, ircnetwork);
+		sendnumeric(requester, RPL_WHOISBOT, acptr->name, NETWORK_NAME);
 
 	return 0;
 }

@@ -34,16 +34,6 @@ struct FloodSettings {
 
 typedef struct NetworkConfiguration NetworkConfiguration;
 struct NetworkConfiguration {
-	unsigned x_inah:1;
-	char *x_ircnetwork;
-	char *x_ircnet005;
-	char *x_defserv;
-	char *x_services_name;
-	char *x_hidden_host;
-	char *x_prefix_quit;
-	char *x_helpchan;
-	char *x_stats_server;
-	char *x_sasl_server;
 };
 
 enum UHAllowed { UHALLOW_ALWAYS, UHALLOW_NOCHANS, UHALLOW_REJOIN, UHALLOW_NEVER };
@@ -176,6 +166,16 @@ struct Configuration {
 	BroadcastChannelMessagesOption broadcast_channel_messages;
 	AllowedChannelChars allowed_channelchars;
 	HideIdleTimePolicy hide_idle_time;
+	unsigned inah:1;
+	char *network_name;
+	char *network_name_005;
+	char *default_server;
+	char *services_name;
+	char *cloak_prefix;
+	char *prefix_quit;
+	char *helpchan;
+	char *stats_server;
+	char *sasl_server;
 };
 
 extern MODVAR Configuration iConf;
@@ -212,16 +212,16 @@ extern MODVAR int ipv6_disabled;
 #endif
 #define EGD_PATH			iConf.egd_path
 
-#define ircnetwork			iConf.network.x_ircnetwork
-#define ircnet005			iConf.network.x_ircnet005
-#define defserv				iConf.network.x_defserv
-#define SERVICES_NAME		iConf.network.x_services_name
-#define hidden_host			iConf.network.x_hidden_host
-#define helpchan			iConf.network.x_helpchan
-#define STATS_SERVER			iConf.network.x_stats_server
-#define SASL_SERVER			iConf.network.x_sasl_server
-#define iNAH				iConf.network.x_inah
-#define PREFIX_QUIT			iConf.network.x_prefix_quit
+#define NETWORK_NAME			iConf.network_name
+#define NETWORK_NAME_005		iConf.network_name_005
+#define DEFAULT_SERVER			iConf.default_server
+#define SERVICES_NAME			iConf.services_name
+#define CLOAK_PREFIX			iConf.cloak_prefix
+#define HELP_CHANNEL			iConf.helpchan
+#define STATS_SERVER			iConf.stats_server
+#define SASL_SERVER			iConf.sasl_server
+#define iNAH				iConf.inah
+#define PREFIX_QUIT			iConf.prefix_quit
 
 #define STATIC_QUIT			iConf.static_quit
 #define STATIC_PART			iConf.static_part

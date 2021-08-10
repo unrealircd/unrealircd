@@ -412,14 +412,14 @@ unsigned int alpha, n;
 	{
 		unsigned int len;
 		p++;
-		ircsnprintf(result, sizeof(result), "%s-%X.", hidden_host, alpha);
+		ircsnprintf(result, sizeof(result), "%s-%X.", CLOAK_PREFIX, alpha);
 		len = strlen(result) + strlen(p);
 		if (len <= HOSTLEN)
 			strlcat(result, p, sizeof(result));
 		else
 			strlcat(result, p + (len - HOSTLEN), sizeof(result));
 	} else
-		ircsnprintf(result, sizeof(result),  "%s-%X", hidden_host, alpha);
+		ircsnprintf(result, sizeof(result),  "%s-%X", CLOAK_PREFIX, alpha);
 
 	return result;
 }

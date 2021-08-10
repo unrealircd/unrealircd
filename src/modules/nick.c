@@ -962,7 +962,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		           log_data_string("extended_client_info", get_connect_extinfo(client)));
 
 		RunHook2(HOOKTYPE_WELCOME, client, 0);
-		sendnumeric(client, RPL_WELCOME, ircnetwork, nick, client->user->username, client->user->realhost);
+		sendnumeric(client, RPL_WELCOME, NETWORK_NAME, nick, client->user->username, client->user->realhost);
 
 		RunHook2(HOOKTYPE_WELCOME, client, 1);
 		sendnumeric(client, RPL_YOURHOST, me.name, version);
@@ -1398,7 +1398,7 @@ int AllowClient(Client *client, char *username)
 		else
 		{
 			/* Class is full */
-			sendnumeric(client, RPL_REDIR, aconf->server ? aconf->server : defserv, aconf->port ? aconf->port : 6667);
+			sendnumeric(client, RPL_REDIR, aconf->server ? aconf->server : DEFAULT_SERVER, aconf->port ? aconf->port : 6667);
 			exit_client(client, NULL, iConf.reject_message_server_full);
 			return 0;
 		}

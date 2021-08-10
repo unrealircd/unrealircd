@@ -109,7 +109,7 @@ void parse_help(Client *client, char *name, char *help)
 		SND("   We're sorry, we don't have help available for the command you requested.");
 		SND(" -");
 		sendto_one(client, NULL, ":%s 292 %s : ***** Go to %s if you have any further questions *****",
-		    me.name, client->name, helpchan);
+		    me.name, client->name, HELP_CHANNEL);
 		SND(" -");
 		return;
 	}

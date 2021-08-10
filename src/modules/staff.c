@@ -378,7 +378,7 @@ CMD_FUNC(cmd_staff)
 		return;
 	}
 
-	sendto_one(client, NULL, RPL_STAFFSTART, me.name, client->name, ircnetwork);
+	sendto_one(client, NULL, RPL_STAFFSTART, me.name, client->name, NETWORK_NAME);
 
 	temp = &staff;
 

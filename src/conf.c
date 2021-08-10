@@ -1712,15 +1712,15 @@ void	free_iConf(Configuration *i)
 	safe_free(i->reject_message_kline);
 	safe_free(i->reject_message_gline);
 	// network struct:
-	safe_free(i->network.x_ircnetwork);
-	safe_free(i->network.x_ircnet005);
-	safe_free(i->network.x_defserv);
-	safe_free(i->network.x_services_name);
-	safe_free(i->network.x_hidden_host);
-	safe_free(i->network.x_prefix_quit);
-	safe_free(i->network.x_helpchan);
-	safe_free(i->network.x_stats_server);
-	safe_free(i->network.x_sasl_server);
+	safe_free(i->network_name);
+	safe_free(i->network_name_005);
+	safe_free(i->default_server);
+	safe_free(i->services_name);
+	safe_free(i->cloak_prefix);
+	safe_free(i->prefix_quit);
+	safe_free(i->helpchan);
+	safe_free(i->stats_server);
+	safe_free(i->sasl_server);
 	// anti-flood:
 	for (f = i->floodsettings; f; f = f_next)
 	{
@@ -1767,10 +1767,10 @@ void config_setdefaultsettings(Configuration *i)
 	i->kick_length = 307;
 	i->quit_length = 307;
 	safe_strdup(i->link_bindip, "*");
-	safe_strdup(i->network.x_hidden_host, "Clk");
+	safe_strdup(i->cloak_prefix, "Clk");
 	if (!ipv6_capable())
 		DISABLE_IPV6 = 1;
-	safe_strdup(i->network.x_prefix_quit, "Quit");
+	safe_strdup(i->prefix_quit, "Quit");
 	i->max_unknown_connections_per_ip = 3;
 	i->handshake_timeout = 30;
 	i->sasl_timeout = 15;
@@ -7447,40 +7447,40 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->name, "network-name")) {
 			char *tmp;
-			safe_strdup(tempiConf.network.x_ircnetwork, cep->value);
+			safe_strdup(tempiConf.network_name, cep->value);
 			for (tmp = cep->value; *cep->value; cep->value++) {
 				if (*cep->value == ' ')
 					*cep->value='-';
 			}
-			safe_strdup(tempiConf.network.x_ircnet005, tmp);
+			safe_strdup(tempiConf.network_name_005, tmp);
 			cep->value = tmp;
 		}
 		else if (!strcmp(cep->name, "default-server")) {
-			safe_strdup(tempiConf.network.x_defserv, cep->value);
+			safe_strdup(tempiConf.default_server, cep->value);
 		}
 		else if (!strcmp(cep->name, "services-server")) {
-			safe_strdup(tempiConf.network.x_services_name, cep->value);
+			safe_strdup(tempiConf.services_name, cep->value);
 		}
 		else if (!strcmp(cep->name, "sasl-server")) {
-			safe_strdup(tempiConf.network.x_sasl_server, cep->value);
+			safe_strdup(tempiConf.sasl_server, cep->value);
 		}
 		else if (!strcmp(cep->name, "stats-server")) {
-			safe_strdup(tempiConf.network.x_stats_server, cep->value);
+			safe_strdup(tempiConf.stats_server, cep->value);
 		}
 		else if (!strcmp(cep->name, "help-channel")) {
-			safe_strdup(tempiConf.network.x_helpchan, cep->value);
+			safe_strdup(tempiConf.helpchan, cep->value);
 		}
-		else if (!strcmp(cep->name, "hiddenhost-prefix")) {
-			safe_strdup(tempiConf.network.x_hidden_host, cep->value);
+		else if (!strcmp(cep->name, "cloak-prefix") || !strcmp(cep->name, "hiddenhost-prefix")) {
+			safe_strdup(tempiConf.cloak_prefix, cep->value);
 		}
 		else if (!strcmp(cep->name, "hide-ban-reason")) {
 			tempiConf.hide_ban_reason = config_checkval(cep->value, CFG_YESNO);
 		}
 		else if (!strcmp(cep->name, "prefix-quit")) {
 			if (!strcmp(cep->value, "0") || !strcmp(cep->value, "no"))
-				safe_free(tempiConf.network.x_prefix_quit);
+				safe_free(tempiConf.prefix_quit);
 			else
-				safe_strdup(tempiConf.network.x_prefix_quit, cep->value);
+				safe_strdup(tempiConf.prefix_quit, cep->value);
 		}
 		else if (!strcmp(cep->name, "link")) {
 			for (cepp = cep->items; cepp; cepp = cepp->next) {
@@ -8217,12 +8217,12 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 			CheckDuplicate(cep, help_channel, "help-channel");
 		}
-		else if (!strcmp(cep->name, "hiddenhost-prefix")) {
+		else if (!strcmp(cep->name, "cloak-prefix") || !strcmp(cep->name, "hiddenhost-prefix")) {
 			CheckNull(cep);
-			CheckDuplicate(cep, hiddenhost_prefix, "hiddenhost-prefix");
+			CheckDuplicate(cep, hiddenhost_prefix, "cloak-prefix");
 			if (strchr(cep->value, ' ') || (*cep->value == ':'))
 			{
-				config_error("%s:%i: set::hiddenhost-prefix must not contain spaces or be prefixed with ':'",
+				config_error("%s:%i: set::cloak-prefix must not contain spaces or be prefixed with ':'",
 					cep->file->filename, cep->line_number);
 				errors++;
 				continue;

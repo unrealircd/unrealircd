@@ -504,7 +504,7 @@ int stats_allow(Client *client, char *para)
 				    allows->maxperip,
 				    allows->global_maxperip,
 				    allows->class->name,
-				    allows->server ? allows->server : defserv,
+				    allows->server ? allows->server : DEFAULT_SERVER,
 				    allows->port ? allows->port : 6667);
 		}
 	}
@@ -798,8 +798,8 @@ int stats_set(Client *client, char *para)
 	}
 
 	sendtxtnumeric(client, "*** Configuration Report ***");
-	sendtxtnumeric(client, "network-name: %s", ircnetwork);
-	sendtxtnumeric(client, "default-server: %s", defserv);
+	sendtxtnumeric(client, "network-name: %s", NETWORK_NAME);
+	sendtxtnumeric(client, "default-server: %s", DEFAULT_SERVER);
 	if (SERVICES_NAME)
 	{
 		sendtxtnumeric(client, "services-server: %s", SERVICES_NAME);
@@ -812,8 +812,8 @@ int stats_set(Client *client, char *para)
 	{
 		sendtxtnumeric(client, "sasl-server: %s", SASL_SERVER);
 	}
-	sendtxtnumeric(client, "hiddenhost-prefix: %s", hidden_host);
-	sendtxtnumeric(client, "help-channel: %s", helpchan);
+	sendtxtnumeric(client, "cloak-prefix: %s", CLOAK_PREFIX);
+	sendtxtnumeric(client, "help-channel: %s", HELP_CHANNEL);
 	sendtxtnumeric(client, "cloak-keys: %s", CLOAK_KEYCRC);
 	sendtxtnumeric(client, "kline-address: %s", KLINE_ADDRESS);
 	if (GLINE_ADDRESS)

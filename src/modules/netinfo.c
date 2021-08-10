@@ -118,11 +118,11 @@ CMD_FUNC(cmd_netinfo)
 	    client->local->traffic.bytes_received,
 	    client->local->traffic.bytes_sent);
 
-	if (!(strcmp(ircnetwork, parv[8]) == 0))
+	if (!(strcmp(NETWORK_NAME, parv[8]) == 0))
 	{
 		sendto_umode_global(UMODE_OPER,
 			"Network name mismatch from link %s (%s != %s)",
-			client->name, parv[8], ircnetwork);
+			client->name, parv[8], NETWORK_NAME);
 	}
 
 	if ((protocol != UnrealProtocol) && (protocol != 0))

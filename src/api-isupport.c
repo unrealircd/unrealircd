@@ -93,7 +93,7 @@ void isupport_init(void)
 #endif
 	ISupportSet(NULL, "ELIST", "MNUCT");
 	ISupportSet(NULL, "CASEMAPPING", "ascii");
-	ISupportSet(NULL, "NETWORK", ircnet005);
+	ISupportSet(NULL, "NETWORK", NETWORK_NAME_005);
 	ISupportSetFmt(NULL, "CHANMODES",
 	               CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
 	               EXPAR1, EXPAR2, EXPAR3, EXPAR4);

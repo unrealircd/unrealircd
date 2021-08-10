@@ -1483,7 +1483,7 @@ int server_sync(Client *client, ConfigItem_link *aconf, int incoming)
 	sendto_one(client, NULL, "NETINFO %i %lld %i %s 0 0 0 :%s",
 	    irccounts.global_max, (long long)TStime(), UnrealProtocol,
 	    CLOAK_KEYCRC,
-	    ircnetwork);
+	    NETWORK_NAME);
 
 	/* Send EOS (End Of Sync) to the just linked server... */
 	sendto_one(client, NULL, ":%s EOS", me.id);
