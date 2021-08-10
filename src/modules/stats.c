@@ -1029,8 +1029,8 @@ int stats_linkinfoint(Client *client, char *para, int all)
 	int remote = 0;
 	int wilds = 0;
 	int doall = 0;
-	int showports = ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL);
 	Client *acptr;
+
 	/*
 	 * send info about connections which match, or all if the
 	 * mask matches me.name.  Only restrictions are on those who
@@ -1075,30 +1075,16 @@ int stats_linkinfoint(Client *client, char *para, int all)
 			continue;
 		}
 
-		if (ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
-		{
-			sendnumericfmt(client, RPL_STATSLINKINFO, "%s%s %lld %lld %lld %lld %lld %lld :%lld",
-				all ? (get_client_name2(acptr, showports)) : (get_client_name(acptr, FALSE)),
-				get_client_status(acptr),
-				(long long)DBufLength(&acptr->local->sendQ),
-				(long long)acptr->local->traffic.messages_sent,
-				(long long)acptr->local->traffic.bytes_sent,
-				(long long)acptr->local->traffic.messages_received,
-				(long long)acptr->local->traffic.bytes_received,
-				(long long)(TStime() - acptr->local->creationtime),
-				(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->idle_since : 0));
-		}
-		else if (!strchr(acptr->name, '.'))
-			sendnumericfmt(client, RPL_STATSLINKINFO, "%s%s %lld %lld %lld %lld %lld %lld :%lld",
-				IsHidden(acptr) ? acptr->name : all ? get_client_name2(acptr, showports) : get_client_name(acptr, FALSE),
-				get_client_status(acptr),
-				(long long)DBufLength(&acptr->local->sendQ),
-				(long long)acptr->local->traffic.messages_sent,
-				(long long)acptr->local->traffic.bytes_sent,
-				(long long)acptr->local->traffic.messages_received,
-				(long long)acptr->local->traffic.bytes_received,
-				(long long)((TStime() - acptr->local->creationtime)),
-				(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->idle_since : 0));
+		sendnumericfmt(client, RPL_STATSLINKINFO,
+		        "%s%s %lld %lld %lld %lld %lld %lld :%lld",
+			acptr->name, get_client_status(acptr),
+			(long long)DBufLength(&acptr->local->sendQ),
+			(long long)acptr->local->traffic.messages_sent,
+			(long long)acptr->local->traffic.bytes_sent,
+			(long long)acptr->local->traffic.messages_received,
+			(long long)acptr->local->traffic.bytes_received,
+			(long long)(TStime() - acptr->local->creationtime),
+			(long long)(TStime() - acptr->local->last_msg_received));
 	}
 #ifdef DEBUGMODE
 	list_for_each_entry(acptr, &client_list, client_node)
