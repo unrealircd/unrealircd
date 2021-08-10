@@ -992,9 +992,9 @@ void read_packet(int fd, int revents, void *data)
 			return;
 		}
 
-		client->local->lasttime = now;
-		if (client->local->lasttime > client->local->fake_lag)
-			client->local->fake_lag = client->local->lasttime;
+		client->local->last_msg_received = now;
+		if (client->local->last_msg_received > client->local->fake_lag)
+			client->local->fake_lag = client->local->last_msg_received;
 		/* FIXME: Is this correct? I have my doubts. */
 		ClearPingSent(client);
 

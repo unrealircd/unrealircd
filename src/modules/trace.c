@@ -182,12 +182,12 @@ CMD_FUNC(cmd_trace)
 						sendnumeric(client, RPL_TRACEOPERATOR,
 						    class, acptr->name,
 						    GetHost(acptr),
-						    now - acptr->local->lasttime);
+						    now - acptr->local->last_msg_received);
 					else
 						sendnumeric(client, RPL_TRACEUSER,
 						    class, acptr->name,
 						    acptr->user->realhost,
-						    now - acptr->local->lasttime);
+						    now - acptr->local->last_msg_received);
 					cnt++;
 				}
 				break;
@@ -196,7 +196,7 @@ CMD_FUNC(cmd_trace)
 				sendnumeric(client, RPL_TRACESERVER, class, acptr->local->fd >= 0 ? link_s[acptr->local->fd] : -1,
 				    acptr->local->fd >= 0 ? link_u[acptr->local->fd] : -1, name, *(acptr->serv->by) ?
 				    acptr->serv->by : "*", "*", me.name,
-				    now - acptr->local->lasttime);
+				    now - acptr->local->last_msg_received);
 				cnt++;
 				break;
 

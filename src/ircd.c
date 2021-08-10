@@ -357,14 +357,14 @@ void check_ping(Client *client)
 	ping = client->local->class ? client->local->class->pingfreq : iConf.handshake_timeout;
 
 	/* If ping is less than or equal to the last time we received a command from them */
-	if (ping > (TStime() - client->local->lasttime))
+	if (ping > (TStime() - client->local->last_msg_received))
 		return; /* some recent command was executed */
 
 	if (
 		/* If we have sent a ping */
 		(IsPingSent(client)
 		/* And they had 2x ping frequency to respond */
-		&& ((TStime() - client->local->lasttime) >= (2 * ping)))
+		&& ((TStime() - client->local->last_msg_received) >= (2 * ping)))
 		||
 		/* Or isn't registered and time spent is larger than ping (CONNECTTIMEOUT).. */
 		(!IsRegistered(client) && (TStime() - client->local->fake_lag >= ping))
@@ -378,7 +378,7 @@ void check_ping(Client *client)
 			           client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
 		}
 		ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %lld seconds",
-			(long long) (TStime() - client->local->lasttime));
+			(long long) (TStime() - client->local->last_msg_received));
 		exit_client(client, NULL, scratch);
 		return;
 	}
@@ -388,13 +388,13 @@ void check_ping(Client *client)
 		SetPingSent(client);
 		ClearPingWarning(client);
 		/* not nice but does the job */
-		client->local->lasttime = TStime() - ping;
+		client->local->last_msg_received = TStime() - ping;
 		sendto_one(client, NULL, "PING :%s", me.name);
 	}
 	else if (!IsPingWarning(client) && PINGWARNING > 0 &&
 		(IsServer(client) || IsHandshake(client) || IsConnecting(client) ||
 		IsTLSConnectHandshake(client)) &&
-		(TStime() - client->local->lasttime) >= (ping + PINGWARNING))
+		(TStime() - client->local->last_msg_received) >= (ping + PINGWARNING))
 	{
 		SetPingWarning(client);
 		unreal_log(ULOG_WARNING, "link", "LINK_UNRELIABLE", client,
@@ -519,8 +519,8 @@ void fix_timers(void)
 	{
 		if (client->local->fake_lag > TStime())
 			client->local->fake_lag = TStime();
-		if (client->local->lasttime > TStime())
-			client->local->lasttime = TStime();
+		if (client->local->last_msg_received > TStime())
+			client->local->last_msg_received = TStime();
 		if (client->local->idle_since > TStime())
 			client->local->idle_since = TStime();
 
@@ -1140,7 +1140,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
 	timeofday = time(NULL);
-	me.local->lasttime = me.local->fake_lag = me.local->creationtime = me.serv->boottime = TStime();
+	me.local->last_msg_received = me.local->fake_lag = me.local->creationtime = me.serv->boottime = TStime();
 	me.serv->features.protocol = UnrealProtocol;
 	safe_strdup(me.serv->features.software, version);
 	add_to_client_hash_table(me.name, &me);
