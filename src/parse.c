@@ -338,7 +338,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 	if (*ch == '\0')
 	{
 		if (!IsServer(cptr))
-			cptr->local->since++; /* 1s fake lag */
+			cptr->local->fake_lag++; /* 1s fake lag */
 		return;
 	}
 
@@ -588,13 +588,13 @@ void parse_addlag(Client *client, int command_bytes, int mtags_bytes)
 		int lag_penalty = settings->period[FLD_LAG_PENALTY];
 		int lag_penalty_bytes = settings->limit[FLD_LAG_PENALTY];
 
-		client->local->since_msec += (1 + (command_bytes/lag_penalty_bytes) + (mtags_bytes/lag_penalty_bytes)) * lag_penalty;
+		client->local->fake_lag_msec += (1 + (command_bytes/lag_penalty_bytes) + (mtags_bytes/lag_penalty_bytes)) * lag_penalty;
 
 		/* This code takes into account not only the msecs we just calculated
 		 * but also any leftover msec from previous lagging up.
 		 */
-		client->local->since += (client->local->since_msec / 1000);
-		client->local->since_msec = client->local->since_msec % 1000;
+		client->local->fake_lag += (client->local->fake_lag_msec / 1000);
+		client->local->fake_lag_msec = client->local->fake_lag_msec % 1000;
 	}
 }
 
@@ -605,9 +605,9 @@ void add_fake_lag(Client *client, long msec)
 	if (!MyConnect(client))
 		return;
 
-	client->local->since_msec += msec;
-	client->local->since += (client->local->since_msec / 1000);
-	client->local->since_msec = client->local->since_msec % 1000;
+	client->local->fake_lag_msec += msec;
+	client->local->fake_lag += (client->local->fake_lag_msec / 1000);
+	client->local->fake_lag_msec = client->local->fake_lag_msec % 1000;
 }
 
 /** Returns 1 if the client is lagged up and data should NOT be parsed.
@@ -623,7 +623,7 @@ static int client_lagged_up(Client *client)
 		return 0;
 	if (ValidatePermissionsForPath("immune:lag",client,NULL,NULL,NULL))
 		return 0;
-	if (client->local->since - TStime() < 10)
+	if (client->local->fake_lag - TStime() < 10)
 		return 0;
 	return 1;
 }

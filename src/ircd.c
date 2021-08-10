@@ -367,7 +367,7 @@ void check_ping(Client *client)
 		&& ((TStime() - client->local->lasttime) >= (2 * ping)))
 		||
 		/* Or isn't registered and time spent is larger than ping (CONNECTTIMEOUT).. */
-		(!IsRegistered(client) && (TStime() - client->local->since >= ping))
+		(!IsRegistered(client) && (TStime() - client->local->fake_lag >= ping))
 		)
 	{
 		if (IsServer(client) || IsConnecting(client) ||
@@ -517,8 +517,8 @@ void fix_timers(void)
 
 	list_for_each_entry(client, &lclient_list, lclient_node)
 	{
-		if (client->local->since > TStime())
-			client->local->since = TStime();
+		if (client->local->fake_lag > TStime())
+			client->local->fake_lag = TStime();
 		if (client->local->lasttime > TStime())
 			client->local->lasttime = TStime();
 		if (client->local->last > TStime())
@@ -1140,7 +1140,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
 	timeofday = time(NULL);
-	me.local->lasttime = me.local->since = me.local->firsttime = me.serv->boottime = TStime();
+	me.local->lasttime = me.local->fake_lag = me.local->firsttime = me.serv->boottime = TStime();
 	me.serv->features.protocol = UnrealProtocol;
 	safe_strdup(me.serv->features.software, version);
 	add_to_client_hash_table(me.name, &me);

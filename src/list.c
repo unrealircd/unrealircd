@@ -123,7 +123,7 @@ Client *make_client(Client *from, Client *servr)
 		INIT_LIST_HEAD(&client->lclient_node);
 		INIT_LIST_HEAD(&client->special_node);
 
-		client->local->since = client->local->lasttime =
+		client->local->fake_lag = client->local->lasttime =
 		client->lastnick = client->local->firsttime =
 		client->local->last = TStime();
 		client->local->class = NULL;

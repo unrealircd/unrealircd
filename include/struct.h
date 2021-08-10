@@ -1342,8 +1342,8 @@ struct Client {
 struct LocalClient {
 	int fd;				/**< File descriptor, can be <0 if socket has been closed already. */
 	SSL *ssl;			/**< OpenSSL/LibreSSL struct for TLS connection */
-	time_t since;			/**< Time when user will next be allowed to send something (actually since<currenttime+10) */
-	int since_msec;			/**< Used for calculating 'since' penalty (modulo) */
+	time_t fake_lag;		/**< Time when user will next be allowed to send something (actually fake_lag<currenttime+10) */
+	int fake_lag_msec;		/**< Used for calculating 'fake_lag' penalty (modulo) */
 	time_t firsttime;		/**< Time user was created (connected on IRC) */
 	time_t lasttime;		/**< Last time any message was received */
 	dbuf sendQ;			/**< Outgoing send queue (data to be sent) */

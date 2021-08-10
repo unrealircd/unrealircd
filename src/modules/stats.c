@@ -971,7 +971,7 @@ int stats_uptime(Client *client, char *para)
 {
 	time_t tmpnow;
 
-	tmpnow = TStime() - me.local->since;
+	tmpnow = TStime() - me.local->fake_lag;
 	sendnumeric(client, RPL_STATSUPTIME,
 	    tmpnow / 86400, (tmpnow / 3600) % 24, (tmpnow / 60) % 60,
 	    tmpnow % 60);

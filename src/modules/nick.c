@@ -319,7 +319,7 @@ CMD_FUNC(cmd_nick_local)
 	}
 
 	if (!ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL))
-		cptr->local->since += 3;	/* Nick-flood prot. -Donwulff */
+		cptr->local->fake_lag += 3;	/* Nick-flood prot. -Donwulff */
 
 	if ((acptr = find_client(nick, NULL)))
 	{
@@ -1128,7 +1128,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		/* Give the user a fresh start as far as fake-lag is concerned.
 		 * Otherwise the user could be lagged up already due to all the CAP stuff.
 		 */
-		client->local->since = TStime();
+		client->local->fake_lag = TStime();
 
 		RunHook2(HOOKTYPE_WELCOME, client, 999);
 

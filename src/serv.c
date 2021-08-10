@@ -219,7 +219,7 @@ void send_proto(Client *client, ConfigItem_link *aconf)
 	/* Second line */
 	sendto_one(client, NULL, "PROTOCTL CHANMODES=%s%s,%s%s,%s%s,%s%s USERMODES=%s BOOTED=%lld PREFIX=%s SID=%s MLOCK TS=%lld EXTSWHOIS",
 		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4,
-		umodestring, (long long)me.local->since, prefix->value,
+		umodestring, (long long)me.local->fake_lag, prefix->value,
 		me.id, (long long)TStime());
 
 	/* Third line */
