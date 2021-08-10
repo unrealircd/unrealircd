@@ -866,7 +866,7 @@ typedef struct Whowas {
 	struct Whowas *prev;	/* for hash table... */
 	struct Whowas *cnext;	/* for client struct linked list */
 	struct Whowas *cprev;	/* for client struct linked list */
-} aWhowas;
+} WhoWas;
 
 typedef struct SWhois SWhois;
 struct SWhois {
@@ -1398,7 +1398,7 @@ struct User {
 	char *virthost;			/**< Virtual host - when user has user mode +x this is the active host */
 	char *server;			/**< Server name the user is on (?) */
 	SWhois *swhois;			/**< Special "additional" WHOIS entries such as "a Network Administrator" */
-	aWhowas *whowas;		/**< Something for whowas :D :D */
+	WhoWas *whowas;		/**< Something for whowas :D :D */
 	int snomask;			/**< Server Notice Mask (snomask) - only for IRCOps */
 	char *operlogin;		/**< Which oper { } block was used to oper up, otherwise NULL - used by oper::maxlogins */
 	struct {

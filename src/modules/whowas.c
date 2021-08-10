@@ -53,8 +53,8 @@ MOD_UNLOAD()
 }
 
 /* externally defined functions */
-extern aWhowas MODVAR WHOWAS[NICKNAMEHISTORYLENGTH];
-extern aWhowas MODVAR *WHOWASHASH[WHOWAS_HASH_TABLE_SIZE];
+extern WhoWas MODVAR WHOWAS[NICKNAMEHISTORYLENGTH];
+extern WhoWas MODVAR *WHOWASHASH[WHOWAS_HASH_TABLE_SIZE];
 
 /*
 ** cmd_whowas
@@ -62,7 +62,7 @@ extern aWhowas MODVAR *WHOWASHASH[WHOWAS_HASH_TABLE_SIZE];
 */
 CMD_FUNC(cmd_whowas)
 {
-	aWhowas *temp;
+	WhoWas *temp;
 	int  cur = 0;
 	int  max = -1, found = 0;
 	char *p, *nick;

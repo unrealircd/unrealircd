@@ -24,19 +24,19 @@
 // Some users may not want to load cmd_whowas at all.
 
 /* internally defined function */
-static void add_whowas_to_clist(aWhowas **, aWhowas *);
-static void del_whowas_from_clist(aWhowas **, aWhowas *);
-static void add_whowas_to_list(aWhowas **, aWhowas *);
-static void del_whowas_from_list(aWhowas **, aWhowas *);
+static void add_whowas_to_clist(WhoWas **, WhoWas *);
+static void del_whowas_from_clist(WhoWas **, WhoWas *);
+static void add_whowas_to_list(WhoWas **, WhoWas *);
+static void del_whowas_from_list(WhoWas **, WhoWas *);
 
-aWhowas MODVAR WHOWAS[NICKNAMEHISTORYLENGTH];
-aWhowas MODVAR *WHOWASHASH[WHOWAS_HASH_TABLE_SIZE];
+WhoWas MODVAR WHOWAS[NICKNAMEHISTORYLENGTH];
+WhoWas MODVAR *WHOWASHASH[WHOWAS_HASH_TABLE_SIZE];
 
 MODVAR int whowas_next = 0;
 
 void add_history(Client *client, int online)
 {
-	aWhowas *new;
+	WhoWas *new;
 
 	new = &WHOWAS[whowas_next];
 
@@ -87,7 +87,7 @@ void add_history(Client *client, int online)
 
 void off_history(Client *client)
 {
-	aWhowas *temp, *next;
+	WhoWas *temp, *next;
 
 	for (temp = client->user->whowas; temp; temp = next)
 	{
@@ -99,7 +99,7 @@ void off_history(Client *client)
 
 Client *get_history(char *nick, time_t timelimit)
 {
-	aWhowas *temp;
+	WhoWas *temp;
 	int  blah;
 
 	timelimit = TStime() - timelimit;
@@ -118,7 +118,7 @@ Client *get_history(char *nick, time_t timelimit)
 
 void count_whowas_memory(int *wwu, u_long *wwum)
 {
-	aWhowas *tmp;
+	WhoWas *tmp;
 	int  i;
 	int  u = 0;
 	u_long um = 0;
@@ -129,7 +129,7 @@ void count_whowas_memory(int *wwu, u_long *wwum)
 		if (tmp->hashv != -1)
 		{
 			u++;
-			um += sizeof(aWhowas);
+			um += sizeof(WhoWas);
 		}
 	*wwu = u;
 	*wwum = um;
@@ -142,14 +142,14 @@ void initwhowas()
 
 	for (i = 0; i < NICKNAMEHISTORYLENGTH; i++)
 	{
-		memset(&WHOWAS[i], 0, sizeof(aWhowas));
+		memset(&WHOWAS[i], 0, sizeof(WhoWas));
 		WHOWAS[i].hashv = -1;
 	}
 	for (i = 0; i < WHOWAS_HASH_TABLE_SIZE; i++)
 		WHOWASHASH[i] = NULL;
 }
 
-static void add_whowas_to_clist(aWhowas ** bucket, aWhowas * whowas)
+static void add_whowas_to_clist(WhoWas ** bucket, WhoWas * whowas)
 {
 	whowas->cprev = NULL;
 	if ((whowas->cnext = *bucket) != NULL)
@@ -157,7 +157,7 @@ static void add_whowas_to_clist(aWhowas ** bucket, aWhowas * whowas)
 	*bucket = whowas;
 }
 
-static void del_whowas_from_clist(aWhowas ** bucket, aWhowas * whowas)
+static void del_whowas_from_clist(WhoWas ** bucket, WhoWas * whowas)
 {
 	if (whowas->cprev)
 		whowas->cprev->cnext = whowas->cnext;
@@ -167,7 +167,7 @@ static void del_whowas_from_clist(aWhowas ** bucket, aWhowas * whowas)
 		whowas->cnext->cprev = whowas->cprev;
 }
 
-static void add_whowas_to_list(aWhowas ** bucket, aWhowas * whowas)
+static void add_whowas_to_list(WhoWas ** bucket, WhoWas * whowas)
 {
 	whowas->prev = NULL;
 	if ((whowas->next = *bucket) != NULL)
@@ -175,7 +175,7 @@ static void add_whowas_to_list(aWhowas ** bucket, aWhowas * whowas)
 	*bucket = whowas;
 }
 
-static void del_whowas_from_list(aWhowas ** bucket, aWhowas * whowas)
+static void del_whowas_from_list(WhoWas ** bucket, WhoWas * whowas)
 {
 	if (whowas->prev)
 		whowas->prev->next = whowas->next;
