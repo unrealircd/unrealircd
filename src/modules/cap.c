@@ -386,7 +386,7 @@ CMD_FUNC(cmd_cap)
 	 * Only add a 1 second fake lag penalty if this is the XXth command.
 	 * This will speed up connections considerably.
 	 */
-	if (client->local->receiveM > 15)
+	if (client->local->traffic.messages_received > 15)
 		add_fake_lag(client, 1000);
 
 	if (DISABLE_CAP)

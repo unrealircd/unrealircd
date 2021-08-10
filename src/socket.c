@@ -500,10 +500,6 @@ void close_connection(Client *client)
 	if (IsServer(client))
 	{
 		ircstats.is_sv++;
-		ircstats.is_sbs += client->local->sendB;
-		ircstats.is_sbr += client->local->receiveB;
-		ircstats.is_sks += client->local->sendK;
-		ircstats.is_skr += client->local->receiveK;
 		ircstats.is_sti += TStime() - client->local->creationtime;
 		if (ircstats.is_sbs > 1023)
 		{
@@ -519,10 +515,6 @@ void close_connection(Client *client)
 	else if (IsUser(client))
 	{
 		ircstats.is_cl++;
-		ircstats.is_cbs += client->local->sendB;
-		ircstats.is_cbr += client->local->receiveB;
-		ircstats.is_cks += client->local->sendK;
-		ircstats.is_ckr += client->local->receiveK;
 		ircstats.is_cti += TStime() - client->local->creationtime;
 		if (ircstats.is_cbs > 1023)
 		{
@@ -1186,18 +1178,8 @@ int deliver_it(Client *client, char *str, int len, int *want_read)
 
 	if (retval > 0)
 	{
-		client->local->sendB += retval;
-		me.local->sendB += retval;
-		if (client->local->sendB > 1023)
-		{
-			client->local->sendK += (client->local->sendB >> 10);
-			client->local->sendB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
-		}
-		if (me.local->sendB > 1023)
-		{
-			me.local->sendK += (me.local->sendB >> 10);
-			me.local->sendB &= 0x03ff;
-		}
+		client->local->traffic.bytes_sent += retval;
+		me.local->traffic.bytes_sent += retval;
 	}
 
 	return (retval);

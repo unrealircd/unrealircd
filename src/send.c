@@ -371,8 +371,8 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 	 * only really sent. Queued bytes get updated in SendQueued.
 	 */
 	// FIXME: something is wrong here, I think we do double counts, either in message or in traffic, I forgot.. CHECK !!!!
-	to->local->sendM += 1;
-	me.local->sendM += 1;
+	to->local->traffic.messages_sent++;
+	me.local->traffic.messages_sent++;
 
 	/* Previously we ran send_queued() here directly, but that is
 	 * a bad idea, CPU-wise. So now we just mark the client indicating

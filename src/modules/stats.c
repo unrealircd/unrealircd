@@ -604,10 +604,6 @@ int stats_traffic(Client *client, char *para)
 	{
 		if (IsServer(acptr))
 		{
-			sp->is_sbs += acptr->local->sendB;
-			sp->is_sbr += acptr->local->receiveB;
-			sp->is_sks += acptr->local->sendK;
-			sp->is_skr += acptr->local->receiveK;
 			sp->is_sti += now - acptr->local->creationtime;
 			sp->is_sv++;
 			if (sp->is_sbs > 1023)
@@ -623,10 +619,6 @@ int stats_traffic(Client *client, char *para)
 		}
 		else if (IsUser(acptr))
 		{
-			sp->is_cbs += acptr->local->sendB;
-			sp->is_cbr += acptr->local->receiveB;
-			sp->is_cks += acptr->local->sendK;
-			sp->is_ckr += acptr->local->receiveK;
 			sp->is_cti += now - acptr->local->creationtime;
 			sp->is_cl++;
 			if (sp->is_cbs > 1023)
@@ -653,10 +645,10 @@ int stats_traffic(Client *client, char *para)
 	sendnumericfmt(client, RPL_STATSDEBUG, "local connections %u udp packets %u", sp->is_loc, sp->is_udp);
 	sendnumericfmt(client, RPL_STATSDEBUG, "Client Server");
 	sendnumericfmt(client, RPL_STATSDEBUG, "connected %u %u", sp->is_cl, sp->is_sv);
-	sendnumericfmt(client, RPL_STATSDEBUG, "bytes sent %ld.%huK %ld.%huK",
-		sp->is_cks, sp->is_cbs, sp->is_sks, sp->is_sbs);
-	sendnumericfmt(client, RPL_STATSDEBUG, "bytes recv %ld.%huK %ld.%huK",
-	    sp->is_ckr, sp->is_cbr, sp->is_skr, sp->is_sbr);
+	sendnumericfmt(client, RPL_STATSDEBUG, "messages sent %lld", me.local->traffic.messages_sent);
+	sendnumericfmt(client, RPL_STATSDEBUG, "messages received %lld", me.local->traffic.messages_received);
+	sendnumericfmt(client, RPL_STATSDEBUG, "bytes sent %lld", me.local->traffic.bytes_sent);
+	sendnumericfmt(client, RPL_STATSDEBUG, "bytes received %lld", me.local->traffic.bytes_received);
 	sendnumericfmt(client, RPL_STATSDEBUG, "time connected %lld %lld",
 	    (long long)sp->is_cti, (long long)sp->is_sti);
 
@@ -1035,11 +1027,11 @@ int stats_linkinfoall(Client *client, char *para)
 int stats_linkinfoint(Client *client, char *para, int all)
 {
 #ifndef DEBUGMODE
-	#define Sformat "SendQ SendM SendBytes RcveM RcveBytes Open_since :Idle"
-	#define Lformat "%s%s %u %u %u %u %u %lld :%lld"
+	#define Sformat "Name SendQ SendM SendBytes RcveM RcveBytes Open_since :Idle"
+	#define Lformat "%s%s %lld %lld %lld %lld %lld %lld :%lld"
 #else
-	#define Sformat "SendQ SendM SendBytes RcveM RcveBytes Open_since CPU :Idle"
-	#define Lformat "%s%s %u %u %u %u %u %lld %s"
+	#define Sformat "Name SendQ SendM SendBytes RcveM RcveBytes Open_since CPU :Idle"
+	#define Lformat "%s%s %lld %lld %lld %lld %lld %lld %s"
 	char pbuf[96];		/* Should be enough for to ints */
 #endif
 	int remote = 0;
@@ -1097,14 +1089,13 @@ int stats_linkinfoint(Client *client, char *para, int all)
 		if (ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
 		{
 			sendnumericfmt(client, RPL_STATSLINKINFO, Lformat,
-				all ?
-				(get_client_name2(acptr, showports)) :
-				(get_client_name(acptr, FALSE)),
+				all ? (get_client_name2(acptr, showports)) : (get_client_name(acptr, FALSE)),
 				get_client_status(acptr),
-				(int)DBufLength(&acptr->local->sendQ),
-				(int)acptr->local->sendM, (int)acptr->local->sendK,
-				(int)acptr->local->receiveM,
-				(int)acptr->local->receiveK,
+				(long long)DBufLength(&acptr->local->sendQ),
+				(long long)acptr->local->traffic.messages_sent,
+				(long long)acptr->local->traffic.bytes_sent,
+				(long long)acptr->local->traffic.messages_received,
+				(long long)acptr->local->traffic.bytes_received,
 				(long long)(TStime() - acptr->local->creationtime),
 #ifndef DEBUGMODE
 				(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->idle_since : 0));
@@ -1114,15 +1105,13 @@ int stats_linkinfoint(Client *client, char *para, int all)
 		}
 		else if (!strchr(acptr->name, '.'))
 			sendnumericfmt(client, RPL_STATSLINKINFO, Lformat,
-				IsHidden(acptr) ? acptr->name :
-				all ?	/* Potvin - PreZ */
-				get_client_name2(acptr, showports) :
-				get_client_name(acptr, FALSE),
+				IsHidden(acptr) ? acptr->name : all ? get_client_name2(acptr, showports) : get_client_name(acptr, FALSE),
 				get_client_status(acptr),
-				(int)DBufLength(&acptr->local->sendQ),
-				(int)acptr->local->sendM, (int)acptr->local->sendK,
-				(int)acptr->local->receiveM,
-				(int)acptr->local->receiveK,
+				(long long)DBufLength(&acptr->local->sendQ),
+				(long long)acptr->local->traffic.messages_sent,
+				(long long)acptr->local->traffic.bytes_sent,
+				(long long)acptr->local->traffic.messages_received,
+				(long long)acptr->local->traffic.bytes_received,
 				(long long)((TStime() - acptr->local->creationtime)),
 #ifndef DEBUGMODE
 				(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->idle_since : 0));

@@ -312,7 +312,11 @@ int websocket_handle_websocket(Client *client, char *readbuf2, int length2)
  */
 int websocket_packet_in(Client *client, char *readbuf, int *length)
 {
-	if ((client->local->receiveM == 0) && WEBSOCKET_PORT(client) && !WSU(client) && (*length > 8) && !strncmp(readbuf, "GET ", 4))
+	if ((client->local->traffic.messages_received == 0) &&
+	    WEBSOCKET_PORT(client) &&
+	    !WSU(client) &&
+	    (*length > 8) &&
+	    !strncmp(readbuf, "GET ", 4))
 	{
 		/* Allocate a new WebSocketUser struct for this session */
 		moddata_client(client, websocket_md).ptr = safe_alloc(sizeof(WebSocketUser));

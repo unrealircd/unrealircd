@@ -1303,6 +1303,13 @@ typedef enum FloodOption {
 } FloodOption;
 #define MAXFLOODOPTIONS 10
 
+typedef struct TrafficStats TrafficStats;
+struct TrafficStats {
+	long long messages_sent;	/* IRC lines sent */
+	long long messages_received;	/* IRC lines received */
+	long long bytes_sent;		/* Bytes sent */
+	long long bytes_received;	/* Received bytes */
+};
 
 /** This shows the Client struct (any client), the User struct (a user), Server (a server) that are commonly accessed both in the core and by 3rd party coders.
  * @defgroup CommonStructs Common structs
@@ -1357,12 +1364,7 @@ struct LocalClient {
 	long serial;			/**< Current serial number for send.c functions (to avoid sending duplicate messages) */
 	time_t next_nick_allowed;		/**< Time the next nick change will be allowed */
 	time_t idle_since;		/**< Last time a RESETIDLE message was received (PRIVMSG) */
-	long sendM;			/**< Statistics: protocol messages send */
-	long sendK;			/**< Statistics: total k-bytes send */
-	long receiveM;			/**< Statistics: protocol messages received */
-	long receiveK;			/**< Statistics: total k-bytes received */
-	u_short sendB;			/**< Statistics: counters to count upto 1-k lots of bytes */
-	u_short receiveB;		/**< Statistics: sent and received (???) */
+	TrafficStats traffic;		/**< Traffic statistics */
 	ModData moddata[MODDATA_MAX_LOCAL_CLIENT];	/**< LocalClient attached module data, used by the ModData system */
 #ifdef DEBUGMODE
 	time_t cputime;			/**< Something with debugging (why is this a time_t? TODO) */

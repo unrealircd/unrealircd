@@ -113,9 +113,10 @@ CMD_FUNC(cmd_netinfo)
 			client->name, (long long)(xx), (long long)(endsync), (long long)(xx - endsync), emsg);
 	}
 	sendto_umode_global(UMODE_OPER,
-	    "Link %s -> %s is now synced [secs: %lld recv: %ld.%hu sent: %ld.%hu]",
-	    client->name, me.name, (long long)(TStime() - endsync), client->local->receiveK,
-	    client->local->receiveB, client->local->sendK, client->local->sendB);
+	    "Link %s -> %s is now synced [secs: %lld recv: %lld sent: %lld]",
+	    client->name, me.name, (long long)(TStime() - endsync),
+	    client->local->traffic.bytes_received,
+	    client->local->traffic.bytes_sent);
 
 	if (!(strcmp(ircnetwork, parv[8]) == 0))
 	{

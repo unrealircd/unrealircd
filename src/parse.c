@@ -140,21 +140,11 @@ void parse_client_queued(Client *client)
 */
 void dopacket(Client *client, char *buffer, int length)
 {
-	me.local->receiveB += length;	/* Update bytes received */
-	client->local->receiveB += length;
-	if (client->local->receiveB > 1023)
-	{
-		client->local->receiveK += (client->local->receiveB >> 10);
-		client->local->receiveB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
-	}
-	if (me.local->receiveB > 1023)
-	{
-		me.local->receiveK += (me.local->receiveB >> 10);
-		me.local->receiveB &= 0x03ff;
-	}
+	client->local->traffic.bytes_received += length;
+	me.local->traffic.bytes_received += length;
 
-	me.local->receiveM += 1;	/* Update messages received */
-	client->local->receiveM += 1;
+	client->local->traffic.messages_received++;
+	me.local->traffic.messages_received++;
 
 	parse(client, buffer, length);
 }
@@ -192,7 +182,7 @@ void parse(Client *cptr, char *buffer, int length)
 	if (IsDeadSocket(cptr))
 		return;
 
-	if ((cptr->local->receiveK >= iConf.handshake_data_flood_amount/1024) && IsUnknown(cptr))
+	if ((cptr->local->traffic.bytes_received >= iConf.handshake_data_flood_amount) && IsUnknown(cptr))
 	{
 		sendto_snomask(SNO_FLOOD, "Handshake data flood from %s detected", cptr->local->sockhost);
 		ban_handshake_data_flooder(cptr);
