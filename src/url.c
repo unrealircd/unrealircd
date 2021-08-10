@@ -20,7 +20,7 @@
 
 #include "unrealircd.h"
 
-extern char *SSLKeyPasswd;
+extern char *TLSKeyPasswd;
 
 #ifndef _WIN32
 extern uid_t irc_uid;
@@ -139,8 +139,8 @@ static void set_curl_tls_options(CURL *curl)
 	 * parsed yet at this point.
 	 */
 	curl_easy_setopt(curl, CURLOPT_SSLCERT, iConf.tls_options->certificate_file);
-	if (SSLKeyPasswd)
-		curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD, SSLKeyPasswd);
+	if (TLSKeyPasswd)
+		curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD, TLSKeyPasswd);
 	curl_easy_setopt(curl, CURLOPT_SSLKEY, iConf.tls_options->key_file);
 #endif
 

@@ -3,7 +3,7 @@
  * (C) Copyright 2010-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
  * This module will indicate if a channel is secure, and if so will set +Z.
- * Secure is defined as: all users on the channel are connected through SSL/TLS
+ * Secure is defined as: all users on the channel are connected through TLS
  * Additionally, the channel has to be +z (only allow secure users to join).
  * Suggested on http://bugs.unrealircd.org/view.php?id=3720
  * Thanks go to fez for pushing us for some kind of method to indicate
@@ -145,7 +145,7 @@ void issecure_unset(Channel *channel, Client *client, MessageTag *recv_mtags, in
 		mtags = NULL;
 		new_message_special(&me, recv_mtags, &mtags, "NOTICE %s :setting -Z", channel->name);
 		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
-		               ":%s NOTICE %s :User '%s' joined and is not connected through SSL/TLS, setting channel -Z (insecure)",
+		               ":%s NOTICE %s :User '%s' joined and is not connected through TLS, setting channel -Z (insecure)",
 		               me.id, channel->name, client->name);
 		free_message_tags(mtags);
 	}
@@ -175,13 +175,13 @@ void issecure_set(Channel *channel, Client *client, MessageTag *recv_mtags, int 
 		 * he is still considered a member of this channel.
 		 */
 		sendto_channel(channel, &me, client, 0, 0, SEND_LOCAL, NULL,
-		               ":%s NOTICE %s :Now all users in the channel are connected through SSL/TLS, setting channel +Z (secure)",
+		               ":%s NOTICE %s :Now all users in the channel are connected through TLS, setting channel +Z (secure)",
 		               me.name, channel->name);
 	} else if (notice)
 	{
 		/* note the missing word 'now' in next line */
 		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, NULL,
-		               ":%s NOTICE %s :All users in the channel are connected through SSL/TLS, setting channel +Z (secure)",
+		               ":%s NOTICE %s :All users in the channel are connected through TLS, setting channel +Z (secure)",
 		               me.name, channel->name);
 	}
 	free_message_tags(mtags);

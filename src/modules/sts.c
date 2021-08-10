@@ -66,7 +66,7 @@ int sts_capability_visible(Client *client)
 	if (!IsSecure(client))
 	{
 		if (iConf.tls_options && iConf.tls_options->sts_port)
-			return 1; /* YES, non-SSL user and set::tls::sts-policy configured */
+			return 1; /* YES, non-TLS user and set::tls::sts-policy configured */
 		return 0; /* NO, there is no sts-policy */
 	}
 

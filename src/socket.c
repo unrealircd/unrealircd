@@ -281,14 +281,14 @@ void close_listener(ConfigItem_listen *listener)
 		ircd_log(LOG_ERROR, "IRCd no longer listening on %s:%d (%s)%s",
 			listener->ip, listener->port,
 			listener->ipv6 ? "IPv6" : "IPv4",
-			listener->options & LISTENER_TLS ? " (SSL/TLS)" : "");
+			listener->options & LISTENER_TLS ? " (TLS)" : "");
 		fd_close(listener->fd);
 		--OpenFiles;
 	}
 
 	listener->options &= ~LISTENER_BOUND;
 	listener->fd = -1;
-	/* We can already free the SSL/TLS context, since it is only
+	/* We can already free the TLS context, since it is only
 	 * used for new connections, which we no longer accept.
 	 */
 	if (listener->ssl_ctx)
@@ -460,7 +460,7 @@ void completed_connection(int fd, int revents, void *data)
 
 	if (IsHandshake(client))
 	{
-		/* Due to delayed ircd_SSL_connect call */
+		/* Due to delayed unreal_tls_connect call */
 		start_server_handshake(client);
 		fd_setselect(fd, FD_SELECT_READ, read_packet, client);
 		return;
@@ -836,8 +836,8 @@ refuse_client:
 			SetTLS(client);
 			SSL_set_fd(client->local->ssl, fd);
 			SSL_set_nonblocking(client->local->ssl);
-			SSL_set_ex_data(client->local->ssl, ssl_client_index, client);
-			if (!ircd_SSL_accept(client, fd))
+			SSL_set_ex_data(client->local->ssl, tls_client_index, client);
+			if (!unreal_tls_accept(client, fd))
 			{
 				SSL_set_shutdown(client->local->ssl, SSL_RECEIVED_SHUTDOWN);
 				SSL_smart_shutdown(client->local->ssl);
@@ -856,7 +856,7 @@ static int dns_special_flag = 0; /* This is for an "interesting" race condition 
 /** Start of normal client handshake - DNS and ident lookups, etc.
  * @param client	The client
  * @note This is called directly after accept() -> add_connection() for plaintext.
- *       For SSL/TLS connections this is called after the SSL/TLS handshake is completed.
+ *       For TLS connections this is called after the TLS handshake is completed.
  */
 void start_of_normal_client_handshake(Client *client)
 {
@@ -935,7 +935,7 @@ void read_packet(int fd, int revents, void *data)
 	fd_setselect(fd, FD_SELECT_READ, read_packet, client);
 	/* Restore handling of writes towards send_queued_cb(), since
 	 * it may be overwritten in an earlier call to read_packet(),
-	 * to handle (SSL) writes by read_packet(), see below under
+	 * to handle (TLS) writes by read_packet(), see below under
 	 * SSL_ERROR_WANT_WRITE.
 	 */
 	fd_setselect(fd, FD_SELECT_WRITE, send_queued_cb, client);
@@ -1102,11 +1102,11 @@ int ipv6_capable(void)
 
 /** Attempt to deliver data to a client.
  * This function is only called from send_queued() and will deal
- * with sending to the SSL/TLS or plaintext connection.
+ * with sending to the TLS or plaintext connection.
  * @param cptr The client
  * @param str  The string to send
  * @param len  The length of the string
- * @param want_read In case of SSL/TLS it may happen that SSL_write()
+ * @param want_read In case of TLS it may happen that SSL_write()
  *                  needs to READ data. If this happens then this
  *                  function will set *want_read to 1.
  *                  The upper layer should then call us again when

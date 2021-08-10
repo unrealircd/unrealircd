@@ -141,7 +141,7 @@ int certificate_verification_active(Client *client)
 
 /** Calculate our (local) link-security level.
  * This means stepping through the list of directly linked
- * servers and determining if they are linked via SSL and
+ * servers and determining if they are linked via TLS and
  * certificate verification is active.
  * @returns value from 0 to 2.
  */
@@ -155,7 +155,7 @@ int our_link_security(void)
 		if (IsLocalhost(client))
 			continue; /* server connected via localhost */
 		if (!IsSecure(client))
-			return 0; /* Any non-SSL server (which is not localhost) results in level 0. */
+			return 0; /* Any non-TLS server (which is not localhost) results in level 0. */
 		if (!certificate_verification_active(client))
 			level = 1; /* downgrade to level 1 */
 	}
@@ -272,9 +272,9 @@ CMD_FUNC(cmd_linksecurity)
 	sendtxtnumeric(client, "= Legend =");
 	sendtxtnumeric(client, "Higher level means better link security");
 	sendtxtnumeric(client, "Level UNKNOWN: Not an UnrealIRCd server (eg: services) or an old version (<4.0.14)");
-	sendtxtnumeric(client, "Level 0: One or more servers linked insecurely (not using SSL/TLS)");
-	sendtxtnumeric(client, "Level 1: Servers are linked with SSL/TLS but at least one of them is not verifying certificates");
-	sendtxtnumeric(client, "Level 2: Servers linked with SSL/TLS and certificates are properly verified");
+	sendtxtnumeric(client, "Level 0: One or more servers linked insecurely (not using TLS)");
+	sendtxtnumeric(client, "Level 1: Servers are linked with TLS but at least one of them is not verifying certificates");
+	sendtxtnumeric(client, "Level 2: Servers linked with TLS and certificates are properly verified");
 	sendtxtnumeric(client, "-");
 	sendtxtnumeric(client, "= More information =");
 	sendtxtnumeric(client, "To understand more about link security and how to improve your level");

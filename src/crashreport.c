@@ -531,7 +531,7 @@ char *generate_crash_report(char *coredump, int *thirdpartymods)
 
 #define CRASH_REPORT_HOST "crash.unrealircd.org"
 
-SSL_CTX *crashreport_init_ssl(void)
+SSL_CTX *crashreport_init_tls(void)
 {
 	SSL_CTX *ctx_client;
 	char buf[512];
@@ -587,7 +587,7 @@ int crashreport_send(char *fname)
 	                           delimiter);
 	snprintf(footer, sizeof(footer), "\r\n--%s--\r\n", delimiter);
 
-	ctx_client = crashreport_init_ssl();
+	ctx_client = crashreport_init_tls();
 	if (!ctx_client)
 	{
 		printf("ERROR: TLS initalization failure (I)\n");

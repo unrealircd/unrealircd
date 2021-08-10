@@ -71,7 +71,7 @@ CMD_FUNC(cmd_starttls)
 	ctx = client->local->listener->ssl_ctx ? client->local->listener->ssl_ctx : ctx_server;
 	tls_options = client->local->listener->tls_options ? client->local->listener->tls_options->options : iConf.tls_options->options;
 
-	/* Is SSL support enabled? (may not, if failed to load cert/keys/..) */
+	/* This should never happen? */
 	if (!ctx)
 	{
 		/* Pretend STARTTLS is an unknown command, this is the safest approach */
@@ -102,7 +102,7 @@ CMD_FUNC(cmd_starttls)
 	SetTLS(client);
 	SSL_set_fd(client->local->ssl, client->local->fd);
 	SSL_set_nonblocking(client->local->ssl);
-	if (!ircd_SSL_accept(client, client->local->fd))
+	if (!unreal_tls_accept(client, client->local->fd))
 	{
 		SSL_set_shutdown(client->local->ssl, SSL_RECEIVED_SHUTDOWN);
 		SSL_smart_shutdown(client->local->ssl);

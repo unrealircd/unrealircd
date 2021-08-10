@@ -955,7 +955,7 @@ char *get_connect_extinfo(Client *client)
 	if (MyUser(client) && client->local->class)
 		add_nvplist(&list, -100000, "class", client->local->class->name);
 
-	/* "secure": SSL/TLS */
+	/* "secure": TLS */
 	if (MyUser(client) && IsSecure(client))
 		add_nvplist(&list, -1000, "secure", tls_get_cipher(client->local->ssl));
 	else if (!MyUser(client) && IsSecureConnect(client))

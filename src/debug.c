@@ -48,9 +48,6 @@ MODVAR char serveropts[] = {
 	'Y',
 #endif
 	'6',
-#ifdef USE_SSL
-	'e',
-#endif
 #ifndef NO_OPEROVERRIDE
 	'O',
 #endif

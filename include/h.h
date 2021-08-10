@@ -779,15 +779,15 @@ extern MODVAR char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options
 extern MODVAR void (*do_unreal_log_remote_deliver)(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized);
 /* /Efuncs */
 
-/* SSL/TLS functions */
-extern int early_init_ssl();
-extern int init_ssl();
+/* TLS functions */
+extern int early_init_tls();
+extern int init_tls();
 extern int ssl_handshake(Client *);   /* Handshake the accpeted con.*/
 extern int ssl_client_handshake(Client *, ConfigItem_link *); /* and the initiated con.*/
-extern int ircd_SSL_accept(Client *acptr, int fd);
-extern int ircd_SSL_connect(Client *acptr, int fd);
+extern int unreal_tls_accept(Client *acptr, int fd);
+extern int unreal_tls_connect(Client *acptr, int fd);
 extern int SSL_smart_shutdown(SSL *ssl);
-extern void ircd_SSL_client_handshake(int, int, void *);
+extern void unreal_tls_client_handshake(int, int, void *);
 extern void SSL_set_nonblocking(SSL *s);
 extern SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server);
 extern MODFUNC char  *tls_get_cipher(SSL *ssl);
@@ -799,7 +799,7 @@ extern EVENT(tls_check_expiry);
 extern MODVAR EVP_MD *sha256_function;
 extern MODVAR EVP_MD *sha1_function;
 extern MODVAR EVP_MD *md5_function;
-/* End of SSL/TLS functions */
+/* End of TLS functions */
 
 extern void parse_message_tags_default_handler(Client *client, char **str, MessageTag **mtag_list);
 extern char *mtags_to_string_default_handler(MessageTag *m, Client *client);
@@ -927,7 +927,7 @@ extern int get_terminal_width(void);
 extern int has_common_channels(Client *c1, Client *c2);
 extern int user_can_see_member(Client *user, Client *target, Channel *channel);
 extern int invisible_user_in_channel(Client *target, Channel *channel);
-extern MODVAR int ssl_client_index;
+extern MODVAR int tls_client_index;
 extern TLSOptions *FindTLSOptionsForUser(Client *acptr);
 extern int IsWebsocket(Client *acptr);
 extern Policy policy_strtoval(char *s);

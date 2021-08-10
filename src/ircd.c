@@ -814,7 +814,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	initlists();
 	initlist_channels();
 
-	early_init_ssl();
+	early_init_tls();
 #ifdef USE_LIBCURL
 	url_init();
 #endif
@@ -1096,9 +1096,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 		exit(-4);
 	}
 
-	if (!init_ssl())
+	if (!init_tls())
 	{
-		config_error("Failed to load SSL/TLS (see errors above). UnrealIRCd can not start.");
+		config_error("Failed to load TLS (see errors above). UnrealIRCd can not start.");
 #ifdef _WIN32
 		win_error(); /* display error dialog box */
 #endif
@@ -1242,7 +1242,7 @@ void SocketLoop(void *dummy)
 		}
 		if (doreloadcert)
 		{
-			unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD_TLS", NULL, "Reloading all SSL related data (./unrealircd reloadtls)");
+			unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD_TLS", NULL, "Reloading all TLS related data (./unrealircd reloadtls)");
 			reinit_tls();
 			doreloadcert = 0;
 		}

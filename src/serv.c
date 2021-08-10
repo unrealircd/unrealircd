@@ -351,7 +351,7 @@ CMD_FUNC(cmd_credits)
 	}
 }
 
-/** Return flags for a client (connection), eg 's' for SSL/TLS - used in STATS L/l */
+/** Return flags for a client (connection), eg 's' for TLS - used in STATS L/l */
 char *get_client_status(Client *client)
 {
 	static char buf[10];
@@ -1308,17 +1308,17 @@ void lost_server_link(Client *client, char *tls_error_string)
 	}
 }
 
-/** Reject an insecure (outgoing) server link that isn't SSL/TLS.
+/** Reject an insecure (outgoing) server link that isn't TLS.
  * This function is void and not int because it can be called from other void functions
  */
 void reject_insecure_server(Client *client)
 {
-	sendto_umode(UMODE_OPER, "Could not link with server %s with SSL/TLS enabled. "
+	sendto_umode(UMODE_OPER, "Could not link with server %s with TLS enabled. "
 	                         "Please check logs on the other side of the link. "
 	                         "If you insist with insecure linking then you can set link::options::outgoing::insecure "
 	                         "(NOT recommended!).",
 	                         client->name);
-	dead_socket(client, "Rejected link without SSL/TLS");
+	dead_socket(client, "Rejected link without TLS");
 }
 
 /** Start server handshake - called after the outgoing connection has been established.

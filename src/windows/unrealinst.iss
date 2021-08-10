@@ -27,7 +27,7 @@ DisableWelcomePage=no
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
-; !!! Make sure to update SSL/TLS validation (WizardForm.TasksList.Checked[9]) if tasks are added/removed !!!
+; !!! Make sure to update TLS validation (WizardForm.TasksList.Checked[9]) if tasks are added/removed !!!
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
 Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked
@@ -35,7 +35,7 @@ Name: "installservice"; Description: "Install as a &service (not for beginners)"
 Name: "installservice/startboot"; Description: "S&tart UnrealIRCd when Windows starts"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive unchecked
 Name: "installservice/startdemand"; Description: "Start UnrealIRCd on &request"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive unchecked
 Name: "installservice/crashrestart"; Description: "Restart UnrealIRCd if it &crashes"; GroupDescription: "Service support:"; Flags: unchecked; MinVersion: 0,5.0;
-Name: "makecert"; Description: "&Create certificate"; GroupDescription: "SSL/TLS options:";
+Name: "makecert"; Description: "&Create certificate"; GroupDescription: "TLS options:";
 Name: "fixperm"; Description: "Make UnrealIRCd folder writable by current user";
 
 [Files]
@@ -156,7 +156,7 @@ if CurStep = ssPostInstall then
 end;
 
 //*********************************************************************************
-// Checks if SSL/TLS cert file exists
+// Checks if TLS cert file exists
 //*********************************************************************************
 
 procedure CurPageChanged(CurPage: Integer);

@@ -483,7 +483,7 @@ CMD_FUNC(cmd_invite)
 			  client->name, client->user->username, client->user->realhost, channel->name);
 
 			/* Logging implementation added by XeRXeS */
-			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding SSL/TLS-Only)",
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding TLS-Only)",
 				client->name, client->user->username, client->user->realhost, channel->name);
 		}
 #ifdef OPEROVERRIDE_VERIFY

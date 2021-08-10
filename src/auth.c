@@ -80,7 +80,7 @@ int Auth_AutoDetectHashType(char *hash)
 
 	if (!strchr(hash, '$'))
 	{
-		/* SHA256 SSL fingerprint perhaps?
+		/* SHA256 certificate fingerprint perhaps?
 		 * These are exactly 64 bytes (00112233..etc..) or 95 bytes (00:11:22:33:etc) in size.
 		 */
 		if ((strlen(hash) == 64) || (strlen(hash) == 95))
@@ -394,7 +394,7 @@ static int authcheck_spkifp(Client *client, AuthConfig *as, char *para)
 	char *fp = spki_fingerprint(client);
 
 	if (!fp)
-		return 0; /* auth failed: not SSL (or other failure) */
+		return 0; /* auth failed: not TLS or some other failure */
 
 	if (strcasecmp(as->data, fp))
 		return 0; /* auth failed: mismatch */

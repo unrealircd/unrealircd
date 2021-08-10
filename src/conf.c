@@ -1801,7 +1801,7 @@ void config_setdefaultsettings(Configuration *i)
 	config_parse_flood_generic("4:15", i, "unknown-users", FLD_CONVERSATIONS); /* 4 users, new user every 15s */
 	config_parse_flood_generic("90:1000", i, "unknown-users", FLD_LAG_PENALTY); /* 90 bytes / 1000 msec */
 
-	/* SSL/TLS options */
+	/* TLS options */
 	i->tls_options = safe_alloc(sizeof(TLSOptions));
 	snprintf(tmp, sizeof(tmp), "%s/tls/server.cert.pem", CONFDIR);
 	safe_strdup(i->tls_options->certificate_file, tmp);
@@ -1863,9 +1863,9 @@ void postconf_defaults(void)
 	{
 		/* The message depends on whether it's reject or warn.. */
 		if (iConf.plaintext_policy_user == POLICY_DENY)
-			addmultiline(&iConf.plaintext_policy_user_message, "Insecure connection. Please reconnect using SSL/TLS.");
+			addmultiline(&iConf.plaintext_policy_user_message, "Insecure connection. Please reconnect using TLS.");
 		else if (iConf.plaintext_policy_user == POLICY_WARN)
-			addmultiline(&iConf.plaintext_policy_user_message, "WARNING: Insecure connection. Please consider using SSL/TLS.");
+			addmultiline(&iConf.plaintext_policy_user_message, "WARNING: Insecure connection. Please consider using TLS.");
 	}
 
 	if (!iConf.plaintext_policy_oper_message)
@@ -1873,29 +1873,29 @@ void postconf_defaults(void)
 		/* The message depends on whether it's reject or warn.. */
 		if (iConf.plaintext_policy_oper == POLICY_DENY)
 		{
-			addmultiline(&iConf.plaintext_policy_oper_message, "You need to use a secure connection (SSL/TLS) in order to /OPER.");
+			addmultiline(&iConf.plaintext_policy_oper_message, "You need to use a secure connection (TLS) in order to /OPER.");
 			addmultiline(&iConf.plaintext_policy_oper_message, "See https://www.unrealircd.org/docs/FAQ#oper-requires-tls");
 		}
 		else if (iConf.plaintext_policy_oper == POLICY_WARN)
-			addmultiline(&iConf.plaintext_policy_oper_message, "WARNING: You /OPER'ed up from an insecure connection. Please consider using SSL/TLS.");
+			addmultiline(&iConf.plaintext_policy_oper_message, "WARNING: You /OPER'ed up from an insecure connection. Please consider using TLS.");
 	}
 
 	if (!iConf.outdated_tls_policy_user_message)
 	{
 		/* The message depends on whether it's reject or warn.. */
 		if (iConf.outdated_tls_policy_user == POLICY_DENY)
-			safe_strdup(iConf.outdated_tls_policy_user_message, "Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
+			safe_strdup(iConf.outdated_tls_policy_user_message, "Your IRC client is using an outdated TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
 		else if (iConf.outdated_tls_policy_user == POLICY_WARN)
-			safe_strdup(iConf.outdated_tls_policy_user_message, "WARNING: Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
+			safe_strdup(iConf.outdated_tls_policy_user_message, "WARNING: Your IRC client is using an outdated TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
 	}
 
 	if (!iConf.outdated_tls_policy_oper_message)
 	{
 		/* The message depends on whether it's reject or warn.. */
 		if (iConf.outdated_tls_policy_oper == POLICY_DENY)
-			safe_strdup(iConf.outdated_tls_policy_oper_message, "Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
+			safe_strdup(iConf.outdated_tls_policy_oper_message, "Your IRC client is using an outdated TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
 		else if (iConf.outdated_tls_policy_oper == POLICY_WARN)
-			safe_strdup(iConf.outdated_tls_policy_oper_message, "WARNING: Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
+			safe_strdup(iConf.outdated_tls_policy_oper_message, "WARNING: Your IRC client is using an outdated TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
 	}
 
 	/* We got a chicken-and-egg problem here.. antries added without reason or ban-time
@@ -6452,7 +6452,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				    (auth->type != AUTHTYPE_TLS_CLIENTCERTFP) && (auth->type != AUTHTYPE_SPKIFP))
 				{
 					config_error("%s:%i: password in link block should be plaintext OR should be the "
-					             "SSL or SPKI fingerprint of the remote link (=better)",
+					             "certificate or SPKI fingerprint of the remote link (=better)",
 					             /* TODO: mention some faq or wiki item for more information */
 					             cep->file->filename, cep->line_number);
 					errors++;
@@ -7075,7 +7075,7 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 			{
 				if (!nv_find_by_name(_TLSFlags, ceppp->name))
 				{
-					config_error("%s:%i: unknown SSL/TLS option '%s'",
+					config_error("%s:%i: unknown TLS option '%s'",
 							 ceppp->file->filename,
 							 ceppp->line_number, ceppp->name);
 					errors ++;

@@ -167,7 +167,7 @@ int secureonly_check_sajoin(Client *target, Channel *channel, Client *requester)
 {
 	if (IsSecureOnly(channel) && !IsSecure(target))
 	{
-		sendnotice(requester, "You cannot SAJOIN %s to %s because the channel is +z and the user is not connected via SSL/TLS",
+		sendnotice(requester, "You cannot SAJOIN %s to %s because the channel is +z and the user is not connected via TLS",
 			target->name, channel->name);
 		return HOOK_DENY;
 	}

@@ -781,7 +781,7 @@ skip_host_check:
 			           "Link with server $client.details denied: verify-certificate failed: $certificate_failure_msg",
 			           log_data_string("certificate_failure_msg", "not using TLS"),
 			           log_data_link_block(link));
-			exit_client(client, NULL, "Link denied (Not using SSL/TLS)");
+			exit_client(client, NULL, "Link denied (Not using TLS)");
 			return 0;
 		}
 		if (!verify_certificate(client->local->ssl, link->servername, &errstr))
@@ -820,20 +820,20 @@ skip_host_check:
 		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_NO_TLS", client,
 		           "Link with server $client.details denied: "
 		           "Server needs to use TLS (set::plaintext-policy::server is 'deny')\n"
-		           "See https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS",
+		           "See https://www.unrealircd.org/docs/FAQ#server-requires-tls",
 		           log_data_link_block(link));
-		exit_client(client, NULL, "Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
+		exit_client(client, NULL, "Servers need to use TLS (set::plaintext-policy::server is 'deny')");
 		return 0;
 	}
 	if (IsSecure(client) && (iConf.outdated_tls_policy_server == POLICY_DENY) && outdated_tls_client(client))
 	{
 		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_OUTDATED_TLS", client,
 		           "Link with server $client.details denied: "
-		           "Server is using an outdated SSL/TLS protocol or cipher ($tls_cipher) and set::outdated-tls-policy::server is 'deny'.\n"
+		           "Server is using an outdated TLS protocol or cipher ($tls_cipher) and set::outdated-tls-policy::server is 'deny'.\n"
 		           "See https://www.unrealircd.org/docs/FAQ#server-outdated-tls",
 		           log_data_link_block(link),
 			   log_data_string("tls_cipher", tls_get_cipher(client->local->ssl)));
-		exit_client(client, NULL, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
+		exit_client(client, NULL, "Server using outdates TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
 		return 0;
 	}
 	/* This one is at the end, because it causes us to delink another server,
@@ -1881,7 +1881,7 @@ void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	if (aconf->outgoing.options & CONNECT_TLS)
 	{
 		SetTLSConnectHandshake(client);
-		fd_setselect(client->local->fd, FD_SELECT_WRITE, ircd_SSL_client_handshake, client);
+		fd_setselect(client->local->fd, FD_SELECT_WRITE, unreal_tls_client_handshake, client);
 	}
 	else
 		fd_setselect(client->local->fd, FD_SELECT_WRITE, completed_connection, client);

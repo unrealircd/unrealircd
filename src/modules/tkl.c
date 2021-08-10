@@ -1187,7 +1187,7 @@ void tkl_general_stats(Client *client)
 
 /** ZLINE - Kill a user as soon as it tries to connect to the server.
  * This happens before any DNS/ident lookups have been done and
- * before any data has been processed (including no SSL/TLS handshake, etc.)
+ * before any data has been processed (including no TLS handshake, etc.)
  */
 CMD_FUNC(cmd_zline)
 {

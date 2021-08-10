@@ -44,7 +44,7 @@ int mm_valid_module_name(char *name);
 void free_managed_module(ManagedModule *m);
 
 
-SSL_CTX *mm_init_ssl(void)
+SSL_CTX *mm_init_tls(void)
 {
 	SSL_CTX *ctx_client;
 	char buf1[512], buf2[512];
@@ -134,7 +134,7 @@ int mm_http_request(char *url, char *fname, int follow_redirects)
 
 	snprintf(hostandport, sizeof(hostandport), "%s:%d", host, port);
 
-	ctx_client = mm_init_ssl();
+	ctx_client = mm_init_tls();
 	if (!ctx_client)
 	{
 		fprintf(stderr, "ERROR: TLS initalization failure (I)\n");

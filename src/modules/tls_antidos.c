@@ -1,6 +1,6 @@
 /*
- * SSL/TLS Anti DoS module
- * This protects against SSL renegotiation attacks while still allowing us
+ * TLS Anti DoS module
+ * This protects against TLS renegotiation attacks while still allowing us
  * to leave renegotiation on with all it's security benefits.
  *
  * (C) Copyright 2015- Bram Matthys and the UnrealIRCd team.
@@ -104,7 +104,7 @@ int tls_antidos_handshake(Client *client)
 	return 0;
 }
 
-/** Called by OpenSSL when the SSL structure is freed (so we can free up our custom struct too) */
+/** Called by OpenSSL when the SSL * structure is freed (so we can free up our custom struct too) */
 void tls_antidos_free(void *parent, void *ptr, CRYPTO_EX_DATA *ad, int idx, long argl, void *argp)
 {
 	safe_free(ptr);

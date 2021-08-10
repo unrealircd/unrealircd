@@ -317,7 +317,7 @@ typedef enum LogDestination { LOG_DEST_SNOMASK=0, LOG_DEST_OPER=1, LOG_DEST_REMO
 
 /** This specifies the current client status or the client type - see @link ClientStatus @endlink in particular.
  * You may think "server" or "client" are the only choices here, but there are many more
- * such as states where the user is in the middle of an SSL/TLS handshake.
+ * such as states where the user is in the middle of an TLS handshake.
  * @defgroup ClientStatuses Client statuses / types
  * @{
  */
@@ -325,8 +325,8 @@ typedef enum ClientStatus {
 	CLIENT_STATUS_LOG			= -7,	/**< Client is a log file */
 	CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE	= -8,	/**< Client is doing a STARTTLS handshake */
 	CLIENT_STATUS_CONNECTING		= -6,	/**< Client is an outgoing connect */
-	CLIENT_STATUS_TLS_CONNECT_HANDSHAKE	= -5,	/**< Client is doing an SSL/TLS handshake - outgoing connection */
-	CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE	= -4,	/**< Client is doing an SSL/TLS handshake - incoming connection */
+	CLIENT_STATUS_TLS_CONNECT_HANDSHAKE	= -5,	/**< Client is doing an TLS handshake - outgoing connection */
+	CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE	= -4,	/**< Client is doing an TLS handshake - incoming connection */
 	CLIENT_STATUS_HANDSHAKE			= -3,	/**< Client is doing a server handshake - outgoing connection */
 	CLIENT_STATUS_ME			= -2,	/**< Client is &me (this server) */
 	CLIENT_STATUS_UNKNOWN			= -1,	/**< Client is doing a hanshake. May become a server or user later, we don't know yet */
@@ -391,7 +391,7 @@ typedef enum ClientStatus {
 #define CLIENT_FLAG_DCCNOTICE		0x00200000	/**< Has the user seen a notice on how to use DCCALLOW already? */
 #define CLIENT_FLAG_SHUNNED		0x00400000	/**< Connection is shunned (user cannot execute any commands) */
 #define CLIENT_FLAG_VIRUS		0x00800000	/**< Tagged by spamfilter as a virus */
-#define CLIENT_FLAG_TLS			0x01000000	/**< Connection is using SSL/TLS */
+#define CLIENT_FLAG_TLS			0x01000000	/**< Connection is using TLS */
 #define CLIENT_FLAG_NOFAKELAG		0x02000000	/**< Exemption from fake lag */
 #define CLIENT_FLAG_DCCBLOCK		0x04000000	/**< Block all DCC send requests */
 #define CLIENT_FLAG_MAP			0x08000000	/**< Show this entry in /MAP (only used in map module) */
@@ -1341,7 +1341,7 @@ struct Client {
  */
 struct LocalClient {
 	int fd;				/**< File descriptor, can be <0 if socket has been closed already. */
-	SSL *ssl;			/**< OpenSSL/LibreSSL struct for SSL/TLS connection */
+	SSL *ssl;			/**< OpenSSL/LibreSSL struct for TLS connection */
 	time_t since;			/**< Time when user will next be allowed to send something (actually since<currenttime+10) */
 	int since_msec;			/**< Used for calculating 'since' penalty (modulo) */
 	time_t firsttime;		/**< Time user was created (connected on IRC) */
@@ -1373,7 +1373,7 @@ struct LocalClient {
 	unsigned char sasl_out;		/**< SASL: Number of outgoing sasl messages */
 	unsigned char sasl_complete;	/**< SASL: >0 if SASL authentication was successful */
 	time_t sasl_sent_time;		/**< SASL: 0 or the time that the (last) AUTHENTICATE command has been sent */
-	char *sni_servername;		/**< Servername as sent by client via SNI (Server Name Indication) in SSL/TLS, otherwise NULL */
+	char *sni_servername;		/**< Servername as sent by client via SNI (Server Name Indication) in TLS, otherwise NULL */
 	int cap_protocol;		/**< CAP protocol in use. At least 300 for any CAP capable client. 302 for 3.2, etc.. */
 	uint32_t nospoof;		/**< Anti-spoofing random number (used in user handshake PING/PONG) */
 	char *passwd;			/**< Password used during connect, if any (freed once connected and set to NULL) */
@@ -1678,7 +1678,7 @@ struct ConfigItem_oper {
 	int maxlogins;
 };
 
-/** The SSL/TLS options that are used in set::tls and otherblocks::tls-options.
+/** The TLS options that are used in set::tls and otherblocks::tls-options.
  * NOTE: If you add something here then you must also update the
  *       conf_tlsblock() function in s_conf.c to have it inherited
  *       from set::tls to the other config blocks!

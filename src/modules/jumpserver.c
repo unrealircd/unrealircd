@@ -137,7 +137,7 @@ CMD_FUNC(cmd_jumpserver)
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		if (jss && jss->ssl_server)
-			sendnotice(client, "JumpServer is \002ENABLED\002 to %s:%d (SSL/TLS: %s:%d) with reason '%s'",
+			sendnotice(client, "JumpServer is \002ENABLED\002 to %s:%d (TLS: %s:%d) with reason '%s'",
 				jss->server, jss->port, jss->ssl_server, jss->ssl_port, jss->reason);
 		else
 		if (jss)
@@ -178,9 +178,9 @@ CMD_FUNC(cmd_jumpserver)
 	}
 
 	/* Parsing code follows...
-	 * The parsing of the SSL stuff is still done even on non-SSL,
+	 * The parsing of the TLS stuff is still done even on non-TLS,
 	 * but it's simply not used/applied :).
-	 * Reason for this is to reduce non-SSL/SSL inconsistency issues.
+	 * Reason for this is to reduce inconsistency issues.
 	 */
 
 	serv = parv[1];
@@ -212,7 +212,7 @@ CMD_FUNC(cmd_jumpserver)
 			sslport = atoi(p);
 			if ((sslport < 1) || (sslport > 65535))
 			{
-				sendnotice(client, "Invalid SSL/TLS serverport specified (%d)", sslport);
+				sendnotice(client, "Invalid TLS serverport specified (%d)", sslport);
 				return;
 			}
 		}
@@ -248,7 +248,7 @@ CMD_FUNC(cmd_jumpserver)
 
 	/* Broadcast/log */
 	if (sslserv)
-		snprintf(logbuf, sizeof(logbuf), "%s (%s@%s) added JUMPSERVER redirect for %s to %s:%d [SSL/TLS: %s:%d] with reason '%s'",
+		snprintf(logbuf, sizeof(logbuf), "%s (%s@%s) added JUMPSERVER redirect for %s to %s:%d [TLS: %s:%d] with reason '%s'",
 			client->name, client->user->username, client->user->realhost,
 			all ? "ALL CLIENTS" : "all new clients",
 			jss->server, jss->port, jss->ssl_server, jss->ssl_port, jss->reason);

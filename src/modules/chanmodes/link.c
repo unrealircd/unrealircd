@@ -39,7 +39,7 @@ typedef enum {
 	LINKTYPE_BAN = 1, // +b
 	LINKTYPE_INVITE = 2, // +i
 	LINKTYPE_OPER = 3, // +O
-	LINKTYPE_SSL = 4, // +z
+	LINKTYPE_SECURE = 4, // +z
 	LINKTYPE_REG = 5, // +R
 	LINKTYPE_LIMIT = 6, // +l
 	LINKTYPE_BADKEY = 7, // +k
@@ -312,8 +312,8 @@ int link_doforward(Client *client, Channel *channel, char *linked, linkType type
 			strncpy(desc, "channel is oper only", sizeof(desc));
 			break;
 
-		case LINKTYPE_SSL:
-			strncpy(desc, "channel requires SSL", sizeof(desc));
+		case LINKTYPE_SECURE:
+			strncpy(desc, "channel requires a secure connection", sizeof(desc));
 			break;
 
 		case LINKTYPE_REG:
@@ -408,9 +408,9 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[])
 	if (has_channel_mode(channel, 'O') && !IsOper(client))
 		return link_doforward(client, channel, linked, LINKTYPE_OPER);
 
-	// SSL/TLS connected users only
+	// TLS connected users only
 	if (has_channel_mode(channel, 'z') && !IsSecureConnect(client))
-		return link_doforward(client, channel, linked, LINKTYPE_SSL);
+		return link_doforward(client, channel, linked, LINKTYPE_SECURE);
 
 	// Registered/identified users only
 	if (has_channel_mode(channel, 'R') && !IsRegNick(client))

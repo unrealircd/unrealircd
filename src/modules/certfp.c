@@ -1,6 +1,6 @@
 /*
  * Certificate Fingerprint Module
- * This grabs the SHA256 fingerprint of the SSL/TLS client certificate
+ * This grabs the SHA256 fingerprint of the TLS client certificate
  * the user is using, shares it with the other servers (and rest of
  * UnrealIRCd) and shows it in /WHOIS etc.
  *
