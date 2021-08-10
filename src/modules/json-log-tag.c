@@ -36,7 +36,7 @@ long CAP_JSON_LOG = 0L;
 
 /* Forward declarations */
 int json_log_mtag_is_ok(Client *client, char *name, char *value);
-int json_log_mtag_can_send(Client *target);
+int json_log_mtag_should_send_to_client(Client *target);
 
 MOD_INIT()
 {
@@ -53,7 +53,7 @@ MOD_INIT()
 	memset(&mtag, 0, sizeof(mtag));
 	mtag.name = "unrealircd.org/json-log";
 	mtag.is_ok = json_log_mtag_is_ok;
-	mtag.can_send = json_log_mtag_can_send;
+	mtag.should_send_to_client = json_log_mtag_should_send_to_client;
 	mtag.clicap_handler = c;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
 
@@ -82,7 +82,7 @@ int json_log_mtag_is_ok(Client *client, char *name, char *value)
 }
 
 /** Outgoing filter for this message tag */
-int json_log_mtag_can_send(Client *target)
+int json_log_mtag_should_send_to_client(Client *target)
 {
 	if (IsServer(target) || (target->local && IsOper(target) && HasCapabilityFast(target, CAP_JSON_LOG)))
 		return 1;

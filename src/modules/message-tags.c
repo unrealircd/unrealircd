@@ -227,7 +227,7 @@ int client_accepts_tag(const char *token, Client *client)
 		return 0;
 
 	/* Maybe there is an outgoing filter in effect (usually not) */
-	if (m->can_send && !m->can_send(client))
+	if (m->should_send_to_client && !m->should_send_to_client(client))
 		return 0;
 
 	/* If the client has indicated 'message-tags' support then we can

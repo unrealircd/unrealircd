@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER
 long CAP_ACCOUNT_TAG = 0L;
 
 int userhost_mtag_is_ok(Client *client, char *name, char *value);
-int userhost_mtag_can_send(Client *target);
+int userhost_mtag_should_send_to_client(Client *target);
 void mtag_add_userhost(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
 
 MOD_INIT()
@@ -47,7 +47,7 @@ MOD_INIT()
 	memset(&mtag, 0, sizeof(mtag));
 	mtag.name = "unrealircd.org/userhost";
 	mtag.is_ok = userhost_mtag_is_ok;
-	mtag.can_send = userhost_mtag_can_send;
+	mtag.should_send_to_client = userhost_mtag_should_send_to_client;
 	mtag.flags = MTAG_HANDLER_FLAGS_NO_CAP_NEEDED;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
 
@@ -103,7 +103,7 @@ void mtag_add_userhost(Client *client, MessageTag *recv_mtags, MessageTag **mtag
 }
 
 /** Outgoing filter for this message tag */
-int userhost_mtag_can_send(Client *target)
+int userhost_mtag_should_send_to_client(Client *target)
 {
 	if (IsServer(target) || IsOper(target))
 		return 1;
