@@ -740,7 +740,7 @@ static char *replies[] = {
 /* 693 */ NULL,
 /* 694 */ NULL,
 /* 695 */ NULL,
-/* 696 */ NULL,
+/* 696 ERR_INVALIDMODEPARAM */ "%s %s %s :%s",
 /* 697 */ NULL,
 /* 698 */ NULL,
 /* 699 */ NULL,

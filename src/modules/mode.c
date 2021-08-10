@@ -1023,18 +1023,21 @@ process_listmode:
 			{
 				if (!bounce) {	/* don't do the mode at all. */
 					char *tmp;
-					if ((tmp = strchr(param, ' ')))
-					*tmp = '\0';
-					if ((tmp = strchr(param, ':')))
-					*tmp = '\0';
-					if ((tmp = strchr(param, ',')))
-					*tmp = '\0';
+					char *error = NULL;
+					if (strchr(param, ' ') || strchr(param, ':') || strchr(param, ','))
+						error = "Invalid key mode parameter, invalid character(s).";
 					if (*param == '\0')
-					break;
+						error = "Invalid key mode parameter, it may not be empty.";
 					if (strlen(param) > KEYLEN)
-						param[KEYLEN] = '\0';
+						error = "Invalid key mode parameter, it is too long.";
+					if (error) {
+						if (MyUser(client))
+							sendnumeric(client, ERR_INVALIDMODEPARAM,
+								channel->chname, "k", "*", error);
+						break;
+					}
 					if (!strcmp(channel->mode.key, param))
-					break;
+						break;  /* no change */
 					strlcpy(channel->mode.key, param, sizeof(channel->mode.key));
 				}
 				tmpstr = param;

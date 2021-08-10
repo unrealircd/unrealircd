@@ -371,6 +371,7 @@
 
 #define RPL_SPAMCMDFWD       659
 
+#define ERR_INVALIDMODEPARAM 696
 #define RPL_STARTTLS         670
 
 #define RPL_WHOISSECURE      671
