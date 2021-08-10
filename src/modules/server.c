@@ -397,7 +397,7 @@ int current_outgoing_link_in_process(void)
 
 	list_for_each_entry(client, &unknown_list, lclient_node)
 	{
-		if (client->serv && *client->serv->by && client->local->firsttime &&
+		if (client->serv && *client->serv->by && client->local->creationtime &&
 		    (IsConnecting(client) || IsTLSConnectHandshake(client) || !IsSynched(client)))
 		{
 			return 1;
@@ -406,7 +406,7 @@ int current_outgoing_link_in_process(void)
 
 	list_for_each_entry(client, &server_list, special_node)
 	{
-		if (client->serv && *client->serv->by && client->local->firsttime &&
+		if (client->serv && *client->serv->by && client->local->creationtime &&
 		    (IsConnecting(client) || IsTLSConnectHandshake(client) || !IsSynched(client)))
 		{
 			return 1;
@@ -458,12 +458,12 @@ EVENT(server_handshake_timeout)
 	list_for_each_entry_safe(client, next, &unknown_list, lclient_node)
 	{
 		/* We are only interested in outgoing server connects */
-		if (!client->serv || !*client->serv->by || !client->local->firsttime)
+		if (!client->serv || !*client->serv->by || !client->local->creationtime)
 			continue;
 
 		/* Handle set::server-linking::connect-timeout */
 		if ((IsConnecting(client) || IsTLSConnectHandshake(client)) &&
-		    ((TStime() - client->local->firsttime) >= cfg.connect_timeout))
+		    ((TStime() - client->local->creationtime) >= cfg.connect_timeout))
 		{
 			/* If this is a connect timeout to an outgoing server then notify ops & log it */
 			unreal_log(ULOG_INFO, "link", "LINK_CONNECT_TIMEOUT", client,
@@ -474,7 +474,7 @@ EVENT(server_handshake_timeout)
 		}
 
 		/* Handle set::server-linking::handshake-timeout */
-		if ((TStime() - client->local->firsttime) >= cfg.handshake_timeout)
+		if ((TStime() - client->local->creationtime) >= cfg.handshake_timeout)
 		{
 			/* If this is a handshake timeout to an outgoing server then notify ops & log it */
 			unreal_log(ULOG_INFO, "link", "LINK_HANDSHAKE_TIMEOUT", client,
@@ -1177,8 +1177,8 @@ CMD_FUNC(cmd_sid)
 		// FIXME: oldest should die.
 		// FIXME: code below looks wrong, it checks direction TS instead of anything else
 		acptr = acptr->direction;
-		ocptr = (direction->local->firsttime > acptr->local->firsttime) ? acptr : direction;
-		acptr = (direction->local->firsttime > acptr->local->firsttime) ? direction : acptr;
+		ocptr = (direction->local->creationtime > acptr->local->creationtime) ? acptr : direction;
+		acptr = (direction->local->creationtime > acptr->local->creationtime) ? direction : acptr;
 		// FIXME: Wait, this kills entire acptr? Without sending SQUIT even :D
 		exit_client(acptr, NULL, "Server Exists");
 		return;

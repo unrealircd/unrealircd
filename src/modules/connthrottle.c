@@ -393,7 +393,7 @@ int ct_pre_lconnect(Client *client)
 	int throttle=0;
 	int score;
 
-	if (me.local->firsttime + cfg.start_delay > TStime())
+	if (me.local->creationtime + cfg.start_delay > TStime())
 		return HOOK_CONTINUE; /* no throttle: start delay */
 
 	if (ucounter->disabled)
@@ -480,7 +480,7 @@ int ct_lconnect(Client *client)
 {
 	int score;
 
-	if (me.local->firsttime + cfg.start_delay > TStime())
+	if (me.local->creationtime + cfg.start_delay > TStime())
 		return 0; /* no throttle: start delay */
 
 	if (ucounter->disabled)
@@ -586,10 +586,10 @@ CMD_FUNC(ct_throttle)
 			{
 				sendnotice(client, "Module DISABLED because the 'reputation' module has not gathered enough data yet (set::connthrottle::disabled-when::reputation-gathering).");
 			} else
-			if (me.local->firsttime + cfg.start_delay > TStime())
+			if (me.local->creationtime + cfg.start_delay > TStime())
 			{
 				sendnotice(client, "Module DISABLED due to start-delay (set::connthrottle::disabled-when::start-delay), will be enabled in %lld second(s).",
-					(long long)((me.local->firsttime + cfg.start_delay) - TStime()));
+					(long long)((me.local->creationtime + cfg.start_delay) - TStime()));
 			} else
 			{
 				sendnotice(client, "Module ENABLED");

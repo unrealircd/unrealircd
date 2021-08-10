@@ -504,7 +504,7 @@ void close_connection(Client *client)
 		ircstats.is_sbr += client->local->receiveB;
 		ircstats.is_sks += client->local->sendK;
 		ircstats.is_skr += client->local->receiveK;
-		ircstats.is_sti += TStime() - client->local->firsttime;
+		ircstats.is_sti += TStime() - client->local->creationtime;
 		if (ircstats.is_sbs > 1023)
 		{
 			ircstats.is_sks += (ircstats.is_sbs >> 10);
@@ -523,7 +523,7 @@ void close_connection(Client *client)
 		ircstats.is_cbr += client->local->receiveB;
 		ircstats.is_cks += client->local->sendK;
 		ircstats.is_ckr += client->local->receiveK;
-		ircstats.is_cti += TStime() - client->local->firsttime;
+		ircstats.is_cti += TStime() - client->local->creationtime;
 		if (ircstats.is_cbs > 1023)
 		{
 			ircstats.is_cks += (ircstats.is_cbs >> 10);

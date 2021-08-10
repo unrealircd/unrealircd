@@ -67,12 +67,12 @@ static EVENT(check_ident_timeout)
 			if (IsIdentLookupSent(client))
 			{
 				/* set::ident::connect-timeout */
-				if ((TStime() - client->local->firsttime) > IDENT_CONNECT_TIMEOUT)
+				if ((TStime() - client->local->creationtime) > IDENT_CONNECT_TIMEOUT)
 					ident_lookup_failed(client);
 			} else
 			{
 				/* set::ident::read-timeout */
-				if ((TStime() - client->local->firsttime) > IDENT_READ_TIMEOUT)
+				if ((TStime() - client->local->creationtime) > IDENT_READ_TIMEOUT)
 					ident_lookup_failed(client);
 			}
 		}

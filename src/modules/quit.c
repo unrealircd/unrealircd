@@ -91,7 +91,7 @@ CMD_FUNC(cmd_quit)
 		
 		if (!ValidatePermissionsForPath("immune:anti-spam-quit-message-time",client,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME)
 		{
-			if (client->local->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
+			if (client->local->creationtime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
 				comment = client->name;
 		}
 

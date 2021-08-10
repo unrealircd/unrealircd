@@ -124,7 +124,7 @@ Client *make_client(Client *from, Client *servr)
 		INIT_LIST_HEAD(&client->special_node);
 
 		client->local->fake_lag = client->local->lasttime =
-		client->lastnick = client->local->firsttime =
+		client->lastnick = client->local->creationtime =
 		client->local->idle_since = TStime();
 		client->local->class = NULL;
 		client->local->passwd = NULL;

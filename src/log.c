@@ -453,8 +453,8 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 		json_object_set_new(child, "details", json_string_unreal(client->name));
 	}
 
-	if (client->local && client->local->firsttime)
-		json_object_set_new(child, "connected_since", json_timestamp(client->local->firsttime));
+	if (client->local && client->local->creationtime)
+		json_object_set_new(child, "connected_since", json_timestamp(client->local->creationtime));
 
 	if (client->user)
 	{

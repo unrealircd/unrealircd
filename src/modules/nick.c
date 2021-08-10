@@ -1122,7 +1122,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		 * Otherwise things like set::anti-spam-quit-messagetime 10s could mean
 		 * 1 second in practice (#2174).
 		 */
-		client->local->firsttime = TStime();
+		client->local->creationtime = TStime();
 		client->local->idle_since = TStime();
 
 		/* Give the user a fresh start as far as fake-lag is concerned.

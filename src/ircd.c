@@ -337,7 +337,7 @@ EVENT(handshake_timeout)
 
 	list_for_each_entry_safe(client, next, &unknown_list, lclient_node)
 	{
-		if (client->local->firsttime && ((TStime() - client->local->firsttime) > iConf.handshake_timeout))
+		if (client->local->creationtime && ((TStime() - client->local->creationtime) > iConf.handshake_timeout))
 		{
 			if (client->serv && *client->serv->by)
 				continue; /* handled by server module */
@@ -1140,7 +1140,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
 	timeofday = time(NULL);
-	me.local->lasttime = me.local->fake_lag = me.local->firsttime = me.serv->boottime = TStime();
+	me.local->lasttime = me.local->fake_lag = me.local->creationtime = me.serv->boottime = TStime();
 	me.serv->features.protocol = UnrealProtocol;
 	safe_strdup(me.serv->features.software, version);
 	add_to_client_hash_table(me.name, &me);

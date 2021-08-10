@@ -292,7 +292,7 @@ void cmd_info_send(Client *client)
 	sendnumericfmt(client, RPL_INFO, ":| UnrealIRCd Homepage: https://www.unrealircd.org");
 	sendnumericfmt(client, RPL_INFO, ":============================================");
 	sendnumericfmt(client, RPL_INFO, ":Birth Date: %s, compile # %s", creation, generation);
-	sendnumericfmt(client, RPL_INFO, ":On-line since %s", myctime(me.local->firsttime));
+	sendnumericfmt(client, RPL_INFO, ":On-line since %s", myctime(me.local->creationtime));
 	sendnumericfmt(client, RPL_INFO, ":ReleaseID (%s)", buildid);
 	sendnumeric(client, RPL_ENDOFINFO);
 }
@@ -346,7 +346,7 @@ CMD_FUNC(cmd_credits)
 
 		sendnumeric(client, RPL_INFO, "");
 		sendnumericfmt(client, RPL_INFO, ":Birth Date: %s, compile # %s", creation, generation);
-		sendnumericfmt(client, RPL_INFO, ":On-line since %s", myctime(me.local->firsttime));
+		sendnumericfmt(client, RPL_INFO, ":On-line since %s", myctime(me.local->creationtime));
 		sendnumeric(client, RPL_ENDOFINFO);
 	}
 }

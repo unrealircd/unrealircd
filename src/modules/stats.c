@@ -608,7 +608,7 @@ int stats_traffic(Client *client, char *para)
 			sp->is_sbr += acptr->local->receiveB;
 			sp->is_sks += acptr->local->sendK;
 			sp->is_skr += acptr->local->receiveK;
-			sp->is_sti += now - acptr->local->firsttime;
+			sp->is_sti += now - acptr->local->creationtime;
 			sp->is_sv++;
 			if (sp->is_sbs > 1023)
 			{
@@ -627,7 +627,7 @@ int stats_traffic(Client *client, char *para)
 			sp->is_cbr += acptr->local->receiveB;
 			sp->is_cks += acptr->local->sendK;
 			sp->is_ckr += acptr->local->receiveK;
-			sp->is_cti += now - acptr->local->firsttime;
+			sp->is_cti += now - acptr->local->creationtime;
 			sp->is_cl++;
 			if (sp->is_cbs > 1023)
 			{
@@ -1105,7 +1105,7 @@ int stats_linkinfoint(Client *client, char *para, int all)
 				(int)acptr->local->sendM, (int)acptr->local->sendK,
 				(int)acptr->local->receiveM,
 				(int)acptr->local->receiveK,
-				(long long)(TStime() - acptr->local->firsttime),
+				(long long)(TStime() - acptr->local->creationtime),
 #ifndef DEBUGMODE
 				(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->idle_since : 0));
 #else
@@ -1123,7 +1123,7 @@ int stats_linkinfoint(Client *client, char *para, int all)
 				(int)acptr->local->sendM, (int)acptr->local->sendK,
 				(int)acptr->local->receiveM,
 				(int)acptr->local->receiveK,
-				(long long)((TStime() - acptr->local->firsttime)),
+				(long long)((TStime() - acptr->local->creationtime)),
 #ifndef DEBUGMODE
 				(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->idle_since : 0));
 #else

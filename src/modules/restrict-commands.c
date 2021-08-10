@@ -313,7 +313,7 @@ int rcmd_canbypass(Client *client, RestrictedCommand *rcmd)
 		return 1;
 	if (rcmd->exempt_reputation_score > 0 && (GetReputation(client) >= rcmd->exempt_reputation_score))
 		return 1;
-	if (rcmd->connect_delay && client->local && (TStime() - client->local->firsttime >= rcmd->connect_delay))
+	if (rcmd->connect_delay && client->local && (TStime() - client->local->creationtime >= rcmd->connect_delay))
 		return 1;
 	return 0;
 }
