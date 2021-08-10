@@ -1026,14 +1026,6 @@ int stats_linkinfoall(Client *client, char *para)
 
 int stats_linkinfoint(Client *client, char *para, int all)
 {
-#ifndef DEBUGMODE
-	#define Sformat "Name SendQ SendM SendBytes RcveM RcveBytes Open_since :Idle"
-	#define Lformat "%s%s %lld %lld %lld %lld %lld %lld :%lld"
-#else
-	#define Sformat "Name SendQ SendM SendBytes RcveM RcveBytes Open_since CPU :Idle"
-	#define Lformat "%s%s %lld %lld %lld %lld %lld %lld %s"
-	char pbuf[96];		/* Should be enough for to ints */
-#endif
 	int remote = 0;
 	int wilds = 0;
 	int doall = 0;
@@ -1056,7 +1048,9 @@ int stats_linkinfoint(Client *client, char *para, int all)
 	}
 	else
 		para = me.name;
-	sendnumericfmt(client, RPL_STATSLINKINFO, "%s", Sformat);
+
+	sendnumericfmt(client, RPL_STATSLINKINFO, "Name SendQ SendM SendBytes RcveM RcveBytes Open_since :Idle");
+
 	if (!MyUser(client))
 	{
 		remote = 1;
@@ -1081,14 +1075,9 @@ int stats_linkinfoint(Client *client, char *para, int all)
 			continue;
 		}
 
-#ifdef DEBUGMODE
-		ircsnprintf(pbuf, sizeof(pbuf), "%lld :%lld",
-			(long long)acptr->local->cputime,
-			(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->idle_since : 0));
-#endif
 		if (ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
 		{
-			sendnumericfmt(client, RPL_STATSLINKINFO, Lformat,
+			sendnumericfmt(client, RPL_STATSLINKINFO, "%s%s %lld %lld %lld %lld %lld %lld :%lld",
 				all ? (get_client_name2(acptr, showports)) : (get_client_name(acptr, FALSE)),
 				get_client_status(acptr),
 				(long long)DBufLength(&acptr->local->sendQ),
@@ -1097,14 +1086,10 @@ int stats_linkinfoint(Client *client, char *para, int all)
 				(long long)acptr->local->traffic.messages_received,
 				(long long)acptr->local->traffic.bytes_received,
 				(long long)(TStime() - acptr->local->creationtime),
-#ifndef DEBUGMODE
 				(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->idle_since : 0));
-#else
-				pbuf);
-#endif
 		}
 		else if (!strchr(acptr->name, '.'))
-			sendnumericfmt(client, RPL_STATSLINKINFO, Lformat,
+			sendnumericfmt(client, RPL_STATSLINKINFO, "%s%s %lld %lld %lld %lld %lld %lld :%lld",
 				IsHidden(acptr) ? acptr->name : all ? get_client_name2(acptr, showports) : get_client_name(acptr, FALSE),
 				get_client_status(acptr),
 				(long long)DBufLength(&acptr->local->sendQ),
@@ -1113,11 +1098,7 @@ int stats_linkinfoint(Client *client, char *para, int all)
 				(long long)acptr->local->traffic.messages_received,
 				(long long)acptr->local->traffic.bytes_received,
 				(long long)((TStime() - acptr->local->creationtime)),
-#ifndef DEBUGMODE
 				(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->idle_since : 0));
-#else
-				pbuf);
-#endif
 	}
 #ifdef DEBUGMODE
 	list_for_each_entry(acptr, &client_list, client_node)
