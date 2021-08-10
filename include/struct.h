@@ -164,13 +164,11 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #include "dbuf.h"		/* THIS REALLY SHOULDN'T BE HERE!!! --msa */
 #endif
 
-#define	HOSTLEN		63	/* Length of hostname.  Updated to         */
-				/* comply with RFC1123                     */
-
+#define	HOSTLEN		63	/* Length of hostname */
 #define	NICKLEN		30
 #define	USERLEN		10
 #define	REALLEN	 	50
-#define ACCOUNTLEN		30
+#define ACCOUNTLEN	30
 #define MAXTOPICLEN	360	/* absolute maximum permitted topic length (above this = potential desync) */
 #define MAXAWAYLEN	360	/* absolute maximum permitted away length (above this = potential desync) */
 #define MAXKICKLEN	360	/* absolute maximum kick length (above this = only cutoff danger) */
@@ -184,7 +182,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	MAXRECIPIENTS 	20
 #define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
 #define IDLEN		12
-#define SIDLEN           3
+#define SIDLEN		3
 #define SWHOISLEN	256
 #define UMODETABLESZ (sizeof(long) * 8)
 #define MAXCCUSERS		20 /* Maximum for set::anti-flood::max-concurrent-conversations */
