@@ -500,7 +500,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 	}
 	cmptr->count++;
 	if (IsUser(cptr) && (cmptr->flags & CMD_RESETIDLE))
-		cptr->local->last = TStime();
+		cptr->local->idle_since = TStime();
 
 	/* Now ready to execute the command */
 #ifndef DEBUGMODE

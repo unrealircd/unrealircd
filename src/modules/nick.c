@@ -1123,7 +1123,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		 * 1 second in practice (#2174).
 		 */
 		client->local->firsttime = TStime();
-		client->local->last = TStime();
+		client->local->idle_since = TStime();
 
 		/* Give the user a fresh start as far as fake-lag is concerned.
 		 * Otherwise the user could be lagged up already due to all the CAP stuff.

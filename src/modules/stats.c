@@ -1092,7 +1092,7 @@ int stats_linkinfoint(Client *client, char *para, int all)
 #ifdef DEBUGMODE
 		ircsnprintf(pbuf, sizeof(pbuf), "%lld :%lld",
 			(long long)acptr->local->cputime,
-			(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->last : 0));
+			(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->idle_since : 0));
 #endif
 		if (ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
 		{
@@ -1107,7 +1107,7 @@ int stats_linkinfoint(Client *client, char *para, int all)
 				(int)acptr->local->receiveK,
 				(long long)(TStime() - acptr->local->firsttime),
 #ifndef DEBUGMODE
-				(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->last : 0));
+				(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->idle_since : 0));
 #else
 				pbuf);
 #endif
@@ -1125,7 +1125,7 @@ int stats_linkinfoint(Client *client, char *para, int all)
 				(int)acptr->local->receiveK,
 				(long long)((TStime() - acptr->local->firsttime)),
 #ifndef DEBUGMODE
-				(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->last : 0));
+				(long long)((acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->idle_since : 0));
 #else
 				pbuf);
 #endif

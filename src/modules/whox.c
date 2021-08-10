@@ -810,7 +810,7 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 		if (HasField(fmt, FIELD_IDLE))
 		{
 			append_format(str, sizeof str, &pos, " %d",
-				(int)((MyUser(acptr) && !hide_idle_time(client, acptr)) ? (TStime() - acptr->local->last) : 0));
+				(int)((MyUser(acptr) && !hide_idle_time(client, acptr)) ? (TStime() - acptr->local->idle_since) : 0));
 		}
 		if (HasField(fmt, FIELD_ACCOUNT))
 			append_format(str, sizeof str, &pos, " %s", IsLoggedIn(acptr) ? acptr->user->account : "0");

@@ -125,7 +125,7 @@ Client *make_client(Client *from, Client *servr)
 
 		client->local->fake_lag = client->local->lasttime =
 		client->lastnick = client->local->firsttime =
-		client->local->last = TStime();
+		client->local->idle_since = TStime();
 		client->local->class = NULL;
 		client->local->passwd = NULL;
 		client->local->sockhost[0] = '\0';

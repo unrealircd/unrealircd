@@ -338,7 +338,7 @@ CMD_FUNC(cmd_whois)
 			if (MyConnect(target) && !hide_idle_time(client, target))
 			{
 				sendnumeric(client, RPL_WHOISIDLE, name,
-				    TStime() - target->local->last, target->local->firsttime);
+				    TStime() - target->local->idle_since, target->local->firsttime);
 			}
 		}
 		if (!found)

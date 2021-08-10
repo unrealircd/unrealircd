@@ -521,8 +521,8 @@ void fix_timers(void)
 			client->local->fake_lag = TStime();
 		if (client->local->lasttime > TStime())
 			client->local->lasttime = TStime();
-		if (client->local->last > TStime())
-			client->local->last = TStime();
+		if (client->local->idle_since > TStime())
+			client->local->idle_since = TStime();
 
 		/* users */
 		if (MyUser(client))
