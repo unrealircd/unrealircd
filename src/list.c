@@ -223,7 +223,6 @@ Server *make_server(Client *client)
 #endif
 		*serv->by = '\0';
 		serv->users = 0;
-		serv->up = NULL;
 		client->server = serv;
 	}
 	if (strlen(client->id) > 3)

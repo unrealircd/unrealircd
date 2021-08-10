@@ -1417,7 +1417,6 @@ struct User {
 /** Server information (local servers and remote servers), you use client->server to access these (see also @link Client @endlink).
  */
 struct Server {
-	char *up;			/**< Name of uplink for this server */
 	char by[NICKLEN + 1];		/**< Uhhhh - who activated this connection - AGAIN? */
 	ConfigItem_link *conf;		/**< link { } block associated with this server, or NULL */
 	time_t timestamp;		/**< Remotely determined connect try time */

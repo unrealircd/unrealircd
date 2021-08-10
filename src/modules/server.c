@@ -1088,7 +1088,6 @@ CMD_FUNC(cmd_server)
 	add_to_client_hash_table(client->name, client);
 	/* doesnt duplicate client->server if allocted this struct already */
 	make_server(client);
-	client->server->up = me.name;
 	client->uplink = &me;
 	if (!client->server->conf)
 		client->server->conf = aconf; /* Only set serv->conf to aconf if not set already! Bug #0003913 */
@@ -1291,7 +1290,6 @@ CMD_FUNC(cmd_sid)
 	strlcpy(acptr->id, parv[3], sizeof(acptr->id));
 	strlcpy(acptr->info, parv[parc - 1], sizeof(acptr->info));
 	make_server(acptr);
-	acptr->server->up = find_or_add(acptr->uplink->name);
 	SetServer(acptr);
 	/* If this server is U-lined, or the parent is, then mark it as U-lined */
 	if (IsULine(client) || find_uline(acptr->name))
@@ -1870,7 +1868,6 @@ void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 		strlcpy(client->server->by, by->name, sizeof(client->server->by));
 	else
 		strlcpy(client->server->by, "AutoConn.", sizeof client->server->by);
-	client->server->up = me.name;
 	SetConnecting(client);
 	SetOutgoing(client);
 	irccounts.unknown++;

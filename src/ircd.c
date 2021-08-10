@@ -1138,7 +1138,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	 * This listener will never go away
 	 */
 	me_hash = find_or_add(me.name);
-	me.server->up = me_hash;
 	timeofday = time(NULL);
 	me.local->last_msg_received = me.local->fake_lag = me.local->creationtime = me.server->boottime = TStime();
 	me.server->features.protocol = UnrealProtocol;
