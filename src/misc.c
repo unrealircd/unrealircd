@@ -2129,6 +2129,34 @@ int running_interactively(void)
 #endif
 }
 
+int terminal_supports_color(void)
+{
+#ifndef _WIN32
+	char *s;
+
+	/* Yeah we check all of stdin, stdout, stderr, because
+	 * or more may be redirected (bin/unrealircd >log 2>&1),
+	 * and then we want to say no to color support.
+	 */
+	if (!isatty(0) || !isatty(1) || !isatty(2))
+		return 0;
+
+	s = getenv("TERM");
+	/* Yeah this is a lazy way to detect color-capable terminals
+	 * but it is good enough for me.
+	 */
+	if (s)
+	{
+		if (strstr(s, "color") || strstr(s, "ansi"))
+			return 1;
+	}
+
+	return 0;
+#else
+	return 0;
+#endif
+}
+
 /** Skip whitespace (if any) */
 void skip_whitespace(char **p)
 {

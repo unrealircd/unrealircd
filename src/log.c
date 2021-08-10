@@ -1044,9 +1044,7 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, Mult
 			else
 				win_log("* [%s] %s\n", log_level_valtostring(loglevel), m->line);
 #else
-			char *t = getenv("TERM");
-			/* Very lazy color detection */
-			if (t && strstr(t, "color"))
+			if (terminal_supports_color())
 			{
 				if (show_event_id_console)
 				{

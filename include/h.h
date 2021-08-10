@@ -1054,6 +1054,7 @@ extern char *get_connect_extinfo(Client *client);
 extern char *unreal_strftime(char *str);
 extern void strtolower_safe(char *dst, char *src, int size);
 extern int running_interactively(void);
+extern int terminal_supports_color(void);
 extern void skip_whitespace(char **p);
 extern void read_until(char **p, char *stopchars);
 /* src/unrealdb.c start */
