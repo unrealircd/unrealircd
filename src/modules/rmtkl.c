@@ -24,7 +24,7 @@ ModuleHeader MOD_HEADER = {
 	"1.4",
 	"Adds /rmtkl command to easily remove *-Lines in bulk",
 	"Gottem and the UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 #define IsParam(x) (parc > (x) && !BadPtr(parv[(x)]))

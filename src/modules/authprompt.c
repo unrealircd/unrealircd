@@ -25,7 +25,7 @@ ModuleHeader MOD_HEADER
 	"1.0",
 	"SASL authentication for clients that don't support SASL",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 /** Configuration settings */

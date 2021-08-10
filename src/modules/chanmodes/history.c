@@ -11,7 +11,7 @@ ModuleHeader MOD_HEADER
 	"1.0",
 	"Channel Mode +H",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 typedef struct ConfigHistoryExt ConfigHistoryExt;

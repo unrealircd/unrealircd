@@ -30,7 +30,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"+reply client tag",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 	};
 
 int replytag_mtag_is_ok(Client *client, char *name, char *value);

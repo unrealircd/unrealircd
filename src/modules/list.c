@@ -33,7 +33,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"command /list", 
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 typedef struct ChannelListOptions ChannelListOptions;

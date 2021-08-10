@@ -32,7 +32,7 @@ ModuleHeader MOD_HEADER
 	"5.0", /* Version */
 	"Character System (set::allowed-nickchars)", /* Short description of module */
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 /* NOTE: it is guaranteed that char is unsigned by compiling options

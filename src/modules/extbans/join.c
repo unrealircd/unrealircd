@@ -24,7 +24,7 @@ ModuleHeader MOD_HEADER
 	"4.2",
 	"Extban ~j - prevent join only",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 /* Forward declarations */

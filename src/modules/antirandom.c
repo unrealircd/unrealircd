@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 	"1.4",
 	"Detect and ban users with random names",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 #ifndef MAX

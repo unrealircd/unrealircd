@@ -19,7 +19,7 @@ ModuleHeader MOD_HEADER
 	CONNTHROTTLE_VERSION,
 	"Connection throttler - by Syzop",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 typedef struct {

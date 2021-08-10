@@ -15,7 +15,7 @@ ModuleHeader MOD_HEADER
 	WEBSOCKET_VERSION,
 	"WebSocket support (RFC6455)",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 #if CHAR_MIN < 0

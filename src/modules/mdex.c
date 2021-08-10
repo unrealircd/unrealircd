@@ -16,7 +16,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"Command /MDEX",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 ModDataInfo *mdex_cli = NULL, *mdex_chan = NULL, *mdex_member = NULL, *mdex_membership = NULL;

@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"msgid CAP",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 	};
 
 /* Variables */

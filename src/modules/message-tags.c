@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"Message tags CAP", 
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 	};
 
 long CAP_MESSAGE_TAGS = 0L;

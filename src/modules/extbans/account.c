@@ -24,7 +24,7 @@ ModuleHeader MOD_HEADER
 	"4.2",
 	"ExtBan ~a - Ban/exempt by services account name",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 /* Forward declarations */

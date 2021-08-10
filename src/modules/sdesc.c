@@ -32,7 +32,7 @@ ModuleHeader MOD_HEADER
 	"5.0", /* Version */
 	"command /sdesc", /* Short description of module */
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 MOD_INIT()

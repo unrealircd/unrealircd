@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER
 	"3.71",
 	"/IRCOPS command that lists IRC Operators",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 MOD_INIT()

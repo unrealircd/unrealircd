@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"unrealircd.org/json-log tag for S2S and ircops",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 /* Variables */

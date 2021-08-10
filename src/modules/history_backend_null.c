@@ -16,7 +16,7 @@ ModuleHeader MOD_HEADER
 	"2.0",
 	"History backend: null/none",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 /* Forward declarations */

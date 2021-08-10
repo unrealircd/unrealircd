@@ -49,7 +49,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"Hide servers from /MAP & /LINKS",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 static void InitConf()

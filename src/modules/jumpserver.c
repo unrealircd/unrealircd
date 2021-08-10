@@ -25,7 +25,7 @@ ModuleHeader MOD_HEADER
 	"1.1",
 	"/jumpserver command",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 /* Defines */

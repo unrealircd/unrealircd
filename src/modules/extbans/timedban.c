@@ -51,7 +51,7 @@ ModuleHeader MOD_HEADER
 	"1.0",
 	"ExtBan ~t: automatically removed timed bans",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 /* Forward declarations */

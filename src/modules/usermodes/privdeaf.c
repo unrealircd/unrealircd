@@ -11,7 +11,7 @@ ModuleHeader MOD_HEADER
 	"1.2",
 	"Private Messages Deaf (+D) -- by Syzop",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 static long UMODE_PRIVDEAF = 0;

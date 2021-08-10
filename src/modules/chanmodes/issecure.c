@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER
 	"4.2",
 	"Channel Mode +Z", 
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 Cmode_t EXTCMODE_ISSECURE;

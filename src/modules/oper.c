@@ -32,7 +32,7 @@ ModuleHeader MOD_HEADER
 	"5.0", /* Version */
 	"command /oper", /* Short description of module */
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 /* This is called on module init, before Server Ready */

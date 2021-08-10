@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"Join flood protection (set::anti-flood::join-flood)",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 ModuleInfo *ModInfo = NULL;

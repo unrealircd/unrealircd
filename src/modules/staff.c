@@ -26,7 +26,7 @@ ModuleHeader MOD_HEADER
 	"3.8",
 	"/STAFF command",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 #define MSG_STAFF	"STAFF"

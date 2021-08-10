@@ -33,7 +33,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"commands /svsnolag and /svs2nolag", 
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 MOD_INIT()

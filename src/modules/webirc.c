@@ -40,7 +40,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"WebIRC/CGI:IRC Support",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 /* Global variables */

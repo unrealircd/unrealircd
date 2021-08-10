@@ -17,7 +17,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"Certificate fingerprint",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 /* Forward declarations */

@@ -26,7 +26,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"Check connecting users against DNS Blacklists",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 /* In this module and the config syntax I tried to 'abstract' things

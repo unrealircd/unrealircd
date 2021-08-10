@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 	"4.2",
 	"User Mode +W",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 /* Global variables */

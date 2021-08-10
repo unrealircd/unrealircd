@@ -11,7 +11,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"Target flood protection (set::anti-flood::target-flood)",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 #define TFP_PRIVMSG	0

@@ -16,7 +16,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"TLS Renegotiation DoS protection",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 #define HANDSHAKE_LIMIT_COUNT 3

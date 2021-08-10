@@ -30,7 +30,7 @@ ModuleHeader MOD_HEADER = {
 	"5.0.1",
 	"Require/deny modules across the network",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 typedef struct _denymod DenyMod;

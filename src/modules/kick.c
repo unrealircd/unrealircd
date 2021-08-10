@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"command /kick",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 /* Forward declarations */

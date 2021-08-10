@@ -32,7 +32,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"command /starttls", 
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 long CLICAP_STARTTLS;

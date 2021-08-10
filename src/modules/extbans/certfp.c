@@ -24,7 +24,7 @@ ModuleHeader MOD_HEADER
 	"4.2",
 	"ExtBan ~S - Ban/exempt by SHA256 TLS certificate fingerprint",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 /* Forward declarations */

@@ -26,7 +26,7 @@ ModuleHeader MOD_HEADER
 	"1.3", /* Version */
 	"Strip/block color/bold/underline/italic/reverse - by Syzop", /* Short description of module */
 	"UnrealIRCd Team", /* Author */
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 int nocodes_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);

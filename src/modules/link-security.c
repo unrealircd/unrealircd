@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"Link Security CAP",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 	};
 
 /* Forward declarations */

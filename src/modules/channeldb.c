@@ -11,7 +11,7 @@ ModuleHeader MOD_HEADER = {
 	"1.0",
 	"Stores and retrieves channel settings for persistent (+P) channels",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 /* Database version */

@@ -25,7 +25,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"Channel Mode +f",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 #define CHFLD_CTCP	0 /* c */

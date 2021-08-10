@@ -25,7 +25,7 @@ ModuleHeader MOD_HEADER
 	"4.2",
 	"Permanent channel mode (+P)", 
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 static Cmode_t EXTMODE_PERMANENT = 0L;

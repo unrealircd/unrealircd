@@ -32,7 +32,7 @@ ModuleHeader MOD_HEADER = {
 	"5.0",
 	"Informs clients about supported client tags",
 	"k4be",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 MOD_INIT(){

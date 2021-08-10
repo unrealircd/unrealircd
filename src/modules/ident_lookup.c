@@ -10,7 +10,7 @@ ModuleHeader MOD_HEADER
 	"1.0",
 	"Ident lookups (RFC1413)",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 /* Forward declarations */

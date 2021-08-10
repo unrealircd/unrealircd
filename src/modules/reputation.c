@@ -64,7 +64,7 @@ ModuleHeader MOD_HEADER
 	REPUTATION_VERSION,
 	"Known IP's scoring system",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 /* Defines */

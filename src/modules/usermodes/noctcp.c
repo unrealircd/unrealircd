@@ -27,7 +27,7 @@ ModuleHeader MOD_HEADER
 	"4.2",
 	"User Mode +T",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 long UMODE_NOCTCP = 0L;

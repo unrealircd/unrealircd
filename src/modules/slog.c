@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"S2S logging", 
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 /* Forward declarations */

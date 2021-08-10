@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 	"1.0",
 	"Do 301 redirect for HEAD/GET/POST/PUT commands", 
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 struct {

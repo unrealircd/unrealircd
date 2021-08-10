@@ -13,7 +13,7 @@ ModuleHeader MOD_HEADER
 	"1.0",
 	"IRCv3 CHATHISTORY command",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 /* Structs */

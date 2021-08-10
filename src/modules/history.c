@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"Simple history command for end-users",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 	};
 
 #define HISTORY_LINES_DEFAULT 100

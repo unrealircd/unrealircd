@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"command /nick",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 /* Forward declarations */

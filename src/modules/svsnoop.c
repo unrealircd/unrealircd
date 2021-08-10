@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"command /svsnoop", 
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 MOD_INIT()

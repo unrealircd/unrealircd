@@ -151,8 +151,8 @@ Module *Module_Find(char *name)
 
 int parse_modsys_version(char *version)
 {
-	if (!strcmp(version, "unrealircd-5"))
-		return 0x500000;
+	if (!strcmp(version, "unrealircd-6"))
+		return 0x600000;
 	return 0;
 }
 

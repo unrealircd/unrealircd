@@ -33,7 +33,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"bot message tag",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 	};
 
 int bottag_mtag_is_ok(Client *client, char *name, char *value);

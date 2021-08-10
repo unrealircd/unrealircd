@@ -76,7 +76,7 @@ ModuleHeader MOD_HEADER
 	"2.2",
 	"ExtBan ~T (textban) by Syzop",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 /* Forward declarations */

@@ -32,7 +32,7 @@ ModuleHeader MOD_HEADER
 	"5.0",
 	"command /ison", 
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 MOD_INIT()

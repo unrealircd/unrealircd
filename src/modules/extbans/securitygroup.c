@@ -24,7 +24,7 @@ ModuleHeader MOD_HEADER
 	"4.2",
 	"ExtBan ~G - Ban based on security-group",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 /* Forward declarations */

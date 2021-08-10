@@ -24,7 +24,7 @@ ModuleHeader MOD_HEADER
 	"4.2",
 	"ExtBan ~r - Ban based on realname/gecos field",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 /* Forward declarations */

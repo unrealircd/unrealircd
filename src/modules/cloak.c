@@ -53,7 +53,7 @@ ModuleHeader MOD_HEADER = {
 	"1.0",
 	"Official cloaking module (md5)",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 MOD_TEST()

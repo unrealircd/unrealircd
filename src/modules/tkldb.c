@@ -24,7 +24,7 @@ ModuleHeader MOD_HEADER = {
 	"1.10",
 	"Stores active TKL entries (*-Lines) persistently/across IRCd restarts",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 #define TKLDB_MAGIC 0x10101010

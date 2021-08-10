@@ -26,7 +26,7 @@ ModuleHeader MOD_HEADER
 	"5.0", /* Version */
 	"command /tsctl", /* Short description of module */
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 CMD_FUNC(cmd_tsctl);

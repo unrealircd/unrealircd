@@ -24,7 +24,7 @@ ModuleHeader MOD_HEADER = {
 	"1.0.2",
 	"Restrict specific commands unless certain conditions have been met",
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
 };
 
 typedef struct RestrictedCommand RestrictedCommand;

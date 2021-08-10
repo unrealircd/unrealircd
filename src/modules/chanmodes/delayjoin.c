@@ -11,7 +11,7 @@ ModuleHeader MOD_HEADER
 	"5.0", /* Version */
 	"delayed join (+D,+d)", /* Short description of module */
 	"UnrealIRCd Team",
-	"unrealircd-5",
+	"unrealircd-6",
     };
 
 #define MOD_DATA_STR "delayjoin"
