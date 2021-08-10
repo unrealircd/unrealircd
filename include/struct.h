@@ -1402,14 +1402,6 @@ struct User {
 	WhoWas *whowas;		/**< Something for whowas :D :D */
 	int snomask;			/**< Server Notice Mask (snomask) - only for IRCOps */
 	char *operlogin;		/**< Which oper { } block was used to oper up, otherwise NULL - used by oper::maxlogins */
-	struct {
-		time_t nick_t;		/**< For set::anti-flood::nick-flood: time */
-		time_t knock_t;		/**< For set::anti-flood::knock-flood: time */
-		time_t invite_t;	/**< For set::anti-flood::invite-flood: time */
-		unsigned char nick_c;	/**< For set::anti-flood::nick-flood: counter */
-		unsigned char knock_c;	/**< For set::anti-flood::knock-flood: counter */
-		unsigned char invite_c;	/**< For set::anti-flood::invite-flood: counter */
-	} flood;			/**< Anti-flood counters */
 	char *away;			/**< AWAY message, or NULL if not away */
 	time_t away_since;		/**< Last time the user went AWAY */
 };
