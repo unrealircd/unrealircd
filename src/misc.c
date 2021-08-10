@@ -625,7 +625,10 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char
 		if (IsServer(client))
 		{
 			irccounts.me_servers--;
-			ircd_log(LOG_SERVER, "SQUIT %s (%s)", client->name, comment);
+			/* This may be a duplicate call sometimes? How to avoid? */
+			unreal_log(ULOG_ERROR, "link", "LINK_DISCONNECTED", client,
+			           "Lost server link to $client: $reason",
+			           log_data_string("reason", comment));
 		}
 		free_pending_net(client);
 		if (client->local->listener)

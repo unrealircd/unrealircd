@@ -202,16 +202,9 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 /* Logging types */
 #define LOG_ERROR 0x0001
 #define LOG_KILL  0x0002
-#define LOG_TKL   0x0004
-#define LOG_KLINE 0x0008
-#define LOG_CLIENT 0x0010
-#define LOG_SERVER 0x0020
-#define LOG_OPER   0x0040
 #define LOG_SACMDS 0x0080
 #define LOG_CHGCMDS 0x0100
 #define LOG_OVERRIDE 0x0200
-#define LOG_SPAMFILTER 0x0400
-#define LOG_FLOOD 0x0800
 
 typedef enum LogFieldType {
 	LOG_FIELD_INTEGER, // and unsigned?
