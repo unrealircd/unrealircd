@@ -1100,9 +1100,9 @@ CMD_FUNC(cmd_tempshun)
 			{
 				SetShunned(target);
 				unreal_log(ULOG_INFO, "tkl", "TKL_ADD_TEMPSHUN", client,
-					   "Temporary shun added on user $victim.details [reason: $shun_reason] [by: $client]",
+					   "Temporary shun added on user $target.details [reason: $shun_reason] [by: $client]",
 					   log_data_string("shun_reason", comment),
-					   log_data_client("victim", target));
+					   log_data_client("target", target));
 			}
 		} else {
 			if (!IsShunned(target))
@@ -1111,8 +1111,8 @@ CMD_FUNC(cmd_tempshun)
 			} else {
 				ClearShunned(target);
 				unreal_log(ULOG_INFO, "tkl", "TKL_DEL_TEMPSHUN", client,
-					   "Temporary shun removed from user $victim.details [by: $client]",
-					   log_data_client("victim", target));
+					   "Temporary shun removed from user $target.details [by: $client]",
+					   log_data_client("target", target));
 			}
 		}
 	}
@@ -4428,9 +4428,9 @@ int _place_host_ban(Client *client, BanAction action, char *reason, long duratio
 		case BAN_ACT_TEMPSHUN:
 			/* We simply mark this connection as shunned and do not add a ban record */
 			unreal_log(ULOG_INFO, "tkl", "TKL_ADD_TEMPSHUN", &me,
-				   "Temporary shun added on user $victim.details [reason: $shun_reason] [by: $client]",
+				   "Temporary shun added on user $target.details [reason: $shun_reason] [by: $client]",
 				   log_data_string("shun_reason", reason),
-				   log_data_client("victim", client));
+				   log_data_client("target", client));
 			SetShunned(client);
 			return 1;
 		case BAN_ACT_GZLINE:
