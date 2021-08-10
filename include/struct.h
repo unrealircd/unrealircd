@@ -1419,7 +1419,6 @@ struct User {
 struct Server {
 	char by[NICKLEN + 1];		/**< Uhhhh - who activated this connection - AGAIN? */
 	ConfigItem_link *conf;		/**< link { } block associated with this server, or NULL */
-	time_t timestamp;		/**< Remotely determined connect try time */
 	long users;			/**< Number of users on this server */
 	time_t boottime;		/**< Startup time of server (boot time) */
 	struct {
