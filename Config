@@ -127,8 +127,8 @@ if [ "$QUICK" != "1" ] ; then
 				TEST="No"
 			fi
 			echo ""
-			echo "UnrealIRCd requires an SSL certificate in order to work."
-			echo "Do you want to generate an SSL certificate for the IRCd?"
+			echo "UnrealIRCd requires a TLS certificate in order to work."
+			echo "Do you want to generate a TLS certificate for the IRCd?"
 			echo "Only answer No if you already have one."
 			echo $n "[$TEST] -> $c"
 			read cc
@@ -152,7 +152,7 @@ if [ "$QUICK" != "1" ] ; then
 		if [ "$GENCERTIFICATE" = 1 ]; then
 			echo
 			echo "*******************************************************************************"
-			echo "Next you will be asked some questions in order to generate the SSL certificate."
+			echo "Next you will be asked some questions in order to generate the TLS certificate."
 			echo "IMPORTANT: If you don't own a domain or don't know what to answer, then you can"
 			echo "           simply press ENTER or use fictional names for each question!"
 			echo "*******************************************************************************"
@@ -162,11 +162,11 @@ if [ "$QUICK" != "1" ] ; then
 			echo "Certificate created successfully."
 			sleep 1
 		else
-			echo "Ok, not generating SSL certificate. Make sure that the certificate and key"
+			echo "Ok, not generating TLS certificate. Make sure that the certificate and key"
 			echo "are installed in conf/tls/server.cert.pem and conf/tls/server.key.pem prior to starting the IRCd."
 		fi
 	else
-		echo "SSL certificate already exists in configuration directory, no need to regenerate."
+		echo "TLS certificate already exists in configuration directory, no need to regenerate."
 	fi
 fi
 
