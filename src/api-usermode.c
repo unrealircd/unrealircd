@@ -25,10 +25,10 @@
 char umodestring[UMODETABLESZ+1];
 
 Umode *Usermode_Table = NULL;
-short	 Usermode_highest = 0;
+int Usermode_highest = 0;
 
 Snomask *Snomask_Table = NULL;
-short	 Snomask_highest = 0;
+int Snomask_highest = 0;
 
 /* client->umodes (32 bits): 26 used, 6 free */
 long UMODE_INVISIBLE = 0L;     /* makes user invisible */

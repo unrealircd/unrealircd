@@ -501,31 +501,11 @@ void close_connection(Client *client)
 	{
 		ircstats.is_sv++;
 		ircstats.is_sti += TStime() - client->local->creationtime;
-		if (ircstats.is_sbs > 1023)
-		{
-			ircstats.is_sks += (ircstats.is_sbs >> 10);
-			ircstats.is_sbs &= 0x3ff;
-		}
-		if (ircstats.is_sbr > 1023)
-		{
-			ircstats.is_skr += (ircstats.is_sbr >> 10);
-			ircstats.is_sbr &= 0x3ff;
-		}
 	}
 	else if (IsUser(client))
 	{
 		ircstats.is_cl++;
 		ircstats.is_cti += TStime() - client->local->creationtime;
-		if (ircstats.is_cbs > 1023)
-		{
-			ircstats.is_cks += (ircstats.is_cbs >> 10);
-			ircstats.is_cbs &= 0x3ff;
-		}
-		if (ircstats.is_cbr > 1023)
-		{
-			ircstats.is_ckr += (ircstats.is_cbr >> 10);
-			ircstats.is_cbr &= 0x3ff;
-		}
 	}
 	else
 		ircstats.is_ni++;

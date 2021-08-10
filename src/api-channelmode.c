@@ -36,7 +36,7 @@
 /** Table with details on each channel mode handler */
 Cmode *Channelmode_Table = NULL;
 /** Highest index in Channelmode_Table */
-unsigned short Channelmode_highest = 0;
+int Channelmode_highest = 0;
 
 /** @} */
 

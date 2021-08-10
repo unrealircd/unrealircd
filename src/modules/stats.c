@@ -606,31 +606,11 @@ int stats_traffic(Client *client, char *para)
 		{
 			sp->is_sti += now - acptr->local->creationtime;
 			sp->is_sv++;
-			if (sp->is_sbs > 1023)
-			{
-				sp->is_sks += (sp->is_sbs >> 10);
-				sp->is_sbs &= 0x3ff;
-			}
-			if (sp->is_sbr > 1023)
-			{
-				sp->is_skr += (sp->is_sbr >> 10);
-				sp->is_sbr &= 0x3ff;
-			}
 		}
 		else if (IsUser(acptr))
 		{
 			sp->is_cti += now - acptr->local->creationtime;
 			sp->is_cl++;
-			if (sp->is_cbs > 1023)
-			{
-				sp->is_cks += (sp->is_cbs >> 10);
-				sp->is_cbs &= 0x3ff;
-			}
-			if (sp->is_cbr > 1023)
-			{
-				sp->is_ckr += (sp->is_cbr >> 10);
-				sp->is_cbr &= 0x3ff;
-			}
 		}
 		else if (IsUnknown(acptr))
 			sp->is_ni++;

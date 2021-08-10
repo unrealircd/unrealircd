@@ -22,8 +22,8 @@
 
 #include "unrealircd.h"
 
-Extban MODVAR ExtBan_Table[EXTBANTABLESZ]; /* this should be fastest */
-unsigned MODVAR short ExtBan_highest = 0;
+MODVAR Extban ExtBan_Table[EXTBANTABLESZ]; /* this should be fastest */
+MODVAR int ExtBan_highest = 0;
 
 void set_isupport_extban(void)
 {
