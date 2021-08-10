@@ -55,9 +55,6 @@
 #endif /* HAVE_INTTYPES_H */
 #endif /* HAVE_STDINT_H */
 
-#ifdef SSL
-#include <openssl/ssl.h>
-#endif
 #ifndef _WIN32
 #include <netinet/in.h>
 #include <sys/socket.h>
