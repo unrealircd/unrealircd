@@ -374,8 +374,9 @@ void check_ping(Client *client)
 		    IsHandshake(client) || IsTLSConnectHandshake(client))
 		{
 			unreal_log(ULOG_ERROR, "link", "LINK_DISCONNECTED", client,
-			           "Lost server link to $client ($link_block.ip:$link_block.port): No response (Ping timeout)",
+			           "Lost server link to $client [$client.ip]: No response (Ping timeout)",
 			           client->server->conf ? log_data_link_block(client->server->conf) : NULL);
+			SetServerDisconnectLogged(client);
 		}
 		ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %lld seconds",
 			(long long) (TStime() - client->local->last_msg_received));

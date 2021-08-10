@@ -388,6 +388,8 @@ typedef enum ClientStatus {
 #define CLIENT_FLAG_MAP			0x08000000	/**< Show this entry in /MAP (only used in map module) */
 #define CLIENT_FLAG_PINGWARN		0x10000000	/**< Server ping warning (remote server slow with responding to PINGs) */
 #define CLIENT_FLAG_NOHANDSHAKEDELAY	0x20000000	/**< No handshake delay */
+#define CLIENT_FLAG_SERVER_DISCONNECT_LOGGED	0x40000000	/**< Server disconnect message is (already) logged */
+
 /** @} */
 
 #define SNO_DEFOPER "+kscfvGqobS"
@@ -472,6 +474,7 @@ typedef enum ClientStatus {
 #define IsDCCNotice(x)			((x)->flags & CLIENT_FLAG_DCCNOTICE)
 #define IsDead(x)			((x)->flags & CLIENT_FLAG_DEAD)
 #define IsDeadSocket(x)			((x)->flags & CLIENT_FLAG_DEADSOCKET)
+#define IsServerDisconnectLogged(x)	((x)->flags & CLIENT_FLAG_SERVER_DISCONNECT_LOGGED)
 #define IsUseIdent(x)			((x)->flags & CLIENT_FLAG_USEIDENT)
 #define IsDNSLookup(x)			((x)->flags & CLIENT_FLAG_DNSLOOKUP)
 #define IsEAuth(x)			((x)->flags & CLIENT_FLAG_EAUTH)
@@ -503,6 +506,7 @@ typedef enum ClientStatus {
 #define SetDCCNotice(x)			do { (x)->flags |= CLIENT_FLAG_DCCNOTICE; } while(0)
 #define SetDead(x)			do { (x)->flags |= CLIENT_FLAG_DEAD; } while(0)
 #define SetDeadSocket(x)		do { (x)->flags |= CLIENT_FLAG_DEADSOCKET; } while(0)
+#define SetServerDisconnectLogged(x)	do { (x)->flags |= CLIENT_FLAG_SERVER_DISCONNECT_LOGGED; } while(0)
 #define SetUseIdent(x)			do { (x)->flags |= CLIENT_FLAG_USEIDENT; } while(0)
 #define SetDNSLookup(x)			do { (x)->flags |= CLIENT_FLAG_DNSLOOKUP; } while(0)
 #define SetEAuth(x)			do { (x)->flags |= CLIENT_FLAG_EAUTH; } while(0)
