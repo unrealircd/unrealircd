@@ -1033,7 +1033,7 @@ process_listmode:
 					if (error) {
 						if (MyUser(client))
 							sendnumeric(client, ERR_INVALIDMODEPARAM,
-								channel->chname, "k", "*", error);
+								channel->chname, modechar, "*", error);
 						break;
 					}
 					if (!strcmp(channel->mode.key, param))
