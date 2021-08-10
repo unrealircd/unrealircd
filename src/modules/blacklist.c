@@ -83,6 +83,9 @@ struct BLUser {
 	long save_tkltime;
 	char *save_opernotice;
 	char *save_reason;
+	char *save_blacklist;
+	char *save_blacklist_dns_name;
+	int save_blacklist_dns_reply;
 };
 
 /* Global variables */
@@ -725,10 +728,17 @@ int blacklist_parse_reply(struct hostent *he, int entry)
  * from blacklist_preconnect() for softbans that need to be delayed
  * as to give the user the opportunity to do SASL Authentication.
  */
-int blacklist_action(Client *client, char *opernotice, BanAction ban_action, char *ban_reason, long ban_time)
+int blacklist_action(Client *client, char *opernotice, BanAction ban_action, char *ban_reason, long ban_time,
+                     char *blacklist, char *blacklist_dns_name, int blacklist_dns_reply)
 {
-	sendto_snomask(SNO_BLACKLIST, "%s", opernotice);
-	ircd_log(LOG_KILL, "%s", opernotice);
+	unreal_log_raw(ULOG_INFO, "blacklist", "BLACKLIST_HIT", client,
+	               opernotice,
+	               log_data_string("blacklist_name", blacklist),
+	               log_data_string("blacklist_dns_name", blacklist_dns_name),
+	               log_data_integer("blacklist_dns_reply", blacklist_dns_reply),
+	               log_data_string("ban_action", banact_valtostring(ban_action)),
+	               log_data_string("ban_reason", ban_reason),
+	               log_data_integer("ban_time", ban_time));
 	if (ban_action == BAN_ACT_WARN)
 		return 0;
 	return place_host_ban(client, ban_action, ban_reason, ban_time);
@@ -766,9 +776,12 @@ void blacklist_hit(Client *client, Blacklist *bl, int reply)
 		blu->save_tkltime = bl->ban_time;
 		safe_strdup(blu->save_opernotice, opernotice);
 		safe_strdup(blu->save_reason, banbuf);
+		safe_strdup(blu->save_blacklist, bl->name);
+		safe_strdup(blu->save_blacklist_dns_name, bl->backend->dns->name);
+		blu->save_blacklist_dns_reply = reply;
 	} else {
 		/* Otherwise, execute the action immediately */
-		blacklist_action(client, opernotice, bl->action, banbuf, bl->ban_time);
+		blacklist_action(client, opernotice, bl->action, banbuf, bl->ban_time, bl->name, bl->backend->dns->name, reply);
 	}
 }
 
@@ -841,7 +854,10 @@ int blacklist_preconnect(Client *client)
 	if (IsLoggedIn(client))
 		return HOOK_CONTINUE; /* yup, so the softban does not apply. */
 
-	if (blacklist_action(client, blu->save_opernotice, blu->save_action, blu->save_reason, blu->save_tkltime))
+	if (blacklist_action(client, blu->save_opernotice, blu->save_action, blu->save_reason, blu->save_tkltime,
+	                     blu->save_blacklist, blu->save_blacklist_dns_name, blu->save_blacklist_dns_reply))
+	{
 		return HOOK_DENY;
+	}
 	return HOOK_CONTINUE; /* exempt */
 }
