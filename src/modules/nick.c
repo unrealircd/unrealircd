@@ -152,7 +152,7 @@ CMD_FUNC(cmd_nick_remote)
 	{
 		/* Remote user changing nick - warning only */
 		sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
-			client->name, client->srvptr ? client->srvptr->name : "<unknown>");
+			client->name, client->uplink ? client->uplink->name : "<unknown>");
 	}
 
 	if ((acptr = find_client(nick, NULL)))
@@ -579,7 +579,7 @@ CMD_FUNC(cmd_uid)
 		{
 			acptrs = find_server(client->user == NULL ? parv[6] : client->user->server, NULL);
 			/* (NEW: no unregistered Q-Line msgs anymore during linking) */
-			if (!acptrs || (acptrs->serv && acptrs->serv->flags.synced))
+			if (!acptrs || (acptrs->server && acptrs->server->flags.synced))
 				sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
 				    (*client->name != 0
 				    && !IsServer(client) ? client->name : "<unregistered>"),
@@ -675,7 +675,7 @@ nickkill2done:
 	realname = parv[12];
 	/* Note that cloaked host aka parv[10] is unused */
 
-	client->user->server = find_or_add(client->srvptr->name);
+	client->user->server = find_or_add(client->uplink->name);
 	strlcpy(client->user->realhost, hostname, sizeof(client->user->realhost));
 	// FIXME: some validation would be nice ^
 
@@ -932,8 +932,8 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	}
 	SetUser(client);
 	irccounts.clients++;
-	if (client->srvptr && client->srvptr->serv)
-		client->srvptr->serv->users++;
+	if (client->uplink && client->uplink->server)
+		client->uplink->server->users++;
 
 	make_cloakedhost(client, client->user->realhost, client->user->cloakedhost, sizeof(client->user->cloakedhost));
 	safe_strdup(client->user->virthost, client->user->cloakedhost);
@@ -1053,7 +1053,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 			client->flags |= acptr->flags;
 		}
 
-		if (IsULine(client->srvptr))
+		if (IsULine(client->uplink))
 			SetULine(client);
 	}
 	if (client->umodes & UMODE_INVISIBLE)
@@ -1192,7 +1192,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 
 	ircd_log(LOG_ERROR, "Nick collision: %s[%s]@%s (new) vs %s[%s]@%s (existing). Winner: %s. Type: %s",
 		newnick, newid, cptr->name,
-		existing->name, existing->id, existing->srvptr->name,
+		existing->name, existing->id, existing->uplink->name,
 		(type == NICKCOL_EQUAL) ? "None (equal)" : ((type == NICKCOL_NEW_WON) ? "New won" : "Existing won"),
 		new ? "nick-change" : "new user connecting");
 

@@ -132,7 +132,7 @@ static char previous_umodestring[256];
 void umodes_check_for_changes(void)
 {
 	make_umodestr();
-	safe_strdup(me.serv->features.usermodes, umodestring);
+	safe_strdup(me.server->features.usermodes, umodestring);
 
 	if (!*previous_umodestring)
 	{

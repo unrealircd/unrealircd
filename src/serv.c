@@ -418,7 +418,7 @@ CMD_FUNC(cmd_error)
 	 * This to prevent flooding and confusing IRCOps by
 	 * malicious users.
 	 */
-	if (!IsServer(client) && !client->serv)
+	if (!IsServer(client) && !client->server)
 	{
 		sendto_snomask(SNO_JUNK, "ERROR from server %s: %s",
 			get_client_name(client, FALSE), para);
@@ -428,7 +428,7 @@ CMD_FUNC(cmd_error)
 	unreal_log(ULOG_ERROR, "link", "LINK_ERROR_MESSAGE", client,
 	           "Error from $client: $error_message",
 	           log_data_string("error_message", para),
-	           client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
+	           client->server->conf ? log_data_link_block(client->server->conf) : NULL);
 }
 
 /** Save the tunefile (such as: highest seen connection count) */
@@ -1147,19 +1147,19 @@ void parse_chanmodes_protoctl(Client *client, char *str)
 	modes = strtoken(&p, copy, ",");
 	if (modes)
 	{
-		safe_strdup(client->serv->features.chanmodes[0], modes);
+		safe_strdup(client->server->features.chanmodes[0], modes);
 		modes = strtoken(&p, NULL, ",");
 		if (modes)
 		{
-			safe_strdup(client->serv->features.chanmodes[1], modes);
+			safe_strdup(client->server->features.chanmodes[1], modes);
 			modes = strtoken(&p, NULL, ",");
 			if (modes)
 			{
-				safe_strdup(client->serv->features.chanmodes[2], modes);
+				safe_strdup(client->server->features.chanmodes[2], modes);
 				modes = strtoken(&p, NULL, ",");
 				if (modes)
 				{
-					safe_strdup(client->serv->features.chanmodes[3], modes);
+					safe_strdup(client->server->features.chanmodes[3], modes);
 				}
 			}
 		}
@@ -1176,7 +1176,7 @@ void charsys_check_for_changes(void)
 {
 	char *langsinuse = charsys_get_current_languages();
 	/* already called by charsys_finish() */
-	safe_strdup(me.serv->features.nickchars, langsinuse);
+	safe_strdup(me.server->features.nickchars, langsinuse);
 
 	if (!previous_langsinuse_ready)
 	{
@@ -1280,13 +1280,13 @@ void lost_server_link(Client *client, char *tls_error_string)
 			unreal_log(ULOG_ERROR, "link", "LINK_DISCONNECTED", client,
 				   "Lost server link to $client ($link_block.ip:$link_block.port): $tls_error_string",
 				   log_data_string("tls_error_string", tls_error_string),
-				   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
+				   client->server->conf ? log_data_link_block(client->server->conf) : NULL);
 		} else {
 			/* NON-TLS */
 			unreal_log(ULOG_ERROR, "link", "LINK_DISCONNECTED", client,
 				   "Lost server link to $client ($link_block.ip:$link_block.port): $socket_error",
 				   log_data_socket_error(client->local->fd),
-				   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
+				   client->server->conf ? log_data_link_block(client->server->conf) : NULL);
 		}
 	} else {
 		/* A link attempt failed (it was never a fully connected server) */
@@ -1297,13 +1297,13 @@ void lost_server_link(Client *client, char *tls_error_string)
 			unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
 				   "Unable to link with server $client ($link_block.ip:$link_block.port): $tls_error_string",
 				   log_data_string("tls_error_string", tls_error_string),
-				   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
+				   client->server->conf ? log_data_link_block(client->server->conf) : NULL);
 		} else {
 			/* non-TLS */
 			unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
 				   "Unable to link with server $client ($link_block.ip:$link_block.port): $socket_error",
 				   log_data_socket_error(client->local->fd),
-				   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
+				   client->server->conf ? log_data_link_block(client->server->conf) : NULL);
 		}
 	}
 }
@@ -1326,7 +1326,7 @@ void reject_insecure_server(Client *client)
  */
 void start_server_handshake(Client *client)
 {
-	ConfigItem_link *aconf = client->serv ? client->serv->conf : NULL;
+	ConfigItem_link *aconf = client->server ? client->server->conf : NULL;
 
 	if (!aconf)
 	{

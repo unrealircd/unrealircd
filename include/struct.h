@@ -574,8 +574,8 @@ typedef enum ClientStatus {
 #define GetHost(x)	(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
 #define GetIP(x)	(x->ip ? x->ip : "255.255.255.255")
 #define IsLoggedIn(x)	(x->user && (*x->user->account != '*') && !isdigit(*x->user->account)) /**< Logged into services */
-#define IsSynched(x)	(x->serv->flags.synced)
-#define IsServerSent(x) (x->serv && x->serv->flags.server_sent)
+#define IsSynched(x)	(x->server->flags.synced)
+#define IsServerSent(x) (x->server && x->server->flags.server_sent)
 
 /* And more that access client stuff - but actually modularized */
 #define GetReputation(client) (moddata_client_get(client, "reputation") ? atoi(moddata_client_get(client, "reputation")) : 0) /**< Get reputation value for a client */
@@ -1317,7 +1317,7 @@ struct Client {
 	struct list_head special_node;		/**< For special lists (server || unknown || oper) */
 	LocalClient *local;			/**< Additional information regarding locally connected clients */
 	User *user;				/**< Additional information, if this client is a user */
-	Server *serv;				/**< Additional information, if this is a server */
+	Server *server;				/**< Additional information, if this is a server */
 	ClientStatus status;			/**< Client status, one of CLIENT_STATUS_* */
 	struct list_head client_hash;		/**< For name hash table (clientTable) */
 	char name[HOSTLEN + 1];			/**< Unique name of the client: nickname for users, hostname for servers */
@@ -1332,7 +1332,7 @@ struct Client {
 	char info[REALLEN + 1];			/**< Additional client information text. For users this is gecos/realname */
 	char id[IDLEN + 1];			/**< Unique ID: SID or UID */
 	struct list_head id_hash;		/**< For UID/SID hash table (idTable) */
-	Client *srvptr;				/**< Server on where this client is connected to (can be &me) */
+	Client *uplink;				/**< Server on where this client is connected to (can be &me) */
 	char *ip;				/**< IP address of user or server (never NULL) */
 	ModData moddata[MODDATA_MAX_CLIENT];	/**< Client attached module data, used by the ModData system */
 };
@@ -1412,7 +1412,7 @@ struct User {
 	time_t lastaway;		/**< Last time the user went AWAY */
 };
 
-/** Server information (local servers and remote servers), you use client->serv to access these (see also @link Client @endlink).
+/** Server information (local servers and remote servers), you use client->server to access these (see also @link Client @endlink).
  */
 struct Server {
 	char *up;			/**< Name of uplink for this server */

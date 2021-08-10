@@ -437,17 +437,17 @@ int stats_links(Client *client, char *para)
 	}
 #ifdef DEBUGMODE
 	list_for_each_entry(acptr, &client_list, client_node)
-		if (MyConnect(acptr) && acptr->serv && !IsMe(acptr))
+		if (MyConnect(acptr) && acptr->server && !IsMe(acptr))
 		{
-			if (!acptr->serv->conf)
+			if (!acptr->server->conf)
 				sendnotice(client, "client '%s' (%p) has NO CONF attached (? :P)",
 					acptr->name, acptr);
 			else
 				sendnotice(client, "client '%s' (%p) has conf %p attached, refcount: %d, temporary: %s",
 					acptr->name, acptr,
-					acptr->serv->conf,
-					acptr->serv->conf->refcount,
-					acptr->serv->conf->flag.temporary ? "YES" : "NO");
+					acptr->server->conf,
+					acptr->server->conf->refcount,
+					acptr->server->conf->flag.temporary ? "YES" : "NO");
 		}
 #endif
 	return 0;
@@ -1135,7 +1135,7 @@ int stats_linkinfoint(Client *client, char *para, int all)
 	{
 		if (IsServer(acptr))
 			sendnotice(client, "Server %s is %s",
-				acptr->name, acptr->serv->flags.synced ? "SYNCED" : "NOT SYNCED!!");
+				acptr->name, acptr->server->flags.synced ? "SYNCED" : "NOT SYNCED!!");
 	}
 #endif
 	return 0;

@@ -119,9 +119,9 @@ int certificate_verification_active(Client *client)
 {
 	ConfigItem_link *conf;
 	
-	if (!client->serv || !client->serv->conf)
+	if (!client->server || !client->server->conf)
 		return 0; /* wtf? */
-	conf = client->serv->conf;
+	conf = client->server->conf;
 	
 	if (conf->verify_certificate)
 		return 1; /* yes, verify-certificate is 'yes' */

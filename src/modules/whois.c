@@ -270,7 +270,7 @@ CMD_FUNC(cmd_whois)
 
                         if (!(IsULine(target) && !IsOper(client) && HIDE_ULINES))
 				sendnumeric(client, RPL_WHOISSERVER, name, target->user->server,
-				    target->srvptr ? target->srvptr->info : "*Not On This Net*");
+				    target->uplink ? target->uplink->info : "*Not On This Net*");
 
 			if (target->user->away)
 				sendnumeric(client, RPL_AWAY, name, target->user->away);

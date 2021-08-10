@@ -749,8 +749,8 @@ int floodprot_join(Client *client, Channel *channel, MessageTag *mtags, char *pa
 	 * from all servers.
 	 */
 	if (IsFloodLimit(channel) &&
-	    (MyUser(client) || client->srvptr->serv->flags.synced) &&
-	    (client->srvptr->serv->boottime && (TStime() - client->srvptr->serv->boottime >= MODEF_BOOT_DELAY)) &&
+	    (MyUser(client) || client->uplink->server->flags.synced) &&
+	    (client->uplink->server->boottime && (TStime() - client->uplink->server->boottime >= MODEF_BOOT_DELAY)) &&
 	    !IsULine(client))
 	{
 	    do_floodprot(channel, client, CHFLD_JOIN);

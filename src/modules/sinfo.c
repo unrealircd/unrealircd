@@ -73,36 +73,36 @@ CMD_FUNC(sinfo_server)
 		return;
 	}
 
-	client->serv->boottime = atol(parv[1]);
-	client->serv->features.protocol = atoi(parv[2]);
+	client->server->boottime = atol(parv[1]);
+	client->server->features.protocol = atoi(parv[2]);
 
 	if (!strcmp(parv[3], "*"))
-		safe_free(client->serv->features.usermodes);
+		safe_free(client->server->features.usermodes);
 	else
-		safe_strdup(client->serv->features.usermodes, parv[3]);
+		safe_strdup(client->server->features.usermodes, parv[3]);
 
 	if (!strcmp(parv[4], "*"))
 	{
-		safe_free(client->serv->features.chanmodes[0]);
-		safe_free(client->serv->features.chanmodes[1]);
-		safe_free(client->serv->features.chanmodes[2]);
-		safe_free(client->serv->features.chanmodes[3]);
+		safe_free(client->server->features.chanmodes[0]);
+		safe_free(client->server->features.chanmodes[1]);
+		safe_free(client->server->features.chanmodes[2]);
+		safe_free(client->server->features.chanmodes[3]);
 	} else {
 		parse_chanmodes_protoctl(client, parv[4]);
 	}
 
 	if (!strcmp(parv[5], "*"))
-		safe_free(client->serv->features.nickchars);
+		safe_free(client->server->features.nickchars);
 	else
-		safe_strdup(client->serv->features.nickchars, parv[5]);
+		safe_strdup(client->server->features.nickchars, parv[5]);
 
 	/* Software is always the last parameter. It is currently parv[6]
 	 * but may change later. So always use parv[parc-1].
 	 */
 	if (!strcmp(parv[parc-1], "*"))
-		safe_free(client->serv->features.software);
+		safe_free(client->server->features.software);
 	else
-		safe_strdup(client->serv->features.software, parv[parc-1]);
+		safe_strdup(client->server->features.software, parv[parc-1]);
 
 	/* Broadcast to 'the other side' of the net */
 	concat_params(buf, sizeof(buf), parc, parv);
@@ -124,33 +124,33 @@ CMD_FUNC(sinfo_user)
 	{
 		sendtxtnumeric(client, "*** Server %s:", acptr->name);
 		sendtxtnumeric(client, "Protocol: %d",
-		               acptr->serv->features.protocol);
+		               acptr->server->features.protocol);
 		sendtxtnumeric(client, "Software: %s",
-		               SafeDisplayStr(acptr->serv->features.software));
-		if (!acptr->serv->boottime)
+		               SafeDisplayStr(acptr->server->features.software));
+		if (!acptr->server->boottime)
 		{
 			sendtxtnumeric(client, "Up since: -");
 			sendtxtnumeric(client, "Uptime: -");
 		} else {
 			sendtxtnumeric(client, "Up since: %s",
-			               pretty_date(acptr->serv->boottime));
+			               pretty_date(acptr->server->boottime));
 			sendtxtnumeric(client, "Uptime: %s",
-			               pretty_time_val(TStime() - acptr->serv->boottime));
+			               pretty_time_val(TStime() - acptr->server->boottime));
 		}
 		sendtxtnumeric(client, "User modes: %s",
-		               SafeDisplayStr(acptr->serv->features.usermodes));
-		if (!acptr->serv->features.chanmodes[0])
+		               SafeDisplayStr(acptr->server->features.usermodes));
+		if (!acptr->server->features.chanmodes[0])
 		{
 			sendtxtnumeric(client, "Channel modes: -");
 		} else {
 			sendtxtnumeric(client, "Channel modes: %s,%s,%s,%s",
-			               SafeDisplayStr(acptr->serv->features.chanmodes[0]),
-			               SafeDisplayStr(acptr->serv->features.chanmodes[1]),
-			               SafeDisplayStr(acptr->serv->features.chanmodes[2]),
-			               SafeDisplayStr(acptr->serv->features.chanmodes[3]));
+			               SafeDisplayStr(acptr->server->features.chanmodes[0]),
+			               SafeDisplayStr(acptr->server->features.chanmodes[1]),
+			               SafeDisplayStr(acptr->server->features.chanmodes[2]),
+			               SafeDisplayStr(acptr->server->features.chanmodes[3]));
 		}
 		sendtxtnumeric(client, "Allowed nick characters: %s",
-		               SafeDisplayStr(acptr->serv->features.nickchars));
+		               SafeDisplayStr(acptr->server->features.nickchars));
 	}
 }
 

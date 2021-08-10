@@ -440,7 +440,7 @@ void consider_ident_lookup(Client *client)
 	char buf[BUFSIZE];
 
 	/* If ident checking is disabled or it's an outgoing connect, then no ident check */
-	if ((IDENT_CHECK == 0) || (client->serv && IsHandshake(client)))
+	if ((IDENT_CHECK == 0) || (client->server && IsHandshake(client)))
 	{
 		ClearIdentLookupSent(client);
 		ClearIdentLookup(client);
@@ -456,7 +456,7 @@ void consider_ident_lookup(Client *client)
 void completed_connection(int fd, int revents, void *data)
 {
 	Client *client = data;
-	ConfigItem_link *aconf = client->serv ? client->serv->conf : NULL;
+	ConfigItem_link *aconf = client->server ? client->server->conf : NULL;
 
 	if (IsHandshake(client))
 	{
@@ -985,7 +985,7 @@ void read_packet(int fd, int revents, void *data)
 			if (length < 0 && ((ERRNO == P_EWOULDBLOCK) || (ERRNO == P_EAGAIN) || (ERRNO == P_EINTR)))
 				return;
 
-			if (IsServer(client) || client->serv) /* server or outgoing connection */
+			if (IsServer(client) || client->server) /* server or outgoing connection */
 				lost_server_link(client, NULL);
 
 			exit_client(client, NULL, ERRNO ? "Read error" : "Connection closed");

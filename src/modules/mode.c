@@ -1341,27 +1341,27 @@ int paracount_for_chanmode_from_server(Client *client, u_int what, char mode)
 	if (MyUser(client))
 		return 0; /* no server, we have no idea, assume 0 paracount */
 
-	if (!client->serv)
+	if (!client->server)
 	{
 		/* If it's from a remote client then figure out from which "uplink" we
 		 * received this MODE. The uplink is the directly-connected-server to us
 		 * and may differ from the server the user is actually on. This is correct.
 		 */
-		if (!client->direction || !client->direction->serv)
+		if (!client->direction || !client->direction->server)
 			return 0;
 		client = client->direction;
 	}
 
-	if (client->serv->features.chanmodes[0] && strchr(client->serv->features.chanmodes[0], mode))
+	if (client->server->features.chanmodes[0] && strchr(client->server->features.chanmodes[0], mode))
 		return 1; /* 1 parameter for set, 1 parameter for unset */
 
-	if (client->serv->features.chanmodes[1] && strchr(client->serv->features.chanmodes[1], mode))
+	if (client->server->features.chanmodes[1] && strchr(client->server->features.chanmodes[1], mode))
 		return 1; /* 1 parameter for set, 1 parameter for unset */
 
-	if (client->serv->features.chanmodes[2] && strchr(client->serv->features.chanmodes[2], mode))
+	if (client->server->features.chanmodes[2] && strchr(client->server->features.chanmodes[2], mode))
 		return (what == MODE_ADD) ? 1 : 0; /* 1 parameter for set, no parameter for unset */
 
-	if (client->serv->features.chanmodes[3] && strchr(client->serv->features.chanmodes[3], mode))
+	if (client->server->features.chanmodes[3] && strchr(client->server->features.chanmodes[3], mode))
 		return 0; /* no parameter for set, no parameter for unset */
 
 	if (mode == '&')
@@ -1388,16 +1388,16 @@ int paracount_for_chanmode_from_server(Client *client, u_int what, char mode)
  */
 int paracount_for_chanmode(u_int what, char mode)
 {
-	if (me.serv->features.chanmodes[0] && strchr(me.serv->features.chanmodes[0], mode))
+	if (me.server->features.chanmodes[0] && strchr(me.server->features.chanmodes[0], mode))
 		return 1; /* 1 parameter for set, 1 parameter for unset */
 
-	if (me.serv->features.chanmodes[1] && strchr(me.serv->features.chanmodes[1], mode))
+	if (me.server->features.chanmodes[1] && strchr(me.server->features.chanmodes[1], mode))
 		return 1; /* 1 parameter for set, 1 parameter for unset */
 
-	if (me.serv->features.chanmodes[2] && strchr(me.serv->features.chanmodes[2], mode))
+	if (me.server->features.chanmodes[2] && strchr(me.server->features.chanmodes[2], mode))
 		return (what == MODE_ADD) ? 1 : 0; /* 1 parameter for set, no parameter for unset */
 
-	if (me.serv->features.chanmodes[3] && strchr(me.serv->features.chanmodes[3], mode))
+	if (me.server->features.chanmodes[3] && strchr(me.server->features.chanmodes[3], mode))
 		return 0; /* no parameter for set, no parameter for unset */
 
 	/* Not found: */
@@ -1699,7 +1699,7 @@ CMD_FUNC(_cmd_umode)
 			case 'O':
 				if (IsQuarantined(client->direction))
 				{
-					sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine", client->name, client->srvptr->name);
+					sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine", client->name, client->uplink->name);
 					sendto_server(NULL, 0, 0, NULL, ":%s KILL %s :Quarantined: no oper privileges allowed", me.id, client->name);
 					exit_client(client, NULL, "Quarantined: no oper privileges allowed");
 					return;

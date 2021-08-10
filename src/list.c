@@ -104,7 +104,7 @@ Client *make_client(Client *from, Client *servr)
 
 	/* Note: all fields are already NULL/0, no need to set here */
 	client->direction = from ? from : client;	/* 'from' of local client is self! */
-	client->srvptr = servr;
+	client->uplink = servr;
 	client->status = CLIENT_STATUS_UNKNOWN;
 
 	INIT_LIST_HEAD(&client->client_node);
@@ -213,7 +213,7 @@ User *make_user(Client *client)
 
 Server *make_server(Client *client)
 {
-	Server *serv = client->serv;
+	Server *serv = client->server;
 
 	if (!serv)
 	{
@@ -224,7 +224,7 @@ Server *make_server(Client *client)
 		*serv->by = '\0';
 		serv->users = 0;
 		serv->up = NULL;
-		client->serv = serv;
+		client->server = serv;
 	}
 	if (strlen(client->id) > 3)
 	{
@@ -234,7 +234,7 @@ Server *make_server(Client *client)
 		del_from_id_hash_table(client->id, client);
 		*client->id = '\0';
 	}
-	return client->serv;
+	return client->server;
 }
 
 /*
@@ -297,8 +297,8 @@ void remove_client_from_list(Client *client)
 			VERIFY_OPERCOUNT(client, "rmvlist");
 		}
 		irccounts.clients--;
-		if (client->srvptr && client->srvptr->serv)
-			client->srvptr->serv->users--;
+		if (client->uplink && client->uplink->server)
+			client->uplink->server->users--;
 	}
 	if (IsUnknown(client) || IsConnecting(client) || IsHandshake(client)
 		|| IsTLSHandshake(client)
@@ -313,16 +313,16 @@ void remove_client_from_list(Client *client)
 	
 	if (client->user)
 		free_user(client);
-	if (client->serv)
+	if (client->server)
 	{
-		safe_free(client->serv->features.usermodes);
-		safe_free(client->serv->features.chanmodes[0]);
-		safe_free(client->serv->features.chanmodes[1]);
-		safe_free(client->serv->features.chanmodes[2]);
-		safe_free(client->serv->features.chanmodes[3]);
-		safe_free(client->serv->features.software);
-		safe_free(client->serv->features.nickchars);
-		safe_free(client->serv);
+		safe_free(client->server->features.usermodes);
+		safe_free(client->server->features.chanmodes[0]);
+		safe_free(client->server->features.chanmodes[1]);
+		safe_free(client->server->features.chanmodes[2]);
+		safe_free(client->server->features.chanmodes[3]);
+		safe_free(client->server->features.software);
+		safe_free(client->server->features.nickchars);
+		safe_free(client->server);
 #ifdef	DEBUGMODE
 		servs.inuse--;
 #endif

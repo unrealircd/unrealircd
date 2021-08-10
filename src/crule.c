@@ -186,7 +186,7 @@ int  crule_via(int numargs, void *crulearg[])
 	{
 		if (!match_simple((char *)crulearg[1], client->name))
 			continue;
-		if (!match_simple((char *)crulearg[0], client->serv->up))
+		if (!match_simple((char *)crulearg[0], client->server->up))
 			continue;
 		return (1);
 	}

@@ -138,8 +138,8 @@ CMD_FUNC(cmd_protoctl)
 							"a different UnrealIRCd version), this MAY cause display issues. Our charset: '%s', theirs: '%s'",
 					get_client_name(client, FALSE), charsys_get_current_languages(), value);
 			}
-			if (client->serv)
-				safe_strdup(client->serv->features.nickchars, value);
+			if (client->server)
+				safe_strdup(client->server->features.nickchars, value);
 
 			/* If this is a runtime change (so post-handshake): */
 			if (IsServer(client))
@@ -271,11 +271,11 @@ CMD_FUNC(cmd_protoctl)
 				return;
 
 			SetEAuth(client);
-			make_server(client); /* allocate and set client->serv */
+			make_server(client); /* allocate and set client->server */
 			if (protocol)
-				client->serv->features.protocol = atoi(protocol);
+				client->server->features.protocol = atoi(protocol);
 			if (software)
-				safe_strdup(client->serv->features.software, software);
+				safe_strdup(client->server->features.software, software);
 			if (!IsHandshake(client) && aconf) /* Send PASS early... */
 				sendto_one(client, NULL, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 		}
@@ -287,7 +287,7 @@ CMD_FUNC(cmd_protoctl)
 			if (!IsEAuth(client))
 				continue;
 				
-			if (client->serv->features.protocol < 2351)
+			if (client->server->features.protocol < 2351)
 				continue; /* old SERVERS= version */
 			
 			/* Other side lets us know which servers are behind it.
@@ -379,23 +379,23 @@ CMD_FUNC(cmd_protoctl)
 		{
 			client->local->proto |= PROTO_MLOCK;
 		}
-		else if (!strcmp(name, "CHANMODES") && value && client->serv)
+		else if (!strcmp(name, "CHANMODES") && value && client->server)
 		{
 			parse_chanmodes_protoctl(client, value);
 			/* If this is a runtime change (so post-handshake): */
 			if (IsServer(client))
 				broadcast_sinfo(client, NULL, client);
 		}
-		else if (!strcmp(name, "USERMODES") && value && client->serv)
+		else if (!strcmp(name, "USERMODES") && value && client->server)
 		{
-			safe_strdup(client->serv->features.usermodes, value);
+			safe_strdup(client->server->features.usermodes, value);
 			/* If this is a runtime change (so post-handshake): */
 			if (IsServer(client))
 				broadcast_sinfo(client, NULL, client);
 		}
-		else if (!strcmp(name, "BOOTED") && value && client->serv)
+		else if (!strcmp(name, "BOOTED") && value && client->server)
 		{
-			client->serv->boottime = atol(value);
+			client->server->boottime = atol(value);
 		}
 		else if (!strcmp(name, "EXTSWHOIS"))
 		{
@@ -409,7 +409,7 @@ CMD_FUNC(cmd_protoctl)
 		 */
 	}
 
-	if (first_protoctl && IsHandshake(client) && client->serv && !IsServerSent(client)) /* first & outgoing connection to server */
+	if (first_protoctl && IsHandshake(client) && client->server && !IsServerSent(client)) /* first & outgoing connection to server */
 	{
 		/* SERVER message moved from completed_connection() to here due to EAUTH/SERVERS PROTOCTL stuff,
 		 * which needed to be delayed until after both sides have received SERVERS=xx (..or not.. in case

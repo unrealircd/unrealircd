@@ -83,10 +83,10 @@ CMD_FUNC(cmd_sdesc)
 		parv[1][REALLEN] = '\0';
 	}
 
-	ircsnprintf(client->srvptr->info, sizeof(client->srvptr->info), "%s", parv[1]);
+	ircsnprintf(client->uplink->info, sizeof(client->uplink->info), "%s", parv[1]);
 
 	sendto_server(client, 0, 0, NULL, ":%s SDESC :%s", client->name, parv[1]);
 
 	sendto_ops("Server description for %s is now '%s' (changed by %s)",
-		client->srvptr->name, client->srvptr->info, client->name);
+		client->uplink->name, client->uplink->info, client->name);
 }

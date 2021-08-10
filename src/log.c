@@ -465,8 +465,8 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 		json_object_set_new(user, "username", json_string_unreal(client->user->username));
 		if (!BadPtr(client->info))
 			json_object_set_new(user, "realname", json_string_unreal(client->info));
-		if (client->srvptr && client->srvptr->name)
-			json_object_set_new(user, "servername", json_string_unreal(client->srvptr->name));
+		if (client->uplink && client->uplink->name)
+			json_object_set_new(user, "servername", json_string_unreal(client->uplink->name));
 		if (IsLoggedIn(client))
 			json_object_set_new(user, "account", json_string_unreal(client->user->account));
 		json_object_set_new(user, "reputation", json_integer(GetReputation(client)));
@@ -484,31 +484,31 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 
 		/* client.server */
 		json_object_set_new(child, "server", server);
-		if (client->srvptr && client->srvptr->name)
-			json_object_set_new(server, "uplink", json_string_unreal(client->srvptr->name));
-		json_object_set_new(server, "num_users", json_integer(client->serv->users));
-		json_object_set_new(server, "boot_time", json_timestamp(client->serv->boottime));
-		json_object_set_new(server, "synced", json_boolean(client->serv->flags.synced));
+		if (client->uplink && client->uplink->name)
+			json_object_set_new(server, "uplink", json_string_unreal(client->uplink->name));
+		json_object_set_new(server, "num_users", json_integer(client->server->users));
+		json_object_set_new(server, "boot_time", json_timestamp(client->server->boottime));
+		json_object_set_new(server, "synced", json_boolean(client->server->flags.synced));
 
 		/* client.server.features */
 		features = json_object();
 		json_object_set_new(server, "features", features);
-		if (!BadPtr(client->serv->features.software))
-			json_object_set_new(features, "software", json_string_unreal(client->serv->features.software));
-		json_object_set_new(features, "protocol", json_integer(client->serv->features.protocol));
-		if (!BadPtr(client->serv->features.usermodes))
-			json_object_set_new(features, "usermodes", json_string_unreal(client->serv->features.usermodes));
-		if (!BadPtr(client->serv->features.chanmodes[0]))
+		if (!BadPtr(client->server->features.software))
+			json_object_set_new(features, "software", json_string_unreal(client->server->features.software));
+		json_object_set_new(features, "protocol", json_integer(client->server->features.protocol));
+		if (!BadPtr(client->server->features.usermodes))
+			json_object_set_new(features, "usermodes", json_string_unreal(client->server->features.usermodes));
+		if (!BadPtr(client->server->features.chanmodes[0]))
 		{
 			/* client.server.features.chanmodes (array) */
 			int i;
 			json_t *chanmodes = json_array();
 			json_object_set_new(features, "chanmodes", chanmodes);
 			for (i=0; i < 4; i++)
-				json_array_append_new(chanmodes, json_string_unreal(client->serv->features.chanmodes[i]));
+				json_array_append_new(chanmodes, json_string_unreal(client->server->features.chanmodes[i]));
 		}
-		if (!BadPtr(client->serv->features.nickchars))
-			json_object_set_new(features, "nick_character_sets", json_string_unreal(client->serv->features.nickchars));
+		if (!BadPtr(client->server->features.nickchars))
+			json_object_set_new(features, "nick_character_sets", json_string_unreal(client->server->features.nickchars));
 	}
 }
 

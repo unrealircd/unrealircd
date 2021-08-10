@@ -523,7 +523,7 @@ int ct_rconnect(Client *client)
 {
 	int score;
 
-	if (client->srvptr && !IsSynched(client->srvptr))
+	if (client->uplink && !IsSynched(client->uplink))
 		return 0; /* Netmerge: skip */
 
 	if (IsULine(client))
@@ -535,8 +535,8 @@ int ct_rconnect(Client *client)
 	 * set::disabled-when::start-delay restriction on remote
 	 * servers as well.
 	 */
-	if (client->srvptr && client->srvptr->serv && client->srvptr->serv->boottime &&
-	    (TStime() - client->srvptr->serv->boottime < cfg.start_delay))
+	if (client->uplink && client->uplink->server && client->uplink->server->boottime &&
+	    (TStime() - client->uplink->server->boottime < cfg.start_delay))
 	{
 		return 0;
 	}

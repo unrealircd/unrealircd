@@ -624,8 +624,8 @@ TLSOptions *get_tls_options_for_client(Client *client)
 {
 	if (!client->local)
 		return NULL;
-	if (client->serv && client->serv->conf && client->serv->conf->tls_options)
-		return client->serv->conf->tls_options;
+	if (client->server && client->server->conf && client->server->conf->tls_options)
+		return client->server->conf->tls_options;
 	if (client->local && client->local->listener && client->local->listener->tls_options)
 		return client->local->listener->tls_options;
 	return iConf.tls_options;
@@ -635,7 +635,7 @@ TLSOptions *get_tls_options_for_client(Client *client)
 void unreal_tls_client_handshake(int fd, int revents, void *data)
 {
 	Client *client = data;
-	SSL_CTX *ctx = (client->serv && client->serv->conf && client->serv->conf->ssl_ctx) ? client->serv->conf->ssl_ctx : ctx_client;
+	SSL_CTX *ctx = (client->server && client->server->conf && client->server->conf->ssl_ctx) ? client->server->conf->ssl_ctx : ctx_client;
 	TLSOptions *tlsoptions = get_tls_options_for_client(client);
 
 	if (!ctx)
@@ -671,10 +671,10 @@ void unreal_tls_client_handshake(int fd, int revents, void *data)
 		BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(client->local->ssl), tlsoptions->renegotiate_timeout);
 	}
 
-	if (client->serv && client->serv->conf)
+	if (client->server && client->server->conf)
 	{
 		/* Client: set hostname for SNI */
-		SSL_set_tlsext_host_name(client->local->ssl, client->serv->conf->servername);
+		SSL_set_tlsext_host_name(client->local->ssl, client->server->conf->servername);
 	}
 
 	SetTLS(client);
@@ -914,13 +914,13 @@ static int fatal_tls_error(int ssl_error, int where, int my_errno, Client *clien
 		{
 			snprintf(extra, sizeof(extra),
 			         ". Please verify that listen::options::ssl is enabled on port %d in %s's configuration file.",
-			         (client->serv && client->serv->conf) ? client->serv->conf->outgoing.port : -1,
+			         (client->server && client->server->conf) ? client->server->conf->outgoing.port : -1,
 			         client->name);
 		}
 		snprintf(buf, sizeof(buf), "%s: %s%s%s", ssl_func, ssl_errstr, additional_info, extra);
 		lost_server_link(client, buf);
 	} else
-	if (IsServer(client) || (client->serv && client->serv->conf))
+	if (IsServer(client) || (client->server && client->server->conf))
 	{
 		/* Either a trusted fully established server (incoming) or an outgoing server link (established or not) */
 		snprintf(buf, sizeof(buf), "%s: %s%s", ssl_func, ssl_errstr, additional_info);
@@ -954,10 +954,10 @@ int client_starttls(Client *client)
 	SSL_set_fd(client->local->ssl, client->local->fd);
 	SSL_set_nonblocking(client->local->ssl);
 
-	if (client->serv && client->serv->conf)
+	if (client->server && client->server->conf)
 	{
 		/* Client: set hostname for SNI */
-		SSL_set_tlsext_host_name(client->local->ssl, client->serv->conf->servername);
+		SSL_set_tlsext_host_name(client->local->ssl, client->server->conf->servername);
 	}
 
 	if (unreal_tls_connect(client, client->local->fd) < 0)

@@ -231,7 +231,7 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 	else
 	{
 		sendnumeric(client, RPL_MAP, prompt,
-		            length, server->name, server->serv->users, IsOper(client) ? server->id : "");
+		            length, server->name, server->server->users, IsOper(client) ? server->id : "");
 		cnt = 0;
 	}
 
@@ -248,7 +248,7 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		if (acptr->srvptr != server ||
+		if (acptr->uplink != server ||
  		    (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL)))
 			continue;
 		if (FindHiddenServer(acptr->name))
@@ -263,7 +263,7 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 			continue;
 		if (FindHiddenServer(acptr->name))
 			break;
-		if (acptr->srvptr != server)
+		if (acptr->uplink != server)
 			continue;
 		if (!IsMap(acptr))
 			continue;
@@ -284,7 +284,7 @@ void dump_flat_map(Client *client, Client *server, int length)
 
 	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL)) ? 1 : 0;
 
-	sendnumeric(client, RPL_MAP, "", length, server->name, server->serv->users, "");
+	sendnumeric(client, RPL_MAP, "", length, server->name, server->server->users, "");
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
@@ -304,7 +304,7 @@ void dump_flat_map(Client *client, Client *server, int length)
 			break;
 		if (--cnt == 0)
 			*buf = '`';
-		sendnumeric(client, RPL_MAP, buf, length-2, acptr->name, acptr->serv->users, "");
+		sendnumeric(client, RPL_MAP, buf, length-2, acptr->name, acptr->server->users, "");
 	}
 }
 
@@ -388,7 +388,7 @@ CMD_OVERRIDE_FUNC(override_links)
 			sendnumeric(client, RPL_LINKS, acptr->name, me.name,
 			    1, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 		else
-			sendnumeric(client, RPL_LINKS, acptr->name, acptr->serv->up,
+			sendnumeric(client, RPL_LINKS, acptr->name, acptr->server->up,
 			    acptr->hopcount, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 	}
 

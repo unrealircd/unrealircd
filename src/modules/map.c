@@ -71,7 +71,7 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 	else
 	{
 		sendnumeric(client, RPL_MAP, prompt,
-		            length, server->name, server->serv->users, IsOper(client) ? server->id : "");
+		            length, server->name, server->server->users, IsOper(client) ? server->id : "");
 		cnt = 0;
 	}
 
@@ -88,7 +88,7 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		if (acptr->srvptr != server ||
+		if (acptr->uplink != server ||
  		    (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL)))
 			continue;
 		SetMap(acptr);
@@ -99,7 +99,7 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 	{
 		if (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL))
 			continue;
-		if (acptr->srvptr != server)
+		if (acptr->uplink != server)
 			continue;
 		if (!IsMap(acptr))
 			continue;
@@ -120,7 +120,7 @@ void dump_flat_map(Client *client, Client *server, int length)
 
 	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL)) ? 1 : 0;
 
-	sendnumeric(client, RPL_MAP, "", length, server->name, server->serv->users, "");
+	sendnumeric(client, RPL_MAP, "", length, server->name, server->server->users, "");
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
@@ -136,7 +136,7 @@ void dump_flat_map(Client *client, Client *server, int length)
 			continue;
 		if (--cnt == 0)
 			*buf = '`';
-		sendnumeric(client, RPL_MAP, buf, length-2, acptr->name, acptr->serv->users, "");
+		sendnumeric(client, RPL_MAP, buf, length-2, acptr->name, acptr->server->users, "");
 	}
 }
 

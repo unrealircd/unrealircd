@@ -114,19 +114,19 @@ void extcmodes_check_for_changes(void)
 	make_extcmodestr();
 
 	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR1, EXPAR1);
-	safe_strdup(me.serv->features.chanmodes[0], chanmodes);
+	safe_strdup(me.server->features.chanmodes[0], chanmodes);
 	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR2, EXPAR2);
-	safe_strdup(me.serv->features.chanmodes[1], chanmodes);
+	safe_strdup(me.server->features.chanmodes[1], chanmodes);
 	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR3, EXPAR3);
-	safe_strdup(me.serv->features.chanmodes[2], chanmodes);
+	safe_strdup(me.server->features.chanmodes[2], chanmodes);
 	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR4, EXPAR4);
-	safe_strdup(me.serv->features.chanmodes[3], chanmodes);
+	safe_strdup(me.server->features.chanmodes[3], chanmodes);
 
 	ircsnprintf(chanmodes, sizeof(chanmodes), "%s,%s,%s,%s",
-	            me.serv->features.chanmodes[0],
-	            me.serv->features.chanmodes[1],
-	            me.serv->features.chanmodes[2],
-	            me.serv->features.chanmodes[3]);
+	            me.server->features.chanmodes[0],
+	            me.server->features.chanmodes[1],
+	            me.server->features.chanmodes[2],
+	            me.server->features.chanmodes[3]);
 
 	isup = ISupportFind("CHANMODES");
 	if (!isup)

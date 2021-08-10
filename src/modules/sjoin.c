@@ -489,7 +489,7 @@ getnick:
 				    me.id, channel->name, acptr->name);
 				sendto_realops
 				    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
-				    nick, client->srvptr->name,
+				    nick, client->uplink->name,
 				    client->name, channel->name);
 				continue;
 			}

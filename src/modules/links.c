@@ -69,7 +69,7 @@ CMD_FUNC(cmd_links)
 			sendnumeric(client, RPL_LINKS, acptr->name, me.name,
 			    1, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 		else
-			sendnumeric(client, RPL_LINKS, acptr->name, acptr->serv->up,
+			sendnumeric(client, RPL_LINKS, acptr->name, acptr->server->up,
 			    acptr->hopcount, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 	}
 

@@ -724,7 +724,7 @@ CMD_OVERRIDE_FUNC(override_mode)
 	 * means: we are the server that services are linked to.
 	 */
 	if ((IsServer(client) && client->local) ||
-	    (IsUser(client) && client->srvptr && client->srvptr->local))
+	    (IsUser(client) && client->uplink && client->uplink->local))
 	{
 		/* Now check if the channel is currently +r */
 		if ((parc >= 2) && !BadPtr(parv[1]) && ((channel = find_channel(parv[1]))) &&

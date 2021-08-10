@@ -438,7 +438,7 @@ static void recurse_send_quits(Client *cptr, Client *client, Client *from, Clien
 
 	list_for_each_entry_safe(acptr, next, &global_server_list, client_node)
 	{
-		if (acptr->srvptr != client)
+		if (acptr->uplink != client)
 			continue;
 
 		recurse_send_quits(cptr, acptr, from, to, mtags, comment, splitstr);
@@ -460,7 +460,7 @@ static void recurse_remove_clients(Client *client, MessageTag *mtags, const char
 
 	list_for_each_entry_safe(acptr, next, &client_list, client_node)
 	{
-		if (acptr->srvptr != client)
+		if (acptr->uplink != client)
 			continue;
 
 		exit_one_client(acptr, mtags, comment);
@@ -468,7 +468,7 @@ static void recurse_remove_clients(Client *client, MessageTag *mtags, const char
 
 	list_for_each_entry_safe(acptr, next, &global_server_list, client_node)
 	{
-		if (acptr->srvptr != client)
+		if (acptr->uplink != client)
 			continue;
 
 		recurse_remove_clients(acptr, mtags, comment);
@@ -612,14 +612,14 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char
 		}
 		if (IsUser(client))
 			irccounts.me_clients--;
-		if (client->serv && client->serv->conf)
+		if (client->server && client->server->conf)
 		{
-			client->serv->conf->refcount--;
-			if (!client->serv->conf->refcount
-			  && client->serv->conf->flag.temporary)
+			client->server->conf->refcount--;
+			if (!client->server->conf->refcount
+			  && client->server->conf->flag.temporary)
 			{
-				delete_linkblock(client->serv->conf);
-				client->serv->conf = NULL;
+				delete_linkblock(client->server->conf);
+				client->server->conf = NULL;
 			}
 		}
 		if (IsServer(client))
@@ -665,7 +665,7 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char
 	}
 	else if (IsUser(client) && !IsULine(client))
 	{
-		if (client->srvptr != &me)
+		if (client->uplink != &me)
 			sendto_fconnectnotice(client, 1, comment);
 	}
 
@@ -678,12 +678,12 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char
 	{
 		char splitstr[HOSTLEN + HOSTLEN + 2];
 
-		assert(client->serv != NULL && client->srvptr != NULL);
+		assert(client->server != NULL && client->uplink != NULL);
 
 		if (FLAT_MAP)
 			strlcpy(splitstr, "*.net *.split", sizeof splitstr);
 		else
-			ircsnprintf(splitstr, sizeof splitstr, "%s %s", client->srvptr->name, client->name);
+			ircsnprintf(splitstr, sizeof splitstr, "%s %s", client->uplink->name, client->name);
 
 		remove_dependents(client, origin, recv_mtags, comment, splitstr);
 
@@ -723,7 +723,7 @@ void verify_opercount(Client *orig, char *tag)
 	snprintf(text, sizeof(text), "[BUG] operator count bug! value in /lusers is '%d', we counted '%d', "
 	               "user='%s', userserver='%s', tag=%s. Corrected. ",
 	               irccounts.operators, counted, orig->name,
-	               orig->srvptr ? orig->srvptr->name : "<null>", tag ? tag : "<null>");
+	               orig->uplink ? orig->uplink->name : "<null>", tag ? tag : "<null>");
 #ifdef DEBUGMODE
 	sendto_realops("%s", text);
 #endif

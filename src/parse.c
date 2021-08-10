@@ -649,7 +649,7 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 	if ((numeric < 0) || (numeric > 999))
 		return -1;
 
-	if (MyConnect(client) && !IsServer(client) && !IsUser(client) && IsHandshake(client) && client->serv && !IsServerSent(client))
+	if (MyConnect(client) && !IsServer(client) && !IsUser(client) && IsHandshake(client) && client->server && !IsServerSent(client))
 	{
 		/* This is an outgoing server connect that is currently not yet IsServer() but in 'unknown' state.
 		 * We need to handle a few responses here.
@@ -658,7 +658,7 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 		/* STARTTLS: unknown command */
 		if ((numeric == 451) && (parc > 2) && strstr(parv[1], "STARTTLS"))
 		{
-			if (client->serv->conf && (client->serv->conf->outgoing.options & CONNECT_INSECURE))
+			if (client->server->conf && (client->server->conf->outgoing.options & CONNECT_INSECURE))
 				start_server_handshake(client);
 			else
 				reject_insecure_server(client);

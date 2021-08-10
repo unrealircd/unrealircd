@@ -397,7 +397,7 @@ int current_outgoing_link_in_process(void)
 
 	list_for_each_entry(client, &unknown_list, lclient_node)
 	{
-		if (client->serv && *client->serv->by && client->local->creationtime &&
+		if (client->server && *client->server->by && client->local->creationtime &&
 		    (IsConnecting(client) || IsTLSConnectHandshake(client) || !IsSynched(client)))
 		{
 			return 1;
@@ -406,7 +406,7 @@ int current_outgoing_link_in_process(void)
 
 	list_for_each_entry(client, &server_list, special_node)
 	{
-		if (client->serv && *client->serv->by && client->local->creationtime &&
+		if (client->server && *client->server->by && client->local->creationtime &&
 		    (IsConnecting(client) || IsTLSConnectHandshake(client) || !IsSynched(client)))
 		{
 			return 1;
@@ -458,7 +458,7 @@ EVENT(server_handshake_timeout)
 	list_for_each_entry_safe(client, next, &unknown_list, lclient_node)
 	{
 		/* We are only interested in outgoing server connects */
-		if (!client->serv || !*client->serv->by || !client->local->creationtime)
+		if (!client->server || !*client->server->by || !client->local->creationtime)
 			continue;
 
 		/* Handle set::server-linking::connect-timeout */
@@ -616,7 +616,7 @@ void _send_protoctl_servers(Client *client, int response)
 
 void _send_server_message(Client *client)
 {
-	if (client->serv && client->serv->flags.server_sent)
+	if (client->server && client->server->flags.server_sent)
 	{
 #ifdef DEBUGMODE
 		abort();
@@ -627,8 +627,8 @@ void _send_server_message(Client *client)
 	sendto_one(client, NULL, "SERVER %s 1 :U%d-%s%s-%s %s",
 		me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", me.id, me.info);
 
-	if (client->serv)
-		client->serv->flags.server_sent = 1;
+	if (client->server)
+		client->server->flags.server_sent = 1;
 }
 
 #define LINK_DEFAULT_ERROR_MSG "Link denied (No link block found with your server name or link::incoming::mask did not match)"
@@ -664,25 +664,25 @@ int _verify_link(Client *client, ConfigItem_link **link_out)
 		return 0;
 	}
 
-	if (client->serv && client->serv->conf)
+	if (client->server && client->server->conf)
 	{
 		/* This is an outgoing connect so we already know what link block we are
-		 * dealing with. It's the one in: client->serv->conf
+		 * dealing with. It's the one in: client->server->conf
 		 */
 
 		/* Actually we still need to double check the servername to avoid confusion. */
-		if (strcasecmp(client->name, client->serv->conf->servername))
+		if (strcasecmp(client->name, client->server->conf->servername))
 		{
 			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_SERVERNAME_MISMATCH", client,
 			           "Link with server $client.details denied: "
 			           "Outgoing connect from link block '$link_block' but server "
 			           "introduced itself as '$client'. Server name mismatch.",
-			           log_data_link_block(client->serv->conf));
+			           log_data_link_block(client->server->conf));
 			exit_client_fmt(client, NULL, "Servername (%s) does not match name in my link block (%s)",
-			                client->name, client->serv->conf->servername);
+			                client->name, client->server->conf->servername);
 			return 0;
 		}
-		link = client->serv->conf;
+		link = client->server->conf;
 		goto skip_host_check;
 	} else {
 		/* Hunt the linkblock down ;) */
@@ -1036,7 +1036,7 @@ CMD_FUNC(cmd_server)
 
 	if (find_uline(client->name))
 	{
-		if (client->serv && client->serv->features.software && !strncmp(client->serv->features.software, "UnrealIRCd-", 11))
+		if (client->server && client->server->features.software && !strncmp(client->server->features.software, "UnrealIRCd-", 11))
 		{
 			unreal_log(ULOG_ERROR, "link", "BAD_ULINES", client,
 			           "Bad ulines! Server $client matches your ulines { } block, but this server "
@@ -1086,16 +1086,16 @@ CMD_FUNC(cmd_server)
 	}
 
 	add_to_client_hash_table(client->name, client);
-	/* doesnt duplicate client->serv if allocted this struct already */
+	/* doesnt duplicate client->server if allocted this struct already */
 	make_server(client);
-	client->serv->up = me.name;
-	client->srvptr = &me;
-	if (!client->serv->conf)
-		client->serv->conf = aconf; /* Only set serv->conf to aconf if not set already! Bug #0003913 */
+	client->server->up = me.name;
+	client->uplink = &me;
+	if (!client->server->conf)
+		client->server->conf = aconf; /* Only set serv->conf to aconf if not set already! Bug #0003913 */
 	if (incoming)
-		client->serv->conf->refcount++;
-	client->serv->conf->class->clients++;
-	client->local->class = client->serv->conf->class;
+		client->server->conf->refcount++;
+	client->server->conf->class->clients++;
+	client->local->class = client->server->conf->class;
 
 	RunHook(HOOKTYPE_SERVER_CONNECT, client);
 
@@ -1222,7 +1222,7 @@ CMD_FUNC(cmd_sid)
 		return;
 	}
 
-	if (!client->direction->serv->conf)
+	if (!client->direction->server->conf)
 	{
 		unreal_log(ULOG_ERROR, "link", "BUG_LOST_CONFIG", client,
 			   "[BUG] Lost link conf record for link $direction.",
@@ -1231,7 +1231,7 @@ CMD_FUNC(cmd_sid)
 		return;
 	}
 
-	aconf = client->direction->serv->conf;
+	aconf = client->direction->server->conf;
 
 	if (!aconf->hub)
 	{
@@ -1291,7 +1291,7 @@ CMD_FUNC(cmd_sid)
 	strlcpy(acptr->id, parv[3], sizeof(acptr->id));
 	strlcpy(acptr->info, parv[parc - 1], sizeof(acptr->info));
 	make_server(acptr);
-	acptr->serv->up = find_or_add(acptr->srvptr->name);
+	acptr->server->up = find_or_add(acptr->uplink->name);
 	SetServer(acptr);
 	/* If this server is U-lined, or the parent is, then mark it as U-lined */
 	if (IsULine(client) || find_uline(acptr->name))
@@ -1309,7 +1309,7 @@ CMD_FUNC(cmd_sid)
 	RunHook(HOOKTYPE_SERVER_CONNECT, acptr);
 
 	sendto_server(client, 0, 0, NULL, ":%s SID %s %d %s :%s",
-		    acptr->srvptr->id, acptr->name, hop + 1, acptr->id, acptr->info);
+		    acptr->uplink->id, acptr->name, hop + 1, acptr->id, acptr->info);
 
 	RunHook(HOOKTYPE_POST_SERVER_CONNECT, acptr);
 }
@@ -1357,24 +1357,24 @@ void _broadcast_sinfo(Client *acptr, Client *to, Client *except)
 {
 	char chanmodes[128], buf[512];
 
-	if (acptr->serv->features.chanmodes[0])
+	if (acptr->server->features.chanmodes[0])
 	{
 		snprintf(chanmodes, sizeof(chanmodes), "%s,%s,%s,%s",
-			 acptr->serv->features.chanmodes[0],
-			 acptr->serv->features.chanmodes[1],
-			 acptr->serv->features.chanmodes[2],
-			 acptr->serv->features.chanmodes[3]);
+			 acptr->server->features.chanmodes[0],
+			 acptr->server->features.chanmodes[1],
+			 acptr->server->features.chanmodes[2],
+			 acptr->server->features.chanmodes[3]);
 	} else {
 		strlcpy(chanmodes, "*", sizeof(chanmodes));
 	}
 
 	snprintf(buf, sizeof(buf), "%lld %d %s %s %s :%s",
-		      (long long)acptr->serv->boottime,
-		      acptr->serv->features.protocol,
-		      SafeStr(acptr->serv->features.usermodes),
+		      (long long)acptr->server->boottime,
+		      acptr->server->features.protocol,
+		      SafeStr(acptr->server->features.usermodes),
 		      chanmodes,
-		      SafeStr(acptr->serv->features.nickchars),
-		      SafeStr(acptr->serv->features.software));
+		      SafeStr(acptr->server->features.nickchars),
+		      SafeStr(acptr->server->features.software));
 
 	if (to)
 	{
@@ -1411,7 +1411,7 @@ int server_sync(Client *client, ConfigItem_link *aconf, int incoming)
 
 	/* Broadcast new server to the rest of the network */
 	sendto_server(client, 0, 0, NULL, ":%s SID %s 2 %s :%s",
-		    client->srvptr->id, client->name, client->id, client->info);
+		    client->uplink->id, client->name, client->id, client->info);
 
 	/* Broadcast the just-linked-in featureset to other servers on our side */
 	broadcast_sinfo(client, NULL, client);
@@ -1428,7 +1428,7 @@ int server_sync(Client *client, ConfigItem_link *aconf, int incoming)
 		if (IsServer(acptr))
 		{
 			sendto_one(client, NULL, ":%s SID %s %d %s :%s",
-			    acptr->srvptr->id,
+			    acptr->uplink->id,
 			    acptr->name, acptr->hopcount + 1,
 			    acptr->id, acptr->info);
 
@@ -1441,7 +1441,7 @@ int server_sync(Client *client, ConfigItem_link *aconf, int incoming)
 			 * then you would think the other one is fully linked
 			 * while in fact he was not.. -- Syzop.
 			 */
-			if (acptr->serv->flags.synced)
+			if (acptr->server->flags.synced)
 				sendto_one(client, NULL, ":%s EOS", acptr->id);
 			/* Send SINFO of our servers to their side */
 			broadcast_sinfo(acptr, client, NULL);
@@ -1525,7 +1525,7 @@ void tls_link_notification_verify(Client *client, ConfigItem_link *aconf)
 	/* Only bother the user if we are linking to UnrealIRCd 4.0.16+,
 	 * since only for these versions we can give precise instructions.
 	 */
-	if (!client->serv || client->serv->features.protocol < 4016)
+	if (!client->server || client->server->features.protocol < 4016)
 		return;
 
 
@@ -1860,17 +1860,17 @@ void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	}
 	/* The socket has been connected or connect is in progress. */
 	make_server(client);
-	client->serv->conf = aconf;
-	client->serv->conf->refcount++;
+	client->server->conf = aconf;
+	client->server->conf->refcount++;
 #ifdef DEBUGMODE
 	sendto_realops("connect_server() CONTINUED (%s:%d), aconf %p, refcount: %d, TEMP: %s",
 		__FILE__, __LINE__, aconf, aconf->refcount, aconf->flag.temporary ? "YES" : "NO");
 #endif
 	if (by && IsUser(by))
-		strlcpy(client->serv->by, by->name, sizeof(client->serv->by));
+		strlcpy(client->server->by, by->name, sizeof(client->server->by));
 	else
-		strlcpy(client->serv->by, "AutoConn.", sizeof client->serv->by);
-	client->serv->up = me.name;
+		strlcpy(client->server->by, "AutoConn.", sizeof client->server->by);
+	client->server->up = me.name;
 	SetConnecting(client);
 	SetOutgoing(client);
 	irccounts.unknown++;

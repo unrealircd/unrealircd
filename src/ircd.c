@@ -339,7 +339,7 @@ EVENT(handshake_timeout)
 	{
 		if (client->local->creationtime && ((TStime() - client->local->creationtime) > iConf.handshake_timeout))
 		{
-			if (client->serv && *client->serv->by)
+			if (client->server && *client->server->by)
 				continue; /* handled by server module */
 
 			exit_client(client, NULL, "Registration Timeout");
@@ -375,7 +375,7 @@ void check_ping(Client *client)
 		{
 			unreal_log(ULOG_ERROR, "link", "LINK_DISCONNECTED", client,
 			           "Lost server link to $client ($link_block.ip:$link_block.port): No response (Ping timeout)",
-			           client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
+			           client->server->conf ? log_data_link_block(client->server->conf) : NULL);
 		}
 		ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %lld seconds",
 			(long long) (TStime() - client->local->last_msg_received));
@@ -400,7 +400,7 @@ void check_ping(Client *client)
 		unreal_log(ULOG_WARNING, "link", "LINK_UNRELIABLE", client,
 			   "Warning, no response from $client for $time_delta seconds",
 			   log_data_integer("time_delta", PINGWARNING),
-			   client->serv->conf ? log_data_link_block(client->serv->conf) : NULL);
+			   client->server->conf ? log_data_link_block(client->server->conf) : NULL);
 	}
 
 	return;
@@ -1138,11 +1138,11 @@ int InitUnrealIRCd(int argc, char *argv[])
 	 * This listener will never go away
 	 */
 	me_hash = find_or_add(me.name);
-	me.serv->up = me_hash;
+	me.server->up = me_hash;
 	timeofday = time(NULL);
-	me.local->last_msg_received = me.local->fake_lag = me.local->creationtime = me.serv->boottime = TStime();
-	me.serv->features.protocol = UnrealProtocol;
-	safe_strdup(me.serv->features.software, version);
+	me.local->last_msg_received = me.local->fake_lag = me.local->creationtime = me.server->boottime = TStime();
+	me.server->features.protocol = UnrealProtocol;
+	safe_strdup(me.server->features.software, version);
 	add_to_client_hash_table(me.name, &me);
 	add_to_id_hash_table(me.id, &me);
 	list_add(&me.client_node, &global_server_list);

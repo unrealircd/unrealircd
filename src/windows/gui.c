@@ -1031,7 +1031,7 @@ void win_map(Client *server, HWND hwTreeView, short remap)
 	for (lp = Servers; lp; lp = lp->next)
         {
                 acptr = lp->value.client;
-                if (acptr->srvptr != server)
+                if (acptr->uplink != server)
                         continue;
                 win_map(acptr, hwTreeView, 0);
         }
