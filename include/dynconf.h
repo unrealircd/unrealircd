@@ -39,7 +39,7 @@ struct NetworkConfiguration {
 enum UHAllowed { UHALLOW_ALWAYS, UHALLOW_NOCHANS, UHALLOW_REJOIN, UHALLOW_NEVER };
 
 struct ChMode {
-        long mode;
+	long mode;
 	long extmodes;
 	char *extparams[EXTCMODETABLESZ];
 };
@@ -90,10 +90,10 @@ struct Configuration {
 	char *oper_auto_join_chans;
 	char *allow_user_stats;
 	OperStat *allow_user_stats_ext;
-	int  ping_warning;
-	int  maxchannelsperuser;
-	int  maxdccallow;
-	int  anti_spam_quit_message_time;
+	int ping_warning;
+	int maxchannelsperuser;
+	int maxdccallow;
+	int anti_spam_quit_message_time;
 	char *egd_path;
 	char *static_quit;
 	char *static_part;
