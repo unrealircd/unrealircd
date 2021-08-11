@@ -1938,7 +1938,7 @@ void mode_operoverride_msg(Client *client, Channel *channel, char *modebuf, char
 	snprintf(buf, sizeof(buf), "%s %s", modebuf, parabuf);
 
 	unreal_log(ULOG_INFO, "operoverride", "OPEROVERRIDE_MODE", client,
-		   "OperOverride: $client.detail changed channel mode of $channel to: $modes",
+		   "OperOverride: $client.details changed channel mode of $channel to: $modes",
 		   log_data_string("override_type", "mode"),
 		   log_data_string("channel_mode", buf),
 		   log_data_channel("channel", channel));

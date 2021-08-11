@@ -62,7 +62,7 @@ MOD_UNLOAD()
 void kick_operoverride_msg(Client *client, Channel *channel, Client *target, char *reason)
 {
 	unreal_log(ULOG_INFO, "operoverride", "OPEROVERRIDE_KICK", client,
-		   "OperOverride: $client.detail kicked $target from $channel ($reason)",
+		   "OperOverride: $client.details kicked $target from $channel ($reason)",
 		   log_data_string("override_type", "kick"),
 		   log_data_string("reason", reason),
 		   log_data_client("target", target),
