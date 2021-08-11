@@ -184,7 +184,6 @@ extern char *extban_conv_param_nuh(char *);
 extern Ban *is_banned(Client *, Channel *, int, char **, char **);
 extern Ban *is_banned_with_nick(Client *, Channel *, int, char *, char **, char **);
 
-extern void ircd_log(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf,2,3)));
 extern Client *find_client(char *, Client *);
 extern Client *find_name(char *, Client *);
 extern Client *find_nickserv(char *, Client *);

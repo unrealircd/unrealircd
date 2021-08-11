@@ -1741,7 +1741,7 @@ int hooktype_tkl_add(Client *client, TKL *tkl);
  */
 int hooktype_tkl_del(Client *client, TKL *tkl);
 
-/** Called when something is logged via the ircd_log() function (function prototype for HOOKTYPE_LOG).
+/** Called when something is logged via the unreal_log() function (function prototype for HOOKTYPE_LOG).
  * @param flags			One of LOG_*, such as LOG_ERROR.
  * @param timebuf		The time buffer, such as "[2030-01-01 12:00:00]"
  * @param buf			The text to be logged

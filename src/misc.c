@@ -98,25 +98,6 @@ SpamfilterTargetTable spamfiltertargettable[] = {
 /** IRC Statistics (quite useless?) */
 struct IRCStatistics ircstats;
 
-/** Main IRCd logging function.
- * @param flags		One of LOG_* (eg: LOG_ERROR)
- * @param format	Format string
- * @param ...		Arguments
- * @note This function is safe to call at all times. It provides
- *       protection against recursion.
- */
-void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
-{
-	va_list vl;
-	char buf[2048];
-
-	va_start(vl, format);
-	ircvsnprintf(buf, sizeof(buf), format, vl);
-	va_end(vl);
-
-	unreal_log_raw(ULOG_ERROR, "unknown", "UNKNOWN", NULL, buf);
-}
-
 /** Returns the date in rather long string */
 char *long_date(time_t clock)
 {
