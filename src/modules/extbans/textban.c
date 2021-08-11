@@ -61,15 +61,6 @@
 /** Which censor replace word to use when CENSORFEATURE is enabled. */
 #define CENSORWORD "<censored>"
 
-/** Benchmark mode.
- * Should never be used on production servers.
- * Mainly meant for debugging/profiling purposes for myself, but if you
- * have a test server and are curious about the speed of this module,
- * then you can enable it of course ;).
- */
-#undef BENCHMARK
-
-
 ModuleHeader MOD_HEADER
   = {
 	"extbans/textban",
@@ -443,11 +434,6 @@ int textban_check_ban(Client *client, Channel *channel, char *ban, char **msg, c
 #endif
 	char tmp[1024], *word;
 	int type;
-#ifdef BENCHMARK
-	struct timeval tv_alpha, tv_beta;
-
-	gettimeofday(&tv_alpha, NULL);
-#endif
 
 	/* We can only filter on non-NULL text of course */
 	if ((msg == NULL) || (*msg == NULL))
@@ -495,13 +481,6 @@ int textban_check_ban(Client *client, Channel *channel, char *ban, char **msg, c
 		}
 #endif
 	}
-
-#ifdef BENCHMARK
-	gettimeofday(&tv_beta, NULL);
-	ircd_log(LOG_ERROR, "TextBan Timing: %ld microseconds (%s / %s / %d)",
-		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec),
-		client->name, channel->name, strlen(*msg));
-#endif
 
 	if (cleaned)
 	{
