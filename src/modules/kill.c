@@ -138,16 +138,10 @@ CMD_FUNC(cmd_kill)
 
 		/* From here on, the kill is probably going to be successful. */
 
-		sendto_snomask(SNO_KILLS,
-			"*** Received KILL message for %s (%s@%s) from %s: %s",
-			target->name, target->user->username, GetHost(target),
-			client->name,
-			reason);
-
-		ircd_log(LOG_KILL, "KILL (%s) by %s (%s)",
-			make_nick_user_host(target->name, target->user->username, GetHost(target)),
-			client->name,
-			reason);
+		unreal_log(ULOG_INFO, "kill", "KILL_COMMAND", client,
+		           "Client killed: $target.details [by: $client] ($reason)",
+		           log_data_client("target", target),
+		           log_data_string("reason", reason));
 
 		new_message(client, recv_mtags, &mtags);
 
