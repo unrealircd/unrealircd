@@ -278,10 +278,10 @@ void close_listener(ConfigItem_listen *listener)
 {
 	if (listener->fd >= 0)
 	{
-		ircd_log(LOG_ERROR, "IRCd no longer listening on %s:%d (%s)%s",
-			listener->ip, listener->port,
-			listener->ipv6 ? "IPv6" : "IPv4",
-			listener->options & LISTENER_TLS ? " (TLS)" : "");
+		unreal_log(ULOG_INFO, "listen", "LISTEN_REMOVED", NULL,
+			   "UnrealIRCd is now no longer listening on $listen_ip:$listen_port",
+			   log_data_string("listen_ip", listener->ip),
+			   log_data_integer("listen_port", listener->port));
 		fd_close(listener->fd);
 		--OpenFiles;
 	}

@@ -37,10 +37,10 @@ int fd_open(int fd, const char *desc, FDCloseMethod close_method)
 
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
 	{
-		sendto_realops("[BUG] trying to add fd #%d to fd table, but MAXCONNECTIONS is %d",
-				fd, MAXCONNECTIONS);
-		ircd_log(LOG_ERROR, "[BUG] trying to add fd #%d to fd table, but MAXCONNECTIONS is %d",
-				fd, MAXCONNECTIONS);
+		unreal_log(ULOG_ERROR, "io", "BUG_FD_OPEN_OUT_OF_RANGE", NULL,
+		           "[BUG] trying to add fd $fd to fd table, but MAXCONNECTIONS is $maxconnections",
+		           log_data_integer("fd", fd),
+		           log_data_integer("maxconnections", MAXCONNECTIONS));
 #ifdef DEBUGMODE
 		abort();
 #endif
@@ -97,10 +97,10 @@ int fd_close(int fd)
 
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
 	{
-		sendto_realops("[BUG] trying to close fd #%d in fd table, but MAXCONNECTIONS is %d",
-				fd, MAXCONNECTIONS);
-		ircd_log(LOG_ERROR, "[BUG] trying to close fd #%d in fd table, but MAXCONNECTIONS is %d",
-				fd, MAXCONNECTIONS);
+		unreal_log(ULOG_ERROR, "io", "BUG_FD_CLOSE_OUT_OF_RANGE", NULL,
+		           "[BUG] trying to close fd $fd to fd table, but MAXCONNECTIONS is $maxconnections",
+		           log_data_integer("fd", fd),
+		           log_data_integer("maxconnections", MAXCONNECTIONS));
 #ifdef DEBUGMODE
 		abort();
 #endif
@@ -110,10 +110,9 @@ int fd_close(int fd)
 	fde = &fd_table[fd];
 	if (!fde->is_open)
 	{
-		sendto_realops("[BUG] trying to close fd #%d in fd table, but this FD isn't reported open",
-				fd);
-		ircd_log(LOG_ERROR, "[BUG] trying to close fd #%d in fd table, but this FD isn't reported open",
-				fd);
+		unreal_log(ULOG_ERROR, "io", "BUG_FD_CLOSE_NOT_OPEN", NULL,
+		           "[BUG] trying to close fd $fd to fd table, but FD is (already) closed",
+		           log_data_integer("fd", fd));
 #ifdef DEBUGMODE
 		abort();
 #endif
@@ -150,10 +149,8 @@ int fd_close(int fd)
 /* Deregister I/O notification for this file descriptor */
 void fd_unnotify(int fd)
 {
-FDEntry *fde;
-#ifdef DEBUGMODE
-	ircd_log(LOG_ERROR, "fd_unnotify(): fd=%d", fd);
-#endif
+	FDEntry *fde;
+
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
 		return;
 	
@@ -194,10 +191,10 @@ void fd_desc(int fd, const char *desc)
 
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
 	{
-		sendto_realops("[BUG] trying to modify fd #%d in fd table, but MAXCONNECTIONS is %d",
-				fd, MAXCONNECTIONS);
-		ircd_log(LOG_ERROR, "[BUG] trying to modify fd #%d in fd table, but MAXCONNECTIONS is %d",
-				fd, MAXCONNECTIONS);
+		unreal_log(ULOG_ERROR, "io", "BUG_FD_DESC_OUT_OF_RANGE", NULL,
+		           "[BUG] trying to fd_desc fd $fd in fd table, but MAXCONNECTIONS is $maxconnections",
+		           log_data_integer("fd", fd),
+		           log_data_integer("maxconnections", MAXCONNECTIONS));
 #ifdef DEBUGMODE
 		abort();
 #endif
@@ -207,10 +204,9 @@ void fd_desc(int fd, const char *desc)
 	fde = &fd_table[fd];
 	if (!fde->is_open)
 	{
-		sendto_realops("[BUG] trying to modify fd #%d in fd table, but this FD isn't reported open",
-				fd);
-		ircd_log(LOG_ERROR, "[BUG] trying to modify fd #%d in fd table, but this FD isn't reported open",
-				fd);
+		unreal_log(ULOG_ERROR, "io", "BUG_FD_DESC_NOT_OPEN", NULL,
+		           "[BUG] trying to fd_desc fd $fd in fd table, but FD is (already) closed",
+		           log_data_integer("fd", fd));
 #ifdef DEBUGMODE
 		abort();
 #endif
