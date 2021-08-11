@@ -265,7 +265,9 @@ void efunctions_switchover(void)
 				continue;
 			if (!efunction_table[i].funcptr)
 			{
-				ircd_log(LOG_ERROR, "[BUG] efunctions_switchover(): someone forgot to initialize the function table for efunc %d", i);
+				unreal_log(ULOG_FATAL, "module", "BUG_EFUNCTIONS_SWITCHOVER", NULL,
+				           "[BUG] efunctions_switchover(): someone forgot to initialize the function table for efunc $efunction_number",
+				           log_data_integer("efunction_number", i));
 				abort();
 			}
 			*efunction_table[i].funcptr = e->func.voidfunc;  /* This is the new one. */
@@ -289,7 +291,10 @@ void efunc_init_function_(EfunctionType what, char *name, void *func, void *defa
 	if (what >= MAXEFUNCTIONS)
 	{
 		/* increase MAXEFUNCTIONS if you ever encounter that --k4be */
-		ircd_log(LOG_ERROR, "Too many efunctions!");
+		unreal_log(ULOG_FATAL, "module", "BUG_EFUNC_INIT_FUNCTION_TOO_MANY", NULL,
+		           "Too many efunctions! ($efunctions_request > $efunctions_max)",
+		           log_data_integer("efunctions_request", what),
+		           log_data_integer("efunctions_max", MAXEFUNCTIONS));
 		abort();
 	}
 	safe_strdup(efunction_table[what].name, name);

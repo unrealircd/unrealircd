@@ -66,7 +66,9 @@ HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 	{
 		if (module)
 			module->errorcode = MODERR_INVALID;
-		ircd_log(LOG_ERROR, "HistoryBackendAdd(): missing a handler for add/del/request/destroy/set_limit");
+		unreal_log(ULOG_ERROR, "module", "HISTORYBACKENDADD_API_ERROR", NULL,
+			   "HistoryBackendAdd(): missing a handler for add/del/request/destroy/set_limit. Module: $module_name",
+			   log_data_string("module_name", module->header->name));
 		return NULL;
 	}
 	m = HistoryBackendFind(mreq->name);

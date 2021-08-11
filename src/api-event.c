@@ -56,16 +56,6 @@ Event *EventAdd(Module *module, char *name, vFP event, void *data, long every_ms
 		return NULL;
 	}
 
-	if ((every_msec < 100) && (count == 0))
-	{
-		ircd_log(LOG_ERROR, "[BUG] EventAdd() '%s' from module '%s' with suspiciously low every_msec value (%ld). "
-		                    "Note that it is in milliseconds now (1000 = 1 second)!",
-		                    name,
-		                    module ? module->header->name : "???",
-		                    every_msec);
-		every_msec = 100;
-	}
-
 	newevent = safe_alloc(sizeof(Event));
 	safe_strdup(newevent->name, name);
 	newevent->count = count;
@@ -128,12 +118,16 @@ static void EventDelReal(Event *e)
 {
 	if (!e->deleted)
 	{
-		ircd_log(LOG_ERROR, "EventDelReal called while e->deleted is 0. This cannot happen. Event name: %s.", e->name);
+		unreal_log(ULOG_FATAL, "module", "BUG_EVENTDELREAL_ZERO", NULL,
+		           "[BUG] EventDelReal called while e->deleted is 0. This cannot happen. Event name: $event_name",
+		           log_data_string("event_name", e->name));
 		abort();
 	}
 	if (e->owner)
 	{
-		ircd_log(LOG_ERROR, "EventDelReal called while e->owner is non-NULL. This cannot happen. Event name: %s.", e->name);
+		unreal_log(ULOG_FATAL, "module", "BUG_EVENTDELREAL_NULL", NULL,
+		           "[BUG] EventDelReal called while e->owner is NULL. This cannot happen. Event name: $event_name",
+		           log_data_string("event_name", e->name));
 		abort();
 	}
 	safe_free(e->name);
@@ -173,19 +167,7 @@ int EventMod(Event *event, EventInfo *mods)
 	}
 
 	if (mods->flags & EMOD_EVERY)
-	{
-		if (mods->every_msec < 100)
-		{
-			ircd_log(LOG_ERROR, "[BUG] EventMod() for '%s' from module '%s' with suspiciously low every_msec value (%lld). "
-					    "Note that it is in milliseconds now (1000 = 1 second)!",
-					    event->name,
-					    event->owner ? event->owner->header->name : "???",
-					    (long long)mods->every_msec);
-			mods->every_msec = 100;
-		}
-
 		event->every_msec = mods->every_msec;
-	}
 	if (mods->flags & EMOD_HOWMANY)
 		event->count = mods->count;
 	if (mods->flags & EMOD_NAME)
