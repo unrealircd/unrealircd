@@ -278,7 +278,7 @@ void invite_process(Client *client, Client *target, Channel *channel, MessageTag
 
 void invite_operoverride_msg(Client *client, Channel *channel, char *override_mode, char *override_mode_text)
 {
-	unreal_log(LOG_INFO, "operoverride", "OPEROVERRIDE_JOIN", client,
+	unreal_log(ULOG_INFO, "operoverride", "OPEROVERRIDE_JOIN", client,
 		   "OperOverride: $client.detail invited him/herself into $channel (Overriding $override_mode_text)",
 		   log_data_string("override_type", "join"),
 		   log_data_string("override_mode", override_mode),
