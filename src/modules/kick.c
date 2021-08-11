@@ -59,6 +59,16 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
+void kick_operoverride_msg(Client *client, Channel *channel, Client *target, char *reason)
+{
+	unreal_log(LOG_INFO, "operoverride", "OPEROVERRIDE_KICK", client,
+		   "OperOverride: $client.detail kicked $target from $channel ($reason)",
+		   log_data_string("override_type", "kick"),
+		   log_data_string("reason", reason),
+		   log_data_client("target", target),
+		   log_data_channel("channel", channel));
+}
+
 /** Kick a user from a channel.
  * @param initial_mtags	Message tags associated with this KICK (can be NULL)
  * @param channel	The channel where the KICK should happen
@@ -247,13 +257,7 @@ CMD_FUNC(cmd_kick)
 				/* If set it means 'not allowed to kick'.. now check if (s)he can override that.. */
 				if (op_can_override("channel:override:kick:no-ops",client,channel,NULL))
 				{
-					sendto_snomask(SNO_EYES,
-						"*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
-						client->name, client->user->username, client->user->realhost,
-						channel->name, who->name, comment);
-					ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
-						client->name, client->user->username, client->user->realhost,
-						channel->name, who->name, comment);
+					kick_operoverride_msg(client, channel, who, comment);
 					goto attack; /* all other checks don't matter anymore (and could cause double msgs) */
 				} else {
 					/* Not an oper overriding */
@@ -274,16 +278,7 @@ CMD_FUNC(cmd_kick)
 				    ((client_flags & CHFL_HALFOP) && (who_flags & CHFL_ISOP)) ||
 				    ((client_flags & CHFL_HALFOP) && (who_flags & CHFL_HALFOP)))
 				{
-					sendto_snomask(SNO_EYES,
-					    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
-					    client->name, client->user->username, client->user->realhost,
-					    channel->name, who->name, comment);
-
-					/* Logging Implementation added by XeRXeS */
-					ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
-						client->name, client->user->username, client->user->realhost,
-						channel->name, who->name, comment);
-
+					kick_operoverride_msg(client, channel, who, comment);
 					goto attack;
 				}	/* is_chan_op */
 
@@ -295,17 +290,9 @@ CMD_FUNC(cmd_kick)
 				if (client == who)
 					goto attack; /* kicking self == ok */
 				if (op_can_override("channel:override:kick:owner",client,channel,NULL)) /* (and f*ck local ops) */
-				{	/* IRCop kicking owner/prot */
-					sendto_snomask(SNO_EYES,
-					    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
-					    client->name, client->user->username, client->user->realhost,
-					    channel->name, who->name, comment);
-
-					/* Logging Implementation added by XeRXeS */
-					ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
-						client->name, client->user->username, client->user->realhost,
-						channel->name, who->name, comment);
-
+				{
+					/* IRCop kicking owner/prot */
+					kick_operoverride_msg(client, channel, who, comment);
 					goto attack;
 				}
 				else if (!IsULine(client) && (who != client) && MyUser(client))

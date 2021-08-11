@@ -44,6 +44,7 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 
 static void mode_cutoff(char *s);
 static void mode_cutoff2(Client *client, Channel *channel, int *parc_out, char *parv[]);
+void mode_operoverride_msg(Client *client, Channel *channel, char *modebuf, char *parabuf);
 
 static int samode_in_progress = 0;
 
@@ -467,18 +468,7 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 #ifndef NO_OPEROVERRIDE
 	if ((opermode == 1) && IsUser(client))
 	{
-		if (modebuf[1])
-		{
-			sendto_snomask(SNO_EYES,
-			    "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
-			    client->name, client->user->username, client->user->realhost,
-			    channel->name, modebuf, parabuf);
-
-			/* Logging Implementation added by XeRXeS */
-			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) MODE %s %s %s",
-				client->name, client->user->username, client->user->realhost,
-				channel->name, modebuf, parabuf);
-		}
+		mode_operoverride_msg(client, channel, modebuf, parabuf);
 
 		sendts = 0;
 	}
@@ -1561,19 +1551,7 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 #ifndef NO_OPEROVERRIDE
 	if ((htrig == 1) && IsUser(client))
 	{
-		/* This is horrible. Just horrible. */
-		if (!((modebuf[0] == '+' || modebuf[0] == '-') && modebuf[1] == '\0'))
-		{
-			sendto_snomask(SNO_EYES, "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
-			               client->name, client->user->username, client->user->realhost,
-			               channel->name, modebuf, parabuf);
-		}
-
-		/* Logging Implementation added by XeRXeS */
-		ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) MODE %s %s %s",
-		         client->name, client->user->username, client->user->realhost,
-		         channel->name, modebuf, parabuf);
-
+		mode_operoverride_msg(client, channel, modebuf, parabuf);
 		htrig = 0;
 		opermode = 0; /* stop double override notices... but is this ok??? -- Syzop */
 	}
@@ -1942,4 +1920,26 @@ CMD_FUNC(cmd_mlock)
 
 	if (IsServer(client))
 		set_channel_mlock(client, channel, parv[3], TRUE);
+}
+
+void mode_operoverride_msg(Client *client, Channel *channel, char *modebuf, char *parabuf)
+{
+	char buf[1024];
+
+	/* First, filter out empty mode changes */
+	if (!*modebuf)
+		return;
+	if (((modebuf[0] == '+') || (modebuf[0] == '-')) && modebuf[1] == '\0')
+		return;
+
+	/* Internally we have this distinction between modebuf and parabuf,
+	 * but this makes little sense to maintain in JSON.
+	 */
+	snprintf(buf, sizeof(buf), "%s %s", modebuf, parabuf);
+
+	unreal_log(LOG_INFO, "operoverride", "OPEROVERRIDE_MODE", client,
+		   "OperOverride: $client.detail changed channel mode of $channel to: $modes",
+		   log_data_string("override_type", "mode"),
+		   log_data_string("channel_mode", buf),
+		   log_data_channel("channel", channel));
 }

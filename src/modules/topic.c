@@ -52,17 +52,13 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-void topicoverride(Client *client, Channel *channel, char *topic)
+void topic_operoverride_msg(Client *client, Channel *channel, char *topic)
 {
-	sendto_snomask(SNO_EYES,
-	    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
-	    client->name, client->user->username, client->user->realhost,
-	    channel->name, topic);
-
-	/* Logging implementation added by XeRXeS */
-	ircd_log(LOG_OVERRIDE, "OVERRIDE: %s (%s@%s) TOPIC %s \'%s\'",
-		client->name, client->user->username, client->user->realhost,
-		channel->name, topic);
+	unreal_log(LOG_INFO, "operoverride", "OPEROVERRIDE_TOPIC", client,
+		   "OperOverride: $client.detail changed the topic of $channel to '$topic'",
+		   log_data_string("override_type", "topic"),
+		   log_data_string("topic", topic),
+		   log_data_channel("channel", channel));
 }
 
 /** Query or change the channel topic.
@@ -199,7 +195,7 @@ CMD_FUNC(cmd_topic)
 				sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 				return;
 			}
-			topicoverride(client, channel, topic);
+			topic_operoverride_msg(client, channel, topic);
 		}
 
 		/* -t and banned? */
@@ -215,7 +211,7 @@ CMD_FUNC(cmd_topic)
 				sendnumeric(client, ERR_CANNOTDOCOMMAND, "TOPIC",  buf);
 				return;
 			}
-			topicoverride(client, channel, topic);
+			topic_operoverride_msg(client, channel, topic);
 		}
 		if (MyUser(client) && newtopic)
 			topic = newtopic; /* process is_banned() changes of topic (eg: text replacement), but only for local clients */
@@ -227,7 +223,7 @@ CMD_FUNC(cmd_topic)
 
 			if (MyUser(client) && ValidatePermissionsForPath("channel:override:topic", client, NULL, channel, NULL))
 			{
-				topicoverride(client, channel, topic);
+				topic_operoverride_msg(client, channel, topic);
 			} else {
 				/* With +m and -t, only voice and higher may change the topic */
 				ircsnprintf(buf, sizeof(buf), "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", channel->name);
