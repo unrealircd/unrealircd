@@ -9367,19 +9367,19 @@ int is_blacklisted_module(char *name)
 
 void start_listeners(void)
 {
-	ConfigItem_listen *listenptr;
+	ConfigItem_listen *listener;
 	int failed = 0, ports_bound = 0;
 	char boundmsg_ipv4[512], boundmsg_ipv6[512];
 	int last_errno = 0;
 
 	*boundmsg_ipv4 = *boundmsg_ipv6 = '\0';
 
-	for (listenptr = conf_listen; listenptr; listenptr = listenptr->next)
+	for (listener = conf_listen; listener; listener = listener->next)
 	{
 		/* Try to bind to any ports that are not yet bound and not marked as temporary */
-		if (!(listenptr->options & LISTENER_BOUND) && !listenptr->flag.temporary)
+		if (!(listener->options & LISTENER_BOUND) && !listener->flag.temporary)
 		{
-			if (add_listener(listenptr) == -1)
+			if (add_listener(listener) == -1)
 			{
 				/* Error already printed upstream */
 				failed = 1;
@@ -9389,17 +9389,17 @@ void start_listeners(void)
 				{
 					unreal_log(ULOG_INFO, "listen", "LISTEN_ADDED", NULL,
 					           "UnrealIRCd is now also listening on $listen_ip:$listen_port",
-					           log_data_string("listen_ip", listenptr->ip),
-					           log_data_integer("listen_port", listenptr->port));
+					           log_data_string("listen_ip", listener->ip),
+					           log_data_integer("listen_port", listener->port));
 				} else {
-					if (listenptr->ipv6)
+					if (listener->ipv6)
 						snprintf(boundmsg_ipv6+strlen(boundmsg_ipv6), sizeof(boundmsg_ipv6)-strlen(boundmsg_ipv6),
-							"%s:%d%s, ", listenptr->ip, listenptr->port,
-							listenptr->options & LISTENER_TLS ? "(TLS)" : "");
+							"%s:%d%s, ", listener->ip, listener->port,
+							listener->options & LISTENER_TLS ? "(TLS)" : "");
 					else
 						snprintf(boundmsg_ipv4+strlen(boundmsg_ipv4), sizeof(boundmsg_ipv4)-strlen(boundmsg_ipv4),
-							"%s:%d%s, ", listenptr->ip, listenptr->port,
-							listenptr->options & LISTENER_TLS ? "(TLS)" : "");
+							"%s:%d%s, ", listener->ip, listener->port,
+							listener->options & LISTENER_TLS ? "(TLS)" : "");
 				}
 			}
 		}
@@ -9407,7 +9407,7 @@ void start_listeners(void)
 		/* NOTE: do not merge this with code above (nor in an else block),
 		 * as add_listener() affects this flag.
 		 */
-		if (listenptr->options & LISTENER_BOUND)
+		if (listener->options & LISTENER_BOUND)
 			ports_bound++;
 	}
 
