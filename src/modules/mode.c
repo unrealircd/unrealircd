@@ -257,11 +257,10 @@ CMD_FUNC(cmd_mode)
 	{
 		if (!(*parv[2] == '&'))	/* & denotes a bounce */
 		{
-			/* !!! */
-			sendto_snomask(SNO_EYES,
-			    "*** TS bounce for %s - %lld(ours) %lld(theirs)",
-			    channel->name, (long long)channel->creationtime,
-			    (long long)sendts);
+			unreal_log(ULOG_INFO, "mode", "MODE_TS_BOUNCE", client,
+			           "TS bounce for $channel: ours=$channel.creationtime, theirs=$their_ts",
+			           log_data_channel("channel", channel),
+			           log_data_integer("their_ts", sendts));
 			bounce_mode(channel, client, parc - 2, parv + 2);
 		}
 		return;
@@ -490,8 +489,14 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 	if (IsUser(client) && samode && MyUser(client))
 	{
 		if (!sajoinmode)
-			sendto_umode_global(UMODE_OPER, "%s used SAMODE %s (%s%s%s)",
-				client->name, channel->name, modebuf, *parabuf ? " " : "", parabuf);
+		{
+			char buf[512];
+			snprintf(buf, sizeof(buf), "%s%s%s", modebuf, *parabuf ? " " : "", parabuf);
+			unreal_log(ULOG_INFO, "samode", "SAMODE_COMMAND", client,
+			           "Client $client used SAMODE $channel ($mode)",
+			           log_data_channel("channel", channel),
+			           log_data_string("mode", buf));
+		}
 
 		client = &me;
 		sendts = 0;
@@ -850,7 +855,11 @@ process_listmode:
 			if (!member)
 			{
 				/* should never happen */
-				sendto_realops("crap! find_membership_link && !find_member_link !!. Report to unreal team");
+				unreal_log(ULOG_ERROR, "mode", "BUG_FIND_MEMBER_LINK_FAILED", target,
+				           "[BUG] Client $target.details on channel $channel: "
+				           "found via find_membership_link() but NOT found via find_member_link(). "
+				           "This should never happen! Please report on https://bugs.unrealircd.org/",
+				           log_data_channel("channel", channel));
 				break;
 			}
 			/* we make the rules, we bend the rules */
@@ -1370,10 +1379,10 @@ int paracount_for_chanmode_from_server(Client *client, u_int what, char mode)
 	 * channel mode. That's actually pretty bad. This shouldn't happen since CHANMODES=
 	 * is sent since 2003 and the (often also required) EAUTH PROTOCTL is in there since 2010.
 	 */
-	sendto_realops("Unknown channel mode %c%c from server %s!",
-		(what == MODE_ADD) ? '+' : '-',
-		mode,
-		client->name);
+	unreal_log(ULOG_WARNING, "mode", "REMOTE_UNKNOWN_CHANNEL_MODE", client,
+	           "Server $client sent us an unknown channel mode $what$mode_character!",
+	           log_data_string("what", ((what == MODE_ADD) ? "+" : "-")),
+	           log_data_char("mode_character", mode));
 
 	return 0;
 }
@@ -1683,7 +1692,8 @@ CMD_FUNC(_cmd_umode)
 			case 'O':
 				if (IsQuarantined(client->direction))
 				{
-					sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine", client->name, client->uplink->name);
+					unreal_log(ULOG_INFO, "mode", "OPER_KILLED_QUARANTINE", client,
+					           "QUARANTINE: Oper $client.detail on server $client.user.servername killed, due to quarantine");
 					sendto_server(NULL, 0, 0, NULL, ":%s KILL %s :Quarantined: no oper privileges allowed", me.id, client->name);
 					exit_client(client, NULL, "Quarantined: no oper privileges allowed");
 					return;

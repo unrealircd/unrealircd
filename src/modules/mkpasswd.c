@@ -74,8 +74,8 @@ CMD_FUNC(cmd_mkpasswd)
 		 * This notice is always sent, even in case of bad usage/bad auth methods/etc.
 		 */
 		add_fake_lag(client, 7000);
-		sendto_snomask(SNO_EYES, "*** /mkpasswd used by %s (%s@%s)",
-			client->name, client->user->username, GetHost(client));
+		unreal_log(ULOG_INFO, "mkpasswd", "MKPASSWD_COMMAND", client,
+		           "mkpasswd command used by $client.details");
 	}
 
 	if ((parc < 3) || BadPtr(parv[2]))
