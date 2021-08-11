@@ -124,7 +124,7 @@ CMD_FUNC(cmd_protoctl)
 			 */
 			if (strstr(charsys_get_current_languages(), "utf8") && !strstr(value, "utf8"))
 			{
-				unreal_log(ULOG_ERROR, "link", "LINK_REJECTED_CHARSYS_INCOMPATIBLE", client,
+				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_CHARSYS_INCOMPATIBLE", client,
 					   "Server link $client rejected. Server $me_name has utf8 in set::allowed-nickchars but $client does not.",
 					   log_data_string("me_name", me.name));
 				exit_client(client, NULL, "Incompatible set::allowed-nickchars setting");
@@ -156,7 +156,7 @@ CMD_FUNC(cmd_protoctl)
 			their_value = allowed_channelchars_strtoval(value);
 			if (their_value != iConf.allowed_channelchars)
 			{
-				unreal_log(ULOG_ERROR, "link", "LINK_REJECTED_ALLOWED_CHANNELCHARS_INCOMPATIBLE", client,
+				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_ALLOWED_CHANNELCHARS_INCOMPATIBLE", client,
 					   "Server link $client rejected. Server has set::allowed-channelchars setting "
 					   "of $their_allowed_channelchars, while we have $our_allowed_channelchars.\n"
 					   "Please set set::allowed-channelchars to the same value on all servers.",
@@ -197,7 +197,7 @@ CMD_FUNC(cmd_protoctl)
 
 			if ((aclient = hash_find_id(sid, NULL)) != NULL)
 			{
-				unreal_log(ULOG_ERROR, "link", "LINK_REJECTED_SID_COLLISION", client,
+				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_SID_COLLISION", client,
 					   "Server link $client rejected. Server with SID $sid already exist via uplink $exiting_client.uplink.",
 					   log_data_string("sid", sid),
 					   log_data_client("existing_client", aclient));

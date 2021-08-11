@@ -957,7 +957,7 @@ CMD_FUNC(cmd_server)
 	hop = atol(parv[2]);
 	if (hop != 1)
 	{
-		unreal_log(ULOG_ERROR, "link", "LINK_REJECTED_INVALID_HOPCOUNT", client,
+		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_INVALID_HOPCOUNT", client,
 		           "Server link $servername rejected. Directly linked server provided a hopcount of $hopcount, while 1 was expected.",
 		           log_data_string("servername", servername),
 		           log_data_integer("hopcount", hop));
@@ -1005,7 +1005,7 @@ CMD_FUNC(cmd_server)
 		if (deny->flag.type == CRULE_ALL && unreal_mask_match_string(servername, deny->mask)
 			&& crule_eval(deny->rule))
 		{
-			unreal_log(ULOG_ERROR, "link", "LINK_REJECTED_DENY_LINK_BLOCK", client,
+			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_DENY_LINK_BLOCK", client,
 			           "Server link $servername rejected by deny link { } block.",
 			           log_data_string("servername", servername));
 			exit_client(client, NULL, "Disallowed by connection rule");
