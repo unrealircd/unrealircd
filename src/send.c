@@ -284,14 +284,17 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 			p = strchr(msg+1, ' ');
 			if (!p)
 			{
-				ircd_log(LOG_ERROR, "[BUG] sendbufto_one(): Malformed message: %s",
-					msg);
+				unreal_log(ULOG_WARNING, "send", "SENDBUFTO_ONE_MALFORMED_MSG", to,
+				           "Malformed message to $client: $buf",
+				           log_data_string("buf", msg));
 				return;
 			}
 			if (p - msg > 4094)
 			{
-				ircd_log(LOG_ERROR, "[BUG] sendbufto_one(): Oversized message-tag (len %d)",
-				         (int)(p - msg));
+				unreal_log(ULOG_WARNING, "send", "SENDBUFTO_ONE_OVERSIZED_MSG", to,
+				           "Oversized message to $client (length $length): $buf",
+				           log_data_integer("length", p - msg),
+				           log_data_string("buf", msg));
 				return;
 			}
 			p++; /* skip space character */
@@ -312,7 +315,10 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 
 	if (len >= 10240)
 	{
-		ircd_log(LOG_ERROR, "sendbufto_one: len=%d, quick=%u", len, quick);
+		unreal_log(ULOG_WARNING, "send", "SENDBUFTO_ONE_OVERSIZED_MSG2", to,
+			   "Oversized message to $client (length $length): $buf",
+			   log_data_integer("length", len),
+			   log_data_string("buf", msg));
 #ifdef DEBUGMODE
 		abort();
 #else
@@ -326,9 +332,9 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 
 		p = strchr(msg, '\r');
 		if (p) *p = '\0';
-		snprintf(tmp_msg, 500, "Trying to send data to myself! '%s'", msg);
-		ircd_log(LOG_ERROR, "%s", tmp_msg);
-		sendto_ops("%s", tmp_msg); /* recursion? */
+		unreal_log(ULOG_WARNING, "send", "SENDBUFTO_ONE_ME_MESSAGE", to,
+			   "Trying to send data to myself: $buf",
+			   log_data_string("buf", tmp_msg));
 		return;
 	}
 

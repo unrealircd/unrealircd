@@ -1105,10 +1105,10 @@ void set_channel_mlock(Client *client, Channel *channel, const char *newmlock, i
  * int ret;
  * for (ret = parse_chanmode(&pm, modebuf, parabuf); ret; ret = parse_chanmode(&pm, NULL, NULL))
  * {
- *         ircd_log(LOG_ERROR, "Got %c%c %s",
- *                  pm.what == MODE_ADD ? '+' : '-',
- *                  pm.modechar,
- *                  pm.param ? pm.param : "");
+ *         unreal_log(ULOG_INFO, "test", "TEST", "Got %c%c %s",
+ *                    pm.what == MODE_ADD ? '+' : '-',
+ *                    pm.modechar,
+ *                    pm.param ? pm.param : "");
  * }
  * @endcode
  */

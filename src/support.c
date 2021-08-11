@@ -50,9 +50,7 @@ char *my_itoa(int i)
  * @section Ex1 Example
  * @code
  * for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
- * {
- *      ircd_log(LOG_ERROR, "Got: %s", name);
- * }
+ *      unreal_log(ULOG_INFO, "test", "TEST", "Got: %s", name);
  * @endcode
  */
 char *strtoken(char **save, char *str, char *fs)
@@ -714,11 +712,11 @@ void outofmemory(size_t bytes)
 
 	if (log_attempt)
 	{
+		/* This will probably fail, but we can try... */
+		unreal_log(ULOG_ERROR, "main", "OUT_OF_MEMORY", NULL,
+		           "Out of memory while trying to allocate $bytes bytes!",
+		           log_data_integer("bytes", bytes));
 		log_attempt = 0;
-		if (bytes)
-			ircd_log(LOG_ERROR, "Out of memory while trying to allocate %lld bytes!", (long long)bytes);
-		else
-			ircd_log(LOG_ERROR, "Out of memory");
 	}
 	exit(7);
 }

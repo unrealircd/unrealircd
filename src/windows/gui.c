@@ -169,7 +169,8 @@ LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 int DoCloseUnreal(HWND hWnd)
 {
-	ircd_log(LOG_ERROR, "Stopping UnrealIRCd...");
+	unreal_log(ULOG_INFO, "main", "UNREALIRCD_STOP", NULL,
+	           "Terminating server (process termination requested or GUI window closed)");
 	loop.ircd_terminating = 1;
 	unload_all_modules();
 	DestroyWindow(hWnd);
