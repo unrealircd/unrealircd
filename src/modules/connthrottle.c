@@ -439,9 +439,9 @@ int ct_pre_lconnect(Client *client)
 		if (!ucounter->throttling_previous_minute && !ucounter->throttling_banner_displayed)
 		{
 			unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTLE_ACTIVATED", NULL,
-			           "[ConnThrottle] Connection throttling has been ACTIVATED due to a HIGH CONNECTION RATE.");
-			sendto_realops("[ConnThrottle] Users with IP addresses that have not been seen before will be rejected above the set connection rate. Known users can still get in.");
-			sendto_realops("[ConnThrottle] For more information see https://www.unrealircd.org/docs/ConnThrottle");
+			           "[ConnThrottle] Connection throttling has been ACTIVATED due to a HIGH CONNECTION RATE.\n"
+			           "Users with IP addresses that have not been seen before will be rejected above the set connection rate. Known users can still get in.\n"
+			           "or more information see https://www.unrealircd.org/docs/ConnThrottle");
 			ucounter->throttling_banner_displayed = 1;
 		}
 		exit_client(client, NULL, cfg.reason);

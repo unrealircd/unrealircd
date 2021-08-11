@@ -371,8 +371,10 @@ CMD_FUNC(cmd_dccdeny)
 
 	if (!find_deny_dcc(parv[1]))
 	{
-		sendto_ops("%s added a temp dccdeny for %s (%s)", client->name,
-		    parv[1], parv[2]);
+		unreal_log(ULOG_INFO, "dccdeny", "DCCDENY_ADD", client,
+		           "[dccdeny] $client added a temporary DCCDENY for $file ($reason)",
+		           log_data_string("file", parv[1]),
+		           log_data_string("reason", parv[2]));
 		DCCdeny_add(parv[1], parv[2], DCCDENY_HARD, CONF_BAN_TYPE_TEMPORARY);
 		return;
 	} else
@@ -405,7 +407,10 @@ CMD_FUNC(cmd_undccdeny)
 
 	if ((d = find_deny_dcc(parv[1])) && d->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 	{
-		sendto_ops("%s removed a temp dccdeny for %s", client->name, parv[1]);
+		unreal_log(ULOG_INFO, "dccdeny", "DCCDENY_DEL", client,
+		           "[dccdeny] $client removed a temporary DCCDENY for $file ($reason)",
+		           log_data_string("file", d->filename),
+		           log_data_string("reason", d->reason));
 		DCCdeny_del(d);
 		return;
 	} else

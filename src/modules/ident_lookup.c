@@ -92,7 +92,8 @@ static int ident_lookup_connect(Client *client)
 	}
 	if (++OpenFiles >= maxclients+1)
 	{
-		sendto_ops("Can't allocate fd, too many connections.");
+		unreal_log(ULOG_FATAL, "ident", "IDENT_ERROR_MAXCLIENTS", client,
+		           "Cannot do ident connection for $client.detail: All connections in use");
 		fd_close(client->local->authfd);
 		--OpenFiles;
 		client->local->authfd = -1;

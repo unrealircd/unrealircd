@@ -243,8 +243,11 @@ int del_dccallow(Client *client, Client *optr)
 		}
 	}
 	if (!found)
-		sendto_realops("[BUG!] %s was in dccallowme list of %s but not in dccallowrem list!",
-			optr->name, client->name);
+	{
+		unreal_log(LOG_WARNING, "dccallow", "BUG_DCCALLOW", client,
+		           "[BUG] DCCALLOW list for $client did not contain $target",
+		           log_data_client("target", optr));
+	}
 
 	sendnumeric(client, RPL_DCCSTATUS, optr->name, "removed from");
 

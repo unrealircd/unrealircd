@@ -206,12 +206,9 @@ CMD_OVERRIDE_FUNC(override_msg)
 	score = lookalikespam_score(StripControlCodes(parv[2]));
 	if ((score >= cfg.score) && !find_tkl_exception(TKL_ANTIMIXEDUTF8, client))
 	{
-		if (cfg.ban_action == BAN_ACT_KILL)
-		{
-			sendto_realops("[antimixedutf8] Killed connection from %s (score %d)",
-				GetIP(client), score);
-		} /* no else here!! */
-
+		unreal_log(ULOG_INFO, "antimixedutf8", "ANTIMIXEDUTF8_HIT", client,
+		           "[antimixedutf8] Client $client.details hit score $score -- taking action",
+		           log_data_integer("score", score));
 		if ((cfg.ban_action == BAN_ACT_BLOCK) ||
 		    ((cfg.ban_action == BAN_ACT_SOFT_BLOCK) && !IsLoggedIn(client)))
 		{

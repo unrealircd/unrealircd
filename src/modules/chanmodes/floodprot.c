@@ -1141,9 +1141,6 @@ EVENT(modef_event)
 			/* Remove chanmode... */
 			long mode = 0;
 			Cmode_t extmode = 0;
-#ifdef NEWFLDDBG
-			sendto_realops("modef_event: chan %s mode -%c EXPIRED", e->channel->name, e->m);
-#endif
 			mode = get_mode_bitbychar(e->m);
 			if (mode == 0)
 			        extmode = get_extmode_bitbychar(e->m);
@@ -1167,11 +1164,6 @@ EVENT(modef_event)
 			/* And delete... */
 			DelListItem(e, removechannelmodetimer_list);
 			safe_free(e);
-		} else {
-#ifdef NEWFLDDBG
-			sendto_realops("modef_event: chan %s mode -%c about %d seconds",
-				e->channel->name, e->m, e->when - now);
-#endif
 		}
 	}
 }

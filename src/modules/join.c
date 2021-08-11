@@ -170,7 +170,12 @@ CMD_FUNC(cmd_join)
 	int r;
 
 	if (bouncedtimes)
-		sendto_realops("join: bouncedtimes=%d??? [please report at https://bugs.unrealircd.org/]", bouncedtimes);
+	{
+		unreal_log(ULOG_ERROR, "join", "BUG_JOIN_BOUNCEDTIMES", NULL,
+		           "[BUG] join: bouncedtimes is not initialized to zero ($bounced_times)!! "
+		           "Please report at https://bugs.unrealircd.org/",
+		           log_data_integer("bounced_times", bouncedtimes));
+	}
 
 	bouncedtimes = 0;
 	if (IsServer(client))
@@ -485,8 +490,9 @@ void _do_join(Client *client, int parc, char *parv[])
 					{
 						if (d->warn)
 						{
-							sendto_snomask(SNO_EYES, "*** %s tried to join forbidden channel %s",
-								get_client_name(client, 1), name);
+							unreal_log(ULOG_INFO, "join", "JOIN_DENIED_FORBIDDEN_CHANNEL", client,
+							           "Client $client.details tried to join forbidden channel $channel",
+							           log_data_string("channel", name));
 						}
 						if (d->reason)
 							sendnumeric(client, ERR_FORBIDDENCHANNEL, name, d->reason);

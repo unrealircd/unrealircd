@@ -75,7 +75,8 @@ CMD_FUNC(cmd_close)
 	}
 
 	sendnumeric(client, RPL_CLOSEEND, closed);
-	sendto_realops("%s!%s@%s closed %d unknown connections", client->name,
-	    client->user->username, GetHost(client), closed);
+	unreal_log(ULOG_INFO, "close", "CLOSED_CONNECTIONS", client,
+	           "$client.details closed $num_closed unknown connections",
+	           log_data_integer("num_closed", closed));
 	irccounts.unknown = 0;
 }

@@ -595,7 +595,9 @@ int hbm_history_add(char *object, MessageTag *mtags, char *line)
 	HistoryLogObject *h = hbm_find_or_add_object(object);
 	if (!h->max_lines)
 	{
-		sendto_realops("hbm_history_add() for '%s', which has no limit", h->name);
+		unreal_log(ULOG_WARNING, "history", "BUG_HISTORY_ADD_NO_LIMIT", NULL,
+		           "[BUG] hbm_history_add() called for $object, which has no limit set",
+		           log_data_string("object", h->name));
 #ifdef DEBUGMODE
 		abort();
 #else
