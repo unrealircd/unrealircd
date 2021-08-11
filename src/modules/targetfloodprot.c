@@ -220,7 +220,9 @@ int sendtypetowhat(SendType sendtype)
 	if (sendtype == SEND_TYPE_TAGMSG)
 		return 2;
 #ifdef DEBUGMODE
-	ircd_log(LOG_ERROR, "sendtypetowhat() for unknown value %d", (int)sendtype);
+	unreal_log(ULOG_ERROR, "flood", "BUG_SENDTYPETOWHAT_UNKNOWN_VALUE", NULL,
+	           "[BUG] sendtypetowhat() called for unknown sendtype $send_type",
+	           log_data_integer("send_type", sendtype));
 	abort();
 #endif
 	return 0; /* otherwise, default to privmsg i guess */

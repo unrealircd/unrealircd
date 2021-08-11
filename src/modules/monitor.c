@@ -161,7 +161,8 @@ CMD_FUNC(cmd_monitor)
 	
 	if (!watchCounterMD || !watchListMD)
 	{
-		ircd_log(LOG_WARNING, "monitor: moddata not available. Check `watch-backend` module.");
+		unreal_log(ULOG_ERROR, "monitor", "WATCH_BACKEND_MISSING", NULL,
+		           "[monitor] moddata unavailable. Is the 'watch-backend' module loaded?");
 		sendnotice(client, "MONITOR command is not available at this moment. Please try again later.");
 		return;
 	}

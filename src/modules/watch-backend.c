@@ -124,7 +124,10 @@ void watch_free(ModData *md)
 {
 	/* it should have been never requested to free as the module is PERM */
 	if (md)
-		ircd_log(LOG_WARNING, "MEMORY LEAK: watchList moddata was not freed!");
+	{
+		unreal_log(ULOG_ERROR, "watch-backend", "BUG_WATCH_FREE_MEMORY_LEAK", NULL,
+		           "[BUG] watchList moddata was not freed -- memory leak!");
+	}
 }
 
 int watch_backend_user_quit(Client *client, MessageTag *mtags, char *comment)

@@ -80,8 +80,11 @@ int md_access_check(Client *client, ModDataInfo *md, Client *target)
 
 	if (MyConnect(target) && !md->remote_write)
 	{
-		ircd_log(LOG_ERROR, "Remote server '%s' tried to write moddata '%s' of a client from ours '%s' -- attempt blocked.",
-			 client->name, md->name, target->name);
+		unreal_log(ULOG_WARNING, "md", "REMOTE_MD_WRITE_DENIED", client,
+		           "Remote server $client tried to write moddata $moddata_name "
+		           "of a client from ours ($target.name) -- attempt BLOCKED",
+		           log_data_string("moddata_name", md->name),
+		           log_data_client("target", target));
 		return 0;
 	}
 
