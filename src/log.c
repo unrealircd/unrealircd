@@ -427,6 +427,7 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 	/* First the information that is available for ALL client types: */
 
 	json_object_set_new(child, "name", json_string_unreal(client->name));
+	json_object_set_new(child, "id", json_string_unreal(client->id));
 
 	/* hostname is available for all, it just depends a bit on whether it is DNS or IP */
 	if (client->user && *client->user->realhost)
