@@ -517,7 +517,15 @@ void json_expand_channel(json_t *j, char *key, Channel *channel, int detail)
 	json_t *child = json_object();
 	json_object_set_new(j, key, child);
 	json_object_set_new(child, "name", json_string_unreal(channel->name));
-	// TODO: expand more, obviously!
+	json_object_set_new(child, "creation_time", json_timestamp(channel->creationtime));
+	json_object_set_new(child, "num_users", json_integer(channel->users));
+	if (channel->topic)
+	{
+		json_object_set_new(child, "topic", json_string_unreal(channel->topic));
+		json_object_set_new(child, "topic_set_by", json_string_unreal(channel->topic_nick));
+		json_object_set_new(child, "topic_set_at", json_timestamp(channel->topic_time));
+	}
+	// Possibly later: If detail is set to 1 then expand modes, mode_lock, ..
 }
 
 char *timestamp_iso8601_now(void)
