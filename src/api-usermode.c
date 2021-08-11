@@ -142,10 +142,10 @@ void umodes_check_for_changes(void)
 
 	if (*previous_umodestring && strcmp(umodestring, previous_umodestring))
 	{
-		ircd_log(LOG_ERROR, "User modes changed at runtime: %s -> %s",
-			previous_umodestring, umodestring);
-		sendto_realops("User modes changed at runtime: %s -> %s",
-			previous_umodestring, umodestring);
+		unreal_log(ULOG_INFO, "mode", "USER_MODES_CHANGED", NULL,
+		           "User modes changed at runtime: $old_user_modes -> $new_user_modes",
+		           log_data_string("old_user_modes", previous_umodestring),
+		           log_data_string("new_user_modes", umodestring));
 		/* Broadcast change to all (locally connected) servers */
 		sendto_server(NULL, 0, 0, NULL, "PROTOCTL USERMODES=%s", umodestring);
 	}

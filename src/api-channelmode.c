@@ -139,10 +139,10 @@ void extcmodes_check_for_changes(void)
 	
 	if (*previous_chanmodes && strcmp(chanmodes, previous_chanmodes))
 	{
-		ircd_log(LOG_ERROR, "Channel modes changed at runtime: %s -> %s",
-			previous_chanmodes, chanmodes);
-		sendto_realops("Channel modes changed at runtime: %s -> %s",
-			previous_chanmodes, chanmodes);
+		unreal_log(ULOG_INFO, "mode", "CHANNEL_MODES_CHANGED", NULL,
+		           "Channel modes changed at runtime: $old_channel_modes -> $new_channel_modes",
+		           log_data_string("old_channel_modes", previous_chanmodes),
+		           log_data_string("new_channel_modes", chanmodes));
 		/* Broadcast change to all (locally connected) servers */
 		sendto_server(NULL, 0, 0, NULL, "PROTOCTL CHANMODES=%s", chanmodes);
 	}
