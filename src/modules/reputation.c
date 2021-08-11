@@ -467,7 +467,7 @@ void reputation_load_db_old(void)
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
 	unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_BENCHMARK", NULL,
-	           "Reputation benchmark: LOAD DB: $time_msec microseconds",
+	           "[reputation] Benchmark: LOAD DB: $time_msec microseconds",
 	           log_data_integer("time_msec", ((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
 #endif
 }

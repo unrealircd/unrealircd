@@ -31,9 +31,10 @@ ModuleHeader MOD_HEADER = {
 
 #define WARN_WRITE_ERROR(fname) \
 	do { \
-		sendto_realops_and_log("[channeldb] Error writing to temporary database file " \
-		                       "'%s': %s (DATABASE NOT SAVED)", \
-		                       fname, unrealdb_get_error_string()); \
+		unreal_log(ULOG_ERROR, "channeldb", "CHANNELDB_FILE_WRITE_ERROR", NULL, \
+			   "[channeldb] Error writing to temporary database file $filename: $system_error", \
+			   log_data_string("filename", fname), \
+			   log_data_string("system_error", unrealdb_get_error_string())); \
 	} while(0)
 
 #define W_SAFE(x) \
@@ -298,7 +299,7 @@ int write_channeldb(void)
 #endif
 	if (rename(tmpfname, cfg.database) < 0)
 	{
-		sendto_realops_and_log("[channeldb] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));
+		config_error("[channeldb] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));
 		return 0;
 	}
 #ifdef BENCHMARK
@@ -527,11 +528,12 @@ int read_channeldb(void)
 	unrealdb_close(db);
 
 	if (added)
-		sendto_realops_and_log("[channeldb] Added %d persistent channels (+P)", added);
+		config_status("[channeldb] Added %d persistent channels (+P)", added);
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
-	ircd_log(LOG_ERROR, "[channeldb] Benchmark: LOAD DB: %ld microseconds",
-		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec));
+	unreal_log(ULOG_DEBUG, "channeldb", "CHANNELDB_BENCHMARK", NULL,
+	           "[channeldb] Benchmark: LOAD DB: $time_msec microseconds",
+	           log_data_integer("time_msec", ((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
 #endif
 	return 1;
 }

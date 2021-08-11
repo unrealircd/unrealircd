@@ -57,9 +57,10 @@ ModuleHeader MOD_HEADER = {
 
 #define WARN_WRITE_ERROR(fname) \
 	do { \
-		sendto_realops_and_log("[tkldb] Error writing to temporary database file " \
-		                       "'%s': %s (DATABASE NOT SAVED)", \
-		                       fname, unrealdb_get_error_string()); \
+		unreal_log(ULOG_ERROR, "tkldb", "TKLDB_FILE_WRITE_ERROR", NULL, \
+			   "[tkldb] Error writing to temporary database file $filename: $system_error", \
+			   log_data_string("filename", fname), \
+			   log_data_string("system_error", unrealdb_get_error_string())); \
 	} while(0)
 
 #define R_SAFE(x) \
@@ -368,7 +369,7 @@ int write_tkldb(void)
 #endif
 	if (rename(tmpfname, cfg.database) < 0)
 	{
-		sendto_realops_and_log("[tkldb] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));
+		config_error("[tkldb] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));
 		return 0;
 	}
 #ifdef BENCHMARK
@@ -746,12 +747,13 @@ int read_tkldb(void)
 	unrealdb_close(db);
 
 	if (added_cnt)
-		sendto_realops_and_log("[tkldb] Re-added %d *-Lines", added_cnt);
+		config_status("[tkldb] Re-added %d *-Lines", added_cnt);
 
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
-	ircd_log(LOG_ERROR, "[tkldb] Benchmark: LOAD DB: %lld microseconds",
-		(long long)(((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
+	unreal_log(ULOG_DEBUG, "tkldb", "TKLDB_BENCHMARK", NULL,
+	           "[tkldb] Benchmark: LOAD DB: $time_msec microseconds",
+	           log_data_integer("time_msec", ((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
 #endif
 	return 1;
 }
