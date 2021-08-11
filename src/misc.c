@@ -725,14 +725,13 @@ void verify_opercount(Client *orig, char *tag)
 	}
 	if (counted == irccounts.operators)
 		return;
-	snprintf(text, sizeof(text), "[BUG] operator count bug! value in /lusers is '%d', we counted '%d', "
-	               "user='%s', userserver='%s', tag=%s. Corrected. ",
-	               irccounts.operators, counted, orig->name,
-	               orig->uplink ? orig->uplink->name : "<null>", tag ? tag : "<null>");
-#ifdef DEBUGMODE
-	sendto_realops("%s", text);
-#endif
-	ircd_log(LOG_ERROR, "%s", text);
+	unreal_log(ULOG_WARNING, "main", "BUG_LUSERS_OPERS", orig,
+	           "[BUG] Operator count bug at $where! Value in /LUSERS is $opers, "
+	           "we counted $counted_opers, "
+	           "triggered by $client.detail on $client.server.servername",
+	           log_data_integer("opers", irccounts.operators),
+	           log_data_integer("counted_opers", counted),
+	           log_data_string("where", tag));
 	irccounts.operators = counted;
 }
 
@@ -1563,16 +1562,10 @@ time_t server_time_to_unix_time(const char *tbuf)
 	time_t ret;
 
 	if (!tbuf)
-	{
-		ircd_log(LOG_ERROR, "[BUG] server_time_to_unix_time() failed for NULL item. Incorrect S2S traffic?");
 		return 0;
-	}
 
 	if (strlen(tbuf) < 20)
-	{
-		ircd_log(LOG_ERROR, "[BUG] server_time_to_unix_time() failed for short item '%s'", tbuf);
 		return 0;
-	}
 
 	memset(&tm, 0, sizeof(tm));
 	ret = sscanf(tbuf, "%d-%d-%dT%d:%d:%d.%dZ",
@@ -1585,10 +1578,7 @@ time_t server_time_to_unix_time(const char *tbuf)
 		&dontcare);
 
 	if (ret != 7)
-	{
-		ircd_log(LOG_ERROR, "[BUG] server_time_to_unix_time() failed for '%s'", tbuf);
 		return 0;
-	}
 
 	tm.tm_year -= 1900;
 	tm.tm_mon -= 1;
@@ -2177,6 +2167,15 @@ void read_until(char **p, char *stopchars)
 	for (; **p && !strchr(stopchars, **p); *p = *p + 1);
 }
 
+void write_pidfile_failed(void)
+{
+	char *errstr = strerror(errno);
+	unreal_log(ULOG_WARNING, "config", "WRITE_PID_FILE_FAILED", NULL,
+		   "Unable to write to pid file '$filename': $system_error",
+		   log_data_string("filename", conf_files->pid_file),
+		   log_data_string("system_error", errstr));
+}
+
 /** Write PID file */
 void write_pidfile(void)
 {
@@ -2185,13 +2184,13 @@ void write_pidfile(void)
 	char buff[20];
 	if ((fd = open(conf_files->pid_file, O_CREAT | O_WRONLY, 0600)) < 0)
 	{
-		ircd_log(LOG_ERROR, "Error writing to pid file %s: %s", conf_files->pid_file, strerror(ERRNO));
+		write_pidfile_failed();
 		return;
 	}
 	ircsnprintf(buff, sizeof(buff), "%5d\n", (int)getpid());
 	if (write(fd, buff, strlen(buff)) < 0)
-		ircd_log(LOG_ERROR, "Error writing to pid file %s: %s", conf_files->pid_file, strerror(ERRNO));
+		write_pidfile_failed();
 	if (close(fd) < 0)
-		ircd_log(LOG_ERROR, "Error writing to pid file %s: %s", conf_files->pid_file, strerror(ERRNO));
+		write_pidfile_failed();
 #endif
 }
