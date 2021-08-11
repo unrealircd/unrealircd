@@ -638,12 +638,20 @@ union ModData
 #ifndef _WIN32
  #define CHECK_LIST_ENTRY(list)		if (offsetof(typeof(*list),prev) != offsetof(ListStruct,prev)) \
 					{ \
-						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->prev must be 1st struct member)", __FILE__, __LINE__); \
+						unreal_log(ULOG_FATAL, "main", "BUG_LIST_OPERATION", NULL, \
+						           "[BUG] $file:$line: List operation on struct with incorrect order ($error_details)", \
+						           log_data_string("error_details", "->prev must be 1st struct member"), \
+						           log_data_string("file", __FILE__), \
+						           log_data_integer("line", __LINE__)); \
 						abort(); \
 					} \
 					if (offsetof(typeof(*list),next) != offsetof(ListStruct,next)) \
 					{ \
-						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->next must be 2nd struct member))", __FILE__, __LINE__); \
+						unreal_log(ULOG_FATAL, "main", "BUG_LIST_OPERATION", NULL, \
+						           "[BUG] $file:$line: List operation on struct with incorrect order ($error_details)", \
+						           log_data_string("error_details", "->next must be 2nd struct member"), \
+						           log_data_string("file", __FILE__), \
+						           log_data_integer("line", __LINE__)); \
 						abort(); \
 					}
 #else
@@ -653,17 +661,29 @@ union ModData
 #ifndef _WIN32
  #define CHECK_PRIO_LIST_ENTRY(list)	if (offsetof(typeof(*list),prev) != offsetof(ListStructPrio,prev)) \
 					{ \
-						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->prev must be 1st struct member)", __FILE__, __LINE__); \
+						unreal_log(ULOG_FATAL, "main", "BUG_LIST_OPERATION", NULL, \
+						           "[BUG] $file:$line: List operation on struct with incorrect order ($error_details)", \
+						           log_data_string("error_details", "->prev must be 1st struct member"), \
+						           log_data_string("file", __FILE__), \
+						           log_data_integer("line", __LINE__)); \
 						abort(); \
 					} \
 					if (offsetof(typeof(*list),next) != offsetof(ListStructPrio,next)) \
 					{ \
-						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->next must be 2nd struct member))", __FILE__, __LINE__); \
+						unreal_log(ULOG_FATAL, "main", "BUG_LIST_OPERATION", NULL, \
+						           "[BUG] $file:$line: List operation on struct with incorrect order ($error_details)", \
+						           log_data_string("error_details", "->next must be 2nd struct member"), \
+						           log_data_string("file", __FILE__), \
+						           log_data_integer("line", __LINE__)); \
 						abort(); \
 					} \
 					if (offsetof(typeof(*list),priority) != offsetof(ListStructPrio,priority)) \
 					{ \
-						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->priority must be 3rd struct member))", __FILE__, __LINE__); \
+						unreal_log(ULOG_FATAL, "main", "BUG_LIST_OPERATION", NULL, \
+						           "[BUG] $file:$line: List operation on struct with incorrect order ($error_details)", \
+						           log_data_string("error_details", "->priority must be 3rd struct member"), \
+						           log_data_string("file", __FILE__), \
+						           log_data_integer("line", __LINE__)); \
 						abort(); \
 					}
 #else
@@ -672,7 +692,10 @@ union ModData
 
 #define CHECK_NULL_LIST_ITEM(item)	if ((item)->prev || (item)->next) \
 					{ \
-						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on item with non-NULL 'prev' or 'next' -- are you adding to a list twice?", __FILE__, __LINE__); \
+						unreal_log(ULOG_FATAL, "main", "BUG_LIST_OPERATION_DOUBLE_ADD", NULL, \
+						           "[BUG] $file:$line: List operation on item with non-NULL 'prev' or 'next' -- are you adding to a list twice?", \
+						           log_data_string("file", __FILE__), \
+						           log_data_integer("line", __LINE__)); \
 						abort(); \
 					}
 
