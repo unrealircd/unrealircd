@@ -987,8 +987,8 @@ process_listmode:
 				v = atoi(param);
 				if (v < 0)
 					v = 1; /* setting +l with a negative number makes no sense */
-				if (v > 1000000000)
-					v = 1000000000; /* some kind of limit, 1 billion (mrah...) */
+				if (v > 1000000)
+					v = 1000000; /* some kind of limit, 1 million (mrah...) */
 				if (channel->mode.limit == v)
 					break;
 				channel->mode.limit = v;
