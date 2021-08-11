@@ -587,17 +587,6 @@ CMD_FUNC(cmd_uid)
 		}
 	}
 
-	/* Now check if 'nick' already exists - first, collisions with server names/ids (extremely rare) */
-	if ((acptr = find_server(nick, NULL)) != NULL)
-	{
-		sendto_umode(UMODE_OPER, "Nick collision on %s(%s <- %s)",
-		    client->name, acptr->direction->name,
-		    get_client_name(client, FALSE));
-		ircstats.is_kill++;
-		sendto_one(client, NULL, ":%s KILL %s :Nick-server-collision", me.id, parv[1]);
-		return;
-	}
-
 	/* Now check if 'nick' already exists - collision with a user (or still in handshake, unknown) */
 	if ((acptr = find_client(nick, NULL)) != NULL)
 	{
@@ -613,22 +602,7 @@ CMD_FUNC(cmd_uid)
 
 		lastnick = atol(parv[3]);
 		differ = (mycmp(acptr->user->username, parv[4]) || mycmp(acptr->user->realhost, parv[5]));
-		sendto_umode(UMODE_OPER, "Nick collision on %s (%s %lld <- %s %lld)",
-		    acptr->name, acptr->direction->name, (long long)acptr->lastnick,
-		    client->direction->name, (long long)lastnick);
-		/*
-		   **    I'm putting the KILL handling here just to make it easier
-		   ** to read, it's hard to follow it the way it used to be.
-		   ** Basically, this is what it will do.  It will kill both
-		   ** users if no timestamp is given, or they are equal.  It will
-		   ** kill the user on our side if the other server is "correct"
-		   ** (user@host differ and their user is older, or user@host are
-		   ** the same and their user is younger), otherwise just kill the
-		   ** user an reintroduce our correct user.
-		   **    The old code just sat there and "hoped" the other server
-		   ** would kill their user.  Not anymore.
-		   **                                               -- binary
-		 */
+
 		if (acptr->lastnick == lastnick)
 		{
 			nick_collision(client, parv[1], parv[6], NULL, acptr, NICKCOL_EQUAL);
@@ -780,10 +754,8 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		{
 			strlcpy(client->user->realhost, client->local->sockhost, sizeof(client->local->sockhost)); /* SET HOSTNAME */
 		} else {
-			sendto_realops("[HOSTNAME BUG] client->local->sockhost is empty for user %s (%s, %s)",
-				client->name, client->ip ? client->ip : "<null>", client->user->realhost);
-			ircd_log(LOG_ERROR, "[HOSTNAME BUG] client->local->sockhost is empty for user %s (%s, %s)",
-				client->name, client->ip ? client->ip : "<null>", client->user->realhost);
+			unreal_log(ULOG_ERROR, "main", "BUG_SOCKHOST_EMPTY", client,
+				   "[BUG] client->local->sockhost is empty for user $client.detail [$client.ip]");
 		}
 
 		/*
@@ -1189,12 +1161,30 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 {
 	char comment[512];
 	char *new_server, *existing_server;
+	char *who_won;
+	char *nickcol_reason;
 
-	ircd_log(LOG_ERROR, "Nick collision: %s[%s]@%s (new) vs %s[%s]@%s (existing). Winner: %s. Type: %s",
-		newnick, newid, cptr->name,
-		existing->name, existing->id, existing->uplink->name,
-		(type == NICKCOL_EQUAL) ? "None (equal)" : ((type == NICKCOL_NEW_WON) ? "New won" : "Existing won"),
-		new ? "nick-change" : "new user connecting");
+	if (type == NICKCOL_NEW_WON)
+		who_won = "new";
+	else if (type == NICKCOL_EXISTING_WON)
+		who_won = "existing";
+	else
+		who_won = "none";
+
+	nickcol_reason = new ? "nick change" : "new user connecting";
+
+	unreal_log(ULOG_ERROR, "nick", "NICK_COLLISION", NULL,
+	           "Nick collision: "
+	           "$new_nick[$new_id]@$uplink (new) vs "
+	           "$existing_client[$existing_client.id]@$existing_client.user.servername (existing). "
+	           "Winner: $nick_collision_winner. "
+	           "Cause: $nick_collision_reason",
+	           log_data_string("new_nick", newnick),
+	           log_data_string("new_id", newid),
+	           log_data_client("uplink", cptr),
+	           log_data_client("existing_client", existing),
+	           log_data_string("nick_collision_winner", who_won),
+	           log_data_string("nick_collision_reason", nickcol_reason));
 
 	new_server = cptr->name;
 	existing_server = (existing == existing->direction) ? me.name : existing->direction->name;
