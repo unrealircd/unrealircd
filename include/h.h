@@ -860,7 +860,6 @@ extern MODVAR char serveropts[];
 extern MODVAR char *ISupportStrings[];
 extern void read_packet(int fd, int revents, void *data);
 extern int process_packet(Client *cptr, char *readbuf, int length, int killsafely);
-extern void sendto_realops_and_log(FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,1,2)));
 extern int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in);
 extern int dead_socket(Client *to, char *notice);
 extern Match *unreal_create_match(MatchType type, char *str, char **error);

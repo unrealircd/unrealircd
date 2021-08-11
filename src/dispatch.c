@@ -531,7 +531,7 @@ void fd_select(time_t delay)
 
 	if (tdiff > 1000000)
 	{
-		sendto_realops_and_log("WARNING: Slow I/O engine or high load: fd_select() took %lld ms! read_callbacks=%d, write_callbacks=%d",
+		sendto_ops_and_log("WARNING: Slow I/O engine or high load: fd_select() took %lld ms! read_callbacks=%d, write_callbacks=%d",
 			tdiff / 1000, read_callbacks, write_callbacks);
 	}
 #endif

@@ -1080,7 +1080,7 @@ void floodprottimer_add(Channel *channel, char mflag, time_t when)
 	{
 		if (strlen(chp->timers_running)+1 >= sizeof(chp->timers_running))
 		{
-			sendto_realops_and_log("floodprottimer_add: too many timers running for %s (%s)!!!",
+			sendto_ops_and_log("floodprottimer_add: too many timers running for %s (%s)!!!",
 				channel->name, chp->timers_running);
 			return;
 		}

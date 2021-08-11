@@ -787,23 +787,6 @@ void sendto_ops_and_log(FORMAT_STRING(const char *pattern), ...)
 	sendto_umode(UMODE_OPER, "%s", buf);
 }
 
-/** This function does exactly the same as sendto_ops_and_log()
- * TODO: remove this function in some future cleanup
- */
-void sendto_realops_and_log(FORMAT_STRING(const char *fmt), ...)
-{
-	va_list vl;
-	static char buf[2048];
-
-	va_start(vl, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, vl);
-	va_end(vl);
-
-	sendto_realops("%s", buf);
-	ircd_log(LOG_ERROR, "%s", buf);
-}
-
-
 /** Send a message to all locally connected users with specified user mode.
  * @param umodes	The umode that the recipient should have set (one of UMODE_)
  * @param pattern	The format string / pattern to use.
