@@ -39,6 +39,11 @@
 #include <sys/ioctl.h>
 #endif
 
+/* Not sure if this is suitable for production,
+ * but let's turn it on for U6 development.
+ */
+#define DETECT_HIGH_CPU
+
 /***************************************************************************************
  * Backend-independent functions.  fd_setselect() and friends                          *
  ***************************************************************************************/
@@ -468,7 +473,7 @@ void fd_select(time_t delay)
 {
 	int num, p, revents, fd;
 	struct epoll_event *epfd;
-#ifdef DEBUG_IOENGINE
+#ifdef DETECT_HIGH_CPU
 	int read_callbacks = 0, write_callbacks = 0;
 	struct timeval oldt, t;
 	long long tdiff;
@@ -480,7 +485,7 @@ void fd_select(time_t delay)
 	if (num <= 0)
 		return;
 
-#ifdef DEBUG_IOENGINE
+#ifdef DETECT_HIGH_CPU
 	gettimeofday(&oldt, NULL);
 #endif
 
@@ -512,7 +517,7 @@ void fd_select(time_t delay)
 			if (iocb != NULL)
 				iocb(fd, evflags, fde->data);
 
-#ifdef DEBUG_IOENGINE
+#ifdef DETECT_HIGH_CPU
 			read_callbacks++;
 #endif
 		}
@@ -524,7 +529,7 @@ void fd_select(time_t delay)
 			if (iocb != NULL)
 				iocb(fd, evflags, fde->data);
 
-#ifdef DEBUG_IOENGINE
+#ifdef DETECT_HIGH_CPU
 			write_callbacks++;
 #endif
 		}
@@ -537,14 +542,18 @@ void fd_select(time_t delay)
 #endif
 	}
 
-#ifdef DEBUG_IOENGINE
+#ifdef DETECT_HIGH_CPU
 	gettimeofday(&t, NULL);
 	tdiff = ((t.tv_sec - oldt.tv_sec) * 1000000) + (t.tv_usec - oldt.tv_usec);
 
 	if (tdiff > 1000000)
 	{
-		sendto_ops_and_log("WARNING: Slow I/O engine or high load: fd_select() took %lld ms! read_callbacks=%d, write_callbacks=%d",
-			tdiff / 1000, read_callbacks, write_callbacks);
+		unreal_log(ULOG_WARNING, "io", "HIGH_LOAD", NULL,
+		           "HIGH CPU LOAD! fd_select() took $time_msec msec "
+		           "(read: $num_read_callbacks, write: $num_write_callbacks)",
+		           log_data_integer("time_msec", tdiff/1000),
+		           log_data_integer("num_read_callbacks", read_callbacks),
+		           log_data_integer("num_write_callbacks", write_callbacks));
 	}
 #endif
 }
