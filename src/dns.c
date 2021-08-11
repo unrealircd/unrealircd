@@ -175,12 +175,10 @@ void reinit_resolver(Client *client)
 {
 	EventDel(unrealdns_timeout_hdl);
 
-	sendto_ops_and_log("%s requested reinitalization of resolver!", client->name);
-	sendto_realops("Destroying resolver channel, along with all currently pending queries...");
+	unreal_log(ULOG_INFO, "dns", "REINIT_RESOLVER", client,
+	           "$client requested reinitalization of the DNS resolver");
 	ares_destroy(resolver_channel);
-	sendto_realops("Initializing resolver again...");
 	init_resolver(0);
-	sendto_realops("Reinitalization finished successfully.");
 }
 
 void unrealdns_addreqtolist(DNSReq *r)
@@ -407,8 +405,9 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 	    !(ip = inetntop(r->ipv6 ? AF_INET6 : AF_INET, he->h_addr_list[0], ipbuf, sizeof(ipbuf))))
 	{
 		/* Illegal response -- fatal */
-		sendto_ops_and_log("Unable to resolve hostname '%s', when trying to connect to server %s.",
-			r->name, r->linkblock->servername);
+		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_RESOLVING", NULL,
+		           "Unable to resolve hostname $link_block.hostname, when trying to connect to server $link_block.",
+		           log_data_link_block(r->linkblock));
 		unrealdns_freeandremovereq(r);
 		return;
 	}

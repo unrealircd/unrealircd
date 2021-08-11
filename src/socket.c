@@ -470,7 +470,8 @@ void completed_connection(int fd, int revents, void *data)
 
 	if (!aconf)
 	{
-		sendto_ops_and_log("Lost configuration for %s", get_client_name(client, FALSE));
+		unreal_log(ULOG_ERROR, "link", "BUG_LOST_CONFIGURATION_ON_CONNECT", client,
+		           "Lost configuration while connecting to $client.details");
 		return;
 	}
 

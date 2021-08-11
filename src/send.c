@@ -79,8 +79,14 @@ int dead_socket(Client *to, char *notice)
 		return -1; /* don't overwrite & don't send multiple times */
 	
 	if (!IsUser(to) && !IsUnknown(to) && !IsClosing(to))
-		sendto_ops_and_log("Link to server %s (%s) closed: %s",
-			to->name, to->ip?to->ip:"<no-ip>", notice);
+	{
+		/* Looks like a duplicate error message to me?
+		 * If so, remove it here.
+		 */
+		unreal_log(ULOG_ERROR, "link", "LINK_CLOSING", to,
+		           "Link to server $client.detail closed: $reason",
+		           log_data_string("reason", notice));
+	}
 	safe_strdup(to->local->error_str, notice);
 	return -1;
 }

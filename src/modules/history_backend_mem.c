@@ -1504,9 +1504,10 @@ char *hbm_history_filename(HistoryLogObject *h)
 
 #define WARN_WRITE_ERROR(fname) \
 	do { \
-		sendto_ops_and_log("[history] Error writing to temporary database file " \
-		                       "'%s': %s (DATABASE NOT SAVED)", \
-		                       fname, unrealdb_get_error_string()); \
+		unreal_log(ULOG_ERROR, "history", "HISTORYDB_FILE_WRITE_ERROR", NULL, \
+			   "[historydb] Error writing to temporary database file $filename: $system_error", \
+			   log_data_string("filename", fname), \
+			   log_data_string("system_error", unrealdb_get_error_string())); \
 	} while(0)
 
 #define W_SAFE(x) \
@@ -1584,7 +1585,7 @@ static int hbm_write_db(HistoryLogObject *h)
 #endif
 	if (rename(tmpfname, realfname) < 0)
 	{
-		sendto_ops_and_log("[history] Error renaming '%s' to '%s': %s (HISTORY NOT SAVED)",
+		config_error("[history] Error renaming '%s' to '%s': %s (HISTORY NOT SAVED)",
 			tmpfname, realfname, strerror(errno));
 		return 0;
 	}

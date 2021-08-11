@@ -1080,8 +1080,10 @@ void floodprottimer_add(Channel *channel, char mflag, time_t when)
 	{
 		if (strlen(chp->timers_running)+1 >= sizeof(chp->timers_running))
 		{
-			sendto_ops_and_log("floodprottimer_add: too many timers running for %s (%s)!!!",
-				channel->name, chp->timers_running);
+			unreal_log(ULOG_WARNING, "flood", "BUG_FLOODPROTTIMER_ADD", NULL,
+			           "[BUG] floodprottimer_add: too many timers running for $channel ($timers_running)",
+			           log_data_channel("channel", channel),
+			           log_data_string("timers_running", chp->timers_running));
 			return;
 		}
 		strccat(chp->timers_running, mflag); /* bounds already checked ^^ */
