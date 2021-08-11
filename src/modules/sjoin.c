@@ -526,9 +526,12 @@ getnick:
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_buf) + strlen(prefix) + strlen(acptr->id) > BUFSIZE - 5)
 				{
-					ircd_log(LOG_ERROR, "Oversized SJOIN: '%s' + '%s%s'",
-						uid_buf, prefix, acptr->id);
-					sendto_realops("Oversized SJOIN for %s -- see ircd log", channel->name);
+					unreal_log(ULOG_ERROR, "sjoin", "BUG_OVERSIZED_SJOIN", client,
+					           "Oversized SJOIN [$sjoin_place] in channel $channel when adding '$str$str2' to '$buf'",
+					           log_data_string("sjoin_place", "UID-MEMBER"),
+					           log_data_string("str", prefix),
+					           log_data_string("str2", acptr->id),
+					           log_data_string("buf", uid_buf));
 					continue;
 				}
 			}
@@ -542,9 +545,12 @@ getnick:
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_sjsby_buf) + strlen(prefix) + strlen(acptr->id) > BUFSIZE - 5)
 				{
-					ircd_log(LOG_ERROR, "Oversized SJOIN: '%s' + '%s%s'",
-						uid_sjsby_buf, prefix, acptr->id);
-					sendto_realops("Oversized SJOIN for %s -- see ircd log", channel->name);
+					unreal_log(ULOG_ERROR, "sjoin", "BUG_OVERSIZED_SJOIN", client,
+					           "Oversized SJOIN [$sjoin_place] in channel $channel when adding '$str$str2' to '$buf'",
+					           log_data_string("sjoin_place", "SJS-MEMBER"),
+					           log_data_string("str", prefix),
+					           log_data_string("str2", acptr->id),
+					           log_data_string("buf", uid_sjsby_buf));
 					continue;
 				}
 			}
@@ -601,9 +607,12 @@ getnick:
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_buf) + strlen(prefix) + strlen(nick) > BUFSIZE - 5)
 				{
-					ircd_log(LOG_ERROR, "Oversized SJOIN: '%s' + '%s%s'",
-						uid_buf, prefix, nick);
-					sendto_realops("Oversized SJOIN for %s -- see ircd log", channel->name);
+					unreal_log(ULOG_ERROR, "sjoin", "BUG_OVERSIZED_SJOIN", client,
+					           "Oversized SJOIN [$sjoin_place] in channel $channel when adding '$str$str2' to '$buf'",
+					           log_data_string("sjoin_place", "UID-LMODE"),
+					           log_data_string("str", prefix),
+					           log_data_string("str2", nick),
+					           log_data_string("buf", uid_buf));
 					continue;
 				}
 			}
@@ -623,8 +632,11 @@ getnick:
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_sjsby_buf) + strlen(scratch_buf) > BUFSIZE - 5)
 				{
-					ircd_log(LOG_ERROR, "Oversized SJOIN: '%s' + '%s'", uid_sjsby_buf, scratch_buf);
-					sendto_realops("Oversized SJOIN for %s -- see ircd log", channel->name);
+					unreal_log(ULOG_ERROR, "sjoin", "BUG_OVERSIZED_SJOIN", client,
+					           "Oversized SJOIN [$sjoin_place] in channel $channel when adding '$str$str2' to '$buf'",
+					           log_data_string("sjoin_place", "SJS-LMODE"),
+					           log_data_string("str", scratch_buf),
+					           log_data_string("buf", uid_sjsby_buf));
 					continue;
 				}
 			}
@@ -855,7 +867,9 @@ getnick:
 						break;
 
 					default:
-						ircd_log(LOG_ERROR, "channel.c:m_sjoin:param diff checker: got unk. retval 0x%x??", r);
+						unreal_log(ULOG_ERROR, "sjoin", "BUG_SJOIN_CHECK", client,
+						           "[BUG] channel.c:m_sjoin:param diff checker: unknown return value $return_value",
+						           log_data_integer("return_value", r));
 						break;
 				}
 			}
