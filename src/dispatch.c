@@ -47,14 +47,18 @@ void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data)
 	FDEntry *fde;
 	int changed = 0;
 #if 0
-	ircd_log(LOG_ERROR, "fd_setselect(): fd %d flags %d func %p", fd, flags, &iocb);
+	unreal_log(ULOG_DEBUG, "io", "IO_DEBUG_FD_SETSELECT", NULL,
+	           "fd_setselect(): fd $fd flags $fd_flags function $function_pointer",
+	           log_data_integer("fd", fd),
+	           log_data_integer("fd_flags", flags),
+	           log_data_integer("function_pointer", (long long)iocb));
 #endif
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
 	{
-		sendto_realops("[BUG] trying to modify fd #%d in fd table, but MAXCONNECTIONS is %d",
-				fd, MAXCONNECTIONS);
-		ircd_log(LOG_ERROR, "[BUG] trying to modify fd #%d in fd table, but MAXCONNECTIONS is %d",
-				fd, MAXCONNECTIONS);
+		unreal_log(ULOG_ERROR, "io", "BUG_FD_SETSELECT_OUT_OF_RANGE", NULL,
+		           "[BUG] trying to modify fd $fd in fd table, but MAXCONNECTIONS is $maxconnections",
+		           log_data_integer("fd", fd),
+		           log_data_integer("maxconnections", MAXCONNECTIONS));
 #ifdef DEBUGMODE
 		abort();
 #endif
@@ -143,7 +147,11 @@ void fd_debug(fd_set *f, int highest, char *name)
 			//if (fcntl(i, F_GETFL) < 0)
 			int nonb = 1;
 			if (ioctlsocket(i, FIONBIO, &nonb) < 0)
-				ircd_log(LOG_ERROR, "fd_debug: FD #%d is invalid!!!", i);
+			{
+				unreal_log(ULOG_ERROR, "io", "FD_DEBUG", NULL,
+					   "[BUG] fd_debug: fd $fd is invalid!!!",
+					   log_data_integer("fd", fd));
+			}
 		}
 	}
 }
@@ -167,10 +175,6 @@ void fd_select(time_t delay)
 	memset(&to, 0, sizeof(to));
 	to.tv_sec = delay / 1000;
 	to.tv_usec = (delay % 1000) * 1000;
-
-#ifdef DEBUGMODE
-	ircd_log(LOG_ERROR, "fd_select() on 0-%d...", highest_fd+1);
-#endif
 
 #ifdef _WIN32
 	num = select(highest_fd + 1, &work_read_fds, &work_write_fds, &work_except_fds, &to);
@@ -205,10 +209,6 @@ void fd_select(time_t delay)
 		if (!fde->is_open)
 			continue;
 
-#ifdef DEBUGMODE
-		ircd_log(LOG_ERROR, "fd_select(): checking %d...", fd);
-#endif
-
 		if (FD_ISSET(fd, &work_read_fds))
 			evflags |= FD_SELECT_READ;
 
@@ -223,10 +223,6 @@ void fd_select(time_t delay)
 
 		if (!evflags)
 			continue;
-
-#ifdef DEBUGMODE
-		ircd_log(LOG_ERROR, "fd_select(): events for %d (%d)... processing...", fd, evflags);
-#endif
 
 		if (evflags & FD_SELECT_READ)
 		{
@@ -281,7 +277,9 @@ void fd_fork()
 					continue;
 					
 #ifdef DEBUGMODE
-				ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
+				unreal_log(ULOG_ERROR, "io", "KEVENT_FAILED", NULL,
+				           "[io] fd_fork(): kevent returned error: $system_error",
+				           log_data_string("system_error", strerror(errno)));
 #endif
 			}
 		}
@@ -309,8 +307,13 @@ void fd_refresh(int fd)
 #ifdef DEBUGMODE
 			if (ERRNO != P_EWOULDBLOCK && ERRNO != P_EAGAIN)
 			{
-				ircd_log(LOG_ERROR, "[BUG?] fd_refresh(): kevent returned %d for fd %d for read callback (%s)",
-				         errno, fd, (fde->read_callback ? "add" : "delete"));
+				int save_err = errno;
+				unreal_log(ULOG_ERROR, "io", "KEVENT_FAILED_REFRESH", NULL,
+				           "fd_refresh(): kevent returned error for fd $fd ($fd_action) ($callback): $system_error",
+				           log_data_string("system_error", strerror(save_err)),
+				           log_data_integer("fd", fd),
+				           log_data_string("fd_action", (fde->read_callback ? "add" : "delete")),
+				           log_data_string("callback", "read_callback"));
 			}
 #endif
 		}
@@ -324,8 +327,13 @@ void fd_refresh(int fd)
 #ifdef DEBUGMODE
 			if (ERRNO != P_EWOULDBLOCK && ERRNO != P_EAGAIN && fde->write_callback)
 			{
-				ircd_log(LOG_ERROR, "[BUG?] fd_refresh(): kevent returned %d for fd %d for write callback (%s)",
-				         errno, fd, "add" /*(fde->write_callback ? "add" : "delete")*/);
+				int save_err = errno;
+				unreal_log(ULOG_ERROR, "io", "KEVENT_FAILED_REFRESH", NULL,
+				           "[io] fd_refresh(): kevent returned error for fd $fd ($fd_action) ($callback): $system_error",
+				           log_data_string("system_error", strerror(save_err)),
+				           log_data_integer("fd", fd),
+				           log_data_string("fd_action", "add"),
+				           log_data_string("callback", "write_callback"));
 			}
 #endif
 		}
@@ -441,11 +449,15 @@ void fd_refresh(int fd)
 
 	if (epoll_ctl(epoll_fd, op, fd, &ep_event) != 0)
 	{
-		if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
+		int save_errno = errno;
+		if ((save_errno == P_EWOULDBLOCK) || (save_errno == P_EAGAIN))
 			return;
 
-		ircd_log(LOG_ERROR, "[BUG] fd_refresh(): epoll_ctl returned error %d (%s) for fd %d (%s)",
-			errno, STRERROR(ERRNO), fd, fde->desc);
+		unreal_log(ULOG_ERROR, "io", "EPOLL_CTL_FAILED", NULL,
+			   "[io] fd_refresh(): epoll_ctl returned error for fd $fd ($fd_description): $system_error",
+			   log_data_string("system_error", strerror(save_errno)),
+			   log_data_integer("fd", fd),
+			   log_data_string("fd_description", fde->desc));
 		return;
 	}
 
