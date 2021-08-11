@@ -517,6 +517,7 @@ void json_expand_channel(json_t *j, char *key, Channel *channel, int detail)
 	json_t *child = json_object();
 	json_object_set_new(j, key, child);
 	json_object_set_new(child, "name", json_string_unreal(channel->name));
+	// TODO: expand more, obviously!
 }
 
 char *timestamp_iso8601_now(void)
@@ -611,6 +612,15 @@ LogData *log_data_client(const char *key, Client *client)
 	d->type = LOG_FIELD_CLIENT;
 	safe_strdup(d->key, key);
 	d->value.client = client;
+	return d;
+}
+
+LogData *log_data_channel(const char *key, Channel *channel)
+{
+	LogData *d = safe_alloc(sizeof(LogData));
+	d->type = LOG_FIELD_CHANNEL;
+	safe_strdup(d->key, key);
+	d->value.channel = channel;
 	return d;
 }
 
@@ -1426,6 +1436,9 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 				break;
 			case LOG_FIELD_CLIENT:
 				json_expand_client(j_details, d->key, d->value.client, 0);
+				break;
+			case LOG_FIELD_CHANNEL:
+				json_expand_channel(j_details, d->key, d->value.channel, 0);
 				break;
 			case LOG_FIELD_OBJECT:
 				json_object_set_new(j_details, d->key, d->value.object);

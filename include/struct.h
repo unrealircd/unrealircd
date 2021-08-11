@@ -210,6 +210,7 @@ typedef enum LogFieldType {
 	LOG_FIELD_INTEGER, // and unsigned?
 	LOG_FIELD_STRING,
 	LOG_FIELD_CLIENT,
+	LOG_FIELD_CHANNEL,
 	LOG_FIELD_OBJECT
 } LogFieldType;
 
@@ -220,6 +221,7 @@ typedef struct LogData {
 		int64_t integer;
 		char *string;
 		Client *client;
+		Channel *channel;
 		json_t *object;
 	} value;
 } LogData;

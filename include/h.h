@@ -1111,6 +1111,7 @@ extern LogData *log_data_char(const char *key, const char c);
 extern LogData *log_data_integer(const char *key, int64_t integer);
 extern LogData *log_data_timestamp(const char *key, time_t ts);
 extern LogData *log_data_client(const char *key, Client *client);
+extern LogData *log_data_channel(const char *key, Channel *channel);
 extern LogData *log_data_source(const char *file, int line, const char *function);
 extern LogData *log_data_socket_error(int fd);
 extern LogData *log_data_link_block(ConfigItem_link *link);
