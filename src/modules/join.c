@@ -676,12 +676,9 @@ void _userhost_changed(Client *client)
 
 	if (strcmp(remember_nick, client->name))
 	{
-		ircd_log(LOG_ERROR, "[BUG] userhost_changed() was called but without calling userhost_save_current() first! Affected user: %s",
-			client->name);
-		ircd_log(LOG_ERROR, "Please report above bug on https://bugs.unrealircd.org/");
-		sendto_realops("[BUG] userhost_changed() was called but without calling userhost_save_current() first! Affected user: %s",
-			client->name);
-		sendto_realops("Please report above bug on https://bugs.unrealircd.org/");
+		unreal_log(ULOG_ERROR, "main", "BUG_USERHOST_CHANGED", client,
+		           "[BUG] userhost_changed() was called but without calling userhost_save_current() first! Affected user: $client\n"
+		           "Please report above bug on https://bugs.unrealircd.org/");
 		return; /* We cannot safely process this request anymore */
 	}
 

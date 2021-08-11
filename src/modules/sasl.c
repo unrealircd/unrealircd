@@ -336,14 +336,9 @@ void auto_discover_sasl_server(int justlinked)
 			/* SASL server found */
 			if (justlinked)
 			{
-				/* Let's send this message only on link and not also on /rehash */
-				sendto_realops("Services server '%s' provides SASL authentication, good! "
-				               "I'm setting set::sasl-server to '%s' internally.",
-				               SERVICES_NAME, SERVICES_NAME);
-				/* We should really get some LOG_INFO or something... I keep abusing LOG_ERROR :) */
-				ircd_log(LOG_ERROR, "Services server '%s' provides SASL authentication, good! "
-				                    "I'm setting set::sasl-server to '%s' internally.",
-				                    SERVICES_NAME, SERVICES_NAME);
+				unreal_log(ULOG_INFO, "config", "SASL_SERVER_AUTODETECT", client,
+				           "Services server $client provides SASL authentication, good! "
+				           "I'm setting set::sasl-server to \"$client\" internally.");
 			}
 			safe_strdup(SASL_SERVER, SERVICES_NAME);
 			if (justlinked)

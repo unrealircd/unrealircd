@@ -211,11 +211,6 @@ EVENT(jointhrottle_cleanup_structs)
 			
 			if (jf->firstjoin + iConf.floodsettings->period[FLD_JOIN] > TStime())
 				continue; /* still valid entry */
-#ifdef DEBUGMODE
-			ircd_log(LOG_ERROR, "jointhrottle_cleanup_structs(): freeing %s/%s (%ld[%ld], %ld)",
-				client->name, jf->name, jf->firstjoin, (long)(TStime() - jf->firstjoin),
-				iConf.floodsettings->period[FLD_JOIN]);
-#endif
 			if (moddata_local_client(client, jointhrottle_md).ptr == jf)
 			{
 				/* change head */
