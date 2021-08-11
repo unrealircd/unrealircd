@@ -178,14 +178,23 @@ CMD_FUNC(cmd_sjoin)
 	if (parc < 5)
 		nomode = 1;
 
-	ts = (time_t)atol(parv[1]);
-
 	channel = find_channel(parv[2]);
 	if (!channel)
 	{
 		channel = make_channel(parv[2]);
-		channel->creationtime = ts;
 		oldts = -1;
+	}
+
+	ts = (time_t)atol(parv[1]);
+
+	if (IsInvalidChannelTS(ts))
+	{
+		unreal_log(ULOG_WARNING, "sjoin", "SJOIN_INVALID_TIMESTAMP", NULL,
+			   "SJOIN for channel $channel has invalid timestamp $send_timestamp (from $client)",
+			   log_data_channel("channel", channel),
+			   log_data_integer("send_timestamp", ts));
+		/* Pretend they match our creation time (matches U6 behavior in m_mode.c) */
+		ts = channel->creationtime;
 	}
 
 	if (channel->creationtime > ts)
@@ -206,15 +215,6 @@ CMD_FUNC(cmd_sjoin)
 	if (channel->creationtime > 0)
 	{
 		oldts = channel->creationtime;
-	}
-
-	// FIXME: make it so services cannot screw this up so easily --- if possible...
-	if (ts < 750000)
-	{
-		if (ts != 0)
-			sendto_ops
-			    ("Warning! Possible desync: SJOIN for channel %s has a fishy timestamp (%lld) [%s/%s]",
-			    channel->name, (long long)ts, client->name, client->direction->name);
 	}
 
 	parabuf[0] = '\0';

@@ -417,25 +417,31 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 	{
 		if (sendts > 0)
 		{
-			if (!channel->creationtime || sendts < channel->creationtime)
+			if (IsInvalidChannelTS(sendts))
 			{
+				unreal_log(ULOG_WARNING, "mode", "MODE_INVALID_TIMESTAMP", NULL,
+				           "MODE for channel $channel has invalid timestamp $send_timestamp (from $client.name on $client.user.servername)\n"
+				           "Buffer: $modebuf $parabuf",
+				           log_data_channel("channel", channel),
+				           log_data_integer("send_timestamp", sendts),
+				           log_data_string("modebuf", modebuf),
+				           log_data_string("parabuf", parabuf));
+				/* Yeah, so what to do in this case?
+				 * Don't set channel->creationtime
+				 * and assume merging.
+				 */
+				sendts = channel->creationtime;
+			} else
+			if (sendts < channel->creationtime)
+			{
+				/* Our timestamp is wrong (or this is a new channel) */
 				tschange = 1;
 				channel->creationtime = sendts;
-				if (sendts < 750000)
-				{
-					sendto_realops(
-						"Warning! Possible desync: MODE for channel %s ('%s %s') has fishy timestamp (%lld) (from %s/%s)",
-						channel->name, modebuf, parabuf, (long long)sendts, client->direction->name, client->name);
-					ircd_log(LOG_ERROR, "Possible desync: MODE for channel %s ('%s %s') has fishy timestamp (%lld) (from %s/%s)",
-						channel->name, modebuf, parabuf, (long long)sendts, client->direction->name, client->name);
-				}
-				/* new chan or our timestamp is wrong */
-				/* now works for double-bounce prevention */
 
 			}
 			if (sendts > channel->creationtime && channel->creationtime)
 			{
-				/* theirs is wrong but we let it pass anyway */
+				/* Their timestamp is wrong */
 				sendts = channel->creationtime;
 				sendto_one(client, NULL, ":%s MODE %s + %lld", me.name,
 				    channel->name, (long long)channel->creationtime);

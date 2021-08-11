@@ -2007,6 +2007,8 @@ struct Link {
 	} value;
 };
 
+#define IsInvalidChannelTS(x)	((x) < 750000) /**< Invalid channel creation time */
+
 /**
  * @addtogroup CommonStructs
  * @{
