@@ -68,6 +68,8 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 			break;
 	if (slot >= EXTBANTABLESZ - 1)
 	{
+		unreal_log(ULOG_ERROR, "module", "EXTBAN_OUT_OF_SPACE", NULL,
+		           "ExtbanAdd: out of space!!!");
 		if (module)
 			module->errorcode = MODERR_NOSPACE;
 		return NULL;

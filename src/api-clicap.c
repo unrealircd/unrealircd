@@ -79,7 +79,9 @@ long ClientCapabilityBit(const char *token)
 #ifdef DEBUGMODE
 	if (!clicap)
 	{
-		ircd_log(LOG_ERROR, "WARNING: ClientCapabilityBit(): unknown token '%s'", token);
+		unreal_log(ULOG_WARNING, "main", "BUG_CLIENTCAPABILITYBIT_UNKNOWN_TOKEN", NULL,
+		           "[BUG] ClientCapabilityBit() check for unknown token: $token",
+		           log_data_string("token", token));
 	}
 #endif
 
@@ -162,8 +164,8 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clic
 			v = clicap_allocate_cap();
 			if (v == 0)
 			{
-				sendto_realops("ClientCapabilityAdd: out of space!!!");
-				ircd_log(LOG_ERROR, "ClientCapabilityAdd: out of space!!!");
+				unreal_log(ULOG_ERROR, "module", "CLIENTCAPABILITY_OUT_OF_SPACE", NULL,
+				           "ClientCapabilityAdd: out of space!!!");
 				if (module)
 					module->errorcode = MODERR_NOSPACE;
 				return NULL;
@@ -204,8 +206,9 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clic
 void unload_clicap_commit(ClientCapability *clicap)
 {
 	/* This is an unusual operation, I think we should log it. */
-	ircd_log(LOG_ERROR, "Unloading client capability '%s'", clicap->name);
-	sendto_realops("Unloading client capability '%s'", clicap->name);
+	unreal_log(ULOG_INFO, "module", "UNLOAD_CLICAP", NULL,
+	           "Unloading client capability '$token'",
+	           log_data_string("token", clicap->name));
 
 	/* NOTE: Stripping the CAP from local clients is done
 	 * in clicap_post_rehash(), so not here.
@@ -284,7 +287,9 @@ void clicap_pre_rehash(void)
 	{
 		if (i == MAXCLICAPS)
 		{
-			ircd_log(LOG_ERROR, "More than %d caps loaded - what???", MAXCLICAPS);
+			unreal_log(ULOG_ERROR, "module", "BUG_TOO_MANY_CLIENTCAPABILITIES", NULL,
+			           "[BUG] clicap_pre_rehash: More than $count caps loaded - this should never happen",
+			           log_data_integer("count", MAXCLICAPS));
 			break;
 		}
 		safe_strdup(old_caps[i], clicap->name);

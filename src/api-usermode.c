@@ -212,6 +212,8 @@ Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*
 	}
 	else
 	{
+		unreal_log(ULOG_ERROR, "module", "USER_MODE_OUT_OF_SPACE", NULL,
+		           "UmodeAdd: out of space!!!");
 		if (module)
 			module->errorcode = MODERR_NOSPACE;
 		return NULL;

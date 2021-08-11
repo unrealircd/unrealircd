@@ -690,14 +690,17 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 					ret = pcre2_match(this_word->pcre2_expr, ptr, PCRE2_ZERO_TERMINATED, 0, 0, md, NULL); /* run the regex */
 					if (ret > 0)
 					{
-						ircd_log(LOG_ERROR, "pcre2_get_ovector_count: %d", pcre2_get_ovector_count(md));
 						dd = pcre2_get_ovector_pointer(md);
 						start = (int)dd[0];
 						end = (int)dd[1];
 						if ((start < 0) || (end < 0) || (start > strlen(ptr)) || (end > strlen(ptr)+1))
 						{
-							ircd_log(LOG_ERROR, "pcre2_match() returned an ovector with OOB start/end: %d/%d, str (%d): '%s'",
-								(int)start, (int)end, (int)strlen(ptr), ptr);
+							unreal_log(ULOG_FATAL, "main", "BUG_STRIPBADWORDS_PCRE2_MATCH_OOB", NULL,
+							           "[BUG] pcre2_match() returned an ovector with OOB start/end: $start/$end, len $length: '$buf'",
+							           log_data_integer("start", start),
+							           log_data_integer("end", end),
+							           log_data_integer("length", strlen(ptr)),
+							           log_data_string("buf", ptr));
 							abort();
 						}
 						m = end - start;

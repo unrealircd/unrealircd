@@ -65,6 +65,8 @@ ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 	    ((req.type == MODDATATYPE_MEMBER) && (slotav >= MODDATA_MAX_MEMBER)) ||
 	    ((req.type == MODDATATYPE_MEMBERSHIP) && (slotav >= MODDATA_MAX_MEMBERSHIP)))
 	{
+		unreal_log(ULOG_ERROR, "module", "MOD_DATA_OUT_OF_SPACE", NULL,
+		           "ModDataAdd: out of space!!!");
 		if (module)
 			module->errorcode = MODERR_NOSPACE;
 		return NULL;

@@ -223,6 +223,8 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 	}
 	if (i == EXTCMODETABLESZ)
 	{
+		unreal_log(ULOG_ERROR, "module", "CHANNEL_MODE_OUT_OF_SPACE", NULL,
+		           "CmodeAdd: out of space!!!");
 		if (module)
 			module->errorcode = MODERR_NOSPACE;
 		return NULL;
@@ -242,6 +244,8 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 			{
 				if (paraslot == MAXPARAMMODES - 1)
 				{
+					unreal_log(ULOG_ERROR, "module", "CHANNEL_MODE_OUT_OF_SPACE", NULL,
+						   "CmodeAdd: out of space!!! Place 2.");
 					if (module)
 						module->errorcode = MODERR_NOSPACE;
 					return NULL;

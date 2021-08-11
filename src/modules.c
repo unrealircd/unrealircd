@@ -564,7 +564,9 @@ void FreeModObj(ModuleObject *obj, Module *m)
 	}
 	else
 	{
-		ircd_log(LOG_ERROR, "FreeModObj() called for unknown object");
+		unreal_log(ULOG_FATAL, "module", "FREEMODOBJ_UNKNOWN_TYPE", NULL,
+		           "[BUG] FreeModObj() called for unknown object (type $type)",
+		           log_data_integer("type", obj->type));
 		abort();
 	}
 }
@@ -1184,7 +1186,9 @@ void	unload_all_modules(void)
 	for (m = Modules; m; m = m->next)
 	{
 #ifdef DEBUGMODE
-		ircd_log(LOG_ERROR, "Unloading %s...", m->header->name);
+		unreal_log(ULOG_DEBUG, "module", "MODULE_UNLOADING", NULL,
+		           "Unloading module $module_name",
+		           log_data_string("module_name", m->header->name));
 #endif
 		irc_dlsym(m->dll, "Mod_Unload", Mod_Unload);
 		if (Mod_Unload)

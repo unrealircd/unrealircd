@@ -308,8 +308,9 @@ static void _rs_stir(void)
 
 	if (RAND_bytes(rnd, sizeof(rnd)) <= 0)
 	{
-		ircd_log(LOG_ERROR, "Couldn't obtain random bytes (error 0x%lx)",
-		    (unsigned long)ERR_get_error());
+		unreal_log(ULOG_FATAL, "random", "RANDOM_OUT_OF_BYTES", NULL,
+		           "Could not obtain random bytes, error $tls_error_code",
+		           log_data_integer("tls_error_code", ERR_get_error()));
 		abort();
 	}
 
