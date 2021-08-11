@@ -268,7 +268,6 @@ extern void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...) __at
 extern void sendnumeric(Client *to, int numeric, ...);
 extern void sendnumericfmt(Client *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,3,4)));
 extern void sendto_server(Client *one, unsigned long caps, unsigned long nocaps, MessageTag *mtags, FORMAT_STRING(const char *format), ...) __attribute__((format(printf, 5, 6)));
-extern void sendto_ops_and_log(FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,1,2)));
 
 extern MODVAR int writecalls, writeb[];
 extern int deliver_it(Client *cptr, char *str, int len, int *want_read);

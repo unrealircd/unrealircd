@@ -1332,7 +1332,8 @@ void start_server_handshake(Client *client)
 	if (!aconf)
 	{
 		/* Should be impossible. */
-		sendto_ops_and_log("Lost configuration for %s in start_server_handshake()", get_client_name(client, FALSE));
+		unreal_log(LOG_ERROR, "link", "BUG_LOST_CONFIGURATION_ON_HANDSHAKE", client,
+		           "Lost configuration while connecting to $client.details");
 		return;
 	}
 

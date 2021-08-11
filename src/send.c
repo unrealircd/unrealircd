@@ -782,23 +782,6 @@ void sendto_realops(FORMAT_STRING(const char *pattern), ...)
 	}
 }
 
-/** Send a message to all locally connected IRCOps and also log the error.
- * @param pattern	The format string / pattern to use.
- * @param ...		Format string parameters.
- */
-void sendto_ops_and_log(FORMAT_STRING(const char *pattern), ...)
-{
-	va_list vl;
-	char buf[1024];
-
-	va_start(vl, pattern);
-	ircvsnprintf(buf, sizeof(buf), pattern, vl);
-	va_end(vl);
-
-	sendto_umode(UMODE_OPER, "%s", buf);
-	unreal_log_raw(ULOG_ERROR, "unknown", "UNKNOWN", NULL, buf);
-}
-
 /** Send a message to all locally connected users with specified user mode.
  * @param umodes	The umode that the recipient should have set (one of UMODE_)
  * @param pattern	The format string / pattern to use.
