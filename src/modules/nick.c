@@ -533,7 +533,7 @@ CMD_FUNC(cmd_uid)
 		return;
 	}
 
-	if (!valid_host(virthost))
+	if (strcmp(virthost, "*") && !valid_host(virthost))
 	{
 		ircstats.is_kill++;
 		unreal_log(ULOG_ERROR, "link", "BAD_HOSTNAME", client,
