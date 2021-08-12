@@ -1398,21 +1398,35 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	char *loglevel_string = log_level_valtostring(loglevel);
 	MultiLine *mmsg;
 
-	/* TODO: Enforcement:
-	 * - loglevel must be valid
-	 * - subsystem may only contain lowercase, underscore and numbers
-	 * - event_id may only contain UPPERCASE, underscore and numbers (but not start with a number)
-	 * - msg may not contain percent signs (%) as that is an obvious indication something is wrong?
-	 *   or maybe a temporary restriction while upgrading that can be removed later ;)
-	 */
 	if (loglevel_string == NULL)
-		abort();
+	{
+		do_unreal_log_internal(ULOG_ERROR, "log", "BUG_LOG_LOGLEVEL", NULL, 0,
+		                       "[BUG] Next log message had an invalid log level -- corrected to ULOG_ERROR",
+		                       NULL);
+		loglevel = ULOG_ERROR;
+		loglevel_string = log_level_valtostring(loglevel);
+	}
 	if (!valid_subsystem(subsystem))
-		abort();
+	{
+		do_unreal_log_internal(ULOG_ERROR, "log", "BUG_LOG_SUBSYSTEM", NULL, 0,
+		                       "[BUG] Next log message had an invalid subsystem -- changed to 'unknown'",
+		                       NULL);
+		subsystem = "unknown";
+	}
 	if (!valid_event_id(event_id))
-		abort();
+	{
+		do_unreal_log_internal(ULOG_ERROR, "log", "BUG_LOG_EVENT_ID", NULL, 0,
+		                       "[BUG] Next log message had an invalid event id -- changed to 'unknown'",
+		                       NULL);
+		event_id = "unknown";
+	}
+	/* This one is probably temporary since it should not be a real error, actually (but often is) */
 	if (expand_msg && strchr(msg, '%'))
-		abort();
+	{
+		do_unreal_log_internal(ULOG_ERROR, "log", "BUG_LOG_MESSAGE_PERCENT", NULL, 0,
+		                       "[BUG] Next log message contains a percent sign -- possibly accidental format string!",
+		                       NULL);
+	}
 
 	j = json_object();
 	j_details = json_object();
