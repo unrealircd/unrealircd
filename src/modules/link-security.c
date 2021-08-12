@@ -231,7 +231,7 @@ EVENT(checklinksec)
 	if (warning_sent)
 	{
 		unreal_log(ULOG_INFO, "link-security", "EFFECTIVE_LINK_SECURITY_REPORT", NULL,
-		           "Effective (network-wide) link-security is now: level $effective_link_security\n",
+		           "Effective (network-wide) link-security is now: level $effective_link_security\n"
 		           "More information about this can be found at https://www.unrealircd.org/docs/Link_security",
 		           log_data_integer("effective_link_security", effective_link_security));
 	}
