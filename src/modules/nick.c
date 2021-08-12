@@ -80,11 +80,7 @@ static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
  */
 #define ASSUME_NICK_IN_FLIGHT
 
-/** The NICK command.
- * In UnrealIRCd 4/5 this is only used in 2 cases:
- * 1) A local user setting or changing the nick name ("NICK xyz")
- * 2) A remote user changing their nick name (":<uid> NICK <newnick>")
- */
+/** Remote client (already fully registered) changing their nick */
 CMD_FUNC(cmd_nick_remote)
 {
 	TKL *tklban;
@@ -94,27 +90,9 @@ CMD_FUNC(cmd_nick_remote)
 	time_t lastnick = 0;
 	int differ = 1;
 	unsigned char removemoder = (client->umodes & UMODE_REGNICK) ? 1 : 0;
-	char *nickid = (IsUser(client) && *client->id) ? client->id : NULL;
-	Client *cptr = client->direction; /* Pending a complete overhaul... (TODO) */
 	MessageTag *mtags = NULL;
 
-	if ((parc < 2) || BadPtr(parv[1]))
-	{
-		sendnumeric(client, ERR_NONICKNAMEGIVEN);
-		return;
-	}
-
-	if (!IsUser(client))
-	{
-		unreal_log(ULOG_ERROR, "link", "LINK_OLD_PROTOCOL_NICK", client->direction,
-		           "Server link $client tried to introduce $nick using NICK command. "
-		           "Server is using an old and unsupported protocol from UnrealIRCd 3.2.x or earlier, should use the UID command. "
-		           "See https://www.unrealircd.org/docs/FAQ#old-server-protocol",
-		           log_data_string("nick", parv[1]));
-		/* Split the entire uplink, as it should never have allowed this (and probably they are to blame too) */
-		exit_client(cptr->direction, NULL, "Server used NICK command, bad, must use UID!");
-		return;
-	}
+	/* 'client' is always the fully registered user doing the nick change */
 
 	strlcpy(nick, parv[1], NICKLEN + 1);
 
@@ -124,12 +102,13 @@ CMD_FUNC(cmd_nick_remote)
 	if (!do_remote_nick_name(nick) || !strcasecmp("ircd", nick) || !strcasecmp("irc", nick))
 	{
 		ircstats.is_kill++;
-		unreal_log(ULOG_ERROR, "nick", "BAD_NICK_REMOTE", client->uplink,
-		           "Server link $client tried to introduce bad nick '$nick' -- rejected.",
-		           log_data_string("nick", parv[1]));
+		unreal_log(ULOG_ERROR, "nick", "BAD_NICK_REMOTE", client,
+		           "Server link $server tried to introduce bad nick '$nick' -- rejected.",
+		           log_data_string("nick", parv[1]),
+		           log_data_client("server", client->direction));
 		mtags = NULL;
 		new_message(client, NULL, &mtags);
-		sendto_one(cptr, mtags, ":%s KILL %s :Illegal nick name", me.id, client->id);
+		sendto_one(client, mtags, ":%s KILL %s :Illegal nick name", me.id, client->id);
 		SetKilled(client);
 		exit_client(client, mtags, "Illegal nick name");
 		free_message_tags(mtags);
@@ -174,19 +153,19 @@ CMD_FUNC(cmd_nick_remote)
 
 			if (!(parc > 2) || lastnick == acptr->lastnick)
 			{
-				nick_collision(client, parv[1], nickid, client, acptr, NICKCOL_EQUAL);
+				nick_collision(client, parv[1], client->id, client, acptr, NICKCOL_EQUAL);
 				return; /* Now that I killed them both, ignore the NICK */
 			} else
 			if ((differ && (acptr->lastnick > lastnick)) ||
 			    (!differ && (acptr->lastnick < lastnick)))
 			{
-				nick_collision(client, parv[1], nickid, client, acptr, NICKCOL_NEW_WON);
+				nick_collision(client, parv[1], client->id, client, acptr, NICKCOL_NEW_WON);
 				/* fallthrough: their user won, continue and proceed with the nick change */
 			} else
 			if ((differ && (acptr->lastnick < lastnick)) ||
 			    (!differ && (acptr->lastnick > lastnick)))
 			{
-				nick_collision(client, parv[1], nickid, client, acptr, NICKCOL_EXISTING_WON);
+				nick_collision(client, parv[1], client->id, client, acptr, NICKCOL_EXISTING_WON);
 				return; /* their user lost, ignore the NICK */
 			} else
 			{
@@ -196,8 +175,6 @@ CMD_FUNC(cmd_nick_remote)
 	}
 
 	mtags = NULL;
-
-	/* Existing client nick-changing */
 
 	if (!IsULine(client))
 	{
@@ -219,13 +196,15 @@ CMD_FUNC(cmd_nick_remote)
 
 	/* Finally set new nick name. */
 	del_from_client_hash_table(client->name, client);
-
-	strcpy(client->name, nick);
+	strlcpy(client->name, nick, sizeof(client->name));
 	add_to_client_hash_table(nick, client);
 
 	RunHook2(HOOKTYPE_POST_REMOTE_NICKCHANGE, client, mtags);
 }
 
+/* Local user: either setting their nick for the first time (registration)
+ * or changing their nick (fully registered already, or not)
+ */
 CMD_FUNC(cmd_nick_local)
 {
 	TKL *tklban;
@@ -233,20 +212,10 @@ CMD_FUNC(cmd_nick_local)
 	Client *acptr;
 	char nick[NICKLEN + 2], descbuf[BUFSIZE];
 	Membership *mp;
-	long lastnick = 0l;
-	int  differ = 1;
 	int newuser = 0;
 	unsigned char removemoder = (client->umodes & UMODE_REGNICK) ? 1 : 0;
 	Hook *h;
-	int i = 0;
-	char *nickid = (IsUser(client) && *client->id) ? client->id : NULL;
-	Client *cptr = client->direction; /* Pending a complete overhaul... (TODO) */
-
-	if ((parc < 2) || BadPtr(parv[1]))
-	{
-		sendnumeric(client, ERR_NONICKNAMEGIVEN);
-		return;
-	}
+	int ret;
 
 	/* Enforce minimum nick length */
 	if (iConf.min_nick_length && !IsOper(client) && !IsULine(client) && strlen(parv[1]) < iConf.min_nick_length)
@@ -315,7 +284,7 @@ CMD_FUNC(cmd_nick_local)
 	}
 
 	if (!ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL))
-		cptr->local->fake_lag += 3;	/* Nick-flood prot. -Donwulff */
+		add_fake_lag(client, 3000);
 
 	if ((acptr = find_client(nick, NULL)))
 	{
@@ -394,6 +363,7 @@ CMD_FUNC(cmd_nick_local)
 	if (MyUser(client))
 	{
 		MessageTag *mtags = NULL;
+		int ret;
 
 		/* Existing client nick-changing */
 
@@ -406,6 +376,8 @@ CMD_FUNC(cmd_nick_local)
 		 */
 		for (mp = client->user->channel; mp; mp = mp->next)
 		{
+			int ret = HOOK_CONTINUE;
+			Hook *h;
 			if (!is_skochanop(client, mp->channel) && is_banned(client, mp->channel, BANCHK_NICK, NULL, NULL))
 			{
 				sendnumeric(client, ERR_BANNICKCHANGE,
@@ -420,15 +392,14 @@ CMD_FUNC(cmd_nick_local)
 
 			for (h = Hooks[HOOKTYPE_CHAN_PERMIT_NICK_CHANGE]; h; h = h->next)
 			{
-				i = (*(h->func.intfunc))(client,mp->channel);
-				if (i != HOOK_CONTINUE)
+				ret = (*(h->func.intfunc))(client,mp->channel);
+				if (ret != HOOK_CONTINUE)
 					break;
 			}
 
-			if (i == HOOK_DENY)
+			if (ret == HOOK_DENY)
 			{
-				sendnumeric(client, ERR_NONICKCHANGE,
-				    mp->channel->name);
+				sendnumeric(client, ERR_NONICKCHANGE, mp->channel->name);
 				return;
 			}
 		}
@@ -494,7 +465,7 @@ CMD_FUNC(cmd_uid)
 	Client *acptr, *serv = NULL;
 	Client *acptrs;
 	char nick[NICKLEN + 1];
-	long lastnick = 0l;
+	long lastnick = 0;
 	int differ = 1;
 	char *hostname, *username, *sstamp, *umodes, *virthost, *ip, *realname;
 
@@ -657,16 +628,38 @@ nickkill2done:
 }
 
 /** The NICK command.
- * In UnrealIRCd 4/5 this is only used in 2 cases:
+ * In UnrealIRCd 4 and later this should only happen for:
  * 1) A local user setting or changing the nick name ("NICK xyz")
+ *    -> cmd_nick_local()
  * 2) A remote user changing their nick name (":<uid> NICK <newnick>")
+ *    -> cmd_nick_remote()
  */
 CMD_FUNC(cmd_nick)
 {
+	if ((parc < 2) || BadPtr(parv[1]))
+	{
+		sendnumeric(client, ERR_NONICKNAMEGIVEN);
+		return;
+	}
+
 	if (MyConnect(client) && !IsServer(client))
+	{
 		cmd_nick_local(client, recv_mtags, parc, parv);
-	else
+	} else
+	if (!IsUser(client))
+	{
+		unreal_log(ULOG_ERROR, "link", "LINK_OLD_PROTOCOL_NICK", client->direction,
+		           "Server link $client tried to introduce $nick using NICK command. "
+		           "Server is using an old and unsupported protocol from UnrealIRCd 3.2.x or earlier, should use the UID command. "
+		           "See https://www.unrealircd.org/docs/FAQ#old-server-protocol",
+		           log_data_string("nick", parv[1]));
+		/* Split the entire uplink, as it should never have allowed this (and probably they are to blame too) */
+		exit_client(client->direction, NULL, "Server used NICK command, bad, must use UID!");
+		return;
+	} else
+	{
 		cmd_nick_remote(client, recv_mtags, parc, parv);
+	}
 }
 
 /** Register the connection as a User.
@@ -686,7 +679,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	char *tmpstr;
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
-	int i, xx;
+	int i;
 	Hook *h;
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
@@ -861,8 +854,8 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 
 		for (h = Hooks[HOOKTYPE_PRE_LOCAL_CONNECT]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(client);
-			if (i == HOOK_DENY)
+			int ret = (*(h->func.intfunc))(client);
+			if (ret == HOOK_DENY)
 			{
 				if (!IsDead(client) && client->local->class)
 				{
@@ -874,7 +867,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 				}
 				return 0;
 			}
-			if (i == HOOK_ALLOW)
+			if (ret == HOOK_ALLOW)
 				break;
 		}
 	}
