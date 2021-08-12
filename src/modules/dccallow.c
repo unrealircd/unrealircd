@@ -244,7 +244,7 @@ int del_dccallow(Client *client, Client *optr)
 	}
 	if (!found)
 	{
-		unreal_log(LOG_WARNING, "dccallow", "BUG_DCCALLOW", client,
+		unreal_log(ULOG_WARNING, "dccallow", "BUG_DCCALLOW", client,
 		           "[BUG] DCCALLOW list for $client did not contain $target",
 		           log_data_client("target", optr));
 	}

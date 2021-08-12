@@ -188,7 +188,7 @@ void fd_select(time_t delay)
 #endif
 	if (num < 0)
 	{
-		unreal_log(LOG_FATAL, "io", "SELECT_ERROR", NULL,
+		unreal_log(ULOG_FATAL, "io", "SELECT_ERROR", NULL,
 		           "select() returned error ($socket_error) -- SERIOUS TROUBLE!",
 		           log_data_socket_error(-1));
 		/* DEBUG the actual problem: */

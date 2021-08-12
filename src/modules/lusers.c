@@ -88,7 +88,7 @@ char flatmap;
 		max_connection_count = irccounts.me_clients;
 		if (max_connection_count % 10 == 0)	/* only send on even tens */
 		{
-			unreal_log(LOG_INFO, "client", "NEW_USER_RECORD", NULL,
+			unreal_log(ULOG_INFO, "client", "NEW_USER_RECORD", NULL,
 			           "New record on this server: $num_users connections",
 			           log_data_integer("num_users", max_connection_count));
 		}

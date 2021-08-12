@@ -1332,7 +1332,7 @@ void start_server_handshake(Client *client)
 	if (!aconf)
 	{
 		/* Should be impossible. */
-		unreal_log(LOG_ERROR, "link", "BUG_LOST_CONFIGURATION_ON_HANDSHAKE", client,
+		unreal_log(ULOG_ERROR, "link", "BUG_LOST_CONFIGURATION_ON_HANDSHAKE", client,
 		           "Lost configuration while connecting to $client.details");
 		return;
 	}
