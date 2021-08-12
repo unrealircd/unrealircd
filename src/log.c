@@ -306,7 +306,6 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 {
 	ConfigEntry *ce, *cep, *cepp;
 	LogSource *sources = NULL;
-	Log *log = safe_alloc(sizeof(Log));
 	int type;
 
 	// TODO: we may allow multiple destination entries later, then we need to 'clone' sources
@@ -345,7 +344,7 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 				} else
 				if (!strcmp(cep->name, "channel"))
 				{
-					Log *d = safe_alloc(sizeof(Log));
+					Log *log = safe_alloc(sizeof(Log));
 					strlcpy(log->destination, cep->value, sizeof(log->destination)); /* destination is the channel */
 					log->sources = sources;
 					AddListItem(log, temp_logs[LOG_DEST_CHANNEL]);
