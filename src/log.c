@@ -1357,16 +1357,33 @@ void do_unreal_log_remote(LogLevel loglevel, char *subsystem, char *event_id, Mu
 	do_unreal_log_remote_deliver(loglevel, subsystem, event_id, msg, json_serialized);
 }
 
+void do_unreal_log_free_args(va_list vl)
+{
+	LogData *d;
+
+	while ((d = va_arg(vl, LogData *)))
+	{
+		log_data_free(d);
+	}
+}
+
 static int unreal_log_recursion_trap = 0;
 
 /* Logging function, called by the unreal_log() macro. */
 void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
                    Client *client, char *msg, ...)
 {
-	if (unreal_log_recursion_trap)
-		return;
-	unreal_log_recursion_trap = 1;
 	va_list vl;
+
+	if (unreal_log_recursion_trap)
+	{
+		va_start(vl, msg);
+		do_unreal_log_free_args(vl);
+		va_end(vl);
+		return;
+	}
+
+	unreal_log_recursion_trap = 1;
 	va_start(vl, msg);
 	do_unreal_log_internal(loglevel, subsystem, event_id, client, 1, msg, vl);
 	va_end(vl);
@@ -1377,10 +1394,17 @@ void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
 void do_unreal_log_raw(LogLevel loglevel, char *subsystem, char *event_id,
                        Client *client, char *msg, ...)
 {
-	if (unreal_log_recursion_trap)
-		return;
-	unreal_log_recursion_trap = 1;
 	va_list vl;
+
+	if (unreal_log_recursion_trap)
+	{
+		va_start(vl, msg);
+		do_unreal_log_free_args(vl);
+		va_end(vl);
+		return;
+	}
+
+	unreal_log_recursion_trap = 1;
 	va_start(vl, msg);
 	do_unreal_log_internal(loglevel, subsystem, event_id, client, 0, msg, vl);
 	va_end(vl);
