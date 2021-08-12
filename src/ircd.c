@@ -762,7 +762,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	memset(&svsmotd, '\0', sizeof(MOTDFile));
 	memset(&me, 0, sizeof(me));
 	me.local = safe_alloc(sizeof(LocalClient));
-	me.uplink = &me;
 	memset(&loop, 0, sizeof(loop));
 
 	init_hash();
