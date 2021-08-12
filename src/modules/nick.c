@@ -467,7 +467,7 @@ CMD_FUNC(cmd_uid)
 	char nick[NICKLEN + 1];
 	long lastnick = 0;
 	int differ = 1;
-	char *hostname, *username, *sstamp, *umodes, *virthost, *ip, *realname;
+	char *hostname, *username, *sstamp, *umodes, *virthost, *ip_raw, *ip=NULL, *realname;
 
 	if (parc < 13)
 	{
@@ -490,7 +490,7 @@ CMD_FUNC(cmd_uid)
 	username = parv[4];
 	umodes = parv[8];
 	virthost = parv[9];
-	ip = parv[11];
+	ip_raw = parv[11];
 	realname = parv[12];
 
 	/* Do some *MINIMAL* nick name checking for remote nicknames.
@@ -542,6 +542,18 @@ CMD_FUNC(cmd_uid)
 		           log_data_string("bad_hostname", virthost));
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
 		sendto_one(client, NULL, ":%s KILL %s :Bad virtual host", me.id, parv[6]);
+		return;
+	}
+
+	if (strcmp(ip_raw, "*") && !(ip = decode_ip(ip_raw)))
+	{
+		ircstats.is_kill++;
+		unreal_log(ULOG_ERROR, "link", "BAD_IP", client,
+		           "Server link $client ($client.id) introduced user $nick with bad IP: $bad_ip.",
+		           log_data_string("nick", nick),
+		           log_data_string("bad_ip", ip_raw));
+		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
+		sendto_one(client, NULL, ":%s KILL %s :Bad IP in UID command", me.id, parv[6]);
 		return;
 	}
 
@@ -1006,18 +1018,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	{
 		/* Set the IP address first */
 		if (ip && (*ip != '*'))
-		{
-			char *ipstring = decode_ip(ip);
-			if (!ipstring)
-			{
-				sendto_ops("USER with invalid IP (%s) (%s) -- "
-				           "IP must be base64 encoded binary representation of either IPv4 or IPv6",
-				           client->name, ip);
-				exit_client(client, NULL, "USER with invalid IP");
-				return 0;
-			}
-			safe_strdup(client->ip, ipstring);
-		}
+			safe_strdup(client->ip, ip);
 
 		/* For remote clients we recalculate the cloakedhost here because
 		 * it may depend on the IP address (bug #5064).
