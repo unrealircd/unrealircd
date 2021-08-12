@@ -976,37 +976,10 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	}
 	else
 	{
-		Client *acptr;
-
-		/* Remote client */
-		/* The following two cases probably cannot happen anymore? at all? */
-		if (!(acptr = find_server_quick(client->user->server)))
-		{
-			sendto_ops("Bad USER [%s] :%s USER %s %s : No such server",
-			           client->name, nick, client->user->username, client->user->server);
-			sendto_one(client, NULL, ":%s KILL %s :No such server: %s",
-			    me.id, client->id, client->user->server);
-			SetKilled(client);
-			exit_client(client, NULL, "USER without prefix(2.8) or wrong prefix");
-			return 0;
-		}
-		else if (acptr->direction != client->direction)
-		{
-			sendto_ops("Bad User [%s] :%s USER %s %s, != %s[%s]",
-			    client->name, nick, client->user->username, client->user->server,
-			    acptr->name, acptr->direction->name);
-			sendto_one(client, NULL, ":%s KILL %s :Wrong user-server-direction",
-			    me.id, client->id);
-			SetKilled(client);
-			exit_client(client, NULL, "USER server wrong direction");
-			return 0;
-		} else
-		{
-			client->flags |= acptr->flags;
-		}
-
-		if (IsULine(client->uplink))
-			SetULine(client);
+		/* Inherit flags from server, makes it easy in the send routines
+		 * and this also makes clients inherit ulines.
+		 */
+		client->flags |= client->uplink->flags;
 	}
 	if (client->umodes & UMODE_INVISIBLE)
 	{
