@@ -1269,7 +1269,7 @@ char *log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id)
 #define COLOR_NONE "\xf"
 #define COLOR_DARKGREY "\00314"
 /** Do the actual writing to log files */
-void do_unreal_log_opers(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized)
+void do_unreal_log_opers(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized, Client *from_server)
 {
 	Client *client;
 	char *snomask_destinations;
@@ -1330,7 +1330,7 @@ void do_unreal_log_opers(LogLevel loglevel, char *subsystem, char *event_id, Mul
 			snprintf(subsystem_and_event_id, sizeof(subsystem_and_event_id), "%s%s.%s%s%s",
 			         COLOR_DARKGREY, subsystem, event_id, m->next?"+":"", COLOR_NONE);
 			sendto_one(client, mtags_loop, ":%s NOTICE %s :%s %s[%s]%s %s",
-				me.name, client->name,
+				from_server->name, client->name,
 				subsystem_and_event_id,
 				log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
 				m->line);
@@ -1522,7 +1522,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	do_unreal_log_disk(loglevel, subsystem, event_id, mmsg, json_serialized);
 
 	/* And the ircops stuff */
-	do_unreal_log_opers(loglevel, subsystem, event_id, mmsg, json_serialized);
+	do_unreal_log_opers(loglevel, subsystem, event_id, mmsg, json_serialized, &me);
 
 	do_unreal_log_remote(loglevel, subsystem, event_id, mmsg, json_serialized);
 
@@ -1536,7 +1536,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 }
 
 void do_unreal_log_internal_from_remote(LogLevel loglevel, char *subsystem, char *event_id,
-                                        MultiLine *msg, char *json_serialized)
+                                        MultiLine *msg, char *json_serialized, Client *from_server)
 {
 	if (unreal_log_recursion_trap)
 		return;
@@ -1546,7 +1546,7 @@ void do_unreal_log_internal_from_remote(LogLevel loglevel, char *subsystem, char
 	do_unreal_log_disk(loglevel, subsystem, event_id, msg, json_serialized);
 
 	/* And the ircops stuff */
-	do_unreal_log_opers(loglevel, subsystem, event_id, msg, json_serialized);
+	do_unreal_log_opers(loglevel, subsystem, event_id, msg, json_serialized, from_server);
 
 	unreal_log_recursion_trap = 0;
 }
