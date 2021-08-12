@@ -55,6 +55,14 @@
 # ifdef SYSSYSLOGH
 #  include <sys/syslog.h>
 # endif
+#ifndef UNREAL_LOGGER_CODE
+/* undef these as they cause confusion with our ULOG_xxx codes */
+#undef LOG_DEBUG
+#undef LOG_INFO
+#undef LOG_WARNING
+#undef LOG_ERROR
+#undef LOG_FATAL
+#endif
 #endif
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include "pcre2.h"

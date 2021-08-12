@@ -24,6 +24,7 @@
  * @brief The logging API
  */
 
+#define UNREAL_LOGGER_CODE
 #include "unrealircd.h"
 
 #define SNO_ALL INT_MAX
