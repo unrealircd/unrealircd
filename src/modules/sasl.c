@@ -179,7 +179,7 @@ CMD_FUNC(cmd_sasl)
 			if (*parv[4] == 'F')
 			{
 				target->local->sasl_sent_time = 0;
-				target->local->fake_lag += 7; /* bump fakelag due to failed authentication attempt */
+				add_fake_lag(target, 7000); /* bump fakelag due to failed authentication attempt */
 				RunHookReturn2(HOOKTYPE_SASL_RESULT, target, 0, !=0);
 				sendnumeric(target, ERR_SASLFAIL);
 			}
