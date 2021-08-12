@@ -97,7 +97,7 @@ CMD_FUNC(cmd_sajoin)
 	}
 
 	/* Broadcast so other servers can log it appropriately as an SAJOIN */
-	sendto_server(client, 0, 0, recv_mtags, ":%s SAPART %s %s", client->id, target->id, parv[2]);
+	sendto_server(client, 0, 0, recv_mtags, ":%s SAJOIN %s %s", client->id, target->id, parv[2]);
 
 	/* If it's not for our client, then simply pass on the message... */
 	if (!MyUser(target))
