@@ -21,7 +21,7 @@ fi
 
 # Install 'unrealircd-tests'
 ## XX: Temporary using this repo URL for early U6 development
-GIT_SSH_COMMAND='ssh -i ~/.ssh/unrealircd_tests_next.key -oIdentitiesOnly=yes' git clone -q git@github.com:/syzop/unrealircd-tests-next.git unrealircd-tests
+GIT_SSH_COMMAND='ssh -i ~/.ssh/unrealircd_tests_next.key -oIdentitiesOnly=yes' git clone -q --branch unreal60 git@github.com:/syzop/unrealircd-tests-next.git unrealircd-tests
 cd unrealircd-tests
 
 # FreeBSD has various issues with the tests from us and others,
