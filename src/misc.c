@@ -717,18 +717,21 @@ void verify_opercount(Client *orig, char *tag)
 }
 
 /** Check if the specified hostname does not contain forbidden characters.
- * RETURNS:
- * 1 if ok, 0 if rejected.
+ * @param host	The host name to check
+ * @returns 1 if valid, 0 if not.
  */
 int valid_host(char *host)
 {
 	char *p;
 
+	if (!*host)
+		return 0; /* must at least contain something */
+
 	if (strlen(host) > HOSTLEN)
 		return 0; /* too long hosts are invalid too */
 
 	for (p=host; *p; p++)
-		if (!isalnum(*p) && (*p != '_') && (*p != '-') && (*p != '.') && (*p != ':') && (*p != '/'))
+		if (!isalnum(*p) && !strchr("_-.:/", *p))
 			return 0;
 
 	return 1;

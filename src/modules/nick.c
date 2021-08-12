@@ -485,6 +485,13 @@ CMD_FUNC(cmd_uid)
 	}
 
 	strlcpy(nick, parv[1], sizeof(nick));
+	hostname = parv[5];
+	sstamp = parv[7];
+	username = parv[4];
+	umodes = parv[8];
+	virthost = parv[9];
+	ip = parv[11];
+	realname = parv[12];
 
 	/* Do some *MINIMAL* nick name checking for remote nicknames.
 	 * This will only catch things that severely break things. -- Syzop
@@ -514,6 +521,30 @@ CMD_FUNC(cmd_uid)
 		return;
 	}
 
+	if (!valid_host(hostname))
+	{
+		ircstats.is_kill++;
+		unreal_log(ULOG_ERROR, "link", "BAD_HOSTNAME", client,
+		           "Server link $client ($client.id) introduced user $nick with bad host name: $bad_hostname.",
+		           log_data_string("nick", nick),
+		           log_data_string("bad_hostname", hostname));
+		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
+		sendto_one(client, NULL, ":%s KILL %s :Bad hostname", me.id, parv[6]);
+		return;
+	}
+
+	if (!valid_host(virthost))
+	{
+		ircstats.is_kill++;
+		unreal_log(ULOG_ERROR, "link", "BAD_HOSTNAME", client,
+		           "Server link $client ($client.id) introduced user $nick with bad virtual hostname: $bad_hostname.",
+		           log_data_string("nick", nick),
+		           log_data_string("bad_hostname", virthost));
+		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
+		sendto_one(client, NULL, ":%s KILL %s :Bad virtual host", me.id, parv[6]);
+		return;
+	}
+
 	/* Kill quarantined opers early... */
 	if (IsQuarantined(client->direction) && strchr(parv[8], 'o'))
 	{
@@ -532,7 +563,7 @@ CMD_FUNC(cmd_uid)
 		unreal_log(LOG_INFO, "nick", "QLINE_NICK_REMOTE", client,
 			   "Banned nick $nick [$nick.ip] from server $server ($reason)",
 			   log_data_string("nick", parv[1]),
-			   log_data_string("ip", parv[11]),
+			   log_data_string("ip", ip),
 			   log_data_client("server", client->uplink),
 			   log_data_string("reason", tklban->ptr.nameban->reason));
 		/* Let it through */
@@ -591,18 +622,10 @@ nickkill2done:
 
 	make_user(client);
 
-	hostname = parv[5];
-	sstamp = parv[7];
-	username = parv[4];
-	umodes = parv[8];
-	virthost = parv[9];
-	ip = parv[11];
-	realname = parv[12];
 	/* Note that cloaked host aka parv[10] is unused */
 
 	client->user->server = find_or_add(client->uplink->name);
 	strlcpy(client->user->realhost, hostname, sizeof(client->user->realhost));
-	// FIXME: some validation would be nice ^
 
 	if (*sstamp != '*')
 		strlcpy(client->user->account, sstamp, sizeof(client->user->account));
