@@ -106,10 +106,13 @@ CMD_FUNC(cmd_nick_remote)
 
 	if (!IsUser(client))
 	{
-		/* Old NICK protocol for introducing users, not supported as you should use UID */
-		sendto_umode_global(UMODE_OPER, "Old NICK protocol detected from server %s, should use UID instead -- delinking",
-		                                client->name);
-		exit_client(cptr->direction, NULL, "Old NICK protocol detected, bad, use UID!");
+		unreal_log(ULOG_ERROR, "link", "LINK_OLD_PROTOCOL_NICK", client->direction,
+		           "Server link $client tried to introduce $nick using NICK command. "
+		           "Server is using an old and unsupported protocol from UnrealIRCd 3.2.x or earlier, should use the UID command. "
+		           "See https://www.unrealircd.org/docs/FAQ#old-server-protocol",
+		           log_data_string("nick", parv[1]));
+		/* Split the entire uplink, as it should never have allowed this (and probably they are to blame too) */
+		exit_client(cptr->direction, NULL, "Server used NICK command, bad, must use UID!");
 		return;
 	}
 
@@ -118,11 +121,12 @@ CMD_FUNC(cmd_nick_remote)
 	if (parc > 2)
 		lastnick = atol(parv[2]);
 
-	if (!do_remote_nick_name(nick))
+	if (!do_remote_nick_name(nick) || !strcasecmp("ircd", nick) || !strcasecmp("irc", nick))
 	{
 		ircstats.is_kill++;
-		sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
-		    parv[1], client->name, get_client_name(cptr, FALSE));
+		unreal_log(ULOG_ERROR, "nick", "BAD_NICK_REMOTE", client->uplink,
+		           "Server link $client tried to introduce bad nick '$nick' -- rejected.",
+		           log_data_string("nick", parv[1]));
 		mtags = NULL;
 		new_message(client, NULL, &mtags);
 		sendto_one(cptr, mtags, ":%s KILL %s :Illegal nick name", me.id, client->id);
@@ -133,26 +137,16 @@ CMD_FUNC(cmd_nick_remote)
 		return;
 	}
 
-	if (!strcasecmp("ircd", nick) || !strcasecmp("irc", nick))
-	{
-		sendto_umode(UMODE_OPER, "Bad Reserved Nick: %s From: %s %s",
-		    parv[1], client->name, get_client_name(cptr, FALSE));
-		mtags = NULL;
-		new_message(client, NULL, &mtags);
-		sendto_one(cptr, mtags, ":%s KILL %s :Reserved nick name", me.id, client->id);
-		SetKilled(client);
-		exit_client(client, mtags, "Reserved nick name");
-		free_message_tags(mtags);
-		mtags = NULL;
-		return;
-	}
-
 	/* Check Q-lines / ban nick */
 	if (!IsULine(client) && (tklban = find_qline(client, nick, &ishold)) && !ishold)
 	{
-		/* Remote user changing nick - warning only */
-		sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
-			client->name, client->uplink ? client->uplink->name : "<unknown>");
+		unreal_log(LOG_INFO, "nick", "QLINE_NICK_REMOTE", client,
+			   "Banned nick $nick [$ip] from server $server ($reason)",
+			   log_data_string("nick", parv[1]),
+			   log_data_string("ip", GetIP(client)),
+			   log_data_client("server", client->uplink),
+			   log_data_string("reason", tklban->ptr.nameban->reason));
+		/* Let it through */
 	}
 
 	if ((acptr = find_client(nick, NULL)))
@@ -177,11 +171,6 @@ CMD_FUNC(cmd_nick_remote)
 			 */
 			differ = (mycmp(acptr->user->username, client->user->username) ||
 			          mycmp(acptr->user->realhost, client->user->realhost));
-
-			sendto_umode(UMODE_OPER, "Nick change collision from %s to %s (%s %lld <- %s %lld)",
-			    client->name, acptr->name, acptr->direction->name,
-			    (long long)acptr->lastnick,
-			    client->direction->name, (long long)lastnick);
 
 			if (!(parc > 2) || lastnick == acptr->lastnick)
 			{
@@ -211,8 +200,11 @@ CMD_FUNC(cmd_nick_remote)
 	/* Existing client nick-changing */
 
 	if (!IsULine(client))
-		sendto_snomask(SNO_FNICKCHANGE, "*** %s (%s@%s) has changed their nickname to %s",
-			client->name, client->user->username, client->user->realhost, nick);
+	{
+		unreal_log(ULOG_INFO, "nick", "REMOTE_NICK_CHANGE", client,
+		           "Client $client.details has changed their nickname to $new_nick",
+		           log_data_string("new_nick", nick));
+	}
 
 	new_message(client, recv_mtags, &mtags);
 	RunHook3(HOOKTYPE_REMOTE_NICKCHANGE, client, mtags, nick);
@@ -301,8 +293,12 @@ CMD_FUNC(cmd_nick_local)
 		{
 			add_fake_lag(client, 4000); /* lag them up */
 			sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, tklban->ptr.nameban->reason);
-			sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s (%s)",
-			    nick, get_client_name(cptr, FALSE), tklban->ptr.nameban->reason);
+			unreal_log(LOG_INFO, "nick", "QLINE_NICK_LOCAL_ATTEMPT", client,
+				   "Attempt to use banned nick $nick [$ip] blocked ($reason)",
+				   log_data_string("nick", parv[1]),
+				   log_data_string("ip", GetIP(client)),
+				   log_data_client("server", client->uplink),
+				   log_data_string("reason", tklban->ptr.nameban->reason));
 			return;	/* NICK message ignored */
 		}
 		/* fallthrough for ircops that have sufficient privileges */
@@ -437,8 +433,9 @@ CMD_FUNC(cmd_nick_local)
 			}
 		}
 
-		sendto_snomask(SNO_NICKCHANGE, "*** %s (%s@%s) has changed their nickname to %s",
-			client->name, client->user->username, client->user->realhost, nick);
+		unreal_log(ULOG_INFO, "nick", "LOCAL_NICK_CHANGE", client,
+		           "Client $client.details has changed their nickname to $new_nick",
+		           log_data_string("new_nick", nick));
 
 		new_message(client, recv_mtags, &mtags);
 		RunHook3(HOOKTYPE_LOCAL_NICKCHANGE, client, mtags, nick);
@@ -521,35 +518,28 @@ CMD_FUNC(cmd_uid)
 	/* Do some *MINIMAL* nick name checking for remote nicknames.
 	 * This will only catch things that severely break things. -- Syzop
 	 */
-	if (!do_remote_nick_name(nick))
+	if (!do_remote_nick_name(nick) || !strcasecmp("ircd", nick) || !strcasecmp("irc", nick))
 	{
-		sendnumeric(client, ERR_ERRONEUSNICKNAME, parv[1], "Illegal characters");
+		unreal_log(ULOG_ERROR, "nick", "BAD_NICK_REMOTE", client->uplink,
+		           "Server link $client tried to introduce bad nick '$nick' -- rejected.",
+		           log_data_string("nick", parv[1]));
+		sendnumeric(client, ERR_ERRONEUSNICKNAME, parv[1], "Illegal nick name");
 
 		ircstats.is_kill++;
-		sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
-		    parv[1], client->name, get_client_name(client, FALSE));
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
 		sendto_one(client, NULL, ":%s KILL %s :Bad nick", me.id, parv[1]);
 		return;
 	}
 
-	if (!valid_uid(parv[6]))
+	if (!valid_uid(parv[6]) || strncmp(parv[6], client->id, 3))
 	{
 		ircstats.is_kill++;
-		sendto_umode(UMODE_OPER, "Bad UID: %s From: %s %s",
-		    parv[6], client->name, get_client_name(client, FALSE));
+		unreal_log(ULOG_ERROR, "link", "BAD_UID", client,
+		           "Server link $client ($sid) used bad UID $uid in UID command.",
+		           log_data_string("sid", client->id),
+		           log_data_string("uid", parv[6]));
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
 		sendto_one(client, NULL, ":%s KILL %s :Bad UID", me.id, parv[6]);
-		return;
-	}
-
-	if (strncmp(parv[6], client->id, 3))
-	{
-		ircstats.is_kill++;
-		sendto_umode(UMODE_OPER, "Bad UID: %s From: %s %s",
-		    parv[6], client->name, get_client_name(client, FALSE));
-		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
-		sendto_one(client, NULL, ":%s KILL %s :Bad UID: UID must contain SID", me.id, parv[6]);
 		return;
 	}
 
@@ -558,33 +548,23 @@ CMD_FUNC(cmd_uid)
 	{
 		ircstats.is_kill++;
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
-		sendto_one(client, NULL, ":%s KILL %s :Quarantined: no oper privileges allowed",
-			me.id, parv[1]);
-		sendto_umode_global(UMODE_OPER, "QUARANTINE: Oper %s on server %s killed, due to quarantine",
-			parv[1], client->name);
-		return;
-	}
-
-	/* This one is never allowed, even from remotes */
-	if (!strcasecmp("ircd", nick) || !strcasecmp("irc", nick))
-	{
-		sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, "Reserved for internal IRCd purposes");
-		sendto_one(client, NULL, ":%s KILL %s :Bad reserved nick", me.id, parv[1]);
+		unreal_log(ULOG_INFO, "link", "OPER_KILLED_QUARANTINE", NULL,
+		           "QUARANTINE: Oper $nick on server $server killed, due to quarantine",
+		           log_data_string("nick", parv[1]),
+		           log_data_client("server", client));
+		sendto_one(client, NULL, ":%s KILL %s :Quarantined: no oper privileges allowed", me.id, parv[6]);
 		return;
 	}
 
 	if (!IsULine(client) && (tklban = find_qline(client, nick, &ishold)))
 	{
-		if (IsServer(client) && !ishold) /* server introducing new client */
-		{
-			acptrs = find_server(client->user == NULL ? parv[6] : client->user->server, NULL);
-			/* (NEW: no unregistered Q-Line msgs anymore during linking) */
-			if (!acptrs || (acptrs->server && acptrs->server->flags.synced))
-				sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
-				    (*client->name != 0
-				    && !IsServer(client) ? client->name : "<unregistered>"),
-				    acptrs ? acptrs->name : "unknown server");
-		}
+		unreal_log(LOG_INFO, "nick", "QLINE_NICK_REMOTE", client,
+			   "Banned nick $nick [$nick.ip] from server $server ($reason)",
+			   log_data_string("nick", parv[1]),
+			   log_data_string("ip", parv[11]),
+			   log_data_client("server", client->uplink),
+			   log_data_string("reason", tklban->ptr.nameban->reason));
+		/* Let it through */
 	}
 
 	/* Now check if 'nick' already exists - collision with a user (or still in handshake, unknown) */
