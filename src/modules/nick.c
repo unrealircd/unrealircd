@@ -966,25 +966,21 @@ int _register_user(Client *client)
 			   "[BUG] client->local->sockhost is empty for user $client.detail [$client.ip]");
 	}
 
-	/* Set the username.
-	 * Work on a copy, because username may point to client->user->username...
-	 */
-	strlcpy(temp, client->user->username, USERLEN + 1);
-	if (!IsUseIdent(client))
-		strlcpy(client->user->username, temp, USERLEN + 1);
-	else if (IsIdentSuccess(client))
-		strlcpy(client->user->username, client->ident, USERLEN+1);
-	else
+	if (IsUseIdent(client))
 	{
-		if (IDENT_CHECK == 0) {
-			strlcpy(client->user->username, temp, USERLEN+1);
-		}
-		else {
-			*client->user->username = '~';
-			strlcpy((client->user->username + 1), temp, sizeof(client->user->username)-1);
+		if (IsIdentSuccess(client))
+		{
+			/* ident succeeded: overwite client->user->username with the ident reply */
+			strlcpy(client->user->username, client->ident, sizeof(client->user->username));
+		} else
+		if (IDENT_CHECK)
+		{
+			/* ident check is enabled and it failed: prefix the username with ~ */
+			char temp[USERLEN+1];
+			strlcpy(temp, client->user->username, sizeof(temp));
+			snprintf(client->user->username, sizeof(client->user->username), "~%s", temp);
 			noident = 1;
 		}
-
 	}
 
 	/* Now validate the username. This may alter client->user->username
