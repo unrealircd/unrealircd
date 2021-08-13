@@ -333,6 +333,9 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 		goto bad;
 	}
 
+	/* Get rid of stupid uppercase DNS names... */
+	strtolower(r->name);
+
 	/* Entry was found, verified, and can be added to cache */
 
 	unrealdns_addtocache(r->name, client->ip);
