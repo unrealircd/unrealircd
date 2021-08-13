@@ -1157,7 +1157,7 @@ int register_user_remote(Client *client, char *nick, char *username, char *umode
 		tkllayer[2] = umode;
 		tkllayer[3] = NULL;
 		dontspread = 1;
-		do_cmd(client, NULL, "MODE", 3, tkllayer);
+		cmd_umode(client, NULL, 3, tkllayer);
 		dontspread = 0;
 
 		/* Set the vhost */
