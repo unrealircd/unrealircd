@@ -1355,6 +1355,7 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 			/* Add */
 			char *str;
 			Extban *extban;
+			BanContext *b;
 			extban = findmod_by_bantype(mask[1]);
 			if (!extban || !(extban->options & EXTBOPT_TKL))
 			{
@@ -1362,8 +1363,18 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 				sendnotice(client, "Valid types are for example ~a, ~r, ~S");
 				return;
 			}
-			if (extban->is_ok && !extban->is_ok(client, NULL, mask, EXBCHK_PARAM, MODE_ADD, EXBTYPE_TKL))
+			b = safe_alloc(sizeof(BanContext));
+			b->client = client;
+			b->banstr = mask;
+			b->is_ok_checktype = EXBCHK_PARAM;
+			b->what = MODE_ADD;
+			b->what2 = EXBTYPE_TKL;
+			if (extban->is_ok && !extban->is_ok(b))
+			{
+				safe_free(b);
 				return; /* rejected */
+			}
+			safe_free(b);
 			str = extban->conv_param(mask);
 			if (!str || (strlen(str) <= 4))
 				return; /* rejected */
@@ -1675,6 +1686,7 @@ CMD_FUNC(cmd_eline)
 			/* Add */
 			char *str;
 			Extban *extban;
+			BanContext *b;
 			extban = findmod_by_bantype(mask[1]);
 			if (!extban || !(extban->options & EXTBOPT_TKL))
 			{
@@ -1682,8 +1694,18 @@ CMD_FUNC(cmd_eline)
 				sendnotice(client, "Valid types are for example ~a, ~r, ~S");
 				return;
 			}
-			if (extban->is_ok && !extban->is_ok(client, NULL, mask, EXBCHK_PARAM, MODE_ADD, EXBTYPE_TKL))
+			b = safe_alloc(sizeof(BanContext));
+			b->client = client;
+			b->banstr = mask;
+			b->is_ok_checktype = EXBCHK_PARAM;
+			b->what = MODE_ADD;
+			b->what2 = EXBTYPE_TKL;
+			if (extban->is_ok && !extban->is_ok(b))
+			{
+				safe_free(b);
 				return; /* rejected */
+			}
+			safe_free(b);
 			str = extban->conv_param(mask);
 			if (!str || (strlen(str) <= 4))
 				return; /* rejected */

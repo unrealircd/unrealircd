@@ -124,9 +124,9 @@ void ExtbanDel(Extban *eb)
 
 /** General is_ok for n!u@h stuff that also deals with recursive extbans.
  */
-int extban_is_ok_nuh_extban(Client *client, Channel* channel, char *para, int checkt, int what, int what2)
+int extban_is_ok_nuh_extban(BanContext *b)
 {
-	char *mask = (para + 3);
+	char *mask = (b->banstr + 3); // TODO: remove this +3
 	Extban *p = NULL;
 	int isok;
 	static int extban_is_ok_recursion = 0;
@@ -137,21 +137,21 @@ int extban_is_ok_nuh_extban(Client *client, Channel* channel, char *para, int ch
 		if (extban_is_ok_recursion)
 			return 0; /* Fail: more than one stacked extban */
 
-		if ((checkt == EXBCHK_PARAM) && RESTRICT_EXTENDEDBANS && !ValidatePermissionsForPath("immune:restrict-extendedbans",client,NULL,channel,NULL))
+		if ((b->is_ok_checktype == EXBCHK_PARAM) && RESTRICT_EXTENDEDBANS && !ValidatePermissionsForPath("immune:restrict-extendedbans",b->client,NULL,b->channel,NULL))
 		{
 			/* Test if this specific extban has been disabled.
 			 * (We can be sure RESTRICT_EXTENDEDBANS is not *. Else this extended ban wouldn't be happening at all.)
 			 */
 			if (strchr(RESTRICT_EXTENDEDBANS, mask[1]))
 			{
-				sendnotice(client, "Setting/removing of extended bantypes '%s' has been disabled.", RESTRICT_EXTENDEDBANS);
+				sendnotice(b->client, "Setting/removing of extended bantypes '%s' has been disabled.", RESTRICT_EXTENDEDBANS);
 				return 0; /* Fail */
 			}
 		}
 		p = findmod_by_bantype(mask[1]);
 		if (!p)
 		{
-			if (what == MODE_DEL)
+			if (b->what == MODE_DEL)
 			{
 				return 1; /* Always allow killing unknowns. */
 			}
@@ -161,7 +161,8 @@ int extban_is_ok_nuh_extban(Client *client, Channel* channel, char *para, int ch
 		if (p->is_ok)
 		{
 			extban_is_ok_recursion++;
-			isok = p->is_ok(client, channel, mask, checkt, what, what2);
+			b->banstr = mask; // TODO: change to +3 later
+			isok = p->is_ok(b);
 			extban_is_ok_recursion--;
 			return isok;
 		}

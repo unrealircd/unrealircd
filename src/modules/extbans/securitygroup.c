@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 char *extban_securitygroup_conv_param(char *para);
-int extban_securitygroup_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2);
+int extban_securitygroup_is_ok(BanContext *b);
 int extban_securitygroup_is_banned(BanContext *b);
 
 /** Called upon module init */
@@ -68,12 +68,8 @@ MOD_UNLOAD()
 /* Helper function for extban_securitygroup_is_ok() and extban_securitygroup_conv_param()
  * to do ban validation.
  */
-int extban_securitygroup_generic(char *para, int strict)
+int extban_securitygroup_generic(char *mask, int strict)
 {
-	char *mask;
-
-	mask = para+3;
-
 	/* ! at the start means negative match */
 	if (*mask == '!')
 		mask++;
@@ -97,21 +93,22 @@ int extban_securitygroup_generic(char *para, int strict)
 	return 1;
 }
 
-int extban_securitygroup_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2)
+int extban_securitygroup_is_ok(BanContext *b)
 {
-	if (MyUser(client) && (what == MODE_ADD) && (checkt == EXBCHK_PARAM))
+	b->banstr += 3;
+	if (MyUser(b->client) && (b->what == MODE_ADD) && (b->is_ok_checktype == EXBCHK_PARAM))
 	{
 		char banbuf[SECURITYGROUPLEN+8];
-		strlcpy(banbuf, para, sizeof(banbuf));
+		strlcpy(banbuf, b->banstr, sizeof(banbuf));
 		if (!extban_securitygroup_generic(banbuf, 1))
 		{
 			SecurityGroup *s;
-			sendnotice(client, "ERROR: Unknown security-group '%s'. Syntax: +b ~G:securitygroup or +b ~G:!securitygroup", para+3);
-			sendnotice(client, "Available security groups:");
+			sendnotice(b->client, "ERROR: Unknown security-group '%s'. Syntax: +b ~G:securitygroup or +b ~G:!securitygroup", b->banstr);
+			sendnotice(b->client, "Available security groups:");
 			for (s = securitygroups; s; s = s->next)
-				sendnotice(client, "%s", s->name);
-			sendnotice(client, "unknown-users");
-			sendnotice(client, "End of security group list.");
+				sendnotice(b->client, "%s", s->name);
+			sendnotice(b->client, "unknown-users");
+			sendnotice(b->client, "End of security group list.");
 			return 0;
 		}
 	}
@@ -124,7 +121,7 @@ char *extban_securitygroup_conv_param(char *para)
 	static char retbuf[SECURITYGROUPLEN + 8];
 
 	strlcpy(retbuf, para, sizeof(retbuf));
-	if (!extban_securitygroup_generic(retbuf, 0))
+	if (!extban_securitygroup_generic(retbuf+3, 0))
 		return NULL;
 
 	return retbuf;

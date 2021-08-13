@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-int extban_inchannel_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2);
+int extban_inchannel_is_ok(BanContext *b);
 char *extban_inchannel_conv_param(char *para);
 int extban_inchannel_is_banned(BanContext *b);
 
@@ -92,20 +92,20 @@ char *extban_inchannel_conv_param(char *para)
 }
 
 /* The only purpose of this function is a temporary workaround to prevent a desync.. pfff */
-int extban_inchannel_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2)
+int extban_inchannel_is_ok(BanContext *b)
+//Client *client, Channel *channel, char *para, int checkt, int what, int what2)
 {
-	char *p;
+	char *p = b->banstr += 3;
 
-	if ((checkt == EXBCHK_PARAM) && MyUser(client) && (what == MODE_ADD) && (strlen(para) > 3))
+	if ((b->is_ok_checktype == EXBCHK_PARAM) && MyUser(b->client) && (b->what == MODE_ADD) && (strlen(b->banstr) > 3))
 	{
-		p = para + 3;
 		if ((*p == '+') || (*p == '%') || (*p == '%') ||
 		    (*p == '@') || (*p == '&') || (*p == '~'))
 		    p++;
 
 		if (*p != '#')
 		{
-			sendnotice(client, "Please use a # in the channelname (eg: ~c:#*blah*)");
+			sendnotice(b->client, "Please use a # in the channelname (eg: ~c:#*blah*)");
 			return 0;
 		}
 	}

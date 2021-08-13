@@ -712,6 +712,86 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 	return;
 }
 
+char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, int bounce, int extbtype, Ban **banlist)
+{
+	char *tmpstr;
+	BanContext *b;
+
+	tmpstr = clean_ban_mask(param, what, client);
+	if (BadPtr(tmpstr))
+	{
+		/* Invalid ban. See if we can send an error about that (only for extbans) */
+		if (MyUser(client) && !bounce && is_extended_ban(param))
+		{
+			Extban *p = findmod_by_bantype(param[1]);
+			BanContext *b = safe_alloc(sizeof(BanContext));
+			b->client = client;
+			b->channel = channel;
+			b->banstr = param;
+			b->is_ok_checktype = EXBCHK_PARAM;
+			b->what = what;
+			b->what2 = extbtype;
+			if (p && p->is_ok)
+				p->is_ok(b);
+			safe_free(b);
+		}
+
+		return NULL;
+	}
+	if (MyUser(client) && !bounce && is_extended_ban(param))
+	{
+		/* extban: check access if needed */
+		Extban *p = findmod_by_bantype(tmpstr[1]);
+		if (p)
+		{
+			if ((extbtype == EXBTYPE_INVEX) && !(p->options & EXTBOPT_INVEX))
+				return NULL; /* this extended ban type does not support INVEX */
+			if (p->is_ok)
+			{
+				BanContext *b = safe_alloc(sizeof(BanContext));
+				b->client = client;
+				b->channel = channel;
+				b->what = what;
+				b->what2 = extbtype;
+
+				b->is_ok_checktype = EXBCHK_ACCESS;
+				b->banstr = tmpstr;
+				if (!p->is_ok(b))
+				{
+					if (ValidatePermissionsForPath("channel:override:mode:extban",client,NULL,channel,NULL))
+					{
+						/* TODO: send operoverride notice */
+					} else {
+						b->banstr = tmpstr;
+						b->is_ok_checktype = EXBCHK_ACCESS_ERR;
+						p->is_ok(b);
+						safe_free(b);
+						return NULL;
+					}
+				}
+				b->banstr = tmpstr;
+				b->is_ok_checktype = EXBCHK_PARAM;
+				if (!p->is_ok(b))
+				{
+					safe_free(b);
+					return NULL;
+				}
+			}
+		}
+	}
+
+	/* For bounce, we don't really need to worry whether
+	 * or not it exists on our server.  We'll just always
+	 * bounce it. */
+	if (!bounce &&
+	    ((what == MODE_ADD && add_listmode(banlist, client, channel, tmpstr))
+	    || (what == MODE_DEL && del_listmode(banlist, channel, tmpstr))))
+	{
+		return NULL;	/* already exists */
+	}
+
+	return tmpstr;
+}
 
 /* do_mode_char
  *  processes one mode character
@@ -1064,49 +1144,8 @@ process_listmode:
 
 		case MODE_BAN:
 			REQUIRE_PARAMETER()
-			retval = 1;
-			tmpstr = clean_ban_mask(param, what, client);
-			if (BadPtr(tmpstr))
-			{
-				/* Invalid ban. See if we can send an error about that (only for extbans) */
-				if (MyUser(client) && !bounce && is_extended_ban(param))
-				{
-					Extban *p = findmod_by_bantype(param[1]);
-					if (p && p->is_ok)
-						p->is_ok(client, channel, param, EXBCHK_PARAM, what, EXBTYPE_BAN);
-				}
-
-				break; /* ignore ban, but eat param */
-			}
-			if (MyUser(client) && !bounce && is_extended_ban(param))
-			{
-				/* extban: check access if needed */
-				Extban *p = findmod_by_bantype(tmpstr[1]);
-				if (p && p->is_ok)
-				{
-					if (!p->is_ok(client, channel, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_BAN))
-					{
-						if (ValidatePermissionsForPath("channel:override:mode:extban",client,NULL,channel,NULL))
-						{
-							/* TODO: send operoverride notice */
-						} else {
-							p->is_ok(client, channel, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_BAN);
-							break;
-						}
-					}
-					if (!p->is_ok(client, channel, tmpstr, EXBCHK_PARAM, what, EXBTYPE_BAN))
-						break;
-				}
-			}
-			/* For bounce, we don't really need to worry whether
-			 * or not it exists on our server.  We'll just always
-			 * bounce it. */
-			if (!bounce &&
-			    ((what == MODE_ADD && add_listmode(&channel->banlist, client, channel, tmpstr))
-			    || (what == MODE_DEL && del_listmode(&channel->banlist, channel, tmpstr))))
-			{
-				break;	/* already exists */
-			}
+			if (!(tmpstr = mode_ban_handler(client, channel, param, what, bounce, EXBTYPE_BAN, &channel->banlist)))
+				break;
 			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
 			            "%cb%s",
 			            (what == MODE_ADD) ? '+' : '-', tmpstr);
@@ -1114,48 +1153,8 @@ process_listmode:
 			break;
 		case MODE_EXCEPT:
 			REQUIRE_PARAMETER()
-			tmpstr = clean_ban_mask(param, what, client);
-			if (BadPtr(tmpstr))
-			{
-				/* Invalid except. See if we can send an error about that (only for extbans) */
-				if (MyUser(client) && !bounce && is_extended_ban(param))
-				{
-					Extban *p = findmod_by_bantype(param[1]);
-					if (p && p->is_ok)
-						p->is_ok(client, channel, param, EXBCHK_PARAM, what, EXBTYPE_EXCEPT);
-				}
-
-				break; /* ignore except, but eat param */
-			}
-			if (MyUser(client) && !bounce && is_extended_ban(param))
-			{
-				/* extban: check access if needed */
-				Extban *p = findmod_by_bantype(tmpstr[1]);
-				if (p && p->is_ok)
-				{
-					if (!p->is_ok(client, channel, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
-					{
-						if (ValidatePermissionsForPath("channel:override:mode:extban",client,NULL,channel,NULL))
-						{
-							/* TODO: send operoverride notice */
-						} else {
-							p->is_ok(client, channel, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_EXCEPT);
-							break;
-						}
-					}
-					if (!p->is_ok(client, channel, tmpstr, EXBCHK_PARAM, what, EXBTYPE_EXCEPT))
-						break;
-				}
-			}
-			/* For bounce, we don't really need to worry whether
-			 * or not it exists on our server.  We'll just always
-			 * bounce it. */
-			if (!bounce &&
-			    ((what == MODE_ADD && add_listmode(&channel->exlist, client, channel, tmpstr))
-			    || (what == MODE_DEL && del_listmode(&channel->exlist, channel, tmpstr))))
-			{
-				break;	/* already exists */
-			}
+			if (!(tmpstr = mode_ban_handler(client, channel, param, what, bounce, EXBTYPE_EXCEPT, &channel->exlist)))
+				break;
 			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
 			            "%ce%s",
 			            (what == MODE_ADD) ? '+' : '-', tmpstr);
@@ -1163,50 +1162,8 @@ process_listmode:
 			break;
 		case MODE_INVEX:
 			REQUIRE_PARAMETER()
-			tmpstr = clean_ban_mask(param, what, client);
-			if (BadPtr(tmpstr))
-			{
-				/* Invalid invex. See if we can send an error about that (only for extbans) */
-				if (MyUser(client) && !bounce && is_extended_ban(param))
-				{
-					Extban *p = findmod_by_bantype(param[1]);
-					if (p && p->is_ok)
-						p->is_ok(client, channel, param, EXBCHK_PARAM, what, EXBTYPE_INVEX);
-				}
-
-				break; /* ignore invex, but eat param */
-			}
-			if (MyUser(client) && !bounce && is_extended_ban(param))
-			{
-				/* extban: check access if needed */
-				Extban *p = findmod_by_bantype(tmpstr[1]);
-				if (p)
-				{
-					if (!(p->options & EXTBOPT_INVEX))
-						break; /* this extended ban type does not support INVEX */
-					if (p->is_ok && !p->is_ok(client, channel, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_INVEX))
-					{
-						if (ValidatePermissionsForPath("channel:override:mode:extban",client,NULL,channel,NULL))
-						{
-							/* TODO: send operoverride notice */
-						} else {
-							p->is_ok(client, channel, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_INVEX);
-							break;
-						}
-					}
-					if (p->is_ok && !p->is_ok(client, channel, tmpstr, EXBCHK_PARAM, what, EXBTYPE_INVEX))
-						break;
-				}
-			}
-			/* For bounce, we don't really need to worry whether
-			 * or not it exists on our server.  We'll just always
-			 * bounce it. */
-			if (!bounce &&
-			    ((what == MODE_ADD && add_listmode(&channel->invexlist, client, channel, tmpstr))
-			    || (what == MODE_DEL && del_listmode(&channel->invexlist, channel, tmpstr))))
-			{
-				break;	/* already exists */
-			}
+			if (!(tmpstr = mode_ban_handler(client, channel, param, what, bounce, EXBTYPE_INVEX, &channel->invexlist)))
+				break;
 			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
 			            "%cI%s",
 			            (what == MODE_ADD) ? '+' : '-', tmpstr);

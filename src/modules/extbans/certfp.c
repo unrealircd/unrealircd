@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-int extban_certfp_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2);
+int extban_certfp_is_ok(BanContext *b);
 char *extban_certfp_conv_param(char *para);
 int extban_certfp_is_banned(BanContext *b);
 
@@ -74,18 +74,19 @@ int extban_certfp_usage(Client *client)
 	return EX_DENY;
 }
 
-int extban_certfp_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2)
+int extban_certfp_is_ok(BanContext *b)
 {
-	if (checkt == EXCHK_PARAM)
+	b->banstr += 3;
+	if (b->is_ok_checktype == EXCHK_PARAM)
 	{
 		char *p;
 		
-		if (strlen(para) != 3 + CERT_FP_LEN)
-			return extban_certfp_usage(client);
+		if (strlen(b->banstr) != CERT_FP_LEN)
+			return extban_certfp_usage(b->client);
 		
-		for (p = para + 3; *p; p++)
+		for (p = b->banstr; *p; p++)
 			if (!isxdigit(*p))
-				return extban_certfp_usage(client);
+				return extban_certfp_usage(b->client);
 
 		return EX_ALLOW;
 	}

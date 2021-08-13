@@ -75,7 +75,7 @@ char *extban_modeT_conv_param(char *para_in);
 int textban_check_ban(Client *client, Channel *channel, char *ban, char **msg, char **errmsg);
 int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 int extban_modeT_is_banned(BanContext *b);
-int extban_modeT_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2);
+int extban_modeT_is_ok(BanContext *b);
 void parse_word(const char *s, char **word, int *type);
 
 MOD_INIT()
@@ -253,21 +253,21 @@ unsigned int counttextbans(Channel *channel)
 }
 
 
-int extban_modeT_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2)
+int extban_modeT_is_ok(BanContext *b)
 {
 	int n;
 
-	if ((what == MODE_ADD) && (what2 == EXBTYPE_EXCEPT) && MyUser(client))
+	if ((b->what == MODE_ADD) && (b->what2 == EXBTYPE_EXCEPT) && MyUser(b->client))
 		return 0; /* except is not supported */
 
 	/* We check the # of bans in the channel, may not exceed MAX_EXTBANT_PER_CHAN */
-	if ((what == MODE_ADD) && (checkt == EXBCHK_PARAM) &&
-	     MyUser(client) && !IsOper(client) &&
-	    ((n = counttextbans(channel)) >= MAX_EXTBANT_PER_CHAN))
+	if ((b->what == MODE_ADD) && (b->is_ok_checktype == EXBCHK_PARAM) &&
+	     MyUser(b->client) && !IsOper(b->client) &&
+	    ((n = counttextbans(b->channel)) >= MAX_EXTBANT_PER_CHAN))
 	{
 		/* We check the # of bans in the channel, may not exceed MAX_EXTBANT_PER_CHAN */
-		sendnumeric(client, ERR_BANLISTFULL, channel->name, para);
-		sendnotice(client, "Too many textbans for this channel");
+		sendnumeric(b->client, ERR_BANLISTFULL, b->channel->name, b->banstr); // FIXME: wants b->full_banstr here
+		sendnotice(b->client, "Too many textbans for this channel");
 		return 0;
 	}
 	return 1;

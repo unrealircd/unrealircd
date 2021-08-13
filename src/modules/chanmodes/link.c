@@ -54,7 +54,7 @@ void *cmodeL_dup_struct(void *r_in);
 int cmodeL_sjoin_check(Channel *channel, void *ourx, void *theirx);
 
 int extban_link_syntax(Client *client, int checkt, char *reason);
-int extban_link_is_ok(Client *client, Channel *channel, char *param, int checkt, int what, int what2);
+int extban_link_is_ok(BanContext *b);
 char *extban_link_conv_param(char *param);
 int extban_link_is_banned(BanContext *b);
 int link_doforward(Client *client, Channel *channel, char *linked, linkType linktype);
@@ -222,7 +222,7 @@ int extban_link_syntax(Client *client, int checkt, char *reason)
 	return 0; // Reject ban
 }
 
-int extban_link_is_ok(Client *client, Channel *channel, char *param, int checkt, int what, int what2)
+int extban_link_is_ok(BanContext *b)
 {
 	char paramtmp[MAX_EB_LEN + 1];
 	char tmpmask[MAX_EB_LEN + 1];
@@ -230,30 +230,32 @@ int extban_link_is_ok(Client *client, Channel *channel, char *param, int checkt,
 	char *chan;
 
 	// Always permit deletion
-	if (what == MODE_DEL)
+	if (b->what == MODE_DEL)
 		return 1;
 
-	if (what2 != EXBTYPE_BAN)
+	if (b->what2 != EXBTYPE_BAN)
 	{
-		if (checkt == EXBCHK_PARAM)
-			sendnotice(client, "Ban type ~f only works with bans (+b) and not with exceptions or invex (+e/+I)");
+		if (b->is_ok_checktype == EXBCHK_PARAM)
+			sendnotice(b->client, "Ban type ~f only works with bans (+b) and not with exceptions or invex (+e/+I)");
 		return 0; // Reject
 	}
 
-	strlcpy(paramtmp, param + 3, sizeof(paramtmp)); // Work on a size-truncated copy
+	b->banstr += 3;
+	strlcpy(paramtmp, b->banstr, sizeof(paramtmp)); // Work on a size-truncated copy
 	chan = paramtmp;
 	matchby = strchr(paramtmp, ':');
 	if (!matchby || !matchby[1])
-		return extban_link_syntax(client, checkt, "Invalid syntax");
+		return extban_link_syntax(b->client, b->is_ok_checktype, "Invalid syntax");
 	*matchby++ = '\0';
 
-	if (*chan != '#' || strchr(param, ','))
-		return extban_link_syntax(client, checkt, "Invalid channel");
+	if (*chan != '#' || strchr(b->banstr, ','))
+		return extban_link_syntax(b->client, b->is_ok_checktype, "Invalid channel");
 
 	// Possibly stack multiple extbans, this is a little convoluted due to extban API limitations
 	snprintf(tmpmask, sizeof(tmpmask), "~?:%s", matchby);
-	if (extban_is_ok_nuh_extban(client, channel, tmpmask, checkt, what, what2) == 0)
-		return extban_link_syntax(client, checkt, "Invalid matcher");
+	b->banstr = tmpmask;
+	if (extban_is_ok_nuh_extban(b) == 0)
+		return extban_link_syntax(b->client, b->is_ok_checktype, "Invalid matcher");
 
 	return 1; // Is ok
 }

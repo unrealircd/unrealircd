@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 char *timedban_extban_conv_param(char *para_in);
-int timedban_extban_is_ok(Client *client, Channel* channel, char *para_in, int checkt, int what, int what2);
+int timedban_extban_is_ok(BanContext *b);
 int timedban_is_banned(BanContext *b);
 void add_send_mode_param(Channel *channel, Client *from, char what, char mode, char *param);
 char *timedban_chanmsg(Client *, Client *, Channel *, char *, int);
@@ -226,52 +226,43 @@ int timedban_extban_syntax(Client *client, int checkt, char *reason)
 }
 
 /** Generic helper for sub-bans, used by our "is this ban ok?" function */
-int generic_ban_is_ok(Client *client, Channel *channel, char *mask, int checkt, int what, int what2)
+int generic_ban_is_ok(BanContext *b)
 {
-	if ((mask[0] == '~') && MyUser(client))
+	if ((b->banstr[0] == '~') && MyUser(b->client))
 	{
 		Extban *p;
 
 		/* This portion is copied from clean_ban_mask() */
-		if (is_extended_ban(mask) && MyUser(client))
+		if (is_extended_ban(b->banstr) && MyUser(b->client))
 		{
-			if (RESTRICT_EXTENDEDBANS && !ValidatePermissionsForPath("immune:restrict-extendedbans",client,NULL,NULL,NULL))
+			if (RESTRICT_EXTENDEDBANS && !ValidatePermissionsForPath("immune:restrict-extendedbans",b->client,NULL,NULL,NULL))
 			{
 				if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))
 				{
-					if (checkt == EXBCHK_ACCESS_ERR)
-						sendnotice(client, "Setting/removing of extended bans has been disabled");
+					if (b->is_ok_checktype == EXBCHK_ACCESS_ERR)
+						sendnotice(b->client, "Setting/removing of extended bans has been disabled");
 					return 0; /* REJECT */
 				}
-				if (strchr(RESTRICT_EXTENDEDBANS, mask[1]))
+				if (strchr(RESTRICT_EXTENDEDBANS, b->banstr[1]))
 				{
-					if (checkt == EXBCHK_ACCESS_ERR)
-						sendnotice(client, "Setting/removing of extended bantypes '%s' has been disabled", RESTRICT_EXTENDEDBANS);
+					if (b->is_ok_checktype == EXBCHK_ACCESS_ERR)
+						sendnotice(b->client, "Setting/removing of extended bantypes '%s' has been disabled", RESTRICT_EXTENDEDBANS);
 					return 0; /* REJECT */
 				}
 			}
 			/* And next is inspired by cmd_mode */
-			p = findmod_by_bantype(mask[1]);
-			if (checkt == EXBCHK_ACCESS)
+			p = findmod_by_bantype(b->banstr[1]);
+			if ((b->is_ok_checktype == EXBCHK_ACCESS) || (b->is_ok_checktype == EXBCHK_ACCESS_ERR))
 			{
-				if (p && p->is_ok && !p->is_ok(client, channel, mask, EXBCHK_ACCESS, what, what2) &&
-				    !ValidatePermissionsForPath("channel:override:mode:extban",client,NULL,channel,NULL))
+				if (p && p->is_ok && !p->is_ok(b) &&
+				    !ValidatePermissionsForPath("channel:override:mode:extban",b->client,NULL,b->channel,NULL))
 				{
 					return 0; /* REJECT */
 				}
 			} else
-			if (checkt == EXBCHK_ACCESS_ERR)
+			if (b->is_ok_checktype == EXBCHK_PARAM)
 			{
-				if (p && p->is_ok && !p->is_ok(client, channel, mask, EXBCHK_ACCESS, what, what2) &&
-				    !ValidatePermissionsForPath("channel:override:mode:extban",client,NULL,channel,NULL))
-				{
-					p->is_ok(client, channel, mask, EXBCHK_ACCESS_ERR, what, what2);
-					return 0; /* REJECT */
-				}
-			} else
-			if (checkt == EXBCHK_PARAM)
-			{
-				if (p && p->is_ok && !p->is_ok(client, channel, mask, EXBCHK_PARAM, what, what2))
+				if (p && p->is_ok && !p->is_ok(b))
 				{
 					return 0; /* REJECT */
 				}
@@ -288,7 +279,7 @@ int generic_ban_is_ok(Client *client, Channel *channel, char *mask, int checkt, 
 }
 
 /** Validate ban ("is this ban ok?") */
-int timedban_extban_is_ok(Client *client, Channel* channel, char *para_in, int checkt, int what, int what2)
+int timedban_extban_is_ok(BanContext *b)
 {
 	char para[MAX_LENGTH+1];
 	char tmpmask[MAX_LENGTH+1];
@@ -300,13 +291,14 @@ int timedban_extban_is_ok(Client *client, Channel* channel, char *para_in, int c
 	int res;
 
 	/* Always permit deletion */
-	if (what == MODE_DEL)
+	if (b->what == MODE_DEL)
 		return 1;
 
 	if (timedban_extban_is_ok_recursion)
 		return 0; /* Recursion detected (~t:1:~t:....) */
 
-	strlcpy(para, para_in+3, sizeof(para)); /* work on a copy (and truncate it) */
+	b->banstr += 3;
+	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
 	
 	/* ~t:duration:n!u@h   for direct matching
 	 * ~t:duration:~x:.... when calling another bantype
@@ -315,18 +307,19 @@ int timedban_extban_is_ok(Client *client, Channel* channel, char *para_in, int c
 	durationstr = para;
 	matchby = strchr(para, ':');
 	if (!matchby || !matchby[1])
-		return timedban_extban_syntax(client, checkt, "Invalid syntax");
+		return timedban_extban_syntax(b->client, b->is_ok_checktype, "Invalid syntax");
 	*matchby++ = '\0';
 
 	duration = atoi(durationstr);
 
 	if ((duration <= 0) || (duration > TIMEDBAN_MAX_TIME))
-		return timedban_extban_syntax(client, checkt, "Invalid duration time");
+		return timedban_extban_syntax(b->client, b->is_ok_checktype, "Invalid duration time");
 
 	strlcpy(tmpmask, matchby, sizeof(tmpmask));
 	timedban_extban_is_ok_recursion++;
-	//res = extban_is_ok_nuh_extban(client, channel, tmpmask, checkt, what, what2);
-	res = generic_ban_is_ok(client, channel, tmpmask, checkt, what, what2);
+	//res = extban_is_ok_nuh_extban(b->client, b->channel, tmpmask, b->is_ok_checktype, b->what, b->what2);
+	b->banstr = tmpmask;
+	res = generic_ban_is_ok(b);
 	timedban_extban_is_ok_recursion--;
 	if (res == 0)
 	{
@@ -334,7 +327,7 @@ int timedban_extban_is_ok(Client *client, Channel* channel, char *para_in, int c
 		 * invalid n!u@h syntax, unknown (sub)extbantype,
 		 * disabled extban type in conf, too much recursion, etc.
 		 */
-		return timedban_extban_syntax(client, checkt, "Invalid matcher");
+		return timedban_extban_syntax(b->client, b->is_ok_checktype, "Invalid matcher");
 	}
 
 	return 1; /* OK */

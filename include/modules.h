@@ -372,6 +372,9 @@ typedef struct {
 	char *msg;		/**< Message, only for some BANCHK_* types (for censoring text) */
 	char *error_msg;	/**< Error message, can be NULL */
 	int no_extbans;		/**< Set to 1 to disable extended bans checking - only nick!user@host allowed */
+	int what;		/**< MODE_ADD or MODE_DEL (for is_ok) */
+	int what2;		/**< EXBTYPE_BAN or EXBTYPE_EXCEPT (for is_ok) */
+	int is_ok_checktype;	/**< One of EXBCHK_* (for is_ok) */
 } BanContext;
 
 typedef struct {
@@ -383,18 +386,7 @@ typedef struct {
 	/** extban options */
 	ExtbanOptions options;
 
-	/** access checking [optional].
-	 * Client *: the client
-	 * Channel *: the channel
-	 * para: the ban parameter
-	 * int: check type (see EXBCHK_*)
-	 * int: what (MODE_ADD or MODE_DEL)
-	 * int: what2 (EXBTYPE_BAN or EXBTYPE_EXCEPT)
-	 * return value: 1=ok, 0=bad
-	 * NOTE: just set this of NULL if you want only +hoaq to place/remove bans as usual.
-	 * NOTE2: This has not been tested yet!!
-	 */
-	int			(*is_ok)(Client *, Channel *, char *para, int, int, int);
+	int (*is_ok)(BanContext *b);
 
 	/** Convert input parameter to output [optional].
 	 * like with normal bans '+b blah' gets '+b blah!*@*', and it allows
@@ -420,7 +412,7 @@ typedef struct {
 typedef struct {
 	char	flag;
 	ExtbanOptions options;
-	int			(*is_ok)(Client *, Channel *, char *para, int, int, int);
+	int			(*is_ok)(BanContext *b);
 	char *			(*conv_param)(char *);
 	int			(*is_banned)(BanContext *b);
 } ExtbanInfo;

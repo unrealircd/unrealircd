@@ -30,7 +30,7 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 int extban_msgbypass_is_banned(BanContext *b);
 int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageRestrictionType bypass_type);
-int msgbypass_extban_is_ok(Client *client, Channel* channel, char *para, int checkt, int what, int what2);
+int msgbypass_extban_is_ok(BanContext *b);
 char *msgbypass_extban_conv_param(char *para);
 
 /** Called upon module init */
@@ -181,7 +181,7 @@ int msgbypass_extban_syntax(Client *client, int checkt, char *reason)
 	return 0; /* FAIL: ban rejected */
 }
 
-int msgbypass_extban_is_ok(Client *client, Channel* channel, char *para_in, int checkt, int what, int what2)
+int msgbypass_extban_is_ok(BanContext *b)
 {
 	char para[MAX_LENGTH+1];
 	char tmpmask[MAX_LENGTH+1];
@@ -190,17 +190,18 @@ int msgbypass_extban_is_ok(Client *client, Channel* channel, char *para_in, int 
 	char *newmask; /**< Cleaned matching method, such as 'n!u@h' */
 
 	/* Always permit deletion */
-	if (what == MODE_DEL)
+	if (b->what == MODE_DEL)
 		return 1;
 	
-	if (what2 != EXBTYPE_EXCEPT)
+	if (b->what2 != EXBTYPE_EXCEPT)
 	{
-		if (checkt == EXBCHK_PARAM)
-			sendnotice(client, "Ban type ~m only works with exceptions (+e) and not with bans or invex (+b/+I)");
+		if (b->is_ok_checktype == EXBCHK_PARAM)
+			sendnotice(b->client, "Ban type ~m only works with exceptions (+e) and not with bans or invex (+b/+I)");
 		return 0; /* reject */
 	}
 
-	strlcpy(para, para_in+3, sizeof(para)); /* work on a copy (and truncate it) */
+	b->banstr += 3;
+	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
 	
 	/* ~m:type:n!u@h   for direct matching
 	 * ~m:type:~x:.... when calling another bantype
@@ -209,24 +210,25 @@ int msgbypass_extban_is_ok(Client *client, Channel* channel, char *para_in, int 
 	type = para;
 	matchby = strchr(para, ':');
 	if (!matchby || !matchby[1])
-		return msgbypass_extban_syntax(client, checkt, "Invalid syntax");
+		return msgbypass_extban_syntax(b->client, b->is_ok_checktype, "Invalid syntax");
 	*matchby++ = '\0';
 
 	if (!msgbypass_extban_type_ok(type))
-		return msgbypass_extban_syntax(client, checkt, "Unknown type");
+		return msgbypass_extban_syntax(b->client, b->is_ok_checktype, "Unknown type");
 
 	/* This is quite silly, we have to create a fake extban here due to
 	 * the current API of extban_conv_param_nuh and extban_conv_param_nuh_or_extban
 	 * expecting the full banmask rather than the portion that actually matters.
 	 */
 	snprintf(tmpmask, sizeof(tmpmask), "~?:%s", matchby);
-	if (extban_is_ok_nuh_extban(client, channel, tmpmask, checkt, what, what2) == 0)
+	b->banstr = tmpmask;
+	if (extban_is_ok_nuh_extban(b) == 0)
 	{
 		/* This could be anything ranging from:
 		 * invalid n!u@h syntax, unknown (sub)extbantype,
 		 * disabled extban type in conf, too much recursion, etc.
 		 */
-		return msgbypass_extban_syntax(client, checkt, "Invalid matcher");
+		return msgbypass_extban_syntax(b->client, b->is_ok_checktype, "Invalid matcher");
 	}
 
 	return 1; /* OK */
