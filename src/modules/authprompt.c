@@ -491,7 +491,7 @@ int authprompt_sasl_result(Client *client, int success)
 	/* Authentication was a success */
 	if (*client->name && client->user && *client->user->username && IsNotSpoof(client))
 	{
-		register_user(client, client->name, client->user->username, NULL, NULL, NULL);
+		register_user(client);
 		/* User MAY be killed now. But since we 'return 1' below, it's safe */
 	}
 

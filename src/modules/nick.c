@@ -54,7 +54,7 @@ CMD_FUNC(cmd_nick);
 CMD_FUNC(cmd_nick_local);
 CMD_FUNC(cmd_nick_remote);
 CMD_FUNC(cmd_uid);
-int _register_user(Client *client, char *nick, char *username, char *umode, char *virthost, char *ip);
+int _register_user(Client *client);
 void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Client *existing, int type);
 int AllowClient(Client *client, char *username);
 
@@ -365,7 +365,7 @@ CMD_FUNC(cmd_nick_local)
 				sendto_one(client, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1", me.name, nick);
 
 			client->lastnick = TStime();
-			if (!register_user(client, nick, client->user->username, NULL, NULL, NULL))
+			if (!register_user(client))
 			{
 				if (IsDead(client))
 					return;
@@ -754,7 +754,7 @@ CMD_FUNC(cmd_nick)
  * @param ip		IP address string (can be NULL)
  * @returns 1 if successfully registered, 0 if not (client might be killed).
  */
-int _register_user(Client *client, char *nick, char *username, char *umode, char *virthost, char *ip)
+int _register_user(Client *client)
 {
 	ConfigItem_ban *bconf;
 	char *tmpstr;
@@ -767,13 +767,10 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	char temp[USERLEN + 1];
 	char descbuf[BUFSIZE];
 
-	nick = client->name; /* <- The data is always the same, but the pointer is sometimes not,
-	                    *    I need this for one of my modules, so do not remove! ;) -- Syzop */
-
 	if (!MyConnect(client))
 		abort();
 
-	if (!AllowClient(client, username))
+	if (!AllowClient(client, client->user->username))
 	{
 		ircstats.is_ref++;
 		/* For safety, we have an extra kill here */
@@ -817,7 +814,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	 */
 
 	/* because username may point to client->user->username */
-	strlcpy(temp, username, USERLEN + 1);
+	strlcpy(temp, client->user->username, USERLEN + 1);
 
 	if (!IsUseIdent(client))
 		strlcpy(client->user->username, temp, USERLEN + 1);
@@ -950,7 +947,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	make_cloakedhost(client, client->user->realhost, client->user->cloakedhost, sizeof(client->user->cloakedhost));
 	safe_strdup(client->user->virthost, client->user->cloakedhost);
 
-	snprintf(descbuf, sizeof descbuf, "Client: %s", nick);
+	snprintf(descbuf, sizeof descbuf, "Client: %s", client->name);
 	fd_desc(client->local->fd, descbuf);
 
 	list_move(&client->lclient_node, &lclient_list);
@@ -969,7 +966,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		   log_data_string("extended_client_info", get_connect_extinfo(client)));
 
 	RunHook2(HOOKTYPE_WELCOME, client, 0);
-	sendnumeric(client, RPL_WELCOME, NETWORK_NAME, nick, client->user->username, client->user->realhost);
+	sendnumeric(client, RPL_WELCOME, NETWORK_NAME, client->name, client->user->username, client->user->realhost);
 
 	RunHook2(HOOKTYPE_WELCOME, client, 1);
 	sendnumeric(client, RPL_YOURHOST, me.name, version);
@@ -1031,26 +1028,6 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 
 	if (client->umodes & UMODE_INVISIBLE)
 		irccounts.invisible++;
-
-	if (virthost && umode)
-	{
-		/* Set the IP address first */
-		if (ip && (*ip != '*'))
-			safe_strdup(client->ip, ip);
-
-		/* For remote clients we recalculate the cloakedhost here because
-		 * it may depend on the IP address (bug #5064).
-		 */
-		make_cloakedhost(client, client->user->realhost, client->user->cloakedhost, sizeof(client->user->cloakedhost));
-		safe_strdup(client->user->virthost, client->user->cloakedhost);
-
-		/* Set the umodes */
-		set_user_modes_dont_spread(client, umode);
-
-		/* Set the vhost */
-		if (virthost && *virthost != '*')
-			safe_strdup(client->user->virthost, virthost);
-	}
 
 	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
 

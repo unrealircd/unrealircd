@@ -41,7 +41,7 @@ void (*do_mode)(Channel *channel, Client *client, MessageTag *mtags, int parc, c
 void (*set_mode)(Channel *channel, Client *client, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
 void (*cmd_umode)(Client *client, MessageTag *mtags, int parc, char *parv[]);
-int (*register_user)(Client *client, char *nick, char *username, char *umode, char *virthost, char *ip);
+int (*register_user)(Client *client);
 int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
 int (*tkl_chartotype)(char c);

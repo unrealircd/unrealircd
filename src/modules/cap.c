@@ -240,7 +240,7 @@ static void cap_end(Client *client, const char *arg)
 	ClearCapabilityFast(client, CAP_IN_PROGRESS);
 
 	if (*client->name && client->user && *client->user->username && IsNotSpoof(client))
-		register_user(client, client->name, client->user->username, NULL, NULL, NULL);
+		register_user(client);
 }
 
 static void cap_list(Client *client, const char *arg)

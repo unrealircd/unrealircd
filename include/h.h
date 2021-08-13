@@ -686,7 +686,7 @@ extern MODVAR void (*do_mode)(Channel *channel, Client *client, MessageTag *mtag
 extern MODVAR void (*set_mode)(Channel *channel, Client *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
 extern MODVAR void (*cmd_umode)(Client *, MessageTag *, int, char **);
-extern MODVAR int (*register_user)(Client *client, char *nick, char *username, char *umode, char *virthost, char *ip);
+extern MODVAR int (*register_user)(Client *client);
 extern MODVAR int (*tkl_hash)(unsigned int c);
 extern MODVAR char (*tkl_typetochar)(int type);
 extern MODVAR int (*tkl_chartotype)(char c);

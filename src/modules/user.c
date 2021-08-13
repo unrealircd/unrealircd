@@ -109,7 +109,7 @@ CMD_FUNC(cmd_user)
 			sendto_one(client, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
 				me.name, client->name);
 		}
-		register_user(client, client->name, username, NULL, NULL, NULL);
+		register_user(client);
 		return;
 	}
 }

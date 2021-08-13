@@ -147,7 +147,7 @@ CMD_FUNC(cmd_nospoof)
 			   me.name, client->name);
 
 	if (is_handshake_finished(client))
-		register_user(client, client->name, client->user->username, NULL, NULL, NULL);
+		register_user(client);
 }
 
 /*
