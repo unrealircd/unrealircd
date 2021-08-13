@@ -76,7 +76,6 @@ int extban_certfp_usage(Client *client)
 
 int extban_certfp_is_ok(BanContext *b)
 {
-	b->banstr += 3;
 	if (b->is_ok_checktype == EXCHK_PARAM)
 	{
 		char *p;

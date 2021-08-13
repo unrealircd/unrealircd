@@ -224,8 +224,7 @@ int extban_link_syntax(Client *client, int checkt, char *reason)
 
 int extban_link_is_ok(BanContext *b)
 {
-	char paramtmp[MAX_EB_LEN + 1];
-	char tmpmask[MAX_EB_LEN + 1];
+	static char paramtmp[MAX_EB_LEN + 1];
 	char *matchby; // Matching method, such as 'n!u@h'
 	char *chan;
 
@@ -240,7 +239,6 @@ int extban_link_is_ok(BanContext *b)
 		return 0; // Reject
 	}
 
-	b->banstr += 3;
 	strlcpy(paramtmp, b->banstr, sizeof(paramtmp)); // Work on a size-truncated copy
 	chan = paramtmp;
 	matchby = strchr(paramtmp, ':');
@@ -251,9 +249,7 @@ int extban_link_is_ok(BanContext *b)
 	if (*chan != '#' || strchr(b->banstr, ','))
 		return extban_link_syntax(b->client, b->is_ok_checktype, "Invalid channel");
 
-	// Possibly stack multiple extbans, this is a little convoluted due to extban API limitations
-	snprintf(tmpmask, sizeof(tmpmask), "~?:%s", matchby);
-	b->banstr = tmpmask;
+	b->banstr = matchby;
 	if (extban_is_ok_nuh_extban(b) == 0)
 		return extban_link_syntax(b->client, b->is_ok_checktype, "Invalid matcher");
 

@@ -230,7 +230,7 @@ int generic_ban_is_ok(BanContext *b)
 {
 	if ((b->banstr[0] == '~') && MyUser(b->client))
 	{
-		Extban *p;
+		Extban *extban;
 
 		/* This portion is copied from clean_ban_mask() */
 		if (is_extended_ban(b->banstr) && MyUser(b->client))
@@ -251,20 +251,27 @@ int generic_ban_is_ok(BanContext *b)
 				}
 			}
 			/* And next is inspired by cmd_mode */
-			p = findmod_by_bantype(b->banstr[1]);
-			if ((b->is_ok_checktype == EXBCHK_ACCESS) || (b->is_ok_checktype == EXBCHK_ACCESS_ERR))
+			extban = findmod_by_bantype(b->banstr[1]);
+			if (extban && extban->is_ok)
 			{
-				if (p && p->is_ok && !p->is_ok(b) &&
-				    !ValidatePermissionsForPath("channel:override:mode:extban",b->client,NULL,b->channel,NULL))
+				b->banstr = strchr(b->banstr, ':');
+				if (!b->banstr)
+					return 0; /* faulty extban */
+				b->banstr++;
+				if ((b->is_ok_checktype == EXBCHK_ACCESS) || (b->is_ok_checktype == EXBCHK_ACCESS_ERR))
 				{
-					return 0; /* REJECT */
-				}
-			} else
-			if (b->is_ok_checktype == EXBCHK_PARAM)
-			{
-				if (p && p->is_ok && !p->is_ok(b))
+					if (!extban->is_ok(b) &&
+					    !ValidatePermissionsForPath("channel:override:mode:extban",b->client,NULL,b->channel,NULL))
+					{
+						return 0; /* REJECT */
+					}
+				} else
+				if (b->is_ok_checktype == EXBCHK_PARAM)
 				{
-					return 0; /* REJECT */
+					if (!extban->is_ok(b))
+					{
+						return 0; /* REJECT */
+					}
 				}
 			}
 		}
@@ -297,7 +304,6 @@ int timedban_extban_is_ok(BanContext *b)
 	if (timedban_extban_is_ok_recursion)
 		return 0; /* Recursion detected (~t:1:~t:....) */
 
-	b->banstr += 3;
 	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
 	
 	/* ~t:duration:n!u@h   for direct matching

@@ -183,8 +183,7 @@ int msgbypass_extban_syntax(Client *client, int checkt, char *reason)
 
 int msgbypass_extban_is_ok(BanContext *b)
 {
-	char para[MAX_LENGTH+1];
-	char tmpmask[MAX_LENGTH+1];
+	static char para[MAX_LENGTH+1];
 	char *type; /**< Type, such as 'external' */
 	char *matchby; /**< Matching method, such as 'n!u@h' */
 	char *newmask; /**< Cleaned matching method, such as 'n!u@h' */
@@ -200,7 +199,6 @@ int msgbypass_extban_is_ok(BanContext *b)
 		return 0; /* reject */
 	}
 
-	b->banstr += 3;
 	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
 	
 	/* ~m:type:n!u@h   for direct matching
@@ -216,12 +214,7 @@ int msgbypass_extban_is_ok(BanContext *b)
 	if (!msgbypass_extban_type_ok(type))
 		return msgbypass_extban_syntax(b->client, b->is_ok_checktype, "Unknown type");
 
-	/* This is quite silly, we have to create a fake extban here due to
-	 * the current API of extban_conv_param_nuh and extban_conv_param_nuh_or_extban
-	 * expecting the full banmask rather than the portion that actually matters.
-	 */
-	snprintf(tmpmask, sizeof(tmpmask), "~?:%s", matchby);
-	b->banstr = tmpmask;
+	b->banstr = matchby;
 	if (extban_is_ok_nuh_extban(b) == 0)
 	{
 		/* This could be anything ranging from:

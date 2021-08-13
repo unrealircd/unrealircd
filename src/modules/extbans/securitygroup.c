@@ -87,15 +87,14 @@ int extban_securitygroup_generic(char *mask, int strict)
 	if (!*mask)
 		return 0; /* don't allow "~G:" nor "~G:!" */
 
-	if (strlen(mask) > SECURITYGROUPLEN + 3)
-		mask[SECURITYGROUPLEN + 3] = '\0';
+	if (strlen(mask) > SECURITYGROUPLEN)
+		mask[SECURITYGROUPLEN] = '\0';
 
 	return 1;
 }
 
 int extban_securitygroup_is_ok(BanContext *b)
 {
-	b->banstr += 3;
 	if (MyUser(b->client) && (b->what == MODE_ADD) && (b->is_ok_checktype == EXBCHK_PARAM))
 	{
 		char banbuf[SECURITYGROUPLEN+8];

@@ -126,13 +126,12 @@ void ExtbanDel(Extban *eb)
  */
 int extban_is_ok_nuh_extban(BanContext *b)
 {
-	char *mask = (b->banstr + 3); // TODO: remove this +3
 	Extban *p = NULL;
 	int isok;
 	static int extban_is_ok_recursion = 0;
 
 	/* Mostly copied from clean_ban_mask - but note MyUser checks aren't needed here: extban->is_ok() according to cmd_mode isn't called for nonlocal. */
-	if (is_extended_ban(mask))
+	if (is_extended_ban(b->banstr))
 	{
 		if (extban_is_ok_recursion)
 			return 0; /* Fail: more than one stacked extban */
@@ -142,13 +141,13 @@ int extban_is_ok_nuh_extban(BanContext *b)
 			/* Test if this specific extban has been disabled.
 			 * (We can be sure RESTRICT_EXTENDEDBANS is not *. Else this extended ban wouldn't be happening at all.)
 			 */
-			if (strchr(RESTRICT_EXTENDEDBANS, mask[1]))
+			if (strchr(RESTRICT_EXTENDEDBANS, b->banstr[1]))
 			{
 				sendnotice(b->client, "Setting/removing of extended bantypes '%s' has been disabled.", RESTRICT_EXTENDEDBANS);
 				return 0; /* Fail */
 			}
 		}
-		p = findmod_by_bantype(mask[1]);
+		p = findmod_by_bantype(b->banstr[1]);
 		if (!p)
 		{
 			if (b->what == MODE_DEL)
@@ -160,8 +159,11 @@ int extban_is_ok_nuh_extban(BanContext *b)
 		/* Now we have to ask the stacked extban if it's ok. */
 		if (p->is_ok)
 		{
+			b->banstr = strchr(b->banstr, ':');
+			if (!b->banstr)
+				return 0; /* faulty extban */
+			b->banstr++;
 			extban_is_ok_recursion++;
-			b->banstr = mask; // TODO: change to +3 later
 			isok = p->is_ok(b);
 			extban_is_ok_recursion--;
 			return isok;

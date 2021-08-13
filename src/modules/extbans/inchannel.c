@@ -93,9 +93,8 @@ char *extban_inchannel_conv_param(char *para)
 
 /* The only purpose of this function is a temporary workaround to prevent a desync.. pfff */
 int extban_inchannel_is_ok(BanContext *b)
-//Client *client, Channel *channel, char *para, int checkt, int what, int what2)
 {
-	char *p = b->banstr += 3;
+	char *p = b->banstr;
 
 	if ((b->is_ok_checktype == EXBCHK_PARAM) && MyUser(b->client) && (b->what == MODE_ADD) && (strlen(b->banstr) > 3))
 	{
