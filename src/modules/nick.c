@@ -56,7 +56,7 @@ CMD_FUNC(cmd_nick_remote);
 CMD_FUNC(cmd_uid);
 int _register_user(Client *client);
 void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Client *existing, int type);
-int AllowClient(Client *client, char *username);
+int AllowClient(Client *client);
 
 MOD_TEST()
 {
@@ -937,7 +937,8 @@ int _register_user(Client *client)
 	if (!MyConnect(client))
 		abort();
 
-	if (!AllowClient(client, client->user->username))
+	/* Check allow { } blocks... */
+	if (!AllowClient(client))
 	{
 		ircstats.is_ref++;
 		/* For safety, we have an extra kill here */
@@ -1218,7 +1219,7 @@ int exceeds_maxperip(Client *client, ConfigItem_allow *aconf)
  * @param username   Username, for some reason...
  * @returns 1 if OK, 0 if client is rejected (likely killed too)
  */
-int AllowClient(Client *client, char *username)
+int AllowClient(Client *client)
 {
 	static char sockhost[HOSTLEN + 1];
 	struct hostent *hp = NULL;
