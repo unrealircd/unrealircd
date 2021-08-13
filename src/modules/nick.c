@@ -31,13 +31,30 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
+/* Defines */
+
+#define NICKCOL_EQUAL         0
+#define NICKCOL_NEW_WON       1
+#define NICKCOL_EXISTING_WON  2
+
+/* Assume that on collision a NICK is in flight and the other server will take
+ * the exact same decision we would do, and thus we don't send a KILL to cptr?
+ * This works great with this code, seems to kill the correct person and not
+ * cause desyncs even without UID/SID. HOWEVER.. who knows what code the other servers run?
+ * Should use UID/SID anyway, then this whole problem doesn't exist.
+ */
+#define ASSUME_NICK_IN_FLIGHT
+
+/* Variables */
+static char buf[BUFSIZE];
+static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
+
 /* Forward declarations */
 CMD_FUNC(cmd_nick);
 CMD_FUNC(cmd_nick_local);
 CMD_FUNC(cmd_nick_remote);
 CMD_FUNC(cmd_uid);
 int _register_user(Client *client, char *nick, char *username, char *umode, char *virthost, char *ip);
-int register_user_remote(Client *client, char *nick, char *username, char *umode, char *virthost, char *ip);
 void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Client *existing, int type);
 int AllowClient(Client *client, char *username);
 
@@ -66,20 +83,20 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-static char buf[BUFSIZE];
-static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
+/** Hmm.. don't we already have such a function? */
+void set_user_modes_dont_spread(Client *client, char *umode)
+{
+	char *args[4];
 
-#define NICKCOL_EQUAL         0
-#define NICKCOL_NEW_WON       1
-#define NICKCOL_EXISTING_WON  2
+	args[0] = client->name;
+	args[1] = client->name;
+	args[2] = umode;
+	args[3] = NULL;
 
-/* Assume that on collision a NICK is in flight and the other server will take
- * the exact same decision we would do, and thus we don't send a KILL to cptr?
- * This works great with this code, seems to kill the correct person and not
- * cause desyncs even without UID/SID. HOWEVER.. who knows what code the other servers run?
- * Should use UID/SID anyway, then this whole problem doesn't exist.
- */
-#define ASSUME_NICK_IN_FLIGHT
+	dontspread = 1;
+	do_cmd(client, NULL, "MODE", 3, args);
+	dontspread = 0;
+}
 
 /** Remote client (already fully registered) changing their nick */
 CMD_FUNC(cmd_nick_remote)
@@ -546,16 +563,20 @@ CMD_FUNC(cmd_uid)
 		return;
 	}
 
-	if (strcmp(ip_raw, "*") && !(ip = decode_ip(ip_raw)))
+	if (strcmp(ip_raw, "*"))
 	{
-		ircstats.is_kill++;
-		unreal_log(ULOG_ERROR, "link", "BAD_IP", client,
-		           "Server link $client ($client.id) introduced user $nick with bad IP: $bad_ip.",
-		           log_data_string("nick", nick),
-		           log_data_string("bad_ip", ip_raw));
-		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
-		sendto_one(client, NULL, ":%s KILL %s :Bad IP in UID command", me.id, parv[6]);
-		return;
+		if (!(ip = decode_ip(ip_raw)))
+		{
+			ircstats.is_kill++;
+			unreal_log(ULOG_ERROR, "link", "BAD_IP", client,
+				   "Server link $client ($client.id) introduced user $nick with bad IP: $bad_ip.",
+				   log_data_string("nick", nick),
+				   log_data_string("bad_ip", ip_raw));
+			/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
+			sendto_one(client, NULL, ":%s KILL %s :Bad IP in UID command", me.id, parv[6]);
+			return;
+		}
+		safe_strdup(client->ip, ip);
 	}
 
 	/* Kill quarantined opers early... */
@@ -645,9 +666,33 @@ nickkill2done:
 
 	strlcpy(client->info, realname, sizeof(client->info));
 	strlcpy(client->user->username, username, USERLEN + 1);
-	register_user_remote(client, client->name, username, umodes, virthost, ip);
-	if (IsDead(client))
-		return;
+	SetUser(client);
+
+	make_cloakedhost(client, client->user->realhost, client->user->cloakedhost, sizeof(client->user->cloakedhost));
+	safe_strdup(client->user->virthost, client->user->cloakedhost);
+
+	/* Inherit flags from server, makes it easy in the send routines
+	 * and this also makes clients inherit ulines.
+	 */
+	client->flags |= client->uplink->flags;
+
+	/* Update counts */
+	irccounts.clients++;
+	if (client->uplink && client->uplink->server)
+		client->uplink->server->users++;
+	if (client->umodes & UMODE_INVISIBLE)
+		irccounts.invisible++;
+
+	/* Set user modes */
+	set_user_modes_dont_spread(client, umodes);
+
+	/* Set the vhost */
+	if (virthost && *virthost != '*')
+		safe_strdup(client->user->virthost, virthost);
+
+	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
+
+	sendto_serv_butone_nickcmd(client->direction, client, (*buf == '\0' ? "+" : buf));
 
 	if (IsLoggedIn(client))
 	{
@@ -698,22 +743,7 @@ CMD_FUNC(cmd_nick)
 	}
 }
 
-/** Hmm.. don't we already have such a function? */
-void set_user_modes_dont_spread(Client *client, char *umode)
-{
-	char *args[4];
-
-	args[0] = client->name;
-	args[1] = client->name;
-	args[2] = umode;
-	args[3] = NULL;
-
-	dontspread = 1;
-	do_cmd(client, NULL, "MODE", 3, args);
-	dontspread = 0;
-}
-
-/** Register the connection as a User.
+/** Register the connection as a User - only for local connections!
  * This is called after NICK + USER (in no particular order)
  * and possibly other protocol messages as well (eg CAP).
  * @param client		Client to be made a user.
@@ -739,6 +769,9 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 
 	nick = client->name; /* <- The data is always the same, but the pointer is sometimes not,
 	                    *    I need this for one of my modules, so do not remove! ;) -- Syzop */
+
+	if (!MyConnect(client))
+		abort();
 
 	if (!AllowClient(client, username))
 	{
@@ -1090,54 +1123,6 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	/* NOTE: If you add something here.. be sure to check the 'if (savetkl)' note above */
 
 	safe_free(client->local->passwd);
-
-	/* User successfully registered */
-	return 1;
-}
-
-int register_user_remote(Client *client, char *nick, char *username, char *umode, char *virthost, char *ip)
-{
-	strlcpy(client->user->username, username, USERLEN+1);
-	SetUser(client);
-
-	make_cloakedhost(client, client->user->realhost, client->user->cloakedhost, sizeof(client->user->cloakedhost));
-	safe_strdup(client->user->virthost, client->user->cloakedhost);
-
-	/* Inherit flags from server, makes it easy in the send routines
-	 * and this also makes clients inherit ulines.
-	 */
-	client->flags |= client->uplink->flags;
-
-	/* Update counts */
-	irccounts.clients++;
-	if (client->uplink && client->uplink->server)
-		client->uplink->server->users++;
-	if (client->umodes & UMODE_INVISIBLE)
-		irccounts.invisible++;
-
-	if (virthost && umode)
-	{
-		/* Set the IP address first */
-		if (ip && (*ip != '*'))
-			safe_strdup(client->ip, ip);
-
-		/* For remote clients we recalculate the cloakedhost here because
-		 * it may depend on the IP address (bug #5064).
-		 */
-		make_cloakedhost(client, client->user->realhost, client->user->cloakedhost, sizeof(client->user->cloakedhost));
-		safe_strdup(client->user->virthost, client->user->cloakedhost);
-
-		/* Set the umodes */
-		set_user_modes_dont_spread(client, umode);
-
-		/* Set the vhost */
-		if (virthost && *virthost != '*')
-			safe_strdup(client->user->virthost, virthost);
-	}
-
-	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
-
-	sendto_serv_butone_nickcmd(client->direction, client, (*buf == '\0' ? "+" : buf));
 
 	/* User successfully registered */
 	return 1;
