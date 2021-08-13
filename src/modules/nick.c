@@ -880,6 +880,43 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 	}
 }
 
+/** Validate client->user->username.
+ * @param client	The client to check
+ * @param noident	Whether we should ignore the first ~ or not
+ * @returns 1 if the username is acceptable, 0 if not.
+ * @note This function will modify client->user->username to make it valid.
+ *       Only if there are zero valid characters it will return 0.
+ */
+int valid_username(Client *client, int noident)
+{
+	static char stripuser[USERLEN + 1];
+	char *i;
+	char *o = stripuser;
+	char filtered = 0; /* any changes? */
+
+	*stripuser = '\0';
+
+	for (i = client->user->username + noident; *i; i++)
+	{
+		if (isallowed(*i))
+			*o++ = *i;
+		else
+			filtered = 1;
+	}
+	*o = '\0';
+
+	if (filtered == 0)
+		return 1; /* No change needed, all good */
+
+	if (*stripuser == '\0')
+		return 0; /* Zero valid characters, reject it */
+
+	strlcpy(client->user->username + 1, stripuser, sizeof(client->user->username)-1);
+	client->user->username[0] = '~';
+	client->user->username[USERLEN] = '\0';
+	return 1; /* Filtered, but OK */
+}
+
 /** Register the connection as a User - only for local connections!
  * This is called after NICK + USER (in no particular order)
  * and possibly other protocol messages as well (eg CAP).
@@ -890,8 +927,7 @@ int _register_user(Client *client)
 {
 	ConfigItem_ban *bconf;
 	char *tmpstr;
-	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
-	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
+	char noident = 0;
 	int i;
 	Hook *h;
 	TKL *savetkl = NULL;
@@ -934,7 +970,6 @@ int _register_user(Client *client)
 	 * Work on a copy, because username may point to client->user->username...
 	 */
 	strlcpy(temp, client->user->username, USERLEN + 1);
-
 	if (!IsUseIdent(client))
 		strlcpy(client->user->username, temp, USERLEN + 1);
 	else if (IsIdentSuccess(client))
@@ -951,55 +986,15 @@ int _register_user(Client *client)
 		}
 
 	}
-	/*
-	 * Limit usernames to just 0-9 a-z A-Z _ - and .
-	 * It strips the "bad" chars out, and if nothing is left
-	 * changes the username to the first 8 characters of their
-	 * nickname. After the MOTD is displayed it sends numeric
-	 * 455 to the user telling them what(if anything) happened.
-	 * -Cabal95
-	 *
-	 * Moved the noident thing to the right place - see above
-	 * -OnyxDragon
-	 *
-	 * No longer use nickname if the entire ident is invalid,
-	 * if thats the case, it is likely the user is trying to cause
-	 * problems so just ban them. (Using the nick could introduce
-	 * hostile chars) -- codemastr
-	 */
-	for (u2 = client->user->username + noident; *u2; u2++)
-	{
-		if (isallowed(*u2))
-			*u1++ = *u2;
-		else if (*u2 < 32)
-		{
-			/*
-			 * Make sure they can read what control
-			 * characters were in their username.
-			 */
-			*ubad++ = '^';
-			*ubad++ = *u2 + '@';
-		}
-		else
-			*ubad++ = *u2;
-	}
-	*u1 = '\0';
-	*ubad = '\0';
-	if (strlen(stripuser) != strlen(client->user->username + noident))
-	{
-		if (stripuser[0] == '\0')
-		{
-			exit_client(client, NULL, "Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
-			return 0;
-		}
 
-		strlcpy(olduser, client->user->username + noident, USERLEN+1);
-		strlcpy(client->user->username + 1, stripuser, sizeof(client->user->username)-1);
-		client->user->username[0] = '~';
-		client->user->username[USERLEN] = '\0';
+	/* Now validate the username. This may alter client->user->username
+	 * or reject it completely.
+	 */
+	if (!valid_username(client, noident))
+	{
+		exit_client(client, NULL, "Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
+		return 0;
 	}
-	else
-		u1 = NULL;
 
 	/* Check ban realname { } blocks */
 	if ((bconf = find_ban(NULL, client->info, CONF_BAN_REALNAME)))
