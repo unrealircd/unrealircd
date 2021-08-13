@@ -744,15 +744,152 @@ CMD_FUNC(cmd_nick)
 	}
 }
 
+void welcome_user(Client *client, int hostile_name_error, char *olduser, char *userbad, char *stripuser, TKL *viruschan_tkl)
+{
+	int i;
+	ConfigItem_tld *tlds;
+
+	RunHook2(HOOKTYPE_WELCOME, client, 0);
+	sendnumeric(client, RPL_WELCOME, NETWORK_NAME, client->name, client->user->username, client->user->realhost);
+
+	RunHook2(HOOKTYPE_WELCOME, client, 1);
+	sendnumeric(client, RPL_YOURHOST, me.name, version);
+
+	RunHook2(HOOKTYPE_WELCOME, client, 2);
+	sendnumeric(client, RPL_CREATED, creation);
+
+	RunHook2(HOOKTYPE_WELCOME, client, 3);
+	sendnumeric(client, RPL_MYINFO, me.name, version, umodestring, cmodestring);
+
+	RunHook2(HOOKTYPE_WELCOME, client, 4);
+	for (i = 0; ISupportStrings[i]; i++)
+		sendnumeric(client, RPL_ISUPPORT, ISupportStrings[i]);
+
+	RunHook2(HOOKTYPE_WELCOME, client, 5);
+
+	if (IsHidden(client))
+	{
+		sendnumeric(client, RPL_HOSTHIDDEN, client->user->virthost);
+		RunHook2(HOOKTYPE_WELCOME, client, 396);
+	}
+
+	if (IsSecureConnect(client))
+	{
+		if (client->local->ssl && !iConf.no_connect_tls_info)
+		{
+			sendnotice(client, "*** You are connected to %s with %s",
+				me.name, tls_get_cipher(client->local->ssl));
+		}
+	}
+
+	{
+		char *parv[2];
+		parv[0] = client->name;
+		parv[1] = NULL;
+		do_cmd(client, NULL, "LUSERS", 1, parv);
+		if (IsDead(client))
+			return;
+	}
+
+	RunHook2(HOOKTYPE_WELCOME, client, 266);
+
+	short_motd(client);
+
+	RunHook2(HOOKTYPE_WELCOME, client, 376);
+
+#ifdef EXPERIMENTAL
+	sendnotice(client,
+		"*** \2NOTE:\2 This server is running experimental IRC server software (UnrealIRCd %s). "
+		"If you find any bugs or problems, please report them at https://bugs.unrealircd.org/",
+		VERSIONONLY);
+#endif
+	/*
+	 * Now send a numeric to the user telling them what, if
+	 * anything, happened.
+	 */
+	if (hostile_name_error)
+		sendnumeric(client, ERR_HOSTILENAME, olduser, userbad, stripuser);
+
+	if (client->umodes & UMODE_INVISIBLE)
+		irccounts.invisible++;
+
+	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
+
+	sendto_serv_butone_nickcmd(client->direction, client, (*buf == '\0' ? "+" : buf));
+
+	broadcast_moddata_client(client);
+	RunHook(HOOKTYPE_LOCAL_CONNECT, client);
+	if (buf[0] != '\0' && buf[1] != '\0')
+		sendto_one(client, NULL, ":%s MODE %s :%s", client->name,
+		    client->name, buf);
+	if (client->user->snomask)
+		sendnumeric(client, RPL_SNOMASK, get_snomask_string_raw(client->user->snomask));
+
+	if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_user == POLICY_WARN))
+		sendnotice_multiline(client, iConf.plaintext_policy_user_message);
+
+	if (IsSecure(client) && (iConf.outdated_tls_policy_user == POLICY_WARN) && outdated_tls_client(client))
+		sendnotice(client, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, client));
+
+	/* Make creation time the real 'online since' time, excluding registration time.
+	 * Otherwise things like set::anti-spam-quit-messagetime 10s could mean
+	 * 1 second in practice (#2174).
+	 */
+	client->local->creationtime = TStime();
+	client->local->idle_since = TStime();
+
+	/* Give the user a fresh start as far as fake-lag is concerned.
+	 * Otherwise the user could be lagged up already due to all the CAP stuff.
+	 */
+	client->local->fake_lag = TStime();
+
+	RunHook2(HOOKTYPE_WELCOME, client, 999);
+
+	/* NOTE: Code after this 'if (viruschan_tkl)' will not be executed for quarantined-
+	 *       virus-users. So be carefull with the order. -- Syzop
+	 */
+	// FIXME: verify if this works, trace code path upstream!!!!
+	if (viruschan_tkl)
+	{
+		join_viruschan(client, viruschan_tkl, SPAMF_USER);
+		return;
+	}
+
+	/* Force the user to join the given chans -- codemastr */
+	tlds = find_tld(client);
+
+	if (tlds && !BadPtr(tlds->channel))
+	{
+		char *chans = strdup(tlds->channel);
+		char *args[3] = {
+			client->name,
+			chans,
+			NULL
+		};
+		do_cmd(client, NULL, "JOIN", 3, args);
+		safe_free(chans);
+		if (IsDead(client))
+			return;
+	}
+	else if (!BadPtr(AUTO_JOIN_CHANS) && strcmp(AUTO_JOIN_CHANS, "0"))
+	{
+		char *chans = strdup(AUTO_JOIN_CHANS);
+		char *args[3] = {
+			client->name,
+			chans,
+			NULL
+		};
+		do_cmd(client, NULL, "JOIN", 3, args);
+		safe_free(chans);
+		if (IsDead(client))
+			return;
+	}
+}
+
 /** Register the connection as a User - only for local connections!
  * This is called after NICK + USER (in no particular order)
  * and possibly other protocol messages as well (eg CAP).
- * @param client		Client to be made a user.
- * @param nick		Nick name
- * @param username	Username
- * @param umode		User modes
- * @param virthost	Virtual host (can be NULL)
- * @param ip		IP address string (can be NULL)
+ * @param client	Client to be made a user.
  * @returns 1 if successfully registered, 0 if not (client might be killed).
  */
 int _register_user(Client *client)
@@ -764,7 +901,6 @@ int _register_user(Client *client)
 	int i;
 	Hook *h;
 	TKL *savetkl = NULL;
-	ConfigItem_tld *tlds;
 	char temp[USERLEN + 1];
 	char descbuf[BUFSIZE];
 
@@ -966,144 +1102,11 @@ int _register_user(Client *client)
 		   "Client connecting: $client ($client.user.username@$client.hostname) [$client.ip] $extended_client_info",
 		   log_data_string("extended_client_info", get_connect_extinfo(client)));
 
-	RunHook2(HOOKTYPE_WELCOME, client, 0);
-	sendnumeric(client, RPL_WELCOME, NETWORK_NAME, client->name, client->user->username, client->user->realhost);
-
-	RunHook2(HOOKTYPE_WELCOME, client, 1);
-	sendnumeric(client, RPL_YOURHOST, me.name, version);
-
-	RunHook2(HOOKTYPE_WELCOME, client, 2);
-	sendnumeric(client, RPL_CREATED, creation);
-
-	RunHook2(HOOKTYPE_WELCOME, client, 3);
-	sendnumeric(client, RPL_MYINFO, me.name, version, umodestring, cmodestring);
-
-	RunHook2(HOOKTYPE_WELCOME, client, 4);
-	for (i = 0; ISupportStrings[i]; i++)
-		sendnumeric(client, RPL_ISUPPORT, ISupportStrings[i]);
-
-	RunHook2(HOOKTYPE_WELCOME, client, 5);
-
-	if (IsHidden(client))
-	{
-		sendnumeric(client, RPL_HOSTHIDDEN, client->user->virthost);
-		RunHook2(HOOKTYPE_WELCOME, client, 396);
-	}
-
-	if (IsSecureConnect(client))
-	{
-		if (client->local->ssl && !iConf.no_connect_tls_info)
-		{
-			sendnotice(client, "*** You are connected to %s with %s",
-				me.name, tls_get_cipher(client->local->ssl));
-		}
-	}
-
-	{
-		char *parv[2];
-		parv[0] = client->name;
-		parv[1] = NULL;
-		do_cmd(client, NULL, "LUSERS", 1, parv);
-		if (IsDead(client))
-			return 0;
-	}
-
-	RunHook2(HOOKTYPE_WELCOME, client, 266);
-
-	short_motd(client);
-
-	RunHook2(HOOKTYPE_WELCOME, client, 376);
-
-#ifdef EXPERIMENTAL
-	sendnotice(client,
-		"*** \2NOTE:\2 This server is running experimental IRC server software (UnrealIRCd %s). "
-		"If you find any bugs or problems, please report them at https://bugs.unrealircd.org/",
-		VERSIONONLY);
-#endif
-	/*
-	 * Now send a numeric to the user telling them what, if
-	 * anything, happened.
-	 */
-	if (u1)
-		sendnumeric(client, ERR_HOSTILENAME, olduser, userbad, stripuser);
-
-	if (client->umodes & UMODE_INVISIBLE)
-		irccounts.invisible++;
-
-	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
-
-	sendto_serv_butone_nickcmd(client->direction, client, (*buf == '\0' ? "+" : buf));
-
-	broadcast_moddata_client(client);
-	RunHook(HOOKTYPE_LOCAL_CONNECT, client);
-	if (buf[0] != '\0' && buf[1] != '\0')
-		sendto_one(client, NULL, ":%s MODE %s :%s", client->name,
-		    client->name, buf);
-	if (client->user->snomask)
-		sendnumeric(client, RPL_SNOMASK, get_snomask_string_raw(client->user->snomask));
-
-	if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_user == POLICY_WARN))
-		sendnotice_multiline(client, iConf.plaintext_policy_user_message);
-
-	if (IsSecure(client) && (iConf.outdated_tls_policy_user == POLICY_WARN) && outdated_tls_client(client))
-		sendnotice(client, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, client));
-
-	/* Make creation time the real 'online since' time, excluding registration time.
-	 * Otherwise things like set::anti-spam-quit-messagetime 10s could mean
-	 * 1 second in practice (#2174).
-	 */
-	client->local->creationtime = TStime();
-	client->local->idle_since = TStime();
-
-	/* Give the user a fresh start as far as fake-lag is concerned.
-	 * Otherwise the user could be lagged up already due to all the CAP stuff.
-	 */
-	client->local->fake_lag = TStime();
-
-	RunHook2(HOOKTYPE_WELCOME, client, 999);
-
-	/* NOTE: Code after this 'if (savetkl)' will not be executed for quarantined-
-	 *       virus-users. So be carefull with the order. -- Syzop
-	 */
-	// FIXME: verify if this works, trace code path upstream!!!!
-	if (savetkl)
-		return join_viruschan(client, savetkl, SPAMF_USER); /* [RETURN!] */
-
-	/* Force the user to join the given chans -- codemastr */
-	tlds = find_tld(client);
-
-	if (tlds && !BadPtr(tlds->channel))
-	{
-		char *chans = strdup(tlds->channel);
-		char *args[3] = {
-			client->name,
-			chans,
-			NULL
-		};
-		do_cmd(client, NULL, "JOIN", 3, args);
-		safe_free(chans);
-		if (IsDead(client))
-			return 0;
-	}
-	else if (!BadPtr(AUTO_JOIN_CHANS) && strcmp(AUTO_JOIN_CHANS, "0"))
-	{
-		char *chans = strdup(AUTO_JOIN_CHANS);
-		char *args[3] = {
-			client->name,
-			chans,
-			NULL
-		};
-		do_cmd(client, NULL, "JOIN", 3, args);
-		safe_free(chans);
-		if (IsDead(client))
-			return 0;
-	}
-	/* NOTE: If you add something here.. be sure to check the 'if (savetkl)' note above */
-
 	safe_free(client->local->passwd);
 
-	/* User successfully registered */
-	return 1;
+	welcome_user(client, u1?1:0, olduser, userbad, stripuser, savetkl);
+
+	return IsDead(client) ? 1 : 0;
 }
 
 /** Nick collission detected. A winner has been decided upstream. Deal with killing.
