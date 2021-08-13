@@ -176,17 +176,17 @@ int extban_is_ok_nuh_extban(BanContext *b)
  * to ensure the parameter is nick!user@host.
  * most of the code is just copied from clean_ban_mask.
  */
-char *extban_conv_param_nuh(char *para)
+char *extban_conv_param_nuh(BanContext *b)
 {
 	char *cp, *user, *host, *mask, *ret = NULL;
 	static char retbuf[USERLEN + NICKLEN + HOSTLEN + 32];
 	char tmpbuf[USERLEN + NICKLEN + HOSTLEN + 32];
 	char pfix[8];
 
-	if (strlen(para)<3)
+	if (strlen(b->banstr)<3)
 		return NULL; /* normally impossible */
 
-	strlcpy(tmpbuf, para, sizeof(retbuf));
+	strlcpy(tmpbuf, b->banstr, sizeof(retbuf));
 	mask = tmpbuf + 3;
 	strlcpy(pfix, tmpbuf, mask - tmpbuf + 1);
 
@@ -213,7 +213,7 @@ char *extban_conv_param_nuh(char *para)
 
 /** conv_param to deal with stacked extbans.
  */
-char *extban_conv_param_nuh_or_extban(char *para)
+char *extban_conv_param_nuh_or_extban(BanContext *b)
 {
 #if (USERLEN + NICKLEN + HOSTLEN + 32) > 256
  #error "wtf?"
@@ -222,83 +222,82 @@ char *extban_conv_param_nuh_or_extban(char *para)
 	static char printbuf[256];
 	char *mask;
 	char tmpbuf[USERLEN + NICKLEN + HOSTLEN + 32];
-	char bantype = para[1];
+	char bantype = b->banstr[1];
 	char *ret = NULL;
 	Extban *p = NULL;
 	static int extban_recursion = 0;
 
-	if ((strlen(para)>3) && is_extended_ban(para+3))
-	{
-		/* We're dealing with a stacked extended ban.
-		 * Rules:
-		 * 1) You can only stack once, so: ~x:~y:something and not ~x:~y:~z...
-		 * 2) The first item must be an action modifier, such as ~q/~n/~j
-		 * 3) The second item may never be an action modifier, nor have the
-		 *    EXTBOPT_NOSTACKCHILD flag set (for things like a textban).
-		 */
-		 
-		/* Rule #1. Yes the recursion check is also in extban_is_ok_nuh_extban,
-		 * but it's possible to get here without the is_ok() function ever
-		 * being called (think: non-local client). And no, don't delete it
-		 * there either. It needs to be in BOTH places. -- Syzop
-		 */
-		if (extban_recursion)
-			return NULL;
+	if ((strlen(b->banstr)<=3) || !is_extended_ban(b->banstr+3))
+		return extban_conv_param_nuh(b);
 
-		/* Rule #2 */
-		p = findmod_by_bantype(para[1]);
-		if (p && !(p->options & EXTBOPT_ACTMODIFIER))
+	/* We're dealing with a stacked extended ban.
+	 * Rules:
+	 * 1) You can only stack once, so: ~x:~y:something and not ~x:~y:~z...
+	 * 2) The first item must be an action modifier, such as ~q/~n/~j
+	 * 3) The second item may never be an action modifier, nor have the
+	 *    EXTBOPT_NOSTACKCHILD flag set (for things like a textban).
+	 */
+	 
+	/* Rule #1. Yes the recursion check is also in extban_is_ok_nuh_extban,
+	 * but it's possible to get here without the is_ok() function ever
+	 * being called (think: non-local client). And no, don't delete it
+	 * there either. It needs to be in BOTH places. -- Syzop
+	 */
+	if (extban_recursion)
+		return NULL;
+
+	/* Rule #2 */
+	p = findmod_by_bantype(b->banstr[1]);
+	if (p && !(p->options & EXTBOPT_ACTMODIFIER))
+	{
+		/* Rule #2 violation */
+		return NULL;
+	}
+	
+	strlcpy(tmpbuf, b->banstr, sizeof(tmpbuf));
+	mask = tmpbuf + 3;
+	/* Already did restrict-extended bans check. */
+	p = findmod_by_bantype(mask[1]);
+	if (!p)
+	{
+		/* Handling unknown bantypes in is_ok. Assume that it's ok here. */
+		return b->banstr;
+	}
+	if ((p->options & EXTBOPT_ACTMODIFIER) || (p->options & EXTBOPT_NOSTACKCHILD))
+	{
+		/* Rule #3 violation */
+		return NULL;
+	}
+	
+	if (p->conv_param)
+	{
+		BanContext *b = safe_alloc(sizeof(BanContext));
+		b->banstr = mask;
+		extban_recursion++;
+		ret = p->conv_param(b);
+		extban_recursion--;
+		safe_free(b);
+		if (ret)
 		{
-			/* Rule #2 violation */
-			return NULL;
-		}
-		
-		strlcpy(tmpbuf, para, sizeof(tmpbuf));
-		mask = tmpbuf + 3;
-		/* Already did restrict-extended bans check. */
-		p = findmod_by_bantype(mask[1]);
-		if (!p)
-		{
-			/* Handling unknown bantypes in is_ok. Assume that it's ok here. */
-			return para;
-		}
-		if ((p->options & EXTBOPT_ACTMODIFIER) || (p->options & EXTBOPT_NOSTACKCHILD))
-		{
-			/* Rule #3 violation */
-			return NULL;
-		}
-		
-		if (p->conv_param)
-		{
-			extban_recursion++;
-			ret = p->conv_param(mask);
-			extban_recursion--;
-			if (ret)
-			{
-				/*
-				 * If bans are stacked, then we have to use two buffers
-				 * to prevent ircsnprintf() from going into a loop.
-				 */
-				ircsnprintf(printbuf, sizeof(printbuf), "~%c:%s", bantype, ret); /* Make sure our extban prefix sticks. */
-				memcpy(retbuf, printbuf, sizeof(retbuf));
-				return retbuf;
-			}
-			else
-			{
-				return NULL; /* Fail. */
-			}
-		}
-		/* I honestly don't know what the deal is with the 80 char cap in clean_ban_mask is about. So I'm leaving it out here. -- aquanight */
-		/* I don't know why it's 80, but I like a limit anyway. A ban of 500 characters can never be good... -- Syzop */
-		if (strlen(para) > 80)
-		{
-			strlcpy(retbuf, para, 128);
+			/*
+			 * If bans are stacked, then we have to use two buffers
+			 * to prevent ircsnprintf() from going into a loop.
+			 */
+			ircsnprintf(printbuf, sizeof(printbuf), "~%c:%s", bantype, ret); /* Make sure our extban prefix sticks. */
+			memcpy(retbuf, printbuf, sizeof(retbuf));
 			return retbuf;
 		}
-		return para;
+		else
+		{
+			return NULL; /* Fail. */
+		}
 	}
-	else
+	/* I honestly don't know what the deal is with the 80 char cap in clean_ban_mask is about. So I'm leaving it out here. -- aquanight */
+	/* I don't know why it's 80, but I like a limit anyway. A ban of 500 characters can never be good... -- Syzop */
+	if (strlen(b->banstr) > 80)
 	{
-		return extban_conv_param_nuh(para);
+		strlcpy(retbuf, b->banstr, 128);
+		return retbuf;
 	}
+	return b->banstr;
 }

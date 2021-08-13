@@ -612,6 +612,7 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 			{
 				char *str;
 				Extban *extban;
+				BanContext *b;
 				char buf2[BUFSIZE];
 				extban = findmod_by_bantype(buf[1]);
 				if (!extban || !(extban->options & EXTBOPT_TKL))
@@ -621,17 +622,21 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 					goto tcrb_end;
 				}
 				/* is_ok() is not called, since there is no client, similar to like remote bans set */
-				str = extban->conv_param(buf);
+				b = safe_alloc(sizeof(BanContext));
+				b->banstr = buf;
+				str = extban->conv_param(b);
 				if (!str || (strlen(str) <= 4))
 				{
 					config_warn("%s:%d: Extended server ban has a problem: %s",
 						cep->file->filename, cep->line_number, buf);
+					safe_free(b);
 					goto tcrb_end;
 				}
 				strlcpy(buf2, str+3, sizeof(buf2));
 				buf[3] = '\0';
 				safe_strdup(usermask, buf); /* eg ~S: */
 				safe_strdup(hostmask, buf2);
+				safe_free(b);
 			} else
 			{
 				p = strchr(buf, '@');
@@ -798,6 +803,7 @@ void config_create_tkl_except(char *mask, char *bantypes)
 	{
 		char *str;
 		Extban *extban;
+		BanContext *b;
 		extban = findmod_by_bantype(buf[1]);
 		if (!extban || !(extban->options & EXTBOPT_TKL))
 		{
@@ -805,16 +811,20 @@ void config_create_tkl_except(char *mask, char *bantypes)
 			return;
 		}
 		/* is_ok() is not called, since there is no client, similar to like remote bans set */
-		str = extban->conv_param(buf);
+		b = safe_alloc(sizeof(BanContext));
+		b->banstr = buf;
+		str = extban->conv_param(b);
 		if (!str || (strlen(str) <= 4))
 		{
 			config_warn("Extended server ban exemption has a problem: %s", buf);
+			safe_free(b);
 			return;
 		}
 		strlcpy(buf2, str+3, sizeof(buf2));
 		buf[3] = '\0';
 		usermask = buf; /* eg ~S: */
 		hostmask = buf2;
+		safe_free(b);
 	} else
 	{
 		p = strchr(buf, '@');
@@ -1374,14 +1384,18 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 				safe_free(b);
 				return; /* rejected */
 			}
-			safe_free(b);
-			str = extban->conv_param(mask);
+			b->banstr = mask;
+			str = extban->conv_param(b);
 			if (!str || (strlen(str) <= 4))
+			{
+				safe_free(b);
 				return; /* rejected */
+			}
 			strlcpy(mask2buf, str+3, sizeof(mask2buf));
 			mask[3] = '\0';
 			usermask = mask; /* eg ~S: */
 			hostmask = mask2buf;
+			safe_free(b);
 
 			if (((*type == 'z') || (*type == 'Z')))
 			{
@@ -1705,14 +1719,18 @@ CMD_FUNC(cmd_eline)
 				safe_free(b);
 				return; /* rejected */
 			}
-			safe_free(b);
-			str = extban->conv_param(mask);
+			b->banstr = mask;
+			str = extban->conv_param(b);
 			if (!str || (strlen(str) <= 4))
+			{
+				safe_free(b);
 				return; /* rejected */
+			}
 			strlcpy(mask2buf, str+3, sizeof(mask2buf));
 			mask[3] = '\0';
 			usermask = mask; /* eg ~S: */
 			hostmask = mask2buf;
+			safe_free(b);
 			if ((t = eline_type_requires_ip(bantypes)))
 			{
 				sendnotice(client, "ERROR: Ban exception with type '%c' does not work on extended server bans. "

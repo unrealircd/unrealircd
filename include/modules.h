@@ -390,31 +390,24 @@ typedef struct {
 
 	/** Convert input parameter to output [optional].
 	 * like with normal bans '+b blah' gets '+b blah!*@*', and it allows
-	 * you to limit the length of the ban too. You can set this to NULL however
-	 * to use the value as-is.
-	 * char *: the input parameter.
+	 * you to limit the length of the ban too.
 	 * return value: pointer to output string (temp. storage)
 	 */
-	char *		(*conv_param)(char *);
+	char *(*conv_param)(BanContext *b);
 
 	/** Checks if the user is affected by this ban [required].
+	 * XXX FIXME: make this optional, as we have several functions who just return 0 atm (eg textban)
 	 * Called from is_banned.
-	 * Client *: the client
-	 * Channel *: the channel
-	 * para: the ban entry
-	 * int: a value of BANCHK_* (see struct.h)
-	 * char **: optionally a message, can be NULL!! (for some BANCHK_ types)
-	 * char **: optionally for setting an error message, can be NULL!!
 	 */
 	int (*is_banned)(BanContext *b);
 } Extban;
 
 typedef struct {
-	char	flag;
+	char flag;
 	ExtbanOptions options;
-	int			(*is_ok)(BanContext *b);
-	char *			(*conv_param)(char *);
-	int			(*is_banned)(BanContext *b);
+	int (*is_ok)(BanContext *b);
+	char *(*conv_param)(BanContext *b);
+	int (*is_banned)(BanContext *b);
 } ExtbanInfo;
 
 

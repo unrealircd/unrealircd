@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-char *extban_operclass_conv_param(char *para);
+char *extban_operclass_conv_param(BanContext *b);
 int extban_operclass_is_banned(BanContext *b);
 
 /** Called upon module init */
@@ -67,12 +67,12 @@ MOD_UNLOAD()
 
 #define OPERCLASSLEN 64
 
-char *extban_operclass_conv_param(char *para)
+char *extban_operclass_conv_param(BanContext *b)
 {
 	static char retbuf[OPERCLASSLEN + 4];
 	char *p;
 
-	strlcpy(retbuf, para, sizeof(retbuf));
+	strlcpy(retbuf, b->banstr, sizeof(retbuf));
 
 	/* allow alpha, numeric, -, _, * and ? wildcards */
 	for (p = retbuf+3; *p; p++)

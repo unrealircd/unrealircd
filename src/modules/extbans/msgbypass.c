@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER
 int extban_msgbypass_is_banned(BanContext *b);
 int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageRestrictionType bypass_type);
 int msgbypass_extban_is_ok(BanContext *b);
-char *msgbypass_extban_conv_param(char *para);
+char *msgbypass_extban_conv_param(BanContext *b);
 
 /** Called upon module init */
 MOD_INIT()
@@ -131,7 +131,7 @@ int msgbypass_extban_type_ok(char *type)
 }
 
 #define MAX_LENGTH 128
-char *msgbypass_extban_conv_param(char *para_in)
+char *msgbypass_extban_conv_param(BanContext *b)
 {
 	static char retbuf[MAX_LENGTH+1];
 	char para[MAX_LENGTH+1];
@@ -140,7 +140,7 @@ char *msgbypass_extban_conv_param(char *para_in)
 	char *matchby; /**< Matching method, such as 'n!u@h' */
 	char *newmask; /**< Cleaned matching method, such as 'n!u@h' */
 
-	strlcpy(para, para_in+3, sizeof(para)); /* work on a copy (and truncate it) */
+	strlcpy(para, b->banstr+3, sizeof(para)); /* work on a copy (and truncate it) */
 	
 	/* ~m:type:n!u@h   for direct matching
 	 * ~m:type:~x:.... when calling another bantype
@@ -160,8 +160,9 @@ char *msgbypass_extban_conv_param(char *para_in)
 	 * expecting the full banmask rather than the portion that actually matters.
 	 */
 	snprintf(tmpmask, sizeof(tmpmask), "~?:%s", matchby);
-	newmask = extban_conv_param_nuh_or_extban(tmpmask);
-	if (!newmask || (strlen(newmask) <= 3))
+	b->banstr = tmpmask; // TODO: this is ban += 3 like but the reverse, drop it later!
+	newmask = extban_conv_param_nuh_or_extban(b);
+	if (!newmask || (strlen(newmask) <= 3)) // this is a += 3 check as well?
 		return NULL;
 
 	snprintf(retbuf, sizeof(retbuf), "~m:%s:%s", type, newmask+3);

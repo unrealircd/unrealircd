@@ -179,8 +179,8 @@ extern int valid_server_name(char *name);
 extern long get_access(Client *, Channel *);
 extern int ban_check_mask(BanContext *b);
 extern int extban_is_ok_nuh_extban(BanContext *b);
-extern char *extban_conv_param_nuh_or_extban(char *);
-extern char *extban_conv_param_nuh(char *);
+extern char *extban_conv_param_nuh_or_extban(BanContext *b);
+extern char *extban_conv_param_nuh(BanContext *b);
 extern Ban *is_banned(Client *, Channel *, int, char **, char **);
 extern Ban *is_banned_with_nick(Client *, Channel *, int, char *, char **, char **);
 

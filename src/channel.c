@@ -857,7 +857,16 @@ char *clean_ban_mask(char *mask, int what, Client *client)
 			return NULL; /* reject */
 		}
 		if (p->conv_param)
-			return p->conv_param(mask);
+		{
+			char *ret;
+			BanContext *b = safe_alloc(sizeof(BanContext));
+			b->client = client;
+			b->what = what;
+			b->banstr = mask;
+			ret = p->conv_param(b);
+			safe_free(b);
+			return ret;
+		}
 		/* else, do some basic sanity checks and cut it off at 80 bytes */
 		if ((mask[1] != ':') || (mask[2] == '\0'))
 		    return NULL; /* require a ":<char>" after extban type */

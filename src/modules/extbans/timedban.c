@@ -55,7 +55,7 @@ ModuleHeader MOD_HEADER
     };
 
 /* Forward declarations */
-char *timedban_extban_conv_param(char *para_in);
+char *timedban_extban_conv_param(BanContext *b);
 int timedban_extban_is_ok(BanContext *b);
 int timedban_is_banned(BanContext *b);
 void add_send_mode_param(Channel *channel, Client *from, char what, char mode, char *param);
@@ -112,7 +112,6 @@ char *generic_clean_ban_mask(char *mask)
 	char *cp, *x;
 	char *user;
 	char *host;
-	Extban *p;
 	static char maskbuf[512];
 
 	/* Work on a copy */
@@ -136,11 +135,18 @@ char *generic_clean_ban_mask(char *mask)
 	/* Extended ban? */
 	if (is_extended_ban(mask))
 	{
-		p = findmod_by_bantype(mask[1]);
-		if (!p)
+		Extban *extban = findmod_by_bantype(mask[1]);
+		if (!extban)
 			return NULL; /* reject unknown extban */
-		if (p->conv_param)
-			return p->conv_param(mask);
+		if (extban->conv_param)
+		{
+			char *ret;
+			BanContext *b = safe_alloc(sizeof(BanContext));
+			b->banstr = mask;
+			ret = extban->conv_param(b);
+			safe_free(b);
+			return ret;
+		}
 		/* else, do some basic sanity checks and cut it off at 80 bytes */
 		if ((mask[1] != ':') || (mask[2] == '\0'))
 		    return NULL; /* require a ":<char>" after extban type */
@@ -169,7 +175,7 @@ char *generic_clean_ban_mask(char *mask)
 }
 
 /** Convert ban to an acceptable format (or return NULL to fully reject it) */
-char *timedban_extban_conv_param(char *para_in)
+char *timedban_extban_conv_param(BanContext *b)
 {
 	static char retbuf[MAX_LENGTH+1];
 	char para[MAX_LENGTH+1];
@@ -183,7 +189,7 @@ char *timedban_extban_conv_param(char *para_in)
 	if (timedban_extban_conv_param_recursion)
 		return NULL; /* reject: recursion detected! */
 
-	strlcpy(para, para_in+3, sizeof(para)); /* work on a copy (and truncate it) */
+	strlcpy(para, b->banstr+3, sizeof(para)); /* work on a copy (and truncate it) */
 	
 	/* ~t:duration:n!u@h   for direct matching
 	 * ~t:duration:~x:.... when calling another bantype

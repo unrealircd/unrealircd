@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-char *extban_realname_conv_param(char *para);
+char *extban_realname_conv_param(BanContext *b);
 int extban_realname_is_banned(BanContext *b);
 
 /** Called upon module init */
@@ -65,12 +65,12 @@ MOD_UNLOAD()
 }
 
 /** Realname bans - conv_param */
-char *extban_realname_conv_param(char *para)
+char *extban_realname_conv_param(BanContext *b)
 {
 	static char retbuf[REALLEN + 8];
 	char *mask;
 
-	strlcpy(retbuf, para, sizeof(retbuf));
+	strlcpy(retbuf, b->banstr, sizeof(retbuf));
 
 	mask = retbuf+3;
 
@@ -80,8 +80,9 @@ char *extban_realname_conv_param(char *para)
 	if (strlen(mask) > REALLEN + 3)
 		mask[REALLEN + 3] = '\0';
 
+	/* Prevent otherwise confusing extban relationship */
 	if (*mask == '~')
-		*mask = '?'; /* Is this good? No ;) */
+		*mask = '?';
 
 	return retbuf;
 }
