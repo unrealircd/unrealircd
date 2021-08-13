@@ -49,7 +49,6 @@ ConfigItem_webirc *conf_webirc = NULL;
 
 /* Forward declarations */
 CMD_FUNC(cmd_webirc);
-int webirc_check_init(Client *client, char *sockn, size_t size);
 int webirc_local_pass(Client *client, char *password);
 int webirc_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int webirc_config_run(ConfigFile *, ConfigEntry *, int);
@@ -96,7 +95,6 @@ MOD_INIT()
 	}
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, webirc_config_run);
-	HookAdd(modinfo->handle, HOOKTYPE_CHECK_INIT, 0, webirc_check_init);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PASS, 0, webirc_local_pass);
 	HookAdd(modinfo->handle, HOOKTYPE_SECURE_CONNECT, 0, webirc_secure_connect);
 
@@ -438,17 +436,6 @@ CMD_FUNC(cmd_webirc)
 
 	/* And do our job.. */
 	dowebirc(client, ip, host, options);
-}
-
-int webirc_check_init(Client *client, char *sockn, size_t size)
-{
-	if (IsWEBIRC(client))
-	{
-		strlcpy(sockn, GetIP(client), size); /* use already set value */
-		return HOOK_DENY;
-	}
-	
-	return HOOK_CONTINUE; /* nothing to do */
 }
 
 int webirc_local_pass(Client *client, char *password)

@@ -1160,32 +1160,6 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 	}
 }
 
-/* This used to initialize the various name strings used to store hostnames.
- * But nowadays this takes place much earlier (in add_connection?).
- * It's mainly used for "localhost" and WEBIRC magic only now...
- */
-int check_init(Client *client, char *sockn, size_t size)
-{
-	strlcpy(sockn, client->local->sockhost, HOSTLEN);
-
-	RunHookReturnInt3(HOOKTYPE_CHECK_INIT, client, sockn, size, !=0);
-
-	/* Some silly hack to convert 127.0.0.1 and such into 'localhost' */
-	if (!strcmp(GetIP(client), "127.0.0.1") ||
-	    !strcmp(GetIP(client), "0:0:0:0:0:0:0:1") ||
-	    !strcmp(GetIP(client), "0:0:0:0:0:ffff:127.0.0.1"))
-	{
-		if (client->local->hostp)
-		{
-			unreal_free_hostent(client->local->hostp);
-			client->local->hostp = NULL;
-		}
-		strlcpy(sockn, "localhost", HOSTLEN);
-	}
-
-	return 1;
-}
-
 /** Returns 1 if allow::maxperip is exceeded by 'client' */
 int exceeds_maxperip(Client *client, ConfigItem_allow *aconf)
 {
@@ -1229,14 +1203,22 @@ int AllowClient(Client *client)
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
 
-	if (!check_init(client, sockhost, sizeof(sockhost)))
-		return 0;
-
-	hp = client->local->hostp;
-	if (hp && hp->h_name)
-		set_sockhost(client, hp->h_name);
-	else if (!strcmp(sockhost, "localhost"))
-		set_sockhost(client, "localhost"); /* yeah, special case :D */
+	if (!strcmp(GetIP(client), "127.0.0.1") ||
+	    !strcmp(GetIP(client), "0:0:0:0:0:0:0:1") ||
+	    !strcmp(GetIP(client), "0:0:0:0:0:ffff:127.0.0.1"))
+	{
+		set_sockhost(client, "localhost");
+		if (client->local->hostp)
+		{
+			unreal_free_hostent(client->local->hostp);
+			client->local->hostp = NULL;
+		}
+	} else
+	{
+		hp = client->local->hostp;
+		if (hp && hp->h_name)
+			set_sockhost(client, hp->h_name);
+	}
 
 	/* SET HOSTNAME: We set client->user->realhost early here
 	 * because we are going to run some checks.

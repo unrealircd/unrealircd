@@ -1123,8 +1123,6 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_CHANNEL_SYNCED	83
 /** See hooktype_can_sajoin() */
 #define HOOKTYPE_CAN_SAJOIN	84
-/** See hooktype_check_init() */
-#define HOOKTYPE_CHECK_INIT	85
 /** See hooktype_mode_deop() */
 #define HOOKTYPE_MODE_DEOP	86
 /** See hooktype_dcc_denied() */
@@ -1914,16 +1912,6 @@ int hooktype_channel_synced(Channel *channel, int merge, int removetheirs, int n
  */
 int hooktype_can_sajoin(Client *target, Channel *channel, Client *client);
 
-/** Called when the hostname is initialized for a client (function prototype for HOOKTYPE_CHECK_INIT).
- * This is a very specific call, it is only meant for the WEBIRC module.
- * @param client		The client
- * @param sockname		The socket name
- * @param size			The size of the socket name? :D
- * @retval HOOK_CONTINUE	Proceed normally
- * @retval HOOK_DENY		Reject the connection(?)
- */
-int hooktype_check_init(Client *client, char *sockname, size_t size);
-
 /** May the target user be deoped? (function prototype for HOOKTYPE_MODE_DEOP).
  * This is for example used by the +S (Services bot) user mode to block deop requests to services bots.
  * @param client		The client issuing the command
@@ -2228,7 +2216,6 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_CHANNEL_SYNCED) && !ValidateHook(hooktype_channel_synced, func)) || \
         ((hooktype == HOOKTYPE_CAN_SAJOIN) && !ValidateHook(hooktype_can_sajoin, func)) || \
         ((hooktype == HOOKTYPE_WHOIS) && !ValidateHook(hooktype_whois, func)) || \
-        ((hooktype == HOOKTYPE_CHECK_INIT) && !ValidateHook(hooktype_check_init, func)) || \
         ((hooktype == HOOKTYPE_WHO_STATUS) && !ValidateHook(hooktype_who_status, func)) || \
         ((hooktype == HOOKTYPE_MODE_DEOP) && !ValidateHook(hooktype_mode_deop, func)) || \
         ((hooktype == HOOKTYPE_PRE_KILL) && !ValidateHook(hooktype_pre_kill, func)) || \
