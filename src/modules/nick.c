@@ -1050,9 +1050,6 @@ int _register_user(Client *client)
 	}
 
 	SetUser(client);
-	irccounts.clients++;
-	if (client->uplink && client->uplink->server)
-		client->uplink->server->users++;
 
 	make_cloakedhost(client, client->user->realhost, client->user->cloakedhost, sizeof(client->user->cloakedhost));
 	safe_strdup(client->user->virthost, client->user->cloakedhost);
@@ -1060,10 +1057,15 @@ int _register_user(Client *client)
 	snprintf(descbuf, sizeof descbuf, "Client: %s", client->name);
 	fd_desc(client->local->fd, descbuf);
 
+	/* Move user from unknown list to client list */
 	list_move(&client->lclient_node, &lclient_list);
 
+	/* Update counts */
 	irccounts.unknown--;
+	irccounts.clients++;
 	irccounts.me_clients++;
+	if (client->uplink && client->uplink->server)
+		client->uplink->server->users++;
 
 	if (IsSecure(client))
 	{
@@ -1071,12 +1073,13 @@ int _register_user(Client *client)
 		RunHook(HOOKTYPE_SECURE_CONNECT, client);
 	}
 
+	safe_free(client->local->passwd);
+
 	unreal_log(ULOG_INFO, "connect", "LOCAL_CLIENT_CONNECT", client,
 		   "Client connecting: $client ($client.user.username@$client.hostname) [$client.ip] $extended_client_info",
 		   log_data_string("extended_client_info", get_connect_extinfo(client)));
 
-	safe_free(client->local->passwd);
-
+	/* Send the RPL_WELCOME, LUSERS, MOTD, auto join channels, everything... */
 	welcome_user(client, savetkl);
 
 	return IsDead(client) ? 1 : 0;
