@@ -1050,6 +1050,7 @@ extern void free_nvplist(NameValuePrioList *lst);
 extern char *get_connect_extinfo(Client *client);
 extern char *unreal_strftime(char *str);
 extern void strtolower_safe(char *dst, char *src, int size);
+extern void strtolower(char *str);
 extern int running_interactively(void);
 extern int terminal_supports_color(void);
 extern void skip_whitespace(char **p);

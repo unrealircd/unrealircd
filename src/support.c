@@ -1338,7 +1338,7 @@ char *unreal_strftime(char *str)
 
 #pragma GCC diagnostic pop
 
-/** Convert a string to lowercase */
+/** Convert a string to lowercase - with separate input/output buffer */
 void strtolower_safe(char *dst, char *src, int size)
 {
 	if (!size)
@@ -1351,4 +1351,11 @@ void strtolower_safe(char *dst, char *src, int size)
 		size--;
 	}
 	*dst = '\0';
+}
+
+/** Convert a string to lowercase - modifying existing string */
+void strtolower(char *str)
+{
+	for (; *str; str++)
+		*str = tolower(*str);
 }
