@@ -539,7 +539,7 @@ CMD_FUNC(cmd_uid)
 		return;
 	}
 
-	if (!valid_host(hostname))
+	if (!valid_host(hostname, 0))
 	{
 		ircstats.is_kill++;
 		unreal_log(ULOG_ERROR, "link", "BAD_HOSTNAME", client,
@@ -551,7 +551,7 @@ CMD_FUNC(cmd_uid)
 		return;
 	}
 
-	if (strcmp(virthost, "*") && !valid_host(virthost))
+	if (strcmp(virthost, "*") && !valid_host(virthost, 0))
 	{
 		ircstats.is_kill++;
 		unreal_log(ULOG_ERROR, "link", "BAD_HOSTNAME", client,
@@ -944,26 +944,6 @@ int _register_user(Client *client)
 		if (!IsDead(client))
 			exit_client(client, NULL, "Rejected");
 		return 0;
-	}
-
-	if (client->local->hostp)
-	{
-		/* reject ASCII < 32 and ASCII >= 127 (note: upper resolver might be even more strict). */
-		for (tmpstr = client->local->sockhost; *tmpstr > ' ' && *tmpstr < 127; tmpstr++);
-
-		/* if host contained invalid ASCII _OR_ the DNS reply is an IP-like reply
-		 * (like: 1.2.3.4 or ::ffff:1.2.3.4), then reject it and use IP instead.
-		 */
-		if (*tmpstr || !*client->user->realhost || (isdigit(*client->local->sockhost) && (client->local->sockhost > tmpstr && isdigit(*(tmpstr - 1))) )
-		    || (client->local->sockhost[0] == ':'))
-			strlcpy(client->local->sockhost, client->ip, sizeof(client->local->sockhost));
-	}
-	if (client->local->sockhost[0])
-	{
-		strlcpy(client->user->realhost, client->local->sockhost, sizeof(client->local->sockhost)); /* SET HOSTNAME */
-	} else {
-		unreal_log(ULOG_ERROR, "main", "BUG_SOCKHOST_EMPTY", client,
-			   "[BUG] client->local->sockhost is empty for user $client.detail [$client.ip]");
 	}
 
 	if (IsUseIdent(client))

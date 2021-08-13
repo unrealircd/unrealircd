@@ -3560,7 +3560,7 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 					cep->line_number);
 				errors++;
 			}
-			if (!valid_host(cep->value))
+			if (!valid_host(cep->value, 0))
 			{
 				config_error("%s:%i: illegal me::name contains invalid character(s) [only a-z, 0-9, _, -, . are allowed]",
 					cep->file->filename,
@@ -6005,7 +6005,7 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 			}
 			else
 			{
-				if (!valid_host(host))
+				if (!valid_host(host, 0))
 				{
 					config_error("%s:%i: vhost::vhost contains an invalid host",
 						cep->file->filename, cep->line_number);

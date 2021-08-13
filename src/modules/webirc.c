@@ -371,7 +371,7 @@ void dowebirc(Client *client, char *ip, char *host, char *options)
 		client->local->hostp = NULL;
 	}
 	/* (create new) */
-	if (host && verify_hostname(host))
+	if (host && valid_host(host, 1))
 		client->local->hostp = unreal_create_hostent(host, client->ip);
 
 	/* STEP 4: Update sockhost

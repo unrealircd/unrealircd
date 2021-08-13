@@ -88,7 +88,7 @@ CMD_FUNC(cmd_sethost)
 		return;
 	}
 
-	if (!valid_host(vhost))
+	if (!valid_host(vhost, 0))
 	{
 		sendnotice(client, "*** /SetHost Error: A hostname may only contain a-z, A-Z, 0-9, '-' & '.'.");
 		return;

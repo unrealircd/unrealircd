@@ -282,27 +282,6 @@ void unrealdns_cb_iptoname(void *arg, int status, int timeouts, struct hostent *
 	ares_gethostbyname(resolver_channel, he->h_name, ipv6 ? AF_INET6 : AF_INET, unrealdns_cb_nametoip_verify, newr);
 }
 
-/*
-  returns:
-  1 = good hostname
-  0 = bad hostname
- */
-int verify_hostname(char *name)
-{
-char *p;
-
-	if (strlen(name) > HOSTLEN)
-		return 0; 
-
-	/* No underscores or other illegal characters */
-	for (p = name; *p; p++)
-		if (!isalnum(*p) && !strchr(".-", *p))
-			return 0;
-
-	return 1;
-}
-
-
 void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct hostent *he)
 {
 	DNSReq *r = (DNSReq *)arg;
@@ -347,7 +326,7 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 		goto bad;
 	}
 
-	if (!verify_hostname(r->name))
+	if (!valid_host(r->name, 1))
 	{
 		/* Hostname is bad, don't cache and consider unresolved */
 		proceed_normal_client_handshake(client, NULL);

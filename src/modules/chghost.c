@@ -83,7 +83,7 @@ CMD_FUNC(cmd_chghost)
 		return;
 	}
 
-	if (!valid_host(parv[2]))
+	if (!valid_host(parv[2], 0))
 	{
 		sendnotice(client, "*** /ChgHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them");
 		return;

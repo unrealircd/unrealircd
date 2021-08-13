@@ -717,10 +717,14 @@ void verify_opercount(Client *orig, char *tag)
 }
 
 /** Check if the specified hostname does not contain forbidden characters.
- * @param host	The host name to check
+ * @param host		The host name to check
+ * @param strict	If set to 1 then we also check if the hostname
+ *                      resembles an IP address (eg contains ':') and
+ *                      some other stuff that we don't consider valid
+ *                      in actual DNS names (eg '/').
  * @returns 1 if valid, 0 if not.
  */
-int valid_host(char *host)
+int valid_host(char *host, int strict)
 {
 	char *p;
 
@@ -730,9 +734,16 @@ int valid_host(char *host)
 	if (strlen(host) > HOSTLEN)
 		return 0; /* too long hosts are invalid too */
 
-	for (p=host; *p; p++)
-		if (!isalnum(*p) && !strchr("_-.:/", *p))
-			return 0;
+	if (strict)
+	{
+		for (p=host; *p; p++)
+			if (!isalnum(*p) && !strchr("_-.", *p))
+				return 0;
+	} else {
+		for (p=host; *p; p++)
+			if (!isalnum(*p) && !strchr("_-.:/", *p))
+				return 0;
+	}
 
 	return 1;
 }

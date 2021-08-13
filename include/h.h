@@ -604,7 +604,7 @@ extern void IRCToRTF(unsigned char *buffer, unsigned char *string);
 #endif
 extern void sendto_chmodemucrap(Client *, Channel *, char *);
 extern void verify_opercount(Client *, char *);
-extern int valid_host(char *host);
+extern int valid_host(char *host, int strict);
 extern int count_oper_sessions(char *);
 extern char *unreal_mktemp(const char *dir, const char *suffix);
 extern char *unreal_getpathname(char *filepath, char *path);
