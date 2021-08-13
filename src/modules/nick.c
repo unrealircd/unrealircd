@@ -937,6 +937,33 @@ int _register_user(Client *client)
 	if (!MyConnect(client))
 		abort();
 
+	/* Set client->local->sockhost:
+	 * First deal with the special 'localhost' case and
+	 * then with generic setting based on DNS.
+	 */
+	if (!strcmp(GetIP(client), "127.0.0.1") ||
+	    !strcmp(GetIP(client), "0:0:0:0:0:0:0:1") ||
+	    !strcmp(GetIP(client), "0:0:0:0:0:ffff:127.0.0.1"))
+	{
+		set_sockhost(client, "localhost");
+		if (client->local->hostp)
+		{
+			unreal_free_hostent(client->local->hostp);
+			client->local->hostp = NULL;
+		}
+	} else
+	{
+		struct hostent *hp = client->local->hostp;
+		if (hp && hp->h_name)
+			set_sockhost(client, hp->h_name);
+	}
+
+	/* Set the hostname (client->user->realhost).
+	 * This may later be overwritten by the AllowClient() call to
+	 * revert to the IP again if allow::options::useip is set.
+	 */
+	strlcpy(client->user->realhost, client->local->sockhost, sizeof(client->local->sockhost));
+
 	/* Check allow { } blocks... */
 	if (!AllowClient(client))
 	{
@@ -1196,37 +1223,11 @@ int exceeds_maxperip(Client *client, ConfigItem_allow *aconf)
 int AllowClient(Client *client)
 {
 	static char sockhost[HOSTLEN + 1];
-	struct hostent *hp = NULL;
 	int i;
 	ConfigItem_allow *aconf;
 	char *hname;
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
-
-	if (!strcmp(GetIP(client), "127.0.0.1") ||
-	    !strcmp(GetIP(client), "0:0:0:0:0:0:0:1") ||
-	    !strcmp(GetIP(client), "0:0:0:0:0:ffff:127.0.0.1"))
-	{
-		set_sockhost(client, "localhost");
-		if (client->local->hostp)
-		{
-			unreal_free_hostent(client->local->hostp);
-			client->local->hostp = NULL;
-		}
-	} else
-	{
-		hp = client->local->hostp;
-		if (hp && hp->h_name)
-			set_sockhost(client, hp->h_name);
-	}
-
-	/* SET HOSTNAME: We set client->user->realhost early here
-	 * because we are going to run some checks.
-	 * Note that later on this may be reversed from hostname to IP if
-	 * allow::options::useip is set.
-	 * Also, register_user() contains more stringent hostname checks later on.
-	 */
-	strlcpy(client->user->realhost, client->local->sockhost, sizeof(client->local->sockhost));
 
 	if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_user == POLICY_DENY))
 	{
