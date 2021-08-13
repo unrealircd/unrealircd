@@ -81,8 +81,6 @@ char *extban_account_conv_param(char *para)
 
 int extban_account_is_banned(BanContext *b)
 {
-	b->banstr += 3;
-
 	/* ~a:0 is special and matches all unauthenticated users */
 	if (!strcmp(b->banstr, "0") && !IsLoggedIn(b->client))
 		return 1;

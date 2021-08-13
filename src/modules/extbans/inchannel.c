@@ -136,7 +136,7 @@ static int extban_inchannel_compareflags(char symbol, int flags)
 int extban_inchannel_is_banned(BanContext *b)
 {
 	Membership *lp;
-	char *p = b->banstr+3;
+	char *p = b->banstr;
 	char symbol = '\0';
 
 	if (*p != '#')

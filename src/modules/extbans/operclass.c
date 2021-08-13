@@ -87,8 +87,6 @@ char *extban_operclass_conv_param(char *para)
 
 int extban_operclass_is_banned(BanContext *b)
 {
-	b->banstr += 3;
-
 	if (MyUser(b->client) && IsOper(b->client))
 	{
 		char *operclass = NULL;

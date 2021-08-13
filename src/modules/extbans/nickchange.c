@@ -72,7 +72,5 @@ int extban_nickchange_is_banned(BanContext *b)
 	if (has_voice(b->client, b->channel))
 		return 0;
 
-	b->banstr += 3;
-
 	return ban_check_mask(b);
 }

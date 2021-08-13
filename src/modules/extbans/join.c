@@ -69,6 +69,5 @@ int extban_modej_is_banned(BanContext *b)
 	if (b->checktype != BANCHK_JOIN)
 		return 0;
 
-	b->banstr += 3;
 	return ban_check_mask(b);
 }

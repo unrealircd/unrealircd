@@ -5081,7 +5081,6 @@ int _match_user(char *rmask, Client *client, int options)
 
 int _match_user_extended_server_ban(char *banstr, Client *client)
 {
-	char *msg = NULL, *errmsg = NULL;
 	Extban *extban;
 	BanContext *b;
 	int ret;
@@ -5092,6 +5091,11 @@ int _match_user_extended_server_ban(char *banstr, Client *client)
 	extban = findmod_by_bantype(banstr[1]);
 	if (!extban || !(extban->options & EXTBOPT_TKL))
 		return 0; /* extban not found or of incorrect type (eg ~T) */
+
+	banstr = strchr(banstr, ':');
+	if (!banstr)
+		return 0;
+	banstr++;
 
 	b = safe_alloc(sizeof(BanContext));
 	b->client = client;

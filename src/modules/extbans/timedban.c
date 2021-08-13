@@ -343,7 +343,6 @@ int timedban_extban_is_ok(Client *client, Channel* channel, char *para_in, int c
 /** Check if the user is currently banned */
 int timedban_is_banned(BanContext *b)
 {
-	b->banstr += 3;
 	b->banstr = strchr(b->banstr, ':'); /* skip time argument */
 	if (!b->banstr)
 		return 0; /* invalid fmt */

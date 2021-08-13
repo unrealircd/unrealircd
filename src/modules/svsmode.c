@@ -65,6 +65,7 @@ void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 	Extban *extban;
 	Ban *ban, *bnext;
 	Ban **banlist;
+	BanContext *b;
 	char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
 	char ihost[NICKLEN+USERLEN+HOSTLEN+6], chost[NICKLEN+USERLEN+HOSTLEN+6];
 
@@ -114,6 +115,11 @@ void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 
 	/* DO THE ACTUAL WORK */
 
+	b = safe_alloc(sizeof(BanContext));
+	b->client = acptr;
+	b->channel = channel;
+	b->checktype = BANCHK_JOIN;
+
 	for (ban = *banlist; ban; ban = bnext)
 	{
 		bnext = ban->next;
@@ -122,28 +128,26 @@ void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 		    (*ihost && match_simple(ban->banstr, ihost)) ||
 		    (*chost && match_simple(ban->banstr, chost)))
 		{
-			add_send_mode_param(channel, client, '-',  chmode, 
-				ban->banstr);
+			add_send_mode_param(channel, client, '-',  chmode, ban->banstr);
 			del_listmode(banlist, channel, ban->banstr);
 		}
 		else if (chmode != 'I' && *ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr[1])))
 		{
 			if (extban->options & EXTBOPT_CHSVSMODE) 
 			{
-				BanContext *b = safe_alloc(sizeof(BanContext));
-				b->client = acptr;
-				b->channel = channel;
-				b->banstr = ban->banstr;
-				b->checktype = BANCHK_JOIN;
+				char *p = strchr(ban->banstr, ':');
+				if (!p)
+					continue; /* faulty extban */
+				b->banstr = p+1;
 				if (extban->is_banned(b))
 				{
 					add_send_mode_param(channel, acptr, '-', chmode, ban->banstr);
 					del_listmode(banlist, channel, ban->banstr);
 				}
-				safe_free(b);
 			}
 		}
 	}
+	safe_free(b);
 }
 
 void clear_bans(Client *client, Channel *channel, char chmode)

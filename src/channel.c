@@ -396,9 +396,16 @@ inline int ban_check_mask(BanContext *b)
 		/* Is an extended ban. */
 		extban = findmod_by_bantype(b->banstr[1]);
 		if (!extban)
+		{
 			return 0;
-		else
+		} else {
+			char *p = strchr(b->banstr, ':');
+			if (!p)
+				return 0; /* faulty extban */
+			p++;
+			b->banstr = p;
 			return extban->is_banned(b);
+		}
 	}
 	else
 	{

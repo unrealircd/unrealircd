@@ -133,8 +133,6 @@ char *extban_securitygroup_conv_param(char *para)
 /** Is the user banned by ~G:something ? */
 int extban_securitygroup_is_banned(BanContext *b)
 {
-	b->banstr += 3;
-
 	if (*b->banstr == '!')
 		return !user_allowed_by_security_group_name(b->client, b->banstr+1);
 	return user_allowed_by_security_group_name(b->client, b->banstr);

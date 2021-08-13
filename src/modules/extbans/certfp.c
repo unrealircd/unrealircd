@@ -112,8 +112,6 @@ int extban_certfp_is_banned(BanContext *b)
 {
 	char *fp;
 
-	b->banstr += 3;
-
 	fp = moddata_client_get(b->client, "certfp");
 
 	if (!fp)
