@@ -698,6 +698,21 @@ CMD_FUNC(cmd_nick)
 	}
 }
 
+/** Hmm.. don't we already have such a function? */
+void set_user_modes_dont_spread(Client *client, char *umode)
+{
+	char *args[4];
+
+	args[0] = client->name;
+	args[1] = client->name;
+	args[2] = umode;
+	args[3] = NULL;
+
+	dontspread = 1;
+	do_cmd(client, NULL, "MODE", 3, args);
+	dontspread = 0;
+}
+
 /** Register the connection as a User.
  * This is called after NICK + USER (in no particular order)
  * and possibly other protocol messages as well (eg CAP).
@@ -717,17 +732,6 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
 	int i;
 	Hook *h;
-	char *tkllayer[9] = {
-		me.name,	/*0  server.name */
-		"+",		/*1  +|- */
-		"z",		/*2  G   */
-		"*",		/*3  user */
-		NULL,		/*4  host */
-		NULL,
-		NULL,		/*6  expire_at */
-		NULL,		/*7  set_at */
-		NULL		/*8  reason */
-	};
 	TKL *savetkl = NULL;
 	ConfigItem_tld *tlds;
 	char temp[USERLEN + 1];
@@ -1008,13 +1012,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		safe_strdup(client->user->virthost, client->user->cloakedhost);
 
 		/* Set the umodes */
-		tkllayer[0] = nick;
-		tkllayer[1] = nick;
-		tkllayer[2] = umode;
-		tkllayer[3] = NULL;
-		dontspread = 1;
-		do_cmd(client, NULL, "MODE", 3, tkllayer);
-		dontspread = 0;
+		set_user_modes_dont_spread(client, umode);
 
 		/* Set the vhost */
 		if (virthost && *virthost != '*')
@@ -1099,34 +1097,8 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 
 int register_user_remote(Client *client, char *nick, char *username, char *umode, char *virthost, char *ip)
 {
-	ConfigItem_ban *bconf;
-	char *tmpstr;
-	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
-	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
-	int i;
-	Hook *h;
-	char *tkllayer[9] = {
-		me.name,	/*0  server.name */
-		"+",		/*1  +|- */
-		"z",		/*2  G   */
-		"*",		/*3  user */
-		NULL,		/*4  host */
-		NULL,
-		NULL,		/*6  expire_at */
-		NULL,		/*7  set_at */
-		NULL		/*8  reason */
-	};
-	TKL *savetkl = NULL;
-	ConfigItem_tld *tlds;
-
-	nick = client->name; /* <- The data is always the same, but the pointer is sometimes not,
-	                    *    I need this for one of my modules, so do not remove! ;) -- Syzop */
-
 	strlcpy(client->user->username, username, USERLEN+1);
 	SetUser(client);
-	irccounts.clients++;
-	if (client->uplink && client->uplink->server)
-		client->uplink->server->users++;
 
 	make_cloakedhost(client, client->user->realhost, client->user->cloakedhost, sizeof(client->user->cloakedhost));
 	safe_strdup(client->user->virthost, client->user->cloakedhost);
@@ -1136,6 +1108,10 @@ int register_user_remote(Client *client, char *nick, char *username, char *umode
 	 */
 	client->flags |= client->uplink->flags;
 
+	/* Update counts */
+	irccounts.clients++;
+	if (client->uplink && client->uplink->server)
+		client->uplink->server->users++;
 	if (client->umodes & UMODE_INVISIBLE)
 		irccounts.invisible++;
 
@@ -1152,13 +1128,7 @@ int register_user_remote(Client *client, char *nick, char *username, char *umode
 		safe_strdup(client->user->virthost, client->user->cloakedhost);
 
 		/* Set the umodes */
-		tkllayer[0] = nick;
-		tkllayer[1] = nick;
-		tkllayer[2] = umode;
-		tkllayer[3] = NULL;
-		dontspread = 1;
-		cmd_umode(client, NULL, 3, tkllayer);
-		dontspread = 0;
+		set_user_modes_dont_spread(client, umode);
 
 		/* Set the vhost */
 		if (virthost && *virthost != '*')
