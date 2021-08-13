@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-int extban_nickchange_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
+int extban_nickchange_is_banned(BanContext *b);
 
 /** Called upon module init */
 MOD_INIT()
@@ -64,18 +64,15 @@ MOD_UNLOAD()
 }
 
 /** This ban that affects nick-changes only */
-int extban_nickchange_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg)
+int extban_nickchange_is_banned(BanContext *b)
 {
-	char *sub_ban;
-
-	if (type != BANCHK_NICK)
+	if (b->checktype != BANCHK_NICK)
 		return 0;
 
-	if (has_voice(client, channel))
+	if (has_voice(b->client, b->channel))
 		return 0;
 
-	sub_ban = banin + 3;
+	b->banstr += 3;
 
-	return ban_check_mask(client, channel, sub_ban, type, msg, errmsg, 0);
+	return ban_check_mask(b);
 }
-

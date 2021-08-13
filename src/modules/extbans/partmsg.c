@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
 };
 
-int extban_partmsg_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
+int extban_partmsg_is_banned(BanContext *b);
 
 MOD_INIT()
 {
@@ -62,10 +62,12 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int extban_partmsg_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg)
+int extban_partmsg_is_banned(BanContext *b)
 {
-	if (type == BANCHK_LEAVE_MSG)
-		*msg = NULL;
+	if (b->checktype == BANCHK_LEAVE_MSG)
+		b->msg = NULL;
+
+	// Uh.. there is no attempt to match.... anything.......?
 
 	return 0;
 }

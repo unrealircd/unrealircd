@@ -365,6 +365,16 @@ typedef enum ExtbanOptions {
 } ExtbanOptions;
 
 typedef struct {
+	Client *client;		/**< Client to check, can be a remote client */
+	Channel *channel;	/**< Channel to check */
+	char *banstr;		/**< Mask string (ban) */
+	int checktype;		/**< Check type, one of BANCHK_* */
+	char *msg;		/**< Message, only for some BANCHK_* types (for censoring text) */
+	char *error_msg;	/**< Error message, can be NULL */
+	int no_extbans;		/**< Set to 1 to disable extended bans checking - only nick!user@host allowed */
+} BanContext;
+
+typedef struct {
 	/** extbans module */
 	Module *owner;
 	/** extended ban character */
@@ -404,7 +414,7 @@ typedef struct {
 	 * char **: optionally a message, can be NULL!! (for some BANCHK_ types)
 	 * char **: optionally for setting an error message, can be NULL!!
 	 */
-	int			(*is_banned)(Client *client, Channel *channel, char *para, int checktype, char **msg, char **errormsg);
+	int (*is_banned)(BanContext *b);
 } Extban;
 
 typedef struct {
@@ -412,7 +422,7 @@ typedef struct {
 	ExtbanOptions options;
 	int			(*is_ok)(Client *, Channel *, char *para, int, int, int);
 	char *			(*conv_param)(char *);
-	int			(*is_banned)(Client *, Channel *, char *, int, char **, char **);
+	int			(*is_banned)(BanContext *b);
 } ExtbanInfo;
 
 

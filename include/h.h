@@ -177,7 +177,7 @@ extern void send_user_joins(Client *, Client *);
 extern int valid_channelname(const char *);
 extern int valid_server_name(char *name);
 extern long get_access(Client *, Channel *);
-extern int ban_check_mask(Client *, Channel *, char *, int, char **, char **, int);
+extern int ban_check_mask(BanContext *b);
 extern int extban_is_ok_nuh_extban(Client *, Channel *, char *, int, int, int);
 extern char *extban_conv_param_nuh_or_extban(char *);
 extern char *extban_conv_param_nuh(char *);

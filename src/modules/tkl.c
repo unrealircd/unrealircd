@@ -5083,6 +5083,8 @@ int _match_user_extended_server_ban(char *banstr, Client *client)
 {
 	char *msg = NULL, *errmsg = NULL;
 	Extban *extban;
+	BanContext *b;
+	int ret;
 
 	if (!is_extended_ban(banstr))
 		return 0; /* we should never have been called */
@@ -5091,5 +5093,11 @@ int _match_user_extended_server_ban(char *banstr, Client *client)
 	if (!extban || !(extban->options & EXTBOPT_TKL))
 		return 0; /* extban not found or of incorrect type (eg ~T) */
 
-	return extban->is_banned(client, NULL, banstr, BANCHK_TKL, &msg, &errmsg);
+	b = safe_alloc(sizeof(BanContext));
+	b->client = client;
+	b->banstr = banstr;
+	b->checktype = BANCHK_TKL;
+	ret = extban->is_banned(b);
+	safe_free(b);
+	return ret;
 }

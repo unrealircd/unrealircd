@@ -30,7 +30,7 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 int extban_certfp_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2);
 char *extban_certfp_conv_param(char *para);
-int extban_certfp_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
+int extban_certfp_is_banned(BanContext *b);
 
 /* Called upon module init */
 MOD_INIT()
@@ -108,17 +108,18 @@ char *extban_certfp_conv_param(char *para)
 	return retbuf;
 }
 
-int extban_certfp_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg)
+int extban_certfp_is_banned(BanContext *b)
 {
-	char *ban = banin+3;
 	char *fp;
 
-	fp = moddata_client_get(client, "certfp");
+	b->banstr += 3;
+
+	fp = moddata_client_get(b->client, "certfp");
 
 	if (!fp)
 		return 0; /* not using TLS */
 
-	if (!strcmp(ban, fp))
+	if (!strcmp(b->banstr, fp))
 		return 1;
 
 	return 0;

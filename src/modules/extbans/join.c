@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-int extban_modej_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
+int extban_modej_is_banned(BanContext *b);
 
 /** Called upon module init */
 MOD_INIT()
@@ -64,15 +64,11 @@ MOD_UNLOAD()
 }
 
 /** This ban that affects JOINs only */
-int extban_modej_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg)
+int extban_modej_is_banned(BanContext *b)
 {
-	char *sub_ban;
-
-	if (type != BANCHK_JOIN)
+	if (b->checktype != BANCHK_JOIN)
 		return 0;
 
-	sub_ban = banin + 3;
-
-	return ban_check_mask(client, channel, sub_ban, type, msg, errmsg, 0);
+	b->banstr += 3;
+	return ban_check_mask(b);
 }
-

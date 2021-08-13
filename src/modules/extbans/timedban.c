@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 char *timedban_extban_conv_param(char *para_in);
 int timedban_extban_is_ok(Client *client, Channel* channel, char *para_in, int checkt, int what, int what2);
-int timedban_is_banned(Client *client, Channel *channel, char *ban, int chktype, char **msg, char **errmsg);
+int timedban_is_banned(BanContext *b);
 void add_send_mode_param(Channel *channel, Client *from, char what, char mode, char *param);
 char *timedban_chanmsg(Client *, Client *, Channel *, char *, int);
 
@@ -341,16 +341,15 @@ int timedban_extban_is_ok(Client *client, Channel* channel, char *para_in, int c
 }
 
 /** Check if the user is currently banned */
-int timedban_is_banned(Client *client, Channel *channel, char *ban, int chktype, char **msg, char **errmsg)
+int timedban_is_banned(BanContext *b)
 {
-	if (strncmp(ban, "~t:", 3))
-		return 0; /* not for us */
-	ban = strchr(ban+3, ':'); /* skip time argument */
-	if (!ban)
+	b->banstr += 3;
+	b->banstr = strchr(b->banstr, ':'); /* skip time argument */
+	if (!b->banstr)
 		return 0; /* invalid fmt */
-	ban++;
+	b->banstr++; /* skip over final semicolon */
 
-	return ban_check_mask(client, channel, ban, chktype, msg, errmsg, 0);
+	return ban_check_mask(b);
 }
 
 /** Helper to check if the ban has been expired */

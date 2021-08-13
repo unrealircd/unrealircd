@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 char *extban_operclass_conv_param(char *para);
-int extban_operclass_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
+int extban_operclass_is_banned(BanContext *b);
 
 /** Called upon module init */
 MOD_INIT()
@@ -85,18 +85,18 @@ char *extban_operclass_conv_param(char *para)
 	return retbuf;
 }
 
-int extban_operclass_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg)
+int extban_operclass_is_banned(BanContext *b)
 {
-	char *ban = banin+3;
+	b->banstr += 3;
 
-	if (MyUser(client) && IsOper(client))
+	if (MyUser(b->client) && IsOper(b->client))
 	{
 		char *operclass = NULL;
-		ConfigItem_oper *oper = find_oper(client->user->operlogin);
+		ConfigItem_oper *oper = find_oper(b->client->user->operlogin);
 		if (oper && oper->operclass)
 			operclass = oper->operclass;
 		
-		if (operclass && match_simple(ban, operclass))
+		if (operclass && match_simple(b->banstr, operclass))
 			return 1;
 	}
 

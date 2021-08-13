@@ -56,7 +56,7 @@ int cmodeL_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int extban_link_syntax(Client *client, int checkt, char *reason);
 int extban_link_is_ok(Client *client, Channel *channel, char *param, int checkt, int what, int what2);
 char *extban_link_conv_param(char *param);
-int extban_link_is_banned(Client *client, Channel *channel, char *ban, int type, char **msg, char **errmsg);
+int extban_link_is_banned(BanContext *b);
 int link_doforward(Client *client, Channel *channel, char *linked, linkType linktype);
 int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[]);
 
@@ -287,7 +287,7 @@ char *extban_link_conv_param(char *param)
 	return retbuf;
 }
 
-int extban_link_is_banned(Client *client, Channel *channel, char *ban, int type, char **msg, char **errmsg)
+int extban_link_is_banned(BanContext *b)
 {
 	// We don't actually ban here because we have to extract the channel name in PRE_LOCAL_JOIN anyways
 	return 0;
@@ -348,10 +348,6 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[])
 {
 	char *linked;
 	int canjoin;
-	Ban *ban;
-	char bantmp[MAX_EB_LEN + 1];
-	char *banchan;
-	char *banmask;
 
 	// User might already be on this channel, let's also exclude any possible services bots early
 	if (IsULine(client) || find_membership_link(client->user->channel, channel))
@@ -361,7 +357,17 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[])
 	// only /INVITE from chanop bypasses:
 	if (!is_invited(client, channel))
 	{
-		for(ban = channel->banlist; ban; ban = ban->next)
+		Ban *ban;
+		BanContext *b = safe_alloc(sizeof(BanContext));
+		char bantmp[MAX_EB_LEN + 1];
+		char *banchan;
+		char *banmask;
+
+		b->client = client;
+		b->channel = channel;
+		b->checktype = BANCHK_JOIN;
+
+		for (ban = channel->banlist; ban; ban = ban->next)
 		{
 			if (!strncmp(ban->banstr, "~f:", 3))
 			{
@@ -391,9 +397,15 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[])
 				continue;
 			*banmask++ = '\0';
 
-			if (ban_check_mask(client, channel, banmask, BANCHK_JOIN, NULL, NULL, 0))
+			b->banstr = banmask;
+			if (ban_check_mask(b))
+			{
+				safe_free(b);
 				return link_doforward(client, channel, banchan, LINKTYPE_BAN);
+			}
 		}
+
+		safe_free(b);
 	}
 
 	// Either +L is not set, or it is set but the parameter isn't stored somehow

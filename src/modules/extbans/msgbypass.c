@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-int extban_msgbypass_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
+int extban_msgbypass_is_banned(BanContext *b);
 int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageRestrictionType bypass_type);
 int msgbypass_extban_is_ok(Client *client, Channel* channel, char *para, int checkt, int what, int what2);
 char *msgbypass_extban_conv_param(char *para);
@@ -68,7 +68,7 @@ MOD_UNLOAD()
 }
 
 /** Is the user banned? No, never by us anyway. */
-int extban_msgbypass_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg)
+int extban_msgbypass_is_banned(BanContext *b)
 {
 	return 0; /* not banned by us */
 }
@@ -78,7 +78,12 @@ int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageR
 {
 	Ban *ban;
 	char *p;
-	
+	BanContext *b = safe_alloc(sizeof(BanContext));
+
+	b->client = client;
+	b->channel = channel;
+	b->checktype = BANCHK_MSG;
+
 	for (ban = channel->exlist; ban; ban=ban->next)
 	{
 		if (!strncmp(ban->banstr, "~m:", 3))
@@ -97,12 +102,17 @@ int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageR
 					continue;
 				matchby++;
 				
-				if (ban_check_mask(client, channel, matchby, BANCHK_MSG, NULL, NULL, 0))
+				b->banstr = matchby;
+				if (ban_check_mask(b))
+				{
+					safe_free(b);
 					return HOOK_ALLOW; /* Yes, user may bypass */
+				}
 			}
 		}
 	}
 
+	safe_free(b);
 	return HOOK_CONTINUE; /* No, may NOT bypass. */
 }
 

@@ -74,7 +74,7 @@ ModuleHeader MOD_HEADER
 char *extban_modeT_conv_param(char *para_in);
 int textban_check_ban(Client *client, Channel *channel, char *ban, char **msg, char **errmsg);
 int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
-int extban_modeT_is_banned(Client *client, Channel *channel, char *ban, int type, char **msg, char **errmsg);
+int extban_modeT_is_banned(BanContext *b);
 int extban_modeT_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2);
 void parse_word(const char *s, char **word, int *type);
 
@@ -379,7 +379,7 @@ char *extban_modeT_conv_param(char *para_in)
 }
 
 /** This is the regular "is banned?" routine. We can't use this as we need to be called for voiced users as well */
-int extban_modeT_is_banned(Client *client, Channel *channel, char *ban, int checktype, char **msg, char **errmsg)
+int extban_modeT_is_banned(BanContext *b)
 {
 	return 0;
 }

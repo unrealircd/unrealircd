@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 char *extban_account_conv_param(char *para);
-int extban_account_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
+int extban_account_is_banned(BanContext *b);
 
 /** Called upon module init */
 MOD_INIT()
@@ -79,22 +79,22 @@ char *extban_account_conv_param(char *para)
 	return retbuf;
 }
 
-int extban_account_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg)
+int extban_account_is_banned(BanContext *b)
 {
-	char *ban = banin+3;
+	b->banstr += 3;
 
 	/* ~a:0 is special and matches all unauthenticated users */
-	if (!strcmp(ban, "0") && !IsLoggedIn(client))
+	if (!strcmp(b->banstr, "0") && !IsLoggedIn(b->client))
 		return 1;
 
 	/* ~a:* matches all authenticated users
 	 * (Yes this special code is needed because account
 	 *  is 0 or * for unauthenticated users)
 	 */
-	if (!strcmp(ban, "*") && IsLoggedIn(client))
+	if (!strcmp(b->banstr, "*") && IsLoggedIn(b->client))
 		return 1;
 
-	if (match_simple(ban, client->user->account))
+	if (match_simple(b->banstr, b->client->user->account))
 		return 1;
 
 	return 0;

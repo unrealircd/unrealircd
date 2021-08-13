@@ -381,37 +381,29 @@ inline Ban *is_banned(Client *client, Channel *channel, int type, char **msg, ch
 }
 
 /** ban_check_mask - Checks if the user matches the specified n!u@h mask -or- run an extended ban.
- * @param client         Client to check (can be remote client)
- * @param channel        Channel to check
- * @param banstr       Mask string to check user
- * @param type         Type of ban to check for (BANCHK_*)
- * @param msg          Message, only for some BANCHK_* types, otherwise NULL.
- * @param errmsg       Error message, could be NULL
- * @param no_extbans   0 to check extbans, nonzero to disable extban checking.
- * @returns            Nonzero if the mask/extban succeeds. Zero if it doesn't.
- * @comments           This is basically extracting the mask and extban check from is_banned_with_nick, but with being a bit more strict in what an extban is.
- *                     Strange things could happen if this is called outside standard ban checking.
+ * This is basically extracting the mask and extban check from is_banned_with_nick,
+ * but with being a bit more strict in what an extban is.
+ * Strange things could happen if this is called outside standard ban checking.
+ * @param b	Ban context, see BanContext
+ * @returns	Nonzero if the mask/extban succeeds. Zero if it doesn't.
  */
-inline int ban_check_mask(Client *client, Channel *channel, char *banstr, int type, char **msg, char **errmsg, int no_extbans)
+inline int ban_check_mask(BanContext *b)
 {
 	Extban *extban = NULL;
-	if (!no_extbans && is_extended_ban(banstr))
+
+	if (!b->no_extbans && is_extended_ban(b->banstr))
 	{
 		/* Is an extended ban. */
-		extban = findmod_by_bantype(banstr[1]);
+		extban = findmod_by_bantype(b->banstr[1]);
 		if (!extban)
-		{
 			return 0;
-		}
 		else
-		{
-			return extban->is_banned(client, channel, banstr, type, msg, errmsg);
-		}
+			return extban->is_banned(b);
 	}
 	else
 	{
 		/* Is a n!u@h mask. */
-		return match_user(banstr, client, MATCH_CHECK_ALL);
+		return match_user(b->banstr, b->client, MATCH_CHECK_ALL);
 	}
 }
 
@@ -427,6 +419,9 @@ Ban *is_banned_with_nick(Client *client, Channel *channel, int type, char *nick,
 {
 	Ban *ban, *ex;
 	char savednick[NICKLEN+1];
+	BanContext *b = safe_alloc(sizeof(BanContext));
+
+	// FIXME: this comment from below actually is doable nowadays with U6 ;)
 
 	/* It's not really doable to pass 'nick' to all the ban layers,
 	 * including extbans (with stacking) and so on. Or at least not
@@ -445,13 +440,20 @@ Ban *is_banned_with_nick(Client *client, Channel *channel, int type, char *nick,
 		strlcpy(client->name, nick, sizeof(client->name));
 	}
 
+	b->client = client;
+	b->channel = channel;
+	b->checktype = type;
+	if (msg)
+		b->msg = *msg;
+
 	/* We check +b first, if a +b is found we then see if there is a +e.
 	 * If a +e was found we return NULL, if not, we return the ban.
 	 */
 
 	for (ban = channel->banlist; ban; ban = ban->next)
 	{
-		if (ban_check_mask(client, channel, ban->banstr, type, msg, errmsg, 0))
+		b->banstr = ban->banstr;
+		if (ban_check_mask(b))
 			break;
 	}
 
@@ -460,7 +462,8 @@ Ban *is_banned_with_nick(Client *client, Channel *channel, int type, char *nick,
 		/* Ban found, now check for +e */
 		for (ex = channel->exlist; ex; ex = ex->next)
 		{
-			if (ban_check_mask(client, channel, ex->banstr, type, msg, errmsg, 0))
+			b->banstr = ex->banstr;
+			if (ban_check_mask(b))
 			{
 				/* except matched */
 				ban = NULL;
@@ -476,6 +479,13 @@ Ban *is_banned_with_nick(Client *client, Channel *channel, int type, char *nick,
 		strlcpy(client->name, savednick, sizeof(client->name));
 	}
 
+	/* OUT: */
+	if (msg)
+		*msg = b->msg;
+	if (errmsg)
+		*errmsg = b->error_msg;
+
+	safe_free(b);
 	return ban;
 }
 
@@ -870,10 +880,18 @@ char *clean_ban_mask(char *mask, int what, Client *client)
 int find_invex(Channel *channel, Client *client)
 {
 	Ban *inv;
+	BanContext *b = safe_alloc(sizeof(BanContext));
+
+	b->client = client;
+	b->channel = channel;
+	b->checktype = BANCHK_JOIN;
 
 	for (inv = channel->invexlist; inv; inv = inv->next)
-		if (ban_check_mask(client, channel, inv->banstr, BANCHK_JOIN, NULL, NULL, 0))
+	{
+		b->banstr = inv->banstr;
+		if (ban_check_mask(b))
 			return 1;
+	}
 
 	return 0;
 }

@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 char *extban_realname_conv_param(char *para);
-int extban_realname_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
+int extban_realname_is_banned(BanContext *b);
 
 /** Called upon module init */
 MOD_INIT()
@@ -86,11 +86,10 @@ char *extban_realname_conv_param(char *para)
 	return retbuf;
 }
 
-int extban_realname_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg)
+int extban_realname_is_banned(BanContext *b)
 {
-	char *ban = banin+3;
-
-	if (match_esc(ban, client->info))
+	b->banstr += 3;
+	if (match_esc(b->banstr, b->client->info))
 		return 1;
 
 	return 0;

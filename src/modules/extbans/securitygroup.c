@@ -30,7 +30,7 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 char *extban_securitygroup_conv_param(char *para);
 int extban_securitygroup_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2);
-int extban_securitygroup_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
+int extban_securitygroup_is_banned(BanContext *b);
 
 /** Called upon module init */
 MOD_INIT()
@@ -131,11 +131,11 @@ char *extban_securitygroup_conv_param(char *para)
 }
 
 /** Is the user banned by ~G:something ? */
-int extban_securitygroup_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg)
+int extban_securitygroup_is_banned(BanContext *b)
 {
-	char *ban = banin+3;
+	b->banstr += 3;
 
-	if (*ban == '!')
-		return !user_allowed_by_security_group_name(client, ban+1);
-	return user_allowed_by_security_group_name(client, ban);
+	if (*b->banstr == '!')
+		return !user_allowed_by_security_group_name(b->client, b->banstr+1);
+	return user_allowed_by_security_group_name(b->client, b->banstr);
 }
