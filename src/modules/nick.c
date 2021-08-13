@@ -744,7 +744,7 @@ CMD_FUNC(cmd_nick)
 	}
 }
 
-void welcome_user(Client *client, int hostile_name_error, char *olduser, char *userbad, char *stripuser, TKL *viruschan_tkl)
+void welcome_user(Client *client, TKL *viruschan_tkl)
 {
 	int i;
 	ConfigItem_tld *tlds;
@@ -803,12 +803,6 @@ void welcome_user(Client *client, int hostile_name_error, char *olduser, char *u
 		"If you find any bugs or problems, please report them at https://bugs.unrealircd.org/",
 		VERSIONONLY);
 #endif
-	/*
-	 * Now send a numeric to the user telling them what, if
-	 * anything, happened.
-	 */
-	if (hostile_name_error)
-		sendnumeric(client, ERR_HOSTILENAME, olduser, userbad, stripuser);
 
 	if (client->umodes & UMODE_INVISIBLE)
 		irccounts.invisible++;
@@ -936,21 +930,9 @@ int _register_user(Client *client)
 			   "[BUG] client->local->sockhost is empty for user $client.detail [$client.ip]");
 	}
 
-	/*
-	 * I do not consider *, ~ or ! 'hostile' in usernames,
-	 * as it is easy to differentiate them (Use \*, \? and \\)
-	 * with the possible?
-	 * exception of !. With mIRC etc. ident is easy to fake
-	 * to contain @ though, so if that is found use non-ident
-	 * username. -Donwulff
-	 *
-	 * I do, We only allow a-z A-Z 0-9 _ - and . now so the
-	 * !strchr(client->ident, '@') check is out of date. -Cabal95
-	 *
-	 * Moved the noident stuff here. -OnyxDragon
+	/* Set the username.
+	 * Work on a copy, because username may point to client->user->username...
 	 */
-
-	/* because username may point to client->user->username */
 	strlcpy(temp, client->user->username, USERLEN + 1);
 
 	if (!IsUseIdent(client))
@@ -1104,7 +1086,7 @@ int _register_user(Client *client)
 
 	safe_free(client->local->passwd);
 
-	welcome_user(client, u1?1:0, olduser, userbad, stripuser, savetkl);
+	welcome_user(client, savetkl);
 
 	return IsDead(client) ? 1 : 0;
 }
