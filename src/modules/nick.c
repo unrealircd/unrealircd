@@ -576,7 +576,6 @@ CMD_FUNC(cmd_uid)
 			sendto_one(client, NULL, ":%s KILL %s :Bad IP in UID command", me.id, parv[6]);
 			return;
 		}
-		safe_strdup(client->ip, ip);
 	}
 
 	/* Kill quarantined opers early... */
@@ -660,6 +659,8 @@ nickkill2done:
 
 	client->user->server = find_or_add(client->uplink->name);
 	strlcpy(client->user->realhost, hostname, sizeof(client->user->realhost));
+	if (ip)
+		safe_strdup(client->ip, ip);
 
 	if (*sstamp != '*')
 		strlcpy(client->user->account, sstamp, sizeof(client->user->account));
