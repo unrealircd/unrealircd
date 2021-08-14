@@ -522,7 +522,7 @@ getnick:
 			{
 				/* Send what we have and start a new buffer */
 				sendto_server(client, 0, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
-				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld %s :", client->id, (long long)ts, sj3_parabuf);
+				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld :", client->id, (long long)ts);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_buf) + strlen(prefix) + strlen(acptr->id) > BUFSIZE - 5)
 				{
@@ -541,7 +541,7 @@ getnick:
 			{
 				/* Send what we have and start a new buffer */
 				sendto_server(client, PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
-				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld %s :", client->id, (long long)ts, sj3_parabuf);
+				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld :", client->id, (long long)ts);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_sjsby_buf) + strlen(prefix) + strlen(acptr->id) > BUFSIZE - 5)
 				{
@@ -603,7 +603,7 @@ getnick:
 			{
 				/* Send what we have and start a new buffer */
 				sendto_server(client, 0, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
-				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld %s :", client->id, (long long)ts, sj3_parabuf);
+				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld :", client->id, (long long)ts);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_buf) + strlen(prefix) + strlen(nick) > BUFSIZE - 5)
 				{
@@ -628,7 +628,7 @@ getnick:
 			{
 				/* Send what we have and start a new buffer */
 				sendto_server(client, PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
-				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld %s :", client->id, (long long)ts, sj3_parabuf);
+				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld :", client->id, (long long)ts);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_sjsby_buf) + strlen(scratch_buf) > BUFSIZE - 5)
 				{

@@ -1595,6 +1595,10 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 	*modebuf = *parabuf = '\0';
 	channel_modes(to, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel, 1);
 
+	/* Strip final space if needed */
+	if (*parabuf && (parabuf[strlen(parabuf)-1] == ' '))
+		parabuf[strlen(parabuf)-1] = '\0';
+
 	if (!modebuf[1])
 		nomode = 1;
 	if (!(*parabuf))
@@ -1676,6 +1680,10 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 			/* Would overflow, so send our current stuff right now (except new stuff) */
 			sendto_one(to, mtags, "%s", buf);
 			sent++;
+			ircsnprintf(buf, sizeof(buf),
+			    ":%s SJOIN %lld %s :", me.id,
+			    (long long)channel->creationtime, channel->name);
+			prebuflen = strlen(buf);
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
 		}
@@ -1699,6 +1707,10 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 			/* Would overflow, so send our current stuff right now (except new stuff) */
 			sendto_one(to, mtags, "%s", buf);
 			sent++;
+			ircsnprintf(buf, sizeof(buf),
+			    ":%s SJOIN %lld %s :", me.id,
+			    (long long)channel->creationtime, channel->name);
+			prebuflen = strlen(buf);
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
 		}
@@ -1722,6 +1734,10 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 			/* Would overflow, so send our current stuff right now (except new stuff) */
 			sendto_one(to, mtags, "%s", buf);
 			sent++;
+			ircsnprintf(buf, sizeof(buf),
+			    ":%s SJOIN %lld %s :", me.id,
+			    (long long)channel->creationtime, channel->name);
+			prebuflen = strlen(buf);
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
 		}
@@ -1745,6 +1761,10 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 			/* Would overflow, so send our current stuff right now (except new stuff) */
 			sendto_one(to, mtags, "%s", buf);
 			sent++;
+			ircsnprintf(buf, sizeof(buf),
+			    ":%s SJOIN %lld %s :", me.id,
+			    (long long)channel->creationtime, channel->name);
+			prebuflen = strlen(buf);
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
 		}
