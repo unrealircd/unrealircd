@@ -239,11 +239,11 @@ CMD_FUNC(cmd_mode)
 	{
 		if (!(*parv[2] == '&'))	/* & denotes a bounce */
 		{
-			unreal_log(ULOG_INFO, "mode", "MODE_TS_BOUNCE", client,
-			           "TS bounce for $channel: ours=$channel.creationtime, theirs=$their_ts",
+			unreal_log(ULOG_INFO, "mode", "MODE_TS_IGNORED", client,
+			           "MODE change ignored for $channel from $client: "
+			           "timestamp mismatch, ours=$channel.creationtime, theirs=$their_ts",
 			           log_data_channel("channel", channel),
 			           log_data_integer("their_ts", sendts));
-			bounce_mode(channel, client, parc - 2, parv + 2);
 		}
 		return;
 	}
