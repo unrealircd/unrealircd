@@ -88,28 +88,32 @@ int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageR
 
 	for (ban = channel->exlist; ban; ban=ban->next)
 	{
+		char *type;
+		char *matchby;
+
 		if (!strncmp(ban->banstr, "~m:", 3))
+			type = ban->banstr + 3;
+		else if (!strncmp(ban->banstr, "~msgbypass:", 11))
+			type = ban->banstr + 11;
+		else
+			continue;
+
+		if (((bypass_type == BYPASS_CHANMSG_EXTERNAL) && !strncmp(type, "external:", 9)) ||
+		    ((bypass_type == BYPASS_CHANMSG_MODERATED) && !strncmp(type, "moderated:", 10)) ||
+		    ((bypass_type == BYPASS_CHANMSG_COLOR) && !strncmp(type, "color:", 6)) ||
+		    ((bypass_type == BYPASS_CHANMSG_CENSOR) && !strncmp(type, "censor:", 7)) ||
+		    ((bypass_type == BYPASS_CHANMSG_NOTICE) && !strncmp(type, "notice:", 7)))
 		{
-			char *type = ban->banstr + 3;
-			char *matchby;
+			matchby = strchr(type, ':');
+			if (!matchby)
+				continue;
+			matchby++;
 			
-			if (((bypass_type == BYPASS_CHANMSG_EXTERNAL) && !strncmp(type, "external:", 9)) ||
-			    ((bypass_type == BYPASS_CHANMSG_MODERATED) && !strncmp(type, "moderated:", 10)) ||
-			    ((bypass_type == BYPASS_CHANMSG_COLOR) && !strncmp(type, "color:", 6)) || 
-			    ((bypass_type == BYPASS_CHANMSG_CENSOR) && !strncmp(type, "censor:", 7)) ||
-			    ((bypass_type == BYPASS_CHANMSG_NOTICE) && !strncmp(type, "notice:", 7)))
+			b->banstr = matchby;
+			if (ban_check_mask(b))
 			{
-				matchby = strchr(type, ':');
-				if (!matchby)
-					continue;
-				matchby++;
-				
-				b->banstr = matchby;
-				if (ban_check_mask(b))
-				{
-					safe_free(b);
-					return HOOK_ALLOW; /* Yes, user may bypass */
-				}
+				safe_free(b);
+				return HOOK_ALLOW; /* Yes, user may bypass */
 			}
 		}
 	}

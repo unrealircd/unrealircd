@@ -372,6 +372,10 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[])
 			{
 				strlcpy(bantmp, ban->banstr + 3, sizeof(bantmp));
 			} else
+			if (!strncmp(ban->banstr, "~forward:", 9))
+			{
+				strlcpy(bantmp, ban->banstr + 9, sizeof(bantmp));
+			} else
 			if (!strncmp(ban->banstr, "~t:", 3))
 			{
 				/* A timed ban, but is it for us? Need to parse a little:
@@ -381,6 +385,28 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[])
 				if (p && !strncmp(p, ":~f:", 4))
 				{
 					strlcpy(bantmp, p + 4, sizeof(bantmp));
+				} else
+				if (p && !strncmp(p, ":~forward:", 10))
+				{
+					strlcpy(bantmp, p + 10, sizeof(bantmp));
+				} else {
+					/* Not for us - some other ~t ban */
+					continue;
+				}
+			} else
+			if (!strncmp(ban->banstr, "~time:", 6))
+			{
+				/* A timed ban, but is it for us? Need to parse a little:
+				 * ~t:dddd:~f:...
+				 */
+				char *p = strchr(ban->banstr + 6, ':');
+				if (p && !strncmp(p, ":~f:", 4))
+				{
+					strlcpy(bantmp, p + 4, sizeof(bantmp));
+				} else
+				if (p && !strncmp(p, ":~forward:", 10))
+				{
+					strlcpy(bantmp, p + 10, sizeof(bantmp));
 				} else {
 					/* Not for us - some other ~t ban */
 					continue;
