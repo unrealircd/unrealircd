@@ -1371,7 +1371,17 @@ void send_invalid_channelname(Client *client, char *channelname)
  */
 int is_extended_ban(const char *str)
 {
-	if ((str[0] == '~') && (str[1] != '\0') && (str[2] == ':'))
-		return 1;
+	const char *p;
+
+	if (*str != '~')
+		return 0;
+	for (p = str+1; *p; p++)
+	{
+		if (!isalnum(*p))
+		{
+			if (*p == ':')
+				return 1;
+		}
+	}
 	return 0;
 }

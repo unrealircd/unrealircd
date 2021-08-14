@@ -382,8 +382,12 @@ typedef struct Extban Extban;
 struct Extban {
 	/** extbans module */
 	Module *owner;
+
 	/** extended ban character */
 	char letter;
+
+	/** extended ban name */
+	char *name;
 
 	/** extban options */
 	ExtbanOptions options;
@@ -406,6 +410,7 @@ struct Extban {
 
 typedef struct {
 	char letter;
+	char *name;
 	ExtbanOptions options;
 	int (*is_ok)(BanContext *b);
 	char *(*conv_param)(BanContext *b, Extban *handler);

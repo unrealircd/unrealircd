@@ -55,8 +55,12 @@ Extban *findmod_by_bantype(char *str, char **remainder)
 		*remainder = p+1;
 
 	for (i=0; i <= ExtBan_highest; i++)
+	{
 		if (ExtBan_Table[i].letter == str[1])
 			return &ExtBan_Table[i];
+		if (ExtBan_Table[i].name && !strncmp(ExtBan_Table[i].name, str+1, p-str-1))
+			return &ExtBan_Table[i];
+	}
 
 	 return NULL;
 }
@@ -65,9 +69,20 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 {
 	int slot;
 
+	/* FIXME: FOR TESTING ONLY !!! */
+	if (!req.name)
+	{
+		char *p;
+		req.name = module->header->name;
+		p = strrchr(req.name, '/');
+		if (p)
+			req.name = p;
+	}
+
 	for (slot=0; slot <= ExtBan_highest; slot++)
 	{
-		if (ExtBan_Table[slot].letter == req.letter) // || name.. matches (TODO)
+		if ((ExtBan_Table[slot].letter == req.letter) ||
+		    (ExtBan_Table[slot].name && !strcasecmp(ExtBan_Table[slot].name, req.name)))
 		{
 			if (module)
 				module->errorcode = MODERR_EXISTS;
@@ -92,6 +107,7 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 	}
 
 	ExtBan_Table[slot].letter = req.letter;
+	safe_strdup(ExtBan_Table[slot].name, req.name);
 	ExtBan_Table[slot].is_ok = req.is_ok;
 	ExtBan_Table[slot].conv_param = req.conv_param;
 	ExtBan_Table[slot].is_banned = req.is_banned;
@@ -127,6 +143,7 @@ void ExtbanDel(Extban *eb)
 			}
 		}
 	}
+	safe_free(eb->name);
 	memset(eb, 0, sizeof(Extban));
 	set_isupport_extban();
 	/* Hmm do we want to go trough all chans and remove the bans?
