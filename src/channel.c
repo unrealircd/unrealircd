@@ -1381,3 +1381,13 @@ int is_extended_ban(const char *str)
 	}
 	return 0;
 }
+
+/** Check if it is an empty (useless) mode, namely "", "+" or "-".
+ * Typically called as: empty_mode(modebuf)
+ */
+int empty_mode(char *m)
+{
+	if (!*m || (((m[0] == '+') || (m[0] == '-')) && m[1] == '\0'))
+		return 1;
+	return 0;
+}

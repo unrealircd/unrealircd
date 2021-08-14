@@ -233,7 +233,7 @@ CMD_FUNC(cmd_sjoin)
 		modebuf[0] = '-';
 
 		/* remove our modes if any */
-		if (modebuf[1] != '\0')
+		if (!empty_mode(modebuf))
 		{
 			MessageTag *mtags = NULL;
 			ap = mp2parv(modebuf, parabuf);
@@ -649,7 +649,7 @@ getnick:
 	sendto_server(client, 0, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
 	sendto_server(client, PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
 
-	if (modebuf[1])
+	if (!empty_mode(modebuf))
 	{
 		modebuf[b] = '\0';
 		send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
@@ -877,10 +877,8 @@ getnick:
 
 		Addsingle('\0');
 
-		if (modebuf[1])
-		{
+		if (!empty_mode(modebuf))
 			send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
-		}
 
 		/* free the oldmode.* crap :( */
 		extcmode_free_paramlist(oldmode.extmodeparams);

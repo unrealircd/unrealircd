@@ -406,8 +406,7 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 			sendts = channel->creationtime;
 	}
 
-	/* Empty mode but a TS change? */
-	if (tschange && (*modebuf == '\0' || (*(modebuf + 1) == '\0' && (*modebuf == '+' || *modebuf == '-'))))
+	if (tschange && empty_mode(modebuf))
 	{
 		/* Message from the other server is an empty mode, BUT they
 		 * did change the channel->creationtime to an earlier TS
@@ -433,8 +432,8 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 	}
 #endif
 
-	/* Should stop null modes */
-	if (*(modebuf + 1) == '\0')
+	/* If we have nothing to do, we can stop here. */
+	if (empty_mode(modebuf))
 	{
 		free_message_tags(mtags);
 		return;
@@ -1830,10 +1829,7 @@ void mode_operoverride_msg(Client *client, Channel *channel, char *modebuf, char
 {
 	char buf[1024];
 
-	/* First, filter out empty mode changes */
-	if (!*modebuf)
-		return;
-	if (((modebuf[0] == '+') || (modebuf[0] == '-')) && modebuf[1] == '\0')
+	if (empty_mode(modebuf))
 		return;
 
 	/* Internally we have this distinction between modebuf and parabuf,

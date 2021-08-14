@@ -1009,6 +1009,7 @@ extern void short_motd(Client *client);
 extern int should_show_connect_info(Client *client);
 extern void send_invalid_channelname(Client *client, char *channelname);
 extern int is_extended_ban(const char *str);
+extern int empty_mode(char *m);
 extern int valid_sid(char *name);
 extern int valid_uid(char *name);
 extern void parse_client_queued(Client *client);
