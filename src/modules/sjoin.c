@@ -237,7 +237,7 @@ CMD_FUNC(cmd_sjoin)
 		{
 			MessageTag *mtags = NULL;
 			ap = mp2parv(modebuf, parabuf);
-			set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar, 0);
+			set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
 			send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
 		}
 		/* remove bans */
@@ -673,7 +673,7 @@ getnick:
 		strlcpy(paraback, parabuf, sizeof paraback);
 		ap = mp2parv(modebuf, parabuf);
 
-		set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar, 0);
+		set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
 		send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
 	}
 
@@ -699,7 +699,7 @@ getnick:
 			}
 		}
 		ap = mp2parv(modebuf, parabuf);
-		set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar, 0);
+		set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
 
 		/* Good, now we got modes, now for the differencing and outputting of modes
 		 * We first see if any para modes are set.

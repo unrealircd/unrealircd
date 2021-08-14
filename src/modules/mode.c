@@ -27,20 +27,18 @@ CMD_FUNC(cmd_mode);
 CMD_FUNC(cmd_mlock);
 void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode);
 void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *pcount,
-                       char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
+                       char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 CMD_FUNC(_cmd_umode);
 
 /* local: */
-static void bounce_mode(Channel *, Client *, int, char **);
 int do_mode_char(Channel *channel, long modetype, char modechar, char *param,
                  u_int what, Client *client,
-                 u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce, long my_access);
+                 u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], long my_access);
 int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
-                    Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
-                    char bounce);
+                    Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pcount,
                    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
-                   size_t mode_buf_size, size_t para_buf_size, char bounce);
+                   size_t mode_buf_size, size_t para_buf_size);
 
 static void mode_cutoff(char *s);
 static void mode_cutoff2(Client *client, Channel *channel, int *parc_out, char *parv[]);
@@ -233,18 +231,21 @@ CMD_FUNC(cmd_mode)
 	}
 #endif
 
+	if (parv[2] && (*parv[2] == '&'))
+	{
+		/* We don't do any bounce-mode handling anymore since UnrealIRCd 6 */
+		return;
+	}
+
 	if (IsServer(client) && (sendts = atol(parv[parc - 1])) &&
 	    !IsULine(client) && channel->creationtime &&
 	    sendts > channel->creationtime)
 	{
-		if (!(*parv[2] == '&'))	/* & denotes a bounce */
-		{
-			unreal_log(ULOG_INFO, "mode", "MODE_TS_IGNORED", client,
-			           "MODE change ignored for $channel from $client: "
-			           "timestamp mismatch, ours=$channel.creationtime, theirs=$their_ts",
-			           log_data_channel("channel", channel),
-			           log_data_integer("their_ts", sendts));
-		}
+		unreal_log(ULOG_INFO, "mode", "MODE_TS_IGNORED", client,
+		           "MODE change ignored for $channel from $client: "
+		           "timestamp mismatch, ours=$channel.creationtime, theirs=$their_ts",
+		           log_data_channel("channel", channel),
+		           log_data_integer("their_ts", sendts));
 		return;
 	}
 	if (IsServer(client) && !sendts && *parv[parc - 1] != '0')
@@ -343,29 +344,6 @@ static void mode_cutoff2(Client *client, Channel *channel, int *parc_out, char *
 	 */
 }
 
-/* bounce_mode -- written by binary
- *	User or server is NOT authorized to change the mode.  This takes care
- * of making the bounce string and bounce it.  Because of the 1 for the bounce
- * param (last param) of the calls to set_mode and make_mode_str, it will not
- * set the mode, but create the bounce string.
- */
-static void bounce_mode(Channel *channel, Client *client, int parc, char *parv[])
-{
-	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
-	int  pcount;
-
-	set_mode(channel, client, parc, parv, &pcount, pvar, 1);
-
-	if (channel->creationtime)
-		sendto_one(client, NULL, ":%s MODE %s &%s %s %lld", me.id,
-		    channel->name, modebuf, parabuf, (long long)channel->creationtime);
-	else
-		sendto_one(client, NULL, ":%s MODE %s &%s %s", me.id, channel->name,
-		    modebuf, parabuf);
-
-	/* the '&' denotes a bounce so servers won't bounce a bounce */
-}
-
 /* do_mode -- written by binary
  *	User or server is authorized to do the mode.  This takes care of
  * setting the mode and relaying it to other users and servers.
@@ -374,19 +352,16 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 {
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	int  pcount;
-	char tschange = 0, isbounce = 0;	/* fwd'ing bounce */
+	char tschange = 0;
 	MessageTag *mtags = NULL;
 
 	new_message(client, recv_mtags, &mtags);
 
 	/* IMPORTANT: if you return, don't forget to free mtags!! */
 
-	if (**parv == '&')
-		isbounce = 1;
-
 	/* Please keep the next 3 lines next to each other */
 	samode_in_progress = samode;
-	set_mode(channel, client, parc, parv, &pcount, pvar, 0);
+	set_mode(channel, client, parc, parv, &pcount, pvar);
 	samode_in_progress = 0;
 
 	if (MyConnect(client))
@@ -434,17 +409,18 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 
 	if (*modebuf == '\0' || (*(modebuf + 1) == '\0' && (*modebuf == '+' || *modebuf == '-')))
 	{
-		if (tschange || isbounce)
+		if (tschange)
 		{
 			/* relay bounce time changes */
 			if (channel->creationtime)
 			{
-				sendto_server(client, 0, 0, NULL, ":%s MODE %s %s+ %lld",
-				    me.id, channel->name, isbounce ? "&" : "",
+				sendto_server(client, 0, 0, NULL, ":%s MODE %s + %lld",
+				    me.id, channel->name,
 				    (long long)channel->creationtime);
 			} else {
-				sendto_server(client, 0, 0, NULL, ":%s MODE %s %s+",
-				    me.id, channel->name, isbounce ? "&" : "");
+				// FIXME: How is this POSSIBLY useful at all? and also, channel->creationtime is never 0 right?
+				sendto_server(client, 0, 0, NULL, ":%s MODE %s +",
+				    me.id, channel->name);
 			}
 			free_message_tags(mtags);
 			return; /* nothing to send */
@@ -491,9 +467,9 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 	if (IsServer(client) && sendts != -1)
 	{
 		sendto_server(client, 0, 0, mtags,
-		              ":%s MODE %s %s%s %s %lld",
+		              ":%s MODE %s %s %s %lld",
 		              client->id, channel->name,
-		              isbounce ? "&" : "", modebuf, parabuf,
+		              modebuf, parabuf,
 		              (long long)sendts);
 	} else
 	if (samode && IsMe(client))
@@ -501,12 +477,14 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 		/* SAMODE is a special case: always send a TS of 0 (omitting TS==desync) */
 		sendto_server(client, 0, 0, mtags,
 		              ":%s MODE %s %s %s 0",
-		              client->id, channel->name, modebuf, parabuf);
+		              client->id, channel->name,
+		              modebuf, parabuf);
 	} else
 	{
 		sendto_server(client, 0, 0, mtags,
-		              ":%s MODE %s %s%s %s",
-		              client->id, channel->name, isbounce ? "&" : "", modebuf, parabuf);
+		              ":%s MODE %s %s %s",
+		              client->id, channel->name,
+		              modebuf, parabuf);
 		/* tell them it's not a timestamp, in case the last param
 		   ** is a number. */
 	}
@@ -524,11 +502,10 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 /* make_mode_str -- written by binary
  *	Reconstructs the mode string, to make it look clean.  mode_buf will
  *  contain the +x-y stuff, and the parabuf will contain the parameters.
- *  If bounce is set to 1, it will make the string it needs for a bounce.
  */
 void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
-    size_t mode_buf_size, size_t para_buf_size, char bounce)
+    size_t mode_buf_size, size_t para_buf_size)
 {
 	char tmpbuf[MODEBUFLEN+3], *tmpstr;
 	CoreChannelModeTable *tab = &corechannelmodetable[0];
@@ -552,7 +529,7 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 			{
 				if (what != MODE_ADD)
 				{
-					*x++ = bounce ? '-' : '+';
+					*x++ = '+';
 					what = MODE_ADD;
 				}
 				*x++ = tab->flag;
@@ -572,7 +549,7 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 		{
 			if (what != MODE_ADD)
 			{
-				*x++ = bounce ? '-' : '+';
+				*x++ = '+';
 				what = MODE_ADD;
 			}
 			*x++ = Channelmode_Table[i].flag;
@@ -590,7 +567,7 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 			{
 				if (what != MODE_DEL)
 				{
-					*x++ = bounce ? '+' : '-';
+					*x++ = '-';
 					what = MODE_DEL;
 				}
 				*x++ = tab->flag;
@@ -612,7 +589,7 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 		{
 			if (what != MODE_DEL)
 			{
-				*x++ = bounce ? '+' : '-';
+				*x++ = '-';
 				what = MODE_DEL;
 			}
 			*x++ = Channelmode_Table[i].flag;
@@ -623,16 +600,13 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 	/* user limit */
 	if (channel->mode.limit != oldl)
 	{
-		if ((!bounce && channel->mode.limit == 0) ||
-		    (bounce && channel->mode.limit != 0))
+		if (channel->mode.limit == 0)
 		{
 			if (what != MODE_DEL)
 			{
 				*x++ = '-';
 				what = MODE_DEL;
 			}
-			if (bounce)
-				channel->mode.limit = 0;	/* set it back */
 			*x++ = 'l';
 		}
 		else
@@ -643,8 +617,6 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 				what = MODE_ADD;
 			}
 			*x++ = 'l';
-			if (bounce)
-				channel->mode.limit = oldl;	/* set it back */
 			ircsnprintf(para_buf, para_buf_size, "%s%d ", para_buf, channel->mode.limit);
 		}
 	}
@@ -653,12 +625,12 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 	{
 		if ((*(pvar[cnt]) == '+') && what != MODE_ADD)
 		{
-			*x++ = bounce ? '-' : '+';
+			*x++ = '+';
 			what = MODE_ADD;
 		}
 		if ((*(pvar[cnt]) == '-') && what != MODE_DEL)
 		{
-			*x++ = bounce ? '+' : '-';
+			*x++ = '-';
 			what = MODE_DEL;
 		}
 		*x++ = *(pvar[cnt] + 1);
@@ -675,11 +647,6 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 		*m++ = ' ';
 		*m = '\0';
 	}
-	if (bounce)
-	{
-		channel->mode.mode = oldm;
-		channel->mode.extmode = oldem;
-	}
 	z = strlen(para_buf);
 	if ((z > 0) && (para_buf[z - 1] == ' '))
 		para_buf[z - 1] = '\0';
@@ -694,7 +661,7 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 	return;
 }
 
-char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, int bounce, int extbtype, Ban **banlist)
+char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, int extbtype, Ban **banlist)
 {
 	char *tmpstr;
 	BanContext *b;
@@ -703,7 +670,7 @@ char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, 
 	if (BadPtr(tmpstr))
 	{
 		/* Invalid ban. See if we can send an error about that (only for extbans) */
-		if (MyUser(client) && !bounce && is_extended_ban(param))
+		if (MyUser(client) && is_extended_ban(param))
 		{
 			char *nextbanstr;
 			Extban *extban = findmod_by_bantype(param, &nextbanstr);
@@ -723,7 +690,7 @@ char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, 
 
 		return NULL;
 	}
-	if (MyUser(client) && !bounce && is_extended_ban(param))
+	if (MyUser(client) && is_extended_ban(param))
 	{
 		/* extban: check access if needed */
 		char *nextbanstr;
@@ -766,12 +733,8 @@ char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, 
 		}
 	}
 
-	/* For bounce, we don't really need to worry whether
-	 * or not it exists on our server.  We'll just always
-	 * bounce it. */
-	if (!bounce &&
-	    ((what == MODE_ADD && add_listmode(banlist, client, channel, tmpstr))
-	    || (what == MODE_DEL && del_listmode(banlist, channel, tmpstr))))
+	if ( (what == MODE_ADD && add_listmode(banlist, client, channel, tmpstr)) ||
+	     (what == MODE_DEL && del_listmode(banlist, channel, tmpstr)))
 	{
 		return NULL;	/* already exists */
 	}
@@ -797,7 +760,7 @@ char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, 
 int  do_mode_char(Channel *channel, long modetype, char modechar, char *param,
                   u_int what, Client *client,
                   u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
-                  char bounce, long my_access)
+                  long my_access)
 {
 	CoreChannelModeTable *tab = &corechannelmodetable[0];
 	int  retval = 0;
@@ -1029,14 +992,8 @@ process_listmode:
 				member->flags |= modetype;
 			else
 				member->flags &= ~modetype;
-			if ((tmp == member->flags) && (bounce || !IsULine(client)))
+			if ((tmp == member->flags) && !IsULine(client))
 				break;
-			/* It's easier to undo the mode here instead of later
-			 * when you call make_mode_str for a bounce string.
-			 * Why set it if it will be instantly removed?
-			 * Besides, pvar keeps a log of it. */
-			if (bounce)
-				member->flags = tmp;
 			if (modetype == MODE_CHANOWNER)
 				tc = 'q';
 			if (modetype == MODE_CHANADMIN)
@@ -1092,22 +1049,20 @@ process_listmode:
 				break;
 			if (what == MODE_ADD)
 			{
-				if (!bounce) {	/* don't do the mode at all. */
-					char *tmp;
-					if ((tmp = strchr(param, ' ')))
+				char *tmp;
+				if ((tmp = strchr(param, ' ')))
 					*tmp = '\0';
-					if ((tmp = strchr(param, ':')))
+				if ((tmp = strchr(param, ':')))
 					*tmp = '\0';
-					if ((tmp = strchr(param, ',')))
+				if ((tmp = strchr(param, ',')))
 					*tmp = '\0';
-					if (*param == '\0')
+				if (*param == '\0')
 					break;
-					if (strlen(param) > KEYLEN)
-						param[KEYLEN] = '\0';
-					if (!strcmp(channel->mode.key, param))
+				if (strlen(param) > KEYLEN)
+					param[KEYLEN] = '\0';
+				if (!strcmp(channel->mode.key, param))
 					break;
-					strlcpy(channel->mode.key, param, sizeof(channel->mode.key));
-				}
+				strlcpy(channel->mode.key, param, sizeof(channel->mode.key));
 				tmpstr = param;
 			}
 			else
@@ -1116,8 +1071,7 @@ process_listmode:
 					break;	/* no change */
 				strlcpy(tmpbuf, channel->mode.key, sizeof(tmpbuf));
 				tmpstr = tmpbuf;
-				if (!bounce)
-					strcpy(channel->mode.key, "");
+				strcpy(channel->mode.key, "");
 				RunHook2(HOOKTYPE_MODECHAR_DEL, channel, (int)modechar);
 			}
 			retval = 1;
@@ -1130,7 +1084,7 @@ process_listmode:
 
 		case MODE_BAN:
 			REQUIRE_PARAMETER()
-			if (!(tmpstr = mode_ban_handler(client, channel, param, what, bounce, EXBTYPE_BAN, &channel->banlist)))
+			if (!(tmpstr = mode_ban_handler(client, channel, param, what, EXBTYPE_BAN, &channel->banlist)))
 				break;
 			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
 			            "%cb%s",
@@ -1139,7 +1093,7 @@ process_listmode:
 			break;
 		case MODE_EXCEPT:
 			REQUIRE_PARAMETER()
-			if (!(tmpstr = mode_ban_handler(client, channel, param, what, bounce, EXBTYPE_EXCEPT, &channel->exlist)))
+			if (!(tmpstr = mode_ban_handler(client, channel, param, what, EXBTYPE_EXCEPT, &channel->exlist)))
 				break;
 			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
 			            "%ce%s",
@@ -1148,7 +1102,7 @@ process_listmode:
 			break;
 		case MODE_INVEX:
 			REQUIRE_PARAMETER()
-			if (!(tmpstr = mode_ban_handler(client, channel, param, what, bounce, EXBTYPE_INVEX, &channel->invexlist)))
+			if (!(tmpstr = mode_ban_handler(client, channel, param, what, EXBTYPE_INVEX, &channel->invexlist)))
 				break;
 			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
 			            "%cI%s",
@@ -1160,12 +1114,10 @@ process_listmode:
 }
 
 /** Check access and if granted, set the extended chanmode to the requested value in memory.
-  * note: if bounce is requested then the mode will not be set.
   * @returns amount of params eaten (0 or 1)
   */
 int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
-                    Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
-                    char bounce)
+                    Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
 {
 	int paracnt = (what == MODE_ADD) ? handler->paracount : 0;
 	char mode = handler->flag;
@@ -1262,9 +1214,6 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 		}
 	}
 
-	if (bounce) /* bounce here means: only check access and return return value */
-		return paracnt;
-
 	if (what == MODE_ADD)
 	{	/* + */
 		channel->mode.extmode |= handler->mode;
@@ -1356,7 +1305,7 @@ int paracount_for_chanmode(u_int what, char mode)
  *	written by binary
  */
 void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *pcount,
-               char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce)
+               char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
 {
 	char *curchr;
 	char *argument;
@@ -1493,18 +1442,18 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 				{
 					paracount += do_mode_char(channel, modetype, *curchr,
 								  argument, what, client, pcount,
-								  pvar, bounce, my_access);
+								  pvar, my_access);
 				}
 				else if (found == 2)
 				{
 					paracount += do_extmode_char(channel, &Channelmode_Table[extm], argument,
-								     what, client, pcount, pvar, bounce);
+								     what, client, pcount, pvar);
 				}
 				break;
 		} /* switch(*curchr) */
 	} /* for loop through mode letters */
 
-	make_mode_str(channel, oldm, oldem, oldl, *pcount, pvar, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), bounce);
+	make_mode_str(channel, oldm, oldem, oldl, *pcount, pvar, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
 
 #ifndef NO_OPEROVERRIDE
 	if ((htrig == 1) && IsUser(client))
