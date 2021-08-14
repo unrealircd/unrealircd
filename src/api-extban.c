@@ -56,7 +56,7 @@ Extban *findmod_by_bantype(char *str, char **remainder)
 
 	for (i=0; i <= ExtBan_highest; i++)
 	{
-		if (ExtBan_Table[i].letter == str[1])
+		if ((str[2] == ':') && (ExtBan_Table[i].letter == str[1]))
 			return &ExtBan_Table[i];
 		if (ExtBan_Table[i].name && !strncmp(ExtBan_Table[i].name, str+1, strlen(ExtBan_Table[i].name)))
 			return &ExtBan_Table[i];

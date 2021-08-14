@@ -372,9 +372,9 @@ char *extban_modeT_conv_param(BanContext *b, Extban *extban)
 
 	/* Rebuild the string.. can be cut off if too long. */
 #ifdef UHOSTFEATURE
-	snprintf(retbuf, sizeof(retbuf), "~T:%s:%s:%s", uhost, action, text);
+	snprintf(retbuf, sizeof(retbuf), "%s:%s:%s", uhost, action, text);
 #else
-	snprintf(retbuf, sizeof(retbuf), "~T:%s:%s", action, text);
+	snprintf(retbuf, sizeof(retbuf), "%s:%s", action, text);
 #endif
 	return retbuf;
 }
