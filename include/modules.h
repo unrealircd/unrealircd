@@ -375,6 +375,7 @@ typedef struct {
 	int what;		/**< MODE_ADD or MODE_DEL (for is_ok) */
 	int what2;		/**< EXBTYPE_BAN or EXBTYPE_EXCEPT (for is_ok) */
 	int is_ok_checktype;	/**< One of EXBCHK_* (for is_ok) */
+	int write_letter_bans;	/**< If set to 1 then we will always use letter extbans */
 } BanContext;
 
 typedef struct Extban Extban;

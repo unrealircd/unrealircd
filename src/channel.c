@@ -863,6 +863,9 @@ char *clean_ban_mask(char *mask, int what, Client *client)
 			b->client = client;
 			b->what = what;
 			b->banstr = nextbanstr;
+			/* Hmm.. i may regret this :D */
+			if (client == NULL)
+				b->write_letter_bans = 1;
 			ret = extban->conv_param(b, extban);
 			ret = prefix_with_extban(ret, b, extban, retbuf, sizeof(retbuf));
 			safe_free(b);
@@ -1255,6 +1258,7 @@ int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
 						strlcpy(pm->buf, start, sizeof(pm->buf));
 						pm->parabuf = pm->parabuf + strlen(pm->parabuf); /* point to \0 at end */
 					}
+					stripcrlf(pm->buf); /* needed for unreal_server_compat.c */
 					pm->param = pm->buf;
 				} else {
 					pm->modebuf++;
