@@ -148,11 +148,7 @@ char *generic_clean_ban_mask(BanContext *b, Extban *extban)
 			BanContext *b = safe_alloc(sizeof(BanContext));
 			b->banstr = nextbanstr;
 			ret = extban->conv_param(b, extban);
-			if (ret)
-			{
-				snprintf(retbuf, sizeof(retbuf), "~%c:%s", extban->letter, ret);
-				ret = retbuf;
-			}
+			ret = prefix_with_extban(ret, b, extban, retbuf, sizeof(retbuf));
 			safe_free(b);
 			return ret;
 		}

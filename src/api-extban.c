@@ -236,7 +236,6 @@ char *extban_conv_param_nuh(BanContext *b, Extban *extban)
 	if (!ret)
 		ret = make_nick_user_host(trim_str(cp,NICKLEN), trim_str(user,USERLEN), trim_str(host,HOSTLEN));
 
-	//ircsnprintf(retbuf, sizeof(retbuf), "~%c:%s", extban->letter, ret);
 	strlcpy(retbuf, ret, sizeof(retbuf));
 	return retbuf;
 }
@@ -318,21 +317,9 @@ char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 		extban_recursion++;
 		ret = extban->conv_param(b, extban);
 		extban_recursion--;
+		ret = prefix_with_extban(ret, b, extban, retbuf, sizeof(retbuf));
 		//safe_free(b);
-		if (ret)
-		{
-			/*
-			 * If bans are stacked, then we have to use two buffers
-			 * to prevent ircsnprintf() from going into a loop.
-			 */
-			ircsnprintf(printbuf, sizeof(printbuf), "~%c:%s", extban->letter, ret); /* Make sure our extban prefix sticks. */
-			memcpy(retbuf, printbuf, sizeof(retbuf));
-			return retbuf;
-		}
-		else
-		{
-			return NULL; /* Fail. */
-		}
+		return ret;
 	}
 	/* I honestly don't know what the deal is with the 80 char cap in clean_ban_mask is about. So I'm leaving it out here. -- aquanight */
 	/* I don't know why it's 80, but I like a limit anyway. A ban of 500 characters can never be good... -- Syzop */
@@ -342,4 +329,14 @@ char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 		return retbuf;
 	}
 	return b->banstr;
+}
+
+char *prefix_with_extban(char *remainder, BanContext *b, Extban *extban, char *buf, size_t buflen)
+{
+	/* Yes, we support this because it makes code at the caller cleaner */
+	if (remainder == NULL)
+		return NULL;
+
+	snprintf(buf, buflen, "~%c:%s", extban->letter, remainder);
+	return buf;
 }

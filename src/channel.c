@@ -864,11 +864,7 @@ char *clean_ban_mask(char *mask, int what, Client *client)
 			b->what = what;
 			b->banstr = nextbanstr;
 			ret = extban->conv_param(b, extban);
-			if (ret)
-			{
-				snprintf(retbuf, sizeof(retbuf), "~%c:%s", extban->letter, ret);
-				ret = retbuf;
-			}
+			ret = prefix_with_extban(ret, b, extban, retbuf, sizeof(retbuf));
 			safe_free(b);
 			return ret;
 		}
