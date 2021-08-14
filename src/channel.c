@@ -389,21 +389,16 @@ inline Ban *is_banned(Client *client, Channel *channel, int type, char **msg, ch
  */
 inline int ban_check_mask(BanContext *b)
 {
-	Extban *extban = NULL;
-
 	if (!b->no_extbans && is_extended_ban(b->banstr))
 	{
 		/* Is an extended ban. */
-		extban = findmod_by_bantype(b->banstr[1]);
+		char *nextbanstr;
+		Extban *extban = findmod_by_bantype(b->banstr, &nextbanstr);
 		if (!extban)
 		{
 			return 0;
 		} else {
-			char *p = strchr(b->banstr, ':');
-			if (!p)
-				return 0; /* faulty extban */
-			p++;
-			b->banstr = p;
+			b->banstr = nextbanstr;
 			return extban->is_banned(b);
 		}
 	}
@@ -804,7 +799,6 @@ char *clean_ban_mask(char *mask, int what, Client *client)
 	char *cp, *x;
 	char *user;
 	char *host;
-	Extban *p;
 	static char maskbuf[512];
 
 	/* Work on a copy */
@@ -828,6 +822,9 @@ char *clean_ban_mask(char *mask, int what, Client *client)
 	/* Extended ban? */
 	if (is_extended_ban(mask))
 	{
+		char *nextbanstr;
+		Extban *extban;
+
 		if (RESTRICT_EXTENDEDBANS && MyUser(client) && !ValidatePermissionsForPath("immune:restrict-extendedbans",client,NULL,NULL,NULL))
 		{
 			if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))
@@ -842,8 +839,9 @@ char *clean_ban_mask(char *mask, int what, Client *client)
 				return NULL;
 			}
 		}
-		p = findmod_by_bantype(mask[1]);
-		if (!p)
+
+		extban = findmod_by_bantype(mask, &nextbanstr);
+		if (!extban)
 		{
 			/* extended bantype not supported, what to do?
 			 * Here are the rules:
@@ -856,14 +854,21 @@ char *clean_ban_mask(char *mask, int what, Client *client)
 				return mask; /* allow it */
 			return NULL; /* reject */
 		}
-		if (p->conv_param)
+
+		if (extban->conv_param)
 		{
 			char *ret;
+			static char retbuf[512];
 			BanContext *b = safe_alloc(sizeof(BanContext));
 			b->client = client;
 			b->what = what;
-			b->banstr = mask;
-			ret = p->conv_param(b);
+			b->banstr = nextbanstr;
+			ret = extban->conv_param(b, extban);
+			if (ret)
+			{
+				snprintf(retbuf, sizeof(retbuf), "~%c:%s", extban->flag, ret);
+				ret = retbuf;
+			}
 			safe_free(b);
 			return ret;
 		}

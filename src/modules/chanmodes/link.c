@@ -55,7 +55,7 @@ int cmodeL_sjoin_check(Channel *channel, void *ourx, void *theirx);
 
 int extban_link_syntax(Client *client, int checkt, char *reason);
 int extban_link_is_ok(BanContext *b);
-char *extban_link_conv_param(BanContext *b);
+char *extban_link_conv_param(BanContext *b, Extban *extban);
 int extban_link_is_banned(BanContext *b);
 int link_doforward(Client *client, Channel *channel, char *linked, linkType linktype);
 int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[]);
@@ -256,7 +256,7 @@ int extban_link_is_ok(BanContext *b)
 	return 1; // Is ok
 }
 
-char *extban_link_conv_param(BanContext *b)
+char *extban_link_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[MAX_EB_LEN + 1];
 	char paramtmp[MAX_EB_LEN + 1];
@@ -265,7 +265,6 @@ char *extban_link_conv_param(BanContext *b)
 	char *newmask; // Cleaned matching method, such as 'n!u@h'
 	char *chan;
 
-	b->banstr += 3; // see also the reverse further down !!!!!!!! TODO!!
 	strlcpy(paramtmp, b->banstr, sizeof(paramtmp)); // Work on a size-truncated copy
 	chan = paramtmp;
 	matchby = strchr(paramtmp, ':');
@@ -276,15 +275,13 @@ char *extban_link_conv_param(BanContext *b)
 	if (!valid_channelname(chan))
 		return NULL;
 
-	// Possibly stack multiple extbans, this is a little convoluted due to extban API limitations
-	// TODO: this will be removed after += 3 is gone
-	snprintf(tmpmask, sizeof(tmpmask), "~?:%s", matchby);
-	b->banstr = tmpmask;
-	newmask = extban_conv_param_nuh_or_extban(b);
-	if (!newmask || (strlen(newmask) <= 3))
+	b->banstr = matchby;
+	newmask = extban_conv_param_nuh_or_extban(b, extban);
+	if (BadPtr(newmask))
 		return NULL;
 
-	snprintf(retbuf, sizeof(retbuf), "~f:%s:%s", chan, newmask + 3);
+	//snprintf(retbuf, sizeof(retbuf), "~f:%s:%s", chan, newmask); // wait.. isn't this double??? FIXME/TODO/VERIFY
+	snprintf(retbuf, sizeof(retbuf), "%s:%s", chan, newmask);
 	return retbuf;
 }
 

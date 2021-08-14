@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 int extban_inchannel_is_ok(BanContext *b);
-char *extban_inchannel_conv_param(BanContext *b);
+char *extban_inchannel_conv_param(BanContext *b, Extban *extban);
 int extban_inchannel_is_banned(BanContext *b);
 
 /** Called upon module init */
@@ -65,13 +65,13 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *extban_inchannel_conv_param(BanContext *b)
+char *extban_inchannel_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[CHANNELLEN+6];
 	char *chan, *p, symbol='\0';
 
 	strlcpy(retbuf, b->banstr, sizeof(retbuf));
-	chan = retbuf+3; // TODO: this is the ban += 3 trick that must be removed
+	chan = retbuf;
 
 	if ((*chan == '+') || (*chan == '%') || (*chan == '%') ||
 	    (*chan == '@') || (*chan == '&') || (*chan == '~'))

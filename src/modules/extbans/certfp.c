@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 int extban_certfp_is_ok(BanContext *b);
-char *extban_certfp_conv_param(BanContext *b);
+char *extban_certfp_conv_param(BanContext *b, Extban *extban);
 int extban_certfp_is_banned(BanContext *b);
 
 /* Called upon module init */
@@ -93,14 +93,14 @@ int extban_certfp_is_ok(BanContext *b)
 }
 
 /* Obtain targeted certfp from the ban string */
-char *extban_certfp_conv_param(BanContext *b)
+char *extban_certfp_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[EVP_MAX_MD_SIZE * 2 + 1];
 	char *p;
 	
 	strlcpy(retbuf, b->banstr, sizeof(retbuf));
 	
-	for (p = retbuf+3; *p; p++)
+	for (p = retbuf; *p; p++)
 	{
 		*p = tolower(*p);
 	}

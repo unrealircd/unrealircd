@@ -71,7 +71,7 @@ ModuleHeader MOD_HEADER
     };
 
 /* Forward declarations */
-char *extban_modeT_conv_param(BanContext *b);
+char *extban_modeT_conv_param(BanContext *b, Extban *extban);
 int textban_check_ban(Client *client, Channel *channel, char *ban, char **msg, char **errmsg);
 int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 int extban_modeT_is_banned(BanContext *b);
@@ -289,7 +289,7 @@ char *conv_pattern_asterisks(const char *pattern)
 }
 
 /** Ban callbacks */
-char *extban_modeT_conv_param(BanContext *b)
+char *extban_modeT_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[MAX_LENGTH+1];
 	char para[MAX_LENGTH+1], *action, *text, *p;
@@ -298,7 +298,7 @@ char *extban_modeT_conv_param(BanContext *b)
 	int ap = 0;
 #endif
 
-	strlcpy(para, b->banstr+3, sizeof(para)); /* work on a copy (and truncate it) */
+	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
 
 	/* ~T:<action>:<text>
 	 * ~T:user@host:<action>:<text> if UHOSTFEATURE is enabled

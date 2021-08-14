@@ -377,7 +377,9 @@ typedef struct {
 	int is_ok_checktype;	/**< One of EXBCHK_* (for is_ok) */
 } BanContext;
 
-typedef struct {
+typedef struct Extban Extban;
+
+struct Extban {
 	/** extbans module */
 	Module *owner;
 	/** extended ban character */
@@ -393,20 +395,20 @@ typedef struct {
 	 * you to limit the length of the ban too.
 	 * return value: pointer to output string (temp. storage)
 	 */
-	char *(*conv_param)(BanContext *b);
+	char *(*conv_param)(BanContext *b, Extban *handler);
 
 	/** Checks if the user is affected by this ban [required].
 	 * XXX FIXME: make this optional, as we have several functions who just return 0 atm (eg textban)
 	 * Called from is_banned.
 	 */
 	int (*is_banned)(BanContext *b);
-} Extban;
+};
 
 typedef struct {
 	char flag;
 	ExtbanOptions options;
 	int (*is_ok)(BanContext *b);
-	char *(*conv_param)(BanContext *b);
+	char *(*conv_param)(BanContext *b, Extban *handler);
 	int (*is_banned)(BanContext *b);
 } ExtbanInfo;
 

@@ -63,6 +63,7 @@ MOD_UNLOAD()
 void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 {
 	Extban *extban;
+	char *nextbanstr;
 	Ban *ban, *bnext;
 	Ban **banlist;
 	BanContext *b;
@@ -131,14 +132,11 @@ void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 			add_send_mode_param(channel, client, '-',  chmode, ban->banstr);
 			del_listmode(banlist, channel, ban->banstr);
 		}
-		else if (chmode != 'I' && *ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr[1])))
+		else if (chmode != 'I' && *ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr, &nextbanstr)))
 		{
 			if (extban->options & EXTBOPT_CHSVSMODE) 
 			{
-				char *p = strchr(ban->banstr, ':');
-				if (!p)
-					continue; /* faulty extban */
-				b->banstr = p+1;
+				b->banstr = nextbanstr;
 				if (extban->is_banned(b))
 				{
 					add_send_mode_param(channel, acptr, '-', chmode, ban->banstr);
@@ -174,7 +172,7 @@ void clear_bans(Client *client, Channel *channel, char chmode)
 	for (ban = *banlist; ban; ban = bnext)
 	{
 		bnext = ban->next;
-		if (chmode != 'I' && (*ban->banstr == '~') && (extban = findmod_by_bantype(ban->banstr[1])))
+		if (chmode != 'I' && (*ban->banstr == '~') && (extban = findmod_by_bantype(ban->banstr, NULL)))
 		{
 			if (!(extban->options & EXTBOPT_CHSVSMODE))							
 				continue;

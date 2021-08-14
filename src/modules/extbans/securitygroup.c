@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-char *extban_securitygroup_conv_param(BanContext *b);
+char *extban_securitygroup_conv_param(BanContext *b, Extban *extban);
 int extban_securitygroup_is_ok(BanContext *b);
 int extban_securitygroup_is_banned(BanContext *b);
 
@@ -115,12 +115,12 @@ int extban_securitygroup_is_ok(BanContext *b)
 }
 
 /** Security group extban - conv_param */
-char *extban_securitygroup_conv_param(BanContext *b)
+char *extban_securitygroup_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[SECURITYGROUPLEN + 8];
 
 	strlcpy(retbuf, b->banstr, sizeof(retbuf));
-	if (!extban_securitygroup_generic(retbuf+3, 0))
+	if (!extban_securitygroup_generic(retbuf, 0))
 		return NULL;
 
 	return retbuf;

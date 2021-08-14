@@ -40,12 +40,22 @@ void set_isupport_extban(void)
 	ISupportSetFmt(NULL, "EXTBAN", "~,%s", extbanstr);
 }
 
-Extban *findmod_by_bantype(char c)
+Extban *findmod_by_bantype(char *str, char **remainder)
 {
-int i;
+	int i;
+	char *p = strchr(str, ':');
+
+	if (!p || !p[1])
+	{
+		if (remainder)
+			*remainder = NULL;
+		return NULL;
+	}
+	if (remainder)
+		*remainder = p+1;
 
 	for (i=0; i <= ExtBan_highest; i++)
-		if (ExtBan_Table[i].flag == c)
+		if (ExtBan_Table[i].flag == str[1])
 			return &ExtBan_Table[i];
 
 	 return NULL;
@@ -55,17 +65,23 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 {
 	int slot;
 
-	if (findmod_by_bantype(req.flag))
+	for (slot=0; slot <= ExtBan_highest; slot++)
 	{
-		if (module)
-			module->errorcode = MODERR_EXISTS;
-		return NULL; 
+		if (ExtBan_Table[slot].flag == req.flag) // || name.. matches (TODO)
+		{
+			if (module)
+				module->errorcode = MODERR_EXISTS;
+			return NULL;
+		}
 	}
 
 	/* TODO: perhaps some sanity checking on a-zA-Z0-9? */
+
+	/* Find next available slot... */
 	for (slot = 0; slot < EXTBANTABLESZ; slot++)
 		if (ExtBan_Table[slot].flag == '\0')
 			break;
+
 	if (slot >= EXTBANTABLESZ - 1)
 	{
 		unreal_log(ULOG_ERROR, "module", "EXTBAN_OUT_OF_SPACE", NULL,
@@ -74,6 +90,7 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 			module->errorcode = MODERR_NOSPACE;
 		return NULL;
 	}
+
 	ExtBan_Table[slot].flag = req.flag;
 	ExtBan_Table[slot].is_ok = req.is_ok;
 	ExtBan_Table[slot].conv_param = req.conv_param;
@@ -126,13 +143,15 @@ void ExtbanDel(Extban *eb)
  */
 int extban_is_ok_nuh_extban(BanContext *b)
 {
-	Extban *p = NULL;
 	int isok;
 	static int extban_is_ok_recursion = 0;
 
 	/* Mostly copied from clean_ban_mask - but note MyUser checks aren't needed here: extban->is_ok() according to cmd_mode isn't called for nonlocal. */
 	if (is_extended_ban(b->banstr))
 	{
+		char *nextbanstr;
+		Extban *extban = NULL;
+
 		if (extban_is_ok_recursion)
 			return 0; /* Fail: more than one stacked extban */
 
@@ -147,8 +166,8 @@ int extban_is_ok_nuh_extban(BanContext *b)
 				return 0; /* Fail */
 			}
 		}
-		p = findmod_by_bantype(b->banstr[1]);
-		if (!p)
+		extban = findmod_by_bantype(b->banstr, &nextbanstr);
+		if (!extban)
 		{
 			if (b->what == MODE_DEL)
 			{
@@ -157,14 +176,11 @@ int extban_is_ok_nuh_extban(BanContext *b)
 			return 0; /* Don't add unknown extbans. */
 		}
 		/* Now we have to ask the stacked extban if it's ok. */
-		if (p->is_ok)
+		if (extban->is_ok)
 		{
-			b->banstr = strchr(b->banstr, ':');
-			if (!b->banstr)
-				return 0; /* faulty extban */
-			b->banstr++;
+			b->banstr = nextbanstr;
 			extban_is_ok_recursion++;
-			isok = p->is_ok(b);
+			isok = extban->is_ok(b);
 			extban_is_ok_recursion--;
 			return isok;
 		}
@@ -176,19 +192,15 @@ int extban_is_ok_nuh_extban(BanContext *b)
  * to ensure the parameter is nick!user@host.
  * most of the code is just copied from clean_ban_mask.
  */
-char *extban_conv_param_nuh(BanContext *b)
+char *extban_conv_param_nuh(BanContext *b, Extban *extban)
 {
 	char *cp, *user, *host, *mask, *ret = NULL;
 	static char retbuf[USERLEN + NICKLEN + HOSTLEN + 32];
 	char tmpbuf[USERLEN + NICKLEN + HOSTLEN + 32];
-	char pfix[8];
 
-	if (strlen(b->banstr)<3)
-		return NULL; /* normally impossible */
-
+	/* Work on a copy */
 	strlcpy(tmpbuf, b->banstr, sizeof(retbuf));
-	mask = tmpbuf + 3;
-	strlcpy(pfix, tmpbuf, mask - tmpbuf + 1);
+	mask = tmpbuf;
 
 	if (!*mask)
 		return NULL; /* empty extban */
@@ -207,13 +219,14 @@ char *extban_conv_param_nuh(BanContext *b)
 	if (!ret)
 		ret = make_nick_user_host(trim_str(cp,NICKLEN), trim_str(user,USERLEN), trim_str(host,HOSTLEN));
 
-	ircsnprintf(retbuf, sizeof(retbuf), "%s%s", pfix, ret);
+	//ircsnprintf(retbuf, sizeof(retbuf), "~%c:%s", extban->flag, ret);
+	strlcpy(retbuf, ret, sizeof(retbuf));
 	return retbuf;
 }
 
 /** conv_param to deal with stacked extbans.
  */
-char *extban_conv_param_nuh_or_extban(BanContext *b)
+char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 {
 #if (USERLEN + NICKLEN + HOSTLEN + 32) > 256
  #error "wtf?"
@@ -222,13 +235,13 @@ char *extban_conv_param_nuh_or_extban(BanContext *b)
 	static char printbuf[256];
 	char *mask;
 	char tmpbuf[USERLEN + NICKLEN + HOSTLEN + 32];
-	char bantype = b->banstr[1];
 	char *ret = NULL;
-	Extban *p = NULL;
+	char *nextbanstr;
+	Extban *extban = NULL;
 	static int extban_recursion = 0;
 
-	if ((strlen(b->banstr)<=3) || !is_extended_ban(b->banstr+3))
-		return extban_conv_param_nuh(b);
+	if (!is_extended_ban(b->banstr))
+		return extban_conv_param_nuh(b, self_extban);
 
 	/* We're dealing with a stacked extended ban.
 	 * Rules:
@@ -246,8 +259,13 @@ char *extban_conv_param_nuh_or_extban(BanContext *b)
 	if (extban_recursion)
 		return NULL;
 
+#if 0
+	// FIXME: FIX THIS AGAIN PLZZZZZZZZZZZZZZZZZZZZZZZ
+	// CURRENTLY CANNOT LOOKUP SELF!
+	// ACTUALLY WE CAN NOW WITH extban->flag.. but it is a char not a string ;)
+
 	/* Rule #2 */
-	p = findmod_by_bantype(b->banstr[1]);
+	extban = findmod_by_bantype(b->banstr, &nextbanstr);
 	if (p && !(p->options & EXTBOPT_ACTMODIFIER))
 	{
 		/* Rule #2 violation */
@@ -257,33 +275,40 @@ char *extban_conv_param_nuh_or_extban(BanContext *b)
 	strlcpy(tmpbuf, b->banstr, sizeof(tmpbuf));
 	mask = tmpbuf + 3;
 	/* Already did restrict-extended bans check. */
-	p = findmod_by_bantype(mask[1]);
-	if (!p)
+	extban = findmod_by_bantype(mask[1]);
+#else
+	strlcpy(tmpbuf, b->banstr, sizeof(tmpbuf));
+	extban = findmod_by_bantype(tmpbuf, &nextbanstr);
+#endif
+	if (!extban)
 	{
 		/* Handling unknown bantypes in is_ok. Assume that it's ok here. */
 		return b->banstr;
 	}
-	if ((p->options & EXTBOPT_ACTMODIFIER) || (p->options & EXTBOPT_NOSTACKCHILD))
+
+	b->banstr = nextbanstr;
+
+	if ((extban->options & EXTBOPT_ACTMODIFIER) || (extban->options & EXTBOPT_NOSTACKCHILD))
 	{
 		/* Rule #3 violation */
 		return NULL;
 	}
-	
-	if (p->conv_param)
+
+	if (extban->conv_param)
 	{
-		BanContext *b = safe_alloc(sizeof(BanContext));
-		b->banstr = mask;
+		//BanContext *b = safe_alloc(sizeof(BanContext));
+		//b->banstr = mask; <-- this is redundant right? we can use existing 'b' context??
 		extban_recursion++;
-		ret = p->conv_param(b);
+		ret = extban->conv_param(b, extban);
 		extban_recursion--;
-		safe_free(b);
+		//safe_free(b);
 		if (ret)
 		{
 			/*
 			 * If bans are stacked, then we have to use two buffers
 			 * to prevent ircsnprintf() from going into a loop.
 			 */
-			ircsnprintf(printbuf, sizeof(printbuf), "~%c:%s", bantype, ret); /* Make sure our extban prefix sticks. */
+			ircsnprintf(printbuf, sizeof(printbuf), "~%c:%s", extban->flag, ret); /* Make sure our extban prefix sticks. */
 			memcpy(retbuf, printbuf, sizeof(retbuf));
 			return retbuf;
 		}

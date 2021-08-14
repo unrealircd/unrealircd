@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-char *extban_account_conv_param(BanContext *b);
+char *extban_account_conv_param(BanContext *b, Extban *extban);
 int extban_account_is_banned(BanContext *b);
 
 /** Called upon module init */
@@ -65,14 +65,14 @@ MOD_UNLOAD()
 }
 
 /** Account bans */
-char *extban_account_conv_param(BanContext *b)
+char *extban_account_conv_param(BanContext *b, Extban *extban)
 {
 	char *mask, *acc;
 	static char retbuf[NICKLEN + 4];
 
 	strlcpy(retbuf, b->banstr, sizeof(retbuf)); /* truncate */
 
-	acc = retbuf+3;
+	acc = retbuf;
 	if (!*acc)
 		return NULL; /* don't allow "~a:" */
 

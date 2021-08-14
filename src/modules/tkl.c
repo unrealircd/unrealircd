@@ -611,10 +611,11 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 			if (is_extended_ban(buf))
 			{
 				char *str;
+				char *nextbanstr;
 				Extban *extban;
 				BanContext *b;
 				char buf2[BUFSIZE];
-				extban = findmod_by_bantype(buf[1]);
+				extban = findmod_by_bantype(buf, &nextbanstr);
 				if (!extban || !(extban->options & EXTBOPT_TKL))
 				{
 					config_warn("%s:%d: Invalid or unsupported extended server ban requested: %s",
@@ -623,8 +624,8 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 				}
 				/* is_ok() is not called, since there is no client, similar to like remote bans set */
 				b = safe_alloc(sizeof(BanContext));
-				b->banstr = buf;
-				str = extban->conv_param(b);
+				b->banstr = nextbanstr;
+				str = extban->conv_param(b, extban);
 				if (!str || (strlen(str) <= 4))
 				{
 					config_warn("%s:%d: Extended server ban has a problem: %s",
@@ -802,9 +803,10 @@ void config_create_tkl_except(char *mask, char *bantypes)
 	if (is_extended_ban(buf))
 	{
 		char *str;
+		char *nextbanstr;
 		Extban *extban;
 		BanContext *b;
-		extban = findmod_by_bantype(buf[1]);
+		extban = findmod_by_bantype(buf, &nextbanstr);
 		if (!extban || !(extban->options & EXTBOPT_TKL))
 		{
 			config_warn("Invalid or unsupported extended server ban exemption requested: %s", buf);
@@ -812,8 +814,8 @@ void config_create_tkl_except(char *mask, char *bantypes)
 		}
 		/* is_ok() is not called, since there is no client, similar to like remote bans set */
 		b = safe_alloc(sizeof(BanContext));
-		b->banstr = buf;
-		str = extban->conv_param(b);
+		b->banstr = nextbanstr;
+		str = extban->conv_param(b, extban);
 		if (!str || (strlen(str) <= 4))
 		{
 			config_warn("Extended server ban exemption has a problem: %s", buf);
@@ -1364,9 +1366,10 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 		{
 			/* Add */
 			char *str;
+			char *nextbanstr;
 			Extban *extban;
 			BanContext *b;
-			extban = findmod_by_bantype(mask[1]);
+			extban = findmod_by_bantype(mask, &nextbanstr);
 			if (!extban || !(extban->options & EXTBOPT_TKL))
 			{
 				sendnotice(client, "Invalid or unsupported extended server ban requested: %s", mask);
@@ -1375,7 +1378,7 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 			}
 			b = safe_alloc(sizeof(BanContext));
 			b->client = client;
-			b->banstr = mask;
+			b->banstr = nextbanstr;
 			b->is_ok_checktype = EXBCHK_PARAM;
 			b->what = MODE_ADD;
 			b->what2 = EXBTYPE_TKL;
@@ -1384,8 +1387,8 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 				safe_free(b);
 				return; /* rejected */
 			}
-			b->banstr = mask;
-			str = extban->conv_param(b);
+			b->banstr = nextbanstr;
+			str = extban->conv_param(b, extban);
 			if (!str || (strlen(str) <= 4))
 			{
 				safe_free(b);
@@ -1699,9 +1702,10 @@ CMD_FUNC(cmd_eline)
 		{
 			/* Add */
 			char *str;
+			char *nextbanstr;
 			Extban *extban;
 			BanContext *b;
-			extban = findmod_by_bantype(mask[1]);
+			extban = findmod_by_bantype(mask, &nextbanstr);
 			if (!extban || !(extban->options & EXTBOPT_TKL))
 			{
 				sendnotice(client, "Invalid or unsupported extended server ban requested: %s", mask);
@@ -1710,7 +1714,7 @@ CMD_FUNC(cmd_eline)
 			}
 			b = safe_alloc(sizeof(BanContext));
 			b->client = client;
-			b->banstr = mask;
+			b->banstr = nextbanstr;
 			b->is_ok_checktype = EXBCHK_PARAM;
 			b->what = MODE_ADD;
 			b->what2 = EXBTYPE_TKL;
@@ -1719,8 +1723,8 @@ CMD_FUNC(cmd_eline)
 				safe_free(b);
 				return; /* rejected */
 			}
-			b->banstr = mask;
-			str = extban->conv_param(b);
+			b->banstr = nextbanstr;
+			str = extban->conv_param(b, extban);
 			if (!str || (strlen(str) <= 4))
 			{
 				safe_free(b);
@@ -5121,6 +5125,7 @@ int _match_user(char *rmask, Client *client, int options)
 
 int _match_user_extended_server_ban(char *banstr, Client *client)
 {
+	char *nextbanstr;
 	Extban *extban;
 	BanContext *b;
 	int ret;
@@ -5128,18 +5133,13 @@ int _match_user_extended_server_ban(char *banstr, Client *client)
 	if (!is_extended_ban(banstr))
 		return 0; /* we should never have been called */
 
-	extban = findmod_by_bantype(banstr[1]);
+	extban = findmod_by_bantype(banstr, &nextbanstr);
 	if (!extban || !(extban->options & EXTBOPT_TKL))
 		return 0; /* extban not found or of incorrect type (eg ~T) */
 
-	banstr = strchr(banstr, ':');
-	if (!banstr)
-		return 0;
-	banstr++;
-
 	b = safe_alloc(sizeof(BanContext));
 	b->client = client;
-	b->banstr = banstr;
+	b->banstr = nextbanstr;
 	b->checktype = BANCHK_TKL;
 	ret = extban->is_banned(b);
 	safe_free(b);

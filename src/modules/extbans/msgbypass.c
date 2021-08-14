@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER
 int extban_msgbypass_is_banned(BanContext *b);
 int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageRestrictionType bypass_type);
 int msgbypass_extban_is_ok(BanContext *b);
-char *msgbypass_extban_conv_param(BanContext *b);
+char *msgbypass_extban_conv_param(BanContext *b, Extban *extban);
 
 /** Called upon module init */
 MOD_INIT()
@@ -131,7 +131,7 @@ int msgbypass_extban_type_ok(char *type)
 }
 
 #define MAX_LENGTH 128
-char *msgbypass_extban_conv_param(BanContext *b)
+char *msgbypass_extban_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[MAX_LENGTH+1];
 	char para[MAX_LENGTH+1];
@@ -140,7 +140,7 @@ char *msgbypass_extban_conv_param(BanContext *b)
 	char *matchby; /**< Matching method, such as 'n!u@h' */
 	char *newmask; /**< Cleaned matching method, such as 'n!u@h' */
 
-	strlcpy(para, b->banstr+3, sizeof(para)); /* work on a copy (and truncate it) */
+	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
 	
 	/* ~m:type:n!u@h   for direct matching
 	 * ~m:type:~x:.... when calling another bantype
@@ -155,17 +155,13 @@ char *msgbypass_extban_conv_param(BanContext *b)
 	if (!msgbypass_extban_type_ok(type))
 		return NULL;
 
-	/* This is quite silly, we have to create a fake extban here due to
-	 * the current API of extban_conv_param_nuh and extban_conv_param_nuh_or_extban
-	 * expecting the full banmask rather than the portion that actually matters.
-	 */
-	snprintf(tmpmask, sizeof(tmpmask), "~?:%s", matchby);
-	b->banstr = tmpmask; // TODO: this is ban += 3 like but the reverse, drop it later!
-	newmask = extban_conv_param_nuh_or_extban(b);
-	if (!newmask || (strlen(newmask) <= 3)) // this is a += 3 check as well?
+	b->banstr = matchby;
+	newmask = extban_conv_param_nuh_or_extban(b, extban);
+	if (BadPtr(newmask))
 		return NULL;
 
-	snprintf(retbuf, sizeof(retbuf), "~m:%s:%s", type, newmask+3);
+	//snprintf(retbuf, sizeof(retbuf), "~m:%s:%s", type, newmask);
+	snprintf(retbuf, sizeof(retbuf), "%s:%s", type, newmask);
 	return retbuf;
 }
 

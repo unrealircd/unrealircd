@@ -723,21 +723,14 @@ char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, 
 		/* Invalid ban. See if we can send an error about that (only for extbans) */
 		if (MyUser(client) && !bounce && is_extended_ban(param))
 		{
-			Extban *extban;
+			char *nextbanstr;
+			Extban *extban = findmod_by_bantype(param, &nextbanstr);
 			BanContext *b;
-			char *subparam;
-
-			extban = findmod_by_bantype(param[1]);
-
-			subparam = strchr(param, ':');
-			if (!subparam)
-				return NULL;
-			subparam++;
 
 			b = safe_alloc(sizeof(BanContext));
 			b->client = client;
 			b->channel = channel;
-			b->banstr = subparam;
+			b->banstr = nextbanstr;
 			b->is_ok_checktype = EXBCHK_PARAM;
 			b->what = what;
 			b->what2 = extbtype;
@@ -751,14 +744,10 @@ char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, 
 	if (MyUser(client) && !bounce && is_extended_ban(param))
 	{
 		/* extban: check access if needed */
-		Extban *extban = findmod_by_bantype(tmpstr[1]);
+		char *nextbanstr;
+		Extban *extban = findmod_by_bantype(tmpstr, &nextbanstr);
 		if (extban)
 		{
-			char *subparam = strchr(tmpstr, ':');
-			if (!subparam)
-				return NULL;
-			subparam++;
-
 			if ((extbtype == EXBTYPE_INVEX) && !(extban->options & EXTBOPT_INVEX))
 				return NULL; /* this extended ban type does not support INVEX */
 			if (extban->is_ok)
@@ -770,21 +759,21 @@ char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, 
 				b->what2 = extbtype;
 
 				b->is_ok_checktype = EXBCHK_ACCESS;
-				b->banstr = subparam;
+				b->banstr = nextbanstr;
 				if (!extban->is_ok(b))
 				{
 					if (ValidatePermissionsForPath("channel:override:mode:extban",client,NULL,channel,NULL))
 					{
 						/* TODO: send operoverride notice */
 					} else {
-						b->banstr = subparam;
+						b->banstr = nextbanstr;
 						b->is_ok_checktype = EXBCHK_ACCESS_ERR;
 						extban->is_ok(b);
 						safe_free(b);
 						return NULL;
 					}
 				}
-				b->banstr = subparam;
+				b->banstr = nextbanstr;
 				b->is_ok_checktype = EXBCHK_PARAM;
 				if (!extban->is_ok(b))
 				{

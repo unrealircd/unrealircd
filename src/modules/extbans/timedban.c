@@ -55,7 +55,7 @@ ModuleHeader MOD_HEADER
     };
 
 /* Forward declarations */
-char *timedban_extban_conv_param(BanContext *b);
+char *timedban_extban_conv_param(BanContext *b, Extban *extban);
 int timedban_extban_is_ok(BanContext *b);
 int timedban_is_banned(BanContext *b);
 void add_send_mode_param(Channel *channel, Client *from, char what, char mode, char *param);
@@ -106,16 +106,18 @@ MOD_UNLOAD()
 
 /** Generic helper for our conv_param extban function.
  * Mostly copied from clean_ban_mask()
+ * FIXME: Figure out why we have this one at all and not use conv_param? ;)
  */
-char *generic_clean_ban_mask(char *mask)
+char *generic_clean_ban_mask(BanContext *b, Extban *extban)
 {
 	char *cp, *x;
 	char *user;
 	char *host;
 	static char maskbuf[512];
+	char *mask;
 
 	/* Work on a copy */
-	strlcpy(maskbuf, mask, sizeof(maskbuf));
+	strlcpy(maskbuf, b->banstr, sizeof(maskbuf));
 	mask = maskbuf;
 
 	cp = strchr(mask, ' ');
@@ -135,15 +137,22 @@ char *generic_clean_ban_mask(char *mask)
 	/* Extended ban? */
 	if (is_extended_ban(mask))
 	{
-		Extban *extban = findmod_by_bantype(mask[1]);
+		char *nextbanstr;
+		Extban *extban = findmod_by_bantype(mask, &nextbanstr);
 		if (!extban)
 			return NULL; /* reject unknown extban */
 		if (extban->conv_param)
 		{
 			char *ret;
+			static char retbuf[512];
 			BanContext *b = safe_alloc(sizeof(BanContext));
-			b->banstr = mask;
-			ret = extban->conv_param(b);
+			b->banstr = nextbanstr;
+			ret = extban->conv_param(b, extban);
+			if (ret)
+			{
+				snprintf(retbuf, sizeof(retbuf), "~%c:%s", extban->flag, ret);
+				ret = retbuf;
+			}
 			safe_free(b);
 			return ret;
 		}
@@ -175,7 +184,7 @@ char *generic_clean_ban_mask(char *mask)
 }
 
 /** Convert ban to an acceptable format (or return NULL to fully reject it) */
-char *timedban_extban_conv_param(BanContext *b)
+char *timedban_extban_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[MAX_LENGTH+1];
 	char para[MAX_LENGTH+1];
@@ -189,7 +198,7 @@ char *timedban_extban_conv_param(BanContext *b)
 	if (timedban_extban_conv_param_recursion)
 		return NULL; /* reject: recursion detected! */
 
-	strlcpy(para, b->banstr+3, sizeof(para)); /* work on a copy (and truncate it) */
+	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
 	
 	/* ~t:duration:n!u@h   for direct matching
 	 * ~t:duration:~x:.... when calling another bantype
@@ -209,12 +218,14 @@ char *timedban_extban_conv_param(BanContext *b)
 	strlcpy(tmpmask, matchby, sizeof(tmpmask));
 	timedban_extban_conv_param_recursion++;
 	//newmask = extban_conv_param_nuh_or_extban(tmpmask);
-	newmask = generic_clean_ban_mask(tmpmask);
+	b->banstr = matchby; // this was previously 'tmpmask' but then it's a copy-copy-copy.. :D
+	newmask = generic_clean_ban_mask(b, extban);
 	timedban_extban_conv_param_recursion--;
 	if (!newmask || (strlen(newmask) <= 1))
 		return NULL;
 
-	snprintf(retbuf, sizeof(retbuf), "~t:%d:%s", duration, newmask);
+	//snprintf(retbuf, sizeof(retbuf), "~t:%d:%s", duration, newmask);
+	snprintf(retbuf, sizeof(retbuf), "%d:%s", duration, newmask);
 	return retbuf;
 }
 
@@ -237,6 +248,7 @@ int generic_ban_is_ok(BanContext *b)
 	if ((b->banstr[0] == '~') && MyUser(b->client))
 	{
 		Extban *extban;
+		char *nextbanstr;
 
 		/* This portion is copied from clean_ban_mask() */
 		if (is_extended_ban(b->banstr) && MyUser(b->client))
@@ -257,13 +269,10 @@ int generic_ban_is_ok(BanContext *b)
 				}
 			}
 			/* And next is inspired by cmd_mode */
-			extban = findmod_by_bantype(b->banstr[1]);
+			extban = findmod_by_bantype(b->banstr, &nextbanstr);
 			if (extban && extban->is_ok)
 			{
-				b->banstr = strchr(b->banstr, ':');
-				if (!b->banstr)
-					return 0; /* faulty extban */
-				b->banstr++;
+				b->banstr = nextbanstr;
 				if ((b->is_ok_checktype == EXBCHK_ACCESS) || (b->is_ok_checktype == EXBCHK_ACCESS_ERR))
 				{
 					if (!extban->is_ok(b) &&
