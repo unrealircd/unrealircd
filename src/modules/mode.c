@@ -724,6 +724,7 @@ char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, 
 					safe_free(b);
 					return NULL;
 				}
+				safe_free(b);
 			}
 		}
 	}
