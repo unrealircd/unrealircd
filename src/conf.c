@@ -1848,6 +1848,8 @@ void config_setdefaultsettings(Configuration *i)
 	i->hide_idle_time = HIDE_IDLE_TIME_OPER_USERMODE;
 
 	i->who_limit = 100;
+
+	i->named_extended_bans = 1;
 }
 
 /** Similar to config_setdefaultsettings but this one is applied *AFTER*
@@ -7406,6 +7408,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "restrict-extendedbans")) {
 			safe_strdup(tempiConf.restrict_extendedbans, cep->value);
 		}
+		else if (!strcmp(cep->name, "named-extended-bans")) {
+			tempiConf.named_extended_bans = config_checkval(cep->value, CFG_YESNO);
+		}
 		else if (!strcmp(cep->name, "anti-spam-quit-message-time")) {
 			tempiConf.anti_spam_quit_message_time = config_checkval(cep->value,CFG_TIME);
 		}
@@ -8271,6 +8276,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "restrict-extendedbans"))
 		{
 			CheckDuplicate(cep, restrict_extendedbans, "restrict-extendedbans");
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->name, "named-extended-bans"))
+		{
 			CheckNull(cep);
 		}
 		else if (!strcmp(cep->name, "link")) {

@@ -58,7 +58,7 @@ Extban *findmod_by_bantype(char *str, char **remainder)
 	{
 		if (ExtBan_Table[i].letter == str[1])
 			return &ExtBan_Table[i];
-		if (ExtBan_Table[i].name && !strncmp(ExtBan_Table[i].name, str+1, p-str-1))
+		if (ExtBan_Table[i].name && !strncmp(ExtBan_Table[i].name, str+1, strlen(ExtBan_Table[i].name)))
 			return &ExtBan_Table[i];
 	}
 
@@ -337,6 +337,10 @@ char *prefix_with_extban(char *remainder, BanContext *b, Extban *extban, char *b
 	if (remainder == NULL)
 		return NULL;
 
-	snprintf(buf, buflen, "~%c:%s", extban->letter, remainder);
+	if (iConf.named_extended_bans)
+		snprintf(buf, buflen, "~%s:%s", extban->name, remainder);
+	else
+		snprintf(buf, buflen, "~%c:%s", extban->letter, remainder);
+
 	return buf;
 }

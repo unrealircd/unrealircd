@@ -112,6 +112,7 @@ struct Configuration {
 	char *restrict_usermodes;
 	char *restrict_channelmodes;
 	char *restrict_extendedbans;
+	int named_extended_bans;
 	char *channel_command_prefix;
 	long handshake_data_flood_amount;
 	long handshake_data_flood_ban_time;
