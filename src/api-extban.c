@@ -337,7 +337,7 @@ char *prefix_with_extban(char *remainder, BanContext *b, Extban *extban, char *b
 	if (remainder == NULL)
 		return NULL;
 
-	if (iConf.named_extended_bans && !b->write_letter_bans)
+	if (iConf.named_extended_bans && !(b->conv_options & BCTX_CONV_OPTION_WRITE_LETTER_BANS))
 		snprintf(buf, buflen, "~%s:%s", extban->name, remainder);
 	else
 		snprintf(buf, buflen, "~%c:%s", extban->letter, remainder);

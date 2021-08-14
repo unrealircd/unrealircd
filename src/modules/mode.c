@@ -661,7 +661,7 @@ char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, 
 	char *tmpstr;
 	BanContext *b;
 
-	tmpstr = clean_ban_mask(param, what, client);
+	tmpstr = clean_ban_mask(param, what, client, 0);
 	if (BadPtr(tmpstr))
 	{
 		/* Invalid ban. See if we can send an error about that (only for extbans) */

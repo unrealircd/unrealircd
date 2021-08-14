@@ -354,6 +354,8 @@ typedef struct {
 #define EXBTYPE_INVEX		2 /* an invite exception */
 #define EXBTYPE_TKL		3 /* TKL or other generic matcher outside banning routines */
 
+#define BCTX_CONV_OPTION_WRITE_LETTER_BANS	1 /* Always write letter extbans in output of conv_param */
+
 #define EXTBANTABLESZ		32
 
 typedef enum ExtbanOptions {
@@ -375,7 +377,7 @@ typedef struct {
 	int what;		/**< MODE_ADD or MODE_DEL (for is_ok) */
 	int what2;		/**< EXBTYPE_BAN or EXBTYPE_EXCEPT (for is_ok) */
 	int is_ok_checktype;	/**< One of EXBCHK_* (for is_ok) */
-	int write_letter_bans;	/**< If set to 1 then we will always use letter extbans */
+	int conv_options;	/**< One of BCTX_CONV_OPTION_* (for conv_param) */
 } BanContext;
 
 typedef struct Extban Extban;

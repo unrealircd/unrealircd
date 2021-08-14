@@ -158,7 +158,7 @@ int usc_reparsemode(char **msg, char *p, int *length)
 
 		if ((pm.modechar == 'b') || (pm.modechar == 'e') || (pm.modechar == 'I'))
 		{
-			char *result = clean_ban_mask(pm.param, pm.what, NULL);
+			char *result = clean_ban_mask(pm.param, pm.what, &me, 1);
 			strlcat(obuf, result?result:"<invalid>", sizeof(obuf));
 			strlcat(obuf, " ", sizeof(obuf));
 		} else

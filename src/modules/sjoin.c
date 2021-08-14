@@ -570,7 +570,7 @@ getnick:
 				if ((nick[0] != '~') && (!strchr(nick, '!') || !strchr(nick, '@') || (nick[0] == '!')))
 					continue;
 				
-				str = clean_ban_mask(nick, MODE_ADD, client);
+				str = clean_ban_mask(nick, MODE_ADD, client, 0);
 				if (!str)
 					continue; /* invalid ban syntax */
 				strlcpy(nick, str, sizeof(nick));

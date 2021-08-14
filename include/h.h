@@ -815,7 +815,7 @@ extern int add_listmode(Ban **list, Client *cptr, Channel *channel, char *banid)
 extern int add_listmode_ex(Ban **list, Client *cptr, Channel *channel, char *banid, char *setby, time_t seton);
 extern int del_listmode(Ban **list, Channel *channel, char *banid);
 extern int Halfop_mode(long mode);
-extern char *clean_ban_mask(char *, int, Client *);
+extern char *clean_ban_mask(char *, int, Client *, int);
 extern int find_invex(Channel *channel, Client *client);
 extern void DoMD5(char *mdout, const char *src, unsigned long n);
 extern char *md5hash(char *dst, const char *src, unsigned long n);

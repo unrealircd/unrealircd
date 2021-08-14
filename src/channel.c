@@ -790,11 +790,12 @@ char *trim_str(char *str, int len)
  * @param mask		The ban mask
  * @param what		MODE_DEL or MODE_ADD
  * @param client	The client adding/removing this ban mask
+ * @param conv_options	Options for BanContext.conv_options (eg BCTX_CONV_OPTION_WRITE_LETTER_BANS)
  * @returns pointer to correct banmask or NULL in case of error
  * @note A pointer is returned to a static buffer, which is overwritten
  *       on next clean_ban_mask or make_nick_user_host call.
  */
-char *clean_ban_mask(char *mask, int what, Client *client)
+char *clean_ban_mask(char *mask, int what, Client *client, int conv_options)
 {
 	char *cp, *x;
 	char *user;
@@ -863,9 +864,7 @@ char *clean_ban_mask(char *mask, int what, Client *client)
 			b->client = client;
 			b->what = what;
 			b->banstr = nextbanstr;
-			/* Hmm.. i may regret this :D */
-			if (client == NULL)
-				b->write_letter_bans = 1;
+			b->conv_options = conv_options;
 			ret = extban->conv_param(b, extban);
 			ret = prefix_with_extban(ret, b, extban, retbuf, sizeof(retbuf));
 			safe_free(b);
