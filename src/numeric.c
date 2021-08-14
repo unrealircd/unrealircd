@@ -371,7 +371,7 @@ static char *replies[] = {
 /* 335    RPL_WHOISBOT */ "%s :is a \2Bot\2 on %s",
 /* 336    RPL_INVITELIST */ ":%s",
 /* 337    RPL_ENDOFINVITELIST */ ":End of /INVITE list.",
-/* 338 */ NULL, /* ircu, bahamut */
+/* 338    RPL_WHOISACTUALLY */ "%s %s@%s %s :is connecting from",
 /* 339 */ NULL, /* Used */
 /* 340    RPL_USERIP */ ":%s %s %s %s %s",
 /* 341    RPL_INVITING */ "%s %s",

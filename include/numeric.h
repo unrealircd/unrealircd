@@ -193,6 +193,7 @@
 
 #define RPL_INVITELIST       336
 #define RPL_ENDOFINVITELIST  337
+#define RPL_WHOISACTUALLY    338
 
 #define RPL_LISTSYNTAX       334
 #define RPL_WHOISBOT	     335

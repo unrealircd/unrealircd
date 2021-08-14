@@ -136,6 +136,12 @@ CMD_FUNC(cmd_whois)
 			}
 			if ((target == client) || IsOper(client))
 			{
+				/* Clients should prefer RPL_WHOISACTUALLY as it is easier to parse,
+				 * but we provide RPL_WHOISHOST (despite it being redundant)
+				 * for backward compatibility */
+				sendnumeric(client, RPL_WHOISACTUALLY, target->name,
+					(MyConnect(target) && strcmp(target->ident, "unknown")) ? target->ident : "*",
+					target->user->realhost, target->ip ? target->ip : "");
 				sendnumeric(client, RPL_WHOISHOST, target->name,
 					(MyConnect(target) && strcmp(target->ident, "unknown")) ? target->ident : "*",
 					target->user->realhost, target->ip ? target->ip : "");
