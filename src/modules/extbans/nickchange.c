@@ -35,7 +35,7 @@ MOD_INIT()
 {
 	ExtbanInfo req;
 	
-	req.flag = 'n';
+	req.letter = 'n';
 	req.is_ok = extban_is_ok_nuh_extban;
 	req.conv_param = extban_conv_param_nuh_or_extban;
 	req.is_banned = extban_nickchange_is_banned;

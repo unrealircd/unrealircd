@@ -37,7 +37,7 @@ MOD_INIT()
 {
 	ExtbanInfo req;
 	
-	req.flag = 'G';
+	req.letter = 'G';
 	req.conv_param = extban_securitygroup_conv_param;
 	req.is_ok = extban_securitygroup_is_ok;
 	req.is_banned = extban_securitygroup_is_banned;

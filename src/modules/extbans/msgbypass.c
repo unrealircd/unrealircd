@@ -38,7 +38,7 @@ MOD_INIT()
 {
 	ExtbanInfo req;
 	
-	req.flag = 'm';
+	req.letter = 'm';
 	req.is_ok = msgbypass_extban_is_ok;
 	req.conv_param = msgbypass_extban_conv_param;
 	req.is_banned = extban_msgbypass_is_banned;

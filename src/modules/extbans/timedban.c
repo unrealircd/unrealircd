@@ -70,12 +70,12 @@ MOD_TEST()
 
 MOD_INIT()
 {
-ExtbanInfo extban;
+	ExtbanInfo extban;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	memset(&extban, 0, sizeof(ExtbanInfo));
-	extban.flag = 't';
+	extban.letter = 't';
 	extban.options |= EXTBOPT_ACTMODIFIER; /* not really, but ours shouldn't be stacked from group 1 */
 	extban.options |= EXTBOPT_CHSVSMODE; /* so "SVSMODE -nick" will unset affected ~t extbans */
 	extban.options |= EXTBOPT_INVEX; /* also permit timed invite-only exceptions (+I) */
@@ -150,7 +150,7 @@ char *generic_clean_ban_mask(BanContext *b, Extban *extban)
 			ret = extban->conv_param(b, extban);
 			if (ret)
 			{
-				snprintf(retbuf, sizeof(retbuf), "~%c:%s", extban->flag, ret);
+				snprintf(retbuf, sizeof(retbuf), "~%c:%s", extban->letter, ret);
 				ret = retbuf;
 			}
 			safe_free(b);

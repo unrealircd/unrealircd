@@ -33,8 +33,8 @@ void set_isupport_extban(void)
 	m = extbanstr;
 	for (i = 0; i <= ExtBan_highest; i++)
 	{
-		if (ExtBan_Table[i].flag)
-			*m++ = ExtBan_Table[i].flag;
+		if (ExtBan_Table[i].letter)
+			*m++ = ExtBan_Table[i].letter;
 	}
 	*m = 0;
 	ISupportSetFmt(NULL, "EXTBAN", "~,%s", extbanstr);
@@ -55,7 +55,7 @@ Extban *findmod_by_bantype(char *str, char **remainder)
 		*remainder = p+1;
 
 	for (i=0; i <= ExtBan_highest; i++)
-		if (ExtBan_Table[i].flag == str[1])
+		if (ExtBan_Table[i].letter == str[1])
 			return &ExtBan_Table[i];
 
 	 return NULL;
@@ -67,7 +67,7 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 
 	for (slot=0; slot <= ExtBan_highest; slot++)
 	{
-		if (ExtBan_Table[slot].flag == req.flag) // || name.. matches (TODO)
+		if (ExtBan_Table[slot].letter == req.letter) // || name.. matches (TODO)
 		{
 			if (module)
 				module->errorcode = MODERR_EXISTS;
@@ -79,7 +79,7 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 
 	/* Find next available slot... */
 	for (slot = 0; slot < EXTBANTABLESZ; slot++)
-		if (ExtBan_Table[slot].flag == '\0')
+		if (ExtBan_Table[slot].letter == '\0')
 			break;
 
 	if (slot >= EXTBANTABLESZ - 1)
@@ -91,7 +91,7 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 		return NULL;
 	}
 
-	ExtBan_Table[slot].flag = req.flag;
+	ExtBan_Table[slot].letter = req.letter;
 	ExtBan_Table[slot].is_ok = req.is_ok;
 	ExtBan_Table[slot].conv_param = req.conv_param;
 	ExtBan_Table[slot].is_banned = req.is_banned;
@@ -219,7 +219,7 @@ char *extban_conv_param_nuh(BanContext *b, Extban *extban)
 	if (!ret)
 		ret = make_nick_user_host(trim_str(cp,NICKLEN), trim_str(user,USERLEN), trim_str(host,HOSTLEN));
 
-	//ircsnprintf(retbuf, sizeof(retbuf), "~%c:%s", extban->flag, ret);
+	//ircsnprintf(retbuf, sizeof(retbuf), "~%c:%s", extban->letter, ret);
 	strlcpy(retbuf, ret, sizeof(retbuf));
 	return retbuf;
 }
@@ -248,7 +248,7 @@ char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 	 * 1) You can only stack once, so: ~x:~y:something and not ~x:~y:~z...
 	 * 2) The first item must be an action modifier, such as ~q/~n/~j
 	 * 3) The second item may never be an action modifier, nor have the
-	 *    EXTBOPT_NOSTACKCHILD flag set (for things like a textban).
+	 *    EXTBOPT_NOSTACKCHILD letter set (for things like a textban).
 	 */
 	 
 	/* Rule #1. Yes the recursion check is also in extban_is_ok_nuh_extban,
@@ -262,7 +262,7 @@ char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 #if 0
 	// FIXME: FIX THIS AGAIN PLZZZZZZZZZZZZZZZZZZZZZZZ
 	// CURRENTLY CANNOT LOOKUP SELF!
-	// ACTUALLY WE CAN NOW WITH extban->flag.. but it is a char not a string ;)
+	// ACTUALLY WE CAN NOW WITH extban->letter.. but it is a char not a string ;)
 
 	/* Rule #2 */
 	extban = findmod_by_bantype(b->banstr, &nextbanstr);
@@ -308,7 +308,7 @@ char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 			 * If bans are stacked, then we have to use two buffers
 			 * to prevent ircsnprintf() from going into a loop.
 			 */
-			ircsnprintf(printbuf, sizeof(printbuf), "~%c:%s", extban->flag, ret); /* Make sure our extban prefix sticks. */
+			ircsnprintf(printbuf, sizeof(printbuf), "~%c:%s", extban->letter, ret); /* Make sure our extban prefix sticks. */
 			memcpy(retbuf, printbuf, sizeof(retbuf));
 			return retbuf;
 		}

@@ -81,7 +81,7 @@ MOD_INIT()
 	CmodeAdd(modinfo->handle, req, &EXTMODE_LINK);
 
 	memset(&req_extban, 0, sizeof(ExtbanInfo));
-	req_extban.flag = 'f';
+	req_extban.letter = 'f';
 	req_extban.is_ok = extban_link_is_ok;
 	req_extban.conv_param = extban_link_conv_param;
 	req_extban.is_banned = extban_link_is_banned;

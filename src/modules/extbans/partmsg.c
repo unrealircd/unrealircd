@@ -34,7 +34,7 @@ MOD_INIT()
 {
 	ExtbanInfo req;
 
-	req.flag = 'p';
+	req.letter = 'p';
 	req.is_ok = extban_is_ok_nuh_extban;
 	req.conv_param = extban_conv_param_nuh_or_extban;
 	req.options = EXTBOPT_ACTMODIFIER;

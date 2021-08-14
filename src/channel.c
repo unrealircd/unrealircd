@@ -866,7 +866,7 @@ char *clean_ban_mask(char *mask, int what, Client *client)
 			ret = extban->conv_param(b, extban);
 			if (ret)
 			{
-				snprintf(retbuf, sizeof(retbuf), "~%c:%s", extban->flag, ret);
+				snprintf(retbuf, sizeof(retbuf), "~%c:%s", extban->letter, ret);
 				ret = retbuf;
 			}
 			safe_free(b);
