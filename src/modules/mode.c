@@ -238,8 +238,7 @@ CMD_FUNC(cmd_mode)
 	}
 
 	if (IsServer(client) && (sendts = atol(parv[parc - 1])) &&
-	    !IsULine(client) && channel->creationtime &&
-	    sendts > channel->creationtime)
+	    !IsULine(client) && (sendts > channel->creationtime))
 	{
 		unreal_log(ULOG_INFO, "mode", "MODE_TS_IGNORED", client,
 		           "MODE change ignored for $channel from $client: "
@@ -390,7 +389,7 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 			} else
 			if (sendts < channel->creationtime)
 			{
-				/* Our timestamp is wrong (or this is a new channel) */
+				/* Our timestamp is wrong or this is a new channel */
 				tschange = 1;
 				channel->creationtime = sendts;
 
@@ -403,28 +402,25 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 				    channel->name, (long long)channel->creationtime);
 			}
 		}
-		if (sendts == -1 && channel->creationtime)
+		if (sendts == -1)
 			sendts = channel->creationtime;
 	}
 
-	if (*modebuf == '\0' || (*(modebuf + 1) == '\0' && (*modebuf == '+' || *modebuf == '-')))
+	/* Empty mode but a TS change? */
+	if (tschange && (*modebuf == '\0' || (*(modebuf + 1) == '\0' && (*modebuf == '+' || *modebuf == '-'))))
 	{
-		if (tschange)
-		{
-			/* relay bounce time changes */
-			if (channel->creationtime)
-			{
-				sendto_server(client, 0, 0, NULL, ":%s MODE %s + %lld",
-				    me.id, channel->name,
-				    (long long)channel->creationtime);
-			} else {
-				// FIXME: How is this POSSIBLY useful at all? and also, channel->creationtime is never 0 right?
-				sendto_server(client, 0, 0, NULL, ":%s MODE %s +",
-				    me.id, channel->name);
-			}
-			free_message_tags(mtags);
-			return; /* nothing to send */
-		}
+		/* Message from the other server is an empty mode, BUT they
+		 * did change the channel->creationtime to an earlier TS
+		 * (see above "Our timestamp is wrong or this is a new channel").
+		 * We need to relay this MODE message to all other servers
+		 * (all except from where it came from, client).
+		 */
+		sendto_server(client, 0, 0, NULL, ":%s MODE %s + %lld",
+		    me.id, channel->name,
+		    (long long)channel->creationtime);
+		free_message_tags(mtags);
+		/* Return here, as there isn't anything else to send */
+		return;
 	}
 
 	/* opermode for twimodesystem --sts */
