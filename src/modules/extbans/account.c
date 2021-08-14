@@ -38,6 +38,7 @@ MOD_INIT()
 	
 	memset(&req, 0, sizeof(req));
 	req.letter = 'a';
+	req.name = "account";
 	req.is_ok = NULL;
 	req.conv_param = extban_account_conv_param;
 	req.is_banned = extban_account_is_banned;

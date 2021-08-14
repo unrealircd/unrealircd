@@ -40,6 +40,7 @@ MOD_INIT()
 	
 	memset(&req, 0, sizeof(req));
 	req.letter = 'm';
+	req.name = "msgbypass";
 	req.is_ok = msgbypass_extban_is_ok;
 	req.conv_param = msgbypass_extban_conv_param;
 	req.is_banned = extban_msgbypass_is_banned;

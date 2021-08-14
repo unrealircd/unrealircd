@@ -39,6 +39,7 @@ MOD_INIT()
 	
 	memset(&req, 0, sizeof(req));
 	req.letter = 'S';
+	req.name = "certfp";
 	req.is_ok = extban_certfp_is_ok;
 	req.conv_param = extban_certfp_conv_param;
 	req.is_banned = extban_certfp_is_banned;

@@ -69,14 +69,14 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 {
 	int slot;
 
-	/* FIXME: FOR TESTING ONLY !!! */
 	if (!req.name)
 	{
-		char *p;
-		req.name = module->header->name;
-		p = strrchr(req.name, '/');
-		if (p)
-			req.name = p+1;
+		if (module)
+			module->errorcode = MODERR_INVALID;
+		unreal_log(ULOG_ERROR, "module", "EXTBANADD_API_ERROR", NULL,
+			   "ExtbanAdd(): name must be specified for ban (new in U6). Module: $module_name",
+			   log_data_string("module_name", module->header->name));
+		return NULL;
 	}
 
 	for (slot=0; slot <= ExtBan_highest; slot++)

@@ -39,6 +39,7 @@ MOD_INIT()
 	
 	memset(&req, 0, sizeof(req));
 	req.letter = 'c';
+	req.name = "channel";
 	req.is_ok = extban_inchannel_is_ok;
 	req.conv_param = extban_inchannel_conv_param;
 	req.is_banned = extban_inchannel_is_banned;

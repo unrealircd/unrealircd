@@ -39,6 +39,7 @@ MOD_INIT()
 
 	memset(&req, 0, sizeof(req));
 	req.letter = 'G';
+	req.name = "security-group";
 	req.conv_param = extban_securitygroup_conv_param;
 	req.is_ok = extban_securitygroup_is_ok;
 	req.is_banned = extban_securitygroup_is_banned;

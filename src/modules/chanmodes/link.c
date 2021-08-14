@@ -82,6 +82,7 @@ MOD_INIT()
 
 	memset(&req_extban, 0, sizeof(ExtbanInfo));
 	req_extban.letter = 'f';
+	req_extban.name = "forward";
 	req_extban.is_ok = extban_link_is_ok;
 	req_extban.conv_param = extban_link_conv_param;
 	req_extban.is_banned = extban_link_is_banned;

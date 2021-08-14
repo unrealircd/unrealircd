@@ -38,6 +38,7 @@ MOD_INIT()
 	
 	memset(&req, 0, sizeof(req));
 	req.letter = 'O';
+	req.name = "operclass";
 	req.is_ok = NULL;
 	req.conv_param = extban_operclass_conv_param;
 	req.is_banned = extban_operclass_is_banned;
