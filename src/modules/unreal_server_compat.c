@@ -3,8 +3,8 @@
  * (C) Copyright 2016-2021 Bram Matthys (Syzop)
  * License: GPLv2
  *
- * Currently the only purpose of this module is to rewrite
- * MODE lines to older servers so any bans/exempts/invex
+ * Currently the only purpose of this module is to rewrite MODE
+ * and SJOIN lines to older servers so any bans/exempts/invex
  * will show up with their single letter syntax,
  * eg "MODE #test +b ~account:someacc" will be rewritten
  * as "MODE #test +b ~a:someacc".
@@ -18,6 +18,10 @@
  * code, so I don't want that.
  * With this we can just rip out the module at some point
  * that we no longer want to support pre-U6 protocol.
+ * For SJOIN we do something similar, though in that case
+ * it would have been quite doable to handle it in there.
+ * Just figured I would stuff it in here as well, since
+ * it is basically the same case.
  * -- Syzop
  */
 
@@ -34,7 +38,8 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 int usc_packet(Client *from, Client *to, Client *intended_to, char **msg, int *length);
-int usc_reparsemode(char **msg, char *p, int *length);
+int usc_reparse_mode(char **msg, char *p, int *length);
+int usc_reparse_sjoin(char **msg, char *p, int *length);
 void skip_spaces(char **p);
 void read_until_space(char **p);
 int eat_parameter(char **p);
@@ -97,22 +102,30 @@ int usc_packet(Client *from, Client *to, Client *intended_to, char **msg, int *l
 	if (*p == '\0')
 		return 0;
 
-	if (!strncmp(p, "MODE ", 5))
+	if (!strncmp(p, "MODE ", 5)) /* MODE #channel */
 	{
-		read_until_space(&p);
-		skip_spaces(&p);
-		if (*p == '\0')
-			return 0; /* unexpected */
+		if (!eat_parameter(&p))
+			return 0;
 		/* p now points to #channel */
 
 		/* Now it gets interesting... we have to re-parse and re-write the entire MODE line. */
-		return usc_reparsemode(msg, p, length);
+		return usc_reparse_mode(msg, p, length);
+	}
+
+	if (!strncmp(p, "SJOIN ", 6)) /* SJOIN timestamp #channel */
+	{
+		if (!eat_parameter(&p) || !eat_parameter(&p))
+			return 0;
+		/* p now points to #channel */
+
+		/* Now it gets interesting... we have to re-parse and re-write the entire SJOIN line. */
+		return usc_reparse_sjoin(msg, p, length);
 	}
 
 	return 0;
 }
 
-int usc_reparsemode(char **msg, char *p, int *length)
+int usc_reparse_mode(char **msg, char *p, int *length)
 {
 	static char obuf[8192];
 	char modebuf[512], *mode_buf_p, *para_buf_p;
@@ -130,7 +143,7 @@ int usc_reparsemode(char **msg, char *p, int *length)
 	if (!eat_parameter(&p))
 		return 0;
 	*modebuf = '\0';
-	strlncat(modebuf, mode_buf_p, sizeof(modebuf), p - mode_buf_p); // FIXME: verify that length calculation (last arg) is correct and doesnt need +1 or -1 etc.
+	strlncat(modebuf, mode_buf_p, sizeof(modebuf), p - mode_buf_p);
 
 	/* If we get here then it is (for example) a
 	 * MODE #channel +b nick!user@host
@@ -146,7 +159,7 @@ int usc_reparsemode(char **msg, char *p, int *length)
 
 	/* Fill 'obuf' with that 'header' */
 	*obuf = '\0'; // we should really get strlncpy ;D
-	strlncat(obuf, *msg, sizeof(obuf), p - *msg); // FIXME: verify that p-msg is correct and should not be -1 or +1 or anything :D
+	strlncat(obuf, *msg, sizeof(obuf), p - *msg);
 	para_buf_p = p;
 
 	/* Now parse the modes */
@@ -189,6 +202,66 @@ int usc_reparsemode(char **msg, char *p, int *length)
 		strlcat(obuf, "\r\n", sizeof(obuf));
 
 	/* Line modified, use it! */
+	*msg = obuf;
+	*length = strlen(obuf);
+
+	return 0;
+}
+
+int usc_reparse_sjoin(char **msg, char *p, int *length)
+{
+	static char obuf[8192];
+	char parabuf[512];
+	char *save = NULL;
+	char *s;
+
+	/* Skip right to the last parameter, the only one we care about */
+	p = strstr(p, " :");
+	if (!p)
+		return 0;
+	p += 2;
+
+	/* Save everything before p, put it in obuf... */
+
+	/* Fill 'obuf' with that 'header' */
+	*obuf = '\0'; // we should really get strlncpy ;D
+	strlncat(obuf, *msg, sizeof(obuf), p - *msg);
+
+	/* Put parameters in parabuf so we can trash it :D */
+	strlcpy(parabuf, p, sizeof(parabuf));
+
+	/* Now parse the SJOIN */
+	for (s = strtoken(&save, parabuf, " "); s; s = strtoken(&save, NULL, " "))
+	{
+		if (strchr("&\"\\", *s))
+		{
+			/* +b / +e / +I */
+			char *result = clean_ban_mask(s+1, MODE_ADD, &me, 1);
+			if (!result)
+			{
+				unreal_log(ULOG_WARNING, "unreal_server_compat", "USC_REPARSE_SJOIN_FAILURE", NULL,
+				           "[unreal_server_compat] usc_reparse_sjoin(): ban '$ban' could not be converted",
+				           log_data_string("ban", s+1));
+				continue;
+			}
+			strlncat(obuf, s, sizeof(obuf), 1);
+			strlcat(obuf, result, sizeof(obuf));
+			strlcat(obuf, " ", sizeof(obuf));
+		} else {
+			strlcat(obuf, s, sizeof(obuf));
+			strlcat(obuf, " ", sizeof(obuf));
+		}
+	}
+
+	/* Strip final whitespace */
+	if (obuf[strlen(obuf)-1] == ' ')
+		obuf[strlen(obuf)-1] = '\0';
+
+	/* Add CRLF */
+	if (obuf[strlen(obuf)-1] != '\n')
+		strlcat(obuf, "\r\n", sizeof(obuf));
+
+	/* And use it! */
 	*msg = obuf;
 	*length = strlen(obuf);
 
