@@ -134,7 +134,7 @@ void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 		}
 		else if (chmode != 'I' && *ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr, &nextbanstr)))
 		{
-			if (extban->options & EXTBOPT_CHSVSMODE) 
+			if ((extban->options & EXTBOPT_CHSVSMODE) && (extban->is_banned_events & b->checktype))
 			{
 				b->banstr = nextbanstr;
 				if (extban->is_banned(b))

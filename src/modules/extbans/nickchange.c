@@ -41,6 +41,7 @@ MOD_INIT()
 	req.is_ok = extban_is_ok_nuh_extban;
 	req.conv_param = extban_conv_param_nuh_or_extban;
 	req.is_banned = extban_nickchange_is_banned;
+	req.is_banned_events = BANCHK_NICK;
 	req.options = EXTBOPT_ACTMODIFIER;
 	if (!ExtbanAdd(modinfo->handle, req))
 	{
@@ -68,9 +69,6 @@ MOD_UNLOAD()
 /** This ban that affects nick-changes only */
 int extban_nickchange_is_banned(BanContext *b)
 {
-	if (b->checktype != BANCHK_NICK)
-		return 0;
-
 	if (has_voice(b->client, b->channel))
 		return 0;
 

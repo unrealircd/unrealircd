@@ -83,6 +83,7 @@ MOD_INIT()
 	extban.conv_param = timedban_extban_conv_param;
 	extban.is_ok = timedban_extban_is_ok;
 	extban.is_banned = timedban_is_banned;
+	extban.is_banned_events = BANCHK_ALL;
 
 	if (!ExtbanAdd(modinfo->handle, extban))
 	{

@@ -28,7 +28,6 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-int extban_msgbypass_is_banned(BanContext *b);
 int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageRestrictionType bypass_type);
 int msgbypass_extban_is_ok(BanContext *b);
 char *msgbypass_extban_conv_param(BanContext *b, Extban *extban);
@@ -43,7 +42,6 @@ MOD_INIT()
 	req.name = "msgbypass";
 	req.is_ok = msgbypass_extban_is_ok;
 	req.conv_param = msgbypass_extban_conv_param;
-	req.is_banned = extban_msgbypass_is_banned;
 	req.options = EXTBOPT_ACTMODIFIER;
 	if (!ExtbanAdd(modinfo->handle, req))
 	{
@@ -67,12 +65,6 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
-}
-
-/** Is the user banned? No, never by us anyway. */
-int extban_msgbypass_is_banned(BanContext *b)
-{
-	return 0; /* not banned by us */
 }
 
 /** Can the user bypass restrictions? */

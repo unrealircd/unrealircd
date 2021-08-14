@@ -79,6 +79,17 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 		return NULL;
 	}
 
+	if (!req.is_banned_events && req.is_banned)
+	{
+		if (module)
+			module->errorcode = MODERR_INVALID;
+		unreal_log(ULOG_ERROR, "module", "EXTBANADD_API_ERROR", NULL,
+			   "ExtbanAdd(): module must indicate via .is_banned_events on which BANCHK_* "
+			   "events to listen on (new in U6). Module: $module_name",
+			   log_data_string("module_name", module->header->name));
+		return NULL;
+	}
+
 	for (slot=0; slot <= ExtBan_highest; slot++)
 	{
 		if ((ExtBan_Table[slot].letter == req.letter) ||
@@ -111,6 +122,7 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 	ExtBan_Table[slot].is_ok = req.is_ok;
 	ExtBan_Table[slot].conv_param = req.conv_param;
 	ExtBan_Table[slot].is_banned = req.is_banned;
+	ExtBan_Table[slot].is_banned_events = req.is_banned_events;
 	ExtBan_Table[slot].owner = module;
 	ExtBan_Table[slot].options = req.options;
 	if (module)

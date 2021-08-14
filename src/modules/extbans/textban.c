@@ -74,7 +74,6 @@ ModuleHeader MOD_HEADER
 char *extban_modeT_conv_param(BanContext *b, Extban *extban);
 int textban_check_ban(Client *client, Channel *channel, char *ban, char **msg, char **errmsg);
 int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
-int extban_modeT_is_banned(BanContext *b);
 int extban_modeT_is_ok(BanContext *b);
 void parse_word(const char *s, char **word, int *type);
 
@@ -89,7 +88,6 @@ MOD_INIT()
 	req.name = "text";
 	req.options = EXTBOPT_NOSTACKCHILD; /* disallow things like ~n:~T, as we only affect text. */
 	req.conv_param = extban_modeT_conv_param;
-	req.is_banned = extban_modeT_is_banned;
 	req.is_ok = extban_modeT_is_ok;
 
 	if (!ExtbanAdd(modinfo->handle, req))
@@ -377,12 +375,6 @@ char *extban_modeT_conv_param(BanContext *b, Extban *extban)
 	snprintf(retbuf, sizeof(retbuf), "%s:%s", action, text);
 #endif
 	return retbuf;
-}
-
-/** This is the regular "is banned?" routine. We can't use this as we need to be called for voiced users as well */
-int extban_modeT_is_banned(BanContext *b)
-{
-	return 0;
 }
 
 /** Check for text bans (censor and block) */

@@ -41,6 +41,7 @@ MOD_INIT()
 	req.is_ok = extban_is_ok_nuh_extban;
 	req.conv_param = extban_conv_param_nuh_or_extban;
 	req.is_banned = extban_quiet_is_banned;
+	req.is_banned_events = BANCHK_MSG;
 	req.options = EXTBOPT_ACTMODIFIER;
 	if (!ExtbanAdd(modinfo->handle, req))
 	{
@@ -68,8 +69,5 @@ MOD_UNLOAD()
 /** This ban that affects messages/notices only */
 int extban_quiet_is_banned(BanContext *b)
 {
-	if (b->checktype != BANCHK_MSG)
-		return 0;
-
 	return ban_check_mask(b);
 }

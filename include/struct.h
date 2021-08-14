@@ -2314,11 +2314,12 @@ struct MaxTarget {
 #define CHANOPPFX "@"
 
 /* used for is_banned type field: */
-#define BANCHK_JOIN		0	/* checking if a ban forbids the person from joining */
-#define BANCHK_MSG		1	/* checking if a ban forbids the person from sending messages */
-#define BANCHK_NICK		2	/* checking if a ban forbids the person from changing his/her nick */
-#define BANCHK_LEAVE_MSG	3	/* checking if a ban forbids the person from leaving a message in PART or QUIT */
-#define BANCHK_TKL		4	/* called from a server ban routine, or other match_user() usage */
+#define BANCHK_JOIN		0x0001	/* checking if a ban forbids the person from joining */
+#define BANCHK_MSG		0x0002	/* checking if a ban forbids the person from sending messages */
+#define BANCHK_NICK		0x0004	/* checking if a ban forbids the person from changing his/her nick */
+#define BANCHK_LEAVE_MSG	0x0008	/* checking if a ban forbids the person from leaving a message in PART or QUIT */
+#define BANCHK_TKL		0x0010	/* called from a server ban routine, or other match_user() usage */
+#define BANCHK_ALL		(BANCHK_JOIN|BANCHK_MSG|BANCHK_NICK|BANCHK_LEAVE_MSG)	/* all events except BANCHK_TKL which is special */
 
 #define TKLISTLEN		26
 #define TKLIPHASHLEN1		4

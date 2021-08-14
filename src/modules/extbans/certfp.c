@@ -43,6 +43,7 @@ MOD_INIT()
 	req.is_ok = extban_certfp_is_ok;
 	req.conv_param = extban_certfp_conv_param;
 	req.is_banned = extban_certfp_is_banned;
+	req.is_banned_events = BANCHK_ALL|BANCHK_TKL;
 	req.options = EXTBOPT_INVEX|EXTBOPT_TKL;
 	if (!ExtbanAdd(modinfo->handle, req))
 	{

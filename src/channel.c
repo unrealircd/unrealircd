@@ -394,7 +394,7 @@ inline int ban_check_mask(BanContext *b)
 		/* Is an extended ban. */
 		char *nextbanstr;
 		Extban *extban = findmod_by_bantype(b->banstr, &nextbanstr);
-		if (!extban)
+		if (!extban || !(extban->is_banned_events & b->checktype))
 		{
 			return 0;
 		} else {

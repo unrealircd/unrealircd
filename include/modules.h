@@ -395,6 +395,8 @@ struct Extban {
 	/** extban options */
 	ExtbanOptions options;
 
+	unsigned int is_banned_events;	/**< Which BANCHK_* events to listen on */
+
 	int (*is_ok)(BanContext *b);
 
 	/** Convert input parameter to output [optional].
@@ -418,6 +420,7 @@ typedef struct {
 	int (*is_ok)(BanContext *b);
 	char *(*conv_param)(BanContext *b, Extban *handler);
 	int (*is_banned)(BanContext *b);
+	unsigned int is_banned_events;
 } ExtbanInfo;
 
 

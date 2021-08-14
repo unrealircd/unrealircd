@@ -41,6 +41,7 @@ MOD_INIT()
 	req.conv_param = extban_conv_param_nuh_or_extban;
 	req.options = EXTBOPT_ACTMODIFIER;
 	req.is_banned = extban_partmsg_is_banned;
+	req.is_banned_events = BANCHK_LEAVE_MSG;
 	if (!ExtbanAdd(modinfo->handle, req))
 	{
 		config_error("could not register extended ban type");
@@ -66,9 +67,7 @@ MOD_UNLOAD()
 
 int extban_partmsg_is_banned(BanContext *b)
 {
-	if (b->checktype == BANCHK_LEAVE_MSG)
-		b->msg = NULL;
-
+	b->msg = NULL;
 	// Uh.. there is no attempt to match.... anything.......?
 
 	return 0;

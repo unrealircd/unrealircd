@@ -56,7 +56,6 @@ int cmodeL_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int extban_link_syntax(Client *client, int checkt, char *reason);
 int extban_link_is_ok(BanContext *b);
 char *extban_link_conv_param(BanContext *b, Extban *extban);
-int extban_link_is_banned(BanContext *b);
 int link_doforward(Client *client, Channel *channel, char *linked, linkType linktype);
 int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[]);
 
@@ -85,7 +84,6 @@ MOD_INIT()
 	req_extban.name = "forward";
 	req_extban.is_ok = extban_link_is_ok;
 	req_extban.conv_param = extban_link_conv_param;
-	req_extban.is_banned = extban_link_is_banned;
 	req_extban.options = EXTBOPT_ACTMODIFIER;
 	if (!ExtbanAdd(modinfo->handle, req_extban))
 	{
@@ -284,12 +282,6 @@ char *extban_link_conv_param(BanContext *b, Extban *extban)
 	//snprintf(retbuf, sizeof(retbuf), "~f:%s:%s", chan, newmask); // wait.. isn't this double??? FIXME/TODO/VERIFY
 	snprintf(retbuf, sizeof(retbuf), "%s:%s", chan, newmask);
 	return retbuf;
-}
-
-int extban_link_is_banned(BanContext *b)
-{
-	// We don't actually ban here because we have to extract the channel name in PRE_LOCAL_JOIN anyways
-	return 0;
 }
 
 int link_doforward(Client *client, Channel *channel, char *linked, linkType type)

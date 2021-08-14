@@ -5134,8 +5134,12 @@ int _match_user_extended_server_ban(char *banstr, Client *client)
 		return 0; /* we should never have been called */
 
 	extban = findmod_by_bantype(banstr, &nextbanstr);
-	if (!extban || !(extban->options & EXTBOPT_TKL))
+	if (!extban ||
+	    !(extban->options & EXTBOPT_TKL) ||
+	    !(extban->is_banned_events & BANCHK_TKL))
+	{
 		return 0; /* extban not found or of incorrect type (eg ~T) */
+	}
 
 	b = safe_alloc(sizeof(BanContext));
 	b->client = client;
