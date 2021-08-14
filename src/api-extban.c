@@ -262,8 +262,7 @@ char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 	/* We're dealing with a stacked extended ban.
 	 * Rules:
 	 * 1) You can only stack once, so: ~x:~y:something and not ~x:~y:~z...
-	 * 2) The first item must be an action modifier, such as ~q/~n/~j
-	 * 3) The second item may never be an action modifier, nor have the
+	 * 2) The second item may never be an action modifier, nor have the
 	 *    EXTBOPT_NOSTACKCHILD letter set (for things like a textban).
 	 */
 	 
@@ -275,27 +274,9 @@ char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 	if (extban_recursion)
 		return NULL;
 
-#if 0
-	// FIXME: FIX THIS AGAIN PLZZZZZZZZZZZZZZZZZZZZZZZ
-	// CURRENTLY CANNOT LOOKUP SELF!
-	// ACTUALLY WE CAN NOW WITH extban->letter.. but it is a char not a string ;)
-
-	/* Rule #2 */
-	extban = findmod_by_bantype(b->banstr, &nextbanstr);
-	if (p && !(p->options & EXTBOPT_ACTMODIFIER))
-	{
-		/* Rule #2 violation */
-		return NULL;
-	}
-	
-	strlcpy(tmpbuf, b->banstr, sizeof(tmpbuf));
-	mask = tmpbuf + 3;
-	/* Already did restrict-extended bans check. */
-	extban = findmod_by_bantype(mask[1]);
-#else
 	strlcpy(tmpbuf, b->banstr, sizeof(tmpbuf));
 	extban = findmod_by_bantype(tmpbuf, &nextbanstr);
-#endif
+
 	if (!extban)
 	{
 		/* Handling unknown bantypes in is_ok. Assume that it's ok here. */
