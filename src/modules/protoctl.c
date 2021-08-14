@@ -114,6 +114,10 @@ CMD_FUNC(cmd_protoctl)
 		{
 			SetMTAGS(client);
 		}
+		else if (!strcmp(name, "NEXTBANS"))
+		{
+			SetNEXTBANS(client);
+		}
 		else if (!strcmp(name, "NICKCHARS") && value)
 		{
 			if (!IsServer(client) && !IsEAuth(client) && !IsHandshake(client))

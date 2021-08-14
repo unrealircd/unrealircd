@@ -422,6 +422,7 @@ typedef enum ClientStatus {
 #define PROTO_EXTSWHOIS 0x000010	/* extended SWHOIS support */
 #define PROTO_SJSBY	0x000020	/* SJOIN setby information (TS and nick) */
 #define PROTO_MTAGS	0x000040	/* Support message tags and big buffers */
+#define PROTO_NEXTBANS	0x000080	/* Server supports named extended bans */
 
 /* For client capabilities: */
 #define CAP_INVERT	1L
@@ -597,12 +598,14 @@ typedef enum ClientStatus {
 #define SupportVHP(x)		(CHECKSERVERPROTO(x, PROTO_VHP))
 #define SupportCLK(x)		(CHECKSERVERPROTO(x, PROTO_CLK))
 #define SupportMTAGS(x)		(CHECKSERVERPROTO(x, PROTO_MTAGS))
+#define SupportNEXTBANS(x)	(CHECKSERVERPROTO(x, PROTO_NEXTBANS))
 
 #define SetVL(x)		((x)->local->proto |= PROTO_VL)
 #define SetSJSBY(x)		((x)->local->proto |= PROTO_SJSBY)
 #define SetVHP(x)		((x)->local->proto |= PROTO_VHP)
 #define SetCLK(x)		((x)->local->proto |= PROTO_CLK)
 #define SetMTAGS(x)		((x)->local->proto |= PROTO_MTAGS)
+#define SetNEXTBANS(x)		((x)->local->proto |= PROTO_NEXTBANS)
 
 /*
  * defined debugging levels

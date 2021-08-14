@@ -212,7 +212,7 @@ void send_proto(Client *client, ConfigItem_link *aconf)
 	 */
 
 	/* First line */
-	sendto_one(client, NULL, "PROTOCTL NOQUIT NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 TKLEXT TKLEXT2 NICKIP ESVID %s %s",
+	sendto_one(client, NULL, "PROTOCTL NOQUIT NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 TKLEXT TKLEXT2 NICKIP ESVID NEXTBANS %s %s",
 	           iConf.ban_setter_sync ? "SJSBY" : "",
 	           ClientCapabilityFindReal("message-tags") ? "MTAGS" : "");
 

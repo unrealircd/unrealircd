@@ -61,8 +61,10 @@ int usc_packet(Client *from, Client *to, Client *intended_to, char **msg, int *l
 {
 	char *p, *buf = *msg;
 
-	/* We are only interested in outgoing data. Also ircops get to see everything as-is */
-	if (IsMe(to) || !IsServer(to) || !buf || !length || !*length)
+	/* We are only interested in outgoing servers
+	 * that do not support PROTOCTL NEXTBANS
+	 */
+	if (IsMe(to) || !IsServer(to) || SupportNEXTBANS(to) || !buf || !length || !*length)
 		return 0;
 
 	buf[*length] = '\0'; /* safety */
