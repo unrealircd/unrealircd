@@ -233,24 +233,6 @@ CMD_FUNC(cmd_mode)
 	}
 #endif
 
-	/* User does not have permission to use the MODE command */
-	if (IsUser(client) && !IsULine(client) && !is_chan_op(client, channel) &&
-	    !is_half_op(client, channel) &&
-	    !ValidatePermissionsForPath("channel:override:mode",client,NULL,channel,NULL))
-	{
-		if (MyUser(client))
-		{
-			sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
-			return;
-		}
-		sendto_one(client, NULL, ":%s MODE %s -oh %s %s 0",
-		    me.name, channel->name, client->name, client->name);
-		/* Tell the other server that the user is
-		 * de-opped.  Fix op desyncs. */
-		bounce_mode(channel, client, parc - 2, parv + 2);
-		return;
-	}
-
 	if (IsServer(client) && (sendts = atol(parv[parc - 1])) &&
 	    !IsULine(client) && channel->creationtime &&
 	    sendts > channel->creationtime)
