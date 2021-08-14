@@ -36,6 +36,7 @@ MOD_INIT()
 {
 	ExtbanInfo req;
 	
+	memset(&req, 0, sizeof(req));
 	req.letter = 'O';
 	req.is_ok = NULL;
 	req.conv_param = extban_operclass_conv_param;

@@ -36,7 +36,8 @@ int extban_securitygroup_is_banned(BanContext *b);
 MOD_INIT()
 {
 	ExtbanInfo req;
-	
+
+	memset(&req, 0, sizeof(req));
 	req.letter = 'G';
 	req.conv_param = extban_securitygroup_conv_param;
 	req.is_ok = extban_securitygroup_is_ok;

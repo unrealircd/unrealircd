@@ -36,6 +36,7 @@ MOD_INIT()
 {
 	ExtbanInfo req;
 	
+	memset(&req, 0, sizeof(req));
 	req.letter = 'a';
 	req.is_ok = NULL;
 	req.conv_param = extban_account_conv_param;
