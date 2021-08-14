@@ -1253,7 +1253,7 @@ CMD_FUNC(reputation_server_cmd)
 #ifdef DEBUGMODE
 		unreal_log(ULOG_INFO, "reputation", "REPUTATION_DIFFERS", client,
 			   "Reputation score for for $ip from $client is $their_score, but we have $score, sending back $score",
-			   log_data_string("ip", e->ip),
+			   log_data_string("ip", ip),
 			   log_data_integer("their_score", score),
 			   log_data_integer("score", e->score));
 #endif
@@ -1266,7 +1266,7 @@ CMD_FUNC(reputation_server_cmd)
 #ifdef DEBUGMODE
 		unreal_log(ULOG_INFO, "reputation", "REPUTATION_DIFFERS", client,
 			   "Reputation score for for $ip from $client is $their_score, but we have $score, updating our score to $score",
-			   log_data_string("ip", e->ip),
+			   log_data_string("ip", ip),
 			   log_data_integer("their_score", score),
 			   log_data_integer("score", e->score));
 #endif
@@ -1279,9 +1279,9 @@ CMD_FUNC(reputation_server_cmd)
 #ifdef DEBUGMODE
 		unreal_log(ULOG_INFO, "reputation", "REPUTATION_NEW", client,
 			   "Reputation score for for $ip from $client is $their_score, we had no entry, adding it",
-			   log_data_string("ip", e->ip),
+			   log_data_string("ip", ip),
 			   log_data_integer("their_score", score),
-			   log_data_integer("score", e->score));
+			   log_data_integer("score", 0));
 #endif
 		e = safe_alloc(sizeof(ReputationEntry)+strlen(ip));
 		strcpy(e->ip, ip); /* safe, see alloc above */
