@@ -76,7 +76,7 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 		req.name = module->header->name;
 		p = strrchr(req.name, '/');
 		if (p)
-			req.name = p;
+			req.name = p+1;
 	}
 
 	for (slot=0; slot <= ExtBan_highest; slot++)
