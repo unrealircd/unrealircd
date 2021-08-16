@@ -148,7 +148,13 @@ int message_tag_ok(Client *client, char *name, char *value)
 
 	m = MessageTagHandlerFind(name);
 	if (!m)
+	{
+		/* Permit unknown message tags from trusted servers */
+		if (IsServer(client) || !MyConnect(client))
+			return 1;
+
 		return 0;
+	}
 
 	if (m->is_ok(client, name, value))
 		return 1;
