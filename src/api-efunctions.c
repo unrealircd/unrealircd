@@ -89,6 +89,8 @@ void (*broadcast_md_client_cmd)(Client *except, Client *sender, Client *acptr, c
 void (*broadcast_md_channel_cmd)(Client *except, Client *sender, Channel *channel, char *varname, char *value);
 void (*broadcast_md_member_cmd)(Client *except, Client *sender, Channel *channel, Client *acptr, char *varname, char *value);
 void (*broadcast_md_membership_cmd)(Client *except, Client *sender, Client *acptr, Channel *channel, char *varname, char *value);
+void (*moddata_add_s2s_mtags)(Client *client, MessageTag **mtags);
+void (*moddata_extract_s2s_mtags)(Client *client, MessageTag *mtags);
 void (*send_moddata_client)(Client *srv, Client *client);
 void (*send_moddata_channel)(Client *srv, Channel *channel);
 void (*send_moddata_members)(Client *srv);
@@ -347,6 +349,8 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_BROADCAST_MD_CHANNEL_CMD, broadcast_md_channel_cmd, NULL);
 	efunc_init_function(EFUNC_BROADCAST_MD_MEMBER_CMD, broadcast_md_member_cmd, NULL);
 	efunc_init_function(EFUNC_BROADCAST_MD_MEMBERSHIP_CMD, broadcast_md_membership_cmd, NULL);
+	efunc_init_function(EFUNC_MODDATA_ADD_S2S_MTAGS, moddata_add_s2s_mtags, NULL);
+	efunc_init_function(EFUNC_MODDATA_EXTRACT_S2S_MTAGS, moddata_extract_s2s_mtags, NULL);
 	efunc_init_function(EFUNC_SEND_MODDATA_CLIENT, send_moddata_client, NULL);
 	efunc_init_function(EFUNC_SEND_MODDATA_CHANNEL, send_moddata_channel, NULL);
 	efunc_init_function(EFUNC_SEND_MODDATA_MEMBERS, send_moddata_members, NULL);

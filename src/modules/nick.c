@@ -693,7 +693,9 @@ nickkill2done:
 
 	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
 
-	sendto_serv_butone_nickcmd(client->direction, client, (*buf == '\0' ? "+" : buf));
+	sendto_serv_butone_nickcmd(client->direction, recv_mtags, client, (*buf == '\0' ? "+" : buf));
+
+	moddata_extract_s2s_mtags(client, recv_mtags);
 
 	if (IsLoggedIn(client))
 	{
@@ -809,7 +811,7 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 
 	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
 
-	sendto_serv_butone_nickcmd(client->direction, client, (*buf == '\0' ? "+" : buf));
+	sendto_serv_butone_nickcmd(client->direction, NULL, client, (*buf == '\0' ? "+" : buf));
 
 	broadcast_moddata_client(client);
 	RunHook(HOOKTYPE_LOCAL_CONNECT, client);

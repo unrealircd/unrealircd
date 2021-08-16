@@ -86,7 +86,7 @@ MOD_INIT()
 	mreq.serialize = webirc_md_serialize;
 	mreq.unserialize = webirc_md_unserialize;
 	mreq.free = webirc_md_free;
-	mreq.sync = 1;
+	mreq.sync = MODDATA_SYNC_EARLY;
 	webirc_md = ModDataAdd(modinfo->handle, mreq);
 	if (!webirc_md)
 	{

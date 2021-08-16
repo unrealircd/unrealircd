@@ -1316,7 +1316,7 @@ void _introduce_user(Client *to, Client *acptr)
 {
 	build_umode_string(acptr, 0, SEND_UMODES, buf);
 
-	sendto_one_nickcmd(to, acptr, buf);
+	sendto_one_nickcmd(to, NULL, acptr, buf);
 	
 	send_moddata_client(to, acptr);
 

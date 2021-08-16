@@ -43,7 +43,7 @@ ModDataInfo mreq;
 	mreq.free = certfp_free;
 	mreq.serialize = certfp_serialize;
 	mreq.unserialize = certfp_unserialize;
-	mreq.sync = 1;
+	mreq.sync = MODDATA_SYNC_EARLY;
 	mreq.type = MODDATATYPE_CLIENT;
 	certfp_md = ModDataAdd(modinfo->handle, mreq);
 	if (!certfp_md)

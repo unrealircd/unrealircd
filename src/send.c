@@ -1103,7 +1103,7 @@ void sendto_fconnectnotice(Client *newuser, int disconnect, char *comment)
  * @param client Client to introduce
  * @param umodes User modes of client
  */
-void sendto_serv_butone_nickcmd(Client *one, Client *client, char *umodes)
+void sendto_serv_butone_nickcmd(Client *one, MessageTag *mtags, Client *client, char *umodes)
 {
 	Client *acptr;
 
@@ -1112,7 +1112,7 @@ void sendto_serv_butone_nickcmd(Client *one, Client *client, char *umodes)
 		if (one && acptr == one->direction)
 			continue;
 		
-		sendto_one_nickcmd(acptr, client, umodes);
+		sendto_one_nickcmd(acptr, mtags, client, umodes);
 	}
 }
 
@@ -1121,9 +1121,10 @@ void sendto_serv_butone_nickcmd(Client *one, Client *client, char *umodes)
  * @param client  Client to introduce
  * @param umodes  User modes of client
  */
-void sendto_one_nickcmd(Client *server, Client *client, char *umodes)
+void sendto_one_nickcmd(Client *server, MessageTag *mtags, Client *client, char *umodes)
 {
 	char *vhost;
+	char mtags_generated = 0;
 
 	if (!*umodes)
 		umodes = "+";
@@ -1143,13 +1144,22 @@ void sendto_one_nickcmd(Client *server, Client *client, char *umodes)
 			vhost = "*";
 	}
 
-	sendto_one(server, NULL,
+	if (mtags == NULL)
+	{
+		moddata_add_s2s_mtags(client, &mtags);
+		mtags_generated = 1;
+	}
+
+	sendto_one(server, mtags,
 		":%s UID %s %d %lld %s %s %s %s %s %s %s %s :%s",
 		client->uplink->id, client->name, client->hopcount,
 		(long long)client->lastnick,
 		client->user->username, client->user->realhost, client->id,
 		client->user->account, umodes, vhost, getcloak(client),
 		encode_ip(client->ip), client->info);
+
+	if (mtags_generated)
+		safe_free_message_tags(mtags);
 }
 
 /* sidenote: sendnotice() and sendtxtnumeric() assume no client or server

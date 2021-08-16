@@ -138,6 +138,11 @@ typedef enum ModDataType {
 	MODDATATYPE_MEMBERSHIP		= 7,
 } ModDataType;
 
+typedef enum ModDataSync {
+	MODDATA_SYNC_NORMAL		= 1, /**< Sync normally via MD command */
+	MODDATA_SYNC_EARLY		= 2, /**< Attempt to (also) sync early in the UID command */
+} ModDataSync;
+
 typedef struct ModDataInfo ModDataInfo;
 
 struct ModDataInfo {
@@ -150,7 +155,7 @@ struct ModDataInfo {
 	void (*free)(ModData *m); /**< Function will be called when the data needs to be freed (may be NULL if not using dynamic storage) */
 	char *(*serialize)(ModData *m); /**< Function which converts the data to a string. May return NULL if 'm' contains no data (since for example m->ptr may be NULL). */
 	void (*unserialize)(char *str, ModData *m); /**< Function which converts the string back to data */
-	int sync; /**< Send in netsynch (when servers connect) */
+	ModDataSync sync; /**< Send in netsynch (when servers connect) */
 	int remote_write; /**< Allow remote servers to set/unset this moddata, even if it they target one of our own clients */
 	int self_write; /**< Allow remote servers to set/unset moddata of their own server object (irc1.example.net writing the MD object of irc1.example.net) */
 };
@@ -2322,6 +2327,8 @@ enum EfunctionType {
 	EFUNC_BROADCAST_MD_CHANNEL_CMD,
 	EFUNC_BROADCAST_MD_MEMBER_CMD,
 	EFUNC_BROADCAST_MD_MEMBERSHIP_CMD,
+	EFUNC_MODDATA_ADD_S2S_MTAGS,
+	EFUNC_MODDATA_EXTRACT_S2S_MTAGS,
 	EFUNC_SEND_MODDATA_CLIENT,
 	EFUNC_SEND_MODDATA_CHANNEL,
 	EFUNC_SEND_MODDATA_MEMBERS,

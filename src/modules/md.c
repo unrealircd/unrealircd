@@ -28,6 +28,8 @@ void _broadcast_md_channel_cmd(Client *except, Client *sender, Channel *channel,
 void _broadcast_md_member_cmd(Client *except, Client *sender, Channel *channel, Client *client, char *varname, char *value);
 void _broadcast_md_membership_cmd(Client *except, Client *sender, Client *client, Channel *channel, char *varname, char *value);
 void _broadcast_md_globalvar_cmd(Client *except, Client *sender, char *varname, char *value);
+void _moddata_add_s2s_mtags(Client *client, MessageTag **mtags);
+void _moddata_extract_s2s_mtags(Client *client, MessageTag *mtags);
 void _send_moddata_client(Client *srv, Client *client);
 void _send_moddata_channel(Client *srv, Channel *channel);
 void _send_moddata_members(Client *srv);
@@ -48,6 +50,8 @@ MOD_TEST()
 	EfunctionAddVoid(modinfo->handle, EFUNC_BROADCAST_MD_MEMBER_CMD, _broadcast_md_member_cmd);
 	EfunctionAddVoid(modinfo->handle, EFUNC_BROADCAST_MD_MEMBERSHIP_CMD, _broadcast_md_membership_cmd);
 	EfunctionAddVoid(modinfo->handle, EFUNC_BROADCAST_MD_GLOBALVAR_CMD, _broadcast_md_globalvar_cmd);
+	EfunctionAddVoid(modinfo->handle, EFUNC_MODDATA_ADD_S2S_MTAGS, _moddata_add_s2s_mtags);
+	EfunctionAddVoid(modinfo->handle, EFUNC_MODDATA_EXTRACT_S2S_MTAGS, _moddata_extract_s2s_mtags);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_MODDATA_CLIENT, _send_moddata_client);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_MODDATA_CHANNEL, _send_moddata_channel);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_MODDATA_MEMBERS, _send_moddata_members);
@@ -381,6 +385,62 @@ void _send_moddata_client(Client *srv, Client *client)
 			if (value)
 				sendto_one(srv, NULL, ":%s MD %s %s %s :%s",
 					me.id, "client", client->id, mdi->name, value);
+		}
+	}
+}
+
+/** Enhance the command with moddata message tags, so we can send
+ * traffic like @s2s-md/certfp=xxxxx UID ....
+ */
+void _moddata_add_s2s_mtags(Client *client, MessageTag **mtags_list)
+{
+	ModDataInfo *mdi;
+	char name[128];
+
+	for (mdi = MDInfo; mdi; mdi = mdi->next)
+	{
+		if ((mdi->type == MODDATATYPE_CLIENT) && (mdi->sync == MODDATA_SYNC_EARLY) && mdi->serialize)
+		{
+			MessageTag *m;
+			char *value = mdi->serialize(&moddata_client(client, mdi));
+			if (!value)
+				continue;
+			snprintf(name, sizeof(name), "s2s-md/%s", mdi->name);
+
+			m = safe_alloc(sizeof(MessageTag));
+			safe_strdup(m->name, name);
+			safe_strdup(m->value, value);
+			AddListItem(m, *mtags_list);
+		}
+	}
+}
+
+/** Extract the s2s-md/<moddataname> tags again from an incoming command,
+ * eg @s2s-md/certfp=xxxxx UID ....
+ */
+void _moddata_extract_s2s_mtags(Client *client, MessageTag *mtags)
+{
+	MessageTag *m;
+	ModDataInfo *md;
+
+	for (m = mtags; m; m = m->next)
+	{
+		if (!strncmp(mtags->name, "s2s-md/", 7))
+		{
+			char *varname = mtags->name + 7;
+			char *value = mtags->value;
+
+			if (!value)
+				continue;
+
+			md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
+			if (!md || !md->unserialize)
+				continue;
+
+			if (!md_access_check(client, md, client))
+				return;
+
+			md->unserialize(value, &moddata_client(client, md));
 		}
 	}
 }

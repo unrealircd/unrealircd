@@ -390,7 +390,7 @@ MOD_INIT()
 	mreq.free = saslmechlist_free;
 	mreq.serialize = saslmechlist_serialize;
 	mreq.unserialize = saslmechlist_unserialize;
-	mreq.sync = 1;
+	mreq.sync = MODDATA_SYNC_EARLY;
 	mreq.self_write = 1;
 	mreq.type = MODDATATYPE_CLIENT;
 	ModDataAdd(modinfo->handle, mreq);
