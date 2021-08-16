@@ -780,7 +780,7 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 		if (client->local->ssl && !iConf.no_connect_tls_info)
 		{
 			sendnotice(client, "*** You are connected to %s with %s",
-				me.name, tls_get_cipher(client->local->ssl));
+				me.name, tls_get_cipher(client));
 		}
 	}
 

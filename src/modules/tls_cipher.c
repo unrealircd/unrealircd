@@ -63,7 +63,7 @@ int tls_cipher_handshake(Client *client)
 {
 	if (client->local->ssl)
 	{
-		char *cipher = tls_get_cipher(client->local->ssl);
+		char *cipher = tls_get_cipher(client);
 
 		if (!cipher)
 			return 0;

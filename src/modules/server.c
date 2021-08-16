@@ -832,7 +832,7 @@ skip_host_check:
 		           "Server is using an outdated TLS protocol or cipher ($tls_cipher) and set::outdated-tls-policy::server is 'deny'.\n"
 		           "See https://www.unrealircd.org/docs/FAQ#server-outdated-tls",
 		           log_data_link_block(link),
-			   log_data_string("tls_cipher", tls_get_cipher(client->local->ssl)));
+			   log_data_string("tls_cipher", tls_get_cipher(client)));
 		exit_client(client, NULL, "Server using outdates TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
 		return 0;
 	}
@@ -1054,7 +1054,7 @@ CMD_FUNC(cmd_server)
 	{
 		unreal_log(ULOG_INFO, "link", "SERVER_LINKED", client,
 		           "Server linked: $me -> $client [secure: $tls_cipher]",
-		           log_data_string("tls_cipher", tls_get_cipher(client->local->ssl)),
+		           log_data_string("tls_cipher", tls_get_cipher(client)),
 		           log_data_client("me", &me));
 		tls_link_notification_verify(client, aconf);
 	}
@@ -1081,7 +1081,7 @@ CMD_FUNC(cmd_server)
 				   "Link with server $client.details is using an outdated "
 				   "TLS protocol or cipher ($tls_cipher).",
 				   log_data_link_block(aconf),
-				   log_data_string("tls_cipher", tls_get_cipher(client->local->ssl)));
+				   log_data_string("tls_cipher", tls_get_cipher(client)));
 		}
 	}
 

@@ -939,7 +939,7 @@ char *get_security_groups(Client *client)
 char *get_connect_extinfo(Client *client)
 {
 	static char retbuf[512];
-	char tmp[512], *secgroups;
+	char tmp[512], *secgroups, *s;
 	NameValuePrioList *list = NULL, *e;
 
 	/* From modules... */
@@ -956,10 +956,11 @@ char *get_connect_extinfo(Client *client)
 		add_nvplist(&list, -100000, "class", client->local->class->name);
 
 	/* "secure": TLS */
-	if (MyUser(client) && IsSecure(client))
-		add_nvplist(&list, -1000, "secure", tls_get_cipher(client->local->ssl));
-	else if (!MyUser(client) && IsSecureConnect(client))
-		add_nvplist(&list, -1000, "secure", NULL);
+	s = tls_get_cipher(client);
+	if (s)
+		add_nvplist(&list, -1000, "secure", s);
+	else if (IsSecure(client) || IsSecureConnect(client))
+		add_nvplist(&list, -1000, "secure", NULL); /* old server or otherwise no details (eg: fake secure) */
 
 	/* services account? */
 	if (IsLoggedIn(client))

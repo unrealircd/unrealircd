@@ -790,7 +790,7 @@ extern int SSL_smart_shutdown(SSL *ssl);
 extern void unreal_tls_client_handshake(int, int, void *);
 extern void SSL_set_nonblocking(SSL *s);
 extern SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server);
-extern MODFUNC char  *tls_get_cipher(SSL *ssl);
+extern MODFUNC char  *tls_get_cipher(Client *client);
 extern TLSOptions *get_tls_options_for_client(Client *acptr);
 extern int outdated_tls_client(Client *acptr);
 extern char *outdated_tls_client_build_string(char *pattern, Client *acptr);

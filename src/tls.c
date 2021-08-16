@@ -605,14 +605,22 @@ void SSL_set_nonblocking(SSL *s)
 }
 
 /** Get TLS ciphersuite */
-char *tls_get_cipher(SSL *ssl)
+char *tls_get_cipher(Client *client)
 {
 	static char buf[256];
-	
+	char *cached;
+
+	cached = moddata_client_get(client, "tls_cipher");
+	if (cached)
+		return cached;
+
+	if (!MyConnect(client) || !client->local->ssl)
+		return NULL;
+
 	buf[0] = '\0';
-	strlcpy(buf, SSL_get_version(ssl), sizeof(buf));
+	strlcpy(buf, SSL_get_version(client->local->ssl), sizeof(buf));
 	strlcat(buf, "-", sizeof(buf));
-	strlcat(buf, SSL_get_cipher(ssl), sizeof(buf));
+	strlcat(buf, SSL_get_cipher(client->local->ssl), sizeof(buf));
 
 	return buf;
 }
