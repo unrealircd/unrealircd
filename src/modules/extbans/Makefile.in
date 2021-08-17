@@ -34,7 +34,8 @@ INCLUDES = ../../include/channel.h \
 R_MODULES= \
 	join.so quiet.so nickchange.so inchannel.so realname.so \
 	account.so operclass.so certfp.so textban.so msgbypass.so \
-	timedban.so partmsg.so securitygroup.so
+	timedban.so partmsg.so securitygroup.so \
+	country.so
 
 MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -106,3 +107,7 @@ partmsg.so: partmsg.c $(INCLUDES)
 securitygroup.so: securitygroup.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o securitygroup.so securitygroup.c
+
+country.so: country.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o country.so country.c
