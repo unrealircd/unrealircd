@@ -325,8 +325,10 @@ AC_DEFUN([CHECK_GEOIP_CLASSIC],
 	[
 		dnl First see if the system provides it
 		has_system_geoip_classic="no"
-		PKG_CHECK_MODULES([GEOIP_CLASSIC], [geoip >= 1.6.0],[has_system_geoip_classic=yes
-		AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libGeoIP.*])],[has_system_geoip_classic=no])])
+		PKG_CHECK_MODULES([GEOIP_CLASSIC], [geoip >= 1.6.0],
+		                  [has_system_geoip_classic=yes
+		                   AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libGeoIP.*])],
+		                  [has_system_geoip_classic=no])
 
 		dnl Otherwise fallback to our own..
 		AS_IF([test "$has_system_geoip_classic" = "no"],[
@@ -357,17 +359,13 @@ AC_DEFUN([CHECK_GEOIP_CLASSIC],
 			$ac_cv_prog_MAKER || exit 1
 			AC_MSG_RESULT(installing GeoIP Classic library)
 			$ac_cv_prog_MAKER install || exit 1
-			GEOIP_CLASSIC_CFLAGS="-I$cur_dir/extras/geoip-classic/include"
-			AC_SUBST(GEOIP_CLASSIC_CFLAGS)
-			GEOIP_CLASSIC_LIBS=
-			dnl See c-ares's compilation section for more info on this hack.
-			dnl ensure that we're linking against the bundled version
-			dnl (we only reach this code if linking against the bundled version is desired).
+			dnl Try pkg-config first...
 			AS_IF([test -n "$ac_cv_path_PKGCONFIG"],
 			       [GEOIP_CLASSIC_LIBS="`$ac_cv_path_PKGCONFIG --libs geoip.pc`"])
-			dnl For when pkg-config isn't available
+			dnl In case the system does not have pkg-config, fallback to hardcoded settings...
 			AS_IF([test -z "$GEOIP_CLASSIC_LIBS"],
-			       [GEOIP_CLASSIC_LIBS="-L$PRIVATELIBDIR -lGeoIP"])
+			       [GEOIP_CLASSIC_LIBS="-L$PRIVATELIBDIR -lGeoIP"
+			        GEOIP_CLASSIC_CFLAGS="-I$cur_dir/extras/geoip-classic/include"])
 			cd $cur_dir
 		])
 		

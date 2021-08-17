@@ -8634,9 +8634,8 @@ else
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 	has_system_geoip_classic=yes
-		if test "x$PRIVATELIBDIR" != "x"; then :
+		                   if test "x$PRIVATELIBDIR" != "x"; then :
   rm -f "$PRIVATELIBDIR/"libGeoIP.*
-fi
 fi
 fi
 
@@ -8670,14 +8669,12 @@ $as_echo "compiling GeoIP Classic library" >&6; }
 			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: installing GeoIP Classic library" >&5
 $as_echo "installing GeoIP Classic library" >&6; }
 			$ac_cv_prog_MAKER install || exit 1
-			GEOIP_CLASSIC_CFLAGS="-I$cur_dir/extras/geoip-classic/include"
-
-			GEOIP_CLASSIC_LIBS=
-												if test -n "$ac_cv_path_PKGCONFIG"; then :
+						if test -n "$ac_cv_path_PKGCONFIG"; then :
   GEOIP_CLASSIC_LIBS="`$ac_cv_path_PKGCONFIG --libs geoip.pc`"
 fi
 						if test -z "$GEOIP_CLASSIC_LIBS"; then :
   GEOIP_CLASSIC_LIBS="-L$PRIVATELIBDIR -lGeoIP"
+			        GEOIP_CLASSIC_CFLAGS="-I$cur_dir/extras/geoip-classic/include"
 fi
 			cd $cur_dir
 
@@ -8689,6 +8686,7 @@ fi
 		GEOIP_CLASSIC_OBJECTS="geoip_classic.so"
 
 
+fi
 
 UNRLINCDIR="`pwd`/include"
 
