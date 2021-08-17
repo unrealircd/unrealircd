@@ -946,6 +946,7 @@ extern void moddata_free_membership(Membership *m);
 extern ModDataInfo *findmoddata_byname(char *name, ModDataType type);
 extern int moddata_client_set(Client *acptr, char *varname, char *value);
 extern char *moddata_client_get(Client *acptr, char *varname);
+extern ModData *moddata_client_get_raw(Client *client, char *varname);
 extern int moddata_local_client_set(Client *acptr, char *varname, char *value);
 extern char *moddata_local_client_get(Client *acptr, char *varname);
 

@@ -360,6 +360,19 @@ char *moddata_client_get(Client *client, char *varname)
 	return md->serialize(&moddata_client(client, md)); /* can be NULL */
 }
 
+/** Get ModData for client (via variable name) */
+ModData *moddata_client_get_raw(Client *client, char *varname)
+{
+	ModDataInfo *md;
+
+	md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
+
+	if (!md)
+		return NULL;
+
+	return &moddata_client(client, md); /* can be NULL */
+}
+
 /** Set ModData for LocalClient (via variable name, string value) */
 int moddata_local_client_set(Client *client, char *varname, char *value)
 {
