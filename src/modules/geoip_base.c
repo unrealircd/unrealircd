@@ -23,6 +23,7 @@ void geoip_base_unserialize(char *str, ModData *m);
 int geoip_base_handshake(Client *client);
 int geoip_base_connect(Client *client);
 int geoip_base_whois(Client *client, Client *target);
+int geoip_connect_extinfo(Client *client, NameValuePrioList **list);
 
 ModDataInfo *geoip_base_md; /* Module Data structure which we acquire */
 
@@ -33,7 +34,7 @@ ModDataInfo mreq;
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	memset(&mreq, 0, sizeof(mreq));
-	mreq.name = "geoip_base";
+	mreq.name = "geoip";
 	mreq.free = geoip_base_free;
 	mreq.serialize = geoip_base_serialize;
 	mreq.unserialize = geoip_base_unserialize;
@@ -45,6 +46,7 @@ ModDataInfo mreq;
 
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, geoip_base_handshake);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_HANDSHAKE_OUT, 0, geoip_base_handshake);
+	HookAdd(modinfo->handle, HOOKTYPE_CONNECT_EXTINFO, 1, geoip_connect_extinfo); /* (prio: near-first) */
 
 	return MOD_SUCCESS;
 }
@@ -69,7 +71,7 @@ int geoip_base_handshake(Client *client)
 		if (!country)
 			return 0;
 
-		moddata_client_set(client, "geoip_country", country);
+		moddata_client_set(client, "geoip", country);
 	}
 	return 0;
 }
@@ -89,4 +91,12 @@ char *geoip_base_serialize(ModData *m)
 void geoip_base_unserialize(char *str, ModData *m)
 {
 	safe_strdup(m->str, str);
+}
+
+int geoip_connect_extinfo(Client *client, NameValuePrioList **list)
+{
+	char *country = moddata_client_get(client, "geoip");
+	if (country)
+		add_nvplist(list, 0, "country", country);
+	return 0;
 }
