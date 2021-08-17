@@ -25,7 +25,15 @@ int geoip_base_connect(Client *client);
 int geoip_base_whois(Client *client, Client *target);
 int geoip_connect_extinfo(Client *client, NameValuePrioList **list);
 int geoip_whois(Client *client, Client *target);
-ModDataInfo *geoip_base_md; /* Module Data structure which we acquire */
+ModDataInfo *geoip_md; /* Module Data structure which we acquire */
+
+/* We can use GEOIPDATA() and GEOIPDATARAW() for fast access.
+ * People wanting to get this information from outside this module
+ * should use geoip_client(client) !
+ */
+
+#define GEOIPDATARAW(x)	(moddata_client((x), geoip_md).ptr)
+#define GEOIPDATA(x)	((GeoIPResult *)moddata_client((x), geoip_md).ptr)
 
 MOD_INIT()
 {
@@ -40,8 +48,8 @@ ModDataInfo mreq;
 	mreq.unserialize = geoip_base_unserialize;
 	mreq.sync = MODDATA_SYNC_EARLY;
 	mreq.type = MODDATATYPE_CLIENT;
-	geoip_base_md = ModDataAdd(modinfo->handle, mreq);
-	if (!geoip_base_md)
+	geoip_md = ModDataAdd(modinfo->handle, mreq);
+	if (!geoip_md)
 		abort();
 
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, geoip_base_handshake);
@@ -72,48 +80,98 @@ int geoip_base_handshake(Client *client)
 		if (!res)
 			return 0;
 
-		moddata_client_set(client, "geoip", res->country_code); // todo: store struct instead of only country code
-		free_geoip_result(res);
+		if (GEOIPDATA(client))
+		{
+			/* Can this even happen? Ah well.. */
+			free_geoip_result(GEOIPDATA(client));
+			GEOIPDATARAW(client) = NULL;
+		}
+		GEOIPDATARAW(client) = res;
 	}
 	return 0;
 }
 
 void geoip_base_free(ModData *m)
 {
-	safe_free(m->str);
+	if (m->ptr)
+	{
+		free_geoip_result((GeoIPResult *)m->ptr);
+		m->ptr = NULL;
+	}
 }
 
 char *geoip_base_serialize(ModData *m)
 {
-	if (!m->str)
+	static char buf[512];
+	GeoIPResult *geo;
+
+	if (!m->ptr)
 		return NULL;
-	return m->str;
+
+	geo = m->ptr;
+	snprintf(buf, sizeof(buf), "cc=%s|cd=%s",
+	         geo->country_code,
+	         geo->country_name);
+
+	return buf;
 }
 
 void geoip_base_unserialize(char *str, ModData *m)
 {
-	safe_strdup(m->str, str);
+	char buf[512], *p=NULL, *varname, *value;
+	char *country_name = NULL;
+	char *country_code = NULL;
+	GeoIPResult *res;
+
+	if (m->ptr == NULL)
+	{
+		free_geoip_result((GeoIPResult *)m->ptr);
+		m->ptr = NULL;
+	}
+	if (str == NULL)
+		return;
+
+	strlcpy(buf, str, sizeof(buf));
+	for (varname = strtoken(&p, buf, "|"); varname; varname = strtoken(&p, NULL, "|"))
+	{
+		value = strchr(varname, '=');
+		if (!value)
+			continue;
+		*value++ = '\0';
+		if (!strcmp(varname, "cc"))
+			country_code = value;
+		else if (!strcmp(varname, "cd"))
+			country_name = value;
+	}
+
+	if (!country_code || !country_name)
+		return; /* does not meet minimum criteria */
+
+	res = safe_alloc(sizeof(GeoIPResult));
+	safe_strdup(res->country_name, country_name);
+	safe_strdup(res->country_code, country_code);
+	m->ptr = res;
 }
 
 int geoip_connect_extinfo(Client *client, NameValuePrioList **list)
 {
-	char *country = moddata_client_get(client, "geoip");
-	if (country)
-		add_nvplist(list, 0, "country", country);
+	GeoIPResult *geo = GEOIPDATA(client);
+	if (geo)
+		add_nvplist(list, 0, "country", geo->country_code);
 	return 0;
 }
 
 int geoip_whois(Client *client, Client *target)
 {
-	char *country;
+	GeoIPResult *geo;
 
 	if (!IsOper(client))
 		return 0;
 
-	country = moddata_client_get(target, "geoip");
-	if (!country)
+	geo = GEOIPDATA(target);
+	if (!geo)
 		return 0;
-	sendnumeric(client, RPL_WHOISCOUNTRY, target->name, country, country);
 
+	sendnumeric(client, RPL_WHOISCOUNTRY, target->name, geo->country_code, geo->country_name);
 	return 0;
 }

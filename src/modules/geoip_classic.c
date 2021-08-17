@@ -79,7 +79,7 @@ GeoIPResult *geoip_lookup_classic(char *ip)
 	country_code = GeoIP_country_code_by_name(gi, ip);
 	if (!country_code)
 		return NULL;
-	country_name = GeoIP_country_code_by_name(gi, ip);
+	country_name = GeoIP_country_name_by_name(gi, ip);
 	if (!country_name)
 		return NULL;
 

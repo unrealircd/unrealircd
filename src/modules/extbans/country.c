@@ -112,12 +112,10 @@ char *extban_country_conv_param(BanContext *b, Extban *extban)
 
 int extban_country_is_banned(BanContext *b)
 {
+	GeoIPResult *geo = geoip_client(b->client);
 	char *country;
 
-	country = moddata_client_get(b->client, "geoip");
-
-	if (!country)
-		country = "*";
+	country = geo ? geo->country_code : "*";
 
 	if (!strcmp(b->banstr, country))
 		return 1;

@@ -1109,3 +1109,12 @@ void free_geoip_result(GeoIPResult *r)
 	safe_free(r->country_name);
 	safe_free(r);
 }
+
+/** Grab geoip information for client */
+GeoIPResult *geoip_client(Client *client)
+{
+	ModData *m = moddata_client_get_raw(client, "geoip");
+	if (!m)
+		return NULL;
+	return m->ptr; /* can still be NULL */
+}

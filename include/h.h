@@ -1129,5 +1129,6 @@ extern char *timestamp_iso8601(time_t v);
 /* end of logging */
 extern void add_fake_lag(Client *client, long msec);
 extern char *prefix_with_extban(char *remainder, BanContext *b, Extban *extban, char *buf, size_t buflen);
+extern GeoIPResult *geoip_client(Client *client);
 extern GeoIPResult *geoip_lookup(char *ip);
 extern void free_geoip_result(GeoIPResult *r);
