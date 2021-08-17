@@ -89,7 +89,11 @@ XCFLAGS=@PTHREAD_CFLAGS@ @PCRE2_CFLAGS@ @ARGON2_CFLAGS@ @CARES_CFLAGS@ @SODIUM_C
 #          you are not defining CMDLINE_CONFIG 
 IRCDMODE = 711
 
+# Objects that are optional due to optional libraries:
 URL=@URL@
+GEOIP_CLASSIC_OBJECTS=@GEOIP_CLASSIC_OBJECTS@
+GEOIP_CLASSIC_LIBS=@GEOIP_CLASSIC_LIBS@
+GEOIP_CLASSIC_CFLAGS=@GEOIP_CLASSIC_CFLAGS@
 
 # Where is your openssl binary
 OPENSSLPATH=@OPENSSLPATH@
@@ -116,7 +120,10 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'SHELL=${SHELL}' \
 		'CRYPTOLIB=${CRYPTOLIB}' \
 		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' \
-		'URL=${URL}'
+		'URL=${URL}' \
+		'GEOIP_CLASSIC_OBJECTS=${GEOIP_CLASSIC_OBJECTS}' \
+		'GEOIP_CLASSIC_LIBS=${GEOIP_CLASSIC_LIBS}' \
+		'GEOIP_CLASSIC_CFLAGS=${GEOIP_CLASSIC_CFLAGS}'
 
 custommodule:
 	@if test -z "${MODULEFILE}"; then echo "Please set MODULEFILE when calling \`\`make custommodule''. For example, \`\`make custommodule MODULEFILE=callerid''." >&2; exit 1; fi

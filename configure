@@ -626,6 +626,9 @@ ac_subst_vars='LTLIBOBJS
 LIBOBJS
 UNRLINCDIR
 IRCDLIBS
+GEOIP_CLASSIC_OBJECTS
+GEOIP_CLASSIC_LIBS
+GEOIP_CLASSIC_CFLAGS
 URL
 PTHREAD_CFLAGS
 PTHREAD_LIBS
@@ -762,6 +765,7 @@ enable_dynamic_linking
 enable_werror
 enable_asan
 enable_libcurl
+enable_geoip_classic
 '
       ac_precious_vars='build_alias
 host_alias
@@ -784,7 +788,9 @@ SODIUM_LIBS
 CARES_CFLAGS
 CARES_LIBS
 JANSSON_CFLAGS
-JANSSON_LIBS'
+JANSSON_LIBS
+GEOIP_CLASSIC_CFLAGS
+GEOIP_CLASSIC_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1423,6 +1429,8 @@ Optional Features:
   --disable-asan          Enable address sanitizer and other debugging
                           options, not recommended for production servers!
   --enable-libcurl=DIR    enable libcurl (remote include) support
+  --enable-geoip-classic=no/yes
+                          enable GeoIP Classic support
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1498,6 +1506,10 @@ Some influential environment variables:
               C compiler flags for JANSSON, overriding pkg-config
   JANSSON_LIBS
               linker flags for JANSSON, overriding pkg-config
+  GEOIP_CLASSIC_CFLAGS
+              C compiler flags for GEOIP_CLASSIC, overriding pkg-config
+  GEOIP_CLASSIC_LIBS
+              linker flags for GEOIP_CLASSIC, overriding pkg-config
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -8539,6 +8551,144 @@ rm -f core conftest.err conftest.$ac_objext \
 
 
 fi
+
+
+	# Check whether --enable-geoip_classic was given.
+if test "${enable_geoip_classic+set}" = set; then :
+  enableval=$enable_geoip_classic; enable_geoip_classic=$enableval
+else
+  enable_geoip_classic=no
+fi
+
+
+	if test "x$enable_geoip_classic" = "xyes"; then :
+
+				has_system_geoip_classic="no"
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for GEOIP_CLASSIC" >&5
+$as_echo_n "checking for GEOIP_CLASSIC... " >&6; }
+
+if test -n "$GEOIP_CLASSIC_CFLAGS"; then
+    pkg_cv_GEOIP_CLASSIC_CFLAGS="$GEOIP_CLASSIC_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"geoip >= 1.6.0\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "geoip >= 1.6.0") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_GEOIP_CLASSIC_CFLAGS=`$PKG_CONFIG --cflags "geoip >= 1.6.0" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$GEOIP_CLASSIC_LIBS"; then
+    pkg_cv_GEOIP_CLASSIC_LIBS="$GEOIP_CLASSIC_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"geoip >= 1.6.0\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "geoip >= 1.6.0") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_GEOIP_CLASSIC_LIBS=`$PKG_CONFIG --libs "geoip >= 1.6.0" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        GEOIP_CLASSIC_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "geoip >= 1.6.0" 2>&1`
+        else
+	        GEOIP_CLASSIC_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "geoip >= 1.6.0" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$GEOIP_CLASSIC_PKG_ERRORS" >&5
+
+	has_system_geoip_classic=no
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	has_system_geoip_classic=no
+else
+	GEOIP_CLASSIC_CFLAGS=$pkg_cv_GEOIP_CLASSIC_CFLAGS
+	GEOIP_CLASSIC_LIBS=$pkg_cv_GEOIP_CLASSIC_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	has_system_geoip_classic=yes
+		if test "x$PRIVATELIBDIR" != "x"; then :
+  rm -f "$PRIVATELIBDIR/"libGeoIP.*
+fi
+fi
+fi
+
+				if test "$has_system_geoip_classic" = "no"; then :
+
+						geoip_classic_version="1.6.12"
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting GeoIP Classic library" >&5
+$as_echo "extracting GeoIP Classic library" >&6; }
+			cur_dir=`pwd`
+			cd extras
+									rm -rf GeoIP-$geoip_classic_version geoip-classic
+			if test "x$ac_cv_path_GUNZIP" = "x" ; then
+				tar xfz geoip-classic.tar.gz
+			else
+				cp geoip-classic.tar.gz geoip-classic.tar.gz.bak
+				gunzip -f geoip-classic.tar.gz
+				cp geoip-classic.tar.gz.bak geoip-classic.tar.gz
+				tar xf geoip-classic.tar
+			fi
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: configuring GeoIP Classic library" >&5
+$as_echo "configuring GeoIP Classic library" >&6; }
+			cd GeoIP-$geoip_classic_version
+			save_cflags="$CFLAGS"
+			CFLAGS="$orig_cflags"
+			export CFLAGS
+			./configure --prefix=$cur_dir/extras/geoip-classic --libdir=$PRIVATELIBDIR --enable-shared --disable-static || exit 1
+			CFLAGS="$save_cflags"
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling GeoIP Classic library" >&5
+$as_echo "compiling GeoIP Classic library" >&6; }
+			$ac_cv_prog_MAKER || exit 1
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: installing GeoIP Classic library" >&5
+$as_echo "installing GeoIP Classic library" >&6; }
+			$ac_cv_prog_MAKER install || exit 1
+			GEOIP_CLASSIC_CFLAGS="-I$cur_dir/extras/geoip-classic/include"
+
+			GEOIP_CLASSIC_LIBS=
+												if test -n "$ac_cv_path_PKGCONFIG"; then :
+  GEOIP_CLASSIC_LIBS="`$ac_cv_path_PKGCONFIG --libs geoip.pc`"
+fi
+						if test -z "$GEOIP_CLASSIC_LIBS"; then :
+  GEOIP_CLASSIC_LIBS="-L$PRIVATELIBDIR -lGeoIP"
+fi
+			cd $cur_dir
+
+fi
+
+
+
+
+		GEOIP_CLASSIC_OBJECTS="geoip_classic.so"
+
+
 
 UNRLINCDIR="`pwd`/include"
 

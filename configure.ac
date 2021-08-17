@@ -830,6 +830,8 @@ AX_PTHREAD()
 
 CHECK_LIBCURL
 
+CHECK_GEOIP_CLASSIC
+
 UNRLINCDIR="`pwd`/include"
 
 dnl Moved to the very end to ensure it doesn't affect any libs or tests.

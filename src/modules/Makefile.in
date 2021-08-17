@@ -76,7 +76,7 @@ R_MODULES= \
 	ident_lookup.so history.so chathistory.so \
 	targetfloodprot.so clienttagdeny.so watch-backend.so \
 	monitor.so slog.so tls_cipher.so \
-	unreal_server_compat.so
+	unreal_server_compat.so $(GEOIP_CLASSIC_OBJECTS)
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -678,6 +678,10 @@ tls_cipher.so: tls_cipher.c $(INCLUDES)
 unreal_server_compat.so: unreal_server_compat.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o unreal_server_compat.so unreal_server_compat.c
+
+geoip_classic.so: geoip_classic.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) $(GEOIP_CLASSIC_CFLAGS) $(GEOIP_CLASSIC_LIBS) -DDYNAMIC_LINKING \
+		-o geoip_classic.so geoip_classic.c
 
 #############################################################################
 # capabilities
