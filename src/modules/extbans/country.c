@@ -81,7 +81,10 @@ int extban_country_is_ok(BanContext *b)
 	{
 		char *p;
 
-		if ((strlen(b->banstr) != 2) && strcmp(b->banstr, "*"))
+		if (!strcmp(b->banstr, "*"))
+			return EX_ALLOW;
+
+		if ((strlen(b->banstr) != 2))
 			return extban_country_usage(b->client);
 
 		for (p = b->banstr; *p; p++)
