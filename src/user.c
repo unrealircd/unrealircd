@@ -1092,11 +1092,20 @@ MODVAR char *floodoption_names[] = {
 
 /** Lookup GEO information for an IP address.
  * @param ip	The IP to lookup
- * @returns The country code, or NULL.
+ * @returns A struct containing all the details. Must be freed by caller!
  */
-char *geoip_lookup_country(char *ip)
+GeoIPResult *geoip_lookup(char *ip)
 {
 	if (!RCallbacks[CALLBACKTYPE_GEOIP_LOOKUP])
 		return NULL;
-	return RCallbacks[CALLBACKTYPE_GEOIP_LOOKUP]->func.pcharfunc(ip);
+	return RCallbacks[CALLBACKTYPE_GEOIP_LOOKUP]->func.pvoidfunc(ip);
+}
+
+void free_geoip_result(GeoIPResult *r)
+{
+	if (!r)
+		return;
+	safe_free(r->country_code);
+	safe_free(r->country_name);
+	safe_free(r);
 }

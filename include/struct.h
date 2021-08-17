@@ -2384,6 +2384,12 @@ struct ConfigItem_badword {
 #define SKIP_DEAF	0x4
 #define SKIP_CTCP	0x8
 
+typedef struct GeoIPResult GeoIPResult;
+struct GeoIPResult {
+	char *country_code;
+	char *country_name;
+};
+
 #endif /* __struct_include__ */
 
 #include "dynconf.h"

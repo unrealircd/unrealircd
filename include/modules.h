@@ -583,6 +583,7 @@ struct Callback {
 	union {
 		int (*intfunc)();
 		void (*voidfunc)();
+		void *(*pvoidfunc)();
 		char *(*pcharfunc)();
 	} func;
 	Module *owner;
@@ -907,14 +908,16 @@ extern void HooktypeDel(Hooktype *hooktype, Module *module);
 #define RunHook7(hooktype,a,b,c,d,e,f,g) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) (*(hook->func.intfunc))(a,b,c,d,e,f,g); } while(0)
 #define RunHook8(hooktype,a,b,c,d,e,f,g,h) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) (*(hook->func.intfunc))(a,b,c,d,e,f,g,h); } while(0)
 
-#define CallbackAdd(cbtype, func) CallbackAddMain(NULL, cbtype, func, NULL, NULL)
-#define CallbackAddEx(module, cbtype, func) CallbackAddMain(module, cbtype, func, NULL, NULL)
-#define CallbackAddVoid(cbtype, func) CallbackAddMain(NULL, cbtype, NULL, func, NULL)
-#define CallbackAddVoidEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, func, NULL)
-#define CallbackAddPChar(cbtype, func) CallbackAddMain(NULL, cbtype, NULL, NULL, func)
-#define CallbackAddPCharEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, func)
+#define CallbackAdd(cbtype, func) CallbackAddMain(NULL, cbtype, func, NULL, NULL, NULL)
+#define CallbackAddVoid(cbtype, func) CallbackAddMain(NULL, cbtype, NULL, func, NULL, NULL)
+#define CallbackAddPVoid(cbtype, func) CallbackAddMain(NULL, cbtype, NULL, NULL, func, NULL)
+#define CallbackAddPChar(cbtype, func) CallbackAddMain(NULL, cbtype, NULL, NULL, NULL, func)
+#define CallbackAddEx(module, cbtype, func) CallbackAddMain(module, cbtype, func, NULL, NULL, NULL)
+#define CallbackAddVoidEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, func, NULL, NULL)
+#define CallbackAddPVoidEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, func, NULL)
+#define CallbackAddPCharEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, NULL, func)
 
-extern Callback	*CallbackAddMain(Module *module, int cbtype, int (*intfunc)(), void (*voidfunc)(), char *(*pcharfunc)());
+extern Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*pcharfunc)());
 extern Callback	*CallbackDel(Callback *cb);
 
 #define EfunctionAdd(module, cbtype, func) EfunctionAddMain(module, cbtype, func, NULL, NULL, NULL)

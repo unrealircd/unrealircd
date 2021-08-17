@@ -20,12 +20,12 @@ char *db_file = NULL;
 GeoIP *gi = NULL;
 
 /* Forward declarations */
-char *geoip_lookup_classic(char *ip);
+GeoIPResult *geoip_lookup_classic(char *ip);
 
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	if (!CallbackAddPCharEx(modinfo->handle, CALLBACKTYPE_GEOIP_LOOKUP, geoip_lookup_classic))
+	if (!CallbackAddPVoidEx(modinfo->handle, CALLBACKTYPE_GEOIP_LOOKUP, TO_PVOIDFUNC(geoip_lookup_classic)))
 	{
 		unreal_log(ULOG_ERROR, "geoip_classic", "GEOIP_ADD_CALLBACK_FAILED", NULL,
 		           "geoip_classic: Could not install GEOIP_LOOKUP callback. "
@@ -67,19 +67,24 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *geoip_lookup_classic(char *ip)
+GeoIPResult *geoip_lookup_classic(char *ip)
 {
 	static char buf[256];
-	const char *r;
+	const char *country_code, *country_name;
+	GeoIPResult *r;
 
 	if (!gi || !ip || !strcmp(ip, "255.255.255.255"))
 		return NULL;
 
-	r = GeoIP_country_code_by_name(gi, ip);
-	if (!r)
+	country_code = GeoIP_country_code_by_name(gi, ip);
+	if (!country_code)
+		return NULL;
+	country_name = GeoIP_country_code_by_name(gi, ip);
+	if (!country_name)
 		return NULL;
 
-	/* Return a copy, since we cannot guarantee const char * */
-	strlcpy(buf, r, sizeof(buf));
-	return buf;
+	r = safe_alloc(sizeof(GeoIPResult));
+	safe_strdup(r->country_code, country_code);
+	safe_strdup(r->country_name, country_name);
+	return r;
 }

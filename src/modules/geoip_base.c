@@ -67,12 +67,13 @@ int geoip_base_handshake(Client *client)
 {
 	if (client->ip)
 	{
-		char *country = geoip_lookup_country(client->ip);
+		GeoIPResult *res = geoip_lookup(client->ip);
 
-		if (!country)
+		if (!res)
 			return 0;
 
-		moddata_client_set(client, "geoip", country);
+		moddata_client_set(client, "geoip", res->country_code); // todo: store struct instead of only country code
+		free_geoip_result(res);
 	}
 	return 0;
 }

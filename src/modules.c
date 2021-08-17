@@ -1037,7 +1037,7 @@ Hook *HookDel(Hook *hook)
 	return NULL;
 }
 
-Callback	*CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), char *(*cfunc)())
+Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())
 {
 	Callback *p;
 	
@@ -1046,6 +1046,8 @@ Callback	*CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfun
 		p->func.intfunc = func;
 	if (vfunc)
 		p->func.voidfunc = vfunc;
+	if (pvfunc)
+		p->func.pvoidfunc = pvfunc;
 	if (cfunc)
 		p->func.pcharfunc = cfunc;
 	p->type = cbtype;
