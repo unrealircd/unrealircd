@@ -2272,6 +2272,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define CALLBACKTYPE_CLOAK_EX 3
 #define CALLBACKTYPE_BLACKLIST_CHECK 4
 #define CALLBACKTYPE_REPUTATION_STARTTIME 5
+#define CALLBACKTYPE_GEO_LOOKUP 6
 
 /* To add a new efunction, only if you are an UnrealIRCd coder:
  * 1) Add a new entry here

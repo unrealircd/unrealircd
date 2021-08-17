@@ -1089,3 +1089,14 @@ MODVAR char *floodoption_names[] = {
 	"lag-penalty",
 	NULL
 };
+
+/** Lookup GEO information for an IP address.
+ * @param ip	The IP to lookup
+ * @returns The country code, or NULL.
+ */
+char *geo_lookup(char *ip)
+{
+	if (!RCallbacks[CALLBACKTYPE_GEO_LOOKUP])
+		return NULL;
+	return RCallbacks[CALLBACKTYPE_GEO_LOOKUP]->func.pcharfunc(ip);
+}
