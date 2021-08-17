@@ -199,6 +199,7 @@
 #define RPL_USERIP	     340
 #define RPL_INVITING         341
 #define	RPL_SUMMONING        342
+#define RPL_WHOISCOUNTRY     344
 
 #define RPL_VERSION          351
 

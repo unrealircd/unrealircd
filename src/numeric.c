@@ -377,7 +377,7 @@ static char *replies[] = {
 /* 341    RPL_INVITING */ "%s %s",
 /* 342    RPL_SUMMONING */ "%s :User summoned to irc",
 /* 343 */ NULL,
-/* 344 */ NULL,
+/* 344    RPL_WHOISCOUNTRY */ "%s %s :is connecting from %s",
 /* 345 */ NULL, /* gamesurge */
 /* 346    RPL_INVEXLIST */ "%s %s %s %lu",
 /* 347    RPL_ENDOFINVEXLIST */ "%s :End of Channel Invite List",

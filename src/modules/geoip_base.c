@@ -24,7 +24,7 @@ int geoip_base_handshake(Client *client);
 int geoip_base_connect(Client *client);
 int geoip_base_whois(Client *client, Client *target);
 int geoip_connect_extinfo(Client *client, NameValuePrioList **list);
-
+int geoip_whois(Client *client, Client *target);
 ModDataInfo *geoip_base_md; /* Module Data structure which we acquire */
 
 MOD_INIT()
@@ -47,6 +47,7 @@ ModDataInfo mreq;
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, geoip_base_handshake);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_HANDSHAKE_OUT, 0, geoip_base_handshake);
 	HookAdd(modinfo->handle, HOOKTYPE_CONNECT_EXTINFO, 1, geoip_connect_extinfo); /* (prio: near-first) */
+	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, geoip_whois);
 
 	return MOD_SUCCESS;
 }
@@ -98,5 +99,20 @@ int geoip_connect_extinfo(Client *client, NameValuePrioList **list)
 	char *country = moddata_client_get(client, "geoip");
 	if (country)
 		add_nvplist(list, 0, "country", country);
+	return 0;
+}
+
+int geoip_whois(Client *client, Client *target)
+{
+	char *country;
+
+	if (!IsOper(client))
+		return 0;
+
+	country = moddata_client_get(target, "geoip");
+	if (!country)
+		return 0;
+	sendnumeric(client, RPL_WHOISCOUNTRY, target->name, country, country);
+
 	return 0;
 }
