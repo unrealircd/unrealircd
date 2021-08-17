@@ -20,15 +20,17 @@ char *db_file = NULL;
 GeoIP *gi = NULL;
 
 /* Forward declarations */
-char *geo_lookup_classic(char *ip);
+char *geoip_lookup_classic(char *ip);
 
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	if (!CallbackAddPCharEx(modinfo->handle, CALLBACKTYPE_GEO_LOOKUP, geo_lookup_classic))
+	if (!CallbackAddPCharEx(modinfo->handle, CALLBACKTYPE_GEOIP_LOOKUP, geoip_lookup_classic))
 	{
-		config_error("geoip_classic: Could not install GEO_LOOKUP callback. "
-		             "Maybe another geoip module is already loaded? You can only load one!");
+		unreal_log(ULOG_ERROR, "geoip_classic", "GEOIP_ADD_CALLBACK_FAILED", NULL,
+		           "geoip_classic: Could not install GEOIP_LOOKUP callback. "
+		           "Most likely another eoip module is already loaded. "
+		           "You can only load one!");
 		return MOD_FAILED;
 	}
 	return MOD_SUCCESS;
@@ -65,7 +67,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *geo_lookup_classic(char *ip)
+char *geoip_lookup_classic(char *ip)
 {
 	static char buf[256];
 	const char *r;

@@ -1094,9 +1094,9 @@ MODVAR char *floodoption_names[] = {
  * @param ip	The IP to lookup
  * @returns The country code, or NULL.
  */
-char *geo_lookup(char *ip)
+char *geoip_lookup_country(char *ip)
 {
-	if (!RCallbacks[CALLBACKTYPE_GEO_LOOKUP])
+	if (!RCallbacks[CALLBACKTYPE_GEOIP_LOOKUP])
 		return NULL;
-	return RCallbacks[CALLBACKTYPE_GEO_LOOKUP]->func.pcharfunc(ip);
+	return RCallbacks[CALLBACKTYPE_GEOIP_LOOKUP]->func.pcharfunc(ip);
 }
