@@ -2135,6 +2135,7 @@ int conf_start(void)
 	int ret;
 
 	config_status("Loading IRCd configuration..");
+	loop.config_load_failed = 0;
 
 	if (conf)
 	{
@@ -2171,6 +2172,15 @@ int conf_check_complete(void)
 int init_conf(int rehash)
 {
 	char *old_pid_file = NULL;
+
+	if (loop.config_load_failed)
+	{
+		/* An error was already printed to the user.
+		 * This happens in case of a failed loaded remote URL
+		 */
+		config_load_failed();
+		return -1;
+	}
 
 	config_status("Testing IRCd configuration..");
 
@@ -10656,7 +10666,22 @@ static void conf_download_complete(const char *url, const char *file, const char
 	config_status("conf_download_complete() for %s [%s]", url, errorbuf?errorbuf:"success");
 
 	if (!file && !cached)
-		update_remote_include(inc, file, 0, errorbuf); /* DOWNLOAD FAILED */
+	{
+		/* DOWNLOAD FAILED */
+		update_remote_include(inc, file, 0, errorbuf);
+		unreal_log(ULOG_ERROR, "config", "DOWNLOAD_FAILED", NULL,
+		           "$file:$line_number: Failed to download '$url': $error_message",
+		           log_data_string("file", inc->included_from),
+		           log_data_integer("line_number", inc->included_from_line),
+		           log_data_string("url", displayurl(url)),
+		           log_data_string("error_message", errorbuf));
+		/* Set error condition, this so load_conf() later will stop. */
+		loop.config_load_failed = 1;
+		/* We keep the other transfers running since they may raise (more) errors.
+		 * Which can be helpful so you can differentiate between an error of an
+		 * include on one server, or complete lack of internet connectvitity.
+		 */
+	}
 	else
 	{
 		char *urlfile = url_getfilename(url);
@@ -10938,7 +10963,7 @@ void free_all_includes(void)
 		if (inc->flag.type & INCLUDE_REMOTE)
 		{
 			/* Delete the file, but only if it's not a cached version */
-			if (strncmp(inc->file, CACHEDIR, strlen(CACHEDIR)))
+			if (inc->file && strncmp(inc->file, CACHEDIR, strlen(CACHEDIR)))
 			{
 				remove(inc->file);
 			}
