@@ -169,7 +169,7 @@ static int download_staff_file(ConfigEntry *ce)
 	safe_strdup(Download.file, filename);
 	safe_free(file);
 
-	if (!loop.ircd_rehashing && !Download.once_completed)
+	if (!loop.rehashing && !Download.once_completed)
 	{
 		char *error;
 

@@ -1987,7 +1987,7 @@ void postconf(void)
 	tls_check_expiry(NULL);
 
 #if OPENSSL_VERSION_NUMBER >= 0x10101000L
-	if (loop.ircd_rehashing)
+	if (loop.rehashing)
 		reinit_tls();
 #endif
 }
@@ -2212,7 +2212,7 @@ int config_test(void)
 	efunctions_switchover();
 	set_targmax_defaults();
 	set_security_group_defaults();
-	if (loop.ircd_rehashing)
+	if (loop.rehashing)
 	{
 		Hook *h;
 		safe_strdup(old_pid_file, conf_files->pid_file);
@@ -2239,7 +2239,7 @@ int config_test(void)
 	{
 		config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
 #ifdef _WIN32
-		if (!loop.ircd_rehashing)
+		if (!loop.rehashing)
 			win_error();
 #endif
 		abort();
@@ -2258,7 +2258,7 @@ int config_test(void)
 
 	config_free(conf);
 	conf = NULL;
-	if (loop.ircd_rehashing)
+	if (loop.rehashing)
 	{
 		module_loadall();
 		RunHook0(HOOKTYPE_REHASH_COMPLETE);
@@ -9403,7 +9403,7 @@ void start_listeners(void)
 				failed = 1;
 				last_errno = ERRNO;
 			} else {
-				if (loop.ircd_booted)
+				if (loop.booted)
 				{
 					unreal_log(ULOG_INFO, "listen", "LISTEN_ADDED", NULL,
 					           "UnrealIRCd is now also listening on $listen_ip:$listen_port",
@@ -9451,7 +9451,7 @@ void start_listeners(void)
 		exit(-1);
 	}
 
-	if (failed && !loop.ircd_booted)
+	if (failed && !loop.booted)
 	{
 		unreal_log(ULOG_FATAL, "listen", "SOME_LISTEN_PORTS_FAILED", NULL,
 			   "Unable to listen on all ports (some of them succeeded, some of them failed). "
@@ -9461,7 +9461,7 @@ void start_listeners(void)
 		exit(-1);
 	}
 
-	if (!loop.ircd_booted)
+	if (!loop.booted)
 	{
 		if (strlen(boundmsg_ipv4) > 2)
 			boundmsg_ipv4[strlen(boundmsg_ipv4)-2] = '\0';
@@ -10532,7 +10532,7 @@ int _test_secret(ConfigFile *conf, ConfigEntry *ce)
 			return errors;
 #endif
 			has_password_prompt = 1;
-			if (loop.ircd_booted && !find_secret(ce->value))
+			if (loop.booted && !find_secret(ce->value))
 			{
 				config_error("%s:%d: you cannot add a new secret { } block that uses password-prompt and then /REHASH. "
 				             "With 'password-prompt' you can only add such a password on boot.",
@@ -10540,7 +10540,7 @@ int _test_secret(ConfigFile *conf, ConfigEntry *ce)
 				config_error("Either use a different method to enter passwords or restart the IRCd on the console.");
 				errors++;
 			}
-			if (!loop.ircd_booted && !running_interactively())
+			if (!loop.booted && !running_interactively())
 			{
 				config_error("ERROR: IRCd is not running interactively, but via a cron job or something similar.");
 				config_error("%s:%d: unable to prompt for password since IRCd is not started in a terminal",
@@ -10616,7 +10616,7 @@ int _conf_secret(ConfigFile *conf, ConfigEntry *ce)
 		} else
 		if (!strcmp(cep->name, "password-prompt"))
 		{
-			if (!loop.ircd_booted && running_interactively())
+			if (!loop.booted && running_interactively())
 			{
 				s->password = _conf_secret_read_prompt(ce->value);
 				if (!s->password || !valid_secret_password(s->password, NULL))
@@ -10712,7 +10712,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 	 * If booting (not rehashing), this is done from the
 	 * startup loop where it also checks is_config_read_finished().
 	 */
-	if (loop.ircd_rehashing && is_config_read_finished())
+	if (loop.rehashing && is_config_read_finished())
 		rehash_internal(loop.rehash_save_client, loop.rehash_save_sig);
 }
 #endif
@@ -10722,14 +10722,14 @@ int     rehash(Client *client, int sig)
 #ifdef USE_LIBCURL
 	ConfigItem_include *inc;
 	char found_remote = 0;
-	if (loop.ircd_rehashing)
+	if (loop.rehashing)
 	{
 		if (!sig)
 			sendnotice(client, "A rehash is already in progress");
 		return 0;
 	}
 
-	loop.ircd_rehashing = 1;
+	loop.rehashing = 1;
 	loop.rehash_save_client = client;
 	loop.rehash_save_sig = sig;
 	config_read_start();
@@ -10741,7 +10741,7 @@ int     rehash(Client *client, int sig)
 	 */
 	return 0;
 #else
-	loop.ircd_rehashing = 1;
+	loop.rehashing = 1;
 	return rehash_internal(client, sig);
 #endif
 }
@@ -10751,7 +10751,7 @@ int rehash_internal(Client *client, int sig)
 	if (sig == 1)
 		unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [./unrealircd rehash]");
 
-	loop.ircd_rehashing = 1; /* double checking.. */
+	loop.rehashing = 1; /* double checking.. */
 
 	if (config_test() == 0)
 		config_run();
@@ -10766,7 +10766,7 @@ int rehash_internal(Client *client, int sig)
 	extcmodes_check_for_changes();
 	umodes_check_for_changes();
 	charsys_check_for_changes();
-	loop.ircd_rehashing = 0;
+	loop.rehashing = 0;
 	remote_rehash_client = NULL;
 	return 1;
 }

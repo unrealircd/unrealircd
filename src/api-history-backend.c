@@ -140,7 +140,7 @@ void HistoryBackendDel(HistoryBackend *m)
 		m->owner = NULL;
 	}
 
-	if (loop.ircd_rehashing)
+	if (loop.rehashing)
 		m->unloaded = 1;
 	else
 		unload_history_backend_commit(m);

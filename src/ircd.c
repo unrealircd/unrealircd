@@ -82,7 +82,7 @@ void s_die()
 	Client *client;
 	if (!IsService)
 	{
-		loop.ircd_terminating = 1;
+		loop.terminating = 1;
 		unload_all_modules();
 
 		list_for_each_entry(client, &lclient_list, lclient_node)
@@ -97,7 +97,7 @@ void s_die()
 		ControlService(hService, SERVICE_CONTROL_STOP, &status);
 	}
 #else
-	loop.ircd_terminating = 1;
+	loop.terminating = 1;
 	unload_all_modules();
 	unlink(conf_files ? conf_files->pid_file : IRCD_PIDFILE);
 	exit(0);
@@ -1173,17 +1173,17 @@ int InitUnrealIRCd(int argc, char *argv[])
 		/* Background process (child) continues below... */
 		close_std_descriptors();
 		fd_fork();
-		loop.ircd_forked = 1;
+		loop.forked = 1;
 	}
 #endif
 #ifdef _WIN32
-	loop.ircd_forked = 1;
+	loop.forked = 1;
 #endif
 
 	fix_timers();
 	write_pidfile();
 	init_throttling();
-	loop.ircd_booted = 1;
+	loop.booted = 1;
 #if defined(HAVE_SETPROCTITLE)
 	setproctitle("%s", me.name);
 #elif defined(HAVE_PSTAT)

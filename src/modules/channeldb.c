@@ -131,7 +131,7 @@ MOD_LOAD()
 
 MOD_UNLOAD()
 {
-	if (loop.ircd_terminating)
+	if (loop.terminating)
 		write_channeldb();
 	freecfg(&test);
 	freecfg(&cfg);

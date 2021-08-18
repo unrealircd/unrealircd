@@ -147,7 +147,7 @@ void MessageTagHandlerDel(MessageTagHandler *m)
 		m->owner = NULL;
 	}
 
-	if (loop.ircd_rehashing)
+	if (loop.rehashing)
 		m->unloaded = 1;
 	else
 		unload_mtag_handler_commit(m);

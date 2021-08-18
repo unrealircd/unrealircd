@@ -240,7 +240,7 @@ MOD_LOAD()
 
 MOD_UNLOAD()
 {
-	if (loop.ircd_terminating)
+	if (loop.terminating)
 		reputation_save_db();
 	reputation_free_config(&test);
 	reputation_free_config(&cfg);

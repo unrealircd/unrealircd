@@ -306,7 +306,7 @@ void CmodeDel(Cmode *cmode)
 		}
 		cmode->owner = NULL;
 	}
-	if (loop.ircd_rehashing)
+	if (loop.rehashing)
 		cmode->unloaded = 1;
 	else
 		unload_extcmode_commit(cmode);

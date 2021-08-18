@@ -564,7 +564,7 @@ CMD_FUNC(cmd_rehash)
 #endif
 		if (parv[2] == NULL)
 		{
-			if (loop.ircd_rehashing)
+			if (loop.rehashing)
 			{
 				sendnotice(client, "A rehash is already in progress");
 				return;
@@ -633,7 +633,7 @@ CMD_FUNC(cmd_rehash)
 	}
 	else
 	{
-		if (loop.ircd_rehashing)
+		if (loop.rehashing)
 		{
 			sendnotice(client, "ERROR: A rehash is already in progress");
 			return;

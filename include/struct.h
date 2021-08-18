@@ -854,16 +854,16 @@ struct MOTDLine {
 struct LoopStruct {
 	unsigned do_garbage_collect : 1;
 	unsigned config_test : 1;
-	unsigned ircd_booted : 1;
-	unsigned ircd_forked : 1;
+	unsigned booted : 1;
+	unsigned forked : 1;
 	unsigned do_bancheck : 1; /* perform *line bancheck? */
 	unsigned do_bancheck_spamf_user : 1; /* perform 'user' spamfilter bancheck */
 	unsigned do_bancheck_spamf_away : 1; /* perform 'away' spamfilter bancheck */
-	unsigned ircd_rehashing : 1;
-	unsigned ircd_terminating : 1;
+	unsigned rehashing : 1;
+	unsigned terminating : 1;
 	unsigned config_load_failed : 1;
 	unsigned tainted : 1;
-	Client *rehash_save_cptr, *rehash_save_client;
+	Client *rehash_save_client;
 	int rehash_save_sig;
 	void (*boot_function)();
 };

@@ -248,7 +248,7 @@ void ClientCapabilityDel(ClientCapability *clicap)
 		clicap->owner = NULL;
 	}
 
-	if (loop.ircd_rehashing)
+	if (loop.rehashing)
 		clicap->unloaded = 1;
 	else
 		unload_clicap_commit(clicap);
@@ -328,7 +328,7 @@ void clicap_post_rehash(void)
 	int i;
 	int found;
 
-	if (!loop.ircd_rehashing)
+	if (!loop.rehashing)
 		return; /* First boot */
 
 	/* Let's deal with CAP DEL first:

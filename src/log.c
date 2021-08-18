@@ -1056,7 +1056,7 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, Mult
 
 	//RunHook3(HOOKTYPE_LOG, flags, timebuf, text_buf); // FIXME: call with more parameters and possibly not even 'text_buf' at all
 
-	if (!loop.ircd_forked && (loglevel > ULOG_DEBUG))
+	if (!loop.forked && (loglevel > ULOG_DEBUG))
 	{
 		for (m = msg; m; m = m->next)
 		{
@@ -1162,7 +1162,7 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, Mult
 			l->logfd = fd_fileopen(l->file, O_CREAT|O_APPEND|O_WRONLY);
 			if (l->logfd == -1)
 			{
-				if (!loop.ircd_booted)
+				if (!loop.booted)
 				{
 					config_status("WARNING: Unable to write to '%s': %s", l->file, strerror(errno));
 				} else {
@@ -1212,7 +1212,7 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, Mult
 
 		if (write_error)
 		{
-			if (!loop.ircd_booted)
+			if (!loop.booted)
 			{
 				config_status("WARNING: Unable to write to '%s': %s", l->file, strerror(errno));
 			} else {
@@ -1280,7 +1280,7 @@ void do_unreal_log_opers(LogLevel loglevel, char *subsystem, char *event_id, Mul
 	MultiLine *m;
 
 	/* If not fully booted then we don't have a logging to snomask mapping so can't do much.. */
-	if (!loop.ircd_booted)
+	if (!loop.booted)
 		return;
 
 	/* Never send these */

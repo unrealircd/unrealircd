@@ -200,7 +200,7 @@ EVENT(history_mem_init)
 
 MOD_UNLOAD()
 {
-	if (loop.ircd_terminating)
+	if (loop.terminating)
 		hbm_flush();
 	freecfg(&test);
 	freecfg(&cfg);

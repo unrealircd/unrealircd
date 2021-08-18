@@ -171,7 +171,7 @@ int DoCloseUnreal(HWND hWnd)
 {
 	unreal_log(ULOG_INFO, "main", "UNREALIRCD_STOP", NULL,
 	           "Terminating server (process termination requested or GUI window closed)");
-	loop.ircd_terminating = 1;
+	loop.terminating = 1;
 	unload_all_modules();
 	DestroyWindow(hWnd);
 	TerminateProcess(GetCurrentProcess(), 0);
@@ -562,7 +562,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				return FALSE;
 			}
 
-			if (!loop.ircd_booted)
+			if (!loop.booted)
 			{
 				MessageBox(NULL, "UnrealIRCd not booted due to configuration errors. "
 				                 "Check other window for error details. Then close that window, "

@@ -276,7 +276,7 @@ void ModDataDel(ModDataInfo *md)
 		md->owner = NULL;
 	}
 
-	if (loop.ircd_rehashing)
+	if (loop.rehashing)
 		md->unloaded = 1;
 	else
 		unload_moddata_commit(md);

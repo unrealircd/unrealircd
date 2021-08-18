@@ -223,7 +223,7 @@ Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*
 
 void UmodeDel(Umode *umode)
 {
-	if (loop.ircd_rehashing)
+	if (loop.rehashing)
 		umode->unloaded = 1;
 	else	
 	{
@@ -317,7 +317,7 @@ Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(Client *client, int 
 
 void SnomaskDel(Snomask *sno)
 {
-	if (loop.ircd_rehashing)
+	if (loop.rehashing)
 		sno->unloaded = 1;
 	else	
 	{

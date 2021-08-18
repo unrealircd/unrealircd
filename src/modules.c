@@ -88,7 +88,7 @@ void DeleteTempModules(void)
 	{
 		config_error("Unable to open temp directory %s: %s, please create one with the appropriate permissions",
 			TMPDIR, strerror(errno));
-		if (!loop.ircd_booted)
+		if (!loop.booted)
 			exit(7);
 		return; 
 	}
@@ -735,9 +735,9 @@ void module_loadall(void)
 	iFP	fp;
 	Module *mi, *next;
 	
-	if (!loop.ircd_booted)
+	if (!loop.booted)
 	{
-		sendto_realops("Ehh, !loop.ircd_booted in module_loadall()");
+		sendto_realops("Ehh, !loop.booted in module_loadall()");
 		return ;
 	}
 	/* Run through all modules and check for module load */
