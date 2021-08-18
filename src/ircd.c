@@ -1076,10 +1076,16 @@ int InitUnrealIRCd(int argc, char *argv[])
 	default_class->sendq = DEFAULT_RECVQ;
 	default_class->name = "default";
 	AddListItem(default_class, conf_class);
-	if (init_conf(configfile, 0) < 0)
-	{
+	if (conf_start() < 0)
 		exit(-1);
+	while (!conf_check_complete())
+	{
+		extern EVENT(curl_socket_timeout);
+		curl_socket_timeout(NULL);
+		fd_select(500);
 	}
+	if (init_conf(0) < 0)
+		exit(-1);
 	booted = TRUE;
 	load_tunefile();
 	make_umodestr();

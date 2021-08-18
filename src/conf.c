@@ -199,7 +199,6 @@ void free_tls_options(TLSOptions *tlsoptions);
 /*
  * Config parser (IRCd)
 */
-int			init_conf(char *rootconf, int rehash);
 int			load_conf(char *filename, const char *original_path);
 void			config_rehash();
 int			config_run();
@@ -253,7 +252,7 @@ char *port_6667_ip = NULL;
 
 void add_include(const char *filename, const char *included_from, int included_from_line);
 #ifdef USE_LIBCURL
-void add_remote_include(const char *, const char *, int, const char *, const char *included_from, int included_from_line);
+ConfigItem_include *add_remote_include(const char *, const char *, int, const char *, const char *included_from, int included_from_line);
 void update_remote_include(ConfigItem_include *inc, const char *file, int, const char *errorbuf);
 int remote_include(ConfigEntry *ce);
 #endif
@@ -2116,16 +2115,67 @@ int config_loadmodules(void)
 	return 1; /* SUCCESS */
 }
 
-int	init_conf(char *rootconf, int rehash)
+/** Reject the configuration load.
+ * This is called both from boot and from rehash.
+ */
+void config_load_failed(void)
 {
-	char *old_pid_file = NULL;
+	unreal_log(ULOG_ERROR, "config", "CONFIG_NOT_LOADED", NULL, "IRCd configuration failed to load");
+	Unload_all_testing_modules();
+	unload_notloaded_includes();
+	config_free(conf);
+	conf = NULL;
+	free_iConf(&tempiConf);
+#ifdef _WIN32
+	if (!rehash)
+		win_error(); /* GUI popup */
+#endif
+}
+
+int conf_start(void)
+{
+	int ret;
 
 	config_status("Loading IRCd configuration..");
+
 	if (conf)
 	{
 		config_error("%s:%i - Someone forgot to clean up", __FILE__, __LINE__);
 		return -1;
 	}
+
+	add_include(configfile, "[thin air]", -1);
+	ret = load_conf(configfile, configfile);
+	if (ret < 0)
+	{
+		config_load_failed();
+		return -1;
+	}
+	return 1;
+}
+
+int conf_check_complete(void)
+{
+	ConfigItem_include *inc;
+
+	for (inc = conf_include; inc; inc = inc->next)
+	{
+		if (inc->flag.type & INCLUDE_DLQUEUED)
+		{
+			config_status("Waiting for %s...", inc->url);
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+int init_conf(int rehash)
+{
+	char *old_pid_file = NULL;
+
+	config_status("Testing IRCd configuration..");
+
 	memset(&tempiConf, 0, sizeof(iConf));
 	memset(&settings, 0, sizeof(settings));
 	memset(&requiredstuff, 0, sizeof(requiredstuff));
@@ -2133,91 +2183,80 @@ int	init_conf(char *rootconf, int rehash)
 	config_setdefaultsettings(&tempiConf);
 	clicap_pre_rehash();
 	free_config_defines();
-	/*
-	 * the rootconf must be listed in the conf_include for include
-	 * recursion prevention code and sanity checking code to be
-	 * made happy :-). Think of it as us implicitly making an
-	 * in-memory config file that looks like:
-	 *
-	 * include "unrealircd.conf";
-	 */
-	add_include(rootconf, "[thin air]", -1);
-	if ((load_conf(rootconf, rootconf) > 0) && config_loadmodules())
-	{
-		preprocessor_resolve_conditionals_all(PREPROCESSOR_PHASE_MODULE);
-		config_test_reset();
-		if (!config_test_all())
-		{
-			config_error("IRCd configuration failed to pass testing");
-#ifdef _WIN32
-			if (!rehash)
-				win_error();
-#endif
-			Unload_all_testing_modules();
-			unload_notloaded_includes();
-			config_free(conf);
-			conf = NULL;
-			free_iConf(&tempiConf);
-			return -1;
-		}
-		callbacks_switchover();
-		efunctions_switchover();
-		set_targmax_defaults();
-		set_security_group_defaults();
-		if (rehash)
-		{
-			Hook *h;
-			safe_strdup(old_pid_file, conf_files->pid_file);
-			unrealdns_delasyncconnects();
-			config_rehash();
-			Unload_all_loaded_modules();
 
-			/* Notify permanent modules of the rehash */
-			for (h = Hooks[HOOKTYPE_REHASH]; h; h = h->next)
-		        {
-				if (!h->owner)
-					continue;
-				if (!(h->owner->options & MOD_OPT_PERM))
-					continue;
-				(*(h->func.intfunc))();
-			}
-			unload_loaded_includes();
-		}
-		load_includes();
-		Init_all_testing_modules();
-		if (config_run() < 0)
-		{
-			config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
-#ifdef _WIN32
-			if (!rehash)
-				win_error();
-#endif
-			abort();
-		}
-		applymeblock();
-		if (old_pid_file && strcmp(old_pid_file, conf_files->pid_file))
-		{
-			sendto_ops("pidfile is being rewritten to %s, please delete %s",
-				   conf_files->pid_file,
-				   old_pid_file);
-			write_pidfile();
-		}
-		safe_free(old_pid_file);
-	}
-	else
+	if (!config_loadmodules())
 	{
-		unreal_log(ULOG_ERROR, "config", "CONFIG_NOT_LOADED", NULL, "IRCd configuration failed to load");
+		config_load_failed();
+		return -1;
+	}
+
+	preprocessor_resolve_conditionals_all(PREPROCESSOR_PHASE_MODULE);
+
+	config_test_reset();
+
+	if (!config_test_all())
+	{
+		config_error("IRCd configuration failed to pass testing");
+#ifdef _WIN32
+		if (!rehash)
+			win_error();
+#endif
 		Unload_all_testing_modules();
 		unload_notloaded_includes();
 		config_free(conf);
 		conf = NULL;
 		free_iConf(&tempiConf);
+		return -1;
+	}
+	callbacks_switchover();
+	efunctions_switchover();
+	set_targmax_defaults();
+	set_security_group_defaults();
+	if (rehash)
+	{
+		Hook *h;
+		safe_strdup(old_pid_file, conf_files->pid_file);
+		unrealdns_delasyncconnects();
+		config_rehash();
+		Unload_all_loaded_modules();
+
+		/* Notify permanent modules of the rehash */
+		for (h = Hooks[HOOKTYPE_REHASH]; h; h = h->next)
+		{
+			if (!h->owner)
+				continue;
+			if (!(h->owner->options & MOD_OPT_PERM))
+				continue;
+			(*(h->func.intfunc))();
+		}
+		unload_loaded_includes();
+	}
+
+	load_includes();
+
+	Init_all_testing_modules();
+
+	if (config_run() < 0)
+	{
+		config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
 #ifdef _WIN32
 		if (!rehash)
 			win_error();
 #endif
-		return -1;
+		abort();
 	}
+
+	applymeblock();
+
+	if (old_pid_file && strcmp(old_pid_file, conf_files->pid_file))
+	{
+		sendto_ops("pidfile is being rewritten to %s, please delete %s",
+			   conf_files->pid_file,
+			   old_pid_file);
+		write_pidfile();
+	}
+	safe_free(old_pid_file);
+
 	config_free(conf);
 	conf = NULL;
 	if (rehash)
@@ -10651,9 +10690,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 {
 	ConfigItem_include *inc;
 
-	if (!loop.ircd_rehashing)
-		return;
-
+#if 0
 	/*
 	  use inc_key to find the correct include block. This
 	  should be cheaper than using the full URL.
@@ -10679,6 +10716,13 @@ static void conf_download_complete(const char *url, const char *file, const char
 		           log_data_string("url_censored", displayurl(url)));
 		return;
 	}
+#else
+	/* This should be sufficient */
+	inc = (ConfigItem_include *)inc_key;
+	inc->flag.type &= ~INCLUDE_DLQUEUED;
+#endif
+
+	config_status("conf_download_complete() for %s [%s]", url, errorbuf?errorbuf:"success");
 
 	if (!file && !cached)
 		update_remote_include(inc, file, 0, errorbuf); /* DOWNLOAD FAILED */
@@ -10706,12 +10750,17 @@ static void conf_download_complete(const char *url, const char *file, const char
 			unreal_copyfileex(file, unreal_mkcache(url), 0);
 		}
 	}
+
+#if 0
 	for (inc = conf_include; inc; inc = inc->next)
 	{
 		if (inc->flag.type & INCLUDE_DLQUEUED)
 			return;
 	}
 	rehash_internal(loop.rehash_save_client, loop.rehash_save_sig);
+#else
+	// This breaks rehashes but.. at least we can boot now :D
+#endif
 }
 #endif
 
@@ -10764,7 +10813,7 @@ int rehash_internal(Client *client, int sig)
 
 	loop.ircd_rehashing = 1; /* double checking.. */
 
-	if (init_conf(configfile, 1) == 0)
+	if (init_conf(1) == 0)
 		run_configuration();
 	reread_motdsandrules();
 	unload_all_unused_snomasks();
@@ -10897,61 +10946,13 @@ int remote_include(ConfigEntry *ce)
 {
 	char *errorbuf = NULL;
 	char *url = ce->value;
-	char *file = find_remote_include(url, &errorbuf);
-	int ret;
-	if (!loop.ircd_rehashing || (loop.ircd_rehashing && !file && !errorbuf))
-	{
-		char *error;
-		if (config_verbose > 0)
-			config_status("Downloading %s", displayurl(url));
-		file = download_file(url, &error);
-		if (!file)
-		{
-			if (has_cached_version(url))
-			{
-				config_warn("%s:%i: include: error downloading '%s': %s -- using cached version instead.",
-					ce->file->filename, ce->line_number,
-					displayurl(url), error);
-				safe_strdup(file, unreal_mkcache(url));
-				/* Let it pass to load_conf()... */
-			} else {
-				config_error("%s:%i: include: error downloading '%s': %s",
-					ce->file->filename, ce->line_number,
-					 displayurl(url), error);
-				return -1;
-			}
-		} else {
-			unreal_copyfileex(file, unreal_mkcache(url), 0);
-		}
-		add_remote_include(file, url, 0, NULL, ce->file->filename, ce->line_number);
-		ret = load_conf(file, url);
-		safe_free(file);
-		return ret;
-	}
-	else
-	{
-		if (errorbuf)
-		{
-			if (has_cached_version(url))
-			{
-				config_warn("%s:%i: include: error downloading '%s': %s -- using cached version instead.",
-					ce->file->filename, ce->line_number,
-					displayurl(url), errorbuf);
-				/* Let it pass to load_conf()... */
-				safe_strdup(file, unreal_mkcache(url));
-			} else {
-				config_error("%s:%i: include: error downloading '%s': %s",
-					ce->file->filename, ce->line_number,
-					displayurl(url), errorbuf);
-				return -1;
-			}
-		}
-		if (config_verbose > 0)
-			config_status("Loading %s from download", url);
-		add_remote_include(file, url, 0, NULL, ce->file->filename, ce->line_number);
-		ret = load_conf(file, url);
-		return ret;
-	}
+	char *file = NULL; // ???
+	ConfigItem_include *inc;
+	time_t modtime = 0; // ???
+
+	inc = add_remote_include(file, url, 0, NULL, ce->file->filename, ce->line_number);
+	inc->flag.type |= INCLUDE_DLQUEUED; // wait.. why doesn't add_remote_include() do this?
+	download_file_async(inc->url, modtime, conf_download_complete, (void *)inc);
 	return 0;
 }
 #endif
@@ -10989,7 +10990,7 @@ void add_include(const char *file, const char *included_from, int included_from_
  * download is complete and you know there it is stored in the FS,
  * call update_remote_include().
  */
-void add_remote_include(const char *file, const char *url, int flags, const char *errorbuf, const char *included_from, int included_from_line)
+ConfigItem_include *add_remote_include(const char *file, const char *url, int flags, const char *errorbuf, const char *included_from, int included_from_line)
 {
 	ConfigItem_include *inc;
 
@@ -11004,6 +11005,7 @@ void add_remote_include(const char *file, const char *url, int flags, const char
 
 	update_remote_include(inc, file, INCLUDE_NOTLOADED|INCLUDE_REMOTE|flags, errorbuf);
 	AddListItem(inc, conf_include);
+	return inc;
 }
 
 /**

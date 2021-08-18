@@ -352,7 +352,7 @@ static int url_socket_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *so
 }
 
 /* Handle timeouts. */
-static EVENT(curl_socket_timeout)
+EVENT(curl_socket_timeout)
 {
 	int dummy;
 
