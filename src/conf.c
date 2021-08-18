@@ -2160,7 +2160,7 @@ int conf_check_complete(void)
 	{
 		if (inc->flag.type & INCLUDE_DLQUEUED)
 		{
-			config_status("Waiting for %s...", inc->url);
+			//config_status("Waiting for %s...", inc->url);
 			return 0;
 		}
 	}
@@ -2308,13 +2308,11 @@ int	load_conf(char *filename, const char *original_path)
 			continue;
 		}
 #endif
-#ifdef USE_LIBCURL
 		if (inc->url && !strcmp(original_path, inc->url))
 		{
 			counter ++;
 			continue;
 		}
-#endif
 	}
 	if (counter > 1)
 	{

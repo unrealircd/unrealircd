@@ -1080,8 +1080,10 @@ int InitUnrealIRCd(int argc, char *argv[])
 		exit(-1);
 	while (!conf_check_complete())
 	{
+#ifdef USE_LIBCURL
 		extern EVENT(curl_socket_timeout);
 		curl_socket_timeout(NULL);
+#endif
 		fd_select(500);
 	}
 	if (init_conf(0) < 0)

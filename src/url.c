@@ -22,11 +22,7 @@
 
 extern char *TLSKeyPasswd;
 
-#ifndef _WIN32
-extern uid_t irc_uid;
-extern gid_t irc_gid;
-#endif
-
+#ifdef USE_LIBCURL
 CURLM *multihandle;
 
 /* Stores information about the async transfer.
@@ -43,6 +39,7 @@ typedef struct
 	char errorbuf[CURL_ERROR_SIZE];
 	time_t cachetime;
 } FileHandle;
+#endif
 
 /*
  * Determines if the given string is a valid URL. Since libcurl
@@ -125,6 +122,7 @@ char *url_getfilename(const char *url)
 	return raw_strdup("-");
 }
 
+#ifdef USE_LIBCURL
 /*
  * Sets up all of the SSL options necessary to support HTTPS/FTPS
  * transfers.
@@ -456,3 +454,4 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 		curl_multi_add_handle(multihandle, curl);
 	}
 }
+#endif

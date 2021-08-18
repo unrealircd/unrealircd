@@ -629,7 +629,6 @@ IRCDLIBS
 GEOIP_CLASSIC_OBJECTS
 GEOIP_CLASSIC_LIBS
 GEOIP_CLASSIC_CFLAGS
-URL
 PTHREAD_CFLAGS
 PTHREAD_LIBS
 PTHREAD_CC
@@ -8546,9 +8545,6 @@ rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 		LIBS="$LIBS_SAVEDA"
 		CFLAGS="$CFLAGS_SAVEDA"
-
-		URL="url.o"
-
 
 fi
 

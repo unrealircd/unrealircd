@@ -129,9 +129,6 @@ AC_DEFUN([CHECK_LIBCURL],
 		])
 		LIBS="$LIBS_SAVEDA"
 		CFLAGS="$CFLAGS_SAVEDA"
-
-		URL="url.o"
-		AC_SUBST(URL)
 	]) dnl AS_IF(enable_curl) 
 ])
 

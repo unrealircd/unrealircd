@@ -1896,10 +1896,8 @@ struct ConfigItem_include {
 	ConfigItem_include *prev, *next;
 	ConfigFlag_ban flag;
 	char *file;
-#ifdef USE_LIBCURL
 	char *url;
 	char *errorbuf;
-#endif
 	char *included_from;
 	int included_from_line;
 };

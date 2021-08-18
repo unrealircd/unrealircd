@@ -33,7 +33,7 @@ OBJS=dns.o auth.o channel.o crule.o dbuf.o \
 	api-event.o \
 	crypt_blowfish.o unrealdb.o updconf.o crashreport.o modulemanager.o \
 	utf8.o log.o \
-	openssl_hostname_validation.o $(URL)
+	openssl_hostname_validation.o url.o
 
 SRC=$(OBJS:%.o=%.c)
 
