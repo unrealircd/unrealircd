@@ -1076,9 +1076,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 	default_class->sendq = DEFAULT_RECVQ;
 	default_class->name = "default";
 	AddListItem(default_class, conf_class);
-	if (conf_start() < 0)
+	if (config_read_start() < 0)
 		exit(-1);
-	while (!conf_check_complete())
+	while (!is_config_read_finished())
 	{
 #ifdef USE_LIBCURL
 		extern EVENT(curl_socket_timeout);
@@ -1086,7 +1086,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 		fd_select(500);
 	}
-	if (init_conf(0) < 0)
+	if (config_test(0) < 0)
 		exit(-1);
 	booted = TRUE;
 	load_tunefile();
@@ -1128,7 +1128,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifdef HAVE_SYSLOG
 	openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON);
 #endif
-	run_configuration();
+	config_run();
 	unreal_log(ULOG_INFO, "main", "UNREALIRCD_START", NULL, "UnrealIRCd started.");
 
 	read_motd(conf_files->botmotd_file, &botmotd);

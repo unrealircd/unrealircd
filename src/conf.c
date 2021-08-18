@@ -199,9 +199,11 @@ void free_tls_options(TLSOptions *tlsoptions);
 /*
  * Config parser (IRCd)
 */
-int			load_conf(char *filename, const char *original_path);
+int			config_read_file(char *filename, const char *original_path);
 void			config_rehash();
-int			config_run();
+int			config_run_blocks();
+int	config_test_blocks();
+
 /*
  * Configuration linked lists
 */
@@ -1727,8 +1729,6 @@ void	free_iConf(Configuration *i)
 	i->floodsettings = NULL;
 }
 
-int	config_test();
-
 void config_setdefaultsettings(Configuration *i)
 {
 	char tmp[512];
@@ -1976,7 +1976,7 @@ RealCommand *cmptr;
  * has been read and almost all values have been set. This is to deal with
  * things like adding a default log { } block if there is none and that kind
  * of things.
- * This function is called by init_conf(), both on boot and on rehash.
+ * This function is called by config_test(), both on boot and on rehash.
  */
 void postconf(void)
 {
@@ -2051,7 +2051,7 @@ void config_test_reset(void)
 /** Run config test and all post config tests. */
 int config_test_all(void)
 {
-	if ((config_test() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0) ||
+	if ((config_test_blocks() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0) ||
 	    reloadable_perm_module_unloaded() || !tls_tests())
 	{
 		return 0;
@@ -2130,7 +2130,7 @@ void config_load_failed(void)
 #endif
 }
 
-int conf_start(void)
+int config_read_start(void)
 {
 	int ret;
 
@@ -2144,7 +2144,7 @@ int conf_start(void)
 	}
 
 	add_include(configfile, "[thin air]", -1);
-	ret = load_conf(configfile, configfile);
+	ret = config_read_file(configfile, configfile);
 	if (ret < 0)
 	{
 		config_load_failed();
@@ -2153,7 +2153,7 @@ int conf_start(void)
 	return 1;
 }
 
-int conf_check_complete(void)
+int is_config_read_finished(void)
 {
 	ConfigItem_include *inc;
 
@@ -2169,7 +2169,7 @@ int conf_check_complete(void)
 	return 1;
 }
 
-int init_conf(int rehash)
+int config_test(int rehash)
 {
 	char *old_pid_file = NULL;
 
@@ -2235,7 +2235,7 @@ int init_conf(int rehash)
 
 	Init_all_testing_modules();
 
-	if (config_run() < 0)
+	if (config_run_blocks() < 0)
 	{
 		config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
 #ifdef _WIN32
@@ -2274,7 +2274,7 @@ int init_conf(int rehash)
  * Processes filename as part of the IRCd's configuration.
  *
  * One _must_ call add_include() or add_remote_include() before
- * calling load_conf(). This way, include recursion may be detected
+ * calling config_read_file(). This way, include recursion may be detected
  * and reported to the user as an error instead of causing the IRCd to
  * hang in an infinite recursion, eat up memory, and eventually
  * overflow its stack ;-). (reported by warg).
@@ -2284,7 +2284,7 @@ int init_conf(int rehash)
  *        (mostly to support remote includes' URIs for recursive include detection).
  * @return 1 on success, a negative number on error
  */
-int	load_conf(char *filename, const char *original_path)
+int	config_read_file(char *filename, const char *original_path)
 {
 	ConfigFile 	*cfptr, *cfptr2, **cfptr3;
 	ConfigEntry 	*ce;
@@ -2779,7 +2779,7 @@ void config_switchover(void)
 	log_blocks_switchover();
 }
 
-int	config_run()
+int	config_run_blocks()
 {
 	ConfigEntry 	*ce;
 	ConfigFile	*cfptr;
@@ -2826,7 +2826,7 @@ int	config_run()
 		for (ce = cfptr->items; ce; ce = ce->next)
 		{
 			/* These are already processed above (set, class)
-			 * or via config_test() (secret).
+			 * or via config_test_blocks() (secret).
 			 */
 			if (!strcmp(ce->name, "set") ||
 			    !strcmp(ce->name, "class") ||
@@ -2885,7 +2885,7 @@ int	config_run()
 }
 
 
-int	config_test()
+int	config_test_blocks()
 {
 	ConfigEntry 	*ce;
 	ConfigFile	*cfptr;
@@ -3390,7 +3390,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 	}
 	for (i = 0; i < files.gl_pathc; i++) {
 		add_include(files.gl_pathv[i], ce->file->filename, ce->line_number);
-		ret = load_conf(files.gl_pathv[i], files.gl_pathv[i]);
+		ret = config_read_file(files.gl_pathv[i], files.gl_pathv[i]);
 		if (ret < 0)
 		{
 			globfree(&files);
@@ -3420,14 +3420,14 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		strcat(path, FindData.cFileName);
 
 		add_include(path, ce->file->filename, ce->line_number);
-		ret = load_conf(path, path);
+		ret = config_read_file(path, path);
 		safe_free(path);
 
 	}
 	else
 	{
 		add_include(FindData.cFileName, ce->file->filename, ce->line_number);
-		ret = load_conf(FindData.cFileName, FindData.cFileName);
+		ret = config_read_file(FindData.cFileName, FindData.cFileName);
 	}
 	if (ret < 0)
 	{
@@ -3443,7 +3443,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 			strcat(path,FindData.cFileName);
 
 			add_include(path, ce->file->filename, ce->line_number);
-			ret = load_conf(path, path);
+			ret = config_read_file(path, path);
 			safe_free(path);
 			if (ret < 0)
 				break;
@@ -3451,7 +3451,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		else
 		{
 			add_include(FindData.cFileName, ce->file->filename, ce->line_number);
-			ret = load_conf(FindData.cFileName, FindData.cFileName);
+			ret = config_read_file(FindData.cFileName, FindData.cFileName);
 		}
 	}
 	FindClose(hFind);
@@ -3459,7 +3459,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		return ret;
 #else
 	add_include(ce->value, ce->file->filename, ce->line_number);
-	ret = load_conf(ce->value, ce->value);
+	ret = config_read_file(ce->value, ce->value);
 	return ret;
 #endif
 	return 1;
@@ -3711,7 +3711,7 @@ int	_conf_files(ConfigFile *conf, ConfigEntry *ce)
 	 * hack to allow initialization of conf_files (above) when there is no files block in
 	 * CPATH. The caller calls _conf_files(NULL, NULL); to do this. We return here because
 	 * the for loop's initialization of cep would segfault otherwise. We return 1 because
-	 * if config_run() calls us with a NULL ce, it's got a bug...but we can't detect that.
+	 * if config_run_blocks() calls us with a NULL ce, it's got a bug...but we can't detect that.
 	 */
 	if (!ce)
 	  return 1;
@@ -5429,7 +5429,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 			/*
 			 * If this item isn't set explicitly by the
 			 * user, the value will temporarily be
-			 * zero. Defaults are applied in config_run().
+			 * zero. Defaults are applied in config_run_blocks().
 			 */
 			allow->ipv6_clone_mask = atoi(cep->value);
 		}
@@ -9483,7 +9483,7 @@ void start_listeners(void)
 }
 
 /* Actually use configuration */
-void run_configuration(void)
+void config_run(void)
 {
 	start_listeners();
 	free_all_includes();
@@ -10675,7 +10675,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 		           log_data_integer("line_number", inc->included_from_line),
 		           log_data_string("url", displayurl(url)),
 		           log_data_string("error_message", errorbuf));
-		/* Set error condition, this so load_conf() later will stop. */
+		/* Set error condition, this so config_read_file() later will stop. */
 		loop.config_load_failed = 1;
 		/* We keep the other transfers running since they may raise (more) errors.
 		 * Which can be helpful so you can differentiate between an error of an
@@ -10705,14 +10705,14 @@ static void conf_download_complete(const char *url, const char *file, const char
 			update_remote_include(inc, tmp, 0, NULL);
 			unreal_copyfileex(file, unreal_mkcache(url), 0);
 		}
-		load_conf(inc->file, inc->url);
+		config_read_file(inc->file, inc->url);
 	}
 
 	/* If rehashing, check if we are done.
 	 * If booting (not rehashing), this is done from the
-	 * startup loop where it also checks conf_check_complete().
+	 * startup loop where it also checks is_config_read_finished().
 	 */
-	if (loop.ircd_rehashing && conf_check_complete())
+	if (loop.ircd_rehashing && is_config_read_finished())
 		rehash_internal(loop.rehash_save_client, loop.rehash_save_sig);
 }
 #endif
@@ -10732,9 +10732,9 @@ int     rehash(Client *client, int sig)
 	loop.ircd_rehashing = 1;
 	loop.rehash_save_client = client;
 	loop.rehash_save_sig = sig;
-	conf_start();
+	config_read_start();
 	/* If we already have everything, then can we proceed with the rehash */
-	if (conf_check_complete())
+	if (is_config_read_finished())
 		return rehash_internal(client, sig);
 	/* Otherwise, return here, I/O events will take care of it later
 	 * after all remote includes have been downloaded.
@@ -10753,8 +10753,8 @@ int rehash_internal(Client *client, int sig)
 
 	loop.ircd_rehashing = 1; /* double checking.. */
 
-	if (init_conf(1) == 0)
-		run_configuration();
+	if (config_test(1) == 0)
+		config_run();
 	reread_motdsandrules();
 	unload_all_unused_snomasks();
 	unload_all_unused_umodes();

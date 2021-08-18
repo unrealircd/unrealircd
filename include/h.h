@@ -466,11 +466,10 @@ extern void      flag_del(char ch);
 extern void init_dynconf(void);
 extern char *pretty_time_val(long);
 extern char *pretty_date(time_t t);
-extern int conf_start(void);
-extern int conf_check_complete(void);
-extern int init_conf(int rehash);
-extern void       validate_configuration(void);
-extern void       run_configuration(void);
+extern int config_read_start(void);
+extern int is_config_read_finished(void);
+extern int config_test(int rehash);
+extern void config_run(void);
 extern void rehash_motdrules();
 extern void read_motd(const char *filename, MOTDFile *motd); /* s_serv.c */
 extern void send_proto(Client *, ConfigItem_link *);
