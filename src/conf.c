@@ -252,7 +252,7 @@ int need_operclass_permissions_upgrade = 0;
 int have_tls_listeners = 0;
 char *port_6667_ip = NULL;
 
-void add_config_resource(const char *resource, int type, ConfigEntry *ce);
+int add_config_resource(const char *resource, int type, ConfigEntry *ce);
 #ifdef USE_LIBCURL
 void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *inc_key);
 #endif
@@ -2280,7 +2280,11 @@ void config_parse_and_queue_urls(ConfigEntry *ce)
 }
 
 /**
- * Processes filename as part of the IRCd's configuration.
+ * Read configuration file into ConfigEntry items and add it to the 'conf'
+ * list. This checks the file for parse errors, but doesn't do much
+ * otherwise. Only: module blacklist checking and checking for "include"
+ * items to see if we need to read and parse more configuration files
+ * that are included from this one.
  *
  * One _must_ call add_config_resource() before calling config_read_file().
  * This way, include recursion may be detected and reported to the user
@@ -2306,10 +2310,11 @@ int	config_read_file(char *filename, const char *original_path)
 	need_34_upgrade = 0;
 	need_operclass_permissions_upgrade = 0;
 
-	/*
-	 * Check if we're accidentally including a file a second
+	/* Check if we're accidentally including a file a second
 	 * time. We should expect to find one entry in this list: the
 	 * entry for our current file.
+	 * Note that no user should be able to trigger this, this
+	 * can only happen if we have buggy code somewhere.
 	 */
 	counter = 0;
 	for (inc = config_resources; inc; inc = inc->next)
@@ -2331,9 +2336,12 @@ int	config_read_file(char *filename, const char *original_path)
 	}
 	if (counter > 1)
 	{
-		config_error("Config file %s has been loaded before %d time."
-			     " You may include each file only once.",
-			     filename, counter - 1);
+		unreal_log(ULOG_ERROR, "config", "CONFIG_BUG_DUPLICATE_RESOURCE", NULL,
+		           "[BUG] Config file $file has been loaded $counter times. "
+		           "This should not happen. Someone forgot to call "
+		           "add_config_resource() or check its return value!",
+		           log_data_string("file", filename),
+		           log_data_integer("counter", counter));
 		return -1;
 	}
 	/* end include recursion checking code */
@@ -3392,13 +3400,16 @@ int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 			ce->value);
 		return -1;
 	}
-	for (i = 0; i < files.gl_pathc; i++) {
-		add_config_resource(files.gl_pathv[i], RESOURCE_INCLUDE, ce);
-		ret = config_read_file(files.gl_pathv[i], files.gl_pathv[i]);
-		if (ret < 0)
+	for (i = 0; i < files.gl_pathc; i++)
+	{
+		if (add_config_resource(files.gl_pathv[i], RESOURCE_INCLUDE, ce))
 		{
-			globfree(&files);
-			return ret;
+			ret = config_read_file(files.gl_pathv[i], files.gl_pathv[i]);
+			if (ret < 0)
+			{
+				globfree(&files);
+				return ret;
+			}
 		}
 	}
 	globfree(&files);
@@ -3423,15 +3434,16 @@ int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 		strcpy(path, cPath);
 		strcat(path, FindData.cFileName);
 
-		add_config_resource(path, RESOURCE_INCLUDE, ce);
-		ret = config_read_file(path, path);
-		safe_free(path);
-
+		if (add_config_resource(path, RESOURCE_INCLUDE, ce))
+		{
+			ret = config_read_file(path, path);
+			safe_free(path);
+		}
 	}
 	else
 	{
-		add_config_resource(FindData.cFileName, RESOURCE_INCLUDe, ce);
-		ret = config_read_file(FindData.cFileName, FindData.cFileName);
+		if (add_config_resource(FindData.cFileName, RESOURCE_INCLUDe, ce))
+			ret = config_read_file(FindData.cFileName, FindData.cFileName);
 	}
 	if (ret < 0)
 	{
@@ -3446,24 +3458,26 @@ int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 			strcpy(path,cPath);
 			strcat(path,FindData.cFileName);
 
-			add_config_resource(path, RESOURCE_INCLUDE, ce);
-			ret = config_read_file(path, path);
-			safe_free(path);
-			if (ret < 0)
-				break;
+			if (add_config_resource(path, RESOURCE_INCLUDE, ce))
+			{
+				ret = config_read_file(path, path);
+				safe_free(path);
+				if (ret < 0)
+					break;
+			}
 		}
 		else
 		{
-			add_config_resource(FindData.cFileName, RESOURCE_INCLUDE, ce);
-			ret = config_read_file(FindData.cFileName, FindData.cFileName);
+			if (add_config_resource(FindData.cFileName, RESOURCE_INCLUDE, ce))
+				ret = config_read_file(FindData.cFileName, FindData.cFileName);
 		}
 	}
 	FindClose(hFind);
 	if (ret < 0)
 		return ret;
 #else
-	add_config_resource(ce->value, RESOURCE_INCLUDE, ce);
-	ret = config_read_file(ce->value, ce->value);
+	if (add_config_resource(ce->value, RESOURCE_INCLUDE, ce))
+		ret = config_read_file(ce->value, ce->value);
 	return ret;
 #endif
 	return 1;
@@ -10861,21 +10875,36 @@ void	listen_cleanup()
 		close_unbound_listeners();
 }
 
-ConfigResource *find_config_resource(const char *url)
+ConfigResource *find_config_resource(const char *resource)
 {
 	ConfigResource *inc;
 
 	for (inc = config_resources; inc; inc = inc->next)
 	{
-		if (!(inc->flag.type & RESOURCE_REMOTE))
-			continue;
-		if (inc->url && !strcasecmp(url, inc->url))
+#ifdef _WIN32
+		if (inc->file && !strcasecmp(resource, inc->file))
+			return inc;
+#else
+		if (inc->file && !strcmp(resource, inc->file))
+			return inc;
+#endif
+		if (inc->url && !strcasecmp(resource, inc->url))
 			return inc;
 	}
 	return NULL;
 }
 
-void add_config_resource(const char *resource, int type, ConfigEntry *ce)
+/* Add configuration resource to list.
+ * For files this doesn't do terribly much, except that you can use
+ * the return value to judge on whether you should call config_read_file() or not.
+ * For urls this adds the resource to the list of links to be downloaded.
+ * @param resource	File or URL of the resource
+ * @param type		A RESOURCE_ type such as RESOURCE_INCLUDE
+ * @param ce		The ConfigEntry where the add_config_resource() happened
+ *			for, such as the include block, etc.
+ * @returns 0 if the file is already on our list (so no need to load it!)
+ */
+int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 {
 	ConfigResource *rs;
 	ConfigEntryWrapper *wce;
@@ -10892,7 +10921,7 @@ void add_config_resource(const char *resource, int type, ConfigEntry *ce)
 		 * items who are interested in this resource ;)
 		 */
 		AddListItem(rs->wce, wce);
-		return;
+		return 0;
 	}
 
 	/* New entry */
@@ -10921,6 +10950,7 @@ void add_config_resource(const char *resource, int type, ConfigEntry *ce)
 		download_file_async(rs->url, 0, resource_download_complete, (void *)rs);
 	}
 #endif
+	return 1;
 }
 
 void free_all_config_resources(void)
