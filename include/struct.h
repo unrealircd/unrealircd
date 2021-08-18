@@ -1900,8 +1900,6 @@ struct ConfigResource {
 	char *file;
 	char *url;
 	char *errorbuf;
-	char *included_from;
-	int included_from_line;
 };
 
 struct ConfigItem_blacklist_module {

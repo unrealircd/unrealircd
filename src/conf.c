@@ -252,7 +252,6 @@ int need_operclass_permissions_upgrade = 0;
 int have_tls_listeners = 0;
 char *port_6667_ip = NULL;
 
-void add_include(const char *filename, const char *included_from, int included_from_line);
 ConfigResource *add_config_resource(const char *resource, int type, ConfigEntry *ce);
 #ifdef USE_LIBCURL
 void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *inc_key);
@@ -2142,7 +2141,7 @@ int config_read_start(void)
 		return -1;
 	}
 
-	add_include(configfile, "[thin air]", -1);
+	add_config_resource(configfile, RESOURCE_INCLUDE, NULL);
 	ret = config_read_file(configfile, configfile);
 	if (ret < 0)
 	{
@@ -2283,11 +2282,10 @@ void config_parse_and_queue_urls(ConfigEntry *ce)
 /**
  * Processes filename as part of the IRCd's configuration.
  *
- * One _must_ call add_include() or add_remote_include() before
- * calling config_read_file(). This way, include recursion may be detected
- * and reported to the user as an error instead of causing the IRCd to
- * hang in an infinite recursion, eat up memory, and eventually
- * overflow its stack ;-). (reported by warg).
+ * One _must_ call add_config_resource() before calling config_read_file().
+ * This way, include recursion may be detected and reported to the user
+ * as an error instead of causing the IRCd to hang in an infinite
+ * recursion, eat up memory, and eventually overflow its stack ;-).
  *
  * @param filename the file where the conf may be read from
  * @param original_path the path or URL used to refer to this file.
@@ -3395,7 +3393,7 @@ int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	}
 	for (i = 0; i < files.gl_pathc; i++) {
-		add_include(files.gl_pathv[i], ce->file->filename, ce->line_number);
+		add_config_resource(files.gl_pathv[i], RESOURCE_INCLUDE, ce);
 		ret = config_read_file(files.gl_pathv[i], files.gl_pathv[i]);
 		if (ret < 0)
 		{
@@ -3425,14 +3423,14 @@ int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 		strcpy(path, cPath);
 		strcat(path, FindData.cFileName);
 
-		add_include(path, ce->file->filename, ce->line_number);
+		add_config_resource(path, RESOURCE_INCLUDE, ce);
 		ret = config_read_file(path, path);
 		safe_free(path);
 
 	}
 	else
 	{
-		add_include(FindData.cFileName, ce->file->filename, ce->line_number);
+		add_config_resource(FindData.cFileName, RESOURCE_INCLUDe, ce);
 		ret = config_read_file(FindData.cFileName, FindData.cFileName);
 	}
 	if (ret < 0)
@@ -3448,7 +3446,7 @@ int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 			strcpy(path,cPath);
 			strcat(path,FindData.cFileName);
 
-			add_include(path, ce->file->filename, ce->line_number);
+			add_config_resource(path, RESOURCE_INCLUDE, ce);
 			ret = config_read_file(path, path);
 			safe_free(path);
 			if (ret < 0)
@@ -3456,7 +3454,7 @@ int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			add_include(FindData.cFileName, ce->file->filename, ce->line_number);
+			add_config_resource(FindData.cFileName, RESOURCE_INCLUDE, ce);
 			ret = config_read_file(FindData.cFileName, FindData.cFileName);
 		}
 	}
@@ -3464,7 +3462,7 @@ int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 	if (ret < 0)
 		return ret;
 #else
-	add_include(ce->value, ce->file->filename, ce->line_number);
+	add_config_resource(ce->value, RESOURCE_INCLUDE, ce);
 	ret = config_read_file(ce->value, ce->value);
 	return ret;
 #endif
@@ -10678,8 +10676,8 @@ void resource_download_complete(const char *url, const char *file, const char *e
 		safe_strdup(rs->errorbuf, errorbuf);
 		unreal_log(ULOG_ERROR, "config", "DOWNLOAD_FAILED", NULL,
 		           "$file:$line_number: Failed to download '$url': $error_message",
-		           log_data_string("file", rs->included_from),
-		           log_data_integer("line_number", rs->included_from_line),
+		           log_data_string("file", rs->ce->file->filename),
+		           log_data_integer("line_number", rs->ce->line_number),
 		           log_data_string("url", displayurl(url)),
 		           log_data_string("error_message", errorbuf));
 		/* Set error condition, this so config_read_file() later will stop. */
@@ -10875,35 +10873,12 @@ ConfigResource *find_config_resource(char *url)
 	return NULL;
 }
 
-/**
- * Add an item to the config_resources list for the specified file.
- *
- * Checks for whether or not we're performing recursive includes
- * belong in conf_load() because that function is able to return an
- * error code. Any checks in here will end up being ignored by callers
- * and thus will gain us nothing.
- *
- * @param file path to the include file.
- */
-void add_include(const char *file, const char *included_from, int included_from_line)
-{
-	ConfigResource *inc;
-
-	inc = safe_alloc(sizeof(ConfigResource));
-	safe_strdup(inc->file, file);
-	safe_strdup(inc->included_from, included_from);
-	inc->included_from_line = included_from_line;
-	AddListItem(inc, config_resources);
-}
-
 ConfigResource *add_config_resource(const char *resource, int type, ConfigEntry *ce)
 {
 	ConfigResource *rs = safe_alloc(sizeof(ConfigResource));
 
 	config_status("add_config_resource() for '%s", resource);
 
-	safe_strdup(rs->included_from, ce->file->filename);
-	rs->included_from_line = ce->line_number;
 	rs->ce = ce;
 
 #ifdef USE_LIBCURL
@@ -10951,7 +10926,6 @@ void free_all_config_resources(void)
 		}
 #endif
 		safe_free(inc->file);
-		safe_free(inc->included_from);
 		DelListItem(inc, config_resources);
 		safe_free(inc);
 	}
