@@ -2348,12 +2348,6 @@ int	config_read_file(char *filename, const char *original_path)
 			if (!strcmp(ce->name, "blacklist-module"))
 				 _test_blacklist_module(cfptr, ce);
 
-		/* Load modules */
-		if (config_verbose > 1)
-			config_status("Loading modules in %s", filename);
-		if (need_34_upgrade)
-			upgrade_conf_to_34();
-
 		/* Load includes */
 		if (config_verbose > 1)
 			config_status("Searching through %s for include files..", filename);
@@ -2370,8 +2364,6 @@ int	config_read_file(char *filename, const char *original_path)
 					return -1;
 				}
 				ret = _conf_include(cfptr, ce);
-				if (need_34_upgrade)
-					upgrade_conf_to_34();
 				if (ret < 0)
 					return ret;
 			}
