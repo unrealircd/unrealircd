@@ -252,7 +252,7 @@ int need_operclass_permissions_upgrade = 0;
 int have_tls_listeners = 0;
 char *port_6667_ip = NULL;
 
-ConfigResource *add_config_resource(const char *resource, int type, ConfigEntry *ce);
+void add_config_resource(const char *resource, int type, ConfigEntry *ce);
 #ifdef USE_LIBCURL
 void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *inc_key);
 #endif
@@ -10676,8 +10676,8 @@ void resource_download_complete(const char *url, const char *file, const char *e
 		safe_strdup(rs->errorbuf, errorbuf);
 		unreal_log(ULOG_ERROR, "config", "DOWNLOAD_FAILED", NULL,
 		           "$file:$line_number: Failed to download '$url': $error_message",
-		           log_data_string("file", rs->ce->file->filename),
-		           log_data_integer("line_number", rs->ce->line_number),
+		           log_data_string("file", rs->wce->ce->file->filename),
+		           log_data_integer("line_number", rs->wce->ce->line_number),
 		           log_data_string("url", displayurl(url)),
 		           log_data_string("error_message", errorbuf));
 		/* Set error condition, this so config_read_file() later will stop. */
@@ -10715,7 +10715,9 @@ void resource_download_complete(const char *url, const char *file, const char *e
 		{
 			config_read_file(rs->file, rs->url);
 		} else {
-			safe_strdup(rs->ce->value, rs->file); // now information of url is lost hm!
+			ConfigEntryWrapper *wce;
+			for (wce = rs->wce; wce; wce = wce->next)
+				safe_strdup(wce->ce->value, rs->file); // now information of url is lost, hm!!
 		}
 	}
 
@@ -10859,7 +10861,7 @@ void	listen_cleanup()
 		close_unbound_listeners();
 }
 
-ConfigResource *find_config_resource(char *url)
+ConfigResource *find_config_resource(const char *url)
 {
 	ConfigResource *inc;
 
@@ -10873,13 +10875,29 @@ ConfigResource *find_config_resource(char *url)
 	return NULL;
 }
 
-ConfigResource *add_config_resource(const char *resource, int type, ConfigEntry *ce)
+void add_config_resource(const char *resource, int type, ConfigEntry *ce)
 {
-	ConfigResource *rs = safe_alloc(sizeof(ConfigResource));
+	ConfigResource *rs;
+	ConfigEntryWrapper *wce;
 
 	config_status("add_config_resource() for '%s", resource);
 
-	rs->ce = ce;
+	wce = safe_alloc(sizeof(ConfigEntryWrapper));
+	wce->ce = ce;
+
+	rs = find_config_resource(resource);
+	if (rs)
+	{
+		/* Existing entry, add us to the list of
+		 * items who are interested in this resource ;)
+		 */
+		AddListItem(rs->wce, wce);
+		return;
+	}
+
+	/* New entry */
+	rs = safe_alloc(sizeof(ConfigResource));
+	rs->wce = wce;
 
 #ifdef USE_LIBCURL
 	if (!url_is_valid(resource))
@@ -10903,31 +10921,37 @@ ConfigResource *add_config_resource(const char *resource, int type, ConfigEntry 
 		download_file_async(rs->url, 0, resource_download_complete, (void *)rs);
 	}
 #endif
-	return rs;
 }
 
 void free_all_config_resources(void)
 {
-	ConfigResource *inc, *next;
+	ConfigResource *rs, *next;
+	ConfigEntryWrapper *wce, *wce_next;
 
-	for (inc = config_resources; inc; inc = next)
+	for (rs = config_resources; rs; rs = next)
 	{
-		next = inc->next;
+		next = rs->next;
+		for (wce = rs->wce; wce; wce = wce_next)
+		{
+			wce_next = wce->next;
+			safe_free(wce);
+		}
+		rs->wce = NULL;
 #ifdef USE_LIBCURL
-		if (inc->flag.type & RESOURCE_REMOTE)
+		if (rs->flag.type & RESOURCE_REMOTE)
 		{
 			/* Delete the file, but only if it's not a cached version */
-			if (inc->file && strncmp(inc->file, CACHEDIR, strlen(CACHEDIR)))
+			if (rs->file && strncmp(rs->file, CACHEDIR, strlen(CACHEDIR)))
 			{
-				remove(inc->file);
+				remove(rs->file);
 			}
-			safe_free(inc->url);
-			safe_free(inc->errorbuf);
+			safe_free(rs->url);
+			safe_free(rs->errorbuf);
 		}
 #endif
-		safe_free(inc->file);
-		DelListItem(inc, config_resources);
-		safe_free(inc);
+		safe_free(rs->file);
+		DelListItem(rs, config_resources);
+		safe_free(rs);
 	}
 }
 

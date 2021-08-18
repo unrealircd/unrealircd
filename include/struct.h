@@ -1892,11 +1892,17 @@ struct ConfigItem_alias_format {
 #define RESOURCE_REMOTE     0x1
 #define RESOURCE_DLQUEUED   0x2
 #define RESOURCE_INCLUDE    0x4
+
+typedef struct ConfigEntryWrapper ConfigEntryWrapper;
+struct ConfigEntryWrapper {
+	ConfigEntryWrapper *prev, *next;
+	ConfigEntry *ce;
+};
 	
 struct ConfigResource {
 	ConfigResource *prev, *next;
 	ConfigFlag_ban flag;
-	ConfigEntry *ce;
+	ConfigEntryWrapper *wce;
 	char *file;
 	char *url;
 	char *errorbuf;
