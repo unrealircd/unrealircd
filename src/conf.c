@@ -10684,18 +10684,13 @@ static void conf_download_complete(const char *url, const char *file, const char
 		}
 		load_conf(inc->file, inc->url);
 	}
-	// TODO: in case of failure condition we don't do anything atm.
 
-#if 0
-	for (inc = conf_include; inc; inc = inc->next)
-	{
-		if (inc->flag.type & INCLUDE_DLQUEUED)
-			return;
-	}
-	rehash_internal(loop.rehash_save_client, loop.rehash_save_sig);
-#else
-	// This breaks rehashes but.. at least we can boot now :D
-#endif
+	/* If rehashing, check if we are done.
+	 * If booting (not rehashing), this is done from the
+	 * startup loop where it also checks conf_check_complete().
+	 */
+	if (loop.ircd_rehashing && conf_check_complete())
+		rehash_internal(loop.rehash_save_client, loop.rehash_save_sig);
 }
 #endif
 
@@ -10714,24 +10709,13 @@ int     rehash(Client *client, int sig)
 	loop.ircd_rehashing = 1;
 	loop.rehash_save_client = client;
 	loop.rehash_save_sig = sig;
-	// FIXME: fix all this so it works again ;).. should call conf_start() or something similar
-	for (inc = conf_include; inc; inc = inc->next)
-	{
-		time_t modtime;
-		if (!(inc->flag.type & INCLUDE_REMOTE))
-			continue;
-		found_remote = 1;
-		modtime = unreal_getfilemodtime(inc->file);
-		inc->flag.type |= INCLUDE_DLQUEUED;
-
-		/*
-		  use (void *)inc as the key for finding which
-		  include block conf_download_complete() should use.
-		*/
-		download_file_async(inc->url, modtime, conf_download_complete, (void *)inc);
-	}
-	if (!found_remote)
+	conf_start();
+	/* If we already have everything, then can we proceed with the rehash */
+	if (conf_check_complete())
 		return rehash_internal(client, sig);
+	/* Otherwise, return here, I/O events will take care of it later
+	 * after all remote includes have been downloaded.
+	 */
 	return 0;
 #else
 	loop.ircd_rehashing = 1;
