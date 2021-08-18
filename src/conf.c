@@ -253,9 +253,8 @@ int have_tls_listeners = 0;
 char *port_6667_ip = NULL;
 
 void add_include(const char *filename, const char *included_from, int included_from_line);
-#ifdef USE_LIBCURL
 ConfigResource *add_config_resource(const char *resource, int type, ConfigEntry *ce);
-void update_config_resource(ConfigResource *inc, const char *file, int, const char *errorbuf);
+#ifdef USE_LIBCURL
 void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *inc_key);
 #endif
 void free_all_config_resources(void);
@@ -10675,7 +10674,8 @@ void resource_download_complete(const char *url, const char *file, const char *e
 	if (!file && !cached)
 	{
 		/* DOWNLOAD FAILED */
-		update_config_resource(rs, file, 0, errorbuf);
+		safe_strdup(rs->file, file);
+		safe_strdup(rs->errorbuf, errorbuf);
 		unreal_log(ULOG_ERROR, "config", "DOWNLOAD_FAILED", NULL,
 		           "$file:$line_number: Failed to download '$url': $error_message",
 		           log_data_string("file", rs->included_from),
@@ -10700,7 +10700,7 @@ void resource_download_complete(const char *url, const char *file, const char *e
 		{
 			unreal_copyfileex(rs->file, tmp, 1);
 			unreal_copyfileex(rs->file, unreal_mkcache(url), 0);
-			update_config_resource(rs, tmp, 0, NULL);
+			safe_strdup(rs->file, tmp);
 		}
 		else
 		{
@@ -10709,7 +10709,7 @@ void resource_download_complete(const char *url, const char *file, const char *e
 			  remove(file).
 			*/
 			unreal_copyfileex(file, tmp, 1);
-			update_config_resource(rs, tmp, 0, NULL);
+			safe_strdup(rs->file, tmp);
 			unreal_copyfileex(file, unreal_mkcache(url), 0);
 		}
 
@@ -10896,26 +10896,23 @@ void add_include(const char *file, const char *included_from, int included_from_
 	AddListItem(inc, config_resources);
 }
 
-#ifdef USE_LIBCURL
-
 ConfigResource *add_config_resource(const char *resource, int type, ConfigEntry *ce)
 {
 	ConfigResource *rs = safe_alloc(sizeof(ConfigResource));
-	int url = 0;
 
 	config_status("add_config_resource() for '%s", resource);
-
-	if (url_is_valid(resource))
-		url = 1;
 
 	safe_strdup(rs->included_from, ce->file->filename);
 	rs->included_from_line = ce->line_number;
 	rs->ce = ce;
 
-	if (!url)
+#ifdef USE_LIBCURL
+	if (!url_is_valid(resource))
 	{
+#endif
 		safe_strdup(rs->file, resource);
 		AddListItem(rs, config_resources);
+#ifdef USE_LIBCURL
 	} else {
 		// FIXME: duplicate entries are fine, and we need to add them to the
 		// list due to 'ce' expansion and so on.
@@ -10926,37 +10923,13 @@ ConfigResource *add_config_resource(const char *resource, int type, ConfigEntry 
 		// FIXME: similarly, we pass 0 modification time to download_file_async()
 		//        while it should be the mtime of the cached entry
 		safe_strdup(rs->url, resource);
-		update_config_resource(rs, NULL, type|RESOURCE_REMOTE, NULL);
-		rs->flag.type |= RESOURCE_DLQUEUED;
+		rs->flag.type = type|RESOURCE_REMOTE|RESOURCE_DLQUEUED;
 		AddListItem(rs, config_resources);
 		download_file_async(rs->url, 0, resource_download_complete, (void *)rs);
 	}
+#endif
 	return rs;
 }
-
-/**
- * Update certain information in a remote include's config_include list entry.
- *
- * @param file the place on disk where the downloaded remote include
- *        may be found
- * @param flags additional flags to set on the config_include entry
- * @param errorbuf non-NULL if there were errors encountered in
- *        downloading. The error will be stored into the config_include
- *        entry.
- */
-void update_config_resource(ConfigResource *inc, const char *file, int flags, const char *errorbuf)
-{
-	/*
-	 * file may be NULL when errorbuf is non-NULL and vice-versa.
-	 */
-	if (file)
-		safe_strdup(inc->file, file);
-	inc->flag.type |= flags;
-
-	if (errorbuf)
-		safe_strdup(inc->errorbuf, errorbuf);
-}
-#endif
 
 void free_all_config_resources(void)
 {
