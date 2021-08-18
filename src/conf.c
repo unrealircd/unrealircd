@@ -3148,7 +3148,7 @@ ConfigItem_tld *find_tld(Client *client)
 
 	for (tld = conf_tld; tld; tld = tld->next)
 	{
-		if (match_user(tld->mask, client, MATCH_CHECK_REAL))
+		if (unreal_mask_match(client, tld->mask))
 		{
 			if ((tld->options & TLD_TLS) && !IsSecureConnect(client))
 				continue;
@@ -4712,7 +4712,7 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "mask"))
-			safe_strdup(ca->mask, cep->value);
+			unreal_add_masks(&ca->mask, cep);
 		else if (!strcmp(cep->name, "motd"))
 		{
 			safe_strdup(ca->motd_file, cep->value);
@@ -4776,13 +4776,8 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 		/* tld::mask */
 		if (!strcmp(cep->name, "mask"))
 		{
-			if (has_mask)
-			{
-				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "tld::mask");
-				continue;
-			}
-			has_mask = 1;
+			if (cep->value || cep->items)
+				has_mask = 1;
 		}
 		/* tld::motd */
 		else if (!strcmp(cep->name, "motd"))
