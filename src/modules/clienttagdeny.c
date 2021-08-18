@@ -62,7 +62,7 @@ char *ct_isupport_param(void){
 	strlcpy(buf, "*", sizeof(buf));
 
 	for (m = mtaghandlers; m; m = m->next) {
-		if(!m->unloaded && m->name[0] == '+'){
+		if (!m->unloaded && m->name[0] == '+'){
 			strlcat(buf, ",-", sizeof(buf));
 			strlcat(buf, m->name+1, sizeof(buf));
 		}

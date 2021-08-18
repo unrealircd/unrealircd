@@ -99,22 +99,22 @@ int detect_script(const char *t)
 	else if ((t[0] == 0xd3) && (t[1] >= 0x80) && (t[1] <= 0xbf))
 		return SCRIPT_CYRILLIC;
 
-	if((t[0] == 0xe4) && (t[1] >= 0xb8) && (t[1] <= 0xbf))
+	if ((t[0] == 0xe4) && (t[1] >= 0xb8) && (t[1] <= 0xbf))
 		return SCRIPT_CJK;
 	else if ((t[0] >= 0xe5) && (t[0] <= 0xe9) && (t[1] >= 0x80) && (t[1] <= 0xbf))
 		return SCRIPT_CJK;
 
-	if((t[0] == 0xea) && (t[1] >= 0xb0) && (t[1] <= 0xbf))
+	if ((t[0] == 0xea) && (t[1] >= 0xb0) && (t[1] <= 0xbf))
 		return SCRIPT_HANGUL;
 	else if ((t[0] >= 0xeb) && (t[0] <= 0xec) && (t[1] >= 0x80) && (t[1] <= 0xbf))
 		return SCRIPT_HANGUL;
 	else if ((t[0] == 0xed) && (t[1] >= 0x80) && (t[1] <= 0x9f))
 		return SCRIPT_HANGUL;
 
-	if((t[0] == 0xe1) && (t[1] >= 0x90) && (t[1] <= 0x99))
+	if ((t[0] == 0xe1) && (t[1] >= 0x90) && (t[1] <= 0x99))
 		return SCRIPT_CANADIAN;
 
-	if((t[0] == 0xe0) && (t[1] >= 0xb0) && (t[1] <= 0xb1))
+	if ((t[0] == 0xe0) && (t[1] >= 0xb0) && (t[1] <= 0xb1))
 		return SCRIPT_TELUGU;
 
 	if ((t[0] >= 'a') && (t[0] <= 'z'))

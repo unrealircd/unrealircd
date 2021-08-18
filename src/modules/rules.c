@@ -70,7 +70,7 @@ CMD_FUNC(cmd_rules)
 
 	if (ptr)
 		temp = ptr->rules.lines;
-	if(!temp)
+	if (!temp)
 		temp = rules.lines;
 
 	if (temp == NULL)

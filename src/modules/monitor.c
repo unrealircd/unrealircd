@@ -81,7 +81,7 @@ char *monitor_isupport_param(void)
 
 int monitor_nickchange(Client *client, MessageTag *mtags, char *newnick)
 {
-	if(!smycmp(client->name, newnick)) // new nick is same as old one, maybe the case changed
+	if (!smycmp(client->name, newnick)) // new nick is same as old one, maybe the case changed
 		return 0;
 
 	watch_check(client, RPL_MONOFFLINE);
@@ -132,7 +132,7 @@ void send_status(Client *client, MessageTag *recv_mtags, char *nick)
 	Client *user;
 	user = find_person(nick, NULL);
 	new_message(client, recv_mtags, &mtags);
-	if(!user){
+	if (!user){
 		sendnumeric(client, RPL_MONOFFLINE, nick);
 	} else {
 		sendnumeric(client, RPL_MONONLINE, user->name, user->user->username, GetHost(user));
@@ -151,7 +151,7 @@ CMD_FUNC(cmd_monitor)
 	int toomany = 0;
 	Link *lp;
 
-	if(parc < 2 || BadPtr(parv[1]))
+	if (parc < 2 || BadPtr(parv[1]))
 		cmd = 'l';
 	else
 		cmd = tolower(*parv[1]);
@@ -202,10 +202,10 @@ CMD_FUNC(cmd_monitor)
 			break;
 		case '-':
 		case '+':
-			if(parc < 3 || BadPtr(parv[2]))
+			if (parc < 3 || BadPtr(parv[2]))
 				return;
 			for(s = strtoken(&p, parv[2], ","); s; s = strtoken(&p, NULL, ",")){
-				if(cmd == '-'){
+				if (cmd == '-'){
 					watch_del(s, client, WATCH_FLAG_TYPE_MONITOR);
 				} else {
 					if (WATCHES(client) >= MAXWATCH)

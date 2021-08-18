@@ -124,7 +124,7 @@ void invite_free(ModData *md)
 {
 	Link **inv, *tmp;
 
-	if(!md->ptr)
+	if (!md->ptr)
 		return; // was not set
 
 	for (inv = (Link **)md->ptr; (tmp = *inv); inv = &tmp->next)
@@ -207,7 +207,7 @@ int invite_is_invited(Client *client, Channel *channel, int *invited)
 {
 	Link *lp;
 	
-	if(!MyConnect(client))
+	if (!MyConnect(client))
 		return 0; // not handling invite lists for remote clients
 
 	for (lp = CLIENT_INVITES(client); lp; lp = lp->next)
@@ -322,7 +322,7 @@ CMD_FUNC(cmd_invite)
 			sendnumeric(client, ERR_NOSUCHCHANNEL, parv[2]);
 			return;
 		}
-		if(parc >= 4 && !BadPtr(parv[3]))
+		if (parc >= 4 && !BadPtr(parv[3]))
 		{
 			override = atoi(parv[3]);
 		}

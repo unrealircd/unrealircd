@@ -782,7 +782,7 @@ void read_motd(const char *filename, MOTDFile *themotd)
 	/* TODO: if themotd points to a tld's motd,
 	   could a rehash disrupt this pointer?*/
 #ifdef USE_LIBCURL
-	if(themotd->motd_download)
+	if (themotd->motd_download)
 	{
 		themotd->motd_download->themotd = NULL;
 		/*
@@ -794,7 +794,7 @@ void read_motd(const char *filename, MOTDFile *themotd)
 	}
 
 	/* if filename is NULL, do_read_motd will catch it */
-	if(filename && url_is_valid(filename))
+	if (filename && url_is_valid(filename))
 	{
 		/* prepare our payload for read_motd_async_downloaded() */
 		motd_download = safe_alloc(sizeof(MOTDDownload));
@@ -829,16 +829,16 @@ void read_motd_async_downloaded(const char *url, const char *filename, const cha
 	  check if the download was soft-canceled. See struct.h's docs on
 	  struct MOTDDownload for details.
 	*/
-	if(!themotd)
+	if (!themotd)
 	{
 		safe_free(motd_download);
 		return;
 	}
 
 	/* errors -- check for specialcached version if applicable */
-	if(!cached && !filename)
+	if (!cached && !filename)
 	{
-		if(has_cached_version(url))
+		if (has_cached_version(url))
 		{
 			config_warn("Error downloading MOTD file from \"%s\": %s -- using cached version instead.", displayurl(url), errorbuf);
 			filename = unreal_mkcache(url);
@@ -856,7 +856,7 @@ void read_motd_async_downloaded(const char *url, const char *filename, const cha
 	 * We need to move our newly downloaded file to its cache file
 	 * if it isn't there already.
 	 */
-	if(!cached)
+	if (!cached)
 	{
 		/* create specialcached version for later */
 		unreal_copyfileex(filename, unreal_mkcache(url), 1);
@@ -889,7 +889,7 @@ void do_read_motd(const char *filename, MOTDFile *themotd)
 
 	free_motd(themotd);
 
-	if(!filename)
+	if (!filename)
 		return;
 
 	fd = fopen(filename, "r");
@@ -915,7 +915,7 @@ void do_read_motd(const char *filename, MOTDFile *themotd)
 		temp = safe_alloc(sizeof(MOTDLine));
 		safe_strdup(temp->line, line);
 
-		if(last)
+		if (last)
 			last->next = temp;
 		else
 			/* handle the special case of the first line */
@@ -924,7 +924,7 @@ void do_read_motd(const char *filename, MOTDFile *themotd)
 		last = temp;
 	}
 	/* the file could be zero bytes long? */
-	if(last)
+	if (last)
 		last->next = NULL;
 
 	fclose(fd);
@@ -941,7 +941,7 @@ void free_motd(MOTDFile *themotd)
 {
 	MOTDLine *next, *motdline;
 
-	if(!themotd)
+	if (!themotd)
 		return;
 
 	for (motdline = themotd->lines; motdline; motdline = next)

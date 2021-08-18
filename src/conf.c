@@ -1568,9 +1568,9 @@ int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *e
 {
 	int fd;
 
-	if(!cep->value)
+	if (!cep->value)
 	{
-		if(fatal)
+		if (fatal)
 			config_error("%s:%i: %s: <no file specified>: no file specified",
 				     cep->file->filename,
 				     cep->line_number,
@@ -1586,9 +1586,9 @@ int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *e
 
 	/* There's not much checking that can be done for asynchronously downloaded files */
 #ifdef USE_LIBCURL
-	if(url_is_valid(cep->value))
+	if (url_is_valid(cep->value))
 	{
-		if(allow_url)
+		if (allow_url)
 			return 0;
 
 		/* but we can check if a URL is used wrongly :-) */
@@ -1596,7 +1596,7 @@ int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *e
 			    cep->file->filename,
 			    cep->line_number,
 			    entry, cep->value);
-		if(fatal)
+		if (fatal)
 			return 1;
 		else
 			return 0;
@@ -1620,13 +1620,13 @@ int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *e
 	 * and that we deal with all of the bugs that come with complexity.
 	 * The only files we may be creating are the tunefile and pidfile so far.
 	 */
-	if(flags & O_CREAT)
+	if (flags & O_CREAT)
 		fd = open(cep->value, flags, mode);
 	else
 		fd = open(cep->value, flags);
-	if(fd == -1)
+	if (fd == -1)
 	{
-		if(fatal)
+		if (fatal)
 			config_error("%s:%i: %s: %s: %s",
 				     cep->file->filename,
 				     cep->line_number,
@@ -2850,7 +2850,7 @@ int	config_run()
 	 * function.
 	 */
 	for(allow = conf_allow; allow; allow = allow->next)
-		if(!allow->ipv6_clone_mask)
+		if (!allow->ipv6_clone_mask)
 			allow->ipv6_clone_mask = tempiConf.default_ipv6_clone_mask;
 
 	/* ^^^ TODO: due to the two-stage model now we can do it in conf_allow again
@@ -2865,7 +2865,7 @@ int	config_run()
 	update_throttling_timer_settings();
 
 	/* initialize conf_files with defaults if the block isn't set: */
-	if(!conf_files)
+	if (!conf_files)
 	  _conf_files(NULL, NULL);
 
 	if (errors > 0)
@@ -3704,7 +3704,7 @@ int	_conf_files(ConfigFile *conf, ConfigEntry *ce)
 	 * the for loop's initialization of cep would segfault otherwise. We return 1 because
 	 * if config_run() calls us with a NULL ce, it's got a bug...but we can't detect that.
 	 */
-	if(!ce)
+	if (!ce)
 	  return 1;
 
 	for (cep = ce->items; cep; cep = cep->next)

@@ -1306,10 +1306,10 @@ uint64_t gen_floodprot_msghash(char *text)
 	if (is_ctcp || is_action)
 	{
 		// Remove the \001 chars around the message
-		if((len = strlen(plaintext)) && plaintext[len - 1] == '\001')
+		if ((len = strlen(plaintext)) && plaintext[len - 1] == '\001')
 			plaintext[len - 1] = '\0';
 		plaintext++;
-		if(is_action)
+		if (is_action)
 			plaintext += 7;
 	}
 

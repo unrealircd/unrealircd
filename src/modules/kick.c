@@ -343,7 +343,7 @@ CMD_FUNC(cmd_kick)
 				int breakit = 0;
 				Hook *h;
 				for (h = Hooks[HOOKTYPE_PRE_LOCAL_KICK]; h; h = h->next) {
-					if((*(h->func.intfunc))(client,who,channel,comment) > 0) {
+					if ((*(h->func.intfunc))(client,who,channel,comment) > 0) {
 						breakit = 1;
 						break;
 					}

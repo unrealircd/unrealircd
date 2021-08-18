@@ -496,7 +496,7 @@ static void who_common_channel(Client *client, Channel *channel,
 
 		SetMark(acptr);
 
-		if(*maxmatches > 0)
+		if (*maxmatches > 0)
 		{
 			if (do_match(client, acptr, mask, fmt))
 			{
@@ -611,7 +611,7 @@ static void do_who_on_channel(Client *client, Channel *channel,
 		if (!operspy && (acptr != client) && i != 0 && !(is_skochanop(client, channel)) && !(is_skochanop(acptr, channel) || has_voice(acptr,channel)))
 			continue;
 
-		if(member || !IsInvisible(acptr))
+		if (member || !IsInvisible(acptr))
 			do_who(client, acptr, channel, fmt);
 	}
 }

@@ -139,17 +139,17 @@ static ClientCapability *clicap_find(Client *client, const char *data, int *nega
 		return NULL;
 	}
 
-	if(*p == '-')
+	if (*p == '-')
 	{
 		*negate = 1;
 		p++;
 
 		/* someone sent a '-' without a parameter.. */
-		if(*p == '\0')
+		if (*p == '\0')
 			return NULL;
 	}
 
-	if((s = strchr(p, ' ')))
+	if ((s = strchr(p, ' ')))
 		*s++ = '\0';
 
 	cap = ClientCapabilityFind(p, client);
@@ -406,7 +406,7 @@ CMD_FUNC(cmd_cap)
 		return;
 	}
 
-	if(!(cmd = bsearch(parv[1], clicap_cmdtable,
+	if (!(cmd = bsearch(parv[1], clicap_cmdtable,
 			   sizeof(clicap_cmdtable) / sizeof(struct clicap_cmd),
 			   sizeof(struct clicap_cmd), (bqcmp) clicap_cmd_search)))
 	{

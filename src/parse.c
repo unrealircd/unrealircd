@@ -175,7 +175,7 @@ void parse(Client *cptr, char *buffer, int length)
 	for (h = Hooks[HOOKTYPE_PACKET]; h; h = h->next)
 	{
 		(*(h->func.intfunc))(from, &me, NULL, &buffer, &length);
-		if(!buffer)
+		if (!buffer)
 			return;
 	}
 

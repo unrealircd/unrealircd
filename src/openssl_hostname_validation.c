@@ -146,7 +146,7 @@ static char Curl_raw_toupper(char in)
 static int Curl_raw_equal(const char *first, const char *second)
 {
   while(*first && *second) {
-    if(Curl_raw_toupper(*first) != Curl_raw_toupper(*second))
+    if (Curl_raw_toupper(*first) != Curl_raw_toupper(*second))
       /* get out of the loop as soon as they don't match */
       break;
     first++;
@@ -161,14 +161,14 @@ static int Curl_raw_equal(const char *first, const char *second)
 static int Curl_raw_nequal(const char *first, const char *second, size_t max)
 {
   while(*first && *second && max) {
-    if(Curl_raw_toupper(*first) != Curl_raw_toupper(*second)) {
+    if (Curl_raw_toupper(*first) != Curl_raw_toupper(*second)) {
       break;
     }
     max--;
     first++;
     second++;
   }
-  if(0 == max)
+  if (0 == max)
     return 1; /* they are equal this far */
 
   return Curl_raw_toupper(*first) == Curl_raw_toupper(*second);
@@ -189,7 +189,7 @@ static int hostmatch(const char *hostname, const char *pattern)
   int wildcard_enabled;
   size_t prefixlen, suffixlen;
   pattern_wildcard = strchr(pattern, '*');
-  if(pattern_wildcard == NULL)
+  if (pattern_wildcard == NULL)
     return Curl_raw_equal(pattern, hostname) ?
       CURL_HOST_MATCH : CURL_HOST_NOMATCH;
 
@@ -197,24 +197,24 @@ static int hostmatch(const char *hostname, const char *pattern)
      match. */
   wildcard_enabled = 1;
   pattern_label_end = strchr(pattern, '.');
-  if(pattern_label_end == NULL || strchr(pattern_label_end+1, '.') == NULL ||
+  if (pattern_label_end == NULL || strchr(pattern_label_end+1, '.') == NULL ||
      pattern_wildcard > pattern_label_end ||
      Curl_raw_nequal(pattern, "xn--", 4)) {
     wildcard_enabled = 0;
   }
-  if(!wildcard_enabled)
+  if (!wildcard_enabled)
     return Curl_raw_equal(pattern, hostname) ?
       CURL_HOST_MATCH : CURL_HOST_NOMATCH;
 
   hostname_label_end = strchr(hostname, '.');
-  if(hostname_label_end == NULL ||
+  if (hostname_label_end == NULL ||
      !Curl_raw_equal(pattern_label_end, hostname_label_end))
     return CURL_HOST_NOMATCH;
 
   /* The wildcard must match at least one character, so the left-most
      label of the hostname is at least as large as the left-most label
      of the pattern. */
-  if(hostname_label_end - hostname < pattern_label_end - pattern)
+  if (hostname_label_end - hostname < pattern_label_end - pattern)
     return CURL_HOST_NOMATCH;
 
   prefixlen = pattern_wildcard - pattern;
@@ -227,14 +227,14 @@ static int hostmatch(const char *hostname, const char *pattern)
 
 int Curl_cert_hostcheck(const char *match_pattern, const char *hostname)
 {
-  if(!match_pattern || !*match_pattern ||
+  if (!match_pattern || !*match_pattern ||
       !hostname || !*hostname) /* sanity check */
     return 0;
 
-  if(Curl_raw_equal(hostname, match_pattern)) /* trivial case */
+  if (Curl_raw_equal(hostname, match_pattern)) /* trivial case */
     return 1;
 
-  if(hostmatch(hostname,match_pattern) == CURL_HOST_MATCH)
+  if (hostmatch(hostname,match_pattern) == CURL_HOST_MATCH)
     return 1;
   return 0;
 }
@@ -388,7 +388,7 @@ static HostnameValidationResult matches_subject_alternative_name(const char *hos
 HostnameValidationResult validate_hostname(const char *hostname, const X509 *server_cert) {
         HostnameValidationResult result;
 
-        if((hostname == NULL) || (server_cert == NULL))
+        if ((hostname == NULL) || (server_cert == NULL))
                 return Error;
 
         // First try the Subject Alternative Names extension

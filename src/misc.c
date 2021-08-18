@@ -357,7 +357,7 @@ int on_dccallow_list(Client *to, Client *from)
 	Link *lp;
 
 	for(lp = to->user->dccallow; lp; lp = lp->next)
-		if(lp->flags == DCC_LINK_ME && lp->value.client == from)
+		if (lp->flags == DCC_LINK_ME && lp->value.client == from)
 			return 1;
 	return 0;
 }
@@ -379,11 +379,11 @@ void remove_dcc_references(Client *client)
 		acptr = lp->value.client;
 		for(found = 0, lpp = &(acptr->user->dccallow); *lpp; lpp=&((*lpp)->next))
 		{
-			if(lp->flags == (*lpp)->flags)
+			if (lp->flags == (*lpp)->flags)
 				continue; /* match only opposite types for sanity */
-			if((*lpp)->value.client == client)
+			if ((*lpp)->value.client == client)
 			{
-				if((*lpp)->flags == DCC_LINK_ME)
+				if ((*lpp)->flags == DCC_LINK_ME)
 				{
 					sendto_one(acptr, NULL, ":%s %d %s :%s has been removed from "
 						"your DCC allow list for signing off",
@@ -397,7 +397,7 @@ void remove_dcc_references(Client *client)
 			}
 		}
 
-		if(!found)
+		if (!found)
 			sendto_realops("[BUG] remove_dcc_references:  %s was in dccallowme "
 				"list[%d] of %s but not in dccallowrem list!",
 				acptr->name, lp->flags, client->name);

@@ -101,7 +101,7 @@ CMD_FUNC(cmd_motd)
 	}
 
 	motdline = NULL;
-	if(themotd)
+	if (themotd)
 		motdline = themotd->lines;
 	while (motdline)
 	{

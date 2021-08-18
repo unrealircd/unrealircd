@@ -2773,7 +2773,7 @@ void _tkl_check_local_remove_shun(TKL *tmp)
 					 */
 					keep_shun = 0;
 					for(tk = tklines[tkl_hash('s')]; tk && !keep_shun; tk = tk->next)
-						if(tk != tmp && match_simple(tk->ptr.serverban->usermask, cname))
+						if (tk != tmp && match_simple(tk->ptr.serverban->usermask, cname))
 						{
 							if ((*tk->ptr.serverban->hostmask >= '0') && (*tk->ptr.serverban->hostmask <= '9')
 							    /* the hostmask is an IP */
@@ -2785,7 +2785,7 @@ void _tkl_check_local_remove_shun(TKL *tmp)
 									keep_shun = 1;
 						}
 
-					if(!keep_shun)
+					if (!keep_shun)
 					{
 						ClearShunned(client);
 					}

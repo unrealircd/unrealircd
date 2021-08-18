@@ -250,7 +250,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
 	WM_FINDMSGSTRING = RegisterWindowMessage(FINDMSGSTRING);
 	atexit(CleanUp);
-	if(!LoadLibrary("riched20.dll"))
+	if (!LoadLibrary("riched20.dll"))
 		LoadLibrary("riched32.dll");
 	InitDebug();
 

@@ -276,7 +276,7 @@ chacha_encrypt_bytes(chacha_ctx *x,const u8 *m,u8 *c,u32 bytes)
  */
 
 /* Modified for UnrealIRCd by Bram Matthys ("Syzop") in 2019.
- * Things like taking out #if(n)def's for openssl (which we always
+ * Things like taking out #if (n)def's for openssl (which we always
  * compile with), re-indenting, removing various stuff, etc.
  */
 
