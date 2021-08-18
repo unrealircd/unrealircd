@@ -1086,7 +1086,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 		fd_select(500);
 	}
-	if (config_test(0) < 0)
+	if (config_test() < 0)
 		exit(-1);
 	booted = TRUE;
 	load_tunefile();

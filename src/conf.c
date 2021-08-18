@@ -2169,7 +2169,7 @@ int is_config_read_finished(void)
 	return 1;
 }
 
-int config_test(int rehash)
+int config_test(void)
 {
 	char *old_pid_file = NULL;
 
@@ -2212,7 +2212,7 @@ int config_test(int rehash)
 	efunctions_switchover();
 	set_targmax_defaults();
 	set_security_group_defaults();
-	if (rehash)
+	if (loop.ircd_rehashing)
 	{
 		Hook *h;
 		safe_strdup(old_pid_file, conf_files->pid_file);
@@ -2239,7 +2239,7 @@ int config_test(int rehash)
 	{
 		config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
 #ifdef _WIN32
-		if (!rehash)
+		if (!loop.ircd_rehashing)
 			win_error();
 #endif
 		abort();
@@ -2258,7 +2258,7 @@ int config_test(int rehash)
 
 	config_free(conf);
 	conf = NULL;
-	if (rehash)
+	if (loop.ircd_rehashing)
 	{
 		module_loadall();
 		RunHook0(HOOKTYPE_REHASH_COMPLETE);
@@ -10753,8 +10753,9 @@ int rehash_internal(Client *client, int sig)
 
 	loop.ircd_rehashing = 1; /* double checking.. */
 
-	if (config_test(1) == 0)
+	if (config_test() == 0)
 		config_run();
+	/* TODO: uh.. are we supposed to do all this for a failed rehash too? maybe some but not all? */
 	reread_motdsandrules();
 	unload_all_unused_snomasks();
 	unload_all_unused_umodes();

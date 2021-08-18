@@ -468,7 +468,7 @@ extern char *pretty_time_val(long);
 extern char *pretty_date(time_t t);
 extern int config_read_start(void);
 extern int is_config_read_finished(void);
-extern int config_test(int rehash);
+extern int config_test(void);
 extern void config_run(void);
 extern void rehash_motdrules();
 extern void read_motd(const char *filename, MOTDFile *motd); /* s_serv.c */
