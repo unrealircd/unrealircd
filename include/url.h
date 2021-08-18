@@ -5,7 +5,6 @@
 int MODFUNC url_is_valid(const char *);
 extern const char MODFUNC *displayurl(const char *url);
 char MODFUNC *url_getfilename(const char *url);
-char MODFUNC *download_file(const char *, char **);
 void MODFUNC download_file_async(const char *, time_t, vFP, void *callback_data);
 void MODFUNC url_do_transfers_async(void);
 void MODFUNC url_init(void);
