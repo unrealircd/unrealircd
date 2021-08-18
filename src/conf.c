@@ -256,9 +256,7 @@ ConfigItem_include *add_remote_include(const char *, const char *, int, const ch
 void update_remote_include(ConfigItem_include *inc, const char *file, int, const char *errorbuf);
 int remote_include(ConfigEntry *ce);
 #endif
-void unload_notloaded_includes(void);
-void load_includes(void);
-void unload_loaded_includes(void);
+void free_all_includes(void);
 int rehash_internal(Client *client, int sig);
 int is_blacklisted_module(char *name);
 
@@ -2122,7 +2120,7 @@ void config_load_failed(void)
 {
 	unreal_log(ULOG_ERROR, "config", "CONFIG_NOT_LOADED", NULL, "IRCd configuration failed to load");
 	Unload_all_testing_modules();
-	unload_notloaded_includes();
+	free_all_includes();
 	config_free(conf);
 	conf = NULL;
 	free_iConf(&tempiConf);
@@ -2197,15 +2195,7 @@ int init_conf(int rehash)
 	if (!config_test_all())
 	{
 		config_error("IRCd configuration failed to pass testing");
-#ifdef _WIN32
-		if (!rehash)
-			win_error();
-#endif
-		Unload_all_testing_modules();
-		unload_notloaded_includes();
-		config_free(conf);
-		conf = NULL;
-		free_iConf(&tempiConf);
+		config_load_failed();
 		return -1;
 	}
 	callbacks_switchover();
@@ -2229,10 +2219,9 @@ int init_conf(int rehash)
 				continue;
 			(*(h->func.intfunc))();
 		}
-		unload_loaded_includes();
 	}
 
-	load_includes();
+	free_all_includes();
 
 	Init_all_testing_modules();
 
@@ -2280,9 +2269,6 @@ int init_conf(int rehash)
  * hang in an infinite recursion, eat up memory, and eventually
  * overflow its stack ;-). (reported by warg).
  *
- * This function will set INCLUDE_USED on the config_include list
- * entry if the config file loaded without error.
- *
  * @param filename the file where the conf may be read from
  * @param original_path the path or URL used to refer to this file.
  *        (mostly to support remote includes' URIs for recursive include detection).
@@ -2308,19 +2294,8 @@ int	load_conf(char *filename, const char *original_path)
 	 * entry for our current file.
 	 */
 	counter = 0;
-	my_inc = NULL;
 	for (inc = conf_include; inc; inc = inc->next)
 	{
-		/*
-		 * ignore files which were part of a _previous_
-		 * successful rehash.
-		 */
-		if (!(inc->flag.type & INCLUDE_NOTLOADED))
-			continue;
-
-		if (!counter)
-			my_inc = inc;
-
 		if (!strcmp(filename, inc->file))
 		{
 			counter ++;
@@ -2341,24 +2316,10 @@ int	load_conf(char *filename, const char *original_path)
 		}
 #endif
 	}
-	if (counter < 1 || !my_inc)
+	if (counter > 1)
 	{
-		/*
-		 * The following is simply for debugging/[sanity
-		 * checking]. To make sure that functions call
-		 * add_include() or add_remote_include() before
-		 * calling us.
-		 */
-		config_error("I don't have a record for %s being included."
-			     " Perhaps someone forgot to call add_include()?",
-			     filename);
-		abort();
-	}
-	if (counter > 1 || my_inc->flag.type & INCLUDE_USED)
-	{
-		config_error("%s:%d:include: Config file %s has been loaded before %d time."
+		config_error("Config file %s has been loaded before %d time."
 			     " You may include each file only once.",
-			     my_inc->included_from, my_inc->included_from_line,
 			     filename, counter - 1);
 		return -1;
 	}
@@ -2389,6 +2350,7 @@ int	load_conf(char *filename, const char *original_path)
 		if (config_verbose > 1)
 			config_status("Searching through %s for include files..", filename);
 		for (ce = cfptr->items; ce; ce = ce->next)
+		{
 			if (!strcmp(ce->name, "include"))
 			{
 				if (ce->conditional_config)
@@ -2405,7 +2367,7 @@ int	load_conf(char *filename, const char *original_path)
 				if (ret < 0)
 					return ret;
 			}
-		my_inc->flag.type |= INCLUDE_USED;
+		}
 		return 1;
 	}
 	else
@@ -9516,6 +9478,7 @@ void start_listeners(void)
 void run_configuration(void)
 {
 	start_listeners();
+	free_all_includes();
 }
 
 int	_conf_offchans(ConfigFile *conf, ConfigEntry *ce)
@@ -10688,39 +10651,9 @@ int _conf_secret(ConfigFile *conf, ConfigEntry *ce)
 #ifdef USE_LIBCURL
 static void conf_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *inc_key)
 {
-	ConfigItem_include *inc;
+	ConfigItem_include *inc = (ConfigItem_include *)inc_key;
 
-#if 0
-	/*
-	  use inc_key to find the correct include block. This
-	  should be cheaper than using the full URL.
-	 */
-	for (inc = conf_include; inc; inc = inc->next)
-	{
-		if ( inc_key != (void *)inc )
-			continue;
-		if (!(inc->flag.type & INCLUDE_REMOTE))
-			continue;
-		if (inc->flag.type & INCLUDE_NOTLOADED)
-			continue;
-		if (strcasecmp(url, inc->url))
-			continue;
-
-		inc->flag.type &= ~INCLUDE_DLQUEUED;
-		break;
-	}
-	if (!inc)
-	{
-		unreal_log(ULOG_ERROR, "config", "BUG_CONF_DOWNLOAD_COMPLETE_NOTFOUND", NULL,
-		           "[BUG] Downloaded remote include which matches no include statement: $url_censored",
-		           log_data_string("url_censored", displayurl(url)));
-		return;
-	}
-#else
-	/* This should be sufficient */
-	inc = (ConfigItem_include *)inc_key;
 	inc->flag.type &= ~INCLUDE_DLQUEUED;
-#endif
 
 	config_status("conf_download_complete() for %s [%s]", url, errorbuf?errorbuf:"success");
 
@@ -10749,7 +10682,9 @@ static void conf_download_complete(const char *url, const char *file, const char
 			update_remote_include(inc, tmp, 0, NULL);
 			unreal_copyfileex(file, unreal_mkcache(url), 0);
 		}
+		load_conf(inc->file, inc->url);
 	}
+	// TODO: in case of failure condition we don't do anything atm.
 
 #if 0
 	for (inc = conf_include; inc; inc = inc->next)
@@ -10779,13 +10714,11 @@ int     rehash(Client *client, int sig)
 	loop.ircd_rehashing = 1;
 	loop.rehash_save_client = client;
 	loop.rehash_save_sig = sig;
+	// FIXME: fix all this so it works again ;).. should call conf_start() or something similar
 	for (inc = conf_include; inc; inc = inc->next)
 	{
 		time_t modtime;
 		if (!(inc->flag.type & INCLUDE_REMOTE))
-			continue;
-
-		if (inc->flag.type & INCLUDE_NOTLOADED)
 			continue;
 		found_remote = 1;
 		modtime = unreal_getfilemodtime(inc->file);
@@ -10905,8 +10838,6 @@ char *find_remote_include(char *url, char **errorbuf)
 
 	for (inc = conf_include; inc; inc = inc->next)
 	{
-		if (!(inc->flag.type & INCLUDE_NOTLOADED))
-			continue;
 		if (!(inc->flag.type & INCLUDE_REMOTE))
 			continue;
 		if (!strcasecmp(url, inc->url))
@@ -10915,23 +10846,6 @@ char *find_remote_include(char *url, char **errorbuf)
 			return inc->file;
 		}
 	}
-	return NULL;
-}
-
-char *find_loaded_remote_include(char *url)
-{
-	ConfigItem_include *inc;
-
-	for (inc = conf_include; inc; inc = inc->next)
-	{
-		if ((inc->flag.type & INCLUDE_NOTLOADED))
-			continue;
-		if (!(inc->flag.type & INCLUDE_REMOTE))
-			continue;
-		if (!strcasecmp(url, inc->url))
-			return inc->file;
-	}
-
 	return NULL;
 }
 
@@ -10973,7 +10887,6 @@ void add_include(const char *file, const char *included_from, int included_from_
 
 	inc = safe_alloc(sizeof(ConfigItem_include));
 	safe_strdup(inc->file, file);
-	inc->flag.type = INCLUDE_NOTLOADED;
 	safe_strdup(inc->included_from, included_from);
 	inc->included_from_line = included_from_line;
 	AddListItem(inc, conf_include);
@@ -11003,7 +10916,7 @@ ConfigItem_include *add_remote_include(const char *file, const char *url, int fl
 	}
 	safe_strdup(inc->url, url);
 
-	update_remote_include(inc, file, INCLUDE_NOTLOADED|INCLUDE_REMOTE|flags, errorbuf);
+	update_remote_include(inc, file, INCLUDE_REMOTE|flags, errorbuf);
 	AddListItem(inc, conf_include);
 	return inc;
 }
@@ -11032,88 +10945,30 @@ void update_remote_include(ConfigItem_include *inc, const char *file, int flags,
 }
 #endif
 
-/**
- * Clean up conf_include after a rehash fails because of a
- * configuration file error.
- *
- * Duplicates some in unload_loaded_include().
- */
-void unload_notloaded_includes(void)
+void free_all_includes(void)
 {
 	ConfigItem_include *inc, *next;
 
 	for (inc = conf_include; inc; inc = next)
 	{
 		next = inc->next;
-		if ((inc->flag.type & INCLUDE_NOTLOADED) || !(inc->flag.type & INCLUDE_USED))
-		{
 #ifdef USE_LIBCURL
-			if (inc->flag.type & INCLUDE_REMOTE)
-			{
-				/* Delete the file, but only if it's not a cached version */
-				if (strncmp(inc->file, CACHEDIR, strlen(CACHEDIR)))
-				{
-					remove(inc->file);
-				}
-				safe_free(inc->url);
-				safe_free(inc->errorbuf);
-			}
-#endif
-			safe_free(inc->file);
-			safe_free(inc->included_from);
-			DelListItem(inc, conf_include);
-			safe_free(inc);
-		}
-	}
-}
-
-/**
- * Clean up conf_include after a successful rehash to make way for
- * load_includes().
- */
-void unload_loaded_includes(void)
-{
-	ConfigItem_include *inc, *next;
-
-	for (inc = conf_include; inc; inc = next)
-	{
-		next = inc->next;
-		if (!(inc->flag.type & INCLUDE_NOTLOADED) || !(inc->flag.type & INCLUDE_USED))
+		if (inc->flag.type & INCLUDE_REMOTE)
 		{
-#ifdef USE_LIBCURL
-			if (inc->flag.type & INCLUDE_REMOTE)
+			/* Delete the file, but only if it's not a cached version */
+			if (strncmp(inc->file, CACHEDIR, strlen(CACHEDIR)))
 			{
-				/* Delete the file, but only if it's not a cached version */
-				if (strncmp(inc->file, CACHEDIR, strlen(CACHEDIR)))
-				{
-					remove(inc->file);
-				}
-				safe_free(inc->url);
-				safe_free(inc->errorbuf);
+				remove(inc->file);
 			}
-#endif
-			safe_free(inc->file);
-			safe_free(inc->included_from);
-			DelListItem(inc, conf_include);
-			safe_free(inc);
+			safe_free(inc->url);
+			safe_free(inc->errorbuf);
 		}
+#endif
+		safe_free(inc->file);
+		safe_free(inc->included_from);
+		DelListItem(inc, conf_include);
+		safe_free(inc);
 	}
-}
-
-/**
- * Mark loaded includes as loaded by removing the INCLUDE_NOTLOADED
- * flag. Meant to be called only after calling
- * unload_loaded_includes().
- */
-void load_includes(void)
-{
-	ConfigItem_include *inc;
-
-	/* Doing this for all the includes should actually be faster
-	 * than only doing it for includes that are not-loaded
-	 */
-	for (inc = conf_include; inc; inc = inc->next)
-		inc->flag.type &= ~INCLUDE_NOTLOADED;
 }
 
 int tls_tests(void)
