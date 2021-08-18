@@ -230,7 +230,7 @@ ConfigItem_allow_channel *conf_allow_channel = NULL;
 ConfigItem_deny_link	*conf_deny_link = NULL;
 ConfigItem_deny_version *conf_deny_version = NULL;
 ConfigItem_alias	*conf_alias = NULL;
-ConfigItem_include	*conf_include = NULL;
+ConfigResource	*config_resources = NULL;
 ConfigItem_blacklist_module	*conf_blacklist_module = NULL;
 ConfigItem_help		*conf_help = NULL;
 ConfigItem_offchans	*conf_offchans = NULL;
@@ -254,11 +254,11 @@ char *port_6667_ip = NULL;
 
 void add_include(const char *filename, const char *included_from, int included_from_line);
 #ifdef USE_LIBCURL
-ConfigItem_include *add_remote_include(const char *, const char *, int, const char *, const char *included_from, int included_from_line);
-void update_remote_include(ConfigItem_include *inc, const char *file, int, const char *errorbuf);
-int remote_include(ConfigEntry *ce);
+ConfigResource *add_config_resource(const char *resource, int type, ConfigEntry *ce);
+void update_config_resource(ConfigResource *inc, const char *file, int, const char *errorbuf);
+void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *inc_key);
 #endif
-void free_all_includes(void);
+void free_all_config_resources(void);
 int rehash_internal(Client *client);
 int is_blacklisted_module(char *name);
 
@@ -2120,7 +2120,7 @@ void config_load_failed(void)
 {
 	unreal_log(ULOG_ERROR, "config", "CONFIG_NOT_LOADED", NULL, "IRCd configuration failed to load");
 	Unload_all_testing_modules();
-	free_all_includes();
+	free_all_config_resources();
 	config_free(conf);
 	conf = NULL;
 	free_iConf(&tempiConf);
@@ -2155,11 +2155,11 @@ int config_read_start(void)
 
 int is_config_read_finished(void)
 {
-	ConfigItem_include *inc;
+	ConfigResource *inc;
 
-	for (inc = conf_include; inc; inc = inc->next)
+	for (inc = config_resources; inc; inc = inc->next)
 	{
-		if (inc->flag.type & INCLUDE_DLQUEUED)
+		if (inc->flag.type & RESOURCE_DLQUEUED)
 		{
 			//config_status("Waiting for %s...", inc->url);
 			return 0;
@@ -2231,8 +2231,6 @@ int config_test(void)
 		}
 	}
 
-	free_all_includes();
-
 	Init_all_testing_modules();
 
 	if (config_run_blocks() < 0)
@@ -2270,6 +2268,19 @@ int config_test(void)
 	return 0;
 }
 
+void config_parse_and_queue_urls(ConfigEntry *ce)
+{
+	for (; ce; ce = ce->next)
+	{
+		if (ce->name && !strcmp(ce->name, "include"))
+			continue; /* handled elsewhere (but maybe merge? TODO) */
+		if (ce->value && url_is_valid(ce->value))
+			add_config_resource(ce->value, 0, ce);
+		if (ce->items)
+			config_parse_and_queue_urls(ce->items);
+	}
+}
+
 /**
  * Processes filename as part of the IRCd's configuration.
  *
@@ -2288,7 +2299,7 @@ int	config_read_file(char *filename, const char *original_path)
 {
 	ConfigFile 	*cfptr, *cfptr2, **cfptr3;
 	ConfigEntry 	*ce;
-	ConfigItem_include *inc, *my_inc;
+	ConfigResource *inc, *my_inc;
 	int ret;
 	int counter;
 
@@ -2304,20 +2315,17 @@ int	config_read_file(char *filename, const char *original_path)
 	 * entry for our current file.
 	 */
 	counter = 0;
-	for (inc = conf_include; inc; inc = inc->next)
+	for (inc = config_resources; inc; inc = inc->next)
 	{
-		if (!strcmp(filename, inc->file))
-		{
-			counter ++;
-			continue;
-		}
-#ifdef _WIN32
-		if (!strcasecmp(filename, inc->file))
-		{
-			counter ++;
-			continue;
-		}
+#ifndef _WIN32
+		if (inc->file && !strcmp(filename, inc->file))
+#else
+		if (inc->file && !strcasecmp(filename, inc->file))
 #endif
+		{
+			counter ++;
+			continue;
+		}
 		if (inc->url && !strcmp(original_path, inc->url))
 		{
 			counter ++;
@@ -2348,9 +2356,13 @@ int	config_read_file(char *filename, const char *original_path)
 			if (!strcmp(ce->name, "blacklist-module"))
 				 _test_blacklist_module(cfptr, ce);
 
+		/* Load urls */
+		config_parse_and_queue_urls(cfptr->items);
+
 		/* Load includes */
 		if (config_verbose > 1)
 			config_status("Searching through %s for include files..", filename);
+
 		for (ce = cfptr->items; ce; ce = ce->next)
 		{
 			if (!strcmp(ce->name, "include"))
@@ -3324,7 +3336,7 @@ char *convert_to_absolute_path_duplicate(char *path, char *reldir)
  * Actual config parser funcs
 */
 
-int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
+int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 {
 	int	ret = 0;
 #ifdef GLOBH
@@ -3350,7 +3362,10 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 
 #ifdef USE_LIBCURL
 	if (url_is_valid(ce->value))
-		return remote_include(ce);
+	{
+		add_config_resource(ce->value, RESOURCE_INCLUDE, ce);
+		return 0;
+	}
 #else
 	if (strstr(ce->value, "://"))
 	{
@@ -9478,7 +9493,7 @@ void start_listeners(void)
 void config_run(void)
 {
 	start_listeners();
-	free_all_includes();
+	free_all_config_resources();
 }
 
 int	_conf_offchans(ConfigFile *conf, ConfigEntry *ce)
@@ -10649,22 +10664,22 @@ int _conf_secret(ConfigFile *conf, ConfigEntry *ce)
 }
 
 #ifdef USE_LIBCURL
-static void conf_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *inc_key)
+void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *inc_key)
 {
-	ConfigItem_include *inc = (ConfigItem_include *)inc_key;
+	ConfigResource *rs = (ConfigResource *)inc_key;
 
-	inc->flag.type &= ~INCLUDE_DLQUEUED;
+	rs->flag.type &= ~RESOURCE_DLQUEUED;
 
-	config_status("conf_download_complete() for %s [%s]", url, errorbuf?errorbuf:"success");
+	config_status("resource_download_complete() for %s [%s]", url, errorbuf?errorbuf:"success");
 
 	if (!file && !cached)
 	{
 		/* DOWNLOAD FAILED */
-		update_remote_include(inc, file, 0, errorbuf);
+		update_config_resource(rs, file, 0, errorbuf);
 		unreal_log(ULOG_ERROR, "config", "DOWNLOAD_FAILED", NULL,
 		           "$file:$line_number: Failed to download '$url': $error_message",
-		           log_data_string("file", inc->included_from),
-		           log_data_integer("line_number", inc->included_from_line),
+		           log_data_string("file", rs->included_from),
+		           log_data_integer("line_number", rs->included_from_line),
 		           log_data_string("url", displayurl(url)),
 		           log_data_string("error_message", errorbuf));
 		/* Set error condition, this so config_read_file() later will stop. */
@@ -10683,9 +10698,9 @@ static void conf_download_complete(const char *url, const char *file, const char
 
 		if (cached)
 		{
-			unreal_copyfileex(inc->file, tmp, 1);
-			unreal_copyfileex(inc->file, unreal_mkcache(url), 0);
-			update_remote_include(inc, tmp, 0, NULL);
+			unreal_copyfileex(rs->file, tmp, 1);
+			unreal_copyfileex(rs->file, unreal_mkcache(url), 0);
+			update_config_resource(rs, tmp, 0, NULL);
 		}
 		else
 		{
@@ -10694,10 +10709,16 @@ static void conf_download_complete(const char *url, const char *file, const char
 			  remove(file).
 			*/
 			unreal_copyfileex(file, tmp, 1);
-			update_remote_include(inc, tmp, 0, NULL);
+			update_config_resource(rs, tmp, 0, NULL);
 			unreal_copyfileex(file, unreal_mkcache(url), 0);
 		}
-		config_read_file(inc->file, inc->url);
+
+		if (rs->flag.type & RESOURCE_INCLUDE)
+		{
+			config_read_file(rs->file, rs->url);
+		} else {
+			safe_strdup(rs->ce->value, rs->file); // now information of url is lost hm!
+		}
 	}
 
 	/* If rehashing, check if we are done.
@@ -10719,7 +10740,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 void request_rehash(Client *client)
 {
 #ifdef USE_LIBCURL
-	ConfigItem_include *inc;
+	ConfigResource *inc;
 	char found_remote = 0;
 	if (loop.rehashing)
 	{
@@ -10840,48 +10861,22 @@ void	listen_cleanup()
 		close_unbound_listeners();
 }
 
-#ifdef USE_LIBCURL
-char *find_remote_include(char *url, char **errorbuf)
+ConfigResource *find_config_resource(char *url)
 {
-	ConfigItem_include *inc;
+	ConfigResource *inc;
 
-	for (inc = conf_include; inc; inc = inc->next)
+	for (inc = config_resources; inc; inc = inc->next)
 	{
-		if (!(inc->flag.type & INCLUDE_REMOTE))
+		if (!(inc->flag.type & RESOURCE_REMOTE))
 			continue;
-		if (!strcasecmp(url, inc->url))
-		{
-			*errorbuf = inc->errorbuf;
-			return inc->file;
-		}
+		if (inc->url && !strcasecmp(url, inc->url))
+			return inc;
 	}
 	return NULL;
 }
 
 /**
- * Non-asynchronous remote inclusion to give a user better feedback
- * when first starting his IRCd.
- *
- * The asynchronous friend is rehash() which merely queues remote
- * includes for download using download_file_async().
- */
-int remote_include(ConfigEntry *ce)
-{
-	char *errorbuf = NULL;
-	char *url = ce->value;
-	char *file = NULL; // ???
-	ConfigItem_include *inc;
-	time_t modtime = 0; // ???
-
-	inc = add_remote_include(file, url, 0, NULL, ce->file->filename, ce->line_number);
-	inc->flag.type |= INCLUDE_DLQUEUED; // wait.. why doesn't add_remote_include() do this?
-	download_file_async(inc->url, modtime, conf_download_complete, (void *)inc);
-	return 0;
-}
-#endif
-
-/**
- * Add an item to the conf_include list for the specified file.
+ * Add an item to the config_resources list for the specified file.
  *
  * Checks for whether or not we're performing recursive includes
  * belong in conf_load() because that function is able to return an
@@ -10892,42 +10887,51 @@ int remote_include(ConfigEntry *ce)
  */
 void add_include(const char *file, const char *included_from, int included_from_line)
 {
-	ConfigItem_include *inc;
+	ConfigResource *inc;
 
-	inc = safe_alloc(sizeof(ConfigItem_include));
+	inc = safe_alloc(sizeof(ConfigResource));
 	safe_strdup(inc->file, file);
 	safe_strdup(inc->included_from, included_from);
 	inc->included_from_line = included_from_line;
-	AddListItem(inc, conf_include);
+	AddListItem(inc, config_resources);
 }
 
 #ifdef USE_LIBCURL
-/**
- * Adds a remote include entry to the config_include list.
- *
- * This is to be called whenever the included_from and
- * included_from_line parameters are known. This means that during a
- * rehash when downloads are done asynchronously, you call this with
- * the inclued_from and included_from_line information. After the
- * download is complete and you know there it is stored in the FS,
- * call update_remote_include().
- */
-ConfigItem_include *add_remote_include(const char *file, const char *url, int flags, const char *errorbuf, const char *included_from, int included_from_line)
+
+ConfigResource *add_config_resource(const char *resource, int type, ConfigEntry *ce)
 {
-	ConfigItem_include *inc;
+	ConfigResource *rs = safe_alloc(sizeof(ConfigResource));
+	int url = 0;
 
-	/* we rely on safe_alloc() zeroing the ConfigItem_include */
-	inc = safe_alloc(sizeof(ConfigItem_include));
-	if (included_from)
+	config_status("add_config_resource() for '%s", resource);
+
+	if (url_is_valid(resource))
+		url = 1;
+
+	safe_strdup(rs->included_from, ce->file->filename);
+	rs->included_from_line = ce->line_number;
+	rs->ce = ce;
+
+	if (!url)
 	{
-		safe_strdup(inc->included_from, included_from);
-		inc->included_from_line = included_from_line;
+		safe_strdup(rs->file, resource);
+		AddListItem(rs, config_resources);
+	} else {
+		// FIXME: duplicate entries are fine, and we need to add them to the
+		// list due to 'ce' expansion and so on.
+		// However, we should not download the file multiple times, that is
+		// just a waste ;)
+		
+		// FIXME: we pass a NULL file pointer here, even though it may be cached
+		// FIXME: similarly, we pass 0 modification time to download_file_async()
+		//        while it should be the mtime of the cached entry
+		safe_strdup(rs->url, resource);
+		update_config_resource(rs, NULL, type|RESOURCE_REMOTE, NULL);
+		rs->flag.type |= RESOURCE_DLQUEUED;
+		AddListItem(rs, config_resources);
+		download_file_async(rs->url, 0, resource_download_complete, (void *)rs);
 	}
-	safe_strdup(inc->url, url);
-
-	update_remote_include(inc, file, INCLUDE_REMOTE|flags, errorbuf);
-	AddListItem(inc, conf_include);
-	return inc;
+	return rs;
 }
 
 /**
@@ -10940,7 +10944,7 @@ ConfigItem_include *add_remote_include(const char *file, const char *url, int fl
  *        downloading. The error will be stored into the config_include
  *        entry.
  */
-void update_remote_include(ConfigItem_include *inc, const char *file, int flags, const char *errorbuf)
+void update_config_resource(ConfigResource *inc, const char *file, int flags, const char *errorbuf)
 {
 	/*
 	 * file may be NULL when errorbuf is non-NULL and vice-versa.
@@ -10954,15 +10958,15 @@ void update_remote_include(ConfigItem_include *inc, const char *file, int flags,
 }
 #endif
 
-void free_all_includes(void)
+void free_all_config_resources(void)
 {
-	ConfigItem_include *inc, *next;
+	ConfigResource *inc, *next;
 
-	for (inc = conf_include; inc; inc = next)
+	for (inc = config_resources; inc; inc = next)
 	{
 		next = inc->next;
 #ifdef USE_LIBCURL
-		if (inc->flag.type & INCLUDE_REMOTE)
+		if (inc->flag.type & RESOURCE_REMOTE)
 		{
 			/* Delete the file, but only if it's not a cached version */
 			if (inc->file && strncmp(inc->file, CACHEDIR, strlen(CACHEDIR)))
@@ -10975,7 +10979,7 @@ void free_all_includes(void)
 #endif
 		safe_free(inc->file);
 		safe_free(inc->included_from);
-		DelListItem(inc, conf_include);
+		DelListItem(inc, config_resources);
 		safe_free(inc);
 	}
 }

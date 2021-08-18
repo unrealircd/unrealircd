@@ -29,12 +29,29 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
+#if 1
+
+MOD_INIT()
+{
+	return MOD_SUCCESS;
+}
+
+MOD_LOAD()
+{
+	return MOD_SUCCESS;
+}
+
+MOD_UNLOAD()
+{
+	return MOD_SUCCESS;
+}
+#else
 #define MSG_STAFF	"STAFF"
 
 #define DEF_STAFF_FILE   CONFDIR "/network.staff"
 #define CONF_STAFF_FILE  (staff_file ? staff_file : DEF_STAFF_FILE)
 #ifdef USE_LIBCURL
-#define STAFF_FILE       (Download.path ? Download.path : CONF_STAFF_FILE)
+#define STAFF_FILE       (ConfigResource.path ? ConfigResource.path : CONF_STAFF_FILE)
 #else
 #define STAFF_FILE       CONF_STAFF_FILE
 #endif
@@ -70,7 +87,7 @@ struct {
 	char		*file;			// File name
 	char		*path;			// File path
 	char		*url;			// Full URL address
-} Download;
+} ConfigResource;
 #endif
 
 MOD_TEST()
@@ -83,7 +100,7 @@ MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 #ifdef USE_LIBCURL
-	memset(&Download, 0, sizeof(Download));
+	memset(&ConfigResource, 0, sizeof(ConfigResource));
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
 #endif
 	memset(&staff, 0, sizeof(staff));
@@ -109,9 +126,9 @@ MOD_UNLOAD()
 	unload_motd_file(&staff);
 
 #ifdef USE_LIBCURL
-	safe_free(Download.path);
-   	safe_free(Download.file);
-	safe_free(Download.url);
+	safe_free(ConfigResource.path);
+   	safe_free(ConfigResource.file);
+	safe_free(ConfigResource.url);
 #endif
 
 	return MOD_SUCCESS;
@@ -138,16 +155,16 @@ static void FreeConf()
 #ifdef USE_LIBCURL
 static void remove_staff_file()
 {
-	if (Download.path)
+	if (ConfigResource.path)
 	{
-		if (remove(Download.path) == -1)
+		if (remove(ConfigResource.path) == -1)
 		{
 			if (config_verbose > 0)
 				config_status("Cannot remove file %s: %s",
-					Download.path, strerror(errno));
+					ConfigResource.path, strerror(errno));
 		}
-	        safe_free(Download.path);
-	        Download.path = NULL;
+	        safe_free(ConfigResource.path);
+	        ConfigResource.path = NULL;
 	}
 }
 
@@ -157,24 +174,24 @@ static int download_staff_file(ConfigEntry *ce)
 	struct stat sb;
 	char *file, *filename;
 
-	if (Download.in_progress)
+	if (ConfigResource.in_progress)
 		return 0;
 
-	Download.is_url = 1;
-	safe_strdup(Download.url, ce->value);
+	ConfigResource.is_url = 1;
+	safe_strdup(ConfigResource.url, ce->value);
 
 	file = url_getfilename(ce->value);
 	filename = unreal_getfilename(file);
 	/* TODO: handle NULL returns */
-	safe_strdup(Download.file, filename);
+	safe_strdup(ConfigResource.file, filename);
 	safe_free(file);
 
-	if (!loop.rehashing && !Download.once_completed)
+	if (!loop.rehashing && !ConfigResource.once_completed)
 	{
 		char *error;
 
 		if (config_verbose > 0)
-			config_status("Downloading %s", displayurl(Download.url));
+			config_status("ConfigResourceing %s", displayurl(ConfigResource.url));
 
 		if (!(file = download_file(ce->value, &error)))
 		{
@@ -184,37 +201,37 @@ static int download_staff_file(ConfigEntry *ce)
 			return -1;
 		}
 
-		Download.once_completed = 1;
-		safe_strdup(Download.path, file);
-		read_motd(Download.path, &staff);
+		ConfigResource.once_completed = 1;
+		safe_strdup(ConfigResource.path, file);
+		read_motd(ConfigResource.path, &staff);
 
 		safe_free(file);
 		return 0;
 	}
 
-	file = Download.path ? Download.path : Download.file;
+	file = ConfigResource.path ? ConfigResource.path : ConfigResource.file;
 
 	if ((ret = stat(file, &sb)) && errno != ENOENT)
 	{
 		/* I know, stat shouldn't fail... */
 		config_error("%s:%i: could not get the creation time of %s: stat() returned %d: %s",
 			ce->file->filename, ce->line_number,
-			Download.file, ret, strerror(errno));
+			ConfigResource.file, ret, strerror(errno));
 		return -1;
 	}
 
 	if (config_verbose > 0)
-		config_status("Downloading %s", displayurl(Download.url));
+		config_status("ConfigResourceing %s", displayurl(ConfigResource.url));
 
-	Download.in_progress = 1;
-	download_file_async(Download.url, sb.st_ctime, download_staff_file_complete, NULL);
+	ConfigResource.in_progress = 1;
+	download_file_async(ConfigResource.url, sb.st_ctime, download_staff_file_complete, NULL);
 	return 0;
 }
 
 static void download_staff_file_complete(char *url, char *file, char *errorbuf, int cached, void *dummy)
 {
-	Download.in_progress = 0;
-	Download.once_completed = 1;
+	ConfigResource.in_progress = 0;
+	ConfigResource.once_completed = 1;
 
 	if (!cached)
 	{
@@ -226,17 +243,17 @@ static void download_staff_file_complete(char *url, char *file, char *errorbuf, 
 		}
 
 		remove_staff_file();
-		safe_strdup(Download.path, file);
-		read_motd(Download.path, &staff);
+		safe_strdup(ConfigResource.path, file);
+		read_motd(ConfigResource.path, &staff);
 	} else
 	{
 		char *urlfile = url_getfilename(url);
 		char *file = unreal_getfilename(urlfile);
 		char *tmp = unreal_mktemp("tmp", file);
 		/* TODO: handle null returns ? */
-		unreal_copyfile(Download.path, tmp);
+		unreal_copyfile(ConfigResource.path, tmp);
 		remove_staff_file();
-		safe_strdup(Download.path, tmp);
+		safe_strdup(ConfigResource.path, tmp);
 		safe_free(urlfile);
 	}
 }
@@ -303,7 +320,7 @@ static int cb_conf(ConfigFile *cf, ConfigEntry *ce, int type)
 		if (!strcmp(ce->name, "staff-file"))
 		{
 #ifdef USE_LIBCURL
-			if (!Download.in_progress)
+			if (!ConfigResource.in_progress)
 			{
 				safe_strdup(staff_file, ce->value);
 				if (url_is_valid(ce->value))
@@ -350,8 +367,8 @@ static int cb_rehashflag(Client *client, char *flag)
                                 MyUser(client) ? "Remotely " : "", client->name);
 
 #ifdef USE_LIBCURL
-		if (Download.is_url)
-			read_motd(Download.path, &staff);
+		if (ConfigResource.is_url)
+			read_motd(ConfigResource.path, &staff);
 		else
 #endif
 			read_motd(CONF_STAFF_FILE, &staff);
@@ -387,3 +404,4 @@ CMD_FUNC(cmd_staff)
 
 	sendto_one(client, NULL, RPL_ENDOFSTAFF, me.name, client->name);
 }
+#endif

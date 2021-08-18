@@ -1222,7 +1222,7 @@ void mm_install_module(ManagedModule *m)
 		basename = "mod.c";
 	tmpfile = unreal_mktemp(TMPDIR, basename);
 
-	printf("Downloading %s from %s...\n", m->name, m->source);
+	printf("ConfigResourceing %s from %s...\n", m->name, m->source);
 	if (!mm_http_request(m->source, tmpfile, 1))
 	{
 		fprintf(stderr, "Repository %s seems to list a module file that cannot be retrieved (%s).\n", m->repo_url, m->source);

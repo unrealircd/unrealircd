@@ -54,7 +54,7 @@ int MODVAR spamf_ugly_vchanoverride = 0;
 void read_motd(const char *filename, MOTDFile *motd);
 void do_read_motd(const char *filename, MOTDFile *themotd);
 #ifdef USE_LIBCURL
-void read_motd_async_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, MOTDDownload *motd_download);
+void read_motd_async_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, MOTDConfigResource *motd_download);
 #endif
 
 extern MOTDLine *find_file(char *, short);
@@ -776,7 +776,7 @@ void read_motd(const char *filename, MOTDFile *themotd)
 {
 #ifdef USE_LIBCURL
 	time_t modtime;
-	MOTDDownload *motd_download;
+	MOTDConfigResource *motd_download;
 #endif
 
 	/* TODO: if themotd points to a tld's motd,
@@ -797,7 +797,7 @@ void read_motd(const char *filename, MOTDFile *themotd)
 	if (filename && url_is_valid(filename))
 	{
 		/* prepare our payload for read_motd_async_downloaded() */
-		motd_download = safe_alloc(sizeof(MOTDDownload));
+		motd_download = safe_alloc(sizeof(MOTDConfigResource));
 		motd_download->themotd = themotd;
 		themotd->motd_download = motd_download;
 
@@ -820,14 +820,14 @@ void read_motd(const char *filename, MOTDFile *themotd)
  * @param errorbuf NULL or an errorstring if there was an error while downloading the MOTD.
  * @param cached 0 if the URL was downloaded freshly or 1 if the last download was canceled and the local copy should be used.
  */
-void read_motd_async_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, MOTDDownload *motd_download)
+void read_motd_async_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, MOTDConfigResource *motd_download)
 {
 	MOTDFile *themotd;
 
 	themotd = motd_download->themotd;
 	/*
 	  check if the download was soft-canceled. See struct.h's docs on
-	  struct MOTDDownload for details.
+	  struct MOTDConfigResource for details.
 	*/
 	if (!themotd)
 	{

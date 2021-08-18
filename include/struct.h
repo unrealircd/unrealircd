@@ -113,7 +113,7 @@ typedef struct ConfigItem_unknown ConfigItem_unknown;
 typedef struct ConfigItem_unknown_ext ConfigItem_unknown_ext;
 typedef struct ConfigItem_alias ConfigItem_alias;
 typedef struct ConfigItem_alias_format ConfigItem_alias_format;
-typedef struct ConfigItem_include ConfigItem_include;
+typedef struct ConfigResource ConfigResource;
 typedef struct ConfigItem_blacklist_module ConfigItem_blacklist_module;
 typedef struct ConfigItem_help ConfigItem_help;
 typedef struct ConfigItem_offchans ConfigItem_offchans;
@@ -139,7 +139,7 @@ typedef struct MessageTag MessageTag;
 typedef struct MOTDFile MOTDFile; /* represents a whole MOTD, including remote MOTD support info */
 typedef struct MOTDLine MOTDLine; /* one line of a MOTD stored as a linked list */
 #ifdef USE_LIBCURL
-typedef struct MOTDDownload MOTDDownload; /* used to coordinate download of a remote MOTD */
+typedef struct MOTDConfigResource MOTDConfigResource; /* used to coordinate download of a remote MOTD */
 #endif
 
 typedef struct RealCommand RealCommand;
@@ -808,7 +808,7 @@ struct MultiLine {
 };
 
 #ifdef USE_LIBCURL
-struct MOTDDownload
+struct MOTDConfigResource
 {
 	MOTDFile *themotd;
 };
@@ -829,7 +829,7 @@ struct MOTDFile
 
 	  To prevent such a situation from leading to a segfault, we
 	  introduce this remote control pointer. It works like this:
-	  1. read_motd() is called with a URL. A new MOTDDownload is
+	  1. read_motd() is called with a URL. A new MOTDConfigResource is
 	     allocated and the pointer is placed here. This pointer is
 	     also passed to the asynchrnous download handler.
 	  2.a. The download is completed and read_motd_async_downloaded()
@@ -842,7 +842,7 @@ struct MOTDFile
 	       the download. read_motd_async_downloaded() is eventually called
 	       and frees motd_download.
 	 */
-	struct MOTDDownload *motd_download;
+	struct MOTDConfigResource *motd_download;
 #endif /* USE_LIBCURL */
 };
 
@@ -1889,12 +1889,14 @@ struct ConfigItem_alias_format {
 	Match *expr;
 };
 
-#define INCLUDE_REMOTE     0x1
-#define INCLUDE_DLQUEUED   0x2
+#define RESOURCE_REMOTE     0x1
+#define RESOURCE_DLQUEUED   0x2
+#define RESOURCE_INCLUDE    0x4
 	
-struct ConfigItem_include {
-	ConfigItem_include *prev, *next;
+struct ConfigResource {
+	ConfigResource *prev, *next;
 	ConfigFlag_ban flag;
+	ConfigEntry *ce;
 	char *file;
 	char *url;
 	char *errorbuf;

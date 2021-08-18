@@ -49,6 +49,9 @@ typedef struct
  */
 int url_is_valid(const char *string)
 {
+	if (strstr(string, " ") || strstr(string, "\t"))
+		return 0;
+
 	if (strstr(string, "telnet://") == string ||
 	    strstr(string, "ldap://") == string ||
 	    strstr(string, "dict://") == string)

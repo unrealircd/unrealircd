@@ -367,15 +367,15 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 						}
 					}
 					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
-					if (conf_include) 
+					if (config_resources) 
 					{
-						ConfigItem_include *inc;
-						for (inc = conf_include; inc; inc = inc->next)
+						ConfigResource *inc;
+						for (inc = config_resources; inc; inc = inc->next)
 						{
 							if (inc->flag.type & INCLUDE_NOTLOADED)
 								continue;
 #ifdef USE_LIBCURL
-							if (inc->flag.type & INCLUDE_REMOTE)
+							if (inc->flag.type & RESOURCE_REMOTE)
 								AppendMenu(hConfig, MF_STRING, i++, inc->url);
 							else
 #endif
@@ -476,13 +476,13 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				}
 				AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
 
-				if (conf_include) 
+				if (config_resources) 
 				{
-					ConfigItem_include *inc;
-					for (inc = conf_include; inc; inc = inc->next)
+					ConfigResource *inc;
+					for (inc = config_resources; inc; inc = inc->next)
 					{
 #ifdef USE_LIBCURL
-						if (inc->flag.type & INCLUDE_REMOTE)
+						if (inc->flag.type & RESOURCE_REMOTE)
 							AppendMenu(hConfig, MF_STRING, i++, inc->url);
 						else
 #endif
