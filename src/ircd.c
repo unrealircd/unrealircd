@@ -1241,7 +1241,7 @@ void SocketLoop(void *dummy)
 		 */
 		if (dorehash)
 		{
-			(void)rehash(&me, 1);
+			request_rehash(NULL);
 			dorehash = 0;
 		}
 		if (dorestart)

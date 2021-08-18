@@ -452,7 +452,7 @@ extern void report_dynconf(Client *client);
 extern void count_memory(Client *cptr, char *nick);
 extern void list_scache(Client *client);
 extern char *oflagstr(long oflag);
-extern int rehash(Client *client, int sig);
+extern void request_rehash(Client *client);
 extern void s_die();
 extern int match_simple(const char *mask, const char *name);
 extern int match_esc(const char *mask, const char *name);

@@ -259,7 +259,7 @@ void update_remote_include(ConfigItem_include *inc, const char *file, int, const
 int remote_include(ConfigEntry *ce);
 #endif
 void free_all_includes(void);
-int rehash_internal(Client *client, int sig);
+int rehash_internal(Client *client);
 int is_blacklisted_module(char *name);
 
 /** Return the printable string of a 'cep' location, such as set::something::xyz */
@@ -10713,42 +10713,51 @@ static void conf_download_complete(const char *url, const char *file, const char
 	 * startup loop where it also checks is_config_read_finished().
 	 */
 	if (loop.rehashing && is_config_read_finished())
-		rehash_internal(loop.rehash_save_client, loop.rehash_save_sig);
+		rehash_internal(loop.rehash_save_client);
 }
 #endif
 
-int     rehash(Client *client, int sig)
+/** Request to REHASH the configuration file.
+ * There is no guarantee that the request will be done immediately
+ * (eg: it won't in case of remote includes).
+ * @param client	The client requesting the /REHASH.
+ *                      If this is NULL then the rehash was requested
+ *                      via a signal to the process or GUI.
+ */
+void request_rehash(Client *client)
 {
 #ifdef USE_LIBCURL
 	ConfigItem_include *inc;
 	char found_remote = 0;
 	if (loop.rehashing)
 	{
-		if (!sig)
+		if (client)
 			sendnotice(client, "A rehash is already in progress");
-		return 0;
+		return;
 	}
 
 	loop.rehashing = 1;
 	loop.rehash_save_client = client;
-	loop.rehash_save_sig = sig;
 	config_read_start();
 	/* If we already have everything, then can we proceed with the rehash */
 	if (is_config_read_finished())
-		return rehash_internal(client, sig);
-	/* Otherwise, return here, I/O events will take care of it later
+	{
+		rehash_internal(client);
+		return;
+	}
+	/* Otherwise, I/O events will take care of it later
 	 * after all remote includes have been downloaded.
 	 */
-	return 0;
 #else
 	loop.rehashing = 1;
-	return rehash_internal(client, sig);
+	rehash_internal(client);
 #endif
 }
 
-int rehash_internal(Client *client, int sig)
+int rehash_internal(Client *client)
 {
-	if (sig == 1)
+	/* Log it here if it is by a signal */
+	if (client == NULL)
 		unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [./unrealircd rehash]");
 
 	loop.rehashing = 1; /* double checking.. */

@@ -508,7 +508,7 @@ extern void reinit_resolver(Client *client);
  */
 CMD_FUNC(cmd_rehash)
 {
-	int x = 0;
+	int x;
 
 	/* This is one of the (few) commands that cannot be handled
 	 * by labeled-response accurately in all circumstances.
@@ -643,7 +643,7 @@ CMD_FUNC(cmd_rehash)
 
 	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
 	sendnumeric(client, RPL_REHASHING, configfile);
-	x = rehash(client, 0);
+	request_rehash(client);
 }
 
 /** RESTART command - restart the server (discouraged command)
