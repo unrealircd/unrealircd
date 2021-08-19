@@ -10718,7 +10718,10 @@ void resource_download_complete(const char *url, const char *file, const char *e
 			unreal_copyfileex(file, cache_file, 1);
 			safe_strdup(rs->file, cache_file);
 		}
+	}
 
+	if (rs->file)
+	{
 		if (rs->type & RESOURCE_INCLUDE)
 		{
 			config_read_file(rs->file, rs->url);
