@@ -1903,10 +1903,11 @@ struct ConfigEntryWrapper {
 struct ConfigResource {
 	ConfigResource *prev, *next;
 	ConfigFlag_ban flag;
-	ConfigEntryWrapper *wce;
-	char *file;
-	char *url;
-	char *errorbuf;
+	ConfigEntryWrapper *wce; /**< The place(s) where this resource is begin used */
+	char *file; /**< File to read: can be a conf/something file or a downloaded file */
+	char *url; /**< URL, if it is an URL */
+	char *cache_file; /**< Set to filename of local cached copy, if it is available */
+	char *errorbuf; /**< Error from the remote include downloading - is this even used? */
 };
 
 struct ConfigItem_blacklist_module {

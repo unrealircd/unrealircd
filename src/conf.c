@@ -10681,43 +10681,43 @@ void resource_download_complete(const char *url, const char *file, const char *e
 	if (!file && !cached)
 	{
 		/* DOWNLOAD FAILED */
-		safe_strdup(rs->file, file);
-		safe_strdup(rs->errorbuf, errorbuf);
-		unreal_log(ULOG_ERROR, "config", "DOWNLOAD_FAILED", NULL,
-		           "$file:$line_number: Failed to download '$url': $error_message",
-		           log_data_string("file", rs->wce->ce->file->filename),
-		           log_data_integer("line_number", rs->wce->ce->line_number),
-		           log_data_string("url", displayurl(url)),
-		           log_data_string("error_message", errorbuf));
-		/* Set error condition, this so config_read_file() later will stop. */
-		loop.config_load_failed = 1;
-		/* We keep the other transfers running since they may raise (more) errors.
-		 * Which can be helpful so you can differentiate between an error of an
-		 * include on one server, or complete lack of internet connectvitity.
-		 */
+		if (rs->cache_file)
+		{
+			unreal_log(ULOG_ERROR, "config", "DOWNLOAD_FAILED_SOFT", NULL,
+				   "$file:$line_number: Failed to download '$url': $error_message\n"
+				   "Using a cached copy instead.",
+				   log_data_string("file", rs->wce->ce->file->filename),
+				   log_data_integer("line_number", rs->wce->ce->line_number),
+				   log_data_string("url", displayurl(url)),
+				   log_data_string("error_message", errorbuf));
+			safe_strdup(rs->file, rs->cache_file);
+		} else {
+			safe_strdup(rs->errorbuf, errorbuf);
+			unreal_log(ULOG_ERROR, "config", "DOWNLOAD_FAILED_HARD", NULL,
+				   "$file:$line_number: Failed to download '$url': $error_message",
+				   log_data_string("file", rs->wce->ce->file->filename),
+				   log_data_integer("line_number", rs->wce->ce->line_number),
+				   log_data_string("url", displayurl(url)),
+				   log_data_string("error_message", errorbuf));
+			/* Set error condition, this so config_read_file() later will stop. */
+			loop.config_load_failed = 1;
+			/* We keep the other transfers running since they may raise (more) errors.
+			 * Which can be helpful so you can differentiate between an error of an
+			 * include on one server, or complete lack of internet connectvitity.
+			 */
+		}
 	}
 	else
 	{
-		char *urlfile = url_getfilename(url);
-		char *file_basename = unreal_getfilename(urlfile);
-		char *tmp = unreal_mktemp(TMPDIR, file_basename ? file_basename : "download.conf");
-		safe_free(urlfile);
-
 		if (cached)
 		{
-			unreal_copyfileex(rs->file, tmp, 1);
-			unreal_copyfileex(rs->file, unreal_mkcache(url), 0);
-			safe_strdup(rs->file, tmp);
-		}
-		else
-		{
-			/*
-			  copy/hardlink file to another file because our caller will
-			  remove(file).
-			*/
-			unreal_copyfileex(file, tmp, 1);
-			safe_strdup(rs->file, tmp);
-			unreal_copyfileex(file, unreal_mkcache(url), 0);
+			/* Copy from cache */
+			safe_strdup(rs->file, rs->cache_file);
+		} else {
+			/* Copy to cache */
+			char *cache_file = unreal_mkcache(url);
+			unreal_copyfileex(file, cache_file, 1);
+			safe_strdup(rs->file, cache_file);
 		}
 
 		if (rs->flag.type & RESOURCE_INCLUDE)
@@ -10922,27 +10922,26 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 	/* New entry */
 	rs = safe_alloc(sizeof(ConfigResource));
 	rs->wce = wce;
+	AddListItem(rs, config_resources);
 
 #ifdef USE_LIBCURL
 	if (!url_is_valid(resource))
 	{
 #endif
 		safe_strdup(rs->file, resource);
-		AddListItem(rs, config_resources);
 #ifdef USE_LIBCURL
 	} else {
-		// FIXME: duplicate entries are fine, and we need to add them to the
-		// list due to 'ce' expansion and so on.
-		// However, we should not download the file multiple times, that is
-		// just a waste ;)
-		
-		// FIXME: we pass a NULL file pointer here, even though it may be cached
-		// FIXME: similarly, we pass 0 modification time to download_file_async()
-		//        while it should be the mtime of the cached entry
+		char *cache_file;
+		time_t modtime;
+
 		safe_strdup(rs->url, resource);
 		rs->flag.type = type|RESOURCE_REMOTE|RESOURCE_DLQUEUED;
-		AddListItem(rs, config_resources);
-		download_file_async(rs->url, 0, resource_download_complete, (void *)rs);
+
+		cache_file = unreal_mkcache(rs->url);
+		modtime = unreal_getfilemodtime(cache_file);
+		if (modtime > 0)
+			safe_strdup(rs->cache_file, cache_file); /* Cached copy is available */
+		download_file_async(rs->url, modtime, resource_download_complete, (void *)rs);
 	}
 #endif
 	return 1;
@@ -10975,6 +10974,7 @@ void free_all_config_resources(void)
 		}
 #endif
 		safe_free(rs->file);
+		safe_free(rs->cache_file);
 		DelListItem(rs, config_resources);
 		safe_free(rs);
 	}
