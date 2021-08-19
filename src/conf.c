@@ -254,7 +254,7 @@ char *port_6667_ip = NULL;
 
 int add_config_resource(const char *resource, int type, ConfigEntry *ce);
 #ifdef USE_LIBCURL
-void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *inc_key);
+void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *rs_key);
 #endif
 void free_all_config_resources(void);
 int rehash_internal(Client *client);
@@ -2153,13 +2153,13 @@ int config_read_start(void)
 
 int is_config_read_finished(void)
 {
-	ConfigResource *inc;
+	ConfigResource *rs;
 
-	for (inc = config_resources; inc; inc = inc->next)
+	for (rs = config_resources; rs; rs = rs->next)
 	{
-		if (inc->flag.type & RESOURCE_DLQUEUED)
+		if (rs->type & RESOURCE_DLQUEUED)
 		{
-			//config_status("Waiting for %s...", inc->url);
+			//config_status("Waiting for %s...", rs->url);
 			return 0;
 		}
 	}
@@ -2300,7 +2300,7 @@ int	config_read_file(char *filename, const char *original_path)
 {
 	ConfigFile 	*cfptr, *cfptr2, **cfptr3;
 	ConfigEntry 	*ce;
-	ConfigResource *inc, *my_inc;
+	ConfigResource *rs;
 	int ret;
 	int counter;
 
@@ -2317,18 +2317,18 @@ int	config_read_file(char *filename, const char *original_path)
 	 * can only happen if we have buggy code somewhere.
 	 */
 	counter = 0;
-	for (inc = config_resources; inc; inc = inc->next)
+	for (rs = config_resources; rs; rs = rs->next)
 	{
 #ifndef _WIN32
-		if (inc->file && !strcmp(filename, inc->file))
+		if (rs->file && !strcmp(filename, rs->file))
 #else
-		if (inc->file && !strcasecmp(filename, inc->file))
+		if (rs->file && !strcasecmp(filename, rs->file))
 #endif
 		{
 			counter ++;
 			continue;
 		}
-		if (inc->url && !strcmp(original_path, inc->url))
+		if (rs->url && !strcmp(original_path, rs->url))
 		{
 			counter ++;
 			continue;
@@ -10670,11 +10670,11 @@ int _conf_secret(ConfigFile *conf, ConfigEntry *ce)
 }
 
 #ifdef USE_LIBCURL
-void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *inc_key)
+void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *rs_key)
 {
-	ConfigResource *rs = (ConfigResource *)inc_key;
+	ConfigResource *rs = (ConfigResource *)rs_key;
 
-	rs->flag.type &= ~RESOURCE_DLQUEUED;
+	rs->type &= ~RESOURCE_DLQUEUED;
 
 	config_status("resource_download_complete() for %s [%s]", url, errorbuf?errorbuf:"success");
 
@@ -10719,7 +10719,7 @@ void resource_download_complete(const char *url, const char *file, const char *e
 			safe_strdup(rs->file, cache_file);
 		}
 
-		if (rs->flag.type & RESOURCE_INCLUDE)
+		if (rs->type & RESOURCE_INCLUDE)
 		{
 			config_read_file(rs->file, rs->url);
 		} else {
@@ -10748,8 +10748,6 @@ void resource_download_complete(const char *url, const char *file, const char *e
 void request_rehash(Client *client)
 {
 #ifdef USE_LIBCURL
-	ConfigResource *inc;
-	char found_remote = 0;
 	if (loop.rehashing)
 	{
 		if (client)
@@ -10871,19 +10869,19 @@ void	listen_cleanup()
 
 ConfigResource *find_config_resource(const char *resource)
 {
-	ConfigResource *inc;
+	ConfigResource *rs;
 
-	for (inc = config_resources; inc; inc = inc->next)
+	for (rs = config_resources; rs; rs = rs->next)
 	{
 #ifdef _WIN32
-		if (inc->file && !strcasecmp(resource, inc->file))
-			return inc;
+		if (rs->file && !strcasecmp(resource, rs->file))
+			return rs;
 #else
-		if (inc->file && !strcmp(resource, inc->file))
-			return inc;
+		if (rs->file && !strcmp(resource, rs->file))
+			return rs;
 #endif
-		if (inc->url && !strcasecmp(resource, inc->url))
-			return inc;
+		if (rs->url && !strcasecmp(resource, rs->url))
+			return rs;
 	}
 	return NULL;
 }
@@ -10934,7 +10932,7 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 		time_t modtime;
 
 		safe_strdup(rs->url, resource);
-		rs->flag.type = type|RESOURCE_REMOTE|RESOURCE_DLQUEUED;
+		rs->type = type|RESOURCE_REMOTE|RESOURCE_DLQUEUED;
 
 		cache_file = unreal_mkcache(rs->url);
 		modtime = unreal_getfilemodtime(cache_file);
@@ -10961,7 +10959,7 @@ void free_all_config_resources(void)
 		}
 		rs->wce = NULL;
 #ifdef USE_LIBCURL
-		if (rs->flag.type & RESOURCE_REMOTE)
+		if (rs->type & RESOURCE_REMOTE)
 		{
 			/* Delete the file, but only if it's not a cached version */
 			if (rs->file && strncmp(rs->file, CACHEDIR, strlen(CACHEDIR)))

@@ -1902,7 +1902,7 @@ struct ConfigEntryWrapper {
 	
 struct ConfigResource {
 	ConfigResource *prev, *next;
-	ConfigFlag_ban flag;
+	int type;
 	ConfigEntryWrapper *wce; /**< The place(s) where this resource is begin used */
 	char *file; /**< File to read: can be a conf/something file or a downloaded file */
 	char *url; /**< URL, if it is an URL */
