@@ -10692,7 +10692,6 @@ void resource_download_complete(const char *url, const char *file, const char *e
 				   log_data_string("error_message", errorbuf));
 			safe_strdup(rs->file, rs->cache_file);
 		} else {
-			safe_strdup(rs->errorbuf, errorbuf);
 			unreal_log(ULOG_ERROR, "config", "DOWNLOAD_FAILED_HARD", NULL,
 				   "$file:$line_number: Failed to download '$url': $error_message",
 				   log_data_string("file", rs->wce->ce->file->filename),
@@ -10970,7 +10969,6 @@ void free_all_config_resources(void)
 				remove(rs->file);
 			}
 			safe_free(rs->url);
-			safe_free(rs->errorbuf);
 		}
 #endif
 		safe_free(rs->file);

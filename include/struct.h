@@ -1907,7 +1907,6 @@ struct ConfigResource {
 	char *file; /**< File to read: can be a conf/something file or a downloaded file */
 	char *url; /**< URL, if it is an URL */
 	char *cache_file; /**< Set to filename of local cached copy, if it is available */
-	char *errorbuf; /**< Error from the remote include downloading - is this even used? */
 };
 
 struct ConfigItem_blacklist_module {
