@@ -253,9 +253,7 @@ int have_tls_listeners = 0;
 char *port_6667_ip = NULL;
 
 int add_config_resource(const char *resource, int type, ConfigEntry *ce);
-#ifdef USE_LIBCURL
 void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *rs_key);
-#endif
 void free_all_config_resources(void);
 int rehash_internal(Client *client);
 int is_blacklisted_module(char *name);
@@ -1582,7 +1580,6 @@ int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *e
 	}
 
 	/* There's not much checking that can be done for asynchronously downloaded files */
-#ifdef USE_LIBCURL
 	if (url_is_valid(cep->value))
 	{
 		if (allow_url)
@@ -1598,17 +1595,6 @@ int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *e
 		else
 			return 0;
 	}
-#else
-	if (strstr(cep->value, "://"))
-	{
-		config_error("%s:%d: %s: UnrealIRCd was not compiled with remote includes support "
-		             "so you cannot use URLs here.",
-		             cep->file->filename,
-		             cep->line_number,
-		             entry);
-		return 1;
-	}
-#endif /* USE_LIBCURL */
 
 	/*
 	 * Make sure that files are created with the correct mode. This is
@@ -3365,25 +3351,11 @@ int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 
 	convert_to_absolute_path(&ce->value, CONFDIR);
 
-#ifdef USE_LIBCURL
 	if (url_is_valid(ce->value))
 	{
 		add_config_resource(ce->value, RESOURCE_INCLUDE, ce);
 		return 0;
 	}
-#else
-	if (strstr(ce->value, "://"))
-	{
-		config_error("%s:%d: URL specified: %s",
-		             ce->file->filename,
-		             ce->line_number,
-		             ce->value);
-		config_error("UnrealIRCd was not compiled with remote includes support "
-		             "so you cannot use URLs. You are suggested to re-run ./Config "
-		             "and answer YES to the question about remote includes.");
-		return -1;
-	}
-#endif
 #if !defined(_WIN32) && !defined(_AMIGA) && !defined(OSXTIGER) && DEFAULT_PERMISSIONS != 0
 	(void)chmod(ce->value, DEFAULT_PERMISSIONS);
 #endif
@@ -10669,7 +10641,6 @@ int _conf_secret(ConfigFile *conf, ConfigEntry *ce)
 	return 1;
 }
 
-#ifdef USE_LIBCURL
 void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *rs_key)
 {
 	ConfigResource *rs = (ConfigResource *)rs_key;
@@ -10739,7 +10710,6 @@ void resource_download_complete(const char *url, const char *file, const char *e
 	if (loop.rehashing && is_config_read_finished())
 		rehash_internal(loop.rehash_save_client);
 }
-#endif
 
 /** Request to REHASH the configuration file.
  * There is no guarantee that the request will be done immediately
@@ -10750,7 +10720,6 @@ void resource_download_complete(const char *url, const char *file, const char *e
  */
 void request_rehash(Client *client)
 {
-#ifdef USE_LIBCURL
 	if (loop.rehashing)
 	{
 		if (client)
@@ -10770,10 +10739,6 @@ void request_rehash(Client *client)
 	/* Otherwise, I/O events will take care of it later
 	 * after all remote includes have been downloaded.
 	 */
-#else
-	loop.rehashing = 1;
-	rehash_internal(client);
-#endif
 }
 
 int rehash_internal(Client *client)
@@ -10924,12 +10889,9 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 	rs->wce = wce;
 	AddListItem(rs, config_resources);
 
-#ifdef USE_LIBCURL
 	if (!url_is_valid(resource))
 	{
-#endif
 		safe_strdup(rs->file, resource);
-#ifdef USE_LIBCURL
 	} else {
 		char *cache_file;
 		time_t modtime;
@@ -10943,7 +10905,6 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 			safe_strdup(rs->cache_file, cache_file); /* Cached copy is available */
 		download_file_async(rs->url, modtime, resource_download_complete, (void *)rs);
 	}
-#endif
 	return 1;
 }
 
@@ -10961,7 +10922,6 @@ void free_all_config_resources(void)
 			safe_free(wce);
 		}
 		rs->wce = NULL;
-#ifdef USE_LIBCURL
 		if (rs->type & RESOURCE_REMOTE)
 		{
 			/* Delete the file, but only if it's not a cached version */
@@ -10971,7 +10931,6 @@ void free_all_config_resources(void)
 			}
 			safe_free(rs->url);
 		}
-#endif
 		safe_free(rs->file);
 		safe_free(rs->cache_file);
 		DelListItem(rs, config_resources);

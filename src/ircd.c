@@ -1066,6 +1066,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	(void)chmod(CPATH, DEFAULT_PERMISSIONS);
 #endif
 	init_dynconf();
+	init_sys();
 	/*
 	 * Add default class
 	 */
@@ -1123,7 +1124,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 		loop.boot_function();
 	open_debugfile();
 	me.local->port = 6667; /* pointless? */
-	init_sys();
 	applymeblock();
 #ifdef HAVE_SYSLOG
 	openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON);

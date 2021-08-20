@@ -788,6 +788,7 @@ extern int ssl_client_handshake(Client *, ConfigItem_link *); /* and the initiat
 extern int unreal_tls_accept(Client *acptr, int fd);
 extern int unreal_tls_connect(Client *acptr, int fd);
 extern int SSL_smart_shutdown(SSL *ssl);
+extern char *ssl_error_str(int err, int my_errno);
 extern void unreal_tls_client_handshake(int, int, void *);
 extern void SSL_set_nonblocking(SSL *s);
 extern SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server);
