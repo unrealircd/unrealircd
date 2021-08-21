@@ -50,6 +50,7 @@ struct Download
 	int ipv6;
 	SSL *ssl;
 	int fd;			/**< Socket */
+	int connected;
 	int got_response;
 	char *lefttoparse;
 	long long lefttoparselen; /* size of data in lefttoparse (note: not used for first header parsing) */
@@ -443,6 +444,7 @@ void https_connect_send_header(Download *handle)
 	int port;
 	char *document;
 
+	handle->connected = 1;
 	snprintf(hostandport, sizeof(hostandport), "%s:%d", handle->hostname, handle->port);
 
 	// TODO: remove debug shit
@@ -944,9 +946,15 @@ EVENT(url_socket_timeout)
 		d_next = d->next;
 		if (d->dns_refcnt)
 			continue; /* can't touch this... */
-		if (TStime() - d->download_started > DOWNLOAD_TRANSFER_TIMEOUT)
+		if (!d->connected && (TStime() - d->download_started > DOWNLOAD_CONNECT_TIMEOUT))
 		{
-			https_cancel(d, "Timeout after %ld seconds", (long)DOWNLOAD_TRANSFER_TIMEOUT);
+			https_cancel(d, "Connect or DNS timeout after %ld seconds", (long)DOWNLOAD_CONNECT_TIMEOUT);
+			continue;
+		}
+		if (d->connected && (TStime() - d->download_started > DOWNLOAD_TRANSFER_TIMEOUT))
+		{
+			https_cancel(d, "Download timeout after %ld seconds", (long)DOWNLOAD_TRANSFER_TIMEOUT);
+			continue;
 		}
 	}
 }
