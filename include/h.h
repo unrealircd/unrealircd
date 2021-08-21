@@ -981,6 +981,8 @@ extern MessageTag *duplicate_mtag(MessageTag *mtag);
 #define safe_free_message_tags(x) do { if (x) free_message_tags(x); x = NULL; } while(0)
 extern void free_message_tags(MessageTag *m);
 extern time_t server_time_to_unix_time(const char *tbuf);
+extern time_t rfc2616_time_to_unix_time(const char *tbuf);
+extern char *rfc2616_time(time_t clock);
 extern int history_set_limit(char *object, int max_lines, long max_t);
 extern int history_add(char *object, MessageTag *mtags, char *line);
 extern HistoryResult *history_request(char *object, HistoryFilter *filter);

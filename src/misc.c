@@ -43,6 +43,15 @@ static char *weekdays[] = {
 	"Thursday", "Friday", "Saturday"
 };
 
+static const char *short_months[12] = {
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+};
+
+static const char *short_weekdays[7] = {
+    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
+};
+
 typedef struct {
 	int value;			/** Unique integer value of item */
 	char character;		/** Unique character assigned to item */
@@ -1580,6 +1589,68 @@ time_t server_time_to_unix_time(const char *tbuf)
 
 	ret = my_timegm(&tm);
 	return ret;
+}
+
+/** Convert an RFC 2616 timestamp (used in HTTP headers) to UNIX time */
+time_t rfc2616_time_to_unix_time(const char *tbuf)
+{
+	struct tm tm;
+	int dontcare = 0;
+	time_t ret;
+	char month[8];
+	int i;
+
+	if (!tbuf)
+		return 0;
+
+	if (strlen(tbuf) < 20)
+		return 0;
+
+	memset(&tm, 0, sizeof(tm));
+	*month = '\0';
+	ret = sscanf(tbuf, "%*[a-zA-Z,] %d %3s %d %d:%d:%d",
+	             &tm.tm_mday, month, &tm.tm_year,
+	             &tm.tm_hour, &tm.tm_min, &tm.tm_sec);
+
+	if (ret < 6)
+		return 0;
+
+	for (i=0; i < 12; i++)
+	{
+		if (!strcmp(short_months[i], month))
+		{
+			tm.tm_mon = i;
+			break;
+		}
+	}
+	if (i == 12)
+		return 0; /* Month not found */
+	if (tm.tm_year < 1900)
+		return 0;
+
+	tm.tm_year -= 1900;
+	ret = my_timegm(&tm);
+	return ret; /* can still be 0 */
+}
+
+/** Returns an RFC 2616 timestamp (used in HTTP headers) */
+char *rfc2616_time(time_t clock)
+{
+	static char buf[80], plus;
+	struct tm *lt, *gm;
+	struct tm gmbuf;
+	int  minswest;
+
+	if (!clock)
+		time(&clock);
+	gm = gmtime(&clock);
+
+	snprintf(buf, sizeof(buf),
+	         "%s, %02d %.3s %4d %02d:%02d:%02d GMT",
+	         short_weekdays[gm->tm_wday], gm->tm_mday, short_months[gm->tm_mon],
+	         gm->tm_year + 1900, gm->tm_hour, gm->tm_min, gm->tm_sec);
+
+	return buf;
 }
 
 /** Write a 64 bit integer to a file.
