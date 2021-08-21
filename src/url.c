@@ -31,8 +31,13 @@ extern char *TLSKeyPasswd;
  * Used to maintain information about the transfer
  * to trigger the callback upon completion.
  */
-typedef struct
+typedef struct Download Download;
+
+struct Download
 {
+#ifndef USE_LIBCURL
+	Download *prev, *next;
+#endif
 	vFP callback;
 	void *callback_data;
 	FILE *file_fd;		/**< File open for writing (otherwise NULL) */
@@ -52,10 +57,12 @@ typedef struct
 	char *lefttoparse;
 	time_t last_modified;
 #endif
-} Download;
+};
 
 #ifdef USE_LIBCURL
-CURLM *multihandle;
+CURLM *multihandle = NULL;
+#else
+Download *downloads = NULL;
 #endif
 
 /*
@@ -144,6 +151,7 @@ char *url_getfilename(const char *url)
 
 void url_free_handle(Download *handle)
 {
+	DelListItem(handle, downloads);
 	if (handle->fd > 0)
 	{
 		fd_close(handle->fd);
@@ -462,6 +470,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	tmp = unreal_mktemp(TMPDIR, filename ? filename : "download.conf");
 
 	handle = safe_alloc(sizeof(Download));
+	AddListItem(handle, downloads);
 	handle->file_fd = fopen(tmp, "wb");
 	if (!handle->file_fd)
 	{

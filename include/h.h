@@ -87,7 +87,6 @@ extern MODVAR ConfigItem_allow_channel *conf_allow_channel;
 extern MODVAR ConfigItem_deny_version	*conf_deny_version;
 extern MODVAR ConfigItem_log		*conf_log;
 extern MODVAR ConfigItem_alias		*conf_alias;
-extern MODVAR ConfigResource	*downloads;
 extern MODVAR ConfigItem_help		*conf_help;
 extern MODVAR ConfigItem_offchans	*conf_offchans;
 extern MODVAR SecurityGroup		*securitygroups;
