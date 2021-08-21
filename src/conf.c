@@ -10695,7 +10695,8 @@ void resource_download_complete(const char *url, const char *file, const char *e
 	{
 		if (rs->type & RESOURCE_INCLUDE)
 		{
-			config_read_file(rs->file, rs->url);
+			if (config_read_file(rs->file, rs->url) < 0)
+				loop.config_load_failed = 1;
 		} else {
 			ConfigEntryWrapper *wce;
 			for (wce = rs->wce; wce; wce = wce->next)
