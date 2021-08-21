@@ -22,6 +22,11 @@
 
 /* Structs */
 
+typedef enum TransferEncoding {
+	TRANSFER_ENCODING_NONE=0,
+	TRANSFER_ENCODING_CHUNKED=1
+} TransferEncoding;
+
 /* Stores information about the async transfer.
  * Used to maintain information about the transfer
  * to trigger the callback upon completion.
@@ -47,9 +52,12 @@ struct Download
 	int fd;			/**< Socket */
 	int got_response;
 	char *lefttoparse;
+	long long lefttoparselen; /* size of data in lefttoparse (note: not used for first header parsing) */
 	time_t last_modified;
 	time_t download_started;
 	int dns_refcnt;
+	TransferEncoding transfer_encoding;
+	long chunk_remaining;
 };
 
 /* Variables */
@@ -111,8 +119,17 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 
 	handle = safe_alloc(sizeof(Download));
 	handle->download_started = TStime();
+	handle->callback = callback;
+	handle->callback_data = callback_data;
+	handle->cachetime = cachetime;
+	safe_strdup(handle->url, url);
 	AddListItem(handle, downloads);
 
+	if (strncmp(url, "https://", 8))
+	{
+		https_cancel(handle, "Only https:// is supported (either rebuild UnrealIRCd with curl support or use https)");
+		return;
+	}
 	if (!url_parse(url, &host, &port, &document))
 	{
 		https_cancel(handle, "Failed to parse HTTP url");
@@ -130,10 +147,6 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 		return;
 	}
 
-	handle->callback = callback;
-	handle->callback_data = callback_data;
-	handle->cachetime = cachetime;
-	safe_strdup(handle->url, url);
 	strlcpy(handle->filename, tmp, sizeof(handle->filename));
 	safe_free(file);
 
@@ -386,10 +399,7 @@ int url_parse(const char *url, char **host, int *port, char **document)
 	static char documentbuf[512];
 
 	if (strncmp(url, "https://", 8))
-	{
-		fprintf(stderr, "ERROR: URL Must start with https! URL: %s\n", url);
 		return 0;
-	}
 	url += 8; /* skip over https:// part */
 
 	p = strchr(url, '/');
@@ -569,9 +579,14 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 				return 0;
 			}
 		} else
-		if (!strcasecmp(key, "Last-Modified"))
+		if (!strcasecmp(key, "Last-Modified") && value)
 		{
 			handle->last_modified = rfc2616_time_to_unix_time(value);
+		} else
+		if (!strcasecmp(key, "Transfer-Encoding") && value)
+		{
+			if (value && !strcasecmp(value, "chunked"))
+				handle->transfer_encoding = TRANSFER_ENCODING_CHUNKED;
 		}
 		//fprintf(stderr, "\nHEADER '%s'\n\n", key);
 	}
@@ -586,7 +601,10 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 
 		nextframe = url_find_end_of_request(netbuf2, totalsize, &remaining_bytes);
 		if (nextframe)
-			https_handle_response_file(handle, nextframe, remaining_bytes);
+		{
+			if (!https_handle_response_file(handle, nextframe, remaining_bytes))
+				return 0;
+		}
 	}
 
 	if (lastloc)
@@ -598,13 +616,117 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 	return 1;
 }
 
-int https_handle_response_file(Download *handle, char *readbuf, int n)
+int https_handle_response_file(Download *handle, char *readbuf, int pktsize)
 {
-	fwrite(readbuf, 1, n, handle->file_fd);
+	char *buf;
+	long long n;
+	char *free_this_buffer = NULL;
 
 	// TODO we fail to check for write errors ;)
-
 	// TODO: Makes sense to track if we got everything? :D
+
+	if (handle->transfer_encoding == TRANSFER_ENCODING_NONE)
+	{
+		/* Ohh.. so easy! */
+		fwrite(readbuf, 1, pktsize, handle->file_fd);
+		return 1;
+	}
+
+	/* Fill 'buf' nd set 'buflen' with what we had + what we have now.
+	 * Makes things easy.
+	 */
+	if (handle->lefttoparse)
+	{
+		n = handle->lefttoparselen + pktsize;
+		free_this_buffer = buf = safe_alloc(n);
+		memcpy(buf, handle->lefttoparse, handle->lefttoparselen);
+		memcpy(buf+handle->lefttoparselen, readbuf, pktsize);
+		safe_free(handle->lefttoparse);
+		handle->lefttoparselen = 0;
+	} else {
+		n = pktsize;
+		buf = readbuf;
+	}
+
+	/* Chunked transfers.. yayyyy.. */
+	while (n > 0)
+	{
+		if (handle->chunk_remaining > 0)
+		{
+			/* Eat it */
+			int eat = MIN(handle->chunk_remaining, n);
+			fwrite(buf, 1, eat, handle->file_fd);
+			n -= eat;
+			buf += eat;
+			handle->chunk_remaining -= eat;
+		} else
+		{
+			int gotlf = 0;
+			int i;
+
+			/* First check if it is a (trailing) empty line,
+			 * eg from a previous chunk. Skip over.
+			 */
+			if ((n >= 2) && !strncmp(buf, "\r\n", 2))
+			{
+				buf += 2;
+				n -= 2;
+			} else
+			if ((n >= 1) && !strncmp(buf, "\n", 1))
+			{
+				buf++;
+				n--;
+			}
+
+			/* Now we are (possibly) at the chunk size line,
+			 * this is or example '7f' + newline.
+			 * So first, check if we have a newline at all.
+			 */
+			for (i=0; i < n; i++)
+			{
+				if (buf[i] == '\n')
+				{
+					gotlf = 1;
+					break;
+				}
+			}
+			if (!gotlf)
+			{
+				/* The line telling us the chunk size is incomplete,
+				 * as it does not contain an \n. Wait for more data
+				 * from the network socket.
+				 */
+				if (n > 0)
+				{
+					/* Store what we have first.. */
+					handle->lefttoparselen = n;
+					handle->lefttoparse = safe_alloc(n);
+					memcpy(handle->lefttoparse, buf, n);
+				}
+				safe_free(free_this_buffer);
+				return 1; /* WE WANT MORE! */
+			}
+			buf[i] = '\0'; /* cut at LF */
+			i++; /* point to next data */
+			handle->chunk_remaining = strtol(buf, NULL, 16);
+			if (handle->chunk_remaining < 0)
+			{
+				https_cancel(handle, "Negative chunk encountered (%ld)", handle->chunk_remaining);
+				safe_free(free_this_buffer);
+				return 0;
+			}
+			if (handle->chunk_remaining == 0)
+			{
+				https_done(handle);
+				safe_free(free_this_buffer);
+				return 0;
+			}
+			buf += i;
+			n -= i;
+		}
+	}
+
+	safe_free(free_this_buffer);
 	return 1;
 }
 
