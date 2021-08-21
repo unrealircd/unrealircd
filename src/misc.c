@@ -2260,3 +2260,87 @@ void write_pidfile(void)
 		write_pidfile_failed();
 #endif
 }
+
+/*
+ * Determines if the given string is a valid URL. Since libcurl
+ * supports telnet, ldap, and dict such strings are treated as
+ * invalid URLs here since we don't want them supported in
+ * unreal.
+ */
+int url_is_valid(const char *string)
+{
+	if (strstr(string, " ") || strstr(string, "\t"))
+		return 0;
+
+	if (strstr(string, "telnet://") == string ||
+	    strstr(string, "ldap://") == string ||
+	    strstr(string, "dict://") == string)
+	{
+		return 0;
+	}
+	return (strstr(string, "://") != NULL);
+}
+
+/** A displayable URL for in error messages and such.
+ * This leaves out any authentication information (user:pass)
+ * the URL may contain.
+ */
+const char *displayurl(const char *url)
+{
+	static char buf[512];
+	char *proto, *rest;
+
+	/* protocol://user:pass@host/etc.. */
+	rest = strchr(url, '@');
+
+	if (!rest)
+		return url; /* contains no auth information */
+
+	rest++; /* now points to the rest (remainder) of the URL */
+
+	proto = strstr(url, "://");
+	if (!proto || (proto > rest) || (proto == url))
+		return url; /* incorrectly formatted, just show entire URL. */
+
+	/* funny, we don't ship strlncpy.. */
+	*buf = '\0';
+	strlncat(buf, url, sizeof(buf), proto - url);
+	strlcat(buf, "://***:***@", sizeof(buf));
+	strlcat(buf, rest, sizeof(buf));
+
+	return buf;
+}
+
+/*
+ * Returns the filename portion of the URL. The returned string
+ * is malloc()'ed and must be freed by the caller. If the specified
+ * URL does not contain a filename, a '-' is allocated and returned.
+ */
+char *url_getfilename(const char *url)
+{
+	const char *c, *start;
+
+	if ((c = strstr(url, "://")))
+		c += 3;
+	else
+		c = url;
+
+	while (*c && *c != '/')
+		c++;
+
+	if (*c == '/')
+	{
+		c++;
+		if (!*c || *c == '?')
+			return raw_strdup("-");
+		start = c;
+		while (*c && *c != '?')
+			c++;
+		if (!*c)
+			return raw_strdup(start);
+		else
+			return raw_strldup(start, c-start+1);
+
+	}
+	return raw_strdup("-");
+}

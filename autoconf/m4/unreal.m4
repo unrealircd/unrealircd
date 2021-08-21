@@ -129,7 +129,14 @@ AC_DEFUN([CHECK_LIBCURL],
 		])
 		LIBS="$LIBS_SAVEDA"
 		CFLAGS="$CFLAGS_SAVEDA"
+
+		dnl Finally, choose the cURL implementation of url.c
+		URL="url_curl.o"
+	],[
+		dnl Choose UnrealIRCds internal implementation of url.c
+		URL="url_unreal.o"
 	]) dnl AS_IF(enable_curl) 
+	AC_SUBST(URL)
 ])
 
 dnl the following 2 macros are based on CHECK_SSL by Mark Ethan Trostler <trostler@juniper.net> 

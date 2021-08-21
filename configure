@@ -629,6 +629,7 @@ IRCDLIBS
 GEOIP_CLASSIC_OBJECTS
 GEOIP_CLASSIC_LIBS
 GEOIP_CLASSIC_CFLAGS
+URL
 PTHREAD_CFLAGS
 PTHREAD_LIBS
 PTHREAD_CC
@@ -8546,7 +8547,14 @@ rm -f core conftest.err conftest.$ac_objext \
 		LIBS="$LIBS_SAVEDA"
 		CFLAGS="$CFLAGS_SAVEDA"
 
+				URL="url_curl.o"
+
+else
+
+				URL="url_unreal.o"
+
 fi
+
 
 
 	# Check whether --enable-geoip_classic was given.

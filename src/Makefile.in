@@ -33,7 +33,7 @@ OBJS=dns.o auth.o channel.o crule.o dbuf.o \
 	api-event.o \
 	crypt_blowfish.o unrealdb.o updconf.o crashreport.o modulemanager.o \
 	utf8.o log.o \
-	openssl_hostname_validation.o url.o
+	openssl_hostname_validation.o $(URL)
 
 SRC=$(OBJS:%.o=%.c)
 
@@ -245,8 +245,13 @@ log.o: log.c $(INCLUDES)
 openssl_hostname_validation.o: openssl_hostname_validation.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c openssl_hostname_validation.c
 
-url.o: url.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c url.c
+# The cURL implementation...
+url_curl.o: url_curl.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c url_curl.c
+
+# ... or our implementation.
+url_unreal.o: url_unreal.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c url_unreal.c
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 
