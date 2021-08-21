@@ -874,9 +874,9 @@ char *unreal_getmodfilename(char *path)
 char *unreal_mkcache(const char *url)
 {
 	static char tempbuf[PATH_MAX+1];
-	char tmp2[33];
+	char tmp2[128];
 	
-	snprintf(tempbuf, PATH_MAX, "%s/%s", CACHEDIR, md5hash(tmp2, url, strlen(url)));
+	snprintf(tempbuf, PATH_MAX, "%s/%s", CACHEDIR, sha256hash(tmp2, url, strlen(url)));
 	return tempbuf;
 }
 
