@@ -50,6 +50,7 @@ typedef struct
 	int fd;			/**< Socket */
 	int got_response;
 	char *lefttoparse;
+	time_t last_modified;
 #endif
 } Download;
 
@@ -433,6 +434,7 @@ void https_receive_response(int fd, int revents, void *data);
 int https_handle_response_header(Download *handle, char *readbuf, int n);
 int https_handle_response_file(Download *handle, char *readbuf, int n);
 void https_done(Download *handle);
+void https_done_cached(Download *handle);
 int https_parse_header(char *buffer, int len, char **key, char **value, char **lastloc, int *end_of_request);
 char *url_find_end_of_request(char *header, int totalsize, int *remaining_bytes);
 
@@ -792,16 +794,29 @@ void https_connect_send_header(Download *handle)
 
 	snprintf(hostandport, sizeof(hostandport), "%s:%d", handle->hostname, handle->port);
 
+	// TODO: remove debug shit
 	unreal_log(ULOG_DEBUG, "url", "URL_CONNECTED", NULL, "Connected!!!");
 
+	/* Prepare the header */
 	snprintf(buf, sizeof(buf), "GET %s HTTP/1.1\r\n"
 	                    "User-Agent: UnrealIRCd %s\r\n"
 	                    "Host: %s\r\n"
-	                    "Connection: close\r\n"
-	                    "\r\n",
+	                    "Connection: close\r\n",
 	                    handle->document,
 	                    VERSIONONLY,
 	                    hostandport);
+	if (handle->cachetime > 0)
+	{
+		char *datestr = rfc2616_time(handle->cachetime);
+		if (datestr)
+		{
+			// snprintf_append...
+			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
+				 "If-Modified-Since: %s\r\n", datestr);
+		}
+	}
+	strlcat(buf, "\r\n", sizeof(buf));
+
 	ssl_err = SSL_write(handle->ssl, buf, strlen(buf));
 	if (ssl_err < 0)
 	{
@@ -909,11 +924,22 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 		if (!strcasecmp(key, "RESPONSE"))
 		{
 			int http_response = atoi(value);
+			if (http_response == 304)
+			{
+				/* 304 Not Modified: cache hit */
+				https_done_cached(handle);
+				return 0;
+			}
 			if (http_response != 200)
 			{
+				/* HTTP Failure code */
 				strlcpy(errorbuf, value, sizeof(errorbuf));
 				goto fail;
 			}
+		} else
+		if (!strcasecmp(key, "Last-Modified"))
+		{
+			handle->last_modified = rfc2616_time_to_unix_time(value);
 		}
 		//fprintf(stderr, "\nHEADER '%s'\n\n", key);
 	}
@@ -964,9 +990,21 @@ void https_done(Download *handle)
 	if (!handle->got_response)
 		handle->callback(handle->url, NULL, "HTTPS response not received", 0, handle->callback_data);
 	else
-		handle->callback(handle->url, handle->filename, "SUCCESS", 0, handle->callback_data);
+	{
+		if (handle->last_modified > 0)
+			unreal_setfilemodtime(handle->filename, handle->last_modified);
+		handle->callback(handle->url, handle->filename, NULL, 0, handle->callback_data);
+	}
 	url_free_handle(handle);
 	return;
+}
+
+void https_done_cached(Download *handle)
+{
+	fclose(handle->file_fd);
+	handle->file_fd = NULL;
+	handle->callback(handle->url, NULL, NULL, 1, handle->callback_data);
+	url_free_handle(handle);
 }
 
 /** Helper function to parse the HTTP header consisting of multiple 'Key: value' pairs */
