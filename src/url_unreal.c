@@ -669,6 +669,11 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 		safe_free(handle->lefttoparse);
 		handle->got_response = 1;
 
+		if (handle->http_status_code == 0)
+		{
+			https_cancel(handle, "Invalid HTTP response");
+			return 0;
+		}
 		if (handle->http_status_code != 200)
 		{
 			if (handle->redirect_new_location)
