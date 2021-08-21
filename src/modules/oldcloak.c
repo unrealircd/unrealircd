@@ -1,6 +1,6 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/cloak.c
- *   (C) 2004 The UnrealIRCd Team
+ *   IRC - Internet Relay Chat, src/modules/oldcloak.c
+ *   (C) 2004-2017 Bram Matthys and The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
@@ -49,9 +49,9 @@ static inline unsigned int downsample(char *i);
 Callback *cloak = NULL, *cloak_csum = NULL;
 
 ModuleHeader MOD_HEADER = {
-	"cloak",
+	"oldcloak",
 	"1.0",
-	"Official cloaking module (md5)",
+	"Old cloaking module (md5)",
 	"UnrealIRCd Team",
 	"unrealircd-6",
 };

@@ -180,7 +180,7 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
 OBJ_FILES=$(EXP_OBJ_FILES) SRC/GUI.OBJ SRC/SERVICE.OBJ SRC/WINDEBUG.OBJ SRC/RTF.OBJ \
  SRC/EDITOR.OBJ SRC/WIN.OBJ 
 
-DLL_FILES=SRC/MODULES/CLOAK.DLL \
+DLL_FILES=SRC/MODULES/OLDCLOAK.DLL \
  SRC/MODULES/CHGHOST.DLL SRC/MODULES/SDESC.DLL SRC/MODULES/SETIDENT.DLL \
  SRC/MODULES/SETNAME.DLL SRC/MODULES/SETHOST.DLL SRC/MODULES/CHGIDENT.DLL \
  SRC/MODULES/SVSMOTD.DLL SRC/MODULES/SVSNLINE.DLL SRC/MODULES/WHO_OLD.DLL \
@@ -576,8 +576,8 @@ SYMBOLFILE:
 
 MODULES: $(DLL_FILES)
 
-src/modules/cloak.dll: src/modules/cloak.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/cloak.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
+src/modules/oldcloak.dll: src/modules/oldcloak.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/oldcloak.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/chghost.dll: src/modules/chghost.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/chghost.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)

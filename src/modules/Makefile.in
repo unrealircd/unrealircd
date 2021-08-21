@@ -79,7 +79,7 @@ R_MODULES= \
 	unreal_server_compat.so \
 	geoip_base.so $(GEOIP_CLASSIC_OBJECTS)
 
-MODULES=cloak.so $(R_MODULES)
+MODULES=oldcloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
 RM=@RM@
 
@@ -696,9 +696,9 @@ geoip_classic.so: geoip_classic.c $(INCLUDES)
 #             and now the remaining modules...
 #############################################################################
 
-cloak.so: cloak.c $(INCLUDES)
+oldcloak.so: oldcloak.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o cloak.so cloak.c
+		-o oldcloak.so oldcloak.c
 
 clean:
 	$(RM) -f *.o *.so *~ core
