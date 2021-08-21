@@ -1081,10 +1081,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 		exit(-1);
 	while (!is_config_read_finished())
 	{
-#ifdef USE_LIBCURL
-		extern EVENT(curl_socket_timeout);
-		curl_socket_timeout(NULL);
-#endif
+		gettimeofday(&timeofday_tv, NULL);
+		timeofday = timeofday_tv.tv_sec;
+		url_socket_timeout(NULL);
 		fd_select(500);
 	}
 	if (config_test() < 0)

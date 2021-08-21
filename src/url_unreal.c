@@ -48,6 +48,8 @@ struct Download
 	int got_response;
 	char *lefttoparse;
 	time_t last_modified;
+	time_t download_started;
+	int dns_refcnt;
 };
 
 /* Variables */
@@ -108,6 +110,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	char *document;
 
 	handle = safe_alloc(sizeof(Download));
+	handle->download_started = TStime();
 	AddListItem(handle, downloads);
 
 	if (!url_parse(url, &host, &port, &document))
@@ -149,6 +152,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 		unreal_https_initiate_connect(handle);
 	} else {
 		/* Hostname, so start resolving... */
+		handle->dns_refcnt++;
 		ares_gethostbyname(resolver_channel, handle->hostname, AF_INET, url_resolve_cb, handle);
 		// TODO: check return value?
 	}
@@ -161,6 +165,8 @@ void url_resolve_cb(void *arg, int status, int timeouts, struct hostent *he)
 	struct hostent *he2;
 	char ipbuf[HOSTLEN+1];
 	char *ip = NULL;
+
+	handle->dns_refcnt--;
 
 	if ((status != 0) || !he->h_addr_list || !he->h_addr_list[0])
 	{
@@ -797,4 +803,27 @@ char *url_find_end_of_request(char *header, int totalsize, int *remaining_bytes)
 			return nextframe;
 	}
 	return NULL;
+}
+
+#define DOWNLOAD_TIMEOUT	45L
+
+/* Handle timeouts. */
+EVENT(url_socket_timeout)
+{
+	Download *d, *d_next;
+	for (d = downloads; d; d = d_next)
+	{
+		d_next = d->next;
+		if (d->dns_refcnt)
+			continue; /* can't touch this... */
+		if (TStime() - d->download_started > DOWNLOAD_TIMEOUT)
+		{
+			https_cancel(d, "Timeout after %ld seconds", DOWNLOAD_TIMEOUT);
+		}
+	}
+}
+
+void url_init(void)
+{
+	EventAdd(NULL, "url_socket_timeout", url_socket_timeout, NULL, 500, 0);
 }

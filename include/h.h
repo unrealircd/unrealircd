@@ -1135,3 +1135,4 @@ extern char *prefix_with_extban(char *remainder, BanContext *b, Extban *extban, 
 extern GeoIPResult *geoip_client(Client *client);
 extern GeoIPResult *geoip_lookup(char *ip);
 extern void free_geoip_result(GeoIPResult *r);
+extern EVENT(url_socket_timeout);

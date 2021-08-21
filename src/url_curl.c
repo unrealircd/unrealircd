@@ -193,7 +193,7 @@ static int url_socket_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *so
 }
 
 /* Handle timeouts. */
-EVENT(curl_socket_timeout)
+EVENT(url_socket_timeout)
 {
 	int dummy;
 
@@ -201,7 +201,7 @@ EVENT(curl_socket_timeout)
 	url_check_multi_handles();
 }
 
-static Event *curl_socket_timeout_hdl = NULL;
+static Event *url_socket_timeout_hdl = NULL;
 
 /*
  * Initializes the URL system
@@ -212,7 +212,7 @@ void url_init(void)
 	multihandle = curl_multi_init();
 
 	curl_multi_setopt(multihandle, CURLMOPT_SOCKETFUNCTION, url_socket_cb);
-	curl_socket_timeout_hdl = EventAdd(NULL, "curl_socket_timeout", curl_socket_timeout, NULL, 500, 0);
+	url_socket_timeout_hdl = EventAdd(NULL, "url_socket_timeout", url_socket_timeout, NULL, 500, 0);
 }
 
 /*
