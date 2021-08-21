@@ -31,7 +31,6 @@
 #include <fcntl.h>
 #include <signal.h>
 #include "h.h"
-#include "url.h"
 #include "version.h"
 #ifdef USE_LIBCURL
  #include <curl/curl.h>

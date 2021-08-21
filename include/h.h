@@ -198,7 +198,7 @@ extern MODVAR char *debugmode, *configfile, *sbrk0;
 extern char *getfield(char *);
 extern void set_sockhost(Client *, char *);
 #ifdef _WIN32
-extern MODFUNC char *sock_strerror(int);
+extern char *sock_strerror(int);
 #endif
 extern int dgets(int, char *, int);
 
@@ -610,8 +610,6 @@ extern char *unreal_mktemp(const char *dir, const char *suffix);
 extern char *unreal_getpathname(char *filepath, char *path);
 extern char *unreal_getfilename(char *path);
 extern char *unreal_getmodfilename(char *path);
-extern char *unreal_mkcache(const char *url);
-extern int has_cached_version(const char *url);
 extern int unreal_copyfile(const char *src, const char *dest);
 extern int unreal_copyfileex(const char *src, const char *dest, int tryhardlink);
 extern time_t unreal_getfilemodtime(const char *filename);
@@ -791,7 +789,7 @@ extern char *ssl_error_str(int err, int my_errno);
 extern void unreal_tls_client_handshake(int, int, void *);
 extern void SSL_set_nonblocking(SSL *s);
 extern SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server);
-extern MODFUNC char  *tls_get_cipher(Client *client);
+extern char *tls_get_cipher(Client *client);
 extern TLSOptions *get_tls_options_for_client(Client *acptr);
 extern int outdated_tls_client(Client *acptr);
 extern char *outdated_tls_client_build_string(char *pattern, Client *acptr);
@@ -1135,4 +1133,13 @@ extern char *prefix_with_extban(char *remainder, BanContext *b, Extban *extban, 
 extern GeoIPResult *geoip_client(Client *client);
 extern GeoIPResult *geoip_lookup(char *ip);
 extern void free_geoip_result(GeoIPResult *r);
+/* url stuff */
+extern char *unreal_mkcache(const char *url);
+extern int has_cached_version(const char *url);
+extern int url_is_valid(const char *);
+extern const char *displayurl(const char *url);
+extern char *url_getfilename(const char *url);
+extern void download_file_async(const char *, time_t, vFP, void *callback_data);
+extern void url_init(void);
 extern EVENT(url_socket_timeout);
+/* end of url stuff */

@@ -28,7 +28,7 @@ INCLUDES = ../../include/channel.h \
 	../../include/numeric.h ../../include/proto.h ../../include/dns.h \
 	../../include/resource.h ../../include/setup.h \
 	../../include/struct.h ../../include/sys.h \
-	../../include/types.h ../../include/url.h \
+	../../include/types.h \
 	../../include/version.h ../../include/whowas.h
 
 MODULEFLAGS=@MODULEFLAGS@
