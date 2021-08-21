@@ -70,6 +70,7 @@ struct Download
 
 /* Variables */
 Download *downloads = NULL;
+SSL_CTX *https_ctx = NULL;
 
 /* Forward declarations */
 void url_resolve_cb(void *arg, int status, int timeouts, struct hostent *he);
@@ -101,7 +102,16 @@ void url_free_handle(Download *handle)
 	if (handle->file_fd)
 		fclose(handle->file_fd);
 	safe_free(handle->url);
+	safe_free(handle->hostname);
+	safe_free(handle->username);
+	safe_free(handle->password);
+	safe_free(handle->document);
+	safe_free(handle->ip);
+	if (handle->ssl)
+		SSL_free(handle->ssl);
 	safe_free(handle->lefttoparse);
+	safe_free(handle->redirect_new_location);
+	safe_free(handle->redirect_original_url);
 	safe_free(handle);
 }
 
@@ -250,15 +260,7 @@ void unreal_https_initiate_connect(Download *handle)
 void unreal_https_connect_handshake(int fd, int revents, void *data)
 {
 	Download *handle = data;
-	SSL_CTX *ctx;
-
-	ctx = https_new_ctx();
-	if (!ctx)
-	{
-		https_cancel(handle, "Failed to setup SSL CTX");
-		return;
-	}
-	handle->ssl = SSL_new(ctx);
+	handle->ssl = SSL_new(https_ctx);
 	if (!handle->ssl)
 	{
 		https_cancel(handle, "Failed to setup SSL");
@@ -303,9 +305,11 @@ SSL_CTX *https_new_ctx(void)
 		snprintf(buf2, sizeof(buf2), "%s/doc/conf/tls/curl-ca-bundle.crt", BUILDDIR);
 		if (!file_exists(buf2))
 		{
-			fprintf(stderr, "ERROR: Neither %s nor %s exist.\n"
-			                "Cannot use module manager without curl-ca-bundle.crt\n",
-			                buf1, buf2);
+			unreal_log(ULOG_ERROR, "url", "CA_BUNDLE_NOT_FOUND", NULL,
+			           "Neither $filename1 nor $filename2 exist.\n"
+			           "Cannot use built-in https client without curl-ca-bundle.crt\n",
+			           log_data_string("filename1", buf1),
+			           log_data_string("filename2", buf2));
 			exit(-1);
 		}
 		curl_ca_bundle = buf2;
@@ -1056,5 +1060,12 @@ EVENT(url_socket_timeout)
 
 void url_init(void)
 {
+	https_ctx = https_new_ctx();
+	if (!https_ctx)
+	{
+		unreal_log(ULOG_ERROR, "url", "HTTPS_NEW_CTX_FAILED", NULL,
+			   "Unable to initialize SSL context");
+		exit(-1);
+	}
 	EventAdd(NULL, "url_socket_timeout", url_socket_timeout, NULL, 500, 0);
 }
