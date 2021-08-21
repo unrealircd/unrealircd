@@ -52,6 +52,7 @@ struct Download
 	int fd;			/**< Socket */
 	int connected;
 	int got_response;
+	int http_status_code;
 	char *lefttoparse;
 	long long lefttoparselen; /* size of data in lefttoparse (note: not used for first header parsing) */
 	time_t last_modified;
@@ -59,6 +60,10 @@ struct Download
 	int dns_refcnt;
 	TransferEncoding transfer_encoding;
 	long chunk_remaining;
+	/* for redirects: */
+	int redirects_remaining;
+	char *redirect_new_location;
+	char *redirect_original_url;
 };
 
 /* Variables */
@@ -78,6 +83,7 @@ int https_handle_response_header(Download *handle, char *readbuf, int n);
 int https_handle_response_file(Download *handle, char *readbuf, int n);
 void https_done(Download *handle);
 void https_done_cached(Download *handle);
+void https_redirect(Download *handle);
 int https_parse_header(char *buffer, int len, char **key, char **value, char **lastloc, int *end_of_request);
 char *url_find_end_of_request(char *header, int totalsize, int *remaining_bytes);
 void https_cancel(Download *handle, FORMAT_STRING(const char *pattern), ...)  __attribute__((format(printf,2,3)));
@@ -107,7 +113,7 @@ void https_cancel(Download *handle, FORMAT_STRING(const char *pattern), ...)
 	url_free_handle(handle);
 }
 
-void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data)
+void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
 {
 	char *file;
 	char *filename;
@@ -124,6 +130,8 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	handle->callback_data = callback_data;
 	handle->cachetime = cachetime;
 	safe_strdup(handle->url, url);
+	safe_strdup(handle->redirect_original_url, original_url);
+	handle->redirects_remaining = maxredirects;
 	AddListItem(handle, downloads);
 
 	if (strncmp(url, "https://", 8))
@@ -575,14 +583,26 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 		// do something actually with the header here ;)
 		if (!strcasecmp(key, "RESPONSE"))
 		{
-			int http_response = atoi(value);
-			if (http_response == 304)
+			handle->http_status_code = atoi(value);
+			if (handle->http_status_code == 304)
 			{
 				/* 304 Not Modified: cache hit */
 				https_done_cached(handle);
 				return 0;
 			}
-			if (http_response != 200)
+			else if ((handle->http_status_code >= 301) && (handle->http_status_code <= 308))
+			{
+				/* Redirect */
+				if (handle->redirects_remaining == 0)
+				{
+					https_cancel(handle, "Too many HTTP redirects (%d)", DOWNLOAD_MAX_REDIRECTS);
+					return 0;
+				}
+				/* Let it continue.. we handle it later, as we need to
+				 * receive the "Location" header as well.
+				 */
+			}
+			else if (handle->http_status_code != 200)
 			{
 				/* HTTP Failure code */
 				https_cancel(handle, "HTTP Error: %s", value);
@@ -592,6 +612,10 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 		if (!strcasecmp(key, "Last-Modified") && value)
 		{
 			handle->last_modified = rfc2616_time_to_unix_time(value);
+		} else
+		if (!strcasecmp(key, "Location") && value)
+		{
+			safe_strdup(handle->redirect_new_location, value);
 		} else
 		if (!strcasecmp(key, "Transfer-Encoding") && value)
 		{
@@ -608,6 +632,18 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 
 		safe_free(handle->lefttoparse);
 		handle->got_response = 1;
+
+		if (handle->http_status_code != 200)
+		{
+			if (handle->redirect_new_location)
+			{
+				https_redirect(handle);
+				return 0; /* this old request dies */
+			} else {
+				https_cancel(handle, "HTTP Redirect encountered but no URL specified!?");
+				return 0;
+			}
+		}
 
 		nextframe = url_find_end_of_request(netbuf2, totalsize, &remaining_bytes);
 		if (nextframe)
@@ -742,17 +778,18 @@ int https_handle_response_file(Download *handle, char *readbuf, int pktsize)
 
 void https_done(Download *handle)
 {
-	//handle->callback(handle->url, NULL, "SUCCESS!!!!", 0, handle->callback_data);
+	char *url = handle->redirect_original_url ? handle->redirect_original_url : handle->url;
+
 	fclose(handle->file_fd);
 	handle->file_fd = NULL;
 
 	if (!handle->got_response)
-		handle->callback(handle->url, NULL, "HTTPS response not received", 0, handle->callback_data);
+		handle->callback(url, NULL, "HTTPS response not received", 0, handle->callback_data);
 	else
 	{
 		if (handle->last_modified > 0)
 			unreal_setfilemodtime(handle->filename, handle->last_modified);
-		handle->callback(handle->url, handle->filename, NULL, 0, handle->callback_data);
+		handle->callback(url, handle->filename, NULL, 0, handle->callback_data);
 	}
 	url_free_handle(handle);
 	return;
@@ -760,9 +797,26 @@ void https_done(Download *handle)
 
 void https_done_cached(Download *handle)
 {
+	char *url = handle->redirect_original_url ? handle->redirect_original_url : handle->url;
+
 	fclose(handle->file_fd);
 	handle->file_fd = NULL;
-	handle->callback(handle->url, NULL, NULL, 1, handle->callback_data);
+	handle->callback(url, NULL, NULL, 1, handle->callback_data);
+	url_free_handle(handle);
+}
+
+void https_redirect(Download *handle)
+{
+	if (handle->redirects_remaining == 0)
+	{
+		https_cancel(handle, "Too many HTTP redirects (%d)", DOWNLOAD_MAX_REDIRECTS);
+		return;
+	}
+	handle->redirects_remaining--;
+
+	download_file_async(handle->redirect_new_location, handle->cachetime, handle->callback, handle->callback_data,
+	                    handle->url, handle->redirects_remaining);
+	/* Don't call the hook, just free this, the new redirect from above will call the hook later */
 	url_free_handle(handle);
 }
 

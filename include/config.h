@@ -225,6 +225,12 @@
 #define DOWNLOAD_CONNECT_TIMEOUT 15
 #define DOWNLOAD_TRANSFER_TIMEOUT 45
 
+/* Maximum number of HTTP redirects to follow.
+ * Keep this reasonably low, as this may delay booting up to
+ * DOWNLOAD_TRANSFER_TIMEOUT * DOWNLOAD_MAX_REDIRECTS
+ */
+#define DOWNLOAD_MAX_REDIRECTS 2
+
 /*
  * Max time from the nickname change that still causes KILL
  * automaticly to switch for the current nick of that user. (seconds)

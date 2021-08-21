@@ -236,7 +236,7 @@ void url_init(void)
  *    than 10 seconds to happen and the config file can be rehashed
  *    multiple times during that time.
  */
-void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data)
+void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
 {
 	static char errorbuf[CURL_ERROR_SIZE];
 	CURL *curl;
@@ -305,7 +305,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, DOWNLOAD_CONNECT_TIMEOUT);
 #if LIBCURL_VERSION_NUM >= 0x070f01
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
-	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
+	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, maxredirects);
 #endif
 
 	curl_multi_add_handle(multihandle, curl);

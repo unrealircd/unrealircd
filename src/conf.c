@@ -10903,7 +10903,7 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 		modtime = unreal_getfilemodtime(cache_file);
 		if (modtime > 0)
 			safe_strdup(rs->cache_file, cache_file); /* Cached copy is available */
-		download_file_async(rs->url, modtime, resource_download_complete, (void *)rs);
+		download_file_async(rs->url, modtime, resource_download_complete, (void *)rs, NULL, DOWNLOAD_MAX_REDIRECTS);
 	}
 	return 1;
 }

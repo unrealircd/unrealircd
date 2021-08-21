@@ -803,7 +803,7 @@ void read_motd(const char *filename, MOTDFile *themotd)
 
 		modtime = unreal_getfilemodtime(unreal_mkcache(filename));
 
-		download_file_async(filename, modtime, (vFP)read_motd_async_downloaded, motd_download);
+//		download_file_async(filename, modtime, (vFP)read_motd_async_downloaded, motd_download);
 		return;
 	}
 #endif /* USE_LIBCURL */

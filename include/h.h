@@ -1139,7 +1139,7 @@ extern int has_cached_version(const char *url);
 extern int url_is_valid(const char *);
 extern const char *displayurl(const char *url);
 extern char *url_getfilename(const char *url);
-extern void download_file_async(const char *, time_t, vFP, void *callback_data);
+extern void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects);
 extern void url_init(void);
 extern EVENT(url_socket_timeout);
 /* end of url stuff */
