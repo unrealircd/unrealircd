@@ -199,7 +199,7 @@ void free_tls_options(TLSOptions *tlsoptions);
 /*
  * Config parser (IRCd)
 */
-int			config_read_file(char *filename, const char *original_path);
+int			config_read_file(char *filename, char *display_name);
 void			config_rehash();
 int			config_run_blocks();
 int	config_test_blocks();
@@ -2278,11 +2278,11 @@ void config_parse_and_queue_urls(ConfigEntry *ce)
  * recursion, eat up memory, and eventually overflow its stack ;-).
  *
  * @param filename the file where the conf may be read from
- * @param original_path the path or URL used to refer to this file.
+ * @param display_name The path or URL used to refer to this file.
  *        (mostly to support remote includes' URIs for recursive include detection).
  * @return 1 on success, a negative number on error
  */
-int	config_read_file(char *filename, const char *original_path)
+int config_read_file(char *filename, char *display_name)
 {
 	ConfigFile 	*cfptr, *cfptr2, **cfptr3;
 	ConfigEntry 	*ce;
@@ -2314,7 +2314,7 @@ int	config_read_file(char *filename, const char *original_path)
 			counter ++;
 			continue;
 		}
-		if (rs->url && !strcmp(original_path, rs->url))
+		if (rs->url && !strcmp(display_name, rs->url))
 		{
 			counter ++;
 			continue;
@@ -2332,7 +2332,7 @@ int	config_read_file(char *filename, const char *original_path)
 	}
 	/* end include recursion checking code */
 
-	if ((cfptr = config_load(filename, NULL)))
+	if ((cfptr = config_load(filename, display_name)))
 	{
 		for (cfptr3 = &conf, cfptr2 = conf; cfptr2; cfptr2 = cfptr2->next)
 			cfptr3 = &cfptr2->next;
@@ -2375,7 +2375,10 @@ int	config_read_file(char *filename, const char *original_path)
 	}
 	else
 	{
-		config_error("Could not load config file %s", filename);
+		unreal_log(ULOG_ERROR, "config", "CONFIG_LOAD_FILE_FAILED", NULL,
+		           "Could not load configuration file: $resource",
+		           log_data_string("resource", display_name),
+		           log_data_string("filename", filename));
 #ifdef _WIN32
 		if (!strcmp(filename, "conf/unrealircd.conf"))
 		{
@@ -2426,7 +2429,7 @@ void remove_config_tkls(void)
 	}
 }
 
-void	config_rehash()
+void config_rehash()
 {
 	ConfigItem_oper			*oper_ptr;
 	ConfigItem_class 		*class_ptr;
@@ -10695,7 +10698,7 @@ void resource_download_complete(const char *url, const char *file, const char *e
 	{
 		if (rs->type & RESOURCE_INCLUDE)
 		{
-			if (config_read_file(rs->file, rs->url) < 0)
+			if (config_read_file(rs->file, (char *)displayurl(rs->url)) < 0)
 				loop.config_load_failed = 1;
 		} else {
 			ConfigEntryWrapper *wce;
