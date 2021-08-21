@@ -423,12 +423,12 @@ static void arc4_addrandom(void *dat, int datlen)
 
 void add_entropy_configfile(struct stat *st, char *buf)
 {
-	unsigned char mdbuf[16];
+	char sha256buf[SHA256_DIGEST_LENGTH];
 
 	arc4_addrandom(&st->st_size, sizeof(st->st_size));
 	arc4_addrandom(&st->st_mtime, sizeof(st->st_mtime));
-	DoMD5(mdbuf, buf, strlen(buf));
-	arc4_addrandom(&mdbuf, sizeof(mdbuf));
+	sha256hash_binary(sha256buf, buf, strlen(buf));
+	arc4_addrandom(sha256buf, sizeof(sha256buf));
 }
 
 /*
