@@ -45,6 +45,8 @@ struct Download
 	time_t cachetime;
 	char *hostname;		/**< Parsed hostname (from 'url') */
 	int port;		/**< Parsed port (from 'url') */
+	char *username;
+	char *password;
 	char *document;		/**< Parsed document (from 'url') */
 	char *ip;		/**< Resolved IP */
 	int ipv6;
@@ -72,7 +74,7 @@ Download *downloads = NULL;
 /* Forward declarations */
 void url_resolve_cb(void *arg, int status, int timeouts, struct hostent *he);
 void unreal_https_initiate_connect(Download *handle);
-int url_parse(const char *url, char **host, int *port, char **document);
+int url_parse(const char *url, char **host, int *port, char **username, char **password, char **document);
 SSL_CTX *https_new_ctx(void);
 void unreal_https_connect_handshake(int fd, int revents, void *data);
 int https_connect(Download *handle);
@@ -122,6 +124,8 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	int ipv6 = 0;
 	char *host;
 	int port;
+	char *username;
+	char *password;
 	char *document;
 
 	handle = safe_alloc(sizeof(Download));
@@ -139,11 +143,17 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 		https_cancel(handle, "Only https:// is supported (either rebuild UnrealIRCd with curl support or use https)");
 		return;
 	}
-	if (!url_parse(url, &host, &port, &document))
+	if (!url_parse(url, &host, &port, &username, &password, &document))
 	{
 		https_cancel(handle, "Failed to parse HTTP url");
 		return;
 	}
+
+	safe_strdup(handle->hostname, host);
+	handle->port = port;
+	safe_strdup(handle->username, username);
+	safe_strdup(handle->password, password);
+	safe_strdup(handle->document, document);
 
 	file = url_getfilename(url);
 	filename = unreal_getfilename(file);
@@ -159,9 +169,6 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	strlcpy(handle->filename, tmp, sizeof(handle->filename));
 	safe_free(file);
 
-	safe_strdup(handle->hostname, host);
-	handle->port = port;
-	safe_strdup(handle->document, document);
 
 	// todo: allocate handle, select en weetikt allemaal
 	// add to some global struct linkedlist, for timeouts
@@ -409,11 +416,14 @@ int https_fatal_tls_error(int ssl_error, int my_errno, Download *handle)
 }
 
 // copied 100% from modulemanager parse_url()
-int url_parse(const char *url, char **host, int *port, char **document)
+int url_parse(const char *url, char **hostname, int *port, char **username, char **password, char **document)
 {
-	char *p;
+	char *p, *p2;
 	static char hostbuf[256];
 	static char documentbuf[512];
+
+	*hostname = *username = *password = *document = NULL;
+	*port = 443;
 
 	if (strncmp(url, "https://", 8))
 		return 0;
@@ -428,12 +438,25 @@ int url_parse(const char *url, char **host, int *port, char **document)
 
 	strlcpy(documentbuf, p, sizeof(documentbuf));
 
-	*host = hostbuf;
+	*hostname = hostbuf;
 	*document = documentbuf;
 
 	/* Actually we may still need to extract the port */
-	*port = 443;
-	p = strchr(hostbuf, ':');
+	p = strchr(hostbuf, '@');
+	if (p)
+	{
+		*p++ = '\0';
+
+		*username = hostbuf;
+		p2 = strchr(hostbuf, ':');
+		if (p2)
+		{
+			*p2++ = '\0';
+			*password = p2;
+		}
+		*hostname = p;
+	}
+	p = strchr(*hostname, ':');
 	if (p)
 	{
 		*p++ = '\0';
@@ -445,7 +468,7 @@ int url_parse(const char *url, char **host, int *port, char **document)
 
 void https_connect_send_header(Download *handle)
 {
-	char buf[512];
+	char buf[1024];
 	char hostandport[512];
 	int ssl_err;
 	char *host;
@@ -466,6 +489,19 @@ void https_connect_send_header(Download *handle)
 	                    handle->document,
 	                    VERSIONONLY,
 	                    hostandport);
+	if (handle->username && handle->password)
+	{
+		char wbuf[128];
+		char obuf[256];
+		char header[512];
+
+		snprintf(wbuf, sizeof(wbuf), "%s:%s", handle->username, handle->password);
+		if (b64_encode(wbuf, strlen(wbuf), obuf, sizeof(obuf)-1) > 0)
+		{
+			snprintf(header, sizeof(header), "Authorization: Basic %s\r\n", obuf);
+			strlcat(buf, header, sizeof(buf));
+		}
+	}
 	if (handle->cachetime > 0)
 	{
 		char *datestr = rfc2616_time(handle->cachetime);
