@@ -364,22 +364,6 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 						}
 					}
 					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
-					if (config_resources) 
-					{
-						ConfigResource *inc;
-						for (inc = config_resources; inc; inc = inc->next)
-						{
-							if (inc->flag.type & INCLUDE_NOTLOADED)
-								continue;
-#ifdef USE_LIBCURL
-							if (inc->flag.type & RESOURCE_REMOTE)
-								AppendMenu(hConfig, MF_STRING, i++, inc->url);
-							else
-#endif
-							AppendMenu(hConfig, MF_STRING, i++, inc->file);
-						}
-						AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
-					}
 					if (conf_files)
 					{
 						AppendMenu(hConfig, MF_STRING, IDM_MOTD, conf_files->motd_file);
@@ -472,21 +456,6 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					}
 				}
 				AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
-
-				if (config_resources) 
-				{
-					ConfigResource *inc;
-					for (inc = config_resources; inc; inc = inc->next)
-					{
-#ifdef USE_LIBCURL
-						if (inc->flag.type & RESOURCE_REMOTE)
-							AppendMenu(hConfig, MF_STRING, i++, inc->url);
-						else
-#endif
-						AppendMenu(hConfig, MF_STRING, i++, inc->file);
-					}
-					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
-				}
 
 				if (conf_files)
 				{
