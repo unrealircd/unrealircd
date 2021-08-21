@@ -301,8 +301,8 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 		curl_easy_setopt(curl, CURLOPT_TIMEVALUE, cachetime);
 	}
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
-	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 45);
-	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15);
+	curl_easy_setopt(curl, CURLOPT_TIMEOUT, DOWNLOAD_TRANSFER_TIMEOUT);
+	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, DOWNLOAD_CONNECT_TIMEOUT);
 #if LIBCURL_VERSION_NUM >= 0x070f01
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
 	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);

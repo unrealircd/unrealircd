@@ -216,6 +216,15 @@
  */
 #define SOCKETLOOP_MAX_DELAY 250
 
+/* After how much time should we timeout downloads:
+ * DOWNLOAD_CONNECT_TIMEOUT: for the DNS and connect() / TLS_connect() call
+ * DOWNLOAD_TRANSFER_TIMEOUT: for the complete transfer (including connect)
+ * This can't be in the configuration file, as we need it while
+ * fetching the configuration file.. ;)
+ */
+#define DOWNLOAD_CONNECT_TIMEOUT 15
+#define DOWNLOAD_TRANSFER_TIMEOUT 45
+
 /*
  * Max time from the nickname change that still causes KILL
  * automaticly to switch for the current nick of that user. (seconds)

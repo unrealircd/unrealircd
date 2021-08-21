@@ -805,8 +805,6 @@ char *url_find_end_of_request(char *header, int totalsize, int *remaining_bytes)
 	return NULL;
 }
 
-#define DOWNLOAD_TIMEOUT	45L
-
 /* Handle timeouts. */
 EVENT(url_socket_timeout)
 {
@@ -816,9 +814,9 @@ EVENT(url_socket_timeout)
 		d_next = d->next;
 		if (d->dns_refcnt)
 			continue; /* can't touch this... */
-		if (TStime() - d->download_started > DOWNLOAD_TIMEOUT)
+		if (TStime() - d->download_started > DOWNLOAD_TRANSFER_TIMEOUT)
 		{
-			https_cancel(d, "Timeout after %ld seconds", DOWNLOAD_TIMEOUT);
+			https_cancel(d, "Timeout after %ld seconds", (long)DOWNLOAD_TRANSFER_TIMEOUT);
 		}
 	}
 }
