@@ -251,7 +251,7 @@ void unreal_https_connect_handshake(int fd, int revents, void *data)
 	SSL_set_fd(handle->ssl, handle->fd);
 	SSL_set_connect_state(handle->ssl);
 	SSL_set_nonblocking(handle->ssl);
-	// TODO SNI: SSL_set_tlsext_host_name(handle->ssl, hostname)
+	SSL_set_tlsext_host_name(handle->ssl, handle->hostname);
 
 	if (https_connect(handle) < 0)
 	{
@@ -314,6 +314,7 @@ void https_connect_retry(int fd, int revents, void *data)
 int https_connect(Download *handle)
 {
 	int ssl_err;
+	char *errstr;
 
 	if ((ssl_err = SSL_connect(handle->ssl)) <= 0)
 	{
@@ -345,6 +346,13 @@ int https_connect(Download *handle)
 		return -1;
 	}
 
+	/* We are connected now. */
+
+	if (!verify_certificate(handle->ssl, handle->hostname, &errstr))
+	{
+		https_cancel(handle, "TLS Certificate error for server: %s", errstr);
+		return -1;
+	}
 	https_connect_send_header(handle);
 	return 1;
 }
