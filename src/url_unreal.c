@@ -20,9 +20,6 @@
 #include "unrealircd.h"
 #include "dns.h"
 
-/* Defines */
-#define URL_ERROR_SIZE 512
-
 /* Structs */
 
 /* Stores information about the async transfer.
@@ -39,7 +36,7 @@ struct Download
 	FILE *file_fd;		/**< File open for writing (otherwise NULL) */
 	char filename[PATH_MAX];
 	char *url; /*< must be free()d by url_do_transfers_async() */
-	char errorbuf[URL_ERROR_SIZE];
+	char errorbuf[512];
 	time_t cachetime;
 	char *hostname;		/**< Parsed hostname (from 'url') */
 	int port;		/**< Parsed port (from 'url') */
@@ -90,7 +87,6 @@ void url_free_handle(Download *handle)
 
 void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data)
 {
-	static char errorbuf[URL_ERROR_SIZE];
 	char *file;
 	char *filename;
 	char *tmp;
@@ -116,7 +112,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	handle->file_fd = fopen(tmp, "wb");
 	if (!handle->file_fd)
 	{
-		snprintf(errorbuf, sizeof(errorbuf), "Cannot create '%s': %s", tmp, strerror(ERRNO));
+		snprintf(handle->errorbuf, sizeof(handle->errorbuf), "Cannot create '%s': %s", tmp, strerror(ERRNO));
 		safe_free(file);
 		goto fail;
 	}
@@ -149,7 +145,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	return;
 
 fail:
-	callback(url, NULL, errorbuf, 0, callback_data);
+	callback(url, NULL, handle->errorbuf, 0, callback_data);
 	if (handle)
 		url_free_handle(handle);
 	return;
@@ -162,11 +158,10 @@ void url_resolve_cb(void *arg, int status, int timeouts, struct hostent *he)
 	struct hostent *he2;
 	char ipbuf[HOSTLEN+1];
 	char *ip = NULL;
-	char errorbuf[512];
 
 	if ((status != 0) || !he->h_addr_list || !he->h_addr_list[0])
 	{
-		snprintf(errorbuf, sizeof(errorbuf), "Unable to resolve hostname '%s'", handle->hostname);
+		snprintf(handle->errorbuf, sizeof(handle->errorbuf), "Unable to resolve hostname '%s'", handle->hostname);
 		goto fail;
 	}
 
@@ -174,7 +169,7 @@ void url_resolve_cb(void *arg, int status, int timeouts, struct hostent *he)
 	    !(ip = inetntop(handle->ipv6 ? AF_INET6 : AF_INET, he->h_addr_list[0], ipbuf, sizeof(ipbuf))))
 	{
 		/* Illegal response -- fatal */
-		snprintf(errorbuf, sizeof(errorbuf), "Unable to resolve hostname '%s'", handle->hostname);
+		snprintf(handle->errorbuf, sizeof(handle->errorbuf), "Unable to resolve hostname '%s'", handle->hostname);
 		goto fail;
 	}
 
@@ -186,35 +181,33 @@ void url_resolve_cb(void *arg, int status, int timeouts, struct hostent *he)
 	return;
 
 fail:
-	handle->callback(handle->url, NULL, errorbuf, 0, handle->callback_data);
+	handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
 	url_free_handle(handle);
 	return;
 }
 
 void unreal_https_initiate_connect(Download *handle)
 {
-	char errorbuf[512];
-
 	// todo: allocate handle, select en weetikt allemaal
 	// add to some global struct linkedlist, for timeouts
 	// register in i/o
 
 	if (!handle->ip)
 	{
-		snprintf(errorbuf, sizeof(errorbuf), "No IP address found to connect to");
+		snprintf(handle->errorbuf, sizeof(handle->errorbuf), "No IP address found to connect to");
 		goto fail;
 	}
 
 	handle->fd = fd_socket(handle->ipv6 ? AF_INET6 : AF_INET, SOCK_STREAM, 0, "HTTPS");
 	if (handle->fd < 0)
 	{
-		snprintf(errorbuf, sizeof(errorbuf), "Could not create socket: %s", strerror(ERRNO));
+		snprintf(handle->errorbuf, sizeof(handle->errorbuf), "Could not create socket: %s", strerror(ERRNO));
 		goto fail;
 	}
 	set_sock_opts(handle->fd, NULL, handle->ipv6);
 	if (!unreal_connect(handle->fd, handle->ip, handle->port, handle->ipv6))
 	{
-		snprintf(errorbuf, sizeof(errorbuf), "Could not connect: %s", strerror(ERRNO));
+		snprintf(handle->errorbuf, sizeof(handle->errorbuf), "Could not connect: %s", strerror(ERRNO));
 		goto fail;
 	}
 	fd_setselect(handle->fd, FD_SELECT_WRITE, unreal_https_connect_handshake, handle);
@@ -222,7 +215,7 @@ void unreal_https_initiate_connect(Download *handle)
 	return;
 
 fail:
-	handle->callback(handle->url, NULL, errorbuf, 0, handle->callback_data);
+	handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
 	url_free_handle(handle);
 	return;
 }
@@ -231,19 +224,18 @@ fail:
 void unreal_https_connect_handshake(int fd, int revents, void *data)
 {
 	Download *handle = data;
-	char errorbuf[URL_ERROR_SIZE];
 	SSL_CTX *ctx;
 
 	ctx = https_new_ctx();
 	if (!ctx)
 	{
-		strlcpy(errorbuf, "Failed to setup SSL CTX", sizeof(errorbuf));
+		strlcpy(handle->errorbuf, "Failed to setup SSL CTX", sizeof(handle->errorbuf));
 		goto fail;
 	}
 	handle->ssl = SSL_new(ctx);
 	if (!handle->ssl)
 	{
-		strlcpy(errorbuf, "Failed to setup SSL", sizeof(errorbuf));
+		strlcpy(handle->errorbuf, "Failed to setup SSL", sizeof(handle->errorbuf));
 		goto fail;
 	}
 	SSL_set_fd(handle->ssl, handle->fd);
@@ -254,13 +246,13 @@ void unreal_https_connect_handshake(int fd, int revents, void *data)
 	if (https_connect(handle) < 0)
 	{
 		/* Some fatal error already */
-		strlcpy(errorbuf, "TLS_connect() failed early", sizeof(errorbuf));
+		strlcpy(handle->errorbuf, "TLS_connect() failed early", sizeof(handle->errorbuf));
 		goto fail;
 	}
 	/* Is connecting... */
 	return;
 fail:
-	handle->callback(handle->url, NULL, errorbuf, 0, handle->callback_data);
+	handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
 	url_free_handle(handle);
 }
 
@@ -363,7 +355,6 @@ int https_fatal_tls_error(int ssl_error, int my_errno, Download *handle)
 	char *ssl_errstr;
 	unsigned long additional_errno = ERR_get_error();
 	char additional_info[256];
-	char errorbuf[URL_ERROR_SIZE];
 	const char *one, *two;
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
@@ -389,8 +380,8 @@ int https_fatal_tls_error(int ssl_error, int my_errno, Download *handle)
 
 	ssl_errstr = ssl_error_str(ssl_error, my_errno);
 
-	snprintf(errorbuf, sizeof(errorbuf), "%s [%s]", ssl_errstr, additional_info);
-	handle->callback(handle->url, NULL, errorbuf, 0, handle->callback_data);
+	snprintf(handle->errorbuf, sizeof(handle->errorbuf), "%s [%s]", ssl_errstr, additional_info);
+	handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
 	url_free_handle(handle);
 
 	return -1;
@@ -535,7 +526,6 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 	char netbuf[4096], netbuf2[4096];
 	char *lastloc = NULL;
 	int maxcopy, nprefix=0;
-	char errorbuf[512];
 	int totalsize;
 
 	/* Yeah, totally paranoid: */
@@ -557,7 +547,7 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 		n = maxcopy;
 	if (n <= 0)
 	{
-		strlcpy(errorbuf, "Oversized line in HTTP response", sizeof(errorbuf));
+		strlcpy(handle->errorbuf, "Oversized line in HTTP response", sizeof(handle->errorbuf));
 		goto fail;
 	}
 	memcpy(netbuf+nprefix, readbuf, n); /* SAFE: see checking above */
@@ -584,7 +574,7 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 			if (http_response != 200)
 			{
 				/* HTTP Failure code */
-				strlcpy(errorbuf, value, sizeof(errorbuf));
+				strlcpy(handle->errorbuf, value, sizeof(handle->errorbuf));
 				goto fail;
 			}
 		} else
@@ -617,7 +607,7 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 	return 1;
 
 fail:
-	handle->callback(handle->url, NULL, errorbuf, 0, handle->callback_data);
+	handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
 	url_free_handle(handle);
 	return 0;
 }
