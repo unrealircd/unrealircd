@@ -138,9 +138,6 @@ typedef struct Mode Mode;
 typedef struct MessageTag MessageTag;
 typedef struct MOTDFile MOTDFile; /* represents a whole MOTD, including remote MOTD support info */
 typedef struct MOTDLine MOTDLine; /* one line of a MOTD stored as a linked list */
-#ifdef USE_LIBCURL
-typedef struct MOTDConfigResource MOTDConfigResource; /* used to coordinate download of a remote MOTD */
-#endif
 
 typedef struct RealCommand RealCommand;
 typedef struct CommandOverride CommandOverride;
@@ -807,43 +804,10 @@ struct MultiLine {
 	char *line;
 };
 
-#ifdef USE_LIBCURL
-struct MOTDConfigResource
-{
-	MOTDFile *themotd;
-};
-#endif /* USE_LIBCURL */
-
 struct MOTDFile 
 {
 	struct MOTDLine *lines;
 	struct tm last_modified; /* store the last modification time */
-
-#ifdef USE_LIBCURL
-	/*
-	  This pointer is used to communicate with an asynchronous MOTD
-	  download. The problem is that a download may take 10 seconds or
-	  more to complete and, in that time, the IRCd could be rehashed.
-	  This would mean that TLD blocks are reallocated and thus the
-	  aMotd structs would be free()d in the meantime.
-
-	  To prevent such a situation from leading to a segfault, we
-	  introduce this remote control pointer. It works like this:
-	  1. read_motd() is called with a URL. A new MOTDConfigResource is
-	     allocated and the pointer is placed here. This pointer is
-	     also passed to the asynchrnous download handler.
-	  2.a. The download is completed and read_motd_async_downloaded()
-	       is called with the same pointer. From this function, this pointer
-	       if free()d. No other code may free() the pointer. Not even free_motd().
-	    OR
-	  2.b. The user rehashes the IRCd before the download is completed.
-	       free_motd() is called, which sets motd_download->themotd to NULL
-	       to signal to read_motd_async_downloaded() that it should ignore
-	       the download. read_motd_async_downloaded() is eventually called
-	       and frees motd_download.
-	 */
-	struct MOTDConfigResource *motd_download;
-#endif /* USE_LIBCURL */
 };
 
 struct MOTDLine {

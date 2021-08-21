@@ -53,9 +53,6 @@ int MODVAR spamf_ugly_vchanoverride = 0;
 
 void read_motd(const char *filename, MOTDFile *motd);
 void do_read_motd(const char *filename, MOTDFile *themotd);
-#ifdef USE_LIBCURL
-void read_motd_async_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, MOTDConfigResource *motd_download);
-#endif
 
 extern MOTDLine *find_file(char *, short);
 
@@ -761,122 +758,11 @@ void short_motd(Client *client)
        sendnumeric(client, RPL_ENDOFMOTD);
 }
 
-/*
- * A merge from ircu and bahamut, and some extra stuff added by codemastr
- * we can now use 1 function for multiple files -- codemastr
- * Merged read_motd/read_rules stuff into this -- Syzop
- */
-
 /** Read motd-like file, used for rules/motd/botmotd/opermotd/etc.
- *  Multiplexes to either directly reading the MOTD or downloading it asynchronously.
  * @param filename Filename of file to read or URL. NULL is accepted and causes the *motd to be free()d.
  * @param motd Reference to motd pointer (used for freeing if needed and for asynchronous remote MOTD support)
  */
 void read_motd(const char *filename, MOTDFile *themotd)
-{
-#ifdef USE_LIBCURL
-	time_t modtime;
-	MOTDConfigResource *motd_download;
-#endif
-
-	/* TODO: if themotd points to a tld's motd,
-	   could a rehash disrupt this pointer?*/
-#ifdef USE_LIBCURL
-	if (themotd->motd_download)
-	{
-		themotd->motd_download->themotd = NULL;
-		/*
-		 * It is not our job to free() motd_download, the
-		 * read_motd_async_downloaded() function will do that
-		 * when it sees that ->themod == NULL.
-		 */
-		themotd->motd_download = NULL;
-	}
-
-	/* if filename is NULL, do_read_motd will catch it */
-	if (filename && url_is_valid(filename))
-	{
-		/* prepare our payload for read_motd_async_downloaded() */
-		motd_download = safe_alloc(sizeof(MOTDConfigResource));
-		motd_download->themotd = themotd;
-		themotd->motd_download = motd_download;
-
-		modtime = unreal_getfilemodtime(unreal_mkcache(filename));
-
-//		download_file_async(filename, modtime, (vFP)read_motd_async_downloaded, motd_download);
-		return;
-	}
-#endif /* USE_LIBCURL */
-
-	do_read_motd(filename, themotd);
-
-	return;
-}
-
-#ifdef USE_LIBCURL
-/** Callback for download_file_async() called from read_motd() below.
- * @param url the URL curl groked or NULL if the MOTD is stored locally.
- * @param filename the path to the local copy of the MOTD or NULL if either cached=1 or there's an error.
- * @param errorbuf NULL or an errorstring if there was an error while downloading the MOTD.
- * @param cached 0 if the URL was downloaded freshly or 1 if the last download was canceled and the local copy should be used.
- */
-void read_motd_async_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, MOTDConfigResource *motd_download)
-{
-	MOTDFile *themotd;
-
-	themotd = motd_download->themotd;
-	/*
-	  check if the download was soft-canceled. See struct.h's docs on
-	  struct MOTDConfigResource for details.
-	*/
-	if (!themotd)
-	{
-		safe_free(motd_download);
-		return;
-	}
-
-	/* errors -- check for specialcached version if applicable */
-	if (!cached && !filename)
-	{
-		if (has_cached_version(url))
-		{
-			config_warn("Error downloading MOTD file from \"%s\": %s -- using cached version instead.", displayurl(url), errorbuf);
-			filename = unreal_mkcache(url);
-		} else {
-			config_error("Error downloading MOTD file from \"%s\": %s", displayurl(url), errorbuf);
-
-			/* remove reference to this chunk of memory about to be freed. */
-			motd_download->themotd->motd_download = NULL;
-			safe_free(motd_download);
-			return;
-		}
-	}
-
-	/*
-	 * We need to move our newly downloaded file to its cache file
-	 * if it isn't there already.
-	 */
-	if (!cached)
-	{
-		/* create specialcached version for later */
-		unreal_copyfileex(filename, unreal_mkcache(url), 1);
-	} else {
-		/*
-		 * The file is cached. Thus we must look for it at the
-		 * cache location where we placed it earlier.
-		 */
-		filename = unreal_mkcache(url);
-	}
-
-	do_read_motd(filename, themotd);
-	safe_free(motd_download);
-}
-#endif /* USE_LIBCURL */
-
-
-/** The actual reading of the MOTD - used by read_motd() and read_motd_async_downloaded()
- */
-void do_read_motd(const char *filename, MOTDFile *themotd)
 {
 	FILE *fd;
 	struct tm *tm_tmp;
@@ -953,11 +839,6 @@ void free_motd(MOTDFile *themotd)
 
 	themotd->lines = NULL;
 	memset(&themotd->last_modified, '\0', sizeof(struct tm));
-
-#ifdef USE_LIBCURL
-	/* see struct.h for more information about motd_download */
-	themotd->motd_download = NULL;
-#endif
 }
 
 /** DIE command - terminate the server

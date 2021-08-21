@@ -43,10 +43,6 @@ char zlinebuf[BUFSIZE];
 extern char *version;
 MODVAR time_t last_allinuse = 0;
 
-#ifdef USE_LIBCURL
-extern void url_do_transfers_async(void);
-#endif
-
 void start_of_normal_client_handshake(Client *client);
 void proceed_normal_client_handshake(Client *client, struct hostent *he);
 

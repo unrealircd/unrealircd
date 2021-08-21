@@ -85,9 +85,6 @@ UINT WM_TASKBARCREATED, WM_FINDMSGSTRING;
 FARPROC lpfnOldWndProc;
 HMENU hContext;
 char OSName[OSVER_SIZE];
-#ifdef USE_LIBCURL
-extern char *find_loaded_remote_include(char *url);
-#endif 
 
 void TaskBarCreated() 
 {
@@ -549,14 +546,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				else 
 				{
 					GetMenuString(hConfig,LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND);
-#ifdef USE_LIBCURL
-					if (url_is_valid(path))
-					{
-						char *file = find_loaded_remote_include(path);
-						DialogBoxParam(hInst, "FromVar", hDlg, (DLGPROC)FromFileReadDLG, (LPARAM)file);
-					}
-					else
-#endif
+					if (!url_is_valid(path))
 						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, (LPARAM)path);
 				}
 				return FALSE;

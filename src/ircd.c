@@ -51,10 +51,6 @@ extern SERVICE_STATUS IRCDStatus;
 
 MODVAR unsigned char conf_debuglevel = 0;
 
-#ifdef USE_LIBCURL
-extern void url_init(void);
-#endif
-
 void server_reboot(char *);
 void restart(char *);
 static void open_debugfile(), setup_signals();
@@ -816,9 +812,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	initlist_channels();
 
 	early_init_tls();
-#ifdef USE_LIBCURL
 	url_init();
-#endif
 	tkl_init();
 	umode_init();
 	extcmode_init();
