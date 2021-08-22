@@ -487,11 +487,11 @@ int notify_or_queue(Client *client, char *who, char *key, char *value, Client *c
 		sendto_snomask(SNO_JUNK, "notify_or_queue called with null client!");
 		return 0;
 	}
-	struct unsynced **us, *prev_us;
 
 	struct moddata_user *moddata = moddata_client(client, metadataUser).ptr;
 	if (!moddata)
 		moddata = prepare_user_moddata(client);
+	struct unsynced **us = &moddata->us;
 
 	if (IsSendable(client))
 	{
@@ -499,9 +499,8 @@ int notify_or_queue(Client *client, char *who, char *key, char *value, Client *c
 	} else
 	{ /* store for the SYNC */
 		trylater = 1;
-		prev_us = NULL;
-		for (us = &moddata->us, prev_us = NULL; (*us)->next; us = &(*us)->next)
-			prev_us = *us; /* find last list element */
+		while (*us)
+			us = &(*us)->next; /* find last list element */
 		*us = safe_alloc(sizeof(struct unsynced));
 		(*us)->name = strdup(who);
 		(*us)->key = strdup(key);
