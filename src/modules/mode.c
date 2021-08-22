@@ -617,13 +617,6 @@ void do_mode_char_write(char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], u_int *pcount,
 	(*pcount)++;
 }
 
-/* do_mode_char
- *  processes one mode character
- *  returns 1 if it ate up a param, otherwise 0
- *	written by binary
- *  modified for Unreal by stskeeps..
- */
-
 #ifdef PREFIX_AQ
 #define is_xchanop(x) ((x & (CHFL_CHANOP|CHFL_CHANADMIN|CHFL_CHANOWNER)))
 #else
@@ -940,9 +933,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 				/* Special extended channel mode requiring a parameter on unset.
 				 * Any provided parameter is ok, the current one (that is set) will be used.
 				 */
-				ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "-%c%s",
-					handler->letter, cm_getparameter(channel, handler->letter));
-				(*pcount)++;
+				do_mode_char_write(pvar, pcount, what, handler->letter, cm_getparameter(channel, handler->letter));
 			} else {
 				/* Normal extended channel mode: deleting is just -X, no parameter.
 				 * Nothing needs to be done here.
@@ -967,9 +958,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 				if (now && requested && !strcmp(now, requested))
 					return paracnt; /* ignore... */
 			}
-			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "+%c%s",
-				handler->letter, handler->conv_param(param, client, channel));
-			(*pcount)++;
+			do_mode_char_write(pvar, pcount, what, handler->letter, handler->conv_param(param, client, channel));
 			param = morphed; /* set param to converted parameter. */
 		}
 	}
