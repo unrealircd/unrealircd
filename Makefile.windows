@@ -1134,4 +1134,7 @@ src/modules/watch-backend.dll: src/modules/watch-backend.c $(INCLUDES)
 src/modules/monitor.dll: src/modules/monitor.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/monitor.c $(MODLFLAGS)
 
+src/modules/metadata.dll: src/modules/metadata.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/metadata.c $(MODLFLAGS)
+
 dummy:
