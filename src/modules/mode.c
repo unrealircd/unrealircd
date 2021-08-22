@@ -614,8 +614,6 @@ char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, 
  *  modified for Unreal by stskeeps..
  */
 
-#define REQUIRE_PARAMETER() { if (!param || *pcount >= MAXMODEPARAMS) { retval = 0; break; } retval = 1; }
-
 #ifdef PREFIX_AQ
 #define is_xchanop(x) ((x & (CHFL_CHANOP|CHFL_CHANADMIN|CHFL_CHANOWNER)))
 #else
@@ -628,50 +626,21 @@ int  do_mode_char(Channel *channel, long modetype, char modechar, char *param,
                   long my_access)
 {
 	CoreChannelModeTable *tab = &corechannelmodetable[0];
-	int  retval = 0;
 	Member *member = NULL;
 	Membership *membership = NULL;
 	Client *target;
 	unsigned int tmp = 0;
-	char tmpbuf[512], *tmpstr;
-	char tc = ' ';		/* */
-	int  chasing = 0, x;
+	char *tmpstr;
+	int chasing = 0;
 	Hook *h;
 
-	if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(client) &&
-	    !op_can_override("channel:override:mode",client,channel,&modetype) && !samode_in_progress)
-	{
-		if (MyUser(client) && (modetype == MODE_HALFOP) && (what == MODE_DEL) &&
-		    param && (find_client(param, NULL) == client))
-		{
-			/* halfop -h'ing him/herself */
-			/* ALLOW */
-		} else
-		{
-			/* Ugly halfop hack --sts
-			   - this allows halfops to do +b +e +v and so on */
-			/* (Syzop/20040413: Allow remote halfop modes */
-			if ((Halfop_mode(modetype) == FALSE) && MyUser(client))
-			{
-				int eaten = 0;
-				while (tab->mode != 0x0)
-				{
-					if (tab->mode == modetype)
-					{
-						sendnumeric(client, ERR_NOTFORHALFOPS, tab->flag);
-						eaten = tab->parameters;
-						break;
-					}
-					tab++;
-				}
-				return eaten;
-			}
-		} /* not -h self */
-	}
+	/* Check if there is a parameter present */
+	if (!param || *pcount >= MAXMODEPARAMS)
+		return 0;
+
 	switch (modetype)
 	{
 		case MODE_CHANOWNER:
-			REQUIRE_PARAMETER()
 			if (!IsULine(client) && !IsServer(client) && !is_chanowner(client, channel) && !samode_in_progress)
 			{
 					if (MyUser(client) && !op_can_override("channel:override:mode",client,channel,&modetype))
@@ -684,7 +653,6 @@ int  do_mode_char(Channel *channel, long modetype, char modechar, char *param,
 			}
 			goto process_listmode;
 		case MODE_CHANADMIN:
-			REQUIRE_PARAMETER()
 			/* not uline, not server, not chanowner, not an samode, not -a'ing yourself... */
 			if (!IsULine(client) && !IsServer(client) && !is_chanowner(client, channel) && !samode_in_progress &&
 			    !(param && (what == MODE_DEL) && (find_client(param, NULL) == client)))
@@ -702,8 +670,22 @@ int  do_mode_char(Channel *channel, long modetype, char modechar, char *param,
 		case MODE_HALFOP:
 		case MODE_CHANOP:
 		case MODE_VOICE:
-			REQUIRE_PARAMETER()
 process_listmode:
+			/* Halfop access check */
+			if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(client) &&
+			    !op_can_override("channel:override:mode",client,channel,&modetype) && !samode_in_progress)
+			{
+				if (MyUser(client) && (modetype == MODE_HALFOP) && (what == MODE_DEL) &&
+				    param && (find_client(param, NULL) == client))
+				{
+					/* halfop doing -h on self */
+				} else
+				if (MyUser(client) && (modetype != MODE_VOICE))
+				{
+					sendnumeric(client, ERR_NOTFORHALFOPS, modechar);
+				}
+			}
+
 			if (!(target = find_chasing(client, param, &chasing)))
 				break;
 			if (!target->user)
@@ -825,27 +807,22 @@ process_listmode:
 				member->flags |= modetype;
 			else
 				member->flags &= ~modetype;
+
+			/* If there was no change, then don't do the mode.
+			 * Except if this came from services, then always set it explicitly,
+			 * even if it was there.
+			 */
 			if ((tmp == member->flags) && !IsULine(client))
 				break;
-			if (modetype == MODE_CHANOWNER)
-				tc = 'q';
-			if (modetype == MODE_CHANADMIN)
-				tc = 'a';
-			if (modetype == MODE_CHANOP)
-				tc = 'o';
-			if (modetype == MODE_HALFOP)
-				tc = 'h';
-			if (modetype == MODE_VOICE)
-				tc = 'v';
+
 			/* Make sure membership->flags and member->flags is the same */
 			membership->flags = member->flags;
 			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
 			            "%c%c%s",
-			            (what == MODE_ADD) ? '+' : '-', tc, target->name);
+			            (what == MODE_ADD) ? '+' : '-', modechar, target->name);
 			(*pcount)++;
 			break;
 		case MODE_BAN:
-			REQUIRE_PARAMETER()
 			if (!(tmpstr = mode_ban_handler(client, channel, param, what, EXBTYPE_BAN, &channel->banlist)))
 				break;
 			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
@@ -854,7 +831,6 @@ process_listmode:
 			(*pcount)++;
 			break;
 		case MODE_EXCEPT:
-			REQUIRE_PARAMETER()
 			if (!(tmpstr = mode_ban_handler(client, channel, param, what, EXBTYPE_EXCEPT, &channel->exlist)))
 				break;
 			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
@@ -863,7 +839,6 @@ process_listmode:
 			(*pcount)++;
 			break;
 		case MODE_INVEX:
-			REQUIRE_PARAMETER()
 			if (!(tmpstr = mode_ban_handler(client, channel, param, what, EXBTYPE_INVEX, &channel->invexlist)))
 				break;
 			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
@@ -872,7 +847,7 @@ process_listmode:
 			(*pcount)++;
 			break;
 	}
-	return retval;
+	return 1;
 }
 
 /** Check access and if granted, set the extended chanmode to the requested value in memory.
