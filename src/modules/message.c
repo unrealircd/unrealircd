@@ -796,26 +796,6 @@ int _can_send_to_channel(Client *client, Channel *channel, char **msgtext, char 
 	member = IsMember(client, channel);
 
 	lp = find_membership_link(client->user->channel, channel);
-	if (channel->mode.mode & MODE_MODERATED &&
-	    !op_can_override("channel:override:message:moderated",client,channel,NULL) &&
-	    (!lp /* FIXME: UGLY */
-	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER | CHFL_HALFOP | CHFL_CHANADMIN))))
-	{
-		/* Channel is moderated (+m).
-		 * Reject, unless HOOKTYPE_CAN_BYPASS_MODERATED tells otherwise.
-		 */
-		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
-		{
-			i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_MODERATED);
-			if (i != HOOK_CONTINUE)
-				break;
-		}
-		if (i != HOOK_ALLOW)
-		{
-			*errmsg = "You need voice (+v)";
-			return 0;
-		}
-	}
 
 	/* Modules can plug in as well */
 	for (h = Hooks[HOOKTYPE_CAN_SEND_TO_CHANNEL]; h; h = h->next)

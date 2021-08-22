@@ -136,12 +136,6 @@ CMD_FUNC(cmd_part)
 				comment = NULL;
 			if (comment && is_banned(client, channel, BANCHK_LEAVE_MSG, &comment, NULL))
 				comment = NULL;
-			/* Same for +m */
-			if ((channel->mode.mode & MODE_MODERATED) && comment &&
-				 !has_voice(client, channel) && !is_half_op(client, channel))
-			{
-				comment = NULL;
-			}
 		}
 
 		if (MyConnect(client))
