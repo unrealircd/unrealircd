@@ -36,7 +36,7 @@ int do_mode_char(Channel *channel, long modetype, char modechar, char *param,
                  u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], long my_access);
 int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
                     Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
-void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pcount,
+void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, int pcount,
                    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
                    size_t mode_buf_size, size_t para_buf_size);
 
@@ -82,6 +82,77 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
+}
+
+void send_list_mode(Client *client, Channel *channel, Ban *list, int list_numeric, int end_of_list_numeric)
+{
+	Ban *ban;
+
+	if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",client,NULL,channel,NULL))
+	{
+		sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
+		return;
+	}
+
+	for (ban = list; ban; ban = ban->next)
+		sendnumeric(client, list_numeric, channel->name, ban->banstr, ban->who, ban->when);
+
+	sendnumeric(client, end_of_list_numeric, channel->name);
+}
+
+void send_user_list_mode(Client *client, Channel *channel, long flags, int list_numeric, int end_of_list_numeric)
+{
+	Member *member;
+
+	if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",client,NULL,channel,NULL))
+	{
+		sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
+		return;
+	}
+
+	for (member = channel->members; member; member = member->next)
+	{
+		if (member->flags & flags)
+			sendnumeric(client, list_numeric, channel->name, member->client->name);
+	}
+	sendnumeric(client, end_of_list_numeric, channel->name);
+}
+
+/* Deal with information requests from local users, such as:
+ * MODE #chan b    Show the ban list
+ * MODE #chan e    Show the ban exemption list
+ * MODE #chan I    Show the invite exception list
+ * MODE #chan q    Show list of channel owners
+ * MODE #chan a    Show list of channel admins
+ */
+int list_mode_request(Client *client, Channel *channel, char *req)
+{
+	if (strstr(req, "b"))
+	{
+		send_list_mode(client, channel, channel->banlist, RPL_BANLIST, RPL_ENDOFBANLIST);
+		return 1;
+	} else
+	if (strstr(req, "e"))
+	{
+		send_list_mode(client, channel, channel->exlist, RPL_EXLIST, RPL_ENDOFEXLIST);
+		return 1;
+	} else
+	if (strstr(req, "I"))
+	{
+		send_list_mode(client, channel, channel->invexlist, RPL_INVEXLIST, RPL_ENDOFINVEXLIST);
+		return 1;
+	} else
+	if (strstr(req, "q"))
+	{
+		send_user_list_mode(client, channel, CHFL_CHANOWNER, RPL_QLIST, RPL_ENDOFQLIST);
+		return 1;
+	} else
+	if (strstr(req, "a"))
+	{
+		send_user_list_mode(client, channel, CHFL_CHANADMIN, RPL_ALIST, RPL_ENDOFALIST);
+		return 1;
+	}
+	return 0;
 }
 
 /*
@@ -138,79 +209,9 @@ CMD_FUNC(cmd_mode)
 		return;
 	}
 
-	if (MyUser(client))
-	{
-		/* Deal with information requests from local users, such as:
-		 * MODE #chan b    Show the ban list
-		 * MODE #chan e    Show the ban exemption list
-		 * MODE #chan I    Show the invite exception list
-		 * MODE #chan q    Show list of channel owners
-		 * MODE #chan a    Show list of channel admins
-		 */
-		if (strstr(parv[2], "b") && BadPtr(parv[3]))
-		{
-			if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",client,NULL,channel,NULL))
-				return;
-			/* send ban list */
-			for (ban = channel->banlist; ban; ban = ban->next)
-				sendnumeric(client, RPL_BANLIST, channel->name, ban->banstr, ban->who, ban->when);
-			sendnumeric(client, RPL_ENDOFBANLIST, channel->name);
-			return;
-		}
-
-		if (strstr(parv[2], "e") && BadPtr(parv[3]))
-		{
-			if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",client,NULL,channel,NULL))
-				return;
-			/* send exban list */
-			for (ban = channel->exlist; ban; ban = ban->next)
-				sendnumeric(client, RPL_EXLIST, channel->name, ban->banstr, ban->who, ban->when);
-			sendnumeric(client, RPL_ENDOFEXLIST, channel->name);
-			return;
-		}
-
-		if (strstr(parv[2], "I") && BadPtr(parv[3]))
-		{
-			if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteinvexlist",client,NULL,channel,NULL))
-				return;
-			for (ban = channel->invexlist; ban; ban = ban->next)
-				sendnumeric(client, RPL_INVEXLIST, channel->name, ban->banstr, ban->who, ban->when);
-			sendnumeric(client, RPL_ENDOFINVEXLIST, channel->name);
-			return;
-		}
-
-		if (strstr(parv[2], "q") && BadPtr(parv[3]))
-		{
-			Member *member;
-
-			if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",client,NULL,channel,NULL))
-				return;
-
-			for (member = channel->members; member; member = member->next)
-			{
-				if (is_chanowner(member->client, channel))
-					sendnumeric(client, RPL_QLIST, channel->name, member->client->name);
-			}
-			sendnumeric(client, RPL_ENDOFQLIST, channel->name);
-			return;
-		}
-
-		if (strstr(parv[2], "a") && BadPtr(parv[3]))
-		{
-			Member *member;
-
-			if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",client,NULL,channel,NULL))
-				return;
-
-			for (member = channel->members; member; member = member->next)
-			{
-				if (is_chanadmin(member->client, channel))
-					sendnumeric(client, RPL_ALIST, channel->name, member->client->name);
-			}
-			sendnumeric(client, RPL_ENDOFALIST, channel->name);
-			return;
-		}
-	}
+	/* List mode request? Eg: "MODE #channel b" to list all bans */
+	if (MyUser(client) && BadPtr(parv[3]) && list_mode_request(client, channel, parv[2]))
+		return;
 
 	opermode = 0;
 
@@ -498,12 +499,11 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
  *	Reconstructs the mode string, to make it look clean.  mode_buf will
  *  contain the +x-y stuff, and the parabuf will contain the parameters.
  */
-void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pcount,
+void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, int pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
     size_t mode_buf_size, size_t para_buf_size)
 {
 	char tmpbuf[MODEBUFLEN+3], *tmpstr;
-	CoreChannelModeTable *tab = &corechannelmodetable[0];
 	char *x = mode_buf;
 	int  what, cnt, z;
 	int i;
@@ -514,24 +514,6 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 	*mode_buf = '\0';
 	*para_buf = '\0';
 	what = 0;
-	/* + param-less modes */
-	tab = &corechannelmodetable[0];
-	while (tab->mode != 0x0)
-	{
-		if (channel->mode.mode & tab->mode)
-		{
-			if (!(oldm & tab->mode))
-			{
-				if (what != MODE_ADD)
-				{
-					*x++ = '+';
-					what = MODE_ADD;
-				}
-				*x++ = tab->flag;
-			}
-		}
-		tab++;
-	}
 
 	/* + paramless extmodes... */
 	for (i=0; i <= Channelmode_highest; i++)
@@ -552,24 +534,6 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 	}
 
 	*x = '\0';
-	/* - param-less modes */
-	tab = &corechannelmodetable[0];
-	while (tab->mode != 0x0)
-	{
-		if (!(channel->mode.mode & tab->mode))
-		{
-			if (oldm & tab->mode)
-			{
-				if (what != MODE_DEL)
-				{
-					*x++ = '-';
-					what = MODE_DEL;
-				}
-				*x++ = tab->flag;
-			}
-		}
-		tab++;
-	}
 
 	/* - extmodes (both "param modes" and paramless don't have
 	 * any params when unsetting... well, except one special type, that is (we skip those here)
@@ -592,29 +556,6 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 	}
 
 	*x = '\0';
-	/* user limit */
-	if (channel->mode.limit != oldl)
-	{
-		if (channel->mode.limit == 0)
-		{
-			if (what != MODE_DEL)
-			{
-				*x++ = '-';
-				what = MODE_DEL;
-			}
-			*x++ = 'l';
-		}
-		else
-		{
-			if (what != MODE_ADD)
-			{
-				*x++ = '+';
-				what = MODE_ADD;
-			}
-			*x++ = 'l';
-			ircsnprintf(para_buf, para_buf_size, "%s%d ", para_buf, channel->mode.limit);
-		}
-	}
 	/* reconstruct bkov chain */
 	for (cnt = 0; cnt < pcount; cnt++)
 	{
@@ -801,34 +742,6 @@ int  do_mode_char(Channel *channel, long modetype, char modechar, char *param,
 	}
 	switch (modetype)
 	{
-		case MODE_RGSTR:
-			if (!IsServer(client) && !IsULine(client))
-			{
-				sendnumeric(client, ERR_ONLYSERVERSCANCHANGE, channel->name);
-				break;
-			}
-			goto setmode;
-		case MODE_MODERATED:
-		case MODE_TOPICLIMIT:
-			goto setmode;
-		setmode:
-			retval = 0;
-			if (what == MODE_ADD)
-			{
-				// FIXME: previously there was anti duplicate +s/+p code here
-				// we may still need something for that...
-				// like calling HOOKTYPE_MODECHAR_ADD
-				channel->mode.mode |= modetype;
-				RunHook2(HOOKTYPE_MODECHAR_ADD, channel, (int)modechar);
-			}
-			else
-			{
-				channel->mode.mode &= ~modetype;
-				RunHook2(HOOKTYPE_MODECHAR_DEL, channel, (int)modechar);
-			}
-			break;
-
-/* do pro-opping here (popping) */
 		case MODE_CHANOWNER:
 			REQUIRE_PARAMETER()
 			if (!IsULine(client) && !IsServer(client) && !is_chanowner(client, channel) && !samode_in_progress)
@@ -1002,29 +915,6 @@ process_listmode:
 			            "%c%c%s",
 			            (what == MODE_ADD) ? '+' : '-', tc, target->name);
 			(*pcount)++;
-			break;
-		case MODE_LIMIT:
-			if (what == MODE_ADD)
-			{
-				int v;
-				REQUIRE_PARAMETER()
-				v = atoi(param);
-				if (v < 0)
-					v = 1; /* setting +l with a negative number makes no sense */
-				if (v > 1000000)
-					v = 1000000; /* some kind of limit, 1 million (mrah...) */
-				if (channel->mode.limit == v)
-					break;
-				channel->mode.limit = v;
-			}
-			else
-			{
-				retval = 0;
-				if (!channel->mode.limit)
-					break;
-				channel->mode.limit = 0;
-				RunHook2(HOOKTYPE_MODECHAR_DEL, channel, (int)modechar);
-			}
 			break;
 		case MODE_BAN:
 			REQUIRE_PARAMETER()
@@ -1265,7 +1155,7 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 	int found = 0;
 	int sent_mlock_warning = 0;
 	unsigned int htrig = 0;
-	long oldm, oldl;
+	long oldm;
 	int checkrestr = 0, warnrestr = 1;
 	int extm = 1000000; /* (default value not used but stops gcc from complaining) */
 	Cmode_t oldem;
@@ -1274,7 +1164,6 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 	*pcount = 0;
 
 	oldm = channel->mode.mode;
-	oldl = channel->mode.limit;
 	oldem = channel->mode.extmode;
 	if (RESTRICT_CHANNELMODES && !ValidatePermissionsForPath("immune:restrict-channelmodes",client,NULL,channel,NULL)) /* "cache" this */
 		checkrestr = 1;
@@ -1398,7 +1287,7 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 		} /* switch(*curchr) */
 	} /* for loop through mode letters */
 
-	make_mode_str(channel, oldm, oldem, oldl, *pcount, pvar, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
+	make_mode_str(channel, oldm, oldem, *pcount, pvar, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
 
 #ifndef NO_OPEROVERRIDE
 	if ((htrig == 1) && IsUser(client))

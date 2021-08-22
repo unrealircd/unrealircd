@@ -186,8 +186,11 @@ CMD_FUNC(cmd_topic)
 	{
 		char *newtopic = NULL;
 
+		// FIXME/TODO: all these checks must be moved to chanmodes/topiclimit
+		//             and to chanmodes/noexternalmsgs, so use some kind of hook !!
+
 		/* +t and not +hoaq ? */
-		if ((channel->mode.mode & MODE_TOPICLIMIT) &&
+		if (has_channel_mode(channel, 't') &&
 		    !is_skochanop(client, channel) && !IsULine(client) && !IsServer(client))
 		{
 			if (MyUser(client) && !ValidatePermissionsForPath("channel:override:topic", client, NULL, channel, NULL))
@@ -200,8 +203,7 @@ CMD_FUNC(cmd_topic)
 
 		/* -t and banned? */
 		newtopic = topic;
-		if (!(channel->mode.mode & MODE_TOPICLIMIT) &&
-		    !is_skochanop(client, channel) && is_banned(client, channel, BANCHK_MSG, &newtopic, &errmsg))
+		if (!is_skochanop(client, channel) && is_banned(client, channel, BANCHK_MSG, &newtopic, &errmsg))
 		{
 			char buf[512];
 
@@ -216,8 +218,11 @@ CMD_FUNC(cmd_topic)
 		if (MyUser(client) && newtopic)
 			topic = newtopic; /* process is_banned() changes of topic (eg: text replacement), but only for local clients */
 
-		/* -t, +m, and not +vhoaq */
-		if (((flags&CHFL_OVERLAP) == 0) && (channel->mode.mode & MODE_MODERATED))
+		/* -t, +m, and not +vhoaq
+		 * TODO: it's not really sane to have this here, we could use HOOKTYPE_PRE_LOCAL_TOPIC,
+		 * but then we have the override shit too, hmmm.
+		 */
+		if (((flags&CHFL_OVERLAP) == 0) && has_channel_mode(channel, 'm'))
 		{
 			char buf[512];
 

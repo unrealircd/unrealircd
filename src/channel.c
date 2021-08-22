@@ -53,13 +53,9 @@ static mp_pool_t *channel_pool = NULL;
  * These are +ntmispklr and also the list modes +vhoaq and +beI.
  */
 CoreChannelModeTable corechannelmodetable[] = {
-	{MODE_LIMIT, 'l', 1, 1},
 	{MODE_VOICE, 'v', 1, 1},
 	{MODE_HALFOP, 'h', 0, 1},
 	{MODE_CHANOP, 'o', 0, 1},
-	{MODE_MODERATED, 'm', 1, 0},
-	{MODE_TOPICLIMIT, 't', 1, 0},
-	{MODE_RGSTR, 'r', 0, 0},
 	{MODE_CHANADMIN, 'a', 0, 1},
 	{MODE_CHANOWNER, 'q', 0, 1},
 	{MODE_BAN, 'b', 1, 1},
@@ -596,10 +592,6 @@ int has_channel_mode(Channel *channel, char mode)
 		tab++;
 	}
 
-	/* Special handling for +l (needed??) */
-	if (channel->mode.limit && (mode == 'l'))
-		return 1;
-
 	return 0; /* Not found */
 }
 
@@ -642,7 +634,6 @@ long get_mode_bitbychar(char m)
 /* TODO: this function has many security issues and needs an audit, maybe even a recode */
 void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel, int hide_local_modes)
 {
-	CoreChannelModeTable *tab = &corechannelmodetable[0];
 	int ismember = 0;
 	int i;
 
@@ -657,17 +648,6 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 	mbuf_size--;
 
 	/* Paramless first */
-	while (mbuf_size && tab->mode != 0x0)
-	{
-		if ((channel->mode.mode & tab->mode))
-		{
-			if (!tab->parameters) {
-				*mbuf++ = tab->flag;
-				mbuf_size--;
-			}
-		}
-		tab++;
-	}
 	for (i=0; i <= Channelmode_highest; i++)
 	{
 		if (!mbuf_size)
@@ -679,19 +659,6 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 		{
 			*mbuf++ = Channelmode_Table[i].flag;
 			mbuf_size--;
-		}
-	}
-
-	if (channel->mode.limit)
-	{
-		if (mbuf_size) {
-			*mbuf++ = 'l';
-			mbuf_size--;
-		}
-		if (ismember) {
-			ircsnprintf(pbuf, pbuf_size, "%d ", channel->mode.limit);
-			pbuf_size-=strlen(pbuf);
-			pbuf+=strlen(pbuf);
 		}
 	}
 
@@ -1182,10 +1149,7 @@ int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
 				/* INTERNAL MODE */
 				if (tab->parameters)
 				{
-					if ((pm->what == MODE_DEL) && (tab->flag == 'l'))
-						eatparam = 0; /* -l is special: no parameter required */
-					else
-						eatparam = 1; /* all other internal parameter modes do require a parameter on unset */
+					eatparam = 1;
 				}
 			} else {
 				/* EXTENDED CHANNEL MODE */

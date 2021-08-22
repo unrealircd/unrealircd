@@ -32,9 +32,9 @@ INCLUDES = ../../include/channel.h \
 	../../include/version.h ../../include/whowas.h
 
 R_MODULES= \
-	key.so inviteonly.so secret.so private.so \
-	noexternalmsgs.so \
-	nocolor.so stripcolor.so issecure.so permanent.so floodprot.so \
+	key.so limit.so inviteonly.so secret.so private.so \
+	moderated.so noexternalmsgs.so topiclimit.so \
+	nocolor.so stripcolor.so isregistered.so issecure.so permanent.so floodprot.so \
 	noctcp.so link.so censor.so delayjoin.so noknock.so noinvite.so operonly.so \
 	nonotice.so regonly.so nonickchange.so nokick.so regonlyspeak.so \
 	secureonly.so history.so
@@ -58,6 +58,10 @@ key.so: key.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o key.so key.c
 
+limit.so: limit.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o limit.so limit.c
+
 inviteonly.so: inviteonly.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o inviteonly.so inviteonly.c
@@ -70,9 +74,21 @@ private.so: private.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o private.so private.c
 
+moderated.so: moderated.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o moderated.so moderated.c
+
 noexternalmsgs.so: noexternalmsgs.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o noexternalmsgs.so noexternalmsgs.c
+
+topiclimit.so: topiclimit.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o topiclimit.so topiclimit.c
+
+isregistered.so: isregistered.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o isregistered.so isregistered.c
 
 issecure.so: issecure.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
