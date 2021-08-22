@@ -33,6 +33,7 @@ INCLUDES = ../../include/channel.h \
 
 R_MODULES= \
 	key.so inviteonly.so secret.so private.so \
+	noexternalmsgs.so \
 	nocolor.so stripcolor.so issecure.so permanent.so floodprot.so \
 	noctcp.so link.so censor.so delayjoin.so noknock.so noinvite.so operonly.so \
 	nonotice.so regonly.so nonickchange.so nokick.so regonlyspeak.so \
@@ -68,6 +69,10 @@ secret.so: secret.c $(INCLUDES)
 private.so: private.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o private.so private.c
+
+noexternalmsgs.so: noexternalmsgs.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o noexternalmsgs.so noexternalmsgs.c
 
 issecure.so: issecure.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

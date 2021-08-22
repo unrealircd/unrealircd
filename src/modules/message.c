@@ -795,24 +795,6 @@ int _can_send_to_channel(Client *client, Channel *channel, char **msgtext, char 
 
 	member = IsMember(client, channel);
 
-	if (channel->mode.mode & MODE_NOPRIVMSGS && !member)
-	{
-		/* Channel does not accept external messages (+n).
-		 * Reject, unless HOOKTYPE_CAN_BYPASS_NO_EXTERNAL_MSGS tells otherwise.
-		 */
-		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
-		{
-			i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_EXTERNAL);
-			if (i != HOOK_CONTINUE)
-				break;
-		}
-		if (i != HOOK_ALLOW)
-		{
-			*errmsg = "No external channel messages";
-			return 0;
-		}
-	}
-
 	lp = find_membership_link(client->user->channel, channel);
 	if (channel->mode.mode & MODE_MODERATED &&
 	    !op_can_override("channel:override:message:moderated",client,channel,NULL) &&
