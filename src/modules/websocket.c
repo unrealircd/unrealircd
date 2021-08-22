@@ -6,6 +6,7 @@
  */
    
 #include "unrealircd.h"
+#include "dns.h"
 
 #define WEBSOCKET_VERSION "1.1.0"
 
@@ -697,23 +698,37 @@ int websocket_handshake_valid(Client *client)
 		if ((inet_pton(AF_INET, forwarded->ip, scratch) != 1) && (inet_pton(AF_INET6, forwarded->ip, scratch) != 1))
 		{
 			unreal_log(ULOG_WARNING, "websocket", "INVALID_FORWARDED_IP", client, "Received invalid IP in Forwarded header from $ip", log_data_string("ip", client->ip));
+			dead_socket(client, "Forwarded: invalid IP");
 			return 0;
 		}
 		/* store data */
 		WSU(client)->secure = forwarded->secure;
 		safe_strdup(client->ip, forwarded->ip);
+		/* Update client->local->hostp */
+		strlcpy(client->local->sockhost, forwarded->ip, sizeof(client->local->sockhost)); /* in case dns lookup fails or is disabled */
+		/* (free old) */
 		if (client->local->hostp)
 		{
 			unreal_free_hostent(client->local->hostp);
 			client->local->hostp = NULL;
 		}
 		/* (create new) */
-		/*
-		TODO actually get a hostname from somewhere!
-		if (host && valid_host(host, 1))
-			client->local->hostp = unreal_create_hostent(host, client->ip);
+		if (!DONT_RESOLVE)
+		{
+			/* taken from socket.c */
+			struct hostent *he;
+			he = unrealdns_doclient(client); /* call this once more */
+			if (!client->local->hostp)
+			{
+				if (he)
+					client->local->hostp = he;
+				else
+					SetDNSLookup(client);
+			} else
+			{
+				/* Race condition detected, DNS has been done, continue with auth */
+			}
 		}
-		*/
 		/* blacklist_start_check() */
 		if (RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK] != NULL)
 			RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK]->func.intfunc(client);
