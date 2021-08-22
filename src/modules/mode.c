@@ -1045,7 +1045,7 @@ int paracount_for_chanmode(u_int what, char mode)
 void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *pcount,
                char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
 {
-	Cmode *cm;
+	Cmode *cm = NULL;
 	char *curchr;
 	char *argument;
 	u_int what = MODE_ADD;
