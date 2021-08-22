@@ -23,6 +23,7 @@
 #include "unrealircd.h"
 
 /* Forward declarations */
+int list_mode_request(Client *client, Channel *channel, char *req);
 CMD_FUNC(cmd_mode);
 CMD_FUNC(cmd_mlock);
 void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode);
