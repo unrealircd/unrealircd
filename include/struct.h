@@ -1953,7 +1953,6 @@ typedef struct MemoryInfo {
  * Otherwise, see the extended channel modes API, CmodeAdd(), etc.
  */
 struct Mode {
-	long mode;				/**< Core modes set on this channel (one of MODE_*) */
 	Cmode_t extmode;			/**< Other ("extended") channel modes set on this channel */
 	void *extmodeparams[MAXPARAMMODES+1];	/**< Parameters for extended channel modes */
 };

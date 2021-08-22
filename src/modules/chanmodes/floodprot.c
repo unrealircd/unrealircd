@@ -1139,14 +1139,9 @@ EVENT(modef_event)
 		if (e->when <= now)
 		{
 			/* Remove chanmode... */
-			long mode = 0;
-			Cmode_t extmode = 0;
-			mode = get_mode_bitbychar(e->m);
-			if (mode == 0)
-			        extmode = get_extmode_bitbychar(e->m);
+			Cmode_t extmode = get_extmode_bitbychar(e->m);
 
-			if ((mode && (e->channel->mode.mode & mode)) ||
-			    (extmode && (e->channel->mode.extmode & extmode)))
+			if (extmode && (e->channel->mode.extmode & extmode))
 			{
 				MessageTag *mtags = NULL;
 
@@ -1156,8 +1151,6 @@ EVENT(modef_event)
 				               ":%s MODE %s -%c",
 				               me.name, e->channel->name, e->m);
 				free_message_tags(mtags);
-
-				e->channel->mode.mode &= ~mode;
 				e->channel->mode.extmode &= ~extmode;
 			}
 
@@ -1214,7 +1207,6 @@ int do_floodprot(Channel *channel, Client *client, int what)
 void do_floodprot_action(Channel *channel, int what)
 {
 	char m;
-	int mode = 0;
 	Cmode_t extmode = 0;
 	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
 	FloodType *floodtype = find_floodprot_by_index(what);
@@ -1234,15 +1226,11 @@ void do_floodprot_action(Channel *channel, int what)
 	if (chp->action[what] == 'd')
 		return;
 
-	mode = get_mode_bitbychar(m);
-	if (mode == 0)
-		extmode = get_extmode_bitbychar(m);
-
-	if (!mode && !extmode)
+	extmode = get_extmode_bitbychar(m);
+	if (!extmode)
 		return;
 
-	if (!(mode && (channel->mode.mode & mode)) &&
-		!(extmode && (channel->mode.extmode & extmode)))
+	if (!(extmode && (channel->mode.extmode & extmode)))
 	{
 		char comment[512], target[CHANNELLEN + 8];
 		MessageTag *mtags;
@@ -1266,7 +1254,6 @@ void do_floodprot_action(Channel *channel, int what)
 		free_message_tags(mtags);
 
 		/* Actually set the mode internally */
-		channel->mode.mode |= mode;
 		channel->mode.extmode |= extmode;
 
 		/* Add remove-chanmode timer */

@@ -234,7 +234,7 @@ extern MODVAR int ipv6_disabled;
 #define THROTTLING_PERIOD		iConf.throttle_period
 #define THROTTLING_COUNT		iConf.throttle_count
 #define USE_BAN_VERSION			iConf.use_ban_version
-#define MODES_ON_JOIN			iConf.modes_on_join.mode
+#define MODES_ON_JOIN			iConf.modes_on_join.extmodes
 #define LEVEL_ON_JOIN			iConf.level_on_join
 
 #define IDENT_CONNECT_TIMEOUT	iConf.ident_connect_timeout

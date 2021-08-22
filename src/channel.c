@@ -574,21 +574,11 @@ long get_access(Client *client, Channel *channel)
 /** Returns 1 if channel has this channel mode set and 0 if not */
 int has_channel_mode(Channel *channel, char mode)
 {
-	CoreChannelModeTable *tab = &corechannelmodetable[0];
 	Cmode *cm;
 
-	/* Extended channel modes */
 	for (cm=channelmodes; cm; cm = cm->next)
 		if ((cm->flag == mode) && (channel->mode.extmode & cm->mode))
 			return 1;
-
-	/* Built-in channel modes */
-	while (tab->mode != 0x0)
-	{
-		if ((channel->mode.mode & tab->mode) && (tab->flag == mode))
-			return 1;
-		tab++;
-	}
 
 	return 0; /* Not found */
 }
@@ -603,20 +593,6 @@ Cmode_t get_extmode_bitbychar(char m)
                         return cm->mode;
 
         return 0;
-}
-
-/** Get the extended channel mode character (eg: 'Z') by the 'bit' value (eg: 0x20) */
-long get_mode_bitbychar(char m)
-{
-	CoreChannelModeTable *tab = &corechannelmodetable[0];
-
-	while(tab->mode != 0x0)
-	{
-		if (tab->flag == m)
-			return tab->mode;
-		tab++;;
-	}
-	return 0;
 }
 
 /** Write the "simple" list of channel modes for channel channel onto buffer mbuf with the parameters in pbuf.

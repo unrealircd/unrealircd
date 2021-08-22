@@ -180,7 +180,7 @@ int secureonly_check_sajoin(Client *target, Channel *channel, Client *requester)
  */
 int secureonly_specialcheck(Client *client, Channel *channel, char *parv[])
 {
-	if ((channel->users == 0) && (iConf.modes_on_join.extmodes & EXTCMODE_SECUREONLY) && !IsSecure(client) && !IsOper(client))
+	if ((channel->users == 0) && (MODES_ON_JOIN & EXTCMODE_SECUREONLY) && !IsSecure(client) && !IsOper(client))
 	{
 		sendnumeric(client, ERR_SECUREONLYCHAN, channel->name);
 		return HOOK_DENY;

@@ -37,7 +37,7 @@ int do_mode_char(Channel *channel, long modetype, char modechar, char *param,
                  u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], long my_access);
 int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
                     Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
-void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, int pcount,
+void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
                    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
                    size_t mode_buf_size, size_t para_buf_size);
 
@@ -426,7 +426,7 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
  *	Reconstructs the mode string, to make it look clean.  mode_buf will
  *  contain the +x-y stuff, and the parabuf will contain the parameters.
  */
-void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, int pcount,
+void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
     size_t mode_buf_size, size_t para_buf_size)
 {
@@ -1059,14 +1059,12 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 	int found = 0;
 	int sent_mlock_warning = 0;
 	unsigned int htrig = 0;
-	long oldm;
 	int checkrestr = 0, warnrestr = 1;
 	Cmode_t oldem;
 	long my_access;
 	paracount = 1;
 	*pcount = 0;
 
-	oldm = channel->mode.mode;
 	oldem = channel->mode.extmode;
 	if (RESTRICT_CHANNELMODES && !ValidatePermissionsForPath("immune:restrict-channelmodes",client,NULL,channel,NULL)) /* "cache" this */
 		checkrestr = 1;
@@ -1190,7 +1188,7 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 		} /* switch(*curchr) */
 	} /* for loop through mode letters */
 
-	make_mode_str(channel, oldm, oldem, *pcount, pvar, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
+	make_mode_str(channel, oldem, *pcount, pvar, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
 
 #ifndef NO_OPEROVERRIDE
 	if ((htrig == 1) && IsUser(client))
