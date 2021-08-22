@@ -7962,12 +7962,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 			conf_channelmodes(cep->value, &temp, 1);
-			if (temp.mode & MODE_SECRET && temp.mode & MODE_PRIVATE)
-			{
-				config_error("%s:%i: set::modes-on-join has both +s and +p",
-					cep->file->filename, cep->line_number);
-				errors++;
-			}
 
 		}
 		else if (!strcmp(cep->name, "modes-on-oper")) {

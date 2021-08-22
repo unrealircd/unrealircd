@@ -734,6 +734,10 @@ getnick:
 			}
 		}
 
+#if 0
+		// FIXME: fix this case of +p/+s merging... which should end up in +s:
+		// can use get_extmode_bitbychar() or shit but probably should call a hook (or sjoin thingy) instead?
+
 		/* Check if we had +s and it became +p, then revert it... */
 		if ((oldmode.mode & MODE_SECRET) && (channel->mode.mode & MODE_PRIVATE))
 		{
@@ -743,6 +747,7 @@ getnick:
 			Addsingle('p'); /* - */
 			queue_s = 1;
 		}
+#endif
 		/* Add single char modes... */
 		for (acp = corechannelmodetable; acp->mode; acp++)
 		{

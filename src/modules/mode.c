@@ -808,21 +808,19 @@ int  do_mode_char(Channel *channel, long modetype, char modechar, char *param,
 				break;
 			}
 			goto setmode;
-		case MODE_SECRET:
-		case MODE_PRIVATE:
 		case MODE_MODERATED:
 		case MODE_TOPICLIMIT:
 		case MODE_NOPRIVMSGS:
 			goto setmode;
 		setmode:
 			retval = 0;
-			if (what == MODE_ADD) {
-				/* +sp bugfix.. (by JK/Luke)*/
-		 	 if ((modetype == MODE_SECRET) && (channel->mode.mode & MODE_PRIVATE))
-					channel->mode.mode &= ~MODE_PRIVATE;
-				if ((modetype == MODE_PRIVATE) && (channel->mode.mode & MODE_SECRET))
-					channel->mode.mode &= ~MODE_SECRET;
+			if (what == MODE_ADD)
+			{
+				// FIXME: previously there was anti duplicate +s/+p code here
+				// we may still need something for that...
+				// like calling HOOKTYPE_MODECHAR_ADD
 				channel->mode.mode |= modetype;
+				RunHook2(HOOKTYPE_MODECHAR_ADD, channel, (int)modechar);
 			}
 			else
 			{
@@ -1166,6 +1164,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 		channel->mode.extmode |= handler->mode;
 		if (handler->paracount)
 			cm_putparameter(channel, handler->flag, param);
+		RunHook2(HOOKTYPE_MODECHAR_ADD, channel, (int)mode);
 	} else
 	{	/* - */
 		channel->mode.extmode &= ~(handler->mode);

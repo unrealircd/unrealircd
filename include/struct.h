@@ -2113,8 +2113,6 @@ struct Ban {
 /* Don't blindly change these MODE_* values, see comment 20 lines up! */
 #define	MODE_CHANOP		CHFL_CHANOP
 #define	MODE_VOICE		CHFL_VOICE
-#define	MODE_PRIVATE		0x0004
-#define	MODE_SECRET		0x0008
 #define	MODE_MODERATED  	0x0010
 #define	MODE_TOPICLIMIT 	0x0020
 #define MODE_CHANOWNER		0x0040
@@ -2140,13 +2138,12 @@ struct Ban {
 
 #define	HoldChannel(x)		(!(x))
 /* name invisible */
-#define	SecretChannel(x)	((x) && ((x)->mode.mode & MODE_SECRET))
+#define	SecretChannel(x)	((x) && has_channel_mode((x), 's'))
 /* channel not shown but names are */
-#define	HiddenChannel(x)	((x) && ((x)->mode.mode & MODE_PRIVATE))
+#define	HiddenChannel(x)	((x) && has_channel_mode((x), 'p'))
 /* channel visible */
 #define	ShowChannel(v,c)	(PubChannel(c) || IsMember((v),(c)))
-#define	PubChannel(x)		((!x) || ((x)->mode.mode &\
-				 (MODE_PRIVATE | MODE_SECRET)) == 0)
+#define	PubChannel(x)		(!SecretChannel((x)) && !HiddenChannel((x)))
 
 #define	IsChannelName(name) ((name) && (*(name) == '#'))
 
