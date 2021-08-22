@@ -707,11 +707,6 @@ getnick:
 		strlcpy(modebuf, "-", sizeof modebuf);
 		parabuf[0] = '\0';
 		b = 1;
-		/* however, is this really going to happen at all? may be unneeded */
-		if (oldmode.limit && !channel->mode.limit)
-		{
-			Addsingle('l');
-		}
 
 		/* First, check if we have something they don't have..
 		 * note that: oldmode.* = us, channel->mode.* = them.
@@ -803,16 +798,6 @@ getnick:
 		}
 
 		/* now, if we had diffent para modes - this loop really could be done better, but */
-
-		/* +l (limit) difference? */
-		if (oldmode.limit && channel->mode.limit && (oldmode.limit != channel->mode.limit))
-		{
-			channel->mode.limit = MAX(oldmode.limit, channel->mode.limit);
-			if (oldmode.limit != channel->mode.limit)
-			{
-				Addit('l', my_itoa(channel->mode.limit));
-			}
-		}
 
 		/* Now, check for any param differences in extended channel modes..
 		 * note that: oldmode.* = us, channel->mode.* = them.

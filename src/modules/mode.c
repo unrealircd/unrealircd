@@ -36,7 +36,7 @@ int do_mode_char(Channel *channel, long modetype, char modechar, char *param,
                  u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], long my_access);
 int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
                     Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
-void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pcount,
+void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, int pcount,
                    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
                    size_t mode_buf_size, size_t para_buf_size);
 
@@ -498,7 +498,7 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
  *	Reconstructs the mode string, to make it look clean.  mode_buf will
  *  contain the +x-y stuff, and the parabuf will contain the parameters.
  */
-void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pcount,
+void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, int pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
     size_t mode_buf_size, size_t para_buf_size)
 {
@@ -592,29 +592,6 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, long oldl, int pc
 	}
 
 	*x = '\0';
-	/* user limit */
-	if (channel->mode.limit != oldl)
-	{
-		if (channel->mode.limit == 0)
-		{
-			if (what != MODE_DEL)
-			{
-				*x++ = '-';
-				what = MODE_DEL;
-			}
-			*x++ = 'l';
-		}
-		else
-		{
-			if (what != MODE_ADD)
-			{
-				*x++ = '+';
-				what = MODE_ADD;
-			}
-			*x++ = 'l';
-			ircsnprintf(para_buf, para_buf_size, "%s%d ", para_buf, channel->mode.limit);
-		}
-	}
 	/* reconstruct bkov chain */
 	for (cnt = 0; cnt < pcount; cnt++)
 	{
@@ -1003,29 +980,6 @@ process_listmode:
 			            (what == MODE_ADD) ? '+' : '-', tc, target->name);
 			(*pcount)++;
 			break;
-		case MODE_LIMIT:
-			if (what == MODE_ADD)
-			{
-				int v;
-				REQUIRE_PARAMETER()
-				v = atoi(param);
-				if (v < 0)
-					v = 1; /* setting +l with a negative number makes no sense */
-				if (v > 1000000)
-					v = 1000000; /* some kind of limit, 1 million (mrah...) */
-				if (channel->mode.limit == v)
-					break;
-				channel->mode.limit = v;
-			}
-			else
-			{
-				retval = 0;
-				if (!channel->mode.limit)
-					break;
-				channel->mode.limit = 0;
-				RunHook2(HOOKTYPE_MODECHAR_DEL, channel, (int)modechar);
-			}
-			break;
 		case MODE_BAN:
 			REQUIRE_PARAMETER()
 			if (!(tmpstr = mode_ban_handler(client, channel, param, what, EXBTYPE_BAN, &channel->banlist)))
@@ -1265,7 +1219,7 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 	int found = 0;
 	int sent_mlock_warning = 0;
 	unsigned int htrig = 0;
-	long oldm, oldl;
+	long oldm;
 	int checkrestr = 0, warnrestr = 1;
 	int extm = 1000000; /* (default value not used but stops gcc from complaining) */
 	Cmode_t oldem;
@@ -1274,7 +1228,6 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 	*pcount = 0;
 
 	oldm = channel->mode.mode;
-	oldl = channel->mode.limit;
 	oldem = channel->mode.extmode;
 	if (RESTRICT_CHANNELMODES && !ValidatePermissionsForPath("immune:restrict-channelmodes",client,NULL,channel,NULL)) /* "cache" this */
 		checkrestr = 1;
@@ -1398,7 +1351,7 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 		} /* switch(*curchr) */
 	} /* for loop through mode letters */
 
-	make_mode_str(channel, oldm, oldem, oldl, *pcount, pvar, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
+	make_mode_str(channel, oldm, oldem, *pcount, pvar, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
 
 #ifndef NO_OPEROVERRIDE
 	if ((htrig == 1) && IsUser(client))

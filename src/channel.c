@@ -53,7 +53,6 @@ static mp_pool_t *channel_pool = NULL;
  * These are +ntmispklr and also the list modes +vhoaq and +beI.
  */
 CoreChannelModeTable corechannelmodetable[] = {
-	{MODE_LIMIT, 'l', 1, 1},
 	{MODE_VOICE, 'v', 1, 1},
 	{MODE_HALFOP, 'h', 0, 1},
 	{MODE_CHANOP, 'o', 0, 1},
@@ -596,10 +595,6 @@ int has_channel_mode(Channel *channel, char mode)
 		tab++;
 	}
 
-	/* Special handling for +l (needed??) */
-	if (channel->mode.limit && (mode == 'l'))
-		return 1;
-
 	return 0; /* Not found */
 }
 
@@ -679,19 +674,6 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 		{
 			*mbuf++ = Channelmode_Table[i].flag;
 			mbuf_size--;
-		}
-	}
-
-	if (channel->mode.limit)
-	{
-		if (mbuf_size) {
-			*mbuf++ = 'l';
-			mbuf_size--;
-		}
-		if (ismember) {
-			ircsnprintf(pbuf, pbuf_size, "%d ", channel->mode.limit);
-			pbuf_size-=strlen(pbuf);
-			pbuf+=strlen(pbuf);
 		}
 	}
 

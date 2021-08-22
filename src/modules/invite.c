@@ -446,7 +446,7 @@ CMD_FUNC(cmd_invite)
 			invite_operoverride_msg(client, channel, "b", "ban");
 		else if (has_channel_mode(channel, 'i'))
 			invite_operoverride_msg(client, channel, "i", "invite only");
-		else if (channel->mode.limit)
+		else if (has_channel_mode(channel, 'l'))
 			invite_operoverride_msg(client, channel, "l", "user limit");
 		else if (has_channel_mode(channel, 'k'))
 			invite_operoverride_msg(client, channel, "k", "key");

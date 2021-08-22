@@ -32,7 +32,7 @@ INCLUDES = ../../include/channel.h \
 	../../include/version.h ../../include/whowas.h
 
 R_MODULES= \
-	key.so inviteonly.so secret.so private.so \
+	key.so limit.so inviteonly.so secret.so private.so \
 	noexternalmsgs.so \
 	nocolor.so stripcolor.so issecure.so permanent.so floodprot.so \
 	noctcp.so link.so censor.so delayjoin.so noknock.so noinvite.so operonly.so \
@@ -57,6 +57,10 @@ clean:
 key.so: key.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o key.so key.c
+
+limit.so: limit.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o limit.so limit.c
 
 inviteonly.so: inviteonly.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

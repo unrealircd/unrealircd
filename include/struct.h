@@ -1956,7 +1956,6 @@ struct Mode {
 	long mode;				/**< Core modes set on this channel (one of MODE_*) */
 	Cmode_t extmode;			/**< Other ("extended") channel modes set on this channel */
 	void *extmodeparams[MAXPARAMMODES+1];	/**< Parameters for extended channel modes */
-	int  limit;				/**< The +l limit in effect (eg: 40), if any - otherwise 0 */
 };
 
 /* flags for Link if used to contain Watch --k4be */
@@ -2120,14 +2119,13 @@ struct Ban {
 #define	MODE_HALFOP		0x0100
 #define MODE_EXCEPT		0x0200
 #define	MODE_BAN		0x0400
-#define	MODE_LIMIT		0x4000
 #define MODE_RGSTR		0x8000
 #define MODE_INVEX		0x8000000
 
 /*
  * mode flags which take another parameter (With PARAmeterS)
  */
-#define	MODE_WPARAS (MODE_HALFOP|MODE_CHANOP|MODE_VOICE|MODE_CHANOWNER|MODE_CHANADMIN|MODE_BAN|MODE_KEY|MODE_LIMIT|MODE_EXCEPT|MODE_INVEX)
+#define	MODE_WPARAS (MODE_HALFOP|MODE_CHANOP|MODE_VOICE|MODE_CHANOWNER|MODE_CHANADMIN|MODE_BAN|MODE_KEY|MODE_EXCEPT|MODE_INVEX)
 /*
  * Undefined here, these are used in conjunction with the above modes in
  * the source.

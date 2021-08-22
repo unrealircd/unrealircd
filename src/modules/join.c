@@ -116,24 +116,6 @@ int _can_join(Client *client, Channel *channel, char *key, char *parv[])
 	if (is_invited(client, channel))
 		return 0; /* allowed to walk through all the other modes */
 
-        if (channel->users >= channel->mode.limit)
-        {
-                /* Hmmm.. don't really like this.. and not at this place */
-                
-                for (h = Hooks[HOOKTYPE_CAN_JOIN_LIMITEXCEEDED]; h; h = h->next) 
-                {
-                        i = (*(h->func.intfunc))(client,channel,key,parv);
-                        if (i != 0)
-                                return i;
-                }
-
-                /* We later check again for this limit (in case +L was not set) */
-        }
-
-
-        if ((channel->mode.limit && channel->users >= channel->mode.limit))
-                return (ERR_CHANNELISFULL);
-
         if (banned)
                 return (ERR_BANNEDFROMCHAN);
 
