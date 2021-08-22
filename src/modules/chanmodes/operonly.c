@@ -48,7 +48,7 @@ CmodeInfo req;
 
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
-	req.flag = 'O';
+	req.letter = 'O';
 	req.is_ok = operonly_require_oper;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_OPERONLY);
 	

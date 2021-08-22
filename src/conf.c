@@ -610,9 +610,9 @@ void conf_channelmodes(char *modes, struct ChMode *store)
 		found = 0;
 		for (cm=channelmodes; cm; cm = cm->next)
 		{
-			if (!(cm->flag))
+			if (!(cm->letter))
 				continue;
-			if (*m == cm->flag)
+			if (*m == cm->letter)
 			{
 				found = 1;
 				if (cm->paracount)
@@ -629,7 +629,7 @@ void conf_channelmodes(char *modes, struct ChMode *store)
 						config_warn("set::modes-on-join '%s'. Parameter for mode %c is invalid (%s).", modes, *m, param_in);
 						break; /* invalid parameter fmt, do not set mode. */
 					}
-					safe_strdup(store->extparams[cm->flag], param);
+					safe_strdup(store->extparams[cm->letter], param);
 					/* Get next parameter */
 					param = strtoken(&save, NULL, " ");
 				}
@@ -655,14 +655,14 @@ void chmode_str(struct ChMode *modes, char *mbuf, char *pbuf, size_t mbuf_size, 
 
 	for (cm=channelmodes; cm; cm = cm->next)
 	{
-		if (!(cm->flag))
+		if (!(cm->letter))
 			continue;
 
 		if (modes->extmodes & cm->mode)
 		{
 			if (mbuf_size)
 			{
-				*mbuf++ = cm->flag;
+				*mbuf++ = cm->letter;
 				if (!--mbuf_size)
 				{
 					*--mbuf=0;
@@ -671,7 +671,7 @@ void chmode_str(struct ChMode *modes, char *mbuf, char *pbuf, size_t mbuf_size, 
 			}
 			if (cm->paracount)
 			{
-				strlcat(pbuf, modes->extparams[cm->flag], pbuf_size);
+				strlcat(pbuf, modes->extparams[cm->letter], pbuf_size);
 				strlcat(pbuf, " ", pbuf_size);
 			}
 		}

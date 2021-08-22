@@ -64,7 +64,7 @@ CmodeInfo req;
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
 	req.is_ok = modeZ_is_ok;
-	req.flag = 'Z';
+	req.letter = 'Z';
 	req.local = 1; /* local channel mode */
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_ISSECURE);
 	

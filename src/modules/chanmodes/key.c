@@ -61,7 +61,7 @@ MOD_INIT()
 	memset(&creq, 0, sizeof(creq));
 	creq.paracount = 1;
 	creq.is_ok = cmode_key_is_ok;
-	creq.flag = 'k';
+	creq.letter = 'k';
 	creq.unset_with_param = 1; /* yeah... +k is like this */
 	creq.put_param = cmode_key_put_param;
 	creq.get_param = cmode_key_get_param;

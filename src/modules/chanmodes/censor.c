@@ -49,7 +49,7 @@ MOD_INIT()
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
 	req.is_ok = extcmode_default_requirechop;
-	req.flag = 'G';
+	req.letter = 'G';
 	CmodeAdd(modinfo->handle, req, &EXTMODE_CENSOR);
 
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, censor_can_send_to_channel);

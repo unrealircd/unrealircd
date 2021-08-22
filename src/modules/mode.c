@@ -446,7 +446,7 @@ void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
 	/* + paramless extmodes... */
 	for (cm=channelmodes; cm; cm = cm->next)
 	{
-		if (!cm->flag || cm->paracount)
+		if (!cm->letter || cm->paracount)
 			continue;
 		/* have it now and didn't have it before? */
 		if ((channel->mode.mode & cm->mode) &&
@@ -457,7 +457,7 @@ void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
 				*x++ = '+';
 				what = MODE_ADD;
 			}
-			*x++ = cm->flag;
+			*x++ = cm->letter;
 		}
 	}
 
@@ -468,7 +468,7 @@ void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
 	 */
 	for (cm=channelmodes; cm; cm = cm->next)
 	{
-		if (!cm->flag || cm->unset_with_param)
+		if (!cm->letter || cm->unset_with_param)
 			continue;
 		/* don't have it now and did have it before */
 		if (!(channel->mode.mode & cm->mode) &&
@@ -479,7 +479,7 @@ void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
 				*x++ = '-';
 				what = MODE_DEL;
 			}
-			*x++ = cm->flag;
+			*x++ = cm->letter;
 		}
 	}
 
@@ -857,7 +857,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
                     Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
 {
 	int paracnt = (what == MODE_ADD) ? handler->paracount : 0;
-	char mode = handler->flag;
+	char mode = handler->letter;
 	int x;
 	char *morphed;
 
@@ -895,7 +895,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 	/* Check for multiple changes in 1 command (like +y-y+y 1 2, or +yy 1 2). */
 	for (x = 0; x < *pcount; x++)
 	{
-		if (pvar[x][1] == handler->flag)
+		if (pvar[x][1] == handler->letter)
 		{
 			/* this is different than the old chanmode system, coz:
 			 * "mode #chan +kkL #a #b #c" will get "+kL #a #b" which is wrong :p.
@@ -918,7 +918,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 				 * Any provided parameter is ok, the current one (that is set) will be used.
 				 */
 				ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "-%c%s",
-					handler->flag, cm_getparameter(channel, handler->flag));
+					handler->letter, cm_getparameter(channel, handler->letter));
 				(*pcount)++;
 			} else {
 				/* Normal extended channel mode: deleting is just -X, no parameter.
@@ -938,14 +938,14 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 			if (channel->mode.mode & handler->mode)
 			{
 				char *now, *requested;
-				char flag = handler->flag;
+				char flag = handler->letter;
 				now = cm_getparameter(channel, flag);
 				requested = handler->conv_param(param, client, channel);
 				if (now && requested && !strcmp(now, requested))
 					return paracnt; /* ignore... */
 			}
 			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "+%c%s",
-				handler->flag, handler->conv_param(param, client, channel));
+				handler->letter, handler->conv_param(param, client, channel));
 			(*pcount)++;
 			param = morphed; /* set param to converted parameter. */
 		}
@@ -955,14 +955,14 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 	{	/* + */
 		channel->mode.mode |= handler->mode;
 		if (handler->paracount)
-			cm_putparameter(channel, handler->flag, param);
+			cm_putparameter(channel, handler->letter, param);
 		RunHook2(HOOKTYPE_MODECHAR_ADD, channel, (int)mode);
 	} else
 	{	/* - */
 		channel->mode.mode &= ~(handler->mode);
 		RunHook2(HOOKTYPE_MODECHAR_DEL, channel, (int)mode);
 		if (handler->paracount)
-			cm_freeparameter(channel, handler->flag);
+			cm_freeparameter(channel, handler->letter);
 	}
 	return paracnt;
 }
@@ -1114,7 +1114,7 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 					/* Maybe in extmodes */
 					for (cm=channelmodes; cm; cm = cm->next)
 					{
-						if (cm->flag == *curchr)
+						if (cm->letter == *curchr)
 						{
 							found = 2;
 							break;

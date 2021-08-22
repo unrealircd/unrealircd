@@ -43,7 +43,7 @@ MOD_INIT()
 
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
-	req.flag = 'r';
+	req.letter = 'r';
 	req.is_ok = isregistered_chanmode_is_ok;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_REGISTERED);
 

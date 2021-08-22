@@ -63,7 +63,7 @@ MOD_INIT()
 	memset(&creq, 0, sizeof(creq));
 	creq.paracount = 1;
 	creq.is_ok = cmode_limit_is_ok;
-	creq.flag = 'l';
+	creq.letter = 'l';
 	creq.put_param = cmode_limit_put_param;
 	creq.get_param = cmode_limit_get_param;
 	creq.conv_param = cmode_limit_conv_param;

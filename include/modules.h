@@ -211,7 +211,7 @@ struct Cmode {
 	Cmode *prev, *next;
 
 	/** mode character (like 'Z') */
-	char		flag;
+	char		letter;
 
 	/** unique flag (like 0x10) */
 	Cmode_t		mode;
@@ -315,7 +315,7 @@ struct Cmode {
  * For documentation, see Cmode struct.
  */
 typedef struct {
-	char		flag;
+	char		letter;
 	int		paracount;
 	int		(*is_ok)(Client *,Channel *, char mode, char *para, int, int);
 	void *	(*put_param)(void *, char *);

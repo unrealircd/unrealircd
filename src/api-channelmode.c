@@ -64,22 +64,22 @@ void make_extcmodestr()
 	/* type 2: 1 par to set/unset (has .unset_with_param) */
 	p = extchmstr[1];
 	for (cm=channelmodes; cm; cm = cm->next)
-		if (cm->paracount && cm->flag && cm->unset_with_param)
-			*p++ = cm->flag;
+		if (cm->paracount && cm->letter && cm->unset_with_param)
+			*p++ = cm->letter;
 	*p = '\0';
 
 	/* type 3: 1 param to set, 0 params to unset (does not have .unset_with_param) */
 	p = extchmstr[2];
 	for (cm=channelmodes; cm; cm = cm->next)
-		if (cm->paracount && cm->flag && !cm->unset_with_param)
-			*p++ = cm->flag;
+		if (cm->paracount && cm->letter && !cm->unset_with_param)
+			*p++ = cm->letter;
 	*p = '\0';
 	
 	/* type 4: paramless modes */
 	p = extchmstr[3];
 	for (cm=channelmodes; cm; cm = cm->next)
-		if (!cm->paracount && cm->flag)
-			*p++ = cm->flag;
+		if (!cm->paracount && cm->letter)
+			*p++ = cm->letter;
 	*p = '\0';
 }
 
@@ -97,8 +97,8 @@ static void make_cmodestr(void)
 		tab++;
 	}
 	for (cm=channelmodes; cm; cm = cm->next)
-		if (cm->flag)
-			*p++ = cm->flag;
+		if (cm->letter)
+			*p++ = cm->letter;
 	*p = '\0';
 }
 
@@ -158,22 +158,22 @@ void extcmode_init(void)
 }
 
 /** Update letter->slot mapping and slot->handler mapping */
-void extcmode_para_addslot(Cmode *c, int slot)
+void extcmode_para_addslot(Cmode *cm, int slot)
 {
 	if ((slot < 0) || (slot > MAXPARAMMODES))
 		abort();
-	c->param_slot = slot;
-	ParamTable[slot] = c;
-	param_to_slot_mapping[c->flag] = slot;
+	cm->param_slot = slot;
+	ParamTable[slot] = cm;
+	param_to_slot_mapping[cm->letter] = slot;
 }
 
 /** Update letter->slot mapping and slot->handler mapping */
-void extcmode_para_delslot(Cmode *c, int slot)
+void extcmode_para_delslot(Cmode *cm, int slot)
 {
 	if ((slot < 0) || (slot > MAXPARAMMODES))
 		abort();
 	ParamTable[slot] = NULL;
-	param_to_slot_mapping[c->flag] = 0;
+	param_to_slot_mapping[cm->letter] = 0;
 }
 
 int channelmode_add_sorted_helper(char x, char y)
@@ -199,9 +199,9 @@ void channelmode_add_sorted(Cmode *n)
 
 	for (m = channelmodes; m; m = m->next)
 	{
-		if (m->flag == '\0')
+		if (m->letter == '\0')
 			abort();
-		if (channelmode_add_sorted_helper(n->flag, m->flag))
+		if (channelmode_add_sorted_helper(n->letter, m->letter))
 		{
 			/* Insert us before */
 			if (m->prev)
@@ -242,7 +242,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 
 	for (cm=channelmodes; cm; cm = cm->next)
 	{
-		if (cm->flag == req.flag)
+		if (cm->letter == req.letter)
 		{
 			if (cm->unloaded)
 			{
@@ -285,7 +285,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 		}
 		cm = safe_alloc(sizeof(Cmode));
 		cm->mode = l;
-		cm->flag = req.flag;
+		cm->letter = req.letter;
 		channelmode_add_sorted(cm);
 	}
 
@@ -315,7 +315,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 
 	*mode = cm->mode;
 	/* Update extended channel mode table highest */
-	cm->flag = req.flag;
+	cm->letter = req.letter;
 	cm->paracount = req.paracount;
 	cm->is_ok = req.is_ok;
 	cm->put_param = req.put_param;
@@ -394,10 +394,10 @@ static void unload_extcmode_commit(Cmode *cmode)
 				new_message(&me, NULL, &mtags);
 				sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 					       ":%s MODE %s -%c",
-					       me.name, channel->name, cmode->flag);
+					       me.name, channel->name, cmode->letter);
 				sendto_server(NULL, 0, 0, mtags,
 					":%s MODE %s -%c 0",
-					me.id, channel->name, cmode->flag);
+					me.id, channel->name, cmode->letter);
 				free_message_tags(mtags);
 
 				channel->mode.mode &= ~cmode->mode;
@@ -415,31 +415,31 @@ static void unload_extcmode_commit(Cmode *cmode)
 				new_message(&me, NULL, &mtags);
 				if (cmode->unset_with_param)
 				{
-					char *param = cmode->get_param(GETPARASTRUCT(channel, cmode->flag));
+					char *param = cmode->get_param(GETPARASTRUCT(channel, cmode->letter));
 					sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 						       ":%s MODE %s -%c %s",
-						       me.name, channel->name, cmode->flag, param);
+						       me.name, channel->name, cmode->letter, param);
 					sendto_server(NULL, 0, 0, mtags,
 						":%s MODE %s -%c %s 0",
-						me.id, channel->name, cmode->flag, param);
+						me.id, channel->name, cmode->letter, param);
 				} else {
 					sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 						       ":%s MODE %s -%c",
-						       me.name, channel->name, cmode->flag);
+						       me.name, channel->name, cmode->letter);
 					sendto_server(NULL, 0, 0, mtags,
 						":%s MODE %s -%c 0",
-						me.id, channel->name, cmode->flag);
+						me.id, channel->name, cmode->letter);
 				}
 				free_message_tags(mtags);
 
-				cmode->free_param(GETPARASTRUCT(channel, cmode->flag));
+				cmode->free_param(GETPARASTRUCT(channel, cmode->letter));
 				channel->mode.mode &= ~cmode->mode;
 			}
 		}
 		extcmode_para_delslot(cmode, cmode->param_slot);
 	}
 
-	cmode->flag = '\0';
+	cmode->letter = '\0';
 }
 
 /** Unload all unused channel modes after a REHASH */
@@ -450,7 +450,7 @@ void unload_all_unused_extcmodes(void)
 	for (cm=channelmodes; cm; cm = cm_next)
 	{
 		cm_next = cm->next;
-		if (cm->flag && cm->unloaded)
+		if (cm->letter && cm->unloaded)
 		{
 			unload_extcmode_commit(cm);
 		}
@@ -597,7 +597,7 @@ int module_has_extcmode_param_mode(Module *mod)
 	Cmode *cm;
 
 	for (cm=channelmodes; cm; cm = cm->next)
-		if ((cm->flag) && (cm->owner == mod) && (cm->paracount))
+		if ((cm->letter) && (cm->owner == mod) && (cm->paracount))
 			return 1;
 
 	return 0;

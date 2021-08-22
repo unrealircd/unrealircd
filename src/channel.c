@@ -577,7 +577,7 @@ int has_channel_mode(Channel *channel, char mode)
 	Cmode *cm;
 
 	for (cm=channelmodes; cm; cm = cm->next)
-		if ((cm->flag == mode) && (channel->mode.mode & cm->mode))
+		if ((cm->letter == mode) && (channel->mode.mode & cm->mode))
 			return 1;
 
 	return 0; /* Not found */
@@ -589,7 +589,7 @@ Cmode_t get_extmode_bitbychar(char m)
 	Cmode *cm;
 
 	for (cm=channelmodes; cm; cm = cm->next)
-                if (cm->flag == m)
+                if (cm->letter == m)
                         return cm->mode;
 
         return 0;
@@ -626,24 +626,24 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 	{
 		if (!mbuf_size)
 			break;
-		if (cm->flag &&
+		if (cm->letter &&
 		    !cm->paracount &&
 		    !(hide_local_modes && cm->local) &&
 		    (channel->mode.mode & cm->mode))
 		{
-			*mbuf++ = cm->flag;
+			*mbuf++ = cm->letter;
 			mbuf_size--;
 		}
 	}
 
 	for (cm=channelmodes; cm; cm = cm->next)
 	{
-		if (cm->flag &&
+		if (cm->letter &&
 		    cm->paracount &&
 		    !(hide_local_modes && cm->local) &&
 		    (channel->mode.mode & cm->mode))
 		{
-			char flag = cm->flag;
+			char flag = cm->letter;
 			if (mbuf_size) {
 				*mbuf++ = flag;
 				mbuf_size--;
@@ -1130,7 +1130,7 @@ int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
 				int found = 0;
 				for (cm=channelmodes; cm; cm = cm->next)
 				{
-					if (cm->flag == *pm->modebuf)
+					if (cm->letter == *pm->modebuf)
 					{
 						found = 1;
 						break;

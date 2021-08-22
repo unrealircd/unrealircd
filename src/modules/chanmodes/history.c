@@ -77,7 +77,7 @@ MOD_INIT()
 	memset(&creq, 0, sizeof(creq));
 	creq.paracount = 1;
 	creq.is_ok = history_chanmode_is_ok;
-	creq.flag = 'H';
+	creq.letter = 'H';
 	creq.put_param = history_chanmode_put_param;
 	creq.get_param = history_chanmode_get_param;
 	creq.conv_param = history_chanmode_conv_param;

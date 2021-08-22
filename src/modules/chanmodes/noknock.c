@@ -47,7 +47,7 @@ CmodeInfo req;
 
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
-	req.flag = 'K';
+	req.letter = 'K';
 	req.is_ok = noknock_mode_allow;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOKNOCK);
 	

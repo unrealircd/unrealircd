@@ -265,10 +265,10 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 			/* Param fun */
 			for (cm=channelmodes; cm; cm = cm->next)
 			{
-				if (!cm->flag || !cm->paracount)
+				if (!cm->letter || !cm->paracount)
 					continue;
 				if (channel->mode.mode & cm->mode)
-				        cm_putparameter(channel, cm->flag, iConf.modes_on_join.extparams[cm->flag]);
+				        cm_putparameter(channel, cm->letter, iConf.modes_on_join.extparams[cm->letter]);
 			}
 
 			*modebuf = *parabuf = 0;

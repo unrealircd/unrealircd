@@ -69,7 +69,7 @@ MOD_INIT()
 	memset(&req, 0, sizeof(req));
 	req.paracount = 1;
 	req.is_ok = cmodeL_is_ok;
-	req.flag = 'L';
+	req.letter = 'L';
 	req.unset_with_param = 1; /* Oh yeah, we are special! */
 	req.put_param = cmodeL_put_param;
 	req.get_param = cmodeL_get_param;

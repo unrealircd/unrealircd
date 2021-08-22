@@ -165,7 +165,7 @@ MOD_INIT()
 	memset(&creq, 0, sizeof(creq));
 	creq.paracount = 1;
 	creq.is_ok = cmodef_is_ok;
-	creq.flag = 'f';
+	creq.letter = 'f';
 	creq.unset_with_param = 1; /* ah yeah, +f is special! */
 	creq.put_param = cmodef_put_param;
 	creq.get_param = cmodef_get_param;

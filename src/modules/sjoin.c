@@ -713,18 +713,18 @@ getnick:
 		 */
 		for (cm=channelmodes; cm; cm = cm->next)
 		{
-			if (cm->flag &&
+			if (cm->letter &&
 			    !cm->local &&
 			    (oldmode.mode & cm->mode) &&
 			    !(channel->mode.mode & cm->mode))
 			{
 				if (cm->paracount)
 				{
-					char *parax = cm_getparameter_ex(oldmode.mode_params, cm->flag);
-					//char *parax = cm->get_param(extcmode_get_struct(oldmode.modeparam, cm->flag));
-					Addit(cm->flag, parax);
+					char *parax = cm_getparameter_ex(oldmode.mode_params, cm->letter);
+					//char *parax = cm->get_param(extcmode_get_struct(oldmode.modeparam, cm->letter));
+					Addit(cm->letter, parax);
 				} else {
-					Addsingle(cm->flag);
+					Addsingle(cm->letter);
 				}
 			}
 		}
@@ -760,19 +760,19 @@ getnick:
 		 */
 		for (cm=channelmodes; cm; cm = cm->next)
 		{
-			if ((cm->flag) &&
+			if ((cm->letter) &&
 			    !(oldmode.mode & cm->mode) &&
 			    (channel->mode.mode & cm->mode))
 			{
 				if (cm->paracount)
 				{
-					char *parax = cm_getparameter(channel, cm->flag);
+					char *parax = cm_getparameter(channel, cm->letter);
 					if (parax)
 					{
-						Addit(cm->flag, parax);
+						Addit(cm->letter, parax);
 					}
 				} else {
-					Addsingle(cm->flag);
+					Addsingle(cm->letter);
 				}
 			}
 		}
@@ -785,13 +785,13 @@ getnick:
 		 */
 		for (cm=channelmodes; cm; cm = cm->next)
 		{
-			if (cm->flag && cm->paracount &&
+			if (cm->letter && cm->paracount &&
 			    (oldmode.mode & cm->mode) &&
 			    (channel->mode.mode & cm->mode))
 			{
 				int r;
 				char *parax;
-				char flag = cm->flag;
+				char flag = cm->letter;
 				void *ourm = GETPARASTRUCTEX(oldmode.mode_params, flag);
 				void *theirm = GETPARASTRUCT(channel, flag);
 				
@@ -805,7 +805,7 @@ getnick:
 
 					case EXSJ_THEYWON:
 						parax = cm_getparameter(channel, flag);
-						Addit(cm->flag, parax);
+						Addit(cm->letter, parax);
 						break;
 
 					case EXSJ_SAME:
