@@ -95,7 +95,7 @@ void isupport_init(void)
 	ISupportSet(NULL, "CASEMAPPING", "ascii");
 	ISupportSet(NULL, "NETWORK", NETWORK_NAME_005);
 	ISupportSetFmt(NULL, "CHANMODES",
-	               CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
+	               CHPAR1 "%s,%s,%s,%s",
 	               EXPAR1, EXPAR2, EXPAR3, EXPAR4);
 	ISupportSet(NULL, "PREFIX", CHPFIX);
 	ISupportSet(NULL, "CHANTYPES", "#");

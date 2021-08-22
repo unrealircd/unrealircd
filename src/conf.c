@@ -9476,6 +9476,7 @@ void start_listeners(void)
 /* Actually use configuration */
 void config_run(void)
 {
+	extcmodes_check_for_changes();
 	start_listeners();
 	free_all_config_resources();
 }
@@ -10766,7 +10767,6 @@ int rehash_internal(Client *client)
 	unload_all_unused_caps();
 	unload_all_unused_history_backends();
 	// unload_all_unused_moddata(); -- this will crash
-	extcmodes_check_for_changes();
 	umodes_check_for_changes();
 	charsys_check_for_changes();
 	loop.rehashing = 0;

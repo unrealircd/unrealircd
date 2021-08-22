@@ -104,22 +104,52 @@ static void make_cmodestr(void)
 	*p = '\0';
 }
 
+int sort_cmodes_cmp(char x, char y)
+{
+	if (x < y)
+		return 1;
+	return 0;
+}
+
+void sort_cmodes(void)
+{
+	int i, j;
+	Cmode swap;
+
+	/* This sorts the Channelmode_Table alphabetically,
+	 * that is: lower characters first (a-z) and then upper (A-Z)
+	 */
+	for (i = 0; i < EXTCMODETABLESZ; i++)
+	{
+		for (j = i+1; j < EXTCMODETABLESZ; j++)
+		{
+			if (sort_cmodes_cmp(Channelmode_Table[i].mode, Channelmode_Table[j].mode))
+			{
+				memcpy(&swap, &Channelmode_Table[j], sizeof(Cmode));
+				memcpy(&Channelmode_Table[j], &Channelmode_Table[i], sizeof(Cmode));
+				memcpy(&Channelmode_Table[i], &swap, sizeof(Cmode));
+			}
+		}
+	}
+}
+
 /** Check for changes - if any are detected, we broadcast the change */
 void extcmodes_check_for_changes(void)
 {
 	char chanmodes[256];
 	ISupport *isup;
 
+	//sort_cmodes();
 	make_cmodestr();
 	make_extcmodestr();
 
 	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR1, EXPAR1);
 	safe_strdup(me.server->features.chanmodes[0], chanmodes);
-	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR2, EXPAR2);
+	snprintf(chanmodes, sizeof(chanmodes), "%s", EXPAR2);
 	safe_strdup(me.server->features.chanmodes[1], chanmodes);
-	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR3, EXPAR3);
+	snprintf(chanmodes, sizeof(chanmodes), "%s", EXPAR3);
 	safe_strdup(me.server->features.chanmodes[2], chanmodes);
-	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR4, EXPAR4);
+	snprintf(chanmodes, sizeof(chanmodes), "%s", EXPAR4);
 	safe_strdup(me.server->features.chanmodes[3], chanmodes);
 
 	ircsnprintf(chanmodes, sizeof(chanmodes), "%s,%s,%s,%s",

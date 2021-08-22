@@ -1089,7 +1089,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	me.local->fd = -1;
 	SetMe(&me);
 	make_server(&me);
-	extcmodes_check_for_changes();
 	umodes_check_for_changes();
 	charsys_check_for_changes();
 	clicap_init();

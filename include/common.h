@@ -183,10 +183,6 @@ extern MODVAR unsigned char char_atribs[];
 #define CHPAR1        "beIqa"
 #endif /* PREFIX_AQ */
 
-#define CHPAR2        "k"
-#define CHPAR3        "l"
-#define CHPAR4        "psmntir"
-
 #ifdef _WIN32
 /*
  * Used to display a string to the GUI interface.
