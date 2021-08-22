@@ -631,7 +631,7 @@ void conf_channelmodes(char *modes, struct ChMode *store)
 					param = Channelmode_Table[i].conv_param(param, NULL, NULL);
 					if (!param)
 					{
-						config_warn("set::modes-on-join '%s'. Parameter for mode %c is invalid (%s).", modes, *m, param);
+						config_warn("set::modes-on-join '%s'. Parameter for mode %c is invalid (%s).", modes, *m, param_in);
 						break; /* invalid parameter fmt, do not set mode. */
 					}
 					store->extparams[i] = raw_strdup(param);
