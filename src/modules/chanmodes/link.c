@@ -426,7 +426,7 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[])
 	}
 
 	// Either +L is not set, or it is set but the parameter isn't stored somehow
-	if (!(channel->mode.extmode & EXTMODE_LINK) || !(linked = cm_getparameter(channel, 'L')))
+	if (!(channel->mode.mode & EXTMODE_LINK) || !(linked = cm_getparameter(channel, 'L')))
 		return HOOK_CONTINUE;
 
 	// can_join() actually returns 0 if we *can* join a channel, so we don't need to bother checking any further conditions

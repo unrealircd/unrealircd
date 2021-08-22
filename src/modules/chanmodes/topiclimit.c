@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_TOPIC_LIMIT;
 
-#define IsTopicLimit(channel)    (channel->mode.extmode & EXTCMODE_TOPIC_LIMIT)
+#define IsTopicLimit(channel)    (channel->mode.mode & EXTCMODE_TOPIC_LIMIT)
 
 MOD_INIT()
 {

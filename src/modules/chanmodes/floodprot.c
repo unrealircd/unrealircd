@@ -113,7 +113,7 @@ static int timedban_available = 0; /**< Set to 1 if extbans/timedban module is l
 RemoveChannelModeTimer *removechannelmodetimer_list = NULL;
 char *floodprot_msghash_key = NULL;
 
-#define IsFloodLimit(x)	((x)->mode.extmode & EXTMODE_FLOODLIMIT)
+#define IsFloodLimit(x)	((x)->mode.mode & EXTMODE_FLOODLIMIT)
 
 /* Forward declarations */
 static void init_config(void);
@@ -1141,7 +1141,7 @@ EVENT(modef_event)
 			/* Remove chanmode... */
 			Cmode_t extmode = get_extmode_bitbychar(e->m);
 
-			if (extmode && (e->channel->mode.extmode & extmode))
+			if (extmode && (e->channel->mode.mode & extmode))
 			{
 				MessageTag *mtags = NULL;
 
@@ -1151,7 +1151,7 @@ EVENT(modef_event)
 				               ":%s MODE %s -%c",
 				               me.name, e->channel->name, e->m);
 				free_message_tags(mtags);
-				e->channel->mode.extmode &= ~extmode;
+				e->channel->mode.mode &= ~extmode;
 			}
 
 			/* And delete... */
@@ -1230,7 +1230,7 @@ void do_floodprot_action(Channel *channel, int what)
 	if (!extmode)
 		return;
 
-	if (!(extmode && (channel->mode.extmode & extmode)))
+	if (!(extmode && (channel->mode.mode & extmode)))
 	{
 		char comment[512], target[CHANNELLEN + 8];
 		MessageTag *mtags;
@@ -1254,7 +1254,7 @@ void do_floodprot_action(Channel *channel, int what)
 		free_message_tags(mtags);
 
 		/* Actually set the mode internally */
-		channel->mode.extmode |= extmode;
+		channel->mode.mode |= extmode;
 
 		/* Add remove-chanmode timer */
 		if (chp->remove_after[what])

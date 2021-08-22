@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_REGISTERED;
 
-#define IsRegisteredChannel(channel)    (channel->mode.extmode & EXTCMODE_REGISTERED)
+#define IsRegisteredChannel(channel)    (channel->mode.mode & EXTCMODE_REGISTERED)
 
 int isregistered_chanmode_is_ok(Client *client, Channel *channel, char mode, char *param, int type, int what);
 

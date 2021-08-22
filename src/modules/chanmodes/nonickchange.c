@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_NONICKCHANGE;
 
-#define IsNoNickChange(channel)    (channel->mode.extmode & EXTCMODE_NONICKCHANGE)
+#define IsNoNickChange(channel)    (channel->mode.mode & EXTCMODE_NONICKCHANGE)
 
 int nonickchange_check (Client *client, Channel *channel);
 

@@ -30,7 +30,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_NONOTICE;
 
-#define IsNoNotice(channel)    (channel->mode.extmode & EXTCMODE_NONOTICE)
+#define IsNoNotice(channel)    (channel->mode.mode & EXTCMODE_NONOTICE)
 
 int nonotice_check_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 

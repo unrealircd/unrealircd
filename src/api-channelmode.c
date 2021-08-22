@@ -387,7 +387,7 @@ static void unload_extcmode_commit(Cmode *cmode)
 		/* Paramless mode, easy */
 		for (channel = channels; channel; channel = channel->nextch)
 		{
-			if (channel->mode.extmode & cmode->mode)
+			if (channel->mode.mode & cmode->mode)
 			{
 				MessageTag *mtags = NULL;
 
@@ -400,7 +400,7 @@ static void unload_extcmode_commit(Cmode *cmode)
 					me.id, channel->name, cmode->flag);
 				free_message_tags(mtags);
 
-				channel->mode.extmode &= ~cmode->mode;
+				channel->mode.mode &= ~cmode->mode;
 			}
 		}
 	} else
@@ -408,7 +408,7 @@ static void unload_extcmode_commit(Cmode *cmode)
 		/* Parameter mode, more complicated */
 		for (channel = channels; channel; channel = channel->nextch)
 		{
-			if (channel->mode.extmode & cmode->mode)
+			if (channel->mode.mode & cmode->mode)
 			{
 				MessageTag *mtags = NULL;
 
@@ -433,7 +433,7 @@ static void unload_extcmode_commit(Cmode *cmode)
 				free_message_tags(mtags);
 
 				cmode->free_param(GETPARASTRUCT(channel, cmode->flag));
-				channel->mode.extmode &= ~cmode->mode;
+				channel->mode.mode &= ~cmode->mode;
 			}
 		}
 		extcmode_para_delslot(cmode, cmode->param_slot);
@@ -493,9 +493,9 @@ void cm_freeparameter(Channel *channel, char mode)
 }
 
 /** Get parameter for a channel mode - special version for SJOIN.
- * This version doesn't take a channel, but a mode.extmodeparams.
+ * This version doesn't take a channel, but a mode.mode_params.
  * It is only used by SJOIN and should not be used in 3rd party modules.
- * @param p	The list, eg oldmode.extmodeparams
+ * @param p	The list, eg oldmode.mode_params
  * @param mode	The mode letter
  */
 char *cm_getparameter_ex(void **p, char mode)
@@ -504,9 +504,9 @@ char *cm_getparameter_ex(void **p, char mode)
 }
 
 /** Set parameter for a channel mode - special version for SJOIN.
- * This version doesn't take a channel, but a mode.extmodeparams.
+ * This version doesn't take a channel, but a mode.mode_params.
  * It is only used by SJOIN and should not be used in 3rd party modules.
- * @param p	The list, eg oldmode.extmodeparams
+ * @param p	The list, eg oldmode.mode_params
  * @param mode	The mode letter
  * @param str	The mode parameter string to set
  */

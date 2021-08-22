@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_REGONLY;
 
-#define IsRegOnly(channel)    (channel->mode.extmode & EXTCMODE_REGONLY)
+#define IsRegOnly(channel)    (channel->mode.mode & EXTCMODE_REGONLY)
 
 int regonly_check (Client *client, Channel *channel, char *key, char *parv[]);
 

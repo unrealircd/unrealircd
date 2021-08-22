@@ -449,7 +449,7 @@ void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
 		if (!cm->flag || cm->paracount)
 			continue;
 		/* have it now and didn't have it before? */
-		if ((channel->mode.extmode & cm->mode) &&
+		if ((channel->mode.mode & cm->mode) &&
 		    !(oldem & cm->mode))
 		{
 			if (what != MODE_ADD)
@@ -471,7 +471,7 @@ void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
 		if (!cm->flag || cm->unset_with_param)
 			continue;
 		/* don't have it now and did have it before */
-		if (!(channel->mode.extmode & cm->mode) &&
+		if (!(channel->mode.mode & cm->mode) &&
 		    (oldem & cm->mode))
 		{
 			if (what != MODE_DEL)
@@ -910,7 +910,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 	{
 		if (what == MODE_DEL)
 		{
-			if (!(channel->mode.extmode & handler->mode))
+			if (!(channel->mode.mode & handler->mode))
 				return paracnt; /* There's nothing to remove! */
 			if (handler->unset_with_param)
 			{
@@ -935,7 +935,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 				return paracnt; /* rejected by conv_param */
 
 			/* is it already set at the same value? if so, ignore it. */
-			if (channel->mode.extmode & handler->mode)
+			if (channel->mode.mode & handler->mode)
 			{
 				char *now, *requested;
 				char flag = handler->flag;
@@ -953,13 +953,13 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 
 	if (what == MODE_ADD)
 	{	/* + */
-		channel->mode.extmode |= handler->mode;
+		channel->mode.mode |= handler->mode;
 		if (handler->paracount)
 			cm_putparameter(channel, handler->flag, param);
 		RunHook2(HOOKTYPE_MODECHAR_ADD, channel, (int)mode);
 	} else
 	{	/* - */
-		channel->mode.extmode &= ~(handler->mode);
+		channel->mode.mode &= ~(handler->mode);
 		RunHook2(HOOKTYPE_MODECHAR_DEL, channel, (int)mode);
 		if (handler->paracount)
 			cm_freeparameter(channel, handler->flag);
@@ -1065,7 +1065,7 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 	paracount = 1;
 	*pcount = 0;
 
-	oldem = channel->mode.extmode;
+	oldem = channel->mode.mode;
 	if (RESTRICT_CHANNELMODES && !ValidatePermissionsForPath("immune:restrict-channelmodes",client,NULL,channel,NULL)) /* "cache" this */
 		checkrestr = 1;
 

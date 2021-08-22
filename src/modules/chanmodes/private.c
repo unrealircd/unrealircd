@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_PRIVATE;
 
-#define IsPrivate(channel)    (channel->mode.extmode & EXTCMODE_PRIVATE)
+#define IsPrivate(channel)    (channel->mode.mode & EXTCMODE_PRIVATE)
 
 int private_modechar_add(Channel *channel, int modechar);
 
@@ -67,7 +67,7 @@ int private_modechar_add(Channel *channel, int modechar)
 {
 	if (modechar == 's')
 	{
-		channel->mode.extmode &= ~EXTCMODE_PRIVATE;
+		channel->mode.mode &= ~EXTCMODE_PRIVATE;
 	}
 	return 0;
 }

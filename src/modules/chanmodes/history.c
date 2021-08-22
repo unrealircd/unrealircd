@@ -37,7 +37,7 @@ Cmode_t EXTMODE_HISTORY = 0L;
 static cfgstruct cfg;
 static cfgstruct test;
 
-#define HistoryEnabled(channel)    (channel->mode.extmode & EXTMODE_HISTORY)
+#define HistoryEnabled(channel)    (channel->mode.mode & EXTMODE_HISTORY)
 
 /* Forward declarations */
 static void init_config(cfgstruct *cfg);

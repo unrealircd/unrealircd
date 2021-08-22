@@ -231,7 +231,7 @@ struct Cmode {
 
 	/** Store parameter in memory for channel.
 	 * This function pointer is NULL (unused) for modes without parameters.
-	 * @param list		The list, this usually points to channel->mode.extmodeparams.
+	 * @param list		The list, this usually points to channel->mode.mode_params.
 	 * @param para		The parameter to store.
 	 * @returns the head of the list, RTFS if you wonder why.
 	 * @note IMPORTANT: only allocate a new paramstruct if you need to.
@@ -338,7 +338,7 @@ typedef struct {
 #define GETPARAMHANDLERBYLETTER(x)	ParamTable[GETPARAMSLOT(x)]
 
 /** Get paramter data struct - for like: ((aModejEntry *)GETPARASTRUCT(channel, 'j'))->t */
-#define GETPARASTRUCT(mychannel, mychar)	channel->mode.extmodeparams[GETPARAMSLOT(mychar)]
+#define GETPARASTRUCT(mychannel, mychar)	channel->mode.mode_params[GETPARAMSLOT(mychar)]
 
 #define GETPARASTRUCTEX(v, mychar)	v[GETPARAMSLOT(mychar)]
 

@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_NO_EXTERNAL_MESSAGES;
 
-#define IsNoExternalMessages(channel)    (channel->mode.extmode & EXTCMODE_NO_EXTERNAL_MESSAGES)
+#define IsNoExternalMessages(channel)    (channel->mode.mode & EXTCMODE_NO_EXTERNAL_MESSAGES)
 
 int noexternalmsgs_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 

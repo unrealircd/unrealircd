@@ -1953,8 +1953,8 @@ typedef struct MemoryInfo {
  * Otherwise, see the extended channel modes API, CmodeAdd(), etc.
  */
 struct Mode {
-	Cmode_t extmode;			/**< Other ("extended") channel modes set on this channel */
-	void *extmodeparams[MAXPARAMMODES+1];	/**< Parameters for extended channel modes */
+	Cmode_t mode;			/**< Other ("extended") channel modes set on this channel */
+	void *mode_params[MAXPARAMMODES+1];	/**< Parameters for extended channel modes */
 };
 
 /* flags for Link if used to contain Watch --k4be */

@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_SECRET;
 
-#define IsSecret(channel)    (channel->mode.extmode & EXTCMODE_SECRET)
+#define IsSecret(channel)    (channel->mode.mode & EXTCMODE_SECRET)
 
 int secret_modechar_add(Channel *channel, int modechar);
 
@@ -67,7 +67,7 @@ int secret_modechar_add(Channel *channel, int modechar)
 {
 	if (modechar == 'p')
 	{
-		channel->mode.extmode &= ~EXTCMODE_SECRET;
+		channel->mode.mode &= ~EXTCMODE_SECRET;
 	}
 	return 0;
 }

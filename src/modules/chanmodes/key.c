@@ -37,7 +37,7 @@ struct ChannelKey {
 ModDataInfo *mdkey = NULL;
 Cmode_t EXTMODE_KEY = 0L;
 
-#define IsKey(x)	((x)->mode.extmode & EXTMODE_KEY)
+#define IsKey(x)	((x)->mode.mode & EXTMODE_KEY)
 
 /* Forward declarations */
 int key_can_join(Client *client, Channel *channel, char *key, char *parv[]);

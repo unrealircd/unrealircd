@@ -18,7 +18,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTMODE_CENSOR = 0L;
 
-#define IsCensored(x) ((x)->mode.extmode & EXTMODE_CENSOR)
+#define IsCensored(x) ((x)->mode.mode & EXTMODE_CENSOR)
 
 int censor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 char *censor_pre_local_part(Client *client, Channel *channel, char *text);

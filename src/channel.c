@@ -577,7 +577,7 @@ int has_channel_mode(Channel *channel, char mode)
 	Cmode *cm;
 
 	for (cm=channelmodes; cm; cm = cm->next)
-		if ((cm->flag == mode) && (channel->mode.extmode & cm->mode))
+		if ((cm->flag == mode) && (channel->mode.mode & cm->mode))
 			return 1;
 
 	return 0; /* Not found */
@@ -629,7 +629,7 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 		if (cm->flag &&
 		    !cm->paracount &&
 		    !(hide_local_modes && cm->local) &&
-		    (channel->mode.extmode & cm->mode))
+		    (channel->mode.mode & cm->mode))
 		{
 			*mbuf++ = cm->flag;
 			mbuf_size--;
@@ -641,7 +641,7 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 		if (cm->flag &&
 		    cm->paracount &&
 		    !(hide_local_modes && cm->local) &&
-		    (channel->mode.extmode & cm->mode))
+		    (channel->mode.mode & cm->mode))
 		{
 			char flag = cm->flag;
 			if (mbuf_size) {
@@ -1018,7 +1018,7 @@ int sub1_from_channel(Channel *channel)
 	}
 
 	/* free extcmode params */
-	extcmode_free_paramlist(channel->mode.extmodeparams);
+	extcmode_free_paramlist(channel->mode.mode_params);
 
 	safe_free(channel->mode_lock);
 	safe_free(channel->topic);

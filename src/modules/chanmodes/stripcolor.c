@@ -32,7 +32,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_STRIPCOLOR;
 
-#define IsStripColor(channel)    (channel->mode.extmode & EXTCMODE_STRIPCOLOR)
+#define IsStripColor(channel)    (channel->mode.mode & EXTCMODE_STRIPCOLOR)
 
 int stripcolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 char *stripcolor_prelocalpart(Client *client, Channel *channel, char *comment);

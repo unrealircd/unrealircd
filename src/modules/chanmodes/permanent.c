@@ -32,7 +32,7 @@ static Cmode_t EXTMODE_PERMANENT = 0L;
 
 static int permanent_channel_destroy(Channel *channel, int *should_destroy)
 {
-	if (channel->mode.extmode & EXTMODE_PERMANENT)
+	if (channel->mode.mode & EXTMODE_PERMANENT)
 		*should_destroy = 0;
 	
 	return 0;
@@ -57,7 +57,7 @@ int permanent_chanmode(Client *client, Channel *channel, MessageTag *mtags, char
 		return 0; /* SJOIN server-sync, already has its own way of destroying the channel */
 
 	/* Destroy the channel if it was set '(SA)MODE #chan -P' with nobody in it (#4442) */
-	if (!(channel->mode.extmode & EXTMODE_PERMANENT) && (channel->users <= 0))
+	if (!(channel->mode.mode & EXTMODE_PERMANENT) && (channel->users <= 0))
 		sub1_from_channel(channel);
 	
 	return 0;

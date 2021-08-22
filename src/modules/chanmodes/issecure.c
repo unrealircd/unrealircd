@@ -39,7 +39,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_ISSECURE;
 
-#define IsSecureChanIndicated(channel)	(channel->mode.extmode & EXTCMODE_ISSECURE)
+#define IsSecureChanIndicated(channel)	(channel->mode.mode & EXTCMODE_ISSECURE)
 
 int IsSecureJoin(Channel *channel);
 int modeZ_is_ok(Client *client, Channel *channel, char mode, char *para, int checkt, int what);
@@ -150,7 +150,7 @@ void issecure_unset(Channel *channel, Client *client, MessageTag *recv_mtags, in
 		free_message_tags(mtags);
 	}
 		
-	channel->mode.extmode &= ~EXTCMODE_ISSECURE;
+	channel->mode.mode &= ~EXTCMODE_ISSECURE;
 	mtags = NULL;
 	new_message_special(&me, recv_mtags, &mtags, "MODE %s -Z", channel->name);
 	sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s -Z", me.name, channel->name);
@@ -186,7 +186,7 @@ void issecure_set(Channel *channel, Client *client, MessageTag *recv_mtags, int 
 	}
 	free_message_tags(mtags);
 
-	channel->mode.extmode |= EXTCMODE_ISSECURE;
+	channel->mode.mode |= EXTCMODE_ISSECURE;
 
 	mtags = NULL;
 	new_message_special(&me, recv_mtags, &mtags, "MODE %s +Z", channel->name);

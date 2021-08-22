@@ -73,14 +73,14 @@ MOD_UNLOAD()
 
 int operonly_check (Client *client, Channel *channel, char *key, char *parv[])
 {
-	if ((channel->mode.extmode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:join",client,NULL,channel,NULL))
+	if ((channel->mode.mode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:join",client,NULL,channel,NULL))
 		return ERR_OPERONLY;
 	return 0;
 }
 
 int operonly_check_ban(Client *client, Channel *channel)
 {
-	 if ((channel->mode.extmode & EXTCMODE_OPERONLY) &&
+	 if ((channel->mode.mode & EXTCMODE_OPERONLY) &&
 		    !ValidatePermissionsForPath("channel:operonly:ban",client,NULL,NULL,NULL))
 		 return HOOK_DENY;
 
@@ -89,7 +89,7 @@ int operonly_check_ban(Client *client, Channel *channel)
 
 int operonly_topic_allow (Client *client, Channel *channel)
 {
-	if (channel->mode.extmode & EXTCMODE_OPERONLY && !ValidatePermissionsForPath("channel:operonly:topic",client,NULL,channel,NULL))
+	if (channel->mode.mode & EXTCMODE_OPERONLY && !ValidatePermissionsForPath("channel:operonly:topic",client,NULL,channel,NULL))
 		return HOOK_DENY;
 
 	return HOOK_CONTINUE;

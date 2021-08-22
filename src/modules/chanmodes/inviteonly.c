@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_INVITE_ONLY;
 
-#define IsInviteOnly(channel)    (channel->mode.extmode & EXTCMODE_INVITE_ONLY)
+#define IsInviteOnly(channel)    (channel->mode.mode & EXTCMODE_INVITE_ONLY)
 
 int inviteonly_can_join(Client *client, Channel *channel, char *key, char *parv[]);
 

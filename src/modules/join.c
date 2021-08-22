@@ -255,19 +255,19 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 		 * Set only if it's the 1st user and only if no other modes have been set
 		 * already (eg: +P, permanent).
 		 */
-		if ((channel->users == 1) && !channel->mode.extmode && MODES_ON_JOIN)
+		if ((channel->users == 1) && !channel->mode.mode && MODES_ON_JOIN)
 		{
 			MessageTag *mtags_mode = NULL;
 			Cmode *cm;
 
-			channel->mode.extmode = MODES_ON_JOIN;
+			channel->mode.mode = MODES_ON_JOIN;
 
 			/* Param fun */
 			for (cm=channelmodes; cm; cm = cm->next)
 			{
 				if (!cm->flag || !cm->paracount)
 					continue;
-				if (channel->mode.extmode & cm->mode)
+				if (channel->mode.mode & cm->mode)
 				        cm_putparameter(channel, cm->flag, iConf.modes_on_join.extparams[cm->flag]);
 			}
 

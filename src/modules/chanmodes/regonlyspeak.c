@@ -32,7 +32,7 @@ ModuleHeader MOD_HEADER
 Cmode_t EXTCMODE_REGONLYSPEAK;
 static char errMsg[2048];
 
-#define IsRegOnlySpeak(channel)    (channel->mode.extmode & EXTCMODE_REGONLYSPEAK)
+#define IsRegOnlySpeak(channel)    (channel->mode.mode & EXTCMODE_REGONLYSPEAK)
 
 int regonlyspeak_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 char *regonlyspeak_part_message (Client *client, Channel *channel, char *comment);

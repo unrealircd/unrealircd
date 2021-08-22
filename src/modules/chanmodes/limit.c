@@ -37,7 +37,7 @@ struct ChannelLimit {
 ModDataInfo *mdlimit = NULL;
 Cmode_t EXTMODE_LIMIT = 0L;
 
-#define IsLimit(x)	((x)->mode.extmode & EXTMODE_LIMIT)
+#define IsLimit(x)	((x)->mode.mode & EXTMODE_LIMIT)
 
 /* Just for buffers, nothing else */
 #define LIMITLEN	32

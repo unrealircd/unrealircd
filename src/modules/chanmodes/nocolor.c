@@ -32,7 +32,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_NOCOLOR;
 
-#define IsNoColor(channel)    (channel->mode.extmode & EXTCMODE_NOCOLOR)
+#define IsNoColor(channel)    (channel->mode.mode & EXTCMODE_NOCOLOR)
 
 int nocolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 char *nocolor_prelocalpart(Client *client, Channel *channel, char *comment);

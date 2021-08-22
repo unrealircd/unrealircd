@@ -32,7 +32,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_NOINVITE;
 
-#define IsNoInvite(channel)    (channel->mode.extmode & EXTCMODE_NOINVITE)
+#define IsNoInvite(channel)    (channel->mode.mode & EXTCMODE_NOINVITE)
 
 int noinvite_pre_knock(Client *client, Channel *channel);
 int noinvite_pre_invite(Client *client, Client *target, Channel *channel, int *override);

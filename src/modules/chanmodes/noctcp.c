@@ -32,7 +32,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_NOCTCP;
 
-#define IsNoCTCP(channel)    (channel->mode.extmode & EXTCMODE_NOCTCP)
+#define IsNoCTCP(channel)    (channel->mode.mode & EXTCMODE_NOCTCP)
 
 int noctcp_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 

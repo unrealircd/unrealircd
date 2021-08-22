@@ -101,7 +101,7 @@ void set_post_delayed(Channel *channel)
 {
 	MessageTag *mtags = NULL;
 
-	channel->mode.extmode |= EXTMODE_POST_DELAYED;
+	channel->mode.mode |= EXTMODE_POST_DELAYED;
 
 	new_message(&me, NULL, &mtags);
 	sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +d", me.name, channel->name);
@@ -112,7 +112,7 @@ void clear_post_delayed(Channel *channel)
 {
 	MessageTag *mtags = NULL;
 
-	channel->mode.extmode &= ~EXTMODE_POST_DELAYED;
+	channel->mode.mode &= ~EXTMODE_POST_DELAYED;
 
 	new_message(&me, NULL, &mtags);
 	sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s -d", me.name, channel->name);
@@ -157,14 +157,14 @@ bool channel_has_invisible_users(Channel *channel)
 
 bool channel_is_post_delayed(Channel *channel)
 {
-	if (channel->mode.extmode & EXTMODE_POST_DELAYED)
+	if (channel->mode.mode & EXTMODE_POST_DELAYED)
 		return true;
 	return false;
 }
 
 bool channel_is_delayed(Channel *channel)
 {
-	if (channel->mode.extmode & EXTMODE_DELAYED)
+	if (channel->mode.mode & EXTMODE_DELAYED)
 		return true;
 	return false;
 }
@@ -200,7 +200,7 @@ void clear_user_invisible(Channel *channel, Client *client)
 		}
 	}
 
-	if (should_clear && (channel->mode.extmode & EXTMODE_POST_DELAYED))
+	if (should_clear && (channel->mode.mode & EXTMODE_POST_DELAYED))
 	{
 		clear_post_delayed(channel);
 	}

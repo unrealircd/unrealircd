@@ -684,8 +684,8 @@ getnick:
 
 		/* Copy current mode to oldmode (need to duplicate all extended mode params too..) */
 		memcpy(&oldmode, &channel->mode, sizeof(oldmode));
-		memset(&oldmode.extmodeparams, 0, sizeof(oldmode.extmodeparams));
-		extcmode_duplicate_paramlist(channel->mode.extmodeparams, oldmode.extmodeparams);
+		memset(&oldmode.mode_params, 0, sizeof(oldmode.mode_params));
+		extcmode_duplicate_paramlist(channel->mode.mode_params, oldmode.mode_params);
 
 		/* Now merge the modes */
 		strlcpy(modebuf, parv[3], sizeof modebuf);
@@ -715,13 +715,13 @@ getnick:
 		{
 			if (cm->flag &&
 			    !cm->local &&
-			    (oldmode.extmode & cm->mode) &&
-			    !(channel->mode.extmode & cm->mode))
+			    (oldmode.mode & cm->mode) &&
+			    !(channel->mode.mode & cm->mode))
 			{
 				if (cm->paracount)
 				{
-					char *parax = cm_getparameter_ex(oldmode.extmodeparams, cm->flag);
-					//char *parax = cm->get_param(extcmode_get_struct(oldmode.extmodeparam, cm->flag));
+					char *parax = cm_getparameter_ex(oldmode.mode_params, cm->flag);
+					//char *parax = cm->get_param(extcmode_get_struct(oldmode.modeparam, cm->flag));
 					Addit(cm->flag, parax);
 				} else {
 					Addsingle(cm->flag);
@@ -761,8 +761,8 @@ getnick:
 		for (cm=channelmodes; cm; cm = cm->next)
 		{
 			if ((cm->flag) &&
-			    !(oldmode.extmode & cm->mode) &&
-			    (channel->mode.extmode & cm->mode))
+			    !(oldmode.mode & cm->mode) &&
+			    (channel->mode.mode & cm->mode))
 			{
 				if (cm->paracount)
 				{
@@ -786,20 +786,20 @@ getnick:
 		for (cm=channelmodes; cm; cm = cm->next)
 		{
 			if (cm->flag && cm->paracount &&
-			    (oldmode.extmode & cm->mode) &&
-			    (channel->mode.extmode & cm->mode))
+			    (oldmode.mode & cm->mode) &&
+			    (channel->mode.mode & cm->mode))
 			{
 				int r;
 				char *parax;
 				char flag = cm->flag;
-				void *ourm = GETPARASTRUCTEX(oldmode.extmodeparams, flag);
+				void *ourm = GETPARASTRUCTEX(oldmode.mode_params, flag);
 				void *theirm = GETPARASTRUCT(channel, flag);
 				
 				r = cm->sjoin_check(channel, ourm, theirm);
 				switch (r)
 				{
 					case EXSJ_WEWON:
-						parax = cm_getparameter_ex(oldmode.extmodeparams, flag); /* grab from old */
+						parax = cm_getparameter_ex(oldmode.mode_params, flag); /* grab from old */
 						cm_putparameter(channel, flag, parax); /* put in new (won) */
 						break;
 
@@ -812,7 +812,7 @@ getnick:
 						break;
 
 					case EXSJ_MERGE:
-						parax = cm_getparameter_ex(oldmode.extmodeparams, flag); /* grab from old */
+						parax = cm_getparameter_ex(oldmode.mode_params, flag); /* grab from old */
 						cm_putparameter(channel, flag, parax); /* put in new (won) */
 						Addit(flag, parax);
 						break;
@@ -832,7 +832,7 @@ getnick:
 			send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
 
 		/* free the oldmode.* crap :( */
-		extcmode_free_paramlist(oldmode.extmodeparams);
+		extcmode_free_paramlist(oldmode.mode_params);
 	}
 
 	for (h = Hooks[HOOKTYPE_CHANNEL_SYNCED]; h; h = h->next)

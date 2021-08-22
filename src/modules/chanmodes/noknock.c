@@ -30,7 +30,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_NOKNOCK;
 
-#define IsNoKnock(channel)    (channel->mode.extmode & EXTCMODE_NOKNOCK)
+#define IsNoKnock(channel)    (channel->mode.mode & EXTCMODE_NOKNOCK)
 
 int noknock_check (Client *client, Channel *channel);
 int noknock_mode_allow(Client *client, Channel *channel, char mode, char *para, int checkt, int what);
@@ -85,7 +85,7 @@ int noknock_mode_del (Channel *channel, int modeChar)
 {
 	// Remove noknock when we're removing invite only
 	if (modeChar == 'i')
-		channel->mode.extmode &= ~EXTCMODE_NOKNOCK;
+		channel->mode.mode &= ~EXTCMODE_NOKNOCK;
 
 	return 0;
 }

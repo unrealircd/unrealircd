@@ -30,7 +30,7 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_SECUREONLY;
 
-#define IsSecureOnly(channel)    (channel->mode.extmode & EXTCMODE_SECUREONLY)
+#define IsSecureOnly(channel)    (channel->mode.mode & EXTCMODE_SECUREONLY)
 
 int secureonly_check_join(Client *client, Channel *channel, char *key, char *parv[]);
 int secureonly_channel_sync (Channel *channel, int merge, int removetheirs, int nomode);
