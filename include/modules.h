@@ -302,7 +302,7 @@ typedef struct {
 	char unloaded;
 	
 	/** Slot number - Can be used instead of GETPARAMSLOT() */
-	int slot;
+	int param_slot;
 	
 	/** Module owner */
         Module *owner;

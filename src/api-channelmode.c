@@ -104,35 +104,6 @@ static void make_cmodestr(void)
 	*p = '\0';
 }
 
-int sort_cmodes_cmp(char x, char y)
-{
-	if (x < y)
-		return 1;
-	return 0;
-}
-
-void sort_cmodes(void)
-{
-	int i, j;
-	Cmode swap;
-
-	/* This sorts the Channelmode_Table alphabetically,
-	 * that is: lower characters first (a-z) and then upper (A-Z)
-	 */
-	for (i = 0; i < EXTCMODETABLESZ; i++)
-	{
-		for (j = i+1; j < EXTCMODETABLESZ; j++)
-		{
-			if (sort_cmodes_cmp(Channelmode_Table[i].mode, Channelmode_Table[j].mode))
-			{
-				memcpy(&swap, &Channelmode_Table[j], sizeof(Cmode));
-				memcpy(&Channelmode_Table[j], &Channelmode_Table[i], sizeof(Cmode));
-				memcpy(&Channelmode_Table[i], &swap, sizeof(Cmode));
-			}
-		}
-	}
-}
-
 /** Check for changes - if any are detected, we broadcast the change */
 void extcmodes_check_for_changes(void)
 {
@@ -202,7 +173,7 @@ void extcmode_para_addslot(Cmode *c, int slot)
 {
 	if ((slot < 0) || (slot > MAXPARAMMODES))
 		abort();
-	c->slot = slot;
+	c->param_slot = slot;
 	ParamTable[slot] = c;
 	param_to_slot_mapping[c->flag] = slot;
 }
@@ -265,7 +236,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 		if (existing)
 		{
 			/* Re-use parameter slot of the module with the same modechar that is unloading */
-			paraslot = Channelmode_Table[i].slot;
+			paraslot = Channelmode_Table[i].param_slot;
 		}
 		else
 		{
@@ -412,7 +383,7 @@ static void unload_extcmode_commit(Cmode *cmode)
 				channel->mode.extmode &= ~cmode->mode;
 			}
 		}
-		extcmode_para_delslot(cmode, cmode->slot);
+		extcmode_para_delslot(cmode, cmode->param_slot);
 	}
 
 	cmode->flag = '\0';
@@ -537,10 +508,10 @@ void extcmode_duplicate_paramlist(void **xi, void **xo)
 		handler = CMP_GETHANDLERBYSLOT(i);
 		if (!handler)
 			continue; /* nothing there.. */
-		inx = xi[handler->slot]; /* paramter data of input is here */
+		inx = xi[handler->param_slot]; /* paramter data of input is here */
 		if (!inx)
 			continue; /* not set */
-		xo[handler->slot] = handler->dup_struct(inx); /* call dup_struct with that input and set the output param to that */
+		xo[handler->param_slot] = handler->dup_struct(inx); /* call dup_struct with that input and set the output param to that */
 	}
 }
 
@@ -557,8 +528,8 @@ void extcmode_free_paramlist(void **ar)
 		handler = GETPARAMHANDLERBYSLOT(i);
 		if (!handler)
 			continue; /* nothing here... */
-		handler->free_param(ar[handler->slot]);
-		ar[handler->slot] = NULL;
+		handler->free_param(ar[handler->param_slot]);
+		ar[handler->param_slot] = NULL;
 	}
 }
 
