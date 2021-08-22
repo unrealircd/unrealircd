@@ -820,8 +820,6 @@ refuse_client:
 	return client;
 }
 
-static int dns_special_flag = 0; /* This is for an "interesting" race condition  very ugly. */
-
 /** Start of normal client handshake - DNS and ident lookups, etc.
  * @param client	The client
  * @note This is called directly after accept() -> add_connection() for plaintext.
@@ -839,9 +837,7 @@ void start_of_normal_client_handshake(Client *client)
 	{
 		if (should_show_connect_info(client))
 			sendto_one(client, NULL, ":%s %s", me.name, REPORT_DO_DNS);
-		dns_special_flag = 1;
 		he = unrealdns_doclient(client);
-		dns_special_flag = 0;
 
 		if (client->local->hostp)
 			goto doauth; /* Race condition detected, DNS has been done, continue with auth */
