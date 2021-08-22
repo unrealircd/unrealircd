@@ -34,9 +34,7 @@
  */
 
 /** Table with details on each channel mode handler */
-Cmode *Channelmode_Table = NULL;
-/** Highest index in Channelmode_Table */
-int Channelmode_highest = 0;
+Cmode *channelmodes = NULL;
 
 /** @} */
 
@@ -55,6 +53,7 @@ static void unload_extcmode_commit(Cmode *cmode);
 void make_extcmodestr()
 {
 	char *p;
+	Cmode *cm;
 	int i;
 	
 	extchmstr[0][0] = extchmstr[1][0] = extchmstr[2][0] = extchmstr[3][0] = '\0';
@@ -64,31 +63,30 @@ void make_extcmodestr()
 
 	/* type 2: 1 par to set/unset (has .unset_with_param) */
 	p = extchmstr[1];
-	for (i=0; i <= Channelmode_highest; i++)
-		if (Channelmode_Table[i].paracount && Channelmode_Table[i].flag &&
-		    Channelmode_Table[i].unset_with_param)
-			*p++ = Channelmode_Table[i].flag;
+	for (cm=channelmodes; cm; cm = cm->next)
+		if (cm->paracount && cm->flag && cm->unset_with_param)
+			*p++ = cm->flag;
 	*p = '\0';
 
 	/* type 3: 1 param to set, 0 params to unset (does not have .unset_with_param) */
 	p = extchmstr[2];
-	for (i=0; i <= Channelmode_highest; i++)
-		if (Channelmode_Table[i].paracount && Channelmode_Table[i].flag &&
-		    !Channelmode_Table[i].unset_with_param)
-			*p++ = Channelmode_Table[i].flag;
+	for (cm=channelmodes; cm; cm = cm->next)
+		if (cm->paracount && cm->flag && !cm->unset_with_param)
+			*p++ = cm->flag;
 	*p = '\0';
 	
 	/* type 4: paramless modes */
 	p = extchmstr[3];
-	for (i=0; i <= Channelmode_highest; i++)
-		if (!Channelmode_Table[i].paracount && Channelmode_Table[i].flag)
-			*p++ = Channelmode_Table[i].flag;
+	for (cm=channelmodes; cm; cm = cm->next)
+		if (!cm->paracount && cm->flag)
+			*p++ = cm->flag;
 	*p = '\0';
 }
 
 /** Create the string that is used in numeric 004 */
 static void make_cmodestr(void)
 {
+	Cmode *cm;
 	char *p = &cmodestring[0];
 	CoreChannelModeTable *tab = &corechannelmodetable[0];
 	int i;
@@ -98,9 +96,9 @@ static void make_cmodestr(void)
 		p++;
 		tab++;
 	}
-	for (i=0; i <= Channelmode_highest; i++)
-		if (Channelmode_Table[i].flag)
-			*p++ = Channelmode_Table[i].flag;
+	for (cm=channelmodes; cm; cm = cm->next)
+		if (cm->flag)
+			*p++ = cm->flag;
 	*p = '\0';
 }
 
@@ -154,15 +152,6 @@ void extcmodes_check_for_changes(void)
 /** Initialize the extended channel modes system */
 void extcmode_init(void)
 {
-	Cmode_t val = 1;
-	int	i;
-	Channelmode_Table = safe_alloc(sizeof(Cmode) * EXTCMODETABLESZ);
-	for (i = 0; i < EXTCMODETABLESZ; i++)
-	{
-		Channelmode_Table[i].mode = val;
-		val *= 2;
-	}
-	Channelmode_highest = 0;
 	memset(&extchmstr, 0, sizeof(extchmstr));
 	memset(&param_to_slot_mapping, 0, sizeof(param_to_slot_mapping));
 	*previous_chanmodes = '\0';
@@ -187,6 +176,54 @@ void extcmode_para_delslot(Cmode *c, int slot)
 	param_to_slot_mapping[c->flag] = 0;
 }
 
+int channelmode_add_sorted_helper(char x, char y)
+{
+	/* Lower before upper */
+	if (islower(x) && isupper(y))
+		return 1;
+	if (isupper(x) && islower(y))
+		return 0;
+	/* Other than that, easy */
+	return x < y ? 1 : 0;
+}
+
+void channelmode_add_sorted(Cmode *n)
+{
+	Cmode *m;
+
+	if (channelmodes == NULL)
+	{
+		channelmodes = n;
+		return;
+	}
+
+	for (m = channelmodes; m; m = m->next)
+	{
+		if (m->flag == '\0')
+			abort();
+		if (channelmode_add_sorted_helper(n->flag, m->flag))
+		{
+			/* Insert us before */
+			if (m->prev)
+				m->prev->next = n;
+			else
+				channelmodes = n; /* new head */
+			n->prev = m->prev;
+
+			n->next = m;
+			m->prev = n;
+			return;
+		}
+		if (!m->next)
+		{
+			/* Append us at end */
+			m->next = n;
+			n->prev = m;
+			return;
+		}
+	}
+}
+
 /** @defgroup ChannelModeAPI Channel mode API
  * @{
  */
@@ -199,19 +236,17 @@ void extcmode_para_delslot(Cmode *c, int slot)
  */
 Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 {
-	short i = 0, j = 0;
 	int paraslot = -1;
 	int existing = 0;
+	Cmode *cm;
 
-	while (i < EXTCMODETABLESZ)
+	for (cm=channelmodes; cm; cm = cm->next)
 	{
-		if (!Channelmode_Table[i].flag)
-			break;
-		else if (Channelmode_Table[i].flag == req.flag)
+		if (cm->flag == req.flag)
 		{
-			if (Channelmode_Table[i].unloaded)
+			if (cm->unloaded)
 			{
-				Channelmode_Table[i].unloaded = 0;
+				cm->unloaded = 0;
 				existing = 1;
 				break;
 			} else {
@@ -220,15 +255,38 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 				return NULL;
 			}
 		}
-		i++;
 	}
-	if (i == EXTCMODETABLESZ)
+
+	if (!cm)
 	{
-		unreal_log(ULOG_ERROR, "module", "CHANNEL_MODE_OUT_OF_SPACE", NULL,
-		           "CmodeAdd: out of space!!!");
-		if (module)
-			module->errorcode = MODERR_NOSPACE;
-		return NULL;
+		long l, found = 0;
+		for (l = 1; l < INT_MAX/2; l *= 2)
+		{
+			found = 0;
+			for (cm=channelmodes; cm; cm = cm->next)
+			{
+				if (cm->mode == l)
+				{
+					found = 1;
+					break;
+				}
+			}
+			if (!found)
+				break;
+		}
+		/* If 'found' is still true, then we are out of space */
+		if (found)
+		{
+			unreal_log(ULOG_ERROR, "module", "CHANNEL_MODE_OUT_OF_SPACE", NULL,
+				   "CmodeAdd: out of space!!!");
+			if (module)
+				module->errorcode = MODERR_NOSPACE;
+			return NULL;
+		}
+		cm = safe_alloc(sizeof(Cmode));
+		cm->mode = l;
+		cm->flag = req.flag;
+		channelmode_add_sorted(cm);
 	}
 
 	if (req.paracount == 1)
@@ -236,7 +294,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 		if (existing)
 		{
 			/* Re-use parameter slot of the module with the same modechar that is unloading */
-			paraslot = Channelmode_Table[i].param_slot;
+			paraslot = cm->param_slot;
 		}
 		else
 		{
@@ -255,39 +313,34 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 		}
 	}
 
-	*mode = Channelmode_Table[i].mode;
+	*mode = cm->mode;
 	/* Update extended channel mode table highest */
-	Channelmode_Table[i].flag = req.flag;
-	Channelmode_Table[i].paracount = req.paracount;
-	Channelmode_Table[i].is_ok = req.is_ok;
-	Channelmode_Table[i].put_param = req.put_param;
-	Channelmode_Table[i].get_param = req.get_param;
-	Channelmode_Table[i].conv_param = req.conv_param;
-	Channelmode_Table[i].free_param = req.free_param;
-	Channelmode_Table[i].dup_struct = req.dup_struct;
-	Channelmode_Table[i].sjoin_check = req.sjoin_check;
-	Channelmode_Table[i].local = req.local;
-	Channelmode_Table[i].unset_with_param = req.unset_with_param;
-	Channelmode_Table[i].owner = module;
-	Channelmode_Table[i].unloaded = 0;
+	cm->flag = req.flag;
+	cm->paracount = req.paracount;
+	cm->is_ok = req.is_ok;
+	cm->put_param = req.put_param;
+	cm->get_param = req.get_param;
+	cm->conv_param = req.conv_param;
+	cm->free_param = req.free_param;
+	cm->dup_struct = req.dup_struct;
+	cm->sjoin_check = req.sjoin_check;
+	cm->local = req.local;
+	cm->unset_with_param = req.unset_with_param;
+	cm->owner = module;
+	cm->unloaded = 0;
 	
-	for (j = 0; j < EXTCMODETABLESZ; j++)
-		if (Channelmode_Table[j].flag)
-			if (j > Channelmode_highest)
-				Channelmode_highest = j;
-
-        if (Channelmode_Table[i].paracount == 1)
-                extcmode_para_addslot(&Channelmode_Table[i], paraslot);
+        if (cm->paracount == 1)
+                extcmode_para_addslot(cm, paraslot);
                 
 	if (module)
 	{
 		ModuleObject *cmodeobj = safe_alloc(sizeof(ModuleObject));
-		cmodeobj->object.cmode = &Channelmode_Table[i];
+		cmodeobj->object.cmode = cm;
 		cmodeobj->type = MOBJ_CMODE;
 		AddListItem(cmodeobj, module->objects);
 		module->errorcode = MODERR_NOERROR;
 	}
-	return &(Channelmode_Table[i]);
+	return cm;
 }
 
 /** Delete a previously registered channel mode - not called by modules.
@@ -392,13 +445,16 @@ static void unload_extcmode_commit(Cmode *cmode)
 /** Unload all unused channel modes after a REHASH */
 void unload_all_unused_extcmodes(void)
 {
-	int i;
+	Cmode *cm, *cm_next;
 
-	for (i = 0; i < EXTCMODETABLESZ; i++)
-		if (Channelmode_Table[i].flag && Channelmode_Table[i].unloaded)
+	for (cm=channelmodes; cm; cm = cm_next)
+	{
+		cm_next = cm->next;
+		if (cm->flag && cm->unloaded)
 		{
-			unload_extcmode_commit(&Channelmode_Table[i]);
+			unload_extcmode_commit(cm);
 		}
+	}
 
 }
 
@@ -538,17 +594,11 @@ void extcmode_free_paramlist(void **ar)
 /** Internal function: returns 1 if the specified module has 1 or more extended channel modes registered */
 int module_has_extcmode_param_mode(Module *mod)
 {
-	int i = 0;
+	Cmode *cm;
 
-	while (i < EXTCMODETABLESZ)
-	{
-		if ((Channelmode_Table[i].flag) &&
-		    (Channelmode_Table[i].owner == mod) &&
-		    (Channelmode_Table[i].paracount))
-		{
+	for (cm=channelmodes; cm; cm = cm->next)
+		if ((cm->flag) && (cm->owner == mod) && (cm->paracount))
 			return 1;
-		}
-		i++;
-	}
+
 	return 0;
 }

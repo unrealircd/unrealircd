@@ -567,18 +567,13 @@ long config_checkval(char *orig, unsigned short flags) {
 /** Free configuration setting for set::modes-on-join */
 void free_conf_channelmodes(struct ChMode *store)
 {
-	int i;
-
-	store->mode = 0;
-	store->extmodes = 0;
-	for (i = 0; i < EXTCMODETABLESZ; i++)
-		safe_free(store->extparams[i]);
+	memset(store, 0, sizeof(struct ChMode));
 }
 
 /* Set configuration, used for set::modes-on-join */
 void conf_channelmodes(char *modes, struct ChMode *store)
 {
-	int i;
+	Cmode *cm;
 	char *m;
 	char *params = strchr(modes, ' ');
 	char *parambuf = NULL;
@@ -613,14 +608,14 @@ void conf_channelmodes(char *modes, struct ChMode *store)
 		}
 
 		found = 0;
-		for (i=0; i <= Channelmode_highest; i++)
+		for (cm=channelmodes; cm; cm = cm->next)
 		{
-			if (!(Channelmode_Table[i].flag))
+			if (!(cm->flag))
 				continue;
-			if (*m == Channelmode_Table[i].flag)
+			if (*m == cm->flag)
 			{
 				found = 1;
-				if (Channelmode_Table[i].paracount)
+				if (cm->paracount)
 				{
 					if (!param)
 					{
@@ -628,17 +623,17 @@ void conf_channelmodes(char *modes, struct ChMode *store)
 						break;
 					}
 					param_in = param; /* save it */
-					param = Channelmode_Table[i].conv_param(param, NULL, NULL);
+					param = cm->conv_param(param, NULL, NULL);
 					if (!param)
 					{
 						config_warn("set::modes-on-join '%s'. Parameter for mode %c is invalid (%s).", modes, *m, param_in);
 						break; /* invalid parameter fmt, do not set mode. */
 					}
-					store->extparams[i] = raw_strdup(param);
+					safe_strdup(store->extparams[cm->flag], param);
 					/* Get next parameter */
 					param = strtoken(&save, NULL, " ");
 				}
-				store->extmodes |= Channelmode_Table[i].mode;
+				store->extmodes |= cm->mode;
 				break;
 			}
 		}
@@ -650,49 +645,33 @@ void conf_channelmodes(char *modes, struct ChMode *store)
 
 void chmode_str(struct ChMode *modes, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size)
 {
-	CoreChannelModeTable *tab;
-	int i;
+	Cmode *cm;
 
 	if (!(mbuf_size && pbuf_size))
 		return;
 
 	*pbuf = 0;
 	*mbuf++ = '+';
-	if (--mbuf_size == 0) return;
-	for (tab = &corechannelmodetable[0]; tab->mode; tab++)
+
+	for (cm=channelmodes; cm; cm = cm->next)
 	{
-		if (modes->mode & tab->mode)
-		{
-			if (!tab->parameters)
-			{
-				*mbuf++ = tab->flag;
-				if (!--mbuf_size)
-				{
-					*--mbuf=0;
-					break;
-				}
-			}
-		}
-	}
-	for (i=0; i <= Channelmode_highest; i++)
-	{
-		if (!(Channelmode_Table[i].flag))
+		if (!(cm->flag))
 			continue;
 
-		if (modes->extmodes & Channelmode_Table[i].mode)
+		if (modes->extmodes & cm->mode)
 		{
 			if (mbuf_size)
 			{
-				*mbuf++ = Channelmode_Table[i].flag;
+				*mbuf++ = cm->flag;
 				if (!--mbuf_size)
 				{
 					*--mbuf=0;
 					break;
 				}
 			}
-			if (Channelmode_Table[i].paracount)
+			if (cm->paracount)
 			{
-				strlcat(pbuf, modes->extparams[i], pbuf_size);
+				strlcat(pbuf, modes->extparams[cm->flag], pbuf_size);
 				strlcat(pbuf, " ", pbuf_size);
 			}
 		}

@@ -430,6 +430,7 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, int pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
     size_t mode_buf_size, size_t para_buf_size)
 {
+	Cmode *cm;
 	char tmpbuf[MODEBUFLEN+3], *tmpstr;
 	char *x = mode_buf;
 	int  what, cnt, z;
@@ -443,20 +444,20 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, int pcount,
 	what = 0;
 
 	/* + paramless extmodes... */
-	for (i=0; i <= Channelmode_highest; i++)
+	for (cm=channelmodes; cm; cm = cm->next)
 	{
-		if (!Channelmode_Table[i].flag || Channelmode_Table[i].paracount)
+		if (!cm->flag || cm->paracount)
 			continue;
 		/* have it now and didn't have it before? */
-		if ((channel->mode.extmode & Channelmode_Table[i].mode) &&
-		    !(oldem & Channelmode_Table[i].mode))
+		if ((channel->mode.extmode & cm->mode) &&
+		    !(oldem & cm->mode))
 		{
 			if (what != MODE_ADD)
 			{
 				*x++ = '+';
 				what = MODE_ADD;
 			}
-			*x++ = Channelmode_Table[i].flag;
+			*x++ = cm->flag;
 		}
 	}
 
@@ -465,20 +466,20 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, int pcount,
 	/* - extmodes (both "param modes" and paramless don't have
 	 * any params when unsetting... well, except one special type, that is (we skip those here)
 	 */
-	for (i=0; i <= Channelmode_highest; i++)
+	for (cm=channelmodes; cm; cm = cm->next)
 	{
-		if (!Channelmode_Table[i].flag || Channelmode_Table[i].unset_with_param)
+		if (!cm->flag || cm->unset_with_param)
 			continue;
 		/* don't have it now and did have it before */
-		if (!(channel->mode.extmode & Channelmode_Table[i].mode) &&
-		    (oldem & Channelmode_Table[i].mode))
+		if (!(channel->mode.extmode & cm->mode) &&
+		    (oldem & cm->mode))
 		{
 			if (what != MODE_DEL)
 			{
 				*x++ = '-';
 				what = MODE_DEL;
 			}
-			*x++ = Channelmode_Table[i].flag;
+			*x++ = cm->flag;
 		}
 	}
 
@@ -1069,6 +1070,7 @@ int paracount_for_chanmode(u_int what, char mode)
 void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *pcount,
                char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
 {
+	Cmode *cm;
 	char *curchr;
 	char *argument;
 	u_int what = MODE_ADD;
@@ -1084,7 +1086,6 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 	unsigned int htrig = 0;
 	long oldm;
 	int checkrestr = 0, warnrestr = 1;
-	int extm = 1000000; /* (default value not used but stops gcc from complaining) */
 	Cmode_t oldem;
 	long my_access;
 	paracount = 1;
@@ -1138,9 +1139,9 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 					modetype = foundat.mode;
 				} else {
 					/* Maybe in extmodes */
-					for (extm=0; extm <= Channelmode_highest; extm++)
+					for (cm=channelmodes; cm; cm = cm->next)
 					{
-						if (Channelmode_Table[extm].flag == *curchr)
+						if (cm->flag == *curchr)
 						{
 							found = 2;
 							break;
@@ -1207,7 +1208,7 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 				}
 				else if (found == 2)
 				{
-					paracount += do_extmode_char(channel, &Channelmode_Table[extm], argument,
+					paracount += do_extmode_char(channel, cm, argument,
 								     what, client, pcount, pvar);
 				}
 				break;

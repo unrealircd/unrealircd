@@ -258,17 +258,18 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 		if ((channel->users == 1) && !channel->mode.mode && !channel->mode.extmode &&
 		    (MODES_ON_JOIN || iConf.modes_on_join.extmodes))
 		{
-			int i;
 			MessageTag *mtags_mode = NULL;
+			Cmode *cm;
 
-			channel->mode.extmode =  iConf.modes_on_join.extmodes;
+			channel->mode.extmode = iConf.modes_on_join.extmodes;
+
 			/* Param fun */
-			for (i = 0; i <= Channelmode_highest; i++)
+			for (cm=channelmodes; cm; cm = cm->next)
 			{
-				if (!Channelmode_Table[i].flag || !Channelmode_Table[i].paracount)
+				if (!cm->flag || !cm->paracount)
 					continue;
-				if (channel->mode.extmode & Channelmode_Table[i].mode)
-				        cm_putparameter(channel, Channelmode_Table[i].flag, iConf.modes_on_join.extparams[i]);
+				if (channel->mode.extmode & cm->mode)
+				        cm_putparameter(channel, cm->flag, iConf.modes_on_join.extparams[cm->flag]);
 			}
 
 			channel->mode.mode = MODES_ON_JOIN;

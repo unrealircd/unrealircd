@@ -1241,8 +1241,7 @@ extern MODVAR int Usermode_highest;
 extern MODVAR Snomask *Snomask_Table;
 extern MODVAR int Snomask_highest;
 
-extern MODVAR Cmode *Channelmode_Table;
-extern MODVAR int Channelmode_highest;
+extern MODVAR Cmode *channelmodes;
 
 extern Umode *UmodeAdd(Module *module, char ch, int options, int unset_on_deoper, int (*allowed)(Client *client, int what), long *mode);
 extern void UmodeDel(Umode *umode);

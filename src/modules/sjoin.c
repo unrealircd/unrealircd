@@ -158,6 +158,7 @@ CMD_FUNC(cmd_sjoin)
 	aParv *ap;
 	int pcount, i;
 	Hook *h;
+	Cmode *cm;
 	time_t ts, oldts;
 	unsigned short b=0;
 	char *tp, *p, *saved = NULL;
@@ -710,20 +711,20 @@ getnick:
 		/* First, check if we had something that is now gone
 		 * note that: oldmode.* = us, channel->mode.* = merged.
 		 */
-		for (i=0; i <= Channelmode_highest; i++)
+		for (cm=channelmodes; cm; cm = cm->next)
 		{
-			if (Channelmode_Table[i].flag &&
-			    !Channelmode_Table[i].local &&
-			    (oldmode.extmode & Channelmode_Table[i].mode) &&
-			    !(channel->mode.extmode & Channelmode_Table[i].mode))
+			if (cm->flag &&
+			    !cm->local &&
+			    (oldmode.extmode & cm->mode) &&
+			    !(channel->mode.extmode & cm->mode))
 			{
-				if (Channelmode_Table[i].paracount)
+				if (cm->paracount)
 				{
-					char *parax = cm_getparameter_ex(oldmode.extmodeparams, Channelmode_Table[i].flag);
-					//char *parax = Channelmode_Table[i].get_param(extcmode_get_struct(oldmode.extmodeparam, Channelmode_Table[i].flag));
-					Addit(Channelmode_Table[i].flag, parax);
+					char *parax = cm_getparameter_ex(oldmode.extmodeparams, cm->flag);
+					//char *parax = cm->get_param(extcmode_get_struct(oldmode.extmodeparam, cm->flag));
+					Addit(cm->flag, parax);
 				} else {
-					Addsingle(Channelmode_Table[i].flag);
+					Addsingle(cm->flag);
 				}
 			}
 		}
@@ -757,21 +758,21 @@ getnick:
 		 *
 		 * First the simple single letter modes...
 		 */
-		for (i=0; i <= Channelmode_highest; i++)
+		for (cm=channelmodes; cm; cm = cm->next)
 		{
-			if ((Channelmode_Table[i].flag) &&
-			    !(oldmode.extmode & Channelmode_Table[i].mode) &&
-			    (channel->mode.extmode & Channelmode_Table[i].mode))
+			if ((cm->flag) &&
+			    !(oldmode.extmode & cm->mode) &&
+			    (channel->mode.extmode & cm->mode))
 			{
-				if (Channelmode_Table[i].paracount)
+				if (cm->paracount)
 				{
-					char *parax = cm_getparameter(channel, Channelmode_Table[i].flag);
+					char *parax = cm_getparameter(channel, cm->flag);
 					if (parax)
 					{
-						Addit(Channelmode_Table[i].flag, parax);
+						Addit(cm->flag, parax);
 					}
 				} else {
-					Addsingle(Channelmode_Table[i].flag);
+					Addsingle(cm->flag);
 				}
 			}
 		}
@@ -782,19 +783,19 @@ getnick:
 		 * note that: oldmode.* = us before, channel->mode.* = merged.
 		 * if we win: copy oldmode to channel mode, if they win: send the mode
 		 */
-		for (i=0; i <= Channelmode_highest; i++)
+		for (cm=channelmodes; cm; cm = cm->next)
 		{
-			if (Channelmode_Table[i].flag && Channelmode_Table[i].paracount &&
-			    (oldmode.extmode & Channelmode_Table[i].mode) &&
-			    (channel->mode.extmode & Channelmode_Table[i].mode))
+			if (cm->flag && cm->paracount &&
+			    (oldmode.extmode & cm->mode) &&
+			    (channel->mode.extmode & cm->mode))
 			{
 				int r;
 				char *parax;
-				char flag = Channelmode_Table[i].flag;
+				char flag = cm->flag;
 				void *ourm = GETPARASTRUCTEX(oldmode.extmodeparams, flag);
 				void *theirm = GETPARASTRUCT(channel, flag);
 				
-				r = Channelmode_Table[i].sjoin_check(channel, ourm, theirm);
+				r = cm->sjoin_check(channel, ourm, theirm);
 				switch (r)
 				{
 					case EXSJ_WEWON:
@@ -804,7 +805,7 @@ getnick:
 
 					case EXSJ_THEYWON:
 						parax = cm_getparameter(channel, flag);
-						Addit(Channelmode_Table[i].flag, parax);
+						Addit(cm->flag, parax);
 						break;
 
 					case EXSJ_SAME:

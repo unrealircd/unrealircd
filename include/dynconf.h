@@ -41,7 +41,7 @@ enum UHAllowed { UHALLOW_ALWAYS, UHALLOW_NOCHANS, UHALLOW_REJOIN, UHALLOW_NEVER 
 struct ChMode {
 	long mode;
 	long extmodes;
-	char *extparams[EXTCMODETABLESZ];
+	char *extparams[256];
 };
 
 typedef struct OperStat {

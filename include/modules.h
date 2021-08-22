@@ -206,7 +206,10 @@ typedef unsigned long Cmode_t;
  * and set the 'is_ok' function. All the rest is for parameter modes
  * or is optional.
  */
-typedef struct {
+typedef struct Cmode Cmode;
+struct Cmode {
+	Cmode *prev, *next;
+
 	/** mode character (like 'Z') */
 	char		flag;
 
@@ -306,7 +309,7 @@ typedef struct {
 	
 	/** Module owner */
         Module *owner;
-} Cmode;
+};
 
 /** The struct used to register a channel mode handler.
  * For documentation, see Cmode struct.

@@ -575,14 +575,12 @@ long get_access(Client *client, Channel *channel)
 int has_channel_mode(Channel *channel, char mode)
 {
 	CoreChannelModeTable *tab = &corechannelmodetable[0];
-	int i;
+	Cmode *cm;
 
 	/* Extended channel modes */
-	for (i=0; i <= Channelmode_highest; i++)
-	{
-		if ((Channelmode_Table[i].flag == mode) && (channel->mode.extmode & Channelmode_Table[i].mode))
+	for (cm=channelmodes; cm; cm = cm->next)
+		if ((cm->flag == mode) && (channel->mode.extmode & cm->mode))
 			return 1;
-	}
 
 	/* Built-in channel modes */
 	while (tab->mode != 0x0)
@@ -598,12 +596,12 @@ int has_channel_mode(Channel *channel, char mode)
 /** Get the extended channel mode 'bit' value (eg: 0x20) by character (eg: 'Z') */
 Cmode_t get_extmode_bitbychar(char m)
 {
-        int extm;
-        for (extm=0; extm <= Channelmode_highest; extm++)
-        {
-                if (Channelmode_Table[extm].flag == m)
-                        return Channelmode_Table[extm].mode;
-        }
+	Cmode *cm;
+
+	for (cm=channelmodes; cm; cm = cm->next)
+                if (cm->flag == m)
+                        return cm->mode;
+
         return 0;
 }
 
@@ -635,7 +633,7 @@ long get_mode_bitbychar(char m)
 void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel, int hide_local_modes)
 {
 	int ismember = 0;
-	int i;
+	Cmode *cm;
 
 	if (!(mbuf_size && pbuf_size)) return;
 
@@ -648,28 +646,28 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 	mbuf_size--;
 
 	/* Paramless first */
-	for (i=0; i <= Channelmode_highest; i++)
+	for (cm=channelmodes; cm; cm = cm->next)
 	{
 		if (!mbuf_size)
 			break;
-		if (Channelmode_Table[i].flag &&
-		    !Channelmode_Table[i].paracount &&
-		    !(hide_local_modes && Channelmode_Table[i].local) &&
-		    (channel->mode.extmode & Channelmode_Table[i].mode))
+		if (cm->flag &&
+		    !cm->paracount &&
+		    !(hide_local_modes && cm->local) &&
+		    (channel->mode.extmode & cm->mode))
 		{
-			*mbuf++ = Channelmode_Table[i].flag;
+			*mbuf++ = cm->flag;
 			mbuf_size--;
 		}
 	}
 
-	for (i=0; i <= Channelmode_highest; i++)
+	for (cm=channelmodes; cm; cm = cm->next)
 	{
-		if (Channelmode_Table[i].flag &&
-		    Channelmode_Table[i].paracount &&
-		    !(hide_local_modes && Channelmode_Table[i].local) &&
-		    (channel->mode.extmode & Channelmode_Table[i].mode))
+		if (cm->flag &&
+		    cm->paracount &&
+		    !(hide_local_modes && cm->local) &&
+		    (channel->mode.extmode & cm->mode))
 		{
-			char flag = Channelmode_Table[i].flag;
+			char flag = cm->flag;
 			if (mbuf_size) {
 				*mbuf++ = flag;
 				mbuf_size--;
@@ -1129,7 +1127,7 @@ int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
 		else
 		{
 			CoreChannelModeTable *tab = &corechannelmodetable[0];
-			int i;
+			Cmode *cm;
 			int eatparam = 0;
 
 			/* Set some defaults */
@@ -1154,24 +1152,26 @@ int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
 			} else {
 				/* EXTENDED CHANNEL MODE */
 				int found = 0;
-				for (i=0; i <= Channelmode_highest; i++)
-					if (Channelmode_Table[i].flag == *pm->modebuf)
+				for (cm=channelmodes; cm; cm = cm->next)
+				{
+					if (cm->flag == *pm->modebuf)
 					{
 						found = 1;
 						break;
 					}
+				}
 				if (!found)
 				{
 					/* Not found. Will be ignored, just move on.. */
 					pm->modebuf++;
 					continue;
 				}
-				pm->extm = &Channelmode_Table[i];
-				if (Channelmode_Table[i].paracount == 1)
+				pm->extm = cm;
+				if (cm->paracount == 1)
 				{
 					if (pm->what == MODE_ADD)
 						eatparam = 1;
-					else if (Channelmode_Table[i].unset_with_param)
+					else if (cm->unset_with_param)
 						eatparam = 1;
 					/* else 0 (if MODE_DEL && !unset_with_param) */
 				}
