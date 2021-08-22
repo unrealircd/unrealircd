@@ -607,8 +607,22 @@ char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, 
 	return tmpstr;
 }
 
+/** Write the result of a mode change.
+ * This is used by do_mode_char_list_mode(), do_mode_char_member_mode()
+ * and do_extmode_char().
+ * The result is later used by make_mode_str() to create the
+ * actual MODE line to be broadcasted to the channel and other servers.
+ */
 void do_mode_char_write(char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], u_int *pcount, u_int what, char modeletter, char *str)
 {
+	/* Caller should have made sure there was room! */
+	if (*pcount >= MAXMODEPARAMS)
+#ifdef DEBUGMODE
+		abort();
+#else
+		return 0;
+#endif
+
 	ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
 	            "%c%c%s",
 	            (what == MODE_ADD) ? '+' : '-',
