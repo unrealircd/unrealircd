@@ -46,8 +46,6 @@ void mode_operoverride_msg(Client *client, Channel *channel, char *modebuf, char
 
 static int samode_in_progress = 0;
 
-#define MSG_MODE 	"MODE"
-
 ModuleHeader MOD_HEADER
   = {
 	"mode",
@@ -68,7 +66,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_MODE, cmd_mode, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, "MODE", cmd_mode, MAXPARA, CMD_USER|CMD_SERVER);
 	CommandAdd(modinfo->handle, MSG_MLOCK, cmd_mlock, MAXPARA, CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -82,77 +80,6 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
-}
-
-void send_list_mode(Client *client, Channel *channel, Ban *list, int list_numeric, int end_of_list_numeric)
-{
-	Ban *ban;
-
-	if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",client,NULL,channel,NULL))
-	{
-		sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
-		return;
-	}
-
-	for (ban = list; ban; ban = ban->next)
-		sendnumeric(client, list_numeric, channel->name, ban->banstr, ban->who, ban->when);
-
-	sendnumeric(client, end_of_list_numeric, channel->name);
-}
-
-void send_user_list_mode(Client *client, Channel *channel, long flags, int list_numeric, int end_of_list_numeric)
-{
-	Member *member;
-
-	if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",client,NULL,channel,NULL))
-	{
-		sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
-		return;
-	}
-
-	for (member = channel->members; member; member = member->next)
-	{
-		if (member->flags & flags)
-			sendnumeric(client, list_numeric, channel->name, member->client->name);
-	}
-	sendnumeric(client, end_of_list_numeric, channel->name);
-}
-
-/* Deal with information requests from local users, such as:
- * MODE #chan b    Show the ban list
- * MODE #chan e    Show the ban exemption list
- * MODE #chan I    Show the invite exception list
- * MODE #chan q    Show list of channel owners
- * MODE #chan a    Show list of channel admins
- */
-int list_mode_request(Client *client, Channel *channel, char *req)
-{
-	if (strstr(req, "b"))
-	{
-		send_list_mode(client, channel, channel->banlist, RPL_BANLIST, RPL_ENDOFBANLIST);
-		return 1;
-	} else
-	if (strstr(req, "e"))
-	{
-		send_list_mode(client, channel, channel->exlist, RPL_EXLIST, RPL_ENDOFEXLIST);
-		return 1;
-	} else
-	if (strstr(req, "I"))
-	{
-		send_list_mode(client, channel, channel->invexlist, RPL_INVEXLIST, RPL_ENDOFINVEXLIST);
-		return 1;
-	} else
-	if (strstr(req, "q"))
-	{
-		send_user_list_mode(client, channel, CHFL_CHANOWNER, RPL_QLIST, RPL_ENDOFQLIST);
-		return 1;
-	} else
-	if (strstr(req, "a"))
-	{
-		send_user_list_mode(client, channel, CHFL_CHANADMIN, RPL_ALIST, RPL_ENDOFALIST);
-		return 1;
-	}
-	return 0;
 }
 
 /*
@@ -416,8 +343,8 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 		 * (all except from where it came from, client).
 		 */
 		sendto_server(client, 0, 0, NULL, ":%s MODE %s + %lld",
-		    me.id, channel->name,
-		    (long long)channel->creationtime);
+		              me.id, channel->name,
+		              (long long)channel->creationtime);
 		free_message_tags(mtags);
 		/* Return here, as there isn't anything else to send */
 		return;
@@ -481,8 +408,7 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 		              ":%s MODE %s %s %s",
 		              client->id, channel->name,
 		              modebuf, parabuf);
-		/* tell them it's not a timestamp, in case the last param
-		   ** is a number. */
+		/* tell them it's not a timestamp, in case the last param is a number. */
 	}
 
 	if (MyConnect(client))
@@ -1682,3 +1608,79 @@ void mode_operoverride_msg(Client *client, Channel *channel, char *modebuf, char
 		   log_data_string("channel_mode", buf),
 		   log_data_channel("channel", channel));
 }
+
+/** Send a mode list (+beI) to the user */
+void send_list_mode(Client *client, Channel *channel, Ban *list, int list_numeric, int end_of_list_numeric)
+{
+	Ban *ban;
+
+	if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",client,NULL,channel,NULL))
+	{
+		sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
+		return;
+	}
+
+	for (ban = list; ban; ban = ban->next)
+		sendnumeric(client, list_numeric, channel->name, ban->banstr, ban->who, ban->when);
+
+	sendnumeric(client, end_of_list_numeric, channel->name);
+}
+
+/** Send a user list (+a or +q) to the user - rarely used */
+void send_user_list_mode(Client *client, Channel *channel, long flags, int list_numeric, int end_of_list_numeric)
+{
+	Member *member;
+
+	if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",client,NULL,channel,NULL))
+	{
+		sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
+		return;
+	}
+
+	for (member = channel->members; member; member = member->next)
+	{
+		if (member->flags & flags)
+			sendnumeric(client, list_numeric, channel->name, member->client->name);
+	}
+	sendnumeric(client, end_of_list_numeric, channel->name);
+}
+
+/* Deal with information requests from local users, such as:
+ * MODE #chan b    Show the ban list
+ * MODE #chan e    Show the ban exemption list
+ * MODE #chan I    Show the invite exception list
+ * MODE #chan q    Show list of channel owners
+ * MODE #chan a    Show list of channel admins
+ * @returns 1 if processed as a mode list (please return),
+ *          0 if not (continue with the MODE as it likely is a set request).
+ */
+int list_mode_request(Client *client, Channel *channel, char *req)
+{
+	if (strstr(req, "b"))
+	{
+		send_list_mode(client, channel, channel->banlist, RPL_BANLIST, RPL_ENDOFBANLIST);
+		return 1;
+	} else
+	if (strstr(req, "e"))
+	{
+		send_list_mode(client, channel, channel->exlist, RPL_EXLIST, RPL_ENDOFEXLIST);
+		return 1;
+	} else
+	if (strstr(req, "I"))
+	{
+		send_list_mode(client, channel, channel->invexlist, RPL_INVEXLIST, RPL_ENDOFINVEXLIST);
+		return 1;
+	} else
+	if (strstr(req, "q"))
+	{
+		send_user_list_mode(client, channel, CHFL_CHANOWNER, RPL_QLIST, RPL_ENDOFQLIST);
+		return 1;
+	} else
+	if (strstr(req, "a"))
+	{
+		send_user_list_mode(client, channel, CHFL_CHANADMIN, RPL_ALIST, RPL_ENDOFALIST);
+		return 1;
+	}
+	return 0;
+}
+
