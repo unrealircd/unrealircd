@@ -634,7 +634,6 @@ long get_mode_bitbychar(char m)
 /* TODO: this function has many security issues and needs an audit, maybe even a recode */
 void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel, int hide_local_modes)
 {
-	CoreChannelModeTable *tab = &corechannelmodetable[0];
 	int ismember = 0;
 	int i;
 
@@ -649,17 +648,6 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 	mbuf_size--;
 
 	/* Paramless first */
-	while (mbuf_size && tab->mode != 0x0)
-	{
-		if ((channel->mode.mode & tab->mode))
-		{
-			if (!tab->parameters) {
-				*mbuf++ = tab->flag;
-				mbuf_size--;
-			}
-		}
-		tab++;
-	}
 	for (i=0; i <= Channelmode_highest; i++)
 	{
 		if (!mbuf_size)
@@ -1161,10 +1149,7 @@ int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
 				/* INTERNAL MODE */
 				if (tab->parameters)
 				{
-					if ((pm->what == MODE_DEL) && (tab->flag == 'l'))
-						eatparam = 0; /* -l is special: no parameter required */
-					else
-						eatparam = 1; /* all other internal parameter modes do require a parameter on unset */
+					eatparam = 1;
 				}
 			} else {
 				/* EXTENDED CHANNEL MODE */

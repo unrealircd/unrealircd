@@ -162,7 +162,6 @@ CMD_FUNC(cmd_sjoin)
 	unsigned short b=0;
 	char *tp, *p, *saved = NULL;
 	long modeflags;
-	char queue_s=0, queue_c=0; /* oh this is soooooo ugly :p */
 	
 	if (!IsServer(client) || parc < 4)
 		return;
@@ -708,8 +707,8 @@ getnick:
 		parabuf[0] = '\0';
 		b = 1;
 
-		/* First, check if we have something they don't have..
-		 * note that: oldmode.* = us, channel->mode.* = them.
+		/* First, check if we had something that is now gone
+		 * note that: oldmode.* = us, channel->mode.* = merged.
 		 */
 		for (i=0; i <= Channelmode_highest; i++)
 		{
@@ -743,14 +742,6 @@ getnick:
 			queue_s = 1;
 		}
 #endif
-		/* Add single char modes... */
-		for (acp = corechannelmodetable; acp->mode; acp++)
-		{
-			if ((oldmode.mode & acp->mode) && !(channel->mode.mode & acp->mode) && !acp->parameters)
-			{
-				Addsingle(acp->flag);
-			}
-		}
 		if (b > 1)
 		{
 			Addsingle('+');
@@ -761,22 +752,10 @@ getnick:
 			b = 1;
 		}
 
-		if (queue_s)
-			Addsingle('s');
-
-		if (queue_c)
-			Addsingle('c');
-
-		for (acp = corechannelmodetable; acp->mode; acp++)
-		{
-			if (!(oldmode.mode & acp->mode) && (channel->mode.mode & acp->mode) && !acp->parameters)
-			{
-				Addsingle(acp->flag);
-			}
-		}
-
-		/* Now, check if they have something we don't have..
-		 * note that: oldmode.* = us, channel->mode.* = them.
+		/* Now, check if merged modes contain something we didn't have before.
+		 * note that: oldmode.* = us before, channel->mode.* = merged.
+		 *
+		 * First the simple single letter modes...
 		 */
 		for (i=0; i <= Channelmode_highest; i++)
 		{
@@ -800,7 +779,7 @@ getnick:
 		/* now, if we had diffent para modes - this loop really could be done better, but */
 
 		/* Now, check for any param differences in extended channel modes..
-		 * note that: oldmode.* = us, channel->mode.* = them.
+		 * note that: oldmode.* = us before, channel->mode.* = merged.
 		 * if we win: copy oldmode to channel mode, if they win: send the mode
 		 */
 		for (i=0; i <= Channelmode_highest; i++)
@@ -814,8 +793,6 @@ getnick:
 				char flag = Channelmode_Table[i].flag;
 				void *ourm = GETPARASTRUCTEX(oldmode.extmodeparams, flag);
 				void *theirm = GETPARASTRUCT(channel, flag);
-				//CmodeParam *ourm = extcmode_get_struct(oldmode.extmodeparam,Channelmode_Table[i].flag);
-				//CmodeParam *theirm = extcmode_get_struct(channel->mode.extmodeparam, Channelmode_Table[i].flag);
 				
 				r = Channelmode_Table[i].sjoin_check(channel, ourm, theirm);
 				switch (r)
@@ -855,7 +832,6 @@ getnick:
 
 		/* free the oldmode.* crap :( */
 		extcmode_free_paramlist(oldmode.extmodeparams);
-		/* memset(&oldmode.extmodeparams, 0, sizeof(oldmode.extmodeparams)); -- redundant? */
 	}
 
 	for (h = Hooks[HOOKTYPE_CHANNEL_SYNCED]; h; h = h->next)

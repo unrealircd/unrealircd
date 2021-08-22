@@ -503,7 +503,6 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, int pcount,
     size_t mode_buf_size, size_t para_buf_size)
 {
 	char tmpbuf[MODEBUFLEN+3], *tmpstr;
-	CoreChannelModeTable *tab = &corechannelmodetable[0];
 	char *x = mode_buf;
 	int  what, cnt, z;
 	int i;
@@ -514,24 +513,6 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, int pcount,
 	*mode_buf = '\0';
 	*para_buf = '\0';
 	what = 0;
-	/* + param-less modes */
-	tab = &corechannelmodetable[0];
-	while (tab->mode != 0x0)
-	{
-		if (channel->mode.mode & tab->mode)
-		{
-			if (!(oldm & tab->mode))
-			{
-				if (what != MODE_ADD)
-				{
-					*x++ = '+';
-					what = MODE_ADD;
-				}
-				*x++ = tab->flag;
-			}
-		}
-		tab++;
-	}
 
 	/* + paramless extmodes... */
 	for (i=0; i <= Channelmode_highest; i++)
@@ -552,24 +533,6 @@ void make_mode_str(Channel *channel, long oldm, Cmode_t oldem, int pcount,
 	}
 
 	*x = '\0';
-	/* - param-less modes */
-	tab = &corechannelmodetable[0];
-	while (tab->mode != 0x0)
-	{
-		if (!(channel->mode.mode & tab->mode))
-		{
-			if (oldm & tab->mode)
-			{
-				if (what != MODE_DEL)
-				{
-					*x++ = '-';
-					what = MODE_DEL;
-				}
-				*x++ = tab->flag;
-			}
-		}
-		tab++;
-	}
 
 	/* - extmodes (both "param modes" and paramless don't have
 	 * any params when unsetting... well, except one special type, that is (we skip those here)
@@ -778,24 +741,6 @@ int  do_mode_char(Channel *channel, long modetype, char modechar, char *param,
 	}
 	switch (modetype)
 	{
-		setmode:
-			retval = 0;
-			if (what == MODE_ADD)
-			{
-				// FIXME: previously there was anti duplicate +s/+p code here
-				// we may still need something for that...
-				// like calling HOOKTYPE_MODECHAR_ADD
-				channel->mode.mode |= modetype;
-				RunHook2(HOOKTYPE_MODECHAR_ADD, channel, (int)modechar);
-			}
-			else
-			{
-				channel->mode.mode &= ~modetype;
-				RunHook2(HOOKTYPE_MODECHAR_DEL, channel, (int)modechar);
-			}
-			break;
-
-/* do pro-opping here (popping) */
 		case MODE_CHANOWNER:
 			REQUIRE_PARAMETER()
 			if (!IsULine(client) && !IsServer(client) && !is_chanowner(client, channel) && !samode_in_progress)
