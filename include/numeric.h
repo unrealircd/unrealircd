@@ -389,6 +389,8 @@
 
 #define ERR_STARTTLS            691
 
+#define ERR_INVALIDMODEPARAM	696
+
 #define RPL_LOGGEDIN            900
 #define RPL_LOGGEDOUT           901
 #define ERR_NICKLOCKED          902
