@@ -891,9 +891,13 @@ int find_invex(Channel *channel, Client *client)
 	{
 		b->banstr = inv->banstr;
 		if (ban_check_mask(b))
+		{
+			safe_free(b);
 			return 1;
+		}
 	}
 
+	safe_free(b);
 	return 0;
 }
 
