@@ -118,6 +118,7 @@ struct Configuration {
 	long handshake_data_flood_ban_time;
 	int handshake_data_flood_ban_action;
 	struct ChMode modes_on_join;
+	int modes_on_join_set;
 	int level_on_join;
 	FloodSettings *floodsettings;
 	int ident_connect_timeout;

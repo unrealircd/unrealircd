@@ -576,15 +576,16 @@ void free_conf_channelmodes(struct ChMode *store)
 }
 
 /* Set configuration, used for set::modes-on-join */
-void conf_channelmodes(char *modes, struct ChMode *store, int warn)
+void conf_channelmodes(char *modes, struct ChMode *store)
 {
-	CoreChannelModeTable *tab;
+	int i;
+	char *m;
 	char *params = strchr(modes, ' ');
 	char *parambuf = NULL;
 	char *param = NULL;
 	char *save = NULL;
-
-	warn = 0; // warn is broken
+	char *param_in;
+	int found;
 
 	/* Free existing parameters first (no inheritance) */
 	free_conf_channelmodes(store);
@@ -596,58 +597,53 @@ void conf_channelmodes(char *modes, struct ChMode *store, int warn)
 		param = strtoken(&save, parambuf, " ");
 	}
 
-	for (; *modes && *modes != ' '; modes++)
+	for (m = modes; *m && *m != ' '; m++)
 	{
-		if (*modes == '+')
+		if (*m == '+')
 			continue;
-		if (*modes == '-')
-		/* When a channel is created it has no modes, so just ignore if the
-		 * user asks us to unset anything -- codemastr
-		 */
+
+		if (*m == '-')
 		{
-			while (*modes && *modes != '+')
-				modes++;
+			/* When a channel is created it has no modes, so just ignore if the
+			 * user asks us to unset anything -- codemastr
+			 */
+			while (*m && *m != '+')
+				m++;
 			continue;
 		}
-		for (tab = &corechannelmodetable[0]; tab->mode; tab++)
+
+		found = 0;
+		for (i=0; i <= Channelmode_highest; i++)
 		{
-			if (tab->flag == *modes)
+			if (!(Channelmode_Table[i].flag))
+				continue;
+			if (*m == Channelmode_Table[i].flag)
 			{
-				if (tab->parameters)
+				found = 1;
+				if (Channelmode_Table[i].paracount)
 				{
-					/* INCOMPATIBLE */
-					break;
+					if (!param)
+					{
+						config_warn("set::modes-on-join '%s'. Parameter missing for mode %c.", modes, *m);
+						break;
+					}
+					param_in = param; /* save it */
+					param = Channelmode_Table[i].conv_param(param, NULL, NULL);
+					if (!param)
+					{
+						config_warn("set::modes-on-join '%s'. Parameter for mode %c is invalid (%s).", modes, *m, param);
+						break; /* invalid parameter fmt, do not set mode. */
+					}
+					store->extparams[i] = raw_strdup(param);
+					/* Get next parameter */
+					param = strtoken(&save, NULL, " ");
 				}
-				store->mode |= tab->mode;
+				store->extmodes |= Channelmode_Table[i].mode;
 				break;
 			}
 		}
-		/* Try extcmodes */
-		if (!tab->mode)
-		{
-			int i;
-			for (i=0; i <= Channelmode_highest; i++)
-			{
-				if (!(Channelmode_Table[i].flag))
-					continue;
-				if (*modes == Channelmode_Table[i].flag)
-				{
-					if (Channelmode_Table[i].paracount)
-					{
-						if (!param)
-							break;
-						param = Channelmode_Table[i].conv_param(param, NULL, NULL);
-						if (!param)
-							break; /* invalid parameter fmt, do not set mode. */
-						store->extparams[i] = raw_strdup(param);
-						/* Get next parameter */
-						param = strtoken(&save, NULL, " ");
-					}
-					store->extmodes |= Channelmode_Table[i].mode;
-					break;
-				}
-			}
-		}
+		if (!found)
+			config_warn("set::modes-on-join '%s'. Channel mode %c not found.", modes, *m);
 	}
 	safe_free(parambuf);
 }
@@ -1730,7 +1726,6 @@ void config_setdefaultsettings(Configuration *i)
 	i->maxchannelsperuser = 10;
 	i->maxdccallow = 10;
 	safe_strdup(i->channel_command_prefix, "`!.");
-	conf_channelmodes("+nt", &i->modes_on_join, 0);
 	i->conn_modes = set_usermode("+ixw");
 	i->check_target_nick_bans = 1;
 	i->maxbans = 60;
@@ -1842,6 +1837,13 @@ void postconf_defaults(void)
 	TKL *tk;
 	char *encoded;
 
+	if (!iConf.modes_on_join_set)
+	{
+		/* We could not do this in config_setdefaultsettings()
+		 * because the channel mode modules were not initialized yet.
+		 */
+		conf_channelmodes("+nt", &iConf.modes_on_join);
+	}
 	if (!iConf.plaintext_policy_user_message)
 	{
 		/* The message depends on whether it's reject or warn.. */
@@ -7321,7 +7323,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			tempiConf.oper_modes = (long) set_usermode(cep->value);
 		}
 		else if (!strcmp(cep->name, "modes-on-join")) {
-			conf_channelmodes(cep->value, &tempiConf.modes_on_join, 0);
+			conf_channelmodes(cep->value, &tempiConf.modes_on_join);
+			tempiConf.modes_on_join_set = 1;
 		}
 		else if (!strcmp(cep->name, "snomask-on-oper")) {
 			safe_strdup(tempiConf.oper_snomask, cep->value);
@@ -7953,16 +7956,17 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					case 'b':
 					case 'e':
 					case 'I':
-					case 'k':
-					case 'l':
 						config_error("%s:%i: set::modes-on-join may not contain +%c",
 							cep->file->filename, cep->line_number, *c);
 						errors++;
 						break;
 				}
 			}
-			conf_channelmodes(cep->value, &temp, 1);
-
+			/* We can't really verify much here.
+			 * The channel mode modules have not been initialized
+			 * yet at this point, so we can't really verify much
+			 * here.
+			 */
 		}
 		else if (!strcmp(cep->name, "modes-on-oper")) {
 			char *p;
