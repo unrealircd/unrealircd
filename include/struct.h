@@ -2112,7 +2112,6 @@ struct Ban {
 /* Don't blindly change these MODE_* values, see comment 20 lines up! */
 #define	MODE_CHANOP		CHFL_CHANOP
 #define	MODE_VOICE		CHFL_VOICE
-#define	MODE_TOPICLIMIT 	0x0020
 #define MODE_CHANOWNER		0x0040
 #define MODE_CHANADMIN		0x0080
 #define	MODE_HALFOP		0x0100

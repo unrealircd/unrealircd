@@ -186,8 +186,11 @@ CMD_FUNC(cmd_topic)
 	{
 		char *newtopic = NULL;
 
+		// FIXME/TODO: all these checks must be moved to chanmodes/topiclimit
+		//             and to chanmodes/noexternalmsgs, so use some kind of hook !!
+
 		/* +t and not +hoaq ? */
-		if ((channel->mode.mode & MODE_TOPICLIMIT) &&
+		if (has_channel_mode(channel, 't') &&
 		    !is_skochanop(client, channel) && !IsULine(client) && !IsServer(client))
 		{
 			if (MyUser(client) && !ValidatePermissionsForPath("channel:override:topic", client, NULL, channel, NULL))
@@ -200,8 +203,7 @@ CMD_FUNC(cmd_topic)
 
 		/* -t and banned? */
 		newtopic = topic;
-		if (!(channel->mode.mode & MODE_TOPICLIMIT) &&
-		    !is_skochanop(client, channel) && is_banned(client, channel, BANCHK_MSG, &newtopic, &errmsg))
+		if (!is_skochanop(client, channel) && is_banned(client, channel, BANCHK_MSG, &newtopic, &errmsg))
 		{
 			char buf[512];
 
