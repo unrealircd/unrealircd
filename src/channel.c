@@ -62,7 +62,6 @@ CoreChannelModeTable corechannelmodetable[] = {
 	{MODE_MODERATED, 'm', 1, 0},
 	{MODE_NOPRIVMSGS, 'n', 1, 0},
 	{MODE_TOPICLIMIT, 't', 1, 0},
-	{MODE_INVITEONLY, 'i', 1, 0},
 	{MODE_RGSTR, 'r', 0, 0},
 	{MODE_CHANADMIN, 'a', 0, 1},
 	{MODE_CHANOWNER, 'q', 0, 1},

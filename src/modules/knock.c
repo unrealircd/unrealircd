@@ -110,7 +110,7 @@ CMD_FUNC(cmd_knock)
 		return;
 	}
 
-	if (!(channel->mode.mode & MODE_INVITEONLY))
+	if (!has_channel_mode(channel, 'i'))
 	{
 		sendnumeric(client, ERR_CANNOTKNOCK, channel->name, "Channel is not invite only!");
 		return;

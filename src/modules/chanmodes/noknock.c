@@ -92,7 +92,7 @@ int noknock_mode_del (Channel *channel, int modeChar)
 
 int noknock_mode_allow(Client *client, Channel *channel, char mode, char *para, int checkt, int what)
 {
-	if (!(channel->mode.mode & MODE_INVITEONLY))
+	if (!has_channel_mode(channel, 'i'))
 	{
 		if (checkt == EXCHK_ACCESS_ERR)
 		{

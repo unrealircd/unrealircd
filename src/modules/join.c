@@ -114,7 +114,7 @@ int _can_join(Client *client, Channel *channel, char *key, char *parv[])
 		return (ERR_BANNEDFROMCHAN);
 
 	if (is_invited(client, channel))
-		return 0; /* allowed */
+		return 0; /* allowed to walk through all the other modes */
 
         if (channel->users >= channel->mode.limit)
         {
@@ -130,9 +130,6 @@ int _can_join(Client *client, Channel *channel, char *key, char *parv[])
                 /* We later check again for this limit (in case +L was not set) */
         }
 
-
-        if ((channel->mode.mode & MODE_INVITEONLY) && !find_invex(channel, client))
-                return (ERR_INVITEONLYCHAN);
 
         if ((channel->mode.limit && channel->users >= channel->mode.limit))
                 return (ERR_CHANNELISFULL);

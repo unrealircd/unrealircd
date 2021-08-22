@@ -388,7 +388,7 @@ CMD_FUNC(cmd_invite)
 		return;
 	}
 
-	if (channel->mode.mode & MODE_INVITEONLY)
+	if (has_channel_mode(channel, 'i'))
 	{
 		if (!is_chan_op(client, channel) && !IsULine(client))
 		{
@@ -444,7 +444,7 @@ CMD_FUNC(cmd_invite)
 		char override_what = '\0';
 		if (is_banned(client, channel, BANCHK_JOIN, NULL, NULL))
 			invite_operoverride_msg(client, channel, "b", "ban");
-		else if (channel->mode.mode & MODE_INVITEONLY)
+		else if (has_channel_mode(channel, 'i'))
 			invite_operoverride_msg(client, channel, "i", "invite only");
 		else if (channel->mode.limit)
 			invite_operoverride_msg(client, channel, "l", "user limit");

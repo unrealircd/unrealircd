@@ -813,7 +813,6 @@ int  do_mode_char(Channel *channel, long modetype, char modechar, char *param,
 		case MODE_MODERATED:
 		case MODE_TOPICLIMIT:
 		case MODE_NOPRIVMSGS:
-		case MODE_INVITEONLY:
 			goto setmode;
 		setmode:
 			retval = 0;
