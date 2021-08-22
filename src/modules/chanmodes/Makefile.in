@@ -34,7 +34,7 @@ INCLUDES = ../../include/channel.h \
 R_MODULES= \
 	key.so limit.so inviteonly.so secret.so private.so \
 	moderated.so noexternalmsgs.so topiclimit.so \
-	nocolor.so stripcolor.so issecure.so permanent.so floodprot.so \
+	nocolor.so stripcolor.so isregistered.so issecure.so permanent.so floodprot.so \
 	noctcp.so link.so censor.so delayjoin.so noknock.so noinvite.so operonly.so \
 	nonotice.so regonly.so nonickchange.so nokick.so regonlyspeak.so \
 	secureonly.so history.so
@@ -85,6 +85,10 @@ noexternalmsgs.so: noexternalmsgs.c $(INCLUDES)
 topiclimit.so: topiclimit.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o topiclimit.so topiclimit.c
+
+isregistered.so: isregistered.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o isregistered.so isregistered.c
 
 issecure.so: issecure.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

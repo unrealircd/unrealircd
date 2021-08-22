@@ -56,7 +56,6 @@ CoreChannelModeTable corechannelmodetable[] = {
 	{MODE_VOICE, 'v', 1, 1},
 	{MODE_HALFOP, 'h', 0, 1},
 	{MODE_CHANOP, 'o', 0, 1},
-	{MODE_RGSTR, 'r', 0, 0},
 	{MODE_CHANADMIN, 'a', 0, 1},
 	{MODE_CHANOWNER, 'q', 0, 1},
 	{MODE_BAN, 'b', 1, 1},

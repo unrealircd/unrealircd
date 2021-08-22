@@ -2117,7 +2117,6 @@ struct Ban {
 #define	MODE_HALFOP		0x0100
 #define MODE_EXCEPT		0x0200
 #define	MODE_BAN		0x0400
-#define MODE_RGSTR		0x8000
 #define MODE_INVEX		0x8000000
 
 /*

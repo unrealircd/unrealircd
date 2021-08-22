@@ -778,13 +778,6 @@ int  do_mode_char(Channel *channel, long modetype, char modechar, char *param,
 	}
 	switch (modetype)
 	{
-		case MODE_RGSTR:
-			if (!IsServer(client) && !IsULine(client))
-			{
-				sendnumeric(client, ERR_ONLYSERVERSCANCHANGE, channel->name);
-				break;
-			}
-			goto setmode;
 		setmode:
 			retval = 0;
 			if (what == MODE_ADD)
