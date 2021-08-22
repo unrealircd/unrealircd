@@ -848,6 +848,7 @@ int metadata_subscribe(char *key, Client *client, int remove)
 			}
 			break;
 		}
+		subs = &(*subs)->next;
 	}
 	if (!remove && !found)
 	{
