@@ -5019,6 +5019,8 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 				conf_tlsblock(conf, tlsconfig, listen->tls_options);
 				listen->ssl_ctx = init_ctx(listen->tls_options, 1);
 			}
+			
+			safe_free(listen->websocket_forward);
 
 			/* For modules that hook CONFIG_LISTEN and CONFIG_LISTEN_OPTIONS.
 			 * Yeah, ugly we have this here..
@@ -5102,6 +5104,9 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 					conf_tlsblock(conf, tlsconfig, listen->tls_options);
 					listen->ssl_ctx = init_ctx(listen->tls_options, 1);
 				}
+				
+				safe_free(listen->websocket_forward);
+				
 				/* For modules that hook CONFIG_LISTEN and CONFIG_LISTEN_OPTIONS.
 				 * Yeah, ugly we have this here..
 				 */
@@ -10824,6 +10829,7 @@ void	listen_cleanup()
 			safe_free(listen_ptr->ip);
 			free_tls_options(listen_ptr->tls_options);
 			DelListItem(listen_ptr, conf_listen);
+			safe_free(listen_ptr->websocket_forward);
 			safe_free(listen_ptr);
 			i++;
 		}

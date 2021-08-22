@@ -1730,6 +1730,7 @@ struct ConfigItem_listen {
 	SSL_CTX *ssl_ctx;
 	TLSOptions *tls_options;
 	int websocket_options; /* should be in module, but lazy */
+	char *websocket_forward;
 };
 
 struct ConfigItem_sni {

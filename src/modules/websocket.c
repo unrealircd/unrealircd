@@ -40,6 +40,8 @@ struct WebSocketUser {
 	int lefttoparselen; /**< Length of lefttoparse buffer */
 	WebSocketType type; /**< WEBSOCKET_TYPE_BINARY or WEBSOCKET_TYPE_TEXT */
 	char *sec_websocket_protocol; /**< Only valid during parsing of the request, after that it is NULL again */
+	char *forwarded; /**< Unparsed `Forwarded:` header, RFC 7239 */
+	int secure; /**< If there is a Forwarded header, this indicates if the remote connection is secure */
 };
 
 #define WSU(client)	((WebSocketUser *)moddata_client(client, websocket_md).ptr)
@@ -56,6 +58,17 @@ struct WebSocketUser {
 #define WSOP_PING         0x09
 #define WSOP_PONG         0x0a
 
+/* used to parse http Forwarded header (RFC 7239) */
+#define IPLEN 48
+#define FHEADER_NAMELEN	20
+
+struct HTTPForwardedHeader
+{
+	int secure;
+	char hostname[HOSTLEN+1];
+	char ip[IPLEN+1];
+};
+
 /* Forward declarations */
 int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
@@ -69,6 +82,7 @@ int websocket_handle_packet_ping(Client *client, char *buf, int len);
 int websocket_handle_packet_pong(Client *client, char *buf, int len);
 int websocket_create_packet(int opcode, char **buf, int *len);
 int websocket_send_pong(Client *client, char *buf, int len);
+int websocket_secure_connect(Client *client);
 
 /* Global variables */
 ModDataInfo *websocket_md;
@@ -89,6 +103,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, websocket_config_run_ex);
 	HookAdd(modinfo->handle, HOOKTYPE_PACKET, INT_MAX, websocket_packet_out);
 	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, INT_MIN, websocket_packet_in);
+	HookAdd(modinfo->handle, HOOKTYPE_SECURE_CONNECT, 0, websocket_secure_connect);
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "websocket";
@@ -162,6 +177,15 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			}
+		} else if (!strcmp(cep->name, "forward"))
+		{
+			if (!cep->value)
+			{
+				/* TODO check whether the ip/host is valid? */
+				config_error_empty(cep->file->filename, cep->line_number, "listen::options::websocket::forward", cep->name);
+				errors++;
+				continue;
+			}
 		} else
 		{
 			config_error("%s:%i: unknown directive listen::options::websocket::%s",
@@ -217,6 +241,9 @@ int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr
 					warned_once_channel = 1;
 				}
 			}
+		} else if (!strcmp(cep->name, "forward"))
+		{
+			safe_strdup(l->websocket_forward, cep->value);
 		}
 	}
 	return 1;
@@ -230,6 +257,7 @@ void websocket_mdata_free(ModData *m)
 	{
 		safe_free(wsu->handshake_key);
 		safe_free(wsu->lefttoparse);
+		safe_free(wsu->forwarded);
 		safe_free(m->ptr);
 	}
 }
@@ -467,6 +495,141 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 	return 0;
 }
 
+#define FHEADER_STATE_NAME	0
+#define FHEADER_STATE_VALUE	1
+#define FHEADER_STATE_VALUE_QUOTED	2
+
+#define FHEADER_ACTION_APPEND	0
+#define FHEADER_ACTION_IGNORE	1
+#define FHEADER_ACTION_PROCESS	2
+
+/** If a valid Forwarded: http header is received from a trusted source (proxy server), this function will
+  * extract remote IP address and secure (https) status from it. If more than one field with same name is received,
+  * we'll accept the last one. This should work correctly with chained proxies. */
+struct HTTPForwardedHeader parse_forwarded_header(char *input)
+{
+	struct HTTPForwardedHeader forwarded;
+	int i, length;
+	int state = FHEADER_STATE_NAME, action = FHEADER_ACTION_APPEND;
+	char name[FHEADER_NAMELEN+1];
+	char value[IPLEN+1];
+	int name_length = 0;
+	int value_length = 0;
+	char c;
+	
+	memset(&forwarded, 0, sizeof(struct HTTPForwardedHeader));
+	
+	length = strlen(input);
+	for (i = 0; i < length; i++)
+	{
+		c = input[i];
+		switch (c)
+		{
+			case '"':
+				switch (state)
+				{
+					case FHEADER_STATE_NAME:
+						action = FHEADER_ACTION_APPEND;
+						break;
+					case FHEADER_STATE_VALUE:
+						action = FHEADER_ACTION_IGNORE;
+						state = FHEADER_STATE_VALUE_QUOTED;
+						break;
+					case FHEADER_STATE_VALUE_QUOTED:
+						action = FHEADER_ACTION_IGNORE;
+						state = FHEADER_STATE_VALUE;
+						break;
+				}
+				break;
+			case ',': case ';': case ' ':
+				switch (state)
+				{
+					case FHEADER_STATE_NAME: /* name without value */
+						name_length = 0;
+						action = FHEADER_ACTION_IGNORE;
+						break;
+					case FHEADER_STATE_VALUE: /* end of value */
+						action = FHEADER_ACTION_PROCESS;
+						break;
+					case FHEADER_STATE_VALUE_QUOTED: /* quoted character, process as normal */
+						action = FHEADER_ACTION_APPEND;
+						break;
+				}
+				break;
+			case '=':
+				switch (state)
+				{
+					case FHEADER_STATE_NAME: /* end of name */
+						name[name_length] = '\0';
+						state = FHEADER_STATE_VALUE;
+						action = FHEADER_ACTION_IGNORE;
+						break;
+					case FHEADER_STATE_VALUE: case FHEADER_STATE_VALUE_QUOTED: /* none of the values is expected to contain = but proceed anyway */
+						action = FHEADER_ACTION_APPEND;
+						break;
+				}
+				break;
+			default:
+				action = FHEADER_ACTION_APPEND;
+				break;
+		}
+		switch (action)
+			{
+				case FHEADER_ACTION_APPEND:
+					if (state == FHEADER_STATE_NAME)
+					{
+						if (name_length < FHEADER_NAMELEN)
+						{
+							name[name_length++] = c;
+						} else
+						{
+							/* truncate */
+						}
+					} else
+					{
+						if (name_length < IPLEN)
+						{
+							value[value_length++] = c;
+						} else
+						{
+							/* truncate */
+						}
+					}
+					break;
+				case FHEADER_ACTION_IGNORE: default:
+					break;
+				case FHEADER_ACTION_PROCESS:
+					value[value_length] = '\0';
+					name[name_length] = '\0';
+					if (!strcasecmp(name, "for"))
+					{
+						strlcpy(forwarded.ip, value, IPLEN+1);
+					} else if (!strcasecmp(name, "proto"))
+					{
+						if (!strcasecmp(value, "https"))
+						{
+							forwarded.secure = 1;
+						} else if (!strcasecmp(value, "http"))
+						{
+							forwarded.secure = 0;
+						} else
+						{
+							/* ignore unknown value */
+						}
+					} else
+					{
+						/* ignore unknown field name */
+					}
+					value_length = 0;
+					name_length = 0;
+					state = FHEADER_STATE_NAME;
+					break;			
+			}
+	}
+	
+	return forwarded;
+}
+
 /** Finally, validate the websocket request (handshake) and proceed or reject. */
 int websocket_handshake_valid(Client *client)
 {
@@ -516,7 +679,62 @@ int websocket_handshake_valid(Client *client)
 			safe_free(WSU(client)->sec_websocket_protocol);
 		}
 	}
+	if (WSU(client)->forwarded)
+	{
+		/* check for source ip */
+		if (BadPtr(client->local->listener->websocket_forward) || 0 /* TODO add access checking here*/)
+		{
+			unreal_log(ULOG_WARNING, "websocket", "UNAUTHORIZED_FORWARDED_HEADER", client, "Received unauthorized Forwarded header from $ip", log_data_string("ip", client->ip));
+			dead_socket(client, "Forwarded: no access");
+			return 0;
+		}
+		/* parse the header */
+		struct HTTPForwardedHeader forwarded;
+		forwarded = parse_forwarded_header(WSU(client)->forwarded);
+		/* check header values */
+		char scratch[64];
+		if ((inet_pton(AF_INET, forwarded.ip, scratch) != 1) && (inet_pton(AF_INET6, forwarded.ip, scratch) != 1))
+		{
+			unreal_log(ULOG_WARNING, "websocket", "INVALID_FORWARDED_IP", client, "Received invalid IP in Forwarded header from $ip", log_data_string("ip", client->ip));
+			return 0;
+		}
+		/* store data */
+		WSU(client)->secure = forwarded.secure;
+		safe_strdup(client->ip, forwarded.ip);
+		if (client->local->hostp)
+		{
+			unreal_free_hostent(client->local->hostp);
+			client->local->hostp = NULL;
+		}
+		/* (create new) */
+		/*
+		TODO actually get a hostname from somewhere!
+		if (host && valid_host(host, 1))
+			client->local->hostp = unreal_create_hostent(host, client->ip);
+		}
+		*/
+		/* blacklist_start_check() */
+		if (RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK] != NULL)
+			RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK]->func.intfunc(client);
+
+		/* Check (g)zlines right now; these are normally checked upon accept(),
+		 * but since we know the IP only now after PASS/WEBIRC, we have to check
+		 * here again...
+		 */
+		check_banned(client, 0);
+	}
 	return 1;
+}
+
+int websocket_secure_connect(Client *client)
+{
+	/* Remove secure mode (-z) if the WEBIRC gateway did not ensure
+	 * us that their [client]--[webirc gateway] connection is also
+	 * secure (eg: using https)
+	 */
+	if (WSU(client)->forwarded && IsSecureConnect(client) && !WSU(client)->secure)
+		client->umodes &= ~UMODE_SECURE;
+	return 0;
 }
 
 /** Handle client GET WebSocket handshake.
@@ -572,6 +790,11 @@ int websocket_handle_handshake(Client *client, char *readbuf, int *length)
 		{
 			/* Save it here, will be processed later */
 			safe_strdup(WSU(client)->sec_websocket_protocol, value);
+		} else
+		if (!strcasecmp(key, "Forwarded"))
+		{
+			/* will be processed later too */
+			safe_strdup(WSU(client)->forwarded, value);
 		}
 	}
 
