@@ -83,6 +83,7 @@ int websocket_handle_packet_pong(Client *client, char *buf, int len);
 int websocket_create_packet(int opcode, char **buf, int *len);
 int websocket_send_pong(Client *client, char *buf, int len);
 int websocket_secure_connect(Client *client);
+struct HTTPForwardedHeader *websocket_parse_forwarded_header(char *input);
 
 /* Global variables */
 ModDataInfo *websocket_md;
@@ -506,9 +507,9 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 /** If a valid Forwarded: http header is received from a trusted source (proxy server), this function will
   * extract remote IP address and secure (https) status from it. If more than one field with same name is received,
   * we'll accept the last one. This should work correctly with chained proxies. */
-struct HTTPForwardedHeader parse_forwarded_header(char *input)
+struct HTTPForwardedHeader *websocket_parse_forwarded_header(char *input)
 {
-	struct HTTPForwardedHeader forwarded;
+	static struct HTTPForwardedHeader forwarded;
 	int i, length;
 	int state = FHEADER_STATE_NAME, action = FHEADER_ACTION_APPEND;
 	char name[FHEADER_NAMELEN+1];
@@ -627,7 +628,7 @@ struct HTTPForwardedHeader parse_forwarded_header(char *input)
 			}
 	}
 	
-	return forwarded;
+	return &forwarded;
 }
 
 /** Finally, validate the websocket request (handshake) and proceed or reject. */
@@ -689,18 +690,18 @@ int websocket_handshake_valid(Client *client)
 			return 0;
 		}
 		/* parse the header */
-		struct HTTPForwardedHeader forwarded;
-		forwarded = parse_forwarded_header(WSU(client)->forwarded);
+		struct HTTPForwardedHeader *forwarded;
+		forwarded = websocket_parse_forwarded_header(WSU(client)->forwarded);
 		/* check header values */
 		char scratch[64];
-		if ((inet_pton(AF_INET, forwarded.ip, scratch) != 1) && (inet_pton(AF_INET6, forwarded.ip, scratch) != 1))
+		if ((inet_pton(AF_INET, forwarded->ip, scratch) != 1) && (inet_pton(AF_INET6, forwarded->ip, scratch) != 1))
 		{
 			unreal_log(ULOG_WARNING, "websocket", "INVALID_FORWARDED_IP", client, "Received invalid IP in Forwarded header from $ip", log_data_string("ip", client->ip));
 			return 0;
 		}
 		/* store data */
-		WSU(client)->secure = forwarded.secure;
-		safe_strdup(client->ip, forwarded.ip);
+		WSU(client)->secure = forwarded->secure;
+		safe_strdup(client->ip, forwarded->ip);
 		if (client->local->hostp)
 		{
 			unreal_free_hostent(client->local->hostp);
