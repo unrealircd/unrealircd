@@ -84,6 +84,77 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
+void send_list_mode(Client *client, Channel *channel, Ban *list, int list_numeric, int end_of_list_numeric)
+{
+	Ban *ban;
+
+	if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",client,NULL,channel,NULL))
+	{
+		sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
+		return;
+	}
+
+	for (ban = list; ban; ban = ban->next)
+		sendnumeric(client, list_numeric, channel->name, ban->banstr, ban->who, ban->when);
+
+	sendnumeric(client, end_of_list_numeric, channel->name);
+}
+
+void send_user_list_mode(Client *client, Channel *channel, long flags, int list_numeric, int end_of_list_numeric)
+{
+	Member *member;
+
+	if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",client,NULL,channel,NULL))
+	{
+		sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
+		return;
+	}
+
+	for (member = channel->members; member; member = member->next)
+	{
+		if (member->flags & flags)
+			sendnumeric(client, list_numeric, channel->name, member->client->name);
+	}
+	sendnumeric(client, end_of_list_numeric, channel->name);
+}
+
+/* Deal with information requests from local users, such as:
+ * MODE #chan b    Show the ban list
+ * MODE #chan e    Show the ban exemption list
+ * MODE #chan I    Show the invite exception list
+ * MODE #chan q    Show list of channel owners
+ * MODE #chan a    Show list of channel admins
+ */
+int list_mode_request(Client *client, Channel *channel, char *req)
+{
+	if (strstr(req, "b"))
+	{
+		send_list_mode(client, channel, channel->banlist, RPL_BANLIST, RPL_ENDOFBANLIST);
+		return 1;
+	} else
+	if (strstr(req, "e"))
+	{
+		send_list_mode(client, channel, channel->exlist, RPL_EXLIST, RPL_ENDOFEXLIST);
+		return 1;
+	} else
+	if (strstr(req, "I"))
+	{
+		send_list_mode(client, channel, channel->invexlist, RPL_INVEXLIST, RPL_ENDOFINVEXLIST);
+		return 1;
+	} else
+	if (strstr(req, "q"))
+	{
+		send_user_list_mode(client, channel, CHFL_CHANOWNER, RPL_QLIST, RPL_ENDOFQLIST);
+		return 1;
+	} else
+	if (strstr(req, "a"))
+	{
+		send_user_list_mode(client, channel, CHFL_CHANADMIN, RPL_ALIST, RPL_ENDOFALIST);
+		return 1;
+	}
+	return 0;
+}
+
 /*
  * cmd_mode -- written by binary (garryb@binary.islesfan.net)
  * Completely rewrote it.  The old mode command was 820 lines of ICKY
@@ -138,79 +209,9 @@ CMD_FUNC(cmd_mode)
 		return;
 	}
 
-	if (MyUser(client))
-	{
-		/* Deal with information requests from local users, such as:
-		 * MODE #chan b    Show the ban list
-		 * MODE #chan e    Show the ban exemption list
-		 * MODE #chan I    Show the invite exception list
-		 * MODE #chan q    Show list of channel owners
-		 * MODE #chan a    Show list of channel admins
-		 */
-		if (strstr(parv[2], "b") && BadPtr(parv[3]))
-		{
-			if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",client,NULL,channel,NULL))
-				return;
-			/* send ban list */
-			for (ban = channel->banlist; ban; ban = ban->next)
-				sendnumeric(client, RPL_BANLIST, channel->name, ban->banstr, ban->who, ban->when);
-			sendnumeric(client, RPL_ENDOFBANLIST, channel->name);
-			return;
-		}
-
-		if (strstr(parv[2], "e") && BadPtr(parv[3]))
-		{
-			if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",client,NULL,channel,NULL))
-				return;
-			/* send exban list */
-			for (ban = channel->exlist; ban; ban = ban->next)
-				sendnumeric(client, RPL_EXLIST, channel->name, ban->banstr, ban->who, ban->when);
-			sendnumeric(client, RPL_ENDOFEXLIST, channel->name);
-			return;
-		}
-
-		if (strstr(parv[2], "I") && BadPtr(parv[3]))
-		{
-			if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteinvexlist",client,NULL,channel,NULL))
-				return;
-			for (ban = channel->invexlist; ban; ban = ban->next)
-				sendnumeric(client, RPL_INVEXLIST, channel->name, ban->banstr, ban->who, ban->when);
-			sendnumeric(client, RPL_ENDOFINVEXLIST, channel->name);
-			return;
-		}
-
-		if (strstr(parv[2], "q") && BadPtr(parv[3]))
-		{
-			Member *member;
-
-			if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",client,NULL,channel,NULL))
-				return;
-
-			for (member = channel->members; member; member = member->next)
-			{
-				if (is_chanowner(member->client, channel))
-					sendnumeric(client, RPL_QLIST, channel->name, member->client->name);
-			}
-			sendnumeric(client, RPL_ENDOFQLIST, channel->name);
-			return;
-		}
-
-		if (strstr(parv[2], "a") && BadPtr(parv[3]))
-		{
-			Member *member;
-
-			if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",client,NULL,channel,NULL))
-				return;
-
-			for (member = channel->members; member; member = member->next)
-			{
-				if (is_chanadmin(member->client, channel))
-					sendnumeric(client, RPL_ALIST, channel->name, member->client->name);
-			}
-			sendnumeric(client, RPL_ENDOFALIST, channel->name);
-			return;
-		}
-	}
+	/* List mode request? Eg: "MODE #channel b" to list all bans */
+	if (MyUser(client) && BadPtr(parv[3]) && list_mode_request(client, channel, parv[2]))
+		return;
 
 	opermode = 0;
 
