@@ -63,7 +63,6 @@ CoreChannelModeTable corechannelmodetable[] = {
 	{MODE_NOPRIVMSGS, 'n', 1, 0},
 	{MODE_TOPICLIMIT, 't', 1, 0},
 	{MODE_INVITEONLY, 'i', 1, 0},
-	{MODE_KEY, 'k', 1, 1},
 	{MODE_RGSTR, 'r', 0, 0},
 	{MODE_CHANADMIN, 'a', 0, 1},
 	{MODE_CHANOWNER, 'q', 0, 1},
@@ -605,10 +604,6 @@ int has_channel_mode(Channel *channel, char mode)
 	if (channel->mode.limit && (mode == 'l'))
 		return 1;
 
-	/* Special handling for +k (needed??) */
-	if (channel->mode.key[0] && (mode == 'k'))
-		return 1;
-
 	return 0; /* Not found */
 }
 
@@ -699,18 +694,6 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 		}
 		if (ismember) {
 			ircsnprintf(pbuf, pbuf_size, "%d ", channel->mode.limit);
-			pbuf_size-=strlen(pbuf);
-			pbuf+=strlen(pbuf);
-		}
-	}
-	if (*channel->mode.key)
-	{
-		if (mbuf_size) {
-			*mbuf++ = 'k';
-			mbuf_size--;
-		}
-		if (ismember && pbuf_size) {
-			ircsnprintf(pbuf, pbuf_size, "%s ", channel->mode.key);
 			pbuf_size-=strlen(pbuf);
 			pbuf+=strlen(pbuf);
 		}

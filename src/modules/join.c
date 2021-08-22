@@ -131,9 +131,6 @@ int _can_join(Client *client, Channel *channel, char *key, char *parv[])
         }
 
 
-        if (*channel->mode.key && (BadPtr(key) || strcmp(channel->mode.key, key)))
-                return (ERR_BADCHANNELKEY);
-
         if ((channel->mode.mode & MODE_INVITEONLY) && !find_invex(channel, client))
                 return (ERR_INVITEONLYCHAN);
 

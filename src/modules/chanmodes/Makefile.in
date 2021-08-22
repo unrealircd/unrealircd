@@ -32,6 +32,7 @@ INCLUDES = ../../include/channel.h \
 	../../include/version.h ../../include/whowas.h
 
 R_MODULES= \
+	key.so \
 	nocolor.so stripcolor.so issecure.so permanent.so floodprot.so \
 	noctcp.so link.so censor.so delayjoin.so noknock.so noinvite.so operonly.so \
 	nonotice.so regonly.so nonickchange.so nokick.so regonlyspeak.so \
@@ -51,6 +52,10 @@ clean:
 #############################################################################
 #             .so's section
 #############################################################################
+
+key.so: key.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o key.so key.c
 
 issecure.so: issecure.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

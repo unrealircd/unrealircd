@@ -448,7 +448,7 @@ CMD_FUNC(cmd_invite)
 			invite_operoverride_msg(client, channel, "i", "invite only");
 		else if (channel->mode.limit)
 			invite_operoverride_msg(client, channel, "l", "user limit");
-		else if (*channel->mode.key)
+		else if (has_channel_mode(channel, 'k'))
 			invite_operoverride_msg(client, channel, "k", "key");
 		else if (has_channel_mode(channel, 'z'))
 			invite_operoverride_msg(client, channel, "z", "secure only");

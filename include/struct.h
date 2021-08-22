@@ -1957,7 +1957,6 @@ struct Mode {
 	Cmode_t extmode;			/**< Other ("extended") channel modes set on this channel */
 	void *extmodeparams[MAXPARAMMODES+1];	/**< Parameters for extended channel modes */
 	int  limit;				/**< The +l limit in effect (eg: 40), if any - otherwise 0 */
-	char key[KEYLEN + 1];			/**< The +k key in effect (eg: secret), if any - otherwise NULL */
 };
 
 /* flags for Link if used to contain Watch --k4be */

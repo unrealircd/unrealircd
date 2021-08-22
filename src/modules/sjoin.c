@@ -712,10 +712,6 @@ getnick:
 		{
 			Addsingle('l');
 		}
-		if (oldmode.key[0] && !channel->mode.key[0])
-		{
-			Addit('k', oldmode.key);
-		}
 
 		/* First, check if we have something they don't have..
 		 * note that: oldmode.* = us, channel->mode.* = them.
@@ -810,19 +806,6 @@ getnick:
 			if (oldmode.limit != channel->mode.limit)
 			{
 				Addit('l', my_itoa(channel->mode.limit));
-			}
-		}
-
-		/* +k (key) difference? */
-		if (oldmode.key[0] && channel->mode.key[0] && strcmp(oldmode.key, channel->mode.key))
-		{
-			if (strcmp(oldmode.key, channel->mode.key) > 0)			
-			{
-				strlcpy(channel->mode.key, oldmode.key, sizeof channel->mode.key);
-			}
-			else
-			{
-				Addit('k', channel->mode.key);
 			}
 		}
 

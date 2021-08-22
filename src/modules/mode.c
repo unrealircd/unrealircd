@@ -1030,54 +1030,6 @@ process_listmode:
 				RunHook2(HOOKTYPE_MODECHAR_DEL, channel, (int)modechar);
 			}
 			break;
-		case MODE_KEY:
-			REQUIRE_PARAMETER()
-			for (x = 0; x < *pcount; x++)
-			{
-				if (pvar[x][1] == 'k')
-				{	/* don't allow user to change key
-				 * more than once per command. */
-					retval = 0;
-					break;
-				}
-			}
-			if (retval == 0)	/* you can't break a case from loop */
-				break;
-			if (what == MODE_ADD)
-			{
-				char *tmp;
-				if ((tmp = strchr(param, ' ')))
-					*tmp = '\0';
-				if ((tmp = strchr(param, ':')))
-					*tmp = '\0';
-				if ((tmp = strchr(param, ',')))
-					*tmp = '\0';
-				if (*param == '\0')
-					break;
-				if (strlen(param) > KEYLEN)
-					param[KEYLEN] = '\0';
-				if (!strcmp(channel->mode.key, param))
-					break;
-				strlcpy(channel->mode.key, param, sizeof(channel->mode.key));
-				tmpstr = param;
-			}
-			else
-			{
-				if (!*channel->mode.key)
-					break;	/* no change */
-				strlcpy(tmpbuf, channel->mode.key, sizeof(tmpbuf));
-				tmpstr = tmpbuf;
-				strcpy(channel->mode.key, "");
-				RunHook2(HOOKTYPE_MODECHAR_DEL, channel, (int)modechar);
-			}
-			retval = 1;
-
-			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
-			            "%ck%s",
-			            (what == MODE_ADD) ? '+' : '-', tmpstr);
-			(*pcount)++;
-			break;
-
 		case MODE_BAN:
 			REQUIRE_PARAMETER()
 			if (!(tmpstr = mode_ban_handler(client, channel, param, what, EXBTYPE_BAN, &channel->banlist)))
