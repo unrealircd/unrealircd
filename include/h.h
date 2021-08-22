@@ -1059,6 +1059,7 @@ extern int running_interactively(void);
 extern int terminal_supports_color(void);
 extern void skip_whitespace(char **p);
 extern void read_until(char **p, char *stopchars);
+extern int is_ip_valid(const char *ip);
 /* src/unrealdb.c start */
 extern UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_block);
 extern int unrealdb_close(UnrealDB *c);

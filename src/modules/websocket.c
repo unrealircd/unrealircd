@@ -85,6 +85,7 @@ int websocket_create_packet(int opcode, char **buf, int *len);
 int websocket_send_pong(Client *client, char *buf, int len);
 int websocket_secure_connect(Client *client);
 struct HTTPForwardedHeader *websocket_parse_forwarded_header(char *input);
+int websocket_ip_compare(const char *ip1, const char *ip2);
 
 /* Global variables */
 ModDataInfo *websocket_md;
@@ -183,8 +184,13 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		{
 			if (!cep->value)
 			{
-				/* TODO check whether the ip/host is valid? */
 				config_error_empty(cep->file->filename, cep->line_number, "listen::options::websocket::forward", cep->name);
+				errors++;
+				continue;
+			}
+			if (!is_ip_valid(cep->value))
+			{
+				config_error("%s:%i: invalid IP address '%s' in listen::options::websocket::forward", cep->file->filename, cep->line_number, cep->value);
 				errors++;
 				continue;
 			}
@@ -684,7 +690,7 @@ int websocket_handshake_valid(Client *client)
 	if (WSU(client)->forwarded)
 	{
 		/* check for source ip */
-		if (BadPtr(client->local->listener->websocket_forward) || 0 /* TODO add access checking here*/)
+		if (BadPtr(client->local->listener->websocket_forward) || !websocket_ip_compare(client->local->listener->websocket_forward, client->ip))
 		{
 			unreal_log(ULOG_WARNING, "websocket", "UNAUTHORIZED_FORWARDED_HEADER", client, "Received unauthorized Forwarded header from $ip", log_data_string("ip", client->ip));
 			dead_socket(client, "Forwarded: no access");
@@ -694,8 +700,7 @@ int websocket_handshake_valid(Client *client)
 		struct HTTPForwardedHeader *forwarded;
 		forwarded = websocket_parse_forwarded_header(WSU(client)->forwarded);
 		/* check header values */
-		char scratch[64];
-		if ((inet_pton(AF_INET, forwarded->ip, scratch) != 1) && (inet_pton(AF_INET6, forwarded->ip, scratch) != 1))
+		if (!is_ip_valid(forwarded->ip))
 		{
 			unreal_log(ULOG_WARNING, "websocket", "INVALID_FORWARDED_IP", client, "Received invalid IP in Forwarded header from $ip", log_data_string("ip", client->ip));
 			dead_socket(client, "Forwarded: invalid IP");
@@ -1165,3 +1170,33 @@ int websocket_send_pong(Client *client, char *buf, int len)
 	send_queued(client);
 	return 0;
 }
+
+/** Compare IP addresses (for authorization checking) */
+int websocket_ip_compare(const char *ip1, const char *ip2)
+{
+	uint32_t ip4[2];
+	uint16_t ip6[16];
+	int i;
+	if (inet_pton(AF_INET, ip1, &ip4[0]) == 1) /* IPv4 */
+	{
+		if (inet_pton(AF_INET, ip2, &ip4[1]) == 1) /* both are valid, let's compare */
+		{
+			return ip4[0] == ip4[1];
+		}
+		return 0;
+	}
+	if (inet_pton(AF_INET6, ip1, &ip6[0]) == 1) /* IPv6 */
+	{
+		if (inet_pton(AF_INET6, ip2, &ip6[8]) == 1)
+		{
+			for (i = 0; i < 8; i++)
+			{
+				if (ip6[i] != ip6[i+8])
+					return 0;
+			}
+			return 1;
+		}
+	}
+	return 0; /* neither valid IPv4 nor IPv6 */
+}
+
