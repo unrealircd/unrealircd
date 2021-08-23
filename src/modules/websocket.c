@@ -722,6 +722,8 @@ int websocket_handshake_valid(Client *client)
 		{
 			/* taken from socket.c */
 			struct hostent *he;
+			unrealdns_delreq_bycptr(client); /* in case the proxy ip is still in progress of being looked up */
+			ClearDNSLookup(client);
 			he = unrealdns_doclient(client); /* call this once more */
 			if (!client->local->hostp)
 			{
