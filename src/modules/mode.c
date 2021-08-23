@@ -620,7 +620,7 @@ void do_mode_char_write(char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], u_int *pcount,
 #ifdef DEBUGMODE
 		abort();
 #else
-		return 0;
+		return;
 #endif
 
 	ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
