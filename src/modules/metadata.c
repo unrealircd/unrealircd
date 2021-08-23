@@ -474,17 +474,17 @@ int notify_or_queue(Client *client, char *who, char *key, char *value, Client *c
 	int trylater = 0;
 	if (!who)
 	{
-		sendto_snomask(SNO_JUNK, "notify_or_queue called with null who!");
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "notify_or_queue called with null who!");
 		return 0;
 	}
 	if (!key)
 	{
-		sendto_snomask(SNO_JUNK, "notify_or_queue called with null key!");
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "notify_or_queue called with null key!");
 		return 0;
 	}
 	if (!client)
 	{
-		sendto_snomask(SNO_JUNK, "notify_or_queue called with null client!");
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "notify_or_queue called with null client!");
 		return 0;
 	}
 
@@ -514,17 +514,17 @@ void send_change(Client *client, char *who, char *key, char *value, Client *chan
 	char *sender = NULL;
 	if (!key)
 	{
-		sendto_snomask(SNO_JUNK, "send_change called with null key!");
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "send_change called with null key!");
 		return;
 	}
 	if (!who)
 	{
-		sendto_snomask(SNO_JUNK, "send_change called with null who!");
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "send_change called with null who!");
 		return;
 	}
 	if (!client)
 	{
-		sendto_snomask(SNO_JUNK, "send_change called with null client!");
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "send_change called with null client!");
 		return;
 	}
 	if (changer)
@@ -1051,7 +1051,8 @@ CMD_FUNC(cmd_metadata_local)
 				strlcat(buf, parv[i], 1024);
 			strlcat(buf, " ", 1024);
 		}
-		sendto_snomask(SNO_JUNK, "Received METADATA, sender %s, params: %s", client->name, buf);
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", client, "Received METADATA, sender $sender, params: $params",
+			log_data_string("sender", client->name), log_data_string("params", buf));
 	}
 	
 	CHECKPARAMSCNT_OR_DIE(2, return);
@@ -1196,7 +1197,8 @@ CMD_FUNC(cmd_metadata_remote)
 				strlcat(buf, parv[i], 1024);
 			strlcat(buf, " ", 1024);
 		}
-		sendto_snomask(SNO_JUNK, "Received remote METADATA, sender: %s, params: %s", client->name, buf);
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", client, "Received METADATA, sender $sender, params: $params",
+			log_data_string("sender", client->name), log_data_string("params", buf));
 	}
 	
 	if (parc < 5 || BadPtr(parv[4]))
@@ -1206,7 +1208,8 @@ CMD_FUNC(cmd_metadata_remote)
 			value = NULL;
 		} else
 		{
-			sendto_snomask(SNO_JUNK, "METADATA not enough args from %s", client->name);
+			unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", client, "METADATA S2S: not enough args from $sender",
+				log_data_string("sender", client->name));
 			return;
 		}
 	} else
