@@ -79,9 +79,9 @@ MOD_UNLOAD()
 int extended_monitor_away(Client *client, MessageTag *mtags, char *reason, int already_as_away) /* FIXME double away notifications! */
 {
 	if (reason)
-		watch_check(client, RPL_GONEAWAY);
+		watch_check(client, WATCH_EVENT_AWAY);
 	else
-		watch_check(client, RPL_NOTAWAY);
+		watch_check(client, WATCH_EVENT_NOTAWAY);
 
 	return 0;
 }
@@ -89,22 +89,22 @@ int extended_monitor_away(Client *client, MessageTag *mtags, char *reason, int a
 int extended_monitor_account_login(Client *client, MessageTag *mtags)
 {
 	if (IsLoggedIn(client))
-		watch_check(client, RPL_LOGGEDIN);
+		watch_check(client, WATCH_EVENT_LOGGEDIN);
 	else
-		watch_check(client, RPL_LOGGEDOUT);
+		watch_check(client, WATCH_EVENT_LOGGEDOUT);
 
 	return 0;
 }
 
 int extended_monitor_userhost_changed(Client *client, const char *olduser, const char *oldhost)
 {
-	watch_check(client, RPL_USERHOST);
+	watch_check(client, WATCH_EVENT_USERHOST);
 	return 0;
 }
 
 int extended_monitor_realname_changed(Client *client, const char *oldinfo)
 {
-	watch_check(client, 1000); /* FIXME add separate defines for this */
+	watch_check(client, WATCH_EVENT_REALNAME);
 	return 0;
 }
 
@@ -121,27 +121,27 @@ int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int re
 
 	switch (reply)
 	{
-		case RPL_GONEAWAY:
+		case WATCH_EVENT_AWAY:
 			if (HasCapability(lp->value.client, "away-notify"))
 				sendto_prefix_one(lp->value.client, client, NULL, ":%s AWAY :%s", client->name, client->user->away);
 			break;
-		case RPL_NOTAWAY:
+		case WATCH_EVENT_NOTAWAY:
 			if (HasCapability(lp->value.client, "away-notify"))
 				sendto_prefix_one(lp->value.client, client, NULL, ":%s AWAY", client->name);
 			break;
-		case RPL_LOGGEDIN:
+		case WATCH_EVENT_LOGGEDIN:
 			if (HasCapability(lp->value.client, "account-notify"))
 				sendto_prefix_one(lp->value.client, client, NULL, ":%s ACCOUNT :%s", client->name, client->user->account);
 			break;
-		case RPL_LOGGEDOUT:
+		case WATCH_EVENT_LOGGEDOUT:
 			if (HasCapability(lp->value.client, "account-notify"))
 				sendto_prefix_one(lp->value.client, client, NULL, ":%s ACCOUNT :*", client->name);
 			break;
-		case RPL_USERHOST:
+		case WATCH_EVENT_USERHOST:
 			if (HasCapability(lp->value.client, "chghost"))
 				sendto_prefix_one(lp->value.client, client, NULL, ":%s CHGHOST %s %s", client->name, client->user->username, GetHost(client));
 			break;
-		case 1000:
+		case WATCH_EVENT_REALNAME:
 			if (HasCapability(lp->value.client, "setname"))
 				sendto_prefix_one(lp->value.client, client, NULL, ":%s SETNAME :%s", client->name, client->info);
 			break;

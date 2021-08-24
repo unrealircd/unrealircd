@@ -84,25 +84,25 @@ int monitor_nickchange(Client *client, MessageTag *mtags, char *newnick)
 	if (!smycmp(client->name, newnick)) // new nick is same as old one, maybe the case changed
 		return 0;
 
-	watch_check(client, RPL_MONOFFLINE);
+	watch_check(client, WATCH_EVENT_OFFLINE);
 	return 0;
 }
 
 int monitor_post_nickchange(Client *client, MessageTag *mtags)
 {
-	watch_check(client, RPL_MONONLINE);
+	watch_check(client, WATCH_EVENT_ONLINE);
 	return 0;
 }
 
 int monitor_quit(Client *client, MessageTag *mtags, char *comment)
 {
-	watch_check(client, RPL_MONOFFLINE);
+	watch_check(client, WATCH_EVENT_OFFLINE);
 	return 0;
 }
 
 int monitor_connect(Client *client)
 {
-	watch_check(client, RPL_MONONLINE);
+	watch_check(client, WATCH_EVENT_ONLINE);
 	return 0;
 }
 
@@ -113,10 +113,10 @@ int monitor_notification(Client *client, Watch *watch, Link *lp, int reply)
 
 	switch (reply)
 	{
-		case RPL_MONONLINE:
+		case WATCH_EVENT_ONLINE:
 			sendnumeric(lp->value.client, RPL_MONONLINE, client->name, client->user->username, GetHost(client));
 			break;
-		case RPL_MONOFFLINE:
+		case WATCH_EVENT_OFFLINE:
 			sendnumeric(lp->value.client, RPL_MONOFFLINE, client->name);
 			break;
 		default:

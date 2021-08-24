@@ -311,37 +311,37 @@ CMD_FUNC(cmd_watch)
 int watch_user_quit(Client *client, MessageTag *mtags, char *comment)
 {
 	if (IsUser(client))
-		watch_check(client, RPL_LOGOFF);
+		watch_check(client, WATCH_EVENT_OFFLINE);
 	return 0;
 }
 
 int watch_away(Client *client, MessageTag *mtags, char *reason, int already_as_away)
 {
 	if (reason)
-		watch_check(client, already_as_away ? RPL_REAWAY : RPL_GONEAWAY);
+		watch_check(client, already_as_away ? WATCH_EVENT_REAWAY : WATCH_EVENT_AWAY);
 	else
-		watch_check(client, RPL_NOTAWAY);
+		watch_check(client, WATCH_EVENT_NOTAWAY);
 
 	return 0;
 }
 
 int watch_nickchange(Client *client, MessageTag *mtags, char *newnick)
 {
-	watch_check(client, RPL_LOGOFF);
+	watch_check(client, WATCH_EVENT_OFFLINE);
 
 	return 0;
 }
 
 int watch_post_nickchange(Client *client, MessageTag *mtags)
 {
-	watch_check(client, RPL_LOGON);
+	watch_check(client, WATCH_EVENT_ONLINE);
 
 	return 0;
 }
 
 int watch_user_connect(Client *client)
 {
-	watch_check(client, RPL_LOGON);
+	watch_check(client, WATCH_EVENT_ONLINE);
 
 	return 0;
 }
@@ -353,7 +353,7 @@ int watch_notification(Client *client, Watch *watch, Link *lp, int reply)
 	if (!(lp->flags & WATCH_FLAG_TYPE_WATCH))
 		return 0;
 	
-	if ((reply == RPL_GONEAWAY) || (reply == RPL_NOTAWAY) || (reply == RPL_REAWAY))
+	if ((reply == WATCH_EVENT_AWAY) || (reply == WATCH_EVENT_NOTAWAY) || (reply == WATCH_EVENT_REAWAY))
 		awaynotify = 1;
 
 	if (!awaynotify)
@@ -371,15 +371,15 @@ int watch_notification(Client *client, Watch *watch, Link *lp, int reply)
 		if (!(lp->flags & WATCH_FLAG_AWAYNOTIFY))
 			return 0; /* skip away/unaway notification for users not interested in them */
 
-		if (reply == RPL_NOTAWAY)
-			sendnumeric(lp->value.client, reply,
+		if (reply == WATCH_EVENT_NOTAWAY)
+			sendnumeric(lp->value.client, RPL_NOTAWAY,
 			    client->name,
 			    (IsUser(client) ? client->user->username : "<N/A>"),
 			    (IsUser(client) ?
 			    (IsHidden(client) ? client->user->virthost : client->
 			    user->realhost) : "<N/A>"), client->user->away_since);
 		else /* RPL_GONEAWAY / RPL_REAWAY */
-			sendnumeric(lp->value.client, reply,
+			sendnumeric(lp->value.client, (reply == WATCH_EVENT_AWAY)?RPL_GONEAWAY:RPL_REAWAY,
 			    client->name,
 			    (IsUser(client) ? client->user->username : "<N/A>"),
 			    (IsUser(client) ?

@@ -1966,6 +1966,17 @@ struct Mode {
 /* behaviour switches */
 #define WATCH_FLAG_AWAYNOTIFY	(1<<8) /* should send AWAY notifications */
 
+/* watch triggering events */
+#define WATCH_EVENT_ONLINE		0
+#define WATCH_EVENT_OFFLINE		1
+#define WATCH_EVENT_AWAY		2
+#define WATCH_EVENT_NOTAWAY		3
+#define WATCH_EVENT_REAWAY		4
+#define WATCH_EVENT_USERHOST	5
+#define WATCH_EVENT_REALNAME	6
+#define WATCH_EVENT_LOGGEDIN	7
+#define WATCH_EVENT_LOGGEDOUT	8
+
 /* Used for notify-hash buckets... -Donwulff */
 
 struct Watch {
