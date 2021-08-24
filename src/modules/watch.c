@@ -358,7 +358,7 @@ int watch_notification(Client *client, Watch *watch, Link *lp, int event)
 
 	if (!awaynotify)
 	{
-		sendnumeric(lp->value.client, (event == WATCH_EVENT_OFFLINE)?RPL_MONOFFLINE:RPL_MONONLINE,
+		sendnumeric(lp->value.client, (event == WATCH_EVENT_OFFLINE)?RPL_LOGOFF:RPL_LOGON,
 		    client->name,
 		    (IsUser(client) ? client->user->username : "<N/A>"),
 		    (IsUser(client) ?
