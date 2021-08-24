@@ -28,7 +28,7 @@ int extended_monitor_away(Client *client, MessageTag *mtags, char *reason, int a
 int extended_monitor_account_login(Client *client, MessageTag *mtags);
 int extended_monitor_userhost_changed(Client *client, const char *olduser, const char *oldhost);
 int extended_monitor_realname_changed(Client *client, const char *oldinfo);
-int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int reply);
+int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int event);
 
 ModuleHeader MOD_HEADER
   = {
@@ -108,7 +108,7 @@ int extended_monitor_realname_changed(Client *client, const char *oldinfo)
 	return 0;
 }
 
-int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int reply)
+int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int event)
 {
 	if (!(lp->flags & WATCH_FLAG_TYPE_MONITOR))
 		return 0;
@@ -119,7 +119,7 @@ int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int re
 	if (has_common_channels(client, lp->value.client))
 		return 0; /* will be notified anyway */
 
-	switch (reply)
+	switch (event)
 	{
 		case WATCH_EVENT_AWAY:
 			if (HasCapability(lp->value.client, "away-notify"))

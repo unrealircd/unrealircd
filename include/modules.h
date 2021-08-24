@@ -2151,10 +2151,10 @@ int hooktype_post_remote_nickchange(Client *client, MessageTag *mtags);
  * @param client		The client whose state has changed
  * @param watch			The watch list entry
  * @param lp         	The associated watch list entry for WATCHing user
- * @param reply			The numeric that is supposed to be sent as a notification (module-defined)
+ * @param event			The event type (WATCH_EVENT_*)
  * @return The return value is ignored (use return 0)
  */
-int hooktype_watch_notification(Client *client, Watch *watch, Link *lp, int reply);
+int hooktype_watch_notification(Client *client, Watch *watch, Link *lp, int event);
 
 /** Called when user name or user host has changed.
  * @param client		The client whose user@host has changed

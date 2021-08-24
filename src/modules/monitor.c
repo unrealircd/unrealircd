@@ -33,7 +33,7 @@ int monitor_nickchange(Client *client, MessageTag *mtags, char *newnick);
 int monitor_post_nickchange(Client *client, MessageTag *mtags);
 int monitor_quit(Client *client, MessageTag *mtags, char *comment);
 int monitor_connect(Client *client);
-int monitor_notification(Client *client, Watch *watch, Link *lp, int reply);
+int monitor_notification(Client *client, Watch *watch, Link *lp, int event);
 
 ModuleHeader MOD_HEADER
   = {
@@ -106,12 +106,12 @@ int monitor_connect(Client *client)
 	return 0;
 }
 
-int monitor_notification(Client *client, Watch *watch, Link *lp, int reply)
+int monitor_notification(Client *client, Watch *watch, Link *lp, int event)
 {
 	if (!(lp->flags & WATCH_FLAG_TYPE_MONITOR))
 		return 0;
 
-	switch (reply)
+	switch (event)
 	{
 		case WATCH_EVENT_ONLINE:
 			sendnumeric(lp->value.client, RPL_MONONLINE, client->name, client->user->username, GetHost(client));
