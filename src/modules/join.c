@@ -36,6 +36,7 @@ extern int find_invex(Channel *channel, Client *client);
 
 /* Local vars */
 static int bouncedtimes = 0;
+long CAP_EXTENDED_JOIN = 0L;
 
 /* Macros */
 #define MAXBOUNCE   5 /** Most sensible */
@@ -64,6 +65,11 @@ MOD_TEST()
 
 MOD_INIT()
 {
+	ClientCapabilityInfo c;
+	memset(&c, 0, sizeof(c));
+	c.name = "extended-join";
+	ClientCapabilityAdd(modinfo->handle, &c, &CAP_EXTENDED_JOIN);
+
 	CommandAdd(modinfo->handle, MSG_JOIN, cmd_join, MAXPARA, CMD_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -169,8 +175,6 @@ void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mta
 	Client *acptr;
 	char joinbuf[512];
 	char exjoinbuf[512];
-	long CAP_EXTENDED_JOIN = ClientCapabilityBit("extended-join");
-	long CAP_AWAY_NOTIFY = ClientCapabilityBit("away-notify");
 
 	ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN :%s",
 		client->name, client->user->username, GetHost(client), channel->name);
@@ -194,15 +198,6 @@ void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mta
 			sendto_one(acptr, mtags, "%s", exjoinbuf);
 		else
 			sendto_one(acptr, mtags, "%s", joinbuf);
-
-		if (client->user->away && HasCapabilityFast(acptr, CAP_AWAY_NOTIFY))
-		{
-			MessageTag *mtags_away = NULL;
-			new_message(client, NULL, &mtags_away);
-			sendto_one(acptr, mtags_away, ":%s!%s@%s AWAY :%s",
-			           client->name, client->user->username, GetHost(client), client->user->away);
-			free_message_tags(mtags_away);
-		}
 	}
 }
 

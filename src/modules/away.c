@@ -25,6 +25,9 @@
 #include "unrealircd.h"
 
 CMD_FUNC(cmd_away);
+int away_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
+
+long CAP_AWAY_NOTIFY = 0L;
 
 #define MSG_AWAY 	"AWAY"	
 
@@ -39,7 +42,14 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
+	ClientCapabilityInfo c;
+	memset(&c, 0, sizeof(c));
+	c.name = "away-notify";
+	ClientCapabilityAdd(modinfo->handle, &c, &CAP_AWAY_NOTIFY);
 	CommandAdd(modinfo->handle, MSG_AWAY, cmd_away, 1, CMD_USER);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, away_join);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_JOIN, 0, away_join);
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -52,6 +62,33 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
+}
+
+int away_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[])
+{
+	Member *lp;
+	Client *acptr;
+	int invisible = invisible_user_in_channel(client, channel);
+	for (lp = channel->members; lp; lp = lp->next)
+	{
+		acptr = lp->client;
+
+		if (!MyConnect(acptr))
+			continue; /* only locally connected clients */
+
+		if (invisible && !(lp->flags & (CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)) && (client != acptr))
+			continue; /* skip non-ops if requested to (used for mode +D), but always send to 'client' */
+
+		if (client->user->away && HasCapabilityFast(acptr, CAP_AWAY_NOTIFY))
+		{
+			MessageTag *mtags_away = NULL;
+			new_message(client, NULL, &mtags_away);
+			sendto_one(acptr, mtags_away, ":%s!%s@%s AWAY :%s",
+			           client->name, client->user->username, GetHost(client), client->user->away);
+			free_message_tags(mtags_away);
+		}
+	}
+	return 0;
 }
 
 /** Mark client as AWAY or mark them as back (in case of empty reason) */
@@ -73,7 +110,7 @@ CMD_FUNC(cmd_away)
 
 			new_message(client, recv_mtags, &mtags);
 			sendto_server(client, 0, 0, mtags, ":%s AWAY", client->name);
-			sendto_local_common_channels(client, client, ClientCapabilityBit("away-notify"), mtags,
+			sendto_local_common_channels(client, client, CAP_AWAY_NOTIFY, mtags,
 			                             ":%s AWAY", client->name);
 			RunHook4(HOOKTYPE_AWAY, client, mtags, NULL, 0);
 			free_message_tags(mtags);
@@ -125,7 +162,7 @@ CMD_FUNC(cmd_away)
 		sendnumeric(client, RPL_NOWAWAY);
 
 	sendto_local_common_channels(client, client,
-	                             ClientCapabilityBit("away-notify"), mtags,
+	                             CAP_AWAY_NOTIFY, mtags,
 	                             ":%s AWAY :%s", client->name, client->user->away);
 
 	RunHook4(HOOKTYPE_AWAY, client, mtags, client->user->away, already_as_away);

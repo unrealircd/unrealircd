@@ -24,6 +24,9 @@
 
 CMD_FUNC(cmd_names);
 
+long CAP_MULTI_PREFIX = 0L;
+long CAP_USERHOST_IN_NAMES = 0L;
+
 #define MSG_NAMES 	"NAMES"
 
 ModuleHeader MOD_HEADER
@@ -37,6 +40,14 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
+	ClientCapabilityInfo c;
+	memset(&c, 0, sizeof(c));
+	c.name = "multi-prefix";
+	ClientCapabilityAdd(modinfo->handle, &c, &CAP_MULTI_PREFIX);
+	memset(&c, 0, sizeof(c));
+	c.name = "userhost-in-names";
+	ClientCapabilityAdd(modinfo->handle, &c, &CAP_USERHOST_IN_NAMES);
+
 	CommandAdd(modinfo->handle, MSG_NAMES, cmd_names, MAXPARA, CMD_USER|CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -66,8 +77,8 @@ static char buf[BUFSIZE];
 #define TRUNCATED_NAMES 64
 CMD_FUNC(cmd_names)
 {
-	int multiprefix = (MyConnect(client) && HasCapability(client, "multi-prefix"));
-	int uhnames = (MyConnect(client) && HasCapability(client, "userhost-in-names")); // cache UHNAMES support
+	int multiprefix = (MyConnect(client) && HasCapabilityFast(client, CAP_MULTI_PREFIX));
+	int uhnames = (MyConnect(client) && HasCapabilityFast(client, CAP_USERHOST_IN_NAMES)); // cache UHNAMES support
 	int bufLen = NICKLEN + (!uhnames ? 0 : (1 + USERLEN + 1 + HOSTLEN));
 	int mlen = strlen(me.name) + bufLen + 7;
 	Channel *channel;

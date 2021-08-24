@@ -43,12 +43,7 @@ int cap_never_visible(Client *client);
 
 /* Variables */
 long CAP_IN_PROGRESS = 0L;
-long CAP_ACCOUNT_NOTIFY = 0L;
-long CAP_AWAY_NOTIFY = 0L;
-long CAP_MULTI_PREFIX = 0L;
-long CAP_USERHOST_IN_NAMES = 0L;
 long CAP_NOTIFY = 0L;
-long CAP_EXTENDED_JOIN = 0L;
 
 MOD_INIT()
 {
@@ -66,28 +61,8 @@ MOD_INIT()
 	ClientCapabilityAdd(modinfo->handle, &c, &CAP_IN_PROGRESS);
 
 	memset(&c, 0, sizeof(c));
-	c.name = "account-notify";
-	ClientCapabilityAdd(modinfo->handle, &c, &CAP_ACCOUNT_NOTIFY);
-	
-	memset(&c, 0, sizeof(c));
-	c.name = "away-notify";
-	ClientCapabilityAdd(modinfo->handle, &c, &CAP_AWAY_NOTIFY);
-
-	memset(&c, 0, sizeof(c));
-	c.name = "multi-prefix";
-	ClientCapabilityAdd(modinfo->handle, &c, &CAP_MULTI_PREFIX);
-
-	memset(&c, 0, sizeof(c));
-	c.name = "userhost-in-names";
-	ClientCapabilityAdd(modinfo->handle, &c, &CAP_USERHOST_IN_NAMES);
-
-	memset(&c, 0, sizeof(c));
 	c.name = "cap-notify";
 	ClientCapabilityAdd(modinfo->handle, &c, &CAP_NOTIFY);
-
-	memset(&c, 0, sizeof(c));
-	c.name = "extended-join";
-	ClientCapabilityAdd(modinfo->handle, &c, &CAP_EXTENDED_JOIN);
 
 	HookAdd(modinfo->handle, HOOKTYPE_IS_HANDSHAKE_FINISHED, 0, cap_is_handshake_finished);
 
