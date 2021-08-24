@@ -37,7 +37,14 @@
 #define HOP_OR_MORE (CHFL_HALFOP | CHFL_CHANOP)
 #endif
 
-#define CHECKPARAMSCNT_OR_DIE(count, return) { if(parc < count+1 || BadPtr(parv[count])) { sendnumeric(client, ERR_NEEDMOREPARAMS, "METADATA"); return; } }
+#define CHECKPARAMSCNT_OR_DIE(count, return) \
+{ \
+	if (parc < count+1 || BadPtr(parv[count])) \
+	{ \
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "METADATA"); \
+		return; \
+	} \
+}
 
 /* target "*" is always the user issuing the command */
 
@@ -70,9 +77,18 @@
 	} \
 }
 
-#define FOR_EACH_KEY() while(keyindex++, key = parv[keyindex], (!BadPtr(key) && keyindex < parc))
+#define FOR_EACH_KEY(keyindex, parc, parv) while(keyindex++, key = parv[keyindex], (!BadPtr(key) && keyindex < parc))
 #define IsSendable(x)		(DBufLength(&x->local->sendQ) < 2048)
-#define CHECKREGISTERED_OR_DIE(client, return)	{ if(!IsUser(client)){ sendnumeric(client, ERR_NOTREGISTERED); return; } }
+#define CHECKREGISTERED_OR_DIE(client, return) \
+{ \
+	if (!IsUser(client)) \
+	{ \
+		sendnumeric(client, ERR_NOTREGISTERED); \
+		return; \
+	} \
+}
+#define USER_METADATA(client) moddata_client(client, metadataUser).ptr
+#define CHANNEL_METADATA(channel) moddata_channel(channel, metadataChannel).ptr
 
 struct metadata {
 	char *name;
@@ -80,21 +96,21 @@ struct metadata {
 	struct metadata *next;
 };
 
-struct subscriptions {
+struct metadata_subscriptions {
 	char *name;
-	struct subscriptions *next;
+	struct metadata_subscriptions *next;
 };
 
-struct moddata_user {
+struct metadata_moddata_user {
 	struct metadata *metadata;
-	struct subscriptions *subs;
-	struct unsynced *us;
+	struct metadata_subscriptions *subs;
+	struct metadata_unsynced *us;
 };
 
-struct unsynced { /* we're listing users (nicknames) that should be synced but were not */
+struct metadata_unsynced { /* we're listing users (nicknames) that should be synced but were not */
 	char *name;
 	char *key;
-	struct unsynced *next;
+	struct metadata_unsynced *next;
 };
 
 CMD_FUNC(cmd_metadata);
@@ -106,23 +122,20 @@ char *metadata_isupport_param(void);
 int metadata_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int metadata_configposttest(int *errs);
 int metadata_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
-/* hooks */
 int metadata_server_sync(Client *client);
 int metadata_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
 int metadata_user_registered(Client *client);
-
 void metadata_user_free(ModData *md);
 void metadata_channel_free(ModData *md);
-void sendnumeric(Client *to, int numeric, ...);
-void free_metadata(struct metadata *metadata);
-void free_subs(struct subscriptions *subs);
-int is_subscribed(Client *user, char *key);
-char *get_user_key_value(Client *user, char *key);
-char *get_channel_key_value(Channel *channel, char *key);
+void metadata_free(struct metadata *metadata);
+void metadata_free_subs(struct metadata_subscriptions *subs);
+int metadata_is_subscribed(Client *user, char *key);
+char *metadata_get_user_key_value(Client *user, char *key);
+char *metadata_get_channel_key_value(Channel *channel, char *key);
 void user_metadata_changed(Client *user, char *key, char *value, Client *changer);
 void channel_metadata_changed(Channel *channel, char *key, char *value, Client *changer);
 void metadata_free_list(struct metadata *metadata, char *whose, Client *client);
-struct moddata_user *prepare_user_moddata(Client *user);
+struct metadata_moddata_user *metadata_prepare_user_moddata(Client *user);
 void metadata_set_channel(Channel *channel, char *key, char *value, Client *client);
 void metadata_set_user(Client *user, char *key, char *value, Client *client);
 void metadata_send_channel(Channel *channel, char *key, Client *client);
@@ -134,17 +147,17 @@ void metadata_send_subscribtions(Client *client);
 void metadata_send_all_for_channel(Channel *channel, Client *client);
 void metadata_send_all_for_user(Client *user, Client *client);
 void metadata_sync(Client *client);
-int key_valid(char *key);
-int check_perms(Client *user, Channel *channel, Client *client, char *key, int mode);
-void send_change(Client *client, char *who, char *key, char *value, Client *changer);
-int notify_or_queue(Client *client, char *who, char *key, char *value, Client *changer);
+int metadata_key_valid(char *key);
+int metadata_check_perms(Client *user, Channel *channel, Client *client, char *key, int mode);
+void metadata_send_change(Client *client, char *who, char *key, char *value, Client *changer);
+int metadata_notify_or_queue(Client *client, char *who, char *key, char *value, Client *changer);
 
 ModDataInfo *metadataUser;
 ModDataInfo *metadataChannel;
 long CAP_METADATA = 0L;
 long CAP_METADATA_NOTIFY = 0L;
 
-struct settings {
+struct metadata_settings_s {
 	int max_user_metadata;
 	int max_channel_metadata;
 	int max_subscriptions;
@@ -416,25 +429,25 @@ char *metadata_isupport_param(void)
 	return buf;
 }
 
-void free_metadata(struct metadata *metadata)
+void metadata_free(struct metadata *metadata)
 {
 	safe_free(metadata->name);
 	safe_free(metadata->value);
 	safe_free(metadata);
 }
 
-void free_subs(struct subscriptions *subs)
+void metadata_free_subs(struct metadata_subscriptions *subs)
 {
 	safe_free(subs->name);
 	safe_free(subs);
 }
 
-int is_subscribed(Client *user, char *key)
+int metadata_is_subscribed(Client *user, char *key)
 {
-	struct moddata_user *moddata = moddata_client(user, metadataUser).ptr;
+	struct metadata_moddata_user *moddata = USER_METADATA(user);
 	if (!moddata)
 		return 0;
-	struct subscriptions *subs;
+	struct metadata_subscriptions *subs;
 	for (subs = moddata->subs; subs; subs = subs->next)
 	{
 		if (!strcasecmp(subs->name, key))
@@ -443,9 +456,9 @@ int is_subscribed(Client *user, char *key)
 	return 0;
 }
 
-char *get_user_key_value(Client *user, char *key)
+char *metadata_get_user_key_value(Client *user, char *key)
 {
-	struct moddata_user *moddata = moddata_client(user, metadataUser).ptr;
+	struct metadata_moddata_user *moddata = USER_METADATA(user);
 	struct metadata *metadata = NULL;
 	if (!moddata)
 		return NULL;
@@ -457,10 +470,10 @@ char *get_user_key_value(Client *user, char *key)
 	return NULL;
 }
 
-char *get_channel_key_value(Channel *channel, char *key)
+char *metadata_get_channel_key_value(Channel *channel, char *key)
 {
 	struct metadata *metadata;
-	for (metadata = moddata_channel(channel, metadataChannel).ptr; metadata; metadata = metadata->next)
+	for (metadata = CHANNEL_METADATA(channel); metadata; metadata = metadata->next)
 	{
 		if (!strcasecmp(key, metadata->name))
 			return metadata->value;
@@ -469,39 +482,39 @@ char *get_channel_key_value(Channel *channel, char *key)
 }
 
 /* returns 1 if something remains to sync */
-int notify_or_queue(Client *client, char *who, char *key, char *value, Client *changer)
+int metadata_notify_or_queue(Client *client, char *who, char *key, char *value, Client *changer)
 {
 	int trylater = 0;
 	if (!who)
 	{
-		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "notify_or_queue called with null who!");
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "metadata_notify_or_queue called with null who!");
 		return 0;
 	}
 	if (!key)
 	{
-		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "notify_or_queue called with null key!");
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "metadata_notify_or_queue called with null key!");
 		return 0;
 	}
 	if (!client)
 	{
-		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "notify_or_queue called with null client!");
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "metadata_notify_or_queue called with null client!");
 		return 0;
 	}
 
-	struct moddata_user *moddata = moddata_client(client, metadataUser).ptr;
+	struct metadata_moddata_user *moddata = USER_METADATA(client);
 	if (!moddata)
-		moddata = prepare_user_moddata(client);
-	struct unsynced **us = &moddata->us;
+		moddata = metadata_prepare_user_moddata(client);
+	struct metadata_unsynced **us = &moddata->us;
 
 	if (IsSendable(client))
 	{
-		send_change(client, who, key, value, changer);
+		metadata_send_change(client, who, key, value, changer);
 	} else
 	{ /* store for the SYNC */
 		trylater = 1;
 		while (*us)
 			us = &(*us)->next; /* find last list element */
-		*us = safe_alloc(sizeof(struct unsynced));
+		*us = safe_alloc(sizeof(struct metadata_unsynced));
 		(*us)->name = strdup(who);
 		(*us)->key = strdup(key);
 		(*us)->next = NULL;
@@ -509,22 +522,22 @@ int notify_or_queue(Client *client, char *who, char *key, char *value, Client *c
 	return trylater;
 }
 
-void send_change(Client *client, char *who, char *key, char *value, Client *changer)
+void metadata_send_change(Client *client, char *who, char *key, char *value, Client *changer)
 {
 	char *sender = NULL;
 	if (!key)
 	{
-		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "send_change called with null key!");
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "metadata_send_change called with null key!");
 		return;
 	}
 	if (!who)
 	{
-		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "send_change called with null who!");
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "metadata_send_change called with null who!");
 		return;
 	}
 	if (!client)
 	{
-		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "send_change called with null client!");
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", changer, "metadata_send_change called with null client!");
 		return;
 	}
 	if (changer)
@@ -558,15 +571,15 @@ void user_metadata_changed(Client *user, char *key, char *value, Client *changer
 		return; /* sanity check */
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{ /* notifications for local subscribers */
-		if(IsUser(acptr) && IsUser(user) && is_subscribed(acptr, key) && has_common_channels(user, acptr))
-			notify_or_queue(acptr, user->name, key, value, changer);
+		if(IsUser(acptr) && IsUser(user) && metadata_is_subscribed(acptr, key) && has_common_channels(user, acptr))
+			metadata_notify_or_queue(acptr, user->name, key, value, changer);
 	}
 
 	list_for_each_entry(acptr, &server_list, special_node)
 	{ /* notifications for linked servers, TODO change to sendto_server */
 		if (acptr == &me)
 			continue;
-		send_change(acptr, user->name, key, value, changer);
+		metadata_send_change(acptr, user->name, key, value, changer);
 	}
 }
 
@@ -577,15 +590,15 @@ void channel_metadata_changed(Channel *channel, char *key, char *value, Client *
 		return; /* sanity check */
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{ /* notifications for local subscribers */
-		if (is_subscribed(acptr, key) && IsMember(acptr, channel))
-			send_change(acptr, channel->name, key, value, changer);
+		if (metadata_is_subscribed(acptr, key) && IsMember(acptr, channel))
+			metadata_send_change(acptr, channel->name, key, value, changer);
 	}
 	
 	list_for_each_entry(acptr, &server_list, special_node)
 	{ /* notifications for linked servers, TODO change to sendto_server */
 		if(acptr == &me)
 			continue;
-		send_change(acptr, channel->name, key, value, changer);
+		metadata_send_change(acptr, channel->name, key, value, changer);
 	}
 }
 
@@ -622,13 +635,13 @@ void metadata_channel_free(ModData *md)
 
 void metadata_user_free(ModData *md)
 {
-	struct moddata_user *moddata = md->ptr;
+	struct metadata_moddata_user *moddata = md->ptr;
 	if (!moddata)
 		return; /* was not set */
-	struct subscriptions *sub = moddata->subs;
-	struct subscriptions *prev_sub = sub;
-	struct unsynced *us = moddata->us;
-	struct unsynced *prev_us;
+	struct metadata_subscriptions *sub = moddata->subs;
+	struct metadata_subscriptions *prev_sub = sub;
+	struct metadata_unsynced *us = moddata->us;
+	struct metadata_unsynced *prev_us;
 	while (sub)
 	{
 		safe_free(sub->name);
@@ -649,10 +662,10 @@ void metadata_user_free(ModData *md)
 	safe_free(moddata);
 }
 
-struct moddata_user *prepare_user_moddata(Client *user)
+struct metadata_moddata_user *metadata_prepare_user_moddata(Client *user)
 {
-	moddata_client(user, metadataUser).ptr = safe_alloc(sizeof(struct moddata_user));
-	struct moddata_user *ptr = moddata_client(user, metadataUser).ptr;
+	USER_METADATA(user) = safe_alloc(sizeof(struct metadata_moddata_user));
+	struct metadata_moddata_user *ptr = USER_METADATA(user);
 	ptr->metadata = NULL;
 	ptr->subs = NULL;
 	return ptr;
@@ -677,9 +690,9 @@ void metadata_set_user(Client *user, char *key, char *value, Client *client)
 		target_name = "*";
 	}
 		
-	struct moddata_user *moddata = moddata_client(target, metadataUser).ptr;
+	struct metadata_moddata_user *moddata = USER_METADATA(target);
 	if (!moddata) /* first call for this user */
-		moddata = prepare_user_moddata(target);
+		moddata = metadata_prepare_user_moddata(target);
 	struct metadata **metadata = &moddata->metadata;
 	struct metadata *prev;
 	if (BadPtr(value) || strlen(value) == 0)
@@ -696,7 +709,7 @@ void metadata_set_user(Client *user, char *key, char *value, Client *client)
 		{
 			prev = *metadata;
 			*metadata = prev->next;
-			free_metadata(prev);
+			metadata_free(prev);
 			removed = 1;
 			changed = 1;
 		}
@@ -750,7 +763,7 @@ void metadata_set_channel(Channel *channel, char *key, char *value, Client *clie
 	int changed = 0;
 	int set = 0;
 	int count = 0;
-	struct metadata **metadata = (struct metadata **)&moddata_channel(channel, metadataChannel).ptr;
+	struct metadata **metadata = (struct metadata **)&CHANNEL_METADATA(channel);
 	struct metadata *prev;
 
 	if(BadPtr(value) || strlen(value) == 0)
@@ -767,7 +780,7 @@ void metadata_set_channel(Channel *channel, char *key, char *value, Client *clie
 		{
 			prev = *metadata;
 			*metadata = prev->next;
-			free_metadata(prev);
+			metadata_free(prev);
 			removed = 1;
 			changed = 1;
 		}
@@ -818,9 +831,9 @@ void metadata_set_channel(Channel *channel, char *key, char *value, Client *clie
 
 int metadata_subscribe(char *key, Client *client, int remove)
 {
-	struct moddata_user *moddata = moddata_client(client, metadataUser).ptr;
-	struct subscriptions **subs;
-	struct subscriptions *prev_subs;
+	struct metadata_moddata_user *moddata = USER_METADATA(client);
+	struct metadata_subscriptions **subs;
+	struct metadata_subscriptions *prev_subs;
 	int found = 0;
 	int count = 0;
 	int trylater = 0;
@@ -832,7 +845,7 @@ int metadata_subscribe(char *key, Client *client, int remove)
 		return 0;
 	
 	if (!moddata) /* first call for this user */
-		moddata = prepare_user_moddata(client);
+		moddata = metadata_prepare_user_moddata(client);
 	subs = &moddata->subs;
 	while (*subs)
 	{
@@ -844,7 +857,7 @@ int metadata_subscribe(char *key, Client *client, int remove)
 			{
 				prev_subs = *subs;
 				*subs = prev_subs->next;
-				free_subs(prev_subs);
+				metadata_free_subs(prev_subs);
 			}
 			break;
 		}
@@ -854,7 +867,7 @@ int metadata_subscribe(char *key, Client *client, int remove)
 	{
 		if (count < metadata_settings.max_subscriptions)
 		{
-			*subs = safe_alloc(sizeof(struct subscriptions));
+			*subs = safe_alloc(sizeof(struct metadata_subscriptions));
 			(*subs)->next = NULL;
 			(*subs)->name = strdup(key);
 		} else
@@ -874,9 +887,9 @@ int metadata_subscribe(char *key, Client *client, int remove)
 		{
 			value = NULL;
 			if (IsUser(client) && IsUser(acptr) && has_common_channels(acptr, client))
-				value = get_user_key_value(acptr, key);
+				value = metadata_get_user_key_value(acptr, key);
 			if (value)
-				trylater |= notify_or_queue(client, acptr->name, key, value, NULL);
+				trylater |= metadata_notify_or_queue(client, acptr->name, key, value, NULL);
 		}
 		for (hashnum = 0; hashnum < CHAN_HASH_TABLE_SIZE; hashnum++)
 		{
@@ -884,9 +897,9 @@ int metadata_subscribe(char *key, Client *client, int remove)
 			{
 				if (IsMember(client, channel))
 				{
-					value = get_channel_key_value(channel, key);
+					value = metadata_get_channel_key_value(channel, key);
 					if (value)
-						trylater |= notify_or_queue(client, channel->name, key, value, NULL);
+						trylater |= metadata_notify_or_queue(client, channel->name, key, value, NULL);
 				}
 			}
 		}
@@ -903,7 +916,7 @@ void metadata_send_channel(Channel *channel, char *key, Client *client)
 {
 	struct metadata *metadata;
 	int found = 0;
-	for (metadata = moddata_channel(channel, metadataChannel).ptr; metadata; metadata = metadata->next)
+	for (metadata = CHANNEL_METADATA(channel); metadata; metadata = metadata->next)
 	{
 		if (!strcasecmp(key, metadata->name))
 		{
@@ -920,7 +933,7 @@ void metadata_send_user(Client *user, char *key, Client *client)
 {
 	if (!user)
 		user = client;
-	struct moddata_user *moddata = moddata_client(user, metadataUser).ptr;
+	struct metadata_moddata_user *moddata = USER_METADATA(user);
 	struct metadata *metadata = NULL;
 	if (moddata)
 		metadata = moddata->metadata;
@@ -940,16 +953,16 @@ void metadata_send_user(Client *user, char *key, Client *client)
 
 void metadata_clear_channel(Channel *channel, Client *client)
 {
-	struct metadata *metadata = moddata_channel(channel, metadataChannel).ptr;
+	struct metadata *metadata = CHANNEL_METADATA(channel);
 	metadata_free_list(metadata, channel->name, client);
-	moddata_channel(channel, metadataChannel).ptr = NULL;
+	CHANNEL_METADATA(channel) = NULL;
 }
 
 void metadata_clear_user(Client *user, Client *client)
 {
 	if (!user)
 		user = client;
-	struct moddata_user *moddata = moddata_client(user, metadataUser).ptr;
+	struct metadata_moddata_user *moddata = USER_METADATA(user);
 	struct metadata *metadata = NULL;
 	if (!moddata)
 		return; /* nothing to delete */
@@ -960,8 +973,8 @@ void metadata_clear_user(Client *user, Client *client)
 
 void metadata_send_subscribtions(Client *client)
 {
-	struct subscriptions *subs;
-	struct moddata_user *moddata = moddata_client(client, metadataUser).ptr;
+	struct metadata_subscriptions *subs;
+	struct metadata_moddata_user *moddata = USER_METADATA(client);
 	if (!moddata)
 		return;
 	for (subs = moddata->subs; subs; subs = subs->next)
@@ -971,7 +984,7 @@ void metadata_send_subscribtions(Client *client)
 void metadata_send_all_for_channel(Channel *channel, Client *client)
 {
 	struct metadata *metadata;
-	for (metadata = moddata_channel(channel, metadataChannel).ptr; metadata; metadata = metadata->next)
+	for (metadata = CHANNEL_METADATA(channel); metadata; metadata = metadata->next)
 		sendnumeric(client, RPL_KEYVALUE, channel->name, metadata->name, "*", metadata->value);
 }
 
@@ -980,14 +993,14 @@ void metadata_send_all_for_user(Client *user, Client *client)
 	struct metadata *metadata;
 	if (!user)
 		user = client;
-	struct moddata_user *moddata = moddata_client(user, metadataUser).ptr;
+	struct metadata_moddata_user *moddata = USER_METADATA(user);
 	if (!moddata)
 		return;
 	for (metadata = moddata->metadata; metadata; metadata = metadata->next)
 		sendnumeric(client, RPL_KEYVALUE, user->name, metadata->name, "*", metadata->value);
 }
 
-int key_valid(char *key)
+int metadata_key_valid(char *key)
 {
 	for( ; *key; key++)
 	{
@@ -1004,7 +1017,7 @@ int key_valid(char *key)
 	return 1;
 }
 
-int check_perms(Client *user, Channel *channel, Client *client, char *key, int mode)
+int metadata_check_perms(Client *user, Channel *channel, Client *client, char *key, int mode)
 { /* either user or channel should be NULL */
 	Membership *lp;
 	if ((user == client) || (!user && !channel)) /* specified target is "*" or own nick */
@@ -1068,11 +1081,11 @@ CMD_FUNC(cmd_metadata_local)
 		CHECKREGISTERED_OR_DIE(client, return);
 		CHECKPARAMSCNT_OR_DIE(3, return);
 		PROCESS_TARGET_OR_DIE(target, user, channel, return);
-		FOR_EACH_KEY()
+		FOR_EACH_KEY(keyindex, parc, parv)
 		{
-			if (check_perms(user, channel, client, key, MODE_GET))
+			if (metadata_check_perms(user, channel, client, key, MODE_GET))
 			{
-				if (!key_valid(key))
+				if (!metadata_key_valid(key))
 				{
 					sendnumeric(client, ERR_KEYINVALID, key);
 					continue;
@@ -1087,7 +1100,7 @@ CMD_FUNC(cmd_metadata_local)
 	{ /* we're just not sending anything if there are no permissions */
 		CHECKREGISTERED_OR_DIE(client, return);
 		PROCESS_TARGET_OR_DIE(target, user, channel, return);
-		if (check_perms(user, channel, client, NULL, MODE_GET))
+		if (metadata_check_perms(user, channel, client, NULL, MODE_GET))
 		{
 			if (channel)
 				metadata_send_all_for_channel(channel, client);
@@ -1100,12 +1113,12 @@ CMD_FUNC(cmd_metadata_local)
 		CHECKPARAMSCNT_OR_DIE(3, return);
 		PROCESS_TARGET_OR_DIE(target, user, channel, return);
 		key = parv[3];
-		if (!check_perms(user, channel, client, key, MODE_SET))
+		if (!metadata_check_perms(user, channel, client, key, MODE_SET))
 			return;
 		if (parc > 3 && !BadPtr(parv[4]))
 			value = parv[4];
 
-		if (!key_valid(key))
+		if (!metadata_key_valid(key))
 		{
 			sendnumeric(client, ERR_KEYINVALID, key);
 			return;
@@ -1119,7 +1132,7 @@ CMD_FUNC(cmd_metadata_local)
 	{
 		CHECKREGISTERED_OR_DIE(client, return);
 		PROCESS_TARGET_OR_DIE(target, user, channel, return);
-		if (check_perms(user, channel, client, "*", MODE_SET))
+		if (metadata_check_perms(user, channel, client, "*", MODE_SET))
 		{
 			if (channel)
 				metadata_clear_channel(channel, client);
@@ -1132,9 +1145,9 @@ CMD_FUNC(cmd_metadata_local)
 		PROCESS_TARGET_OR_DIE(target, user, channel, return);
 		CHECKPARAMSCNT_OR_DIE(3, return);
 		trylater = 0;
-		FOR_EACH_KEY()
+		FOR_EACH_KEY(keyindex, parc, parv)
 		{
-			if(key_valid(key))
+			if(metadata_key_valid(key))
 			{
 				if(metadata_subscribe(key, client, 0))
 					trylater = 1;
@@ -1150,9 +1163,9 @@ CMD_FUNC(cmd_metadata_local)
 		CHECKREGISTERED_OR_DIE(client, return);
 		CHECKPARAMSCNT_OR_DIE(3, return);
 		int subok = 0;
-		FOR_EACH_KEY()
+		FOR_EACH_KEY(keyindex, parc, parv)
 		{
-			if(key_valid(key))
+			if(metadata_key_valid(key))
 			{
 				metadata_subscribe(key, client, 1);
 			} else
@@ -1220,7 +1233,7 @@ CMD_FUNC(cmd_metadata_remote)
 	key = parv[2];
 	channame = strchr(target, '#');
 
-	if (!*target || !strcmp(target, "*") || !key_valid(key))
+	if (!*target || !strcmp(target, "*") || !metadata_key_valid(key))
 	{
 		sendto_snomask(SNO_JUNK, "Bad metadata target %s or key %s from %s", target, key, client->name);
 		return;
@@ -1247,26 +1260,26 @@ CMD_FUNC(cmd_metadata)
 int metadata_server_sync(Client *client)
 { /* we send all our data to the server that was just linked */
 	Client *acptr;
-	struct moddata_user *moddata;
+	struct metadata_moddata_user *moddata;
 	struct metadata *metadata;
 	unsigned int  hashnum;
 	Channel *channel;
 	
 	list_for_each_entry(acptr, &client_list, client_node)
 	{ /* send out users (all on our side of the link) */
-		moddata = moddata_client(acptr, metadataUser).ptr;
+		moddata = USER_METADATA(acptr);
 		if(!moddata)
 			continue;
 		for (metadata = moddata->metadata; metadata; metadata = metadata->next)
-			send_change(client, acptr->name, metadata->name, metadata->value, &me);
+			metadata_send_change(client, acptr->name, metadata->name, metadata->value, &me);
 	}
 
 	for (hashnum = 0; hashnum < CHAN_HASH_TABLE_SIZE; hashnum++)
 	{ /* send out channels */
 		for(channel = hash_get_chan_bucket(hashnum); channel; channel = channel->hnextch)
 		{
-			for(metadata = moddata_channel(channel, metadataChannel).ptr; metadata; metadata = metadata->next)
-				send_change(client, channel->name, metadata->name, metadata->value, &me);
+			for(metadata = CHANNEL_METADATA(channel); metadata; metadata = metadata->next)
+				metadata_send_change(client, channel->name, metadata->name, metadata->value, &me);
 		}
 	}
 	return 0;
@@ -1277,36 +1290,36 @@ int metadata_join(Client *client, Channel *channel, MessageTag *mtags, char *par
 	Client *acptr;
 	Member *cm;
 	char *value;
-	struct unsynced *prev_us;
-	struct unsynced *us;
+	struct metadata_unsynced *prev_us;
+	struct metadata_unsynced *us;
 	Membership *lp;
-	struct subscriptions *subs;
+	struct metadata_subscriptions *subs;
 	struct metadata *metadata;
 
-	struct moddata_user *moddata = moddata_client(client, metadataUser).ptr;
+	struct metadata_moddata_user *moddata = USER_METADATA(client);
 	if(!moddata)
 		return 0; /* the user is both not subscribed to anything and has no own data */
 	for (metadata = moddata->metadata; metadata; metadata = metadata->next)
 	{ /* if joining user has metadata, let's notify all subscribers */
 		list_for_each_entry(acptr, &lclient_list, lclient_node)
 		{
-			if(IsMember(acptr, channel) && is_subscribed(acptr, metadata->name))
-				notify_or_queue(acptr, client->name, metadata->name, metadata->value, NULL);
+			if(IsMember(acptr, channel) && metadata_is_subscribed(acptr, metadata->name))
+				metadata_notify_or_queue(acptr, client->name, metadata->name, metadata->value, NULL);
 		}
 	}
 	for (subs = moddata->subs; subs; subs = subs->next)
 	{
-		value = get_channel_key_value(channel, subs->name); /* notify joining user about channel metadata */
+		value = metadata_get_channel_key_value(channel, subs->name); /* notify joining user about channel metadata */
 		if(value)
-			notify_or_queue(client, channel->name, subs->name, value, NULL);
+			metadata_notify_or_queue(client, channel->name, subs->name, value, NULL);
 		for (cm = channel->members; cm; cm = cm->next)
 		{ /* notify joining user about other channel members' metadata, TODO check if we already see this user elsewhere */
 			acptr = cm->client;
 			if (acptr == client)
 				continue; /* ignore own data */
-			value = get_user_key_value(acptr, subs->name);
+			value = metadata_get_user_key_value(acptr, subs->name);
 			if (value)
-				notify_or_queue(client, acptr->name, subs->name, value, NULL);
+				metadata_notify_or_queue(client, acptr->name, subs->name, value, NULL);
 		}
 	}
 	return 0;
@@ -1317,11 +1330,11 @@ void metadata_sync(Client *client)
 	Client *acptr;
 	Channel *channel = NULL;
 
-	struct moddata_user *my_moddata = moddata_client(client, metadataUser).ptr;
+	struct metadata_moddata_user *my_moddata = USER_METADATA(client);
 	if(!my_moddata)
 		return; /* nothing queued */
-	struct unsynced *us = my_moddata->us;
-	struct unsynced *prev_us;
+	struct metadata_unsynced *us = my_moddata->us;
+	struct metadata_unsynced *prev_us;
 	
 	while (us)
 	{
@@ -1330,7 +1343,7 @@ void metadata_sync(Client *client)
 		acptr = hash_find_nickatserver(us->name, NULL);
 		if (acptr && has_common_channels(acptr, client))
 		{ /* if not, the user has vanished since or one of us parted the channel */
-			struct moddata_user *moddata = moddata_client(acptr, metadataUser).ptr;
+			struct metadata_moddata_user *moddata = USER_METADATA(acptr);
 			if (moddata)
 			{
 				struct metadata *metadata = moddata->metadata;
@@ -1338,9 +1351,9 @@ void metadata_sync(Client *client)
 				{
 					if (!strcasecmp(us->key, metadata->name))
 					{ /* has it */
-						char *value = get_user_key_value(acptr, us->key);
+						char *value = metadata_get_user_key_value(acptr, us->key);
 						if(value)
-							send_change(client, us->name, us->key, value, NULL);
+							metadata_send_change(client, us->name, us->key, value, NULL);
 					}
 					metadata = metadata->next;
 				}
@@ -1358,7 +1371,7 @@ void metadata_sync(Client *client)
 int metadata_user_registered(Client *client)
 {	/*	if we have any metadata set at this point, let's broadcast it to other servers and users */
 	struct metadata *metadata;
-	struct moddata_user *moddata = moddata_client(client, metadataUser).ptr;
+	struct metadata_moddata_user *moddata = USER_METADATA(client);
 	if(!moddata)
 		return HOOK_CONTINUE;
 	for (metadata = moddata->metadata; metadata; metadata = metadata->next)
