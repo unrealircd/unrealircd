@@ -48,7 +48,6 @@ long CAP_AWAY_NOTIFY = 0L;
 long CAP_MULTI_PREFIX = 0L;
 long CAP_USERHOST_IN_NAMES = 0L;
 long CAP_NOTIFY = 0L;
-long CAP_CHGHOST = 0L;
 long CAP_EXTENDED_JOIN = 0L;
 
 MOD_INIT()
@@ -85,10 +84,6 @@ MOD_INIT()
 	memset(&c, 0, sizeof(c));
 	c.name = "cap-notify";
 	ClientCapabilityAdd(modinfo->handle, &c, &CAP_NOTIFY);
-
-	memset(&c, 0, sizeof(c));
-	c.name = "chghost";
-	ClientCapabilityAdd(modinfo->handle, &c, &CAP_CHGHOST);
 
 	memset(&c, 0, sizeof(c));
 	c.name = "extended-join";

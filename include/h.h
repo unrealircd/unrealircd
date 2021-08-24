@@ -775,6 +775,7 @@ extern MODVAR Watch *(*watch_get)(char *nick);
 extern MODVAR int (*watch_check)(Client *client, int reply);
 extern MODVAR char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options);
 extern MODVAR void (*do_unreal_log_remote_deliver)(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized);
+extern MODVAR char *(*get_chmodes_for_user)(Client *client, int flags);
 /* /Efuncs */
 
 /* TLS functions */
