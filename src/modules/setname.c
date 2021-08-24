@@ -84,7 +84,7 @@ char *setname_isupport_param(void){
 CMD_FUNC(cmd_setname)
 {
 	int xx;
-	char tmpinfo[REALLEN + 1];
+	char oldinfo[REALLEN + 1];
 	char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
 	ConfigItem_ban *bconf;
 	MessageTag *mtags = NULL;
@@ -112,10 +112,10 @@ CMD_FUNC(cmd_setname)
 		return;
 	}
 
+	strcpy(oldinfo, client->info);
+
 	if (MyUser(client))
 	{
-		/* set temp info for spamfilter check*/
-		strcpy(tmpinfo, client->info);
 		/* set the new name before we check, but don't send to servers unless it is ok */
 		strcpy(client->info, parv[1]);
 		spamfilter_build_user_string(spamfilter_user, client->name, client);
@@ -128,7 +128,7 @@ CMD_FUNC(cmd_setname)
 				sendto_one(client, mtags, "%s FAIL SETNAME CANNOT_CHANGE_REALNAME :Rejected by server", me.name);
 				free_message_tags(mtags);
 			}
-			strcpy(client->info, tmpinfo);
+			strcpy(client->info, oldinfo);
 			return;
 		}
 
@@ -157,4 +157,6 @@ CMD_FUNC(cmd_setname)
 			sendnotice(client, "Your \"real name\" is now set to be %s - you have to set it manually to undo it", parv[1]);
 	}
 	free_message_tags(mtags);
+	
+	RunHook2(HOOKTYPE_REALNAME_CHANGED, client, oldinfo);
 }

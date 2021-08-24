@@ -1137,4 +1137,7 @@ src/modules/monitor.dll: src/modules/monitor.c $(INCLUDES)
 src/modules/metadata.dll: src/modules/metadata.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/metadata.c $(MODLFLAGS)
 
+src/modules/extended-monitor.dll: src/modules/extended-monitor.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/extended-monitor.c $(MODLFLAGS)
+
 dummy:

@@ -77,6 +77,7 @@ R_MODULES= \
 	targetfloodprot.so clienttagdeny.so watch-backend.so \
 	monitor.so slog.so tls_cipher.so \
 	unreal_server_compat.so metadata.so \
+	extended-monitor.so \
 	geoip_base.so $(GEOIP_CLASSIC_OBJECTS)
 
 MODULES=oldcloak.so $(R_MODULES)
@@ -691,6 +692,10 @@ geoip_classic.so: geoip_classic.c $(INCLUDES)
 metadata.so: metadata.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o metadata.so metadata.c
+
+extended-monitor.so: extended-monitor.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o extended-monitor.so extended-monitor.c
 
 #############################################################################
 # capabilities
