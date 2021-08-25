@@ -772,7 +772,7 @@ extern MODVAR int (*watch_add)(char *nick, Client *client, int flags);
 extern MODVAR int (*watch_del)(char *nick, Client *client, int flags);
 extern MODVAR int (*watch_del_list)(Client *client, int flags);
 extern MODVAR Watch *(*watch_get)(char *nick);
-extern MODVAR int (*watch_check)(Client *client, int reply);
+extern MODVAR int (*watch_check)(Client *client, int reply, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event));
 extern MODVAR char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options);
 extern MODVAR void (*do_unreal_log_remote_deliver)(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized);
 extern MODVAR char *(*get_chmodes_for_user)(Client *client, int flags);

@@ -57,7 +57,6 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, monitor_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, monitor_connect);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, 0, monitor_connect);
-	HookAdd(modinfo->handle, HOOKTYPE_WATCH_NOTIFICATION, 0, monitor_notification);
 
 	return MOD_SUCCESS;
 }
@@ -84,25 +83,25 @@ int monitor_nickchange(Client *client, MessageTag *mtags, char *newnick)
 	if (!smycmp(client->name, newnick)) // new nick is same as old one, maybe the case changed
 		return 0;
 
-	watch_check(client, WATCH_EVENT_OFFLINE);
+	watch_check(client, WATCH_EVENT_OFFLINE, monitor_notification);
 	return 0;
 }
 
 int monitor_post_nickchange(Client *client, MessageTag *mtags)
 {
-	watch_check(client, WATCH_EVENT_ONLINE);
+	watch_check(client, WATCH_EVENT_ONLINE, monitor_notification);
 	return 0;
 }
 
 int monitor_quit(Client *client, MessageTag *mtags, char *comment)
 {
-	watch_check(client, WATCH_EVENT_OFFLINE);
+	watch_check(client, WATCH_EVENT_OFFLINE, monitor_notification);
 	return 0;
 }
 
 int monitor_connect(Client *client)
 {
-	watch_check(client, WATCH_EVENT_ONLINE);
+	watch_check(client, WATCH_EVENT_ONLINE, monitor_notification);
 	return 0;
 }
 

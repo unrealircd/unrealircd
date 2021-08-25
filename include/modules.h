@@ -1187,12 +1187,10 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_POST_LOCAL_NICKCHANGE	106
 /** See hooktype_post_remote_nickchange() */
 #define HOOKTYPE_POST_REMOTE_NICKCHANGE	107
-/** See hooktype_watch_notify() */
-#define HOOKTYPE_WATCH_NOTIFICATION 108
 /** See hooktype_userhost_changed() */
-#define HOOKTYPE_USERHOST_CHANGED 109
+#define HOOKTYPE_USERHOST_CHANGED 108
 /** See hooktype_realname_changed() */
-#define HOOKTYPE_REALNAME_CHANGED 110
+#define HOOKTYPE_REALNAME_CHANGED 109
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
  * 2) Add a hook prototype (see below)
@@ -2147,15 +2145,6 @@ int hooktype_post_local_nickchange(Client *client, MessageTag *mtags);
  */
 int hooktype_post_remote_nickchange(Client *client, MessageTag *mtags);
 
-/** Called when a user changed its state in a way that should trigger a WATCH notification (function prototype for HOOKTYPE_WATCH_NOTIFY).
- * @param client		The client whose state has changed
- * @param watch			The watch list entry
- * @param lp         	The associated watch list entry for WATCHing user
- * @param event			The event type (WATCH_EVENT_*)
- * @return The return value is ignored (use return 0)
- */
-int hooktype_watch_notification(Client *client, Watch *watch, Link *lp, int event);
-
 /** Called when user name or user host has changed.
  * @param client		The client whose user@host has changed
  * @param olduser		Old username of the client
@@ -2282,7 +2271,6 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_IS_INVITED) && !ValidateHook(hooktype_is_invited, func)) || \
         ((hooktype == HOOKTYPE_POST_LOCAL_NICKCHANGE) && !ValidateHook(hooktype_post_local_nickchange, func)) || \
         ((hooktype == HOOKTYPE_POST_REMOTE_NICKCHANGE) && !ValidateHook(hooktype_post_remote_nickchange, func)) || \
-        ((hooktype == HOOKTYPE_WATCH_NOTIFICATION) && !ValidateHook(hooktype_watch_notification, func)) || \
         ((hooktype == HOOKTYPE_USERHOST_CHANGED) && !ValidateHook(hooktype_userhost_changed, func)) || \
         ((hooktype == HOOKTYPE_REALNAME_CHANGED) && !ValidateHook(hooktype_realname_changed, func)) )\
         _hook_error_incompatible();

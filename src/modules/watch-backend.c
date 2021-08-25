@@ -38,7 +38,7 @@ void watch_free(ModData *md);
 
 int watch_backend_user_quit(Client *client, MessageTag *mtags, char *comment);
 int add_to_watch_hash_table(char *nick, Client *client, int flags);
-int hash_check_watch(Client *client, int reply);
+int hash_check_watch(Client *client, int event, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event));
 Watch *hash_get_watch(char *nick);
 int del_from_watch_hash_table(char *nick, Client *client, int flags);
 int hash_del_watch_list(Client *client, int flags);
@@ -193,7 +193,7 @@ int add_to_watch_hash_table(char *nick, Client *client, int flags)
 /*
  *	hash_check_watch
  */
-int hash_check_watch(Client *client, int reply)
+int hash_check_watch(Client *client, int event, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event))
 {
 	unsigned int hashv;
 	Watch *watch;
@@ -215,7 +215,7 @@ int hash_check_watch(Client *client, int reply)
 	/* Send notifies out to everybody on the list in header */
 	for (lp = watch->watch; lp; lp = lp->next)
 	{
-		RunHook4(HOOKTYPE_WATCH_NOTIFICATION, client, watch, lp, reply);
+		watch_notify(client, watch, lp, event);
 	}
 	
 	return 0;

@@ -130,7 +130,7 @@ int (*watch_add)(char *nick, Client *client, int flags);
 int (*watch_del)(char *nick, Client *client, int flags);
 int (*watch_del_list)(Client *client, int flags);
 Watch *(*watch_get)(char *nick);
-int (*watch_check)(Client *client, int reply);
+int (*watch_check)(Client *client, int reply, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event));
 void (*do_unreal_log_remote_deliver)(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized);
 char *(*get_chmodes_for_user)(Client *client, int flags);
 

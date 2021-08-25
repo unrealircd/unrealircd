@@ -61,7 +61,6 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_ACCOUNT_LOGIN, 0, extended_monitor_account_login);
 	HookAdd(modinfo->handle, HOOKTYPE_USERHOST_CHANGED, 0, extended_monitor_userhost_changed);
 	HookAdd(modinfo->handle, HOOKTYPE_REALNAME_CHANGED, 0, extended_monitor_realname_changed);
-	HookAdd(modinfo->handle, HOOKTYPE_WATCH_NOTIFICATION, 0, extended_monitor_notification);
 
 	return MOD_SUCCESS;
 }
@@ -76,12 +75,12 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int extended_monitor_away(Client *client, MessageTag *mtags, char *reason, int already_as_away) /* FIXME double away notifications! */
+int extended_monitor_away(Client *client, MessageTag *mtags, char *reason, int already_as_away)
 {
 	if (reason)
-		watch_check(client, WATCH_EVENT_AWAY);
+		watch_check(client, WATCH_EVENT_AWAY, extended_monitor_notification);
 	else
-		watch_check(client, WATCH_EVENT_NOTAWAY);
+		watch_check(client, WATCH_EVENT_NOTAWAY, extended_monitor_notification);
 
 	return 0;
 }
@@ -89,22 +88,22 @@ int extended_monitor_away(Client *client, MessageTag *mtags, char *reason, int a
 int extended_monitor_account_login(Client *client, MessageTag *mtags)
 {
 	if (IsLoggedIn(client))
-		watch_check(client, WATCH_EVENT_LOGGEDIN);
+		watch_check(client, WATCH_EVENT_LOGGEDIN, extended_monitor_notification);
 	else
-		watch_check(client, WATCH_EVENT_LOGGEDOUT);
+		watch_check(client, WATCH_EVENT_LOGGEDOUT, extended_monitor_notification);
 
 	return 0;
 }
 
 int extended_monitor_userhost_changed(Client *client, const char *olduser, const char *oldhost)
 {
-	watch_check(client, WATCH_EVENT_USERHOST);
+	watch_check(client, WATCH_EVENT_USERHOST, extended_monitor_notification);
 	return 0;
 }
 
 int extended_monitor_realname_changed(Client *client, const char *oldinfo)
 {
-	watch_check(client, WATCH_EVENT_REALNAME);
+	watch_check(client, WATCH_EVENT_REALNAME, extended_monitor_notification);
 	return 0;
 }
 

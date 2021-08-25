@@ -55,7 +55,6 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_POST_REMOTE_NICKCHANGE, 0, watch_post_nickchange);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, watch_user_connect);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, 0, watch_user_connect);
-	HookAdd(modinfo->handle, HOOKTYPE_WATCH_NOTIFICATION, 0, watch_notification);
 
 	return MOD_SUCCESS;
 }
@@ -311,37 +310,37 @@ CMD_FUNC(cmd_watch)
 int watch_user_quit(Client *client, MessageTag *mtags, char *comment)
 {
 	if (IsUser(client))
-		watch_check(client, WATCH_EVENT_OFFLINE);
+		watch_check(client, WATCH_EVENT_OFFLINE, watch_notification);
 	return 0;
 }
 
 int watch_away(Client *client, MessageTag *mtags, char *reason, int already_as_away)
 {
 	if (reason)
-		watch_check(client, already_as_away ? WATCH_EVENT_REAWAY : WATCH_EVENT_AWAY);
+		watch_check(client, already_as_away ? WATCH_EVENT_REAWAY : WATCH_EVENT_AWAY, watch_notification);
 	else
-		watch_check(client, WATCH_EVENT_NOTAWAY);
+		watch_check(client, WATCH_EVENT_NOTAWAY, watch_notification);
 
 	return 0;
 }
 
 int watch_nickchange(Client *client, MessageTag *mtags, char *newnick)
 {
-	watch_check(client, WATCH_EVENT_OFFLINE);
+	watch_check(client, WATCH_EVENT_OFFLINE, watch_notification);
 
 	return 0;
 }
 
 int watch_post_nickchange(Client *client, MessageTag *mtags)
 {
-	watch_check(client, WATCH_EVENT_ONLINE);
+	watch_check(client, WATCH_EVENT_ONLINE, watch_notification);
 
 	return 0;
 }
 
 int watch_user_connect(Client *client)
 {
-	watch_check(client, WATCH_EVENT_ONLINE);
+	watch_check(client, WATCH_EVENT_ONLINE, watch_notification);
 
 	return 0;
 }
