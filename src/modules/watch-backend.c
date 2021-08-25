@@ -37,11 +37,11 @@ void dummy_free(ModData *md);
 void watch_free(ModData *md);
 
 int watch_backend_user_quit(Client *client, MessageTag *mtags, char *comment);
-int add_to_watch_hash_table(char *nick, Client *client, int flags);
-int hash_check_watch(Client *client, int event, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event));
-Watch *hash_get_watch(char *nick);
-int del_from_watch_hash_table(char *nick, Client *client, int flags);
-int hash_del_watch_list(Client *client, int flags);
+int _watch_add(char *nick, Client *client, int flags);
+int _watch_check(Client *client, int event, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event));
+Watch *_watch_get(char *nick);
+int _watch_del(char *nick, Client *client, int flags);
+int _watch_del_list(Client *client, int flags);
 uint64_t hash_watch_nick_name(const char *name);
 
 ModuleHeader MOD_HEADER
@@ -57,11 +57,11 @@ MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	EfunctionAdd(modinfo->handle, EFUNC_WATCH_ADD, add_to_watch_hash_table);
-	EfunctionAdd(modinfo->handle, EFUNC_WATCH_DEL, del_from_watch_hash_table);
-	EfunctionAdd(modinfo->handle, EFUNC_WATCH_DEL_LIST, hash_del_watch_list);
-	EfunctionAddPVoid(modinfo->handle, EFUNC_WATCH_GET, TO_PVOIDFUNC(hash_get_watch));
-	EfunctionAdd(modinfo->handle, EFUNC_WATCH_CHECK, hash_check_watch);
+	EfunctionAdd(modinfo->handle, EFUNC_WATCH_ADD, _watch_add);
+	EfunctionAdd(modinfo->handle, EFUNC_WATCH_DEL, _watch_del);
+	EfunctionAdd(modinfo->handle, EFUNC_WATCH_DEL_LIST, _watch_del_list);
+	EfunctionAddPVoid(modinfo->handle, EFUNC_WATCH_GET, TO_PVOIDFUNC(_watch_get));
+	EfunctionAdd(modinfo->handle, EFUNC_WATCH_CHECK, _watch_check);
 	return MOD_SUCCESS;
 }
 
@@ -138,9 +138,9 @@ int watch_backend_user_quit(Client *client, MessageTag *mtags, char *comment)
 }
 
 /*
- * add_to_watch_hash_table
+ * _watch_add
  */
-int add_to_watch_hash_table(char *nick, Client *client, int flags)
+int _watch_add(char *nick, Client *client, int flags)
 {
 	unsigned int hashv;
 	Watch *watch;
@@ -191,9 +191,9 @@ int add_to_watch_hash_table(char *nick, Client *client, int flags)
 }
 
 /*
- *	hash_check_watch
+ *	_watch_check
  */
-int hash_check_watch(Client *client, int event, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event))
+int _watch_check(Client *client, int event, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event))
 {
 	unsigned int hashv;
 	Watch *watch;
@@ -222,9 +222,9 @@ int hash_check_watch(Client *client, int event, int (*watch_notify)(Client *clie
 }
 
 /*
- * hash_get_watch
+ * _watch_get
  */
-Watch *hash_get_watch(char *nick)
+Watch *_watch_get(char *nick)
 {
 	unsigned int hashv;
 	Watch *watch;
@@ -239,9 +239,9 @@ Watch *hash_get_watch(char *nick)
 }
 
 /*
- * del_from_watch_hash_table
+ * _watch_del
  */
-int del_from_watch_hash_table(char *nick, Client *client, int flags)
+int _watch_del(char *nick, Client *client, int flags)
 {
 	unsigned int hashv;
 	Watch **watch, *wprev;
@@ -283,7 +283,7 @@ int del_from_watch_hash_table(char *nick, Client *client, int flags)
 	 * No error checking in ircd is unneccessary ;) -Cabal95
 	 */
 	if (!*lp)
-		sendto_ops("WATCH debug error: del_from_watch_hash_table "
+		sendto_ops("WATCH debug error: _watch_del "
 					 "found a watch entry with no client "
 					 "counterpoint processing nick %s on client %p!",
 					 nick, client->user);
@@ -306,9 +306,9 @@ int del_from_watch_hash_table(char *nick, Client *client, int flags)
 }
 
 /*
- * hash_del_watch_list
+ * _watch_del_list
  */
-int hash_del_watch_list(Client *client, int flags)
+int _watch_del_list(Client *client, int flags)
 {
 	unsigned int hashv;
 	Watch *watch;
@@ -334,7 +334,7 @@ int hash_del_watch_list(Client *client, int flags)
 
 		/* Not found, another "worst case" debug error */
 		if (!*lp)
-			sendto_ops("WATCH Debug error: hash_del_watch_list "
+			sendto_ops("WATCH Debug error: _watch_del_list "
 				"found a WATCH entry with no table "
 				"counterpoint processing client %s!",
 				client->name);
