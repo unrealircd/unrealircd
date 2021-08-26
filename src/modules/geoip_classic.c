@@ -240,6 +240,9 @@ GeoIPResult *geoip_lookup_classic(char *ip)
 {
 	static char buf[256];
 	const char *country_code, *country_name;
+	GeoIPLookup gl;
+	GeoIP *gi;
+	int geoid;
 	GeoIPResult *r;
 
 	if (!ip)
@@ -249,18 +252,24 @@ GeoIPResult *geoip_lookup_classic(char *ip)
 	{
 		if (!gi6)
 			return NULL;
-		country_code = GeoIP_country_code_by_name_v6(gi6, ip);
-		country_name = GeoIP_country_name_by_name_v6(gi6, ip);
+		geoid = GeoIP_id_by_addr_v6_gl(gi6, ip, &gl);
+		gi = gi6;
 	} else
 	{
 		if (!gi4 || !strcmp(ip, "255.255.255.255"))
 			return NULL;
-		country_code = GeoIP_country_code_by_name(gi4, ip);
-		country_name = GeoIP_country_name_by_name(gi4, ip);
+		geoid = GeoIP_id_by_addr_gl(gi4, ip, &gl);
+		gi = gi4;
 	}
 
+	if (geoid == 0)
+		return NULL;
+
+	country_code = GeoIP_code_by_id(geoid);
+	country_name = GeoIP_country_name_by_id(gi, geoid);
+
 	if (!country_code || !country_name)
-			return NULL;
+		return NULL;
 
 	r = safe_alloc(sizeof(GeoIPResult));
 	safe_strdup(r->country_code, country_code);
