@@ -310,7 +310,12 @@ DLL_FILES=SRC/MODULES/OLDCLOAK.DLL \
  SRC/MODULES/TARGETFLOODPROT.DLL \
  SRC/MODULES/TYPING-INDICATOR.DLL \
  SRC/MODULES/CLIENTTAGDENY.DLL \
- SRC/MODULES/WATCH-BACKEND.DLL
+ SRC/MODULES/WATCH-BACKEND.DLL \
+ SRC/MODULES/MONITOR.DLL \
+ SRC/MODULES/METADATA.DLL \
+ SRC/MODULES/EXTENDED-MONITOR.DLL \
+ SRC/MODULES/GEOIP_CSV.DLL \
+ SRC/MODULES/GEOIP_BASE.DLL
 
 
 ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES 
@@ -1139,5 +1144,11 @@ src/modules/metadata.dll: src/modules/metadata.c $(INCLUDES)
 
 src/modules/extended-monitor.dll: src/modules/extended-monitor.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/extended-monitor.c $(MODLFLAGS)
+
+src/modules/geoip_base.dll: src/modules/geoip_base.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/geoip_base.c $(MODLFLAGS)
+
+src/modules/geoip_csv.dll: src/modules/geoip_csv.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/geoip_csv.c $(MODLFLAGS)
 
 dummy:
