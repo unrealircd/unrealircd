@@ -653,6 +653,7 @@ int mm_valid_module_name(char *name)
 	return 1;
 }
 
+#undef CheckNull
 #define CheckNull(x) if ((!(x)->value) || (!(*((x)->value)))) { config_error("%s:%i: missing parameter", repo_url, (x)->line_number); goto fail_mm_repo_module_config; }
 
 /** Parse a module { } line from a repository */

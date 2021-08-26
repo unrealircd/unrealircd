@@ -124,8 +124,6 @@ static void init_config(cfgstruct *cfg)
 	cfg->max_storage_per_channel_registered.time = 86400*31;
 }
 
-#define CheckNull(x) if ((!(x)->value) || (!(*((x)->value)))) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); errors++; continue; }
-
 int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
