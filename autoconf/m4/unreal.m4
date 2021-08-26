@@ -365,7 +365,8 @@ AC_DEFUN([CHECK_GEOIP_CLASSIC],
 			$ac_cv_prog_MAKER install || exit 1
 			dnl Try pkg-config first...
 			AS_IF([test -n "$ac_cv_path_PKGCONFIG"],
-			       [GEOIP_CLASSIC_LIBS="`$ac_cv_path_PKGCONFIG --libs geoip.pc`"])
+			       [GEOIP_CLASSIC_LIBS="`$ac_cv_path_PKGCONFIG --libs geoip.pc`"
+			        GEOIP_CLASSIC_CFLAGS="`$ac_cv_path_PKGCONFIG --cflags geoip.pc`"])
 			dnl In case the system does not have pkg-config, fallback to hardcoded settings...
 			AS_IF([test -z "$GEOIP_CLASSIC_LIBS"],
 			       [GEOIP_CLASSIC_LIBS="-L$PRIVATELIBDIR -lGeoIP"

@@ -659,6 +659,7 @@ LDFLAGS_PRIVATELIBS
 PIDFILE
 DOCDIR
 PERMDATADIR
+PRIVATELIBDIR
 TMPDIR
 CACHEDIR
 LOGDIR
@@ -6511,6 +6512,7 @@ fi
 
 
 
+
 # Check whether --with-maxconnections was given.
 if test "${with_maxconnections+set}" = set; then :
   withval=$with_maxconnections; ac_fd=$withval
@@ -7304,8 +7306,8 @@ if test "x$with_system_pcre2" = "xyes"; then :
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for PCRE2" >&5
-$as_echo_n "checking for PCRE2... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libpcre2-8 >= 10.00" >&5
+$as_echo_n "checking for libpcre2-8 >= 10.00... " >&6; }
 
 if test -n "$PCRE2_CFLAGS"; then
     pkg_cv_PCRE2_CFLAGS="$PCRE2_CFLAGS"
@@ -7345,7 +7347,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -7363,7 +7365,7 @@ fi
 
 	has_system_pcre2=no
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_pcre2=no
 else
@@ -7423,8 +7425,8 @@ if test "x$with_system_argon2" = "xyes"; then :
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARGON2" >&5
-$as_echo_n "checking for ARGON2... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libargon2 >= 0~20161029" >&5
+$as_echo_n "checking for libargon2 >= 0~20161029... " >&6; }
 
 if test -n "$ARGON2_CFLAGS"; then
     pkg_cv_ARGON2_CFLAGS="$ARGON2_CFLAGS"
@@ -7464,7 +7466,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -7482,7 +7484,7 @@ fi
 
 	has_system_argon2=no
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_argon2=no
 else
@@ -7541,8 +7543,8 @@ if test "x$with_system_sodium" = "xyes"; then :
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SODIUM" >&5
-$as_echo_n "checking for SODIUM... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libsodium >= 1.0.16" >&5
+$as_echo_n "checking for libsodium >= 1.0.16... " >&6; }
 
 if test -n "$SODIUM_CFLAGS"; then
     pkg_cv_SODIUM_CFLAGS="$SODIUM_CFLAGS"
@@ -7582,7 +7584,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -7600,7 +7602,7 @@ fi
 
 	has_system_sodium=no
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_sodium=no
 else
@@ -7664,8 +7666,8 @@ if test "x$with_system_cares" = "xyes"; then :
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for CARES" >&5
-$as_echo_n "checking for CARES... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libcares >= 1.6.0" >&5
+$as_echo_n "checking for libcares >= 1.6.0... " >&6; }
 
 if test -n "$CARES_CFLAGS"; then
     pkg_cv_CARES_CFLAGS="$CARES_CFLAGS"
@@ -7705,7 +7707,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -7723,7 +7725,7 @@ fi
 
 	has_system_cares=no
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_cares=no
 else
@@ -7806,8 +7808,8 @@ if test "x$with_system_jansson" = "xyes"; then :
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for JANSSON" >&5
-$as_echo_n "checking for JANSSON... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for jansson >= 2.0.0" >&5
+$as_echo_n "checking for jansson >= 2.0.0... " >&6; }
 
 if test -n "$JANSSON_CFLAGS"; then
     pkg_cv_JANSSON_CFLAGS="$JANSSON_CFLAGS"
@@ -7847,7 +7849,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -7865,7 +7867,7 @@ fi
 
 	has_system_jansson=no
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_jansson=no
 else
@@ -8570,8 +8572,8 @@ fi
 				has_system_geoip_classic="no"
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for GEOIP_CLASSIC" >&5
-$as_echo_n "checking for GEOIP_CLASSIC... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for geoip >= 1.6.0" >&5
+$as_echo_n "checking for geoip >= 1.6.0... " >&6; }
 
 if test -n "$GEOIP_CLASSIC_CFLAGS"; then
     pkg_cv_GEOIP_CLASSIC_CFLAGS="$GEOIP_CLASSIC_CFLAGS"
@@ -8611,7 +8613,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -8629,7 +8631,7 @@ fi
 
 	has_system_geoip_classic=no
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_geoip_classic=no
 else
@@ -8675,6 +8677,7 @@ $as_echo "installing GeoIP Classic library" >&6; }
 			$ac_cv_prog_MAKER install || exit 1
 						if test -n "$ac_cv_path_PKGCONFIG"; then :
   GEOIP_CLASSIC_LIBS="`$ac_cv_path_PKGCONFIG --libs geoip.pc`"
+			        GEOIP_CLASSIC_CFLAGS="`$ac_cv_path_PKGCONFIG --cflags geoip.pc`"
 fi
 						if test -z "$GEOIP_CLASSIC_LIBS"; then :
   GEOIP_CLASSIC_LIBS="-L$PRIVATELIBDIR -lGeoIP"

@@ -485,6 +485,7 @@ AC_SUBST(MODULESDIR)
 AC_SUBST(LOGDIR)
 AC_SUBST(CACHEDIR)
 AC_SUBST(TMPDIR)
+AC_SUBST(PRIVATELIBDIR)
 dnl Why o why PERMDATADIR and not DATADIR you ask?
 dnl well, Because DATADIR conflicts with the Windows SDK header files.. amazing.
 AC_SUBST(PERMDATADIR)
