@@ -39,68 +39,62 @@ GeoIPResult *geoip_lookup_classic(char *ip);
 
 int geoip_classic_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
-	ConfigEntry *cep, *cep2;
+	ConfigEntry *cep;
 	int errors = 0;
 	int i;
 	
-	if (type != CONFIG_MAIN)
+	if (type != CONFIG_SET)
 		return 0;
 
 	if (!ce || !ce->name)
 		return 0;
 
-	if (strcmp(ce->name, "geoip"))
+	if (strcmp(ce->name, "geoip-classic"))
 		return 0;
+
+	geoip_classic_config.have_config = 1;
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (strcmp(cep->name, "classic"))
-			continue;
-
-		geoip_classic_config.have_config = 1;
-
-		for (cep2 = cep->items; cep2; cep2 = cep2->next)
+		if (!strcmp(cep->name, "ipv4-database"))
 		{
-			if (!strcmp(cep2->name, "ipv4-database"))
+			if (geoip_classic_config.have_ipv4_database)
 			{
-				if (geoip_classic_config.have_ipv4_database)
-				{
-					config_error("%s:%i: duplicate item geoip::classic::%s", cep2->file->filename, cep2->line_number, cep2->name);
-					continue;
-				}
-				char *filename = strdup(cep2->value);
-				convert_to_absolute_path(&filename, PERMDATADIR);
-				if(access(filename, R_OK)){
-					config_error("%s:%i: geoip::classic::%s: cannot open file \"%s\" for reading", cep2->file->filename, cep2->line_number, cep2->name, cep2->value);
-					errors++;
-					safe_free(filename);
-					continue;
-				}
-				safe_free(filename);
-				geoip_classic_config.have_ipv4_database = 1;
+				config_error("%s:%i: duplicate item set::geoip-classic::%s", cep->file->filename, cep->line_number, cep->name);
 				continue;
 			}
-			if (!strcmp(cep2->name, "ipv6-database"))
-			{
-				if (geoip_classic_config.have_ipv6_database)
-				{
-					config_error("%s:%i: duplicate item geoip::classic::%s", cep2->file->filename, cep2->line_number, cep2->name);
-					continue;
-				}
-				char *filename = strdup(cep2->value);
-				convert_to_absolute_path(&filename, PERMDATADIR);
-				if(access(filename, R_OK)){
-					config_error("%s:%i: geoip::classic::%s: cannot open file \"%s\" for reading", cep2->file->filename, cep2->line_number, cep2->name, cep2->value);
-					errors++;
-					safe_free(filename);
-					continue;
-				}
+			char *filename = strdup(cep->value);
+			convert_to_absolute_path(&filename, PERMDATADIR);
+			if(access(filename, R_OK)){
+				config_error("%s:%i: set::geoip-classic::%s: cannot open file \"%s\" for reading", cep->file->filename, cep->line_number, cep->name, cep->value);
+				errors++;
 				safe_free(filename);
-				geoip_classic_config.have_ipv6_database = 1;
 				continue;
 			}
-			config_warn("%s:%i: unknown item geoip::classic::%s", cep2->file->filename, cep2->line_number, cep2->name);
+			safe_free(filename);
+			geoip_classic_config.have_ipv4_database = 1;
+			continue;
 		}
+		if (!strcmp(cep->name, "ipv6-database"))
+		{
+			if (geoip_classic_config.have_ipv6_database)
+			{
+				config_error("%s:%i: duplicate item set::geoip-classic::%s", cep->file->filename, cep->line_number, cep->name);
+				continue;
+			}
+			char *filename = strdup(cep->value);
+			convert_to_absolute_path(&filename, PERMDATADIR);
+			if(access(filename, R_OK)){
+				config_error("%s:%i: set::geoip-classic::%s: cannot open file \"%s\" for reading", cep->file->filename, cep->line_number, cep->name, cep->value);
+				errors++;
+				safe_free(filename);
+				continue;
+			}
+			safe_free(filename);
+			geoip_classic_config.have_ipv6_database = 1;
+			continue;
+		}
+		config_warn("%s:%i: unknown item set::geoip-classic::%s", cep->file->filename, cep->line_number, cep->name);
 	}
 	
 	*errs = errors;
@@ -110,46 +104,35 @@ int geoip_classic_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *err
 int geoip_classic_configposttest(int *errs)
 {
 	int errors = 0;
-	if (geoip_classic_config.have_config)
+	if (geoip_classic_config.have_config && !geoip_classic_config.have_ipv4_database && !geoip_classic_config.have_ipv6_database)
 	{
-		if (!geoip_classic_config.have_ipv4_database && !geoip_classic_config.have_ipv6_database)
-		{
-			config_error("geoip_classic: no database files specified! Remove geoip::classic to use defaults");
-			errors++;
-			goto end;
-		}
-		geoip_classic_free();
+		config_error("geoip_classic: no database files specified! Remove set::geoip-classic to use defaults");
+		errors++;
 	}
-end:
+
 	*errs = errors;
 	return errors ? -1 : 1;
 }
 
 int geoip_classic_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 {
-	ConfigEntry *cep, *cep2;
+	ConfigEntry *cep;
 
-	if (type != CONFIG_MAIN)
+	if (type != CONFIG_SET)
 		return 0;
 
 	if (!ce || !ce->name)
 		return 0;
 
-	if (strcmp(ce->name, "geoip"))
+	if (strcmp(ce->name, "geoip-classic"))
 		return 0;
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (strcmp(cep->name, "classic"))
-			continue;
-
-		for (cep2 = cep->items; cep2; cep2 = cep2->next)
-		{
-			if (!strcmp(cep2->name, "ipv4-database"))
-				safe_strdup(geoip_classic_config.v4_db_file, cep2->value);
-			if (!strcmp(cep2->name, "ipv6-database"))
-				safe_strdup(geoip_classic_config.v6_db_file, cep2->value);
-		}
+		if (!strcmp(cep->name, "ipv4-database"))
+			safe_strdup(geoip_classic_config.v4_db_file, cep->value);
+		if (!strcmp(cep->name, "ipv6-database"))
+			safe_strdup(geoip_classic_config.v6_db_file, cep->value);
 	}
 	return 1;
 }
@@ -177,6 +160,7 @@ MOD_TEST()
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	geoip_classic_free();
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, geoip_classic_configrun);
 	return MOD_SUCCESS;
 }
@@ -246,6 +230,8 @@ void geoip_classic_free(void)
 		GeoIP_delete(gi4);
 	if (gi6)
 		GeoIP_delete(gi6);
+	gi4 = NULL;
+	gi6 = NULL;
 	safe_free(geoip_classic_config.v4_db_file);
 	safe_free(geoip_classic_config.v6_db_file);
 }
@@ -263,14 +249,12 @@ GeoIPResult *geoip_lookup_classic(char *ip)
 	{
 		if (!gi6)
 			return NULL;
-
 		country_code = GeoIP_country_code_by_name_v6(gi6, ip);
 		country_name = GeoIP_country_name_by_name_v6(gi6, ip);
 	} else
 	{
 		if (!gi4 || !strcmp(ip, "255.255.255.255"))
 			return NULL;
-
 		country_code = GeoIP_country_code_by_name(gi4, ip);
 		country_name = GeoIP_country_name_by_name(gi4, ip);
 	}
