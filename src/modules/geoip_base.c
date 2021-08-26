@@ -21,7 +21,6 @@ void geoip_base_free(ModData *m);
 char *geoip_base_serialize(ModData *m);
 void geoip_base_unserialize(char *str, ModData *m);
 int geoip_base_handshake(Client *client);
-int geoip_base_connect(Client *client);
 int geoip_base_whois(Client *client, Client *target);
 int geoip_connect_extinfo(Client *client, NameValuePrioList **list);
 int geoip_whois(Client *client, Client *target);
@@ -55,6 +54,8 @@ ModDataInfo mreq;
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, geoip_base_handshake);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_HANDSHAKE_OUT, 0, geoip_base_handshake);
 	HookAdd(modinfo->handle, HOOKTYPE_CONNECT_EXTINFO, 1, geoip_connect_extinfo); /* (prio: near-first) */
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0,geoip_base_handshake); /* in case the IP changed in registration phase (WEBIRC, HTTP Forwarded) */
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, 0, geoip_base_handshake); /* remote user */
 	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, geoip_whois);
 
 	return MOD_SUCCESS;
@@ -73,21 +74,20 @@ MOD_UNLOAD()
 
 int geoip_base_handshake(Client *client)
 {
-	if (client->ip)
+	if (!client->ip)
+		return 0;
+	GeoIPResult *res = geoip_lookup(client->ip);
+
+	if (!res)
+		return 0;
+
+	if (GEOIPDATA(client))
 	{
-		GeoIPResult *res = geoip_lookup(client->ip);
-
-		if (!res)
-			return 0;
-
-		if (GEOIPDATA(client))
-		{
-			/* Can this even happen? Ah well.. */
-			free_geoip_result(GEOIPDATA(client));
-			GEOIPDATARAW(client) = NULL;
-		}
-		GEOIPDATARAW(client) = res;
+		/* Can this even happen? Ah well.. */
+		free_geoip_result(GEOIPDATA(client));
+		GEOIPDATARAW(client) = NULL;
 	}
+	GEOIPDATARAW(client) = res;
 	return 0;
 }
 
