@@ -3275,7 +3275,7 @@ char *pretty_time_val(long timeval)
 }
 
 /* This converts a relative path to an absolute path, but only if necessary. */
-void convert_to_absolute_path(char **path, char *reldir)
+void convert_to_absolute_path(char **path, const char *reldir)
 {
 	char *s;
 

@@ -115,15 +115,12 @@ int geoip_csv_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				config_error("%s:%i: duplicate item set::geoip-csv::%s", cep->file->filename, cep->line_number, cep->name);
 				continue;
 			}
-			char *filename = strdup(cep->value);
-			convert_to_absolute_path(&filename, PERMDATADIR);
-			if(access(filename, R_OK)){
-				config_error("%s:%i: set::geoip-classic::%s: cannot open file \"%s\" for reading", cep->file->filename, cep->line_number, cep->name, cep->value);
+			if (!is_file_readable(cep->value, PERMDATADIR))
+			{
+				config_error("%s:%i: set::geoip-csv::%s: cannot open file \"%s/%s\" for reading (%s)", cep->file->filename, cep->line_number, cep->name, PERMDATADIR, cep->value, strerror(errno));
 				errors++;
-				safe_free(filename);
 				continue;
 			}
-			safe_free(filename);
 			geoip_csv_config.have_ipv4_database = 1;
 			continue;
 		}
@@ -134,15 +131,12 @@ int geoip_csv_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				config_error("%s:%i: duplicate item set::geoip-csv::%s", cep->file->filename, cep->line_number, cep->name);
 				continue;
 			}
-			char *filename = strdup(cep->value);
-			convert_to_absolute_path(&filename, PERMDATADIR);
-			if(access(filename, R_OK)){
-				config_error("%s:%i: set::geoip-csv::%s: cannot open file \"%s\" for reading", cep->file->filename, cep->line_number, cep->name, cep->value);
+			if (!is_file_readable(cep->value, PERMDATADIR))
+			{
+				config_error("%s:%i: set::geoip-csv::%s: cannot open file \"%s/%s\" for reading (%s)", cep->file->filename, cep->line_number, cep->name, PERMDATADIR, cep->value, strerror(errno));
 				errors++;
-				safe_free(filename);
 				continue;
 			}
-			safe_free(filename);
 			geoip_csv_config.have_ipv6_database = 1;
 			continue;
 		}
@@ -153,16 +147,13 @@ int geoip_csv_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				config_error("%s:%i: duplicate item set::geoip-csv::%s", cep->file->filename, cep->line_number, cep->name);
 				continue;
 			}
-			char *filename = strdup(cep->value);
-			convert_to_absolute_path(&filename, PERMDATADIR);
-			if(access(filename, R_OK)){
-				config_error("%s:%i: set::geoip-csv::%s: cannot open file \"%s\" for reading", cep->file->filename, cep->line_number, cep->name, cep->value);
+			if (!is_file_readable(cep->value, PERMDATADIR))
+			{
+				config_error("%s:%i: set::geoip-csv::%s: cannot open file \"%s/%s\" for reading (%s)", cep->file->filename, cep->line_number, cep->name, PERMDATADIR, cep->value, strerror(errno));
 				errors++;
-				safe_free(filename);
 				continue;
 			}
-			safe_free(filename);
-			geoip_csv_config.have_ipv6_database = 1;
+			geoip_csv_config.have_countries = 1;
 			continue;
 		}
 		config_warn("%s:%i: unknown item set::geoip-csv::%s", cep->file->filename, cep->line_number, cep->name);
@@ -179,12 +170,46 @@ int geoip_csv_configposttest(int *errs)
 	{
 		if (!geoip_csv_config.have_countries)
 		{
-			config_error("geoip_csv: no countries file specified! Remove set::geoip-csv to use defaults");
+			config_error("[geoip_csv] no countries file specified! Remove set::geoip-csv to use defaults");
 			errors++;
 		}
 		if (!geoip_csv_config.have_ipv4_database && !geoip_csv_config.have_ipv6_database)
 		{
-			config_error("geoip_csv: no database files specified! Remove set::geoip-csv to use defaults");
+			config_error("[geoip_csv] no database files specified! Remove set::geoip-csv to use defaults");
+			errors++;
+		}
+	} else
+	{
+		safe_strdup(geoip_csv_config.v4_db_file, "GeoLite2-Country-Blocks-IPv4.csv");
+		safe_strdup(geoip_csv_config.v6_db_file, "GeoLite2-Country-Blocks-IPv6.csv");
+		safe_strdup(geoip_csv_config.countries_db_file, "GeoLite2-Country-Locations-en.csv");
+
+		if (is_file_readable(geoip_csv_config.v4_db_file, PERMDATADIR))
+		{
+			geoip_csv_config.have_ipv4_database = 1;
+		} else
+		{
+			config_warn("[geoip_csv] cannot open IPv4 blocks file \"%s/%s\" for reading (%s)", PERMDATADIR, geoip_csv_config.v4_db_file, strerror(errno));
+			safe_free(geoip_csv_config.v4_db_file);
+		}
+		if (is_file_readable(geoip_csv_config.v6_db_file, PERMDATADIR))
+		{
+			geoip_csv_config.have_ipv6_database = 1;
+		} else
+		{
+			config_warn("[geoip_csv] cannot open IPv6 blocks file \"%s/%s\" for reading (%s)", PERMDATADIR, geoip_csv_config.v6_db_file, strerror(errno));
+			safe_free(geoip_csv_config.v6_db_file);
+		}
+		if (!is_file_readable(geoip_csv_config.countries_db_file, PERMDATADIR))
+		{
+			config_error("[geoip_csv] cannot open countries file \"%s/%s\" for reading (%s)", PERMDATADIR, geoip_csv_config.countries_db_file, strerror(errno));
+			safe_free(geoip_csv_config.countries_db_file);
+			errors++;
+		}
+		if (!geoip_csv_config.have_ipv4_database && !geoip_csv_config.have_ipv6_database)
+		{
+			config_error("[geoip_csv] couldn't read any blocks file! Either put these in %s location "
+					"or specify another in set::geoip-csv config block", PERMDATADIR);
 			errors++;
 		}
 	}
@@ -208,9 +233,9 @@ int geoip_csv_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "ipv4-blocks-file"))
+		if (!strcmp(cep->name, "ipv4-blocks-file") && geoip_csv_config.have_ipv4_database)
 			safe_strdup(geoip_csv_config.v4_db_file, cep->value);
-		if (!strcmp(cep->name, "ipv6-blocks-file"))
+		if (!strcmp(cep->name, "ipv6-blocks-file") && geoip_csv_config.have_ipv6_database)
 			safe_strdup(geoip_csv_config.v6_db_file, cep->value);
 		if (!strcmp(cep->name, "countries-file"))
 			safe_strdup(geoip_csv_config.countries_db_file, cep->value);
@@ -250,13 +275,6 @@ MOD_INIT()
 MOD_LOAD()
 {
 	int found_good_file = 0;
-
-	if (!geoip_csv_config.have_config)
-	{
-		safe_strdup(geoip_csv_config.v4_db_file, "GeoLite2-Country-Blocks-IPv4.csv");
-		safe_strdup(geoip_csv_config.v6_db_file, "GeoLite2-Country-Blocks-IPv6.csv");
-		safe_strdup(geoip_csv_config.countries_db_file, "GeoLite2-Country-Locations-en.csv");
-	}
 
 	if (geoip_csv_config.v4_db_file)
 	{

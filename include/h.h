@@ -898,7 +898,7 @@ extern int is_valid_ip(char *str);
 extern int ipv6_capable(void);
 extern MODVAR Client *remote_rehash_client;
 extern MODVAR int debugfd;
-extern void convert_to_absolute_path(char **path, char *reldir);
+extern void convert_to_absolute_path(char **path, const char *reldir);
 extern int has_user_mode(Client *acptr, char mode);
 extern int has_channel_mode(Channel *channel, char mode);
 extern Cmode_t get_extmode_bitbychar(char m);
@@ -1060,6 +1060,7 @@ extern int terminal_supports_color(void);
 extern void skip_whitespace(char **p);
 extern void read_until(char **p, char *stopchars);
 extern int is_ip_valid(const char *ip);
+extern int is_file_readable(const char *file, const char *dir);
 /* src/unrealdb.c start */
 extern UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_block);
 extern int unrealdb_close(UnrealDB *c);

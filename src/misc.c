@@ -2360,3 +2360,18 @@ int is_ip_valid(const char *ip)
 	return 0;
 }
 
+/*
+ * Checks whether a file can be opened for reading.
+ */
+int is_file_readable(const char *file, const char *dir)
+{
+	char *filename = strdup(file);
+	convert_to_absolute_path(&filename, dir);
+	if (access(filename, R_OK)){
+		safe_free(filename);
+		return 0;
+	}
+	safe_free(filename);
+	return 1;
+}
+
