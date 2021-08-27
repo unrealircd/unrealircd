@@ -84,4 +84,4 @@ Protocol:
 * Bounced modes are gone
 * SLOG
 
-FIXME: server delinking in case of error may be wrong
+FIXME: (wrong) server delinking in case of error may be an issue
