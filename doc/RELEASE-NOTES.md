@@ -13,6 +13,35 @@ This is UnrealIRCd 6's latest git, bleeding edge. Do not use on production serve
   * CAP unrealircd.org/json-log
 * Named extbans
 * Geo ip: tell how it works and where it is available/used/shown
+  main configuration:
+```
+  set { geoip {
+    check-on-load yes; // check all users already connected and add geoip info to them on module load
+    whois-for-anyone no; // display country info in whois: yes for all users, no for opers only
+  };};
+```
+  geoip_csv module: always compiled, file locations:
+```
+  set { geoip-csv {
+    ipv4-blocks-file "GeoLite2-Country-Blocks-IPv4.csv"; // don't set for ipv6-only
+    ipv6-blocks-file "GeoLite2-Country-Blocks-IPv6.csv"; // don't set for ipv4-only
+    countries-file "GeoLite2-Country-Locations-en.csv"; // required
+  };};
+```
+  geoip_maxmind module: compiled when system libmaxminddb is present, file location:
+```
+  set { geoip-maxmind {
+    database "GeoLite2-Country.mmdb";
+  };};
+```
+  geoip_classic module: compiled when `--enable-geoip-classic=yes` added to configure, file locations:
+```
+  set { geoip-classic {
+    ipv4-database "GeoIP.dat"; // don't set for ipv6-only
+    ipv6-database "GeoIPv6.dat"; // don't set for ipv4-only
+  };};
+```
+  None of these modules are loaded by default
 * TLS cipher and some other information is now visible for remote
   clients as well, also in [secure: xyz] connect line.
 * Remote includes support:
