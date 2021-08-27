@@ -1037,9 +1037,28 @@ Hook *HookDel(Hook *hook)
 	return NULL;
 }
 
+static int num_callbacks(int cbtype)
+{
+Callback *e;
+int cnt = 0;
+
+	for (e = Callbacks[cbtype]; e; e = e->next)
+		if (!e->willberemoved)
+			cnt++;
+			
+	return cnt;
+}
+
 Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())
 {
 	Callback *p;
+	
+	if (num_callbacks(cbtype) > 0)
+	{
+		if (module)
+			module->errorcode = MODERR_EXISTS;
+		return NULL;
+	}
 	
 	p = safe_alloc(sizeof(Callback));
 	if (func)
@@ -1240,18 +1259,6 @@ const char *ModuleGetErrorStr(Module *module)
 		return NULL;
 
 	return module_error_str[module->errorcode];
-}
-
-static int num_callbacks(int cbtype)
-{
-Callback *e;
-int cnt = 0;
-
-	for (e = Callbacks[cbtype]; e; e = e->next)
-		if (!e->willberemoved)
-			cnt++;
-			
-	return cnt;
 }
 
 /** Ensure that all required callbacks are in place and meet
