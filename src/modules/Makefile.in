@@ -78,7 +78,8 @@ R_MODULES= \
 	monitor.so slog.so tls_cipher.so \
 	unreal_server_compat.so metadata.so \
 	extended-monitor.so geoip_csv.so \
-	geoip_base.so $(GEOIP_CLASSIC_OBJECTS)
+	geoip_base.so \
+	$(GEOIP_CLASSIC_OBJECTS) $(GEOIP_MAXMIND_OBJECTS)
 
 MODULES=oldcloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -700,6 +701,10 @@ extended-monitor.so: extended-monitor.c $(INCLUDES)
 geoip_csv.so: geoip_csv.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o geoip_csv.so geoip_csv.c
+
+geoip_maxmind.so: geoip_maxmind.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) $(LIBMAXMINDDB_CFLAGS) $(LIBMAXMINDDB_LIBS) -DDYNAMIC_LINKING \
+		-o geoip_maxmind.so geoip_maxmind.c
 
 #############################################################################
 # capabilities

@@ -626,6 +626,9 @@ ac_subst_vars='LTLIBOBJS
 LIBOBJS
 UNRLINCDIR
 IRCDLIBS
+GEOIP_MAXMIND_OBJECTS
+LIBMAXMINDDB_LIBS
+LIBMAXMINDDB_CFLAGS
 GEOIP_CLASSIC_OBJECTS
 GEOIP_CLASSIC_LIBS
 GEOIP_CLASSIC_CFLAGS
@@ -767,6 +770,7 @@ enable_werror
 enable_asan
 enable_libcurl
 enable_geoip_classic
+enable_libmaxminddb
 '
       ac_precious_vars='build_alias
 host_alias
@@ -791,7 +795,9 @@ CARES_LIBS
 JANSSON_CFLAGS
 JANSSON_LIBS
 GEOIP_CLASSIC_CFLAGS
-GEOIP_CLASSIC_LIBS'
+GEOIP_CLASSIC_LIBS
+LIBMAXMINDDB_CFLAGS
+LIBMAXMINDDB_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1432,6 +1438,8 @@ Optional Features:
   --enable-libcurl=DIR    enable libcurl (remote include) support
   --enable-geoip-classic=no/yes
                           enable GeoIP Classic support
+  --enable-libmaxminddb=no/yes
+                          enable GeoIP libmaxminddb support
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1511,6 +1519,10 @@ Some influential environment variables:
               C compiler flags for GEOIP_CLASSIC, overriding pkg-config
   GEOIP_CLASSIC_LIBS
               linker flags for GEOIP_CLASSIC, overriding pkg-config
+  LIBMAXMINDDB_CFLAGS
+              C compiler flags for LIBMAXMINDDB, overriding pkg-config
+  LIBMAXMINDDB_LIBS
+              linker flags for LIBMAXMINDDB, overriding pkg-config
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -8694,6 +8706,103 @@ fi
 
 
 fi
+
+
+	# Check whether --enable-libmaxminddb was given.
+if test "${enable_libmaxminddb+set}" = set; then :
+  enableval=$enable_libmaxminddb; enable_libmaxminddb=$enableval
+else
+  enable_libmaxminddb=yes
+fi
+
+
+	if test "x$enable_libmaxminddb" = "xyes"; then :
+
+				has_system_libmaxminddb="no"
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libmaxminddb >= 1.6.0" >&5
+$as_echo_n "checking for libmaxminddb >= 1.6.0... " >&6; }
+
+if test -n "$LIBMAXMINDDB_CFLAGS"; then
+    pkg_cv_LIBMAXMINDDB_CFLAGS="$LIBMAXMINDDB_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libmaxminddb >= 1.6.0\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libmaxminddb >= 1.6.0") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LIBMAXMINDDB_CFLAGS=`$PKG_CONFIG --cflags "libmaxminddb >= 1.6.0" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$LIBMAXMINDDB_LIBS"; then
+    pkg_cv_LIBMAXMINDDB_LIBS="$LIBMAXMINDDB_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libmaxminddb >= 1.6.0\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libmaxminddb >= 1.6.0") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LIBMAXMINDDB_LIBS=`$PKG_CONFIG --libs "libmaxminddb >= 1.6.0" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        LIBMAXMINDDB_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libmaxminddb >= 1.6.0" 2>&1`
+        else
+	        LIBMAXMINDDB_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libmaxminddb >= 1.6.0" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$LIBMAXMINDDB_PKG_ERRORS" >&5
+
+	has_system_libmaxminddb=no
+elif test $pkg_failed = untried; then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	has_system_libmaxminddb=no
+else
+	LIBMAXMINDDB_CFLAGS=$pkg_cv_LIBMAXMINDDB_CFLAGS
+	LIBMAXMINDDB_LIBS=$pkg_cv_LIBMAXMINDDB_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	has_system_libmaxminddb=yes
+fi
+		if test "x$has_system_libmaxminddb" = "xyes"; then :
+
+
+
+
+
+			GEOIP_MAXMIND_OBJECTS="geoip_maxmind.so"
+
+
+fi
+
+fi
+
 
 UNRLINCDIR="`pwd`/include"
 
