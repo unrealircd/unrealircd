@@ -38,6 +38,9 @@ MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
 RM=@RM@
 
+.SUFFIXES:
+.SUFFIXES: .c .h .so
+
 all: build
 
 build: $(MODULES)
@@ -45,11 +48,6 @@ build: $(MODULES)
 clean:
 	$(RM) -f *.o *.so *~ core
 
-#############################################################################
-#             .so's section
-#############################################################################
-
-dccreject.so: dccreject.c $(INCLUDES)
+.c.so: $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o dccreject.so dccreject.c
-
+		-o $@ $<

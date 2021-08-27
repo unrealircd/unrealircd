@@ -43,6 +43,9 @@ MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
 RM=@RM@
 
+.SUFFIXES:
+.SUFFIXES: .c .h .so
+
 all: build
 
 build: $(MODULES)
@@ -50,118 +53,6 @@ build: $(MODULES)
 clean:
 	$(RM) -f *.o *.so *~ core
 
-#############################################################################
-#             .so's section
-#############################################################################
-
-key.so: key.c $(INCLUDES)
+.c.so: $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o key.so key.c
-
-limit.so: limit.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o limit.so limit.c
-
-inviteonly.so: inviteonly.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o inviteonly.so inviteonly.c
-
-secret.so: secret.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o secret.so secret.c
-
-private.so: private.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o private.so private.c
-
-moderated.so: moderated.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o moderated.so moderated.c
-
-noexternalmsgs.so: noexternalmsgs.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o noexternalmsgs.so noexternalmsgs.c
-
-topiclimit.so: topiclimit.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o topiclimit.so topiclimit.c
-
-isregistered.so: isregistered.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o isregistered.so isregistered.c
-
-issecure.so: issecure.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o issecure.so issecure.c
-
-nocolor.so: nocolor.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o nocolor.so nocolor.c
-
-stripcolor.so: stripcolor.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o stripcolor.so stripcolor.c
-
-permanent.so: permanent.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o permanent.so permanent.c
-
-floodprot.so: floodprot.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o floodprot.so floodprot.c
-
-noctcp.so: noctcp.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o noctcp.so noctcp.c
-
-link.so: link.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o link.so link.c
-
-censor.so: censor.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o censor.so censor.c
-
-delayjoin.so: delayjoin.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o delayjoin.so delayjoin.c
-
-noknock.so: noknock.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o noknock.so noknock.c
-		
-noinvite.so: noinvite.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o noinvite.so noinvite.c
-		
-operonly.so: operonly.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o operonly.so operonly.c
-		
-nonotice.so: nonotice.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o nonotice.so nonotice.c
-		
-regonly.so: regonly.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o regonly.so regonly.c
-		
-nonickchange.so: nonickchange.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o nonickchange.so nonickchange.c
-		
-nokick.so: nokick.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o nokick.so nokick.c
-		
-regonlyspeak.so: regonlyspeak.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o regonlyspeak.so regonlyspeak.c
-		
-secureonly.so: secureonly.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o secureonly.so secureonly.c
-
-history.so: history.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o history.so history.c
+		-o $@ $<

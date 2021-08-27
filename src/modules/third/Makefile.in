@@ -34,6 +34,9 @@ INCLUDES = ../../include/channel.h \
 MODULEFLAGS=@MODULEFLAGS@
 RM=@RM@
 
+.SUFFIXES:
+.SUFFIXES: .c .h .so
+
 all: build
 
 build:

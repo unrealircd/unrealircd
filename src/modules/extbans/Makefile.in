@@ -41,6 +41,9 @@ MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
 RM=@RM@
 
+.SUFFIXES:
+.SUFFIXES: .c .h .so
+
 all: build
 
 build: $(MODULES)
@@ -48,66 +51,6 @@ build: $(MODULES)
 clean:
 	$(RM) -f *.o *.so *~ core
 
-#############################################################################
-#             .so's section
-#############################################################################
-
-skel.so: skel.c $(INCLUDES)
+.c.so: $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o skel.so skel.c
-
-join.so: join.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o join.so join.c
-
-quiet.so: quiet.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o quiet.so quiet.c
-
-nickchange.so: nickchange.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o nickchange.so nickchange.c
-
-inchannel.so: inchannel.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o inchannel.so inchannel.c
-
-realname.so: realname.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o realname.so realname.c
-
-account.so: account.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o account.so account.c
-
-operclass.so: operclass.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o operclass.so operclass.c
-
-certfp.so: certfp.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o certfp.so certfp.c
-
-textban.so: textban.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o textban.so textban.c
-
-msgbypass.so: msgbypass.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o msgbypass.so msgbypass.c
-
-timedban.so: timedban.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o timedban.so timedban.c
-
-partmsg.so: partmsg.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o partmsg.so partmsg.c
-
-securitygroup.so: securitygroup.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o securitygroup.so securitygroup.c
-
-country.so: country.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o country.so country.c
+		-o $@ $<
