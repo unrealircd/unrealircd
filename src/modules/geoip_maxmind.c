@@ -13,7 +13,7 @@ ModuleHeader MOD_HEADER
 	"GEOIP using maxmind databases", 
 	"UnrealIRCd Team",
 	"unrealircd-6",
-    };
+	};
 
 struct geoip_maxmind_config_s {
 	char *db_file;
@@ -132,9 +132,9 @@ MOD_TEST()
 	if (!CallbackAddPVoidEx(modinfo->handle, CALLBACKTYPE_GEOIP_LOOKUP, TO_PVOIDFUNC(geoip_lookup_maxmind)))
 	{
 		unreal_log(ULOG_ERROR, "geoip_maxmind", "GEOIP_ADD_CALLBACK_FAILED", NULL,
-		           "geoip_maxmind: Could not install GEOIP_LOOKUP callback. "
-		           "Most likely another geoip module is already loaded. "
-		           "You can only load one!");
+				   "geoip_maxmind: Could not install GEOIP_LOOKUP callback. "
+				   "Most likely another geoip module is already loaded. "
+				   "You can only load one!");
 		return MOD_FAILED;
 	}
 
@@ -157,17 +157,17 @@ MOD_LOAD()
 	geoip_maxmind_free();
 	convert_to_absolute_path(&geoip_maxmind_config.db_file, PERMDATADIR);
 	
-    int status = MMDB_open(geoip_maxmind_config.db_file, MMDB_MODE_MMAP, &mmdb);
+	int status = MMDB_open(geoip_maxmind_config.db_file, MMDB_MODE_MMAP, &mmdb);
 
-    if (status != MMDB_SUCCESS) {
-    	int save_err = errno;
+	if (status != MMDB_SUCCESS) {
+		int save_err = errno;
 		unreal_log(ULOG_WARNING, "geoip_maxmind", "GEOIP_CANNOT_OPEN_DB", NULL,
-			       "Could not open '$filename' - $maxmind_error; IO error: $io_error",
-			       log_data_string("filename", geoip_maxmind_config.db_file),
-			       log_data_string("maxmind_error", MMDB_strerror(status)),
-			       log_data_string("io_error", (status == MMDB_IO_ERROR)?strerror(save_err):"none"));
+				   "Could not open '$filename' - $maxmind_error; IO error: $io_error",
+				   log_data_string("filename", geoip_maxmind_config.db_file),
+				   log_data_string("maxmind_error", MMDB_strerror(status)),
+				   log_data_string("io_error", (status == MMDB_IO_ERROR)?strerror(save_err):"none"));
 		return MOD_FAILED;
-    }
+	}
 	return MOD_SUCCESS;
 }
 
@@ -195,23 +195,23 @@ GeoIPResult *geoip_lookup_maxmind(char *ip)
 		return NULL;
 
 	result = MMDB_lookup_string(&mmdb, ip, &gai_error, &mmdb_error);
-    if (gai_error)
-    {
-    	unreal_log(ULOG_DEBUG, "geoip_maxmind", "GEOIP_DB_ERROR", NULL,
-    			"libmaxminddb: getaddrinfo error for $ip: $error",
-    			log_data_string("ip", ip),
-    			log_data_string("error", gai_strerror(gai_error)));
-        return NULL;
-    }
-    
-    if (mmdb_error != MMDB_SUCCESS)
-    {
-    	unreal_log(ULOG_DEBUG, "geoip_maxmind", "GEOIP_DB_ERROR", NULL,
-    			"libmaxminddb: library error for $ip: $error",
-    			log_data_string("ip", ip),
-    			log_data_string("error", MMDB_strerror(mmdb_error)));
-        return NULL;
-    }
+	if (gai_error)
+	{
+		unreal_log(ULOG_DEBUG, "geoip_maxmind", "GEOIP_DB_ERROR", NULL,
+				"libmaxminddb: getaddrinfo error for $ip: $error",
+				log_data_string("ip", ip),
+				log_data_string("error", gai_strerror(gai_error)));
+		return NULL;
+	}
+	
+	if (mmdb_error != MMDB_SUCCESS)
+	{
+		unreal_log(ULOG_DEBUG, "geoip_maxmind", "GEOIP_DB_ERROR", NULL,
+				"libmaxminddb: library error for $ip: $error",
+				log_data_string("ip", ip),
+				log_data_string("error", MMDB_strerror(mmdb_error)));
+		return NULL;
+	}
 
 	if (!result.found_entry) /* no result */
 		return NULL;
