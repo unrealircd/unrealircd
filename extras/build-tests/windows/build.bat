@@ -25,6 +25,16 @@ copy dlltool.exe \users\user\worker\unreal6-w10\build /y
 rem for appveyor, use: cd \projects\unrealircd
 cd \users\user\worker\unreal6-w10\build
 
+rem Install 'unrealircd-tests'
+cd ..
+rd /q/s unrealircd-tests
+rem Commented out due to private test repo (temporarily)
+rem git clone https://github.com/unrealircd/unrealircd-tests.git
+SET GIT_SSH_COMMAND=ssh -i ~/.ssh/unrealircd_tests_next.key -oIdentitiesOnly=yes
+git clone -q --branch unreal60 git@github.com:/syzop/unrealircd-tests-next.git unrealircd-tests
+if %ERRORLEVEL% NEQ 0 EXIT /B 1
+cd build
+
 rem Now the actual build
 call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat
 
@@ -38,7 +48,7 @@ call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 rem Compile dependencies for unrealircd-tests -- this doesn't belong here though..
-curl -fsS -o src\modules\third\fakereputation.c https://raw.githubusercontent.com/unrealircd/unrealircd-tests/master/serverconfig/unrealircd/modules/fakereputation.c
+copy ..\unrealircd-tests\serverconfig\unrealircd\modules\fakereputation.c src\modules\third /Y
 call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat CUSTOMMODULE MODULEFILE=fakereputation
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
@@ -70,15 +80,7 @@ rem Upload artifact
 rem appveyor PushArtifact unrealircd-dev-build.exe
 rem if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
-rem Install 'unrealircd-tests'
-cd ..
-rd /q/s unrealircd-tests
-rem Commented out due to private test repo (temporarily)
-rem git clone https://github.com/unrealircd/unrealircd-tests.git
-SET GIT_SSH_COMMAND=ssh -i ~/.ssh/unrealircd_tests_next.key -oIdentitiesOnly=yes
-git clone -q --branch unreal60 git@github.com:/syzop/unrealircd-tests-next.git unrealircd-tests
-if %ERRORLEVEL% NEQ 0 EXIT /B 1
-cd unrealircd-tests
+cd ..\unrealircd-tests
 dir
 
 rem All tests except db:
