@@ -21,4 +21,4 @@ SODIUM_INC_DIR="c:\projects\unrealircd-6-libs\libsodium\src\libsodium\include" ^
 SODIUMLIB="libsodium.lib" ^
 JANSSON_LIB_DIR="C:\projects\unrealircd-6-libs\jansson\lib" ^
 JANSSON_INC_DIR="C:\projects\unrealircd-6-libs\jansson\include" ^
-JANSSONLIB="jansson.lib "%*"
+JANSSONLIB="jansson.lib %*
