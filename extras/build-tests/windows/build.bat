@@ -18,12 +18,12 @@ rem Installing UnrealIRCd dependencies
 cd \projects
 mkdir unrealircd-5-libs
 cd unrealircd-5-libs
-curl -fsS -o unrealircd-libraries-5-devel.zip https://www.unrealircd.org/files/dev/win/libs/unrealircd-libraries-5-devel.zip
-unzip unrealircd-libraries-5-devel.zip
-copy dlltool.exe \users\user\worker\unreal5-w10\build /y
+curl -fsS -o unrealircd-libraries-6-devel.zip https://www.unrealircd.org/files/dev/win/libs/unrealircd-libraries-6-devel.zip
+unzip unrealircd-libraries-6-devel.zip
+copy dlltool.exe \users\user\worker\unreal6-w10\build /y
 
-rem for appveyor: cd \projects\unrealircd
-cd \users\user\worker\unreal5-w10\build
+rem for appveyor, use: cd \projects\unrealircd
+cd \users\user\worker\unreal6-w10\build
 
 rem Now the actual build
 call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat
@@ -73,7 +73,8 @@ rem if %ERRORLEVEL% NEQ 0 EXIT /B 1
 rem Install 'unrealircd-tests'
 cd ..
 rd /q/s unrealircd-tests
-git clone https://github.com/unrealircd/unrealircd-tests.git
+rem git clone https://github.com/unrealircd/unrealircd-tests.git
+GIT_SSH_COMMAND='ssh -i ~/.ssh/unrealircd_tests_next.key -oIdentitiesOnly=yes' git clone -q --branch unreal60 git@github.com:/syzop/unrealircd-tests-next.git unrealircd-tests
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 cd unrealircd-tests
 dir
