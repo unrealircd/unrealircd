@@ -19,6 +19,11 @@ if [ ! -d ~/cipherscan ]; then
 	git clone -q https://github.com/mozilla/cipherscan
 fi
 
+if [ "$HOSTNAME" = "deb8" ]; then
+	echo "Not running tests on Debian 8. It's LTS is EOL and trouble with running tests."
+	exit 0
+fi
+
 # Install 'unrealircd-tests'
 ## XX: Temporary using this repo URL for early U6 development
 GIT_SSH_COMMAND='ssh -i ~/.ssh/unrealircd_tests_next.key -oIdentitiesOnly=yes' git clone -q --branch unreal60 git@github.com:/syzop/unrealircd-tests-next.git unrealircd-tests
