@@ -16,8 +16,8 @@ rem cinst innosetup -y
 
 rem Installing UnrealIRCd dependencies
 cd \projects
-mkdir unrealircd-5-libs
-cd unrealircd-5-libs
+mkdir unrealircd-6-libs
+cd unrealircd-6-libs
 curl -fsS -o unrealircd-libraries-6-devel.zip https://www.unrealircd.org/files/dev/win/libs/unrealircd-libraries-6-devel.zip
 unzip unrealircd-libraries-6-devel.zip
 copy dlltool.exe \users\user\worker\unreal6-w10\build /y
@@ -42,9 +42,9 @@ curl -fsS -o src\modules\third\fakereputation.c https://raw.githubusercontent.co
 call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat CUSTOMMODULE MODULEFILE=fakereputation
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
-rem Convert c:\dev to c:\projects\unrealircd-5-libs
+rem Convert c:\dev to c:\projects\unrealircd-6-libs
 rem TODO: should use environment variable in innosetup script?
-sed -i "s/c:\\dev\\unrealircd-5-libs/c:\\projects\\unrealircd-5-libs/gi" src\windows\unrealinst.iss
+sed -i "s/c:\\dev\\unrealircd-6-libs/c:\\projects\\unrealircd-6-libs/gi" src\windows\unrealinst.iss
 
 rem Build installer file
 "c:\Program Files (x86)\Inno Setup 5\iscc.exe" /Q- src\windows\unrealinst.iss

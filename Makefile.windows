@@ -25,13 +25,13 @@ MT=mt
 #ARGON2LIB="Argon2RefDll.lib"
 
 ### SODIUM ###
-#SODIUM_LIB_DIR="C:\dev\unrealircd-5-libs\libsodium\......."
-#SODIUM_INC_DIR="C:\dev\unrealircd-5-libs\libsodium\......."
+#SODIUM_LIB_DIR="C:\dev\unrealircd-6-libs\libsodium\......."
+#SODIUM_INC_DIR="C:\dev\unrealircd-6-libs\libsodium\......."
 #SODIUMLIB="libsodium.lib"
 
 ### JANSSON ###
-#JANSSON_LIB_DIR="C:\dev\unrealircd-5-libs\jansson\......."
-#JANSSON_INC_DIR="C:\dev\unrealircd-5-libs\jansson\......."
+#JANSSON_LIB_DIR="C:\dev\unrealircd-6-libs\jansson\......."
+#JANSSON_INC_DIR="C:\dev\unrealircd-6-libs\jansson\......."
 #JANSSONLIB="libjansson.lib"
 
 ### C-ARES ####

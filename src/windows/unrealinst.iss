@@ -70,16 +70,16 @@ Source: "src\modules\snomasks\*.dll"; DestDir: "{app}\modules\snomasks"; Flags: 
 Source: "src\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ignoreversion
 Source: "src\modules\third\*.dll"; DestDir: "{app}\modules\third"; Flags: ignoreversion skipifsourcedoesntexist
 
-Source: "c:\dev\unrealircd-5-libs\pcre2\bin\pcre*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "c:\dev\unrealircd-5-libs\argon2\vs2015\build\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "c:\dev\unrealircd-5-libs\libsodium\bin\x64\Release\v142\dynamic\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "c:\dev\unrealircd-5-libs\c-ares\msvc\cares\dll-release\cares.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "c:\dev\unrealircd-5-libs\libressl\bin\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "c:\dev\unrealircd-5-libs\libressl\bin\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "c:\dev\unrealircd-5-libs\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\pcre2\bin\pcre*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\argon2\vs2015\build\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\libsodium\bin\x64\Release\v142\dynamic\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\c-ares\msvc\cares\dll-release\cares.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\libressl\bin\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\libressl\bin\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
 
 #ifdef USE_CURL
-Source: "c:\dev\unrealircd-5-libs\curl\builds\libcurl-vc-x64-release-dll-ssl-dll-cares-dll-ipv6-obj-lib\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\curl\builds\libcurl-vc-x64-release-dll-ssl-dll-cares-dll-ipv6-obj-lib\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "doc\conf\tls\curl-ca-bundle.crt"; DestDir: "{app}\conf\tls"; Flags: ignoreversion
 #endif
 
