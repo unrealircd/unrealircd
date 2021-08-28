@@ -239,6 +239,7 @@ void url_init(void)
 void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
 {
 	static char errorbuf[CURL_ERROR_SIZE];
+	char user_agent[256];
 	CURL *curl;
 	char *file;
 	char *filename;
@@ -277,6 +278,8 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	safe_free(file);
 
 	curl_easy_setopt(curl, CURLOPT_URL, url);
+	snprintf(user_agent, sizeof(user_agent), "UnrealIRCd %s", VERSIONONLY);
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, user_agent);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->file_fd);
 	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
