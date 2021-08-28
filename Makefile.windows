@@ -532,8 +532,8 @@ src/mempool.obj: src/mempool.c $(INCLUDES)
 src/dispatch.obj: src/dispatch.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/dispatch.c
 
-src/url.obj: src/url.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/url.c
+src/url_curl.obj: src/url_curl.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/url_curl.c
 
 src/api-extban.obj: src/api-extban.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/api-extban.c
