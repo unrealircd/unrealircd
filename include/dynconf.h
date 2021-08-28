@@ -32,10 +32,6 @@ struct FloodSettings {
 	long period[MAXFLOODOPTIONS];
 };
 
-typedef struct NetworkConfiguration NetworkConfiguration;
-struct NetworkConfiguration {
-};
-
 enum UHAllowed { UHALLOW_ALWAYS, UHALLOW_NOCHANS, UHALLOW_REJOIN, UHALLOW_NEVER };
 
 struct ChMode {
@@ -140,7 +136,6 @@ struct Configuration {
 	int maxbanlength;
 	int watch_away_notification;
 	int uhnames;
-	NetworkConfiguration network;
 	unsigned short default_ipv6_clone_mask;
 	int ping_cookie;
 	int min_nick_length;

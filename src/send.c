@@ -26,8 +26,10 @@
 
 #include "unrealircd.h"
 
+#if defined(__GNUC__)
 /* Temporarily ignore these for this entire file. FIXME later: */
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
 
 /* Some forward declarions are needed */
 void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl) __attribute__((format(printf,3,0)));

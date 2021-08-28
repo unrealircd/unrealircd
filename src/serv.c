@@ -58,9 +58,11 @@ extern MOTDLine *find_file(char *, short);
 
 void reread_motdsandrules();
 
+#if defined(__GNUC__)
 /* Temporarily ignore for this function. FIXME later!!! */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
 
 /** Send a message upstream if necessary and check if it's for us.
  * @param client	The sender
@@ -118,7 +120,9 @@ int hunt_server(Client *client, MessageTag *mtags, char *command, int server, in
 	return HUNTED_PASS;
 }
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif
 
 #ifndef _WIN32
 /** Grab operating system name on Windows (outdated) */

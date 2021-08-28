@@ -155,7 +155,7 @@ void fd_debug(fd_set *f, int highest, char *name)
 			{
 				unreal_log(ULOG_ERROR, "io", "FD_DEBUG", NULL,
 					   "[BUG] fd_debug: fd $fd is invalid!!!",
-					   log_data_integer("fd", fd));
+					   log_data_integer("fd", i));
 			}
 		}
 	}

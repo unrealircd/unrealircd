@@ -354,6 +354,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					DestroyMenu(hLogs);
 					hLogs = CreatePopupMenu();
 					AppendMenu(hConfig, MF_STRING, IDM_CONF, CPATH);
+#if 0
 					if (conf_log) 
 					{
 						ConfigItem_log *logs;
@@ -364,6 +365,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 						}
 					}
 					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+#endif
 					if (conf_files)
 					{
 						AppendMenu(hConfig, MF_STRING, IDM_MOTD, conf_files->motd_file);
@@ -446,6 +448,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				hLogs = CreatePopupMenu();
 
 				AppendMenu(hConfig, MF_STRING, IDM_CONF, CPATH);
+#if 0
 				if (conf_log) 
 				{
 					ConfigItem_log *logs;
@@ -456,7 +459,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					}
 				}
 				AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
-
+#endif
 				if (conf_files)
 				{
 					AppendMenu(hConfig, MF_STRING, IDM_MOTD, conf_files->motd_file);

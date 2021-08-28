@@ -120,7 +120,7 @@ JANSSON_LIB=/LIBPATH:"$(JANSSON_LIB_DIR)"
 
 !IFDEF USE_REMOTEINC
 CURLCFLAGS=/D USE_LIBCURL
-CURLOBJ=SRC/URL.OBJ
+CURLOBJ=SRC/URL_CURL.OBJ
 CURLLIB=libcurl.lib
 !IFDEF LIBCURL_INC_DIR
 LIBCURL_INC=/I "$(LIBCURL_INC_DIR)"
@@ -188,7 +188,7 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/API-EXTBAN.OBJ SRC/API-EFUNCTIONS.OBJ SRC/CRYPT_BLOWFISH.OBJ \
  SRC/OPERCLASS.OBJ SRC/UPDCONF.OBJ SRC/CRASHREPORT.OBJ SRC/UNREALDB.OBJ \
  SRC/OPENSSL_HOSTNAME_VALIDATION.OBJ \
- SRC/UTF8.OBJ $(CURLOBJ)
+ SRC/UTF8.OBJ SRC/LOG.OBJ $(CURLOBJ)
 
 OBJ_FILES=$(EXP_OBJ_FILES) SRC/GUI.OBJ SRC/SERVICE.OBJ SRC/WINDEBUG.OBJ SRC/RTF.OBJ \
  SRC/EDITOR.OBJ SRC/WIN.OBJ 
@@ -323,6 +323,10 @@ DLL_FILES=SRC/MODULES/OLDCLOAK.DLL \
  SRC/MODULES/TARGETFLOODPROT.DLL \
  SRC/MODULES/TYPING-INDICATOR.DLL \
  SRC/MODULES/CLIENTTAGDENY.DLL \
+ SRC/MODULES/JSON-LOG-TAG.DLL \
+ SRC/MODULES/SLOG.DLL \
+ SRC/MODULES/TLS_CIPHER.DLL \
+ SRC/MODULES/UNREAL_SERVER_COMPAT.DLL \
  SRC/MODULES/WATCH-BACKEND.DLL \
  SRC/MODULES/MONITOR.DLL \
  SRC/MODULES/METADATA.DLL \
@@ -572,6 +576,9 @@ src/unrealdb.obj: src/unrealdb.c $(INCLUDES) ./include/dbuf.h
 
 src/utf8.obj: src/utf8.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/utf8.c
+
+src/log.obj: src/log.c $(INCLUDES) ./include/dbuf.h
+        $(CC) $(CFLAGS) src/log.c
 
 src/windows/win.res: src/windows/wingui.rc
         $(RC) /l 0x409 /fosrc/windows/win.res /i ./include /i ./src \
@@ -1145,10 +1152,22 @@ src/modules/typing-indicator.dll: src/modules/typing-indicator.c $(INCLUDES)
 
 src/modules/clienttagdeny.dll: src/modules/clienttagdeny.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/clienttagdeny.c $(MODLFLAGS)
-	
+
+src/modules/json-log-tag.dll: src/modules/json-log-tag.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/json-log-tag.c $(MODLFLAGS)
+
+src/modules/slog.dll: src/modules/slog.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/slog.c $(MODLFLAGS)
+
+src/modules/tls_cipher.dll: src/modules/tls_cipher.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/tls_cipher.c $(MODLFLAGS)
+
+src/modules/unreal_server_compat.dll: src/modules/unreal_server_compat.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/unreal_server_compat.c $(MODLFLAGS)
+
 src/modules/watch-backend.dll: src/modules/watch-backend.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/watch-backend.c $(MODLFLAGS)
-	
+
 src/modules/monitor.dll: src/modules/monitor.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/monitor.c $(MODLFLAGS)
 

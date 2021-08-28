@@ -2090,7 +2090,7 @@ void config_load_failed(void)
 	conf = NULL;
 	free_iConf(&tempiConf);
 #ifdef _WIN32
-	if (!rehash)
+	if (!loop.rehashing)
 		win_error(); /* GUI popup */
 #endif
 }
@@ -3398,7 +3398,7 @@ int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
-		if (add_config_resource(FindData.cFileName, RESOURCE_INCLUDe, ce))
+		if (add_config_resource(FindData.cFileName, RESOURCE_INCLUDE, ce))
 			ret = config_read_file(FindData.cFileName, FindData.cFileName);
 	}
 	if (ret < 0)

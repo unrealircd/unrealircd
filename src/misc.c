@@ -2360,6 +2360,13 @@ int is_ip_valid(const char *ip)
 	return 0;
 }
 
+#ifdef _WIN32
+ // https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/access-waccess
+ // mode value   Checks file for
+ // 04 	         Read-only
+ #define R_OK 04
+#endif
+
 /*
  * Checks whether a file can be opened for reading.
  */
