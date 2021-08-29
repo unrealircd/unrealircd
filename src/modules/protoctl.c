@@ -240,7 +240,7 @@ CMD_FUNC(cmd_protoctl)
 			}
 			
 			servername = strtoken(&p, buf, ",");
-			if (!valid_server_name(servername))
+			if (!servername || !valid_server_name(servername))
 			{
 				exit_client(client, NULL, "Bogus server name");
 				return;
