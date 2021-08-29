@@ -1424,12 +1424,13 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	char msgbuf[1024];
 	char *loglevel_string = log_level_valtostring(loglevel);
 	MultiLine *mmsg;
+	static va_list null_va;
 
 	if (loglevel_string == NULL)
 	{
 		do_unreal_log_internal(ULOG_ERROR, "log", "BUG_LOG_LOGLEVEL", NULL, 0,
 		                       "[BUG] Next log message had an invalid log level -- corrected to ULOG_ERROR",
-		                       NULL);
+		                       null_va);
 		loglevel = ULOG_ERROR;
 		loglevel_string = log_level_valtostring(loglevel);
 	}
@@ -1437,14 +1438,14 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	{
 		do_unreal_log_internal(ULOG_ERROR, "log", "BUG_LOG_SUBSYSTEM", NULL, 0,
 		                       "[BUG] Next log message had an invalid subsystem -- changed to 'unknown'",
-		                       NULL);
+		                       null_va);
 		subsystem = "unknown";
 	}
 	if (!valid_event_id(event_id))
 	{
 		do_unreal_log_internal(ULOG_ERROR, "log", "BUG_LOG_EVENT_ID", NULL, 0,
 		                       "[BUG] Next log message had an invalid event id -- changed to 'unknown'",
-		                       NULL);
+		                       null_va);
 		event_id = "unknown";
 	}
 	/* This one is probably temporary since it should not be a real error, actually (but often is) */
@@ -1452,7 +1453,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	{
 		do_unreal_log_internal(ULOG_ERROR, "log", "BUG_LOG_MESSAGE_PERCENT", NULL, 0,
 		                       "[BUG] Next log message contains a percent sign -- possibly accidental format string!",
-		                       NULL);
+		                       null_va);
 	}
 
 	j = json_object();
