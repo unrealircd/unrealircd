@@ -395,7 +395,9 @@ AC_DEFUN([CHECK_LIBMAXMINDDB],
 		has_system_libmaxminddb="no"
 		PKG_CHECK_MODULES([LIBMAXMINDDB], [libmaxminddb >= 1.6.0],
 		                  [has_system_libmaxminddb=yes],
-		                  [has_system_libmaxminddb=no])
+		                  [has_system_libmaxminddb=no
+		                  AC_MSG_RESULT(not building libmaxminddb GeoIP support)
+		                  ])
 		AS_IF([test "x$has_system_libmaxminddb" = "xyes"],
 		[
 

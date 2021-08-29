@@ -8779,10 +8779,16 @@ fi
 	echo "$LIBMAXMINDDB_PKG_ERRORS" >&5
 
 	has_system_libmaxminddb=no
+		                  { $as_echo "$as_me:${as_lineno-$LINENO}: result: not building libmaxminddb GeoIP support" >&5
+$as_echo "not building libmaxminddb GeoIP support" >&6; }
+
 elif test $pkg_failed = untried; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_libmaxminddb=no
+		                  { $as_echo "$as_me:${as_lineno-$LINENO}: result: not building libmaxminddb GeoIP support" >&5
+$as_echo "not building libmaxminddb GeoIP support" >&6; }
+
 else
 	LIBMAXMINDDB_CFLAGS=$pkg_cv_LIBMAXMINDDB_CFLAGS
 	LIBMAXMINDDB_LIBS=$pkg_cv_LIBMAXMINDDB_LIBS
