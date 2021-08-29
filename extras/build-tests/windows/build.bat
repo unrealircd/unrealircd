@@ -36,8 +36,16 @@ if %ERRORLEVEL% NEQ 0 EXIT /B 1
 cd build
 
 rem Now the actual build
+rem - First this, otherwise JOM will fail
+IF NOT EXIST src\version.c nmake -f Makefile.windows CONF
+rem - Then build most of UnrealIRCd.exe etc
 call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat UNREALSVC.EXE UnrealIRCd.exe
+rem - It will fail due to missing symbolfile, which we create here..
 nmake -f makefile.windows SYMBOLFILE
+rem - Then we finalize building UnrealIRCd.exe: should be no error
+call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat UNREALSVC.EXE UnrealIRCd.exe
+if %ERRORLEVEL% NEQ 0 EXIT /B 1
+rem - Build all the modules (DLL files): should be no error
 call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat MODULES
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
