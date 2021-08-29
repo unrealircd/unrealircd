@@ -955,7 +955,7 @@ extern void set_targmax_defaults(void);
 extern void parse_chanmodes_protoctl(Client *client, char *str);
 extern void concat_params(char *buf, int len, int parc, char *parv[]);
 extern void charsys_check_for_changes(void);
-extern int maxclients;
+extern MODVAR int maxclients;
 extern int fast_badword_match(ConfigItem_badword *badword, char *line);
 extern int fast_badword_replace(ConfigItem_badword *badword, char *line, char *buf, int max);
 extern char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked);
