@@ -294,7 +294,6 @@ DLL_FILES=\
  src/modules/lusers.dll \
  src/modules/map.dll \
  src/modules/md.dll \
- src/modules/mdex.dll \
  src/modules/message.dll \
  src/modules/message-ids.dll \
  src/modules/message-tags.dll \
@@ -939,9 +938,6 @@ src/modules/map.dll: src/modules/map.c $(INCLUDES)
 
 src/modules/md.dll: src/modules/md.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/md.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/md.pdb $(MODLFLAGS)
-
-src/modules/mdex.dll: src/modules/mdex.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/mdex.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/mdex.pdb $(MODLFLAGS)
 
 src/modules/message.dll: src/modules/message.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/message.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/message.pdb $(MODLFLAGS)
