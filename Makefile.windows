@@ -192,72 +192,36 @@ EXP_OBJ_FILES=src/channel.obj src/send.obj src/socket.obj \
 OBJ_FILES=$(EXP_OBJ_FILES) src/gui.obj src/service.obj src/windebug.obj src/rtf.obj \
  src/editor.obj src/win.obj 
 
-DLL_FILES=src/modules/oldcloak.dll \
- src/modules/chghost.dll src/modules/sdesc.dll src/modules/setident.dll \
- src/modules/setname.dll src/modules/sethost.dll src/modules/chgident.dll \
- src/modules/svsmotd.dll src/modules/svsnline.dll src/modules/who_old.dll \
- src/modules/whox.dll \
- src/modules/swhois.dll src/modules/svsmode.dll src/modules/away.dll \
- src/modules/svsnoop.dll src/modules/mkpasswd.dll \
- src/modules/svsnick.dll \
- src/modules/chgname.dll \
- src/modules/lag.dll src/modules/message.dll \
- src/modules/oper.dll src/modules/pingpong.dll src/modules/quit.dll \
- src/modules/sendumode.dll \
- src/modules/sqline.dll src/modules/kill.dll src/modules/tsctl.dll \
- src/modules/unsqline.dll \
- src/modules/whois.dll src/modules/tkl.dll src/modules/vhost.dll \
- src/modules/cycle.dll src/modules/svsjoin.dll src/modules/svspart.dll \
- src/modules/svslusers.dll src/modules/svswatch.dll src/modules/svssilence.dll \
- src/modules/sendsno.dll src/modules/svssno.dll src/modules/sajoin.dll \
- src/modules/sapart.dll src/modules/samode.dll src/modules/kick.dll \
- src/modules/topic.dll src/modules/invite.dll src/modules/list.dll \
- src/modules/time.dll src/modules/svskill.dll src/modules/knock.dll \
- src/modules/umode2.dll src/modules/squit.dll src/modules/protoctl.dll \
- src/modules/sjoin.dll src/modules/pass.dll src/modules/userhost.dll \
- src/modules/ison.dll src/modules/silence.dll \
- src/modules/addmotd.dll src/modules/addomotd.dll src/modules/wallops.dll \
- src/modules/globops.dll src/modules/locops.dll \
- src/modules/admin.dll src/modules/trace.dll src/modules/netinfo.dll \
- src/modules/links.dll src/modules/help.dll src/modules/rules.dll \
- src/modules/close.dll src/modules/map.dll src/modules/eos.dll \
- src/modules/server.dll src/modules/stats.dll \
- src/modules/dccdeny.dll src/modules/whowas.dll \
- src/modules/connect.dll src/modules/dccallow.dll src/modules/userip.dll \
- src/modules/nick.dll src/modules/user.dll src/modules/mode.dll \
- src/modules/watch.dll src/modules/part.dll src/modules/join.dll \
- src/modules/motd.dll src/modules/opermotd.dll src/modules/botmotd.dll \
- src/modules/lusers.dll src/modules/names.dll src/modules/svsnolag.dll \
- src/modules/starttls.dll \
- src/modules/webredir.dll \
- src/modules/cap.dll \
- src/modules/sasl.dll \
- src/modules/tls_antidos.dll \
- src/modules/md.dll \
- src/modules/certfp.dll \
- src/modules/webirc.dll \
- src/modules/websocket.dll \
- src/modules/blacklist.dll \
- src/modules/jointhrottle.dll \
- src/modules/antirandom.dll \
- src/modules/hideserver.dll \
- src/modules/jumpserver.dll \
- src/modules/ircops.dll \
- src/modules/staff.dll \
- src/modules/nocodes.dll \
- src/modules/charsys.dll \
+DLL_FILES=\
+ src/modules/account-notify.dll \
+ src/modules/account-tag.dll \
+ src/modules/addmotd.dll \
+ src/modules/addomotd.dll \
+ src/modules/admin.dll \
  src/modules/antimixedutf8.dll \
+ src/modules/antirandom.dll \
  src/modules/authprompt.dll \
- src/modules/sinfo.dll \
- src/modules/reputation.dll \
- src/modules/connthrottle.dll \
+ src/modules/away.dll \
+ src/modules/batch.dll \
+ src/modules/blacklist.dll \
+ src/modules/botmotd.dll \
+ src/modules/bot-tag.dll \
+ src/modules/cap.dll \
+ src/modules/certfp.dll \
  src/modules/chanmodes/censor.dll \
  src/modules/chanmodes/delayjoin.dll \
  src/modules/chanmodes/floodprot.dll \
+ src/modules/chanmodes/history.dll \
+ src/modules/chanmodes/inviteonly.dll \
+ src/modules/chanmodes/isregistered.dll \
  src/modules/chanmodes/issecure.dll \
+ src/modules/chanmodes/key.dll \
+ src/modules/chanmodes/limit.dll \
  src/modules/chanmodes/link.dll \
+ src/modules/chanmodes/moderated.dll \
  src/modules/chanmodes/nocolor.dll \
  src/modules/chanmodes/noctcp.dll \
+ src/modules/chanmodes/noexternalmsgs.dll \
  src/modules/chanmodes/noinvite.dll \
  src/modules/chanmodes/nokick.dll \
  src/modules/chanmodes/noknock.dll \
@@ -265,73 +229,175 @@ DLL_FILES=src/modules/oldcloak.dll \
  src/modules/chanmodes/nonotice.dll \
  src/modules/chanmodes/operonly.dll \
  src/modules/chanmodes/permanent.dll \
+ src/modules/chanmodes/private.dll \
  src/modules/chanmodes/regonly.dll \
  src/modules/chanmodes/regonlyspeak.dll \
+ src/modules/chanmodes/secret.dll \
  src/modules/chanmodes/secureonly.dll \
  src/modules/chanmodes/stripcolor.dll \
- src/modules/chanmodes/history.dll \
- src/modules/usermodes/censor.dll \
- src/modules/usermodes/noctcp.dll \
- src/modules/usermodes/bot.dll \
- src/modules/usermodes/servicebot.dll \
- src/modules/usermodes/showwhois.dll \
- src/modules/usermodes/privacy.dll \
- src/modules/usermodes/nokick.dll \
- src/modules/usermodes/regonlymsg.dll \
- src/modules/usermodes/privdeaf.dll \
- src/modules/usermodes/secureonlymsg.dll \
- src/modules/snomasks/dccreject.dll \
+ src/modules/chanmodes/topiclimit.dll \
+ src/modules/channeldb.dll \
+ src/modules/charsys.dll \
+ src/modules/chathistory.dll \
+ src/modules/chghost.dll \
+ src/modules/chgident.dll \
+ src/modules/chgname.dll \
+ src/modules/clienttagdeny.dll \
+ src/modules/close.dll \
+ src/modules/connect.dll \
+ src/modules/connthrottle.dll \
+ src/modules/cycle.dll \
+ src/modules/dccallow.dll \
+ src/modules/dccdeny.dll \
+ src/modules/echo-message.dll \
+ src/modules/eos.dll \
  src/modules/extbans/account.dll \
+ src/modules/extbans/certfp.dll \
+ src/modules/extbans/country.dll \
  src/modules/extbans/inchannel.dll \
  src/modules/extbans/join.dll \
+ src/modules/extbans/msgbypass.dll \
  src/modules/extbans/nickchange.dll \
+ src/modules/extbans/operclass.dll \
+ src/modules/extbans/partmsg.dll \
  src/modules/extbans/quiet.dll \
  src/modules/extbans/realname.dll \
- src/modules/extbans/operclass.dll \
- src/modules/extbans/certfp.dll \
- src/modules/extbans/textban.dll \
- src/modules/extbans/msgbypass.dll \
- src/modules/extbans/timedban.dll \
- src/modules/extbans/partmsg.dll \
  src/modules/extbans/securitygroup.dll \
- src/modules/account-notify.dll \
- src/modules/message-tags.dll \
- src/modules/batch.dll \
- src/modules/account-tag.dll \
- src/modules/labeled-response.dll \
- src/modules/link-security.dll \
- src/modules/message-ids.dll \
- src/modules/plaintext-policy.dll \
- src/modules/server-time.dll \
- src/modules/sts.dll \
- src/modules/tkldb.dll \
- src/modules/channeldb.dll \
+ src/modules/extbans/textban.dll \
+ src/modules/extbans/timedban.dll \
+ src/modules/extended-monitor.dll \
+ src/modules/geoip_base.dll \
+ src/modules/geoip_csv.dll \
+ src/modules/globops.dll \
+ src/modules/help.dll \
+ src/modules/hideserver.dll \
  src/modules/history_backend_mem.dll \
  src/modules/history_backend_null.dll \
+ src/modules/history.dll \
+ src/modules/ident_lookup.dll \
+ src/modules/invite.dll \
+ src/modules/ircops.dll \
+ src/modules/ison.dll \
+ src/modules/join.dll \
+ src/modules/jointhrottle.dll \
+ src/modules/json-log-tag.dll \
+ src/modules/jumpserver.dll \
+ src/modules/kick.dll \
+ src/modules/kill.dll \
+ src/modules/knock.dll \
+ src/modules/labeled-response.dll \
+ src/modules/lag.dll \
+ src/modules/links.dll \
+ src/modules/link-security.dll \
+ src/modules/list.dll \
+ src/modules/locops.dll \
+ src/modules/lusers.dll \
+ src/modules/map.dll \
+ src/modules/md.dll \
+ src/modules/mdex.dll \
+ src/modules/message.dll \
+ src/modules/message-ids.dll \
+ src/modules/message-tags.dll \
+ src/modules/metadata.dll \
+ src/modules/mkpasswd.dll \
+ src/modules/mode.dll \
+ src/modules/monitor.dll \
+ src/modules/motd.dll \
+ src/modules/names.dll \
+ src/modules/netinfo.dll \
+ src/modules/nick.dll \
+ src/modules/nocodes.dll \
+ src/modules/oldcloak.dll \
+ src/modules/oper.dll \
+ src/modules/opermotd.dll \
+ src/modules/part.dll \
+ src/modules/pass.dll \
+ src/modules/pingpong.dll \
+ src/modules/plaintext-policy.dll \
+ src/modules/protoctl.dll \
+ src/modules/quit.dll \
+ src/modules/reply-tag.dll \
+ src/modules/reputation.dll \
+ src/modules/require-module.dll \
  src/modules/restrict-commands.dll \
  src/modules/rmtkl.dll \
- src/modules/echo-message.dll \
- src/modules/userip-tag.dll \
- src/modules/userhost-tag.dll \
- src/modules/bot-tag.dll \
- src/modules/reply-tag.dll \
- src/modules/require-module.dll \
- src/modules/ident_lookup.dll \
- src/modules/history.dll \
- src/modules/chathistory.dll \
- src/modules/targetfloodprot.dll \
- src/modules/typing-indicator.dll \
- src/modules/clienttagdeny.dll \
- src/modules/json-log-tag.dll \
+ src/modules/rules.dll \
+ src/modules/sajoin.dll \
+ src/modules/samode.dll \
+ src/modules/sapart.dll \
+ src/modules/sasl.dll \
+ src/modules/sdesc.dll \
+ src/modules/sendsno.dll \
+ src/modules/sendumode.dll \
+ src/modules/server.dll \
+ src/modules/server-time.dll \
+ src/modules/sethost.dll \
+ src/modules/setident.dll \
+ src/modules/setname.dll \
+ src/modules/silence.dll \
+ src/modules/sinfo.dll \
+ src/modules/sjoin.dll \
  src/modules/slog.dll \
+ src/modules/snomasks/dccreject.dll \
+ src/modules/sqline.dll \
+ src/modules/squit.dll \
+ src/modules/staff.dll \
+ src/modules/starttls.dll \
+ src/modules/stats.dll \
+ src/modules/sts.dll \
+ src/modules/svsjoin.dll \
+ src/modules/svskill.dll \
+ src/modules/svslusers.dll \
+ src/modules/svsmode.dll \
+ src/modules/svsmotd.dll \
+ src/modules/svsnick.dll \
+ src/modules/svsnline.dll \
+ src/modules/svsnolag.dll \
+ src/modules/svsnoop.dll \
+ src/modules/svspart.dll \
+ src/modules/svssilence.dll \
+ src/modules/svssno.dll \
+ src/modules/svswatch.dll \
+ src/modules/swhois.dll \
+ src/modules/targetfloodprot.dll \
+ src/modules/time.dll \
+ src/modules/tkl.dll \
+ src/modules/tkldb.dll \
+ src/modules/tls_antidos.dll \
  src/modules/tls_cipher.dll \
+ src/modules/topic.dll \
+ src/modules/trace.dll \
+ src/modules/tsctl.dll \
+ src/modules/typing-indicator.dll \
+ src/modules/umode2.dll \
  src/modules/unreal_server_compat.dll \
+ src/modules/unsqline.dll \
+ src/modules/user.dll \
+ src/modules/userhost.dll \
+ src/modules/userhost-tag.dll \
+ src/modules/userip.dll \
+ src/modules/userip-tag.dll \
+ src/modules/usermodes/bot.dll \
+ src/modules/usermodes/censor.dll \
+ src/modules/usermodes/noctcp.dll \
+ src/modules/usermodes/nokick.dll \
+ src/modules/usermodes/privacy.dll \
+ src/modules/usermodes/privdeaf.dll \
+ src/modules/usermodes/regonlymsg.dll \
+ src/modules/usermodes/secureonlymsg.dll \
+ src/modules/usermodes/servicebot.dll \
+ src/modules/usermodes/showwhois.dll \
+ src/modules/vhost.dll \
+ src/modules/wallops.dll \
  src/modules/watch-backend.dll \
- src/modules/monitor.dll \
- src/modules/metadata.dll \
- src/modules/extended-monitor.dll \
- src/modules/geoip_csv.dll \
- src/modules/geoip_base.dll
+ src/modules/watch.dll \
+ src/modules/webirc.dll \
+ src/modules/webredir.dll \
+ src/modules/websocket.dll \
+ src/modules/whois.dll \
+ src/modules/who_old.dll \
+ src/modules/whowas.dll \
+ src/modules/whox.dll
 
 
 ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES 
