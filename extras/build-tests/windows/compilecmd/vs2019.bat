@@ -1,6 +1,9 @@
 rem Build command for Visual Studio 2019
 
-nmake -f makefile.windows ^
+rem This used to start with:
+rem nmake -f makefile.windows ^
+rem But nowadays we use JOM for parallel builds:
+jom /j32 -f makefile.windows ^
 LIBRESSL_INC_DIR="c:\projects\unrealircd-6-libs\libressl\include" ^
 LIBRESSL_LIB_DIR="c:\projects\unrealircd-6-libs\libressl\lib" ^
 SSLLIB="crypto-46.lib ssl-48.lib" ^

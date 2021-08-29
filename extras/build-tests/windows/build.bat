@@ -36,15 +36,9 @@ if %ERRORLEVEL% NEQ 0 EXIT /B 1
 cd build
 
 rem Now the actual build
-call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat
-
-rem The above command will fail, due to missing symbol file
-rem However the symbol file can only be generated after the above command
-rem So... we create the symbolfile...
+call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat UNREALSVC.EXE UnrealIRCd.exe
 nmake -f makefile.windows SYMBOLFILE
-
-rem And we re-run the exact same command:
-call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat
+call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat MODULES
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 rem Compile dependencies for unrealircd-tests -- this doesn't belong here though..
