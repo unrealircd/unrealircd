@@ -43,6 +43,7 @@ void set_isupport_extban(void)
 Extban *findmod_by_bantype(char *str, char **remainder)
 {
 	int i;
+	int ban_name_length;
 	char *p = strchr(str, ':');
 
 	if (!p || !p[1])
@@ -54,12 +55,18 @@ Extban *findmod_by_bantype(char *str, char **remainder)
 	if (remainder)
 		*remainder = p+1;
 
+	ban_name_length = p - str - 1;
+
 	for (i=0; i <= ExtBan_highest; i++)
 	{
-		if ((str[2] == ':') && (ExtBan_Table[i].letter == str[1]))
+		if ((ban_name_length == 1) && (ExtBan_Table[i].letter == str[1]))
 			return &ExtBan_Table[i];
-		if (ExtBan_Table[i].name && !strncmp(ExtBan_Table[i].name, str+1, strlen(ExtBan_Table[i].name)))
-			return &ExtBan_Table[i];
+		if (ExtBan_Table[i].name)
+		{
+			int namelen = strlen(ExtBan_Table[i].name);
+			if ((namelen == ban_name_length) && !strncmp(ExtBan_Table[i].name, str+1, namelen))
+				return &ExtBan_Table[i];
+		}
 	}
 
 	 return NULL;
