@@ -225,6 +225,9 @@ CMD_FUNC(cmd_protoctl)
 			char buf[512];
 			ConfigItem_link *aconf = NULL;
 
+			if (IsUser(client))
+				return; /* ignore PROTOCTL EAUTH from users */
+
 			if (IsEAuth(client))
 			{
 				exit_client(client, NULL, "PROTOCTL EAUTH received twice");
