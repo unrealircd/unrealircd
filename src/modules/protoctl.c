@@ -94,6 +94,10 @@ CMD_FUNC(cmd_protoctl)
 		{
 			SetCapability(client, "userhost-in-names");
 		}
+		else if (IsUser(client))
+		{
+			return;
+		}
 		else if (!strcmp(name, "VL"))
 		{
 			SetVL(client);
@@ -224,9 +228,6 @@ CMD_FUNC(cmd_protoctl)
 			char *servername = NULL, *protocol = NULL, *flags = NULL, *software = NULL;
 			char buf[512];
 			ConfigItem_link *aconf = NULL;
-
-			if (IsUser(client))
-				return; /* ignore PROTOCTL EAUTH from users */
 
 			if (IsEAuth(client))
 			{
