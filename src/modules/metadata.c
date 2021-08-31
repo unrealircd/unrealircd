@@ -1020,6 +1020,8 @@ int metadata_key_valid(char *key)
 int metadata_check_perms(Client *user, Channel *channel, Client *client, char *key, int mode)
 { /* either user or channel should be NULL */
 	Membership *lp;
+	if (!IsUser(client) && channel) /* ignore channel metadata requests for unregistered users */
+		return 0;
 	if ((user == client) || (!user && !channel)) /* specified target is "*" or own nick */
 		return 1;
 	if (IsOper(client) && mode == MODE_GET)
