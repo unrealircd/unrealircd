@@ -311,6 +311,8 @@ CMD_FUNC(cmd_invite)
 	if (!MyConnect(client))
 	/*** remote invite ***/
 	{
+		if (!params_ok)
+			return;
 		/* the client or channel may be already gone */
 		if (!target)
 		{
