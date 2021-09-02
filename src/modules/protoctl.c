@@ -344,6 +344,7 @@ CMD_FUNC(cmd_protoctl)
 				           log_data_integer("time_delta", TStime() - t));
 				exit_client_fmt(client, NULL, "Incorrect clock. Our clocks are %lld seconds apart.",
 				                (long long)(TStime() - t));
+				return;
 			} else
 			if ((t - TStime()) > MAX_SERVER_TIME_OFFSET)
 			{
@@ -355,6 +356,7 @@ CMD_FUNC(cmd_protoctl)
 				           log_data_integer("time_delta", t - TStime()));
 				exit_client_fmt(client, NULL, "Incorrect clock. Our clocks are %lld seconds apart.",
 				                (long long)(t - TStime()));
+				return;
 			}
 		}
 		else if (!strcmp(name, "MLOCK"))
