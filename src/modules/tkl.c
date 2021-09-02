@@ -100,6 +100,7 @@ TKL *_find_tkl_nameban(int type, char *name, int hold);
 TKL *_find_tkl_spamfilter(int type, char *match_string, BanAction action, unsigned short target);
 int _find_tkl_exception(int ban_type, Client *client);
 static void add_default_exempts(void);
+int parse_extended_server_ban(char *mask_in, Client *client, char **error, int skip_checking, char *buf1, size_t buf1len, char *buf2, size_t buf2len);
 
 /* Externals (only for us :D) */
 extern int MODVAR spamf_ugly_vchanoverride;
@@ -606,40 +607,25 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	{
 		if (!strcmp(cep->name, "mask"))
 		{
-			char buf[512], *p;
-			strlcpy(buf, cep->value, sizeof(buf));
-			if (is_extended_ban(buf))
+			if (is_extended_ban(cep->value))
 			{
-				char *str;
-				char *nextbanstr;
-				Extban *extban;
-				BanContext *b;
-				char buf2[BUFSIZE];
-				extban = findmod_by_bantype(buf, &nextbanstr);
-				if (!extban || !(extban->options & EXTBOPT_TKL))
+				char mask1buf[512], mask2buf[512];
+				char *err = NULL;
+
+				if (!parse_extended_server_ban(cep->value, NULL, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
 				{
-					config_warn("%s:%d: Invalid or unsupported extended server ban requested: %s",
-						cep->file->filename, cep->line_number, buf);
+					config_warn("%s:%d: Could not add extended server ban '%s': %s",
+						cep->file->filename, cep->line_number, cep->value, err);
 					goto tcrb_end;
 				}
-				/* is_ok() is not called, since there is no client, similar to like remote bans set */
-				b = safe_alloc(sizeof(BanContext));
-				b->banstr = nextbanstr;
-				str = extban->conv_param(b, extban);
-				if (!str || (strlen(str) <= 4))
-				{
-					config_warn("%s:%d: Extended server ban has a problem: %s",
-						cep->file->filename, cep->line_number, buf);
-					safe_free(b);
-					goto tcrb_end;
-				}
-				strlcpy(buf2, str+3, sizeof(buf2));
-				buf[3] = '\0';
-				safe_strdup(usermask, buf); /* eg ~S: */
-				safe_strdup(hostmask, buf2);
-				safe_free(b);
+				safe_strdup(usermask, mask1buf);
+				safe_strdup(hostmask, mask2buf);
 			} else
 			{
+				char buf[512];
+				char *p;
+
+				strlcpy(buf, cep->value, sizeof(buf));
 				p = strchr(buf, '@');
 				if (p)
 				{
@@ -792,7 +778,10 @@ void config_create_tkl_except(char *mask, char *bantypes)
 	char *usermask = NULL;
 	char *hostmask = NULL;
 	int soft = 0;
-	char buf[256], buf2[256], *p;
+	char buf[256];
+	char mask1buf[512];
+	char mask2buf[512];
+	char *p;
 
 	if (*mask == '%')
 	{
@@ -802,31 +791,14 @@ void config_create_tkl_except(char *mask, char *bantypes)
 	strlcpy(buf, mask, sizeof(buf));
 	if (is_extended_ban(buf))
 	{
-		char *str;
-		char *nextbanstr;
-		Extban *extban;
-		BanContext *b;
-		extban = findmod_by_bantype(buf, &nextbanstr);
-		if (!extban || !(extban->options & EXTBOPT_TKL))
+		char *err = NULL;
+		if (!parse_extended_server_ban(buf, NULL, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
 		{
-			config_warn("Invalid or unsupported extended server ban exemption requested: %s", buf);
+			config_warn("Could not add extended server ban '%s': %s", buf, err);
 			return;
 		}
-		/* is_ok() is not called, since there is no client, similar to like remote bans set */
-		b = safe_alloc(sizeof(BanContext));
-		b->banstr = nextbanstr;
-		str = extban->conv_param(b, extban);
-		if (!str || (strlen(str) <= 4))
-		{
-			config_warn("Extended server ban exemption has a problem: %s", buf);
-			safe_free(b);
-			return;
-		}
-		strlcpy(buf2, str+3, sizeof(buf2));
-		buf[3] = '\0';
-		usermask = buf; /* eg ~S: */
-		hostmask = buf2;
-		safe_free(b);
+		usermask = mask1buf;
+		hostmask = mask2buf;
 	} else
 	{
 		p = strchr(buf, '@');
@@ -1291,6 +1263,122 @@ static int xline_exists(char *type, char *usermask, char *hostmask)
 	return find_tkl_serverban(tpe, umask, hostmask, softban) ? 1 : 0;
 }
 
+/** Parse an extended server ban such as ~S:aabbccddetc..
+ * Used for both syntax checking and to split it into userbuf/hostbuf for TKL protocol.
+ * @param mask_in	The input mask (eg: ~S:aabbccddetc)
+ * @param client	Client doing the request (used to send errors), can be NULL.
+ * @param error		Pointer to set to the error buffer (must be set!)
+ * @param skip_checking	Set this to 1 if coming from a remote user/server to skip the .is_ok() check.
+ *                      Note that a .conv_param() call can still fail.
+ * @param buf1		Buffer to store the extban starter in (eg "~S:") -- can be NULL if you don't need it
+ * @param buf1len	Length of buf1
+ * @param buf2		Buffer to store the extban remainder in (eg "aabbccddetc") -- can be NULL if you don't need it
+ * @param buf2len	Length of buf2
+ * @returns 1 if the server ban is acceptable. The ban will then be stored in buf1/buf2 (unless those
+ *            were set to NULL by the caller). On failure we return 0 and 'error' is set appropriately.
+ */
+int parse_extended_server_ban(char *mask_in, Client *client, char **error, int skip_checking, char *buf1, size_t buf1len, char *buf2, size_t buf2len)
+{
+	char *nextbanstr = NULL;
+	Extban *extban;
+	char *str, *p;
+	BanContext *b;
+	char    mask[USERLEN + NICKLEN + HOSTLEN + 32]; // same as extban_conv_param_nuh_or_extban()
+	char newmask[USERLEN + NICKLEN + HOSTLEN + 32];
+
+	*error = NULL;
+	if (buf1 && buf2)
+		*buf1 = *buf2 = '\0';
+
+	/* Work on a copy */
+	strlcpy(mask, mask_in, sizeof(mask));
+
+	extban = findmod_by_bantype(mask, &nextbanstr);
+	if (!extban || !(extban->options & EXTBOPT_TKL))
+	{
+		*error = "Invalid or unsupported extended server ban requested. Valid types are for example ~a, ~r, ~S.";
+		return 0;
+	}
+
+	b = safe_alloc(sizeof(BanContext));
+	b->client = client;
+	b->banstr = nextbanstr;
+	b->is_ok_checktype = EXBCHK_PARAM;
+	b->what = MODE_ADD;
+	b->what2 = EXBTYPE_TKL;
+
+	/* Run .is_ok() for the extban. This check is skipped if coming from a remote user/server */
+	if (skip_checking == 0)
+	{
+		if (extban->is_ok && !extban->is_ok(b))
+		{
+			*error = "Invalid extended server ban";
+			safe_free(b);
+			return 0; /* rejected */
+		}
+	}
+
+	b->banstr = nextbanstr;
+	str = extban->conv_param(b, extban);
+	if (!str)
+	{
+		*error = "Invalid extended server ban";
+		safe_free(b);
+		return 0; /* rejected */
+	}
+	str = prefix_with_extban(str, b, extban, newmask, sizeof(newmask));
+	if (str == NULL)
+	{
+		*error = "Unexpected error (1)";
+		safe_free(b);
+		return 0;
+	}
+
+	p = strchr(newmask, ':');
+	if (!p)
+	{
+		*error = "Unexpected error (2)";
+		safe_free(b);
+		return 0;
+	}
+
+	if (p[1] == ':')
+	{
+		*error = "For technical reasons you cannot use a double : at the beginning of an extended server ban (eg ~a::xyz)";
+		return 0;
+	}
+
+	if (!p[1])
+	{
+		*error = "Empty / too short extended server ban";
+		return 0;
+	}
+
+	/* Now convert the result into two buffers for TKL protocol usage */
+	if (buf1 && buf2)
+	{
+		char save;
+		p++;
+		save = *p;
+		*p = '\0';
+		strlcpy(buf1, newmask, buf1len); /* eg ~S: */
+		*p = save;
+		strlcpy(buf2, p, buf2len); /* eg 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef */
+	}
+	safe_free(b);
+	return 1;
+
+/*	if (((*type == 'z') || (*type == 'Z')))
+	{
+		sendnotice(client, "ERROR: (g)zlines must be placed at *@\037IPMASK\037. "
+				   "Extended server bans don't work here because (g)zlines are processed"
+				   "BEFORE dns and ident lookups are done and before reading any client data. "
+				   "If you want to use extended server bans then use a KLINE/GLINE instead.");
+		return;
+	} */
+}
+
+
 /** Intermediate layer between user functions such as KLINE/GLINE
  * and the TKL layer (cmd_tkl).
  * This allows us doing some syntax checking and other helpful
@@ -1304,6 +1392,7 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 	Client *acptr = NULL;
 	char *mask = NULL;
 	char mo[64], mo2[64];
+	char mask1buf[BUFSIZE];
 	char mask2buf[BUFSIZE];
 	char *p, *usermask, *hostmask;
 	char *tkllayer[10] = {
@@ -1362,71 +1451,40 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 	/* Check if it's an extended server ban */
 	if (is_extended_ban(mask))
 	{
-		if (whattodo == 0)
-		{
-			/* Add */
-			char *str;
-			char *nextbanstr;
-			Extban *extban;
-			BanContext *b;
-			extban = findmod_by_bantype(mask, &nextbanstr);
-			if (!extban || !(extban->options & EXTBOPT_TKL))
-			{
-				sendnotice(client, "Invalid or unsupported extended server ban requested: %s", mask);
-				sendnotice(client, "Valid types are for example ~a, ~r, ~S");
-				return;
-			}
-			b = safe_alloc(sizeof(BanContext));
-			b->client = client;
-			b->banstr = nextbanstr;
-			b->is_ok_checktype = EXBCHK_PARAM;
-			b->what = MODE_ADD;
-			b->what2 = EXBTYPE_TKL;
-			if (extban->is_ok && !extban->is_ok(b))
-			{
-				safe_free(b);
-				return; /* rejected */
-			}
-			b->banstr = nextbanstr;
-			str = extban->conv_param(b, extban);
-			if (!str || (strlen(str) <= 4))
-			{
-				safe_free(b);
-				return; /* rejected */
-			}
-			strlcpy(mask2buf, str+3, sizeof(mask2buf));
-			mask[3] = '\0';
-			usermask = mask; /* eg ~S: */
-			hostmask = mask2buf;
-			safe_free(b);
+		char *err;
 
-			if (((*type == 'z') || (*type == 'Z')))
+		if (!parse_extended_server_ban(mask, client, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
+		{
+			/* If adding, reject it */
+			if (whattodo == 0)
 			{
-				sendnotice(client, "ERROR: (g)zlines must be placed at *@\037IPMASK\037. "
-				                   "Extended server bans don't work here because (g)zlines are processed"
-				                   "BEFORE dns and ident lookups are done and before reading any client data. "
-				                   "If you want to use extended server bans then use a KLINE/GLINE instead.");
+				sendnotice(client, "ERROR: %s", err);
 				return;
+			} else
+			{
+				/* Always allow any removal attempt... */
+				char *p;
+				char save;
+				p = strchr(mask, ':');
+				p++;
+				save = *p;
+				*p = '\0';
+				strlcpy(mask1buf, mask, sizeof(mask1buf));
+				*p = save;
+				strlcpy(mask2buf, p, sizeof(mask2buf));
+				/* fallthrough */
 			}
-		} else {
-			/* Delete: allow any attempt */
-			strlcpy(mask2buf, mask+3, sizeof(mask2buf));
-			mask[3] = '\0';
-			usermask = mask; /* eg ~S: */
-			hostmask = mask2buf;
 		}
-		/* Make sure we don't screw up S2S traffic ;) */
-		if (*hostmask == ':')
+		if ((whattodo == 0) && ((*type == 'z') || (*type == 'Z')))
 		{
-			sendnotice(client, "[error] For technical reasons you cannot use double :: at the beginning "
-					   "of an extended server ban (eg ~a::xyz). You probably don't want to do this either.");
+			sendnotice(client, "ERROR: (g)zlines must be placed at *@\037IPMASK\037. "
+					   "Extended server bans don't work here because (g)zlines are processed"
+					   "BEFORE dns and ident lookups are done and before reading any client data. "
+					   "If you want to use extended server bans then use a KLINE/GLINE instead.");
 			return;
 		}
-		if (!*hostmask)
-		{
-			sendnotice(client, "[error] Empty hostmask encountered, eg -~S:");
-			return;
-		}
+		usermask = mask1buf; /* eg ~S: */
+		hostmask = mask2buf; /* eg 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef */
 	} else
 	{
 		/* Check if it's a hostmask and legal .. */
@@ -1620,6 +1678,7 @@ CMD_FUNC(cmd_eline)
 	Client *acptr = NULL;
 	char *mask = NULL;
 	char mo[64], mo2[64];
+	char mask1buf[BUFSIZE];
 	char mask2buf[BUFSIZE];
 	char *p, *usermask, *hostmask, *bantypes=NULL, *reason=NULL;
 	char *tkllayer[11] = {
@@ -1698,69 +1757,38 @@ CMD_FUNC(cmd_eline)
 	/* Check if it's an extended server ban */
 	if (is_extended_ban(mask))
 	{
-		if (add)
+		char *err;
+		if (!parse_extended_server_ban(mask, client, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
 		{
-			/* Add */
-			char *str;
-			char *nextbanstr;
-			Extban *extban;
-			BanContext *b;
-			extban = findmod_by_bantype(mask, &nextbanstr);
-			if (!extban || !(extban->options & EXTBOPT_TKL))
+			/* If adding, reject it */
+			if (add)
 			{
-				sendnotice(client, "Invalid or unsupported extended server ban requested: %s", mask);
-				sendnotice(client, "Valid types are for example ~a, ~r, ~S");
+				sendnotice(client, "ERROR: %s", err);
 				return;
-			}
-			b = safe_alloc(sizeof(BanContext));
-			b->client = client;
-			b->banstr = nextbanstr;
-			b->is_ok_checktype = EXBCHK_PARAM;
-			b->what = MODE_ADD;
-			b->what2 = EXBTYPE_TKL;
-			if (extban->is_ok && !extban->is_ok(b))
+			} else
 			{
-				safe_free(b);
-				return; /* rejected */
+				/* Always allow any removal attempt... */
+				char *p;
+				char save;
+				p = strchr(mask, ':');
+				p++;
+				save = *p;
+				*p = '\0';
+				strlcpy(mask1buf, mask, sizeof(mask1buf));
+				*p = save;
+				strlcpy(mask2buf, p, sizeof(mask2buf));
+				/* fallthrough */
 			}
-			b->banstr = nextbanstr;
-			str = extban->conv_param(b, extban);
-			if (!str || (strlen(str) <= 4))
-			{
-				safe_free(b);
-				return; /* rejected */
-			}
-			strlcpy(mask2buf, str+3, sizeof(mask2buf));
-			mask[3] = '\0';
-			usermask = mask; /* eg ~S: */
-			hostmask = mask2buf;
-			safe_free(b);
-			if ((t = eline_type_requires_ip(bantypes)))
-			{
-				sendnotice(client, "ERROR: Ban exception with type '%c' does not work on extended server bans. "
-				                   "This is because checking for %s takes places BEFORE "
-				                   "extended bans can be checked.", t->letter, t->log_name);
-				return;
-			}
-		} else {
-			/* Delete: allow any attempt */
-			strlcpy(mask2buf, mask+3, sizeof(mask2buf));
-			mask[3] = '\0';
-			usermask = mask; /* eg ~S: */
-			hostmask = mask2buf;
 		}
-		/* Make sure we don't screw up S2S traffic ;) */
-		if (*hostmask == ':')
+		if (add && (t = eline_type_requires_ip(bantypes)))
 		{
-			sendnotice(client, "[error] For technical reasons you cannot use double :: at the beginning "
-					   "of an extended server ban (eg ~a::xyz). You probably don't want to do this either.");
+			sendnotice(client, "ERROR: Ban exception with type '%c' does not work on extended server bans. "
+					   "This is because checking for %s takes places BEFORE "
+					   "extended bans can be checked.", t->letter, t->log_name);
 			return;
 		}
-		if (!*hostmask)
-		{
-			sendnotice(client, "[error] Empty hostmask encountered, eg -~S:");
-			return;
-		}
+		usermask = mask1buf; /* eg ~S: */
+		hostmask = mask2buf; /* eg 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef */
 	} else
 	{
 		/* Check if it's a hostmask and legal .. */
