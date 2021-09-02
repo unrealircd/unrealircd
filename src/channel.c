@@ -232,7 +232,8 @@ Client *find_chasing(Client *client, char *user, int *chasing)
 /** Return 1 if the bans are identical, taking into account special handling for extbans */
 int identical_ban(char *one, char *two)
 {
-	if (is_extended_ban(one))
+#if 0
+	if (is_extended_ban(one) && is_extended_ban(two))
 	{
 		/* compare the first 3 characters case-sensitive and if identical then compare
 		 * the remainder of the string case-insensitive.
@@ -243,6 +244,14 @@ int identical_ban(char *one, char *two)
 		if (!mycmp(one, two))
 			return 1;
 	}
+#else
+	/* Actually I think we can live with this nowadays.
+	 * We are pushing towards named extbans, and all the
+	 * letter extbans that could clash no longer exist.
+	 */
+	if (!mycmp(one, two))
+		return 1;
+#endif
 	return 0;
 }
 
