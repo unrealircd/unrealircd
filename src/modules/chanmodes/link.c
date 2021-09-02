@@ -226,13 +226,9 @@ int extban_link_is_ok(BanContext *b)
 	static char paramtmp[MAX_EB_LEN + 1];
 	char *matchby; // Matching method, such as 'n!u@h'
 	char *chan;
-	static int recurse = 0; /* prevent recursive calls - FIXME do it on higher level */
 
 	// Always permit deletion
 	if (b->what == MODE_DEL)
-		return 1;
-
-	if (recurse)
 		return 1;
 
 	if (b->what2 != EXBTYPE_BAN)
@@ -253,11 +249,7 @@ int extban_link_is_ok(BanContext *b)
 		return extban_link_syntax(b->client, b->is_ok_checktype, "Invalid channel");
 
 	b->banstr = matchby;
-
-	recurse = 1;
-	int isok = extban_is_ok_nuh_extban(b);
-	recurse = 0;
-	if (isok == 0)
+	if (extban_is_ok_nuh_extban(b) == 0)
 		return extban_link_syntax(b->client, b->is_ok_checktype, "Invalid matcher");
 
 	return 1; // Is ok

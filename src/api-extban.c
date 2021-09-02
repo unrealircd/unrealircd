@@ -188,8 +188,15 @@ int extban_is_ok_nuh_extban(BanContext *b)
 		char *nextbanstr;
 		Extban *extban = NULL;
 
+		/* We're dealing with a stacked extended ban.
+		 * Rules:
+		 * 1) You can only stack once, so: ~x:~y:something and not ~x:~y:~z...
+		 * 2) The second item may never be an action modifier, nor have the
+		 *    EXTBOPT_NOSTACKCHILD letter set (for things like a textban).
+		 */
+
 		if (extban_is_ok_recursion)
-			return 0; /* Fail: more than one stacked extban */
+			return 0; /* Rule #1 violation (more than one stacked extban) */
 
 		if ((b->is_ok_checktype == EXBCHK_PARAM) && RESTRICT_EXTENDEDBANS && !ValidatePermissionsForPath("immune:restrict-extendedbans",b->client,NULL,b->channel,NULL))
 		{
@@ -211,6 +218,13 @@ int extban_is_ok_nuh_extban(BanContext *b)
 			}
 			return 0; /* Don't add unknown extbans. */
 		}
+
+		if ((extban->options & EXTBOPT_ACTMODIFIER) || (extban->options & EXTBOPT_NOSTACKCHILD))
+		{
+			/* Rule #2 violation */
+			return 0;
+		}
+
 		/* Now we have to ask the stacked extban if it's ok. */
 		if (extban->is_ok)
 		{
@@ -306,7 +320,7 @@ char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 
 	if ((extban->options & EXTBOPT_ACTMODIFIER) || (extban->options & EXTBOPT_NOSTACKCHILD))
 	{
-		/* Rule #3 violation */
+		/* Rule #2 violation */
 		return NULL;
 	}
 
