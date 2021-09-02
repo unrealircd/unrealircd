@@ -473,7 +473,7 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 		json_object_set_new(user, "reputation", json_integer(GetReputation(client)));
 		json_expand_client_security_groups(user, client);
 	} else
-	if (IsServer(client))
+	if (IsServer(client) && client->server)
 	{
 		/* client.server */
 
