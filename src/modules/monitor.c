@@ -150,6 +150,9 @@ CMD_FUNC(cmd_monitor)
 	int toomany = 0;
 	Link *lp;
 
+	if (!MyUser(client))
+		return;
+
 	if (parc < 2 || BadPtr(parv[1]))
 		cmd = 'l';
 	else
