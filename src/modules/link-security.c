@@ -59,7 +59,7 @@ MOD_INIT()
 	mreq.serialize = link_security_md_serialize;
 	mreq.unserialize = link_security_md_unserialize;
 	mreq.sync = 1;
-	mreq.remote_write = 1;
+	mreq.self_write = 1;
 	link_security_md = ModDataAdd(modinfo->handle, mreq);
 	if (!link_security_md)
 	{

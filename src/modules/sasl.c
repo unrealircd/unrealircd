@@ -25,7 +25,7 @@
 ModuleHeader MOD_HEADER
   = {
 	"sasl",
-	"5.0",
+	"5.2.1",
 	"SASL", 
 	"UnrealIRCd Team",
 	"unrealircd-5",
@@ -100,7 +100,7 @@ CMD_FUNC(cmd_svslogin)
 {
 	Client *target;
 
-	if (!SASL_SERVER || MyUser(client) || (parc < 3) || !parv[3])
+	if (MyUser(client) || (parc < 3) || !parv[3])
 		return;
 
 	/* We actually ignore parv[1] since this is a broadcast message.
@@ -396,11 +396,10 @@ MOD_INIT()
 	mreq.serialize = saslmechlist_serialize;
 	mreq.unserialize = saslmechlist_unserialize;
 	mreq.sync = 1;
-	mreq.remote_write = 1;
+	mreq.self_write = 1;
 	mreq.type = MODDATATYPE_CLIENT;
-	mreq.remote_write = 1;
 	ModDataAdd(modinfo->handle, mreq);
-	
+
 	EventAdd(modinfo->handle, "sasl_timeout", sasl_timeout, NULL, 2000, 0);
 
 	return MOD_SUCCESS;

@@ -25,7 +25,8 @@
 /* Definitions */
 typedef enum AutoConnectStrategy {
 	AUTOCONNECT_PARALLEL = 0,
-	AUTOCONNECT_SEQUENTIAL = 1
+	AUTOCONNECT_SEQUENTIAL = 1,
+	AUTOCONNECT_SEQUENTIAL_FALLBACK = 2
 } AutoConnectStrategy;
 
 typedef struct cfgstruct cfgstruct;
@@ -52,6 +53,8 @@ int _check_deny_version(Client *cptr, char *software, int protocol, char *flags)
 void _broadcast_sinfo(Client *acptr, Client *to, Client *except);
 int server_sync(Client *cptr, ConfigItem_link *conf);
 void server_generic_free(ModData *m);
+int server_post_connect(Client *client);
+
 
 /* Global variables */
 static char buf[BUFSIZE];
@@ -86,6 +89,7 @@ MOD_INIT()
 	LoadPersistentPointer(modinfo, last_autoconnect_server, server_generic_free);
 	server_config_setdefaults(&cfg);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, server_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_POST_SERVER_CONNECT, 0, server_post_connect);
 	CommandAdd(modinfo->handle, "SERVER", cmd_server, MAXPARA, CMD_UNREGISTERED|CMD_SERVER);
 	CommandAdd(modinfo->handle, "SID", cmd_sid, MAXPARA, CMD_SERVER);
 
@@ -115,6 +119,8 @@ AutoConnectStrategy autoconnect_strategy_strtoval(char *str)
 		return AUTOCONNECT_PARALLEL;
 	if (!strcmp(str, "sequential"))
 		return AUTOCONNECT_SEQUENTIAL;
+	if (!strcmp(str, "sequential-fallback"))
+		return AUTOCONNECT_SEQUENTIAL_FALLBACK;
 	return -1;
 }
 
@@ -130,6 +136,8 @@ char *autoconnect_strategy_valtostr(AutoConnectStrategy val)
 			return "parallel";
 		case AUTOCONNECT_SEQUENTIAL:
 			return "sequential";
+		case AUTOCONNECT_SEQUENTIAL_FALLBACK:
+			return "sequential-fallback";
 		default:
 			return "???";
 	}
@@ -441,6 +449,8 @@ EVENT(server_autoconnect)
 			server_autoconnect_parallel();
 			break;
 		case AUTOCONNECT_SEQUENTIAL:
+		/* Fallback is the same as sequential but we reset last_autoconnect_server on connect */
+		case AUTOCONNECT_SEQUENTIAL_FALLBACK:
 			server_autoconnect_sequential();
 			break;
 	}
@@ -1697,4 +1707,13 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 void server_generic_free(ModData *m)
 {
 	safe_free(m->ptr);
+}
+
+int server_post_connect(Client *client) {
+	if (cfg.autoconnect_strategy == AUTOCONNECT_SEQUENTIAL_FALLBACK && last_autoconnect_server
+		&& !strcmp(last_autoconnect_server, client->name))
+	{
+		last_autoconnect_server = NULL;
+	}
+	return 0;
 }
