@@ -34,7 +34,6 @@ time_t timeofday = 0;
 struct timeval timeofday_tv;
 int  tainted = 0;
 LoopStruct loop;
-MODVAR MemoryInfo StatsZ;
 #ifndef _WIN32
 uid_t irc_uid = 0;
 gid_t irc_gid = 0;
@@ -800,7 +799,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 #else
 	WSAStartup(wVersionRequested, &wsaData);
 #endif
-	memset(&StatsZ, 0, sizeof(StatsZ));
 	setup_signals();
 
 	memset(&irccounts, '\0', sizeof(irccounts));

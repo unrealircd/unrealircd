@@ -98,9 +98,6 @@
  */
 /* #undef	DEBUGMODE */
 
-/* Similarly, DEBUG_IOENGINE can be used to debug the I/O engine. */
-/* #undef	DEBUG_IOENGINE */
-
 /*
  * Full pathnames and defaults of irc system's support files.
  */

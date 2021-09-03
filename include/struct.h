@@ -107,9 +107,6 @@ typedef struct ConfigItem_deny_dcc ConfigItem_deny_dcc;
 typedef struct ConfigItem_deny_link ConfigItem_deny_link;
 typedef struct ConfigItem_deny_channel ConfigItem_deny_channel;
 typedef struct ConfigItem_deny_version ConfigItem_deny_version;
-typedef struct ConfigItem_log ConfigItem_log;
-typedef struct ConfigItem_unknown ConfigItem_unknown;
-typedef struct ConfigItem_unknown_ext ConfigItem_unknown_ext;
 typedef struct ConfigItem_alias ConfigItem_alias;
 typedef struct ConfigItem_alias_format ConfigItem_alias_format;
 typedef struct ConfigResource ConfigResource;
@@ -602,27 +599,6 @@ typedef enum ClientStatus {
 #define SetCLK(x)		((x)->local->proto |= PROTO_CLK)
 #define SetMTAGS(x)		((x)->local->proto |= PROTO_MTAGS)
 #define SetNEXTBANS(x)		((x)->local->proto |= PROTO_NEXTBANS)
-
-/*
- * defined debugging levels
- */
-#define	DEBUG_FATAL  0
-#define	DEBUG_ERROR  1		/* report_error() and other errors that are found */
-#define	DEBUG_NOTICE 3
-#define	DEBUG_DNS    4		/* used by all DNS related routines - a *lot* */
-#define	DEBUG_INFO   5		/* general usful info */
-#define	DEBUG_NUM    6		/* numerics */
-#define	DEBUG_SEND   7		/* everything that is sent out */
-#define	DEBUG_DEBUG  8		/* anything to do with debugging, ie unimportant :) */
-#define	DEBUG_MALLOC 9		/* malloc/free calls */
-#define	DEBUG_LIST  10		/* debug list use */
-
-/*
- * defines for curses in client
- */
-#define	DUMMY_TERM	0
-#define	CURSES_TERM	1
-#define	TERMCAP_TERM	2
 
 /* Dcc deny types (see src/s_extra.c) */
 #define DCCDENY_HARD	0
@@ -1266,16 +1242,13 @@ extern void unload_all_unused_moddata(void);
 #define IsServersOnlyListener(x)	((x) && ((x)->options & LISTENER_SERVERSONLY))
 
 #define CONNECT_TLS		0x000001
-//0x000002 unused (was ziplinks)
-#define CONNECT_AUTO		0x000004
-#define CONNECT_QUARANTINE	0x000008
-#define CONNECT_NODNSCACHE	0x000010
-#define CONNECT_NOHOSTCHECK	0x000020
-#define CONNECT_INSECURE	0x000040
+#define CONNECT_AUTO		0x000002
+#define CONNECT_QUARANTINE	0x000004
+#define CONNECT_INSECURE	0x000008
 
-#define TLSFLAG_FAILIFNOCERT 	0x1
-#define TLSFLAG_NOSTARTTLS	0x8
-#define TLSFLAG_DISABLECLIENTCERT 0x10
+#define TLSFLAG_FAILIFNOCERT 		0x0001
+#define TLSFLAG_NOSTARTTLS		0x0002
+#define TLSFLAG_DISABLECLIENTCERT	0x0004
 
 /** Flood counters for local clients */
 typedef struct FloodCounter {
@@ -1927,11 +1900,6 @@ struct IRCStatistics {
 	unsigned int is_loc;	/* local connections made */
 };
 
-typedef struct MemoryInfo {
-	unsigned int classes;
-	unsigned long classesmem;
-} MemoryInfo;
-
 #define EXTCMODETABLESZ 32
 
 /* Number of maximum paramter modes to allow.
@@ -2121,18 +2089,6 @@ struct Ban {
 #define	MODE_BAN		0x0400
 #define MODE_INVEX		0x8000000
 
-/*
- * mode flags which take another parameter (With PARAmeterS)
- */
-#define	MODE_WPARAS (MODE_HALFOP|MODE_CHANOP|MODE_VOICE|MODE_CHANOWNER|MODE_CHANADMIN|MODE_BAN|MODE_KEY|MODE_EXCEPT|MODE_INVEX)
-/*
- * Undefined here, these are used in conjunction with the above modes in
- * the source.
-#define	MODE_DEL       0x200000000
-#define	MODE_ADD       0x400000000
- */
-
-#define	HoldChannel(x)		(!(x))
 /* name invisible */
 #define	SecretChannel(x)	((x) && has_channel_mode((x), 's'))
 /* channel not shown but names are */
@@ -2255,9 +2211,6 @@ struct MaxTarget {
 #define MARK_AS_OFFICIAL_MODULE(modinf)	do { if (modinf && modinf->handle) ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL, 1);  } while(0)
 #define MARK_AS_GLOBAL_MODULE(modinf)	do { if (modinf && modinf->handle) ModuleSetOptions(modinfo->handle, MOD_OPT_GLOBAL, 1);  } while(0)
 
-/* old.. please don't use anymore */
-#define CHANOPPFX "@"
-
 /* used for is_banned type field: */
 #define BANCHK_JOIN		0x0001	/* checking if a ban forbids the person from joining */
 #define BANCHK_MSG		0x0002	/* checking if a ban forbids the person from sending messages */
@@ -2281,8 +2234,6 @@ struct MaxTarget {
 
 #define MATCH_MASK_IS_UHOST         0x1000
 #define MATCH_MASK_IS_HOST          0x2000
-
-#define MATCH_USE_IDENT             0x0100
 
 typedef enum {
 	POLICY_ALLOW=1,
