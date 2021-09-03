@@ -1282,7 +1282,7 @@ int parse_extended_server_ban(char *mask_in, Client *client, char **error, int s
 	char *nextbanstr = NULL;
 	Extban *extban;
 	char *str, *p;
-	BanContext *b;
+	BanContext *b = NULL;
 	char    mask[USERLEN + NICKLEN + HOSTLEN + 32]; // same as extban_conv_param_nuh_or_extban()
 	char newmask[USERLEN + NICKLEN + HOSTLEN + 32];
 
@@ -1297,7 +1297,7 @@ int parse_extended_server_ban(char *mask_in, Client *client, char **error, int s
 	if (!extban || !(extban->options & EXTBOPT_TKL))
 	{
 		*error = "Invalid or unsupported extended server ban requested. Valid types are for example ~a, ~r, ~S.";
-		return 0;
+		goto fail_parse_extended_server_ban;
 	}
 
 	b = safe_alloc(sizeof(BanContext));
@@ -1313,8 +1313,7 @@ int parse_extended_server_ban(char *mask_in, Client *client, char **error, int s
 		if (extban->is_ok && !extban->is_ok(b))
 		{
 			*error = "Invalid extended server ban";
-			safe_free(b);
-			return 0; /* rejected */
+			goto fail_parse_extended_server_ban;
 		}
 	}
 
@@ -1323,35 +1322,32 @@ int parse_extended_server_ban(char *mask_in, Client *client, char **error, int s
 	if (!str)
 	{
 		*error = "Invalid extended server ban";
-		safe_free(b);
-		return 0; /* rejected */
+		goto fail_parse_extended_server_ban;
 	}
 	str = prefix_with_extban(str, b, extban, newmask, sizeof(newmask));
 	if (str == NULL)
 	{
 		*error = "Unexpected error (1)";
-		safe_free(b);
-		return 0;
+		goto fail_parse_extended_server_ban;
 	}
 
 	p = strchr(newmask, ':');
 	if (!p)
 	{
 		*error = "Unexpected error (2)";
-		safe_free(b);
-		return 0;
+		goto fail_parse_extended_server_ban;
 	}
 
 	if (p[1] == ':')
 	{
 		*error = "For technical reasons you cannot use a double : at the beginning of an extended server ban (eg ~a::xyz)";
-		return 0;
+		goto fail_parse_extended_server_ban;
 	}
 
 	if (!p[1])
 	{
 		*error = "Empty / too short extended server ban";
-		return 0;
+		goto fail_parse_extended_server_ban;
 	}
 
 	/* Now convert the result into two buffers for TKL protocol usage */
@@ -1368,14 +1364,9 @@ int parse_extended_server_ban(char *mask_in, Client *client, char **error, int s
 	safe_free(b);
 	return 1;
 
-/*	if (((*type == 'z') || (*type == 'Z')))
-	{
-		sendnotice(client, "ERROR: (g)zlines must be placed at *@\037IPMASK\037. "
-				   "Extended server bans don't work here because (g)zlines are processed"
-				   "BEFORE dns and ident lookups are done and before reading any client data. "
-				   "If you want to use extended server bans then use a KLINE/GLINE instead.");
-		return;
-	} */
+fail_parse_extended_server_ban:
+	safe_free(b);
+	return 0;
 }
 
 
