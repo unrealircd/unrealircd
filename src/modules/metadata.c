@@ -161,7 +161,6 @@ struct metadata_settings_s {
 	int max_user_metadata;
 	int max_channel_metadata;
 	int max_subscriptions;
-	int enable_debug;
 } metadata_settings;
 
 ModuleHeader MOD_HEADER = {
@@ -177,7 +176,6 @@ metadata {
 	max-user-metadata 10;
 	max-channel-metadata 10;
 	max-subscriptions 10;
-	enable-debug 0;
 };
 */
 
@@ -268,17 +266,6 @@ int metadata_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
 			continue;
 		}
 
-		if (!strcmp(cep->name, "enable-debug"))
-		{
-			if (strlen(cep->value) != 1 || (cep->value[0] != '0' && cep->value[0] != '1'))
-			{
-				config_error("%s:%i: %s::%s must be 0 or 1", cep->file->filename, cep->line_number, MYCONF, cep->name);
-				errors++;
-				break;
-			}
-			continue;
-		}
-
 		config_warn("%s:%i: unknown item %s::%s", cep->file->filename, cep->line_number, MYCONF, cep->name);
 	}
 	
@@ -326,12 +313,6 @@ int metadata_configrun(ConfigFile *cf, ConfigEntry *ce, int type) {
 		if (!strcmp(cep->name, "max-subscriptions"))
 		{
 			metadata_settings.max_subscriptions = atoi(cep->value);
-			continue;
-		}
-
-		if (!strcmp(cep->name, "enable-debug"))
-		{
-			metadata_settings.enable_debug = atoi(cep->value);
 			continue;
 		}
 	}
@@ -1053,23 +1034,6 @@ CMD_FUNC(cmd_metadata_local)
 {
 	Channel *channel = NULL;
 	Client *user = NULL;
-	
-	char buf[1024] = "";
-	int i;
-	int trylater;
-	
-	if (metadata_settings.enable_debug)
-	{
-		for (i=1; i<parc; i++)
-		{
-			if (!BadPtr(parv[i]))
-				strlcat(buf, parv[i], 1024);
-			strlcat(buf, " ", 1024);
-		}
-		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", client, "Received METADATA, sender $sender, params: $params",
-			log_data_string("sender", client->name), log_data_string("params", buf));
-	}
-	
 	CHECKPARAMSCNT_OR_DIE(2, return);
 	char *target = parv[1];
 	char *cmd = parv[2];
@@ -1146,13 +1110,11 @@ CMD_FUNC(cmd_metadata_local)
 	{
 		PROCESS_TARGET_OR_DIE(target, user, channel, return);
 		CHECKPARAMSCNT_OR_DIE(3, return);
-		trylater = 0;
 		FOR_EACH_KEY(keyindex, parc, parv)
 		{
 			if(metadata_key_valid(key))
 			{
-				if(metadata_subscribe(key, client, 0))
-					trylater = 1;
+				metadata_subscribe(key, client, 0);
 			} else
 			{
 				sendnumeric(client, ERR_KEYINVALID, key);
@@ -1201,21 +1163,7 @@ CMD_FUNC(cmd_metadata_remote)
 	char *key;
 	char *value;
 	char *channame;
-	char buf[1024] = "";
-	int i;
 
-	if (metadata_settings.enable_debug)
-	{
-		for (i=1; i<parc; i++)
-		{
-			if (!BadPtr(parv[i]))
-				strlcat(buf, parv[i], 1024);
-			strlcat(buf, " ", 1024);
-		}
-		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", client, "Received METADATA, sender $sender, params: $params",
-			log_data_string("sender", client->name), log_data_string("params", buf));
-	}
-	
 	if (parc < 5 || BadPtr(parv[4]))
 	{
 		if (parc == 4 && !BadPtr(parv[3]))
@@ -1238,7 +1186,10 @@ CMD_FUNC(cmd_metadata_remote)
 
 	if (!*target || !strcmp(target, "*") || !metadata_key_valid(key))
 	{
-		sendto_snomask(SNO_JUNK, "Bad metadata target %s or key %s from %s", target, key, client->name);
+		unreal_log(ULOG_DEBUG, "metadata", "METADATA_DEBUG", client, "METADATA S2S: bad metadata target $target or key $key from $sender",
+			log_data_string("target", target),
+			log_data_string("key", key),
+			log_data_string("sender", client->name));
 		return;
 	}
 	PROCESS_TARGET_OR_DIE(target, user, channel, return);
