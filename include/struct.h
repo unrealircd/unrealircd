@@ -101,7 +101,6 @@ typedef struct ConfigFlag_allow ConfigFlag_allow;
 typedef struct ConfigItem_allow_channel ConfigItem_allow_channel;
 typedef struct ConfigItem_allow_dcc ConfigItem_allow_dcc;
 typedef struct ConfigItem_vhost ConfigItem_vhost;
-typedef struct ConfigItem_except ConfigItem_except;
 typedef struct ConfigItem_link	ConfigItem_link;
 typedef struct ConfigItem_ban ConfigItem_ban;
 typedef struct ConfigItem_deny_dcc ConfigItem_deny_dcc;
@@ -1776,13 +1775,6 @@ struct ConfigItem_link {
 	char *connect_ip; /**< actual IP to use for outgoing connect (filled in after host is resolved) */
 	SSL_CTX *ssl_ctx; /**< SSL Context for outgoing connection (optional) */
 	TLSOptions *tls_options; /**< SSL Options for outgoing connection (optional) */
-};
-
-struct ConfigItem_except {
-	ConfigItem_except      *prev, *next;
-	ConfigFlag_except      flag;
-	int type;
-	char		*mask;
 };
 
 struct ConfigItem_ban {

@@ -221,7 +221,6 @@ ConfigItem_operclass	*conf_operclass = NULL;
 ConfigItem_listen	*conf_listen = NULL;
 ConfigItem_sni		*conf_sni = NULL;
 ConfigItem_allow	*conf_allow = NULL;
-ConfigItem_except	*conf_except = NULL;
 ConfigItem_vhost	*conf_vhost = NULL;
 ConfigItem_link		*conf_link = NULL;
 ConfigItem_ban		*conf_ban = NULL;
@@ -2416,7 +2415,6 @@ void config_rehash()
 	ConfigItem_class 		*class_ptr;
 	ConfigItem_ulines 		*uline_ptr;
 	ConfigItem_allow 		*allow_ptr;
-	ConfigItem_except 		*except_ptr;
 	ConfigItem_ban 			*ban_ptr;
 	ConfigItem_link 		*link_ptr;
 	ConfigItem_listen	 	*listen_ptr;
@@ -2505,13 +2503,6 @@ void config_rehash()
 		Auth_FreeAuthConfig(allow_ptr->auth);
 		DelListItem(allow_ptr, conf_allow);
 		safe_free(allow_ptr);
-	}
-	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) next)
-	{
-		next = (ListStruct *)except_ptr->next;
-		safe_free(except_ptr->mask);
-		DelListItem(except_ptr, conf_except);
-		safe_free(except_ptr);
 	}
 	/* Free ban realname { }, ban server { } and ban version { } */
 	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) next)
@@ -3096,21 +3087,6 @@ ConfigItem_ulines *find_uline(char *host)
 	return NULL;
 }
 
-
-ConfigItem_except *find_except(Client *client, short type)
-{
-	ConfigItem_except *excepts;
-
-	for(excepts = conf_except; excepts; excepts = excepts->next)
-	{
-		if (excepts->flag.type == type)
-		{
-			if (match_user(excepts->mask, client, MATCH_CHECK_REAL))
-				return excepts;
-		}
-	}
-	return NULL;
-}
 
 ConfigItem_tld *find_tld(Client *client)
 {
