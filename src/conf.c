@@ -10633,7 +10633,8 @@ void resource_download_complete(const char *url, const char *file, const char *e
 
 	rs->type &= ~RESOURCE_DLQUEUED;
 
-	config_status("resource_download_complete() for %s [%s]", url, errorbuf?errorbuf:"success");
+	if (config_verbose)
+		config_status("resource_download_complete() for %s [%s]", url, errorbuf?errorbuf:"success");
 
 	if (!file && !cached)
 	{
@@ -10856,7 +10857,8 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 	ConfigResource *rs;
 	ConfigEntryWrapper *wce;
 
-	config_status("add_config_resource() for '%s", resource);
+	if (config_verbose)
+		config_status("add_config_resource() for '%s", resource);
 
 	wce = safe_alloc(sizeof(ConfigEntryWrapper));
 	wce->ce = ce;
