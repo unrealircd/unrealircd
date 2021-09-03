@@ -1378,7 +1378,7 @@ fail_parse_extended_server_ban:
 void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 {
 	time_t secs;
-	int whattodo = 0;	/* 0 = add  1 = del */
+	int add = 1;
 	time_t i;
 	Client *acptr = NULL;
 	char *mask = NULL;
@@ -1406,12 +1406,12 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 	mask = parv[1];
 	if (*mask == '-')
 	{
-		whattodo = 1;
+		add = 0;
 		mask++;
 	}
 	else if (*mask == '+')
 	{
-		whattodo = 0;
+		add = 1;
 		mask++;
 	}
 
@@ -1447,7 +1447,7 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 		if (!parse_extended_server_ban(mask, client, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
 		{
 			/* If adding, reject it */
-			if (whattodo == 0)
+			if (add)
 			{
 				sendnotice(client, "ERROR: %s", err);
 				return;
@@ -1466,7 +1466,7 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 				/* fallthrough */
 			}
 		}
-		if ((whattodo == 0) && ((*type == 'z') || (*type == 'Z')))
+		if (add && ((*type == 'z') || (*type == 'Z')))
 		{
 			sendnotice(client, "ERROR: (g)zlines must be placed at *@\037IPMASK\037. "
 					   "Extended server bans don't work here because (g)zlines are processed"
@@ -1500,7 +1500,7 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 				sendnotice(client, "[error] For technical reasons you cannot start the host with a ':', sorry");
 				return;
 			}
-			if (((*type == 'z') || (*type == 'Z')) && !whattodo)
+			if (add && ((*type == 'z') || (*type == 'Z')))
 			{
 				/* It's a (G)ZLINE, make sure the user isn't specyfing a HOST.
 				 * Just a warning in 3.2.3, but an error in 3.2.4.
@@ -1541,7 +1541,7 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 		}
 	}
 
-	if (!whattodo && ban_too_broad(usermask, hostmask))
+	if (add && ban_too_broad(usermask, hostmask))
 	{
 		sendnotice(client, "*** [error] Too broad mask");
 		return;
@@ -1549,7 +1549,7 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 
 	secs = 0;
 
-	if (whattodo == 0 && (parc > 3))
+	if (add && (parc > 3))
 	{
 		secs = config_checkval(parv[2], CFG_TIME);
 		if (secs < 0)
@@ -1558,12 +1558,12 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 			return;
 		}
 	}
-	tkllayer[1] = whattodo == 0 ? "+" : "-";
+	tkllayer[1] = add ? "+" : "-";
 	tkllayer[2] = type;
 	tkllayer[3] = usermask;
 	tkllayer[4] = hostmask;
 	tkllayer[5] = make_nick_user_host(client->name, client->user->username, GetHost(client));
-	if (whattodo == 0)
+	if (add)
 	{
 		if (secs == 0)
 		{
@@ -1990,7 +1990,7 @@ void spamfilter_del_by_id(Client *client, char *id)
  */
 CMD_FUNC(cmd_spamfilter)
 {
-	int whattodo = 0;	/* 0 = add  1 = del */
+	int add = 1;
 	char mo[32], mo2[32];
 	char *tkllayer[13] = {
 		me.name,	/*  0 server.name */
@@ -2073,9 +2073,9 @@ CMD_FUNC(cmd_spamfilter)
 	 * parv[7]: regex
 	 */
 	if (!strcasecmp(parv[1], "add") || !strcmp(parv[1], "+"))
-		whattodo = 0;
+		add = 1;
 	else if (!strcasecmp(parv[1], "del") || !strcmp(parv[1], "-") || !strcasecmp(parv[1], "remove"))
-		whattodo = 1;
+		add = 0;
 	else
 	{
 		sendnotice(client, "1st parameter invalid");
@@ -2083,7 +2083,7 @@ CMD_FUNC(cmd_spamfilter)
 		return;
 	}
 
-	if ((whattodo == 0) && !strcasecmp(parv[2]+1, "posix"))
+	if (add && !strcasecmp(parv[2]+1, "posix"))
 	{
 		sendnotice(client, "ERROR: Spamfilter type 'posix' is DEPRECATED. You must use type 'regex' instead.");
 		sendnotice(client, "See https://www.unrealircd.org/docs/FAQ#spamfilter-posix-deprecated");
@@ -2116,7 +2116,7 @@ CMD_FUNC(cmd_spamfilter)
 	actionbuf[0] = banact_valtochar(action);
 	actionbuf[1] = '\0';
 
-	if (whattodo == 0)
+	if (add)
 	{
 		/* now check the regex / match field... */
 		m = unreal_create_match(match_type, parv[7], &err);
@@ -2128,7 +2128,7 @@ CMD_FUNC(cmd_spamfilter)
 		unreal_delete_match(m);
 	}
 
-	tkllayer[1] = whattodo ? "-" : "+";
+	tkllayer[1] = add ? "+" : "-";
 	tkllayer[3] = targetbuf;
 	tkllayer[4] = actionbuf;
 	tkllayer[5] = make_nick_user_host(client->name, client->user->username, GetHost(client));
@@ -2159,14 +2159,14 @@ CMD_FUNC(cmd_spamfilter)
 	 * on 50 characters for the rest... -- Syzop
 	 */
 	n = strlen(reason) + strlen(parv[7]) + strlen(tkllayer[6]) + (NICKLEN * 2) + 40;
-	if ((n > 500) && (whattodo == 0))
+	if ((n > 500) && add)
 	{
 		sendnotice(client, "Sorry, spamfilter too long. You'll either have to trim down the "
 		                 "reason or the regex (exceeded by %d bytes)", n - 500);
 		return;
 	}
 
-	if (whattodo == 0)
+	if (add)
 	{
 		ircsnprintf(mo2, sizeof(mo2), "%lld", (long long)TStime());
 		tkllayer[7] = mo2;
