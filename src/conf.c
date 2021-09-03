@@ -1636,7 +1636,6 @@ void	free_iConf(Configuration *i)
 {
 	FloodSettings *f, *f_next;
 
-	safe_free(i->dns_bindip);
 	safe_free(i->link_bindip);
 	safe_free(i->kline_address);
 	safe_free(i->gline_address);
@@ -1645,7 +1644,6 @@ void	free_iConf(Configuration *i)
 	safe_free(i->oper_auto_join_chans);
 	safe_free(i->allow_user_stats);
 	// allow_user_stats_ext is freed elsewhere
-	safe_free(i->egd_path);
 	safe_free(i->static_quit);
 	safe_free(i->static_part);
 	free_tls_options(i->tls_options);
@@ -1668,7 +1666,6 @@ void	free_iConf(Configuration *i)
 	safe_free(i->reject_message_unauthorized);
 	safe_free(i->reject_message_kline);
 	safe_free(i->reject_message_gline);
-	// network struct:
 	safe_free(i->network_name);
 	safe_free(i->network_name_005);
 	safe_free(i->default_server);
@@ -7454,13 +7451,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
-		else if (!strcmp(cep->name, "dns")) {
-			for (cepp = cep->items; cepp; cepp = cepp->next) {
-				if (!strcmp(cepp->name, "bind-ip")) {
-					safe_strdup(tempiConf.dns_bindip, cepp->value);
-				}
-			}
-		}
 		else if (!strcmp(cep->name, "anti-flood")) {
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
@@ -7565,7 +7555,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.flat_map = 1;
 				}
 				else if (!strcmp(cepp->name, "show-opermotd")) {
-					tempiConf.som = 1;
+					tempiConf.show_opermotd = 1;
 				}
 				else if (!strcmp(cepp->name, "identd-check")) {
 					tempiConf.ident_check = 1;
@@ -8255,41 +8245,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 							}
 						}
 					}
-		}
-		else if (!strcmp(cep->name, "dns")) {
-			for (cepp = cep->items; cepp; cepp = cepp->next) {
-				CheckNull(cepp);
-				if (!strcmp(cepp->name, "nameserver") ||
-				    !strcmp(cepp->name, "timeout") ||
-				    !strcmp(cepp->name, "retries"))
-				{
-					config_error("%s:%i: set::dns::%s no longer exist in UnrealIRCd 4. "
-					             "Please remove it from your configuration file.",
-						cepp->file->filename, cepp->line_number, cepp->name);
-					errors++;
-				} else
-				if (!strcmp(cepp->name, "bind-ip")) {
-					CheckDuplicate(cepp, dns_bind_ip, "dns::bind-ip");
-					if (strcmp(cepp->value, "*"))
-					{
-						if (!is_valid_ip(cepp->value))
-						{
-							config_error("%s:%i: set::dns::bind-ip (%s) is not a valid IP",
-								cepp->file->filename, cepp->line_number,
-								cepp->value);
-							errors++;
-							continue;
-						}
-					}
-				}
-				else
-				{
-					config_error_unknownopt(cepp->file->filename,
-						cepp->line_number, "set::dns",
-						cepp->name);
-						errors++;
-				}
-			}
 		}
 		else if (!strcmp(cep->name, "throttle")) {
 			config_error("%s:%i: set::throttle has been renamed. you now use "

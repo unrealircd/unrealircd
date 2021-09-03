@@ -881,8 +881,6 @@ int stats_set(Client *client, char *para)
 	sendtxtnumeric(client, "static-part: %s", STATIC_PART ? STATIC_PART : "<none>");
 	sendtxtnumeric(client, "who-limit: %d", WHOLIMIT);
 	sendtxtnumeric(client, "silence-limit: %d", SILENCE_LIMIT);
-	if (DNS_BINDIP)
-		sendtxtnumeric(client, "dns::bind-ip: %s", DNS_BINDIP);
 	sendtxtnumeric(client, "ban-version-tkl-time: %s", pretty_time_val(BAN_VERSION_TKL_TIME));
 	if (LINK_BINDIP)
 		sendtxtnumeric(client, "link::bind-ip: %s", LINK_BINDIP);
