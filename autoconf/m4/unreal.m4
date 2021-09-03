@@ -182,7 +182,11 @@ AS_IF([test $enable_ssl != "no"],
 	else
 		CRYPTOLIB="-lssl -lcrypto";
 		if test ! "$ssldir" = "/usr" ; then
-			LDFLAGS="$LDFLAGS -L$ssldir/lib";
+			if test -d "$ssldir/lib64" ; then
+				LDFLAGS="$LDFLAGS -L$ssldir/lib64";
+			else
+				LDFLAGS="$LDFLAGS -L$ssldir/lib";
+			fi
 			dnl check if binary path exists
 			if test -f "$ssldir/bin/openssl"; then
 			    OPENSSLPATH="$ssldir/bin/openssl";

@@ -6668,7 +6668,11 @@ $as_echo "not found" >&6; }
 	else
 		CRYPTOLIB="-lssl -lcrypto";
 		if test ! "$ssldir" = "/usr" ; then
-			LDFLAGS="$LDFLAGS -L$ssldir/lib";
+			if test -d "$ssldir/lib64" ; then
+				LDFLAGS="$LDFLAGS -L$ssldir/lib64";
+			else
+				LDFLAGS="$LDFLAGS -L$ssldir/lib";
+			fi
 						if test -f "$ssldir/bin/openssl"; then
 			    OPENSSLPATH="$ssldir/bin/openssl";
 			fi
@@ -7318,8 +7322,8 @@ if test "x$with_system_pcre2" = "xyes"; then :
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libpcre2-8 >= 10.00" >&5
-$as_echo_n "checking for libpcre2-8 >= 10.00... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for PCRE2" >&5
+$as_echo_n "checking for PCRE2... " >&6; }
 
 if test -n "$PCRE2_CFLAGS"; then
     pkg_cv_PCRE2_CFLAGS="$PCRE2_CFLAGS"
@@ -7359,7 +7363,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -7377,7 +7381,7 @@ fi
 
 	has_system_pcre2=no
 elif test $pkg_failed = untried; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_pcre2=no
 else
@@ -7437,8 +7441,8 @@ if test "x$with_system_argon2" = "xyes"; then :
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libargon2 >= 0~20161029" >&5
-$as_echo_n "checking for libargon2 >= 0~20161029... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARGON2" >&5
+$as_echo_n "checking for ARGON2... " >&6; }
 
 if test -n "$ARGON2_CFLAGS"; then
     pkg_cv_ARGON2_CFLAGS="$ARGON2_CFLAGS"
@@ -7478,7 +7482,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -7496,7 +7500,7 @@ fi
 
 	has_system_argon2=no
 elif test $pkg_failed = untried; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_argon2=no
 else
@@ -7555,8 +7559,8 @@ if test "x$with_system_sodium" = "xyes"; then :
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libsodium >= 1.0.16" >&5
-$as_echo_n "checking for libsodium >= 1.0.16... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SODIUM" >&5
+$as_echo_n "checking for SODIUM... " >&6; }
 
 if test -n "$SODIUM_CFLAGS"; then
     pkg_cv_SODIUM_CFLAGS="$SODIUM_CFLAGS"
@@ -7596,7 +7600,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -7614,7 +7618,7 @@ fi
 
 	has_system_sodium=no
 elif test $pkg_failed = untried; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_sodium=no
 else
@@ -7678,8 +7682,8 @@ if test "x$with_system_cares" = "xyes"; then :
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libcares >= 1.6.0" >&5
-$as_echo_n "checking for libcares >= 1.6.0... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for CARES" >&5
+$as_echo_n "checking for CARES... " >&6; }
 
 if test -n "$CARES_CFLAGS"; then
     pkg_cv_CARES_CFLAGS="$CARES_CFLAGS"
@@ -7719,7 +7723,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -7737,7 +7741,7 @@ fi
 
 	has_system_cares=no
 elif test $pkg_failed = untried; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_cares=no
 else
@@ -7820,8 +7824,8 @@ if test "x$with_system_jansson" = "xyes"; then :
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for jansson >= 2.0.0" >&5
-$as_echo_n "checking for jansson >= 2.0.0... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for JANSSON" >&5
+$as_echo_n "checking for JANSSON... " >&6; }
 
 if test -n "$JANSSON_CFLAGS"; then
     pkg_cv_JANSSON_CFLAGS="$JANSSON_CFLAGS"
@@ -7861,7 +7865,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -7879,7 +7883,7 @@ fi
 
 	has_system_jansson=no
 elif test $pkg_failed = untried; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_jansson=no
 else
@@ -8584,8 +8588,8 @@ fi
 				has_system_geoip_classic="no"
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for geoip >= 1.6.0" >&5
-$as_echo_n "checking for geoip >= 1.6.0... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for GEOIP_CLASSIC" >&5
+$as_echo_n "checking for GEOIP_CLASSIC... " >&6; }
 
 if test -n "$GEOIP_CLASSIC_CFLAGS"; then
     pkg_cv_GEOIP_CLASSIC_CFLAGS="$GEOIP_CLASSIC_CFLAGS"
@@ -8625,7 +8629,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -8643,7 +8647,7 @@ fi
 
 	has_system_geoip_classic=no
 elif test $pkg_failed = untried; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_geoip_classic=no
 else
@@ -8721,8 +8725,8 @@ fi
 				has_system_libmaxminddb="no"
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libmaxminddb >= 1.6.0" >&5
-$as_echo_n "checking for libmaxminddb >= 1.6.0... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for LIBMAXMINDDB" >&5
+$as_echo_n "checking for LIBMAXMINDDB... " >&6; }
 
 if test -n "$LIBMAXMINDDB_CFLAGS"; then
     pkg_cv_LIBMAXMINDDB_CFLAGS="$LIBMAXMINDDB_CFLAGS"
@@ -8762,7 +8766,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -8783,7 +8787,7 @@ fi
 $as_echo "not building libmaxminddb GeoIP support" >&6; }
 
 elif test $pkg_failed = untried; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_libmaxminddb=no
 		                  { $as_echo "$as_me:${as_lineno-$LINENO}: result: not building libmaxminddb GeoIP support" >&5
