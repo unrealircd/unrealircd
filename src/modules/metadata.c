@@ -1197,13 +1197,13 @@ CMD_FUNC(cmd_metadata_remote)
 { /* handling data from linked server */
 	Channel *channel = NULL;
 	Client *user = NULL;
-	char *target= parv[1];
+	char *target;
 	char *key;
 	char *value;
-	char *channame = strchr(target, '#');
-	
+	char *channame;
 	char buf[1024] = "";
 	int i;
+
 	if (metadata_settings.enable_debug)
 	{
 		for (i=1; i<parc; i++)
@@ -1231,6 +1231,7 @@ CMD_FUNC(cmd_metadata_remote)
 	{
 		value = parv[4];
 	}
+
 	target = parv[1];
 	key = parv[2];
 	channame = strchr(target, '#');
