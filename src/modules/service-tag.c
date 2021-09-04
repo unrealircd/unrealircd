@@ -49,7 +49,7 @@ MOD_INIT()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	memset(&mtag, 0, sizeof(mtag));
-	mtag.name = "unrealircd.org/service";
+	mtag.name = "inspircd.org/service";
 	mtag.is_ok = servicetag_mtag_is_ok;
 	mtag.flags = MTAG_HANDLER_FLAGS_NO_CAP_NEEDED;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
