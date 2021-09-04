@@ -86,7 +86,7 @@ void mtag_add_servicetag(Client *client, MessageTag *recv_mtags, MessageTag **mt
 	if (IsUser(client) && has_user_mode(client, 'S'))
 	{
 		MessageTag *m = safe_alloc(sizeof(MessageTag));
-		safe_strdup(m->name, "unrealircd.org/service");
+		safe_strdup(m->name, "inspircd.org/service");
 		m->value = NULL;
 		AddListItem(m, *mtag_list);
 	}
