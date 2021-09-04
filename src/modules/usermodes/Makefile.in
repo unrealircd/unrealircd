@@ -49,6 +49,6 @@ build: $(MODULES)
 clean:
 	$(RM) -f *.o *.so *~ core
 
-.c.so: $(INCLUDES)
+%.so: %.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o $@ $<

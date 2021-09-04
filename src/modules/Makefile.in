@@ -105,7 +105,7 @@ clean:
 	cd third; $(MAKE) clean
 
 # Generic *.so rule:
-.c.so: $(INCLUDES)
+%.so: %.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o $@ $<
 

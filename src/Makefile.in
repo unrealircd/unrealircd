@@ -83,7 +83,7 @@ mods:
 version.c: version.c.SH
 	$(SHELL) version.c.SH
 
-.c.o:	$(INCLUDES)
+%.o:	%.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c $<
 
 clean:
