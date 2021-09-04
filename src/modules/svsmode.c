@@ -228,21 +228,31 @@ void channel_svsmode(Client *client, int parc, char *parv[])
 			case 'o':
 			case 'a':
 			case 'q':
-				if (what != MODE_DEL)
+				if (what == MODE_DEL)
 				{
-					sendto_realops("Warning! Received SVS(2)MODE with +%c for %s from %s, which is invalid!!",
-						*m, channel->chname, client->name);
-					continue;
+					channel_flags = char_to_channelflag(*m);
+					for (cm = channel->members; cm; cm = cm->next)
+					{
+						if (cm->flags & channel_flags)
+						{
+							Membership *mb;
+							mb = find_membership_link(cm->client->user->channel, channel);
+							add_send_mode_param(channel, client, '-', *m, cm->client->name);
+							cm->flags &= ~channel_flags;
+							if (mb)
+								mb->flags = cm->flags;
+						}
+					}
 				}
-				channel_flags = char_to_channelflag(*m);
-				for (cm = channel->members; cm; cm = cm->next)
+				if (what == MODE_ADD) 
 				{
-					if (cm->flags & channel_flags)
+					channel_flags = char_to_channelflag(*m);
+					for (cm = channel->members; cm; cm = cm->next)
 					{
 						Membership *mb;
 						mb = find_membership_link(cm->client->user->channel, channel);
-						add_send_mode_param(channel, client, '-', *m, cm->client->name);
-						cm->flags &= ~channel_flags;
+						add_send_mode_param(channel, client, '+', *m, cm->client->name);
+						cm->flags |= channel_flags;
 						if (mb)
 							mb->flags = cm->flags;
 					}
