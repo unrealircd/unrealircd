@@ -46,10 +46,10 @@ if [ "$SSLDIR" != "" ]; then
 fi
 ./Config -quick || (tail -n 5000 config.log; exit 1)
 $MAKE
-yes ''|make pem
-make
+yes ''|$MAKE pem
+$MAKE || exit 1
 ./unrealircd module install third/dumpcmds
-make install
+$MAKE install || exit 1
 
 set +x
 echo ""
