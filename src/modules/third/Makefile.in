@@ -40,7 +40,7 @@ RM=@RM@
 all: build
 
 build:
-	../../buildmod
+	../../buildmod $(MAKE)
 
 custommodule: $(MODULEFILE).c
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

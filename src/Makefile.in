@@ -88,7 +88,7 @@ version.c: version.c.SH
 
 clean:
 	$(RM) -f *.o *.so *~ core ircd version.c; \
-	cd modules; make clean
+	cd modules; ${MAKE} clean
 
 cleandir: clean
 

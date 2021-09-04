@@ -158,7 +158,7 @@ if [ "$QUICK" != "1" ] ; then
 			echo "*******************************************************************************"
 			echo "Press ENTER to continue"
 			read cc
-			make pem
+			$MAKE pem
 			echo "Certificate created successfully."
 			sleep 1
 		else
@@ -173,7 +173,7 @@ fi
 # Silently force a 'make clean' as otherwise part (or whole) of the
 # compiled source could be using different settings than the user
 # just requested when re-running ./Config.
-make clean 1>/dev/null 2>&1
+$MAKE clean 1>/dev/null 2>&1
 }
 
 RUN_ADVANCED () {
@@ -332,6 +332,33 @@ if [ "`id -u`" = "0" ]; then
 	echo "See https://www.unrealircd.org/docs/Do_not_run_as_root"
 	exit
 fi
+
+# Check for gmake early...
+if [ "$MAKE" = "" ]; then
+	MAKE="make"
+fi
+
+if ! $MAKE --version 2>&1|grep -q "GNU Make"; then
+	# So $MAKE is not GNU make, but do we have gmake?
+	if gmake --version 2>&1|grep -q "GNU Make"; then
+		# Great, use that one!
+		MAKE="gmake"
+	else
+		# Both $MAKE and gmake are not GNU make, do we have a working $MAKE at all?
+		if $MAKE --version 1>/dev/null 2>&1; then
+			echo "Your system has 'make' but UnrealIRCd requires GNU Make ('gmake')"
+			echo "Please install 'gmake' (eg 'pkg install gmake' on BSD)."
+			exit 1
+		else
+			echo "Your system does not have the required tools installed to build UnrealIRCd."
+			echo "Please check https://www.unrealircd.org/docs/Installing_from_source"
+			echo "and install the required tools listed under 'Prerequisites'."
+			echo "After that, you can run ./Config again"
+			exit 1
+		fi
+	fi
+fi
+
 
 clear
 
@@ -808,7 +835,7 @@ cat << __EOF__
 |_______________________________________________________________________|
 |_______________________________________________________________________|
 |                                                                       |
-| Now all you have to do is type 'make' and let it compile. When that's |
+| Now all you have to do is type '$MAKE' and let it compile. When that's |
 | done, you will receive other instructions on what to do next.         |
 |                                                                       |
 |_______________________________________________________________________|
