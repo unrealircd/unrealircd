@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/bot-tag.c
+ *   IRC - Internet Relay Chat, src/modules/service-tag.c
  *   (C) 2021 Syzop & The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
