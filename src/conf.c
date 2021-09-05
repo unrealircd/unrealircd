@@ -2079,7 +2079,8 @@ int config_loadmodules(void)
  */
 void config_load_failed(void)
 {
-	unreal_log(ULOG_ERROR, "config", "CONFIG_NOT_LOADED", NULL, "IRCd configuration failed to load");
+	if (conf)
+		unreal_log(ULOG_ERROR, "config", "CONFIG_NOT_LOADED", NULL, "IRCd configuration failed to load");
 	Unload_all_testing_modules();
 	free_all_config_resources();
 	config_free(conf);
@@ -2233,6 +2234,8 @@ void config_parse_and_queue_urls(ConfigEntry *ce)
 {
 	for (; ce; ce = ce->next)
 	{
+		if (loop.config_load_failed)
+			break;
 		if (ce->name && !strcmp(ce->name, "include"))
 			continue; /* handled elsewhere (but maybe merge? TODO) */
 		if (ce->value && url_is_valid(ce->value))
@@ -2326,6 +2329,9 @@ int config_read_file(char *filename, char *display_name)
 
 		/* Load urls */
 		config_parse_and_queue_urls(cfptr->items);
+
+		if(loop.config_load_failed) /* something bad happened while processing urls */
+			return -1;
 
 		/* Load includes */
 		if (config_verbose > 1)
