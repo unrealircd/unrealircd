@@ -956,8 +956,13 @@ unsigned char* extjwt_sha_pem_extjwt_hash(int method, const void *key, int keyle
 				continue;
 		}
 
+#if (OPENSSL_VERSION_NUMBER < 0x10100003L) /* https://github.com/openssl/openssl/commit/8ab31975bacb9c907261088937d3aa4102e3af84 */
+		if (!(bufkey = BIO_new_mem_buf((void *)key, keylen)))
+			break; /* out of memory */
+#else
 		if (!(bufkey = BIO_new_mem_buf(key, keylen)))
 			break; /* out of memory */
+#endif
 		if (!(pkey = PEM_read_bio_PrivateKey(bufkey, NULL, NULL, NULL)))
 			break; /* invalid key? */
 		pkey_type = EVP_PKEY_id(pkey);
