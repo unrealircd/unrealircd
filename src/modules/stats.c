@@ -55,37 +55,37 @@ MOD_UNLOAD()
 extern MODVAR int  max_connection_count;
 extern char *get_client_name2(Client *, int);
 
-int stats_banversion(Client *, char *);
-int stats_links(Client *, char *);
-int stats_denylinkall(Client *, char *);
-int stats_gline(Client *, char *);
-int stats_except(Client *, char *);
-int stats_allow(Client *, char *);
-int stats_command(Client *, char *);
-int stats_oper(Client *, char *);
-int stats_port(Client *, char *);
-int stats_bannick(Client *, char *);
-int stats_traffic(Client *, char *);
-int stats_uline(Client *, char *);
-int stats_vhost(Client *, char *);
-int stats_denylinkauto(Client *, char *);
-int stats_kline(Client *, char *);
-int stats_banrealname(Client *, char *);
-int stats_sqline(Client *, char *);
-int stats_linkinfoint(Client *, char *, int);
-int stats_linkinfo(Client *, char *);
-int stats_linkinfoall(Client *, char *);
-int stats_chanrestrict(Client *, char *);
-int stats_shun(Client *, char *);
-int stats_set(Client *, char *);
-int stats_tld(Client *, char *);
-int stats_uptime(Client *, char *);
-int stats_denyver(Client *, char *);
-int stats_notlink(Client *, char *);
-int stats_class(Client *, char *);
-int stats_officialchannels(Client *, char *);
-int stats_spamfilter(Client *, char *);
-int stats_fdtable(Client *, char *);
+int stats_banversion(Client *, const char *);
+int stats_links(Client *, const char *);
+int stats_denylinkall(Client *, const char *);
+int stats_gline(Client *, const char *);
+int stats_except(Client *, const char *);
+int stats_allow(Client *, const char *);
+int stats_command(Client *, const char *);
+int stats_oper(Client *, const char *);
+int stats_port(Client *, const char *);
+int stats_bannick(Client *, const char *);
+int stats_traffic(Client *, const char *);
+int stats_uline(Client *, const char *);
+int stats_vhost(Client *, const char *);
+int stats_denylinkauto(Client *, const char *);
+int stats_kline(Client *, const char *);
+int stats_banrealname(Client *, const char *);
+int stats_sqline(Client *, const char *);
+int stats_linkinfoint(Client *, const char *, int);
+int stats_linkinfo(Client *, const char *);
+int stats_linkinfoall(Client *, const char *);
+int stats_chanrestrict(Client *, const char *);
+int stats_shun(Client *, const char *);
+int stats_set(Client *, const char *);
+int stats_tld(Client *, const char *);
+int stats_uptime(Client *, const char *);
+int stats_denyver(Client *, const char *);
+int stats_notlink(Client *, const char *);
+int stats_class(Client *, const char *);
+int stats_officialchannels(Client *, const char *);
+int stats_spamfilter(Client *, const char *);
+int stats_fdtable(Client *, const char *);
 
 #define SERVER_AS_PARA 0x1
 #define FLAGS_AS_PARA 0x2
@@ -93,7 +93,7 @@ int stats_fdtable(Client *, char *);
 struct statstab {
 	char flag;
 	char *longflag;
-	int (*func)(Client *client, char *para);
+	int (*func)(Client *client, const char *para);
 	int options;
 };
 
@@ -395,7 +395,7 @@ CMD_FUNC(cmd_stats)
 			stat->flag, client->name, client->user->username, GetHost(client));
 }
 
-int stats_banversion(Client *client, char *para)
+int stats_banversion(Client *client, const char *para)
 {
 	ConfigItem_ban *bans;
 	for (bans = conf_ban; bans; bans = bans->next)
@@ -408,7 +408,7 @@ int stats_banversion(Client *client, char *para)
 	return 0;
 }
 
-int stats_links(Client *client, char *para)
+int stats_links(Client *client, const char *para)
 {
 	ConfigItem_link *link_p;
 #ifdef DEBUGMODE
@@ -453,7 +453,7 @@ int stats_links(Client *client, char *para)
 	return 0;
 }
 
-int stats_denylinkall(Client *client, char *para)
+int stats_denylinkall(Client *client, const char *para)
 {
 	ConfigItem_deny_link *links;
 
@@ -466,7 +466,7 @@ int stats_denylinkall(Client *client, char *para)
 	return 0;
 }
 
-int stats_gline(Client *client, char *para)
+int stats_gline(Client *client, const char *para)
 {
 	int cnt = 0;
 	tkl_stats(client, TKL_GLOBAL|TKL_KILL, para, &cnt);
@@ -474,7 +474,7 @@ int stats_gline(Client *client, char *para)
 	return 0;
 }
 
-int stats_spamfilter(Client *client, char *para)
+int stats_spamfilter(Client *client, const char *para)
 {
 	int cnt = 0;
 	tkl_stats(client, TKL_SPAMF, para, &cnt);
@@ -482,7 +482,7 @@ int stats_spamfilter(Client *client, char *para)
 	return 0;
 }
 
-int stats_except(Client *client, char *para)
+int stats_except(Client *client, const char *para)
 {
 	int cnt = 0;
 	tkl_stats(client, TKL_EXCEPTION, para, &cnt);
@@ -490,7 +490,7 @@ int stats_except(Client *client, char *para)
 	return 0;
 }
 
-int stats_allow(Client *client, char *para)
+int stats_allow(Client *client, const char *para)
 {
 	ConfigItem_allow *allows;
 	ConfigItem_mask *m;
@@ -511,7 +511,7 @@ int stats_allow(Client *client, char *para)
 	return 0;
 }
 
-int stats_command(Client *client, char *para)
+int stats_command(Client *client, const char *para)
 {
 	int i;
 	RealCommand *mptr;
@@ -531,7 +531,7 @@ int stats_command(Client *client, char *para)
 	return 0;
 }
 
-int stats_oper(Client *client, char *para)
+int stats_oper(Client *client, const char *para)
 {
 	ConfigItem_oper *oper_p;
 	ConfigItem_mask *m;
@@ -561,7 +561,7 @@ static char *stats_port_helper(ConfigItem_listen *listener)
 	return buf;
 }
 
-int stats_port(Client *client, char *para)
+int stats_port(Client *client, const char *para)
 {
 	ConfigItem_listen *listener;
 
@@ -582,7 +582,7 @@ int stats_port(Client *client, char *para)
 	return 0;
 }
 
-int stats_bannick(Client *client, char *para)
+int stats_bannick(Client *client, const char *para)
 {
 	int cnt = 0;
 	tkl_stats(client, TKL_NAME, para, &cnt);
@@ -590,7 +590,7 @@ int stats_bannick(Client *client, char *para)
 	return 0;
 }
 
-int stats_traffic(Client *client, char *para)
+int stats_traffic(Client *client, const char *para)
 {
 	Client *acptr;
 	IRCStatistics *sp;
@@ -635,7 +635,7 @@ int stats_traffic(Client *client, char *para)
 	return 0;
 }
 
-int stats_fdtable(Client *client, char *para)
+int stats_fdtable(Client *client, const char *para)
 {
 	int i;
 
@@ -654,14 +654,14 @@ int stats_fdtable(Client *client, char *para)
 	return 0;
 }
 
-int stats_uline(Client *client, char *para)
+int stats_uline(Client *client, const char *para)
 {
 	ConfigItem_ulines *ulines;
 	for (ulines = conf_ulines; ulines; ulines = ulines->next)
 		sendnumeric(client, RPL_STATSULINE, ulines->servername);
 	return 0;
 }
-int stats_vhost(Client *client, char *para)
+int stats_vhost(Client *client, const char *para)
 {
 	ConfigItem_mask *m;
 	ConfigItem_vhost *vhosts;
@@ -677,7 +677,7 @@ int stats_vhost(Client *client, char *para)
 	return 0;
 }
 
-int stats_denylinkauto(Client *client, char *para)
+int stats_denylinkauto(Client *client, const char *para)
 {
 	ConfigItem_deny_link *links;
 
@@ -690,7 +690,7 @@ int stats_denylinkauto(Client *client, char *para)
 	return 0;
 }
 
-int stats_kline(Client *client, char *para)
+int stats_kline(Client *client, const char *para)
 {
 	int cnt = 0;
 	tkl_stats(client, TKL_KILL, NULL, &cnt);
@@ -698,7 +698,7 @@ int stats_kline(Client *client, char *para)
 	return 0;
 }
 
-int stats_banrealname(Client *client, char *para)
+int stats_banrealname(Client *client, const char *para)
 {
 	ConfigItem_ban *bans;
 	for (bans = conf_ban; bans; bans = bans->next)
@@ -712,14 +712,14 @@ int stats_banrealname(Client *client, char *para)
 	return 0;
 }
 
-int stats_sqline(Client *client, char *para)
+int stats_sqline(Client *client, const char *para)
 {
 	int cnt = 0;
 	tkl_stats(client, TKL_NAME|TKL_GLOBAL, para, &cnt);
 	return 0;
 }
 
-int stats_chanrestrict(Client *client, char *para)
+int stats_chanrestrict(Client *client, const char *para)
 {
 	ConfigItem_deny_channel *dchans;
 	ConfigItem_allow_channel *achans;
@@ -734,7 +734,7 @@ int stats_chanrestrict(Client *client, char *para)
 	return 0;
 }
 
-int stats_shun(Client *client, char *para)
+int stats_shun(Client *client, const char *para)
 {
 	int cnt = 0;
 	tkl_stats(client, TKL_GLOBAL|TKL_SHUN, para, &cnt);
@@ -742,7 +742,7 @@ int stats_shun(Client *client, char *para)
 }
 
 /* should this be moved to a seperate stats flag? */
-int stats_officialchannels(Client *client, char *para)
+int stats_officialchannels(Client *client, const char *para)
 {
 	ConfigItem_offchans *x;
 
@@ -785,7 +785,7 @@ static void stats_set_anti_flood(Client *client, FloodSettings *f)
 	}
 }
 
-int stats_set(Client *client, char *para)
+int stats_set(Client *client, const char *para)
 {
 	char *uhallow;
 	SecurityGroup *s;
@@ -923,7 +923,7 @@ int stats_set(Client *client, char *para)
 	return 1;
 }
 
-int stats_tld(Client *client, char *para)
+int stats_tld(Client *client, const char *para)
 {
 	ConfigItem_tld *tld;
 
@@ -937,7 +937,7 @@ int stats_tld(Client *client, char *para)
 	return 0;
 }
 
-int stats_uptime(Client *client, char *para)
+int stats_uptime(Client *client, const char *para)
 {
 	time_t tmpnow;
 
@@ -950,7 +950,7 @@ int stats_uptime(Client *client, char *para)
 	return 0;
 }
 
-int stats_denyver(Client *client, char *para)
+int stats_denyver(Client *client, const char *para)
 {
 	ConfigItem_deny_version *versions;
 	for (versions = conf_deny_version; versions; versions = versions->next)
@@ -961,7 +961,7 @@ int stats_denyver(Client *client, char *para)
 	return 0;
 }
 
-int stats_notlink(Client *client, char *para)
+int stats_notlink(Client *client, const char *para)
 {
 	ConfigItem_link *link_p;
 
@@ -976,7 +976,7 @@ int stats_notlink(Client *client, char *para)
 	return 0;
 }
 
-int stats_class(Client *client, char *para)
+int stats_class(Client *client, const char *para)
 {
 	ConfigItem_class *classes;
 
@@ -992,17 +992,17 @@ int stats_class(Client *client, char *para)
 	return 0;
 }
 
-int stats_linkinfo(Client *client, char *para)
+int stats_linkinfo(Client *client, const char *para)
 {
 	return stats_linkinfoint(client, para, 0);
 }
 
-int stats_linkinfoall(Client *client, char *para)
+int stats_linkinfoall(Client *client, const char *para)
 {
 	return stats_linkinfoint(client, para, 1);
 }
 
-int stats_linkinfoint(Client *client, char *para, int all)
+int stats_linkinfoint(Client *client, const char *para, int all)
 {
 	int remote = 0;
 	int wilds = 0;

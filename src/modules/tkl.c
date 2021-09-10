@@ -80,7 +80,7 @@ int _find_shun(Client *client);
 int _find_spamfilter_user(Client *client, int flags);
 TKL *_find_qline(Client *client, char *nick, int *ishold);
 TKL *_find_tkline_match_zap(Client *client);
-void _tkl_stats(Client *client, int type, char *para, int *cnt);
+void _tkl_stats(Client *client, int type, const char *para, int *cnt);
 void _tkl_sync(Client *client);
 CMD_FUNC(_cmd_tkl);
 int _place_host_ban(Client *client, BanAction action, char *reason, long duration);
@@ -3331,15 +3331,15 @@ TKL *_find_tkline_match_zap(Client *client)
 
 typedef struct {
 	int flags;
-	char *mask;
-	char *reason;
-	char *set_by;
+	const char *mask;
+	const char *reason;
+	const char *set_by;
 } TKLFlag;
 
 /** Parse STATS tkl parameters.
  * TODO: I don't think this is documented anywhere? Or underdocumented at least.
  */
-static void parse_stats_params(char *para, TKLFlag *flag)
+static void parse_stats_params(const char *para, TKLFlag *flag)
 {
 	static char paratmp[512]; /* <- copy of para, because it gets fragged by strtok() */
 	char *flags, *tmp;
@@ -3395,7 +3395,7 @@ static void parse_stats_params(char *para, TKLFlag *flag)
 /** Does this TKL entry match the search terms?
  * This is a helper function for tkl_stats().
  */
-int tkl_stats_matcher(Client *client, int type, char *para, TKLFlag *tklflags, TKL *tkl)
+int tkl_stats_matcher(Client *client, int type, const char *para, TKLFlag *tklflags, TKL *tkl)
 {
 	/***** First, handle the selection ******/
 
@@ -3550,7 +3550,7 @@ int tkl_stats_matcher(Client *client, int type, char *para, TKLFlag *tklflags, T
 }
 
 /* TKL Stats. This is used by /STATS gline and all the others */
-void _tkl_stats(Client *client, int type, char *para, int *cnt)
+void _tkl_stats(Client *client, int type, const char *para, int *cnt)
 {
 	TKL *tk;
 	TKLFlag tklflags;

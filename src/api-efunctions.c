@@ -65,7 +65,7 @@ int (*find_shun)(Client *client);
 int(*find_spamfilter_user)(Client *client, int flags);
 TKL *(*find_qline)(Client *client, char *nick, int *ishold);
 TKL *(*find_tkline_match_zap)(Client *client);
-void (*tkl_stats)(Client *client, int type, char *para, int *cnt);
+void (*tkl_stats)(Client *client, int type, const char *para, int *cnt);
 void (*tkl_sync)(Client *client);
 void (*cmd_tkl)(Client *client, MessageTag *mtags, int parc, char *parv[]);
 int (*place_host_ban)(Client *client, BanAction action, char *reason, long duration);
