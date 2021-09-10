@@ -485,7 +485,7 @@ static void maxtarget_add_sorted(MaxTarget *n)
 }
 
 /** Find a maxtarget structure for a cmd (internal) */
-MaxTarget *findmaxtarget(char *cmd)
+MaxTarget *findmaxtarget(const char *cmd)
 {
 	MaxTarget *m;
 
@@ -529,7 +529,7 @@ void freemaxtargets(void)
 }
 
 /** Return the maximum number of targets permitted for a command */
-int max_targets_for_command(char *cmd)
+int max_targets_for_command(const char *cmd)
 {
 	MaxTarget *m = findmaxtarget(cmd);
 	if (m)

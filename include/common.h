@@ -98,7 +98,6 @@ extern int myncmp(const char *, const char *, int);
 extern char *strtoken(char **, char *, char *);
 
 extern MODVAR int  global_count, max_global_count;
-extern char *myctime(time_t);
 #ifdef _WIN32
 extern int gettimeofday(struct timeval *tp, void *tzp);
 #endif

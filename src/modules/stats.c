@@ -53,7 +53,6 @@ MOD_UNLOAD()
 }
 
 extern MODVAR int  max_connection_count;
-extern char *get_client_name2(Client *, int);
 
 int stats_banversion(Client *, const char *);
 int stats_links(Client *, const char *);

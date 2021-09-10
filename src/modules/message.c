@@ -120,7 +120,7 @@ int can_send_to_user(Client *client, Client *target, const char **msgtext, const
 	if (MyUser(client))
 	{
 		int spamtype = (sendtype == SEND_TYPE_NOTICE ? SPAMF_USERNOTICE : SPAMF_USERMSG);
-		char *cmd = sendtype_to_cmd(sendtype);
+		const char *cmd = sendtype_to_cmd(sendtype);
 
 		if (match_spamfilter(client, *msgtext, spamtype, cmd, target->name, 0, NULL))
 			return 0;
@@ -282,7 +282,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 	char pfixchan[CHANNELLEN + 4];
 	int ret;
 	int ntargets = 0;
-	char *cmd = sendtype_to_cmd(sendtype);
+	const char *cmd = sendtype_to_cmd(sendtype);
 	int maxtargets = max_targets_for_command(cmd);
 	Hook *h;
 	MessageTag *mtags;

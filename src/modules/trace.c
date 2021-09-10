@@ -140,8 +140,8 @@ CMD_FUNC(cmd_trace)
 	now = TStime();
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		char *name;
-		char *class;
+		const char *name;
+		const char *class;
 
 		if (!ValidatePermissionsForPath("client:see:trace:invisible-users",client,acptr,NULL,NULL) && (acptr != client))
 			continue;

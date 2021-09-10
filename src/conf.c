@@ -3240,7 +3240,7 @@ void init_dynconf(void)
 	memset(&tempiConf, 0, sizeof(iConf));
 }
 
-char *pretty_time_val(long timeval)
+const char *pretty_time_val(long timeval)
 {
 	static char buf[512];
 

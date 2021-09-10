@@ -507,7 +507,7 @@ void https_connect_send_header(Download *handle)
 	}
 	if (handle->cachetime > 0)
 	{
-		char *datestr = rfc2616_time(handle->cachetime);
+		const char *datestr = rfc2616_time(handle->cachetime);
 		if (datestr)
 		{
 			// snprintf_append...

@@ -643,7 +643,6 @@ void _send_server_message(Client *client)
 int _verify_link(Client *client, ConfigItem_link **link_out)
 {
 	ConfigItem_link *link;
-	char *inpath = get_client_name(client, TRUE);
 	Client *acptr = NULL, *ocptr = NULL;
 	ConfigItem_ban *bconf;
 

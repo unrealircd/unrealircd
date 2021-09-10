@@ -381,27 +381,6 @@ char *get_client_status(Client *client)
 	return (buf);
 }
 
-/** Used to blank out ports -- Barubary - only used in STATS l/L */
-char *get_client_name2(Client *client, int showports)
-{
-	char *pointer = get_client_name(client, TRUE);
-
-	if (!pointer)
-		return NULL;
-	if (showports)
-		return pointer;
-	if (!strrchr(pointer, '.'))
-		return NULL;
-	/*
-	 * This may seem like wack but remind this is only used 
-	 * in rows of get_client_name2's, so it's perfectly fair
-	 * 
-	*/
-	strcpy(strrchr(pointer, '.'), ".0]");
-
-	return pointer;
-}
-
 /** ERROR command - used by servers to indicate errors.
  * Syntax: ERROR :<reason>
  */

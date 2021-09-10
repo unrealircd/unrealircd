@@ -108,7 +108,7 @@ SpamfilterTargetTable spamfiltertargettable[] = {
 struct IRCStatistics ircstats;
 
 /** Returns the date in rather long string */
-char *long_date(time_t clock)
+const char *long_date(time_t clock)
 {
 	static char buf[80], plus;
 	struct tm *lt, *gm;
@@ -150,7 +150,7 @@ char *long_date(time_t clock)
  * @param buf  The buffer to store the string (minimum size: 128 bytes),
  *             or NULL to use temporary static storage.
  */
-char *short_date(time_t ts, char *buf)
+const char *short_date(time_t ts, char *buf)
 {
 	struct tm *t = gmtime(&ts);
 	char *timestr;
@@ -173,7 +173,7 @@ char *short_date(time_t ts, char *buf)
 }
 
 /** Return a string with the "pretty date" - yeah, another variant */
-char *pretty_date(time_t t)
+const char *pretty_date(time_t t)
 {
 	static char buf[128];
 	struct tm *tm;
@@ -262,7 +262,7 @@ char *make_nick_user_host(const char *nick, const char *name, const char *host)
 /** Similar to ctime() but without a potential newline and
  * also takes a time_t value rather than a pointer.
  */
-char *myctime(time_t value)
+const char *myctime(time_t value)
 {
 	static char buf[28];
 	char *p;
@@ -298,7 +298,7 @@ char *myctime(time_t value)
 **	to internal buffer (nbuf). *NEVER* use the returned pointer
 **	to modify what it points!!!
 */
-char *get_client_name(Client *client, int showip)
+const char *get_client_name(Client *client, int showip)
 {
 	static char nbuf[HOSTLEN * 2 + USERLEN + 5];
 
@@ -323,7 +323,7 @@ char *get_client_name(Client *client, int showip)
 	return client->name;
 }
 
-char *get_client_host(Client *client)
+const char *get_client_host(Client *client)
 {
 	static char nbuf[HOSTLEN * 2 + USERLEN + 5];
 
@@ -698,7 +698,7 @@ void initstats(void)
 }
 
 /** Verify operator count, to catch bugs introduced by flawed services */
-void verify_opercount(Client *orig, char *tag)
+void verify_opercount(Client *orig, const char *tag)
 {
 	int counted = 0;
 	Client *client;
@@ -729,9 +729,9 @@ void verify_opercount(Client *orig, char *tag)
  *                      in actual DNS names (eg '/').
  * @returns 1 if valid, 0 if not.
  */
-int valid_host(char *host, int strict)
+int valid_host(const char *host, int strict)
 {
-	char *p;
+	const char *p;
 
 	if (!*host)
 		return 0; /* must at least contain something */
@@ -899,7 +899,7 @@ char *unreal_encodespace(char *s)
 }
 
 /** This is basically only used internally by match_spamfilter()... */
-char *cmdname_by_spamftarget(int target)
+const char *cmdname_by_spamftarget(int target)
 {
 	SpamfilterTargetTable *e;
 
@@ -910,7 +910,7 @@ char *cmdname_by_spamftarget(int target)
 }
 
 /** Returns 1 if this is a channel from set::auto-join or set::oper-auto-join */
-int is_autojoin_chan(char *chname)
+int is_autojoin_chan(const char *chname)
 {
 	char buf[512];
 	char *p, *name;
@@ -1114,7 +1114,7 @@ int unreal_mask_match_string(const char *name, ConfigItem_mask *mask)
 /** Our own strcasestr implementation because strcasestr is
  * often not available or is not working correctly.
  */
-char *our_strcasestr(char *haystack, char *needle)
+char *our_strcasestr(const char *haystack, const char *needle)
 {
 	int i;
 	int nlength = strlen(needle);
@@ -1127,12 +1127,12 @@ char *our_strcasestr(char *haystack, char *needle)
 		return NULL;
 
 	if (nlength <= 0)
-		return haystack;
+		return (char *)haystack;
 
 	for (i = 0; i <= (hlength - nlength); i++)
 	{
 		if (strncasecmp (haystack + i, needle, nlength) == 0)
-			return haystack + i;
+			return (char *)(haystack + i);
 	}
 
 	return NULL; /* not found */
@@ -1148,7 +1148,7 @@ char *our_strcasestr(char *haystack, char *needle)
  * @param from		Who added this entry
  * @param skip		Which server(-side) to skip broadcasting this entry to.
  */
-int swhois_add(Client *client, char *tag, int priority, char *swhois, Client *from, Client *skip)
+int swhois_add(Client *client, const char *tag, int priority, const char *swhois, Client *from, Client *skip)
 {
 	SWhois *s;
 
@@ -1182,7 +1182,7 @@ int swhois_add(Client *client, char *tag, int priority, char *swhois, Client *fr
  * @param skip		Which server(-side) to skip broadcasting this entry to.
  * @note If you use swhois "*" then it will remove all swhois titles for that tag
  */
-int swhois_delete(Client *client, char *tag, char *swhois, Client *from, Client *skip)
+int swhois_delete(Client *client, const char *tag, const char *swhois, Client *from, Client *skip)
 {
 	SWhois *s, *s_next;
 	int ret = -1; /* default to 'not found' */
@@ -1235,7 +1235,7 @@ extern void send_raw_direct(Client *user, FORMAT_STRING(const char *pattern), ..
  *
  * @note This function will call exit_client() appropriately.
  */
-void banned_client(Client *client, char *bantype, char *reason, int global, int noexit)
+void banned_client(Client *client, const char *bantype, const char *reason, int global, int noexit)
 {
 	char buf[512];
 	char *fmt = global ? iConf.reject_message_gline : iConf.reject_message_kline;
@@ -1314,7 +1314,7 @@ char *mystpcpy(char *dst, const char *src)
  *         so similar to what strlen() would have returned.
  * @note Caller must ensure that the buffer 'buf' is of sufficient size.
  */
-size_t add_sjsby(char *buf, char *setby, time_t seton)
+size_t add_sjsby(char *buf, const char *setby, time_t seton)
 {
 	char tbuf[32];
 	char *p = buf;
@@ -1630,7 +1630,7 @@ time_t rfc2616_time_to_unix_time(const char *tbuf)
 }
 
 /** Returns an RFC 2616 timestamp (used in HTTP headers) */
-char *rfc2616_time(time_t clock)
+const char *rfc2616_time(time_t clock)
 {
 	static char buf[80], plus;
 	struct tm *lt, *gm;
@@ -1738,7 +1738,7 @@ int write_data(FILE *fd, const void *buf, size_t len)
  *        Note that 'x' can safely be NULL.
  * @returns 1 on success, 0 on failure.
  */
-int write_str(FILE *fd, char *x)
+int write_str(FILE *fd, const char *x)
 {
 	uint16_t len;
 
@@ -2053,7 +2053,7 @@ long get_file_size(const char *fname)
 }
 
 /** Add a line to a MultiLine list */
-void addmultiline(MultiLine **l, char *line)
+void addmultiline(MultiLine **l, const char *line)
 {
 	MultiLine *m = safe_alloc(sizeof(MultiLine));
 	safe_strdup(m->line, line);
@@ -2092,7 +2092,7 @@ MultiLine *line2multiline(const char *str)
 }
 
 /** Convert a sendtype to a command string */
-char *sendtype_to_cmd(SendType sendtype)
+const char *sendtype_to_cmd(SendType sendtype)
 {
 	if (sendtype == SEND_TYPE_PRIVMSG)
 		return "PRIVMSG";
@@ -2109,11 +2109,11 @@ char *sendtype_to_cmd(SendType sendtype)
  * @param strict	Whether to require UPPER+lower+digits
  * @returns 1 if good, 0 if not.
  */
-int check_password_strength(char *pass, int min_length, int strict, char **err)
+int check_password_strength(const char *pass, int min_length, int strict, char **err)
 {
-	char has_lowercase=0, has_uppercase=0, has_digit=0;
-	char *p;
 	static char buf[256];
+	char has_lowercase=0, has_uppercase=0, has_digit=0;
+	const char *p;
 
 	if (err)
 		*err = NULL;
@@ -2163,7 +2163,7 @@ int check_password_strength(char *pass, int min_length, int strict, char **err)
 	return 1;
 }
 
-int valid_secret_password(char *pass, char **err)
+int valid_secret_password(const char *pass, char **err)
 {
 	return check_password_strength(pass, 10, 1, err);
 }
