@@ -177,6 +177,27 @@ size_t strlcpy(char *dst, const char *src, size_t size)
 }
 #endif
 
+#ifndef HAVE_STRLNCPY
+/** BSD'ish strlncpy() - similar to strlcpy but never copies more then n characters.
+ */
+size_t strlncpy(char *dst, const char *src, size_t size, size_t n)
+{
+	size_t len = strlen(src);
+	size_t ret = len;
+
+	if (size <= 0)
+		return 0;
+	if (len > n)
+		len = n;
+	if (len >= size)
+		len = size - 1;
+	memcpy(dst, src, len);
+	dst[len] = 0;
+
+	return ret;
+}
+#endif
+
 #ifndef HAVE_STRLCAT
 /* BSD'ish strlcat().
  * The strlcat() function appends the NUL-terminated string src to the end of

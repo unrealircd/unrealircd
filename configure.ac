@@ -357,6 +357,8 @@ AC_CHECK_FUNCS(strlcat,
 	AC_DEFINE([HAVE_STRLCAT], [], [Define if you have strlcat]))
 AC_CHECK_FUNCS(strlncat,
 	AC_DEFINE([HAVE_STRLNCAT], [], [Define if you have strlncat]))
+AC_CHECK_FUNCS(strlncpy,
+	AC_DEFINE([HAVE_STRLNCPY], [], [Define if you have strlncpy]))
 
 AC_CHECK_FUNCS([getrusage],
 	[AC_DEFINE([GETRUSAGE_2], [], [Define if you have getrusage])],

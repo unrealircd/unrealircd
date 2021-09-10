@@ -115,6 +115,9 @@
 /* Define to 1 if you have the `strlncat' function. */
 #undef HAVE_STRLNCAT
 
+/* Define to 1 if you have the `strlncpy' function. */
+#undef HAVE_STRLNCPY
+
 /* Define to 1 if you have the `syslog' function. */
 #undef HAVE_SYSLOG
 
