@@ -193,7 +193,7 @@ extern void reset_help();
 
 extern MODVAR char *debugmode, *configfile, *sbrk0;
 extern char *getfield(char *);
-extern void set_sockhost(Client *, char *);
+extern void set_sockhost(Client *, const char *);
 #ifdef _WIN32
 extern char *sock_strerror(int);
 #endif
@@ -279,10 +279,10 @@ extern void exit_client(Client *client, MessageTag *recv_mtags, char *comment);
 extern void exit_client_fmt(Client *client, MessageTag *recv_mtags, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 3, 4)));
 extern void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char *comment);
 extern void initstats(), tstats(Client *, char *);
-extern char *check_string(char *);
-extern char *make_nick_user_host(char *, char *, char *);
-extern char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host);
-extern char *make_user_host(char *, char *);
+extern const char *check_string(const char *);
+extern char *make_nick_user_host(const char *, const char *, const char *);
+extern char *make_nick_user_host_r(char *namebuf, size_t namebuflen, const char *nick, const char *name, const char *host);
+extern char *make_user_host(const char *, const char *);
 extern void parse(Client *cptr, char *buffer, int length);
 extern int hunt_server(Client *, MessageTag *, char *, int, int, char **);
 extern int cmd_server_estab(Client *);

@@ -32,13 +32,13 @@
 
 static void exit_one_client(Client *, MessageTag *mtags_i, const char *);
 
-static char *months[] = {
+static const char *months[] = {
 	"January", "February", "March", "April",
 	"May", "June", "July", "August",
 	"September", "October", "November", "December"
 };
 
-static char *weekdays[] = {
+static const char *weekdays[] = {
 	"Sunday", "Monday", "Tuesday", "Wednesday",
 	"Thursday", "Friday", "Saturday"
 };
@@ -197,62 +197,53 @@ char *pretty_date(time_t t)
  * string marker (`\-`).  returns the 'fixed' string or "*" if the string
  * was NULL length or a NULL pointer.
  */
-char *check_string(char *s)
+const char *check_string(const char *s)
 {
+	static char buf[512];
 	static char star[2] = "*";
-	char *str = s;
+	const char *str = s;
 
 	if (BadPtr(s))
 		return star;
 
 	for (; *s; s++)
+	{
 		if (isspace(*s))
 		{
-			*s = '\0';
+			/* Because this is an unlikely scenario, we have
+			 * delayed the copy until here:
+			 */
+			strlncpy(buf, s, sizeof(buf), s - str);
+			str = buf;
 			break;
 		}
+	}
 
 	return (BadPtr(str)) ? star : str;
 }
 
 /** Create a user@host based on the provided name and host */
-char *make_user_host(char *name, char *host)
+char *make_user_host(const char *name, const char *host)
 {
 	static char namebuf[USERLEN + HOSTLEN + 6];
-	char *s = namebuf;
 
-	memset(namebuf, 0, sizeof(namebuf));
-	name = check_string(name);
-	strlcpy(s, name, USERLEN + 1);
-	s += strlen(s);
-	*s++ = '@';
-	host = check_string(host);
-	strlcpy(s, host, HOSTLEN + 1);
-	s += strlen(s);
-	*s = '\0';
-	return (namebuf);
+	strlncpy(namebuf, check_string(name), sizeof(namebuf), USERLEN+1);
+	strlcat(namebuf, "@", sizeof(namebuf));
+	strlncat(namebuf, check_string(host), sizeof(namebuf), HOSTLEN+1);
+	return namebuf;
 }
 
 /** Create a nick!user@host string based on the provided variables.
  * If any of the variables are NULL, it becomes * (asterisk)
  * This is the reentrant safe version.
  */
-char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host)
+char *make_nick_user_host_r(char *namebuf, size_t namebuflen, const char *nick, const char *name, const char *host)
 {
-	char *s = namebuf;
-
-	nick = check_string(nick);
-	strlcpy(namebuf, nick, NICKLEN + 1);
-	s += strlen(s);
-	*s++ = '!';
-	name = check_string(name);
-	strlcpy(s, name, USERLEN + 1);
-	s += strlen(s);
-	*s++ = '@';
-	host = check_string(host);
-	strlcpy(s, host, HOSTLEN + 1);
-	s += strlen(s);
-	*s = '\0';
+	strlncpy(namebuf, check_string(nick), namebuflen, NICKLEN+1);
+	strlcat(namebuf, "!", namebuflen);
+	strlncat(namebuf, check_string(name), namebuflen, USERLEN+1);
+	strlcat(namebuf, "@", namebuflen);
+	strlncat(namebuf, check_string(host), namebuflen, HOSTLEN+1);
 	return namebuf;
 }
 
@@ -260,11 +251,11 @@ char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host)
  * If any of the variables are NULL, it becomes * (asterisk)
  * This version uses static storage.
  */
-char *make_nick_user_host(char *nick, char *name, char *host)
+char *make_nick_user_host(const char *nick, const char *name, const char *host)
 {
 	static char namebuf[NICKLEN + USERLEN + HOSTLEN + 24];
 
-	return make_nick_user_host_r(namebuf, nick, name, host);
+	return make_nick_user_host_r(namebuf, sizeof(namebuf), nick, name, host);
 }
 
 
@@ -350,9 +341,9 @@ char *get_client_host(Client *client)
 /*
  * Set sockhost to 'host'. Skip the user@ part of 'host' if necessary.
  */
-void set_sockhost(Client *client, char *host)
+void set_sockhost(Client *client, const char *host)
 {
-	char *s;
+	const char *s;
 	if ((s = strchr(host, '@')))
 		s++;
 	else

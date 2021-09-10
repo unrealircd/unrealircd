@@ -336,7 +336,7 @@ int add_listmode(Ban **list, Client *client, Channel *channel, char *banid)
 	char nuhbuf[NICKLEN+USERLEN+HOSTLEN+4];
 
 	if (IsUser(client) && (iConf.ban_setter == SETTER_NICK_USER_HOST))
-		setby = make_nick_user_host_r(nuhbuf, client->name, client->user->username, GetHost(client));
+		setby = make_nick_user_host_r(nuhbuf, sizeof(nuhbuf), client->name, client->user->username, GetHost(client));
 
 	return add_listmode_ex(list, client, channel, banid, setby, TStime());
 }
