@@ -170,7 +170,7 @@ CMD_FUNC(cmd_sasl)
 
 		if (*parv[3] == 'C')
 		{
-			RunHookReturn2(HOOKTYPE_SASL_CONTINUATION, target, parv[4], !=0);
+			RunHookReturn(HOOKTYPE_SASL_CONTINUATION, !=0, target, parv[4]);
 			sendto_one(target, NULL, "AUTHENTICATE %s", parv[4]);
 		}
 		else if (*parv[3] == 'D')
@@ -180,14 +180,14 @@ CMD_FUNC(cmd_sasl)
 			{
 				target->local->sasl_sent_time = 0;
 				add_fake_lag(target, 7000); /* bump fakelag due to failed authentication attempt */
-				RunHookReturn2(HOOKTYPE_SASL_RESULT, target, 0, !=0);
+				RunHookReturn(HOOKTYPE_SASL_RESULT, !=0, target, 0);
 				sendnumeric(target, ERR_SASLFAIL);
 			}
 			else if (*parv[4] == 'S')
 			{
 				target->local->sasl_sent_time = 0;
 				target->local->sasl_complete++;
-				RunHookReturn2(HOOKTYPE_SASL_RESULT, target, 1, !=0);
+				RunHookReturn(HOOKTYPE_SASL_RESULT, !=0, target, 1);
 				sendnumeric(target, RPL_SASLSUCCESS);
 			}
 		}

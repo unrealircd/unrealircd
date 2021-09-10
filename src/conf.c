@@ -2229,7 +2229,7 @@ int config_test(void)
 	if (loop.rehashing)
 	{
 		module_loadall();
-		RunHook0(HOOKTYPE_REHASH_COMPLETE);
+		RunHook(HOOKTYPE_REHASH_COMPLETE);
 	}
 	postconf();
 	unreal_log(ULOG_INFO, "config", "CONFIG_LOADED", NULL, "Configuration loaded");

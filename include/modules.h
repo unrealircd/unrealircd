@@ -828,90 +828,27 @@ extern Hook	*HookDel(Hook *hook);
 extern Hooktype *HooktypeAdd(Module *module, char *string, int *type);
 extern void HooktypeDel(Hooktype *hooktype, Module *module);
 
-#define RunHook0(hooktype) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next)(*(h->func.intfunc))(); } while(0)
 #define RunHook(hooktype,...) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(__VA_ARGS__); } while(0)
-#define RunHookReturn(hooktype,x,retchk) \
+#define RunHookReturn(hooktype,retchk,...) \
 { \
  int retval; \
  Hook *h; \
  for (h = Hooks[hooktype]; h; h = h->next) \
  { \
-  retval = (*(h->func.intfunc))(x); \
+  retval = (*(h->func.intfunc))(__VA_ARGS__); \
   if (retval retchk) return; \
  } \
 }
-#define RunHookReturn2(hooktype,x,y,retchk) \
+#define RunHookReturnInt(hooktype,retchk,...) \
 { \
  int retval; \
  Hook *h; \
  for (h = Hooks[hooktype]; h; h = h->next) \
  { \
-  retval = (*(h->func.intfunc))(x,y); \
-  if (retval retchk) return; \
- } \
-}
-#define RunHookReturn3(hooktype,x,y,z,retchk) \
-{ \
- int retval; \
- Hook *h; \
- for (h = Hooks[hooktype]; h; h = h->next) \
- { \
-  retval = (*(h->func.intfunc))(x,y,z); \
-  if (retval retchk) return; \
- } \
-}
-#define RunHookReturn4(hooktype,a,b,c,d,retchk) \
-{ \
- int retval; \
- Hook *h; \
- for (h = Hooks[hooktype]; h; h = h->next) \
- { \
-  retval = (*(h->func.intfunc))(a,b,c,d); \
-  if (retval retchk) return; \
- } \
-}
-#define RunHookReturnInt(hooktype,x,retchk) \
-{ \
- int retval; \
- Hook *h; \
- for (h = Hooks[hooktype]; h; h = h->next) \
- { \
-  retval = (*(h->func.intfunc))(x); \
+  retval = (*(h->func.intfunc))(__VA_ARGS__); \
   if (retval retchk) return retval; \
  } \
 }
-#define RunHookReturnInt2(hooktype,x,y,retchk) \
-{ \
- int retval; \
- Hook *h; \
- for (h = Hooks[hooktype]; h; h = h->next) \
- { \
-  retval = (*(h->func.intfunc))(x,y); \
-  if (retval retchk) return retval; \
- } \
-}
-#define RunHookReturnInt3(hooktype,x,y,z,retchk) \
-{ \
- int retval; \
- Hook *h; \
- for (h = Hooks[hooktype]; h; h = h->next) \
- { \
-  retval = (*(h->func.intfunc))(x,y,z); \
-  if (retval retchk) return retval; \
- } \
-}
-#define RunHookReturnInt4(hooktype,a,b,c,d,retchk) \
-{ \
- int retval; \
- Hook *h; \
- for (h = Hooks[hooktype]; h; h = h->next) \
- { \
-  retval = (*(h->func.intfunc))(a,b,c,d); \
-  if (retval retchk) return retval; \
- } \
-}
-
-#define RunHookReturnVoid(hooktype,x,ret) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) if ((*(hook->func.intfunc))(x) ret) return; } while(0)
 
 #define CallbackAdd(module, cbtype, func) CallbackAddMain(module, cbtype, func, NULL, NULL, NULL, NULL)
 #define CallbackAddVoid(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, func, NULL, NULL, NULL)

@@ -3078,7 +3078,7 @@ int _find_tkline_match(Client *client, int skip_soft)
 
 	/* User is banned... */
 
-	RunHookReturnInt2(HOOKTYPE_FIND_TKLINE_MATCH, client, tkl, !=99);
+	RunHookReturnInt(HOOKTYPE_FIND_TKLINE_MATCH, !=99, client, tkl);
 
 	if (tkl->type & TKL_KILL)
 	{
@@ -4550,7 +4550,7 @@ int _place_host_ban(Client *client, BanAction action, char *reason, long duratio
 			tkllayer[7] = mo2;
 			tkllayer[8] = reason;
 			cmd_tkl(&me, NULL, 9, tkllayer);
-			RunHookReturnInt4(HOOKTYPE_PLACE_HOST_BAN, client, action, reason, duration, !=99);
+			RunHookReturnInt(HOOKTYPE_PLACE_HOST_BAN, !=99, client, action, reason, duration);
 			if ((action == BAN_ACT_SHUN) || (action == BAN_ACT_SOFT_SHUN))
 			{
 				find_shun(client);
@@ -4561,7 +4561,7 @@ int _place_host_ban(Client *client, BanAction action, char *reason, long duratio
 		case BAN_ACT_SOFT_KILL:
 		case BAN_ACT_KILL:
 		default:
-			RunHookReturnInt4(HOOKTYPE_PLACE_HOST_BAN, client, action, reason, duration, !=99);
+			RunHookReturnInt(HOOKTYPE_PLACE_HOST_BAN, !=99, client, action, reason, duration);
 			exit_client(client, NULL, reason);
 			return 1;
 	}
