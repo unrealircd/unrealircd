@@ -39,7 +39,7 @@ MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	EfunctionAddPChar(modinfo->handle, EFUNC_MTAGS_TO_STRING, _mtags_to_string);
+	EfunctionAddString(modinfo->handle, EFUNC_MTAGS_TO_STRING, _mtags_to_string);
 	EfunctionAddVoid(modinfo->handle, EFUNC_PARSE_MESSAGE_TAGS, _parse_message_tags);
 
 	return 0;

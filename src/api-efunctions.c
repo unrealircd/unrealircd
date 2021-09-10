@@ -134,7 +134,7 @@ int (*watch_check)(Client *client, int reply, int (*watch_notify)(Client *client
 void (*do_unreal_log_remote_deliver)(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized);
 char *(*get_chmodes_for_user)(Client *client, int flags);
 
-Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())
+Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
 	Efunction *p;
 
@@ -152,8 +152,10 @@ Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(),
 		p->func.voidfunc = vfunc;
 	if (pvfunc)
 		p->func.pvoidfunc = pvfunc;
-	if (cfunc)
-		p->func.stringfunc = cfunc;
+	if (stringfunc)
+		p->func.stringfunc = stringfunc;
+	if (conststringfunc)
+		p->func.conststringfunc = conststringfunc;
 	p->type = eftype;
 	p->owner = module;
 	AddListItem(p, Efunctions[eftype]);

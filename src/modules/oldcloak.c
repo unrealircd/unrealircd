@@ -58,13 +58,13 @@ ModuleHeader MOD_HEADER = {
 
 MOD_TEST()
 {
-	cloak = CallbackAddPCharEx(modinfo->handle, CALLBACKTYPE_CLOAK_EX, hidehost);
+	cloak = CallbackAddStringEx(modinfo->handle, CALLBACKTYPE_CLOAK_EX, hidehost);
 	if (!cloak)
 	{
 		config_error("cloak: Error while trying to install cloaking callback!");
 		return MOD_FAILED;
 	}
-	cloak_csum = CallbackAddPCharEx(modinfo->handle, CALLBACKTYPE_CLOAKKEYCSUM, cloakcsum);
+	cloak_csum = CallbackAddStringEx(modinfo->handle, CALLBACKTYPE_CLOAKKEYCSUM, cloakcsum);
 	if (!cloak_csum)
 	{
 		config_error("cloak: Error while trying to install cloaking checksum callback!");

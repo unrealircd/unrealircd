@@ -189,7 +189,7 @@ MOD_TEST()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAdd(modinfo->handle, EFUNC_DO_NICK_NAME, _do_nick_name);
 	EfunctionAdd(modinfo->handle, EFUNC_DO_REMOTE_NICK_NAME, _do_remote_nick_name);
-	EfunctionAddPChar(modinfo->handle, EFUNC_CHARSYS_GET_CURRENT_LANGUAGES, _charsys_get_current_languages);
+	EfunctionAddString(modinfo->handle, EFUNC_CHARSYS_GET_CURRENT_LANGUAGES, _charsys_get_current_languages);
 	charsys_reset();
 	charsys_reset_pretest();
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, charsys_config_test);

@@ -985,7 +985,7 @@ void VersionflagDel(Versionflag *vflag, Module *module)
 	}
 }
 
-Hook *HookAddMain(Module *module, int hooktype, int priority, int (*func)(), void (*vfunc)(), char *(*cfunc)())
+Hook *HookAddMain(Module *module, int hooktype, int priority, int (*func)(), void (*vfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
 	Hook *p;
 	
@@ -994,8 +994,10 @@ Hook *HookAddMain(Module *module, int hooktype, int priority, int (*func)(), voi
 		p->func.intfunc = func;
 	if (vfunc)
 		p->func.voidfunc = vfunc;
-	if (cfunc)
-		p->func.stringfunc = cfunc;
+	if (stringfunc)
+		p->func.stringfunc = stringfunc;
+	if (conststringfunc)
+		p->func.conststringfunc = conststringfunc;
 	p->type = hooktype;
 	p->owner = module;
 	p->priority = priority;
@@ -1049,7 +1051,7 @@ int cnt = 0;
 	return cnt;
 }
 
-Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())
+Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
 	Callback *p;
 	
@@ -1067,8 +1069,10 @@ Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfun
 		p->func.voidfunc = vfunc;
 	if (pvfunc)
 		p->func.pvoidfunc = pvfunc;
-	if (cfunc)
-		p->func.stringfunc = cfunc;
+	if (stringfunc)
+		p->func.stringfunc = stringfunc;
+	if (conststringfunc)
+		p->func.conststringfunc = conststringfunc;
 	p->type = cbtype;
 	p->owner = module;
 	AddListItem(p, Callbacks[cbtype]);

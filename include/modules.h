@@ -576,6 +576,7 @@ struct Hook {
 		int (*intfunc)();
 		void (*voidfunc)();
 		char *(*stringfunc)();
+		const char *(*conststringfunc)();
 	} func;
 	Module *owner;
 };
@@ -588,6 +589,7 @@ struct Callback {
 		void (*voidfunc)();
 		void *(*pvoidfunc)();
 		char *(*stringfunc)();
+		const char *(*conststringfunc)();
 	} func;
 	Module *owner;
 	char willberemoved; /* will be removed on next rehash? (eg the 'old'/'current' one) */
@@ -609,6 +611,7 @@ struct Efunction {
 		void (*voidfunc)();
 		void *(*pvoidfunc)();
 		char *(*stringfunc)();
+		const char *(*conststringfunc)();
 	} func;
 	Module *owner;
 	char willberemoved; /* will be removed on next rehash? (eg the 'old'/'current' one) */
@@ -790,30 +793,36 @@ extern HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mre
 extern void HistoryBackendDel(HistoryBackend *m);
 
 #ifndef GCC_TYPECHECKING
-#define HookAdd(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, func, NULL, NULL)
-#define HookAddVoid(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, func, NULL)
-#define HookAddString(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, func)
+#define HookAdd(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, func, NULL, NULL, NULL)
+#define HookAddVoid(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, func, NULL, NULL)
+#define HookAddString(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, func, NULL)
+#define HookAddConstString(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, NULL, func)
 #else
 #define HookAdd(module, hooktype, priority, func) \
 __extension__ ({ \
 	ValidateHooks(hooktype, func); \
-    HookAddMain(module, hooktype, priority, func, NULL, NULL); \
+    HookAddMain(module, hooktype, priority, func, NULL, NULL, NULL); \
 })
 
 #define HookAddVoid(module, hooktype, priority, func) \
 __extension__ ({ \
 	ValidateHooks(hooktype, func); \
-    HookAddMain(module, hooktype, priority, NULL, func, NULL); \
+    HookAddMain(module, hooktype, priority, NULL, func, NULL, NULL); \
 })
 
 #define HookAddString(module, hooktype, priority, func) \
 __extension__ ({ \
 	ValidateHooks(hooktype, func); \
-    HookAddMain(module, hooktype, priority, NULL, NULL, func); \
+    HookAddMain(module, hooktype, priority, NULL, NULL, func, NULL); \
+})
+#define HookAddConstString(module, hooktype, priority, func) \
+__extension__ ({ \
+	ValidateHooks(hooktype, func); \
+    HookAddMain(module, hooktype, priority, NULL, NULL, NULL, func); \
 })
 #endif /* GCC_TYPCHECKING */
 
-extern Hook	*HookAddMain(Module *module, int hooktype, int priority, int (*intfunc)(), void (*voidfunc)(), char *(*stringfunc)());
+extern Hook	*HookAddMain(Module *module, int hooktype, int priority, int (*intfunc)(), void (*voidfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)());
 extern Hook	*HookDel(Hook *hook);
 
 extern Hooktype *HooktypeAdd(Module *module, char *string, int *type);
@@ -911,24 +920,22 @@ extern void HooktypeDel(Hooktype *hooktype, Module *module);
 #define RunHook7(hooktype,a,b,c,d,e,f,g) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) (*(hook->func.intfunc))(a,b,c,d,e,f,g); } while(0)
 #define RunHook8(hooktype,a,b,c,d,e,f,g,h) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) (*(hook->func.intfunc))(a,b,c,d,e,f,g,h); } while(0)
 
-#define CallbackAdd(cbtype, func) CallbackAddMain(NULL, cbtype, func, NULL, NULL, NULL)
-#define CallbackAddVoid(cbtype, func) CallbackAddMain(NULL, cbtype, NULL, func, NULL, NULL)
-#define CallbackAddPVoid(cbtype, func) CallbackAddMain(NULL, cbtype, NULL, NULL, func, NULL)
-#define CallbackAddPChar(cbtype, func) CallbackAddMain(NULL, cbtype, NULL, NULL, NULL, func)
-#define CallbackAddEx(module, cbtype, func) CallbackAddMain(module, cbtype, func, NULL, NULL, NULL)
-#define CallbackAddVoidEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, func, NULL, NULL)
-#define CallbackAddPVoidEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, func, NULL)
-#define CallbackAddPCharEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, NULL, func)
+#define CallbackAddEx(module, cbtype, func) CallbackAddMain(module, cbtype, func, NULL, NULL, NULL, NULL)
+#define CallbackAddVoidEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, func, NULL, NULL, NULL)
+#define CallbackAddPVoidEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, func, NULL, NULL)
+#define CallbackAddStringEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, NULL, func, NULL)
+#define CallbackAddConstStringEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, NULL, NULL, func)
 
-extern Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)());
+extern Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)());
 extern Callback	*CallbackDel(Callback *cb);
 
-#define EfunctionAdd(module, cbtype, func) EfunctionAddMain(module, cbtype, func, NULL, NULL, NULL)
-#define EfunctionAddVoid(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, func, NULL, NULL)
-#define EfunctionAddPVoid(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, NULL, func, NULL)
-#define EfunctionAddPChar(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, NULL, NULL, func)
+#define EfunctionAdd(module, cbtype, func) EfunctionAddMain(module, cbtype, func, NULL, NULL, NULL, NULL)
+#define EfunctionAddVoid(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, func, NULL, NULL, NULL)
+#define EfunctionAddPVoid(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, NULL, func, NULL, NULL)
+#define EfunctionAddString(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, NULL, NULL, func, NULL)
+#define EfunctionAddConstString(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, NULL, NULL, NULL, func)
 
-extern Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*intfunc)(), void (*voidfunc)(), void *(*pvoidfunc)(), char *(*stringfunc)());
+extern Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*intfunc)(), void (*voidfunc)(), void *(*pvoidfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)());
 extern Efunction *EfunctionDel(Efunction *cb);
 
 extern Command *CommandAdd(Module *module, char *cmd, CmdFunc func, unsigned char params, int flags);

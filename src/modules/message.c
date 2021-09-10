@@ -46,8 +46,8 @@ ModuleHeader MOD_HEADER
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCOLORS, _StripColors);
-	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCONTROLCODES, _StripControlCodes);
+	EfunctionAddString(modinfo->handle, EFUNC_STRIPCOLORS, _StripColors);
+	EfunctionAddString(modinfo->handle, EFUNC_STRIPCONTROLCODES, _StripControlCodes);
 	EfunctionAdd(modinfo->handle, EFUNC_CAN_SEND_TO_CHANNEL, _can_send_to_channel);
 	return MOD_SUCCESS;
 }
