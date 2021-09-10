@@ -266,6 +266,7 @@ DLL_FILES=\
  src/modules/extbans/textban.dll \
  src/modules/extbans/timedban.dll \
  src/modules/extended-monitor.dll \
+ src/modules/extjwt.dll \
  src/modules/geoip_base.dll \
  src/modules/geoip_csv.dll \
  src/modules/globops.dll \
@@ -851,6 +852,9 @@ src/modules/extended-monitor.dll: src/modules/extended-monitor.c $(INCLUDES)
 
 src/modules/geoip_base.dll: src/modules/geoip_base.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/geoip_base.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/geoip_base.pdb $(MODLFLAGS)
+
+src/modules/extjwt.dll: src/modules/extjwt.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/extjwt.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/extjwt.pdb $(MODLFLAGS)
 
 src/modules/geoip_classic.dll: src/modules/geoip_classic.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/geoip_classic.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/geoip_classic.pdb $(MODLFLAGS)
