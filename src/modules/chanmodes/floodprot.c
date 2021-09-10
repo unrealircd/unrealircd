@@ -128,7 +128,7 @@ static int do_floodprot(Channel *channel, Client *client, int what);
 char *channel_modef_string(ChannelFloodProtection *x, char *str);
 void do_floodprot_action(Channel *channel, int what);
 void floodprottimer_add(Channel *channel, char mflag, time_t when);
-uint64_t gen_floodprot_msghash(char *text);
+uint64_t gen_floodprot_msghash(const char *text);
 int cmodef_is_ok(Client *client, Channel *channel, char mode, char *para, int type, int what);
 void *cmodef_put_param(void *r_in, char *param);
 char *cmodef_get_param(void *r_in);
@@ -139,7 +139,7 @@ int cmodef_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int floodprot_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
 EVENT(modef_event);
 int cmodef_channel_destroy(Channel *channel, int *should_destroy);
-int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
+int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
 int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, SendType sendtype);
 int floodprot_knock(Client *client, Channel *channel, MessageTag *mtags, char *comment);
 int floodprot_nickchange(Client *client, MessageTag *mtags, char *oldnick);
@@ -818,7 +818,7 @@ char *channel_modef_string(ChannelFloodProtection *x, char *retbuf)
 	return retbuf;
 }
 
-int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype)
+int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
 {
 	Membership *mb;
 	ChannelFloodProtection *chp;
@@ -1267,7 +1267,7 @@ void do_floodprot_action(Channel *channel, int what)
 	}
 }
 
-uint64_t gen_floodprot_msghash(char *text)
+uint64_t gen_floodprot_msghash(const char *text)
 {
 	int i;
 	int is_ctcp, is_action;

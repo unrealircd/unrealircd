@@ -2175,8 +2175,8 @@ struct ParseMode {
 	char modechar;
 	char *param;
 	Cmode *extm;
-	char *modebuf; /* curr pos */
-	char *parabuf; /* curr pos */
+	const char *modebuf; /* curr pos */
+	const char *parabuf; /* curr pos */
 	char buf[512]; /* internal parse buffer */
 };
 

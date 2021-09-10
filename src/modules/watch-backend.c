@@ -36,7 +36,7 @@ static char siphashkey_watch[SIPHASH_KEY_LENGTH];
 void dummy_free(ModData *md);
 void watch_free(ModData *md);
 
-int watch_backend_user_quit(Client *client, MessageTag *mtags, char *comment);
+int watch_backend_user_quit(Client *client, MessageTag *mtags, const char *comment);
 int _watch_add(char *nick, Client *client, int flags);
 int _watch_check(Client *client, int event, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event));
 Watch *_watch_get(char *nick);
@@ -130,7 +130,7 @@ void watch_free(ModData *md)
 	}
 }
 
-int watch_backend_user_quit(Client *client, MessageTag *mtags, char *comment)
+int watch_backend_user_quit(Client *client, MessageTag *mtags, const char *comment)
 {
 	/* Clean out list and watch structures -Donwulff */
 	watch_del_list(client, 0);

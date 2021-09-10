@@ -84,7 +84,7 @@ void _tkl_stats(Client *client, int type, char *para, int *cnt);
 void _tkl_sync(Client *client);
 CMD_FUNC(_cmd_tkl);
 int _place_host_ban(Client *client, BanAction action, char *reason, long duration);
-int _match_spamfilter(Client *client, char *str_in, int type, char *cmd, char *target, int flags, TKL **rettk);
+int _match_spamfilter(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, TKL **rettk);
 int _match_spamfilter_mtags(Client *client, MessageTag *mtags, char *cmd);
 int check_mtag_spamfilters_present(void);
 int _join_viruschan(Client *client, TKL *tk, int type);
@@ -4613,7 +4613,7 @@ TKL *choose_winning_spamfilter(TKL *one, TKL *two)
 /** Checks if 'target' is on the spamfilter exception list.
  * RETURNS 1 if found in list, 0 if not.
  */
-static int target_is_spamexcept(char *target)
+static int target_is_spamexcept(const char *target)
 {
 	SpamExcept *e;
 
@@ -4682,11 +4682,11 @@ int _join_viruschan(Client *client, TKL *tkl, int type)
  * 1 if spamfilter matched and it should be blocked (or client exited), 0 if not matched.
  * In case of 1, be sure to check IsDead(client)..
  */
-int _match_spamfilter(Client *client, char *str_in, int target, char *cmd, char *destination, int flags, TKL **rettkl)
+int _match_spamfilter(Client *client, const char *str_in, int target, const char *cmd, const char *destination, int flags, TKL **rettkl)
 {
 	TKL *tkl;
 	TKL *winner_tkl = NULL;
-	char *str;
+	const char *str;
 	int ret = -1;
 	char *reason = NULL;
 #ifdef SPAMFILTER_DETECTSLOW
@@ -4703,7 +4703,7 @@ int _match_spamfilter(Client *client, char *str_in, int target, char *cmd, char 
 	if (target == SPAMF_USER)
 		str = str_in;
 	else
-		str = (char *)StripControlCodes(str_in);
+		str = StripControlCodes(str_in);
 
 	/* (note: using client->user check here instead of IsUser()
 	 * due to SPAMF_USER where user isn't marked as client/person yet.

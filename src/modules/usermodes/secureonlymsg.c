@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 long UMODE_SECUREONLYMSG = 0L;
 
 /* Forward declarations */
-int secureonlymsg_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype);
+int secureonlymsg_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype);
                     
 MOD_INIT()
 {
@@ -58,7 +58,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int secureonlymsg_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype)
+int secureonlymsg_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype)
 {
 	if (IsSecureOnlyMsg(target) && !IsServer(client) && !IsULine(client) && !IsSecureConnect(client))
 	{

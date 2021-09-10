@@ -33,8 +33,8 @@ Cmode_t EXTCMODE_MODERATED;
 
 #define IsModerated(channel)    (channel->mode.mode & EXTCMODE_MODERATED)
 
-int moderated_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
-char *moderated_pre_local_part(Client *client, Channel *channel, char *text);
+int moderated_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
+const char *moderated_pre_local_part(Client *client, Channel *channel, const char *text);
 
 MOD_INIT()
 {
@@ -49,7 +49,7 @@ MOD_INIT()
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_MODERATED);
 
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, moderated_can_send_to_channel);
-	HookAddString(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, moderated_pre_local_part);
+	HookAddConstString(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, moderated_pre_local_part);
 
 	return MOD_SUCCESS;
 }
@@ -64,7 +64,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int moderated_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype)
+int moderated_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
 {
 	if (IsModerated(channel) && (!lp || !(lp->flags & CHFL_OVERLAP)) &&
 	    !op_can_override("channel:override:message:moderated",client,channel,NULL))
@@ -87,7 +87,7 @@ int moderated_can_send_to_channel(Client *client, Channel *channel, Membership *
 }
 
 /** Remove PART reason too if the channel is +m, -t, and user not +vhoaq */
-char *moderated_pre_local_part(Client *client, Channel *channel, char *text)
+const char *moderated_pre_local_part(Client *client, Channel *channel, const char *text)
 {
 	if (IsModerated(channel) && !has_voice(client, channel) && !is_half_op(client, channel))
 		return NULL;

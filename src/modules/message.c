@@ -21,8 +21,8 @@
 #include "unrealircd.h"
 
 /* Forward declarations */
-char *_StripColors(unsigned char *text);
-char *_StripControlCodes(unsigned char *text);
+const char *_StripColors(const char *text);
+const char *_StripControlCodes(const char *text);
 int ban_version(Client *client, char *text);
 CMD_FUNC(cmd_private);
 CMD_FUNC(cmd_notice);
@@ -46,8 +46,8 @@ ModuleHeader MOD_HEADER
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	EfunctionAddString(modinfo->handle, EFUNC_STRIPCOLORS, _StripColors);
-	EfunctionAddString(modinfo->handle, EFUNC_STRIPCONTROLCODES, _StripControlCodes);
+	EfunctionAddConstString(modinfo->handle, EFUNC_STRIPCOLORS, _StripColors);
+	EfunctionAddConstString(modinfo->handle, EFUNC_STRIPCONTROLCODES, _StripControlCodes);
 	EfunctionAdd(modinfo->handle, EFUNC_CAN_SEND_TO_CHANNEL, _can_send_to_channel);
 	return MOD_SUCCESS;
 }
@@ -583,11 +583,12 @@ CMD_FUNC(cmd_tagmsg)
  * RGB color stripping support added -- codemastr
  */
 
-char *_StripColors(unsigned char *text)
+const char *_StripColors(const char *text)
 {
 	int i = 0, len = strlen(text), save_len=0;
-	char nc = 0, col = 0, rgb = 0, *save_text=NULL;
-	static unsigned char new_str[4096];
+	char nc = 0, col = 0, rgb = 0;
+	const char *save_text=NULL;
+	static char new_str[4096];
 
 	while (len > 0) 
 	{
@@ -650,10 +651,11 @@ char *_StripColors(unsigned char *text)
 }
 
 /* strip color, bold, underline, and reverse codes from a string */
-char *_StripControlCodes(unsigned char *text) 
+const char *_StripControlCodes(const char *text) 
 {
 	int i = 0, len = strlen(text), save_len=0;
-	char nc = 0, col = 0, rgb = 0, *save_text=NULL;
+	char nc = 0, col = 0, rgb = 0;
+	const char *save_text=NULL;
 	static unsigned char new_str[4096];
 	while (len > 0) 
 	{

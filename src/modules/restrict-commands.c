@@ -45,14 +45,14 @@ typedef struct {
 } CmdMap;
 
 // Forward declarations
-char *find_cmd_byconftag(char *conftag);
-RestrictedCommand *find_restrictions_bycmd(char *cmd);
-RestrictedCommand *find_restrictions_byconftag(char *conftag);
+const char *find_cmd_byconftag(const char *conftag);
+RestrictedCommand *find_restrictions_bycmd(const char *cmd);
+RestrictedCommand *find_restrictions_byconftag(const char *conftag);
 int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
-int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
-int rcmd_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype);
-int rcmd_block_message(Client *client, char *text, SendType sendtype, char **errmsg, char *display, char *conftag);
+int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
+int rcmd_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype);
+int rcmd_block_message(Client *client, const char *text, SendType sendtype, const char **errmsg, const char *display, const char *conftag);
 CMD_OVERRIDE_FUNC(rcmd_override);
 
 // Globals
@@ -110,7 +110,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *find_cmd_byconftag(char *conftag) {
+const char *find_cmd_byconftag(const char *conftag) {
 	CmdMap *cmap;
 	for (cmap = conf_cmdmaps; cmap->conftag; cmap++)
 	{
@@ -120,7 +120,7 @@ char *find_cmd_byconftag(char *conftag) {
 	return NULL;
 }
 
-RestrictedCommand *find_restrictions_bycmd(char *cmd) {
+RestrictedCommand *find_restrictions_bycmd(const char *cmd) {
 	RestrictedCommand *rcmd;
 	for (rcmd = RestrictedCommandList; rcmd; rcmd = rcmd->next)
 	{
@@ -130,7 +130,7 @@ RestrictedCommand *find_restrictions_bycmd(char *cmd) {
 	return NULL;
 }
 
-RestrictedCommand *find_restrictions_byconftag(char *conftag) {
+RestrictedCommand *find_restrictions_byconftag(const char *conftag) {
 	RestrictedCommand *rcmd;
 	for (rcmd = RestrictedCommandList; rcmd; rcmd = rcmd->next)
 	{
@@ -220,7 +220,7 @@ int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep, *cep2;
-	char *cmd, *conftag;
+	const char *cmd, *conftag;
 	RestrictedCommand *rcmd;
 
 	// We are only interested in set::restrict-commands
@@ -318,7 +318,7 @@ int rcmd_canbypass(Client *client, RestrictedCommand *rcmd)
 	return 0;
 }
 
-int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype)
+int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
 {
 	if (rcmd_block_message(client, *msg, sendtype, errmsg, "channel", (sendtype == SEND_TYPE_NOTICE ? "channel-notice" : "channel-message")))
 		return HOOK_DENY;
@@ -326,7 +326,7 @@ int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, c
 	return HOOK_CONTINUE;
 }
 
-int rcmd_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype)
+int rcmd_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype)
 {
 	// Need a few extra exceptions for user messages only =]
 	if ((client == target) || IsULine(target))
@@ -338,7 +338,7 @@ int rcmd_can_send_to_user(Client *client, Client *target, char **text, char **er
 	return HOOK_CONTINUE;
 }
 
-int rcmd_block_message(Client *client, char *text, SendType sendtype, char **errmsg, char *display, char *conftag)
+int rcmd_block_message(Client *client, const char *text, SendType sendtype, const char **errmsg, const char *display, const char *conftag)
 {
 	RestrictedCommand *rcmd;
 	static char errbuf[256];

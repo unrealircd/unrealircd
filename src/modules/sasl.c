@@ -309,7 +309,7 @@ int sasl_connect(Client *client)
 	return abort_sasl(client);
 }
 
-int sasl_quit(Client *client, MessageTag *mtags, char *comment)
+int sasl_quit(Client *client, MessageTag *mtags, const char *comment)
 {
 	return abort_sasl(client);
 }

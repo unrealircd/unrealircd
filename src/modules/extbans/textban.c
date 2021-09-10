@@ -72,8 +72,8 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 char *extban_modeT_conv_param(BanContext *b, Extban *extban);
-int textban_check_ban(Client *client, Channel *channel, char *ban, char **msg, char **errmsg);
-int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
+int textban_check_ban(Client *client, Channel *channel, const char *ban, const char **msg, const char **errmsg);
+int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
 int extban_modeT_is_ok(BanContext *b);
 void parse_word(const char *s, char **word, int *type);
 
@@ -378,7 +378,7 @@ char *extban_modeT_conv_param(BanContext *b, Extban *extban)
 }
 
 /** Check for text bans (censor and block) */
-int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype)
+int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
 {
 	Ban *ban;
 
@@ -415,13 +415,13 @@ int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp
 }
 
 
-int textban_check_ban(Client *client, Channel *channel, char *ban, char **msg, char **errmsg)
+int textban_check_ban(Client *client, Channel *channel, const char *ban, const char **msg, const char **errmsg)
 {
 	static char retbuf[512];
 	char filtered[512]; /* temp input buffer */
 	long fl;
 	int cleaned=0;
-	char *p;
+	const char *p;
 #ifdef UHOSTFEATURE
 	char buf[512], uhost[USERLEN + HOSTLEN + 16];
 #endif

@@ -38,10 +38,10 @@ long UMODE_SERVICEBOT = 0L;
 
 /* Forward declarations */
 int servicebot_can_kick(Client *client, Client *target, Channel *channel,
-                    char *comment, long client_flags, long target_flags, char **reject_reason);
+                    const char *comment, long client_flags, long target_flags, const char **reject_reason);
 int servicebot_mode_deop(Client *client, Client *target, Channel *channel,
-                    u_int what, int modechar, long my_access, char **reject_reason);
-int servicebot_pre_kill(Client *client, Client *target, char *reason);
+                    u_int what, int modechar, long my_access, const char **reject_reason);
+int servicebot_pre_kill(Client *client, Client *target, const char *reason);
 int servicebot_whois(Client *requester, Client *acptr);
 int servicebot_see_channel_in_whois(Client *client, Client *target, Channel *channel);
                     
@@ -74,8 +74,8 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int servicebot_can_kick(Client *client, Client *target, Channel *channel, char *comment,
-                    long client_flags, long target_flags, char **reject_reason)
+int servicebot_can_kick(Client *client, Client *target, Channel *channel, const char *comment,
+                    long client_flags, long target_flags, const char **reject_reason)
 {
 	static char errmsg[NICKLEN+256];
 
@@ -96,7 +96,7 @@ int servicebot_can_kick(Client *client, Client *target, Channel *channel, char *
 }
 
 int servicebot_mode_deop(Client *client, Client *target, Channel *channel,
-                    u_int what, int modechar, long my_access, char **reject_reason)
+                    u_int what, int modechar, long my_access, const char **reject_reason)
 {
 	static char errmsg[NICKLEN+256];
 	
@@ -113,7 +113,7 @@ int servicebot_mode_deop(Client *client, Client *target, Channel *channel,
 	return EX_ALLOW;
 }
 
-int servicebot_pre_kill(Client *client, Client *target, char *reason)
+int servicebot_pre_kill(Client *client, Client *target, const char *reason)
 {
 	if (IsServiceBot(target) && !(ValidatePermissionsForPath("services:servicebot:kill",client,target,NULL,NULL) || IsULine(client)))
 	{

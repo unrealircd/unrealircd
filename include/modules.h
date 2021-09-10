@@ -942,9 +942,9 @@ extern Command *CommandAdd(Module *module, char *cmd, CmdFunc func, unsigned cha
 extern Command *AliasAdd(Module *module, char *cmd, AliasCmdFunc aliasfunc, unsigned char params, int flags);
 extern void CommandDel(Command *command);
 extern void CommandDelX(Command *command, RealCommand *cmd);
-extern int CommandExists(char *name);
-extern CommandOverride *CommandOverrideAdd(Module *module, char *cmd, OverrideCmdFunc func);
-extern CommandOverride *CommandOverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc func);
+extern int CommandExists(const char *name);
+extern CommandOverride *CommandOverrideAdd(Module *module, const char *cmd, OverrideCmdFunc func);
+extern CommandOverride *CommandOverrideAddEx(Module *module, const char *name, int priority, OverrideCmdFunc func);
 extern void CommandOverrideDel(CommandOverride *ovr);
 extern void CallCommandOverride(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, char *parv[]);
 
@@ -1230,7 +1230,7 @@ int hooktype_remote_connect(Client *client);
  * @param client		The quit/disconnect reason
  * @return The quit reason (you may also return 'comment' if it should be unchanged) or NULL for an empty reason.
  */
-char *hooktype_pre_local_quit(Client *client, char *comment);
+const char *hooktype_pre_local_quit(Client *client, const char *comment);
 
 /** Called when a local user quits or otherwise disconnects (function prototype for HOOKTYPE_PRE_LOCAL_QUIT).
  * @param client		The client
@@ -1238,7 +1238,7 @@ char *hooktype_pre_local_quit(Client *client, char *comment);
  * @param comment       	The quit/exit reason
  * @return The return value is ignored (use return 0)
  */
-int hooktype_local_quit(Client *client, MessageTag *mtags, char *comment);
+int hooktype_local_quit(Client *client, MessageTag *mtags, const char *comment);
 
 /** Called when a remote user qutis or otherwise disconnects (function prototype for HOOKTYPE_REMOTE_QUIT).
  * @param client		The client
@@ -1246,7 +1246,7 @@ int hooktype_local_quit(Client *client, MessageTag *mtags, char *comment);
  * @param comment       	The quit/exit reason
  * @return The return value is ignored (use return 0)
  */
-int hooktype_remote_quit(Client *client, MessageTag *mtags, char *comment);
+int hooktype_remote_quit(Client *client, MessageTag *mtags, const char *comment);
 
 /** Called when an unregistered user disconnects, so before the user was fully online (function prototype for HOOKTYPE_UNKUSER_QUIT).
  * @param client		The client
@@ -1353,7 +1353,7 @@ int hooktype_remote_join(Client *client, Channel *channel, MessageTag *mtags, ch
  * @param comment		The PART reason, this may be NULL.
  * @return The part reason (you may also return 'comment' if it should be unchanged) or NULL for an empty reason.
  */
-char *hooktype_pre_local_part(Client *client, Channel *channel, char *comment);
+const char *hooktype_pre_local_part(Client *client, Channel *channel, const char *comment);
 
 /** Called when a local user parts a channel (function prototype for HOOKTYPE_LOCAL_PART).
  * @param client		The client
@@ -1362,7 +1362,7 @@ char *hooktype_pre_local_part(Client *client, Channel *channel, char *comment);
  * @param comment		The PART reason, this may be NULL.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_local_part(Client *client, Channel *channel, MessageTag *mtags, char *comment);
+int hooktype_local_part(Client *client, Channel *channel, MessageTag *mtags, const char *comment);
 
 /** Called when a remote user parts a channel (function prototype for HOOKTYPE_REMOTE_PART).
  * @param client		The client
@@ -1371,11 +1371,11 @@ int hooktype_local_part(Client *client, Channel *channel, MessageTag *mtags, cha
  * @param comment		The PART reason, this may be NULL.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_remote_part(Client *client, Channel *channel, MessageTag *mtags, char *comment);
+int hooktype_remote_part(Client *client, Channel *channel, MessageTag *mtags, const char *comment);
 
 /** Do not use this function, use hooktype_can_kick() instead!
  */
-char *hooktype_pre_local_kick(Client *client, Client *victim, Channel *channel, char *comment);
+const char *hooktype_pre_local_kick(Client *client, Client *victim, Channel *channel, const char *comment);
 
 /** Called when a local user wants to kick another user from a channel (function prototype for HOOKTYPE_CAN_KICK).
  * @param client		The client issuing the command
@@ -1389,7 +1389,7 @@ char *hooktype_pre_local_kick(Client *client, Client *victim, Channel *channel, 
  * @retval EX_ALWAYS_DENY	Deny the KICK always (even if IRCOp).
  * @retval EX_ALLOW		Allow the kick, unless another module blocks it.
  */
-int hooktype_can_kick(Client *client, Client *victim, Channel *channel, char *comment, long client_flags, long victim_flags, char **error);
+int hooktype_can_kick(Client *client, Client *victim, Channel *channel, const char *comment, long client_flags, long victim_flags, const char **error);
 
 /** Called when a local user is kicked (function prototype for HOOKTYPE_LOCAL_KICK).
  * @param client		The client issuing the command
@@ -1399,7 +1399,7 @@ int hooktype_can_kick(Client *client, Client *victim, Channel *channel, char *co
  * @param comment		The KICK reason, this may be NULL.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_local_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, char *comment);
+int hooktype_local_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, const char *comment);
 
 /** Called when a remote user is kicked (function prototype for HOOKTYPE_REMOTE_KICK).
  * @param client		The client issuing the command
@@ -1409,7 +1409,7 @@ int hooktype_local_kick(Client *client, Client *victim, Channel *channel, Messag
  * @param comment		The KICK reason, this may be NULL.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_remote_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, char *comment);
+int hooktype_remote_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, const char *comment);
 
 /** Called right before a message is sent to the channel (function prototype for HOOKTYPE_PRE_CHANMSG).
  * This function is only used by delayjoin. It cannot block a message. See hooktype_can_send_to_user() instead!
@@ -1419,7 +1419,7 @@ int hooktype_remote_kick(Client *client, Client *victim, Channel *channel, Messa
  * @param text			The text that will be sent
  * @return The return value is ignored (use return 0)
  */
-int hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, SendType sendtype);
+int hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, const char *text, SendType sendtype);
 
 /** Called when a user wants to send a message to another user (function prototype for HOOKTYPE_CAN_SEND_TO_USER).
  * @param client		The sender
@@ -1430,7 +1430,7 @@ int hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, ch
  * @retval HOOK_DENY		Deny the message. The 'errmsg' will be sent to the user.
  * @retval HOOK_CONTINUE	Allow the message, unless other modules block it.
  */
-int hooktype_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype);
+int hooktype_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype);
 
 /** Called when a user wants to send a message to a channel (function prototype for HOOKTYPE_CAN_SEND_TO_CHANNEL).
  * @param client		The sender
@@ -1442,7 +1442,7 @@ int hooktype_can_send_to_user(Client *client, Client *target, char **text, char 
  * @retval HOOK_DENY		Deny the message. The 'errmsg' will be sent to the user.
  * @retval HOOK_CONTINUE	Allow the message, unless other modules block it.
  */
-int hooktype_can_send_to_channel(Client *client, Channel *channel, Membership *member, char **text, char **errmsg, SendType sendtype);
+int hooktype_can_send_to_channel(Client *client, Channel *channel, Membership *member, const char **text, const char **errmsg, SendType sendtype);
 
 /** Called when a message is sent from one user to another user (function prototype for HOOKTYPE_USERMSG).
  * @param client		The sender
@@ -1473,7 +1473,7 @@ int hooktype_chanmsg(Client *client, Channel *channel, int sendflags, int prefix
  * @param topic			The new requested topic
  * @return The new topic (you may also return 'topic'), or NULL if the topic change request should be rejected.
  */
-char *hooktype_pre_local_topic(Client *client, Channel *channel, char *topic);
+const char *hooktype_pre_local_topic(Client *client, Channel *channel, const char *topic);
 
 /** Called when the channel topic is changed (function prototype for HOOKTYPE_TOPIC).
  * @param client		The client
@@ -1496,7 +1496,7 @@ int hooktype_topic(Client *client, Channel *channel, MessageTag *mtags, char *to
  * @param samode		Is this an SAMODE?
  * @return The return value is ignored (use return 0)
  */
-int hooktype_pre_local_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_pre_local_chanmode(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode);
 
 /** Called when a remote user changes channel modes, called early (function prototype for HOOKTYPE_PRE_REMOTE_CHANMODE).
  * WARNING: This does not allow you to stop or reject the channel modes. It only allows you to do stuff -before- the
@@ -1510,7 +1510,7 @@ int hooktype_pre_local_chanmode(Client *client, Channel *channel, MessageTag *mt
  * @param samode		Is this an SAMODE?
  * @return The return value is ignored (use return 0)
  */
-int hooktype_pre_remote_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_pre_remote_chanmode(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode);
 
 /** Called when a local user changes channel modes (function prototype for HOOKTYPE_LOCAL_CHANMODE).
  * @param client		The client
@@ -1628,7 +1628,7 @@ int hooktype_who_status(Client *client, Client *target, Channel *channel, Member
  * @retval EX_ALWAYS_DENY	Deny the KICK always (even if IRCOp).
  * @retval EX_ALLOW		Allow the kick, unless another module blocks it.
  */
-int hooktype_pre_kill(Client *client, Client *victim, char *reason);
+int hooktype_pre_kill(Client *client, Client *victim, const char *reason);
 
 /** Called when a local user kills another user (function prototype for HOOKTYPE_LOCAL_KILL).
  * Note that kills from remote IRCOps will show up as regular quits, so use hooktype_remote_quit() and hooktype_local_quit().
@@ -1637,7 +1637,7 @@ int hooktype_pre_kill(Client *client, Client *victim, char *reason);
  * @param comment		The kill reason
  * @return The return value is ignored (use return 0)
  */
-int hooktype_local_kill(Client *client, Client *victim, char *comment);
+int hooktype_local_kill(Client *client, Client *victim, const char *comment);
 
 /** Called when an IRCOp /REHASH'es, and passes the parameters (function prototype for HOOKTYPE_REHASHFLAG).
  * FIXME: shouldn't this be merged with hooktype_rehash() ?
@@ -1949,12 +1949,12 @@ int hooktype_can_sajoin(Client *target, Channel *channel, Client *client);
  * @param what			Always MODE_DEL at the moment
  * @param modechar		The mode character: q/a/o/h/v
  * @param my_access		Cached result of get_access(), so one of CHFL_*, for example CHFL_CHANOP.
- * @param badmode		The error string that should be sent to the client
+ * @param reject_reason		The error string that should be sent to the client
  * @retval HOOK_CONTINUE	Proceed normally (allow it)
  * @retval HOOK_DENY		Reject the mode change
  * @retval HOOK_ALWAYS_DENY	Reject the mode change, even if IRCOp/Services/..
  */
-int hooktype_mode_deop(Client *client, Client *victim, Channel *channel, u_int what, int modechar, long my_access, char **badmode);
+int hooktype_mode_deop(Client *client, Client *victim, Channel *channel, u_int what, int modechar, long my_access, const char **reject_reason);
 
 /** Called when a DCC request was denied by the IRCd (function prototype for HOOKTYPE_DCC_DENIED).
  * @param client		The client who tried to send a file
@@ -2094,7 +2094,7 @@ int hooktype_is_handshake_finished(Client *client);
  * @param comment		The quit message
  * @return The original quit message (comment), the new quit message (pointing to your own static buffer), or NULL (no quit message)
  */
-char *hooktype_pre_local_quit_chan(Client *client, Channel *channel, char *comment);
+const char *hooktype_pre_local_quit_chan(Client *client, Channel *channel, const char *comment);
 
 /** Called when an ident lookup should be made (function prototype for HOOKTYPE_IDENT_LOOKUP).
  * This is used by the ident_lookup module.

@@ -534,7 +534,7 @@ static void exit_one_client(Client *client, MessageTag *mtags_i, const char *com
  * @param recv_mtags  Message tags to use as a base (if any).
  * @param comment     The (s)quit message
  */
-void exit_client(Client *client, MessageTag *recv_mtags, char *comment)
+void exit_client(Client *client, MessageTag *recv_mtags, const char *comment)
 {
 	exit_client_ex(client, client->direction, recv_mtags, comment);
 }
@@ -561,7 +561,7 @@ void exit_client_fmt(Client *client, MessageTag *recv_mtags, FORMAT_STRING(const
  * @param recv_mtags  Message tags to use as a base (if any).
  * @param comment     The (s)quit message
  */
-void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char *comment)
+void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, const char *comment)
 {
 	long long on_for;
 	ConfigItem_listen *listen_conf;

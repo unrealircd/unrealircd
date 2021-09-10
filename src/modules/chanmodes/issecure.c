@@ -44,9 +44,9 @@ Cmode_t EXTCMODE_ISSECURE;
 int IsSecureJoin(Channel *channel);
 int modeZ_is_ok(Client *client, Channel *channel, char mode, char *para, int checkt, int what);
 int issecure_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
-int issecure_part(Client *client, Channel *channel, MessageTag *mtags, char *comment);
-int issecure_quit(Client *client, MessageTag *mtags, char *comment);
-int issecure_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, char *comment);
+int issecure_part(Client *client, Channel *channel, MessageTag *mtags, const char *comment);
+int issecure_quit(Client *client, MessageTag *mtags, const char *comment);
+int issecure_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, const char *comment);
 int issecure_chanmode(Client *client, Channel *channel, MessageTag *mtags,
                              char *modebuf, char *parabuf, time_t sendts, int samode);
                              
@@ -213,7 +213,7 @@ int issecure_join(Client *client, Channel *channel, MessageTag *mtags, char *par
 	return 0;
 }
 
-int issecure_part(Client *client, Channel *channel, MessageTag *mtags, char *comment)
+int issecure_part(Client *client, Channel *channel, MessageTag *mtags, const char *comment)
 {
 	/* Only care if chan is +z-Z and the user leaving is insecure, then count */
 	if (IsSecureJoin(channel) && !IsSecureChanIndicated(channel) && !IsSecureConnect(client) &&
@@ -222,7 +222,7 @@ int issecure_part(Client *client, Channel *channel, MessageTag *mtags, char *com
 	return 0;
 }
 
-int issecure_quit(Client *client, MessageTag *mtags, char *comment)
+int issecure_quit(Client *client, MessageTag *mtags, const char *comment)
 {
 Membership *membership;
 Channel *channel;
@@ -238,7 +238,7 @@ Channel *channel;
 	return 0;
 }
 
-int issecure_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, char *comment)
+int issecure_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, const char *comment)
 {
 	/* Identical to part&quit, except we care about 'victim' and not 'client' */
 	if (IsSecureJoin(channel) && !IsSecureChanIndicated(channel) &&

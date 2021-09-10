@@ -1082,7 +1082,7 @@ void set_channel_mlock(Client *client, Channel *channel, const char *newmlock, i
  * }
  * @endcode
  */
-int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
+int parse_chanmode(ParseMode *pm, const char *modebuf_in, const char *parabuf_in)
 {
 	if (modebuf_in)
 	{
@@ -1167,7 +1167,7 @@ int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
 				/* Hungry.. */
 				if (pm->parabuf && *pm->parabuf)
 				{
-					char *start, *end;
+					const char *start, *end;
 					for (; *pm->parabuf == ' '; pm->parabuf++); /* skip whitespace */
 					start = pm->parabuf;
 					if (*pm->parabuf == '\0')

@@ -32,7 +32,7 @@ static RealCommand *add_Command_backend(char *cmd);
 
 /** Returns 1 if the specified command exists
  */
-int CommandExists(char *name)
+int CommandExists(const char *name)
 {
 	RealCommand *p;
 	
@@ -250,7 +250,7 @@ static RealCommand *add_Command_backend(char *cmd)
  */
 
 /** Find a command by name and flags */
-RealCommand *find_command(char *cmd, int flags)
+RealCommand *find_command(const char *cmd, int flags)
 {
 	RealCommand *p;
 	for (p = CommandHash[toupper(*cmd)]; p; p = p->next) {
@@ -269,7 +269,7 @@ RealCommand *find_command(char *cmd, int flags)
 }
 
 /** Find a command by name (no access rights check) */
-RealCommand *find_command_simple(char *cmd)
+RealCommand *find_command_simple(const char *cmd)
 {
 	RealCommand *c;
 

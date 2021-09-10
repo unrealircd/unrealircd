@@ -35,8 +35,8 @@ struct TargetFloodConfig {
 int targetfloodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int targetfloodprot_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 void targetfloodprot_mdata_free(ModData *m);
-int targetfloodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
-int targetfloodprot_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype);
+int targetfloodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
+int targetfloodprot_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype);
 
 /* Global variables */
 ModDataInfo *targetfloodprot_client_md = NULL;
@@ -224,7 +224,7 @@ int sendtypetowhat(SendType sendtype)
 	return 0; /* otherwise, default to privmsg i guess */
 }
 
-int targetfloodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype)
+int targetfloodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
 {
 	TargetFlood *flood;
 	static char errbuf[256];
@@ -269,7 +269,7 @@ int targetfloodprot_can_send_to_channel(Client *client, Channel *channel, Member
 	return HOOK_CONTINUE;
 }
 
-int targetfloodprot_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype)
+int targetfloodprot_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype)
 {
 	TargetFlood *flood;
 	static char errbuf[256];

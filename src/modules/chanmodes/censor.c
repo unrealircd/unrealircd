@@ -20,9 +20,9 @@ Cmode_t EXTMODE_CENSOR = 0L;
 
 #define IsCensored(x) ((x)->mode.mode & EXTMODE_CENSOR)
 
-int censor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
-char *censor_pre_local_part(Client *client, Channel *channel, char *text);
-char *censor_pre_local_quit(Client *client, char *text);
+int censor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
+const char *censor_pre_local_part(Client *client, Channel *channel, const char *text);
+const char *censor_pre_local_quit(Client *client, const char *text);
 int censor_stats_badwords_channel(Client *client, char *para);
 int censor_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int censor_config_run(ConfigFile *, ConfigEntry *, int);
@@ -53,8 +53,8 @@ MOD_INIT()
 	CmodeAdd(modinfo->handle, req, &EXTMODE_CENSOR);
 
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, censor_can_send_to_channel);
-	HookAddString(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, censor_pre_local_part);
-	HookAddString(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, 0, censor_pre_local_quit);
+	HookAddConstString(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, censor_pre_local_part);
+	HookAddConstString(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, 0, censor_pre_local_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, censor_stats_badwords_channel);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, censor_config_run);
 	return MOD_SUCCESS;
@@ -248,12 +248,12 @@ int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 1;
 }
 
-char *stripbadwords_channel(char *str, int *blocked)
+const char *stripbadwords_channel(const char *str, int *blocked)
 {
 	return stripbadwords(str, conf_badword_channel, blocked);
 }
 
-int censor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype)
+int censor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
 {
 	int blocked;
 	Hook *h;
@@ -281,7 +281,7 @@ int censor_can_send_to_channel(Client *client, Channel *channel, Membership *lp,
 	return HOOK_CONTINUE;
 }
 
-char *censor_pre_local_part(Client *client, Channel *channel, char *text)
+const char *censor_pre_local_part(Client *client, Channel *channel, const char *text)
 {
 	int blocked;
 
@@ -306,7 +306,7 @@ static int IsAnyChannelCensored(Client *client)
 	return 0;
 }
 
-char *censor_pre_local_quit(Client *client, char *text)
+const char *censor_pre_local_quit(Client *client, const char *text)
 {
 	int blocked = 0;
 

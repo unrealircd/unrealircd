@@ -99,7 +99,7 @@ void blacklist_free_conf(void);
 void delete_blacklist_block(Blacklist *e);
 void blacklist_md_free(ModData *md);
 int blacklist_handshake(Client *client);
-int blacklist_quit(Client *client, MessageTag *mtags, char *comment);
+int blacklist_quit(Client *client, MessageTag *mtags, const char *comment);
 int blacklist_preconnect(Client *client);
 void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hostent *he);
 int blacklist_start_check(Client *client);
@@ -647,7 +647,7 @@ void blacklist_cancel(BLUser *bl)
 	bl->client = NULL;
 }
 
-int blacklist_quit(Client *client, MessageTag *mtags, char *comment)
+int blacklist_quit(Client *client, MessageTag *mtags, const char *comment)
 {
 	if (BLUSER(client))
 		blacklist_cancel(BLUSER(client));

@@ -25,7 +25,7 @@
 #define MSG_WATCH 	"WATCH"
 
 CMD_FUNC(cmd_watch);
-int watch_user_quit(Client *client, MessageTag *mtags, char *comment);
+int watch_user_quit(Client *client, MessageTag *mtags, const char *comment);
 int watch_away(Client *client, MessageTag *mtags, char *reason, int already_as_away);
 int watch_nickchange(Client *client, MessageTag *mtags, char *newnick);
 int watch_post_nickchange(Client *client, MessageTag *mtags);
@@ -307,7 +307,7 @@ CMD_FUNC(cmd_watch)
 	}
 }
 
-int watch_user_quit(Client *client, MessageTag *mtags, char *comment)
+int watch_user_quit(Client *client, MessageTag *mtags, const char *comment)
 {
 	if (IsUser(client))
 		watch_check(client, WATCH_EVENT_OFFLINE, watch_notification);

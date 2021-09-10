@@ -33,7 +33,7 @@ Cmode_t EXTCMODE_NOKICK;
 
 #define IsNoKick(channel)    (channel->mode.mode & EXTCMODE_NOKICK)
 
-int nokick_check (Client *client, Client *who, Channel *channel, char *comment, long client_flags, long who_flags, char **reject_reason);
+int nokick_check (Client *client, Client *who, Channel *channel, const char *comment, long client_flags, long who_flags, const char **reject_reason);
 
 MOD_TEST()
 {
@@ -67,7 +67,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int nokick_check (Client *client, Client *who, Channel *channel, char *comment, long client_flags, long who_flags, char **reject_reason)
+int nokick_check (Client *client, Client *who, Channel *channel, const char *comment, long client_flags, long who_flags, const char **reject_reason)
 {
 	static char errmsg[256];
 

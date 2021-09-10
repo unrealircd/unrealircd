@@ -438,7 +438,7 @@ Match *unreal_create_match(MatchType type, char *str, char **error)
  * @returns 1 if matched, 0 if not.
  * @note These (more logical) return values are opposite to the match_simple() function.
  */
-int unreal_match(Match *m, char *str)
+int unreal_match(Match *m, const char *str)
 {
 	if (m->type == MATCH_SIMPLE)
 	{
@@ -615,7 +615,7 @@ int fast_badword_replace(ConfigItem_badword *badword, char *line, char *buf, int
  * the loadbadwords() function.  It's primary use is to filter swearing
  * in both private and public messages
  */
-char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
+const char *stripbadwords(const char *str, ConfigItem_badword *start_bw, int *blocked)
 {
 	static char cleanstr[4096];
 	char buf[4096];
