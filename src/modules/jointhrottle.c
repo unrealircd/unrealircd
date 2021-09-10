@@ -47,7 +47,7 @@ struct JoinFlood {
 
 /* Forward declarations */
 void jointhrottle_md_free(ModData *m);
-int jointhrottle_can_join(Client *client, Channel *channel, const char *key, char *parv[]);
+int jointhrottle_can_join(Client *client, Channel *channel, const char *key);
 int jointhrottle_local_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
 static int isjthrottled(Client *client, Channel *channel);
 static void jointhrottle_increase_usercounter(Client *client, Channel *channel);
@@ -149,7 +149,7 @@ static void jointhrottle_increase_usercounter(Client *client, Channel *channel)
 	}
 }
 
-int jointhrottle_can_join(Client *client, Channel *channel, const char *key, char *parv[])
+int jointhrottle_can_join(Client *client, Channel *channel, const char *key)
 {
 	if (!ValidatePermissionsForPath("immune:join-flood",client,NULL,channel,NULL) && isjthrottled(client, channel))
 		return ERR_TOOMANYJOINS;

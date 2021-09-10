@@ -433,7 +433,7 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[])
 		return HOOK_CONTINUE;
 
 	// can_join() actually returns 0 if we *can* join a channel, so we don't need to bother checking any further conditions
-	if (!(canjoin = can_join(client, channel, parv[2], parv)))
+	if (!(canjoin = can_join(client, channel, parv[2])))
 		return HOOK_CONTINUE;
 
 	// Oper only channel

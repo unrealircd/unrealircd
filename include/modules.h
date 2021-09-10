@@ -1312,10 +1312,9 @@ int hooktype_remote_nickchange(Client *client, MessageTag *mtags, char *newnick)
  * @param client		The client
  * @param channel		The channel the user wants to join
  * @param key			The key supplied by the client
- * @param parv			The parameters from the JOIN. Normally you should not use this.
  * @return Return 0 to allow the user, any other value should be an IRC numeric (eg: ERR_BANNEDFROMCHAN).
  */
-int hooktype_can_join(Client *client, Channel *channel, const char *key, char *parv[]);
+int hooktype_can_join(Client *client, Channel *channel, const char *key);
 
 /** Called when a user wants to join a channel, may the user join? (function prototype for HOOKTYPE_PRE_LOCAL_JOIN).
  * FIXME: It's not entirely clear why we have both hooktype_can_join() and hooktype_pre_local_join().
@@ -1848,11 +1847,10 @@ int hooktype_free_user(Client *client);
  * @param client		The client
  * @param channel		The channel
  * @param key			The channel key
- * @param parv			The join parameters
  * @note I don't think this works?
  * @return Unclear..
  */
-int hooktype_can_join_limitexceeded(Client *client, Channel *channel, const char *key, char *parv[]);
+int hooktype_can_join_limitexceeded(Client *client, Channel *channel, const char *key);
 
 /** Called to check if the user is visible in the channel (function prototype for HOOKTYPE_VISIBLE_IN_CHANNEL).
  * For example, the delayjoin module (+d/+D) will 'return 0' here if the user is hidden due to delayed join.

@@ -26,7 +26,7 @@
 CMD_FUNC(cmd_join);
 void _join_channel(Channel *channel, Client *client, MessageTag *mtags, int flags);
 void _do_join(Client *client, int parc, char *parv[]);
-int _can_join(Client *client, Channel *channel, const char *key, char *parv[]);
+int _can_join(Client *client, Channel *channel, const char *key);
 void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mtags);
 char *_get_chmodes_for_user(Client *client, int flags);
 
@@ -91,7 +91,7 @@ MOD_UNLOAD()
  * (eg: bans at the end), so don't change it unless you have a good reason
  * to do so -- Syzop.
  */
-int _can_join(Client *client, Channel *channel, const char *key, char *parv[])
+int _can_join(Client *client, Channel *channel, const char *key)
 {
 	Link *lp;
 	Ban *banned;
@@ -100,7 +100,7 @@ int _can_join(Client *client, Channel *channel, const char *key, char *parv[])
 
 	for (h = Hooks[HOOKTYPE_CAN_JOIN]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(client,channel,key,parv);
+		i = (*(h->func.intfunc))(client,channel,key);
 		if (i != 0)
 			return i;
 	}
@@ -536,7 +536,7 @@ void _do_join(Client *client, int parc, char *parv[])
 			}
 			/* If they are allowed, don't check can_join */
 			if (i != HOOK_ALLOW && 
-			   (i = can_join(client, channel, key, parv)))
+			   (i = can_join(client, channel, key)))
 			{
 				if (i != -1)
 				{

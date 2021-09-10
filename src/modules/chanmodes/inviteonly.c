@@ -33,7 +33,7 @@ Cmode_t EXTCMODE_INVITE_ONLY;
 
 #define IsInviteOnly(channel)    (channel->mode.mode & EXTCMODE_INVITE_ONLY)
 
-int inviteonly_can_join(Client *client, Channel *channel, const char *key, char *parv[]);
+int inviteonly_can_join(Client *client, Channel *channel, const char *key);
 
 MOD_INIT()
 {
@@ -62,7 +62,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int inviteonly_can_join (Client *client, Channel *channel, const char *key, char *parv[])
+int inviteonly_can_join (Client *client, Channel *channel, const char *key)
 {
 	if (IsInviteOnly(channel))
 	{

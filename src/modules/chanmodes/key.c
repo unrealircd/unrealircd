@@ -40,7 +40,7 @@ Cmode_t EXTMODE_KEY = 0L;
 #define IsKey(x)	((x)->mode.mode & EXTMODE_KEY)
 
 /* Forward declarations */
-int key_can_join(Client *client, Channel *channel, const char *key, char *parv[]);
+int key_can_join(Client *client, Channel *channel, const char *key);
 int cmode_key_is_ok(Client *client, Channel *channel, char mode, const char *para, int type, int what);
 void *cmode_key_put_param(void *r_in, const char *param);
 const char *cmode_key_get_param(void *r_in);
@@ -86,7 +86,7 @@ MOD_UNLOAD()
 }
 
 /** Can the user join the channel? */
-int key_can_join(Client *client, Channel *channel, const char *key, char *parv[])
+int key_can_join(Client *client, Channel *channel, const char *key)
 {
 	ChannelKey *r = (ChannelKey *)GETPARASTRUCT(channel, 'k');
 

@@ -33,7 +33,7 @@ ModuleHeader MOD_HEADER
 Cmode_t EXTCMODE_OPERONLY;
 
 int operonly_require_oper(Client *client, Channel *channel, char mode, const char *para, int checkt, int what);
-int operonly_check (Client *client, Channel *channel, const char *key, char *parv[]);
+int operonly_check (Client *client, Channel *channel, const char *key);
 int operonly_topic_allow (Client *client, Channel *channel);
 int operonly_check_ban(Client *client, Channel *channel);
 
@@ -71,7 +71,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int operonly_check (Client *client, Channel *channel, const char *key, char *parv[])
+int operonly_check (Client *client, Channel *channel, const char *key)
 {
 	if ((channel->mode.mode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:join",client,NULL,channel,NULL))
 		return ERR_OPERONLY;
