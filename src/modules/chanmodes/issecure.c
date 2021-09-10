@@ -43,7 +43,7 @@ Cmode_t EXTCMODE_ISSECURE;
 
 int IsSecureJoin(Channel *channel);
 int modeZ_is_ok(Client *client, Channel *channel, char mode, const char *para, int checkt, int what);
-int issecure_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
+int issecure_join(Client *client, Channel *channel, MessageTag *mtags);
 int issecure_part(Client *client, Channel *channel, MessageTag *mtags, const char *comment);
 int issecure_quit(Client *client, MessageTag *mtags, const char *comment);
 int issecure_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, const char *comment);
@@ -200,7 +200,7 @@ void issecure_set(Channel *channel, Client *client, MessageTag *recv_mtags, int 
  *       so while they can be written shorter, they would only take longer to execute!
  */
 
-int issecure_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[])
+int issecure_join(Client *client, Channel *channel, MessageTag *mtags)
 {
 	/* Check only if chan already +zZ and the user joining is insecure (no need to count) */
 	if (IsSecureJoin(channel) && IsSecureChanIndicated(channel) && !IsSecureConnect(client) && !IsULine(client))

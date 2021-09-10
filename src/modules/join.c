@@ -208,7 +208,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 {
 	MessageTag *mtags = NULL; /** Message tags to send to local users (sender is :user) */
 	MessageTag *mtags_sjoin = NULL; /* Message tags to send to remote servers for SJOIN (sender is :me.id) */
-	char *parv[] = { 0, 0 };
+	char *parv[3];
 
 	/* Same way as in SJOIN */
 	new_message_special(client, recv_mtags, &mtags, ":%s JOIN %s", client->name, channel->name);
@@ -274,13 +274,14 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 			free_message_tags(mtags_mode);
 		}
 
-		parv[0] = client->name;
+		parv[0] = NULL;
 		parv[1] = channel->name;
+		parv[2] = NULL;
 		do_cmd(client, NULL, "NAMES", 2, parv);
 
-		RunHook4(HOOKTYPE_LOCAL_JOIN, client, channel, mtags, parv);
+		RunHook3(HOOKTYPE_LOCAL_JOIN, client, channel, mtags);
 	} else {
-		RunHook4(HOOKTYPE_REMOTE_JOIN, client, channel, mtags, parv);
+		RunHook3(HOOKTYPE_REMOTE_JOIN, client, channel, mtags);
 	}
 
 	free_message_tags(mtags);
@@ -512,17 +513,7 @@ void _do_join(Client *client, int parc, char *parv[])
 			Hook *h;
 			for (h = Hooks[HOOKTYPE_PRE_LOCAL_JOIN]; h; h = h->next) 
 			{
-				/* Note: this is just a hack not to break the ABI but still be
-				 * able to fix https://bugs.unrealircd.org/view.php?id=5644
-				 * In the future we should just drop the parv/parx argument
-				 * and use key as an argument instead.
-				 */
-				char *parx[4];
-				parx[0] = NULL;
-				parx[1] = name;
-				parx[2] = key;
-				parx[3] = NULL;
-				i = (*(h->func.intfunc))(client,channel,parx);
+				i = (*(h->func.intfunc))(client,channel,key);
 				if (i == HOOK_DENY || i == HOOK_ALLOW)
 					break;
 			}

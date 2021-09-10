@@ -506,7 +506,7 @@ getnick:
 				MessageTag *mtags = NULL;
 
 				add_user_to_channel(channel, acptr, modeflags);
-				RunHook4(HOOKTYPE_REMOTE_JOIN, acptr, channel, recv_mtags, NULL);
+				RunHook3(HOOKTYPE_REMOTE_JOIN, acptr, channel, recv_mtags);
 				new_message_special(acptr, recv_mtags, &mtags, ":%s JOIN %s", acptr->name, channel->name);
 				send_join_to_local_users(acptr, channel, mtags);
 				free_message_tags(mtags);

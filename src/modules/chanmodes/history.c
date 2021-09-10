@@ -55,7 +55,7 @@ void *history_chanmode_dup_struct(void *r_in);
 int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int history_channel_destroy(Channel *channel, int *should_destroy);
 int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, SendType sendtype);
-int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
+int history_join(Client *client, Channel *channel, MessageTag *mtags);
 CMD_OVERRIDE_FUNC(override_mode);
 
 MOD_TEST()
@@ -678,7 +678,7 @@ int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix,
 	return 0;
 }
 
-int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[])
+int history_join(Client *client, Channel *channel, MessageTag *mtags)
 {
 	/* Only for +H channels */
 	if (!HistoryEnabled(channel) || !cfg.playback_on_join.lines || !cfg.playback_on_join.time)

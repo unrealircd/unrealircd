@@ -36,7 +36,7 @@ int secureonly_check_join(Client *client, Channel *channel, const char *key);
 int secureonly_channel_sync (Channel *channel, int merge, int removetheirs, int nomode);
 int secureonly_check_secure(Channel *channel);
 int secureonly_check_sajoin(Client *target, Channel *channel, Client *requester);
-int secureonly_specialcheck(Client *client, Channel *channel, char *parv[]);
+int secureonly_pre_local_join(Client *client, Channel *channel, const char *key);
 
 MOD_TEST()
 {
@@ -53,7 +53,7 @@ MOD_INIT()
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_SECUREONLY);
 
-	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_JOIN, 0, secureonly_specialcheck);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_JOIN, 0, secureonly_pre_local_join);
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, secureonly_check_join);
 	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_SYNCED, 0, secureonly_channel_sync);
 	HookAdd(modinfo->handle, HOOKTYPE_IS_CHANNEL_SECURE, 0, secureonly_check_secure);
@@ -178,7 +178,7 @@ int secureonly_check_sajoin(Client *target, Channel *channel, Client *requester)
 /* Special check for +z in set::modes-on-join. Needs to be done early.
  * Perhaps one day this will be properly handled in the core so this can be removed.
  */
-int secureonly_specialcheck(Client *client, Channel *channel, char *parv[])
+int secureonly_pre_local_join(Client *client, Channel *channel, const char *key)
 {
 	if ((channel->users == 0) && (MODES_ON_JOIN & EXTCMODE_SECUREONLY) && !IsSecure(client) && !IsOper(client))
 	{

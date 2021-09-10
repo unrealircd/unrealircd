@@ -136,7 +136,7 @@ const char *cmodef_conv_param(const char *param_in, Client *client, Channel *cha
 void cmodef_free_param(void *r);
 void *cmodef_dup_struct(void *r_in);
 int cmodef_sjoin_check(Channel *channel, void *ourx, void *theirx);
-int floodprot_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
+int floodprot_join(Client *client, Channel *channel, MessageTag *mtags);
 EVENT(modef_event);
 int cmodef_channel_destroy(Channel *channel, int *should_destroy);
 int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
@@ -736,7 +736,7 @@ int cmodef_sjoin_check(Channel *channel, void *ourx, void *theirx)
 	return EXSJ_MERGE;
 }
 
-int floodprot_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[])
+int floodprot_join(Client *client, Channel *channel, MessageTag *mtags)
 {
 	/* I'll explain this only once:
 	 * 1. if channel is +f

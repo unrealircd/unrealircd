@@ -25,7 +25,7 @@
 #include "unrealircd.h"
 
 CMD_FUNC(cmd_away);
-int away_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
+int away_join(Client *client, Channel *channel, MessageTag *mtags);
 
 long CAP_AWAY_NOTIFY = 0L;
 
@@ -64,7 +64,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int away_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[])
+int away_join(Client *client, Channel *channel, MessageTag *mtags)
 {
 	Member *lp;
 	Client *acptr;

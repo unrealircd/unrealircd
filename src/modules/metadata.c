@@ -123,7 +123,7 @@ int metadata_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int metadata_configposttest(int *errs);
 int metadata_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 int metadata_server_sync(Client *client);
-int metadata_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
+int metadata_join(Client *client, Channel *channel, MessageTag *mtags);
 int metadata_user_registered(Client *client);
 void metadata_user_free(ModData *md);
 void metadata_channel_free(ModData *md);
@@ -1239,7 +1239,7 @@ int metadata_server_sync(Client *client)
 	return 0;
 }
 
-int metadata_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[])
+int metadata_join(Client *client, Channel *channel, MessageTag *mtags)
 {
 	Client *acptr;
 	Member *cm;

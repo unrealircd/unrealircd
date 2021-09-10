@@ -41,7 +41,7 @@ void add_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags);
 void del_invite(Client *client, Channel *channel);
 static int invite_channel_destroy(Channel *channel, int *should_destroy);
 int invite_user_quit(Client *client, MessageTag *mtags, const char *comment);
-int invite_user_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
+int invite_user_join(Client *client, Channel *channel, MessageTag *mtags);
 int invite_is_invited(Client *client, Channel *channel, int *invited);
 
 ModuleHeader MOD_HEADER
@@ -184,7 +184,7 @@ int invite_user_quit(Client *client, MessageTag *mtags, const char *comment)
 	return 0;
 }
 
-int invite_user_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[])
+int invite_user_join(Client *client, Channel *channel, MessageTag *mtags)
 {
 	del_invite(client, channel);
 	return 0;

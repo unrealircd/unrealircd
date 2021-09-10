@@ -57,7 +57,7 @@ int extban_link_syntax(Client *client, int checkt, const char *reason);
 int extban_link_is_ok(BanContext *b);
 const char *extban_link_conv_param(BanContext *b, Extban *extban);
 int link_doforward(Client *client, Channel *channel, const char *linked, linkType linktype);
-int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[]);
+int link_pre_localjoin_cb(Client *client, Channel *channel, const char *key);
 
 MOD_INIT()
 {
@@ -338,7 +338,7 @@ int link_doforward(Client *client, Channel *channel, const char *linked, linkTyp
 	return HOOK_DENY; // Original channel join = ignored
 }
 
-int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[])
+int link_pre_localjoin_cb(Client *client, Channel *channel, const char *key)
 {
 	const char *linked;
 	int canjoin;
@@ -433,7 +433,7 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[])
 		return HOOK_CONTINUE;
 
 	// can_join() actually returns 0 if we *can* join a channel, so we don't need to bother checking any further conditions
-	if (!(canjoin = can_join(client, channel, parv[2])))
+	if (!(canjoin = can_join(client, channel, key)))
 		return HOOK_CONTINUE;
 
 	// Oper only channel

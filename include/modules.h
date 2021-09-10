@@ -1320,30 +1320,30 @@ int hooktype_can_join(Client *client, Channel *channel, const char *key);
  * FIXME: It's not entirely clear why we have both hooktype_can_join() and hooktype_pre_local_join().
  * @param client		The client
  * @param channel		The channel the user wants to join
- * @param parv			The parameters from the JOIN. May contain channel key in parv[2].
+ * @param key			Channel key (can be NULL)
  * @retval HOOK_DENY		Deny the join.
  * @retval HOOK_ALLOW		Allow the join (stop processing other modules)
  * @retval HOOK_CONTINUE	Allow the join, unless another module blocks it.
  */
-int hooktype_pre_local_join(Client *client, Channel *channel, char *parv[]);
+int hooktype_pre_local_join(Client *client, Channel *channel, const char *key);
 
 /** Called when a local user joins a channel (function prototype for HOOKTYPE_LOCAL_JOIN).
  * @param client		The client
  * @param channel		The channel the user wants to join
  * @param mtags         	Message tags associated with the event
- * @param parv			The parameters from the JOIN. May contain channel key in parv[2].
+ * @param key			Channel key (can be NULL)
  * @return The return value is ignored (use return 0)
  */
-int hooktype_local_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
+int hooktype_local_join(Client *client, Channel *channel, MessageTag *mtags);
 
 /** Called when a remote user joins a channel (function prototype for HOOKTYPE_REMOTE_JOIN).
  * @param client		The client
  * @param channel		The channel the user wants to join
  * @param mtags         	Message tags associated with the event
- * @param parv			The parameters from the JOIN. May contain channel key in parv[2].
+ * @param key			Channel key (can be NULL)
  * @return The return value is ignored (use return 0)
  */
-int hooktype_remote_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
+int hooktype_remote_join(Client *client, Channel *channel, MessageTag *mtags);
 
 /** Called when a local user wants to part a channel (function prototype for HOOKTYPE_PRE_LOCAL_PART).
  * @param client		The client
