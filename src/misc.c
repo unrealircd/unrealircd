@@ -2307,9 +2307,7 @@ const char *displayurl(const char *url)
 	if (!proto || (proto > rest) || (proto == url))
 		return url; /* incorrectly formatted, just show entire URL. */
 
-	/* funny, we don't ship strlncpy.. */
-	*buf = '\0';
-	strlncat(buf, url, sizeof(buf), proto - url);
+	strlncpy(buf, url, sizeof(buf), proto - url);
 	strlcat(buf, "://***:***@", sizeof(buf));
 	strlcat(buf, rest, sizeof(buf));
 

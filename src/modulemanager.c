@@ -101,8 +101,7 @@ int parse_url(const char *url, char **host, int *port, char **document)
 	if (!p)
 		return 0;
 
-	*hostbuf = '\0';
-	strlncat(hostbuf, url, sizeof(hostbuf), p - url);
+	strlncpy(hostbuf, url, sizeof(hostbuf), p - url);
 
 	strlcpy(documentbuf, p, sizeof(documentbuf));
 

@@ -396,6 +396,9 @@ extern size_t strlcat(char *dst, const char *src, size_t size);
 #ifndef HAVE_STRLNCAT
 extern size_t strlncat(char *dst, const char *src, size_t size, size_t n);
 #endif
+#ifndef HAVE_STRLNCPY
+extern size_t strlncpy(char *dst, const char *src, size_t size, size_t n);
+#endif
 extern char *strldup(const char *src, size_t n);
 
 extern void dopacket(Client *, char *, int);

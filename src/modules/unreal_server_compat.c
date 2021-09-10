@@ -142,8 +142,7 @@ int usc_reparse_mode(char **msg, char *p, int *length)
 	mode_buf_p = p;
 	if (!eat_parameter(&p))
 		return 0;
-	*modebuf = '\0';
-	strlncat(modebuf, mode_buf_p, sizeof(modebuf), p - mode_buf_p);
+	strlncpy(modebuf, mode_buf_p, sizeof(modebuf), p - mode_buf_p);
 
 	/* If we get here then it is (for example) a
 	 * MODE #channel +b nick!user@host
@@ -158,8 +157,7 @@ int usc_reparse_mode(char **msg, char *p, int *length)
 	 */
 
 	/* Fill 'obuf' with that 'header' */
-	*obuf = '\0'; // we should really get strlncpy ;D
-	strlncat(obuf, *msg, sizeof(obuf), p - *msg);
+	strlncpy(obuf, *msg, sizeof(obuf), p - *msg);
 	para_buf_p = p;
 
 	/* Now parse the modes */
@@ -224,8 +222,7 @@ int usc_reparse_sjoin(char **msg, char *p, int *length)
 	/* Save everything before p, put it in obuf... */
 
 	/* Fill 'obuf' with that 'header' */
-	*obuf = '\0'; // we should really get strlncpy ;D
-	strlncat(obuf, *msg, sizeof(obuf), p - *msg);
+	strlncpy(obuf, *msg, sizeof(obuf), p - *msg);
 
 	/* Put parameters in parabuf so we can trash it :D */
 	strlcpy(parabuf, p, sizeof(parabuf));

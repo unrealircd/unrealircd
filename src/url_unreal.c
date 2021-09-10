@@ -437,8 +437,7 @@ int url_parse(const char *url, char **hostname, int *port, char **username, char
 	if (!p)
 		return 0;
 
-	*hostbuf = '\0';
-	strlncat(hostbuf, url, sizeof(hostbuf), p - url);
+	strlncpy(hostbuf, url, sizeof(hostbuf), p - url);
 
 	strlcpy(documentbuf, p, sizeof(documentbuf));
 

@@ -970,8 +970,7 @@ void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details
 			for (p=i; validvarcharacter(*p) || ((*p == '.') && validvarcharacter(p[1])); p++);
 
 			/* find variable name in list */
-			*varname = '\0';
-			strlncat(varname, i, sizeof(varname), p - i);
+			strlncpy(varname, i, sizeof(varname), p - i);
 			varp = strchr(varname, '.');
 			if (varp)
 				*varp = '\0';
