@@ -644,7 +644,6 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char
 				   log_data_string("extended_client_info", get_connect_extinfo(client)),
 				   log_data_string("reason", comment),
 				   log_data_integer("connected_time", connected_time));
-
 		} else
 		if (IsUnknown(client))
 		{
@@ -661,7 +660,13 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, char
 	else if (IsUser(client) && !IsULine(client))
 	{
 		if (client->uplink != &me)
-			sendto_fconnectnotice(client, 1, comment);
+		{
+			unreal_log(ULOG_INFO, "connect", "REMOTE_CLIENT_DISCONNECT", client,
+				   "Client exiting: $client ($client.user.username@$client.hostname) [$client.ip] ($reason)",
+				   log_data_string("extended_client_info", get_connect_extinfo(client)),
+				   log_data_string("reason", comment),
+				   log_data_string("from_server_name", client->user->server));
+		}
 	}
 
 	/*

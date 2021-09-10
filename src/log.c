@@ -1419,12 +1419,15 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 {
 	LogData *d;
 	char *json_serialized;
+	const char *str;
 	json_t *j = NULL;
 	json_t *j_details = NULL;
+	json_t *t;
 	char msgbuf[1024];
 	char *loglevel_string = log_level_valtostring(loglevel);
 	MultiLine *mmsg;
 	static va_list null_va;
+	Client *from_server = NULL;
 
 	if (loglevel_string == NULL)
 	{
@@ -1523,7 +1526,12 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	do_unreal_log_disk(loglevel, subsystem, event_id, mmsg, json_serialized);
 
 	/* And the ircops stuff */
-	do_unreal_log_opers(loglevel, subsystem, event_id, mmsg, json_serialized, &me);
+	t = json_object_get(j_details, "from_server_name");
+	if (t && (str = json_get_value(t)))
+		from_server = find_server((char *)str, NULL);
+	if (from_server == NULL)
+		from_server = &me;
+	do_unreal_log_opers(loglevel, subsystem, event_id, mmsg, json_serialized, from_server);
 
 	do_unreal_log_remote(loglevel, subsystem, event_id, mmsg, json_serialized);
 

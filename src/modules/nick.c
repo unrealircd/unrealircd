@@ -708,7 +708,12 @@ nickkill2done:
 	RunHook(HOOKTYPE_REMOTE_CONNECT, client);
 
 	if (!IsULine(serv) && IsSynched(serv))
-		sendto_fconnectnotice(client, 0, NULL);
+	{
+		unreal_log(ULOG_INFO, "connect", "REMOTE_CLIENT_CONNECT", client,
+			   "Client connecting: $client ($client.user.username@$client.hostname) [$client.ip] $extended_client_info",
+			   log_data_string("extended_client_info", get_connect_extinfo(client)),
+		           log_data_string("from_server_name", client->user->server));
+	}
 }
 
 /** The NICK command.

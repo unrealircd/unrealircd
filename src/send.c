@@ -1047,59 +1047,6 @@ void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char 
 	}
 }
 
-void sendto_connectnotice(Client *newuser, int disconnect, char *comment)
-{
-	Client *acptr;
-	char connect[512];
-
-	if (!disconnect)
-	{
-		RunHook(HOOKTYPE_LOCAL_CONNECT, newuser);
-
-		ircsnprintf(connect, sizeof(connect),
-		    "*** Client connecting: %s (%s@%s) [%s] %s", newuser->name,
-		    newuser->user->username, newuser->user->realhost, newuser->ip,
-		    get_connect_extinfo(newuser));
-	}
-	else
-	{
-		ircsnprintf(connect, sizeof(connect), "*** Client exiting: %s (%s@%s) [%s] (%s)",
-			newuser->name, newuser->user->username, newuser->user->realhost, newuser->ip, comment);
-	}
-
-	list_for_each_entry(acptr, &oper_list, special_node)
-	{
-		if (acptr->user->snomask & SNO_CLIENT)
-			sendnotice(acptr, "%s", connect);
-	}
-}
-
-void sendto_fconnectnotice(Client *newuser, int disconnect, char *comment)
-{
-	Client *acptr;
-	char connect[512];
-
-	if (!disconnect)
-	{
-		ircsnprintf(connect, sizeof(connect),
-		    "*** Client connecting: %s (%s@%s) [%s] %s", newuser->name,
-		    newuser->user->username, newuser->user->realhost, newuser->ip ? newuser->ip : "0",
-		    get_connect_extinfo(newuser));
-	}
-	else
-	{
-		ircsnprintf(connect, sizeof(connect), "*** Client exiting: %s (%s@%s) [%s] (%s)",
-			newuser->name, newuser->user->username, newuser->user->realhost,
-			newuser->ip ? newuser->ip : "0", comment);
-	}
-
-	list_for_each_entry(acptr, &oper_list, special_node)
-	{
-		if (acptr->user->snomask & SNO_FCLIENT)
-			sendto_one(acptr, NULL, ":%s NOTICE %s :%s", newuser->user->server, acptr->name, connect);
-	}
-}
-
 /** Introduce user to all other servers, except the one to skip.
  * @param one    Server to skip (can be NULL)
  * @param client Client to introduce

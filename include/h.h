@@ -231,7 +231,6 @@ extern void *safe_alloc(size_t size);
 extern void set_socket_buffers(int fd, int rcvbuf, int sndbuf);
 extern int send_queued(Client *);
 extern void send_queued_cb(int fd, int revents, void *data);
-extern void sendto_connectnotice(Client *client, int disconnect, char *comment);
 extern void sendto_serv_butone_nickcmd(Client *one, MessageTag *mtags, Client *client, char *umodes);
 extern void    sendto_message_one(Client *to, Client *from, char *sender,
     char *cmd, char *nick, char *msg);
@@ -655,7 +654,6 @@ extern int efunctions_check(void);
 extern void efunctions_switchover(void);
 extern char *encode_ip(char *);
 extern char *decode_ip(char *);
-extern void sendto_fconnectnotice(Client *client, int disconnect, char *comment);
 extern void sendto_one_nickcmd(Client *server, MessageTag *mtags, Client *client, char *umodes);
 extern int on_dccallow_list(Client *to, Client *from);
 extern int add_dccallow(Client *client, Client *optr);
