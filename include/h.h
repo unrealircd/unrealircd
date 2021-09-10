@@ -194,7 +194,7 @@ extern MODVAR char *debugmode, *configfile, *sbrk0;
 extern char *getfield(char *);
 extern void set_sockhost(Client *, const char *);
 #ifdef _WIN32
-extern char *sock_strerror(int);
+extern const char *sock_strerror(int);
 #endif
 extern int dgets(int, char *, int);
 
@@ -657,8 +657,8 @@ extern int callbacks_check(void);
 extern void callbacks_switchover(void);
 extern int efunctions_check(void);
 extern void efunctions_switchover(void);
-extern char *encode_ip(char *);
-extern char *decode_ip(char *);
+extern char *encode_ip(const char *);
+extern char *decode_ip(const char *);
 extern void sendto_one_nickcmd(Client *server, MessageTag *mtags, Client *client, char *umodes);
 extern int on_dccallow_list(Client *to, Client *from);
 extern int add_dccallow(Client *client, Client *optr);
@@ -919,7 +919,7 @@ extern CMD_FUNC(cmd_rehash);
 extern CMD_FUNC(cmd_die);
 extern CMD_FUNC(cmd_restart);
 extern void cmd_alias(Client *client, MessageTag *recv_mtags, int parc, char *parv[], char *cmd); /* special! */
-extern char *pcre2_version(void);
+extern const char *pcre2_version(void);
 extern int get_terminal_width(void);
 extern int has_common_channels(Client *c1, Client *c2);
 extern int user_can_see_member(Client *user, Client *target, Channel *channel);
@@ -1048,11 +1048,11 @@ extern void add_fmt_nvplist(NameValuePrioList **lst, int priority, const char *n
 extern NameValuePrioList *find_nvplist(NameValuePrioList *list, const char *name);
 extern void free_nvplist(NameValuePrioList *lst);
 extern const char *get_connect_extinfo(Client *client);
-extern char *unreal_strftime(char *str);
+extern char *unreal_strftime(const char *str);
 extern void strtolower(char *str);
-extern void strtolower_safe(char *dst, char *src, int size);
+extern void strtolower_safe(char *dst, const char *src, int size);
 extern void strtoupper(char *str);
-extern void strtoupper_safe(char *dst, char *src, int size);
+extern void strtoupper_safe(char *dst, const char *src, int size);
 extern int running_interactively(void);
 extern int terminal_supports_color(void);
 extern void skip_whitespace(char **p);

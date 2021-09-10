@@ -34,7 +34,7 @@ extern void outofmemory();
 #define is_enabled match
 
 /** Convert integer to string */
-char *my_itoa(int i)
+const char *my_itoa(int i)
 {
 	static char buf[128];
 	ircsnprintf(buf, sizeof(buf), "%d", i);
@@ -1056,7 +1056,7 @@ time_t unreal_getfilemodtime(const char *filename)
 #endif
 
 /** Encode an IP string (eg: "1.2.3.4") to a BASE64 encoded value for S2S traffic */
-char *encode_ip(char *ip)
+char *encode_ip(const char *ip)
 {
 	static char retbuf[25]; /* returned string */
 	char addrbuf[16];
@@ -1089,7 +1089,7 @@ char *encode_ip(char *ip)
 }
 
 /** Decode a BASE64 encoded string to an IP address string. Used for S2S traffic. */
-char *decode_ip(char *buf)
+char *decode_ip(const char *buf)
 {
 	int n;
 	char targ[25];
@@ -1183,7 +1183,7 @@ struct u_WSA_errors WSAErrors[] = {
 };
 
 /** Get socket error string */
-char *sock_strerror(int error)
+const char *sock_strerror(int error)
 {
 	static char unkerr[64];
 	int start = 0;
@@ -1299,7 +1299,7 @@ literal:
 }
 
 /** Return the PCRE2 library version in use */
-char *pcre2_version(void)
+const char *pcre2_version(void)
 {
 	static char buf[256];
 
@@ -1350,7 +1350,7 @@ int get_terminal_width(void)
 #endif
 
 /** Like strftime() but easier. */
-char *unreal_strftime(char *str)
+char *unreal_strftime(const char *str)
 {
 	time_t t;
 	struct tm *tmp;
@@ -1359,7 +1359,11 @@ char *unreal_strftime(char *str)
 	t = time(NULL);
 	tmp = localtime(&t);
 	if (!tmp || !strftime(buf, sizeof(buf), str, tmp))
-		return str;
+	{
+		/* If anything fails bigtime, then return the format string */
+		strlcpy(buf, str, sizeof(buf));
+		return buf;
+	}
 	return buf;
 }
 
@@ -1368,7 +1372,7 @@ char *unreal_strftime(char *str)
 #endif
 
 /** Convert a string to lowercase - with separate input/output buffer */
-void strtolower_safe(char *dst, char *src, int size)
+void strtolower_safe(char *dst, const char *src, int size)
 {
 	if (!size)
 		return; /* size of 0 is unworkable */
@@ -1390,7 +1394,7 @@ void strtolower(char *str)
 }
 
 /** Convert a string to uppercase - with separate input/output buffer */
-void strtoupper_safe(char *dst, char *src, int size)
+void strtoupper_safe(char *dst, const char *src, int size)
 {
 	if (!size)
 		return; /* size of 0 is unworkable */

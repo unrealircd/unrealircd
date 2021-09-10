@@ -43,7 +43,7 @@ extern EVENT(handshake_timeout);
 extern EVENT(check_deadsockets);
 extern EVENT(try_connections);
 /* support.c */
-extern char *my_itoa(int i);
+extern const char *my_itoa(int i);
 
 /* s_serv.c */
 extern void load_tunefile(void);
