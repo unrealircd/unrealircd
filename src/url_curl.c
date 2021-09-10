@@ -242,7 +242,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	char user_agent[256];
 	CURL *curl;
 	char *file;
-	char *filename;
+	const char *filename;
 	char *tmp;
 	Download *handle;
 
