@@ -786,7 +786,7 @@ CMD_OVERRIDE_FUNC(override_mode)
 				(long long)channel->creationtime);
 
 			/* Activate this hook just like cmd_mode.c */
-			RunHook7(HOOKTYPE_REMOTE_CHANMODE, &me, channel, mtags, modebuf, parabuf, 0, 0);
+			RunHook(HOOKTYPE_REMOTE_CHANMODE, &me, channel, mtags, modebuf, parabuf, 0, 0);
 
 			free_message_tags(mtags);
 

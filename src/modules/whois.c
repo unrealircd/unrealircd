@@ -306,7 +306,7 @@ CMD_FUNC(cmd_whois)
 				sendnumeric(client, RPL_WHOISSECURE, name,
 					"is using a Secure Connection");
 			
-			RunHook2(HOOKTYPE_WHOIS, client, target);
+			RunHook(HOOKTYPE_WHOIS, client, target);
 
 			if (IsOper(client) && MyUser(target) && IsShunned(target))
 			{

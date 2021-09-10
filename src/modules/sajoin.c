@@ -233,7 +233,7 @@ CMD_FUNC(cmd_sajoin)
 					               target->name, channel->name, "Left all channels");
 					sendto_server(NULL, 0, 0, mtags, ":%s PART %s :Left all channels", target->name, channel->name);
 					if (MyConnect(target))
-						RunHook4(HOOKTYPE_LOCAL_PART, target, channel, mtags, "Left all channels");
+						RunHook(HOOKTYPE_LOCAL_PART, target, channel, mtags, "Left all channels");
 					free_message_tags(mtags);
 					remove_user_from_channel(target, channel);
 				}

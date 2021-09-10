@@ -279,9 +279,9 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 		parv[2] = NULL;
 		do_cmd(client, NULL, "NAMES", 2, parv);
 
-		RunHook3(HOOKTYPE_LOCAL_JOIN, client, channel, mtags);
+		RunHook(HOOKTYPE_LOCAL_JOIN, client, channel, mtags);
 	} else {
-		RunHook3(HOOKTYPE_REMOTE_JOIN, client, channel, mtags);
+		RunHook(HOOKTYPE_REMOTE_JOIN, client, channel, mtags);
 	}
 
 	free_message_tags(mtags);
@@ -418,7 +418,7 @@ void _do_join(Client *client, int parc, char *parv[])
 				sendto_server(client, 0, 0, mtags, ":%s PART %s :Left all channels", client->name, channel->name);
 
 				if (MyConnect(client))
-					RunHook4(HOOKTYPE_LOCAL_PART, client, channel, mtags, "Left all channels");
+					RunHook(HOOKTYPE_LOCAL_PART, client, channel, mtags, "Left all channels");
 
 				remove_user_from_channel(client, channel);
 				free_message_tags(mtags);

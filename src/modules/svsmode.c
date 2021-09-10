@@ -295,7 +295,7 @@ void channel_svsmode(Client *client, int parc, char *parv[])
 		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", client->id, channel->name, modebuf, parabuf);
 
 		/* Activate this hook just like cmd_mode.c */
-		RunHook7(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, 0);
+		RunHook(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, 0);
 
 		free_message_tags(mtags);
 
@@ -524,7 +524,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], 
 	   only if the old flags (setflags) are different than the newly-
 	   set ones */
 	if (setflags != target->umodes)
-		RunHook3(HOOKTYPE_UMODE_CHANGE, target, setflags, target->umodes);
+		RunHook(HOOKTYPE_UMODE_CHANGE, target, setflags, target->umodes);
 
 	if (show_change)
 	{

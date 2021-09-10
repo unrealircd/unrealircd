@@ -111,7 +111,7 @@ int can_send_to_user(Client *client, Client *target, const char **msgtext, const
 
 	if (is_silenced(client, target))
 	{
-		RunHook3(HOOKTYPE_SILENCED, client, target, sendtype);
+		RunHook(HOOKTYPE_SILENCED, client, target, sendtype);
 		/* Silently discarded, no error message */
 		return 0;
 	}
@@ -398,7 +398,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 
 			new_message(client, recv_mtags, &mtags);
 
-			RunHook5(HOOKTYPE_PRE_CHANMSG, client, channel, mtags, text, sendtype);
+			RunHook(HOOKTYPE_PRE_CHANMSG, client, channel, mtags, text, sendtype);
 
 			if (!text)
 			{
@@ -430,7 +430,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 					       client->name, targetstr);
 			}
 
-			RunHook8(HOOKTYPE_CHANMSG, client, channel, sendflags, prefix, targetstr, mtags, text, sendtype);
+			RunHook(HOOKTYPE_CHANMSG, client, channel, sendflags, prefix, targetstr, mtags, text, sendtype);
 
 			free_message_tags(mtags);
 
@@ -523,7 +523,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 					}
 				}
 				labeled_response_inhibit = 0;
-				RunHook5(HOOKTYPE_USERMSG, client, target, mtags, text, sendtype);
+				RunHook(HOOKTYPE_USERMSG, client, target, mtags, text, sendtype);
 				free_message_tags(mtags);
 				continue;
 			}

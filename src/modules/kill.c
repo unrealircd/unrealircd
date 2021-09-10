@@ -171,7 +171,7 @@ CMD_FUNC(cmd_kill)
 		}
 
 		if (MyUser(client))
-			RunHook3(HOOKTYPE_LOCAL_KILL, client, target, reason);
+			RunHook(HOOKTYPE_LOCAL_KILL, client, target, reason);
 
 		ircsnprintf(buf2, sizeof(buf2), "Killed by %s (%s)", client->name, reason);
 		exit_client(target, mtags, buf2);

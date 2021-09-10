@@ -202,7 +202,7 @@ CMD_FUNC(cmd_nick_remote)
 	}
 
 	new_message(client, recv_mtags, &mtags);
-	RunHook3(HOOKTYPE_REMOTE_NICKCHANGE, client, mtags, nick);
+	RunHook(HOOKTYPE_REMOTE_NICKCHANGE, client, mtags, nick);
 	client->lastnick = lastnick ? lastnick : TStime();
 	add_history(client, 1);
 	sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
@@ -217,7 +217,7 @@ CMD_FUNC(cmd_nick_remote)
 	strlcpy(client->name, nick, sizeof(client->name));
 	add_to_client_hash_table(nick, client);
 
-	RunHook2(HOOKTYPE_POST_REMOTE_NICKCHANGE, client, mtags);
+	RunHook(HOOKTYPE_POST_REMOTE_NICKCHANGE, client, mtags);
 }
 
 /* Local user: either setting their nick for the first time (registration)
@@ -427,7 +427,7 @@ CMD_FUNC(cmd_nick_local)
 		           log_data_string("new_nick", nick));
 
 		new_message(client, recv_mtags, &mtags);
-		RunHook3(HOOKTYPE_LOCAL_NICKCHANGE, client, mtags, nick);
+		RunHook(HOOKTYPE_LOCAL_NICKCHANGE, client, mtags, nick);
 		client->lastnick = TStime();
 		add_history(client, 1);
 		sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
@@ -455,7 +455,7 @@ CMD_FUNC(cmd_nick_local)
 		sendto_one(client, NULL, ":%s MODE %s :-r", me.name, client->name);
 
 	if (MyUser(client) && !newuser)
-		RunHook2(HOOKTYPE_POST_LOCAL_NICKCHANGE, client, recv_mtags);
+		RunHook(HOOKTYPE_POST_LOCAL_NICKCHANGE, client, recv_mtags);
 }
 
 /*
@@ -756,28 +756,28 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 	int i;
 	ConfigItem_tld *tlds;
 
-	RunHook2(HOOKTYPE_WELCOME, client, 0);
+	RunHook(HOOKTYPE_WELCOME, client, 0);
 	sendnumeric(client, RPL_WELCOME, NETWORK_NAME, client->name, client->user->username, client->user->realhost);
 
-	RunHook2(HOOKTYPE_WELCOME, client, 1);
+	RunHook(HOOKTYPE_WELCOME, client, 1);
 	sendnumeric(client, RPL_YOURHOST, me.name, version);
 
-	RunHook2(HOOKTYPE_WELCOME, client, 2);
+	RunHook(HOOKTYPE_WELCOME, client, 2);
 	sendnumeric(client, RPL_CREATED, creation);
 
-	RunHook2(HOOKTYPE_WELCOME, client, 3);
+	RunHook(HOOKTYPE_WELCOME, client, 3);
 	sendnumeric(client, RPL_MYINFO, me.name, version, umodestring, cmodestring);
 
-	RunHook2(HOOKTYPE_WELCOME, client, 4);
+	RunHook(HOOKTYPE_WELCOME, client, 4);
 	for (i = 0; ISupportStrings[i]; i++)
 		sendnumeric(client, RPL_ISUPPORT, ISupportStrings[i]);
 
-	RunHook2(HOOKTYPE_WELCOME, client, 5);
+	RunHook(HOOKTYPE_WELCOME, client, 5);
 
 	if (IsHidden(client))
 	{
 		sendnumeric(client, RPL_HOSTHIDDEN, client->user->virthost);
-		RunHook2(HOOKTYPE_WELCOME, client, 396);
+		RunHook(HOOKTYPE_WELCOME, client, 396);
 	}
 
 	if (IsSecureConnect(client))
@@ -798,11 +798,11 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 			return;
 	}
 
-	RunHook2(HOOKTYPE_WELCOME, client, 266);
+	RunHook(HOOKTYPE_WELCOME, client, 266);
 
 	short_motd(client);
 
-	RunHook2(HOOKTYPE_WELCOME, client, 376);
+	RunHook(HOOKTYPE_WELCOME, client, 376);
 
 #ifdef EXPERIMENTAL
 	sendnotice(client,
@@ -844,7 +844,7 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 	 */
 	client->local->fake_lag = TStime();
 
-	RunHook2(HOOKTYPE_WELCOME, client, 999);
+	RunHook(HOOKTYPE_WELCOME, client, 999);
 
 	/* NOTE: Code after this 'if (viruschan_tkl)' will not be executed for quarantined-
 	 *       virus-users. So be carefull with the order. -- Syzop

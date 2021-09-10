@@ -2883,7 +2883,7 @@ void tkl_expire_entry(TKL *tkl)
 	if (tkl->type & TKL_SHUN)
 		tkl_check_local_remove_shun(tkl);
 
-	RunHook2(HOOKTYPE_TKL_DEL, NULL, tkl);
+	RunHook(HOOKTYPE_TKL_DEL, NULL, tkl);
 	tkl_del_line(tkl);
 }
 
@@ -3213,7 +3213,7 @@ int spamfilter_check_users(TKL *tkl)
 				   log_data_string("command", "USER"),
 				   log_data_string("str", spamfilter_user));
 
-			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, client, spamfilter_user, spamfilter_user, SPAMF_USER, NULL, tkl);
+			RunHook(HOOKTYPE_LOCAL_SPAMFILTER, client, spamfilter_user, spamfilter_user, SPAMF_USER, NULL, tkl);
 			matches++;
 		}
 	}
@@ -4205,7 +4205,7 @@ CMD_FUNC(cmd_tkl_add)
 
 	/* Below this line we will only use 'tkl'. No parc/parv reading anymore. */
 
-	RunHook2(HOOKTYPE_TKL_ADD, client, tkl);
+	RunHook(HOOKTYPE_TKL_ADD, client, tkl);
 
 	sendnotice_tkl_add(tkl);
 
@@ -4337,7 +4337,7 @@ CMD_FUNC(cmd_tkl_del)
 	if (type & TKL_SHUN)
 		tkl_check_local_remove_shun(tkl);
 
-	RunHook2(HOOKTYPE_TKL_DEL, client, tkl);
+	RunHook(HOOKTYPE_TKL_DEL, client, tkl);
 
 	if (type & TKL_GLOBAL)
 	{
@@ -4788,7 +4788,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 				   log_data_string("destination", destinationbuf),
 				   log_data_string("str", str));
 
-			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, client, str, str_in, target, destination, tkl);
+			RunHook(HOOKTYPE_LOCAL_SPAMFILTER, client, str, str_in, target, destination, tkl);
 
 			/* If we should stop after the first match, we end here... */
 			if (SPAMFILTER_STOP_ON_FIRST_MATCH)

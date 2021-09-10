@@ -154,7 +154,7 @@ CMD_FUNC(cmd_knock)
 	if (MyUser(client))
 		sendnotice(client, "Knocked on %s", channel->name);
 
-        RunHook4(HOOKTYPE_KNOCK, client, channel, mtags, parv[2]);
+        RunHook(HOOKTYPE_KNOCK, client, channel, mtags, parv[2]);
 
 	free_message_tags(mtags);
 }

@@ -112,7 +112,7 @@ CMD_FUNC(cmd_away)
 			sendto_server(client, 0, 0, mtags, ":%s AWAY", client->name);
 			sendto_local_common_channels(client, client, CAP_AWAY_NOTIFY, mtags,
 			                             ":%s AWAY", client->name);
-			RunHook4(HOOKTYPE_AWAY, client, mtags, NULL, 0);
+			RunHook(HOOKTYPE_AWAY, client, mtags, NULL, 0);
 			free_message_tags(mtags);
 		}
 
@@ -165,7 +165,7 @@ CMD_FUNC(cmd_away)
 	                             CAP_AWAY_NOTIFY, mtags,
 	                             ":%s AWAY :%s", client->name, client->user->away);
 
-	RunHook4(HOOKTYPE_AWAY, client, mtags, client->user->away, already_as_away);
+	RunHook(HOOKTYPE_AWAY, client, mtags, client->user->away, already_as_away);
 
 	free_message_tags(mtags);
 

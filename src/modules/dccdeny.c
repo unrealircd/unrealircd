@@ -653,7 +653,7 @@ static int can_dcc(Client *client, char *target, Client *targetcli, const char *
 	{
 		char *displayfile = dcc_displayfile(filename);
 
-		RunHook5(HOOKTYPE_DCC_DENIED, client, target, filename, displayfile, fl);
+		RunHook(HOOKTYPE_DCC_DENIED, client, target, filename, displayfile, fl);
 
 		ircsnprintf(errbuf, sizeof(errbuf), "Cannot DCC SEND file: %s", fl->reason);
 		*errmsg = errbuf;

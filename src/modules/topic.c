@@ -170,7 +170,7 @@ CMD_FUNC(cmd_topic)
 			channel->topic_time = ttime;
 
 			new_message(client, recv_mtags, &mtags);
-			RunHook4(HOOKTYPE_TOPIC, client, channel, mtags, topic);
+			RunHook(HOOKTYPE_TOPIC, client, channel, mtags, topic);
 			sendto_server(client, 0, 0, mtags, ":%s TOPIC %s %s %lld :%s",
 			    client->id, channel->name, channel->topic_nick,
 			    (long long)channel->topic_time, channel->topic);
@@ -272,7 +272,7 @@ CMD_FUNC(cmd_topic)
 		channel->topic_time = TStime();
 
 	new_message(client, recv_mtags, &mtags);
-	RunHook4(HOOKTYPE_TOPIC, client, channel, mtags, topic);
+	RunHook(HOOKTYPE_TOPIC, client, channel, mtags, topic);
 	sendto_server(client, 0, 0, mtags, ":%s TOPIC %s %s %lld :%s",
 	    client->id, channel->name, channel->topic_nick,
 	    (long long)channel->topic_time, channel->topic);

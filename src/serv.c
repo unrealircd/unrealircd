@@ -593,7 +593,7 @@ CMD_FUNC(cmd_rehash)
 			if (!strncasecmp("-gar", parv[1], 4))
 			{
 				loop.do_garbage_collect = 1;
-				RunHook2(HOOKTYPE_REHASHFLAG, client, parv[1]);
+				RunHook(HOOKTYPE_REHASHFLAG, client, parv[1]);
 				return;
 			}
 			if (!strncasecmp("-dns", parv[1], 4))
@@ -607,7 +607,7 @@ CMD_FUNC(cmd_rehash)
 				reinit_tls();
 				return;
 			}
-			RunHook2(HOOKTYPE_REHASHFLAG, client, parv[1]);
+			RunHook(HOOKTYPE_REHASHFLAG, client, parv[1]);
 			return;
 		}
 	}

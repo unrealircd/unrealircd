@@ -171,7 +171,7 @@ int rmtkl_tryremove(Client *client, TKLType *tkltype, TKL *tkl, char *uhmask, ch
 	if (!silent)
 		sendnotice_tkl_del(client->name, tkl);
 
-	RunHook2(HOOKTYPE_TKL_DEL, client, tkl);
+	RunHook(HOOKTYPE_TKL_DEL, client, tkl);
 
 	if (tkl->type & TKL_SHUN)
 		tkl_check_local_remove_shun(tkl);

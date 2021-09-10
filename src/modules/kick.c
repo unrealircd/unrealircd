@@ -98,9 +98,9 @@ void _kick_user(MessageTag *initial_mtags, Channel *channel, Client *client, Cli
 	/* The same message is actually sent at 5 places below (though max 4 at most) */
 
 	if (MyUser(client))
-		RunHook5(HOOKTYPE_LOCAL_KICK, client, victim, channel, mtags, comment);
+		RunHook(HOOKTYPE_LOCAL_KICK, client, victim, channel, mtags, comment);
 	else
-		RunHook5(HOOKTYPE_REMOTE_KICK, client, victim, channel, mtags, comment);
+		RunHook(HOOKTYPE_REMOTE_KICK, client, victim, channel, mtags, comment);
 
 	if (invisible_user_in_channel(victim, channel))
 	{

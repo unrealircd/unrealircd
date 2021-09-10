@@ -203,9 +203,9 @@ CMD_FUNC(cmd_part)
 		}
 
 		if (MyUser(client))
-			RunHook4(HOOKTYPE_LOCAL_PART, client, channel, mtags, comment);
+			RunHook(HOOKTYPE_LOCAL_PART, client, channel, mtags, comment);
 		else
-			RunHook4(HOOKTYPE_REMOTE_PART, client, channel, mtags, comment);
+			RunHook(HOOKTYPE_REMOTE_PART, client, channel, mtags, comment);
 
 		free_message_tags(mtags);
 

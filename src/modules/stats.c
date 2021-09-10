@@ -381,7 +381,7 @@ CMD_FUNC(cmd_stats)
 	 */
 	if (stat->flag != 'S')
 	{
-		RunHook2(HOOKTYPE_STATS, client, flags);
+		RunHook(HOOKTYPE_STATS, client, flags);
 	}
 
 	sendnumeric(client, RPL_ENDOFSTATS, stat->flag);
@@ -914,7 +914,7 @@ int stats_set(Client *client, const char *para)
 	sendtxtnumeric(client, "outdated-tls-policy::user: %s", policy_valtostr(iConf.outdated_tls_policy_user));
 	sendtxtnumeric(client, "outdated-tls-policy::oper: %s", policy_valtostr(iConf.outdated_tls_policy_oper));
 	sendtxtnumeric(client, "outdated-tls-policy::server: %s", policy_valtostr(iConf.outdated_tls_policy_server));
-	RunHook2(HOOKTYPE_STATS, client, "S");
+	RunHook(HOOKTYPE_STATS, client, "S");
 #ifndef _WIN32
 	sendtxtnumeric(client, "This server can handle %d concurrent sockets (%d clients + %d reserve)",
 		maxclients+CLIENTS_RESERVE, maxclients, CLIENTS_RESERVE);

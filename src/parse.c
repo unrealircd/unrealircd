@@ -221,9 +221,9 @@ void parse(Client *cptr, char *buffer, int length)
 	parse2(cptr, &from, mtags, mtags_bytes, ch);
 
 	if (IsDead(cptr))
-		RunHook3(HOOKTYPE_POST_COMMAND, NULL, mtags, ch);
+		RunHook(HOOKTYPE_POST_COMMAND, NULL, mtags, ch);
 	else
-		RunHook3(HOOKTYPE_POST_COMMAND, from, mtags, ch);
+		RunHook(HOOKTYPE_POST_COMMAND, from, mtags, ch);
 
 	free_message_tags(mtags);
 	return;
@@ -323,7 +323,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 			ch++;
 	}
 
-	RunHook3(HOOKTYPE_PRE_COMMAND, from, mtags, ch);
+	RunHook(HOOKTYPE_PRE_COMMAND, from, mtags, ch);
 
 	if (*ch == '\0')
 	{

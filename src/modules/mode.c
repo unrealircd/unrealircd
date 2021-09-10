@@ -293,9 +293,9 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 	samode_in_progress = 0;
 
 	if (MyConnect(client))
-		RunHook7(HOOKTYPE_PRE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode);
+		RunHook(HOOKTYPE_PRE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode);
 	else
-		RunHook7(HOOKTYPE_PRE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode);
+		RunHook(HOOKTYPE_PRE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode);
 
 	if (IsServer(client))
 	{
@@ -413,9 +413,9 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 	}
 
 	if (MyConnect(client))
-		RunHook7(HOOKTYPE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode);
+		RunHook(HOOKTYPE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode);
 	else
-		RunHook7(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode);
+		RunHook(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode);
 
 	/* After this, don't touch 'channel' anymore! As permanent module may have destroyed the channel. */
 
@@ -982,11 +982,11 @@ int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int w
 		channel->mode.mode |= handler->mode;
 		if (handler->paracount)
 			cm_putparameter(channel, handler->letter, param);
-		RunHook2(HOOKTYPE_MODECHAR_ADD, channel, (int)mode);
+		RunHook(HOOKTYPE_MODECHAR_ADD, channel, (int)mode);
 	} else
 	{	/* - */
 		channel->mode.mode &= ~(handler->mode);
-		RunHook2(HOOKTYPE_MODECHAR_DEL, channel, (int)mode);
+		RunHook(HOOKTYPE_MODECHAR_DEL, channel, (int)mode);
 		if (handler->paracount)
 			cm_freeparameter(channel, handler->letter);
 	}
@@ -1524,7 +1524,7 @@ CMD_FUNC(_cmd_umode)
 	{
 		list_del(&client->special_node);
 		remove_oper_privileges(client, 0);
-		RunHook2(HOOKTYPE_LOCAL_OPER, client, 0);
+		RunHook(HOOKTYPE_LOCAL_OPER, client, 0);
 	}
 
 	if (!(oldumodes & UMODE_OPER) && IsOper(client))
@@ -1560,7 +1560,7 @@ CMD_FUNC(_cmd_umode)
 	 * will cause servers to update correctly.
 	 */
 	if (oldumodes != client->umodes)
-		RunHook3(HOOKTYPE_UMODE_CHANGE, client, oldumodes, client->umodes);
+		RunHook(HOOKTYPE_UMODE_CHANGE, client, oldumodes, client->umodes);
 	if (dontspread == 0)
 		send_umode_out(client, 1, oldumodes);
 

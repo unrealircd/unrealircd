@@ -721,7 +721,7 @@ void user_account_login(MessageTag *recv_mtags, Client *client)
 		if (find_tkline_match(client, 0) && IsDead(client))
 			return;
 	}
-	RunHook2(HOOKTYPE_ACCOUNT_LOGIN, client, recv_mtags);
+	RunHook(HOOKTYPE_ACCOUNT_LOGIN, client, recv_mtags);
 }
 
 /** Should we hide the idle time of 'target' to user 'client'?
@@ -949,7 +949,7 @@ const char *get_connect_extinfo(Client *client)
 	NameValuePrioList *list = NULL, *e;
 
 	/* From modules... */
-	RunHook2(HOOKTYPE_CONNECT_EXTINFO, client, &list);
+	RunHook(HOOKTYPE_CONNECT_EXTINFO, client, &list);
 
 	/* And some built-in: */
 

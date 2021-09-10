@@ -510,7 +510,7 @@ void add_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags)
 	inv->next = CLIENT_INVITES(to);
 	CLIENT_INVITES(to) = inv;
 
-	RunHook4(HOOKTYPE_INVITE, from, to, channel, mtags);
+	RunHook(HOOKTYPE_INVITE, from, to, channel, mtags);
 }
 
 /** Delete a previous invite of someone to a channel.

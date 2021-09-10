@@ -106,7 +106,7 @@ static int secureonly_kick_insecure_users(Channel *channel)
 
 			new_message(&me, NULL, &mtags);
 
-			RunHook6(HOOKTYPE_LOCAL_KICK, &me, &me, client, channel, mtags, comment);
+			RunHook(HOOKTYPE_LOCAL_KICK, &me, &me, client, channel, mtags, comment);
 
 			sendto_channel(channel, &me, client,
 				       prefix, 0,

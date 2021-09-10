@@ -516,7 +516,7 @@ void add_user_to_channel(Channel *channel, Client *who, int flags)
 		mb->flags = flags;
 		who->user->channel = mb;
 		who->user->joined++;
-		RunHook2(HOOKTYPE_JOIN_DATA, who, channel);
+		RunHook(HOOKTYPE_JOIN_DATA, who, channel);
 	}
 }
 
@@ -968,7 +968,7 @@ Channel *make_channel(char *name)
 int is_invited(Client *client, Channel *channel)
 {
 	int invited = 0;
-	RunHook3(HOOKTYPE_IS_INVITED, client, channel, &invited);
+	RunHook(HOOKTYPE_IS_INVITED, client, channel, &invited);
 	return invited;
 }
 
@@ -990,7 +990,7 @@ int sub1_from_channel(Channel *channel)
 	channel->users = 0; /* to be sure */
 
 	/* If the channel is +P then this hook will actually stop destruction. */
-	RunHook2(HOOKTYPE_CHANNEL_DESTROY, channel, &should_destroy);
+	RunHook(HOOKTYPE_CHANNEL_DESTROY, channel, &should_destroy);
 	if (!should_destroy)
 		return 0;
 
