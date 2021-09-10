@@ -920,11 +920,11 @@ extern void HooktypeDel(Hooktype *hooktype, Module *module);
 #define RunHook7(hooktype,a,b,c,d,e,f,g) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) (*(hook->func.intfunc))(a,b,c,d,e,f,g); } while(0)
 #define RunHook8(hooktype,a,b,c,d,e,f,g,h) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) (*(hook->func.intfunc))(a,b,c,d,e,f,g,h); } while(0)
 
-#define CallbackAddEx(module, cbtype, func) CallbackAddMain(module, cbtype, func, NULL, NULL, NULL, NULL)
-#define CallbackAddVoidEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, func, NULL, NULL, NULL)
-#define CallbackAddPVoidEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, func, NULL, NULL)
-#define CallbackAddStringEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, NULL, func, NULL)
-#define CallbackAddConstStringEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, NULL, NULL, func)
+#define CallbackAdd(module, cbtype, func) CallbackAddMain(module, cbtype, func, NULL, NULL, NULL, NULL)
+#define CallbackAddVoid(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, func, NULL, NULL, NULL)
+#define CallbackAddPVoid(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, func, NULL, NULL)
+#define CallbackAddString(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, NULL, func, NULL)
+#define CallbackAddConstString(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, NULL, NULL, func)
 
 extern Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)());
 extern Callback	*CallbackDel(Callback *cb);

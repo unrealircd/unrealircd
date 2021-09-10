@@ -118,7 +118,7 @@ MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, blacklist_config_test);
 
-	CallbackAddEx(modinfo->handle, CALLBACKTYPE_BLACKLIST_CHECK, blacklist_start_check);
+	CallbackAdd(modinfo->handle, CALLBACKTYPE_BLACKLIST_CHECK, blacklist_start_check);
 	return MOD_SUCCESS;
 }
 

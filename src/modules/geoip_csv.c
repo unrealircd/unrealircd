@@ -246,7 +246,7 @@ int geoip_csv_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	if (!CallbackAddPVoidEx(modinfo->handle, CALLBACKTYPE_GEOIP_LOOKUP, TO_PVOIDFUNC(geoip_lookup_csv)))
+	if (!CallbackAddPVoid(modinfo->handle, CALLBACKTYPE_GEOIP_LOOKUP, TO_PVOIDFUNC(geoip_lookup_csv)))
 	{
 		unreal_log(ULOG_ERROR, "geoip_csv", "GEOIP_ADD_CALLBACK_FAILED", NULL,
 		           "geoip_csv: Could not install GEOIP_LOOKUP callback. "
