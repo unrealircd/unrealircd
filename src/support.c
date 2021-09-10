@@ -1388,3 +1388,25 @@ void strtolower(char *str)
 	for (; *str; str++)
 		*str = tolower(*str);
 }
+
+/** Convert a string to uppercase - with separate input/output buffer */
+void strtoupper_safe(char *dst, char *src, int size)
+{
+	if (!size)
+		return; /* size of 0 is unworkable */
+	size--; /* for \0 */
+
+	for (; *src && size; src++)
+	{
+		*dst++ = toupper(*src);
+		size--;
+	}
+	*dst = '\0';
+}
+
+/** Convert a string to uppercase - modifying existing string */
+void strtoupper(char *str)
+{
+	for (; *str; str++)
+		*str = toupper(*str);
+}

@@ -801,9 +801,14 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 		if (HasField(fmt, FIELD_MODES))
 		{
 			if (IsOper(client))
-				append_format(str, sizeof str, &pos, " %s", strtok(get_usermode_string(acptr), "+"));
-			else
+			{
+				const char *umodes = get_usermode_string(acptr);
+				if (*umodes == '+')
+					umodes++;
+				append_format(str, sizeof str, &pos, " %s", umodes);
+			} else {
 				append_format(str, sizeof str, &pos, " %s", "*");
+			}
 		}
 		if (HasField(fmt, FIELD_HOP))
 			append_format(str, sizeof str, &pos, " %d", hide ? 0 : acptr->hopcount);

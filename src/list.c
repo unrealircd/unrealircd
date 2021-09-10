@@ -563,7 +563,7 @@ NameList *find_name_list_match(NameList *list, char *name)
 	return NULL;
 }
 
-void add_nvplist(NameValuePrioList **lst, int priority, char *name, char *value)
+void add_nvplist(NameValuePrioList **lst, int priority, const char *name, const char *value)
 {
 	va_list vl;
 	NameValuePrioList *e = safe_alloc(sizeof(NameValuePrioList));
@@ -573,7 +573,7 @@ void add_nvplist(NameValuePrioList **lst, int priority, char *name, char *value)
 	AddListItemPrio(e, *lst, priority);
 }
 
-NameValuePrioList *find_nvplist(NameValuePrioList *list, char *name)
+NameValuePrioList *find_nvplist(NameValuePrioList *list, const char *name)
 {
 	NameValuePrioList *e;
 
@@ -587,7 +587,7 @@ NameValuePrioList *find_nvplist(NameValuePrioList *list, char *name)
 	return NULL;
 }
 
-void add_fmt_nvplist(NameValuePrioList **lst, int priority, char *name, FORMAT_STRING(const char *format), ...)
+void add_fmt_nvplist(NameValuePrioList **lst, int priority, const char *name, FORMAT_STRING(const char *format), ...)
 {
 	char value[512];
 	va_list vl;
@@ -615,7 +615,7 @@ void free_nvplist(NameValuePrioList *lst)
 
 #define nv_find_by_name(stru, name)	do_nv_find_by_name(stru, name, ARRAY_SIZEOF((stru)))
 
-long do_nv_find_by_name(NameValue *table, char *cmd, int numelements)
+long do_nv_find_by_name(NameValue *table, const char *cmd, int numelements)
 {
 	int start = 0;
 	int stop = numelements-1;
@@ -636,7 +636,7 @@ long do_nv_find_by_name(NameValue *table, char *cmd, int numelements)
 }
 
 #define nv_find_by_value(stru, value)	do_nv_find_by_value(stru, value, ARRAY_SIZEOF((stru)))
-char *do_nv_find_by_value(NameValue *table, long value, int numelements)
+const char *do_nv_find_by_value(NameValue *table, long value, int numelements)
 {
 	int i;
 

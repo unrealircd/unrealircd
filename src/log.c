@@ -1272,7 +1272,7 @@ void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *e
 {
 	Client *client;
 	const char *snomask_destinations, *p;
-	char *client_snomasks;
+	const char *client_snomasks;
 	char found;
 	MessageTag *mtags = NULL, *mtags_loop;
 	MultiLine *m;
