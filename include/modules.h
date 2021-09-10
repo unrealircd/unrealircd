@@ -575,7 +575,7 @@ struct Hook {
 	union {
 		int (*intfunc)();
 		void (*voidfunc)();
-		char *(*pcharfunc)();
+		char *(*stringfunc)();
 	} func;
 	Module *owner;
 };
@@ -587,7 +587,7 @@ struct Callback {
 		int (*intfunc)();
 		void (*voidfunc)();
 		void *(*pvoidfunc)();
-		char *(*pcharfunc)();
+		char *(*stringfunc)();
 	} func;
 	Module *owner;
 	char willberemoved; /* will be removed on next rehash? (eg the 'old'/'current' one) */
@@ -608,7 +608,7 @@ struct Efunction {
 		int (*intfunc)();
 		void (*voidfunc)();
 		void *(*pvoidfunc)();
-		char *(*pcharfunc)();
+		char *(*stringfunc)();
 	} func;
 	Module *owner;
 	char willberemoved; /* will be removed on next rehash? (eg the 'old'/'current' one) */
@@ -792,7 +792,7 @@ extern void HistoryBackendDel(HistoryBackend *m);
 #ifndef GCC_TYPECHECKING
 #define HookAdd(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, func, NULL, NULL)
 #define HookAddVoid(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, func, NULL)
-#define HookAddPChar(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, func)
+#define HookAddString(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, func)
 #else
 #define HookAdd(module, hooktype, priority, func) \
 __extension__ ({ \
@@ -806,14 +806,14 @@ __extension__ ({ \
     HookAddMain(module, hooktype, priority, NULL, func, NULL); \
 })
 
-#define HookAddPChar(module, hooktype, priority, func) \
+#define HookAddString(module, hooktype, priority, func) \
 __extension__ ({ \
 	ValidateHooks(hooktype, func); \
     HookAddMain(module, hooktype, priority, NULL, NULL, func); \
 })
 #endif /* GCC_TYPCHECKING */
 
-extern Hook	*HookAddMain(Module *module, int hooktype, int priority, int (*intfunc)(), void (*voidfunc)(), char *(*pcharfunc)());
+extern Hook	*HookAddMain(Module *module, int hooktype, int priority, int (*intfunc)(), void (*voidfunc)(), char *(*stringfunc)());
 extern Hook	*HookDel(Hook *hook);
 
 extern Hooktype *HooktypeAdd(Module *module, char *string, int *type);
@@ -920,7 +920,7 @@ extern void HooktypeDel(Hooktype *hooktype, Module *module);
 #define CallbackAddPVoidEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, func, NULL)
 #define CallbackAddPCharEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, NULL, func)
 
-extern Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*pcharfunc)());
+extern Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)());
 extern Callback	*CallbackDel(Callback *cb);
 
 #define EfunctionAdd(module, cbtype, func) EfunctionAddMain(module, cbtype, func, NULL, NULL, NULL)
@@ -928,7 +928,7 @@ extern Callback	*CallbackDel(Callback *cb);
 #define EfunctionAddPVoid(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, NULL, func, NULL)
 #define EfunctionAddPChar(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, NULL, NULL, func)
 
-extern Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*intfunc)(), void (*voidfunc)(), void *(*pvoidfunc)(), char *(*pcharfunc)());
+extern Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*intfunc)(), void (*voidfunc)(), void *(*pvoidfunc)(), char *(*stringfunc)());
 extern Efunction *EfunctionDel(Efunction *cb);
 
 extern Command *CommandAdd(Module *module, char *cmd, CmdFunc func, unsigned char params, int flags);
@@ -2428,7 +2428,7 @@ enum EfunctionType {
 #define MOD_LOAD() DLLFUNC int Mod_Load(ModuleInfo *modinfo)
 #define MOD_UNLOAD() DLLFUNC int Mod_Unload(ModuleInfo *modinfo)
 
-#define CLOAK_KEYCRC	RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM] != NULL ? RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM]->func.pcharfunc() : "nil"
+#define CLOAK_KEYCRC	RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM] != NULL ? RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM]->func.stringfunc() : "nil"
 
 #ifdef DYNAMIC_LINKING
  #include "modversion.h"

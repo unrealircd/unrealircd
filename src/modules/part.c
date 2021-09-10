@@ -142,7 +142,7 @@ CMD_FUNC(cmd_part)
 		{
 			Hook *tmphook;
 			for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_PART]; tmphook; tmphook = tmphook->next) {
-				comment = (*(tmphook->func.pcharfunc))(client, channel, comment);
+				comment = (*(tmphook->func.stringfunc))(client, channel, comment);
 				if (!comment)
 					break;
 			}

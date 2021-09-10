@@ -53,7 +53,7 @@ MOD_INIT()
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_REGONLYSPEAK);
 	
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, regonlyspeak_can_send_to_channel);
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, regonlyspeak_part_message);
+	HookAddString(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, regonlyspeak_part_message);
 
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);

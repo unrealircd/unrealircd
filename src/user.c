@@ -700,9 +700,9 @@ void make_cloakedhost(Client *client, char *curr, char *buf, size_t buflen)
 
 	/* Call the cloaking layer */
 	if (RCallbacks[CALLBACKTYPE_CLOAK_EX] != NULL)
-		mask = RCallbacks[CALLBACKTYPE_CLOAK_EX]->func.pcharfunc(client, host);
+		mask = RCallbacks[CALLBACKTYPE_CLOAK_EX]->func.stringfunc(client, host);
 	else if (RCallbacks[CALLBACKTYPE_CLOAK] != NULL)
-		mask = RCallbacks[CALLBACKTYPE_CLOAK]->func.pcharfunc(host);
+		mask = RCallbacks[CALLBACKTYPE_CLOAK]->func.stringfunc(host);
 	else
 		mask = curr;
 

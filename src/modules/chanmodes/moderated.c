@@ -49,7 +49,7 @@ MOD_INIT()
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_MODERATED);
 
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, moderated_can_send_to_channel);
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, moderated_pre_local_part);
+	HookAddString(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, moderated_pre_local_part);
 
 	return MOD_SUCCESS;
 }

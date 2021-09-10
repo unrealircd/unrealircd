@@ -109,7 +109,7 @@ CMD_FUNC(cmd_quit)
 
 				for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT_CHAN]; tmphook; tmphook = tmphook->next)
 				{
-					newcomment = (*(tmphook->func.pcharfunc))(client, channel, comment);
+					newcomment = (*(tmphook->func.stringfunc))(client, channel, comment);
 					if (!newcomment)
 						break;
 				}
@@ -138,7 +138,7 @@ CMD_FUNC(cmd_quit)
 
 		for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT]; tmphook; tmphook = tmphook->next)
 		{
-			comment = (*(tmphook->func.pcharfunc))(client, comment);
+			comment = (*(tmphook->func.stringfunc))(client, comment);
 			if (!comment)
 			{			
 				comment = client->name;

@@ -53,8 +53,8 @@ MOD_INIT()
 	CmodeAdd(modinfo->handle, req, &EXTMODE_CENSOR);
 
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, censor_can_send_to_channel);
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, censor_pre_local_part);
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, 0, censor_pre_local_quit);
+	HookAddString(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, censor_pre_local_part);
+	HookAddString(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, 0, censor_pre_local_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, censor_stats_badwords_channel);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, censor_config_run);
 	return MOD_SUCCESS;

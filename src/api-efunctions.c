@@ -153,7 +153,7 @@ Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(),
 	if (pvfunc)
 		p->func.pvoidfunc = pvfunc;
 	if (cfunc)
-		p->func.pcharfunc = cfunc;
+		p->func.stringfunc = cfunc;
 	p->type = eftype;
 	p->owner = module;
 	AddListItem(p, Efunctions[eftype]);

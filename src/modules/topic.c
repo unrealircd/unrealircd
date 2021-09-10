@@ -247,7 +247,7 @@ CMD_FUNC(cmd_topic)
 				return;
 
 			for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_TOPIC]; tmphook; tmphook = tmphook->next) {
-				topic = (*(tmphook->func.pcharfunc))(client, channel, topic);
+				topic = (*(tmphook->func.stringfunc))(client, channel, topic);
 				if (!topic)
 					return;
 			}

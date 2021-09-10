@@ -995,7 +995,7 @@ Hook *HookAddMain(Module *module, int hooktype, int priority, int (*func)(), voi
 	if (vfunc)
 		p->func.voidfunc = vfunc;
 	if (cfunc)
-		p->func.pcharfunc = cfunc;
+		p->func.stringfunc = cfunc;
 	p->type = hooktype;
 	p->owner = module;
 	p->priority = priority;
@@ -1068,7 +1068,7 @@ Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfun
 	if (pvfunc)
 		p->func.pvoidfunc = pvfunc;
 	if (cfunc)
-		p->func.pcharfunc = cfunc;
+		p->func.stringfunc = cfunc;
 	p->type = cbtype;
 	p->owner = module;
 	AddListItem(p, Callbacks[cbtype]);
