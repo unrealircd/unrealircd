@@ -227,7 +227,7 @@ struct Cmode {
 	 * @param what		MODE_ADD or MODE_DEL
 	 * @returns EX_DENY, EX_ALLOW or EX_ALWAYS_DENY
 	 */
-	int (*is_ok)(Client *client, Channel *channel, char mode, char *para, int checkt, int what);
+	int (*is_ok)(Client *client, Channel *channel, char mode, const char *para, int checkt, int what);
 
 	/** Store parameter in memory for channel.
 	 * This function pointer is NULL (unused) for modes without parameters.
@@ -237,14 +237,14 @@ struct Cmode {
 	 * @note IMPORTANT: only allocate a new paramstruct if you need to.
 	 *       Search for any current one first! Eg: in case of mode +y 5 and then +y 6 later without -y.
 	 */
-	void *(*put_param)(void *list, char *para);
+	void *(*put_param)(void *list, const char *para);
 
 	/** Get the stored parameter as a readable/printable string.
 	 * This function pointer is NULL (unused) for modes without parameters.
 	 * @param parastruct	The parameter struct
 	 * @returns a pointer to the string (temporary storage)
 	 */
-	char *(*get_param)(void *parastruct);
+	const char *(*get_param)(void *parastruct);
 
 	/** Convert input parameter to output.
 	 * This converts stuff like where a MODE +l "1aaa" becomes "1".
@@ -259,7 +259,7 @@ struct Cmode {
 	 *       In particular you MUST NOT SEND ERRORS to the client.
 	 *       This should be done in is_ok() and not in conv_param().
 	 */
-	char *(*conv_param)(char *para, Client *client, Channel *channel);
+	const char *(*conv_param)(const char *para, Client *client, Channel *channel);
 
 	/** Free and remove parameter from list.
 	 * This function pointer is NULL (unused) for modes without parameters.
@@ -317,12 +317,12 @@ struct Cmode {
 typedef struct {
 	char		letter;
 	int		paracount;
-	int		(*is_ok)(Client *,Channel *, char mode, char *para, int, int);
-	void *	(*put_param)(void *, char *);
-	char *		(*get_param)(void *);
-	char *		(*conv_param)(char *, Client *, Channel *);
+	int		(*is_ok)(Client *,Channel *, char mode, const char *para, int, int);
+	void *		(*put_param)(void *, const char *);
+	const char *	(*get_param)(void *);
+	const char *	(*conv_param)(const char *, Client *, Channel *);
 	void		(*free_param)(void *);
-	void *	(*dup_struct)(void *);
+	void *		(*dup_struct)(void *);
 	int		(*sjoin_check)(Channel *, void *, void *);
 	char		local;
 	char		unset_with_param;
@@ -1316,7 +1316,7 @@ int hooktype_remote_nickchange(Client *client, MessageTag *mtags, char *newnick)
  * @param parv			The parameters from the JOIN. Normally you should not use this.
  * @return Return 0 to allow the user, any other value should be an IRC numeric (eg: ERR_BANNEDFROMCHAN).
  */
-int hooktype_can_join(Client *client, Channel *channel, char *key, char *parv[]);
+int hooktype_can_join(Client *client, Channel *channel, const char *key, char *parv[]);
 
 /** Called when a user wants to join a channel, may the user join? (function prototype for HOOKTYPE_PRE_LOCAL_JOIN).
  * FIXME: It's not entirely clear why we have both hooktype_can_join() and hooktype_pre_local_join().
@@ -1853,7 +1853,7 @@ int hooktype_free_user(Client *client);
  * @note I don't think this works?
  * @return Unclear..
  */
-int hooktype_can_join_limitexceeded(Client *client, Channel *channel, char *key, char *parv[]);
+int hooktype_can_join_limitexceeded(Client *client, Channel *channel, const char *key, char *parv[]);
 
 /** Called to check if the user is visible in the channel (function prototype for HOOKTYPE_VISIBLE_IN_CHANNEL).
  * For example, the delayjoin module (+d/+D) will 'return 0' here if the user is hidden due to delayed join.

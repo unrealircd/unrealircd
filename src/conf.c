@@ -576,9 +576,9 @@ void conf_channelmodes(char *modes, struct ChMode *store)
 	char *m;
 	char *params = strchr(modes, ' ');
 	char *parambuf = NULL;
-	char *param = NULL;
+	const char *param = NULL;
+	const char *param_in;
 	char *save = NULL;
-	char *param_in;
 	int found;
 
 	/* Free existing parameters first (no inheritance) */

@@ -42,7 +42,7 @@ Cmode_t EXTCMODE_ISSECURE;
 #define IsSecureChanIndicated(channel)	(channel->mode.mode & EXTCMODE_ISSECURE)
 
 int IsSecureJoin(Channel *channel);
-int modeZ_is_ok(Client *client, Channel *channel, char mode, char *para, int checkt, int what);
+int modeZ_is_ok(Client *client, Channel *channel, char mode, const char *para, int checkt, int what);
 int issecure_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
 int issecure_part(Client *client, Channel *channel, MessageTag *mtags, const char *comment);
 int issecure_quit(Client *client, MessageTag *mtags, const char *comment);
@@ -108,7 +108,7 @@ int IsSecureJoin(Channel *channel)
 	return i;
 }
 
-int modeZ_is_ok(Client *client, Channel *channel, char mode, char *para, int checkt, int what)
+int modeZ_is_ok(Client *client, Channel *channel, char mode, const char *para, int checkt, int what)
 {
 	/* Reject any attempt to set or unset our mode. Even to IRCOps */
 	return EX_ALWAYS_DENY;

@@ -26,7 +26,7 @@
 CMD_FUNC(cmd_join);
 void _join_channel(Channel *channel, Client *client, MessageTag *mtags, int flags);
 void _do_join(Client *client, int parc, char *parv[]);
-int _can_join(Client *client, Channel *channel, char *key, char *parv[]);
+int _can_join(Client *client, Channel *channel, const char *key, char *parv[]);
 void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mtags);
 char *_get_chmodes_for_user(Client *client, int flags);
 
@@ -91,7 +91,7 @@ MOD_UNLOAD()
  * (eg: bans at the end), so don't change it unless you have a good reason
  * to do so -- Syzop.
  */
-int _can_join(Client *client, Channel *channel, char *key, char *parv[])
+int _can_join(Client *client, Channel *channel, const char *key, char *parv[])
 {
 	Link *lp;
 	Ban *banned;

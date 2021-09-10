@@ -28,7 +28,7 @@ int moded_check_part(Client *client, Channel *channel);
 int moded_join(Client *client, Channel *channel);
 int moded_part(Client *client, Channel *channel, MessageTag *mtags, const char *comment);
 int moded_quit(Client *client, MessageTag *mtags, const char *comment);
-int deny_all(Client *client, Channel *channel, char mode, char *para, int checkt, int what);
+int delayjoin_is_ok(Client *client, Channel *channel, char mode, const char *para, int checkt, int what);
 int moded_chanmode(Client *client, Channel *channel,
                    MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode);
 int moded_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, const char *text, SendType sendtype);
@@ -51,7 +51,7 @@ MOD_INIT()
 
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
-	req.is_ok = deny_all;
+	req.is_ok = delayjoin_is_ok;
 	req.letter = 'd';
 	req.local = 1;
 	CmodePostDelayed = CmodeAdd(modinfo->handle, req, &EXTMODE_POST_DELAYED);
@@ -256,7 +256,7 @@ void set_user_invisible(Channel *channel, Client *client)
 }
 
 
-int deny_all(Client *client, Channel *channel, char mode, char *para, int checkt, int what)
+int delayjoin_is_ok(Client *client, Channel *channel, char mode, const char *para, int checkt, int what)
 {
 	return EX_ALWAYS_DENY;
 }

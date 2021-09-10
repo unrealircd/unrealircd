@@ -415,7 +415,7 @@ static void unload_extcmode_commit(Cmode *cmode)
 				new_message(&me, NULL, &mtags);
 				if (cmode->unset_with_param)
 				{
-					char *param = cmode->get_param(GETPARASTRUCT(channel, cmode->letter));
+					const char *param = cmode->get_param(GETPARASTRUCT(channel, cmode->letter));
 					sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 						       ":%s MODE %s -%c %s",
 						       me.name, channel->name, cmode->letter, param);
@@ -466,9 +466,20 @@ void unload_all_unused_extcmodes(void)
  * @param channel	The channel
  * @param mode		The mode character (eg: 'f')
  */
-char *cm_getparameter(Channel *channel, char mode)
+const char *cm_getparameter(Channel *channel, char mode)
 {
 	return GETPARAMHANDLERBYLETTER(mode)->get_param(GETPARASTRUCT(channel, mode));
+}
+
+/** Get parameter for a channel mode - special version for SJOIN.
+ * This version doesn't take a channel, but a mode.mode_params.
+ * It is only used by SJOIN and should not be used in 3rd party modules.
+ * @param p	The list, eg oldmode.mode_params
+ * @param mode	The mode letter
+ */
+const char *cm_getparameter_ex(void **p, char mode)
+{
+	return GETPARAMHANDLERBYLETTER(mode)->get_param(GETPARASTRUCTEX(p, mode));
 }
 
 /** Set parameter for a channel mode.
@@ -477,7 +488,7 @@ char *cm_getparameter(Channel *channel, char mode)
  * @param str		The parameter string
  * @note Module users should not use this function directly, it is only used by MODE and SJOIN.
  */
-void cm_putparameter(Channel *channel, char mode, char *str)
+void cm_putparameter(Channel *channel, char mode, const char *str)
 {
 	GETPARASTRUCT(channel, mode) = GETPARAMHANDLERBYLETTER(mode)->put_param(GETPARASTRUCT(channel, mode), str);
 }
@@ -492,16 +503,6 @@ void cm_freeparameter(Channel *channel, char mode)
 	GETPARASTRUCT(channel, mode) = NULL;
 }
 
-/** Get parameter for a channel mode - special version for SJOIN.
- * This version doesn't take a channel, but a mode.mode_params.
- * It is only used by SJOIN and should not be used in 3rd party modules.
- * @param p	The list, eg oldmode.mode_params
- * @param mode	The mode letter
- */
-char *cm_getparameter_ex(void **p, char mode)
-{
-	return GETPARAMHANDLERBYLETTER(mode)->get_param(GETPARASTRUCTEX(p, mode));
-}
 
 /** Set parameter for a channel mode - special version for SJOIN.
  * This version doesn't take a channel, but a mode.mode_params.
@@ -510,7 +511,7 @@ char *cm_getparameter_ex(void **p, char mode)
  * @param mode	The mode letter
  * @param str	The mode parameter string to set
  */
-void cm_putparameter_ex(void **p, char mode, char *str)
+void cm_putparameter_ex(void **p, char mode, const char *str)
 {
 	GETPARASTRUCTEX(p, mode) = GETPARAMHANDLERBYLETTER(mode)->put_param(GETPARASTRUCTEX(p, mode), str);
 }
@@ -524,7 +525,7 @@ void cm_putparameter_ex(void **p, char mode, char *str)
  * @param what		MODE_ADD / MODE_DEL (???)
  * @returns EX_ALLOW or EX_DENY
  */
-int extcmode_default_requirechop(Client *client, Channel *channel, char mode, char *para, int checkt, int what)
+int extcmode_default_requirechop(Client *client, Channel *channel, char mode, const char *para, int checkt, int what)
 {
 	if (IsUser(client) && is_chan_op(client, channel))
 		return EX_ALLOW;
@@ -542,7 +543,7 @@ int extcmode_default_requirechop(Client *client, Channel *channel, char mode, ch
  * @param what		MODE_ADD / MODE_DEL (???)
  * @returns EX_ALLOW or EX_DENY
  */
-int extcmode_default_requirehalfop(Client *client, Channel *channel, char mode, char *para, int checkt, int what)
+int extcmode_default_requirehalfop(Client *client, Channel *channel, char mode, const char *para, int checkt, int what)
 {
 	if (IsUser(client) && (is_chan_op(client, channel) || is_half_op(client, channel)))
 		return EX_ALLOW;

@@ -579,8 +579,8 @@ extern void gen_random_alnum(char *buf, int numbytes);
 
 extern MODVAR char extchmstr[4][64];
 
-extern int extcmode_default_requirechop(Client *, Channel *, char, char *, int, int);
-extern int extcmode_default_requirehalfop(Client *, Channel *, char, char *, int, int);
+extern int extcmode_default_requirechop(Client *, Channel *, char, const char *, int, int);
+extern int extcmode_default_requirehalfop(Client *, Channel *, char, const char *, int, int);
 extern Cmode_t extcmode_get(Cmode *);
 extern void extcmode_init(void);
 extern void make_extcmodestr();
@@ -638,7 +638,7 @@ extern int is_invited(Client *client, Channel *channel);
 extern void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel, int hide_local_modes);
 extern MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
 extern int op_can_override(char *acl, Client *client,Channel *channel,void* extra);
-extern Client *find_chasing(Client *client, char *user, int *chasing);
+extern Client *find_chasing(Client *client, const char *user, int *chasing);
 extern MODVAR long opermode;
 extern MODVAR long sajoinmode;
 extern void add_user_to_channel(Channel *channel, Client *who, int flags);
@@ -677,7 +677,7 @@ extern MODVAR int labeled_response_force;
 /* Efuncs */
 extern MODVAR void (*do_join)(Client *, int, char **);
 extern MODVAR void (*join_channel)(Channel *channel, Client *client, MessageTag *mtags, int flags);
-extern MODVAR int (*can_join)(Client *client, Channel *channel, char *key, char *parv[]);
+extern MODVAR int (*can_join)(Client *client, Channel *channel, const char *key, char *parv[]);
 extern MODVAR void (*do_mode)(Channel *channel, Client *client, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
 extern MODVAR void (*set_mode)(Channel *channel, Client *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
@@ -836,11 +836,11 @@ extern char *unreal_time_sync_error(void);
 extern int unreal_time_synch(int timeout);
 extern char *getcloak(Client *client);
 extern MODVAR unsigned char param_to_slot_mapping[256];
-extern char *cm_getparameter(Channel *channel, char mode);
-extern void cm_putparameter(Channel *channel, char mode, char *str);
+extern const char *cm_getparameter(Channel *channel, char mode);
+extern const char *cm_getparameter_ex(void **p, char mode);
+extern void cm_putparameter(Channel *channel, char mode, const char *str);
+extern void cm_putparameter_ex(void **p, char mode, const char *str);
 extern void cm_freeparameter(Channel *channel, char mode);
-extern char *cm_getparameter_ex(void **p, char mode);
-extern void cm_putparameter_ex(void **p, char mode, char *str);
 extern void cm_freeparameter_ex(void **p, char mode, char *str);
 extern int file_exists(char *file);
 extern time_t get_file_time(char *fname);

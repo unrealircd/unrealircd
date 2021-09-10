@@ -204,7 +204,7 @@ static void free_membership(Membership *m)
  *			only after searching through the nick history.
  * @returns The client (if found) or NULL (if not found).
  */
-Client *find_chasing(Client *client, char *user, int *chasing)
+Client *find_chasing(Client *client, const char *user, int *chasing)
 {
 	Client *who = find_client(user, NULL);
 

@@ -43,15 +43,15 @@ Cmode_t EXTMODE_LIMIT = 0L;
 #define LIMITLEN	32
 
 /* Forward declarations */
-int limit_can_join(Client *client, Channel *channel, char *key, char *parv[]);
-int cmode_limit_is_ok(Client *client, Channel *channel, char mode, char *para, int type, int what);
-void *cmode_limit_put_param(void *r_in, char *param);
-char *cmode_limit_get_param(void *r_in);
-char *cmode_limit_conv_param(char *param_in, Client *client, Channel *channel);
+int limit_can_join(Client *client, Channel *channel, const char *key, char *parv[]);
+int cmode_limit_is_ok(Client *client, Channel *channel, char mode, const char *para, int type, int what);
+void *cmode_limit_put_param(void *r_in, const char *param);
+const char *cmode_limit_get_param(void *r_in);
+const char *cmode_limit_conv_param(const char *param_in, Client *client, Channel *channel);
 void cmode_limit_free_param(void *r);
 void *cmode_limit_dup_struct(void *r_in);
 int cmode_limit_sjoin_check(Channel *channel, void *ourx, void *theirx);
-int transform_channel_limit(char *param);
+int transform_channel_limit(const char *param);
 
 MOD_INIT()
 {
@@ -87,7 +87,7 @@ MOD_UNLOAD()
 }
 
 /** Can the user join the channel? */
-int limit_can_join(Client *client, Channel *channel, char *key, char *parv[])
+int limit_can_join(Client *client, Channel *channel, const char *key, char *parv[])
 {
 	ChannelLimit *r = (ChannelLimit *)GETPARASTRUCT(channel, 'l');
 
@@ -107,7 +107,7 @@ int limit_can_join(Client *client, Channel *channel, char *key, char *parv[])
 	return 0;
 }
 
-int cmode_limit_is_ok(Client *client, Channel *channel, char mode, char *param, int type, int what)
+int cmode_limit_is_ok(Client *client, Channel *channel, char mode, const char *param, int type, int what)
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
@@ -126,7 +126,7 @@ int cmode_limit_is_ok(Client *client, Channel *channel, char mode, char *param, 
 	return EX_DENY;
 }
 
-void *cmode_limit_put_param(void *k_in, char *param)
+void *cmode_limit_put_param(void *k_in, const char *param)
 {
 	ChannelLimit *fld = (ChannelLimit *)k_in;
 
@@ -138,7 +138,7 @@ void *cmode_limit_put_param(void *k_in, char *param)
 	return fld;
 }
 
-char *cmode_limit_get_param(void *r_in)
+const char *cmode_limit_get_param(void *r_in)
 {
 	ChannelLimit *r = (ChannelLimit *)r_in;
 	static char retbuf[32];
@@ -150,7 +150,7 @@ char *cmode_limit_get_param(void *r_in)
 	return retbuf;
 }
 
-char *cmode_limit_conv_param(char *param, Client *client, Channel *channel)
+const char *cmode_limit_conv_param(const char *param, Client *client, Channel *channel)
 {
 	static char retbuf[32];
 	int v = transform_channel_limit(param);
@@ -186,7 +186,7 @@ int cmode_limit_sjoin_check(Channel *channel, void *ourx, void *theirx)
 		return EXSJ_THEYWON;
 }
 
-int transform_channel_limit(char *param)
+int transform_channel_limit(const char *param)
 {
 	int v = atoi(param);
 	if (v <= 0)

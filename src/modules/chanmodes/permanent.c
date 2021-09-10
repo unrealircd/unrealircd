@@ -38,7 +38,7 @@ static int permanent_channel_destroy(Channel *channel, int *should_destroy)
 	return 0;
 }
 
-static int permanent_is_ok(Client *client, Channel *channel, char mode, char *para, int checkt, int what)
+static int permanent_is_ok(Client *client, Channel *channel, char mode, const char *para, int checkt, int what)
 {
 	if (!IsOper(client))
 	{

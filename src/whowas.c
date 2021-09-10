@@ -97,7 +97,7 @@ void off_history(Client *client)
 	}
 }
 
-Client *get_history(char *nick, time_t timelimit)
+Client *get_history(const char *nick, time_t timelimit)
 {
 	WhoWas *temp;
 	int  blah;

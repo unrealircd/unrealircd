@@ -32,10 +32,10 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 CMD_FUNC(_cmd_umode);
 
 /* local: */
-int do_mode_char(Channel *channel, long modetype, char modechar, char *param,
+int do_mode_char(Channel *channel, long modetype, char modechar, const char *param,
                  u_int what, Client *client,
                  u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], long my_access);
-int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
+int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int what,
                     Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
                    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
@@ -525,7 +525,7 @@ void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
 	return;
 }
 
-const char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, int extbtype, Ban **banlist)
+const char *mode_ban_handler(Client *client, Channel *channel, const char *param, int what, int extbtype, Ban **banlist)
 {
 	const char *tmpstr;
 	BanContext *b;
@@ -637,7 +637,7 @@ void do_mode_char_write(char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], u_int *pcount,
 #define is_xchanop(x) ((x & CHFL_CHANOP))
 #endif
 
-int do_mode_char_list_mode(Channel *channel, long modetype, char modechar, char *param,
+int do_mode_char_list_mode(Channel *channel, long modetype, char modechar, const char *param,
                            u_int what, Client *client,
                            u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
                            long my_access)
@@ -666,7 +666,7 @@ int do_mode_char_list_mode(Channel *channel, long modetype, char modechar, char 
 }
 
 /** Called for [+-]vhoaq */
-int do_mode_char_member_mode(Channel *channel, long modetype, char modechar, char *param,
+int do_mode_char_member_mode(Channel *channel, long modetype, char modechar, const char *param,
                              u_int what, Client *client,
                              u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
                              long my_access)
@@ -865,7 +865,7 @@ int do_mode_char_member_mode(Channel *channel, long modetype, char modechar, cha
 /* Called for +vhoaq and +beI, simply delegates it to sub-handlers
  * (but first checks if there is a parameter present)
  */
-int do_mode_char(Channel *channel, long modetype, char modechar, char *param,
+int do_mode_char(Channel *channel, long modetype, char modechar, const char *param,
                  u_int what, Client *client,
                  u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
                  long my_access)
@@ -883,13 +883,13 @@ int do_mode_char(Channel *channel, long modetype, char modechar, char *param,
 /** Check access and if granted, set the extended chanmode to the requested value in memory.
   * @returns amount of params eaten (0 or 1)
   */
-int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
+int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int what,
                     Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
 {
 	int paracnt = (what == MODE_ADD) ? handler->paracount : 0;
 	char mode = handler->letter;
 	int x;
-	char *morphed;
+	const char *morphed;
 
 	if ((what == MODE_DEL) && handler->unset_with_param)
 		paracnt = 1; /* there's always an exception! */
@@ -965,7 +965,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 			/* is it already set at the same value? if so, ignore it. */
 			if (channel->mode.mode & handler->mode)
 			{
-				char *now, *requested;
+				const char *now, *requested;
 				char flag = handler->letter;
 				now = cm_getparameter(channel, flag);
 				requested = handler->conv_param(param, client, channel);

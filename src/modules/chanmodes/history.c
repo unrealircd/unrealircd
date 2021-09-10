@@ -46,10 +46,10 @@ int history_config_posttest(int *);
 int history_config_run(ConfigFile *, ConfigEntry *, int);
 int history_chanmode_change(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
 static int compare_history_modes(HistoryChanMode *a, HistoryChanMode *b);
-int history_chanmode_is_ok(Client *client, Channel *channel, char mode, char *para, int type, int what);
-void *history_chanmode_put_param(void *r_in, char *param);
-char *history_chanmode_get_param(void *r_in);
-char *history_chanmode_conv_param(char *param, Client *client, Channel *channel);
+int history_chanmode_is_ok(Client *client, Channel *channel, char mode, const char *para, int type, int what);
+void *history_chanmode_put_param(void *r_in, const char *param);
+const char *history_chanmode_get_param(void *r_in);
+const char *history_chanmode_conv_param(const char *param, Client *client, Channel *channel);
 void history_chanmode_free_param(void *r);
 void *history_chanmode_dup_struct(void *r_in);
 int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx);
@@ -413,7 +413,7 @@ int history_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
  * @param lines: The number of lines (the X in +H X:Y)
  * @param t:     The time value (the Y in +H X:Y)
   */
-int history_parse_chanmode(Channel *channel, char *param, int *lines, long *t)
+int history_parse_chanmode(Channel *channel, const char *param, int *lines, long *t)
 {
 	char buf[64], *p, *q;
 	char contains_non_digit = 0;
@@ -477,7 +477,7 @@ int history_parse_chanmode(Channel *channel, char *param, int *lines, long *t)
  * Does the user have rights to add/remove this channel mode?
  * Is the supplied mode parameter ok?
  */
-int history_chanmode_is_ok(Client *client, Channel *channel, char mode, char *param, int type, int what)
+int history_chanmode_is_ok(Client *client, Channel *channel, char mode, const char *param, int type, int what)
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
@@ -527,7 +527,7 @@ static void history_chanmode_helper(char *buf, size_t bufsize, int lines, long t
 /** Convert channel parameter to something proper.
  * NOTE: client may be NULL if called for e.g. set::modes-playback-on-join
  */
-char *history_chanmode_conv_param(char *param, Client *client, Channel *channel)
+const char *history_chanmode_conv_param(const char *param, Client *client, Channel *channel)
 {
 	static char buf[64];
 	int lines = 0;
@@ -541,7 +541,7 @@ char *history_chanmode_conv_param(char *param, Client *client, Channel *channel)
 }
 
 /** Store the +H x:y channel mode */
-void *history_chanmode_put_param(void *mode_in, char *param)
+void *history_chanmode_put_param(void *mode_in, const char *param)
 {
 	HistoryChanMode *h = (HistoryChanMode *)mode_in;
 	int lines = 0;
@@ -563,7 +563,7 @@ void *history_chanmode_put_param(void *mode_in, char *param)
 }
 
 /** Retrieve the +H settings (the X:Y string) */
-char *history_chanmode_get_param(void *h_in)
+const char *history_chanmode_get_param(void *h_in)
 {
 	HistoryChanMode *h = (HistoryChanMode *)h_in;
 	static char buf[64];
@@ -768,7 +768,7 @@ CMD_OVERRIDE_FUNC(override_mode)
 		if (changed)
 		{
 			MessageTag *mtags = NULL;
-			char *params = history_chanmode_get_param(settings);
+			const char *params = history_chanmode_get_param(settings);
 
 			if (!params)
 				return; /* Weird */

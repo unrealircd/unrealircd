@@ -59,7 +59,7 @@ void off_history(Client *);
 **	nickname within the timelimit. Returns NULL, if no
 **	one found...
 */
-Client *get_history(char *, time_t);
+Client *get_history(const char *, time_t);
 					/* Nick name */
 					/* Time limit in seconds */
 

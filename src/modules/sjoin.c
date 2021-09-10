@@ -720,7 +720,7 @@ getnick:
 			{
 				if (cm->paracount)
 				{
-					char *parax = cm_getparameter_ex(oldmode.mode_params, cm->letter);
+					const char *parax = cm_getparameter_ex(oldmode.mode_params, cm->letter);
 					//char *parax = cm->get_param(extcmode_get_struct(oldmode.modeparam, cm->letter));
 					Addit(cm->letter, parax);
 				} else {
@@ -766,7 +766,7 @@ getnick:
 			{
 				if (cm->paracount)
 				{
-					char *parax = cm_getparameter(channel, cm->letter);
+					const char *parax = cm_getparameter(channel, cm->letter);
 					if (parax)
 					{
 						Addit(cm->letter, parax);
@@ -790,7 +790,7 @@ getnick:
 			    (channel->mode.mode & cm->mode))
 			{
 				int r;
-				char *parax;
+				const char *parax;
 				char flag = cm->letter;
 				void *ourm = GETPARASTRUCTEX(oldmode.mode_params, flag);
 				void *theirm = GETPARASTRUCT(channel, flag);

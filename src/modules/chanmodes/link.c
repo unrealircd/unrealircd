@@ -45,18 +45,18 @@ typedef enum {
 	LINKTYPE_BADKEY = 7, // +k
 } linkType;
 
-int cmodeL_is_ok(Client *client, Channel *channel, char mode, char *para, int type, int what);
-void *cmodeL_put_param(void *r_in, char *param);
-char *cmodeL_get_param(void *r_in);
-char *cmodeL_conv_param(char *param_in, Client *client, Channel *channel);
+int cmodeL_is_ok(Client *client, Channel *channel, char mode, const char *para, int type, int what);
+void *cmodeL_put_param(void *r_in, const char *param);
+const char *cmodeL_get_param(void *r_in);
+const char *cmodeL_conv_param(const char *param_in, Client *client, Channel *channel);
 void cmodeL_free_param(void *r);
 void *cmodeL_dup_struct(void *r_in);
 int cmodeL_sjoin_check(Channel *channel, void *ourx, void *theirx);
 
-int extban_link_syntax(Client *client, int checkt, char *reason);
+int extban_link_syntax(Client *client, int checkt, const char *reason);
 int extban_link_is_ok(BanContext *b);
 const char *extban_link_conv_param(BanContext *b, Extban *extban);
-int link_doforward(Client *client, Channel *channel, char *linked, linkType linktype);
+int link_doforward(Client *client, Channel *channel, const char *linked, linkType linktype);
 int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[]);
 
 MOD_INIT()
@@ -106,7 +106,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int cmodeL_is_ok(Client *client, Channel *channel, char mode, char *para, int type, int what)
+int cmodeL_is_ok(Client *client, Channel *channel, char mode, const char *para, int type, int what)
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
@@ -142,7 +142,7 @@ int cmodeL_is_ok(Client *client, Channel *channel, char mode, char *para, int ty
 	return EX_DENY;
 }
 
-void *cmodeL_put_param(void *r_in, char *param)
+void *cmodeL_put_param(void *r_in, const char *param)
 {
 	aModeLEntry *r = (aModeLEntry *)r_in;
 
@@ -155,7 +155,7 @@ void *cmodeL_put_param(void *r_in, char *param)
 	return (void *)r;
 }
 
-char *cmodeL_get_param(void *r_in)
+const char *cmodeL_get_param(void *r_in)
 {
 	aModeLEntry *r = (aModeLEntry *)r_in;
 	static char retbuf[CHANNELLEN+1];
@@ -170,10 +170,8 @@ char *cmodeL_get_param(void *r_in)
 /** Convert parameter to something proper.
  * NOTE: client may be NULL
  */
-char *cmodeL_conv_param(char *param, Client *client, Channel *channel)
+const char *cmodeL_conv_param(const char *param, Client *client, Channel *channel)
 {
-	char *p;
-
 	if (!valid_channelname(param))
 		return NULL;
 
@@ -206,7 +204,7 @@ int cmodeL_sjoin_check(Channel *channel, void *ourx, void *theirx)
 	return EXSJ_THEYWON;
 }
 
-int extban_link_syntax(Client *client, int checkt, char *reason)
+int extban_link_syntax(Client *client, int checkt, const char *reason)
 {
 	if (MyUser(client) && (checkt == EXBCHK_PARAM))
 	{
@@ -284,8 +282,9 @@ const char *extban_link_conv_param(BanContext *b, Extban *extban)
 	return retbuf;
 }
 
-int link_doforward(Client *client, Channel *channel, char *linked, linkType type)
+int link_doforward(Client *client, Channel *channel, const char *linked, linkType type)
 {
+	char linked_channel_buffer[CHANNELLEN+1];
 	char desc[64];
 	char *parv[3];
 
@@ -328,16 +327,20 @@ int link_doforward(Client *client, Channel *channel, char *linked, linkType type
 	           ":%s %d %s %s %s :[Link] Cannot join channel %s (%s) -- transferring you to %s",
 	           me.name, ERR_LINKCHANNEL, client->name, channel->name, linked,
 	           channel->name, desc, linked);
+
+	strlcpy(linked_channel_buffer, linked, sizeof(linked_channel_buffer));
 	parv[0] = client->name;
-	parv[1] = linked;
+	parv[1] = linked_channel_buffer;
 	parv[2] = NULL;
+
 	do_join(client, 2, parv);
+
 	return HOOK_DENY; // Original channel join = ignored
 }
 
 int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[])
 {
-	char *linked;
+	const char *linked;
 	int canjoin;
 
 	// User might already be on this channel, let's also exclude any possible services bots early

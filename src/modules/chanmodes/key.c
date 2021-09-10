@@ -40,16 +40,16 @@ Cmode_t EXTMODE_KEY = 0L;
 #define IsKey(x)	((x)->mode.mode & EXTMODE_KEY)
 
 /* Forward declarations */
-int key_can_join(Client *client, Channel *channel, char *key, char *parv[]);
-int cmode_key_is_ok(Client *client, Channel *channel, char mode, char *para, int type, int what);
-void *cmode_key_put_param(void *r_in, char *param);
-char *cmode_key_get_param(void *r_in);
-char *cmode_key_conv_param(char *param_in, Client *client, Channel *channel);
+int key_can_join(Client *client, Channel *channel, const char *key, char *parv[]);
+int cmode_key_is_ok(Client *client, Channel *channel, char mode, const char *para, int type, int what);
+void *cmode_key_put_param(void *r_in, const char *param);
+const char *cmode_key_get_param(void *r_in);
+const char *cmode_key_conv_param(const char *param_in, Client *client, Channel *channel);
 void cmode_key_free_param(void *r);
 void *cmode_key_dup_struct(void *r_in);
 int cmode_key_sjoin_check(Channel *channel, void *ourx, void *theirx);
-int is_valid_key(char *key);
-void transform_channel_key(char *i, char *o, int n);
+int is_valid_key(const char *key);
+void transform_channel_key(const char *i, char *o, int n);
 
 MOD_INIT()
 {
@@ -86,7 +86,7 @@ MOD_UNLOAD()
 }
 
 /** Can the user join the channel? */
-int key_can_join(Client *client, Channel *channel, char *key, char *parv[])
+int key_can_join(Client *client, Channel *channel, const char *key, char *parv[])
 {
 	ChannelKey *r = (ChannelKey *)GETPARASTRUCT(channel, 'k');
 
@@ -101,7 +101,7 @@ int key_can_join(Client *client, Channel *channel, char *key, char *parv[])
 	return 0;
 }
 
-int cmode_key_is_ok(Client *client, Channel *channel, char mode, char *param, int type, int what)
+int cmode_key_is_ok(Client *client, Channel *channel, char mode, const char *param, int type, int what)
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
@@ -125,7 +125,7 @@ int cmode_key_is_ok(Client *client, Channel *channel, char mode, char *param, in
 	return EX_DENY;
 }
 
-void *cmode_key_put_param(void *k_in, char *param)
+void *cmode_key_put_param(void *k_in, const char *param)
 {
 	ChannelKey *fld = (ChannelKey *)k_in;
 
@@ -137,7 +137,7 @@ void *cmode_key_put_param(void *k_in, char *param)
 	return fld;
 }
 
-char *cmode_key_get_param(void *r_in)
+const char *cmode_key_get_param(void *r_in)
 {
 	ChannelKey *r = (ChannelKey *)r_in;
 	static char retbuf[KEYLEN+1];
@@ -149,7 +149,7 @@ char *cmode_key_get_param(void *r_in)
 	return retbuf;
 }
 
-char *cmode_key_conv_param(char *param, Client *client, Channel *channel)
+const char *cmode_key_conv_param(const char *param, Client *client, Channel *channel)
 {
 	static char retbuf[KEYLEN+1];
 
@@ -202,9 +202,9 @@ int valid_key_char(char c)
 }
 
 #define BADKEYCHARS " :,"
-int is_valid_key(char *key)
+int is_valid_key(const char *key)
 {
-	char *p;
+	const char *p;
 
 	if (strlen(key) > KEYLEN)
 		return 0;
@@ -214,7 +214,7 @@ int is_valid_key(char *key)
 	return 1;
 }
 
-void transform_channel_key(char *i, char *o, int n)
+void transform_channel_key(const char *i, char *o, int n)
 {
 	n--; /* reserve one for final nul byte */
 

@@ -33,7 +33,7 @@ Cmode_t EXTCMODE_NOKNOCK;
 #define IsNoKnock(channel)    (channel->mode.mode & EXTCMODE_NOKNOCK)
 
 int noknock_check (Client *client, Channel *channel);
-int noknock_mode_allow(Client *client, Channel *channel, char mode, char *para, int checkt, int what);
+int noknock_mode_allow(Client *client, Channel *channel, char mode, const char *para, int checkt, int what);
 int noknock_mode_del (Channel *channel, int modeChar);
 
 MOD_TEST()
@@ -90,7 +90,7 @@ int noknock_mode_del (Channel *channel, int modeChar)
 	return 0;
 }
 
-int noknock_mode_allow(Client *client, Channel *channel, char mode, char *para, int checkt, int what)
+int noknock_mode_allow(Client *client, Channel *channel, char mode, const char *para, int checkt, int what)
 {
 	if (!has_channel_mode(channel, 'i'))
 	{

@@ -33,7 +33,7 @@ Cmode_t EXTCMODE_REGISTERED;
 
 #define IsRegisteredChannel(channel)    (channel->mode.mode & EXTCMODE_REGISTERED)
 
-int isregistered_chanmode_is_ok(Client *client, Channel *channel, char mode, char *param, int type, int what);
+int isregistered_chanmode_is_ok(Client *client, Channel *channel, char mode, const char *param, int type, int what);
 
 MOD_INIT()
 {
@@ -60,7 +60,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int isregistered_chanmode_is_ok(Client *client, Channel *channel, char mode, char *param, int type, int what)
+int isregistered_chanmode_is_ok(Client *client, Channel *channel, char mode, const char *param, int type, int what)
 {
 	if (!IsServer(client) && !IsULine(client))
 	{

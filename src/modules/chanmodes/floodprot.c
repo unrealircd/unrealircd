@@ -129,10 +129,10 @@ char *channel_modef_string(ChannelFloodProtection *x, char *str);
 void do_floodprot_action(Channel *channel, int what);
 void floodprottimer_add(Channel *channel, char mflag, time_t when);
 uint64_t gen_floodprot_msghash(const char *text);
-int cmodef_is_ok(Client *client, Channel *channel, char mode, char *para, int type, int what);
-void *cmodef_put_param(void *r_in, char *param);
-char *cmodef_get_param(void *r_in);
-char *cmodef_conv_param(char *param_in, Client *client, Channel *channel);
+int cmodef_is_ok(Client *client, Channel *channel, char mode, const char *para, int type, int what);
+void *cmodef_put_param(void *r_in, const char *param);
+const char *cmodef_get_param(void *r_in);
+const char *cmodef_conv_param(const char *param_in, Client *client, Channel *channel);
 void cmodef_free_param(void *r);
 void *cmodef_dup_struct(void *r_in);
 int cmodef_sjoin_check(Channel *channel, void *ourx, void *theirx);
@@ -341,7 +341,7 @@ FloodType *find_floodprot_by_index(int index)
 	return NULL;
 }
 
-int cmodef_is_ok(Client *client, Channel *channel, char mode, char *param, int type, int what)
+int cmodef_is_ok(Client *client, Channel *channel, char mode, const char *param, int type, int what)
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
@@ -467,7 +467,7 @@ invalidsyntax:
 	return EX_DENY;
 }
 
-void *cmodef_put_param(void *fld_in, char *param)
+void *cmodef_put_param(void *fld_in, const char *param)
 {
 	ChannelFloodProtection *fld = (ChannelFloodProtection *)fld_in;
 	char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
@@ -581,7 +581,7 @@ fail_cmodef_put_param:
 	return fld; /* FAIL */
 }
 
-char *cmodef_get_param(void *r_in)
+const char *cmodef_get_param(void *r_in)
 {
 	ChannelFloodProtection *r = (ChannelFloodProtection *)r_in;
 	static char retbuf[512];
@@ -596,7 +596,7 @@ char *cmodef_get_param(void *r_in)
 /** Convert parameter to something proper.
  * NOTE: client may be NULL if called for e.g. set::modes-on-join
  */
-char *cmodef_conv_param(char *param_in, Client *client, Channel *channel)
+const char *cmodef_conv_param(const char *param_in, Client *client, Channel *channel)
 {
 	static char retbuf[256];
 	char param[256];
