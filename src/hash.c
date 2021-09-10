@@ -314,7 +314,7 @@ uint64_t hash_whowas_name(const char *name)
 /*
  * add_to_client_hash_table
  */
-int add_to_client_hash_table(char *name, Client *client)
+int add_to_client_hash_table(const char *name, Client *client)
 {
 	unsigned int hashv;
 	/*
@@ -340,7 +340,7 @@ int add_to_client_hash_table(char *name, Client *client)
 /*
  * add_to_client_hash_table
  */
-int add_to_id_hash_table(char *name, Client *client)
+int add_to_id_hash_table(const char *name, Client *client)
 {
 	unsigned int hashv;
 	hashv = hash_client_name(name);
@@ -351,7 +351,7 @@ int add_to_id_hash_table(char *name, Client *client)
 /*
  * add_to_channel_hash_table
  */
-int add_to_channel_hash_table(char *name, Channel *channel)
+int add_to_channel_hash_table(const char *name, Channel *channel)
 {
 	unsigned int hashv;
 
@@ -363,7 +363,7 @@ int add_to_channel_hash_table(char *name, Channel *channel)
 /*
  * del_from_client_hash_table
  */
-int del_from_client_hash_table(char *name, Client *client)
+int del_from_client_hash_table(const char *name, Client *client)
 {
 	if (!list_empty(&client->client_hash))
 		list_del(&client->client_hash);
@@ -373,7 +373,7 @@ int del_from_client_hash_table(char *name, Client *client)
 	return 0;
 }
 
-int del_from_id_hash_table(char *name, Client *client)
+int del_from_id_hash_table(const char *name, Client *client)
 {
 	if (!list_empty(&client->id_hash))
 		list_del(&client->id_hash);
@@ -386,7 +386,7 @@ int del_from_id_hash_table(char *name, Client *client)
 /*
  * del_from_channel_hash_table
  */
-void del_from_channel_hash_table(char *name, Channel *channel)
+void del_from_channel_hash_table(const char *name, Channel *channel)
 {
 	Channel *tmp, *prev = NULL;
 	unsigned int hashv;
@@ -507,7 +507,7 @@ Client *hash_find_server(const char *server, Client *def)
  *        the ID table, otherwise not.
  * @returns If the client is found then the Client is returned, otherwise NULL.
  */
-Client *find_client(char *name, Client *requester)
+Client *find_client(const char *name, Client *requester)
 {
 	if (requester == NULL || IsServer(requester))
 	{
@@ -528,7 +528,7 @@ Client *find_client(char *name, Client *requester)
  *        the ID table, otherwise not.
  * @returns If the server is found then the Client is returned, otherwise NULL.
  */
-Client *find_server(char *name, Client *requester)
+Client *find_server(const char *name, Client *requester)
 {
 	if (name)
 	{
@@ -548,7 +548,7 @@ Client *find_server(char *name, Client *requester)
  *        the ID table, otherwise not.
  * @returns If the user is found then the Client is returned, otherwise NULL.
  */
-Client *find_person(char *name, Client *requester) /* TODO: this should have been called find_user() to be consistent */
+Client *find_person(const char *name, Client *requester) /* TODO: this should have been called find_user() to be consistent */
 {
 	Client *c2ptr;
 
@@ -565,7 +565,7 @@ Client *find_person(char *name, Client *requester) /* TODO: this should have bee
  * @param name			The channel name to search for
  * @returns If the channel exists then the Channel is returned, otherwise NULL.
  */
-Channel *find_channel(char *name)
+Channel *find_channel(const char *name)
 {
 	unsigned int hashv;
 	Channel *channel;
@@ -625,7 +625,7 @@ void init_throttling()
 	 */
 }
 
-uint64_t hash_throttling(char *ip)
+uint64_t hash_throttling(const char *ip)
 {
 	return siphash(ip, siphashkey_throttling) % THROTTLING_HASH_TABLE_SIZE;
 }
