@@ -1143,7 +1143,7 @@ int mm_compile(ManagedModule *m, char *tmpfile, int test)
 {
 	char newpath[512];
 	char cmd[512];
-	char *basename;
+	const char *basename;
 	char *p;
 	FILE *fd;
 	char buf[512];
@@ -1214,7 +1214,7 @@ int mm_compile(ManagedModule *m, char *tmpfile, int test)
  */
 void mm_install_module(ManagedModule *m)
 {
-	char *basename = unreal_getfilename(m->source);
+	const char *basename = unreal_getfilename(m->source);
 	char *tmpfile;
 	char *sha256;
 
@@ -1612,7 +1612,7 @@ void mm_generate_repository(int argc, char *args[])
 void mm_parse_c_file(int argc, char *args[])
 {
 	char *fullname = args[1];
-	char *basename;
+	const char *basename;
 	char modname[256];
 	ManagedModule *m;
 

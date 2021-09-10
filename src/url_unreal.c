@@ -128,7 +128,7 @@ void https_cancel(Download *handle, FORMAT_STRING(const char *pattern), ...)
 void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
 {
 	char *file;
-	char *filename;
+	const char *filename;
 	char *tmp;
 	Download *handle = NULL;
 	int ipv6 = 0;

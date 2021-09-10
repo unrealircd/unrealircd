@@ -33,7 +33,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 CMD_FUNC(cmd_slog);
-void _do_unreal_log_remote_deliver(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized);
+void _do_unreal_log_remote_deliver(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
 
 MOD_TEST()
 {
@@ -170,7 +170,7 @@ CMD_FUNC(cmd_slog)
 	safe_free_multiline(mmsg);
 }
 
-void _do_unreal_log_remote_deliver(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized)
+void _do_unreal_log_remote_deliver(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized)
 {
 	MessageTag *mtags = safe_alloc(sizeof(MessageTag));
 

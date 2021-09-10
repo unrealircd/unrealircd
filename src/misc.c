@@ -756,7 +756,7 @@ int valid_host(char *host, int strict)
 /*|| BAN ACTION ROUTINES FOLLOW ||*/
 
 /** Converts a banaction string (eg: "kill") to an integer value (eg: BAN_ACT_KILL) */
-BanAction banact_stringtoval(char *s)
+BanAction banact_stringtoval(const char *s)
 {
 	BanActTable *b;
 
@@ -789,7 +789,7 @@ char banact_valtochar(BanAction val)
 }
 
 /** Converts a banaction value (eg: BAN_ACT_KLINE) to a string (eg: "kline") */
-char *banact_valtostring(BanAction val)
+const char *banact_valtostring(BanAction val)
 {
 	BanActTable *b;
 
@@ -802,7 +802,7 @@ char *banact_valtostring(BanAction val)
 /*|| BAN TARGET ROUTINES FOLLOW ||*/
 
 /** Extract target flags from string 's'. */
-int spamfilter_gettargets(char *s, Client *client)
+int spamfilter_gettargets(const char *s, Client *client)
 {
 SpamfilterTargetTable *e;
 int flags = 0;
@@ -825,7 +825,7 @@ int flags = 0;
 }
 
 /** Convert a string with a targetname to an integer value */
-int spamfilter_getconftargets(char *s)
+int spamfilter_getconftargets(const char *s)
 {
 SpamfilterTargetTable *e;
 
@@ -838,9 +838,9 @@ SpamfilterTargetTable *e;
 /** Create a string with (multiple) targets from an integer mask */
 char *spamfilter_target_inttostring(int v)
 {
-static char buf[128];
-SpamfilterTargetTable *e;
-char *p = buf;
+	static char buf[128];
+	SpamfilterTargetTable *e;
+	char *p = buf;
 
 	for (e = &spamfiltertargettable[0]; e->value; e++)
 		if (v & e->value)
@@ -1514,7 +1514,7 @@ void labeled_response_force_end_default_handler(void)
 }
 
 /** Ad default handler for if the slog module is not loaded */
-void do_unreal_log_remote_deliver_default_handler(LogLevel loglevel, char *subsystem, char *event_id, char *msg, char *json_serialized)
+void do_unreal_log_remote_deliver_default_handler(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized)
 {
 }
 
@@ -2019,7 +2019,7 @@ int filename_has_suffix(const char *fname, const char *suffix)
 }
 
 /** Check if the specified file or directory exists */
-int file_exists(char *file)
+int file_exists(const char *file)
 {
 #ifdef _WIN32
 	if (_access(file, 0) == 0)
@@ -2031,7 +2031,7 @@ int file_exists(char *file)
 }
 
 /** Get the file creation time */
-time_t get_file_time(char *fname)
+time_t get_file_time(const char *fname)
 {
 	struct stat st;
 
@@ -2042,7 +2042,7 @@ time_t get_file_time(char *fname)
 }
 
 /** Get the size of a file */
-long get_file_size(char *fname)
+long get_file_size(const char *fname)
 {
 	struct stat st;
 

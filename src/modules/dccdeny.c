@@ -58,6 +58,7 @@ static int can_dcc_soft(Client *from, Client *to, const char *filename, const ch
 static void free_dcc_config_blocks(void);
 void dccdeny_unload_free_all_conf_deny_dcc(ModData *m);
 void dccdeny_unload_free_all_conf_allow_dcc(ModData *m);
+ConfigItem_deny_dcc *find_deny_dcc(const char *name);
 
 MOD_TEST()
 {
@@ -793,7 +794,7 @@ static void DCCdeny_del(ConfigItem_deny_dcc *deny)
 	safe_free(deny);
 }
 
-ConfigItem_deny_dcc *find_deny_dcc(char *name)
+ConfigItem_deny_dcc *find_deny_dcc(const char *name)
 {
 	ConfigItem_deny_dcc	*e;
 

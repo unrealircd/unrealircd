@@ -463,7 +463,7 @@ int unreal_match(Match *m, const char *str)
 	return 0;
 }
 
-int unreal_match_method_strtoval(char *str)
+int unreal_match_method_strtoval(const char *str)
 {
 	if (!strcmp(str, "regex") || !strcmp(str, "pcre"))
 		return MATCH_PCRE_REGEX;

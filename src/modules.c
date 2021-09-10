@@ -69,7 +69,7 @@ void *obsd_dlsym(void *handle, char *symbol)
 }
 #endif
 
-void deletetmp(char *path)
+void deletetmp(const char *path)
 {
 #ifndef NOREMOVETMP
 	if (!loop.config_test)
@@ -180,7 +180,7 @@ unsigned int maj, min, plevel;
  * something like "/home/xyz/unrealircd/modules/third/la.so
  * (and other tricks)
  */
-char *Module_TransformPath(char *path_)
+const char *Module_TransformPath(const char *path_)
 {
 	static char path[1024];
 
@@ -202,17 +202,18 @@ char *Module_TransformPath(char *path_)
 }
 
 /** This function is the inverse of Module_TransformPath() */
-char *Module_GetRelPath(char *fullpath)
+const char *Module_GetRelPath(const char *fullpath)
 {
 	static char buf[512];
 	char prefix[512];
-	char *s = fullpath;
+	const char *without_prefix = fullpath;
+	char *s;
 
 	/* Strip the prefix */
 	snprintf(prefix, sizeof(prefix), "%s/", MODULESDIR);
 	if (!strncasecmp(fullpath, prefix, strlen(prefix)))
-		s += strlen(prefix);
-	strlcpy(buf, s, sizeof(buf));
+		without_prefix += strlen(prefix);
+	strlcpy(buf, without_prefix, sizeof(buf));
 
 	/* Strip the suffix */
 	s = strstr(buf, MODULE_SUFFIX);
@@ -225,7 +226,7 @@ char *Module_GetRelPath(char *fullpath)
 /** Validate a modules' ModuleHeader.
  * @returns Error message is returned, or NULL if everything is OK.
  */
-static char *validate_mod_header(char *relpath, ModuleHeader *mod_header)
+static char *validate_mod_header(const char *relpath, ModuleHeader *mod_header)
 {
 	char *p;
 	static char buf[256];
@@ -260,7 +261,7 @@ static char *validate_mod_header(char *relpath, ModuleHeader *mod_header)
 	return NULL; /* SUCCESS */
 }
 
-int module_already_in_testing(char *relpath)
+int module_already_in_testing(const char *relpath)
 {
 	Module *m;
 	for (m = Modules; m; m = m->next)
@@ -291,7 +292,7 @@ char  *Module_Create(char *path_)
 	char    *Mod_Version;
 	unsigned int *compiler_version;
 	static char 	errorbuf[1024];
-	char 		*path, *relpath, *tmppath;
+	const char	*path, *relpath, *tmppath;
 	ModuleHeader    *mod_header = NULL;
 	int		ret = 0;
 	char		*reterr;

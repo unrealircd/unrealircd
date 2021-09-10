@@ -19,7 +19,7 @@ static inline int ValidVarCharacter(char x)
 	return 0;
 }
 
-PreprocessorItem evaluate_preprocessor_if(char *statement, char *filename, int linenumber, ConditionalConfig **cc_out)
+PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename, int linenumber, ConditionalConfig **cc_out)
 {
 	char *p=statement, *name;
 	int negative = 0;
@@ -176,7 +176,7 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, char *filename, int l
 	return PREPROCESSOR_ERROR;
 }
 
-PreprocessorItem  evaluate_preprocessor_define(char *statement, char *filename, int linenumber)
+PreprocessorItem  evaluate_preprocessor_define(char *statement, const char *filename, int linenumber)
 {
 	char *p = statement;
 	char *name, *name_terminator;
@@ -246,7 +246,7 @@ PreprocessorItem  evaluate_preprocessor_define(char *statement, char *filename, 
 	return PREPROCESSOR_DEFINE;
 }
 
-PreprocessorItem  parse_preprocessor_item(char *start, char *end, char *filename, int linenumber, ConditionalConfig **cc)
+PreprocessorItem  parse_preprocessor_item(char *start, char *end, const char *filename, int linenumber, ConditionalConfig **cc)
 {
 	char buf[512];
 	int max;

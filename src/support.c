@@ -821,31 +821,35 @@ char *unreal_getpathname(char *filepath, char *path)
 /** Returns the filename portion of the given path.
  * The original string is not modified
  */
-char *unreal_getfilename(char *path)
+const char *unreal_getfilename(const char *path)
 {
-        int len = strlen(path);
-        char *end;
-        if (!len)
-                return NULL;
-        end = path+len-1;
+	int len = strlen(path);
+	const char *end;
+
+	if (!len)
+		return NULL;
+
+	end = path+len-1;
 	if (*end == '\\' || *end == '/')
 		return NULL;
-        while (end > path)
-        {
-                if (*end == '\\' || *end == '/')
-                {
-                        end++;
-                        break;
-                }
-                end--;
-        }
-        return end;
+
+	while (end > path)
+	{
+		if (*end == '\\' || *end == '/')
+		{
+			end++;
+			break;
+		}
+		end--;
+	}
+
+	return end;
 }
 
 /** Returns the special module tmp name for a given path.
  * The original string is not modified.
  */
-char *unreal_getmodfilename(char *path)
+const char *unreal_getmodfilename(const char *path)
 {
 	static char ret[512];
 	char buf[512];
@@ -892,7 +896,7 @@ char *unreal_getmodfilename(char *path)
 /* Returns a consistent filename for the cache/ directory.
  * Returned value will be like: cache/<hash of url>
  */
-char *unreal_mkcache(const char *url)
+const char *unreal_mkcache(const char *url)
 {
 	static char tempbuf[PATH_MAX+1];
 	char tmp2[128];
@@ -910,9 +914,9 @@ int has_cached_version(const char *url)
 /** Used to blow away result of bad copy or cancel file copy */
 void cancel_copy(int srcfd, int destfd, const char *dest)
 {
-        close(srcfd);
-        close(destfd);
-        unlink(dest);
+	close(srcfd);
+	close(destfd);
+	unlink(dest);
 }
 
 /** Copys the contents of the src file to the dest file.

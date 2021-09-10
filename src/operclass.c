@@ -29,7 +29,7 @@ struct OperClassValidator
 	OperClassCallbackNode *node;
 };
 
-OperClassACLPath *OperClass_parsePath(char *path);
+OperClassACLPath *OperClass_parsePath(const char *path);
 void OperClass_freePath(OperClassACLPath *path);
 OperClassPathNode *OperClass_findPathNodeForIdentifier(char *identifier, OperClassPathNode *head);
 
@@ -111,7 +111,7 @@ void OperClassValidatorDel(OperClassValidator *validator)
 	safe_free(validator);	
 }
 
-OperClassACLPath *OperClass_parsePath(char *path)
+OperClassACLPath *OperClass_parsePath(const char *path)
 {
 	char *pathCopy = raw_strdup(path);
 	OperClassACLPath *pathHead = NULL;
@@ -279,7 +279,7 @@ OperPermission ValidatePermissionsForPathEx(OperClassACL *acl, OperClassACLPath 
 	return OPER_DENY;
 }
 
-OperPermission ValidatePermissionsForPath(char *path, Client *client, Client *victim, Channel *channel, const void *extra)
+OperPermission ValidatePermissionsForPath(const char *path, Client *client, Client *victim, Channel *channel, const void *extra)
 {
 	ConfigItem_oper *ce_oper;
 	ConfigItem_operclass *ce_operClass;

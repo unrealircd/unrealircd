@@ -37,7 +37,7 @@ Log *logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 
 /* Forward declarations */
-void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id, Client *client, int expand_msg, char *msg, va_list vl);
+void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, int expand_msg, const char *msg, va_list vl);
 void log_blocks_switchover(void);
 
 /** Convert a regular string value to a JSON string.
@@ -64,13 +64,13 @@ json_t *json_string_unreal(const char *s)
 
 json_t *json_timestamp(time_t v)
 {
-	char *ts = timestamp_iso8601(v);
+	const char *ts = timestamp_iso8601(v);
 	if (ts)
 		return json_string_unreal(ts);
 	return json_null();
 }
 
-LogType log_type_stringtoval(char *str)
+LogType log_type_stringtoval(const char *str)
 {
 	if (!strcmp(str, "json"))
 		return LOG_TYPE_JSON;
@@ -79,7 +79,7 @@ LogType log_type_stringtoval(char *str)
 	return LOG_TYPE_INVALID;
 }
 
-char *log_type_valtostring(LogType v)
+const char *log_type_valtostring(LogType v)
 {
 	switch(v)
 	{
@@ -417,7 +417,7 @@ void json_expand_client_security_groups(json_t *parent, Client *client)
 			json_array_append_new(child, json_string_unreal(s->name));
 }
 
-void json_expand_client(json_t *j, char *key, Client *client, int detail)
+void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 {
 	char buf[BUFSIZE+1];
 	json_t *child = json_object();
@@ -513,7 +513,7 @@ void json_expand_client(json_t *j, char *key, Client *client, int detail)
 	}
 }
 
-void json_expand_channel(json_t *j, char *key, Channel *channel, int detail)
+void json_expand_channel(json_t *j, const char *key, Channel *channel, int detail)
 {
 	json_t *child = json_object();
 	json_object_set_new(j, key, child);
@@ -529,7 +529,7 @@ void json_expand_channel(json_t *j, char *key, Channel *channel, int detail)
 	// Possibly later: If detail is set to 1 then expand modes, mode_lock, ..
 }
 
-char *timestamp_iso8601_now(void)
+const char *timestamp_iso8601_now(void)
 {
 	struct timeval t;
 	struct tm *tm;
@@ -552,7 +552,7 @@ char *timestamp_iso8601_now(void)
 	return buf;
 }
 
-char *timestamp_iso8601(time_t v)
+const char *timestamp_iso8601(time_t v)
 {
 	struct tm *tm;
 	static char buf[64];
@@ -818,7 +818,7 @@ void log_data_free(LogData *d)
 	safe_free(d);
 }
 
-char *log_level_valtostring(LogLevel loglevel)
+const char *log_level_valtostring(LogLevel loglevel)
 {
 	switch(loglevel)
 	{
@@ -856,12 +856,12 @@ static NameValue log_colors_terminal[] = {
 };
 #define TERMINAL_COLOR_RESET "\033[0m"
 
-char *log_level_irc_color(LogLevel loglevel)
+const char *log_level_irc_color(LogLevel loglevel)
 {
 	return nv_find_by_value(log_colors_irc, loglevel);
 }
 
-char *log_level_terminal_color(LogLevel loglevel)
+const char *log_level_terminal_color(LogLevel loglevel)
 {
 	return nv_find_by_value(log_colors_terminal, loglevel);
 }
@@ -1040,7 +1040,7 @@ literal:
 }
 
 /** Do the actual writing to log files */
-void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized)
+void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized)
 {
 	static int last_log_file_warning = 0;
 	Log *l;
@@ -1225,7 +1225,7 @@ void do_unreal_log_disk(LogLevel loglevel, char *subsystem, char *event_id, Mult
 	}
 }
 
-int log_sources_match(LogSource *ls, LogLevel loglevel, char *subsystem, char *event_id)
+int log_sources_match(LogSource *ls, LogLevel loglevel, const char *subsystem, const char *event_id)
 {
 	// NOTE: This routine works by exclusion, so a bad struct would
 	//       cause everything to match!!
@@ -1246,7 +1246,7 @@ int log_sources_match(LogSource *ls, LogLevel loglevel, char *subsystem, char *e
  * @returns The snomask letters (may be more than one),
  *          an asterisk (for all ircops), or NULL (no delivery)
  */
-char *log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id)
+const char *log_to_snomask(LogLevel loglevel, const char *subsystem, const char *event_id)
 {
 	Log *ld;
 	static char snomasks[64];
@@ -1268,12 +1268,11 @@ char *log_to_snomask(LogLevel loglevel, char *subsystem, char *event_id)
 #define COLOR_NONE "\xf"
 #define COLOR_DARKGREY "\00314"
 /** Do the actual writing to log files */
-void do_unreal_log_opers(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized, Client *from_server)
+void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized, Client *from_server)
 {
 	Client *client;
-	char *snomask_destinations;
+	const char *snomask_destinations, *p;
 	char *client_snomasks;
-	char *p;
 	char found;
 	MessageTag *mtags = NULL, *mtags_loop;
 	MultiLine *m;
@@ -1340,7 +1339,7 @@ void do_unreal_log_opers(LogLevel loglevel, char *subsystem, char *event_id, Mul
 	safe_free_message_tags(mtags);
 }
 
-void do_unreal_log_remote(LogLevel loglevel, char *subsystem, char *event_id, MultiLine *msg, char *json_serialized)
+void do_unreal_log_remote(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized)
 {
 	Log *l;
 	int found = 0;
@@ -1372,8 +1371,8 @@ void do_unreal_log_free_args(va_list vl)
 static int unreal_log_recursion_trap = 0;
 
 /* Logging function, called by the unreal_log() macro. */
-void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
-                   Client *client, char *msg, ...)
+void do_unreal_log(LogLevel loglevel, const char *subsystem, const char *event_id,
+                   Client *client, const char *msg, ...)
 {
 	va_list vl;
 
@@ -1393,8 +1392,8 @@ void do_unreal_log(LogLevel loglevel, char *subsystem, char *event_id,
 }
 
 /* Logging function, called by the unreal_log_raw() macro. */
-void do_unreal_log_raw(LogLevel loglevel, char *subsystem, char *event_id,
-                       Client *client, char *msg, ...)
+void do_unreal_log_raw(LogLevel loglevel, const char *subsystem, const char *event_id,
+                       Client *client, const char *msg, ...)
 {
 	va_list vl;
 
@@ -1413,8 +1412,8 @@ void do_unreal_log_raw(LogLevel loglevel, char *subsystem, char *event_id,
 	unreal_log_recursion_trap = 0;
 }
 
-void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
-                            Client *client, int expand_msg, char *msg, va_list vl)
+void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char *event_id,
+                            Client *client, int expand_msg, const char *msg, va_list vl)
 {
 	LogData *d;
 	char *json_serialized;
@@ -1423,7 +1422,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	json_t *j_details = NULL;
 	json_t *t;
 	char msgbuf[1024];
-	char *loglevel_string = log_level_valtostring(loglevel);
+	const char *loglevel_string = log_level_valtostring(loglevel);
 	MultiLine *mmsg;
 	static va_list null_va;
 	Client *from_server = NULL;
@@ -1527,7 +1526,7 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	/* And the ircops stuff */
 	t = json_object_get(j_details, "from_server_name");
 	if (t && (str = json_get_value(t)))
-		from_server = find_server((char *)str, NULL);
+		from_server = find_server(str, NULL);
 	if (from_server == NULL)
 		from_server = &me;
 	do_unreal_log_opers(loglevel, subsystem, event_id, mmsg, json_serialized, from_server);
@@ -1543,8 +1542,8 @@ void do_unreal_log_internal(LogLevel loglevel, char *subsystem, char *event_id,
 	json_decref(j);
 }
 
-void do_unreal_log_internal_from_remote(LogLevel loglevel, char *subsystem, char *event_id,
-                                        MultiLine *msg, char *json_serialized, Client *from_server)
+void do_unreal_log_internal_from_remote(LogLevel loglevel, const char *subsystem, const char *event_id,
+                                        MultiLine *msg, const char *json_serialized, Client *from_server)
 {
 	if (unreal_log_recursion_trap)
 		return;

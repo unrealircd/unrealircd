@@ -751,7 +751,7 @@ extern void SetupEvents(void);
 
 extern void    Module_Init(void);
 extern char    *Module_Create(char *path);
-extern char    *Module_TransformPath(char *path_);
+extern const char    *Module_TransformPath(const char *path_);
 extern void    Init_all_testing_modules(void);
 extern void    Unload_all_loaded_modules(void);
 extern void    Unload_all_testing_modules(void);

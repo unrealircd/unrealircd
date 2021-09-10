@@ -169,20 +169,20 @@ struct SetCheck settings;
  * Utilities
 */
 
-void	port_range(char *string, int *start, int *end);
-long	config_checkval(char *value, unsigned short flags);
+void	port_range(const char *string, int *start, int *end);
+long	config_checkval(const char *value, unsigned short flags);
 
 /*
  * Parser
 */
 
-ConfigFile		*config_load(char *filename, char *displayname);
+ConfigFile		*config_load(const char *filename, const char *displayname);
 void			config_free(ConfigFile *cfptr);
-ConfigFile		*config_parse_with_offset(char *filename, char *confdata, unsigned int line_offset);
-ConfigFile	 	*config_parse(char *filename, char *confdata);
-ConfigEntry		*config_find_entry(ConfigEntry *ce, char *name);
+ConfigFile		*config_parse_with_offset(const char *filename, char *confdata, unsigned int line_offset);
+ConfigFile	 	*config_parse(const char *filename, char *confdata);
+ConfigEntry		*config_find_entry(ConfigEntry *ce, const char *name);
 
-extern void add_entropy_configfile(struct stat *st, char *buf);
+extern void add_entropy_configfile(struct stat *st, const char *buf);
 extern void unload_all_unused_snomasks(void);
 extern void unload_all_unused_umodes(void);
 extern void unload_all_unused_extcmodes(void);
@@ -199,7 +199,7 @@ void free_tls_options(TLSOptions *tlsoptions);
 /*
  * Config parser (IRCd)
 */
-int			config_read_file(char *filename, char *display_name);
+int			config_read_file(const char *filename, const char *display_name);
 void			config_rehash();
 int			config_run_blocks();
 int	config_test_blocks();
@@ -255,10 +255,10 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce);
 void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *rs_key);
 void free_all_config_resources(void);
 int rehash_internal(Client *client);
-int is_blacklisted_module(char *name);
+int is_blacklisted_module(const char *name);
 
 /** Return the printable string of a 'cep' location, such as set::something::xyz */
-char *config_var(ConfigEntry *cep)
+const char *config_var(ConfigEntry *cep)
 {
 	static char buf[256];
 	ConfigEntry *e;
@@ -289,9 +289,12 @@ char *config_var(ConfigEntry *cep)
 	return buf;
 }
 
-void port_range(char *string, int *start, int *end)
+void port_range(const char *string, int *start, int *end)
 {
-	char *c = strchr(string, '-');
+	char buf[256];
+	char *c;
+	strlcpy(buf, string, sizeof(buf));
+	c = strchr(buf, '-');
 	if (!c)
 	{
 		int tmp = atoi(string);
@@ -312,18 +315,21 @@ void port_range(char *string, int *start, int *end)
  * RETURNS: 0 for parse error, 1 if ok.
  * REMARK: times&period should be ints!
  */
-int config_parse_flood(char *orig, int *times, int *period)
+int config_parse_flood(const char *orig, int *times, int *period)
 {
-char *x;
+	char buf[256];
+	char *x;
+
+	strlcpy(buf, orig, sizeof(buf));
 
 	*times = *period = 0;
-	x = strchr(orig, ':');
+	x = strchr(buf, ':');
 	/* 'blah', ':blah', '1:' */
-	if (!x || (x == orig) || (*(x+1) == '\0'))
+	if (!x || (x == buf) || (*(x+1) == '\0'))
 		return 0;
 
 	*x = '\0';
-	*times = atoi(orig);
+	*times = atoi(buf);
 	*period = config_checkval(x+1, CFG_TIME);
 	*x = ':'; /* restore */
 	return 1;
@@ -457,7 +463,8 @@ int config_parse_flood_generic(const char *str, Configuration *conf, char *block
 	return 1;
 }
 
-long config_checkval(char *orig, unsigned short flags) {
+long config_checkval(const char *orig, unsigned short flags)
+{
 	char *value = raw_strdup(orig);
 	char *text;
 	long ret = 0;
@@ -570,10 +577,10 @@ void free_conf_channelmodes(struct ChMode *store)
 }
 
 /* Set configuration, used for set::modes-on-join */
-void conf_channelmodes(char *modes, struct ChMode *store)
+void conf_channelmodes(const char *modes, struct ChMode *store)
 {
 	Cmode *cm;
-	char *m;
+	const char *m;
 	char *params = strchr(modes, ' ');
 	char *parambuf = NULL;
 	const char *param = NULL;
@@ -678,7 +685,7 @@ void chmode_str(struct ChMode *modes, char *mbuf, char *pbuf, size_t mbuf_size, 
 	*mbuf=0;
 }
 
-int channellevel_to_int(char *s)
+int channellevel_to_int(const char *s)
 {
 	/* Requested at http://bugs.unrealircd.org/view.php?id=3852 */
 	if (!strcmp(s, "none"))
@@ -708,7 +715,7 @@ int channellevel_to_int(char *s)
 /* Channel flag (eg: CHFL_CHANOWNER) to SJOIN symbol (eg: *).
  * WARNING: Do not confuse SJOIN symbols with prefixes in /NAMES!
  */
-char *chfl_to_sjoin_symbol(int s)
+const char *chfl_to_sjoin_symbol(int s)
 {
 	switch(s)
 	{
@@ -758,7 +765,7 @@ char chfl_to_chanmode(int s)
 	/* NOT REACHED */
 }
 
-Policy policy_strtoval(char *s)
+Policy policy_strtoval(const char *s)
 {
 	if (!s)
 		return 0;
@@ -775,7 +782,7 @@ Policy policy_strtoval(char *s)
 	return 0;
 }
 
-char *policy_valtostr(Policy policy)
+const char *policy_valtostr(Policy policy)
 {
 	if (policy == POLICY_ALLOW)
 		return "allow";
@@ -797,7 +804,7 @@ char policy_valtochar(Policy policy)
 	return '?';
 }
 
-AllowedChannelChars allowed_channelchars_strtoval(char *str)
+AllowedChannelChars allowed_channelchars_strtoval(const char *str)
 {
 	if (!strcmp(str, "ascii"))
 		return ALLOWED_CHANNELCHARS_ASCII;
@@ -808,7 +815,7 @@ AllowedChannelChars allowed_channelchars_strtoval(char *str)
 	return 0;
 }
 
-char *allowed_channelchars_valtostr(AllowedChannelChars v)
+const char *allowed_channelchars_valtostr(AllowedChannelChars v)
 {
 	switch(v)
 	{
@@ -826,7 +833,7 @@ char *allowed_channelchars_valtostr(AllowedChannelChars v)
 }
 
 /* Used for set::automatic-ban-target and set::manual-ban-target */
-BanTarget ban_target_strtoval(char *str)
+BanTarget ban_target_strtoval(const char *str)
 {
 	if (!strcmp(str, "ip"))
 		return BAN_TARGET_IP;
@@ -844,7 +851,7 @@ BanTarget ban_target_strtoval(char *str)
 }
 
 /* Used for set::automatic-ban-target and set::manual-ban-target */
-char *ban_target_valtostr(BanTarget v)
+const char *ban_target_valtostr(BanTarget v)
 {
 	switch(v)
 	{
@@ -865,7 +872,7 @@ char *ban_target_valtostr(BanTarget v)
 	}
 }
 
-HideIdleTimePolicy hideidletime_strtoval(char *str)
+HideIdleTimePolicy hideidletime_strtoval(const char *str)
 {
 	if (!strcmp(str, "never"))
 		return HIDE_IDLE_TIME_NEVER;
@@ -878,7 +885,7 @@ HideIdleTimePolicy hideidletime_strtoval(char *str)
 	return 0;
 }
 
-char *hideidletime_valtostr(HideIdleTimePolicy v)
+const char *hideidletime_valtostr(HideIdleTimePolicy v)
 {
 	switch(v)
 	{
@@ -895,7 +902,7 @@ char *hideidletime_valtostr(HideIdleTimePolicy v)
 	}
 }
 
-ConfigFile *config_load(char *filename, char *displayname)
+ConfigFile *config_load(const char *filename, const char *displayname)
 {
 	struct stat sb;
 	int			fd;
@@ -990,7 +997,7 @@ void unreal_del_quotes(char *i)
 }
 
 /** Add quotes to a line, eg some"thing becomes some\"thing - extended version */
-int unreal_add_quotes_r(char *i, char *o, size_t len)
+int unreal_add_quotes_r(const char *i, char *o, size_t len)
 {
 	if (len == 0)
 		return 0;
@@ -1026,7 +1033,7 @@ int unreal_add_quotes_r(char *i, char *o, size_t len)
 }	
 
 /** Add quotes to a line, eg some"thing becomes some\"thing */
-char *unreal_add_quotes(char *str)
+const char *unreal_add_quotes(const char *str)
 {
 	static char qbuf[2048];
 	
@@ -1035,14 +1042,15 @@ char *unreal_add_quotes(char *str)
 	return qbuf;
 }
 
-ConfigFile *config_parse(char *filename, char *confdata){
+ConfigFile *config_parse(const char *filename, char *confdata)
+{
 	return config_parse_with_offset(filename, confdata, 0);
 }
 
 /* This is the internal parser, made by Chris Behrens & Fred Jacobs <2005.
  * Enhanced (or mutilated) by Bram Matthys over the years (2015-2019).
  */
-ConfigFile *config_parse_with_offset(char *filename, char *confdata, unsigned int line_offset)
+ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsigned int line_offset)
 {
 	char		*ptr;
 	char		*start;
@@ -1427,7 +1435,7 @@ void config_entry_free(ConfigEntry *ce)
 	safe_free(ce);
 }
 
-ConfigEntry *config_find_entry(ConfigEntry *ce, char *name)
+ConfigEntry *config_find_entry(ConfigEntry *ce, const char *name)
 {
 	ConfigEntry *cep;
 
@@ -1614,7 +1622,7 @@ int config_is_blankorempty(ConfigEntry *cep, const char *block)
 	return 0;
 }
 
-ConfigCommand *config_binary_search(char *cmd) {
+ConfigCommand *config_binary_search(const char *cmd) {
 	int start = 0;
 	int stop = ARRAY_SIZEOF(_ConfigCommands)-1;
 	int mid;
@@ -2262,7 +2270,7 @@ void config_parse_and_queue_urls(ConfigEntry *ce)
  *        (mostly to support remote includes' URIs for recursive include detection).
  * @return 1 on success, a negative number on error
  */
-int config_read_file(char *filename, char *display_name)
+int config_read_file(const char *filename, const char *display_name)
 {
 	ConfigFile 	*cfptr, *cfptr2, **cfptr3;
 	ConfigEntry 	*ce;
@@ -2968,7 +2976,7 @@ int	config_test_blocks()
  * Service functions
 */
 
-ConfigItem_alias *find_alias(char *name)
+ConfigItem_alias *find_alias(const char *name)
 {
 	ConfigItem_alias *e;
 
@@ -2983,7 +2991,7 @@ ConfigItem_alias *find_alias(char *name)
 	return NULL;
 }
 
-ConfigItem_class *find_class(char *name)
+ConfigItem_class *find_class(const char *name)
 {
 	ConfigItem_class *e;
 
@@ -2999,7 +3007,7 @@ ConfigItem_class *find_class(char *name)
 }
 
 
-ConfigItem_oper	*find_oper(char *name)
+ConfigItem_oper	*find_oper(const char *name)
 {
 	ConfigItem_oper	*e;
 
@@ -3014,7 +3022,7 @@ ConfigItem_oper	*find_oper(char *name)
 	return NULL;
 }
 
-ConfigItem_operclass *find_operclass(char *name)
+ConfigItem_operclass *find_operclass(const char *name)
 {
 	ConfigItem_operclass *e;
 
@@ -3029,7 +3037,7 @@ ConfigItem_operclass *find_operclass(char *name)
 	return NULL;
 }
 
-int count_oper_sessions(char *name)
+int count_oper_sessions(const char *name)
 {
 	int count = 0;
 	Client *client;
@@ -3043,7 +3051,7 @@ int count_oper_sessions(char *name)
 	return count;
 }
 
-ConfigItem_listen *find_listen(char *ipmask, int port, int ipv6)
+ConfigItem_listen *find_listen(const char *ipmask, int port, int ipv6)
 {
 	ConfigItem_listen *e;
 
@@ -3060,7 +3068,7 @@ ConfigItem_listen *find_listen(char *ipmask, int port, int ipv6)
 /** Find an SNI match.
  * @param name The hostname to look for (eg: irc.xyz.com).
  */
-ConfigItem_sni *find_sni(char *name)
+ConfigItem_sni *find_sni(const char *name)
 {
 	ConfigItem_sni *e;
 
@@ -3075,7 +3083,7 @@ ConfigItem_sni *find_sni(char *name)
 	return NULL;
 }
 
-ConfigItem_ulines *find_uline(char *host)
+ConfigItem_ulines *find_uline(const char *host)
 {
 	ConfigItem_ulines *ulines;
 
@@ -3111,7 +3119,7 @@ ConfigItem_tld *find_tld(Client *client)
 }
 
 
-ConfigItem_link *find_link(char *servername, Client *client)
+ConfigItem_link *find_link(const char *servername, Client *client)
 {
 	ConfigItem_link	*link;
 
@@ -3128,7 +3136,7 @@ ConfigItem_link *find_link(char *servername, Client *client)
 /** Find a ban of type CONF_BAN_*, which is currently only
  * CONF_BAN_SERVER, CONF_BAN_VERSION and CONF_BAN_REALNAME
  */
-ConfigItem_ban *find_ban(Client *client, char *host, short type)
+ConfigItem_ban *find_ban(Client *client, const char *host, short type)
 {
 	ConfigItem_ban *ban;
 
@@ -3152,7 +3160,7 @@ ConfigItem_ban *find_ban(Client *client, char *host, short type)
  * CONF_BAN_SERVER, CONF_BAN_VERSION and CONF_BAN_REALNAME
  * This is the extended version, only used by cmd_svsnline.
  */
-ConfigItem_ban 	*find_banEx(Client *client, char *host, short type, short type2)
+ConfigItem_ban 	*find_banEx(Client *client, const char *host, short type, short type2)
 {
 	ConfigItem_ban *ban;
 
@@ -3172,7 +3180,7 @@ ConfigItem_ban 	*find_banEx(Client *client, char *host, short type, short type2)
 	return NULL;
 }
 
-ConfigItem_vhost *find_vhost(char *name)
+ConfigItem_vhost *find_vhost(const char *name)
 {
 	ConfigItem_vhost *vhost;
 
@@ -3187,7 +3195,7 @@ ConfigItem_vhost *find_vhost(char *name)
 
 
 /** returns NULL if allowed and struct if denied */
-ConfigItem_deny_channel *find_channel_allowed(Client *client, char *name)
+ConfigItem_deny_channel *find_channel_allowed(Client *client, const char *name)
 {
 	ConfigItem_deny_channel *dchannel;
 	ConfigItem_allow_channel *achannel;
@@ -3848,7 +3856,7 @@ OperClassACLEntry* _conf_parseACLEntry(ConfigEntry *ce)
 	return entry;
 }
 
-OperClassACL* _conf_parseACL(char *name, ConfigEntry *ce)
+OperClassACL* _conf_parseACL(const char *name, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	OperClassACL *acl = NULL;
@@ -9245,7 +9253,7 @@ int	_test_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_blacklist_module(ConfigFile *conf, ConfigEntry *ce)
 {
-	char *path;
+	const char *path;
 	ConfigItem_blacklist_module *m;
 
 	if (!ce->value)
@@ -9278,9 +9286,9 @@ int	_test_blacklist_module(ConfigFile *conf, ConfigEntry *ce)
 	return 0;
 }
 
-int is_blacklisted_module(char *name)
+int is_blacklisted_module(const char *name)
 {
-	char *path = Module_TransformPath(name);
+	const char *path = Module_TransformPath(name);
 	ConfigItem_blacklist_module *m;
 
 	for (m = conf_blacklist_module; m; m = m->next)
@@ -10264,7 +10272,7 @@ int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
 	return 1;
 }
 
-Secret *find_secret(char *secret_name)
+Secret *find_secret(const char *secret_name)
 {
 	Secret *s;
 	for (s = secrets; s; s = s->next)
@@ -10295,7 +10303,7 @@ void free_secret(Secret *s)
 	safe_free(s);
 }
 
-char *_conf_secret_read_password_file(char *fname)
+char *_conf_secret_read_password_file(const char *fname)
 {
 	char *pwd, *err;
 	int fd, n;
@@ -10333,7 +10341,7 @@ char *_conf_secret_read_password_file(char *fname)
 	return pwd;
 }
 
-char *_conf_secret_read_prompt(char *blockname)
+char *_conf_secret_read_prompt(const char *blockname)
 {
 	char *pwd, *pwd_prompt;
 	char buf[256];
@@ -10609,7 +10617,7 @@ void resource_download_complete(const char *url, const char *file, const char *e
 			safe_strdup(rs->file, rs->cache_file);
 		} else {
 			/* Copy to cache */
-			char *cache_file = unreal_mkcache(url);
+			const char *cache_file = unreal_mkcache(url);
 			unreal_copyfileex(file, cache_file, 1);
 			safe_strdup(rs->file, cache_file);
 		}
@@ -10819,7 +10827,7 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 	{
 		safe_strdup(rs->file, resource);
 	} else {
-		char *cache_file;
+		const char *cache_file;
 		time_t modtime;
 
 		safe_strdup(rs->url, resource);
@@ -10911,7 +10919,7 @@ int reloadable_perm_module_unloaded(void)
 	return ret;
 }
 
-char *link_generator_spkifp(TLSOptions *tlsoptions)
+const char *link_generator_spkifp(TLSOptions *tlsoptions)
 {
 	SSL_CTX *ctx;
 	SSL *ssl;
@@ -10933,7 +10941,7 @@ void link_generator(void)
 	TLSOptions *tlsopt = iConf.tls_options; /* never null */
 	int port = 0;
 	char *ip = NULL;
-	char *spkifp;
+	const char *spkifp;
 
 	for (lstn = conf_listen; lstn; lstn = lstn->next)
 	{
