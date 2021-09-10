@@ -42,11 +42,11 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 static void unload_motd_file(MOTDFile *list);
 CMD_FUNC(cmd_staff);
-static int cb_rehashflag(Client *client, char *flag);
+static int cb_rehashflag(Client *client, const char *flag);
 static int cb_test(ConfigFile *, ConfigEntry *, int, int *);
 static int cb_conf(ConfigFile *, ConfigEntry *, int);
 static int cb_rehash();
-static int cb_stats(Client *client, char *flag);
+static int cb_stats(Client *client, const char *flag);
 static void FreeConf();
 
 static MOTDFile staff;
@@ -148,7 +148,7 @@ static int cb_conf(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 0;
 }
 
-static int cb_stats(Client *client, char *flag)
+static int cb_stats(Client *client, const char *flag)
 {
 	if (*flag == 'S')
 	{
@@ -159,7 +159,7 @@ static int cb_stats(Client *client, char *flag)
 	return 0;
 }
 
-static int cb_rehashflag(Client *client, char *flag)
+static int cb_rehashflag(Client *client, const char *flag)
 {
 	int myflag = 0;
 

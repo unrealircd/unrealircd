@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER
 long CAP_ACCOUNT_TAG = 0L;
 
 int msgid_mtag_is_ok(Client *client, char *name, char *value);
-void mtag_add_or_inherit_msgid(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
+void mtag_add_or_inherit_msgid(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature);
 
 MOD_INIT()
 {
@@ -103,7 +103,7 @@ MessageTag *mtag_generate_msgid(void)
 }
 
 
-void mtag_add_or_inherit_msgid(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature)
+void mtag_add_or_inherit_msgid(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature)
 {
 	MessageTag *m = find_mtag(recv_mtags, "msgid");
 	if (m)

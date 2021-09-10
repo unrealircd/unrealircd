@@ -856,7 +856,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifndef _WIN32
 		  case 'P':{
 			  short type;
-			  char *result;
+			  const char *result;
 			  srandom(TStime());
 			  type = Auth_FindType(NULL, p);
 			  if (type == -1)

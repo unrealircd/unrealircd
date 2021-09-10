@@ -49,7 +49,7 @@ ConfigItem_webirc *conf_webirc = NULL;
 
 /* Forward declarations */
 CMD_FUNC(cmd_webirc);
-int webirc_local_pass(Client *client, char *password);
+int webirc_local_pass(Client *client, const char *password);
 int webirc_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int webirc_config_run(ConfigFile *, ConfigEntry *, int);
 void webirc_free_conf(void);
@@ -301,7 +301,7 @@ void webirc_md_free(ModData *md)
 	md->l = 0;
 }
 
-ConfigItem_webirc *find_webirc(Client *client, char *password, WEBIRCType type, char **errorstr)
+ConfigItem_webirc *find_webirc(Client *client, const char *password, WEBIRCType type, char **errorstr)
 {
 	ConfigItem_webirc *e;
 	char *error = NULL;
@@ -437,14 +437,17 @@ CMD_FUNC(cmd_webirc)
 	dowebirc(client, ip, host, options);
 }
 
-int webirc_local_pass(Client *client, char *password)
+int webirc_local_pass(Client *client, const char *password)
 {
 	if (!strncmp(password, WEBIRC_STRING, WEBIRC_STRINGLEN))
 	{
+		char buf[512];
 		char *ip, *host;
 		ConfigItem_webirc *e;
 		char *error = NULL;
 
+		/* Work on a copy as we may trash it */
+		strlcpy(buf, password, sizeof(buf));
 		e = find_webirc(client, NULL, WEBIRC_PASS, &error);
 		if (e)
 		{
@@ -453,7 +456,7 @@ int webirc_local_pass(Client *client, char *password)
 			 * The <resolvedhostname> has been checked ip->host AND host->ip by CGI:IRC itself
 			 * already so we trust it.
 			 */
-			ip = password + WEBIRC_STRINGLEN;
+			ip = buf + WEBIRC_STRINGLEN;
 			host = strchr(ip, '_');
 			if (!host)
 			{

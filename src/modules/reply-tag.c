@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER
 	};
 
 int replytag_mtag_is_ok(Client *client, char *name, char *value);
-void mtag_add_replytag(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
+void mtag_add_replytag(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature);
 
 MOD_INIT()
 {
@@ -92,7 +92,7 @@ int replytag_mtag_is_ok(Client *client, char *name, char *value)
 	return 1; /* OK */
 }
 
-void mtag_add_replytag(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature)
+void mtag_add_replytag(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature)
 {
 	MessageTag *m;
 

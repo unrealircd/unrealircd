@@ -60,8 +60,8 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_mkpasswd)
 {
-	short	type;
-	char	*result = NULL;
+	short type;
+	const char *result = NULL;
 
 	if (!MKPASSWD_FOR_EVERYONE && !IsOper(client))
 	{

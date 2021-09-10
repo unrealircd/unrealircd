@@ -436,13 +436,13 @@ extern void close_connections(void);
 extern int b64_encode(unsigned char const *src, size_t srclength, char *target, size_t targsize);
 extern int b64_decode(char const *src, unsigned char *target, size_t targsize);
 
-extern AuthenticationType Auth_FindType(char *hash, char *type);
+extern AuthenticationType Auth_FindType(const char *hash, const char *type);
 extern AuthConfig	*AuthBlockToAuthConfig(ConfigEntry *ce);
 extern void		Auth_FreeAuthConfig(AuthConfig *as);
-extern int		Auth_Check(Client *cptr, AuthConfig *as, char *para);
-extern char   		*Auth_Hash(int type, char *para);
+extern int		Auth_Check(Client *cptr, AuthConfig *as, const char *para);
+extern const char	*Auth_Hash(int type, const char *para);
 extern int   		Auth_CheckError(ConfigEntry *ce);
-extern int              Auth_AutoDetectHashType(char *hash);
+extern int              Auth_AutoDetectHashType(const char *hash);
 
 extern void make_cloakedhost(Client *client, const char *curr, char *buf, size_t buflen);
 extern int  channel_canjoin(Client *client, char *name);

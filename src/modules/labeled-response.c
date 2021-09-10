@@ -43,8 +43,8 @@ struct LabeledResponseContext {
 };
 
 /* Forward declarations */
-int lr_pre_command(Client *from, MessageTag *mtags, char *buf);
-int lr_post_command(Client *from, MessageTag *mtags, char *buf);
+int lr_pre_command(Client *from, MessageTag *mtags, const char *buf);
+int lr_post_command(Client *from, MessageTag *mtags, const char *buf);
 int lr_close_connection(Client *client);
 int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *len);
 void *_labeled_response_save_context(void);
@@ -111,7 +111,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int lr_pre_command(Client *from, MessageTag *mtags, char *buf)
+int lr_pre_command(Client *from, MessageTag *mtags, const char *buf)
 {
 	memset(&currentcmd, 0, sizeof(currentcmd));
 	labeled_response_inhibit = labeled_response_inhibit_end = labeled_response_force = 0;
@@ -156,7 +156,7 @@ char *gen_start_batch(void)
 	return buf;
 }
 
-int lr_post_command(Client *from, MessageTag *mtags, char *buf)
+int lr_post_command(Client *from, MessageTag *mtags, const char *buf)
 {
 	/* ** IMPORTANT **
 	 * Take care NOT to return here, use 'goto done' instead

@@ -29,7 +29,7 @@
 
 CMD_FUNC(cmd_monitor);
 char *monitor_isupport_param(void);
-int monitor_nickchange(Client *client, MessageTag *mtags, char *newnick);
+int monitor_nickchange(Client *client, MessageTag *mtags, const char *newnick);
 int monitor_post_nickchange(Client *client, MessageTag *mtags);
 int monitor_quit(Client *client, MessageTag *mtags, const char *comment);
 int monitor_connect(Client *client);
@@ -78,7 +78,7 @@ char *monitor_isupport_param(void)
 	return STR(MAXWATCH);
 }
 
-int monitor_nickchange(Client *client, MessageTag *mtags, char *newnick)
+int monitor_nickchange(Client *client, MessageTag *mtags, const char *newnick)
 {
 	if (!smycmp(client->name, newnick)) // new nick is same as old one, maybe the case changed
 		return 0;
@@ -125,7 +125,7 @@ int monitor_notification(Client *client, Watch *watch, Link *lp, int event)
 	return 0;
 }
 
-void send_status(Client *client, MessageTag *recv_mtags, char *nick)
+void send_status(Client *client, MessageTag *recv_mtags, const char *nick)
 {
 	MessageTag *mtags = NULL;
 	Client *user;

@@ -44,7 +44,7 @@ static void init_config(cfgstruct *cfg);
 int history_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int history_config_posttest(int *);
 int history_config_run(ConfigFile *, ConfigEntry *, int);
-int history_chanmode_change(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+int history_chanmode_change(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode);
 static int compare_history_modes(HistoryChanMode *a, HistoryChanMode *b);
 int history_chanmode_is_ok(Client *client, Channel *channel, char mode, const char *para, int type, int what);
 void *history_chanmode_put_param(void *r_in, const char *param);
@@ -54,7 +54,7 @@ void history_chanmode_free_param(void *r);
 void *history_chanmode_dup_struct(void *r_in);
 int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int history_channel_destroy(Channel *channel, int *should_destroy);
-int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, SendType sendtype);
+int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype);
 int history_join(Client *client, Channel *channel, MessageTag *mtags);
 CMD_OVERRIDE_FUNC(override_mode);
 
@@ -610,7 +610,7 @@ int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx)
 }
 
 /** On channel mode change, communicate the +H limits to the history backend layer */
-int history_chanmode_change(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode)
+int history_chanmode_change(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode)
 {
 	HistoryChanMode *settings;
 
@@ -639,7 +639,7 @@ int history_channel_destroy(Channel *channel, int *should_destroy)
 	return 0;
 }
 
-int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, SendType sendtype)
+int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype)
 {
 	char buf[512];
 	char source[64];

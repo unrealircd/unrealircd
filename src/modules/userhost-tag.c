@@ -36,7 +36,7 @@ long CAP_ACCOUNT_TAG = 0L;
 
 int userhost_mtag_is_ok(Client *client, char *name, char *value);
 int userhost_mtag_should_send_to_client(Client *target);
-void mtag_add_userhost(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
+void mtag_add_userhost(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature);
 
 MOD_INIT()
 {
@@ -79,7 +79,7 @@ int userhost_mtag_is_ok(Client *client, char *name, char *value)
 	return 0;
 }
 
-void mtag_add_userhost(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature)
+void mtag_add_userhost(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature)
 {
 	MessageTag *m;
 

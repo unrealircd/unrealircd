@@ -23,7 +23,7 @@ Cmode_t EXTMODE_CENSOR = 0L;
 int censor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
 const char *censor_pre_local_part(Client *client, Channel *channel, const char *text);
 const char *censor_pre_local_quit(Client *client, const char *text);
-int censor_stats_badwords_channel(Client *client, char *para);
+int censor_stats_badwords_channel(Client *client, const char *para);
 int censor_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int censor_config_run(ConfigFile *, ConfigEntry *, int);
 
@@ -319,7 +319,7 @@ const char *censor_pre_local_quit(Client *client, const char *text)
 	return blocked ? NULL : text;
 }
 
-int censor_stats_badwords_channel(Client *client, char *para)
+int censor_stats_badwords_channel(Client *client, const char *para)
 {
 	ConfigItem_badword *words;
 

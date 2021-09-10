@@ -24,7 +24,7 @@
 
 long CAP_EXTENDED_MONITOR = 0L;
 
-int extended_monitor_away(Client *client, MessageTag *mtags, char *reason, int already_as_away);
+int extended_monitor_away(Client *client, MessageTag *mtags, const char *reason, int already_as_away);
 int extended_monitor_account_login(Client *client, MessageTag *mtags);
 int extended_monitor_userhost_changed(Client *client, const char *olduser, const char *oldhost);
 int extended_monitor_realname_changed(Client *client, const char *oldinfo);
@@ -75,7 +75,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int extended_monitor_away(Client *client, MessageTag *mtags, char *reason, int already_as_away)
+int extended_monitor_away(Client *client, MessageTag *mtags, const char *reason, int already_as_away)
 {
 	if (reason)
 		watch_check(client, WATCH_EVENT_AWAY, extended_monitor_notification);

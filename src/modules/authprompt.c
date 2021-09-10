@@ -51,10 +51,10 @@ static void init_config(void);
 static void config_postdefaults(void);
 int authprompt_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int authprompt_config_run(ConfigFile *, ConfigEntry *, int);
-int authprompt_require_sasl(Client *client, char *reason);
-int authprompt_sasl_continuation(Client *client, char *buf);
+int authprompt_require_sasl(Client *client, const char *reason);
+int authprompt_sasl_continuation(Client *client, const char *buf);
 int authprompt_sasl_result(Client *client, int success);
-int authprompt_place_host_ban(Client *client, int action, char *reason, long duration);
+int authprompt_place_host_ban(Client *client, int action, const char *reason, long duration);
 int authprompt_find_tkline_match(Client *client, TKL *tk);
 int authprompt_pre_connect(Client *client);
 CMD_FUNC(cmd_auth);
@@ -379,7 +379,7 @@ void authprompt_send_auth_required_message(Client *client)
 	sendnotice_multiline(client, cfg.message);
 }
 
-int authprompt_require_sasl(Client *client, char *reason)
+int authprompt_require_sasl(Client *client, const char *reason)
 {
 	/* If the client did SASL then we (authprompt) will not kick in */
 	if (HasCapability(client, "sasl"))
@@ -397,7 +397,7 @@ int authprompt_require_sasl(Client *client, char *reason)
 }
 
 /* Called upon "place a host ban on this user" (eg: spamfilter, blacklist, ..) */
-int authprompt_place_host_ban(Client *client, int action, char *reason, long duration)
+int authprompt_place_host_ban(Client *client, int action, const char *reason, long duration)
 {
 	/* If it's a soft-xx action and the user is not logged in
 	 * and the user is not yet online, then we will handle this user.
@@ -451,7 +451,7 @@ int authprompt_pre_connect(Client *client)
 	return HOOK_CONTINUE; /* no action taken, proceed normally */
 }
 
-int authprompt_sasl_continuation(Client *client, char *buf)
+int authprompt_sasl_continuation(Client *client, const char *buf)
 {
 	/* If it's not for us (eg: user is doing real SASL) then return 0. */
 	if (!SEUSER(client) || !SEUSER(client)->authmsg)

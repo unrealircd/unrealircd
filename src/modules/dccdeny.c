@@ -40,7 +40,7 @@ int dccdeny_configtest_deny_dcc(ConfigFile *cf, ConfigEntry *ce, int type, int *
 int dccdeny_configtest_allow_dcc(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int dccdeny_configrun_deny_dcc(ConfigFile *cf, ConfigEntry *ce, int type);
 int dccdeny_configrun_allow_dcc(ConfigFile *cf, ConfigEntry *ce, int type);
-int dccdeny_stats(Client *client, char *para);
+int dccdeny_stats(Client *client, const char *para);
 CMD_FUNC(cmd_dccdeny);
 CMD_FUNC(cmd_undccdeny);
 CMD_FUNC(cmd_svsfline);
@@ -827,7 +827,7 @@ static void dcc_wipe_services(void)
 
 }
 
-int dccdeny_stats(Client *client, char *para)
+int dccdeny_stats(Client *client, const char *para)
 {
 	ConfigItem_deny_dcc *denytmp;
 	ConfigItem_allow_dcc *allowtmp;

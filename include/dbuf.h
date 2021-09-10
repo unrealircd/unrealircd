@@ -70,7 +70,7 @@ typedef struct dbufbuf {
 **	memory as needed. Bytes are copied into internal buffers
 **	from users buffer.
 */
-void dbuf_put(dbuf *, char *, size_t);
+void dbuf_put(dbuf *, const char *, size_t);
 					/* Dynamic buffer header */
 					/* Pointer to data to be stored */
 					/* Number of bytes to store */

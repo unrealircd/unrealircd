@@ -31,7 +31,7 @@ ConfigItem_badword *conf_badword_message = NULL;
 
 static ConfigItem_badword *copy_badword_struct(ConfigItem_badword *ca, int regex, int regflags);
 
-int censor_stats_badwords_user(Client *client, char *para);
+int censor_stats_badwords_user(Client *client, const char *para);
 
 MOD_TEST()
 {
@@ -253,7 +253,7 @@ int censor_can_send_to_user(Client *client, Client *target, const char **text, c
 	return HOOK_CONTINUE;
 }
 
-int censor_stats_badwords_user(Client *client, char *para)
+int censor_stats_badwords_user(Client *client, const char *para)
 {
 	ConfigItem_badword *words;
 

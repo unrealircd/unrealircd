@@ -46,10 +46,10 @@ AuthTypeList MODVAR AuthTypeLists[] = {
 };
 
 /* Helper function for Auth_AutoDetectHashType() */
-static int parsepass(char *str, char **salt, char **hash)
+static int parsepass(const char *str, char **salt, char **hash)
 {
 	static char saltbuf[512], hashbuf[512];
-	char *p;
+	const char *p;
 	int max;
 
 	/* Syntax: $<salt>$<hash> */
@@ -72,7 +72,7 @@ static int parsepass(char *str, char **salt, char **hash)
 /** Auto detect hash type for input hash 'hash'.
  * Will fallback to AUTHTYPE_PLAINTEXT when not found (or invalid).
  */
-int Auth_AutoDetectHashType(char *hash)
+int Auth_AutoDetectHashType(const char *hash)
 {
 	static char hashbuf[256];
 	char *saltstr, *hashstr;
@@ -85,7 +85,7 @@ int Auth_AutoDetectHashType(char *hash)
 		 */
 		if ((strlen(hash) == 64) || (strlen(hash) == 95))
 		{
-			char *p;
+			const char *p;
 			char *hexchars = "0123456789abcdefABCDEF";
 			for (p = hash; *p; p++)
 				if ((*p != ':') && !strchr(hexchars, *p))
@@ -96,7 +96,7 @@ int Auth_AutoDetectHashType(char *hash)
 
 		if (strlen(hash) == 44)
 		{
-			char *p;
+			const char *p;
 			char *b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 			for (p = hash; *p; p++)
 				if (!strchr(b64chars, *p))
@@ -134,7 +134,7 @@ int Auth_AutoDetectHashType(char *hash)
  *               than trying to determine the type on the 'hash' parameter.
  *               Or leave NULL, then we use hash autodetection.
  */
-AuthenticationType Auth_FindType(char *hash, char *type)
+AuthenticationType Auth_FindType(const char *hash, const char *type)
 {
 	if (type)
 	{
@@ -279,7 +279,7 @@ void Auth_FreeAuthConfig(AuthConfig *as)
 #define RAWSALTLEN		6
 #define REALSALTLEN		12
 
-static int authcheck_argon2(Client *client, AuthConfig *as, char *para)
+static int authcheck_argon2(Client *client, AuthConfig *as, const char *para)
 {
 	argon2_type hashtype;
 
@@ -304,7 +304,7 @@ static int authcheck_argon2(Client *client, AuthConfig *as, char *para)
 	return 0; /* NO MATCH or error */
 }
 
-static int authcheck_bcrypt(Client *client, AuthConfig *as, char *para)
+static int authcheck_bcrypt(Client *client, AuthConfig *as, const char *para)
 {
 	char data[512]; /* NOTE: only 64 required by BF_crypt() */
 	char *str;
@@ -324,7 +324,7 @@ static int authcheck_bcrypt(Client *client, AuthConfig *as, char *para)
 	return 0; /* NO MATCH */
 }
 
-static int authcheck_tls_clientcert(Client *client, AuthConfig *as, char *para)
+static int authcheck_tls_clientcert(Client *client, AuthConfig *as, const char *para)
 {
 	X509 *x509_clientcert = NULL;
 	X509 *x509_filecert = NULL;
@@ -358,7 +358,7 @@ static int authcheck_tls_clientcert(Client *client, AuthConfig *as, char *para)
 	return 1;
 }
 
-static int authcheck_tls_clientcert_fingerprint(Client *client, AuthConfig *as, char *para)
+static int authcheck_tls_clientcert_fingerprint(Client *client, AuthConfig *as, const char *para)
 {
 	int i, k;
 	char hexcolon[EVP_MAX_MD_SIZE * 3 + 1];
@@ -389,7 +389,7 @@ static int authcheck_tls_clientcert_fingerprint(Client *client, AuthConfig *as, 
 	return 1;
 }
 
-static int authcheck_spkifp(Client *client, AuthConfig *as, char *para)
+static int authcheck_spkifp(Client *client, AuthConfig *as, const char *para)
 {
 	char *fp = spki_fingerprint(client);
 
@@ -420,7 +420,7 @@ static int authcheck_spkifp(Client *client, AuthConfig *as, char *para)
  * - The return value was different in versions before UnrealIRCd 5.0.0!
  * - In older versions a NULL 'as' was treated as an allow, now it's deny.
  */
-int Auth_Check(Client *client, AuthConfig *as, char *para)
+int Auth_Check(Client *client, AuthConfig *as, const char *para)
 {
 	extern char *crypt();
 	char *res;
@@ -479,7 +479,7 @@ int Auth_Check(Client *client, AuthConfig *as, char *para)
 #define UNREALIRCD_ARGON2_DEFAULT_HASH_LENGTH           32
 #define UNREALIRCD_ARGON2_DEFAULT_SALT_LENGTH           (128/8)
 
-static char *mkpass_argon2(char *para)
+static char *mkpass_argon2(const char *para)
 {
 	static char buf[512];
 	char salt[UNREALIRCD_ARGON2_DEFAULT_SALT_LENGTH];
@@ -511,7 +511,7 @@ static char *mkpass_argon2(char *para)
 	return buf;
 }
 
-static char *mkpass_bcrypt(char *para)
+static char *mkpass_bcrypt(const char *para)
 {
 	static char buf[128];
 	char data[512]; /* NOTE: only 64 required by BF_crypt() */
@@ -547,7 +547,7 @@ static char *mkpass_bcrypt(char *para)
  * @param text  The password in plaintext.
  * @returns The hashed password.
  */
-char *Auth_Hash(AuthenticationType type, char *text)
+const char *Auth_Hash(AuthenticationType type, const char *text)
 {
 	switch (type)
 	{

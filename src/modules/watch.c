@@ -26,8 +26,8 @@
 
 CMD_FUNC(cmd_watch);
 int watch_user_quit(Client *client, MessageTag *mtags, const char *comment);
-int watch_away(Client *client, MessageTag *mtags, char *reason, int already_as_away);
-int watch_nickchange(Client *client, MessageTag *mtags, char *newnick);
+int watch_away(Client *client, MessageTag *mtags, const char *reason, int already_as_away);
+int watch_nickchange(Client *client, MessageTag *mtags, const char *newnick);
 int watch_post_nickchange(Client *client, MessageTag *mtags);
 int watch_user_connect(Client *client);
 int watch_notification(Client *client, Watch *watch, Link *lp, int event);
@@ -314,7 +314,7 @@ int watch_user_quit(Client *client, MessageTag *mtags, const char *comment)
 	return 0;
 }
 
-int watch_away(Client *client, MessageTag *mtags, char *reason, int already_as_away)
+int watch_away(Client *client, MessageTag *mtags, const char *reason, int already_as_away)
 {
 	if (reason)
 		watch_check(client, already_as_away ? WATCH_EVENT_REAWAY : WATCH_EVENT_AWAY, watch_notification);
@@ -324,7 +324,7 @@ int watch_away(Client *client, MessageTag *mtags, char *reason, int already_as_a
 	return 0;
 }
 
-int watch_nickchange(Client *client, MessageTag *mtags, char *newnick)
+int watch_nickchange(Client *client, MessageTag *mtags, const char *newnick)
 {
 	watch_check(client, WATCH_EVENT_OFFLINE, watch_notification);
 

@@ -1183,7 +1183,7 @@ int hooktype_remote_quit(Client *client, MessageTag *mtags, const char *comment)
  * @param comment       	The quit/exit reason
  * @return The return value is ignored (use return 0)
  */
-int hooktype_unkuser_quit(Client *client, MessageTag *mtags, char *comment);
+int hooktype_unkuser_quit(Client *client, MessageTag *mtags, const char *comment);
 
 /** Called when a local or remote server connects / links in (function prototype for HOOKTYPE_SERVER_CONNECT).
  * @param client		The client
@@ -1228,7 +1228,7 @@ int hooktype_server_quit(Client *client, MessageTag *mtags);
  * @param newnick		The new nick name
  * @return The return value is ignored (use return 0)
  */
-int hooktype_local_nickchange(Client *client, MessageTag *mtags, char *newnick);
+int hooktype_local_nickchange(Client *client, MessageTag *mtags, const char *newnick);
 
 /** Called when a remote user changes the nick name (function prototype for HOOKTYPE_REMOTE_NICKCHANGE).
  * @param client		The client
@@ -1236,7 +1236,7 @@ int hooktype_local_nickchange(Client *client, MessageTag *mtags, char *newnick);
  * @param newnick		The new nick name
  * @return The return value is ignored (use return 0)
  */
-int hooktype_remote_nickchange(Client *client, MessageTag *mtags, char *newnick);
+int hooktype_remote_nickchange(Client *client, MessageTag *mtags, const char *newnick);
 
 /** Called when a user wants to join a channel, may the user join? (function prototype for HOOKTYPE_CAN_JOIN).
  * @param client		The client
@@ -1380,7 +1380,7 @@ int hooktype_can_send_to_channel(Client *client, Channel *channel, Membership *m
  * @param sendtype		The message type, for example SEND_TYPE_PRIVMSG.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_usermsg(Client *client, Client *to, MessageTag *mtags, char *text, SendType sendtype);
+int hooktype_usermsg(Client *client, Client *to, MessageTag *mtags, const char *text, SendType sendtype);
 
 /** Called when a message is sent to a channel (function prototype for HOOKTYPE_CHANMSG).
  * @param client		The sender
@@ -1393,7 +1393,7 @@ int hooktype_usermsg(Client *client, Client *to, MessageTag *mtags, char *text, 
  * @param sendtype		The message type, for example SEND_TYPE_PRIVMSG.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, SendType sendtype);
+int hooktype_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype);
 
 /** Called when a local user wants to change the channel topic (function prototype for HOOKTYPE_PRE_LOCAL_TOPIC).
  * @param client		The client
@@ -1410,7 +1410,7 @@ const char *hooktype_pre_local_topic(Client *client, Channel *channel, const cha
  * @param topic			The new topic
  * @return The return value is ignored (use return 0)
  */
-int hooktype_topic(Client *client, Channel *channel, MessageTag *mtags, char *topic);
+int hooktype_topic(Client *client, Channel *channel, MessageTag *mtags, const char *topic);
 
 /** Called when a local user changes channel modes, called early (function prototype for HOOKTYPE_PRE_LOCAL_CHANMODE).
  * WARNING: This does not allow you to stop or reject the channel modes. It only allows you to do stuff -before- the
@@ -1450,7 +1450,7 @@ int hooktype_pre_remote_chanmode(Client *client, Channel *channel, MessageTag *m
  * @param samode		Is this an SAMODE?
  * @return The return value is ignored (use return 0)
  */
-int hooktype_local_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_local_chanmode(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode);
 
 /** Called when a remote user changes channel modes (function prototype for HOOKTYPE_REMOTE_CHANMODE).
  * @param client		The client
@@ -1462,7 +1462,7 @@ int hooktype_local_chanmode(Client *client, Channel *channel, MessageTag *mtags,
  * @param samode		Is this an SAMODE?
  * @return The return value is ignored (use return 0)
  */
-int hooktype_remote_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_remote_chanmode(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode);
 
 /** Called when a channel mode is removed by a local or remote user (function prototype for HOOKTYPE_MODECHAR_DEL).
  * NOTE: This is currently not terribly useful for most modules. It is used by by the floodprot and noknock modules.
@@ -1487,7 +1487,7 @@ int hooktype_modechar_add(Channel *channel, int modechar);
  * @param already_as_away	Set to 1 if the user only changed their away reason.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_away(Client *client, MessageTag *mtags, char *reason, int already_as_away);
+int hooktype_away(Client *client, MessageTag *mtags, const char *reason, int already_as_away);
 
 /** Called when a user wants to invite another user to a channel (function prototype for HOOKTYPE_PRE_INVITE).
  * @param client		The client
@@ -1526,7 +1526,7 @@ int hooktype_pre_knock(Client *client, Channel *channel);
  * @param comment		The knock reason
  * @return The return value is ignored (use return 0)
  */
-int hooktype_knock(Client *client, Channel *channel, MessageTag *mtags, char *comment);
+int hooktype_knock(Client *client, Channel *channel, MessageTag *mtags, const char *comment);
 
 /** Called when a user whoises someone (function prototype for HOOKTYPE_WHOIS).
  * @param client		The client issuing the command
@@ -1546,7 +1546,7 @@ int hooktype_whois(Client *client, Client *target);
  * @param cansee		If 'client' can see 'target' (eg: in same channel or -i)
  * @return Return 0 if no WHO status flags need to be added, otherwise return the ascii character (eg: return 'B').
  */
-int hooktype_who_status(Client *client, Client *target, Channel *channel, Member *member, char *status, int cansee);
+int hooktype_who_status(Client *client, Client *target, Channel *channel, Member *member, const char *status, int cansee);
 
 /** Called when an IRCOp wants to kill another user (function prototype for HOOKTYPE_PRE_KILL).
  * @param client		The client
@@ -1573,7 +1573,7 @@ int hooktype_local_kill(Client *client, Client *victim, const char *comment);
  * @param str			The rehash flag (eg: "-all")
  * @return The return value is ignored (use return 0)
  */
-int hooktype_rehashflag(Client *client, char *str);
+int hooktype_rehashflag(Client *client, const char *str);
 
 /** Called when the server is rehashing (function prototype for HOOKTYPE_REHASH).
  * @return The return value is ignored (use return 0)
@@ -1633,7 +1633,7 @@ int hooktype_configrun_ex(ConfigFile *cfptr, ConfigEntry *ce, int section, void 
  * @param str			The parameter to the STATS command, eg 'something'.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_stats(Client *client, char *str);
+int hooktype_stats(Client *client, const char *str);
 
 /** Called when a user becomes IRCOp or is no longer an IRCOp (function prototype for HOOKTYPE_LOCAL_OPER).
  * @param client		The client
@@ -1647,7 +1647,7 @@ int hooktype_local_oper(Client *client, int add);
  * @param password		The password supplied by the client
  * @return The return value is ignored (use return 0)
  */
-int hooktype_local_pass(Client *client, char *password);
+int hooktype_local_pass(Client *client, const char *password);
 
 /** Called when a channel is created (function prototype for HOOKTYPE_CHANNEL_CREATE).
  * @param channel		The channel that just got created
@@ -1702,7 +1702,7 @@ int hooktype_tkl_del(Client *client, TKL *tkl);
  * @param buf			The text to be logged
  * @return The return value is ignored (use return 0)
  */
-int hooktype_log(int flags, char *timebuf, char *buf);
+int hooktype_log(int flags, const char *timebuf, const char *buf);
 
 /** Called when a local user matches a spamfilter (function prototype for HOOKTYPE_LOCAL_SPAMFILTER).
  * @param client		The client
@@ -1713,7 +1713,7 @@ int hooktype_log(int flags, char *timebuf, char *buf);
  * @param tkl			The spamfilter TKL entry that matched
  * @return The return value is ignored (use return 0)
  */
-int hooktype_local_spamfilter(Client *client, char *str, char *str_in, int type, char *target, TKL *tkl);
+int hooktype_local_spamfilter(Client *client, const char *str, const char *str_in, int type, const char *target, TKL *tkl);
 
 /** Called when a user sends something to a user that has the sender silenced (function prototype for HOOKTYPE_SILENCED).
  * UnrealIRCd support a SILENCE list. If the target user has added someone on the silence list, eg via SILENCE +BadUser,
@@ -1736,7 +1736,7 @@ int hooktype_silenced(Client *client, Client *target, SendType sendtype);
  * @note If you want to alter the buffer contents then replace 'readbuf' with your own buffer and set 'length' appropriately.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_rawpacket_in(Client *client, char *readbuf, int *length);
+int hooktype_rawpacket_in(Client *client, const char *readbuf, int *length);
 
 /** Called when a packet is received or sent (function prototype for HOOKTYPE_PACKET).
  * @param client		The locally connected sender, this can be &me
@@ -1891,7 +1891,7 @@ int hooktype_mode_deop(Client *client, Client *victim, Channel *channel, u_int w
  * @param denydcc		The deny dcc { ] rule that triggered.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_dcc_denied(Client *client, char *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *denydcc);
+int hooktype_dcc_denied(Client *client, const char *target, const char *realfile, const char *displayfile, ConfigItem_deny_dcc *denydcc);
 
 /** Called in the user accept procedure, when setting the +z user mode (function prototype for HOOKTYPE_SECURE_CONNECT).
  * This is only meant to be used by the WEBIRC module, so it can do -z for fake secure users.
@@ -1915,7 +1915,7 @@ int hooktype_can_bypass_channel_message_restriction(Client *client, Channel *cha
  * @param client		The client
  * @return The return value is ignored (use return 0)
  */
-int hooktype_require_sasl(Client *client, char *reason);
+int hooktype_require_sasl(Client *client, const char *reason);
 
 /** Called when a SASL continuation response is received (function prototype for HOOKTYPE_SASL_CONTINUATION).
  * This is only used by the authprompt module, it unlikely that you need it.
@@ -1924,7 +1924,7 @@ int hooktype_require_sasl(Client *client, char *reason);
  * @retval HOOK_CONTINUE	Continue as normal
  * @retval HOOK_DENY		Do not handle the SASL request, or at least don't show the response to the client.
  */
-int hooktype_sasl_continuation(Client *client, char *buf);
+int hooktype_sasl_continuation(Client *client, const char *buf);
 
 /** Called when a SASL result response is received (function prototype for HOOKTYPE_SASL_RESULT).
  * This is only used by the authprompt module.
@@ -1944,7 +1944,7 @@ int hooktype_sasl_result(Client *client, int success);
  * @param duration		The duration of the ban, 0 for permanent ban
  * @return The magic value 99 is used to exempt the user (=do not ban!), otherwise the ban is added.
  */
-int hooktype_place_host_ban(Client *client, int action, char *reason, long duration);
+int hooktype_place_host_ban(Client *client, int action, const char *reason, long duration);
 
 /** Called when a TKL ban is hit by this user (function prototype for HOOKTYPE_FIND_TKLINE_MATCH).
  * This is called when an existing TKL entry is hit by the user.
@@ -1974,7 +1974,7 @@ int hooktype_welcome(Client *client, int after_numeric);
  * @param buf			The buffer (without message tags)
  * @return The return value is ignored (use return 0)
  */
-int hooktype_pre_command(Client *from, MessageTag *mtags, char *buf);
+int hooktype_pre_command(Client *from, MessageTag *mtags, const char *buf);
 
 /** Called right after finishing a client command (function prototype for HOOKTYPE_POST_COMMAND).
  * This is only used by labeled-reponse. If you think this hook is useful then you
@@ -1984,7 +1984,7 @@ int hooktype_pre_command(Client *from, MessageTag *mtags, char *buf);
  * @param buf			The buffer (without message tags)
  * @return The return value is ignored (use return 0)
  */
-int hooktype_post_command(Client *from, MessageTag *mtags, char *buf);
+int hooktype_post_command(Client *from, MessageTag *mtags, const char *buf);
 
 /** Called when new_message() is executed (function prototype for HOOKTYPE_NEW_MESSAGE).
  * When a new message with message tags is prepared, code in UnrealIRCd
@@ -1998,7 +1998,7 @@ int hooktype_post_command(Client *from, MessageTag *mtags, char *buf);
  * @param signature		Special signature when used through new_message_special()
  * @return The return value is ignored (use return 0)
  */
-void hooktype_new_message(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
+void hooktype_new_message(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature);
 
 /** Is the client handshake finished? (function prototype for HOOKTYPE_IS_HANDSHAKE_FINISHED).
  * This is called by the is_handshake_finished() function to check if the user

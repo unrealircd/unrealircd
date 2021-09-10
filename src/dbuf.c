@@ -61,7 +61,7 @@ void dbuf_queue_init(dbuf *dyn)
 	INIT_LIST_HEAD(&dyn->dbuf_list);
 }
 
-void dbuf_put(dbuf *dyn, char *buf, size_t length)
+void dbuf_put(dbuf *dyn, const char *buf, size_t length)
 {
 	struct dbufbuf *block;
 	size_t amount;

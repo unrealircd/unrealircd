@@ -74,15 +74,15 @@ struct HTTPForwardedHeader
 int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
 int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length);
-int websocket_packet_in(Client *client, char *readbuf, int *length);
+int websocket_packet_in(Client *client, const char *readbuf, int *length);
 void websocket_mdata_free(ModData *m);
-int websocket_handle_packet(Client *client, char *readbuf, int length);
-int websocket_handle_handshake(Client *client, char *readbuf, int *length);
+int websocket_handle_packet(Client *client, const char *readbuf, int length);
+int websocket_handle_handshake(Client *client, const char *readbuf, int *length);
 int websocket_handshake_send_response(Client *client);
-int websocket_handle_packet_ping(Client *client, char *buf, int len);
-int websocket_handle_packet_pong(Client *client, char *buf, int len);
+int websocket_handle_packet_ping(Client *client, const char *buf, int len);
+int websocket_handle_packet_pong(Client *client, const char *buf, int len);
 int websocket_create_packet(int opcode, char **buf, int *len);
-int websocket_send_pong(Client *client, char *buf, int len);
+int websocket_send_pong(Client *client, const char *buf, int len);
 int websocket_secure_connect(Client *client);
 struct HTTPForwardedHeader *websocket_parse_forwarded_header(char *input);
 int websocket_ip_compare(const char *ip1, const char *ip2);
@@ -290,7 +290,7 @@ int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **m
 	return 0;
 }
 
-int websocket_handle_websocket(Client *client, char *readbuf2, int length2)
+int websocket_handle_websocket(Client *client, const char *readbuf2, int length2)
 {
 	int n;
 	char *ptr;
@@ -342,7 +342,7 @@ int websocket_handle_websocket(Client *client, char *readbuf2, int length2)
  * 0 means: don't process this data, but you can read another packet if you want
  * >0 means: process this data (regular IRC data, non-websocket stuff)
  */
-int websocket_packet_in(Client *client, char *readbuf, int *length)
+int websocket_packet_in(Client *client, const char *readbuf, int *length)
 {
 	if ((client->local->traffic.messages_received == 0) &&
 	    WEBSOCKET_PORT(client) &&
@@ -759,7 +759,7 @@ int websocket_secure_connect(Client *client)
 /** Handle client GET WebSocket handshake.
  * Yes, I'm going to assume that the header fits in one packet and one packet only.
  */
-int websocket_handle_handshake(Client *client, char *readbuf, int *length)
+int websocket_handle_handshake(Client *client, const char *readbuf, int *length)
 {
 	char *key, *value;
 	int r, end_of_request;
@@ -904,14 +904,16 @@ void add_lf_if_needed(char **buf, int *len)
  *          OR 0 to indicate a possible short read (want more data)
  *          OR -1 in case of an error.
  */
-int websocket_handle_packet(Client *client, char *readbuf, int length)
+int websocket_handle_packet(Client *client, const char *readbuf, int length)
 {
 	char opcode; /**< Opcode */
 	char masked; /**< Masked */
 	int len; /**< Length of the packet */
 	char maskkey[4]; /**< Key used for masking */
-	char *p, *payload;
+	const char *p;
 	int total_packet_size;
+	char *payload = NULL;
+	static char payloadbuf[READBUF_SIZE];
 
 	if (length < 4)
 	{
@@ -972,14 +974,20 @@ int websocket_handle_packet(Client *client, char *readbuf, int length)
 
 	memcpy(maskkey, p, 4);
 	p+= 4;
-	payload = (len > 0) ? p : NULL;
+
+	if (len > 0)
+	{
+		memcpy(payloadbuf, p, len);
+		payload = payloadbuf;
+	} /* else payload is NULL */
 
 	if (len > 0)
 	{
 		/* Unmask this thing (page 33, section 5.3) */
 		int n;
 		char v;
-		for (n = 0; n < len; n++)
+		char *p;
+		for (p = payload, n = 0; n < len; n++)
 		{
 			v = *p;
 			*p++ = v ^ maskkey[n % 4];
@@ -1021,7 +1029,7 @@ int websocket_handle_packet(Client *client, char *readbuf, int length)
 	return -1; /* NOTREACHED */
 }
 
-int websocket_handle_packet_ping(Client *client, char *buf, int len)
+int websocket_handle_packet_ping(Client *client, const char *buf, int len)
 {
 	if (len > 500)
 	{
@@ -1033,7 +1041,7 @@ int websocket_handle_packet_ping(Client *client, char *buf, int len)
 	return 0;
 }
 
-int websocket_handle_packet_pong(Client *client, char *buf, int len)
+int websocket_handle_packet_pong(Client *client, const char *buf, int len)
 {
 	/* We don't care */
 	return 0;
@@ -1043,7 +1051,7 @@ int websocket_handle_packet_pong(Client *client, char *buf, int len)
  * This is the simple version that is used ONLY for WSOP_PONG,
  * as it does not take \r\n into account.
  */
-int websocket_create_packet_simple(int opcode, char **buf, int *len)
+int websocket_create_packet_simple(int opcode, const char **buf, int *len)
 {
 	static char sendbuf[8192];
 
@@ -1150,9 +1158,9 @@ int websocket_create_packet(int opcode, char **buf, int *len)
 }
 
 /** Create and send a WSOP_PONG frame */
-int websocket_send_pong(Client *client, char *buf, int len)
+int websocket_send_pong(Client *client, const char *buf, int len)
 {
-	char *b = buf;
+	const char *b = buf;
 	int l = len;
 
 	if (websocket_create_packet_simple(WSOP_PONG, &b, &l) < 0)
