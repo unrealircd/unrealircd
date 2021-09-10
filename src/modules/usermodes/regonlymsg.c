@@ -61,7 +61,7 @@ int regonlymsg_can_send_to_user(Client *client, Client *target, const char **tex
 {
 	if (IsRegOnlyMsg(target) && !IsServer(client) && !IsULine(client) && !IsLoggedIn(client))
 	{
-		if (ValidatePermissionsForPath("client:override:message:regonlymsg",client,target,NULL,text))
+		if (ValidatePermissionsForPath("client:override:message:regonlymsg",client,target,NULL,text?*text:NULL))
 			return HOOK_CONTINUE; /* bypass this restriction */
 
 		*errmsg = "You must identify to a registered nick to private message this user";

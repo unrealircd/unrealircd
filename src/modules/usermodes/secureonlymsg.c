@@ -62,7 +62,7 @@ int secureonlymsg_can_send_to_user(Client *client, Client *target, const char **
 {
 	if (IsSecureOnlyMsg(target) && !IsServer(client) && !IsULine(client) && !IsSecureConnect(client))
 	{
-		if (ValidatePermissionsForPath("client:override:message:secureonlymsg",client,target,NULL,text))
+		if (ValidatePermissionsForPath("client:override:message:secureonlymsg",client,target,NULL,text?*text:NULL))
 			return HOOK_CONTINUE; /* bypass this restriction */
 
 		*errmsg = "You must be connected via TLS to message this user";
@@ -70,7 +70,7 @@ int secureonlymsg_can_send_to_user(Client *client, Client *target, const char **
 	} else
 	if (IsSecureOnlyMsg(client) && !IsSecureConnect(target) && !IsULine(target))
 	{
-		if (ValidatePermissionsForPath("client:override:message:secureonlymsg",client,target,NULL,text))
+		if (ValidatePermissionsForPath("client:override:message:secureonlymsg",client,target,NULL,text?*text:NULL))
 			return HOOK_CONTINUE; /* bypass this restriction */
 		
 		/* Similar to above but in this case we are +Z and are trying to message

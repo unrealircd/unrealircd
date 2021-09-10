@@ -131,7 +131,7 @@ extern ConfigItem_deny_channel *find_channel_allowed(Client *cptr, char *name);
 extern ConfigItem_alias	*find_alias(char *name);
 extern ConfigItem_help 	*find_Help(char *command);
 
-extern OperPermission ValidatePermissionsForPath(char *path, Client *client, Client *victim, Channel *channel, void *extra);
+extern OperPermission ValidatePermissionsForPath(char *path, Client *client, Client *victim, Channel *channel, const void *extra);
 extern void OperClassValidatorDel(OperClassValidator *validator);
 
 extern ConfigItem_ban  *find_ban_ip(Client *client);

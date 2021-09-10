@@ -1613,7 +1613,7 @@ struct OperClassCheckParams
         Client *client;
         Client *victim;
         Channel *channel;
-        void *extra;
+        const void *extra;
 };
 
 struct ConfigItem_operclass {

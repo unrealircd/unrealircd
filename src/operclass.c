@@ -279,7 +279,7 @@ OperPermission ValidatePermissionsForPathEx(OperClassACL *acl, OperClassACLPath 
 	return OPER_DENY;
 }
 
-OperPermission ValidatePermissionsForPath(char *path, Client *client, Client *victim, Channel *channel, void *extra)
+OperPermission ValidatePermissionsForPath(char *path, Client *client, Client *victim, Channel *channel, const void *extra)
 {
 	ConfigItem_oper *ce_oper;
 	ConfigItem_operclass *ce_operClass;
