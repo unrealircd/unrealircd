@@ -564,7 +564,7 @@ getnick:
 			/* For list modes (beI): validate the syntax */
 			if (modeflags & (CHFL_BAN|CHFL_EXCEPT|CHFL_INVEX))
 			{
-				char *str;
+				const char *str;
 				
 				/* non-extbans: prevent bans without ! or @. a good case of "should never happen". */
 				if ((nick[0] != '~') && (!strchr(nick, '!') || !strchr(nick, '@') || (nick[0] == '!')))

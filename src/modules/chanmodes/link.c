@@ -55,7 +55,7 @@ int cmodeL_sjoin_check(Channel *channel, void *ourx, void *theirx);
 
 int extban_link_syntax(Client *client, int checkt, char *reason);
 int extban_link_is_ok(BanContext *b);
-char *extban_link_conv_param(BanContext *b, Extban *extban);
+const char *extban_link_conv_param(BanContext *b, Extban *extban);
 int link_doforward(Client *client, Channel *channel, char *linked, linkType linktype);
 int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[]);
 
@@ -255,13 +255,13 @@ int extban_link_is_ok(BanContext *b)
 	return 1; // Is ok
 }
 
-char *extban_link_conv_param(BanContext *b, Extban *extban)
+const char *extban_link_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[MAX_EB_LEN + 1];
 	char paramtmp[MAX_EB_LEN + 1];
 	char tmpmask[MAX_EB_LEN + 1];
 	char *matchby; // Matching method, such as 'n!u@h'
-	char *newmask; // Cleaned matching method, such as 'n!u@h'
+	const char *newmask; // Cleaned matching method, such as 'n!u@h'
 	char *chan;
 
 	strlcpy(paramtmp, b->banstr, sizeof(paramtmp)); // Work on a size-truncated copy

@@ -98,7 +98,7 @@ CMD_FUNC(cmd_quit)
 		if (iConf.part_instead_of_quit_on_comment_change && MyUser(client))
 		{
 			Membership *lp, *lp_next;
-			char *newcomment;
+			const char *newcomment;
 			Channel *channel;
 
 			for (lp = client->user->channel; lp; lp = lp_next)
@@ -121,11 +121,14 @@ CMD_FUNC(cmd_quit)
 				if (comment != newcomment)
 				{
 					char *parx[4];
+					char tmp[512];
 					int ret;
+
+					strlcpy(tmp, newcomment, sizeof(tmp));
 
 					parx[0] = NULL;
 					parx[1] = channel->name;
-					parx[2] = newcomment;
+					parx[2] = tmp;
 					parx[3] = NULL;
 
 					do_cmd(client, recv_mtags, "PART", newcomment ? 3 : 2, parx);

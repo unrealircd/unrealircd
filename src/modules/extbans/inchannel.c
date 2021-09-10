@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 int extban_inchannel_is_ok(BanContext *b);
-char *extban_inchannel_conv_param(BanContext *b, Extban *extban);
+const char *extban_inchannel_conv_param(BanContext *b, Extban *extban);
 int extban_inchannel_is_banned(BanContext *b);
 
 /** Called upon module init */
@@ -68,7 +68,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *extban_inchannel_conv_param(BanContext *b, Extban *extban)
+const char *extban_inchannel_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[CHANNELLEN+6];
 	char *chan, *p, symbol='\0';
@@ -97,7 +97,7 @@ char *extban_inchannel_conv_param(BanContext *b, Extban *extban)
 /* The only purpose of this function is a temporary workaround to prevent a desync.. pfff */
 int extban_inchannel_is_ok(BanContext *b)
 {
-	char *p = b->banstr;
+	const char *p = b->banstr;
 
 	if ((b->is_ok_checktype == EXBCHK_PARAM) && MyUser(b->client) && (b->what == MODE_ADD) && (strlen(b->banstr) > 3))
 	{
@@ -138,7 +138,7 @@ static int extban_inchannel_compareflags(char symbol, int flags)
 int extban_inchannel_is_banned(BanContext *b)
 {
 	Membership *lp;
-	char *p = b->banstr;
+	const char *p = b->banstr;
 	char symbol = '\0';
 
 	if (*p != '#')

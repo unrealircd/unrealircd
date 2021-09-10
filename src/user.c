@@ -768,7 +768,7 @@ int security_group_valid_name(char *name)
  * @param name	The name of the security group
  * @returns A SecurityGroup struct, or NULL if not found.
  */
-SecurityGroup *find_security_group(char *name)
+SecurityGroup *find_security_group(const char *name)
 {
 	SecurityGroup *s;
 	for (s = securitygroups; s; s = s->next)
@@ -793,7 +793,7 @@ int security_group_exists(char *name)
  * @param name	The name of the security group
  * @returns A SecurityGroup struct (already added to the 'securitygroups' linked list)
  */
-SecurityGroup *add_security_group(char *name, int priority)
+SecurityGroup *add_security_group(const char *name, int priority)
 {
 	SecurityGroup *s = find_security_group(name);
 
@@ -876,7 +876,7 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
  * @param secgroupname	The name of the security-group to check against
  * @retval 1 if user is allowed by security-group, 0 if not.
  */
-int user_allowed_by_security_group_name(Client *client, char *secgroupname)
+int user_allowed_by_security_group_name(Client *client, const char *secgroupname)
 {
 	SecurityGroup *s;
 

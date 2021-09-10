@@ -108,8 +108,8 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 		Channel *channel;
 		if ((channel = find_channel(alias->nick)))
 		{
-			char *msg = parv[1];
-			char *errmsg = NULL;
+			const char *msg = parv[1];
+			const char *errmsg = NULL;
 			if (can_send_to_channel(client, channel, &msg, &errmsg, 0))
 			{
 				if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_CHANMSG, cmd, channel->name, 0, NULL))
@@ -243,8 +243,8 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 					Channel *channel;
 					if ((channel = find_channel(format->nick)))
 					{
-						char *msg = output;
-						char *errmsg = NULL;
+						const char *msg = output;
+						const char *errmsg = NULL;
 						if (!can_send_to_channel(client, channel, &msg, &errmsg, 0))
 						{
 							if (alias->spamfilter && match_spamfilter(client, output, SPAMF_CHANMSG, cmd, channel->name, 0, NULL))

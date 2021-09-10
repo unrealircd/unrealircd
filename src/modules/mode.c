@@ -525,9 +525,9 @@ void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
 	return;
 }
 
-char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, int extbtype, Ban **banlist)
+const char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, int extbtype, Ban **banlist)
 {
-	char *tmpstr;
+	const char *tmpstr;
 	BanContext *b;
 
 	tmpstr = clean_ban_mask(param, what, client, 0);
@@ -536,7 +536,7 @@ char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, 
 		/* Invalid ban. See if we can send an error about that (only for extbans) */
 		if (MyUser(client) && is_extended_ban(param))
 		{
-			char *nextbanstr;
+			const char *nextbanstr;
 			Extban *extban = findmod_by_bantype(param, &nextbanstr);
 			BanContext *b;
 
@@ -557,7 +557,7 @@ char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, 
 	if (MyUser(client) && is_extended_ban(param))
 	{
 		/* extban: check access if needed */
-		char *nextbanstr;
+		const char *nextbanstr;
 		Extban *extban = findmod_by_bantype(tmpstr, &nextbanstr);
 		if (extban)
 		{
@@ -613,7 +613,7 @@ char *mode_ban_handler(Client *client, Channel *channel, char *param, int what, 
  * The result is later used by make_mode_str() to create the
  * actual MODE line to be broadcasted to the channel and other servers.
  */
-void do_mode_char_write(char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], u_int *pcount, u_int what, char modeletter, char *str)
+void do_mode_char_write(char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], u_int *pcount, u_int what, char modeletter, const char *str)
 {
 	/* Caller should have made sure there was room! */
 	if (*pcount >= MAXMODEPARAMS)
@@ -642,7 +642,7 @@ int do_mode_char_list_mode(Channel *channel, long modetype, char modechar, char 
                            u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
                            long my_access)
 {
-	char *tmpstr;
+	const char *tmpstr;
 
 	switch (modetype)
 	{

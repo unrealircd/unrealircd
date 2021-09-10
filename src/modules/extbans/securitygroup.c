@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-char *extban_securitygroup_conv_param(BanContext *b, Extban *extban);
+const char *extban_securitygroup_conv_param(BanContext *b, Extban *extban);
 int extban_securitygroup_is_ok(BanContext *b);
 int extban_securitygroup_is_banned(BanContext *b);
 
@@ -90,9 +90,6 @@ int extban_securitygroup_generic(char *mask, int strict)
 	if (!*mask)
 		return 0; /* don't allow "~G:" nor "~G:!" */
 
-	if (strlen(mask) > SECURITYGROUPLEN)
-		mask[SECURITYGROUPLEN] = '\0';
-
 	return 1;
 }
 
@@ -118,7 +115,7 @@ int extban_securitygroup_is_ok(BanContext *b)
 }
 
 /** Security group extban - conv_param */
-char *extban_securitygroup_conv_param(BanContext *b, Extban *extban)
+const char *extban_securitygroup_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[SECURITYGROUPLEN + 8];
 

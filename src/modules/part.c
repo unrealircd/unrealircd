@@ -63,7 +63,7 @@ CMD_FUNC(cmd_part)
 	Membership *lp;
 	char *p = NULL, *name;
 	char *commentx = (parc > 2 && parv[2]) ? parv[2] : NULL;
-	char *comment;
+	const char *comment;
 	int n;
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("PART");

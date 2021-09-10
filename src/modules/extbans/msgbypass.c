@@ -30,7 +30,7 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageRestrictionType bypass_type);
 int msgbypass_extban_is_ok(BanContext *b);
-char *msgbypass_extban_conv_param(BanContext *b, Extban *extban);
+const char *msgbypass_extban_conv_param(BanContext *b, Extban *extban);
 
 /** Called upon module init */
 MOD_INIT()
@@ -129,14 +129,14 @@ int msgbypass_extban_type_ok(char *type)
 }
 
 #define MAX_LENGTH 128
-char *msgbypass_extban_conv_param(BanContext *b, Extban *extban)
+const char *msgbypass_extban_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[MAX_LENGTH+1];
 	char para[MAX_LENGTH+1];
 	char tmpmask[MAX_LENGTH+1];
 	char *type; /**< Type, such as 'external' */
 	char *matchby; /**< Matching method, such as 'n!u@h' */
-	char *newmask; /**< Cleaned matching method, such as 'n!u@h' */
+	const char *newmask; /**< Cleaned matching method, such as 'n!u@h' */
 
 	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
 	

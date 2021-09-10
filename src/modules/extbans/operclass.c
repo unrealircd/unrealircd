@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-char *extban_operclass_conv_param(BanContext *b, Extban *extban);
+const char *extban_operclass_conv_param(BanContext *b, Extban *extban);
 int extban_operclass_is_banned(BanContext *b);
 
 /** Called upon module init */
@@ -70,7 +70,7 @@ MOD_UNLOAD()
 
 #define OPERCLASSLEN 64
 
-char *extban_operclass_conv_param(BanContext *b, Extban *extban)
+const char *extban_operclass_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[OPERCLASSLEN + 4];
 	char *p;

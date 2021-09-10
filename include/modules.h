@@ -377,10 +377,10 @@ typedef enum ExtbanOptions {
 typedef struct {
 	Client *client;		/**< Client to check, can be a remote client */
 	Channel *channel;	/**< Channel to check */
-	char *banstr;		/**< Mask string (ban) */
+	const char *banstr;	/**< Mask string (ban) */
 	int checktype;		/**< Check type, one of BANCHK_* */
-	char *msg;		/**< Message, only for some BANCHK_* types (for censoring text) */
-	char *error_msg;	/**< Error message, can be NULL */
+	const char *msg;	/**< Message, only for some BANCHK_* types (for censoring text) */
+	const char *error_msg;	/**< Error message, can be NULL */
 	int no_extbans;		/**< Set to 1 to disable extended bans checking - only nick!user@host allowed */
 	int what;		/**< MODE_ADD or MODE_DEL (for is_ok) */
 	int what2;		/**< EXBTYPE_BAN or EXBTYPE_EXCEPT (for is_ok) */
@@ -412,7 +412,7 @@ struct Extban {
 	 * you to limit the length of the ban too.
 	 * return value: pointer to output string (temp. storage)
 	 */
-	char *(*conv_param)(BanContext *b, Extban *handler);
+	const char *(*conv_param)(BanContext *b, Extban *handler);
 
 	/** Checks if the user is affected by this ban [required].
 	 * XXX FIXME: make this optional, as we have several functions who just return 0 atm (eg textban)
@@ -426,7 +426,7 @@ typedef struct {
 	char *name;
 	ExtbanOptions options;
 	int (*is_ok)(BanContext *b);
-	char *(*conv_param)(BanContext *b, Extban *handler);
+	const char *(*conv_param)(BanContext *b, Extban *handler);
 	int (*is_banned)(BanContext *b);
 	unsigned int is_banned_events;
 } ExtbanInfo;

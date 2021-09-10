@@ -28,8 +28,8 @@ CMD_FUNC(cmd_private);
 CMD_FUNC(cmd_notice);
 CMD_FUNC(cmd_tagmsg);
 void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[], SendType sendtype);
-int _can_send_to_channel(Client *client, Channel *channel, char **msgtext, char **errmsg, SendType sendtype);
-int can_send_to_user(Client *client, Client *target, char **msgtext, char **errmsg, SendType sendtype);
+int _can_send_to_channel(Client *client, Channel *channel, const char **msgtext, const char **errmsg, SendType sendtype);
+int can_send_to_user(Client *client, Client *target, const char **msgtext, const char **errmsg, SendType sendtype);
 
 /* Variables */
 long CAP_MESSAGE_TAGS = 0; /**< Looked up at MOD_LOAD, may stay 0 if message-tags support is absent */
@@ -85,7 +85,7 @@ MOD_UNLOAD()
  * text:	Pointer to a pointer to a text [in, out]
  * cmd:		Pointer to a pointer which contains the command to use [in, out]
  */
-int can_send_to_user(Client *client, Client *target, char **msgtext, char **errmsg, SendType sendtype)
+int can_send_to_user(Client *client, Client *target, const char **msgtext, const char **errmsg, SendType sendtype)
 {
 	int ret;
 	Hook *h;
@@ -276,7 +276,8 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 {
 	Client *target;
 	Channel *channel;
-	char *targetstr, *p, *p2, *pc, *text, *errmsg;
+	char *targetstr, *p, *p2, *pc;
+	const char *text, *errmsg;
 	int  prefix = 0;
 	char pfixchan[CHANNELLEN + 4];
 	int ret;
@@ -471,7 +472,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 		target = hash_find_nickatserver(targetstr, NULL);
 		if (target)
 		{
-			char *errmsg = NULL;
+			const char *errmsg = NULL;
 			text = parv[2];
 			if (!can_send_to_user(client, target, &text, &errmsg, sendtype))
 			{
@@ -784,7 +785,7 @@ int ban_version(Client *client, char *text)
  * @returns Returns 1 if the user is allowed to send, otherwise 0.
  * (note that this behavior was reversed in UnrealIRCd versions <5.x.
  */
-int _can_send_to_channel(Client *client, Channel *channel, char **msgtext, char **errmsg, SendType sendtype)
+int _can_send_to_channel(Client *client, Channel *channel, const char **msgtext, const char **errmsg, SendType sendtype)
 {
 	Membership *lp;
 	int  member, i = 0;

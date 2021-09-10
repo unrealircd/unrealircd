@@ -63,7 +63,7 @@ MOD_UNLOAD()
 void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 {
 	Extban *extban;
-	char *nextbanstr;
+	const char *nextbanstr;
 	Ban *ban, *bnext;
 	Ban **banlist;
 	BanContext *b;

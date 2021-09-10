@@ -55,7 +55,7 @@ ModuleHeader MOD_HEADER
     };
 
 /* Forward declarations */
-char *timedban_extban_conv_param(BanContext *b, Extban *extban);
+const char *timedban_extban_conv_param(BanContext *b, Extban *extban);
 int timedban_extban_is_ok(BanContext *b);
 int timedban_is_banned(BanContext *b);
 void add_send_mode_param(Channel *channel, Client *from, char what, char mode, char *param);
@@ -110,7 +110,7 @@ MOD_UNLOAD()
  * Mostly copied from clean_ban_mask()
  * FIXME: Figure out why we have this one at all and not use conv_param? ;)
  */
-char *generic_clean_ban_mask(BanContext *b, Extban *extban)
+const char *generic_clean_ban_mask(BanContext *b, Extban *extban)
 {
 	char *cp, *x;
 	char *user;
@@ -139,13 +139,13 @@ char *generic_clean_ban_mask(BanContext *b, Extban *extban)
 	/* Extended ban? */
 	if (is_extended_ban(mask))
 	{
-		char *nextbanstr;
+		const char *nextbanstr;
 		Extban *extban = findmod_by_bantype(mask, &nextbanstr);
 		if (!extban)
 			return NULL; /* reject unknown extban */
 		if (extban->conv_param)
 		{
-			char *ret;
+			const char *ret;
 			static char retbuf[512];
 			BanContext *b = safe_alloc(sizeof(BanContext));
 			b->banstr = nextbanstr;
@@ -182,7 +182,7 @@ char *generic_clean_ban_mask(BanContext *b, Extban *extban)
 }
 
 /** Convert ban to an acceptable format (or return NULL to fully reject it) */
-char *timedban_extban_conv_param(BanContext *b, Extban *extban)
+const char *timedban_extban_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[MAX_LENGTH+1];
 	char para[MAX_LENGTH+1];
@@ -190,7 +190,7 @@ char *timedban_extban_conv_param(BanContext *b, Extban *extban)
 	char *durationstr; /**< Duration, such as '5' */
 	int duration;
 	char *matchby; /**< Matching method, such as 'n!u@h' */
-	char *newmask; /**< Cleaned matching method, such as 'n!u@h' */
+	const char *newmask; /**< Cleaned matching method, such as 'n!u@h' */
 	static int timedban_extban_conv_param_recursion = 0;
 	
 	if (timedban_extban_conv_param_recursion)
@@ -246,7 +246,7 @@ int generic_ban_is_ok(BanContext *b)
 	if ((b->banstr[0] == '~') && MyUser(b->client))
 	{
 		Extban *extban;
-		char *nextbanstr;
+		const char *nextbanstr;
 
 		/* This portion is copied from clean_ban_mask() */
 		if (is_extended_ban(b->banstr) && MyUser(b->client))

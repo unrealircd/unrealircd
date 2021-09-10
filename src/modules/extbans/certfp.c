@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 int extban_certfp_is_ok(BanContext *b);
-char *extban_certfp_conv_param(BanContext *b, Extban *extban);
+const char *extban_certfp_conv_param(BanContext *b, Extban *extban);
 int extban_certfp_is_banned(BanContext *b);
 
 /* Called upon module init */
@@ -81,7 +81,7 @@ int extban_certfp_is_ok(BanContext *b)
 {
 	if (b->is_ok_checktype == EXCHK_PARAM)
 	{
-		char *p;
+		const char *p;
 		
 		if (strlen(b->banstr) != CERT_FP_LEN)
 			return extban_certfp_usage(b->client);
@@ -96,7 +96,7 @@ int extban_certfp_is_ok(BanContext *b)
 }
 
 /* Obtain targeted certfp from the ban string */
-char *extban_certfp_conv_param(BanContext *b, Extban *extban)
+const char *extban_certfp_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[EVP_MAX_MD_SIZE * 2 + 1];
 	char *p;

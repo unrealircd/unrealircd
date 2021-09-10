@@ -89,8 +89,8 @@ int _match_spamfilter_mtags(Client *client, MessageTag *mtags, char *cmd);
 int check_mtag_spamfilters_present(void);
 int _join_viruschan(Client *client, TKL *tk, int type);
 void _spamfilter_build_user_string(char *buf, char *nick, Client *client);
-int _match_user(char *rmask, Client *client, int options);
-int _match_user_extended_server_ban(char *banstr, Client *client);
+int _match_user(const char *rmask, Client *client, int options);
+int _match_user_extended_server_ban(const char *banstr, Client *client);
 void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *client, char **tkl_username, char **tkl_hostname);
 int _tkl_ip_hash(char *ip);
 int _tkl_ip_hash_type(int type);
@@ -1279,9 +1279,10 @@ static int xline_exists(char *type, char *usermask, char *hostmask)
  */
 int parse_extended_server_ban(char *mask_in, Client *client, char **error, int skip_checking, char *buf1, size_t buf1len, char *buf2, size_t buf2len)
 {
-	char *nextbanstr = NULL;
+	const char *nextbanstr = NULL;
 	Extban *extban;
-	char *str, *p;
+	const char *str;
+	char *p;
 	BanContext *b = NULL;
 	char    mask[USERLEN + NICKLEN + HOSTLEN + 32]; // same as extban_conv_param_nuh_or_extban()
 	char newmask[USERLEN + NICKLEN + HOSTLEN + 32];
@@ -4988,7 +4989,7 @@ static int comp_with_mask(void *addr, void *dest, u_int mask)
  * CIDR support is available so 'host' may be like '1.2.0.0/16'.
  * @returns 1 on match, 0 on no match.
  */
-int _match_user(char *rmask, Client *client, int options)
+int _match_user(const char *rmask, Client *client, int options)
 {
 	char mask[NICKLEN+USERLEN+HOSTLEN+8];
 	char clientip[IPSZ], maskip[IPSZ];
@@ -5142,9 +5143,9 @@ int _match_user(char *rmask, Client *client, int options)
 	return 0; /* NOMATCH: nothing of the above matched */
 }
 
-int _match_user_extended_server_ban(char *banstr, Client *client)
+int _match_user_extended_server_ban(const char *banstr, Client *client)
 {
-	char *nextbanstr;
+	const char *nextbanstr;
 	Extban *extban;
 	BanContext *b;
 	int ret;

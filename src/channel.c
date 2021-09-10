@@ -230,7 +230,7 @@ Client *find_chasing(Client *client, char *user, int *chasing)
 }
 
 /** Return 1 if the bans are identical, taking into account special handling for extbans */
-int identical_ban(char *one, char *two)
+int identical_ban(const char *one, const char *two)
 {
 #if 0
 	if (is_extended_ban(one) && is_extended_ban(two))
@@ -259,14 +259,14 @@ int identical_ban(char *one, char *two)
  *  the specified channel. (Extended version with
  *  set by nick and set on timestamp)
  */
-int add_listmode_ex(Ban **list, Client *client, Channel *channel, char *banid, char *setby, time_t seton)
+int add_listmode_ex(Ban **list, Client *client, Channel *channel, const char *banid, const char *setby, time_t seton)
 {
 	Ban *ban;
 	int cnt = 0, len;
 	int do_not_add = 0;
 
-	if (MyUser(client))
-		collapse(banid);
+	//if (MyUser(client))
+	//	collapse(banid);
 
 	len = strlen(banid);
 	if (!*list && ((len > MAXBANLENGTH) || (MAXBANS < 1)))
@@ -330,7 +330,7 @@ int add_listmode_ex(Ban **list, Client *client, Channel *channel, char *banid, c
 /** Add a listmode (+beI) with the specified banid to
  *  the specified channel. (Simplified version)
  */
-int add_listmode(Ban **list, Client *client, Channel *channel, char *banid)
+int add_listmode(Ban **list, Client *client, Channel *channel, const char *banid)
 {
 	char *setby = client->name;
 	char nuhbuf[NICKLEN+USERLEN+HOSTLEN+4];
@@ -343,7 +343,7 @@ int add_listmode(Ban **list, Client *client, Channel *channel, char *banid)
 
 /** Delete a listmode (+beI) from a channel that matches the specified banid.
  */
-int del_listmode(Ban **list, Channel *channel, char *banid)
+int del_listmode(Ban **list, Channel *channel, const char *banid)
 {
 	Ban **ban;
 	Ban *tmp;
@@ -375,7 +375,7 @@ int del_listmode(Ban **list, Channel *channel, char *banid)
  * @returns      A pointer to the ban struct if banned, otherwise NULL.
  * @comments     Simple wrapper for is_banned_with_nick()
  */
-inline Ban *is_banned(Client *client, Channel *channel, int type, char **msg, char **errmsg)
+inline Ban *is_banned(Client *client, Channel *channel, int type, const char **msg, const char **errmsg)
 {
 	return is_banned_with_nick(client, channel, type, NULL, msg, errmsg);
 }
@@ -392,7 +392,7 @@ inline int ban_check_mask(BanContext *b)
 	if (!b->no_extbans && is_extended_ban(b->banstr))
 	{
 		/* Is an extended ban. */
-		char *nextbanstr;
+		const char *nextbanstr;
 		Extban *extban = findmod_by_bantype(b->banstr, &nextbanstr);
 		if (!extban || !(extban->is_banned_events & b->checktype))
 		{
@@ -417,7 +417,7 @@ inline int ban_check_mask(BanContext *b)
  * @param msg    Message, only for some BANCHK_* types, otherwise NULL
  * @returns      A pointer to the ban struct if banned, otherwise NULL.
  */
-Ban *is_banned_with_nick(Client *client, Channel *channel, int type, char *nick, char **msg, char **errmsg)
+Ban *is_banned_with_nick(Client *client, Channel *channel, int type, const char *nick, const char **msg, const char **errmsg)
 {
 	Ban *ban, *ex;
 	char savednick[NICKLEN+1];
@@ -724,25 +724,24 @@ char *trim_str(char *str, int len)
  * @note A pointer is returned to a static buffer, which is overwritten
  *       on next clean_ban_mask or make_nick_user_host call.
  */
-char *clean_ban_mask(char *mask, int what, Client *client, int conv_options)
+const char *clean_ban_mask(const char *mask_in, int what, Client *client, int conv_options)
 {
 	char *cp, *x;
 	char *user;
 	char *host;
-	static char maskbuf[512];
+	static char mask[512];
+
+	/* Strip any ':' at beginning since that would cause a desync */
+	for (; (*mask_in && (*mask_in == ':')); mask_in++);
+	if (!*mask_in)
+		return NULL;
 
 	/* Work on a copy */
-	strlcpy(maskbuf, mask, sizeof(maskbuf));
-	mask = maskbuf;
+	strlcpy(mask, mask_in, sizeof(mask));
 
 	cp = strchr(mask, ' ');
 	if (cp)
 		*cp = '\0';
-
-	/* Strip any ':' at beginning since that would cause a desync */
-	for (; (*mask && (*mask == ':')); mask++);
-	if (!*mask)
-		return NULL;
 
 	/* Forbid ASCII <= 32 in all bans */
 	for (x = mask; *x; x++)
@@ -752,7 +751,7 @@ char *clean_ban_mask(char *mask, int what, Client *client, int conv_options)
 	/* Extended ban? */
 	if (is_extended_ban(mask))
 	{
-		char *nextbanstr;
+		const char *nextbanstr;
 		Extban *extban;
 
 		if (RESTRICT_EXTENDEDBANS && MyUser(client) && !ValidatePermissionsForPath("immune:restrict-extendedbans",client,NULL,NULL,NULL))
@@ -787,7 +786,7 @@ char *clean_ban_mask(char *mask, int what, Client *client, int conv_options)
 
 		if (extban->conv_param)
 		{
-			char *ret;
+			const char *ret;
 			static char retbuf[512];
 			BanContext *b = safe_alloc(sizeof(BanContext));
 			b->client = client;

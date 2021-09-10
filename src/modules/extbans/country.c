@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 int extban_country_is_ok(BanContext *b);
-char *extban_country_conv_param(BanContext *b, Extban *extban);
+const char *extban_country_conv_param(BanContext *b, Extban *extban);
 int extban_country_is_banned(BanContext *b);
 
 /* Called upon module init */
@@ -79,7 +79,7 @@ int extban_country_is_ok(BanContext *b)
 {
 	if (b->is_ok_checktype == EXCHK_PARAM)
 	{
-		char *p;
+		const char *p;
 
 		if (!strcmp(b->banstr, "*"))
 			return EX_ALLOW;
@@ -97,7 +97,7 @@ int extban_country_is_ok(BanContext *b)
 }
 
 /* Obtain targeted country from the ban string */
-char *extban_country_conv_param(BanContext *b, Extban *extban)
+const char *extban_country_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[EVP_MAX_MD_SIZE * 2 + 1];
 	char *p;

@@ -52,7 +52,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-void topic_operoverride_msg(Client *client, Channel *channel, char *topic)
+void topic_operoverride_msg(Client *client, Channel *channel, const char *topic)
 {
 	unreal_log(ULOG_INFO, "operoverride", "OPEROVERRIDE_TOPIC", client,
 		   "OperOverride: $client.details changed the topic of $channel to '$topic'",
@@ -76,8 +76,9 @@ void topic_operoverride_msg(Client *client, Channel *channel, char *topic)
 CMD_FUNC(cmd_topic)
 {
 	Channel *channel = NULL;
-	char *topic = NULL, *name, *tnick = client->name;
-	char *errmsg = NULL;
+	const char *topic = NULL;
+	char *name, *tnick = client->name;
+	const char *errmsg = NULL;
 	time_t ttime = 0;
 	int i = 0;
 	Hook *h;
@@ -184,7 +185,7 @@ CMD_FUNC(cmd_topic)
 	/* Topic change. Either locally (check permissions!) or remote, check permissions: */
 	if (IsUser(client))
 	{
-		char *newtopic = NULL;
+		const char *newtopic = NULL;
 
 		// FIXME/TODO: all these checks must be moved to chanmodes/topiclimit
 		//             and to chanmodes/noexternalmsgs, so use some kind of hook !!

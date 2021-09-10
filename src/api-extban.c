@@ -40,11 +40,11 @@ void set_isupport_extban(void)
 	ISupportSetFmt(NULL, "EXTBAN", "~,%s", extbanstr);
 }
 
-Extban *findmod_by_bantype(char *str, char **remainder)
+Extban *findmod_by_bantype(const char *str, const char **remainder)
 {
 	int i;
 	int ban_name_length;
-	char *p = strchr(str, ':');
+	const char *p = strchr(str, ':');
 
 	if (!p || !p[1])
 	{
@@ -185,7 +185,7 @@ int extban_is_ok_nuh_extban(BanContext *b)
 	/* Mostly copied from clean_ban_mask - but note MyUser checks aren't needed here: extban->is_ok() according to cmd_mode isn't called for nonlocal. */
 	if (is_extended_ban(b->banstr))
 	{
-		char *nextbanstr;
+		const char *nextbanstr;
 		Extban *extban = NULL;
 
 		/* We're dealing with a stacked extended ban.
@@ -242,7 +242,7 @@ int extban_is_ok_nuh_extban(BanContext *b)
  * to ensure the parameter is nick!user@host.
  * most of the code is just copied from clean_ban_mask.
  */
-char *extban_conv_param_nuh(BanContext *b, Extban *extban)
+const char *extban_conv_param_nuh(BanContext *b, Extban *extban)
 {
 	char *cp, *user, *host, *mask, *ret = NULL;
 	static char retbuf[USERLEN + NICKLEN + HOSTLEN + 32];
@@ -275,7 +275,7 @@ char *extban_conv_param_nuh(BanContext *b, Extban *extban)
 
 /** conv_param to deal with stacked extbans.
  */
-char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
+const char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 {
 #if (USERLEN + NICKLEN + HOSTLEN + 32) > 256
  #error "wtf?"
@@ -284,8 +284,8 @@ char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 	static char printbuf[256];
 	char *mask;
 	char tmpbuf[USERLEN + NICKLEN + HOSTLEN + 32];
-	char *ret = NULL;
-	char *nextbanstr;
+	const char *ret = NULL;
+	const char *nextbanstr;
 	Extban *extban = NULL;
 	static int extban_recursion = 0;
 
@@ -345,7 +345,7 @@ char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 	return b->banstr;
 }
 
-char *prefix_with_extban(char *remainder, BanContext *b, Extban *extban, char *buf, size_t buflen)
+char *prefix_with_extban(const char *remainder, BanContext *b, Extban *extban, char *buf, size_t buflen)
 {
 	/* Yes, we support this because it makes code at the caller cleaner */
 	if (remainder == NULL)

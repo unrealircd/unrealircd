@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-char *extban_account_conv_param(BanContext *b, Extban *extban);
+const char *extban_account_conv_param(BanContext *b, Extban *extban);
 int extban_account_is_banned(BanContext *b);
 
 /** Called upon module init */
@@ -68,7 +68,7 @@ MOD_UNLOAD()
 }
 
 /** Account bans */
-char *extban_account_conv_param(BanContext *b, Extban *extban)
+const char *extban_account_conv_param(BanContext *b, Extban *extban)
 {
 	char *mask, *acc;
 	static char retbuf[NICKLEN + 4];

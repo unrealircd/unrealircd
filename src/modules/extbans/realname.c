@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-char *extban_realname_conv_param(BanContext *b, Extban *extban);
+const char *extban_realname_conv_param(BanContext *b, Extban *extban);
 int extban_realname_is_banned(BanContext *b);
 
 /** Called upon module init */
@@ -68,7 +68,7 @@ MOD_UNLOAD()
 }
 
 /** Realname bans - conv_param */
-char *extban_realname_conv_param(BanContext *b, Extban *extban)
+const char *extban_realname_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[REALLEN + 8];
 	char *mask;
