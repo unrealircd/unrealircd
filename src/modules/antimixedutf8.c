@@ -243,10 +243,10 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	if (!CommandOverrideAdd(modinfo->handle, "PRIVMSG", override_msg))
+	if (!CommandOverrideAdd(modinfo->handle, "PRIVMSG", 0, override_msg))
 		return MOD_FAILED;
 
-	if (!CommandOverrideAdd(modinfo->handle, "NOTICE", override_msg))
+	if (!CommandOverrideAdd(modinfo->handle, "NOTICE", 0, override_msg))
 		return MOD_FAILED;
 
 	return MOD_SUCCESS;

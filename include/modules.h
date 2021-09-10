@@ -943,8 +943,7 @@ extern Command *AliasAdd(Module *module, char *cmd, AliasCmdFunc aliasfunc, unsi
 extern void CommandDel(Command *command);
 extern void CommandDelX(Command *command, RealCommand *cmd);
 extern int CommandExists(const char *name);
-extern CommandOverride *CommandOverrideAdd(Module *module, const char *cmd, OverrideCmdFunc func);
-extern CommandOverride *CommandOverrideAddEx(Module *module, const char *name, int priority, OverrideCmdFunc func);
+extern CommandOverride *CommandOverrideAdd(Module *module, const char *name, int priority, OverrideCmdFunc func);
 extern void CommandOverrideDel(CommandOverride *ovr);
 extern void CallCommandOverride(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, char *parv[]);
 

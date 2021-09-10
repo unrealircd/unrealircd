@@ -250,7 +250,7 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 				continue;
 			}
 
-			if (!CommandOverrideAdd(ModInf.handle, cmd, rcmd_override))
+			if (!CommandOverrideAdd(ModInf.handle, cmd, 0, rcmd_override))
 			{
 				config_warn("[restrict-commands] Failed to add override for '%s' (NO RESTRICTIONS APPLY)", cmd);
 				continue;

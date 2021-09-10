@@ -1112,7 +1112,7 @@ Callback *CallbackDel(Callback *cb)
 	return NULL;
 }
 
-CommandOverride *CommandOverrideAddEx(Module *module, const char *name, int priority, OverrideCmdFunc function)
+CommandOverride *CommandOverrideAdd(Module *module, const char *name, int priority, OverrideCmdFunc function)
 {
 	RealCommand *p;
 	CommandOverride *ovr;
@@ -1151,11 +1151,6 @@ CommandOverride *CommandOverrideAddEx(Module *module, const char *name, int prio
 		AddListItem(ovr, p->friend->overriders);
 	}
 	return ovr;
-}
-
-CommandOverride *CommandOverrideAdd(Module *module, const char *name, OverrideCmdFunc function)
-{
-	return CommandOverrideAddEx(module, name, 0, function);
 }
 
 void CommandOverrideDel(CommandOverride *cmd)

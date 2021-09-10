@@ -95,10 +95,10 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	if (!CommandOverrideAdd(MyMod, "MAP", override_map))
+	if (!CommandOverrideAdd(MyMod, "MAP", 0, override_map))
 		return MOD_FAILED;
 
-	if (!CommandOverrideAdd(MyMod, "LINKS", override_links))
+	if (!CommandOverrideAdd(MyMod, "LINKS", 0, override_links))
 		return MOD_FAILED;
 
 	return MOD_SUCCESS;

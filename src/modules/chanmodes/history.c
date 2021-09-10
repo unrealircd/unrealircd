@@ -99,11 +99,11 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	CommandOverrideAdd(modinfo->handle, "MODE", override_mode);
-	CommandOverrideAdd(modinfo->handle, "SVSMODE", override_mode);
-	CommandOverrideAdd(modinfo->handle, "SVS2MODE", override_mode);
-	CommandOverrideAdd(modinfo->handle, "SAMODE", override_mode);
-	CommandOverrideAdd(modinfo->handle, "SJOIN", override_mode);
+	CommandOverrideAdd(modinfo->handle, "MODE", 0, override_mode);
+	CommandOverrideAdd(modinfo->handle, "SVSMODE", 0, override_mode);
+	CommandOverrideAdd(modinfo->handle, "SVS2MODE", 0, override_mode);
+	CommandOverrideAdd(modinfo->handle, "SAMODE", 0, override_mode);
+	CommandOverrideAdd(modinfo->handle, "SJOIN", 0, override_mode);
 	return MOD_SUCCESS;
 }
 
