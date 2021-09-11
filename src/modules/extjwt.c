@@ -22,6 +22,11 @@
 
 #include "unrealircd.h"
 
+#if defined(__GNUC__)
+/* Temporarily ignore these for this entire file. FIXME later when updating the code for OpenSSL 3: */
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 /* internal definitions */
 
 #define MSG_EXTJWT	"EXTJWT"
