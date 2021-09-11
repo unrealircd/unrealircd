@@ -289,7 +289,7 @@ void efunctions_switchover(void)
 	}
 }
 
-#define efunc_init_function(what, func, default_func) efunc_init_function_(what, #func, (void *)&func, default_func)
+#define efunc_init_function(what, func, default_func) efunc_init_function_(what, #func, (void *)&func, (void *)default_func)
 
 void efunc_init_function_(EfunctionType what, char *name, void *func, void *default_func)
 {
