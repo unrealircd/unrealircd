@@ -100,7 +100,7 @@ CMD_FUNC(cmd_svsnick)
 	RunHook(HOOKTYPE_LOCAL_NICKCHANGE, acptr, mtags, nickname);
 	sendto_local_common_channels(acptr, acptr, 0, mtags, ":%s NICK :%s", acptr->name, nickname);
 	sendto_one(acptr, mtags, ":%s NICK :%s", acptr->name, nickname);
-	sendto_server(NULL, 0, 0, mtags, ":%s NICK %s :%ld", acptr->id, nickname, acptr->lastnick);
+	sendto_server(NULL, 0, 0, mtags, ":%s NICK %s :%lld", acptr->id, nickname, (long long)acptr->lastnick);
 	free_message_tags(mtags);
 
 	add_history(acptr, 1);
