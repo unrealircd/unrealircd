@@ -45,7 +45,7 @@ extern EVENT(unrealdb_expire_secret_cache);
  *        can be later, in case of high load, in very extreme cases even up to 1000 or 2000
  *        msec later but that would be very unusual. Just saying, it's not a guarantee..
  */
-Event *EventAdd(Module *module, char *name, vFP event, void *data, long every_msec, int count)
+Event *EventAdd(Module *module, const char *name, vFP event, void *data, long every_msec, int count)
 {
 	Event *newevent;
 
@@ -147,7 +147,7 @@ static void CleanupEvents(void)
 	}
 }
 
-Event *EventFind(char *name)
+Event *EventFind(const char *name)
 {
 	Event *eventptr;
 

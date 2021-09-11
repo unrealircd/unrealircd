@@ -37,7 +37,7 @@ CMD_FUNC(cmd_batch);
 /* Variables */
 long CAP_BATCH = 0L;
 
-int batch_mtag_is_ok(Client *client, char *name, char *value);
+int batch_mtag_is_ok(Client *client, const char *name, const char *value);
 
 MOD_INIT()
 {
@@ -111,7 +111,7 @@ CMD_FUNC(cmd_batch)
  * syntax.
  * We simply allow batch ONLY from servers and with any syntax.
  */
-int batch_mtag_is_ok(Client *client, char *name, char *value)
+int batch_mtag_is_ok(Client *client, const char *name, const char *value)
 {
 	if (IsServer(client))
 		return 1;

@@ -483,13 +483,13 @@ typedef struct {
 /** Message Tag Handler */
 struct MessageTagHandler {
 	MessageTagHandler *prev, *next;
-	char *name;                                 /**< The name of the message-tag */
-	int flags;                                  /**< A flag of MTAG_HANDLER_FLAGS_* */
-	int (*is_ok)(Client *, char *, char *);     /**< Verify syntax and access rights */
-	int (*should_send_to_client)(Client *);     /**< Tag may be sent to this client (normally NULL!) */
-	Module *owner;                              /**< Module introducing this CAP. */
-	ClientCapability *clicap_handler;           /**< Client capability handler associated with this */
-	char unloaded;                              /**< Internal flag to indicate module is being unloaded */
+	char *name;                                             /**< The name of the message-tag */
+	int flags;                                              /**< A flag of MTAG_HANDLER_FLAGS_* */
+	int (*is_ok)(Client *, const char *, const char *);     /**< Verify syntax and access rights */
+	int (*should_send_to_client)(Client *);                 /**< Tag may be sent to this client (normally NULL!) */
+	Module *owner;                                          /**< Module introducing this CAP. */
+	ClientCapability *clicap_handler;                       /**< Client capability handler associated with this */
+	char unloaded;                                          /**< Internal flag to indicate module is being unloaded */
 };
 
 /** The struct used to register a message tag handler.
@@ -498,7 +498,7 @@ struct MessageTagHandler {
 typedef struct {
 	char *name;
 	int flags;
-	int (*is_ok)(Client *, char *, char *);
+	int (*is_ok)(Client *, const char *, const char *);
 	int (*should_send_to_client)(Client *);
 	ClientCapability *clicap_handler;
 } MessageTagHandlerInfo;
@@ -549,10 +549,10 @@ typedef struct HistoryBackend HistoryBackend;
 struct HistoryBackend {
 	HistoryBackend *prev, *next;
 	char *name;                                   /**< The name of the history backend (eg: "mem") */
-	int (*history_set_limit)(char *object, int max_lines, long max_time); /**< Impose a limit on a history object */
-	int (*history_add)(char *object, MessageTag *mtags, char *line); /**< Add to history */
-	HistoryResult *(*history_request)(char *object, HistoryFilter *filter);  /**< Request history */
-	int (*history_destroy)(char *object);  /**< Destroy history of this object completely */
+	int (*history_set_limit)(const char *object, int max_lines, long max_time); /**< Impose a limit on a history object */
+	int (*history_add)(const char *object, MessageTag *mtags, const char *line); /**< Add to history */
+	HistoryResult *(*history_request)(const char *object, HistoryFilter *filter);  /**< Request history */
+	int (*history_destroy)(const char *object);  /**< Destroy history of this object completely */
 	Module *owner;                                /**< Module introducing this */
 	char unloaded;                                /**< Internal flag to indicate module is being unloaded */
 };
@@ -562,10 +562,10 @@ struct HistoryBackend {
  */
 typedef struct {
 	char *name;
-	int (*history_set_limit)(char *object, int max_lines, long max_time);
-	int (*history_add)(char *object, MessageTag *mtags, char *line);
-	HistoryResult *(*history_request)(char *object, HistoryFilter *filter);
-	int (*history_destroy)(char *object);
+	int (*history_set_limit)(const char *object, int max_lines, long max_time);
+	int (*history_add)(const char *object, MessageTag *mtags, const char *line);
+	HistoryResult *(*history_request)(const char *object, HistoryFilter *filter);
+	int (*history_destroy)(const char *object);
 } HistoryBackendInfo;
 
 struct Hook {
@@ -739,10 +739,10 @@ extern MODVAR Hooktype		Hooktypes[MAXCUSTOMHOOKS];
 extern MODVAR Callback *Callbacks[MAXCALLBACKS], *RCallbacks[MAXCALLBACKS];
 extern MODVAR ClientCapability *clicaps;
 
-extern Event *EventAdd(Module *module, char *name, vFP event, void *data, long every_msec, int count);
+extern Event *EventAdd(Module *module, const char *name, vFP event, void *data, long every_msec, int count);
 extern void   EventDel(Event *event);
 extern Event *EventMarkDel(Event *event);
-extern Event *EventFind(char *name);
+extern Event *EventFind(const char *name);
 extern int EventMod(Event *event, EventInfo *mods);
 extern void DoEvents(void);
 extern void EventStatus(Client *client);
@@ -823,7 +823,7 @@ __extension__ ({ \
 extern Hook	*HookAddMain(Module *module, int hooktype, int priority, int (*intfunc)(), void (*voidfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)());
 extern Hook	*HookDel(Hook *hook);
 
-extern Hooktype *HooktypeAdd(Module *module, char *string, int *type);
+extern Hooktype *HooktypeAdd(Module *module, const char *string, int *type);
 extern void HooktypeDel(Hooktype *hooktype, Module *module);
 
 #define RunHook(hooktype,...) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(__VA_ARGS__); } while(0)
@@ -866,8 +866,8 @@ extern Callback	*CallbackDel(Callback *cb);
 extern Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*intfunc)(), void (*voidfunc)(), void *(*pvoidfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)());
 extern Efunction *EfunctionDel(Efunction *cb);
 
-extern Command *CommandAdd(Module *module, char *cmd, CmdFunc func, unsigned char params, int flags);
-extern Command *AliasAdd(Module *module, char *cmd, AliasCmdFunc aliasfunc, unsigned char params, int flags);
+extern Command *CommandAdd(Module *module, const char *cmd, CmdFunc func, unsigned char params, int flags);
+extern Command *AliasAdd(Module *module, const char *cmd, AliasCmdFunc aliasfunc, unsigned char params, int flags);
 extern void CommandDel(Command *command);
 extern void CommandDelX(Command *command, RealCommand *cmd);
 extern int CommandExists(const char *name);

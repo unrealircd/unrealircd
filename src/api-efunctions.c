@@ -105,7 +105,7 @@ char *(*charsys_get_current_languages)(void);
 void (*broadcast_sinfo)(Client *client, Client *to, Client *except);
 void (*connect_server)(ConfigItem_link *aconf, Client *by, struct hostent *hp);
 void (*parse_message_tags)(Client *client, char **str, MessageTag **mtag_list);
-char *(*mtags_to_string)(MessageTag *m, Client *client);
+const char *(*mtags_to_string)(MessageTag *m, Client *client);
 int (*can_send_to_channel)(Client *client, Channel *channel, const char **msgtext, const char **errmsg, int notice);
 void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 void (*broadcast_md_globalvar_cmd)(Client *except, Client *sender, const char *varname, const char *value);

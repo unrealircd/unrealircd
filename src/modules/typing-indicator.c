@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
 	};
 
-int ti_mtag_is_ok(Client *client, char *name, char *value);
+int ti_mtag_is_ok(Client *client, const char *name, const char *value);
 void mtag_add_ti(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature);
 
 MOD_INIT()
@@ -69,7 +69,7 @@ MOD_UNLOAD()
 
 /** This function verifies if the client sending the mtag is permitted to do so.
  */
-int ti_mtag_is_ok(Client *client, char *name, char *value)
+int ti_mtag_is_ok(Client *client, const char *name, const char *value)
 {
 	/* Require a non-empty parameter */
 	if (BadPtr(value))

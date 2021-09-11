@@ -61,7 +61,7 @@ static long CAP_LABELED_RESPONSE = 0L;
 
 static char packet[8192];
 
-int labeled_response_mtag_is_ok(Client *client, char *name, char *value);
+int labeled_response_mtag_is_ok(Client *client, const char *name, const char *value);
 
 MOD_TEST()
 {
@@ -336,7 +336,7 @@ int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *le
 /** This function verifies if the client sending the
  * tag is permitted to do so and uses a permitted syntax.
  */
-int labeled_response_mtag_is_ok(Client *client, char *name, char *value)
+int labeled_response_mtag_is_ok(Client *client, const char *name, const char *value)
 {
 	if (BadPtr(value))
 		return 0;

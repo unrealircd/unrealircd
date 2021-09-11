@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER
 /* Variables */
 long CAP_ACCOUNT_TAG = 0L;
 
-int msgid_mtag_is_ok(Client *client, char *name, char *value);
+int msgid_mtag_is_ok(Client *client, const char *name, const char *value);
 void mtag_add_or_inherit_msgid(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature);
 
 MOD_INIT()
@@ -69,7 +69,7 @@ MOD_UNLOAD()
  * syntax.
  * We simply allow msgid ONLY from servers and with any syntax.
  */
-int msgid_mtag_is_ok(Client *client, char *name, char *value)
+int msgid_mtag_is_ok(Client *client, const char *name, const char *value)
 {
 	if (IsServer(client) && !BadPtr(value))
 		return 1;

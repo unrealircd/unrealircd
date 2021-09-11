@@ -32,14 +32,14 @@ ModuleHeader MOD_HEADER
 	};
 
 long CAP_MESSAGE_TAGS = 0L;
-char *_mtags_to_string(MessageTag *m, Client *client);
+const char *_mtags_to_string(MessageTag *m, Client *client);
 void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list);
 
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	EfunctionAddString(modinfo->handle, EFUNC_MTAGS_TO_STRING, _mtags_to_string);
+	EfunctionAddConstString(modinfo->handle, EFUNC_MTAGS_TO_STRING, _mtags_to_string);
 	EfunctionAddVoid(modinfo->handle, EFUNC_PARSE_MESSAGE_TAGS, _parse_message_tags);
 
 	return 0;
@@ -263,7 +263,7 @@ int client_accepts_tag(const char *token, Client *client)
  * Taking into account the restrictions that 'client' may have.
  * @returns A string (static buffer) or NULL if no tags at all (!)
  */
-char *_mtags_to_string(MessageTag *m, Client *client)
+const char *_mtags_to_string(MessageTag *m, Client *client)
 {
 	static char buf[4096], name[8192], value[8192];
 	static char tbuf[4094];

@@ -670,7 +670,7 @@ extern void del_async_connects(void);
 extern void isupport_init(void);
 extern void clicap_init(void);
 extern void efunctions_init(void);
-extern void do_cmd(Client *client, MessageTag *mtags, char *cmd, int parc, char *parv[]);
+extern void do_cmd(Client *client, MessageTag *mtags, const char *cmd, int parc, char *parv[]);
 extern MODVAR char *me_hash;
 extern MODVAR int dontspread;
 extern MODVAR int labeled_response_inhibit;
@@ -755,7 +755,7 @@ extern MODVAR char *(*charsys_get_current_languages)(void);
 extern MODVAR void (*broadcast_sinfo)(Client *acptr, Client *to, Client *except);
 extern MODVAR void (*connect_server)(ConfigItem_link *aconf, Client *by, struct hostent *hp);
 extern MODVAR void (*parse_message_tags)(Client *cptr, char **str, MessageTag **mtag_list);
-extern MODVAR char *(*mtags_to_string)(MessageTag *m, Client *acptr);
+extern MODVAR const char *(*mtags_to_string)(MessageTag *m, Client *acptr);
 extern MODVAR int (*can_send_to_channel)(Client *cptr, Channel *channel, const char **msgtext, const char **errmsg, int notice);
 extern MODVAR void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 extern MODVAR void (*broadcast_md_globalvar_cmd)(Client *except, Client *sender, const char *varname, const char *value);
@@ -803,7 +803,7 @@ extern MODVAR EVP_MD *md5_function;
 /* End of TLS functions */
 
 extern void parse_message_tags_default_handler(Client *client, char **str, MessageTag **mtag_list);
-extern char *mtags_to_string_default_handler(MessageTag *m, Client *client);
+extern const char *mtags_to_string_default_handler(MessageTag *m, Client *client);
 extern void *labeled_response_save_context_default_handler(void);
 extern void labeled_response_set_context_default_handler(void *ctx);
 extern void labeled_response_force_end_default_handler(void);

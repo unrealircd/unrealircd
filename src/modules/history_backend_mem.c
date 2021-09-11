@@ -97,16 +97,16 @@ static void freecfg(struct cfgstruct *cfg);
 static void hbm_init_hashes(ModuleInfo *m);
 static void init_history_storage(ModuleInfo *modinfo);
 int hbm_modechar_del(Channel *channel, int modechar);
-int hbm_history_add(char *object, MessageTag *mtags, char *line);
+int hbm_history_add(const char *object, MessageTag *mtags, const char *line);
 int hbm_history_cleanup(HistoryLogObject *h);
-HistoryResult *hbm_history_request(char *object, HistoryFilter *filter);
-int hbm_history_destroy(char *object);
-int hbm_history_set_limit(char *object, int max_lines, long max_time);
+HistoryResult *hbm_history_request(const char *object, HistoryFilter *filter);
+int hbm_history_destroy(const char *object);
+int hbm_history_set_limit(const char *object, int max_lines, long max_time);
 EVENT(history_mem_clean);
 EVENT(history_mem_init);
 static int hbm_read_masterdb(void);
 static void hbm_read_dbs(void);
-static int hbm_read_db(char *fname);
+static int hbm_read_db(const char *fname);
 static int hbm_write_masterdb(void);
 static int hbm_write_db(HistoryLogObject *h);
 static void hbm_delete_db(HistoryLogObject *h);
@@ -427,12 +427,12 @@ static void init_history_storage(ModuleInfo *modinfo)
 	ClientCapabilityAdd(modinfo->handle, &cap, NULL);
 }
 
-uint64_t hbm_hash(char *object)
+uint64_t hbm_hash(const char *object)
 {
 	return siphash_nocase(object, siphashkey_history_backend_mem) % HISTORY_BACKEND_MEM_HASH_TABLE_SIZE;
 }
 
-HistoryLogObject *hbm_find_object(char *object)
+HistoryLogObject *hbm_find_object(const char *object)
 {
 	int hashv = hbm_hash(object);
 	HistoryLogObject *h;
@@ -445,7 +445,7 @@ HistoryLogObject *hbm_find_object(char *object)
 	return NULL;
 }
 
-HistoryLogObject *hbm_find_or_add_object(char *object)
+HistoryLogObject *hbm_find_or_add_object(const char *object)
 {
 	int hashv = hbm_hash(object);
 	HistoryLogObject *h;
@@ -539,7 +539,7 @@ void hbm_duplicate_mtags(HistoryLogLine *l, MessageTag *m)
 }
 
 /** Add a line to a history object */
-void hbm_history_add_line(HistoryLogObject *h, MessageTag *mtags, char *line)
+void hbm_history_add_line(HistoryLogObject *h, MessageTag *mtags, const char *line)
 {
 	HistoryLogLine *l = safe_alloc(sizeof(HistoryLogLine) + strlen(line));
 	strcpy(l->line, line); /* safe, see memory allocation above ^ */
@@ -590,7 +590,7 @@ void hbm_history_del_line(HistoryLogObject *h, HistoryLogLine *l)
 }
 
 /** Add history entry */
-int hbm_history_add(char *object, MessageTag *mtags, char *line)
+int hbm_history_add(const char *object, MessageTag *mtags, const char *line)
 {
 	HistoryLogObject *h = hbm_find_or_add_object(object);
 	if (!h->max_lines)
@@ -958,7 +958,7 @@ static int hbm_return_between(HistoryResult *r, HistoryLogObject *h, HistoryFilt
 	return 0;
 }
 
-HistoryResult *hbm_history_request(char *object, HistoryFilter *filter)
+HistoryResult *hbm_history_request(const char *object, HistoryFilter *filter)
 {
 	HistoryResult *r;
 	HistoryLogObject *h = hbm_find_object(object);
@@ -1053,7 +1053,7 @@ int hbm_history_cleanup(HistoryLogObject *h)
 	return 1;
 }
 
-int hbm_history_destroy(char *object)
+int hbm_history_destroy(const char *object)
 {
 	HistoryLogObject *h = hbm_find_object(object);
 	HistoryLogLine *l, *l_next;
@@ -1078,7 +1078,7 @@ int hbm_history_destroy(char *object)
 }
 
 /** Set new limit on history object */
-int hbm_history_set_limit(char *object, int max_lines, long max_time)
+int hbm_history_set_limit(const char *object, int max_lines, long max_time)
 {
 	HistoryLogObject *h = hbm_find_or_add_object(object);
 	h->max_lines = max_lines;
@@ -1286,7 +1286,7 @@ static void hbm_read_dbs(void)
 
 
 /** Read a channel history db file */
-static int hbm_read_db(char *fname)
+static int hbm_read_db(const char *fname)
 {
 	UnrealDB *db = NULL;
 	// header
@@ -1486,7 +1486,7 @@ EVENT(history_mem_clean)
 	} while(loopcnt++ < HISTORY_CLEAN_PER_LOOP);
 }
 
-char *hbm_history_filename(HistoryLogObject *h)
+const char *hbm_history_filename(HistoryLogObject *h)
 {
 	static char fname[512];
 	char oname[OBJECTLEN+1];
@@ -1527,7 +1527,7 @@ char *hbm_history_filename(HistoryLogObject *h)
 static int hbm_write_db(HistoryLogObject *h)
 {
 	UnrealDB *db;
-	char *realfname;
+	const char *realfname;
 	char tmpfname[512];
 	HistoryLogLine *l;
 	MessageTag *m;
@@ -1600,7 +1600,7 @@ static int hbm_write_db(HistoryLogObject *h)
 static void hbm_delete_db(HistoryLogObject *h)
 {
 	UnrealDB *db;
-	char *fname;
+	const char *fname;
 	if (!cfg.persist || !hbm_prehash || !hbm_posthash)
 	{
 #ifdef DEBUGMODE

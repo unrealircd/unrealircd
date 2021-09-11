@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
 	};
 
-int bottag_mtag_is_ok(Client *client, char *name, char *value);
+int bottag_mtag_is_ok(Client *client, const char *name, const char *value);
 void mtag_add_bottag(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature);
 
 MOD_INIT()
@@ -68,7 +68,7 @@ MOD_UNLOAD()
 
 /** This function verifies if the client sending the mtag is permitted to do so.
  */
-int bottag_mtag_is_ok(Client *client, char *name, char *value)
+int bottag_mtag_is_ok(Client *client, const char *name, const char *value)
 {
 	if (IsServer(client) && (value == NULL))
 		return 1; /* OK */

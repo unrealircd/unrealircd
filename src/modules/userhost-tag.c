@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER
 /* Variables */
 long CAP_ACCOUNT_TAG = 0L;
 
-int userhost_mtag_is_ok(Client *client, char *name, char *value);
+int userhost_mtag_is_ok(Client *client, const char *name, const char *value);
 int userhost_mtag_should_send_to_client(Client *target);
 void mtag_add_userhost(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature);
 
@@ -71,7 +71,7 @@ MOD_UNLOAD()
  * syntax.
  * We simply allow userhost-tag ONLY from servers and with any syntax.
  */
-int userhost_mtag_is_ok(Client *client, char *name, char *value)
+int userhost_mtag_is_ok(Client *client, const char *name, const char *value)
 {
 	if (IsServer(client))
 		return 1;

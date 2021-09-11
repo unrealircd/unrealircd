@@ -1454,7 +1454,7 @@ void parse_message_tags_default_handler(Client *client, char **str, MessageTag *
  * This is only used if the 'mtags' module is NOT loaded,
  * which would be quite unusual, but possible.
  */
-char *mtags_to_string_default_handler(MessageTag *m, Client *client)
+const char *mtags_to_string_default_handler(MessageTag *m, Client *client)
 {
 	return NULL;
 }

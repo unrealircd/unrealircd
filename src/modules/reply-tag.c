@@ -33,7 +33,7 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
 	};
 
-int replytag_mtag_is_ok(Client *client, char *name, char *value);
+int replytag_mtag_is_ok(Client *client, const char *name, const char *value);
 void mtag_add_replytag(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature);
 
 MOD_INIT()
@@ -73,9 +73,9 @@ MOD_UNLOAD()
 
 /** This function verifies if the client sending the mtag is permitted to do so.
  */
-int replytag_mtag_is_ok(Client *client, char *name, char *value)
+int replytag_mtag_is_ok(Client *client, const char *name, const char *value)
 {
-	char *p;
+	const char *p;
 
 	/* Require a non-empty parameter */
 	if (BadPtr(value))

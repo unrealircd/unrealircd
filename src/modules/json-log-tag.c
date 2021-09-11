@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER
 long CAP_JSON_LOG = 0L;
 
 /* Forward declarations */
-int json_log_mtag_is_ok(Client *client, char *name, char *value);
+int json_log_mtag_is_ok(Client *client, const char *name, const char *value);
 int json_log_mtag_should_send_to_client(Client *target);
 
 MOD_INIT()
@@ -73,7 +73,7 @@ MOD_UNLOAD()
 /** This function verifies if the client sending
  * We simply allow from servers without any syntax checking.
  */
-int json_log_mtag_is_ok(Client *client, char *name, char *value)
+int json_log_mtag_is_ok(Client *client, const char *name, const char *value)
 {
 	if (IsServer(client) || IsMe(client))
 		return 1;

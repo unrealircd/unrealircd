@@ -216,7 +216,7 @@ void sendto_one(Client *to, MessageTag *mtags, FORMAT_STRING(const char *pattern
  */
 void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl)
 {
-	char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
+	const char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
 
 	ircvsnprintf(sendbuf, sizeof(sendbuf), pattern, vl);
 
@@ -1029,7 +1029,7 @@ void sendto_prefix_one(Client *to, Client *from, MessageTag *mtags, FORMAT_STRIN
  */
 void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl)
 {
-	char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
+	const char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
 
 	if (to && from && MyUser(to) && from->user)
 		vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, from, pattern, vl);
