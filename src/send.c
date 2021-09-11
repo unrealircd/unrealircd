@@ -970,7 +970,7 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, con
 		va_arg(vl, char *); /* eat first parameter */
 
 		*buf = ':';
-		strcpy(buf+1, from->name);
+		strlcpy(buf+1, from->name, buflen-1);
 
 		if (IsUser(from))
 		{
@@ -979,13 +979,13 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, con
 
 			if (*username)
 			{
-				strcat(buf, "!");
-				strcat(buf, username);
+				strlcat(buf, "!", buflen);
+				strlcat(buf, username, buflen);
 			}
 			if (*host)
 			{
-				strcat(buf, "@");
-				strcat(buf, host);
+				strlcat(buf, "@", buflen);
+				strlcat(buf, host, buflen);
 			}
 		}
 		/* Now build the remaining string */

@@ -172,7 +172,7 @@ CMD_FUNC(cmd_sajoin)
 
 			if (*name == '0' && !atoi(name) && !sjmode)
 			{
-				strcpy(jbuf, "0");
+				strlcpy(jbuf, "0", sizeof(jbuf));
 				i = 1;
 				parted = 1;
 				continue;
@@ -238,7 +238,7 @@ CMD_FUNC(cmd_sajoin)
 					free_message_tags(mtags);
 					remove_user_from_channel(target, channel);
 				}
-				strcpy(jbuf, "0");
+				strlcpy(jbuf, "0", sizeof(jbuf));
 				continue;
 			}
 			flags = (ChannelExists(name)) ? CHFL_DEOPPED : LEVEL_ON_JOIN;

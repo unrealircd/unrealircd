@@ -112,12 +112,12 @@ CMD_FUNC(cmd_setname)
 		return;
 	}
 
-	strcpy(oldinfo, client->info);
+	strlcpy(oldinfo, client->info, sizeof(oldinfo));
 
 	if (MyUser(client))
 	{
 		/* set the new name before we check, but don't send to servers unless it is ok */
-		strcpy(client->info, parv[1]);
+		strlcpy(client->info, parv[1], sizeof(client->info));
 		spamfilter_build_user_string(spamfilter_user, client->name, client);
 		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, "SETNAME", NULL, 0, NULL))
 		{
@@ -128,7 +128,7 @@ CMD_FUNC(cmd_setname)
 				sendto_one(client, mtags, "%s FAIL SETNAME CANNOT_CHANGE_REALNAME :Rejected by server", me.name);
 				free_message_tags(mtags);
 			}
-			strcpy(client->info, oldinfo);
+			strlcpy(client->info, oldinfo, sizeof(client->info));
 			return;
 		}
 
@@ -141,7 +141,7 @@ CMD_FUNC(cmd_setname)
 		}
 	} else {
 		/* remote user */
-		strcpy(client->info, parv[1]);
+		strlcpy(client->info, parv[1], sizeof(client->info));
 	}
 
 	new_message(client, recv_mtags, &mtags);

@@ -140,8 +140,8 @@ CMD_FUNC(cmd_vhost)
 	safe_strdup(client->user->virthost, vhost->virthost);
 	if (vhost->virtuser)
 	{
-		strcpy(olduser, client->user->username);
-		strlcpy(client->user->username, vhost->virtuser, USERLEN);
+		strlcpy(olduser, client->user->username, sizeof(olduser));
+		strlcpy(client->user->username, vhost->virtuser, sizeof(client->user->username));
 		sendto_server(client, 0, 0, NULL, ":%s SETIDENT %s", client->id,
 		    client->user->username);
 	}

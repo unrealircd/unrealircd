@@ -111,7 +111,7 @@ Client *make_client(Client *from, Client *servr)
 	INIT_LIST_HEAD(&client->client_hash);
 	INIT_LIST_HEAD(&client->id_hash);
 
-	strcpy(client->ident, "unknown");
+	strlcpy(client->ident, "unknown", sizeof(client->ident));
 	if (!from)
 	{
 		/* Local client */
