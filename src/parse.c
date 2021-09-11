@@ -496,12 +496,12 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 #ifndef DEBUGMODE
 	if (cmptr->flags & CMD_ALIAS)
 	{
-		(*cmptr->aliasfunc) (from, mtags, i, para, cmptr->cmd);
+		(*cmptr->aliasfunc) (from, mtags, i, (const char **)para, cmptr->cmd);
 	} else {
 		if (!cmptr->overriders)
-			(*cmptr->func) (from, mtags, i, para);
+			(*cmptr->func) (from, mtags, i, (const char **)para);
 		else
-			(*cmptr->overriders->func) (cmptr->overriders, from, mtags, i, para);
+			(*cmptr->overriders->func) (cmptr->overriders, from, mtags, i, (const char **)para);
 	}
 #else
 	then = clock();
