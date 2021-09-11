@@ -158,7 +158,7 @@ void unload_all_unused_history_backends(void)
 	}
 }
 
-int history_add(char *object, MessageTag *mtags, char *line)
+int history_add(const char *object, MessageTag *mtags, const char *line)
 {
 	HistoryBackend *hb;
 
@@ -168,7 +168,7 @@ int history_add(char *object, MessageTag *mtags, char *line)
 	return 1;
 }
 
-HistoryResult *history_request(char *object, HistoryFilter *filter)
+HistoryResult *history_request(const char *object, HistoryFilter *filter)
 {
 	HistoryBackend *hb = historybackends;
 	HistoryResult *r;
@@ -185,7 +185,7 @@ HistoryResult *history_request(char *object, HistoryFilter *filter)
 	return NULL;
 }
 
-int history_destroy(char *object)
+int history_destroy(const char *object)
 {
 	HistoryBackend *hb;
 
@@ -195,7 +195,7 @@ int history_destroy(char *object)
 	return 1;
 }
 
-int history_set_limit(char *object, int max_lines, long max_t)
+int history_set_limit(const char *object, int max_lines, long max_t)
 {
 	HistoryBackend *hb;
 
@@ -232,7 +232,7 @@ int can_receive_history(Client *client)
 	return 0;
 }
 
-static void history_send_result_line(Client *client, HistoryLogLine *l, char *batchid)
+static void history_send_result_line(Client *client, HistoryLogLine *l, const char *batchid)
 {
 	if (BadPtr(batchid))
 	{
@@ -240,9 +240,10 @@ static void history_send_result_line(Client *client, HistoryLogLine *l, char *ba
 	} else {
 		MessageTag *m = safe_alloc(sizeof(MessageTag));
 		m->name = "batch";
-		m->value = batchid;
+		m->value = strdup(batchid);
 		AddListItem(m, l->mtags);
 		sendto_one(client, l->mtags, "%s", l->line);
+		safe_free(m->value);
 		DelListItem(m, l->mtags);
 		safe_free(m);
 	}

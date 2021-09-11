@@ -958,7 +958,7 @@ int mm_get_module_status(ManagedModule *m)
 {
 	FILE *fd;
 	char fname[512];
-	char *our_sha256sum;
+	const char *our_sha256sum;
 
 	snprintf(fname, sizeof(fname), "%s/src/modules/%s.c", BUILDDIR, m->name);
 	if (!file_exists(fname))
@@ -1216,7 +1216,7 @@ void mm_install_module(ManagedModule *m)
 {
 	const char *basename = unreal_getfilename(m->source);
 	char *tmpfile;
-	char *sha256;
+	const char *sha256;
 
 	if (!basename)
 		basename = "mod.c";

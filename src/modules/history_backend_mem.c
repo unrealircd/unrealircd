@@ -281,7 +281,7 @@ int hbm_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	} else
 	if (!strcmp(ce->name, "db-secret"))
 	{
-		char *err;
+		const char *err;
 		if ((err = unrealdb_test_secret(ce->value)))
 		{
 			config_error("%s:%i: set::history::channel::db-secret: %s", ce->file->filename, ce->line_number, err);

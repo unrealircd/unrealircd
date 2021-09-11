@@ -1086,7 +1086,7 @@ FloodSettings *get_floodsettings_for_user(Client *client, FloodOption opt)
 	return f;
 }
 
-MODVAR char *floodoption_names[] = {
+MODVAR const char *floodoption_names[] = {
 	"nick-flood",
 	"join-flood",
 	"away-flood",

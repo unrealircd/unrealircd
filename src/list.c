@@ -500,7 +500,7 @@ void add_ListItemPrio(ListStructPrio *new, ListStructPrio **list, int priority)
 
 /* NameList functions */
 
-void _add_name_list(NameList **list, char *name)
+void _add_name_list(NameList **list, const char *name)
 {
 	NameList *e = safe_alloc(sizeof(NameList)+strlen(name));
 	strcpy(e->name, name); /* safe, allocated above */
@@ -518,7 +518,7 @@ void _free_entire_name_list(NameList *n)
 	}
 }
 
-void _del_name_list(NameList **list, char *name)
+void _del_name_list(NameList **list, const char *name)
 {
 	NameList *e = find_name_list(*list, name);
 	if (e)
@@ -532,7 +532,7 @@ void _del_name_list(NameList **list, char *name)
 /** Find an entry in a NameList - case insensitive comparisson.
  * @ingroup ListFunctions
  */
-NameList *find_name_list(NameList *list, char *name)
+NameList *find_name_list(NameList *list, const char *name)
 {
 	NameList *e;
 
@@ -549,7 +549,7 @@ NameList *find_name_list(NameList *list, char *name)
 /** Find an entry in a NameList by running match_simple() on it.
  * @ingroup ListFunctions
  */
-NameList *find_name_list_match(NameList *list, char *name)
+NameList *find_name_list_match(NameList *list, const char *name)
 {
 	NameList *e;
 

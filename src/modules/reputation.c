@@ -303,7 +303,7 @@ int reputation_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		} else
 		if (!strcmp(cep->name, "db-secret"))
 		{
-			char *err;
+			const char *err;
 			if ((err = unrealdb_test_secret(cep->value)))
 			{
 				config_error("%s:%i: set::channeldb::db-secret: %s", cep->file->filename, cep->line_number, err);

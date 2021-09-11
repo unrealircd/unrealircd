@@ -1902,7 +1902,7 @@ char *sha256hash(char *dst, const char *src, unsigned long n)
 }
 
 /** Calculate the SHA256 checksum of a file */
-char *sha256sum_file(const char *fname)
+const char *sha256sum_file(const char *fname)
 {
 	FILE *fd;
 	char buf[2048];

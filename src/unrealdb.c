@@ -137,7 +137,7 @@ static int unrealdb_kdf(UnrealDB *c, Secret *secr)
  *       For programmatically checking of error conditions
  *       use unrealdb_get_error_code() instead.
  */
-char *unrealdb_get_error_string(void)
+const char *unrealdb_get_error_string(void)
 {
 	return unrealdb_last_error_string;
 }
@@ -572,11 +572,11 @@ char *unrealdb_test_db(const char *filename, char *secret_block)
  *       unrealdb_write_int64(), unrealdb_write_int32(), unrealdb_write_int16(),
  *       unrealdb_write_char(), unrealdb_write_str().
  */
-static int unrealdb_write(UnrealDB *c, void *wbuf, int len)
+static int unrealdb_write(UnrealDB *c, const void *wbuf, int len)
 {
 	char buf_out[UNREALDB_CRYPT_FILE_CHUNK_SIZE + crypto_secretstream_xchacha20poly1305_ABYTES];
 	unsigned long long out_len;
-	char *buf = wbuf;
+	const char *buf = wbuf;
 
 	if (c->error_code)
 		return 0;
@@ -652,7 +652,7 @@ static int unrealdb_write(UnrealDB *c, void *wbuf, int len)
  *        Note that 'x' can safely be NULL.
  * @returns 1 on success, 0 on failure.
  */
-int unrealdb_write_str(UnrealDB *c, char *x)
+int unrealdb_write_str(UnrealDB *c, const char *x)
 {
 	uint16_t len;
 
@@ -1059,7 +1059,7 @@ void unrealdb_test(void)
 
 /** TODO: document and implement
  */
-char *unrealdb_test_secret(char *name)
+const char *unrealdb_test_secret(const char *name)
 {
 	// FIXME: check if exists, if not then return an error, with a nice FAQ reference etc.
 	return NULL; /* no error */

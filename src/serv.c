@@ -1098,7 +1098,7 @@ int valid_server_name(const char *name)
 }
 
 /** Check if the supplied name is a valid SID, as in: syntax. */
-int valid_sid(char *name)
+int valid_sid(const char *name)
 {
 	if (strlen(name) != 3)
 		return 0;
@@ -1112,9 +1112,9 @@ int valid_sid(char *name)
 }
 
 /** Check if the supplied name is a valid UID, as in: syntax. */
-int valid_uid(char *name)
+int valid_uid(const char *name)
 {
-	char *p;
+	const char *p;
 
 	/* Enforce at least some minimum length */
 	if (strlen(name) < 6)
@@ -1146,7 +1146,7 @@ void tkl_init(void)
 /** Called when a server link is lost.
  * Used for logging only, API users can use the HOOKTYPE_SERVER_QUIT hook.
  */
-void lost_server_link(Client *client, char *tls_error_string)
+void lost_server_link(Client *client, const char *tls_error_string)
 {
 	if (IsServer(client))
 	{

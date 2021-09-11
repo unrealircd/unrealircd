@@ -1271,9 +1271,9 @@ int invisible_user_in_channel(Client *target, Channel *channel)
  * @param client      The client to send the message to.
  * @param channelname The (invalid) channel that the user tried to join.
  */
-void send_invalid_channelname(Client *client, char *channelname)
+void send_invalid_channelname(Client *client, const char *channelname)
 {
-	char *reason;
+	const char *reason;
 
 	if (*channelname != '#')
 	{
@@ -1323,7 +1323,7 @@ int is_extended_ban(const char *str)
 /** Check if it is an empty (useless) mode, namely "", "+" or "-".
  * Typically called as: empty_mode(modebuf)
  */
-int empty_mode(char *m)
+int empty_mode(const char *m)
 {
 	if (!*m || (((m[0] == '+') || (m[0] == '-')) && m[1] == '\0'))
 		return 1;
