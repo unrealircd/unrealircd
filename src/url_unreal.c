@@ -203,7 +203,7 @@ void url_resolve_cb(void *arg, int status, int timeouts, struct hostent *he)
 	int n;
 	struct hostent *he2;
 	char ipbuf[HOSTLEN+1];
-	char *ip = NULL;
+	const char *ip = NULL;
 
 	handle->dns_refcnt--;
 
@@ -387,7 +387,7 @@ int https_connect(Download *handle)
  */
 int https_fatal_tls_error(int ssl_error, int my_errno, Download *handle)
 {
-	char *ssl_errstr;
+	const char *ssl_errstr;
 	unsigned long additional_errno = ERR_get_error();
 	char additional_info[256];
 	const char *one, *two;
