@@ -125,6 +125,7 @@ CMD_FUNC(cmd_list)
 	NameList *nolist = NULL;
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("LIST");
+	char request[BUFSIZE];
 
 	static char *usage[] = {
 		"   Usage: /LIST <options>",
@@ -187,8 +188,8 @@ CMD_FUNC(cmd_list)
 	usermin = 0;		/* Minimum of 0 */
 	usermax = -1;		/* No maximum */
 
-	for (name = strtoken(&p, parv[1], ","); name && !error;
-	    name = strtoken(&p, NULL, ","))
+	strlcpy(request, parv[1], sizeof(request));
+	for (name = strtoken(&p, request, ","); name && !error; name = strtoken(&p, NULL, ","))
 	{
 		if (MyUser(client) && (++ntargets > maxtargets))
 		{

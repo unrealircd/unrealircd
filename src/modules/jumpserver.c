@@ -122,8 +122,10 @@ void jumpserver_free_jss(ModData *m)
 
 CMD_FUNC(cmd_jumpserver)
 {
-	char *serv, *tlsserv=NULL, *reason, *p;
+	char *serv, *tlsserv=NULL, *p;
+	const char *reason;
 	int all=0, port=6667, sslport=6697;
+	char request[BUFSIZE];
 	char logbuf[512];
 
 	if (!IsOper(client))
@@ -173,13 +175,10 @@ CMD_FUNC(cmd_jumpserver)
 		return;
 	}
 
-	/* Parsing code follows...
-	 * The parsing of the TLS stuff is still done even on non-TLS,
-	 * but it's simply not used/applied :).
-	 * Reason for this is to reduce inconsistency issues.
-	 */
+	/* Parsing code follows... */
 
-	serv = parv[1];
+	strlcpy(request, parv[1], sizeof(request));
+	serv = request;
 	
 	p = strchr(serv, '/');
 	if (p)

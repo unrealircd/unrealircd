@@ -57,7 +57,8 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_vhost)
 {
 	ConfigItem_vhost *vhost;
-	char *login, *password;
+	char login[HOSTLEN+1];
+	const char *password;
 	char olduser[USERLEN+1];
 
 	if (!MyUser(client))
@@ -70,14 +71,12 @@ CMD_FUNC(cmd_vhost)
 
 	}
 
-	login = parv[1];
-	password = (parc > 2) ? parv[2] : "";
-
 	/* cut-off too long login names. HOSTLEN is arbitrary, we just don't want our
 	 * error messages to be cut off because the user is sending huge login names.
 	 */
-	if (strlen(login) > HOSTLEN)
-		login[HOSTLEN] = '\0';
+	strlcpy(login, parv[1], sizeof(login));
+
+	password = (parc > 2) ? parv[2] : "";
 
 	if (!(vhost = find_vhost(login)))
 	{

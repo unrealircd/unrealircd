@@ -88,7 +88,7 @@ int bot_umode_change(Client *client, long oldmode, long newmode)
 	if ((newmode & UMODE_BOT) && !(oldmode & UMODE_BOT) && MyUser(client))
 	{
 		/* now +B */
-		char *parv[2];
+		const char *parv[2];
 		parv[0] = client->name;
 		parv[1] = NULL;
 		do_cmd(client, NULL, "BOTMOTD", 1, parv);

@@ -84,9 +84,9 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_slog)
 {
 	LogLevel loglevel;
-	char *subsystem;
-	char *event_id;
-	char *msg;
+	const char *subsystem;
+	const char *event_id;
+	const char *msg;
 	const char *msg_in_json;
 	char *json_incoming = NULL;
 	char *json_serialized = NULL;

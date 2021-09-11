@@ -641,7 +641,7 @@ int websocket_handshake_valid(Client *client)
 	{
 		if (is_module_loaded("webredir"))
 		{
-			char *parx[2] = { NULL, NULL };
+			const char *parx[2] = { NULL, NULL };
 			do_cmd(client, NULL, "GET", 1, parx);
 		}
 		dead_socket(client, "Invalid WebSocket request");

@@ -78,7 +78,7 @@ CMD_FUNC(cmd_knock)
 	Hook *h;
 	int i = 0;
 	MessageTag *mtags = NULL;
-	char *reason;
+	const char *reason;
 
 	if (IsServer(client))
 		return;

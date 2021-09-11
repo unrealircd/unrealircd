@@ -58,13 +58,13 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_unsqline)
 {
-	char *tkllayer[6] = {
+	const char *tkllayer[6] = {
 		me.name,           /*0  server.name */
 		"-",               /*1  - */
 		"Q",               /*2  Q   */
 		"*",               /*3  unused */
 		parv[1],           /*4  host */
-		client->name         /*5  whoremoved */
+		client->name       /*5  whoremoved */
 	};
 
 	if (parc < 2)

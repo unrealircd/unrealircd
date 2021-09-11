@@ -74,10 +74,10 @@ void reread_motdsandrules();
  * @note Command can have only max 8 parameters (parv[8])
  * @note parv[server] is replaced with the name of the matched client.
  */
-int hunt_server(Client *client, MessageTag *mtags, char *command, int server, int parc, char *parv[])
+int hunt_server(Client *client, MessageTag *mtags, char *command, int server, int parc, const char *parv[])
 {
 	Client *acptr;
-	char *saved;
+	const char *saved;
 
 	/* This would be strange and bad. Previous version assumed "it's for me". Hmm.. okay. */
 	if (parc <= server || BadPtr(parv[server]))
@@ -234,7 +234,7 @@ void send_proto(Client *client, ConfigItem_link *aconf)
 #endif
 
 /** Special filter for remote commands */
-int remotecmdfilter(Client *client, int parc, char *parv[])
+int remotecmdfilter(Client *client, int parc, const char *parv[])
 {
 	/* no remote requests permitted from non-ircops */
 	if (MyUser(client) && !ValidatePermissionsForPath("server:remote",client,NULL,NULL,NULL) && !BadPtr(parv[1]))
@@ -386,7 +386,7 @@ const char *get_client_status(Client *client)
  */
 CMD_FUNC(cmd_error)
 {
-	char *para;
+	const char *para;
 
 	if (!MyConnect(client))
 		return;
@@ -632,7 +632,7 @@ CMD_FUNC(cmd_rehash)
  */
 CMD_FUNC(cmd_restart)
 {
-	char *reason = parv[1];
+	const char *reason = parv[1];
 	Client *acptr;
 
 	if (!MyUser(client))

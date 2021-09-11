@@ -1344,14 +1344,14 @@ size_t add_sjsby(char *buf, const char *setby, time_t seton)
  * sendto_server(client, 0, 0, recv_mtags, ":%s SOMECOMMAND %s", client->name, buf);
  * @endcode
  */
-void concat_params(char *buf, int len, int parc, char *parv[])
+void concat_params(char *buf, int len, int parc, const char *parv[])
 {
 	int i;
 
 	*buf = '\0';
 	for (i = 1; i < parc; i++)
 	{
-		char *param = parv[i];
+		const char *param = parv[i];
 
 		if (!param)
 			break;

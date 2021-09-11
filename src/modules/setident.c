@@ -61,8 +61,7 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_setident)
 {
-
-	char *vident, *s;
+	const char *vident, *s;
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{

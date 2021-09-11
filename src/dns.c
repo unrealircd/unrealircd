@@ -616,7 +616,7 @@ CMD_FUNC(cmd_dns)
 {
 	DNSCache *c;
 	DNSReq *r;
-	char *param;
+	const char *param;
 
 	if (!ValidatePermissionsForPath("server:dns",client,NULL,NULL,NULL))
 	{

@@ -64,6 +64,7 @@ CMD_FUNC(cmd_svsnick)
 	Client *acptr;
 	Client *ocptr; /* Other client */
 	MessageTag *mtags = NULL;
+	char nickname[NICKLEN+1];
 
 	if (!IsULine(client) || parc < 4 || (strlen(parv[2]) > NICKLEN))
 		return; /* This looks like an error anyway -Studded */
@@ -71,13 +72,14 @@ CMD_FUNC(cmd_svsnick)
 	if (hunt_server(client, NULL, ":%s SVSNICK %s %s :%s", 1, parc, parv) != HUNTED_ISME)
 		return; /* Forwarded, done */
 
-	if (do_nick_name(parv[2]) == 0)
+	strlcpy(nickname, parv[2], sizeof(nickname));
+	if (do_nick_name(nickname) == 0)
 		return;
 
 	if (!(acptr = find_person(parv[1], NULL)))
 		return; /* User not found, bail out */
 
-	if ((ocptr = find_client(parv[2], NULL)) && ocptr != acptr) /* Collision */
+	if ((ocptr = find_client(nickname, NULL)) && ocptr != acptr) /* Collision */
 	{
 		exit_client(acptr, NULL,
 		                   "Nickname collision due to Services enforced "
@@ -86,7 +88,7 @@ CMD_FUNC(cmd_svsnick)
 	}
 
 	/* if the new nickname is identical to the old one, ignore it */
-	if (!strcmp(acptr->name, parv[2]))
+	if (!strcmp(acptr->name, nickname))
 		return;
 
 	if (acptr != ocptr)
@@ -95,10 +97,10 @@ CMD_FUNC(cmd_svsnick)
 
 	/* no 'recv_mtags' here, we do not inherit from SVSNICK but generate a new NICK event */
 	new_message(acptr, NULL, &mtags);
-	RunHook(HOOKTYPE_LOCAL_NICKCHANGE, acptr, mtags, parv[2]);
-	sendto_local_common_channels(acptr, acptr, 0, mtags, ":%s NICK :%s", acptr->name, parv[2]);
-	sendto_one(acptr, mtags, ":%s NICK :%s", acptr->name, parv[2]);
-	sendto_server(NULL, 0, 0, mtags, ":%s NICK %s :%ld", acptr->id, parv[2], atol(parv[3]));
+	RunHook(HOOKTYPE_LOCAL_NICKCHANGE, acptr, mtags, nickname);
+	sendto_local_common_channels(acptr, acptr, 0, mtags, ":%s NICK :%s", acptr->name, nickname);
+	sendto_one(acptr, mtags, ":%s NICK :%s", acptr->name, nickname);
+	sendto_server(NULL, 0, 0, mtags, ":%s NICK %s :%ld", acptr->id, nickname, acptr->lastnick);
 	free_message_tags(mtags);
 
 	add_history(acptr, 1);
@@ -106,9 +108,9 @@ CMD_FUNC(cmd_svsnick)
 
 	sendto_snomask(SNO_NICKCHANGE,
 		"*** %s (%s@%s) has been forced to change their nickname to %s", 
-		acptr->name, acptr->user->username, acptr->user->realhost, parv[2]);
+		acptr->name, acptr->user->username, acptr->user->realhost, nickname);
 
-	strlcpy(acptr->name, parv[2], sizeof acptr->name);
-	add_to_client_hash_table(parv[2], acptr);
+	strlcpy(acptr->name, nickname, sizeof acptr->name);
+	add_to_client_hash_table(nickname, acptr);
 	RunHook(HOOKTYPE_POST_LOCAL_NICKCHANGE, acptr, mtags);
 }

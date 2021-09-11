@@ -335,7 +335,7 @@ ConfigItem_webirc *find_webirc(Client *client, const char *password, WEBIRCType 
 #define WEBIRC_STRINGLEN  (sizeof(WEBIRC_STRING)-1)
 
 /* Does the CGI:IRC host spoofing work */
-void dowebirc(Client *client, char *ip, char *host, char *options)
+void dowebirc(Client *client, const char *ip, const char *host, const char *options)
 {
 	char scratch[64];
 
@@ -382,8 +382,10 @@ void dowebirc(Client *client, char *ip, char *host, char *options)
 
 	if (options)
 	{
+		char optionsbuf[BUFSIZE];
 		char *name, *p = NULL, *p2;
-		for (name = strtoken(&p, options, " "); name; name = strtoken(&p, NULL, " "))
+		strlcpy(optionsbuf, options, sizeof(optionsbuf));
+		for (name = strtoken(&p, optionsbuf, " "); name; name = strtoken(&p, NULL, " "))
 		{
 			p2 = strchr(name, '=');
 			if (p2)
@@ -410,7 +412,7 @@ void dowebirc(Client *client, char *ip, char *host, char *options)
 /* WEBIRC <pass> "cgiirc" <hostname> <ip> [:option1 [option2...]]*/
 CMD_FUNC(cmd_webirc)
 {
-	char *ip, *host, *password, *options;
+	const char *ip, *host, *password, *options;
 	ConfigItem_webirc *e;
 	char *error = NULL;
 

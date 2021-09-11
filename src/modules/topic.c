@@ -77,7 +77,7 @@ CMD_FUNC(cmd_topic)
 {
 	Channel *channel = NULL;
 	const char *topic = NULL;
-	char *name, *tnick = client->name;
+	const char *name, *tnick = client->name;
 	const char *errmsg = NULL;
 	time_t ttime = 0;
 	int i = 0;

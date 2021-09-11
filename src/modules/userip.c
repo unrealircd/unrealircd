@@ -69,6 +69,7 @@ CMD_FUNC(cmd_userip)
 	char *cn;		/* current name */
 	char *ip, ipbuf[HOSTLEN+1];
 	Client *acptr;
+	char request[BUFSIZE];
 	char response[MAXUSERHOSTREPLIES][NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30];
 	int  i;			/* loop counter */
 	int w;
@@ -88,10 +89,10 @@ CMD_FUNC(cmd_userip)
 	 * and our ircsnprintf() truncates it to fit anyway. There is
 	 * no danger of an overflow here. -Dianora
 	 */
-	response[0][0] = response[1][0] = response[2][0] =
-	    response[3][0] = response[4][0] = '\0';
+	response[0][0] = response[1][0] = response[2][0] = response[3][0] = response[4][0] = '\0';
 
-	cn = parv[1];
+	strlcpy(request, parv[1], sizeof(request));
+	cn = request;
 
 	for (w = 0, i = 0; (i < MAXUSERHOSTREPLIES) && cn; i++)
 	{

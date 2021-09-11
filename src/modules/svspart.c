@@ -62,7 +62,7 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_svspart)
 {
 	Client *target;
-	char *comment = (parc > 3 && parv[3] ? parv[3] : NULL);
+	const char *comment = (parc > 3 && parv[3] ? parv[3] : NULL);
 	if (!IsULine(client))
 		return;
 

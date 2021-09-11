@@ -66,7 +66,7 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_ping)
 {
 	Client *target;
-	char *origin, *destination;
+	const char *origin, *destination;
 
 	if (parc < 2 || BadPtr(parv[1]))
 	{
@@ -158,7 +158,7 @@ CMD_FUNC(cmd_nospoof)
 CMD_FUNC(cmd_pong)
 {
 	Client *target;
-	char *origin, *destination;
+	const char *origin, *destination;
 
 	if (!IsRegistered(client))
 	{

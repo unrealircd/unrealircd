@@ -63,7 +63,7 @@ CMD_FUNC(cmd_svskill)
 {
 	MessageTag *mtags = NULL;
 	Client *target;
-	char *comment = "SVS Killed";
+	const char *comment = "SVS Killed";
 	int n;
 
 	if (parc < 2)

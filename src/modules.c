@@ -1179,7 +1179,7 @@ void CommandOverrideDel(CommandOverride *cmd)
 	safe_free(cmd);
 }
 
-void CallCommandOverride(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, char *parv[])
+void CallCommandOverride(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, const char *parv[])
 {
 	if (ovr->next)
 		ovr->next->func(ovr->next, client, mtags, parc, parv);

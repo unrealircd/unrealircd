@@ -61,7 +61,7 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_sethost)
 {
-	char *vhost;
+	const char *vhost;
 
 	if (MyUser(client) && !ValidatePermissionsForPath("self:set:host",client,NULL,NULL,NULL))
 	{

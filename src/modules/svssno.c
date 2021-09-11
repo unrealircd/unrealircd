@@ -61,9 +61,9 @@ MOD_UNLOAD()
  * parv[2] - snomasks to change
  * show_change determines whether to show the change to the user
  */
-void do_svssno(Client *client, int parc, char *parv[], int show_change)
+void do_svssno(Client *client, int parc, const char *parv[], int show_change)
 {
-	char *p;
+	const char *p;
 	Client *target;
 	int what = MODE_ADD, i;
 
@@ -79,12 +79,8 @@ void do_svssno(Client *client, int parc, char *parv[], int show_change)
 	if (!(target = find_person(parv[1], NULL)))
 		return;
 
-	if (hunt_server(client, NULL,
-	                      show_change ? ":%s SVS2SNO %s %s" : ":%s SVSSNO %s %s",
-	                      1, parc, parv) != HUNTED_ISME)
-	{
+	if (hunt_server(client, NULL, show_change ? ":%s SVS2SNO %s %s" : ":%s SVSSNO %s %s", 1, parc, parv) != HUNTED_ISME)
 		return;
-	}
 
 	if (MyUser(target))
 	{
@@ -92,8 +88,10 @@ void do_svssno(Client *client, int parc, char *parv[], int show_change)
 			target->user->snomask = 0;
 		else
 		{
-			for (p = parv[2]; p && *p; p++) {
-				switch (*p) {
+			for (p = parv[2]; p && *p; p++)
+			{
+				switch (*p)
+				{
 					case '+':
 						what = MODE_ADD;
 						break;
@@ -101,18 +99,18 @@ void do_svssno(Client *client, int parc, char *parv[], int show_change)
 						what = MODE_DEL;
 						break;
 					default:
-				 	 for (i = 0; i <= Snomask_highest; i++)
-				 	 {
-				 	 	if (!Snomask_Table[i].flag)
-				 	 		continue;
-		 	 			if (*p == Snomask_Table[i].flag)
-				 	 	{
-				 	 		if (what == MODE_ADD)
-					 	 		target->user->snomask |= Snomask_Table[i].mode;
-			 			 	else
-			 	 				target->user->snomask &= ~Snomask_Table[i].mode;
-				 	 	}
-				 	 }				
+					for (i = 0; i <= Snomask_highest; i++)
+					{
+						if (!Snomask_Table[i].flag)
+							continue;
+						if (*p == Snomask_Table[i].flag)
+						{
+							if (what == MODE_ADD)
+								target->user->snomask |= Snomask_Table[i].mode;
+							else
+								target->user->snomask &= ~Snomask_Table[i].mode;
+						}
+					}				
 				}
 			}
 		}

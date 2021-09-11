@@ -37,10 +37,10 @@ typedef struct {
 	char *operpriv;
 } TKLType;
 
-static void dump_str(Client *client, char **buf);
+static void dump_str(Client *client, const char **buf);
 static TKLType *find_TKLType_by_flag(char flag);
-void rmtkl_check_options(char *param, int *skipperm, int *silent);
-int rmtkl_tryremove(Client *client, TKLType *tkltype, TKL *tkl, char *uhmask, char *commentmask, int skipperm, int silent);
+void rmtkl_check_options(const char *param, int *skipperm, int *silent);
+int rmtkl_tryremove(Client *client, TKLType *tkltype, TKL *tkl, const char *uhmask, const char *commentmask, int skipperm, int silent);
 CMD_FUNC(rmtkl);
 
 TKLType tkl_types[] = {
@@ -53,7 +53,7 @@ TKLType tkl_types[] = {
 	{ 0, 0, "Unknown *-Line", 0 },
 };
 
-static char *rmtkl_help[] = {
+static const char *rmtkl_help[] = {
 	"*** \002Help on /rmtkl\002 *** ",
 	"Removes all TKLs matching the given conditions from the local server, or the entire",
 	"network if it's a global-type ban.",
@@ -104,7 +104,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-static void dump_str(Client *client, char **buf)
+static void dump_str(Client *client, const char **buf)
 {
 	if (!MyUser(client))
 		return;
@@ -126,14 +126,14 @@ static TKLType *find_TKLType_by_flag(char flag)
 	return t;
 }
 
-void rmtkl_check_options(char *param, int *skipperm, int *silent) {
+void rmtkl_check_options(const char *param, int *skipperm, int *silent) {
 	if (!strcasecmp("-skipperm", param))
 		*skipperm = 1;
 	if (!strcasecmp("-silent", param))
 		*silent = 1;
 }
 
-int rmtkl_tryremove(Client *client, TKLType *tkltype, TKL *tkl, char *uhmask, char *commentmask, int skipperm, int silent)
+int rmtkl_tryremove(Client *client, TKLType *tkltype, TKL *tkl, const char *uhmask, const char *commentmask, int skipperm, int silent)
 {
 	if (tkl->type != tkltype->type)
 		return 0;
@@ -183,7 +183,7 @@ CMD_FUNC(rmtkl)
 {
 	TKL *tkl, *next;
 	TKLType *tkltype;
-	char *types, *uhmask, *commentmask, *p;
+	const char *types, *uhmask, *commentmask, *p;
 	char tklchar;
 	int tklindex, tklindex2, skipperm, silent;
 	unsigned int count;

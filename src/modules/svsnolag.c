@@ -54,7 +54,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-void do_svsnolag(Client *client, int parc, char *parv[], int show_change)
+void do_svsnolag(Client *client, int parc, const char *parv[], int show_change)
 {
 	Client *target;
 	char *cmd = show_change ? MSG_SVS2NOLAG : MSG_SVSNOLAG;

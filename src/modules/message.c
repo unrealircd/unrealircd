@@ -23,11 +23,11 @@
 /* Forward declarations */
 const char *_StripColors(const char *text);
 const char *_StripControlCodes(const char *text);
-int ban_version(Client *client, char *text);
+int ban_version(Client *client, const char *text);
 CMD_FUNC(cmd_private);
 CMD_FUNC(cmd_notice);
 CMD_FUNC(cmd_tagmsg);
-void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[], SendType sendtype);
+void cmd_message(Client *client, MessageTag *recv_mtags, int parc, const char *parv[], SendType sendtype);
 int _can_send_to_channel(Client *client, Channel *channel, const char **msgtext, const char **errmsg, SendType sendtype);
 int can_send_to_user(Client *client, Client *target, const char **msgtext, const char **errmsg, SendType sendtype);
 
@@ -272,10 +272,11 @@ int has_client_mtags(MessageTag *mtags)
 
 /* General message handler to users and channels. Used by PRIVMSG, NOTICE, etc.
  */
-void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[], SendType sendtype)
+void cmd_message(Client *client, MessageTag *recv_mtags, int parc, const char *parv[], SendType sendtype)
 {
 	Client *target;
 	Channel *channel;
+	char targets[BUFSIZE];
 	char *targetstr, *p, *p2, *pc;
 	const char *text, *errmsg;
 	int  prefix = 0;
@@ -309,7 +310,8 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 	if (MyConnect(client))
 		parv[1] = (char *)canonize(parv[1]);
 
-	for (p = NULL, targetstr = strtoken(&p, parv[1], ","); targetstr; targetstr = strtoken(&p, NULL, ","))
+	strlcpy(targets, parv[1], sizeof(targets));
+	for (p = NULL, targetstr = strtoken(&p, targets, ","); targetstr; targetstr = strtoken(&p, NULL, ","))
 	{
 		if (MyUser(client) && (++ntargets > maxtargets))
 		{
@@ -749,19 +751,21 @@ const char *_StripControlCodes(const char *text)
 }
 
 /** Check ban version { } blocks, returns 1  if banned and  0 if not. */
-int ban_version(Client *client, char *text)
+int ban_version(Client *client, const char *text)
 {
 	int len;
 	ConfigItem_ban *ban;
+	char ctcp_reply[BUFSIZE];
 
-	len = strlen(text);
+	strlcpy(ctcp_reply, text, sizeof(ctcp_reply));
+	len = strlen(ctcp_reply);
 	if (!len)
 		return 0;
+	
+	if (ctcp_reply[len-1] == '\1')
+		ctcp_reply[len-1] = '\0'; /* remove CTCP REPLY terminator (ASCII 1) */
 
-	if (text[len-1] == '\1')
-		text[len-1] = '\0'; /* remove CTCP REPLY terminator (ASCII 1) */
-
-	if ((ban = find_ban(NULL, text, CONF_BAN_VERSION)))
+	if ((ban = find_ban(NULL, ctcp_reply, CONF_BAN_VERSION)))
 	{
 		if (IsSoftBanAction(ban->action) && IsLoggedIn(client))
 			return 0; /* soft ban does not apply to us, we are logged in */

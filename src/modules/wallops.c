@@ -58,8 +58,7 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_wallops)
 {
-	char *message;
-	message = parc > 1 ? parv[1] : NULL;
+	const char *message = parc > 1 ? parv[1] : NULL;
 
 	if (BadPtr(message))
 	{

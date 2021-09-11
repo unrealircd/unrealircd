@@ -86,7 +86,7 @@ CMD_FUNC(cmd_names)
 	int member;
 	Member *cm;
 	int idx, flag = 1, spos;
-	char *s, *para = parv[1];
+	const char *para = parv[1], *s;
 	char nuhBuffer[NICKLEN+USERLEN+HOSTLEN+3];
 
 	if (parc < 2 || !MyConnect(client))
@@ -99,10 +99,6 @@ CMD_FUNC(cmd_names)
 	{
 		if (*s == ',')
 		{
-			if (strlen(para) > TRUNCATED_NAMES)
-				para[TRUNCATED_NAMES] = '\0';
-			sendto_realops("names abuser %s %s",
-			    get_client_name(client, FALSE), para);
 			sendnumeric(client, ERR_TOOMANYTARGETS, s+1, 1, "NAMES");
 			return;
 		}

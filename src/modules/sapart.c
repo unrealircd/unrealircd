@@ -52,7 +52,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-static void log_sapart(Client *client, Client *target, char *channels, char *comment)
+static void log_sapart(Client *client, Client *target, const char *channels, const char *comment)
 {
 	if (comment)
 	{
@@ -86,8 +86,9 @@ CMD_FUNC(cmd_sapart)
 	Membership *lp;
 	char *name, *p = NULL;
 	int i;
-	char *comment = (parc > 3 && parv[3] ? parv[3] : NULL);
+	const char *comment = (parc > 3 && parv[3] ? parv[3] : NULL);
 	char commentx[512];
+	char request[BUFSIZE];
 	char jbuf[BUFSIZE];
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("SAPART");
@@ -126,7 +127,8 @@ CMD_FUNC(cmd_sapart)
 	/* 'target' is our client... */
 
 	*jbuf = 0;
-	for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p, NULL, ","))
+	strlcpy(request, parv[2], sizeof(request));
+	for (i = 0, name = strtoken(&p, request, ","); name; name = strtoken(&p, NULL, ","))
 	{
 		if (++ntargets > maxtargets)
 		{
@@ -161,23 +163,20 @@ CMD_FUNC(cmd_sapart)
 	if (!*jbuf)
 		return;
 
-	strcpy(parv[2], jbuf);
+	strlcpy(request, jbuf, sizeof(request));
+
+	log_sapart(client, target, request, comment);
 
 	if (comment)
 	{
-		strcpy(commentx, "SAPart: ");
-		strlcat(commentx, comment, 512);
+		snprintf(commentx, sizeof(commentx), "SAPart: %s", comment);
+		sendnotice(target, "*** You were forced to part %s (%s)", request, commentx);
+	} else {
+		sendnotice(target, "*** You were forced to part %s", request);
 	}
 
-	log_sapart(client, target, parv[2], comment);
-
-	if (comment)
-		sendnotice(target, "*** You were forced to part %s (%s)", parv[2], commentx);
-	else
-		sendnotice(target, "*** You were forced to part %s", parv[2]);
-
 	parv[0] = target->name; // nick
-	parv[1] = parv[2]; // chan
+	parv[1] = request; // chan
 	parv[2] = comment ? commentx : NULL; // comment
 
 	/* Now, do the actual parting: */

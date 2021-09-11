@@ -59,10 +59,11 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_part)
 {
+	char request[BUFSIZE];
 	Channel *channel;
 	Membership *lp;
 	char *p = NULL, *name;
-	char *commentx = (parc > 2 && parv[2]) ? parv[2] : NULL;
+	const char *commentx = (parc > 2 && parv[2]) ? parv[2] : NULL;
 	const char *comment;
 	int n;
 	int ntargets = 0;
@@ -96,7 +97,8 @@ CMD_FUNC(cmd_part)
 		}
 	}
 
-	for (; (name = strtoken(&p, parv[1], ",")); parv[1] = NULL)
+	strlcpy(request, parv[1], sizeof(request));
+	for (name = strtoken(&p, request, ","); name; name = strtoken(&p, NULL, ","))
 	{
 		MessageTag *mtags = NULL;
 

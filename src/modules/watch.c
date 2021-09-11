@@ -111,8 +111,9 @@ static char buf[BUFSIZE];
  */
 CMD_FUNC(cmd_watch)
 {
+	char request[BUFSIZE];
 	Client *target;
-	char *s, **pav = parv, *user;
+	char *s, *user;
 	char *p = NULL, *def = "l";
 	int awaynotify = 0;
 	int did_l=0, did_s=0;
@@ -141,7 +142,8 @@ CMD_FUNC(cmd_watch)
 		return;
 	}
 
-	for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, NULL, " "))
+	strlcpy(request, parv[1], sizeof(request));
+	for (s = strtoken(&p, request, " "); s; s = strtoken(&p, NULL, " "))
 	{
 		if ((user = strchr(s, '!')))
 			*user++ = '\0';	/* Not used */

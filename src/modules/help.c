@@ -80,7 +80,7 @@ ConfigItem_help *find_Help(const char *command)
 	return NULL;
 }
 
-void parse_help(Client *client, char *name, char *help)
+void parse_help(Client *client, const char *help)
 {
 	ConfigItem_help *helpitem;
 	MOTDLine *text;
@@ -131,7 +131,7 @@ void parse_help(Client *client, char *name, char *help)
 */
 CMD_FUNC(cmd_help)
 {
-	char *helptopic;
+	const char *helptopic;
 
 	if (!MyUser(client))
 		return; /* never remote */
@@ -141,5 +141,5 @@ CMD_FUNC(cmd_help)
 	if (helptopic && (*helptopic == '?'))
 		helptopic++;
 
-	parse_help(client, client->name, BadPtr(helptopic) ? NULL : helptopic);
+	parse_help(client, BadPtr(helptopic) ? NULL : helptopic);
 }

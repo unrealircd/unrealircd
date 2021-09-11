@@ -883,7 +883,7 @@ struct SWhois {
  *        Note that reading parv[parc] and beyond is OUT OF BOUNDS and will cause a crash.
  *        E.g. parv[3] in the above example is out of bounds.
  */
-#define CMD_FUNC(x) void (x) (Client *client, MessageTag *recv_mtags, int parc, char *parv[])
+#define CMD_FUNC(x) void (x) (Client *client, MessageTag *recv_mtags, int parc, const char *parv[])
 /** @} */
 
 /** Command override function - used by all command override handlers.
@@ -900,13 +900,13 @@ struct SWhois {
  *        Note that reading parv[parc] and beyond is OUT OF BOUNDS and will cause a crash.
  *        E.g. parv[3] in the above example.
  */
-#define CMD_OVERRIDE_FUNC(x) void (x)(CommandOverride *ovr, Client *client, MessageTag *recv_mtags, int parc, char *parv[])
+#define CMD_OVERRIDE_FUNC(x) void (x)(CommandOverride *ovr, Client *client, MessageTag *recv_mtags, int parc, const char *parv[])
 
 
 
-typedef void (*CmdFunc)(Client *client, MessageTag *mtags, int parc, char *parv[]);
-typedef void (*AliasCmdFunc)(Client *client, MessageTag *mtags, int parc, char *parv[], char *cmd);
-typedef void (*OverrideCmdFunc)(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, char *parv[]);
+typedef void (*CmdFunc)(Client *client, MessageTag *mtags, int parc, const char *parv[]);
+typedef void (*AliasCmdFunc)(Client *client, MessageTag *mtags, int parc, const char *parv[], const char *cmd);
+typedef void (*OverrideCmdFunc)(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, const char *parv[]);
 
 #include <sodium.h>
 

@@ -191,7 +191,7 @@ void CommandDel(Command *command)
  * @note If mtags is NULL then new message tags are created for the command
  *       (and destroyed before return).
  */
-void do_cmd(Client *client, MessageTag *mtags, const char *cmd, int parc, char *parv[])
+void do_cmd(Client *client, MessageTag *mtags, const char *cmd, int parc, const char *parv[])
 {
 	RealCommand *cmptr;
 

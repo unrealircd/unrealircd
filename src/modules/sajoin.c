@@ -52,7 +52,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-static void log_sajoin(Client *client, Client *target, char *channels)
+static void log_sajoin(Client *client, Client *target, const char *channels)
 {
 	unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", client, "SAJOIN: $client used SAJOIN to make $target join $channels",
 		   log_data_client("target", target),
@@ -69,10 +69,10 @@ static void log_sajoin(Client *client, Client *target, char *channels)
 CMD_FUNC(cmd_sajoin)
 {
 	Client *target;
+	char request[BUFSIZE];
 	char jbuf[BUFSIZE];
 	char mode = '\0';
 	char sjmode = '\0';
-	char *mode_args[3];
 	int did_anything = 0;
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("SAJOIN");
@@ -118,7 +118,8 @@ CMD_FUNC(cmd_sajoin)
 		*jbuf = 0;
 
 		/* Now works like cmd_join */
-		for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p, NULL, ","))
+		strlcpy(request, parv[2], sizeof(request));
+		for (i = 0, name = strtoken(&p, request, ","); name; name = strtoken(&p, NULL, ","))
 		{
 			Channel *channel;
 			Membership *lp;
@@ -205,9 +206,9 @@ CMD_FUNC(cmd_sajoin)
 		if (!*jbuf)
 			return;
 		i = 0;
-		strcpy(parv[2], jbuf);
+		strlcpy(request, jbuf, sizeof(request));
 		*jbuf = 0;
-		for (name = strtoken(&p, parv[2], ","); name; name = strtoken(&p, NULL, ","))
+		for (name = strtoken(&p, request, ","); name; name = strtoken(&p, NULL, ","))
 		{
 			MessageTag *mtags = NULL;
 			int flags;
@@ -265,16 +266,23 @@ CMD_FUNC(cmd_sajoin)
 			join_channel(channel, target, mtags, flags);
 			if (sjmode)
 			{
+				char *modes;
+				const char *mode_args[3];
+
 				opermode = 0;
 				sajoinmode = 1;
-				mode_args[0] = safe_alloc(2);
-				mode_args[0][0] = mode;
-				mode_args[0][1] = '\0';
+
+				modes = safe_alloc(2);
+				modes[0] = mode;
+
+				mode_args[0] = modes;
 				mode_args[1] = target->name;
 				mode_args[2] = 0;
+
 				do_mode(channel, target, NULL, 3, mode_args, 0, 1);
+
 				sajoinmode = 0;
-				safe_free(mode_args[0]);
+				safe_free(modes);
 			}
 			free_message_tags(mtags);
 			did_anything = 1;

@@ -23,11 +23,11 @@
 #include "unrealircd.h"
 
 /* Forward declarations */
-int list_mode_request(Client *client, Channel *channel, char *req);
+int list_mode_request(Client *client, Channel *channel, const char *req);
 CMD_FUNC(cmd_mode);
 CMD_FUNC(cmd_mlock);
-void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode);
-void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *pcount,
+void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc, const char *parv[], time_t sendts, int samode);
+void _set_mode(Channel *channel, Client *client, int parc, const char *parv[], u_int *pcount,
                        char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 CMD_FUNC(_cmd_umode);
 
@@ -41,8 +41,8 @@ void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
                    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
                    size_t mode_buf_size, size_t para_buf_size);
 
-static void mode_cutoff(char *s);
-static void mode_cutoff2(Client *client, Channel *channel, int *parc_out, char *parv[]);
+static char *mode_cutoff(const char *s);
+static void mode_cutoff2(Client *client, Channel *channel, int *parc_out, const char *parv[]);
 void mode_operoverride_msg(Client *client, Channel *channel, char *modebuf, char *parabuf);
 
 static int samode_in_progress = 0;
@@ -186,7 +186,7 @@ aftercheck:
 	/* This is to prevent excess +<whatever> modes. -- Syzop */
 	if (MyUser(client) && parv[2])
 	{
-		mode_cutoff(parv[2]);
+		parv[2] = mode_cutoff(parv[2]);
 		mode_cutoff2(client, channel, &parc, parv);
 	}
 
@@ -201,23 +201,28 @@ aftercheck:
 /** Cut off mode string (eg: +abcdfjkdsgfgs) at MAXMODEPARAMS modes.
  * @param s The mode string (modes only, no parameters)
  * @note Should only used on local clients
- * @author Syzop
+ * @returns The cleaned up string
  */
-static void mode_cutoff(char *s)
+static char *mode_cutoff(const char *i)
 {
-unsigned short modesleft = MAXMODEPARAMS * 2; /* be generous... */
+	static char newmodebuf[BUFSIZE];
+	char *o;
+	unsigned short modesleft = MAXMODEPARAMS * 2; /* be generous... */
 
-	for (; *s && modesleft; s++)
-		if ((*s != '-') && (*s != '+'))
+	strlcpy(newmodebuf, i, sizeof(newmodebuf));
+
+	for (o = newmodebuf; *o && modesleft; o++)
+		if ((*o != '-') && (*o != '+'))
 			modesleft--;
-	*s = '\0';
+	*o = '\0';
+	return newmodebuf;
 }
 
 /** Another mode cutoff routine - this one for the server-side
  * amplification/enlargement problem that happens with bans/exempts/invex
  * as explained in #2837. -- Syzop
  */
-static void mode_cutoff2(Client *client, Channel *channel, int *parc_out, char *parv[])
+static void mode_cutoff2(Client *client, Channel *channel, int *parc_out, const char *parv[])
 {
 	int len, i;
 	int parc = *parc_out;
@@ -276,7 +281,7 @@ static void mode_cutoff2(Client *client, Channel *channel, int *parc_out, char *
  *	User or server is authorized to do the mode.  This takes care of
  * setting the mode and relaying it to other users and servers.
  */
-void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode)
+void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc, const char *parv[], time_t sendts, int samode)
 {
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	int  pcount;
@@ -1068,12 +1073,13 @@ int paracount_for_chanmode(u_int what, char mode)
 /* set_mode
  *	written by binary
  */
-void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *pcount,
+void _set_mode(Channel *channel, Client *client, int parc, const char *parv[], u_int *pcount,
                char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
 {
 	Cmode *cm = NULL;
-	char *curchr;
-	char *argument;
+	const char *curchr;
+	const char *argument;
+	char argumentbuf[MODEBUFLEN+1];
 	u_int what = MODE_ADD;
 	long modetype = 0;
 	int paracount = 1;
@@ -1168,10 +1174,13 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 					break;
 				}
 
-				if (paracount < parc)
-					argument = parv[paracount]; /* can still be NULL */
-				else
+				if ((paracount < parc) && parv[paracount])
+				{
+					strlcpy(argumentbuf, parv[paracount], sizeof(argumentbuf));
+					argument = argumentbuf;
+				} else {
 					argument = NULL;
+				}
 
 #ifndef NO_OPEROVERRIDE
 				if (found == 1)
@@ -1194,10 +1203,6 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 					 */
 				}
 #endif /* !NO_OPEROVERRIDE */
-
-				/* Not sure how useful this is, but I'll let it stay... */
-				if (argument && strlen(argument) >= MODEBUFLEN)
-					argument[MODEBUFLEN-1] = '\0';
 
 				if (found == 1)
 				{
@@ -1234,7 +1239,7 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 CMD_FUNC(_cmd_umode)
 {
 	int i;
-	char **p, *m;
+	const char *m;
 	Client *acptr;
 	int what, setsnomask = 0;
 	long oldumodes = 0;
@@ -1288,11 +1293,11 @@ CMD_FUNC(_cmd_umode)
 
 	if (MyConnect(client))
 		setsnomask = client->user->snomask;
+
 	/*
 	 * parse mode change string(s)
 	 */
-	p = &parv[2];
-	for (m = *p; *m; m++)
+	for (m = parv[2]; *m; m++)
 	{
 		if (chk_restrict && strchr(RESTRICT_USERMODES, *m))
 		{
@@ -1655,7 +1660,7 @@ void send_user_list_mode(Client *client, Channel *channel, long flags, int list_
  * @returns 1 if processed as a mode list (please return),
  *          0 if not (continue with the MODE as it likely is a set request).
  */
-int list_mode_request(Client *client, Channel *channel, char *req)
+int list_mode_request(Client *client, Channel *channel, const char *req)
 {
 	if (strstr(req, "b"))
 	{

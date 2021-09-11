@@ -872,7 +872,7 @@ skip_host_check:
  */
 CMD_FUNC(cmd_server)
 {
-	char *servername = NULL;	/* Pointer for servername */
+	const char *servername = NULL;	/* Pointer for servername */
 	char *ch = NULL;	/* */
 	char descbuf[BUFSIZE];
 	int  hop = 0;
@@ -1111,8 +1111,8 @@ CMD_FUNC(cmd_sid)
 	Client *acptr, *ocptr;
 	ConfigItem_link	*aconf;
 	ConfigItem_ban *bconf;
-	int 	hop;
-	char	*servername = parv[1];
+	int hop;
+	const char *servername = parv[1];
 	Client *direction = client->direction; /* lazy, since this function may be removed soon */
 
 	/* Only allow this command from server sockets */

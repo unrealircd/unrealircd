@@ -63,7 +63,7 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_chgident)
 {
 	Client *target;
-	char *s;
+	const char *s;
 	int legalident = 1;
 
 	if (!ValidatePermissionsForPath("client:set:ident",client,NULL,NULL,NULL))

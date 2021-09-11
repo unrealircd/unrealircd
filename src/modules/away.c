@@ -94,14 +94,14 @@ int away_join(Client *client, Channel *channel, MessageTag *mtags)
 /** Mark client as AWAY or mark them as back (in case of empty reason) */
 CMD_FUNC(cmd_away)
 {
-	char *new_reason = parv[1];
+	char reason[512];
 	int n, already_as_away = 0;
 	MessageTag *mtags = NULL;
 
 	if (IsServer(client))
 		return;
 
-	if (parc < 2 || !*new_reason)
+	if (parc < 2 || BadPtr(parv[1]))
 	{
 		/* Marking as not away */
 		if (client->user->away)
@@ -121,8 +121,11 @@ CMD_FUNC(cmd_away)
 		return;
 	}
 
+	/* Obey set::away-length */
+	strlncpy(reason, parv[1], sizeof(reason), iConf.away_length);
+
 	/* Check spamfilters */
-	if (MyUser(client) && match_spamfilter(client, new_reason, SPAMF_AWAY, "AWAY", NULL, 0, NULL))
+	if (MyUser(client) && match_spamfilter(client, reason, SPAMF_AWAY, "AWAY", NULL, 0, NULL))
 		return;
 
 	/* Check away-flood */
@@ -134,12 +137,8 @@ CMD_FUNC(cmd_away)
 		return;
 	}
 
-	/* Obey set::away-length */
-	if (strlen(new_reason) > iConf.away_length)
-		new_reason[iConf.away_length] = '\0';
-
 	/* Check if the new away reason is the same as the current reason - if so then return (no change) */
-	if ((client->user->away) && !strcmp(client->user->away, new_reason))
+	if ((client->user->away) && !strcmp(client->user->away, reason))
 		return;
 
 	/* All tests passed. Now marking as away (or still away but changing the away reason) */
@@ -148,7 +147,7 @@ CMD_FUNC(cmd_away)
 	
 	new_message(client, recv_mtags, &mtags);
 
-	sendto_server(client, 0, 0, mtags, ":%s AWAY :%s", client->id, new_reason);
+	sendto_server(client, 0, 0, mtags, ":%s AWAY :%s", client->id, reason);
 
 	if (client->user->away)
 	{
@@ -156,7 +155,7 @@ CMD_FUNC(cmd_away)
 		already_as_away = 1;
 	}
 	
-	safe_strdup(client->user->away, new_reason);
+	safe_strdup(client->user->away, reason);
 
 	if (MyConnect(client))
 		sendnumeric(client, RPL_NOWAWAY);

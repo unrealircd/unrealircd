@@ -57,13 +57,18 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int chathistory_token(char *str, char *token, char **store)
+int chathistory_token(const char *str, char *token, char **store)
 {
-	char *p = strchr(str, '=');
+	char request[BUFSIZE];
+	char *p;
+
+	strlcpy(request, str, sizeof(request));
+
+	p = strchr(request, '=');
 	if (!p)
 		return 0;
 	*p = '\0'; // frag
-	if (!strcmp(str, token))
+	if (!strcmp(request, token))
 	{
 		*p = '='; // restore
 		*store = strdup(p + 1); // can be \0

@@ -548,7 +548,7 @@ static void set_channel_mode(Channel *channel, char *modes, char *parameters)
 	char buf[512];
 	char *p, *param;
 	int myparc = 1, i;
-	char *myparv[64];
+	char *myparv[512];
 
 	memset(&myparv, 0, sizeof(myparv));
 	myparv[0] = raw_strdup(modes);
@@ -559,7 +559,7 @@ static void set_channel_mode(Channel *channel, char *modes, char *parameters)
 	myparv[myparc] = NULL;
 
 	SetULine(&me); // hack for crash.. set ulined so no access checks.
-	do_mode(channel, &me, NULL, myparc, myparv, 0, 0);
+	do_mode(channel, &me, NULL, myparc, (const char **)myparv, 0, 0);
 	ClearULine(&me); // and clear it again..
 
 	for (i = 0; i < myparc; i++)

@@ -29,7 +29,7 @@ char backupbuf[8192];
 static char *para[MAXPARA + 2];
 
 /* Forward declarations of functions that are local (static) */
-static int do_numeric(int, Client *, MessageTag *, int, char **);
+static int do_numeric(int, Client *, MessageTag *, int, const char **);
 static void cancel_clients(Client *, Client *, char *);
 static void remove_unknown(Client *, char *);
 static void parse2(Client *client, Client **fromptr, MessageTag *mtags, int mtags_bytes, char *ch);
@@ -485,7 +485,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 
 	if (cmptr == NULL)
 	{
-		do_numeric(numeric, from, mtags, i, para);
+		do_numeric(numeric, from, mtags, i, (const char **)para);
 		return;
 	}
 	cmptr->count++;
@@ -507,12 +507,12 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 	then = clock();
 	if (cmptr->flags & CMD_ALIAS)
 	{
-		(*cmptr->aliasfunc) (from, mtags, i, para, cmptr->cmd);
+		(*cmptr->aliasfunc) (from, mtags, i, (const char **)para, cmptr->cmd);
 	} else {
 		if (!cmptr->overriders)
-			(*cmptr->func) (from, mtags, i, para);
+			(*cmptr->func) (from, mtags, i, (const char **)para);
 		else
-			(*cmptr->overriders->func) (cmptr->overriders, from, mtags, i, para);
+			(*cmptr->overriders->func) (cmptr->overriders, from, mtags, i, (const char **)para);
 	}
 	if (!IsDead(cptr))
 	{
@@ -628,13 +628,14 @@ static int client_lagged_up(Client *client)
  * @note  In general you should NOT send anything back if you receive
  *        a numeric, this to prevent creating loops.
  */
-static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int parc, char *parv[])
+static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int parc, const char *parv[])
 {
 	Client *acptr;
 	Channel *channel;
 	char *nick, *p;
 	int i;
 	char buffer[BUFSIZE];
+	char targets[BUFSIZE];
 
 	if ((numeric < 0) || (numeric > 999))
 		return -1;
@@ -697,7 +698,8 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 	concat_params(buffer, sizeof(buffer), parc, parv);
 
 	/* Now actually process the numeric, IOTW: send it on */
-	for (; (nick = strtoken(&p, parv[1], ",")); parv[1] = NULL)
+	strlcpy(targets, parv[1], sizeof(targets));
+	for (nick = strtoken(&p, targets, ","); nick; nick = strtoken(&p, NULL, ","))
 	{
 		if ((acptr = find_client(nick, NULL)))
 		{

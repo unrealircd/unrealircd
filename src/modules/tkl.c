@@ -49,7 +49,7 @@ CMD_FUNC(cmd_kline);
 CMD_FUNC(cmd_zline);
 CMD_FUNC(cmd_spamfilter);
 CMD_FUNC(cmd_eline);
-void cmd_tkl_line(Client *client, int parc, char *parv[], char *type);
+void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type);
 int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);
@@ -91,7 +91,7 @@ int _join_viruschan(Client *client, TKL *tk, int type);
 void _spamfilter_build_user_string(char *buf, char *nick, Client *client);
 int _match_user(const char *rmask, Client *client, int options);
 int _match_user_extended_server_ban(const char *banstr, Client *client);
-void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *client, char **tkl_username, char **tkl_hostname);
+void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *client, const char **tkl_username, const char **tkl_hostname);
 int _tkl_ip_hash(char *ip);
 int _tkl_ip_hash_type(int type);
 TKL *_find_tkl_serverban(int type, char *usermask, char *hostmask, int softban);
@@ -100,7 +100,7 @@ TKL *_find_tkl_nameban(int type, char *name, int hold);
 TKL *_find_tkl_spamfilter(int type, char *match_string, BanAction action, unsigned short target);
 int _find_tkl_exception(int ban_type, Client *client);
 static void add_default_exempts(void);
-int parse_extended_server_ban(char *mask_in, Client *client, char **error, int skip_checking, char *buf1, size_t buf1len, char *buf2, size_t buf2len);
+int parse_extended_server_ban(const char *mask_in, Client *client, char **error, int skip_checking, char *buf1, size_t buf1len, char *buf2, size_t buf2len);
 
 /* Externals (only for us :D) */
 extern int MODVAR spamf_ugly_vchanoverride;
@@ -970,7 +970,7 @@ CMD_FUNC(cmd_gline)
 
 	if (parc == 1)
 	{
-		char *parv[3];
+		const char *parv[3];
 		parv[0] = NULL;
 		parv[1] = "gline";
 		parv[2] = NULL;
@@ -996,7 +996,7 @@ CMD_FUNC(cmd_gzline)
 
 	if (parc == 1)
 	{
-		char *parv[3];
+		const char *parv[3];
 		parv[0] = NULL;
 		parv[1] = "gline"; /* (there's no /STATS gzline, it's included in /STATS gline output) */
 		parv[2] = NULL;
@@ -1021,7 +1021,7 @@ CMD_FUNC(cmd_shun)
 
 	if (parc == 1)
 	{
-		char *parv[3];
+		const char *parv[3];
 		parv[0] = NULL;
 		parv[1] = "shun";
 		parv[2] = NULL;
@@ -1037,8 +1037,8 @@ CMD_FUNC(cmd_shun)
 CMD_FUNC(cmd_tempshun)
 {
 	Client *target;
-	char *comment = ((parc > 2) && !BadPtr(parv[2])) ? parv[2] : "no reason";
-	char *name;
+	const char *comment = ((parc > 2) && !BadPtr(parv[2])) ? parv[2] : "no reason";
+	const char *name;
 	int remove = 0;
 
 	if (MyUser(client) && (!ValidatePermissionsForPath("server-ban:shun:temporary",client,NULL,NULL,NULL)))
@@ -1117,7 +1117,7 @@ CMD_FUNC(cmd_kline)
 
 	if (parc == 1)
 	{
-		char *parv[3];
+		const char *parv[3];
 		parv[0] = NULL;
 		parv[1] = "kline";
 		parv[2] = NULL;
@@ -1186,7 +1186,7 @@ CMD_FUNC(cmd_zline)
 
 	if (parc == 1)
 	{
-		char *parv[3];
+		const char *parv[3];
 		parv[0] = NULL;
 		parv[1] = "kline"; /* (there's no /STATS zline, it's included in /STATS kline output) */
 		parv[2] = NULL;
@@ -1277,7 +1277,7 @@ static int xline_exists(char *type, char *usermask, char *hostmask)
  * @returns 1 if the server ban is acceptable. The ban will then be stored in buf1/buf2 (unless those
  *            were set to NULL by the caller). On failure we return 0 and 'error' is set appropriately.
  */
-int parse_extended_server_ban(char *mask_in, Client *client, char **error, int skip_checking, char *buf1, size_t buf1len, char *buf2, size_t buf2len)
+int parse_extended_server_ban(const char *mask_in, Client *client, char **error, int skip_checking, char *buf1, size_t buf1len, char *buf2, size_t buf2len)
 {
 	const char *nextbanstr = NULL;
 	Extban *extban;
@@ -1376,18 +1376,19 @@ fail_parse_extended_server_ban:
  * This allows us doing some syntax checking and other helpful
  * things that are the same for many types of *LINES.
  */
-void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
+void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 {
 	time_t secs;
 	int add = 1;
 	time_t i;
 	Client *acptr = NULL;
-	char *mask = NULL;
+	char maskbuf[BUFSIZE];
+	char *mask;
 	char mo[64], mo2[64];
 	char mask1buf[BUFSIZE];
 	char mask2buf[BUFSIZE];
 	char *p, *usermask, *hostmask;
-	char *tkllayer[10] = {
+	const char *tkllayer[10] = {
 		me.name,		/*0  server.name */
 		NULL,			/*1  +|- */
 		NULL,			/*2  G   */
@@ -1404,7 +1405,8 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 	if ((parc == 1) || BadPtr(parv[1]))
 		return; /* shouldn't happen */
 
-	mask = parv[1];
+	strlcpy(maskbuf, parv[1], sizeof(maskbuf));
+	mask = maskbuf;
 	if (*mask == '-')
 	{
 		add = 0;
@@ -1532,7 +1534,7 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 				BanAction action = BAN_ACT_KLINE; // just a dummy default
 				if ((*type == 'z') || (*type == 'Z'))
 					action = BAN_ACT_ZLINE; // to indicate zline (no hostname, no dns, etc)
-				ban_target_to_tkl_layer(iConf.manual_ban_target, action, acptr, &usermask, &hostmask);
+				ban_target_to_tkl_layer(iConf.manual_ban_target, action, acptr, (const char **)&usermask, (const char **)&hostmask);
 			}
 			else
 			{
@@ -1638,7 +1640,7 @@ void eline_syntax(Client *client)
  * exception to be placed on *@ip rather than
  * user@host or *@host. For eg zlines.
  */
-TKLTypeTable *eline_type_requires_ip(char *bantypes)
+TKLTypeTable *eline_type_requires_ip(const char *bantypes)
 {
 	int i;
 
@@ -1649,9 +1651,9 @@ TKLTypeTable *eline_type_requires_ip(char *bantypes)
 }
 
 /** Checks a string to see if it contains invalid ban exception types */
-int contains_invalid_server_ban_exception_type(char *str, char *c)
+int contains_invalid_server_ban_exception_type(const char *str, char *c)
 {
-	char *p;
+	const char *p;
 	for (p = str; *p; p++)
 	{
 		if (!tkl_banexception_chartotype(*p))
@@ -1670,10 +1672,12 @@ CMD_FUNC(cmd_eline)
 	Client *acptr = NULL;
 	char *mask = NULL;
 	char mo[64], mo2[64];
+	char maskbuf[BUFSIZE];
 	char mask1buf[BUFSIZE];
 	char mask2buf[BUFSIZE];
-	char *p, *usermask, *hostmask, *bantypes=NULL, *reason=NULL;
-	char *tkllayer[11] = {
+	const char *p, *bantypes=NULL, *reason=NULL;
+	char *usermask, *hostmask;
+	const char *tkllayer[11] = {
 		me.name,		/*0  server.name */
 		NULL,			/*1  +|- */
 		NULL,			/*2  E   */
@@ -1707,7 +1711,8 @@ CMD_FUNC(cmd_eline)
 		return;
 	}
 
-	mask = parv[1];
+	strlcpy(maskbuf, parv[1], sizeof(maskbuf));
+	mask = maskbuf;
 	if (*mask == '-')
 	{
 		add = 0;
@@ -1841,7 +1846,7 @@ CMD_FUNC(cmd_eline)
 				BanAction action = BAN_ACT_KLINE; // just a dummy default
 				if (add && eline_type_requires_ip(bantypes))
 					action = BAN_ACT_ZLINE; // to indicate zline (no hostname, no dns, etc)
-				ban_target_to_tkl_layer(iConf.manual_ban_target, action, acptr, &usermask, &hostmask);
+				ban_target_to_tkl_layer(iConf.manual_ban_target, action, acptr, (const char **)&usermask, (const char **)&hostmask);
 			}
 			else
 			{
@@ -1911,7 +1916,7 @@ void spamfilter_usage(Client *client)
 }
 
 /** Helper function for cmd_spamfilter, explaining usage has changed. */
-void spamfilter_new_usage(Client *client, char *parv[])
+void spamfilter_new_usage(Client *client, const char *parv[])
 {
 	sendnotice(client, "Unknown match-type '%s'. Must be one of: -regex (new fast PCRE regexes) or "
 	                 "-simple (simple text with ? and * wildcards)",
@@ -1924,13 +1929,13 @@ void spamfilter_new_usage(Client *client, char *parv[])
 }
 
 /** Delete a spamfilter by ID (the ID can be obtained via '/SPAMFILTER del' */
-void spamfilter_del_by_id(Client *client, char *id)
+void spamfilter_del_by_id(Client *client, const char *id)
 {
 	int index;
 	TKL *tk;
 	int found = 0;
 	char mo[32], mo2[32];
-	char *tkllayer[13] = {
+	const char *tkllayer[13] = {
 		me.name,	/*  0 server.name */
 		NULL,		/*  1 +|- */
 		"F",		/*  2 F   */
@@ -1993,7 +1998,7 @@ CMD_FUNC(cmd_spamfilter)
 {
 	int add = 1;
 	char mo[32], mo2[32];
-	char *tkllayer[13] = {
+	const char *tkllayer[13] = {
 		me.name,	/*  0 server.name */
 		NULL,		/*  1 +|- */
 		"F",		/*  2 F   */
@@ -2027,7 +2032,7 @@ CMD_FUNC(cmd_spamfilter)
 
 	if (parc == 1)
 	{
-		char *parv[3];
+		const char *parv[3];
 		parv[0] = NULL;
 		parv[1] = "spamfilter";
 		parv[2] = NULL;
@@ -2040,7 +2045,7 @@ CMD_FUNC(cmd_spamfilter)
 		if (!parv[2])
 		{
 			/* Show STATS with appropriate SPAMFILTER del command */
-			char *parv[5];
+			const char *parv[5];
 			parv[0] = NULL;
 			parv[1] = "spamfilter";
 			parv[2] = me.name;
@@ -3927,7 +3932,7 @@ CMD_FUNC(cmd_tkl_add)
 	TKL *tkl;
 	int type;
 	time_t expire_at, set_at;
-	char *set_by;
+	const char *set_by;
 	char tkl_entry_exists = 0;
 
 	/* we rely on servers to be failsafe.. */
@@ -3978,9 +3983,9 @@ CMD_FUNC(cmd_tkl_add)
 	{
 		/* Validate server ban TKL fields */
 		int softban = 0;
-		char *usermask = parv[3];
-		char *hostmask = parv[4];
-		char *reason = parv[8];
+		const char *usermask = parv[3];
+		const char *hostmask = parv[4];
+		const char *reason = parv[8];
 
 		/* Some simple validation on usermask and hostmask:
 		 * may not contain an @. Yeah, some services or self-written
@@ -4019,10 +4024,10 @@ CMD_FUNC(cmd_tkl_add)
 	{
 		/* Validate ban exception TKL fields */
 		int softban = 0;
-		char *usermask = parv[3];
-		char *hostmask = parv[4];
-		char *bantypes = parv[8];
-		char *reason;
+		const char *usermask = parv[3];
+		const char *hostmask = parv[4];
+		const char *bantypes = parv[8];
+		const char *reason;
 
 		if (parc < 10)
 			return;
@@ -4069,8 +4074,8 @@ CMD_FUNC(cmd_tkl_add)
 	{
 		/* Validate name ban TKL fields */
 		int hold = 0;
-		char *name = parv[4];
-		char *reason = parv[8];
+		const char *name = parv[4];
+		const char *reason = parv[8];
 
 		if (*parv[3] == 'H')
 			hold = 1;
@@ -4088,10 +4093,10 @@ CMD_FUNC(cmd_tkl_add)
 	{
 		/* Validate spamfilter-specific TKL fields */
 		MatchType match_method;
-		char *match_string;
+		const char *match_string;
 		Match *m; /* compiled match_string */
 		time_t tkl_duration;
-		char *tkl_reason;
+		const char *tkl_reason;
 		BanAction action;
 		unsigned short target;
 		/* helper variables */
@@ -4225,7 +4230,7 @@ CMD_FUNC(cmd_tkl_del)
 {
 	TKL *tkl;
 	int type;
-	char *removed_by;
+	const char *removed_by;
 
 	if (!IsServer(client) && !IsMe(client))
 		return;
@@ -4241,8 +4246,8 @@ CMD_FUNC(cmd_tkl_del)
 
 	if (TKLIsServerBanType(type))
 	{
-		char *usermask = parv[3];
-		char *hostmask = parv[4];
+		const char *usermask = parv[3];
+		const char *hostmask = parv[4];
 		int softban = 0;
 
 		if (*usermask == '%')
@@ -4255,8 +4260,8 @@ CMD_FUNC(cmd_tkl_del)
 	}
 	else if (TKLIsBanExceptionType(type))
 	{
-		char *usermask = parv[3];
-		char *hostmask = parv[4];
+		const char *usermask = parv[3];
+		const char *hostmask = parv[4];
 		int softban = 0;
 		/* other parameters are ignored */
 
@@ -4271,7 +4276,7 @@ CMD_FUNC(cmd_tkl_del)
 	else if (TKLIsNameBanType(type))
 	{
 		int hold = 0;
-		char *name = parv[4];
+		const char *name = parv[4];
 
 		if (*parv[3] == 'H')
 			hold = 1;
@@ -4279,7 +4284,7 @@ CMD_FUNC(cmd_tkl_del)
 	}
 	else if (TKLIsSpamfilterType(type))
 	{
-		char *match_string;
+		const char *match_string;
 		unsigned short target;
 		BanAction action;
 
@@ -4411,7 +4416,7 @@ CMD_FUNC(_cmd_tkl)
 }
 
 /** Configure the username/hostname TKL layer based on the BAN_TARGET_* configuration */
-void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *client, char **tkl_username, char **tkl_hostname)
+void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *client, const char **tkl_username, const char **tkl_hostname)
 {
 	static char username[USERLEN+1];
 	static char hostname[HOSTLEN+8];
@@ -4507,7 +4512,7 @@ int _place_host_ban(Client *client, BanAction action, char *reason, long duratio
 		case BAN_ACT_SOFT_SHUN:
 		{
 			char ip[128], user[USERLEN+3], mo[100], mo2[100];
-			char *tkllayer[9] = {
+			const char *tkllayer[9] = {
 				me.name,	/*0  server.name */
 				"+",		/*1  +|- */
 				"?",		/*2  type */
@@ -4634,12 +4639,13 @@ static int target_is_spamexcept(const char *target)
  */
 int _join_viruschan(Client *client, TKL *tkl, int type)
 {
-	char *xparv[3], chbuf[CHANNELLEN + 16], buf[2048];
+	const char *xparv[3];
+	char chbuf[CHANNELLEN + 16], buf[2048];
 	Channel *channel;
 	int ret;
 
 	snprintf(buf, sizeof(buf), "0,%s", SPAMFILTER_VIRUSCHAN);
-	xparv[0] = client->name;
+	xparv[0] = NULL;
 	xparv[1] = buf;
 	xparv[2] = NULL;
 

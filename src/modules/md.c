@@ -111,7 +111,7 @@ int md_access_check(Client *client, ModDataInfo *md, Client *target)
  */
 CMD_FUNC(cmd_md)
 {
-	char *type, *objname, *varname, *value;
+	const char *type, *objname, *varname, *value;
 	ModDataInfo *md;
 
 	if (!IsServer(client) || (parc < 4) || BadPtr(parv[3]))

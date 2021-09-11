@@ -286,7 +286,7 @@ int link_doforward(Client *client, Channel *channel, const char *linked, linkTyp
 {
 	char linked_channel_buffer[CHANNELLEN+1];
 	char desc[64];
-	char *parv[3];
+	const char *parv[3];
 
 	switch (type)
 	{

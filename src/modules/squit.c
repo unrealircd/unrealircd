@@ -59,9 +59,9 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_squit)
 {
-	char *server;
+	const char *server;
 	Client *target;
-	char *comment = (parc > 2 && parv[parc - 1]) ? parv[parc - 1] : client->name;
+	const char *comment = (parc > 2 && parv[parc - 1]) ? parv[parc - 1] : client->name;
 
 	// FIXME: this function is way too confusing, and full of old shit?
 

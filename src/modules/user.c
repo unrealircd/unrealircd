@@ -65,8 +65,9 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_user)
 {
-	char *username;
-	char *realname;
+	const char *username;
+	const char *realname;
+	char *p;
 
 	if (!MyConnect(client) || IsServer(client))
 		return;
@@ -83,23 +84,20 @@ CMD_FUNC(cmd_user)
 		return;
 	}
 
-	/* This cuts the username off at @, uh okay.. */
-	if ((username = strchr(parv[1], '@')))
-		*username = '\0';
-
 	username = parv[1];
 	realname = parv[4];
 	
-	if (strlen(username) > USERLEN)
-		username[USERLEN] = '\0'; /* cut-off */
-
 	make_user(client);
 
 	/* set::modes-on-connect */
 	client->umodes |= CONN_MODES;
 	client->user->server = me_hash;
 	strlcpy(client->info, realname, sizeof(client->info));
-	strlcpy(client->user->username, username, USERLEN + 1);
+	strlcpy(client->user->username, username, sizeof(client->user->username));
+
+	/* This cuts the username off at @, uh okay.. */
+	if ((p = strchr(client->user->username, '@')))
+		*p = '\0';
 
 	if (*client->name && is_handshake_finished(client))
 	{

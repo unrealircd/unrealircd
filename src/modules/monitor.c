@@ -144,6 +144,7 @@ void send_status(Client *client, MessageTag *recv_mtags, const char *nick)
 
 CMD_FUNC(cmd_monitor)
 {
+	char request[BUFSIZE];
 	char cmd;
 	char *s, *p = NULL;
 	int i;
@@ -206,8 +207,10 @@ CMD_FUNC(cmd_monitor)
 		case '+':
 			if (parc < 3 || BadPtr(parv[2]))
 				return;
-			for(s = strtoken(&p, parv[2], ","); s; s = strtoken(&p, NULL, ",")){
-				if (cmd == '-'){
+			strlcpy(request, parv[2], sizeof(request));
+			for (s = strtoken(&p, request, ","); s; s = strtoken(&p, NULL, ","))
+			{
+				if (cmd == '-') {
 					watch_del(s, client, WATCH_FLAG_TYPE_MONITOR);
 				} else {
 					if (WATCHES(client) >= MAXWATCH)

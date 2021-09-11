@@ -82,7 +82,7 @@ void set_oper_host(Client *client, char *host)
 CMD_FUNC(cmd_oper)
 {
 	ConfigItem_oper *operblock;
-	char *operblock_name, *password;
+	const char *operblock_name, *password;
 	long old_umodes = client->umodes & ALL_UMODES;
 
 	if (!MyUser(client))
@@ -298,7 +298,7 @@ CMD_FUNC(cmd_oper)
 	if (!BadPtr(OPER_AUTO_JOIN_CHANS) && strcmp(OPER_AUTO_JOIN_CHANS, "0"))
 	{
 		char *chans = strdup(OPER_AUTO_JOIN_CHANS);
-		char *args[3] = {
+		const char *args[3] = {
 			client->name,
 			chans,
 			NULL

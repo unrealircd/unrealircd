@@ -66,8 +66,8 @@ CMD_FUNC(cmd_sendumode)
 {
 	MessageTag *mtags = NULL;
 	Client *acptr;
-	char *message;
-	char *p;
+	const char *message;
+	const char *p;
 	int i;
 	long umode_s = 0;
 

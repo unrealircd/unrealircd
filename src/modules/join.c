@@ -25,7 +25,7 @@
 /* Forward declarations */
 CMD_FUNC(cmd_join);
 void _join_channel(Channel *channel, Client *client, MessageTag *mtags, int flags);
-void _do_join(Client *client, int parc, char *parv[]);
+void _do_join(Client *client, int parc, const char *parv[]);
 int _can_join(Client *client, Channel *channel, const char *key);
 void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mtags);
 char *_get_chmodes_for_user(Client *client, int flags);
@@ -208,7 +208,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 {
 	MessageTag *mtags = NULL; /** Message tags to send to local users (sender is :user) */
 	MessageTag *mtags_sjoin = NULL; /* Message tags to send to remote servers for SJOIN (sender is :me.id) */
-	char *parv[3];
+	const char *parv[3];
 
 	/* Same way as in SJOIN */
 	new_message_special(client, recv_mtags, &mtags, ":%s JOIN %s", client->name, channel->name);
@@ -295,10 +295,12 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
  * increased every time we enter this loop and decreased anytime we leave the
  * loop. So be carefull not to use a simple 'return' after bouncedtimes++. -- Syzop
  */
-void _do_join(Client *client, int parc, char *parv[])
+void _do_join(Client *client, int parc, const char *parv[])
 {
+	char request[BUFSIZE];
+	char request_key[BUFSIZE];
 	char jbuf[BUFSIZE], jbuf2[BUFSIZE];
-	char *orig_parv1;
+	const char *orig_parv1;
 	Membership *lp;
 	Channel *channel;
 	char *name, *key = NULL;
@@ -336,9 +338,8 @@ void _do_join(Client *client, int parc, char *parv[])
 	   ** Rebuild list of channels joined to be the actual result of the
 	   ** JOIN.  Note that "JOIN 0" is the destructive problem.
 	 */
-	for (i = 0, name = strtoken(&p, parv[1], ",");
-	     name;
-	     i++, name = strtoken(&p, NULL, ","))
+	strlcpy(request, parv[1], sizeof(request));
+	for (i = 0, name = strtoken(&p, request, ","); name; i++, name = strtoken(&p, NULL, ","))
 	{
 		if (MyUser(client) && (++ntargets > maxtargets))
 		{
@@ -392,7 +393,10 @@ void _do_join(Client *client, int parc, char *parv[])
 
 	p = NULL;
 	if (parv[2])
-		key = strtoken(&p2, parv[2], ",");
+	{
+		strlcpy(request_key, parv[2], sizeof(request_key));
+		key = strtoken(&p2, request_key, ",");
+	}
 	parv[2] = NULL;		/* for cmd_names call later, parv[parc] must == NULL */
 
 	for (name = strtoken(&p, jbuf, ",");

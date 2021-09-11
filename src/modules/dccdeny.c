@@ -49,11 +49,11 @@ int dccdeny_can_send_to_channel(Client *client, Channel *channel, Membership *lp
 int dccdeny_server_sync(Client *client);
 static ConfigItem_deny_dcc *dcc_isforbidden(Client *client, const char *filename);
 static ConfigItem_deny_dcc *dcc_isdiscouraged(Client *client, const char *filename);
-static void DCCdeny_add(char *filename, char *reason, int type, int type2);
+static void DCCdeny_add(const char *filename, const char *reason, int type, int type2);
 static void DCCdeny_del(ConfigItem_deny_dcc *deny);
 static void dcc_wipe_services(void);
-static char *get_dcc_filename(const char *text);
-static int can_dcc(Client *client, char *target, Client *targetcli, const char *filename, const char **errmsg);
+static const char *get_dcc_filename(const char *text);
+static int can_dcc(Client *client, const char *target, Client *targetcli, const char *filename, const char **errmsg);
 static int can_dcc_soft(Client *from, Client *to, const char *filename, const char **errmsg);
 static void free_dcc_config_blocks(void);
 void dccdeny_unload_free_all_conf_deny_dcc(ModData *m);
@@ -499,7 +499,7 @@ int dccdeny_can_send_to_user(Client *client, Client *target, const char **text, 
 {
 	if (**text == '\001')
 	{
-		char *filename = get_dcc_filename(*text);
+		const char *filename = get_dcc_filename(*text);
 		if (filename)
 		{
 			if (MyUser(client) && !can_dcc(client, target->name, target, filename, errmsg))
@@ -520,7 +520,7 @@ int dccdeny_can_send_to_channel(Client *client, Channel *channel, Membership *lp
 	if (MyUser(client) && (**msg == '\001'))
 	{
 		const char *err = NULL;
-		char *filename = get_dcc_filename(*msg);
+		const char *filename = get_dcc_filename(*msg);
 		if (filename && !can_dcc(client, channel->name, NULL, filename, &err))
 		{
 			if (!IsDead(client) && (sendtype != SEND_TYPE_NOTICE))
@@ -547,7 +547,7 @@ int dccdeny_can_send_to_channel(Client *client, Channel *channel, Membership *lp
  * This is to protect a bit against tricks like 'flood-it-off-the-buffer'
  * and color 1,1 etc...
  */
-static char *dcc_displayfile(const char *f)
+static const char *dcc_displayfile(const char *f)
 {
 	static char buf[512];
 	const char *i;
@@ -582,7 +582,7 @@ static char *dcc_displayfile(const char *f)
 	return buf;
 }
 
-static char *get_dcc_filename(const char *text)
+static const char *get_dcc_filename(const char *text)
 {
 	static char filename[BUFSIZE+1];
 	char *end;
@@ -624,7 +624,7 @@ static char *get_dcc_filename(const char *text)
  * @param text        The entire message
  * @returns 1 if DCC SEND allowed, 0 if rejected
  */
-static int can_dcc(Client *client, char *target, Client *targetcli, const char *filename, const char **errmsg)
+static int can_dcc(Client *client, const char *target, Client *targetcli, const char *filename, const char **errmsg)
 {
 	ConfigItem_deny_dcc *fl;
 	static char errbuf[256];
@@ -651,7 +651,7 @@ static int can_dcc(Client *client, char *target, Client *targetcli, const char *
 
 	if ((fl = dcc_isforbidden(client, filename)))
 	{
-		char *displayfile = dcc_displayfile(filename);
+		const char *displayfile = dcc_displayfile(filename);
 
 		RunHook(HOOKTYPE_DCC_DENIED, client, target, filename, displayfile, fl);
 
@@ -685,7 +685,7 @@ static int can_dcc(Client *client, char *target, Client *targetcli, const char *
 static int can_dcc_soft(Client *from, Client *to, const char *filename, const char **errmsg)
 {
 	ConfigItem_deny_dcc *fl;
-	char *displayfile;
+	const char *displayfile;
 	static char errbuf[256];
 
 	/* User (IRCOp) may bypass send restrictions */
@@ -774,7 +774,7 @@ static ConfigItem_deny_dcc *dcc_isdiscouraged(Client *client, const char *filena
 	return NULL;
 }
 
-static void DCCdeny_add(char *filename, char *reason, int type, int type2)
+static void DCCdeny_add(const char *filename, const char *reason, int type, int type2)
 {
 	ConfigItem_deny_dcc *deny = NULL;
 

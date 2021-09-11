@@ -119,7 +119,7 @@ int _check_banned(Client *client, int exitflags)
 */
 CMD_FUNC(cmd_pass)
 {
-	char *password = parc > 1 ? parv[1] : NULL;
+	const char *password = parc > 1 ? parv[1] : NULL;
 
 	if (!MyConnect(client) || (!IsUnknown(client) && !IsHandshake(client)))
 	{

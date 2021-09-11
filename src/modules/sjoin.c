@@ -55,7 +55,7 @@ MOD_UNLOAD()
 typedef struct xParv aParv;
 struct xParv {
 	int  parc;
-	char *parv[256];
+	const char *parv[256];
 };
 
 aParv pparv;
@@ -657,7 +657,6 @@ getnick:
 	
 	if (!merge && !removetheirs && !nomode)
 	{
-		char paraback[1024];
 		MessageTag *mtags = NULL;
 
 		strlcpy(modebuf, parv[3], sizeof modebuf);
@@ -670,9 +669,7 @@ getnick:
 				strlcat(parabuf, " ", sizeof parabuf);
 			}
 		}
-		strlcpy(paraback, parabuf, sizeof paraback);
 		ap = mp2parv(modebuf, parabuf);
-
 		set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
 		send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
 	}
@@ -698,6 +695,7 @@ getnick:
 				strlcat(parabuf, " ", sizeof parabuf);
 			}
 		}
+
 		ap = mp2parv(modebuf, parabuf);
 		set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
 

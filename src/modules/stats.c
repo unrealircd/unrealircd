@@ -141,7 +141,7 @@ struct statstab StatsTable[] = {
 	{ 0, 	NULL, 		NULL, 			0		}
 };
 
-int stats_compare(char *s1, char *s2)
+int stats_compare(const char *s1, const char *s2)
 {
 	/* The long stats flags are always lowercase */
 	while (*s1 == tolower(*s2))
@@ -170,7 +170,7 @@ static inline struct statstab *stats_binary_search(char c) {
 	return NULL;
 }
 
-static inline struct statstab *stats_search(char *s) {
+static inline struct statstab *stats_search(const char *s) {
 	int i;
 	for (i = 0; StatsTable[i].flag; i++)
 		if (!stats_compare(StatsTable[i].longflag,s))
@@ -178,7 +178,7 @@ static inline struct statstab *stats_search(char *s) {
 	return NULL;
 }
 
-static inline char *stats_combine_parv(char *p1, char *p2)
+static inline char *stats_combine_parv(const char *p1, const char *p2)
 {
 	static char buf[BUFSIZE+1];
         ircsnprintf(buf, sizeof(buf), "%s %s", p1, p2);
@@ -258,7 +258,7 @@ static inline int allow_user_stats_short(char c)
 	return 0;
 }
 
-static inline int allow_user_stats_long(char *s)
+static inline int allow_user_stats_long(const char *s)
 {
 	OperStat *os;
 	for (os = iConf.allow_user_stats_ext; os; os = os->next)

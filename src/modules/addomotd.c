@@ -60,7 +60,7 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_addomotd)
 {
 	FILE *conf;
-	char *text;
+	const char *text;
 
 	text = parc > 1 ? parv[1] : NULL;
 

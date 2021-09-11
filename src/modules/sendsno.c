@@ -63,7 +63,7 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_sendsno)
 {
 	MessageTag *mtags = NULL;
-	char *sno, *msg, *p;
+	const char *sno, *msg, *p;
 	long snomask = 0;
 	int i;
 	Client *acptr;

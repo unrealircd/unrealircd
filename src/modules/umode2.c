@@ -60,7 +60,7 @@ MOD_UNLOAD()
 
 CMD_FUNC(cmd_umode2)
 {
-	char *xparv[5] = {
+	const char *xparv[5] = {
 		client->name,
 		client->name,
 		parv[1],

@@ -145,8 +145,8 @@ int reputation_connect_extinfo(Client *client, NameValuePrioList **list);
 int reputation_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int reputation_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 int reputation_config_posttest(int *errs);
-static uint64_t hash_reputation_entry(char *ip);
-ReputationEntry *find_reputation_entry(char *ip);
+static uint64_t hash_reputation_entry(const char *ip);
+ReputationEntry *find_reputation_entry(const char *ip);
 void add_reputation_entry(ReputationEntry *e);
 EVENT(delete_old_records);
 EVENT(add_scores);
@@ -752,7 +752,7 @@ int reputation_save_db(void)
 	return 1;
 }
 
-static uint64_t hash_reputation_entry(char *ip)
+static uint64_t hash_reputation_entry(const char *ip)
 {
 	return siphash(ip, siphashkey_reputation) % REPUTATION_HASH_TABLE_SIZE;
 }
@@ -764,7 +764,7 @@ void add_reputation_entry(ReputationEntry *e)
 	AddListItem(e, ReputationHashTable[hashv]);
 }
 
-ReputationEntry *find_reputation_entry(char *ip)
+ReputationEntry *find_reputation_entry(const char *ip)
 {
 	ReputationEntry *e;
 	int hashv = hash_reputation_entry(ip);
@@ -1095,7 +1095,7 @@ void reputation_list_query(Client *client, int maxscore)
 CMD_FUNC(reputation_user_cmd)
 {
 	ReputationEntry *e;
-	char *ip;
+	const char *ip;
 
 	if (!IsOper(client))
 	{
@@ -1218,7 +1218,7 @@ CMD_FUNC(reputation_user_cmd)
 CMD_FUNC(reputation_server_cmd)
 {
 	ReputationEntry *e;
-	char *ip;
+	const char *ip;
 	int score;
 	int allow_reply;
 

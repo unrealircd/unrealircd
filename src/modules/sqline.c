@@ -64,8 +64,8 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_sqline)
 {
 	char mo[32];
-	char *comment = (parc == 3) ? parv[2] : NULL;
-	char *tkllayer[9] = {
+	const char *comment = (parc == 3) ? parv[2] : NULL;
+	const char *tkllayer[9] = {
 		me.name,        /*0  server.name */
 		"+",            /*1  +|- */
 		"Q",            /*2  G   */

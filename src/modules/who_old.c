@@ -64,12 +64,12 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-static void do_channel_who(Client *client, Channel *channel, char *mask);
+static void do_channel_who(Client *client, Channel *channel, const char *mask);
 static void make_who_status(Client *, Client *, Channel *, Member *, char *, int);
-static void do_other_who(Client *client, char *mask);
-static void send_who_reply(Client *, Client *, char *, char *, char *);
-static char *first_visible_channel(Client *, Client *, int *);
-static int parse_who_options(Client *, int, char**);
+static void do_other_who(Client *client, const char *mask);
+static void send_who_reply(Client *, Client *, const char *, const char *, const char *);
+static const char *first_visible_channel(Client *, Client *, int *);
+static int parse_who_options(Client *, int, const char **);
 static void who_sendhelp(Client *);
 
 #define WF_OPERONLY  0x01 /**< only show opers */
@@ -93,19 +93,19 @@ static int who_flags;
 struct {
 	int want_away;
 	int want_channel;
-	char *channel; /**< if they want one */
+	const char *channel; /**< if they want one */
 	int want_gecos;
-	char *gecos;
+	const char *gecos;
 	int want_server;
-	char *server;
+	const char *server;
 	int want_host;
-	char *host;
+	const char *host;
 	int want_nick;
-	char *nick;
+	const char *nick;
 	int want_user;
-	char *user;
+	const char *user;
 	int want_ip;
-	char *ip;
+	const char *ip;
 	int want_port;
 	int port;
 	int want_umode;
@@ -118,8 +118,8 @@ struct {
 CMD_FUNC(cmd_who)
 {
 	Channel *target_channel;
-	char *mask = parv[1];
-	char star[] = "*";
+	const char *mask = parv[1];
+	char maskbuf[512];
 	int i = 0;
 
 	if (!MyUser(client))
@@ -139,14 +139,17 @@ CMD_FUNC(cmd_who)
 	}
 
 	if (parc-i < 2 || strcmp(parv[1 + i], "0") == 0)
-		mask = star;
+		mask = "*";
 	else
 		mask = parv[1 + i];
 
 	if (!i && parc > 2 && *parv[2] == 'o')
 		who_flags |= WF_OPERONLY;
 
-	collapse(mask);
+	/* Pfff... collapse... hate it! */
+	strlcpy(maskbuf, mask, sizeof(mask));
+	collapse(maskbuf);
+	mask = maskbuf;
 
 	if (*mask == '\0')
 	{
@@ -247,11 +250,11 @@ static void who_sendhelp(Client *client)
 #define WHO_ADD 1
 #define WHO_DEL 2
 
-static int parse_who_options(Client *client, int argc, char **argv)
+static int parse_who_options(Client *client, int argc, const char **argv)
 {
-char *s = argv[0];
-int what = WHO_ADD;
-int i = 1;
+	const char *s = argv[0];
+	int what = WHO_ADD;
+	int i = 1;
 
 /* A few helper macro's because this is used a lot, added during recode by Syzop. */
 
@@ -319,7 +322,7 @@ int i = 1;
 			case 'm':
 				REQUIRE_PARAM()
 				{
-					char *s = argv[i];
+					const char *s = argv[i];
 					int *umodes;
 
 					if (what == WHO_ADD)
@@ -587,7 +590,7 @@ static int can_see(Client *requester, Client *target, Channel *channel)
 	}
 }
 
-static void do_channel_who(Client *client, Channel *channel, char *mask)
+static void do_channel_who(Client *client, Channel *channel, const char *mask)
 {
 	Member *cm = channel->members;
 	if (IsMember(client, channel) || ValidatePermissionsForPath("channel:see:who:onchannel",client,NULL,channel,NULL))
@@ -675,7 +678,7 @@ static void make_who_status(Client *client, Client *acptr, Channel *channel,
 	status[i] = '\0';
 }
 
-static void do_other_who(Client *client, char *mask)
+static void do_other_who(Client *client, const char *mask)
 {
 int oper = IsOper(client);
 
@@ -690,7 +693,7 @@ int oper = IsOper(client);
 		{
 		int cansee;
 		char status[20];
-		char *channel;
+		const char *channel;
 		int flg;
 
 			if (!IsUser(acptr))
@@ -733,7 +736,7 @@ matchok:
 		Client *acptr = find_client(mask, NULL);
 		int cansee;
 		char status[20];
-		char *channel;
+		const char *channel;
 		int flg;
 
 		if (!acptr)
@@ -749,10 +752,10 @@ matchok:
 }
 
 static void send_who_reply(Client *client, Client *acptr, 
-			   char *channel, char *status, char *xstat)
+			   const char *channel, const char *status, const char *xstat)
 {
 	char *stat;
-	char *host;
+	const char *host;
 	int flat = (FLAT_MAP && !IsOper(client)) ? 1 : 0;
 
 	stat = safe_alloc(strlen(status) + strlen(xstat) + 1);
@@ -799,7 +802,7 @@ static void send_who_reply(Client *client, Client *acptr,
 	safe_free(stat);
 }
 
-static char *first_visible_channel(Client *client, Client *acptr, int *flg)
+static const char *first_visible_channel(Client *client, Client *acptr, int *flg)
 {
 	Membership *lp;
 

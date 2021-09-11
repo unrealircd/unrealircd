@@ -61,7 +61,7 @@ CMD_FUNC(cmd_trace)
 	int  i;
 	Client *acptr;
 	ConfigItem_class *cltmp;
-	char *tname;
+	const char *tname;
 	int  doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
 	int  cnt = 0, wilds, dow;
 	time_t now;

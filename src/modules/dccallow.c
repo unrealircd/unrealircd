@@ -59,6 +59,7 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_dccallow)
 {
+	char request[BUFSIZE];
 	Link *lp;
 	char *p, *s;
 	Client *friend;
@@ -92,7 +93,8 @@ CMD_FUNC(cmd_dccallow)
 		return;
 	}
 
-	for (p = NULL, s = strtoken(&p, parv[1], ", "); s; s = strtoken(&p, NULL, ", "))
+	strlcpy(request, parv[1], sizeof(request));
+	for (p = NULL, s = strtoken(&p, request, ", "); s; s = strtoken(&p, NULL, ", "))
 	{
 		if (MyUser(client) && (++ntargets > maxtargets))
 		{

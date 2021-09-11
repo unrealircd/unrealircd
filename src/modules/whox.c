@@ -80,7 +80,7 @@ static void who_global(Client *client, char *mask, int operspy, struct who_forma
 static void do_who(Client *client, Client *acptr, Channel *channel, struct who_format *fmt);
 static void do_who_on_channel(Client *client, Channel *channel,
                               int member, int operspy, struct who_format *fmt);
-static int convert_classical_who_request(Client *client, int *parc, char *parv[], char **orig_mask, struct who_format *fmt);
+static int convert_classical_who_request(Client *client, int *parc, const char *parv[], const char **orig_mask, struct who_format *fmt);
 const char *whox_md_serialize(ModData *m);
 void whox_md_unserialize(const char *str, ModData *m);
 void whox_md_free(ModData *md);
@@ -180,9 +180,9 @@ void whox_md_free(ModData *md)
 CMD_FUNC(cmd_whox)
 {
 	char *mask;
-	char *orig_mask;
+	const char *orig_mask;
 	char ch; /* Scratch char register */
-	char *p; /* Scratch char pointer */
+	const char *p; /* Scratch char pointer */
 	int member;
 	int operspy = 0;
 	struct who_format fmt;
@@ -843,10 +843,10 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 }
 
 /* Yeah, this is fun. Thank you WHOX !!! */
-static int convert_classical_who_request(Client *client, int *parc, char *parv[], char **orig_mask, struct who_format *fmt)
+static int convert_classical_who_request(Client *client, int *parc, const char *parv[], const char **orig_mask, struct who_format *fmt)
 {
-	char *p;
-	static char pbuf1[256];
+	const char *p;
+	static char pbuf1[512], pbuf2[512];
 	int points;
 
 	/* Figure out if the user is doing a 'classical' UnrealIRCd request,
@@ -892,7 +892,7 @@ static int convert_classical_who_request(Client *client, int *parc, char *parv[]
 			         parv[1], parv[2] ? " " : "", parv[2] ? parv[2] : "");
 			if (parv[2])
 			{
-				char *swap = parv[1];
+				const char *swap = parv[1];
 				parv[1] = parv[2];
 				parv[2] = swap;
 			} else {
@@ -930,13 +930,19 @@ static int convert_classical_who_request(Client *client, int *parc, char *parv[]
 				sendnotice(client, "WHO request '%s' failed: flag 'c' no longer exists with WHOX.", oldrequest);
 				return 0;
 			}
-			for (p = parv[2]; *p; p++)
+			if (strchr(parv[2], 'g'))
 			{
-				if (*p == 'g')
+				char *w;
+				strlcpy(pbuf2, parv[2], sizeof(pbuf2));
+				for (w = pbuf2; *w; w++)
 				{
-					*p = 'r';
-					break;
+					if (*w == 'g')
+					{
+						*w = 'r';
+						break;
+					}
 				}
+				parv[2] = pbuf2;
 			}
 
 			/* "WHO -m xyz" (now: xyz -m) should become "WHO -xyz m"

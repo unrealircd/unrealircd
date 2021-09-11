@@ -60,6 +60,7 @@ CMD_FUNC(cmd_svssilence)
 	Client *target;
 	int mine;
 	char *p, *cp, c;
+	char request[BUFSIZE];
 	
 	if (!IsULine(client))
 		return;
@@ -74,7 +75,8 @@ CMD_FUNC(cmd_svssilence)
 	}
 
 	/* It's for our client */
-	for (p = strtok(parv[2], " "); p; p = strtok(NULL, " "))
+	strlcpy(request, parv[2], sizeof(request));
+	for (p = strtok(request, " "); p; p = strtok(NULL, " "))
 	{
 		c = *p;
 		if ((c == '-') || (c == '+'))

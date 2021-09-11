@@ -207,9 +207,10 @@ int target_limit_exceeded(Client *client, void *target, const char *name)
  * @param buffer	Input string
  * @returns The new de-duplicated buffer (temporary storage, only valid until next canonize call)
  */
-char *canonize(char *buffer)
+char *canonize(const char *buffer)
 {
 	static char cbuf[2048];
+	char tbuf[2048];
 	char *s, *t, *cp = cbuf;
 	int  l = 0;
 	char *p = NULL, *p2;
@@ -219,11 +220,8 @@ char *canonize(char *buffer)
 	if (!buffer)
 		return NULL;
 
-	/* Ohh.. so lazy. But then again, this should never happen with a 2K buffer anyway. */
-	if (strlen(buffer) >= sizeof(cbuf))
-		buffer[sizeof(cbuf)-1] = '\0';
-
-	for (s = strtoken(&p, buffer, ","); s; s = strtoken(&p, NULL, ","))
+	strlcpy(tbuf, buffer, sizeof(tbuf));
+	for (s = strtoken(&p, tbuf, ","); s; s = strtoken(&p, NULL, ","))
 	{
 		if (l)
 		{

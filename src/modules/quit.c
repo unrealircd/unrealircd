@@ -59,11 +59,17 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_quit)
 {
-	char *comment = (parc > 1 && parv[1]) ? parv[1] : client->name;
-	static char commentbuf[MAXQUITLEN + 1];
+	const char *comment = (parc > 1 && parv[1]) ? parv[1] : client->name;
+	char commentbuf[MAXQUITLEN + 1];
+	char commentbuf2[MAXQUITLEN + 1];
 
-	if (parv[1] && (strlen(comment) > iConf.quit_length))
-		comment[iConf.quit_length] = '\0';
+	if (parc > 1 && parv[1])
+	{
+		strlncpy(commentbuf, parv[1], sizeof(commentbuf), iConf.quit_length);
+		comment = commentbuf;
+	} else {
+		comment = client->name;
+	}
 
 	if (MyUser(client))
 	{
@@ -120,7 +126,7 @@ CMD_FUNC(cmd_quit)
 				/* Comment changed? Then PART the user before we do the QUIT. */
 				if (comment != newcomment)
 				{
-					char *parx[4];
+					const char *parx[4];
 					char tmp[512];
 					int ret;
 
@@ -150,11 +156,11 @@ CMD_FUNC(cmd_quit)
 		}
 
 		if (PREFIX_QUIT)
-			snprintf(commentbuf, sizeof(commentbuf), "%s: %s", PREFIX_QUIT, comment);
+			snprintf(commentbuf2, sizeof(commentbuf2), "%s: %s", PREFIX_QUIT, comment);
 		else
-			strlcpy(commentbuf, comment, sizeof(commentbuf));
+			strlcpy(commentbuf2, comment, sizeof(commentbuf2));
 
-		exit_client(client, recv_mtags, commentbuf);
+		exit_client(client, recv_mtags, commentbuf2);
 	}
 	else
 	{

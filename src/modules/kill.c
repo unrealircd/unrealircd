@@ -56,7 +56,9 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_kill)
 {
-	char *targetlist, *reason;
+	char targetlist[BUFSIZE];
+	char reason[BUFSIZE];
+	char *str;
 	char *nick, *save = NULL;
 	Client *target;
 	Hook *h;
@@ -69,20 +71,18 @@ CMD_FUNC(cmd_kill)
 		return;
 	}
 
-	targetlist = parv[1];
-	reason = parv[2];
-
 	if (!IsServer(client->direction) && !ValidatePermissionsForPath("kill:global",client,NULL,NULL,NULL) && !ValidatePermissionsForPath("kill:local",client,NULL,NULL,NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
-	if (strlen(reason) > iConf.quit_length)
-		reason[iConf.quit_length] = '\0';
-
 	if (MyUser(client))
-		targetlist = canonize(targetlist);
+		strlcpy(targetlist, canonize(parv[1]), sizeof(targetlist));
+	else
+		strlcpy(targetlist, parv[1], sizeof(targetlist));
+
+	strlncpy(reason, parv[2], sizeof(reason), iConf.quit_length);
 
 	for (nick = strtoken(&save, targetlist, ","); nick; nick = strtoken(&save, NULL, ","))
 	{

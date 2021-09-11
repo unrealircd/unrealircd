@@ -55,7 +55,7 @@ CMD_FUNC(cmd_nick_local);
 CMD_FUNC(cmd_nick_remote);
 CMD_FUNC(cmd_uid);
 int _register_user(Client *client);
-void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Client *existing, int type);
+void nick_collision(Client *cptr, const char *newnick, const char *newid, Client *new, Client *existing, int type);
 int AllowClient(Client *client);
 
 MOD_TEST()
@@ -84,9 +84,9 @@ MOD_UNLOAD()
 }
 
 /** Hmm.. don't we already have such a function? */
-void set_user_modes_dont_spread(Client *client, char *umode)
+void set_user_modes_dont_spread(Client *client, const char *umode)
 {
-	char *args[4];
+	const char *args[4];
 
 	args[0] = client->name;
 	args[1] = client->name;
@@ -485,7 +485,7 @@ CMD_FUNC(cmd_uid)
 	char nick[NICKLEN + 1];
 	long lastnick = 0;
 	int differ = 1;
-	char *hostname, *username, *sstamp, *umodes, *virthost, *ip_raw, *realname;
+	const char *hostname, *username, *sstamp, *umodes, *virthost, *ip_raw, *realname;
 	const char *ip = NULL;
 
 	if (parc < 13)
@@ -791,8 +791,8 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 	}
 
 	{
-		char *parv[2];
-		parv[0] = client->name;
+		const char *parv[2];
+		parv[0] = NULL;
 		parv[1] = NULL;
 		do_cmd(client, NULL, "LUSERS", 1, parv);
 		if (IsDead(client))
@@ -863,8 +863,8 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 	if (tlds && !BadPtr(tlds->channel))
 	{
 		char *chans = strdup(tlds->channel);
-		char *args[3] = {
-			client->name,
+		const char *args[3] = {
+			NULL,
 			chans,
 			NULL
 		};
@@ -876,8 +876,8 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 	else if (!BadPtr(AUTO_JOIN_CHANS) && strcmp(AUTO_JOIN_CHANS, "0"))
 	{
 		char *chans = strdup(AUTO_JOIN_CHANS);
-		char *args[3] = {
-			client->name,
+		const char *args[3] = {
+			NULL,
 			chans,
 			NULL
 		};
@@ -1105,12 +1105,12 @@ int _register_user(Client *client)
  * I moved this all to a single routine here rather than having all code duplicated
  * due to SID vs NICK and some code quadruplicated.
  */
-void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Client *existing, int type)
+void nick_collision(Client *cptr, const char *newnick, const char *newid, Client *new, Client *existing, int type)
 {
 	char comment[512];
-	char *new_server, *existing_server;
-	char *who_won;
-	char *nickcol_reason;
+	const char *new_server, *existing_server;
+	const char *who_won;
+	const char *nickcol_reason;
 
 	if (type == NICKCOL_NEW_WON)
 		who_won = "new";

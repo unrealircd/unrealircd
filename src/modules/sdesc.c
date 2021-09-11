@@ -80,10 +80,9 @@ CMD_FUNC(cmd_sdesc)
 				REALLEN);
 			return;
 		}
-		parv[1][REALLEN] = '\0';
 	}
 
-	ircsnprintf(client->uplink->info, sizeof(client->uplink->info), "%s", parv[1]);
+	strlncpy(client->uplink->info, parv[1], sizeof(client->uplink->info), REALLEN);
 
 	sendto_server(client, 0, 0, NULL, ":%s SDESC :%s", client->name, parv[1]);
 

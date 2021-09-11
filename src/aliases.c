@@ -42,11 +42,12 @@ void strrangetok(char *in, char *out, char tok, short first, short last) {
 /* cmd_alias is a special type of command, it has an extra argument 'cmd'. */
 static int recursive_alias = 0;
 
-void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *cmd)
+void cmd_alias(Client *client, MessageTag *mtags, int parc, const char *parv[], const char *cmd)
 {
 	ConfigItem_alias *alias;
 	Client *acptr;
 	int ret;
+	char request[BUFSIZE];
 
 	if (!(alias = find_alias(cmd))) 
 	{
@@ -132,7 +133,10 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 		char *ptr = "";
 
 		if (!(parc < 2 || *parv[1] == '\0'))
-			ptr = parv[1]; 
+		{
+			strlcpy(request, parv[1], sizeof(request));
+			ptr = request;
+		}
 
 		for (format = alias->format; format; format = format->next)
 		{

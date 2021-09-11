@@ -873,7 +873,7 @@ extern void CommandDelX(Command *command, RealCommand *cmd);
 extern int CommandExists(const char *name);
 extern CommandOverride *CommandOverrideAdd(Module *module, const char *name, int priority, OverrideCmdFunc func);
 extern void CommandOverrideDel(CommandOverride *ovr);
-extern void CallCommandOverride(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, char *parv[]);
+extern void CallCommandOverride(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, const char *parv[]);
 
 extern void moddata_free_client(Client *acptr);
 extern void moddata_free_local_client(Client *acptr);

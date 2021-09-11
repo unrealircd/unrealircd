@@ -104,7 +104,8 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_silence)
 {
 	Silence *s;
-	char action, *p;
+	const char *p;
+	char action;
 
 	if (MyUser(client))
 	{

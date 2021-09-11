@@ -203,11 +203,11 @@ void clear_bans(Client *client, Channel *channel, char chmode)
  *
  * OLD syntax had a 'ts' parameter. No services are known to use this.
  */
-void channel_svsmode(Client *client, int parc, char *parv[]) 
+void channel_svsmode(Client *client, int parc, const char *parv[]) 
 {
 	Channel *channel;
 	Client *target;
-	char *m;
+	const char *m;
 	int what = MODE_ADD;
 	int i = 4; // wtf is this
 	Member *cm;
@@ -221,7 +221,7 @@ void channel_svsmode(Client *client, int parc, char *parv[])
 	if (!(channel = find_channel(parv[1])))
 		return;
 
-	for(m = parv[2]; *m; m++)
+	for (m = parv[2]; *m; m++)
 	{
 		switch (*m)
 		{
@@ -312,10 +312,10 @@ void channel_svsmode(Client *client, int parc, char *parv[])
  *
  * show_change can be 0 (for svsmode) or 1 (for svs2mode).
  */
-void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], int show_change)
+void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *parv[], int show_change)
 {
 	int i;
-	char *m;
+	const char *m;
 	Client *target;
 	int  what;
 	long setflags = 0;

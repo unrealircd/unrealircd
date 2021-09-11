@@ -34,13 +34,13 @@ static Efunction *Efunctions[MAXEFUNCTIONS]; /* Efunction objects (used for reha
 static EfunctionsList efunction_table[MAXEFUNCTIONS];
 
 /* Efuncs */
-void (*do_join)(Client *client, int parc, char *parv[]);
+void (*do_join)(Client *client, int parc, const char *parv[]);
 void (*join_channel)(Channel *channel, Client *client, MessageTag *mtags, int flags);
 int (*can_join)(Client *client, Channel *channel, const char *key);
-void (*do_mode)(Channel *channel, Client *client, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
-void (*set_mode)(Channel *channel, Client *client, int parc, char *parv[], u_int *pcount,
+void (*do_mode)(Channel *channel, Client *client, MessageTag *mtags, int parc, const char *parv[], time_t sendts, int samode);
+void (*set_mode)(Channel *channel, Client *client, int parc, const char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
-void (*cmd_umode)(Client *client, MessageTag *mtags, int parc, char *parv[]);
+void (*cmd_umode)(Client *client, MessageTag *mtags, int parc, const char *parv[]);
 int (*register_user)(Client *client);
 int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
@@ -67,7 +67,7 @@ TKL *(*find_qline)(Client *client, const char *nick, int *ishold);
 TKL *(*find_tkline_match_zap)(Client *client);
 void (*tkl_stats)(Client *client, int type, const char *para, int *cnt);
 void (*tkl_sync)(Client *client);
-void (*cmd_tkl)(Client *client, MessageTag *mtags, int parc, char *parv[]);
+void (*cmd_tkl)(Client *client, MessageTag *mtags, int parc, const char *parv[]);
 int (*place_host_ban)(Client *client, BanAction action, const char *reason, long duration);
 int (*match_spamfilter)(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, TKL **rettk);
 int (*match_spamfilter_mtags)(Client *client, MessageTag *mtags, const char *cmd);

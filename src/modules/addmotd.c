@@ -60,7 +60,7 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_addmotd)
 {
 	FILE *conf;
-	char *text;
+	const char *text;
 
 	text = parc > 1 ? parv[1] : NULL;
 
