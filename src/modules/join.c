@@ -315,6 +315,11 @@ void _do_join(Client *client, int parc, char *parv[])
 		sendnumeric(client, ERR_NEEDMOREPARAMS, "JOIN");
 		return;
 	}
+
+	/* For our tests we need super accurate time for JOINs or they mail fail. */
+	gettimeofday(&timeofday_tv, NULL);
+	timeofday = timeofday_tv.tv_sec;
+
 	bouncedtimes++;
 	orig_parv1 = parv[1];
 	/* don't use 'return;' but 'RET();' from here ;p */
