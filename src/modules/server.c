@@ -1492,8 +1492,8 @@ int server_sync(Client *client, ConfigItem_link *aconf, int incoming)
 
 void tls_link_notification_verify(Client *client, ConfigItem_link *aconf)
 {
-	char *spki_fp;
-	char *tls_fp;
+	const char *spki_fp;
+	const char *tls_fp;
 	char *errstr = NULL;
 	int verify_ok;
 

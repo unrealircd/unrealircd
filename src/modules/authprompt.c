@@ -295,7 +295,7 @@ void send_first_auth(Client *client)
 {
 	Client *sasl_server;
 	char *addr = BadPtr(client->ip) ? "0" : client->ip;
-	char *certfp = moddata_client_get(client, "certfp");
+	const char *certfp = moddata_client_get(client, "certfp");
 	sasl_server = find_client(SASL_SERVER, NULL);
 	if (!sasl_server)
 	{

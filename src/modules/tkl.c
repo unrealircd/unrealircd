@@ -4434,7 +4434,7 @@ void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *cli
 	} else
 	if (ban_target == BAN_TARGET_CERTFP)
 	{
-		char *fp = moddata_client_get(client, "certfp");
+		const char *fp = moddata_client_get(client, "certfp");
 		if (fp)
 		{
 			/* Place a ban on ~S:sha256sumofclientcertificate */

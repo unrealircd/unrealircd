@@ -117,7 +117,7 @@ CMD_FUNC(cmd_metadata);
 CMD_FUNC(cmd_metadata_remote);
 CMD_FUNC(cmd_metadata_local);
 EVENT(metadata_queue_evt);
-char *metadata_cap_param(Client *client);
+const char *metadata_cap_param(Client *client);
 char *metadata_isupport_param(void);
 int metadata_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int metadata_configposttest(int *errs);
@@ -396,7 +396,7 @@ MOD_UNLOAD() {
 	return MOD_SUCCESS;
 }
 
-char *metadata_cap_param(Client *client)
+const char *metadata_cap_param(Client *client)
 {
 	static char buf[20];
 	ircsnprintf(buf, sizeof(buf), "maxsub=%d", metadata_settings.max_subscriptions);

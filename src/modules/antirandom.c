@@ -897,7 +897,7 @@ static int is_exempt(Client *client)
 	/* WEBIRC gateway and exempt? */
 	if (cfg.except_webirc)
 	{
-		char *val = moddata_client_get(client, "webirc");
+		const char *val = moddata_client_get(client, "webirc");
 		if (val && (atoi(val)>0))
 			return 1;
 	}

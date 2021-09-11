@@ -944,7 +944,8 @@ const char *get_security_groups(Client *client)
 const char *get_connect_extinfo(Client *client)
 {
 	static char retbuf[512];
-	char tmp[512], *s;
+	char tmp[512];
+	const char *s;
 	const char *secgroups;
 	NameValuePrioList *list = NULL, *e;
 

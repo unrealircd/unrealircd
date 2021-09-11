@@ -17,8 +17,8 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 void tls_cipher_free(ModData *m);
-char *tls_cipher_serialize(ModData *m);
-void tls_cipher_unserialize(char *str, ModData *m);
+const char *tls_cipher_serialize(ModData *m);
+void tls_cipher_unserialize(const char *str, ModData *m);
 int tls_cipher_handshake(Client *client);
 int tls_cipher_connect(Client *client);
 int tls_cipher_whois(Client *client, Client *target);
@@ -63,7 +63,7 @@ int tls_cipher_handshake(Client *client)
 {
 	if (client->local->ssl)
 	{
-		char *cipher = tls_get_cipher(client);
+		const char *cipher = tls_get_cipher(client);
 
 		if (!cipher)
 			return 0;
@@ -78,14 +78,14 @@ void tls_cipher_free(ModData *m)
 	safe_free(m->str);
 }
 
-char *tls_cipher_serialize(ModData *m)
+const char *tls_cipher_serialize(ModData *m)
 {
 	if (!m->str)
 		return NULL;
 	return m->str;
 }
 
-void tls_cipher_unserialize(char *str, ModData *m)
+void tls_cipher_unserialize(const char *str, ModData *m)
 {
 	safe_strdup(m->str, str);
 }

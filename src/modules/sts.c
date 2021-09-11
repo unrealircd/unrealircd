@@ -78,7 +78,7 @@ int sts_capability_visible(Client *client)
 	return 0;
 }
 
-char *sts_capability_parameter(Client *client)
+const char *sts_capability_parameter(Client *client)
 {
 	TLSOptions *ssl;
 	static char buf[256];

@@ -113,9 +113,7 @@ const char *extban_certfp_conv_param(BanContext *b, Extban *extban)
 
 int extban_certfp_is_banned(BanContext *b)
 {
-	char *fp;
-
-	fp = moddata_client_get(b->client, "certfp");
+	const char *fp = moddata_client_get(b->client, "certfp");
 
 	if (!fp)
 		return 0; /* not using TLS */

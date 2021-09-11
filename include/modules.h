@@ -153,8 +153,8 @@ struct ModDataInfo {
 	int slot; /**< Assigned slot */
 	char unloaded; /**< Module being unloaded? */
 	void (*free)(ModData *m); /**< Function will be called when the data needs to be freed (may be NULL if not using dynamic storage) */
-	char *(*serialize)(ModData *m); /**< Function which converts the data to a string. May return NULL if 'm' contains no data (since for example m->ptr may be NULL). */
-	void (*unserialize)(char *str, ModData *m); /**< Function which converts the string back to data */
+	const char *(*serialize)(ModData *m); /**< Function which converts the data to a string. May return NULL if 'm' contains no data (since for example m->ptr may be NULL). */
+	void (*unserialize)(const char *str, ModData *m); /**< Function which converts the string back to data */
 	ModDataSync sync; /**< Send in netsynch (when servers connect) */
 	int remote_write; /**< Allow remote servers to set/unset this moddata, even if it they target one of our own clients */
 	int self_write; /**< Allow remote servers to set/unset moddata of their own server object (irc1.example.net writing the MD object of irc1.example.net) */
@@ -457,8 +457,8 @@ struct ClientCapability {
 	char *name;                              /**< The name of the CAP */
 	long cap;                                /**< The acptr->user->proto we should set (if any, can be 0, like for sts) */
 	int flags;                               /**< A flag from CLICAP_FLAGS_* */
-	int (*visible)(Client *);               /**< Should the capability be visible? Note: parameter may be NULL. [optional] */
-	char *(*parameter)(Client *);           /**< CAP parameters. Note: parameter may be NULL. [optional] */
+	int (*visible)(Client *);                /**< Should the capability be visible? Note: parameter may be NULL. [optional] */
+	const char *(*parameter)(Client *);      /**< CAP parameters. Note: parameter may be NULL. [optional] */
 	MessageTagHandler *mtag_handler;         /**< For reverse dependency */
 	Module *owner;                           /**< Module introducing this CAP. */
 	char unloaded;                           /**< Internal flag to indicate module is being unloaded */
@@ -468,7 +468,7 @@ typedef struct {
 	char *name;
 	int flags;
 	int (*visible)(Client *);
-	char *(*parameter)(Client *);
+	const char *(*parameter)(Client *);
 } ClientCapabilityInfo;
 
 /** @defgroup MessagetagAPI Message tag API
@@ -749,21 +749,19 @@ extern void EventStatus(Client *client);
 extern void SetupEvents(void);
 
 
-extern void    Module_Init(void);
-extern char    *Module_Create(char *path);
-extern const char    *Module_TransformPath(const char *path_);
-extern void    Init_all_testing_modules(void);
-extern void    Unload_all_loaded_modules(void);
-extern void    Unload_all_testing_modules(void);
-extern int     Module_Unload(char *name);
-extern vFP     Module_Sym(char *name);
-extern vFP     Module_SymX(char *name, Module **mptr);
-extern int	Module_free(Module *mod);
-
+extern void Module_Init(void);
+extern const char *Module_Create(const char *path);
+extern const char *Module_TransformPath(const char *path_);
+extern void Init_all_testing_modules(void);
+extern void Unload_all_loaded_modules(void);
+extern void Unload_all_testing_modules(void);
+extern int Module_Unload(const char *name);
+extern vFP Module_Sym(const char *name);
+extern vFP Module_SymX(const char *name, Module **mptr);
+extern int Module_free(Module *mod);
 #ifdef __OpenBSD__
-extern void *obsd_dlsym(void *handle, char *symbol);
+extern void *obsd_dlsym(void *handle, const char *symbol);
 #endif
-
 #ifdef _WIN32
 extern const char *our_dlerror(void);
 #endif
@@ -882,26 +880,26 @@ extern void moddata_free_local_client(Client *acptr);
 extern void moddata_free_channel(Channel *channel);
 extern void moddata_free_member(Member *m);
 extern void moddata_free_membership(Membership *m);
-extern ModDataInfo *findmoddata_byname(char *name, ModDataType type);
-extern int moddata_client_set(Client *acptr, char *varname, char *value);
-extern char *moddata_client_get(Client *acptr, char *varname);
-extern ModData *moddata_client_get_raw(Client *client, char *varname);
-extern int moddata_local_client_set(Client *acptr, char *varname, char *value);
-extern char *moddata_local_client_get(Client *acptr, char *varname);
+extern ModDataInfo *findmoddata_byname(const char *name, ModDataType type);
+extern int moddata_client_set(Client *acptr, const char *varname, const char *value);
+extern const char *moddata_client_get(Client *acptr, const char *varname);
+extern ModData *moddata_client_get_raw(Client *client, const char *varname);
+extern int moddata_local_client_set(Client *acptr, const char *varname, const char *value);
+extern const char *moddata_local_client_get(Client *acptr, const char *varname);
 
-extern int LoadPersistentPointerX(ModuleInfo *modinfo, char *varshortname, void **var, void (*free_variable)(ModData *m));
+extern int LoadPersistentPointerX(ModuleInfo *modinfo, const char *varshortname, void **var, void (*free_variable)(ModData *m));
 #define LoadPersistentPointer(modinfo, var, free_variable) LoadPersistentPointerX(modinfo, #var, (void **)&var, free_variable)
-extern void SavePersistentPointerX(ModuleInfo *modinfo, char *varshortname, void *var);
+extern void SavePersistentPointerX(ModuleInfo *modinfo, const char *varshortname, void *var);
 #define SavePersistentPointer(modinfo, var) SavePersistentPointerX(modinfo, #var, var)
 
-extern int LoadPersistentIntX(ModuleInfo *modinfo, char *varshortname, int *var);
+extern int LoadPersistentIntX(ModuleInfo *modinfo, const char *varshortname, int *var);
 #define LoadPersistentInt(modinfo, var) LoadPersistentIntX(modinfo, #var, &var)
-extern void SavePersistentIntX(ModuleInfo *modinfo, char *varshortname, int var);
+extern void SavePersistentIntX(ModuleInfo *modinfo, const char *varshortname, int var);
 #define SavePersistentInt(modinfo, var) SavePersistentIntX(modinfo, #var, var)
 
-extern int LoadPersistentLongX(ModuleInfo *modinfo, char *varshortname, long *var);
+extern int LoadPersistentLongX(ModuleInfo *modinfo, const char *varshortname, long *var);
 #define LoadPersistentLong(modinfo, var) LoadPersistentLongX(modinfo, #var, &var)
-extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long var);
+extern void SavePersistentLongX(ModuleInfo *modinfo, const char *varshortname, long var);
 #define SavePersistentLong(modinfo, var) SavePersistentLongX(modinfo, #var, var)
 
 /** Hooks trigger on "events", such as a new user connecting or joining a channel,

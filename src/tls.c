@@ -605,10 +605,10 @@ void SSL_set_nonblocking(SSL *s)
 }
 
 /** Get TLS ciphersuite */
-char *tls_get_cipher(Client *client)
+const char *tls_get_cipher(Client *client)
 {
 	static char buf[256];
-	char *cached;
+	const char *cached;
 
 	cached = moddata_client_get(client, "tls_cipher");
 	if (cached)

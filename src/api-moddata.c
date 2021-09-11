@@ -294,7 +294,7 @@ ModDataInfo *md, *md_next;
 	}
 }
 
-ModDataInfo *findmoddata_byname(char *name, ModDataType type)
+ModDataInfo *findmoddata_byname(const char *name, ModDataType type)
 {
 ModDataInfo *md;
 
@@ -317,7 +317,7 @@ int module_has_moddata(Module *mod)
 }
 
 /** Set ModData for client (via variable name, string value) */
-int moddata_client_set(Client *client, char *varname, char *value)
+int moddata_client_set(Client *client, const char *varname, const char *value)
 {
 	ModDataInfo *md;
 
@@ -348,7 +348,7 @@ int moddata_client_set(Client *client, char *varname, char *value)
 }
 
 /** Get ModData for client (via variable name) */
-char *moddata_client_get(Client *client, char *varname)
+const char *moddata_client_get(Client *client, const char *varname)
 {
 	ModDataInfo *md;
 
@@ -361,7 +361,7 @@ char *moddata_client_get(Client *client, char *varname)
 }
 
 /** Get ModData for client (via variable name) */
-ModData *moddata_client_get_raw(Client *client, char *varname)
+ModData *moddata_client_get_raw(Client *client, const char *varname)
 {
 	ModDataInfo *md;
 
@@ -374,7 +374,7 @@ ModData *moddata_client_get_raw(Client *client, char *varname)
 }
 
 /** Set ModData for LocalClient (via variable name, string value) */
-int moddata_local_client_set(Client *client, char *varname, char *value)
+int moddata_local_client_set(Client *client, const char *varname, const char *value)
 {
 	ModDataInfo *md;
 
@@ -408,7 +408,7 @@ int moddata_local_client_set(Client *client, char *varname, char *value)
 }
 
 /** Get ModData for LocalClient (via variable name) */
-char *moddata_local_client_get(Client *client, char *varname)
+const char *moddata_local_client_get(Client *client, const char *varname)
 {
 	ModDataInfo *md;
 
@@ -424,7 +424,7 @@ char *moddata_local_client_get(Client *client, char *varname)
 }
 
 /** Set local variable moddata (via variable name, string value) */
-int moddata_local_variable_set(char *varname, char *value)
+int moddata_local_variable_set(const char *varname, const char *value)
 {
 	ModDataInfo *md;
 
@@ -449,7 +449,7 @@ int moddata_local_variable_set(char *varname, char *value)
 }
 
 /** Set global variable moddata (via variable name, string value) */
-int moddata_global_variable_set(char *varname, char *value)
+int moddata_global_variable_set(const char *varname, const char *value)
 {
 	ModDataInfo *md;
 

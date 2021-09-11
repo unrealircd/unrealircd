@@ -23,8 +23,8 @@ struct geoip_base_config_s {
 
 /* Forward declarations */
 void geoip_base_free(ModData *m);
-char *geoip_base_serialize(ModData *m);
-void geoip_base_unserialize(char *str, ModData *m);
+const char *geoip_base_serialize(ModData *m);
+void geoip_base_unserialize(const char *str, ModData *m);
 int geoip_base_handshake(Client *client);
 int geoip_base_whois(Client *client, Client *target);
 int geoip_connect_extinfo(Client *client, NameValuePrioList **list);
@@ -178,7 +178,7 @@ void geoip_base_free(ModData *m)
 	}
 }
 
-char *geoip_base_serialize(ModData *m)
+const char *geoip_base_serialize(ModData *m)
 {
 	static char buf[512];
 	GeoIPResult *geo;
@@ -194,7 +194,7 @@ char *geoip_base_serialize(ModData *m)
 	return buf;
 }
 
-void geoip_base_unserialize(char *str, ModData *m)
+void geoip_base_unserialize(const char *str, ModData *m)
 {
 	char buf[512], *p=NULL, *varname, *value;
 	char *country_name = NULL;

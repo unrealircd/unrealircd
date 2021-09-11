@@ -925,7 +925,7 @@ void send_cap_notify(int add, char *token)
 		{
 			if (add)
 			{
-				char *args = NULL;
+				const char *args = NULL;
 				if (clicap)
 				{
 					if (clicap->visible && !clicap->visible(client))

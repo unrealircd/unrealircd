@@ -362,7 +362,7 @@ static int authcheck_tls_clientcert_fingerprint(Client *client, AuthConfig *as, 
 {
 	int i, k;
 	char hexcolon[EVP_MAX_MD_SIZE * 3 + 1];
-	char *fp;
+	const char *fp;
 
 	if (!client->local->ssl)
 		return 0;

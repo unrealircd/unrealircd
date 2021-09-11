@@ -33,10 +33,10 @@ ModuleHeader MOD_HEADER
 	};
 
 /* Forward declarations */
-char *link_security_md_serialize(ModData *m);
-void link_security_md_unserialize(char *str, ModData *m);
+const char *link_security_md_serialize(ModData *m);
+void link_security_md_unserialize(const char *str, ModData *m);
 EVENT(checklinksec);
-char *link_security_capability_parameter(Client *client);
+const char *link_security_capability_parameter(Client *client);
 CMD_FUNC(cmd_linksecurity);
 
 /* Global variables */
@@ -98,7 +98,7 @@ MOD_UNLOAD()
  */
 #define LNKSECMAGIC 100
 
-char *link_security_md_serialize(ModData *m)
+const char *link_security_md_serialize(ModData *m)
 {
 	static char buf[32];
 	if (m->i == 0)
@@ -107,7 +107,7 @@ char *link_security_md_serialize(ModData *m)
 	return buf;
 }
 
-void link_security_md_unserialize(char *str, ModData *m)
+void link_security_md_unserialize(const char *str, ModData *m)
 {
 	m->i = atoi(str) + LNKSECMAGIC;
 }
@@ -178,7 +178,6 @@ EVENT(checklinksec)
 	int last_local_link_security = local_link_security;
 	int last_global_link_security = global_link_security;
 	Client *client;
-	char *s;
 	int v;
 	int warning_sent = 0;
 	
@@ -194,7 +193,7 @@ EVENT(checklinksec)
 	global_link_security = 2;
 	list_for_each_entry(client, &global_server_list, client_node)
 	{
-		s = moddata_client_get(client, "link-security");
+		const char *s = moddata_client_get(client, "link-security");
 		if (s)
 		{
 			v = atoi(s);
@@ -237,7 +236,7 @@ EVENT(checklinksec)
 	}
 }
 
-char *link_security_capability_parameter(Client *client)
+const char *link_security_capability_parameter(Client *client)
 {
 	return valtostr(effective_link_security);
 }
@@ -246,8 +245,6 @@ char *link_security_capability_parameter(Client *client)
 CMD_FUNC(cmd_linksecurity)
 {
 	Client *acptr;
-	char *s;
-	int v;
 	
 	if (!IsOper(client))
 	{
@@ -260,15 +257,11 @@ CMD_FUNC(cmd_linksecurity)
 	sendtxtnumeric(client, "= By server =");
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		v = -1;
-		s = moddata_client_get(acptr, "link-security");
+		const char *s = moddata_client_get(acptr, "link-security");
 		if (s)
-		{
-			v = atoi(s);
-			sendtxtnumeric(client, "%s: level %d", acptr->name, v);
-		} else {
+			sendtxtnumeric(client, "%s: level %d", acptr->name, atoi(s));
+		else
 			sendtxtnumeric(client, "%s: level UNKNOWN", acptr->name);
-		}
 	}
 	
 	sendtxtnumeric(client, "-");

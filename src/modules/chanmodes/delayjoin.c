@@ -32,8 +32,8 @@ int delayjoin_is_ok(Client *client, Channel *channel, char mode, const char *par
 int moded_chanmode(Client *client, Channel *channel,
                    MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode);
 int moded_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, const char *text, SendType sendtype);
-char *moded_serialize(ModData *m);
-void moded_unserialize(char *str, ModData *m);
+const char *moded_serialize(ModData *m);
+void moded_unserialize(const char *str, ModData *m);
 
 MOD_INIT()
 {
@@ -395,12 +395,12 @@ int moded_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, const 
 	return 0;
 }
 
-char *moded_serialize(ModData *m)
+const char *moded_serialize(ModData *m)
 {
 	return m->i ? "1" : "0";
 }
 
-void moded_unserialize(char *str, ModData *m)
+void moded_unserialize(const char *str, ModData *m)
 {
 	m->i = atoi(str);
 }

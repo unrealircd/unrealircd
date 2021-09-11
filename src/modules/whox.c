@@ -81,8 +81,8 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 static void do_who_on_channel(Client *client, Channel *channel,
                               int member, int operspy, struct who_format *fmt);
 static int convert_classical_who_request(Client *client, int *parc, char *parv[], char **orig_mask, struct who_format *fmt);
-char *whox_md_serialize(ModData *m);
-void whox_md_unserialize(char *str, ModData *m);
+const char *whox_md_serialize(ModData *m);
+void whox_md_unserialize(const char *str, ModData *m);
 void whox_md_free(ModData *md);
 static void append_format(char *buf, size_t bufsize, size_t *pos, const char *fmt, ...) __attribute__((format(printf,4,5)));
 
@@ -127,7 +127,7 @@ MOD_UNLOAD()
 }
 
 /** whox module data operations: serialize (rare) */
-char *whox_md_serialize(ModData *m)
+const char *whox_md_serialize(ModData *m)
 {
 	static char buf[32];
 	if (m->i == 0)
@@ -137,7 +137,7 @@ char *whox_md_serialize(ModData *m)
 }
 
 /** whox module data operations: unserialize (rare) */
-void whox_md_unserialize(char *str, ModData *m)
+void whox_md_unserialize(const char *str, ModData *m)
 {
 	m->i = atoi(str);
 }

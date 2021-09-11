@@ -9203,7 +9203,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 
 int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 {
-	char *ret;
+	const char *ret;
 	if (!ce->value)
 	{
 		config_status("%s:%i: loadmodule without filename",

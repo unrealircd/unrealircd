@@ -33,9 +33,9 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 void saslmechlist_free(ModData *m);
-char *saslmechlist_serialize(ModData *m);
-void saslmechlist_unserialize(char *str, ModData *m);
-char *sasl_capability_parameter(Client *client);
+const char *saslmechlist_serialize(ModData *m);
+void saslmechlist_unserialize(const char *str, ModData *m);
+const char *sasl_capability_parameter(Client *client);
 int sasl_server_synced(Client *client);
 int sasl_account_login(Client *client, MessageTag *mtags);
 EVENT(sasl_timeout);
@@ -233,7 +233,7 @@ CMD_FUNC(cmd_authenticate)
 	if (agent_p == NULL)
 	{
 		char *addr = BadPtr(client->ip) ? "0" : client->ip;
-		char *certfp = moddata_client_get(client, "certfp");
+		const char *certfp = moddata_client_get(client, "certfp");
 
 		sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s H %s %s",
 		    me.name, SASL_SERVER, client->id, addr, addr);
@@ -416,19 +416,19 @@ void saslmechlist_free(ModData *m)
 	safe_free(m->str);
 }
 
-char *saslmechlist_serialize(ModData *m)
+const char *saslmechlist_serialize(ModData *m)
 {
 	if (!m->str)
 		return NULL;
 	return m->str;
 }
 
-void saslmechlist_unserialize(char *str, ModData *m)
+void saslmechlist_unserialize(const char *str, ModData *m)
 {
 	safe_strdup(m->str, str);
 }
 
-char *sasl_capability_parameter(Client *client)
+const char *sasl_capability_parameter(Client *client)
 {
 	Client *server;
 

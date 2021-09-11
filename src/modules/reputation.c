@@ -132,8 +132,8 @@ ModDataInfo *reputation_md; /* Module Data structure which we acquire */
 
 /* Forward declarations */
 void reputation_md_free(ModData *m);
-char *reputation_md_serialize(ModData *m);
-void reputation_md_unserialize(char *str, ModData *m);
+const char *reputation_md_serialize(ModData *m);
+void reputation_md_unserialize(const char *str, ModData *m);
 void reputation_config_setdefaults(struct cfgstruct *cfg);
 void reputation_free_config(struct cfgstruct *cfg);
 CMD_FUNC(reputation_cmd);
@@ -1329,7 +1329,7 @@ void reputation_md_free(ModData *m)
 	m->l = 0;
 }
 
-char *reputation_md_serialize(ModData *m)
+const char *reputation_md_serialize(ModData *m)
 {
 	static char buf[32];
 	if (m->i == 0)
@@ -1338,7 +1338,7 @@ char *reputation_md_serialize(ModData *m)
 	return buf;
 }
 
-void reputation_md_unserialize(char *str, ModData *m)
+void reputation_md_unserialize(const char *str, ModData *m)
 {
 	m->i = atoi(str);
 }

@@ -52,7 +52,7 @@ Module *Module_make(ModuleHeader *header,
 
 #ifdef UNDERSCORE
 /* dlsym for OpenBSD */
-void *obsd_dlsym(void *handle, char *symbol)
+void *obsd_dlsym(void *handle, const char *symbol)
 {
 	size_t buflen = strlen(symbol) + 2;
 	char *obsdsymbol = safe_alloc(buflen);
@@ -131,7 +131,7 @@ void DeleteTempModules(void)
 #endif	
 }
 
-Module *Module_Find(char *name)
+Module *Module_Find(const char *name)
 {
 	Module *p;
 	
@@ -149,7 +149,7 @@ Module *Module_Find(char *name)
 	
 }
 
-int parse_modsys_version(char *version)
+int parse_modsys_version(const char *version)
 {
 	if (!strcmp(version, "unrealircd-6"))
 		return 0x600000;
@@ -158,7 +158,7 @@ int parse_modsys_version(char *version)
 
 void make_compiler_string(char *buf, size_t buflen, unsigned int ver)
 {
-unsigned int maj, min, plevel;
+	unsigned int maj, min, plevel;
 
 	if (ver == 0)
 	{
@@ -226,7 +226,7 @@ const char *Module_GetRelPath(const char *fullpath)
 /** Validate a modules' ModuleHeader.
  * @returns Error message is returned, or NULL if everything is OK.
  */
-static char *validate_mod_header(const char *relpath, ModuleHeader *mod_header)
+static const char *validate_mod_header(const char *relpath, ModuleHeader *mod_header)
 {
 	char *p;
 	static char buf[256];
@@ -278,7 +278,7 @@ int module_already_in_testing(const char *relpath)
 /*
  * Returns an error if insucessful .. yes NULL is OK! 
 */
-char  *Module_Create(char *path_)
+const char *Module_Create(const char *path_)
 {
 #ifdef _WIN32
 	HMODULE 	Mod;
@@ -295,7 +295,7 @@ char  *Module_Create(char *path_)
 	const char	*path, *relpath, *tmppath;
 	ModuleHeader    *mod_header = NULL;
 	int		ret = 0;
-	char		*reterr;
+	const char	*reterr;
 	Module          *mod = NULL, **Mod_Handle = NULL;
 	char *expectedmodversion = our_mod_version;
 	unsigned int expectedcompilerversion = our_compiler_version;
@@ -447,7 +447,7 @@ char  *Module_Create(char *path_)
 	else
 	{
 		/* Return the error .. */
-		return ((char *)irc_dlerror());
+		return irc_dlerror();
 	}
 }
 
@@ -695,7 +695,7 @@ int    Module_free(Module *mod)
  *      1                Module unloaded
  *      2                Module wishes delayed unloading, has placed event
  */
-int Module_Unload(char *name)
+int Module_Unload(const char *name)
 {
 	Module *m;
 	int    (*Mod_Unload)();
@@ -886,7 +886,7 @@ CMD_FUNC(cmd_module)
 	sendtxtnumeric(client, "Override: %s", tmp);
 }
 
-Hooktype *HooktypeFind(char *string) {
+Hooktype *HooktypeFind(const char *string) {
 	Hooktype *hooktype;
 	for (hooktype = Hooktypes; hooktype->string ;hooktype++) {
 		if (!strcasecmp(hooktype->string, string))
@@ -1323,7 +1323,7 @@ const char *our_dlerror(void)
  * @note  The name is checked against the module name,
  *        this can be a problem if two modules have the same name.
  */
-int is_module_loaded(char *name)
+int is_module_loaded(const char *name)
 {
 	Module *mi;
 	for (mi = Modules; mi; mi = mi->next)
@@ -1337,17 +1337,17 @@ int is_module_loaded(char *name)
 	return 0;
 }
 
-static char *mod_var_name(ModuleInfo *modinfo, char *varshortname)
+static const char *mod_var_name(ModuleInfo *modinfo, const char *varshortname)
 {
 	static char fullname[512];
 	snprintf(fullname, sizeof(fullname), "%s:%s", modinfo->handle->header->name, varshortname);
 	return fullname;
 }
 
-int LoadPersistentPointerX(ModuleInfo *modinfo, char *varshortname, void **var, void (*free_variable)(ModData *m))
+int LoadPersistentPointerX(ModuleInfo *modinfo, const char *varshortname, void **var, void (*free_variable)(ModData *m))
 {
 	ModDataInfo *m;
-	char *fullname = mod_var_name(modinfo, varshortname);
+	const char *fullname = mod_var_name(modinfo, varshortname);
 
 	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
 	if (m)
@@ -1358,27 +1358,28 @@ int LoadPersistentPointerX(ModuleInfo *modinfo, char *varshortname, void **var, 
 		ModDataInfo mreq;
 		memset(&mreq, 0, sizeof(mreq));
 		mreq.type = MODDATATYPE_LOCAL_VARIABLE;
-		mreq.name = fullname;
+		mreq.name = strdup(fullname);
 		mreq.free = free_variable;
 		m = ModDataAdd(modinfo->handle, mreq);
 		moddata_local_variable(m).ptr = NULL;
+		safe_free(mreq.name);
 		return 0;
 	}
 }
 
-void SavePersistentPointerX(ModuleInfo *modinfo, char *varshortname, void *var)
+void SavePersistentPointerX(ModuleInfo *modinfo, const char *varshortname, void *var)
 {
 	ModDataInfo *m;
-	char *fullname = mod_var_name(modinfo, varshortname);
+	const char *fullname = mod_var_name(modinfo, varshortname);
 
 	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
 	moddata_local_variable(m).ptr = var;
 }
 
-int LoadPersistentIntX(ModuleInfo *modinfo, char *varshortname, int *var)
+int LoadPersistentIntX(ModuleInfo *modinfo, const char *varshortname, int *var)
 {
 	ModDataInfo *m;
-	char *fullname = mod_var_name(modinfo, varshortname);
+	const char *fullname = mod_var_name(modinfo, varshortname);
 
 	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
 	if (m)
@@ -1389,27 +1390,28 @@ int LoadPersistentIntX(ModuleInfo *modinfo, char *varshortname, int *var)
 		ModDataInfo mreq;
 		memset(&mreq, 0, sizeof(mreq));
 		mreq.type = MODDATATYPE_LOCAL_VARIABLE;
-		mreq.name = fullname;
+		mreq.name = strdup(fullname);
 		mreq.free = NULL;
 		m = ModDataAdd(modinfo->handle, mreq);
 		moddata_local_variable(m).i = 0;
+		safe_free(mreq.name);
 		return 0;
 	}
 }
 
-void SavePersistentIntX(ModuleInfo *modinfo, char *varshortname, int var)
+void SavePersistentIntX(ModuleInfo *modinfo, const char *varshortname, int var)
 {
 	ModDataInfo *m;
-	char *fullname = mod_var_name(modinfo, varshortname);
+	const char *fullname = mod_var_name(modinfo, varshortname);
 
 	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
 	moddata_local_variable(m).i = var;
 }
 
-int LoadPersistentLongX(ModuleInfo *modinfo, char *varshortname, long *var)
+int LoadPersistentLongX(ModuleInfo *modinfo, const char *varshortname, long *var)
 {
 	ModDataInfo *m;
-	char *fullname = mod_var_name(modinfo, varshortname);
+	const char *fullname = mod_var_name(modinfo, varshortname);
 
 	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
 	if (m)
@@ -1420,18 +1422,19 @@ int LoadPersistentLongX(ModuleInfo *modinfo, char *varshortname, long *var)
 		ModDataInfo mreq;
 		memset(&mreq, 0, sizeof(mreq));
 		mreq.type = MODDATATYPE_LOCAL_VARIABLE;
-		mreq.name = fullname;
+		mreq.name = strdup(fullname);
 		mreq.free = NULL;
 		m = ModDataAdd(modinfo->handle, mreq);
 		moddata_local_variable(m).l = 0;
+		safe_free(mreq.name);
 		return 0;
 	}
 }
 
-void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long var)
+void SavePersistentLongX(ModuleInfo *modinfo, const char *varshortname, long var)
 {
 	ModDataInfo *m;
-	char *fullname = mod_var_name(modinfo, varshortname);
+	const char *fullname = mod_var_name(modinfo, varshortname);
 
 	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
 	moddata_local_variable(m).l = var;

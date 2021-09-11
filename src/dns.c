@@ -40,9 +40,9 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct hostent *he);
 void unrealdns_delasyncconnects(void);
 static uint64_t unrealdns_hash_ip(const char *ip);
-static void unrealdns_addtocache(char *name, char *ip);
-static char *unrealdns_findcache_ip(char *ip);
-struct hostent *unreal_create_hostent(char *name, char *ip);
+static void unrealdns_addtocache(const char *name, const char *ip);
+static const char *unrealdns_findcache_ip(const char *ip);
+struct hostent *unreal_create_hostent(const char *name, const char *ip);
 static void unrealdns_freeandremovereq(DNSReq *r);
 void unrealdns_removecacherecord(DNSCache *c);
 
@@ -201,7 +201,7 @@ void unrealdns_addreqtolist(DNSReq *r)
 struct hostent *unrealdns_doclient(Client *client)
 {
 	DNSReq *r;
-	char *cache_name;
+	const char *cache_name;
 
 	cache_name = unrealdns_findcache_ip(client->ip);
 	if (cache_name)
@@ -232,7 +232,7 @@ struct hostent *unrealdns_doclient(Client *client)
 
 /** Resolve a name to an IP, for a link block.
  */
-void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf, int ipv4_only)
+void unrealdns_gethostbyname_link(const char *name, ConfigItem_link *conf, int ipv4_only)
 {
 	DNSReq *r;
 
@@ -412,7 +412,7 @@ static uint64_t unrealdns_hash_ip(const char *ip)
         return siphash(ip, siphashkey_dns_ip) % DNS_HASH_SIZE;
 }
 
-static void unrealdns_addtocache(char *name, char *ip)
+static void unrealdns_addtocache(const char *name, const char *ip)
 {
 	unsigned int hashv;
 	DNSCache *c;
@@ -464,7 +464,7 @@ static void unrealdns_addtocache(char *name, char *ip)
 /** Search the cache for a confirmed ip->name and name->ip match, by address.
  * @returns The resolved hostname, or NULL if not found in cache.
  */
-static char *unrealdns_findcache_ip(char *ip)
+static const char *unrealdns_findcache_ip(const char *ip)
 {
 	unsigned int hashv;
 	DNSCache *c;
@@ -542,7 +542,7 @@ DNSCache *c, *next;
 	}
 }
 
-struct hostent *unreal_create_hostent(char *name, char *ip)
+struct hostent *unreal_create_hostent(const char *name, const char *ip)
 {
 struct hostent *he;
 

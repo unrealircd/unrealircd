@@ -160,7 +160,7 @@ static void clicap_generate(Client *client, const char *subcmd, int flags)
 	for (cap = clicaps; cap; cap = cap->next)
 	{
 		char name[256];
-		char *param;
+		const char *param;
 
 		if (cap->visible && !cap->visible(client))
 			continue; /* hidden */

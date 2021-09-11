@@ -404,7 +404,7 @@ int hbm_rehash_complete(void)
 	return 0;
 }
 
-char *history_storage_capability_parameter(Client *client)
+const char *history_storage_capability_parameter(Client *client)
 {
 	static char buf[128];
 

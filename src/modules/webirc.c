@@ -54,8 +54,8 @@ int webirc_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int webirc_config_run(ConfigFile *, ConfigEntry *, int);
 void webirc_free_conf(void);
 void delete_webircblock(ConfigItem_webirc *e);
-char *webirc_md_serialize(ModData *m);
-void webirc_md_unserialize(char *str, ModData *m);
+const char *webirc_md_serialize(ModData *m);
+void webirc_md_unserialize(const char *str, ModData *m);
 void webirc_md_free(ModData *md);
 int webirc_secure_connect(Client *client);
 
@@ -281,7 +281,7 @@ int webirc_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 0;
 }
 
-char *webirc_md_serialize(ModData *m)
+const char *webirc_md_serialize(ModData *m)
 {
 	static char buf[32];
 	if (m->i == 0)
@@ -290,7 +290,7 @@ char *webirc_md_serialize(ModData *m)
 	return buf;
 }
 
-void webirc_md_unserialize(char *str, ModData *m)
+void webirc_md_unserialize(const char *str, ModData *m)
 {
 	m->i = atoi(str);
 }

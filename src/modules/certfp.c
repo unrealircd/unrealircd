@@ -22,8 +22,8 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 void certfp_free(ModData *m);
-char *certfp_serialize(ModData *m);
-void certfp_unserialize(char *str, ModData *m);
+const char *certfp_serialize(ModData *m);
+void certfp_unserialize(const char *str, ModData *m);
 int certfp_handshake(Client *client);
 int certfp_connect(Client *client);
 int certfp_whois(Client *client, Client *target);
@@ -121,7 +121,7 @@ int certfp_connect(Client *client)
 {
 	if (IsSecure(client))
 	{
-		char *fp = moddata_client_get(client, "certfp");
+		const char *fp = moddata_client_get(client, "certfp");
 	
 		if (fp && !iConf.no_connect_tls_info)
 			sendnotice(client, "*** Your TLS certificate fingerprint is %s", fp);
@@ -132,7 +132,7 @@ int certfp_connect(Client *client)
 
 int certfp_whois(Client *client, Client *target)
 {
-	char *fp = moddata_client_get(target, "certfp");
+	const char *fp = moddata_client_get(target, "certfp");
 	
 	if (fp)
 		sendnumeric(client, RPL_WHOISCERTFP, target->name, fp);
@@ -144,14 +144,14 @@ void certfp_free(ModData *m)
 	safe_free(m->str);
 }
 
-char *certfp_serialize(ModData *m)
+const char *certfp_serialize(ModData *m)
 {
 	if (!m->str)
 		return NULL;
 	return m->str;
 }
 
-void certfp_unserialize(char *str, ModData *m)
+void certfp_unserialize(const char *str, ModData *m)
 {
 	safe_strdup(m->str, str);
 }
