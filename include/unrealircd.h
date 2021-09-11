@@ -10,7 +10,6 @@
 #include "numeric.h"
 #include "msg.h"
 #include "mempool.h"
-#include "proto.h"
 #include "channel.h"
 #include <time.h>
 #include <sys/stat.h>
