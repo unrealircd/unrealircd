@@ -147,7 +147,7 @@ CMD_FUNC(cmd_who)
 		who_flags |= WF_OPERONLY;
 
 	/* Pfff... collapse... hate it! */
-	strlcpy(maskbuf, mask, sizeof(mask));
+	strlcpy(maskbuf, mask, sizeof(maskbuf));
 	collapse(maskbuf);
 	mask = maskbuf;
 
