@@ -183,6 +183,8 @@ CMD_FUNC(cmd_sjoin)
 	{
 		channel = make_channel(parv[2]);
 		oldts = -1;
+	} else {
+		oldts = channel->creationtime;
 	}
 
 	ts = (time_t)atol(parv[1]);
@@ -197,24 +199,23 @@ CMD_FUNC(cmd_sjoin)
 		ts = channel->creationtime;
 	}
 
+	if (oldts == -1)
+	{
+		/* Newly created channel (from our POV), so set the correct creationtime here */
+		channel->creationtime = ts;
+	} else
 	if (channel->creationtime > ts)
 	{
 		removeours = 1;
-		oldts = channel->creationtime;
 		channel->creationtime = ts;
 	}
-	else if ((channel->creationtime < ts) && (channel->creationtime != 0))
+	else if (channel->creationtime < ts)
 	{
 		removetheirs = 1;
 	}
 	else if (channel->creationtime == ts)
 	{
 		merge = 1;
-	}
-
-	if (channel->creationtime > 0)
-	{
-		oldts = channel->creationtime;
 	}
 
 	parabuf[0] = '\0';
@@ -843,13 +844,11 @@ getnick:
 	/* we should be synced by now, */
 	if ((oldts != -1) && (oldts != channel->creationtime))
 	{
-		MessageTag *mtags = NULL;
-		new_message(client, NULL, &mtags);
-		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, NULL,
-			":%s NOTICE %s :*** TS for %s changed from %lld to %lld",
-			me.name, channel->name, channel->name,
-			(long long)oldts, (long long)channel->creationtime);
-		free_message_tags(mtags);
+		unreal_log(ULOG_INFO, "channel", "CHANNEL_SYNC_TS_CHANGE", client,
+		           "Channel $channel: timestamp changed from $old_ts -> $new_ts "
+		           "after syncing with server $client.",
+		           log_data_integer("old_ts", oldts),
+		           log_data_integer("new_ts", channel->creationtime));
 	}
 
 	/* If something went wrong with processing of the SJOIN above and
