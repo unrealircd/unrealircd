@@ -50,8 +50,8 @@ extern SERVICE_STATUS IRCDStatus;
 
 MODVAR unsigned char conf_debuglevel = 0;
 
-void server_reboot(char *);
-void restart(char *);
+void server_reboot(const char *);
+void restart(const char *);
 static void open_debugfile(), setup_signals();
 extern void init_glines(void);
 extern void tkl_init(void);
@@ -123,7 +123,7 @@ static void s_reloadcert()
 }
 #endif // #ifndef _WIN32
 
-void restart(char *mesg)
+void restart(const char *mesg)
 {
 	server_reboot(mesg);
 }
@@ -169,7 +169,7 @@ void ignore_this_signal()
 #endif /* #ifndef _WIN32 */
 
 
-void server_reboot(char *mesg)
+void server_reboot(const char *mesg)
 {
 	int i;
 	Client *client;

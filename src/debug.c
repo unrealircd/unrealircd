@@ -147,7 +147,7 @@ void debug(int level, FORMAT_STRING(const char *form), ...)
 	SET_ERRNO(err);
 }
 
-int checkprotoflags(Client *client, int flags, char *file, int line)
+int checkprotoflags(Client *client, int flags, const char *file, int line)
 {
 	if (!MyConnect(client))
 	{

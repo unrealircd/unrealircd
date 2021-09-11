@@ -384,7 +384,7 @@ void unreal_delete_match(Match *m)
 	safe_free(m);
 }
 
-Match *unreal_create_match(MatchType type, char *str, char **error)
+Match *unreal_create_match(MatchType type, const char *str, char **error)
 {
 	Match *m = safe_alloc(sizeof(Match));
 	static char errorbuf[512];
@@ -489,10 +489,11 @@ char *unreal_match_method_valtostr(int val)
  * Moved here from the censor channel and user mode module
  * (previously was present in both modules, code duplication)
  */
-int fast_badword_match(ConfigItem_badword *badword, char *line)
+int fast_badword_match(ConfigItem_badword *badword, const char *line)
 {
-	char *p;
+	const char *p;
 	int bwlen = strlen(badword->word);
+
 	if ((badword->type & BADW_TYPE_FAST_L) && (badword->type & BADW_TYPE_FAST_R))
 		return (our_strcasestr(line, badword->word) ? 1 : 0);
 
@@ -523,15 +524,16 @@ next:
  * buf is used for the result and max is sizeof(buf).
  * Assumptions[!]: max > 0 AND max > strlen(line)+1
  */
-int fast_badword_replace(ConfigItem_badword *badword, char *line, char *buf, int max)
+int fast_badword_replace(ConfigItem_badword *badword, const char *line, char *buf, int max)
 {
 	/* Some aliases ;P */
 	char *replacew = badword->replace ? badword->replace : REPLACEWORD;
-	char *pold = line, *pnew = buf; /* Pointers to old string and new string */
-	char *poldx = line;
+	const char *pold = line; /* pointer to the old string */
+	const char *poldx = line;
+	char *pnew = buf; /* pointer to the new string */
 	int replacen = -1; /* Only calculated if needed. w00t! saves us a few nanosecs? lol */
 	int searchn = -1;
-	char *startw, *endw;
+	const char *startw, *endw; /* start and end of the word */
 	char *c_eol = buf + max - 1; /* Cached end of (new) line */
 	int run = 1;
 	int cleaned = 0;
@@ -744,10 +746,10 @@ const char *stripbadwords(const char *str, ConfigItem_badword *start_bw, int *bl
  * if check_broadness is 1, the function will attempt to determine
  * if the given regex string is too broad (i.e. matches everything)
  */
-char *badword_config_check_regex(char *str, int fastsupport, int check_broadness)
+const char *badword_config_check_regex(const char *str, int fastsupport, int check_broadness)
 {
 	int regex=0;
-	char *tmp;
+	const char *tmp;
 	static char errorbuf[512];
 
 	if (fastsupport)
@@ -788,9 +790,9 @@ char *badword_config_check_regex(char *str, int fastsupport, int check_broadness
 	return NULL;
 }
 
-int badword_config_process(ConfigItem_badword *ca, char *str)
+int badword_config_process(ConfigItem_badword *ca, const char *str)
 {
-	char *tmp;
+	const char *tmp;
 	short regex = 0;
 	int ast_l = 0, ast_r = 0;
 

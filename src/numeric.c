@@ -1047,7 +1047,7 @@ static char *replies[] = {
 /* 1000 */ NULL,
 };
 
-char *getreply(int numeric)
+const char *getreply(int numeric)
 {
 	if ((numeric < 0) || (numeric > 999) || !replies[numeric])
 		return replies[ERR_NUMERICERR];

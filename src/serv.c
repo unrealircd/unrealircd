@@ -353,7 +353,7 @@ CMD_FUNC(cmd_credits)
 }
 
 /** Return flags for a client (connection), eg 's' for TLS - used in STATS L/l */
-char *get_client_status(Client *client)
+const char *get_client_status(Client *client)
 {
 	static char buf[10];
 	char *p = buf;
@@ -378,7 +378,7 @@ char *get_client_status(Client *client)
 	}
 	*p++ = ']';
 	*p++ = '\0';
-	return (buf);
+	return buf;
 }
 
 /** ERROR command - used by servers to indicate errors.
@@ -875,23 +875,29 @@ CMD_FUNC(cmd_die)
 PendingNet *pendingnet = NULL;
 
 /** Add server list (network) from 'client' connection */
-void add_pending_net(Client *client, char *str)
+void add_pending_net(Client *client, const char *str)
 {
 	PendingNet *net;
 	PendingServer *srv;
 	char *p, *name;
+	char buf[512];
 
 	if (BadPtr(str) || !client)
 		return;
+
+	/* Skip any * at the beginning (indicating a reply),
+	 * and work on a copy.
+	 */
+	if (*str == '*')
+		strlcpy(buf, str+1, sizeof(buf));
+	else
+		strlcpy(buf, str, sizeof(buf));
 
 	/* Allocate */
 	net = safe_alloc(sizeof(PendingNet));
 	net->client = client;
 
-	/* Fill in */
-	if (*str == '*')
-		str++;
-	for (name = strtoken(&p, str, ","); name; name = strtoken(&p, NULL, ","))
+	for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
 	{
 		if (!*name)
 			continue;
@@ -928,7 +934,7 @@ void free_pending_net(Client *client)
 }
 
 /** Find SID in any server list (network) that is pending, except 'exempt' */
-PendingNet *find_pending_net_by_sid_butone(char *sid, Client *exempt)
+PendingNet *find_pending_net_by_sid_butone(const char *sid, Client *exempt)
 {
 	PendingNet *net;
 	PendingServer *srv;
@@ -1001,7 +1007,7 @@ Client *find_non_pending_net_duplicates(Client *client)
 }
 
 /** Parse CHANMODES= in PROTOCTL */
-void parse_chanmodes_protoctl(Client *client, char *str)
+void parse_chanmodes_protoctl(Client *client, const char *str)
 {
 	char *modes, *p;
 	char copy[256];
@@ -1038,7 +1044,7 @@ static int previous_langsinuse_ready = 0;
  */
 void charsys_check_for_changes(void)
 {
-	char *langsinuse = charsys_get_current_languages();
+	const char *langsinuse = charsys_get_current_languages();
 	/* already called by charsys_finish() */
 	safe_strdup(me.server->features.nickchars, langsinuse);
 
@@ -1063,9 +1069,9 @@ void charsys_check_for_changes(void)
 }
 
 /** Check if supplied server name is valid, that is: does not contain forbidden characters etc */
-int valid_server_name(char *name)
+int valid_server_name(const char *name)
 {
-	char *p;
+	const char *p;
 	int has_dot = 0;
 
 	if (!*name)

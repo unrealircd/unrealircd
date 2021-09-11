@@ -90,7 +90,7 @@ char *strtoken(char **save, char *str, char *fs)
  * @returns IP address as a string (IPv4 or IPv6, in case of the latter:
  *          always the uncompressed form without ::)
  */
-char *inetntop(int af, const void *in, char *out, size_t size)
+const char *inetntop(int af, const void *in, char *out, size_t size)
 {
 	char tmp[MYDUMMY_SIZE];
 
@@ -796,9 +796,9 @@ char *unreal_mktemp(const char *dir, const char *suffix)
 /** Returns the path portion of the given path/file
  * in the specified location (must be at least PATH_MAX bytes).
  */
-char *unreal_getpathname(char *filepath, char *path)
+char *unreal_getpathname(const char *filepath, char *path)
 {
-	char *end = filepath+strlen(filepath);
+	const char *end = filepath+strlen(filepath);
 
 	while (*end != '\\' && *end != '/' && end > filepath)
 		end--;
@@ -1056,7 +1056,7 @@ time_t unreal_getfilemodtime(const char *filename)
 #endif
 
 /** Encode an IP string (eg: "1.2.3.4") to a BASE64 encoded value for S2S traffic */
-char *encode_ip(const char *ip)
+const char *encode_ip(const char *ip)
 {
 	static char retbuf[25]; /* returned string */
 	char addrbuf[16];
@@ -1089,7 +1089,7 @@ char *encode_ip(const char *ip)
 }
 
 /** Decode a BASE64 encoded string to an IP address string. Used for S2S traffic. */
-char *decode_ip(const char *buf)
+const char *decode_ip(const char *buf)
 {
 	int n;
 	char targ[25];

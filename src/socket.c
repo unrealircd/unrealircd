@@ -660,7 +660,7 @@ int is_loopback_ip(char *ip)
  * @param port		Remote port (will be written)
  * @returns The IP address
  */
-char *getpeerip(Client *client, int fd, int *port)
+const char *getpeerip(Client *client, int fd, int *port)
 {
 	static char ret[HOSTLEN+1];
 
@@ -723,7 +723,7 @@ static int check_too_many_unknown_connections(Client *client)
 Client *add_connection(ConfigItem_listen *listener, int fd)
 {
 	Client *client;
-	char *ip;
+	const char *ip;
 	int port = 0;
 	
 	client = make_client(NULL, &me);
@@ -1040,7 +1040,7 @@ void process_clients(void)
  * and 6 if 'str' is a valid IPv6 IP address.
  * Zero (0) is returned in any other case (eg: hostname).
  */
-int is_valid_ip(char *str)
+int is_valid_ip(const char *str)
 {
 	char scratch[64];
 	
@@ -1161,7 +1161,7 @@ int deliver_it(Client *client, char *str, int len, int *want_read)
 }
 
 /** Initiate an outgoing connection, the actual connect() call. */
-int unreal_connect(int fd, char *ip, int port, int ipv6)
+int unreal_connect(int fd, const char *ip, int port, int ipv6)
 {
 	int n;
 	
@@ -1197,7 +1197,7 @@ int unreal_connect(int fd, char *ip, int port, int ipv6)
 /** Bind to an IP/port (port may be 0 for auto).
  * @returns 0 on failure, other on success.
  */
-int unreal_bind(int fd, char *ip, int port, int ipv6)
+int unreal_bind(int fd, const char *ip, int port, int ipv6)
 {
 	if (ipv6)
 	{

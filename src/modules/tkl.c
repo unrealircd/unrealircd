@@ -3828,7 +3828,7 @@ void _sendnotice_tkl_add(TKL *tkl)
 	char buf[512];
 	char set_at[128];
 	char expire_at[128];
-	char *tkl_type_str; /**< Eg: "K-Line" */
+	const char *tkl_type_str; /**< Eg: "K-Line" */
 
 	/* Don't show notices for temporary nick holds (issued by services) */
 	if (TKLIsNameBan(tkl) && tkl->ptr.nameban->hold)
@@ -3876,7 +3876,7 @@ void _sendnotice_tkl_del(char *removed_by, TKL *tkl)
 {
 	char buf[512];
 	char set_at[128];
-	char *tkl_type_str;
+	const char *tkl_type_str;
 
 	/* Don't show notices for temporary nick holds (issued by services) */
 	if (TKLIsNameBan(tkl) && tkl->ptr.nameban->hold)

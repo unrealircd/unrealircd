@@ -45,36 +45,36 @@ int (*register_user)(Client *client);
 int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
 int (*tkl_chartotype)(char c);
-char *(*tkl_type_string)(TKL *tk);
-char *(*tkl_type_config_string)(TKL *tk);
+const char *(*tkl_type_string)(TKL *tk);
+const char *(*tkl_type_config_string)(TKL *tk);
 char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options);
-TKL *(*tkl_add_serverban)(int type, char *usermask, char *hostmask, char *reason, char *setby,
+TKL *(*tkl_add_serverban)(int type, const char *usermask, const char *hostmask, const char *reason, const char *setby,
                               time_t expire_at, time_t set_at, int soft, int flags);
-TKL *(*tkl_add_nameban)(int type, char *name, int hold, char *reason, char *setby,
+TKL *(*tkl_add_nameban)(int type, const char *name, int hold, const char *reason, const char *setby,
                             time_t expire_at, time_t set_at, int flags);
-TKL *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short action, Match *match, char *setby,
+TKL *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short action, Match *match, const char *setby,
                                time_t expire_at, time_t set_at,
-                               time_t spamf_tkl_duration, char *spamf_tkl_reason,
+                               time_t spamf_tkl_duration, const char *spamf_tkl_reason,
                                int flags);
-TKL *(*tkl_add_banexception)(int type, char *usermask, char *hostmask, char *reason, char *set_by,
-                                time_t expire_at, time_t set_at, int soft, char *bantypes, int flags);
+TKL *(*tkl_add_banexception)(int type, const char *usermask, const char *hostmask, const char *reason, const char *set_by,
+                                time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags);
 TKL *(*tkl_del_line)(TKL *tkl);
 void (*tkl_check_local_remove_shun)(TKL *tmp);
 int (*find_tkline_match)(Client *client, int skip_soft);
 int (*find_shun)(Client *client);
 int(*find_spamfilter_user)(Client *client, int flags);
-TKL *(*find_qline)(Client *client, char *nick, int *ishold);
+TKL *(*find_qline)(Client *client, const char *nick, int *ishold);
 TKL *(*find_tkline_match_zap)(Client *client);
 void (*tkl_stats)(Client *client, int type, const char *para, int *cnt);
 void (*tkl_sync)(Client *client);
 void (*cmd_tkl)(Client *client, MessageTag *mtags, int parc, char *parv[]);
-int (*place_host_ban)(Client *client, BanAction action, char *reason, long duration);
+int (*place_host_ban)(Client *client, BanAction action, const char *reason, long duration);
 int (*match_spamfilter)(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, TKL **rettk);
-int (*match_spamfilter_mtags)(Client *client, MessageTag *mtags, char *cmd);
+int (*match_spamfilter_mtags)(Client *client, MessageTag *mtags, const char *cmd);
 int (*join_viruschan)(Client *client, TKL *tk, int type);
 const char *(*StripColors)(const char *text);
 const char *(*StripControlCodes)(const char *text);
-void (*spamfilter_build_user_string)(char *buf, char *nick, Client *client);
+void (*spamfilter_build_user_string)(char *buf, const char *nick, Client *client);
 void (*send_protoctl_servers)(Client *client, int response);
 int (*verify_link)(Client *client, ConfigItem_link **link_out);
 void (*introduce_user)(Client *to, Client *client);
@@ -84,7 +84,7 @@ void (*broadcast_md_channel)(ModDataInfo *mdi, Channel *channel, ModData *md);
 void (*broadcast_md_member)(ModDataInfo *mdi, Channel *channel, Member *m, ModData *md);
 void (*broadcast_md_membership)(ModDataInfo *mdi, Client *client, Membership *m, ModData *md);
 int (*check_banned)(Client *client, int exitflags);
-int (*check_deny_version)(Client *client, char *software, int protocol, char *flags);
+int (*check_deny_version)(Client *client, const char *software, int protocol, const char *flags);
 void (*broadcast_md_client_cmd)(Client *except, Client *sender, Client *acptr, const char *varname, const char *value);
 void (*broadcast_md_channel_cmd)(Client *except, Client *sender, Channel *channel, const char *varname, const char *value);
 void (*broadcast_md_member_cmd)(Client *except, Client *sender, Channel *channel, Client *acptr, const char *varname, const char *value);
@@ -101,7 +101,7 @@ void (*userhost_save_current)(Client *client);
 void (*send_join_to_local_users)(Client *client, Channel *channel, MessageTag *mtags);
 int (*do_nick_name)(char *nick);
 int (*do_remote_nick_name)(char *nick);
-char *(*charsys_get_current_languages)(void);
+const char *(*charsys_get_current_languages)(void);
 void (*broadcast_sinfo)(Client *client, Client *to, Client *except);
 void (*connect_server)(ConfigItem_link *aconf, Client *by, struct hostent *hp);
 void (*parse_message_tags)(Client *client, char **str, MessageTag **mtag_list);
@@ -109,15 +109,15 @@ const char *(*mtags_to_string)(MessageTag *m, Client *client);
 int (*can_send_to_channel)(Client *client, Channel *channel, const char **msgtext, const char **errmsg, int notice);
 void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 void (*broadcast_md_globalvar_cmd)(Client *except, Client *sender, const char *varname, const char *value);
-int (*tkl_ip_hash)(char *ip);
+int (*tkl_ip_hash)(const char *ip);
 int (*tkl_ip_hash_type)(int type);
-void (*sendnotice_tkl_del)(char *removed_by, TKL *tkl);
+void (*sendnotice_tkl_del)(const char *removed_by, TKL *tkl);
 void (*sendnotice_tkl_add)(TKL *tkl);
 void (*free_tkl)(TKL *tkl);
-TKL *(*find_tkl_serverban)(int type, char *usermask, char *hostmask, int softban);
-TKL *(*find_tkl_banexception)(int type, char *usermask, char *hostmask, int softban);
-TKL *(*find_tkl_nameban)(int type, char *name, int hold);
-TKL *(*find_tkl_spamfilter)(int type, char *match_string, unsigned short action, unsigned short target);
+TKL *(*find_tkl_serverban)(int type, const char *usermask, const char *hostmask, int softban);
+TKL *(*find_tkl_banexception)(int type, const char *usermask, const char *hostmask, int softban);
+TKL *(*find_tkl_nameban)(int type, const char *name, int hold);
+TKL *(*find_tkl_spamfilter)(int type, const char *match_string, unsigned short action, unsigned short target);
 int (*find_tkl_exception)(int ban_type, Client *client);
 int (*is_silenced)(Client *client, Client *acptr);
 int (*del_silence)(Client *client, const char *mask);
@@ -125,11 +125,11 @@ int (*add_silence)(Client *client, const char *mask, int senderr);
 void *(*labeled_response_save_context)(void);
 void (*labeled_response_set_context)(void *ctx);
 void (*labeled_response_force_end)(void);
-void (*kick_user)(MessageTag *mtags, Channel *channel, Client *client, Client *victim, char *comment);
-int (*watch_add)(char *nick, Client *client, int flags);
-int (*watch_del)(char *nick, Client *client, int flags);
+void (*kick_user)(MessageTag *mtags, Channel *channel, Client *client, Client *victim, const char *comment);
+int (*watch_add)(const char *nick, Client *client, int flags);
+int (*watch_del)(const char *nick, Client *client, int flags);
 int (*watch_del_list)(Client *client, int flags);
-Watch *(*watch_get)(char *nick);
+Watch *(*watch_get)(const char *nick);
 int (*watch_check)(Client *client, int reply, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event));
 void (*do_unreal_log_remote_deliver)(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
 char *(*get_chmodes_for_user)(Client *client, int flags);

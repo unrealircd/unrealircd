@@ -68,7 +68,7 @@ CoreChannelModeTable corechannelmodetable[] = {
 char cmodestring[512];
 
 /** Returns 1 if the IRCOp can override or is a remote connection */
-inline int op_can_override(char *acl, Client *client,Channel *channel,void* extra)
+inline int op_can_override(const char *acl, Client *client, Channel *channel, void* extra)
 {
 #ifndef NO_OPEROVERRIDE
 	if (MyUser(client) && !(ValidatePermissionsForPath(acl,client,NULL,channel,extra)))
@@ -677,14 +677,16 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 
 /** Make a pretty mask from the input string - only used by SILENCE
  */
-char *pretty_mask(char *mask)
+char *pretty_mask(const char *mask_in)
 {
-	char *cp;
-	char *user;
-	char *host;
+	char mask[512];
+	char *cp, *user, *host;
+
+	strlcpy(mask, mask_in, sizeof(mask));
 
 	if ((user = strchr((cp = mask), '!')))
 		*user++ = '\0';
+
 	if ((host = strrchr(user ? user : cp, '@')))
 	{
 		*host++ = '\0';
@@ -692,7 +694,9 @@ char *pretty_mask(char *mask)
 			return make_nick_user_host(NULL, cp, host);
 	}
 	else if (!user && strchr(cp, '.'))
+	{
 		return make_nick_user_host(NULL, NULL, cp);
+	}
 	return make_nick_user_host(cp, user, host);
 }
 
@@ -912,7 +916,7 @@ void initlist_channels(void)
  * @note Be sure to call valid_channelname() first before
  *       you blindly call this function!
  */
-Channel *make_channel(char *name)
+Channel *make_channel(const char *name)
 {
 	Channel *channel;
 	int len;

@@ -87,7 +87,7 @@ LRESULT TLS_key_passwd_dialog(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lPa
  * @param my_errno	The value of errno to use in case we want to call strerror().
  * @returns Error string, only valid until next call to this function.
  */
-char *ssl_error_str(int err, int my_errno)
+const char *ssl_error_str(int err, int my_errno)
 {
 	static char ssl_errbuf[256];
 	char *ssl_errstr = NULL;
@@ -857,7 +857,7 @@ static int fatal_tls_error(int ssl_error, int where, int my_errno, Client *clien
 {
 	/* don`t alter ERRNO */
 	int errtmp = ERRNO;
-	char *ssl_errstr, *ssl_func;
+	const char *ssl_errstr, *ssl_func;
 	unsigned long additional_errno = ERR_get_error();
 	char additional_info[256];
 	char buf[512];
@@ -1021,7 +1021,7 @@ TLSOptions *FindTLSOptionsForUser(Client *client)
  * @param errstr: Error will be stored in here (optional)
  * @returns Returns 1 on success and 0 on error.
  */
-int verify_certificate(SSL *ssl, char *hostname, char **errstr)
+int verify_certificate(SSL *ssl, const char *hostname, char **errstr)
 {
 	static char buf[512];
 	X509 *cert;
@@ -1086,7 +1086,7 @@ int verify_certificate(SSL *ssl, char *hostname, char **errstr)
 }
 
 /** Grab the certificate name */
-char *certificate_name(SSL *ssl)
+const char *certificate_name(SSL *ssl)
 {
 	static char buf[384];
 	X509 *cert;
@@ -1232,7 +1232,7 @@ int certificate_quality_check(SSL_CTX *ctx, char **errstr)
 	return 1;
 }
 
-char *spki_fingerprint_ex(X509 *x509_cert);
+const char *spki_fingerprint_ex(X509 *x509_cert);
 
 /** Return the SPKI Fingerprint for a client.
  *
@@ -1241,10 +1241,10 @@ char *spki_fingerprint_ex(X509 *x509_cert);
  * openssl dgst -sha256 -binary public.key | openssl enc -base64
  * ( from https://tools.ietf.org/html/draft-ietf-websec-key-pinning-21#appendix-A )
  */
-char *spki_fingerprint(Client *cptr)
+const char *spki_fingerprint(Client *cptr)
 {
 	X509 *x509_cert = NULL;
-	char *ret;
+	const char *ret;
 
 	if (!MyConnect(cptr) || !cptr->local->ssl)
 		return NULL;
@@ -1257,7 +1257,7 @@ char *spki_fingerprint(Client *cptr)
 	return ret;
 }
 
-char *spki_fingerprint_ex(X509 *x509_cert)
+const char *spki_fingerprint_ex(X509 *x509_cert)
 {
 	unsigned char *der_cert = NULL, *p;
 	int der_cert_len, n;
@@ -1318,7 +1318,7 @@ int outdated_tls_client(Client *client)
 }
 
 /** Returns the expanded string used for set::outdated-tls-policy::user-message etc. */
-char *outdated_tls_client_build_string(char *pattern, Client *client)
+const char *outdated_tls_client_build_string(const char *pattern, Client *client)
 {
 	static char buf[512];
 	const char *name[3], *value[3];

@@ -102,7 +102,7 @@ int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		}
 		if (!strcmp(cep->name, "word"))
 		{
-			char *errbuf;
+			const char *errbuf;
 			if (has_word)
 			{
 				config_warn_duplicate(cep->file->filename, 

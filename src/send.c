@@ -64,7 +64,7 @@ MODVAR int  current_serial;
  * @param to		Client to mark as dead
  * @param notice	The quit reason to use
  */
-int dead_socket(Client *to, char *notice)
+int dead_socket(Client *to, const char *notice)
 {
 	DBufClear(&to->local->recvQ);
 	DBufClear(&to->local->sendQ);
@@ -644,7 +644,7 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
 ** addition -- Armin, 8jun90 (gruner@informatik.tu-muenchen.de)
 */
 
-static int match_it(Client *one, char *mask, int what)
+static int match_it(Client *one, const char *mask, int what)
 {
 	switch (what)
 	{
@@ -666,7 +666,7 @@ static int match_it(Client *one, char *mask, int what)
  * @param pattern	Format string
  * @param ...		Parameters to the format string
  */
-void sendto_match_butone(Client *one, Client *from, char *mask, int what,
+void sendto_match_butone(Client *one, Client *from, const char *mask, int what,
                          MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
@@ -913,7 +913,7 @@ void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...)
  * @param add		Whether the CAP token is added (1) or removed (0)
  * @param token		The CAP token
  */
-void send_cap_notify(int add, char *token)
+void send_cap_notify(int add, const char *token)
 {
 	Client *client;
 	ClientCapability *clicap = ClientCapabilityFindReal(token);
@@ -1052,7 +1052,7 @@ void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char 
  * @param client Client to introduce
  * @param umodes User modes of client
  */
-void sendto_serv_butone_nickcmd(Client *one, MessageTag *mtags, Client *client, char *umodes)
+void sendto_serv_butone_nickcmd(Client *one, MessageTag *mtags, Client *client, const char *umodes)
 {
 	Client *acptr;
 
@@ -1070,7 +1070,7 @@ void sendto_serv_butone_nickcmd(Client *one, MessageTag *mtags, Client *client, 
  * @param client  Client to introduce
  * @param umodes  User modes of client
  */
-void sendto_one_nickcmd(Client *server, MessageTag *mtags, Client *client, char *umodes)
+void sendto_one_nickcmd(Client *server, MessageTag *mtags, Client *client, const char *umodes)
 {
 	char *vhost;
 	char mtags_generated = 0;

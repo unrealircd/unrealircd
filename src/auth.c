@@ -391,7 +391,7 @@ static int authcheck_tls_clientcert_fingerprint(Client *client, AuthConfig *as, 
 
 static int authcheck_spkifp(Client *client, AuthConfig *as, const char *para)
 {
-	char *fp = spki_fingerprint(client);
+	const char *fp = spki_fingerprint(client);
 
 	if (!fp)
 		return 0; /* auth failed: not TLS or some other failure */

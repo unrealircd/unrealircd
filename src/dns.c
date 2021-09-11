@@ -353,7 +353,7 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 	int n;
 	struct hostent *he2;
 	char ipbuf[HOSTLEN+1];
-	char *ip = NULL;
+	const char *ip = NULL;
 
 	if (!r->linkblock)
 	{
@@ -672,7 +672,8 @@ CMD_FUNC(cmd_dns)
 		ares_get_servers(resolver_channel, &serverlist);
 		for (ns = serverlist; ns; ns = ns->next)
 		{
-			char ipbuf[128], *ip;
+			char ipbuf[128];
+			const char *ip;
 			i++;
 			
 			ip = inetntop(ns->family, &ns->addr, ipbuf, sizeof(ipbuf));

@@ -485,7 +485,8 @@ CMD_FUNC(cmd_uid)
 	char nick[NICKLEN + 1];
 	long lastnick = 0;
 	int differ = 1;
-	char *hostname, *username, *sstamp, *umodes, *virthost, *ip_raw, *ip=NULL, *realname;
+	char *hostname, *username, *sstamp, *umodes, *virthost, *ip_raw, *realname;
+	const char *ip = NULL;
 
 	if (parc < 13)
 	{
@@ -1244,7 +1245,7 @@ int AllowClient(Client *client)
 
 	if (IsSecure(client) && (iConf.outdated_tls_policy_user == POLICY_DENY) && outdated_tls_client(client))
 	{
-		char *msg = outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, client);
+		const char *msg = outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, client);
 		exit_client(client, NULL, msg);
 		return 0;
 	}
