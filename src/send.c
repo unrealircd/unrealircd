@@ -353,7 +353,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 			return;
 	}
 
-#if defined(DEBUGMODE) && defined(RAWCMDLOGGING)
+#if defined(RAWCMDLOGGING)
 	{
 		char copy[512], *p;
 		strlcpy(copy, msg, len > sizeof(copy) ? sizeof(copy) : len);

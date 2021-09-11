@@ -192,7 +192,7 @@ void parse(Client *cptr, char *buffer, int length)
 	/* This stores the last executed command in 'backupbuf', useful for debugging crashes */
 	strlcpy(backupbuf, buffer, sizeof(backupbuf));
 
-#if defined(DEBUGMODE) && defined(RAWCMDLOGGING)
+#if defined(RAWCMDLOGGING)
 	unreal_log(ULOG_INFO, "traffic", "TRAFFIC_IN", cptr,
 		   "<- $client: $data",
 		   log_data_string("data", backupbuf));
