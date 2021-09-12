@@ -5927,7 +5927,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 if $CC --version | grep -q "clang version 3."; then :
-  CFLAGS="$CFLAGS -Wno-tautological-compare"
+  CFLAGS="$CFLAGS -Wno-tautological-compare -Wno-pragmas"
 fi
 
 ac_ext=c
