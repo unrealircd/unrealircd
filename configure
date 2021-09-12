@@ -5916,9 +5916,9 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags__Werror___Wunknown_pragmas" >&5
 $as_echo "$ax_cv_check_cflags__Werror___Wunknown_pragmas" >&6; }
 if test x"$ax_cv_check_cflags__Werror___Wunknown_pragmas" = xyes; then :
-  CFLAGS="$CFLAGS -Wno-unknown-pragmas"
+  unknown_pragmas=1
 else
-  :
+  unknown_pragmas=0
 fi
 
   ac_ext=c
@@ -5963,9 +5963,9 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags__Werror___Wunknown_warning_option" >&5
 $as_echo "$ax_cv_check_cflags__Werror___Wunknown_warning_option" >&6; }
 if test x"$ax_cv_check_cflags__Werror___Wunknown_warning_option" = xyes; then :
-  CFLAGS="$CFLAGS -Wno-unknown-warning-option"
+  unknown_warning_option=1
 else
-  :
+  unknown_warning_option=0
 fi
 
   ac_ext=c
@@ -5974,6 +5974,14 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
+
+if test "$unknown_warning_option" = "1"; then
+		CFLAGS="$CFLAGS -Wno-unknown-warning-option"
+else
+	if test "$unknown_pragmas" = "1"; then
+								CFLAGS="$CFLAGS -Wno-unknown-pragmas"
+	fi
+fi
 
 
 
