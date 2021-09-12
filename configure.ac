@@ -273,7 +273,7 @@ else
 		dnl This is a fallback needed for older gcc/clang, it also
 		dnl disables several other useful warnings/errors related
 		dnl to pragma's unfortunately.
-		CFLAGS="$CFLAGS -Wno-no-pragmas"
+		CFLAGS="$CFLAGS -Wno-pragmas"
 	fi
 fi
 
