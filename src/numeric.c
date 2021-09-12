@@ -237,11 +237,7 @@ static char *replies[] = {
 /* 209    RPL_TRACECLASS */      "Class %s %d",
 /* 210    RPL_STATSHELP */       ":%s",
 /* 211 */ NULL, /* Used */
-#ifdef DEBUGMODE
-/* 212    RPL_STATSCOMMANDS */ "%s %u %lu %lu %lu %lu %lu",
-#else
 /* 212    RPL_STATSCOMMANDS */ "%s %u %lu",
-#endif
 /* 213    RPL_STATSCLINE */ "%c %s * %s %d %d %s",
 /* 214    RPL_STATSOLDNLINE */ "%c %s * %s %d %d %s",
 /* 215    RPL_STATSILINE */ "I %s %s %d %d %s %s %d",
@@ -425,17 +421,10 @@ static char *replies[] = {
 /* 389    RPL_ENDOFALIST */ "%s :End of Protected User List",
 /* 390 */ NULL,
 /* 391    RPL_TIME */ "%s :%s",
-#ifdef	ENABLE_USERS
-/* 392    RPL_USERSSTART */ ":UserID   Terminal  Host",
-/* 393    RPL_USERS */ ":%-8s %-9s %-8s",
-/* 394    RPL_ENDOFUSERS */ ":End of Users",
-/* 395    RPL_NOUSERS */ ":Nobody logged in.",
-#else
 /* 392 */ NULL,
 /* 393 */ NULL,
 /* 394 */ NULL,
 /* 395 */ NULL, 
-#endif
 /* 396    RPL_HOSTHIDDEN */ "%s :is now your displayed host",
 /* 397 */ NULL,
 /* 398 */ NULL,

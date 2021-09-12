@@ -517,15 +517,8 @@ int stats_command(Client *client, const char *para)
 	for (i = 0; i < 256; i++)
 		for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
 			if (mptr->count)
-#ifndef DEBUGMODE
 			sendnumeric(client, RPL_STATSCOMMANDS, mptr->cmd,
 				mptr->count, mptr->bytes);
-#else
-			sendnumeric(client, RPL_STATSCOMMANDS, mptr->cmd,
-				mptr->count, mptr->bytes,
-				mptr->lticks, mptr->lticks / CLOCKS_PER_SEC,
-				mptr->rticks, mptr->rticks / CLOCKS_PER_SEC);
-#endif
 
 	return 0;
 }
