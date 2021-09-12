@@ -30,10 +30,6 @@
 
 extern MODVAR char *extraflags;
 extern MODVAR int tainted;
-/* for the new s_err.c */
-extern const char *getreply(int);
-#define rpl_str(x) getreply(x)
-#define err_str(x) getreply(x)
 extern MODVAR Member *freemember;
 extern MODVAR Membership *freemembership;
 extern MODVAR Client me;
@@ -273,7 +269,6 @@ extern void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...) __at
  * @ingroup SendFunctions
  */
 #define sendnumeric(to, numeric, ...) sendnumericfmt(to, numeric, STR_ ## numeric, ##__VA_ARGS__)
-extern void sendnumeric_legacy(Client *to, int numeric, ...);
 extern void sendnumericfmt(Client *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,3,4)));
 extern void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
 extern void sendto_server(Client *one, unsigned long caps, unsigned long nocaps, MessageTag *mtags, FORMAT_STRING(const char *format), ...) __attribute__((format(printf, 5, 6)));

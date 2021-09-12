@@ -176,7 +176,6 @@ EXP_OBJ_FILES=src/channel.obj src/send.obj src/socket.obj \
  src/whowas.obj \
  src/misc.obj src/match.obj src/crule.obj \
  src/debug.obj  src/support.obj src/list.obj \
- src/numeric.obj \
  src/serv.obj src/user.obj \
  src/version.obj src/ircsprintf.obj \
  src/scache.obj src/dns.obj src/modules.obj \
@@ -479,9 +478,6 @@ src/conf_preprocessor.obj: src/conf_preprocessor.c $(INCLUDES)
 
 src/debug.obj: src/debug.c $(INCLUDES)
         $(CC) $(CFLAGS) src/debug.c
-
-src/numeric.obj: src/numeric.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/numeric.c
 
 src/misc.obj: src/misc.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/misc.c

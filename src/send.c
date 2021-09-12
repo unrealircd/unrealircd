@@ -1143,36 +1143,6 @@ void sendnotice_multiline(Client *client, MultiLine *m)
 		sendnotice(client, "%s", m->line);
 }
 
-
-/** Send numeric message to a client.
- * @param to		The recipient
- * @param numeric	The numeric, one of RPL_* or ERR_*, see src/numeric.c
- * @param ...		The parameters for the numeric
- * @note Be sure to provide the correct number and type of parameters that belong to the numeric. Check src/numeric.c when in doubt!
- * @section sendnumeric_examples Examples
- * @subsection sendnumeric_permission_denied Send "Permission Denied" numeric
- * This numeric has no parameter, so is simple:
- * @code
- * sendnumeric(client, ERR_NOPRIVILEGES);
- * @endcode
- * @subsection sendnumeric_notenoughparameters Send "Not enough parameters" numeric
- * This numeric requires 1 parameter: the name of the command.
- * @code
- * sendnumeric(client, ERR_NEEDMOREPARAMS, "SOMECOMMAND");
- * @endcode
- */
-void sendnumeric_legacy(Client *to, int numeric, ...)
-{
-	va_list vl;
-	char pattern[512];
-
-	snprintf(pattern, sizeof(pattern), ":%s %.3d %s %s", me.name, numeric, to->name[0] ? to->name : "*", rpl_str(numeric));
-
-	va_start(vl, numeric);
-	vsendto_one(to, NULL, pattern, vl);
-	va_end(vl);
-}
-
 /** Send numeric message to a client - format to user specific needs.
  * This will ignore the numeric definition of src/numeric.c and always send ":me.name numeric clientname "
  * followed by the pattern and format string you choose.
