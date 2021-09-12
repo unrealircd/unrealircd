@@ -254,7 +254,26 @@ extern void sendto_umode_global(int, FORMAT_STRING(const char *), ...) __attribu
 extern void sendto_snomask(int snomask, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
 extern void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
 extern void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
-extern void sendnumeric(Client *to, int numeric, ...);
+/** Send numeric message to a client.
+ * @param to		The recipient
+ * @param numeric	The numeric, one of RPL_* or ERR_*, see src/numeric.c
+ * @param ...		The parameters for the numeric
+ * @note Be sure to provide the correct number and type of parameters that belong to the numeric. Check src/numeric.c when in doubt!
+ * @section sendnumeric_examples Examples
+ * @subsection sendnumeric_permission_denied Send "Permission Denied" numeric
+ * This numeric has no parameter, so is simple:
+ * @code
+ * sendnumeric(client, ERR_NOPRIVILEGES);
+ * @endcode
+ * @subsection sendnumeric_notenoughparameters Send "Not enough parameters" numeric
+ * This numeric requires 1 parameter: the name of the command.
+ * @code
+ * sendnumeric(client, ERR_NEEDMOREPARAMS, "SOMECOMMAND");
+ * @endcode
+ * @ingroup SendFunctions
+ */
+#define sendnumeric(to, numeric, ...) sendnumericfmt(to, numeric, STR_ ## numeric, ##__VA_ARGS__)
+extern void sendnumeric_legacy(Client *to, int numeric, ...);
 extern void sendnumericfmt(Client *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,3,4)));
 extern void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
 extern void sendto_server(Client *one, unsigned long caps, unsigned long nocaps, MessageTag *mtags, FORMAT_STRING(const char *format), ...) __attribute__((format(printf, 5, 6)));

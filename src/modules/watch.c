@@ -90,14 +90,14 @@ static void show_watch(Client *client, char *name, int rpl1, int rpl2, int awayn
 			return;
 		}
 		
-		sendnumeric(client, rpl1,
+		sendnumeric_legacy(client, rpl1,
 		    target->name, target->user->username,
 		    IsHidden(target) ? target->user->virthost : target->user->
 		    realhost, target->lastnick);
 	}
 	else
 	{
-		sendnumeric(client, rpl2, name, "*", "*", 0L);
+		sendnumeric_legacy(client, rpl2, name, "*", "*", 0L);
 	}
 }
 
@@ -359,7 +359,7 @@ int watch_notification(Client *client, Watch *watch, Link *lp, int event)
 
 	if (!awaynotify)
 	{
-		sendnumeric(lp->value.client, (event == WATCH_EVENT_OFFLINE)?RPL_LOGOFF:RPL_LOGON,
+		sendnumeric_legacy(lp->value.client, (event == WATCH_EVENT_OFFLINE)?RPL_LOGOFF:RPL_LOGON,
 		    client->name,
 		    (IsUser(client) ? client->user->username : "<N/A>"),
 		    (IsUser(client) ?
@@ -377,10 +377,10 @@ int watch_notification(Client *client, Watch *watch, Link *lp, int event)
 			    client->name,
 			    (IsUser(client) ? client->user->username : "<N/A>"),
 			    (IsUser(client) ?
-			    (IsHidden(client) ? client->user->virthost : client->
-			    user->realhost) : "<N/A>"), client->user->away_since);
+			    (IsHidden(client) ? client->user->virthost : client->user->realhost) : "<N/A>"),
+			    (int)client->user->away_since);
 		else /* RPL_GONEAWAY / RPL_REAWAY */
-			sendnumeric(lp->value.client, (event == WATCH_EVENT_AWAY)?RPL_GONEAWAY:RPL_REAWAY,
+			sendnumeric_legacy(lp->value.client, (event == WATCH_EVENT_AWAY)?RPL_GONEAWAY:RPL_REAWAY,
 			    client->name,
 			    (IsUser(client) ? client->user->username : "<N/A>"),
 			    (IsUser(client) ?

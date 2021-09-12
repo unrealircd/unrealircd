@@ -153,12 +153,17 @@ char *getosname(void)
 #endif
 
 /** Helper function to send version strings */
-void send_version(Client *client, int reply)
+void send_version(Client *client, int remote)
 {
 	int i;
 
 	for (i = 0; ISupportStrings[i]; i++)
-		sendnumeric(client, reply, ISupportStrings[i]);
+	{
+		if (remote)
+			sendnumeric(client, RPL_REMOTEISUPPORT, ISupportStrings[i]);
+		else
+			sendnumeric(client, RPL_ISUPPORT, ISupportStrings[i]);
+	}
 }
 
 /** VERSION command:
@@ -169,7 +174,7 @@ CMD_FUNC(cmd_version)
 	/* Only allow remote VERSIONs if registered -- Syzop */
 	if (!IsUser(client) && !IsServer(client))
 	{
-		send_version(client, RPL_ISUPPORT);
+		send_version(client, 0);
 		return;
 	}
 
@@ -192,9 +197,9 @@ CMD_FUNC(cmd_version)
 			sendnotice(client, "%s", pcre2_version());
 		}
 		if (MyUser(client))
-			send_version(client,RPL_ISUPPORT);
+			send_version(client,0);
 		else
-			send_version(client,RPL_REMOTEISUPPORT);
+			send_version(client,1);
 	}
 }
 

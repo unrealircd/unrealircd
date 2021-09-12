@@ -1615,42 +1615,6 @@ void mode_operoverride_msg(Client *client, Channel *channel, char *modebuf, char
 		   log_data_channel("channel", channel));
 }
 
-/** Send a mode list (+beI) to the user */
-void send_list_mode(Client *client, Channel *channel, Ban *list, int list_numeric, int end_of_list_numeric)
-{
-	Ban *ban;
-
-	if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",client,NULL,channel,NULL))
-	{
-		sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
-		return;
-	}
-
-	for (ban = list; ban; ban = ban->next)
-		sendnumeric(client, list_numeric, channel->name, ban->banstr, ban->who, ban->when);
-
-	sendnumeric(client, end_of_list_numeric, channel->name);
-}
-
-/** Send a user list (+a or +q) to the user - rarely used */
-void send_user_list_mode(Client *client, Channel *channel, long flags, int list_numeric, int end_of_list_numeric)
-{
-	Member *member;
-
-	if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",client,NULL,channel,NULL))
-	{
-		sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
-		return;
-	}
-
-	for (member = channel->members; member; member = member->next)
-	{
-		if (member->flags & flags)
-			sendnumeric(client, list_numeric, channel->name, member->client->name);
-	}
-	sendnumeric(client, end_of_list_numeric, channel->name);
-}
-
 /* Deal with information requests from local users, such as:
  * MODE #chan b    Show the ban list
  * MODE #chan e    Show the ban exemption list
@@ -1662,31 +1626,64 @@ void send_user_list_mode(Client *client, Channel *channel, long flags, int list_
  */
 int list_mode_request(Client *client, Channel *channel, const char *req)
 {
-	if (strstr(req, "b"))
+	const char *p;
+	Ban *ban;
+	Member *member;
+
+	for (p = req; *p; p++)
+		if (strchr("beIqa", *p))
+			break;
+
+	if (!*p)
+		return 0; /* not handled, proceed with the MODE set attempt */
+
+	/* First, check access */
+	if (strchr("beI", *p))
 	{
-		send_list_mode(client, channel, channel->banlist, RPL_BANLIST, RPL_ENDOFBANLIST);
-		return 1;
-	} else
-	if (strstr(req, "e"))
-	{
-		send_list_mode(client, channel, channel->exlist, RPL_EXLIST, RPL_ENDOFEXLIST);
-		return 1;
-	} else
-	if (strstr(req, "I"))
-	{
-		send_list_mode(client, channel, channel->invexlist, RPL_INVEXLIST, RPL_ENDOFINVEXLIST);
-		return 1;
-	} else
-	if (strstr(req, "q"))
-	{
-		send_user_list_mode(client, channel, CHFL_CHANOWNER, RPL_QLIST, RPL_ENDOFQLIST);
-		return 1;
-	} else
-	if (strstr(req, "a"))
-	{
-		send_user_list_mode(client, channel, CHFL_CHANADMIN, RPL_ALIST, RPL_ENDOFALIST);
-		return 1;
+		if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",client,NULL,channel,NULL))
+		{
+			sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
+			return 1; /* handled */
+		}
+	} else {
+		if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",client,NULL,channel,NULL))
+		{
+			sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
+			return 1; /* handled */
+		}
 	}
-	return 0;
+
+	switch(*p)
+	{
+		case 'b':
+			for (ban = channel->banlist; ban; ban = ban->next)
+				sendnumeric(client, RPL_BANLIST, channel->name, ban->banstr, ban->who, ban->when);
+			sendnumeric(client, RPL_ENDOFBANLIST, channel->name);
+			break;
+		case 'e':
+			for (ban = channel->exlist; ban; ban = ban->next)
+				sendnumeric(client, RPL_EXLIST, channel->name, ban->banstr, ban->who, ban->when);
+			sendnumeric(client, RPL_ENDOFEXLIST, channel->name);
+			break;
+		case 'I':
+			for (ban = channel->invexlist; ban; ban = ban->next)
+				sendnumeric(client, RPL_INVEXLIST, channel->name, ban->banstr, ban->who, ban->when);
+			sendnumeric(client, RPL_ENDOFINVEXLIST, channel->name);
+			break;
+		case 'q':
+			for (member = channel->members; member; member = member->next)
+				if (member->flags & CHFL_CHANOWNER)
+					sendnumeric(client, RPL_QLIST, channel->name, member->client->name);
+			sendnumeric(client, RPL_ENDOFQLIST, channel->name);
+			break;
+		case 'a':
+			for (member = channel->members; member; member = member->next)
+				if (member->flags & CHFL_CHANADMIN)
+					sendnumeric(client, RPL_ALIST, channel->name, member->client->name);
+			sendnumeric(client, RPL_ENDOFALIST, channel->name);
+			break;
+	}
+
+	return 1; /* handled */
 }
 

@@ -455,12 +455,15 @@ int stats_links(Client *client, const char *para)
 int stats_denylinkall(Client *client, const char *para)
 {
 	ConfigItem_deny_link *links;
+	ConfigItem_mask *m;
 
 	for (links = conf_deny_link; links; links = links->next)
 	{
 		if (links->flag.type == CRULE_ALL)
-			sendnumeric(client, RPL_STATSDLINE,
-			'D', links->mask, links->prettyrule);
+		{
+			for (m = links->mask; m; m = m->next)
+				sendnumeric(client, RPL_STATSDLINE, 'D', m->mask, links->prettyrule);
+		}
 	}
 	return 0;
 }
@@ -672,12 +675,15 @@ int stats_vhost(Client *client, const char *para)
 int stats_denylinkauto(Client *client, const char *para)
 {
 	ConfigItem_deny_link *links;
+	ConfigItem_mask *m;
 
 	for (links = conf_deny_link; links; links = links->next)
 	{
 		if (links->flag.type == CRULE_AUTO)
-			sendnumeric(client, RPL_STATSDLINE,
-			'd', links->mask, links->prettyrule);
+		{
+			for (m = links->mask; m; m = m->next)
+				sendnumeric(client, RPL_STATSDLINE, 'd', m->mask, links->prettyrule);
+		}
 	}
 	return 0;
 }
@@ -918,12 +924,12 @@ int stats_set(Client *client, const char *para)
 int stats_tld(Client *client, const char *para)
 {
 	ConfigItem_tld *tld;
+	ConfigItem_mask *m;
 
 	for (tld = conf_tld; tld; tld = tld->next)
 	{
-		sendnumeric(client, RPL_STATSTLINE,
-			tld->mask, tld->motd_file, tld->rules_file ?
-			tld->rules_file : "none");
+		for (m = tld->mask; m; m = m->next)
+			sendnumeric(client, RPL_STATSTLINE, m->mask, tld->motd_file, tld->rules_file ? tld->rules_file : "none");
 	}
 
 	return 0;

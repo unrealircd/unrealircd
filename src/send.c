@@ -1161,7 +1161,7 @@ void sendnotice_multiline(Client *client, MultiLine *m)
  * sendnumeric(client, ERR_NEEDMOREPARAMS, "SOMECOMMAND");
  * @endcode
  */
-void sendnumeric(Client *to, int numeric, ...)
+void sendnumeric_legacy(Client *to, int numeric, ...)
 {
 	va_list vl;
 	char pattern[512];

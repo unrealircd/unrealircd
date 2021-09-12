@@ -540,7 +540,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 			{
 				if (i != -1)
 				{
-					sendnumeric(client, i, name);
+					sendnumeric_legacy(client, i, name);
 				}
 				continue;
 			}

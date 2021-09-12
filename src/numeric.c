@@ -480,11 +480,7 @@ static char *replies[] = {
 /* 452 */ NULL, /* Used */
 /* 453 */ NULL, /* Used */
 /* 454 */ NULL,
-/* 455    ERR_HOSTILENAME */ ":Your username %s contained the invalid "
-	    "character(s) %s and has been changed to %s. "
-	    "Please use only the characters 0-9 a-z A-Z _ - "
-	    "or . in your username. Your username is the part "
-	    "before the @ in your email address.",
+/* 455    ERR_HOSTILENAME */ ":Your username %s contained the invalid character(s) %s and has been changed to %s. Please use only the characters 0-9 a-z A-Z _ - or . in your username. Your username is the part before the @ in your email address.",
 /* 456 */ NULL, /* hybrid */
 /* 457 */ NULL, /* hybrid */
 /* 458 */ NULL, /* hybrid */
