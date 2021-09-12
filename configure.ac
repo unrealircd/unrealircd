@@ -249,11 +249,14 @@ check_cc_flag([-Wsign-compare], [CFLAGS="$CFLAGS -Wno-sign-compare"])
 dnl Don't warn about empty body, we use this, eg via Debug(()) or in if's.
 check_cc_flag([-Wempty-body], [CFLAGS="$CFLAGS -Wno-empty-body"])
 
-dnl This one breaks our TO_INTFUNC() that is used in m_tkl for tkl_typetochar
-check_cc_flag([-Wcast-function-type], [CFLAGS="$CFLAGS -Wno-cast-function-type"])
-
 AS_IF([$CC --version | grep -q "clang version 3."],
         [CFLAGS="$CFLAGS -Wno-tautological-compare"])
+
+dnl This one MUST be LAST!!
+dnl It disables -Wsomeunknownoption being an error. Which is needed for
+dnl the pragma's in individual files to selectively disable some warnings
+dnl on clang/gcc (that may exist in eg gcc but not in clang or vice versa).
+check_cc_flag([-Wunknown-warning-option], [CFLAGS="$CFLAGS -Wno-unknown-warning-option"])
 
 dnl End of -W... compiler checks.
 
