@@ -256,6 +256,7 @@ dnl This one MUST be LAST!!
 dnl It disables -Wsomeunknownoption being an error. Which is needed for
 dnl the pragma's in individual files to selectively disable some warnings
 dnl on clang/gcc (that may exist in eg gcc but not in clang or vice versa).
+check_cc_flag([-Wunknown-pragmas], [CFLAGS="$CFLAGS -Wno-unknown-pragmas"])
 check_cc_flag([-Wunknown-warning-option], [CFLAGS="$CFLAGS -Wno-unknown-warning-option"])
 
 dnl End of -W... compiler checks.
