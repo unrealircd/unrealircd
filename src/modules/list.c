@@ -272,19 +272,15 @@ CMD_FUNC(cmd_list)
 			  {
 				  channel = find_channel(name);
 				  if (channel && (ShowChannel(client, channel) || ValidatePermissionsForPath("channel:see:list:secret",client,NULL,channel,NULL))) {
-#ifdef LIST_SHOW_MODES
 					modebuf[0] = '[';
 					channel_modes(client, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), channel, 0);
 					if (modebuf[2] == '\0')
 						modebuf[0] = '\0';
 					else
 						strlcat(modebuf, "]", sizeof modebuf);
-#endif
 					  sendnumeric(client, RPL_LIST,
 					      name, channel->users,
-#ifdef LIST_SHOW_MODES
 					      modebuf,
-#endif
 					      (channel->topic ? channel->topic :
 					      ""));
 }
@@ -348,9 +344,7 @@ int send_list(Client *client)
 				continue; /* exists, >0 users.. will be sent later */
 			sendnumeric(client, RPL_LIST, x->name,
 			    0,
-#ifdef LIST_SHOW_MODES
 			    "",
-#endif					    
 			    x->topic ? x->topic : "");
 		}
 	}
@@ -402,32 +396,26 @@ int send_list(Client *client)
 					if (lopt->yeslist && !find_name_list_match(lopt->yeslist, channel->name))
 						continue;
 				}
-#ifdef LIST_SHOW_MODES
 				modebuf[0] = '[';
 				channel_modes(client, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), channel, 0);
 				if (modebuf[2] == '\0')
 					modebuf[0] = '\0';
 				else
 					strlcat(modebuf, "]", sizeof modebuf);
-#endif
 				if (!ValidatePermissionsForPath("channel:see:list:secret",client,NULL,channel,NULL))
 					sendnumeric(client, RPL_LIST,
 					    ShowChannel(client,
 					    channel) ? channel->name :
 					    "*", channel->users,
-#ifdef LIST_SHOW_MODES
 					    ShowChannel(client, channel) ?
 					    modebuf : "",
-#endif
 					    ShowChannel(client,
 					    channel) ? (channel->topic ?
 					    channel->topic : "") : "");
 				else
 					sendnumeric(client, RPL_LIST, channel->name,
 					    channel->users,
-#ifdef LIST_SHOW_MODES
 					    modebuf,
-#endif					    
 					    (channel->topic ? channel->topic : ""));
 				numsend--;
 			}

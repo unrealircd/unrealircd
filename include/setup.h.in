@@ -133,9 +133,6 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Define if you want modes shown in /list */
-#undef LIST_SHOW_MODES
-
 /* Define the location of the log files */
 #undef LOGDIR
 

@@ -756,7 +756,6 @@ with_pidfile
 with_privatelibdir
 with_maxconnections
 enable_prefixaq
-with_showlistmodes
 with_no_operoverride
 with_operoverride_verify
 with_system_pcre2
@@ -1469,7 +1468,6 @@ Optional Packages:
                           stored. Disable when building a package for a distro
   --with-maxconnections=size
                           Specify the max file descriptors to use
-  --with-showlistmodes    Specify whether modes are shown in /list
   --with-no-operoverride  Disable OperOverride
   --with-operoverride-verify
                           Require opers to invite themselves to +s/+p channels
@@ -6619,16 +6617,6 @@ if test $enable_prefixaq = "yes"; then :
 
 $as_echo "#define PREFIX_AQ /**/" >>confdefs.h
 
-fi
-
-
-# Check whether --with-showlistmodes was given.
-if test "${with_showlistmodes+set}" = set; then :
-  withval=$with_showlistmodes; if test $withval = "yes"; then :
-
-$as_echo "#define LIST_SHOW_MODES /**/" >>confdefs.h
-
-fi
 fi
 
 

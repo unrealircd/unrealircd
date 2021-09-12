@@ -529,10 +529,6 @@ AC_ARG_ENABLE([prefixaq],
 AS_IF([test $enable_prefixaq = "yes"],
 	[AC_DEFINE([PREFIX_AQ], [], [Define if you want +a/+q prefixes])])
 
-AC_ARG_WITH(showlistmodes,
-	[AS_HELP_STRING([--with-showlistmodes], [Specify whether modes are shown in /list])],
-	[AS_IF([test $withval = "yes"],
-		[AC_DEFINE([LIST_SHOW_MODES], [], [Define if you want modes shown in /list])])])
 AC_ARG_WITH(no-operoverride, [AS_HELP_STRING([--with-no-operoverride], [Disable OperOverride])],
 	[AS_IF([test $withval = "yes"],
 		[AC_DEFINE([NO_OPEROVERRIDE], [], [Define if you want OperOverride disabled])])])
