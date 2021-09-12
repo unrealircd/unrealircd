@@ -255,8 +255,12 @@ check_cc_flag([-Wsign-compare], [CFLAGS="$CFLAGS -Wno-sign-compare"])
 dnl Don't warn about empty body, we use this, eg via Debug(()) or in if's.
 check_cc_flag([-Wempty-body], [CFLAGS="$CFLAGS -Wno-empty-body"])
 
+dnl Yeah this old clang version is a bit problematic
+dnl (ships in Ubuntu 16.04 for example)
+dnl -Wtautological-compare has false positives
+dnl -Wno-pragmas is needed, despite -Wno-unknown-warning-option
 AS_IF([$CC --version | grep -q "clang version 3."],
-        [CFLAGS="$CFLAGS -Wno-tautological-compare"])
+        [CFLAGS="$CFLAGS -Wno-tautological-compare -Wno-pragmas"])
 
 dnl This one MUST be LAST!!
 dnl It disables -Wsomeunknownoption being an error. Which is needed for
