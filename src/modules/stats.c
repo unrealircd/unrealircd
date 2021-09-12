@@ -937,12 +937,12 @@ int stats_tld(Client *client, const char *para)
 
 int stats_uptime(Client *client, const char *para)
 {
-	time_t tmpnow;
+	long long uptime;
 
-	tmpnow = TStime() - me.local->fake_lag;
+	uptime = TStime() - me.local->fake_lag;
 	sendnumeric(client, RPL_STATSUPTIME,
-	    tmpnow / 86400, (tmpnow / 3600) % 24, (tmpnow / 60) % 60,
-	    tmpnow % 60);
+	    uptime / 86400, (uptime / 3600) % 24, (uptime / 60) % 60,
+	    uptime % 60);
 	sendnumeric(client, RPL_STATSCONN,
 	    max_connection_count, irccounts.me_max);
 	return 0;

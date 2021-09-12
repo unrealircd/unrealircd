@@ -86,7 +86,7 @@ static void show_watch(Client *client, char *name, int rpl1, int rpl2, int awayn
 			sendnumeric(client, RPL_NOWISAWAY,
 			    target->name, target->user->username,
 			    IsHidden(target) ? target->user->virthost : target->user->
-			    realhost, target->user->away_since);
+			    realhost, (long long)target->user->away_since);
 			return;
 		}
 		
@@ -285,7 +285,7 @@ CMD_FUNC(cmd_watch)
 					    target->user->username,
 					    IsHidden(target) ? target->user->
 					    virthost : target->user->realhost,
-					    target->lastnick);
+					    (long long)target->lastnick);
 				}
 				/*
 				 * But actually, only show them offline if its a capital
@@ -294,7 +294,7 @@ CMD_FUNC(cmd_watch)
 				else if (isupper(*s))
 					sendnumeric(client, RPL_NOWOFF,
 					    lp->value.wptr->nick, "*", "*",
-					    lp->value.wptr->lasttime);
+					    (long long)lp->value.wptr->lasttime);
 				lp = lp->next;
 			}
 

@@ -149,10 +149,9 @@ CMD_FUNC(cmd_topic)
 			sendnumeric(client, RPL_NOTOPIC, channel->name);
 		else
 		{
-			sendnumeric(client, RPL_TOPIC,
-			    channel->name, channel->topic);
+			sendnumeric(client, RPL_TOPIC, channel->name, channel->topic);
 			sendnumeric(client, RPL_TOPICWHOTIME, channel->name,
-			    channel->topic_nick, channel->topic_time);
+			            channel->topic_nick, (long long)channel->topic_time);
 		}
 		return;
 	}

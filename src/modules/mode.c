@@ -133,7 +133,7 @@ CMD_FUNC(cmd_mode)
 		modebuf[1] = '\0';
 		channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel, 0);
 		sendnumeric(client, RPL_CHANNELMODEIS, channel->name, modebuf, parabuf);
-		sendnumeric(client, RPL_CREATIONTIME, channel->name, channel->creationtime);
+		sendnumeric(client, RPL_CREATIONTIME, channel->name, (long long)channel->creationtime);
 		return;
 	}
 
@@ -1657,17 +1657,17 @@ int list_mode_request(Client *client, Channel *channel, const char *req)
 	{
 		case 'b':
 			for (ban = channel->banlist; ban; ban = ban->next)
-				sendnumeric(client, RPL_BANLIST, channel->name, ban->banstr, ban->who, ban->when);
+				sendnumeric(client, RPL_BANLIST, channel->name, ban->banstr, ban->who, (long long)ban->when);
 			sendnumeric(client, RPL_ENDOFBANLIST, channel->name);
 			break;
 		case 'e':
 			for (ban = channel->exlist; ban; ban = ban->next)
-				sendnumeric(client, RPL_EXLIST, channel->name, ban->banstr, ban->who, ban->when);
+				sendnumeric(client, RPL_EXLIST, channel->name, ban->banstr, ban->who, (long long)ban->when);
 			sendnumeric(client, RPL_ENDOFEXLIST, channel->name);
 			break;
 		case 'I':
 			for (ban = channel->invexlist; ban; ban = ban->next)
-				sendnumeric(client, RPL_INVEXLIST, channel->name, ban->banstr, ban->who, ban->when);
+				sendnumeric(client, RPL_INVEXLIST, channel->name, ban->banstr, ban->who, (long long)ban->when);
 			sendnumeric(client, RPL_ENDOFINVEXLIST, channel->name);
 			break;
 		case 'q':

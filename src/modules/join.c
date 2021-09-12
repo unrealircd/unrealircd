@@ -240,8 +240,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 		if (channel->topic)
 		{
 			sendnumeric(client, RPL_TOPIC, channel->name, channel->topic);
-			sendnumeric(client, RPL_TOPICWHOTIME, channel->name, channel->topic_nick,
-			    channel->topic_time);
+			sendnumeric(client, RPL_TOPICWHOTIME, channel->name, channel->topic_nick, (long long)channel->topic_time);
 		}
 		
 		/* Set default channel modes (set::modes-on-join).

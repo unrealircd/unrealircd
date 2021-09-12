@@ -3486,32 +3486,32 @@ int tkl_stats_matcher(Client *client, int type, const char *para, TKLFlag *tklfl
 		if (tkl->type == (TKL_KILL | TKL_GLOBAL))
 		{
 			sendnumeric(client, RPL_STATSGLINE, 'G', uhost,
-				   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
-				   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
+				   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
+				   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
 		} else
 		if (tkl->type == (TKL_ZAP | TKL_GLOBAL))
 		{
 			sendnumeric(client, RPL_STATSGLINE, 'Z', uhost,
-				   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
-				   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
+				   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
+				   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
 		} else
 		if (tkl->type == (TKL_SHUN | TKL_GLOBAL))
 		{
 			sendnumeric(client, RPL_STATSGLINE, 's', uhost,
-				   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
-				   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
+				   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
+				   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
 		} else
 		if (tkl->type == (TKL_KILL))
 		{
 			sendnumeric(client, RPL_STATSGLINE, 'K', uhost,
-				   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
-				   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
+				   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
+				   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
 		} else
 		if (tkl->type == (TKL_ZAP))
 		{
 			sendnumeric(client, RPL_STATSGLINE, 'z', uhost,
-				   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
-				   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
+				   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
+				   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
 		}
 	} else
 	if (TKLIsSpamfilter(tkl))
@@ -3521,9 +3521,10 @@ int tkl_stats_matcher(Client *client, int type, const char *para, TKLFlag *tklfl
 			unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type),
 			spamfilter_target_inttostring(tkl->ptr.spamfilter->target),
 			banact_valtostring(tkl->ptr.spamfilter->action),
-			(tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
-			TStime() - tkl->set_at,
-			tkl->ptr.spamfilter->tkl_duration, tkl->ptr.spamfilter->tkl_reason,
+			(tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
+			(long long)(TStime() - tkl->set_at),
+			(long long)tkl->ptr.spamfilter->tkl_duration,
+			tkl->ptr.spamfilter->tkl_reason,
 			tkl->set_by,
 			tkl->ptr.spamfilter->match->str);
 		if (para && !strcasecmp(para, "del"))
@@ -3541,9 +3542,13 @@ int tkl_stats_matcher(Client *client, int type, const char *para, TKLFlag *tklfl
 	} else
 	if (TKLIsNameBan(tkl))
 	{
-		sendnumeric(client, RPL_STATSQLINE, (tkl->type & TKL_GLOBAL) ? 'Q' : 'q',
-			tkl->ptr.nameban->name, (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
-			TStime() - tkl->set_at, tkl->set_by, tkl->ptr.nameban->reason);
+		sendnumeric(client, RPL_STATSQLINE,
+		            (tkl->type & TKL_GLOBAL) ? 'Q' : 'q',
+		            tkl->ptr.nameban->name,
+		            (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
+		            (long long)(TStime() - tkl->set_at),
+		            tkl->set_by,
+		            tkl->ptr.nameban->reason);
 	} else
 	if (TKLIsBanException(tkl))
 	{
@@ -3551,8 +3556,8 @@ int tkl_stats_matcher(Client *client, int type, const char *para, TKLFlag *tklfl
 		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
 		sendnumeric(client, RPL_STATSEXCEPTTKL, uhost,
 			   tkl->ptr.banexception->bantypes,
-			   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
-			   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.banexception->reason);
+			   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
+			   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->ptr.banexception->reason);
 	} else
 	{
 		/* That's weird, unknown TKL type */
