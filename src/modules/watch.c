@@ -72,10 +72,8 @@ MOD_UNLOAD()
 /*
  * RPL_NOWON	- Online at the moment (Successfully added to WATCH-list)
  * RPL_NOWOFF	- Offline at the moement (Successfully added to WATCH-list)
- * RPL_WATCHOFF	- Successfully removed from WATCH-list.
- * ERR_TOOMANYWATCH - Take a guess :>  Too many WATCH entries.
  */
-static void show_watch(Client *client, char *name, int rpl1, int rpl2, int awaynotify)
+static void show_watch(Client *client, char *name, int awaynotify)
 {
 	Client *target;
 
@@ -85,19 +83,39 @@ static void show_watch(Client *client, char *name, int rpl1, int rpl2, int awayn
 		{
 			sendnumeric(client, RPL_NOWISAWAY,
 			    target->name, target->user->username,
-			    IsHidden(target) ? target->user->virthost : target->user->
-			    realhost, (long long)target->user->away_since);
+			    IsHidden(target) ? target->user->virthost : target->user->realhost,
+			    (long long)target->user->away_since);
 			return;
 		}
 		
-		sendnumeric_legacy(client, rpl1,
+		sendnumeric(client, RPL_NOWON,
 		    target->name, target->user->username,
-		    IsHidden(target) ? target->user->virthost : target->user->
-		    realhost, target->lastnick);
+		    IsHidden(target) ? target->user->virthost : target->user->realhost,
+		    (long long)target->lastnick);
 	}
 	else
 	{
-		sendnumeric_legacy(client, rpl2, name, "*", "*", 0L);
+		sendnumeric(client, RPL_NOWOFF, name, "*", "*", 0LL);
+	}
+}
+
+/*
+ * RPL_WATCHOFF	- Successfully removed from WATCH-list.
+ */
+static void show_watch_removed(Client *client, char *name)
+{
+	Client *target;
+
+	if ((target = find_person(name, NULL)))
+	{
+		sendnumeric(client, RPL_WATCHOFF,
+		    target->name, target->user->username,
+		    IsHidden(target) ? target->user->virthost : target->user->realhost,
+		    (long long)target->lastnick);
+	}
+	else
+	{
+		sendnumeric(client, RPL_WATCHOFF, name, "*", "*", 0LL);
 	}
 }
 
@@ -172,7 +190,7 @@ CMD_FUNC(cmd_watch)
 					);
 			}
 
-			show_watch(client, s + 1, RPL_NOWON, RPL_NOWOFF, awaynotify);
+			show_watch(client, s + 1, awaynotify);
 			continue;
 		}
 
@@ -185,8 +203,7 @@ CMD_FUNC(cmd_watch)
 			if (!*(s+1))
 				continue;
 			watch_del(s + 1, client, WATCH_FLAG_TYPE_WATCH);
-			show_watch(client, s + 1, RPL_WATCHOFF, RPL_WATCHOFF, 0);
-
+			show_watch_removed(client, s + 1);
 			continue;
 		}
 
@@ -359,12 +376,20 @@ int watch_notification(Client *client, Watch *watch, Link *lp, int event)
 
 	if (!awaynotify)
 	{
-		sendnumeric_legacy(lp->value.client, (event == WATCH_EVENT_OFFLINE)?RPL_LOGOFF:RPL_LOGON,
-		    client->name,
-		    (IsUser(client) ? client->user->username : "<N/A>"),
-		    (IsUser(client) ?
-		    (IsHidden(client) ? client->user->virthost : client->
-		    user->realhost) : "<N/A>"), watch->lasttime, client->info);
+		if (event == WATCH_EVENT_OFFLINE)
+		{
+			sendnumeric(lp->value.client, RPL_LOGOFF,
+			            client->name,
+			            (IsUser(client) ? client->user->username : "<N/A>"),
+			            (IsUser(client) ? (IsHidden(client) ? client->user->virthost : client->user->realhost) : "<N/A>"),
+			            (long long)watch->lasttime);
+		} else {
+			sendnumeric(lp->value.client, RPL_LOGON,
+			            client->name,
+			            (IsUser(client) ? client->user->username : "<N/A>"),
+			            (IsUser(client) ? (IsHidden(client) ? client->user->virthost : client->user->realhost) : "<N/A>"),
+			            (long long)watch->lasttime);
+		}
 	}
 	else
 	{
@@ -373,19 +398,31 @@ int watch_notification(Client *client, Watch *watch, Link *lp, int event)
 			return 0; /* skip away/unaway notification for users not interested in them */
 
 		if (event == WATCH_EVENT_NOTAWAY)
+		{
 			sendnumeric(lp->value.client, RPL_NOTAWAY,
 			    client->name,
 			    (IsUser(client) ? client->user->username : "<N/A>"),
-			    (IsUser(client) ?
-			    (IsHidden(client) ? client->user->virthost : client->user->realhost) : "<N/A>"),
-			    (int)client->user->away_since);
-		else /* RPL_GONEAWAY / RPL_REAWAY */
-			sendnumeric_legacy(lp->value.client, (event == WATCH_EVENT_AWAY)?RPL_GONEAWAY:RPL_REAWAY,
-			    client->name,
-			    (IsUser(client) ? client->user->username : "<N/A>"),
-			    (IsUser(client) ?
-			    (IsHidden(client) ? client->user->virthost : client->
-			    user->realhost) : "<N/A>"), client->user->away_since, client->user->away);
+			    (IsUser(client) ? (IsHidden(client) ? client->user->virthost : client->user->realhost) : "<N/A>"),
+			    (long long)client->user->away_since);
+		} else
+		if (event == RPL_GONEAWAY)
+		{
+			sendnumeric(lp->value.client, RPL_GONEAWAY,
+			            client->name,
+			            (IsUser(client) ? client->user->username : "<N/A>"),
+			            (IsUser(client) ? (IsHidden(client) ? client->user->virthost : client->user->realhost) : "<N/A>"),
+			            (long long)client->user->away_since,
+			            client->user->away);
+		} else
+		if (event == RPL_REAWAY)
+		{
+			sendnumeric(lp->value.client, RPL_REAWAY,
+			            client->name,
+			            (IsUser(client) ? client->user->username : "<N/A>"),
+			            (IsUser(client) ? (IsHidden(client) ? client->user->virthost : client->user->realhost) : "<N/A>"),
+			            (long long)client->user->away_since,
+			            client->user->away);
+		}
 	}
 	
 	return 0;
