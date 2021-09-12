@@ -109,7 +109,7 @@ char *find_best_asan_log(void)
 		}
 	}
 	closedir(fd);
-	return BadPtr(best_fname) ? NULL : best_fname;
+	return *best_fname ? best_fname : NULL;
 #else
 	return NULL;
 #endif

@@ -204,7 +204,7 @@ void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list)
 			m = safe_alloc(sizeof(MessageTag));
 			safe_strdup(m->name, name);
 			/* Both NULL and empty become NULL: */
-			if (BadPtr(value))
+			if (!*value)
 				m->value = NULL;
 			else /* a real value... */
 				safe_strdup(m->value, value);

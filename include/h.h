@@ -484,7 +484,7 @@ extern void *safe_alloc(size_t size);
  * @param dst   The current pointer and the pointer where a new copy of the string will be stored.
  * @param str   The string you want to copy
  */
-#define safe_strdup(dst,str) do { if (dst) free(dst); if (!(str)) dst = NULL; else dst = our_strdup(str); } while(0)
+#define safe_strdup(dst,str) do { if (dst) free(dst); if ((str) == NULL) dst = NULL; else dst = our_strdup(str); } while(0)
 
 /** Return a copy of the string. Do not free any existing memory.
  * @param str   The string to duplicate
