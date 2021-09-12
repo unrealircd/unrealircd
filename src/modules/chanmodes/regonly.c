@@ -33,7 +33,7 @@ Cmode_t EXTCMODE_REGONLY;
 
 #define IsRegOnly(channel)    (channel->mode.mode & EXTCMODE_REGONLY)
 
-int regonly_check (Client *client, Channel *channel, const char *key);
+int regonly_check(Client *client, Channel *channel, const char *key, char **errmsg);
 
 
 MOD_TEST()
@@ -68,10 +68,13 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int regonly_check (Client *client, Channel *channel, const char *key)
+int regonly_check (Client *client, Channel *channel, const char *key, char **errmsg)
 {
 	if (IsRegOnly(channel) && !IsLoggedIn(client))
+	{
+		*errmsg = STR_ERR_NEEDREGGEDNICK;
 		return ERR_NEEDREGGEDNICK;
+	}
 	return 0;
 }
 

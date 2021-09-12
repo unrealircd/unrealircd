@@ -342,6 +342,7 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, const char *key)
 {
 	const char *linked;
 	int canjoin;
+	char *error = NULL;
 
 	// User might already be on this channel, let's also exclude any possible services bots early
 	if (IsULine(client) || find_membership_link(client->user->channel, channel))
@@ -433,7 +434,7 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, const char *key)
 		return HOOK_CONTINUE;
 
 	// can_join() actually returns 0 if we *can* join a channel, so we don't need to bother checking any further conditions
-	if (!(canjoin = can_join(client, channel, key)))
+	if (!(canjoin = can_join(client, channel, key, &error)))
 		return HOOK_CONTINUE;
 
 	// Oper only channel

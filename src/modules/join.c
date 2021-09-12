@@ -26,9 +26,10 @@
 CMD_FUNC(cmd_join);
 void _join_channel(Channel *channel, Client *client, MessageTag *mtags, int flags);
 void _do_join(Client *client, int parc, const char *parv[]);
-int _can_join(Client *client, Channel *channel, const char *key);
+int _can_join(Client *client, Channel *channel, const char *key, char **errmsg);
 void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mtags);
 char *_get_chmodes_for_user(Client *client, int flags);
+void send_cannot_join_error(Client *client, int numeric, char *fmtstr, char *channel_name);
 
 /* Externs */
 extern MODVAR int spamf_ugly_vchanoverride;
@@ -91,7 +92,7 @@ MOD_UNLOAD()
  * (eg: bans at the end), so don't change it unless you have a good reason
  * to do so -- Syzop.
  */
-int _can_join(Client *client, Channel *channel, const char *key)
+int _can_join(Client *client, Channel *channel, const char *key, char **errmsg)
 {
 	Link *lp;
 	Ban *banned;
@@ -100,7 +101,7 @@ int _can_join(Client *client, Channel *channel, const char *key)
 
 	for (h = Hooks[HOOKTYPE_CAN_JOIN]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(client,channel,key);
+		i = (*(h->func.intfunc))(client,channel,key, errmsg);
 		if (i != 0)
 			return i;
 	}
@@ -115,23 +116,32 @@ int _can_join(Client *client, Channel *channel, const char *key)
 	/* See if we can evade this ban */
 	banned = is_banned(client, channel, BANCHK_JOIN, NULL, NULL);
 	if (banned && j == HOOK_DENY)
-		return (ERR_BANNEDFROMCHAN);
+	{
+		*errmsg = STR_ERR_BANNEDFROMCHAN;
+		return ERR_BANNEDFROMCHAN;
+	}
 
 	if (is_invited(client, channel))
 		return 0; /* allowed to walk through all the other modes */
 
-        if (banned)
-                return (ERR_BANNEDFROMCHAN);
+	if (banned)
+	{
+		*errmsg = STR_ERR_BANNEDFROMCHAN;
+		return ERR_BANNEDFROMCHAN;
+	}
 
 #ifndef NO_OPEROVERRIDE
 #ifdef OPEROVERRIDE_VERIFY
-        if (ValidatePermissionsForPath("channel:override:privsecret",client,NULL,channel,NULL) && (channel->mode.mode & MODE_SECRET ||
-            channel->mode.mode & MODE_PRIVATE) && !is_autojoin_chan(channel->name))
-                return (ERR_OPERSPVERIFY);
+	if (ValidatePermissionsForPath("channel:override:privsecret",client,NULL,channel,NULL) && (channel->mode.mode & MODE_SECRET ||
+	    channel->mode.mode & MODE_PRIVATE) && !is_autojoin_chan(channel->name))
+	{
+		*errmsg = STR_ERR_OPERSPVERIFY;
+		return (ERR_OPERSPVERIFY);
+	}
 #endif
 #endif
 
-        return 0;
+	return 0;
 }
 
 /*
@@ -519,6 +529,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 		else
 		{
 			Hook *h;
+			char *errmsg = NULL;
 			for (h = Hooks[HOOKTYPE_PRE_LOCAL_JOIN]; h; h = h->next) 
 			{
 				i = (*(h->func.intfunc))(client,channel,key);
@@ -535,12 +546,10 @@ void _do_join(Client *client, int parc, const char *parv[])
 			}
 			/* If they are allowed, don't check can_join */
 			if (i != HOOK_ALLOW && 
-			   (i = can_join(client, channel, key)))
+			   (i = can_join(client, channel, key, &errmsg)))
 			{
 				if (i != -1)
-				{
-					sendnumeric_legacy(client, i, name);
-				}
+					send_cannot_join_error(client, i, errmsg, name);
 				continue;
 			}
 		}
@@ -562,6 +571,20 @@ void _do_join(Client *client, int parc, const char *parv[])
 	RET();
 #undef RET
 }
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
+void send_cannot_join_error(Client *client, int numeric, char *fmtstr, char *channel_name)
+{
+	// TODO: add single %s validation !
+	sendnumericfmt(client, numeric, fmtstr, channel_name);
+}
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
 
 /* Additional channel-related functions. I've put it here instead
  * of the core so it could be upgraded on the fly should it be necessary.

@@ -678,7 +678,7 @@ extern MODVAR int labeled_response_force;
 /* Efuncs */
 extern MODVAR void (*do_join)(Client *, int, const char **);
 extern MODVAR void (*join_channel)(Channel *channel, Client *client, MessageTag *mtags, int flags);
-extern MODVAR int (*can_join)(Client *client, Channel *channel, const char *key);
+extern MODVAR int (*can_join)(Client *client, Channel *channel, const char *key, char **errmsg);
 extern MODVAR void (*do_mode)(Channel *channel, Client *client, MessageTag *mtags, int parc, const char *parv[], time_t sendts, int samode);
 extern MODVAR void (*set_mode)(Channel *channel, Client *cptr, int parc, const char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);

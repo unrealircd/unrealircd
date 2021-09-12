@@ -33,7 +33,7 @@ Cmode_t EXTCMODE_INVITE_ONLY;
 
 #define IsInviteOnly(channel)    (channel->mode.mode & EXTCMODE_INVITE_ONLY)
 
-int inviteonly_can_join(Client *client, Channel *channel, const char *key);
+int inviteonly_can_join(Client *client, Channel *channel, const char *key, char **errmsg);
 
 MOD_INIT()
 {
@@ -62,7 +62,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int inviteonly_can_join (Client *client, Channel *channel, const char *key)
+int inviteonly_can_join (Client *client, Channel *channel, const char *key, char **errmsg)
 {
 	if (IsInviteOnly(channel))
 	{
@@ -70,6 +70,7 @@ int inviteonly_can_join (Client *client, Channel *channel, const char *key)
 			return 0;
 		if (find_invex(channel, client))
 			return 0;
+		*errmsg = STR_ERR_INVITEONLYCHAN;
 		return ERR_INVITEONLYCHAN;
 	}
 	return 0;

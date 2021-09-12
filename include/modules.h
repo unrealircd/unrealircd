@@ -1242,7 +1242,7 @@ int hooktype_remote_nickchange(Client *client, MessageTag *mtags, const char *ne
  * @param key			The key supplied by the client
  * @return Return 0 to allow the user, any other value should be an IRC numeric (eg: ERR_BANNEDFROMCHAN).
  */
-int hooktype_can_join(Client *client, Channel *channel, const char *key);
+int hooktype_can_join(Client *client, Channel *channel, const char *key, char **errmsg);
 
 /** Called when a user wants to join a channel, may the user join? (function prototype for HOOKTYPE_PRE_LOCAL_JOIN).
  * FIXME: It's not entirely clear why we have both hooktype_can_join() and hooktype_pre_local_join().
@@ -1310,12 +1310,12 @@ const char *hooktype_pre_local_kick(Client *client, Client *victim, Channel *cha
  * @param comment		The KICK reason, this may be NULL.
  * @param client_flags		The access flags of 'client', one of CHFL_*, eg CHFL_CHANOP.
  * @param victim_flags		The access flags of 'victim', one of CHFL_*, eg CHFL_VOICE.
- * @param error			The error message that should be shown to the user (full IRC protocol line).
+ * @param errmsg		The error message that should be shown to the user (full IRC protocol line).
  * @retval EX_DENY		Deny the KICK (unless IRCOp with sufficient override rights).
  * @retval EX_ALWAYS_DENY	Deny the KICK always (even if IRCOp).
  * @retval EX_ALLOW		Allow the kick, unless another module blocks it.
  */
-int hooktype_can_kick(Client *client, Client *victim, Channel *channel, const char *comment, long client_flags, long victim_flags, const char **error);
+int hooktype_can_kick(Client *client, Client *victim, Channel *channel, const char *comment, long client_flags, long victim_flags, const char **errmsg);
 
 /** Called when a local user is kicked (function prototype for HOOKTYPE_LOCAL_KICK).
  * @param client		The client issuing the command
@@ -1778,7 +1778,7 @@ int hooktype_free_user(Client *client);
  * @note I don't think this works?
  * @return Unclear..
  */
-int hooktype_can_join_limitexceeded(Client *client, Channel *channel, const char *key);
+int hooktype_can_join_limitexceeded(Client *client, Channel *channel, const char *key, char **errmsg);
 
 /** Called to check if the user is visible in the channel (function prototype for HOOKTYPE_VISIBLE_IN_CHANNEL).
  * For example, the delayjoin module (+d/+D) will 'return 0' here if the user is hidden due to delayed join.

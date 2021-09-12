@@ -32,7 +32,7 @@ Cmode_t EXTCMODE_SECUREONLY;
 
 #define IsSecureOnly(channel)    (channel->mode.mode & EXTCMODE_SECUREONLY)
 
-int secureonly_check_join(Client *client, Channel *channel, const char *key);
+int secureonly_check_join(Client *client, Channel *channel, const char *key, char **errmsg);
 int secureonly_channel_sync (Channel *channel, int merge, int removetheirs, int nomode);
 int secureonly_check_secure(Channel *channel);
 int secureonly_check_sajoin(Client *target, Channel *channel, Client *requester);
@@ -127,7 +127,7 @@ static int secureonly_kick_insecure_users(Channel *channel)
 	return 0;
 }
 
-int secureonly_check_join(Client *client, Channel *channel, const char *key)
+int secureonly_check_join(Client *client, Channel *channel, const char *key, char **errmsg)
 {
 	Link *lp;
 
@@ -141,6 +141,7 @@ int secureonly_check_join(Client *client, Channel *channel, const char *key)
 			if (is_invited(client, channel))
 				return HOOK_CONTINUE;
 		}
+		*errmsg = STR_ERR_SECUREONLYCHAN;
 		return ERR_SECUREONLYCHAN;
 	}
 	return 0;

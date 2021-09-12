@@ -43,7 +43,7 @@ Cmode_t EXTMODE_LIMIT = 0L;
 #define LIMITLEN	32
 
 /* Forward declarations */
-int limit_can_join(Client *client, Channel *channel, const char *key);
+int limit_can_join(Client *client, Channel *channel, const char *key, char **errmsg);
 int cmode_limit_is_ok(Client *client, Channel *channel, char mode, const char *para, int type, int what);
 void *cmode_limit_put_param(void *r_in, const char *param);
 const char *cmode_limit_get_param(void *r_in);
@@ -87,7 +87,7 @@ MOD_UNLOAD()
 }
 
 /** Can the user join the channel? */
-int limit_can_join(Client *client, Channel *channel, const char *key)
+int limit_can_join(Client *client, Channel *channel, const char *key, char **errmsg)
 {
 	ChannelLimit *r = (ChannelLimit *)GETPARASTRUCT(channel, 'l');
 
@@ -97,10 +97,11 @@ int limit_can_join(Client *client, Channel *channel, const char *key)
 		Hook *h;
 		for (h = Hooks[HOOKTYPE_CAN_JOIN_LIMITEXCEEDED]; h; h = h->next) 
 		{
-			int i = (*(h->func.intfunc))(client,channel,key);
+			int i = (*(h->func.intfunc))(client,channel,key,errmsg);
 			if (i != 0)
 				return i;
 		}
+		*errmsg = STR_ERR_CHANNELISFULL;
 		return ERR_CHANNELISFULL;
 	}
 

@@ -33,9 +33,9 @@ ModuleHeader MOD_HEADER
 Cmode_t EXTCMODE_OPERONLY;
 
 int operonly_require_oper(Client *client, Channel *channel, char mode, const char *para, int checkt, int what);
-int operonly_check (Client *client, Channel *channel, const char *key);
-int operonly_topic_allow (Client *client, Channel *channel);
-int operonly_check_ban(Client *client, Channel *channel);
+int operonly_can_join(Client *client, Channel *channel, const char *key, char **errmsg);
+int operonly_view_topic_outside_channel(Client *client, Channel *channel);
+int operonly_oper_invite_ban(Client *client, Channel *channel);
 
 MOD_TEST()
 {
@@ -52,9 +52,9 @@ CmodeInfo req;
 	req.is_ok = operonly_require_oper;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_OPERONLY);
 	
-	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, operonly_check);
-	HookAdd(modinfo->handle, HOOKTYPE_OPER_INVITE_BAN, 0, operonly_check_ban);
-	HookAdd(modinfo->handle, HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL, 0, operonly_topic_allow);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, operonly_can_join);
+	HookAdd(modinfo->handle, HOOKTYPE_OPER_INVITE_BAN, 0, operonly_oper_invite_ban);
+	HookAdd(modinfo->handle, HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL, 0, operonly_view_topic_outside_channel);
 
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -71,14 +71,17 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int operonly_check (Client *client, Channel *channel, const char *key)
+int operonly_can_join(Client *client, Channel *channel, const char *key, char **errmsg)
 {
 	if ((channel->mode.mode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:join",client,NULL,channel,NULL))
+	{
+		*errmsg = STR_ERR_OPERONLY;
 		return ERR_OPERONLY;
+	}
 	return 0;
 }
 
-int operonly_check_ban(Client *client, Channel *channel)
+int operonly_oper_invite_ban(Client *client, Channel *channel)
 {
 	 if ((channel->mode.mode & EXTCMODE_OPERONLY) &&
 		    !ValidatePermissionsForPath("channel:operonly:ban",client,NULL,NULL,NULL))
@@ -87,7 +90,7 @@ int operonly_check_ban(Client *client, Channel *channel)
 	 return HOOK_CONTINUE;
 }
 
-int operonly_topic_allow (Client *client, Channel *channel)
+int operonly_view_topic_outside_channel(Client *client, Channel *channel)
 {
 	if (channel->mode.mode & EXTCMODE_OPERONLY && !ValidatePermissionsForPath("channel:operonly:topic",client,NULL,channel,NULL))
 		return HOOK_DENY;
