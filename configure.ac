@@ -189,6 +189,8 @@ CFLAGS="$CFLAGS -funsigned-char"
 
 dnl Compiler -W checks...
 
+dnl == ADD THESE WARNINGS ==
+
 dnl We should be able to turn this on unconditionally:
 CFLAGS="$CFLAGS -Wall"
 
@@ -202,6 +204,10 @@ dnl to disable them:
 dnl Can't use this, too bad: check_cc_flag([-Wlogical-op], [CFLAGS="$CFLAGS -Wlogical-op"])
 check_cc_flag([-Wduplicated-cond], [CFLAGS="$CFLAGS -Wduplicated-cond"])
 check_cc_flag([-Wduplicated-branches], [CFLAGS="$CFLAGS -Wduplicated-branches"])
+
+check_cc_flag([-Wparentheses], [CFLAGS="$CFLAGS -Wparentheses"])
+
+dnl == REMOVE THESE WARNINGS ==
 
 dnl And now to filter out certain warnings:
 dnl [!] NOTE REGARDING THE check_cc_flag used by these:
