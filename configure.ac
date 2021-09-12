@@ -249,10 +249,6 @@ check_cc_flag([-Wsign-compare], [CFLAGS="$CFLAGS -Wno-sign-compare"])
 dnl Don't warn about empty body, we use this, eg via Debug(()) or in if's.
 check_cc_flag([-Wempty-body], [CFLAGS="$CFLAGS -Wno-empty-body"])
 
-dnl This one fails with ircstrdup(var, staticstring)
-dnl Shame we have to turn it off completely...
-check_cc_flag([-Waddress], [CFLAGS="$CFLAGS -Wno-address"])
-
 dnl This one breaks our TO_INTFUNC() that is used in m_tkl for tkl_typetochar
 check_cc_flag([-Wcast-function-type], [CFLAGS="$CFLAGS -Wno-cast-function-type"])
 

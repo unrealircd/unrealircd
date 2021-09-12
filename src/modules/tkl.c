@@ -4455,7 +4455,7 @@ void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *cli
 	/* Below we deal with the more common choices... */
 
 	/* First, set the username */
-	if (((ban_target == BAN_TARGET_USERIP) || (ban_target == BAN_TARGET_USERHOST)) && client->ident && strcmp(client->ident, "unknown"))
+	if (((ban_target == BAN_TARGET_USERIP) || (ban_target == BAN_TARGET_USERHOST)) && strcmp(client->ident, "unknown"))
 		strlcpy(username, client->ident, sizeof(username));
 	else
 		strlcpy(username, "*", sizeof(username));

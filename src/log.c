@@ -466,7 +466,7 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		json_object_set_new(user, "username", json_string_unreal(client->user->username));
 		if (!BadPtr(client->info))
 			json_object_set_new(user, "realname", json_string_unreal(client->info));
-		if (client->uplink && client->uplink->name)
+		if (client->uplink)
 			json_object_set_new(user, "servername", json_string_unreal(client->uplink->name));
 		if (IsLoggedIn(client))
 			json_object_set_new(user, "account", json_string_unreal(client->user->account));
@@ -485,7 +485,7 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 
 		/* client.server */
 		json_object_set_new(child, "server", server);
-		if (client->uplink && client->uplink->name)
+		if (client->uplink)
 			json_object_set_new(server, "uplink", json_string_unreal(client->uplink->name));
 		json_object_set_new(server, "num_users", json_integer(client->server->users));
 		json_object_set_new(server, "boot_time", json_timestamp(client->server->boottime));
