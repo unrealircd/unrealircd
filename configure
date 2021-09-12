@@ -6029,7 +6029,7 @@ if test "$unknown_warning_option" = "1"; then
 		CFLAGS="$CFLAGS -Wno-unknown-warning-option"
 else
 	if test "$no_pragmas" = "1"; then
-								CFLAGS="$CFLAGS -Wno-no-pragmas"
+								CFLAGS="$CFLAGS -Wno-pragmas"
 	fi
 fi
 
