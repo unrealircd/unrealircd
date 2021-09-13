@@ -64,9 +64,9 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int moderated_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
+int moderated_can_send_to_channel(Client *client, Channel *channel, Membership *m, const char **msg, const char **errmsg, SendType sendtype)
 {
-	if (IsModerated(channel) && (!lp || !(lp->flags & CHFL_OVERLAP)) &&
+	if (IsModerated(channel) && (!m || !check_channel_access_membership(m, "vhoaq")) &&
 	    !op_can_override("channel:override:message:moderated",client,channel,NULL))
 	{
 		Hook *h;

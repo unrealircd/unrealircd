@@ -1140,7 +1140,7 @@ CMD_FUNC(reputation_user_cmd)
 			return;
 		}
 		/* corner case: ircop without proper permissions and not in channel */
-		if (!ValidatePermissionsForPath("channel:see:names:invisible",client,NULL,NULL,NULL) && !get_access(client,channel))
+		if (!ValidatePermissionsForPath("channel:see:names:invisible",client,NULL,NULL,NULL) && !IsMember(client,channel))
 		{
 			sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
 			return;

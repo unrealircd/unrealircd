@@ -198,6 +198,11 @@ typedef enum BypassChannelMessageRestrictionType {
 /** Channel mode bit/value */
 typedef unsigned long Cmode_t;
 
+typedef enum CmodeType {
+	CMODE_NORMAL=0,
+	CMODE_MEMBER=1,
+} CmodeType;
+
 /** Channel mode handler.
  * This struct contains all extended channel mode information,
  * like the flag, mode, their handler functions, etc.
@@ -213,11 +218,30 @@ struct Cmode {
 	/** mode character (like 'Z') */
 	char		letter;
 
-	/** unique flag (like 0x10) */
+	CmodeType	type;
+
+	/** If type is CMODE_NORMAL, then bitmask (eg: 0x10) that
+	 * is used in channel->mode.mode
+	 */
 	Cmode_t		mode;
 
+	/** If type is CMODE_MEMBER, then the prefix used in NAMES etc (eg @) */
+	char		prefix;
+
+	/** If type is CMODE_MEMBER, then the prefix used in SJOIN (eg @) */
+	char		sjoin_prefix;
+
+	/** If type is CMODE_MEMBER, then the priority of the prefix, iotw: how high ranking.
+	 * This is used, for example, in NAMES without NAMESX when we can only
+	 * show one symbol but not all.
+	 * To match other priority fields in UnrealIRCd: lowest number (negative) = highest priority!
+	 * Priority 0 (zero) cannot be used.
+	 * For reference: q is -4000, a is -3000, o is -2000, h is -1000, v is +1000
+	 */
+	int		prefix_priority;
+
 	/** Number of parameters (1 or 0) */
-	int			paracount;
+	int		paracount;
 
 	/** Check access or parameter of the channel mode.
 	 * @param client	The client
@@ -316,6 +340,10 @@ struct Cmode {
  */
 typedef struct {
 	char		letter;
+	CmodeType	type;
+	char		prefix;
+	char		sjoin_prefix;
+	int		prefix_priority;
 	int		paracount;
 	int		(*is_ok)(Client *,Channel *, char mode, const char *para, int, int);
 	void *		(*put_param)(void *, const char *);
@@ -1308,14 +1336,14 @@ const char *hooktype_pre_local_kick(Client *client, Client *victim, Channel *cha
  * @param victim		The victim that should be kicked
  * @param channel		The channel the user should be kicked from
  * @param comment		The KICK reason, this may be NULL.
- * @param client_flags		The access flags of 'client', one of CHFL_*, eg CHFL_CHANOP.
- * @param victim_flags		The access flags of 'victim', one of CHFL_*, eg CHFL_VOICE.
+ * @param client_member_modes	The member modes of 'client' (eg "o"), never NULL but can be empty.
+ * @param victim_member_modes	The member modes of 'victim' (eg "v"), never NULL but can be empty.
  * @param errmsg		The error message that should be shown to the user (full IRC protocol line).
  * @retval EX_DENY		Deny the KICK (unless IRCOp with sufficient override rights).
  * @retval EX_ALWAYS_DENY	Deny the KICK always (even if IRCOp).
  * @retval EX_ALLOW		Allow the kick, unless another module blocks it.
  */
-int hooktype_can_kick(Client *client, Client *victim, Channel *channel, const char *comment, long client_flags, long victim_flags, const char **errmsg);
+int hooktype_can_kick(Client *client, Client *victim, Channel *channel, const char *comment, const char *client_member_modes, const char *victim_member_modes, const char **errmsg);
 
 /** Called when a local user is kicked (function prototype for HOOKTYPE_LOCAL_KICK).
  * @param client		The client issuing the command
@@ -1873,13 +1901,14 @@ int hooktype_can_sajoin(Client *target, Channel *channel, Client *client);
  * @param channel		The channel
  * @param what			Always MODE_DEL at the moment
  * @param modechar		The mode character: q/a/o/h/v
- * @param my_access		Cached result of get_access(), so one of CHFL_*, for example CHFL_CHANOP.
+ * @param client_access		Channel member modes of 'client', eg "o", never NULL but can be empty.
+ * @param target_access		Channel member modes of 'client', eg "h", never NULL but can be empty.
  * @param reject_reason		The error string that should be sent to the client
  * @retval HOOK_CONTINUE	Proceed normally (allow it)
  * @retval HOOK_DENY		Reject the mode change
  * @retval HOOK_ALWAYS_DENY	Reject the mode change, even if IRCOp/Services/..
  */
-int hooktype_mode_deop(Client *client, Client *victim, Channel *channel, u_int what, int modechar, long my_access, const char **reject_reason);
+int hooktype_mode_deop(Client *client, Client *victim, Channel *channel, u_int what, int modechar, const char *client_access, const char *target_access, const char **reject_reason);
 
 /** Called when a DCC request was denied by the IRCd (function prototype for HOOKTYPE_DCC_DENIED).
  * @param client		The client who tried to send a file

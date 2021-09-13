@@ -86,10 +86,10 @@ int regonlyspeak_can_send_to_channel(Client *client, Channel *channel, Membershi
 	Hook *h;
 	int i;
 
-	if (IsRegOnlySpeak(channel) && !op_can_override("channel:override:message:regonlyspeak",client,channel,NULL) && !IsLoggedIn(client) &&
-		    (!lp
-		    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
-		    CHFL_HALFOP | CHFL_CHANADMIN))))
+	if (IsRegOnlySpeak(channel) &&
+	    !op_can_override("channel:override:message:regonlyspeak",client,channel,NULL) &&
+	    !IsLoggedIn(client) &&
+	    !check_channel_access_membership(lp, "vhoaq"))
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{

@@ -147,9 +147,10 @@ CMD_FUNC(cmd_sjoin)
 	unsigned short merge;	/**< same timestamp: merge their & our modes */
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	char cbuf[1024];
-	char nick[1024]; /**< nick or ban/invex/exempt being processed */
 	char scratch_buf[1024]; /**< scratch buffer */
-	char prefix[16]; /**< prefix of nick for server to server traffic (eg: @) */
+	char item[1024]; /**< nick or ban/invex/exempt being processed */
+	char item_modes[MEMBERMODESLEN]; /**< item modes, eg "b" or "vhoaq" */
+	char prefix[16]; /**< SJOIN prefix of item for server to server traffic (eg: @) */
 	char uid_buf[BUFSIZE];  /**< Buffer for server-to-server traffic which will be broadcasted to others (servers supporting SID/UID) */
 	char uid_sjsby_buf[BUFSIZE];  /**< Buffer for server-to-server traffic which will be broadcasted to others (servers supporting SID/UID and SJSBY) */
 	char sj3_parabuf[BUFSIZE]; /**< Prefix for the above SJOIN buffers (":xxx SJOIN #channel +mode :") */
@@ -162,7 +163,6 @@ CMD_FUNC(cmd_sjoin)
 	time_t ts, oldts;
 	unsigned short b=0;
 	char *tp, *p, *saved = NULL;
-	long modeflags;
 	
 	if (!IsServer(client) || parc < 4)
 		return;
@@ -229,7 +229,6 @@ CMD_FUNC(cmd_sjoin)
 	if (removeours)
 	{
 		Member *lp;
-		Membership *lp2;
 
 		modebuf[0] = '-';
 
@@ -276,39 +275,21 @@ CMD_FUNC(cmd_sjoin)
 		}
 		for (lp = channel->members; lp; lp = lp->next)
 		{
-			lp2 = find_membership_link(lp->client->user->channel, channel);
+			Membership *lp2 = find_membership_link(lp->client->user->channel, channel);
+
 			if (!lp2)
 			{
 				sendto_realops("Oops! channel->members && !find_membership_link");
 				continue;
 			}
-			if (lp->flags & MODE_CHANOWNER)
+
+			/* Remove all our modes, one by one */
+			for (p = lp->member_modes; *p; p++)
 			{
-				lp->flags &= ~MODE_CHANOWNER;
-				Addit('q', lp->client->name);
+				Addit(*p, lp->client->name);
 			}
-			if (lp->flags & MODE_CHANADMIN)
-			{
-				lp->flags &= ~MODE_CHANADMIN;
-				Addit('a', lp->client->name);
-			}
-			if (lp->flags & MODE_CHANOP)
-			{
-				lp->flags &= ~MODE_CHANOP;
-				Addit('o', lp->client->name);
-			}
-			if (lp->flags & MODE_HALFOP)
-			{
-				lp->flags &= ~MODE_HALFOP;
-				Addit('h', lp->client->name);
-			}
-			if (lp->flags & MODE_VOICE)
-			{
-				lp->flags &= ~MODE_VOICE;
-				Addit('v', lp->client->name);
-			}
-			/* Those should always match anyways  */
-			lp2->flags = lp->flags;
+			/* And clear all the flags in memory */
+			*lp->member_modes = *lp2->member_modes = '\0';
 		}
 		if (b > 1)
 		{
@@ -350,7 +331,7 @@ CMD_FUNC(cmd_sjoin)
 		time_t setat = TStime(); /**< Set at timestamp */
 		int sjsby_info = 0; /**< Set to 1 if we receive SJSBY info to alter the above 2 vars */
 
-		modeflags = 0;
+		*item_modes = 0;
 		i = 0;
 		tp = s;
 
@@ -390,91 +371,46 @@ CMD_FUNC(cmd_sjoin)
 			tp = end; /* the remainder is used for the actual ban/exempt/invex */
 		}
 
-		while (
-		    (*tp == '@') || (*tp == '+') || (*tp == '%')
-		    || (*tp == '*') || (*tp == '~') || (*tp == '&')
-		    || (*tp == '"') || (*tp == '\''))
+		/* Process the SJOIN prefixes... */
+		for (p = tp; *p; p++)
 		{
-			switch (*(tp++))
+			char m = sjoin_prefix_to_mode(*p);
+			if (!m)
+				break; /* end of prefix stuff, or so we hope anyway :D */
+			// TODO: do we want safety here for if one side has prefixmodes loaded
+			// and the other does not? and if so, in what way do we want this?
+
+			strlcat_letter(item_modes, m, sizeof(item_modes));
+
+			/* For list modes (+beI) stop processing immediately,
+			 * so we don't accidentally eat additional prefix chars.
+			 */
+			if (strchr("beI", m))
 			{
-			  case '@':
-				  modeflags |= CHFL_CHANOP;
-				  break;
-			  case '%':
-				  modeflags |= CHFL_HALFOP;
-				  break;
-			  case '+':
-				  modeflags |= CHFL_VOICE;
-				  break;
-			  case '*':
-				  modeflags |= CHFL_CHANOWNER;
-				  break;
-			  case '~':
-				  modeflags |= CHFL_CHANADMIN;
-				  break;
-			  case '&':
-				  modeflags = CHFL_BAN;
-				  goto getnick;
-			  case '"':
-				  modeflags = CHFL_EXCEPT;
-				  goto getnick;
-			  case '\'':
-				  modeflags = CHFL_INVEX;
-				  goto getnick;
+				p++;
+				break;
 			}
 		}
-getnick:
 
-		/* First, set the appropriate prefix for server to server traffic.
-		 * Note that 'prefix' is a 16 byte buffer but it's safe due to the limited
-		 * number of choices as can be seen below:
+		/* Now set 'prefix' to the prefixes we encountered.
+		 * This is basically the range tp..p
 		 */
-		*prefix = '\0';
-		p = prefix;
-		if (modeflags == CHFL_INVEX)
-			*p++ = '\'';
-		else if (modeflags == CHFL_EXCEPT)
-			*p++ = '\"';
-		else if (modeflags == CHFL_BAN)
-			*p++ = '&';
-		else
-		{
-			/* multiple options possible at the same time */
-			if (modeflags & CHFL_CHANOWNER)
-				*p++ = '*';
-			if (modeflags & CHFL_CHANADMIN)
-				*p++ = '~';
-			if (modeflags & CHFL_CHANOP)
-				*p++ = '@';
-			if (modeflags & CHFL_HALFOP)
-				*p++ = '%';
-			if (modeflags & CHFL_VOICE)
-				*p++ = '+';
-		}
-		*p = '\0';
+		strlncpy(prefix, tp, sizeof(prefix), p - tp);
 
-		/* Now copy the "nick" (which can actually be a ban/invex/exempt).
-		 * There's no size checking here but nick is 1024 bytes and we
-		 * have 512 bytes input max.
-		 */
-		i = 0;
-		while ((*tp != ' ') && (*tp != '\0'))
-			nick[i++] = *(tp++);	/* get nick */
-		nick[i] = '\0';
-		if (nick[0] == ' ')
+		/* Now copy the "nick" (which can actually be a ban/invex/exempt) */
+		strlcpy(item, p, sizeof(item));
+		if (*item == '\0')
 			continue;
-		if (nick[0] == '\0')
-			continue;
-		if (!(modeflags & CHFL_BAN) && !(modeflags & CHFL_EXCEPT) && !(modeflags & CHFL_INVEX))
+
+		/* If not a list mode... then we deal with users... */
+		if (!strchr(item_modes, 'b') && !strchr(item_modes, 'e') && !strchr(item_modes, 'I'))
 		{
 			Client *acptr;
-
-			/* A person joining */
 
 			/* The user may no longer exist. This can happen in case of a
 			 * SVSKILL traveling in the other direction. Nothing to worry about.
 			 */
-			if (!(acptr = find_person(nick, NULL)))
+			if (!(acptr = find_person(item, NULL)))
 				continue;
 
 			if (acptr->direction != client->direction)
@@ -490,15 +426,13 @@ getnick:
 				    me.id, channel->name, acptr->name);
 				sendto_realops
 				    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
-				    nick, client->uplink->name,
+				    item, client->uplink->name,
 				    client->name, channel->name);
 				continue;
 			}
 
 			if (removetheirs)
-			{
-				modeflags = 0;
-			}
+				*item_modes = '\0';
 
 			if (!IsMember(acptr, channel))
 			{
@@ -506,18 +440,16 @@ getnick:
 				 */
 				MessageTag *mtags = NULL;
 
-				add_user_to_channel(channel, acptr, modeflags);
+				add_user_to_channel(channel, acptr, item_modes);
 				RunHook(HOOKTYPE_REMOTE_JOIN, acptr, channel, recv_mtags);
 				new_message_special(acptr, recv_mtags, &mtags, ":%s JOIN %s", acptr->name, channel->name);
 				send_join_to_local_users(acptr, channel, mtags);
 				free_message_tags(mtags);
 			}
 
-			CheckStatus('q', CHFL_CHANOWNER);
-			CheckStatus('a', CHFL_CHANADMIN);
-			CheckStatus('o', CHFL_CHANOP);
-			CheckStatus('h', CHFL_HALFOP);
-			CheckStatus('v', CHFL_VOICE);
+			/* Set the +vhoaq */
+			for (p = item_modes; *p; p++)
+				Addit(*p, acptr->name);
 
 			if (strlen(uid_buf) + strlen(prefix) + IDLEN > BUFSIZE - 10)
 			{
@@ -559,71 +491,70 @@ getnick:
 		}
 		else
 		{
+			/* It's a list mode................ */
+			const char *str;
+			
 			if (removetheirs)
 				continue;
 
-			/* For list modes (beI): validate the syntax */
-			if (modeflags & (CHFL_BAN|CHFL_EXCEPT|CHFL_INVEX))
-			{
-				const char *str;
-				
-				/* non-extbans: prevent bans without ! or @. a good case of "should never happen". */
-				if ((nick[0] != '~') && (!strchr(nick, '!') || !strchr(nick, '@') || (nick[0] == '!')))
-					continue;
-				
-				str = clean_ban_mask(nick, MODE_ADD, client, 0);
-				if (!str)
-					continue; /* invalid ban syntax */
-				strlcpy(nick, str, sizeof(nick));
-			}
+			/* Validate syntax */
+
+			/* non-extbans: prevent bans without ! or @. a good case of "should never happen". */
+			if ((item[0] != '~') && (!strchr(item, '!') || !strchr(item, '@') || (item[0] == '!')))
+				continue;
+
+			str = clean_ban_mask(item, MODE_ADD, client, 0);
+			if (!str)
+				continue; /* invalid ban syntax */
+			strlcpy(item, str, sizeof(item));
 			
 			/* Adding of list modes */
-			if (modeflags & CHFL_BAN)
+			if (*item_modes == 'b')
 			{
-				if (add_listmode_ex(&channel->banlist, client, channel, nick, setby, setat) != -1)
+				if (add_listmode_ex(&channel->banlist, client, channel, item, setby, setat) != -1)
 				{
-					Addit('b', nick);
+					Addit('b', item);
 				}
 			}
-			if (modeflags & CHFL_EXCEPT)
+			if (*item_modes == 'e')
 			{
-				if (add_listmode_ex(&channel->exlist, client, channel, nick, setby, setat) != -1)
+				if (add_listmode_ex(&channel->exlist, client, channel, item, setby, setat) != -1)
 				{
-					Addit('e', nick);
+					Addit('e', item);
 				}
 			}
-			if (modeflags & CHFL_INVEX)
+			if (*item_modes == 'I')
 			{
-				if (add_listmode_ex(&channel->invexlist, client, channel, nick, setby, setat) != -1)
+				if (add_listmode_ex(&channel->invexlist, client, channel, item, setby, setat) != -1)
 				{
-					Addit('I', nick);
+					Addit('I', item);
 				}
 			}
 
-			if (strlen(uid_buf) + strlen(prefix) + strlen(nick) > BUFSIZE - 10)
+			if (strlen(uid_buf) + strlen(prefix) + strlen(item) > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
 				sendto_server(client, 0, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
 				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld %s :", client->id, (long long)ts, channel->name);
 				/* Double-check the new buffer is sufficient to concat the data */
-				if (strlen(uid_buf) + strlen(prefix) + strlen(nick) > BUFSIZE - 5)
+				if (strlen(uid_buf) + strlen(prefix) + strlen(item) > BUFSIZE - 5)
 				{
 					unreal_log(ULOG_ERROR, "sjoin", "BUG_OVERSIZED_SJOIN", client,
 					           "Oversized SJOIN [$sjoin_place] in channel $channel when adding '$str$str2' to '$buf'",
 					           log_data_string("sjoin_place", "UID-LMODE"),
 					           log_data_string("str", prefix),
-					           log_data_string("str2", nick),
+					           log_data_string("str2", item),
 					           log_data_string("buf", uid_buf));
 					continue;
 				}
 			}
-			sprintf(uid_buf+strlen(uid_buf), "%s%s ", prefix, nick);
+			sprintf(uid_buf+strlen(uid_buf), "%s%s ", prefix, item);
 
 			*scratch_buf = '\0';
 			if (sjsby_info)
 				add_sjsby(scratch_buf, setby, setat);
 			strcat(scratch_buf, prefix);
-			strcat(scratch_buf, nick);
+			strcat(scratch_buf, item);
 			strcat(scratch_buf, " ");
 			if (strlen(uid_sjsby_buf) + strlen(scratch_buf) > BUFSIZE - 10)
 			{

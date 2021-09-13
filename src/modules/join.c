@@ -24,11 +24,11 @@
 
 /* Forward declarations */
 CMD_FUNC(cmd_join);
-void _join_channel(Channel *channel, Client *client, MessageTag *mtags, int flags);
+void _join_channel(Channel *channel, Client *client, MessageTag *mtags, const char *member_modes);
 void _do_join(Client *client, int parc, const char *parv[]);
 int _can_join(Client *client, Channel *channel, const char *key, char **errmsg);
 void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mtags);
-char *_get_chmodes_for_user(Client *client, int flags);
+char *_get_chmodes_for_user(Client *client, const char *flags);
 void send_cannot_join_error(Client *client, int numeric, char *fmtstr, char *channel_name);
 
 /* Externs */
@@ -201,7 +201,7 @@ void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mta
 		if (!MyConnect(acptr))
 			continue; /* only locally connected clients */
 
-		if (chanops_only && !(lp->flags & (CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)) && (client != acptr))
+		if (chanops_only && !check_channel_access_member(lp, "hoaq") && (client != acptr))
 			continue; /* skip non-ops if requested to (used for mode +D), but always send to 'client' */
 
 		if (HasCapabilityFast(acptr, CAP_EXTENDED_JOIN))
@@ -214,7 +214,7 @@ void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mta
 /* Routine that actually makes a user join the channel
  * this does no actual checking (banned, etc.) it just adds the user
  */
-void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int flags)
+void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, const char *member_modes)
 {
 	MessageTag *mtags = NULL; /** Message tags to send to local users (sender is :user) */
 	MessageTag *mtags_sjoin = NULL; /* Message tags to send to remote servers for SJOIN (sender is :me.id) */
@@ -225,13 +225,13 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 
 	new_message(&me, recv_mtags, &mtags_sjoin);
 
-	add_user_to_channel(channel, client, flags);
+	add_user_to_channel(channel, client, member_modes);
 
 	send_join_to_local_users(client, channel, mtags);
 
 	sendto_server(client, 0, 0, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
 		me.id, (long long)channel->creationtime,
-		channel->name, chfl_to_sjoin_symbol(flags), client->id);
+		channel->name, modes_to_sjoin_prefix(member_modes), client->id);
 
 	if (MyUser(client))
 	{
@@ -313,11 +313,12 @@ void _do_join(Client *client, int parc, const char *parv[])
 	Membership *lp;
 	Channel *channel;
 	char *name, *key = NULL;
-	int i, flags = 0, ishold;
+	int i, ishold;
 	char *p = NULL, *p2 = NULL;
 	TKL *tklban;
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("JOIN");
+	const char *member_modes;
 
 #define RET() do { bouncedtimes--; parv[1] = orig_parv1; return; } while(0)
 
@@ -446,19 +447,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 
 		if (MyConnect(client))
 		{
-			/*
-			   ** local client is first to enter previously nonexistant
-			   ** channel so make them (rightfully) the Channel
-			   ** Operator.
-			 */
-			/* Where did this come from? Potvin ? --Stskeeps
-			   flags = (ChannelExists(name)) ? CHFL_DEOPPED :
-			   CHFL_CHANOWNER;
-
-			 */
-
-			flags =
-			    (ChannelExists(name)) ? CHFL_DEOPPED : LEVEL_ON_JOIN;
+			member_modes = (ChannelExists(name)) ? "" : LEVEL_ON_JOIN;
 
 			if (!ValidatePermissionsForPath("immune:maxchannelsperuser",client,NULL,NULL,NULL))	/* opers can join unlimited chans */
 				if (client->user->joined >= MAXCHANNELSPERUSER)
@@ -525,7 +514,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 
 		i = HOOK_CONTINUE;
 		if (!MyConnect(client))
-			flags = CHFL_DEOPPED;
+			member_modes = "";
 		else
 		{
 			Hook *h;
@@ -565,7 +554,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 		 * and so on, each with their own unique msgid and such.
 		 */
 		new_message(client, NULL, &mtags);
-		join_channel(channel, client, mtags, flags);
+		join_channel(channel, client, mtags, member_modes);
 		free_message_tags(mtags);
 	}
 	RET();
@@ -585,37 +574,22 @@ void send_cannot_join_error(Client *client, int numeric, char *fmtstr, char *cha
 #pragma GCC diagnostic pop
 #endif
 
-
 /* Additional channel-related functions. I've put it here instead
  * of the core so it could be upgraded on the fly should it be necessary.
  */
 
-char *_get_chmodes_for_user(Client *client, int flags)
+char *_get_chmodes_for_user(Client *client, const char *member_flags)
 {
 	static char modebuf[512]; /* returned */
 	char flagbuf[8]; /* For holding "vhoaq" */
-	char *p = flagbuf;
 	char parabuf[512];
 	int n, i;
 
-	if (!flags)
+	if (BadPtr(member_flags))
 		return "";
 
-	if (flags & MODE_CHANOWNER)
-		*p++ = 'q';
-	if (flags & MODE_CHANADMIN)
-		*p++ = 'a';
-	if (flags & MODE_CHANOP)
-		*p++ = 'o';
-	if (flags & MODE_VOICE)
-		*p++ = 'v';
-	if (flags & MODE_HALFOP)
-		*p++ = 'h';
-	*p = '\0';
-
 	parabuf[0] = '\0';
-
-	n = strlen(flagbuf);
+	n = strlen(member_flags);
 	if (n)
 	{
 		for (i=0; i < n; i++)
@@ -625,10 +599,9 @@ char *_get_chmodes_for_user(Client *client, int flags)
 				strlcat(parabuf, " ", sizeof(parabuf));
 		}
 		/* And we have our mode line! */
-		snprintf(modebuf, sizeof(modebuf), "+%s %s", flagbuf, parabuf);
+		snprintf(modebuf, sizeof(modebuf), "+%s %s", member_flags, parabuf);
 		return modebuf;
 	}
 
 	return "";
 }
-

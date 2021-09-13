@@ -2000,7 +2000,7 @@ struct Member
 {
 	struct Member *next;				/**< Next entry in list */
 	Client	      *client;				/**< The client */
-	int		flags;				/**< The access of the user on this channel (one or more of CHFL_*) */
+	char member_modes[MEMBERMODESLEN];		/**< The access of the user on this channel (eg "vhoqa") */
 	ModData moddata[MODDATA_MAX_MEMBER];		/** Member attached module data, used by the ModData system */
 };
 
@@ -2013,7 +2013,7 @@ struct Membership
 {
 	struct Membership 	*next;			/**< Next entry in list */
 	struct Channel		*channel;			/**< The channel */
-	int			flags;			/**< The access of the user on this channel (one or more of CHFL_*) */
+	char member_modes[MEMBERMODESLEN];		/**< The (new) access of the user on this channel (eg "vhoqa") */
 	ModData moddata[MODDATA_MAX_MEMBERSHIP];	/**< Membership attached module data, used by the ModData system */
 };
 
@@ -2031,15 +2031,6 @@ struct Ban {
 ** Channel Related macros follow
 */
 
-/* Channel related flags */
-#ifdef PREFIX_AQ
- #define CHFL_CHANOP_OR_HIGHER (CHFL_CHANOP|CHFL_CHANADMIN|CHFL_CHANOWNER)
- #define CHFL_HALFOP_OR_HIGHER (CHFL_CHANOWNER|CHFL_CHANADMIN|CHFL_CHANOP|CHFL_HALFOP)
-#else
- #define CHFL_CHANOP_OR_HIGHER (CHFL_CHANOP)
- #define CHFL_HALFOP_OR_HIGHER (CHFL_CHANOP|CHFL_HALFOP)
-#endif
-
 /** Channel flags (privileges) of users on a channel.
  * This is used by Member and Membership (m->flags) to indicate the access rights of a user in a channel.
  * Also used by SJOIN and MODE to set some flags while a JOIN or MODE is in process.
@@ -2047,44 +2038,21 @@ struct Ban {
  * @{
  */
 /** Is channel owner (+q) */
-#define is_chanowner(cptr,channel) (get_access(cptr,channel) & CHFL_CHANOWNER)
+#define is_chanowner(client,channel)	check_channel_access(client, channel, "q")
 /** Is channel admin (+a) */
-#define is_chanadmin(cptr,channel) (get_access(cptr,channel) & CHFL_CHANADMIN)
+#define is_chanadmin(client,channel)	check_channel_access(client, channel, "a")
 /** Is channel operator or higher (+o/+a/+q) */
-#define is_chan_op(cptr,channel) (get_access(cptr,channel) & CHFL_CHANOP_OR_HIGHER)
+#define is_chan_op(client,channel)	check_channel_access(client, channel, "oaq")
 /** Is some kind of channel op (+h/+o/+a/+q) */
-#define is_skochanop(cptr,channel) (get_access(cptr,channel) & CHFL_HALFOP_OR_HIGHER)
+#define is_skochanop(client,channel)	check_channel_access(client, channel, "hoaq")
 /** Is half-op (+h) */
-#define is_half_op(cptr,channel) (get_access(cptr,channel) & CHFL_HALFOP)
+#define is_half_op(client,channel)	check_channel_access(client, channel, "h")
 /** Has voice (+v) */
-#define has_voice(cptr,channel) (get_access(cptr,channel) & CHFL_VOICE)
-/* Important:
- * Do not blindly change the values of CHFL_* as they must match the
- * ones in MODE_*. I already screwed this up twice. -- Syzop
- * Obviously these should be decoupled in a code cleanup.
- */
-#define	CHFL_CHANOP     0x0001	/**< Channel operator (+o) */
-#define	CHFL_VOICE      0x0002	/**< Voice (+v, can speak through bans and +m) */
-#define	CHFL_DEOPPED	0x0004	/**< De-oped by a server (temporary state) */
-#define CHFL_CHANOWNER	0x0040	/**< Channel owner (+q) */
-#define CHFL_CHANADMIN	0x0080	/**< Channel admin (+a) */
-#define CHFL_HALFOP	0x0100	/**< Channel halfop (+h) */
-#define	CHFL_BAN     	0x0200	/**< Channel ban (+b) - not a real flag, only used in sjoin.c */
-#define CHFL_EXCEPT	0x0400	/**< Channel except (+e) - not a real flag, only used in sjoin.c */
-#define CHFL_INVEX	0x0800  /**< Channel invite exception (+I) - not a real flag, only used in sjoin.c */
+#define has_voice(client,channel)	check_channel_access(client, channel, "v")
+
 /** @} */
 
-#define CHFL_REJOINING	0x8000  /* used internally by rejoin_* */
-
-#define	CHFL_OVERLAP    (CHFL_CHANOWNER|CHFL_CHANADMIN|CHFL_CHANOP|CHFL_VOICE|CHFL_HALFOP)
-
 /* Channel macros */
-/* Don't blindly change these MODE_* values, see comment 20 lines up! */
-#define	MODE_CHANOP		CHFL_CHANOP
-#define	MODE_VOICE		CHFL_VOICE
-#define MODE_CHANOWNER		0x0040
-#define MODE_CHANADMIN		0x0080
-#define	MODE_HALFOP		0x0100
 #define MODE_EXCEPT		0x0200
 #define	MODE_BAN		0x0400
 #define MODE_INVEX		0x8000000

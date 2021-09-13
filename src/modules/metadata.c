@@ -31,12 +31,6 @@
 
 #define MYCONF "metadata"
 
-#ifdef PREFIX_AQ
-#define HOP_OR_MORE (CHFL_HALFOP | CHFL_CHANOP | CHFL_CHANADMIN | CHFL_CHANOWNER)
-#else
-#define HOP_OR_MORE (CHFL_HALFOP | CHFL_CHANOP)
-#endif
-
 #define CHECKPARAMSCNT_OR_DIE(count, return) \
 { \
 	if (parc < count+1 || BadPtr(parv[count])) \
@@ -1000,7 +994,6 @@ int metadata_key_valid(const char *key)
 
 int metadata_check_perms(Client *user, Channel *channel, Client *client, const char *key, int mode)
 { /* either user or channel should be NULL */
-	Membership *lp;
 	if (!IsUser(client) && channel) /* ignore channel metadata requests for unregistered users */
 		return 0;
 	if ((user == client) || (!user && !channel)) /* specified target is "*" or own nick */
@@ -1009,8 +1002,12 @@ int metadata_check_perms(Client *user, Channel *channel, Client *client, const c
 		return 1; /* allow ircops to view everything */
 	if (channel)
 	{
-		if ((lp = find_membership_link(client->user->channel, channel)) && ((lp->flags & HOP_OR_MORE) || (mode == MODE_GET)))
-			return 1; /* allow setting channel metadata if we're halfop or more, and getting when we're just on this channel */
+		/* The only requirement for GET is to be in the channel */
+		if ((mode == MODE_GET) && IsMember(client, channel))
+			return 1;
+		/* Otherwise, +hoaq */
+		if (check_channel_access(client, channel, "hoaq"))
+			return 1;
 	} else if (user)
 	{
 		if (mode == MODE_SET)

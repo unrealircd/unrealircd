@@ -936,40 +936,6 @@ int is_autojoin_chan(const char *chname)
 	return 0;
 }
 
-/** Convert a character like 'o' to the corresponding channel flag
- *  like CHFL_CHANOP.
- * @param c   The mode character. The only valid values are: vhoaq
- * @returns One of CHFL_* or 0 if an invalid mode character is specified.
- */
-int char_to_channelflag(char c)
-{
-	if (c == 'v')
-		return CHFL_VOICE;
-	else if (c == 'h')
-		return CHFL_HALFOP;
-	else if (c == 'o')
-		return CHFL_CHANOP;
-	else if (c == 'a')
-		return CHFL_CHANADMIN;
-	else if (c == 'q')
-		return CHFL_CHANOWNER;
-	return 0;
-}
-
-// FIXME: should detect <U5 ;)
-int mixed_network(void)
-{
-	Client *client;
-
-	list_for_each_entry(client, &server_list, special_node)
-	{
-		if (!IsServer(client) || IsULine(client))
-			continue; /* skip u-lined servers (=non-unreal, unless you configure your ulines badly, that is) */
-		// uh.. right.. bit hard to detect u4 this way now :D
-	}
-	return 0;
-}
-
 /** Free all masks in the mask list */
 void unreal_delete_masks(ConfigItem_mask *m)
 {

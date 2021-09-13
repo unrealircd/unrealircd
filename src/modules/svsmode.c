@@ -210,7 +210,7 @@ void channel_svsmode(Client *client, int parc, const char *parv[])
 	const char *m;
 	int what = MODE_ADD;
 	int i = 4; // wtf is this
-	Member *cm;
+	Member *member;
 	int channel_flags;
 
 	*parabuf = *modebuf = '\0';
@@ -223,62 +223,65 @@ void channel_svsmode(Client *client, int parc, const char *parv[])
 
 	for (m = parv[2]; *m; m++)
 	{
-		switch (*m)
+		if (*m == '+') 
 		{
-			case '+':
-				what = MODE_ADD;
-				break;
-			case '-':
-				what = MODE_DEL;
-				break;
-			case 'v':
-			case 'h':
-			case 'o':
-			case 'a':
-			case 'q':
-				if (what != MODE_DEL)
+			what = MODE_ADD;
+		} else
+		if (*m == '-')
+		{
+			what = MODE_DEL;
+		} else
+		if ((*m == 'b') || (*m == 'e') || (*m == 'I'))
+		{
+			if (parc >= i)
+			{
+				if (!(target = find_person(parv[i-1], NULL)))
 				{
-					sendto_realops("Warning! Received SVS(2)MODE with +%c for %s from %s, which is invalid!!",
-						*m, channel->name, client->name);
-					continue;
-				}
-				channel_flags = char_to_channelflag(*m);
-				for (cm = channel->members; cm; cm = cm->next)
-				{
-					if (cm->flags & channel_flags)
-					{
-						Membership *mb;
-						mb = find_membership_link(cm->client->user->channel, channel);
-						add_send_mode_param(channel, client, '-', *m, cm->client->name);
-						cm->flags &= ~channel_flags;
-						if (mb)
-							mb->flags = cm->flags;
-					}
-				}
-				break;
-			case 'b':
-			case 'e':
-			case 'I':
-				if (parc >= i)
-				{
-					if (!(target = find_person(parv[i-1], NULL)))
-					{
-						i++;
-						break;
-					}
 					i++;
+					break;
+				}
+				i++;
 
-					unban_user(client, channel, target, *m);
+				unban_user(client, channel, target, *m);
+			}
+			else {
+				clear_bans(client, channel, *m);
+			}
+		} else
+		{
+			/* Find member mode handler (vhoaq) */
+			Cmode *cm = find_channel_mode_handler(*m);
+			if (!cm || (cm->type != CMODE_MEMBER))
+			{
+				unreal_log(ULOG_WARNING, "svsmode", "INVALID_SVSMODE", client,
+				           "Invalid SVSMODE for mode '$mode_character' in channel $channel from $client.",
+				           log_data_char("mode_character", *m),
+				           log_data_channel("channel", channel));
+				continue;
+			}
+			if (what != MODE_DEL)
+			{
+				unreal_log(ULOG_WARNING, "svsmode", "INVALID_SVSMODE", client,
+				           "Invalid SVSMODE from $client trying to add '$mode_character' in $channel.",
+				           log_data_char("mode_character", *m),
+				           log_data_channel("channel", channel));
+				continue;
+			}
+			for (member = channel->members; member; member = member->next)
+			{
+				if (check_channel_access_letter(member->member_modes, *m))
+				{
+					Membership *mb = find_membership_link(member->client->user->channel, channel);
+					if (!mb)
+						continue; /* bug */
+					
+					/* Send the -x out */
+					add_send_mode_param(channel, client, '-', *m, member->client->name);
+					
+					/* And remove from memory */
+					del_member_mode_fast(member, mb, *m);
 				}
-				else {
-					clear_bans(client, channel, *m);
-				}
-				break;
-			default:
-				sendto_realops("Warning! Invalid mode `%c' used with 'SVSMODE %s %s %s' (from %s %s)",
-					       *m, channel->name, parv[2], parv[3] ? parv[3] : "",
-					       client->direction->name, client->name);
-				break;
+			}
 		}
 	}
 

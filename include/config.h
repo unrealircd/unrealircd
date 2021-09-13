@@ -257,6 +257,14 @@
 #define MODDATA_MAX_LOCAL_VARIABLE	500
 #define MODDATA_MAX_GLOBAL_VARIABLE	500
 
+/** Size of the member modes buffer, so can be max this-1 modes
+ * assigned to an individual user (and thus max prefixes as well).
+ * The default is 8, so 7 max modes, and is a bit tight.
+ * It allows for vhoaq (5) and then 2 additional ones from 3rd
+ * party modules.
+ */
+#define MEMBERMODESLEN	8
+
 /* If EXPERIMENTAL is #define'd then all users will receive a notice about
  * this when they connect, along with a pointer to bugs.unrealircd.org where
  * they can report any problems. This is mainly to help UnrealIRCd development.

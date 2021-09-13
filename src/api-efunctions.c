@@ -35,7 +35,7 @@ static EfunctionsList efunction_table[MAXEFUNCTIONS];
 
 /* Efuncs */
 void (*do_join)(Client *client, int parc, const char *parv[]);
-void (*join_channel)(Channel *channel, Client *client, MessageTag *mtags, int flags);
+void (*join_channel)(Channel *channel, Client *client, MessageTag *mtags, const char *member_modes);
 int (*can_join)(Client *client, Channel *channel, const char *key, char **errmsg);
 void (*do_mode)(Channel *channel, Client *client, MessageTag *mtags, int parc, const char *parv[], time_t sendts, int samode);
 void (*set_mode)(Channel *channel, Client *client, int parc, const char *parv[], u_int *pcount,
@@ -132,7 +132,7 @@ int (*watch_del_list)(Client *client, int flags);
 Watch *(*watch_get)(const char *nick);
 int (*watch_check)(Client *client, int reply, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event));
 void (*do_unreal_log_remote_deliver)(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
-char *(*get_chmodes_for_user)(Client *client, int flags);
+char *(*get_chmodes_for_user)(Client *client, const char *flags);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
@@ -403,4 +403,3 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_DO_UNREAL_LOG_REMOTE_DELIVER, do_unreal_log_remote_deliver, do_unreal_log_remote_deliver_default_handler);
 	efunc_init_function(EFUNC_GET_CHMODES_FOR_USER, get_chmodes_for_user, NULL);
 }
-

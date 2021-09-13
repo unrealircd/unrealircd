@@ -114,22 +114,24 @@ int extban_inchannel_is_ok(BanContext *b)
 	return 1;
 }
 
-static int extban_inchannel_compareflags(char symbol, int flags)
+static int extban_inchannel_compareflags(char symbol, const char *member_modes)
 {
-	int require=0;
+	const char *required_modes = NULL;
 
 	if (symbol == '+')
-		require = CHFL_VOICE|CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANADMIN|CHFL_CHANOWNER;
+		required_modes = "vhoaq";
 	else if (symbol == '%')
-		require = CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANADMIN|CHFL_CHANOWNER;
+		required_modes = "hoaq";
 	else if (symbol == '@')
-		require = CHFL_CHANOP|CHFL_CHANADMIN|CHFL_CHANOWNER;
+		required_modes = "oaq";
 	else if (symbol == '&')
-		require = CHFL_CHANADMIN|CHFL_CHANOWNER;
+		required_modes = "aq";
 	else if (symbol == '~')
-		require = CHFL_CHANOWNER;
+		required_modes = "q";
+	else
+		return 0; /* unknown prefix character */
 
-	if (flags & require)
+	if (check_channel_access_string(member_modes, required_modes))
 		return 1;
 
 	return 0;
@@ -154,7 +156,7 @@ int extban_inchannel_is_banned(BanContext *b)
 			/* Channel matched, check symbol if needed (+/%/@/etc) */
 			if (symbol)
 			{
-				if (extban_inchannel_compareflags(symbol, lp->flags))
+				if (extban_inchannel_compareflags(symbol, lp->member_modes))
 					return 1;
 			} else
 				return 1;

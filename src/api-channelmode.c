@@ -260,36 +260,57 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 	if (!cm)
 	{
 		long l, found = 0;
-		for (l = 1; l < INT_MAX/2; l *= 2)
+
+		if (req.type == CMODE_NORMAL)
 		{
-			found = 0;
-			for (cm=channelmodes; cm; cm = cm->next)
+			for (l = 1; l < INT_MAX/2; l *= 2)
 			{
-				if (cm->mode == l)
+				found = 0;
+				for (cm=channelmodes; cm; cm = cm->next)
 				{
-					found = 1;
-					break;
+					if (cm->mode == l)
+					{
+						found = 1;
+						break;
+					}
 				}
+				if (!found)
+					break;
 			}
-			if (!found)
-				break;
-		}
-		/* If 'found' is still true, then we are out of space */
-		if (found)
+			/* If 'found' is still true, then we are out of space */
+			if (found)
+			{
+				unreal_log(ULOG_ERROR, "module", "CHANNEL_MODE_OUT_OF_SPACE", NULL,
+					   "CmodeAdd: out of space!!!");
+				if (module)
+					module->errorcode = MODERR_NOSPACE;
+				return NULL;
+			}
+			cm = safe_alloc(sizeof(Cmode));
+			cm->letter = req.letter;
+			cm->mode = l;
+			*mode = cm->mode;
+		} else if (req.type == CMODE_MEMBER)
 		{
-			unreal_log(ULOG_ERROR, "module", "CHANNEL_MODE_OUT_OF_SPACE", NULL,
-				   "CmodeAdd: out of space!!!");
-			if (module)
-				module->errorcode = MODERR_NOSPACE;
-			return NULL;
+			if (!req.prefix || !req.sjoin_prefix || !req.paracount ||
+			    !req.unset_with_param || !req.prefix_priority)
+			{
+				unreal_log(ULOG_ERROR, "module", "CMODEADD_API_ERROR", NULL,
+					   "CmodeAdd(): module is missing required information. "
+					   "Module: $module_name",
+					   log_data_string("module_name", module->header->name));
+				module->errorcode = MODERR_INVALID;
+				return NULL;
+			}
+			cm = safe_alloc(sizeof(Cmode));
+			cm->letter = req.letter;
+		} else {
+			abort();
 		}
-		cm = safe_alloc(sizeof(Cmode));
-		cm->mode = l;
-		cm->letter = req.letter;
 		channelmode_add_sorted(cm);
 	}
 
-	if (req.paracount == 1)
+	if ((req.paracount == 1) && (req.type == CMODE_NORMAL))
 	{
 		if (existing)
 		{
@@ -313,9 +334,12 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 		}
 	}
 
-	*mode = cm->mode;
 	/* Update extended channel mode table highest */
 	cm->letter = req.letter;
+	cm->type = req.type;
+	cm->prefix = req.prefix;
+	cm->sjoin_prefix = req.sjoin_prefix;
+	cm->prefix_priority = req.prefix_priority;
 	cm->paracount = req.paracount;
 	cm->is_ok = req.is_ok;
 	cm->put_param = req.put_param;
@@ -328,10 +352,14 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 	cm->unset_with_param = req.unset_with_param;
 	cm->owner = module;
 	cm->unloaded = 0;
-	
-        if (cm->paracount == 1)
-                extcmode_para_addslot(cm, paraslot);
-                
+
+	if (cm->type == CMODE_NORMAL)
+	{
+		*mode = cm->mode;
+		if (cm->paracount == 1)
+			extcmode_para_addslot(cm, paraslot);
+	}
+
 	if (module)
 	{
 		ModuleObject *cmodeobj = safe_alloc(sizeof(ModuleObject));
@@ -602,4 +630,318 @@ int module_has_extcmode_param_mode(Module *mod)
 			return 1;
 
 	return 0;
+}
+
+const char *get_channel_access(Client *client, Channel *channel)
+{
+	Membership *mb;
+
+	mb = find_membership_link(client->user->channel, channel);
+	if (!mb)
+		return "";
+	return mb->member_modes;
+}
+
+/** Check channel access for user.
+ * @param client	The client to check
+ * @param channel	The channel to check
+ * @param modes		Which mode(s) to check for
+ * @returns If the client in channel has any of the modes set, 1 is returned.
+ * Otherwise 0 is returned, which is also the case if the user is
+ * not a user or is not in the channel at all.
+ */
+int check_channel_access(Client *client, Channel *channel, const char *modes)
+{
+	Membership *mb;
+	const char *p;
+
+	if (!IsUser(client))
+		return 0; /* eg server */
+
+	mb = find_membership_link(client->user->channel, channel);
+	if (!mb)
+		return 0; /* not a member */
+
+	for (p = mb->member_modes; *p; p++)
+		if (strchr(modes, *p))
+			return 1; /* match new style */
+
+	return 0; /* nomatch */
+}
+
+/** Check channel access for user.
+ * @param client	The client to check
+ * @param channel	The channel to check
+ * @param modes		Which mode(s) to check for
+ * @returns If the client in channel has any of the modes set, 1 is returned.
+ * Otherwise 0 is returned, which is also the case if the user is
+ * not a user or is not in the channel at all.
+ */
+int check_channel_access_membership(Membership *mb, const char *modes)
+{
+	const char *p;
+
+	if (!mb)
+		return 0;
+
+	for (p = mb->member_modes; *p; p++)
+		if (strchr(modes, *p))
+			return 1; /* match new style */
+
+	return 0; /* nomatch */
+}
+
+/** Check channel access for user.
+ * @param client	The client to check
+ * @param channel	The channel to check
+ * @param modes		Which mode(s) to check for
+ * @returns If the client in channel has any of the modes set, 1 is returned.
+ * Otherwise 0 is returned, which is also the case if the user is
+ * not a user or is not in the channel at all.
+ */
+int check_channel_access_member(Member *mb, const char *modes)
+{
+	const char *p;
+
+	if (!mb)
+		return 0;
+
+	for (p = mb->member_modes; *p; p++)
+		if (strchr(modes, *p))
+			return 1; /* match new style */
+
+	return 0; /* nomatch */
+}
+
+/** Check channel access for user.
+ * @param current	Flags currently set on the client (eg mb->member_modes)
+ * @param modes		Which mode(s) to check for
+ * @returns If the client in channel has any of the modes set, 1 is returned.
+ * Otherwise 0 is returned.
+ */
+int check_channel_access_string(const char *current_modes, const char *modes)
+{
+	const char *p;
+
+	for (p = current_modes; *p; p++)
+		if (strchr(modes, *p))
+			return 1;
+
+	return 0; /* nomatch */
+}
+
+/** Check channel access for user.
+ * @param current	Flags currently set on the client (eg mb->member_modes)
+ * @param letter	Which mode letter to check for
+ * @returns If the client in channel has any of the modes set, 1 is returned.
+ * Otherwise 0 is returned.
+ */
+int check_channel_access_letter(const char *current_modes, const char letter)
+{
+	return strchr(current_modes, letter) ? 1 : 0;
+}
+
+Cmode *find_channel_mode_handler(char letter)
+{
+	Cmode *cm;
+
+	for (cm=channelmodes; cm; cm = cm->next)
+		if (cm->letter == letter)
+			return cm;
+	return NULL;
+}
+
+void addlettertomstring(char *str, char letter)
+{
+	Cmode *cm;
+	int n;
+	int my_priority;
+	char *p;
+
+	if (!(cm = find_channel_mode_handler(letter)) || (cm->type != CMODE_MEMBER))
+		return; // should we BUG on this? if something makes it this far, it can never be good right?
+
+	my_priority = cm->prefix_priority;
+
+	n = strlen(str);
+	if (n >= MEMBERMODESLEN-1)
+		return; // panic!
+
+	for (p = str; *p; p++)
+	{
+		cm = find_channel_mode_handler(*p);
+		if (!cm)
+			continue; /* wtf */
+		if (cm->prefix_priority > my_priority)
+		{
+			/* We need to insert us here */
+			n = strlen(p);
+			memmove(p+1, p, n+1); // +1 for NUL byte
+			*p = letter;
+			return;
+		}
+	}
+	/* We should be at the end */
+	str[n] = letter;
+	str[n+1] = '\0';
+}
+
+void delletterfromstring(char *s, char letter)
+{
+	for (; *s; s++)
+	{
+		if (*s == letter)
+		{
+			for (; *s; s++)
+				*s = s[1];
+		}
+	}
+}
+
+void add_member_mode_fast(Member *mb, Membership *mbs, char letter)
+{
+	addlettertomstring(mb->member_modes, letter);
+	addlettertomstring(mbs->member_modes, letter);
+}
+
+void del_member_mode_fast(Member *mb, Membership *mbs, char letter)
+{
+	delletterfromstring(mb->member_modes, letter);
+	delletterfromstring(mbs->member_modes, letter);
+}
+
+int find_mbs(Client *client, Channel *channel, Member **mb, Membership **mbs)
+{
+	*mbs = NULL;
+
+	if (!(*mb = find_member_link(channel->members, client)))
+		return 0;
+
+	if (!(*mbs = find_membership_link(client->user->channel, channel)))
+		return 0;
+	
+	return 1;
+}
+
+void add_member_mode(Client *client, Channel *channel, char letter)
+{
+	Member *mb;
+	Membership *mbs;
+
+	if (!find_mbs(client, channel, &mb, &mbs))
+		return;
+
+	add_member_mode_fast(mb, mbs, letter);
+}
+
+void del_member_mode(Client *client, Channel *channel, char letter)
+{
+	Member *mb;
+	Membership *mbs;
+
+	if (!find_mbs(client, channel, &mb, &mbs))
+		return;
+
+	del_member_mode_fast(mb, mbs, letter);
+}
+
+char sjoin_prefix_to_mode(char s)
+{
+	Cmode *cm;
+
+	/* Filter this out early to avoid spurious results */
+	if (s == '\0')
+		return '\0';
+
+	/* First the hardcoded list modes: */
+	if (s == '&')
+		return 'b';
+	if (s == '"')
+		return 'e';
+	if (s == '\'')
+		return 'I';
+
+	/* Now the dynamic ones (+vhoaq): */
+	for (cm=channelmodes; cm; cm = cm->next)
+		if ((cm->sjoin_prefix == s) && (cm->type == CMODE_MEMBER))
+			return cm->letter;
+
+	/* Not found */
+	return '\0';
+}
+
+char mode_to_sjoin_prefix(char s)
+{
+	Cmode *cm;
+
+	/* Filter this out early to avoid spurious results */
+	if (s == '\0')
+		return '\0';
+
+	/* First the hardcoded list modes: */
+	if (s == 'b')
+		return '&';
+	if (s == 'e')
+		return '"';
+	if (s == 'I')
+		return '\'';
+
+	/* Now the dynamic ones (+vhoaq): */
+	for (cm=channelmodes; cm; cm = cm->next)
+		if ((cm->letter == s) && (cm->type == CMODE_MEMBER))
+			return cm->sjoin_prefix;
+
+	/* Not found */
+	return '\0';
+}
+
+const char *modes_to_sjoin_prefix(const char *modes)
+{
+	static char buf[MEMBERMODESLEN];
+	const char *m;
+	char f;
+
+	*buf = '\0';
+	for (m = modes; *m; m++)
+	{
+		f = mode_to_sjoin_prefix(*m);
+		if (f)
+			strlcat_letter(buf, f, sizeof(buf));
+	}
+
+	return buf;
+}
+
+char mode_to_prefix(char s)
+{
+	Cmode *cm;
+
+	/* Filter this out early to avoid spurious results */
+	if (s == '\0')
+		return '\0';
+
+	/* Now the dynamic ones (+vhoaq): */
+	for (cm=channelmodes; cm; cm = cm->next)
+		if ((cm->letter == s) && (cm->type == CMODE_MEMBER))
+			return cm->prefix;
+
+	/* Not found */
+	return '\0';
+}
+
+const char *modes_to_prefix(const char *modes)
+{
+	static char buf[MEMBERMODESLEN];
+	const char *m;
+	char f;
+
+	*buf = '\0';
+	for (m = modes; *m; m++)
+	{
+		f = mode_to_prefix(*m);
+		if (f)
+			strlcat_letter(buf, f, sizeof(buf));
+	}
+
+	return buf;
 }

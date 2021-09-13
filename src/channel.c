@@ -53,11 +53,6 @@ static mp_pool_t *channel_pool = NULL;
  * These are +ntmispklr and also the list modes +vhoaq and +beI.
  */
 CoreChannelModeTable corechannelmodetable[] = {
-	{MODE_VOICE, 'v', 1, 1},
-	{MODE_HALFOP, 'h', 0, 1},
-	{MODE_CHANOP, 'o', 0, 1},
-	{MODE_CHANADMIN, 'a', 0, 1},
-	{MODE_CHANOWNER, 'q', 0, 1},
 	{MODE_BAN, 'b', 1, 1},
 	{MODE_EXCEPT, 'e', 1, 1},	/* exception ban */
 	{MODE_INVEX, 'I', 1, 1},	/* invite-only exception */
@@ -132,8 +127,6 @@ static Member *make_member(void)
 		for (i = 1; i <= (4072/sizeof(Member)); ++i)
 		{
 			lp = safe_alloc(sizeof(Member));
-			lp->client = NULL;
-			lp->flags = 0;
 			lp->next = freemember;
 			freemember = lp;
 		}
@@ -152,8 +145,6 @@ static void free_member(Member *lp)
 	moddata_free_member(lp);
 	memset(lp, 0, sizeof(Member));
 	lp->next = freemember;
-	lp->client = NULL;
-	lp->flags = 0;
 	freemember = lp;
 }
 
@@ -496,28 +487,31 @@ Ban *is_banned_with_nick(Client *client, Channel *channel, int type, const char 
  * and also the Membership struct to the client->user->channel linked list.
  * @note This does NOT send the JOIN, it only does the linked list stuff.
  */
-void add_user_to_channel(Channel *channel, Client *who, int flags)
+void add_user_to_channel(Channel *channel, Client *client, const char *modes)
 {
 	Member *m;
 	Membership *mb;
+	const char *p;
 
-	if (who->user)
-	{
-		m = make_member();
-		m->client = who;
-		m->flags = flags;
-		m->next = channel->members;
-		channel->members = m;
-		channel->users++;
+	if (!client->user)
+		return;
 
-		mb = make_membership();
-		mb->channel = channel;
-		mb->next = who->user->channel;
-		mb->flags = flags;
-		who->user->channel = mb;
-		who->user->joined++;
-		RunHook(HOOKTYPE_JOIN_DATA, who, channel);
-	}
+	m = make_member();
+	m->client = client;
+	m->next = channel->members;
+	channel->members = m;
+	channel->users++;
+
+	mb = make_membership();
+	mb->channel = channel;
+	mb->next = client->user->channel;
+	client->user->channel = mb;
+	client->user->joined++;
+
+	for (p = modes; *p; p++)
+		add_member_mode_fast(m, mb, *p);
+
+	RunHook(HOOKTYPE_JOIN_DATA, client, channel);
 }
 
 /** Remove the user from the channel.
@@ -562,22 +556,6 @@ int remove_user_from_channel(Client *client, Channel *channel)
 	 * and destroy the channel if needed.
 	 */
 	return sub1_from_channel(channel);
-}
-
-/** Get channel access flags (CHFL_*) for a client in a channel.
- * @param client	The client
- * @param channel	The channel
- * @returns One or more of CHFL_* (eg: CHFL_CHANOP|CHFL_CHANADMIN)
- * @note If the user is not found, then 0 is returned.
- *       If the user has no access rights, then 0 is returned as well.
- */
-long get_access(Client *client, Channel *channel)
-{
-	Membership *lp;
-	if (channel && IsUser(client))
-		if ((lp = find_membership_link(client->user->channel, channel)))
-			return lp->flags;
-	return 0;
 }
 
 /** Returns 1 if channel has this channel mode set and 0 if not */

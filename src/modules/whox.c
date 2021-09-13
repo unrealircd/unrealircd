@@ -715,36 +715,16 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 		{
 			if (!(fmt->fields || HasCapability(client, "multi-prefix")))
 			{
-				/* Standard NAMES reply */
-#ifdef PREFIX_AQ
-				if (lp->flags & CHFL_CHANOWNER)
-					status[i++] = '~';
-				else if (lp->flags & CHFL_CHANADMIN)
-					status[i++] = '&';
-				else
-#endif
-				if (lp->flags & CHFL_CHANOP)
-					status[i++] = '@';
-				else if (lp->flags & CHFL_HALFOP)
-					status[i++] = '%';
-				else if (lp->flags & CHFL_VOICE)
-					status[i++] = '+';
+				/* Standard NAMES reply (single character) */
+				char c = mode_to_prefix(*lp->member_modes);
+				if (c)
+					status[i++] = c;
 			}
 			else
 			{
 				/* NAMES reply with all rights included (multi-prefix / NAMESX) */
-#ifdef PREFIX_AQ
-				if (lp->flags & CHFL_CHANOWNER)
-					status[i++] = '~';
-				if (lp->flags & CHFL_CHANADMIN)
-					status[i++] = '&';
-#endif
-				if (lp->flags & CHFL_CHANOP)
-					status[i++] = '@';
-				if (lp->flags & CHFL_HALFOP)
-					status[i++] = '%';
-				if (lp->flags & CHFL_VOICE)
-					status[i++] = '+';
+				strcpy(&status[i], modes_to_prefix(lp->member_modes));
+				i += strlen(&status[i]);
 			}
 		}
 	}

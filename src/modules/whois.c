@@ -195,7 +195,6 @@ CMD_FUNC(cmd_whois)
 
 				if (showchannel)
 				{
-					long access;
 					if (len + strlen(channel->name) > (size_t)BUFSIZE - 4 - mlen)
 					{
 						sendto_one(client, NULL,
@@ -224,37 +223,18 @@ CMD_FUNC(cmd_whois)
 						}
 					}
 
-					access = get_access(target, channel);
 					if (!MyUser(client) || !HasCapability(client, "multi-prefix"))
 					{
-#ifdef PREFIX_AQ
-						if (access & CHFL_CHANOWNER)
-							*(buf + len++) = '~';
-						else if (access & CHFL_CHANADMIN)
-							*(buf + len++) = '&';
-						else
-#endif
-						if (access & CHFL_CHANOP)
-							*(buf + len++) = '@';
-						else if (access & CHFL_HALFOP)
-							*(buf + len++) = '%';
-						else if (access & CHFL_VOICE)
-							*(buf + len++) = '+';
+						/* Standard NAMES reply (single character) */
+						char c = mode_to_prefix(*lp->member_modes);
+						if (c)
+							*(buf + len++) = c;
 					}
 					else
 					{
-#ifdef PREFIX_AQ
-						if (access & CHFL_CHANOWNER)
-							*(buf + len++) = '~';
-						if (access & CHFL_CHANADMIN)
-							*(buf + len++) = '&';
-#endif
-						if (access & CHFL_CHANOP)
-							*(buf + len++) = '@';
-						if (access & CHFL_HALFOP)
-							*(buf + len++) = '%';
-						if (access & CHFL_VOICE)
-							*(buf + len++) = '+';
+						/* NAMES reply with all rights included (multi-prefix / NAMESX) */
+						strcpy(buf + len, modes_to_prefix(lp->member_modes));
+						len += strlen(buf + len);
 					}
 					if (len)
 						*(buf + len) = '\0';

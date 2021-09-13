@@ -167,7 +167,22 @@ extern int check_tkls(Client *cptr);
 extern void send_user_joins(Client *, Client *);
 extern int valid_channelname(const char *);
 extern int valid_server_name(const char *name);
-extern long get_access(Client *, Channel *);
+extern Cmode *find_channel_mode_handler(char letter);
+extern int check_channel_access(Client *client, Channel *channel, const char *modes);
+extern int check_channel_access_membership(Membership *mb, const char *modes);
+extern int check_channel_access_member(Member *mb, const char *modes);
+extern int check_channel_access_string(const char *current_modes, const char *modes);
+extern int check_channel_access_letter(const char *current_modes, const char letter);
+extern const char *get_channel_access(Client *client, Channel *channel);
+extern void add_member_mode_fast(Member *mb, Membership *mbs, char letter);
+extern void del_member_mode_fast(Member *mb, Membership *mbs, char letter);
+extern void add_member_mode(Client *client, Channel *channel, char letter);
+extern void del_member_mode(Client *client, Channel *channel, char letter);
+extern char sjoin_prefix_to_mode(char s);
+extern char mode_to_sjoin_prefix(char s);
+extern char mode_to_prefix(char s);
+extern const char *modes_to_prefix(const char *modes);
+extern const char *modes_to_sjoin_prefix(const char *modes);
 extern int ban_check_mask(BanContext *b);
 extern int extban_is_ok_nuh_extban(BanContext *b);
 extern const char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *extban);
@@ -399,15 +414,16 @@ extern MODVAR long SNO_OPER;
 #ifndef HAVE_STRLCPY
 extern size_t strlcpy(char *dst, const char *src, size_t size);
 #endif
+#ifndef HAVE_STRLNCPY
+extern size_t strlncpy(char *dst, const char *src, size_t size, size_t n);
+#endif
 #ifndef HAVE_STRLCAT
 extern size_t strlcat(char *dst, const char *src, size_t size);
 #endif
 #ifndef HAVE_STRLNCAT
 extern size_t strlncat(char *dst, const char *src, size_t size, size_t n);
 #endif
-#ifndef HAVE_STRLNCPY
-extern size_t strlncpy(char *dst, const char *src, size_t size, size_t n);
-#endif
+extern void strlcat_letter(char *buf, char c, size_t buflen);
 extern char *strldup(const char *src, size_t n);
 
 extern void dopacket(Client *, char *, int);
@@ -637,7 +653,7 @@ extern int op_can_override(const char *acl, Client *client,Channel *channel,void
 extern Client *find_chasing(Client *client, const char *user, int *chasing);
 extern MODVAR long opermode;
 extern MODVAR long sajoinmode;
-extern void add_user_to_channel(Channel *channel, Client *who, int flags);
+extern void add_user_to_channel(Channel *channel, Client *who, const char *modes);
 extern int add_banid(Client *, Channel *, const char *);
 extern int add_exbanid(Client *cptr, Channel *channel, const char *banid);
 extern int sub1_from_channel(Channel *);
@@ -672,7 +688,7 @@ extern MODVAR int labeled_response_force;
 
 /* Efuncs */
 extern MODVAR void (*do_join)(Client *, int, const char **);
-extern MODVAR void (*join_channel)(Channel *channel, Client *client, MessageTag *mtags, int flags);
+extern MODVAR void (*join_channel)(Channel *channel, Client *client, MessageTag *mtags, const char *flags);
 extern MODVAR int (*can_join)(Client *client, Channel *channel, const char *key, char **errmsg);
 extern MODVAR void (*do_mode)(Channel *channel, Client *client, MessageTag *mtags, int parc, const char *parv[], time_t sendts, int samode);
 extern MODVAR void (*set_mode)(Channel *channel, Client *cptr, int parc, const char *parv[], u_int *pcount,
@@ -769,7 +785,7 @@ extern MODVAR Watch *(*watch_get)(const char *nick);
 extern MODVAR int (*watch_check)(Client *client, int reply, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event));
 extern MODVAR char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options);
 extern MODVAR void (*do_unreal_log_remote_deliver)(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
-extern MODVAR char *(*get_chmodes_for_user)(Client *client, int flags);
+extern MODVAR char *(*get_chmodes_for_user)(Client *client, const char *flags);
 /* /Efuncs */
 
 /* TLS functions */
@@ -860,7 +876,6 @@ extern void unreal_delete_match(Match *m);
 extern int unreal_match(Match *m, const char *str);
 extern int unreal_match_method_strtoval(const char *str);
 extern char *unreal_match_method_valtostr(int val);
-extern int mixed_network(void);
 extern void unreal_delete_masks(ConfigItem_mask *m);
 extern void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce);
 extern int unreal_mask_match(Client *acptr, ConfigItem_mask *m);
@@ -985,7 +1000,6 @@ extern int read_data(FILE *fd, void *buf, size_t len);
 extern int write_data(FILE *fd, const void *buf, size_t len);
 extern int write_str(FILE *fd, const char *x);
 extern int read_str(FILE *fd, char **x);
-extern int char_to_channelflag(char c);
 extern void _free_entire_name_list(NameList *n);
 extern void _add_name_list(NameList **list, const char *name);
 extern void _del_name_list(NameList **list, const char *name);

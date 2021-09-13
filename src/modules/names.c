@@ -115,6 +115,8 @@ CMD_FUNC(cmd_names)
 	/* cache whether this user is a member of this channel or not */
 	member = IsMember(client, channel);
 
+	// FIXME: consider rewriting this whole thing to get rid of pointer juggling and stuff.
+
 	if (PubChannel(channel))
 		buf[0] = '=';
 	else if (SecretChannel(channel))
@@ -147,34 +149,14 @@ CMD_FUNC(cmd_names)
 
 		if (!multiprefix)
 		{
-			/* Standard NAMES reply */
-#ifdef PREFIX_AQ
-			if (cm->flags & CHFL_CHANOWNER)
-				buf[idx++] = '~';
-			else if (cm->flags & CHFL_CHANADMIN)
-				buf[idx++] = '&';
-			else
-#endif
-			if (cm->flags & CHFL_CHANOP)
-				buf[idx++] = '@';
-			else if (cm->flags & CHFL_HALFOP)
-				buf[idx++] = '%';
-			else if (cm->flags & CHFL_VOICE)
-				buf[idx++] = '+';
+			/* Standard NAMES reply (single character) */
+			char c = mode_to_prefix(*cm->member_modes);
+			if (c)
+				buf[idx++] = c;
 		} else {
 			/* NAMES reply with all rights included (multi-prefix / NAMESX) */
-#ifdef PREFIX_AQ
-			if (cm->flags & CHFL_CHANOWNER)
-				buf[idx++] = '~';
-			if (cm->flags & CHFL_CHANADMIN)
-				buf[idx++] = '&';
-#endif
-			if (cm->flags & CHFL_CHANOP)
-				buf[idx++] = '@';
-			if (cm->flags & CHFL_HALFOP)
-				buf[idx++] = '%';
-			if (cm->flags & CHFL_VOICE)
-				buf[idx++] = '+';
+			strcpy(&buf[idx], modes_to_prefix(cm->member_modes));
+			idx += strlen(&buf[idx]);
 		}
 
 		if (!uhnames) {
@@ -194,7 +176,7 @@ CMD_FUNC(cmd_names)
 			buf[idx++] = ' ';
 		buf[idx] = '\0';
 		flag = 1;
-		if (mlen + idx + bufLen > BUFSIZE - 7)
+		if (mlen + idx + bufLen + MEMBERMODESLEN >= BUFSIZE - 1)
 		{
 			sendnumeric(client, RPL_NAMREPLY, buf);
 			idx = spos;

@@ -32,6 +32,7 @@ INCLUDES = ../../include/channel.h \
 	../../include/version.h ../../include/whowas.h
 
 R_MODULES= \
+	chanowner.so chanadmin.so chanop.so halfop.so voice.so \
 	key.so limit.so inviteonly.so secret.so private.so \
 	moderated.so noexternalmsgs.so topiclimit.so \
 	nocolor.so stripcolor.so isregistered.so issecure.so permanent.so floodprot.so \

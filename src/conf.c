@@ -685,84 +685,23 @@ void chmode_str(struct ChMode *modes, char *mbuf, char *pbuf, size_t mbuf_size, 
 	*mbuf=0;
 }
 
-int channellevel_to_int(const char *s)
+char *channellevel_to_string(const char *s)
 {
 	/* Requested at http://bugs.unrealircd.org/view.php?id=3852 */
 	if (!strcmp(s, "none"))
-		return CHFL_DEOPPED;
+		return "";
 	if (!strcmp(s, "voice"))
-		return CHFL_VOICE;
+		return "v";
 	if (!strcmp(s, "halfop"))
-		return CHFL_HALFOP;
+		return "h";
 	if (!strcmp(s, "op") || !strcmp(s, "chanop"))
-		return CHFL_CHANOP;
-	if (!strcmp(s, "protect") || !strcmp(s, "chanprot"))
-#ifdef PREFIX_AQ
-		return CHFL_CHANADMIN;
-#else
-		return CHFL_CHANOP|CHFL_CHANADMIN;
-#endif
+		return "o";
+	if (!strcmp(s, "protect") || !strcmp(s, "chanprot") || !strcmp(s, "chanadmin") || !strcmp(s, "admin"))
+		return "a";
 	if (!strcmp(s, "owner") || !strcmp(s, "chanowner"))
-#ifdef PREFIX_AQ
-		return CHFL_CHANOWNER;
-#else
-		return CHFL_CHANOP|CHFL_CHANOWNER;
-#endif
+		return "q";
 
-	return 0; /* unknown or unsupported */
-}
-
-/* Channel flag (eg: CHFL_CHANOWNER) to SJOIN symbol (eg: *).
- * WARNING: Do not confuse SJOIN symbols with prefixes in /NAMES!
- */
-const char *chfl_to_sjoin_symbol(int s)
-{
-	switch(s)
-	{
-		case CHFL_VOICE:
-			return "+";
-		case CHFL_HALFOP:
-			return "%";
-		case CHFL_CHANOP:
-			return "@";
-		case CHFL_CHANADMIN:
-#ifdef PREFIX_AQ
-			return "~";
-#else
-			return "~@";
-#endif
-		case CHFL_CHANOWNER:
-#ifdef PREFIX_AQ
-			return "*";
-#else
-			return "*@";
-#endif
-		case CHFL_DEOPPED:
-		default:
-			return "";
-	}
-	/* NOT REACHED */
-}
-
-char chfl_to_chanmode(int s)
-{
-	switch(s)
-	{
-		case CHFL_VOICE:
-			return 'v';
-		case CHFL_HALFOP:
-			return 'h';
-		case CHFL_CHANOP:
-			return 'o';
-		case CHFL_CHANADMIN:
-			return 'a';
-		case CHFL_CHANOWNER:
-			return 'q';
-		case CHFL_DEOPPED:
-		default:
-			return '\0';
-	}
-	/* NOT REACHED */
+	return ""; /* unknown or unsupported */
 }
 
 Policy policy_strtoval(const char *s)
@@ -1713,7 +1652,7 @@ void config_setdefaultsettings(Configuration *i)
 	i->check_target_nick_bans = 1;
 	i->maxbans = 60;
 	i->maxbanlength = 2048;
-	i->level_on_join = CHFL_CHANOP;
+	safe_strdup(i->level_on_join, "o");
 	i->watch_away_notification = 1;
 	i->uhnames = 1;
 	i->ping_cookie = 1;
@@ -7301,7 +7240,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			safe_strdup(tempiConf.oper_snomask, cep->value);
 		}
 		else if (!strcmp(cep->name, "level-on-join")) {
-			tempiConf.level_on_join = channellevel_to_int(cep->value);
+			safe_strdup(tempiConf.level_on_join, channellevel_to_string(cep->value));
 		}
 		else if (!strcmp(cep->name, "static-quit")) {
 			safe_strdup(tempiConf.static_quit, cep->value);
@@ -7952,9 +7891,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "level-on-join")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, level_on_join, "level-on-join");
-			if (!channellevel_to_int(cep->value))
+			if (BadPtr(channellevel_to_string(cep->value)))
 			{
-				config_error("%s:%i: set::level-on-join: unknown value '%s', should be one of: none, voice, halfop, op, protect, owner",
+				config_error("%s:%i: set::level-on-join: unknown value '%s', should be one of: none, voice, halfop, op, admin, owner",
 					cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			}

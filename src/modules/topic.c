@@ -82,8 +82,6 @@ CMD_FUNC(cmd_topic)
 	time_t ttime = 0;
 	int i = 0;
 	Hook *h;
-	int ismember; /* cache: IsMember() */
-	long flags = 0; /* cache: membership flags */
 	MessageTag *mtags = NULL;
 
 	if ((parc < 2) || BadPtr(parv[1]))
@@ -101,13 +99,9 @@ CMD_FUNC(cmd_topic)
 		return;
 	}
 
-	ismember = IsMember(client, channel); /* CACHE */
-	if (ismember)
-		flags = get_access(client, channel); /* CACHE */
-
 	if (parc > 2 || SecretChannel(channel))
 	{
-		if (!ismember && !IsServer(client)
+		if (!IsMember(client, channel) && !IsServer(client)
 		    && !ValidatePermissionsForPath("channel:see:list:secret",client,NULL,channel,NULL) && !IsULine(client))
 		{
 			sendnumeric(client, ERR_NOTONCHANNEL, name);
@@ -137,7 +131,7 @@ CMD_FUNC(cmd_topic)
 		}
 
 		/* If you're not a member, and you can't view outside channel, deny */
-		if ((!ismember && i == HOOK_DENY) ||
+		if ((!IsMember(client, channel) && i == HOOK_DENY) ||
 		    (is_banned(client,channel,BANCHK_JOIN,NULL,NULL) &&
 		     !ValidatePermissionsForPath("channel:see:topic",client,NULL,channel,NULL)))
 		{
@@ -222,7 +216,7 @@ CMD_FUNC(cmd_topic)
 		 * TODO: it's not really sane to have this here, we could use HOOKTYPE_PRE_LOCAL_TOPIC,
 		 * but then we have the override shit too, hmmm.
 		 */
-		if (((flags&CHFL_OVERLAP) == 0) && has_channel_mode(channel, 'm'))
+		if (!check_channel_access(client, channel, "vhoaq") && has_channel_mode(channel, 'm'))
 		{
 			char buf[512];
 

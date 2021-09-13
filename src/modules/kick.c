@@ -143,15 +143,9 @@ void _kick_user(MessageTag *initial_mtags, Channel *channel, Client *client, Cli
 **	parv[3] = kick comment
 */
 
-#ifdef PREFIX_AQ
-#define CHFL_ISOP (CHFL_CHANOWNER|CHFL_CHANADMIN|CHFL_CHANOP)
-#else
-#define CHFL_ISOP (CHFL_CHANOP)
-#endif
-
 CMD_FUNC(cmd_kick)
 {
-	Client *who;
+	Client *target;
 	Channel *channel;
 	int  chasing = 0;
 	char *p = NULL, *user, *p2 = NULL, *badkick;
@@ -162,8 +156,8 @@ CMD_FUNC(cmd_kick)
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("KICK");
 	MessageTag *mtags;
-	long client_flags = 0;
 	char request[BUFSIZE];
+	const char *client_member_modes, *target_member_modes;
 
 	if (parc < 3 || *parv[1] == '\0')
 	{
@@ -185,9 +179,10 @@ CMD_FUNC(cmd_kick)
 
 	/* Store "client" access flags */
 	if (IsUser(client))
-		client_flags = get_access(client, channel);
-	if (MyUser(client) && !IsULine(client) && !op_can_override("channel:override:kick:no-ops",client,channel,NULL)
-	    && !(client_flags & CHFL_ISOP) && !(client_flags & CHFL_HALFOP))
+		client_member_modes = get_channel_access(client, channel);
+	if (MyUser(client) && !IsULine(client) &&
+	    !op_can_override("channel:override:kick:no-ops",client,channel,NULL) &&
+	    !is_skochanop(client, channel))
 	{
 		sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 		return;
@@ -196,21 +191,19 @@ CMD_FUNC(cmd_kick)
 	strlcpy(request, parv[2], sizeof(request));
 	for (user = strtoken(&p2, request, ","); user; user = strtoken(&p2, NULL, ","))
 	{
-		long who_flags;
-
 		if (MyUser(client) && (++ntargets > maxtargets))
 		{
 			sendnumeric(client, ERR_TOOMANYTARGETS, user, maxtargets, "KICK");
 			break;
 		}
 
-		if (!(who = find_chasing(client, user, &chasing)))
+		if (!(target = find_chasing(client, user, &chasing)))
 			continue;	/* No such user left! */
 
-		if (!who->user)
+		if (!target->user)
 			continue; /* non-user */
 
-		lp = find_membership_link(who->user->channel, channel);
+		lp = find_membership_link(target->user->channel, channel);
 		if (!lp)
 		{
 			if (MyUser(client))
@@ -228,13 +221,13 @@ CMD_FUNC(cmd_kick)
 		 * a remote kick should always be allowed (pass through). -- Syzop
 		 */
 
-		/* Store "who" access flags */
-		who_flags = get_access(who, channel);
+		/* Store "target" access flags */
+		target_member_modes = get_channel_access(target, channel);
 
 		badkick = NULL;
 		ret = EX_ALLOW;
 		for (h = Hooks[HOOKTYPE_CAN_KICK]; h; h = h->next) {
-			int n = (*(h->func.intfunc))(client, who, channel, comment, client_flags, who_flags, &badkick);
+			int n = (*(h->func.intfunc))(client, target, channel, comment, client_member_modes, target_member_modes, &badkick);
 
 			if (n == EX_DENY)
 				ret = n;
@@ -259,7 +252,7 @@ CMD_FUNC(cmd_kick)
 			/* If set it means 'not allowed to kick'.. now check if (s)he can override that.. */
 			if (op_can_override("channel:override:kick:no-ops",client,channel,NULL))
 			{
-				kick_operoverride_msg(client, channel, who, comment);
+				kick_operoverride_msg(client, channel, target, comment);
 				goto attack; /* all other checks don't matter anymore (and could cause double msgs) */
 			} else {
 				/* Not an oper overriding */
@@ -270,65 +263,65 @@ CMD_FUNC(cmd_kick)
 			}
 		}
 
+		// FIXME: Most, maybe even all, of these must be moved to HOOKTYPE_CAN_KICK checks in the corresponding halfop/chanop/chanadmin/chanowner modules :)
+		// !!!! FIXME
+
 		/* we are neither +o nor +h, OR..
-		 * we are +h but victim is +o, OR...
-		 * we are +h and victim is +h
+		 * we are +h but target is +o, OR...
+		 * we are +h and target is +h
 		 */
 		if (op_can_override("channel:override:kick:no-ops",client,channel,NULL))
 		{
-			if ((!(client_flags & CHFL_ISOP) && !(client_flags & CHFL_HALFOP)) ||
-			    ((client_flags & CHFL_HALFOP) && (who_flags & CHFL_ISOP)) ||
-			    ((client_flags & CHFL_HALFOP) && (who_flags & CHFL_HALFOP)))
+			if ((!check_channel_access_string(client_member_modes, "o") && !check_channel_access_string(client_member_modes, "h")) ||
+			    (check_channel_access_string(client_member_modes, "h") && check_channel_access_string(target_member_modes, "h")) ||
+			    (check_channel_access_string(client_member_modes, "h") && check_channel_access_string(target_member_modes, "o")))
 			{
-				kick_operoverride_msg(client, channel, who, comment);
+				kick_operoverride_msg(client, channel, target, comment);
 				goto attack;
 			}	/* is_chan_op */
 
 		}
 
-		/* victim is +a or +q, we are not +q */
-		if ((who_flags & (CHFL_CHANOWNER|CHFL_CHANADMIN))
-			 && !(client_flags & CHFL_CHANOWNER)) {
-			if (client == who)
+		/* target is +a/+q, and we are not +q? */
+		if (check_channel_access_string(target_member_modes, "qa") && !check_channel_access_string(client_member_modes, "a"))
+		{
+			if (client == target)
 				goto attack; /* kicking self == ok */
 			if (op_can_override("channel:override:kick:owner",client,channel,NULL)) /* (and f*ck local ops) */
 			{
 				/* IRCop kicking owner/prot */
-				kick_operoverride_msg(client, channel, who, comment);
+				kick_operoverride_msg(client, channel, target, comment);
 				goto attack;
 			}
-			else if (!IsULine(client) && (who != client) && MyUser(client))
+			else if (!IsULine(client) && (target != client) && MyUser(client))
 			{
 				char errbuf[NICKLEN+25];
-				if (who_flags & CHFL_CHANOWNER)
-					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel owner",
-						   who->name);
+				if (check_channel_access_string(target_member_modes, "q"))
+					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel owner", target->name);
 				else
-					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin",
-						   who->name);
-				sendnumeric(client, ERR_CANNOTDOCOMMAND, "KICK",
-					   errbuf);
+					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin", target->name);
+				sendnumeric(client, ERR_CANNOTDOCOMMAND, "KICK", errbuf);
 				goto deny;
-			}	/* chanadmin/chanowner */
+			}
 		}
 
-		/* victim is +o, we are +h [operoverride is already taken care of 2 blocks above] */
-		if ((who_flags & CHFL_ISOP) && (client_flags & CHFL_HALFOP)
-		    && !(client_flags & CHFL_ISOP) && !IsULine(client) && MyUser(client))
+		/* target is +o, we are +h [operoverride is already taken care of 2 blocks above] */
+		if (check_channel_access_string(target_member_modes, "h") && check_channel_access_string(client_member_modes, "h")
+		    && !check_channel_access_string(client_member_modes, "o") && !IsULine(client) && MyUser(client))
 		{
 			char errbuf[NICKLEN+30];
-			ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel operator", who->name);
+			ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel operator", target->name);
 			sendnumeric(client, ERR_CANNOTDOCOMMAND, "KICK",
 				   errbuf);
 			goto deny;
 		}
 
-		/* victim is +h, we are +h [operoverride is already taken care of 3 blocks above] */
-		if ((who_flags & CHFL_HALFOP) && (client_flags & CHFL_HALFOP)
-		    && !(client_flags & CHFL_ISOP) && MyUser(client))
+		/* target is +h, we are +h [operoverride is already taken care of 3 blocks above] */
+		if (check_channel_access_string(target_member_modes, "o") && check_channel_access_string(client_member_modes, "h")
+		    && !check_channel_access_string(client_member_modes, "o") && MyUser(client))
 		{
 			char errbuf[NICKLEN+15];
-			ircsnprintf(errbuf, sizeof(errbuf), "%s is a halfop", who->name);
+			ircsnprintf(errbuf, sizeof(errbuf), "%s is a halfop", target->name);
 			sendnumeric(client, ERR_CANNOTDOCOMMAND, "KICK",
 				   errbuf);
 			goto deny;
@@ -345,7 +338,7 @@ CMD_FUNC(cmd_kick)
 			int breakit = 0;
 			Hook *h;
 			for (h = Hooks[HOOKTYPE_PRE_LOCAL_KICK]; h; h = h->next) {
-				if ((*(h->func.intfunc))(client,who,channel,comment) > 0) {
+				if ((*(h->func.intfunc))(client,target,channel,comment) > 0) {
 					breakit = 1;
 					break;
 				}
@@ -354,6 +347,6 @@ CMD_FUNC(cmd_kick)
 				continue;
 		}
 
-		kick_user(recv_mtags, channel, client, who, comment);
+		kick_user(recv_mtags, channel, client, target, comment);
 	}
 }

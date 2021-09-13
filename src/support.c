@@ -251,6 +251,16 @@ size_t strlncat(char *dst, const char *src, size_t size, size_t n)
 }
 #endif
 
+/** Like strlcpy but concat one letter */
+void strlcat_letter(char *buf, char c, size_t buflen)
+{
+	int n = strlen(buf);
+	if (!buflen || (n >= buflen-1))
+		return;
+	buf[n] = c;
+	buf[n+1] = '\0';
+}
+
 /** Copies a string and ensure the new buffer is at most 'max' size, including NUL.
  * The syntax is pretty much identical to strlcpy() except that
  * the buffer is newly allocated.

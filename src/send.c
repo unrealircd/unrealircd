@@ -470,18 +470,16 @@ void sendto_channel(Channel *channel, Client *from, Client *skip,
 		/* Now deal with 'prefix' (if non-zero) */
 		if (!prefix)
 			goto good;
-		if ((prefix & PREFIX_HALFOP) && (lp->flags & CHFL_HALFOP))
+		if ((prefix & PREFIX_HALFOP) && check_channel_access_member(lp, "h"))
 			goto good;
-		if ((prefix & PREFIX_VOICE) && (lp->flags & CHFL_VOICE))
+		if ((prefix & PREFIX_VOICE) && check_channel_access_member(lp, "v"))
 			goto good;
-		if ((prefix & PREFIX_OP) && (lp->flags & CHFL_CHANOP))
+		if ((prefix & PREFIX_OP) && check_channel_access_member(lp, "o"))
 			goto good;
-#ifdef PREFIX_AQ
-		if ((prefix & PREFIX_ADMIN) && (lp->flags & CHFL_CHANADMIN))
+		if ((prefix & PREFIX_ADMIN) && check_channel_access_member(lp, "a"))
 			goto good;
-		if ((prefix & PREFIX_OWNER) && (lp->flags & CHFL_CHANOWNER))
+		if ((prefix & PREFIX_OWNER) && check_channel_access_member(lp, "q"))
 			goto good;
-#endif
 		continue;
 good:
 		/* Now deal with 'clicap' (if non-zero) */

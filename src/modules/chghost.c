@@ -128,7 +128,6 @@ void _userhost_changed(Client *client)
 		for (channels = client->user->channel; channels; channels = channels->next)
 		{
 			Channel *channel = channels->channel;
-			int flags = channels->flags;
 			char *modes;
 			char partbuf[512]; /* PART */
 			char joinbuf[512]; /* JOIN */
@@ -156,7 +155,7 @@ void _userhost_changed(Client *client)
 				IsLoggedIn(client) ? client->user->account : "*",
 				client->info);
 
-			modes = get_chmodes_for_user(client, flags);
+			modes = get_chmodes_for_user(client, channels->member_modes);
 			if (!BadPtr(modes))
 				ircsnprintf(modebuf, sizeof(modebuf), ":%s MODE %s %s", me.name, channel->name, modes);
 
@@ -170,7 +169,7 @@ void _userhost_changed(Client *client)
 				if (!MyConnect(acptr))
 					continue; /* only locally connected clients */
 
-				if (chanops_only && !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)))
+				if (chanops_only && !check_channel_access_member(lp, "hoaq"))
 					continue; /* skip non-ops if requested to (used for mode +D) */
 
 				if (HasCapabilityFast(acptr, CAP_CHGHOST))

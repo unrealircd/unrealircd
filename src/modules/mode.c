@@ -34,8 +34,10 @@ CMD_FUNC(_cmd_umode);
 /* local: */
 int do_mode_char(Channel *channel, long modetype, char modechar, const char *param,
                  u_int what, Client *client,
-                 u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], long my_access);
+                 u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int what,
+                    Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
+void do_mode_char_member_mode_new(Channel *channel, Cmode *handler, const char *param, u_int what,
                     Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
                    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
@@ -636,18 +638,15 @@ void do_mode_char_write(char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], u_int *pcount,
 	(*pcount)++;
 }
 
-#ifdef PREFIX_AQ
-#define is_xchanop(x) ((x & (CHFL_CHANOP|CHFL_CHANADMIN|CHFL_CHANOWNER)))
-#else
-#define is_xchanop(x) ((x & CHFL_CHANOP))
-#endif
-
 int do_mode_char_list_mode(Channel *channel, long modetype, char modechar, const char *param,
                            u_int what, Client *client,
-                           u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
-                           long my_access)
+                           u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
 {
 	const char *tmpstr;
+
+	/* Check if there is a parameter present */
+	if (!param || *pcount >= MAXMODEPARAMS)
+		return 0;
 
 	switch (modetype)
 	{
@@ -668,221 +667,6 @@ int do_mode_char_list_mode(Channel *channel, long modetype, char modechar, const
 			break;
 	}
 	return 1;
-}
-
-/** Called for [+-]vhoaq */
-int do_mode_char_member_mode(Channel *channel, long modetype, char modechar, const char *param,
-                             u_int what, Client *client,
-                             u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
-                             long my_access)
-{
-	Member *member = NULL;
-	Membership *membership = NULL;
-	Client *target;
-	unsigned int tmp = 0;
-	int chasing = 0;
-	Hook *h;
-
-	if (modetype == MODE_CHANOWNER)
-	{
-		if (!IsULine(client) && !IsServer(client) && !is_chanowner(client, channel) && !samode_in_progress)
-		{
-			if (MyUser(client) && !op_can_override("channel:override:mode",client,channel,&modetype))
-			{
-				sendnumeric(client, ERR_CHANOWNPRIVNEEDED, channel->name);
-				return 1;
-			}
-			if (!is_half_op(client, channel)) /* htrig will take care of halfop override notices */
-				opermode = 1;
-		}
-	} else
-	if (modetype == MODE_CHANADMIN)
-	{
-		/* not uline, not server, not chanowner, not an samode, not -a'ing yourself... */
-		if (!IsULine(client) && !IsServer(client) && !is_chanowner(client, channel) && !samode_in_progress &&
-		    !(param && (what == MODE_DEL) && (find_client(param, NULL) == client)))
-		{
-			if (MyUser(client) && !op_can_override("channel:override:mode",client,channel,&modetype))
-			{
-				sendnumeric(client, ERR_CHANOWNPRIVNEEDED, channel->name);
-				return 1;
-			}
-			if (!is_half_op(client, channel)) /* htrig will take care of halfop override notices */
-				opermode = 1;
-		}
-	}
-
-	/* Halfop access check */
-	if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(client) &&
-	    !op_can_override("channel:override:mode",client,channel,&modetype) && !samode_in_progress)
-	{
-		if (MyUser(client) && (modetype == MODE_HALFOP) && (what == MODE_DEL) &&
-		    param && (find_client(param, NULL) == client))
-		{
-			/* halfop doing -h on self */
-		} else
-		if (MyUser(client) && (modetype != MODE_VOICE))
-		{
-			sendnumeric(client, ERR_NOTFORHALFOPS, modechar);
-		}
-	}
-
-	if (!(target = find_chasing(client, param, &chasing)))
-		return 1;
-
-	if (!target->user)
-		return 1;
-
-	if (!(membership = find_membership_link(target->user->channel, channel)))
-	{
-		sendnumeric(client, ERR_USERNOTINCHANNEL, target->name, channel->name);
-		return 1;
-	}
-	member = find_member_link(channel->members, target);
-	if (!member)
-	{
-		/* should never happen */
-		unreal_log(ULOG_ERROR, "mode", "BUG_FIND_MEMBER_LINK_FAILED", target,
-			   "[BUG] Client $target.details on channel $channel: "
-			   "found via find_membership_link() but NOT found via find_member_link(). "
-			   "This should never happen! Please report on https://bugs.unrealircd.org/",
-			   log_data_channel("channel", channel));
-		return 1;
-	}
-
-	/* More access checks (unless server or ulined)... */
-	if (!IsServer(client) && !IsULine(client))
-	{
-		/* This code checks permissions when removing a member mode (-vhoaq), it is quite... long... */
-		if (what == MODE_DEL)
-		{
-			int ret = EX_ALLOW;
-			char *badmode = NULL;
-
-			for (h = Hooks[HOOKTYPE_MODE_DEOP]; h; h = h->next)
-			{
-				int n = (*(h->func.intfunc))(client, member->client, channel, what, modechar, my_access, &badmode);
-				if (n == EX_DENY)
-					ret = n;
-				else if (n == EX_ALWAYS_DENY)
-				{
-					ret = n;
-					return 1;
-				}
-			}
-
-			if (ret == EX_ALWAYS_DENY)
-			{
-				if (MyUser(client) && badmode)
-					sendto_one(client, NULL, "%s", badmode); /* send error message, if any */
-
-				if (MyUser(client))
-				return 1; /* stop processing this mode */
-			}
-
-			/* This probably should work but is completely untested (the operoverride stuff, I mean): */
-			if (ret == EX_DENY)
-			{
-				if (!op_can_override("channel:override:mode:del",client,channel,&modetype))
-				{
-					if (badmode)
-						sendto_one(client, NULL, "%s", badmode); /* send error message, if any */
-					return 1; /* stop processing this mode */
-				} else {
-					opermode = 1;
-				}
-			}
-		}
-
-		/* This check not only prevents unprivileged users from doing a -q on chanowners,
-		 * it also protects against -o/-h/-v on them.
-		 */
-		if (is_chanowner(member->client, channel)
-		    && member->client != client
-		    && !is_chanowner(client, channel) && !IsServer(client)
-		    && !IsULine(client) && !opermode && !samode_in_progress && (what == MODE_DEL))
-		{
-			if (MyUser(client))
-			{
-				/* Need this !op_can_override() here again, even with the !opermode
-				 * check a few lines up, all due to halfops. -- Syzop
-				 */
-				if (!op_can_override("channel:override:mode:del",client,channel,&modetype))
-				{
-					char errbuf[NICKLEN+30];
-					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel owner", member->client->name);
-					sendnumeric(client, ERR_CANNOTCHANGECHANMODE, modechar, errbuf);
-					return 1;
-				}
-			} else {
-				if (IsOper(client))
-					opermode = 1;
-			}
-		}
-
-		/* This check not only prevents unprivileged users from doing a -a on chanadmins,
-		 * it also protects against -o/-h/-v on them.
-		 */
-		if (is_chanadmin(member->client, channel)
-		    && member->client != client
-		    && !is_chanowner(client, channel) && !IsServer(client) && !opermode && !samode_in_progress
-		    && modetype != MODE_CHANOWNER && (what == MODE_DEL))
-		{
-			if (MyUser(client))
-			{
-				/* Need this !op_can_override() here again, even with the !opermode
-				 * check a few lines up, all due to halfops. -- Syzop
-				 */
-				if (!op_can_override("channel:override:mode:del",client,channel,&modetype))
-				{
-					char errbuf[NICKLEN+30];
-					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin", member->client->name);
-					sendnumeric(client, ERR_CANNOTCHANGECHANMODE, modechar, errbuf);
-					return 1;
-				}
-			} else {
-				if (IsOper(client))
-					opermode = 1;
-			}
-		}
-	} // !IsServer() and !IsULine()
-
-	/* Save current flags and set the new flag */
-	tmp = member->flags;
-	if (what == MODE_ADD)
-		member->flags |= modetype;
-	else
-		member->flags &= ~modetype;
-
-	/* If there was no change, then don't do the mode.
-	 * Except if this came from services, then always set it explicitly,
-	 * even if it was there.
-	 */
-	if ((tmp == member->flags) && !IsULine(client))
-		return 1; /* already set */
-
-	/* Make sure membership->flags and member->flags is the same */
-	membership->flags = member->flags;
-	do_mode_char_write(pvar, pcount, what, modechar, target->name);
-	return 1;
-}
-
-/* Called for +vhoaq and +beI, simply delegates it to sub-handlers
- * (but first checks if there is a parameter present)
- */
-int do_mode_char(Channel *channel, long modetype, char modechar, const char *param,
-                 u_int what, Client *client,
-                 u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
-                 long my_access)
-{
-	/* Check if there is a parameter present */
-	if (!param || *pcount >= MAXMODEPARAMS)
-		return 0;
-
-	if ((modetype == MODE_BAN) || (modetype == MODE_EXCEPT) || (modetype == MODE_INVEX))
-		return do_mode_char_list_mode(channel, modetype, modechar, param, what, client, pcount, pvar, my_access);
-
-	return do_mode_char_member_mode(channel, modetype, modechar, param, what, client, pcount, pvar, my_access);
 }
 
 /** Check access and if granted, set the extended chanmode to the requested value in memory.
@@ -925,6 +709,12 @@ int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int w
 		{
 			opermode = 1; /* override in progress... */
 		}
+	}
+
+	if (handler->type == CMODE_MEMBER)
+	{
+		do_mode_char_member_mode_new(channel, handler, param, what, client, pcount, pvar);
+		return 1;
 	}
 
 	/* Check for multiple changes in 1 command (like +y-y+y 1 2, or +yy 1 2). */
@@ -996,6 +786,62 @@ int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int w
 			cm_freeparameter(channel, handler->letter);
 	}
 	return paracnt;
+}
+
+/** Set or unset a mode on a member (eg +vhoaq/-vhoaq) */
+void do_mode_char_member_mode_new(Channel *channel, Cmode *handler, const char *param, u_int what,
+                    Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
+{
+	Member *member = NULL;
+	Membership *membership = NULL;
+	Client *target;
+	int chasing = 0;
+	Hook *h;
+	char c[2];
+	char modechar = handler->letter;
+
+	if (!(target = find_chasing(client, param, &chasing)))
+		return;
+
+	if (!target->user)
+		return;
+
+	if (!(membership = find_membership_link(target->user->channel, channel)))
+	{
+		sendnumeric(client, ERR_USERNOTINCHANNEL, target->name, channel->name);
+		return;
+	}
+	member = find_member_link(channel->members, target);
+	if (!member)
+	{
+		/* should never happen */
+		unreal_log(ULOG_ERROR, "mode", "BUG_FIND_MEMBER_LINK_FAILED", target,
+			   "[BUG] Client $target.details on channel $channel: "
+			   "found via find_membership_link() but NOT found via find_member_link(). "
+			   "This should never happen! Please report on https://bugs.unrealircd.org/",
+			   log_data_channel("channel", channel));
+		return;
+	}
+
+	if ((what == MODE_ADD) && strchr(member->member_modes, modechar))
+		return; /* already set */
+	if ((what == MODE_DEL) && !strchr(member->member_modes, modechar))
+		return; /* already unset */
+
+	if (what == MODE_ADD)
+	{
+		if (strchr(member->member_modes, modechar))
+			return; /* already set */
+		/* Set the mode */
+		add_member_mode_fast(member, membership, modechar);
+	} else {
+		if (!strchr(member->member_modes, modechar))
+			return; /* already unset */
+		del_member_mode_fast(member, membership, modechar);
+	}
+
+	/* And write out the mode */
+	do_mode_char_write(pvar, pcount, what, modechar, target->name);
 }
 
 /** In 2003 I introduced PROTOCTL CHANMODES= so remote servers (and services)
@@ -1093,16 +939,12 @@ void _set_mode(Channel *channel, Client *client, int parc, const char *parv[], u
 	unsigned int htrig = 0;
 	int checkrestr = 0, warnrestr = 1;
 	Cmode_t oldem;
-	long my_access;
 	paracount = 1;
 	*pcount = 0;
 
 	oldem = channel->mode.mode;
 	if (RESTRICT_CHANNELMODES && !ValidatePermissionsForPath("immune:restrict-channelmodes",client,NULL,channel,NULL)) /* "cache" this */
 		checkrestr = 1;
-
-	/* Set access to the status we have */
-	my_access = IsUser(client) ? get_access(client, channel) : 0;
 
 	for (curchr = parv[0]; *curchr; curchr++)
 	{
@@ -1206,14 +1048,11 @@ void _set_mode(Channel *channel, Client *client, int parc, const char *parv[], u
 
 				if (found == 1)
 				{
-					paracount += do_mode_char(channel, modetype, *curchr,
-								  argument, what, client, pcount,
-								  pvar, my_access);
+					paracount += do_mode_char_list_mode(channel, modetype, *curchr, argument, what, client, pcount, pvar);
 				}
 				else if (found == 2)
 				{
-					paracount += do_extmode_char(channel, cm, argument,
-								     what, client, pcount, pvar);
+					paracount += do_extmode_char(channel, cm, argument, what, client, pcount, pvar);
 				}
 				break;
 		} /* switch(*curchr) */
@@ -1672,13 +1511,13 @@ int list_mode_request(Client *client, Channel *channel, const char *req)
 			break;
 		case 'q':
 			for (member = channel->members; member; member = member->next)
-				if (member->flags & CHFL_CHANOWNER)
+				if (strchr(member->member_modes, 'q'))
 					sendnumeric(client, RPL_QLIST, channel->name, member->client->name);
 			sendnumeric(client, RPL_ENDOFQLIST, channel->name);
 			break;
 		case 'a':
 			for (member = channel->members; member; member = member->next)
-				if (member->flags & CHFL_CHANADMIN)
+				if (strchr(member->member_modes, 'a'))
 					sendnumeric(client, RPL_ALIST, channel->name, member->client->name);
 			sendnumeric(client, RPL_ENDOFALIST, channel->name);
 			break;

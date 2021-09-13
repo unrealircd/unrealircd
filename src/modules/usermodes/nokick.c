@@ -37,7 +37,7 @@ long UMODE_NOKICK = 0L;
 /* Forward declarations */
 int umode_allow_unkickable_oper(Client *client, int what);
 int nokick_can_kick(Client *client, Client *target, Channel *channel,
-                    const char *comment, long client_flags, long target_flags, const char **reject_reason);
+                    const char *comment, const char *client_member_modes, const char *target_member_modes, const char **reject_reason);
 
 MOD_TEST()
 {
@@ -77,7 +77,7 @@ int umode_allow_unkickable_oper(Client *client, int what)
 }
 
 int nokick_can_kick(Client *client, Client *target, Channel *channel, const char *comment,
-                    long client_flags, long target_flags, const char **reject_reason)
+                    const char *client_member_modes, const char *target_member_modes, const char **reject_reason)
 {
 	static char errmsg[NICKLEN+256];
 

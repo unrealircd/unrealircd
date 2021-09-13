@@ -646,32 +646,16 @@ static void make_who_status(Client *client, Client *acptr, Channel *channel,
 	{
 		if (HasCapability(client, "multi-prefix"))
 		{
-#ifdef PREFIX_AQ
-			if (cm->flags & CHFL_CHANOWNER)
-				status[i++] = '~';
-			if (cm->flags & CHFL_CHANADMIN)
-				status[i++] = '&';
-#endif
-			if (cm->flags & CHFL_CHANOP)
-				status[i++] = '@';
-			if (cm->flags & CHFL_HALFOP)
-				status[i++] = '%';
-			if (cm->flags & CHFL_VOICE)
-				status[i++] = '+';
-		} else {
-#ifdef PREFIX_AQ
-			if (cm->flags & CHFL_CHANOWNER)
-				status[i++] = '~';
-			else if (cm->flags & CHFL_CHANADMIN)
-				status[i++] = '&';
-			else
-#endif
-			if (cm->flags & CHFL_CHANOP)
-				status[i++] = '@';
-			else if (cm->flags & CHFL_HALFOP)
-				status[i++] = '%';
-			else if (cm->flags & CHFL_VOICE)
-				status[i++] = '+';
+			/* Standard NAMES reply (single character) */
+			char c = mode_to_prefix(*cm->member_modes);
+			if (c)
+				status[i++] = c;
+		}
+		else
+		{
+			/* NAMES reply with all rights included (multi-prefix / NAMESX) */
+			strcpy(&status[i], modes_to_prefix(cm->member_modes));
+			i += strlen(&status[i]);
 		}
 	}
 

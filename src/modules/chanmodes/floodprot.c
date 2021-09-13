@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER
 #define CHFLD_CTCP	0 /* c */
 #define CHFLD_JOIN	1 /* j */
 #define CHFLD_KNOCK	2 /* k */
-#define CHFLD_MSG		3 /* m */
+#define CHFLD_MSG	3 /* m */
 #define CHFLD_NICK	4 /* n */
 #define CHFLD_TEXT	5 /* t */
 #define CHFLD_REPEAT	6 /* r */
@@ -977,8 +977,7 @@ int floodprot_nickchange(Client *client, MessageTag *mtags, const char *oldnick)
 	for (mp = client->user->channel; mp; mp = mp->next)
 	{
 		Channel *channel = mp->channel;
-		if (channel && IsFloodLimit(channel) &&
-		    !(mp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANADMIN)))
+		if (channel && IsFloodLimit(channel) && !check_channel_access_membership(mp, "vhoaq"))
 		{
 			do_floodprot(channel, client, CHFLD_NICK);
 		}

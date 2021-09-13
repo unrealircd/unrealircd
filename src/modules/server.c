@@ -1657,19 +1657,8 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 
 	for (lp = members; lp; lp = lp->next)
 	{
-		p = tbuf;
-		if (lp->flags & MODE_CHANOP)
-			*p++ = '@';
-		if (lp->flags & MODE_VOICE)
-			*p++ = '+';
-		if (lp->flags & MODE_HALFOP)
-			*p++ = '%';
-		if (lp->flags & MODE_CHANOWNER)
-			*p++ = '*';
-		if (lp->flags & MODE_CHANADMIN)
-			*p++ = '~';
-
-		p = mystpcpy(p, lp->client->id);
+		p = mystpcpy(tbuf, modes_to_sjoin_prefix(lp->member_modes)); /* eg @+ */
+		p = mystpcpy(p, lp->client->id); /* nick (well, id) */
 		*p++ = ' ';
 		*p = '\0';
 

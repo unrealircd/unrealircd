@@ -211,7 +211,7 @@ CMD_FUNC(cmd_sajoin)
 		for (name = strtoken(&p, request, ","); name; name = strtoken(&p, NULL, ","))
 		{
 			MessageTag *mtags = NULL;
-			int flags;
+			const char *member_modes;
 			Channel *channel;
 			Membership *lp;
 			Hook *h;
@@ -241,7 +241,7 @@ CMD_FUNC(cmd_sajoin)
 				strlcpy(jbuf, "0", sizeof(jbuf));
 				continue;
 			}
-			flags = (ChannelExists(name)) ? CHFL_DEOPPED : LEVEL_ON_JOIN;
+			member_modes = (ChannelExists(name)) ? "" : LEVEL_ON_JOIN;
 			channel = make_channel(name);
 			if (channel && (lp = find_membership_link(target->user->channel, channel)))
 				continue;
@@ -263,7 +263,7 @@ CMD_FUNC(cmd_sajoin)
 			 * Each with their own unique msgid.
 			 */
 			new_message(target, NULL, &mtags);
-			join_channel(channel, target, mtags, flags);
+			join_channel(channel, target, mtags, member_modes);
 			if (sjmode)
 			{
 				char *modes;

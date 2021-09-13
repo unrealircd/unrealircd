@@ -76,7 +76,7 @@ int away_join(Client *client, Channel *channel, MessageTag *mtags)
 		if (!MyConnect(acptr))
 			continue; /* only locally connected clients */
 
-		if (invisible && !(lp->flags & (CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)) && (client != acptr))
+		if (invisible && !check_channel_access_member(lp, "hoaq") && (client != acptr))
 			continue; /* skip non-ops if requested to (used for mode +D), but always send to 'client' */
 
 		if (client->user->away && HasCapabilityFast(acptr, CAP_AWAY_NOTIFY))

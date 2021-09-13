@@ -244,14 +244,14 @@ int can_send_to_prefix(Client *client, Channel *channel, int prefix)
 	 * Need at least voice (+) in order to send to +,% or @
 	 * Need at least ops (@) in order to send to & or ~
 	 */
-	if (!lp || !(lp->flags & (CHFL_VOICE|CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)))
+	if (!lp || !check_channel_access_membership(lp, "vhoaq"))
 	{
 		sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 		return 0;
 	}
 
 	if (!(prefix & PREFIX_OP) && ((prefix & PREFIX_OWNER) || (prefix & PREFIX_ADMIN)) &&
-	    !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)))
+	    !check_channel_access_membership(lp, "oaq"))
 	{
 		sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 		return 0;
@@ -846,10 +846,10 @@ int _can_send_to_channel(Client *client, Channel *channel, const char **msgtext,
 	if (op_can_override("channel:override:message:ban",client,channel,NULL))
 		return 1;
 
-	if ((!lp
-	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
-	    CHFL_HALFOP | CHFL_CHANADMIN))) && MyUser(client)
-	    && is_banned(client, channel, BANCHK_MSG, msgtext, errmsg))
+	/* If local client is banned and not +vhoaq... */
+	if (MyUser(client) &&
+	    !check_channel_access_membership(lp, "vhoaq") &&
+	    is_banned(client, channel, BANCHK_MSG, msgtext, errmsg))
 	{
 		/* Modules can set 'errmsg', otherwise we default to this: */
 		if (!*errmsg)

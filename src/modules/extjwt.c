@@ -856,21 +856,8 @@ char *extjwt_make_payload(Client *client, Channel *channel, struct extjwt_config
 	if (channel)
 	{ /* fill in channel information and user flags */
 		lp = find_membership_link(client->user->channel, channel);
-		if (lp)
-		{
-			if (lp->flags & CHFL_VOICE)
-				json_array_append_new(modes, json_string("v"));
-			if (lp->flags & CHFL_HALFOP)
-				json_array_append_new(modes, json_string("h"));
-			if (lp->flags & CHFL_CHANOP)
-				json_array_append_new(modes, json_string("o"));
-#ifdef PREFIX_AQ
-			if (lp->flags & CHFL_CHANADMIN)
-				json_array_append_new(modes, json_string("a"));
-			if (lp->flags & CHFL_CHANOWNER)
-				json_array_append_new(modes, json_string("q"));
-#endif
-		}
+		if (lp && *lp->member_modes)
+			json_array_append_new(modes, json_string(lp->member_modes));
 		json_object_set_new(payload, "channel", json_string_unreal(channel->name));
 		json_object_set_new(payload, "joined", json_integer(lp?1:0));
 		json_object_set_new(payload, "cmodes", modes);
