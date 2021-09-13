@@ -157,7 +157,8 @@ CMD_FUNC(cmd_kick)
 	int maxtargets = max_targets_for_command("KICK");
 	MessageTag *mtags;
 	char request[BUFSIZE];
-	const char *client_member_modes, *target_member_modes;
+	const char *client_member_modes = NULL;
+	const char *target_member_modes;
 
 	if (parc < 3 || *parv[1] == '\0')
 	{

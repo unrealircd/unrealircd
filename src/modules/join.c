@@ -318,7 +318,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 	TKL *tklban;
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("JOIN");
-	const char *member_modes;
+	const char *member_modes = "";
 
 #define RET() do { bouncedtimes--; parv[1] = orig_parv1; return; } while(0)
 
