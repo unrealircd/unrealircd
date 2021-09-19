@@ -54,8 +54,12 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-#define HDR(str) sendto_one(client, NULL, ":%s 290 %s :%s", me.name, client->name, str);
-#define SND(str) sendto_one(client, NULL, ":%s 292 %s :%s", me.name, client->name, str);
+// RPL_HELPSTART
+#define HDR(subject, str) sendto_one(client, NULL, ":%s 704 %s %s :%s", me.name, client->name, subject, str);
+// RPL_HELPTXT
+#define SND(subject, str) sendto_one(client, NULL, ":%s 705 %s %s :%s", me.name, client->name, subject, str);
+// RPL_ENDOFHELP
+#define FTR(subject, str) sendto_one(client, NULL, ":%s 706 %s %s :%s", me.name, client->name, subject, str);
 
 ConfigItem_help *find_Help(const char *command)
 {
@@ -89,40 +93,37 @@ void parse_help(Client *client, const char *help)
 		helpitem = find_Help(NULL);
 		if (!helpitem)
 			return;
-		SND(" -");
-		HDR("        ***** UnrealIRCd Help System *****");
-		SND(" -");
+		HDR("*", "        ***** UnrealIRCd Help System *****");
+		SND("*", " -");
 		text = helpitem->text;
 		while (text) {
-			SND(text->line);
+			SND("*", text->line);
 			text = text->next;
 		}
-		SND(" -");
+		FTR("*", " -");
 		return;
 		
 	}
 	helpitem = find_Help(help);
 	if (!helpitem) {
-		SND(" -");
-		HDR("        ***** No Help Available *****");
-		SND(" -");
-		SND("   We're sorry, we don't have help available for the command you requested.");
-		SND(" -");
-		sendto_one(client, NULL, ":%s 292 %s : ***** Go to %s if you have any further questions *****",
-		    me.name, client->name, HELP_CHANNEL);
-		SND(" -");
+		HDR("*", "        ***** No Help Available *****");
+		SND("*", " -");
+		SND("*", "   We're sorry, we don't have help available for the command you requested.");
+		SND("*", " -");
+		sendto_one(client, NULL, ":%s 705 %s * : ***** Go to %s if you have any further questions *****",
+		    me.name, client->name, helpchan);
+		FTR("*", " -");
 		return;
 	}
 	text = helpitem->text;
-	SND(" -");
-	sendto_one(client, NULL, ":%s 290 %s :***** %s *****",
-	    me.name, client->name, helpitem->command);
-	SND(" -");
+	sendto_one(client, NULL, ":%s 704 %s %s :***** %s *****",
+	    me.name, client->name, help, helpitem->command);
+	SND(help, " -");
 	while (text) {
-		SND(text->line);
+		SND(help, text->line);
 		text = text->next;
 	}
-	SND(" -");
+	FTR(help, " -");
 }
 
 /*
