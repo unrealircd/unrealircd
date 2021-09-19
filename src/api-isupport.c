@@ -86,18 +86,13 @@ void isupport_init(void)
 {
 	ISupportSet(NULL, "INVEX", NULL);
 	ISupportSet(NULL, "EXCEPTS", NULL);
-#ifdef PREFIX_AQ
-	ISupportSet(NULL, "STATUSMSG", "~&@%+");
-#else
-	ISupportSet(NULL, "STATUSMSG", "@%+");
-#endif
 	ISupportSet(NULL, "ELIST", "MNUCT");
 	ISupportSet(NULL, "CASEMAPPING", "ascii");
 	ISupportSet(NULL, "NETWORK", NETWORK_NAME_005);
+	ISupportSet(NULL, "PREFIX", ""); /* placeholder */
 	ISupportSetFmt(NULL, "CHANMODES",
 	               CHPAR1 "%s,%s,%s,%s",
 	               EXPAR1, EXPAR2, EXPAR3, EXPAR4);
-	ISupportSet(NULL, "PREFIX", CHPFIX);
 	ISupportSet(NULL, "CHANTYPES", "#");
 	ISupportSetFmt(NULL, "MODES", "%d", MAXMODEPARAMS);
 	ISupportSetFmt(NULL, "SILENCE", "%d", SILENCE_LIMIT);

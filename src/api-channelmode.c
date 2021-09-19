@@ -46,6 +46,7 @@ char extchmstr[4][64];
 /* Private functions (forward declaration) and variables */
 static void make_cmodestr(void);
 static char previous_chanmodes[256];
+static char previous_prefix[256];
 static Cmode *ParamTable[MAXPARAMMODES+1];
 static void unload_extcmode_commit(Cmode *cmode);
 
@@ -103,7 +104,7 @@ static void make_cmodestr(void)
 }
 
 /** Check for changes - if any are detected, we broadcast the change */
-void extcmodes_check_for_changes(void)
+void extcmodes_check_for_changed_channel_modes(void)
 {
 	char chanmodes[256];
 	ISupport *isup;
@@ -149,12 +150,100 @@ void extcmodes_check_for_changes(void)
 	strlcpy(previous_chanmodes, chanmodes, sizeof(previous_chanmodes));
 }
 
+char *make_prefix(void)
+{
+	static char prefix[256];
+	char prefix_prefix[256];
+	char prefix_modes[256];
+	int level[256];
+	Cmode *cm;
+	int n;
+
+	*prefix = *prefix_prefix = *prefix_modes = '\0';
+
+	for (n=0, cm=channelmodes; cm && n < sizeof(level)-1; cm = cm->next)
+	{
+		if ((cm->type == CMODE_MEMBER) && cm->letter)
+		{
+			strlcat_letter(prefix_prefix, cm->prefix, sizeof(prefix_prefix));
+			strlcat_letter(prefix_modes, cm->letter, sizeof(prefix_modes));
+			level[n] = cm->prefix_priority;
+			n++;
+		}
+	}
+
+	if (*prefix_prefix)
+	{
+		int i, j;
+		/* Now sort the damn thing */
+		for (i=0; i < n; i++)
+		{
+			for (j=i+1; j < n; j++)
+			{
+				if (level[i] > level[j])
+				{
+					/* swap */
+					char save;
+					int save_level;
+					save = prefix_prefix[i];
+					prefix_prefix[i] = prefix_prefix[j];
+					prefix_prefix[j] = save;
+					save = prefix_modes[i];
+					prefix_modes[i] = prefix_modes[j];
+					prefix_modes[j] = save;
+					save_level = level[i];
+					level[i] = level[j];
+					level[j] = save_level;
+				}
+			}
+		}
+		snprintf(prefix, sizeof(prefix), "(%s)%s", prefix_prefix, prefix_modes);
+	}
+
+	return prefix;
+}
+
+void extcmodes_check_for_changed_prefixes(void)
+{
+	ISupport *isup;
+	char *prefix = make_prefix();
+
+	isup = ISupportFind("PREFIX");
+	if (!isup)
+	{
+		strlcpy(previous_prefix, prefix, sizeof(previous_prefix));
+		return; /* not booted yet. then we are done here. */
+	}
+
+	ISupportSetValue(isup, prefix);
+
+	if (*previous_prefix && strcmp(prefix, previous_prefix))
+	{
+		unreal_log(ULOG_INFO, "mode", "PREFIX_CHANGED", NULL,
+		           "Prefix changed at runtime: $old_prefix -> $new_prefix",
+		           log_data_string("old_prefix", previous_prefix),
+		           log_data_string("new_prefix", prefix));
+		/* Broadcast change to all (locally connected) servers */
+		sendto_server(NULL, 0, 0, NULL, "PROTOCTL PREFIX=%s", prefix);
+	}
+
+	strlcpy(previous_prefix, prefix, sizeof(previous_prefix));
+}
+
+/** Check for changes - if any are detected, we broadcast the change */
+void extcmodes_check_for_changes(void)
+{
+	extcmodes_check_for_changed_channel_modes();
+	extcmodes_check_for_changed_prefixes();
+}
+
 /** Initialize the extended channel modes system */
 void extcmode_init(void)
 {
 	memset(&extchmstr, 0, sizeof(extchmstr));
 	memset(&param_to_slot_mapping, 0, sizeof(param_to_slot_mapping));
 	*previous_chanmodes = '\0';
+	*previous_prefix = '\0';
 }
 
 /** Update letter->slot mapping and slot->handler mapping */
@@ -406,7 +495,7 @@ static void unload_extcmode_commit(Cmode *cmode)
 	Channel *channel;
 
 	if (!cmode)
-		return;	
+		return;
 
 	/* Unset channel mode and send MODE to everyone */
 
