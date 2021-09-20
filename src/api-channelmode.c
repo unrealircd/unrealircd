@@ -155,19 +155,19 @@ char *make_prefix(void)
 	static char prefix[256];
 	char prefix_prefix[256];
 	char prefix_modes[256];
-	int level[256];
+	int rank[256];
 	Cmode *cm;
 	int n;
 
 	*prefix = *prefix_prefix = *prefix_modes = '\0';
 
-	for (n=0, cm=channelmodes; cm && n < sizeof(level)-1; cm = cm->next)
+	for (n=0, cm=channelmodes; cm && n < sizeof(rank)-1; cm = cm->next)
 	{
 		if ((cm->type == CMODE_MEMBER) && cm->letter)
 		{
 			strlcat_letter(prefix_prefix, cm->prefix, sizeof(prefix_prefix));
 			strlcat_letter(prefix_modes, cm->letter, sizeof(prefix_modes));
-			level[n] = cm->prefix_priority;
+			rank[n] = cm->rank;
 			n++;
 		}
 	}
@@ -180,20 +180,20 @@ char *make_prefix(void)
 		{
 			for (j=i+1; j < n; j++)
 			{
-				if (level[i] > level[j])
+				if (rank[i] < rank[j])
 				{
 					/* swap */
 					char save;
-					int save_level;
+					int save_rank;
 					save = prefix_prefix[i];
 					prefix_prefix[i] = prefix_prefix[j];
 					prefix_prefix[j] = save;
 					save = prefix_modes[i];
 					prefix_modes[i] = prefix_modes[j];
 					prefix_modes[j] = save;
-					save_level = level[i];
-					level[i] = level[j];
-					level[j] = save_level;
+					save_rank = rank[i];
+					rank[i] = rank[j];
+					rank[j] = save_rank;
 				}
 			}
 		}
@@ -382,7 +382,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 		} else if (req.type == CMODE_MEMBER)
 		{
 			if (!req.prefix || !req.sjoin_prefix || !req.paracount ||
-			    !req.unset_with_param || !req.prefix_priority)
+			    !req.unset_with_param || !req.rank)
 			{
 				unreal_log(ULOG_ERROR, "module", "CMODEADD_API_ERROR", NULL,
 					   "CmodeAdd(): module is missing required information. "
@@ -428,7 +428,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 	cm->type = req.type;
 	cm->prefix = req.prefix;
 	cm->sjoin_prefix = req.sjoin_prefix;
-	cm->prefix_priority = req.prefix_priority;
+	cm->rank = req.rank;
 	cm->paracount = req.paracount;
 	cm->is_ok = req.is_ok;
 	cm->put_param = req.put_param;
@@ -845,13 +845,13 @@ void addlettertomstring(char *str, char letter)
 {
 	Cmode *cm;
 	int n;
-	int my_priority;
+	int my_rank;
 	char *p;
 
 	if (!(cm = find_channel_mode_handler(letter)) || (cm->type != CMODE_MEMBER))
 		return; // should we BUG on this? if something makes it this far, it can never be good right?
 
-	my_priority = cm->prefix_priority;
+	my_rank = cm->rank;
 
 	n = strlen(str);
 	if (n >= MEMBERMODESLEN-1)
@@ -862,7 +862,7 @@ void addlettertomstring(char *str, char letter)
 		cm = find_channel_mode_handler(*p);
 		if (!cm)
 			continue; /* wtf */
-		if (cm->prefix_priority > my_priority)
+		if (cm->rank < my_rank)
 		{
 			/* We need to insert us here */
 			n = strlen(p);
@@ -1057,7 +1057,7 @@ char rank_to_mode(int rank)
 {
 	Cmode *cm;
 	for (cm=channelmodes; cm; cm = cm->next)
-		if ((cm->type == CMODE_MEMBER) && (cm->prefix_priority == rank))
+		if ((cm->type == CMODE_MEMBER) && (cm->rank == rank))
 			return cm->letter;
 	return '\0';
 }
@@ -1067,7 +1067,7 @@ int mode_to_rank(char mode)
 	Cmode *cm;
 	for (cm=channelmodes; cm; cm = cm->next)
 		if ((cm->type == CMODE_MEMBER) && (cm->letter == mode))
-			return cm->prefix_priority;
+			return cm->rank;
 	return '\0';
 }
 
@@ -1076,7 +1076,7 @@ int prefix_to_rank(char prefix)
 	Cmode *cm;
 	for (cm=channelmodes; cm; cm = cm->next)
 		if ((cm->type == CMODE_MEMBER) && (cm->prefix == prefix))
-			return cm->prefix_priority;
+			return cm->rank;
 	return '\0';
 }
 
@@ -1084,7 +1084,7 @@ char rank_to_prefix(int rank)
 {
 	Cmode *cm;
 	for (cm=channelmodes; cm; cm = cm->next)
-		if ((cm->type == CMODE_MEMBER) && (cm->prefix_priority == rank))
+		if ((cm->type == CMODE_MEMBER) && (cm->rank == rank))
 			return cm->prefix;
 	return '\0';
 }
@@ -1092,33 +1092,33 @@ char rank_to_prefix(int rank)
 char lowest_ranking_prefix(const char *prefix)
 {
 	const char *p;
-	int winning_level = INT_MIN;
+	int winning_rank = INT_MAX;
 
 	for (p = prefix; *p; p++)
 	{
-		int level = prefix_to_rank(*p);
-		if (level > winning_level)
-			winning_level = level;
+		int rank = prefix_to_rank(*p);
+		if (rank < winning_rank)
+			winning_rank = rank;
 	}
-	if (winning_level == INT_MIN)
+	if (winning_rank == INT_MAX)
 		return '\0'; /* No result */
-	return rank_to_prefix(winning_level);
+	return rank_to_prefix(winning_rank);
 }
 
 char lowest_ranking_mode(const char *mode)
 {
 	const char *p;
-	int winning_level = INT_MIN;
+	int winning_rank = INT_MAX;
 
 	for (p = mode; *p; p++)
 	{
-		int level = mode_to_rank(*p);
-		if (level > winning_level)
-			winning_level = level;
+		int rank = mode_to_rank(*p);
+		if (rank < winning_rank)
+			winning_rank = rank;
 	}
-	if (winning_level == INT_MIN)
+	if (winning_rank == INT_MAX)
 		return '\0'; /* No result */
-	return rank_to_mode(winning_level);
+	return rank_to_mode(winning_rank);
 }
 
 /** Generate all member modes that are equal or greater than 'modes'.
@@ -1140,6 +1140,6 @@ void channel_member_modes_generate_equal_or_greater(const char *modes, char *buf
 		return; /* zero matches */
 
 	for (cm=channelmodes; cm; cm = cm->next)
-	if ((cm->type == CMODE_MEMBER) && (cm->prefix_priority <= rank))
+	if ((cm->type == CMODE_MEMBER) && (cm->rank >= rank))
 		strlcat_letter(buf, cm->letter, buflen);
 }

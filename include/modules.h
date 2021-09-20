@@ -203,6 +203,12 @@ typedef enum CmodeType {
 	CMODE_MEMBER=1,
 } CmodeType;
 
+#define RANK_CHANOWNER  4000
+#define RANK_CHANADMIN  3000
+#define RANK_CHANOP     2000
+#define RANK_HALFOP     1000
+#define RANK_VOICE        -1
+
 /** Channel mode handler.
  * This struct contains all extended channel mode information,
  * like the flag, mode, their handler functions, etc.
@@ -231,14 +237,13 @@ struct Cmode {
 	/** If type is CMODE_MEMBER, then the prefix used in SJOIN (eg @) */
 	char		sjoin_prefix;
 
-	/** If type is CMODE_MEMBER, then the priority of the prefix, iotw: how high ranking.
+	/** If type is CMODE_MEMBER, then the rank of this prefix.
+	 * Higher ranking = more rights.
 	 * This is used, for example, in NAMES without NAMESX when we can only
 	 * show one symbol but not all.
-	 * To match other priority fields in UnrealIRCd: lowest number (negative) = highest priority!
-	 * Priority 0 (zero) cannot be used.
-	 * For reference: q is -4000, a is -3000, o is -2000, h is -1000, v is +1000
+	 * For the shipped modules vhoaq we use the RANK_* values.
 	 */
-	int		prefix_priority;
+	int		rank;
 
 	/** Number of parameters (1 or 0) */
 	int		paracount;
@@ -343,7 +348,7 @@ typedef struct {
 	CmodeType	type;
 	char		prefix;
 	char		sjoin_prefix;
-	int		prefix_priority;
+	int		rank;
 	int		paracount;
 	int		(*is_ok)(Client *,Channel *, char mode, const char *para, int, int);
 	void *		(*put_param)(void *, const char *);

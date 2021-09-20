@@ -44,7 +44,7 @@ MOD_INIT()
 	creq.letter = 'a';
 	creq.prefix = '&';
 	creq.sjoin_prefix = '~'; /* yeah i know, totally not confusing! */
-	creq.prefix_priority = -3000;
+	creq.rank = RANK_CHANADMIN;
 	creq.unset_with_param = 1;
 	creq.type = CMODE_MEMBER;
 	CmodeAdd(modinfo->handle, creq, NULL);

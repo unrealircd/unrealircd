@@ -44,7 +44,7 @@ MOD_INIT()
 	creq.letter = 'o';
 	creq.prefix = '@';
 	creq.sjoin_prefix = '@';
-	creq.prefix_priority = -2000;
+	creq.rank = RANK_CHANOP;
 	creq.unset_with_param = 1;
 	creq.type = CMODE_MEMBER;
 	CmodeAdd(modinfo->handle, creq, NULL);

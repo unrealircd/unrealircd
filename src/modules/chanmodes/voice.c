@@ -44,7 +44,7 @@ MOD_INIT()
 	creq.letter = 'v';
 	creq.prefix = '+';
 	creq.sjoin_prefix = '+';
-	creq.prefix_priority = 1000;
+	creq.rank = RANK_VOICE;
 	creq.unset_with_param = 1;
 	creq.type = CMODE_MEMBER;
 	CmodeAdd(modinfo->handle, creq, NULL);
