@@ -173,14 +173,7 @@ extern MODVAR unsigned char char_atribs[];
 #define EXPAR2	extchmstr[1]
 #define EXPAR3	extchmstr[2]
 #define EXPAR4	extchmstr[3]
-
-#ifdef PREFIX_AQ
-#define CHPFIX        "(qaohv)~&@%+"
-#define CHPAR1        "beI"
-#else
-#define CHPFIX        "(ohv)@%+"
-#define CHPAR1        "beIqa"
-#endif /* PREFIX_AQ */
+#define CHPAR1  "beI"
 
 #ifdef _WIN32
 /*

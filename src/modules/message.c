@@ -153,11 +153,9 @@ int can_send_to_user(Client *client, Client *target, const char **msgtext, const
 	return 1;
 }
 
-#ifdef PREFIX_AQ
- #define PREFIX_REST (PREFIX_ADMIN|PREFIX_OWNER)
-#else
- #define PREFIX_REST (0)
-#endif
+// TODO: I don't think we should use PREFIX_ stuff at all anymore,
+// so get rid of it in prefix_string_to_values(), prefix_values_to_char()
+// and in cmd_message() and the send function in send.c
 
 /** Convert a string of prefixes (like "+%@") to values (like PREFIX_VOICE|PREFIX_HALFOP|PREFIX_OP).
  * @param str	The string containing the prefixes and the channel name.
@@ -174,29 +172,20 @@ int prefix_string_to_values(char *str, char *end)
 		switch (*p)
 		{
 			case '+':
-				prefix |= PREFIX_VOICE | PREFIX_HALFOP | PREFIX_OP | PREFIX_REST;
+				prefix |= PREFIX_VOICE | PREFIX_HALFOP | PREFIX_OP | PREFIX_ADMIN | PREFIX_OWNER;
 				break;
 			case '%':
-				prefix |= PREFIX_HALFOP | PREFIX_OP | PREFIX_REST;
+				prefix |= PREFIX_HALFOP | PREFIX_OP | PREFIX_ADMIN | PREFIX_OWNER;
 				break;
 			case '@':
-				prefix |= PREFIX_OP | PREFIX_REST;
+				prefix |= PREFIX_OP | PREFIX_ADMIN | PREFIX_OWNER;
 				break;
-#ifdef PREFIX_AQ
 			case '&':
 				prefix |= PREFIX_ADMIN | PREFIX_OWNER;
 				break;
 			case '~':
 				prefix |= PREFIX_OWNER;
 				break;
-#else
-			case '&':
-				prefix |= PREFIX_OP | PREFIX_REST;
-				break;
-			case '~':
-				prefix |= PREFIX_OP | PREFIX_REST;
-				break;
-#endif
 			default:
 				break;	/* ignore it :P */
 		}
@@ -217,12 +206,10 @@ char prefix_values_to_char(int prefix)
 		return '%';
 	if (prefix & PREFIX_OP)
 		return '@';
-#ifdef PREFIX_AQ
 	if (prefix & PREFIX_ADMIN)
 		return '&';
 	if (prefix & PREFIX_OWNER)
 		return '~';
-#endif
 	abort();
 }
 

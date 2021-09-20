@@ -130,9 +130,9 @@ CMD_FUNC(cmd_sajoin)
 				break;
 			}
 
+			// TODO/FIXME: convert this to generic prefix code!!
 			switch (name[0])
 			{
-#ifdef PREFIX_AQ
 				case '~':
 					mode = 'q';
 					sjmode = '~';
@@ -143,7 +143,6 @@ CMD_FUNC(cmd_sajoin)
 					sjmode = '&';
 					++name;
 					break;
-#endif
 				case '@':
 					mode = 'o';
 					sjmode = '@';

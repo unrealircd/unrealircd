@@ -522,13 +522,6 @@ AC_ARG_WITH(maxconnections, [AS_HELP_STRING([--with-maxconnections=size], [Speci
 	[ac_fd=0])
 AC_DEFINE_UNQUOTED([MAXCONNECTIONS_REQUEST], [$ac_fd], [Set to the maximum number of connections you want])
 
-AC_ARG_ENABLE([prefixaq],
-	[AS_HELP_STRING([--disable-prefixaq],[Disable chanadmin (+a) and chanowner (+q) prefixes])],
-	[],
-	[enable_prefixaq=yes])
-AS_IF([test $enable_prefixaq = "yes"],
-	[AC_DEFINE([PREFIX_AQ], [], [Define if you want +a/+q prefixes])])
-
 AC_ARG_WITH(no-operoverride, [AS_HELP_STRING([--with-no-operoverride], [Disable OperOverride])],
 	[AS_IF([test $withval = "yes"],
 		[AC_DEFINE([NO_OPEROVERRIDE], [], [Define if you want OperOverride disabled])])])

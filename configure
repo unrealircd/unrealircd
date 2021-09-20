@@ -755,7 +755,6 @@ with_docdir
 with_pidfile
 with_privatelibdir
 with_maxconnections
-enable_prefixaq
 with_no_operoverride
 with_operoverride_verify
 with_system_pcre2
@@ -1423,7 +1422,6 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-hardening      Enable compiler and linker options to frustrate
                           memory corruption exploits [yes]
-  --disable-prefixaq      Disable chanadmin (+a) and chanowner (+q) prefixes
   --enable-ssl=           enable ssl will check /usr/local/opt/openssl
                           /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg
                           /usr/sfw /usr/local /usr
@@ -6605,19 +6603,6 @@ cat >>confdefs.h <<_ACEOF
 #define MAXCONNECTIONS_REQUEST $ac_fd
 _ACEOF
 
-
-# Check whether --enable-prefixaq was given.
-if test "${enable_prefixaq+set}" = set; then :
-  enableval=$enable_prefixaq;
-else
-  enable_prefixaq=yes
-fi
-
-if test $enable_prefixaq = "yes"; then :
-
-$as_echo "#define PREFIX_AQ /**/" >>confdefs.h
-
-fi
 
 
 # Check whether --with-no-operoverride was given.

@@ -35,7 +35,6 @@
 #define PIDFILE PERMDATADIR"/unrealircd.pid"
 #define NO_U_TYPES
 #define NEED_U_INT32_T
-#define PREFIX_AQ
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
 #define HAVE_EXPLICIT_BZERO

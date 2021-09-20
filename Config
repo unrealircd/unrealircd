@@ -53,9 +53,6 @@ fi
 if [ "$REMOTEINC" = "1" ] ; then
 ARG="$ARG--enable-libcurl=$CURLDIR "
 fi
-if [ "$PREFIXAQ" != "1" ]; then
-ARG="$ARG--disable-prefixaq "
-fi
 if [ "$MAXCONNECTIONS_REQUEST" != "auto" ]; then
 	ARG="$ARG--with-maxconnections=$MAXCONNECTIONS_REQUEST "
 fi
@@ -243,7 +240,6 @@ NICKNAMEHISTORYLENGTH="2000"
 MAXCONNECTIONS_REQUEST="auto"
 REMOTEINC=""
 CURLDIR=""
-PREFIXAQ="1"
 NOOPEROVERRIDE=""
 OPEROVERRIDEVERIFY=""
 GENCERTIFICATE="1"
@@ -657,39 +653,6 @@ fi
 
 TEST=""
 while [ -z "$TEST" ] ; do
-	if [ "$PREFIXAQ" = "1" ] ; then
-		TEST="Yes"
-	else
-		TEST="No"
-	fi
-	echo ""
-	echo "Do you want to enable prefixes for chanadmin and chanowner?"
-	echo "This will give +a the & prefix and ~ for +q (just like +o is @)"
-	echo "Supported by the major clients (mIRC, xchat, epic, eggdrop, Klient,"
-	echo "PJIRC, irssi, CGI:IRC, etc.)"
-	echo "This feature should be enabled/disabled network-wide."
-	echo $n "[$TEST] -> $c"
-	read cc
-	if [ -z "$cc" ] ; then
-		cc=$TEST
-	fi
-	case "$cc" in
-	[Yy]*)
-		PREFIXAQ="1"
-		;;
-	[Nn]*)
-		PREFIXAQ=""
-		;;
-	*)
-		echo ""
-		echo "You must enter either Yes or No"
-		TEST=""
-		;;
-	esac
-done
-
-TEST=""
-while [ -z "$TEST" ] ; do
 	TEST="$NICKNAMEHISTORYLENGTH"
 	echo ""
 	echo "How far back do you want to keep the nickname history?"
@@ -778,7 +741,6 @@ CACHEDIR="$CACHEDIR"
 DOCDIR="$DOCDIR"
 TMPDIR="$TMPDIR"
 PRIVATELIBDIR="$PRIVATELIBDIR"
-PREFIXAQ="$PREFIXAQ"
 MAXCONNECTIONS_REQUEST="$MAXCONNECTIONS_REQUEST"
 NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"
 DEFPERM="$DEFPERM"

@@ -181,9 +181,6 @@
 /* Define the path of the pid file */
 #undef PIDFILE
 
-/* Define if you want +a/+q prefixes */
-#undef PREFIX_AQ
-
 /* Define the location of private libraries */
 #undef PRIVATELIBDIR
 
