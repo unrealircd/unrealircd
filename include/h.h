@@ -181,6 +181,7 @@ extern void del_member_mode(Client *client, Channel *channel, char letter);
 extern char sjoin_prefix_to_mode(char s);
 extern char mode_to_sjoin_prefix(char s);
 extern char mode_to_prefix(char s);
+extern char prefix_to_mode(char s);
 extern const char *modes_to_prefix(const char *modes);
 extern const char *modes_to_sjoin_prefix(const char *modes);
 extern int ban_check_mask(BanContext *b);

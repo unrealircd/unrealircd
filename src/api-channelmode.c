@@ -1035,3 +1035,20 @@ const char *modes_to_prefix(const char *modes)
 
 	return buf;
 }
+
+char prefix_to_mode(char s)
+{
+	Cmode *cm;
+
+	/* Filter this out early to avoid spurious results */
+	if (s == '\0')
+		return '\0';
+
+	/* Now the dynamic ones (+vhoaq): */
+	for (cm=channelmodes; cm; cm = cm->next)
+		if ((cm->prefix == s) && (cm->type == CMODE_MEMBER))
+			return cm->letter;
+
+	/* Not found */
+	return '\0';
+}

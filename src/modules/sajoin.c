@@ -71,8 +71,6 @@ CMD_FUNC(cmd_sajoin)
 	Client *target;
 	char request[BUFSIZE];
 	char jbuf[BUFSIZE];
-	char mode = '\0';
-	char sjmode = '\0';
 	int did_anything = 0;
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("SAJOIN");
@@ -113,16 +111,18 @@ CMD_FUNC(cmd_sajoin)
 	 */
 	{
 		char *name, *p = NULL;
-		int i, parted = 0;
+		int parted = 0;
 	
 		*jbuf = 0;
 
 		/* Now works like cmd_join */
 		strlcpy(request, parv[2], sizeof(request));
-		for (i = 0, name = strtoken(&p, request, ","); name; name = strtoken(&p, NULL, ","))
+		for (name = strtoken(&p, request, ","); name; name = strtoken(&p, NULL, ","))
 		{
 			Channel *channel;
 			Membership *lp;
+			char mode = '\0';
+			char prefix = '\0';
 
 			if (++ntargets > maxtargets)
 			{
@@ -130,37 +130,11 @@ CMD_FUNC(cmd_sajoin)
 				break;
 			}
 
-			// TODO/FIXME: convert this to generic prefix code!!
-			switch (name[0])
+			mode = prefix_to_mode(*name);
+			if (mode)
 			{
-				case '~':
-					mode = 'q';
-					sjmode = '~';
-					++name;
-					break;
-				case '&':
-					mode = 'a';
-					sjmode = '&';
-					++name;
-					break;
-				case '@':
-					mode = 'o';
-					sjmode = '@';
-					++name;
-					break;
-				case '%':
-					mode = 'h';
-					sjmode = '%';
-					++name;
-					break;
-				case '+':
-					mode = 'v';
-					sjmode = '+';
-					++name;
-					break;
-				default:
-					mode = sjmode = '\0'; /* make sure sjmode is 0. */
-					break;
+				prefix = *name;
+				name++; /* skip the prefix */
 			}
 
 			if (strlen(name) > CHANNELLEN)
@@ -169,10 +143,9 @@ CMD_FUNC(cmd_sajoin)
 				continue;
 			}
 
-			if (*name == '0' && !atoi(name) && !sjmode)
+			if (*name == '0' && !atoi(name) && !mode)
 			{
 				strlcpy(jbuf, "0", sizeof(jbuf));
-				i = 1;
 				parted = 1;
 				continue;
 			}
@@ -198,13 +171,14 @@ CMD_FUNC(cmd_sajoin)
 				continue;
 			}
 			if (*jbuf)
-				strlcat(jbuf, ",", sizeof jbuf);
-			strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
-			i += strlen(name) + 1;
+				strlcat(jbuf, ",", sizeof(jbuf));
+			if (prefix)
+				strlcat_letter(jbuf, prefix, sizeof(jbuf));
+			strlcat(jbuf, name, sizeof(jbuf));
 		}
 		if (!*jbuf)
 			return;
-		i = 0;
+
 		strlcpy(request, jbuf, sizeof(request));
 		*jbuf = 0;
 		for (name = strtoken(&p, request, ","); name; name = strtoken(&p, NULL, ","))
@@ -215,8 +189,18 @@ CMD_FUNC(cmd_sajoin)
 			Membership *lp;
 			Hook *h;
 			int i = 0;
+			char mode = '\0';
+			char prefix = '\0';
 
-			if (*name == '0' && !atoi(name) && !sjmode)
+			mode = prefix_to_mode(*name);
+			if (mode != '\0')
+			{
+				/* Yup, it was a real prefix. */
+				prefix = *name;
+				name++;
+			}
+
+			if (*name == '0' && !atoi(name) && !mode)
 			{
 				/* Rewritten so to generate a PART for each channel to servers,
 				 * so the same msgid is used for each part on all servers. -- Syzop
@@ -263,7 +247,7 @@ CMD_FUNC(cmd_sajoin)
 			 */
 			new_message(target, NULL, &mtags);
 			join_channel(channel, target, mtags, member_modes);
-			if (sjmode)
+			if (prefix)
 			{
 				char *modes;
 				const char *mode_args[3];
@@ -292,10 +276,7 @@ CMD_FUNC(cmd_sajoin)
 		
 		if (did_anything)
 		{
-			if (!sjmode)
-				sendnotice(target, "*** You were forced to join %s", jbuf);
-			else
-				sendnotice(target, "*** You were forced to join %s with '%c'", jbuf, sjmode);
+			sendnotice(target, "*** You were forced to join %s", jbuf);
 			log_sajoin(client, target, jbuf);
 		}
 	}

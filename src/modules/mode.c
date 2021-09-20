@@ -700,7 +700,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int w
 			handler->is_ok(client, channel, mode, param, EXCHK_ACCESS_ERR, what);
 			return paracnt; /* Denied & error msg sent */
 		}
-		if (x == EX_DENY)
+		if ((x == EX_DENY) && !samode_in_progress)
 			opermode = 1; /* override in progress... */
 	} else {
 		/* remote user: we only need to check if we need to generate an operoverride msg */
