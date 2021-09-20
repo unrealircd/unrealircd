@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER
 long CAP_ECHO_MESSAGE = 0L;
 
 /* Forward declarations */
-int em_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype);
+int em_chanmsg(Client *client, Channel *channel, int sendflags, const char *prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype);
 int em_usermsg(Client *client, Client *to, MessageTag *mtags, const char *text, SendType sendtype);
 
 MOD_INIT()
@@ -64,7 +64,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int em_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype)
+int em_chanmsg(Client *client, Channel *channel, int sendflags, const char *prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype)
 {
 	if (MyUser(client) && HasCapabilityFast(client, CAP_ECHO_MESSAGE))
 	{

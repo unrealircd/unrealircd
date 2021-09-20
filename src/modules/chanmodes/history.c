@@ -54,7 +54,7 @@ void history_chanmode_free_param(void *r);
 void *history_chanmode_dup_struct(void *r_in);
 int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int history_channel_destroy(Channel *channel, int *should_destroy);
-int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype);
+int history_chanmsg(Client *client, Channel *channel, int sendflags, const char *prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype);
 int history_join(Client *client, Channel *channel, MessageTag *mtags);
 CMD_OVERRIDE_FUNC(override_mode);
 
@@ -639,7 +639,7 @@ int history_channel_destroy(Channel *channel, int *should_destroy)
 	return 0;
 }
 
-int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype)
+int history_chanmsg(Client *client, Channel *channel, int sendflags, const char *prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype)
 {
 	char buf[512];
 	char source[64];

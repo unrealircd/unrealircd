@@ -140,7 +140,7 @@ int floodprot_join(Client *client, Channel *channel, MessageTag *mtags);
 EVENT(modef_event);
 int cmodef_channel_destroy(Channel *channel, int *should_destroy);
 int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
-int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype);
+int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, const char *prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype);
 int floodprot_knock(Client *client, Channel *channel, MessageTag *mtags, const char *comment);
 int floodprot_nickchange(Client *client, MessageTag *mtags, const char *oldnick);
 int floodprot_chanmode_del(Channel *channel, int m);
@@ -942,7 +942,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 	return HOOK_CONTINUE;
 }
 
-int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype)
+int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, const char *prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype)
 {
 	if (!IsFloodLimit(channel) || is_skochanop(client, channel) || IsULine(client))
 		return 0;
