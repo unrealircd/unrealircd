@@ -140,6 +140,11 @@ LogSource *add_log_source(const char *str)
 	return ls;
 }
 
+void free_log_source(LogSource *l)
+{
+	safe_free(l);
+}
+
 int config_test_log(ConfigFile *conf, ConfigEntry *block)
 {
 	int errors = 0;
@@ -1562,6 +1567,7 @@ void do_unreal_log_internal_from_remote(LogLevel loglevel, const char *subsystem
 void free_log_block(Log *l)
 {
 	Log *l_next;
+	LogSource *src, *src_next;
 	for (; l; l = l_next)
 	{
 		l_next = l->next;
@@ -1569,6 +1575,11 @@ void free_log_block(Log *l)
 		{
 			fd_close(l->logfd);
 			l->logfd = -1;
+		}
+		for (src = l->sources; src; src = src_next)
+		{
+			src_next = src->next;
+			free_log_source(src);
 		}
 		safe_free(l->file);
 		safe_free(l->filefmt);
