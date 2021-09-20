@@ -4681,7 +4681,7 @@ int _join_viruschan(Client *client, TKL *tkl, int type)
 			client->name, tkl->ptr.spamfilter->match->str, cmdname_by_spamftarget(type),
 			unreal_decodespace(tkl->ptr.spamfilter->tkl_reason));
 		new_message(&me, NULL, &mtags);
-		sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+		sendto_channel(channel, &me, NULL, "o",
 		               0, SEND_ALL|SKIP_DEAF, mtags,
 		               ":%s NOTICE %s :%s", me.name, chbuf, buf);
 		free_message_tags(mtags);

@@ -1052,3 +1052,94 @@ char prefix_to_mode(char s)
 	/* Not found */
 	return '\0';
 }
+
+char rank_to_mode(int rank)
+{
+	Cmode *cm;
+	for (cm=channelmodes; cm; cm = cm->next)
+		if ((cm->type == CMODE_MEMBER) && (cm->prefix_priority == rank))
+			return cm->letter;
+	return '\0';
+}
+
+int mode_to_rank(char mode)
+{
+	Cmode *cm;
+	for (cm=channelmodes; cm; cm = cm->next)
+		if ((cm->type == CMODE_MEMBER) && (cm->letter == mode))
+			return cm->prefix_priority;
+	return '\0';
+}
+
+int prefix_to_rank(char prefix)
+{
+	Cmode *cm;
+	for (cm=channelmodes; cm; cm = cm->next)
+		if ((cm->type == CMODE_MEMBER) && (cm->prefix == prefix))
+			return cm->prefix_priority;
+	return '\0';
+}
+
+char rank_to_prefix(int rank)
+{
+	Cmode *cm;
+	for (cm=channelmodes; cm; cm = cm->next)
+		if ((cm->type == CMODE_MEMBER) && (cm->prefix_priority == rank))
+			return cm->prefix;
+	return '\0';
+}
+
+char lowest_ranking_prefix(const char *prefix)
+{
+	const char *p;
+	int winning_level = INT_MIN;
+
+	for (p = prefix; *p; p++)
+	{
+		int level = prefix_to_rank(*p);
+		if (level > winning_level)
+			winning_level = level;
+	}
+	if (winning_level == INT_MIN)
+		return '\0'; /* No result */
+	return rank_to_prefix(winning_level);
+}
+
+char lowest_ranking_mode(const char *mode)
+{
+	const char *p;
+	int winning_level = INT_MIN;
+
+	for (p = mode; *p; p++)
+	{
+		int level = mode_to_rank(*p);
+		if (level > winning_level)
+			winning_level = level;
+	}
+	if (winning_level == INT_MIN)
+		return '\0'; /* No result */
+	return rank_to_mode(winning_level);
+}
+
+/** Generate all member modes that are equal or greater than 'modes'.
+ * Eg calling this with "o" would generate "oaq" with the default loaded modules.
+ * This is used in sendto_channel() to make multiple check_channel_access_member()
+ * calls more easy / faster.
+ */
+void channel_member_modes_generate_equal_or_greater(const char *modes, char *buf, size_t buflen)
+{
+	const char *p;
+	int rank;
+	Cmode *cm;
+
+	*buf = '\0';
+
+	/* First we must grab the lowest ranking mode, eg 'vhoaq' results in rank for 'v' */
+	rank = lowest_ranking_mode(modes);
+	if (!rank)
+		return; /* zero matches */
+
+	for (cm=channelmodes; cm; cm = cm->next)
+	if ((cm->type == CMODE_MEMBER) && (cm->prefix_priority <= rank))
+		strlcat_letter(buf, cm->letter, buflen);
+}

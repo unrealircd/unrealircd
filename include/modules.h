@@ -1412,14 +1412,14 @@ int hooktype_usermsg(Client *client, Client *to, MessageTag *mtags, const char *
  * @param client		The sender
  * @param channel		The channel
  * @param sendflags		One of SEND_* (eg SEND_ALL, SKIP_DEAF).
- * @param prefix		Either zero, one or a combination of PREFIX_*.
+ * @param member_modes		Either NULL, or a member mode like "h", "o", etc.
  * @param target		Target string, usually this is "#channel", but it can also contain prefixes like "@#channel"
  * @param mtags         	Message tags associated with the event
  * @param text			The text
  * @param sendtype		The message type, for example SEND_TYPE_PRIVMSG.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype);
+int hooktype_chanmsg(Client *client, Channel *channel, int sendflags, const char *member_modes, const char *target, MessageTag *mtags, const char *text, SendType sendtype);
 
 /** Called when a local user wants to change the channel topic (function prototype for HOOKTYPE_PRE_LOCAL_TOPIC).
  * @param client		The client

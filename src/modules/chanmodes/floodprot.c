@@ -1240,7 +1240,7 @@ void do_floodprot_action(Channel *channel, int what)
 		ircsnprintf(comment, sizeof(comment), "*** Channel %s detected (limit is %d per %d seconds), setting mode +%c",
 			text, chp->limit[what], chp->per, m);
 		ircsnprintf(target, sizeof(target), "%%%s", channel->name);
-		sendto_channel(channel, &me, NULL, PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+		sendto_channel(channel, &me, NULL, "ho",
 		               0, SEND_ALL, mtags,
 		               ":%s NOTICE %s :%s", me.name, target, comment);
 		free_message_tags(mtags);

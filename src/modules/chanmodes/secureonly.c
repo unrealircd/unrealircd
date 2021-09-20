@@ -95,13 +95,13 @@ static int secureonly_kick_insecure_users(Channel *channel)
 		client = member->client;
 		if (MyUser(client) && !IsSecureConnect(client) && !IsULine(client))
 		{
-			int prefix = 0;
+			char *prefix = NULL;
 			MessageTag *mtags = NULL;
 
 			if (invisible_user_in_channel(client, channel))
 			{
 				/* Send only to chanops */
-				prefix = PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER;
+				prefix = "ho";
 			}
 
 			new_message(&me, NULL, &mtags);

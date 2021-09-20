@@ -400,11 +400,11 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
  * now there is 1 single function. This also means that you most
  * likely will pass NULL or 0 as some parameters.
  * @param channel       The channel to send to
- * @param from        The source of the message
- * @param skip        The client to skip (can be NULL).
- *                    Note that if you specify a remote link then
- *                    you usually mean xyz->direction and not xyz.
- * @param prefix      Any combination of PREFIX_* (can be 0 for all)
+ * @param from          The source of the message
+ * @param skip          The client to skip (can be NULL).
+ *                      Note that if you specify a remote link then
+ *                      you usually mean xyz->direction and not xyz.
+ * @param member_modes  Require any of the member_modes to be set (eg: "o"), or NULL to skip this check.
  * @param clicap      Client capability the recipient should have
  *                    (this only works for local clients, we will
  *                     always send the message to remote clients and
@@ -436,7 +436,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
  *         return;
  *     }
  *     new_message(client, recv_mtags, &mtags);
- *     sendto_channel(channel, client, client->direction, 0, 0,
+ *     sendto_channel(channel, client, client->direction, NULL, 0,
  *                    SEND_LOCAL|SEND_REMOTE, mtags,
  *                    ":%s PRIVMSG %s :Hello everyone!!!",
  *                    client->name, channel->name);
@@ -445,13 +445,20 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
  * @endcode
  */
 void sendto_channel(Channel *channel, Client *from, Client *skip,
-                    int prefix, long clicap, int sendflags,
+                    char *member_modes, long clicap, int sendflags,
                     MessageTag *mtags,
                     FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	Member *lp;
 	Client *acptr;
+	char member_modes_ext[64];
+
+	if (member_modes)
+	{
+		channel_member_modes_generate_equal_or_greater(member_modes, member_modes_ext, sizeof(member_modes_ext));
+		member_modes = member_modes_ext;
+	}
 
 	++current_serial;
 	for (lp = channel->members; lp; lp = lp->next)
@@ -467,21 +474,9 @@ void sendto_channel(Channel *channel, Client *from, Client *skip,
 		/* Don't send to NOCTCP clients */
 		if (has_user_mode(acptr, 'T') && (sendflags & SKIP_CTCP))
 			continue;
-		/* Now deal with 'prefix' (if non-zero) */
-		if (!prefix)
-			goto good;
-		if ((prefix & PREFIX_HALFOP) && check_channel_access_member(lp, "h"))
-			goto good;
-		if ((prefix & PREFIX_VOICE) && check_channel_access_member(lp, "v"))
-			goto good;
-		if ((prefix & PREFIX_OP) && check_channel_access_member(lp, "o"))
-			goto good;
-		if ((prefix & PREFIX_ADMIN) && check_channel_access_member(lp, "a"))
-			goto good;
-		if ((prefix & PREFIX_OWNER) && check_channel_access_member(lp, "q"))
-			goto good;
-		continue;
-good:
+		/* Now deal with 'member_modes' (if not NULL) */
+		if (member_modes && !check_channel_access_member(lp, member_modes))
+			continue;
 		/* Now deal with 'clicap' (if non-zero) */
 		if (clicap && MyUser(acptr) && ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
 			continue;

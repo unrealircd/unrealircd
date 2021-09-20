@@ -117,7 +117,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, const char *parv[], 
 					return;
 				new_message(client, NULL, &mtags);
 				sendto_channel(channel, client, client->direction,
-				               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, mtags,
+				               NULL, 0, SEND_ALL|SKIP_DEAF, mtags,
 				               ":%s PRIVMSG %s :%s",
 				               client->name, channel->name, parv[1]);
 				free_message_tags(mtags);
@@ -255,7 +255,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, const char *parv[], 
 								return;
 							new_message(client, NULL, &mtags);
 							sendto_channel(channel, client, client->direction,
-							               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, mtags,
+							               NULL, 0, SEND_ALL|SKIP_DEAF, mtags,
 							               ":%s PRIVMSG %s :%s",
 							               client->name, channel->name, parv[1]);
 							free_message_tags(mtags);

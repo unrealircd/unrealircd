@@ -237,20 +237,20 @@ void invite_process(Client *client, Client *target, Channel *channel, MessageTag
 	{
 		if (override == 1)
 		{
-			sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+			sendto_channel(channel, &me, NULL, "o",
 				0, SEND_LOCAL, mtags,
 				":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
 				me.name, channel->name, client->name);
 		}
 		if (override == 0)
 		{
-			sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+			sendto_channel(channel, &me, NULL, "o",
 				CAP_INVITE_NOTIFY | CAP_INVERT, SEND_LOCAL, mtags,
 				":%s NOTICE @%s :%s invited %s into the channel.",
 				me.name, channel->name, client->name, target->name);
 		}
 		/* always send IRCv3 invite-notify if possible */
-		sendto_channel(channel, client, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+		sendto_channel(channel, client, NULL, "o",
 			CAP_INVITE_NOTIFY, SEND_LOCAL, mtags,
 			":%s INVITE %s %s",
 			client->name, target->name, channel->name);

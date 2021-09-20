@@ -142,7 +142,7 @@ CMD_FUNC(cmd_knock)
 
 	new_message(&me, NULL, &mtags);
 
-	sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+	sendto_channel(channel, &me, NULL, "o",
 	               0, SEND_LOCAL, mtags,
 	               ":%s NOTICE @%s :[Knock] by %s!%s@%s (%s)",
 	               me.name, channel->name,

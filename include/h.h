@@ -184,6 +184,11 @@ extern char mode_to_prefix(char s);
 extern char prefix_to_mode(char s);
 extern const char *modes_to_prefix(const char *modes);
 extern const char *modes_to_sjoin_prefix(const char *modes);
+extern char rank_to_mode(int rank);
+extern int mode_to_rank(char mode);
+extern char lowest_ranking_mode(const char *modes);
+extern char lowest_ranking_prefix(const char *prefix);
+extern void channel_member_modes_generate_equal_or_greater(const char *modes, char *buf, size_t buflen);
 extern int ban_check_mask(BanContext *b);
 extern int extban_is_ok_nuh_extban(BanContext *b);
 extern const char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *extban);
@@ -240,14 +245,8 @@ extern int send_queued(Client *);
 extern void send_queued_cb(int fd, int revents, void *data);
 extern void sendto_serv_butone_nickcmd(Client *one, MessageTag *mtags, Client *client, const char *umodes);
 extern void    sendto_message_one(Client *to, Client *from, const char *sender, const char *cmd, const char *nick, const char *msg);
-#define PREFIX_ALL		0
-#define PREFIX_HALFOP	0x1
-#define PREFIX_VOICE	0x2
-#define PREFIX_OP	0x4
-#define PREFIX_ADMIN	0x08
-#define PREFIX_OWNER	0x10
 extern void sendto_channel(Channel *channel, Client *from, Client *skip,
-                           int prefix, long clicap, int sendflags,
+                           char *member_modes, long clicap, int sendflags,
                            MessageTag *mtags,
                            FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,8,9)));
 extern void sendto_local_common_channels(Client *user, Client *skip,

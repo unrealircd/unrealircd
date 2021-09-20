@@ -163,7 +163,7 @@ CMD_FUNC(cmd_part)
 			if (!comment)
 			{
 				sendto_channel(channel, client, client,
-					       PREFIX_HALFOP|PREFIX_OP|PREFIX_OWNER|PREFIX_ADMIN, 0,
+					       "ho", 0,
 					       SEND_LOCAL, mtags,
 					       ":%s PART %s",
 					       client->name, channel->name);
@@ -176,7 +176,7 @@ CMD_FUNC(cmd_part)
 			else
 			{
 				sendto_channel(channel, client, client,
-					       PREFIX_HALFOP|PREFIX_OP|PREFIX_OWNER|PREFIX_ADMIN, 0,
+					       "ho", 0,
 					       SEND_LOCAL, mtags,
 					       ":%s PART %s %s",
 					       client->name, channel->name, comment);

@@ -153,72 +153,12 @@ int can_send_to_user(Client *client, Client *target, const char **msgtext, const
 	return 1;
 }
 
-// TODO: I don't think we should use PREFIX_ stuff at all anymore,
-// so get rid of it in prefix_string_to_values(), prefix_values_to_char()
-// and in cmd_message() and the send function in send.c
-
-/** Convert a string of prefixes (like "+%@") to values (like PREFIX_VOICE|PREFIX_HALFOP|PREFIX_OP).
- * @param str	The string containing the prefixes and the channel name.
- * @param end	The position of the hashmark (#)
- * @returns A value of PREFIX_*, potentially OR'ed if there are multiple values.
- */
-int prefix_string_to_values(char *str, char *end)
-{
-	char *p;
-	int prefix = 0;
-
-	for (p = str; p != end; p++)
-	{
-		switch (*p)
-		{
-			case '+':
-				prefix |= PREFIX_VOICE | PREFIX_HALFOP | PREFIX_OP | PREFIX_ADMIN | PREFIX_OWNER;
-				break;
-			case '%':
-				prefix |= PREFIX_HALFOP | PREFIX_OP | PREFIX_ADMIN | PREFIX_OWNER;
-				break;
-			case '@':
-				prefix |= PREFIX_OP | PREFIX_ADMIN | PREFIX_OWNER;
-				break;
-			case '&':
-				prefix |= PREFIX_ADMIN | PREFIX_OWNER;
-				break;
-			case '~':
-				prefix |= PREFIX_OWNER;
-				break;
-			default:
-				break;	/* ignore it :P */
-		}
-	}
-	return prefix;
-}
-
-/** Find out the lowest prefix to use, so @&~#chan becomes @#chan.
- * @param prefix	One or more of PREFIX_* values (OR'ed)
- * @returns A single character
- * @note prefix must be >0, so must contain at least one PREFIX_xx value!
- */
-char prefix_values_to_char(int prefix)
-{
-	if (prefix & PREFIX_VOICE)
-		return '+';
-	if (prefix & PREFIX_HALFOP)
-		return '%';
-	if (prefix & PREFIX_OP)
-		return '@';
-	if (prefix & PREFIX_ADMIN)
-		return '&';
-	if (prefix & PREFIX_OWNER)
-		return '~';
-	abort();
-}
-
 /** Check if user is allowed to send to a prefix (eg: @#channel).
  * @param client	The client (sender)
  * @param channel	The target channel
- * @param prefix	The prefix mask (eg: PREFIX_CHANOP)
+ * @param mode		The member mode to send to (eg: 'o')
  */
-int can_send_to_prefix(Client *client, Channel *channel, int prefix)
+int can_send_to_member_mode(Client *client, Channel *channel, char mode)
 {
 	Membership *lp;
 
@@ -237,12 +177,14 @@ int can_send_to_prefix(Client *client, Channel *channel, int prefix)
 		return 0;
 	}
 
+#if 0
 	if (!(prefix & PREFIX_OP) && ((prefix & PREFIX_OWNER) || (prefix & PREFIX_ADMIN)) &&
 	    !check_channel_access_membership(lp, "oaq"))
 	{
 		sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 		return 0;
 	}
+#endif
 
 	return 1;
 }
@@ -266,8 +208,6 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, const char *p
 	char targets[BUFSIZE];
 	char *targetstr, *p, *p2, *pc;
 	const char *text, *errmsg;
-	int  prefix = 0;
-	char pfixchan[CHANNELLEN + 4];
 	int ret;
 	int ntargets = 0;
 	const char *cmd = sendtype_to_cmd(sendtype);
@@ -323,23 +263,38 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, const char *p
 		}
 
 		p2 = strchr(targetstr, '#');
-		prefix = 0;
 
 		/* Message to channel */
 		if (p2 && (channel = find_channel(p2)))
 		{
-			prefix = prefix_string_to_values(targetstr, p2);
-			if (prefix)
+			char pfixchan[CHANNELLEN + 4];
+			int replaced = 0;
+			char member_modes_tmp[2];
+			char *member_modes = NULL;
+			if (p2 - targetstr > 0)
 			{
-				if (MyUser(client) && !can_send_to_prefix(client, channel, prefix))
-					continue;
-				/* Now find out the lowest prefix and rewrite the target.
-				 * Eg: @&~#chan becomes @#chan
-				 */
-				pfixchan[0] = prefix_values_to_char(prefix);
-				strlcpy(pfixchan+1, channel->name, sizeof(pfixchan)-1);
-				targetstr = pfixchan;
-			} else {
+				/* There is (posssibly) a prefix involved... */
+				char prefix_tmp[32];
+				char prefix;
+				strlncpy(prefix_tmp, targetstr, sizeof(prefix_tmp), p2 - targetstr);
+				prefix = lowest_ranking_prefix(prefix_tmp);
+				if (prefix)
+				{
+					/* Rewrite the target. Eg: @&~#chan becomes @#chan */
+					snprintf(pfixchan, sizeof(pfixchan), "%c%s", prefix, channel->name);
+					targetstr = pfixchan;
+					replaced = 1;
+					/* And set 'member_modes' */
+					member_modes_tmp[0] = prefix_to_mode(prefix);
+					member_modes_tmp[1] = '\0';
+					member_modes = member_modes_tmp;
+					/* Oh, and some access check */
+					if (MyUser(client) && !can_send_to_member_mode(client, channel, *member_modes))
+						continue;
+				}
+			}
+			if (!replaced)
+			{
 				/* Replace target so the privmsg always goes to the "official" channel name */
 				strlcpy(pfixchan, channel->name, sizeof(pfixchan));
 				targetstr = pfixchan;
@@ -399,7 +354,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, const char *p
 			{
 				/* PRIVMSG or NOTICE */
 				sendto_channel(channel, client, client->direction,
-					       prefix, 0, sendflags, mtags,
+					       member_modes, 0, sendflags, mtags,
 					       ":%s %s %s :%s",
 					       client->name, cmd, targetstr, text);
 			} else {
@@ -414,12 +369,12 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, const char *p
 					continue;
 				}
 				sendto_channel(channel, client, client->direction,
-					       prefix, CAP_MESSAGE_TAGS, sendflags, mtags,
+					       member_modes, CAP_MESSAGE_TAGS, sendflags, mtags,
 					       ":%s TAGMSG %s",
 					       client->name, targetstr);
 			}
 
-			RunHook(HOOKTYPE_CHANMSG, client, channel, sendflags, prefix, targetstr, mtags, text, sendtype);
+			RunHook(HOOKTYPE_CHANMSG, client, channel, sendflags, member_modes, targetstr, mtags, text, sendtype);
 
 			free_message_tags(mtags);
 
