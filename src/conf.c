@@ -1604,6 +1604,7 @@ void	free_iConf(Configuration *i)
 	safe_free(i->restrict_channelmodes);
 	safe_free(i->restrict_extendedbans);
 	safe_free(i->channel_command_prefix);
+	safe_free(i->level_on_join);
 	safe_free(i->spamfilter_ban_reason);
 	safe_free(i->spamfilter_virus_help_channel);
 	// spamexcept is freed elsewhere
