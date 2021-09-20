@@ -556,7 +556,8 @@ static void unload_extcmode_commit(Cmode *cmode)
 		extcmode_para_delslot(cmode, cmode->param_slot);
 	}
 
-	cmode->letter = '\0';
+	DelListItem(cmode, channelmodes);
+	safe_free(cmode);
 }
 
 /** Unload all unused channel modes after a REHASH */
