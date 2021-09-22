@@ -763,16 +763,17 @@ cat << __EOF__
 |_______________________________________________________________________|
 |_______________________________________________________________________|
 |                                                                       |
-| Now all you have to do is type '$MAKE' and let it compile. When that's |
-| done, you will receive other instructions on what to do next.         |
-|                                                                       |
-|_______________________________________________________________________|
-|_______________________________________________________________________|
 |                        - The UnrealIRCd Team -                        |
 |                                                                       |
-| * Bram Matthys (Syzop)     syzop@unrealircd.org                       |
-| * Gottem                   gottem@unrealircd.org                      |
-| * i                        i@unrealircd.org                           |
+|              Bram Matthys (Syzop) - syzop@unrealircd.org              |
+|       Krzysztof Beresztant (k4be) - k4be@unrealircd.org               |
+|                            Gottem - gottem@unrealircd.org             |
+|                                 i - i@unrealircd.org                  |
+|_______________________________________________________________________|
+|_______________________________________________________________________|
+|                                                                       |
+| Now all you have to do is type '$MAKE' and let it compile. When that's |
+| done, you will receive other instructions on what to do next.         |
 |_______________________________________________________________________|
 __EOF__
 
