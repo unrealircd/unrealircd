@@ -1030,7 +1030,8 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
 	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
-	fprintf(stderr, "UnrealIRCd is brought to you by Bram Matthys (Syzop), Gottem and i\n\n");
+	fprintf(stderr, "UnrealIRCd is brought to you by Bram Matthys (Syzop),\n"
+	                "Krzysztof Beresztant (k4be), Gottem and i\n\n");
 
 	fprintf(stderr, "Using the following libraries:\n");
 	fprintf(stderr, "* %s\n", SSLeay_version(SSLEAY_VERSION));

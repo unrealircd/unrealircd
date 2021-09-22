@@ -264,6 +264,7 @@ char *unrealinfo[] =
 	"* Bram Matthys (Syzop) <syzop@unrealircd.org>",
 	"",
 	"Coders:",
+	"* Krzysztof Beresztant (k4be) <k4be@unrealircd.org>",
 	"* Gottem <gottem@unrealircd.org>",
 	"* i <i@unrealircd.org>",
 	"",
