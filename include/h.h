@@ -262,8 +262,6 @@ extern void sendto_prefix_one(Client *, Client *, MessageTag *, FORMAT_STRING(co
 extern void sendto_opers(FORMAT_STRING(const char *), ...) __attribute__((format(printf,1,2)));
 extern void sendto_umode(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf,2,3)));
 extern void sendto_umode_global(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf,2,3)));
-extern void sendto_snomask(int snomask, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
-extern void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
 extern void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
 /** Send numeric message to a client.
  * @param to		The recipient

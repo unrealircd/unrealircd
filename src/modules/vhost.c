@@ -80,31 +80,33 @@ CMD_FUNC(cmd_vhost)
 
 	if (!(vhost = find_vhost(login)))
 	{
-		sendto_snomask(SNO_VHOST,
-		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
-		    login, client->name,
-		    client->user->username,
-		    client->user->realhost);
+		unreal_log(ULOG_WARNING, "vhost", "VHOST_FAILED", client,
+		           "Failed VHOST attempt by $client.details [reason: $reason] [vhost-block: $vhost_block]",
+		           log_data_string("reason", "Vhost block not found"),
+		           log_data_string("fail_type", "UNKNOWN_VHOST_NAME"),
+		           log_data_string("vhost_block", login));
 		sendnotice(client, "*** [\2vhost\2] Login for %s failed - password incorrect", login);
 		return;
 	}
 	
 	if (!unreal_mask_match(client, vhost->mask))
 	{
-		sendto_snomask(SNO_VHOST,
-		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - host does not match",
-		    login, client->name, client->user->username, client->user->realhost);
+		unreal_log(ULOG_WARNING, "vhost", "VHOST_FAILED", client,
+		           "Failed VHOST attempt by $client.details [reason: $reason] [vhost-block: $vhost_block]",
+		           log_data_string("reason", "Host does not match"),
+		           log_data_string("fail_type", "NO_HOST_MATCH"),
+		           log_data_string("vhost_block", login));
 		sendnotice(client, "*** No vHost lines available for your host");
 		return;
 	}
 
 	if (!Auth_Check(client, vhost->auth, password))
 	{
-		sendto_snomask(SNO_VHOST,
-		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
-		    login, client->name,
-		    client->user->username,
-		    client->user->realhost);
+		unreal_log(ULOG_WARNING, "vhost", "VHOST_FAILED", client,
+		           "Failed VHOST attempt by $client.details [reason: $reason] [vhost-block: $vhost_block]",
+		           log_data_string("reason", "Authentication failed"),
+		           log_data_string("fail_type", "AUTHENTICATION_FAILED"),
+		           log_data_string("vhost_block", login));
 		sendnotice(client, "*** [\2vhost\2] Login for %s failed - password incorrect", login);
 		return;
 	}
@@ -160,12 +162,22 @@ CMD_FUNC(cmd_vhost)
 		vhost->virtuser ? vhost->virtuser : "",
 		vhost->virtuser ? "@" : "",
 		vhost->virthost);
-	sendto_snomask(SNO_VHOST,
-	    "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s%s%s",
-	    login, client->name,
-	    vhost->virtuser ? olduser : client->user->username,
-	    client->user->realhost, vhost->virtuser ? vhost->virtuser : "", 
-		vhost->virtuser ? "@" : "", vhost->virthost);
+
+	if (vhost->virtuser)
+	{
+		/* virtuser@virthost */
+		unreal_log(ULOG_INFO, "vhost", "VHOST_SUCCESS", client,
+			   "$client.details is now using vhost $virtuser@$virthost [vhost-block: $vhost_block]",
+			   log_data_string("virtuser", vhost->virtuser),
+			   log_data_string("virthost", vhost->virthost),
+			   log_data_string("vhost_block", login));
+	} else {
+		/* just virthost */
+		unreal_log(ULOG_INFO, "vhost", "VHOST_SUCCESS", client,
+			   "$client.details is now using vhost $virthost [vhost-block: $vhost_block]",
+			   log_data_string("virthost", vhost->virthost),
+			   log_data_string("vhost_block", login));
+	}
 
 	userhost_changed(client);
 }

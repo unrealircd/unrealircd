@@ -399,17 +399,12 @@ CMD_FUNC(cmd_error)
 
 	para = (parc > 1 && *parv[1] != '\0') ? parv[1] : "<>";
 
-	/* Errors from untrusted sources only go to the junk snomask
-	 * (which is only for debugging issues and such).
-	 * This to prevent flooding and confusing IRCOps by
-	 * malicious users.
+	/* Errors from untrusted sources are ignored as any
+	 * malicious user can send these, confusing IRCOps etc.
+	 * One can always see the errors from the other side anyway.
 	 */
 	if (!IsServer(client) && !client->server)
-	{
-		sendto_snomask(SNO_JUNK, "ERROR from server %s: %s",
-			get_client_name(client, FALSE), para);
 		return;
-	}
 
 	unreal_log(ULOG_ERROR, "link", "LINK_ERROR_MESSAGE", client,
 	           "Error from $client: $error_message",

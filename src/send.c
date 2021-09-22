@@ -369,10 +369,10 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 
 	if (DBufLength(&to->local->sendQ) > get_sendq(to))
 	{
-		if (IsServer(to))
-			sendto_ops("Max SendQ limit exceeded for %s: %u > %d",
-			    get_client_name(to, FALSE), DBufLength(&to->local->sendQ),
-			    get_sendq(to));
+		unreal_log(ULOG_INFO, "flood", "SENDQ_EXCEEDED", to,
+		           "Flood of queued data to $client.details [$client.ip] exceeds class::sendq ($sendq > $class_sendq) (Too much data queued to be sent to this client)",
+		           log_data_integer("sendq", DBufLength(&to->local->sendQ)),
+		           log_data_integer("class_sendq", get_sendq(to)));
 		dead_socket(to, "Max SendQ exceeded");
 		return;
 	}
@@ -845,60 +845,6 @@ void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 			va_end(vl);
 		}
 	}
-}
-
-/** Send a message to all locally connected users with specified snomask.
- * @param snomask	The snomask that the recipient should have set (one of SNO_*)
- * @param pattern	The format string / pattern to use.
- * @param ...		Format string parameters.
- */
-void sendto_snomask(int snomask, FORMAT_STRING(const char *pattern), ...)
-{
-	va_list vl;
-	Client *acptr;
-	char nbuf[2048];
-
-	va_start(vl, pattern);
-	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
-	va_end(vl);
-
-	list_for_each_entry(acptr, &oper_list, special_node)
-	{
-		if (acptr->user->snomask & snomask)
-			sendnotice(acptr, "%s", nbuf);
-	}
-}
-
-/** Send a message to all users with specified snomask (local and remote users).
- * @param snomask	The snomask that the recipient should have set (one of SNO_*)
- * @param pattern	The format string / pattern to use.
- * @param ...		Format string parameters.
- */
-void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...)
-{
-	va_list vl;
-	Client *acptr;
-	int  i;
-	char nbuf[2048], snobuf[32], *p;
-
-	va_start(vl, pattern);
-	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
-	va_end(vl);
-
-	list_for_each_entry(acptr, &oper_list, special_node)
-	{
-		if (acptr->user->snomask & snomask)
-			sendnotice(acptr, "%s", nbuf);
-	}
-
-	/* Build snomasks-to-send-to buffer */
-	snobuf[0] = '\0';
-	for (i = 0, p=snobuf; i<= Snomask_highest; i++)
-		if (snomask & Snomask_Table[i].mode)
-			*p++ = Snomask_Table[i].flag;
-	*p = '\0';
-
-	sendto_server(NULL, 0, 0, NULL, ":%s SENDSNO %s :%s", me.id, snobuf, nbuf);
 }
 
 /** Send CAP DEL and CAP NEW notification to clients supporting it.

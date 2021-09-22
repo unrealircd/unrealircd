@@ -289,5 +289,7 @@ CMD_FUNC(rmtkl)
 		}
 	}
 
-	sendto_snomask(SNO_TKL, "*** %s removed %d TKLine(s) using /rmtkl", client->name, count);
+	unreal_log(ULOG_INFO, "tkl", "RMTKL_COMMAND", client,
+	           "[rmtkl] $client removed $tkl_removed_count TKLine(s) using /RMTKL",
+	           log_data_integer("tkl_removed_count", count));
 }

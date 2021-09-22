@@ -106,9 +106,9 @@ CMD_FUNC(cmd_svsnick)
 	add_history(acptr, 1);
 	del_from_client_hash_table(acptr->name, acptr);
 
-	sendto_snomask(SNO_NICKCHANGE,
-		"*** %s (%s@%s) has been forced to change their nickname to %s", 
-		acptr->name, acptr->user->username, acptr->user->realhost, nickname);
+	unreal_log(ULOG_INFO, "nick", "FORCED_NICK_CHANGE", acptr,
+	           "$client.details has been forced by services to change their nickname to $new_nick_name",
+	           log_data_string("new_nick_name", nickname));
 
 	strlcpy(acptr->name, nickname, sizeof acptr->name);
 	add_to_client_hash_table(nickname, acptr);

@@ -63,7 +63,8 @@ int process_packet(Client *client, char *readbuf, int length, int killsafely)
 	/* flood from unknown connection */
 	if (IsUnknown(client) && (DBufLength(&client->local->recvQ) > iConf.handshake_data_flood_amount))
 	{
-		sendto_snomask(SNO_FLOOD, "Handshake data flood from %s detected", client->local->sockhost);
+		unreal_log(ULOG_INFO, "flood", "HANDSHAKE_DATA_FLOOD", client,
+		           "Handshake data flood detected from $client.details [$client.ip]");
 		if (!killsafely)
 			ban_handshake_data_flooder(client);
 		else
@@ -74,12 +75,10 @@ int process_packet(Client *client, char *readbuf, int length, int killsafely)
 	/* excess flood check */
 	if (IsUser(client) && DBufLength(&client->local->recvQ) > get_recvq(client))
 	{
-		sendto_snomask(SNO_FLOOD,
-			"*** Flood -- %s!%s@%s (%d) exceeds %d recvQ",
-			client->name[0] ? client->name : "*",
-			client->user ? client->user->username : "*",
-			client->user ? client->user->realhost : "*",
-			DBufLength(&client->local->recvQ), get_recvq(client));
+		unreal_log(ULOG_INFO, "flood", "RECVQ_EXCEEDED", client,
+		           "Flood from $client.details [$client.ip] exceeds class::recvq ($recvq > $class_recvq) (Client sending too much data)",
+		           log_data_integer("recvq", DBufLength(&client->local->recvQ)),
+		           log_data_integer("class_recvq", get_recvq(client)));
 		if (!killsafely)
 			exit_client(client, NULL, "Excess Flood");
 		else
@@ -184,7 +183,8 @@ void parse(Client *cptr, char *buffer, int length)
 
 	if ((cptr->local->traffic.bytes_received >= iConf.handshake_data_flood_amount) && IsUnknown(cptr))
 	{
-		sendto_snomask(SNO_FLOOD, "Handshake data flood from %s detected", cptr->local->sockhost);
+		unreal_log(ULOG_INFO, "flood", "HANDSHAKE_DATA_FLOOD", cptr,
+		           "Handshake data flood detected from $client.details [$client.ip]");
 		ban_handshake_data_flooder(cptr);
 		return;
 	}

@@ -385,13 +385,6 @@ CMD_FUNC(cmd_stats)
 	}
 
 	sendnumeric(client, RPL_ENDOFSTATS, stat->flag);
-
-	if (!IsULine(client))
-		sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
-			stat->flag, client->name, client->user->username, GetHost(client));
-	else
-		sendto_snomask(SNO_JUNK, "Stats \'%c\' requested by %s (%s@%s) [ulined]",
-			stat->flag, client->name, client->user->username, GetHost(client));
 }
 
 int stats_banversion(Client *client, const char *para)

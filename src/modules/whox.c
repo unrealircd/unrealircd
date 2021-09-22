@@ -811,13 +811,6 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 		if (HasField(fmt, FIELD_INFO))
 			append_format(str, sizeof str, &pos, " :%s", acptr->info);
 
-		if (pos >= sizeof str)
-		{
-			static int warned = 0;
-			if (!warned)
-				sendto_snomask(SNO_JUNK, "*** WHOX overflow while sending information about %s to %s", acptr->name, client->name);
-			warned = 1;
- 		}
 		sendto_one(client, NULL, "%s", str);
 	}
 }

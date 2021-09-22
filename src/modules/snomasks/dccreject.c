@@ -62,9 +62,10 @@ MOD_UNLOAD()
 
 int dccreject_dcc_denied(Client *client, const char *target, const char *realfile, const char *displayfile, ConfigItem_deny_dcc *dccdeny)
 {
-	sendto_snomask_global(SNO_DCCREJECT, 
-		"%s tried to send forbidden file %s (%s) to %s (is blocked now)",
-		client->name, displayfile, dccdeny->reason, target);
-
+	unreal_log(ULOG_INFO, "dcc", "DCC_REJECTED", client,
+	           "$client.details tried to send forbidden file $filename ($ban_reason) to $target (is blocked now)",
+	           log_data_string("filename", displayfile),
+	           log_data_string("ban_reason", dccdeny->reason),
+	           log_data_string("target", target));
 	return 0;
 }
