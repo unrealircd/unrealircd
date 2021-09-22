@@ -161,7 +161,6 @@ extern void add_server_to_table(Client *);
 extern void remove_server_from_table(Client *);
 extern void iNAH_host(Client *client, const char *host);
 extern void set_snomask(Client *client, const char *snomask);
-extern const char *get_snomask_string(Client *client);
 extern int check_tkls(Client *cptr);
 /* for services */
 extern void send_user_joins(Client *, Client *);
@@ -435,6 +434,10 @@ extern int checkprotoflags(Client *, int, const char *, int);
 
 extern const char *inetntop(int af, const void *in, char *local_dummy, size_t the_size);
 
+extern void delletterfromstring(char *s, char letter);
+extern void addlettertodynamicstringsorted(char **str, char letter);
+extern int sort_character_lowercase_before_uppercase(char x, char y);
+
 /* Internal command stuff - not for modules */
 extern MODVAR RealCommand *CommandHash[256];
 extern void init_CommandHash(void);
@@ -601,7 +604,6 @@ extern void extcmode_free_paramlist(void **ar);
 
 extern void chmode_str(struct ChMode *, char *, char *, size_t, size_t);
 extern const char *get_client_status(Client *);
-extern const char *get_snomask_string_raw(long);
 extern void SocketLoop(void *);
 #ifdef _WIN32
 extern void InitDebug(void);
@@ -640,7 +642,7 @@ extern int spamfilter_gettargets(const char *s, Client *client);
 extern char *spamfilter_target_inttostring(int v);
 extern char *our_strcasestr(const char *haystack, const char *needle);
 extern int spamfilter_getconftargets(const char *s);
-extern void remove_oper_snomasks(Client *client);
+extern void remove_all_snomasks(Client *client);
 extern void remove_oper_modes(Client *client);
 extern char *spamfilter_inttostring_long(int v);
 extern MODVAR char backupbuf[];

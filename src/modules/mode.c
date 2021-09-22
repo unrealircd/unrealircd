@@ -1080,9 +1080,9 @@ CMD_FUNC(_cmd_umode)
 	int i;
 	const char *m;
 	Client *acptr;
-	int what, setsnomask = 0;
+	int what;
 	long oldumodes = 0;
-	int oldsnomasks = 0;
+	char oldsnomask[64];
 	/* (small note: keep 'what' as an int. -- Syzop). */
 	short rpterror = 0, umode_restrict_err = 0, chk_restrict = 0, modex_err = 0;
 
@@ -1112,7 +1112,7 @@ CMD_FUNC(_cmd_umode)
 	{
 		sendnumeric(client, RPL_UMODEIS, get_usermode_string(client));
 		if (client->user->snomask)
-			sendnumeric(client, RPL_SNOMASK, get_snomask_string(client));
+			sendnumeric(client, RPL_SNOMASK, client->user->snomask);
 		return;
 	}
 
@@ -1123,15 +1123,11 @@ CMD_FUNC(_cmd_umode)
 		if ((client->umodes & Usermode_Table[i].mode))
 			oldumodes |= Usermode_Table[i].mode;
 
-	for (i = 0; i <= Snomask_highest; i++)
-		if ((client->user->snomask & Snomask_Table[i].mode))
-			oldsnomasks |= Snomask_Table[i].mode;
-
 	if (RESTRICT_USERMODES && MyUser(client) && !ValidatePermissionsForPath("immune:restrict-usermodes",client,NULL,NULL,NULL))
 		chk_restrict = 1;
 
-	if (MyConnect(client))
-		setsnomask = client->user->snomask;
+	if (client->user->snomask)
+		strlcpy(oldsnomask, client->user->snomask, sizeof(oldsnomask));
 
 	/*
 	 * parse mode change string(s)
@@ -1168,7 +1164,7 @@ CMD_FUNC(_cmd_umode)
 					if (parc >= 4 && client->user->snomask)
 					{
 						set_snomask(client, parv[3]);
-						if (client->user->snomask == 0)
+						if (client->user->snomask == NULL)
 							goto def;
 						break;
 					} else {
@@ -1292,18 +1288,30 @@ CMD_FUNC(_cmd_umode)
 			}
 
 			/* SNOMASKS: user can delete existing but not add new ones */
-			for (i = 0; i <= Snomask_highest; i++)
+			if (client->user->snomask)
 			{
-				int sno = Snomask_Table[i].mode;
+				char rerun;
+				do {
+					char *p;
 
-				if (!Snomask_Table[i].flag)
-					continue;
-				/* Is it set now and wasn't earlier? Then it
-				 * needs to be stripped, as setting it is not
-				 * permitted.
-				 */
-				if ((client->user->snomask & sno) && !(oldsnomasks & sno))
-					client->user->snomask &= ~Snomask_Table[i].mode; /* remove */
+					rerun = 0;
+					for (p = client->user->snomask; *p; p++)
+					{
+						if (!strchr(oldsnomask, *p))
+						{
+							/* It is set now, but was not earlier?
+							 * Then it needs to be stripped, as setting is not permitted.
+							 * And re-run the loop
+							 */
+							delletterfromstring(client->user->snomask, *p);
+							rerun = 1;
+							break;
+						}
+					}
+				} while(rerun);
+				/* And make sure an empty snomask ("") becomes a NULL pointer */
+				if (client->user->snomask && !*client->user->snomask)
+					remove_all_snomasks(client);
 			}
 		} else {
 			/* User isn't an ircop at all. The solution is simple: */
@@ -1408,8 +1416,8 @@ CMD_FUNC(_cmd_umode)
 	if (dontspread == 0)
 		send_umode_out(client, 1, oldumodes);
 
-	if (MyConnect(client) && setsnomask != client->user->snomask)
-		sendnumeric(client, RPL_SNOMASK, get_snomask_string(client));
+	if (MyConnect(client) && client->user->snomask && strcmp(oldsnomask, client->user->snomask))
+		sendnumeric(client, RPL_SNOMASK, client->user->snomask);
 }
 
 CMD_FUNC(cmd_mlock)

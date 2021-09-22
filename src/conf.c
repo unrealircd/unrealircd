@@ -183,7 +183,6 @@ ConfigFile	 	*config_parse(const char *filename, char *confdata);
 ConfigEntry		*config_find_entry(ConfigEntry *ce, const char *name);
 
 extern void add_entropy_configfile(struct stat *st, const char *buf);
-extern void unload_all_unused_snomasks(void);
 extern void unload_all_unused_umodes(void);
 extern void unload_all_unused_extcmodes(void);
 extern void unload_all_unused_caps(void);
@@ -10626,7 +10625,6 @@ int rehash_internal(Client *client)
 		config_run();
 	/* TODO: uh.. are we supposed to do all this for a failed rehash too? maybe some but not all? */
 	reread_motdsandrules();
-	unload_all_unused_snomasks();
 	unload_all_unused_umodes();
 	unload_all_unused_extcmodes();
 	unload_all_unused_caps();

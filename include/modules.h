@@ -95,7 +95,6 @@ typedef enum ModuleObjectType {
 	MOBJ_COMMAND = 3,
 	MOBJ_HOOKTYPE = 4,
 	MOBJ_VERSIONFLAG = 5,
-	MOBJ_SNOMASK = 6,
 	MOBJ_UMODE = 7,
 	MOBJ_COMMANDOVERRIDE = 8,
 	MOBJ_EXTBAN = 9,
@@ -118,15 +117,6 @@ typedef struct {
         char unloaded; /**< Internal flag to indicate module is being unloaded */
         Module *owner; /**< Module that owns this user mode */
 } Umode;
-
-typedef struct {
-        long mode; /**< Snomask mask */
-        char flag; /**< Snomask character */
-        int unset_on_deoper; /**< When set to 1 then this snomask will be unset on de-oper */
-        int (*allowed)(Client *client, int what); /**< The 'is this user allowed to set this snomask?' routine */
-        char unloaded; /**< Internal flag to indicate module is being unloaded */
-        Module *owner; /**< Module that owns this snomask */
-} Snomask;
 
 typedef enum ModDataType {
 	MODDATATYPE_LOCAL_VARIABLE	= 1,
@@ -673,7 +663,6 @@ typedef struct ModuleObject {
 		Command *command;
 		Hooktype *hooktype;
 		Versionflag *versionflag;
-		Snomask *snomask;
 		Umode *umode;
 		CommandOverride *cmdoverride;
 		Extban *extban;

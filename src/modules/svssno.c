@@ -85,39 +85,13 @@ void do_svssno(Client *client, int parc, const char *parv[], int show_change)
 	if (MyUser(target))
 	{
 		if (parc == 2)
-			target->user->snomask = 0;
+			set_snomask(target, NULL);
 		else
-		{
-			for (p = parv[2]; p && *p; p++)
-			{
-				switch (*p)
-				{
-					case '+':
-						what = MODE_ADD;
-						break;
-					case '-':
-						what = MODE_DEL;
-						break;
-					default:
-					for (i = 0; i <= Snomask_highest; i++)
-					{
-						if (!Snomask_Table[i].flag)
-							continue;
-						if (*p == Snomask_Table[i].flag)
-						{
-							if (what == MODE_ADD)
-								target->user->snomask |= Snomask_Table[i].mode;
-							else
-								target->user->snomask &= ~Snomask_Table[i].mode;
-						}
-					}				
-				}
-			}
-		}
+			set_snomask(target, parv[2]);
 	}
 
-	if (show_change)
-		sendnumeric(target, RPL_SNOMASK, get_snomask_string(target));
+	if (show_change && target->user->snomask)
+		sendnumeric(target, RPL_SNOMASK, target->user->snomask);
 }
 
 CMD_FUNC(cmd_svssno)

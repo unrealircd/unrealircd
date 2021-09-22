@@ -449,22 +449,6 @@ typedef enum ClientStatus {
 #define ClearHidden(x)          ((x)->umodes &= ~UMODE_HIDE)
 #define ClearHideOper(x)	((x)->umodes &= ~UMODE_HIDEOPER)
 
-/* Snomask macros: */
-#define	SendServNotice(x)	(((x)->user) && ((x)->user->snomask & SNO_SNOTICE))
-#define IsKillsF(x)		((x)->user->snomask & SNO_KILLS)
-#define IsClientF(x)		((x)->user->snomask & SNO_CLIENT)
-#define IsFloodF(x)		((x)->user->snomask & SNO_FLOOD)
-#define IsEyes(x)		((x)->user->snomask & SNO_EYES)
-#define SetKillsF(x)		((x)->user->snomask |= SNO_KILLS)
-#define SetClientF(x)		((x)->user->snomask |= SNO_CLIENT)
-#define SetFloodF(x)		((x)->user->snomask |= SNO_FLOOD)
-#define SetEyes(x)		((x)->user->snomask |= SNO_EYES)
-#define ClearKillsF(x)		((x)->user->snomask &= ~SNO_KILLS)
-#define ClearClientF(x)		((x)->user->snomask &= ~SNO_CLIENT)
-#define ClearFloodF(x)		((x)->user->snomask &= ~SNO_FLOOD)
-#define ClearEyes(x)		((x)->user->snomask &= ~SNO_EYES)
-
-
 /* Client flags macros: to check for via IsXX(),
  * to set via SetXX() and to clear the flag via ClearXX()
  */
@@ -1212,17 +1196,10 @@ struct CommandOverride {
 
 extern MODVAR Umode *Usermode_Table;
 extern MODVAR int Usermode_highest;
-
-extern MODVAR Snomask *Snomask_Table;
-extern MODVAR int Snomask_highest;
-
 extern MODVAR Cmode *channelmodes;
 
 extern Umode *UmodeAdd(Module *module, char ch, int options, int unset_on_deoper, int (*allowed)(Client *client, int what), long *mode);
 extern void UmodeDel(Umode *umode);
-
-extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(Client *client, int what), long *mode);
-extern void SnomaskDel(Snomask *sno);
 
 extern Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode);
 extern void CmodeDel(Cmode *cmode);
@@ -1366,7 +1343,7 @@ struct User {
 	char *server;			/**< Server name the user is on (?) */
 	SWhois *swhois;			/**< Special "additional" WHOIS entries such as "a Network Administrator" */
 	WhoWas *whowas;			/**< Something for whowas :D :D */
-	int snomask;			/**< Server Notice Mask (snomask) - only for IRCOps */
+	char *snomask;			/**< Server Notice Mask (snomask) - only for IRCOps */
 	char *operlogin;		/**< Which oper { } block was used to oper up, otherwise NULL - used by oper::maxlogins */
 	char *away;			/**< AWAY message, or NULL if not away */
 	time_t away_since;		/**< Last time the user went AWAY */

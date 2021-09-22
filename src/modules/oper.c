@@ -270,15 +270,9 @@ CMD_FUNC(cmd_oper)
 	else
 		set_snomask(client, OPER_SNOMASK); /* set::snomask-on-oper */
 
-	/* some magic to set user mode +s (and snomask +s) if you have any snomasks set */
-	if (client->user->snomask)
-	{
-		client->user->snomask |= SNO_SNOTICE;
-		client->umodes |= UMODE_SERVNOTICE;
-	}
-	
 	send_umode_out(client, 1, old_umodes);
-	sendnumeric(client, RPL_SNOMASK, get_snomask_string(client));
+	if (client->user->snomask)
+		sendnumeric(client, RPL_SNOMASK, client->user->snomask);
 
 	list_add(&client->special_node, &oper_list);
 

@@ -368,7 +368,7 @@
 #define STR_RPL_ISUPPORT		/* 005 */	"%s :are supported by this server"
 #define STR_RPL_MAP			/* 006 */	":%s%-*s(%ld) %s"
 #define STR_RPL_MAPEND			/* 007 */	":End of /MAP"
-#define STR_RPL_SNOMASK			/* 008 */	"%s :Server notice mask"
+#define STR_RPL_SNOMASK			/* 008 */	"+%s :Server notice mask"
 #define STR_RPL_REDIR			/* 010 */	"%s %d :Please use this Server/Port instead"
 #define STR_RPL_REMOTEISUPPORT		/* 105 */	"%s :are supported by this server"
 #define STR_RPL_TRACELINK		/* 200 */	"Link %s%s %s %s"

@@ -250,26 +250,6 @@ char *canonize(const char *buffer)
 	return cbuf;
 }
 
-/** Get snomasks as a string.
- * @param client	The client
- * @returns string of snomasks (temporary storage)
- */
-const char *get_snomask_string(Client *client)
-{
-	static char buf[128];
-	int i;
-	char *m;
-
-	m = buf;
-
-	*m++ = '+';
-	for (i = 0; i <= Snomask_highest && (m - buf < sizeof(buf) - 4); i++)
-		if (Snomask_Table[i].flag && client->user->snomask & Snomask_Table[i].mode)
-			*m++ = Snomask_Table[i].flag;
-	*m = 0;
-	return buf;
-}
-
 /** Get user modes as a string.
  * @param client	The client
  * @returns string of user modes (temporary storage)
@@ -310,26 +290,6 @@ const char *get_usermode_string_raw(long umodes)
 	return buf;
 }
 
-/** Get snomasks as a string - this one does not work on 'client' but directly on 'sno'.
- * @param sno	The snomasks that are set
- * @returns string of snomasks (temporary storage)
- */
-const char *get_snomask_string_raw(long sno)
-{
-	static char buf[128];
-	int i;
-	char *m;
-
-	m = buf;
-
-	*m++ = '+';
-	for (i = 0; i <= Snomask_highest && (m - buf < sizeof(buf) - 4); i++)
-		if (Snomask_Table[i].flag && sno & Snomask_Table[i].mode)
-			*m++ = Snomask_Table[i].flag;
-	*m = 0;
-	return buf;
-}
-
 /** Set a new snomask on the user.
  * The user is not informed of the change by this function.
  * @param client	The client
@@ -340,13 +300,17 @@ void set_snomask(Client *client, const char *snomask)
 	int what = MODE_ADD; /* keep this an int. -- Syzop */
 	const char *p;
 	int i;
-	if (snomask == NULL) {
-		client->user->snomask = 0;
+
+	if (snomask == NULL)
+	{
+		remove_all_snomasks(client);
 		return;
 	}
 	
-	for (p = snomask; p && *p; p++) {
-		switch (*p) {
+	for (p = snomask; p && *p; p++)
+	{
+		switch (*p)
+		{
 			case '+':
 				what = MODE_ADD;
 				break;
@@ -354,22 +318,18 @@ void set_snomask(Client *client, const char *snomask)
 				what = MODE_DEL;
 				break;
 			default:
-		 	 for (i = 0; i <= Snomask_highest; i++)
-		 	 {
-		 	 	if (!Snomask_Table[i].flag)
-		 	 		continue;
-		 	 	if (*p == Snomask_Table[i].flag)
-		 	 	{
-					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(client,what))
-						continue;
-		 	 		if (what == MODE_ADD)
-			 	 		client->user->snomask |= Snomask_Table[i].mode;
-			 	 	else
-			 	 		client->user->snomask &= ~Snomask_Table[i].mode;
-		 	 	}
-		 	 }				
+				if (!isalpha(*p))
+					continue;
+				if (what == MODE_ADD)
+					addlettertodynamicstringsorted(&client->user->snomask, *p);
+				else
+					delletterfromstring(client->user->snomask, *p);
+				break;
 		}
 	}
+	/* If the snomask becomes empty ("") then set it to NULL and user mode -s */
+	if (client->user->snomask && !*client->user->snomask)
+		remove_all_snomasks(client);
 }
 
 /** Build the MODE line with (modified) user modes for this user.

@@ -112,8 +112,6 @@ void blacklist_free_bluser_if_able(BLUser *bl);
 #define SetBLUser(x, y)	do { moddata_client(x, blacklist_md).ptr = y; } while(0)
 #define BLUSER(x)	((BLUser *)moddata_client(x, blacklist_md).ptr)
 
-long SNO_BLACKLIST = 0L;
-
 MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, blacklist_config_test);
@@ -152,8 +150,6 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH, 0, blacklist_rehash);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH_COMPLETE, 0, blacklist_rehash_complete);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, blacklist_quit);
-
-	SnomaskAdd(modinfo->handle, 'b', umode_allow_opers, &SNO_BLACKLIST);
 
 	return MOD_SUCCESS;
 }

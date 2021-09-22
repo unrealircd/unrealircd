@@ -42,8 +42,6 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	SnomaskAdd(modinfo->handle, 'D', umode_allow_opers, &SNO_DCCREJECT);
-	
 	HookAdd(modinfo->handle, HOOKTYPE_DCC_DENIED, 0, dccreject_dcc_denied);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);

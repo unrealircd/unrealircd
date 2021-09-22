@@ -27,9 +27,6 @@ char umodestring[UMODETABLESZ+1];
 Umode *Usermode_Table = NULL;
 int Usermode_highest = 0;
 
-Snomask *Snomask_Table = NULL;
-int Snomask_highest = 0;
-
 /* client->umodes (32 bits): 26 used, 6 free */
 long UMODE_INVISIBLE = 0L;     /* makes user invisible */
 long UMODE_OPER = 0L;          /* Operator */
@@ -76,15 +73,6 @@ void	umode_init(void)
 	}
 	Usermode_highest = 0;
 
-	Snomask_Table = safe_alloc(sizeof(Snomask) * UMODETABLESZ);
-	val = 1;
-	for (i = 0; i < UMODETABLESZ; i++)
-	{
-		Snomask_Table[i].mode = val;
-		val *= 2;
-	}
-	Snomask_highest = 0;
-
 	/* Set up modes */
 	UmodeAdd(NULL, 'i', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_INVISIBLE);
 	UmodeAdd(NULL, 'o', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_OPER);
@@ -97,20 +85,6 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'H', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_HIDEOPER);
 	UmodeAdd(NULL, 't', UMODE_GLOBAL, 0, umode_allow_unset, &UMODE_SETHOST);
 	UmodeAdd(NULL, 'I', UMODE_GLOBAL, 0, umode_hidle_allow, &UMODE_HIDLE);
-	SnomaskAdd(NULL, 'k', umode_allow_opers, &SNO_KILLS);
-	SnomaskAdd(NULL, 'c', umode_allow_opers, &SNO_CLIENT);
-	SnomaskAdd(NULL, 'f', umode_allow_opers, &SNO_FLOOD);
-	SnomaskAdd(NULL, 'F', umode_allow_opers, &SNO_FCLIENT);
-	SnomaskAdd(NULL, 'j', umode_allow_opers, &SNO_JUNK);
-	SnomaskAdd(NULL, 'v', umode_allow_opers, &SNO_VHOST);
-	SnomaskAdd(NULL, 'e', umode_allow_opers, &SNO_EYES);
-	SnomaskAdd(NULL, 'G', umode_allow_opers, &SNO_TKL);
-	SnomaskAdd(NULL, 'n', umode_allow_opers, &SNO_NICKCHANGE);
-	SnomaskAdd(NULL, 'N', umode_allow_opers, &SNO_FNICKCHANGE);
-	SnomaskAdd(NULL, 'q', umode_allow_opers, &SNO_QLINE);
-	SnomaskAdd(NULL, 'S', umode_allow_opers, &SNO_SPAMF);
-	SnomaskAdd(NULL, 's', umode_allow_opers, &SNO_SNOTICE);
-	SnomaskAdd(NULL, 'o', umode_allow_opers, &SNO_OPER);
 }
 
 void make_umodestr(void)
@@ -258,98 +232,6 @@ void UmodeDel(Umode *umode)
 	return;
 }
 
-Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(Client *client, int what), long *mode)
-{
-	short	 i = 0;
-	short	 j = 0;
-	short 	 save = -1;
-	while (i < UMODETABLESZ)
-	{
-		if (!Snomask_Table[i].flag && save == -1)
-			save = i;
-		else if (Snomask_Table[i].flag == ch)
-		{
-			if (Snomask_Table[i].unloaded)
-			{
-				save = i;
-				Snomask_Table[i].unloaded = 0;
-				break;
-			}
-			else
-			{
-				if (module)
-					module->errorcode = MODERR_EXISTS;
-				return NULL;
-			}
-		}
-		i++;
-	}
-	i = save;
-	if (i != UMODETABLESZ)
-	{
-		Snomask_Table[i].flag = ch;
-		Snomask_Table[i].allowed = allowed;
-		/* Update usermode table highest */
-		for (j = 0; j < UMODETABLESZ; j++)
-			if (Snomask_Table[i].flag)
-				if (i > Snomask_highest)
-					Snomask_highest = i;
-		*mode = Snomask_Table[i].mode;
-		Snomask_Table[i].owner = module;
-		if (module)
-		{
-			ModuleObject *snoobj = safe_alloc(sizeof(ModuleObject));
-			snoobj->object.snomask = &(Snomask_Table[i]);
-			snoobj->type = MOBJ_SNOMASK;
-			AddListItem(snoobj, module->objects);
-			module->errorcode = MODERR_NOERROR;
-		}
-		return &(Snomask_Table[i]);
-	}
-	else
-	{
-		*mode = 0;
-		if (module)
-			module->errorcode = MODERR_NOSPACE;
-		return NULL;
-	}
-}
-
-void SnomaskDel(Snomask *sno)
-{
-	if (loop.rehashing)
-		sno->unloaded = 1;
-	else	
-	{
-		Client *client;
-
-		list_for_each_entry(client, &lclient_list, lclient_node)
-		{
-			long oldsno;
-			if (!client || !IsUser(client))
-				continue;
-			oldsno = client->user->snomask;
-			client->user->snomask &= ~sno->mode;
-			if (oldsno != client->user->snomask)
-				sendnumeric(client, RPL_SNOMASK, get_snomask_string_raw(client->user->snomask));
-		}
-
-		sno->flag = '\0';
-	}
-	if (sno->owner) {
-		ModuleObject *snoobj;
-		for (snoobj = sno->owner->objects; snoobj; snoobj = snoobj->next) {
-			if (snoobj->type == MOBJ_SNOMASK && snoobj->object.snomask == sno) {
-				DelListItem(snoobj, sno->owner->objects);
-				safe_free(snoobj);
-				break;
-			}
-		}
-		sno->owner = NULL;
-	}
-	return;
-}
-
 int umode_allow_all(Client *client, int what)
 {
 	return 1;
@@ -425,54 +307,25 @@ void unload_all_unused_umodes(void)
 	make_umodestr();
 }
 
-void unload_all_unused_snomasks(void)
-{
-	Client *client;
-	long removed_sno = 0;
-	int i;
-
-	for (i = 0; i < UMODETABLESZ; i++)
-	{
-		if (Snomask_Table[i].unloaded)
-		{
-			removed_sno |= Snomask_Table[i].mode;
-			Snomask_Table[i].flag = '\0';
-			Snomask_Table[i].unloaded = 0;
-		}
-	}
-	if (!removed_sno) /* Nothing was unloaded */
-		return;
-
-	list_for_each_entry(client, &lclient_list, lclient_node)
-	{
-		long oldsno;
-		if (!client || !IsUser(client))
-			continue;
-		oldsno = client->user->snomask;
-		client->user->snomask &= ~(removed_sno);
-		if (oldsno != client->user->snomask)
-			sendnumeric(client, RPL_SNOMASK, get_snomask_string_raw(client->user->snomask));
-	}
-}
-
 /**
  * This function removes any oper-only snomasks when the user is no
  * longer an IRC Operator.
  * This used to be a bit more complex but nowadays we just erase all
  * snomasks since all of them are IRCOp-only. Easy.
  */
-void remove_oper_snomasks(Client *client)
+void remove_all_snomasks(Client *client)
 {
-	client->user->snomask = 0;
+	safe_free(client->user->snomask);
+	client->umodes &= ~UMODE_SERVNOTICE;
 }
 
 /*
  * This function removes any oper-only user modes from the user.
- * You may also want to call remove_oper_snomasks(), see above.
+ * You may also want to call remove_all_snomasks(), see above.
  */
 void remove_oper_modes(Client *client)
 {
-int i;
+	int i;
 
 	for (i = 0; i <= Usermode_highest; i++)
 	{
@@ -491,7 +344,7 @@ void remove_oper_privileges(Client *client, int broadcast_mode_change)
 {
 	long oldumodes = client->umodes;
 	remove_oper_modes(client);
-	remove_oper_snomasks(client);
+	remove_all_snomasks(client);
 	if (broadcast_mode_change && (client->umodes != oldumodes))
 		send_umode_out(client, 1, oldumodes);
 	if (MyUser(client)) /* only do if it's our client, remote servers will send a SWHOIS cmd */

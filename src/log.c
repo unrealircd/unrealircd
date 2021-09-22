@@ -27,8 +27,6 @@
 #define UNREAL_LOGGER_CODE
 #include "unrealircd.h"
 
-#define SNO_ALL INT_MAX
-
 // TODO: Make configurable at compile time (runtime won't do, as we haven't read the config file)
 #define show_event_id_console 0
 
@@ -1277,8 +1275,6 @@ void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *e
 {
 	Client *client;
 	const char *snomask_destinations, *p;
-	const char *client_snomasks;
-	char found;
 	MessageTag *mtags = NULL, *mtags_loop;
 	MultiLine *m;
 
@@ -1313,11 +1309,12 @@ void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *e
 	{
 		if (snomask_destinations)
 		{
-			found = 0;
-			client_snomasks = get_snomask_string(client);
+			char found = 0;
+			if (!client->user->snomask)
+				continue; /* None set, so will never match */
 			for (p = snomask_destinations; *p; p++)
 			{
-				if (strchr(client_snomasks, *p))
+				if (strchr(client->user->snomask, *p))
 				{
 					found = 1;
 					break;

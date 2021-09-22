@@ -711,8 +711,9 @@ void sendto_ops(FORMAT_STRING(const char *pattern), ...)
 	Client *acptr;
 	char nbuf[1024];
 
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
-		if (!IsServer(acptr) && !IsMe(acptr) && SendServNotice(acptr))
+	list_for_each_entry(acptr, &oper_list, special_node)
+	{
+		if (!IsServer(acptr) && !IsMe(acptr) && acptr->user->snomask)
 		{
 			ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ", me.name, acptr->name);
 			strlcat(nbuf, pattern, sizeof nbuf);
@@ -721,6 +722,7 @@ void sendto_ops(FORMAT_STRING(const char *pattern), ...)
 			vsendto_one(acptr, NULL, nbuf, vl);
 			va_end(vl);
 		}
+	}
 }
 
 /* Hmm.. so local sending is called sendto_ops() and local+remote is sendto_ops_butone(),

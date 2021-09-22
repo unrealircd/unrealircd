@@ -259,6 +259,7 @@ void free_user(Client *client)
 	}
 	safe_free(client->user->virthost);
 	safe_free(client->user->operlogin);
+	safe_free(client->user->snomask);
 	mp_pool_release(client->user);
 #ifdef	DEBUGMODE
 	users.inuse--;

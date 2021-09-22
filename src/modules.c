@@ -524,9 +524,6 @@ void FreeModObj(ModuleObject *obj, Module *m)
 	else if (obj->type == MOBJ_VERSIONFLAG) {
 		VersionflagDel(obj->object.versionflag, m);
 	}
-	else if (obj->type == MOBJ_SNOMASK) {
-		SnomaskDel(obj->object.snomask);
-	}
 	else if (obj->type == MOBJ_UMODE) {
 		UmodeDel(obj->object.umode);
 	}

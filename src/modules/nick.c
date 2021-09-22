@@ -825,7 +825,7 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 		sendto_one(client, NULL, ":%s MODE %s :%s", client->name,
 		    client->name, buf);
 	if (client->user->snomask)
-		sendnumeric(client, RPL_SNOMASK, get_snomask_string_raw(client->user->snomask));
+		sendnumeric(client, RPL_SNOMASK, client->user->snomask);
 
 	if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_user == POLICY_WARN))
 		sendnotice_multiline(client, iConf.plaintext_policy_user_message);

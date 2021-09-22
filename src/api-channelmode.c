@@ -265,17 +265,6 @@ void extcmode_para_delslot(Cmode *cm, int slot)
 	param_to_slot_mapping[cm->letter] = 0;
 }
 
-int channelmode_add_sorted_helper(char x, char y)
-{
-	/* Lower before upper */
-	if (islower(x) && isupper(y))
-		return 1;
-	if (isupper(x) && islower(y))
-		return 0;
-	/* Other than that, easy */
-	return x < y ? 1 : 0;
-}
-
 void channelmode_add_sorted(Cmode *n)
 {
 	Cmode *m;
@@ -290,7 +279,7 @@ void channelmode_add_sorted(Cmode *n)
 	{
 		if (m->letter == '\0')
 			abort();
-		if (channelmode_add_sorted_helper(n->letter, m->letter))
+		if (sort_character_lowercase_before_uppercase(n->letter, m->letter))
 		{
 			/* Insert us before */
 			if (m->prev)
@@ -874,18 +863,6 @@ void addlettertomstring(char *str, char letter)
 	/* We should be at the end */
 	str[n] = letter;
 	str[n+1] = '\0';
-}
-
-void delletterfromstring(char *s, char letter)
-{
-	for (; *s; s++)
-	{
-		if (*s == letter)
-		{
-			for (; *s; s++)
-				*s = s[1];
-		}
-	}
 }
 
 void add_member_mode_fast(Member *mb, Membership *mbs, char letter)

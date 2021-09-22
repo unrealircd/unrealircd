@@ -2342,3 +2342,66 @@ int is_file_readable(const char *file, const char *dir)
 	return 1;
 }
 
+void delletterfromstring(char *s, char letter)
+{
+	for (; *s; s++)
+	{
+		if (*s == letter)
+		{
+			for (; *s; s++)
+				*s = s[1];
+			break;
+		}
+	}
+}
+
+int sort_character_lowercase_before_uppercase(char x, char y)
+{
+	/* Lower before upper */
+	if (islower(x) && isupper(y))
+		return 1;
+	if (isupper(x) && islower(y))
+		return 0;
+	/* Other than that, easy */
+	return x < y ? 1 : 0;
+}
+
+/* Helper function, mainly used by snomask code */
+void addlettertodynamicstringsorted(char **str, char letter)
+{
+	char *i, *o;
+	char *newbuf;
+	size_t newbuflen;
+
+	/* NULL string? Easy! */
+	if (*str == NULL)
+	{
+		*str = safe_alloc(2);
+		**str = letter;
+		return;
+	}
+
+	/* Exists? Then nothing to do */
+	if (strchr(*str, letter))
+		return;
+
+	/* Ok, we really need to add it */
+	newbuflen = strlen(*str) + 2;
+	newbuf = safe_alloc(newbuflen);
+	for (i = *str, o = newbuf; *i; i++)
+	{
+		/* Insert before a higher letter */
+		if (letter && sort_character_lowercase_before_uppercase(letter, *i))
+		{
+			*o++ = letter;
+			letter = '\0';
+		}
+		*o++ = *i;
+	}
+	/* Or maybe we should be at the final spot? */
+	if (letter)
+		*o++ = letter;
+	*o = '\0';
+	safe_free_raw(*str);
+	*str = newbuf;
+}

@@ -64,8 +64,6 @@ CMD_FUNC(cmd_sendsno)
 {
 	MessageTag *mtags = NULL;
 	const char *sno, *msg, *p;
-	long snomask = 0;
-	int i;
 	Client *acptr;
 
 	if ((parc < 3) || BadPtr(parv[2]))
@@ -81,22 +79,22 @@ CMD_FUNC(cmd_sendsno)
 	/* Forward to others... */
 	sendto_server(client, 0, 0, mtags, ":%s SENDSNO %s :%s", client->id, parv[1], parv[2]);
 
-	for (p = sno; *p; p++)
-	{
-		for(i = 0; i <= Snomask_highest; i++)
-		{
-			if (Snomask_Table[i].flag == *p)
-			{
-				snomask |= Snomask_Table[i].mode;
-				break;
-			}
-		}
-	}
-
 	list_for_each_entry(acptr, &oper_list, special_node)
 	{
-		if (acptr->user->snomask & snomask)
-			sendto_one(acptr, mtags, ":%s NOTICE %s :%s", client->name, acptr->name, msg);
+		if (acptr->user->snomask)
+		{
+			char found = 0;
+			for (p = sno; *p; p++)
+			{
+				if (strchr(client->user->snomask, *p))
+				{
+					found = 1;
+					break;
+				}
+			}
+			if (found)
+				sendto_one(acptr, mtags, ":%s NOTICE %s :%s", client->name, acptr->name, msg);
+		}
 	}
 
 	free_message_tags(mtags);
