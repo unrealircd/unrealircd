@@ -84,6 +84,7 @@ struct LangList
 /* MUST be alphabetized (first column) */
 static LangList langlist[] = {
 /*	{ "arabic",       "ara", LANGAV_ASCII|LANGAV_ISO8859_6 }, -- TODO: check if this has issues first! */
+	{ "arabic-utf8", "ara-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "belarussian-utf8", "blr-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_CYRILLIC_UTF8 },
 	{ "belarussian-w1251", "blr", LANGAV_ASCII|LANGAV_W1251 },
 	{ "catalan",      "cat", LANGAV_ASCII|LANGAV_LATIN1 },
@@ -1180,6 +1181,19 @@ void charsys_add_language(char *name)
 		charsys_addmultibyterange(0xc5, 0xc5, 0xb2, 0xb3);
 		charsys_addmultibyterange(0xc5, 0xc5, 0xaa, 0xab);
 		charsys_addmultibyterange(0xc5, 0xc5, 0xbd, 0xbe);
+	}
+
+	/* [ARABIC] */
+	if (latin_utf8 || !strcmp(name, "arabic-utf8"))
+	{
+		/* Supplied by Sensiva */
+		/*charsys_addallowed("اأإآءبتثجحخدذرزسشصضطظعغفقكلمنهؤةويىئ");*/
+		/*- From U+0621 to U+063A (Regex: [\u0621-\u063A])*/
+		/* 0xd8a1 - 0xd8ba */
+		charsys_addmultibyterange(0xd8, 0xd8, 0xa1, 0xba);
+		/*- From U+0641 to U+064A (Regex: [\u0641-\u064A])*/
+		/* 0xd981 - 0xd98a */
+		charsys_addmultibyterange(0xd9, 0xd9, 0x81, 0x8a);
 	}
 }
 
