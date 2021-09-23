@@ -42,10 +42,8 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 static void unload_motd_file(MOTDFile *list);
 CMD_FUNC(cmd_staff);
-static int cb_rehashflag(Client *client, const char *flag);
 static int cb_test(ConfigFile *, ConfigEntry *, int, int *);
 static int cb_conf(ConfigFile *, ConfigEntry *, int);
-static int cb_rehash();
 static int cb_stats(Client *client, const char *flag);
 static void FreeConf();
 
@@ -65,8 +63,6 @@ MOD_INIT()
 
 	CommandAdd(modinfo->handle, MSG_STAFF, cmd_staff, MAXPARA, CMD_USER);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, cb_conf);
-	HookAdd(modinfo->handle, HOOKTYPE_REHASH, 0, cb_rehash);
-	HookAdd(modinfo->handle, HOOKTYPE_REHASHFLAG, 0, cb_rehashflag);
 	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, cb_stats);
 
 	return MOD_SUCCESS;
@@ -83,12 +79,6 @@ MOD_UNLOAD()
 	unload_motd_file(&staff);
 
 	return MOD_SUCCESS;
-}
-
-static int cb_rehash()
-{
-	FreeConf();
-	return 1;
 }
 
 static void FreeConf()
@@ -154,23 +144,6 @@ static int cb_stats(Client *client, const char *flag)
 	{
 		sendtxtnumeric(client, "staff-file: %s", STAFF_FILE);
 		return 1;
-	}
-
-	return 0;
-}
-
-static int cb_rehashflag(Client *client, const char *flag)
-{
-	int myflag = 0;
-
-	/* "-all" only keeps compatibility with beta19 */
-	if (match_simple("-all", flag) || (myflag = match_simple("-staff", flag)))
-	{
-		if (myflag)
-			sendto_ops("%sRehashing network staff file on the request of %s",
-                                MyUser(client) ? "Remotely " : "", client->name);
-
-		read_motd(STAFF_FILE, &staff);
 	}
 
 	return 0;
