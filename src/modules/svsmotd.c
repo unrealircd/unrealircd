@@ -60,59 +60,53 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_svsmotd)
 {
-        FILE *conf = NULL;
+	FILE *conf = NULL;
 
-        if (!IsULine(client))
-        {
-                sendnumeric(client, ERR_NOPRIVILEGES);
-                return;
-        }
-        if (parc < 2)
-        {
-                sendnumeric(client, ERR_NEEDMOREPARAMS, "SVSMOTD");
-                return;
-        }
+	if (!IsULine(client))
+	{
+		sendnumeric(client, ERR_NOPRIVILEGES);
+		return;
+	}
+	if (parc < 2)
+	{
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "SVSMOTD");
+		return;
+	}
 
-        if ((*parv[1] != '!') && parc < 3)
-        {
-                sendnumeric(client, ERR_NEEDMOREPARAMS, "SVSMOTD");
-                return;
-        }
+	if ((*parv[1] != '!') && parc < 3)
+	{
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "SVSMOTD");
+		return;
+	}
 
-        switch (*parv[1])
-        {
-          case '#':
-                  conf = fopen(conf_files->svsmotd_file, "a");
-                  sendto_ops("Added '%s' to services motd", parv[2]);
-                  break;
-          case '!':
-          {
-                  remove(conf_files->svsmotd_file);
-                  free_motd(&svsmotd);
-                  sendto_ops("Wiped out services motd data");
-                  break;
-          }
-          default:
-                  return;
-        }
-        if (parv[2])
-                sendto_server(client, 0, 0, NULL, ":%s SVSMOTD %s :%s", client->id, parv[1], parv[2]);
-        else
-                sendto_server(client, 0, 0, NULL, ":%s SVSMOTD %s", client->id, parv[1]);
+	if (parv[2])
+		sendto_server(client, 0, 0, NULL, ":%s SVSMOTD %s :%s", client->id, parv[1], parv[2]);
+	else
+		sendto_server(client, 0, 0, NULL, ":%s SVSMOTD %s", client->id, parv[1]);
 
-        if (conf == NULL)
-                return;
+	switch (*parv[1])
+	{
+		case '#':
+			unreal_log(ULOG_INFO, "svsmotd", "SVSMOTD_ADDED", client,
+			           "Services added '$line' to services motd",
+			           log_data_string("line", parv[2]));
+			conf = fopen(conf_files->svsmotd_file, "a");
+			if (conf)
+			{
+				fprintf(conf, "%s\n", parv[2]);
+				fclose(conf);
+			}
+			break;
+		case '!':
+			unreal_log(ULOG_INFO, "svsmotd", "SVSMOTD_REMOVED", client,
+			           "Services deleted the services motd");
+			remove(conf_files->svsmotd_file);
+			free_motd(&svsmotd);
+			break;
+		default:
+			return;
+	}
 
-        if (parc < 3 && (*parv[1] == '!'))
-        {
-                fclose(conf);
-                return;
-        }
-        fprintf(conf, "%s\n", parv[2]);
-        if (*parv[1] == '!')
-                sendto_ops("Added '%s' to services motd", parv[2]);
-
-        fclose(conf);
-        /* We editted it, so rehash it -- codemastr */
-        read_motd(conf_files->svsmotd_file, &svsmotd);
+	/* We editted it, so rehash it -- codemastr */
+	read_motd(conf_files->svsmotd_file, &svsmotd);
 }
