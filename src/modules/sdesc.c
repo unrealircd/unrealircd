@@ -86,6 +86,7 @@ CMD_FUNC(cmd_sdesc)
 
 	sendto_server(client, 0, 0, NULL, ":%s SDESC :%s", client->name, parv[1]);
 
-	sendto_ops("Server description for %s is now '%s' (changed by %s)",
-		client->uplink->name, client->uplink->info, client->name);
+	unreal_log(ULOG_INFO, "sdesc", "SDESC_COMMAND", client,
+	           "Server description for $server is now '$server.server.info' (changed by $client)",
+	           log_data_client("server", client->uplink));
 }

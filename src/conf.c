@@ -2156,10 +2156,8 @@ int config_test(void)
 
 	if (old_pid_file && strcmp(old_pid_file, conf_files->pid_file))
 	{
-		sendto_ops("pidfile is being rewritten to %s, please delete %s",
-			   conf_files->pid_file,
-			   old_pid_file);
 		write_pidfile();
+		unlink(old_pid_file);
 	}
 	safe_free(old_pid_file);
 

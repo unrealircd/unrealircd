@@ -73,4 +73,5 @@ CMD_FUNC(cmd_wallops)
 	}
 
 	sendto_ops_butone(client->direction, client, ":%s WALLOPS :%s", client->name, message);
+	// FIXME: move all that code to here and modularize +w
 }

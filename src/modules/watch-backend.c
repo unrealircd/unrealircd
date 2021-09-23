@@ -283,11 +283,12 @@ int _watch_del(char *nick, Client *client, int flags)
 	 * No error checking in ircd is unneccessary ;) -Cabal95
 	 */
 	if (!*lp)
-		sendto_ops("WATCH debug error: _watch_del "
-					 "found a watch entry with no client "
-					 "counterpoint processing nick %s on client %p!",
-					 nick, client->user);
-	else {
+	{
+		unreal_log(ULOG_WARNING, "watch", "BUG_WATCH_DEL", client,
+		           "[BUG] watch_del found a watch entry with no client counterpoint, "
+		           "while processing nick $nick on client $client.details",
+		           log_data_string("nick", nick));
+	} else {
 		prev = *lp;
 		*lp = prev->next;
 		free_link(prev);
@@ -334,11 +335,11 @@ int _watch_del_list(Client *client, int flags)
 
 		/* Not found, another "worst case" debug error */
 		if (!*lp)
-			sendto_ops("WATCH Debug error: _watch_del_list "
-				"found a WATCH entry with no table "
-				"counterpoint processing client %s!",
-				client->name);
-		else {
+		{
+			unreal_log(ULOG_WARNING, "watch", "BUG_WATCH_DEL_LIST", client,
+				   "[BUG] watch_del_list found a watch entry with no table counterpoint, "
+				   "while processing client $client.details");
+		} else {
 			/* Fix the watch-list and remove entry */
 			Link *prev = *lp;
 			*lp = prev->next;

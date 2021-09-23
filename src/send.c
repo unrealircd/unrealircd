@@ -701,34 +701,6 @@ void sendto_match_butone(Client *one, Client *from, const char *mask, int what,
 	}
 }
 
-/** Send a message to all locally connected IRCOps
- * @param pattern	The format string / pattern to use.
- * @param ...		Format string parameters.
- */
-void sendto_ops(FORMAT_STRING(const char *pattern), ...)
-{
-	va_list vl;
-	Client *acptr;
-	char nbuf[1024];
-
-	list_for_each_entry(acptr, &oper_list, special_node)
-	{
-		if (!IsServer(acptr) && !IsMe(acptr) && acptr->user->snomask)
-		{
-			ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ", me.name, acptr->name);
-			strlcat(nbuf, pattern, sizeof nbuf);
-
-			va_start(vl, pattern);
-			vsendto_one(acptr, NULL, nbuf, vl);
-			va_end(vl);
-		}
-	}
-}
-
-/* Hmm.. so local sending is called sendto_ops() and local+remote is sendto_ops_butone(),
- * that is weird naming... (TODO fix some day in a new major series)
- */
-
 /** Send a message to all IRCOps (local and remote), except one.
  * @param one		Skip sending the message to this client/direction
  * @param from		The sender (can not be NULL)

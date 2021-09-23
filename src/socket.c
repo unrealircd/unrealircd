@@ -1093,16 +1093,10 @@ int deliver_it(Client *client, char *str, int len, int *want_read)
 
 	*want_read = 0;
 
-	if (IsDeadSocket(client) || (!IsServer(client) && !IsUser(client)
-	    && !IsHandshake(client) 
-	    && !IsTLSHandshake(client)
- 
-	    && !IsUnknown(client)))
+	if (IsDeadSocket(client) ||
+	    (!IsServer(client) && !IsUser(client) && !IsHandshake(client) &&
+	     !IsTLSHandshake(client) && !IsUnknown(client)))
 	{
-		str[len] = '\0';
-		sendto_ops
-		    ("* * * DEBUG ERROR * * * !!! Calling deliver_it() for %s, status %d %s, with message: %s",
-		    client->name, client->status, IsDeadSocket(client) ? "DEAD" : "", str);
 		return -1;
 	}
 

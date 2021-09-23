@@ -310,11 +310,6 @@ CMD_FUNC(cmd_sjoin)
 	sj3_parabuf[0] = '\0';
 	for (i = 2; i <= (parc - 2); i++)
 	{
-		if (!parv[i])
-		{
-			sendto_ops("Got null parv in SJ3 code");
-			continue;
-		}
 		strlcat(sj3_parabuf, parv[i], sizeof sj3_parabuf);
 		if (((i + 1) <= (parc - 2)))
 			strlcat(sj3_parabuf, " ", sizeof sj3_parabuf);
@@ -348,8 +343,10 @@ CMD_FUNC(cmd_sjoin)
 			if (!end)
 			{
 				/* this obviously should never happen */
-				sendto_ops("Malformed SJOIN piece from %s for channel %s: %s",
-					client->name, channel->name, tp);
+				unreal_log(ULOG_WARNING, "sjoin", "SJOIN_INVALID_SJSBY", NULL,
+					   "SJOIN for channel $channel has invalid SJSBY in item '$item' (from $client)",
+					   log_data_channel("channel", channel),
+					   log_data_string("item", s));
 				continue;
 			}
 			*end++ = '\0';
@@ -358,8 +355,10 @@ CMD_FUNC(cmd_sjoin)
 			if (!p)
 			{
 				/* missing setby parameter */
-				sendto_ops("Malformed SJOIN piece from %s for channel %s: %s",
-					client->name, channel->name, tp);
+				unreal_log(ULOG_WARNING, "sjoin", "SJOIN_INVALID_SJSBY", NULL,
+					   "SJOIN for channel $channel has invalid SJSBY in item '$item' (from $client)",
+					   log_data_channel("channel", channel),
+					   log_data_string("item", s));
 				continue;
 			}
 			*p++ = '\0';

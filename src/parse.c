@@ -758,10 +758,6 @@ static void remove_unknown(Client *client, char *sender)
 	if (!IsServer(client))
 		return;
 
-#ifdef DEVELOP
-	sendto_ops("Killing %s (%s)", sender, backupbuf);
-	return;
-#endif
 	/*
 	 * Do kill if it came from a server because it means there is a ghost
 	 * user on the other server which needs to be removed. -avalon

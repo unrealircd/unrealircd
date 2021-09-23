@@ -1123,8 +1123,12 @@ int websocket_create_packet(int opcode, char **buf, int *len)
 		if (bytes_in_sendbuf + bytes_single_frame > sizeof(sendbuf))
 		{
 			/* Overflow. This should never happen. */
-			sendto_ops("[websocket] [BUG] Overflow prevented: %d + %d > %d",
-				bytes_in_sendbuf, bytes_single_frame, (int)sizeof(sendbuf));
+			unreal_log(ULOG_WARNING, "websocket", "BUG_WEBSOCKET_OVERFLOW", NULL,
+			           "[BUG] [websocket] Overflow prevented in websocket_create_packet(): "
+			           "$bytes_in_sendbuf + $bytes_single_frame > $sendbuf_size",
+			           log_data_integer("bytes_in_sendbuf", bytes_in_sendbuf),
+			           log_data_integer("bytes_single_frame", bytes_single_frame),
+			           log_data_integer("sendbuf_size", sizeof(sendbuf)));
 			return -1;
 		}
 

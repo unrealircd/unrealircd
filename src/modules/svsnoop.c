@@ -67,7 +67,8 @@ CMD_FUNC(cmd_svsnoop)
 		if (parv[2][0] == '+')
 		{
 			SVSNOOP = 1;
-			sendto_ops("This server has been placed in NOOP mode");
+			unreal_log(ULOG_INFO, "svsnoop", "SVSNOOP_ENABLED", client,
+			           "This server has been placed in NOOP mode (by $client) -- all IRCOp rights disabled");
 			list_for_each_entry(acptr, &client_list, client_node)
 			{
 				if (MyUser(acptr) && IsOper(acptr))
@@ -89,7 +90,8 @@ CMD_FUNC(cmd_svsnoop)
 		else
 		{
 			SVSNOOP = 0;
-			sendto_ops("This server is no longer in NOOP mode");
+			unreal_log(ULOG_INFO, "svsnoop", "SVSNOOP_ENABLED", client,
+			           "This server is no longer in NOOP mode (by $client) -- IRCOps can oper up again");
 		}
 	}
 }
