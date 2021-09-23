@@ -83,7 +83,8 @@ CMD_FUNC(cmd_netinfo)
 
 	if (IsNetInfo(client))
 	{
-		sendto_realops("Already got NETINFO from Link %s", client->name);
+		unreal_log(ULOG_WARNING, "link", "NETINFO_ALREADY_RECEIVED", client,
+		           "Got NETINFO from server $client, but we already received it earlier!");
 		return;
 	}
 
@@ -96,8 +97,9 @@ CMD_FUNC(cmd_netinfo)
 	if (lmax > irccounts.global_max)
 	{
 		irccounts.global_max = lmax;
-		sendto_realops("Max Global Count is now %li (set by link %s)",
-		    lmax, client->name);
+		unreal_log(ULOG_INFO, "link", "NEW_GLOBAL_RECORD", client,
+		           "Record global users is now $record_global_users (set by server $client)",
+		           log_data_integer("record_global_users", lmax));
 	}
 
 	xx = TStime();
@@ -134,9 +136,9 @@ CMD_FUNC(cmd_netinfo)
 	strlcpy(buf, CLOAK_KEYCRC, sizeof(buf));
 	if (*parv[4] != '*' && strcmp(buf, parv[4]))
 	{
-		sendto_realops
-			("Link %s has a DIFFERENT CLOAK KEY - %s != %s. \002YOU SHOULD CORRECT THIS ASAP\002.",
-				client->name, parv[4], buf);
+		unreal_log(ULOG_WARNING, "link", "CLOAK_KEY_MISMATCH", client,
+		           "Server $client has a DIFFERENT CLOAK KEY!!! You should fix this ASAP "
+		           "as this causes major issues with channel bans not working!!");
 	}
 	SetNetInfo(client);
 }

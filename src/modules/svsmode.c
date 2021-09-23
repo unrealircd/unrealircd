@@ -403,10 +403,15 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 					if (!IsOper(target) && !strchr(parv[2], 'o')) /* (ofcoz this strchr() is flawed) */
 					{
 						/* isn't an oper, and would not become one either.. abort! */
-						sendto_realops(
-							"[BUG] server %s tried to set +H while user not an oper, para=%s/%s, "
-							"umodes=%ld, please fix your services or if you think it's our fault, "
-							"report at https://bugs.unrealircd.org/", client->name, parv[1], parv[2], target->umodes);
+						unreal_log(ULOG_WARNING, "svsmode", "SVSMODE_INVALID", client,
+						           "[BUG] Server $client tried to set user mode +H (hidden ircop) "
+						           "on a user that is not +o (not ircop)! "
+						           "Please fix your services, or if you think it is our fault, then "
+						           "report at https://bugs.unrealircd.org/. "
+						           "Parameters: $para1 $para2. Target: $target.",
+						           log_data_string("para1", parv[1]),
+						           log_data_string("para2", parv[2]),
+						           log_data_client("target", target));
 						break; /* abort! */
 					}
 					irccounts.operators--;

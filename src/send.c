@@ -701,28 +701,6 @@ void sendto_match_butone(Client *one, Client *from, const char *mask, int what,
 	}
 }
 
-/** This function does exactly the same as sendto_ops() in practice in 5.x.
- * There used to be a difference between sendto_ops() and sendto_realops()
- * with regards to user-settable snomasks, but this is no longer the case.
- * TODO: remove this function in some future cleanup
- */
-void sendto_realops(FORMAT_STRING(const char *pattern), ...)
-{
-	va_list vl;
-	Client *acptr;
-	char nbuf[1024];
-
-	list_for_each_entry(acptr, &oper_list, special_node)
-	{
-		ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ", me.name, acptr->name);
-		strlcat(nbuf, pattern, sizeof nbuf);
-
-		va_start(vl, pattern);
-		vsendto_one(acptr, NULL, nbuf, vl);
-		va_end(vl);
-	}
-}
-
 /** Send a message to all locally connected users with specified user mode.
  * @param umodes	The umode that the recipient should have set (one of UMODE_)
  * @param pattern	The format string / pattern to use.

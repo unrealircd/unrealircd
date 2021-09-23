@@ -964,9 +964,9 @@ CMD_FUNC(reputationunperm)
 
 	ModuleSetOptions(ModInf.handle, MOD_OPT_PERM, 0);
 
-	sendto_realops("%s used /REPUTATIONUNPERM. On next REHASH the module can be RELOADED or UNLOADED. "
-	               "Note however that for a few minutes the scoring may be skipped, so don't do this too often.",
-	               client->name);
+	unreal_log(ULOG_INFO, "reputation", "REPUTATIONUNPERM_COMMAND", client,
+	           "$client used /REPUTATIONUNPERM. On next REHASH the module can be RELOADED or UNLOADED. "
+	           "Note however that for a few minutes the scoring may be skipped, so don't do this too often.");
 }
 
 int reputation_connect_extinfo(Client *client, NameValuePrioList **list)

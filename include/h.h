@@ -1152,7 +1152,6 @@ extern EVENT(url_socket_timeout);
 extern char *collapse(char *pattern);
 extern void clear_scache_hash_table(void);
 extern void sendto_one(Client *, MessageTag *mtags, FORMAT_STRING(const char *), ...) __attribute__((format(printf,3,4)));
-extern void sendto_realops(FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,1,2)));
 extern EVENT(garbage_collect);
 extern EVENT(loop_event);
 extern EVENT(check_pings);

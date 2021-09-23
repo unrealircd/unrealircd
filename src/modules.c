@@ -654,8 +654,6 @@ int    Module_free(Module *mod)
 
 	for (cp = mod->children; cp; cp = cp->next)
 	{
-		sendto_realops("Unloading child module %s",
-			      cp->child->header->name);
 		Module_Unload(cp->child->header->name);
 	}
 	for (objs = mod->objects; objs; objs = next) {
@@ -733,11 +731,6 @@ void module_loadall(void)
 	iFP	fp;
 	Module *mi, *next;
 	
-	if (!loop.booted)
-	{
-		sendto_realops("Ehh, !loop.booted in module_loadall()");
-		return ;
-	}
 	/* Run through all modules and check for module load */
 	for (mi = Modules; mi; mi = next)
 	{
@@ -1190,14 +1183,18 @@ EVENT(e_unload_module_delayed)
 	int i; 
 	i = Module_Unload(name);
 	if (i == 1)
-		sendto_realops("Unloaded module %s", name);
+	{
+		unreal_log(ULOG_INFO, "module", "MODULE_UNLOADING_DELAYED", NULL,
+		           "Unloading module $module_name (was delayed earlier)",
+		           log_data_string("module_name", name));
+	}
 	safe_free(name);
 	extcmodes_check_for_changes();
 	umodes_check_for_changes();
 	return;
 }
 
-void	unload_all_modules(void)
+void unload_all_modules(void)
 {
 	Module *m;
 	int	(*Mod_Unload)();

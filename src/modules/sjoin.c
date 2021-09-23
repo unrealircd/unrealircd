@@ -277,12 +277,6 @@ CMD_FUNC(cmd_sjoin)
 		{
 			Membership *lp2 = find_membership_link(lp->client->user->channel, channel);
 
-			if (!lp2)
-			{
-				sendto_realops("Oops! channel->members && !find_membership_link");
-				continue;
-			}
-
 			/* Remove all our modes, one by one */
 			for (p = lp->member_modes; *p; p++)
 			{
@@ -423,10 +417,12 @@ CMD_FUNC(cmd_sjoin)
 				sendto_one(client, NULL,
 				    ":%s KICK %s %s :Fake direction",
 				    me.id, channel->name, acptr->name);
-				sendto_realops
-				    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
-				    item, client->uplink->name,
-				    client->name, channel->name);
+				unreal_log(ULOG_WARNING, "sjoin", "SJOIN_FAKE_DIRECTION", client,
+				           "Fake direction from server $client in SJOIN "
+				           "for user $other_client on $other_client.server "
+				           "(item: $buf)",
+				           log_data_client("other_client", acptr),
+				           log_data_string("buf", item));
 				continue;
 			}
 

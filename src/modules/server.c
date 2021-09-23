@@ -1789,11 +1789,6 @@ void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 {
 	Client *client;
 
-#ifdef DEBUGMODE
-	sendto_realops("connect_server() called with aconf %p, refcount: %d, TEMP: %s",
-		aconf, aconf->refcount, aconf->flag.temporary ? "YES" : "NO");
-#endif
-
 	if (!aconf->outgoing.hostname)
 	{
 		/* Actually the caller should make sure that this doesn't happen,
@@ -1868,10 +1863,6 @@ void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	make_server(client);
 	client->server->conf = aconf;
 	client->server->conf->refcount++;
-#ifdef DEBUGMODE
-	sendto_realops("connect_server() CONTINUED (%s:%d), aconf %p, refcount: %d, TEMP: %s",
-		__FILE__, __LINE__, aconf, aconf->refcount, aconf->flag.temporary ? "YES" : "NO");
-#endif
 	if (by && IsUser(by))
 		strlcpy(client->server->by, by->name, sizeof(client->server->by));
 	else

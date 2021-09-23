@@ -398,9 +398,12 @@ void remove_dcc_references(Client *client)
 		}
 
 		if (!found)
-			sendto_realops("[BUG] remove_dcc_references:  %s was in dccallowme "
-				"list[%d] of %s but not in dccallowrem list!",
-				acptr->name, lp->flags, client->name);
+		{
+			unreal_log(ULOG_WARNING, "main", "BUG_REMOVE_DCC_REFERENCES", acptr,
+			           "[BUG] remove_dcc_references: $client was in dccallowme "
+			           "list of $other_client but not in dccallowrem list!",
+			           log_data_client("other_client", client));
+		}
 
 		free_link(lp);
 		lp = nextlp;

@@ -532,13 +532,7 @@ DNSCache *c, *next;
 	{
 		next = c->next;
 		if (c->expires < TStime())
-		{
-#if 0
-			sendto_realops(client, "[Syzop/DNS] Expire: %s [%s] (%ld < %ld)",
-				c->name, c->ip, c->expires, TStime());
-#endif
 			unrealdns_removecacherecord(c);
-		}
 	}
 }
 
@@ -643,8 +637,8 @@ CMD_FUNC(cmd_dns)
 	} else
 	if (*param == 'c') /* CLEAR CACHE */
 	{
-		sendto_realops("%s (%s@%s) cleared the DNS cache list (/QUOTE DNS c)",
-			client->name, client->user->username, client->user->realhost);
+		unreal_log(ULOG_INFO, "dns", "DNS_CACHE_CLEARED", client,
+		            "DNS cache cleared by $client");
 		
 		while (cache_list)
 		{

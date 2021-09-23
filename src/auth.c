@@ -435,8 +435,9 @@ int Auth_Check(Client *client, AuthConfig *as, const char *para)
 				return 0;
 			if (!strcmp(as->data, "changemeplease") && !strcmp(para, as->data))
 			{
-				sendto_realops("Rejecting default password 'changemeplease'. "
-				               "Please change the password in the configuration file.");
+				unreal_log(ULOG_INFO, "auth", "AUTH_REJECT_DEFAULT_PASSWORD", client,
+				           "Rejecting default password 'changemeplease'. "
+				           "Please change the password in the configuration file.");
 				return 0;
 			}
 			/* plain text compare */

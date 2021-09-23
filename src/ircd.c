@@ -244,7 +244,7 @@ EVENT(garbage_collect)
 	int  ii;
 
 	if (loop.do_garbage_collect == 1)
-		sendto_realops("Doing garbage collection ..");
+		unreal_log(ULOG_INFO, "main", "GARBAGE_COLLECT_STARTED", NULL, "Doing garbage collection...");
 	if (freelinks > HOW_MANY_FREELINKS_ALLOWED) {
 		ii = freelinks;
 		while (freelink && (freelinks > HOW_MANY_FREELINKS_ALLOWED)) {
@@ -255,8 +255,8 @@ EVENT(garbage_collect)
 		}
 		if (loop.do_garbage_collect == 1) {
 			loop.do_garbage_collect = 0;
-			sendto_realops
-			    ("Cleaned up %i garbage blocks", (ii - freelinks));
+			unreal_log(ULOG_INFO, "main", "GARBAGE_COLLECT_STARTED", NULL, "Cleaned up $count garbage blocks",
+			           (ii - freelinks));
 		}
 	}
 	if (loop.do_garbage_collect == 1)
@@ -269,8 +269,6 @@ int match_tkls(Client *client)
 	ConfigItem_ban *bconf = NULL;
 	char banbuf[1024];
 
-	char killflag = 0;
-
 	/* Process dynamic *LINES */
 	if (find_tkline_match(client, 0))
 		return 1; /* user killed */
@@ -281,35 +279,25 @@ int match_tkls(Client *client)
 	{
 		/* Check ban realname { } */
 		if (!ValidatePermissionsForPath("immune",client,NULL,NULL,NULL) && (bconf = find_ban(NULL, client->info, CONF_BAN_REALNAME)))
-			killflag++;
-	}
+		{
+			unreal_log(ULOG_INFO, "tkl", "BAN_REALNAME", client,
+			           "Banned client $client.details due to realname ban: $reason",
+			           bconf->reason ? bconf->reason : "no reason");
 
-	/* If user is meant to be killed, take action: */
-	if (killflag)
-	{
-		if (IsUser(client))
-			sendto_realops("Ban active for %s (%s)",
-				get_client_name(client, FALSE),
-				bconf->reason ? bconf->reason : "no reason");
-
-		if (IsServer(client))
-			sendto_realops("Ban active for server %s (%s)",
-				get_client_name(client, FALSE),
-				bconf->reason ? bconf->reason : "no reason");
-
-		if (bconf->reason) {
-			if (IsUser(client))
-				snprintf(banbuf, sizeof(banbuf), "User has been banned (%s)", bconf->reason);
-			else
-				snprintf(banbuf, sizeof(banbuf), "Banned (%s)", bconf->reason);
-			exit_client(client, NULL, banbuf);
-		} else {
-			if (IsUser(client))
-				exit_client(client, NULL, "User has been banned");
-			else
-				exit_client(client, NULL, "Banned");
+			if (bconf->reason) {
+				if (IsUser(client))
+					snprintf(banbuf, sizeof(banbuf), "User has been banned (%s)", bconf->reason);
+				else
+					snprintf(banbuf, sizeof(banbuf), "Banned (%s)", bconf->reason);
+				exit_client(client, NULL, banbuf);
+			} else {
+				if (IsUser(client))
+					exit_client(client, NULL, "User has been banned");
+				else
+					exit_client(client, NULL, "Banned");
+			}
+			return 1; /* stop processing, client is dead now */
 		}
-		return 1; /* stop processing this user, as (s)he is dead now. */
 	}
 
 	if (loop.do_bancheck_spamf_user && IsUser(client) && find_spamfilter_user(client, SPAMFLAG_NOWARN))
@@ -643,15 +631,15 @@ void detect_timeshift_and_warn(void)
 		/* tdiff = # of seconds of time set backwards (positive number! eg: 60) */
 		time_t tdiff = oldtimeofday - timeofday;
 		unreal_log(ULOG_WARNING, "system", "SYSTEM_CLOCK_JUMP_BACKWARDS", NULL,
-		           "System clock jumped back in time ~$time_delta seconds ($time_from -> $time_to)",
+		           "System clock jumped back in time ~$time_delta seconds ($time_from -> $time_to)\n"
+		           "Incorrect time for IRC servers is a serious problem. "
+		           "Time being set backwards (system clock changed) is "
+		           "even more serious and can cause clients to freeze, channels to be "
+		           "taken over, and other issues.\n"
+		           "Please be sure your clock is always synchronized before the IRCd is started!",
 		           log_data_integer("time_delta", tdiff),
 		           log_data_timestamp("time_from", oldtimeofday),
 		           log_data_timestamp("time_to", timeofday));
-		sendto_realops("Incorrect time for IRC servers is a serious problem. "
-			       "Time being set backwards (system clock changed) is "
-			       "even more serious and can cause clients to freeze, channels to be "
-			       "taken over, and other issues.");
-		sendto_realops("Please be sure your clock is always synchronized before the IRCd is started!");
 		fix_timers();
 	} else
 	if (mytdiff(timeofday, oldtimeofday) > POSITIVE_SHIFT_WARN) /* do not set too low or you get false positives */
@@ -659,14 +647,14 @@ void detect_timeshift_and_warn(void)
 		/* tdiff = # of seconds of time set forward (eg: 60) */
 		time_t tdiff = timeofday - oldtimeofday;
 		unreal_log(ULOG_WARNING, "system", "SYSTEM_CLOCK_JUMP_FORWARDS", NULL,
-		           "System clock jumped ~$time_delta seconds forward ($time_from -> $time_to)",
+		           "System clock jumped ~$time_delta seconds forward ($time_from -> $time_to)\n"
+		           "Incorrect time for IRC servers is a serious problem. "
+		           "Time being adjusted (by changing the system clock) "
+		           "more than a few seconds forward/backward can lead to serious issues.\n"
+		           "Please be sure your clock is always synchronized before the IRCd is started!",
 		           log_data_integer("time_delta", tdiff),
 		           log_data_timestamp("time_from", oldtimeofday),
 		           log_data_timestamp("time_to", timeofday));
-		sendto_realops("Incorrect time for IRC servers is a serious problem. "
-			       "Time being adjusted (by changing the system clock) "
-			       "more than a few seconds forward/backward can lead to serious issues.");
-		sendto_realops("Please be sure your clock is always synchronized before the IRCd is started!");
 		fix_timers();
 	}
 
