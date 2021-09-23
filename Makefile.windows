@@ -386,8 +386,8 @@ DLL_FILES=\
  src/modules/usermodes/secureonlymsg.dll \
  src/modules/usermodes/servicebot.dll \
  src/modules/usermodes/showwhois.dll \
+ src/modules/usermodes/wallops.dll \
  src/modules/vhost.dll \
- src/modules/wallops.dll \
  src/modules/watch-backend.dll \
  src/modules/watch.dll \
  src/modules/webirc.dll \
@@ -1215,11 +1215,11 @@ src/modules/usermodes/servicebot.dll: src/modules/usermodes/servicebot.c $(INCLU
 src/modules/usermodes/showwhois.dll: src/modules/usermodes/showwhois.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/usermodes/showwhois.c /Fesrc/modules/usermodes/ /Fosrc/modules/usermodes/ /Fdsrc/modules/usermodes/showwhois.pdb $(MODLFLAGS)
 
+src/modules/usermodes/wallops.dll: src/modules/usermodes/wallops.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/usermodes/wallops.c /Fesrc/modules/usermodes/ /Fosrc/modules/usermodes/ /Fdsrc/modules/usermodes/wallops.pdb $(MODLFLAGS)
+
 src/modules/vhost.dll: src/modules/vhost.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/vhost.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/vhost.pdb $(MODLFLAGS)
-
-src/modules/wallops.dll: src/modules/wallops.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/wallops.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/wallops.pdb $(MODLFLAGS)
 
 src/modules/watch-backend.dll: src/modules/watch-backend.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/watch-backend.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/watch-backend.pdb $(MODLFLAGS)

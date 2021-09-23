@@ -49,7 +49,7 @@ MODULES= \
 	invite.so list.so time.so svskill.so sjoin.so \
 	pass.so userhost.so ison.so silence.so knock.so \
 	umode2.so squit.so protoctl.so addomotd.so \
-	wallops.so admin.so globops.so locops.so \
+	admin.so globops.so locops.so \
 	trace.so netinfo.so links.so help.so rules.so \
 	close.so map.so eos.so server.so stats.so \
 	dccdeny.so whowas.so \

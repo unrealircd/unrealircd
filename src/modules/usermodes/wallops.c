@@ -1,6 +1,6 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/wallops.c
- *   (C) 2004 The UnrealIRCd Team
+ *   IRC - Internet Relay Chat, src/modules/usermodes/wallops.c
+ *   (C) 2004-2021 The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
