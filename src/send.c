@@ -701,34 +701,6 @@ void sendto_match_butone(Client *one, Client *from, const char *mask, int what,
 	}
 }
 
-/** Send a message to all IRCOps (local and remote), except one.
- * @param one		Skip sending the message to this client/direction
- * @param from		The sender (can not be NULL)
- * @param pattern	The format string / pattern to use.
- * @param ...		Format string parameters.
- */
-void sendto_ops_butone(Client *one, Client *from, FORMAT_STRING(const char *pattern), ...)
-{
-	va_list vl;
-	Client *acptr;
-
-	++current_serial;
-	list_for_each_entry(acptr, &client_list, client_node)
-	{
-		if (!SendWallops(acptr))
-			continue;
-		if (acptr->direction->local->serial == current_serial)	/* sent message along it already ? */
-			continue;
-		if (acptr->direction == one)
-			continue;	/* ...was the one I should skip */
-		acptr->direction->local->serial = current_serial;
-
-		va_start(vl, pattern);
-		vsendto_prefix_one(acptr->direction, from, NULL, pattern, vl);
-		va_end(vl);
-	}
-}
-
 /** This function does exactly the same as sendto_ops() in practice in 5.x.
  * There used to be a difference between sendto_ops() and sendto_realops()
  * with regards to user-settable snomasks, but this is no longer the case.

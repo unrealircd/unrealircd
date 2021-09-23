@@ -51,7 +51,6 @@
 #define MSG_PONG	"PONG"	/* PONG */
 #define MSG_OPER	"OPER"	/* OPER */
 #define MSG_PASS	"PASS"	/* PASS */
-#define MSG_WALLOPS	"WALLOPS"	/* WALL */
 #define MSG_TIME	"TIME"	/* TIME */
 #define MSG_NAMES	"NAMES"	/* NAME */
 #define MSG_ADMIN	"ADMIN"	/* ADMI */

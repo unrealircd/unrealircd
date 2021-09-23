@@ -35,10 +35,13 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
+long UMODE_WALLOP = 0L;        /* send wallops to them */
+
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_WALLOPS, cmd_wallops, 1, CMD_USER|CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	CommandAdd(modinfo->handle, MSG_WALLOPS, cmd_wallops, 1, CMD_USER|CMD_SERVER);
+	UmodeAdd(modinfo->handle, 'w', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_WALLOP);
 	return MOD_SUCCESS;
 }
 
@@ -50,6 +53,36 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
+}
+
+#define SendWallops(x)          (!IsMe(x) && IsUser(x) && ((x)->umodes & UMODE_WALLOP))
+
+/** Send a message to all wallops, except one.
+ * @param one		Skip sending the message to this client/direction
+ * @param from		The sender (can not be NULL)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ */
+void sendto_wallops(Client *one, Client *from, FORMAT_STRING(const char *pattern), ...)
+{
+	va_list vl;
+	Client *acptr;
+
+	++current_serial;
+	list_for_each_entry(acptr, &client_list, client_node)
+	{
+		if (!SendWallops(acptr))
+			continue;
+		if (acptr->direction->local->serial == current_serial)	/* sent message along it already ? */
+			continue;
+		if (acptr->direction == one)
+			continue;	/* ...was the one I should skip */
+		acptr->direction->local->serial = current_serial;
+
+		va_start(vl, pattern);
+		vsendto_prefix_one(acptr->direction, from, NULL, pattern, vl);
+		va_end(vl);
+	}
 }
 
 /*
@@ -72,6 +105,5 @@ CMD_FUNC(cmd_wallops)
 		return;
 	}
 
-	sendto_ops_butone(client->direction, client, ":%s WALLOPS :%s", client->name, message);
-	// FIXME: move all that code to here and modularize +w
+	sendto_wallops(client->direction, client, ":%s WALLOPS :%s", client->name, message);
 }

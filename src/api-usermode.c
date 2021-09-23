@@ -30,7 +30,6 @@ int Usermode_highest = 0;
 /* client->umodes (32 bits): 26 used, 6 free */
 long UMODE_INVISIBLE = 0L;     /* makes user invisible */
 long UMODE_OPER = 0L;          /* Operator */
-long UMODE_WALLOP = 0L;        /* send wallops to them */
 long UMODE_REGNICK = 0L;       /* Nick set by services as registered */
 long UMODE_SERVNOTICE = 0L;    /* server notices such as kill */
 long UMODE_HIDE = 0L;          /* Hide from Nukes */
@@ -76,7 +75,6 @@ void	umode_init(void)
 	/* Set up modes */
 	UmodeAdd(NULL, 'i', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_INVISIBLE);
 	UmodeAdd(NULL, 'o', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_OPER);
-	UmodeAdd(NULL, 'w', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_WALLOP);
 	UmodeAdd(NULL, 'r', UMODE_GLOBAL, 0, umode_allow_none, &UMODE_REGNICK);
 	UmodeAdd(NULL, 's', UMODE_LOCAL, 0, umode_allow_all, &UMODE_SERVNOTICE);
 	UmodeAdd(NULL, 'x', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_HIDE);
