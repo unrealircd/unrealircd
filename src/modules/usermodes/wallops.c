@@ -28,7 +28,7 @@ CMD_FUNC(cmd_wallops);
 
 ModuleHeader MOD_HEADER
   = {
-	"wallops",
+	"usermodes/wallops",
 	"5.0",
 	"command /wallops", 
 	"UnrealIRCd Team",
