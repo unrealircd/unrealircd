@@ -476,6 +476,19 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		json_object_set_new(user, "reputation", json_integer(GetReputation(client)));
 		json_expand_client_security_groups(user, client);
 	} else
+	if (IsMe(client))
+	{
+		json_t *server = json_object();
+		json_t *features;
+
+		/* client.server */
+		json_object_set_new(child, "server", server);
+
+		if (!BadPtr(client->info))
+			json_object_set_new(server, "info", json_string_unreal(client->info));
+		json_object_set_new(server, "num_users", json_integer(client->server->users));
+		json_object_set_new(server, "boot_time", json_timestamp(client->server->boottime));
+	} else
 	if (IsServer(client) && client->server)
 	{
 		/* client.server */
@@ -488,6 +501,8 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 
 		/* client.server */
 		json_object_set_new(child, "server", server);
+		if (!BadPtr(client->info))
+			json_object_set_new(server, "info", json_string_unreal(client->info));
 		if (client->uplink)
 			json_object_set_new(server, "uplink", json_string_unreal(client->uplink->name));
 		json_object_set_new(server, "num_users", json_integer(client->server->users));
