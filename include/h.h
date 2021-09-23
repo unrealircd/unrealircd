@@ -257,7 +257,7 @@ extern void sendto_match_butone(Client *, Client *, const char *, int, MessageTa
 extern void sendto_all_butone(Client *, Client *, FORMAT_STRING(const char *), ...) __attribute__((format(printf,3,4)));
 extern void sendto_ops(FORMAT_STRING(const char *), ...) __attribute__((format(printf,1,2)));
 extern void sendto_prefix_one(Client *, Client *, MessageTag *, FORMAT_STRING(const char *), ...) __attribute__((format(printf,4,5)));
-extern void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl) __attribute__((format(printf,4,0)));
+extern void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl);
 extern void sendto_opers(FORMAT_STRING(const char *), ...) __attribute__((format(printf,1,2)));
 extern void sendto_umode(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf,2,3)));
 extern void sendto_umode_global(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf,2,3)));
