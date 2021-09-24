@@ -443,7 +443,11 @@ CMD_FUNC(cmd_smod)
 		if ((dmod = find_denymod_byname(name)))
 		{
 			// Send this particular notice to local opers only
-			sendto_umode_global(UMODE_OPER, "Server %s is using module '%s', which is specified in a deny module { } config block (reason: %s)", client->name, name, dmod->reason);
+			unreal_log(ULOG_ERROR, "link", "LINK_DENY_MODULE", client,
+			           "Server $client is using module '$module_name', "
+			           "which is specified in a deny module { } config block (reason: $ban_reason) -- aborting link",
+			           log_data_string("module_name", name),
+			           log_data_string("ban_reason", dmod->reason));
 			abort = 1; // Always SQUIT because it was explicitly denied by admins
 			continue;
 		}
@@ -458,13 +462,21 @@ CMD_FUNC(cmd_smod)
 			if (modflag == 'R')
 			{
 				// We don't need to check the version yet because there's nothing to compare it to, so we'll treat it as if no require module::min-version was specified
-				sendto_umode_global(UMODE_OPER, "Required module wasn't (fully) loaded or is missing entirely: %s", name);
+				unreal_log(ULOG_ERROR, "link", "LINK_MISSING_REQUIRED_MODULE", client,
+				           "Server $me is missing module '$module_name' which "
+				           "is required by server $client. -- aborting link",
+				           log_data_client("me", &me),
+				           log_data_string("module_name", name));
 				abort = 1; // Always SQUIT here too (explicitly required by admins)
 			}
-
 			else if (modflag == 'G')
-				sendto_umode_global(UMODE_OPER, "[WARN] Module marked as global wasn't (fully) loaded or is missing entirely: %s", name);
-
+			{
+				unreal_log(ULOG_WARNING, "link", "LINK_MISSING_GLOBAL_MODULE", client,
+				           "Server $me is missing module '$module_name', which is "
+				           "marked as global at $client",
+				           log_data_client("me", &me),
+				           log_data_string("module_name", name));
+			}
 			continue;
 		}
 
@@ -476,15 +488,21 @@ CMD_FUNC(cmd_smod)
 		// An explicit version was specified in require module { } but our module version is less than that
 		if (*version != '*' && strnatcasecmp(mod->header->version, version) < 0)
 		{
-			sendto_umode_global(UMODE_OPER, "Module version mismatch for required module '%s' (should be equal to or greater than %s but we're running %s)", name, version, mod->header->version);
+			unreal_log(ULOG_ERROR, "link", "LINK_MODULE_OLD_VERSION", client,
+			           "Server $me is using an old version of module '$module_name'. "
+			           "Server $client requires us to have version $minimum_module_version or later (we have $our_module_version). "
+			           "-- aborting link",
+			           log_data_client("me", &me),
+			           log_data_string("module_name", name),
+			           log_data_string("minimum_module_version", version),
+			           log_data_string("our_module_version", mod->header->version));
 			abort = 1;
 		}
 	}
 
 	if (abort)
 	{
-		sendto_umode_global(UMODE_OPER, "ABORTING LINK: %s <=> %s", me.name, client->name);
-		exit_client(client, NULL, "ABORTING LINK");
+		exit_client_fmt(client, NULL, "Link aborted due to missing or banned modules (see previous errors)");
 		return;
 	}
 }

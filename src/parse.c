@@ -659,7 +659,9 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 		/* STARTTLS failed */
 		if (numeric == 691)
 		{
-			sendto_umode(UMODE_OPER, "STARTTLS failed for link %s. Please check the other side of the link.", client->name);
+			unreal_log(ULOG_WARNING, "link", "STARTTLS_FAILED", client,
+			           "Switching from plaintext to TLS via STARTTLS failed for server $client, this is unusual. "
+			           "Please check the other side of the link for errors.");
 			reject_insecure_server(client);
 			return 0;
 		}
@@ -670,7 +672,8 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 			int ret = client_starttls(client);
 			if (ret < 0)
 			{
-				sendto_umode(UMODE_OPER, "STARTTLS handshake failed for link %s. Strange.", client->name);
+				unreal_log(ULOG_WARNING, "link", "STARTTLS_FAILED", client,
+					   "Switching from plaintext to TLS via STARTTLS failed for server $client, this is unusual.");
 				reject_insecure_server(client);
 				return ret;
 			}

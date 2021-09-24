@@ -130,8 +130,10 @@ CMD_FUNC(cmd_squit)
 	 */
 	if (MyConnect(target) && !MyUser(client))
 	{
-		sendto_umode_global(UMODE_OPER, "Received SQUIT %s from %s (%s)",
-		    target->name, get_client_name(client, FALSE), comment);
+		unreal_log(ULOG_INFO, "link", "SQUIT", client,
+		           "SQUIT: Forced server disconnect of $target by $client ($reason)",
+		           log_data_client("target", target),
+		           log_data_string("reason", comment));
 	}
 	else if (MyConnect(target))
 	{
@@ -141,8 +143,10 @@ CMD_FUNC(cmd_squit)
 			           me.name);
 			return;
 		}
-		sendto_umode_global(UMODE_OPER, "Received SQUIT %s from %s (%s)",
-		    target->name, get_client_name(client, FALSE), comment);
+		unreal_log(ULOG_INFO, "link", "SQUIT", client,
+		           "SQUIT: Forced server disconnect of $target by $client ($reason)",
+		           log_data_client("target", target),
+		           log_data_string("reason", comment));
 	}
 
 	exit_client_ex(target, client->direction, recv_mtags, comment);

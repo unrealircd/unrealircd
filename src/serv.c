@@ -1193,12 +1193,12 @@ void lost_server_link(Client *client, const char *tls_error_string)
  */
 void reject_insecure_server(Client *client)
 {
-	sendto_umode(UMODE_OPER, "Could not link with server %s with TLS enabled. "
-	                         "Please check logs on the other side of the link. "
-	                         "If you insist with insecure linking then you can set link::options::outgoing::insecure "
-	                         "(NOT recommended!).",
-	                         client->name);
-	dead_socket(client, "Rejected link without TLS");
+	unreal_log(ULOG_ERROR, "link", "SERVER_STARTTLS_FAILED", client,
+	           "Could not link with server $client with TLS enabled. "
+	           "Please check logs on the other side of the link. "
+	           "If you insist with insecure linking then you can set link::options::outgoing::insecure "
+	           "(NOT recommended!).");
+	dead_socket(client, "Rejected server link without TLS");
 }
 
 /** Start server handshake - called after the outgoing connection has been established.
