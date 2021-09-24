@@ -41,6 +41,7 @@ int dccdeny_configtest_allow_dcc(ConfigFile *cf, ConfigEntry *ce, int type, int 
 int dccdeny_configrun_deny_dcc(ConfigFile *cf, ConfigEntry *ce, int type);
 int dccdeny_configrun_allow_dcc(ConfigFile *cf, ConfigEntry *ce, int type);
 int dccdeny_stats(Client *client, const char *para);
+int dccdeny_dcc_denied(Client *client, const char *target, const char *realfile, const char *displayfile, ConfigItem_deny_dcc *dccdeny);
 CMD_FUNC(cmd_dccdeny);
 CMD_FUNC(cmd_undccdeny);
 CMD_FUNC(cmd_svsfline);
@@ -81,6 +82,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, 0, dccdeny_can_send_to_user);
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, dccdeny_can_send_to_channel);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_SYNC, 0, dccdeny_server_sync);
+	HookAdd(modinfo->handle, HOOKTYPE_DCC_DENIED, 0, dccdeny_dcc_denied);
 	return MOD_SUCCESS;
 }
 
@@ -866,4 +868,14 @@ int dccdeny_stats(Client *client, const char *para)
 			a, filemask);
 	}
 	return 1;
+}
+
+int dccdeny_dcc_denied(Client *client, const char *target, const char *realfile, const char *displayfile, ConfigItem_deny_dcc *dccdeny)
+{
+	unreal_log(ULOG_INFO, "dcc", "DCC_REJECTED", client,
+	           "$client.details tried to send forbidden file $filename ($ban_reason) to $target (is blocked now)",
+	           log_data_string("filename", displayfile),
+	           log_data_string("ban_reason", dccdeny->reason),
+	           log_data_string("target", target));
+	return 0;
 }

@@ -92,7 +92,6 @@ all: build
 build: $(MODULES)
 	cd chanmodes; $(MAKE) all
 	cd usermodes; $(MAKE) all
-	cd snomasks; $(MAKE) all
 	cd extbans; $(MAKE) all
 	cd third; $(MAKE) all
 
@@ -100,7 +99,6 @@ clean:
 	$(RM) -f *.o *.so *~ core
 	cd chanmodes; $(MAKE) clean
 	cd usermodes; $(MAKE) clean
-	cd snomasks; $(MAKE) clean
 	cd extbans; $(MAKE) clean
 	cd third; $(MAKE) clean
 

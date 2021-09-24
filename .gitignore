@@ -9,7 +9,6 @@ extras/c-ares*
 config.status
 extras/ircdcron/ircd.cron
 extras/ircdcron/ircdchk
-src/modules/snomasks/Makefile
 src/modules/chanmodes/Makefile
 src/modules/extbans/Makefile
 src/modules/usermodes/Makefile

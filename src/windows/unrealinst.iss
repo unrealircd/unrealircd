@@ -66,7 +66,6 @@ Source: "extras\tls.cnf"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "src\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion
 Source: "src\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags: ignoreversion
 Source: "src\modules\usermodes\*.dll"; DestDir: "{app}\modules\usermodes"; Flags: ignoreversion
-Source: "src\modules\snomasks\*.dll"; DestDir: "{app}\modules\snomasks"; Flags: ignoreversion
 Source: "src\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ignoreversion
 Source: "src\modules\third\*.dll"; DestDir: "{app}\modules\third"; Flags: ignoreversion skipifsourcedoesntexist
 

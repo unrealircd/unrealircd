@@ -337,7 +337,6 @@ DLL_FILES=\
  src/modules/sinfo.dll \
  src/modules/sjoin.dll \
  src/modules/slog.dll \
- src/modules/snomasks/dccreject.dll \
  src/modules/sqline.dll \
  src/modules/squit.dll \
  src/modules/staff.dll \
@@ -1067,9 +1066,6 @@ src/modules/sjoin.dll: src/modules/sjoin.c $(INCLUDES)
 
 src/modules/slog.dll: src/modules/slog.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/slog.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/slog.pdb $(MODLFLAGS)
-
-src/modules/snomasks/dccreject.dll: src/modules/snomasks/dccreject.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/snomasks/dccreject.c /Fesrc/modules/snomasks/ /Fosrc/modules/snomasks/ /Fdsrc/modules/snomasks/dccreject.pdb $(MODLFLAGS)
 
 src/modules/sqline.dll: src/modules/sqline.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/sqline.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/sqline.pdb $(MODLFLAGS)

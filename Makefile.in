@@ -214,9 +214,6 @@ install: all
 	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/chanmodes
 	@rm -f $(DESTDIR)@MODULESDIR@/chanmodes/*.so 1>/dev/null 2>&1
 	$(INSTALL) -m 0700 src/modules/chanmodes/*.so $(DESTDIR)@MODULESDIR@/chanmodes
-	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/snomasks
-	@rm -f $(DESTDIR)@MODULESDIR@/snomasks/*.so 1>/dev/null 2>&1
-	$(INSTALL) -m 0700 src/modules/snomasks/*.so $(DESTDIR)@MODULESDIR@/snomasks
 	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/extbans
 	@rm -f $(DESTDIR)@MODULESDIR@/extbans/*.so 1>/dev/null 2>&1
 	$(INSTALL) -m 0700 src/modules/extbans/*.so $(DESTDIR)@MODULESDIR@/extbans
