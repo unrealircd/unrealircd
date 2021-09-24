@@ -9,6 +9,7 @@ This is UnrealIRCd 6's latest git, bleeding edge. Do not use on production serve
   * New log { } block format (TODO: auto-convert old style?)
   * JSON logging (optional)
   * Snomasks work different now
+  * Snomasks letters have different meaning now
   * Colored logs, explain where/when used and how to turn off
   * CAP unrealircd.org/json-log
 * Named extbans
