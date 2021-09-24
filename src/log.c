@@ -35,6 +35,7 @@ Log *logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 
 /* Forward declarations */
+int log_sources_match(LogSource *logsource, LogLevel loglevel, const char *subsystem, const char *event_id, int matched_already);
 void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, int expand_msg, const char *msg, va_list vl);
 void log_blocks_switchover(void);
 
@@ -1120,9 +1121,8 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 
 	for (l = logs[LOG_DEST_OTHER]; l; l = l->next)
 	{
-		// FIXME: implement the proper log filters (eg what 'flags' previously was)
-		//if (!(l->flags & flags))
-		//	continue;
+		if (!log_sources_match(l->sources, loglevel, subsystem, event_id, 0))
+			continue;
 
 #ifdef HAVE_SYSLOG
 		if (l->file && !strcasecmp(l->file, "syslog"))
@@ -1264,6 +1264,11 @@ int log_sources_match(LogSource *logsource, LogLevel loglevel, const char *subsy
 		/* First deal with all positive matchers.. */
 		if (ls->negative)
 			continue;
+		if (!strcmp(ls->subsystem, "all"))
+		{
+			retval = 1;
+			break;
+		}
 		if (!strcmp(ls->subsystem, "nomatch") && !matched_already)
 		{
 			/* catch-all */
@@ -1291,8 +1296,8 @@ int log_sources_match(LogSource *logsource, LogLevel loglevel, const char *subsy
 		/* Only deal with negative matches... */
 		if (!ls->negative)
 			continue;
-		if (!strcmp(ls->subsystem, "nomatch"))
-			continue; /* !nomatch makes no sense, so just ignore it */
+		if (!strcmp(ls->subsystem, "nomatch") || !strcmp(ls->subsystem, "all"))
+			continue; /* !nomatch and !all make no sense, so just ignore it */
 		if (*ls->event_id && strcmp(ls->event_id, event_id))
 			continue;
 		if (*ls->subsystem && strcmp(ls->subsystem, subsystem))
