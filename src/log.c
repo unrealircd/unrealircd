@@ -926,6 +926,8 @@ int valid_subsystem(const char *s)
 {
 	if (!*s)
 		return 0;
+	if (log_level_stringtoval(s) != ULOG_INVALID)
+		return 0;
 	for (; *s; s++)
 		if (!validsubsystemcharacter(*s))
 			return 0;
