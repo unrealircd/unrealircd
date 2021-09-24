@@ -1847,6 +1847,8 @@ void postconf_defaults(void)
 				safe_strdup(tk->set_by, conf_me->name ? conf_me->name : "~server~");
 		}
 	}
+
+	postconf_defaults_log_block();
 }
 
 void postconf_fixes(void)

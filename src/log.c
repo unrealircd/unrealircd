@@ -1660,3 +1660,32 @@ void log_blocks_switchover(void)
  * blocks, then we would have opened the file twice.
  * Better to use an extra layer to keep track of files.
  */
+
+void postconf_defaults_log_block(void)
+{
+	Log *l;
+	LogSource *ls;
+
+	/* Is there any log block to disk? Then nothing to do. */
+	if (logs[LOG_DEST_OTHER])
+		return;
+
+	unreal_log(ULOG_WARNING, "log", "NO_DISK_LOG_BLOCK", NULL,
+	           "No log { } block found that logs to disk -- "
+	           "logging everything in text format to 'ircd.log'");
+
+	/* Create a default log block */
+	l = safe_alloc(sizeof(Log));
+	l->logfd = -1;
+	l->type = LOG_TYPE_TEXT; /* text */
+	l->maxsize = 100000000; /* maxsize 100M */
+	safe_strdup(l->file, "ircd.log");
+	convert_to_absolute_path(&l->file, LOGDIR);
+	AddListItem(l, logs[LOG_DEST_OTHER]);
+
+	/* And the source filter */
+	ls = add_log_source("all");
+	AppendListItem(ls, l->sources);
+	ls = add_log_source("!SOMETHING");
+	AppendListItem(ls, l->sources);
+}

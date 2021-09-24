@@ -1126,6 +1126,7 @@ extern LogData *log_data_link_block(ConfigItem_link *link);
 extern LogData *log_data_tkl(const char *key, TKL *tkl);
 extern LogData *log_data_tls_error(void);
 extern void log_blocks_switchover(void);
+extern void postconf_defaults_log_block(void);
 extern LogLevel log_level_stringtoval(const char *str);
 extern const char *log_level_valtostring(LogLevel loglevel);
 extern LogLevel log_level_stringtoval(const char *str);
