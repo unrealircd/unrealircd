@@ -392,7 +392,7 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 							log->type = log_type_stringtoval(cepp->value);
 						}
 					}
-					AddListItem(log, temp_logs[LOG_DEST_OTHER]);
+					AddListItem(log, temp_logs[LOG_DEST_DISK]);
 				}
 			}
 		}
@@ -1121,7 +1121,7 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 	if (loop.config_test)
 		return;
 
-	for (l = logs[LOG_DEST_OTHER]; l; l = l->next)
+	for (l = logs[LOG_DEST_DISK]; l; l = l->next)
 	{
 		if (!log_sources_match(l->sources, loglevel, subsystem, event_id, 0))
 			continue;
@@ -1669,7 +1669,7 @@ void postconf_defaults_log_block(void)
 	LogSource *ls;
 
 	/* Is there any log block to disk? Then nothing to do. */
-	if (logs[LOG_DEST_OTHER])
+	if (logs[LOG_DEST_DISK])
 		return;
 
 	unreal_log(ULOG_WARNING, "log", "NO_DISK_LOG_BLOCK", NULL,
@@ -1683,7 +1683,7 @@ void postconf_defaults_log_block(void)
 	l->maxsize = 100000000; /* maxsize 100M */
 	safe_strdup(l->file, "ircd.log");
 	convert_to_absolute_path(&l->file, LOGDIR);
-	AddListItem(l, logs[LOG_DEST_OTHER]);
+	AddListItem(l, logs[LOG_DEST_DISK]);
 
 	/* And the source filter */
 	ls = add_log_source("all");
