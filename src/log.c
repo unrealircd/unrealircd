@@ -1686,6 +1686,17 @@ void postconf_defaults_log_block(void)
 	/* And the source filter */
 	ls = add_log_source("all");
 	AppendListItem(ls, l->sources);
-	ls = add_log_source("!SOMETHING");
+	ls = add_log_source("!debug");
 	AppendListItem(ls, l->sources);
+	ls = add_log_source("!join.LOCAL_CLIENT_JOIN");
+	AppendListItem(ls, l->sources);
+	ls = add_log_source("!join.REMOTE_CLIENT_JOIN");
+	AppendListItem(ls, l->sources);
+	ls = add_log_source("!part.LOCAL_CLIENT_PART");
+	AppendListItem(ls, l->sources);
+	ls = add_log_source("!part.REMOTE_CLIENT_PART");
+	AppendListItem(ls, l->sources);
+	ls = add_log_source("!kick.LOCAL_CLIENT_KICK");
+	AppendListItem(ls, l->sources);
+	ls = add_log_source("!kick.REMOTE_CLIENT_KICK");
 }
