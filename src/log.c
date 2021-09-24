@@ -1670,7 +1670,7 @@ int log_tests(void)
 	if (snomask_num_destinations <= 1)
 	{
 		unreal_log(ULOG_ERROR, "config", "LOG_SNOMASK_BLOCK_MISSING", NULL,
-		           "Missing log blocks with snomask configuration.\n"
+		           "Missing snomask logging configuration:\n"
 		           "Please add the following line to your unrealircd.conf: "
 		           "include \"snomasks.default.conf\";");
 		return 0;
