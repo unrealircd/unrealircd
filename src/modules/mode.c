@@ -1172,10 +1172,10 @@ CMD_FUNC(_cmd_umode)
 						goto def;
 					}
 				}
-				if (what == MODE_ADD)
+				if ((what == MODE_ADD) && IsOper(client))
 				{
 					if (parc < 4)
-						set_snomask(client, IsOper(client) ? SNO_DEFOPER : SNO_DEFUSER);
+						set_snomask(client, OPER_SNOMASKS);
 					else
 						set_snomask(client, parv[3]);
 					goto def;

@@ -1635,7 +1635,7 @@ void config_setdefaultsettings(Configuration *i)
 {
 	char tmp[512];
 
-	safe_strdup(i->oper_snomask, SNO_DEFOPER);
+	safe_strdup(i->oper_snomask, OPER_SNOMASKS);
 	i->ident_read_timeout = 7;
 	i->ident_connect_timeout = 3;
 	i->ban_version_tkl_time = 86400; /* 1d */

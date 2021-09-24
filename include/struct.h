@@ -395,8 +395,7 @@ typedef enum ClientStatus {
 
 /** @} */
 
-#define SNO_DEFOPER "+kscfvGqobS"
-#define SNO_DEFUSER "+ks"
+#define OPER_SNOMASKS "+bBcdfkqsSoO"
 
 #define SEND_UMODES (SendUmodes)
 #define ALL_UMODES (AllUmodes)
