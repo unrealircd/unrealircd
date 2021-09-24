@@ -1479,6 +1479,16 @@ void do_unreal_log_raw(LogLevel loglevel, const char *subsystem, const char *eve
 	unreal_log_recursion_trap = 0;
 }
 
+void do_unreal_log_norecursioncheck(LogLevel loglevel, const char *subsystem, const char *event_id,
+                                    Client *client, const char *msg, ...)
+{
+	va_list vl;
+
+	va_start(vl, msg);
+	do_unreal_log_internal(loglevel, subsystem, event_id, client, 1, msg, vl);
+	va_end(vl);
+}
+
 void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char *event_id,
                             Client *client, int expand_msg, const char *msg, va_list vl)
 {
@@ -1491,37 +1501,36 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 	char msgbuf[1024];
 	const char *loglevel_string = log_level_valtostring(loglevel);
 	MultiLine *mmsg;
-	static va_list null_va;
 	Client *from_server = NULL;
 
 	if (loglevel_string == NULL)
 	{
-		do_unreal_log_internal(ULOG_ERROR, "log", "BUG_LOG_LOGLEVEL", NULL, 0,
+		do_unreal_log_norecursioncheck(ULOG_ERROR, "log", "BUG_LOG_LOGLEVEL", NULL,
 		                       "[BUG] Next log message had an invalid log level -- corrected to ULOG_ERROR",
-		                       null_va);
+		                       NULL);
 		loglevel = ULOG_ERROR;
 		loglevel_string = log_level_valtostring(loglevel);
 	}
 	if (!valid_subsystem(subsystem))
 	{
-		do_unreal_log_internal(ULOG_ERROR, "log", "BUG_LOG_SUBSYSTEM", NULL, 0,
+		do_unreal_log_norecursioncheck(ULOG_ERROR, "log", "BUG_LOG_SUBSYSTEM", NULL,
 		                       "[BUG] Next log message had an invalid subsystem -- changed to 'unknown'",
-		                       null_va);
+		                       NULL);
 		subsystem = "unknown";
 	}
 	if (!valid_event_id(event_id))
 	{
-		do_unreal_log_internal(ULOG_ERROR, "log", "BUG_LOG_EVENT_ID", NULL, 0,
+		do_unreal_log_norecursioncheck(ULOG_ERROR, "log", "BUG_LOG_EVENT_ID", NULL,
 		                       "[BUG] Next log message had an invalid event id -- changed to 'unknown'",
-		                       null_va);
+		                       NULL);
 		event_id = "unknown";
 	}
 	/* This one is probably temporary since it should not be a real error, actually (but often is) */
 	if (expand_msg && strchr(msg, '%'))
 	{
-		do_unreal_log_internal(ULOG_ERROR, "log", "BUG_LOG_MESSAGE_PERCENT", NULL, 0,
+		do_unreal_log_norecursioncheck(ULOG_ERROR, "log", "BUG_LOG_MESSAGE_PERCENT", NULL,
 		                       "[BUG] Next log message contains a percent sign -- possibly accidental format string!",
-		                       null_va);
+		                       NULL);
 	}
 
 	j = json_object();
