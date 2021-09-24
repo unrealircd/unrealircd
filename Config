@@ -71,6 +71,12 @@ ARG="$ARG--with-scriptdir=$BASEPATH "
 ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
 ARG="$ARG--with-permissions=$DEFPERM "
 ARG="$ARG--enable-dynamic-linking "
+if [ "$GEOIP" = "classic" ]; then
+	ARG="$ARG--enable-geoip-classic "
+fi
+if [ "$GEOIP" = "libmaxminddb" ]; then
+	ARG="$ARG--enable-libmaxminddb "
+fi
 ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
 # remove possibly old instances of curl in ~/unrealircd/lib/
@@ -244,6 +250,7 @@ NOOPEROVERRIDE=""
 OPEROVERRIDEVERIFY=""
 GENCERTIFICATE="1"
 EXTRAPARA=""
+GEOIP="classic"
 if [ "`eval echo -n 'a'`" = "-n a" ] ; then
 	c="\c"
 else
@@ -674,6 +681,41 @@ while [ -z "$TEST" ] ; do
 	esac
 done
 
+TEST=""
+while [ -z "$TEST" ] ; do
+	TEST="$GEOIP"
+	echo ""
+	echo "GeoIP is a feature that allows converting an IP address to a location (country)"
+	echo "You have three options in UnrealIRCd:"
+	echo "     classic: This is the DEFAULT geoip engine that should work on all systems"
+	echo "libmaxminddb: This uses the libmaxminddb library. If you want to use it then"
+	echo "              you need to install the libmaxminddb library on your system first"
+	echo "        none: Don't built with any geoip feature"
+	echo "Choose one of: classic, libmaxminddb, none"
+	echo $n "[$TEST] -> $c"
+	read cc
+	if [ -z "$cc" ] ; then
+		GEOIP=$TEST
+		break
+	fi
+	case "$cc" in
+	classic)
+		GEOIP="$cc"
+		;;
+	libmaxminddb)
+		GEOIP="$cc"
+		;;
+	none)
+		GEOIP="$cc"
+		;;
+	*)
+		echo ""
+		echo "Invalid choice: $cc"
+		TEST=""
+		;;
+	esac
+done
+
 echo ""
 TEST=""
 while [ -z "$TEST" ] ; do
@@ -743,6 +785,7 @@ TMPDIR="$TMPDIR"
 PRIVATELIBDIR="$PRIVATELIBDIR"
 MAXCONNECTIONS_REQUEST="$MAXCONNECTIONS_REQUEST"
 NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"
+GEOIP="$GEOIP"
 DEFPERM="$DEFPERM"
 SSLDIR="$SSLDIR"
 REMOTEINC="$REMOTEINC"
