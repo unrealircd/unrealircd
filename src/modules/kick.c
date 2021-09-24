@@ -133,7 +133,18 @@ void _kick_user(MessageTag *initial_mtags, Channel *channel, Client *client, Cli
 		initial_mtags = NULL;
 	}
 
-	remove_user_from_channel(victim, channel);
+	if (MyUser(victim))
+	{
+		unreal_log(ULOG_INFO, "kick", "LOCAL_CLIENT_KICK", victim,
+		           "User $client kicked from $channel",
+		           log_data_channel("channel", channel));
+	} else {
+		unreal_log(ULOG_INFO, "kick", "REMOTE_CLIENT_KICK", victim,
+		           "User $client kicked from $channel",
+		           log_data_channel("channel", channel));
+	}
+
+	remove_user_from_channel(victim, channel, 1);
 }
 
 /*

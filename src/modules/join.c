@@ -288,8 +288,17 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, con
 		parv[2] = NULL;
 		do_cmd(client, NULL, "NAMES", 2, parv);
 
+		unreal_log(ULOG_INFO, "join", "LOCAL_CLIENT_JOIN", client,
+			   "User $client joined $channel",
+			   log_data_channel("channel", channel),
+			   log_data_string("modes", member_modes));
+
 		RunHook(HOOKTYPE_LOCAL_JOIN, client, channel, mtags);
 	} else {
+		unreal_log(ULOG_INFO, "join", "REMOTE_CLIENT_JOIN", client,
+			   "User $client joined $channel",
+			   log_data_channel("channel", channel),
+			   log_data_string("modes", member_modes));
 		RunHook(HOOKTYPE_REMOTE_JOIN, client, channel, mtags);
 	}
 
@@ -439,7 +448,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 				if (MyConnect(client))
 					RunHook(HOOKTYPE_LOCAL_PART, client, channel, mtags, "Left all channels");
 
-				remove_user_from_channel(client, channel);
+				remove_user_from_channel(client, channel, 0);
 				free_message_tags(mtags);
 			}
 			continue;

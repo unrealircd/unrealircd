@@ -515,12 +515,15 @@ void add_user_to_channel(Channel *channel, Client *client, const char *modes)
 }
 
 /** Remove the user from the channel.
- * This doesn't send any PART etc. It does the free'ing of
- * membership etc. It will also DESTROY the channel if the
- * user was the last user (and the channel is not +P),
- * via sub1_from_channel(), that is.
+ * This frees the memberships, decreases the user counts,
+ * destroys the channel if needed, etc.
+ * This does not send any PART/KICK/..!
+ * @param client	The client that is removed from the channel
+ * @param channel	The channel
+ * @param dont_log	Set to 1 if it should not be logged as a part,
+ *                      for example if you are already logging it as a kick.
  */
-int remove_user_from_channel(Client *client, Channel *channel)
+int remove_user_from_channel(Client *client, Channel *channel, int dont_log)
 {
 	Member **m;
 	Member *m2;
@@ -551,6 +554,20 @@ int remove_user_from_channel(Client *client, Channel *channel)
 
 	/* Update user record to reflect 1 less joined */
 	client->user->joined--;
+
+	if (!dont_log)
+	{
+		if (MyUser(client))
+		{
+			unreal_log(ULOG_INFO, "part", "LOCAL_CLIENT_PART", client,
+				   "User $client left $channel",
+				   log_data_channel("channel", channel));
+		} else {
+			unreal_log(ULOG_INFO, "part", "REMOTE_CLIENT_PART", client,
+				   "User $client left $channel",
+				   log_data_channel("channel", channel));
+		}
+	}
 
 	/* Now sub1_from_channel() will deal with the channel record
 	 * and destroy the channel if needed.

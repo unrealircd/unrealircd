@@ -120,7 +120,7 @@ static int secureonly_kick_insecure_users(Channel *channel)
 
 			free_message_tags(mtags);
 
-			if (remove_user_from_channel(client, channel) == 1)
+			if (remove_user_from_channel(client, channel, 0) == 1)
 				return 1; /* channel was destroyed */
 		}
 	}

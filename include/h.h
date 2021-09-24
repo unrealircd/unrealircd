@@ -156,7 +156,7 @@ extern RealCommand *find_command(const char *cmd, int flags);
 extern RealCommand *find_command_simple(const char *cmd);
 extern Membership *find_membership_link(Membership *lp, Channel *ptr);
 extern Member *find_member_link(Member *, Client *);
-extern int remove_user_from_channel(Client *, Channel *);
+extern int remove_user_from_channel(Client *client, Channel *channel, int dont_log);
 extern void add_server_to_table(Client *);
 extern void remove_server_from_table(Client *);
 extern void iNAH_host(Client *client, const char *host);

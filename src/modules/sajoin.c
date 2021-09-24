@@ -219,7 +219,7 @@ CMD_FUNC(cmd_sajoin)
 					if (MyConnect(target))
 						RunHook(HOOKTYPE_LOCAL_PART, target, channel, mtags, "Left all channels");
 					free_message_tags(mtags);
-					remove_user_from_channel(target, channel);
+					remove_user_from_channel(target, channel, 0);
 				}
 				strlcpy(jbuf, "0", sizeof(jbuf));
 				continue;

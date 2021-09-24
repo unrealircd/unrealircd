@@ -498,7 +498,7 @@ static void exit_one_client(Client *client, MessageTag *mtags_i, const char *com
 		free_message_tags(mtags_o);
 
 		while ((mp = client->user->channel))
-			remove_user_from_channel(client, mp->channel);
+			remove_user_from_channel(client, mp->channel, 1);
 		/* again, this is all that is needed */
 
 		/* Clean up dccallow list and (if needed) notify other clients
