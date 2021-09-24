@@ -100,10 +100,21 @@ LogSource *add_log_source(const char *str)
 	LogLevel loglevel = ULOG_INVALID;
 	char *subsystem = NULL;
 	char *event_id = NULL;
-	strlcpy(buf, str, sizeof(buf));
+	int negative = 0;
+
+	if (*str == '!')
+	{
+		negative = 1;
+		strlcpy(buf, str+1, sizeof(buf));
+	} else
+	{
+		strlcpy(buf, str, sizeof(buf));
+	}
+
 	p = strchr(buf, '.');
 	if (p)
 		*p++ = '\0';
+
 	loglevel = log_level_stringtoval(buf);
 	if (loglevel == ULOG_INVALID)
 	{
@@ -130,6 +141,7 @@ LogSource *add_log_source(const char *str)
 	}
 	ls = safe_alloc(sizeof(LogSource));
 	ls->loglevel = loglevel;
+	ls->negative = negative;
 	if (!BadPtr(subsystem))
 		strlcpy(ls->subsystem, subsystem, sizeof(ls->subsystem));
 	if (!BadPtr(event_id))
@@ -173,13 +185,9 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 						config_error_blank(cep->file->filename, cep->line_number, "set::logging::snomask");
 						errors++;
 					} else
-					if (!strcmp(cep->value, "all"))
-					{
-						/* Fine */
-					} else
 					if ((strlen(cep->value) != 1) || !(islower(cep->value[0]) || isupper(cep->value[0])))
 					{
-						config_error("%s:%d: snomask must be a single letter or 'all'",
+						config_error("%s:%d: snomask must be a single letter",
 							cep->file->filename, cep->line_number);
 						errors++;
 					}
@@ -341,7 +349,7 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 					Log *log = safe_alloc(sizeof(Log));
 					strlcpy(log->destination, cep->value, sizeof(log->destination)); /* destination is the snomask */
 					log->sources = sources;
-					if (!strcmp(cep->value, "all"))
+					if (!strcmp(cep->value, "s"))
 						AddListItem(log, temp_logs[LOG_DEST_OPER]);
 					else
 						AddListItem(log, temp_logs[LOG_DEST_SNOMASK]);
@@ -1243,21 +1251,59 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 	}
 }
 
-int log_sources_match(LogSource *ls, LogLevel loglevel, const char *subsystem, const char *event_id)
+int log_sources_match(LogSource *logsource, LogLevel loglevel, const char *subsystem, const char *event_id, int matched_already)
 {
+	int retval = 0;
+	LogSource *ls;
+
 	// NOTE: This routine works by exclusion, so a bad struct would
 	//       cause everything to match!!
-	for (; ls; ls = ls->next)
+
+	for (ls = logsource; ls; ls = ls->next)
 	{
+		/* First deal with all positive matchers.. */
+		if (ls->negative)
+			continue;
+		if (!strcmp(ls->subsystem, "nomatch") && !matched_already)
+		{
+			/* catch-all */
+			retval = 1;
+			break;
+		}
 		if (*ls->event_id && strcmp(ls->event_id, event_id))
 			continue;
 		if (*ls->subsystem && strcmp(ls->subsystem, subsystem))
 			continue;
 		if ((ls->loglevel != ULOG_INVALID) && (ls->loglevel != loglevel))
 			continue;
-		return 1; /* MATCH */
+		/* MATCH */
+		retval = 1;
+		break;
 	}
-	return 0;
+
+	/* No matches? Then we can stop here */
+	if (retval == 0)
+		return 0;
+
+	/* There was a match, now check for exemptions, eg !operoverride */
+	for (ls = logsource; ls; ls = ls->next)
+	{
+		/* Only deal with negative matches... */
+		if (!ls->negative)
+			continue;
+		if (!strcmp(ls->subsystem, "nomatch"))
+			continue; /* !nomatch makes no sense, so just ignore it */
+		if (*ls->event_id && strcmp(ls->event_id, event_id))
+			continue;
+		if (*ls->subsystem && strcmp(ls->subsystem, subsystem))
+			continue;
+		if ((ls->loglevel != ULOG_INVALID) && (ls->loglevel != loglevel))
+			continue;
+		/* NEGATIVE MATCH */
+		return 0;
+	}
+
+	return 1;
 }
 
 /** Convert loglevel/subsystem/event_id to a snomask.
@@ -1268,17 +1314,20 @@ const char *log_to_snomask(LogLevel loglevel, const char *subsystem, const char 
 {
 	Log *ld;
 	static char snomasks[64];
-
-	/* At the top right now. TODO: "nomatch" support */
-	if (logs[LOG_DEST_OPER] && log_sources_match(logs[LOG_DEST_OPER]->sources, loglevel, subsystem, event_id))
-		return "*";
+	int matched = 0;
 
 	*snomasks = '\0';
 	for (ld = logs[LOG_DEST_SNOMASK]; ld; ld = ld->next)
 	{
-		if (log_sources_match(ld->sources, loglevel, subsystem, event_id))
+		if (log_sources_match(ld->sources, loglevel, subsystem, event_id, 0))
+		{
 			strlcat(snomasks, ld->destination, sizeof(snomasks));
+			matched = 1;
+		}
 	}
+
+	if (logs[LOG_DEST_OPER] && log_sources_match(logs[LOG_DEST_OPER]->sources, loglevel, subsystem, event_id, matched))
+		strlcat(snomasks, "s", sizeof(snomasks));
 
 	return *snomasks ? snomasks : NULL;
 }
@@ -1302,14 +1351,8 @@ void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *e
 		return;
 
 	snomask_destinations = log_to_snomask(loglevel, subsystem, event_id);
-
-	/* Zero destinations? Then return.
-	 * XXX temporarily log to all ircops until we ship with default conf ;)
-	 */
-
-	/* All ircops? Then we set snomask_destinations to NULL */
-	if (snomask_destinations && !strcmp(snomask_destinations, "*"))
-		snomask_destinations = NULL;
+	if (!snomask_destinations)
+		return;
 
 	/* Prepare message tag for those who have CAP unrealircd.org/json-log */
 	if (json_serialized)
@@ -1363,7 +1406,7 @@ void do_unreal_log_remote(LogLevel loglevel, const char *subsystem, const char *
 
 	for (l = logs[LOG_DEST_REMOTE]; l; l = l->next)
 	{
-		if (log_sources_match(l->sources, loglevel, subsystem, event_id))
+		if (log_sources_match(l->sources, loglevel, subsystem, event_id, 0))
 		{
 			found = 1;
 			break;

@@ -254,6 +254,7 @@ typedef struct LogSource LogSource;
 struct LogSource {
 	LogSource *prev, *next;
 	LogLevel loglevel;
+	char negative; /**< 1 if negative match (eg !operoverride), 0 if normal */
 	char subsystem[LOG_CATEGORY_LEN+1];
 	char event_id[LOG_EVENT_ID_LEN+1];
 };
