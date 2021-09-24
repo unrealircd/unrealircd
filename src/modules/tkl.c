@@ -438,11 +438,6 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		errors++;
 	}
 
-	if (!has_match_type && !has_match && has_action && has_target)
-	{
-		need_34_upgrade = 1;
-	}
-
 	if (match && !strcmp(match, "^LOL! //echo -a \\$\\(\\$decode\\(.+,m\\),[0-9]\\)$"))
 	{
 		config_warn("*** IMPORTANT ***");

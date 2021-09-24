@@ -1048,26 +1048,6 @@ void win_error()
 {
 	if (errors && !IsService)
 		DialogBox(hInst, "ConfigError", hwIRCDWnd, (DLGPROC)ConfigErrorDLG);
-	if (need_34_upgrade)
-	{
-		need_34_upgrade = 0; /* anti-recursion. yes, is needed. */
-		if (MessageBox(NULL, 
-		               "Shall I try to upgrade your configuration files to UnrealIRCd 4 format?",
-		               "3.2.x configuration detected",
-		               MB_YESNO|MB_ICONQUESTION) == IDNO)
-		{
-			 return;
-		}
-		else 
-		{
-			MessageBox(NULL,
-			           "Configuration file(s) upgraded! In next screen you can see what I did (just for reference). "
-			           "After that, simply try to start UnrealIRCd again and see if it loads.",
-			           "Configuration upgrade",
-			           MB_OK);
-			DialogBox(hInst, "ConfigError", hwIRCDWnd, (DLGPROC)ConfigErrorDLG);
-		}
-	}
 }
 
 LRESULT CALLBACK ConfigErrorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 

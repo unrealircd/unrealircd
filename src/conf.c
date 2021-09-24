@@ -245,7 +245,6 @@ MODVAR Client *remote_rehash_client = NULL;
 MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
 
-MODVAR int need_34_upgrade = 0;
 int need_operclass_permissions_upgrade = 0;
 int have_tls_listeners = 0;
 char *port_6667_ip = NULL;
@@ -1928,31 +1927,6 @@ void applymeblock(void)
 		strlcpy(me.id, conf_me->sid, sizeof(me.id));
 }
 
-void upgrade_conf_to_34(void)
-{
-	config_error("******************************************************************");
-	config_error("This *seems* an UnrealIRCd 3.2.x configuration file.");
-
-#ifdef _WIN32
-	if (!IsService)
-		config_error("In next screen you will be prompted to automatically upgrade the configuration file(s).");
-	else
-	{
-		config_error("We offer a configuration file converter to convert 3.2.x conf's to 4.x, however this "
-		             "is not available when running as a service. If you want to use it, make UnrealIRCd "
-		             "run in GUI mode by running 'unreal uninstall'. Then start UnrealIRCd.exe and when "
-		             "it prompts you to convert the configuration click 'Yes'. Check if UnrealIRCd boots properly. "
-		             "Once everything is looking good you can run 'unreal install' to make UnrealIRCd run "
-		             "as a service again."); /* TODO: make this unnecessary :D */
-	}
-#else
-	config_error("To upgrade it to the new 4.x format, run: ./unrealircd upgrade-conf");
-#endif
-
-	config_error("******************************************************************");
-	/* TODO: win32 may require a different error */
-}
-
 /** Reset config tests (before running the config test) */
 void config_test_reset(void)
 {
@@ -2220,7 +2194,6 @@ int config_read_file(const char *filename, const char *display_name)
 	if (config_verbose > 0)
 		config_status("Loading config file %s ..", filename);
 
-	need_34_upgrade = 0;
 	need_operclass_permissions_upgrade = 0;
 
 	/* Check if we're accidentally including a file a second
@@ -2813,8 +2786,6 @@ int	config_test_blocks()
 	int		errors = 0;
 	Hook *h;
 
-	need_34_upgrade = 0;
-
 	for (cfptr = conf; cfptr; cfptr = cfptr->next)
 	{
 		if (config_verbose > 1)
@@ -2904,10 +2875,6 @@ int	config_test_blocks()
 		config_error("%i errors encountered", errors);
 	}
 
-	if (need_34_upgrade)
-	{
-		upgrade_conf_to_34();
-	}
 	return (errors > 0 ? -1 : 1);
 }
 
@@ -3255,9 +3222,6 @@ int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 			ce->line_number);
 		return -1;
 	}
-
-	if (!strcmp(ce->value, "help.conf"))
-		need_34_upgrade = 1;
 
 	convert_to_absolute_path(&ce->value, CONFDIR);
 
@@ -4160,14 +4124,6 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 			}
-			/* oper::flags */
-			else if (!strcmp(cep->name, "flags"))
-			{
-				config_error("%s:%i: oper::flags no longer exists. UnrealIRCd 4 uses a new style oper block.",
-					cep->file->filename, cep->line_number);
-				errors++;
-				need_34_upgrade = 1;
-			}
 			else if (!strcmp(cep->name, "mask"))
 			{
 				if (cep->value || cep->items)
@@ -4184,25 +4140,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 		/* Sections */
 		else
 		{
-			/* oper::flags {} */
-			if (!strcmp(cep->name, "flags"))
-			{
-				config_error("%s:%i: oper::flags no longer exists. UnrealIRCd 4 uses a new style oper block.",
-					cep->file->filename, cep->line_number);
-				errors++;
-				need_34_upgrade = 1;
-				continue;
-			}
-			/* oper::from {} */
-			else if (!strcmp(cep->name, "from"))
-			{
-				config_error("%s:%i: oper::from::userhost is now called oper::mask",
-				             cep->file->filename, cep->line_number);
-				errors++;
-				need_34_upgrade = 1;
-				continue;
-			}
-			else if (!strcmp(cep->name, "swhois"))
+			if (!strcmp(cep->name, "swhois"))
 			{
 				/* ok */
 			}
@@ -4254,7 +4192,6 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
 			"oper::operclass");
-		need_34_upgrade = 1;
 		errors++;
 	}
 
@@ -5069,8 +5006,6 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error("%s:%i: listen block has a new syntax, see https://www.unrealircd.org/docs/Listen_block",
 			ce->file->filename, ce->line_number);
-
-		need_34_upgrade = 1;
 		return 1;
 	}
 
@@ -5624,7 +5559,6 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		config_error("%s:%d: allow block has both allow::ip and allow::hostname, this is no longer permitted.",
 		             ce->file->filename, ce->line_number);
 		config_error("Please integrate your allow::ip and allow::hostname items into a single allow::mask block");
-		need_34_upgrade = 1;
 		errors++;
 	} else
 	if (hostname_possible_silliness)
@@ -5957,14 +5891,6 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 			}
 			if (Auth_CheckError(cep) < 0)
 				errors++;
-		}
-		else if (!strcmp(cep->name, "from"))
-		{
-			config_error("%s:%i: vhost::from::userhost is now called oper::mask",
-						 cep->file->filename, cep->line_number);
-			errors++;
-			need_34_upgrade = 1;
-			continue;
 		}
 		else if (!strcmp(cep->name, "mask"))
 		{
@@ -6453,7 +6379,6 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 		config_error("%s:%d: link block needs at least an incoming or outgoing section.",
 			ce->file->filename, ce->line_number);
 		errors++;
-		need_34_upgrade = 1;
 	}
 
 	if (has_incoming)
@@ -7943,7 +7868,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "pingpong-warning")) {
 			config_error("%s:%i: set::pingpong-warning no longer exists (the warning is always off)",
 			             cep->file->filename, cep->line_number);
-			need_34_upgrade = 1;
 			errors++;
 		}
 		else if (!strcmp(cep->name, "ping-cookie")) {
@@ -8206,7 +8130,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			             "of 3 per 60 seconds.",
 			             cep->file->filename, cep->line_number);
 			errors++;
-			need_34_upgrade = 1;
 			continue;
 		}
 		else if (!strcmp(cep->name, "anti-flood"))
@@ -8593,10 +8516,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->name, "hosts")) {
-			config_error("%s:%i: set::hosts has been removed in UnrealIRCd 4. You can use oper::vhost now.",
+			config_error("%s:%i: set::hosts has been removed. You can use oper::vhost now.",
 				cep->file->filename, cep->line_number);
 			errors++;
-			need_34_upgrade = 1;
 		}
 		else if (!strcmp(cep->name, "cloak-keys"))
 		{
@@ -9148,25 +9070,6 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		config_status("%s:%i: loadmodule without filename",
 			ce->file->filename, ce->line_number);
 		return -1;
-	}
-	if (strstr(ce->value, "commands.so") || strstr(ce->value, "commands.dll"))
-	{
-		config_error("%s:%i: You are trying to load the 'commands' module, this is no longer supported. "
-		             "Fix this by editing your configuration file: remove the loadmodule line for commands and add the following line instead: "
-		             "include \"modules.default.conf\";",
-		             ce->file->filename, ce->line_number);
-		need_34_upgrade = 1;
-		return -1;
-	}
-	if (strstr(ce->value, "modules/cloak") && !strcmp(conf->filename, "modules.conf"))
-	{
-		config_error("You seem to have an include for 'modules.conf'.");
-		config_error("If you have this because you are upgrading from 3.4-alpha3 to");
-		config_error("UnrealIRCd 4 then please change the include \"modules.conf\";");
-		config_error("into an include \"modules.default.conf\"; (probably in your");
-		config_error("conf/unrealircd.conf). Yeah, we changed the file name.");
-		// TODO ^: silly win32 wrapping prevents this from being displayed otherwise. PLZ FIX! !
-		/* let it continue to load anyway? */
 	}
 
 	if (is_blacklisted_module(ce->value))

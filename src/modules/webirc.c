@@ -157,7 +157,6 @@ int webirc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		config_error("%s:%i: the cgiirc block has been renamed to webirc and "
 		             "the syntax has changed in UnrealIRCd 4",
 		             ce->file->filename, ce->line_number);
-		need_34_upgrade = 1;
 		*errs = 1;
 		return -1;
 	}
