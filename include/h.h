@@ -1123,6 +1123,7 @@ extern LogData *log_data_socket_error(int fd);
 extern LogData *log_data_link_block(ConfigItem_link *link);
 extern LogData *log_data_tkl(const char *key, TKL *tkl);
 extern LogData *log_data_tls_error(void);
+extern int log_tests(void);
 extern void log_blocks_switchover(void);
 extern void postconf_defaults_log_block(void);
 extern LogLevel log_level_stringtoval(const char *str);

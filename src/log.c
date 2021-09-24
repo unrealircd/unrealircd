@@ -33,6 +33,7 @@
 /* Variables */
 Log *logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
+static int snomask_num_destinations = 0;
 
 /* Forward declarations */
 int log_sources_match(LogSource *logsource, LogLevel loglevel, const char *subsystem, const char *event_id, int matched_already);
@@ -180,6 +181,7 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 				if (!strcmp(cep->name, "snomask"))
 				{
 					destinations++;
+					snomask_num_destinations++;
 					/* We need to validate the parameter here as well */
 					if (!cep->value)
 					{
@@ -1658,19 +1660,24 @@ void free_log_block(Log *l)
 	}
 }
 
-void log_blocks_switchover(void)
-{
-	int i;
-	for (i=0; i < NUM_LOG_DESTINATIONS; i++)
-		free_log_block(logs[i]);
-	memcpy(logs, temp_logs, sizeof(logs));
-	memset(temp_logs, 0, sizeof(temp_logs));
-}
-
 /* TODO: if logging to the same file from multiple log { }
  * blocks, then we would have opened the file twice.
  * Better to use an extra layer to keep track of files.
  */
+
+int log_tests(void)
+{
+	if (snomask_num_destinations <= 1)
+	{
+		unreal_log(ULOG_ERROR, "config", "LOG_SNOMASK_BLOCK_MISSING", NULL,
+		           "Missing log blocks with snomask configuration.\n"
+		           "Please add the following line to your unrealircd.conf: "
+		           "include \"snomasks.default.conf\";");
+		return 0;
+	}
+	snomask_num_destinations = 0;
+	return 1;
+}
 
 void postconf_defaults_log_block(void)
 {
@@ -1710,4 +1717,13 @@ void postconf_defaults_log_block(void)
 	ls = add_log_source("!kick.LOCAL_CLIENT_KICK");
 	AppendListItem(ls, l->sources);
 	ls = add_log_source("!kick.REMOTE_CLIENT_KICK");
+}
+
+void log_blocks_switchover(void)
+{
+	int i;
+	for (i=0; i < NUM_LOG_DESTINATIONS; i++)
+		free_log_block(logs[i]);
+	memcpy(logs, temp_logs, sizeof(logs));
+	memset(temp_logs, 0, sizeof(temp_logs));
 }
