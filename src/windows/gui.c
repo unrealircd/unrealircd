@@ -1060,7 +1060,6 @@ void win_error()
 		}
 		else 
 		{
-			update_conf();
 			MessageBox(NULL,
 			           "Configuration file(s) upgraded! In next screen you can see what I did (just for reference). "
 			           "After that, simply try to start UnrealIRCd again and see if it loads.",

@@ -879,7 +879,6 @@ extern void unreal_delete_masks(ConfigItem_mask *m);
 extern void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce);
 extern int unreal_mask_match(Client *acptr, ConfigItem_mask *m);
 extern int unreal_mask_match_string(const char *name, ConfigItem_mask *m);
-extern void update_conf(void);
 extern MODVAR int need_34_upgrade;
 #ifdef _WIN32
 extern MODVAR BOOL IsService;

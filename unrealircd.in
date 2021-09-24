@@ -133,8 +133,6 @@ elif [ "$1" = "version" ] ; then
 	@BINDIR@/unrealircd -v
 elif [ "$1" = "gencloak" ] ; then
 	@BINDIR@/unrealircd -k
-elif [ "$1" = "upgrade-conf" ] ; then
-	@BINDIR@/unrealircd -U
 elif [ "$1" = "backtrace" ] ; then
 	cd @TMPDIR@
 

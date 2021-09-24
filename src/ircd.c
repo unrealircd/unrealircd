@@ -941,14 +941,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 			  	fprintf(stderr, "It is impossible to get here\n");
 			  	exit(0);
 			  }
-		  case 'U':
-		      if (chdir(CONFDIR) < 0)
-	{
-		      	fprintf(stderr, "Unable to change to '%s' directory\n", CONFDIR);
-		      	exit(1);
-		      }
-		      update_conf();
-		      exit(0);
 		  case 'R':
 		      report_crash();
 		      exit(0);

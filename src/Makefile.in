@@ -31,7 +31,7 @@ OBJS=dns.o auth.o channel.o crule.o dbuf.o \
 	api-moddata.o api-extban.o api-isupport.o api-command.o \
 	api-clicap.o api-messagetag.o api-history-backend.o api-efunctions.o \
 	api-event.o \
-	crypt_blowfish.o unrealdb.o updconf.o crashreport.o modulemanager.o \
+	crypt_blowfish.o unrealdb.o crashreport.o modulemanager.o \
 	utf8.o log.o \
 	openssl_hostname_validation.o $(URL)
 

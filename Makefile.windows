@@ -184,7 +184,7 @@ EXP_OBJ_FILES=src/channel.obj src/send.obj src/socket.obj \
  src/dispatch.obj src/api-isupport.obj src/api-command.obj \
  src/api-clicap.obj src/api-messagetag.obj src/api-history-backend.obj \
  src/api-extban.obj src/api-efunctions.obj src/crypt_blowfish.obj \
- src/operclass.obj src/updconf.obj src/crashreport.obj src/unrealdb.obj \
+ src/operclass.obj src/crashreport.obj src/unrealdb.obj \
  src/openssl_hostname_validation.obj \
  src/utf8.obj src/log.obj $(CURLOBJ)
 
@@ -586,9 +586,6 @@ src/crypt_blowfish.obj: src/crypt_blowfish.c $(INCLUDES)
 
 src/operclass.obj: src/operclass.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/operclass.c
-
-src/updconf.obj: src/updconf.c $(INCLUDES) ./include/dbuf.h
-        $(CC) $(CFLAGS) src/updconf.c
 
 src/crashreport.obj: src/crashreport.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/crashreport.c
