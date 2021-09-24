@@ -50,7 +50,7 @@ const char *my_itoa(int i)
  * @section Ex1 Example
  * @code
  * for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
- *      unreal_log(ULOG_INFO, "test", "TEST", "Got: %s", name);
+ *      unreal_log(ULOG_INFO, "test", "TEST", "Got: $name", log_data_string(name));
  * @endcode
  */
 char *strtoken(char **save, char *str, char *fs)
