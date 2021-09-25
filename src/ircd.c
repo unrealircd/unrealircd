@@ -558,30 +558,28 @@ void fix_timers(void)
 
 
 #ifndef _WIN32
+/* Generate 3 cloak keys and print to console */
 static void generate_cloakkeys()
 {
-	/* Generate 3 cloak keys */
-#define GENERATE_CLOAKKEY_MINLEN 50
-#define GENERATE_CLOAKKEY_MAXLEN 60 /* Length of cloak keys to generate. */
-	char keyBuf[GENERATE_CLOAKKEY_MAXLEN + 1];
+	#define GENERATE_CLOAKKEY_LEN 80 /* Length of cloak keys to generate. */
+	char keyBuf[GENERATE_CLOAKKEY_LEN + 1];
 	int keyNum;
-	int keyLen;
 	int charIndex;
 
 	short has_upper;
 	short has_lower;
 	short has_num;
 
-	fprintf(stderr, "Here are 3 random cloak keys:\n");
+	fprintf(stderr, "Here are 3 random cloak keys that you can copy-paste to your configuration file:\n\n");
 
+	fprintf(stderr, "set {\n\tcloak-keys {\n");
 	for (keyNum = 0; keyNum < 3; ++keyNum)
 	{
 		has_upper = 0;
 		has_lower = 0;
 		has_num = 0;
 
-		keyLen = (getrandom8() % (GENERATE_CLOAKKEY_MAXLEN - GENERATE_CLOAKKEY_MINLEN + 1)) + GENERATE_CLOAKKEY_MINLEN;
-		for (charIndex = 0; charIndex < keyLen; ++charIndex)
+		for (charIndex = 0; charIndex < sizeof(keyBuf)-1; ++charIndex)
 		{
 			switch (getrandom8() % 3)
 			{
@@ -599,14 +597,15 @@ static void generate_cloakkeys()
 					break;
 			}
 		}
-		keyBuf[keyLen] = '\0';
+		keyBuf[sizeof(keyBuf)-1] = '\0';
 
 		if (has_upper && has_lower && has_num)
-			(void)fprintf(stderr, "%s\n", keyBuf);
+			fprintf(stderr, "\t\t\"%s\";\n", keyBuf);
 		else
 			/* Try again. For this reason, keyNum must be signed. */
 			keyNum--;
 	}
+	fprintf(stderr, "\t}\n}\n\n");
 }
 #endif
 
