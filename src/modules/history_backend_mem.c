@@ -323,7 +323,7 @@ int hbm_config_posttest(int *errs)
 	} else
 	if (!test.db_secret && test.persist)
 	{
-		config_error("set::history::channel::db-secret needs to be set."); // TODO: REFER TO FAQ OR OTHER ENTRY!!!!
+		config_error("set::history::channel::db-secret needs to be set.");
 		errors++;
 	} else
 	if (test.db_secret && test.persist)
@@ -1107,8 +1107,6 @@ static int hbm_read_masterdb(void)
 		{
 			/* Database does not exist. Could be first boot */
 			config_warn("[history] No database present at '%s', will start a new one", test.masterdb);
-			// TODO: maybe check for condition where 'master.db' does not exist but
-			// there are other .db files.
 			if (!hbm_write_masterdb())
 				return 0; /* fatal error */
 			return 1;

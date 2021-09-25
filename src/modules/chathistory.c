@@ -30,7 +30,6 @@ CMD_FUNC(cmd_chathistory);
 /* Global variables */
 long CAP_CHATHISTORY = 0L;
 
-/* TODO: consider moving to config file */
 #define CHATHISTORY_LIMIT 50
 
 MOD_INIT()

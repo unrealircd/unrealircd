@@ -277,7 +277,6 @@ const char *extban_link_conv_param(BanContext *b, Extban *extban)
 	if (BadPtr(newmask))
 		return NULL;
 
-	//snprintf(retbuf, sizeof(retbuf), "~f:%s:%s", chan, newmask); // wait.. isn't this double??? FIXME/TODO/VERIFY
 	snprintf(retbuf, sizeof(retbuf), "%s:%s", chan, newmask);
 	return retbuf;
 }

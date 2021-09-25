@@ -559,8 +559,6 @@ void set_socket_buffers(int fd, int rcvbuf, int sndbuf)
 	setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (void *)&opt, sizeof(opt));
 }
 
-// TODO: the unreal_log() for socket errors do not expand client in regular msgs. should we?
-
 /** Set the appropriate socket options */
 void set_sock_opts(int fd, Client *client, int ipv6)
 {

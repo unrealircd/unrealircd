@@ -103,8 +103,7 @@ CMD_FUNC(cmd_oper)
 
 	if (IsOper(client))
 	{
-		sendnumeric(client, RPL_YOUREOPER);
-		// TODO: de-confuse this ? ;)
+		sendnotice(client, "You are already an IRC Operator. If you want to re-oper then de-oper first via /MODE yournick -o");
 		return;
 	}
 

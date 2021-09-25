@@ -333,8 +333,9 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 	LogSource *sources = NULL;
 	int type;
 
-	// TODO: we may allow multiple destination entries later, then we need to 'clone' sources
-	//       or work with reference counts.
+	/* If we later allow multiple destination entries later,
+	 * then we need to 'clone' sources or work with reference counts.
+	 */
 
 	/* First, gather the source... */
 	for (ce = block->items; ce; ce = ce->next)
@@ -435,8 +436,6 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 
 
 /***** RUNTIME *****/
-
-// TODO: validate that all 'key' values are lowercase+underscore+digits in all functions below.
 
 void json_expand_client_security_groups(json_t *parent, Client *client)
 {

@@ -1125,7 +1125,7 @@ CommandOverride *CommandOverrideAdd(Module *module, const char *name, int priori
 	}
 	ovr = safe_alloc(sizeof(CommandOverride));
 	ovr->func = function;
-	ovr->owner = module; /* TODO: module objects */
+	ovr->owner = module;
 	ovr->priority = priority;
 	if (module)
 	{
@@ -1268,7 +1268,7 @@ int i;
 		{
 			config_error("ERROR: Multiple callbacks loaded for type %d. "
 			             "Make sure you only load 1 module of 1 type (eg: only 1 cloaking module)",
-			             i); /* TODO: make more clear? */
+			             i);
 			return -1;
 		}
 	}

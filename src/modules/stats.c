@@ -425,7 +425,6 @@ int stats_links(Client *client, const char *para)
 		else if (link_p->leaf)
 			sendnumericfmt(client, RPL_STATSLLINE, "L %s * %s %d",
 				link_p->leaf, link_p->servername, link_p->leaf_depth);
-		// TODO: send incoming allow list? (for opers only)
 	}
 #ifdef DEBUGMODE
 	list_for_each_entry(acptr, &client_list, client_node)

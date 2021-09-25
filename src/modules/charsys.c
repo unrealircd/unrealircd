@@ -84,7 +84,6 @@ struct LangList
 
 /* MUST be alphabetized (first column) */
 static LangList langlist[] = {
-/*	{ "arabic",       "ara", LANGAV_ASCII|LANGAV_ISO8859_6 }, -- TODO: check if this has issues first! */
 	{ "arabic-utf8", "ara-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_ARABIC_UTF8 },
 	{ "belarussian-utf8", "blr-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_CYRILLIC_UTF8 },
 	{ "belarussian-w1251", "blr", LANGAV_ASCII|LANGAV_W1251 },
@@ -886,13 +885,6 @@ void charsys_add_language(char *name)
 		charsys_addmultibyterange(0xc3, 0xc3, 0xba, 0xba);
 		charsys_addmultibyterange(0xc3, 0xc3, 0xbd, 0xbe);
 	}
-/*	if (latin1 || !strcmp(name, "arabic")) -- Since when is arabic considered latin(1)??? oh man...
-	{
-		char bytes[] = { 0xa0, 0xa4, 0xac, 0xad, 0xbb, 0xbf, 0x00 };
-		charsys_addallowed(bytes);
-		charsys_addallowed_range(0xc1, 0xda);
-		charsys_addallowed_range(0xe0, 0xf2);
-	} */
 
 	/* [LATIN2] and rest of [LATIN-UTF8] */
 	/* actually hungarian is a special case, include it in both w1250 and latin2 ;p */

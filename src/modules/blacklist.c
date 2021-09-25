@@ -457,7 +457,7 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	d = safe_alloc(sizeof(Blacklist));
 	safe_strdup(d->name, ce->value);
-	/* set some defaults. TODO: use set::blacklist or something ? */
+	/* set some defaults */
 	d->action = BAN_ACT_KILL;
 	safe_strdup(d->reason, "Your IP is on a DNS Blacklist");
 	d->ban_time = 3600;

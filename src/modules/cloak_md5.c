@@ -152,7 +152,6 @@ int cloak_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		keycnt++;
-		/* TODO: check randomness */
 		if (check_badrandomness(cep->name))
 		{
 			config_error("%s:%i: set::cloak-keys: (key %d) Keys should be mixed a-zA-Z0-9, "

@@ -1847,11 +1847,6 @@ void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 
 	if (!connect_server_helper(aconf, client))
 	{
-		/* TODO:
-		 * For /connect's issued by remote opers we used to also
-		 * send the error message to them, this was removed during
-		 * the U6 recode but would still be nice to have.
-		 */
 		fd_close(client->local->fd);
 		--OpenFiles;
 		client->local->fd = -2;

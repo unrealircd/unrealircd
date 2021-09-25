@@ -481,9 +481,6 @@ void https_connect_send_header(Download *handle)
 	handle->connected = 1;
 	snprintf(hostandport, sizeof(hostandport), "%s:%d", handle->hostname, handle->port);
 
-	// TODO: remove debug shit
-	unreal_log(ULOG_DEBUG, "url", "URL_CONNECTED", NULL, "Connected!!!");
-
 	/* Prepare the header */
 	snprintf(buf, sizeof(buf), "GET %s HTTP/1.1\r\n"
 	                    "User-Agent: UnrealIRCd %s\r\n"
