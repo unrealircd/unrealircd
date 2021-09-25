@@ -609,34 +609,29 @@ Cmode_t get_extmode_bitbychar(char m)
  * @param hide_local_modes	If set to 1 then we will hide local channel modes like Z and d
  *				(eg: if you intend to send the buffer to a remote server)
  */
-/* TODO: this function has many security issues and needs an audit, maybe even a recode */
 void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel, int hide_local_modes)
 {
 	int ismember = 0;
 	Cmode *cm;
 
-	if (!(mbuf_size && pbuf_size)) return;
+	if (!mbuf_size || !pbuf_size)
+		return;
 
 	if (!client || IsMember(client, channel) || IsServer(client) || IsMe(client) || IsULine(client))
 		ismember = 1;
 
 	*pbuf = '\0';
-
-	*mbuf++ = '+';
-	mbuf_size--;
+	strlcpy(mbuf, "+", mbuf_size);
 
 	/* Paramless first */
 	for (cm=channelmodes; cm; cm = cm->next)
 	{
-		if (!mbuf_size)
-			break;
 		if (cm->letter &&
 		    !cm->paracount &&
 		    !(hide_local_modes && cm->local) &&
 		    (channel->mode.mode & cm->mode))
 		{
-			*mbuf++ = cm->letter;
-			mbuf_size--;
+			strlcat_letter(mbuf, cm->letter, mbuf_size);
 		}
 	}
 
@@ -648,15 +643,14 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 		    (channel->mode.mode & cm->mode))
 		{
 			char flag = cm->letter;
-			if (mbuf_size) {
-				*mbuf++ = flag;
-				mbuf_size--;
-			}
+
+			if (mbuf_size)
+				strlcat_letter(mbuf, flag, mbuf_size);
+
 			if (ismember)
 			{
-				ircsnprintf(pbuf, pbuf_size, "%s ", cm_getparameter(channel, flag));
-				pbuf_size-=strlen(pbuf);
-				pbuf+=strlen(pbuf);
+				strlcat(pbuf, cm_getparameter(channel, flag), pbuf_size);
+				strlcat(pbuf, " ", pbuf_size);
 			}
 		}
 	}
@@ -664,10 +658,6 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 	/* Remove the trailing space from the parameters -- codemastr */
 	if (*pbuf)
 		pbuf[strlen(pbuf)-1]='\0';
-
-	if (!mbuf_size)
-		mbuf--;
-	*mbuf++ = '\0';
 }
 
 /** Make a pretty mask from the input string - only used by SILENCE
