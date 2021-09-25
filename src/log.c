@@ -157,6 +157,16 @@ void free_log_source(LogSource *l)
 	safe_free(l);
 }
 
+void free_log_sources(LogSource *l)
+{
+	LogSource *l_next;
+	for (; l; l = l_next)
+	{
+		l_next = l->next;
+		free_log_source(l);
+	}
+}
+
 int config_test_log(ConfigFile *conf, ConfigEntry *block)
 {
 	int errors = 0;
@@ -286,7 +296,7 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 							errors++;
 						}
 					}
-				} else // TODO: re-add syslog support too
+				} else
 				{
 					config_error_unknownopt(cep->file->filename, cep->line_number, "log::destination", cep->name);
 					errors++;
@@ -373,7 +383,25 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 				} else
 				if (!strcmp(cep->name, "file") || !strcmp(cep->name, "syslog"))
 				{
-					Log *log = safe_alloc(sizeof(Log));
+					Log *log;
+					/* First check if already exists... yeah this is a bit late
+					 * and ideally would have been done in config_test but...
+					 * that would have been lots of work for a (hopefully) rare case.
+					 */
+					for (log = temp_logs[LOG_DEST_DISK]; log; log = log->next)
+					{
+						if ((log->file && !strcmp(log->file, cep->value)) ||
+						    (log->filefmt && !strcmp(log->filefmt, cep->value)))
+						{
+							config_warn("%s:%d: Ignoring duplicate log block for file '%s'. "
+							            "You cannot have multiple log blocks logging to the same file.",
+							            cep->file->filename, cep->line_number,
+							            cep->value);
+							free_log_sources(sources);
+							return 0;
+						}
+					}
+					log = safe_alloc(sizeof(Log));
 					log->sources = sources;
 					log->logfd = -1;
 					log->type = LOG_TYPE_TEXT; /* default */
@@ -1678,21 +1706,12 @@ void free_log_block(Log *l)
 			fd_close(l->logfd);
 			l->logfd = -1;
 		}
-		for (src = l->sources; src; src = src_next)
-		{
-			src_next = src->next;
-			free_log_source(src);
-		}
+		free_log_sources(l->sources);
 		safe_free(l->file);
 		safe_free(l->filefmt);
 		safe_free(l);
 	}
 }
-
-/* TODO: if logging to the same file from multiple log { }
- * blocks, then we would have opened the file twice.
- * Better to use an extra layer to keep track of files.
- */
 
 int log_tests(void)
 {
