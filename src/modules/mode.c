@@ -29,6 +29,7 @@ CMD_FUNC(cmd_mlock);
 void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc, const char *parv[], time_t sendts, int samode);
 void _set_mode(Channel *channel, Client *client, int parc, const char *parv[], u_int *pcount,
                        char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
+void _set_channel_mode(Channel *channel, char *modes, char *parameters);
 CMD_FUNC(_cmd_umode);
 
 /* local: */
@@ -64,6 +65,7 @@ MOD_TEST()
 	EfunctionAddVoid(modinfo->handle, EFUNC_DO_MODE, _do_mode);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SET_MODE, _set_mode);
 	EfunctionAddVoid(modinfo->handle, EFUNC_CMD_UMODE, _cmd_umode);
+	EfunctionAddVoid(modinfo->handle, EFUNC_SET_CHANNEL_MODE, _set_channel_mode);
 	return MOD_SUCCESS;
 }
 
@@ -1535,3 +1537,25 @@ int list_mode_request(Client *client, Channel *channel, const char *req)
 	return 1; /* handled */
 }
 
+void _set_channel_mode(Channel *channel, char *modes, char *parameters)
+{
+	char buf[512];
+	char *p, *param;
+	int myparc = 1, i;
+	char *myparv[512];
+
+	memset(&myparv, 0, sizeof(myparv));
+	myparv[0] = raw_strdup(modes);
+
+	strlcpy(buf, parameters, sizeof(buf));
+	for (param = strtoken(&p, buf, " "); param; param = strtoken(&p, NULL, " "))
+		myparv[myparc++] = raw_strdup(param);
+	myparv[myparc] = NULL;
+
+	SetULine(&me); // hack for crash.. set ulined so no access checks.
+	do_mode(channel, &me, NULL, myparc, (const char **)myparv, 0, 0);
+	ClearULine(&me); // and clear it again..
+
+	for (i = 0; i < myparc; i++)
+		safe_free(myparv[i]);
+}

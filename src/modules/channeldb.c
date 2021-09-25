@@ -71,7 +71,6 @@ EVENT(write_channeldb_evt);
 int write_channeldb(void);
 int write_channel_entry(UnrealDB *db, const char *tmpfname, Channel *channel);
 int read_channeldb(void);
-static void set_channel_mode(Channel *channel, char *modes, char *parameters);
 
 /* Global variables */
 static uint32_t channeldb_version = CHANNELDB_VERSION;
@@ -542,27 +541,3 @@ int read_channeldb(void)
 }
 #undef FreeChannelEntry
 #undef R_SAFE
-
-static void set_channel_mode(Channel *channel, char *modes, char *parameters)
-{
-	char buf[512];
-	char *p, *param;
-	int myparc = 1, i;
-	char *myparv[512];
-
-	memset(&myparv, 0, sizeof(myparv));
-	myparv[0] = raw_strdup(modes);
-
-	strlcpy(buf, parameters, sizeof(buf));
-	for (param = strtoken(&p, buf, " "); param; param = strtoken(&p, NULL, " "))
-		myparv[myparc++] = raw_strdup(param);
-	myparv[myparc] = NULL;
-
-	SetULine(&me); // hack for crash.. set ulined so no access checks.
-	do_mode(channel, &me, NULL, myparc, (const char **)myparv, 0, 0);
-	ClearULine(&me); // and clear it again..
-
-	for (i = 0; i < myparc; i++)
-		safe_free(myparv[i]);
-}
-// FIXME: move above function to m_mode and make efunc, available for all modules anyway
