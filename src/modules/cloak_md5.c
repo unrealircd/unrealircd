@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/oldcloak.c
+ *   IRC - Internet Relay Chat, src/modules/cloak_md5.c
  *   (C) 2004-2017 Bram Matthys and The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
@@ -49,9 +49,9 @@ static inline unsigned int downsample(char *i);
 Callback *cloak = NULL, *cloak_csum = NULL;
 
 ModuleHeader MOD_HEADER = {
-	"oldcloak",
+	"cloak_md5",
 	"1.0",
-	"Old cloaking module (md5)",
+	"Old cloaking module (MD5)",
 	"UnrealIRCd Team",
 	"unrealircd-6",
 };
@@ -61,13 +61,13 @@ MOD_TEST()
 	cloak = CallbackAddString(modinfo->handle, CALLBACKTYPE_CLOAK_EX, hidehost);
 	if (!cloak)
 	{
-		config_error("cloak: Error while trying to install cloaking callback!");
+		config_error("cloak_md5: Error while trying to install cloaking callback!");
 		return MOD_FAILED;
 	}
 	cloak_csum = CallbackAddString(modinfo->handle, CALLBACKTYPE_CLOAK_KEY_CHECKSUM, cloakcsum);
 	if (!cloak_csum)
 	{
-		config_error("cloak: Error while trying to install cloaking checksum callback!");
+		config_error("cloak_md5: Error while trying to install cloaking checksum callback!");
 		return MOD_FAILED;
 	}
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, cloak_config_test);

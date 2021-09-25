@@ -306,7 +306,7 @@ DLL_FILES=\
  src/modules/netinfo.dll \
  src/modules/nick.dll \
  src/modules/nocodes.dll \
- src/modules/oldcloak.dll \
+ src/modules/cloak_md5.dll \
  src/modules/oper.dll \
  src/modules/opermotd.dll \
  src/modules/part.dll \
@@ -971,8 +971,8 @@ src/modules/nick.dll: src/modules/nick.c $(INCLUDES)
 src/modules/nocodes.dll: src/modules/nocodes.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/nocodes.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/nocodes.pdb $(MODLFLAGS)
 
-src/modules/oldcloak.dll: src/modules/oldcloak.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/oldcloak.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/oldcloak.pdb $(MODLFLAGS)
+src/modules/cloak_md5.dll: src/modules/cloak_md5.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/cloak_md5.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/cloak_md5.pdb $(MODLFLAGS)
 
 src/modules/oper.dll: src/modules/oper.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/oper.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/oper.pdb $(MODLFLAGS)

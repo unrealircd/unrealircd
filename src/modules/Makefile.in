@@ -35,7 +35,7 @@ INCLUDES = ../include/channel.h \
 	../include/version.h ../include/whowas.h
 
 MODULES= \
-	oldcloak.so sethost.so chghost.so chgident.so setname.so \
+	cloak_md5.so sethost.so chghost.so chgident.so setname.so \
 	setident.so sdesc.so svsmode.so swhois.so\
 	svsmotd.so svsnline.so who_old.so whox.so mkpasswd.so \
 	away.so svsnoop.so svsnick.so \
