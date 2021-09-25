@@ -2308,21 +2308,6 @@ char *url_getfilename(const char *url)
 	return raw_strdup("-");
 }
 
-/*
- * Checks whether given string contains a valid IP address.
- */
-int is_ip_valid(const char *ip)
-{
-	char scratch[64];
-	if (BadPtr(ip))
-		return 0;
-	if (inet_pton(AF_INET, ip, scratch) == 1)
-		return 1;
-	if (inet_pton(AF_INET6, ip, scratch) == 1)
-		return 1;
-	return 0;
-}
-
 #ifdef _WIN32
  // https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/access-waccess
  // mode value   Checks file for

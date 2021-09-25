@@ -1036,18 +1036,23 @@ void process_clients(void)
 	} while(&client->lclient_node != &unknown_list);
 }
 
-/** Returns 4 if 'str' is a valid IPv4 address
- * and 6 if 'str' is a valid IPv6 IP address.
- * Zero (0) is returned in any other case (eg: hostname).
+/** Check if 'ip' is a valid IP address, and if so what type.
+ * @param ip	The IP address
+ * @retval 4	Valid IPv4 address
+ * @retval 6	Valid IPv6 address
+ * @retval 0	Invalid IP address (eg: a hostname)
  */
-int is_valid_ip(const char *str)
+int is_valid_ip(const char *ip)
 {
 	char scratch[64];
 	
-	if (inet_pton(AF_INET, str, scratch) == 1)
+	if (BadPtr(ip))
+		return 0;
+
+	if (inet_pton(AF_INET, ip, scratch) == 1)
 		return 4; /* IPv4 */
 	
-	if (inet_pton(AF_INET6, str, scratch) == 1)
+	if (inet_pton(AF_INET6, ip, scratch) == 1)
 		return 6; /* IPv6 */
 	
 	return 0; /* not an IP address */

@@ -349,7 +349,7 @@ void dowebirc(Client *client, const char *ip, const char *host, const char *opti
 
 	/* STEP 1: Update client->local->ip
 	   inet_pton() returns 1 on success, 0 on bad input, -1 on bad AF */
-	if (!is_ip_valid(ip))
+	if (!is_valid_ip(ip))
 	{
 		/* then we have an invalid IP */
 		exit_client(client, NULL, "Invalid IP address");

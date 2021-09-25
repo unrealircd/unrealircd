@@ -184,7 +184,7 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				errors++;
 				continue;
 			}
-			if (!is_ip_valid(cep->value))
+			if (!is_valid_ip(cep->value))
 			{
 				config_error("%s:%i: invalid IP address '%s' in listen::options::websocket::forward", cep->file->filename, cep->line_number, cep->value);
 				errors++;
@@ -696,7 +696,7 @@ int websocket_handshake_valid(Client *client)
 		struct HTTPForwardedHeader *forwarded;
 		forwarded = websocket_parse_forwarded_header(WSU(client)->forwarded);
 		/* check header values */
-		if (!is_ip_valid(forwarded->ip))
+		if (!is_valid_ip(forwarded->ip))
 		{
 			unreal_log(ULOG_WARNING, "websocket", "INVALID_FORWARDED_IP", client, "Received invalid IP in Forwarded header from $ip", log_data_string("ip", client->ip));
 			dead_socket(client, "Forwarded: invalid IP");
