@@ -29,12 +29,16 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
+/* Global variables */
 Cmode_t EXTCMODE_MODERATED;
 
-#define IsModerated(channel)    (channel->mode.mode & EXTCMODE_MODERATED)
-
+/* Forward declarations */
 int moderated_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
 const char *moderated_pre_local_part(Client *client, Channel *channel, const char *text);
+int moderated_can_set_topic(Client *client, Channel *channel, const char *topic, const char **errmsg);
+
+/* Macros */
+#define IsModerated(channel)    (channel->mode.mode & EXTCMODE_MODERATED)
 
 MOD_INIT()
 {
@@ -50,6 +54,7 @@ MOD_INIT()
 
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, moderated_can_send_to_channel);
 	HookAddConstString(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, moderated_pre_local_part);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SET_TOPIC, 0, moderated_can_set_topic);
 
 	return MOD_SUCCESS;
 }
@@ -92,4 +97,21 @@ const char *moderated_pre_local_part(Client *client, Channel *channel, const cha
 	if (IsModerated(channel) && !check_channel_access(client, channel, "v") && !check_channel_access(client, channel, "h"))
 		return NULL;
 	return text;
+}
+
+int moderated_can_set_topic(Client *client, Channel *channel, const char *topic, const char **errmsg)
+{
+	static char errmsg_buf[NICKLEN+256];
+
+	/* Channel is +m but user is not +vhoaq: reject the topic change */
+	if (has_channel_mode(channel, 'm') && !check_channel_access(client, channel, "vhoaq"))
+	{
+		char buf[512];
+		snprintf(buf, sizeof(buf), "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", channel->name);
+		buildnumeric(errmsg_buf, sizeof(errmsg_buf), client, ERR_CANNOTDOCOMMAND, "TOPIC", buf);
+		*errmsg = errmsg_buf;
+		return EX_DENY;
+	}
+
+	return EX_ALLOW;
 }

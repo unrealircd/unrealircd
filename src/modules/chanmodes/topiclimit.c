@@ -29,8 +29,13 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
+/* Global variables */
 Cmode_t EXTCMODE_TOPIC_LIMIT;
 
+/* Forward declarations */
+int topiclimit_can_set_topic(Client *client, Channel *channel, const char *topic, const char **errmsg);
+
+/* Macros */
 #define IsTopicLimit(channel)    (channel->mode.mode & EXTCMODE_TOPIC_LIMIT)
 
 MOD_INIT()
@@ -45,6 +50,7 @@ MOD_INIT()
 	req.is_ok = extcmode_default_requirehalfop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_TOPIC_LIMIT);
 
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SET_TOPIC, 0, topiclimit_can_set_topic);
 	return MOD_SUCCESS;
 }
 
@@ -58,4 +64,19 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-// TODO: move code from modules/topic to here, some hook call
+int topiclimit_can_set_topic(Client *client, Channel *channel, const char *topic, const char **errmsg)
+{
+	static char errmsg_buf[NICKLEN+256];
+
+	if (has_channel_mode(channel, 't') &&
+	    !check_channel_access(client, channel, "hoaq") &&
+	    !IsULine(client) &&
+	    !IsServer(client))
+	{
+		buildnumeric(errmsg_buf, sizeof(errmsg_buf), client, ERR_CHANOPRIVSNEEDED, channel->name);
+		*errmsg = errmsg_buf;
+		return EX_DENY;
+	}
+
+	return EX_ALLOW;
+}

@@ -179,23 +179,47 @@ CMD_FUNC(cmd_topic)
 	if (IsUser(client))
 	{
 		const char *newtopic = NULL;
+		const char *errmsg = NULL;
+		int ret = EX_ALLOW;
+		int operoverride = 0;
 
-		// FIXME/TODO: all these checks must be moved to chanmodes/topiclimit
-		//             and to chanmodes/noexternalmsgs, so use some kind of hook !!
+		for (h = Hooks[HOOKTYPE_CAN_SET_TOPIC]; h; h = h->next)
+		{
+			int n = (*(h->func.intfunc))(client, channel, topic, &errmsg);
 
-		/* +t and not +hoaq ? */
-		if (has_channel_mode(channel, 't') &&
-		    !check_channel_access(client, channel, "hoaq") && !IsULine(client) && !IsServer(client))
+			if (n == EX_DENY)
+			{
+				ret = n;
+			} else
+			if (n == EX_ALWAYS_DENY)
+			{
+				ret = n;
+				break;
+			}
+		}
+
+		if (ret == EX_ALWAYS_DENY)
+		{
+			if (MyUser(client) && errmsg)
+				sendto_one(client, NULL, "%s", errmsg); /* send error, if any */
+
+			if (MyUser(client))
+				return; /* reject the topic set (note: we never block remote sets) */
+		}
+
+		if (ret == EX_DENY)
 		{
 			if (MyUser(client) && !ValidatePermissionsForPath("channel:override:topic", client, NULL, channel, NULL))
 			{
-				sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
-				return;
+				if (errmsg)
+					sendto_one(client, NULL, "%s", errmsg);
+				return; /* reject */
+			} else {
+				operoverride = 1; /* allow */
 			}
-			topic_operoverride_msg(client, channel, topic);
 		}
 
-		/* -t and banned? */
+		/* banned? */
 		newtopic = topic;
 		if (!check_channel_access(client, channel, "hoaq") && is_banned(client, channel, BANCHK_MSG, &newtopic, &errmsg))
 		{
@@ -207,29 +231,14 @@ CMD_FUNC(cmd_topic)
 				sendnumeric(client, ERR_CANNOTDOCOMMAND, "TOPIC",  buf);
 				return;
 			}
-			topic_operoverride_msg(client, channel, topic);
+			operoverride = 1;
 		}
+
 		if (MyUser(client) && newtopic)
 			topic = newtopic; /* process is_banned() changes of topic (eg: text replacement), but only for local clients */
 
-		/* -t, +m, and not +vhoaq
-		 * TODO: it's not really sane to have this here, we could use HOOKTYPE_PRE_LOCAL_TOPIC,
-		 * but then we have the override shit too, hmmm.
-		 */
-		if (!check_channel_access(client, channel, "vhoaq") && has_channel_mode(channel, 'm'))
-		{
-			char buf[512];
-
-			if (MyUser(client) && ValidatePermissionsForPath("channel:override:topic", client, NULL, channel, NULL))
-			{
-				topic_operoverride_msg(client, channel, topic);
-			} else {
-				/* With +m and -t, only voice and higher may change the topic */
-				ircsnprintf(buf, sizeof(buf), "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", channel->name);
-				sendnumeric(client, ERR_CANNOTDOCOMMAND, "TOPIC",  buf);
-				return;
-			}
-		}
+		if (operoverride)
+			topic_operoverride_msg(client, channel, topic);
 
 		/* For local users, run spamfilters and hooks.. */
 		if (MyUser(client))

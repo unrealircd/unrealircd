@@ -1147,6 +1147,8 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, const char *varshortname, l
 #define HOOKTYPE_USERHOST_CHANGED 108
 /** See hooktype_realname_changed() */
 #define HOOKTYPE_REALNAME_CHANGED 109
+/** See hooktype_can_set_topic() */
+#define HOOKTYPE_CAN_SET_TOPIC	110
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
  * 2) Add a hook prototype (see below)
@@ -1414,6 +1416,17 @@ int hooktype_usermsg(Client *client, Client *to, MessageTag *mtags, const char *
  * @return The return value is ignored (use return 0)
  */
 int hooktype_chanmsg(Client *client, Channel *channel, int sendflags, const char *member_modes, const char *target, MessageTag *mtags, const char *text, SendType sendtype);
+
+/** Called when a user wants to set the topic (function prototype for HOOKTYPE_CAN_SET_TOPIC).
+ * @param client		The client issuing the command
+ * @param channel		The channel the topic should be set for
+ * @param topic			The topic that should be set, this may be NULL for unset.
+ * @param errmsg		The error message that should be shown to the user (full IRC protocol line).
+ * @retval EX_DENY		Deny the TOPIC (unless IRCOp with sufficient override rights).
+ * @retval EX_ALWAYS_DENY	Deny the TOPIC always (even if IRCOp).
+ * @retval EX_ALLOW		Allow the TOPIC, unless another module blocks it.
+ */
+int hooktype_can_set_topic(Client *client, Channel *channel, const char *topic, const char **errmsg);
 
 /** Called when a local user wants to change the channel topic (function prototype for HOOKTYPE_PRE_LOCAL_TOPIC).
  * @param client		The client
@@ -2150,6 +2163,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_REMOTE_QUIT) && !ValidateHook(hooktype_remote_quit, func)) || \
         ((hooktype == HOOKTYPE_PRE_LOCAL_JOIN) && !ValidateHook(hooktype_pre_local_join, func)) || \
         ((hooktype == HOOKTYPE_PRE_LOCAL_KICK) && !ValidateHook(hooktype_pre_local_kick, func)) || \
+        ((hooktype == HOOKTYPE_CAN_SET_TOPIC) && !ValidateHook(hooktype_can_set_topic, func)) || \
         ((hooktype == HOOKTYPE_PRE_LOCAL_TOPIC) && !ValidateHook(hooktype_pre_local_topic, func)) || \
         ((hooktype == HOOKTYPE_REMOTE_NICKCHANGE) && !ValidateHook(hooktype_remote_nickchange, func)) || \
         ((hooktype == HOOKTYPE_CHANNEL_CREATE) && !ValidateHook(hooktype_channel_create, func)) || \
