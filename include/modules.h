@@ -376,14 +376,18 @@ typedef struct {
 
 // TODO: These should be enums!
 
-#define EXBCHK_ACCESS		0 /* Check access */
-#define EXBCHK_ACCESS_ERR	1 /* Check access and send error */
-#define EXBCHK_PARAM		2 /* Check if the parameter is valid */
+typedef enum ExtbanCheck {
+	EXBCHK_ACCESS=0,	/**< Check access */
+	EXBCHK_ACCESS_ERR=1,	/**< Check access and send error */
+	EXBCHK_PARAM=2		/**< Check if the parameter is valid */
+} ExtbanCheck;
 
-#define EXBTYPE_BAN		0 /* a ban */
-#define EXBTYPE_EXCEPT		1 /* an except */
-#define EXBTYPE_INVEX		2 /* an invite exception */
-#define EXBTYPE_TKL		3 /* TKL or other generic matcher outside banning routines */
+typedef enum ExtbanType {
+	EXBTYPE_BAN=0,		/**< Ban (channel mode +b) */
+	EXBTYPE_EXCEPT=1,	/**< Ban exception (channel mode +e) */
+	EXBTYPE_INVEX=2,	/**< Invite exception (channel mode +I) */
+	EXBTYPE_TKL=3		/**< TKL or other generic matcher outside banning routines */
+} ExtbanType;
 
 #define BCTX_CONV_OPTION_WRITE_LETTER_BANS	1 /* Always write letter extbans in output of conv_param */
 
@@ -401,12 +405,12 @@ typedef struct {
 	Client *client;		/**< Client to check, can be a remote client */
 	Channel *channel;	/**< Channel to check */
 	const char *banstr;	/**< Mask string (ban) */
-	int checktype;		/**< Check type, one of BANCHK_* */
+	ExtbanCheck checktype;	/**< Check type, one of BANCHK_* */
 	const char *msg;	/**< Message, only for some BANCHK_* types (for censoring text) */
 	const char *error_msg;	/**< Error message, can be NULL */
 	int no_extbans;		/**< Set to 1 to disable extended bans checking - only nick!user@host allowed */
 	int what;		/**< MODE_ADD or MODE_DEL (for is_ok) */
-	int what2;		/**< EXBTYPE_BAN or EXBTYPE_EXCEPT (for is_ok) */
+	ExtbanType what2;	/**< EXBTYPE_BAN or EXBTYPE_EXCEPT (for is_ok) */
 	int is_ok_checktype;	/**< One of EXBCHK_* (for is_ok) */
 	int conv_options;	/**< One of BCTX_CONV_OPTION_* (for conv_param) */
 } BanContext;
