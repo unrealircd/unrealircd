@@ -832,6 +832,8 @@ char *extjwt_make_payload(Client *client, Channel *channel, struct extjwt_config
 	json_t *payload = NULL;
 	json_t *modes = NULL;
 	json_t *umodes = NULL;
+	char *modestring;
+	char singlemode[2] = { '\0' };
 	char *result;
 
 	if (!IsUser(client))
@@ -856,8 +858,16 @@ char *extjwt_make_payload(Client *client, Channel *channel, struct extjwt_config
 	if (channel)
 	{ /* fill in channel information and user flags */
 		lp = find_membership_link(client->user->channel, channel);
-		if (lp && *lp->member_modes)
-			json_array_append_new(modes, json_string(lp->member_modes));
+		if (lp)
+		{
+			modestring = lp->member_modes;
+			while (*modestring)
+			{
+				singlemode[0] = *modestring;
+				json_array_append_new(modes, json_string(singlemode));
+				modestring++;
+			}
+		}
 		json_object_set_new(payload, "channel", json_string_unreal(channel->name));
 		json_object_set_new(payload, "joined", json_integer(lp?1:0));
 		json_object_set_new(payload, "cmodes", modes);
