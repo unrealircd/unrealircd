@@ -51,7 +51,6 @@ static void init_config(void);
 static void config_postdefaults(void);
 int authprompt_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int authprompt_config_run(ConfigFile *, ConfigEntry *, int);
-int authprompt_require_sasl(Client *client, const char *reason);
 int authprompt_sasl_continuation(Client *client, const char *buf);
 int authprompt_sasl_result(Client *client, int success);
 int authprompt_place_host_ban(Client *client, int action, const char *reason, long duration);
@@ -90,7 +89,6 @@ MOD_INIT()
 
 	init_config();
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, authprompt_config_run);
-	HookAdd(modinfo->handle, HOOKTYPE_REQUIRE_SASL, 0, authprompt_require_sasl);
 	HookAdd(modinfo->handle, HOOKTYPE_SASL_CONTINUATION, 0, authprompt_sasl_continuation);
 	HookAdd(modinfo->handle, HOOKTYPE_SASL_RESULT, 0, authprompt_sasl_result);
 	HookAdd(modinfo->handle, HOOKTYPE_PLACE_HOST_BAN, 0, authprompt_place_host_ban);
@@ -377,23 +375,6 @@ void authprompt_send_auth_required_message(Client *client)
 {
 	/* Display set::authentication-prompt::message */
 	sendnotice_multiline(client, cfg.message);
-}
-
-int authprompt_require_sasl(Client *client, const char *reason)
-{
-	/* If the client did SASL then we (authprompt) will not kick in */
-	if (HasCapability(client, "sasl"))
-		return 0;
-
-	authprompt_tag_as_auth_required(client);
-
-	/* Display the require authentication::reason */
-	if (reason && strcmp(reason, "-") && strcmp(reason, "*"))
-		sendnotice(client, "%s", reason);
-
-	authprompt_send_auth_required_message(client);
-
-	return 1;
 }
 
 /* Called upon "place a host ban on this user" (eg: spamfilter, blacklist, ..) */

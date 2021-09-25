@@ -1110,8 +1110,6 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, const char *varshortname, l
 #define HOOKTYPE_SECURE_CONNECT	88
 /** See hooktype_can_bypass_channel_message_restriction() */
 #define HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION	89
-/** See hooktype_require_sasl() */
-#define HOOKTYPE_REQUIRE_SASL	90
 /** See hooktype_sasl_continuation() */
 #define HOOKTYPE_SASL_CONTINUATION	91
 /** See hooktype_sasl_result() */
@@ -1603,8 +1601,7 @@ int hooktype_pre_kill(Client *client, Client *victim, const char *reason);
  */
 int hooktype_local_kill(Client *client, Client *victim, const char *comment);
 
-/** Called when an IRCOp /REHASH'es, and passes the parameters (function prototype for HOOKTYPE_REHASHFLAG).
- * FIXME: shouldn't this be merged with hooktype_rehash() ?
+/** Called when an IRCOp calls /REHASH with a -parameter (function prototype for HOOKTYPE_REHASHFLAG).
  * @param client		The client issuing the command, or NULL if rehashing due to system signal.
  * @param str			The rehash flag (eg: "-all")
  * @return The return value is ignored (use return 0)
@@ -1948,13 +1945,6 @@ int hooktype_secure_connect(Client *client);
  */
 int hooktype_can_bypass_channel_message_restriction(Client *client, Channel *channel, BypassChannelMessageRestrictionType bypass_type);
 
-/** Called when xxxx (function prototype for HOOKTYPE_REQUIRE_SASL).
- * FIXME: this hook is never called!?
- * @param client		The client
- * @return The return value is ignored (use return 0)
- */
-int hooktype_require_sasl(Client *client, const char *reason);
-
 /** Called when a SASL continuation response is received (function prototype for HOOKTYPE_SASL_CONTINUATION).
  * This is only used by the authprompt module, it unlikely that you need it.
  * @param client		The client for which the SASL authentication is taking place
@@ -2225,7 +2215,6 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_SERVER_SYNCED) && !ValidateHook(hooktype_server_synced, func)) || \
         ((hooktype == HOOKTYPE_SECURE_CONNECT) && !ValidateHook(hooktype_secure_connect, func)) || \
         ((hooktype == HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION) && !ValidateHook(hooktype_can_bypass_channel_message_restriction, func)) || \
-        ((hooktype == HOOKTYPE_REQUIRE_SASL) && !ValidateHook(hooktype_require_sasl, func)) || \
         ((hooktype == HOOKTYPE_SASL_CONTINUATION) && !ValidateHook(hooktype_sasl_continuation, func)) || \
         ((hooktype == HOOKTYPE_SASL_RESULT) && !ValidateHook(hooktype_sasl_result, func)) || \
         ((hooktype == HOOKTYPE_PLACE_HOST_BAN) && !ValidateHook(hooktype_place_host_ban, func)) || \
