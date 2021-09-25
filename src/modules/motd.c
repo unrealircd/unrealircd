@@ -66,7 +66,7 @@ CMD_FUNC(cmd_motd)
 	if (IsServer(client))
 		return;
 
-	if (hunt_server(client, recv_mtags, ":%s MOTD :%s", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, "MOTD", 1, parc, parv) != HUNTED_ISME)
 	{
 		if (MyUser(client))
 			add_fake_lag(client, 15000);

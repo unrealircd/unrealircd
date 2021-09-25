@@ -62,7 +62,7 @@ CMD_FUNC(cmd_svsnoop)
 	if (!(IsULine(client) && parc > 2))
 		return;
 
-	if (hunt_server(client, NULL, ":%s SVSNOOP %s :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(client, NULL, "SVSNOOP", 1, parc, parv) == HUNTED_ISME)
 	{
 		if (parv[2][0] == '+')
 		{

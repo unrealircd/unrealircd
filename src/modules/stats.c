@@ -294,12 +294,12 @@ CMD_FUNC(cmd_stats)
 
 	if (parc == 3 && parv[2][0] != '+' && parv[2][0] != '-')
 	{
-		if (hunt_server(client, recv_mtags, ":%s STATS %s :%s", 2, parc, parv) != HUNTED_ISME)
+		if (hunt_server(client, recv_mtags, "STATS", 2, parc, parv) != HUNTED_ISME)
 			return;
 	}
 	else if (parc == 4 && parv[2][0] != '+' && parv[2][0] != '-')
 	{
-		if (hunt_server(client, recv_mtags, ":%s STATS %s %s %s", 2, parc, parv) != HUNTED_ISME)
+		if (hunt_server(client, recv_mtags, "STATS", 2, parc, parv) != HUNTED_ISME)
 			return;
 	}
 	if (parc < 2 || !*parv[1])

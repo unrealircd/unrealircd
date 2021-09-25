@@ -793,10 +793,10 @@ CMD_FUNC(cmd_module)
 	if (MyUser(client) && !IsOper(client) && all)
 		add_fake_lag(client, 7000); /* Lag them up. Big list. */
 
-	if ((parc > 2) && (hunt_server(client, recv_mtags, ":%s MODULE %s :%s", 2, parc, parv) != HUNTED_ISME))
+	if ((parc > 2) && (hunt_server(client, recv_mtags, "MODULE", 2, parc, parv) != HUNTED_ISME))
 		return;
 
-	if ((parc == 2) && (parv[1][0] != '-') && (hunt_server(client, recv_mtags, ":%s MODULE :%s", 1, parc, parv) != HUNTED_ISME))
+	if ((parc == 2) && (parv[1][0] != '-') && (hunt_server(client, recv_mtags, "MODULE", 1, parc, parv) != HUNTED_ISME))
 		return;
 
 	if (all)

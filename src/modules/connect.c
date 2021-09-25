@@ -76,7 +76,7 @@ CMD_FUNC(cmd_connect)
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
-	if (hunt_server(client, recv_mtags, ":%s CONNECT %s %s :%s", 3, parc, parv) != HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, "CONNECT", 3, parc, parv) != HUNTED_ISME)
 		return;
 
 	if (parc < 2 || *parv[1] == '\0')

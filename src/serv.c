@@ -71,13 +71,24 @@ void reread_motdsandrules();
  * @param server	This indicates parv[server] contains the destination
  * @param parc		Parameter count (MAX 8!!)
  * @param parv		Parameter values (MAX 8!!)
- * @note Command can have only max 8 parameters (parv[8])
- * @note parv[server] is replaced with the name of the matched client.
+ * @note While sending parv[server] is replaced with the name of the matched client
+ *       (virtually, as parv[] is not actually written to)
  */
-int hunt_server(Client *client, MessageTag *mtags, char *command, int server, int parc, const char *parv[])
+int hunt_server(Client *client, MessageTag *mtags, const char *command, int server, int parc, const char *parv[])
 {
 	Client *acptr;
 	const char *saved;
+	int i;
+	char buf[1024];
+
+	if (strchr(command, '%') || strchr(command, ' '))
+	{
+		unreal_log(ULOG_ERROR, "main", "BUG_HUNT_SERVER", client,
+		           "[BUG] hunt_server called with command '$command' but it may not contain "
+		           "spaces or percentage signs nowadays, it must be ONLY the command.",
+		           log_data_string("command", command));
+		abort();
+	}
 
 	/* This would be strange and bad. Previous version assumed "it's for me". Hmm.. okay. */
 	if (parc <= server || BadPtr(parv[server]))
@@ -105,17 +116,38 @@ int hunt_server(Client *client, MessageTag *mtags, char *command, int server, in
 		return HUNTED_NOSUCH;
 	}
 
-	/* Replace "server" part with actual servername (eg: 'User' -> 'x.y.net')
-	 * Ugly. Previous version didn't even restore the state, now we do.
+	/* This puts all parv[] arguments in 'buf'
+	 * Taken from concat_params() but this one is
+	 * with parv[server] magic replacement.
 	 */
-	saved = parv[server];
-	parv[server] = acptr->id;
+	*buf = '\0';
+	for (i = 1; i < parc; i++)
+	{
+		const char *param = parv[i];
 
-	sendto_one(acptr, mtags, command, client->id,
-	    parv[1], parv[2], parv[3], parv[4],
-	    parv[5], parv[6], parv[7], parv[8]);
+		if (!param)
+			break;
 
-	parv[server] = saved;
+		/* The magic parv[server] replacement:
+		 * this replaces eg 'User' with '001' in S2S traffic.
+		 */
+		if (i == server)
+			param = acptr->id;
+
+		if (*buf)
+			strlcat(buf, " ", sizeof(buf));
+
+		if (strchr(param, ' ') || (*param == ':'))
+		{
+			/* Last parameter, with : */
+			strlcat(buf, ":", sizeof(buf));
+			strlcat(buf, parv[i], sizeof(buf));
+			break;
+		}
+		strlcat(buf, parv[i], sizeof(buf));
+	}
+
+	sendto_one(acptr, mtags, ":%s %s %s", client->id, command, buf);
 
 	return HUNTED_PASS;
 }
@@ -178,7 +210,7 @@ CMD_FUNC(cmd_version)
 		return;
 	}
 
-	if (hunt_server(client, recv_mtags, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, "VERSION", 1, parc, parv) == HUNTED_ISME)
 	{
 		sendnumeric(client, RPL_VERSION, version, debugmode, me.name,
 			    (ValidatePermissionsForPath("server:info",client,NULL,NULL,NULL) ? serveropts : "0"),
@@ -312,7 +344,7 @@ CMD_FUNC(cmd_info)
 	if (remotecmdfilter(client, parc, parv))
 		return;
 
-	if (hunt_server(client, recv_mtags, ":%s INFO :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, "INFO", 1, parc, parv) == HUNTED_ISME)
 		cmd_info_send(client);
 }
 
@@ -326,7 +358,7 @@ CMD_FUNC(cmd_license)
 	if (remotecmdfilter(client, parc, parv))
 		return;
 
-	if (hunt_server(client, recv_mtags, ":%s LICENSE :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, "LICENSE", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
 			sendnumeric(client, RPL_INFO, *text++);
@@ -346,7 +378,7 @@ CMD_FUNC(cmd_credits)
 	if (remotecmdfilter(client, parc, parv))
 		return;
 
-	if (hunt_server(client, recv_mtags, ":%s CREDITS :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, "CREDITS", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
 			sendnumeric(client, RPL_INFO, *text++);
@@ -509,13 +541,13 @@ CMD_FUNC(cmd_rehash)
 		if (parv[1] && (parv[1][0] == '-'))
 			x = HUNTED_ISME;
 		else
-			x = hunt_server(client, recv_mtags, ":%s REHASH :%s", 1, parc, parv);
+			x = hunt_server(client, recv_mtags, "REHASH", 1, parc, parv);
 	} else {
 		if (match_simple("-glob*", parv[1])) /* This is really ugly... hack to make /rehash -global -something work */
 		{
 			x = HUNTED_ISME;
 		} else {
-			x = hunt_server(client, NULL, ":%s REHASH %s :%s", 1, parc, parv);
+			x = hunt_server(client, NULL, "REHASH", 1, parc, parv);
 		}
 	}
 	if (x != HUNTED_ISME)

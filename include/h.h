@@ -326,7 +326,7 @@ extern char *make_nick_user_host(const char *, const char *, const char *);
 extern char *make_nick_user_host_r(char *namebuf, size_t namebuflen, const char *nick, const char *name, const char *host);
 extern char *make_user_host(const char *, const char *);
 extern void parse(Client *cptr, char *buffer, int length);
-extern int hunt_server(Client *, MessageTag *, char *, int, int, const char **);
+extern int hunt_server(Client *, MessageTag *, const char *, int, int, const char **);
 extern int cmd_server_estab(Client *);
 extern void umode_init(void);
 #define UMODE_GLOBAL 1

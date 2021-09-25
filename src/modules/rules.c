@@ -63,7 +63,7 @@ CMD_FUNC(cmd_rules)
 
 	temp = NULL;
 
-	if (hunt_server(client, recv_mtags, ":%s RULES :%s", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, "RULES", 1, parc, parv) != HUNTED_ISME)
 		return;
 
 	ptr = find_tld(client);

@@ -59,7 +59,7 @@ CMD_FUNC(cmd_lusers)
 {
 char flatmap;
 
-	if (hunt_server(client, recv_mtags, ":%s LUSERS :%s", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, "LUSERS", 1, parc, parv) != HUNTED_ISME)
 		return;
 
 	flatmap = (FLAT_MAP && !ValidatePermissionsForPath("server:info:lusers",client,NULL,NULL,NULL)) ? 1 : 0;

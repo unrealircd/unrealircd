@@ -73,7 +73,7 @@ CMD_FUNC(cmd_trace)
 	labeled_response_inhibit = 1;
 
 	if (parc > 2)
-		if (hunt_server(client, NULL, ":%s TRACE %s :%s", 2, parc, parv))
+		if (hunt_server(client, NULL, "TRACE", 2, parc, parv))
 			return;
 
 	if (parc > 1)
@@ -98,7 +98,7 @@ CMD_FUNC(cmd_trace)
 		}
 	}
 
-	switch (hunt_server(client, NULL, ":%s TRACE :%s", 1, parc, parv))
+	switch (hunt_server(client, NULL, "TRACE", 1, parc, parv))
 	{
 	  case HUNTED_PASS:	/* note: gets here only if parv[1] exists */
 	  {

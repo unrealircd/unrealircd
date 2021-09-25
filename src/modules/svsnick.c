@@ -69,7 +69,7 @@ CMD_FUNC(cmd_svsnick)
 	if (!IsULine(client) || parc < 4 || (strlen(parv[2]) > NICKLEN))
 		return; /* This looks like an error anyway -Studded */
 
-	if (hunt_server(client, NULL, ":%s SVSNICK %s %s :%s", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(client, NULL, "SVSNICK", 1, parc, parv) != HUNTED_ISME)
 		return; /* Forwarded, done */
 
 	strlcpy(nickname, parv[2], sizeof(nickname));
