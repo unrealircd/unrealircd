@@ -1279,7 +1279,7 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 		{
 			for (m = msg; m; m = m->next)
 			{
-				char text_buf[1024];
+				char text_buf[8192];
 				snprintf(text_buf, sizeof(text_buf), "%s.%s%s %s: %s\n", subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
 				// FIXME: don't write in 2 stages, waste of slow system calls
 				if (write(l->logfd, timebuf, strlen(timebuf)) < 0)
@@ -1557,7 +1557,7 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 	json_t *j = NULL;
 	json_t *j_details = NULL;
 	json_t *t;
-	char msgbuf[1024];
+	char msgbuf[8192];
 	const char *loglevel_string = log_level_valtostring(loglevel);
 	MultiLine *mmsg;
 	Client *from_server = NULL;
