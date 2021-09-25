@@ -929,7 +929,7 @@ EVENT(delete_old_records)
 			if (is_reputation_expired(e))
 			{
 #ifdef DEBUGMODE
-				unreal_log(ULOG_INFO, "reputation", "REPUTATION_EXPIRY", NULL,
+				unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_EXPIRY", NULL,
 				           "Deleting expired entry for $ip (score $score, last seen $time_delta seconds ago)",
 				           log_data_string("ip", e->ip),
 				           log_data_integer("score", e->score),
@@ -1251,7 +1251,7 @@ CMD_FUNC(reputation_server_cmd)
 		 */
 		sendto_one(client, NULL, ":%s REPUTATION %s *%d", me.id, parv[1], e->score);
 #ifdef DEBUGMODE
-		unreal_log(ULOG_INFO, "reputation", "REPUTATION_DIFFERS", client,
+		unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_DIFFERS", client,
 			   "Reputation score for for $ip from $client is $their_score, but we have $score, sending back $score",
 			   log_data_string("ip", ip),
 			   log_data_integer("their_score", score),
@@ -1264,7 +1264,7 @@ CMD_FUNC(reputation_server_cmd)
 	if (e && (score > e->score))
 	{
 #ifdef DEBUGMODE
-		unreal_log(ULOG_INFO, "reputation", "REPUTATION_DIFFERS", client,
+		unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_DIFFERS", client,
 			   "Reputation score for for $ip from $client is $their_score, but we have $score, updating our score to $score",
 			   log_data_string("ip", ip),
 			   log_data_integer("their_score", score),
@@ -1277,7 +1277,7 @@ CMD_FUNC(reputation_server_cmd)
 	if (!e && (score > 0))
 	{
 #ifdef DEBUGMODE
-		unreal_log(ULOG_INFO, "reputation", "REPUTATION_NEW", client,
+		unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_NEW", client,
 			   "Reputation score for for $ip from $client is $their_score, we had no entry, adding it",
 			   log_data_string("ip", ip),
 			   log_data_integer("their_score", score),
