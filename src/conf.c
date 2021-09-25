@@ -2158,7 +2158,7 @@ void config_parse_and_queue_urls(ConfigEntry *ce)
 		if (loop.config_load_failed)
 			break;
 		if (ce->name && !strcmp(ce->name, "include"))
-			continue; /* handled elsewhere (but maybe merge? TODO) */
+			continue; /* handled elsewhere */
 		if (ce->value && url_is_valid(ce->value))
 			add_config_resource(ce->value, 0, ce);
 		if (ce->items)
@@ -2744,20 +2744,6 @@ int	config_run_blocks()
 			}
 		}
 	}
-
-	/*
-	 * transfer default values from set::ipv6_clones_mask into
-	 * each individual allow block. If other similar things like
-	 * this stack up here, perhaps this shoul be moved to another
-	 * function.
-	 */
-	for(allow = conf_allow; allow; allow = allow->next)
-		if (!allow->ipv6_clone_mask)
-			allow->ipv6_clone_mask = tempiConf.default_ipv6_clone_mask;
-
-	/* ^^^ TODO: due to the two-stage model now we can do it in conf_allow again
-	 *     and remove it here.
-	 */
 
 	close_unbound_listeners();
 	listen_cleanup();
@@ -5230,6 +5216,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	allow = safe_alloc(sizeof(ConfigItem_allow));
+	allow->ipv6_clone_mask = tempiConf.default_ipv6_clone_mask;
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
@@ -5932,7 +5919,6 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 			"vhost::mask");
 		errors++;
 	}
-	// TODO: 3.2.x -> 4.x upgrading hints
 	return errors;
 }
 
@@ -6079,7 +6065,6 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 					link->outgoing.port = atoi(cepp->value);
 				else if (!strcmp(cepp->name, "options"))
 				{
-					/* TODO: options still need to be split */
 					link->outgoing.options = 0;
 					for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
 					{
@@ -6142,7 +6127,6 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 }
 
 /** Helper function for erroring on duplicate items.
- * TODO: make even more friendy for dev's?
  */
 int config_detect_duplicate(int *var, ConfigEntry *ce, int *errors)
 {
@@ -6260,7 +6244,6 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 								ceppp->line_number, "link::outgoing", ceppp->name);
 							errors++;
 						}
-						// TODO: validate more options (?) and use list rather than code here...
 					}
 				}
 				else if (!strcmp(cepp->name, "ssl-options") || !strcmp(cepp->name, "tls-options"))
@@ -6290,7 +6273,6 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				{
 					config_error("%s:%i: password in link block should be plaintext OR should be the "
 					             "certificate or SPKI fingerprint of the remote link (=better)",
-					             /* TODO: mention some faq or wiki item for more information */
 					             cep->file->filename, cep->line_number);
 					errors++;
 				}
@@ -7917,17 +7899,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "allow-user-stats"))
 		{
 			CheckDuplicate(cep, allow_user_stats, "allow-user-stats");
-			if (!cep->items)
-			{
-				CheckNull(cep);
-			}
-			else
-			{
-				/* TODO: check the entries for existence?
-				for (cepp = cep->items; cepp; cepp = cepp->next)
-				{
-				} */
-			}
+			CheckNull(cep);
 		}
 		else if (!strcmp(cep->name, "maxchannelsperuser")) {
 			CheckNull(cep);
@@ -8646,7 +8618,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
-/* TODO: FIX THIS */
 		else if (!strcmp(cep->name, "default-bantime"))
 		{
 			long x;
@@ -9452,8 +9423,6 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 			{
 				config_error("%s:%i: alias::format contains an invalid regex: %s",
 					cep->file->filename, cep->line_number, err);
-				config_error("Upgrading from 3.2.x to UnrealIRCd 4? Note that regex changed from POSIX Regex "
-				             "to PCRE Regex!"); /* TODO: refer to some url ? */
 			} else {
 				unreal_delete_match(expr);
 			}
