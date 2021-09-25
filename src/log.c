@@ -544,6 +544,8 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 
 void json_expand_channel(json_t *j, const char *key, Channel *channel, int detail)
 {
+	char modem[512], modep[512], modes[512];
+
 	json_t *child = json_object();
 	json_object_set_new(j, key, child);
 	json_object_set_new(child, "name", json_string_unreal(channel->name));
@@ -555,7 +557,18 @@ void json_expand_channel(json_t *j, const char *key, Channel *channel, int detai
 		json_object_set_new(child, "topic_set_by", json_string_unreal(channel->topic_nick));
 		json_object_set_new(child, "topic_set_at", json_timestamp(channel->topic_time));
 	}
-	// Possibly later: If detail is set to 1 then expand modes, mode_lock, ..
+
+	/* Add "mode" too */
+	channel_modes(NULL, modem, modep, sizeof(modem), sizeof(modep), channel, 0);
+	if (*modep)
+	{
+		snprintf(modes, sizeof(modes), "%s %s", modem, modep);
+		json_object_set_new(child, "modes", json_string_unreal(modes));
+	} else {
+		json_object_set_new(child, "modes", json_string_unreal(modem));
+	}
+
+	// Possibly later: If detail is set to 1 then expand more...
 }
 
 const char *timestamp_iso8601_now(void)
