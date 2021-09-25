@@ -83,7 +83,6 @@ CMD_FUNC(cmd_svsnoop)
 						list_del(&acptr->special_node);
 
 					remove_oper_privileges(acptr, 1);
-					RunHook(HOOKTYPE_LOCAL_OPER, acptr, 0);
 				}
 			}
 		}

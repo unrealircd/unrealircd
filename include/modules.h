@@ -1671,9 +1671,10 @@ int hooktype_stats(Client *client, const char *str);
 /** Called when a user becomes IRCOp or is no longer an IRCOp (function prototype for HOOKTYPE_LOCAL_OPER).
  * @param client		The client
  * @param add			1 if the user becomes IRCOp, 0 if the user is no longer IRCOp
+ * @param oper_block		The name of the oper block used to oper up
  * @return The return value is ignored (use return 0)
  */
-int hooktype_local_oper(Client *client, int add);
+int hooktype_local_oper(Client *client, int add, ConfigItem_oper *oper_block);
 
 /** Called when a client sends a PASS command (function prototype for HOOKTYPE_LOCAL_PASS).
  * @param client		The client

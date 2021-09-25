@@ -276,7 +276,7 @@ CMD_FUNC(cmd_oper)
 
 	list_add(&client->special_node, &oper_list);
 
-	RunHook(HOOKTYPE_LOCAL_OPER, client, 1);
+	RunHook(HOOKTYPE_LOCAL_OPER, client, 1, operblock);
 
 	sendnumeric(client, RPL_YOUREOPER);
 

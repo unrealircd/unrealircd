@@ -254,28 +254,36 @@ CMD_FUNC(cmd_whois)
 
 			if (IsOper(target) && !hideoper)
 			{
-				buf[0] = '\0';
-				if (IsOper(target))
-					strlcat(buf, "an IRC Operator", sizeof buf);
+				const char *operlogin;
+				const char *operclass;
 
-				else
-					strlcat(buf, "a Local IRC Operator", sizeof buf);
-				if (buf[0])
+				strlcpy(buf, "an IRC Operator", sizeof buf);
+
+				if (MyUser(target))
 				{
-					if (IsOper(client) && MyUser(target))
-					{
-						char *operclass = "???";
-						ConfigItem_oper *oper = find_oper(target->user->operlogin);
-						if (oper && oper->operclass)
-							operclass = oper->operclass;
-						sendto_one(client, NULL,
-						    ":%s 313 %s %s :is %s (%s) [%s]", me.name,
-						    client->name, name, buf,
-						    target->user->operlogin ? target->user->operlogin : "unknown",
-						    operclass);
-					}
-					else
-						sendnumeric(client, RPL_WHOISOPERATOR, name, buf);
+					ConfigItem_oper *oper;
+					operlogin = target->user->operlogin;
+					oper = find_oper(target->user->operlogin);
+					if (oper && oper->operclass)
+						operclass = oper->operclass;
+				} else {
+					operlogin = moddata_client_get(target, "operlogin");
+					operclass = moddata_client_get(target, "operclass");
+				}
+				if (operlogin && operclass)
+				{
+					sendnumericfmt(client, RPL_WHOISOPERATOR,
+					    "%s :is %s (%s) [%s]",
+					    name, buf, operlogin, operclass);
+				} else
+				if (operlogin)
+				{
+					sendnumericfmt(client, RPL_WHOISOPERATOR,
+					    "%s :is %s (%s)",
+					    name, buf, operlogin);
+				} else
+				{
+					sendnumeric(client, RPL_WHOISOPERATOR, name, buf);
 				}
 			}
 

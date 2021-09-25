@@ -340,7 +340,10 @@ void remove_oper_modes(Client *client)
 
 void remove_oper_privileges(Client *client, int broadcast_mode_change)
 {
-	long oldumodes = client->umodes;
+	long oldumodes;
+	if (MyUser(client))
+		RunHook(HOOKTYPE_LOCAL_OPER, client, 0, NULL);
+	oldumodes = client->umodes;
 	remove_oper_modes(client);
 	remove_all_snomasks(client);
 	if (broadcast_mode_change && (client->umodes != oldumodes))
