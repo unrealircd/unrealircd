@@ -65,7 +65,7 @@ void make_extcmodestr()
 	/* type 2: 1 par to set/unset (has .unset_with_param) */
 	p = extchmstr[1];
 	for (cm=channelmodes; cm; cm = cm->next)
-		if (cm->paracount && cm->letter && cm->unset_with_param)
+		if (cm->paracount && cm->letter && cm->unset_with_param && (cm->type != CMODE_MEMBER))
 			*p++ = cm->letter;
 	*p = '\0';
 
