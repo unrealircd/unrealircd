@@ -405,13 +405,13 @@ typedef struct {
 	Client *client;		/**< Client to check, can be a remote client */
 	Channel *channel;	/**< Channel to check */
 	const char *banstr;	/**< Mask string (ban) */
-	ExtbanCheck checktype;	/**< Check type, one of BANCHK_* */
+	int ban_check_types;	/**< Ban types to check for, one or more of BANCHK_* OR'd together */
 	const char *msg;	/**< Message, only for some BANCHK_* types (for censoring text) */
 	const char *error_msg;	/**< Error message, can be NULL */
 	int no_extbans;		/**< Set to 1 to disable extended bans checking - only nick!user@host allowed */
 	int what;		/**< MODE_ADD or MODE_DEL (for is_ok) */
-	ExtbanType what2;	/**< EXBTYPE_BAN or EXBTYPE_EXCEPT (for is_ok) */
-	int is_ok_checktype;	/**< One of EXBCHK_* (for is_ok) */
+	ExtbanType ban_type;	/**< EXBTYPE_BAN or EXBTYPE_EXCEPT (for is_ok) */
+	ExtbanCheck is_ok_check;/**< One of EXBCHK_* (for is_ok) */
 	int conv_options;	/**< One of BCTX_CONV_OPTION_* (for conv_param) */
 } BanContext;
 

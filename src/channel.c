@@ -385,7 +385,7 @@ inline int ban_check_mask(BanContext *b)
 		/* Is an extended ban. */
 		const char *nextbanstr;
 		Extban *extban = findmod_by_bantype(b->banstr, &nextbanstr);
-		if (!extban || !(extban->is_banned_events & b->checktype))
+		if (!extban || !(extban->is_banned_events & b->ban_check_types))
 		{
 			return 0;
 		} else {
@@ -435,7 +435,7 @@ Ban *is_banned_with_nick(Client *client, Channel *channel, int type, const char 
 
 	b->client = client;
 	b->channel = channel;
-	b->checktype = type;
+	b->ban_check_types = type;
 	if (msg)
 		b->msg = *msg;
 
@@ -820,7 +820,7 @@ int find_invex(Channel *channel, Client *client)
 
 	b->client = client;
 	b->channel = channel;
-	b->checktype = BANCHK_JOIN;
+	b->ban_check_types = BANCHK_JOIN;
 
 	for (inv = channel->invexlist; inv; inv = inv->next)
 	{

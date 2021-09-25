@@ -77,7 +77,7 @@ int extban_country_usage(Client *client)
 
 int extban_country_is_ok(BanContext *b)
 {
-	if (b->is_ok_checktype == EXCHK_PARAM)
+	if (b->is_ok_check == EXCHK_PARAM)
 	{
 		const char *p;
 

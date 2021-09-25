@@ -255,13 +255,13 @@ int generic_ban_is_ok(BanContext *b)
 			{
 				if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))
 				{
-					if (b->is_ok_checktype == EXBCHK_ACCESS_ERR)
+					if (b->is_ok_check == EXBCHK_ACCESS_ERR)
 						sendnotice(b->client, "Setting/removing of extended bans has been disabled");
 					return 0; /* REJECT */
 				}
 				if (strchr(RESTRICT_EXTENDEDBANS, b->banstr[1]))
 				{
-					if (b->is_ok_checktype == EXBCHK_ACCESS_ERR)
+					if (b->is_ok_check == EXBCHK_ACCESS_ERR)
 						sendnotice(b->client, "Setting/removing of extended bantypes '%s' has been disabled", RESTRICT_EXTENDEDBANS);
 					return 0; /* REJECT */
 				}
@@ -271,7 +271,7 @@ int generic_ban_is_ok(BanContext *b)
 			if (extban && extban->is_ok)
 			{
 				b->banstr = nextbanstr;
-				if ((b->is_ok_checktype == EXBCHK_ACCESS) || (b->is_ok_checktype == EXBCHK_ACCESS_ERR))
+				if ((b->is_ok_check == EXBCHK_ACCESS) || (b->is_ok_check == EXBCHK_ACCESS_ERR))
 				{
 					if (!extban->is_ok(b) &&
 					    !ValidatePermissionsForPath("channel:override:mode:extban",b->client,NULL,b->channel,NULL))
@@ -279,7 +279,7 @@ int generic_ban_is_ok(BanContext *b)
 						return 0; /* REJECT */
 					}
 				} else
-				if (b->is_ok_checktype == EXBCHK_PARAM)
+				if (b->is_ok_check == EXBCHK_PARAM)
 				{
 					if (!extban->is_ok(b))
 					{
@@ -326,17 +326,17 @@ int timedban_extban_is_ok(BanContext *b)
 	durationstr = para;
 	matchby = strchr(para, ':');
 	if (!matchby || !matchby[1])
-		return timedban_extban_syntax(b->client, b->is_ok_checktype, "Invalid syntax");
+		return timedban_extban_syntax(b->client, b->is_ok_check, "Invalid syntax");
 	*matchby++ = '\0';
 
 	duration = atoi(durationstr);
 
 	if ((duration <= 0) || (duration > TIMEDBAN_MAX_TIME))
-		return timedban_extban_syntax(b->client, b->is_ok_checktype, "Invalid duration time");
+		return timedban_extban_syntax(b->client, b->is_ok_check, "Invalid duration time");
 
 	strlcpy(tmpmask, matchby, sizeof(tmpmask));
 	timedban_extban_is_ok_recursion++;
-	//res = extban_is_ok_nuh_extban(b->client, b->channel, tmpmask, b->is_ok_checktype, b->what, b->what2);
+	//res = extban_is_ok_nuh_extban(b->client, b->channel, tmpmask, b->is_ok_check, b->what, b->ban_type);
 	b->banstr = tmpmask;
 	res = generic_ban_is_ok(b);
 	timedban_extban_is_ok_recursion--;
@@ -346,7 +346,7 @@ int timedban_extban_is_ok(BanContext *b)
 		 * invalid n!u@h syntax, unknown (sub)extbantype,
 		 * disabled extban type in conf, too much recursion, etc.
 		 */
-		return timedban_extban_syntax(b->client, b->is_ok_checktype, "Invalid matcher");
+		return timedban_extban_syntax(b->client, b->is_ok_check, "Invalid matcher");
 	}
 
 	return 1; /* OK */

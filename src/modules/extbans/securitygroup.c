@@ -95,7 +95,7 @@ int extban_securitygroup_generic(char *mask, int strict)
 
 int extban_securitygroup_is_ok(BanContext *b)
 {
-	if (MyUser(b->client) && (b->what == MODE_ADD) && (b->is_ok_checktype == EXBCHK_PARAM))
+	if (MyUser(b->client) && (b->what == MODE_ADD) && (b->is_ok_check == EXBCHK_PARAM))
 	{
 		char banbuf[SECURITYGROUPLEN+8];
 		strlcpy(banbuf, b->banstr, sizeof(banbuf));

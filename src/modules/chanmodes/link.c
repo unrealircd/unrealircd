@@ -229,9 +229,9 @@ int extban_link_is_ok(BanContext *b)
 	if (b->what == MODE_DEL)
 		return 1;
 
-	if (b->what2 != EXBTYPE_BAN)
+	if (b->ban_type != EXBTYPE_BAN)
 	{
-		if (b->is_ok_checktype == EXBCHK_PARAM)
+		if (b->is_ok_check == EXBCHK_PARAM)
 			sendnotice(b->client, "Ban type ~f only works with bans (+b) and not with exceptions or invex (+e/+I)");
 		return 0; // Reject
 	}
@@ -240,15 +240,15 @@ int extban_link_is_ok(BanContext *b)
 	chan = paramtmp;
 	matchby = strchr(paramtmp, ':');
 	if (!matchby || !matchby[1])
-		return extban_link_syntax(b->client, b->is_ok_checktype, "Invalid syntax");
+		return extban_link_syntax(b->client, b->is_ok_check, "Invalid syntax");
 	*matchby++ = '\0';
 
 	if (*chan != '#' || strchr(b->banstr, ','))
-		return extban_link_syntax(b->client, b->is_ok_checktype, "Invalid channel");
+		return extban_link_syntax(b->client, b->is_ok_check, "Invalid channel");
 
 	b->banstr = matchby;
 	if (extban_is_ok_nuh_extban(b) == 0)
-		return extban_link_syntax(b->client, b->is_ok_checktype, "Invalid matcher");
+		return extban_link_syntax(b->client, b->is_ok_check, "Invalid matcher");
 
 	return 1; // Is ok
 }
@@ -360,7 +360,7 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, const char *key)
 
 		b->client = client;
 		b->channel = channel;
-		b->checktype = BANCHK_JOIN;
+		b->ban_check_types = BANCHK_JOIN;
 
 		for (ban = channel->banlist; ban; ban = ban->next)
 		{

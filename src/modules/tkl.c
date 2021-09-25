@@ -1306,9 +1306,9 @@ int parse_extended_server_ban(const char *mask_in, Client *client, char **error,
 	b = safe_alloc(sizeof(BanContext));
 	b->client = client;
 	b->banstr = nextbanstr;
-	b->is_ok_checktype = EXBCHK_PARAM;
+	b->is_ok_check = EXBCHK_PARAM;
 	b->what = MODE_ADD;
-	b->what2 = EXBTYPE_TKL;
+	b->ban_type = EXBTYPE_TKL;
 
 	/* Run .is_ok() for the extban. This check is skipped if coming from a remote user/server */
 	if (skip_checking == 0)
@@ -5177,7 +5177,7 @@ int _match_user_extended_server_ban(const char *banstr, Client *client)
 	b = safe_alloc(sizeof(BanContext));
 	b->client = client;
 	b->banstr = nextbanstr;
-	b->checktype = BANCHK_TKL;
+	b->ban_check_types = BANCHK_TKL;
 	ret = extban->is_banned(b);
 	safe_free(b);
 	return ret;

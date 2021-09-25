@@ -76,7 +76,7 @@ int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageR
 
 	b->client = client;
 	b->channel = channel;
-	b->checktype = BANCHK_MSG;
+	b->ban_check_types = BANCHK_MSG;
 
 	for (ban = channel->exlist; ban; ban=ban->next)
 	{
@@ -187,9 +187,9 @@ int msgbypass_extban_is_ok(BanContext *b)
 	if (b->what == MODE_DEL)
 		return 1;
 	
-	if (b->what2 != EXBTYPE_EXCEPT)
+	if (b->ban_type != EXBTYPE_EXCEPT)
 	{
-		if (b->is_ok_checktype == EXBCHK_PARAM)
+		if (b->is_ok_check == EXBCHK_PARAM)
 			sendnotice(b->client, "Ban type ~m only works with exceptions (+e) and not with bans or invex (+b/+I)");
 		return 0; /* reject */
 	}
@@ -203,11 +203,11 @@ int msgbypass_extban_is_ok(BanContext *b)
 	type = para;
 	matchby = strchr(para, ':');
 	if (!matchby || !matchby[1])
-		return msgbypass_extban_syntax(b->client, b->is_ok_checktype, "Invalid syntax");
+		return msgbypass_extban_syntax(b->client, b->is_ok_check, "Invalid syntax");
 	*matchby++ = '\0';
 
 	if (!msgbypass_extban_type_ok(type))
-		return msgbypass_extban_syntax(b->client, b->is_ok_checktype, "Unknown type");
+		return msgbypass_extban_syntax(b->client, b->is_ok_check, "Unknown type");
 
 	b->banstr = matchby;
 	if (extban_is_ok_nuh_extban(b) == 0)
@@ -216,7 +216,7 @@ int msgbypass_extban_is_ok(BanContext *b)
 		 * invalid n!u@h syntax, unknown (sub)extbantype,
 		 * disabled extban type in conf, too much recursion, etc.
 		 */
-		return msgbypass_extban_syntax(b->client, b->is_ok_checktype, "Invalid matcher");
+		return msgbypass_extban_syntax(b->client, b->is_ok_check, "Invalid matcher");
 	}
 
 	return 1; /* OK */

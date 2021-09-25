@@ -256,11 +256,11 @@ int extban_modeT_is_ok(BanContext *b)
 {
 	int n;
 
-	if ((b->what == MODE_ADD) && (b->what2 == EXBTYPE_EXCEPT) && MyUser(b->client))
+	if ((b->what == MODE_ADD) && (b->ban_type == EXBTYPE_EXCEPT) && MyUser(b->client))
 		return 0; /* except is not supported */
 
 	/* We check the # of bans in the channel, may not exceed MAX_EXTBANT_PER_CHAN */
-	if ((b->what == MODE_ADD) && (b->is_ok_checktype == EXBCHK_PARAM) &&
+	if ((b->what == MODE_ADD) && (b->is_ok_check == EXBCHK_PARAM) &&
 	     MyUser(b->client) && !IsOper(b->client) &&
 	    ((n = counttextbans(b->channel)) >= MAX_EXTBANT_PER_CHAN))
 	{

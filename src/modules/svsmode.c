@@ -119,7 +119,7 @@ void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 	b = safe_alloc(sizeof(BanContext));
 	b->client = acptr;
 	b->channel = channel;
-	b->checktype = BANCHK_JOIN;
+	b->ban_check_types = BANCHK_JOIN;
 
 	for (ban = *banlist; ban; ban = bnext)
 	{
@@ -134,7 +134,7 @@ void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 		}
 		else if (chmode != 'I' && *ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr, &nextbanstr)))
 		{
-			if ((extban->options & EXTBOPT_CHSVSMODE) && (extban->is_banned_events & b->checktype))
+			if ((extban->options & EXTBOPT_CHSVSMODE) && (extban->is_banned_events & b->ban_check_types))
 			{
 				b->banstr = nextbanstr;
 				if (extban->is_banned(b))

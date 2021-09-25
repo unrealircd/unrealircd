@@ -198,7 +198,7 @@ int extban_is_ok_nuh_extban(BanContext *b)
 		if (extban_is_ok_recursion)
 			return 0; /* Rule #1 violation (more than one stacked extban) */
 
-		if ((b->is_ok_checktype == EXBCHK_PARAM) && RESTRICT_EXTENDEDBANS && !ValidatePermissionsForPath("immune:restrict-extendedbans",b->client,NULL,b->channel,NULL))
+		if ((b->is_ok_check == EXBCHK_PARAM) && RESTRICT_EXTENDEDBANS && !ValidatePermissionsForPath("immune:restrict-extendedbans",b->client,NULL,b->channel,NULL))
 		{
 			/* Test if this specific extban has been disabled.
 			 * (We can be sure RESTRICT_EXTENDEDBANS is not *. Else this extended ban wouldn't be happening at all.)

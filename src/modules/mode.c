@@ -551,9 +551,9 @@ const char *mode_ban_handler(Client *client, Channel *channel, const char *param
 			b->client = client;
 			b->channel = channel;
 			b->banstr = nextbanstr;
-			b->is_ok_checktype = EXBCHK_PARAM;
+			b->is_ok_check = EXBCHK_PARAM;
 			b->what = what;
-			b->what2 = extbtype;
+			b->ban_type = extbtype;
 			if (extban && extban->is_ok)
 				extban->is_ok(b);
 			safe_free(b);
@@ -576,9 +576,9 @@ const char *mode_ban_handler(Client *client, Channel *channel, const char *param
 				b->client = client;
 				b->channel = channel;
 				b->what = what;
-				b->what2 = extbtype;
+				b->ban_type = extbtype;
 
-				b->is_ok_checktype = EXBCHK_ACCESS;
+				b->is_ok_check = EXBCHK_ACCESS;
 				b->banstr = nextbanstr;
 				if (!extban->is_ok(b))
 				{
@@ -587,14 +587,14 @@ const char *mode_ban_handler(Client *client, Channel *channel, const char *param
 						/* TODO: send operoverride notice */
 					} else {
 						b->banstr = nextbanstr;
-						b->is_ok_checktype = EXBCHK_ACCESS_ERR;
+						b->is_ok_check = EXBCHK_ACCESS_ERR;
 						extban->is_ok(b);
 						safe_free(b);
 						return NULL;
 					}
 				}
 				b->banstr = nextbanstr;
-				b->is_ok_checktype = EXBCHK_PARAM;
+				b->is_ok_check = EXBCHK_PARAM;
 				if (!extban->is_ok(b))
 				{
 					safe_free(b);
