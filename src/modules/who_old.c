@@ -334,7 +334,7 @@ static int parse_who_options(Client *client, int argc, const char **argv)
 					{
 					int i;
 						for (i = 0; i <= Usermode_highest; i++)
-							if (*s == Usermode_Table[i].flag)
+							if (*s == Usermode_Table[i].letter)
 							{
 								*umodes |= Usermode_Table[i].mode;
 								break;

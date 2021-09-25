@@ -1238,7 +1238,7 @@ CMD_FUNC(_cmd_umode)
 			def:
 				for (i = 0; i <= Usermode_highest; i++)
 				{
-					if (*m == Usermode_Table[i].flag)
+					if (*m == Usermode_Table[i].letter)
 					{
 						if (Usermode_Table[i].allowed)
 						if (!Usermode_Table[i].allowed(client,what))
@@ -1273,7 +1273,7 @@ CMD_FUNC(_cmd_umode)
 			/* MODES */
 			for (i = 0; i <= Usermode_highest; i++)
 			{
-				if (!Usermode_Table[i].flag)
+				if (!Usermode_Table[i].letter)
 					continue;
 				if (Usermode_Table[i].unset_on_deoper)
 				{

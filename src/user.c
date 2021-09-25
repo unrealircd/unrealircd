@@ -106,9 +106,9 @@ long set_usermode(const char *umode)
 		  default:
 		 	 for (i = 0; i <= Usermode_highest; i++)
 		 	 {
-		 	 	if (!Usermode_Table[i].flag)
+		 	 	if (!Usermode_Table[i].letter)
 		 	 		continue;
-		 	 	if (*m == Usermode_Table[i].flag)
+		 	 	if (*m == Usermode_Table[i].letter)
 		 	 	{
 		 	 		if (what == MODE_ADD)
 			 	 		newumode |= Usermode_Table[i].mode;
@@ -263,8 +263,8 @@ const char *get_usermode_string(Client *client)
 	m = buf;
 	*m++ = '+';
 	for (i = 0; (i <= Usermode_highest) && (m - buf < sizeof(buf) - 4); i++)
-		if (Usermode_Table[i].flag && (client->umodes & Usermode_Table[i].mode))
-			*m++ = Usermode_Table[i].flag;
+		if (Usermode_Table[i].letter && (client->umodes & Usermode_Table[i].mode))
+			*m++ = Usermode_Table[i].letter;
 	*m = '\0';
 	return buf;
 }
@@ -284,8 +284,8 @@ const char *get_usermode_string_raw(long umodes)
 	*m++ = '+';
 	for (i = 0; (i <= Usermode_highest) && (m - buf < sizeof(buf) - 4); i++)
 		
-		if (Usermode_Table[i].flag && (umodes & Usermode_Table[i].mode))
-			*m++ = Usermode_Table[i].flag;
+		if (Usermode_Table[i].letter && (umodes & Usermode_Table[i].mode))
+			*m++ = Usermode_Table[i].letter;
 	*m = '\0';
 	return buf;
 }
@@ -350,7 +350,7 @@ void build_umode_string(Client *client, long old, long sendmask, char *umode_buf
 	*m = '\0';
 	for (i = 0; i <= Usermode_highest; i++)
 	{
-		if (!Usermode_Table[i].flag)
+		if (!Usermode_Table[i].letter)
 			continue;
 		flag = Usermode_Table[i].mode;
 		if (MyUser(client) && !(flag & sendmask))
@@ -358,23 +358,23 @@ void build_umode_string(Client *client, long old, long sendmask, char *umode_buf
 		if ((flag & old) && !(client->umodes & flag))
 		{
 			if (what == MODE_DEL)
-				*m++ = Usermode_Table[i].flag;
+				*m++ = Usermode_Table[i].letter;
 			else
 			{
 				what = MODE_DEL;
 				*m++ = '-';
-				*m++ = Usermode_Table[i].flag;
+				*m++ = Usermode_Table[i].letter;
 			}
 		}
 		else if (!(flag & old) && (client->umodes & flag))
 		{
 			if (what == MODE_ADD)
-				*m++ = Usermode_Table[i].flag;
+				*m++ = Usermode_Table[i].letter;
 			else
 			{
 				what = MODE_ADD;
 				*m++ = '+';
-				*m++ = Usermode_Table[i].flag;
+				*m++ = Usermode_Table[i].letter;
 			}
 		}
 	}

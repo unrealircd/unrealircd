@@ -93,8 +93,8 @@ void make_umodestr(void)
 	m = umodestring;
 	for (i = 0; i <= Usermode_highest; i++)
 	{
-		if (Usermode_Table[i].flag)
-			*m++ = Usermode_Table[i].flag;
+		if (Usermode_Table[i].letter)
+			*m++ = Usermode_Table[i].letter;
 	}
 	*m = '\0';
 }
@@ -136,9 +136,9 @@ Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*
 	short 	 save = -1;
 	while (i < UMODETABLESZ)
 	{
-		if (!Usermode_Table[i].flag && save == -1)
+		if (!Usermode_Table[i].letter && save == -1)
 			save = i;
-		else if (Usermode_Table[i].flag == ch)
+		else if (Usermode_Table[i].letter == ch)
 		{
 			if (Usermode_Table[i].unloaded)
 			{
@@ -158,12 +158,12 @@ Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*
 	i = save;
 	if (i != UMODETABLESZ)
 	{
-		Usermode_Table[i].flag = ch;
+		Usermode_Table[i].letter = ch;
 		Usermode_Table[i].allowed = allowed;
 		Usermode_Table[i].unset_on_deoper = unset_on_deoper;
 		/* Update usermode table highest */
 		for (j = 0; j < UMODETABLESZ; j++)
-			if (Usermode_Table[i].flag)
+			if (Usermode_Table[i].letter)
 				if (i > Usermode_highest)
 					Usermode_highest = i;
 		make_umodestr();
@@ -210,7 +210,7 @@ void UmodeDel(Umode *umode)
 			if (MyUser(client))
 				send_umode_out(client, 1, oldumode);
 		}
-		umode->flag = '\0';
+		umode->letter = '\0';
 		AllUmodes &= ~(umode->mode);
 		SendUmodes &= ~(umode->mode);
 		make_umodestr();
@@ -298,7 +298,7 @@ void unload_all_unused_umodes(void)
 		{
 			AllUmodes &= ~(Usermode_Table[i].mode);
 			SendUmodes &= ~(Usermode_Table[i].mode);
-			Usermode_Table[i].flag = '\0';
+			Usermode_Table[i].letter = '\0';
 			Usermode_Table[i].unloaded = 0;
 		}
 	}
@@ -327,7 +327,7 @@ void remove_oper_modes(Client *client)
 
 	for (i = 0; i <= Usermode_highest; i++)
 	{
-		if (!Usermode_Table[i].flag)
+		if (!Usermode_Table[i].letter)
 			continue;
 		if (Usermode_Table[i].unset_on_deoper)
 			client->umodes &= ~Usermode_Table[i].mode;
@@ -356,7 +356,7 @@ long find_user_mode(char flag)
 
 	for (i = 0; i < UMODETABLESZ; i++)
 	{
-		if ((Usermode_Table[i].flag == flag) && !(Usermode_Table[i].unloaded))
+		if ((Usermode_Table[i].letter == flag) && !(Usermode_Table[i].unloaded))
 			return Usermode_Table[i].mode;
 	}
 	return 0;

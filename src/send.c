@@ -743,10 +743,10 @@ void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 	p = modestr;
 	for(i = 0; i <= Usermode_highest; i++)
 	{
-		if (!Usermode_Table[i].flag)
+		if (!Usermode_Table[i].letter)
 			continue;
 		if (umodes & Usermode_Table[i].mode)
-			*p++ = Usermode_Table[i].flag;
+			*p++ = Usermode_Table[i].letter;
 	}
 	*p = '\0';
 

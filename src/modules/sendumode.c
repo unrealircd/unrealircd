@@ -87,9 +87,9 @@ CMD_FUNC(cmd_sendumode)
 	{
 		for(i = 0; i <= Usermode_highest; i++)
 		{
-			if (!Usermode_Table[i].flag)
+			if (!Usermode_Table[i].letter)
 				continue;
-			if (Usermode_Table[i].flag == *p)
+			if (Usermode_Table[i].letter == *p)
 			{
 				umode_s |= Usermode_Table[i].mode;
 				break;

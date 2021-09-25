@@ -111,7 +111,7 @@ typedef enum ModuleObjectType {
 
 typedef struct {
         long mode; /**< Mode mask */
-        char flag; /**< Mode character */
+        char letter; /**< Mode character */
         int unset_on_deoper; /**< When set to 1 then this user mode will be unset on de-oper */
         int (*allowed)(Client *client, int what); /**< The 'is this user allowed to set this mode?' routine */
         char unloaded; /**< Internal flag to indicate module is being unloaded */

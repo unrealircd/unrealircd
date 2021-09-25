@@ -344,7 +344,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 
 	/* initialize setflag to be the user's pre-SVSMODE flags */
 	for (i = 0; i <= Usermode_highest; i++)
-		if (Usermode_Table[i].flag && (target->umodes & Usermode_Table[i].mode))
+		if (Usermode_Table[i].letter && (target->umodes & Usermode_Table[i].mode))
 			setflags |= Usermode_Table[i].mode;
 
 	/* parse mode change string(s) */
@@ -505,9 +505,9 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 				setmodex:
 				for (i = 0; i <= Usermode_highest; i++)
 				{
-					if (!Usermode_Table[i].flag)
+					if (!Usermode_Table[i].letter)
 						continue;
-					if (*m == Usermode_Table[i].flag)
+					if (*m == Usermode_Table[i].letter)
 					{
 						if (what == MODE_ADD)
 							target->umodes |= Usermode_Table[i].mode;

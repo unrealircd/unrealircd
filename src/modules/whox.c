@@ -319,7 +319,7 @@ CMD_FUNC(cmd_whox)
 
 			for (i = 0; i <= Usermode_highest; i++)
 			{
-				if (*s == Usermode_Table[i].flag)
+				if (*s == Usermode_Table[i].letter)
 				{
 					*umodes |= Usermode_Table[i].mode;
 					break;
