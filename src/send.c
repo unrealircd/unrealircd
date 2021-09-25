@@ -855,7 +855,14 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, con
 			}
 		}
 		/* Now build the remaining string */
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
 		ircvsnprintf(buf + strlen(buf), buflen - strlen(buf), &pattern[3], vl);
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 	}
 	else
 	{
