@@ -1306,9 +1306,6 @@ struct LocalClient {
 	time_t idle_since;		/**< Last time a RESETIDLE message was received (PRIVMSG) */
 	TrafficStats traffic;		/**< Traffic statistics */
 	ModData moddata[MODDATA_MAX_LOCAL_CLIENT];	/**< LocalClient attached module data, used by the ModData system */
-#ifdef DEBUGMODE
-	time_t cputime;			/**< Something with debugging (why is this a time_t? TODO) */
-#endif
 	char *error_str;		/**< Quit reason set by dead_socket() in case of socket/buffer error, later used by exit_client() */
 	char sasl_agent[NICKLEN + 1];	/**< SASL: SASL Agent the user is interacting with */
 	unsigned char sasl_out;		/**< SASL: Number of outgoing sasl messages */

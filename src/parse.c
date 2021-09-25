@@ -521,7 +521,6 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 			cmptr->rticks += ticks;
 		else
 			cmptr->lticks += ticks;
-		cptr->local->cputime += ticks;
 	}
 #endif
 }

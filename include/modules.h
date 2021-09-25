@@ -374,8 +374,6 @@ typedef struct {
 
 /*** Extended bans ***/
 
-// TODO: These should be enums!
-
 typedef enum ExtbanCheck {
 	EXBCHK_ACCESS=0,	/**< Check access */
 	EXBCHK_ACCESS_ERR=1,	/**< Check access and send error */

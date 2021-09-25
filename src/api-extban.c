@@ -72,14 +72,24 @@ Extban *findmod_by_bantype(const char *str, const char **remainder)
 	 return NULL;
 }
 
+/* Check if this is a valid extended ban name */
+int is_valid_extban_name(const char *p)
+{
+	if (!*p)
+		return 0; /* empty name */
+	for (; *p; p++)
+		if (!isalnum(*p) && !strchr("_-", *p))
+			return 0;
+	return 1;
+}
+
 Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 {
 	int slot;
 
 	if (!req.name)
 	{
-		if (module)
-			module->errorcode = MODERR_INVALID;
+		module->errorcode = MODERR_INVALID;
 		unreal_log(ULOG_ERROR, "module", "EXTBANADD_API_ERROR", NULL,
 			   "ExtbanAdd(): name must be specified for ban (new in U6). Module: $module_name",
 			   log_data_string("module_name", module->header->name));
@@ -88,12 +98,32 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 
 	if (!req.is_banned_events && req.is_banned)
 	{
-		if (module)
-			module->errorcode = MODERR_INVALID;
+		module->errorcode = MODERR_INVALID;
 		unreal_log(ULOG_ERROR, "module", "EXTBANADD_API_ERROR", NULL,
 			   "ExtbanAdd(): module must indicate via .is_banned_events on which BANCHK_* "
 			   "events to listen on (new in U6). Module: $module_name",
 			   log_data_string("module_name", module->header->name));
+		return NULL;
+	}
+
+	if (!isalnum(req.letter))
+	{
+		module->errorcode = MODERR_INVALID;
+		unreal_log(ULOG_ERROR, "module", "EXTBANADD_API_ERROR", NULL,
+		           "ExtbanAdd(): module tried to add extban which is not alphanumeric. "
+		           "Module: $module_name",
+		           log_data_string("module_name", module->header->name));
+		return NULL;
+	}
+
+	if (!is_valid_extban_name(req.name))
+	{
+		module->errorcode = MODERR_INVALID;
+		unreal_log(ULOG_ERROR, "module", "EXTBANADD_API_ERROR", NULL,
+		           "ExtbanAdd(): module tried to add extban with an invalid name ($extban_name). "
+		           "Module: $module_name",
+		           log_data_string("module_name", module->header->name),
+		           log_data_string("extban_name", req.name));
 		return NULL;
 	}
 
@@ -107,8 +137,6 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 			return NULL;
 		}
 	}
-
-	/* TODO: perhaps some sanity checking on a-zA-Z0-9? */
 
 	/* Find next available slot... */
 	for (slot = 0; slot < EXTBANTABLESZ; slot++)
