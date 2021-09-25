@@ -1155,6 +1155,8 @@ extern char *prefix_with_extban(const char *remainder, BanContext *b, Extban *ex
 extern GeoIPResult *geoip_client(Client *client);
 extern GeoIPResult *geoip_lookup(const char *ip);
 extern void free_geoip_result(GeoIPResult *r);
+extern const char *get_operlogin(Client *client);
+extern const char *get_operclass(Client *client);
 /* url stuff */
 extern const char *unreal_mkcache(const char *url);
 extern int has_cached_version(const char *url);

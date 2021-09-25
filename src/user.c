@@ -1101,3 +1101,37 @@ GeoIPResult *geoip_client(Client *client)
 		return NULL;
 	return m->ptr; /* can still be NULL */
 }
+
+/** Get the oper block that was used to become OPER.
+ * @param client	The client to fetch the info for
+ * @returns the oper block name (eg: "OpEr") or NULL.
+ */
+const char *get_operlogin(Client *client)
+{
+	if (client->user->operlogin)
+		return client->user->operlogin;
+	return moddata_client_get(client, "operlogin");
+}
+
+/** Get the operclass of the IRCOp.
+ * @param client	The client to fetch the info for
+ * @returns the operclass name or NULL
+ */
+const char *get_operclass(Client *client)
+{
+	const char *operlogin = NULL;
+
+	if (MyUser(client) && client->user->operlogin)
+	{
+		ConfigItem_oper *oper;
+		operlogin = client->user->operlogin;
+		oper = find_oper(operlogin);
+		if (oper && oper->operclass)
+			return oper->operclass;
+	}
+
+	/* Remote user or locally no longer available
+	 * (eg oper block removed but user is still oper)
+	 */
+	return moddata_client_get(client, "operclass");
+}
