@@ -372,7 +372,6 @@ MOD_INIT() {
 }
 
 MOD_LOAD() {
-	ISupportAdd(modinfo->handle, "METADATA", metadata_isupport_param());
 	/* setting default values if not configured */
 	if(metadata_settings.max_user_metadata == 0)
 		metadata_settings.max_user_metadata = 10;
@@ -382,7 +381,7 @@ MOD_LOAD() {
 		metadata_settings.max_subscriptions = 10;
 
 	EventAdd(modinfo->handle, "metadata_queue", metadata_queue_evt, NULL, 1500, 0);
-
+	ISupportAdd(modinfo->handle, "METADATA", metadata_isupport_param());
 	return MOD_SUCCESS;
 }
 
