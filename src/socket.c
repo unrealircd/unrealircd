@@ -28,11 +28,6 @@
 #include "unrealircd.h"
 #include "dns.h"
 
-#if defined(__GNUC__)
-/* Temporarily ignore these for this entire file. FIXME later: */
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
-#endif
-
 int OpenFiles = 0;    /* GLOBAL - number of files currently open */
 int readcalls = 0;
 

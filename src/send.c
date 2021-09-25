@@ -26,13 +26,8 @@
 
 #include "unrealircd.h"
 
-#if defined(__GNUC__)
-/* Temporarily ignore these for this entire file. FIXME later: */
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
-#endif
-
 /* Some forward declarions are needed */
-void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl) __attribute__((format(printf,3,0)));
+void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl);
 void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl) __attribute__((format(printf,4,0)));
 static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, const char *pattern, va_list vl) __attribute__((format(printf,4,0)));
 
@@ -218,7 +213,15 @@ void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl)
 {
 	const char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
 
+	/* Need to ignore -Wformat-nonliteral here */
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
 	ircvsnprintf(sendbuf, sizeof(sendbuf), pattern, vl);
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 	if (BadPtr(mtags_str))
 	{
@@ -1063,7 +1066,15 @@ void buildnumericfmt(char *buf, size_t buflen, Client *to, int numeric, FORMAT_S
 	snprintf(realpattern, sizeof(realpattern), ":%s %.3d %s %s", me.name, numeric, to->name[0] ? to->name : "*", pattern);
 
 	va_start(vl, pattern);
+	/* Need to ignore -Wformat-nonliteral here */
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
 	vsnprintf(buf, buflen, realpattern, vl);
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 	va_end(vl);
 }
 
@@ -1082,14 +1093,14 @@ void buildnumericfmt(char *buf, size_t buflen, Client *to, int numeric, FORMAT_S
  * By the way, did I already mention that you SHOULD NOT USE THIS
  * FUNCTION? ;)
  */
-void send_raw_direct(Client *user, FORMAT_STRING(FORMAT_STRING(const char *pattern)), ...)
+void send_raw_direct(Client *user, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	int sendlen;
 
 	*sendbuf = '\0';
 	va_start(vl, pattern);
-	sendlen = vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, user, pattern, vl);
+	sendlen = vmakebuf_local_withprefix(sendbuf, sizeof(sendbuf), user, pattern, vl);
 	va_end(vl);
 	(void)send(user->local->fd, sendbuf, sendlen, 0);
 }

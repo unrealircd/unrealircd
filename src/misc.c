@@ -1191,8 +1191,6 @@ int IsWebsocket(Client *client)
 	return (MyConnect(client) && moddata_client(client, md).ptr) ? 1 : 0;
 }
 
-extern void send_raw_direct(Client *user, FORMAT_STRING(const char *pattern), ...);
-
 /** Generic function to inform the user he/she has been banned.
  * @param client   The affected client.
  * @param bantype  The ban type, such as: "K-Lined", "G-Lined" or "realname".

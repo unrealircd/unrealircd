@@ -300,7 +300,7 @@ extern void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...) 
 #define buildnumeric(buf, buflen, to, numeric, ...) buildnumericfmt(buf, buflen, to, numeric, STR_ ## numeric, ##__VA_ARGS__)
 extern void buildnumericfmt(char *buf, size_t buflen, Client *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,5,6)));
 extern void sendto_server(Client *one, unsigned long caps, unsigned long nocaps, MessageTag *mtags, FORMAT_STRING(const char *format), ...) __attribute__((format(printf, 5, 6)));
-
+extern void send_raw_direct(Client *user, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 2, 3)));
 extern MODVAR int writecalls, writeb[];
 extern int deliver_it(Client *cptr, char *str, int len, int *want_read);
 extern int target_limit_exceeded(Client *client, void *target, const char *name);
