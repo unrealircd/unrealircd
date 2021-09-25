@@ -1272,7 +1272,17 @@ int i;
 			return -1;
 		}
 	}
-		
+
+	if (!Callbacks[CALLBACKTYPE_CLOAK_KEY_CHECKSUM])
+	{
+		unreal_log(ULOG_ERROR, "config", "NO_CLOAKING_MODULE", NULL,
+		           "No cloaking module loaded, you must load 1 of these modulese:\n"
+		           "1) cloak_sha256 - if you are a new network starting with UnrealIRCd 6\n"
+		           "2) cloak_md5 - the old one if migrating an existing network from UnrealIRCd 3.2/4/5\n"
+		           "3) cloak_none - if you don't want to use cloaking at all\n"
+		           "See also https://www.unrealircd.org/docs/FAQ#choose-a-cloaking-module");
+		return -1;
+	}
 	return 0;
 }
 
