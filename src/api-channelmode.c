@@ -150,10 +150,10 @@ void extcmodes_check_for_changed_channel_modes(void)
 	strlcpy(previous_chanmodes, chanmodes, sizeof(previous_chanmodes));
 }
 
-char *make_prefix(void)
+void make_prefix(char **isupport_prefix, char **isupport_statusmsg)
 {
 	static char prefix[256];
-	char prefix_prefix[256];
+	static char prefix_prefix[256];
 	char prefix_modes[256];
 	int rank[256];
 	Cmode *cm;
@@ -200,22 +200,18 @@ char *make_prefix(void)
 		snprintf(prefix, sizeof(prefix), "(%s)%s", prefix_modes, prefix_prefix);
 	}
 
-	return prefix;
+	*isupport_prefix = prefix;
+	*isupport_statusmsg = prefix_prefix;
 }
 
 void extcmodes_check_for_changed_prefixes(void)
 {
 	ISupport *isup;
-	char *prefix = make_prefix();
+	char *prefix, *statusmsg;
 
-	isup = ISupportFind("PREFIX");
-	if (!isup)
-	{
-		strlcpy(previous_prefix, prefix, sizeof(previous_prefix));
-		return; /* not booted yet. then we are done here. */
-	}
-
-	ISupportSetValue(isup, prefix);
+	make_prefix(&prefix, &statusmsg);
+	ISupportSet(NULL, "PREFIX", prefix);
+	ISupportSet(NULL, "STATUSMSG", statusmsg);
 
 	if (*previous_prefix && strcmp(prefix, previous_prefix))
 	{

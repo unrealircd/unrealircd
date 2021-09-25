@@ -89,7 +89,6 @@ void isupport_init(void)
 	ISupportSet(NULL, "ELIST", "MNUCT");
 	ISupportSet(NULL, "CASEMAPPING", "ascii");
 	ISupportSet(NULL, "NETWORK", NETWORK_NAME_005);
-	ISupportSet(NULL, "PREFIX", ""); /* placeholder */
 	ISupportSetFmt(NULL, "CHANMODES",
 	               CHPAR1 "%s,%s,%s,%s",
 	               EXPAR1, EXPAR2, EXPAR3, EXPAR4);
