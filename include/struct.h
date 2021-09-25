@@ -2001,19 +2001,6 @@ struct Ban {
 	time_t when;		/**< When the entry was added */
 };
 
-/*
-** Channel Related macros follow
-*/
-
-/** Channel flags (privileges) of users on a channel.
- * This is used by Member and Membership (m->flags) to indicate the access rights of a user in a channel.
- * Also used by SJOIN and MODE to set some flags while a JOIN or MODE is in process.
- * @defgroup ChannelFlags Channel access flags
- * @{
- */
-
-/** @} */
-
 /* Channel macros */
 #define MODE_EXCEPT		0x0200
 #define	MODE_BAN		0x0400

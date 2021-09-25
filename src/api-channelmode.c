@@ -711,6 +711,19 @@ int module_has_extcmode_param_mode(Module *mod)
 	return 0;
 }
 
+/** Channel member privileges - getting, setting, checking vhoaq status, etc.
+ * These functions get or set the access rights of channel members, such as +vhoaq.
+ * They can also convert between modes (vhoaq), prefixes and sjoin prefixes.
+ * @defgroup ChannelMember Channel members access privileges
+ * @{
+ */
+
+/** Retrieve channel access for a user on a channel, returns modes eg "qao".
+ * @param client	The client
+ * @param channel	The channel
+ * @returns The modes, sorted by high ranking to lower ranking, eg "qao".
+ * An empty string ("") is returned when not in the channel or no modes.
+ */
 const char *get_channel_access(Client *client, Channel *channel)
 {
 	Membership *mb;
@@ -1120,3 +1133,5 @@ void channel_member_modes_generate_equal_or_greater(const char *modes, char *buf
 	if ((cm->type == CMODE_MEMBER) && (cm->rank >= rank))
 		strlcat_letter(buf, cm->letter, buflen);
 }
+
+/** @} */
