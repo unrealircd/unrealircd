@@ -61,7 +61,7 @@ MOD_UNLOAD()
  * parv[1] = max global count
  * parv[2] = time of end sync
  * parv[3] = unreal protocol using (numeric)
- * parv[4] = cloak-crc (> u2302)
+ * parv[4] = cloak key check (> u2302)
  * parv[5] = free(**)
  * parv[6] = free(**)
  * parv[7] = free(**)
@@ -128,12 +128,14 @@ CMD_FUNC(cmd_netinfo)
 		           log_data_integer("their_link_protocol", protocol),
 		           log_data_integer("our_link_protocol", UnrealProtocol));
 	}
-	strlcpy(buf, CLOAK_KEYCRC, sizeof(buf));
+	strlcpy(buf, CLOAK_KEY_CHECKSUM, sizeof(buf));
 	if (*parv[4] != '*' && strcmp(buf, parv[4]))
 	{
 		unreal_log(ULOG_WARNING, "link", "CLOAK_KEY_MISMATCH", client,
-		           "Server $client has a DIFFERENT CLOAK KEY!!! You should fix this ASAP "
-		           "as this causes major issues with channel bans not working!!");
+		           "Server $client has a DIFFERENT CLOAK KEY (OR METHOD)!!! You should fix this ASAP!\n"
+		           "When the cloaking configuration is different on servers, this will cause "
+		           "channel bans on cloaked hosts/IPs not to work correctly, "
+		           "meaning users can bypass channel bans!");
 	}
 	SetNetInfo(client);
 }

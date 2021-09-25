@@ -2253,7 +2253,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 
 /* Callback types */
 #define CALLBACKTYPE_CLOAK 1
-#define CALLBACKTYPE_CLOAKKEYCSUM 2
+#define CALLBACKTYPE_CLOAK_KEY_CHECKSUM 2
 #define CALLBACKTYPE_CLOAK_EX 3
 #define CALLBACKTYPE_BLACKLIST_CHECK 4
 #define CALLBACKTYPE_REPUTATION_STARTTIME 5
@@ -2398,7 +2398,7 @@ enum EfunctionType {
 #define MOD_LOAD() DLLFUNC int Mod_Load(ModuleInfo *modinfo)
 #define MOD_UNLOAD() DLLFUNC int Mod_Unload(ModuleInfo *modinfo)
 
-#define CLOAK_KEYCRC	RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM] != NULL ? RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM]->func.stringfunc() : "nil"
+#define CLOAK_KEY_CHECKSUM	RCallbacks[CALLBACKTYPE_CLOAK_KEY_CHECKSUM] != NULL ? RCallbacks[CALLBACKTYPE_CLOAK_KEY_CHECKSUM]->func.stringfunc() : "nil"
 
 #ifdef DYNAMIC_LINKING
  #include "modversion.h"

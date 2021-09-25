@@ -64,7 +64,7 @@ MOD_TEST()
 		config_error("cloak: Error while trying to install cloaking callback!");
 		return MOD_FAILED;
 	}
-	cloak_csum = CallbackAddString(modinfo->handle, CALLBACKTYPE_CLOAKKEYCSUM, cloakcsum);
+	cloak_csum = CallbackAddString(modinfo->handle, CALLBACKTYPE_CLOAK_KEY_CHECKSUM, cloakcsum);
 	if (!cloak_csum)
 	{
 		config_error("cloak: Error while trying to install cloaking checksum callback!");

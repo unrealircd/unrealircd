@@ -805,7 +805,7 @@ int stats_set(Client *client, const char *para)
 	}
 	sendtxtnumeric(client, "cloak-prefix: %s", CLOAK_PREFIX);
 	sendtxtnumeric(client, "help-channel: %s", HELP_CHANNEL);
-	sendtxtnumeric(client, "cloak-keys: %s", CLOAK_KEYCRC);
+	sendtxtnumeric(client, "cloak-keys: %s", CLOAK_KEY_CHECKSUM);
 	sendtxtnumeric(client, "kline-address: %s", KLINE_ADDRESS);
 	if (GLINE_ADDRESS)
 		sendtxtnumeric(client, "gline-address: %s", GLINE_ADDRESS);
