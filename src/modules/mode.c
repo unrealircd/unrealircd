@@ -1030,7 +1030,7 @@ void _set_mode(Channel *channel, Client *client, int parc, const char *parv[], u
 					if ((Halfop_mode(modetype) == FALSE) && opermode == 2 && htrig != 1)
 					{
 						/* YUCK! */
-						if ((foundat.flag == 'h') && argument && (find_person(argument, NULL) == client))
+						if ((foundat.flag == 'h') && argument && (find_user(argument, NULL) == client))
 						{
 							/* ircop with halfop doing a -h on himself. no warning. */
 						} else {
@@ -1094,7 +1094,7 @@ CMD_FUNC(_cmd_umode)
 		return;
 	}
 
-	if (!(acptr = find_person(parv[1], NULL)))
+	if (!(acptr = find_user(parv[1], NULL)))
 	{
 		if (MyConnect(client))
 		{

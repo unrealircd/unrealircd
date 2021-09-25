@@ -1159,7 +1159,7 @@ CMD_FUNC(reputation_user_cmd)
 		reputation_list_query(client, max);
 		return;
 	} else {
-		Client *target = find_person(parv[1], NULL);
+		Client *target = find_user(parv[1], NULL);
 		if (!target)
 		{
 			sendnumeric(client, ERR_NOSUCHNICK, parv[1]);

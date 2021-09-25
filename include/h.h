@@ -200,7 +200,7 @@ extern Ban *is_banned_with_nick(Client *, Channel *, int, const char *, const ch
 extern Client *find_client(const char *, Client *);
 extern Client *find_name(const char *, Client *);
 extern Client *find_nickserv(const char *, Client *);
-extern Client *find_person(const char *, Client *);
+extern Client *find_user(const char *, Client *);
 extern Client *find_server(const char *, Client *);
 extern Client *find_service(const char *, Client *);
 #define find_server_quick(x) find_server(x, NULL)

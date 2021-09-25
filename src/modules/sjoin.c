@@ -403,7 +403,7 @@ CMD_FUNC(cmd_sjoin)
 			/* The user may no longer exist. This can happen in case of a
 			 * SVSKILL traveling in the other direction. Nothing to worry about.
 			 */
-			if (!(acptr = find_person(item, NULL)))
+			if (!(acptr = find_user(item, NULL)))
 				continue;
 
 			if (acptr->direction != client->direction)

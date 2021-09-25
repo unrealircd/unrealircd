@@ -177,7 +177,7 @@ CMD_FUNC(cmd_md)
 		if (!channel)
 			return;
 
-		target = find_person(p, NULL);
+		target = find_user(p, NULL);
 		if (!target)
 			return;
 
@@ -216,7 +216,7 @@ CMD_FUNC(cmd_md)
 			return;
 		*p++ = '\0';
 
-		target = find_person(objname, NULL);
+		target = find_user(objname, NULL);
 		if (!target)
 			return;
 

@@ -76,7 +76,7 @@ CMD_FUNC(cmd_svskill)
 	if (!IsULine(client))
 		return;
 
-	if (!(target = find_person(parv[1], NULL)))
+	if (!(target = find_user(parv[1], NULL)))
 		return;
 
 	/* for new_message() we use target here, makes sense for the exit_client, right? */

@@ -103,7 +103,7 @@ CMD_FUNC(cmd_whois)
 		if (wilds)
 			continue;
 
-		if ((target = find_person(nick, NULL)))
+		if ((target = find_user(nick, NULL)))
 		{
 			/*
 			 * 'Rules' established for sending a WHOIS reply:

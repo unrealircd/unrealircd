@@ -122,7 +122,7 @@ CMD_FUNC(cmd_silence)
 		{
 			p++;
 		} else
-		if (!strchr(p, '@') && !strchr(p, '.') && !strchr(p, '!') && !strchr(p, '*') && !find_person(p, NULL))
+		if (!strchr(p, '@') && !strchr(p, '.') && !strchr(p, '!') && !strchr(p, '*') && !find_user(p, NULL))
 		{
 			sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
 			return;

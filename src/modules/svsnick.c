@@ -76,7 +76,7 @@ CMD_FUNC(cmd_svsnick)
 	if (do_nick_name(nickname) == 0)
 		return;
 
-	if (!(acptr = find_person(parv[1], NULL)))
+	if (!(acptr = find_user(parv[1], NULL)))
 		return; /* User not found, bail out */
 
 	if ((ocptr = find_client(nickname, NULL)) && ocptr != acptr) /* Collision */

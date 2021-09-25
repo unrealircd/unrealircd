@@ -65,7 +65,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, const char *parv[], 
 
 	if (alias->type == ALIAS_SERVICES) 
 	{
-		if (SERVICES_NAME && (acptr = find_person(alias->nick, NULL)))
+		if (SERVICES_NAME && (acptr = find_user(alias->nick, NULL)))
 		{
 			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, NULL))
 				return;
@@ -77,7 +77,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, const char *parv[], 
 	}
 	else if (alias->type == ALIAS_STATS) 
 	{
-		if (STATS_SERVER && (acptr = find_person(alias->nick, NULL)))
+		if (STATS_SERVER && (acptr = find_user(alias->nick, NULL)))
 		{
 			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, NULL))
 				return;
@@ -89,7 +89,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, const char *parv[], 
 	}
 	else if (alias->type == ALIAS_NORMAL) 
 	{
-		if ((acptr = find_person(alias->nick, NULL))) 
+		if ((acptr = find_user(alias->nick, NULL))) 
 		{
 			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, NULL))
 				return;
@@ -205,7 +205,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, const char *parv[], 
 				
 				if (format->type == ALIAS_SERVICES) 
 				{
-					if (SERVICES_NAME && (acptr = find_person(format->nick, NULL)))
+					if (SERVICES_NAME && (acptr = find_user(format->nick, NULL)))
 					{
 						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, NULL))
 							return;
@@ -216,7 +216,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, const char *parv[], 
 				}
 				else if (format->type == ALIAS_STATS) 
 				{
-					if (STATS_SERVER && (acptr = find_person(format->nick, NULL)))
+					if (STATS_SERVER && (acptr = find_user(format->nick, NULL)))
 					{
 						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, NULL))
 							return;
@@ -227,7 +227,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, const char *parv[], 
 				}
 				else if (format->type == ALIAS_NORMAL) 
 				{
-					if ((acptr = find_person(format->nick, NULL))) 
+					if ((acptr = find_user(format->nick, NULL))) 
 					{
 						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, NULL))
 							return;

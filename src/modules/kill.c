@@ -94,7 +94,7 @@ CMD_FUNC(cmd_kill)
 			break;
 		}
 
-		target = find_person(nick, NULL);
+		target = find_user(nick, NULL);
 
 		/* If a local user issued the /KILL then we will "chase" the user.
 		 * In other words: we'll check the history for recently changed nicks.

@@ -88,7 +88,7 @@ CMD_FUNC(cmd_ison)
 	{
 		if ((user = strchr(s, '!')))
 			*user++ = '\0';
-		if ((acptr = find_person(s, NULL)))
+		if ((acptr = find_user(s, NULL)))
 		{
 			if (user)
 			{

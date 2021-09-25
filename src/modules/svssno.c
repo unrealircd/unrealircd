@@ -76,7 +76,7 @@ void do_svssno(Client *client, int parc, const char *parv[], int show_change)
 	if (parv[1][0] == '#') 
 		return;
 
-	if (!(target = find_person(parv[1], NULL)))
+	if (!(target = find_user(parv[1], NULL)))
 		return;
 
 	if (hunt_server(client, NULL, show_change ? "SVS2SNO" : "SVSSNO", 1, parc, parv) != HUNTED_ISME)

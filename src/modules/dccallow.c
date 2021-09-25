@@ -107,7 +107,7 @@ CMD_FUNC(cmd_dccallow)
 			if (!*++s)
 				continue;
 			
-			friend = find_person(s, NULL);
+			friend = find_user(s, NULL);
 			
 			if (friend == client)
 				continue;
@@ -125,7 +125,7 @@ CMD_FUNC(cmd_dccallow)
 			if (!*++s)
 				continue;
 			
-			friend = find_person(s, NULL);
+			friend = find_user(s, NULL);
 			if (friend == client)
 				continue;
 			if (!friend)

@@ -92,7 +92,7 @@ CMD_FUNC(cmd_userhost)
 		if ((p = strchr(cn, ' ')))
 			*p = '\0';
 
-		if ((acptr = find_person(cn, NULL)))
+		if ((acptr = find_user(cn, NULL)))
 		{
 			ircsnprintf(response[w], NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30,
                             "%s%s=%c%s@%s",

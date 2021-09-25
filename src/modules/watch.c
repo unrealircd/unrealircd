@@ -77,7 +77,7 @@ static void show_watch(Client *client, char *name, int awaynotify)
 {
 	Client *target;
 
-	if ((target = find_person(name, NULL)))
+	if ((target = find_user(name, NULL)))
 	{
 		if (awaynotify && target->user->away)
 		{
@@ -106,7 +106,7 @@ static void show_watch_removed(Client *client, char *name)
 {
 	Client *target;
 
-	if ((target = find_person(name, NULL)))
+	if ((target = find_user(name, NULL)))
 	{
 		sendnumeric(client, RPL_WATCHOFF,
 		    target->name, target->user->username,
@@ -296,7 +296,7 @@ CMD_FUNC(cmd_watch)
 					lp = lp->next;
 					continue; /* this one is not ours */
 				}
-				if ((target = find_person(lp->value.wptr->nick, NULL)))
+				if ((target = find_user(lp->value.wptr->nick, NULL)))
 				{
 					sendnumeric(client, RPL_NOWON, target->name,
 					    target->user->username,

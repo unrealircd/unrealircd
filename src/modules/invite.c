@@ -304,7 +304,7 @@ CMD_FUNC(cmd_invite)
 	if (parc >= 3 && *parv[1] != '\0')
 	{
 		params_ok = 1;
-		target = find_person(parv[1], NULL);
+		target = find_user(parv[1], NULL);
 		channel = find_channel(parv[2]);
 	}
 	

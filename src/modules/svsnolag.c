@@ -65,7 +65,7 @@ void do_svsnolag(Client *client, int parc, const char *parv[], int show_change)
 	if (parc < 3)
 		return;
 
-	if (!(target = find_person(parv[2], NULL)))
+	if (!(target = find_user(parv[2], NULL)))
 		return;
 
 	if (!MyUser(target))

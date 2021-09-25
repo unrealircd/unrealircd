@@ -285,7 +285,7 @@ CMD_FUNC(cmd_chghost)
 		return;
 	}
 
-	if (!(target = find_person(parv[1], NULL)))
+	if (!(target = find_user(parv[1], NULL)))
 	{
 		sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
 		return;

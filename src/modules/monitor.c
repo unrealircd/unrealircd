@@ -129,7 +129,7 @@ void send_status(Client *client, MessageTag *recv_mtags, const char *nick)
 {
 	MessageTag *mtags = NULL;
 	Client *user;
-	user = find_person(nick, NULL);
+	user = find_user(nick, NULL);
 	new_message(client, recv_mtags, &mtags);
 	if (!user){
 		sendnumeric(client, RPL_MONOFFLINE, nick);

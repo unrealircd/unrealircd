@@ -1062,7 +1062,7 @@ CMD_FUNC(cmd_tempshun)
 	} else
 		name = parv[1];
 
-	target = find_person(name, NULL);
+	target = find_user(name, NULL);
 	if (!target)
 	{
 		sendnumeric(client, ERR_NOSUCHNICK, name);
@@ -1531,7 +1531,7 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 		else
 		{
 			/* It's seemingly a nick .. let's see if we can find the user */
-			if ((acptr = find_person(mask, NULL)))
+			if ((acptr = find_user(mask, NULL)))
 			{
 				BanAction action = BAN_ACT_KLINE; // just a dummy default
 				if ((*type == 'z') || (*type == 'Z'))
@@ -1843,7 +1843,7 @@ CMD_FUNC(cmd_eline)
 		else
 		{
 			/* It's seemingly a nick .. let's see if we can find the user */
-			if ((acptr = find_person(mask, NULL)))
+			if ((acptr = find_user(mask, NULL)))
 			{
 				BanAction action = BAN_ACT_KLINE; // just a dummy default
 				if (add && eline_type_requires_ip(bantypes))

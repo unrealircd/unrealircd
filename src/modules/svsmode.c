@@ -235,7 +235,7 @@ void channel_svsmode(Client *client, int parc, const char *parv[])
 		{
 			if (parc >= i)
 			{
-				if (!(target = find_person(parv[i-1], NULL)))
+				if (!(target = find_user(parv[i-1], NULL)))
 				{
 					i++;
 					break;
@@ -337,7 +337,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 		return;
 	}
 
-	if (!(target = find_person(parv[1], NULL)))
+	if (!(target = find_user(parv[1], NULL)))
 		return;
 
 	userhost_save_current(target);

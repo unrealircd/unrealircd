@@ -99,7 +99,7 @@ CMD_FUNC(cmd_userip)
 		if ((p = strchr(cn, ' ')))
 			*p = '\0';
 
-		if ((acptr = find_person(cn, NULL)))
+		if ((acptr = find_user(cn, NULL)))
 		{
 			if (!(ip = GetIP(acptr)))
 				ip = "<unknown>";

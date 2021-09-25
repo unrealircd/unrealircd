@@ -530,7 +530,7 @@ static void who_global(Client *client, char *mask, int operspy, struct who_forma
 
 	/* If searching for a nick explicitly, then include it later on in the result: */
 	if (mask && ((fmt->matchsel & WMATCH_NICK) || (fmt->matchsel == 0)))
-		hunted = find_person(mask, NULL);
+		hunted = find_user(mask, NULL);
 
 	/* Initialize the markers to zero */
 	list_for_each_entry(acptr, &client_list, client_node)

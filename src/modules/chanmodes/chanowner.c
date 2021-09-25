@@ -66,7 +66,7 @@ int cmode_chanowner_is_ok(Client *client, Channel *channel, char mode, const cha
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
-		Client *target = find_person(param, NULL);
+		Client *target = find_user(param, NULL);
 
 		if ((what == MODE_DEL) && (client == target))
 		{

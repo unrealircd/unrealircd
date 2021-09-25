@@ -456,7 +456,7 @@ Client *hash_find_nickatserver(const char *str, Client *def)
 	if (serv)
 		*serv++ = '\0';
 
-	client = find_person(nick, NULL);
+	client = find_user(nick, NULL);
 	if (!client)
 		return NULL; /* client not found */
 	
@@ -500,7 +500,7 @@ Client *hash_find_server(const char *server, Client *def)
 
 /** Find a client by name.
  * This searches in the list of all types of clients, user/person, servers or an unregistered clients.
- * If you know what type of client to search for, then use find_server() or find_person() instead!
+ * If you know what type of client to search for, then use find_server() or find_user() instead!
  * @param name        The name to search for (eg: "nick" or "irc.example.net")
  * @param requester   The client that is searching for this name
  * @note  If 'requester' is a server or NULL, then we also check
@@ -541,14 +541,14 @@ Client *find_server(const char *name, Client *requester)
 	return NULL;
 }
 
-/** Find a person (a user).
+/** Find a user (a person)
  * @param name        The name to search for (eg: "nick" or "001ABCDEFG")
  * @param requester   The client that is searching for this name
  * @note  If 'requester' is a server or NULL, then we also check
  *        the ID table, otherwise not.
  * @returns If the user is found then the Client is returned, otherwise NULL.
  */
-Client *find_person(const char *name, Client *requester) /* TODO: this should have been called find_user() to be consistent */
+Client *find_user(const char *name, Client *requester)
 {
 	Client *c2ptr;
 
