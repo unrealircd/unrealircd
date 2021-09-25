@@ -92,11 +92,7 @@ int extban_operclass_is_banned(BanContext *b)
 {
 	if (MyUser(b->client) && IsOper(b->client))
 	{
-		char *operclass = NULL;
-		ConfigItem_oper *oper = find_oper(b->client->user->operlogin);
-		if (oper && oper->operclass)
-			operclass = oper->operclass;
-		
+		const char *operclass = get_operclass(b->client);
 		if (operclass && match_simple(b->banstr, operclass))
 			return 1;
 	}
