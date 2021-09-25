@@ -751,7 +751,7 @@ int websocket_secure_connect(Client *client)
 	 * us that their [client]--[webirc gateway] connection is also
 	 * secure (eg: using https)
 	 */
-	if (WSU(client)->forwarded && IsSecureConnect(client) && !WSU(client)->secure)
+	if (IsSecureConnect(client) && WSU(client) && WSU(client)->forwarded && !WSU(client)->secure)
 		client->umodes &= ~UMODE_SECURE;
 	return 0;
 }
