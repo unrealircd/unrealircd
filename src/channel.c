@@ -414,8 +414,6 @@ Ban *is_banned_with_nick(Client *client, Channel *channel, int type, const char 
 	char savednick[NICKLEN+1];
 	BanContext *b = safe_alloc(sizeof(BanContext));
 
-	// FIXME: this comment from below actually is doable nowadays with U6 ;)
-
 	/* It's not really doable to pass 'nick' to all the ban layers,
 	 * including extbans (with stacking) and so on. Or at least not
 	 * without breaking several module API's.

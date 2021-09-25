@@ -1269,8 +1269,8 @@ int hooktype_remote_nickchange(Client *client, MessageTag *mtags, const char *ne
  */
 int hooktype_can_join(Client *client, Channel *channel, const char *key, char **errmsg);
 
-/** Called when a user wants to join a channel, may the user join? (function prototype for HOOKTYPE_PRE_LOCAL_JOIN).
- * FIXME: It's not entirely clear why we have both hooktype_can_join() and hooktype_pre_local_join().
+/** Called when a user wants to join a channel (function prototype for HOOKTYPE_PRE_LOCAL_JOIN).
+ * IMPORTANT: Generally you want to use HOOKTYPE_CAN_JOIN / hooktype_can_join() instead!!
  * @param client		The client
  * @param channel		The channel the user wants to join
  * @param key			Channel key (can be NULL)
