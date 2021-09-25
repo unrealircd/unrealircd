@@ -197,7 +197,7 @@ char *make_prefix(void)
 				}
 			}
 		}
-		snprintf(prefix, sizeof(prefix), "(%s)%s", prefix_prefix, prefix_modes);
+		snprintf(prefix, sizeof(prefix), "(%s)%s", prefix_modes, prefix_prefix);
 	}
 
 	return prefix;
