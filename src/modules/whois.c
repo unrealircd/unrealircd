@@ -254,8 +254,8 @@ CMD_FUNC(cmd_whois)
 
 			if (IsOper(target) && !hideoper)
 			{
-				const char *operlogin;
-				const char *operclass;
+				const char *operlogin = NULL;
+				const char *operclass = NULL;
 
 				strlcpy(buf, "an IRC Operator", sizeof buf);
 
