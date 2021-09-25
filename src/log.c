@@ -473,6 +473,7 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 
 	if (client->user)
 	{
+		char buf[512];
 		/* client.user */
 		user = json_object();
 		json_object_set_new(child, "user", user);
@@ -486,6 +487,16 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 			json_object_set_new(user, "account", json_string_unreal(client->user->account));
 		json_object_set_new(user, "reputation", json_integer(GetReputation(client)));
 		json_expand_client_security_groups(user, client);
+
+		/* user modes and snomasks */
+		get_usermode_string_r(client, buf, sizeof(buf));
+		json_object_set_new(user, "modes", json_string_unreal(buf+1));
+		if (client->user->snomask)
+			json_object_set_new(user, "snomasks", json_string_unreal(client->user->snomask));
+
+		/* if oper then we can possibly expand a bit more */
+		if (client->user->operlogin)
+			json_object_set_new(user, "oper_login", json_string_unreal(client->user->operlogin));
 	} else
 	if (IsMe(client))
 	{
@@ -544,7 +555,7 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 
 void json_expand_channel(json_t *j, const char *key, Channel *channel, int detail)
 {
-	char modem[512], modep[512], modes[512];
+	char mode1[512], mode2[512], modes[512];
 
 	json_t *child = json_object();
 	json_object_set_new(j, key, child);
@@ -559,13 +570,13 @@ void json_expand_channel(json_t *j, const char *key, Channel *channel, int detai
 	}
 
 	/* Add "mode" too */
-	channel_modes(NULL, modem, modep, sizeof(modem), sizeof(modep), channel, 0);
-	if (*modep)
+	channel_modes(NULL, mode1, mode2, sizeof(mode1), sizeof(mode2), channel, 0);
+	if (*mode2)
 	{
-		snprintf(modes, sizeof(modes), "%s %s", modem, modep);
+		snprintf(modes, sizeof(modes), "%s %s", mode1+1, mode2);
 		json_object_set_new(child, "modes", json_string_unreal(modes));
 	} else {
-		json_object_set_new(child, "modes", json_string_unreal(modem));
+		json_object_set_new(child, "modes", json_string_unreal(mode1+1));
 	}
 
 	// Possibly later: If detail is set to 1 then expand more...

@@ -91,6 +91,8 @@ extern EVENT(throttling_check_expire);
 
 extern void  module_loadall(void);
 extern long set_usermode(const char *umode);
+extern const char *get_usermode_string(Client *acptr);
+extern const char *get_usermode_string_r(Client *client, char *buf, size_t buflen);
 extern const char *get_usermode_string_raw(long umodes);
 extern ConfigFile *config_parse(const char *filename, char *confdata);
 extern ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsigned int line_offset);
@@ -1178,7 +1180,6 @@ extern EVENT(save_tunefile);
 extern void read_motd(const char *filename, MOTDFile *motd);
 extern int target_limit_exceeded(Client *client, void *target, const char *name);
 extern void make_umodestr(void);
-extern const char *get_usermode_string(Client *acptr);
 extern void initwhowas(void);
 extern void uid_init(void);
 extern const char *uid_get(void);

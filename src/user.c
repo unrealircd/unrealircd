@@ -269,6 +269,24 @@ const char *get_usermode_string(Client *client)
 	return buf;
 }
 
+/** Get user modes as a string - buffer is specified.
+ * @param client	The client
+ * @param buf		The buffer to write to
+ * @param buflen	The size of the buffer
+ * @returns string of user modes (temporary storage)
+ */
+const char *get_usermode_string_r(Client *client, char *buf, size_t buflen)
+{
+	int i;
+
+	strlcpy(buf, "+", buflen);
+	for (i = 0; i <= Usermode_highest; i++)
+		if (Usermode_Table[i].letter && (client->umodes & Usermode_Table[i].mode))
+			strlcat_letter(buf, Usermode_Table[i].letter, buflen);
+
+	return buf;
+}
+
 
 /** Get user modes as a string - this one does not work on 'client' but directly on 'umodes'.
  * @param umodes	The user modes that are set
