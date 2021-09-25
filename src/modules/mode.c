@@ -1375,6 +1375,8 @@ CMD_FUNC(_cmd_umode)
 	if ((oldumodes & UMODE_OPER) && !IsOper(client) && MyConnect(client))
 	{
 		list_del(&client->special_node);
+		if (MyUser(client))
+			RunHook(HOOKTYPE_LOCAL_OPER, client, 0, NULL);
 		remove_oper_privileges(client, 0);
 	}
 
