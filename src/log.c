@@ -1140,7 +1140,7 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 
 	snprintf(timebuf, sizeof(timebuf), "[%s] ", myctime(TStime()));
 
-	//RunHook(HOOKTYPE_LOG, flags, timebuf, text_buf); // FIXME: call with more parameters and possibly not even 'text_buf' at all
+	RunHook(HOOKTYPE_LOG, loglevel, subsystem, event_id, msg, json_serialized, timebuf);
 
 	if (!loop.forked && (loglevel > ULOG_DEBUG))
 	{

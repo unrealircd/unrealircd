@@ -1731,12 +1731,15 @@ int hooktype_tkl_add(Client *client, TKL *tkl);
 int hooktype_tkl_del(Client *client, TKL *tkl);
 
 /** Called when something is logged via the unreal_log() function (function prototype for HOOKTYPE_LOG).
- * @param flags			One of LOG_*, such as LOG_ERROR.
- * @param timebuf		The time buffer, such as "[2030-01-01 12:00:00]"
- * @param buf			The text to be logged
+ * @param loglevel		Loglevel (eg ULOG_INFO)
+ * @param subsystem		Subsystem (eg "operoverride")
+ * @param event_id		Event ID (eg "SAJOIN_COMMAND")
+ * @param msg			Message(s) in text form
+ * @param json_serialized	The associated JSON text
+ * @param timebuf		The [xxxx] time buffer, for convenience
  * @return The return value is ignored (use return 0)
  */
-int hooktype_log(int flags, const char *timebuf, const char *buf);
+int hooktype_log(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized, const char *timebuf);
 
 /** Called when a local user matches a spamfilter (function prototype for HOOKTYPE_LOCAL_SPAMFILTER).
  * @param client		The client
