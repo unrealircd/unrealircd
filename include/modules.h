@@ -439,9 +439,10 @@ struct Extban {
 	 */
 	const char *(*conv_param)(BanContext *b, Extban *handler);
 
-	/** Checks if the user is affected by this ban [required].
-	 * XXX FIXME: make this optional, as we have several functions who just return 0 atm (eg textban)
-	 * Called from is_banned.
+	/** Checks if the user is affected by this ban [optional].
+	 * This may be set to NULL if you have is_banned_events set to 0 (zero),
+	 * this can be useful if you don't actually ban a user, eg for text bans.
+	 * This function is called from is_banned() and two other places.
 	 */
 	int (*is_banned)(BanContext *b);
 };
@@ -1545,14 +1546,14 @@ int hooktype_pre_invite(Client *client, Client *acptr, Channel *channel, int *ov
 int hooktype_invite(Client *client, Client *acptr, Channel *channel, MessageTag *mtags);
 
 /** Called when a user wants to knock on a channel (function prototype for HOOKTYPE_PRE_KNOCK).
- * FIXME: where is the knock reason ?
  * @param client		The client
  * @param channel		The channel to knock on
+ * @param reason		Knock reason (can be replaced if needed)
  * @retval HOOK_DENY		Deny the knock.
  * @retval HOOK_ALLOW		Allow the knock (stop processing other modules)
  * @retval HOOK_CONTINUE	Allow the knock, unless another module blocks it.
  */
-int hooktype_pre_knock(Client *client, Channel *channel);
+int hooktype_pre_knock(Client *client, Channel *channel, const char **reason);
 
 /** Called when a user knocks on a channel (function prototype for HOOKTYPE_KNOCK).
  * @param client		The client

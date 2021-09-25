@@ -34,7 +34,7 @@ Cmode_t EXTCMODE_NOINVITE;
 
 #define IsNoInvite(channel)    (channel->mode.mode & EXTCMODE_NOINVITE)
 
-int noinvite_pre_knock(Client *client, Channel *channel);
+int noinvite_pre_knock(Client *client, Channel *channel, const char **reason);
 int noinvite_pre_invite(Client *client, Client *target, Channel *channel, int *override);
 
 MOD_TEST()
@@ -70,12 +70,12 @@ MOD_UNLOAD()
 }
 
 
-int noinvite_pre_knock(Client *client, Channel *channel)
+int noinvite_pre_knock(Client *client, Channel *channel, const char **reason)
 {
 	if (MyUser(client) && IsNoInvite(channel))
 	{
-		sendnumeric(client, ERR_CANNOTKNOCK,
-				    channel->name, "The channel does not allow invites (+V)");
+		sendnumeric(client, ERR_CANNOTKNOCK, channel->name,
+		            "The channel does not allow invites (+V)");
 		return HOOK_DENY;
 	}
 

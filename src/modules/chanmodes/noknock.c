@@ -32,7 +32,7 @@ Cmode_t EXTCMODE_NOKNOCK;
 
 #define IsNoKnock(channel)    (channel->mode.mode & EXTCMODE_NOKNOCK)
 
-int noknock_check (Client *client, Channel *channel);
+int noknock_check_knock(Client *client, Channel *channel, const char **reason);
 int noknock_mode_allow(Client *client, Channel *channel, char mode, const char *para, int checkt, int what);
 int noknock_mode_del (Channel *channel, int modeChar);
 
@@ -51,7 +51,7 @@ CmodeInfo req;
 	req.is_ok = noknock_mode_allow;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOKNOCK);
 	
-	HookAdd(modinfo->handle, HOOKTYPE_PRE_KNOCK, 0, noknock_check);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_KNOCK, 0, noknock_check_knock);
 	HookAdd(modinfo->handle, HOOKTYPE_MODECHAR_DEL, 0, noknock_mode_del);
 
 	
@@ -70,7 +70,7 @@ MOD_UNLOAD()
 }
 
 
-int noknock_check (Client *client, Channel *channel)
+int noknock_check_knock (Client *client, Channel *channel, const char **reason)
 {
 	if (MyUser(client) && IsNoKnock(channel))
 	{

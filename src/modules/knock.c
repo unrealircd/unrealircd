@@ -124,7 +124,7 @@ CMD_FUNC(cmd_knock)
 
 	for (h = Hooks[HOOKTYPE_PRE_KNOCK]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(client,channel);
+		i = (*(h->func.intfunc))(client, channel, &reason);
 		if (i == HOOK_DENY || i == HOOK_ALLOW)
 			break;
 	}
