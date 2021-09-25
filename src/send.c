@@ -1047,6 +1047,26 @@ void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...)
 	va_end(vl);
 }
 
+/** Build buffer in order to send a numeric message to a client - rarely used.
+ * @param buf		The buffer that should be used
+ * @param buflen	The size of the buffer
+ * @param to		The recipient
+ * @param numeric	The numeric, one of RPL_* or ERR_*, see src/numeric.c
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ */
+void buildnumericfmt(char *buf, size_t buflen, Client *to, int numeric, FORMAT_STRING(const char *pattern), ...)
+{
+	va_list vl;
+	char realpattern[512];
+
+	snprintf(realpattern, sizeof(realpattern), ":%s %.3d %s %s", me.name, numeric, to->name[0] ? to->name : "*", pattern);
+
+	va_start(vl, pattern);
+	vsnprintf(buf, buflen, realpattern, vl);
+	va_end(vl);
+}
+
 /* Send raw data directly to socket, bypassing everything.
  * Looks like an interesting function to call? NO! STOP!
  * Don't use this function. It may only be used by the initial

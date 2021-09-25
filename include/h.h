@@ -264,9 +264,9 @@ extern void sendto_umode_global(int, FORMAT_STRING(const char *), ...) __attribu
 extern void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
 /** Send numeric message to a client.
  * @param to		The recipient
- * @param numeric	The numeric, one of RPL_* or ERR_*, see src/numeric.c
+ * @param numeric	The numeric, one of RPL_* or ERR_*, see include/numeric.h
  * @param ...		The parameters for the numeric
- * @note Be sure to provide the correct number and type of parameters that belong to the numeric. Check src/numeric.c when in doubt!
+ * @note Be sure to provide the correct number and type of parameters that belong to the numeric. Check include/numeric.h when in doubt!
  * @section sendnumeric_examples Examples
  * @subsection sendnumeric_permission_denied Send "Permission Denied" numeric
  * This numeric has no parameter, so is simple:
@@ -283,6 +283,20 @@ extern void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...) __at
 #define sendnumeric(to, numeric, ...) sendnumericfmt(to, numeric, STR_ ## numeric, ##__VA_ARGS__)
 extern void sendnumericfmt(Client *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,3,4)));
 extern void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
+/** Build numeric message so it is ready to be sent to a client - rarely used, normally you use sendnumeric() instead.
+ * This function is normally only used in eg CAN_KICK and CAN_SET_TOPIC, where
+ * you need to set an 'errbuf' with a full IRC protocol line to reject the request
+ * (which then may or may not be sent depending on operoverride privileges).
+ * @param buf		The buffer where the message should be stored to (full IRC protocol line)
+ * @param buflen	The size of the buffer
+ * @param to		The recipient
+ * @param numeric	The numeric, one of RPL_* or ERR_*, see include/numeric.h
+ * @param ...		The parameters for the numeric
+ * @note Be sure to provide the correct number and type of parameters that belong to the numeric. Check include/numeric.h when in doubt!
+ * @ingroup SendFunctions
+ */
+#define buildnumeric(buf, buflen, to, numeric, ...) buildnumericfmt(buf, buflen, to, numeric, STR_ ## numeric, ##__VA_ARGS__)
+extern void buildnumericfmt(char *buf, size_t buflen, Client *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,5,6)));
 extern void sendto_server(Client *one, unsigned long caps, unsigned long nocaps, MessageTag *mtags, FORMAT_STRING(const char *format), ...) __attribute__((format(printf, 5, 6)));
 
 extern MODVAR int writecalls, writeb[];
