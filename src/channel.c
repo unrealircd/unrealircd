@@ -1233,7 +1233,7 @@ int user_can_see_member(Client *user, Client *target, Channel *channel)
 	}
 
 	/* We must ensure that user is allowed to "see" target */
-	if (j != 0 && !(is_skochanop(target, channel) || has_voice(target,channel)) && !is_skochanop(user, channel))
+	if (j != 0 && !(check_channel_access(target, channel, "hoaq") || check_channel_access(target,channel, "v")) && !check_channel_access(user, channel, "hoaq"))
 		return 0;
 
 	return 1;
@@ -1255,7 +1255,7 @@ int invisible_user_in_channel(Client *target, Channel *channel)
 	}
 
 	/* We must ensure that user is allowed to "see" target */
-	if (j != 0 && !(is_skochanop(target, channel) || has_voice(target,channel)))
+	if (j != 0 && !(check_channel_access(target, channel, "hoaq") || check_channel_access(target,channel, "v")))
 		return 1;
 
 	return 0;

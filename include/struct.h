@@ -2011,18 +2011,6 @@ struct Ban {
  * @defgroup ChannelFlags Channel access flags
  * @{
  */
-/** Is channel owner (+q) */
-#define is_chanowner(client,channel)	check_channel_access(client, channel, "q")
-/** Is channel admin (+a) */
-#define is_chanadmin(client,channel)	check_channel_access(client, channel, "a")
-/** Is channel operator or higher (+o/+a/+q) */
-#define is_chan_op(client,channel)	check_channel_access(client, channel, "oaq")
-/** Is some kind of channel op (+h/+o/+a/+q) */
-#define is_skochanop(client,channel)	check_channel_access(client, channel, "hoaq")
-/** Is half-op (+h) */
-#define is_half_op(client,channel)	check_channel_access(client, channel, "h")
-/** Has voice (+v) */
-#define has_voice(client,channel)	check_channel_access(client, channel, "v")
 
 /** @} */
 

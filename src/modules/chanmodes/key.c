@@ -107,7 +107,7 @@ int cmode_key_is_ok(Client *client, Channel *channel, char mode, const char *par
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
 		/* Permitted for +hoaq */
-		if (IsUser(client) && is_skochanop(client, channel))
+		if (IsUser(client) && check_channel_access(client, channel, "hoaq"))
 			return EX_ALLOW;
 		return EX_DENY;
 	} else

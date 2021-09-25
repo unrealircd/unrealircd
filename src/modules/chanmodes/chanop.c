@@ -66,7 +66,7 @@ int cmode_chanop_is_ok(Client *client, Channel *channel, char mode, const char *
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
-		if (is_chan_op(client, channel))
+		if (check_channel_access(client, channel, "oaq"))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR)
 			sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);

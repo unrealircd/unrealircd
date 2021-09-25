@@ -229,7 +229,7 @@ void invite_process(Client *client, Client *target, Channel *channel, MessageTag
 	sendto_server(client, 0, 0, mtags, ":%s INVITE %s %s %d", client->id, target->id, channel->name, override);
 
 	/* send chanops notifications */
-	if (IsUser(client) && (is_chan_op(client, channel)
+	if (IsUser(client) && (check_channel_access(client, channel, "oaq")
 	    || IsULine(client)
 	    || ValidatePermissionsForPath("channel:override:invite:self",client,NULL,channel,NULL)
 	    || invite_always_notify
@@ -259,7 +259,7 @@ void invite_process(Client *client, Client *target, Channel *channel, MessageTag
 	/* add to list and notify the person who got invited */
 	if (MyConnect(target))
 	{
-		if (IsUser(client) && (is_chan_op(client, channel)
+		if (IsUser(client) && (check_channel_access(client, channel, "oaq")
 			|| IsULine(client)
 			|| ValidatePermissionsForPath("channel:override:invite:self",client,NULL,channel,NULL)
 			))
@@ -392,7 +392,7 @@ CMD_FUNC(cmd_invite)
 
 	if (has_channel_mode(channel, 'i'))
 	{
-		if (!is_chan_op(client, channel) && !IsULine(client))
+		if (!check_channel_access(client, channel, "oaq") && !IsULine(client))
 		{
 			if (ValidatePermissionsForPath("channel:override:invite:invite-only",client,NULL,channel,NULL) && client == target)
 			{
@@ -416,7 +416,7 @@ CMD_FUNC(cmd_invite)
 
 	if (SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
 	    !strcasecmp(channel->name, SPAMFILTER_VIRUSCHAN) &&
-	    !is_chan_op(client, channel) && !ValidatePermissionsForPath("immune:server-ban:viruschan",client,NULL,NULL,NULL))
+	    !check_channel_access(client, channel, "oaq") && !ValidatePermissionsForPath("immune:server-ban:viruschan",client,NULL,NULL,NULL))
 	{
 		sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 		return;

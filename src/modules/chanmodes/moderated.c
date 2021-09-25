@@ -89,7 +89,7 @@ int moderated_can_send_to_channel(Client *client, Channel *channel, Membership *
 /** Remove PART reason too if the channel is +m, -t, and user not +vhoaq */
 const char *moderated_pre_local_part(Client *client, Channel *channel, const char *text)
 {
-	if (IsModerated(channel) && !has_voice(client, channel) && !is_half_op(client, channel))
+	if (IsModerated(channel) && !check_channel_access(client, channel, "v") && !check_channel_access(client, channel, "h"))
 		return NULL;
 	return text;
 }

@@ -345,7 +345,7 @@ int cmodef_is_ok(Client *client, Channel *channel, char mode, const char *param,
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
-		if (IsUser(client) && is_chan_op(client, channel))
+		if (IsUser(client) && check_channel_access(client, channel, "oaq"))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
 			sendnumeric(client, ERR_NOTFORHALFOPS, 'f');
@@ -834,7 +834,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 	if (sendtype == SEND_TYPE_TAGMSG)
 		return 0; // TODO: some TAGMSG specific limit? (1 of 2)
 
-	if (ValidatePermissionsForPath("channel:override:flood",client,NULL,channel,NULL) || !IsFloodLimit(channel) || is_skochanop(client, channel))
+	if (ValidatePermissionsForPath("channel:override:flood",client,NULL,channel,NULL) || !IsFloodLimit(channel) || check_channel_access(client, channel, "hoaq"))
 		return HOOK_CONTINUE;
 
 	if (!(mb = find_membership_link(client->user->channel, channel)))
@@ -944,7 +944,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 
 int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, const char *prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype)
 {
-	if (!IsFloodLimit(channel) || is_skochanop(client, channel) || IsULine(client))
+	if (!IsFloodLimit(channel) || check_channel_access(client, channel, "hoaq") || IsULine(client))
 		return 0;
 
 	if (sendtype == SEND_TYPE_TAGMSG)

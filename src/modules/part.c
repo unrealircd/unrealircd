@@ -132,7 +132,7 @@ CMD_FUNC(cmd_part)
 			continue;
 		}
 
-		if (!ValidatePermissionsForPath("channel:override:banpartmsg",client,NULL,channel,NULL) && !is_chan_op(client, channel)) {
+		if (!ValidatePermissionsForPath("channel:override:banpartmsg",client,NULL,channel,NULL) && !check_channel_access(client, channel, "oaq")) {
 			/* Banned? No comment allowed ;) */
 			if (comment && is_banned(client, channel, BANCHK_MSG, &comment, NULL))
 				comment = NULL;

@@ -383,7 +383,7 @@ int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp
 	Ban *ban;
 
 	/* +h/+o/+a/+q users bypass textbans */
-	if (is_skochanop(client, channel))
+	if (check_channel_access(client, channel, "hoaq"))
 		return HOOK_CONTINUE;
 
 	/* IRCOps with these privileges bypass textbans too */

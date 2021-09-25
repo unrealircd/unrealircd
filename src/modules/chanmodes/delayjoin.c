@@ -228,7 +228,7 @@ void clear_user_invisible_announce(Channel *channel, Client *client, MessageTag 
 	for (i = channel->members; i; i = i->next)
 	{
 		Client *acptr = i->client;
-		if (!is_skochanop(acptr, channel) && acptr != client && MyConnect(acptr))
+		if (!check_channel_access(acptr, channel, "hoaq") && acptr != client && MyConnect(acptr))
 		{
 			if (HasCapabilityFast(acptr, CAP_EXTENDED_JOIN))
 				sendto_one(acptr, mtags, "%s", exjoinbuf);

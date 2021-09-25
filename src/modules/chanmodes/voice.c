@@ -73,7 +73,7 @@ int cmode_voice_is_ok(Client *client, Channel *channel, char mode, const char *p
 			/* User may always remove their own modes */
 			return EX_ALLOW;
 		}
-		if (is_skochanop(client, channel))
+		if (check_channel_access(client, channel, "hoaq"))
 		{
 			/* Permitted for +hoaq */
 			return EX_ALLOW;

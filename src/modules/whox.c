@@ -491,7 +491,7 @@ static void who_common_channel(Client *client, Channel *channel,
 				break;
 		}
 
-		if (i != 0 && !(is_skochanop(client, channel)) && !(is_skochanop(acptr, channel) || has_voice(acptr,channel)))
+		if (i != 0 && !(check_channel_access(client, channel, "hoaq")) && !(check_channel_access(acptr, channel, "hoaq") || check_channel_access(acptr,channel, "v")))
 			continue;
 
 		SetMark(acptr);
@@ -608,7 +608,7 @@ static void do_who_on_channel(Client *client, Channel *channel,
 				break;
 		}
 
-		if (!operspy && (acptr != client) && i != 0 && !(is_skochanop(client, channel)) && !(is_skochanop(acptr, channel) || has_voice(acptr,channel)))
+		if (!operspy && (acptr != client) && i != 0 && !(check_channel_access(client, channel, "hoaq")) && !(check_channel_access(acptr, channel, "hoaq") || check_channel_access(acptr,channel, "v")))
 			continue;
 
 		if (member || !IsInvisible(acptr))
@@ -800,7 +800,7 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 		if (HasField(fmt, FIELD_ACCOUNT))
 			append_format(str, sizeof str, &pos, " %s", IsLoggedIn(acptr) ? acptr->user->account : "0");
 		if (HasField(fmt, FIELD_OPLEVEL))
-			append_format(str, sizeof str, &pos, " %s", (channel && is_skochanop(acptr, channel)) ? "999" : "n/a");
+			append_format(str, sizeof str, &pos, " %s", (channel && check_channel_access(acptr, channel, "hoaq")) ? "999" : "n/a");
 		if (HasField(fmt, FIELD_REPUTATION))
 		{
 			if (IsOper(client))

@@ -185,7 +185,7 @@ CMD_FUNC(cmd_topic)
 
 		/* +t and not +hoaq ? */
 		if (has_channel_mode(channel, 't') &&
-		    !is_skochanop(client, channel) && !IsULine(client) && !IsServer(client))
+		    !check_channel_access(client, channel, "hoaq") && !IsULine(client) && !IsServer(client))
 		{
 			if (MyUser(client) && !ValidatePermissionsForPath("channel:override:topic", client, NULL, channel, NULL))
 			{
@@ -197,7 +197,7 @@ CMD_FUNC(cmd_topic)
 
 		/* -t and banned? */
 		newtopic = topic;
-		if (!is_skochanop(client, channel) && is_banned(client, channel, BANCHK_MSG, &newtopic, &errmsg))
+		if (!check_channel_access(client, channel, "hoaq") && is_banned(client, channel, BANCHK_MSG, &newtopic, &errmsg))
 		{
 			char buf[512];
 

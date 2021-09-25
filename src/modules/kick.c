@@ -194,7 +194,7 @@ CMD_FUNC(cmd_kick)
 		client_member_modes = get_channel_access(client, channel);
 	if (MyUser(client) && !IsULine(client) &&
 	    !op_can_override("channel:override:kick:no-ops",client,channel,NULL) &&
-	    !is_skochanop(client, channel))
+	    !check_channel_access(client, channel, "hoaq"))
 	{
 		sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 		return;

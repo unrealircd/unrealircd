@@ -69,7 +69,7 @@ MOD_UNLOAD()
 /** This ban that affects nick-changes only */
 int extban_nickchange_is_banned(BanContext *b)
 {
-	if (has_voice(b->client, b->channel))
+	if (check_channel_access(b->client, b->channel, "v"))
 		return 0;
 
 	return ban_check_mask(b);

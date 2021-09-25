@@ -634,7 +634,7 @@ void cm_putparameter_ex(void **p, char mode, const char *str)
  */
 int extcmode_default_requirechop(Client *client, Channel *channel, char mode, const char *para, int checkt, int what)
 {
-	if (IsUser(client) && is_chan_op(client, channel))
+	if (IsUser(client) && check_channel_access(client, channel, "oaq"))
 		return EX_ALLOW;
 	if (checkt == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
 		sendnumeric(client, ERR_NOTFORHALFOPS, mode);
@@ -652,7 +652,7 @@ int extcmode_default_requirechop(Client *client, Channel *channel, char mode, co
  */
 int extcmode_default_requirehalfop(Client *client, Channel *channel, char mode, const char *para, int checkt, int what)
 {
-	if (IsUser(client) && (is_chan_op(client, channel) || is_half_op(client, channel)))
+	if (IsUser(client) && (check_channel_access(client, channel, "oaq") || check_channel_access(client, channel, "h")))
 		return EX_ALLOW;
 	return EX_DENY;
 }

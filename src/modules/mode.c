@@ -146,16 +146,16 @@ CMD_FUNC(cmd_mode)
 	opermode = 0;
 
 #ifndef NO_OPEROVERRIDE
-	if (IsUser(client) && !IsULine(client) && !is_chan_op(client, channel) &&
-	    !is_half_op(client, channel) && ValidatePermissionsForPath("channel:override:mode",client,NULL,channel,NULL))
+	if (IsUser(client) && !IsULine(client) && !check_channel_access(client, channel, "oaq") &&
+	    !check_channel_access(client, channel, "h") && ValidatePermissionsForPath("channel:override:mode",client,NULL,channel,NULL))
 	{
 		sendts = 0;
 		opermode = 1;
 		goto aftercheck;
 	}
 
-	if (IsUser(client) && !IsULine(client) && !is_chan_op(client, channel) &&
-	    is_half_op(client, channel) && ValidatePermissionsForPath("channel:override:mode",client,NULL,channel,NULL))
+	if (IsUser(client) && !IsULine(client) && !check_channel_access(client, channel, "oaq") &&
+	    check_channel_access(client, channel, "h") && ValidatePermissionsForPath("channel:override:mode",client,NULL,channel,NULL))
 	{
 		opermode = 2;
 		goto aftercheck;

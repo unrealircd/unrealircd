@@ -71,7 +71,7 @@ int nonickchange_check (Client *client, Channel *channel)
 {
 	if (!IsOper(client) && !IsULine(client)
 		&& IsNoNickChange(channel)
-		&& !is_chan_op(client, channel))
+		&& !check_channel_access(client, channel, "oaq"))
 	{
 		return HOOK_DENY;
 	}
