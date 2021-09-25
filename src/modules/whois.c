@@ -254,22 +254,11 @@ CMD_FUNC(cmd_whois)
 
 			if (IsOper(target) && !hideoper)
 			{
-				const char *operlogin = NULL;
-				const char *operclass = NULL;
+				const char *operlogin = get_operlogin(client);
+				const char *operclass = get_operclass(client);
 
 				strlcpy(buf, "an IRC Operator", sizeof buf);
 
-				if (MyUser(target))
-				{
-					ConfigItem_oper *oper;
-					operlogin = target->user->operlogin;
-					oper = find_oper(target->user->operlogin);
-					if (oper && oper->operclass)
-						operclass = oper->operclass;
-				} else {
-					operlogin = moddata_client_get(target, "operlogin");
-					operclass = moddata_client_get(target, "operclass");
-				}
 				if (operlogin && operclass)
 				{
 					sendnumericfmt(client, RPL_WHOISOPERATOR,

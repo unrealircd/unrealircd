@@ -1341,7 +1341,7 @@ struct User {
 	SWhois *swhois;			/**< Special "additional" WHOIS entries such as "a Network Administrator" */
 	WhoWas *whowas;			/**< Something for whowas :D :D */
 	char *snomask;			/**< Server Notice Mask (snomask) - only for IRCOps */
-	char *operlogin;		/**< Which oper { } block was used to oper up, otherwise NULL - used by oper::maxlogins */
+	char *operlogin;		/**< Which oper { } block was used to oper up, otherwise NULL - used for auditting and by oper::maxlogins */
 	char *away;			/**< AWAY message, or NULL if not away */
 	time_t away_since;		/**< Last time the user went AWAY */
 };

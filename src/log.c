@@ -474,6 +474,7 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 	if (client->user)
 	{
 		char buf[512];
+		const char *str;
 		/* client.user */
 		user = json_object();
 		json_object_set_new(child, "user", user);
@@ -495,8 +496,12 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 			json_object_set_new(user, "snomasks", json_string_unreal(client->user->snomask));
 
 		/* if oper then we can possibly expand a bit more */
-		if (client->user->operlogin)
-			json_object_set_new(user, "oper_login", json_string_unreal(client->user->operlogin));
+		str = get_operlogin(client);
+		if (str)
+			json_object_set_new(user, "operlogin", json_string_unreal(str));
+		str = get_operclass(client);
+		if (str)
+			json_object_set_new(user, "operclass", json_string_unreal(str));
 	} else
 	if (IsMe(client))
 	{
