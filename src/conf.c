@@ -1302,7 +1302,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 					safe_strldup(curce->name, start, ptr-start+1);
 					preprocessor_replace_defines(&curce->name, curce);
 					if (curce->conditional_config)
-						abort(); // hmm this can be reached? FIXME!
+						abort();
 					preprocessor_cc_duplicate_list(cc_list, &curce->conditional_config);
 				}
 				if ((*ptr == ';') || (*ptr == '\n'))
@@ -1802,49 +1802,6 @@ void postconf_defaults(void)
 			safe_strdup(iConf.outdated_tls_policy_oper_message, "Your IRC client is using an outdated TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
 		else if (iConf.outdated_tls_policy_oper == POLICY_WARN)
 			safe_strdup(iConf.outdated_tls_policy_oper_message, "WARNING: Your IRC client is using an outdated TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
-	}
-
-	/* We got a chicken-and-egg problem here.. antries added without reason or ban-time
-	 * field should use the config default (set::spamfilter::ban-reason/ban-time) but
-	 * this isn't (or might not) be known yet when parsing spamfilter entries..
-	 * so we do a VERY UGLY mass replace here.. unless someone else has a better idea.
-	 */
-
-	encoded = unreal_encodespace(SPAMFILTER_BAN_REASON);
-	if (!encoded)
-		abort(); /* hack to trace 'impossible' bug... */
-	// FIXME: remove this stuff with ~server~, why not just use -config-
-	//        which is more meaningful.
-	for (tk = tklines[tkl_hash('q')]; tk; tk = tk->next)
-	{
-		if (tk->type != TKL_NAME)
-			continue;
-		if (!tk->set_by)
-		{
-			if (me.name[0] != '\0')
-				safe_strdup(tk->set_by, me.name);
-			else
-				safe_strdup(tk->set_by, conf_me->name ? conf_me->name : "~server~");
-		}
-	}
-
-	for (tk = tklines[tkl_hash('f')]; tk; tk = tk->next)
-	{
-		if (tk->type != TKL_SPAMF)
-			continue; /* global entry or something else.. */
-		if (!strcmp(tk->ptr.spamfilter->tkl_reason, "<internally added by ircd>"))
-		{
-			safe_strdup(tk->ptr.spamfilter->tkl_reason, encoded);
-			tk->ptr.spamfilter->tkl_duration = SPAMFILTER_BAN_TIME;
-		}
-		/* This one is even more ugly, but our config crap is VERY confusing :[ */
-		if (!tk->set_by)
-		{
-			if (me.name[0] != '\0')
-				safe_strdup(tk->set_by, me.name);
-			else
-				safe_strdup(tk->set_by, conf_me->name ? conf_me->name : "~server~");
-		}
 	}
 
 	postconf_defaults_log_block();

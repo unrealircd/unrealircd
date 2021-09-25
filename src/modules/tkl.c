@@ -456,8 +456,8 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
 	char *word = NULL;
-	time_t bantime = (SPAMFILTER_BAN_TIME ? SPAMFILTER_BAN_TIME : 86400);
-	char *banreason = "<internally added by ircd>";
+	time_t bantime = tempiConf.spamfilter_ban_time;
+	char *banreason = tempiConf.spamfilter_ban_reason;
 	int action = 0, target = 0;
 	int match_type = 0;
 	Match *m;
