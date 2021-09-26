@@ -164,15 +164,15 @@ int cloak_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			             "like \"a2JO6fh3Q6w4oN3s7\"", cep->file->filename, cep->line_number, keycnt);
 			errors++;
 		}
-		if (strlen(cep->name) < 5)
+		if (strlen(cep->name) < 80)
 		{
-			config_error("%s:%i: set::cloak-keys: (key %d) Each key should be at least 5 characters",
+			config_error("%s:%i: set::cloak-keys: (key %d) Each key should be at least 80 characters",
 				cep->file->filename, cep->line_number, keycnt);
 			errors++;
 		}
-		if (strlen(cep->name) > 100)
+		if (strlen(cep->name) > 1000)
 		{
-			config_error("%s:%i: set::cloak-keys: (key %d) Each key should be less than 100 characters",
+			config_error("%s:%i: set::cloak-keys: (key %d) Each key should be less than 1000 characters",
 				cep->file->filename, cep->line_number, keycnt);
 			errors++;
 		}
