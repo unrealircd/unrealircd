@@ -33,7 +33,7 @@
  * @{
  */
 
-/** Table with details on each channel mode handler */
+/** List of all channel modes, their handlers, etc */
 Cmode *channelmodes = NULL;
 
 /** @} */
@@ -408,7 +408,6 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 		}
 	}
 
-	/* Update extended channel mode table highest */
 	cm->letter = req.letter;
 	cm->type = req.type;
 	cm->prefix = req.prefix;
