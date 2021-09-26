@@ -48,8 +48,6 @@ static char *hidehost_ipv6(char *host);
 static char *hidehost_normalhost(char *host);
 static inline unsigned int downsample(char *i);
 
-Callback *cloak = NULL, *cloak_csum = NULL;
-
 ModuleHeader MOD_HEADER = {
 	"cloak_sha256",
 	"1.0",
@@ -60,16 +58,16 @@ ModuleHeader MOD_HEADER = {
 
 MOD_TEST()
 {
-	cloak = CallbackAddString(modinfo->handle, CALLBACKTYPE_CLOAK_EX, hidehost);
-	if (!cloak)
+	if (!CallbackAddString(modinfo->handle, CALLBACKTYPE_CLOAK_KEY_CHECKSUM, cloakcsum))
 	{
-		config_error("cloak_sha256: Error while trying to install cloaking callback!");
+		unreal_log(ULOG_ERROR, "config", "CLOAK_MODULE_DUPLICATE", NULL,
+		           "cloak_sha256: Error while trying to install callback.\n"
+		           "Maybe you have multiple cloaking modules loaded? You can only load one!");
 		return MOD_FAILED;
 	}
-	cloak_csum = CallbackAddString(modinfo->handle, CALLBACKTYPE_CLOAK_KEY_CHECKSUM, cloakcsum);
-	if (!cloak_csum)
+	if (!CallbackAddString(modinfo->handle, CALLBACKTYPE_CLOAK_EX, hidehost))
 	{
-		config_error("cloak_sha256: Error while trying to install cloaking checksum callback!");
+		config_error("cloak_sha256: Error while trying to install cloaking callback!");
 		return MOD_FAILED;
 	}
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, cloak_config_test);
