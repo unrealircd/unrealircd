@@ -12,6 +12,7 @@ This is UnrealIRCd 6's latest git, bleeding edge. Do not use on production serve
   * Snomasks letters have different meaning now
   * Colored logs, explain where/when used and how to turn off
   * CAP unrealircd.org/json-log
+* Cloaking module: now need to load one explicitly, explain
 * Named extbans
 * Geo ip: tell how it works and where it is available/used/shown
   main configuration:
@@ -53,7 +54,6 @@ This is UnrealIRCd 6's latest git, bleeding edge. Do not use on production serve
 * We now (try to) kill the "old" server when a server links in with the same
   name, handy when the old server is a zombie waiting for ping timeout.
 * Error messages in remote includes use the url instead of temp file
-* Something with cloaking
 * Downgrading is only supported down to 5.2.0, not lower, otherwise
   make a copy of your reputation db etc.
 * Antirandom no longer has fullstatus-on-load: maybe warn and ignore
