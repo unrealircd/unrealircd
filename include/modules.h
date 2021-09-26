@@ -418,8 +418,7 @@ typedef struct {
 typedef struct Extban Extban;
 
 struct Extban {
-	/** extbans module */
-	Module *owner;
+	Extban *prev, *next;
 
 	/** extended ban character */
 	char letter;
@@ -447,6 +446,12 @@ struct Extban {
 	 * This function is called from is_banned() and two other places.
 	 */
 	int (*is_banned)(BanContext *b);
+
+	/** extbans module */
+	Module *owner;
+
+	/* Set to 1 during rehash when module is unloading (which may be re-used, and then set to 0) */
+	char unloaded;
 };
 
 typedef struct {

@@ -22,27 +22,25 @@
 
 #include "unrealircd.h"
 
-MODVAR Extban ExtBan_Table[EXTBANTABLESZ]; /* this should be fastest */
-MODVAR int ExtBan_highest = 0;
+/** List of all extbans, their handlers, etc */
+MODVAR Extban *extbans = NULL;
 
 void set_isupport_extban(void)
 {
-	int i;
-	char extbanstr[EXTBANTABLESZ+1], *m;
+	char extbanstr[512];
+	Extban *e;
+	char *p = extbanstr;
 
-	m = extbanstr;
-	for (i = 0; i <= ExtBan_highest; i++)
-	{
-		if (ExtBan_Table[i].letter)
-			*m++ = ExtBan_Table[i].letter;
-	}
-	*m = 0;
+	for (e = extbans; e; e = e->next)
+		*p++ = e->letter;
+	*p = '\0';
+
 	ISupportSetFmt(NULL, "EXTBAN", "~,%s", extbanstr);
 }
 
 Extban *findmod_by_bantype(const char *str, const char **remainder)
 {
-	int i;
+	Extban *e;
 	int ban_name_length;
 	const char *p = strchr(str, ':');
 
@@ -57,15 +55,15 @@ Extban *findmod_by_bantype(const char *str, const char **remainder)
 
 	ban_name_length = p - str - 1;
 
-	for (i=0; i <= ExtBan_highest; i++)
+	for (e=extbans; e; e = e->next)
 	{
-		if ((ban_name_length == 1) && (ExtBan_Table[i].letter == str[1]))
-			return &ExtBan_Table[i];
-		if (ExtBan_Table[i].name)
+		if ((ban_name_length == 1) && (e->letter == str[1]))
+			return e;
+		if (e->name)
 		{
-			int namelen = strlen(ExtBan_Table[i].name);
-			if ((namelen == ban_name_length) && !strncmp(ExtBan_Table[i].name, str+1, namelen))
-				return &ExtBan_Table[i];
+			int namelen = strlen(e->name);
+			if ((namelen == ban_name_length) && !strncmp(e->name, str+1, namelen))
+				return e;
 		}
 	}
 
@@ -83,9 +81,47 @@ int is_valid_extban_name(const char *p)
 	return 1;
 }
 
+static void extban_add_sorted(Extban *n)
+{
+	Extban *m;
+
+	if (extbans == NULL)
+	{
+		extbans = n;
+		return;
+	}
+
+	for (m = extbans; m; m = m->next)
+	{
+		if (m->letter == '\0')
+			abort();
+		if (sort_character_lowercase_before_uppercase(n->letter, m->letter))
+		{
+			/* Insert us before */
+			if (m->prev)
+				m->prev->next = n;
+			else
+				extbans = n; /* new head */
+			n->prev = m->prev;
+
+			n->next = m;
+			m->prev = n;
+			return;
+		}
+		if (!m->next)
+		{
+			/* Append us at end */
+			m->next = n;
+			n->prev = m;
+			return;
+		}
+	}
+}
+
 Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 {
-	int slot;
+	Extban *e;
+	int existing = 0;
 
 	if (!req.name)
 	{
@@ -127,81 +163,87 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 		return NULL;
 	}
 
-	for (slot=0; slot <= ExtBan_highest; slot++)
+	for (e=extbans; e; e = e->next)
 	{
-		if ((ExtBan_Table[slot].letter == req.letter) ||
-		    (ExtBan_Table[slot].name && !strcasecmp(ExtBan_Table[slot].name, req.name)))
+		if (e->letter == req.letter)
 		{
-			if (module)
-				module->errorcode = MODERR_EXISTS;
-			return NULL;
+			if (e->unloaded)
+			{
+				e->unloaded = 0;
+				existing = 1;
+				break;
+			} else {
+				if (module)
+					module->errorcode = MODERR_EXISTS;
+				return NULL;
+			}
 		}
 	}
 
-	/* Find next available slot... */
-	for (slot = 0; slot < EXTBANTABLESZ; slot++)
-		if (ExtBan_Table[slot].letter == '\0')
-			break;
-
-	if (slot >= EXTBANTABLESZ - 1)
+	if (!e)
 	{
-		unreal_log(ULOG_ERROR, "module", "EXTBAN_OUT_OF_SPACE", NULL,
-		           "ExtbanAdd: out of space!!!");
-		if (module)
-			module->errorcode = MODERR_NOSPACE;
-		return NULL;
+		/* Not found, create */
+		e = safe_alloc(sizeof(Extban));
+		e->letter = req.letter;
+		extban_add_sorted(e);
 	}
-
-	ExtBan_Table[slot].letter = req.letter;
-	safe_strdup(ExtBan_Table[slot].name, req.name);
-	ExtBan_Table[slot].is_ok = req.is_ok;
-	ExtBan_Table[slot].conv_param = req.conv_param;
-	ExtBan_Table[slot].is_banned = req.is_banned;
-	ExtBan_Table[slot].is_banned_events = req.is_banned_events;
-	ExtBan_Table[slot].owner = module;
-	ExtBan_Table[slot].options = req.options;
+	e->letter = req.letter;
+	safe_strdup(e->name, req.name);
+	e->is_ok = req.is_ok;
+	e->conv_param = req.conv_param;
+	e->is_banned = req.is_banned;
+	e->is_banned_events = req.is_banned_events;
+	e->owner = module;
+	e->options = req.options;
 	if (module)
 	{
 		ModuleObject *banobj = safe_alloc(sizeof(ModuleObject));
-		banobj->object.extban = &ExtBan_Table[slot];
+		banobj->object.extban = e;
 		banobj->type = MOBJ_EXTBAN;
 		AddListItem(banobj, module->objects);
 		module->errorcode = MODERR_NOERROR;
 	}
-	ExtBan_highest = slot;
 	set_isupport_extban();
-	return &ExtBan_Table[slot];
+	return e;
 }
 
-void ExtbanDel(Extban *eb)
+static void unload_extban_commit(Extban *e)
 {
-	/* Just zero it all away.. */
+	/* Should we mass unban everywhere?
+	 * Hmmm. Not needed per se, user can always unset
+	 * themselves. Leaning towards no atm.
+	 */
+	// noop
 
-	if (eb->owner)
+	/* Then unload the extban */
+	DelListItem(e, extbans);
+	safe_free(e);
+	set_isupport_extban();
+}
+
+void ExtbanDel(Extban *e)
+{
+	/* Always free the module object */
+	if (e->owner)
 	{
 		ModuleObject *banobj;
-		for (banobj = eb->owner->objects; banobj; banobj = banobj->next)
+		for (banobj = e->owner->objects; banobj; banobj = banobj->next)
 		{
-			if (banobj->type == MOBJ_EXTBAN && banobj->object.extban == eb)
+			if (banobj->type == MOBJ_EXTBAN && banobj->object.extban == e)
 			{
-				DelListItem(banobj, eb->owner->objects);
+				DelListItem(banobj, e->owner->objects);
 				safe_free(banobj);
 				break;
 			}
 		}
 	}
-	safe_free(eb->name);
-	memset(eb, 0, sizeof(Extban));
-	set_isupport_extban();
-	/* Hmm do we want to go trough all chans and remove the bans?
-	 * I would say 'no' because perhaps we are just reloading,
-	 * and else.. well... screw them?
-	 */
-}
 
-/* NOTE: the routines below can safely assume the ban has at
- * least the '~t:' part (t=type). -- Syzop
- */
+	/* Whether we can actually (already) free the Extban, it depends... */
+	if (loop.rehashing)
+		e->unloaded = 1;
+	else
+		unload_extban_commit(e);
+}
 
 /** General is_ok for n!u@h stuff that also deals with recursive extbans.
  */
