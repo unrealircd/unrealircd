@@ -82,43 +82,43 @@ void iNAH_host(Client *client, const char *host)
  */
 long set_usermode(const char *umode)
 {
-	int  newumode;
-	int  what;
+	Umode *um;
+	int newumode;
+	int what;
 	const char *m;
-	int i;
 
 	newumode = 0;
 	what = MODE_ADD;
 	for (m = umode; *m; m++)
+	{
 		switch (*m)
 		{
-		  case '+':
-			  what = MODE_ADD;
-			  break;
-		  case '-':
-			  what = MODE_DEL;
-			  break;
-		  case ' ':
-		  case '\n':
-		  case '\r':
-		  case '\t':
-			  break;
-		  default:
-		 	 for (i = 0; i <= Usermode_highest; i++)
-		 	 {
-		 	 	if (!Usermode_Table[i].letter)
-		 	 		continue;
-		 	 	if (*m == Usermode_Table[i].letter)
-		 	 	{
-		 	 		if (what == MODE_ADD)
-			 	 		newumode |= Usermode_Table[i].mode;
-			 	 	else
-			 	 		newumode &= ~Usermode_Table[i].mode;
-		 	 	}
-		 	 } 	  
+			case '+':
+				what = MODE_ADD;
+				break;
+			case '-':
+				what = MODE_DEL;
+				break;
+			case ' ':
+			case '\n':
+			case '\r':
+			case '\t':
+				break;
+			default:
+				for (um = usermodes; um; um = um->next)
+				{
+					if (um->letter == *m)
+					{
+						if (what == MODE_ADD)
+							newumode |= um->mode;
+						else
+							newumode &= ~um->mode;
+					}
+				}
 		}
+	}
 
-	return (newumode);
+	return newumode;
 }
 
 /** Convert a target pointer to an 8 bit hash, used for target limiting. */
@@ -257,15 +257,13 @@ char *canonize(const char *buffer)
 const char *get_usermode_string(Client *client)
 {
 	static char buf[128];
-	int  i;
-	char *m;
+	Umode *um;
 
-	m = buf;
-	*m++ = '+';
-	for (i = 0; (i <= Usermode_highest) && (m - buf < sizeof(buf) - 4); i++)
-		if (Usermode_Table[i].letter && (client->umodes & Usermode_Table[i].mode))
-			*m++ = Usermode_Table[i].letter;
-	*m = '\0';
+	strlcpy(buf, "+", sizeof(buf));
+	for (um = usermodes; um; um = um->next)
+		if (client->umodes & um->mode)
+			strlcat_letter(buf, um->letter, sizeof(buf));
+
 	return buf;
 }
 
@@ -273,20 +271,19 @@ const char *get_usermode_string(Client *client)
  * @param client	The client
  * @param buf		The buffer to write to
  * @param buflen	The size of the buffer
- * @returns string of user modes (temporary storage)
+ * @returns string of user modes (buf)
  */
 const char *get_usermode_string_r(Client *client, char *buf, size_t buflen)
 {
-	int i;
+	Umode *um;
 
 	strlcpy(buf, "+", buflen);
-	for (i = 0; i <= Usermode_highest; i++)
-		if (Usermode_Table[i].letter && (client->umodes & Usermode_Table[i].mode))
-			strlcat_letter(buf, Usermode_Table[i].letter, buflen);
+	for (um = usermodes; um; um = um->next)
+		if (client->umodes & um->mode)
+			strlcat_letter(buf, um->letter, buflen);
 
 	return buf;
 }
-
 
 /** Get user modes as a string - this one does not work on 'client' but directly on 'umodes'.
  * @param umodes	The user modes that are set
@@ -295,18 +292,34 @@ const char *get_usermode_string_r(Client *client, char *buf, size_t buflen)
 const char *get_usermode_string_raw(long umodes)
 {
 	static char buf[128];
-	int  i;
-	char *m;
+	Umode *um;
 
-	m = buf;
-	*m++ = '+';
-	for (i = 0; (i <= Usermode_highest) && (m - buf < sizeof(buf) - 4); i++)
-		
-		if (Usermode_Table[i].letter && (umodes & Usermode_Table[i].mode))
-			*m++ = Usermode_Table[i].letter;
-	*m = '\0';
+	strlcpy(buf, "+", sizeof(buf));
+	for (um = usermodes; um; um = um->next)
+		if (umodes & um->mode)
+			strlcat_letter(buf, um->letter, sizeof(buf));
+
 	return buf;
 }
+
+/** Get user modes as a string - this one does not work on 'client' but directly on 'umodes'.
+ * @param umodes	The user modes that are set
+ * @param buf		The buffer to write to
+ * @param buflen	The size of the buffer
+ * @returns string of user modes (buf)
+ */
+const char *get_usermode_string_raw_r(long umodes, char *buf, size_t buflen)
+{
+	Umode *um;
+
+	strlcpy(buf, "+", buflen);
+	for (um = usermodes; um; um = um->next)
+		if (umodes & um->mode)
+			strlcat_letter(buf, um->letter, buflen);
+
+	return buf;
+}
+
 
 /** Set a new snomask on the user.
  * The user is not informed of the change by this function.
@@ -355,7 +368,7 @@ void set_snomask(Client *client, const char *snomask)
  */
 void build_umode_string(Client *client, long old, long sendmask, char *umode_buf)
 {
-	int i;
+	Umode *um;
 	long flag;
 	char *m;
 	int what = MODE_NULL;
@@ -366,33 +379,31 @@ void build_umode_string(Client *client, long old, long sendmask, char *umode_buf
 	 */
 	m = umode_buf;
 	*m = '\0';
-	for (i = 0; i <= Usermode_highest; i++)
+	for (um = usermodes; um; um = um->next)
 	{
-		if (!Usermode_Table[i].letter)
-			continue;
-		flag = Usermode_Table[i].mode;
+		flag = um->mode;
 		if (MyUser(client) && !(flag & sendmask))
 			continue;
 		if ((flag & old) && !(client->umodes & flag))
 		{
 			if (what == MODE_DEL)
-				*m++ = Usermode_Table[i].letter;
+				*m++ = um->letter;
 			else
 			{
 				what = MODE_DEL;
 				*m++ = '-';
-				*m++ = Usermode_Table[i].letter;
+				*m++ = um->letter;
 			}
 		}
 		else if (!(flag & old) && (client->umodes & flag))
 		{
 			if (what == MODE_ADD)
-				*m++ = Usermode_Table[i].letter;
+				*m++ = um->letter;
 			else
 			{
 				what = MODE_ADD;
 				*m++ = '+';
-				*m++ = Usermode_Table[i].letter;
+				*m++ = um->letter;
 			}
 		}
 	}

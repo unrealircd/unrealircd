@@ -736,22 +736,13 @@ void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	Client *acptr;
+	Umode *um;
 	char nbuf[1024];
-	int i;
 	char modestr[128];
 	char *p;
 
 	/* Convert 'umodes' (int) to 'modestr' (string) */
-	*modestr = '\0';
-	p = modestr;
-	for(i = 0; i <= Usermode_highest; i++)
-	{
-		if (!Usermode_Table[i].letter)
-			continue;
-		if (umodes & Usermode_Table[i].mode)
-			*p++ = Usermode_Table[i].letter;
-	}
-	*p = '\0';
+	get_usermode_string_raw_r(umodes, modestr, sizeof(modestr));
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{

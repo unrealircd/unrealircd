@@ -109,14 +109,16 @@ typedef enum ModuleObjectType {
 	MOBJ_HISTORY_BACKEND = 18,
 } ModuleObjectType;
 
-typedef struct {
-        long mode; /**< Mode mask */
-        char letter; /**< Mode character */
-        int unset_on_deoper; /**< When set to 1 then this user mode will be unset on de-oper */
-        int (*allowed)(Client *client, int what); /**< The 'is this user allowed to set this mode?' routine */
-        char unloaded; /**< Internal flag to indicate module is being unloaded */
-        Module *owner; /**< Module that owns this user mode */
-} Umode;
+typedef struct Umode Umode;
+struct Umode {
+	Umode *prev, *next;
+	long mode; /**< Mode mask */
+	char letter; /**< Mode character */
+	int unset_on_deoper; /**< When set to 1 then this user mode will be unset on de-oper */
+	int (*allowed)(Client *client, int what); /**< The 'is this user allowed to set this mode?' routine */
+	char unloaded; /**< Internal flag to indicate module is being unloaded */
+	Module *owner; /**< Module that owns this user mode */
+};
 
 typedef enum ModDataType {
 	MODDATATYPE_LOCAL_VARIABLE	= 1,

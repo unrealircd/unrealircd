@@ -317,11 +317,11 @@ void channel_svsmode(Client *client, int parc, const char *parv[])
  */
 void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *parv[], int show_change)
 {
-	int i;
+	Umode *um;
 	const char *m;
 	Client *target;
 	int  what;
-	long setflags = 0;
+	long oldumodes = 0;
 
 	if (!IsULine(client))
 		return;
@@ -342,10 +342,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 
 	userhost_save_current(target);
 
-	/* initialize setflag to be the user's pre-SVSMODE flags */
-	for (i = 0; i <= Usermode_highest; i++)
-		if (Usermode_Table[i].letter && (target->umodes & Usermode_Table[i].mode))
-			setflags |= Usermode_Table[i].mode;
+	oldumodes = target->umodes;
 
 	/* parse mode change string(s) */
 	for (m = parv[2]; *m; m++)
@@ -505,16 +502,14 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 				break;
 			default:
 				setmodex:
-				for (i = 0; i <= Usermode_highest; i++)
+				for (um = usermodes; um; um = um->next)
 				{
-					if (!Usermode_Table[i].letter)
-						continue;
-					if (*m == Usermode_Table[i].letter)
+					if (um->letter == *m)
 					{
 						if (what == MODE_ADD)
-							target->umodes |= Usermode_Table[i].mode;
+							target->umodes |= um->mode;
 						else
-							target->umodes &= ~Usermode_Table[i].mode;
+							target->umodes &= ~um->mode;
 						break;
 					}
 				}
@@ -531,15 +526,15 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 		    parv[1], parv[2]);
 
 	/* Here we trigger the same hooks that cmd_mode does and, likewise,
-	   only if the old flags (setflags) are different than the newly-
+	   only if the old flags (oldumodes) are different than the newly-
 	   set ones */
-	if (setflags != target->umodes)
-		RunHook(HOOKTYPE_UMODE_CHANGE, target, setflags, target->umodes);
+	if (oldumodes != target->umodes)
+		RunHook(HOOKTYPE_UMODE_CHANGE, target, oldumodes, target->umodes);
 
 	if (show_change)
 	{
 		char buf[BUFSIZE];
-		build_umode_string(target, setflags, ALL_UMODES, buf);
+		build_umode_string(target, oldumodes, ALL_UMODES, buf);
 		if (MyUser(target) && *buf)
 			sendto_one(target, NULL, ":%s MODE %s :%s", client->name, target->name, buf);
 	}

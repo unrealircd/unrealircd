@@ -83,19 +83,7 @@ CMD_FUNC(cmd_sendumode)
 
 	sendto_server(client, 0, 0, mtags, ":%s SENDUMODE %s :%s", client->id, parv[1], message);
 
-	for (p = parv[1]; *p; p++)
-	{
-		for(i = 0; i <= Usermode_highest; i++)
-		{
-			if (!Usermode_Table[i].letter)
-				continue;
-			if (Usermode_Table[i].letter == *p)
-			{
-				umode_s |= Usermode_Table[i].mode;
-				break;
-			}
-		}
-	}
+	umode_s = set_usermode(parv[1]);
 
 	list_for_each_entry(acptr, &oper_list, special_node)
 	{

@@ -330,17 +330,7 @@ static int parse_who_options(Client *client, int argc, const char **argv)
 					else
 						umodes = &wfl.umodes_dontwant;
 
-					while (*s)
-					{
-					int i;
-						for (i = 0; i <= Usermode_highest; i++)
-							if (*s == Usermode_Table[i].letter)
-							{
-								*umodes |= Usermode_Table[i].mode;
-								break;
-							}
-					s++;
-					}
+					*umodes = set_usermode(s);
 
 					if (!IsOper(client))
 						*umodes = *umodes & UMODE_OPER; /* these are usermodes regular users may search for. just oper now. */

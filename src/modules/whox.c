@@ -295,7 +295,7 @@ CMD_FUNC(cmd_whox)
 	
 		while (*s)
 		{
-			int i;
+			Umode *um;
 
 			switch (*s)
 			{
@@ -317,11 +317,11 @@ CMD_FUNC(cmd_whox)
 			else
 				umodes = &fmt.noumodes;
 
-			for (i = 0; i <= Usermode_highest; i++)
+			for (um = usermodes; um; um = um->next)
 			{
-				if (*s == Usermode_Table[i].letter)
+				if (um->letter == *s)
 				{
-					*umodes |= Usermode_Table[i].mode;
+					*umodes |= um->mode;
 					break;
 				}
 			}

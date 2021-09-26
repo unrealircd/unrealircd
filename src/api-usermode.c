@@ -24,10 +24,9 @@
 
 char umodestring[UMODETABLESZ+1];
 
-Umode *Usermode_Table = NULL;
-int Usermode_highest = 0;
+/** User modes and their handlers */
+Umode *usermodes = NULL;
 
-/* client->umodes (32 bits): 26 used, 6 free */
 long UMODE_INVISIBLE = 0L;     /* makes user invisible */
 long UMODE_OPER = 0L;          /* Operator */
 long UMODE_REGNICK = 0L;       /* Nick set by services as registered */
@@ -59,20 +58,11 @@ long SendUmodes;	/* All umodes which are sent to other servers (global umodes) *
 
 /* Forward declarations */
 int umode_hidle_allow(Client *client, int what);
+static void unload_usermode_commit(Umode *m);
 
-void	umode_init(void)
+void umode_init(void)
 {
-	long val = 1;
-	int	i;
-	Usermode_Table = safe_alloc(sizeof(Umode) * UMODETABLESZ);
-	for (i = 0; i < UMODETABLESZ; i++)
-	{
-		Usermode_Table[i].mode = val;
-		val *= 2;
-	}
-	Usermode_highest = 0;
-
-	/* Set up modes */
+	/* Some built-in modes */
 	UmodeAdd(NULL, 'i', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_INVISIBLE);
 	UmodeAdd(NULL, 'o', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_OPER);
 	UmodeAdd(NULL, 'r', UMODE_GLOBAL, 0, umode_allow_none, &UMODE_REGNICK);
@@ -87,16 +77,13 @@ void	umode_init(void)
 
 void make_umodestr(void)
 {
-	int i;
-	char *m;
+	Umode *um;
+	char *p = umodestring;
 
-	m = umodestring;
-	for (i = 0; i <= Usermode_highest; i++)
-	{
-		if (Usermode_Table[i].letter)
-			*m++ = Usermode_Table[i].letter;
-	}
-	*m = '\0';
+	for (um=usermodes; um; um = um->next)
+		if (um->letter)
+			*p++ = um->letter;
+	*p = '\0';
 }
 
 static char previous_umodestring[256];
@@ -125,101 +112,134 @@ void umodes_check_for_changes(void)
 	strlcpy(previous_umodestring, umodestring, sizeof(previous_umodestring));
 }
 
+void usermode_add_sorted(Umode *n)
+{
+	Umode *m;
+
+	if (usermodes == NULL)
+	{
+		usermodes = n;
+		return;
+	}
+
+	for (m = usermodes; m; m = m->next)
+	{
+		if (m->letter == '\0')
+			abort();
+		if (sort_character_lowercase_before_uppercase(n->letter, m->letter))
+		{
+			/* Insert us before */
+			if (m->prev)
+				m->prev->next = n;
+			else
+				usermodes = n; /* new head */
+			n->prev = m->prev;
+
+			n->next = m;
+			m->prev = n;
+			return;
+		}
+		if (!m->next)
+		{
+			/* Append us at end */
+			m->next = n;
+			n->prev = m;
+			return;
+		}
+	}
+}
+
+
 /* UmodeAdd:
  * Add a usermode with character 'ch', if global is set to 1 the usermode is global
  * (sent to other servers) otherwise it's a local usermode
  */
 Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*allowed)(Client *client, int what), long *mode)
 {
-	short	 i = 0;
-	short	 j = 0;
-	short 	 save = -1;
-	while (i < UMODETABLESZ)
+	Umode *um;
+	int existing = 0;
+
+	for (um=usermodes; um; um = um->next)
 	{
-		if (!Usermode_Table[i].letter && save == -1)
-			save = i;
-		else if (Usermode_Table[i].letter == ch)
+		if (um->letter == ch)
 		{
-			if (Usermode_Table[i].unloaded)
+			if (um->unloaded)
 			{
-				save = i;
-				Usermode_Table[i].unloaded = 0;
+				um->unloaded = 0;
+				existing = 1;
 				break;
-			}
-			else
-			{
+			} else {
 				if (module)
 					module->errorcode = MODERR_EXISTS;
 				return NULL;
 			}
 		}
-		i++;
 	}
-	i = save;
-	if (i != UMODETABLESZ)
+
+	if (!um)
 	{
-		Usermode_Table[i].letter = ch;
-		Usermode_Table[i].allowed = allowed;
-		Usermode_Table[i].unset_on_deoper = unset_on_deoper;
-		/* Update usermode table highest */
-		for (j = 0; j < UMODETABLESZ; j++)
-			if (Usermode_Table[i].letter)
-				if (i > Usermode_highest)
-					Usermode_highest = i;
-		make_umodestr();
-		AllUmodes |= Usermode_Table[i].mode;
-		if (global)
-			SendUmodes |= Usermode_Table[i].mode;
-		*mode = Usermode_Table[i].mode;
-		Usermode_Table[i].owner = module;
-		if (module)
+		/* Not found, create */
+		long l, found = 0;
+		for (l = 1; l < INT_MAX/2; l *= 2)
 		{
-			ModuleObject *umodeobj = safe_alloc(sizeof(ModuleObject));
-			umodeobj->object.umode = &(Usermode_Table[i]);
-			umodeobj->type = MOBJ_UMODE;
-			AddListItem(umodeobj, module->objects);
-			module->errorcode = MODERR_NOERROR;
+			found = 0;
+			for (um=usermodes; um; um = um->next)
+			{
+				if (um->mode == l)
+				{
+					found = 1;
+					break;
+				}
+			}
+			if (!found)
+				break;
 		}
-		return &(Usermode_Table[i]);
+		/* If 'found' is still true, then we are out of space */
+		if (found)
+		{
+			unreal_log(ULOG_ERROR, "module", "USER_MODE_OUT_OF_SPACE", NULL,
+				   "UmodeAdd: out of space!!!");
+			if (module)
+				module->errorcode = MODERR_NOSPACE;
+			return NULL;
+		}
+		um = safe_alloc(sizeof(Umode));
+		um->letter = ch;
+		um->mode = l;
+		usermode_add_sorted(um);
 	}
-	else
+
+	um->letter = ch;
+	um->allowed = allowed;
+	um->unset_on_deoper = unset_on_deoper;
+	make_umodestr();
+	AllUmodes |= um->mode;
+	if (global)
+		SendUmodes |= um->mode;
+	*mode = um->mode;
+	um->owner = module;
+	if (module)
 	{
-		unreal_log(ULOG_ERROR, "module", "USER_MODE_OUT_OF_SPACE", NULL,
-		           "UmodeAdd: out of space!!!");
-		if (module)
-			module->errorcode = MODERR_NOSPACE;
-		return NULL;
+		ModuleObject *umodeobj = safe_alloc(sizeof(ModuleObject));
+		umodeobj->object.umode = um;
+		umodeobj->type = MOBJ_UMODE;
+		AddListItem(umodeobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
 	}
+	return um;
 }
 
 
 void UmodeDel(Umode *umode)
 {
-	if (loop.rehashing)
-		umode->unloaded = 1;
-	else	
+	/* Always free the module object */
+	if (umode->owner)
 	{
-		Client *client;
-		list_for_each_entry(client, &client_list, client_node)
-		{
-			long oldumode = 0;
-			if (!IsUser(client))
-				continue;
-			oldumode = client->umodes;
-			client->umodes &= ~umode->mode;
-			if (MyUser(client))
-				send_umode_out(client, 1, oldumode);
-		}
-		umode->letter = '\0';
-		AllUmodes &= ~(umode->mode);
-		SendUmodes &= ~(umode->mode);
-		make_umodestr();
-	}
-
-	if (umode->owner) {
 		ModuleObject *umodeobj;
-		for (umodeobj = umode->owner->objects; umodeobj; umodeobj = umodeobj->next) {
-			if (umodeobj->type == MOBJ_UMODE && umodeobj->object.umode == umode) {
+		for (umodeobj = umode->owner->objects; umodeobj; umodeobj = umodeobj->next)
+		{
+			if (umodeobj->type == MOBJ_UMODE && umodeobj->object.umode == umode)
+			{
 				DelListItem(umodeobj, umode->owner->objects);
 				safe_free(umodeobj);
 				break;
@@ -227,7 +247,13 @@ void UmodeDel(Umode *umode)
 		}
 		umode->owner = NULL;
 	}
-	return;
+
+	/* Whether we can actually (already) free the Umode depends... */
+
+	if (loop.rehashing)
+		umode->unloaded = 1;
+	else
+		unload_usermode_commit(umode);
 }
 
 int umode_allow_all(Client *client, int what)
@@ -270,39 +296,43 @@ int umode_hidle_allow(Client *client, int what)
 	return 0; /* if set::hide-idle-time is 'never' or 'always' then +I makes no sense */
 }
 
-void unload_all_unused_umodes(void)
+static void unload_usermode_commit(Umode *um)
 {
-	long removed_umode = 0;
-	int i;
 	Client *client;
-	for (i = 0; i < UMODETABLESZ; i++)
-	{
-		if (Usermode_Table[i].unloaded)
-			removed_umode |= Usermode_Table[i].mode;
-	}
-	if (!removed_umode) /* Nothing was unloaded */
+	long removed_umode;
+
+	if (!um)
 		return;
+
+	removed_umode = um->mode;
+
+	/* First send the -mode regarding all users */
 	list_for_each_entry(client, &lclient_list, lclient_node)
 	{
-		long oldumode = 0;
-		if (!IsUser(client))
-			continue;
-		oldumode = client->umodes;
-		client->umodes &= ~(removed_umode);
-		if (MyUser(client))
-			send_umode_out(client, 1, oldumode);
-	}
-	for (i = 0; i < UMODETABLESZ; i++)
-	{
-		if (Usermode_Table[i].unloaded)
+		if (MyUser(client) && (client->umodes & removed_umode))
 		{
-			AllUmodes &= ~(Usermode_Table[i].mode);
-			SendUmodes &= ~(Usermode_Table[i].mode);
-			Usermode_Table[i].letter = '\0';
-			Usermode_Table[i].unloaded = 0;
+			long oldumode = client->umodes;
+			client->umodes &= ~(removed_umode);
+			send_umode_out(client, 1, oldumode);
 		}
 	}
+
+	/* Then unload the mode */
+	DelListItem(um, usermodes);
+	safe_free(um);
 	make_umodestr();
+}
+
+void unload_all_unused_umodes(void)
+{
+	Umode *um, *um_next;
+
+	for (um=usermodes; um; um = um_next)
+	{
+		um_next = um->next;
+		if (um->letter && um->unloaded)
+			unload_usermode_commit(um);
+	}
 }
 
 /**
@@ -323,14 +353,12 @@ void remove_all_snomasks(Client *client)
  */
 void remove_oper_modes(Client *client)
 {
-	int i;
+	Umode *um;
 
-	for (i = 0; i <= Usermode_highest; i++)
+	for (um = usermodes; um; um = um->next)
 	{
-		if (!Usermode_Table[i].letter)
-			continue;
-		if (Usermode_Table[i].unset_on_deoper)
-			client->umodes &= ~Usermode_Table[i].mode;
+		if (um->unset_on_deoper)
+			client->umodes &= ~um->mode;
 	}
 
 	/* Bit of a hack, since this is a dynamic permission umode */
@@ -350,15 +378,14 @@ void remove_oper_privileges(Client *client, int broadcast_mode_change)
 }
 
 /** Return long integer mode for a user mode character (eg: 'x' -> 0x10) */
-long find_user_mode(char flag)
+long find_user_mode(char letter)
 {
-	int i;
+	Umode *um;
 
-	for (i = 0; i < UMODETABLESZ; i++)
-	{
-		if ((Usermode_Table[i].letter == flag) && !(Usermode_Table[i].unloaded))
-			return Usermode_Table[i].mode;
-	}
+	for (um = usermodes; um; um = um->next)
+		if ((um->letter == letter) && !um->unloaded)
+			return um->mode;
+
 	return 0;
 }
 

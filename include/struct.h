@@ -1191,8 +1191,7 @@ struct CommandOverride {
 	OverrideCmdFunc		func;
 };
 
-extern MODVAR Umode *Usermode_Table;
-extern MODVAR int Usermode_highest;
+extern MODVAR Umode *usermodes;
 extern MODVAR Cmode *channelmodes;
 
 extern Umode *UmodeAdd(Module *module, char ch, int options, int unset_on_deoper, int (*allowed)(Client *client, int what), long *mode);

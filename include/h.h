@@ -94,6 +94,7 @@ extern long set_usermode(const char *umode);
 extern const char *get_usermode_string(Client *acptr);
 extern const char *get_usermode_string_r(Client *client, char *buf, size_t buflen);
 extern const char *get_usermode_string_raw(long umodes);
+extern const char *get_usermode_string_raw_r(long umodes, char *buf, size_t buflen);
 extern ConfigFile *config_parse(const char *filename, char *confdata);
 extern ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsigned int line_offset);
 extern void config_error(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));

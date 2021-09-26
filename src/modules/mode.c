@@ -1079,7 +1079,7 @@ void _set_mode(Channel *channel, Client *client, int parc, const char *parv[], u
  */
 CMD_FUNC(_cmd_umode)
 {
-	int i;
+	Umode *um;
 	const char *m;
 	Client *acptr;
 	int what;
@@ -1120,10 +1120,7 @@ CMD_FUNC(_cmd_umode)
 
 	userhost_save_current(client); /* save host, in case we do any +x/-x or similar */
 
-	/* find flags already set for user */
-	for (i = 0; i <= Usermode_highest; i++)
-		if ((client->umodes & Usermode_Table[i].mode))
-			oldumodes |= Usermode_Table[i].mode;
+	oldumodes = client->umodes;
 
 	if (RESTRICT_USERMODES && MyUser(client) && !ValidatePermissionsForPath("immune:restrict-usermodes",client,NULL,NULL,NULL))
 		chk_restrict = 1;
@@ -1238,24 +1235,23 @@ CMD_FUNC(_cmd_umode)
 				break;
 			default:
 			def:
-				for (i = 0; i <= Usermode_highest; i++)
+				for (um = usermodes; um; um = um->next)
 				{
-					if (*m == Usermode_Table[i].letter)
+					if (um->letter == *m)
 					{
-						if (Usermode_Table[i].allowed)
-						if (!Usermode_Table[i].allowed(client,what))
+						if (um->allowed && !um->allowed(client,what))
 							break;
 						if (what == MODE_ADD)
-							client->umodes |= Usermode_Table[i].mode;
+							client->umodes |= um->mode;
 						else
-							client->umodes &= ~Usermode_Table[i].mode;
+							client->umodes &= ~um->mode;
 						break;
 					}
-					else if (i == Usermode_highest && MyConnect(client) && !rpterror)
-					{
-						sendnumeric(client, ERR_UMODEUNKNOWNFLAG);
-						rpterror = 1;
-					}
+				}
+				if (!um && MyConnect(client) && !rpterror)
+				{
+					sendnumeric(client, ERR_UMODEUNKNOWNFLAG);
+					rpterror = 1;
 				}
 				break;
 		} /* switch */
@@ -1273,19 +1269,16 @@ CMD_FUNC(_cmd_umode)
 			int i;
 
 			/* MODES */
-			for (i = 0; i <= Usermode_highest; i++)
+			for (um = usermodes; um; um = um->next)
 			{
-				if (!Usermode_Table[i].letter)
-					continue;
-				if (Usermode_Table[i].unset_on_deoper)
+				if (um->unset_on_deoper)
 				{
 					/* This is an oper mode. Is it set now and wasn't earlier?
 					 * then it needs to be stripped, as setting it is not
 					 * permitted.
 					 */
-					long m = Usermode_Table[i].mode;
-					if ((client->umodes & m) && !(oldumodes & m))
-						client->umodes &= ~Usermode_Table[i].mode; /* remove */
+					if ((client->umodes & um->mode) && !(oldumodes & um->mode))
+						client->umodes &= ~um->mode; /* remove */
 				}
 			}
 
