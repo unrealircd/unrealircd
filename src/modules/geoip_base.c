@@ -17,7 +17,6 @@ ModuleHeader MOD_HEADER
     };
 
 struct geoip_base_config_s {
-	int whois_for_anyone;
 	int check_on_load;
 };
 
@@ -26,9 +25,8 @@ void geoip_base_free(ModData *m);
 const char *geoip_base_serialize(ModData *m);
 void geoip_base_unserialize(const char *str, ModData *m);
 int geoip_base_handshake(Client *client);
-int geoip_base_whois(Client *client, Client *target);
+int geoip_base_whois(Client *client, Client *target, NameValuePrioList **list);
 int geoip_connect_extinfo(Client *client, NameValuePrioList **list);
-int geoip_whois(Client *client, Client *target);
 int geoip_base_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int geoip_base_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 EVENT(geoip_base_set_existing_users_evt);
@@ -61,7 +59,7 @@ int geoip_base_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "whois-for-anyone") || !strcmp(cep->name, "check-on-load"))
+		if (!strcmp(cep->name, "check-on-load"))
 		{
 			CheckNull(cep);
 			continue;
@@ -88,8 +86,6 @@ int geoip_base_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "whois-for-anyone"))
-			geoip_base_config.whois_for_anyone = config_checkval(cep->value, CFG_YESNO);
 		if (!strcmp(cep->name, "check-on-load"))
 			geoip_base_config.check_on_load = config_checkval(cep->value, CFG_YESNO);
 	}
@@ -126,10 +122,9 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONNECT_EXTINFO, 1, geoip_connect_extinfo); /* (prio: near-first) */
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0,geoip_base_handshake); /* in case the IP changed in registration phase (WEBIRC, HTTP Forwarded) */
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, 0, geoip_base_handshake); /* remote user */
-	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, geoip_whois);
+	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, geoip_base_whois);
 
 	/* set defaults */
-	geoip_base_config.whois_for_anyone = 0;
 	geoip_base_config.check_on_load = 1;
 
 	return MOD_SUCCESS;
@@ -248,18 +243,26 @@ int geoip_connect_extinfo(Client *client, NameValuePrioList **list)
 	return 0;
 }
 
-int geoip_whois(Client *client, Client *target)
+int geoip_base_whois(Client *client, Client *target, NameValuePrioList **list)
 {
 	GeoIPResult *geo;
+	char buf[512];
+	int policy = whois_get_policy(client, target, "geo");
 
-	if (!geoip_base_config.whois_for_anyone && !IsOper(client))
+	if (policy == WHOIS_CONFIG_DETAILS_NONE)
 		return 0;
 
 	geo = GEOIPDATA(target);
 	if (!geo)
 		return 0;
 
-	sendnumeric(client, RPL_WHOISCOUNTRY, target->name, geo->country_code, geo->country_name);
+	// we only have country atm, but if we add city then city goes in 'full' and
+	// country goes in 'limited'
+	// if policy == WHOIS_CONFIG_DETAILS_LIMITED ...
+	add_nvplist_numeric_fmt(list, 0, "geo", client, RPL_WHOISCOUNTRY,
+	                        "%s %s :is connecting from %s",
+	                        target->name,
+	                        geo->country_code,
+	                        geo->country_name);
 	return 0;
 }
-

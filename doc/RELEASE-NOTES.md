@@ -14,12 +14,13 @@ This is UnrealIRCd 6's latest git, bleeding edge. Do not use on production serve
   * CAP unrealircd.org/json-log
 * Cloaking module: now need to load one explicitly, explain
 * Named extbans
+* You can decide precisely what information to expose in WHOIS
+  via the new set::whois-details block.
 * Geo ip: tell how it works and where it is available/used/shown
   main configuration:
 ```
   set { geoip {
     check-on-load yes; // check all users already connected and add geoip info to them on module load
-    whois-for-anyone no; // display country info in whois: yes for all users, no for opers only
   };};
 ```
   geoip_csv module: always compiled, file locations:

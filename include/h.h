@@ -803,6 +803,7 @@ extern MODVAR int (*watch_check)(Client *client, int reply, int (*watch_notify)(
 extern MODVAR char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options);
 extern MODVAR void (*do_unreal_log_remote_deliver)(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
 extern MODVAR char *(*get_chmodes_for_user)(Client *client, const char *flags);
+extern MODVAR WhoisConfigDetails (*whois_get_policy)(Client *client, Client *target, const char *name);
 /* /Efuncs */
 
 /* TLS functions */
@@ -1066,6 +1067,17 @@ extern long do_nv_find_by_name(NameValue *table, const char *cmd, int numelement
 extern const char *do_nv_find_by_value(NameValue *table, long value, int numelements);
 extern void add_nvplist(NameValuePrioList **lst, int priority, const char *name, const char *value);
 extern void add_fmt_nvplist(NameValuePrioList **lst, int priority, const char *name, FORMAT_STRING(const char *format), ...) __attribute__((format(printf,4,5)));
+/** Combination of add_nvplist() and buildnumeric() for convenience - only used in WHOIS response functions.
+ * @param lst		The NameValuePrioList &head
+ * @param priority	The priority of the item being added
+ * @param name		The name of the item being added (eg: "certfp")
+ * @param to		The recipient
+ * @param numeric	The numeric, one of RPL_* or ERR_*, see include/numeric.h
+ * @param ...		The parameters for the numeric
+ * @note Be sure to provide the correct number and type of parameters that belong to the numeric. Check include/numeric.h when in doubt!
+ */
+#define add_nvplist_numeric(lst, priority, name, to, numeric, ...) add_nvplist_numeric_fmt(lst, priority, name, to, numeric, STR_ ## numeric, ##__VA_ARGS__)
+extern void add_nvplist_numeric_fmt(NameValuePrioList **lst, int priority, const char *name, Client *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,6,7)));
 extern NameValuePrioList *find_nvplist(NameValuePrioList *list, const char *name);
 extern void free_nvplist(NameValuePrioList *lst);
 extern const char *get_connect_extinfo(Client *client);

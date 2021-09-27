@@ -2199,6 +2199,13 @@ struct GeoIPResult {
 	char *country_name;
 };
 
+typedef enum WhoisConfigDetails {
+	WHOIS_CONFIG_DETAILS_DEFAULT	= 0,
+	WHOIS_CONFIG_DETAILS_NONE	= 1,
+	WHOIS_CONFIG_DETAILS_LIMITED	= 2,
+	WHOIS_CONFIG_DETAILS_FULL	= 3,
+} WhoisConfigDetails;
+
 #endif /* __struct_include__ */
 
 #include "dynconf.h"

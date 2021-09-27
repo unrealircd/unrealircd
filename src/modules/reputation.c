@@ -138,7 +138,7 @@ void reputation_config_setdefaults(struct cfgstruct *cfg);
 void reputation_free_config(struct cfgstruct *cfg);
 CMD_FUNC(reputation_cmd);
 CMD_FUNC(reputationunperm);
-int reputation_whois(Client *client, Client *target);
+int reputation_whois(Client *client, Client *target, NameValuePrioList **list);
 int reputation_set_on_connect(Client *client);
 int reputation_pre_lconnect(Client *client);
 int reputation_connect_extinfo(Client *client, NameValuePrioList **list);
@@ -1307,18 +1307,19 @@ CMD_FUNC(reputation_cmd)
 		reputation_server_cmd(client, recv_mtags, parc, parv);
 }
 
-int reputation_whois(Client *client, Client *target)
+int reputation_whois(Client *client, Client *target, NameValuePrioList **list)
 {
-	int reputation = Reputation(target);
+	int reputation;
 
-	if (!IsOper(client))
-		return 0; /* only opers can see this.. */
+	if (whois_get_policy(client, target, "reputation") != WHOIS_CONFIG_DETAILS_FULL)
+		return 0;
 
+	reputation = Reputation(target);
 	if (reputation > 0)
 	{
-		sendto_one(client, NULL, ":%s %d %s %s :is using an IP with a reputation score of %d",
-			me.name, RPL_WHOISSPECIAL, client->name,
-			target->name, reputation);
+		add_nvplist_numeric_fmt(list, 0, "reputation", client, RPL_WHOISSPECIAL,
+		                        "%s :is using an IP with a reputation score of %d",
+		                        target->name, reputation);
 	}
 	return 0;
 }

@@ -21,8 +21,6 @@
 
 #define IsServiceBot(client)    (client->umodes & UMODE_SERVICEBOT)
 
-#define WHOIS_SERVICE_STRING ":%s 313 %s %s :is a Network Service"
-
 /* Module header */
 ModuleHeader MOD_HEADER
   = {
@@ -42,7 +40,7 @@ int servicebot_can_kick(Client *client, Client *target, Channel *channel,
 int servicebot_mode_deop(Client *client, Client *target, Channel *channel,
                     u_int what, int modechar, const char *client_access, const char *target_access, const char **reject_reason);
 int servicebot_pre_kill(Client *client, Client *target, const char *reason);
-int servicebot_whois(Client *requester, Client *acptr);
+int servicebot_whois(Client *requester, Client *acptr, NameValuePrioList **list);
 int servicebot_see_channel_in_whois(Client *client, Client *target, Channel *channel);
                     
 MOD_TEST()
@@ -123,12 +121,15 @@ int servicebot_pre_kill(Client *client, Client *target, const char *reason)
 	return EX_ALLOW;
 }
 
-int servicebot_whois(Client *requester, Client *acptr)
+int servicebot_whois(Client *client, Client *target, NameValuePrioList **list)
 {
-	int hideoper = (IsHideOper(acptr) && (requester != acptr) && !IsOper(requester)) ? 1 : 0;
+	int hideoper = (IsHideOper(target) && (client != target) && !IsOper(client)) ? 1 : 0;
 
-	if (IsServiceBot(acptr) && !hideoper)
-		sendto_one(requester, NULL, WHOIS_SERVICE_STRING, me.name, requester->name, acptr->name);
+	if (IsServiceBot(target) && !hideoper &&
+	    (whois_get_policy(client, target, "services") > WHOIS_CONFIG_DETAILS_NONE))
+	{
+		add_nvplist_numeric(list, 0, "services", client, RPL_WHOISOPERATOR, target->name, "a Network Service");
+	}
 
 	return 0;
 }

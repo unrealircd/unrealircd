@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER
 long UMODE_BOT = 0L;
 
 /* Forward declarations */
-int bot_whois(Client *client, Client *acptr);
+int bot_whois(Client *client, Client *acptr, NameValuePrioList **list);
 int bot_who_status(Client *client, Client *acptr, Channel *channel, Member *cm, const char *status, int cansee);
 int bot_umode_change(Client *client, long oldmode, long newmode);
 
@@ -67,17 +67,24 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int bot_whois(Client *requester, Client *acptr)
+int bot_whois(Client *client, Client *target, NameValuePrioList **list)
 {
-	if (IsBot(acptr))
-		sendnumeric(requester, RPL_WHOISBOT, acptr->name, NETWORK_NAME);
+	char buf[512];
+
+	if (!IsBot(target))
+		return 0;
+
+	if (whois_get_policy(client, target, "bot") == WHOIS_CONFIG_DETAILS_NONE)
+		return 0;
+
+	add_nvplist_numeric(list, 0, "bot", client, RPL_WHOISBOT, target->name, NETWORK_NAME);
 
 	return 0;
 }
 
-int bot_who_status(Client *requester, Client *acptr, Channel *channel, Member *cm, const char *status, int cansee)
+int bot_who_status(Client *client, Client *target, Channel *channel, Member *cm, const char *status, int cansee)
 {
-	if (IsBot(acptr))
+	if (IsBot(target))
 		return 'B';
 	
 	return 0;

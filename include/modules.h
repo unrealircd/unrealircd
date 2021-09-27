@@ -1572,9 +1572,11 @@ int hooktype_knock(Client *client, Channel *channel, MessageTag *mtags, const ch
 /** Called when a user whoises someone (function prototype for HOOKTYPE_WHOIS).
  * @param client		The client issuing the command
  * @param target		The user who is the target of the /WHOIS.
+ * @param list			The name/value/prio list that you can add information to
+ *				that will be sent to the user as the WHOIS response.
  * @return The return value is ignored (use return 0)
  */
-int hooktype_whois(Client *client, Client *target);
+int hooktype_whois(Client *client, Client *target, NameValuePrioList **list);
 
 /** Called to add letters to the WHO status column (function prototype for HOOKTYPE_WHO_STATUS).
  * If a user does a /WHO request, then WHO will show a number of status flags
@@ -2368,6 +2370,7 @@ enum EfunctionType {
 	EFUNC_TKL_UHOST,
 	EFUNC_DO_UNREAL_LOG_REMOTE_DELIVER,
 	EFUNC_GET_CHMODES_FOR_USER,
+	EFUNC_WHOIS_GET_POLICY,
 };
 
 /* Module flags */

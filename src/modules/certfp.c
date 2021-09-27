@@ -26,7 +26,7 @@ const char *certfp_serialize(ModData *m);
 void certfp_unserialize(const char *str, ModData *m);
 int certfp_handshake(Client *client);
 int certfp_connect(Client *client);
-int certfp_whois(Client *client, Client *target);
+int certfp_whois(Client *client, Client *target, NameValuePrioList **list);
 
 ModDataInfo *certfp_md; /* Module Data structure which we acquire */
 
@@ -130,12 +130,19 @@ int certfp_connect(Client *client)
 	return 0;
 }
 
-int certfp_whois(Client *client, Client *target)
+int certfp_whois(Client *client, Client *target, NameValuePrioList **list)
 {
 	const char *fp = moddata_client_get(target, "certfp");
-	
-	if (fp)
-		sendnumeric(client, RPL_WHOISCERTFP, target->name, fp);
+	char buf[512];
+
+	if (!fp)
+		return 0;
+
+	if (whois_get_policy(client, target, "certfp") == WHOIS_CONFIG_DETAILS_FULL)
+	{
+		add_nvplist_numeric(list, 0, "certfp", client, RPL_WHOISSPECIAL, target->name, fp);
+	}
+
 	return 0;
 }
 

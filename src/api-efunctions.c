@@ -134,6 +134,7 @@ Watch *(*watch_get)(const char *nick);
 int (*watch_check)(Client *client, int reply, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event));
 void (*do_unreal_log_remote_deliver)(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
 char *(*get_chmodes_for_user)(Client *client, const char *flags);
+WhoisConfigDetails (*whois_get_policy)(Client *client, Client *target, const char *name);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
@@ -404,4 +405,5 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_TKL_UHOST, tkl_uhost, NULL);
 	efunc_init_function(EFUNC_DO_UNREAL_LOG_REMOTE_DELIVER, do_unreal_log_remote_deliver, do_unreal_log_remote_deliver_default_handler);
 	efunc_init_function(EFUNC_GET_CHMODES_FOR_USER, get_chmodes_for_user, NULL);
+	efunc_init_function(EFUNC_WHOIS_GET_POLICY, whois_get_policy, NULL);
 }

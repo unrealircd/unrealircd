@@ -1076,6 +1076,28 @@ void buildnumericfmt(char *buf, size_t buflen, Client *to, int numeric, FORMAT_S
 	va_end(vl);
 }
 
+void add_nvplist_numeric_fmt(NameValuePrioList **lst, int priority, const char *name, Client *to, int numeric, FORMAT_STRING(const char *pattern), ...)
+{
+	va_list vl;
+	char realpattern[512], buf[512];
+
+	snprintf(realpattern, sizeof(realpattern), ":%s %.3d %s %s", me.name, numeric, to->name[0] ? to->name : "*", pattern);
+
+	va_start(vl, pattern);
+	/* Need to ignore -Wformat-nonliteral here */
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
+	vsnprintf(buf, sizeof(buf), realpattern, vl);
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+	va_end(vl);
+
+	add_nvplist(lst, priority, name, buf);
+}
+
 /* Send raw data directly to socket, bypassing everything.
  * Looks like an interesting function to call? NO! STOP!
  * Don't use this function. It may only be used by the initial
