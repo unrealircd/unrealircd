@@ -315,6 +315,7 @@ DLL_FILES=\
  src/modules/cloak_none.dll \
  src/modules/cloak_sha256.dll \
  src/modules/oper.dll \
+ src/modules/operinfo.dll \
  src/modules/opermotd.dll \
  src/modules/part.dll \
  src/modules/pass.dll \
@@ -1004,6 +1005,9 @@ src/modules/cloak_sha256.dll: src/modules/cloak_sha256.c $(INCLUDES)
 
 src/modules/oper.dll: src/modules/oper.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/oper.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/oper.pdb $(MODLFLAGS)
+
+src/modules/operinfo.dll: src/modules/operinfo.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/operinfo.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/operinfo.pdb $(MODLFLAGS)
 
 src/modules/opermotd.dll: src/modules/opermotd.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/opermotd.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/opermotd.pdb $(MODLFLAGS)
