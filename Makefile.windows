@@ -207,6 +207,11 @@ DLL_FILES=\
  src/modules/bot-tag.dll \
  src/modules/cap.dll \
  src/modules/certfp.dll \
+ src/modules/chanmodes/chanowner.dll \
+ src/modules/chanmodes/chanadmin.dll \
+ src/modules/chanmodes/chanop.dll \
+ src/modules/chanmodes/halfop.dll \
+ src/modules/chanmodes/voice.dll \
  src/modules/chanmodes/censor.dll \
  src/modules/chanmodes/delayjoin.dll \
  src/modules/chanmodes/floodprot.dll \
@@ -307,6 +312,8 @@ DLL_FILES=\
  src/modules/nick.dll \
  src/modules/nocodes.dll \
  src/modules/cloak_md5.dll \
+ src/modules/cloak_none.dll \
+ src/modules/cloak_sha256.dll \
  src/modules/oper.dll \
  src/modules/opermotd.dll \
  src/modules/part.dll \
@@ -668,6 +675,21 @@ src/modules/cap.dll: src/modules/cap.c $(INCLUDES)
 src/modules/certfp.dll: src/modules/certfp.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/certfp.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/certfp.pdb $(MODLFLAGS)
 
+src/modules/chanmodes/chanowner.dll: src/modules/chanmodes/chanowner.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/chanmodes/chanowner.c /Fesrc/modules/chanmodes/ /Fosrc/modules/chanmodes/ /Fdsrc/modules/chanmodes/chanowner.pdb $(MODLFLAGS)
+
+src/modules/chanmodes/chanadmin.dll: src/modules/chanmodes/chanadmin.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/chanmodes/chanadmin.c /Fesrc/modules/chanmodes/ /Fosrc/modules/chanmodes/ /Fdsrc/modules/chanmodes/chanadmin.pdb $(MODLFLAGS)
+
+src/modules/chanmodes/chanop.dll: src/modules/chanmodes/chanop.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/chanmodes/chanop.c /Fesrc/modules/chanmodes/ /Fosrc/modules/chanmodes/ /Fdsrc/modules/chanmodes/chanop.pdb $(MODLFLAGS)
+
+src/modules/chanmodes/halfop.dll: src/modules/chanmodes/halfop.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/chanmodes/halfop.c /Fesrc/modules/chanmodes/ /Fosrc/modules/chanmodes/ /Fdsrc/modules/chanmodes/halfop.pdb $(MODLFLAGS)
+
+src/modules/chanmodes/voice.dll: src/modules/chanmodes/voice.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/chanmodes/voice.c /Fesrc/modules/chanmodes/ /Fosrc/modules/chanmodes/ /Fdsrc/modules/chanmodes/voice.pdb $(MODLFLAGS)
+
 src/modules/chanmodes/censor.dll: src/modules/chanmodes/censor.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/chanmodes/censor.c /Fesrc/modules/chanmodes/ /Fosrc/modules/chanmodes/ /Fdsrc/modules/chanmodes/censor.pdb $(MODLFLAGS)
 
@@ -973,6 +995,12 @@ src/modules/nocodes.dll: src/modules/nocodes.c $(INCLUDES)
 
 src/modules/cloak_md5.dll: src/modules/cloak_md5.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/cloak_md5.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/cloak_md5.pdb $(MODLFLAGS)
+
+src/modules/cloak_none.dll: src/modules/cloak_none.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/cloak_none.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/cloak_none.pdb $(MODLFLAGS)
+
+src/modules/cloak_sha256.dll: src/modules/cloak_sha256.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/cloak_sha256.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/cloak_sha256.pdb $(MODLFLAGS)
 
 src/modules/oper.dll: src/modules/oper.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/oper.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/oper.pdb $(MODLFLAGS)
