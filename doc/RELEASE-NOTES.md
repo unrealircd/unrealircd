@@ -51,7 +51,7 @@ Enhancements
   * ```cloak_sha256```: the recommended module for anyone starting a new
     network. It uses the SHA256 algorithm under the hood.
   * ```cloak_md5```: for anyone who is upgrading their network from older
-    UnrealIRCd versions. Use this so your existing cloaked host bans work.
+    UnrealIRCd versions. Use this so your cloaked host bans don't break.
   * ```cloak_none```: if you don't want any cloaking, not even as an option
     to your users (rare)
 * Remote includes are now supported everywhere in the config file.
@@ -63,11 +63,22 @@ Enhancements
   * If you need to prevent UnrealIRCd from treating an URL as a
     remote include then use ..... TODO......
 * New IRCv3 features:
-  * MONITOR
-  * invite-notify
-  * setname
+  * [MONITOR](https://ircv3.net/specs/extensions/monitor.html)
+  * [invite-notify](https://ircv3.net/specs/extensions/invite-notify)
+  * [setname](https://ircv3.net/specs/extensions/setname.html)
   * draft/metadata --- ONLY if we decide to ship with this
   * draft/extended-monitor ?
+* Almost all channel modes are modularized
+  * Only the three list modes (+b/+e/+I) are still in the core
+  * The five rank modes +vhoaq are now also modular. They are loaded by
+    default but you can blacklist one or more if you don't want them.
+  * For example to disable halfop: ```blacklist-module chanmodes/halfop;```
+  * Support for compiling without PREFIX_AQ has been removed because
+    people often confused it with disabling +a/+q which is something
+    different.
+  * TODO: replace part of the above with a simple docs reference, eg
+    a new page called Channel ranks or whatever, or part of the
+    Channel modes page.
 
 Mental notes / move these wiki:
 
