@@ -7659,7 +7659,7 @@ fi
 
 if test "$has_system_cares" = "no"; then :
 
-cares_version="1.17.1"
+cares_version="1.17.2"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting c-ares resolver library" >&5
 $as_echo "extracting c-ares resolver library" >&6; }
 cur_dir=`pwd`
