@@ -4,7 +4,7 @@ UnrealIRCd 5.2.2-NOTRELEASEDYET Release Notes
 Previous release 5.2.1.1 turned out to be good and stable. This 5.2.2 release
 only has some small updates.
 
-If you are still on UnrealIRCd 5.0.x then we now recommend you to upgrade to 5.2.2.
+If you are still using UnrealIRCd 5.0.x then we now recommend you to upgrade to 5.2.2.
 
 Enhancements:
 * [set::allowed-nickchars](https://www.unrealircd.org/docs/Nick_Character_Sets):
@@ -22,10 +22,13 @@ Fixes:
   * LibreSSL, such as with UnrealIRCd on Windows
 
 Module coders / IRC protocol:
-* Allow SVSLOGIN also when set::sasl-server is not set.
-* Make CHATHISTORY subcommands case-insensitive, and some other CHATHISTORY fixes
-* You can now use the ```UNREAL_VERSION``` define which is easier than
-  the individual MAJOR/MINOR/etc defines.
+* S2S: Allow ```SVSLOGIN``` also when
+ [set::sasl-server](https://www.unrealircd.org/docs/Set_block#set::sasl-server)
+ is not set.
+* Some minor ```CHATHISTORY``` fixes, for example the subcommand is now
+  case-insensitive.
+* You can use the new ```UNREAL_VERSION``` define. It is easier than the
+  old individual UNREAL_VERSION_MAJOR/MINOR/etc defines.
 
 UnrealIRCd 5.2.1 Release Notes
 ===============================
