@@ -2,15 +2,12 @@ UnrealIRCd 5.2.2-NOTRELEASEDYET Release Notes
 ===============================
 
 Previous release 5.2.1.1 turned out to be good and stable. This 5.2.2 release
-only has some small updates.
+only contains some minor changes.
 
-If you are still using UnrealIRCd 5.0.x then we now recommend you to upgrade to 5.2.2.
-
-Enhancements:
-* [set::allowed-nickchars](https://www.unrealircd.org/docs/Nick_Character_Sets):
-  added ```arabic-utf8```
-* [set::server-linking](https://www.unrealircd.org/docs/Set_block#set::server-linking):
-  add another autoconnect-strategy called ```sequential-fallback```.
+If you are still using UnrealIRCd 5.0.x then we recommend you to upgrade
+to 5.2.2 in the next few weeks/months. Just as a reminder: 5.2.x is the
+direct successor to 5.0.9, there is
+[no support for 5.0.x](https://www.unrealircd.org/docs/FAQ#About_the_new_5.2.x_series).
 
 Fixes:
 * Fix issues with Let's Encrypt certificates for
@@ -20,11 +17,17 @@ Fixes:
   * OpenSSL 1.0.2 and older, which is officially unsupported, but still in
     use on e.g. Debian 8 and Ubuntu 16.04.
   * LibreSSL, such as with UnrealIRCd on Windows
-* OpenBSD build issue when using shipped c-ares
+* OpenBSD compile issue when using shipped c-ares
+
+Enhancements:
+* [set::allowed-nickchars](https://www.unrealircd.org/docs/Nick_Character_Sets):
+  added ```arabic-utf8```
+* [set::server-linking](https://www.unrealircd.org/docs/Set_block#set::server-linking):
+  add another autoconnect-strategy called ```sequential-fallback```.
 
 Changes:
-* Shipped libs: update to c-ares 1.17.1
-* Windows build: update to LibreSSL 3.3.5
+* Shipped libs: updated c-ares to 1.17.2
+* Windows build: updated LibreSSL to 3.3.5
 
 Module coders / IRC protocol:
 * S2S: Allow ```SVSLOGIN``` also when
@@ -32,17 +35,21 @@ Module coders / IRC protocol:
  is not set.
 * Some minor ```CHATHISTORY``` fixes, for example the subcommand is now
   case-insensitive.
-* You can use the new ```UNREAL_VERSION``` define. It is easier than the
-  old individual UNREAL_VERSION_MAJOR/MINOR/etc defines.
+* You can use the new ```UNREAL_VERSION``` macro. It is easier than the
+  old individual UNREAL_VERSION_MAJOR/MINOR/etc macros.
 
-UnrealIRCd 5.2.1 Release Notes
-===============================
+UnrealIRCd 5.2.1.1
+-------------------
+
+UnrealIRCd 5.2.1.1 fixes an issue with SASL services autodetection and mechlist in
+5.2.1.
+
+UnrealIRCd 5.2.1
+-----------------
 
 This is UnrealIRCd 5.2.1. Even though only a month has passed since 5.2.0,
 this release comes with several new features and some major bug fixes.
 Please report any issues to https://bugs.unrealircd.org/.
-
-(5.2.1.1 fixes an issue with SASL services autodetection and mechlist in 5.2.1)
 
 Enhancements:
 * The [allow block](https://www.unrealircd.org/docs/Allow_block)
