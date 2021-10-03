@@ -20,6 +20,7 @@ Fixes:
   * OpenSSL 1.0.2 and older, which is officially unsupported, but still in
     use on e.g. Debian 8 and Ubuntu 16.04.
   * LibreSSL, such as with UnrealIRCd on Windows
+* OpenBSD build issue when using shipped c-ares
 
 Changes:
 * Shipped libs: update to c-ares 1.17.1
