@@ -1,4 +1,4 @@
-UnrealIRCd 5.2.2-NOTRELEASEDYET Release Notes
+UnrealIRCd 5.2.2 Release Notes
 ===============================
 
 Previous release 5.2.1.1 turned out to be good and stable. This 5.2.2 release
@@ -7,7 +7,7 @@ only contains some minor changes.
 If you are still using UnrealIRCd 5.0.x then we recommend you to upgrade
 to 5.2.2 in the next few weeks/months. Just as a reminder: 5.2.x is the
 direct successor to 5.0.9, there is
-[no support for 5.0.x](https://www.unrealircd.org/docs/FAQ#About_the_new_5.2.x_series).
+[no support for 5.0.x](https://www.unrealircd.org/docs/FAQ#about-52x).
 
 Fixes:
 * Fix issues with Let's Encrypt certificates for
@@ -142,7 +142,7 @@ on disk and allows clients to fetch hundreds/thousands of lines.
 Upgrading and the 5.0.x series
 -------------------------------
 UnrealIRCd 5.2.0 is the direct successor to 5.0.9/5.0.9.1.
-There will be [no further 5.0.x releases](https://www.unrealircd.org/docs/FAQ#About_the_new_5.2.x_series),
+There will be [no further 5.0.x releases](https://www.unrealircd.org/docs/FAQ#about-52x),
 in particular there will be no 5.0.10.
 
 Only four bugs that affect a limited number of people/networks were fixed.
