@@ -27,6 +27,10 @@ if lsb_release -av 2>&1|egrep 'Debian.*jessie'; then
 	echo "Disabling ASan due to false positives on deb8"
 	echo 'EXTRAPARA="--enable-werror --disable-asan"' >>config.settings
 fi
+if uname -s|grep -i freebsd; then
+	echo "Disabling ASan on FreeBSD due to 100% CPU loop in OpenSSL initialization routine"
+	echo 'EXTRAPARA="--enable-werror --disable-asan"' >>config.settings
+fi
 
 # If SSLDIR is set the environment, this overrides config.settings
 # Used for example in the openssl3 build tests.
