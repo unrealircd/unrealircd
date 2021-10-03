@@ -21,6 +21,10 @@ Fixes:
     use on e.g. Debian 8 and Ubuntu 16.04.
   * LibreSSL, such as with UnrealIRCd on Windows
 
+Changes:
+* Shipped libs: update to c-ares 1.17.1
+* Windows build: update to LibreSSL 3.3.5
+
 Module coders / IRC protocol:
 * S2S: Allow ```SVSLOGIN``` also when
  [set::sasl-server](https://www.unrealircd.org/docs/Set_block#set::sasl-server)
