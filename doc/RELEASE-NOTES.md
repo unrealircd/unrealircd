@@ -15,7 +15,7 @@ Fixes:
   common) and with linking to servers with link::verify-certificate enabled
   (more rare). Both issues only happen with:
   * OpenSSL 1.0.2 and older, which is officially unsupported, but still in
-    use on e.g. Debian 8 and Ubuntu 16.04.
+    use on e.g. CentOS 7, Debian 8 and Ubuntu 16.04.
   * LibreSSL, such as with UnrealIRCd on Windows
 * OpenBSD compile issue when using shipped c-ares
 
