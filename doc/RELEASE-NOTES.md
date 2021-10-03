@@ -1,6 +1,31 @@
-UnrealIRCd 5.2.2-git Release Notes
-===================================
-This is git, latest bleeding edge. It is not meant to be used on production servers.
+UnrealIRCd 5.2.2-NOTRELEASEDYET Release Notes
+===============================
+
+Previous release 5.2.1.1 turned out to be good and stable. This 5.2.2 release
+only has some small updates.
+
+If you are still on UnrealIRCd 5.0.x then we now recommend you to upgrade to 5.2.2.
+
+Enhancements:
+* [set::allowed-nickchars](https://www.unrealircd.org/docs/Nick_Character_Sets):
+  added ```arabic-utf8```
+* [set::server-linking](https://www.unrealircd.org/docs/Set_block#set::server-linking):
+  add another autoconnect-strategy called ```sequential-fallback```.
+
+Fixes:
+* Fix issues with Let's Encrypt certificates for
+  [remote includes](https://www.unrealircd.org/docs/Remote_includes) (quite
+  common) and with linking to servers with link::verify-certificate enabled
+  (more rare). Both issues only happen with:
+  * OpenSSL 1.0.2 and older, which is officially unsupported, but still in
+    use on e.g. Debian 8 and Ubuntu 16.04.
+  * LibreSSL, such as with UnrealIRCd on Windows
+
+Module coders / IRC protocol:
+* Allow SVSLOGIN also when set::sasl-server is not set.
+* Make CHATHISTORY subcommands case-insensitive, and some other CHATHISTORY fixes
+* You can now use the ```UNREAL_VERSION``` define which is easier than
+  the individual MAJOR/MINOR/etc defines.
 
 UnrealIRCd 5.2.1 Release Notes
 ===============================
