@@ -8,10 +8,10 @@ UnrealIRCd 6 comes with a completely redone log system (with optional
 JSON support), named extended bans, four new IRCv3 features,
 geoip support and remote includes support built-in.
 
-Additionally, things are more customizable such as all snomasks. You can
-also can decide exactly which channel modes you want to load (especially
-handy for those admins who don't want or need halfops or +q/+a).
-Who gets to see what in WHOIS is also very customizable now.
+Additionally, things are more customizable such as what gets sent to
+which snomask. All the +vhoaq channel modes are now modular as well,
+handy for admins who don't want or need halfops or +q/+a.
+Who gets to see what in WHOIS is also customizable in detail.
 
 Breaking changes
 -----------------
