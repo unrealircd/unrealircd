@@ -28,14 +28,15 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
-#define CHFLD_CTCP	0 /* c */
-#define CHFLD_JOIN	1 /* j */
-#define CHFLD_KNOCK	2 /* k */
-#define CHFLD_MSG	3 /* m */
-#define CHFLD_NICK	4 /* n */
-#define CHFLD_TEXT	5 /* t */
-#define CHFLD_REPEAT	6 /* r */
-
+typedef enum Flood {
+	CHFLD_CTCP	= 0,
+	CHFLD_JOIN	= 1,
+	CHFLD_KNOCK	= 2,
+	CHFLD_MSG	= 3,
+	CHFLD_NICK	= 4,
+	CHFLD_TEXT	= 5,
+	CHFLD_REPEAT	= 6,
+} Flood;
 #define NUMFLD	7 /* 7 flood types */
 
 /** Configuration settings */
@@ -47,7 +48,7 @@ struct {
 
 typedef struct FloodType {
 	char letter;
-	int index;
+	Flood index;
 	char *description;
 	char default_action;
 	char *actions;
@@ -61,7 +62,7 @@ FloodType floodtypes[] = {
 	{ 'c', CHFLD_CTCP,	"CTCPflood",		'C',	"mM",	0, },
 	{ 'j', CHFLD_JOIN,	"joinflood",		'i',	"R",	0, },
 	{ 'k', CHFLD_KNOCK,	"knockflood",		'K',	"",	0, },
-	{ 'm', CHFLD_MSG,		"msg/noticeflood",	'm',	"M",	0, },
+	{ 'm', CHFLD_MSG,	"msg/noticeflood",	'm',	"M",	0, },
 	{ 'n', CHFLD_NICK,	"nickflood",		'N',	"",	0, },
 	{ 't', CHFLD_TEXT,	"msg/noticeflood",	'\0',	"bd",	1, },
 	{ 'r', CHFLD_REPEAT,	"repeating",		'\0',	"bd",	1, },
@@ -331,7 +332,7 @@ FloodType *find_floodprot_by_letter(char c)
 	return NULL;
 }
 
-FloodType *find_floodprot_by_index(int index)
+FloodType *find_floodprot_by_index(Flood index)
 {
 	int i;
 	for (i=0; i < ARRAY_SIZEOF(floodtypes); i++)
@@ -359,7 +360,7 @@ int cmodef_is_ok(Client *client, Channel *channel, char mode, const char *param,
 		unsigned short warnings = 0, breakit;
 		unsigned char r;
 		FloodType *floodtype;
-		int index;
+		Flood index;
 
 		memset(&newf, 0, sizeof(newf));
 
@@ -475,7 +476,7 @@ void *cmodef_put_param(void *fld_in, const char *param)
 	unsigned short breakit;
 	unsigned char r;
 	FloodType *floodtype;
-	int index;
+	Flood index;
 
 	strlcpy(xbuf, param, sizeof(xbuf));
 
@@ -607,7 +608,7 @@ const char *cmodef_conv_param(const char *param_in, Client *client, Channel *cha
 	unsigned short breakit;
 	unsigned char r;
 	FloodType *floodtype;
-	int index;
+	Flood index;
 
 	memset(&newf, 0, sizeof(newf));
 
