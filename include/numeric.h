@@ -318,23 +318,6 @@
 
 #define RPL_WHOISSECURE      671
 
-#define RPL_WHOISKEYVALUE    760
-#define RPL_KEYVALUE         761
-#define RPL_METADATAEND      762
-#define ERR_METADATALIMIT    764
-#define ERR_TARGETINVALID    765
-#define ERR_NOMATCHINGKEY    766
-#define ERR_KEYINVALID       767
-#define ERR_KEYNOTSET        768
-#define ERR_KEYNOPERMISSION  769
-#define RPL_METADATASUBOK    770
-#define RPL_METADATAUNSUBOK  771
-#define RPL_METADATASUBS     772
-#define ERR_METADATATOOMANYSUBS 773
-#define ERR_METADATASYNCLATER 774
-#define ERR_METADATARATELIMIT 775
-#define ERR_METADATAINVALIDSUBCOMMAND 776
-
 #define RPL_MONONLINE		730
 #define RPL_MONOFFLINE		731
 #define RPL_MONLIST			732
@@ -578,22 +561,6 @@
 #define STR_RPL_ENDOFMONLIST		/* 733 */	":End of MONITOR list"
 #define STR_ERR_MONLISTFULL		/* 734 */	"%d %s :Monitor list is full."
 #define STR_ERR_MLOCKRESTRICTED		/* 742 */	"%s %c %s :MODE cannot be set due to channel having an active MLOCK restriction policy"
-#define STR_RPL_WHOISKEYVALUE		/* 760 */	"%s %s %s :%s"
-#define STR_RPL_KEYVALUE		/* 761 */	"%s %s %s :%s"
-#define STR_RPL_METADATAEND		/* 762 */	":end of metadata"
-#define STR_ERR_METADATALIMIT		/* 764 */	"%s :metadata limit reached"
-#define STR_ERR_TARGETINVALID		/* 765 */	"%s :invalid metadata target"
-#define STR_ERR_NOMATCHINGKEY		/* 766 */	"%s %s :no matching key"
-#define STR_ERR_KEYINVALID		/* 767 */	":%s"
-#define STR_ERR_KEYNOTSET		/* 768 */	"%s %s :key not set"
-#define STR_ERR_KEYNOPERMISSION		/* 769 */	"%s %s :permission denied"
-#define STR_RPL_METADATASUBOK		/* 770 */	":%s"
-#define STR_RPL_METADATAUNSUBOK		/* 771 */	":%s"
-#define STR_RPL_METADATASUBS		/* 772 */	":%s"
-#define STR_ERR_METADATATOOMANYSUBS	/* 773 */	"%s"
-#define STR_ERR_METADATASYNCLATER	/* 774 */	"%s %s"
-#define STR_ERR_METADATARATELIMIT	/* 775 */	"%s %s %s :%s"
-#define STR_ERR_METADATAINVALIDSUBCOMMAND /* 776 */	"%s :invalid metadata subcommand"
 #define STR_RPL_LOGGEDIN		/* 900 */	"%s!%s@%s %s :You are now logged in as %s."
 #define STR_RPL_LOGGEDOUT		/* 901 */	"%s!%s@%s :You are now logged out."
 #define STR_RPL_SASLSUCCESS		/* 903 */	":SASL authentication successful"

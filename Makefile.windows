@@ -302,7 +302,6 @@ DLL_FILES=\
  src/modules/message.dll \
  src/modules/message-ids.dll \
  src/modules/message-tags.dll \
- src/modules/metadata.dll \
  src/modules/mkpasswd.dll \
  src/modules/mode.dll \
  src/modules/monitor.dll \
@@ -966,9 +965,6 @@ src/modules/message-ids.dll: src/modules/message-ids.c $(INCLUDES)
 
 src/modules/message-tags.dll: src/modules/message-tags.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/message-tags.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/message-tags.pdb $(MODLFLAGS)
-
-src/modules/metadata.dll: src/modules/metadata.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/metadata.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/metadata.pdb $(MODLFLAGS)
 
 src/modules/mkpasswd.dll: src/modules/mkpasswd.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/mkpasswd.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/mkpasswd.pdb $(MODLFLAGS)

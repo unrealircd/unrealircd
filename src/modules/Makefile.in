@@ -77,7 +77,7 @@ MODULES= \
 	ident_lookup.so history.so chathistory.so \
 	targetfloodprot.so clienttagdeny.so watch-backend.so \
 	monitor.so slog.so tls_cipher.so operinfo.so \
-	unreal_server_compat.so metadata.so \
+	unreal_server_compat.so \
 	extended-monitor.so geoip_csv.so \
 	geoip_base.so extjwt.so \
 	$(GEOIP_CLASSIC_OBJECTS) $(GEOIP_MAXMIND_OBJECTS)

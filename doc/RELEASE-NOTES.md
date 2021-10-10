@@ -79,7 +79,6 @@ Enhancements
   * [MONITOR](https://ircv3.net/specs/extensions/monitor.html)
   * [invite-notify](https://ircv3.net/specs/extensions/invite-notify)
   * [setname](https://ircv3.net/specs/extensions/setname.html)
-  * draft/metadata --- ONLY if we decide to ship with this
   * draft/extended-monitor ?
 * Almost all channel modes are modularized
   * Only the three list modes (+b/+e/+I) are still in the core
