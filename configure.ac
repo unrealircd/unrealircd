@@ -7,7 +7,7 @@ dnl src/windows/unrealinst.iss
 dnl doc/Config.header
 dnl src/version.c.SH
 
-AC_INIT([unrealircd], [5.0.7-rc1], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
+AC_INIT([unrealircd], [5.0.10-git], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
 AC_CONFIG_SRCDIR([src/ircd.c])
 AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])
@@ -34,13 +34,13 @@ UNREAL_VERSION_MAJOR=["0"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_MAJOR], [$UNREAL_VERSION_MAJOR], [Major version number (e.g.: Y for X.Y.Z)])
 
 # Minor version number (e.g.: Z in X.Y.Z)
-UNREAL_VERSION_MINOR=["7"]
+UNREAL_VERSION_MINOR=["10"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_MINOR], [$UNREAL_VERSION_MINOR], [Minor version number (e.g.: Z for X.Y.Z)])
 
 # The version suffix such as a beta marker or release candidate
 # marker. (e.g.: -rcX for unrealircd-3.2.9-rcX). This macro is a
 # string instead of an integer because it contains arbitrary data.
-UNREAL_VERSION_SUFFIX=["-rc1"]
+UNREAL_VERSION_SUFFIX=["-git"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_SUFFIX], ["$UNREAL_VERSION_SUFFIX"], [Version suffix such as a beta marker or release candidate marker. (e.g.: -rcX for unrealircd-3.2.9-rcX)])
 
 AC_PATH_PROG(RM,rm)
@@ -82,6 +82,18 @@ AC_CHECK_LIB(descrypt, crypt,
 	[AC_CHECK_LIB(crypt, crypt,
 		[AC_DEFINE([HAVE_CRYPT], [], [Define if you have crypt])
 			IRCDLIBS="$IRCDLIBS-lcrypt "])])
+
+dnl Check for big-endian system, even though these hardly exist anymore...
+AS_CASE([$host_cpu],
+  [i?86|amd64|x86_64],
+    [ac_cv_c_bigendian=no]
+)
+AC_C_BIGENDIAN(
+  AC_DEFINE(NATIVE_BIG_ENDIAN, 1, [machine is bigendian]),
+  AC_DEFINE(NATIVE_LITTLE_ENDIAN, 1, [machine is littleendian]),
+  AC_MSG_ERROR([unknown endianness]),
+  AC_MSG_ERROR([universal endianness is not supported - compile separately and use lipo(1)])
+)
 
 dnl HARDENING START
 dnl This is taken from https://github.com/kmcallister/autoharden
@@ -499,11 +511,14 @@ AC_ARG_WITH(operoverride-verify, [AS_HELP_STRING([--with-operoverride-verify], [
 		[AC_DEFINE([OPEROVERRIDE_VERIFY], [], [Define if you want opers to have to use /invite to join +s/+p channels])])])
 AC_ARG_WITH(system-pcre2, [AS_HELP_STRING([--without-system-pcre2], [Use the system pcre2 package instead of bundled, discovered using pkg-config])], [], [with_system_pcre2=yes])
 AC_ARG_WITH(system-argon2, [AS_HELP_STRING([--without-system-argon2], [Use bundled version instead of system argon2 library. Normally autodetected via pkg-config])], [], [with_system_argon2=yes])
+AC_ARG_WITH(system-sodium, [AS_HELP_STRING([--without-system-sodium], [Use bundled version instead of system sodium library. Normally autodetected via pkg-config])], [], [with_system_sodium=yes])
 AC_ARG_WITH(system-cares, [AS_HELP_STRING([--without-system-cares], [Use bundled version instead of system c-ares. Normally autodetected via pkg-config.])], [], [with_system_cares=yes])
 CHECK_SSL
 CHECK_SSL_CTX_SET1_CURVES_LIST
 CHECK_SSL_CTX_SET_MIN_PROTO_VERSION
 CHECK_SSL_CTX_SET_SECURITY_LEVEL
+CHECK_ASN1_TIME_diff
+CHECK_X509_get0_notAfter
 AC_ARG_ENABLE(dynamic-linking, [AS_HELP_STRING([--disable-dynamic-linking], [Make the IRCd statically link with shared objects rather than dynamically (noone knows if disabling dynamic linking actually does anything or not)])],
 	[enable_dynamic_linking=$enableval], [enable_dynamic_linking="yes"])
 AS_IF([test $enable_dynamic_linking = "yes"],
@@ -542,7 +557,7 @@ AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libpcre2*])],[has
 
 AS_IF([test "$has_system_pcre2" = "no"], [
 dnl REMEMBER TO CHANGE WITH A NEW PCRE2 RELEASE!
-pcre2_version="10.33"
+pcre2_version="10.36"
 AC_MSG_RESULT(extracting PCRE2 regex library)
 cur_dir=`pwd`
 cd extras
@@ -623,6 +638,55 @@ AC_SUBST(ARGON2_LIBS)
 cd $cur_dir
 ])
 
+dnl Use system sodium when available, unless --without-system-sodium
+has_system_sodium="no"
+AS_IF([test "x$with_system_sodium" = "xyes"],[
+PKG_CHECK_MODULES([SODIUM], [libsodium >= 1.0.16],[has_system_sodium=yes
+AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libsodium*])],[has_system_sodium=no])])
+
+AS_IF([test "$has_system_sodium" = "no"],[
+dnl REMEMBER TO CHANGE WITH A NEW SODIUM RELEASE!
+sodium_version="1.0.18"
+AC_MSG_RESULT(extracting sodium library)
+cur_dir=`pwd`
+cd extras
+dnl remove old sodium directory to force a recompile...
+dnl and remove its installation prefix just to clean things up.
+rm -rf sodium-$sodium_version sodium
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz libsodium.tar.gz
+else
+	cp libsodium.tar.gz libsodium.tar.gz.bak
+	gunzip -f libsodium.tar.gz
+	cp libsodium.tar.gz.bak libsodium.tar.gz
+	tar xf libsodium.tar
+fi
+AC_MSG_RESULT(compiling sodium library)
+cd libsodium-$sodium_version
+save_cflags="$CFLAGS"
+CFLAGS="$orig_cflags"
+export CFLAGS
+./configure --prefix=$cur_dir/extras/sodium --libdir=$PRIVATELIBDIR --enable-shared --disable-static --enable-opt || exit 1
+CFLAGS="$save_cflags"
+AC_MSG_RESULT(compiling sodium resolver library)
+$ac_cv_prog_MAKER || exit 1
+AC_MSG_RESULT(installing sodium resolver library)
+$ac_cv_prog_MAKER install || exit 1
+SODIUM_CFLAGS="-I$cur_dir/extras/sodium/include"
+AC_SUBST(SODIUM_CFLAGS)
+SODIUM_LIBS=
+dnl See c-ares's compilation section for more info on this hack.
+dnl ensure that we're linking against the bundled version
+dnl (we only reach this code if linking against the bundled version is desired).
+AS_IF([test -n "$ac_cv_path_PKGCONFIG"],
+       [SODIUM_LIBS="`$ac_cv_path_PKGCONFIG --libs libsodium.pc`"])
+dnl For when pkg-config isn't available
+AS_IF([test -z "$SODIUM_LIBS"],
+       [SODIUM_LIBS="-L$PRIVATELIBDIR -lsodium"])
+AC_SUBST(SODIUM_LIBS)
+cd $cur_dir
+])
+
 dnl Use system c-ares when available, unless --without-system-cares.
 has_system_cares="no"
 AS_IF([test "x$with_system_cares" = "xyes"],[
@@ -633,7 +697,7 @@ AS_IF([test "$has_system_cares" = "no"], [
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
 dnl NOTE: when changing this here, ALSO change it in extras/curlinstall
 dnl       and in the comment in this file around line 400!
-cares_version="1.16.0"
+cares_version="1.17.1"
 AC_MSG_RESULT(extracting c-ares resolver library)
 cur_dir=`pwd`
 cd extras
@@ -652,7 +716,7 @@ cd c-ares-$cares_version
 save_cflags="$CFLAGS"
 CFLAGS="$orig_cflags"
 export CFLAGS
-./configure --prefix=$cur_dir/extras/c-ares --libdir=$PRIVATELIBDIR --enable-shared || exit 1
+./configure --prefix=$cur_dir/extras/c-ares --libdir=$PRIVATELIBDIR --enable-shared --disable-tests || exit 1
 CFLAGS="$save_cflags"
 AC_MSG_RESULT(compiling c-ares resolver library)
 $ac_cv_prog_MAKER || exit 1
@@ -728,6 +792,7 @@ AC_CONFIG_FILES([Makefile
 	src/modules/snomasks/Makefile
 	src/modules/extbans/Makefile
 	src/modules/third/Makefile
+	extras/unrealircd-upgrade-script
 	unrealircd])
 AC_OUTPUT
 chmod 0700 unrealircd

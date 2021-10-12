@@ -14,8 +14,15 @@ ModuleHeader MOD_HEADER = {
 	"unrealircd-5",
 };
 
+/* Database version */
 #define CHANNELDB_VERSION 100
-#define CHANNELDB_SAVE_EVERY 299
+/* Save channels to file every <this> seconds */
+#define CHANNELDB_SAVE_EVERY 300
+/* The very first save after boot, apply this delta, this
+ * so we don't coincide with other (potentially) expensive
+ * I/O events like saving tkldb.
+ */
+#define CHANNELDB_SAVE_EVERY_DELTA -15
 
 #define MAGIC_CHANNEL_START	0x11111111
 #define MAGIC_CHANNEL_END	0x22222222
@@ -28,14 +35,14 @@ ModuleHeader MOD_HEADER = {
 	do { \
 		sendto_realops_and_log("[channeldb] Error writing to temporary database file " \
 		                       "'%s': %s (DATABASE NOT SAVED)", \
-		                       fname, strerror(errno)); \
+		                       fname, unrealdb_get_error_string()); \
 	} while(0)
 
 #define W_SAFE(x) \
 	do { \
 		if (!(x)) { \
 			WARN_WRITE_ERROR(tmpfname); \
-			fclose(fd); \
+			unrealdb_close(db); \
 			return 0; \
 		} \
 	} while(0)
@@ -48,43 +55,53 @@ ModuleHeader MOD_HEADER = {
 		} \
 	} while(0)
 
+/* Structs */
+struct cfgstruct {
+	char *database;
+	char *db_secret;
+};
+
 /* Forward declarations */
 void channeldb_moddata_free(ModData *md);
-void setcfg(void);
-void freecfg(void);
-int channeldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
-int channeldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
+void setcfg(struct cfgstruct *cfg);
+void freecfg(struct cfgstruct *cfg);
+int channeldb_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int channeldb_config_posttest(int *errs);
+int channeldb_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 EVENT(write_channeldb_evt);
 int write_channeldb(void);
-int write_channel_entry(FILE *fd, const char *tmpfname, Channel *channel);
+int write_channel_entry(UnrealDB *db, const char *tmpfname, Channel *channel);
 int read_channeldb(void);
 static void set_channel_mode(Channel *channel, char *modes, char *parameters);
 
 /* Global variables */
 static uint32_t channeldb_version = CHANNELDB_VERSION;
-struct cfgstruct {
-	char *database;
-};
 static struct cfgstruct cfg;
+static struct cfgstruct test;
 
 static long channeldb_next_event = 0;
 
 MOD_TEST()
 {
 	memset(&cfg, 0, sizeof(cfg));
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, channeldb_configtest);
+	memset(&test, 0, sizeof(test));
+	setcfg(&test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, channeldb_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, channeldb_config_posttest);
 	return MOD_SUCCESS;
 }
 
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	/* We must unload early, when all channel modes and such are still in place: */
+	ModuleSetOptions(modinfo->handle, MOD_OPT_UNLOAD_PRIORITY, -99999999);
 
 	LoadPersistentLong(modinfo, channeldb_next_event);
 
-	setcfg();
+	setcfg(&cfg);
 
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, channeldb_configrun);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, channeldb_config_run);
 	return MOD_SUCCESS;
 }
 
@@ -102,7 +119,7 @@ MOD_LOAD()
 			else
 				config_warn("[channeldb] Failed to rename database from %s to %s: %s", cfg.database, fname, strerror(errno));
 		}
-		channeldb_next_event = TStime() + CHANNELDB_SAVE_EVERY;
+		channeldb_next_event = TStime() + CHANNELDB_SAVE_EVERY + CHANNELDB_SAVE_EVERY_DELTA;
 	}
 	EventAdd(modinfo->handle, "channeldb_write_channeldb", write_channeldb_evt, NULL, 1000, 0);
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
@@ -115,7 +132,10 @@ MOD_LOAD()
 
 MOD_UNLOAD()
 {
-	freecfg();
+	if (loop.ircd_terminating)
+		write_channeldb();
+	freecfg(&test);
+	freecfg(&cfg);
 	SavePersistentLong(modinfo, channeldb_next_event);
 	return MOD_SUCCESS;
 }
@@ -126,19 +146,20 @@ void channeldb_moddata_free(ModData *md)
 		md->i = 0;
 }
 
-void setcfg(void)
+void setcfg(struct cfgstruct *cfg)
 {
 	// Default: data/channel.db
-	safe_strdup(cfg.database, "channel.db");
-	convert_to_absolute_path(&cfg.database, PERMDATADIR);
+	safe_strdup(cfg->database, "channel.db");
+	convert_to_absolute_path(&cfg->database, PERMDATADIR);
 }
 
-void freecfg(void)
+void freecfg(struct cfgstruct *cfg)
 {
-	safe_free(cfg.database);
+	safe_free(cfg->database);
+	safe_free(cfg->db_secret);
 }
 
-int channeldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int channeldb_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
 	ConfigEntry *cep;
@@ -152,16 +173,45 @@ int channeldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_vardata) {
+		if (!cep->ce_vardata)
+		{
 			config_error("%s:%i: blank set::channeldb::%s without value", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 			errors++;
-			continue;
-		}
-		if (!strcmp(cep->ce_varname, "database")) {
+		} else
+		if (!strcmp(cep->ce_varname, "database"))
+		{
 			convert_to_absolute_path(&cep->ce_vardata, PERMDATADIR);
-			continue;
+			safe_strdup(test.database, cep->ce_vardata);
+		} else
+		if (!strcmp(cep->ce_varname, "db-secret"))
+		{
+			char *err;
+			if ((err = unrealdb_test_secret(cep->ce_vardata)))
+			{
+				config_error("%s:%i: set::channeldb::db-secret: %s", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, err);
+				errors++;
+				continue;
+			}
+			safe_strdup(test.db_secret, cep->ce_vardata);
+		} else
+		{
+			config_error("%s:%i: unknown directive set::channeldb::%s", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			errors++;
 		}
-		config_error("%s:%i: unknown directive set::channeldb::%s", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+int channeldb_config_posttest(int *errs)
+{
+	int errors = 0;
+	char *errstr;
+
+	if (test.database && ((errstr = unrealdb_test_db(test.database, test.db_secret))))
+	{
+		config_error("[channeldb] %s", errstr);
 		errors++;
 	}
 
@@ -169,7 +219,7 @@ int channeldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	return errors ? -1 : 1;
 }
 
-int channeldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
+int channeldb_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
 
@@ -184,6 +234,8 @@ int channeldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 	{
 		if (!strcmp(cep->ce_varname, "database"))
 			safe_strdup(cfg.database, cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "db-secret"))
+			safe_strdup(cfg.db_secret, cep->ce_vardata);
 	}
 	return 1;
 }
@@ -199,7 +251,7 @@ EVENT(write_channeldb_evt)
 int write_channeldb(void)
 {
 	char tmpfname[512];
-	FILE *fd;
+	UnrealDB *db;
 	Channel *channel;
 	int cnt = 0;
 #ifdef BENCHMARK
@@ -209,34 +261,34 @@ int write_channeldb(void)
 #endif
 
 	// Write to a tempfile first, then rename it if everything succeeded
-	snprintf(tmpfname, sizeof(tmpfname), "%s.tmp", cfg.database);
-	fd = fopen(tmpfname, "wb");
-	if (!fd)
+	snprintf(tmpfname, sizeof(tmpfname), "%s.%x.tmp", cfg.database, getrandom32());
+	db = unrealdb_open(tmpfname, UNREALDB_MODE_WRITE, cfg.db_secret);
+	if (!db)
 	{
 		WARN_WRITE_ERROR(tmpfname);
 		return 0;
 	}
 
-	W_SAFE(write_data(fd, &channeldb_version, sizeof(channeldb_version)));
+	W_SAFE(unrealdb_write_int32(db, channeldb_version));
 
 	/* First, count +P channels and write the count to the database */
 	for (channel = channels; channel; channel=channel->nextch)
 		if (has_channel_mode(channel, 'P'))
 			cnt++;
-	W_SAFE(write_int64(fd, cnt));
+	W_SAFE(unrealdb_write_int64(db, cnt));
 
 	for (channel = channels; channel; channel=channel->nextch)
 	{
 		/* We only care about +P (persistent) channels */
 		if (has_channel_mode(channel, 'P'))
 		{
-			if (!write_channel_entry(fd, tmpfname, channel))
+			if (!write_channel_entry(db, tmpfname, channel))
 				return 0;
 		}
 	}
 
 	// Everything seems to have gone well, attempt to close and rename the tempfile
-	if (fclose(fd) != 0)
+	if (!unrealdb_close(db))
 	{
 		WARN_WRITE_ERROR(tmpfname);
 		return 0;
@@ -259,7 +311,7 @@ int write_channeldb(void)
 	return 1;
 }
 
-int write_listmode(FILE *fd, const char *tmpfname, Ban *lst)
+int write_listmode(UnrealDB *db, const char *tmpfname, Ban *lst)
 {
 	Ban *l;
 	int cnt = 0;
@@ -267,50 +319,50 @@ int write_listmode(FILE *fd, const char *tmpfname, Ban *lst)
 	/* First count and write the list count */
 	for (l = lst; l; l = l->next)
 		cnt++;
-	W_SAFE(write_int32(fd, cnt));
+	W_SAFE(unrealdb_write_int32(db, cnt));
 
 	for (l = lst; l; l = l->next)
 	{
 		/* The entry, setby, seton */
-		W_SAFE(write_str(fd, l->banstr));
-		W_SAFE(write_str(fd, l->who));
-		W_SAFE(write_int64(fd, l->when));
+		W_SAFE(unrealdb_write_str(db, l->banstr));
+		W_SAFE(unrealdb_write_str(db, l->who));
+		W_SAFE(unrealdb_write_int64(db, l->when));
 	}
 	return 1;
 }
 
-int write_channel_entry(FILE *fd, const char *tmpfname, Channel *channel)
+int write_channel_entry(UnrealDB *db, const char *tmpfname, Channel *channel)
 {
-	W_SAFE(write_int32(fd, MAGIC_CHANNEL_START));
+	W_SAFE(unrealdb_write_int32(db, MAGIC_CHANNEL_START));
 	/* Channel name */
-	W_SAFE(write_str(fd, channel->chname));
+	W_SAFE(unrealdb_write_str(db, channel->chname));
 	/* Channel creation time */
-	W_SAFE(write_int64(fd, channel->creationtime));
+	W_SAFE(unrealdb_write_int64(db, channel->creationtime));
 	/* Topic (topic, setby, seton) */
-	W_SAFE(write_str(fd, channel->topic));
-	W_SAFE(write_str(fd, channel->topic_nick));
-	W_SAFE(write_int64(fd, channel->topic_time));
+	W_SAFE(unrealdb_write_str(db, channel->topic));
+	W_SAFE(unrealdb_write_str(db, channel->topic_nick));
+	W_SAFE(unrealdb_write_int64(db, channel->topic_time));
 	/* Basic channel modes (eg: +sntkl key 55) */
 	channel_modes(&me, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel);
-	W_SAFE(write_str(fd, modebuf));
-	W_SAFE(write_str(fd, parabuf));
+	W_SAFE(unrealdb_write_str(db, modebuf));
+	W_SAFE(unrealdb_write_str(db, parabuf));
 	/* Mode lock */
-	W_SAFE(write_str(fd, channel->mode_lock));
+	W_SAFE(unrealdb_write_str(db, channel->mode_lock));
 	/* List modes (bans, exempts, invex) */
-	if (!write_listmode(fd, tmpfname, channel->banlist))
+	if (!write_listmode(db, tmpfname, channel->banlist))
 		return 0;
-	if (!write_listmode(fd, tmpfname, channel->exlist))
+	if (!write_listmode(db, tmpfname, channel->exlist))
 		return 0;
-	if (!write_listmode(fd, tmpfname, channel->invexlist))
+	if (!write_listmode(db, tmpfname, channel->invexlist))
 		return 0;
-	W_SAFE(write_int32(fd, MAGIC_CHANNEL_END));
+	W_SAFE(unrealdb_write_int32(db, MAGIC_CHANNEL_END));
 	return 1;
 }
 
 #define R_SAFE(x) \
 	do { \
 		if (!(x)) { \
-			config_warn("[channeldb] Read error from database file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
+			config_warn("[channeldb] Read error from database file '%s' (possible corruption): %s", cfg.database, unrealdb_get_error_string()); \
 			if (e) \
 			{ \
 				safe_free(e->banstr); \
@@ -321,21 +373,21 @@ int write_channel_entry(FILE *fd, const char *tmpfname, Channel *channel)
 		} \
 	} while(0)
 
-int read_listmode(FILE *fd, Ban **lst)
+int read_listmode(UnrealDB *db, Ban **lst)
 {
 	uint32_t total;
 	uint64_t when;
 	int i;
 	Ban *e = NULL;
 
-	R_SAFE(read_data(fd, &total, sizeof(total)));
+	R_SAFE(unrealdb_read_int32(db, &total));
 
 	for (i = 0; i < total; i++)
 	{
 		e = safe_alloc(sizeof(Ban));
-		R_SAFE(read_str(fd, &e->banstr));
-		R_SAFE(read_str(fd, &e->who));
-		R_SAFE(read_data(fd, &when, sizeof(when)));
+		R_SAFE(unrealdb_read_str(db, &e->banstr));
+		R_SAFE(unrealdb_read_str(db, &e->who));
+		R_SAFE(unrealdb_read_int64(db, &when));
 		e->when = when;
 		e->next = *lst;
 		*lst = e;
@@ -359,8 +411,8 @@ int read_listmode(FILE *fd, Ban **lst)
 #define R_SAFE(x) \
 	do { \
 		if (!(x)) { \
-			config_warn("[channeldb] Read error from database file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
-			fclose(fd); \
+			config_warn("[channeldb] Read error from database file '%s' (possible corruption): %s", cfg.database, unrealdb_get_error_string()); \
+			unrealdb_close(db); \
 			FreeChannelEntry(); \
 			return 0; \
 		} \
@@ -368,7 +420,7 @@ int read_listmode(FILE *fd, Ban **lst)
 
 int read_channeldb(void)
 {
-	FILE *fd;
+	UnrealDB *db;
 	uint32_t version;
 	int added = 0;
 	int i;
@@ -390,29 +442,41 @@ int read_channeldb(void)
 	gettimeofday(&tv_alpha, NULL);
 #endif
 
-	fd = fopen(cfg.database, "rb");
-	if (!fd)
+	db = unrealdb_open(cfg.database, UNREALDB_MODE_READ, cfg.db_secret);
+	if (!db)
 	{
-		if (errno == ENOENT)
+		if (unrealdb_get_error_code() == UNREALDB_ERROR_FILENOTFOUND)
 		{
 			/* Database does not exist. Could be first boot */
 			config_warn("[channeldb] No database present at '%s', will start a new one", cfg.database);
 			return 1;
-		} else {
-			config_warn("[channeldb] Unable to open the database file '%s' for reading: %s", cfg.database, strerror(errno));
+		} else
+		if (unrealdb_get_error_code() == UNREALDB_ERROR_NOTCRYPTED)
+		{
+			/* Re-open as unencrypted */
+			db = unrealdb_open(cfg.database, UNREALDB_MODE_READ, NULL);
+			if (!db)
+			{
+				/* This should actually never happen, unless some weird I/O error */
+				config_warn("[channeldb] Unable to open the database file '%s': %s", cfg.database, unrealdb_get_error_string());
+				return 0;
+			}
+		} else
+		{
+			config_warn("[channeldb] Unable to open the database file '%s' for reading: %s", cfg.database, unrealdb_get_error_string());
 			return 0;
 		}
 	}
 
-	R_SAFE(read_data(fd, &version, sizeof(version)));
+	R_SAFE(unrealdb_read_int32(db, &version));
 	if (version > channeldb_version)
 	{
 		config_warn("[channeldb] Database '%s' has a wrong version: expected it to be <= %u but got %u instead", cfg.database, channeldb_version, version);
-		fclose(fd);
+		unrealdb_close(db);
 		return 0;
 	}
 
-	R_SAFE(read_data(fd, &count, sizeof(count)));
+	R_SAFE(unrealdb_read_int64(db, &count));
 
 	for (i=1; i <= count; i++)
 	{
@@ -427,20 +491,20 @@ int read_channeldb(void)
 		mode_lock = NULL;
 		
 		Channel *channel;
-		R_SAFE(read_data(fd, &magic, sizeof(magic)));
+		R_SAFE(unrealdb_read_int32(db, &magic));
 		if (magic != MAGIC_CHANNEL_START)
 		{
 			config_error("[channeldb] Corrupt database (%s) - channel magic start is 0x%x. Further reading aborted.", cfg.database, magic);
 			break;
 		}
-		R_SAFE(read_str(fd, &chname));
-		R_SAFE(read_data(fd, &creationtime, sizeof(creationtime)));
-		R_SAFE(read_str(fd, &topic));
-		R_SAFE(read_str(fd, &topic_nick));
-		R_SAFE(read_data(fd, &topic_time, sizeof(topic_time)));
-		R_SAFE(read_str(fd, &modes1));
-		R_SAFE(read_str(fd, &modes2));
-		R_SAFE(read_str(fd, &mode_lock));
+		R_SAFE(unrealdb_read_str(db, &chname));
+		R_SAFE(unrealdb_read_int64(db, &creationtime));
+		R_SAFE(unrealdb_read_str(db, &topic));
+		R_SAFE(unrealdb_read_str(db, &topic_nick));
+		R_SAFE(unrealdb_read_int64(db, &topic_time));
+		R_SAFE(unrealdb_read_str(db, &modes1));
+		R_SAFE(unrealdb_read_str(db, &modes2));
+		R_SAFE(unrealdb_read_str(db, &mode_lock));
 		/* If we got this far, we can create/initialize the channel with the above */
 		channel = get_channel(&me, chname, CREATE);
 		channel->creationtime = creationtime;
@@ -449,10 +513,10 @@ int read_channeldb(void)
 		channel->topic_time = topic_time;
 		safe_strdup(channel->mode_lock, mode_lock);
 		set_channel_mode(channel, modes1, modes2);
-		R_SAFE(read_listmode(fd, &channel->banlist));
-		R_SAFE(read_listmode(fd, &channel->exlist));
-		R_SAFE(read_listmode(fd, &channel->invexlist));
-		R_SAFE(read_data(fd, &magic, sizeof(magic)));
+		R_SAFE(read_listmode(db, &channel->banlist));
+		R_SAFE(read_listmode(db, &channel->exlist));
+		R_SAFE(read_listmode(db, &channel->invexlist));
+		R_SAFE(unrealdb_read_int32(db, &magic));
 		FreeChannelEntry();
 		added++;
 		if (magic != MAGIC_CHANNEL_END)
@@ -462,7 +526,7 @@ int read_channeldb(void)
 		}
 	}
 
-	fclose(fd);
+	unrealdb_close(db);
 
 	if (added)
 		sendto_realops_and_log("[channeldb] Added %d persistent channels (+P)", added);

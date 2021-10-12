@@ -76,7 +76,7 @@ void initlists(void)
 
 	client_pool = mp_pool_new(sizeof(Client), 512 * 1024);
 	local_client_pool = mp_pool_new(sizeof(LocalClient), 512 * 1024);
-	user_pool = mp_pool_new(sizeof(ClientUser), 512 * 1024);
+	user_pool = mp_pool_new(sizeof(User), 512 * 1024);
 	link_pool = mp_pool_new(sizeof(Link), 512 * 1024);
 }
 
@@ -184,30 +184,20 @@ void free_client(Client *client)
 ** 'make_user' add's an User information block to a client
 ** if it was not previously allocated.
 */
-ClientUser *make_user(Client *client)
+User *make_user(Client *client)
 {
-	ClientUser *user;
+	User *user;
 
 	user = client->user;
 	if (!user)
 	{
 		user = mp_pool_get(user_pool);
-		memset(user, 0, sizeof(ClientUser));
+		memset(user, 0, sizeof(User));
 
 #ifdef	DEBUGMODE
 		users.inuse++;
 #endif
-		user->swhois = NULL;
-		user->away = NULL;
-		user->flood.away_t = 0;
-		user->flood.away_c = 0;
-		user->joined = 0;
-		user->channel = NULL;
-		user->invited = NULL;
-		user->server = NULL;
 		strlcpy(user->svid, "0", sizeof(user->svid));
-		user->whowas = NULL;
-		user->snomask = 0;
 		if (client->ip)
 		{
 			/* initially set client->user->realhost to IP */
@@ -243,11 +233,6 @@ Server *make_server(Client *client)
 		 */
 		del_from_id_hash_table(client->id, client);
 		*client->id = '\0';
-	}
-	if (MyConnect(client) && (client->local->fd >= 0))
-	{
-		/* Give servers a large socket buffer for performance */
-		set_socket_buffers(client->local->fd, SERVER_SOCKET_RECEIVE_BUFFER, SERVER_SOCKET_SEND_BUFFER);
 	}
 	return client->serv;
 }
@@ -455,6 +440,8 @@ void del_ListItem(ListStruct *item, ListStruct **list)
 		item->next->prev = item->prev;
 	if (*list == item)
 		*list = item->next; /* new head */
+	/* And update 'item', prev/next should point nowhere anymore */
+	item->prev = item->next = NULL;
 }
 
 /** Add item to list with a 'priority'.
@@ -550,7 +537,7 @@ NameList *find_name_list(NameList *list, char *name)
 	return NULL;
 }
 
-/** Find an entry in a NameList by running match_simpl() on it.
+/** Find an entry in a NameList by running match_simple() on it.
  * @ingroup ListFunctions
  */
 NameList *find_name_list_match(NameList *list, char *name)
@@ -567,3 +554,52 @@ NameList *find_name_list_match(NameList *list, char *name)
 	return NULL;
 }
 
+void add_nvplist(NameValuePrioList **lst, int priority, char *name, char *value)
+{
+	va_list vl;
+	NameValuePrioList *e = safe_alloc(sizeof(NameValuePrioList));
+	safe_strdup(e->name, name);
+	if (value && *value)
+		safe_strdup(e->value, value);
+	AddListItemPrio(e, *lst, priority);
+}
+
+NameValuePrioList *find_nvplist(NameValuePrioList *list, char *name)
+{
+	NameValuePrioList *e;
+
+	for (e = list; e; e = e->next)
+	{
+		if (!strcasecmp(e->name, name))
+		{
+			return e;
+		}
+	}
+	return NULL;
+}
+
+void add_fmt_nvplist(NameValuePrioList **lst, int priority, char *name, FORMAT_STRING(const char *format), ...)
+{
+	char value[512];
+	va_list vl;
+	*value = '\0';
+	if (format)
+	{
+		va_start(vl, format);
+		vsnprintf(value, sizeof(value), format, vl);
+		va_end(vl);
+	}
+	add_nvplist(lst, priority, name, value);
+}
+
+void free_nvplist(NameValuePrioList *lst)
+{
+	NameValuePrioList *e, *e_next;
+	for (e = lst; e; e = e_next)
+	{
+		e_next = e->next;
+		safe_free(e->name);
+		safe_free(e->value);
+		safe_free(e);
+	}
+}

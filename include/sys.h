@@ -224,4 +224,15 @@ extern char OSName[256];
 # endif
 #endif
 
+#ifdef NATIVE_BIG_ENDIAN
+ #if defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__)
+  #include <sys/endian.h>
+  #define bswap_64 bswap64
+  #define bswap_32 bswap32
+  #define bswap_16 bswap16
+ #else
+  #include <byteswap.h>
+ #endif
+#endif
+
 #endif /* __sys_include__ */

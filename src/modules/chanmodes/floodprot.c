@@ -28,13 +28,13 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
     };
 
-#define FLD_CTCP	0 /* c */
-#define FLD_JOIN	1 /* j */
-#define FLD_KNOCK	2 /* k */
-#define FLD_MSG		3 /* m */
-#define FLD_NICK	4 /* n */
-#define FLD_TEXT	5 /* t */
-#define FLD_REPEAT	6 /* r */
+#define CHFLD_CTCP	0 /* c */
+#define CHFLD_JOIN	1 /* j */
+#define CHFLD_KNOCK	2 /* k */
+#define CHFLD_MSG		3 /* m */
+#define CHFLD_NICK	4 /* n */
+#define CHFLD_TEXT	5 /* t */
+#define CHFLD_REPEAT	6 /* r */
 
 #define NUMFLD	7 /* 7 flood types */
 
@@ -44,6 +44,28 @@ struct {
 	unsigned char modef_max_unsettime;
 	long modef_boot_delay;
 } cfg;
+
+typedef struct FloodType {
+	char letter;
+	int index;
+	char *description;
+	char default_action;
+	char *actions;
+	int timedban_required;
+} FloodType;
+
+/* All the floodtypes that are tracked.
+ * IMPORTANT: MUST be in alphabetic order!!
+ */
+FloodType floodtypes[] = {
+	{ 'c', CHFLD_CTCP,	"CTCPflood",		'C',	"mM",	0, },
+	{ 'j', CHFLD_JOIN,	"joinflood",		'i',	"R",	0, },
+	{ 'k', CHFLD_KNOCK,	"knockflood",		'K',	"",	0, },
+	{ 'm', CHFLD_MSG,		"msg/noticeflood",	'm',	"M",	0, },
+	{ 'n', CHFLD_NICK,	"nickflood",		'N',	"",	0, },
+	{ 't', CHFLD_TEXT,	"msg/noticeflood",	'\0',	"bd",	1, },
+	{ 'r', CHFLD_REPEAT,	"repeating",		'\0',	"bd",	1, },
+};
 
 #define MODEF_DEFAULT_UNSETTIME		cfg.modef_default_unsettime
 #define MODEF_MAX_UNSETTIME		cfg.modef_max_unsettime
@@ -102,15 +124,15 @@ void floodprottimer_del(Channel *channel, char mflag);
 void floodprottimer_stopchantimers(Channel *channel);
 static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a, unsigned char r);
 static int compare_floodprot_modes(ChannelFloodProtection *a, ChannelFloodProtection *b);
-static int do_floodprot(Channel *channel, int what);
+static int do_floodprot(Channel *channel, Client *client, int what);
 char *channel_modef_string(ChannelFloodProtection *x, char *str);
-void do_floodprot_action(Channel *channel, int what, char *text);
+void do_floodprot_action(Channel *channel, int what);
 void floodprottimer_add(Channel *channel, char mflag, time_t when);
 uint64_t gen_floodprot_msghash(char *text);
 int cmodef_is_ok(Client *client, Channel *channel, char mode, char *para, int type, int what);
 void *cmodef_put_param(void *r_in, char *param);
 char *cmodef_get_param(void *r_in);
-char *cmodef_conv_param(char *param_in, Client *client);
+char *cmodef_conv_param(char *param_in, Client *client, Channel *channel);
 void cmodef_free_param(void *r);
 void *cmodef_dup_struct(void *r_in);
 int cmodef_sjoin_check(Channel *channel, void *ourx, void *theirx);
@@ -120,7 +142,7 @@ int cmodef_channel_destroy(Channel *channel, int *should_destroy);
 int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, SendType sendtype);
 int floodprot_knock(Client *client, Channel *channel, MessageTag *mtags, char *comment);
-int floodprot_nickchange(Client *client, char *oldnick);
+int floodprot_nickchange(Client *client, MessageTag *mtags, char *oldnick);
 int floodprot_chanmode_del(Channel *channel, int m);
 void memberflood_free(ModData *md);
 int floodprot_stats(Client *client, char *flag);
@@ -299,6 +321,26 @@ int floodprot_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 1;
 }
 
+FloodType *find_floodprot_by_letter(char c)
+{
+	int i;
+	for (i=0; i < ARRAY_SIZEOF(floodtypes); i++)
+		if (floodtypes[i].letter == c)
+			return &floodtypes[i];
+
+	return NULL;
+}
+
+FloodType *find_floodprot_by_index(int index)
+{
+	int i;
+	for (i=0; i < ARRAY_SIZEOF(floodtypes); i++)
+		if (floodtypes[i].index == index)
+			return &floodtypes[i];
+
+	return NULL;
+}
+
 int cmodef_is_ok(Client *client, Channel *channel, char mode, char *param, int type, int what)
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
@@ -316,6 +358,8 @@ int cmodef_is_ok(Client *client, Channel *channel, char mode, char *param, int t
 		int v;
 		unsigned short warnings = 0, breakit;
 		unsigned char r;
+		FloodType *floodtype;
+		int index;
 
 		memset(&newf, 0, sizeof(newf));
 
@@ -338,24 +382,21 @@ int cmodef_is_ok(Client *client, Channel *channel, char mode, char *param, int t
 			/* <number><1 letter>[optional: '#'+1 letter] */
 			p = x;
 			while(isdigit(*p)) { p++; }
-			if ((*p == '\0') ||
-			    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
-			      (*p == 'm') || (*p == 'n') || (*p == 't') ||
-			      (*p == 'r')))
+			c = *p;
+			floodtype = find_floodprot_by_letter(c);
+			if (!floodtype)
 			{
 				if (MyUser(client) && *p && (warnings++ < 3))
 					sendnotice(client, "warning: channelmode +f: floodtype '%c' unknown, ignored.", *p);
 				continue; /* continue instead of break for forward compatability. */
 			}
-			c = *p;
 			*p = '\0';
 			v = atoi(x);
 			if ((v < 1) || (v > 999)) /* out of range... */
 			{
 				if (MyUser(client))
 				{
-					sendnumeric(client, ERR_CANNOTCHANGECHANMODE,
-						   'f', "value should be from 1-999");
+					sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'f', "value should be from 1-999");
 					goto invalidsyntax;
 				} else
 					continue; /* just ignore for remote servers */
@@ -383,59 +424,14 @@ int cmodef_is_ok(Client *client, Channel *channel, char mode, char *param, int t
 				}
 			}
 
-			switch(c)
-			{
-				case 'c':
-					newf.limit[FLD_CTCP] = v;
-					if ((a == 'm') || (a == 'M'))
-						newf.action[FLD_CTCP] = a;
-					else
-						newf.action[FLD_CTCP] = 'C';
-					newf.remove_after[FLD_CTCP] = r;
-					break;
-				case 'j':
-					newf.limit[FLD_JOIN] = v;
-					if (a == 'R')
-						newf.action[FLD_JOIN] = a;
-					else
-						newf.action[FLD_JOIN] = 'i';
-					newf.remove_after[FLD_JOIN] = r;
-					break;
-				case 'k':
-					newf.limit[FLD_KNOCK] = v;
-					newf.action[FLD_KNOCK] = 'K';
-					newf.remove_after[FLD_KNOCK] = r;
-					break;
-				case 'm':
-					newf.limit[FLD_MSG] = v;
-					if (a == 'M')
-						newf.action[FLD_MSG] = a;
-					else
-						newf.action[FLD_MSG] = 'm';
-					newf.remove_after[FLD_MSG] = r;
-					break;
-				case 'n':
-					newf.limit[FLD_NICK] = v;
-					newf.action[FLD_NICK] = 'N';
-					newf.remove_after[FLD_NICK] = r;
-					break;
-				case 't':
-					newf.limit[FLD_TEXT] = v;
-					if (a == 'b' || a == 'd')
-						newf.action[FLD_TEXT] = a;
-					if (timedban_available)
-						newf.remove_after[FLD_TEXT] = r;
-					break;
-				case 'r':
-					newf.limit[FLD_REPEAT] = v;
-					if (a == 'b' || a == 'd')
-						newf.action[FLD_REPEAT] = a;
-					if (timedban_available)
-						newf.remove_after[FLD_REPEAT] = r;
-					break;
-				default:
-					goto invalidsyntax;
-			}
+			index = floodtype->index;
+			newf.limit[index] = v;
+			if (a && strchr(floodtype->actions, a))
+				newf.action[index] = a;
+			else
+				newf.action[index] = floodtype->default_action;
+			if (!floodtype->timedban_required || (floodtype->timedban_required && timedban_available))
+				newf.remove_after[index] = r;
 		} /* for */
 		/* parse 'per' */
 		p2++;
@@ -448,8 +444,7 @@ int cmodef_is_ok(Client *client, Channel *channel, char mode, char *param, int t
 		if ((v < 1) || (v > 999)) /* 'per' out of range */
 		{
 			if (MyUser(client))
-				sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'f',
-					   "time range should be 1-999");
+				sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'f', "time range should be 1-999");
 			goto invalidsyntax;
 		}
 		newf.per = v;
@@ -479,14 +474,13 @@ void *cmodef_put_param(void *fld_in, char *param)
 	int v;
 	unsigned short breakit;
 	unsigned char r;
+	FloodType *floodtype;
+	int index;
 
 	strlcpy(xbuf, param, sizeof(xbuf));
 
 	if (!fld)
-	{
-		/* Need to create one */
 		fld = safe_alloc(sizeof(ChannelFloodProtection));
-	}
 
 	/* always reset settings (l, a, r) */
 	for (v=0; v < NUMFLD; v++)
@@ -499,31 +493,21 @@ void *cmodef_put_param(void *fld_in, char *param)
 	/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
 	p2 = strchr(xbuf+1, ']');
 	if (!p2)
-	{
-		memset(fld, 0, sizeof(ChannelFloodProtection));
-		return fld; /* FAIL */
-	}
+		goto fail_cmodef_put_param; /* FAIL */
 	*p2 = '\0';
 	if (*(p2+1) != ':')
-	{
-		memset(fld, 0, sizeof(ChannelFloodProtection));
-		return fld; /* FAIL */
-	}
+		goto fail_cmodef_put_param; /* FAIL */
+
 	breakit = 0;
 	for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
 	{
 		/* <number><1 letter>[optional: '#'+1 letter] */
 		p = x;
 		while(isdigit(*p)) { p++; }
-		if ((*p == '\0') ||
-		    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
-		      (*p == 'm') || (*p == 'n') || (*p == 't') ||
-		      (*p == 'r')))
-		{
-			/* (unknown type) */
-			continue; /* continue instead of break for forward compatability. */
-		}
 		c = *p;
+		floodtype = find_floodprot_by_letter(c);
+		if (!floodtype)
+			continue; /* continue instead of break for forward compatability. */
 		*p = '\0';
 		v = atoi(x);
 		if (v < 1)
@@ -549,78 +533,28 @@ void *cmodef_put_param(void *fld_in, char *param)
 			}
 		}
 
-		switch(c)
-		{
-			case 'c':
-				fld->limit[FLD_CTCP] = v;
-				if ((a == 'm') || (a == 'M'))
-					fld->action[FLD_CTCP] = a;
-				else
-					fld->action[FLD_CTCP] = 'C';
-				fld->remove_after[FLD_CTCP] = r;
-				break;
-			case 'j':
-				fld->limit[FLD_JOIN] = v;
-				if (a == 'R')
-					fld->action[FLD_JOIN] = a;
-				else
-					fld->action[FLD_JOIN] = 'i';
-				fld->remove_after[FLD_JOIN] = r;
-				break;
-			case 'k':
-				fld->limit[FLD_KNOCK] = v;
-				fld->action[FLD_KNOCK] = 'K';
-				fld->remove_after[FLD_KNOCK] = r;
-				break;
-			case 'm':
-				fld->limit[FLD_MSG] = v;
-				if (a == 'M')
-					fld->action[FLD_MSG] = a;
-				else
-					fld->action[FLD_MSG] = 'm';
-				fld->remove_after[FLD_MSG] = r;
-				break;
-			case 'n':
-				fld->limit[FLD_NICK] = v;
-				fld->action[FLD_NICK] = 'N';
-				fld->remove_after[FLD_NICK] = r;
-				break;
-			case 't':
-				fld->limit[FLD_TEXT] = v;
-				if (a == 'b' || a == 'd')
-					fld->action[FLD_TEXT] = a;
-				if (timedban_available)
-					fld->remove_after[FLD_TEXT] = r;
-				break;
-			case 'r':
-				fld->limit[FLD_REPEAT] = v;
-				if (a == 'b' || a == 'd')
-					fld->action[FLD_REPEAT] = a;
-				if (timedban_available)
-					fld->remove_after[FLD_REPEAT] = r;
-				break;
-			default:
-				/* NOOP */
-				break;
-		}
+		index = floodtype->index;
+		fld->limit[index] = v;
+		if (a && strchr(floodtype->actions, a))
+			fld->action[index] = a;
+		else
+			fld->action[index] = floodtype->default_action;
+		if (!floodtype->timedban_required || (floodtype->timedban_required && timedban_available))
+			fld->remove_after[index] = r;
 	} /* for */
+
 	/* parse 'per' */
 	p2++;
 	if (*p2 != ':')
-	{
-		memset(fld, 0, sizeof(ChannelFloodProtection));
-		return fld; /* FAIL */
-	}
+		goto fail_cmodef_put_param; /* FAIL */
 	p2++;
 	if (!*p2)
-	{
-		memset(fld, 0, sizeof(ChannelFloodProtection));
-		return fld; /* FAIL */
-	}
+		goto fail_cmodef_put_param; /* FAIL */
 	v = atoi(p2);
 	if (v < 1)
 		v = 1;
-	/* if new 'per xxx seconds' is smaller than current 'per' then reset timers/counters (t, c) */
+
+	/* If new 'per xxx seconds' is smaller than current 'per' then reset timers/counters (t, c) */
 	if (v < fld->per)
 	{
 		int i;
@@ -638,12 +572,13 @@ void *cmodef_put_param(void *fld_in, char *param)
 		if (fld->limit[v])
 			breakit=0;
 	if (breakit)
-	{
-		memset(fld, 0, sizeof(ChannelFloodProtection));
-		return fld; /* FAIL */
-	}
+		goto fail_cmodef_put_param; /* FAIL */
 
 	return (void *)fld;
+
+fail_cmodef_put_param:
+	memset(fld, 0, sizeof(ChannelFloodProtection));
+	return fld; /* FAIL */
 }
 
 char *cmodef_get_param(void *r_in)
@@ -661,7 +596,7 @@ char *cmodef_get_param(void *r_in)
 /** Convert parameter to something proper.
  * NOTE: client may be NULL if called for e.g. set::modes-on-join
  */
-char *cmodef_conv_param(char *param_in, Client *client)
+char *cmodef_conv_param(char *param_in, Client *client, Channel *channel)
 {
 	static char retbuf[256];
 	char param[256];
@@ -671,6 +606,8 @@ char *cmodef_conv_param(char *param_in, Client *client)
 	int v;
 	unsigned short breakit;
 	unsigned char r;
+	FloodType *floodtype;
+	int index;
 
 	memset(&newf, 0, sizeof(newf));
 
@@ -694,15 +631,10 @@ char *cmodef_conv_param(char *param_in, Client *client)
 		/* <number><1 letter>[optional: '#'+1 letter] */
 		p = x;
 		while(isdigit(*p)) { p++; }
-		if ((*p == '\0') ||
-		    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
-		      (*p == 'm') || (*p == 'n') || (*p == 't') ||
-		      (*p == 'r')))
-		{
-			/* (unknown type) */
-			continue; /* continue instead of break for forward compatability. */
-		}
 		c = *p;
+		floodtype = find_floodprot_by_letter(c);
+		if (!floodtype)
+			continue; /* continue instead of break for forward compatability. */
 		*p = '\0';
 		v = atoi(x);
 		if ((v < 1) || (v > 999)) /* out of range... */
@@ -733,59 +665,14 @@ char *cmodef_conv_param(char *param_in, Client *client)
 			}
 		}
 
-		switch(c)
-		{
-			case 'c':
-				newf.limit[FLD_CTCP] = v;
-				if ((a == 'm') || (a == 'M'))
-					newf.action[FLD_CTCP] = a;
-				else
-					newf.action[FLD_CTCP] = 'C';
-				newf.remove_after[FLD_CTCP] = r;
-				break;
-			case 'j':
-				newf.limit[FLD_JOIN] = v;
-				if (a == 'R')
-					newf.action[FLD_JOIN] = a;
-				else
-					newf.action[FLD_JOIN] = 'i';
-				newf.remove_after[FLD_JOIN] = r;
-				break;
-			case 'k':
-				newf.limit[FLD_KNOCK] = v;
-				newf.action[FLD_KNOCK] = 'K';
-				newf.remove_after[FLD_KNOCK] = r;
-				break;
-			case 'm':
-				newf.limit[FLD_MSG] = v;
-				if (a == 'M')
-					newf.action[FLD_MSG] = a;
-				else
-					newf.action[FLD_MSG] = 'm';
-				newf.remove_after[FLD_MSG] = r;
-				break;
-			case 'n':
-				newf.limit[FLD_NICK] = v;
-				newf.action[FLD_NICK] = 'N';
-				newf.remove_after[FLD_NICK] = r;
-				break;
-			case 't':
-				newf.limit[FLD_TEXT] = v;
-				if (a == 'b' || a == 'd')
-					newf.action[FLD_TEXT] = a;
-				if (timedban_available)
-					newf.remove_after[FLD_TEXT] = r;
-				break;
-			case 'r':
-				newf.limit[FLD_REPEAT] = v;
-				if (a == 'b' || a == 'd')
-					newf.action[FLD_REPEAT] = a;
-				if (timedban_available)
-					newf.remove_after[FLD_REPEAT] = r;
-				break;
-			default:
-				return NULL;
-		}
+		index = floodtype->index;
+		newf.limit[index] = v;
+		if (a && strchr(floodtype->actions, a))
+			newf.action[index] = a;
+		else
+			newf.action[index] = floodtype->default_action;
+		if (!floodtype->timedban_required || (floodtype->timedban_required && timedban_available))
+			newf.remove_after[index] = r;
 	} /* for */
 	/* parse 'per' */
 	p2++;
@@ -864,11 +751,9 @@ int floodprot_join(Client *client, Channel *channel, MessageTag *mtags, char *pa
 	if (IsFloodLimit(channel) &&
 	    (MyUser(client) || client->srvptr->serv->flags.synced) &&
 	    (client->srvptr->serv->boottime && (TStime() - client->srvptr->serv->boottime >= MODEF_BOOT_DELAY)) &&
-	    !IsULine(client) &&
-	    do_floodprot(channel, FLD_JOIN) &&
-	    MyUser(client))
+	    !IsULine(client))
 	{
-		do_floodprot_action(channel, FLD_JOIN, "join");
+	    do_floodprot(channel, client, CHFLD_JOIN);
 	}
 	return 0;
 }
@@ -913,25 +798,18 @@ char tmpbuf[16], *p2 = tmpbuf;
  */
 char *channel_modef_string(ChannelFloodProtection *x, char *retbuf)
 {
+	int i;
 	char *p = retbuf;
+	FloodType *f;
 
 	*p++ = '[';
 
-	/* (alphabetized) */
-	if (x->limit[FLD_CTCP])
-		p = chmodefstrhelper(p, 'c', 'C', x->limit[FLD_CTCP], x->action[FLD_CTCP], x->remove_after[FLD_CTCP]);
-	if (x->limit[FLD_JOIN])
-		p = chmodefstrhelper(p, 'j', 'i', x->limit[FLD_JOIN], x->action[FLD_JOIN], x->remove_after[FLD_JOIN]);
-	if (x->limit[FLD_KNOCK])
-		p = chmodefstrhelper(p, 'k', 'K', x->limit[FLD_KNOCK], x->action[FLD_KNOCK], x->remove_after[FLD_KNOCK]);
-	if (x->limit[FLD_MSG])
-		p = chmodefstrhelper(p, 'm', 'm', x->limit[FLD_MSG], x->action[FLD_MSG], x->remove_after[FLD_MSG]);
-	if (x->limit[FLD_NICK])
-		p = chmodefstrhelper(p, 'n', 'N', x->limit[FLD_NICK], x->action[FLD_NICK], x->remove_after[FLD_NICK]);
-	if (x->limit[FLD_TEXT])
-		p = chmodefstrhelper(p, 't', '\0', x->limit[FLD_TEXT], x->action[FLD_TEXT], x->remove_after[FLD_TEXT]);
-	if (x->limit[FLD_REPEAT])
-		p = chmodefstrhelper(p, 'r', '\0', x->limit[FLD_REPEAT], x->action[FLD_REPEAT], x->remove_after[FLD_REPEAT]);
+	for (i=0; i < ARRAY_SIZEOF(floodtypes); i++)
+	{
+		f = &floodtypes[i];
+		if (x->limit[f->index])
+			p = chmodefstrhelper(p, f->letter, f->default_action, x->limit[f->index], x->action[f->index], x->remove_after[f->index]);
+	}
 
 	if (*(p - 1) == ',')
 		p--;
@@ -964,7 +842,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 
 	chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
 
-	if (!chp || !(chp->limit[FLD_TEXT] || chp->limit[FLD_REPEAT]))
+	if (!chp || !(chp->limit[CHFLD_TEXT] || chp->limit[CHFLD_REPEAT]))
 		return HOOK_CONTINUE;
 
 	if (moddata_membership(mb, mdflood).ptr == NULL)
@@ -981,7 +859,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 		memberflood->firstmsg = TStime();
 		memberflood->nmsg = 1;
 		memberflood->nmsg_repeat = 1;
-		if (chp->limit[FLD_REPEAT])
+		if (chp->limit[CHFLD_REPEAT])
 		{
 			memberflood->lastmsg = gen_floodprot_msghash(*msg);
 			memberflood->prevmsg = 0;
@@ -990,7 +868,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 	}
 
 	/* Anti-repeat ('r') */
-	if (chp->limit[FLD_REPEAT])
+	if (chp->limit[CHFLD_REPEAT])
 	{
 		msghash = gen_floodprot_msghash(*msg);
 		if (memberflood->lastmsg)
@@ -998,7 +876,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 			if ((memberflood->lastmsg == msghash) || (memberflood->prevmsg == msghash))
 			{
 				memberflood->nmsg_repeat++;
-				if (memberflood->nmsg_repeat > chp->limit[FLD_REPEAT])
+				if (memberflood->nmsg_repeat > chp->limit[CHFLD_REPEAT])
 					is_flooding_repeat = 1;
 			}
 			memberflood->prevmsg = memberflood->lastmsg;
@@ -1006,11 +884,11 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 		memberflood->lastmsg = msghash;
 	}
 
-	if (chp->limit[FLD_TEXT])
+	if (chp->limit[CHFLD_TEXT])
 	{
 		/* increase msgs */
 		memberflood->nmsg++;
-		if (memberflood->nmsg > chp->limit[FLD_TEXT])
+		if (memberflood->nmsg > chp->limit[CHFLD_TEXT])
 			is_flooding_text = 1;
 	}
 
@@ -1025,11 +903,11 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 		if (is_flooding_repeat)
 		{
 			snprintf(errbuf, sizeof(errbuf), "Flooding (Your last message is too similar to previous ones)");
-			flood_type = FLD_REPEAT;
+			flood_type = CHFLD_REPEAT;
 		} else
 		{
-			snprintf(errbuf, sizeof(errbuf), "Flooding (Limit is %i lines per %i seconds)", chp->limit[FLD_TEXT], chp->per);
-			flood_type = FLD_TEXT;
+			snprintf(errbuf, sizeof(errbuf), "Flooding (Limit is %i lines per %i seconds)", chp->limit[CHFLD_TEXT], chp->per);
+			flood_type = CHFLD_TEXT;
 		}
 
 		if (chp->action[flood_type] == 'd')
@@ -1074,26 +952,22 @@ int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, int 
 
 	/* HINT: don't be so stupid to reorder the items in the if's below.. you'll break things -- Syzop. */
 
-	if (do_floodprot(channel, FLD_MSG) && MyUser(client))
-		do_floodprot_action(channel, FLD_MSG, "msg/notice");
+	do_floodprot(channel, client, CHFLD_MSG);
 
-	if ((text[0] == '\001') && strncmp(text+1, "ACTION ", 7) &&
-	    do_floodprot(channel, FLD_CTCP) && MyUser(client))
-	{
-		do_floodprot_action(channel, FLD_CTCP, "CTCP");
-	}
+	if ((text[0] == '\001') && strncmp(text+1, "ACTION ", 7))
+		do_floodprot(channel, client, CHFLD_CTCP);
 
 	return 0;
 }
 
 int floodprot_knock(Client *client, Channel *channel, MessageTag *mtags, char *comment)
 {
-	if (IsFloodLimit(channel) && !IsULine(client) && do_floodprot(channel, FLD_KNOCK) && MyUser(client))
-		do_floodprot_action(channel, FLD_KNOCK, "knock");
+	if (IsFloodLimit(channel) && !IsULine(client))
+		do_floodprot(channel, client, CHFLD_KNOCK);
 	return 0;
 }
 
-int floodprot_nickchange(Client *client, char *oldnick)
+int floodprot_nickchange(Client *client, MessageTag *mtags, char *oldnick)
 {
 	Membership *mp;
 
@@ -1104,10 +978,9 @@ int floodprot_nickchange(Client *client, char *oldnick)
 	{
 		Channel *channel = mp->channel;
 		if (channel && IsFloodLimit(channel) &&
-		    !(mp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANADMIN)) &&
-		    do_floodprot(channel, FLD_NICK) && MyUser(client))
+		    !(mp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANADMIN)))
 		{
-			do_floodprot_action(channel, FLD_NICK, "nick");
+			do_floodprot(channel, client, CHFLD_NICK);
 		}
 	}
 	return 0;
@@ -1128,27 +1001,27 @@ int floodprot_chanmode_del(Channel *channel, int modechar)
 	switch(modechar)
 	{
 		case 'C':
-			chp->counter[FLD_CTCP] = 0;
+			chp->counter[CHFLD_CTCP] = 0;
 			break;
 		case 'N':
-			chp->counter[FLD_NICK] = 0;
+			chp->counter[CHFLD_NICK] = 0;
 			break;
 		case 'm':
-			chp->counter[FLD_MSG] = 0;
-			chp->counter[FLD_CTCP] = 0;
+			chp->counter[CHFLD_MSG] = 0;
+			chp->counter[CHFLD_CTCP] = 0;
 			break;
 		case 'K':
-			chp->counter[FLD_KNOCK] = 0;
+			chp->counter[CHFLD_KNOCK] = 0;
 			break;
 		case 'i':
-			chp->counter[FLD_JOIN] = 0;
+			chp->counter[CHFLD_JOIN] = 0;
 			break;
 		case 'M':
-			chp->counter[FLD_MSG] = 0;
-			chp->counter[FLD_CTCP] = 0;
+			chp->counter[CHFLD_MSG] = 0;
+			chp->counter[CHFLD_CTCP] = 0;
 			break;
 		case 'R':
-			chp->counter[FLD_JOIN] = 0;
+			chp->counter[CHFLD_JOIN] = 0;
 			break;
 		default:
 			break;
@@ -1316,42 +1189,46 @@ void floodprottimer_stopchantimers(Channel *channel)
 	}
 }
 
-int do_floodprot(Channel *channel, int what)
+int do_floodprot(Channel *channel, Client *client, int what)
 {
 	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
 
-	if (!chp || !chp->limit[what]) /* no +f or not restricted */
-		return 0;
-	if (TStime() - chp->timer[what] >= chp->per)
+	if (!chp)
+		return 0; /* no +f active */
+
+	if (chp->limit[what])
 	{
-		chp->timer[what] = TStime();
-		chp->counter[what] = 1;
-	} else
-	{
-		chp->counter[what]++;
-		if ((chp->counter[what] > chp->limit[what]) &&
-		    (TStime() - chp->timer[what] < chp->per))
+		if (TStime() - chp->timer[what] >= chp->per)
 		{
-			/* reset it too (makes it easier for chanops to handle the situation) */
-			/*
-			 *XXchp->timer[what] = TStime();
-			 *XXchp->counter[what] = 1;
-			 *
-			 * BAD.. there are some situations where we might 'miss' a flood
-			 * because of this. The reset has been moved to -i,-m,-N,-C,etc.
-			*/
-			return 1; /* flood detected! */
+			chp->timer[what] = TStime();
+			chp->counter[what] = 1;
+		} else
+		{
+			chp->counter[what]++;
+			if ((chp->counter[what] > chp->limit[what]) &&
+			    (TStime() - chp->timer[what] < chp->per))
+			{
+				if (MyUser(client))
+					do_floodprot_action(channel, what);
+				return 1; /* flood detected! */
+			}
 		}
 	}
 	return 0;
 }
 
-void do_floodprot_action(Channel *channel, int what, char *text)
+void do_floodprot_action(Channel *channel, int what)
 {
 	char m;
 	int mode = 0;
 	Cmode_t extmode = 0;
 	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+	FloodType *floodtype = find_floodprot_by_index(what);
+	char *text;
+
+	if (!floodtype)
+		return;
+	text = floodtype->description;
 
 	m = chp->action[what];
 	if (!m)
@@ -1379,7 +1256,7 @@ void do_floodprot_action(Channel *channel, int what, char *text)
 		/* First the notice to the chanops */
 		mtags = NULL;
 		new_message(&me, NULL, &mtags);
-		ircsnprintf(comment, sizeof(comment), "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
+		ircsnprintf(comment, sizeof(comment), "*** Channel %s detected (limit is %d per %d seconds), setting mode +%c",
 			text, chp->limit[what], chp->per, m);
 		ircsnprintf(target, sizeof(target), "%%%s", channel->chname);
 		sendto_channel(channel, &me, NULL, PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,

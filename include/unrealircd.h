@@ -26,6 +26,7 @@
 #else
  #include <sys/resource.h>
  #include <utime.h>
+ #include <dirent.h>
 #endif
 #include <fcntl.h>
 #include <signal.h>
@@ -35,3 +36,4 @@
 #ifdef USE_LIBCURL
  #include <curl/curl.h>
 #endif
+#include <argon2.h>

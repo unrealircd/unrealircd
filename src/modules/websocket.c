@@ -6,7 +6,6 @@
  */
    
 #include "unrealircd.h"
-#include <limits.h>
 
 #define WEBSOCKET_VERSION "1.1.0"
 
@@ -27,6 +26,11 @@ ModuleHeader MOD_HEADER
  #define WEBSOCKET_SEND_BUFFER_SIZE 16384
 #endif
 
+typedef enum WebSocketType {
+	WEBSOCKET_TYPE_BINARY = 1,
+	WEBSOCKET_TYPE_TEXT   = 2
+} WebSocketType;
+
 typedef struct WebSocketUser WebSocketUser;
 struct WebSocketUser {
 	char get; /**< GET initiated */
@@ -34,14 +38,14 @@ struct WebSocketUser {
 	char *handshake_key; /**< Handshake key (used during handshake) */
 	char *lefttoparse; /**< Leftover buffer to parse */
 	int lefttoparselen; /**< Length of lefttoparse buffer */
+	WebSocketType type; /**< WEBSOCKET_TYPE_BINARY or WEBSOCKET_TYPE_TEXT */
+	char *sec_websocket_protocol; /**< Only valid during parsing of the request, after that it is NULL again */
 };
-
-#define WEBSOCKET_TYPE_BINARY	0x1
-#define WEBSOCKET_TYPE_TEXT	0x2
 
 #define WSU(client)	((WebSocketUser *)moddata_client(client, websocket_md).ptr)
 
-#define WEBSOCKET_TYPE(client)	((client->local && client->local->listener) ? client->local->listener->websocket_options : 0)
+#define WEBSOCKET_PORT(client)	((client->local && client->local->listener) ? client->local->listener->websocket_options : 0)
+#define WEBSOCKET_TYPE(client)	(WSU(client)->type)
 
 #define WEBSOCKET_MAGIC_KEY "258EAFA5-E914-47DA-95CA-C5AB0DC85B11" /* see RFC6455 */
 
@@ -60,7 +64,7 @@ int websocket_packet_in(Client *client, char *readbuf, int *length);
 void websocket_mdata_free(ModData *m);
 int websocket_handle_packet(Client *client, char *readbuf, int length);
 int websocket_handle_handshake(Client *client, char *readbuf, int *length);
-int websocket_complete_handshake(Client *client);
+int websocket_handshake_send_response(Client *client);
 int websocket_handle_packet_ping(Client *client, char *buf, int len);
 int websocket_handle_packet_pong(Client *client, char *buf, int len);
 int websocket_create_packet(int opcode, char **buf, int *len);
@@ -68,6 +72,7 @@ int websocket_send_pong(Client *client, char *buf, int len);
 
 /* Global variables */
 ModDataInfo *websocket_md;
+static int ws_text_mode_available = 1;
 
 MOD_TEST()
 {
@@ -99,6 +104,8 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	if (non_utf8_nick_chars_in_use || (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY))
+		ws_text_mode_available = 0;
 	return MOD_SUCCESS;
 }
 
@@ -303,11 +310,12 @@ int websocket_handle_websocket(Client *client, char *readbuf2, int length2)
  */
 int websocket_packet_in(Client *client, char *readbuf, int *length)
 {
-	if ((client->local->receiveM == 0) && WEBSOCKET_TYPE(client) && !WSU(client) && (*length > 8) && !strncmp(readbuf, "GET ", 4))
+	if ((client->local->receiveM == 0) && WEBSOCKET_PORT(client) && !WSU(client) && (*length > 8) && !strncmp(readbuf, "GET ", 4))
 	{
 		/* Allocate a new WebSocketUser struct for this session */
 		moddata_client(client, websocket_md).ptr = safe_alloc(sizeof(WebSocketUser));
 		WSU(client)->get = 1;
+		WSU(client)->type = client->local->listener->websocket_options; /* the default, unless the client chooses otherwise */
 	}
 
 	if (!WSU(client))
@@ -453,6 +461,58 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 	return 0;
 }
 
+/** Finally, validate the websocket request (handshake) and proceed or reject. */
+int websocket_handshake_valid(Client *client)
+{
+	if (!WSU(client)->handshake_key)
+	{
+		if (is_module_loaded("webredir"))
+		{
+			char *parx[2] = { NULL, NULL };
+			do_cmd(client, NULL, "GET", 1, parx);
+		}
+		dead_socket(client, "Invalid WebSocket request");
+		return 0;
+	}
+	if (WSU(client)->sec_websocket_protocol)
+	{
+		char *p = NULL, *name;
+		int negotiated = 0;
+
+		for (name = strtoken(&p, WSU(client)->sec_websocket_protocol, ",");
+		     name;
+		     name = strtoken(&p, NULL, ","))
+		{
+			skip_whitespace(&name);
+			if (!strcmp(name, "binary.ircv3.net"))
+			{
+				negotiated = WEBSOCKET_TYPE_BINARY;
+				break; /* First hit wins */
+			} else
+			if (!strcmp(name, "text.ircv3.net") && ws_text_mode_available)
+			{
+				negotiated = WEBSOCKET_TYPE_TEXT;
+				break; /* First hit wins */
+			}
+		}
+		if (negotiated == WEBSOCKET_TYPE_BINARY)
+		{
+			WSU(client)->type = WEBSOCKET_TYPE_BINARY;
+			safe_strdup(WSU(client)->sec_websocket_protocol, "binary.ircv3.net");
+		} else
+		if (negotiated == WEBSOCKET_TYPE_TEXT)
+		{
+			WSU(client)->type = WEBSOCKET_TYPE_TEXT;
+			safe_strdup(WSU(client)->sec_websocket_protocol, "text.ircv3.net");
+		} else
+		{
+			/* Negotiation failed, fallback to the default (don't set it here) */
+			safe_free(WSU(client)->sec_websocket_protocol);
+		}
+	}
+	return 1;
+}
+
 /** Handle client GET WebSocket handshake.
  * Yes, I'm going to assume that the header fits in one packet and one packet only.
  */
@@ -501,22 +561,19 @@ int websocket_handle_handshake(Client *client, char *readbuf, int *length)
 				return -1;
 			}
 			safe_strdup(WSU(client)->handshake_key, value);
+		} else
+		if (!strcasecmp(key, "Sec-WebSocket-Protocol"))
+		{
+			/* Save it here, will be processed later */
+			safe_strdup(WSU(client)->sec_websocket_protocol, value);
 		}
 	}
 
 	if (end_of_request)
 	{
-		if (!WSU(client)->handshake_key)
-		{
-			if (is_module_loaded("webredir"))
-			{
-				char *parx[2] = { NULL, NULL };
-				do_cmd(client, NULL, "GET", 1, parx);
-			}
-			dead_socket(client, "Invalid WebSocket request");
+		if (!websocket_handshake_valid(client))
 			return -1;
-		}
-		websocket_complete_handshake(client);
+		websocket_handshake_send_response(client);
 		return 0;
 	}
 
@@ -529,7 +586,7 @@ int websocket_handle_handshake(Client *client, char *readbuf, int *length)
 }
 
 /** Complete the handshake by sending the appropriate HTTP 101 response etc. */
-int websocket_complete_handshake(Client *client)
+int websocket_handshake_send_response(Client *client)
 {
 	char buf[512], hashbuf[64];
 	SHA_CTX hash;
@@ -548,9 +605,20 @@ int websocket_complete_handshake(Client *client)
 	         "HTTP/1.1 101 Switching Protocols\r\n"
 	         "Upgrade: websocket\r\n"
 	         "Connection: Upgrade\r\n"
-	         "Sec-WebSocket-Accept: %s\r\n"
-	         "\r\n",
+	         "Sec-WebSocket-Accept: %s\r\n",
 	         hashbuf);
+
+	if (WSU(client)->sec_websocket_protocol)
+	{
+		/* using strlen() is safe here since above buffer will not
+		 * cause it to be >=512 and thus we won't get into negatives.
+		 */
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
+		         "Sec-WebSocket-Protocol: %s\r\n",
+		         WSU(client)->sec_websocket_protocol);
+	}
+
+	strlcat(buf, "\r\n", sizeof(buf));
 
 	/* Caution: we bypass sendQ flood checking by doing it this way.
 	 * Risk is minimal, though, as we only permit limited text only

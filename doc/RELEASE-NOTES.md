@@ -1,9 +1,243 @@
-UnrealIRCd 5.0.7-rc1 Release Notes
-===================================
+UnrealIRCd 5.X.Y-git Release Notes
+===============================
 
-This is the release candidate for 5.0.7. If there are any issues
-with this release then please report them on
-[the bug tracker](https://bugs.unrealircd.org/).
+This is the current development version (git) of UnrealIRCd.
+
+This UnrealIRCd release focusses on channel history. A way to store channel
+history encrypted on disk has been added (to preserve between server restarts)
+and the IRCv3 CHATHISTORY command has been implemented to allow fetching
+thousands of lines of channel history.
+
+It also contains a breaking change, meaning (almost) everyone will need
+to change a few things in their configuration file.
+
+Breaking change:
+* The set::anti-flood block has been redone so you can have different limits
+  for ''unknown-users'' and ''known-users''.
+  * As a reminder, by default, "known-users" are users who are identified
+    to services OR are on an IP that has been connected for over 2 hours
+    in the past X days. The exact definition of "known-users" is in the
+    [security-group block](https://www.unrealircd.org/docs/Security-group_block).
+  * See [here](https://www.unrealircd.org/docs/FAQ#new-anti-flood-block)
+    for more information on the layout of the new set::anti-flood block.
+  * All violatons of target-flood, nick-flood, join-flood, away-flood,
+    invite-flood, knock-flood, max-concurrent-conversations are now
+    reported to opers with the snomask ```f``` (flood).
+
+Enhancements:
+* Add support for database encryption. The way this works
+  is that you define an encryption password in a
+  [secret { } block](https://www.unrealircd.org/docs/Secret_block).
+  Then from the various modules you can refer to this secret
+  block, from
+  [set::reputation::db-secret](https://www.unrealircd.org/docs/Set_block#set::reputation),
+  [set::tkldb::db-secret](https://www.unrealircd.org/docs/Set_block#set::tkldb)
+  and [set::channeldb::db-secret](https://www.unrealircd.org/docs/Set_block#set::channeldb).
+  This way you can encrypt the reputation, TKL and channel
+  database for increased privacy.
+* Add optional support for
+  [persistent channel history](https://www.unrealircd.org/docs/Set_block#Persistent_channel_history):
+  * This stores channel history on disk for channels that have
+    both ```+H``` and ```+P``` set.
+  * If you enable this then we ALWAYS require you to set an
+    encryption password, as we do not allow storing of
+    channel history in plain text.
+  * If you enable the option, then the history is stored in
+    ```data/history/``` in individual .db files. No channel
+    names are visible in the filenames for optimal privacy.
+  * See [Persistent channel history](https://www.unrealircd.org/docs/Set_block#Persistent_channel_history)
+    on how to enable this. By default it is off.
+* Add optional support for IRCv3
+  [draft/chathistory](https://ircv3.net/specs/extensions/chathistory).
+  This module can be loaded via ```loadmodule "chathistory";```
+* The maximums for channel mode ```+H``` have been raised and are now
+  different for ```+r``` (registered) and ```-r``` channels. For unregistered
+  channels the limit is now 200 lines / 31 days. For registered channels
+  the limit is 5000 lines / 31 days. The old limit for both was 200 lines / 7 days.
+  These maximums can be changed in the now slightly different
+  [set::history::channel::max-storage-per-channel](https://www.unrealircd.org/docs/Set_block#set::history)
+  block.
+* Add c-ares and libsodium version output to boot screen and /VERSION.
+* WHOX now supports displaying the
+  [reputation score](https://www.unrealircd.org/docs/Reputation_score).
+  If you are an IRCOp then you can use e.g. ```WHO * %cuhsnfmdaRr```.
+* Add ability to [spamfilter](https://www.unrealircd.org/docs/Spamfilter)
+  message tags via the new 'T' target. Right now it would be unusual
+  to use this, but some day when we have more
+  [message tags](https://www.unrealircd.org/docs/Message_tags) it
+  may come in handy.
+* Support [+draft/reply](https://ircv3.net/specs/client-tags/reply) IRCv3
+  client tag. Can be used by bots (and others) to indicate to what message
+  people are replying to. This module, reply-tag, is loaded by default.
+* Send [draft/bot](https://ircv3.net/specs/extensions/bot-mode) IRCv3
+  message tag if the user has mode ```+B``` set.
+
+Fixes:
+* Forbid using [extended server bans](https://www.unrealircd.org/docs/Extended_server_bans)
+  in ZLINE/GZLINE since they won't work.
+* Extended server ban ```~a:accname``` was not working for shun, and only
+  partially working for kline/gline.
+* More accurate /ELINE error message.
+
+Changed:
+* Channel mode ```+H``` always showed time in minutes (```m```) until now.
+  From now on it will show it in minutes (```m```), hours (```h```) or
+  days (```d```) depending on the actual value. Eg ```+H 50:7d```.
+* If you ran ```./unrealircd stop``` we used to wait only 1 second.
+  From now on we will wait up to 10 seconds max. This gives UnrealIRCd
+  plenty of time to write database files.
+* If you have zero [log blocks](https://www.unrealircd.org/docs/Log_block)
+  then we already automatically logged errors to ```ircd.log```.
+  From now on we will log everything (not only errors) to that file.
+
+Removed:
+* Version check for curl and openssl as nowadays they have ABI guarantees.
+
+Module coders / Developers:
+* New UnrealDB API and disk format, see
+  https://www.unrealircd.org/docs/Dev:UnrealDB
+* We now use libsodium for file encryption routines as well
+  as some helpers to lock/clear passwords in memory.
+* Updated ```HOOKTYPE_LOCAL_NICKCHANGE``` and
+  ```HOOKTYPE_REMOTE_NICKCHANGE``` to include an
+  ```MessageTag *mtags``` argument in the middle.
+  You can use ```#if UNREAL_VERSION_TIME>=202115``` to detect this.
+* Updated channel mode ```conv_param``` function to
+  include a ```Channel *channel``` argument at the end.
+  You can use ```#if UNREAL_VERSION_TIME>=202120``` to detect this.
+* New: ```ModuleSetOptions(modinfo->handle, MOD_OPT_UNLOAD_PRIORITY, priority);```.
+  This can be used for modules to indicate they wish to be unloaded
+  before or after others. It is used by for example the channel
+  and history modules so they can save their databases before
+  chanmode modules or other modules get unloaded.
+* New CAP [```draft/chathistory```](https://ircv3.net/specs/extensions/chathistory).
+  If a client REQ's this CAP then UnrealIRCd won't send history on-join as
+  it assumes the client will fetch it when they feel the need for it.
+* New informative CAP:
+  [unrealircd.org/history-backend](https://www.unrealircd.org/history-backend)
+
+Reminder: UnrealIRCd 4 is no longer supported
+----------------------------------------------
+
+UnrealIRCd 4.x is [no longer supported](https://www.unrealircd.org/docs/UnrealIRCd_4_EOL).
+Admins must [upgrade to UnrealIRCd 5](https://www.unrealircd.org/docs/Upgrading_from_4.x).
+
+UnrealIRCd 5.0.9.1
+-------------------
+The only change between 5.0.9 and 5.0.9.1 is:
+* Build improvements on *NIX (faster compiling and lower memory requirements)
+* Windows version is unchanged and still 5.0.9
+
+UnrealIRCd 5.0.9
+-----------------
+The 5.0.9 release comes with several nice feature enhancements. There are no major bug fixes.
+
+Enhancements:
+* Changes to the "Client connecting" notice on IRC (for IRCOps):
+  * The format changed slightly, instead of ```{clients}``` it
+    now shows ```[class: clients]```
+  * SSL/TLS information is still shown via ```[secure]```
+  * New: ```[reputation: NNN]``` to show the current
+    [reputation score](https://www.unrealircd.org/docs/Reputation_score)
+  * New: ```[account: abcdef]``` to show the services account,
+    but only if [SASL](https://www.unrealircd.org/docs/SASL) was used.
+* In the log file the format also changed slightly:
+  * IP information is now added as ```[127.0.0.1]``` in both the
+    connect and disconnect log messages.
+  * The vhost is logged as ```[vhost: xyz]``` instead of ```[VHOST xyz]```
+  * All the other values are now logged as well on-connect,
+    similar to the "Client connecting" notice, so: secure, reputation,
+    account (if applicable).
+* New option [allow::global-maxperip](https://www.unrealircd.org/docs/Allow_block):
+  this imposes a global (network-wide) restriction on the number of
+  connections per IP address.
+  If you don't have a global-maxperip setting in the allow block then it
+  will default to maxperip plus one. So, if you currently have an
+  allow::maxperip of 3 then global-maxperip will be 4.
+* [Handshake delay](https://www.unrealircd.org/docs/Set_block#set::handshake-delay)
+  is automatically disabled for users that are exempt from blacklist checking.
+* Always exempt 127.* from gline, kline, etc.
+* You can now have dated logfiles thanks to strftime formatting.
+  For example ```log "ircd.%Y-%m-%d.log" { }``` will create a log
+  file like called ircd.2020-01-31.log, a new one every day.
+* The Windows build now supports TLSv1.3 too.
+
+Fixes:
+* Windows: some warnings and error messages on boot were previously
+  missing.
+
+Changes:
+* Add doc/KEYS which contains the public key(s) used to sign UnrealIRCd releases
+* The options set::anti-flood::unknown-flood-* have been renamed and
+integrated in a new block called
+[set::anti-flood::handshake-data-flood](https://www.unrealircd.org/docs/Set_block#set::anti-flood::handshake-data-flood).
+The ban-action can now also be changed. Note that almost nobody will have to
+change this setting since it has a good default.
+* On *NIX bump the default maximum connections from 8192 to 16384.
+That is, when in "auto" mode, which is like for 99% of the users.
+Note that the system may still limit the actual number of connections
+to a lower value, epending on the value of ```ulimit -n -H```.
+
+UnrealIRCd 5.0.8
+-----------------
+
+The main purpose of this release is to enhance the
+[reputation](https://www.unrealircd.org/docs/Reputation_score)
+functionality. There have also been some other changes and minor
+bug fixes. For more information, see below.
+
+Enhancements:
+* Support for [security groups](https://www.unrealircd.org/docs/Security-group_block),
+  of which four groups always exist by default: known-users, unknown-users,
+  tls-users and tls-and-known-users.
+* New extended ban ```~G:securitygroupname```. Typical usage would be
+  ```MODE #chan +b ~G:unknown-users``` which will ban all users from the
+  channel that are not identified to services and have a reputation
+  score below 25 (by default). The exact settings can be tweaked in the
+  [security group block](https://www.unrealircd.org/docs/Security-group_block).
+* The reputation command (IRCOp-only) has been extended to make it
+  easier to look for potential troublemakers:
+  * ```REPUTATION Nick``` shows reputation about the nick name
+  * ```REPUTATION IP``` shows reputation about the IP address
+  * ```REPUTATION #channel``` lists users in channel with their reputation score
+  * ```REPUTATION <NN``` lists users with reputation scores below value NN
+* Only send the first 1000 matches on ```STATS gline``` or a
+  similar command. This to prevent the IRCOp from being flooded off.
+  This value can be changed via
+  [set::max-stats-matches](https://www.unrealircd.org/docs/Set_block#set::max-stats-matches)
+* Warn when the SSL/TLS server certificate is expired or expires soon
+  (within 7 days).
+* New option allow::options::reject-on-auth-failure if you want to
+  stop matching on a passworded allow block, see the
+  [allow password documentation](https://www.unrealircd.org/docs/Allow_block#password)
+  for more information. Note that most people won't use this.
+
+Fixes:
+* The ```WHO``` command searched on nick name even if it was told
+  to search on a specific account name via WHOX options.
+* Some typos in the Config script and a warning
+* Counting clients twice in some circumstances
+
+Changes:
+* Support for $(DESTDIR) in 'make install' if packaging for a distro
+* Mention the ban reason in Q-line server notices
+* Add self-test to module manager and improve the error message in case
+  the IRCd source directory does not exist.
+* Print out a more helpful error if you run the unrealircd binary
+  rather than the unrealircd script with an argument like 'mkpasswd' etc.
+* On *NIX create a symlink 'source' to the UnrealIRCd source
+
+Module coders / Developers:
+* The [Doxygen module API docs](https://www.unrealircd.org/api/5/index.html)
+  have been improved, in particular the 
+  [Hook API](https://www.unrealircd.org/api/5/group__HookAPI.html)
+  is now 100% documented.
+
+UnrealIRCd 5.0.7
+-----------------
+
+UnrealIRCd 5.0.7 consists mainly of fixes for the 5.x stable series,
+with some minor enhancements.
 
 Enhancements:
 * Add support for ```estonian-utf8```, ```latvian-utf8``` and
@@ -11,6 +245,7 @@ Enhancements:
   [set::allowed-nickchars](https://www.unrealircd.org/docs/Nick_Character_Sets)
 * Add [message tags](https://www.unrealircd.org/docs/Message_tags)
   to ```PONG``` to help fix timestamp issues in KiwiIRC.
+* Dutch helpop file (conf/help/help.nl.conf)
 
 Fixes:
 * When having multiple text bans (```+b ~T:censor```), these caused an empty
@@ -33,17 +268,6 @@ websocket packet.
 Module coders / Developers:
 * No changes, only some small additions to the
 [Doxygen module API docs](https://www.unrealircd.org/api/5/index.html)
-
-Reminder: UnrealIRCd 4 is End Of Life
----------------------------------------
-
-All support for the previous series, UnrealIRCd 4.x, will stop after
-[December 31, 2020](https://www.unrealircd.org/docs/UnrealIRCd_4_EOL).
-If you haven't upgraded yet, do so soon!
-
-Upgrading from 4.x to 5.x?
-Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5). At the
-very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
 
 UnrealIRCd 5.0.6
 -----------------

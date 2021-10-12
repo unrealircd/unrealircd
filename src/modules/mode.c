@@ -1293,7 +1293,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 			if (handler->is_ok(client, channel, mode, param, EXCHK_PARAM, what) == FALSE)
 				return paracnt; /* rejected by is_ok */
 
-			morphed = handler->conv_param(param, client);
+			morphed = handler->conv_param(param, client, channel);
 			if (!morphed)
 				return paracnt; /* rejected by conv_param */
 
@@ -1303,12 +1303,12 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 				char *now, *requested;
 				char flag = handler->flag;
 				now = cm_getparameter(channel, flag);
-				requested = handler->conv_param(param, client);
+				requested = handler->conv_param(param, client, channel);
 				if (now && requested && !strcmp(now, requested))
 					return paracnt; /* ignore... */
 			}
 			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "+%c%s",
-				handler->flag, handler->conv_param(param, client));
+				handler->flag, handler->conv_param(param, client, channel));
 			(*pcount)++;
 			param = morphed; /* set param to converted parameter. */
 		}
@@ -1366,6 +1366,9 @@ int paracount_for_chanmode_from_server(Client *client, u_int what, char mode)
 
 	if (mode == '&')
 		return 0; /* & indicates bounce, it is not an actual mode character */
+
+	if (mode == 'F')
+		return (what == MODE_ADD) ? 1 : 0; /* Future compatibility */
 
 	/* If we end up here it means we have no idea if it is a parameter-eating or paramless
 	 * channel mode. That's actually pretty bad. This shouldn't happen since CHANMODES=

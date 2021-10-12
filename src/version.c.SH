@@ -4,7 +4,7 @@ echo "Extracting src/version.c..."
 
 #id=`grep '$Id: Changes,v' ../Changes`
 #id=`echo $id |sed 's/.* Changes\,v \(.*\) .* Exp .*/\1/'`
-id="5.0.7-rc1"
+id="5.0.9.1"
 echo "$id"
 
 if test -r version.c
@@ -133,7 +133,8 @@ char *unrealcredits[] =
 	"Underfloor Heating Systems - www.underfloorheatingsystems.co.uk,",
 	"Project Free TV - newprojectfreetv.com, companyaccountscheck.com,",
 	"Coyote Traffic - www.coyotetraffic.com, www.emailextractor14lite.com,",
-	"bet365 Bonus Code - williamspromocodes.co.uk/bet365-bonus-code-sports/",
+	"bet365 Bonus Code - williamspromocodes.co.uk/bet365-bonus-code-sports/,",
+	"Valerie Amelia Pond",
 	" ",
 	"==========================[ Supporters ]==========================",
 	"Our support staff: Cronus, Jobe, SpaceDog, Stealth",

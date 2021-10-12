@@ -558,9 +558,15 @@ int blacklist_start_check(Client *client)
 {
 	Blacklist *bl;
 
-	/* If the user is on 'except blacklist' then don't bother checking... */
 	if (find_tkl_exception(TKL_BLACKLIST, client))
+	{
+		/* If the user is exempt from DNSBL checking then:
+		 * 1) Don't bother checking DNSBL's
+		 * 2) Disable handshake delay for this user, since it serves no purpose.
+		 */
+		SetNoHandshakeDelay(client);
 		return 0;
+	}
 	
 	if (!BLUSER(client))
 	{

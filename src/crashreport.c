@@ -4,25 +4,12 @@
  */
 
 #include "unrealircd.h"
-#ifndef _WIN32
-#include <dirent.h>
-#else
+#ifdef _WIN32
 extern void StartUnrealAgain(void);
 #endif
 #include "version.h"
 
 extern char *getosname(void);
-
-
-time_t get_file_time(char *fname)
-{
-	struct stat st;
-	
-	if (stat(fname, &st) != 0)
-		return 0;
-
-	return (time_t)st.st_ctime;
-}
 
 char *find_best_coredump(void)
 {
@@ -303,7 +290,7 @@ int crash_report_asan_log(FILE *reportfd, char *coredump)
 	coretime = get_file_time(coredump);
 	asantime = get_file_time(asan_log);
 
-	fprintf(reportfd, "ASan log file found '%s' which is %ld newer than core file\n",
+	fprintf(reportfd, "ASan log file found '%s' which is %ld seconds older than core file\n",
 		asan_log,
 		(long)((long)(coretime) - (long)asantime));
 
@@ -538,38 +525,9 @@ char *generate_crash_report(char *coredump, int *thirdpartymods)
 	return reportfname;
 }
 
-int running_interactive(void)
-{
-#ifndef _WIN32
-	char *s;
-	
-	if (!isatty(0))
-		return 0;
-	
-	s = getenv("TERM");
-	if (!s || !strcasecmp(s, "dumb") || !strcasecmp(s, "none"))
-		return 0;
-
-	return 1;
-#else
-	return IsService ? 0 : 1;
-#endif
-}
-
 #define REPORT_NEVER	-1
 #define REPORT_ASK		0
 #define REPORT_AUTO		1
-
-
-int getfilesize(char *fname)
-{
-	struct stat st;
-	
-	if (stat(fname, &st) != 0)
-		return -1;
-	
-	return (int)st.st_size;
-}
 
 #define CRASH_REPORT_HOST "crash.unrealircd.org"
 
@@ -614,7 +572,7 @@ int crashreport_send(char *fname)
 	int xfr = 0;
 	char *errstr = NULL;
 	
-	filesize = getfilesize(fname);
+	filesize = get_file_size(fname);
 	if (filesize < 0)
 		return 0;
 	
@@ -741,13 +699,50 @@ void mark_coredump_as_read(char *coredump)
 
 static int report_pref = REPORT_ASK;
 
+void report_crash_not_sent(char *fname)
+{
+		printf("Crash report will not be sent to UnrealIRCd Team.\n"
+		       "\n"
+		       "Feel free to read the report at %s and delete it.\n"
+		       "Or, if you change your mind, you can submit it anyway at https://bugs.unrealircd.org/\n"
+		       " (if you do, please set the option 'View Status' at the end of the bug report page to 'private'!!)\n", fname);
+}
+
+/** This checks if there are indications that 3rd party modules are
+ * loaded. This is used to provide a small warning to the user that
+ * the crash may be likely due to that.
+ */
+int check_third_party_mods_present(void)
+{
+#ifndef _WIN32
+	struct dirent *dir;
+	DIR *fd = opendir(TMPDIR);
+
+	if (!fd)
+		return 0;
+
+	/* We search for files like tmp/FC5C3116.third.somename.so */
+	while ((dir = readdir(fd)))
+	{
+		char *fname = dir->d_name;
+		if (strstr(fname, ".third.") && strstr(fname, ".so"))
+		{
+			closedir(fd);
+			return 1;
+		}
+	}
+	closedir(fd);
+#endif
+	return 0;
+}
+
 void report_crash(void)
 {
 	char *coredump, *fname;
 	int thirdpartymods = 0;
 	int crashed_secs_ago;
 
-	if (!running_interactive() && (report_pref != REPORT_AUTO))
+	if (!running_interactively() && (report_pref != REPORT_AUTO))
 		exit(0); /* don't bother if we run through cron or something similar */
 
 	coredump = find_best_coredump();
@@ -763,6 +758,8 @@ void report_crash(void)
 	if (!fname)
 		return;
 
+	if (thirdpartymods == 0)
+		thirdpartymods = check_third_party_mods_present();
 #ifndef _WIN32
 	printf("The IRCd has been started now (and is running), but it did crash %d seconds ago.\n", crashed_secs_ago);
 	printf("Crash report generated in: %s\n\n", fname);
@@ -774,24 +771,26 @@ void report_crash(void)
                "by someone other than the UnrealIRCd team). If you installed new 3rd party\n"
                "module(s) in the past few weeks we suggest to unload these modules and see if\n"
                "the crash issue dissapears. If so, that module is probably to blame.\n"
-               "If you keep crashing without 3rd party modules then please do report it to\n"
-               "the UnrealIRCd team.\n"
-               "The reason we ask you to do this is because more than 95%% of the crash issues\n"
-               "reported nowadays are caused by 3rd party modules and not by an UnrealIRCd bug.\n"
+               "If you keep crashing without any 3rd party modules loaded then please do report\n"
+               "it to the UnrealIRCd team.\n"
+               "The reason we ask you to do this is because MORE THAN 95%% OF ALL CRASH ISSUES\n"
+               "ARE CAUSED BY 3RD PARTY MODULES and not by an UnrealIRCd bug.\n"
                "\n");
 	}
 		
 	if (report_pref == REPORT_NEVER)
 	{
-		printf("Crash report will not be sent to UnrealIRCd Team.\n\n");
-		printf("Feel free to read the report at %s and if you change your mind you can submit it anyway at https://bugs.unrealircd.org/\n", fname);
+		report_crash_not_sent(fname);
+		return;
 	} else
 	if (report_pref == REPORT_ASK)
 	{
 		char answerbuf[64], *answer;
 		printf("Shall I send a crash report to the UnrealIRCd developers?\n");
 		if (!thirdpartymods)
-		    printf("Crash reports help us greatly with fixing bugs that affect you and others\n");
+			printf("Crash reports help us greatly with fixing bugs that affect you and others\n");
+		else
+			printf("NOTE: If the crash is caused by a 3rd party module then UnrealIRCd devs can't fix that.\n");
 		printf("\n");
 		
 		do
@@ -802,8 +801,7 @@ void report_crash(void)
 			
 			if (answer && (toupper(*answer) == 'N'))
 			{
-				printf("Ok, not sending bug report.\n\n");
-				printf("Feel free to read the report at %s and if you change your mind you can submit it anyway at https://bugs.unrealircd.org/\n", fname);
+				report_crash_not_sent(fname);
 				return;
 			}
 			if (answer && (toupper(*answer) == 'Y'))
@@ -819,7 +817,7 @@ void report_crash(void)
 		return;
 	}
 
-	if (running_interactive())
+	if (running_interactively())
 	{
 		char buf[8192], *line;
 

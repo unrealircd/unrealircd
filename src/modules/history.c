@@ -72,6 +72,7 @@ void history_usage(Client *client)
 CMD_FUNC(cmd_history)
 {
 	HistoryFilter filter;
+	HistoryResult *r;
 	Channel *channel;
 	int lines = HISTORY_LINES_DEFAULT;
 
@@ -115,12 +116,18 @@ CMD_FUNC(cmd_history)
 	if (!HasCapability(client, "server-time"))
 	{
 		sendnotice(client, "Your IRC client does not support the 'server-time' capability");
-		sendnotice(client, "https://ircv3.net/specs/extensions/server-time-3.2.html");
+		sendnotice(client, "https://ircv3.net/specs/extensions/server-time");
 		sendnotice(client, "History request refused.");
 		return;
 	}
 
 	memset(&filter, 0, sizeof(filter));
+	filter.cmd = HFC_SIMPLE;
 	filter.last_lines = lines;
-	history_request(client, channel->chname, &filter);
+
+	if ((r = history_request(channel->chname, &filter)))
+	{
+		history_send_result(client, r);
+		free_history_result(r);
+	}
 }

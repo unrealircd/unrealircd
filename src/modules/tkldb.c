@@ -27,9 +27,16 @@ ModuleHeader MOD_HEADER = {
 	"unrealircd-5",
 };
 
-#define TKL_DB_MAGIC 0x10101010
-#define TKL_DB_VERSION 4999
-#define TKL_DB_SAVE_EVERY 299
+#define TKLDB_MAGIC 0x10101010
+/* Database version */
+#define TKLDB_VERSION 4999
+/* Save tkls to file every <this> seconds */
+#define TKLDB_SAVE_EVERY 300
+/* The very first save after boot, apply this delta, this
+ * so we don't coincide with other (potentially) expensive
+ * I/O events like saving channeldb.
+ */
+#define TKLDB_SAVE_EVERY_DELTA +15
 
 #ifdef DEBUGMODE
  #define BENCHMARK
@@ -54,14 +61,14 @@ ModuleHeader MOD_HEADER = {
 	do { \
 		sendto_realops_and_log("[tkldb] Error writing to temporary database file " \
 		                       "'%s': %s (DATABASE NOT SAVED)", \
-		                       fname, strerror(errno)); \
+		                       fname, unrealdb_get_error_string()); \
 	} while(0)
 
 #define R_SAFE(x) \
 	do { \
 		if (!(x)) { \
-			config_warn("[tkldb] Read error from database file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
-			fclose(fd); \
+			config_warn("[tkldb] Read error from database file '%s' (possible corruption): %s", cfg.database, unrealdb_get_error_string()); \
+			unrealdb_close(db); \
 			FreeTKLRead(); \
 			return 0; \
 		} \
@@ -71,7 +78,7 @@ ModuleHeader MOD_HEADER = {
 	do { \
 		if (!(x)) { \
 			WARN_WRITE_ERROR(tmpfname); \
-			fclose(fd); \
+			unrealdb_close(db); \
 			return 0; \
 		} \
 	} while(0)
@@ -84,42 +91,57 @@ ModuleHeader MOD_HEADER = {
 		} \
 	} while(0)
 
+/* Structs */
+struct cfgstruct {
+	char *database;
+	char *db_secret;
+};
+
 /* Forward declarations */
 void tkldb_moddata_free(ModData *md);
-void setcfg(void);
-void freecfg(void);
-int tkldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
-int tkldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
+void setcfg(struct cfgstruct *cfg);
+void freecfg(struct cfgstruct *cfg);
+int tkldb_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int tkldb_config_posttest(int *errs);
+int tkldb_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 EVENT(write_tkldb_evt);
 int write_tkldb(void);
-int write_tkline(FILE *fd, const char *tmpfname, TKL *tkl);
+int write_tkline(UnrealDB *db, const char *tmpfname, TKL *tkl);
 int read_tkldb(void);
 
 /* Globals variables */
-const uint32_t tkl_db_version = TKL_DB_VERSION;
-struct cfgstruct {
-	char *database;
-};
+const uint32_t tkldb_version = TKLDB_VERSION;
 static struct cfgstruct cfg;
+static struct cfgstruct test;
 
-static int tkls_loaded = 0;
+static long tkldb_next_event = 0;
 
 MOD_TEST()
 {
 	memset(&cfg, 0, sizeof(cfg));
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkldb_configtest);
+	memset(&test, 0, sizeof(test));
+	setcfg(&test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkldb_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, tkldb_config_posttest);
 	return MOD_SUCCESS;
 }
 
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_UNLOAD_PRIORITY, -9999);
 
-	LoadPersistentInt(modinfo, tkls_loaded);
+	LoadPersistentLong(modinfo, tkldb_next_event);
 
-	setcfg();
+	setcfg(&cfg);
 
-	if (!tkls_loaded)
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkldb_config_run);
+	return MOD_SUCCESS;
+}
+
+MOD_LOAD()
+{
+	if (!tkldb_next_event)
 	{
 		/* If this is the first time that our module is loaded, then
 		 * read the TKL DB and add all *-Lines.
@@ -133,28 +155,19 @@ MOD_INIT()
 			else
 				config_warn("[tkldb] Failed to rename database from %s to %s: %s", cfg.database, fname, strerror(errno));
 		}
-		tkls_loaded = 1;
+		tkldb_next_event = TStime() + TKLDB_SAVE_EVERY + TKLDB_SAVE_EVERY_DELTA;
 	}
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkldb_configrun);
-	return MOD_SUCCESS;
-}
-
-MOD_LOAD()
-{
-	EventAdd(modinfo->handle, "tkldb_write_tkldb", write_tkldb_evt, NULL, TKL_DB_SAVE_EVERY*1000, 0);
-	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
-	{
-		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));
-		return MOD_FAILED;
-	}
+	EventAdd(modinfo->handle, "tkldb_write_tkldb", write_tkldb_evt, NULL, 1000, 0);
 	return MOD_SUCCESS;
 }
 
 MOD_UNLOAD()
 {
-	write_tkldb();
-	freecfg();
-	SavePersistentInt(modinfo, tkls_loaded);
+	if (loop.ircd_terminating)
+		write_tkldb();
+	freecfg(&test);
+	freecfg(&cfg);
+	SavePersistentLong(modinfo, tkldb_next_event);
 	return MOD_SUCCESS;
 }
 
@@ -164,19 +177,20 @@ void tkldb_moddata_free(ModData *md)
 		md->i = 0;
 }
 
-void setcfg(void)
+void setcfg(struct cfgstruct *cfg)
 {
 	// Default: data/tkl.db
-	safe_strdup(cfg.database, "tkl.db");
-	convert_to_absolute_path(&cfg.database, PERMDATADIR);
+	safe_strdup(cfg->database, "tkl.db");
+	convert_to_absolute_path(&cfg->database, PERMDATADIR);
 }
 
-void freecfg(void)
+void freecfg(struct cfgstruct *cfg)
 {
-	safe_free(cfg.database);
+	safe_free(cfg->database);
+	safe_free(cfg->db_secret);
 }
 
-int tkldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int tkldb_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
 	ConfigEntry *cep;
@@ -190,16 +204,45 @@ int tkldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_vardata) {
+		if (!cep->ce_vardata)
+		{
 			config_error("%s:%i: blank set::tkldb::%s without value", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 			errors++;
-			continue;
-		}
-		if (!strcmp(cep->ce_varname, "database")) {
+		} else
+		if (!strcmp(cep->ce_varname, "database"))
+		{
 			convert_to_absolute_path(&cep->ce_vardata, PERMDATADIR);
-			continue;
+			safe_strdup(test.database, cep->ce_vardata);
+		} else
+		if (!strcmp(cep->ce_varname, "db-secret"))
+		{
+			char *err;
+			if ((err = unrealdb_test_secret(cep->ce_vardata)))
+			{
+				config_error("%s:%i: set::tkldb::db-secret: %s", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, err);
+				errors++;
+				continue;
+			}
+			safe_strdup(test.db_secret, cep->ce_vardata);
+		} else
+		{
+			config_error("%s:%i: unknown directive set::tkldb::%s", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			errors++;
 		}
-		config_error("%s:%i: unknown directive set::tkldb::%s", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+int tkldb_config_posttest(int *errs)
+{
+	int errors = 0;
+	char *errstr;
+
+	if (test.database && ((errstr = unrealdb_test_db(test.database, test.db_secret))))
+	{
+		config_error("[tkldb] %s", errstr);
 		errors++;
 	}
 
@@ -207,7 +250,7 @@ int tkldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	return errors ? -1 : 1;
 }
 
-int tkldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
+int tkldb_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
 
@@ -222,19 +265,24 @@ int tkldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 	{
 		if (!strcmp(cep->ce_varname, "database"))
 			safe_strdup(cfg.database, cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "db-secret"))
+			safe_strdup(cfg.db_secret, cep->ce_vardata);
 	}
 	return 1;
 }
 
 EVENT(write_tkldb_evt)
 {
+	if (tkldb_next_event > TStime())
+		return;
+	tkldb_next_event = TStime() + TKLDB_SAVE_EVERY;
 	write_tkldb();
 }
 
 int write_tkldb(void)
 {
 	char tmpfname[512];
-	FILE *fd;
+	UnrealDB *db;
 	uint64_t tklcount;
 	int index, index2;
 	TKL *tkl;
@@ -245,16 +293,16 @@ int write_tkldb(void)
 #endif
 
 	// Write to a tempfile first, then rename it if everything succeeded
-	snprintf(tmpfname, sizeof(tmpfname), "%s.tmp", cfg.database);
-	fd = fopen(tmpfname, "wb");
-	if (!fd)
+	snprintf(tmpfname, sizeof(tmpfname), "%s.%x.tmp", cfg.database, getrandom32());
+	db = unrealdb_open(tmpfname, UNREALDB_MODE_WRITE, cfg.db_secret);
+	if (!db)
 	{
 		WARN_WRITE_ERROR(tmpfname);
 		return 0;
 	}
 
-	W_SAFE(write_int32(fd, TKL_DB_MAGIC));
-	W_SAFE(write_data(fd, &tkl_db_version, sizeof(tkl_db_version)));
+	W_SAFE(unrealdb_write_int32(db, TKLDB_MAGIC));
+	W_SAFE(unrealdb_write_int32(db, tkldb_version));
 
 	// Count the *-Lines
 	tklcount = 0;
@@ -282,7 +330,7 @@ int write_tkldb(void)
 			tklcount++;
 		}
 	}
-	W_SAFE(write_data(fd, &tklcount, sizeof(tklcount)));
+	W_SAFE(unrealdb_write_int64(db, tklcount));
 
 	// Now write the actual *-Lines, first the ones in the hash table
 	for (index = 0; index < TKLIPHASHLEN1; index++)
@@ -293,7 +341,7 @@ int write_tkldb(void)
 			{
 				if (tkl->flags & TKL_FLAG_CONFIG)
 					continue; /* config entry */
-				if (!write_tkline(fd, tmpfname, tkl)) // write_tkline() closes the fd on errors itself
+				if (!write_tkline(db, tmpfname, tkl)) // write_tkline() closes the db on errors itself
 					return 0;
 			}
 		}
@@ -305,13 +353,13 @@ int write_tkldb(void)
 		{
 			if (tkl->flags & TKL_FLAG_CONFIG)
 				continue; /* config entry */
-			if (!write_tkline(fd, tmpfname, tkl))
+			if (!write_tkline(db, tmpfname, tkl))
 				return 0;
 		}
 	}
 
 	// Everything seems to have gone well, attempt to close and rename the tempfile
-	if (fclose(fd) != 0)
+	if (!unrealdb_close(db))
 	{
 		WARN_WRITE_ERROR(tmpfname);
 		return 0;
@@ -334,18 +382,18 @@ int write_tkldb(void)
 }
 
 /** Write a TKL entry */
-int write_tkline(FILE *fd, const char *tmpfname, TKL *tkl)
+int write_tkline(UnrealDB *db, const char *tmpfname, TKL *tkl)
 {
 	char tkltype;
 	char buf[256];
 
 	/* First, write the common attributes */
 	tkltype = tkl_typetochar(tkl->type);
-	W_SAFE(write_data(fd, &tkltype, sizeof(tkltype))); // TKL char
+	W_SAFE(unrealdb_write_char(db, tkltype)); // TKL char
 
-	W_SAFE(write_str(fd, tkl->set_by));
-	W_SAFE(write_int64(fd, tkl->set_at));
-	W_SAFE(write_int64(fd, tkl->expire_at));
+	W_SAFE(unrealdb_write_str(db, tkl->set_by));
+	W_SAFE(unrealdb_write_int64(db, tkl->set_at));
+	W_SAFE(unrealdb_write_int64(db, tkl->expire_at));
 
 	if (TKLIsServerBan(tkl))
 	{
@@ -355,9 +403,9 @@ int write_tkline(FILE *fd, const char *tmpfname, TKL *tkl)
 			snprintf(buf, sizeof(buf), "%%%s", tkl->ptr.serverban->usermask);
 			usermask = buf;
 		}
-		W_SAFE(write_str(fd, usermask));
-		W_SAFE(write_str(fd, tkl->ptr.serverban->hostmask));
-		W_SAFE(write_str(fd, tkl->ptr.serverban->reason));
+		W_SAFE(unrealdb_write_str(db, usermask));
+		W_SAFE(unrealdb_write_str(db, tkl->ptr.serverban->hostmask));
+		W_SAFE(unrealdb_write_str(db, tkl->ptr.serverban->reason));
 	} else
 	if (TKLIsBanException(tkl))
 	{
@@ -367,17 +415,17 @@ int write_tkline(FILE *fd, const char *tmpfname, TKL *tkl)
 			snprintf(buf, sizeof(buf), "%%%s", tkl->ptr.banexception->usermask);
 			usermask = buf;
 		}
-		W_SAFE(write_str(fd, usermask));
-		W_SAFE(write_str(fd, tkl->ptr.banexception->hostmask));
-		W_SAFE(write_str(fd, tkl->ptr.banexception->bantypes));
-		W_SAFE(write_str(fd, tkl->ptr.banexception->reason));
+		W_SAFE(unrealdb_write_str(db, usermask));
+		W_SAFE(unrealdb_write_str(db, tkl->ptr.banexception->hostmask));
+		W_SAFE(unrealdb_write_str(db, tkl->ptr.banexception->bantypes));
+		W_SAFE(unrealdb_write_str(db, tkl->ptr.banexception->reason));
 	} else
 	if (TKLIsNameBan(tkl))
 	{
 		char *hold = tkl->ptr.nameban->hold ? "H" : "*";
-		W_SAFE(write_str(fd, hold));
-		W_SAFE(write_str(fd, tkl->ptr.nameban->name));
-		W_SAFE(write_str(fd, tkl->ptr.nameban->reason));
+		W_SAFE(unrealdb_write_str(db, hold));
+		W_SAFE(unrealdb_write_str(db, tkl->ptr.nameban->name));
+		W_SAFE(unrealdb_write_str(db, tkl->ptr.nameban->reason));
 	} else
 	if (TKLIsSpamfilter(tkl))
 	{
@@ -385,12 +433,12 @@ int write_tkline(FILE *fd, const char *tmpfname, TKL *tkl)
 		char *target = spamfilter_target_inttostring(tkl->ptr.spamfilter->target);
 		char action = banact_valtochar(tkl->ptr.spamfilter->action);
 
-		W_SAFE(write_str(fd, match_type));
-		W_SAFE(write_str(fd, tkl->ptr.spamfilter->match->str));
-		W_SAFE(write_str(fd, target));
-		W_SAFE(write_data(fd, &action, sizeof(action)));
-		W_SAFE(write_str(fd, tkl->ptr.spamfilter->tkl_reason));
-		W_SAFE(write_int64(fd, tkl->ptr.spamfilter->tkl_duration));
+		W_SAFE(unrealdb_write_str(db, match_type));
+		W_SAFE(unrealdb_write_str(db, tkl->ptr.spamfilter->match->str));
+		W_SAFE(unrealdb_write_str(db, target));
+		W_SAFE(unrealdb_write_char(db, action));
+		W_SAFE(unrealdb_write_str(db, tkl->ptr.spamfilter->tkl_reason));
+		W_SAFE(unrealdb_write_int64(db, tkl->ptr.spamfilter->tkl_duration));
 	}
 
 	return 1;
@@ -399,7 +447,7 @@ int write_tkline(FILE *fd, const char *tmpfname, TKL *tkl)
 /** Read all entries from the TKL db */
 int read_tkldb(void)
 {
-	FILE *fd;
+	UnrealDB *db;
 	TKL *tkl = NULL;
 	uint32_t magic = 0;
 	uint32_t version;
@@ -416,49 +464,61 @@ int read_tkldb(void)
 	gettimeofday(&tv_alpha, NULL);
 #endif
 
-	fd = fopen(cfg.database, "rb");
-	if (!fd)
+	db = unrealdb_open(cfg.database, UNREALDB_MODE_READ, cfg.db_secret);
+	if (!db)
 	{
-		if (errno == ENOENT)
+		if (unrealdb_get_error_code() == UNREALDB_ERROR_FILENOTFOUND)
 		{
 			/* Database does not exist. Could be first boot */
 			config_warn("[tkldb] No database present at '%s', will start a new one", cfg.database);
 			return 1;
-		} else {
-			config_warn("[tkldb] Unable to open database file '%s' for reading: %s", cfg.database, strerror(errno));
+		} else
+		if (unrealdb_get_error_code() == UNREALDB_ERROR_NOTCRYPTED)
+		{
+			/* Re-open as unencrypted */
+			db = unrealdb_open(cfg.database, UNREALDB_MODE_READ, NULL);
+			if (!db)
+			{
+				/* This should actually never happen, unless some weird I/O error */
+				config_warn("[tkldb] Unable to open the database file '%s': %s", cfg.database, unrealdb_get_error_string());
+				return 0;
+			}
+		} else
+		{
+			config_warn("[tkldb] Unable to open the database file '%s' for reading: %s", cfg.database, unrealdb_get_error_string());
 			return 0;
 		}
 	}
 
 	/* The database starts with a "magic value" - unless it's some old version or corrupt */
-	R_SAFE(read_data(fd, &magic, sizeof(magic)));
-	if (magic != TKL_DB_MAGIC)
+	R_SAFE(unrealdb_read_int32(db, &magic));
+	if (magic != TKLDB_MAGIC)
 	{
 		config_warn("[tkldb] Database '%s' uses an old and unsupported format OR is corrupt", cfg.database);
 		config_status("If you are upgrading from UnrealIRCd 4 (or 5.0.0-alpha1) then we suggest you to "
 		              "delete the existing database. Just keep at least 1 server linked during the upgrade "
 		              "process to preserve your global *LINES and Spamfilters.");
-		fclose(fd);
+		unrealdb_close(db);
 		return 0;
 	}
 
 	/* Now do a version check */
-	R_SAFE(read_data(fd, &version, sizeof(version)));
+	R_SAFE(unrealdb_read_int32(db, &version));
 	if (version < 4999)
 	{
 		config_warn("[tkldb] Database '%s' uses an unsupport - possibly old - format (%ld).", cfg.database, (long)version);
-		fclose(fd);
+		unrealdb_close(db);
 		return 0;
 	}
-	if (version > tkl_db_version)
+	if (version > tkldb_version)
 	{
 		config_warn("[tkldb] Database '%s' has version %lu while we only support %lu. Did you just downgrade UnrealIRCd? Sorry this is not suported",
-			cfg.database, (unsigned long)tkl_db_version, (unsigned long)version);
-		fclose(fd);
+			cfg.database, (unsigned long)tkldb_version, (unsigned long)version);
+		unrealdb_close(db);
 		return 0;
 	}
 
-	R_SAFE(read_data(fd, &tklcount, sizeof(tklcount)));
+	R_SAFE(unrealdb_read_int64(db, &tklcount));
 
 	for (cnt = 0; cnt < tklcount; cnt++)
 	{
@@ -467,7 +527,7 @@ int read_tkldb(void)
 		tkl = safe_alloc(sizeof(TKL));
 
 		/* First, fetch the TKL type.. */
-		R_SAFE(read_data(fd, &c, sizeof(c)));
+		R_SAFE(unrealdb_read_char(db, &c));
 		tkl->type = tkl_chartotype(c);
 		if (!tkl->type)
 		{
@@ -483,10 +543,10 @@ int read_tkldb(void)
 		}
 
 		/* Read the common types (same for all TKLs) */
-		R_SAFE(read_str(fd, &tkl->set_by));
-		R_SAFE(read_int64(fd, &v));
+		R_SAFE(unrealdb_read_str(db, &tkl->set_by));
+		R_SAFE(unrealdb_read_int64(db, &v));
 		tkl->set_at = v;
-		R_SAFE(read_int64(fd, &v));
+		R_SAFE(unrealdb_read_int64(db, &v));
 		tkl->expire_at = v;
 
 		/* Save some CPU... if it's already expired then don't bother adding */
@@ -503,7 +563,7 @@ int read_tkldb(void)
 			/* Usermask - but taking into account that the
 			 * %-prefix means a soft ban.
 			 */
-			R_SAFE(read_str(fd, &str));
+			R_SAFE(unrealdb_read_str(db, &str));
 			if (*str == '%')
 			{
 				softban = 1;
@@ -514,8 +574,8 @@ int read_tkldb(void)
 			safe_free(str);
 
 			/* And the other 2 fields.. */
-			R_SAFE(read_str(fd, &tkl->ptr.serverban->hostmask));
-			R_SAFE(read_str(fd, &tkl->ptr.serverban->reason));
+			R_SAFE(unrealdb_read_str(db, &tkl->ptr.serverban->hostmask));
+			R_SAFE(unrealdb_read_str(db, &tkl->ptr.serverban->reason));
 
 			if (find_tkl_serverban(tkl->type, tkl->ptr.serverban->usermask,
 			                       tkl->ptr.serverban->hostmask, softban))
@@ -541,7 +601,7 @@ int read_tkldb(void)
 			/* Usermask - but taking into account that the
 			 * %-prefix means a soft ban.
 			 */
-			R_SAFE(read_str(fd, &str));
+			R_SAFE(unrealdb_read_str(db, &str));
 			if (*str == '%')
 			{
 				softban = 1;
@@ -552,9 +612,9 @@ int read_tkldb(void)
 			safe_free(str);
 
 			/* And the other 3 fields.. */
-			R_SAFE(read_str(fd, &tkl->ptr.banexception->hostmask));
-			R_SAFE(read_str(fd, &tkl->ptr.banexception->bantypes));
-			R_SAFE(read_str(fd, &tkl->ptr.banexception->reason));
+			R_SAFE(unrealdb_read_str(db, &tkl->ptr.banexception->hostmask));
+			R_SAFE(unrealdb_read_str(db, &tkl->ptr.banexception->bantypes));
+			R_SAFE(unrealdb_read_str(db, &tkl->ptr.banexception->reason));
 
 			if (find_tkl_banexception(tkl->type, tkl->ptr.banexception->usermask,
 			                          tkl->ptr.banexception->hostmask, softban))
@@ -577,12 +637,12 @@ int read_tkldb(void)
 		{
 			tkl->ptr.nameban = safe_alloc(sizeof(NameBan));
 
-			R_SAFE(read_str(fd, &str));
+			R_SAFE(unrealdb_read_str(db, &str));
 			if (*str == 'H')
 				tkl->ptr.nameban->hold = 1;
 			safe_free(str);
-			R_SAFE(read_str(fd, &tkl->ptr.nameban->name));
-			R_SAFE(read_str(fd, &tkl->ptr.nameban->reason));
+			R_SAFE(unrealdb_read_str(db, &tkl->ptr.nameban->name));
+			R_SAFE(unrealdb_read_str(db, &tkl->ptr.nameban->reason));
 
 			if (find_tkl_nameban(tkl->type, tkl->ptr.nameban->name,
 			                     tkl->ptr.nameban->hold))
@@ -607,7 +667,7 @@ int read_tkldb(void)
 			tkl->ptr.spamfilter = safe_alloc(sizeof(Spamfilter));
 
 			/* Match method */
-			R_SAFE(read_str(fd, &str));
+			R_SAFE(unrealdb_read_str(db, &str));
 			match_method = unreal_match_method_strtoval(str);
 			if (!match_method)
 			{
@@ -617,7 +677,7 @@ int read_tkldb(void)
 			safe_free(str);
 
 			/* Match string (eg: regex) */
-			R_SAFE(read_str(fd, &str));
+			R_SAFE(unrealdb_read_str(db, &str));
 			tkl->ptr.spamfilter->match = unreal_create_match(match_method, str, &err);
 			if (!tkl->ptr.spamfilter->match)
 			{
@@ -627,7 +687,7 @@ int read_tkldb(void)
 			safe_free(str);
 
 			/* Target (eg: cpn) */
-			R_SAFE(read_str(fd, &str));
+			R_SAFE(unrealdb_read_str(db, &str));
 			tkl->ptr.spamfilter->target = spamfilter_gettargets(str, NULL);
 			if (!tkl->ptr.spamfilter->target)
 			{
@@ -638,7 +698,7 @@ int read_tkldb(void)
 			safe_free(str);
 
 			/* Action */
-			R_SAFE(read_data(fd, &c, sizeof(c)));
+			R_SAFE(unrealdb_read_char(db, &c));
 			tkl->ptr.spamfilter->action = banact_chartoval(c);
 			if (!tkl->ptr.spamfilter->action)
 			{
@@ -647,8 +707,8 @@ int read_tkldb(void)
 				do_not_add = 1;
 			}
 
-			R_SAFE(read_str(fd, &tkl->ptr.spamfilter->tkl_reason));
-			R_SAFE(read_int64(fd, &v));
+			R_SAFE(unrealdb_read_str(db, &tkl->ptr.spamfilter->tkl_reason));
+			R_SAFE(unrealdb_read_int64(db, &v));
 			tkl->ptr.spamfilter->tkl_duration = v;
 
 			if (find_tkl_spamfilter(tkl->type, tkl->ptr.spamfilter->match->str,
@@ -685,10 +745,7 @@ int read_tkldb(void)
 		FreeTKLRead();
 	}
 
-	/* If everything went fine, then reading a single byte should cause an EOF error */
-	if (fread(&c, 1, 1, fd) == 1)
-		config_warn("[tkldb] Database invalid. Extra data found at end of DB file.");
-	fclose(fd);
+	unrealdb_close(db);
 
 	if (added_cnt)
 		sendto_realops_and_log("[tkldb] Re-added %d *-Lines", added_cnt);

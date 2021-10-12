@@ -69,7 +69,9 @@ static int	_conf_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_help		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_offchans		(ConfigFile *conf, ConfigEntry *ce);
-static int	_conf_sni			(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_sni		(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_security_group	(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_secret		(ConfigFile *conf, ConfigEntry *ce);
 
 /*
  * Validation commands
@@ -101,7 +103,9 @@ static int	_test_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_help		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_offchans		(ConfigFile *conf, ConfigEntry *ce);
-static int	_test_sni			(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_sni		(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_security_group	(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_secret		(ConfigFile *conf, ConfigEntry *ce);
 
 /* This MUST be alphabetized */
 static ConfigCommand _ConfigCommands[] = {
@@ -126,6 +130,8 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "oper", 		_conf_oper,		_test_oper	},
 	{ "operclass",		_conf_operclass,	_test_operclass	},
 	{ "require", 		_conf_require,		_test_require	},
+	{ "secret",		_conf_secret,		_test_secret	},
+	{ "security-group",	_conf_security_group,	_test_security_group	},
 	{ "set",		_conf_set,		_test_set	},
 	{ "sni",		_conf_sni,		_test_sni	},
 	{ "tld",		_conf_tld,		_test_tld	},
@@ -157,6 +163,7 @@ static NameValue _LogFlags[] = {
 	{ LOG_CHGCMDS, "chg-commands" },
 	{ LOG_CLIENT, "connects" },
 	{ LOG_ERROR, "errors" },
+	{ LOG_FLOOD, "flood" },
 	{ LOG_KILL, "kills" },
 	{ LOG_KLINE, "kline" },
 	{ LOG_OPER, "oper" },
@@ -254,6 +261,8 @@ ConfigItem_include	*conf_include = NULL;
 ConfigItem_blacklist_module	*conf_blacklist_module = NULL;
 ConfigItem_help		*conf_help = NULL;
 ConfigItem_offchans	*conf_offchans = NULL;
+SecurityGroup		*securitygroups = NULL;
+Secret			*secrets = NULL;
 
 MODVAR Configuration		iConf;
 MODVAR Configuration		tempiConf;
@@ -351,6 +360,128 @@ char *x;
 	*times = atoi(orig);
 	*period = config_checkval(x+1, CFG_TIME);
 	*x = ':'; /* restore */
+	return 1;
+}
+
+/** Find an anti-flood settings block by name.
+ * @param name		The name of the set::anti-flood block
+ * @returns The FloodSettings block if found, or NULL if not found.
+ */
+FloodSettings *find_floodsettings_block_ex(Configuration *conf, const char *name)
+{
+	FloodSettings *f;
+
+	for (f = conf->floodsettings; f; f = f->next)
+		if (!strcmp(f->name, name))
+			return f;
+
+	return NULL;
+}
+
+/** Find an anti-flood settings block by name.
+ * @param name		The name of the set::anti-flood block
+ * @returns The FloodSettings block if found, or NULL if not found.
+ */
+FloodSettings *find_floodsettings_block(const char *name)
+{
+	return find_floodsettings_block_ex(&iConf, name);
+}
+
+/** Check if 'name' is in the array 'list'.
+ * @param name		The name to check
+ * @param list		The char *list[] with the list of valid names.
+ * @returns 1 if found, 0 if not
+ * @note The array in list must end in a NULL element!
+ */
+int text_in_array(const char *name, const char *list[])
+{
+	int i;
+
+	for (i=0; list[i]; i++)
+		if (!strcmp(name, list[i]))
+			return 1;
+
+	return 0; /* Not found */
+}
+
+int flood_option_is_old(const char *name)
+{
+	const char *opts[] =
+	{
+		"max-concurrent-conversations",
+		"unknown-flood-amount",
+		"unknown-flood-bantime",
+		"handshake-data-flood",
+		"away-count",
+		"away-period",
+		"away-flood",
+		"nick-flood",
+		"join-flood",
+		"invite-flood",
+		"knock-flood",
+		"connect-flood",
+		"target-flood",
+		NULL
+	};
+
+	return text_in_array(name, opts);
+}
+
+int flood_option_is_for_everyone(const char *name)
+{
+	const char *opts[] =
+	{
+		"connect-flood",
+		"handshake-data-flood",
+		"unknown-flood",
+		"target-flood",
+		NULL
+	};
+
+	return text_in_array(name, opts);
+}
+
+
+/** Parses a value like '5:60s' into a flood setting that we can store.
+ * @param str		The string to parse (eg: '5:60s')
+ * @param settings	The FloodSettings block to store the result in
+ * @param opt		The option (eg: FLD_AWAY)
+ * @returns 1 if OK, 0 for parse error.
+ */
+int config_parse_flood_generic(const char *str, Configuration *conf, char *blockname, FloodOption opt)
+{
+	char buf[64], *p;
+	FloodSettings *settings = find_floodsettings_block_ex(conf, blockname);
+
+	/* Create a new anti-flood block if it doesn't exist */
+	if (!settings)
+	{
+		settings = safe_alloc(sizeof(FloodSettings));
+		safe_strdup(settings->name, blockname);
+		AddListItem(settings, conf->floodsettings);
+	}
+
+	if (!strcmp(str, "unlimited") || !strcmp(str, "max"))
+	{
+		settings->limit[opt] = -1;
+		settings->period[opt] = 0;
+		return 1;
+	}
+
+	/* Work on a copy so we don't destroy 'str' */
+	strlcpy(buf, str, sizeof(buf));
+
+	p = strchr(buf, ':');
+
+	/* 'blah', ':blah', '1:' */
+	if (!p || (p == buf) || (*(p+1) == '\0'))
+		return 0;
+
+	*p++ = '\0';
+
+	settings->limit[opt] = atoi(buf);
+	settings->period[opt] = config_checkval(p, CFG_TIME);
+
 	return 1;
 }
 
@@ -532,7 +663,7 @@ void conf_channelmodes(char *modes, struct ChMode *store, int warn)
 					{
 						if (!param)
 							break;
-						param = Channelmode_Table[i].conv_param(param, NULL);
+						param = Channelmode_Table[i].conv_param(param, NULL, NULL);
 						if (!param)
 							break; /* invalid parameter fmt, do not set mode. */
 						store->extparams[i] = raw_strdup(param);
@@ -1370,10 +1501,6 @@ void config_error(FORMAT_STRING(const char *format), ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-#ifdef _WIN32
-	if (!loop.ircd_booted)
-		win_log("[error] %s", buffer);
-#endif
 	ircd_log(LOG_ERROR, "config error: %s", buffer);
 	sendto_realops("error: %s", buffer);
 	if (remote_rehash_client)
@@ -1433,10 +1560,6 @@ void config_status(FORMAT_STRING(const char *format), ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-#ifdef _WIN32
-	if (!loop.ircd_booted)
-		win_log("* %s", buffer);
-#endif
 	ircd_log(LOG_ERROR, "%s", buffer);
 	sendto_realops("%s", buffer);
 	if (remote_rehash_client)
@@ -1454,10 +1577,6 @@ void config_warn(FORMAT_STRING(const char *format), ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-#ifdef _WIN32
-	if (!loop.ircd_booted)
-		win_log("[warning] %s", buffer);
-#endif
 	ircd_log(LOG_ERROR, "[warning] %s", buffer);
 	sendto_realops("[warning] %s", buffer);
 	if (remote_rehash_client)
@@ -1552,24 +1671,6 @@ int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *e
 	return 0;
 }
 
-void config_progress(FORMAT_STRING(const char *format), ...)
-{
-	va_list		ap;
-	char		buffer[1024];
-	char		*ptr;
-
-	va_start(ap, format);
-	vsnprintf(buffer, 1023, format, ap);
-	va_end(ap);
-	if ((ptr = strchr(buffer, '\n')) != NULL)
-		*ptr = '\0';
-#ifdef _WIN32
-	if (!loop.ircd_booted)
-		win_log("* %s", buffer);
-#endif
-	sendto_realops("%s", buffer);
-}
-
 int config_is_blankorempty(ConfigEntry *cep, const char *block)
 {
 	if (!cep->ce_vardata)
@@ -1651,16 +1752,9 @@ void config_setdefaultsettings(Configuration *i)
 {
 	char tmp[512];
 
-	i->unknown_flood_amount = 4;
-	i->unknown_flood_bantime = 600;
 	safe_strdup(i->oper_snomask, SNO_DEFOPER);
 	i->ident_read_timeout = 7;
 	i->ident_connect_timeout = 3;
-	i->nick_count = 3; i->nick_period = 60; /* NICK flood protection: max 3 per 60s */
-	i->away_count = 4; i->away_period = 120; /* AWAY flood protection: max 4 per 120s */
-	i->invite_count = 4; i->invite_period = 60; /* INVITE flood protection: max 4 per 60s */
-	i->knock_count = 4; i->knock_period = 120; /* KNOCK protection: max 4 per 120s */
-	i->throttle_count = 3; i->throttle_period = 60; /* throttle protection: max 3 per 60s */
 	i->ban_version_tkl_time = 86400; /* 1d */
 	i->spamfilter_ban_time = 86400; /* 1d */
 	safe_strdup(i->spamfilter_ban_reason, "Spam/advertising");
@@ -1698,6 +1792,28 @@ void config_setdefaultsettings(Configuration *i)
 	i->sasl_timeout = 15;
 	i->handshake_delay = -1;
 	i->broadcast_channel_messages = BROADCAST_CHANNEL_MESSAGES_AUTO;
+
+	/* Flood options */
+	/* - everyone */
+	i->throttle_count = 3; i->throttle_period = 60; /* throttle protection: max 3 per 60s */
+	i->handshake_data_flood_amount = 4096;
+	i->handshake_data_flood_ban_action = BAN_ACT_ZLINE;
+	i->handshake_data_flood_ban_time = 600;
+	// (targetflood is in the targetflood module)
+	/* - known-users */
+	config_parse_flood_generic("3:60", i, "known-users", FLD_NICK); /* NICK flood protection: max 3 per 60s */
+	config_parse_flood_generic("3:90", i, "known-users", FLD_JOIN); /* JOIN flood protection: max 3 per 90s */
+	config_parse_flood_generic("4:120", i, "known-users", FLD_AWAY); /* AWAY flood protection: max 4 per 120s */
+	config_parse_flood_generic("4:60", i, "known-users", FLD_INVITE); /* INVITE flood protection: max 4 per 60s */
+	config_parse_flood_generic("4:120", i, "known-users", FLD_KNOCK); /* KNOCK protection: max 4 per 120s */
+	config_parse_flood_generic("10:15", i, "known-users", FLD_CONVERSATIONS); /* 10 users, new user every 15s */
+	/* - unknown-users */
+	config_parse_flood_generic("2:60", i, "unknown-users", FLD_NICK); /* NICK flood protection: max 2 per 60s */
+	config_parse_flood_generic("2:90", i, "unknown-users", FLD_JOIN); /* JOIN flood protection: max 2 per 90s */
+	config_parse_flood_generic("4:120", i, "unknown-users", FLD_AWAY); /* AWAY flood protection: max 4 per 120s */
+	config_parse_flood_generic("2:60", i, "unknown-users", FLD_INVITE); /* INVITE flood protection: max 2 per 60s */
+	config_parse_flood_generic("2:120", i, "unknown-users", FLD_KNOCK); /* KNOCK protection: max 2 per 120s */
+	config_parse_flood_generic("4:15", i, "unknown-users", FLD_CONVERSATIONS); /* 4 users, new user every 15s */
 
 	/* SSL/TLS options */
 	i->tls_options = safe_alloc(sizeof(TLSOptions));
@@ -1738,9 +1854,6 @@ void config_setdefaultsettings(Configuration *i)
 	i->ban_setter = SETTER_NICK;
 	i->ban_setter_sync = 1;
 
-	i->max_concurrent_conversations_users = 10;
-	i->max_concurrent_conversations_new_user_every = 15;
-
 	i->allowed_channelchars = ALLOWED_CHANNELCHARS_UTF8;
 
 	i->automatic_ban_target = BAN_TARGET_IP;
@@ -1755,11 +1868,11 @@ static void make_default_logblock(void)
 {
 	ConfigItem_log *ca = safe_alloc(sizeof(ConfigItem_log));
 
-	config_status("No log { } block found -- using default: errors will be logged to 'ircd.log'");
+	config_status("No log { } block found -- logging everything to 'ircd.log'");
 
 	safe_strdup(ca->file, "ircd.log");
 	convert_to_absolute_path(&ca->file, LOGDIR);
-	ca->flags |= LOG_ERROR;
+	ca->flags |= LOG_CHGCMDS|LOG_CLIENT|LOG_ERROR|LOG_KILL|LOG_KLINE|LOG_OPER|LOG_OVERRIDE|LOG_SACMDS|LOG_SERVER|LOG_SPAMFILTER|LOG_TKL;
 	ca->logfd = -1;
 	AddListItem(ca, conf_log);
 }
@@ -1902,6 +2015,7 @@ void postconf(void)
 	postconf_fixes();
 	do_weird_shun_stuff();
 	isupport_init(); /* for all the 005 values that changed.. */
+	tls_check_expiry(NULL);
 }
 
 int isanyserverlinked(void)
@@ -2072,6 +2186,7 @@ int	init_conf(char *rootconf, int rehash)
 		callbacks_switchover();
 		efunctions_switchover();
 		set_targmax_defaults();
+		set_security_group_defaults();
 		if (rehash)
 		{
 			Hook *h;
@@ -2728,8 +2843,15 @@ int	config_run()
 			config_status("Running %s", cfptr->cf_filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 		{
-			if (!strcmp(ce->ce_varname, "set") || !strcmp(ce->ce_varname, "class"))
-				continue; // already processed
+			/* These are already processed above (set, class)
+			 * or via config_test() (secret).
+			 */
+			if (!strcmp(ce->ce_varname, "set") ||
+			    !strcmp(ce->ce_varname, "class") ||
+			    !strcmp(ce->ce_varname, "secret"))
+			{
+				continue;
+			}
 
 			if ((cc = config_binary_search(ce->ce_varname))) {
 				if ((cc->conffunc) && (cc->conffunc(cfptr, ce) < 0))
@@ -2816,6 +2938,17 @@ int	config_test()
 	{
 		if (config_verbose > 1)
 			config_status("Testing %s", cfptr->cf_filename);
+		/* First test and run the secret { } blocks */
+		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
+		{
+			if (!strcmp(ce->ce_varname, "secret"))
+			{
+				int n = _test_secret(cfptr, ce);
+				errors += n;
+				if (n == 0)
+					_conf_secret(cfptr, ce);
+			}
+		}
 		/* First test the set { } block */
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 		{
@@ -2826,8 +2959,11 @@ int	config_test()
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 		{
 			/* These are already processed, so skip them here.. */
-			if (!strcmp(ce->ce_varname, "set"))
+			if (!strcmp(ce->ce_varname, "secret") ||
+			    !strcmp(ce->ce_varname, "set"))
+			{
 				continue;
+			}
 			if ((cc = config_binary_search(ce->ce_varname))) {
 				if (cc->testfunc)
 					errors += (cc->testfunc(cfptr, ce));
@@ -3187,16 +3323,14 @@ char *pretty_time_val(long timeval)
 	buf[0] = 0;
 
 	if (timeval/86400)
-		snprintf(buf, sizeof(buf), "%ld day%s ", timeval/86400, timeval/86400 != 1 ? "s" : "");
+		snprintf(buf, sizeof(buf), "%ldd", timeval/86400);
 	if ((timeval/3600) % 24)
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%ld hour%s ", (timeval/3600)%24, (timeval/3600)%24 != 1 ? "s" : "");
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%ldh", (timeval/3600)%24);
 	if ((timeval/60)%60)
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%ld minute%s ", (timeval/60)%60, (timeval/60)%60 != 1 ? "s" : "");
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%ldm", (timeval/60)%60);
 	if ((timeval%60))
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%ld second%s", timeval%60, timeval%60 != 1 ? "s" : "");
-	/* Strip space at the end (if any) */
-	if (*buf && (buf[strlen(buf)-1] == ' '))
-		buf[strlen(buf)-1] = '\0';
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%lds", timeval%60);
+
 	return buf;
 }
 
@@ -5327,6 +5461,8 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "maxperip"))
 			allow->maxperip = atoi(cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "global-maxperip"))
+			allow->global_maxperip = atoi(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "redirect-server"))
 			safe_strdup(allow->server, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "redirect-port"))
@@ -5350,6 +5486,8 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 					allow->flags.useip = 1;
 				else if (!strcmp(cepp->ce_varname, "ssl") || !strcmp(cepp->ce_varname, "tls"))
 					allow->flags.tls = 1;
+				else if (!strcmp(cepp->ce_varname, "reject-on-auth-failure"))
+					allow->flags.reject_on_auth_failure = 1;
 			}
 		}
 	}
@@ -5360,6 +5498,14 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	if (!allow->ip)
 		safe_strdup(allow->ip, "*@NOMATCH");
 
+	/* Default: global-maxperip = maxperip+1 */
+	if (allow->global_maxperip == 0)
+		allow->global_maxperip = allow->maxperip+1;
+
+	/* global-maxperip < maxperip makes no sense */
+	if (allow->global_maxperip < allow->maxperip)
+		allow->global_maxperip = allow->maxperip;
+
 	AddListItem(allow, conf_allow);
 	return 1;
 }
@@ -5369,7 +5515,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp;
 	int		errors = 0;
 	Hook *h;
-	char has_ip = 0, has_hostname = 0, has_maxperip = 0, has_password = 0, has_class = 0;
+	char has_ip = 0, has_hostname = 0, has_maxperip = 0, has_global_maxperip = 0, has_password = 0, has_class = 0;
 	char has_redirectserver = 0, has_redirectport = 0, has_options = 0;
 	int hostname_possible_silliness = 0;
 
@@ -5442,9 +5588,26 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_maxperip = 1;
-			if ((v <= 0) || (v > 65535))
+			if ((v <= 0) || (v > 1000000))
 			{
-				config_error("%s:%i: allow::maxperip with illegal value (must be 1-65535)",
+				config_error("%s:%i: allow::maxperip with illegal value (must be 1-1000000)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "global-maxperip"))
+		{
+			int v = atoi(cep->ce_vardata);
+			if (has_global_maxperip)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "allow::global-maxperip");
+				continue;
+			}
+			has_global_maxperip = 1;
+			if ((v <= 0) || (v > 1000000))
+			{
+				config_error("%s:%i: allow::global-maxperip with illegal value (must be 1-1000000)",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
@@ -5544,6 +5707,8 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "useip"))
 				{}
 				else if (!strcmp(cepp->ce_varname, "ssl") || !strcmp(cepp->ce_varname, "tls"))
+				{}
+				else if (!strcmp(cepp->ce_varname, "reject-on-auth-failure"))
 				{}
 				else if (!strcmp(cepp->ce_varname, "sasl"))
 				{
@@ -6086,7 +6251,10 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 
 	ca = safe_alloc(sizeof(ConfigItem_log));
 	ca->logfd = -1;
-	safe_strdup(ca->file, ce->ce_vardata);
+	if (strchr(ce->ce_vardata, '%'))
+		safe_strdup(ca->filefmt, ce->ce_vardata);
+	else
+		safe_strdup(ca->file, ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -6112,6 +6280,7 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 	int fd, errors = 0;
 	ConfigEntry *cep, *cepp;
 	char has_flags = 0, has_maxsize = 0;
+	char *fname;
 
 	if (!ce->ce_vardata)
 	{
@@ -6182,21 +6351,25 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 			continue;
 		}
 	}
+
 	if (!has_flags)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			"log::flags");
 		errors++;
 	}
-	if ((fd = fd_fileopen(ce->ce_vardata, O_WRONLY|O_CREAT)) == -1)
+
+	fname = unreal_strftime(ce->ce_vardata);
+	if ((fd = fd_fileopen(fname, O_WRONLY|O_CREAT)) == -1)
 	{
 		config_error("%s:%i: Couldn't open logfile (%s) for writing: %s",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			ce->ce_vardata, strerror(errno));
+			fname, strerror(errno));
 		errors++;
-	}
-	else
+	} else
+	{
 		fd_close(fd);
+	}
 
 	return errors;
 }
@@ -6612,7 +6785,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "reason"))
 			safe_strdup(ca->reason, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "action"))
-			ca ->action = banact_stringtoval(cep->ce_vardata);
+			ca->action = banact_stringtoval(cep->ce_vardata);
 	}
 	AddListItem(ca, conf_ban);
 	return 0;
@@ -7295,7 +7468,7 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 
 int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep, *cepp, *ceppp;
+	ConfigEntry *cep, *cepp, *ceppp, *cep4;
 	Hook *h;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -7488,78 +7661,77 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "anti-flood")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "unknown-flood-bantime"))
-					tempiConf.unknown_flood_bantime = config_checkval(cepp->ce_vardata,CFG_TIME);
-				else if (!strcmp(cepp->ce_varname, "unknown-flood-amount"))
-					tempiConf.unknown_flood_amount = atol(cepp->ce_vardata);
-				else if (!strcmp(cepp->ce_varname, "away-count"))
-					tempiConf.away_count = atol(cepp->ce_vardata);
-				else if (!strcmp(cepp->ce_varname, "away-period"))
-					tempiConf.away_period = config_checkval(cepp->ce_vardata, CFG_TIME);
-				else if (!strcmp(cepp->ce_varname, "away-flood"))
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
 				{
-					int cnt, period;
-					config_parse_flood(cepp->ce_vardata, &cnt, &period);
-					tempiConf.away_count = cnt;
-					tempiConf.away_period = period;
-				}
-				else if (!strcmp(cepp->ce_varname, "nick-flood"))
-				{
-					int cnt, period;
-					config_parse_flood(cepp->ce_vardata, &cnt, &period);
-					tempiConf.nick_count = cnt;
-					tempiConf.nick_period = period;
-				}
-				else if (!strcmp(cepp->ce_varname, "away-flood"))
-				{
-					int cnt, period;
-					config_parse_flood(cepp->ce_vardata, &cnt, &period);
-					tempiConf.away_count = cnt;
-					tempiConf.away_period = period;
-				}
-				else if (!strcmp(cepp->ce_varname, "invite-flood"))
-				{
-					int cnt, period;
-					config_parse_flood(cepp->ce_vardata, &cnt, &period);
-					tempiConf.invite_count = cnt;
-					tempiConf.invite_period = period;
-				}
-				else if (!strcmp(cepp->ce_varname, "knock-flood"))
-				{
-					int cnt, period;
-					config_parse_flood(cepp->ce_vardata, &cnt, &period);
-					tempiConf.knock_count = cnt;
-					tempiConf.knock_period = period;
-				}
-				else if (!strcmp(cepp->ce_varname, "connect-flood"))
-				{
-					int cnt, period;
-					config_parse_flood(cepp->ce_vardata, &cnt, &period);
-					tempiConf.throttle_count = cnt;
-					tempiConf.throttle_period = period;
-				}
-				if (!strcmp(cepp->ce_varname, "max-concurrent-conversations"))
-				{
-					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					if (!strcmp(ceppp->ce_varname, "handshake-data-flood"))
 					{
-						if (!strcmp(ceppp->ce_varname, "users"))
+						for (cep4 = ceppp->ce_entries; cep4; cep4 = cep4->ce_next)
 						{
-							tempiConf.max_concurrent_conversations_users = atoi(ceppp->ce_vardata);
-						} else
-						if (!strcmp(ceppp->ce_varname, "new-user-every"))
-						{
-							tempiConf.max_concurrent_conversations_new_user_every = config_checkval(ceppp->ce_vardata, CFG_TIME);
+							if (!strcmp(cep4->ce_varname, "amount"))
+								tempiConf.handshake_data_flood_amount = config_checkval(cep4->ce_vardata, CFG_SIZE);
+							else if (!strcmp(cep4->ce_varname, "ban-time"))
+								tempiConf.handshake_data_flood_ban_time = config_checkval(cep4->ce_vardata, CFG_TIME);
+							else if (!strcmp(cep4->ce_varname, "ban-action"))
+								tempiConf.handshake_data_flood_ban_action = banact_stringtoval(cep4->ce_vardata);
 						}
 					}
-				}
-				else
-				{
-					for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+					else if (!strcmp(ceppp->ce_varname, "away-flood"))
 					{
-						int value = (*(h->func.intfunc))(conf,cepp,CONFIG_SET_ANTI_FLOOD);
-						if (value == 1)
-							break;
+						config_parse_flood_generic(ceppp->ce_vardata, &tempiConf, cepp->ce_varname, FLD_AWAY);
+					}
+					else if (!strcmp(ceppp->ce_varname, "nick-flood"))
+					{
+						config_parse_flood_generic(ceppp->ce_vardata, &tempiConf, cepp->ce_varname, FLD_NICK);
+					}
+					else if (!strcmp(ceppp->ce_varname, "join-flood"))
+					{
+						config_parse_flood_generic(ceppp->ce_vardata, &tempiConf, cepp->ce_varname, FLD_JOIN);
+					}
+					else if (!strcmp(ceppp->ce_varname, "invite-flood"))
+					{
+						config_parse_flood_generic(ceppp->ce_vardata, &tempiConf, cepp->ce_varname, FLD_INVITE);
+					}
+					else if (!strcmp(ceppp->ce_varname, "knock-flood"))
+					{
+						config_parse_flood_generic(ceppp->ce_vardata, &tempiConf, cepp->ce_varname, FLD_KNOCK);
+					}
+					else if (!strcmp(ceppp->ce_varname, "connect-flood"))
+					{
+						int cnt, period;
+						config_parse_flood(ceppp->ce_vardata, &cnt, &period);
+						tempiConf.throttle_count = cnt;
+						tempiConf.throttle_period = period;
+					}
+					if (!strcmp(ceppp->ce_varname, "max-concurrent-conversations"))
+					{
+						/* We use a hack here to make it fit our storage format */
+						char buf[64];
+						int users=0;
+						long every=0;
+						for (cep4 = ceppp->ce_entries; cep4; cep4 = cep4->ce_next)
+						{
+							if (!strcmp(cep4->ce_varname, "users"))
+							{
+								users = atoi(cep4->ce_vardata);
+							} else
+							if (!strcmp(cep4->ce_varname, "new-user-every"))
+							{
+								every = config_checkval(cep4->ce_vardata, CFG_TIME);
+							}
+						}
+						snprintf(buf, sizeof(buf), "%d:%ld", users, every);
+						config_parse_flood_generic(buf, &tempiConf, cepp->ce_varname, FLD_CONVERSATIONS);
+					}
+					else
+					{
+						for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+						{
+							int value = (*(h->func.intfunc))(conf,ceppp,CONFIG_SET_ANTI_FLOOD);
+							if (value == 1)
+								break;
+						}
 					}
 				}
 			}
@@ -7851,7 +8023,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep, *cepp, *ceppp;
+	ConfigEntry *cep, *cepp, *ceppp, *cep4;
 	int tempi;
 	int errors = 0;
 	Hook *h;
@@ -8311,200 +8483,284 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			need_34_upgrade = 1;
 			continue;
 		}
-		else if (!strcmp(cep->ce_varname, "anti-flood")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "max-concurrent-conversations"))
+		else if (!strcmp(cep->ce_varname, "anti-flood"))
+		{
+			int anti_flood_warned_old = 0;
+
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				/* Test for old options: */
+				if (flood_option_is_old(cepp->ce_varname))
 				{
-					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					/* Warn only once per block: */
+					if (anti_flood_warned_old == 0)
+					{
+						config_error("%s:%d: the set::anti-flood block has been reorganized to be more flexible. "
+							     "See https://www.unrealircd.org/docs/FAQ#new-anti-flood-block for how to update your block. "
+							     "Or simply remove all the anti-flood options from the conf to use UnrealIRCds defaults.",
+							     cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						anti_flood_warned_old = 1;
+						errors++;
+					}
+					continue;
+				}
+
+				for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+				{
+					int everyone = !strcmp(cepp->ce_varname, "everyone") ? 1 : 0;
+					int for_everyone = flood_option_is_for_everyone(ceppp->ce_varname);
+
+					if (everyone && !for_everyone)
+					{
+						config_error("%s:%i: %s cannot be in the set::anti-flood::everyone block. "
+						             "You can put it in 'known-users' or 'unknown-users' instead.",
+							ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum,
+							ceppp->ce_varname);
+						errors++;
+						continue;
+					} else
+					if (!everyone && for_everyone)
+					{
+						config_error("%s:%i: %s must be in the set::anti-flood::everyone block, not anywhere else.",
+							ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum,
+							ceppp->ce_varname);
+						errors++;
+						continue;
+					}
+
+					/* Now comes the actual config check for each element... */
+					if (!strcmp(ceppp->ce_varname, "max-concurrent-conversations"))
+					{
+						for (cep4 = ceppp->ce_entries; cep4; cep4 = cep4->ce_next)
+						{
+							CheckNull(cep4);
+							if (!strcmp(cep4->ce_varname, "users"))
+							{
+								int v = atoi(cep4->ce_vardata);
+								if ((v < 1) || (v > MAXCCUSERS))
+								{
+									config_error("%s:%i: set::anti-flood::max-concurrent-conversations::users: "
+										     "value should be between 1 and %d",
+										     cep4->ce_fileptr->cf_filename, cep4->ce_varlinenum, MAXCCUSERS);
+									errors++;
+								}
+							} else
+							if (!strcmp(cep4->ce_varname, "new-user-every"))
+							{
+								long v = config_checkval(cep4->ce_vardata, CFG_TIME);
+								if ((v < 1) || (v > 120))
+								{
+									config_error("%s:%i: set::anti-flood::max-concurrent-conversations::new-user-every: "
+										     "value should be between 1 and 120 seconds",
+										     cep4->ce_fileptr->cf_filename, cep4->ce_varlinenum);
+									errors++;
+								}
+							} else
+							{
+								config_error_unknownopt(cep4->ce_fileptr->cf_filename,
+									cep4->ce_varlinenum, "set::anti-flood",
+									cep4->ce_varname);
+								errors++;
+							}
+						}
+						continue; /* required here, due to checknull directly below */
+					}
+					else if (!strcmp(ceppp->ce_varname, "unknown-flood-amount") ||
+						 !strcmp(ceppp->ce_varname, "unknown-flood-bantime"))
+					{
+						config_error("%s:%i: set::anti-flood::%s: this setting has been moved. "
+							     "See https://www.unrealircd.org/docs/Set_block#set::anti-flood::handshake-data-flood",
+							     ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, ceppp->ce_varname);
+						errors++;
+						continue;
+					}
+					else if (!strcmp(ceppp->ce_varname, "handshake-data-flood"))
+					{
+						for (cep4 = ceppp->ce_entries; cep4; cep4 = cep4->ce_next)
+						{
+							if (!strcmp(cep4->ce_varname, "amount"))
+							{
+								long v;
+								CheckNull(cep4);
+								v = config_checkval(cep4->ce_vardata, CFG_SIZE);
+								if (v < 1024)
+								{
+									config_error("%s:%i: set::anti-flood::handshake-data-flood::amount must be at least 1024 bytes",
+										cep4->ce_fileptr->cf_filename, cep4->ce_varlinenum);
+									errors++;
+								}
+							} else
+							if (!strcmp(cep4->ce_varname, "ban-action"))
+							{
+								CheckNull(cep4);
+								if (!banact_stringtoval(cep4->ce_vardata))
+								{
+									config_error("%s:%i: set::anti-flood::handshake-data-flood::ban-action has unknown action type '%s'",
+										cep4->ce_fileptr->cf_filename, cep4->ce_varlinenum,
+										cep4->ce_vardata);
+									errors++;
+								}
+							} else
+							if (!strcmp(cep4->ce_varname, "ban-time"))
+							{
+								CheckNull(cep4);
+							} else
+							{
+								config_error_unknownopt(cep4->ce_fileptr->cf_filename,
+									cep4->ce_varlinenum, "set::anti-flood::handshake-data-flood",
+									cep4->ce_varname);
+								errors++;
+							}
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "away-count"))
+					{
+						int temp = atol(ceppp->ce_vardata);
+						CheckNull(ceppp);
+						if (temp < 1 || temp > 255)
+						{
+							config_error("%s:%i: set::anti-flood::away-count must be between 1 and 255",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "away-period"))
 					{
 						CheckNull(ceppp);
-						if (!strcmp(ceppp->ce_varname, "users"))
+						int temp = config_checkval(ceppp->ce_vardata, CFG_TIME);
+						if (temp < 10)
 						{
-							int v = atoi(ceppp->ce_vardata);
-							if ((v < 1) || (v > MAXCCUSERS))
-							{
-								config_error("%s:%i: set::anti-flood::max-concurrent-conversations::users: "
-								             "value should be between 1 and %d",
-								             ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, MAXCCUSERS);
-								errors++;
-							}
-						} else
-						if (!strcmp(ceppp->ce_varname, "new-user-every"))
+							config_error("%s:%i: set::anti-flood::away-period must be greater than 9",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "away-flood"))
+					{
+						int cnt, period;
+						CheckNull(ceppp);
+						if (!config_parse_flood(ceppp->ce_vardata, &cnt, &period) ||
+						    (cnt < 1) || (cnt > 255) || (period < 10))
 						{
-							long v = config_checkval(ceppp->ce_vardata, CFG_TIME);
-							if ((v < 1) || (v > 120))
+							config_error("%s:%i: set::anti-flood::away-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+								     "count should be 1-255, period should be greater than 9",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "nick-flood"))
+					{
+						int cnt, period;
+						CheckNull(ceppp);
+						if (!config_parse_flood(ceppp->ce_vardata, &cnt, &period) ||
+						    (cnt < 1) || (cnt > 255) || (period < 5))
+						{
+							config_error("%s:%i: set::anti-flood::nick-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+								     "count should be 1-255, period should be greater than 4",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "join-flood"))
+					{
+						int cnt, period;
+						CheckNull(ceppp);
+
+						if (!config_parse_flood(ceppp->ce_vardata, &cnt, &period) ||
+						    (cnt < 1) || (cnt > 255) || (period < 5))
+						{
+							config_error("%s:%i: join-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+								     "count should be 1-255, period should be greater than 4",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "invite-flood"))
+					{
+						int cnt, period;
+						CheckNull(ceppp);
+						if (!config_parse_flood(ceppp->ce_vardata, &cnt, &period) ||
+						    (cnt < 1) || (cnt > 255) || (period < 5))
+						{
+							config_error("%s:%i: set::anti-flood::invite-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+								     "count should be 1-255, period should be greater than 4",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "knock-flood"))
+					{
+						int cnt, period;
+						CheckNull(ceppp);
+						if (!config_parse_flood(ceppp->ce_vardata, &cnt, &period) ||
+						    (cnt < 1) || (cnt > 255) || (period < 5))
+						{
+							config_error("%s:%i: set::anti-flood::knock-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+								     "count should be 1-255, period should be greater than 4",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->ce_varname, "connect-flood"))
+					{
+						int cnt, period;
+						CheckNull(ceppp);
+						if (strcmp(cepp->ce_varname, "everyone"))
+						{
+							config_error("%s:%i: connect-flood must be in the set::anti-flood::everyone block, not anywhere else.",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+							continue;
+						}
+						if (!config_parse_flood(ceppp->ce_vardata, &cnt, &period) ||
+						    (cnt < 1) || (cnt > 255) || (period < 1) || (period > 3600))
+						{
+							config_error("%s:%i: set::anti-flood::connect-flood: Syntax is '<count>:<period>' (eg 5:60), "
+								     "count should be 1-255, period should be 1-3600",
+								ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+							errors++;
+						}
+					}
+					else
+					{
+						/* hmm.. I don't like this method. but I just quickly copied it from CONFIG_ALLOW for now... */
+						int used = 0;
+						Hook *h;
+						for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
+						{
+							int value, errs = 0;
+							if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+								&& !(h->owner->options & MOD_OPT_PERM))
+								continue;
+							value = (*(h->func.intfunc))(conf,ceppp,CONFIG_SET_ANTI_FLOOD,&errs);
+							if (value == 2)
+								used = 1;
+							if (value == 1)
 							{
-								config_error("%s:%i: set::anti-flood::max-concurrent-conversations::new-user-every: "
-								             "value should be between 1 and 120 seconds",
-								             ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
-								errors++;
+								used = 1;
+								break;
 							}
-						} else
+							if (value == -1)
+							{
+								used = 1;
+								errors += errs;
+								break;
+							}
+							if (value == -2)
+							{
+								used = 1;
+								errors += errs;
+							}
+						}
+						if (!used)
 						{
 							config_error_unknownopt(ceppp->ce_fileptr->cf_filename,
 								ceppp->ce_varlinenum, "set::anti-flood",
 								ceppp->ce_varname);
 							errors++;
 						}
-					}
-					continue; /* required here, due to checknull directly below */
-				}
-				if (!strcmp(cepp->ce_varname, "unknown-flood-bantime"))
-				{
-					CheckNull(cepp);
-					CheckDuplicate(cepp, anti_flood_unknown_flood_bantime, "anti-flood::unknown-flood-bantime");
-				}
-				else if (!strcmp(cepp->ce_varname, "unknown-flood-amount"))
-				{
-					CheckNull(cepp);
-					CheckDuplicate(cepp, anti_flood_unknown_flood_amount, "anti-flood::unknown-flood-amount");
-				}
-				else if (!strcmp(cepp->ce_varname, "away-count"))
-				{
-					int temp = atol(cepp->ce_vardata);
-					CheckNull(cepp);
-					CheckDuplicate(cepp, anti_flood_away_count, "anti-flood::away-count");
-					if (temp < 1 || temp > 255)
-					{
-						config_error("%s:%i: set::anti-flood::away-count must be between 1 and 255",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "away-period"))
-				{
-					CheckNull(cepp);
-					int temp = config_checkval(cepp->ce_vardata, CFG_TIME);
-					CheckDuplicate(cepp, anti_flood_away_period, "anti-flood::away-period");
-					if (temp < 10)
-					{
-						config_error("%s:%i: set::anti-flood::away-period must be greater than 9",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "away-flood"))
-				{
-					int cnt, period;
-					CheckNull(cepp);
-					if (settings.has_anti_flood_away_period)
-					{
-						config_warn("%s:%d: set::anti-flood::away-flood overrides set::anti-flood::away-period",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						continue;
 					}
-					if (settings.has_anti_flood_away_count)
-					{
-						config_warn("%s:%d: set::anti-flood::away-flood overrides set::anti-flood::away-count",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						continue;
-					}
-					settings.has_anti_flood_away_period = 1;
-					settings.has_anti_flood_away_count = 1;
-					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
-					    (cnt < 1) || (cnt > 255) || (period < 10))
-					{
-						config_error("%s:%i: set::anti-flood::away-flood error. Syntax is '<count>:<period>' (eg 5:60), "
-						             "count should be 1-255, period should be greater than 9",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "nick-flood"))
-				{
-					int cnt, period;
-					CheckNull(cepp);
-					CheckDuplicate(cepp, anti_flood_nick_flood, "anti-flood::nick-flood");
-					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
-					    (cnt < 1) || (cnt > 255) || (period < 5))
-					{
-						config_error("%s:%i: set::anti-flood::nick-flood error. Syntax is '<count>:<period>' (eg 5:60), "
-						             "count should be 1-255, period should be greater than 4",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "invite-flood"))
-				{
-					int cnt, period;
-					CheckNull(cepp);
-					CheckDuplicate(cepp, anti_flood_invite_flood, "anti-flood::invite-flood");
-					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
-					    (cnt < 1) || (cnt > 255) || (period < 5))
-					{
-						config_error("%s:%i: set::anti-flood::invite-flood error. Syntax is '<count>:<period>' (eg 5:60), "
-						             "count should be 1-255, period should be greater than 4",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "knock-flood"))
-				{
-					int cnt, period;
-					CheckNull(cepp);
-					CheckDuplicate(cepp, anti_flood_knock_flood, "anti-flood::knock-flood");
-					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
-					    (cnt < 1) || (cnt > 255) || (period < 5))
-					{
-						config_error("%s:%i: set::anti-flood::knock-flood error. Syntax is '<count>:<period>' (eg 5:60), "
-						             "count should be 1-255, period should be greater than 4",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "connect-flood"))
-				{
-					int cnt, period;
-					CheckNull(cepp);
-					CheckDuplicate(cepp, anti_flood_connect_flood, "anti-flood::connect-flood");
-					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
-					    (cnt < 1) || (cnt > 255) || (period < 1) || (period > 3600))
-					{
-						config_error("%s:%i: set::anti-flood::connect-flood: Syntax is '<count>:<period>' (eg 5:60), "
-						             "count should be 1-255, period should be 1-3600",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else
-				{
-					/* hmm.. I don't like this method. but I just quickly copied it from CONFIG_ALLOW for now... */
-					int used = 0;
-					Hook *h;
-					for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
-					{
-						int value, errs = 0;
-						if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
-							&& !(h->owner->options & MOD_OPT_PERM))
-							continue;
-						value = (*(h->func.intfunc))(conf,cepp,CONFIG_SET_ANTI_FLOOD,&errs);
-						if (value == 2)
-							used = 1;
-						if (value == 1)
-						{
-							used = 1;
-							break;
-						}
-						if (value == -1)
-						{
-							used = 1;
-							errors += errs;
-							break;
-						}
-						if (value == -2)
-						{
-							used = 1;
-							errors += errs;
-						}
-					}
-					if (!used)
-					{
-						config_error_unknownopt(cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum, "set::anti-flood",
-							cepp->ce_varname);
-						errors++;
-					}
-					continue;
 				}
 			}
 		}
@@ -9317,7 +9573,7 @@ int	_test_offchans(ConfigFile *conf, ConfigEntry *ce)
 		return 1;
 	}
 
-	config_warn("set::oficial-channels is deprecated. It often does not do what you want. "
+	config_warn("set::official-channels is deprecated. It often does not do what you want. "
 	            "You're better of creating a channel, setting all modes, topic, etc. to your liking "
 	            "and then making the channel permanent (MODE #channel +P). "
 	            "The channel will then be stored in a database to preserve it between restarts.");
@@ -10044,6 +10300,387 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 	return errors;
 }
 
+int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
+{
+	int errors = 0;
+	ConfigEntry *cep;
+
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: security-group block needs a name, eg: security-group web-users {",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	} else {
+		if (!strcasecmp(ce->ce_vardata, "unknown-users"))
+		{
+			config_error("%s:%i: The 'unknown-users' group is a special group that is the "
+			             "inverse of 'known-users', you cannot create or adjust it in the "
+			             "config file, as it is created automatically by UnrealIRCd.",
+			             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
+			return errors;
+		}
+		if (!security_group_valid_name(ce->ce_vardata))
+		{
+			config_error("%s:%i: security-group block name '%s' contains invalid characters or is too long. "
+			             "Only letters, numbers, underscore and hyphen are allowed.",
+			             ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+	}
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "webirc"))
+		{
+			CheckNull(cep);
+		} else
+		if (!strcmp(cep->ce_varname, "identified"))
+		{
+			CheckNull(cep);
+		} else
+		if (!strcmp(cep->ce_varname, "tls"))
+		{
+			CheckNull(cep);
+		} else
+		if (!strcmp(cep->ce_varname, "reputation-score"))
+		{
+			int v;
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
+			if ((v < 1) || (v > 10000))
+			{
+				config_error("%s:%i: security-group::reputation-score needs to be a value of 1-10000",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		} else
+		{
+			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				"security-group", cep->ce_varname);
+			errors++;
+			continue;
+		}
+	}
+
+	return errors;
+}
+
+int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	SecurityGroup *s = add_security_group(ce->ce_vardata, 1);
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "webirc"))
+			s->webirc = config_checkval(cep->ce_vardata, CFG_YESNO);
+		else if (!strcmp(cep->ce_varname, "identified"))
+			s->identified = config_checkval(cep->ce_vardata, CFG_YESNO);
+		else if (!strcmp(cep->ce_varname, "tls"))
+			s->tls = config_checkval(cep->ce_vardata, CFG_YESNO);
+		else if (!strcmp(cep->ce_varname, "reputation-score"))
+			s->reputation_score = atoi(cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "priority"))
+		{
+			s->priority = atoi(cep->ce_vardata);
+			DelListItem(s, securitygroups);
+			AddListItemPrio(s, securitygroups, s->priority);
+		}
+	}
+	return 1;
+}
+
+Secret *find_secret(char *secret_name)
+{
+	Secret *s;
+	for (s = secrets; s; s = s->next)
+	{
+		if (!strcasecmp(s->name, secret_name))
+			return s;
+	}
+	return NULL;
+}
+
+void free_secret_cache(SecretCache *c)
+{
+	unrealdb_free_config(c->config);
+	safe_free(c);
+}
+
+void free_secret(Secret *s)
+{
+	SecretCache *c, *c_next;
+	for (c = s->cache; c; c = c_next)
+	{
+		c_next = c->next;
+		DelListItem(c, s->cache);
+		free_secret_cache(c);
+	}
+	safe_free(s->name);
+	safe_free_sensitive(s->password);
+	safe_free(s);
+}
+
+char *_conf_secret_read_password_file(char *fname)
+{
+	char *pwd, *err;
+	int fd, n;
+
+#ifndef _WIN32
+	fd = open(fname, O_RDONLY);
+#else
+	fd = open(fname, _O_RDONLY|_O_BINARY);
+#endif
+	if (fd < 0)
+	{
+		/* This should not happen, as we tested for file exists earlier.. */
+		config_error("Could not open file '%s': %s", fname, strerror(errno));
+		return NULL;
+	}
+
+	pwd = safe_alloc_sensitive(512);
+	n = read(fd, pwd, 511);
+	if (n <= 0)
+	{
+		close(fd);
+		config_error("Could not read from file '%s': %s", fname, strerror(errno));
+		safe_free_sensitive(pwd);
+		return NULL;
+	}
+	close(fd);
+	stripcrlf(pwd);
+	sodium_stackzero(1024);
+	if (!valid_secret_password(pwd, &err))
+	{
+		config_error("Key from file '%s' does not meet password complexity requirements: %s", fname, err);
+		safe_free_sensitive(pwd);
+		return NULL;
+	}
+	return pwd;
+}
+
+char *_conf_secret_read_prompt(char *blockname)
+{
+	char *pwd, *pwd_prompt;
+	char buf[256];
+
+#ifdef _WIN32
+	/* FIXME: add windows support? should be possible in GUI no? */
+	return NULL;
+#else
+	snprintf(buf, sizeof(buf), "Enter password for secret '%s': ", blockname);
+	pwd_prompt = getpass(buf);
+	if (pwd_prompt)
+	{
+		pwd = safe_alloc_sensitive(512);
+		strlcpy(pwd, pwd_prompt, 512);
+		memset(pwd_prompt, 0, strlen(pwd_prompt)); // zero password out
+		sodium_stackzero(1024);
+		return pwd;
+	}
+	return NULL;
+#endif
+}
+
+int _test_secret(ConfigFile *conf, ConfigEntry *ce)
+{
+	int errors = 0;
+	int has_password = 0, has_password_file = 0, has_password_prompt = 0;
+	ConfigEntry *cep;
+	char *err;
+	Secret *existing;
+
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: secret block needs a name, eg: secret xyz {",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+		return errors; /* need to return here since we dereference ce->ce_vardata later.. */
+	} else {
+		if (!security_group_valid_name(ce->ce_vardata))
+		{
+			config_error("%s:%i: secret block name '%s' contains invalid characters or is too long. "
+			             "Only letters, numbers, underscore and hyphen are allowed.",
+			             ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+	}
+
+	existing = find_secret(ce->ce_vardata);
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "password"))
+		{
+			has_password = 1;
+			CheckNull(cep);
+			if (!valid_secret_password(cep->ce_vardata, &err))
+			{
+				config_error("%s:%d: secret::password does not meet password complexity requirements: %s",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum, err);
+				errors++;
+			}
+		} else
+		if (!strcmp(cep->ce_varname, "password-file"))
+		{
+			char *str;
+			has_password_file = 1;
+			CheckNull(cep);
+			convert_to_absolute_path(&cep->ce_vardata, CONFDIR);
+			if (!file_exists(cep->ce_vardata) && existing && existing->password)
+			{
+				/* Silently ignore the case where a secret block already
+				 * has the password read and now the file is no longer available.
+				 * This so secret::password-file can be used only to boot
+				 * and then the media (eg: USB stick) can be pulled.
+				 */
+			} else
+			{
+				str = _conf_secret_read_password_file(cep->ce_vardata);
+				if (!str)
+				{
+					config_error("%s:%d: secret::password-file: error reading password from file, see error from above.",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					errors++;
+				}
+				safe_free_sensitive(str);
+			}
+		} else
+		if (!strcmp(cep->ce_varname, "password-prompt"))
+		{
+#ifdef _WIN32
+			config_error("%s:%d: secret::password-prompt is not implemented in Windows at the moment, sorry!",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			config_error("Choose a different method to enter passwords or use *NIX");
+			errors++;
+			return errors;
+#endif
+			has_password_prompt = 1;
+			if (loop.ircd_booted && !find_secret(ce->ce_vardata))
+			{
+				config_error("%s:%d: you cannot add a new secret { } block that uses password-prompt and then /REHASH. "
+				             "With 'password-prompt' you can only add such a password on boot.",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				config_error("Either use a different method to enter passwords or restart the IRCd on the console.");
+				errors++;
+			}
+			if (!loop.ircd_booted && !running_interactively())
+			{
+				config_error("ERROR: IRCd is not running interactively, but via a cron job or something similar.");
+				config_error("%s:%d: unable to prompt for password since IRCd is not started in a terminal",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				config_error("Either use a different method to enter passwords or start the IRCd in a terminal/SSH/..");
+			}
+		} else
+		if (!strcmp(cep->ce_varname, "password-url"))
+		{
+			config_error("%s:%d: secret::password-url is not supported yet in this UnrealIRCd version.",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++;
+		} else
+		{
+			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				"secret", cep->ce_varname);
+			errors++;
+			continue;
+		}
+		if (cep->ce_entries)
+		{
+			config_error("%s:%d: secret::%s does not support sub-options (%s)",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				cep->ce_varname, cep->ce_entries->ce_varname);
+			errors++;
+		}
+	}
+
+	if (!has_password && !has_password_file && !has_password_prompt)
+	{
+		config_error("%s:%d: secret { } block must contain 1 of: password OR password-file OR password-prompt",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+
+	return errors;
+}
+
+/* NOTE: contrary to all other _conf* stuff, this one actually runs during config_test,
+ * so during the early CONFIG TEST stage rather than CONFIG RUN.
+ * This so all secret { } block configuration is available already during TEST/POSTTEST
+ * stage for modules, so they can check if the password is correct or not.
+ */
+int _conf_secret(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	Secret *s;
+	Secret *existing = find_secret(ce->ce_vardata);
+
+	s = safe_alloc(sizeof(Secret));
+	safe_strdup(s->name, ce->ce_vardata);
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "password"))
+		{
+			safe_strdup_sensitive(s->password, cep->ce_vardata);
+			destroy_string(cep->ce_vardata); /* destroy the original */
+		} else
+		if (!strcmp(cep->ce_varname, "password-file"))
+		{
+			if (!file_exists(cep->ce_vardata) && existing && existing->password)
+			{
+				/* Silently ignore the case where a secret block already
+				 * has the password read and now the file is no longer available.
+				 * This so secret::password-file can be used only to boot
+				 * and then the media (eg: USB stick) can be pulled.
+				 */
+			} else
+			{
+				s->password = _conf_secret_read_password_file(cep->ce_vardata);
+			}
+		} else
+		if (!strcmp(cep->ce_varname, "password-prompt"))
+		{
+			if (!loop.ircd_booted && running_interactively())
+			{
+				s->password = _conf_secret_read_prompt(ce->ce_vardata);
+				if (!s->password || !valid_secret_password(s->password, NULL))
+				{
+					config_error("Invalid password entered on console (does not meet complexity requirements)");
+					/* This cannot be the correct password, so exit */
+					exit(-1);
+				}
+			}
+		}
+	}
+
+	/* This may happen if we run twice, due to destroy_string() earlier: */
+	if (BadPtr(s->password))
+	{
+		free_secret(s);
+		return 1;
+	}
+
+	/* If there is an existing secret { } block with this name in memory
+	 * and it has a different password, then free that secret block
+	 */
+	if (existing)
+	{
+		if (!strcmp(s->password, existing->password))
+		{
+			free_secret(s);
+			return 1;
+		}
+		/* passwords differ, so free the old existing one,
+		 * including purging the cache for it.
+		 */
+		DelListItem(existing, secrets);
+		free_secret(existing);
+	}
+	AddListItem(s, secrets);
+	return 1;
+}
+
 #ifdef USE_LIBCURL
 static void conf_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *inc_key)
 {
@@ -10641,6 +11278,7 @@ void link_generator(void)
 	       "    outgoing {\n"
 	       "        hostname %s;\n"
 	       "        port %d;\n"
+	       "        options { tls; autoconnect; }\n"
 	       "    }\n"
 	       "    password \"%s\" { spkifp; }\n"
 	       "    class servers;\n"

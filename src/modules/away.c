@@ -86,24 +86,16 @@ CMD_FUNC(cmd_away)
 	}
 
 	/* Check spamfilters */
-	if (MyUser(client) && match_spamfilter(client, new_reason, SPAMF_AWAY, NULL, 0, NULL))
+	if (MyUser(client) && match_spamfilter(client, new_reason, SPAMF_AWAY, "AWAY", NULL, 0, NULL))
 		return;
 
-	/* Check set::anti-flood::away-flood */
-	if (MyUser(client) && AWAY_PERIOD && !ValidatePermissionsForPath("immune:away-flood",client,NULL,NULL,NULL))
+	/* Check away-flood */
+	if (MyUser(client) &&
+	    !ValidatePermissionsForPath("immune:away-flood",client,NULL,NULL,NULL) &&
+	    flood_limit_exceeded(client, FLD_AWAY))
 	{
-		if ((client->user->flood.away_t + AWAY_PERIOD) <= timeofday)
-		{
-			client->user->flood.away_c = 0;
-			client->user->flood.away_t = timeofday;
-		}
-		if (client->user->flood.away_c <= AWAY_COUNT)
-			client->user->flood.away_c++;
-		if (client->user->flood.away_c > AWAY_COUNT)
-		{
-			sendnumeric(client, ERR_TOOMANYAWAY);
-			return;
-		}
+		sendnumeric(client, ERR_TOOMANYAWAY);
+		return;
 	}
 
 	/* Obey set::away-length */

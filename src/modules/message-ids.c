@@ -31,14 +31,6 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
 	};
 
-/** The length of a standard 'msgid' tag (note that special
- * msgid tags will be longer).
- * The 22 alphanumeric characters provide slightly more
- * than 128 bits of randomness (62^22 > 2^128).
- * See mtag_add_or_inherit_msgid() for more information.
- */
-#define MSGIDLEN	22
-
 /* Variables */
 long CAP_ACCOUNT_TAG = 0L;
 

@@ -66,7 +66,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 	{
 		if (SERVICES_NAME && (acptr = find_person(alias->nick, NULL)))
 		{
-			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL))
+			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, NULL))
 				return;
 			sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", client->name,
 				alias->nick, SERVICES_NAME, parv[1]);
@@ -78,7 +78,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 	{
 		if (STATS_SERVER && (acptr = find_person(alias->nick, NULL)))
 		{
-			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL))
+			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, NULL))
 				return;
 			sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", client->name,
 				alias->nick, STATS_SERVER, parv[1]);
@@ -90,7 +90,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 	{
 		if ((acptr = find_person(alias->nick, NULL))) 
 		{
-			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL))
+			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, NULL))
 				return;
 			if (MyUser(acptr))
 				sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", client->name, 
@@ -112,7 +112,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 			char *errmsg = NULL;
 			if (can_send_to_channel(client, channel, &msg, &errmsg, 0))
 			{
-				if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_CHANMSG, channel->chname, 0, NULL))
+				if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_CHANMSG, cmd, channel->chname, 0, NULL))
 					return;
 				new_message(client, NULL, &mtags);
 				sendto_channel(channel, client, client->direction,
@@ -203,7 +203,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 				{
 					if (SERVICES_NAME && (acptr = find_person(format->nick, NULL)))
 					{
-						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, format->nick, 0, NULL))
+						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, NULL))
 							return;
 						sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", client->name,
 							format->nick, SERVICES_NAME, output);
@@ -214,7 +214,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 				{
 					if (STATS_SERVER && (acptr = find_person(format->nick, NULL)))
 					{
-						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, format->nick, 0, NULL))
+						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, NULL))
 							return;
 						sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", client->name,
 							format->nick, STATS_SERVER, output);
@@ -225,7 +225,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 				{
 					if ((acptr = find_person(format->nick, NULL))) 
 					{
-						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, format->nick, 0, NULL))
+						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, NULL))
 							return;
 						if (MyUser(acptr))
 							sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", client->name, 
@@ -247,7 +247,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 						char *errmsg = NULL;
 						if (!can_send_to_channel(client, channel, &msg, &errmsg, 0))
 						{
-							if (alias->spamfilter && match_spamfilter(client, output, SPAMF_CHANMSG, channel->chname, 0, NULL))
+							if (alias->spamfilter && match_spamfilter(client, output, SPAMF_CHANMSG, cmd, channel->chname, 0, NULL))
 								return;
 							new_message(client, NULL, &mtags);
 							sendto_channel(channel, client, client->direction,

@@ -36,9 +36,10 @@ extern HWND hwIRCDWnd;
 #define SAFE_SSL_ACCEPT 3
 #define SAFE_SSL_CONNECT 4
 
+/* Forward declarations */
 static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *client);
-extern int cipher_check(SSL_CTX *ctx, char **errstr);
-extern int certificate_quality_check(SSL_CTX *ctx, char **errstr);
+int cipher_check(SSL_CTX *ctx, char **errstr);
+int certificate_quality_check(SSL_CTX *ctx, char **errstr);
 
 /* The SSL structures */
 SSL_CTX *ctx_server;
@@ -1040,6 +1041,8 @@ int verify_certificate(SSL *ssl, char *hostname, char **errstr)
 
 	if (SSL_get_verify_result(ssl) != X509_V_OK)
 	{
+		// FIXME: there are actually about 25+ different possible errors,
+		// this is only the most common one:
 		strlcpy(buf, "Certificate is not issued by a trusted Certificate Authority", sizeof(buf));
 		if (errstr)
 			*errstr = buf;
@@ -1332,4 +1335,101 @@ char *outdated_tls_client_build_string(char *pattern, Client *client)
 
 	buildvarstring(pattern, buf, sizeof(buf), name, value);
 	return buf;
+}
+
+int check_certificate_expiry_ctx(SSL_CTX *ctx, char **errstr)
+{
+#if !defined(HAS_ASN1_TIME_diff) || !defined(HAS_X509_get0_notAfter)
+	return 0;
+#else
+	static char errbuf[512];
+	SSL *ssl;
+	X509 *cert;
+	const ASN1_TIME *cert_expiry_time;
+	int days_expiry = 0, seconds_expiry = 0;
+	long duration;
+
+	*errstr = NULL;
+
+	ssl = SSL_new(ctx);
+	if (!ssl)
+		return 0;
+
+	cert = SSL_get_certificate(ssl);
+	if (!cert)
+	{
+		SSL_free(ssl);
+		return 0;
+	}
+
+	/* get certificate time */
+	cert_expiry_time = X509_get0_notAfter(cert);
+
+	/* calculate difference */
+	ASN1_TIME_diff(&days_expiry, &seconds_expiry, cert_expiry_time, NULL);
+	duration = (days_expiry * 86400) + seconds_expiry;
+
+	/* certificate expiry? */
+	if ((days_expiry > 0) || (seconds_expiry > 0))
+	{
+		snprintf(errbuf, sizeof(errbuf), "certificate expired %s ago", pretty_time_val(duration));
+		SSL_free(ssl);
+		*errstr = errbuf;
+		return 1;
+	} else
+	/* or near-expiry? */
+	if (((days_expiry < 0) || (seconds_expiry < 0)) && (days_expiry > -7))
+	{
+		snprintf(errbuf, sizeof(errbuf), "certificate will expire in %s", pretty_time_val(0 - duration));
+		SSL_free(ssl);
+		*errstr = errbuf;
+		return 1;
+	}
+
+	/* All good */
+	SSL_free(ssl);
+	return 0;
+#endif
+}
+
+void check_certificate_expiry_tlsoptions_and_warn(TLSOptions *tlsoptions)
+{
+	SSL_CTX *ctx;
+	int ret;
+	char *errstr = NULL;
+
+	ctx = init_ctx(tlsoptions, 1);
+	if (!ctx)
+		return;
+
+	if (check_certificate_expiry_ctx(ctx, &errstr))
+	{
+		sendto_umode_global(UMODE_OPER, "Warning: TLS certificate '%s': %s", tlsoptions->certificate_file, errstr);
+		ircd_log(LOG_ERROR, "[warning] TLS certificate '%s': %s", tlsoptions->certificate_file, errstr);
+	}
+	SSL_CTX_free(ctx);
+}
+
+EVENT(tls_check_expiry)
+{
+	ConfigItem_listen *listen;
+	ConfigItem_sni *sni;
+	ConfigItem_link *link;
+
+	/* set block */
+	check_certificate_expiry_tlsoptions_and_warn(iConf.tls_options);
+
+	for (listen = conf_listen; listen; listen = listen->next)
+		if (listen->tls_options)
+			check_certificate_expiry_tlsoptions_and_warn(listen->tls_options);
+
+	/* sni::tls-options.... */
+	for (sni = conf_sni; sni; sni = sni->next)
+		if (sni->tls_options)
+			check_certificate_expiry_tlsoptions_and_warn(sni->tls_options);
+
+	/* link::outgoing::tls-options.... */
+	for (link = conf_link; link; link = link->next)
+		if (link->tls_options)
+			check_certificate_expiry_tlsoptions_and_warn(link->tls_options);
 }

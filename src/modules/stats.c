@@ -462,22 +462,25 @@ int stats_denylinkall(Client *client, char *para)
 
 int stats_gline(Client *client, char *para)
 {
-	tkl_stats(client, TKL_GLOBAL|TKL_KILL, para);
-	tkl_stats(client, TKL_GLOBAL|TKL_ZAP, para);
+	int cnt = 0;
+	tkl_stats(client, TKL_GLOBAL|TKL_KILL, para, &cnt);
+	tkl_stats(client, TKL_GLOBAL|TKL_ZAP, para, &cnt);
 	return 0;
 }
 
 int stats_spamfilter(Client *client, char *para)
 {
-	tkl_stats(client, TKL_SPAMF, para);
-	tkl_stats(client, TKL_GLOBAL|TKL_SPAMF, para);
+	int cnt = 0;
+	tkl_stats(client, TKL_SPAMF, para, &cnt);
+	tkl_stats(client, TKL_GLOBAL|TKL_SPAMF, para, &cnt);
 	return 0;
 }
 
 int stats_except(Client *client, char *para)
 {
-	tkl_stats(client, TKL_EXCEPTION, para);
-	tkl_stats(client, TKL_EXCEPTION|TKL_GLOBAL, para);
+	int cnt = 0;
+	tkl_stats(client, TKL_EXCEPTION, para, &cnt);
+	tkl_stats(client, TKL_EXCEPTION|TKL_GLOBAL, para, &cnt);
 	return 0;
 }
 
@@ -485,9 +488,15 @@ int stats_allow(Client *client, char *para)
 {
 	ConfigItem_allow *allows;
 	for (allows = conf_allow; allows; allows = allows->next)
-		sendnumeric(client, RPL_STATSILINE, allows->ip, allows->hostname, allows->maxperip,
-			allows->class->name, allows->server ? allows->server
-			: defserv, allows->port ? allows->port : 6667);
+	{
+		sendnumeric(client, RPL_STATSILINE,
+		            allows->ip, allows->hostname,
+		            allows->maxperip,
+		            allows->global_maxperip,
+		            allows->class->name,
+		            allows->server ? allows->server : defserv,
+		            allows->port ? allows->port : 6667);
+	}
 	return 0;
 }
 
@@ -564,8 +573,9 @@ int stats_port(Client *client, char *para)
 
 int stats_bannick(Client *client, char *para)
 {
-	tkl_stats(client, TKL_NAME, para);
-	tkl_stats(client, TKL_GLOBAL|TKL_NAME, para);
+	int cnt = 0;
+	tkl_stats(client, TKL_NAME, para, &cnt);
+	tkl_stats(client, TKL_GLOBAL|TKL_NAME, para, &cnt);
 	return 0;
 }
 
@@ -699,8 +709,9 @@ int stats_denylinkauto(Client *client, char *para)
 
 int stats_kline(Client *client, char *para)
 {
-	tkl_stats(client, TKL_KILL, NULL);
-	tkl_stats(client, TKL_ZAP, NULL);
+	int cnt = 0;
+	tkl_stats(client, TKL_KILL, NULL, &cnt);
+	tkl_stats(client, TKL_ZAP, NULL, &cnt);
 	return 0;
 }
 
@@ -720,7 +731,8 @@ int stats_banrealname(Client *client, char *para)
 
 int stats_sqline(Client *client, char *para)
 {
-	tkl_stats(client, TKL_NAME|TKL_GLOBAL, para);
+	int cnt = 0;
+	tkl_stats(client, TKL_NAME|TKL_GLOBAL, para, &cnt);
 	return 0;
 }
 
@@ -741,7 +753,8 @@ int stats_chanrestrict(Client *client, char *para)
 
 int stats_shun(Client *client, char *para)
 {
-	tkl_stats(client, TKL_GLOBAL|TKL_SHUN, para);
+	int cnt = 0;
+	tkl_stats(client, TKL_GLOBAL|TKL_SHUN, para, &cnt);
 	return 0;
 }
 
@@ -759,9 +772,33 @@ int stats_officialchannels(Client *client, char *para)
 
 #define SafePrint(x)   ((x) ? (x) : "")
 
+/** Helper for stats_set() */
+static void stats_set_anti_flood(Client *client, FloodSettings *f)
+{
+	int i;
+
+	for (i=0; floodoption_names[i]; i++)
+	{
+		if (i == FLD_CONVERSATIONS)
+		{
+			sendtxtnumeric(client, "anti-flood::%s::%s: %d users, new user every %s",
+				f->name, floodoption_names[i],
+				(int)f->limit[i], pretty_time_val(f->period[i]));
+		}
+		else
+		{
+			sendtxtnumeric(client, "anti-flood::%s::%s: %d per %s",
+				f->name, floodoption_names[i],
+				(int)f->limit[i], pretty_time_val(f->period[i]));
+		}
+	}
+}
+
 int stats_set(Client *client, char *para)
 {
 	char *uhallow;
+	SecurityGroup *s;
+	FloodSettings *f;
 
 	if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
 	{
@@ -859,13 +896,20 @@ int stats_set(Client *client, char *para)
 	if (LINK_BINDIP)
 		sendtxtnumeric(client, "link::bind-ip: %s", LINK_BINDIP);
 	sendtxtnumeric(client, "anti-flood::connect-flood: %d per %s", THROTTLING_COUNT, pretty_time_val(THROTTLING_PERIOD));
-	sendtxtnumeric(client, "anti-flood::unknown-flood-bantime: %s", pretty_time_val(UNKNOWN_FLOOD_BANTIME));
-	sendtxtnumeric(client, "anti-flood::unknown-flood-amount: %ldKB", UNKNOWN_FLOOD_AMOUNT);
-	if (AWAY_PERIOD)
-	{
-		sendtxtnumeric(client, "anti-flood::away-flood: %d per %s", AWAY_COUNT, pretty_time_val(AWAY_PERIOD));
-	}
-	sendtxtnumeric(client, "anti-flood::nick-flood: %d per %s", NICK_COUNT, pretty_time_val(NICK_PERIOD));
+	sendtxtnumeric(client, "anti-flood::handshake-data-flood::amount: %ld bytes", iConf.handshake_data_flood_amount);
+	sendtxtnumeric(client, "anti-flood::handshake-data-flood::ban-action: %s", banact_valtostring(iConf.handshake_data_flood_ban_action));
+	sendtxtnumeric(client, "anti-flood::handshake-data-flood::ban-time: %s", pretty_time_val(iConf.handshake_data_flood_ban_time));
+
+	/* set::anti-flood */
+	for (s = securitygroups; s; s = s->next)
+		if ((f = find_floodsettings_block(s->name)))
+			stats_set_anti_flood(client, f);
+	f = find_floodsettings_block("unknown-users");
+	stats_set_anti_flood(client, f);
+
+	//if (AWAY_PERIOD)
+	//	sendtxtnumeric(client, "anti-flood::away-flood: %d per %s", AWAY_COUNT, pretty_time_val(AWAY_PERIOD));
+	//sendtxtnumeric(client, "anti-flood::nick-flood: %d per %s", NICK_COUNT, pretty_time_val(NICK_PERIOD));
 	sendtxtnumeric(client, "handshake-timeout: %s", pretty_time_val(iConf.handshake_timeout));
 	sendtxtnumeric(client, "sasl-timeout: %s", pretty_time_val(iConf.sasl_timeout));
 	sendtxtnumeric(client, "ident::connect-timeout: %s", pretty_time_val(IDENT_CONNECT_TIMEOUT));

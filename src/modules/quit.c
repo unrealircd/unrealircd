@@ -82,7 +82,7 @@ CMD_FUNC(cmd_quit)
 			return;
 		}
 
-		if (match_spamfilter(client, comment, SPAMF_QUIT, NULL, 0, NULL))
+		if (match_spamfilter(client, comment, SPAMF_QUIT, "QUIT", NULL, 0, NULL))
 		{
 			comment = client->name;
 			if (IsDead(client))

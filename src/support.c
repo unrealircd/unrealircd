@@ -724,15 +724,32 @@ void outofmemory(size_t bytes)
 	exit(7);
 }
 
-/** Check if the specified file exists */
-int file_exists(char *file)
+/** Allocate sensitive memory - this should only be used for HIGHLY sensitive data, since
+ * it wastes 8192+ bytes even if only asked to allocate for example 32 bytes (this is by design).
+ * @param size How many bytes to allocate
+ * @returns A pointer to the newly allocated memory.
+ * @note If out of memory then the IRCd will exit.
+ */
+void *safe_alloc_sensitive(size_t size)
 {
-	FILE *fd;
-	fd = fopen(file, "r");
-	if (!fd)
-		return 0;
-	fclose(fd);
-	return 1;
+	void *p;
+	if (size == 0)
+		return NULL;
+	p = sodium_malloc(((size/32)*32)+32);
+	if (!p)
+		outofmemory(size);
+	memset(p, 0, size);
+	return p;
+}
+
+/** Safely duplicate a string */
+char *our_strdup_sensitive(const char *str)
+{
+	char *ret = safe_alloc_sensitive(strlen(str)+1);
+	if (!ret)
+		outofmemory(strlen(str));
+	strcpy(ret, str); /* safe, see above */
+	return ret;
 }
 
 /** Returns a unique filename in the specified directory
@@ -1303,4 +1320,33 @@ int get_terminal_width(void)
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 	return w.ws_col;
 #endif
+}
+
+/** Like strftime() but easier. */
+char *unreal_strftime(char *str)
+{
+	time_t t;
+	struct tm *tmp;
+	static char buf[512];
+
+	t = time(NULL);
+	tmp = localtime(&t);
+	if (!tmp || !strftime(buf, sizeof(buf), str, tmp))
+		return str;
+	return buf;
+}
+
+/** Convert a string to lowercase */
+void strtolower_safe(char *dst, char *src, int size)
+{
+	if (!size)
+		return; /* size of 0 is unworkable */
+	size--; /* for \0 */
+
+	for (; *src && size; src++)
+	{
+		*dst++ = tolower(*src);
+		size--;
+	}
+	*dst = '\0';
 }

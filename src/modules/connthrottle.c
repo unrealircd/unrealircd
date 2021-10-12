@@ -67,8 +67,6 @@ UCounter *ucounter = NULL;
 
 #define MSG_THROTTLE "THROTTLE"
 
-#define GetReputation(client)     (moddata_client_get(client, "reputation") ? atoi(moddata_client_get(client, "reputation")) : 0)
-
 /* Forward declarations */
 int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int ct_config_posttest(int *errs);

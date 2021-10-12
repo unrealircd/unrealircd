@@ -35,6 +35,7 @@ static void remove_unknown(Client *, char *);
 static void parse2(Client *client, Client **fromptr, MessageTag *mtags, char *ch);
 static void parse_addlag(Client *client, int cmdbytes);
 static int client_lagged_up(Client *client);
+static void ban_handshake_data_flooder(Client *client);
 
 /** Put a packet in the client receive queue and process the data (if
  * the 'fake lag' rules permit doing so).
@@ -60,14 +61,13 @@ int process_packet(Client *client, char *readbuf, int length, int killsafely)
 		return 0;
 
 	/* flood from unknown connection */
-	if (IsUnknown(client) && (DBufLength(&client->local->recvQ) > UNKNOWN_FLOOD_AMOUNT*1024))
+	if (IsUnknown(client) && (DBufLength(&client->local->recvQ) > iConf.handshake_data_flood_amount))
 	{
-		sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
-			client->local->sockhost);
+		sendto_snomask(SNO_FLOOD, "Handshake data flood from %s detected", client->local->sockhost);
 		if (!killsafely)
-			ban_flooder(client);
+			ban_handshake_data_flooder(client);
 		else
-			dead_socket(client, "Flood from unknown connection");
+			dead_socket(client, "Handshake data flood detected");
 		return 0;
 	}
 
@@ -105,7 +105,7 @@ void parse_client_queued(Client *client)
 		return; /* we delay processing of data until identd has replied */
 
 	if (!IsUser(client) && !IsServer(client) && (iConf.handshake_delay > 0) &&
-	    (TStime() - client->local->firsttime < iConf.handshake_delay))
+	    !IsNoHandshakeDelay(client) && (TStime() - client->local->firsttime < iConf.handshake_delay))
 	{
 		return; /* we delay processing of data until set::handshake-delay is reached */
 	}
@@ -193,11 +193,10 @@ void parse(Client *cptr, char *buffer, int length)
 	if (IsDeadSocket(cptr))
 		return;
 
-	if ((cptr->local->receiveK >= UNKNOWN_FLOOD_AMOUNT) && IsUnknown(cptr))
+	if ((cptr->local->receiveK >= iConf.handshake_data_flood_amount/1024) && IsUnknown(cptr))
 	{
-		sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
-			cptr->local->sockhost);
-		ban_flooder(cptr);
+		sendto_snomask(SNO_FLOOD, "Handshake data flood from %s detected", cptr->local->sockhost);
+		ban_handshake_data_flooder(cptr);
 		return;
 	}
 
@@ -417,7 +416,10 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		/* If you're a user, and this command does not permit users or opers, deny */
 		if ((flags & CMD_USER) && !(cmptr->flags & CMD_USER) && !(cmptr->flags & CMD_OPER))
 		{
-			sendnumeric(cptr, ERR_NOTFORUSERS, cmptr->cmd);
+			if (cmptr->flags & CMD_UNREGISTERED)
+				sendnumeric(cptr, ERR_ALREADYREGISTRED); /* only for unregistered phase */
+			else
+				sendnumeric(cptr, ERR_NOTFORUSERS, cmptr->cmd); /* really never for users */
 			return;
 		}
 
@@ -483,6 +485,11 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		}
 	}
 	para[++i] = NULL;
+
+	/* Check if one of the message tags are rejected by spamfilter */
+	if (MyConnect(from) && !IsServer(from) && match_spamfilter_mtags(from, mtags, cmptr ? cmptr->cmd : NULL))
+		return;
+
 	if (cmptr == NULL)
 	{
 		do_numeric(numeric, from, mtags, i, para);
@@ -492,6 +499,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 	if (IsUser(cptr) && (cmptr->flags & CMD_RESETIDLE))
 		cptr->local->last = TStime();
 
+	/* Now ready to execute the command */
 #ifndef DEBUGMODE
 	if (cmptr->flags & CMD_ALIAS)
 	{
@@ -530,20 +538,20 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
  * Note that "lots" in terms of IRC is a few KB's, since more is rather unusual.
  * @param client The client.
  */
-void ban_flooder(Client *client)
+static void ban_handshake_data_flooder(Client *client)
 {
-	if (find_tkl_exception(TKL_UNKNOWN_DATA_FLOOD, client))
+	if (find_tkl_exception(TKL_HANDSHAKE_DATA_FLOOD, client))
 	{
 		/* If the user is exempt we will still KILL the client, since it is
 		 * clearly misbehaving. We just won't ZLINE the host, so it won't
 		 * affect any other connections from the same IP address.
 		 */
-		exit_client(client, NULL, "Flood from unknown connection");
+		exit_client(client, NULL, "Handshake data flood detected");
 	}
 	else
 	{
 		/* place_host_ban also takes care of removing any other clients with same host/ip */
-		place_host_ban(client, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
+		place_host_ban(client, iConf.handshake_data_flood_ban_action, "Handshake data flood detected", iConf.handshake_data_flood_ban_time);
 	}
 }
 

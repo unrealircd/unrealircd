@@ -34,7 +34,6 @@ Cmode_t EXTCMODE_SECUREONLY;
 
 int secureonly_check_join(Client *client, Channel *channel, char *key, char *parv[]);
 int secureonly_channel_sync (Channel *channel, int merge, int removetheirs, int nomode);
-int secureonly_send_channel(Client *client, Channel *channel);
 int secureonly_check_secure(Channel *channel);
 int secureonly_check_sajoin(Client *target, Channel *channel, Client *requester);
 int secureonly_specialcheck(Client *client, Channel *channel, char *parv[]);
@@ -58,7 +57,6 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, secureonly_check_join);
 	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_SYNCED, 0, secureonly_channel_sync);
 	HookAdd(modinfo->handle, HOOKTYPE_IS_CHANNEL_SECURE, 0, secureonly_check_secure);
-	HookAdd(modinfo->handle, HOOKTYPE_SEND_CHANNEL, 0, secureonly_send_channel);
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SAJOIN, 0, secureonly_check_sajoin);
 
 
@@ -163,15 +161,6 @@ int secureonly_channel_sync(Channel *channel, int merge, int removetheirs, int n
 	if (!merge && !removetheirs && !nomode)
 		return secureonly_kick_insecure_users(channel); /* may return 1, meaning channel is destroyed */
 	return 0;
-}
-
-int secureonly_send_channel(Client *client, Channel *channel)
-{
-	if (IsSecureOnly(channel))
-		if (!IsSecure(client))
-			return HOOK_DENY;
-
-	return HOOK_CONTINUE;
 }
 
 int secureonly_check_sajoin(Client *target, Channel *channel, Client *requester)

@@ -90,6 +90,7 @@ extern MODVAR ConfigItem_alias		*conf_alias;
 extern MODVAR ConfigItem_include	*conf_include;
 extern MODVAR ConfigItem_help		*conf_help;
 extern MODVAR ConfigItem_offchans	*conf_offchans;
+extern MODVAR SecurityGroup		*securitygroups;
 extern void		completed_connection(int, int, void *);
 extern void clear_unknown();
 extern EVENT(e_unload_module_delayed);
@@ -112,7 +113,6 @@ extern void config_error_empty(const char *filename, int line, const char *block
 extern void config_warn_duplicate(const char *filename, int line, const char *entry);
 extern int config_is_blankorempty(ConfigEntry *cep, const char *block);
 extern MODVAR int config_verbose;
-extern void config_progress(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
 extern void config_entry_free(ConfigEntry *ce);
 extern void config_entry_free_all(ConfigEntry *ce);
 extern ConfigFile *config_load(char *filename, char *displayname);
@@ -163,7 +163,6 @@ extern MODVAR struct list_head global_server_list;
 extern MODVAR struct list_head dead_list;
 extern RealCommand *find_command(char *cmd, int flags);
 extern RealCommand *find_command_simple(char *cmd);
-extern Channel *find_channel(char *, Channel *);
 extern Membership *find_membership_link(Membership *lp, Channel *ptr);
 extern Member *find_member_link(Member *, Client *);
 extern int remove_user_from_channel(Client *, Channel *);
@@ -313,7 +312,7 @@ extern int find_str_match_link(Link *, char *);
 extern void free_str_list(Link *);
 extern Link *make_link();
 extern Ban *make_ban();
-extern ClientUser *make_user(Client *);
+extern User *make_user(Client *);
 extern Server *make_server();
 extern Client *make_client(Client *, Client *);
 extern Member *find_channel_link(Member *, Channel *);
@@ -336,7 +335,7 @@ extern void del_queries(char *);
 #define WATCH_HASH_TABLE_SIZE 32768
 #define WHOWAS_HASH_TABLE_SIZE 32768
 #define THROTTLING_HASH_TABLE_SIZE 8192
-#define find_channel hash_find_channel
+#define hash_find_channel find_channel
 extern uint64_t siphash(const char *in, const char *k);
 extern uint64_t siphash_raw(const char *in, size_t len, const char *k);
 extern uint64_t siphash_nocase(const char *in, const char *k);
@@ -359,7 +358,7 @@ extern Channel *hash_get_chan_bucket(uint64_t);
 extern Client *hash_find_client(const char *, Client *);
 extern Client *hash_find_id(const char *, Client *);
 extern Client *hash_find_nickatserver(const char *, Client *);
-extern Channel *hash_find_channel(char *name, Channel *channel);
+extern Channel *find_channel(char *name, Channel *channel);
 extern Client *hash_find_server(const char *, Client *);
 extern struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_TABLE_SIZE];
 
@@ -460,6 +459,7 @@ extern void count_memory(Client *cptr, char *nick);
 extern void list_scache(Client *client);
 extern char *oflagstr(long oflag);
 extern int rehash(Client *client, int sig);
+extern void s_die();
 extern int match_simple(const char *mask, const char *name);
 extern int match_esc(const char *mask, const char *name);
 extern int add_listener(ConfigItem_listen *conf);
@@ -545,14 +545,32 @@ extern void *safe_alloc(size_t size);
  */
 #define raw_strldup(str, max) our_strldup(str, max)
 
+extern void *safe_alloc_sensitive(size_t size);
+
+/** Free previously allocate memory pointer - this is the sensitive version which
+ * may ONLY be called on allocations returned by safe_alloc_sensitive() / safe_strdup_sensitive().
+ * This will set the memory to all zeroes before actually deallocating.
+ * It also sets the pointer to NULL, since that would otherwise be common to forget.
+ * @note If you call this function on normally allocated memory (non-sensitive) then we will crash.
+ */
+#define safe_free_sensitive(x) do { if (x) sodium_free(x); x = NULL; } while(0)
+
+/** Free previous memory (if any) and then save a duplicate of the specified string -
+ * This is the 'sensitive' version which should only be used for HIGHLY sensitive data,
+ * as it wastes about 8000 bytes even if you only duplicate a string of 32 bytes (this is by design).
+ * @param dst   The current pointer and the pointer where a new copy of the string will be stored.
+ * @param str   The string you want to copy
+ */
+#define safe_strdup_sensitive(dst,str) do { if (dst) sodium_free(dst); if (!(str)) dst = NULL; else dst = our_strdup_sensitive(str); } while(0)
+
+/** Safely destroy a string in memory (but do not free!) */
+#define destroy_string(str) sodium_memzero(str, strlen(str))
+
 /** @} */
 extern char *our_strdup(const char *str);
 extern char *our_strldup(const char *str, size_t max);
+extern char *our_strdup_sensitive(const char *str);
 
-extern MODFUNC char  *tls_get_cipher(SSL *ssl);
-extern TLSOptions *get_tls_options_for_client(Client *acptr);
-extern int outdated_tls_client(Client *acptr);
-extern char *outdated_tls_client_build_string(char *pattern, Client *acptr);
 extern long config_checkval(char *value, unsigned short flags);
 extern void config_status(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
 extern void init_random();
@@ -701,11 +719,12 @@ extern MODVAR int (*find_shun)(Client *cptr);
 extern MODVAR int (*find_spamfilter_user)(Client *client, int flags);
 extern MODVAR TKL *(*find_qline)(Client *cptr, char *nick, int *ishold);
 extern MODVAR TKL *(*find_tkline_match_zap)(Client *cptr);
-extern MODVAR void (*tkl_stats)(Client *cptr, int type, char *para);
+extern MODVAR void (*tkl_stats)(Client *cptr, int type, char *para, int *cnt);
 extern MODVAR void (*tkl_sync)(Client *client);
 extern MODVAR void (*cmd_tkl)(Client *client, MessageTag *recv_mtags, int parc, char *parv[]);
 extern MODVAR int (*place_host_ban)(Client *client, BanAction action, char *reason, long duration);
-extern MODVAR int (*match_spamfilter)(Client *client, char *str_in, int type, char *target, int flags, TKL **rettk);
+extern MODVAR int (*match_spamfilter)(Client *client, char *str_in, int type, char *cmd, char *target, int flags, TKL **rettk);
+extern MODVAR int (*match_spamfilter_mtags)(Client *client, MessageTag *mtags, char *cmd);
 extern MODVAR int (*join_viruschan)(Client *client, TKL *tk, int type);
 extern MODVAR unsigned char *(*StripColors)(unsigned char *text);
 extern MODVAR const char *(*StripControlCodes)(unsigned char *text);
@@ -753,6 +772,25 @@ extern MODVAR void (*labeled_response_force_end)(void);
 extern MODVAR void (*kick_user)(MessageTag *mtags, Channel *channel, Client *client, Client *victim, char *comment);
 /* /Efuncs */
 
+/* SSL/TLS functions */
+extern int early_init_ssl();
+extern int init_ssl();
+extern int ssl_handshake(Client *);   /* Handshake the accpeted con.*/
+extern int ssl_client_handshake(Client *, ConfigItem_link *); /* and the initiated con.*/
+extern int ircd_SSL_accept(Client *acptr, int fd);
+extern int ircd_SSL_connect(Client *acptr, int fd);
+extern int SSL_smart_shutdown(SSL *ssl);
+extern void ircd_SSL_client_handshake(int, int, void *);
+extern void SSL_set_nonblocking(SSL *s);
+extern SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server);
+extern MODFUNC char  *tls_get_cipher(SSL *ssl);
+extern TLSOptions *get_tls_options_for_client(Client *acptr);
+extern int outdated_tls_client(Client *acptr);
+extern char *outdated_tls_client_build_string(char *pattern, Client *acptr);
+extern int check_certificate_expiry_ctx(SSL_CTX *ctx, char **errstr);
+extern EVENT(tls_check_expiry);
+/* End of SSL/TLS functions */
+
 extern void parse_message_tags_default_handler(Client *client, char **str, MessageTag **mtag_list);
 extern char *mtags_to_string_default_handler(MessageTag *m, Client *client);
 extern void *labeled_response_save_context_default_handler(void);
@@ -772,6 +810,7 @@ extern char *clean_ban_mask(char *, int, Client *);
 extern int find_invex(Channel *channel, Client *client);
 extern void DoMD5(char *mdout, const char *src, unsigned long n);
 extern char *md5hash(char *dst, const char *src, unsigned long n);
+extern char *sha256hash(char *dst, const char *src, unsigned long n);
 extern MODVAR TKL *tklines[TKLISTLEN];
 extern MODVAR TKL *tklines_ip_hash[TKLIPHASHLEN1][TKLIPHASHLEN2];
 extern char *cmdname_by_spamftarget(int target);
@@ -793,6 +832,8 @@ extern char *cm_getparameter_ex(void **p, char mode);
 extern void cm_putparameter_ex(void **p, char mode, char *str);
 extern void cm_freeparameter_ex(void **p, char mode, char *str);
 extern int file_exists(char *file);
+extern time_t get_file_time(char *fname);
+extern long get_file_size(char *fname);
 extern void free_motd(MOTDFile *motd); /* s_serv.c */
 extern void fix_timers(void);
 extern char *chfl_to_sjoin_symbol(int s);
@@ -868,7 +909,6 @@ extern CMD_FUNC(cmd_rehash);
 extern CMD_FUNC(cmd_die);
 extern CMD_FUNC(cmd_restart);
 extern void cmd_alias(Client *client, MessageTag *recv_mtags, int parc, char *parv[], char *cmd); /* special! */
-extern void ban_flooder(Client *cptr);
 extern char *pcre2_version(void);
 extern int get_terminal_width(void);
 extern int has_common_channels(Client *c1, Client *c2);
@@ -928,8 +968,12 @@ extern void free_message_tags(MessageTag *m);
 extern time_t server_time_to_unix_time(const char *tbuf);
 extern int history_set_limit(char *object, int max_lines, long max_t);
 extern int history_add(char *object, MessageTag *mtags, char *line);
-extern int history_request(Client *acptr, char *object, HistoryFilter *filter);
+extern HistoryResult *history_request(char *object, HistoryFilter *filter);
 extern int history_destroy(char *object);
+extern int can_receive_history(Client *client);
+extern void history_send_result(Client *client, HistoryResult *r);
+extern void free_history_result(HistoryResult *r);
+extern void free_history_filter(HistoryFilter *f);
 extern void special_delayed_unloading(void);
 extern int write_int64(FILE *fd, uint64_t t);
 extern int write_int32(FILE *fd, uint32_t t);
@@ -974,3 +1018,55 @@ extern int hide_idle_time(Client *client, Client *target);
 extern void lost_server_link(Client *serv, FORMAT_STRING(const char *fmt), ...);
 extern char *sendtype_to_cmd(SendType sendtype);
 extern MODVAR MessageTagHandler *mtaghandlers;
+extern int security_group_valid_name(char *name);
+extern int security_group_exists(char *name);
+extern SecurityGroup *add_security_group(char *name, int order);
+extern SecurityGroup *find_security_group(char *name);
+extern void free_security_group(SecurityGroup *s);
+extern void set_security_group_defaults(void);
+extern int user_allowed_by_security_group(Client *client, SecurityGroup *s);
+extern int user_allowed_by_security_group_name(Client *client, char *secgroupname);
+extern void add_nvplist(NameValuePrioList **lst, int priority, char *name, char *value);
+extern void add_fmt_nvplist(NameValuePrioList **lst, int priority, char *name, FORMAT_STRING(const char *format), ...) __attribute__((format(printf,4,5)));
+extern NameValuePrioList *find_nvplist(NameValuePrioList *list, char *name);
+extern void free_nvplist(NameValuePrioList *lst);
+extern char *get_connect_extinfo(Client *client);
+extern char *unreal_strftime(char *str);
+extern void strtolower_safe(char *dst, char *src, int size);
+extern int running_interactively(void);
+extern void skip_whitespace(char **p);
+extern void read_until(char **p, char *stopchars);
+/* src/unrealdb.c start */
+extern UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_block);
+extern int unrealdb_close(UnrealDB *c);
+extern char *unrealdb_test_db(const char *filename, char *secret_block);
+extern int unrealdb_write_int64(UnrealDB *c, uint64_t t);
+extern int unrealdb_write_int32(UnrealDB *c, uint32_t t);
+extern int unrealdb_write_int16(UnrealDB *c, uint16_t t);
+extern int unrealdb_write_str(UnrealDB *c, char *x);
+extern int unrealdb_write_char(UnrealDB *c, char t);
+extern int unrealdb_read_int64(UnrealDB *c, uint64_t *t);
+extern int unrealdb_read_int32(UnrealDB *c, uint32_t *t);
+extern int unrealdb_read_int16(UnrealDB *c, uint16_t *t);
+extern int unrealdb_read_str(UnrealDB *c, char **x);
+extern int unrealdb_read_char(UnrealDB *c, char *t);
+extern char *unrealdb_test_secret(char *name);
+extern UnrealDBConfig *unrealdb_copy_config(UnrealDBConfig *src);
+extern UnrealDBConfig *unrealdb_get_config(UnrealDB *db);
+extern void unrealdb_free_config(UnrealDBConfig *c);
+extern UnrealDBError unrealdb_get_error_code(void);
+extern char *unrealdb_get_error_string(void);
+/* src/unrealdb.c end */
+/* secret { } related stuff */
+extern Secret *find_secret(char *secret_name);
+extern void free_secret_cache(SecretCache *c);
+extern void free_secret(Secret *s);
+extern Secret *secrets;
+/* end */
+extern int check_password_strength(char *pass, int min_length, int strict, char **err);
+extern int valid_secret_password(char *pass, char **err);
+extern int flood_limit_exceeded(Client *client, FloodOption opt);
+extern FloodSettings *find_floodsettings_block(const char *name);
+extern FloodSettings *get_floodsettings_for_user(Client *client, FloodOption opt);
+extern MODVAR char *floodoption_names[];
+extern void flood_limit_exceeded_log(Client *client, char *floodname);

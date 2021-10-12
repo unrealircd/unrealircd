@@ -108,6 +108,8 @@ typedef struct ConfigItem_include ConfigItem_include;
 typedef struct ConfigItem_blacklist_module ConfigItem_blacklist_module;
 typedef struct ConfigItem_help ConfigItem_help;
 typedef struct ConfigItem_offchans ConfigItem_offchans;
+typedef struct SecurityGroup SecurityGroup;
+typedef struct Secret Secret;
 typedef struct ListStruct ListStruct;
 typedef struct ListStructPrio ListStructPrio;
 
@@ -119,7 +121,7 @@ typedef struct Watch Watch;
 typedef struct Client Client;
 typedef struct LocalClient LocalClient;
 typedef struct Channel Channel;
-typedef struct User ClientUser;
+typedef struct User User;
 typedef struct Server Server;
 typedef struct Link Link;
 typedef struct Ban Ban;
@@ -210,7 +212,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define LOG_CHGCMDS 0x0100
 #define LOG_OVERRIDE 0x0200
 #define LOG_SPAMFILTER 0x0400
-#define LOG_DBG    0x0800 /* fixme */
+#define LOG_FLOOD 0x0800
 
 /*
 ** 'offsetof' is defined in ANSI-C. The following definition
@@ -238,6 +240,14 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
  * DO NOT CHANGE THIS as the siphash code depends on it.
  */
 #define SIPHASH_KEY_LENGTH 16
+
+/** The length of a standard 'msgid' tag (note that special
+ * msgid tags will be longer).
+ * The 22 alphanumeric characters provide slightly more
+ * than 128 bits of randomness (62^22 > 2^128).
+ * See mtag_add_or_inherit_msgid() for more information.
+ */
+#define MSGIDLEN	22
 
 /** This specifies the current client status or the client type - see @link ClientStatus @endlink in particular.
  * You may think "server" or "client" are the only choices here, but there are many more
@@ -285,7 +295,7 @@ typedef enum ClientStatus {
 #define	SetUser(x)		((x)->status = CLIENT_STATUS_USER)
 #define	SetLog(x)		((x)->status = CLIENT_STATUS_LOG)
 
-/* @} */
+/** @} */
 
 /** Used for checking certain properties of clients, such as IsSecure() and IsULine().
  * @defgroup ClientFlags Client flags
@@ -320,6 +330,7 @@ typedef enum ClientStatus {
 #define CLIENT_FLAG_DCCBLOCK		0x04000000	/**< Block all DCC send requests */
 #define CLIENT_FLAG_MAP			0x08000000	/**< Show this entry in /MAP (only used in map module) */
 #define CLIENT_FLAG_PINGWARN		0x10000000	/**< Server ping warning (remote server slow with responding to PINGs) */
+#define CLIENT_FLAG_NOHANDSHAKEDELAY	0x20000000	/**< No handshake delay */
 /** @} */
 
 #define SNO_DEFOPER "+kscfvGqobS"
@@ -420,6 +431,7 @@ typedef enum ClientStatus {
 #define IsOutgoing(x)			((x)->flags & CLIENT_FLAG_OUTGOING)
 #define IsPingSent(x)			((x)->flags & CLIENT_FLAG_PINGSENT)
 #define IsPingWarning(x)		((x)->flags & CLIENT_FLAG_PINGWARN)
+#define IsNoHandshakeDelay(x)		((x)->flags & CLIENT_FLAG_NOHANDSHAKEDELAY)
 #define IsProtoctlReceived(x)		((x)->flags & CLIENT_FLAG_PROTOCTL)
 #define IsQuarantined(x)		((x)->flags & CLIENT_FLAG_QUARANTINE)
 #define IsShunned(x)			((x)->flags & CLIENT_FLAG_SHUNNED)
@@ -450,6 +462,7 @@ typedef enum ClientStatus {
 #define SetOutgoing(x)			do { (x)->flags |= CLIENT_FLAG_OUTGOING; } while(0)
 #define SetPingSent(x)			do { (x)->flags |= CLIENT_FLAG_PINGSENT; } while(0)
 #define SetPingWarning(x)		do { (x)->flags |= CLIENT_FLAG_PINGWARN; } while(0)
+#define SetNoHandshakeDelay(x)		do { (x)->flags |= CLIENT_FLAG_NOHANDSHAKEDELAY; } while(0)
 #define SetProtoctlReceived(x)		do { (x)->flags |= CLIENT_FLAG_PROTOCTL; } while(0)
 #define SetQuarantined(x)		do { (x)->flags |= CLIENT_FLAG_QUARANTINE; } while(0)
 #define SetShunned(x)			do { (x)->flags |= CLIENT_FLAG_SHUNNED; } while(0)
@@ -479,6 +492,7 @@ typedef enum ClientStatus {
 #define ClearOutgoing(x)		do { (x)->flags &= ~CLIENT_FLAG_OUTGOING; } while(0)
 #define ClearPingSent(x)		do { (x)->flags &= ~CLIENT_FLAG_PINGSENT; } while(0)
 #define ClearPingWarning(x)		do { (x)->flags &= ~CLIENT_FLAG_PINGWARN; } while(0)
+#define ClearNoHandshakeDelay(x)	do { (x)->flags &= ~CLIENT_FLAG_NOHANDSHAKEDELAY; } while(0)
 #define ClearProtoctlReceived(x)	do { (x)->flags &= ~CLIENT_FLAG_PROTOCTL; } while(0)
 #define ClearQuarantined(x)		do { (x)->flags &= ~CLIENT_FLAG_QUARANTINE; } while(0)
 #define ClearShunned(x)			do { (x)->flags &= ~CLIENT_FLAG_SHUNNED; } while(0)
@@ -487,7 +501,7 @@ typedef enum ClientStatus {
 #define ClearULine(x)			do { (x)->flags &= ~CLIENT_FLAG_ULINE; } while(0)
 #define ClearVirus(x)			do { (x)->flags &= ~CLIENT_FLAG_VIRUS; } while(0)
 #define ClearIdentLookupSent(x)		do { (x)->flags &= ~CLIENT_FLAG_IDENTLOOKUPSENT; } while(0)
-/* @} */
+/** @} */
 
 
 /* Others that access client structs: */
@@ -497,6 +511,9 @@ typedef enum ClientStatus {
 #define IsLoggedIn(x)	(IsRegNick(x) || (x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid))) /* registered nick (+r) or just logged into services (may be -r) */
 #define IsSynched(x)	(x->serv->flags.synced)
 #define IsServerSent(x) (x->serv && x->serv->flags.server_sent)
+
+/* And more that access client stuff - but actually modularized */
+#define GetReputation(client) (moddata_client_get(client, "reputation") ? atoi(moddata_client_get(client, "reputation")) : 0) /**< Get reputation value for a client */
 
 /* PROTOCTL (Server protocol) stuff */
 #ifndef DEBUGMODE
@@ -653,6 +670,7 @@ struct ListStructPrio {
 						CHECK_PRIO_LIST_ENTRY(list) \
 						CHECK_PRIO_LIST_ENTRY(item) \
 						CHECK_NULL_LIST_ITEM(item) \
+						item->priority = prio; \
 						add_ListItemPrio((ListStructPrio *)item, (ListStructPrio **)&list, prio); \
 					} while(0)
 
@@ -746,6 +764,7 @@ struct LoopStruct {
 	unsigned do_bancheck_spamf_user : 1; /* perform 'user' spamfilter bancheck */
 	unsigned do_bancheck_spamf_away : 1; /* perform 'away' spamfilter bancheck */
 	unsigned ircd_rehashing : 1;
+	unsigned ircd_terminating : 1;
 	unsigned tainted : 1;
 	Client *rehash_save_cptr, *rehash_save_client;
 	int rehash_save_sig;
@@ -792,7 +811,8 @@ struct SWhois {
 	char *setby;
 };
 
-/** The command API - used by modules and the core.
+/** The command API - used by modules and the core to add commands, overrides, etc.
+ * See also https://www.unrealircd.org/docs/Dev:Command_API for a higher level overview and example.
  * @defgroup CommandAPI Command API
  * @{
  */
@@ -829,7 +849,7 @@ struct SWhois {
  *        E.g. parv[3] in the above example is out of bounds.
  */
 #define CMD_FUNC(x) void (x) (Client *client, MessageTag *recv_mtags, int parc, char *parv[])
-/* @} */
+/** @} */
 
 /** Command override function - used by all command override handlers.
  * This is used in the code like <pre>CMD_OVERRIDE_FUNC(ovr_somecmd)</pre> as a function definition.
@@ -853,6 +873,97 @@ typedef void (*CmdFunc)(Client *client, MessageTag *mtags, int parc, char *parv[
 typedef void (*AliasCmdFunc)(Client *client, MessageTag *mtags, int parc, char *parv[], char *cmd);
 typedef void (*OverrideCmdFunc)(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, char *parv[]);
 
+#include <sodium.h>
+
+/* This is the 'chunk size', the size of encryption blocks.
+ * We choose 4K here since that is a decent amount as of 2021 and
+ * more would not benefit performance anyway.
+ * Note that you cannot change this value easily afterwards
+ * (you cannot read files with a different chunk size).
+ */
+#define UNREALDB_CRYPT_FILE_CHUNK_SIZE 4096
+
+/** The salt length. Don't change. */
+#define UNREALDB_SALT_LEN 16
+
+/** Database modes of operation (read or write)
+ * @ingroup UnrealDBFunctions
+ */
+typedef enum UnrealDBMode {
+	UNREALDB_MODE_READ = 0,
+	UNREALDB_MODE_WRITE = 1
+} UnrealDBMode;
+
+typedef enum UnrealDBCipher {
+	UNREALDB_CIPHER_XCHACHA20 = 0x0001
+} UnrealDBCipher;
+
+typedef enum UnrealDBKDF {
+	UNREALDB_KDF_ARGON2ID = 0x0001
+} UnrealDBKDF;
+
+/** Database configuration for a particular file */
+typedef struct UnrealDBConfig {
+	uint16_t kdf;					/**< Key derivation function (always 0x01) */
+	uint16_t t_cost;				/**< Time cost (number of rounds) */
+	uint16_t m_cost; 				/**< Memory cost (in number of bitshifts, eg 15 means 1<<15=32M) */
+	uint16_t p_cost;				/**< Parallel cost (number of concurrent threads) */
+	uint16_t saltlen;				/**< Length of the salt (normally UNREALDB_SALT_LEN) */
+	char *salt;					/**< Salt */
+	uint16_t cipher;				/**< Encryption cipher (always 0x01) */
+	uint16_t keylen;				/**< Key length */
+	char *key;					/**< The key used for encryption/decryption */
+} UnrealDBConfig;
+
+/** Error codes returned by @ref UnrealDBFunctions
+ * @ingroup UnrealDBFunctions
+ */
+typedef enum UnrealDBError {
+	UNREALDB_ERROR_SUCCESS = 0,			/**< Success, not an error */
+	UNREALDB_ERROR_FILENOTFOUND = 1,		/**< File does not exist */
+	UNREALDB_ERROR_CRYPTED = 2,			/**< File is crypted but no password provided */
+	UNREALDB_ERROR_NOTCRYPTED = 3,			/**< File is not crypted and a password was provided */
+	UNREALDB_ERROR_HEADER = 4,			/**< Header is corrupt, invalid or unknown format */
+	UNREALDB_ERROR_SECRET = 5,			/**< Invalid secret { } block provided - either does not exist or does not meet requirements */
+	UNREALDB_ERROR_PASSWORD = 6,			/**< Invalid password provided */
+	UNREALDB_ERROR_IO = 7,				/**< I/O error */
+	UNREALDB_ERROR_API = 8,				/**< API call violation, eg requesting to write on a file opened for reading */
+	UNREALDB_ERROR_INTERNAL = 9,			/**< Internal error, eg crypto routine returned something unexpected */
+} UnrealDBError;
+
+/** Database handle
+ * This is returned by unrealdb_open() and used by all other @ref UnrealDBFunctions
+ * @ingroup UnrealDBFunctions
+ */
+typedef struct UnrealDB {
+	FILE *fd;					/**< File descriptor */
+	UnrealDBMode mode;				/**< UNREALDB_MODE_READ / UNREALDB_MODE_WRITE */
+	int crypted;					/**< Are we doing any encryption or just plaintext? */
+	uint64_t creationtime;				/**< When this file was created/updates */
+	crypto_secretstream_xchacha20poly1305_state st; /**< Internal state for crypto engine */
+	char buf[UNREALDB_CRYPT_FILE_CHUNK_SIZE];	/**< Buffer used for reading/writing */
+	int buflen;					/**< Length of current data in buffer */
+	UnrealDBError error_code;			/**< Last error code. Whenever this happens we will set this, never overwrite, and block further I/O */
+	char *error_string;				/**< Error string upon failure */
+	UnrealDBConfig *config;				/**< Config */
+} UnrealDB;
+
+/** Used for speeding up reading/writing of DBs (so we don't have to run argon2 repeatedly) */
+typedef struct SecretCache SecretCache;
+struct SecretCache {
+	SecretCache *prev, *next;
+	UnrealDBConfig *config;
+	time_t cache_hit;
+};
+
+/** Used for storing secret { } blocks */
+struct Secret {
+	Secret *prev, *next;
+	char *name;
+	char *password;
+	SecretCache *cache;
+};
+
 
 /* tkl:
  *   TKL_KILL|TKL_GLOBAL 	= Global K-Line (GLINE)
@@ -871,7 +982,7 @@ typedef void (*OverrideCmdFunc)(CommandOverride *ovr, Client *client, MessageTag
 #define TKL_BLACKLIST		0x0001000
 #define TKL_CONNECT_FLOOD	0x0002000
 #define TKL_MAXPERIP		0x0004000
-#define TKL_UNKNOWN_DATA_FLOOD	0x0008000
+#define TKL_HANDSHAKE_DATA_FLOOD	0x0008000
 #define TKL_ANTIRANDOM          0x0010000
 #define TKL_ANTIMIXEDUTF8       0x0020000
 #define TKL_BAN_VERSION         0x0040000
@@ -889,12 +1000,13 @@ typedef void (*OverrideCmdFunc)(CommandOverride *ovr, Client *client, MessageTag
 #define SPAMF_USERMSG		0x0002 /* p */
 #define SPAMF_USERNOTICE	0x0004 /* n */
 #define SPAMF_CHANNOTICE	0x0008 /* N */
-#define SPAMF_PART			0x0010 /* P */
-#define SPAMF_QUIT			0x0020 /* q */
-#define SPAMF_DCC			0x0040 /* d */
-#define SPAMF_USER			0x0080 /* u */
-#define SPAMF_AWAY			0x0100 /* a */
-#define SPAMF_TOPIC			0x0200 /* t */
+#define SPAMF_PART		0x0010 /* P */
+#define SPAMF_QUIT		0x0020 /* q */
+#define SPAMF_DCC		0x0040 /* d */
+#define SPAMF_USER		0x0080 /* u */
+#define SPAMF_AWAY		0x0100 /* a */
+#define SPAMF_TOPIC		0x0200 /* t */
+#define SPAMF_MTAG		0x0400 /* m */
 
 /* Other flags only for function calls: */
 #define SPAMFLAG_NOWARN		0x0001
@@ -1009,6 +1121,21 @@ struct IRCCounts {
 /** The /LUSERS stats information */
 extern MODVAR IRCCounts irccounts;
 
+typedef struct NameValueList NameValueList;
+struct NameValueList {
+	NameValueList *prev, *next;
+	char *name;
+	char *value;
+};
+
+typedef struct NameValuePrioList NameValuePrioList;
+struct NameValuePrioList {
+	NameValuePrioList *prev, *next;
+	int priority;
+	char *name;
+	char *value;
+};
+
 #include "modules.h"
 
 /** A "real" command (internal interface, not for modules) */
@@ -1083,6 +1210,25 @@ extern void unload_all_unused_moddata(void);
 #define TLSFLAG_NOSTARTTLS	0x8
 #define TLSFLAG_DISABLECLIENTCERT 0x10
 
+/** Flood counters for local clients */
+typedef struct FloodCounter {
+	int count;
+	long t;
+} FloodCounter;
+
+/** This is the list of different flood counters that we keep for local clients. */
+/* IMPORTANT: If you change this, update floodoption_names[] in src/user.c too !!!!!!!!!!!! */
+typedef enum FloodOption {
+	FLD_NICK		= 0,	/**< nick-flood */
+	FLD_JOIN		= 1,	/**< join-flood */
+	FLD_AWAY		= 2,	/**< away-flood */
+	FLD_INVITE		= 3,	/**< invite-flood */
+	FLD_KNOCK		= 4,	/**< knock-flood */
+	FLD_CONVERSATIONS	= 5,	/**< max-concurrent-conversations */
+} FloodOption;
+#define MAXFLOODOPTIONS 10
+
+
 /** This shows the Client struct (any client), the User struct (a user), Server (a server) that are commonly accessed both in the core and by 3rd party coders.
  * @defgroup CommonStructs Common structs
  * @{
@@ -1095,7 +1241,7 @@ struct Client {
 	struct list_head lclient_node;		/**< For local client list (lclient_list) */
 	struct list_head special_node;		/**< For special lists (server || unknown || oper) */
 	LocalClient *local;			/**< Additional information regarding locally connected clients */
-	ClientUser *user;			/**< Additional information, if this client is a user */
+	User *user;				/**< Additional information, if this client is a user */
 	Server *serv;				/**< Additional information, if this is a server */
 	ClientStatus status;			/**< Client status, one of CLIENT_STATUS_* */
 	struct list_head client_hash;		/**< For name hash table (clientTable) */
@@ -1162,6 +1308,7 @@ struct LocalClient {
 	struct hostent *hostp;		/**< Host record for this client (used by DNS code) */
 	char sockhost[HOSTLEN + 1];	/**< Hostname from the socket */
 	u_short port;			/**< Remote TCP port of client */
+	FloodCounter flood[MAXFLOODOPTIONS];
 };
 
 /** User information (persons, not servers), you use client->user to access these (see also @link Client @endlink).
@@ -1171,7 +1318,7 @@ struct User {
 	Link *invited;			/**< Channels has the user been invited to (linked list) */
 	Link *dccallow;			/**< DCCALLOW list (linked list) */
 	char *away;			/**< AWAY message, or NULL if not away */
-	char svid[SVIDLEN + 1];		/**< Unique value assigned by services (SVID) */
+	char svid[SVIDLEN + 1];		/**< Services account name or ID (SVID) */
 	unsigned short joined;		/**< Number of channels joined */
 	char username[USERLEN + 1];	/**< Username, the user portion in nick!user@host. */
 	char realhost[HOSTLEN + 1];	/**< Realhost, the real host of the user (IP or hostname) - usually this is not shown to other users */
@@ -1184,11 +1331,9 @@ struct User {
 	char *operlogin;		/**< Which oper { } block was used to oper up, otherwise NULL - used by oper::maxlogins */
 	struct {
 		time_t nick_t;		/**< For set::anti-flood::nick-flood: time */
-		time_t away_t;		/**< For set::anti-flood::away-flood: time */
 		time_t knock_t;		/**< For set::anti-flood::knock-flood: time */
 		time_t invite_t;	/**< For set::anti-flood::invite-flood: time */
 		unsigned char nick_c;	/**< For set::anti-flood::nick-flood: counter */
-		unsigned char away_c;	/**< For set::anti-flood::away-flood: counter */
 		unsigned char knock_c;	/**< For set::anti-flood::knock-flood: counter */
 		unsigned char invite_c;	/**< For set::anti-flood::invite-flood: counter */
 	} flood;			/**< Anti-flood counters */
@@ -1217,17 +1362,10 @@ struct Server {
 	} features;
 };
 
-/* @} */
+/** @} */
 
 struct MessageTag {
 	MessageTag *prev, *next;
-	char *name;
-	char *value;
-};
-
-typedef struct NameValueList NameValueList;
-struct NameValueList {
-	NameValueList *prev, *next;
 	char *name;
 	char *value;
 };
@@ -1379,17 +1517,22 @@ struct ConfigFlag_allow {
 	unsigned	noident :1;
 	unsigned	useip :1;
 	unsigned	tls :1;
+	unsigned	reject_on_auth_failure :1;
 };
 
+/** allow { } block settings */
 struct ConfigItem_allow {
-	ConfigItem_allow	*prev, *next;
-	ConfigFlag			flag;
-	char				*ip, *hostname, *server;
-	AuthConfig		*auth;	
-	unsigned short		maxperip;
-	int					port;
-	ConfigItem_class	*class;
-	ConfigFlag_allow	flags;
+	ConfigItem_allow *prev, *next;
+	ConfigFlag flag;
+	char *ip;
+	char *hostname;
+	char *server;
+	AuthConfig *auth;
+	int maxperip; /**< Maximum connections permitted per IP address (locally) */
+	int global_maxperip; /**< Maximum connections permitted per IP address (globally) */
+	int port;
+	ConfigItem_class *class;
+	ConfigFlag_allow flags;
 	unsigned short ipv6_clone_mask;
 };
 
@@ -1624,7 +1767,8 @@ struct ConfigItem_allow_dcc {
 struct ConfigItem_log {
 	ConfigItem_log *prev, *next;
 	ConfigFlag flag;
-	char *file;
+	char *file; /**< Filename to log to (either generated or specified) */
+	char *filefmt; /**< Filename with dynamic % stuff */
 	long maxsize;
 	int  flags;
 	int  logfd;
@@ -1715,6 +1859,16 @@ struct ConfigItem_offchans {
 	char *topic;
 };
 
+#define SECURITYGROUPLEN 48
+struct SecurityGroup {
+	SecurityGroup *prev, *next;
+	int priority;
+	char name[SECURITYGROUPLEN+1];
+	int identified;
+	int reputation_score;
+	int webirc;
+	int tls;
+};
 
 #define HM_HOST 1
 #define HM_IPV4 2
@@ -2009,18 +2163,6 @@ extern MODVAR char *gnulicense[];
 extern MODVAR SSL_CTX *ctx;
 extern MODVAR SSL_CTX *ctx_server;
 extern MODVAR SSL_CTX *ctx_client;
-
-extern SSL_METHOD *meth;
-extern int early_init_ssl();
-extern int init_ssl();
-extern int ssl_handshake(Client *);   /* Handshake the accpeted con.*/
-extern int ssl_client_handshake(Client *, ConfigItem_link *); /* and the initiated con.*/
-extern int ircd_SSL_accept(Client *acptr, int fd);
-extern int ircd_SSL_connect(Client *acptr, int fd);
-extern int SSL_smart_shutdown(SSL *ssl);
-extern void ircd_SSL_client_handshake(int, int, void *);
-extern void SSL_set_nonblocking(SSL *s);
-extern SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server);
 
 #define TLS_PROTOCOL_TLSV1		0x0001
 #define TLS_PROTOCOL_TLSV1_1	0x0002

@@ -1,6 +1,7 @@
 /************************************************************************
  *   Unreal Internet Relay Chat Daemon, include/dynconf.h
- *   Copyright (C) 1999 Carsten Munk
+ *   Copyright (C) 1999-2003 Carsten Munk
+ *   Copyright (C) 2003-2021 Bram Matthys
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -21,6 +22,15 @@
 
 
 #define DYNCONF_H
+
+typedef struct FloodSettings FloodSettings;
+
+struct FloodSettings {
+	FloodSettings *prev, *next;
+	char *name;
+	int limit[MAXFLOODOPTIONS];
+	long period[MAXFLOODOPTIONS];
+};
 
 typedef struct NetworkConfiguration NetworkConfiguration;
 struct NetworkConfiguration {
@@ -113,20 +123,12 @@ struct Configuration {
 	char *restrict_channelmodes;
 	char *restrict_extendedbans;
 	char *channel_command_prefix;
-	long unknown_flood_bantime;
-	long unknown_flood_amount;
+	long handshake_data_flood_amount;
+	long handshake_data_flood_ban_time;
+	int handshake_data_flood_ban_action;
 	struct ChMode modes_on_join;
 	int level_on_join;
-	unsigned char away_count;
-	long away_period;
-	unsigned char nick_count;
-	long nick_period;
-	unsigned char invite_count;
-	long invite_period;
-	unsigned char knock_count;
-	long knock_period;
-	unsigned char max_concurrent_conversations_users;
-	unsigned char max_concurrent_conversations_new_user_every;
+	FloodSettings *floodsettings;
 	int ident_connect_timeout;
 	int ident_read_timeout;
 	long default_bantime;
@@ -230,19 +232,8 @@ extern MODVAR int ipv6_disabled;
 #define THROTTLING_PERIOD		iConf.throttle_period
 #define THROTTLING_COUNT		iConf.throttle_count
 #define USE_BAN_VERSION			iConf.use_ban_version
-#define UNKNOWN_FLOOD_BANTIME		iConf.unknown_flood_bantime
-#define UNKNOWN_FLOOD_AMOUNT		iConf.unknown_flood_amount
 #define MODES_ON_JOIN			iConf.modes_on_join.mode
 #define LEVEL_ON_JOIN			iConf.level_on_join
-
-#define AWAY_PERIOD			iConf.away_period
-#define AWAY_COUNT			iConf.away_count
-#define NICK_PERIOD			iConf.nick_period
-#define NICK_COUNT			iConf.nick_count
-#define KNOCK_PERIOD			iConf.knock_period
-#define KNOCK_COUNT			iConf.knock_count
-#define INVITE_PERIOD			iConf.invite_period
-#define INVITE_COUNT			iConf.invite_count
 
 #define IDENT_CONNECT_TIMEOUT	iConf.ident_connect_timeout
 #define IDENT_READ_TIMEOUT		iConf.ident_read_timeout
@@ -326,16 +317,8 @@ struct SetCheck {
 	unsigned has_restrict_channelmodes:1;
 	unsigned has_restrict_extendedbans:1;
 	unsigned has_channel_command_prefix:1;
-	unsigned has_anti_flood_unknown_flood_bantime:1;
-	unsigned has_anti_flood_unknown_flood_amount:1;
 	unsigned has_modes_on_join:1;
 	unsigned has_level_on_join:1;
-	unsigned has_anti_flood_away_count:1;
-	unsigned has_anti_flood_away_period:1;
-	unsigned has_anti_flood_nick_flood:1;
-	unsigned has_anti_flood_connect_flood:1;
-	unsigned has_anti_flood_invite_flood:1;
-	unsigned has_anti_flood_knock_flood:1;
 	unsigned has_ident_connect_timeout:1;
 	unsigned has_ident_read_timeout:1;
 	unsigned has_default_bantime:1;

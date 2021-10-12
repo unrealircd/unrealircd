@@ -81,16 +81,17 @@ typedef struct {
 } SpamfilterTargetTable;
 
 SpamfilterTargetTable spamfiltertargettable[] = {
-	{ SPAMF_CHANMSG,	'c',	"channel",			"PRIVMSG" },
-	{ SPAMF_USERMSG,	'p',	"private",			"PRIVMSG" },
+	{ SPAMF_CHANMSG,	'c',	"channel",		"PRIVMSG" },
+	{ SPAMF_USERMSG,	'p',	"private",		"PRIVMSG" },
 	{ SPAMF_USERNOTICE,	'n',	"private-notice",	"NOTICE" },
 	{ SPAMF_CHANNOTICE,	'N',	"channel-notice",	"NOTICE" },
-	{ SPAMF_PART,		'P',	"part",				"PART" },
-	{ SPAMF_QUIT,		'q',	"quit",				"QUIT" },
-	{ SPAMF_DCC,		'd',	"dcc",				"PRIVMSG" },
-	{ SPAMF_USER,		'u',	"user",				"NICK" },
-	{ SPAMF_AWAY,		'a',	"away",				"AWAY" },
-	{ SPAMF_TOPIC,		't',	"topic",			"TOPIC" },
+	{ SPAMF_PART,		'P',	"part",			"PART" },
+	{ SPAMF_QUIT,		'q',	"quit",			"QUIT" },
+	{ SPAMF_DCC,		'd',	"dcc",			"PRIVMSG" },
+	{ SPAMF_USER,		'u',	"user",			"NICK" },
+	{ SPAMF_AWAY,		'a',	"away",			"AWAY" },
+	{ SPAMF_TOPIC,		't',	"topic",		"TOPIC" },
+	{ SPAMF_MTAG,		'T',	"message-tag",		"message-tag" },
 	{ 0, 0, 0, 0 }
 };
 
@@ -137,7 +138,13 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 	strlcat(buf, "\n", sizeof(buf));
 
 	if (!loop.ircd_forked && (flags & LOG_ERROR))
+	{
+#ifdef _WIN32
+		win_log("* %s", buf);
+#else
 		fprintf(stderr, "%s", buf);
+#endif
+	}
 
 	/* In case of './unrealircd configtest': don't write to log file, only to stderr */
 	if (loop.config_test)
@@ -146,83 +153,66 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 		return;
 	}
 
-	for (logs = conf_log; logs; logs = logs->next) {
+	for (logs = conf_log; logs; logs = logs->next)
+	{
+		if (!(logs->flags & flags))
+			continue;
+
 #ifdef HAVE_SYSLOG
-		if (!strcasecmp(logs->file, "syslog") && logs->flags & flags) {
+		if (logs->file && !strcasecmp(logs->file, "syslog"))
+		{
 			syslog(LOG_INFO, "%s", buf);
 			written++;
 			continue;
 		}
 #endif
-		if (logs->flags & flags)
+
+		/* This deals with dynamic log file names, such as ircd.%Y-%m-%d.log */
+		if (logs->filefmt)
 		{
-			if (stat(logs->file, &fstats) != -1 && logs->maxsize && fstats.st_size >= logs->maxsize)
+			char *fname = unreal_strftime(logs->filefmt);
+			if (logs->file && (logs->logfd != -1) && strcmp(logs->file, fname))
 			{
-				char oldlog[512];
-				if (logs->logfd == -1)
-				{
-					/* Try to open, so we can write the 'Max file size reached' message. */
-#ifndef _WIN32
-					logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
-#else
-					logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
-#endif
-				}
-				if (logs->logfd != -1)
-				{
-					if (write(logs->logfd, "Max file size reached, starting new log file\n", 45) < 0)
-					{
-						/* We already handle the unable to write to log file case for normal data.
-						 * I think we can get away with not handling this one.
-						 */
-						;
-					}
-					fd_close(logs->logfd);
-				}
-
-				/* Rename log file to xxxxxx.old */
-				snprintf(oldlog, sizeof(oldlog), "%s.old", logs->file);
-				rename(logs->file, oldlog);
-
-				logs->logfd = fd_fileopen(logs->file, O_CREAT|O_WRONLY|O_TRUNC);
-				if (logs->logfd == -1)
-					continue;
+				/* We are logging already and need to switch over */
+				fd_close(logs->logfd);
+				logs->logfd = -1;
 			}
-			else if (logs->logfd == -1) {
-#ifndef _WIN32
-				logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
-#else
-				logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
-#endif
-				if (logs->logfd == -1)
-				{
-					if (!loop.ircd_booted)
-					{
-						config_status("WARNING: Unable to write to '%s': %s", logs->file, strerror(ERRNO));
-					} else {
-						if (last_log_file_warning + 300 < TStime())
-						{
-							config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", logs->file, strerror(ERRNO));
-							last_log_file_warning = TStime();
-						}
-					}
-					continue;
-				}
-			}
-			/* this shouldn't happen, but lets not waste unnecessary syscalls... */
+			safe_strdup(logs->file, fname);
+		}
+
+		/* log::maxsize code */
+		if (logs->maxsize && (stat(logs->file, &fstats) != -1) && fstats.st_size >= logs->maxsize)
+		{
+			char oldlog[512];
 			if (logs->logfd == -1)
-				continue;
-			if (write(logs->logfd, timebuf, strlen(timebuf)) < 0)
 			{
-				/* Let's ignore any write errors for this one. Next write() will catch it... */
-				;
+				/* Try to open, so we can write the 'Max file size reached' message. */
+				logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
 			}
-			n = write(logs->logfd, buf, strlen(buf));
-			if (n == strlen(buf))
+			if (logs->logfd != -1)
 			{
-				written++;
+				if (write(logs->logfd, "Max file size reached, starting new log file\n", 45) < 0)
+				{
+					/* We already handle the unable to write to log file case for normal data.
+					 * I think we can get away with not handling this one.
+					 */
+					;
+				}
+				fd_close(logs->logfd);
 			}
-			else
+			logs->logfd = -1;
+
+			/* Rename log file to xxxxxx.old */
+			snprintf(oldlog, sizeof(oldlog), "%s.old", logs->file);
+			unlink(oldlog); /* windows rename cannot overwrite, so unlink here.. ;) */
+			rename(logs->file, oldlog);
+		}
+
+		/* generic code for opening log if not open yet.. */
+		if (logs->logfd == -1)
+		{
+			logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
+			if (logs->logfd == -1)
 			{
 				if (!loop.ircd_booted)
 				{
@@ -233,6 +223,32 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 						config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", logs->file, strerror(ERRNO));
 						last_log_file_warning = TStime();
 					}
+				}
+				continue;
+			}
+		}
+
+		/* Now actually WRITE to the log... */
+		if (write(logs->logfd, timebuf, strlen(timebuf)) < 0)
+		{
+			/* Let's ignore any write errors for this one. Next write() will catch it... */
+			;
+		}
+		n = write(logs->logfd, buf, strlen(buf));
+		if (n == strlen(buf))
+		{
+			written++;
+		}
+		else
+		{
+			if (!loop.ircd_booted)
+			{
+				config_status("WARNING: Unable to write to '%s': %s", logs->file, strerror(ERRNO));
+			} else {
+				if (last_log_file_warning + 300 < TStime())
+				{
+					config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", logs->file, strerror(ERRNO));
+					last_log_file_warning = TStime();
 				}
 			}
 		}
@@ -754,14 +770,14 @@ void exit_client(Client *client, MessageTag *recv_mtags, char *comment)
 			hash_del_watch_list(client);
 			on_for = TStime() - client->local->firsttime;
 			if (IsHidden(client))
-				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s [VHOST %s] (%s)",
+				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s [%s] [vhost: %s] (%s)",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
 					client->name, client->user->username,
-					client->user->realhost, client->user->virthost, comment);
+					client->user->realhost, GetIP(client), client->user->virthost, comment);
 			else
-				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s (%s)",
+				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s [%s] (%s)",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
-					client->name, client->user->username, client->user->realhost, comment);
+					client->name, client->user->username, client->user->realhost, GetIP(client), comment);
 		} else
 		if (IsUnknown(client))
 		{
@@ -810,7 +826,6 @@ void exit_client(Client *client, MessageTag *recv_mtags, char *comment)
 	exit_one_client(client, recv_mtags, comment);
 
 	free_message_tags(mtags_generated);
-	
 }
 
 /** Initialize the (quite useless) IRC statistics */
@@ -851,7 +866,7 @@ void verify_opercount(Client *orig, char *tag)
 int valid_host(char *host)
 {
 	char *p;
-	
+
 	if (strlen(host) > HOSTLEN)
 		return 0; /* too long hosts are invalid too */
 
@@ -1032,7 +1047,7 @@ int is_autojoin_chan(char *chname)
 			if (!strcasecmp(name, chname))
 				return 1;
 	}
-	
+
 	if (AUTO_JOIN_CHANS)
 	{
 		strlcpy(buf, AUTO_JOIN_CHANS, sizeof(buf));
@@ -1069,7 +1084,7 @@ int char_to_channelflag(char c)
 int mixed_network(void)
 {
 	Client *client;
-	
+
 	list_for_each_entry(client, &server_list, special_node)
 	{
 		if (!IsServer(client) || IsULine(client))
@@ -1083,7 +1098,7 @@ int mixed_network(void)
 void unreal_delete_masks(ConfigItem_mask *m)
 {
 	ConfigItem_mask *m_next;
-	
+
 	for (; m; m = m_next)
 	{
 		m_next = m->next;
@@ -1104,7 +1119,7 @@ static void unreal_add_mask(ConfigItem_mask **head, ConfigEntry *ce)
 		safe_strdup(m->mask, ce->ce_vardata);
 	else
 		safe_strdup(m->mask, ce->ce_varname);
-	
+
 	add_ListItem((ListStruct *)m, (ListStruct **)head);
 }
 
@@ -1137,7 +1152,7 @@ int unreal_mask_match(Client *client, ConfigItem_mask *m)
 				return 1;
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -1173,6 +1188,7 @@ char *our_strcasestr(char *haystack, char *needle)
  * @param tag		A tag used internally and for server-to-server traffic,
  *			not visible to end-users.
  * @param priority	Priority - for ordering multiple swhois entries
+ *                      (lower number = further up in the swhoises list in WHOIS)
  * @param swhois	The actual special whois title (string) you want to add to the user
  * @param from		Who added this entry
  * @param skip		Which server(-side) to skip broadcasting this entry to.
@@ -1191,7 +1207,7 @@ int swhois_add(Client *client, char *tag, int priority, char *swhois, Client *fr
 	safe_strdup(s->setby, tag);
 	s->priority = priority;
 	AddListItemPrio(s, client->user->swhois, s->priority);
-	
+
 	sendto_server(skip, 0, PROTO_EXTSWHOIS, NULL, ":%s SWHOIS %s :%s",
 		from->id, client->id, swhois);
 
@@ -1215,11 +1231,11 @@ int swhois_delete(Client *client, char *tag, char *swhois, Client *from, Client 
 {
 	SWhois *s, *s_next;
 	int ret = -1; /* default to 'not found' */
-	
+
 	for (s = client->user->swhois; s; s = s_next)
 	{
 		s_next = s->next;
-		
+
 		/* If ( same swhois or "*" ) AND same tag */
 		if ( ((!strcmp(s->line, swhois) || !strcmp(swhois, "*")) &&
 		    !strcmp(s->setby, tag)))
@@ -1234,7 +1250,7 @@ int swhois_delete(Client *client, char *tag, char *swhois, Client *from, Client 
 
 			sendto_server(skip, PROTO_EXTSWHOIS, 0, NULL, ":%s SWHOIS %s - %s %d :%s",
 				from->id, client->id, tag, 0, swhois);
-			
+
 			ret = 0;
 		}
 	}
@@ -1771,6 +1787,23 @@ int read_str(FILE *fd, char **x)
 	return 1;
 }
 
+/** Convert binary 'data' of size 'len' to a hexadecimal string 'str'.
+ * The caller is responsible to ensure that 'str' is sufficiently large.
+ */
+void binarytohex(void *data, size_t len, char *str)
+{
+	const char hexchars[16] = "0123456789abcdef";
+	char *datastr = (char *)data;
+	int i, n = 0;
+
+	for (i=0; i<len; i++)
+	{
+		str[n++] = hexchars[(datastr[i] >> 4) & 0xF];
+		str[n++] = hexchars[datastr[i] & 0xF];
+	}
+	str[n] = '\0';
+}
+
 /** Generates an MD5 checksum.
  * @param mdout[out] Buffer to store result in, the result will be 16 bytes in binary
  *                   (not ascii printable!).
@@ -1795,31 +1828,27 @@ void DoMD5(char *mdout, const char *src, unsigned long n)
 char *md5hash(char *dst, const char *src, unsigned long n)
 {
 	char tmp[16];
-	SHA256_CTX hash;
 
 	DoMD5(tmp, src, n);
-	sprintf(dst, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-		tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5], tmp[6], tmp[7], tmp[8],
-		tmp[9], tmp[10], tmp[11], tmp[12], tmp[13], tmp[14], tmp[15]);
-
+	binarytohex(tmp, sizeof(tmp), dst);
 	return dst;
 }
 
-/** Convert binary 'data' of size 'len' to a hexadecimal string 'str'.
- * The caller is responsible to ensure that 'str' is sufficiently large.
+/** Generates a SHA256 checksum - ASCII printable string (0011223344..etc..).
+ * @param dst[out]  Buffer to store result in, which needs to be 65 bytes minimum.
+ * @param src[in]   The input data used to generate the checksum.
+ * @param n[in]     Length of data.
  */
-void binarytohex(void *data, size_t len, char *str)
+char *sha256hash(char *dst, const char *src, unsigned long n)
 {
-	const char hexchars[16] = "0123456789abcdef";
-	char *datastr = (char *)data;
-	int i, n = 0;
+	SHA256_CTX hash;
+	char binaryhash[SHA256_DIGEST_LENGTH];
 
-	for (i=0; i<len; i++)
-	{
-		str[n++] = hexchars[(datastr[i] >> 4) & 0xF];
-		str[n++] = hexchars[datastr[i] & 0xF];
-	}
-	str[n] = '\0';
+	SHA256_Init(&hash);
+	SHA256_Update(&hash, src, n);
+	SHA256_Final(binaryhash, &hash);
+	binarytohex(binaryhash, sizeof(binaryhash), dst);
+	return dst;
 }
 
 /** Calculate the SHA256 checksum of a file */
@@ -1893,6 +1922,41 @@ int filename_has_suffix(const char *fname, const char *suffix)
 	return 0;
 }
 
+/** Check if the specified file exists */
+int file_exists(char *file)
+{
+	FILE *fd;
+
+	fd = fopen(file, "r");
+	if (!fd)
+		return 0;
+
+	fclose(fd);
+	return 1;
+}
+
+/** Get the file creation time */
+time_t get_file_time(char *fname)
+{
+	struct stat st;
+
+	if (stat(fname, &st) != 0)
+		return 0;
+
+	return (time_t)st.st_ctime;
+}
+
+/** Get the size of a file */
+long get_file_size(char *fname)
+{
+	struct stat st;
+
+	if (stat(fname, &st) != 0)
+		return -1;
+
+	return (long)st.st_size;
+}
+
 /** Add a line to a MultiLine list */
 void addmultiline(MultiLine **l, char *line)
 {
@@ -1923,4 +1987,102 @@ char *sendtype_to_cmd(SendType sendtype)
 	if (sendtype == SEND_TYPE_TAGMSG)
 		return "TAGMSG";
 	return NULL;
+}
+
+/** Check password strength.
+ * @param pass		The password to check
+ * @param min_length	The minimum length of the password
+ * @param strict	Whether to require UPPER+lower+digits
+ * @returns 1 if good, 0 if not.
+ */
+int check_password_strength(char *pass, int min_length, int strict, char **err)
+{
+	char has_lowercase=0, has_uppercase=0, has_digit=0;
+	char *p;
+	static char buf[256];
+
+	if (err)
+		*err = NULL;
+
+	if (strlen(pass) < min_length)
+	{
+		if (err)
+		{
+			snprintf(buf, sizeof(buf), "Password must be at least %d characters", min_length);
+			*err = buf;
+		}
+		return 0;
+	}
+
+	for (p=pass; *p; p++)
+	{
+		if (islower(*p))
+			has_lowercase = 1;
+		else if (isupper(*p))
+			has_uppercase = 1;
+		else if (isdigit(*p))
+			has_digit = 1;
+	}
+
+	if (strict)
+	{
+		if (!has_lowercase)
+		{
+			if (err)
+				*err = "Password must contain at least 1 lowercase character";
+			return 0;
+		} else
+		if (!has_uppercase)
+		{
+			if (err)
+				*err = "Password must contain at least 1 UPPERcase character";
+			return 0;
+		} else
+		if (!has_digit)
+		{
+			if (err)
+				*err = "Password must contain at least 1 digit (number)";
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+int valid_secret_password(char *pass, char **err)
+{
+	return check_password_strength(pass, 10, 1, err);
+}
+
+int running_interactively(void)
+{
+#ifndef _WIN32
+	char *s;
+
+	if (!isatty(0))
+		return 0;
+
+	s = getenv("TERM");
+	if (!s || !strcasecmp(s, "dumb") || !strcasecmp(s, "none"))
+		return 0;
+
+	return 1;
+#else
+	return IsService ? 0 : 1;
+#endif
+}
+
+/** Skip whitespace (if any) */
+void skip_whitespace(char **p)
+{
+	for (; **p == ' ' || **p == '\t'; *p = *p + 1);
+}
+
+/** Keep reading '*p' until we hit any of the 'stopchars'.
+ * Actually behaves like strstr() but then hit the end
+ * of the string (\0) i guess?
+ */
+void read_until(char **p, char *stopchars)
+{
+	for (; **p && !strchr(stopchars, **p); *p = *p + 1);
 }

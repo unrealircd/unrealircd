@@ -12,16 +12,6 @@ extern ConfigFile *conf;
 
 NameValueList *config_defines = NULL; /**< List of @defines, only valid during configuration reading */
 
-void skip_whitespace(char **p)
-{
-	for (; **p == ' ' || **p == '\t'; *p = *p + 1);
-}
-
-void read_until(char **p, char *stopchars)
-{
-	for (; **p && !strchr(stopchars, **p); *p = *p + 1);
-}
-
 static inline int ValidVarCharacter(char x)
 {
 	if (isupper(x) || isdigit(x) || strchr("_", x))

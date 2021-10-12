@@ -639,7 +639,7 @@ static int can_dcc(Client *client, char *target, Client *targetcli, char *filena
 		return 0;
 	}
 
-	if (match_spamfilter(client, filename, SPAMF_DCC, target, 0, NULL))
+	if (match_spamfilter(client, filename, SPAMF_DCC, "PRIVMSG", target, 0, NULL))
 		return 0;
 
 	if ((fl = dcc_isforbidden(client, filename)))

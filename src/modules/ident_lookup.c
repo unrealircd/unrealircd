@@ -190,16 +190,6 @@ static void ident_lookup_receive(int fd, int revents, void *userdata)
 	return;
 }
 
-void skip_whitespace(char **p)
-{
-	for (; **p == ' ' || **p == '\t'; *p = *p + 1);
-}
-
-void read_until(char **p, char *stopchars)
-{
-	for (; **p && !strchr(stopchars, **p); *p = *p + 1);
-}
-
 static char *ident_lookup_parse(Client *client, char *buf)
 {
 	/* <port> , <port> : USERID : <OSTYPE>: <username>

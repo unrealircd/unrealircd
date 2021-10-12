@@ -132,21 +132,12 @@ CMD_FUNC(cmd_knock)
 	if (i == HOOK_DENY)
 		return;
 
-	if (MyUser(client) && !ValidatePermissionsForPath("immune:knock-flood",client,NULL,NULL,NULL))
+	if (MyUser(client) &&
+	    !ValidatePermissionsForPath("immune:knock-flood",client,NULL,NULL,NULL) &&
+	    flood_limit_exceeded(client, FLD_KNOCK))
 	{
-		if ((client->user->flood.knock_t + KNOCK_PERIOD) <= timeofday)
-		{
-			client->user->flood.knock_c = 0;
-			client->user->flood.knock_t = timeofday;
-		}
-		if (client->user->flood.knock_c <= KNOCK_COUNT)
-			client->user->flood.knock_c++;
-		if (client->user->flood.knock_c > KNOCK_COUNT)
-		{
-			sendnumeric(client, ERR_CANNOTKNOCK, parv[1],
-			    "You are KNOCK flooding");
-			return;
-		}
+		sendnumeric(client, ERR_CANNOTKNOCK, parv[1], "You are KNOCK flooding");
+		return;
 	}
 
 	new_message(&me, NULL, &mtags);

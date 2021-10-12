@@ -24,6 +24,11 @@ MT=mt
 #ARGON2_INC_DIR="C:\dev\argon2\include"
 #ARGON2LIB="Argon2RefDll.lib"
 
+### SODIUM ###
+#SODIUM_LIB_DIR="C:\dev\unrealircd-5-libs\libsodium\......."
+#SODIUM_INC_DIR="C:\dev\unrealircd-5-libs\libsodium\......."
+#SODIUMLIB="libsodium.lib"
+
 ### C-ARES ####
 #CARES_LIB_DIR="C:\dev\c-ares\vc\cares\dll-release"
 #CARES_INC_DIR="C:\dev\c-ares"
@@ -94,6 +99,13 @@ ARGON2_INC=/I "$(ARGON2_INC_DIR)"
 ARGON2_LIB=/LIBPATH:"$(ARGON2_LIB_DIR)"
 !ENDIF
 
+!IFDEF SODIUM_INC_DIR
+SODIUM_INC=/I "$(SODIUM_INC_DIR)"
+!ENDIF
+!IFDEF SODIUM_LIB_DIR
+SODIUM_LIB=/LIBPATH:"$(SODIUM_LIB_DIR)"
+!ENDIF
+
 !IFDEF USE_REMOTEINC
 CURLCFLAGS=/D USE_LIBCURL
 CURLOBJ=SRC/URL.OBJ
@@ -125,13 +137,13 @@ DBGLFLAG=/debug
 MODDBGCFLAG=/LDd /MD /Zi
 !ENDIF 
 
-STDOPTIONS=$(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /nologo \
+STDOPTIONS=$(PCRE2_INC) $(ARGON2_INC) $(SODIUM_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /nologo \
  $(CURLCFLAGS) /D FD_SETSIZE=16384 $(SSLCFLAGS) /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE \
  /D FAKELAG_CONFIGURABLE=1 \
  /W3 /wd4267 /wd4101 /wd4018 /wd4244 /wd4996 /WX \
  /analyze:ruleset extras\VStudioAnalyze.ruleset
 STDLIBS=$(CARES_LIB) $(CARESLIB) $(PCRE2_LIB) $(PCRE2LIB) $(ARGON2_LIB) $(ARGON2LIB) \
- $(LIBRESSL_LIB) $(SSLLIB) $(LIBCURL_LIB) $(CURLLIB)
+ $(SODIUM_LIB) $(SODIUMLIB) $(LIBRESSL_LIB) $(SSLLIB) $(LIBCURL_LIB) $(CURLLIB)
 CFLAGS=$(DBGCFLAG) $(STDOPTIONS) /c /Fosrc/
 CFLAGSST=$(DBGCFLAGST) $(STDOPTIONS) /c /Fosrc/
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
@@ -161,7 +173,7 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/DISPATCH.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ \
  SRC/API-CLICAP.OBJ SRC/API-MESSAGETAG.OBJ SRC/API-HISTORY-BACKEND.OBJ \
  SRC/API-EXTBAN.OBJ SRC/API-EFUNCTIONS.OBJ SRC/CRYPT_BLOWFISH.OBJ \
- SRC/OPERCLASS.OBJ SRC/UPDCONF.OBJ SRC/CRASHREPORT.OBJ \
+ SRC/OPERCLASS.OBJ SRC/UPDCONF.OBJ SRC/CRASHREPORT.OBJ SRC/UNREALDB.OBJ \
  SRC/OPENSSL_HOSTNAME_VALIDATION.OBJ \
  SRC/UTF8.OBJ $(CURLOBJ)
 
@@ -269,6 +281,7 @@ DLL_FILES=SRC/MODULES/CLOAK.DLL \
  SRC/MODULES/EXTBANS/MSGBYPASS.DLL \
  SRC/MODULES/EXTBANS/TIMEDBAN.DLL \
  SRC/MODULES/EXTBANS/PARTMSG.DLL \
+ SRC/MODULES/EXTBANS/SECURITYGROUP.DLL \
  SRC/MODULES/ACCOUNT-NOTIFY.DLL \
  SRC/MODULES/MESSAGE-TAGS.DLL \
  SRC/MODULES/BATCH.DLL \
@@ -288,9 +301,12 @@ DLL_FILES=SRC/MODULES/CLOAK.DLL \
  SRC/MODULES/ECHO-MESSAGE.DLL \
  SRC/MODULES/USERIP-TAG.DLL \
  SRC/MODULES/USERHOST-TAG.DLL \
+ SRC/MODULES/BOT-TAG.DLL \
+ SRC/MODULES/REPLY-TAG.DLL \
  SRC/MODULES/REQUIRE-MODULE.DLL \
  SRC/MODULES/IDENT_LOOKUP.DLL \
  SRC/MODULES/HISTORY.DLL \
+ SRC/MODULES/CHATHISTORY.DLL \
  SRC/MODULES/TARGETFLOODPROT.DLL \
  SRC/MODULES/TYPING-INDICATOR.DLL \
  SRC/MODULES/CLIENTTAGDENY.DLL
@@ -528,6 +544,12 @@ src/operclass.obj: src/operclass.c $(INCLUDES) ./include/dbuf.h
 
 src/updconf.obj: src/updconf.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/updconf.c
+
+src/crashreport.obj: src/crashreport.c $(INCLUDES) ./include/dbuf.h
+        $(CC) $(CFLAGS) src/crashreport.c
+
+src/unrealdb.obj: src/unrealdb.c $(INCLUDES) ./include/dbuf.h
+        $(CC) $(CFLAGS) src/unrealdb.c
 
 src/utf8.obj: src/utf8.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/utf8.c
@@ -1018,6 +1040,9 @@ src/modules/extbans/timedban.dll: src/modules/extbans/timedban.c $(INCLUDES)
 src/modules/extbans/partmsg.dll: src/modules/extbans/partmsg.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/partmsg.c $(MODLFLAGS)
 
+src/modules/extbans/securitygroup.dll: src/modules/extbans/securitygroup.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/securitygroup.c $(MODLFLAGS)
+
 src/modules/account-notify.dll: src/modules/account-notify.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/account-notify.c $(MODLFLAGS)
 
@@ -1075,6 +1100,12 @@ src/modules/userip-tag.dll: src/modules/userip-tag.c $(INCLUDES)
 src/modules/userhost-tag.dll: src/modules/userhost-tag.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/userhost-tag.c $(MODLFLAGS)
 
+src/modules/bot-tag.dll: src/modules/bot-tag.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/bot-tag.c $(MODLFLAGS)
+
+src/modules/reply-tag.dll: src/modules/reply-tag.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/reply-tag.c $(MODLFLAGS)
+
 src/modules/require-module.dll: src/modules/require-module.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/require-module.c $(MODLFLAGS)
 
@@ -1083,6 +1114,9 @@ src/modules/ident_lookup.dll: src/modules/ident_lookup.c $(INCLUDES)
 
 src/modules/history.dll: src/modules/history.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/history.c $(MODLFLAGS)
+
+src/modules/chathistory.dll: src/modules/chathistory.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/chathistory.c $(MODLFLAGS)
 
 src/modules/targetfloodprot.dll: src/modules/targetfloodprot.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/targetfloodprot.c $(MODLFLAGS)

@@ -6,7 +6,6 @@
 
 #include "unrealircd.h"
 #ifndef _WIN32
-#include <dirent.h>
 
 #define MODULEMANAGER_CONNECT_TIMEOUT	7
 #define MODULEMANAGER_READ_TIMEOUT	20
@@ -1643,10 +1642,32 @@ void mm_parse_c_file(int argc, char *args[])
 	exit(0);
 }
 
+void mm_self_test(void)
+{
+	char name[512];
+	snprintf(name, sizeof(name), "%s/src/modules/third", BUILDDIR);
+	if (file_exists(name))
+		return;
+	if (!file_exists(BUILDDIR))
+	{
+		fprintf(stderr, "ERROR: Directory %s does not exist.\n"
+				"The UnrealIRCd source is required for the module manager to work!\n",
+				BUILDDIR);
+	} else {
+		fprintf(stderr, "ERROR: Directory %s exists, but %s does not.\n"
+		                "The UnrealIRCd source is required for the module manager to work.\n"
+		                "It seems you only have a partial build directory??\n",
+		                BUILDDIR, name);
+	}
+	exit(-1);
+}
+
 void modulemanager(int argc, char *args[])
 {
 	if (!args[0])
 		mm_usage();
+
+	mm_self_test();
 
 	/* The following operations do not require reading
 	 * of the repository list and are always available:

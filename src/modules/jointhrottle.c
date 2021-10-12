@@ -23,10 +23,6 @@
 
 #include "unrealircd.h"
 
-/* Default settings for set::anti-flood::join-flood block: */
-#define JOINTHROTTLE_DEFAULT_COUNT 3
-#define JOINTHROTTLE_DEFAULT_TIME 90
-
 ModuleHeader MOD_HEADER
   = {
 	"jointhrottle",
@@ -40,11 +36,6 @@ ModuleInfo *ModInfo = NULL;
 
 ModDataInfo *jointhrottle_md; /* Module Data structure which we acquire */
 
-struct {
-	unsigned short num;
-	unsigned short t;
-} cfg;
-
 typedef struct JoinFlood JoinFlood;
 
 struct JoinFlood {
@@ -55,8 +46,6 @@ struct JoinFlood {
 };
 
 /* Forward declarations */
-int jointhrottle_config_test(ConfigFile *, ConfigEntry *, int, int *);
-int jointhrottle_config_run(ConfigFile *, ConfigEntry *, int);
 void jointhrottle_md_free(ModData *m);
 int jointhrottle_can_join(Client *client, Channel *channel, char *key, char *parv[]);
 int jointhrottle_local_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
@@ -67,7 +56,6 @@ JoinFlood *jointhrottle_addentry(Client *client, Channel *channel);
 
 MOD_TEST()
 {
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, jointhrottle_config_test);
 	return MOD_SUCCESS;
 }
 
@@ -89,12 +77,9 @@ MOD_INIT()
 	if (!jointhrottle_md)
 		abort();
 
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, jointhrottle_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, jointhrottle_can_join);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, jointhrottle_local_join);
 	
-	cfg.t = JOINTHROTTLE_DEFAULT_TIME;
-	cfg.num = JOINTHROTTLE_DEFAULT_COUNT;
 	return MOD_SUCCESS;
 }
 
@@ -109,53 +94,10 @@ MOD_UNLOAD()
 	return MOD_FAILED;
 }
 
-int jointhrottle_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
-{
-	int errors = 0;
-	int cnt=0, period=0;
-
-	if (type != CONFIG_SET_ANTI_FLOOD)
-		return 0;
-
-	if (strcmp(ce->ce_varname, "join-flood"))
-		return 0; /* otherwise not interested */
-
-	if (!ce->ce_vardata || !config_parse_flood(ce->ce_vardata, &cnt, &period) ||
-		(cnt < 1) || (cnt > 255) || (period < 5))
-	{
-		config_error("%s:%i: set::anti-flood::join-flood. Syntax is '<count>:<period>' (eg 3:90), "
-					 "count should be 1-255, period should be greater than 4",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		errors++;
-	}
-
-	*errs = errors;
-	return errors ? -1 : 1;
-}
-
-int jointhrottle_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
-{
-	int cnt=0, period=0;
-
-	if (type != CONFIG_SET_ANTI_FLOOD)
-		return 0;
-
-	if (strcmp(ce->ce_varname, "join-flood"))
-		return 0; /* otherwise not interested */
-	
-	config_parse_flood(ce->ce_vardata, &cnt, &period);
-	
-	cfg.t = period;
-	cfg.num = cnt;
-	
-	return 0;
-}
-
 static int isjthrottled(Client *client, Channel *channel)
 {
 	JoinFlood *e;
-	int num = cfg.num;
-	int t = cfg.t;
+	FloodSettings *settings = get_floodsettings_for_user(client, FLD_JOIN);
 
 	if (!MyUser(client))
 		return 0;
@@ -171,7 +113,8 @@ static int isjthrottled(Client *client, Channel *channel)
 	/* Ok... now the actual check:
 	 * if ([timer valid] && [one more join would exceed num])
 	 */
-	if (((TStime() - e->firstjoin) < t) && (e->numjoins == num))
+	if (((TStime() - e->firstjoin) < settings->period[FLD_JOIN]) &&
+	    (e->numjoins >= settings->limit[FLD_JOIN]))
 		return 1; /* Throttled */
 
 	return 0;
@@ -196,7 +139,7 @@ static void jointhrottle_increase_usercounter(Client *client, Channel *channel)
 		e->firstjoin = TStime();
 		e->numjoins = 1;
 	} else
-	if ((TStime() - e->firstjoin) < cfg.t) /* still valid? */
+	if ((TStime() - e->firstjoin) < iConf.floodsettings->period[FLD_JOIN]) /* still valid? */
 	{
 		e->numjoins++;
 	} else {
@@ -266,11 +209,12 @@ EVENT(jointhrottle_cleanup_structs)
 		{
 			jf_next = jf->next;
 			
-			if (jf->firstjoin + cfg.t > TStime())
+			if (jf->firstjoin + iConf.floodsettings->period[FLD_JOIN] > TStime())
 				continue; /* still valid entry */
 #ifdef DEBUGMODE
-			ircd_log(LOG_ERROR, "jointhrottle_cleanup_structs(): freeing %s/%s (%ld[%ld], %d)",
-				client->name, jf->chname, jf->firstjoin, (long)(TStime() - jf->firstjoin), cfg.t);
+			ircd_log(LOG_ERROR, "jointhrottle_cleanup_structs(): freeing %s/%s (%ld[%ld], %ld)",
+				client->name, jf->chname, jf->firstjoin, (long)(TStime() - jf->firstjoin),
+				iConf.floodsettings->period[FLD_JOIN]);
 #endif
 			if (moddata_local_client(client, jointhrottle_md).ptr == jf)
 			{

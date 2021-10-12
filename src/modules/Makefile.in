@@ -71,8 +71,9 @@ R_MODULES= \
 	account-tag.so labeled-response.so link-security.so \
 	message-ids.so plaintext-policy.so server-time.so sts.so \
 	echo-message.so userip-tag.so userhost-tag.so \
-	typing-indicator.so \
-	ident_lookup.so history.so \
+	bot-tag.so \
+	reply-tag.so typing-indicator.so \
+	ident_lookup.so history.so chathistory.so \
 	targetfloodprot.so clienttagdeny.so
 
 MODULES=cloak.so $(R_MODULES)
@@ -612,6 +613,14 @@ userhost-tag.so: userhost-tag.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o userhost-tag.so userhost-tag.c
 
+bot-tag.so: bot-tag.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o bot-tag.so bot-tag.c
+
+reply-tag.so: reply-tag.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o reply-tag.so reply-tag.c
+
 typing-indicator.so: typing-indicator.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o typing-indicator.so typing-indicator.c
@@ -631,6 +640,10 @@ ident_lookup.so: ident_lookup.c $(INCLUDES)
 history.so: history.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o history.so history.c
+
+chathistory.so: chathistory.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o chathistory.so chathistory.c
 
 targetfloodprot.so: targetfloodprot.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

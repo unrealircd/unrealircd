@@ -1034,6 +1034,7 @@ void win_log(FORMAT_STRING(const char *format), ...)
 	va_start(ap, format);
 
 	ircvsnprintf(buf, sizeof(buf), format, ap);
+	stripcrlf(buf);
 
 	if (!IsService) 
 	{
@@ -1043,6 +1044,7 @@ void win_log(FORMAT_STRING(const char *format), ...)
 			char *tbuf = safe_alloc(strlen(errors) + strlen(buf) + 1);
 			strcpy(tbuf, errors);
 			strcat(tbuf, buf);
+			safe_free(errors);
 			errors = tbuf;
 		}
 		else 

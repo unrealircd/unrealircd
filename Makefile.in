@@ -34,11 +34,11 @@ FROMDOS=/home/cmunk/bin/4dos
 #
 
 #XCFLAGS=-O -g -export-dynamic
-IRCDLIBS=@IRCDLIBS@ @PCRE2_LIBS@ @ARGON2_LIBS@ @CARES_LIBS@ @PTHREAD_LIBS@
+IRCDLIBS=@IRCDLIBS@ @PCRE2_LIBS@ @ARGON2_LIBS@ @CARES_LIBS@ @SODIUM_LIBS@ @PTHREAD_LIBS@
 CRYPTOLIB=@CRYPTOLIB@
 OPENSSLINCLUDES=
 
-XCFLAGS=@PTHREAD_CFLAGS@ @PCRE2_CFLAGS@ @ARGON2_CFLAGS@ @CARES_CFLAGS@ @CFLAGS@ @HARDEN_CFLAGS@ @CPPFLAGS@
+XCFLAGS=@PTHREAD_CFLAGS@ @PCRE2_CFLAGS@ @ARGON2_CFLAGS@ @CARES_CFLAGS@ @SODIUM_CFLAGS@ @CFLAGS@ @HARDEN_CFLAGS@ @CPPFLAGS@
 #
 # use the following on MIPS:
 #CFLAGS= -systype bsd43 -DSYSTYPE_BSD43 -I$(INCLUDEDIR)
@@ -164,72 +164,75 @@ depend:
 	done
 
 install: all
-	$(INSTALL) -m 0700 -d @BINDIR@
-	$(INSTALL) -m 0700 src/ircd @BINDIR@/unrealircd
-	$(INSTALL) -m 0700 -d @DOCDIR@
-	$(INSTALL) -m 0600 doc/Authors doc/coding-guidelines doc/tao.of.irc @DOCDIR@
-	$(INSTALL) -m 0700 -d @CONFDIR@
-	$(INSTALL) -m 0600 doc/conf/*.default.conf @CONFDIR@
-	$(INSTALL) -m 0600 doc/conf/*.optional.conf @CONFDIR@
-	-@if [ ! -f "@CONFDIR@/modules.sources.list" ] ; then \
-		$(INSTALL) -m 0600 doc/conf/modules.sources.list @CONFDIR@ ; \
+	$(INSTALL) -m 0700 -d $(DESTDIR)@BINDIR@
+	$(INSTALL) -m 0700 src/ircd $(DESTDIR)@BINDIR@/unrealircd
+	$(INSTALL) -m 0700 extras/unrealircd-upgrade-script $(DESTDIR)@BINDIR@/unrealircd-upgrade-script
+	$(INSTALL) -m 0700 -d $(DESTDIR)@DOCDIR@
+	$(INSTALL) -m 0600 doc/Authors doc/coding-guidelines doc/tao.of.irc doc/KEYS doc/RELEASE-NOTES.md $(DESTDIR)@DOCDIR@
+	$(INSTALL) -m 0700 -d $(DESTDIR)@CONFDIR@
+	$(INSTALL) -m 0600 doc/conf/*.default.conf $(DESTDIR)@CONFDIR@
+	$(INSTALL) -m 0600 doc/conf/*.optional.conf $(DESTDIR)@CONFDIR@
+	-@if [ ! -f "$(DESTDIR)@CONFDIR@/modules.sources.list" ] ; then \
+		$(INSTALL) -m 0600 doc/conf/modules.sources.list $(DESTDIR)@CONFDIR@ ; \
 	fi
-	-@if [ ! -f "@CONFDIR@/spamfilter.conf" ] ; then \
-		$(INSTALL) -m 0600 doc/conf/spamfilter.conf @CONFDIR@ ; \
+	-@if [ ! -f "$(DESTDIR)@CONFDIR@/spamfilter.conf" ] ; then \
+		$(INSTALL) -m 0600 doc/conf/spamfilter.conf $(DESTDIR)@CONFDIR@ ; \
 	fi
-	-@extras/patches/patch_spamfilter_conf "@CONFDIR@"
-	-@if [ ! -f "@CONFDIR@/badwords.conf" ] ; then \
-		$(INSTALL) -m 0600 doc/conf/badwords.conf @CONFDIR@ ; \
+	-@extras/patches/patch_spamfilter_conf "$(DESTDIR)@CONFDIR@"
+	-@if [ ! -f "$(DESTDIR)@CONFDIR@/badwords.conf" ] ; then \
+		$(INSTALL) -m 0600 doc/conf/badwords.conf $(DESTDIR)@CONFDIR@ ; \
 	fi
-	-@if [ ! -f "@CONFDIR@/dccallow.conf" ] ; then \
-		$(INSTALL) -m 0600 doc/conf/dccallow.conf @CONFDIR@ ; \
+	-@if [ ! -f "$(DESTDIR)@CONFDIR@/dccallow.conf" ] ; then \
+		$(INSTALL) -m 0600 doc/conf/dccallow.conf $(DESTDIR)@CONFDIR@ ; \
 	fi
-	$(INSTALL) -m 0700 -d @CONFDIR@/aliases
-	$(INSTALL) -m 0600 doc/conf/aliases/*.conf @CONFDIR@/aliases
-	$(INSTALL) -m 0700 -d @CONFDIR@/help
-	$(INSTALL) -m 0600 doc/conf/help/*.conf @CONFDIR@/help
-	$(INSTALL) -m 0700 -d @CONFDIR@/examples
-	$(INSTALL) -m 0600 doc/conf/examples/*.conf @CONFDIR@/examples
-	$(INSTALL) -m 0700 unrealircd @SCRIPTDIR@
-	$(INSTALL) -m 0700 -d @MODULESDIR@
-	@rm -f @MODULESDIR@/*.so 1>/dev/null 2>&1
-	$(INSTALL) -m 0700 src/modules/*.so @MODULESDIR@
-	$(INSTALL) -m 0700 -d @MODULESDIR@/usermodes
-	@rm -f @MODULESDIR@/usermodes/*.so 1>/dev/null 2>&1
-	$(INSTALL) -m 0700 src/modules/usermodes/*.so @MODULESDIR@/usermodes
-	$(INSTALL) -m 0700 -d @MODULESDIR@/chanmodes
-	@rm -f @MODULESDIR@/chanmodes/*.so 1>/dev/null 2>&1
-	$(INSTALL) -m 0700 src/modules/chanmodes/*.so @MODULESDIR@/chanmodes
-	$(INSTALL) -m 0700 -d @MODULESDIR@/snomasks
-	@rm -f @MODULESDIR@/snomasks/*.so 1>/dev/null 2>&1
-	$(INSTALL) -m 0700 src/modules/snomasks/*.so @MODULESDIR@/snomasks
-	$(INSTALL) -m 0700 -d @MODULESDIR@/extbans
-	@rm -f @MODULESDIR@/extbans/*.so 1>/dev/null 2>&1
-	$(INSTALL) -m 0700 src/modules/extbans/*.so @MODULESDIR@/extbans
+	$(INSTALL) -m 0700 -d $(DESTDIR)@CONFDIR@/aliases
+	$(INSTALL) -m 0600 doc/conf/aliases/*.conf $(DESTDIR)@CONFDIR@/aliases
+	$(INSTALL) -m 0700 -d $(DESTDIR)@CONFDIR@/help
+	$(INSTALL) -m 0600 doc/conf/help/*.conf $(DESTDIR)@CONFDIR@/help
+	$(INSTALL) -m 0700 -d $(DESTDIR)@CONFDIR@/examples
+	$(INSTALL) -m 0600 doc/conf/examples/*.conf $(DESTDIR)@CONFDIR@/examples
+	$(INSTALL) -m 0700 unrealircd $(DESTDIR)@SCRIPTDIR@
+	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@
+	@rm -f $(DESTDIR)@MODULESDIR@/*.so 1>/dev/null 2>&1
+	$(INSTALL) -m 0700 src/modules/*.so $(DESTDIR)@MODULESDIR@
+	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/usermodes
+	@rm -f $(DESTDIR)@MODULESDIR@/usermodes/*.so 1>/dev/null 2>&1
+	$(INSTALL) -m 0700 src/modules/usermodes/*.so $(DESTDIR)@MODULESDIR@/usermodes
+	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/chanmodes
+	@rm -f $(DESTDIR)@MODULESDIR@/chanmodes/*.so 1>/dev/null 2>&1
+	$(INSTALL) -m 0700 src/modules/chanmodes/*.so $(DESTDIR)@MODULESDIR@/chanmodes
+	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/snomasks
+	@rm -f $(DESTDIR)@MODULESDIR@/snomasks/*.so 1>/dev/null 2>&1
+	$(INSTALL) -m 0700 src/modules/snomasks/*.so $(DESTDIR)@MODULESDIR@/snomasks
+	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/extbans
+	@rm -f $(DESTDIR)@MODULESDIR@/extbans/*.so 1>/dev/null 2>&1
+	$(INSTALL) -m 0700 src/modules/extbans/*.so $(DESTDIR)@MODULESDIR@/extbans
 	@#If the conf/ssl directory exists then rename it here to conf/tls
 	@#and add a symlink for backwards compatibility (so that f.e. certbot
 	@#doesn't randomly fail after an upgrade to U5).
-	-@if [ -d "@CONFDIR@/ssl" ] ; then \
-		mv "@CONFDIR@/ssl" "@CONFDIR@/tls" ; \
-		ln -s "@CONFDIR@/tls" "@CONFDIR@/ssl" ; \
+	-@if [ -d "$(DESTDIR)@CONFDIR@/ssl" ] ; then \
+		mv "$(DESTDIR)@CONFDIR@/ssl" "$(DESTDIR)@CONFDIR@/tls" ; \
+		ln -s "$(DESTDIR)@CONFDIR@/tls" "$(DESTDIR)@CONFDIR@/ssl" ; \
 	fi
-	$(INSTALL) -m 0700 -d @CONFDIR@/tls
-	$(INSTALL) -m 0600 doc/conf/tls/curl-ca-bundle.crt @CONFDIR@/tls
+	$(INSTALL) -m 0700 -d $(DESTDIR)@CONFDIR@/tls
+	$(INSTALL) -m 0600 doc/conf/tls/curl-ca-bundle.crt $(DESTDIR)@CONFDIR@/tls
 	@# delete modules/cap directory, to avoid confusing with U4 to U5 upgrades:
-	rm -rf @MODULESDIR@/cap
-	$(INSTALL) -m 0700 -d @MODULESDIR@/third
-	@rm -f @MODULESDIR@/third/*.so 1>/dev/null 2>&1
+	rm -rf $(DESTDIR)@MODULESDIR@/cap
+	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/third
+	@rm -f $(DESTDIR)@MODULESDIR@/third/*.so 1>/dev/null 2>&1
 	@#This step can fail with zero files, so we ignore exit status:
-	-$(INSTALL) -m 0700 src/modules/third/*.so @MODULESDIR@/third
-	$(INSTALL) -m 0700 -d @TMPDIR@
-	$(INSTALL) -m 0700 -d @CACHEDIR@
-	$(INSTALL) -m 0700 -d @PERMDATADIR@
-	$(INSTALL) -m 0700 -d @LOGDIR@
-	-@if [ ! -f "@CONFDIR@/tls/server.cert.pem" ] ; then \
-		$(INSTALL) -m 0600 server.req.pem @CONFDIR@/tls ; \
-		$(INSTALL) -m 0600 server.key.pem @CONFDIR@/tls ; \
-		$(INSTALL) -m 0600 server.cert.pem @CONFDIR@/tls ; \
+	-$(INSTALL) -m 0700 src/modules/third/*.so $(DESTDIR)@MODULESDIR@/third
+	$(INSTALL) -m 0700 -d $(DESTDIR)@TMPDIR@
+	$(INSTALL) -m 0700 -d $(DESTDIR)@CACHEDIR@
+	$(INSTALL) -m 0700 -d $(DESTDIR)@PERMDATADIR@
+	$(INSTALL) -m 0700 -d $(DESTDIR)@LOGDIR@
+	-@if [ ! -f "$(DESTDIR)@CONFDIR@/tls/server.cert.pem" ] ; then \
+		$(INSTALL) -m 0600 server.req.pem $(DESTDIR)@CONFDIR@/tls ; \
+		$(INSTALL) -m 0600 server.key.pem $(DESTDIR)@CONFDIR@/tls ; \
+		$(INSTALL) -m 0600 server.cert.pem $(DESTDIR)@CONFDIR@/tls ; \
 	fi
+	@rm -f $(DESTDIR)@SCRIPTDIR@/source
+	ln -s @BUILDDIR@ $(DESTDIR)@SCRIPTDIR@/source
 	@echo ''
 	@echo '* UnrealIRCd is now installed.'
 	

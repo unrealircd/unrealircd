@@ -214,11 +214,10 @@ CMD_FUNC(cmd_nick_remote)
 		sendto_snomask(SNO_FNICKCHANGE, "*** %s (%s@%s) has changed their nickname to %s",
 			client->name, client->user->username, client->user->realhost, nick);
 
-	RunHook2(HOOKTYPE_REMOTE_NICKCHANGE, client, nick);
-
+	new_message(client, recv_mtags, &mtags);
+	RunHook3(HOOKTYPE_REMOTE_NICKCHANGE, client, mtags, nick);
 	client->lastnick = lastnick ? lastnick : TStime();
 	add_history(client, 1);
-	new_message(client, recv_mtags, &mtags);
 	sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
 	    client->id, nick, (long long)client->lastnick);
 	sendto_local_common_channels(client, client, 0, mtags, ":%s NICK :%s", client->name, nick);
@@ -275,19 +274,6 @@ CMD_FUNC(cmd_nick_local)
 		return;
 	}
 
-	/* set::anti-flood::nick-flood */
-	if (client->user && !ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL))
-	{
-		if ((client->user->flood.nick_c >= NICK_COUNT) &&
-		    (TStime() - client->user->flood.nick_t < NICK_PERIOD))
-		{
-			/* Throttle... */
-			sendnumeric(client, ERR_NCHANGETOOFAST, nick,
-				(int)(NICK_PERIOD - (TStime() - client->user->flood.nick_t)));
-			return;
-		}
-	}
-
 	/* Check for collisions / in use */
 	if (!strcasecmp("ircd", nick) || !strcasecmp("irc", nick))
 	{
@@ -299,7 +285,7 @@ CMD_FUNC(cmd_nick_local)
 	{
 		/* Local client changing nick: check spamfilter */
 		spamfilter_build_user_string(spamfilter_user, nick, client);
-		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, 0, NULL))
+		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, "NICK", NULL, 0, NULL))
 			return;
 	}
 
@@ -315,11 +301,21 @@ CMD_FUNC(cmd_nick_local)
 		{
 			client->local->since += 4; /* lag them up */
 			sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, tklban->ptr.nameban->reason);
-			sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s.",
-			    nick, get_client_name(cptr, FALSE));
+			sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s (%s)",
+			    nick, get_client_name(cptr, FALSE), tklban->ptr.nameban->reason);
 			return;	/* NICK message ignored */
 		}
 		/* fallthrough for ircops that have sufficient privileges */
+	}
+
+	/* set::anti-flood::nick-flood */
+	if (client->user &&
+	    !ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL) &&
+	    flood_limit_exceeded(client, FLD_NICK))
+	{
+		/* Throttle... */
+		sendnumeric(client, ERR_NCHANGETOOFAST, nick);
+		return;
 	}
 
 	if (!ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL))
@@ -440,20 +436,13 @@ CMD_FUNC(cmd_nick_local)
 			}
 		}
 
-		if (TStime() - client->user->flood.nick_t >= NICK_PERIOD)
-		{
-			client->user->flood.nick_t = TStime();
-			client->user->flood.nick_c = 1;
-		} else
-			client->user->flood.nick_c++;
-
 		sendto_snomask(SNO_NICKCHANGE, "*** %s (%s@%s) has changed their nickname to %s",
 			client->name, client->user->username, client->user->realhost, nick);
 
-		RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, client, nick);
+		new_message(client, recv_mtags, &mtags);
+		RunHook3(HOOKTYPE_LOCAL_NICKCHANGE, client, mtags, nick);
 		client->lastnick = TStime();
 		add_history(client, 1);
-		new_message(client, recv_mtags, &mtags);
 		sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
 		    client->id, nick, (long long)client->lastnick);
 		sendto_local_common_channels(client, client, 0, mtags, ":%s NICK :%s", client->name, nick);
@@ -679,13 +668,19 @@ nickkill2done:
 	register_user(client, client->name, username, umodes, virthost, ip);
 	if (IsDead(client))
 		return;
-	if (!IsULine(serv) && IsSynched(serv))
-		sendto_fconnectnotice(client, 0, NULL);
 
 	if (client->user->svid[0] != '0')
+	{
 		user_account_login(recv_mtags, client);
+		/* no need to check for kill upon user_account_login() here
+		 * since that can only happen for local users.
+		 */
+	}
 
 	RunHook(HOOKTYPE_REMOTE_CONNECT, client);
+
+	if (!IsULine(serv) && IsSynched(serv))
+		sendto_fconnectnotice(client, 0, NULL);
 }
 
 /** The NICK command.
@@ -720,7 +715,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
 	int i, xx;
 	Hook *h;
-	ClientUser *user = client->user;
+	User *user = client->user;
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
 		"+",		/*1  +|- */
@@ -866,13 +861,19 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		/* Check G/Z lines before shuns -- kill before quite -- codemastr */
 		if (find_tkline_match(client, 0))
 		{
+			if (!IsDead(client) && client->local->class)
+			{
+				/* Fix client count bug, in case that it was a hold such as via authprompt */
+				client->local->class->clients--;
+				client->local->class = NULL;
+			}
 			ircstats.is_ref++;
 			return 0;
 		}
 		find_shun(client);
 
 		spamfilter_build_user_string(spamfilter_user, client->name, client);
-		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, 0, &savetkl))
+		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, NULL, 0, &savetkl))
 		{
 			if (savetkl && ((savetkl->ptr.spamfilter->action == BAN_ACT_VIRUSCHAN) ||
 			                (savetkl->ptr.spamfilter->action == BAN_ACT_SOFT_VIRUSCHAN)))
@@ -892,7 +893,17 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		{
 			i = (*(h->func.intfunc))(client);
 			if (i == HOOK_DENY)
+			{
+				if (!IsDead(client) && client->local->class)
+				{
+					/* Fix client count bug, in case that
+					 * the HOOK_DENY was only meant temporarily.
+					 */
+					client->local->class->clients--;
+					client->local->class = NULL;
+				}
 				return 0;
+			}
 			if (i == HOOK_ALLOW)
 				break;
 		}
@@ -929,11 +940,14 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		}
 
 		if (IsHidden(client))
-			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [VHOST %s]", nick,
-				user->username, user->realhost, user->virthost);
-		else
-			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s", nick, user->username,
-				user->realhost);
+		{
+			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [%s] [vhost: %s] %s",
+				nick, user->username, user->realhost, GetIP(client), user->virthost, get_connect_extinfo(client));
+		} else
+		{
+			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [%s] %s",
+				nick, user->username, user->realhost, GetIP(client), get_connect_extinfo(client));
+		}
 
 		RunHook2(HOOKTYPE_WELCOME, client, 0);
 		sendnumeric(client, RPL_WELCOME, ircnetwork, nick, user->username, user->realhost);
@@ -1262,17 +1276,24 @@ int check_init(Client *client, char *sockn, size_t size)
 int exceeds_maxperip(Client *client, ConfigItem_allow *aconf)
 {
 	Client *acptr;
-	int cnt = 1;
+	int local_cnt = 1;
+	int global_cnt = 1;
 
 	if (find_tkl_exception(TKL_MAXPERIP, client))
 		return 0; /* exempt */
 
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry(acptr, &client_list, client_node)
 	{
 		if (IsUser(acptr) && !strcmp(GetIP(acptr), GetIP(client)))
 		{
-			cnt++;
-			if (cnt > aconf->maxperip)
+			if (MyUser(acptr))
+			{
+				local_cnt++;
+				if (local_cnt > aconf->maxperip)
+					return 1;
+			}
+			global_cnt++;
+			if (global_cnt > aconf->global_maxperip)
 				return 1;
 		}
 	}
@@ -1316,12 +1337,9 @@ int AllowClient(Client *client, char *username)
 
 	for (aconf = conf_allow; aconf; aconf = aconf->next)
 	{
-		if (!aconf->hostname || !aconf->ip)
-			goto attach;
-		if (aconf->auth && !client->local->passwd && !moddata_client_get(client, "certfp"))
-			continue;
 		if (aconf->flags.tls && !IsSecure(client))
 			continue;
+
 		if (hp && hp->h_name)
 		{
 			hname = hp->h_name;
@@ -1376,8 +1394,21 @@ int AllowClient(Client *client, char *username)
 				goto attach;
 		}
 
-		continue;
+		continue; /* No match */
 	attach:
+		/* Check authentication */
+		if (aconf->auth && !Auth_Check(client, aconf->auth, client->local->passwd))
+		{
+			/* Incorrect password/authentication - but was is it required? */
+			if (aconf->flags.reject_on_auth_failure)
+			{
+				exit_client(client, NULL, iConf.reject_message_unauthorized);
+				return 0;
+			} else {
+				continue; /* Continue (this is the default behavior) */
+			}
+		}
+
 		if (!aconf->flags.noident)
 			SetUseIdent(client);
 		if (!aconf->flags.useip && hp)
@@ -1386,17 +1417,11 @@ int AllowClient(Client *client, char *username)
 			strlcpy(uhost, sockhost, sizeof(uhost));
 		set_sockhost(client, uhost);
 
-		if (aconf->maxperip && exceeds_maxperip(client, aconf))
+		if (exceeds_maxperip(client, aconf))
 		{
 			/* Already got too many with that ip# */
 			exit_client(client, NULL, iConf.reject_message_too_many_connections);
 			return 0;
-		}
-
-		if (aconf->auth && !Auth_Check(client, aconf->auth, client->local->passwd))
-		{
-			/* Always continue if password was wrong. */
-			continue;
 		}
 
 		if (!((aconf->class->clients + 1) > aconf->class->maxclients))

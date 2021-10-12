@@ -858,20 +858,6 @@ static int internal_getscore(char *str)
 	return score;
 }
 
-void strtolower_safe(char *dst, char *src, int size)
-{
-	if (!size)
-		return; /* size of 0 is unworkable */
-	size--; /* for \0 */
-	
-	for (; *src && size; src++)
-	{
-		*dst++ = tolower(*src);
-		size--;
-	}
-	*dst = '\0';
-}
-
 /** Returns "spam score".
  * @note a user is expected, do not call for anything else (eg: servers)
  */

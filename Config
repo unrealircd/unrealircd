@@ -18,6 +18,12 @@
 
 # some bits edited by baafie on March 17 2004, every change marked.
 
+echo "This is UnrealIRCd from git branch 'unreal50'"
+echo "You are looking at an incomplete release that cannot be used."
+echo ""
+echo "Please use branch 'unreal52' instead (or later)"
+echo ""
+exit 1
 
 RUN_CONFIGURE () {
 ARG=" "
@@ -95,8 +101,19 @@ fi
 if [ "x$MAKE" = "x" ]; then
 	if [ "x$MAKEFLAGS" = "x" ]; then
 		if make --version 2>&1|grep -q "GNU Make"; then
-			echo "Running with 4 concurrent build processes by default (make -j4)."
-			export MAKE='make -j4'
+			LOWMEM=0
+			if [ -f /proc/meminfo ]; then
+				FREEKB="`cat /proc/meminfo |grep MemAvailable|awk '{ print $2 }'`"
+				if [ "$FREEKB" != "" -a "$FREEKB" -lt 768000 ]; then
+					LOWMEM=1
+				fi
+			fi
+			if [ "$LOWMEM" = 0 ]; then
+				echo "Running with 4 concurrent build processes by default (make -j4)."
+				export MAKE='make -j4'
+			else
+				echo "System detected with less than 750MB available memory, not forcing parallel build."
+			fi
 		fi
 	fi
 fi
@@ -104,49 +121,59 @@ fi
 echo $CONF
 $CONF || exit 1
 cd "$UNREALCWD"
-if [  "$QUICK" != "1" ] ; then
-if [ ! -f $CONFDIR/tls/server.cert.pem -a ! -f $CONFDIR/ssl/server.cert.pem ]; then
-export OPENSSLPATH
-TEST=""
-while [ -z "$TEST" ] ; do
-    if [ "$GENCERTIFICATE" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Do you want to generate an SSL certificate for the IRCd?"
-    echo "Only answer No if you already have one."
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
-	[Yy]*)
-	    GENCERTIFICATE="1"
-	    ;;
-	[Nn]*)
-	    GENCERTIFICATE=""
-	    ;;
-	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
-done
-if [ "$GENCERTIFICATE" = 1 ]; then
-	make pem
-	echo "Certificate created successfully."
-	sleep 1
-else
-	echo "Ok, not generating SSL certificate. Make sure that the certificate and key"
-	echo "are installed in conf/tls/server.crt.pem and conf/tls/server.key.pem prior to starting the IRCd."
-fi
-else
-echo "SSL certificate already exists in configuration directory, no need to regenerate."
-fi
+
+if [ "$QUICK" != "1" ] ; then
+	if [ ! -f $CONFDIR/tls/server.cert.pem -a ! -f $CONFDIR/ssl/server.cert.pem ]; then
+		export OPENSSLPATH
+		TEST=""
+		while [ -z "$TEST" ] ; do
+			if [ "$GENCERTIFICATE" = "1" ] ; then
+				TEST="Yes"
+			else
+				TEST="No"
+			fi
+			echo ""
+			echo "UnrealIRCd requires an SSL certificate in order to work."
+			echo "Do you want to generate an SSL certificate for the IRCd?"
+			echo "Only answer No if you already have one."
+			echo $n "[$TEST] -> $c"
+			read cc
+			if [ -z "$cc" ] ; then
+			cc=$TEST
+			fi
+			case "$cc" in
+			[Yy]*)
+				GENCERTIFICATE="1"
+				;;
+			[Nn]*)
+				GENCERTIFICATE=""
+				;;
+			*)
+				echo ""
+				echo "You must enter either Yes or No"
+				TEST=""
+				;;
+			esac
+		done
+		if [ "$GENCERTIFICATE" = 1 ]; then
+			echo
+			echo "*******************************************************************************"
+			echo "Next you will be asked some questions in order to generate the SSL certificate."
+			echo "IMPORTANT: If you don't own a domain or don't know what to answer, then you can"
+			echo "           simply press ENTER or use fictional names for each question!"
+			echo "*******************************************************************************"
+			echo "Press ENTER to continue"
+			read cc
+			make pem
+			echo "Certificate created successfully."
+			sleep 1
+		else
+			echo "Ok, not generating SSL certificate. Make sure that the certificate and key"
+			echo "are installed in conf/tls/server.cert.pem and conf/tls/server.key.pem prior to starting the IRCd."
+		fi
+	else
+		echo "SSL certificate already exists in configuration directory, no need to regenerate."
+	fi
 fi
 
 # Silently force a 'make clean' as otherwise part (or whole) of the
@@ -158,89 +185,89 @@ make clean 1>/dev/null 2>&1
 RUN_ADVANCED () {
 TEST=""
 while [ -z "$TEST" ] ; do
-    if [ "$SHOWLISTMODES" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Do you want to show the modes a channel has set in the /list output?"
-    echo $n "[$TEST] -> $c"
+	if [ "$SHOWLISTMODES" = "1" ] ; then
+		TEST="Yes"
+	else
+		TEST="No"
+	fi
+	echo ""
+	echo "Do you want to show the modes a channel has set in the /list output?"
+	echo $n "[$TEST] -> $c"
 	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
+	if [ -z "$cc" ] ; then
+		cc=$TEST
+	fi
+	case "$cc" in
 	[Yy]*)
-	    SHOWLISTMODES="1"
-	    ;;
+		SHOWLISTMODES="1"
+		;;
 	[Nn]*)
-	    SHOWLISTMODES=""
-	    ;;
+		SHOWLISTMODES=""
+		;;
 	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
+		echo ""
+		echo "You must enter either Yes or No"
+		TEST=""
+		;;
+	esac
 done
 
 TEST=""
 while [ -z "$TEST" ] ; do
-    if [ "$NOOPEROVERRIDE" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Do you want to disable oper override?"
-    echo $n "[$TEST] -> $c"
+	if [ "$NOOPEROVERRIDE" = "1" ] ; then
+		TEST="Yes"
+	else
+		TEST="No"
+	fi
+	echo ""
+	echo "Do you want to disable oper override?"
+	echo $n "[$TEST] -> $c"
 	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
+	if [ -z "$cc" ] ; then
+		cc=$TEST
+	fi
+	case "$cc" in
 	[Yy]*)
-	    NOOPEROVERRIDE="1"
-	    ;;
+		NOOPEROVERRIDE="1"
+		;;
 	[Nn]*)
-	    NOOPEROVERRIDE=""
-	    ;;
+		NOOPEROVERRIDE=""
+		;;
 	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
+		echo ""
+		echo "You must enter either Yes or No"
+		TEST=""
+		;;
+	esac
 done
 
 TEST=""
 while [ -z "$TEST" ] ; do
-    if [ "$OPEROVERRIDEVERIFY" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Do you want to require opers to /invite themselves into a +s or +p channel?"
-    echo $n "[$TEST] -> $c"
+	if [ "$OPEROVERRIDEVERIFY" = "1" ] ; then
+		TEST="Yes"
+	else
+		TEST="No"
+	fi
+	echo ""
+	echo "Do you want to require opers to /invite themselves into a +s or +p channel?"
+	echo $n "[$TEST] -> $c"
 	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
+	if [ -z "$cc" ] ; then
+		cc=$TEST
+	fi
+	case "$cc" in
 	[Yy]*)
-	    OPEROVERRIDEVERIFY="1"
-	    ;;
+		OPEROVERRIDEVERIFY="1"
+		;;
 	[Nn]*)
-	    OPEROVERRIDEVERIFY=""
-	    ;;
+		OPEROVERRIDEVERIFY=""
+		;;
 	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
+		echo ""
+		echo "You must enter either Yes or No"
+		TEST=""
+		;;
+	esac
 done
 
 }
@@ -261,9 +288,9 @@ OPEROVERRIDEVERIFY=""
 GENCERTIFICATE="1"
 EXTRAPARA=""
 if [ "`eval echo -n 'a'`" = "-n a" ] ; then
-        c="\c"
+	c="\c"
 else
-        n="-n"
+	n="-n"
 fi
 
 
@@ -314,19 +341,19 @@ fi
 
 clear
 
-    if [ -f "doc/Config.header" -a -z "$NOINTRO" ] ; then
-        more doc/Config.header
-        echo ""
-        echo $n "[Press Enter to continue]"
-        read cc
-        clear
-    fi
+if [ -f "doc/Config.header" -a -z "$NOINTRO" ] ; then
+	more doc/Config.header
+	echo ""
+	echo $n "[Press Enter to continue]"
+	read cc
+	clear
+fi
 
 echo "We will now ask you a number of questions. You can just press ENTER to accept the defaults!"
 echo ""
 
 # This needs to be updated each release so auto-upgrading works for settings, modules, etc!!:
-UNREALRELEASES="unrealircd-5.0.6 unrealircd-5.0.5.1 unrealircd-5.0.5 unrealircd-5.0.4 unrealircd-5.0.3.1 unrealircd-5.0.3 unrealircd-5.0.2 unrealircd-5.0.1 unrealircd-5.0.0 unrealircd-5.0.0-rc2 unrealircd-5.0.0-rc1"
+UNREALRELEASES="unrealircd-5.0.9 unrealircd-5.0.9-rc1 unrealircd-5.0.8 unrealircd-5.0.8-rc1 unrealircd-5.0.7 unrealircd-5.0.7-rc1 unrealircd-5.0.6 unrealircd-5.0.5.1 unrealircd-5.0.5 unrealircd-5.0.4 unrealircd-5.0.3.1 unrealircd-5.0.3 unrealircd-5.0.2 unrealircd-5.0.1 unrealircd-5.0.0"
 if [ -f "config.settings" ]; then
 	. ./config.settings
 else
@@ -405,9 +432,9 @@ echo " If this directory does not exist it will be created.)"
 echo $n "[$TEST] -> $c"
 read cc
 if [ -z "$cc" ] ; then
-   BASEPATH=$TEST
+	BASEPATH=$TEST
 else
-   BASEPATH=`eval echo $cc` # modified
+	BASEPATH=`eval echo $cc` # modified
 fi
 if [ "$BASEPATH" = "$UNREALCWD" ]; then
 	echo ""
@@ -431,31 +458,27 @@ PRIVATELIBDIR="$BASEPATH/lib"
 
 TEST=""
 while [ -z "$TEST" ] ; do
-    TEST="$DEFPERM"
-    echo ""
-    echo "What should the default permissions for your configuration files be? (Set this to 0 to disable)"
-    echo "It is strongly recommended that you use 0600 to prevent unwanted reading of the file"
-    echo $n "[$TEST] -> $c"
+	TEST="$DEFPERM"
+	echo ""
+	echo "What should the default permissions for your configuration files be? (Set this to 0 to disable)"
+	echo "It is strongly recommended that you use 0600 to prevent unwanted reading of the file"
+	echo $n "[$TEST] -> $c"
 	read cc
-    if [ -z "$cc" ] ; then
-	DEFPERM=$TEST
-	break
-    fi
-    case "$cc" in
+	if [ -z "$cc" ] ; then
+		DEFPERM=$TEST
+		break
+	fi
+	case "$cc" in
 	[0-9]*)
-	    DEFPERM="$cc"
-	    ;;
+		DEFPERM="$cc"
+		;;
 	*)
-	    echo ""
-	    echo "You must enter a number"
-	    TEST=""
-	    ;;
-    esac
-
+		echo ""
+		echo "You must enter a number"
+		TEST=""
+		;;
+	esac
 done
-
-
-
 
 echo ""
 echo "If you want, you can manually enter the path to OpenSSL/LibreSSL here."
@@ -475,43 +498,43 @@ fi
 
 TEST="$SSLDIR"
 echo $n "[$TEST] -> $c"
-    read cc
+read cc
 if [ -z "$cc" ] ; then
-    SSLDIR="$TEST"
+	SSLDIR="$TEST"
 else 
-    SSLDIR=`eval echo $cc` # modified
+	SSLDIR=`eval echo $cc` # modified
 fi
 
 TEST=""
 while [ -z "$TEST" ] ; do
-    if [ "$REMOTEINC" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Do you want to enable remote includes?"
-    echo "This allows stuff like this in your configuration file:"
-    echo "include \"https://www.somesite.org/files/opers.conf\";"
-    echo $n "[$TEST] -> $c"
+	if [ "$REMOTEINC" = "1" ] ; then
+		TEST="Yes"
+	else
+		TEST="No"
+	fi
+	echo ""
+	echo "Do you want to enable remote includes?"
+	echo "This allows stuff like this in your configuration file:"
+	echo "include \"https://www.somesite.org/files/opers.conf\";"
+	echo $n "[$TEST] -> $c"
 	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
+	if [ -z "$cc" ] ; then
+		cc=$TEST
+	fi
+	case "$cc" in
 	[Yy]*)
-	    REMOTEINC="1"
-	    ;;
+		REMOTEINC="1"
+		;;
 	[Nn]*)
-	    REMOTEINC=""
-	    CURLDIR=""
-	    ;;
+		REMOTEINC=""
+		CURLDIR=""
+		;;
 	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
+		echo ""
+		echo "You must enter either Yes or No"
+		TEST=""
+		;;
+	esac
 done
 
 if [ "$REMOTEINC" = "1" ] ; then
@@ -589,108 +612,115 @@ if [ "$REMOTEINC" = "1" ] ; then
 		fi
 	fi
 
-        if [ "x$CURLDIR" = "x" ]; then
-        	# Still empty?
-        	TEST=""
-                while [ -z "$TEST" ] ; do
-                    TEST="Yes"
-                    echo ""
-        	    echo "Do you want me to automatically download and install curl for you?"
-                    echo $n "[$TEST] -> $c"
-                        read cc
-                    if [ -z "$cc" ] ; then
-                        cc=$TEST
-                    fi
-                    case "$cc" in
-                        [Yy]*)
-                            INSTALLCURL="1"
-                            CURLDIR="$UNREALCWD/extras/curl"
-                            ;;
-                        [Nn]*)
-                            INSTALLCURL="0"
-                            ;;
-                        *)
-                            echo ""
-                            echo "You must enter either Yes or No"
-                            TEST=""
-                            ;;
-                    esac
-                done
-        fi
+	if [ "x$CURLDIR" = "x" ]; then
+		# Still empty?
+		TEST=""
+		while [ -z "$TEST" ] ; do
+			TEST="Yes"
+			echo ""
+			echo "Do you want me to automatically download and install curl for you?"
+			echo $n "[$TEST] -> $c"
+			read cc
+			if [ -z "$cc" ] ; then
+				cc=$TEST
+			fi
+			case "$cc" in
+			[Yy]*)
+				INSTALLCURL="1"
+				CURLDIR="$UNREALCWD/extras/curl"
+				;;
+			[Nn]*)
+				INSTALLCURL="0"
+				;;
+			*)
+				echo ""
+				echo "You must enter either Yes or No"
+				TEST=""
+				;;
+			esac
+		done
+	fi
 
 	if [ "$INSTALLCURL" != "1" ]; then
-	  TEST=""
-          while [ -z "$TEST" ] ; do
-                  TEST="$CURLDIR"
-                  echo ""
-                  echo "Specify the directory you installed libcurl to"
-                  echo $n "[$TEST] -> $c"
-                  read cc
-                  if [ -z "$cc" ] ; then
-                      cc=$TEST
-                  else
-                      TEST=$cc
-                      CURLDIR=`eval echo $cc` # modified
-                  fi
-          done
-        fi
+		TEST=""
+		while [ -z "$TEST" ] ; do
+			TEST="$CURLDIR"
+			echo ""
+			echo "Specify the directory you installed libcurl to"
+			echo $n "[$TEST] -> $c"
+			read cc
+			if [ -z "$cc" ] ; then
+				cc=$TEST
+			else
+				TEST=$cc
+				CURLDIR=`eval echo $cc` # modified
+			fi
+		done
+		if [ "x$CURLDIR" != "x" ]; then
+			"$CURLDIR/bin/curl-config" --libs 1>/dev/null 2>&1
+			if [ "$?" != 0 ]; then
+				echo "Curl from $CURLDIR seems unusable ($CURLDIR/bin/curl-config does not exist)"
+				CURLDIR=""
+			fi
+		fi
+	fi
 fi
 
 
 TEST=""
 while [ -z "$TEST" ] ; do
-    if [ "$PREFIXAQ" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Do you want to enable prefixes for chanadmin and chanowner?"
-    echo "This will give +a the & prefix and ~ for +q (just like +o is @)"
-    echo "Supported by the major clients (mIRC, xchat, epic, eggdrop, Klient,"
-    echo "PJIRC, irssi, CGI:IRC, etc.)"
-    echo "This feature should be enabled/disabled network-wide."
-    echo $n "[$TEST] -> $c"
+	if [ "$PREFIXAQ" = "1" ] ; then
+		TEST="Yes"
+	else
+		TEST="No"
+	fi
+	echo ""
+	echo "Do you want to enable prefixes for chanadmin and chanowner?"
+	echo "This will give +a the & prefix and ~ for +q (just like +o is @)"
+	echo "Supported by the major clients (mIRC, xchat, epic, eggdrop, Klient,"
+	echo "PJIRC, irssi, CGI:IRC, etc.)"
+	echo "This feature should be enabled/disabled network-wide."
+	echo $n "[$TEST] -> $c"
 	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
+	if [ -z "$cc" ] ; then
+		cc=$TEST
+	fi
+	case "$cc" in
 	[Yy]*)
-	    PREFIXAQ="1"
-	    ;;
+		PREFIXAQ="1"
+		;;
 	[Nn]*)
-	    PREFIXAQ=""
-	    ;;
+		PREFIXAQ=""
+		;;
 	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
+		echo ""
+		echo "You must enter either Yes or No"
+		TEST=""
+		;;
+	esac
 done
 
 TEST=""
 while [ -z "$TEST" ] ; do
-    TEST="$NICKNAMEHISTORYLENGTH"
-    echo ""
-    echo "How far back do you want to keep the nickname history?"
-    echo $n "[$TEST] -> $c"
+	TEST="$NICKNAMEHISTORYLENGTH"
+	echo ""
+	echo "How far back do you want to keep the nickname history?"
+	echo $n "[$TEST] -> $c"
 	read cc
-    if [ -z "$cc" ] ; then
-	NICKNAMEHISTORYLENGTH=$TEST
-	break
-    fi
-    case "$cc" in
+	if [ -z "$cc" ] ; then
+		NICKNAMEHISTORYLENGTH=$TEST
+		break
+	fi
+	case "$cc" in
 	[1-9]*)
-	    NICKNAMEHISTORYLENGTH="$cc"
-	    ;;
+		NICKNAMEHISTORYLENGTH="$cc"
+		;;
 	*)
-	    echo ""
-	    echo "You must enter a number"
-	    TEST=""
-	    ;;
-    esac
+		echo ""
+		echo "You must enter a number"
+		TEST=""
+		;;
+	esac
 done
 
 echo ""
@@ -701,7 +731,7 @@ while [ -z "$TEST" ] ; do
 	echo "What is the maximum number of sockets (and file descriptors) that"
 	echo "UnrealIRCd may use?"
 	echo "It is recommended to leave this at the default setting 'auto',"
-	echo "which at present results in a limit of up to 8192, depending on"
+	echo "which at present results in a limit of up to 16384, depending on"
 	echo "the system. When you boot UnrealIRCd later you will always see"
 	echo "the effective limit."
 	echo $n "[$TEST] -> $c"
@@ -737,11 +767,18 @@ echo "Otherwise, see \`./configure --help' and write them here:"
 echo $n "[$TEST] -> $c"
 read EXTRAPARA
 if [ -z "$EXTRAPARA" ]; then
-    EXTRAPARA="$TEST"
+	EXTRAPARA="$TEST"
 fi
 
 rm -f config.settings
 cat > config.settings << __EOF__
+#
+# These are the settings saved from running './Config'.
+# Note that it is not recommended to edit config.settings by hand!
+# Chances are you misunderstand what a variable does or what the
+# supported values are. You better just re-run the ./Config script
+# and answer appropriately there, to get a correct config.settings
+# file.
 #
 BASEPATH="$BASEPATH"
 BINDIR="$BINDIR"

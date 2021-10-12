@@ -53,17 +53,34 @@ if [ "$1" = "start" ] ; then
 	# Now check if we need to create a crash report.
 	@BINDIR@/unrealircd -R
 elif [ "$1" = "stop" ] ; then
-	echo "Stopping UnrealIRCd"
+	echo -n "Stopping UnrealIRCd"
 	if [ ! -r $PID_FILE ] ; then
+		echo
 		echo "ERROR: UnrealIRCd is not running"
 		exit 1
 	fi
 	kill -15 `cat $PID_FILE`
 	if [ "$?" != 0 ]; then
+		echo
 		echo "ERROR: UnrealIRCd is not running"
 		exit 1
 	fi
-	sleep 1
+	# Wait for UnrealIRCd to terminate, but wait 10 seconds max
+	n="0"
+	while [ "$n" -lt 10 ]
+	do
+		echo -n "."
+		if [ ! -r $PID_FILE ] ; then
+			break
+		fi
+		if ! kill -0 `cat $PID_FILE`; then
+			break
+		fi
+		n=`expr $n + 1`
+		sleep 1
+	done
+	echo
+	# In case it is still running, kill it for good.
 	if [ -r $PID_FILE ] ; then
 		kill -9 `cat $PID_FILE` 1>/dev/null 2>&1
 	fi
@@ -212,7 +229,7 @@ __EOF__
 	echo '2. If you are using 3rd party modules we might request you'
 	echo '   to run without them and verify you still crash. This is'
 	echo '   to eleminate any loss of time due to bugs made by others'
-	echo '3. Always use the latest UnrealIRCd version, we fix (crash)bugs'
+	echo '3. Use a reasonably recent UnrealIRCd version. We fix (crash)bugs'
 	echo '   all the time so your bug might as well be fixed already.'
 	echo ""
 	echo "Thanks!"
@@ -286,6 +303,8 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 	else
 		echo "Patch applied successfully. You must now restart your IRC server."
 	fi
+elif [ "$1" = "upgrade" ] ; then
+	@BINDIR@/unrealircd-upgrade-script $*
 elif [ "$1" = "genlinkblock" ] ; then
 	@BINDIR@/unrealircd -L
 else
@@ -298,15 +317,17 @@ else
 	echo "unrealircd start         Start the IRC Server"
 	echo "unrealircd stop          Stop (kill) the IRC Server"
 	echo "unrealircd rehash        Reload the configuration file"
-	echo "unrealircd reloadtls     Reload the SSL/TLS certificate and settings"
+	echo "unrealircd reloadtls     Reload the SSL/TLS certificates"
 	echo "unrealircd restart       Restart the IRC Server (stop+start)"
+	echo "unrealircd upgrade       Upgrade UnrealIRCd to the latest version"
+	echo "unrealircd upgrade-conf  Upgrade the configuration file from UnrealIRCd"
+	echo "                         3.2.x/4.x to 5.x format"
 	echo "unrealircd mkpasswd      Hash a password"
 	echo "unrealircd version       Display the UnrealIRCd version"
 	echo "unrealircd module        Install and uninstall 3rd party modules"
 	echo "unrealircd croncheck     For use in crontab: this checks if the server"
 	echo "                         is running. If not, the server is started."
+	echo "unrealircd genlinkblock  Generate link { } block for the other side."
 	echo "unrealircd gencloak      Display 3 random cloak keys"
 	echo "unrealircd spkifp        Display SPKI Fingerprint"
-	echo "unrealircd upgrade-conf  Upgrade the configuration file from UnrealIRCd"
-	echo "                         3.2.x/4.x to 5.x format"
 fi

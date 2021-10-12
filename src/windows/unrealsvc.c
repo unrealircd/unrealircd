@@ -1,6 +1,7 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, windows/unreal.c
+ *   IRC - Internet Relay Chat, windows/unrealsvc.c
  *   Copyright (C) 2002 Dominick Meglio (codemastr)
+ *   Copyright (C) 2006-2021 Bram Matthys (Syzop)
  *   
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -25,7 +26,7 @@ UCHANGESERVICECONFIG2 uChangeServiceConfig2;
 
 #define IRCD_SERVICE_CONTROL_REHASH 128
 void show_usage() {
-	fprintf(stderr, "unreal start|stop|rehash|restart|install|uninstall|config <option> <value>");
+	fprintf(stderr, "unrealsvc start|stop|rehash|restart|install|uninstall|config <option> <value>");
 	fprintf(stderr, "\nValid config options:\nstartup auto|manual\n");
 	fprintf(stderr, "crashrestart delay\n");
 }

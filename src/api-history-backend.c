@@ -166,14 +166,21 @@ int history_add(char *object, MessageTag *mtags, char *line)
 	return 1;
 }
 
-int history_request(Client *client, char *object, HistoryFilter *filter)
+HistoryResult *history_request(char *object, HistoryFilter *filter)
 {
-	HistoryBackend *hb;
+	HistoryBackend *hb = historybackends;
+	HistoryResult *r;
+	HistoryLogLine *l;
 
-	for (hb = historybackends; hb; hb=hb->next)
-		hb->history_request(client, object, filter);
+	if (!hb)
+		return 0; /* no history backend loaded */
 
-	return 1;
+	/* Right now we return whenever the first backend has a result. */
+	for (hb = historybackends; hb; hb = hb->next)
+		if ((r = hb->history_request(object, filter)))
+			return r;
+
+	return NULL;
 }
 
 int history_destroy(char *object)
@@ -194,4 +201,84 @@ int history_set_limit(char *object, int max_lines, long max_t)
 		hb->history_set_limit(object, max_lines, max_t);
 
 	return 1;
+}
+
+/** Free a HistoryResult object that was returned from request_result() earlier */
+void free_history_result(HistoryResult *r)
+{
+	HistoryLogLine *l, *l_next;
+	for (l = r->log; l; l = l_next)
+	{
+		l_next = l->next;
+		free_message_tags(l->mtags);
+		safe_free(l);
+	}
+	safe_free(r->object);
+	safe_free(r);
+}
+
+/** Returns 1 if the client can receive channel history, 0 if not.
+ * @param client	The client to check.
+ * @note It is recommend to call this function BEFORE trying to
+ *       retrieve channel history via history_request(),
+ *       as to not waste useless resources.
+ */
+int can_receive_history(Client *client)
+{
+	if (HasCapability(client, "server-time"))
+		return 1;
+	return 0;
+}
+
+static void history_send_result_line(Client *client, HistoryLogLine *l, char *batchid)
+{
+	if (BadPtr(batchid))
+	{
+		sendto_one(client, l->mtags, "%s", l->line);
+	} else {
+		MessageTag *m = safe_alloc(sizeof(MessageTag));
+		m->name = "batch";
+		m->value = batchid;
+		AddListItem(m, l->mtags);
+		sendto_one(client, l->mtags, "%s", l->line);
+		DelListItem(m, l->mtags);
+		safe_free(m);
+	}
+}
+
+/** Send the result of a history_request() to the client.
+ * @param client	The client to send to.
+ * @param r		The history result retrieved via history_request().
+ */
+void history_send_result(Client *client, HistoryResult *r)
+{
+	char batch[BATCHLEN+1];
+	HistoryLogLine *l;
+
+	if (!can_receive_history(client))
+		return;
+
+	batch[0] = '\0';
+	if (HasCapability(client, "batch"))
+	{
+		/* Start a new batch */
+		generate_batch_id(batch);
+		sendto_one(client, NULL, ":%s BATCH +%s chathistory %s", me.name, batch, r->object);
+	}
+
+	for (l = r->log; l; l = l->next)
+		history_send_result_line(client, l, batch);
+
+	/* End of batch */
+	if (*batch)
+		sendto_one(client, NULL, ":%s BATCH -%s", me.name, batch);
+}
+
+void free_history_filter(HistoryFilter *f)
+{
+	safe_free(f->timestamp_a);
+	safe_free(f->msgid_a);
+	safe_free(f->timestamp_b);
+	safe_free(f->msgid_b);
+	safe_free(f);
 }
