@@ -2329,6 +2329,8 @@ int is_file_readable(const char *file, const char *dir)
 
 void delletterfromstring(char *s, char letter)
 {
+	if (s == NULL)
+		return;
 	for (; *s; s++)
 	{
 		if (*s == letter)
