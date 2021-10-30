@@ -71,7 +71,8 @@ Enhancements
 * Configure ```WHOIS``` output in a very precise way
   * You can now decide which fields (eg modes, geo, certfp, etc) you want
     to expose to who (everyone, self, oper).
-  * See ... for the default configuration and more details
+  * See [set::whois-details](https://www.unrealircd.org/docs/Set_block#set::whois-details)
+    for more details.
 * We now ship with 3 cloaking modules and you need to load 1 explicitly
   via ```loadmodule```:
   * ```cloak_sha256```: the recommended module for anyone starting a new
@@ -86,8 +87,8 @@ Enhancements
   * Anywhere an URL is encountered on its own, it will be fetched
     automatically. This makes it work not only for includes and motd
     (which is already supported) but also for any other file.
-  * If you need to prevent UnrealIRCd from treating an URL as a
-    remote include then use ..... TODO......
+  * On TODO list: an option to prevent UnrealIRCd from treating an URL as a
+    remote include.
 * New IRCv3 features:
   * [MONITOR](https://ircv3.net/specs/extensions/monitor.html)
   * [invite-notify](https://ircv3.net/specs/extensions/invite-notify)
