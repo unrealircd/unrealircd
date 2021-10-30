@@ -3378,18 +3378,18 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 					cep->line_number);
 				errors++;
 			}
-			if (!valid_host(cep->value, 0))
-			{
-				config_error("%s:%i: illegal me::name contains invalid character(s) [only a-z, 0-9, _, -, . are allowed]",
-					cep->file->filename,
-					cep->line_number);
-				errors++;
-			}
 			if (strlen(cep->value) > HOSTLEN)
 			{
 				config_error("%s:%i: illegal me::name, must be less or equal to %i characters",
 					cep->file->filename,
 					cep->line_number, HOSTLEN);
+				errors++;
+			}
+			if (!valid_server_name(cep->value))
+			{
+				config_error("%s:%i: illegal me::name contains invalid character(s) [only a-z, 0-9, _, -, . are allowed]",
+					cep->file->filename,
+					cep->line_number);
 				errors++;
 			}
 		}

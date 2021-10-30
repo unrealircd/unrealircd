@@ -1105,26 +1105,11 @@ void charsys_check_for_changes(void)
 int valid_server_name(const char *name)
 {
 	const char *p;
-	int has_dot = 0;
 
-	if (!*name)
-		return 0; /* empty name */
+	if (!valid_host(name, 0))
+		return 0; /* invalid hostname */
 
-	if (strlen(name) >= HOSTLEN)
-		return 0; /* oversized */
-
-	for (p = name; *p; p++)
-	{
-		if (*p == '.')
-		{
-			has_dot = 1;
-			continue;
-		}
-		if ((*p <= '0') || (*p > 'z'))
-			return 0; /* forbidden chars */
-	}
-
-	if (!has_dot)
+	if (!strchr(name, '.'))
 		return 0; /* no dot */
 
 	return 1;
