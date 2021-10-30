@@ -191,7 +191,7 @@ CMD_FUNC(cmd_sjoin)
 
 	if (IsInvalidChannelTS(ts))
 	{
-		unreal_log(ULOG_WARNING, "sjoin", "SJOIN_INVALID_TIMESTAMP", NULL,
+		unreal_log(ULOG_WARNING, "sjoin", "SJOIN_INVALID_TIMESTAMP", client,
 			   "SJOIN for channel $channel has invalid timestamp $send_timestamp (from $client)",
 			   log_data_channel("channel", channel),
 			   log_data_integer("send_timestamp", ts));
@@ -773,6 +773,7 @@ CMD_FUNC(cmd_sjoin)
 		unreal_log(ULOG_INFO, "channel", "CHANNEL_SYNC_TS_CHANGE", client,
 		           "Channel $channel: timestamp changed from $old_ts -> $new_ts "
 		           "after syncing with server $client.",
+		           log_data_channel("channel", channel),
 		           log_data_integer("old_ts", oldts),
 		           log_data_integer("new_ts", channel->creationtime));
 	}
