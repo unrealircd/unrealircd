@@ -15,9 +15,18 @@ Who gets to see what in WHOIS is also customizable in detail.
 
 Breaking changes
 -----------------
-TODO elaborate but try to keep short:
-log block, cloaking module needs to be chosen explicitly,
-and the need to include snomasks.default.conf.
+* You need to add ```include "snomasks.default.conf";```
+* You need to load a cloaking module explicitly. Assuming you already
+  have a network then add: ```loadmodule "cloak_md5";```
+* The log block(s) need to be updated, use something like:
+  ```log {
+        source {
+                all;
+        }
+        destination {
+                file "ircd.log" { maxsize 100M; }
+        }
+     }```
 
 Enhancements
 -------------
