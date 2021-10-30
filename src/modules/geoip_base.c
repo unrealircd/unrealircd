@@ -30,6 +30,7 @@ int geoip_connect_extinfo(Client *client, NameValuePrioList **list);
 int geoip_base_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int geoip_base_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 EVENT(geoip_base_set_existing_users_evt);
+CMD_FUNC(cmd_geoip);
 
 ModDataInfo *geoip_md; /* Module Data structure which we acquire */
 struct geoip_base_config_s geoip_base_config;
@@ -123,6 +124,8 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0,geoip_base_handshake); /* in case the IP changed in registration phase (WEBIRC, HTTP Forwarded) */
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, 0, geoip_base_handshake); /* remote user */
 	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, geoip_base_whois);
+
+	CommandAdd(modinfo->handle, "GEOIP", cmd_geoip, MAXPARA, CMD_USER);
 
 	/* set defaults */
 	geoip_base_config.check_on_load = 1;
@@ -265,4 +268,59 @@ int geoip_base_whois(Client *client, Client *target, NameValuePrioList **list)
 	                        geo->country_code,
 	                        geo->country_name);
 	return 0;
+}
+
+CMD_FUNC(cmd_geoip)
+{
+	const char *ip = NULL;
+	Client *target;
+	GeoIPResult *res;
+
+	if (!IsOper(client))
+	{
+		sendnumeric(client, ERR_NOPRIVILEGES);
+		return;
+	}
+
+	if ((parc < 2) || BadPtr(parv[1]))
+	{
+		/* Maybe some report */
+		return;
+	}
+
+	if (strchr(parv[1], '.') || strchr(parv[1], ':'))
+	{
+		ip = parv[1];
+	} else {
+		target = find_user(parv[1], NULL);
+		if (!target)
+		{
+			sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
+			return;
+		}
+		ip = target->ip;
+		if (!ip)
+		{
+			sendnotice(client, "User %s has no known IP address", client->name); // (eg: services bot)
+			return;
+		}
+	}
+
+	res = geoip_lookup(ip);
+
+	sendnotice(client, "*** GEOIP information for IP %s ***", ip);
+	if (!res)
+	{
+		sendnotice(client, "- No information available");
+		return;
+	} else {
+		if (res->country_code)
+			sendnotice(client, "- Country code: %s", res->country_code);
+		if (res->country_name)
+			sendnotice(client, "- Country name: %s", res->country_name);
+	}
+
+	free_geoip_result(res);
+
+	sendnotice(client, "*** End of information ***");
 }
