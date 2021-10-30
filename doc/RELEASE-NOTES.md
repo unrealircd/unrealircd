@@ -72,10 +72,14 @@ Enhancements
     The auto-conversion also works fine with complex extbans such as
     ```+b ~t:5:~q:nick!user@host``` to ```+b ~time:5:~quiet:nick!user@host```.
 * New IRCv3 features:
-  * [MONITOR](https://ircv3.net/specs/extensions/monitor.html)
-  * [invite-notify](https://ircv3.net/specs/extensions/invite-notify)
-  * [setname](https://ircv3.net/specs/extensions/setname.html)
-  * draft/extended-monitor
+  * [MONITOR](https://ircv3.net/specs/extensions/monitor.html): an
+    alternative for ```WATCH``` to monitor other users ("notify list").
+  * draft/extended-monitor: extensions for MONITOR, still in draft.
+  * [invite-notify](https://ircv3.net/specs/extensions/invite-notify):
+    report channel invites to other chanops (or users) in a machine
+    readable way.
+  * [setname](https://ircv3.net/specs/extensions/setname.html):
+    notify clients about realname (gecos) changes.
 * GeoIP lookups are now done by default
   * This shows the country of the user to IRCOps in ```WHOIS``` and in the
     "user connecting" line.
@@ -106,12 +110,9 @@ Enhancements
     remote include.
 * TLS cipher and some other information is now visible for remote
   clients as well, also in [secure: xyz] connect line.
-* Lots of code cleanups / API breakage
-* Error messages in remote includes use the url instead of temp file
-* Downgrading is only supported down to 5.2.0, not lower, otherwise
-  make a copy of your reputation db etc.
-* Antirandom no longer has fullstatus-on-load: maybe warn and ignore
-  the option rather than failing? Was this in the default conf?
+* Error messages in remote includes use the url instead of a temporary file
+* Downgrading from UnrealIRCd 6 is only supported down to 5.2.0, not lower.
+  If this is a problem then make a copy of your db files (eg: reputation.db).
 * /REHASH -motd and -opermotd are gone, just use /REHASH
 * Invite: set `set::normal-user-invite-notification yes;` to make chanops
   receive information about normal users inviting someone to their channel.
@@ -121,9 +122,9 @@ Enhancements
   connecting from `1.2.3.4` (plans to accept legacy `X-Forwarded-For` and a proxy
   password too)
 
-API:
-* Bump from unrealircd-5 to unrealircd-6
-* Where do I start...
+Module coders (API changes):
+* This section is incomplete and has little details. It will be expanded later.
+* Bump module header from unrealircd-5 to unrealircd-6
 * Newlog
 * ConfigEntry, ConfigFile (c22207c4ca2e6a72024ff9c642863737e2519d33)
 * get_channel() is now make_channel() and creates if needed, otherwise use find_channel()
@@ -133,15 +134,17 @@ API:
 * For adjusting fake lag use add_fake_lag(client, msec)
 * Some client/user struct changes: eg client->uplink->name, check log for all..
 
-Protocol:
+Server protocol:
 * SJOIN followups
 * NEXTBANS
 * Bounced modes are gone
 * SLOG
 
+Client protocol:
+* TODO: document
 
 Mental notes / move these wiki:
-* Geo ip main configuration:
+* Geo ip main configuration (config items may still change!!):
 ```
   set { geoip {
     check-on-load yes; // check all users already connected and add geoip info to them on module load
@@ -172,3 +175,5 @@ Mental notes / move these wiki:
   name, handy when the old server is a zombie waiting for ping timeout.
   FIXME: isnt this broken?
 FIXME: (wrong) server delinking in case of error may be an issue
+* Antirandom no longer has fullstatus-on-load: maybe warn and ignore
+  the option rather than failing? Was this in the default conf?
