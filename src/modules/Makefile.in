@@ -111,9 +111,9 @@ clean:
 # geoip_classic requires extra library
 geoip_classic.so: geoip_classic.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) $(GEOIP_CLASSIC_CFLAGS) -DDYNAMIC_LINKING \
-		-o geoip_classic.so geoip_classic.c $(GEOIP_CLASSIC_LIBS)
+		-o geoip_classic.so geoip_classic.c @LDFLAGS_PRIVATELIBS@ $(GEOIP_CLASSIC_LIBS)
 
 # geoip_maxmind requires another extra library
 geoip_maxmind.so: geoip_maxmind.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) $(LIBMAXMINDDB_CFLAGS) -DDYNAMIC_LINKING \
-		-o geoip_maxmind.so geoip_maxmind.c $(LIBMAXMINDDB_LIBS)
+		-o geoip_maxmind.so geoip_maxmind.c @LDFLAGS_PRIVATELIBS@ $(LIBMAXMINDDB_LIBS)
