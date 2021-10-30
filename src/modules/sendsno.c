@@ -86,7 +86,7 @@ CMD_FUNC(cmd_sendsno)
 			char found = 0;
 			for (p = sno; *p; p++)
 			{
-				if (strchr(client->user->snomask, *p))
+				if (strchr(acptr->user->snomask, *p))
 				{
 					found = 1;
 					break;
