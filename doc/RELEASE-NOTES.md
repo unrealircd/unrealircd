@@ -44,7 +44,8 @@ Enhancements
     on the new snomasks - lots of letters changed!
   * See [FAQ: Converting log { } block](https://www.unrealircd.org/docs/FAQ#old-log-block)
     on how to change your existing log { } blocks for disk logging.
-  * New support for JSON logging to disk, instead of the default text format.
+  * New support for [JSON logging](https://www.unrealircd.org/docs/JSON_logging)
+    to disk, instead of the default text format.
     JSON logging adds lot of detail to log messages and consistently
     expands things like 'client' with properties like hostname,
     connected_since, reputation, modes, etc.
