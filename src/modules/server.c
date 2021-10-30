@@ -1169,9 +1169,9 @@ CMD_FUNC(cmd_sid)
 
 		unreal_log(ULOG_ERROR, "link", "REMOTE_LINK_DENIED_DUPLICATE_SERVER", client,
 			   "Denied remote server $servername which was introduced by $client: "
-			   "Already linked via $other_client.uplink.",
+			   "Already linked via $existing_client.uplink.",
 			   log_data_string("servername", servername),
-			   log_data_client("other_client", acptr));
+			   log_data_client("existing_client", acptr));
 		// FIXME: oldest should die.
 		// FIXME: code below looks wrong, it checks direction TS instead of anything else
 		acptr = acptr->direction;

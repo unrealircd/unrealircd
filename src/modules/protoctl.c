@@ -305,7 +305,7 @@ CMD_FUNC(cmd_protoctl)
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_DUPLICATE_SID", client,
 					   "Denied server $client: Server with SID $existing_client.id ($existing_client) is already linked.",
-					   log_data_client("other_client", aclient));
+					   log_data_client("existing_client", aclient));
 				exit_client(client, NULL, "Server Exists (or non-unique me::sid)");
 				return;
 			}
@@ -318,7 +318,7 @@ CMD_FUNC(cmd_protoctl)
 					   "but we already have SID $sid linked ($existing_client via $existing_client.uplink)\n"
 					   "Possible race condition, just wait a moment for the network to synchronize...",
 					   log_data_string("sid", sid),
-					   log_data_client("other_client", aclient));
+					   log_data_client("existing_client", aclient));
 				exit_client(client, NULL, "Server Exists (just wait a moment...)");
 				return;
 			}

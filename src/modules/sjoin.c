@@ -419,9 +419,9 @@ CMD_FUNC(cmd_sjoin)
 				    me.id, channel->name, acptr->name);
 				unreal_log(ULOG_WARNING, "sjoin", "SJOIN_FAKE_DIRECTION", client,
 				           "Fake direction from server $client in SJOIN "
-				           "for user $other_client on $other_client.server "
+				           "for user $existing_client on $existing_client.server "
 				           "(item: $buf)",
-				           log_data_client("other_client", acptr),
+				           log_data_client("existing_client", acptr),
 				           log_data_string("buf", item));
 				continue;
 			}

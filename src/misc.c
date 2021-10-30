@@ -401,8 +401,8 @@ void remove_dcc_references(Client *client)
 		{
 			unreal_log(ULOG_WARNING, "main", "BUG_REMOVE_DCC_REFERENCES", acptr,
 			           "[BUG] remove_dcc_references: $client was in dccallowme "
-			           "list of $other_client but not in dccallowrem list!",
-			           log_data_client("other_client", client));
+			           "list of $existing_client but not in dccallowrem list!",
+			           log_data_client("existing_client", client));
 		}
 
 		free_link(lp);
