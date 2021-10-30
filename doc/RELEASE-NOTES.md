@@ -55,13 +55,15 @@ Enhancements
   * We now have a consistent log format and log messages can be multiline.
   * Colors are enabled in snomasks and console logs by default. Later there
     will be an option to turn this off (TODO).
-* GeoIP lookups are now done by default
-  * This shows the country of the user to IRCOps in ```WHOIS``` and in the
-    "user connecting" line.
-  * By default the ```geoip_classic``` module is loaded, for which we
-    provide a mirror of database updates at unrealircd.org. This uses
-    the classic geolite library that is now shipped with UnrealIRCd
-  * Other options are the ```geoip_maxmind``` and ```geoip_csv``` modules.
+* Almost all channel modes are modularized
+  * Only the three list modes (+b/+e/+I) are still in the core
+  * The five [rank modes](https://www.unrealircd.org/docs/Channel_Modes#Access_levels)
+    (+vhoaq) are now also modular. They are loaded by default but you can
+    blacklist one or more if you don't want them. For example to disable halfop:
+    ```blacklist-module chanmodes/halfop;```
+  * Support for compiling without PREFIX_AQ has been removed because
+    people often confused it with disabling +a/+q which is something
+    different.
 * Named extbans
   * Extbans now no longer show up with single letters but with names.
     For example ```+b ~c:#channel``` is now ```+b ~channel:#channel```.
@@ -69,6 +71,18 @@ Enhancements
     both from clients and from/to older UnrealIRCd 5 servers.
     The auto-conversion also works fine with complex extbans such as
     ```+b ~t:5:~q:nick!user@host``` to ```+b ~time:5:~quiet:nick!user@host```.
+* New IRCv3 features:
+  * [MONITOR](https://ircv3.net/specs/extensions/monitor.html)
+  * [invite-notify](https://ircv3.net/specs/extensions/invite-notify)
+  * [setname](https://ircv3.net/specs/extensions/setname.html)
+  * draft/extended-monitor
+* GeoIP lookups are now done by default
+  * This shows the country of the user to IRCOps in ```WHOIS``` and in the
+    "user connecting" line.
+  * By default the ```geoip_classic``` module is loaded, for which we
+    provide a mirror of database updates at unrealircd.org. This uses
+    the classic geolite library that is now shipped with UnrealIRCd
+  * Other options are the ```geoip_maxmind``` and ```geoip_csv``` modules.
 * Configure ```WHOIS``` output in a very precise way
   * You can now decide which fields (eg modes, geo, certfp, etc) you want
     to expose to who (everyone, self, oper).
@@ -90,20 +104,6 @@ Enhancements
     (which is already supported) but also for any other file.
   * On TODO list: an option to prevent UnrealIRCd from treating an URL as a
     remote include.
-* New IRCv3 features:
-  * [MONITOR](https://ircv3.net/specs/extensions/monitor.html)
-  * [invite-notify](https://ircv3.net/specs/extensions/invite-notify)
-  * [setname](https://ircv3.net/specs/extensions/setname.html)
-  * draft/extended-monitor ?
-* Almost all channel modes are modularized
-  * Only the three list modes (+b/+e/+I) are still in the core
-  * The five [rank modes](https://www.unrealircd.org/docs/Channel_Modes#Access_levels)
-    (+vhoaq) are now also modular. They are loaded by default but you can
-    blacklist one or more if you don't want them.
-  * For example to disable halfop: ```blacklist-module chanmodes/halfop;```
-  * Support for compiling without PREFIX_AQ has been removed because
-    people often confused it with disabling +a/+q which is something
-    different.
 * TLS cipher and some other information is now visible for remote
   clients as well, also in [secure: xyz] connect line.
 * Lots of code cleanups / API breakage
