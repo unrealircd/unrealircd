@@ -306,6 +306,19 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 		}
 	}
 
+	if (!any_sources && !destinations)
+	{
+		unreal_log(ULOG_ERROR, "config", "CONFIG_OLD_LOG_BLOCK", NULL,
+		           "$config_file:$line_number: Your log block contains no sources and no destinations.\n"
+		           "The log block changed between UnrealIRCd 5 and UnrealIRCd 6, "
+		           "see https://www.unrealircd.org/docs/FAQ#old-log-block on how "
+		           "to convert it to the new syntax.",
+		           log_data_string("config_file", block->file->filename),
+		           log_data_integer("line_number", block->line_number));
+		errors++;
+		return errors;
+	}
+
 	if (!any_sources)
 	{
 		config_error("%s:%d: log block contains no sources. Old log block perhaps?",

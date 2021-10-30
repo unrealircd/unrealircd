@@ -11,7 +11,7 @@ geoip support and remote includes support built-in.
 Additionally, things are more customizable such as what gets sent to
 which snomask. All the +vhoaq channel modes are now modular as well,
 handy for admins who don't want or need halfops or +q/+a.
-Who gets to see what in WHOIS is also customizable in detail.
+For WHOIS it is now customizable in detail who gets to see what.
 
 Breaking changes
 -----------------
@@ -27,7 +27,7 @@ Breaking changes
           destination {
               file "ircd.log" { maxsize 100M; }
           }
-      }
+  }
   ```
 
 Enhancements
@@ -40,8 +40,10 @@ Enhancements
     which everyone should include from unrealircd.conf. That is, unless you
     wish to completely reconfigure which logging goes to which snomasks
     yourself, which is also an option now.
-  * See ... on the new snomasks - lots of letters changed!
-  * See ... on how to change your existing log { } blocks for disk logging
+  * See [Snomasks](https://www.unrealircd.org/docs/Snomasks#UnrealIRCd_6)
+    on the new snomasks - lots of letters changed!
+  * See [FAQ: Converting log { } block](https://www.unrealircd.org/docs/FAQ#old-log-block)
+    on how to change your existing log { } blocks for disk logging.
   * New support for JSON logging to disk, instead of the default text format.
     JSON logging adds lot of detail to log messages and consistently
     expands things like 'client' with properties like hostname,
