@@ -28,7 +28,7 @@ cd \users\user\worker\unreal6-w10\build
 rem Install 'unrealircd-tests'
 cd ..
 rd /q/s unrealircd-tests
-git clone -q --branch unreal60 git@github.com:/unrealircd/unrealircd-tests.git unrealircd-tests
+git clone -q --branch unreal60 https://github.com/unrealircd/unrealircd-tests.git unrealircd-tests
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 cd build
 
