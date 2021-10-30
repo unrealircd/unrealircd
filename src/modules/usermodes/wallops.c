@@ -63,7 +63,7 @@ MOD_UNLOAD()
  * @param pattern	The format string / pattern to use.
  * @param ...		Format string parameters.
  */
-void sendto_wallops(Client *one, Client *from, FORMAT_STRING(const char *pattern), ...)
+void sendto_wallops(Client *from, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	Client *acptr;
@@ -75,8 +75,6 @@ void sendto_wallops(Client *one, Client *from, FORMAT_STRING(const char *pattern
 			continue;
 		if (acptr->direction->local->serial == current_serial)	/* sent message along it already ? */
 			continue;
-		if (acptr->direction == one)
-			continue;	/* ...was the one I should skip */
 		acptr->direction->local->serial = current_serial;
 
 		va_start(vl, pattern);
@@ -105,5 +103,5 @@ CMD_FUNC(cmd_wallops)
 		return;
 	}
 
-	sendto_wallops(client->direction, client, ":%s WALLOPS :%s", client->name, message);
+	sendto_wallops(client, ":%s WALLOPS :%s", client->name, message);
 }
