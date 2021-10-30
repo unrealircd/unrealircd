@@ -52,8 +52,9 @@ Enhancements
     ```unrealircd.org/json-log``` capability. The data is then sent in
     a message-tag called ```unrealircd.org/json-log```. This makes it ideal
     for client scripts and bots to do automated things.
-  * TODO: Explain log format, and multiline
-  * TODO: Explain colored logs, where/when and how to turn off
+  * We now have a consistent log format and log messages can be multiline.
+  * Colors are enabled in snomasks and console logs by default. Later there
+    will be an option to turn this off (TODO).
 * GeoIP lookups are now done by default
   * This shows the country of the user to IRCOps in ```WHOIS``` and in the
     "user connecting" line.
@@ -96,53 +97,16 @@ Enhancements
   * draft/extended-monitor ?
 * Almost all channel modes are modularized
   * Only the three list modes (+b/+e/+I) are still in the core
-  * The five rank modes +vhoaq are now also modular. They are loaded by
-    default but you can blacklist one or more if you don't want them.
+  * The five [rank modes](https://www.unrealircd.org/docs/Channel_Modes#Access_levels)
+    (+vhoaq) are now also modular. They are loaded by default but you can
+    blacklist one or more if you don't want them.
   * For example to disable halfop: ```blacklist-module chanmodes/halfop;```
   * Support for compiling without PREFIX_AQ has been removed because
     people often confused it with disabling +a/+q which is something
     different.
-  * TODO: replace part of the above with a simple docs reference, eg
-    a new page called Channel ranks or whatever, or part of the
-    Channel modes page.
-
-Mental notes / move these wiki:
-
-* Geo ip: tell how it works and where it is available/used/shown
-  main configuration:
-```
-  set { geoip {
-    check-on-load yes; // check all users already connected and add geoip info to them on module load
-  };};
-```
-  geoip_csv module: always compiled, file locations:
-```
-  set { geoip-csv {
-    ipv4-blocks-file "GeoLite2-Country-Blocks-IPv4.csv"; // don't set for ipv6-only
-    ipv6-blocks-file "GeoLite2-Country-Blocks-IPv6.csv"; // don't set for ipv4-only
-    countries-file "GeoLite2-Country-Locations-en.csv"; // required
-  };};
-```
-  geoip_maxmind module: compiled when system libmaxminddb is present, file location:
-```
-  set { geoip-maxmind {
-    database "GeoLite2-Country.mmdb";
-  };};
-```
-  geoip_classic module: compiled when `--enable-geoip-classic=yes` added to configure, file locations:
-```
-  set { geoip-classic {
-    ipv4-database "GeoIP.dat"; // don't set for ipv6-only
-    ipv6-database "GeoIPv6.dat"; // don't set for ipv4-only
-  };};
-```
-  None of these modules are loaded by default
 * TLS cipher and some other information is now visible for remote
   clients as well, also in [secure: xyz] connect line.
 * Lots of code cleanups / API breakage
-* We now (try to) kill the "old" server when a server links in with the same
-  name, handy when the old server is a zombie waiting for ping timeout.
-  FIXME: isnt this broken?
 * Error messages in remote includes use the url instead of temp file
 * Downgrading is only supported down to 5.2.0, not lower, otherwise
   make a copy of your reputation db etc.
@@ -175,4 +139,36 @@ Protocol:
 * Bounced modes are gone
 * SLOG
 
+
+Mental notes / move these wiki:
+* Geo ip main configuration:
+```
+  set { geoip {
+    check-on-load yes; // check all users already connected and add geoip info to them on module load
+  };};
+```
+  geoip_csv module: always compiled, file locations:
+```
+  set { geoip-csv {
+    ipv4-blocks-file "GeoLite2-Country-Blocks-IPv4.csv"; // don't set for ipv6-only
+    ipv6-blocks-file "GeoLite2-Country-Blocks-IPv6.csv"; // don't set for ipv4-only
+    countries-file "GeoLite2-Country-Locations-en.csv"; // required
+  };};
+```
+  geoip_maxmind module: compiled when system libmaxminddb is present, file location:
+```
+  set { geoip-maxmind {
+    database "GeoLite2-Country.mmdb";
+  };};
+```
+  geoip_classic module: compiled when `--enable-geoip-classic=yes` added to configure, file locations:
+```
+  set { geoip-classic {
+    ipv4-database "GeoIP.dat"; // don't set for ipv6-only
+    ipv6-database "GeoIPv6.dat"; // don't set for ipv4-only
+  };};
+```
+* We now (try to) kill the "old" server when a server links in with the same
+  name, handy when the old server is a zombie waiting for ping timeout.
+  FIXME: isnt this broken?
 FIXME: (wrong) server delinking in case of error may be an issue
