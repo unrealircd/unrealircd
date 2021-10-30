@@ -28,10 +28,7 @@ cd \users\user\worker\unreal6-w10\build
 rem Install 'unrealircd-tests'
 cd ..
 rd /q/s unrealircd-tests
-rem Commented out due to private test repo (temporarily)
-rem git clone https://github.com/unrealircd/unrealircd-tests.git
-SET GIT_SSH_COMMAND=ssh -i ~/.ssh/unrealircd_tests_next.key -oIdentitiesOnly=yes
-git clone -q --branch unreal60 git@github.com:/syzop/unrealircd-tests-next.git unrealircd-tests
+git clone -q --branch unreal60 git@github.com:/unrealircd/unrealircd-tests.git unrealircd-tests
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 cd build
 
