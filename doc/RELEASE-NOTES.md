@@ -4,7 +4,7 @@ This is UnrealIRCd 6's latest git, bleeding edge. Do not use on production serve
 
 Summary
 --------
-UnrealIRCd 6 comes with a completely redone log system (with optional
+UnrealIRCd 6 comes with a completely redone logging system (with optional
 JSON support), named extended bans, four new IRCv3 features,
 geoip support and remote includes support built-in.
 
@@ -15,6 +15,8 @@ For WHOIS it is now customizable in detail who gets to see what.
 
 Breaking changes
 -----------------
+You can use the unrealircd.conf from UnrealIRCd 5, but you need to make
+a few changes:
 * You need to add `include "snomasks.default.conf";`
 * You need to load a cloaking module explicitly. Assuming you already
   have a network then add: `loadmodule "cloak_md5";`
@@ -34,6 +36,15 @@ Enhancements
 -------------
 * Completely new log system and snomasks overhaul
   * Both logging and snomask sending is done by a single logging function
+  * New support for [JSON logging](https://www.unrealircd.org/docs/JSON_logging)
+    to disk, instead of the default text format.
+    JSON logging adds lot of detail to log messages and consistently
+    expands things like 'client' with properties like hostname,
+    connected_since, reputation, modes, etc.
+  * The JSON data is also sent to all IRCOps who request the
+    `unrealircd.org/json-log` capability. The data is then sent in
+    a message-tag called `unrealircd.org/json-log`. This makes it ideal
+    for client scripts and bots to do automated things.
   * A new style log { } block is used to map what log messages should be
     logged to disk, and which ones should be sent to snomasks.
   * The default logging to snomask configuration is in `snomasks.default.conf`
@@ -44,28 +55,19 @@ Enhancements
     on the new snomasks - lots of letters changed!
   * See [FAQ: Converting log { } block](https://www.unrealircd.org/docs/FAQ#old-log-block)
     on how to change your existing log { } blocks for disk logging.
-  * New support for [JSON logging](https://www.unrealircd.org/docs/JSON_logging)
-    to disk, instead of the default text format.
-    JSON logging adds lot of detail to log messages and consistently
-    expands things like 'client' with properties like hostname,
-    connected_since, reputation, modes, etc.
-  * The JSON data is also sent to all IRCOps who request the
-    `unrealircd.org/json-log` capability. The data is then sent in
-    a message-tag called `unrealircd.org/json-log`. This makes it ideal
-    for client scripts and bots to do automated things.
   * We now have a consistent log format and log messages can be multiline.
   * Colors are enabled in snomasks and console logs by default. Later there
     will be an option to turn this off (TODO).
 * Almost all channel modes are modularized
   * Only the three list modes (+b/+e/+I) are still in the core
-  * The five [rank modes](https://www.unrealircd.org/docs/Channel_Modes#Access_levels)
-    (+vhoaq) are now also modular. They are loaded by default but you can
+  * The five [level modes](https://www.unrealircd.org/docs/Channel_Modes#Access_levels)
+    (+vhoaq) are now also modular. They are all loaded by default but you can
     blacklist one or more if you don't want them. For example to disable halfop:
     `blacklist-module chanmodes/halfop;`
   * Support for compiling without PREFIX_AQ has been removed because
     people often confused it with disabling +a/+q which is something
     different.
-* Named extbans
+* Named extended bans
   * Extbans now no longer show up with single letters but with names.
     For example `+b ~c:#channel` is now `+b ~channel:#channel`.
   * Extbans are automatically converted from the old to the new style,
@@ -95,10 +97,10 @@ Enhancements
     for more details.
 * We now ship with 3 cloaking modules and you need to load 1 explicitly
   via `loadmodule`:
-  * `cloak_sha256`: the recommended module for anyone starting a new
+  * `cloak_sha256`: the recommended module for anyone starting a *new*
     network. It uses the SHA256 algorithm under the hood.
   * `cloak_md5`: for anyone who is upgrading their network from older
-    UnrealIRCd versions. Use this so your cloaked host bans don't break.
+    UnrealIRCd versions. Use this so your cloaked host bans remain the same.
   * `cloak_none`: if you don't want any cloaking, not even as an option
     to your users (rare)
 * Remote includes are now supported everywhere in the config file.
@@ -106,11 +108,11 @@ Enhancements
     if you don't compile with libcurl support.
   * Anywhere an URL is encountered on its own, it will be fetched
     automatically. This makes it work not only for includes and motd
-    (which is already supported) but also for any other file.
+    (which was already supported) but also for any other file.
   * On TODO list: an option to prevent UnrealIRCd from treating an URL as a
     remote include.
-* Invite: set `set::normal-user-invite-notification yes;` to make chanops
-  receive information about normal users inviting someone to their channel.
+* Invite notification: set `set::normal-user-invite-notification yes;` to make
+  chanops receive information about normal users inviting someone to their channel.
   (TODO: Not completely sure about the setting name)
 * Websocket: you can add a `listen::options::websocket::forward 1.2.3.4` option
   to make unrealircd accept a `Forwarded` (RFC 7239) header from a reverse proxy
@@ -120,10 +122,11 @@ Enhancements
 Changes
 --------
 * TLS cipher and some other information is now visible for remote
-  clients as well, also in [secure: xyz] connect line.
+  clients as well, also in `[secure: xyz]` connect line.
 * Error messages in remote includes use the url instead of a temporary file
-* Downgrading from UnrealIRCd 6 is only supported down to 5.2.0, not lower.
-  If this is a problem then make a copy of your db files (eg: reputation.db).
+* Downgrading from UnrealIRCd 6 is only supported down to 5.2.0 (so not
+  lower like 5.0.x). If this is a problem then make a copy of your db files
+  (eg: reputation.db).
 
 Removed
 --------
