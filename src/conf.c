@@ -3121,6 +3121,11 @@ void convert_to_absolute_path(char **path, const char *reldir)
 	if (strstr(*path, "://"))
 		return; /* URL: don't touch */
 
+#ifdef _WIN32
+	if (!strncmp(*path, "cache/", 6))
+		return; /* downloaded from URL: don't touch (is only relative path on Windows) */
+#endif
+
 	if ((**path == '/') || (**path == '\\'))
 		return; /* already absolute path */
 

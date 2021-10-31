@@ -76,6 +76,7 @@ Source: "c:\dev\unrealircd-6-libs\jansson\bin\*.dll"; DestDir: "{app}\bin"; Flag
 Source: "c:\dev\unrealircd-6-libs\c-ares\msvc\cares\dll-release\cares.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "c:\dev\unrealircd-6-libs\libressl\bin\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "c:\dev\unrealircd-6-libs\libressl\bin\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\GeoIP\libGeoIP\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "c:\dev\unrealircd-6-libs\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
 
 #ifdef USE_CURL
