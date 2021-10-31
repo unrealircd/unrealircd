@@ -1,11 +1,19 @@
 UnrealIRCd 6.0.0-beta1
 =======================
 This is the first beta for UnrealIRCd 6. It contains all the planned
-features for U6 and we now need the help of the public to test these releases.
+features for U6 and now we need the help of the public to test these beta's.
 Caution: this beta may crash spectacularly, behave weird or in unexpected
 ways, so don't run it on production systems!
 If you find any issues, please report them at https://bugs.unrealircd.org/.
 This way, you help us getting ready for a real stable UnrealIRCd 6 release.
+
+Note that [AddressSanitizer](https://en.wikipedia.org/wiki/AddressSanitizer)
+is enabled in these builds, which will cause UnrealIRCd to use a lot more
+memory and run more slowly than normal. AddressSanitizer helps us greatly
+to catch more bugs during development. However, if this is a problem for
+you, then answer --disable-asan to the last question in ./Config about
+custom parameters to pass to configure.
+Naturally, the eventual stable release won't use AddressSanitizer.
 
 Summary
 --------
@@ -29,6 +37,7 @@ a few changes:
   ```
   log {
           source {
+              !debug;
               all;
           }
           destination {
