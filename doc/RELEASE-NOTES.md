@@ -1,6 +1,11 @@
-UnrealIRCd 6
-=============
-This is UnrealIRCd 6's latest git, bleeding edge. Do not use on production servers!
+UnrealIRCd 6.0.0-beta1
+=======================
+This is the first beta for UnrealIRCd 6. It contains all the planned
+features for U6 and we now need the help of the public to test these releases.
+Caution: this beta may crash spectacularly, behave weird or in unexpected
+ways, so don't run it on production systems!
+If you find any issues, please report them at https://bugs.unrealircd.org/.
+This way, you help us getting ready for a real stable UnrealIRCd 6 release.
 
 Summary
 --------
