@@ -511,8 +511,8 @@ CMD_FUNC(cmd_whois)
 			policy = whois_get_policy(client, target, "oper");
 			if (policy == WHOIS_CONFIG_DETAILS_FULL)
 			{
-				const char *operlogin = get_operlogin(client);
-				const char *operclass = get_operclass(client);
+				const char *operlogin = get_operlogin(target);
+				const char *operclass = get_operclass(target);
 
 				if (operlogin && operclass)
 				{
