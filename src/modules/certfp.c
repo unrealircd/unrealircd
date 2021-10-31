@@ -30,11 +30,9 @@ int certfp_whois(Client *client, Client *target, NameValuePrioList **list);
 
 ModDataInfo *certfp_md; /* Module Data structure which we acquire */
 
-#define WHOISCERTFP_STRING ":%s 276 %s %s :has client certificate fingerprint %s"
-
 MOD_INIT()
 {
-ModDataInfo mreq;
+	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	
@@ -139,9 +137,7 @@ int certfp_whois(Client *client, Client *target, NameValuePrioList **list)
 		return 0;
 
 	if (whois_get_policy(client, target, "certfp") == WHOIS_CONFIG_DETAILS_FULL)
-	{
-		add_nvplist_numeric(list, 0, "certfp", client, RPL_WHOISSPECIAL, target->name, fp);
-	}
+		add_nvplist_numeric(list, 0, "certfp", client, RPL_WHOISCERTFP, target->name, fp);
 
 	return 0;
 }
