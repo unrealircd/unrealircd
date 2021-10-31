@@ -1,9 +1,9 @@
-# AppArmor profile for UnrealIRCd 5
+# AppArmor profile for UnrealIRCd 6
 #
 # Note that you may still see some DENIED warnings in logs with
 # operation="chmod". These are harmless and can be safely ignored.
 #
-# Tested on Ubuntu 16.04 LTS and Ubuntu 18.04 LTS
+# Tested on Ubuntu 16.04 LTS, Ubuntu 18.04 LTS, Ubuntu 20.04 LTS
 #
 # IMPORTANT: you will have to modify the path to executable below
 #            if it's not /home/ircd/unrealircd/bin/unrealircd !

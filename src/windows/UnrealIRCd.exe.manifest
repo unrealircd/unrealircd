@@ -2,8 +2,8 @@
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
 <assemblyIdentity
     processorArchitecture="amd64"
-    name="UnrealIRCd.UnrealIRCd.5"
-    version="5.2.2.0"
+    name="UnrealIRCd.UnrealIRCd.6"
+    version="6.0.0.0"
     type="win32"
 />
 <description>Internet Relay Chat Daemon</description>

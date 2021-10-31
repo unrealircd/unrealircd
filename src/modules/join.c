@@ -367,7 +367,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 		}
 		if (*name == '0' && !atoi(name))
 		{
-			/* UnrealIRCd 5: we only support "JOIN 0",
+			/* UnrealIRCd 5+: we only support "JOIN 0",
 			 * "JOIN 0,#somechan" etc... so only at the beginning.
 			 * We do not support it half-way like "JOIN #a,0,#b"
 			 * since that doesn't make sense, unless you are flooding...

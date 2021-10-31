@@ -16,15 +16,15 @@ A short installation guide is available online at:
 https://www.unrealircd.org/docs/Installing_from_source
 
 Full documentation is available at:
-https://www.unrealircd.org/docs/UnrealIRCd_5_documentation
+https://www.unrealircd.org/docs/UnrealIRCd_6_documentation
 
 --------------------------------------------------------------------------------------
 
 The full release notes are available in doc/RELEASE-NOTES.md
 For easier viewing, check out the latest online release notes at:
-https://github.com/unrealircd/unrealircd/blob/unreal52/doc/RELEASE-NOTES.md
+https://github.com/unrealircd/unrealircd/blob/unreal60_dev/doc/RELEASE-NOTES.md
 
-UnrealIRCd 5 is compatible with the following services:
+UnrealIRCd 6 is compatible with the following services:
 * anope with the "unreal4" protocol module - version 2.0.7 or higher required!
 * atheme with the "unreal4" protocol module - tested with version 7.2.9
 

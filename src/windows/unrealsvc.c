@@ -83,11 +83,11 @@ int main(int argc, char *argv[]) {
 			uChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &info);
 			CloseServiceHandle(hService);
 			printf("\n[!!!] IMPORTANT: By default the network service user cannot write to the \n"
-			       "UnrealIRCd 5 folder and this will make UnrealIRCd fail to boot without\n"
+			       "UnrealIRCd 6 folder and this will make UnrealIRCd fail to boot without\n"
 				   "writing any meaningful error to the log files.\n"
 				   "You have two options:\n"
 				   "1) Manually grant FULL permissions to NT AUTHORITY\\NetworkService\n"
-				   "   for the UnrealIRCd 5 folder, all its subfolders and files.\n"
+				   "   for the UnrealIRCd 6 folder, all its subfolders and files.\n"
 				   "OR, easier and recommended:\n"
 				   "2) just re-run the UnrealIRCd installer and select 'Install as a service',\n"
 				   "   which sets all the necessary permissions automatically.\n");

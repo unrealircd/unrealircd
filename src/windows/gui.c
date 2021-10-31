@@ -199,7 +199,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	DWORD need;
 	
 	/* Go one level up, since we are currently in the bin\ subdir
-	 * and we want to be in (f.e.) "C:\Program Files\UnrealIRCd 5"
+	 * and we want to be in (f.e.) "C:\Program Files\UnrealIRCd 6"
 	 */
 	chdir("..");
 

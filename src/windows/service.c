@@ -111,7 +111,7 @@ VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 	chdir(path);
 
 	/* Go one level up, since we are currently in the bin\ subdir
-	 * and we want to be in (f.e.) "C:\Program Files\UnrealIRCd 5"
+	 * and we want to be in (f.e.) "C:\Program Files\UnrealIRCd 6"
 	 */
 	chdir("..");
 

@@ -9,7 +9,7 @@
 
 #
 # This is the unrealircd-contrib repository which is added by default in
-# UnrealIRCd 5 to make it easy for users to install 3rd party modules.
+# UnrealIRCd to make it easy for users to install 3rd party modules.
 # If you are a module coder and want to add your module to this repository
 # as well, then read the rules and procedure at:
 # https://www.unrealircd.org/docs/Rules_for_3rd_party_modules_in_unrealircd-contrib

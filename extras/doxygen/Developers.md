@@ -1,4 +1,4 @@
-Welcome to the doxygen-generated documentation for the UnrealIRCd 5.x API.
+Welcome to the doxygen-generated documentation for the UnrealIRCd 6.x API.
 This is intended **for developers only!**
 
 If you are creating a 3rd party module for UnrealIRCd or are interested

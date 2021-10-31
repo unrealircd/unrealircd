@@ -209,7 +209,7 @@
  * when there is no socket data waiting for us (no clients sending anything).
  * Was 2000ms in 3.2.x, 1000ms for versions below 3.4-alpha4.
  * 500ms in UnrealIRCd 4 (?)
- * 250ms in UnrealIRCd 5.
+ * 250ms in UnrealIRCd 5 and UnrealIRCd 6.
  */
 #define SOCKETLOOP_MAX_DELAY 250
 

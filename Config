@@ -418,7 +418,7 @@ fi
 TEST="$BASEPATH"
 echo ""
 echo "In what directory do you want to install UnrealIRCd?"
-echo "(Note: UnrealIRCd 5 will need to be installed somewhere."
+echo "(Note: UnrealIRCd 6 will need to be installed somewhere."
 echo " If this directory does not exist it will be created.)"
 echo $n "[$TEST] -> $c"
 read cc

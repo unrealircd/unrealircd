@@ -13,7 +13,7 @@ class AppModel : ChangeNotifierDelegate
 {
     var menuItem : NSStatusItem
     static let logoName = "logo.png"
-    static let helpURL = "https://www.unrealircd.org/docs/UnrealIRCd_5_documentation"
+    static let helpURL = "https://www.unrealircd.org/docs/UnrealIRCd_6_documentation"
     var daemonModel : DaemonModel
     var configurationModel : ConfigurationModel
     var windowController : NSWindowController?

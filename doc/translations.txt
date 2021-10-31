@@ -1,6 +1,6 @@
 ==[ Translations ]===========================================================
 
-In UnrealIRCd 5 we support the following translations:
+In UnrealIRCd we support the following translations:
 * on-line documentation at https://www.unrealircd.org/docs/ (wiki!)
 * help.conf
 * example.conf
