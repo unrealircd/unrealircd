@@ -326,7 +326,7 @@ CMD_FUNC(cmd_chghost)
 	if (!IsULine(client))
 	{
 		unreal_log(ULOG_INFO, "chgcmds", "CHGHOST_COMMAND", client,
-		           "CHGHOST: $client changed the virtual hostname of $target to be $new_hostname",
+		           "CHGHOST: $client changed the virtual hostname of $target.details to be $new_hostname",
 		           log_data_string("change_type", "hostname"),
 			   log_data_client("target", target)
 		           log_data_string("new_hostname", parv[2]));
