@@ -303,7 +303,6 @@ char *long_date(time_t clock)
 char *short_date(time_t ts, char *buf)
 {
 	struct tm *t = gmtime(&ts);
-	char *timestr;
 	static char retbuf[128];
 
 	if (!buf)
@@ -313,15 +312,9 @@ char *short_date(time_t ts, char *buf)
 	if (!t)
 		return NULL;
 
-	if (t->tm_year > (9999-1900)) // asctime(t) is undefined if it would generate >26 bytes of output according to POSIX & musl.
+	if (!strftime(buf, 128, "%a %b %d %H:%M:%S %Y", t))
 		return NULL;
-	
-	timestr = asctime(t);
-	if (!timestr)
-		return NULL;
-
-	strlcpy(buf, timestr, 128);
-	stripcrlf(buf);
+ 
 	return buf;
 }
 
