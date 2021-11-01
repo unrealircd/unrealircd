@@ -98,7 +98,7 @@ CMD_FUNC(cmd_chgname)
 	if (!IsULine(client))
 	{
 		unreal_log(ULOG_INFO, "chgcmds", "CHGHOST_COMMAND", client,
-		           "CHGHOST: $client changed the realname of $target to be $new_realname",
+		           "CHGHOST: $client changed the realname of $target.details to be $new_realname",
 		           log_data_string("change_type", "realname"),
 			   log_data_client("target", target),
 		           log_data_string("new_realname", parv[2]));
