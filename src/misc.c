@@ -411,28 +411,6 @@ void remove_dcc_references(Client *client)
 }
 
 /*
- * Recursively send QUITs and SQUITs for cptr and all of it's dependent
- * clients.  A server needs the client QUITs if it does not support NOQUIT.
- *    - kaniini
- */
-static void recurse_send_quits(Client *cptr, Client *client, Client *from, Client *to,
-                               MessageTag *mtags, const char *comment, const char *splitstr)
-{
-	Client *acptr, *next;
-
-	list_for_each_entry_safe(acptr, next, &global_server_list, client_node)
-	{
-		if (acptr->uplink != client)
-			continue;
-
-		recurse_send_quits(cptr, acptr, from, to, mtags, comment, splitstr);
-	}
-
-	if (cptr == client && to != from && !(to->direction && (to->direction == from)))
-		sendto_one(to, mtags, "SQUIT %s :%s", client->name, comment);
-}
-
-/*
  * Remove all clients that depend on source_p; assumes all (S)QUITs have
  * already been sent.  we make sure to exit a server's dependent clients
  * and servers before the server itself; exit_one_client takes care of
@@ -470,7 +448,10 @@ static void remove_dependents(Client *client, Client *from, MessageTag *mtags, c
 	Client *acptr;
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
-		recurse_send_quits(client, client, from, acptr, mtags, comment, splitstr);
+	{
+		if (acptr != from && !(acptr->direction && (acptr->direction == from)))
+			sendto_one(acptr, mtags, "SQUIT %s :%s", client->name, comment);
+	}
 
 	recurse_remove_clients(client, mtags, splitstr);
 }
