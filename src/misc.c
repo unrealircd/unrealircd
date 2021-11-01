@@ -153,7 +153,6 @@ const char *long_date(time_t clock)
 const char *short_date(time_t ts, char *buf)
 {
 	struct tm *t = gmtime(&ts);
-	char *timestr;
 	static char retbuf[128];
 
 	if (!buf)
@@ -163,12 +162,9 @@ const char *short_date(time_t ts, char *buf)
 	if (!t)
 		return NULL;
 
-	timestr = asctime(t);
-	if (!timestr)
+	if (!strftime(buf, 128, "%a %b %d %H:%M:%S %Y", t))
 		return NULL;
 
-	strlcpy(buf, timestr, 128);
-	stripcrlf(buf);
 	return buf;
 }
 
