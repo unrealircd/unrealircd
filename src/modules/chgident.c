@@ -135,10 +135,10 @@ CMD_FUNC(cmd_chgident)
 	if (!IsULine(client))
 	{
 		unreal_log(ULOG_INFO, "chgcmds", "CHGIDENT_COMMAND", client,
-		           "CHIDENT: $client changed the username of $target.detail to be $new_username",
+		           "CHIDENT: $client changed the username of $target.details to be $new_username",
 		           log_data_string("change_type", "username"),
-		           log_data_string("new_username", parv[2]),
-		           log_data_client("target", target));
+			   log_data_client("target", target),
+		           log_data_string("new_username", parv[2]));
 	}
 
 	sendto_server(client, 0, 0, NULL, ":%s CHGIDENT %s %s",
