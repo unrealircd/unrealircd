@@ -419,7 +419,7 @@ CMD_FUNC(cmd_sjoin)
 				    me.id, channel->name, acptr->name);
 				unreal_log(ULOG_WARNING, "sjoin", "SJOIN_FAKE_DIRECTION", client,
 				           "Fake direction from server $client in SJOIN "
-				           "for user $existing_client on $existing_client.server "
+				           "for user $existing_client on $existing_client.user.servername "
 				           "(item: $buf)",
 				           log_data_client("existing_client", acptr),
 				           log_data_string("buf", item));
@@ -456,6 +456,7 @@ CMD_FUNC(cmd_sjoin)
 				{
 					unreal_log(ULOG_ERROR, "sjoin", "BUG_OVERSIZED_SJOIN", client,
 					           "Oversized SJOIN [$sjoin_place] in channel $channel when adding '$str$str2' to '$buf'",
+						   log_data_channel("channel", channel),
 					           log_data_string("sjoin_place", "UID-MEMBER"),
 					           log_data_string("str", prefix),
 					           log_data_string("str2", acptr->id),
@@ -475,6 +476,7 @@ CMD_FUNC(cmd_sjoin)
 				{
 					unreal_log(ULOG_ERROR, "sjoin", "BUG_OVERSIZED_SJOIN", client,
 					           "Oversized SJOIN [$sjoin_place] in channel $channel when adding '$str$str2' to '$buf'",
+						   log_data_channel("channel", channel),
 					           log_data_string("sjoin_place", "SJS-MEMBER"),
 					           log_data_string("str", prefix),
 					           log_data_string("str2", acptr->id),
@@ -536,6 +538,7 @@ CMD_FUNC(cmd_sjoin)
 				{
 					unreal_log(ULOG_ERROR, "sjoin", "BUG_OVERSIZED_SJOIN", client,
 					           "Oversized SJOIN [$sjoin_place] in channel $channel when adding '$str$str2' to '$buf'",
+						   log_data_channel("channel", channel),
 					           log_data_string("sjoin_place", "UID-LMODE"),
 					           log_data_string("str", prefix),
 					           log_data_string("str2", item),
@@ -560,7 +563,8 @@ CMD_FUNC(cmd_sjoin)
 				if (strlen(uid_sjsby_buf) + strlen(scratch_buf) > BUFSIZE - 5)
 				{
 					unreal_log(ULOG_ERROR, "sjoin", "BUG_OVERSIZED_SJOIN", client,
-					           "Oversized SJOIN [$sjoin_place] in channel $channel when adding '$str$str2' to '$buf'",
+					           "Oversized SJOIN [$sjoin_place] in channel $channel when adding '$str' to '$buf'",
+						   log_data_channel("channel", channel),
 					           log_data_string("sjoin_place", "SJS-LMODE"),
 					           log_data_string("str", scratch_buf),
 					           log_data_string("buf", uid_sjsby_buf));

@@ -717,7 +717,7 @@ void verify_opercount(Client *orig, const char *tag)
 	unreal_log(ULOG_WARNING, "main", "BUG_LUSERS_OPERS", orig,
 	           "[BUG] Operator count bug at $where! Value in /LUSERS is $opers, "
 	           "we counted $counted_opers, "
-	           "triggered by $client.details on $client.server.servername",
+	           "triggered by $client.details on $client.user.servername",
 	           log_data_integer("opers", irccounts.operators),
 	           log_data_integer("counted_opers", counted),
 	           log_data_string("where", tag));

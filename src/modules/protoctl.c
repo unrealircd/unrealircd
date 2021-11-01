@@ -206,7 +206,7 @@ CMD_FUNC(cmd_protoctl)
 			if ((aclient = hash_find_id(sid, NULL)) != NULL)
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_SID_COLLISION", client,
-					   "Server link $client rejected. Server with SID $sid already exist via uplink $exiting_client.uplink.",
+					   "Server link $client rejected. Server with SID $sid already exist via uplink $exiting_client.server.uplink.",
 					   log_data_string("sid", sid),
 					   log_data_client("existing_client", aclient));
 				exit_client(client, NULL, "SID collision");
@@ -315,7 +315,7 @@ CMD_FUNC(cmd_protoctl)
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_DUPLICATE_SID_LINKED", client,
 					   "Denied server $client: Server would (later) introduce SID $sid, "
-					   "but we already have SID $sid linked ($existing_client via $existing_client.uplink)\n"
+					   "but we already have SID $sid linked ($existing_client via $existing_client.server.uplink)\n"
 					   "Possible race condition, just wait a moment for the network to synchronize...",
 					   log_data_string("sid", sid),
 					   log_data_client("existing_client", aclient));
@@ -341,7 +341,8 @@ CMD_FUNC(cmd_protoctl)
 				           "seconds behind the clock of $me_name.\n"
 				           "Correct time is very important for IRC servers, "
 				           "see https://www.unrealircd.org/docs/FAQ#fix-your-clock",
-				           log_data_integer("time_delta", TStime() - t));
+				           log_data_integer("time_delta", TStime() - t),
+				           log_data_string("me_name", me.name));
 				exit_client_fmt(client, NULL, "Incorrect clock. Our clocks are %lld seconds apart.",
 				                (long long)(TStime() - t));
 				return;
@@ -353,7 +354,8 @@ CMD_FUNC(cmd_protoctl)
 				           "seconds ahead the clock of $me_name.\n"
 				           "Correct time is very important for IRC servers, "
 				           "see https://www.unrealircd.org/docs/FAQ#fix-your-clock",
-				           log_data_integer("time_delta", t - TStime()));
+				           log_data_integer("time_delta", t - TStime()),
+				           log_data_string("me_name", me.name));
 				exit_client_fmt(client, NULL, "Incorrect clock. Our clocks are %lld seconds apart.",
 				                (long long)(t - TStime()));
 				return;

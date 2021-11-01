@@ -312,8 +312,8 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 		{
 			if (IsInvalidChannelTS(sendts))
 			{
-				unreal_log(ULOG_WARNING, "mode", "MODE_INVALID_TIMESTAMP", NULL,
-				           "MODE for channel $channel has invalid timestamp $send_timestamp (from $client.name on $client.user.servername)\n"
+				unreal_log(ULOG_WARNING, "mode", "MODE_INVALID_TIMESTAMP", client,
+				           "MODE for channel $channel has invalid timestamp $send_timestamp (from $client.name)\n"
 				           "Buffer: $modebuf $parabuf",
 				           log_data_channel("channel", channel),
 				           log_data_integer("send_timestamp", sendts),
