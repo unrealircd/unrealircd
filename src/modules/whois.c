@@ -608,6 +608,7 @@ CMD_FUNC(cmd_whois)
 		for (e = list; e; e = e->next)
 			sendto_one(client, NULL, "%s", e->value);
 
+		free_nvplist(list);
 	}
 	sendnumeric(client, RPL_ENDOFWHOIS, querybuf);
 }
