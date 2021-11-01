@@ -162,14 +162,42 @@ Module coders (API changes)
 
 Server protocol
 ----------------
-* SJOIN followups
-* NEXTBANS
-* Bounced modes are gone
-* SLOG
+* If multiple related `SJOIN` messages are generated for the same channel
+  then we now only send the current channel modes (eg ```+sntk key```) in the
+  first SJOIN and not in the other ones as they are unneeded for the
+  immediate followup SJOINs, they waste unnecessary bytes and CPU.
+  Such messages may be generated when syncing a channel that has dozens
+  of users and/or bans/exempts/invexes. Ideally this should not need any
+  changes in other software, since we already supported such messages in the
+  past and code for handling it exists way back to 3.2.x, but you better
+  check to be sure!
+* If you send `PROTOCTL NEXTBANS` then you will receive extended bans
+  with Named EXTended BANs instead of letters (eg: `+b ~account:xyz`),
+  otherwise you receive them with letters (eg: `+b ~a:xyz`).
+* Some ModData of users is (also) communicated in the `UID` message while
+  syncing using a message tag that only appears in server-to-server traffic,
+  `s2s-md/moddataname=value`. Thus, data such as operinfo, tls cipher,
+  geoip, certfp, sasl and webirc is communicated at the same time as when
+  a remote connection is added.
+  This makes it that a "connecting from" server notice can include all this
+  information and also so code can make an immediate decission on what to do
+  with the user in hooks. ModData modules need to set
+  `mreq.sync = MODDATA_SYNC_EARLY;` if they want this.
+  Servers of course need to enable `MTAGS` in PROTOCTL to see this.
+* The `SLOG` command is used to broadcast logging messages. This is done
+  for log::destination remote, as used in doc/conf/snomasks.default.conf,
+  for example for link errors, oper ups, flood messages, etc.
+  It also includes all JSON data in a message tag when `PROTOCTL MTAGS` is used.
+* Bounced modes are gone: these were MODEs that started with a `&` which
+  servers were to act on with reversed logic (add becoming remove and
+  vice versa) and never to send something back to that server.
+  In practice this was almost never used and complicated the code (way)
+  too much.
 
 Client protocol
 ----------------
-* TODO: document
+* Extended bans now have names instead of letters
+* TODO: document other stuff?
 
 Mental notes / move these wiki
 -------------------------------
