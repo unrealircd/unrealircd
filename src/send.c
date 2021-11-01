@@ -81,7 +81,7 @@ int dead_socket(Client *to, const char *notice)
 		 * If so, remove it here.
 		 */
 		unreal_log(ULOG_ERROR, "link", "LINK_CLOSING", to,
-		           "Link to server $client.detail closed: $reason",
+		           "Link to server $client.details closed: $reason",
 		           log_data_string("reason", notice));
 	}
 	safe_strdup(to->local->error_str, notice);

@@ -1185,7 +1185,7 @@ CMD_FUNC(_cmd_umode)
 				if (IsQuarantined(client->direction))
 				{
 					unreal_log(ULOG_INFO, "mode", "OPER_KILLED_QUARANTINE", client,
-					           "QUARANTINE: Oper $client.detail on server $client.user.servername killed, due to quarantine");
+					           "QUARANTINE: Oper $client.details on server $client.user.servername killed, due to quarantine");
 					sendto_server(NULL, 0, 0, NULL, ":%s KILL %s :Quarantined: no oper privileges allowed", me.id, client->name);
 					exit_client(client, NULL, "Quarantined: no oper privileges allowed");
 					return;

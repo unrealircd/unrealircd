@@ -157,7 +157,7 @@ CMD_FUNC(cmd_jumpserver)
 		}
 		free_jss();
 		unreal_log(ULOG_INFO, "jumpserver", "JUMPSERVER_DISABLED", client,
-		           "[jumpserver] $client.detail turned jumpserver OFF");
+		           "[jumpserver] $client.details turned jumpserver OFF");
 		return;
 	}
 
@@ -245,7 +245,7 @@ CMD_FUNC(cmd_jumpserver)
 	if (tlsserv)
 	{
 		unreal_log(ULOG_INFO, "jumpserver", "JUMPSERVER_ENABLED", client,
-		           "[jumpserver] $client.detail turned jumpserver ON for $jumpserver_who "
+		           "[jumpserver] $client.details turned jumpserver ON for $jumpserver_who "
 		           "to $jumpserver_server:$jumpserver_port "
 		           "[TLS: $jumpserver_tls_server:$jumpserver_tls_port] "
 		           "($reason)",
@@ -257,7 +257,7 @@ CMD_FUNC(cmd_jumpserver)
 		           log_data_string("reason", jss->reason));
 	} else {
 		unreal_log(ULOG_INFO, "jumpserver", "JUMPSERVER_ENABLED", client,
-		           "[jumpserver] $client.detail turned jumpserver ON for $jumpserver_who "
+		           "[jumpserver] $client.details turned jumpserver ON for $jumpserver_who "
 		           "to $jumpserver_server:$jumpserver_port "
 		           "($reason)",
 		           log_data_string("jumpserver_who", all ? "ALL CLIENTS" : "all new clients"),
