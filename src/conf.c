@@ -7760,7 +7760,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "level-on-join")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, level_on_join, "level-on-join");
-			if (cep->value == NULL)
+			if (channellevel_to_string(cep->value) == NULL)
 			{
 				config_error("%s:%i: set::level-on-join: unknown value '%s', should be one of: none, voice, halfop, op, admin, owner",
 					cep->file->filename, cep->line_number, cep->value);
