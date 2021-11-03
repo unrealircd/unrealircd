@@ -56,14 +56,14 @@ static void log_sapart(Client *client, Client *target, const char *channels, con
 {
 	if (comment)
 	{
-		unreal_log(ULOG_INFO, "sacmds", "SAPART_COMMAND", client, "SAPART: $client used SAPART to make $target join $channels ($reason)",
+		unreal_log(ULOG_INFO, "sacmds", "SAPART_COMMAND", client, "SAPART: $client used SAPART to make $target part $channels ($reason)",
 			   log_data_client("target", target),
 			   log_data_string("channels", channels),
 			   log_data_string("reason", comment));
 	}
 	else
 	{
-		unreal_log(ULOG_INFO, "sacmds", "SAPART_COMMAND", client, "SAPART: $client used SAPART to make $target join $channels",
+		unreal_log(ULOG_INFO, "sacmds", "SAPART_COMMAND", client, "SAPART: $client used SAPART to make $target part $channels",
 			   log_data_client("target", target),
 			   log_data_string("channels", channels));
 	}
