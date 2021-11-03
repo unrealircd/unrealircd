@@ -170,6 +170,7 @@ extern void send_user_joins(Client *, Client *);
 extern int valid_channelname(const char *);
 extern int valid_server_name(const char *name);
 extern Cmode *find_channel_mode_handler(char letter);
+extern int valid_channel_access_mode_letter(char letter);
 extern int check_channel_access(Client *client, Channel *channel, const char *modes);
 extern int check_channel_access_membership(Membership *mb, const char *modes);
 extern int check_channel_access_member(Member *mb, const char *modes);

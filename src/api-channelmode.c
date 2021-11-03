@@ -838,6 +838,20 @@ Cmode *find_channel_mode_handler(char letter)
 	return NULL;
 }
 
+/** Is 'letter' a valid mode used for access/levels/ranks? (vhoaq and such)
+ * @param letter	The channel mode letter to check, eg 'v'
+ * @returns 1 if valid, 0 if the channel mode does not exist or is not a level mode.
+ */
+int valid_channel_access_mode_letter(char letter)
+{
+	Cmode *cm;
+
+	if ((cm = find_channel_mode_handler(letter)) && (cm->type == CMODE_MEMBER))
+		return 1;
+
+	return 0;
+}
+
 void addlettertomstring(char *str, char letter)
 {
 	Cmode *cm;
