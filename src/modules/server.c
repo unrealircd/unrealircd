@@ -1182,6 +1182,17 @@ CMD_FUNC(cmd_sid)
 		return;
 	}
 
+	if ((acptr = find_client(parv[3], NULL)))
+	{
+		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_DUPLICATE_SID_SERVER", client,
+			   "Denied server $servername with SID $sid: Server with SID $existing_client.id ($existing_client) is already linked.",
+			   log_data_string("servername", servername),
+			   log_data_string("sid", parv[3]),
+			   log_data_client("existing_client", acptr));
+		sendto_one(client, NULL, "SQUIT %s :Server with this SID (%s) already exists (%s)", parv[3], parv[3], acptr->name);
+		return;
+	}
+
 	/* Check deny server { } */
 	if ((bconf = find_ban(NULL, servername, CONF_BAN_SERVER)))
 	{
