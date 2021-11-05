@@ -502,7 +502,10 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		snprintf(buf, sizeof(buf), "%s!%s@%s", client->name, client->user->username, client->user->realhost);
 		json_object_set_new(child, "details", json_string_unreal(buf));
 	} else if (client->ip) {
-		snprintf(buf, sizeof(buf), "%s@%s", client->name, client->ip);
+		if (*client->name)
+			snprintf(buf, sizeof(buf), "%s@%s", client->name, client->ip);
+		else
+			snprintf(buf, sizeof(buf), "[%s]", client->ip);
 		json_object_set_new(child, "details", json_string_unreal(buf));
 	} else {
 		json_object_set_new(child, "details", json_string_unreal(client->name));
