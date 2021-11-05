@@ -295,7 +295,7 @@ CMD_FUNC(cmd_protoctl)
 			
 			/* Other side lets us know which servers are behind it.
 			 * SERVERS=<sid-of-server-1>[,<sid-of-server-2[,..etc..]]
-			 * Eg: SERVER=001,002,0AB,004,005
+			 * Eg: SERVERS=001,002,0AB,004,005
 			 */
 
 			add_pending_net(client, value);
@@ -315,7 +315,7 @@ CMD_FUNC(cmd_protoctl)
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_DUPLICATE_SID_LINKED", client,
 					   "Denied server $client: Server would (later) introduce SID $sid, "
-					   "but we already have SID $sid linked ($existing_client via $existing_client.server.uplink)\n"
+					   "but we already have SID $sid linked ($existing_client)\n"
 					   "Possible race condition, just wait a moment for the network to synchronize...",
 					   log_data_string("sid", sid),
 					   log_data_client("existing_client", aclient));
