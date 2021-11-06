@@ -1780,6 +1780,7 @@ void postconf_defaults_log_block(void)
 	ls = add_log_source("!kick.LOCAL_CLIENT_KICK");
 	AppendListItem(ls, l->sources);
 	ls = add_log_source("!kick.REMOTE_CLIENT_KICK");
+	AppendListItem(ls, l->sources);
 }
 
 void log_blocks_switchover(void)
