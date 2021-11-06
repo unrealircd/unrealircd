@@ -144,9 +144,11 @@ int invite_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (!ce || !ce->name || strcmp(ce->name, "normal-user-invite-notification"))
 		return 0;
 
-	do
-		CheckNull(ce)
-	while (0);
+	if (!ce->value)
+	{
+		config_error_empty(ce->file->filename, ce->line_number, "set", ce->name);
+		errors++;
+	}
 
 	*errs = errors;
 	return errors ? -1 : 1;
