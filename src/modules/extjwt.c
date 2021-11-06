@@ -596,6 +596,7 @@ int extjwt_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	extjwt_free_services(&services);
 	if (errors)
 		safe_free(cfg_state.key_filename);
+	safe_free(sfilename);
 	return errors ? -1 : 1;
 }
 
@@ -1141,15 +1142,11 @@ char *extjwt_generate_token(const char *payload, struct extjwt_config *config)
 	safe_free(header);
 	safe_free(b64header);
 	safe_free(b64payload);
-	if (config->method != EXTJWT_METHOD_NONE)
-	{
-		safe_free(b64sig);
-		safe_free(extjwt_hash_val);
-	}
+	safe_free(b64sig);
+	safe_free(extjwt_hash_val);
 
 	if (retval != b64data)
 		safe_free(b64data);
 
 	return retval;
 }
-
