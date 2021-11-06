@@ -5014,7 +5014,7 @@ int _match_user(const char *rmask, Client *client, int options)
 
 	if ((options & MATCH_CHECK_EXTENDED) &&
 	    is_extended_ban(mask) &&
-	    client && client->user)
+	    client->user)
 	{
 		/* Check user properties / extbans style */
 		return _match_user_extended_server_ban(rmask, client);
