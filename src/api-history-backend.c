@@ -60,12 +60,12 @@ HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 {
 	HistoryBackend *m;
 	int exists = 0;
+	ModuleObject *mobj;
 
 	if (!mreq->history_add || !mreq->history_request ||
 	    !mreq->history_destroy || !mreq->history_set_limit)
 	{
-		if (module)
-			module->errorcode = MODERR_INVALID;
+		module->errorcode = MODERR_INVALID;
 		unreal_log(ULOG_ERROR, "module", "HISTORYBACKENDADD_API_ERROR", NULL,
 			   "HistoryBackendAdd(): missing a handler for add/del/request/destroy/set_limit. Module: $module_name",
 			   log_data_string("module_name", module->header->name));
@@ -79,8 +79,7 @@ HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 		{
 			m->unloaded = 0;
 		} else {
-			if (module)
-				module->errorcode = MODERR_EXISTS;
+			module->errorcode = MODERR_EXISTS;
 			return NULL;
 		}
 	} else {
@@ -99,14 +98,11 @@ HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 	if (!exists)
 		AddListItem(m, historybackends);
 
-	if (module)
-	{
-		ModuleObject *mobj = safe_alloc(sizeof(ModuleObject));
-		mobj->type = MOBJ_HISTORY_BACKEND;
-		mobj->object.history_backend = m;
-		AddListItem(mobj, module->objects);
-		module->errorcode = MODERR_NOERROR;
-	}
+	mobj = safe_alloc(sizeof(ModuleObject));
+	mobj->type = MOBJ_HISTORY_BACKEND;
+	mobj->object.history_backend = m;
+	AddListItem(mobj, module->objects);
+	module->errorcode = MODERR_NOERROR;
 
 	return m;
 }
