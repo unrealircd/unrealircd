@@ -1126,10 +1126,10 @@ static int hbm_read_masterdb(void)
 	    !unrealdb_read_str(db, &prehash) ||
 	    !unrealdb_read_str(db, &posthash))
 	{
-		safe_free(prehash);
-		safe_free(posthash);
 		config_error("[history] Read error from database file '%s': %s",
 			test.masterdb, unrealdb_get_error_string());
+		safe_free(prehash);
+		safe_free(posthash);
 		unrealdb_close(db);
 		return 0;
 	}
@@ -1139,6 +1139,8 @@ static int hbm_read_masterdb(void)
 	{
 		config_error("[history] Read error from database file '%s': unexpected values encountered",
 			test.masterdb);
+		safe_free(prehash);
+		safe_free(posthash);
 		return 0;
 	}
 

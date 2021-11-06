@@ -173,6 +173,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	if (!handle->file_fd)
 	{
 		https_cancel(handle, "Cannot create '%s': %s", tmp, strerror(ERRNO));
+		safe_free(file);
 		return;
 	}
 
