@@ -391,17 +391,14 @@ AC_DEFUN([CHECK_LIBMAXMINDDB],
 	AC_ARG_ENABLE(libmaxminddb,
 	[AC_HELP_STRING([--enable-libmaxminddb=no/yes],[enable GeoIP libmaxminddb support])],
 	[enable_libmaxminddb=$enableval],
-	[enable_libmaxminddb=yes])
+	[enable_libmaxminddb=no])
 
 	AS_IF([test "x$enable_libmaxminddb" = "xyes"],
 	[
 		dnl see if the system provides it
 		has_system_libmaxminddb="no"
 		PKG_CHECK_MODULES([LIBMAXMINDDB], [libmaxminddb >= 1.6.0],
-		                  [has_system_libmaxminddb=yes],
-		                  [has_system_libmaxminddb=no
-		                  AC_MSG_RESULT(not building libmaxminddb GeoIP support)
-		                  ])
+		                  [has_system_libmaxminddb=yes])
 		AS_IF([test "x$has_system_libmaxminddb" = "xyes"],
 		[
 
