@@ -680,7 +680,7 @@ nickkill2done:
 
 	/* Update counts */
 	irccounts.clients++;
-	if (client->uplink && client->uplink->server)
+	if (client->uplink->server)
 		client->uplink->server->users++;
 	if (client->umodes & UMODE_INVISIBLE)
 		irccounts.invisible++;
@@ -689,7 +689,7 @@ nickkill2done:
 	set_user_modes_dont_spread(client, umodes);
 
 	/* Set the vhost */
-	if (virthost && *virthost != '*')
+	if (*virthost != '*')
 		safe_strdup(client->user->virthost, virthost);
 
 	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
