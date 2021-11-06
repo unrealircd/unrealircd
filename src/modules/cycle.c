@@ -76,6 +76,7 @@ CMD_FUNC(cmd_cycle)
 		return;
 
 	/* Then JOIN the user again... */
+	parx[0] = NULL;
 	parx[1] = channels;
 	parx[2] = NULL;
 	do_cmd(client, recv_mtags, "JOIN", 2, parx);
