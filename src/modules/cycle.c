@@ -62,7 +62,7 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_cycle)
 {
 	char channels[BUFSIZE];
-	const char *parx[2];
+	const char *parx[3];
 	int n;
 	
 	if (parc < 2)
