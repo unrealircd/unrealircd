@@ -217,7 +217,7 @@ struct jwt_service *find_jwt_service(struct jwt_service *services, const char *n
 int extjwt_valid_integer_string(const char *in, int min, int max)
 {
 	int i, val;
-	if (!in && !*in)
+	if (BadPtr(in))
 		return 0;
 	for (i=0; in[i]; i++){
 		if (!isdigit(in[i]))
