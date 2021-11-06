@@ -130,12 +130,17 @@ CMD_FUNC(cmd_quit)
 					char tmp[512];
 					int ret;
 
-					strlcpy(tmp, newcomment, sizeof(tmp));
 
 					parx[0] = NULL;
 					parx[1] = channel->name;
-					parx[2] = tmp;
-					parx[3] = NULL;
+					if (newcomment)
+					{
+						strlcpy(tmp, newcomment, sizeof(tmp));
+						parx[2] = tmp;
+						parx[3] = NULL;
+					} else {
+						parx[2] = NULL;
+					}
 
 					do_cmd(client, recv_mtags, "PART", newcomment ? 3 : 2, parx);
 					/* This would be unusual, but possible (somewhere in the future perhaps): */
