@@ -101,7 +101,6 @@ CMD_FUNC(cmd_svsnick)
 	sendto_local_common_channels(acptr, acptr, 0, mtags, ":%s NICK :%s", acptr->name, nickname);
 	sendto_one(acptr, mtags, ":%s NICK :%s", acptr->name, nickname);
 	sendto_server(NULL, 0, 0, mtags, ":%s NICK %s :%lld", acptr->id, nickname, (long long)acptr->lastnick);
-	free_message_tags(mtags);
 
 	add_history(acptr, 1);
 	del_from_client_hash_table(acptr->name, acptr);
@@ -113,4 +112,5 @@ CMD_FUNC(cmd_svsnick)
 	strlcpy(acptr->name, nickname, sizeof acptr->name);
 	add_to_client_hash_table(nickname, acptr);
 	RunHook(HOOKTYPE_POST_LOCAL_NICKCHANGE, acptr, mtags);
+	free_message_tags(mtags);
 }

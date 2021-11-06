@@ -208,7 +208,6 @@ CMD_FUNC(cmd_nick_remote)
 	sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
 	    client->id, nick, (long long)client->lastnick);
 	sendto_local_common_channels(client, client, 0, mtags, ":%s NICK :%s", client->name, nick);
-	free_message_tags(mtags);
 	if (removemoder)
 		client->umodes &= ~UMODE_REGNICK;
 
@@ -218,6 +217,7 @@ CMD_FUNC(cmd_nick_remote)
 	add_to_client_hash_table(nick, client);
 
 	RunHook(HOOKTYPE_POST_REMOTE_NICKCHANGE, client, mtags);
+	free_message_tags(mtags);
 }
 
 /* Local user: either setting their nick for the first time (registration)
