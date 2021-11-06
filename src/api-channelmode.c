@@ -161,7 +161,7 @@ void make_prefix(char **isupport_prefix, char **isupport_statusmsg)
 
 	*prefix = *prefix_prefix = *prefix_modes = '\0';
 
-	for (n=0, cm=channelmodes; cm && n < sizeof(rank)-1; cm = cm->next)
+	for (n=0, cm=channelmodes; cm && n < ARRAY_SIZEOF(rank)-1; cm = cm->next)
 	{
 		if ((cm->type == CMODE_MEMBER) && cm->letter)
 		{
