@@ -759,8 +759,6 @@ static int geoip_csv_get_v4_geoid(char *iip)
 				found = 1;
 				break;
 			}
-			if (found)
-				break;
 			i++;
 		}
 	}
