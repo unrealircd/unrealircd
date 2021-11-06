@@ -425,7 +425,7 @@ void _moddata_extract_s2s_mtags(Client *client, MessageTag *mtags)
 
 	for (m = mtags; m; m = m->next)
 	{
-		if (!strncmp(mtags->name, "s2s-md/", 7))
+		if (!strncmp(m->name, "s2s-md/", 7))
 		{
 			char *varname = m->name + 7;
 			char *value = m->value;
