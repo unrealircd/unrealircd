@@ -10608,7 +10608,7 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 		/* Existing entry, add us to the list of
 		 * items who are interested in this resource ;)
 		 */
-		AddListItem(rs->wce, wce);
+		AddListItem(wce, rs->wce);
 		return 0;
 	}
 
