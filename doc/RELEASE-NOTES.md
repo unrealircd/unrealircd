@@ -1,6 +1,6 @@
-UnrealIRCd 6.0.0-beta1
+UnrealIRCd 6.0.0-beta2
 =======================
-This is the first beta for UnrealIRCd 6. It contains all the planned
+This is the second beta for UnrealIRCd 6. It contains all the planned
 features for U6 and now we need the help of the public to test these beta's.
 Caution: this beta may crash spectacularly, behave weird or in unexpected
 ways, so don't run it on production systems!
@@ -14,6 +14,13 @@ to catch more bugs during development. However, if this is a problem for
 you, then answer --disable-asan to the last question in ./Config about
 custom parameters to pass to configure.
 Naturally, the eventual stable release won't use AddressSanitizer.
+
+Changes between beta1 and beta2:
+* Fix 15 server notices (missing info, formatting or duplicate)
+* Fix several memory leaks
+* Fix wrong oper information shown in /WHOIS to other opers
+* Make SQUIT code faster (matters for very large networks)
+* Add another check for SID collision
 
 Summary
 --------
