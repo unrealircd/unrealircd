@@ -259,7 +259,7 @@ char *extjwt_test_key(const char *file, int method)
 				break;
 			default:
 				retval = "Internal error (invalid type)";
-				break;
+				return retval;
 		}
 		fcontent = extjwt_read_file_contents(file, 0, &fsize);
 		if (!fcontent)
@@ -956,7 +956,7 @@ unsigned char* extjwt_sha_pem_extjwt_hash(int method, const void *key, int keyle
 				type = EVP_PKEY_EC;
 				break;
 			default:
-				break;
+				return NULL;
 		}
 
 #if (OPENSSL_VERSION_NUMBER < 0x10100003L) /* https://github.com/openssl/openssl/commit/8ab31975bacb9c907261088937d3aa4102e3af84 */
