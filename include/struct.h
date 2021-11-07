@@ -782,6 +782,7 @@ struct LoopStruct {
 	unsigned rehashing : 1;
 	unsigned terminating : 1;
 	unsigned config_load_failed : 1;
+	unsigned rehash_download_busy : 1; /* don't return "all downloads complete", needed for race condition */
 	unsigned tainted : 1;
 	Client *rehash_save_client;
 	void (*boot_function)();

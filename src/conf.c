@@ -1985,8 +1985,13 @@ int config_read_start(void)
 		return -1;
 	}
 
+	/* We set this to 1 because otherwise we may call rehash_internal()
+	 * already from config_read_file() which is too soon (race).
+	 */
+	loop.rehash_download_busy = 1;
 	add_config_resource(configfile, RESOURCE_INCLUDE, NULL);
 	ret = config_read_file(configfile, configfile);
+	loop.rehash_download_busy = 0;
 	if (ret < 0)
 	{
 		config_load_failed();
@@ -1998,6 +2003,9 @@ int config_read_start(void)
 int is_config_read_finished(void)
 {
 	ConfigResource *rs;
+
+	if (loop.rehash_download_busy)
+		return 0;
 
 	for (rs = config_resources; rs; rs = rs->next)
 	{
