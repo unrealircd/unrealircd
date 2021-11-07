@@ -22,6 +22,9 @@ Changes between beta1 and beta2:
 * Make SQUIT code faster (matters for very large networks)
 * Add another check for SID collision
 
+If you are already using a 6.0.0 beta then you can upgrade to
+the latest one using `./unrealircd upgrade`
+
 Summary
 --------
 UnrealIRCd 6 comes with a completely redone logging system (with optional
