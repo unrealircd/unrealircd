@@ -1311,8 +1311,13 @@ CMD_FUNC(cmd_sid)
 	add_to_id_hash_table(acptr->id, acptr);
 	list_move(&acptr->client_node, &global_server_list);
 
-	unreal_log(ULOG_INFO, "link", "SERVER_LINKED_REMOTE", client,
-		   "Server linked: $client (via $client.server.uplink)");
+	if (IsULine(client->direction) || IsSynched(client->direction))
+	{
+		/* Log these (but don't show when still syncing) */
+		unreal_log(ULOG_INFO, "link", "SERVER_LINKED_REMOTE", acptr,
+			   "Server linked: $client -> $other_server)",
+			   log_data_client("other_server", client));
+	}
 
 	RunHook(HOOKTYPE_SERVER_CONNECT, acptr);
 
