@@ -1446,6 +1446,10 @@ void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *e
 	/* To specific snomasks... */
 	list_for_each_entry(client, &oper_list, special_node)
 	{
+		const char *operlogin;
+		ConfigItem_oper *oper;
+		int colors = iConf.server_notice_colors;
+
 		if (snomask_destinations)
 		{
 			char found = 0;
@@ -1462,17 +1466,28 @@ void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *e
 			if (!found)
 				continue;
 		}
+
+		operlogin = get_operlogin(client);
+		if (operlogin && (oper = find_oper(operlogin)))
+			colors = oper->server_notice_colors;
+
 		mtags_loop = mtags;
 		for (m = msg; m; m = m->next)
 		{
-			char subsystem_and_event_id[256];
-			snprintf(subsystem_and_event_id, sizeof(subsystem_and_event_id), "%s%s.%s%s%s",
-			         COLOR_DARKGREY, subsystem, event_id, m->next?"+":"", COLOR_NONE);
-			sendto_one(client, mtags_loop, ":%s NOTICE %s :%s %s[%s]%s %s",
-				from_server->name, client->name,
-				subsystem_and_event_id,
-				log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
-				m->line);
+			if (colors)
+			{
+				sendto_one(client, mtags_loop, ":%s NOTICE %s :%s%s.%s%s%s %s[%s]%s %s",
+					from_server->name, client->name,
+					COLOR_DARKGREY, subsystem, event_id, m->next?"+":"", COLOR_NONE,
+					log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
+					m->line);
+			} else {
+				sendto_one(client, mtags_loop, ":%s NOTICE %s :%s.%s%s [%s] %s",
+					from_server->name, client->name,
+					subsystem, event_id, m->next?"+":"",
+					log_level_valtostring(loglevel),
+					m->line);
+			}
 			mtags_loop = NULL; /* this way we only send the JSON in the first msg */
 		}
 	}

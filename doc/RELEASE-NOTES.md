@@ -80,8 +80,9 @@ Enhancements
   * See [FAQ: Converting log { } block](https://www.unrealircd.org/docs/FAQ#old-log-block)
     on how to change your existing log { } blocks for disk logging.
   * We now have a consistent log format and log messages can be multiline.
-  * Colors are enabled in snomasks and console logs by default. Later there
-    will be an option to turn this off (TODO).
+  * Colors are enabled by default in snomask server notices, these can be disabled via
+    [set::server-notice-colors](https://www.unrealircd.org/docs/Set_block#set::server-notice-colors)
+    and also in [oper::server-notice-colors](https://www.unrealircd.org/docs/Oper_block)
 * Almost all channel modes are modularized
   * Only the three list modes (+b/+e/+I) are still in the core
   * The five [level modes](https://www.unrealircd.org/docs/Channel_Modes#Access_levels)

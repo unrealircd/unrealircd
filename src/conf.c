@@ -1635,6 +1635,7 @@ void config_setdefaultsettings(Configuration *i)
 	char tmp[512];
 
 	safe_strdup(i->oper_snomask, OPER_SNOMASKS);
+	i->server_notice_colors = 1;
 	i->ident_read_timeout = 7;
 	i->ident_connect_timeout = 3;
 	i->ban_version_tkl_time = 86400; /* 1d */
@@ -3858,6 +3859,8 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	oper =  safe_alloc(sizeof(ConfigItem_oper));
 	safe_strdup(oper->name, ce->value);
 
+	oper->server_notice_colors = tempiConf.server_notice_colors; /* default */
+
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "operclass"))
@@ -3899,6 +3902,10 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "snomask"))
 		{
 			safe_strdup(oper->snomask, cep->value);
+		}
+		else if (!strcmp(cep->name, "server-notice-colors"))
+		{
+			oper->server_notice_colors = config_checkval(cep->value, CFG_YESNO);
 		}
 		else if (!strcmp(cep->name, "modes"))
 		{
@@ -4020,6 +4027,9 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 				has_snomask = 1;
+			}
+			else if (!strcmp(cep->name, "server-notice-colors"))
+			{
 			}
 			/* oper::modes */
 			else if (!strcmp(cep->name, "modes"))
@@ -7116,6 +7126,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "snomask-on-oper")) {
 			safe_strdup(tempiConf.oper_snomask, cep->value);
 		}
+		else if (!strcmp(cep->name, "server-notice-colors")) {
+			tempiConf.server_notice_colors = config_checkval(cep->value, CFG_YESNO);
+		}
 		else if (!strcmp(cep->name, "level-on-join")) {
 			const char *res = channellevel_to_string(cep->value); /* 'halfop', etc */
 			if (!res)
@@ -7784,6 +7797,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "snomask-on-oper")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, snomask_on_oper, "snomask-on-oper");
+		}
+		else if (!strcmp(cep->name, "server-notice-colors")) {
+			CheckNull(cep);
 		}
 		else if (!strcmp(cep->name, "level-on-join")) {
 			CheckNull(cep);

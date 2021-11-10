@@ -1604,6 +1604,7 @@ struct ConfigItem_oper {
 	unsigned long modes, require_modes;
 	char *vhost;
 	int maxlogins;
+	int server_notice_colors;
 };
 
 /** The TLS options that are used in set::tls and otherblocks::tls-options.
