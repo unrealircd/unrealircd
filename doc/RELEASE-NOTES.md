@@ -134,8 +134,8 @@ Enhancements
   * Anywhere an URL is encountered on its own, it will be fetched
     automatically. This makes it work not only for includes and motd
     (which was already supported) but also for any other file.
-  * On TODO list: an option to prevent UnrealIRCd from treating an URL as a
-    remote include.
+  * To prevent something from being interpreted as a remote include
+    URL you can use 'value' instead of "value".
 * Invite notification: set `set::normal-user-invite-notification yes;` to make
   chanops receive information about normal users inviting someone to their channel.
   (TODO: Not completely sure about the setting name)

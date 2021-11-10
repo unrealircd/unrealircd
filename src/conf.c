@@ -1131,6 +1131,10 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 					}
 				}
 				break;
+			case '\'':
+				if (curce)
+					curce->escaped = 1;
+				/* fallthrough */
 			case '\"':
 				if (curce && curce->line_number != linenumber && cursection)
 				{
@@ -1150,14 +1154,18 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 				{
 					if (*ptr == '\\')
 					{
-						if ((ptr[1] == '\\') || (ptr[1] == '"'))
+						if (strchr("\\\"'", ptr[1]))
 						{
 							/* \\ or \" in config file (escaped) */
 							ptr++; /* skip */
 							continue;
 						}
 					}
-					else if ((*ptr == '\"') || (*ptr == '\n'))
+					else if (*ptr == '\n')
+						break;
+					else if (curce && curce->escaped && (*ptr == '\''))
+						break;
+					else if ((!curce || !curce->escaped) && (*ptr == '"'))
 						break;
 				}
 				if (!*ptr || (*ptr == '\n'))
@@ -2126,7 +2134,7 @@ void config_parse_and_queue_urls(ConfigEntry *ce)
 			break;
 		if (ce->name && !strcmp(ce->name, "include"))
 			continue; /* handled elsewhere */
-		if (ce->value && url_is_valid(ce->value))
+		if (ce->value && !ce->escaped && url_is_valid(ce->value))
 			add_config_resource(ce->value, 0, ce);
 		if (ce->items)
 			config_parse_and_queue_urls(ce->items);
