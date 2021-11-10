@@ -35,6 +35,8 @@ Log *logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 static int snomask_num_destinations = 0;
 
+static char snomasks_in_use[257] = { '\0' };
+
 /* Forward declarations */
 int log_sources_match(LogSource *logsource, LogLevel loglevel, const char *subsystem, const char *event_id, int matched_already);
 void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, int expand_msg, const char *msg, va_list vl);
@@ -375,6 +377,7 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 				{
 					Log *log = safe_alloc(sizeof(Log));
 					strlcpy(log->destination, cep->value, sizeof(log->destination)); /* destination is the snomask */
+					strlcat(snomasks_in_use, cep->value, sizeof(snomasks_in_use));
 					log->sources = sources;
 					if (!strcmp(cep->value, "s"))
 						AddListItem(log, temp_logs[LOG_DEST_OPER]);
@@ -1798,6 +1801,13 @@ void postconf_defaults_log_block(void)
 	AppendListItem(ls, l->sources);
 }
 
+/* Called after CONFIG_TEST right before CONFIG_RUN */
+void config_pre_run_log(void)
+{
+	*snomasks_in_use = '\0';
+}
+
+/* Called after CONFIG_RUN is complete */
 void log_blocks_switchover(void)
 {
 	int i;
@@ -1805,4 +1815,14 @@ void log_blocks_switchover(void)
 		free_log_block(logs[i]);
 	memcpy(logs, temp_logs, sizeof(logs));
 	memset(temp_logs, 0, sizeof(temp_logs));
+}
+
+/** Check if a letter is a valid snomask (that is:
+ * one that exists in the log block configuration).
+ * @param c	the snomask letter to check
+ * @returns	1 if exists, 0 if not.
+ */
+int is_valid_snomask(char c)
+{
+	return strchr(snomasks_in_use, c) ? 1 : 0;
 }

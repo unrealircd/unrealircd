@@ -2081,6 +2081,7 @@ int config_test(void)
 			(*(h->func.intfunc))();
 		}
 	}
+	config_pre_run_log();
 
 	Init_all_testing_modules();
 

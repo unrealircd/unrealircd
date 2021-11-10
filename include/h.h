@@ -1155,6 +1155,7 @@ extern LogData *log_data_link_block(ConfigItem_link *link);
 extern LogData *log_data_tkl(const char *key, TKL *tkl);
 extern LogData *log_data_tls_error(void);
 extern int log_tests(void);
+extern void config_pre_run_log(void);
 extern void log_blocks_switchover(void);
 extern void postconf_defaults_log_block(void);
 extern LogLevel log_level_stringtoval(const char *str);
@@ -1164,6 +1165,7 @@ extern int valid_event_id(const char *s);
 extern int valid_subsystem(const char *s);
 extern const char *timestamp_iso8601_now(void);
 extern const char *timestamp_iso8601(time_t v);
+extern int is_valid_snomask(char c);
 /* end of logging */
 extern void add_fake_lag(Client *client, long msec);
 extern char *prefix_with_extban(const char *remainder, BanContext *b, Extban *extban, char *buf, size_t buflen);
