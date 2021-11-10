@@ -623,7 +623,7 @@ void fd_select(time_t delay)
 		pfd = &pollfds[p];
 
 		revents = pfd->revents;
-		fd = pfd->local->fd;
+		fd = pfd->fd;
 		if (revents == 0 || fd == -1)
 			continue;
 
