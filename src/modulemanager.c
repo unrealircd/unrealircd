@@ -1536,7 +1536,7 @@ void print_md_block(FILE *fdo, ManagedModule *m)
 
 void mm_generate_repository_usage(void)
 {
-	fprintf(stderr, "Usage: ./unrealircd module generate-repository <url base path> <directory-with-modules> <name of output file>\n");
+	fprintf(stderr, "Usage: ./unrealircd module generate-repository <url base path> <directory-with-modules> <name of output file> [optional-minimum-version-filter]\n");
 	fprintf(stderr, "For example: ./unrealircd module generate-repository https://www.unrealircd.org/modules/ src/modules/third modules.lst\n");
 }
 
@@ -1548,6 +1548,7 @@ void mm_generate_repository(int argc, char *args[])
 	char *urlbasepath;
 	char *dirname;
 	char *outputfile;
+	char *minversion;
 	char modname[128];
 	char fullname[512];
 	ManagedModule *m;
@@ -1556,6 +1557,8 @@ void mm_generate_repository(int argc, char *args[])
 	urlbasepath = args[1];
 	dirname = args[2];
 	outputfile = args[3];
+	minversion = args[4];
+
 	if (!urlbasepath || !dirname || !outputfile)
 	{
 		mm_generate_repository_usage();
@@ -1588,6 +1591,7 @@ void mm_generate_repository(int argc, char *args[])
 		char *fname = dir->d_name;
 		if (filename_has_suffix(fname, ".c"))
 		{
+			int hide = 0;
 			snprintf(fullname, sizeof(fullname), "%s/%s", dirname, fname);
 			snprintf(modname, sizeof(modname), "third/%s", filename_strip_suffix(fname, ".c"));
 			printf("Processing: %s\n", modname);
@@ -1600,7 +1604,12 @@ void mm_generate_repository(int argc, char *args[])
 			m->sha256sum = strdup(sha256sum_file(fullname));
 			m->source = safe_alloc(512);
 			snprintf(m->source, 512, "%s%s.c", urlbasepath, modname + 6);
-			print_md_block(fdo, m);
+			/* filter */
+			if (minversion && m->min_unrealircd_version && strncmp(minversion, m->min_unrealircd_version, strlen(minversion)))
+				hide = 1;
+			/* /filter */
+			if (!hide)
+				print_md_block(fdo, m);
 			free_managed_module(m);
 			m = NULL;
 		}
