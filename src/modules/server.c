@@ -642,7 +642,7 @@ void _send_server_message(Client *client)
  */
 int _verify_link(Client *client, ConfigItem_link **link_out)
 {
-	ConfigItem_link *link;
+	ConfigItem_link *link, *orig_link;
 	Client *acptr = NULL, *ocptr = NULL;
 	ConfigItem_ban *bconf;
 
@@ -707,13 +707,14 @@ int _verify_link(Client *client, ConfigItem_link **link_out)
 		return 0;
 	}
 
+	orig_link = link;
 	link = find_link(client->name, client);
 
 	if (!link)
 	{
 		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_INCOMING_MASK_MISMATCH", client,
 		           "Link with server $client.details denied: Server is in link block but link::incoming::mask didn't match",
-		           log_data_link_block(link));
+		           log_data_link_block(orig_link));
 		exit_client(client, NULL, LINK_DEFAULT_ERROR_MSG);
 		return 0;
 	}
