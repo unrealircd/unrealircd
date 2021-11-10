@@ -1316,7 +1316,7 @@ CMD_FUNC(cmd_sid)
 	{
 		/* Log these (but don't show when still syncing) */
 		unreal_log(ULOG_INFO, "link", "SERVER_LINKED_REMOTE", acptr,
-			   "Server linked: $client -> $other_server)",
+			   "Server linked: $client -> $other_server",
 			   log_data_client("other_server", client));
 	}
 
