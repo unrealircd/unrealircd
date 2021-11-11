@@ -231,7 +231,6 @@ int extjwt_valid_integer_string(const char *in, int min, int max)
 
 int vfy_url_is_valid(const char *string)
 {
-	return 1; /* TODO enable */
 	if (strstr(string, "http://") == string || strstr(string, "https://") == string)
 	{
 		if (strstr(string, "%s"))
