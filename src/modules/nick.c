@@ -291,16 +291,6 @@ CMD_FUNC(cmd_nick_local)
 		/* fallthrough for ircops that have sufficient privileges */
 	}
 
-	/* set::anti-flood::nick-flood */
-	if (client->user &&
-	    !ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL) &&
-	    flood_limit_exceeded(client, FLD_NICK))
-	{
-		/* Throttle... */
-		sendnumeric(client, ERR_NCHANGETOOFAST, nick);
-		return;
-	}
-
 	if (!ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL))
 		add_fake_lag(client, 3000);
 
@@ -331,6 +321,16 @@ CMD_FUNC(cmd_nick_local)
 			sendnumeric(client, ERR_NICKNAMEINUSE, nick);
 			return;	/* NICK message ignored */
 		}
+	}
+
+	/* set::anti-flood::nick-flood */
+	if (client->user &&
+	    !ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL) &&
+	    flood_limit_exceeded(client, FLD_NICK))
+	{
+		/* Throttle... */
+		sendnumeric(client, ERR_NCHANGETOOFAST, nick);
+		return;
 	}
 
 	/* New local client? */
