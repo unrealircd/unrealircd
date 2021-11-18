@@ -820,21 +820,21 @@ static int internal_getscore(char *str)
 	
 	if (digits >= 5)
 	{
-		score += 5 + (digits - 5);
+		score += digits;
 #ifdef DEBUGMODE
 		sendto_ops_and_log("score@'%s': MATCH for digits check", str);
 #endif
 	}
 	if (vowels >= 4)
 	{
-		score += 4 + (vowels - 4);
+		score += vowels;
 #ifdef DEBUGMODE
 		sendto_ops_and_log("score@'%s': MATCH for vowels check", str);
 #endif
 	}
 	if (consonants >= 4)
 	{
-		score += 4 + (consonants - 4);
+		score += consonants;
 #ifdef DEBUGMODE
 		sendto_ops_and_log("score@'%s': MATCH for consonants check", str);
 #endif
