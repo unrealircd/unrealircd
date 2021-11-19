@@ -1,6 +1,6 @@
-UnrealIRCd 6.0.0-beta2
+UnrealIRCd 6.0.0-beta3
 =======================
-This is the second beta for UnrealIRCd 6. It contains all the planned
+This is the third beta for UnrealIRCd 6. It contains all the planned
 features for U6 and now we need the help of the public to test these beta's.
 Caution: this beta may crash spectacularly, behave weird or in unexpected
 ways, so don't run it on production systems!
@@ -14,6 +14,16 @@ to catch more bugs during development. However, if this is a problem for
 you, then answer --disable-asan to the last question in ./Config about
 custom parameters to pass to configure.
 Naturally, the eventual stable release won't use AddressSanitizer.
+
+Changes since beta2:
+* Fix crash with non-matching link block
+* Update MODE to behave better in mixed U5-U6 networks, preventing desyncs.
+* Only allow setting of snomasks that actually exist in log { } blocks
+* Fix nick-flood message appearing even though the user was not changing nicks
+* Added set::server-notice-colors and oper::server-notice-colors
+* Only fetch updates of GEO IP database every 14 days
+* Add escaping option for URLs using single quotes, needed for extjwt.
+* Fewer (duplicate) succesful linking notices
 
 Changes between beta1 and beta2:
 * Fix 15 server notices (missing info, formatting or duplicate)
