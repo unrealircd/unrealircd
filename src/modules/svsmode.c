@@ -291,6 +291,7 @@ void channel_svsmode(Client *client, int parc, const char *parv[])
 	if (*parabuf)
 	{
 		MessageTag *mtags = NULL;
+		int destroy_channel = 0;
 		/* NOTE: cannot use 'recv_mtag' here because MODE could be rewrapped. Not ideal :( */
 		new_message(client, NULL, &mtags);
 
@@ -300,7 +301,7 @@ void channel_svsmode(Client *client, int parc, const char *parv[])
 		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", client->id, channel->name, modebuf, parabuf);
 
 		/* Activate this hook just like cmd_mode.c */
-		RunHook(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, 0);
+		RunHook(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, 0, &destroy_channel);
 
 		free_message_tags(mtags);
 

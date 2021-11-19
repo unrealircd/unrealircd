@@ -83,14 +83,15 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 void send_local_chan_mode(MessageTag *recv_mtags, Client *client, Channel *channel, char *modebuf, char *parabuf)
 {
 	MessageTag *mtags = NULL;
+	int destroy_channel = 0;
 
 	new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, channel->name, modebuf, parabuf);
 	sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 	               ":%s MODE %s %s %s", client->name, channel->name, modebuf, parabuf);
 	if (MyConnect(client))
-		RunHook(HOOKTYPE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, -1);
+		RunHook(HOOKTYPE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, -1, &destroy_channel);
 	else
-		RunHook(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, -1);
+		RunHook(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, -1, &destroy_channel);
 	free_message_tags(mtags);
 }
 

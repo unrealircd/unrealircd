@@ -770,6 +770,7 @@ CMD_OVERRIDE_FUNC(override_mode)
 			MessageTag *mtags = NULL;
 			const char *params = history_chanmode_get_param(settings);
 			char modebuf[BUFSIZE], parabuf[BUFSIZE];
+			int destroy_channel = 0;
 
 			if (!params)
 				return; /* Weird */
@@ -787,7 +788,7 @@ CMD_OVERRIDE_FUNC(override_mode)
 				(long long)channel->creationtime);
 
 			/* Activate this hook just like cmd_mode.c */
-			RunHook(HOOKTYPE_REMOTE_CHANMODE, &me, channel, mtags, modebuf, parabuf, 0, 0);
+			RunHook(HOOKTYPE_REMOTE_CHANMODE, &me, channel, mtags, modebuf, parabuf, 0, 0, &destroy_channel);
 
 			free_message_tags(mtags);
 
