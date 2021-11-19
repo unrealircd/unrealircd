@@ -1598,6 +1598,7 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 	char *p; /* points to somewhere in 'tbuf' */
 	int prebuflen = 0; /* points to after the <sjointoken> <TS> <chan> <fixmodes> <fixparas <..>> : part */
 	int sent = 0; /* we need this so we send at least 1 message about the channel (eg if +P and no members, no bans, #4459) */
+	char modebuf[BUFSIZE], parabuf[BUFSIZE];
 
 	if (*channel->name != '#')
 		return;

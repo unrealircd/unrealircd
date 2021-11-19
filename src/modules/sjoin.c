@@ -35,6 +35,8 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
+char modebuf[BUFSIZE], parabuf[BUFSIZE];
+
 MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SJOIN, cmd_sjoin, MAXPARA, CMD_SERVER);
@@ -238,6 +240,10 @@ CMD_FUNC(cmd_sjoin)
 			MessageTag *mtags = NULL;
 			ap = mp2parv(modebuf, parabuf);
 			set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
+			/* Hm.. originally modebuf & parabuf were returned via set_mode(), but
+			 * now we use the result from channel_modes().. is that correct?
+			 * They should not differ, right? Still not sure about it, though.
+			 */
 			send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
 		}
 		/* remove bans */

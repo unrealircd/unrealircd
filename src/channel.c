@@ -40,12 +40,8 @@ long sajoinmode = 0;
  */
 Channel *channels = NULL;
 
-/* some buffers for rebuilding channel/nick lists with comma's */
+/* A buffer for rebuilding channel/nick lists with comma's */
 static char buf[BUFSIZE];
-/** Mode buffer (eg: "+sntkl") */
-MODVAR char modebuf[BUFSIZE];
-/** Parameter buffer (eg: "key 123") */
-MODVAR char parabuf[BUFSIZE];
 
 static mp_pool_t *channel_pool = NULL;
 
@@ -1311,4 +1307,18 @@ int empty_mode(const char *m)
 	if (!*m || (((m[0] == '+') || (m[0] == '-')) && m[1] == '\0'))
 		return 1;
 	return 0;
+}
+
+/** Free everything of/in a MultiLineMode */
+void free_multilinemode(MultiLineMode *m)
+{
+	int i;
+	if (m == NULL)
+		return;
+	for (i=0; i < m->numlines; i++)
+	{
+		safe_free(m->modeline[i]);
+		safe_free(m->paramline[i]);
+	}
+	safe_free(m);
 }

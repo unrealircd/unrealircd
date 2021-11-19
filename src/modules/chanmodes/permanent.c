@@ -51,14 +51,17 @@ static int permanent_is_ok(Client *client, Channel *channel, char mode, const ch
 	return EX_ALLOW;
 }
 
-int permanent_chanmode(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode)
+int permanent_chanmode(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode, int *destroy_channel)
 {
 	if (samode == -1)
 		return 0; /* SJOIN server-sync, already has its own way of destroying the channel */
 
 	/* Destroy the channel if it was set '(SA)MODE #chan -P' with nobody in it (#4442) */
 	if (!(channel->mode.mode & EXTMODE_PERMANENT) && (channel->users <= 0))
+	{
 		sub1_from_channel(channel);
+		*destroy_channel = 1;
+	}
 	
 	return 0;
 }

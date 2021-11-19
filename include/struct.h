@@ -2096,6 +2096,14 @@ struct ParseMode {
 	char buf[512]; /* internal parse buffer */
 };
 
+#define MAXMULTILINEMODES       3
+typedef struct MultiLineMode MultiLineMode;
+struct MultiLineMode {
+	char *modeline[MAXMULTILINEMODES+1];
+	char *paramline[MAXMULTILINEMODES+1];
+	int numlines;
+};
+
 typedef struct PendingServer PendingServer;
 struct PendingServer {
 	PendingServer *prev, *next;

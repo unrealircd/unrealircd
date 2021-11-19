@@ -44,7 +44,7 @@ static void init_config(cfgstruct *cfg);
 int history_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int history_config_posttest(int *);
 int history_config_run(ConfigFile *, ConfigEntry *, int);
-int history_chanmode_change(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode);
+int history_chanmode_change(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode, int *destroy_channel);
 static int compare_history_modes(HistoryChanMode *a, HistoryChanMode *b);
 int history_chanmode_is_ok(Client *client, Channel *channel, char mode, const char *para, int type, int what);
 void *history_chanmode_put_param(void *r_in, const char *param);
@@ -610,7 +610,7 @@ int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx)
 }
 
 /** On channel mode change, communicate the +H limits to the history backend layer */
-int history_chanmode_change(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode)
+int history_chanmode_change(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode, int *destroy_channel)
 {
 	HistoryChanMode *settings;
 
@@ -769,6 +769,7 @@ CMD_OVERRIDE_FUNC(override_mode)
 		{
 			MessageTag *mtags = NULL;
 			const char *params = history_chanmode_get_param(settings);
+			char modebuf[BUFSIZE], parabuf[BUFSIZE];
 
 			if (!params)
 				return; /* Weird */

@@ -22,12 +22,21 @@
 
 #include "unrealircd.h"
 
+ModuleHeader MOD_HEADER
+  = {
+	"mode",
+	"5.0",
+	"command /mode",
+	"UnrealIRCd Team",
+	"unrealircd-6",
+    };
+
 /* Forward declarations */
 int list_mode_request(Client *client, Channel *channel, const char *req);
 CMD_FUNC(cmd_mode);
 CMD_FUNC(cmd_mlock);
 void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc, const char *parv[], time_t sendts, int samode);
-void _set_mode(Channel *channel, Client *client, int parc, const char *parv[], u_int *pcount,
+MultiLineMode *_set_mode(Channel *channel, Client *client, int parc, const char *parv[], u_int *pcount,
                        char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 void _set_channel_mode(Channel *channel, char *modes, char *parameters);
 CMD_FUNC(_cmd_umode);
@@ -40,30 +49,18 @@ int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int w
                     Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 void do_mode_char_member_mode_new(Channel *channel, Cmode *handler, const char *param, u_int what,
                     Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
-void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
-                   char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
-                   size_t mode_buf_size, size_t para_buf_size);
+MultiLineMode *make_mode_str(Client *client, Channel *channel, Cmode_t oldem, int pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 
 static char *mode_cutoff(const char *s);
-static void mode_cutoff2(Client *client, Channel *channel, int *parc_out, const char *parv[]);
 void mode_operoverride_msg(Client *client, Channel *channel, char *modebuf, char *parabuf);
 
 static int samode_in_progress = 0;
-
-ModuleHeader MOD_HEADER
-  = {
-	"mode",
-	"5.0",
-	"command /mode",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
 
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_DO_MODE, _do_mode);
-	EfunctionAddVoid(modinfo->handle, EFUNC_SET_MODE, _set_mode);
+	EfunctionAddPVoid(modinfo->handle, EFUNC_SET_MODE, TO_PVOIDFUNC(_set_mode));
 	EfunctionAddVoid(modinfo->handle, EFUNC_CMD_UMODE, _cmd_umode);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SET_CHANNEL_MODE, _set_channel_mode);
 	return MOD_SUCCESS;
@@ -132,6 +129,7 @@ CMD_FUNC(cmd_mode)
 
 	if (parc < 3)
 	{
+		char modebuf[BUFSIZE], parabuf[BUFSIZE];
 		*modebuf = *parabuf = '\0';
 
 		modebuf[1] = '\0';
@@ -191,7 +189,6 @@ aftercheck:
 	if (MyUser(client) && parv[2])
 	{
 		parv[2] = mode_cutoff(parv[2]);
-		mode_cutoff2(client, channel, &parc, parv);
 	}
 
 	/* Filter out the unprivileged FIRST. *
@@ -222,89 +219,23 @@ static char *mode_cutoff(const char *i)
 	return newmodebuf;
 }
 
-/** Another mode cutoff routine - this one for the server-side
- * amplification/enlargement problem that happens with bans/exempts/invex
- * as explained in #2837. -- Syzop
- */
-static void mode_cutoff2(Client *client, Channel *channel, int *parc_out, const char *parv[])
-{
-	int len, i;
-	int parc = *parc_out;
-
-	if (parc-2 <= 3)
-		return; /* Less than 3 mode parameters? Then we don't even have to check */
-
-	/* Calculate length of MODE if it would go through fully as-is */
-	/* :nick!user@host MODE #channel +something param1 param2 etc... */
-	len = strlen(client->name) + strlen(client->user->username) + strlen(GetHost(client)) +
-	      strlen(channel->name) + 11;
-
-	len += strlen(parv[2]);
-
-	if (*parv[2] != '+' && *parv[2] != '-')
-		len++;
-
-	for (i = 3; parv[i]; i++)
-	{
-		len += strlen(parv[i]) + 1; /* (+1 for the space character) */
-		/* +4 is another potential amplification (per-param).
-		 * If we were smart we would only check this for b/e/I and only for
-		 * relevant cases (not for all extended), but this routine is dumb,
-		 * so we just +4 for any case where the full mask is missing.
-		 * It's better than assuming +4 for all cases, though...
-		 */
-		if (!match_simple("*!*@*", parv[i]))
-			len += 4;
-	}
-
-	/* Now check if the result is acceptable... */
-	if (len < 510)
-		return; /* Ok, no problem there... */
-
-	/* Ok, we have a potential problem...
-	 * we just dump the last parameter... check how much space we saved...
-	 * and try again if that did not help
-	 */
-	for (i = parc-1; parv[i] && (i > 3); i--)
-	{
-		len -= strlen(parv[i]);
-		if (!match_simple("*!*@*", parv[i]))
-			len -= 4; /* must adjust accordingly.. */
-		parv[i] = NULL;
-		(*parc_out)--;
-		if (len < 510)
-			break;
-	}
-	/* This may be reached if like the first parameter is really insane long..
-	 * which is no problem, as other layers (eg: ban) takes care of that.
-	 * We're done...
-	 */
-}
-
 /* do_mode -- written by binary
  *	User or server is authorized to do the mode.  This takes care of
  * setting the mode and relaying it to other users and servers.
  */
 void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc, const char *parv[], time_t sendts, int samode)
 {
+	Client *orig_client = client; /* (needed for samode replacement in a loop) */
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	int  pcount;
+	int i;
 	char tschange = 0;
-	MessageTag *mtags = NULL;
-
-	new_message(client, recv_mtags, &mtags);
-
-	/* IMPORTANT: if you return, don't forget to free mtags!! */
+	MultiLineMode *m;
 
 	/* Please keep the next 3 lines next to each other */
 	samode_in_progress = samode;
-	set_mode(channel, client, parc, parv, &pcount, pvar);
+	m = set_mode(channel, client, parc, parv, &pcount, pvar);
 	samode_in_progress = 0;
-
-	if (MyConnect(client))
-		RunHook(HOOKTYPE_PRE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode);
-	else
-		RunHook(HOOKTYPE_PRE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode);
 
 	if (IsServer(client))
 	{
@@ -317,8 +248,8 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 				           "Buffer: $modebuf $parabuf",
 				           log_data_channel("channel", channel),
 				           log_data_integer("send_timestamp", sendts),
-				           log_data_string("modebuf", modebuf),
-				           log_data_string("parabuf", parabuf));
+				           log_data_string("modebuf", m?m->modeline[0]:""),
+				           log_data_string("parabuf", m?m->modeline[0]:""));
 				/* Yeah, so what to do in this case?
 				 * Don't set channel->creationtime
 				 * and assume merging.
@@ -344,115 +275,143 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 			sendts = channel->creationtime;
 	}
 
-	if (tschange && empty_mode(modebuf))
+	if (!m)
 	{
-		/* Message from the other server is an empty mode, BUT they
-		 * did change the channel->creationtime to an earlier TS
-		 * (see above "Our timestamp is wrong or this is a new channel").
-		 * We need to relay this MODE message to all other servers
-		 * (all except from where it came from, client).
-		 */
-		sendto_server(client, 0, 0, NULL, ":%s MODE %s + %lld",
-		              me.id, channel->name,
-		              (long long)channel->creationtime);
-		free_message_tags(mtags);
-		/* Return here, as there isn't anything else to send */
+		/* No modes changed (empty mode change) */
+		if (tschange && !m)
+		{
+			/* Message from the other server is an empty mode, BUT they
+			 * did change the channel->creationtime to an earlier TS
+			 * (see above "Our timestamp is wrong or this is a new channel").
+			 * We need to relay this MODE message to all other servers
+			 * (all except from where it came from, client).
+			 */
+			sendto_server(client, 0, 0, NULL, ":%s MODE %s + %lld",
+				      me.id, channel->name,
+				      (long long)channel->creationtime);
+		}
+		/* Nothing to send */
+		safe_free_multilinemode(m);
+		opermode = 0;
 		return;
 	}
 
-	/* opermode for twimodesystem --sts */
-#ifndef NO_OPEROVERRIDE
-	if ((opermode == 1) && IsUser(client))
+	/* Now loop through the multiline modes... */
+	for (i = 0; i < m->numlines; i++)
 	{
-		mode_operoverride_msg(client, channel, modebuf, parabuf);
+		char *modebuf = m->modeline[i];
+		char *parabuf = m->paramline[i];
+		MessageTag *mtags = NULL;
+		int should_destroy = 0;
 
-		sendts = 0;
-	}
+		new_message(client, recv_mtags, &mtags);
+
+		/* IMPORTANT: if you return, don't forget to free mtags!! */
+
+		if (MyConnect(client))
+			RunHook(HOOKTYPE_PRE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode);
+		else
+			RunHook(HOOKTYPE_PRE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode);
+
+		/* opermode for twimodesystem --sts */
+#ifndef NO_OPEROVERRIDE
+		if ((opermode == 1) && IsUser(client))
+		{
+			mode_operoverride_msg(client, channel, modebuf, parabuf);
+
+			sendts = 0;
+		}
 #endif
 
-	/* If we have nothing to do, we can stop here. */
-	if (empty_mode(modebuf))
-	{
-		free_message_tags(mtags);
-		return;
-	}
-
-	if (IsUser(client) && samode && MyUser(client))
-	{
-		if (!sajoinmode)
+		if (IsUser(orig_client) && samode && MyUser(orig_client))
 		{
-			char buf[512];
-			snprintf(buf, sizeof(buf), "%s%s%s", modebuf, *parabuf ? " " : "", parabuf);
-			unreal_log(ULOG_INFO, "samode", "SAMODE_COMMAND", client,
-			           "Client $client used SAMODE $channel ($mode)",
-			           log_data_channel("channel", channel),
-			           log_data_string("mode", buf));
+			if (!sajoinmode)
+			{
+				char buf[512];
+				snprintf(buf, sizeof(buf), "%s%s%s", modebuf, *parabuf ? " " : "", parabuf);
+				unreal_log(ULOG_INFO, "samode", "SAMODE_COMMAND", orig_client,
+					   "Client $client used SAMODE $channel ($mode)",
+					   log_data_channel("channel", channel),
+					   log_data_string("mode", buf));
+			}
+
+			client = &me;
+			sendts = 0;
 		}
 
-		client = &me;
-		sendts = 0;
+		sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
+			       ":%s MODE %s %s %s",
+			       client->name, channel->name, modebuf, parabuf);
+
+		if (IsServer(client) && sendts != -1)
+		{
+			sendto_server(client, 0, 0, mtags,
+				      ":%s MODE %s %s %s %lld",
+				      client->id, channel->name,
+				      modebuf, parabuf,
+				      (long long)sendts);
+		} else
+		if (samode && IsMe(client))
+		{
+			/* SAMODE is a special case: always send a TS of 0 (omitting TS==desync) */
+			sendto_server(client, 0, 0, mtags,
+				      ":%s MODE %s %s %s 0",
+				      client->id, channel->name,
+				      modebuf, parabuf);
+		} else
+		{
+			sendto_server(client, 0, 0, mtags,
+				      ":%s MODE %s %s %s",
+				      client->id, channel->name,
+				      modebuf, parabuf);
+			/* tell them it's not a timestamp, in case the last param is a number. */
+		}
+
+		if (MyConnect(client))
+			RunHook(HOOKTYPE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode, &should_destroy);
+		else
+			RunHook(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode, &should_destroy);
+
+		free_message_tags(mtags);
+
+		if (should_destroy)
+			break; /* eg channel went -P with nobody in it. 'channel' is freed now */
 	}
-
-	sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
-	               ":%s MODE %s %s %s",
-	               client->name, channel->name, modebuf, parabuf);
-
-	if (IsServer(client) && sendts != -1)
-	{
-		sendto_server(client, 0, 0, mtags,
-		              ":%s MODE %s %s %s %lld",
-		              client->id, channel->name,
-		              modebuf, parabuf,
-		              (long long)sendts);
-	} else
-	if (samode && IsMe(client))
-	{
-		/* SAMODE is a special case: always send a TS of 0 (omitting TS==desync) */
-		sendto_server(client, 0, 0, mtags,
-		              ":%s MODE %s %s %s 0",
-		              client->id, channel->name,
-		              modebuf, parabuf);
-	} else
-	{
-		sendto_server(client, 0, 0, mtags,
-		              ":%s MODE %s %s %s",
-		              client->id, channel->name,
-		              modebuf, parabuf);
-		/* tell them it's not a timestamp, in case the last param is a number. */
-	}
-
-	if (MyConnect(client))
-		RunHook(HOOKTYPE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode);
-	else
-		RunHook(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, sendts, samode);
-
-	/* After this, don't touch 'channel' anymore! As permanent module may have destroyed the channel. */
-
-	free_message_tags(mtags);
-
+	safe_free_multilinemode(m);
+	opermode = 0;
 }
+
 /* make_mode_str -- written by binary
  *	Reconstructs the mode string, to make it look clean.  mode_buf will
  *  contain the +x-y stuff, and the parabuf will contain the parameters.
  */
-void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
-    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
-    size_t mode_buf_size, size_t para_buf_size)
+MultiLineMode *make_mode_str(Client *client, Channel *channel, Cmode_t oldem, int pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
 {
 	Cmode *cm;
-	char tmpbuf[MODEBUFLEN+3], *tmpstr;
-	char *x = mode_buf;
-	int  what, cnt, z;
-	int i;
-	char *m;
+	int what;
+	int cnt, z, i;
+	MultiLineMode *m = safe_alloc(sizeof(MultiLineMode));
+	int curr = 0;
+	int initial_len;
+
+	if (client->user)
+		initial_len = strlen(client->name) + strlen(client->user->username) + strlen(GetHost(client)) + strlen(channel->name) + 11;
+	else
+		initial_len = strlen(client->name) + strlen(channel->name) + 11;
+
+	/* Reserve room for the first element */
+	curr = 0;
+	m->modeline[curr] = safe_alloc(BUFSIZE);
+	m->paramline[curr] = safe_alloc(BUFSIZE);
+	m->numlines = curr+1;
 	what = 0;
 
-	*tmpbuf = '\0';
-	*mode_buf = '\0';
-	*para_buf = '\0';
-	what = 0;
+	/* The first element will be filled with all paramless modes.
+	 * That is: both the ones that got set, and the ones that got unset.
+	 * This will always fit.
+	 */
 
-	/* + paramless extmodes... */
+	/* Which paramless modes got set? Eg +snt */
 	for (cm=channelmodes; cm; cm = cm->next)
 	{
 		if (!cm->letter || cm->paracount)
@@ -463,75 +422,84 @@ void make_mode_str(Channel *channel, Cmode_t oldem, int pcount,
 		{
 			if (what != MODE_ADD)
 			{
-				*x++ = '+';
+				strlcat_letter(m->modeline[curr], '+', BUFSIZE);
 				what = MODE_ADD;
 			}
-			*x++ = cm->letter;
+			strlcat_letter(m->modeline[curr], cm->letter, BUFSIZE);
 		}
 	}
 
-	*x = '\0';
-
-	/* - extmodes (both "param modes" and paramless don't have
-	 * any params when unsetting... well, except one special type, that is (we skip those here)
-	 */
+	/* Which paramless modes got unset? Eg -r */
 	for (cm=channelmodes; cm; cm = cm->next)
 	{
 		if (!cm->letter || cm->unset_with_param)
 			continue;
 		/* don't have it now and did have it before */
-		if (!(channel->mode.mode & cm->mode) &&
-		    (oldem & cm->mode))
+		if (!(channel->mode.mode & cm->mode) && (oldem & cm->mode))
 		{
 			if (what != MODE_DEL)
 			{
-				*x++ = '-';
+				strlcat_letter(m->modeline[curr], '-', BUFSIZE);
 				what = MODE_DEL;
 			}
-			*x++ = cm->letter;
+			strlcat_letter(m->modeline[curr], cm->letter, BUFSIZE);
 		}
 	}
 
-	*x = '\0';
-	/* reconstruct bkov chain */
+	/* Now for parameter modes we do both addition and removal. Eg +b-e ban!x@y exempt!z@z */
 	for (cnt = 0; cnt < pcount; cnt++)
 	{
+		if ((strlen(m->modeline[curr]) + strlen(m->paramline[curr]) + strlen(&pvar[cnt][2])) > 507)
+		{
+			if (curr == MAXMULTILINEMODES)
+			{
+				/* Should be impossible.. */
+				unreal_log(ULOG_ERROR, "mode", "MODE_MULTINE_EXCEEDED", client,
+				           "A mode string caused an avalanche effect of more than $max_multiline modes "
+				           "in channel $channel. Caused by client $client. Expect a desync.",
+				           log_data_integer("max_multiline_modes", MAXMULTILINEMODES),
+				           log_data_channel("channel", channel));
+				break;
+			}
+			curr++;
+			m->modeline[curr] = safe_alloc(BUFSIZE);
+			m->paramline[curr] = safe_alloc(BUFSIZE);
+			m->numlines = curr+1;
+			what = 0;
+		}
 		if ((*(pvar[cnt]) == '+') && what != MODE_ADD)
 		{
-			*x++ = '+';
+			strlcat_letter(m->modeline[curr], '+', BUFSIZE);
 			what = MODE_ADD;
 		}
 		if ((*(pvar[cnt]) == '-') && what != MODE_DEL)
 		{
-			*x++ = '-';
+			strlcat_letter(m->modeline[curr], '-', BUFSIZE);
 			what = MODE_DEL;
 		}
-		*x++ = *(pvar[cnt] + 1);
-		tmpstr = &pvar[cnt][2];
-		z = (MODEBUFLEN * MAXMODEPARAMS);
-		m = para_buf;
-		while ((*m)) { m++; }
-		while ((*tmpstr) && ((m-para_buf) < z))
-		{
-			*m = *tmpstr;
-			m++;
-			tmpstr++;
-		}
-		*m++ = ' ';
-		*m = '\0';
+		strlcat_letter(m->modeline[curr], *(pvar[cnt] + 1), BUFSIZE);
+		strlcat(m->paramline[curr], &pvar[cnt][2], BUFSIZE);
+		strlcat_letter(m->paramline[curr], ' ', BUFSIZE);
 	}
-	z = strlen(para_buf);
-	if ((z > 0) && (para_buf[z - 1] == ' '))
-		para_buf[z - 1] = '\0';
-	*x = '\0';
-	if (*mode_buf == '\0')
+
+	for (i = 0; i <= curr; i++)
 	{
-		*mode_buf = '+';
-		mode_buf++;
-		*mode_buf = '\0';
-		/* Don't send empty lines. */
+		char *para_buf = m->paramline[i];
+		/* Strip off useless space character (' ') at the end, if there is any */
+		z = strlen(para_buf);
+		if ((z > 0) && (para_buf[z - 1] == ' '))
+			para_buf[z - 1] = '\0';
 	}
-	return;
+
+	/* Now check for completely empty mode: */
+	if ((curr == 0) && empty_mode(m->modeline[0]))
+	{
+		/* And convert it to a NULL result */
+		safe_free_multilinemode(m);
+		return NULL;
+	}
+
+	return m;
 }
 
 const char *mode_ban_handler(Client *client, Channel *channel, const char *param, int what, int extbtype, Ban **banlist)
@@ -918,13 +886,11 @@ int paracount_for_chanmode(u_int what, char mode)
 	return 0;
 }
 
-/* set_mode
- *	written by binary
- */
-void _set_mode(Channel *channel, Client *client, int parc, const char *parv[], u_int *pcount,
-               char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
+MultiLineMode *_set_mode(Channel *channel, Client *client, int parc, const char *parv[], u_int *pcount,
+                        char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
 {
 	Cmode *cm = NULL;
+	MultiLineMode *mlm = NULL;
 	const char *curchr;
 	const char *argument;
 	char argumentbuf[MODEBUFLEN+1];
@@ -938,7 +904,6 @@ void _set_mode(Channel *channel, Client *client, int parc, const char *parv[], u
 	CoreChannelModeTable foundat;
 	int found = 0;
 	int sent_mlock_warning = 0;
-	unsigned int htrig = 0;
 	int checkrestr = 0, warnrestr = 1;
 	Cmode_t oldem;
 	paracount = 1;
@@ -1026,50 +991,16 @@ void _set_mode(Channel *channel, Client *client, int parc, const char *parv[], u
 					argument = NULL;
 				}
 
-#ifndef NO_OPEROVERRIDE
 				if (found == 1)
-				{
-					if ((Halfop_mode(modetype) == FALSE) && opermode == 2 && htrig != 1)
-					{
-						/* YUCK! */
-						if ((foundat.flag == 'h') && argument && (find_user(argument, NULL) == client))
-						{
-							/* ircop with halfop doing a -h on himself. no warning. */
-						} else {
-							opermode = 0;
-							htrig = 1;
-						}
-					}
-				}
-				else if (found == 2) {
-					/* Extended mode: all override stuff is in do_extmode_char which will set
-					 * opermode if appropriate. -- Syzop
-					 */
-				}
-#endif /* !NO_OPEROVERRIDE */
-
-				if (found == 1)
-				{
 					paracount += do_mode_char_list_mode(channel, modetype, *curchr, argument, what, client, pcount, pvar);
-				}
 				else if (found == 2)
-				{
 					paracount += do_extmode_char(channel, cm, argument, what, client, pcount, pvar);
-				}
 				break;
 		} /* switch(*curchr) */
 	} /* for loop through mode letters */
 
-	make_mode_str(channel, oldem, *pcount, pvar, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
-
-#ifndef NO_OPEROVERRIDE
-	if ((htrig == 1) && IsUser(client))
-	{
-		mode_operoverride_msg(client, channel, modebuf, parabuf);
-		htrig = 0;
-		opermode = 0; /* stop double override notices... but is this ok??? -- Syzop */
-	}
-#endif
+	mlm = make_mode_str(client, channel, oldem, *pcount, pvar);
+	return mlm;
 }
 
 /*

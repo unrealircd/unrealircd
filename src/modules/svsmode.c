@@ -42,6 +42,8 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
+char modebuf[BUFSIZE], parabuf[BUFSIZE];
+
 MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSMODE, cmd_svsmode, MAXPARA, CMD_SERVER|CMD_USER);

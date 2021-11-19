@@ -665,7 +665,6 @@ extern char *spamfilter_inttostring_long(int v);
 extern MODVAR char backupbuf[];
 extern int is_invited(Client *client, Channel *channel);
 extern void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel, int hide_local_modes);
-extern MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
 extern int op_can_override(const char *acl, Client *client,Channel *channel,void* extra);
 extern Client *find_chasing(Client *client, const char *user, int *chasing);
 extern MODVAR long opermode;
@@ -708,8 +707,8 @@ extern MODVAR void (*do_join)(Client *, int, const char **);
 extern MODVAR void (*join_channel)(Channel *channel, Client *client, MessageTag *mtags, const char *flags);
 extern MODVAR int (*can_join)(Client *client, Channel *channel, const char *key, char **errmsg);
 extern MODVAR void (*do_mode)(Channel *channel, Client *client, MessageTag *mtags, int parc, const char *parv[], time_t sendts, int samode);
-extern MODVAR void (*set_mode)(Channel *channel, Client *cptr, int parc, const char *parv[], u_int *pcount,
-    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
+extern MODVAR MultiLineMode *(*set_mode)(Channel *channel, Client *cptr, int parc, const char *parv[], u_int *pcount,
+                            char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 extern MODVAR void (*set_channel_mode)(Channel *channel, char *modes, char *parameters);
 extern MODVAR void (*cmd_umode)(Client *, MessageTag *, int, const char **);
 extern MODVAR int (*register_user)(Client *client);
@@ -1032,6 +1031,8 @@ extern int should_show_connect_info(Client *client);
 extern void send_invalid_channelname(Client *client, const char *channelname);
 extern int is_extended_ban(const char *str);
 extern int empty_mode(const char *m);
+extern void free_multilinemode(MultiLineMode *m);
+#define safe_free_multilinemode(m) do { if (m) free_multilinemode(m); m = NULL; } while(0)
 extern int valid_sid(const char *name);
 extern int valid_uid(const char *name);
 extern void parse_client_queued(Client *client);
