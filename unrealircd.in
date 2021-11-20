@@ -2,6 +2,11 @@
 
 PID_FILE="@PIDFILE@"
 PID_BACKUP="@PIDFILE@.bak"
+
+# When built with --with-asan, ASan does not dump core by default because
+# older gcc/clang might dump a 16TB core file. We explicitly enable it here.
+export ASAN_OPTIONS="abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1:log_path=@TMPDIR@/unrealircd_asan:detect_leaks=0"
+
 if [ ! -f @BINDIR@/unrealircd ]; then
 	echo "ERROR: Could not find the IRCd binary (@BINDIR@/unrealircd)"
 	echo "This could mean two things:"
@@ -14,9 +19,6 @@ if [ "$1" = "start" ] ; then
 	if [ -r $PID_FILE ] ; then
 		mv -f $PID_FILE $PID_BACKUP
 	fi
-	# When built with --with-asan, ASan does not dump core by default because
-	# older gcc/clang might dump a 16TB core file. We explicitly enable it here.
-	export ASAN_OPTIONS="abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1:log_path=@TMPDIR@/unrealircd_asan:detect_leaks=0"
 
 	# Check if ~/Unrealxxx/unrealircd.conf exists but the file
 	# ~/unrealircd/conf/unrealircd.conf does not.
