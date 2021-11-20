@@ -504,9 +504,12 @@ while [ -z "$TEST" ] ; do
 		TEST="No"
 	fi
 	echo ""
-	echo "Do you want to enable remote includes?"
-	echo "This allows stuff like this in your configuration file:"
-	echo "include \"https://www.somesite.org/files/opers.conf\";"
+	echo "UnrealIRCd comes with support for 'remote includes', this allows things like:"
+	echo "include \"https://www.example.org/files/opers.conf\";"
+	echo "Do you want to compile with the libcurl library to enable additional protocols?"
+	echo "If you answer 'No' then only https:// links will work for remote includes."
+	echo "Answer 'Yes' if you need other protocols, such as plaintext http, ftp, tftp or smb."
+	echo "Most people answer 'No' here because they don't use remote includes or only need https."
 	echo $n "[$TEST] -> $c"
 	read cc
 	if [ -z "$cc" ] ; then
