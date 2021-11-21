@@ -162,6 +162,14 @@ CMD_FUNC(cmd_mode)
 	}
 #endif
 
+	/* User does not have permission to use the MODE command */
+	if (MyUser(client) && !IsULine(client) && !check_channel_access(client, channel, "hoaq") &&
+	    !ValidatePermissionsForPath("channel:override:mode",client,NULL,channel,NULL))
+	{
+		sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
+		return;
+	}
+
 	if (parv[2] && (*parv[2] == '&'))
 	{
 		/* We don't do any bounce-mode handling anymore since UnrealIRCd 6 */
