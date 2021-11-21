@@ -304,7 +304,26 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 		MessageTag *mtags = NULL;
 		int should_destroy = 0;
 
-		new_message(client, recv_mtags, &mtags);
+		if (m->numlines == 1)
+		{
+			/* Single mode lines are easy: retain original msgid etc */
+			new_message(client, recv_mtags, &mtags);
+		} else {
+			/* We have a multi-mode line:
+			 * This only happens when the input was a single mode line
+			 * that got expanded into a multi mode line due to expansion
+			 * issues. The sender could be a local client, but could also
+			 * be a remote server like UnrealIRCd 5.
+			 * We can't use the same msgid multiple times, and (if the
+			 * sender was a server) then we can't use the original msgid
+			 * either, not for both events and not for the first event
+			 * (since the modeline differs for all events, including first).
+			 * Obviously message ids must be unique for the event...
+			 * So here is our special version again, just like we use in
+			 * SJOIN and elsewhere sporadically for cases like this:
+			 */
+			new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, channel->name, modebuf, parabuf);
+		}
 
 		/* IMPORTANT: if you return, don't forget to free mtags!! */
 
