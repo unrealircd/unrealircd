@@ -219,7 +219,7 @@ CMD_FUNC(cmd_kick)
 		if (!lp)
 		{
 			if (MyUser(client))
-				sendnumeric(client, ERR_USERNOTINCHANNEL, user, channel->name);
+				sendnumeric(client, ERR_USERNOTINCHANNEL, user, parv[1]);
 			continue;
 		}
 

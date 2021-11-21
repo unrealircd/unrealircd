@@ -18,6 +18,7 @@ Naturally, the eventual stable release won't use AddressSanitizer.
 Changes since beta3:
 * Fix regular users being able to set some channel modes (users without +hoaq)
 * Fix memory leak in SJOIN
+* Fix potential crash with KICK (read-after-free)
 * Fix websocket memory leak and two issues with forwarders
 * Fix issue with MODE expansion leading to duplicate msgids (rare)
 * Update Turkish example and help conf
