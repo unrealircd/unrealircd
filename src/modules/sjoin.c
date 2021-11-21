@@ -80,7 +80,7 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 	return (&pparv);
 }
 
-void send_local_chan_mode(MessageTag *recv_mtags, Client *client, Channel *channel, char *modebuf, char *parabuf)
+static void send_local_chan_mode(MessageTag *recv_mtags, Client *client, Channel *channel, char *modebuf, char *parabuf)
 {
 	MessageTag *mtags = NULL;
 	int destroy_channel = 0;
@@ -93,6 +93,17 @@ void send_local_chan_mode(MessageTag *recv_mtags, Client *client, Channel *chann
 	else
 		RunHook(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, -1, &destroy_channel);
 	free_message_tags(mtags);
+}
+
+/** Call send_local_chan_mode() for multiline modes */
+static void send_local_chan_mode_mlm(MessageTag *recv_mtags, Client *client, Channel *channel, MultiLineMode *mlm)
+{
+	if (mlm)
+	{
+		int i;
+		for (i = 0; i < mlm->numlines; i++)
+			send_local_chan_mode(recv_mtags, client, channel, mlm->modeline[i], mlm->paramline[i]);
+	}
 }
 
 /** SJOIN: Synchronize channel modes, +beI lists and users (server-to-server command)
@@ -242,12 +253,8 @@ CMD_FUNC(cmd_sjoin)
 			MultiLineMode *mlm;
 			ap = mp2parv(modebuf, parabuf);
 			mlm = set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
-			if (mlm)
-			{
-				for (i = 0; i < mlm->numlines; i++)
-					send_local_chan_mode(recv_mtags, client, channel, mlm->modeline[i], mlm->paramline[i]);
-				safe_free_multilinemode(mlm);
-			}
+			send_local_chan_mode_mlm(recv_mtags, client, channel, mlm);
+			safe_free_multilinemode(mlm);
 		}
 		/* remove bans */
 		/* reset the buffers */
@@ -617,6 +624,7 @@ CMD_FUNC(cmd_sjoin)
 	if (merge && !nomode)
 	{
 		CoreChannelModeTable *acp;
+		MultiLineMode *mlm;
 		Mode oldmode; /**< The old mode (OUR mode) */
 
 		/* Copy current mode to oldmode (need to duplicate all extended mode params too..) */
@@ -636,8 +644,14 @@ CMD_FUNC(cmd_sjoin)
 			}
 		}
 
+		/* First we set the mode (in memory) BUT we don't send the
+		 * mode change out to anyone, hence the immediate freeing
+		 * of 'mlm'. We do the actual rebuilding of the string and
+		 * sending it out a few lines further down.
+		 */
 		ap = mp2parv(modebuf, parabuf);
-		set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
+		mlm = set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
+		safe_free_multilinemode(mlm);
 
 		/* Good, now we got modes, now for the differencing and outputting of modes
 		 * We first see if any para modes are set.
