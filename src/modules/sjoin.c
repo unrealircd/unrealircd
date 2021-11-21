@@ -605,6 +605,7 @@ CMD_FUNC(cmd_sjoin)
 	if (!merge && !removetheirs && !nomode)
 	{
 		MessageTag *mtags = NULL;
+		MultiLineMode *mlm;
 
 		strlcpy(modebuf, parv[3], sizeof modebuf);
 		parabuf[0] = '\0';
@@ -617,8 +618,9 @@ CMD_FUNC(cmd_sjoin)
 			}
 		}
 		ap = mp2parv(modebuf, parabuf);
-		set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
-		send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
+		mlm = set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
+		send_local_chan_mode_mlm(recv_mtags, client, channel, mlm);
+		safe_free_multilinemode(mlm);
 	}
 
 	if (merge && !nomode)
