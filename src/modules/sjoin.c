@@ -239,13 +239,15 @@ CMD_FUNC(cmd_sjoin)
 		if (!empty_mode(modebuf))
 		{
 			MessageTag *mtags = NULL;
+			MultiLineMode *mlm;
 			ap = mp2parv(modebuf, parabuf);
-			set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
-			/* Hm.. originally modebuf & parabuf were returned via set_mode(), but
-			 * now we use the result from channel_modes().. is that correct?
-			 * They should not differ, right? Still not sure about it, though.
-			 */
-			send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
+			mlm = set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
+			if (mlm)
+			{
+				for (i = 0; i < mlm->numlines; i++)
+					send_local_chan_mode(recv_mtags, client, channel, mlm->modeline[i], mlm->paramline[i]);
+				safe_free_multilinemode(mlm);
+			}
 		}
 		/* remove bans */
 		/* reset the buffers */
