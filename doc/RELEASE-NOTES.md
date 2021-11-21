@@ -1,6 +1,6 @@
-UnrealIRCd 6.0.0-beta3
+UnrealIRCd 6.0.0-beta4
 =======================
-This is the third beta for UnrealIRCd 6. It contains all the planned
+This is the fourth beta for UnrealIRCd 6. It contains all the planned
 features for U6 and now we need the help of the public to test these beta's.
 Caution: this beta may crash spectacularly, behave weird or in unexpected
 ways, so don't run it on production systems!
@@ -14,6 +14,13 @@ to catch more bugs during development. However, if this is a problem for
 you, then answer --disable-asan to the last question in ./Config about
 custom parameters to pass to configure.
 Naturally, the eventual stable release won't use AddressSanitizer.
+
+Changes since beta3:
+* Fix regular users being able to set some channel modes (users without +hoaq)
+* Fix memory leak in SJOIN
+* Fix websocket memory leak and two issues with forwarders
+* Fix issue with MODE expansion leading to duplicate msgids (rare)
+* Update Turkish example and help conf
 
 Changes since beta2:
 * Fix crash with non-matching link block
