@@ -76,6 +76,9 @@ CMD_FUNC(cmd_history)
 	Channel *channel;
 	int lines = HISTORY_LINES_DEFAULT;
 
+	if (!MyUser(client))
+		return;
+
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		history_usage(client);
