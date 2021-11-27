@@ -34,25 +34,13 @@ which snomask. All the +vhoaq channel modes are now modular as well,
 handy for admins who don't want or need halfops or +q/+a.
 For WHOIS it is now customizable in detail who gets to see what.
 
-Breaking changes
------------------
-You can use the unrealircd.conf from UnrealIRCd 5, but you need to make
-a few changes:
-* You need to add `include "snomasks.default.conf";`
-* You need to load a cloaking module explicitly. Assuming you already
-  have a network then add: `loadmodule "cloak_md5";`
-* The log block(s) need to be updated, use something like:
-  ```
-  log {
-          source {
-              !debug;
-              all;
-          }
-          destination {
-              file "ircd.log" { maxsize 100M; }
-          }
-  }
-  ```
+Upgrading
+----------
+If you are upgrading from UnrealIRCd 5 to 6 then you can use your existing
+configuration and files. There's no need to start from scratch.
+
+However, you will need to make a few updates, see
+[Upgrading from 5.x to 6.x](https://www.unrealircd.org/docs/Upgrading_from_5.x).
 
 Enhancements
 -------------
@@ -154,6 +142,28 @@ Changes
 Removed
 --------
 * /REHASH -motd and -opermotd are gone, just use /REHASH
+
+Breaking changes
+-----------------
+See https://www.unrealircd.org/docs/Upgrading_from_5.x, but in short:
+
+You can use the unrealircd.conf from UnrealIRCd 5, but you need to make
+a few changes:
+* You need to add `include "snomasks.default.conf";`
+* You need to load a cloaking module explicitly. Assuming you already
+  have a network then add: `loadmodule "cloak_md5";`
+* The log block(s) need to be updated, use something like:
+  ```
+  log {
+          source {
+              !debug;
+              all;
+          }
+          destination {
+              file "ircd.log" { maxsize 100M; }
+          }
+  }
+  ```
 
 Module coders (API changes)
 ----------------------------
