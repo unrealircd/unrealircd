@@ -77,6 +77,9 @@ fi
 if [ "$GEOIP" = "libmaxminddb" ]; then
 	ARG="$ARG--enable-libmaxminddb "
 fi
+if [ "$SANITIZER" = "asan" ]; then
+	ARG="$ARG--enable-asan "
+fi
 ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
 # remove possibly old instances of curl in ~/unrealircd/lib/
@@ -250,6 +253,7 @@ NOOPEROVERRIDE=""
 OPEROVERRIDEVERIFY=""
 GENCERTIFICATE="1"
 EXTRAPARA=""
+SANITIZER=""
 GEOIP="classic"
 if [ "`eval echo -n 'a'`" = "-n a" ] ; then
 	c="\c"
@@ -755,6 +759,42 @@ if [ -n "$ADVANCED" ] ; then
 	RUN_ADVANCED
 fi
 
+TEST=""
+while [ -z "$TEST" ] ; do
+	if [ "$SANITIZER" = "asan" ] ; then
+		TEST="Yes"
+	else
+		TEST="No"
+	fi
+	echo ""
+	echo "Are you running UnrealIRCd as a test, debugging a problem or developing a module?"
+	echo "Then it is possible to run with AddressSanitizer enabled. This will make it"
+	echo "catch bugs such as out-of-bounds and other memory corruption issues, which can"
+	echo "be really helpful in some cases. The downside is that it will consume a lot"
+	echo "more memory and run slower too. So, only answer 'Yes' if you are OK with this."
+	echo "Also, on some systems (notably FreeBSD), when you enable AddressSanitizer,"
+	echo "UnrealIRCd may fail to start. So when in doubt, answer 'No'."
+	echo "Do you want to enable AddressSanitizer?"
+	echo $n "[$TEST] -> $c"
+	read cc
+	if [ -z "$cc" ] ; then
+		cc=$TEST
+	fi
+	case "$cc" in
+	[Yy]*)
+		SANITIZER="asan"
+		;;
+	[Nn]*)
+		SANITIZER=""
+		;;
+	*)
+		echo ""
+		echo "You must enter either Yes or No"
+		TEST=""
+		;;
+	esac
+done
+
 TEST="$EXTRAPARA"
 echo ""
 echo "Would you like to pass any custom parameters to configure?"
@@ -796,6 +836,7 @@ CURLDIR="$CURLDIR"
 NOOPEROVERRIDE="$NOOPEROVERRIDE"
 OPEROVERRIDEVERIFY="$OPEROVERRIDEVERIFY"
 GENCERTIFICATE="$GENCERTIFICATE"
+SANITIZER="$SANITIZER"
 EXTRAPARA="$EXTRAPARA"
 ADVANCED="$ADVANCED"
 __EOF__
