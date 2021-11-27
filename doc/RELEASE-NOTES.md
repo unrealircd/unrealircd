@@ -38,7 +38,6 @@ Upgrading
 ----------
 If you are upgrading from UnrealIRCd 5 to 6 then you can use your existing
 configuration and files. There's no need to start from scratch.
-
 However, you will need to make a few updates, see
 [Upgrading from 5.x to 6.x](https://www.unrealircd.org/docs/Upgrading_from_5.x).
 
@@ -217,41 +216,3 @@ Client protocol
 ----------------
 * Extended bans now have names instead of letters
 * TODO: document other stuff?
-
-Mental notes / move these wiki
--------------------------------
-These notes are mostly for ourselves:
-
-* Geo ip main configuration (config items may still change!!):
-```
-  set { geoip {
-    check-on-load yes; // check all users already connected and add geoip info to them on module load
-  };};
-```
-  geoip_csv module: always compiled, file locations:
-```
-  set { geoip-csv {
-    ipv4-blocks-file "GeoLite2-Country-Blocks-IPv4.csv"; // don't set for ipv6-only
-    ipv6-blocks-file "GeoLite2-Country-Blocks-IPv6.csv"; // don't set for ipv4-only
-    countries-file "GeoLite2-Country-Locations-en.csv"; // required
-  };};
-```
-  geoip_maxmind module: compiled when system libmaxminddb is present, file location:
-```
-  set { geoip-maxmind {
-    database "GeoLite2-Country.mmdb";
-  };};
-```
-  geoip_classic module: compiled when `--enable-geoip-classic=yes` added to configure, file locations:
-```
-  set { geoip-classic {
-    ipv4-database "GeoIP.dat"; // don't set for ipv6-only
-    ipv6-database "GeoIPv6.dat"; // don't set for ipv4-only
-  };};
-```
-* We now (try to) kill the "old" server when a server links in with the same
-  name, handy when the old server is a zombie waiting for ping timeout.
-  FIXME: isnt this broken?
-FIXME: (wrong) server delinking in case of error may be an issue
-* Antirandom no longer has fullstatus-on-load: maybe warn and ignore
-  the option rather than failing? Was this in the default conf?
