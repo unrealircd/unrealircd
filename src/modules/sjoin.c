@@ -353,7 +353,7 @@ CMD_FUNC(cmd_sjoin)
 			if (!end)
 			{
 				/* this obviously should never happen */
-				unreal_log(ULOG_WARNING, "sjoin", "SJOIN_INVALID_SJSBY", NULL,
+				unreal_log(ULOG_WARNING, "sjoin", "SJOIN_INVALID_SJSBY", client,
 					   "SJOIN for channel $channel has invalid SJSBY in item '$item' (from $client)",
 					   log_data_channel("channel", channel),
 					   log_data_string("item", s));
@@ -365,7 +365,7 @@ CMD_FUNC(cmd_sjoin)
 			if (!p)
 			{
 				/* missing setby parameter */
-				unreal_log(ULOG_WARNING, "sjoin", "SJOIN_INVALID_SJSBY", NULL,
+				unreal_log(ULOG_WARNING, "sjoin", "SJOIN_INVALID_SJSBY", client,
 					   "SJOIN for channel $channel has invalid SJSBY in item '$item' (from $client)",
 					   log_data_channel("channel", channel),
 					   log_data_string("item", s));
