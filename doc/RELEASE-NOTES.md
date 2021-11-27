@@ -1,47 +1,27 @@
-UnrealIRCd 6.0.0-beta4
+UnrealIRCd 6.0.0-rc1
 =======================
-This is the fourth beta for UnrealIRCd 6. It contains all the planned
-features for U6 and now we need the help of the public to test these beta's.
-Caution: this beta may crash spectacularly, behave weird or in unexpected
-ways, so don't run it on production systems!
+This is the first Release Candidate for UnrealIRCd 6.
+
+The "Release Candidate" stage means that the code is (soon) expected to be
+of production quality. It should no longer crash or have major issues,
+but we need help from the public to verify that this is indeed the case.
+So, feel free to fire up a U6 test server, link in an U6 server to your
+existing U5 network, upgrade a not-so-important server from U5 to U6,
+play around, and help us!
+
 If you find any issues, please report them at https://bugs.unrealircd.org/.
 This way, you help us getting ready for a real stable UnrealIRCd 6 release.
+Similarly, if you are missing any documentation on U6 features, upgrading,
+or think some docs or instructions could be better, let us know as well.
 
-Note that [AddressSanitizer](https://en.wikipedia.org/wiki/AddressSanitizer)
-is enabled in these builds, which will cause UnrealIRCd to use a lot more
-memory and run more slowly than normal. AddressSanitizer helps us greatly
-to catch more bugs during development. However, if this is a problem for
-you, then answer --disable-asan to the last question in ./Config about
-custom parameters to pass to configure.
-Naturally, the eventual stable release won't use AddressSanitizer.
+If you can afford it during testing, answer *Yes* to the `./Config` question
+about [AddressSanitizer](https://en.wikipedia.org/wiki/AddressSanitizer)
+as it allows better testing (catches more bugs). But, if you don't want
+this performance penalty, or if UnrealIRCd fails to start with a mysterious
+error, then you can answer *No* there, that is totally fine too.
 
-Changes since beta3:
-* Fix regular users being able to set some channel modes (users without +hoaq)
-* Fix memory leak in SJOIN
-* Fix potential crash with KICK (read-after-free)
-* Fix websocket memory leak and two issues with forwarders
-* Fix issue with MODE expansion leading to duplicate msgids (rare)
-* Update Turkish example and help conf
-
-Changes since beta2:
-* Fix crash with non-matching link block
-* Update MODE to behave better in mixed U5-U6 networks, preventing desyncs.
-* Only allow setting of snomasks that actually exist in log { } blocks
-* Fix nick-flood message appearing even though the user was not changing nicks
-* Added set::server-notice-colors and oper::server-notice-colors
-* Only fetch updates of GEO IP database every 14 days
-* Add escaping option for URLs using single quotes, needed for extjwt.
-* Fewer (duplicate) succesful linking notices
-
-Changes between beta1 and beta2:
-* Fix 15 server notices (missing info, formatting or duplicate)
-* Fix several memory leaks
-* Fix wrong oper information shown in /WHOIS to other opers
-* Make SQUIT code faster (matters for very large networks)
-* Add another check for SID collision
-
-If you are already using a 6.0.0 beta then you can upgrade to
-the latest one using `./unrealircd upgrade`
+If you were previously using a 6.0.0-beta then you can upgrade to
+the release candidate using `./unrealircd upgrade`
 
 Summary
 --------
