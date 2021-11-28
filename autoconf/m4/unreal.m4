@@ -397,7 +397,7 @@ AC_DEFUN([CHECK_LIBMAXMINDDB],
 	[
 		dnl see if the system provides it
 		has_system_libmaxminddb="no"
-		PKG_CHECK_MODULES([LIBMAXMINDDB], [libmaxminddb >= 1.6.0],
+		PKG_CHECK_MODULES([LIBMAXMINDDB], [libmaxminddb >= 1.4.3],
 		                  [has_system_libmaxminddb=yes])
 		AS_IF([test "x$has_system_libmaxminddb" = "xyes"],
 		[
