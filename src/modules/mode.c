@@ -1047,6 +1047,7 @@ CMD_FUNC(_cmd_umode)
 	short rpterror = 0, umode_restrict_err = 0, chk_restrict = 0, modex_err = 0;
 
 	what = MODE_ADD;
+	*oldsnomask = '\0';
 
 	if (parc < 2)
 	{
