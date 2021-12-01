@@ -2110,16 +2110,18 @@ int hooktype_is_invited(Client *client, Channel *channel, int *invited);
 /** Called after a local user has changed the nick name (function prototype for HOOKTYPE_POST_LOCAL_NICKCHANGE).
  * @param client		The client
  * @param mtags         	Message tags associated with the event
+ * @param oldnick		The nick name before the nick change
  * @return The return value is ignored (use return 0)
  */
-int hooktype_post_local_nickchange(Client *client, MessageTag *mtags);
+int hooktype_post_local_nickchange(Client *client, MessageTag *mtags, const char *oldnick);
 
 /** Called after a remote user has changed the nick name (function prototype for HOOKTYPE_POST_REMOTE_NICKCHANGE).
  * @param client		The client
  * @param mtags         	Message tags associated with the event
+ * @param oldnick		The nick name before the nick change
  * @return The return value is ignored (use return 0)
  */
-int hooktype_post_remote_nickchange(Client *client, MessageTag *mtags);
+int hooktype_post_remote_nickchange(Client *client, MessageTag *mtags, const char *oldnick);
 
 /** Called when user name or user host has changed.
  * @param client		The client whose user@host has changed

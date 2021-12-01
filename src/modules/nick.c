@@ -105,6 +105,7 @@ CMD_FUNC(cmd_nick_remote)
 	int ishold;
 	Client *acptr;
 	char nick[NICKLEN + 2];
+	char oldnick[NICKLEN + 1];
 	time_t lastnick = 0;
 	int differ = 1;
 	unsigned char removemoder = (client->umodes & UMODE_REGNICK) ? 1 : 0;
@@ -113,6 +114,7 @@ CMD_FUNC(cmd_nick_remote)
 	/* 'client' is always the fully registered user doing the nick change */
 
 	strlcpy(nick, parv[1], NICKLEN + 1);
+	strlcpy(oldnick, client->name, sizeof(oldnick));
 
 	if (parc > 2)
 		lastnick = atol(parv[2]);
@@ -216,7 +218,7 @@ CMD_FUNC(cmd_nick_remote)
 	strlcpy(client->name, nick, sizeof(client->name));
 	add_to_client_hash_table(nick, client);
 
-	RunHook(HOOKTYPE_POST_REMOTE_NICKCHANGE, client, mtags);
+	RunHook(HOOKTYPE_POST_REMOTE_NICKCHANGE, client, mtags, oldnick);
 	free_message_tags(mtags);
 }
 
@@ -228,12 +230,16 @@ CMD_FUNC(cmd_nick_local)
 	TKL *tklban;
 	int ishold;
 	Client *acptr;
-	char nick[NICKLEN + 2], descbuf[BUFSIZE];
+	char nick[NICKLEN + 2];
+	char oldnick[NICKLEN + 1];
+	char descbuf[BUFSIZE];
 	Membership *mp;
 	int newuser = 0;
 	unsigned char removemoder = (client->umodes & UMODE_REGNICK) ? 1 : 0;
 	Hook *h;
 	int ret;
+
+	strlcpy(oldnick, client->name, sizeof(oldnick));
 
 	/* Enforce minimum nick length */
 	if (iConf.min_nick_length && !IsOper(client) && !IsULine(client) && strlen(parv[1]) < iConf.min_nick_length)
@@ -455,7 +461,7 @@ CMD_FUNC(cmd_nick_local)
 		sendto_one(client, NULL, ":%s MODE %s :-r", me.name, client->name);
 
 	if (MyUser(client) && !newuser)
-		RunHook(HOOKTYPE_POST_LOCAL_NICKCHANGE, client, recv_mtags);
+		RunHook(HOOKTYPE_POST_LOCAL_NICKCHANGE, client, recv_mtags, oldnick);
 }
 
 /*

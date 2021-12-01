@@ -30,7 +30,7 @@
 CMD_FUNC(cmd_monitor);
 char *monitor_isupport_param(void);
 int monitor_nickchange(Client *client, MessageTag *mtags, const char *newnick);
-int monitor_post_nickchange(Client *client, MessageTag *mtags);
+int monitor_post_nickchange(Client *client, MessageTag *mtags, const char *oldnick);
 int monitor_quit(Client *client, MessageTag *mtags, const char *comment);
 int monitor_connect(Client *client);
 int monitor_notification(Client *client, Watch *watch, Link *lp, int event);
@@ -87,7 +87,7 @@ int monitor_nickchange(Client *client, MessageTag *mtags, const char *newnick)
 	return 0;
 }
 
-int monitor_post_nickchange(Client *client, MessageTag *mtags)
+int monitor_post_nickchange(Client *client, MessageTag *mtags, const char *oldnick)
 {
 	watch_check(client, WATCH_EVENT_ONLINE, monitor_notification);
 	return 0;

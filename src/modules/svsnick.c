@@ -65,6 +65,7 @@ CMD_FUNC(cmd_svsnick)
 	Client *ocptr; /* Other client */
 	MessageTag *mtags = NULL;
 	char nickname[NICKLEN+1];
+	char oldnickname[NICKLEN+1];
 
 	if (!IsULine(client) || parc < 4 || (strlen(parv[2]) > NICKLEN))
 		return; /* This looks like an error anyway -Studded */
@@ -91,6 +92,8 @@ CMD_FUNC(cmd_svsnick)
 	if (!strcmp(acptr->name, nickname))
 		return;
 
+	strlcpy(oldnickname, acptr->name, sizeof(oldnickname));
+
 	if (acptr != ocptr)
 		acptr->umodes &= ~UMODE_REGNICK;
 	acptr->lastnick = atol(parv[3]);
@@ -111,6 +114,6 @@ CMD_FUNC(cmd_svsnick)
 
 	strlcpy(acptr->name, nickname, sizeof acptr->name);
 	add_to_client_hash_table(nickname, acptr);
-	RunHook(HOOKTYPE_POST_LOCAL_NICKCHANGE, acptr, mtags);
+	RunHook(HOOKTYPE_POST_LOCAL_NICKCHANGE, acptr, mtags, oldnickname);
 	free_message_tags(mtags);
 }
