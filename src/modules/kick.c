@@ -300,7 +300,7 @@ CMD_FUNC(cmd_kick)
 		}
 
 		/* target is +a/+q, and we are not +q? */
-		if (check_channel_access_string(target_member_modes, "qa") && !check_channel_access_string(client_member_modes, "a"))
+		if (check_channel_access_string(target_member_modes, "qa") && !check_channel_access_string(client_member_modes, "q"))
 		{
 			if (client == target)
 				goto attack; /* kicking self == ok */
