@@ -923,6 +923,7 @@ extern MODVAR int debugfd;
 extern void convert_to_absolute_path(char **path, const char *reldir);
 extern int has_user_mode(Client *acptr, char mode);
 extern int has_channel_mode(Channel *channel, char mode);
+extern int has_channel_mode_raw(Cmode_t m, char mode);
 extern Cmode_t get_extmode_bitbychar(char m);
 extern long find_user_mode(char mode);
 extern void start_listeners(void);

@@ -581,6 +581,18 @@ int has_channel_mode(Channel *channel, char mode)
 	return 0; /* Not found */
 }
 
+/** Returns 1 if channel has this mode is set and 0 if not */
+int has_channel_mode_raw(Cmode_t m, char mode)
+{
+	Cmode *cm;
+
+	for (cm=channelmodes; cm; cm = cm->next)
+		if ((cm->letter == mode) && (m & cm->mode))
+			return 1;
+
+	return 0; /* Not found */
+}
+
 /** Get the extended channel mode 'bit' value (eg: 0x20) by character (eg: 'Z') */
 Cmode_t get_extmode_bitbychar(char m)
 {

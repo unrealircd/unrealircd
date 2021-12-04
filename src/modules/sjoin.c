@@ -662,6 +662,18 @@ CMD_FUNC(cmd_sjoin)
 		parabuf[0] = '\0';
 		b = 1;
 
+		/* Check if we had +s and it became +p, then revert it silently (as it is no-change) */
+		if (has_channel_mode_raw(oldmode.mode, 's') && has_channel_mode(channel, 'p'))
+		{
+			/* stay +s ! */
+			long mode_p = get_extmode_bitbychar('p');
+			long mode_s = get_extmode_bitbychar('s');
+			channel->mode.mode &= ~mode_p;
+			channel->mode.mode |= mode_s;
+			/* TODO: all the code of above would ideally be in a module */
+		}
+		/* (And the other condition, +p to +s, is already handled below by the generic code) */
+
 		/* First, check if we had something that is now gone
 		 * note that: oldmode.* = us, channel->mode.* = merged.
 		 */
@@ -683,20 +695,6 @@ CMD_FUNC(cmd_sjoin)
 			}
 		}
 
-#if 0
-		// FIXME: fix this case of +p/+s merging... which should end up in +s:
-		// can use get_extmode_bitbychar() or shit but probably should call a hook (or sjoin thingy) instead?
-
-		/* Check if we had +s and it became +p, then revert it... */
-		if ((oldmode.mode & MODE_SECRET) && (channel->mode.mode & MODE_PRIVATE))
-		{
-			/* stay +s ! */
-			channel->mode.mode &= ~MODE_PRIVATE;
-			channel->mode.mode |= MODE_SECRET;
-			Addsingle('p'); /* - */
-			queue_s = 1;
-		}
-#endif
 		if (b > 1)
 		{
 			Addsingle('+');
