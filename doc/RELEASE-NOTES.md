@@ -1,18 +1,17 @@
-UnrealIRCd 6.0.0-rc1
+UnrealIRCd 6.0.0-rc2
 =======================
-This is the first Release Candidate for UnrealIRCd 6.
+This is the second Release Candidate for UnrealIRCd 6.
+
+The plan is to have a stable 6.0.0 release the week before Christmas, so
+please help us test this (possibly last) Release Candidate to ensure it's good!
+Fire up an U6 test server, link in an U6 server to your existing U5 network,
+upgrade a server from U5 to U6. Test real-world scenarios and play around.
+If you find any issues (big or small), then please report them at
+https://bugs.unrealircd.org/.
 
 The "Release Candidate" stage means that the code is (soon) expected to be
 of production quality. It should no longer crash or have major issues,
 but we need help from the public to verify that this is indeed the case.
-So, feel free to fire up a U6 test server, link in an U6 server to your
-existing U5 network, upgrade a not-so-important server from U5 to U6,
-play around, and help us!
-
-If you find any issues, please report them at https://bugs.unrealircd.org/.
-This way, you help us getting ready for a real stable UnrealIRCd 6 release.
-Similarly, if you are missing any documentation on U6 features, upgrading,
-or think some docs or instructions could be better, let us know as well.
 
 If you can afford it during testing, answer *Yes* to the `./Config` question
 about [AddressSanitizer](https://en.wikipedia.org/wiki/AddressSanitizer)
@@ -20,8 +19,16 @@ as it allows better testing (catches more bugs). But, if you don't want
 this performance penalty, or if UnrealIRCd fails to start with a mysterious
 error, then you can answer *No* there, that is totally fine too.
 
-If you were previously using a 6.0.0-beta then you can upgrade to
-the release candidate using `./unrealircd upgrade`
+If you were previously using a 6.0.0 beta or RC then you can upgrade to
+the latest release (candidate) using `./unrealircd upgrade`
+
+Change between 6.0.0-rc1 and 6.0.0-rc2:
+* Documentation changes (HELPOP EXTBANS, HELPOP SNOMASK, etc.)
+* Fix a problem where a +a (chanadmin) could kick a +q (chanowner)
+* Fix a possible KICK problem with some IRC clients (now behave like U5)
+* Porting over some changes from 5.x to 6.x that were forgotten earlier
+  (curl-ca-bundle.crt, shipped c-ares, SVSLOGIN without SASL)
+* Some other small fixes, eg +s/+p handling on netmerge
 
 Summary
 --------
