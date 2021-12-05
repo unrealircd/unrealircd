@@ -1293,6 +1293,7 @@ void send_invalid_channelname(Client *client, const char *channelname)
 
 /** Is the provided string possibly an extended ban?
  * Note that it still may not exist, it just tests the first part.
+ * @param str	The string to check (eg "~account:xyz")
  */
 int is_extended_ban(const char *str)
 {
@@ -1309,6 +1310,21 @@ int is_extended_ban(const char *str)
 		}
 	}
 	return 0;
+}
+
+/** Is the provided string possibly an extended server ban?
+ * Actually this is only a very light check.
+ * It may still not exist, it just tests the first part.
+ * @param str	The string to check (eg "~account:xyz")
+ * The only difference between this and is_extended_ban()
+ * is that we allow a % at the beginning for soft-bans.
+ * @see is_extended_ban()
+ */
+int is_extended_server_ban(const char *str)
+{
+	if (*str == '%')
+		str++;
+	return is_extended_ban(str);
 }
 
 /** Check if it is an empty (useless) mode, namely "", "+" or "-".

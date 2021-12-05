@@ -1031,6 +1031,7 @@ extern void short_motd(Client *client);
 extern int should_show_connect_info(Client *client);
 extern void send_invalid_channelname(Client *client, const char *channelname);
 extern int is_extended_ban(const char *str);
+extern int is_extended_server_ban(const char *str);
 extern int empty_mode(const char *m);
 extern void free_multilinemode(MultiLineMode *m);
 #define safe_free_multilinemode(m) do { if (m) free_multilinemode(m); m = NULL; } while(0)

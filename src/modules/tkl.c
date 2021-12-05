@@ -609,7 +609,7 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	{
 		if (!strcmp(cep->name, "mask"))
 		{
-			if (is_extended_ban(cep->value))
+			if (is_extended_server_ban(cep->value))
 			{
 				char mask1buf[512], mask2buf[512];
 				char *err = NULL;
@@ -791,7 +791,7 @@ void config_create_tkl_except(char *mask, char *bantypes)
 		mask++;
 	}
 	strlcpy(buf, mask, sizeof(buf));
-	if (is_extended_ban(buf))
+	if (is_extended_server_ban(buf))
 	{
 		char *err = NULL;
 		if (!parse_extended_server_ban(buf, NULL, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
@@ -1288,13 +1288,20 @@ int parse_extended_server_ban(const char *mask_in, Client *client, char **error,
 	BanContext *b = NULL;
 	char    mask[USERLEN + NICKLEN + HOSTLEN + 32]; // same as extban_conv_param_nuh_or_extban()
 	char newmask[USERLEN + NICKLEN + HOSTLEN + 32];
+	char soft_ban = 0;
 
 	*error = NULL;
 	if (buf1 && buf2)
 		*buf1 = *buf2 = '\0';
 
 	/* Work on a copy */
-	strlcpy(mask, mask_in, sizeof(mask));
+	if (*mask_in == '%')
+	{
+		strlcpy(mask, mask_in+1, sizeof(mask));
+		soft_ban = 1;
+	} else {
+		strlcpy(mask, mask_in, sizeof(mask));
+	}
 
 	extban = findmod_by_bantype(mask, &nextbanstr);
 	if (!extban || !(extban->options & EXTBOPT_TKL))
@@ -1360,7 +1367,10 @@ int parse_extended_server_ban(const char *mask_in, Client *client, char **error,
 		p++;
 		save = *p;
 		*p = '\0';
-		strlcpy(buf1, newmask, buf1len); /* eg ~S: */
+		/* First buffer is eg ~S: or %~S: */
+		snprintf(buf1, buf1len, "%s%s",
+		         soft_ban ? "%" : "",
+		         newmask);
 		*p = save;
 		strlcpy(buf2, p, buf2len); /* eg 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef */
 	}
@@ -1445,7 +1455,7 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 	}
 
 	/* Check if it's an extended server ban */
-	if (is_extended_ban(mask))
+	if (is_extended_server_ban(mask))
 	{
 		char *err;
 
@@ -1754,7 +1764,7 @@ CMD_FUNC(cmd_eline)
 		return;
 
 	/* Check if it's an extended server ban */
-	if (is_extended_ban(mask))
+	if (is_extended_server_ban(mask))
 	{
 		char *err;
 		if (!parse_extended_server_ban(mask, client, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
@@ -2830,7 +2840,7 @@ char *_tkl_uhost(TKL *tkl, char *buf, size_t buflen, int options)
 {
 	if (TKLIsServerBan(tkl))
 	{
-		if (is_extended_ban(tkl->ptr.serverban->usermask))
+		if (is_extended_server_ban(tkl->ptr.serverban->usermask))
 		{
 			ircsnprintf(buf, buflen, "%s%s%s",
 				(!(options & NO_SOFT_PREFIX) && (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT)) ? "%" : "",
@@ -2843,7 +2853,7 @@ char *_tkl_uhost(TKL *tkl, char *buf, size_t buflen, int options)
 	} else
 	if (TKLIsBanException(tkl))
 	{
-		if (is_extended_ban(tkl->ptr.banexception->usermask))
+		if (is_extended_server_ban(tkl->ptr.banexception->usermask))
 		{
 			ircsnprintf(buf, buflen, "%s%s%s",
 				(!(options & NO_SOFT_PREFIX) && (tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT)) ? "%" : "",
@@ -5013,7 +5023,7 @@ int _match_user(const char *rmask, Client *client, int options)
 	strlcpy(mask, rmask, sizeof(mask));
 
 	if ((options & MATCH_CHECK_EXTENDED) &&
-	    is_extended_ban(mask) &&
+	    is_extended_server_ban(mask) &&
 	    client->user)
 	{
 		/* Check user properties / extbans style */
@@ -5163,7 +5173,7 @@ int _match_user_extended_server_ban(const char *banstr, Client *client)
 	BanContext *b;
 	int ret;
 
-	if (!is_extended_ban(banstr))
+	if (!is_extended_server_ban(banstr))
 		return 0; /* we should never have been called */
 
 	extban = findmod_by_bantype(banstr, &nextbanstr);
