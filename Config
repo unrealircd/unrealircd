@@ -287,6 +287,22 @@ else
 	n="-n"
 fi
 
+date|egrep '2021|2022' 1>/dev/null 2>&1
+if [ "$?" -ne 0 ]; then
+	echo "*** WARNING ***"
+	echo "UnrealIRCd 5.x will no longer be supported after June 1, 2023."
+	echo "You should upgrade to a newer UnrealIRCd version before that date."
+	echo "See https://www.unrealircd.org/docs/UnrealIRCd_5_EOL"
+	echo $n . $c
+	sleep 1
+	echo $n . $c
+	sleep 1
+	echo $n . $c
+	echo ""
+	sleep 1
+	echo "Press ENTER to continue"
+	read xyz
+fi
 
 #parse arguments
 IMPORTEDSETTINGS=""
