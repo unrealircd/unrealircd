@@ -5,12 +5,10 @@ This release contains only a few changes.
 
 Important:
 * UnrealIRCd 6.x will be the new "stable" (release Dec 2021)
-* UnrealIRCd 5.2.x ("oldstable") stays supported...:
-  * Until June 1, 2022: security and other bug fixes (no more feature enhancements)
-  * June 1, 2022 - June 1, 2023: security-fixes only
-  * After June 1, 2023: end of all support
-  * See [UnrealIRCd 5 EOL](https://www.unrealircd.org/docs/UnrealIRCd_5_EOL)
-    for more information.
+* UnrealIRCd 5.2.x ("oldstable")
+  [end of support dates](https://www.unrealircd.org/docs/UnrealIRCd_5_EOL):
+  * Bug fixes until June 1, 2022 (no more feature enhancements)
+  * Security fixes until June 1, 2023
 
 Fixes:
 * Memory leak in websocket module
