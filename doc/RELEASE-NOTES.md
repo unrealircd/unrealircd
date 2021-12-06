@@ -11,6 +11,9 @@ Important:
   * Security fixes until June 1, 2023
 
 Fixes:
+* set::anti-flood::connect-flood was only expiring entries every
+  2 minutes instead of the configured amount (until the first REHASH,
+  after that it was all good).
 * Memory leak in websocket module
 * Send WALLOPS back to the sender too
 
