@@ -1,5 +1,23 @@
-UnrealIRCd 5.2.2 Release Notes
+UnrealIRCd 5.2.3-git Release Notes
 ===============================
+
+This release contains only a few changes.
+
+Important:
+* UnrealIRCd 6 will be the new "stable" (release Dec 2021)
+* UnrealIRCd 5 ("oldstable") will stay supported until
+[June 1, 2023](https://www.unrealircd.org/docs/UnrealIRCd_5_EOL).
+
+Fixes:
+* Memory leak in websocket module
+* Send WALLOPS back to the sender too
+
+Changes:
+* Documentation updates (HELPOP)
+* Add information on EOL date
+
+UnrealIRCd 5.2.2
+-----------------
 
 Previous release 5.2.1.1 turned out to be good and stable. This 5.2.2 release
 only contains some minor changes.
