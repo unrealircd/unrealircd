@@ -289,12 +289,7 @@ void init_hash(void)
 
 	memset(channelTable, 0, sizeof(channelTable));
 	memset(watchTable, 0, sizeof(watchTable));
-
 	memset(ThrottlingHash, 0, sizeof(ThrottlingHash));
-	/* do not call init_throttling() here, as
-	 * config file has not been read yet.
-	 * The hash table is ready, anyway.
-	 */
 
 	if (strcmp(BASE_VERSION, &unreallogo[337]))
 		loop.tainted = 1;
@@ -923,14 +918,6 @@ void update_throttling_timer_settings(void)
 	eInfo.flags = EMOD_EVERY;
 	eInfo.every_msec = v;
 	EventMod(EventFind("throttling_check_expire"), &eInfo);
-}
-
-void init_throttling()
-{
-	EventAdd(NULL, "throttling_check_expire", throttling_check_expire, NULL, 123456, 0);
-	/* Note: the every_ms value (123,456) will be adjusted on boot and rehash
-	 * via the update_throttling_timer_settings() function.
-	 */
 }
 
 uint64_t hash_throttling(char *ip)
