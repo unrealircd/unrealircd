@@ -29,6 +29,7 @@ MODVAR Event *events = NULL;
 
 extern EVENT(unrealdns_removeoldrecords);
 extern EVENT(unrealdb_expire_secret_cache);
+extern EVENT(deprecated_notice);
 
 /** Add an event, a function that will run at regular intervals.
  * @param module	Module that this event belongs to
@@ -237,6 +238,7 @@ void SetupEvents(void)
 	EventAdd(NULL, "garbage", garbage_collect, NULL, GARBAGE_COLLECT_EVERY*1000, 0);
 	EventAdd(NULL, "loop", loop_event, NULL, 1000, 0);
 	EventAdd(NULL, "unrealdns_removeoldrecords", unrealdns_removeoldrecords, NULL, 15000, 0);
+	EventAdd(NULL, "deprecated_notice", deprecated_notice, NULL, ((86400*7)-(3600*8))*1000, 0);
 	EventAdd(NULL, "check_pings", check_pings, NULL, 1000, 0);
 	EventAdd(NULL, "check_deadsockets", check_deadsockets, NULL, 1000, 0);
 	EventAdd(NULL, "handshake_timeout", handshake_timeout, NULL, 1000, 0);

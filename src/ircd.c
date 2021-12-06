@@ -486,6 +486,18 @@ EVENT(check_deadsockets)
 	}
 }
 
+EVENT(deprecated_notice)
+{
+	/* Send a warning to opers currently online every week after January 1, 2023 */
+	if (TStime() > 1672527600)
+	{
+		char *msg = "[WARNING] UnrealIRCd 5.x is no longer supported after June 1, 2023. "
+		            "See https://www.unrealircd.org/docs/UnrealIRCd_5_EOL";
+		sendto_realops("%s", msg);
+		ircd_log(LOG_ERROR, "%s", msg);
+	}
+}
+
 /*
 ** bad_command
 **	This is called when the commandline is not acceptable.
@@ -1177,6 +1189,13 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifndef _WIN32
 	fprintf(stderr, "Dynamic configuration initialized.. booting IRCd.\n");
 #endif
+	/* Warn about this starting September 1, 2022 (9 months in advance) */
+	if (time(NULL) > 1661983200)
+	{
+		fprintf(stderr, "\n"
+		                "[WARNING] UnrealIRCd 5.x is no longer supported after June 1, 2023.\n"
+		                "          See https://www.unrealircd.org/docs/UnrealIRCd_5_EOL\n\n");
+	}
 	open_debugfile();
 	me.local->port = 6667; /* pointless? */
 	init_sys();
