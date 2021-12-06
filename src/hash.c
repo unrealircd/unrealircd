@@ -617,14 +617,6 @@ void update_throttling_timer_settings(void)
 	EventMod(EventFind("throttling_check_expire"), &eInfo);
 }
 
-void init_throttling()
-{
-	EventAdd(NULL, "throttling_check_expire", throttling_check_expire, NULL, 123456, 0);
-	/* Note: the every_ms value (123,456) will be adjusted on boot and rehash
-	 * via the update_throttling_timer_settings() function.
-	 */
-}
-
 uint64_t hash_throttling(const char *ip)
 {
 	return siphash(ip, siphashkey_throttling) % THROTTLING_HASH_TABLE_SIZE;

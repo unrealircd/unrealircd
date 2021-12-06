@@ -224,4 +224,5 @@ void SetupEvents(void)
 	EventAdd(NULL, "handshake_timeout", handshake_timeout, NULL, 1000, 0);
 	EventAdd(NULL, "tls_check_expiry", tls_check_expiry, NULL, (86400/2)*1000, 0);
 	EventAdd(NULL, "unrealdb_expire_secret_cache", unrealdb_expire_secret_cache, NULL, 61000, 0);
+	EventAdd(NULL, "throttling_check_expire", throttling_check_expire, NULL, 1000, 0);
 }

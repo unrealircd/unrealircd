@@ -1152,7 +1152,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 
 	fix_timers();
 	write_pidfile();
-	init_throttling();
 	loop.booted = 1;
 #if defined(HAVE_SETPROCTITLE)
 	setproctitle("%s", me.name);
