@@ -107,5 +107,5 @@ CMD_FUNC(cmd_wallops)
 
 	sendto_wallops(client->direction, client, ":%s WALLOPS :%s", client->name, message);
 	if (MyUser(client))
-		sendto_one(client, NULL, ":%s WALLOPS :%s", client->name, message);
+		sendto_prefix_one(client, client, NULL, ":%s WALLOPS :%s", client->name, message);
 }
