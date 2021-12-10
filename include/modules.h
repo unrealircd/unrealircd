@@ -1291,7 +1291,6 @@ int hooktype_pre_local_join(Client *client, Channel *channel, const char *key);
  * @param client		The client
  * @param channel		The channel the user wants to join
  * @param mtags         	Message tags associated with the event
- * @param key			Channel key (can be NULL)
  * @return The return value is ignored (use return 0)
  */
 int hooktype_local_join(Client *client, Channel *channel, MessageTag *mtags);
@@ -1300,7 +1299,6 @@ int hooktype_local_join(Client *client, Channel *channel, MessageTag *mtags);
  * @param client		The client
  * @param channel		The channel the user wants to join
  * @param mtags         	Message tags associated with the event
- * @param key			Channel key (can be NULL)
  * @return The return value is ignored (use return 0)
  */
 int hooktype_remote_join(Client *client, Channel *channel, MessageTag *mtags);

@@ -193,7 +193,7 @@ void parse(Client *cptr, char *buffer, int length)
 	strlcpy(backupbuf, buffer, sizeof(backupbuf));
 
 #if defined(RAWCMDLOGGING)
-	unreal_log(ULOG_INFO, "traffic", "TRAFFIC_IN", cptr,
+	unreal_log(ULOG_INFO, "rawtraffic", "TRAFFIC_IN", cptr,
 		   "<- $client: $data",
 		   log_data_string("data", backupbuf));
 #endif

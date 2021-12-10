@@ -1282,7 +1282,7 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 
 		/* Now actually WRITE to the log... */
 		write_error = 0;
-		if ((l->type == LOG_TYPE_JSON) && strcmp(subsystem, "traffic"))
+		if ((l->type == LOG_TYPE_JSON) && strcmp(subsystem, "rawtraffic"))
 		{
 			n = write(l->logfd, json_serialized, strlen(json_serialized));
 			if (n < strlen(json_serialized))
@@ -1431,7 +1431,7 @@ void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *e
 		return;
 
 	/* Never send these */
-	if (!strcmp(subsystem, "traffic"))
+	if (!strcmp(subsystem, "rawtraffic"))
 		return;
 
 	snomask_destinations = log_to_snomask(loglevel, subsystem, event_id);
