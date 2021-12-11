@@ -345,7 +345,7 @@ extern void free_client(Client *);
 extern void free_link(Link *);
 extern void free_ban(Ban *);
 extern void free_user(Client *);
-extern int list_length(Link *lp);
+extern int link_list_length(Link *lp);
 extern int find_str_match_link(Link *, const char *);
 extern void free_str_list(Link *);
 extern Link *make_link();

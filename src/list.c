@@ -384,7 +384,7 @@ void free_link(Link *lp)
 }
 
 /** Returns the length (entry count) of a +beI list */
-int list_length(Link *lp)
+int link_list_length(Link *lp)
 {
 	int  count = 0;
 
