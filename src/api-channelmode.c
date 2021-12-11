@@ -337,7 +337,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 
 		if (req.type == CMODE_NORMAL)
 		{
-			for (l = 1; l < INT_MAX/2; l *= 2)
+			for (l = 1; l < LONG_MAX/2; l *= 2)
 			{
 				found = 0;
 				for (cm=channelmodes; cm; cm = cm->next)
