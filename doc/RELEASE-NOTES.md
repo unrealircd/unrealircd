@@ -10,16 +10,21 @@ Important:
   * Bug fixes until June 1, 2022 (no more feature enhancements)
   * Security fixes until June 1, 2023
 
+Enhancements:
+* Spanish example conf was added (`conf/help/example.es.conf`)
+
 Fixes:
 * set::anti-flood::connect-flood was only expiring entries every
   2 minutes instead of the configured amount (until the first REHASH,
   after that it was all good).
 * Memory leak in websocket module
-* Send WALLOPS back to the sender too
+* Send `WALLOPS` back to the sender too
 
 Changes:
-* Documentation updates (HELPOP)
+* Update `HELPOP` docs
 * Add information on EOL date
+* Add `CONTRIBUTING.md` file with a reference to docs on
+  [https://www.unrealircd.org/docs/Contributing](how people can help out).
 
 UnrealIRCd 5.2.2
 -----------------
