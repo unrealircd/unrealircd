@@ -1,34 +1,6 @@
-UnrealIRCd 6.0.0-rc2
-=======================
-This is the second Release Candidate for UnrealIRCd 6.
-
-The plan is to have a stable 6.0.0 release the week before Christmas, so
-please help us test this (possibly last) Release Candidate to ensure it's good!
-Fire up an U6 test server, link in an U6 server to your existing U5 network,
-upgrade a server from U5 to U6. Test real-world scenarios and play around.
-If you find any issues (big or small), then please report them at
-https://bugs.unrealircd.org/.
-
-The "Release Candidate" stage means that the code is (soon) expected to be
-of production quality. It should no longer crash or have major issues,
-but we need help from the public to verify that this is indeed the case.
-
-If you can afford it during testing, answer *Yes* to the `./Config` question
-about [AddressSanitizer](https://en.wikipedia.org/wiki/AddressSanitizer)
-as it allows better testing (catches more bugs). But, if you don't want
-this performance penalty, or if UnrealIRCd fails to start with a mysterious
-error, then you can answer *No* there, that is totally fine too.
-
-If you were previously using a 6.0.0 beta or RC then you can upgrade to
-the latest release (candidate) using `./unrealircd upgrade`
-
-Change between 6.0.0-rc1 and 6.0.0-rc2:
-* Documentation changes (HELPOP EXTBANS, HELPOP SNOMASK, etc.)
-* Fix a problem where a +a (chanadmin) could kick a +q (chanowner)
-* Fix a possible KICK problem with some IRC clients (now behave like U5)
-* Porting over some changes from 5.x to 6.x that were forgotten earlier
-  (curl-ca-bundle.crt, shipped c-ares, SVSLOGIN without SASL)
-* Some other small fixes, eg +s/+p handling on netmerge
+UnrealIRCd 6.0.0-git
+=================
+This WILL BE the first stable release of UnrealIRCd 6.
 
 Summary
 --------
@@ -130,11 +102,11 @@ Enhancements
     URL you can use 'value' instead of "value".
 * Invite notification: set `set::normal-user-invite-notification yes;` to make
   chanops receive information about normal users inviting someone to their channel.
-  (TODO: Not completely sure about the setting name)
+  The name of this setting may change in a later version.
 * Websocket: you can add a `listen::options::websocket::forward 1.2.3.4` option
   to make unrealircd accept a `Forwarded` (RFC 7239) header from a reverse proxy
   connecting from `1.2.3.4` (plans to accept legacy `X-Forwarded-For` and a proxy
-  password too)
+  password too). This feature is currently experimental.
 
 Changes
 --------
@@ -173,21 +145,34 @@ a few changes:
 
 Module coders (API changes)
 ----------------------------
-
-* This section is incomplete and has little details. It will be expanded later.
-* Bump module header from unrealircd-5 to unrealircd-6
-* Newlog
-* ConfigEntry, ConfigFile (c22207c4ca2e6a72024ff9c642863737e2519d33)
+* Be sure to bump the version in the module header from `unrealircd-5` to `unrealircd-6`
+* We use a lot more `const char *` now (instead of `char *`). In particular `parv`
+  is const now and so are a lot of arguments to hooks. This will mean that in your
+  module you have to use more const too. The reason for this change is to indicate
+  that certain strings should not be touched, as doing so is dangerous or could
+  have had side-effects that were unpredictable.
+* Logging has been completely redone. Don't use `ircd_log()`, `sendto_snomask()`,
+  `sendto_ops()` and `sendto_realops()` anymore. Instead use `unreal_log()` which
+  handles both logging to disk and notifying IRCOps.
+* Various struct member names changed, in particular in `ConfigEntry` and `ConfigFile`,
+  but also `channel->chname` is `channel->name` now.
 * get_channel() is now make_channel() and creates if needed, otherwise use find_channel()
-* Extban api breakage
-* Message tag api breakage
-* ModData MODDATA_SYNC_EARLY
-* For adjusting fake lag use add_fake_lag(client, msec)
-* Some client/user struct changes: eg client->uplink->name, check log for all..
+* The Extended Ban API has been changed a lot. We use a `BanContext` struct now
+  that we pass around a lot. You also don't need to do `+3` magic anymore on the
+  string as it is handled in another layer. When registering the extended ban,
+  `.flag` is now `.letter`, and you also need to set a `.name` to a string due
+  to named extended bans. Have a look at the built-in extban modules to see
+  how to handle the changes.
+* ModData now has an option `MODDATA_SYNC_EARLY`. See under *Server protocol*.
+* If you want to lag someone up, don't touch `client->since`, but instead use:
+  `add_fake_lag(client, msec)`
+* Some client/user struct changes, with `client->user->account` (instead of svid)
+  and `client->uplink->name` being the most important ones.
+* Possibly more, but above is like 90%+ of the changes that you will encounter.
 
 Server protocol
 ----------------
-* If multiple related `SJOIN` messages are generated for the same channel
+* When multiple related `SJOIN` messages are generated for the same channel
   then we now only send the current channel modes (eg ```+sntk key```) in the
   first SJOIN and not in the other ones as they are unneeded for the
   immediate followup SJOINs, they waste unnecessary bytes and CPU.
@@ -221,5 +206,7 @@ Server protocol
 
 Client protocol
 ----------------
-* Extended bans now have names instead of letters
-* TODO: document other stuff?
+* Extended bans now have names instead of letters. If a client sends the
+  old format with letters (eg `+b ~a:XYZ`) then the server will
+  convert it to the new format with names (eg: `+b ~account:XYZ`)
+* Support for `MONITOR` and the other IRCv3 features (see *Enhancements*)
