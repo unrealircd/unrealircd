@@ -1,7 +1,8 @@
 # Security Policy
 
 ## Supported Versions
-* The latest *stable* release of the 5.x branch
+* The latest *stable* release of the 5.x branch (until 2023-06-01)
+* The latest *stable* release of the 6.x branch
 
 See [UnrealIRCd releases](https://www.unrealircd.org/docs/UnrealIRCd_releases) for information on older versions and End Of Life dates.
 
