@@ -1,6 +1,12 @@
 UnrealIRCd 6.0.0-git
 =================
-This WILL BE the first stable release of UnrealIRCd 6.
+*NOT RELEASED YET*
+
+This is the first stable release of UnrealIRCd 6.
+
+Many thanks to k4be for his help during development, other contributors for
+their feedback and patches, the people who tested the beta's and release
+candidates, translators and everyone else who made this release happen!
 
 Summary
 --------
@@ -13,8 +19,22 @@ which snomask. All the +vhoaq channel modes are now modular as well,
 handy for admins who don't want or need halfops or +q/+a.
 For WHOIS it is now customizable in detail who gets to see what.
 
-Upgrading
-----------
+A summary of the features is available at
+[What's new in UnrealIRCd 6](https://www.unrealircd.org/docs/What's_new_in_UnrealIRCd_6).
+For complete information, continue reading the release notes below.
+The sections below contain all the details.
+
+Upgrading from UnrealIRCd 5
+----------------------------
+The previous stable series, UnrealIRCd 5, will no longer get any new features.
+We still do bug fixes until July 1, 2022. In the 12 months after that, only
+security issues will be fixed. Finally, after July 1, 2023,
+[all support will stop](https://www.unrealircd.org/docs/UnrealIRCd_5_EOL).
+
+If you want to hold off for a while because you are cautious or if you
+depend on 3rd party modules (which may not have been upgraded yet by their
+authors) then feel free to wait for a 6.0.1 or 6.0.2 release.
+
 If you are upgrading from UnrealIRCd 5 to 6 then you can use your existing
 configuration and files. There's no need to start from scratch.
 However, you will need to make a few updates, see
@@ -24,11 +44,11 @@ Enhancements
 -------------
 * Completely new log system and snomasks overhaul
   * Both logging and snomask sending is done by a single logging function
-  * New support for [JSON logging](https://www.unrealircd.org/docs/JSON_logging)
+  * Support for [JSON logging](https://www.unrealircd.org/docs/JSON_logging)
     to disk, instead of the default text format.
     JSON logging adds lot of detail to log messages and consistently
-    expands things like 'client' with properties like hostname,
-    connected_since, reputation, modes, etc.
+    expands things like *client* with properties like *hostname*,
+    *connected_since*, *reputation*, *modes*, etc.
   * The JSON data is also sent to all IRCOps who request the
     `unrealircd.org/json-log` capability. The data is then sent in
     a message-tag called `unrealircd.org/json-log`. This makes it ideal
@@ -173,7 +193,7 @@ Module coders (API changes)
 Server protocol
 ----------------
 * When multiple related `SJOIN` messages are generated for the same channel
-  then we now only send the current channel modes (eg ```+sntk key```) in the
+  then we now only send the current channel modes (eg `+sntk key`) in the
   first SJOIN and not in the other ones as they are unneeded for the
   immediate followup SJOINs, they waste unnecessary bytes and CPU.
   Such messages may be generated when syncing a channel that has dozens
