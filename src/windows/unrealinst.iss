@@ -108,7 +108,7 @@ begin
 	d := StrToInt(GetDateTimeString('yyyymm',#0,#0));
 	if (d > 202209) then
 	begin
-		MsgBox('You are installing the old UnrealIRCd 5.x stable series. This branch will receive security fixes only until June 1, 2023. ' +
+		MsgBox('You are installing the old UnrealIRCd 5.x stable series. This branch will receive security fixes only until July 1, 2023. ' +
 		       'After that date, all support for the UnrealIRCd 5.x series will stop. ' +
 		       'Please consider upgrading. See https://www.unrealircd.org/docs/UnrealIRCd_5_EOL', mbInformation, MB_OK);
 		if (d > 202303) then

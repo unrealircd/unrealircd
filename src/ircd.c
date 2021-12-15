@@ -491,7 +491,7 @@ EVENT(deprecated_notice)
 	/* Send a warning to opers currently online every week after January 1, 2023 */
 	if (TStime() > 1672527600)
 	{
-		char *msg = "[WARNING] UnrealIRCd 5.x is no longer supported after June 1, 2023. "
+		char *msg = "[WARNING] UnrealIRCd 5.x is no longer supported after July 1, 2023. "
 		            "See https://www.unrealircd.org/docs/UnrealIRCd_5_EOL";
 		sendto_realops("%s", msg);
 		ircd_log(LOG_ERROR, "%s", msg);
@@ -1193,7 +1193,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	if (time(NULL) > 1661983200)
 	{
 		fprintf(stderr, "\n"
-		                "[WARNING] UnrealIRCd 5.x is no longer supported after June 1, 2023.\n"
+		                "[WARNING] UnrealIRCd 5.x is no longer supported after July 1, 2023.\n"
 		                "          See https://www.unrealircd.org/docs/UnrealIRCd_5_EOL\n\n");
 	}
 	open_debugfile();
