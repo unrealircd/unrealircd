@@ -1,7 +1,5 @@
-UnrealIRCd 6.0.0-git
+UnrealIRCd 6.0.0
 =================
-*NOT RELEASED YET*
-
 This is the first stable release of UnrealIRCd 6.
 
 Many thanks to k4be for his help during development, other contributors for
