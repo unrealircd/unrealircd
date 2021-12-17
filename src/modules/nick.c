@@ -1104,7 +1104,7 @@ int _register_user(Client *client)
 	/* Send the RPL_WELCOME, LUSERS, MOTD, auto join channels, everything... */
 	welcome_user(client, savetkl);
 
-	return IsDead(client) ? 1 : 0;
+	return IsDead(client) ? 0 : 1;
 }
 
 /** Nick collission detected. A winner has been decided upstream. Deal with killing.
