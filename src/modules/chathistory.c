@@ -276,10 +276,17 @@ CMD_FUNC(cmd_chathistory)
 		return;
 	}
 
+	/* Channel is not +H? Send empty response/batch (as per IRCv3 discussion) */
 	if (!has_channel_mode(channel, 'H'))
 	{
-		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_TARGET %s %s :Messages could not be retrieved, channel does not have mode +H",
-			me.name, parv[1], parv[2]);
+		if (HasCapability(client, "batch"))
+		{
+			char batch[BATCHLEN+1];
+
+			generate_batch_id(batch);
+			sendto_one(client, NULL, ":%s BATCH +%s chathistory %s", me.name, batch, channel->name);
+			sendto_one(client, NULL, ":%s BATCH -%s", me.name, batch);
+		}
 		return;
 	}
 
