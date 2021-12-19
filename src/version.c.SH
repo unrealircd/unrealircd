@@ -22,7 +22,9 @@ generation=`expr $generation + 1`
 export LANG=C
 export LC_TIME=C
 export LC_ALL=C
-creation=`date | \
+SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(date +%s)}"
+BUILD_DATE=$(date -u -d "@$SOURCE_DATE_EPOCH" 2>/dev/null || date -u -r "$SOURCE_DATE_EPOCH" 2>/dev/null || date -u)
+creation=`echo "$BUILD_DATE" | \
 awk '{if (NF == 6) \
          { print $1 " "  $2 " " $3 " "  $6 " at " $4 " " $5 } \
 else \
