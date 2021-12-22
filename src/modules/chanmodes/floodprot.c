@@ -922,9 +922,14 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 		{
 			/* Ban the user */
 			if (timedban_available && (chp->remove_after[flood_type] > 0))
-				snprintf(mask, sizeof(mask), "~t:%d:*!*@%s", chp->remove_after[flood_type], GetHost(client));
-			else
+			{
+				if (iConf.named_extended_bans)
+					snprintf(mask, sizeof(mask), "~time:%d:*!*@%s", chp->remove_after[flood_type], GetHost(client));
+				else
+					snprintf(mask, sizeof(mask), "~t:%d:*!*@%s", chp->remove_after[flood_type], GetHost(client));
+			} else {
 				snprintf(mask, sizeof(mask), "*!*@%s", GetHost(client));
+			}
 			if (add_listmode(&channel->banlist, &me, channel, mask) == 0)
 			{
 				mtags = NULL;
