@@ -4808,7 +4808,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			           "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
 				   log_data_tkl("tkl", tkl),
 				   log_data_string("command", cmd),
-				   log_data_string("destination", destinationbuf),
+				   log_data_string("destination", destination ? destination : ""),
 				   log_data_string("str", str));
 
 			RunHook(HOOKTYPE_LOCAL_SPAMFILTER, client, str, str_in, target, destination, tkl);
