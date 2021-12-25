@@ -42,7 +42,7 @@
 /* Not sure if this is suitable for production,
  * but let's turn it on for U6 development.
  */
-#define DETECT_HIGH_CPU
+//#define DETECT_HIGH_CPU
 
 /***************************************************************************************
  * Backend-independent functions.  fd_setselect() and friends                          *
