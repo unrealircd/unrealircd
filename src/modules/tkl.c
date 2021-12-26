@@ -2877,7 +2877,7 @@ void tkl_expire_entry(TKL *tkl)
 	if (TKLIsServerBan(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_EXPIRE", NULL,
-		           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] set $tkl.set_at_delta seconds ago",
+		           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
 		           log_data_tkl("tkl", tkl));
 	}
 	else if (TKLIsNameBan(tkl))
@@ -2885,14 +2885,14 @@ void tkl_expire_entry(TKL *tkl)
 		if (!tkl->ptr.nameban->hold)
 		{
 			unreal_log(ULOG_INFO, "tkl", "TKL_EXPIRE", NULL,
-			           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] set $tkl.set_at_delta seconds ago",
+			           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
 				   log_data_tkl("tkl", tkl));
 		}
 	}
 	else if (TKLIsBanException(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_EXPIRE", NULL,
-			   "Expiring $tkl.type_string '$tkl' [type: $tkl.exception_types] [reason: $tkl.reason] [by: $tkl.set_by] set $tkl.set_at_delta seconds ago",
+			   "Expiring $tkl.type_string '$tkl' [type: $tkl.exception_types] [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
 			   log_data_tkl("tkl", tkl));
 	}
 
@@ -3847,32 +3847,20 @@ TKL *_find_tkl_spamfilter(int type, char *match_string, BanAction action, unsign
 /** Send a notice to opers about the TKL that is being added */
 void _sendnotice_tkl_add(TKL *tkl)
 {
-	char buf[512];
-	char set_at[128];
-	char expire_at[128];
-	const char *tkl_type_str; /**< Eg: "K-Line" */
-
 	/* Don't show notices for temporary nick holds (issued by services) */
 	if (TKLIsNameBan(tkl) && tkl->ptr.nameban->hold)
 		return;
 
-	tkl_type_str = tkl_type_string(tkl);
-
-	*buf = *set_at = *expire_at = '\0';
-	short_date(tkl->set_at, set_at);
-	if (tkl->expire_at > 0)
-		short_date(tkl->expire_at, expire_at);
-
 	if (TKLIsServerBan(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
-			   "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [expires: $tkl.expire_at_string]",
+			   "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
 			   log_data_tkl("tkl", tkl));
 	} else
 	if (TKLIsNameBan(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
-			   "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [expires: $tkl.expire_at_string]",
+			   "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
 			   log_data_tkl("tkl", tkl));
 	} else
 	if (TKLIsSpamfilter(tkl))
@@ -3885,29 +3873,21 @@ void _sendnotice_tkl_add(TKL *tkl)
 	if (TKLIsBanException(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
-			   "$tkl.type_string added: '$tkl' [types: $tkl.exception_types] [by: $tkl.set_by] [expires: $tkl.expire_at_string]",
+			   "$tkl.type_string added: '$tkl' [types: $tkl.exception_types] [by: $tkl.set_by] [duration: $tkl.duration_string]",
 			   log_data_tkl("tkl", tkl));
 	} else
 	{
-		ircsnprintf(buf, sizeof(buf), "[BUG] %s added but type unhandled in sendnotice_tkl_add()!!!", tkl_type_str);
+		unreal_log(ULOG_ERROR, "tkl", "BUG_UNKNOWN_TKL", NULL,
+		           "[BUG] TKL added of unknown type, unhandled in sendnotice_tkl_add()!!!!");
 	}
 }
 
 /** Send a notice to opers about the TKL that is being deleted */
 void _sendnotice_tkl_del(char *removed_by, TKL *tkl)
 {
-	char buf[512];
-	char set_at[128];
-	const char *tkl_type_str;
-
 	/* Don't show notices for temporary nick holds (issued by services) */
 	if (TKLIsNameBan(tkl) && tkl->ptr.nameban->hold)
 		return;
-
-	tkl_type_str = tkl_type_string(tkl); /* eg: "K-Line" */
-
-	*buf = *set_at = '\0';
-	short_date(tkl->set_at, set_at);
 
 	if (TKLIsServerBan(tkl))
 	{
@@ -3939,7 +3919,8 @@ void _sendnotice_tkl_del(char *removed_by, TKL *tkl)
 			   log_data_string("removed_by", removed_by));
 	} else
 	{
-		ircsnprintf(buf, sizeof(buf), "[BUG] %s added but type unhandled in sendnotice_tkl_del()!!!!!", tkl_type_str);
+		unreal_log(ULOG_ERROR, "tkl", "BUG_UNKNOWN_TKL", NULL,
+		           "[BUG] TKL removed of unknown type, unhandled in sendnotice_tkl_del()!!!!");
 	}
 }
 

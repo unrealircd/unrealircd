@@ -876,11 +876,13 @@ LogData *log_data_tkl(const char *key, TKL *tkl)
 	if (tkl->expire_at <= 0)
 	{
 		json_object_set_new(j, "expire_at_string", json_string_unreal("Never"));
+		json_object_set_new(j, "duration_string", json_string_unreal("permanent"));
 	} else {
 		*buf = '\0';
 		short_date(tkl->expire_at, buf);
 		strlcat(buf, " GMT", sizeof(buf));
 		json_object_set_new(j, "expire_at_string", json_string_unreal(buf));
+		json_object_set_new(j, "duration_string", json_string_unreal(pretty_time_val_r(buf, sizeof(buf), tkl->expire_at - tkl->set_at)));
 	}
 	json_object_set_new(j, "set_at_delta", json_integer(TStime() - tkl->set_at));
 	if (TKLIsServerBan(tkl))
