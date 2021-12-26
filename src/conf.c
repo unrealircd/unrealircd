@@ -3107,25 +3107,29 @@ void init_dynconf(void)
 	memset(&tempiConf, 0, sizeof(iConf));
 }
 
-const char *pretty_time_val(long timeval)
+const char *pretty_time_val_r(char *buf, size_t buflen, long timeval)
 {
-	static char buf[512];
-
 	if (timeval == 0)
 		return "0";
 
 	buf[0] = 0;
 
 	if (timeval/86400)
-		snprintf(buf, sizeof(buf), "%ldd", timeval/86400);
+		snprintf(buf, buflen, "%ldd", timeval/86400);
 	if ((timeval/3600) % 24)
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%ldh", (timeval/3600)%24);
+		snprintf(buf+strlen(buf), buflen-strlen(buf), "%ldh", (timeval/3600)%24);
 	if ((timeval/60)%60)
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%ldm", (timeval/60)%60);
+		snprintf(buf+strlen(buf), buflen-strlen(buf), "%ldm", (timeval/60)%60);
 	if ((timeval%60))
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%lds", timeval%60);
+		snprintf(buf+strlen(buf), buflen-strlen(buf), "%lds", timeval%60);
 
 	return buf;
+}
+
+const char *pretty_time_val(long timeval)
+{
+	static char buf[512];
+	return pretty_time_val_r(buf, sizeof(buf), timeval);
 }
 
 /* This converts a relative path to an absolute path, but only if necessary. */

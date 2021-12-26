@@ -315,6 +315,7 @@ extern const char *myctime(time_t);
 extern const char *short_date(time_t, char *buf);
 extern const char *long_date(time_t);
 extern const char *pretty_time_val(long);
+extern const char *pretty_time_val_r(char *buf, size_t buflen, long timeval);
 extern const char *pretty_date(time_t t);
 extern time_t server_time_to_unix_time(const char *tbuf);
 extern time_t rfc2616_time_to_unix_time(const char *tbuf);
