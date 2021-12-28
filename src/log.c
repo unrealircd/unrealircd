@@ -36,6 +36,7 @@ Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 static int snomask_num_destinations = 0;
 
 static char snomasks_in_use[257] = { '\0' };
+static char snomasks_in_use_testing[257] = { '\0' };
 
 /* Forward declarations */
 int log_sources_match(LogSource *logsource, LogLevel loglevel, const char *subsystem, const char *event_id, int matched_already);
@@ -205,6 +206,8 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 						config_error("%s:%d: snomask must be a single letter",
 							cep->file->filename, cep->line_number);
 						errors++;
+					} else {
+						strlcat(snomasks_in_use_testing, cep->value, sizeof(snomasks_in_use_testing));
 					}
 				} else
 				if (!strcmp(cep->name, "channel"))
@@ -1803,6 +1806,12 @@ void postconf_defaults_log_block(void)
 	AppendListItem(ls, l->sources);
 }
 
+/* Called before CONFIG_TEST */
+void log_pre_rehash(void)
+{
+	*snomasks_in_use_testing = '\0';
+}
+
 /* Called after CONFIG_TEST right before CONFIG_RUN */
 void config_pre_run_log(void)
 {
@@ -1827,4 +1836,36 @@ void log_blocks_switchover(void)
 int is_valid_snomask(char c)
 {
 	return strchr(snomasks_in_use, c) ? 1 : 0;
+}
+
+/** Check if a letter is a valid snomask during or after CONFIG_TEST
+ * (the snomasks exist in the log block configuration read during config_test).
+ * @param c	the snomask letter to check
+ * @returns	1 if exists, 0 if not.
+ */
+int is_valid_snomask_testing(char c)
+{
+	return strchr(snomasks_in_use_testing, c) ? 1 : 0;
+}
+
+/** Check if a string all consists of valid snomasks during or after CONFIG_TEST
+ * (the snomasks exist in the log block configuration read during config_test).
+ * @param str			the snomask string to check
+ * @param invalid_snomasks	list of unknown snomask letters
+ * @returns			1 if exists, 0 if not.
+ */
+int is_valid_snomask_string_testing(const char *str, char **invalid_snomasks)
+{
+	static char invalid_snomasks_buf[256];
+
+	*invalid_snomasks_buf = '\0';
+	for (; *str; str++)
+	{
+		if ((*str == '+') || (*str == '-'))
+			continue;
+		if (!strchr(snomasks_in_use_testing, *str))
+			strlcat_letter(invalid_snomasks_buf, *str, sizeof(invalid_snomasks_buf));
+	}
+	*invalid_snomasks = invalid_snomasks_buf;
+	return *invalid_snomasks_buf ? 0 : 1;
 }

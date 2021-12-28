@@ -246,6 +246,7 @@ MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
 
 int need_operclass_permissions_upgrade = 0;
+int invalid_snomasks_encountered = 0;
 int have_tls_listeners = 0;
 char *port_6667_ip = NULL;
 
@@ -1893,11 +1894,6 @@ void applymeblock(void)
 		strlcpy(me.id, conf_me->sid, sizeof(me.id));
 }
 
-/** Reset config tests (before running the config test) */
-void config_test_reset(void)
-{
-}
-
 /** Run config test and all post config tests. */
 int config_test_all(void)
 {
@@ -2049,6 +2045,7 @@ int config_test(void)
 	memset(&nicklengths, 0, sizeof(nicklengths));
 	config_setdefaultsettings(&tempiConf);
 	clicap_pre_rehash();
+	log_pre_rehash();
 	free_config_defines();
 
 	if (!config_loadmodules())
@@ -2058,8 +2055,6 @@ int config_test(void)
 	}
 
 	preprocessor_resolve_conditionals_all(PREPROCESSOR_PHASE_MODULE);
-
-	config_test_reset();
 
 	if (!config_test_all())
 	{
@@ -2747,6 +2742,21 @@ int	config_test_blocks()
 	int		errors = 0;
 	Hook *h;
 
+	invalid_snomasks_encountered = 0;
+
+	/* First, all the log { } blocks everywhere */
+	for (cfptr = conf; cfptr; cfptr = cfptr->next)
+	{
+		if (config_verbose > 1)
+			config_status("Testing %s", cfptr->filename);
+		/* First test and run the log { } blocks */
+		for (ce = cfptr->items; ce; ce = ce->next)
+		{
+			if (!strcmp(ce->name, "log"))
+				errors += config_test_log(cfptr, ce);
+		}
+	}
+
 	for (cfptr = conf; cfptr; cfptr = cfptr->next)
 	{
 		if (config_verbose > 1)
@@ -2773,7 +2783,8 @@ int	config_test_blocks()
 		{
 			/* These are already processed, so skip them here.. */
 			if (!strcmp(ce->name, "secret") ||
-			    !strcmp(ce->name, "set"))
+			    !strcmp(ce->name, "set") ||
+			    !strcmp(ce->name, "log"))
 			{
 				continue;
 			}
@@ -2834,6 +2845,12 @@ int	config_test_blocks()
 	if (errors > 0)
 	{
 		config_error("%i errors encountered", errors);
+	}
+
+	if (invalid_snomasks_encountered)
+	{
+		config_error("It seems your set::snomask-on-oper and/or oper::snomask needs to be updated. Are you perhaps upgrading from an older version to UnrealIRCd 6?");
+		config_error("See https://www.unrealircd.org/docs/Upgrading_from_5.x#Update_your_snomasks");
 	}
 
 	return (errors > 0 ? -1 : 1);
@@ -4033,11 +4050,19 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			/* oper::snomask */
 			else if (!strcmp(cep->name, "snomask"))
 			{
+				char *wrong_snomask;
 				if (has_snomask)
 				{
 					config_warn_duplicate(cep->file->filename,
 						cep->line_number, "oper::snomask");
 					continue;
+				}
+				if (!is_valid_snomask_string_testing(cep->value, &wrong_snomask))
+				{
+					config_error("%s:%i: oper::snomask contains unknown snomask letter(s) '%s'",
+					             cep->file->filename, cep->line_number, wrong_snomask);
+					errors++;
+					invalid_snomasks_encountered++;
 				}
 				has_snomask = 1;
 			}
@@ -7808,8 +7833,16 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			set_usermode(cep->value);
 		}
 		else if (!strcmp(cep->name, "snomask-on-oper")) {
+			char *wrong_snomask;
 			CheckNull(cep);
 			CheckDuplicate(cep, snomask_on_oper, "snomask-on-oper");
+			if (!is_valid_snomask_string_testing(cep->value, &wrong_snomask))
+			{
+				config_error("%s:%i: set::snomask-on-oper contains unknown snomask letter(s) '%s'",
+					     cep->file->filename, cep->line_number, wrong_snomask);
+				errors++;
+				invalid_snomasks_encountered++;
+			}
 		}
 		else if (!strcmp(cep->name, "server-notice-colors")) {
 			CheckNull(cep);
