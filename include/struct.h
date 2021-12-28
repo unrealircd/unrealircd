@@ -782,6 +782,7 @@ struct LoopStruct {
 	unsigned rehashing : 1;
 	unsigned terminating : 1;
 	unsigned config_load_failed : 1;
+	unsigned rehash_download_busy : 1; /* don't return "all downloads complete", needed for race condition */
 	unsigned tainted : 1;
 	Client *rehash_save_client;
 	void (*boot_function)();
@@ -1446,6 +1447,7 @@ struct ConfigEntry
 	int section_linenumber;		/**< Line number of the section (only used internally for parse errors) */
 	ConfigEntry *parent;		/**< Parent item, can be NULL */
 	ConditionalConfig *conditional_config;	/**< Used for conditional config by the main parser */
+	unsigned escaped:1;
 };
 
 struct ConfigFlag 
@@ -1603,6 +1605,7 @@ struct ConfigItem_oper {
 	unsigned long modes, require_modes;
 	char *vhost;
 	int maxlogins;
+	int server_notice_colors;
 };
 
 /** The TLS options that are used in set::tls and otherblocks::tls-options.
@@ -2091,6 +2094,14 @@ struct ParseMode {
 	const char *modebuf; /* curr pos */
 	const char *parabuf; /* curr pos */
 	char buf[512]; /* internal parse buffer */
+};
+
+#define MAXMULTILINEMODES       3
+typedef struct MultiLineMode MultiLineMode;
+struct MultiLineMode {
+	char *modeline[MAXMULTILINEMODES+1];
+	char *paramline[MAXMULTILINEMODES+1];
+	int numlines;
 };
 
 typedef struct PendingServer PendingServer;

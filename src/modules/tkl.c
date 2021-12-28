@@ -609,7 +609,7 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	{
 		if (!strcmp(cep->name, "mask"))
 		{
-			if (is_extended_ban(cep->value))
+			if (is_extended_server_ban(cep->value))
 			{
 				char mask1buf[512], mask2buf[512];
 				char *err = NULL;
@@ -791,7 +791,7 @@ void config_create_tkl_except(char *mask, char *bantypes)
 		mask++;
 	}
 	strlcpy(buf, mask, sizeof(buf));
-	if (is_extended_ban(buf))
+	if (is_extended_server_ban(buf))
 	{
 		char *err = NULL;
 		if (!parse_extended_server_ban(buf, NULL, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
@@ -1288,13 +1288,20 @@ int parse_extended_server_ban(const char *mask_in, Client *client, char **error,
 	BanContext *b = NULL;
 	char    mask[USERLEN + NICKLEN + HOSTLEN + 32]; // same as extban_conv_param_nuh_or_extban()
 	char newmask[USERLEN + NICKLEN + HOSTLEN + 32];
+	char soft_ban = 0;
 
 	*error = NULL;
 	if (buf1 && buf2)
 		*buf1 = *buf2 = '\0';
 
 	/* Work on a copy */
-	strlcpy(mask, mask_in, sizeof(mask));
+	if (*mask_in == '%')
+	{
+		strlcpy(mask, mask_in+1, sizeof(mask));
+		soft_ban = 1;
+	} else {
+		strlcpy(mask, mask_in, sizeof(mask));
+	}
 
 	extban = findmod_by_bantype(mask, &nextbanstr);
 	if (!extban || !(extban->options & EXTBOPT_TKL))
@@ -1360,7 +1367,10 @@ int parse_extended_server_ban(const char *mask_in, Client *client, char **error,
 		p++;
 		save = *p;
 		*p = '\0';
-		strlcpy(buf1, newmask, buf1len); /* eg ~S: */
+		/* First buffer is eg ~S: or %~S: */
+		snprintf(buf1, buf1len, "%s%s",
+		         soft_ban ? "%" : "",
+		         newmask);
 		*p = save;
 		strlcpy(buf2, p, buf2len); /* eg 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef */
 	}
@@ -1445,7 +1455,7 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 	}
 
 	/* Check if it's an extended server ban */
-	if (is_extended_ban(mask))
+	if (is_extended_server_ban(mask))
 	{
 		char *err;
 
@@ -1754,7 +1764,7 @@ CMD_FUNC(cmd_eline)
 		return;
 
 	/* Check if it's an extended server ban */
-	if (is_extended_ban(mask))
+	if (is_extended_server_ban(mask))
 	{
 		char *err;
 		if (!parse_extended_server_ban(mask, client, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
@@ -2830,7 +2840,7 @@ char *_tkl_uhost(TKL *tkl, char *buf, size_t buflen, int options)
 {
 	if (TKLIsServerBan(tkl))
 	{
-		if (is_extended_ban(tkl->ptr.serverban->usermask))
+		if (is_extended_server_ban(tkl->ptr.serverban->usermask))
 		{
 			ircsnprintf(buf, buflen, "%s%s%s",
 				(!(options & NO_SOFT_PREFIX) && (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT)) ? "%" : "",
@@ -2843,7 +2853,7 @@ char *_tkl_uhost(TKL *tkl, char *buf, size_t buflen, int options)
 	} else
 	if (TKLIsBanException(tkl))
 	{
-		if (is_extended_ban(tkl->ptr.banexception->usermask))
+		if (is_extended_server_ban(tkl->ptr.banexception->usermask))
 		{
 			ircsnprintf(buf, buflen, "%s%s%s",
 				(!(options & NO_SOFT_PREFIX) && (tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT)) ? "%" : "",
@@ -2867,7 +2877,7 @@ void tkl_expire_entry(TKL *tkl)
 	if (TKLIsServerBan(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_EXPIRE", NULL,
-		           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] set $tkl.set_at_delta seconds ago",
+		           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
 		           log_data_tkl("tkl", tkl));
 	}
 	else if (TKLIsNameBan(tkl))
@@ -2875,14 +2885,14 @@ void tkl_expire_entry(TKL *tkl)
 		if (!tkl->ptr.nameban->hold)
 		{
 			unreal_log(ULOG_INFO, "tkl", "TKL_EXPIRE", NULL,
-			           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] set $tkl.set_at_delta seconds ago",
+			           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
 				   log_data_tkl("tkl", tkl));
 		}
 	}
 	else if (TKLIsBanException(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_EXPIRE", NULL,
-			   "Expiring $tkl.type_string '$tkl' [type: $tkl.exception_types] [reason: $tkl.reason] [by: $tkl.set_by] set $tkl.set_at_delta seconds ago",
+			   "Expiring $tkl.type_string '$tkl' [type: $tkl.exception_types] [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
 			   log_data_tkl("tkl", tkl));
 	}
 
@@ -3837,32 +3847,20 @@ TKL *_find_tkl_spamfilter(int type, char *match_string, BanAction action, unsign
 /** Send a notice to opers about the TKL that is being added */
 void _sendnotice_tkl_add(TKL *tkl)
 {
-	char buf[512];
-	char set_at[128];
-	char expire_at[128];
-	const char *tkl_type_str; /**< Eg: "K-Line" */
-
 	/* Don't show notices for temporary nick holds (issued by services) */
 	if (TKLIsNameBan(tkl) && tkl->ptr.nameban->hold)
 		return;
 
-	tkl_type_str = tkl_type_string(tkl);
-
-	*buf = *set_at = *expire_at = '\0';
-	short_date(tkl->set_at, set_at);
-	if (tkl->expire_at > 0)
-		short_date(tkl->expire_at, expire_at);
-
 	if (TKLIsServerBan(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
-			   "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [expires: $tkl.expire_at_string]",
+			   "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
 			   log_data_tkl("tkl", tkl));
 	} else
 	if (TKLIsNameBan(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
-			   "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [expires: $tkl.expire_at_string]",
+			   "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
 			   log_data_tkl("tkl", tkl));
 	} else
 	if (TKLIsSpamfilter(tkl))
@@ -3875,29 +3873,21 @@ void _sendnotice_tkl_add(TKL *tkl)
 	if (TKLIsBanException(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
-			   "$tkl.type_string added: '$tkl' [types: $tkl.exception_types] [by: $tkl.set_by] [expires: $tkl.expire_at_string]",
+			   "$tkl.type_string added: '$tkl' [types: $tkl.exception_types] [by: $tkl.set_by] [duration: $tkl.duration_string]",
 			   log_data_tkl("tkl", tkl));
 	} else
 	{
-		ircsnprintf(buf, sizeof(buf), "[BUG] %s added but type unhandled in sendnotice_tkl_add()!!!", tkl_type_str);
+		unreal_log(ULOG_ERROR, "tkl", "BUG_UNKNOWN_TKL", NULL,
+		           "[BUG] TKL added of unknown type, unhandled in sendnotice_tkl_add()!!!!");
 	}
 }
 
 /** Send a notice to opers about the TKL that is being deleted */
 void _sendnotice_tkl_del(char *removed_by, TKL *tkl)
 {
-	char buf[512];
-	char set_at[128];
-	const char *tkl_type_str;
-
 	/* Don't show notices for temporary nick holds (issued by services) */
 	if (TKLIsNameBan(tkl) && tkl->ptr.nameban->hold)
 		return;
-
-	tkl_type_str = tkl_type_string(tkl); /* eg: "K-Line" */
-
-	*buf = *set_at = '\0';
-	short_date(tkl->set_at, set_at);
 
 	if (TKLIsServerBan(tkl))
 	{
@@ -3929,7 +3919,8 @@ void _sendnotice_tkl_del(char *removed_by, TKL *tkl)
 			   log_data_string("removed_by", removed_by));
 	} else
 	{
-		ircsnprintf(buf, sizeof(buf), "[BUG] %s added but type unhandled in sendnotice_tkl_del()!!!!!", tkl_type_str);
+		unreal_log(ULOG_ERROR, "tkl", "BUG_UNKNOWN_TKL", NULL,
+		           "[BUG] TKL removed of unknown type, unhandled in sendnotice_tkl_del()!!!!");
 	}
 }
 
@@ -4798,7 +4789,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			           "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
 				   log_data_tkl("tkl", tkl),
 				   log_data_string("command", cmd),
-				   log_data_string("destination", destinationbuf),
+				   log_data_string("destination", destination ? destination : ""),
 				   log_data_string("str", str));
 
 			RunHook(HOOKTYPE_LOCAL_SPAMFILTER, client, str, str_in, target, destination, tkl);
@@ -5013,8 +5004,8 @@ int _match_user(const char *rmask, Client *client, int options)
 	strlcpy(mask, rmask, sizeof(mask));
 
 	if ((options & MATCH_CHECK_EXTENDED) &&
-	    is_extended_ban(mask) &&
-	    client && client->user)
+	    is_extended_server_ban(mask) &&
+	    client->user)
 	{
 		/* Check user properties / extbans style */
 		return _match_user_extended_server_ban(rmask, client);
@@ -5163,7 +5154,7 @@ int _match_user_extended_server_ban(const char *banstr, Client *client)
 	BanContext *b;
 	int ret;
 
-	if (!is_extended_ban(banstr))
+	if (!is_extended_server_ban(banstr))
 		return 0; /* we should never have been called */
 
 	extban = findmod_by_bantype(banstr, &nextbanstr);

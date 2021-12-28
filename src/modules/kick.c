@@ -168,6 +168,7 @@ CMD_FUNC(cmd_kick)
 	int maxtargets = max_targets_for_command("KICK");
 	MessageTag *mtags;
 	char request[BUFSIZE];
+	char request_chans[BUFSIZE];
 	const char *client_member_modes = NULL;
 	const char *target_member_modes;
 
@@ -182,10 +183,14 @@ CMD_FUNC(cmd_kick)
 	else
 		strlncpy(comment, parv[3], sizeof(comment), iConf.kick_length);
 
-	channel = find_channel(parv[1]);
+	strlcpy(request_chans, parv[1], sizeof(request_chans));
+	p = strchr(request_chans, ',');
+	if (p)
+		*p = '\0';
+	channel = find_channel(request_chans);
 	if (!channel)
 	{
-		sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);
+		sendnumeric(client, ERR_NOSUCHCHANNEL, request_chans);
 		return;
 	}
 
@@ -219,7 +224,7 @@ CMD_FUNC(cmd_kick)
 		if (!lp)
 		{
 			if (MyUser(client))
-				sendnumeric(client, ERR_USERNOTINCHANNEL, user, channel->name);
+				sendnumeric(client, ERR_USERNOTINCHANNEL, user, request_chans);
 			continue;
 		}
 
@@ -295,7 +300,7 @@ CMD_FUNC(cmd_kick)
 		}
 
 		/* target is +a/+q, and we are not +q? */
-		if (check_channel_access_string(target_member_modes, "qa") && !check_channel_access_string(client_member_modes, "a"))
+		if (check_channel_access_string(target_member_modes, "qa") && !check_channel_access_string(client_member_modes, "q"))
 		{
 			if (client == target)
 				goto attack; /* kicking self == ok */

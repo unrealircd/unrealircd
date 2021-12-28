@@ -35,6 +35,8 @@ Log *logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 static int snomask_num_destinations = 0;
 
+static char snomasks_in_use[257] = { '\0' };
+
 /* Forward declarations */
 int log_sources_match(LogSource *logsource, LogLevel loglevel, const char *subsystem, const char *event_id, int matched_already);
 void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, int expand_msg, const char *msg, va_list vl);
@@ -375,6 +377,7 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 				{
 					Log *log = safe_alloc(sizeof(Log));
 					strlcpy(log->destination, cep->value, sizeof(log->destination)); /* destination is the snomask */
+					strlcat(snomasks_in_use, cep->value, sizeof(snomasks_in_use));
 					log->sources = sources;
 					if (!strcmp(cep->value, "s"))
 						AddListItem(log, temp_logs[LOG_DEST_OPER]);
@@ -502,7 +505,10 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		snprintf(buf, sizeof(buf), "%s!%s@%s", client->name, client->user->username, client->user->realhost);
 		json_object_set_new(child, "details", json_string_unreal(buf));
 	} else if (client->ip) {
-		snprintf(buf, sizeof(buf), "%s@%s", client->name, client->ip);
+		if (*client->name)
+			snprintf(buf, sizeof(buf), "%s@%s", client->name, client->ip);
+		else
+			snprintf(buf, sizeof(buf), "[%s]", client->ip);
 		json_object_set_new(child, "details", json_string_unreal(buf));
 	} else {
 		json_object_set_new(child, "details", json_string_unreal(client->name));
@@ -870,11 +876,13 @@ LogData *log_data_tkl(const char *key, TKL *tkl)
 	if (tkl->expire_at <= 0)
 	{
 		json_object_set_new(j, "expire_at_string", json_string_unreal("Never"));
+		json_object_set_new(j, "duration_string", json_string_unreal("permanent"));
 	} else {
 		*buf = '\0';
 		short_date(tkl->expire_at, buf);
 		strlcat(buf, " GMT", sizeof(buf));
 		json_object_set_new(j, "expire_at_string", json_string_unreal(buf));
+		json_object_set_new(j, "duration_string", json_string_unreal(pretty_time_val_r(buf, sizeof(buf), tkl->expire_at - tkl->set_at)));
 	}
 	json_object_set_new(j, "set_at_delta", json_integer(TStime() - tkl->set_at));
 	if (TKLIsServerBan(tkl))
@@ -1276,7 +1284,7 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 
 		/* Now actually WRITE to the log... */
 		write_error = 0;
-		if ((l->type == LOG_TYPE_JSON) && strcmp(subsystem, "traffic"))
+		if ((l->type == LOG_TYPE_JSON) && strcmp(subsystem, "rawtraffic"))
 		{
 			n = write(l->logfd, json_serialized, strlen(json_serialized));
 			if (n < strlen(json_serialized))
@@ -1425,7 +1433,7 @@ void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *e
 		return;
 
 	/* Never send these */
-	if (!strcmp(subsystem, "traffic"))
+	if (!strcmp(subsystem, "rawtraffic"))
 		return;
 
 	snomask_destinations = log_to_snomask(loglevel, subsystem, event_id);
@@ -1443,6 +1451,10 @@ void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *e
 	/* To specific snomasks... */
 	list_for_each_entry(client, &oper_list, special_node)
 	{
+		const char *operlogin;
+		ConfigItem_oper *oper;
+		int colors = iConf.server_notice_colors;
+
 		if (snomask_destinations)
 		{
 			char found = 0;
@@ -1459,17 +1471,28 @@ void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *e
 			if (!found)
 				continue;
 		}
+
+		operlogin = get_operlogin(client);
+		if (operlogin && (oper = find_oper(operlogin)))
+			colors = oper->server_notice_colors;
+
 		mtags_loop = mtags;
 		for (m = msg; m; m = m->next)
 		{
-			char subsystem_and_event_id[256];
-			snprintf(subsystem_and_event_id, sizeof(subsystem_and_event_id), "%s%s.%s%s%s",
-			         COLOR_DARKGREY, subsystem, event_id, m->next?"+":"", COLOR_NONE);
-			sendto_one(client, mtags_loop, ":%s NOTICE %s :%s %s[%s]%s %s",
-				from_server->name, client->name,
-				subsystem_and_event_id,
-				log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
-				m->line);
+			if (colors)
+			{
+				sendto_one(client, mtags_loop, ":%s NOTICE %s :%s%s.%s%s%s %s[%s]%s %s",
+					from_server->name, client->name,
+					COLOR_DARKGREY, subsystem, event_id, m->next?"+":"", COLOR_NONE,
+					log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
+					m->line);
+			} else {
+				sendto_one(client, mtags_loop, ":%s NOTICE %s :%s.%s%s [%s] %s",
+					from_server->name, client->name,
+					subsystem, event_id, m->next?"+":"",
+					log_level_valtostring(loglevel),
+					m->line);
+			}
 			mtags_loop = NULL; /* this way we only send the JSON in the first msg */
 		}
 	}
@@ -1777,8 +1800,16 @@ void postconf_defaults_log_block(void)
 	ls = add_log_source("!kick.LOCAL_CLIENT_KICK");
 	AppendListItem(ls, l->sources);
 	ls = add_log_source("!kick.REMOTE_CLIENT_KICK");
+	AppendListItem(ls, l->sources);
 }
 
+/* Called after CONFIG_TEST right before CONFIG_RUN */
+void config_pre_run_log(void)
+{
+	*snomasks_in_use = '\0';
+}
+
+/* Called after CONFIG_RUN is complete */
 void log_blocks_switchover(void)
 {
 	int i;
@@ -1786,4 +1817,14 @@ void log_blocks_switchover(void)
 		free_log_block(logs[i]);
 	memcpy(logs, temp_logs, sizeof(logs));
 	memset(temp_logs, 0, sizeof(temp_logs));
+}
+
+/** Check if a letter is a valid snomask (that is:
+ * one that exists in the log block configuration).
+ * @param c	the snomask letter to check
+ * @returns	1 if exists, 0 if not.
+ */
+int is_valid_snomask(char c)
+{
+	return strchr(snomasks_in_use, c) ? 1 : 0;
 }

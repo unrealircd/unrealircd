@@ -161,7 +161,7 @@ void make_prefix(char **isupport_prefix, char **isupport_statusmsg)
 
 	*prefix = *prefix_prefix = *prefix_modes = '\0';
 
-	for (n=0, cm=channelmodes; cm && n < sizeof(rank)-1; cm = cm->next)
+	for (n=0, cm=channelmodes; cm && n < ARRAY_SIZEOF(rank)-1; cm = cm->next)
 	{
 		if ((cm->type == CMODE_MEMBER) && cm->letter)
 		{
@@ -337,7 +337,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 
 		if (req.type == CMODE_NORMAL)
 		{
-			for (l = 1; l < INT_MAX/2; l *= 2)
+			for (l = 1; l < LONG_MAX/2; l *= 2)
 			{
 				found = 0;
 				for (cm=channelmodes; cm; cm = cm->next)

@@ -1131,6 +1131,10 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 					}
 				}
 				break;
+			case '\'':
+				if (curce)
+					curce->escaped = 1;
+				/* fallthrough */
 			case '\"':
 				if (curce && curce->line_number != linenumber && cursection)
 				{
@@ -1150,14 +1154,18 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 				{
 					if (*ptr == '\\')
 					{
-						if ((ptr[1] == '\\') || (ptr[1] == '"'))
+						if (strchr("\\\"'", ptr[1]))
 						{
 							/* \\ or \" in config file (escaped) */
 							ptr++; /* skip */
 							continue;
 						}
 					}
-					else if ((*ptr == '\"') || (*ptr == '\n'))
+					else if (*ptr == '\n')
+						break;
+					else if (curce && curce->escaped && (*ptr == '\''))
+						break;
+					else if ((!curce || !curce->escaped) && (*ptr == '"'))
 						break;
 				}
 				if (!*ptr || (*ptr == '\n'))
@@ -1635,6 +1643,7 @@ void config_setdefaultsettings(Configuration *i)
 	char tmp[512];
 
 	safe_strdup(i->oper_snomask, OPER_SNOMASKS);
+	i->server_notice_colors = 1;
 	i->ident_read_timeout = 7;
 	i->ident_connect_timeout = 3;
 	i->ban_version_tkl_time = 86400; /* 1d */
@@ -1985,8 +1994,13 @@ int config_read_start(void)
 		return -1;
 	}
 
+	/* We set this to 1 because otherwise we may call rehash_internal()
+	 * already from config_read_file() which is too soon (race).
+	 */
+	loop.rehash_download_busy = 1;
 	add_config_resource(configfile, RESOURCE_INCLUDE, NULL);
 	ret = config_read_file(configfile, configfile);
+	loop.rehash_download_busy = 0;
 	if (ret < 0)
 	{
 		config_load_failed();
@@ -1998,6 +2012,9 @@ int config_read_start(void)
 int is_config_read_finished(void)
 {
 	ConfigResource *rs;
+
+	if (loop.rehash_download_busy)
+		return 0;
 
 	for (rs = config_resources; rs; rs = rs->next)
 	{
@@ -2072,6 +2089,7 @@ int config_test(void)
 			(*(h->func.intfunc))();
 		}
 	}
+	config_pre_run_log();
 
 	Init_all_testing_modules();
 
@@ -2116,7 +2134,7 @@ void config_parse_and_queue_urls(ConfigEntry *ce)
 			break;
 		if (ce->name && !strcmp(ce->name, "include"))
 			continue; /* handled elsewhere */
-		if (ce->value && url_is_valid(ce->value))
+		if (ce->value && !ce->escaped && url_is_valid(ce->value))
 			add_config_resource(ce->value, 0, ce);
 		if (ce->items)
 			config_parse_and_queue_urls(ce->items);
@@ -3089,25 +3107,29 @@ void init_dynconf(void)
 	memset(&tempiConf, 0, sizeof(iConf));
 }
 
-const char *pretty_time_val(long timeval)
+const char *pretty_time_val_r(char *buf, size_t buflen, long timeval)
 {
-	static char buf[512];
-
 	if (timeval == 0)
 		return "0";
 
 	buf[0] = 0;
 
 	if (timeval/86400)
-		snprintf(buf, sizeof(buf), "%ldd", timeval/86400);
+		snprintf(buf, buflen, "%ldd", timeval/86400);
 	if ((timeval/3600) % 24)
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%ldh", (timeval/3600)%24);
+		snprintf(buf+strlen(buf), buflen-strlen(buf), "%ldh", (timeval/3600)%24);
 	if ((timeval/60)%60)
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%ldm", (timeval/60)%60);
+		snprintf(buf+strlen(buf), buflen-strlen(buf), "%ldm", (timeval/60)%60);
 	if ((timeval%60))
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%lds", timeval%60);
+		snprintf(buf+strlen(buf), buflen-strlen(buf), "%lds", timeval%60);
 
 	return buf;
+}
+
+const char *pretty_time_val(long timeval)
+{
+	static char buf[512];
+	return pretty_time_val_r(buf, sizeof(buf), timeval);
 }
 
 /* This converts a relative path to an absolute path, but only if necessary. */
@@ -3850,6 +3872,8 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	oper =  safe_alloc(sizeof(ConfigItem_oper));
 	safe_strdup(oper->name, ce->value);
 
+	oper->server_notice_colors = tempiConf.server_notice_colors; /* default */
+
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "operclass"))
@@ -3891,6 +3915,10 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "snomask"))
 		{
 			safe_strdup(oper->snomask, cep->value);
+		}
+		else if (!strcmp(cep->name, "server-notice-colors"))
+		{
+			oper->server_notice_colors = config_checkval(cep->value, CFG_YESNO);
 		}
 		else if (!strcmp(cep->name, "modes"))
 		{
@@ -4012,6 +4040,9 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 				has_snomask = 1;
+			}
+			else if (!strcmp(cep->name, "server-notice-colors"))
+			{
 			}
 			/* oper::modes */
 			else if (!strcmp(cep->name, "modes"))
@@ -7108,6 +7139,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "snomask-on-oper")) {
 			safe_strdup(tempiConf.oper_snomask, cep->value);
 		}
+		else if (!strcmp(cep->name, "server-notice-colors")) {
+			tempiConf.server_notice_colors = config_checkval(cep->value, CFG_YESNO);
+		}
 		else if (!strcmp(cep->name, "level-on-join")) {
 			const char *res = channellevel_to_string(cep->value); /* 'halfop', etc */
 			if (!res)
@@ -7727,7 +7761,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						cep->file->filename, cep->line_number, *p);
 					errors++;
 				}
-			set_usermode(cep->value);
 		}
 		else if (!strcmp(cep->name, "modes-on-join")) {
 			char *c;
@@ -7777,6 +7810,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "snomask-on-oper")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, snomask_on_oper, "snomask-on-oper");
+		}
+		else if (!strcmp(cep->name, "server-notice-colors")) {
+			CheckNull(cep);
 		}
 		else if (!strcmp(cep->name, "level-on-join")) {
 			CheckNull(cep);
@@ -10608,7 +10644,7 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 		/* Existing entry, add us to the list of
 		 * items who are interested in this resource ;)
 		 */
-		AddListItem(rs->wce, wce);
+		AddListItem(wce, rs->wce);
 		return 0;
 	}
 
@@ -10630,7 +10666,42 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 		cache_file = unreal_mkcache(rs->url);
 		modtime = unreal_getfilemodtime(cache_file);
 		if (modtime > 0)
+		{
 			safe_strdup(rs->cache_file, cache_file); /* Cached copy is available */
+			/* Check if there is an "url-refresh" argument */
+			ConfigEntry *cep, *prev = NULL;
+			for (cep = ce->items; cep; cep = cep->next)
+			{
+				if (!strcmp(cep->name, "url-refresh"))
+				{
+					/* First find out the time value of url-refresh... (eg '7d' -> 86400*7) */
+					long refresh_time = 0;
+					if (cep->value)
+						refresh_time = config_checkval(cep->value, CFG_TIME);
+					/* Then remove the config item so it is not seen by the rest of unrealircd.
+					 * Can't use DelListItem() here as ConfigEntry has no ->prev, only ->next.
+					 */
+					if (prev)
+						prev->next = cep->next; /* (skip over us) */
+					else
+						ce->items = cep->next; /* (new head) */
+					/* ..and free it */
+					config_entry_free(cep);
+					/* And now check if the current cached copy is recent enough */
+					if (TStime() - modtime < refresh_time)
+					{
+						/* Don't download, use cached copy */
+						//config_status("DEBUG: using cached copy due to url-refresh %ld", refresh_time);
+						resource_download_complete(rs->url, NULL, NULL, 1, rs);
+						return 1;
+					} else {
+						//config_status("DEBUG: requires download attempt, out of date url-refresh %ld < %ld", refresh_time, TStime() - modtime);
+					}
+					break; // MUST break now as we touched the linked list.
+				}
+				prev = cep;
+			}
+		}
 		download_file_async(rs->url, modtime, resource_download_complete, (void *)rs, NULL, DOWNLOAD_MAX_REDIRECTS);
 	}
 	return 1;

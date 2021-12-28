@@ -349,12 +349,14 @@ void set_snomask(Client *client, const char *snomask)
 				what = MODE_DEL;
 				break;
 			default:
-				if (!isalpha(*p))
-					continue;
 				if (what == MODE_ADD)
+				{
+					if (!isalpha(*p) || !is_valid_snomask(*p))
+						continue;
 					addlettertodynamicstringsorted(&client->user->snomask, *p);
-				else
+				} else {
 					delletterfromstring(client->user->snomask, *p);
+				}
 				break;
 		}
 	}

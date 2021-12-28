@@ -262,7 +262,7 @@ PreprocessorItem  parse_preprocessor_item(char *start, char *end, const char *fi
 		return evaluate_preprocessor_define(buf+7, filename, linenumber);
 	else if (!strncmp(buf, "@if ", 4))
 		return evaluate_preprocessor_if(buf+4, filename, linenumber, cc);
-	else if (!strcmp(buf, "@endif"))
+	else if (!strncmp(buf, "@endif", 6))
 		return PREPROCESSOR_ENDIF;
 
 	config_error("%s:%i: Unknown preprocessor directive: %s", filename, linenumber, buf);

@@ -1291,7 +1291,6 @@ int hooktype_pre_local_join(Client *client, Channel *channel, const char *key);
  * @param client		The client
  * @param channel		The channel the user wants to join
  * @param mtags         	Message tags associated with the event
- * @param key			Channel key (can be NULL)
  * @return The return value is ignored (use return 0)
  */
 int hooktype_local_join(Client *client, Channel *channel, MessageTag *mtags);
@@ -1300,7 +1299,6 @@ int hooktype_local_join(Client *client, Channel *channel, MessageTag *mtags);
  * @param client		The client
  * @param channel		The channel the user wants to join
  * @param mtags         	Message tags associated with the event
- * @param key			Channel key (can be NULL)
  * @return The return value is ignored (use return 0)
  */
 int hooktype_remote_join(Client *client, Channel *channel, MessageTag *mtags);
@@ -1489,9 +1487,10 @@ int hooktype_pre_remote_chanmode(Client *client, Channel *channel, MessageTag *m
  * @param parabuf		The parameter buffer, for example "NiceOp"
  * @param sendts		Send timestamp
  * @param samode		Is this an SAMODE?
+ * @param destroy_channel	Module can set this to 1 to indicate 'channel' was destroyed
  * @return The return value is ignored (use return 0)
  */
-int hooktype_local_chanmode(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode);
+int hooktype_local_chanmode(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode, int *destroy_channel);
 
 /** Called when a remote user changes channel modes (function prototype for HOOKTYPE_REMOTE_CHANMODE).
  * @param client		The client
@@ -1501,9 +1500,10 @@ int hooktype_local_chanmode(Client *client, Channel *channel, MessageTag *mtags,
  * @param parabuf		The parameter buffer, for example "NiceOp"
  * @param sendts		Send timestamp
  * @param samode		Is this an SAMODE?
+ * @param destroy_channel	Module can set this to 1 to indicate 'channel' was destroyed
  * @return The return value is ignored (use return 0)
  */
-int hooktype_remote_chanmode(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode);
+int hooktype_remote_chanmode(Client *client, Channel *channel, MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode, int *destroy_channel);
 
 /** Called when a channel mode is removed by a local or remote user (function prototype for HOOKTYPE_MODECHAR_DEL).
  * NOTE: This is currently not terribly useful for most modules. It is used by by the floodprot and noknock modules.
@@ -2108,16 +2108,18 @@ int hooktype_is_invited(Client *client, Channel *channel, int *invited);
 /** Called after a local user has changed the nick name (function prototype for HOOKTYPE_POST_LOCAL_NICKCHANGE).
  * @param client		The client
  * @param mtags         	Message tags associated with the event
+ * @param oldnick		The nick name before the nick change
  * @return The return value is ignored (use return 0)
  */
-int hooktype_post_local_nickchange(Client *client, MessageTag *mtags);
+int hooktype_post_local_nickchange(Client *client, MessageTag *mtags, const char *oldnick);
 
 /** Called after a remote user has changed the nick name (function prototype for HOOKTYPE_POST_REMOTE_NICKCHANGE).
  * @param client		The client
  * @param mtags         	Message tags associated with the event
+ * @param oldnick		The nick name before the nick change
  * @return The return value is ignored (use return 0)
  */
-int hooktype_post_remote_nickchange(Client *client, MessageTag *mtags);
+int hooktype_post_remote_nickchange(Client *client, MessageTag *mtags, const char *oldnick);
 
 /** Called when user name or user host has changed.
  * @param client		The client whose user@host has changed

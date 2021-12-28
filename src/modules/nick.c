@@ -105,6 +105,7 @@ CMD_FUNC(cmd_nick_remote)
 	int ishold;
 	Client *acptr;
 	char nick[NICKLEN + 2];
+	char oldnick[NICKLEN + 1];
 	time_t lastnick = 0;
 	int differ = 1;
 	unsigned char removemoder = (client->umodes & UMODE_REGNICK) ? 1 : 0;
@@ -113,6 +114,7 @@ CMD_FUNC(cmd_nick_remote)
 	/* 'client' is always the fully registered user doing the nick change */
 
 	strlcpy(nick, parv[1], NICKLEN + 1);
+	strlcpy(oldnick, client->name, sizeof(oldnick));
 
 	if (parc > 2)
 		lastnick = atol(parv[2]);
@@ -208,7 +210,6 @@ CMD_FUNC(cmd_nick_remote)
 	sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
 	    client->id, nick, (long long)client->lastnick);
 	sendto_local_common_channels(client, client, 0, mtags, ":%s NICK :%s", client->name, nick);
-	free_message_tags(mtags);
 	if (removemoder)
 		client->umodes &= ~UMODE_REGNICK;
 
@@ -217,7 +218,8 @@ CMD_FUNC(cmd_nick_remote)
 	strlcpy(client->name, nick, sizeof(client->name));
 	add_to_client_hash_table(nick, client);
 
-	RunHook(HOOKTYPE_POST_REMOTE_NICKCHANGE, client, mtags);
+	RunHook(HOOKTYPE_POST_REMOTE_NICKCHANGE, client, mtags, oldnick);
+	free_message_tags(mtags);
 }
 
 /* Local user: either setting their nick for the first time (registration)
@@ -228,12 +230,16 @@ CMD_FUNC(cmd_nick_local)
 	TKL *tklban;
 	int ishold;
 	Client *acptr;
-	char nick[NICKLEN + 2], descbuf[BUFSIZE];
+	char nick[NICKLEN + 2];
+	char oldnick[NICKLEN + 1];
+	char descbuf[BUFSIZE];
 	Membership *mp;
 	int newuser = 0;
 	unsigned char removemoder = (client->umodes & UMODE_REGNICK) ? 1 : 0;
 	Hook *h;
 	int ret;
+
+	strlcpy(oldnick, client->name, sizeof(oldnick));
 
 	/* Enforce minimum nick length */
 	if (iConf.min_nick_length && !IsOper(client) && !IsULine(client) && strlen(parv[1]) < iConf.min_nick_length)
@@ -291,16 +297,6 @@ CMD_FUNC(cmd_nick_local)
 		/* fallthrough for ircops that have sufficient privileges */
 	}
 
-	/* set::anti-flood::nick-flood */
-	if (client->user &&
-	    !ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL) &&
-	    flood_limit_exceeded(client, FLD_NICK))
-	{
-		/* Throttle... */
-		sendnumeric(client, ERR_NCHANGETOOFAST, nick);
-		return;
-	}
-
 	if (!ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL))
 		add_fake_lag(client, 3000);
 
@@ -331,6 +327,16 @@ CMD_FUNC(cmd_nick_local)
 			sendnumeric(client, ERR_NICKNAMEINUSE, nick);
 			return;	/* NICK message ignored */
 		}
+	}
+
+	/* set::anti-flood::nick-flood */
+	if (client->user &&
+	    !ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL) &&
+	    flood_limit_exceeded(client, FLD_NICK))
+	{
+		/* Throttle... */
+		sendnumeric(client, ERR_NCHANGETOOFAST, nick);
+		return;
 	}
 
 	/* New local client? */
@@ -455,7 +461,7 @@ CMD_FUNC(cmd_nick_local)
 		sendto_one(client, NULL, ":%s MODE %s :-r", me.name, client->name);
 
 	if (MyUser(client) && !newuser)
-		RunHook(HOOKTYPE_POST_LOCAL_NICKCHANGE, client, recv_mtags);
+		RunHook(HOOKTYPE_POST_LOCAL_NICKCHANGE, client, recv_mtags, oldnick);
 }
 
 /*
@@ -680,7 +686,7 @@ nickkill2done:
 
 	/* Update counts */
 	irccounts.clients++;
-	if (client->uplink && client->uplink->server)
+	if (client->uplink->server)
 		client->uplink->server->users++;
 	if (client->umodes & UMODE_INVISIBLE)
 		irccounts.invisible++;
@@ -689,7 +695,7 @@ nickkill2done:
 	set_user_modes_dont_spread(client, umodes);
 
 	/* Set the vhost */
-	if (virthost && *virthost != '*')
+	if (*virthost != '*')
 		safe_strdup(client->user->virthost, virthost);
 
 	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
@@ -1098,7 +1104,7 @@ int _register_user(Client *client)
 	/* Send the RPL_WELCOME, LUSERS, MOTD, auto join channels, everything... */
 	welcome_user(client, savetkl);
 
-	return IsDead(client) ? 1 : 0;
+	return IsDead(client) ? 0 : 1;
 }
 
 /** Nick collission detected. A winner has been decided upstream. Deal with killing.

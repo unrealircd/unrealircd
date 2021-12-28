@@ -40,12 +40,8 @@ long sajoinmode = 0;
  */
 Channel *channels = NULL;
 
-/* some buffers for rebuilding channel/nick lists with comma's */
+/* A buffer for rebuilding channel/nick lists with comma's */
 static char buf[BUFSIZE];
-/** Mode buffer (eg: "+sntkl") */
-MODVAR char modebuf[BUFSIZE];
-/** Parameter buffer (eg: "key 123") */
-MODVAR char parabuf[BUFSIZE];
 
 static mp_pool_t *channel_pool = NULL;
 
@@ -580,6 +576,18 @@ int has_channel_mode(Channel *channel, char mode)
 
 	for (cm=channelmodes; cm; cm = cm->next)
 		if ((cm->letter == mode) && (channel->mode.mode & cm->mode))
+			return 1;
+
+	return 0; /* Not found */
+}
+
+/** Returns 1 if channel has this mode is set and 0 if not */
+int has_channel_mode_raw(Cmode_t m, char mode)
+{
+	Cmode *cm;
+
+	for (cm=channelmodes; cm; cm = cm->next)
+		if ((cm->letter == mode) && (m & cm->mode))
 			return 1;
 
 	return 0; /* Not found */
@@ -1285,6 +1293,7 @@ void send_invalid_channelname(Client *client, const char *channelname)
 
 /** Is the provided string possibly an extended ban?
  * Note that it still may not exist, it just tests the first part.
+ * @param str	The string to check (eg "~account:xyz")
  */
 int is_extended_ban(const char *str)
 {
@@ -1303,6 +1312,21 @@ int is_extended_ban(const char *str)
 	return 0;
 }
 
+/** Is the provided string possibly an extended server ban?
+ * Actually this is only a very light check.
+ * It may still not exist, it just tests the first part.
+ * @param str	The string to check (eg "~account:xyz")
+ * The only difference between this and is_extended_ban()
+ * is that we allow a % at the beginning for soft-bans.
+ * @see is_extended_ban()
+ */
+int is_extended_server_ban(const char *str)
+{
+	if (*str == '%')
+		str++;
+	return is_extended_ban(str);
+}
+
 /** Check if it is an empty (useless) mode, namely "", "+" or "-".
  * Typically called as: empty_mode(modebuf)
  */
@@ -1311,4 +1335,18 @@ int empty_mode(const char *m)
 	if (!*m || (((m[0] == '+') || (m[0] == '-')) && m[1] == '\0'))
 		return 1;
 	return 0;
+}
+
+/** Free everything of/in a MultiLineMode */
+void free_multilinemode(MultiLineMode *m)
+{
+	int i;
+	if (m == NULL)
+		return;
+	for (i=0; i < m->numlines; i++)
+	{
+		safe_free(m->modeline[i]);
+		safe_free(m->paramline[i]);
+	}
+	safe_free(m);
 }

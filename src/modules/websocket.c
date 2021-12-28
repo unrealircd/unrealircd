@@ -261,6 +261,7 @@ void websocket_mdata_free(ModData *m)
 	{
 		safe_free(wsu->handshake_key);
 		safe_free(wsu->lefttoparse);
+		safe_free(wsu->sec_websocket_protocol);
 		safe_free(wsu->forwarded);
 		safe_free(m->ptr);
 	}
@@ -578,57 +579,57 @@ struct HTTPForwardedHeader *websocket_parse_forwarded_header(char *input)
 				break;
 		}
 		switch (action)
-			{
-				case FHEADER_ACTION_APPEND:
-					if (state == FHEADER_STATE_NAME)
+		{
+			case FHEADER_ACTION_APPEND:
+				if (state == FHEADER_STATE_NAME)
+				{
+					if (name_length < FHEADER_NAMELEN)
 					{
-						if (name_length < FHEADER_NAMELEN)
-						{
-							name[name_length++] = c;
-						} else
-						{
-							/* truncate */
-						}
+						name[name_length++] = c;
 					} else
 					{
-						if (name_length < IPLEN)
-						{
-							value[value_length++] = c;
-						} else
-						{
-							/* truncate */
-						}
+						/* truncate */
 					}
-					break;
-				case FHEADER_ACTION_IGNORE: default:
-					break;
-				case FHEADER_ACTION_PROCESS:
-					value[value_length] = '\0';
-					name[name_length] = '\0';
-					if (!strcasecmp(name, "for"))
+				} else
+				{
+					if (value_length < IPLEN)
 					{
-						strlcpy(forwarded.ip, value, IPLEN+1);
-					} else if (!strcasecmp(name, "proto"))
-					{
-						if (!strcasecmp(value, "https"))
-						{
-							forwarded.secure = 1;
-						} else if (!strcasecmp(value, "http"))
-						{
-							forwarded.secure = 0;
-						} else
-						{
-							/* ignore unknown value */
-						}
+						value[value_length++] = c;
 					} else
 					{
-						/* ignore unknown field name */
+						/* truncate */
 					}
-					value_length = 0;
-					name_length = 0;
-					state = FHEADER_STATE_NAME;
-					break;			
-			}
+				}
+				break;
+			case FHEADER_ACTION_IGNORE: default:
+				break;
+			case FHEADER_ACTION_PROCESS:
+				value[value_length] = '\0';
+				name[name_length] = '\0';
+				if (!strcasecmp(name, "for"))
+				{
+					strlcpy(forwarded.ip, value, IPLEN+1);
+				} else if (!strcasecmp(name, "proto"))
+				{
+					if (!strcasecmp(value, "https"))
+					{
+						forwarded.secure = 1;
+					} else if (!strcasecmp(value, "http"))
+					{
+						forwarded.secure = 0;
+					} else
+					{
+						/* ignore unknown value */
+					}
+				} else
+				{
+					/* ignore unknown field name */
+				}
+				value_length = 0;
+				name_length = 0;
+				state = FHEADER_STATE_NAME;
+				break;
+		}
 	}
 	
 	return &forwarded;
@@ -819,7 +820,7 @@ int websocket_handle_handshake(Client *client, const char *readbuf, int *length)
 
 	if (end_of_request)
 	{
-		if (!websocket_handshake_valid(client))
+		if (!websocket_handshake_valid(client) || IsDead(client))
 			return -1;
 		websocket_handshake_send_response(client);
 		return 0;

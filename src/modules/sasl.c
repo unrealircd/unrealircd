@@ -100,7 +100,7 @@ CMD_FUNC(cmd_svslogin)
 {
 	Client *target;
 
-	if (!SASL_SERVER || MyUser(client) || (parc < 3) || !parv[3])
+	if (MyUser(client) || (parc < 3) || !parv[3])
 		return;
 
 	/* We actually ignore parv[1] since this is a broadcast message.

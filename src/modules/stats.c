@@ -780,6 +780,7 @@ int stats_set(Client *client, const char *para)
 	char *uhallow;
 	SecurityGroup *s;
 	FloodSettings *f;
+	char modebuf[BUFSIZE], parabuf[BUFSIZE];
 
 	if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
 	{

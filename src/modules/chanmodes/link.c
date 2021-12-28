@@ -113,7 +113,7 @@ int cmodeL_is_ok(Client *client, Channel *channel, char mode, const char *para, 
 		if (IsUser(client) && check_channel_access(client, channel, "oaq"))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
-			sendnumeric(client, ERR_NOTFORHALFOPS, 'H');
+			sendnumeric(client, ERR_NOTFORHALFOPS, 'L');
 		return EX_DENY;
 	} else
 	if (type == EXCHK_PARAM)

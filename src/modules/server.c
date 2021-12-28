@@ -642,7 +642,7 @@ void _send_server_message(Client *client)
  */
 int _verify_link(Client *client, ConfigItem_link **link_out)
 {
-	ConfigItem_link *link;
+	ConfigItem_link *link, *orig_link;
 	Client *acptr = NULL, *ocptr = NULL;
 	ConfigItem_ban *bconf;
 
@@ -707,13 +707,14 @@ int _verify_link(Client *client, ConfigItem_link **link_out)
 		return 0;
 	}
 
+	orig_link = link;
 	link = find_link(client->name, client);
 
 	if (!link)
 	{
 		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_INCOMING_MASK_MISMATCH", client,
 		           "Link with server $client.details denied: Server is in link block but link::incoming::mask didn't match",
-		           log_data_link_block(link));
+		           log_data_link_block(orig_link));
 		exit_client(client, NULL, LINK_DEFAULT_ERROR_MSG);
 		return 0;
 	}
@@ -1182,6 +1183,17 @@ CMD_FUNC(cmd_sid)
 		return;
 	}
 
+	if ((acptr = find_client(parv[3], NULL)))
+	{
+		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_DUPLICATE_SID_SERVER", client,
+			   "Denied server $servername with SID $sid: Server with SID $existing_client.id ($existing_client) is already linked.",
+			   log_data_string("servername", servername),
+			   log_data_string("sid", parv[3]),
+			   log_data_client("existing_client", acptr));
+		sendto_one(client, NULL, "SQUIT %s :Server with this SID (%s) already exists (%s)", parv[3], parv[3], acptr->name);
+		return;
+	}
+
 	/* Check deny server { } */
 	if ((bconf = find_ban(NULL, servername, CONF_BAN_SERVER)))
 	{
@@ -1300,8 +1312,13 @@ CMD_FUNC(cmd_sid)
 	add_to_id_hash_table(acptr->id, acptr);
 	list_move(&acptr->client_node, &global_server_list);
 
-	unreal_log(ULOG_INFO, "link", "SERVER_LINKED_REMOTE", client,
-		   "Server linked: $client (via $client.server.uplink)");
+	if (IsULine(client->direction) || IsSynched(client->direction))
+	{
+		/* Log these (but don't show when still syncing) */
+		unreal_log(ULOG_INFO, "link", "SERVER_LINKED_REMOTE", acptr,
+			   "Server linked: $client -> $other_server",
+			   log_data_client("other_server", client));
+	}
 
 	RunHook(HOOKTYPE_SERVER_CONNECT, acptr);
 
@@ -1581,6 +1598,7 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 	char *p; /* points to somewhere in 'tbuf' */
 	int prebuflen = 0; /* points to after the <sjointoken> <TS> <chan> <fixmodes> <fixparas <..>> : part */
 	int sent = 0; /* we need this so we send at least 1 message about the channel (eg if +P and no members, no bans, #4459) */
+	char modebuf[BUFSIZE], parabuf[BUFSIZE];
 
 	if (*channel->name != '#')
 		return;

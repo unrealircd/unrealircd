@@ -363,22 +363,31 @@ int timedban_is_banned(BanContext *b)
 	return ban_check_mask(b);
 }
 
-/** Helper to check if the ban has been expired */
+/** Helper to check if the ban has been expired.
+ */
 int timedban_has_ban_expired(Ban *ban)
 {
 	char *banstr = ban->banstr;
-	char *p;
+	char *p1, *p2;
 	int t;
 	time_t expire_on;
 
-	if (strncmp(banstr, "~t:", 3))
+	/* The caller has only performed a very light check (string starting
+	 * with ~t, in the interest of performance), so we don't know yet if
+	 * it REALLY is a timed ban. We check that first here...
+	 */
+	if (!strncmp(banstr, "~t:", 3))
+		p1 = banstr + 3;
+	else if (!strncmp(banstr, "~time:", 6))
+		p1 = banstr + 6;
+	else
 		return 0; /* not for us */
-	p = strchr(banstr+3, ':'); /* skip time argument */
-	if (!p)
+	p2 = strchr(p1+1, ':'); /* skip time argument */
+	if (!p2)
 		return 0; /* invalid fmt */
-	*p = '\0'; /* danger.. must restore!! */
-	t = atoi(banstr+3);
-	*p = ':'; /* restored.. */
+	*p2 = '\0'; /* danger.. must restore!! */
+	t = atoi(p1);
+	*p2 = ':'; /* restored.. */
 	
 	expire_on = ban->when + (t * 60) - TIMEDBAN_TIMER_DELTA;
 	
@@ -415,7 +424,7 @@ EVENT(timedban_timeout)
 		for (ban = channel->banlist; ban; ban=nextban)
 		{
 			nextban = ban->next;
-			if (!strncmp(ban->banstr, "~t:", 3) && timedban_has_ban_expired(ban))
+			if (!strncmp(ban->banstr, "~t", 2) && timedban_has_ban_expired(ban))
 			{
 				add_send_mode_param(channel, &me, '-',  'b', ban->banstr);
 				del_listmode(&channel->banlist, channel, ban->banstr);
@@ -424,7 +433,7 @@ EVENT(timedban_timeout)
 		for (ban = channel->exlist; ban; ban=nextban)
 		{
 			nextban = ban->next;
-			if (!strncmp(ban->banstr, "~t:", 3) && timedban_has_ban_expired(ban))
+			if (!strncmp(ban->banstr, "~t", 2) && timedban_has_ban_expired(ban))
 			{
 				add_send_mode_param(channel, &me, '-',  'e', ban->banstr);
 				del_listmode(&channel->exlist, channel, ban->banstr);
@@ -433,7 +442,7 @@ EVENT(timedban_timeout)
 		for (ban = channel->invexlist; ban; ban=nextban)
 		{
 			nextban = ban->next;
-			if (!strncmp(ban->banstr, "~t:", 3) && timedban_has_ban_expired(ban))
+			if (!strncmp(ban->banstr, "~t", 2) && timedban_has_ban_expired(ban))
 			{
 				add_send_mode_param(channel, &me, '-',  'I', ban->banstr);
 				del_listmode(&channel->invexlist, channel, ban->banstr);

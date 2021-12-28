@@ -180,7 +180,7 @@ Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*
 	{
 		/* Not found, create */
 		long l, found = 0;
-		for (l = 1; l < INT_MAX/2; l *= 2)
+		for (l = 1; l < LONG_MAX/2; l *= 2)
 		{
 			found = 0;
 			for (um=usermodes; um; um = um->next)

@@ -1,19 +1,10 @@
-UnrealIRCd 6.0.0-beta1
-=======================
-This is the first beta for UnrealIRCd 6. It contains all the planned
-features for U6 and now we need the help of the public to test these beta's.
-Caution: this beta may crash spectacularly, behave weird or in unexpected
-ways, so don't run it on production systems!
-If you find any issues, please report them at https://bugs.unrealircd.org/.
-This way, you help us getting ready for a real stable UnrealIRCd 6 release.
+UnrealIRCd 6.0.0
+=================
+This is the first stable release of UnrealIRCd 6.
 
-Note that [AddressSanitizer](https://en.wikipedia.org/wiki/AddressSanitizer)
-is enabled in these builds, which will cause UnrealIRCd to use a lot more
-memory and run more slowly than normal. AddressSanitizer helps us greatly
-to catch more bugs during development. However, if this is a problem for
-you, then answer --disable-asan to the last question in ./Config about
-custom parameters to pass to configure.
-Naturally, the eventual stable release won't use AddressSanitizer.
+Many thanks to k4be for his help during development, other contributors for
+their feedback and patches, the people who tested the beta's and release
+candidates, translators and everyone else who made this release happen!
 
 Summary
 --------
@@ -26,35 +17,36 @@ which snomask. All the +vhoaq channel modes are now modular as well,
 handy for admins who don't want or need halfops or +q/+a.
 For WHOIS it is now customizable in detail who gets to see what.
 
-Breaking changes
------------------
-You can use the unrealircd.conf from UnrealIRCd 5, but you need to make
-a few changes:
-* You need to add `include "snomasks.default.conf";`
-* You need to load a cloaking module explicitly. Assuming you already
-  have a network then add: `loadmodule "cloak_md5";`
-* The log block(s) need to be updated, use something like:
-  ```
-  log {
-          source {
-              !debug;
-              all;
-          }
-          destination {
-              file "ircd.log" { maxsize 100M; }
-          }
-  }
-  ```
+A summary of the features is available at
+[What's new in UnrealIRCd 6](https://www.unrealircd.org/docs/What's_new_in_UnrealIRCd_6).
+For complete information, continue reading the release notes below.
+The sections below contain all the details.
+
+Upgrading from UnrealIRCd 5
+----------------------------
+The previous stable series, UnrealIRCd 5, will no longer get any new features.
+We still do bug fixes until July 1, 2022. In the 12 months after that, only
+security issues will be fixed. Finally, after July 1, 2023,
+[all support will stop](https://www.unrealircd.org/docs/UnrealIRCd_5_EOL).
+
+If you want to hold off for a while because you are cautious or if you
+depend on 3rd party modules (which may not have been upgraded yet by their
+authors) then feel free to wait for a 6.0.1 or 6.0.2 release.
+
+If you are upgrading from UnrealIRCd 5 to 6 then you can use your existing
+configuration and files. There's no need to start from scratch.
+However, you will need to make a few updates, see
+[Upgrading from 5.x to 6.x](https://www.unrealircd.org/docs/Upgrading_from_5.x).
 
 Enhancements
 -------------
 * Completely new log system and snomasks overhaul
   * Both logging and snomask sending is done by a single logging function
-  * New support for [JSON logging](https://www.unrealircd.org/docs/JSON_logging)
+  * Support for [JSON logging](https://www.unrealircd.org/docs/JSON_logging)
     to disk, instead of the default text format.
     JSON logging adds lot of detail to log messages and consistently
-    expands things like 'client' with properties like hostname,
-    connected_since, reputation, modes, etc.
+    expands things like *client* with properties like *hostname*,
+    *connected_since*, *reputation*, *modes*, etc.
   * The JSON data is also sent to all IRCOps who request the
     `unrealircd.org/json-log` capability. The data is then sent in
     a message-tag called `unrealircd.org/json-log`. This makes it ideal
@@ -70,8 +62,9 @@ Enhancements
   * See [FAQ: Converting log { } block](https://www.unrealircd.org/docs/FAQ#old-log-block)
     on how to change your existing log { } blocks for disk logging.
   * We now have a consistent log format and log messages can be multiline.
-  * Colors are enabled in snomasks and console logs by default. Later there
-    will be an option to turn this off (TODO).
+  * Colors are enabled by default in snomask server notices, these can be disabled via
+    [set::server-notice-colors](https://www.unrealircd.org/docs/Set_block#set::server-notice-colors)
+    and also in [oper::server-notice-colors](https://www.unrealircd.org/docs/Oper_block)
 * Almost all channel modes are modularized
   * Only the three list modes (+b/+e/+I) are still in the core
   * The five [level modes](https://www.unrealircd.org/docs/Channel_Modes#Access_levels)
@@ -123,15 +116,15 @@ Enhancements
   * Anywhere an URL is encountered on its own, it will be fetched
     automatically. This makes it work not only for includes and motd
     (which was already supported) but also for any other file.
-  * On TODO list: an option to prevent UnrealIRCd from treating an URL as a
-    remote include.
+  * To prevent something from being interpreted as a remote include
+    URL you can use 'value' instead of "value".
 * Invite notification: set `set::normal-user-invite-notification yes;` to make
   chanops receive information about normal users inviting someone to their channel.
-  (TODO: Not completely sure about the setting name)
+  The name of this setting may change in a later version.
 * Websocket: you can add a `listen::options::websocket::forward 1.2.3.4` option
   to make unrealircd accept a `Forwarded` (RFC 7239) header from a reverse proxy
   connecting from `1.2.3.4` (plans to accept legacy `X-Forwarded-For` and a proxy
-  password too)
+  password too). This feature is currently experimental.
 
 Changes
 --------
@@ -146,24 +139,59 @@ Removed
 --------
 * /REHASH -motd and -opermotd are gone, just use /REHASH
 
+Breaking changes
+-----------------
+See https://www.unrealircd.org/docs/Upgrading_from_5.x, but in short:
+
+You can use the unrealircd.conf from UnrealIRCd 5, but you need to make
+a few changes:
+* You need to add `include "snomasks.default.conf";`
+* You need to load a cloaking module explicitly. Assuming you already
+  have a network then add: `loadmodule "cloak_md5";`
+* The log block(s) need to be updated, use something like:
+  ```
+  log {
+          source {
+              !debug;
+              all;
+          }
+          destination {
+              file "ircd.log" { maxsize 100M; }
+          }
+  }
+  ```
+
 Module coders (API changes)
 ----------------------------
-
-* This section is incomplete and has little details. It will be expanded later.
-* Bump module header from unrealircd-5 to unrealircd-6
-* Newlog
-* ConfigEntry, ConfigFile (c22207c4ca2e6a72024ff9c642863737e2519d33)
+* Be sure to bump the version in the module header from `unrealircd-5` to `unrealircd-6`
+* We use a lot more `const char *` now (instead of `char *`). In particular `parv`
+  is const now and so are a lot of arguments to hooks. This will mean that in your
+  module you have to use more const too. The reason for this change is to indicate
+  that certain strings should not be touched, as doing so is dangerous or could
+  have had side-effects that were unpredictable.
+* Logging has been completely redone. Don't use `ircd_log()`, `sendto_snomask()`,
+  `sendto_ops()` and `sendto_realops()` anymore. Instead use `unreal_log()` which
+  handles both logging to disk and notifying IRCOps.
+* Various struct member names changed, in particular in `ConfigEntry` and `ConfigFile`,
+  but also `channel->chname` is `channel->name` now.
 * get_channel() is now make_channel() and creates if needed, otherwise use find_channel()
-* Extban api breakage
-* Message tag api breakage
-* ModData MODDATA_SYNC_EARLY
-* For adjusting fake lag use add_fake_lag(client, msec)
-* Some client/user struct changes: eg client->uplink->name, check log for all..
+* The Extended Ban API has been changed a lot. We use a `BanContext` struct now
+  that we pass around a lot. You also don't need to do `+3` magic anymore on the
+  string as it is handled in another layer. When registering the extended ban,
+  `.flag` is now `.letter`, and you also need to set a `.name` to a string due
+  to named extended bans. Have a look at the built-in extban modules to see
+  how to handle the changes.
+* ModData now has an option `MODDATA_SYNC_EARLY`. See under *Server protocol*.
+* If you want to lag someone up, don't touch `client->since`, but instead use:
+  `add_fake_lag(client, msec)`
+* Some client/user struct changes, with `client->user->account` (instead of svid)
+  and `client->uplink->name` being the most important ones.
+* Possibly more, but above is like 90%+ of the changes that you will encounter.
 
 Server protocol
 ----------------
-* If multiple related `SJOIN` messages are generated for the same channel
-  then we now only send the current channel modes (eg ```+sntk key```) in the
+* When multiple related `SJOIN` messages are generated for the same channel
+  then we now only send the current channel modes (eg `+sntk key`) in the
   first SJOIN and not in the other ones as they are unneeded for the
   immediate followup SJOINs, they waste unnecessary bytes and CPU.
   Such messages may be generated when syncing a channel that has dozens
@@ -196,43 +224,7 @@ Server protocol
 
 Client protocol
 ----------------
-* Extended bans now have names instead of letters
-* TODO: document other stuff?
-
-Mental notes / move these wiki
--------------------------------
-These notes are mostly for ourselves:
-
-* Geo ip main configuration (config items may still change!!):
-```
-  set { geoip {
-    check-on-load yes; // check all users already connected and add geoip info to them on module load
-  };};
-```
-  geoip_csv module: always compiled, file locations:
-```
-  set { geoip-csv {
-    ipv4-blocks-file "GeoLite2-Country-Blocks-IPv4.csv"; // don't set for ipv6-only
-    ipv6-blocks-file "GeoLite2-Country-Blocks-IPv6.csv"; // don't set for ipv4-only
-    countries-file "GeoLite2-Country-Locations-en.csv"; // required
-  };};
-```
-  geoip_maxmind module: compiled when system libmaxminddb is present, file location:
-```
-  set { geoip-maxmind {
-    database "GeoLite2-Country.mmdb";
-  };};
-```
-  geoip_classic module: compiled when `--enable-geoip-classic=yes` added to configure, file locations:
-```
-  set { geoip-classic {
-    ipv4-database "GeoIP.dat"; // don't set for ipv6-only
-    ipv6-database "GeoIPv6.dat"; // don't set for ipv4-only
-  };};
-```
-* We now (try to) kill the "old" server when a server links in with the same
-  name, handy when the old server is a zombie waiting for ping timeout.
-  FIXME: isnt this broken?
-FIXME: (wrong) server delinking in case of error may be an issue
-* Antirandom no longer has fullstatus-on-load: maybe warn and ignore
-  the option rather than failing? Was this in the default conf?
+* Extended bans now have names instead of letters. If a client sends the
+  old format with letters (eg `+b ~a:XYZ`) then the server will
+  convert it to the new format with names (eg: `+b ~account:XYZ`)
+* Support for `MONITOR` and the other IRCv3 features (see *Enhancements*)

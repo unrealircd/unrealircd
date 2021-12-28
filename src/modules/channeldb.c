@@ -331,6 +331,8 @@ int write_listmode(UnrealDB *db, const char *tmpfname, Ban *lst)
 
 int write_channel_entry(UnrealDB *db, const char *tmpfname, Channel *channel)
 {
+	char modebuf[BUFSIZE], parabuf[BUFSIZE];
+
 	W_SAFE(unrealdb_write_int32(db, MAGIC_CHANNEL_START));
 	/* Channel name */
 	W_SAFE(unrealdb_write_str(db, channel->name));

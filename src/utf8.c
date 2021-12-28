@@ -239,4 +239,5 @@ void utf8_test(void)
 		}
 		free(heapbuf);
 	}
+	safe_free(workbuf);
 }

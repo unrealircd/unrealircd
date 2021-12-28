@@ -48,7 +48,7 @@ int issecure_part(Client *client, Channel *channel, MessageTag *mtags, const cha
 int issecure_quit(Client *client, MessageTag *mtags, const char *comment);
 int issecure_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, const char *comment);
 int issecure_chanmode(Client *client, Channel *channel, MessageTag *mtags,
-                             const char *modebuf, const char *parabuf, time_t sendts, int samode);
+                             const char *modebuf, const char *parabuf, time_t sendts, int samode, int *destroy_channel);
                              
 
 MOD_TEST()
@@ -248,7 +248,7 @@ int issecure_kick(Client *client, Client *victim, Channel *channel, MessageTag *
 }
 
 int issecure_chanmode(Client *client, Channel *channel, MessageTag *mtags,
-                             const char *modebuf, const char *parabuf, time_t sendts, int samode)
+                             const char *modebuf, const char *parabuf, time_t sendts, int samode, int *destroy_channel)
 {
 	if (!strchr(modebuf, 'z'))
 		return 0; /* don't care */

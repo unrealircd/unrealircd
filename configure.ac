@@ -7,7 +7,7 @@ dnl src/windows/unrealinst.iss
 dnl doc/Config.header
 dnl src/version.c.SH
 
-AC_INIT([unrealircd], [6.0.0-beta1], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
+AC_INIT([unrealircd], [6.0.0], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
 AC_CONFIG_SRCDIR([src/ircd.c])
 AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])
@@ -40,7 +40,7 @@ AC_DEFINE_UNQUOTED([UNREAL_VERSION_MINOR], [$UNREAL_VERSION_MINOR], [Minor versi
 # The version suffix such as a beta marker or release candidate
 # marker. (e.g.: -rcX for unrealircd-3.2.9-rcX). This macro is a
 # string instead of an integer because it contains arbitrary data.
-UNREAL_VERSION_SUFFIX=["-beta1"]
+UNREAL_VERSION_SUFFIX=[""]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_SUFFIX], ["$UNREAL_VERSION_SUFFIX"], [Version suffix such as a beta marker or release candidate marker. (e.g.: -rcX for unrealircd-3.2.9-rcX)])
 
 AC_PATH_PROG(RM,rm)
@@ -550,17 +550,11 @@ AC_ARG_ENABLE([werror],
   [ac_cv_werror="$enableval"],
   [ac_cv_werror="no"])
 
-dnl AC_ARG_ENABLE([asan],
-dnl   [AS_HELP_STRING([--enable-asan],
-dnl     [Enable address sanitizer and other debugging options, not recommended for production servers!])],
-dnl   [ac_cv_asan="$enableval"],
-dnl   [ac_cv_asan="no"])
-
 AC_ARG_ENABLE([asan],
-  [AS_HELP_STRING([--disable-asan],
+  [AS_HELP_STRING([--enable-asan],
     [Enable address sanitizer and other debugging options, not recommended for production servers!])],
-  [ac_cv_asan="no"],
-  [ac_cv_asan="yes"])
+  [ac_cv_asan="$enableval"],
+  [ac_cv_asan="no"])
 
 AC_CHECK_FUNCS([poll],
 	AC_DEFINE([HAVE_POLL], [], [Define if you have poll]))
@@ -722,7 +716,7 @@ AS_IF([test "$has_system_cares" = "no"], [
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
 dnl NOTE: when changing this here, ALSO change it in extras/curlinstall
 dnl       and in the comment in this file around line 400!
-cares_version="1.17.1"
+cares_version="1.17.2"
 AC_MSG_RESULT(extracting c-ares resolver library)
 cur_dir=`pwd`
 cd extras

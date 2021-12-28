@@ -268,8 +268,8 @@ char *make_authbuf(const char *username, const char *password)
 	static char outbuf[512];
 	int size;
 
-	size = strlen(username) + 1 + strlen(username) + 1 + strlen(password) + 1;
-	if (size >= sizeof(inbuf))
+	size = strlen(username) + 1 + strlen(username) + 1 + strlen(password);
+	if (size >= sizeof(inbuf)-1)
 		return NULL; /* too long */
 
 	/* Because size limits are already checked above, we can cut some corners here: */

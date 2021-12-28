@@ -261,6 +261,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, con
 		{
 			MessageTag *mtags_mode = NULL;
 			Cmode *cm;
+			char modebuf[BUFSIZE], parabuf[BUFSIZE];
 
 			channel->mode.mode = MODES_ON_JOIN;
 

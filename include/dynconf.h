@@ -169,6 +169,7 @@ struct Configuration {
 	char *helpchan;
 	char *stats_server;
 	char *sasl_server;
+	int server_notice_colors;
 };
 
 extern MODVAR Configuration iConf;

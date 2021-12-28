@@ -796,15 +796,15 @@ static int internal_getscore(char *str)
 	
 	if (digits >= 5)
 	{
-		score += 5 + (digits - 5);
+		score += digits;
 	}
 	if (vowels >= 4)
 	{
-		score += 4 + (vowels - 4);
+		score += vowels;
 	}
 	if (consonants >= 4)
 	{
-		score += 4 + (consonants - 4);
+		score += consonants;
 	}
 	
 	for (t=triples; t; t=t->next)

@@ -144,9 +144,11 @@ int invite_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (!ce || !ce->name || strcmp(ce->name, "normal-user-invite-notification"))
 		return 0;
 
-	do
-		CheckNull(ce)
-	while (0);
+	if (!ce->value)
+	{
+		config_error_empty(ce->file->filename, ce->line_number, "set", ce->name);
+		errors++;
+	}
 
 	*errs = errors;
 	return errors ? -1 : 1;
@@ -478,7 +480,7 @@ void add_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags)
 
 	del_invite(to, channel);
 	/* If too many invite entries then delete the oldest one */
-	if (list_length(CLIENT_INVITES(to)) >= MAXCHANNELSPERUSER)
+	if (link_list_length(CLIENT_INVITES(to)) >= MAXCHANNELSPERUSER)
 	{
 		for (tmp = CLIENT_INVITES(to); tmp->next; tmp = tmp->next)
 			;
@@ -489,7 +491,7 @@ void add_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags)
 	 * since otherwise mass-inviters could take up some major
 	 * resources -Donwulff
 	 */
-	if (list_length(CHANNEL_INVITES(channel)) >= MAXCHANNELSPERUSER)
+	if (link_list_length(CHANNEL_INVITES(channel)) >= MAXCHANNELSPERUSER)
 	{
 		for (tmp = CHANNEL_INVITES(channel); tmp->next; tmp = tmp->next)
 			;

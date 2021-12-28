@@ -408,6 +408,7 @@ static int geoip_csv_read_ipv4(char *file)
 	if (!fgets(buf, BUFLEN, u))
 	{
 		config_warn("[geoip_csv] IPv4 list file is empty");
+		fclose(u);
 		return 1;
 	}
 	buf[BUFLEN] = '\0';
@@ -508,6 +509,7 @@ static int geoip_csv_read_ipv6(char *file)
 	if (!fgets(buf, BUFLEN, u))
 	{
 		config_warn("[geoip_csv] IPv6 list file is empty");
+		fclose(u);
 		return 1;
 	}
 	while (fgets(buf, BUFLEN, u))
@@ -612,6 +614,7 @@ static int geoip_csv_read_countries(char *file)
 	if (!fgets(buf, BUFLEN, u))
 	{
 		config_warn("[geoip_csv] Countries list file is empty");
+		fclose(u);
 		return 1;
 	}
 	while (fscanf(u, "%d,%" STR(BUFLEN) "[^\n]", &id, buf) == 2)
@@ -759,8 +762,6 @@ static int geoip_csv_get_v4_geoid(char *iip)
 				found = 1;
 				break;
 			}
-			if (found)
-				break;
 			i++;
 		}
 	}

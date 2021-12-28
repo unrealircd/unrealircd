@@ -9,6 +9,11 @@ Key features include SSL/TLS, cloaking, its advanced anti-flood and anti-spam sy
 swear filtering and module support. We are also particularly proud on our extensive
 online documentation. 
 
+## Versions
+* UnrealIRCd 6 is the *stable* series since December 2021. All new features go in there.
+* UnrealIRCd 5 is the *oldstable* series. It will receive bug fixes until
+  July 1, 2022 plus another 12 months of security fixes.
+
 ## How to get started
 Please consult our excellent online documentation at https://www.unrealircd.org/docs/
 when setting up the IRCd!

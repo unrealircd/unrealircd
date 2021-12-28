@@ -42,7 +42,7 @@
 /* Not sure if this is suitable for production,
  * but let's turn it on for U6 development.
  */
-#define DETECT_HIGH_CPU
+//#define DETECT_HIGH_CPU
 
 /***************************************************************************************
  * Backend-independent functions.  fd_setselect() and friends                          *
@@ -623,7 +623,7 @@ void fd_select(time_t delay)
 		pfd = &pollfds[p];
 
 		revents = pfd->revents;
-		fd = pfd->local->fd;
+		fd = pfd->fd;
 		if (revents == 0 || fd == -1)
 			continue;
 

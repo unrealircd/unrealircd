@@ -35,6 +35,8 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
+char modebuf[BUFSIZE], parabuf[BUFSIZE];
+
 MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SJOIN, cmd_sjoin, MAXPARA, CMD_SERVER);
@@ -78,18 +80,30 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 	return (&pparv);
 }
 
-void send_local_chan_mode(MessageTag *recv_mtags, Client *client, Channel *channel, char *modebuf, char *parabuf)
+static void send_local_chan_mode(MessageTag *recv_mtags, Client *client, Channel *channel, char *modebuf, char *parabuf)
 {
 	MessageTag *mtags = NULL;
+	int destroy_channel = 0;
 
 	new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, channel->name, modebuf, parabuf);
 	sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 	               ":%s MODE %s %s %s", client->name, channel->name, modebuf, parabuf);
 	if (MyConnect(client))
-		RunHook(HOOKTYPE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, -1);
+		RunHook(HOOKTYPE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, -1, &destroy_channel);
 	else
-		RunHook(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, -1);
+		RunHook(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, -1, &destroy_channel);
 	free_message_tags(mtags);
+}
+
+/** Call send_local_chan_mode() for multiline modes */
+static void send_local_chan_mode_mlm(MessageTag *recv_mtags, Client *client, Channel *channel, MultiLineMode *mlm)
+{
+	if (mlm)
+	{
+		int i;
+		for (i = 0; i < mlm->numlines; i++)
+			send_local_chan_mode(recv_mtags, client, channel, mlm->modeline[i], mlm->paramline[i]);
+	}
 }
 
 /** SJOIN: Synchronize channel modes, +beI lists and users (server-to-server command)
@@ -236,9 +250,11 @@ CMD_FUNC(cmd_sjoin)
 		if (!empty_mode(modebuf))
 		{
 			MessageTag *mtags = NULL;
+			MultiLineMode *mlm;
 			ap = mp2parv(modebuf, parabuf);
-			set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
-			send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
+			mlm = set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
+			send_local_chan_mode_mlm(recv_mtags, client, channel, mlm);
+			safe_free_multilinemode(mlm);
 		}
 		/* remove bans */
 		/* reset the buffers */
@@ -337,7 +353,7 @@ CMD_FUNC(cmd_sjoin)
 			if (!end)
 			{
 				/* this obviously should never happen */
-				unreal_log(ULOG_WARNING, "sjoin", "SJOIN_INVALID_SJSBY", NULL,
+				unreal_log(ULOG_WARNING, "sjoin", "SJOIN_INVALID_SJSBY", client,
 					   "SJOIN for channel $channel has invalid SJSBY in item '$item' (from $client)",
 					   log_data_channel("channel", channel),
 					   log_data_string("item", s));
@@ -349,7 +365,7 @@ CMD_FUNC(cmd_sjoin)
 			if (!p)
 			{
 				/* missing setby parameter */
-				unreal_log(ULOG_WARNING, "sjoin", "SJOIN_INVALID_SJSBY", NULL,
+				unreal_log(ULOG_WARNING, "sjoin", "SJOIN_INVALID_SJSBY", client,
 					   "SJOIN for channel $channel has invalid SJSBY in item '$item' (from $client)",
 					   log_data_channel("channel", channel),
 					   log_data_string("item", s));
@@ -589,6 +605,7 @@ CMD_FUNC(cmd_sjoin)
 	if (!merge && !removetheirs && !nomode)
 	{
 		MessageTag *mtags = NULL;
+		MultiLineMode *mlm;
 
 		strlcpy(modebuf, parv[3], sizeof modebuf);
 		parabuf[0] = '\0';
@@ -601,13 +618,15 @@ CMD_FUNC(cmd_sjoin)
 			}
 		}
 		ap = mp2parv(modebuf, parabuf);
-		set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
-		send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
+		mlm = set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
+		send_local_chan_mode_mlm(recv_mtags, client, channel, mlm);
+		safe_free_multilinemode(mlm);
 	}
 
 	if (merge && !nomode)
 	{
 		CoreChannelModeTable *acp;
+		MultiLineMode *mlm;
 		Mode oldmode; /**< The old mode (OUR mode) */
 
 		/* Copy current mode to oldmode (need to duplicate all extended mode params too..) */
@@ -627,8 +646,14 @@ CMD_FUNC(cmd_sjoin)
 			}
 		}
 
+		/* First we set the mode (in memory) BUT we don't send the
+		 * mode change out to anyone, hence the immediate freeing
+		 * of 'mlm'. We do the actual rebuilding of the string and
+		 * sending it out a few lines further down.
+		 */
 		ap = mp2parv(modebuf, parabuf);
-		set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
+		mlm = set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar);
+		safe_free_multilinemode(mlm);
 
 		/* Good, now we got modes, now for the differencing and outputting of modes
 		 * We first see if any para modes are set.
@@ -636,6 +661,18 @@ CMD_FUNC(cmd_sjoin)
 		strlcpy(modebuf, "-", sizeof modebuf);
 		parabuf[0] = '\0';
 		b = 1;
+
+		/* Check if we had +s and it became +p, then revert it silently (as it is no-change) */
+		if (has_channel_mode_raw(oldmode.mode, 's') && has_channel_mode(channel, 'p'))
+		{
+			/* stay +s ! */
+			long mode_p = get_extmode_bitbychar('p');
+			long mode_s = get_extmode_bitbychar('s');
+			channel->mode.mode &= ~mode_p;
+			channel->mode.mode |= mode_s;
+			/* TODO: all the code of above would ideally be in a module */
+		}
+		/* (And the other condition, +p to +s, is already handled below by the generic code) */
 
 		/* First, check if we had something that is now gone
 		 * note that: oldmode.* = us, channel->mode.* = merged.
@@ -658,20 +695,6 @@ CMD_FUNC(cmd_sjoin)
 			}
 		}
 
-#if 0
-		// FIXME: fix this case of +p/+s merging... which should end up in +s:
-		// can use get_extmode_bitbychar() or shit but probably should call a hook (or sjoin thingy) instead?
-
-		/* Check if we had +s and it became +p, then revert it... */
-		if ((oldmode.mode & MODE_SECRET) && (channel->mode.mode & MODE_PRIVATE))
-		{
-			/* stay +s ! */
-			channel->mode.mode &= ~MODE_PRIVATE;
-			channel->mode.mode |= MODE_SECRET;
-			Addsingle('p'); /* - */
-			queue_s = 1;
-		}
-#endif
 		if (b > 1)
 		{
 			Addsingle('+');

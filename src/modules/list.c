@@ -54,6 +54,7 @@ struct ChannelListOptions {
 
 /* Global variables */
 ModDataInfo *list_md = NULL;
+char modebuf[BUFSIZE], parabuf[BUFSIZE];
 
 /* Macros */
 #define CHANNELLISTOPTIONS(x)       ((ChannelListOptions *)moddata_local_client(x, list_md).ptr)

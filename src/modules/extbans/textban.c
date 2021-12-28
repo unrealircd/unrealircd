@@ -393,21 +393,29 @@ int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp
 	/* Now we have to manually walk the banlist and check if things match */
 	for (ban = channel->banlist; ban; ban=ban->next)
 	{
-		if (!strncmp(ban->banstr, "~T:", 3))
+		char *banstr = ban->banstr;
+
+		/* Pretend time does not exist... */
+		if (!strncmp(banstr, "~t:", 3))
 		{
-			/* ~T ban */
-			if (textban_check_ban(client, channel, ban->banstr, msg, errmsg))
+			banstr = strchr(banstr+3, ':');
+			if (!banstr)
+				continue;
+			banstr++;
+		}
+		else if (!strncmp(banstr, "~time:", 6))
+		{
+			banstr = strchr(banstr+6, ':');
+			if (!banstr)
+				continue;
+			banstr++;
+		}
+
+		if (!strncmp(banstr, "~T:", 3) || !strncmp(banstr, "~text:", 6))
+		{
+			/* text ban */
+			if (textban_check_ban(client, channel, banstr, msg, errmsg))
 				return HOOK_DENY;
-		} else
-		if (!strncmp(ban->banstr, "~t:", 3))
-		{
-			/* Stacked ~t:xx:~T ban (timed text ban) */
-			char *p = strchr(ban->banstr+3, ':');
-			if (p && !strncmp(p+1, "~T:", 3))
-			{
-				if (textban_check_ban(client, channel, p+1, msg, errmsg))
-					return HOOK_DENY;
-			}
 		}
 	}
 
@@ -439,7 +447,10 @@ int textban_check_ban(Client *client, Channel *channel, const char *ban, const c
 #endif
 	strlcpy(filtered, StripControlCodes(*msg), sizeof(filtered));
 
-	p = ban + 3;
+	p = strchr(ban, ':');
+	if (!p)
+		return 0; /* "impossible" */
+	p++;
 #ifdef UHOSTFEATURE
 	/* First.. deal with userhost... */
 	strcpy(buf, p);

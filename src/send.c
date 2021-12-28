@@ -364,7 +364,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 		if (p) *p = '\0';
 		p = strchr(copy, '\r');
 		if (p) *p = '\0';
-		unreal_log(ULOG_INFO, "traffic", "TRAFFIC_OUT", to,
+		unreal_log(ULOG_INFO, "rawtraffic", "TRAFFIC_OUT", to,
 		           "-> $client: $data",
 		           log_data_string("data", copy));
 	}

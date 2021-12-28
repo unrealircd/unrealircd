@@ -909,7 +909,7 @@ static int fatal_tls_error(int ssl_error, int where, int my_errno, Client *clien
 
 	SetDeadSocket(client);
 	unreal_log(ULOG_DEBUG, "tls", "DEBUG_TLS_FATAL_ERROR", client,
-		   "Exiting TLS client $client: $tls_function: $tls_error_string: $tls_additional_info",
+		   "Exiting TLS client $client.details: $tls_function: $tls_error_string: $tls_additional_info",
 		   log_data_string("tls_function", ssl_func),
 		   log_data_string("tls_error_string", ssl_errstr),
 		   log_data_string("tls_additional_info", additional_info));

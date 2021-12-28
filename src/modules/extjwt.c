@@ -217,7 +217,7 @@ struct jwt_service *find_jwt_service(struct jwt_service *services, const char *n
 int extjwt_valid_integer_string(const char *in, int min, int max)
 {
 	int i, val;
-	if (!in && !*in)
+	if (BadPtr(in))
 		return 0;
 	for (i=0; in[i]; i++){
 		if (!isdigit(in[i]))
@@ -231,7 +231,6 @@ int extjwt_valid_integer_string(const char *in, int min, int max)
 
 int vfy_url_is_valid(const char *string)
 {
-	return 1; /* TODO enable */
 	if (strstr(string, "http://") == string || strstr(string, "https://") == string)
 	{
 		if (strstr(string, "%s"))
@@ -259,7 +258,7 @@ char *extjwt_test_key(const char *file, int method)
 				break;
 			default:
 				retval = "Internal error (invalid type)";
-				continue;
+				return retval;
 		}
 		fcontent = extjwt_read_file_contents(file, 0, &fsize);
 		if (!fcontent)
@@ -596,6 +595,7 @@ int extjwt_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	extjwt_free_services(&services);
 	if (errors)
 		safe_free(cfg_state.key_filename);
+	safe_free(sfilename);
 	return errors ? -1 : 1;
 }
 
@@ -955,7 +955,7 @@ unsigned char* extjwt_sha_pem_extjwt_hash(int method, const void *key, int keyle
 				type = EVP_PKEY_EC;
 				break;
 			default:
-				continue;
+				return NULL;
 		}
 
 #if (OPENSSL_VERSION_NUMBER < 0x10100003L) /* https://github.com/openssl/openssl/commit/8ab31975bacb9c907261088937d3aa4102e3af84 */
@@ -1141,15 +1141,11 @@ char *extjwt_generate_token(const char *payload, struct extjwt_config *config)
 	safe_free(header);
 	safe_free(b64header);
 	safe_free(b64payload);
-	if (config->method != EXTJWT_METHOD_NONE)
-	{
-		safe_free(b64sig);
-		safe_free(extjwt_hash_val);
-	}
+	safe_free(b64sig);
+	safe_free(extjwt_hash_val);
 
 	if (retval != b64data)
 		safe_free(b64data);
 
 	return retval;
 }
-

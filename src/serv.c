@@ -1190,16 +1190,30 @@ void lost_server_link(Client *client, const char *tls_error_string)
 		if (tls_error_string)
 		{
 			/* TLS */
-			unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
-				   "Unable to link with server $client [$link_block.ip:$link_block.port]: $tls_error_string",
-				   log_data_string("tls_error_string", tls_error_string),
-				   client->server->conf ? log_data_link_block(client->server->conf) : NULL);
+			if (client->server->conf)
+			{
+				unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
+					   "Unable to link with server $client [$link_block.ip:$link_block.port]: $tls_error_string",
+					   log_data_string("tls_error_string", tls_error_string),
+					   log_data_link_block(client->server->conf));
+			} else {
+				unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
+					   "Unable to link with server $client: $tls_error_string",
+					   log_data_string("tls_error_string", tls_error_string));
+			}
 		} else {
 			/* non-TLS */
-			unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
-				   "Unable to link with server $client [$link_block.ip:$link_block.port]: $socket_error",
-				   log_data_socket_error(client->local->fd),
-				   client->server->conf ? log_data_link_block(client->server->conf) : NULL);
+			if (client->server->conf)
+			{
+				unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
+					   "Unable to link with server $client [$link_block.ip:$link_block.port]: $socket_error",
+					   log_data_socket_error(client->local->fd),
+					   log_data_link_block(client->server->conf));
+			} else {
+				unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
+					   "Unable to link with server $client: $socket_error",
+					   log_data_socket_error(client->local->fd));
+			}
 		}
 	}
 	SetServerDisconnectLogged(client);
