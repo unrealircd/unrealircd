@@ -227,9 +227,15 @@ elif [ "$1" = "spki" -o "$1" = "spkifp" ] ; then
 	CERT="@CONFDIR@/tls/server.cert.pem"
 	if [ "$2" != "" ]; then
 		CERT="$2"
+	else
+		echo "NOTE: This script uses the default certificate location (any set::tls settings"
+		echo "are ignored). If this is not what you want then specify a certificate"
+		echo "explicitly like this: ./unrealircd spkifp conf/tls/example.pem"
+		echo ""
 	fi
 	if [ ! -f "$CERT" ]; then
 		echo "Could not open certificate: $CERT"
+		echo "You can specify a certificate like this: ./unrealircd spkifp conf/tls/example.pem"
 		exit 1
 	fi
 	openssl x509 -noout -in "$CERT" -pubkey | openssl asn1parse -noout -inform pem -out @TMPDIR@/tmp.public.key
