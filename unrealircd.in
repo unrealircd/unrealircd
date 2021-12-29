@@ -295,6 +295,7 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 	fi
 elif [ "$1" = "upgrade" ] ; then
 	@BINDIR@/unrealircd-upgrade-script $*
+	exit
 elif [ "$1" = "genlinkblock" ] ; then
 	@BINDIR@/unrealircd -L
 else
