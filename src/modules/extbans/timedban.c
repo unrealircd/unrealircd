@@ -147,11 +147,12 @@ const char *generic_clean_ban_mask(BanContext *b, Extban *extban)
 		{
 			const char *ret;
 			static char retbuf[512];
-			BanContext *b = safe_alloc(sizeof(BanContext));
-			b->banstr = nextbanstr;
-			ret = extban->conv_param(b, extban);
-			ret = prefix_with_extban(ret, b, extban, retbuf, sizeof(retbuf));
-			safe_free(b);
+			BanContext *newb = safe_alloc(sizeof(BanContext));
+			newb->banstr = nextbanstr;
+			newb->conv_options = b->conv_options;
+			ret = extban->conv_param(newb, extban);
+			ret = prefix_with_extban(ret, newb, extban, retbuf, sizeof(retbuf));
+			safe_free(newb);
 			return ret;
 		}
 		/* else, do some basic sanity checks and cut it off at 80 bytes */

@@ -230,6 +230,35 @@ int usc_reparse_sjoin(char **msg, char *p, int *length)
 	/* Now parse the SJOIN */
 	for (s = strtoken(&save, parabuf, " "); s; s = strtoken(&save, NULL, " "))
 	{
+		if (*s == '<')
+		{
+			/* SJSBY */
+			char *next = strchr(s, '>');
+			const char *result;
+			if (!next)
+			{
+				unreal_log(ULOG_WARNING, "unreal_server_compat", "USC_REPARSE_SJOIN_FAILURE", NULL,
+				           "[unreal_server_compat] usc_reparse_sjoin(): sjoin data '$ban' seemed like a SJSBY but was not??",
+				           log_data_string("ban", s));
+				continue;
+			}
+			if (!strchr("&\"\\", next[1]))
+				goto fallback_usc_reparse_sjoin;
+			*next++ = '\0';
+			result = clean_ban_mask(next+1, MODE_ADD, &me, 1);
+			if (!result)
+			{
+				unreal_log(ULOG_WARNING, "unreal_server_compat", "USC_REPARSE_SJOIN_FAILURE", NULL,
+				           "[unreal_server_compat] usc_reparse_sjoin(): ban '$ban' could not be converted",
+				           log_data_string("ban", s+1));
+				continue;
+			}
+			strlcat(obuf, s, sizeof(obuf)); /* "<123,nick" */
+			strlcat(obuf, ">", sizeof(obuf)); /* > */
+			strlncat(obuf, next, sizeof(obuf), 1); /* & or \" or \\ */
+			strlcat(obuf, result, sizeof(obuf)); /* the converted result */
+			strlcat(obuf, " ", sizeof(obuf));
+		} else
 		if (strchr("&\"\\", *s))
 		{
 			/* +b / +e / +I */
@@ -245,6 +274,7 @@ int usc_reparse_sjoin(char **msg, char *p, int *length)
 			strlcat(obuf, result, sizeof(obuf));
 			strlcat(obuf, " ", sizeof(obuf));
 		} else {
+fallback_usc_reparse_sjoin:
 			strlcat(obuf, s, sizeof(obuf));
 			strlcat(obuf, " ", sizeof(obuf));
 		}
