@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # This is stage 1 of the UnrealIRCd upgrade script
 # It downloads stage 2 online, verifies the integrity, and then
 # passes control to it to proceed with the rest of the upgrade.
 #
-# This is a bash script, so it is less cross-platform than
-# the rest of UnrealIRCd. We also mostly assume Linux here.
+# This is a bash script, so it is less cross-platform than the
+# rest of UnrealIRCd. We also mostly assume Linux/FreeBSD here.
 #
 
 BUILDDIR="@BUILDDIR@"
@@ -55,13 +55,19 @@ if [ ! -d "$BUILDDIR" ]; then
 	exit 1
 fi
 
+FETCHER="wget"
 if ! wget --help 1>/dev/null 2>&1; then
-	echo "The tool 'wget' is missing, which is used by this script."
-	echo "On Linux consider running 'sudo apt install wget' or 'sudo yum install wget'"
-	echo "and run this script again."
-	echo "Or, don't use this script and follow the manual upgrade procedure from"
-	echo "https://www.unrealircd.org/docs/Upgrading"
-	exit 1
+	# fetch is a pain: it always returns 1 (false) even for usage info and has no --version
+	fetch 1>/dev/null 2>&1
+	if [ "$?" -ne 1 ]; then
+		echo "The tool 'wget' is missing, which is used by this script."
+		echo "On Linux consider running 'sudo apt install wget' or 'sudo yum install wget'"
+		echo "and run this script again."
+		echo "Or, don't use this script and follow the manual upgrade procedure from"
+		echo "https://www.unrealircd.org/docs/Upgrading"
+		exit 1
+	fi
+	FETCHER="fetch"
 fi
 
 # Weird way to get version, but ok.
@@ -70,11 +76,16 @@ UNREALVER="`./configure --version|head -n1|awk '{ print $3 }'`"
 cd .. || fail "Could not cd back"
 
 # Set and export all variables with settings
-export UNREALVER BUILDDIR SCRIPTDIR DOCDIR TMPDIR
+export UNREALVER BUILDDIR SCRIPTDIR DOCDIR TMPDIR FETCHER
 
 # Download the install script
-wget -O unrealircd-upgrade-script.stage2 "https://www.unrealircd.org/downloads/unrealircd-upgrade-script.stage2?from=$UNREALVER" || fail "Could not download online installer"
-wget -O unrealircd-upgrade-script.stage2.asc "https://www.unrealircd.org/downloads/unrealircd-upgrade-script.stage2.asc" || fail "Could not download online installer signature"
+if [ "$FETCHER" = "wget" ]; then
+	wget -O unrealircd-upgrade-script.stage2 "https://www.unrealircd.org/downloads/unrealircd-upgrade-script.stage2?from=$UNREALVER" || fail "Could not download online installer"
+	wget -O unrealircd-upgrade-script.stage2.asc "https://www.unrealircd.org/downloads/unrealircd-upgrade-script.stage2.asc" || fail "Could not download online installer signature"
+else
+	fetch -o unrealircd-upgrade-script.stage2 "https://www.unrealircd.org/downloads/unrealircd-upgrade-script.stage2?from=$UNREALVER" || fail "Could not download online installer"
+	fetch -o unrealircd-upgrade-script.stage2.asc "https://www.unrealircd.org/downloads/unrealircd-upgrade-script.stage2.asc" || fail "Could not download online installer signature"
+fi
 
 # GPG verification - if available
 if gpg --version 1>/dev/null 2>&1; then
@@ -94,7 +105,11 @@ if gpg --version 1>/dev/null 2>&1; then
 	fi
 else
 	echo "WARNING: The GnuPG (GPG/PGP) verification tool 'gpg' is not installed."
-	echo "Consider running 'sudo apt install gpg' or 'yum install gnupg2'"
+	if [[ "$OSTYPE" == "freebsd"* ]] ; then
+		echo "Consider running 'sudo pkg install gnupg'"
+	else
+		echo "Consider running 'sudo apt install gpg' or 'yum install gnupg2'"
+	fi
 	echo "When 'gpg' is installed then the UnrealIRCd upgrade script can"
 	echo "verify the digital signature of the download file."
 	warn "Unable to check download integrity"
@@ -103,3 +118,6 @@ fi
 
 chmod +x unrealircd-upgrade-script.stage2
 ./unrealircd-upgrade-script.stage2 $*
+SAVERET="$?"
+rm -f unrealircd-upgrade-script.stage2 unrealircd-upgrade-script.stage2
+exit $SAVERET
