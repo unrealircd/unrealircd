@@ -50,6 +50,18 @@ ARG="$ARG--enable-ssl "
 else
 ARG="$ARG--enable-ssl=$SSLDIR "
 fi
+# Ensure we install curl even if someone does ./Config -quick...
+if [ "x$CURLDIR" = "x$UNREALCWD/extras/curl" ]; then
+	INSTALLCURL=1
+else
+	# And that the path does not refer to eg an old unrealircd-1.2.3 either ;)
+	if echo "$CURLDIR"|egrep -qi extras.*curl; then
+		echo "WARNING: Potentially old cURL directory encountered ($CURLDIR)."
+		echo "I am changing the cURL directory to $UNREALCWD/extras/curl and forcing a rebuild of cURL."
+		CURLDIR="$UNREALCWD/extras/curl"
+		INSTALLCURL=1
+	fi
+fi
 if [ "$REMOTEINC" = "1" ] ; then
 ARG="$ARG--enable-libcurl=$CURLDIR "
 fi
@@ -84,10 +96,6 @@ ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
 # remove possibly old instances of curl in ~/unrealircd/lib/
 rm -f $PRIVATELIBDIR/*curl* 1>/dev/null 2>&1
-# Ensure we install curl even if someone does ./Config -quick...
-if [ "x$CURLDIR" = "x$UNREALCWD/extras/curl" ]; then
-	INSTALLCURL=1
-fi
 if [ "x$INSTALLCURL" = "x1" ]; then
 	extras/curlinstall "$PRIVATELIBDIR" || exit 1
 fi
