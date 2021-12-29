@@ -1,6 +1,31 @@
-UnrealIRCd 6.0.0
+UnrealIRCd 6.0.1-git
 =================
-This is the first stable release of UnrealIRCd 6.
+**This is work in progres**
+
+This is the second stable release of UnrealIRCd 6.
+
+If you are already running UnrealIRCd 6 then read below on the small
+changes between 6.0.0 and 6.0.1. Otherwise, jump straight to the
+[summary about UnrealIRCd 6](#Summary) to learn more about UnrealIRCd 6.
+
+Fixes:
+* Text extbans did not have any effect (`+b ~text:censor:*badword*`)
+* Timed bans were not expiring if all servers on the network were on U6
+* Channel mode `+f` could place a timed extban with `~t` instead of `~time`
+* Crash when unloading any of the vhoaq modules at runtime
+* `./unrealircd upgrade` not working on FreeBSD and not with self-compiled cURL
+* Some log messages being wrong (`CHGIDENT`, `CHGNAME`)
+* Remove confusing high cpu load warning
+
+Enhancements:
+* Error on unknown snomask in set::snomask-on-oper and oper::snomask.
+* TKL add/remove/expire messages now show `[duration: 60m]` instead of
+  the `[expires: ZZZ GMT]` string since that is what people are more
+  interested in and is not affected by time zones. The format in all the
+  3 notices is also consistent now.
+
+UnrealIRCd 6.0.0
+-----------------
 
 Many thanks to k4be for his help during development, other contributors for
 their feedback and patches, the people who tested the beta's and release
