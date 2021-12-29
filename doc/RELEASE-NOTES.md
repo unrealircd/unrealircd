@@ -4,7 +4,7 @@ UnrealIRCd 5.2.3 Release Notes
 This release contains a couple of small changes.
 
 Important:
-* UnrealIRCd 6 is the new "stable"
+* [UnrealIRCd 6](https://www.unrealircd.org/docs/What's_new_in_UnrealIRCd_6) is the new "stable"
 * UnrealIRCd 5.2.x ("oldstable")
   [end of support dates](https://www.unrealircd.org/docs/UnrealIRCd_5_EOL):
   * Bug fixes until July 1, 2022 (no more feature enhancements)
