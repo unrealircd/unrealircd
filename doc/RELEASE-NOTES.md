@@ -1,10 +1,13 @@
-UnrealIRCd 6.0.1
-=================
-If you are already running UnrealIRCd 6 then read below on the few
-changes between 6.0.0 and 6.0.1. Otherwise, jump straight to the
+UnrealIRCd 6.0.1.1
+===================
+If you are already running UnrealIRCd 6 then read below on the 
+changes between 6.0.0 and 6.0.1(.1). Otherwise, jump straight to the
 [summary about UnrealIRCd 6](#Summary) to learn more about UnrealIRCd 6.
 
 Fixes:
+* In 6.0.1.1: extended bans were not properly synced between U5 and U6.
+  This caused missing extended bans on the U5 side (MODE was working OK,
+  this only happened when linking servers)
 * Text extbans did not have any effect (`+b ~text:censor:*badword*`)
 * Timed bans were not expiring if all servers on the network were on U6
 * Channel mode `+f` could place a timed extban with `~t` instead of `~time`
