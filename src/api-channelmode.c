@@ -481,63 +481,89 @@ static void unload_extcmode_commit(Cmode *cmode)
 	if (!cmode)
 		return;
 
-	/* Unset channel mode and send MODE to everyone */
-
-	if (cmode->paracount == 0)
+	if (cmode->type == CMODE_NORMAL)
 	{
-		/* Paramless mode, easy */
-		for (channel = channels; channel; channel = channel->nextch)
+		/* Unset channel mode and send MODE to everyone */
+		if (cmode->paracount == 0)
 		{
-			if (channel->mode.mode & cmode->mode)
+			/* Paramless mode, easy */
+			for (channel = channels; channel; channel = channel->nextch)
 			{
-				MessageTag *mtags = NULL;
-
-				new_message(&me, NULL, &mtags);
-				sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
-					       ":%s MODE %s -%c",
-					       me.name, channel->name, cmode->letter);
-				sendto_server(NULL, 0, 0, mtags,
-					":%s MODE %s -%c 0",
-					me.id, channel->name, cmode->letter);
-				free_message_tags(mtags);
-
-				channel->mode.mode &= ~cmode->mode;
-			}
-		}
-	} else
-	{
-		/* Parameter mode, more complicated */
-		for (channel = channels; channel; channel = channel->nextch)
-		{
-			if (channel->mode.mode & cmode->mode)
-			{
-				MessageTag *mtags = NULL;
-
-				new_message(&me, NULL, &mtags);
-				if (cmode->unset_with_param)
+				if (channel->mode.mode & cmode->mode)
 				{
-					const char *param = cmode->get_param(GETPARASTRUCT(channel, cmode->letter));
-					sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
-						       ":%s MODE %s -%c %s",
-						       me.name, channel->name, cmode->letter, param);
-					sendto_server(NULL, 0, 0, mtags,
-						":%s MODE %s -%c %s 0",
-						me.id, channel->name, cmode->letter, param);
-				} else {
+					MessageTag *mtags = NULL;
+
+					new_message(&me, NULL, &mtags);
 					sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 						       ":%s MODE %s -%c",
 						       me.name, channel->name, cmode->letter);
 					sendto_server(NULL, 0, 0, mtags,
 						":%s MODE %s -%c 0",
 						me.id, channel->name, cmode->letter);
-				}
-				free_message_tags(mtags);
+					free_message_tags(mtags);
 
-				cmode->free_param(GETPARASTRUCT(channel, cmode->letter));
-				channel->mode.mode &= ~cmode->mode;
+					channel->mode.mode &= ~cmode->mode;
+				}
+			}
+		} else
+		{
+			/* Parameter mode, more complicated */
+			for (channel = channels; channel; channel = channel->nextch)
+			{
+				if (channel->mode.mode & cmode->mode)
+				{
+					MessageTag *mtags = NULL;
+
+					new_message(&me, NULL, &mtags);
+					if (cmode->unset_with_param)
+					{
+						const char *param = cmode->get_param(GETPARASTRUCT(channel, cmode->letter));
+						sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+							       ":%s MODE %s -%c %s",
+							       me.name, channel->name, cmode->letter, param);
+						sendto_server(NULL, 0, 0, mtags,
+							":%s MODE %s -%c %s 0",
+							me.id, channel->name, cmode->letter, param);
+					} else {
+						sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+							       ":%s MODE %s -%c",
+							       me.name, channel->name, cmode->letter);
+						sendto_server(NULL, 0, 0, mtags,
+							":%s MODE %s -%c 0",
+							me.id, channel->name, cmode->letter);
+					}
+					free_message_tags(mtags);
+
+					cmode->free_param(GETPARASTRUCT(channel, cmode->letter));
+					channel->mode.mode &= ~cmode->mode;
+				}
+			}
+			extcmode_para_delslot(cmode, cmode->param_slot);
+		}
+	} else
+	if (cmode->type == CMODE_MEMBER)
+	{
+		for (channel = channels; channel; channel = channel->nextch)
+		{
+			Member *m;
+			for (m = channel->members; m; m = m->next)
+			{
+				if (strchr(m->member_modes, cmode->letter))
+				{
+					MessageTag *mtags = NULL;
+
+					new_message(&me, NULL, &mtags);
+					sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+						       ":%s MODE %s -%c %s",
+						       me.name, channel->name, cmode->letter, m->client->name);
+					sendto_server(NULL, 0, 0, mtags,
+						":%s MODE %s -%c %s 0",
+						me.id, channel->name, cmode->letter, m->client->id);
+					free_message_tags(mtags);
+					del_member_mode(m->client, channel, cmode->letter);
+				}
 			}
 		}
-		extcmode_para_delslot(cmode, cmode->param_slot);
 	}
 
 	DelListItem(cmode, channelmodes);
