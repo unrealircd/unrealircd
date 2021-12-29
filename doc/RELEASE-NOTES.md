@@ -1,10 +1,6 @@
-UnrealIRCd 6.0.1-git
+UnrealIRCd 6.0.1
 =================
-**This is work in progres**
-
-This is the second stable release of UnrealIRCd 6.
-
-If you are already running UnrealIRCd 6 then read below on the small
+If you are already running UnrealIRCd 6 then read below on the few
 changes between 6.0.0 and 6.0.1. Otherwise, jump straight to the
 [summary about UnrealIRCd 6](#Summary) to learn more about UnrealIRCd 6.
 
@@ -56,7 +52,7 @@ security issues will be fixed. Finally, after July 1, 2023,
 
 If you want to hold off for a while because you are cautious or if you
 depend on 3rd party modules (which may not have been upgraded yet by their
-authors) then feel free to wait for a 6.0.1 or 6.0.2 release.
+authors) then feel free to wait a while.
 
 If you are upgrading from UnrealIRCd 5 to 6 then you can use your existing
 configuration and files. There's no need to start from scratch.
