@@ -104,6 +104,7 @@ var
 function InitializeSetup(): Boolean;
 var
 	major: Cardinal;
+	d: Integer;
 begin
 	d := StrToInt(GetDateTimeString('yyyymm',#0,#0));
 	if (d > 202209) then
