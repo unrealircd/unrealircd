@@ -229,6 +229,8 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 					{
 						if (!strcmp(cepp->name, "color"))
 							;
+						else if (!strcmp(cepp->name, "show-event"))
+							;
 						else if (!strcmp(cepp->name, "json-message-tag"))
 							;
 						else if (!strcmp(cepp->name, "oper-only"))
@@ -421,6 +423,8 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 					{
 						if (!strcmp(cepp->name, "color"))
 							log->color = config_checkval(cepp->value, CFG_YESNO);
+						else if (!strcmp(cepp->name, "show-event"))
+							log->show_event = config_checkval(cepp->value, CFG_YESNO);
 						else if (!strcmp(cepp->name, "json-message-tag"))
 							log->json_message_tag = config_checkval(cepp->value, CFG_YESNO);
 						else if (!strcmp(cepp->name, "oper-only"))
