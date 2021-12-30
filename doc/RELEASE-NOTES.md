@@ -1,5 +1,12 @@
+UnrealIRCd 6.0.2-git
+=================
+*THIS IS WORK IN PROGRESS*
+
+You are looking at the git version of UnrealIRCd, bleeding edge.
+
+
 UnrealIRCd 6.0.1.1
-===================
+-------------------
 If you are already running UnrealIRCd 6 then read below on the 
 changes between 6.0.0 and 6.0.1(.1). Otherwise, jump straight to the
 [summary about UnrealIRCd 6](#Summary) to learn more about UnrealIRCd 6.
