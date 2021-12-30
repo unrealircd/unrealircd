@@ -1427,13 +1427,49 @@ const char *log_to_snomask(LogLevel loglevel, const char *subsystem, const char 
 
 #define COLOR_NONE "\xf"
 #define COLOR_DARKGREY "\00314"
-/** Do the actual writing to log files */
+
+void sendto_log(Client *client, const char *msgtype, const char *destination, int colors,
+                LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized, Client *from_server)
+{
+	MultiLine *m;
+
+	for (m = msg; m; m = m->next)
+	{
+		MessageTag *mtags = NULL;
+		new_message(from_server, NULL, &mtags);
+
+		/* Add JSON data, but only if it is the first message (m == msg) */
+		if (json_serialized && (m == msg))
+		{
+			MessageTag *json_mtag = safe_alloc(sizeof(MessageTag));
+			safe_strdup(json_mtag->name, "unrealircd.org/json-log");
+			safe_strdup(json_mtag->value, json_serialized);
+			AddListItem(json_mtag, mtags);
+		}
+
+		if (colors)
+		{
+			sendto_one(client, mtags, ":%s %s %s :%s%s.%s%s%s %s[%s]%s %s",
+				from_server->name, msgtype, destination,
+				COLOR_DARKGREY, subsystem, event_id, m->next?"+":"", COLOR_NONE,
+				log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
+				m->line);
+		} else {
+			sendto_one(client, mtags, ":%s %s %s :%s.%s%s [%s] %s",
+				from_server->name, msgtype, destination,
+				subsystem, event_id, m->next?"+":"",
+				log_level_valtostring(loglevel),
+				m->line);
+		}
+		safe_free_message_tags(mtags);
+	}
+}
+
+/** Send server notices to IRCOps */
 void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized, Client *from_server)
 {
 	Client *client;
 	const char *snomask_destinations, *p;
-	MessageTag *mtags = NULL, *mtags_loop;
-	MultiLine *m;
 
 	/* If not fully booted then we don't have a logging to snomask mapping so can't do much.. */
 	if (!loop.booted)
@@ -1446,14 +1482,6 @@ void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *e
 	snomask_destinations = log_to_snomask(loglevel, subsystem, event_id);
 	if (!snomask_destinations)
 		return;
-
-	/* Prepare message tag for those who have CAP unrealircd.org/json-log */
-	if (json_serialized)
-	{
-		mtags = safe_alloc(sizeof(MessageTag));
-		safe_strdup(mtags->name, "unrealircd.org/json-log");
-		safe_strdup(mtags->value, json_serialized);
-	}
 
 	/* To specific snomasks... */
 	list_for_each_entry(client, &oper_list, special_node)
@@ -1483,28 +1511,51 @@ void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *e
 		if (operlogin && (oper = find_oper(operlogin)))
 			colors = oper->server_notice_colors;
 
-		mtags_loop = mtags;
-		for (m = msg; m; m = m->next)
+		sendto_log(client, "NOTICE", client->name, colors, loglevel, subsystem, event_id, msg, json_serialized, from_server);
+	}
+}
+
+/** Send server notices to channels */
+void do_unreal_log_channels(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized, Client *from_server)
+{
+	Log *l;
+	Member *m;
+	Client *client;
+
+	/* If not fully booted then we don't have a logging to snomask mapping so can't do much.. */
+	if (!loop.booted)
+		return;
+
+	/* Never send these */
+	if (!strcmp(subsystem, "rawtraffic"))
+		return;
+
+	for (l = logs[LOG_DEST_CHANNEL]; l; l = l->next)
+	{
+		int colors = iConf.server_notice_colors;
+		const char *operlogin;
+		ConfigItem_oper *oper;
+		Channel *channel;
+
+		if (!log_sources_match(l->sources, loglevel, subsystem, event_id, 0))
+			continue;
+
+		// TODO: allow option to override 'colors' on a per-channel basis?
+
+		channel = find_channel(l->destination);
+		if (!channel)
+			continue;
+
+		for (m = channel->members; m; m = m->next)
 		{
-			if (colors)
-			{
-				sendto_one(client, mtags_loop, ":%s NOTICE %s :%s%s.%s%s%s %s[%s]%s %s",
-					from_server->name, client->name,
-					COLOR_DARKGREY, subsystem, event_id, m->next?"+":"", COLOR_NONE,
-					log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
-					m->line);
-			} else {
-				sendto_one(client, mtags_loop, ":%s NOTICE %s :%s.%s%s [%s] %s",
-					from_server->name, client->name,
-					subsystem, event_id, m->next?"+":"",
-					log_level_valtostring(loglevel),
-					m->line);
-			}
-			mtags_loop = NULL; /* this way we only send the JSON in the first msg */
+			Client *client = m->client;
+			if (!MyUser(client))
+				continue;
+			if (!IsOper(client)) // TODO: allow config option for unsafe
+				continue;
+			sendto_log(client, "PRIVMSG", channel->name, colors, loglevel, subsystem, event_id, msg, json_serialized, from_server);
 		}
 	}
-
-	safe_free_message_tags(mtags);
 }
 
 void do_unreal_log_remote(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized)
@@ -1708,6 +1759,8 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 		from_server = &me;
 	do_unreal_log_opers(loglevel, subsystem, event_id, mmsg, json_serialized, from_server);
 
+	do_unreal_log_channels(loglevel, subsystem, event_id, mmsg, json_serialized, from_server);
+
 	do_unreal_log_remote(loglevel, subsystem, event_id, mmsg, json_serialized);
 
 	// NOTE: code duplication further down!
@@ -1729,8 +1782,9 @@ void do_unreal_log_internal_from_remote(LogLevel loglevel, const char *subsystem
 	/* Call the disk loggers */
 	do_unreal_log_disk(loglevel, subsystem, event_id, msg, json_serialized);
 
-	/* And the ircops stuff */
+	/* And to IRC */
 	do_unreal_log_opers(loglevel, subsystem, event_id, msg, json_serialized, from_server);
+	do_unreal_log_channels(loglevel, subsystem, event_id, msg, json_serialized, from_server);
 
 	unreal_log_recursion_trap = 0;
 }
