@@ -536,6 +536,10 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 
 	/* same for ip, is there for all (well, some services pseudo-users may not have one) */
 	json_object_set_new(child, "ip", json_string_unreal(client->ip));
+	if (client->local && client->local->listener)
+		json_object_set_new(child, "server_port", json_integer(client->local->listener->port));
+	if (client->local && client->local->port)
+		json_object_set_new(child, "client_port", json_integer(client->local->port));
 
 	/* client.details is always available: it is nick!user@host, nick@host, server@host
 	 * server@ip, or just server.
