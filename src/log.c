@@ -186,7 +186,7 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 				/* TODO: Validate the sources lightly for formatting issues */
 				any_sources = 1;
 			}
-		}
+		} else
 		if (!strcmp(ce->name, "destination"))
 		{
 			for (cep = ce->items; cep; cep = cep->next)
@@ -308,6 +308,10 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 					continue;
 				}
 			}
+		} else
+		{
+			config_error_unknown(ce->file->filename, ce->line_number, "log", ce->name);
+			errors++;
 		}
 	}
 
