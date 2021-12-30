@@ -113,7 +113,7 @@ static int unrealdns_sock_create_cb(ares_socket_t fd, int type, void *data)
 	return ARES_SUCCESS;
 }
 
-static EVENT(unrealdns_timeout)
+EVENT(unrealdns_timeout)
 {
 	ares_process_fd(resolver_channel, ARES_SOCKET_BAD, ARES_SOCKET_BAD);
 }

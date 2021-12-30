@@ -1056,6 +1056,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 		gettimeofday(&timeofday_tv, NULL);
 		timeofday = timeofday_tv.tv_sec;
 		url_socket_timeout(NULL);
+		unrealdns_timeout(NULL);
 		fd_select(500);
 	}
 	if (config_test() < 0)

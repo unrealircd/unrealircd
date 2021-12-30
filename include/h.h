@@ -859,6 +859,7 @@ extern const char *cmdname_by_spamftarget(int target);
 extern void unrealdns_delreq_bycptr(Client *cptr);
 extern void unrealdns_gethostbyname_link(const char *name, ConfigItem_link *conf, int ipv4_only);
 extern void unrealdns_delasyncconnects(void);
+extern EVENT(unrealdns_timeout);
 extern int is_autojoin_chan(const char *chname);
 extern void unreal_free_hostent(struct hostent *he);
 extern struct hostent *unreal_create_hostent(const char *name, const char *ip);
