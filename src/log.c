@@ -225,6 +225,20 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 							cep->file->filename, cep->line_number, cep->value);
 						errors++;
 					}
+					for (cepp = cep->items; cepp; cepp = cepp->next)
+					{
+						if (!strcmp(cepp->name, "color"))
+							;
+						else if (!strcmp(cepp->name, "json-message-tag"))
+							;
+						else if (!strcmp(cepp->name, "oper-only"))
+							;
+						else
+						{
+							config_error_unknown(cepp->file->filename, cepp->line_number, "log::destination::channel", cepp->name);
+							errors++;
+						}
+					}
 				} else
 				if (!strcmp(cep->name, "file"))
 				{
@@ -397,6 +411,20 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 					strlcpy(log->destination, cep->value, sizeof(log->destination)); /* destination is the channel */
 					log->sources = sources;
 					AddListItem(log, temp_logs[LOG_DEST_CHANNEL]);
+					/* set defaults */
+					log->color = tempiConf.server_notice_colors;
+					log->json_message_tag = 1;
+					log->oper_only = 1;
+					/* now parse options (if any) */
+					for (cepp = cep->items; cepp; cepp = cepp->next)
+					{
+						if (!strcmp(cepp->name, "color"))
+							log->color = config_checkval(cepp->value, CFG_YESNO);
+						else if (!strcmp(cepp->name, "json-message-tag"))
+							log->json_message_tag = config_checkval(cepp->value, CFG_YESNO);
+						else if (!strcmp(cepp->name, "oper-only"))
+							log->oper_only = config_checkval(cepp->value, CFG_YESNO);
+					}
 				} else
 				if (!strcmp(cep->name, "remote"))
 				{
@@ -1532,15 +1560,12 @@ void do_unreal_log_channels(LogLevel loglevel, const char *subsystem, const char
 
 	for (l = logs[LOG_DEST_CHANNEL]; l; l = l->next)
 	{
-		int colors = iConf.server_notice_colors;
 		const char *operlogin;
 		ConfigItem_oper *oper;
 		Channel *channel;
 
 		if (!log_sources_match(l->sources, loglevel, subsystem, event_id, 0))
 			continue;
-
-		// TODO: allow option to override 'colors' on a per-channel basis?
 
 		channel = find_channel(l->destination);
 		if (!channel)
@@ -1551,9 +1576,12 @@ void do_unreal_log_channels(LogLevel loglevel, const char *subsystem, const char
 			Client *client = m->client;
 			if (!MyUser(client))
 				continue;
-			if (!IsOper(client)) // TODO: allow config option for unsafe
+			if (l->oper_only && !IsOper(client))
 				continue;
-			sendto_log(client, "PRIVMSG", channel->name, colors, loglevel, subsystem, event_id, msg, json_serialized, from_server);
+			sendto_log(client, "PRIVMSG", channel->name, l->color,
+			           loglevel, subsystem, event_id, msg,
+			           l->json_message_tag ? json_serialized : NULL,
+			           from_server);
 		}
 	}
 }

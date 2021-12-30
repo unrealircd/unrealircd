@@ -4,6 +4,9 @@ UnrealIRCd 6.0.2-git
 
 You are looking at the git version of UnrealIRCd, bleeding edge.
 
+Enhancements:
+* Support for [logging to a channel](https://www.unrealircd.org/docs/Log_block#Logging_to_a_channel).
+  Similar to snomasks but then for channels.
 
 UnrealIRCd 6.0.1.1
 -------------------
