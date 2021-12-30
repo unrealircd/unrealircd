@@ -170,6 +170,7 @@ struct Configuration {
 	char *stats_server;
 	char *sasl_server;
 	int server_notice_colors;
+	int server_notice_show_event;
 };
 
 extern MODVAR Configuration iConf;

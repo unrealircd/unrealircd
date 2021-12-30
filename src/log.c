@@ -28,7 +28,7 @@
 #include "unrealircd.h"
 
 // TODO: Make configurable at compile time (runtime won't do, as we haven't read the config file)
-#define show_event_id_console 0
+#define show_event_console 0
 
 /* Variables */
 Log *logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
@@ -413,6 +413,7 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 					AddListItem(log, temp_logs[LOG_DEST_CHANNEL]);
 					/* set defaults */
 					log->color = tempiConf.server_notice_colors;
+					log->show_event = tempiConf.server_notice_show_event;
 					log->json_message_tag = 1;
 					log->oper_only = 1;
 					/* now parse options (if any) */
@@ -1203,14 +1204,14 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 		for (m = msg; m; m = m->next)
 		{
 #ifdef _WIN32
-			if (show_event_id_console)
+			if (show_event_console)
 				win_log("* %s.%s%s [%s] %s\n", subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
 			else
 				win_log("* [%s] %s\n", log_level_valtostring(loglevel), m->line);
 #else
 			if (terminal_supports_color())
 			{
-				if (show_event_id_console)
+				if (show_event_console)
 				{
 					fprintf(stderr, "%s%s.%s%s %s[%s]%s %s\n",
 							log_level_terminal_color(ULOG_INVALID), subsystem, event_id, TERMINAL_COLOR_RESET,
@@ -1222,7 +1223,7 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 							m->line);
 				}
 			} else {
-				if (show_event_id_console)
+				if (show_event_console)
 					fprintf(stderr, "%s.%s%s [%s] %s\n", subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
 				else
 					fprintf(stderr, "[%s] %s\n", log_level_valtostring(loglevel), m->line);
@@ -1456,7 +1457,8 @@ const char *log_to_snomask(LogLevel loglevel, const char *subsystem, const char 
 #define COLOR_NONE "\xf"
 #define COLOR_DARKGREY "\00314"
 
-void sendto_log(Client *client, const char *msgtype, const char *destination, int colors,
+/** Generic sendto function for logging to IRC. Used for notices to IRCOps and also for sending to individual users on channels */
+void sendto_log(Client *client, const char *msgtype, const char *destination, int show_colors, int show_event,
                 LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized, Client *from_server)
 {
 	MultiLine *m;
@@ -1475,19 +1477,35 @@ void sendto_log(Client *client, const char *msgtype, const char *destination, in
 			AddListItem(json_mtag, mtags);
 		}
 
-		if (colors)
+		if (show_colors)
 		{
-			sendto_one(client, mtags, ":%s %s %s :%s%s.%s%s%s %s[%s]%s %s",
-				from_server->name, msgtype, destination,
-				COLOR_DARKGREY, subsystem, event_id, m->next?"+":"", COLOR_NONE,
-				log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
-				m->line);
+			if (show_event)
+			{
+				sendto_one(client, mtags, ":%s %s %s :%s%s.%s%s%s %s[%s]%s %s",
+					from_server->name, msgtype, destination,
+					COLOR_DARKGREY, subsystem, event_id, m->next?"+":"", COLOR_NONE,
+					log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
+					m->line);
+			} else {
+				sendto_one(client, mtags, ":%s %s %s :%s[%s]%s %s",
+					from_server->name, msgtype, destination,
+					log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
+					m->line);
+			}
 		} else {
-			sendto_one(client, mtags, ":%s %s %s :%s.%s%s [%s] %s",
-				from_server->name, msgtype, destination,
-				subsystem, event_id, m->next?"+":"",
-				log_level_valtostring(loglevel),
-				m->line);
+			if (show_event)
+			{
+				sendto_one(client, mtags, ":%s %s %s :%s.%s%s [%s] %s",
+					from_server->name, msgtype, destination,
+					subsystem, event_id, m->next?"+":"",
+					log_level_valtostring(loglevel),
+					m->line);
+			} else {
+				sendto_one(client, mtags, ":%s %s %s :[%s] %s",
+					from_server->name, msgtype, destination,
+					log_level_valtostring(loglevel),
+					m->line);
+			}
 		}
 		safe_free_message_tags(mtags);
 	}
@@ -1516,7 +1534,8 @@ void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *e
 	{
 		const char *operlogin;
 		ConfigItem_oper *oper;
-		int colors = iConf.server_notice_colors;
+		int show_colors = iConf.server_notice_colors;
+		int show_event = iConf.server_notice_show_event;
 
 		if (snomask_destinations)
 		{
@@ -1537,9 +1556,12 @@ void do_unreal_log_opers(LogLevel loglevel, const char *subsystem, const char *e
 
 		operlogin = get_operlogin(client);
 		if (operlogin && (oper = find_oper(operlogin)))
-			colors = oper->server_notice_colors;
+		{
+			show_colors = oper->server_notice_colors;
+			show_event = oper->server_notice_show_event;
+		}
 
-		sendto_log(client, "NOTICE", client->name, colors, loglevel, subsystem, event_id, msg, json_serialized, from_server);
+		sendto_log(client, "NOTICE", client->name, show_colors, show_event, loglevel, subsystem, event_id, msg, json_serialized, from_server);
 	}
 }
 
@@ -1578,7 +1600,7 @@ void do_unreal_log_channels(LogLevel loglevel, const char *subsystem, const char
 				continue;
 			if (l->oper_only && !IsOper(client))
 				continue;
-			sendto_log(client, "PRIVMSG", channel->name, l->color,
+			sendto_log(client, "PRIVMSG", channel->name, l->color, l->show_event,
 			           loglevel, subsystem, event_id, msg,
 			           l->json_message_tag ? json_serialized : NULL,
 			           from_server);

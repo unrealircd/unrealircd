@@ -265,6 +265,7 @@ struct Log {
 	LogSource *sources;
 	int type;
 	char destination[CHANNELLEN+1];
+	int show_event;
 	/* for destination::file */
 	char *file;
 	char *filefmt;
@@ -1611,6 +1612,7 @@ struct ConfigItem_oper {
 	char *vhost;
 	int maxlogins;
 	int server_notice_colors;
+	int server_notice_show_event;
 };
 
 /** The TLS options that are used in set::tls and otherblocks::tls-options.

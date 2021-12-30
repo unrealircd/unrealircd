@@ -7,6 +7,9 @@ You are looking at the git version of UnrealIRCd, bleeding edge.
 Enhancements:
 * Support for [logging to a channel](https://www.unrealircd.org/docs/Log_block#Logging_to_a_channel).
   Similar to snomasks but then for channels.
+* New option [set::server-notice-show-event](https://www.unrealircd.org/docs/Set_block#set::server-notice-show-event)
+  which can be set to `no` to hide the event information (eg `connect.LOCAL_CLIENT_CONNECT`)
+  in server notices. This can be overriden per-oper in [[Oper block]] via oper::server-notice-show-event.
 
 UnrealIRCd 6.0.1.1
 -------------------
