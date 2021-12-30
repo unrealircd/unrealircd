@@ -4772,23 +4772,15 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 
 		if (ret)
 		{
-			/* We have a match! */
-			char destinationbuf[48];
-
-			if (destination) {
-				destinationbuf[0] = ' ';
-				strlcpy(destinationbuf+1, destination, sizeof(destinationbuf)-1); /* cut it off */
-			} else
-				destinationbuf[0] = '\0';
-
-			/* Hold on.. perhaps it's on the exceptions list... */
+			/* We have a match! But.. perhaps it's on the exceptions list? */
 			if (!winner_tkl && destination && target_is_spamexcept(destination))
 				return 0; /* No problem! */
 
 			unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
-			           "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
+			           "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
 				   log_data_tkl("tkl", tkl),
 				   log_data_string("command", cmd),
+				   log_data_string("_space", destination ? " " : ""),
 				   log_data_string("destination", destination ? destination : ""),
 				   log_data_string("str", str));
 
