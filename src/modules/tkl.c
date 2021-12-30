@@ -4786,7 +4786,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 				return 0; /* No problem! */
 
 			unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
-			           "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
+			           "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command $destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
 				   log_data_tkl("tkl", tkl),
 				   log_data_string("command", cmd),
 				   log_data_string("destination", destination ? destination : ""),
