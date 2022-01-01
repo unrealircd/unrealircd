@@ -58,6 +58,7 @@
 #ifndef _WIN32
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <arpa/inet.h>
 #else
 #include <winsock2.h>

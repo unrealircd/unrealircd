@@ -372,7 +372,6 @@ typedef enum ClientStatus {
 #define	CLIENT_FLAG_DEAD		0x00000002	/**< Client is dead: already quit/exited and removed from all lists -- Remaining part will soon be freed in main loop */
 #define	CLIENT_FLAG_DEADSOCKET		0x00000004	/**< Local socket is dead but otherwise the client still exists fully -- Will soon exit in main loop */
 #define	CLIENT_FLAG_KILLED		0x00000008	/**< Prevents "QUIT" from being sent for this */
-#define CLIENT_FLAG_IPV6		0x00000010	/**< Connection is using IPv6 */
 #define CLIENT_FLAG_OUTGOING		0x00000020	/**< Outgoing connection (do not touch cptr->listener->clients) */
 #define	CLIENT_FLAG_CLOSING		0x00000040	/**< Set when closing to suppress errors */
 #define	CLIENT_FLAG_LISTEN		0x00000080	/**< Used to mark clients which we listen() on */
@@ -470,7 +469,6 @@ typedef enum ClientStatus {
 #define IsDNSLookup(x)			((x)->flags & CLIENT_FLAG_DNSLOOKUP)
 #define IsEAuth(x)			((x)->flags & CLIENT_FLAG_EAUTH)
 #define IsIdentSuccess(x)		((x)->flags & CLIENT_FLAG_IDENTSUCCESS)
-#define IsIPV6(x)			((x)->flags & CLIENT_FLAG_IPV6)
 #define IsKilled(x)			((x)->flags & CLIENT_FLAG_KILLED)
 #define IsListening(x)			((x)->flags & CLIENT_FLAG_LISTEN)
 #define IsLocalhost(x)			((x)->flags & CLIENT_FLAG_LOCALHOST)
@@ -502,7 +500,6 @@ typedef enum ClientStatus {
 #define SetDNSLookup(x)			do { (x)->flags |= CLIENT_FLAG_DNSLOOKUP; } while(0)
 #define SetEAuth(x)			do { (x)->flags |= CLIENT_FLAG_EAUTH; } while(0)
 #define SetIdentSuccess(x)		do { (x)->flags |= CLIENT_FLAG_IDENTSUCCESS; } while(0)
-#define SetIPV6(x)			do { (x)->flags |= CLIENT_FLAG_IPV6; } while(0)
 #define SetKilled(x)			do { (x)->flags |= CLIENT_FLAG_KILLED; } while(0)
 #define SetListening(x)			do { (x)->flags |= CLIENT_FLAG_LISTEN; } while(0)
 #define SetLocalhost(x)			do { (x)->flags |= CLIENT_FLAG_LOCALHOST; } while(0)
@@ -532,7 +529,6 @@ typedef enum ClientStatus {
 #define ClearDNSLookup(x)		do { (x)->flags &= ~CLIENT_FLAG_DNSLOOKUP; } while(0)
 #define ClearEAuth(x)			do { (x)->flags &= ~CLIENT_FLAG_EAUTH; } while(0)
 #define ClearIdentSuccess(x)		do { (x)->flags &= ~CLIENT_FLAG_IDENTSUCCESS; } while(0)
-#define ClearIPV6(x)			do { (x)->flags &= ~CLIENT_FLAG_IPV6; } while(0)
 #define ClearKilled(x)			do { (x)->flags &= ~CLIENT_FLAG_KILLED; } while(0)
 #define ClearListening(x)		do { (x)->flags &= ~CLIENT_FLAG_LISTEN; } while(0)
 #define ClearLocalhost(x)		do { (x)->flags &= ~CLIENT_FLAG_LOCALHOST; } while(0)
@@ -552,6 +548,9 @@ typedef enum ClientStatus {
 #define ClearULine(x)			do { (x)->flags &= ~CLIENT_FLAG_ULINE; } while(0)
 #define ClearVirus(x)			do { (x)->flags &= ~CLIENT_FLAG_VIRUS; } while(0)
 #define ClearIdentLookupSent(x)		do { (x)->flags &= ~CLIENT_FLAG_IDENTLOOKUPSENT; } while(0)
+#define IsIPV6(x)			((x)->local->socket_type == SOCKET_TYPE_IPV6)
+#define IsUnixSocket(x)			((x)->local->socket_type == SOCKET_TYPE_UNIX)
+#define SetIPV6(x)			do { (x)->local->socket_type = SOCKET_TYPE_IPV6; } while(0)
 /** @} */
 
 
@@ -1257,6 +1256,11 @@ struct TrafficStats {
 	long long bytes_received;	/* Received bytes */
 };
 
+/** Socket type (IPv4, IPv6, UNIX) */
+typedef enum {
+	SOCKET_TYPE_IPV4=0, SOCKET_TYPE_IPV6=1, SOCKET_TYPE_UNIX=2
+} SocketType;
+
 /** This shows the Client struct (any client), the User struct (a user), Server (a server) that are commonly accessed both in the core and by 3rd party coders.
  * @defgroup CommonStructs Common structs
  * @{
@@ -1294,6 +1298,7 @@ struct Client {
  */
 struct LocalClient {
 	int fd;				/**< File descriptor, can be <0 if socket has been closed already. */
+	SocketType socket_type;		/**< Type of socket: IPv4, IPV6, UNIX */
 	SSL *ssl;			/**< OpenSSL/LibreSSL struct for TLS connection */
 	time_t fake_lag;		/**< Time when user will next be allowed to send something (actually fake_lag<currenttime+10) */
 	int fake_lag_msec;		/**< Used for calculating 'fake_lag' penalty (modulo) */
@@ -1673,11 +1678,12 @@ struct ConfigItem_tld {
 struct ConfigItem_listen {
 	ConfigItem_listen *prev, *next;
 	ConfigFlag flag;
+	SocketType socket_type;
+	char *file;
 	char *ip;
 	int port;
 	int options, clients;
 	int fd;
-	int ipv6;
 	SSL_CTX *ssl_ctx;
 	TLSOptions *tls_options;
 	int websocket_options; /* should be in module, but lazy */

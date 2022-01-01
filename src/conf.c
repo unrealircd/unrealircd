@@ -2936,7 +2936,7 @@ int count_oper_sessions(const char *name)
 	return count;
 }
 
-ConfigItem_listen *find_listen(const char *ipmask, int port, int ipv6)
+ConfigItem_listen *find_listen(const char *ipmask, int port, SocketType socket_type)
 {
 	ConfigItem_listen *e;
 
@@ -2944,8 +2944,17 @@ ConfigItem_listen *find_listen(const char *ipmask, int port, int ipv6)
 		return NULL;
 
 	for (e = conf_listen; e; e = e->next)
-		if ((e->ipv6 == ipv6) && (e->port == port) && !strcmp(e->ip, ipmask))
-			return e;
+	{
+		if (socket_type == SOCKET_TYPE_UNIX)
+		{
+			if (!strcmp(e->file, ipmask))
+				return e;
+		} else
+		{
+			if ((e->socket_type == socket_type) && (e->port == port) && !strcmp(e->ip, ipmask))
+				return e;
+		}
+	}
 
 	return NULL;
 }
@@ -4787,6 +4796,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cepp;
 	ConfigEntry *tlsconfig = NULL;
 	ConfigItem_listen *listen = NULL;
+	char *file = NULL;
 	char *ip = NULL;
 	int start=0, end=0, port, isnew;
 	int tmpflags =0;
@@ -4794,6 +4804,10 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		if (!strcmp(cep->name, "file"))
+		{
+			file = cep->value;
+		} else
 		if (!strcmp(cep->name, "ip"))
 		{
 			ip = cep->value;
@@ -4835,18 +4849,44 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 	}
+
+	/* UNIX domain socket code */
+	if (file)
+	{
+		if (!(listen = find_listen(file, 0, SOCKET_TYPE_UNIX)))
+		{
+			listen = safe_alloc(sizeof(ConfigItem_listen));
+			safe_strdup(listen->file, file);
+			listen->socket_type = SOCKET_TYPE_UNIX;
+			listen->fd = -1;
+			isnew = 1;
+		} else {
+			isnew = 0;
+		}
+
+		if (listen->options & LISTENER_BOUND)
+			tmpflags |= LISTENER_BOUND;
+
+		listen->options = tmpflags;
+		if (isnew)
+			AddListItem(listen, conf_listen);
+		listen->flag.temporary = 0;
+
+		return 1;
+	}
+
 	for (port = start; port <= end; port++)
 	{
 		/* First deal with IPv4 */
 		if (!strchr(ip, ':'))
 		{
-			if (!(listen = find_listen(ip, port, 0)))
+			if (!(listen = find_listen(ip, port, SOCKET_TYPE_IPV4)))
 			{
 				listen = safe_alloc(sizeof(ConfigItem_listen));
 				safe_strdup(listen->ip, ip);
 				listen->port = port;
 				listen->fd = -1;
-				listen->ipv6 = 0;
+				listen->socket_type = SOCKET_TYPE_IPV4;
 				isnew = 1;
 			} else
 				isnew = 0;
@@ -4925,13 +4965,13 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		{
 			if (strchr(ip, ':') || (*ip == '*'))
 			{
-				if (!(listen = find_listen(ip, port, 1)))
+				if (!(listen = find_listen(ip, port, SOCKET_TYPE_IPV6)))
 				{
 					listen = safe_alloc(sizeof(ConfigItem_listen));
 					safe_strdup(listen->ip, ip);
 					listen->port = port;
 					listen->fd = -1;
-					listen->ipv6 = 1;
+					listen->socket_type = SOCKET_TYPE_IPV6;
 					isnew = 1;
 				} else
 					isnew = 0;
@@ -5012,7 +5052,8 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
 	int errors = 0;
-	char has_ip = 0, has_port = 0, has_options = 0, port_6667 = 0;
+	char has_file = 0, has_ip = 0, has_port = 0, has_options = 0, port_6667 = 0;
+	char *file = NULL;
 	char *ip = NULL;
 	Hook *h;
 
@@ -5127,6 +5168,11 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			}
 			continue; /* always */
 		} else
+		if (!strcmp(cep->name, "file"))
+		{
+			has_file = 1;
+			file = cep->value;
+		} else
 		if (!strcmp(cep->name, "ip"))
 		{
 			has_ip = 1;
@@ -5199,18 +5245,32 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	if (!has_ip)
+	if (has_file)
 	{
-		config_error("%s:%d: listen block requires an listen::ip",
-			ce->file->filename, ce->line_number);
-		errors++;
-	}
+		if (has_ip || has_port)
+		{
+			config_error("%s:%d: listen block should either have a 'file' (for *NIX domain socket), "
+			             "OR have an 'ip' and 'port' (for IPv4/IPv6). You cannot combine both in one listen block.",
+			             ce->file->filename, ce->line_number);
+			errors++;
+		} else {
+			// TODO: check if file can be created fresh etc.
+		}
+	} else
+	{
+		if (!has_ip)
+		{
+			config_error("%s:%d: listen block requires an listen::ip",
+				ce->file->filename, ce->line_number);
+			errors++;
+		}
 
-	if (!has_port)
-	{
-		config_error("%s:%d: listen block requires an listen::port",
-			ce->file->filename, ce->line_number);
-		errors++;
+		if (!has_port)
+		{
+			config_error("%s:%d: listen block requires an listen::port",
+				ce->file->filename, ce->line_number);
+			errors++;
+		}
 	}
 
 	if (port_6667)
@@ -9207,14 +9267,22 @@ void start_listeners(void)
 					           log_data_string("listen_ip", listener->ip),
 					           log_data_integer("listen_port", listener->port));
 				} else {
-					if (listener->ipv6)
-						snprintf(boundmsg_ipv6+strlen(boundmsg_ipv6), sizeof(boundmsg_ipv6)-strlen(boundmsg_ipv6),
-							"%s:%d%s, ", listener->ip, listener->port,
-							listener->options & LISTENER_TLS ? "(TLS)" : "");
-					else
-						snprintf(boundmsg_ipv4+strlen(boundmsg_ipv4), sizeof(boundmsg_ipv4)-strlen(boundmsg_ipv4),
-							"%s:%d%s, ", listener->ip, listener->port,
-							listener->options & LISTENER_TLS ? "(TLS)" : "");
+					switch (listener->socket_type)
+					{
+						case SOCKET_TYPE_IPV4:
+							snprintf(boundmsg_ipv4+strlen(boundmsg_ipv4), sizeof(boundmsg_ipv4)-strlen(boundmsg_ipv4),
+								"%s:%d%s, ", listener->ip, listener->port,
+								listener->options & LISTENER_TLS ? "(TLS)" : "");
+							break;
+						case SOCKET_TYPE_IPV6:
+							snprintf(boundmsg_ipv6+strlen(boundmsg_ipv6), sizeof(boundmsg_ipv6)-strlen(boundmsg_ipv6),
+								"%s:%d%s, ", listener->ip, listener->port,
+								listener->options & LISTENER_TLS ? "(TLS)" : "");
+							break;
+						// TODO: show unix domain sockets ;)
+						default:
+							break;
+					}
 				}
 			}
 		}

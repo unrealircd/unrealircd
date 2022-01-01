@@ -558,13 +558,22 @@ int stats_port(Client *client, const char *para)
 			continue;
 		if ((listener->options & LISTENER_SERVERSONLY) && !ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
 			continue;
-		sendnotice(client, "*** Listener on %s:%i (%s): has %i client(s), options: %s %s",
-		           listener->ip,
-		           listener->port,
-		           listener->ipv6 ? "IPv6" : "IPv4",
-		           listener->clients,
-		           stats_port_helper(listener),
-		           listener->flag.temporary ? "[TEMPORARY]" : "");
+		if (listener->socket_type == SOCKET_TYPE_UNIX)
+		{
+			sendnotice(client, "*** Listener on %s (UNIX): has %i client(s), options: %s %s",
+				   listener->file,
+				   listener->clients,
+				   stats_port_helper(listener),
+				   listener->flag.temporary ? "[TEMPORARY]" : "");
+		} else {
+			sendnotice(client, "*** Listener on %s:%i (%s): has %i client(s), options: %s %s",
+				   listener->ip,
+				   listener->port,
+				   listener->socket_type == SOCKET_TYPE_IPV6 ? "IPv6" : "IPv4",
+				   listener->clients,
+				   stats_port_helper(listener),
+				   listener->flag.temporary ? "[TEMPORARY]" : "");
+		}
 	}
 	return 0;
 }
