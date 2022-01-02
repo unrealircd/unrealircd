@@ -649,6 +649,13 @@ int crashreport_send(char *fname)
 	if ((n < 0) || strncmp(buf, "HTTP/1.1 100", 12))
 	{
 		printf("Error transmitting bug report (stage II, n=%d)\n", n);
+		if (!strncmp(buf, "HTTP/1.1 403", 12))
+		{
+			printf("Your crash report was rejected automatically.\n"
+			       "This normally means your UnrealIRCd version is too old and unsupported.\n"
+			       "Chances are that your crash issue is already fixed in a later release.\n"
+			       "Check https://www.unrealircd.org/ for latest releases!\n");
+		}
 		return 0;
 	}
 	
