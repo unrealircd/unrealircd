@@ -78,7 +78,6 @@ MOD_INIT()
 	extban.letter = 't';
 	extban.name = "time";
 	extban.options |= EXTBOPT_ACTMODIFIER; /* not really, but ours shouldn't be stacked from group 1 */
-	extban.options |= EXTBOPT_CHSVSMODE; /* so "SVSMODE -nick" will unset affected ~t extbans */
 	extban.options |= EXTBOPT_INVEX; /* also permit timed invite-only exceptions (+I) */
 	extban.conv_param = timedban_extban_conv_param;
 	extban.is_ok = timedban_extban_is_ok;
