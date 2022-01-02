@@ -659,6 +659,7 @@ PKG_CONFIG_LIBDIR
 PKG_CONFIG_PATH
 PKG_CONFIG
 LDFLAGS_PRIVATELIBS
+CONTROLFILE
 PIDFILE
 DOCDIR
 PERMDATADIR
@@ -752,6 +753,7 @@ with_tmpdir
 with_datadir
 with_docdir
 with_pidfile
+with_controlfile
 with_privatelibdir
 with_maxconnections
 with_no_operoverride
@@ -1460,6 +1462,7 @@ Optional Packages:
   --with-datadir=path     Specify the directory where permanent data is stored
   --with-docdir=path      Specify the directory where documentation is stored
   --with-pidfile=path     Specify the path of the pid file
+  --with-controlfile=path Specify the path of the control socket
   --with-privatelibdir=path
                           Specify the directory where private libraries are
                           stored. Disable when building a package for a distro
@@ -6548,6 +6551,25 @@ fi
 
 
 
+# Check whether --with-controlfile was given.
+if test "${with_controlfile+set}" = set; then :
+  withval=$with_controlfile;
+cat >>confdefs.h <<_ACEOF
+#define CONTROLFILE "$withval"
+_ACEOF
+
+		CONTROLFILE="$withval"
+else
+
+cat >>confdefs.h <<_ACEOF
+#define CONTROLFILE "$HOME/unrealircd/data/unrealircd.ctl"
+_ACEOF
+
+		CONTROLFILE="$HOME/unrealircd/data/unrealircd.ctl"
+fi
+
+
+
 # Check whether --with-privatelibdir was given.
 if test "${with_privatelibdir+set}" = set; then :
   withval=$with_privatelibdir;
@@ -6574,6 +6596,7 @@ _ACEOF
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS
 fi
+
 
 
 

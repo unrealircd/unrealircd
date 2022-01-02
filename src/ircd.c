@@ -25,209 +25,33 @@
 char *malloc_options = "h" MALLOC_FLAGS_EXTRA;
 #endif
 
-#ifndef _WIN32
-extern char unreallogo[];
-#endif
-int  SVSNOOP = 0;
+/* Externals */
 extern MODVAR char *buildid;
-time_t timeofday = 0;
-struct timeval timeofday_tv;
-int  tainted = 0;
-LoopStruct loop;
-#ifndef _WIN32
-uid_t irc_uid = 0;
-gid_t irc_gid = 0;
-#endif
-
-MODVAR IRCCounts irccounts;
-MODVAR Client me;			/* That's me */
-MODVAR char *me_hash;
 extern char backupbuf[8192];
-#ifdef _WIN32
-extern SERVICE_STATUS_HANDLE IRCDStatusHandle;
-extern SERVICE_STATUS IRCDStatus;
-#endif
-
-MODVAR unsigned char conf_debuglevel = 0;
-
-void server_reboot(const char *);
-void restart(const char *);
-static void open_debugfile(), setup_signals();
+extern EVENT(unrealdns_removeoldrecords);
+extern EVENT(unrealdb_expire_secret_cache);
 extern void init_glines(void);
 extern void tkl_init(void);
 extern void process_clients(void);
 extern void unrealdb_test(void);
-
+extern void ignore_this_signal();
+extern void s_rehash();
+extern void s_reloadcert();
+extern void s_restart();
+extern void s_die();
 #ifndef _WIN32
-MODVAR char **myargv;
+// nix specific
+extern char unreallogo[];
 #else
-LPCSTR cmdLine;
+// windows specific
+extern SERVICE_STATUS_HANDLE IRCDStatusHandle;
+extern SERVICE_STATUS IRCDStatus;
 #endif
-char *configfile = NULL; 	/* Server configuration file */
-int  debuglevel = 0;		/* Server debug level */
-int  bootopt = 0;		/* Server boot option flags */
-char *debugmode = "";		/*  -"-    -"-   -"-  */
-char *sbrk0;			/* initial sbrk(0) */
-static int dorehash = 0, dorestart = 0, doreloadcert = 0;
-MODVAR int  booted = FALSE;
 
-void s_die()
-{
-#ifdef _WIN32
-	Client *client;
-	if (!IsService)
-	{
-		loop.terminating = 1;
-		unload_all_modules();
-
-		list_for_each_entry(client, &lclient_list, lclient_node)
-			(void) send_queued(client);
-
-		exit(-1);
-	}
-	else {
-		SERVICE_STATUS status;
-		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_STOP);
-		ControlService(hService, SERVICE_CONTROL_STOP, &status);
-	}
-#else
-	loop.terminating = 1;
-	unload_all_modules();
-	unlink(conf_files ? conf_files->pid_file : IRCD_PIDFILE);
-	exit(0);
-#endif
-}
-
-#ifndef _WIN32
-static void s_rehash()
-{
-	struct sigaction act;
-	dorehash = 1;
-	act.sa_handler = s_rehash;
-	act.sa_flags = 0;
-	(void)sigemptyset(&act.sa_mask);
-	(void)sigaddset(&act.sa_mask, SIGHUP);
-	(void)sigaction(SIGHUP, &act, NULL);
-}
-
-static void s_reloadcert()
-{
-	struct sigaction act;
-	doreloadcert = 1;
-	act.sa_handler = s_reloadcert;
-	act.sa_flags = 0;
-	(void)sigemptyset(&act.sa_mask);
-	(void)sigaddset(&act.sa_mask, SIGUSR1);
-	(void)sigaction(SIGUSR1, &act, NULL);
-}
-#endif // #ifndef _WIN32
-
-void restart(const char *mesg)
-{
-	server_reboot(mesg);
-}
-
-void s_restart()
-{
-	dorestart = 1;
-#if 0
-	static int restarting = 0;
-
-	if (restarting == 0) {
-		/*
-		 * Send (or attempt to) a dying scream to oper if present
-		 */
-
-		restarting = 1;
-		server_reboot("SIGINT");
-	}
-#endif
-}
-
-
-#ifndef _WIN32
-/** Signal handler for signals which we ignore,
- * like SIGPIPE ("Broken pipe") and SIGWINCH (terminal window changed) etc.
- */
-void ignore_this_signal()
-{
-	struct sigaction act;
-
-	act.sa_handler = ignore_this_signal;
-	act.sa_flags = 0;
-	(void)sigemptyset(&act.sa_mask);
-	(void)sigaddset(&act.sa_mask, SIGALRM);
-	(void)sigaddset(&act.sa_mask, SIGPIPE);
-	(void)sigaction(SIGALRM, &act, (struct sigaction *)NULL);
-	(void)sigaction(SIGPIPE, &act, (struct sigaction *)NULL);
-#ifdef SIGWINCH
-	(void)sigaddset(&act.sa_mask, SIGWINCH);
-	(void)sigaction(SIGWINCH, &act, (struct sigaction *)NULL);
-#endif
-}
-#endif /* #ifndef _WIN32 */
-
-
-void server_reboot(const char *mesg)
-{
-	int i;
-	Client *client;
-	unreal_log(ULOG_INFO, "main", "UNREALIRCD_RESTARTING", NULL,
-	           "Restarting server: $reason",
-	           log_data_string("reason", mesg));
-
-	list_for_each_entry(client, &lclient_list, lclient_node)
-		(void) send_queued(client);
-
-	/*
-	 * ** fd 0 must be 'preserved' if either the -d or -i options have
-	 * ** been passed to us before restarting.
-	 */
-#ifdef HAVE_SYSLOG
-	(void)closelog();
-#endif
-#ifndef _WIN32
-	for (i = 3; i < MAXCONNECTIONS; i++)
-		(void)close(i);
-	if (!(bootopt & (BOOT_TTY | BOOT_DEBUG)))
-		(void)close(2);
-	(void)close(1);
-	(void)close(0);
-	(void)execv(MYNAME, myargv);
-#else
-	close_connections();
-	if (!IsService)
-	{
-		CleanUp();
-		WinExec(cmdLine, SW_SHOWDEFAULT);
-	}
-#endif
-	unload_all_modules();
-#ifdef _WIN32
-	if (IsService)
-	{
-		SERVICE_STATUS status;
-		PROCESS_INFORMATION pi;
-		STARTUPINFO si;
-		char fname[MAX_PATH];
-		memset(&status, 0, sizeof(status));
-		memset(&si, 0, sizeof(si));
-		IRCDStatus.dwCurrentState = SERVICE_STOP_PENDING;
-		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
-		GetModuleFileName(GetModuleHandle(NULL), fname, MAX_PATH);
-		CreateProcess(fname, "restartsvc", NULL, NULL, FALSE,
-			0, NULL, NULL, &si, &pi);
-		IRCDStatus.dwCurrentState = SERVICE_STOPPED;
-		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
-		ExitProcess(0);
-	}
-	else
-#endif
-	exit(-1);
-}
-
-MODVAR char *areason;
+/* Forward declarations */
+void server_reboot(const char *);
+void restart(const char *);
+static void open_debugfile(), setup_signals();
 
 EVENT(loop_event)
 {
@@ -677,30 +501,19 @@ void detect_timeshift_and_warn(void)
 	oldtimeofday = timeofday;
 }
 
-/** Check if at least 'minimum' seconds passed by since last run.
- * @param tv_old   Pointer to a timeval struct to keep track of things.
- * @param minimum  The time specified in milliseconds (eg: 1000 for 1 second)
- * @returns When 'minimum' msec passed 1 is returned and the time is reset, otherwise 0 is returned.
- */
-int minimum_msec_since_last_run(struct timeval *tv_old, long minimum)
+void SetupEvents(void)
 {
-	long v;
-
-	if (tv_old->tv_sec == 0)
-	{
-		/* First call ever */
-		tv_old->tv_sec = timeofday_tv.tv_sec;
-		tv_old->tv_usec = timeofday_tv.tv_usec;
-		return 0;
-	}
-	v = ((timeofday_tv.tv_sec - tv_old->tv_sec) * 1000) + ((timeofday_tv.tv_usec - tv_old->tv_usec)/1000);
-	if (v >= minimum)
-	{
-		tv_old->tv_sec = timeofday_tv.tv_sec;
-		tv_old->tv_usec = timeofday_tv.tv_usec;
-		return 1;
-	}
-	return 0;
+	/* Start events */
+	EventAdd(NULL, "tunefile", save_tunefile, NULL, 300*1000, 0);
+	EventAdd(NULL, "garbage", garbage_collect, NULL, GARBAGE_COLLECT_EVERY*1000, 0);
+	EventAdd(NULL, "loop", loop_event, NULL, 1000, 0);
+	EventAdd(NULL, "unrealdns_removeoldrecords", unrealdns_removeoldrecords, NULL, 15000, 0);
+	EventAdd(NULL, "check_pings", check_pings, NULL, 1000, 0);
+	EventAdd(NULL, "check_deadsockets", check_deadsockets, NULL, 1000, 0);
+	EventAdd(NULL, "handshake_timeout", handshake_timeout, NULL, 1000, 0);
+	EventAdd(NULL, "tls_check_expiry", tls_check_expiry, NULL, (86400/2)*1000, 0);
+	EventAdd(NULL, "unrealdb_expire_secret_cache", unrealdb_expire_secret_cache, NULL, 61000, 0);
+	EventAdd(NULL, "throttling_check_expire", throttling_check_expire, NULL, 1000, 0);
 }
 
 /** The main function. This will call SocketLoop() once the server is ready. */
@@ -755,7 +568,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	SetErrorMode(SEM_FAILCRITICALERRORS);
 #endif
 #if !defined(_WIN32) && !defined(_AMIGA)
-	sbrk0 = (char *)sbrk((size_t)0);
 	uid = getuid();
 	euid = geteuid();
 	gid = getgid();
@@ -1032,7 +844,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	initstats();
 	if (!loop.config_test)
 		DeleteTempModules();
-	booted = FALSE;
 #if !defined(_WIN32) && !defined(_AMIGA) && !defined(OSXTIGER) && DEFAULT_PERMISSIONS != 0
 	/* Hack to stop people from being able to read the config file */
 	(void)chmod(CPATH, DEFAULT_PERMISSIONS);
@@ -1061,7 +872,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	}
 	if (config_test() < 0)
 		exit(-1);
-	booted = TRUE;
 	load_tunefile();
 	make_umodestr();
 	SetListening(&me);

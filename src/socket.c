@@ -41,6 +41,7 @@ extern char *version;
 MODVAR time_t last_allinuse = 0;
 
 void start_of_normal_client_handshake(Client *client);
+extern void start_of_control_client_handshake(Client *client);
 void proceed_normal_client_handshake(Client *client, struct hostent *he);
 
 /** Close all connections - only used when we terminate the server (eg: /DIE or SIGTERM) */
@@ -69,6 +70,15 @@ void close_connections(void)
 		{
 			fd_close(client->local->authfd);
 			client->local->fd = -1;
+		}
+	}
+
+	list_for_each_entry(client, &control_list, lclient_node)
+	{
+		if (client->local->fd >= 0)
+		{
+			fd_close(client->local->fd);
+			client->local->fd = -2;
 		}
 	}
 
@@ -101,10 +111,17 @@ static void listener_accept(int listener_fd, int revents, void *data)
 			 * Of course the underlying cause of this issue should be investigated, as this
 			 * is very much a workaround.
 			 */
-			unreal_log(ULOG_FATAL, "listen", "ACCEPT_ERROR", NULL, "Cannot accept incoming connection on IP \"$listen_ip\" port $listen_port: $socket_error",
-				   log_data_socket_error(listener->fd),
-				   log_data_string("listen_ip", listener->ip),
-				   log_data_integer("listen_port", listener->port));
+			if (listener->file)
+			{
+				unreal_log(ULOG_FATAL, "listen", "ACCEPT_ERROR", NULL, "Cannot accept incoming connection on file $file: $socket_error",
+					   log_data_socket_error(listener->fd),
+					   log_data_string("file", listener->file));
+			} else {
+				unreal_log(ULOG_FATAL, "listen", "ACCEPT_ERROR", NULL, "Cannot accept incoming connection on IP \"$listen_ip\" port $listen_port: $socket_error",
+					   log_data_socket_error(listener->fd),
+					   log_data_string("listen_ip", listener->ip),
+					   log_data_integer("listen_port", listener->port));
+			}
 			close_listener(listener);
 			start_listeners();
 		}
@@ -115,22 +132,48 @@ static void listener_accept(int listener_fd, int revents, void *data)
 
 	set_sock_opts(cli_fd, NULL, listener->socket_type);
 
-	if ((++OpenFiles >= maxclients) || (cli_fd >= maxclients))
+	/* Allow connections to the control socket, even if maxclients is reached */
+	if (listener->options & LISTENER_CONTROL)
 	{
-		ircstats.is_ref++;
-		if (last_allinuse < TStime() - 15)
+		/* ... but not unlimited ;) */
+		if ((++OpenFiles >= maxclients+(CLIENTS_RESERVE/2)) || (cli_fd >= maxclients+(CLIENTS_RESERVE/2)))
 		{
-			unreal_log(ULOG_FATAL, "listen", "ACCEPT_ERROR_MAXCLIENTS", NULL, "Cannot accept incoming connection on IP \"$listen_ip\" port $listen_port: All connections in use",
-				   log_data_string("listen_ip", listener->ip),
-				   log_data_integer("listen_port", listener->port));
-			last_allinuse = TStime();
+			ircstats.is_ref++;
+			if (last_allinuse < TStime() - 15)
+			{
+				unreal_log(ULOG_FATAL, "listen", "ACCEPT_ERROR_MAXCLIENTS", NULL, "Cannot accept incoming connection on file $file: All connections in use",
+					   log_data_string("file", listener->file));
+				last_allinuse = TStime();
+			}
+			fd_close(cli_fd);
+			--OpenFiles;
+			return;
 		}
+	} else
+	{
+		if ((++OpenFiles >= maxclients) || (cli_fd >= maxclients))
+		{
+			ircstats.is_ref++;
+			if (last_allinuse < TStime() - 15)
+			{
+				if (listener->file)
+				{
+					unreal_log(ULOG_FATAL, "listen", "ACCEPT_ERROR_MAXCLIENTS", NULL, "Cannot accept incoming connection on file $file: All connections in use",
+						   log_data_string("file", listener->file));
+				} else {
+					unreal_log(ULOG_FATAL, "listen", "ACCEPT_ERROR_MAXCLIENTS", NULL, "Cannot accept incoming connection on IP \"$listen_ip\" port $listen_port: All connections in use",
+						   log_data_string("listen_ip", listener->ip),
+						   log_data_integer("listen_port", listener->port));
+				}
+				last_allinuse = TStime();
+			}
 
-		(void)send(cli_fd, "ERROR :All connections in use\r\n", 31, 0);
+			(void)send(cli_fd, "ERROR :All connections in use\r\n", 31, 0);
 
-		fd_close(cli_fd);
-		--OpenFiles;
-		return;
+			fd_close(cli_fd);
+			--OpenFiles;
+			return;
+		}
 	}
 
 	/* add_connection() may fail. we just don't care. */
@@ -831,29 +874,38 @@ refuse_client:
 		SetLocalhost(client);
 	}
 
-	/* Check set::max-unknown-connections-per-ip */
-	if (check_too_many_unknown_connections(client))
+	if (!(listener->options & LISTENER_CONTROL))
 	{
-		ircsnprintf(zlinebuf, sizeof(zlinebuf),
-		            "ERROR :Closing Link: [%s] (Too many unknown connections from your IP)\r\n",
-		            client->ip);
-		(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
-		goto refuse_client;
-	}
+		/* Check set::max-unknown-connections-per-ip */
+		if (check_too_many_unknown_connections(client))
+		{
+			ircsnprintf(zlinebuf, sizeof(zlinebuf),
+				    "ERROR :Closing Link: [%s] (Too many unknown connections from your IP)\r\n",
+				    client->ip);
+			(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
+			goto refuse_client;
+		}
 
-	/* Check (G)Z-Lines and set::anti-flood::connect-flood */
-	if (check_banned(client, NO_EXIT_CLIENT))
-		goto refuse_client;
+		/* Check (G)Z-Lines and set::anti-flood::connect-flood */
+		if (check_banned(client, NO_EXIT_CLIENT))
+			goto refuse_client;
+	}
 
 	client->local->listener = listener;
 	if (client->local->listener != NULL)
 		client->local->listener->clients++;
 	add_client_to_list(client);
 
-	irccounts.unknown++;
-	client->status = CLIENT_STATUS_UNKNOWN;
-
-	list_add(&client->lclient_node, &unknown_list);
+	if (!(listener->options & LISTENER_CONTROL))
+	{
+		/* IRC: unknown connection */
+		irccounts.unknown++;
+		client->status = CLIENT_STATUS_UNKNOWN;
+		list_add(&client->lclient_node, &unknown_list);
+	} else {
+		client->status = CLIENT_STATUS_CONTROL;
+		list_add(&client->lclient_node, &control_list);
+	}
 
 	if ((listener->options & LISTENER_TLS) && ctx_server)
 	{
@@ -878,7 +930,9 @@ refuse_client:
 				goto refuse_client;
 			}
 		}
-	}
+	} else
+	if (listener->options & LISTENER_CONTROL)
+		start_of_control_client_handshake(client);
 	else
 		start_of_normal_client_handshake(client);
 	return client;
@@ -1096,6 +1150,20 @@ void process_clients(void)
 			}
 		}
 	} while(&client->lclient_node != &unknown_list);
+
+	do {
+		list_for_each_entry(client, &control_list, lclient_node)
+		{
+			if ((client->local->fd >= 0) && DBufLength(&client->local->recvQ) && !IsDead(client))
+			{
+				parse_client_queued(client);
+				if (IsDead(client))
+					break;
+			}
+		}
+	} while(&client->lclient_node != &control_list);
+
+
 }
 
 /** Check if 'ip' is a valid IP address, and if so what type.

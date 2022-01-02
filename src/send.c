@@ -395,7 +395,10 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 	 * a bad idea, CPU-wise. So now we just mark the client indicating
 	 * that there is data to send.
 	 */
-	mark_data_to_send(to);
+	if (IsControl(to))
+		send_queued(to); /* send this one ASAP */
+	else
+		mark_data_to_send(to);
 }
 
 /** A single function to send data to a channel.

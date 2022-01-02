@@ -1004,7 +1004,6 @@ static NameValue log_colors_terminal[] = {
 	{ ULOG_ERROR,	"\033[91m" },
 	{ ULOG_FATAL,	"\033[95m" },
 };
-#define TERMINAL_COLOR_RESET "\033[0m"
 
 const char *log_level_irc_color(LogLevel loglevel)
 {
@@ -1635,6 +1634,25 @@ void do_unreal_log_remote(LogLevel loglevel, const char *subsystem, const char *
 	do_unreal_log_remote_deliver(loglevel, subsystem, event_id, msg, json_serialized);
 }
 
+/** Send server notices to control channel */
+void do_unreal_log_control(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized, Client *from_server)
+{
+	Client *client;
+	MultiLine *m;
+
+	if (!loop.booted)
+		return;
+
+	/* Never send these */
+	if (!strcmp(subsystem, "rawtraffic"))
+		return;
+
+	list_for_each_entry(client, &control_list, lclient_node)
+		if (IsMonitorRehash(client))
+			for (m = msg; m; m = m->next)
+				sendto_one(client, NULL, "REPLY [%s] %s", log_level_valtostring(loglevel), m->line);
+}
+
 void do_unreal_log_free_args(va_list vl)
 {
 	LogData *d;
@@ -1815,6 +1833,10 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 		from_server = find_server(str, NULL);
 	if (from_server == NULL)
 		from_server = &me;
+
+	if ((loop.rehashing == 2) || !strcmp(subsystem, "config"))
+		do_unreal_log_control(loglevel, subsystem, event_id, mmsg, json_serialized, from_server);
+
 	do_unreal_log_opers(loglevel, subsystem, event_id, mmsg, json_serialized, from_server);
 
 	do_unreal_log_channels(loglevel, subsystem, event_id, mmsg, json_serialized, from_server);

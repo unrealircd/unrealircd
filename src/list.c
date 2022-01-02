@@ -44,6 +44,7 @@ MODVAR int  numclients = 0;
 // TODO: Document whether servers are included or excluded in these lists...
 
 MODVAR struct list_head unknown_list;		/**< Local clients in handshake (may become a user or server later) */
+MODVAR struct list_head control_list;		/**< Local "control channel" clients */
 MODVAR struct list_head lclient_list;		/**< Local clients (users only, right?) */
 MODVAR struct list_head client_list;		/**< All clients - local and remote (not in handshake) */
 MODVAR struct list_head server_list;		/**< Locally connected servers */
@@ -71,6 +72,7 @@ void initlists(void)
 	INIT_LIST_HEAD(&server_list);
 	INIT_LIST_HEAD(&oper_list);
 	INIT_LIST_HEAD(&unknown_list);
+	INIT_LIST_HEAD(&control_list);
 	INIT_LIST_HEAD(&global_server_list);
 	INIT_LIST_HEAD(&dead_list);
 

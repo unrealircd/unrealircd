@@ -12,6 +12,9 @@
 /* Define the location of the configuration files */
 #undef CONFDIR
 
+/* Define the path of the control socket */
+#undef CONTROLFILE
+
 /* Define the location of permanent data files */
 #undef DATADIR
 

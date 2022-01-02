@@ -21,10 +21,10 @@
 
 CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
 
-OBJS=dns.o auth.o channel.o crule.o dbuf.o \
-	fdlist.o hash.o ircd.o ircsprintf.o list.o \
+OBJS=ircd_vars.o dns.o auth.o channel.o crule.o dbuf.o \
+	fdlist.o hash.o ircsprintf.o list.o \
 	match.o modules.o parse.o mempool.o operclass.o \
-	conf_preprocessor.o conf.o debug.o dispatch.o \
+	conf_preprocessor.o conf.o proc_io_server.o debug.o dispatch.o \
 	misc.o serv.o aliases.o socket.o \
 	tls.o user.o scache.o send.o support.o \
 	version.o whowas.o random.o api-usermode.o api-channelmode.o \
@@ -62,21 +62,21 @@ all: build
 
 build:
 	# Force build of 'ircd', before we start building any modules:
-	$(MAKE) ircd
+	$(MAKE) ircd unrealircdctl
 	$(MAKE) mods
 
 custommodule:
 	+cd modules/third; $(MAKE) MODULEFILE=$(MODULEFILE) 'EXLIBS=$(EXLIBS)' custommodule
 
-ircd: $(OBJS)
-	$(CC) $(CFLAGS) $(BINCFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(BINLDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
+ircd: $(OBJS) ircd.o
+	$(CC) $(CFLAGS) $(BINCFLAGS) $(CRYPTOLIB) -o ircd ircd.o $(OBJS) $(LDFLAGS) $(BINLDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
+
+unrealircdctl: $(OBJS) unrealircdctl.o proc_io_client.o
+	$(CC) $(CFLAGS) $(BINCFLAGS) $(CRYPTOLIB) -o unrealircdctl unrealircdctl.o proc_io_client.o $(OBJS) $(LDFLAGS) $(BINLDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
 
 mods:
 	@if [ ! -r include ] ; then \
 		ln -s ../include include; \
-	fi
-	@if [ ! -r modules ] ; then \
-		echo "You havent done cvs update -P -d"; \
 	fi
 	+cd modules; $(MAKE) all
 

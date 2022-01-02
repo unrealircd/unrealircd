@@ -104,7 +104,9 @@ void parse_client_queued(Client *client)
 		return; /* we delay processing of data until identd has replied */
 
 	if (!IsUser(client) && !IsServer(client) && (iConf.handshake_delay > 0) &&
-	    !IsNoHandshakeDelay(client) && (TStime() - client->local->creationtime < iConf.handshake_delay))
+	    !IsNoHandshakeDelay(client) &&
+	    !IsControl(client) &&
+	    (TStime() - client->local->creationtime < iConf.handshake_delay))
 	{
 		return; /* we delay processing of data until set::handshake-delay is reached */
 	}
@@ -368,6 +370,8 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 			flags |= CMD_VIRUS;
 		if (IsOper(from))
 			flags |= CMD_OPER;
+		if (IsControl(from))
+			flags |= CMD_CONTROL;
 		cmptr = find_command(ch, flags);
 		if (!cmptr || !(cmptr->flags & CMD_NOLAG))
 		{
@@ -376,6 +380,12 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 		}
 		if (!cmptr)
 		{
+			if (IsControl(from))
+			{
+				sendto_one(from, NULL, "ERROR UNKNOWN_COMMAND: %s", ch);
+				sendto_one(from, NULL, "END 1");
+				return;
+			}
 			/* Don't send error messages in response to NOTICEs
 			 * in pre-connection state.
 			 */

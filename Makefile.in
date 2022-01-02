@@ -179,6 +179,7 @@ depend:
 install: all
 	$(INSTALL) -m 0700 -d $(DESTDIR)@BINDIR@
 	$(INSTALL) -m 0700 src/ircd $(DESTDIR)@BINDIR@/unrealircd
+	$(INSTALL) -m 0700 src/unrealircdctl $(DESTDIR)@BINDIR@/unrealircdctl
 	$(INSTALL) -m 0700 extras/unrealircd-upgrade-script $(DESTDIR)@BINDIR@/unrealircd-upgrade-script
 	$(INSTALL) -m 0700 -d $(DESTDIR)@DOCDIR@
 	$(INSTALL) -m 0600 doc/Authors doc/coding-guidelines doc/tao.of.irc doc/KEYS doc/RELEASE-NOTES.md $(DESTDIR)@DOCDIR@

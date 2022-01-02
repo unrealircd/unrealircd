@@ -89,7 +89,7 @@ static Command *CommandAddInternal(Module *module, const char *cmd, CmdFunc func
 	Command *command = NULL;
 	RealCommand *c;
 
-	if (find_command_simple(cmd))
+	if ((c = find_command(cmd, flags)) && (c->flags == flags))
 	{
 		if (module)
 			module->errorcode = MODERR_EXISTS;
@@ -253,15 +253,26 @@ static RealCommand *add_Command_backend(const char *cmd)
 RealCommand *find_command(const char *cmd, int flags)
 {
 	RealCommand *p;
-	for (p = CommandHash[toupper(*cmd)]; p; p = p->next) {
-		if ((flags & CMD_UNREGISTERED) && !(p->flags & CMD_UNREGISTERED))
-			continue;
-		if ((flags & CMD_SHUN) && !(p->flags & CMD_SHUN))
-			continue;
-		if ((flags & CMD_VIRUS) && !(p->flags & CMD_VIRUS))
-			continue;
-		if ((flags & CMD_ALIAS) && !(p->flags & CMD_ALIAS))
-			continue;
+	for (p = CommandHash[toupper(*cmd)]; p; p = p->next)
+	{
+		if (flags & CMD_CONTROL)
+		{
+			if (!(p->flags & CMD_CONTROL))
+				continue;
+		} else
+		{
+			if ((flags & CMD_UNREGISTERED) && !(p->flags & CMD_UNREGISTERED))
+				continue;
+			if ((flags & CMD_SHUN) && !(p->flags & CMD_SHUN))
+				continue;
+			if ((flags & CMD_VIRUS) && !(p->flags & CMD_VIRUS))
+				continue;
+			if ((flags & CMD_ALIAS) && !(p->flags & CMD_ALIAS))
+				continue;
+			if (p->flags & CMD_CONTROL)
+				continue; /* important to also filter it this way ;) */
+		}
+
 		if (!strcasecmp(p->cmd, cmd))
 			return p;
 	}

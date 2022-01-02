@@ -512,7 +512,7 @@ int init_tls(void)
 
 /** Reinitialize TLS server and client contexts - after REHASH -tls
  */
-void reinit_tls(void)
+int reinit_tls(void)
 {
 	SSL_CTX *tmp;
 	ConfigItem_listen *listen;
@@ -524,7 +524,7 @@ void reinit_tls(void)
 	{
 		unreal_log(ULOG_ERROR, "config", "TLS_RELOAD_FAILED", NULL,
 		           "TLS Reload failed. See previous errors.");
-		return;
+		return 0;
 	}
 	if (ctx_server)
 		SSL_CTX_free(ctx_server);
@@ -535,7 +535,7 @@ void reinit_tls(void)
 	{
 		unreal_log(ULOG_ERROR, "config", "TLS_RELOAD_FAILED", NULL,
 		           "TLS Reload failed at client context. See previous errors.");
-		return;
+		return 0;
 	}
 	if (ctx_client)
 		SSL_CTX_free(ctx_client);
@@ -551,7 +551,7 @@ void reinit_tls(void)
 			{
 				unreal_log(ULOG_ERROR, "config", "TLS_RELOAD_FAILED", NULL,
 					   "TLS Reload failed at listen::tls-options. See previous errors.");
-				return;
+				return 0;
 			}
 			if (listen->ssl_ctx)
 				SSL_CTX_free(listen->ssl_ctx);
@@ -569,7 +569,7 @@ void reinit_tls(void)
 			{
 				unreal_log(ULOG_ERROR, "config", "TLS_RELOAD_FAILED", NULL,
 					   "TLS Reload failed at sni::tls-options. See previous errors.");
-				return;
+				return 0;
 			}
 			if (sni->ssl_ctx)
 				SSL_CTX_free(sni->ssl_ctx);
@@ -588,13 +588,15 @@ void reinit_tls(void)
 				unreal_log(ULOG_ERROR, "config", "TLS_RELOAD_FAILED", NULL,
 					   "TLS Reload failed at link $servername due to outgoing::tls-options. See previous errors.",
 					   log_data_string("servername", link->servername));
-				return;
+				return 0;
 			}
 			if (link->ssl_ctx)
 				SSL_CTX_free(link->ssl_ctx);
 			link->ssl_ctx = tmp; /* activate */
 		}
 	}
+
+	return 1;
 }
 
 /** Set SSL connection as nonblocking */

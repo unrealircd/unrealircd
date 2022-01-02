@@ -484,6 +484,12 @@ AC_ARG_WITH(pidfile, [AS_HELP_STRING([--with-pidfile=path],[Specify the path of 
 	[AC_DEFINE_UNQUOTED([PIDFILE], ["$HOME/unrealircd/data/unrealircd.pid"], [Define the path of the pid file])
 		PIDFILE="$HOME/unrealircd/data/unrealircd.pid"])
 
+AC_ARG_WITH(controlfile, [AS_HELP_STRING([--with-controlfile=path],[Specify the path of the control socket])],
+	[AC_DEFINE_UNQUOTED([CONTROLFILE], ["$withval"], [Define the path of the control socket])
+		CONTROLFILE="$withval"],
+	[AC_DEFINE_UNQUOTED([CONTROLFILE], ["$HOME/unrealircd/data/unrealircd.ctl"], [Define the path of the control socket])
+		CONTROLFILE="$HOME/unrealircd/data/unrealircd.ctl"])
+
 dnl Ensure that this “feature” can be disabled as it makes it harder to package unrealircd.
 dnl Users have always been able to specify “./configure LDFLAGS=-Wl,-rpath,/path/to/blah”—binki
 AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify the directory where private libraries are stored. Disable when building a package for a distro])],
@@ -514,6 +520,7 @@ dnl well, Because DATADIR conflicts with the Windows SDK header files.. amazing.
 AC_SUBST(PERMDATADIR)
 AC_SUBST(DOCDIR)
 AC_SUBST(PIDFILE)
+AC_SUBST(CONTROLFILE)
 AC_SUBST(LDFLAGS_PRIVATELIBS)
 
 AC_ARG_WITH(maxconnections, [AS_HELP_STRING([--with-maxconnections=size], [Specify the max file descriptors to use])],

@@ -2412,7 +2412,8 @@ void config_rehash()
 	}
 	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = listen_ptr->next)
 	{
-		listen_ptr->flag.temporary = 1;
+		if (!(listen_ptr->options & LISTENER_CONTROL))
+			listen_ptr->flag.temporary = 1;
 	}
 	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) next)
 	{
@@ -2945,7 +2946,9 @@ ConfigItem_listen *find_listen(const char *ipmask, int port, SocketType socket_t
 
 	for (e = conf_listen; e; e = e->next)
 	{
-		if (socket_type == SOCKET_TYPE_UNIX)
+		if (e->socket_type != socket_type)
+			continue;
+		if (e->socket_type == SOCKET_TYPE_UNIX)
 		{
 			if (!strcmp(e->file, ipmask))
 				return e;
@@ -9352,6 +9355,7 @@ void config_run(void)
 {
 	extcmodes_check_for_changes();
 	start_listeners();
+	add_proc_io_server();
 	free_all_config_resources();
 }
 
@@ -10624,13 +10628,16 @@ void request_rehash(Client *client)
 
 int rehash_internal(Client *client)
 {
+	int failure;
+
 	/* Log it here if it is by a signal */
 	if (client == NULL)
 		unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [./unrealircd rehash]");
 
-	loop.rehashing = 1; /* double checking.. */
+	loop.rehashing = 2; /* now doing the actual rehash */
 
-	if (config_test() == 0)
+	failure = config_test();
+	if (failure == 0)
 		config_run();
 	/* TODO: uh.. are we supposed to do all this for a failed rehash too? maybe some but not all? */
 	reread_motdsandrules();
@@ -10641,8 +10648,11 @@ int rehash_internal(Client *client)
 	// unload_all_unused_moddata(); -- this will crash
 	umodes_check_for_changes();
 	charsys_check_for_changes();
+
+	/* Clear everything now that we are done */
 	loop.rehashing = 0;
 	remote_rehash_client = NULL;
+	procio_post_rehash(failure);
 	return 1;
 }
 

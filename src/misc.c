@@ -623,8 +623,8 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, cons
 
 		if (client->local->fd >= 0 && !IsConnecting(client))
 		{
-			sendto_one(client, NULL, "ERROR :Closing Link: %s (%s)",
-			    get_client_name(client, FALSE), comment);
+			if (!IsControl(client))
+				sendto_one(client, NULL, "ERROR :Closing Link: %s (%s)", get_client_name(client, FALSE), comment);
 		}
 		close_connection(client);
 	}
@@ -2368,4 +2368,173 @@ void addlettertodynamicstringsorted(char **str, char letter)
 	*o = '\0';
 	safe_free_raw(*str);
 	*str = newbuf;
+}
+
+void s_die()
+{
+#ifdef _WIN32
+	Client *client;
+	if (!IsService)
+	{
+		loop.terminating = 1;
+		unload_all_modules();
+
+		list_for_each_entry(client, &lclient_list, lclient_node)
+			(void) send_queued(client);
+
+		exit(-1);
+	}
+	else {
+		SERVICE_STATUS status;
+		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_STOP);
+		ControlService(hService, SERVICE_CONTROL_STOP, &status);
+	}
+#else
+	loop.terminating = 1;
+	unload_all_modules();
+	unlink(conf_files ? conf_files->pid_file : IRCD_PIDFILE);
+	exit(0);
+#endif
+}
+
+#ifndef _WIN32
+void s_rehash()
+{
+	struct sigaction act;
+	dorehash = 1;
+	act.sa_handler = s_rehash;
+	act.sa_flags = 0;
+	(void)sigemptyset(&act.sa_mask);
+	(void)sigaddset(&act.sa_mask, SIGHUP);
+	(void)sigaction(SIGHUP, &act, NULL);
+}
+
+void s_reloadcert()
+{
+	struct sigaction act;
+	doreloadcert = 1;
+	act.sa_handler = s_reloadcert;
+	act.sa_flags = 0;
+	(void)sigemptyset(&act.sa_mask);
+	(void)sigaddset(&act.sa_mask, SIGUSR1);
+	(void)sigaction(SIGUSR1, &act, NULL);
+}
+#endif // #ifndef _WIN32
+
+void restart(const char *mesg)
+{
+	server_reboot(mesg);
+}
+
+void s_restart()
+{
+	dorestart = 1;
+}
+
+#ifndef _WIN32
+/** Signal handler for signals which we ignore,
+ * like SIGPIPE ("Broken pipe") and SIGWINCH (terminal window changed) etc.
+ */
+void ignore_this_signal()
+{
+	struct sigaction act;
+
+	act.sa_handler = ignore_this_signal;
+	act.sa_flags = 0;
+	(void)sigemptyset(&act.sa_mask);
+	(void)sigaddset(&act.sa_mask, SIGALRM);
+	(void)sigaddset(&act.sa_mask, SIGPIPE);
+	(void)sigaction(SIGALRM, &act, (struct sigaction *)NULL);
+	(void)sigaction(SIGPIPE, &act, (struct sigaction *)NULL);
+#ifdef SIGWINCH
+	(void)sigaddset(&act.sa_mask, SIGWINCH);
+	(void)sigaction(SIGWINCH, &act, (struct sigaction *)NULL);
+#endif
+}
+#endif /* #ifndef _WIN32 */
+
+
+void server_reboot(const char *mesg)
+{
+	int i;
+	Client *client;
+	unreal_log(ULOG_INFO, "main", "UNREALIRCD_RESTARTING", NULL,
+	           "Restarting server: $reason",
+	           log_data_string("reason", mesg));
+
+	list_for_each_entry(client, &lclient_list, lclient_node)
+		(void) send_queued(client);
+
+	/*
+	 * ** fd 0 must be 'preserved' if either the -d or -i options have
+	 * ** been passed to us before restarting.
+	 */
+#ifdef HAVE_SYSLOG
+	(void)closelog();
+#endif
+#ifndef _WIN32
+	for (i = 3; i < MAXCONNECTIONS; i++)
+		(void)close(i);
+	if (!(bootopt & (BOOT_TTY | BOOT_DEBUG)))
+		(void)close(2);
+	(void)close(1);
+	(void)close(0);
+	(void)execv(MYNAME, myargv);
+#else
+	close_connections();
+	if (!IsService)
+	{
+		CleanUp();
+		WinExec(cmdLine, SW_SHOWDEFAULT);
+	}
+#endif
+	unload_all_modules();
+#ifdef _WIN32
+	if (IsService)
+	{
+		SERVICE_STATUS status;
+		PROCESS_INFORMATION pi;
+		STARTUPINFO si;
+		char fname[MAX_PATH];
+		memset(&status, 0, sizeof(status));
+		memset(&si, 0, sizeof(si));
+		IRCDStatus.dwCurrentState = SERVICE_STOP_PENDING;
+		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
+		GetModuleFileName(GetModuleHandle(NULL), fname, MAX_PATH);
+		CreateProcess(fname, "restartsvc", NULL, NULL, FALSE,
+			0, NULL, NULL, &si, &pi);
+		IRCDStatus.dwCurrentState = SERVICE_STOPPED;
+		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
+		ExitProcess(0);
+	}
+	else
+#endif
+	exit(-1);
+}
+
+/** Check if at least 'minimum' seconds passed by since last run.
+ * @param tv_old   Pointer to a timeval struct to keep track of things.
+ * @param minimum  The time specified in milliseconds (eg: 1000 for 1 second)
+ * @returns When 'minimum' msec passed 1 is returned and the time is reset, otherwise 0 is returned.
+ */
+int minimum_msec_since_last_run(struct timeval *tv_old, long minimum)
+{
+	long v;
+
+	if (tv_old->tv_sec == 0)
+	{
+		/* First call ever */
+		tv_old->tv_sec = timeofday_tv.tv_sec;
+		tv_old->tv_usec = timeofday_tv.tv_usec;
+		return 0;
+	}
+	v = ((timeofday_tv.tv_sec - tv_old->tv_sec) * 1000) + ((timeofday_tv.tv_usec - tv_old->tv_usec)/1000);
+	if (v >= minimum)
+	{
+		tv_old->tv_sec = timeofday_tv.tv_sec;
+		tv_old->tv_usec = timeofday_tv.tv_usec;
+		return 1;
+	}
+	return 0;
 }
