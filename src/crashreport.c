@@ -649,6 +649,13 @@ int crashreport_send(char *fname)
 	if ((n < 0) || strncmp(buf, "HTTP/1.1 100", 12))
 	{
 		printf("Error transmitting bug report (stage II, n=%d)\n", n);
+		if (!strncmp(buf, "HTTP/1.1 403", 12))
+		{
+			printf("Your crash report was rejected automatically.\n"
+			       "This normally means your UnrealIRCd version is too old and unsupported.\n"
+			       "Chances are that your crash issue is already fixed in a later release.\n"
+			       "Check https://www.unrealircd.org/ for latest releases!\n");
+		}
 		return 0;
 	}
 	
@@ -757,6 +764,22 @@ void report_crash(void)
 	
 	if (!fname)
 		return;
+
+	if (time(NULL) > 1688169600)
+	{
+		printf("Crash report generated in '%s' but NOT sent.\n\n"
+		       "UnrealIRCd 5 is no longer supported since July 1, 2023.\n"
+		       "All support stopped after that date. You had 18+ months to upgrade.\n"
+		       "See https://www.unrealircd.org/docs/UnrealIRCd_5_EOL.\n",
+		       fname);
+		return;
+	} else
+	if (time(NULL) > 1656633600)
+	{
+		printf("WARNING: UnrealIRCd 5 is only receiving security fixes until July 1, 2023.\n"
+		       "         See https://www.unrealircd.org/docs/UnrealIRCd_5_EOL\n");
+		/* continue below.. */
+	}
 
 	if (thirdpartymods == 0)
 		thirdpartymods = check_third_party_mods_present();
