@@ -114,7 +114,7 @@ elif [ "$1" = "module" ] ; then
 	shift
 	@BINDIR@/unrealircd -m $*
 elif [ "$1" = "mkpasswd" ] ; then
-	@BINDIR@/unrealircd -P $2 $3
+	$UNREALIRCDCTL mkpasswd $2 $3
 elif [ "$1" = "version" ] ; then
 	@BINDIR@/unrealircd -v
 elif [ "$1" = "gencloak" ] ; then

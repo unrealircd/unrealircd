@@ -71,6 +71,44 @@ void unrealircdctl_status(void)
 	exit(1);
 }
 
+void unrealircdctl_mkpasswd(int argc, char *argv[])
+{
+	AuthenticationType type;
+	const char *result;
+	char *p = argv[2];
+
+	srandom(TStime());
+	type = Auth_FindType(NULL, p);
+	if (type == -1)
+	{
+		type = AUTHTYPE_ARGON2;
+	} else {
+		p = argv[3];
+	}
+	if (BadPtr(p))
+	{
+#ifndef _WIN32
+		p = getpass("Enter password to hash: ");
+#else
+		printf("ERROR: You should specify a password to hash");
+		exit(1);
+#endif
+	}
+	if ((type == AUTHTYPE_UNIXCRYPT) && (strlen(p) > 8))
+	{
+		/* Hmmm.. is this warning really still true (and always) ?? */
+		printf("WARNING: Password truncated to 8 characters due to 'crypt' algorithm. "
+		       "You are suggested to use the 'argon2' algorithm instead.");
+		p[8] = '\0';
+	}
+	if (!(result = Auth_Hash(type, p))) {
+		printf("Failed to generate password. Deprecated method? Try 'argon2' instead.\n");
+		exit(0);
+	}
+	printf("Encrypted password is: %s\n", result);
+	exit(0);
+}
+
 int main(int argc, char *argv[])
 {
 	dbuf_init();
@@ -87,7 +125,9 @@ int main(int argc, char *argv[])
 		unrealircdctl_reloadtls();
 	else if (!strcmp(argv[1], "status"))
 		unrealircdctl_status();
+	else if (!strcmp(argv[1], "mkpasswd"))
+		unrealircdctl_mkpasswd(argc, argv);
 	else
-		printf("Hai frienz: %d\n", argc);
+		unrealircdctl_usage(argv[0]);
 	exit(0);
 }
