@@ -58,6 +58,7 @@ static void dbuf_free(dbufbuf *ptr)
 
 void dbuf_queue_init(dbuf *dyn)
 {
+	memset(dyn, 0, sizeof(dbuf));
 	INIT_LIST_HEAD(&dyn->dbuf_list);
 }
 
