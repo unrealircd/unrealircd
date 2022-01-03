@@ -540,11 +540,20 @@ static char *stats_port_helper(ConfigItem_listen *listener)
 {
 	static char buf[256];
 
-	ircsnprintf(buf, sizeof(buf), "%s%s%s%s",
+	ircsnprintf(buf, sizeof(buf), "%s%s%s",
 	    (listener->options & LISTENER_CLIENTSONLY)? "clientsonly ": "",
 	    (listener->options & LISTENER_SERVERSONLY)? "serversonly ": "",
-	    (listener->options & LISTENER_TLS)?         "tls ": "",
-	    !(listener->options & LISTENER_TLS)?        "plaintext ": "");
+	    (listener->options & LISTENER_DEFER_ACCEPT)? "defer-accept ": "");
+
+	/* And one of these.. */
+	if (listener->options & LISTENER_CONTROL)
+		strlcat(buf, "control ", sizeof(buf));
+	else if (listener->socket_type == SOCKET_TYPE_UNIX)
+		;
+	else if (listener->options & LISTENER_TLS)
+		strlcat(buf, "tls ", sizeof(buf));
+	else
+		strlcat(buf, "plaintext ", sizeof(buf));
 	return buf;
 }
 
