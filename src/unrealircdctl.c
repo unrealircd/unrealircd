@@ -73,9 +73,10 @@ void unrealircdctl_status(void)
 
 int main(int argc, char *argv[])
 {
-	WSADATA wsaData;
-	WSAStartup(MAKEWORD(1,1), &wsaData);
 	dbuf_init();
+#ifdef _WIN32
+	init_winsock();
+#endif
 
 	if (argc == 1)
 		unrealircdctl_usage(argv[0]);

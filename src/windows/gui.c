@@ -188,7 +188,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	MSG msg;
 	unsigned char *s;
 	HWND hWnd;
-	WSADATA WSAData;
 	HICON hIcon;
 	SC_HANDLE hService, hSCManager;
 	SERVICE_TABLE_ENTRY DispatchTable[] = 
@@ -250,12 +249,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	if (!LoadLibrary("riched20.dll"))
 		LoadLibrary("riched32.dll");
 	InitDebug();
-
-	if (WSAStartup(MAKEWORD(1, 1), &WSAData) != 0)
-	{
-		MessageBox(NULL, "Unable to initialize WinSock", "UnrealIRCD Initalization Error", MB_OK);
-		return FALSE;
-	}
+	init_winsock();
 	hInst = hInstance; 
 
 	MainDlgBackground = CreateSolidBrush(RGB(75, 134, 238)); /* Background of main dialog */

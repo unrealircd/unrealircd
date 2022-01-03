@@ -90,7 +90,6 @@ VOID WINAPI IRCDCtrlHandler(DWORD opcode)
  */
 VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv) 
 {
-	WSADATA WSAData;
 	DWORD error = 0;
 	char path[MAX_PATH], *folder;
 
@@ -121,13 +120,7 @@ VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 	GetOSName(OSName);
 
 	InitDebug();
-
-	/* Initialize Winsocks */
-	if ((error = WSAStartup(MAKEWORD(1, 1), &WSAData)) != 0) 
-	{
-		SetServiceStop(error);
-		return;
-	}
+	init_winsock();
 
 	/* Initialize the IRCd */
 	if ((error = InitUnrealIRCd(dwArgc, lpszArgv)) != 1) 

@@ -948,6 +948,9 @@ extern int unreal_bind(int fd, const char *ip, int port, SocketType socket_type)
 extern int unreal_connect(int fd, const char *ip, int port, int ipv6);
 extern int is_valid_ip(const char *str);
 extern int ipv6_capable(void);
+#ifdef _WIN32
+extern void init_winsock(void);
+#endif
 extern MODVAR Client *remote_rehash_client;
 extern MODVAR int debugfd;
 extern void convert_to_absolute_path(char **path, const char *reldir);

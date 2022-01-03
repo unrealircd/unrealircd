@@ -1365,3 +1365,16 @@ int unreal_bind(int fd, const char *ip, int port, SocketType socket_type)
 		return ret;
 	}
 }
+
+#ifdef _WIN32
+void init_winsock(void)
+{
+	WSADATA WSAData;
+	if (WSAStartup(MAKEWORD(1, 1), &WSAData) != 0)
+	{
+		MessageBox(NULL, "Unable to initialize WinSock", "UnrealIRCD Initalization Error", MB_OK);
+		fprintf(stderr, "Unable to initialize WinSock\n");
+		exit(1);
+	}
+}
+#endif

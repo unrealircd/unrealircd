@@ -500,10 +500,7 @@ int main(int argc, char *argv[])
 int InitUnrealIRCd(int argc, char *argv[])
 #endif
 {
-#ifdef _WIN32
-	WORD wVersionRequested = MAKEWORD(1, 1);
-	WSADATA wsaData;
-#else
+#ifndef _WIN32
 	uid_t uid, euid;
 	gid_t gid, egid;
 #endif
@@ -573,7 +570,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifndef _WIN32
 	(void)umask(077);	/* better safe than sorry --SRB */
 #else
-	WSAStartup(wVersionRequested, &wsaData);
+	init_winsock();
 #endif
 	setup_signals();
 
