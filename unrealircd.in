@@ -118,7 +118,7 @@ elif [ "$1" = "mkpasswd" ] ; then
 elif [ "$1" = "version" ] ; then
 	@BINDIR@/unrealircd -v
 elif [ "$1" = "gencloak" ] ; then
-	@BINDIR@/unrealircd -k
+	$UNREALIRCDCTL gencloak
 elif [ "$1" = "backtrace" ] ; then
 	cd @TMPDIR@
 

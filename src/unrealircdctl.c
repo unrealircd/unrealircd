@@ -109,9 +109,60 @@ void unrealircdctl_mkpasswd(int argc, char *argv[])
 	exit(0);
 }
 
+void unrealircdctl_gencloak(int argc, char *argv[])
+{
+	#define GENERATE_CLOAKKEY_LEN 80 /* Length of cloak keys to generate. */
+	char keyBuf[GENERATE_CLOAKKEY_LEN + 1];
+	int keyNum;
+	int charIndex;
+
+	short has_upper;
+	short has_lower;
+	short has_num;
+
+	fprintf(stderr, "Here are 3 random cloak keys that you can copy-paste to your configuration file:\n\n");
+
+	fprintf(stderr, "set {\n\tcloak-keys {\n");
+	for (keyNum = 0; keyNum < 3; ++keyNum)
+	{
+		has_upper = 0;
+		has_lower = 0;
+		has_num = 0;
+
+		for (charIndex = 0; charIndex < sizeof(keyBuf)-1; ++charIndex)
+		{
+			switch (getrandom8() % 3)
+			{
+				case 0: /* Uppercase. */
+					keyBuf[charIndex] = (char)('A' + (getrandom8() % ('Z' - 'A')));
+					has_upper = 1;
+					break;
+				case 1: /* Lowercase. */
+					keyBuf[charIndex] = (char)('a' + (getrandom8() % ('z' - 'a')));
+					has_lower = 1;
+					break;
+				case 2: /* Digit. */
+					keyBuf[charIndex] = (char)('0' + (getrandom8() % ('9' - '0')));
+					has_num = 1;
+					break;
+			}
+		}
+		keyBuf[sizeof(keyBuf)-1] = '\0';
+
+		if (has_upper && has_lower && has_num)
+			fprintf(stderr, "\t\t\"%s\";\n", keyBuf);
+		else
+			/* Try again. For this reason, keyNum must be signed. */
+			keyNum--;
+	}
+	fprintf(stderr, "\t}\n}\n\n");
+	exit(0);
+}
+
 int main(int argc, char *argv[])
 {
 	dbuf_init();
+	init_random();
 #ifdef _WIN32
 	init_winsock();
 #endif
@@ -127,6 +178,8 @@ int main(int argc, char *argv[])
 		unrealircdctl_status();
 	else if (!strcmp(argv[1], "mkpasswd"))
 		unrealircdctl_mkpasswd(argc, argv);
+	else if (!strcmp(argv[1], "gencloak"))
+		unrealircdctl_gencloak(argc, argv);
 	else
 		unrealircdctl_usage(argv[0]);
 	exit(0);
