@@ -39,7 +39,13 @@ int procio_client_connect(const char *file)
 	strlcpy(addr.sun_path, file, sizeof(addr.sun_path));
 
 	if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+	{
+		fprintf(stderr, "Could not connect to '%s': %s\n",
+			CONTROLFILE, strerror(errno));
+		fprintf(stderr, "The IRC server does not appear to be running.\n");
+		close(fd);
 		return -1;
+	}
 
 	return fd;
 }
@@ -116,12 +122,7 @@ int procio_client(const char *command, int auto_color_logs)
 
 	fd = procio_client_connect(CONTROLFILE);
 	if (fd < 0)
-	{
-		fprintf(stderr, "Could not connect to '%s': %s\n",
-			CONTROLFILE, strerror(errno));
-		fprintf(stderr, "Maybe the IRC server is not running?\n");
 		return -1;
-	}
 
 	/* Expect the welcome message */
 	memset(buf, 0, sizeof(buf));
@@ -131,6 +132,7 @@ int procio_client(const char *command, int auto_color_logs)
 		fprintf(stderr, "Error while communicating to IRCd via '%s': %s\n"
 		                "Maybe the IRC server is not running?\n",
 		                CONTROLFILE, strerror(errno));
+		close(fd);
 		return -1;
 	}
 
@@ -138,6 +140,7 @@ int procio_client(const char *command, int auto_color_logs)
 	{
 		fprintf(stderr, "Error while sending command to IRCd via '%s'. Strange!\n",
 		                CONTROLFILE);
+		close(fd);
 		return -1;
 	}
 
@@ -177,5 +180,9 @@ int procio_client(const char *command, int auto_color_logs)
 		} while(n > 0);
 	}
 
-	return 0; /* zero is good */
+	/* IRCd hung up without saying goodbye, possibly problematic,
+	 * or at least we cannot determine, so exit with status 66.
+	 */
+	close(fd);
+	return 66;
 }
