@@ -2661,96 +2661,6 @@ static const char *config_run_priority_blocks[] =
 	"class",
 };
 
-int config_run_blocks(void)
-{
-	ConfigEntry 	*ce;
-	ConfigFile	*cfptr;
-	ConfigCommand	*cc;
-	int		errors = 0;
-	int i;
-	Hook *h;
-	ConfigItem_allow *allow;
-
-	/* Stage 1: first the priority blocks, in the order as specified
-	 *          in config_run_priority_blocks[]
-	 */
-	for (i=0; i < ARRAY_SIZEOF(config_run_priority_blocks); i++)
-	{
-		const char *config_block = config_run_priority_blocks[i];
-		cc = config_binary_search(config_block);
-		if (!cc)
-			abort(); /* internal fuckup */
-		if (!strcmp(config_block, "secret"))
-			continue; /* yeah special case, we already processed the run part in test for these */
-		for (cfptr = conf; cfptr; cfptr = cfptr->next)
-		{
-			if (config_verbose > 1)
-				config_status("Running %s", cfptr->filename);
-			for (ce = cfptr->items; ce; ce = ce->next)
-			{
-				if (!strcmp(ce->name, config_block))
-				{
-					if (cc->conffunc(cfptr, ce) < 0)
-						errors++;
-				}
-			}
-		}
-	}
-
-	/* Stage 2: now all the other config blocks */
-	for (cfptr = conf; cfptr; cfptr = cfptr->next)
-	{
-		if (config_verbose > 1)
-			config_status("Running %s", cfptr->filename);
-		for (ce = cfptr->items; ce; ce = ce->next)
-		{
-			char skip = 0;
-			for (i=0; i < ARRAY_SIZEOF(config_run_priority_blocks); i++)
-			{
-				if (!strcmp(ce->name, config_run_priority_blocks[i]))
-				{
-					skip = 1;
-					break;
-				}
-			}
-			if (skip)
-				continue;
-
-			if ((cc = config_binary_search(ce->name))) {
-				if ((cc->conffunc) && (cc->conffunc(cfptr, ce) < 0))
-					errors++;
-			}
-			else
-			{
-				int value;
-				for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
-				{
-					value = (*(h->func.intfunc))(cfptr,ce,CONFIG_MAIN);
-					if (value == 1)
-						break;
-				}
-			}
-		}
-	}
-
-	close_unbound_listeners();
-	listen_cleanup();
-	close_unbound_listeners();
-	loop.do_bancheck = 1;
-	config_switchover();
-	update_throttling_timer_settings();
-
-	/* initialize conf_files with defaults if the block isn't set: */
-	if (!conf_files)
-	  _conf_files(NULL, NULL);
-
-	if (errors > 0)
-	{
-		config_error("%i fatal errors encountered", errors);
-	}
-	return (errors > 0 ? -1 : 1);
-}
-
 int config_test_blocks()
 {
 	ConfigEntry 	*ce;
@@ -2879,6 +2789,96 @@ int config_test_blocks()
 		config_error("See https://www.unrealircd.org/docs/Upgrading_from_5.x#Update_your_snomasks");
 	}
 
+	return (errors > 0 ? -1 : 1);
+}
+
+int config_run_blocks(void)
+{
+	ConfigEntry 	*ce;
+	ConfigFile	*cfptr;
+	ConfigCommand	*cc;
+	int		errors = 0;
+	int i;
+	Hook *h;
+	ConfigItem_allow *allow;
+
+	/* Stage 1: first the priority blocks, in the order as specified
+	 *          in config_run_priority_blocks[]
+	 */
+	for (i=0; i < ARRAY_SIZEOF(config_run_priority_blocks); i++)
+	{
+		const char *config_block = config_run_priority_blocks[i];
+		cc = config_binary_search(config_block);
+		if (!cc)
+			abort(); /* internal fuckup */
+		if (!strcmp(config_block, "secret"))
+			continue; /* yeah special case, we already processed the run part in test for these */
+		for (cfptr = conf; cfptr; cfptr = cfptr->next)
+		{
+			if (config_verbose > 1)
+				config_status("Running %s", cfptr->filename);
+			for (ce = cfptr->items; ce; ce = ce->next)
+			{
+				if (!strcmp(ce->name, config_block))
+				{
+					if (cc->conffunc(cfptr, ce) < 0)
+						errors++;
+				}
+			}
+		}
+	}
+
+	/* Stage 2: now all the other config blocks */
+	for (cfptr = conf; cfptr; cfptr = cfptr->next)
+	{
+		if (config_verbose > 1)
+			config_status("Running %s", cfptr->filename);
+		for (ce = cfptr->items; ce; ce = ce->next)
+		{
+			char skip = 0;
+			for (i=0; i < ARRAY_SIZEOF(config_run_priority_blocks); i++)
+			{
+				if (!strcmp(ce->name, config_run_priority_blocks[i]))
+				{
+					skip = 1;
+					break;
+				}
+			}
+			if (skip)
+				continue;
+
+			if ((cc = config_binary_search(ce->name))) {
+				if ((cc->conffunc) && (cc->conffunc(cfptr, ce) < 0))
+					errors++;
+			}
+			else
+			{
+				int value;
+				for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+				{
+					value = (*(h->func.intfunc))(cfptr,ce,CONFIG_MAIN);
+					if (value == 1)
+						break;
+				}
+			}
+		}
+	}
+
+	close_unbound_listeners();
+	listen_cleanup();
+	close_unbound_listeners();
+	loop.do_bancheck = 1;
+	config_switchover();
+	update_throttling_timer_settings();
+
+	/* initialize conf_files with defaults if the block isn't set: */
+	if (!conf_files)
+	  _conf_files(NULL, NULL);
+
+	if (errors > 0)
+	{
+		config_error("%i fatal errors encountered", errors);
+	}
 	return (errors > 0 ? -1 : 1);
 }
 
