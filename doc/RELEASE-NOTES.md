@@ -8,13 +8,18 @@ Enhancements:
 * Support for [logging to a channel](https://www.unrealircd.org/docs/Log_block#Logging_to_a_channel).
   Similar to snomasks but then for channels.
 * Command line interface changes:
-  * The CLI tool now communicates to the running UnrealIRCd process via
-    a UNIX socket to send commands and retrieve output (if needed).
+  * The [CLI tool](https://www.unrealircd.org/docs/Command_Line_Interface) now
+    communicates to the running UnrealIRCd process via a UNIX socket to
+    send commands and retrieve output (if needed).
   * The command `./unrealircd rehash` will now show the rehash output,
     including warnings and errors, and return a proper exit code.
   * The same for `./unrealircd reloadtls`
   * New command `./unrealircd status` to show if UnrealIRCd is running, the
     version of it (and all the libraries), channel and user count, etc.
+  * The command `./unrealircd genlinkblock` is now
+    [documented](https://www.unrealircd.org/docs/Linking_servers_(genlinkblock))
+    and is referred to from the
+    [Linking servers tutorial](https://www.unrealircd.org/docs/Tutorial:_Linking_servers).
   * On Windows in the `C:\Program Files\UnrealIRCd 6\bin` directory there is
     now an `unrealircdctl` that can be used to do similar things to what
     you can do on *NIX. Supported operations are: `rehash`, `reloadtls`,
