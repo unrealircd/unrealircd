@@ -7,10 +7,26 @@ You are looking at the git version of UnrealIRCd, bleeding edge.
 Enhancements:
 * Support for [logging to a channel](https://www.unrealircd.org/docs/Log_block#Logging_to_a_channel).
   Similar to snomasks but then for channels.
+* Command line interface changes:
+  * The CLI tool now communicates to the running UnrealIRCd process via
+    a UNIX socket to send commands and retrieve output (if needed).
+  * The command `./unrealircd rehash` will now show the rehash output,
+    including warnings and errors, and return a proper exit code.
+  * The same for `./unrealircd reloadtls`
+  * New command `./unrealircd status` to show if UnrealIRCd is running, the
+    version of it (and all the libraries), channel and user count, etc.
+  * On Windows in the `C:\Program Files\UnrealIRCd 6\bin` directory there is
+    now an `unrealircdctl` that can be used to do similar things to what
+    you can do on *NIX. Supported operations are: `rehash`, `reloadtls`,
+    `mkpasswd`, `gencloak` and `spkifp`.
 * New option [set::server-notice-show-event](https://www.unrealircd.org/docs/Set_block#set::server-notice-show-event)
   which can be set to `no` to hide the event information (eg `connect.LOCAL_CLIENT_CONNECT`)
   in server notices. This can be overriden per-oper in the
   [Oper block](https://www.unrealircd.org/docs/Oper_block) via oper::server-notice-show-event.
+* Support for IRC over UNIX sockets (on the same machine), if you specify a
+  listen::file instead of ip/port. This probably won't be used much, but
+  the option is there. Users will show up with a host of `localhost`
+  and IP `127.0.0.1` to keep things simple.
 
 UnrealIRCd 6.0.1.1
 -------------------
