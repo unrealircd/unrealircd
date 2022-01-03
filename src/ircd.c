@@ -25,29 +25,6 @@
 char *malloc_options = "h" MALLOC_FLAGS_EXTRA;
 #endif
 
-/* Externals */
-extern MODVAR char *buildid;
-extern char backupbuf[8192];
-extern EVENT(unrealdns_removeoldrecords);
-extern EVENT(unrealdb_expire_secret_cache);
-extern void init_glines(void);
-extern void tkl_init(void);
-extern void process_clients(void);
-extern void unrealdb_test(void);
-extern void ignore_this_signal();
-extern void s_rehash();
-extern void s_reloadcert();
-extern void s_restart();
-extern void s_die();
-#ifndef _WIN32
-// nix specific
-extern char unreallogo[];
-#else
-// windows specific
-extern SERVICE_STATUS_HANDLE IRCDStatusHandle;
-extern SERVICE_STATUS IRCDStatus;
-#endif
-
 /* Forward declarations */
 void server_reboot(const char *);
 void restart(const char *);

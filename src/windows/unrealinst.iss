@@ -45,6 +45,7 @@ Name: "fixperm"; Description: "Make UnrealIRCd folder writable by current user";
 ; UnrealIRCd binaries
 Source: "UnrealIRCd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "UnrealIRCd.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "unrealircdctl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "unrealsvc.exe";  DestDir: "{app}\bin"; Flags: ignoreversion signonce
 
 ; TLS certificate generation helpers

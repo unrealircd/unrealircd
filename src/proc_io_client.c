@@ -32,7 +32,12 @@ int procio_client_connect(const char *file)
 
 	fd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (fd < 0)
+	{
+		fprintf(stderr, "Cannot communicate to UnrealIRCd: %s\n"
+		                "Your operating system does not support UNIX Sockets?\n",
+						strerror(ERRNO));
 		return -1;
+	}
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;

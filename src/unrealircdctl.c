@@ -73,6 +73,8 @@ void unrealircdctl_status(void)
 
 int main(int argc, char *argv[])
 {
+	WSADATA wsaData;
+	WSAStartup(MAKEWORD(1,1), &wsaData);
 	dbuf_init();
 
 	if (argc == 1)

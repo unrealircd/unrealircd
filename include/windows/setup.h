@@ -33,6 +33,7 @@
 #define CACHEDIR "cache"
 #define TMPDIR "tmp"
 #define PIDFILE PERMDATADIR"/unrealircd.pid"
+#define CONTROLFILE PERMDATADIR"/unrealircd.ctl"
 #define NO_U_TYPES
 #define NEED_U_INT32_T
 #define strcasecmp _stricmp

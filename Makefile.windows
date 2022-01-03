@@ -165,8 +165,7 @@ CFLAGS=$(DBGCFLAG) $(STDOPTIONS) /FS /MP1 /c /Fosrc/
 CFLAGSST=$(DBGCFLAGST) $(STDOPTIONS) /FS /MP1 /c /Fosrc/
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
  dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(STDLIBS) \
- /def:UnrealIRCd.def /implib:UnrealIRCd.lib \
- /nologo $(DBGLFLAG) /out:UnrealIRCd.exe
+ /nologo $(DBGLFLAG)
 MODCFLAGS=$(MODDBGCFLAG) $(STDOPTIONS) /D DYNAMIC_LINKING /D MODULE_COMPILE
 MODLFLAGS=/link /def:src/modules/module.def UnrealIRCd.lib ws2_32.lib $(STDLIBS)
 
@@ -174,10 +173,10 @@ INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/common.h ./include/version.h ./include/h.h ./include/numeric.h \
  ./include/msg.h ./include/setup.h ./include/dynconf.h
 
-EXP_OBJ_FILES=src/channel.obj src/send.obj src/socket.obj \
- src/conf.obj src/conf_preprocessor.obj \
+EXP_OBJ_FILES=src/ircd_vars.obj src/channel.obj src/send.obj src/socket.obj \
+ src/conf.obj src/proc_io_server.obj src/conf_preprocessor.obj \
  src/fdlist.obj src/dbuf.obj  \
- src/hash.obj src/parse.obj src/ircd.obj \
+ src/hash.obj src/parse.obj \
  src/whowas.obj \
  src/misc.obj src/match.obj src/crule.obj \
  src/debug.obj  src/support.obj src/list.obj \
@@ -194,7 +193,7 @@ EXP_OBJ_FILES=src/channel.obj src/send.obj src/socket.obj \
  src/utf8.obj src/log.obj $(CURLOBJ)
 
 OBJ_FILES=$(EXP_OBJ_FILES) src/gui.obj src/service.obj src/windebug.obj src/rtf.obj \
- src/editor.obj src/win.obj 
+ src/editor.obj src/win.obj src/ircd.obj src/proc_io_client.obj
 
 DLL_FILES=\
  src/modules/account-notify.dll \
@@ -411,7 +410,7 @@ DLL_FILES=\
  src/modules/whox.dll
 
 
-ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES 
+ALL: CONF unrealircdctl.exe UNREALSVC.EXE UnrealIRCd.exe MODULES
 
 CLEAN:
 	-@del /Q /S *.dll *.exe *.obj *.pdb *.res *.lib  *.exp *.ilk src\version.c >NUL
@@ -424,20 +423,26 @@ CONF:
 	$(CC) src/windows/config.c
 	-@config.exe
 
-UnrealIRCd.exe: $(OBJ_FILES) src/windows/win.res
-        $(LINK) $(LFLAGS) $(OBJ_FILES) src/windows/win.res /MAP
+UnrealIRCd.exe: $(OBJ_FILES) src/ircd.obj src/windows/win.res
+        $(LINK) $(LFLAGS) /out:UnrealIRCd.exe /def:UnrealIRCd.def /implib:UnrealIRCd.lib $(OBJ_FILES) src/windows/win.res /MAP
 	-@erase src\windows\win.res
 	$(MT) -manifest src\windows\UnrealIRCd.exe.manifest -outputresource:UnrealIRCd.exe;1
-!IFNDEF DEBUGEXTRA
- @echo Standard version built 
-!ELSE
- @echo Extra-Debug version built ... 
-!ENDIF
+
+unrealircdctl.exe: $(OBJ_FILES) src/unrealircdctl.obj src/proc_io_client.obj
+	$(LINK) $(LFLAGS) /SUBSYSTEM:CONSOLE /out:unrealircdctl.exe $(OBJ_FILES) src/unrealircdctl.obj
+	$(MT) -manifest src\windows\unrealircdctl.exe.manifest -outputresource:unrealircdctl.exe;1
+
+# alternative option -- FIXME: REMOVE / CHOOSE
+#unrealircdctl.exe: $(OBJ_FILES) src/unrealircdctl.obj src/proc_io_client.obj src/windows/unrealircdctl.res
+#	$(LINK) $(LFLAGS) /out:unrealircdctl.exe $(OBJ_FILES) src/unrealircdctl.obj src/windows/unrealircdctl.res
 
 #Source files
 
 src/version.obj: src/version.c
         $(CC) $(CFLAGS) src/version.c
+
+src/ircd_vars.obj: src/ircd_vars.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/ircd_vars.c
 
 src/parse.obj: src/parse.c $(INCLUDES)
         $(CC) $(CFLAGS) src/parse.c
@@ -484,6 +489,12 @@ src/dns.obj: src/dns.c $(INCLUDES)
 
 src/conf.obj: src/conf.c $(INCLUDES)
         $(CC) $(CFLAGS) src/conf.c
+
+src/proc_io_server.obj: src/proc_io_server.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/proc_io_server.c
+
+src/proc_io_client.obj: src/proc_io_client.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/proc_io_client.c
 
 src/conf_preprocessor.obj: src/conf_preprocessor.c $(INCLUDES)
         $(CC) $(CFLAGS) src/conf_preprocessor.c
@@ -539,6 +550,9 @@ src/win.obj: src/windows/win.c $(INCLUDES)
 
 src/unrealsvc.obj: src/windows/unrealsvc.c $(INCLUDES)
 	$(CC) $(CFLAGSST) src/windows/unrealsvc.c
+
+src/unrealircdctl.obj: src/unrealircdctl.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/unrealircdctl.c
 
 src/modules.obj: src/modules.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules.c
@@ -622,6 +636,10 @@ src/windows/win.res: src/windows/wingui.rc
 src/windows/unrealsvc.res: src/windows/unrealsvc.rc
         $(RC) /l 0x409 /fosrc/windows/unrealsvc.res /i ./include /i ./src \
               /d NDEBUG src/windows/unrealsvc.rc
+
+src/windows/unrealircdctl.res: src/windows/unrealircdctl.rc
+        $(RC) /l 0x409 /fosrc/windows/unrealircdctl.res /i ./include /i ./src \
+              /d NDEBUG src/windows/unrealircdctl.rc
 
 ################# Modules #################
 

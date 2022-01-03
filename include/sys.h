@@ -63,6 +63,7 @@
 #else
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <afunix.h>
 #endif
 
 #ifndef _WIN32
