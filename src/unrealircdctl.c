@@ -120,9 +120,9 @@ void unrealircdctl_gencloak(int argc, char *argv[])
 	short has_lower;
 	short has_num;
 
-	fprintf(stderr, "Here are 3 random cloak keys that you can copy-paste to your configuration file:\n\n");
+	printf("Here are 3 random cloak keys that you can copy-paste to your configuration file:\n\n");
 
-	fprintf(stderr, "set {\n\tcloak-keys {\n");
+	printf("set {\n\tcloak-keys {\n");
 	for (keyNum = 0; keyNum < 3; ++keyNum)
 	{
 		has_upper = 0;
@@ -150,12 +150,68 @@ void unrealircdctl_gencloak(int argc, char *argv[])
 		keyBuf[sizeof(keyBuf)-1] = '\0';
 
 		if (has_upper && has_lower && has_num)
-			fprintf(stderr, "\t\t\"%s\";\n", keyBuf);
+			printf("\t\t\"%s\";\n", keyBuf);
 		else
 			/* Try again. For this reason, keyNum must be signed. */
 			keyNum--;
 	}
-	fprintf(stderr, "\t}\n}\n\n");
+	printf("\t}\n}\n\n");
+	exit(0);
+}
+
+void unrealircdctl_spkifp(int argc, char *argv[])
+{
+	char *file = argv[2];
+	SSL_CTX *ctx = SSL_CTX_new(SSLv23_server_method());
+	SSL *ssl;
+	X509 *cert;
+	const char *spkifp;
+
+	if (!ctx)
+	{
+		printf("Internal failure while initializing SSL/TLS library context\n");
+		exit(1);
+	}
+
+	if (!file)
+	{
+		printf("NOTE: This script uses the default certificate location (any set::tls settings\n"
+		       "are ignored). If this is not what you want then specify a certificate\n"
+		       "explicitly like this: ./unrealircd spkifp conf/tls/example.pem\n\n");
+		safe_strdup(file, "tls/server.cert.pem");
+		convert_to_absolute_path(&file, CONFDIR);
+	}
+
+	if (!file_exists(file))
+	{
+		printf("Could not open certificate: %s\n"
+		       "You can specify a certificate like this: ./unrealircd spkifp conf/tls/example.pem\n",
+		       file);
+		exit(1);
+	}
+
+	if (SSL_CTX_use_certificate_chain_file(ctx, file) <= 0)
+	{
+		printf("Could not read certificate '%s'\n", file);
+		exit(1);
+	}
+
+	ssl = SSL_new(ctx);
+	if (!ssl)
+	{
+		printf("Something went wrong when generating the SPKI fingerprint.\n");
+		exit(1);
+	}
+
+	cert = SSL_get_certificate(ssl);
+	spkifp = spki_fingerprint_ex(cert);
+	printf("The SPKI fingerprint for certificate '%s' is:\n"
+	       "%s\n"
+	       "\n"
+	       "You normally add this password on the other side of the link as:\n"
+	       "password \"%s\" { spkifp; };\n"
+	       "\n",
+	       file, spkifp, spkifp);
 	exit(0);
 }
 
@@ -166,6 +222,7 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
 	init_winsock();
 #endif
+	early_init_tls();
 
 	if (argc == 1)
 		unrealircdctl_usage(argv[0]);
@@ -180,6 +237,8 @@ int main(int argc, char *argv[])
 		unrealircdctl_mkpasswd(argc, argv);
 	else if (!strcmp(argv[1], "gencloak"))
 		unrealircdctl_gencloak(argc, argv);
+	else if (!strcmp(argv[1], "spkifp") || !strcmp(argv[1], "spki"))
+		unrealircdctl_spkifp(argc, argv);
 	else
 		unrealircdctl_usage(argv[0]);
 	exit(0);
