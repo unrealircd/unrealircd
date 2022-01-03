@@ -216,11 +216,12 @@ void unrealircdctl_spkifp(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-	dbuf_init();
-	init_random();
 #ifdef _WIN32
+	chdir(".."); /* go up one level from "bin" */
 	init_winsock();
 #endif
+	dbuf_init();
+	init_random();
 	early_init_tls();
 
 	if (argc == 1)
