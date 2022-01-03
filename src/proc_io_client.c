@@ -33,9 +33,15 @@ int procio_client_connect(const char *file)
 	fd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (fd < 0)
 	{
+#ifdef _WIN32
+		fprintf(stderr, "Your Windows version does not support UNIX sockets, "
+		                "so cannot communicate to UnrealIRCd.\n"
+		                "Windows 10 version 1803 (April 2018) or later is needed.\n");
+#else
 		fprintf(stderr, "Cannot communicate to UnrealIRCd: %s\n"
-		                "Your operating system does not support UNIX Sockets?\n",
-						strerror(ERRNO));
+		                "Perhaps your operating system does not support UNIX Sockets?\n",
+				strerror(ERRNO));
+#endif
 		return -1;
 	}
 

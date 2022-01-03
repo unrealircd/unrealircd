@@ -34,7 +34,14 @@ CMD_FUNC(procio_help);
 /** Create the unrealircd.ctl socket (server-side) */
 void add_proc_io_server(void)
 {
-	ConfigItem_listen *listener = safe_alloc(sizeof(ConfigItem_listen));
+	ConfigItem_listen *listener;
+
+#ifdef _WIN32
+	/* Ignore silently on Windows versions older than W10 build 17061 */
+	if (!unix_sockets_capable())
+		return;
+#endif
+	listener = safe_alloc(sizeof(ConfigItem_listen));
 	safe_strdup(listener->file, CONTROLFILE);
 	listener->socket_type = SOCKET_TYPE_UNIX;
 	listener->options = LISTENER_CONTROL;

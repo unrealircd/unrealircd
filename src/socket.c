@@ -1202,6 +1202,16 @@ int ipv6_capable(void)
 	return 1; /* YES */
 }
 
+/** Return 1 if UNIX sockets of type SOCK_STREAM are supported, and 0 otherwise */
+int unix_sockets_capable(void)
+{
+	int fd = fd_socket(AF_UNIX, SOCK_STREAM, 0, "Testing UNIX socket");
+	if (fd < 0)
+		return 0;
+	fd_close(fd);
+	return 1;
+}
+
 /** Attempt to deliver data to a client.
  * This function is only called from send_queued() and will deal
  * with sending to the TLS or plaintext connection.
