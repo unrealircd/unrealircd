@@ -4,18 +4,22 @@ UnrealIRCd 6.0.2-git
 
 You are looking at the git version of UnrealIRCd, bleeding edge.
 
+If you are already running UnrealIRCd 6 then read below on the new
+features in 6.0.2. Otherwise, jump straight to the
+[summary about UnrealIRCd 6](#Summary) to learn more about UnrealIRCd 6.
+
 Enhancements:
 * Support for [logging to a channel](https://www.unrealircd.org/docs/Log_block#Logging_to_a_channel).
   Similar to snomasks but then for channels.
 * Command line interface changes:
   * The [CLI tool](https://www.unrealircd.org/docs/Command_Line_Interface) now
     communicates to the running UnrealIRCd process via a UNIX socket to
-    send commands and retrieve output (if needed).
+    send commands and retrieve output.
   * The command `./unrealircd rehash` will now show the rehash output,
     including warnings and errors, and return a proper exit code.
   * The same for `./unrealircd reloadtls`
   * New command `./unrealircd status` to show if UnrealIRCd is running, the
-    version of it (and all the libraries), channel and user count, etc.
+    version, channel and user count, ..
   * The command `./unrealircd genlinkblock` is now
     [documented](https://www.unrealircd.org/docs/Linking_servers_(genlinkblock))
     and is referred to from the
@@ -35,9 +39,6 @@ Enhancements:
 
 UnrealIRCd 6.0.1.1
 -------------------
-If you are already running UnrealIRCd 6 then read below on the 
-changes between 6.0.0 and 6.0.1(.1). Otherwise, jump straight to the
-[summary about UnrealIRCd 6](#Summary) to learn more about UnrealIRCd 6.
 
 Fixes:
 * In 6.0.1.1: extended bans were not properly synced between U5 and U6.
