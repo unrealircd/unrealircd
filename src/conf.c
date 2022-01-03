@@ -199,8 +199,8 @@ void free_tls_options(TLSOptions *tlsoptions);
  * Config parser (IRCd)
 */
 int			config_read_file(const char *filename, const char *display_name);
-void			config_rehash();
-int			config_run_blocks();
+void			config_rehash(void);
+int			config_run_blocks(void);
 int	config_test_blocks();
 
 /*
@@ -1586,7 +1586,7 @@ ConfigCommand *config_binary_search(const char *cmd) {
 	return NULL;
 }
 
-void	free_iConf(Configuration *i)
+void free_iConf(Configuration *i)
 {
 	FloodSettings *f, *f_next;
 
@@ -2644,61 +2644,77 @@ void config_switchover(void)
 	log_blocks_switchover();
 }
 
-int	config_run_blocks()
+/** Priority of config blocks during CONFIG_TEST stage */
+static const char *config_test_priority_blocks[] =
+{
+	"log",
+	"secret",
+	"set",
+	"class",
+};
+
+/** Priority of config blocks during CONFIG_RUN stage */
+static const char *config_run_priority_blocks[] =
+{
+	"secret",
+	"set",
+	"class",
+};
+
+int config_run_blocks(void)
 {
 	ConfigEntry 	*ce;
 	ConfigFile	*cfptr;
 	ConfigCommand	*cc;
 	int		errors = 0;
+	int i;
 	Hook *h;
 	ConfigItem_allow *allow;
 
-	/* Stage 1: set block first */
-	for (cfptr = conf; cfptr; cfptr = cfptr->next)
+	/* Stage 1: first the priority blocks, in the order as specified
+	 *          in config_run_priority_blocks[]
+	 */
+	for (i=0; i < ARRAY_SIZEOF(config_run_priority_blocks); i++)
 	{
-		if (config_verbose > 1)
-			config_status("Running %s", cfptr->filename);
-		for (ce = cfptr->items; ce; ce = ce->next)
+		const char *config_block = config_run_priority_blocks[i];
+		cc = config_binary_search(config_block);
+		if (!cc)
+			abort(); /* internal fuckup */
+		if (!strcmp(config_block, "secret"))
+			continue; /* yeah special case, we already processed the run part in test for these */
+		for (cfptr = conf; cfptr; cfptr = cfptr->next)
 		{
-			if (!strcmp(ce->name, "set"))
+			if (config_verbose > 1)
+				config_status("Running %s", cfptr->filename);
+			for (ce = cfptr->items; ce; ce = ce->next)
 			{
-				if (_conf_set(cfptr, ce) < 0)
-					errors++;
+				if (!strcmp(ce->name, config_block))
+				{
+					if (cc->conffunc(cfptr, ce) < 0)
+						errors++;
+				}
 			}
 		}
 	}
 
-	/* Stage 2: now class blocks */
+	/* Stage 2: now all the other config blocks */
 	for (cfptr = conf; cfptr; cfptr = cfptr->next)
 	{
 		if (config_verbose > 1)
 			config_status("Running %s", cfptr->filename);
 		for (ce = cfptr->items; ce; ce = ce->next)
 		{
-			if (!strcmp(ce->name, "class"))
+			char skip = 0;
+			for (i=0; i < ARRAY_SIZEOF(config_run_priority_blocks); i++)
 			{
-				if (_conf_class(cfptr, ce) < 0)
-					errors++;
+				if (!strcmp(ce->name, config_run_priority_blocks[i]))
+				{
+					skip = 1;
+					break;
+				}
 			}
-		}
-	}
-
-	/* Stage 3: now all the rest */
-	for (cfptr = conf; cfptr; cfptr = cfptr->next)
-	{
-		if (config_verbose > 1)
-			config_status("Running %s", cfptr->filename);
-		for (ce = cfptr->items; ce; ce = ce->next)
-		{
-			/* These are already processed above (set, class)
-			 * or via config_test_blocks() (secret).
-			 */
-			if (!strcmp(ce->name, "set") ||
-			    !strcmp(ce->name, "class") ||
-			    !strcmp(ce->name, "secret"))
-			{
+			if (skip)
 				continue;
-			}
 
 			if ((cc = config_binary_search(ce->name))) {
 				if ((cc->conffunc) && (cc->conffunc(cfptr, ce) < 0))
@@ -2735,61 +2751,67 @@ int	config_run_blocks()
 	return (errors > 0 ? -1 : 1);
 }
 
-
-int	config_test_blocks()
+int config_test_blocks()
 {
 	ConfigEntry 	*ce;
 	ConfigFile	*cfptr;
 	ConfigCommand	*cc;
 	int		errors = 0;
+	int i;
 	Hook *h;
 
 	invalid_snomasks_encountered = 0;
 
-	/* First, all the log { } blocks everywhere */
-	for (cfptr = conf; cfptr; cfptr = cfptr->next)
+	/* Stage 1: first the priority blocks, in the order as specified
+	 *          in config_test_priority_blocks[]
+	 */
+	for (i=0; i < ARRAY_SIZEOF(config_test_priority_blocks); i++)
 	{
-		if (config_verbose > 1)
-			config_status("Testing %s", cfptr->filename);
-		/* First test and run the log { } blocks */
-		for (ce = cfptr->items; ce; ce = ce->next)
+		const char *config_block = config_test_priority_blocks[i];
+		cc = config_binary_search(config_block);
+		if (!cc)
+			abort(); /* internal fuckup */
+		for (cfptr = conf; cfptr; cfptr = cfptr->next)
 		{
-			if (!strcmp(ce->name, "log"))
-				errors += config_test_log(cfptr, ce);
+			if (config_verbose > 1)
+				config_status("Running %s", cfptr->filename);
+			for (ce = cfptr->items; ce; ce = ce->next)
+			{
+				if (!strcmp(ce->name, config_block))
+				{
+					int n = cc->testfunc(cfptr, ce);
+					errors += n;
+					if (!strcmp(config_block, "secret") && (n == 0))
+					{
+						/* Yeah special case: secret { } blocks we run
+						 * immediately here.
+						 */
+						_conf_secret(cfptr, ce);
+					}
+				}
+			}
 		}
 	}
 
+	/* Stage 2: now all the other config blocks */
 	for (cfptr = conf; cfptr; cfptr = cfptr->next)
 	{
 		if (config_verbose > 1)
-			config_status("Testing %s", cfptr->filename);
-		/* First test and run the secret { } blocks */
+			config_status("Running %s", cfptr->filename);
 		for (ce = cfptr->items; ce; ce = ce->next)
 		{
-			if (!strcmp(ce->name, "secret"))
+			char skip = 0;
+			for (i=0; i < ARRAY_SIZEOF(config_test_priority_blocks); i++)
 			{
-				int n = _test_secret(cfptr, ce);
-				errors += n;
-				if (n == 0)
-					_conf_secret(cfptr, ce);
+				if (!strcmp(ce->name, config_test_priority_blocks[i]))
+				{
+					skip = 1;
+					break;
+				}
 			}
-		}
-		/* First test the set { } block */
-		for (ce = cfptr->items; ce; ce = ce->next)
-		{
-			if (!strcmp(ce->name, "set"))
-				errors += _test_set(cfptr, ce);
-		}
-		/* Now test all the rest */
-		for (ce = cfptr->items; ce; ce = ce->next)
-		{
-			/* These are already processed, so skip them here.. */
-			if (!strcmp(ce->name, "secret") ||
-			    !strcmp(ce->name, "set") ||
-			    !strcmp(ce->name, "log"))
-			{
+			if (skip)
 				continue;
-			}
+
 			if ((cc = config_binary_search(ce->name))) {
 				if (cc->testfunc)
 					errors += (cc->testfunc(cfptr, ce));
@@ -2843,7 +2865,9 @@ int	config_test_blocks()
 			}
 		}
 	}
+
 	errors += config_post_test();
+
 	if (errors > 0)
 	{
 		config_error("%i errors encountered", errors);
