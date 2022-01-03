@@ -77,7 +77,6 @@ void unrealircdctl_mkpasswd(int argc, char *argv[])
 	const char *result;
 	char *p = argv[2];
 
-	srandom(TStime());
 	type = Auth_FindType(NULL, p);
 	if (type == -1)
 	{
