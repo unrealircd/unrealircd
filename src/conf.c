@@ -2647,8 +2647,9 @@ void config_switchover(void)
 /** Priority of config blocks during CONFIG_TEST stage */
 static const char *config_test_priority_blocks[] =
 {
-	"log",
+	"me",
 	"secret",
+	"log", /* "log" needs to be before "set" in CONFIG_TEST */
 	"set",
 	"class",
 };
@@ -2656,8 +2657,10 @@ static const char *config_test_priority_blocks[] =
 /** Priority of config blocks during CONFIG_RUN stage */
 static const char *config_run_priority_blocks[] =
 {
+	"me",
 	"secret",
 	"set",
+	"log", /* "log" needs to be after "set" in CONFIG_RUN */
 	"class",
 };
 
