@@ -370,28 +370,19 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 			       ":%s MODE %s %s %s",
 			       client->name, channel->name, modebuf, parabuf);
 
-		if (IsServer(client) && sendts != -1)
+		if (IsServer(client) || IsMe(client))
 		{
 			sendto_server(client, 0, 0, mtags,
 				      ":%s MODE %s %s %s %lld",
 				      client->id, channel->name,
 				      modebuf, parabuf,
-				      (long long)sendts);
-		} else
-		if (samode && IsMe(client))
-		{
-			/* SAMODE is a special case: always send a TS of 0 (omitting TS==desync) */
-			sendto_server(client, 0, 0, mtags,
-				      ":%s MODE %s %s %s 0",
-				      client->id, channel->name,
-				      modebuf, parabuf);
+				      (sendts != -1) ? (long long)sendts : 0LL);
 		} else
 		{
 			sendto_server(client, 0, 0, mtags,
 				      ":%s MODE %s %s %s",
 				      client->id, channel->name,
 				      modebuf, parabuf);
-			/* tell them it's not a timestamp, in case the last param is a number. */
 		}
 
 		if (MyConnect(client))
