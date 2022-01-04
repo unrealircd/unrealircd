@@ -25,7 +25,7 @@ Enhancements:
     and is referred to from the
     [Linking servers tutorial](https://www.unrealircd.org/docs/Tutorial:_Linking_servers).
   * On Windows in the `C:\Program Files\UnrealIRCd 6\bin` directory there is
-    now an `unrealircdctl` that can be used to do similar things to what
+    now an `unrealircdctl.exe` that can be used to do similar things to what
     you can do on *NIX. Supported operations are: `rehash`, `reloadtls`,
     `mkpasswd`, `gencloak` and `spkifp`.
 * New option [set::server-notice-show-event](https://www.unrealircd.org/docs/Set_block#set::server-notice-show-event)
@@ -36,6 +36,29 @@ Enhancements:
   listen::file instead of ip/port. This probably won't be used much, but
   the option is there. Users will show up with a host of `localhost`
   and IP `127.0.0.1` to keep things simple.
+
+Fixes:
+* Fix infinite hang on "Loading IRCd configuration" if DNS is not working.
+  For example if the 1st DNS server in `/etc/resolv.conf` is down or refusing
+  requests.
+* Some `MODE` server-to-server commands were missing a timestamp at the end,
+  even though this is mandatory for modes coming from a server.
+
+Developers and protocol:
+* People packaging UnrealIRCd (eg. to an .rpm/.deb):
+  * Be sure to pass the new `--with-controlfile` configure option
+  * There is now an `unrealircdctl` tool that the `unrealircd` shell script
+    uses, it is expected to be in `bindir`.
+* `SVSMODE #chan -b nick` will now remove extbans that prevent `nick` from
+  joining. This fixes a bug where it would remove too much (for `~time`)
+  or not remove extbans (most other extbans, eg `~account`).
+  `SVSMODE #chan -b` has also been fixed accordingly (remove all bans
+  previnting joins for anyone).
+  Note that all these commands do not remove bans that prevent other
+  things such as `~quiet` or `~text`.
+* For module coders: setting the `EXTBOPT_CHSVSMODE` flag in `extban.options`
+  is no longer useful. The flag is ignored as we now decide using
+  `extban.is_banned_events` if the ban should be removed or not.
 
 UnrealIRCd 6.0.1.1
 -------------------
