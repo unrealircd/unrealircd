@@ -1256,6 +1256,7 @@ typedef enum FloodOption {
 	FLD_KNOCK		= 4,	/**< knock-flood */
 	FLD_CONVERSATIONS	= 5,	/**< max-concurrent-conversations */
 	FLD_LAG_PENALTY		= 6,	/**< lag-penalty / lag-penalty-bytes */
+	FLD_VHOST		= 7,	/**< vhost-flood */
 } FloodOption;
 #define MAXFLOODOPTIONS 10
 

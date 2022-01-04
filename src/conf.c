@@ -7483,6 +7483,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					{
 						config_parse_flood_generic(ceppp->value, &tempiConf, cepp->name, FLD_NICK);
 					}
+					else if (!strcmp(ceppp->name, "vhost-flood"))
+					{
+						config_parse_flood_generic(ceppp->value, &tempiConf, cepp->name, FLD_VHOST);
+					}
 					else if (!strcmp(ceppp->name, "join-flood"))
 					{
 						config_parse_flood_generic(ceppp->value, &tempiConf, cepp->name, FLD_JOIN);
@@ -8441,6 +8445,19 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						    (cnt < 1) || (cnt > 255) || (period < 5))
 						{
 							config_error("%s:%i: set::anti-flood::nick-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+								     "count should be 1-255, period should be greater than 4",
+								ceppp->file->filename, ceppp->line_number);
+							errors++;
+						}
+					}
+					else if (!strcmp(ceppp->name, "vhost-flood"))
+					{
+						int cnt, period;
+						CheckNull(ceppp);
+						if (!config_parse_flood(ceppp->value, &cnt, &period) ||
+						    (cnt < 1) || (cnt > 255) || (period < 5))
+						{
+							config_error("%s:%i: set::anti-flood::vhost-flood error. Syntax is '<count>:<period>' (eg 5:60), "
 								     "count should be 1-255, period should be greater than 4",
 								ceppp->file->filename, ceppp->line_number);
 							errors++;

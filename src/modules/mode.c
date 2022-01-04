@@ -1150,6 +1150,22 @@ CMD_FUNC(_cmd_umode)
 				goto def;
 			case 't':
 			case 'x':
+				/* set::anti-flood::vhost-flood */
+				if (MyUser(client))
+				{
+					if ((what == MODE_DEL) && !ValidatePermissionsForPath("immune:vhost-flood",client,NULL,NULL,NULL) &&
+							flood_limit_exceeded(client, FLD_VHOST))
+					{
+						/* Throttle... */
+						if (!modex_err)
+						{
+							sendnotice(client, "*** Setting -%c too fast. Please try again later.", *m);
+							modex_err = 1;
+						}
+						break;
+					}
+				}
+
 				switch (UHOST_ALLOWED)
 				{
 				case UHALLOW_ALWAYS:
