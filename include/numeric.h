@@ -37,7 +37,7 @@
 
 #define RPL_REDIR	     10
 
-#define RPL_MAPUSERS	     018
+#define RPL_MAPUSERS	     18
 
 #define RPL_REMOTEISUPPORT 105
 
