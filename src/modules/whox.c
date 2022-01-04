@@ -46,6 +46,7 @@ ModuleHeader MOD_HEADER
 #define WMATCH_ACCOUNT	0x0040
 #define WMATCH_IP	0x0080
 #define WMATCH_MODES	0x0100
+#define WMATCH_CONTIME	0x0200
 
 #define RPL_WHOSPCRPL	354
 
@@ -69,6 +70,8 @@ struct who_format
 	const char *querytype;
 	int show_realhost;
 	int show_ip;
+	time_t contimemin;
+	time_t contimemax;
 };
 
 /* Global variables */
@@ -229,6 +232,7 @@ CMD_FUNC(cmd_whox)
 				case 's': fmt.matchsel |= WMATCH_SERVER; continue;
 				case 'a': fmt.matchsel |= WMATCH_ACCOUNT; continue;
 				case 'm': fmt.matchsel |= WMATCH_MODES; continue;
+				case 't': fmt.matchsel |= WMATCH_CONTIME; continue;
 				case 'R':
 					if (IsOper(client))
 						fmt.show_realhost = 1;
@@ -333,6 +337,28 @@ CMD_FUNC(cmd_whox)
 			/* these are usermodes regular users may search for. just oper now. */
 			fmt.umodes &= UMODE_OPER;
 			fmt.noumodes &= UMODE_OPER;
+		}
+	}
+
+	/* match connect time */
+	if (fmt.matchsel & WMATCH_CONTIME)
+	{
+		char *s = mask;
+		time_t currenttime = TStime();
+
+		fmt.contimemin = 0;
+		fmt.contimemax = 0;
+
+		switch (*s)
+		{
+			case '<':
+				if (*s++)
+					fmt.contimemin = currenttime - config_checkval(s, CFG_TIME);
+				break;
+			case '>':
+				if (*s++)
+					fmt.contimemax = currenttime - config_checkval(s, CFG_TIME);
+				break;
 		}
 	}
 
@@ -447,6 +473,16 @@ static int do_match(Client *client, Client *acptr, char *mask, struct who_format
 		{
 			return 1;
 		}
+	}
+
+	/* match connect time */
+	if (IsMatch(fmt, WMATCH_CONTIME) && MyConnect(acptr) && (fmt->contimemin || fmt->contimemax))
+	{
+		if (fmt->contimemin && (acptr->local->creationtime > fmt->contimemin))
+			return 1;
+
+		if (fmt->contimemax && (acptr->local->creationtime < fmt->contimemax))
+			return 1;
 	}
 
 	return 0;
