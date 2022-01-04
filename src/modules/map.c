@@ -26,6 +26,22 @@ CMD_FUNC(cmd_map);
 
 #define MSG_MAP 	"MAP"	
 
+static int lmax = 0;
+static int umax = 0;
+
+static int dcount(int n)
+{
+   int cnt = 0;
+
+   while (n != 0)
+   {
+	   n = n/10;
+	   cnt++;
+   }
+
+   return cnt;
+}
+
 ModuleHeader MOD_HEADER
   = {
 	"map",
@@ -70,8 +86,24 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 		sendnumeric(client, RPL_MAPMORE, prompt, length, server->name);
 	else
 	{
-		sendnumeric(client, RPL_MAP, prompt,
-		            length, server->name, server->server->users, IsOper(client) ? server->id : "");
+		char tbuf[256];
+		char sid[10];
+		int len = length - strlen(server->name) + 1;
+
+		if (len < 0)
+			len = 0;
+		if (len > 255)
+			len = 255;
+
+		tbuf[len--] = '\0';
+		while (len >= 0)
+			tbuf[len--] = '-';
+		if (IsOper(client))
+			snprintf(sid, sizeof(sid), " [%s]", server->id);
+		sendnumeric(client, RPL_MAP, prompt, server->name, tbuf, umax,
+			server->server->users, (double)(lmax < 10) ? 4 : (lmax == 100) ? 6 : 5,
+			(server->server->users * 100.0 / irccounts.clients),
+			IsOper(client) ? sid : "");
 		cnt = 0;
 	}
 
@@ -115,12 +147,15 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 void dump_flat_map(Client *client, Client *server, int length)
 {
 	char buf[4];
+	char tbuf[256];
 	Client *acptr;
 	int cnt = 0, hide_ulines;
 
 	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL)) ? 1 : 0;
 
-	sendnumeric(client, RPL_MAP, "", length, server->name, server->server->users, "");
+	sendnumeric(client, RPL_MAP, "", server->name, "-", umax, server->server->users,
+		(lmax < 10) ? 4 : (lmax == 100) ? 6 : 5,
+		(server->server->users * 100.0 / irccounts.clients), "");
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
@@ -132,11 +167,25 @@ void dump_flat_map(Client *client, Client *server, int length)
 	strcpy(buf, "|-");
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
+		int len = 0;
 		if ((IsULine(acptr) && hide_ulines) || (acptr == server))
 			continue;
 		if (--cnt == 0)
 			*buf = '`';
-		sendnumeric(client, RPL_MAP, buf, length-2, acptr->name, acptr->server->users, "");
+
+		len = length - strlen(server->name) + 1;
+		if (len < 0)
+			len = 0;
+		if (len > 255)
+			len = 255;
+
+		tbuf[len--] = '\0';
+		while (len >= 0)
+			tbuf[len--] = '-';
+
+		sendnumeric(client, RPL_MAP, buf, server->name, tbuf, umax, server->server->users,
+			(lmax < 10) ? 4 : (lmax == 100) ? 6 : 5,
+			(server->server->users * 100.0 / irccounts.clients), "");
 	}
 }
 
@@ -150,14 +199,23 @@ CMD_FUNC(cmd_map)
 {
 	Client *acptr;
 	int  longest = strlen(me.name);
+	float avg_users;
+
+	umax = 0;
+	lmax = 0;
 
 	if (parc < 2)
 		parv[1] = "*";
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
+		int perc = (acptr->server->users * 100 / irccounts.clients);
 		if ((strlen(acptr->name) + acptr->hopcount * 2) > longest)
 			longest = strlen(acptr->name) + acptr->hopcount * 2;
+		if (lmax < perc)
+			lmax = perc;
+		if (umax < dcount(acptr->server->users))
+			umax = dcount(acptr->server->users);
 	}
 
 	if (longest > 60)
@@ -169,5 +227,8 @@ CMD_FUNC(cmd_map)
 	else
 		dump_map(client, &me, "*", 0, longest);
 
+	avg_users = irccounts.clients * 1.0 / irccounts.servers;
+	sendnumeric(client, RPL_MAPUSERS, irccounts.servers, (irccounts.servers > 1 ? "s" : ""), irccounts.clients,
+		(irccounts.clients > 1 ? "s" : ""), avg_users);
 	sendnumeric(client, RPL_MAPEND);
 }

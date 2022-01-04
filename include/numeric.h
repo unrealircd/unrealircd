@@ -37,6 +37,8 @@
 
 #define RPL_REDIR	     10
 
+#define RPL_MAPUSERS	     018
+
 #define RPL_REMOTEISUPPORT 105
 
 /*
@@ -353,6 +355,7 @@
 #define STR_RPL_MAPEND			/* 007 */	":End of /MAP"
 #define STR_RPL_SNOMASK			/* 008 */	"+%s :Server notice mask"
 #define STR_RPL_REDIR			/* 010 */	"%s %d :Please use this Server/Port instead"
+#define STR_RPL_MAPUSERS		/* 018 */	":%d server%s and %d user%s, average %.2f users per server"
 #define STR_RPL_REMOTEISUPPORT		/* 105 */	"%s :are supported by this server"
 #define STR_RPL_TRACELINK		/* 200 */	"Link %s%s %s %s"
 #define STR_RPL_TRACECONNECTING		/* 201 */	"Attempt %s %s"
