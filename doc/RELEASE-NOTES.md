@@ -49,16 +49,17 @@ Developers and protocol:
   * Be sure to pass the new `--with-controlfile` configure option
   * There is now an `unrealircdctl` tool that the `unrealircd` shell script
     uses, it is expected to be in `bindir`.
-* `SVSMODE #chan -b nick` will now remove extbans that prevent `nick` from
-  joining. This fixes a bug where it would remove too much (for `~time`)
+* `SVSMODE #chan -b nick` will now correctly remove extbans that prevent `nick`
+  from joining. This fixes a bug where it would remove too much (for `~time`)
   or not remove extbans (most other extbans, eg `~account`).
   `SVSMODE #chan -b` has also been fixed accordingly (remove all bans
-  previnting joins for anyone).
-  Note that all these commands do not remove bans that prevent other
-  things such as `~quiet` or `~text`.
+  preventing joins).
+  Note that all these commands do not remove bans that do not affect joins,
+  such as `~quiet` or `~text`.
 * For module coders: setting the `EXTBOPT_CHSVSMODE` flag in `extban.options`
-  is no longer useful. The flag is ignored as we now decide using
-  `extban.is_banned_events` if the ban should be removed or not.
+  is no longer useful, the flag is ignored. We now decide based on
+  `BANCHK_JOIN` being in `extban.is_banned_events` if the ban should be
+  removed or not upon SVS(2)MODE -b.
 
 UnrealIRCd 6.0.1.1
 -------------------
