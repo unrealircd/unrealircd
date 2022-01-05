@@ -706,7 +706,7 @@ while [ -z "$TEST" ] ; do
 	echo "     classic: This is the DEFAULT geoip engine that should work on all systems"
 	echo "libmaxminddb: This uses the libmaxminddb library. If you want to use it then"
 	echo "              you need to install the libmaxminddb library on your system first"
-	echo "        none: Don't built with any geoip feature"
+	echo "        none: Don't built with any geoip library (geoip-csv is still built)"
 	echo "Choose one of: classic, libmaxminddb, none"
 	echo $n "[$TEST] -> $c"
 	read cc
