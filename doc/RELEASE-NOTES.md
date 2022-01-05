@@ -36,6 +36,11 @@ Enhancements:
   listen::file instead of ip/port. This probably won't be used much, but
   the option is there. Users will show up with a host of `localhost`
   and IP `127.0.0.1` to keep things simple.
+* The `MAP` command now shows percentages of users
+* Add `WHO` option to search clients by time connected (eg. `WHO <300 t` to
+  search for less than 300 seconds)
+* Rate limiting of `MODE nick -x` and `-t` via new `vhost-flood` option in
+  [set::anti-flood block](https://www.unrealircd.org/docs/Anti-flood_settings).
 
 Fixes:
 * Fix infinite hang on "Loading IRCd configuration" if DNS is not working.
@@ -43,6 +48,9 @@ Fixes:
   requests.
 * Some `MODE` server-to-server commands were missing a timestamp at the end,
   even though this is mandatory for modes coming from a server.
+
+Changes:
+* Update Russian `help.ru.conf`.
 
 Developers and protocol:
 * People packaging UnrealIRCd (eg. to an .rpm/.deb):
