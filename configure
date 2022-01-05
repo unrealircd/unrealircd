@@ -7461,7 +7461,7 @@ fi
 
 if test "$has_system_pcre2" = "no"; then :
 
-pcre2_version="10.36"
+pcre2_version="10.39"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting PCRE2 regex library" >&5
 $as_echo "extracting PCRE2 regex library" >&6; }
 cur_dir=`pwd`
