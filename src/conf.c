@@ -464,10 +464,15 @@ int config_parse_flood_generic(const char *str, Configuration *conf, char *block
 
 long config_checkval(const char *orig, unsigned short flags)
 {
-	char *value = raw_strdup(orig);
+	char *value;
 	char *text;
 	long ret = 0;
 
+	/* Handle empty strings early, since we use +1 later in the code etc. */
+	if (BadPtr(orig))
+		return 0;
+
+	value = raw_strdup(orig);
 	if (flags == CFG_YESNO) {
 		for (text = value; *text; text++) {
 			if (!isalnum(*text))
