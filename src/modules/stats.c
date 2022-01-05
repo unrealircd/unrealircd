@@ -917,6 +917,7 @@ int stats_set(Client *client, const char *para)
 	sendtxtnumeric(client, "spamfilter::virus-help-channel: %s", SPAMFILTER_VIRUSCHAN);
 	if (SPAMFILTER_EXCEPT)
 		sendtxtnumeric(client, "spamfilter::except: %s", SPAMFILTER_EXCEPT);
+	sendtxtnumeric(client, "spamfilter::utf8-support: %s", iConf.spamfilter_utf8_support ? "yes" : "no");
 	sendtxtnumeric(client, "check-target-nick-bans: %s", CHECK_TARGET_NICK_BANS ? "yes" : "no");
 	sendtxtnumeric(client, "plaintext-policy::user: %s", policy_valtostr(iConf.plaintext_policy_user));
 	sendtxtnumeric(client, "plaintext-policy::oper: %s", policy_valtostr(iConf.plaintext_policy_oper));

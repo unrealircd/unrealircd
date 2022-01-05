@@ -578,7 +578,7 @@ export PATH_SEPARATOR
 dnl Use system pcre2 when available, unless --without-system-pcre2.
 has_system_pcre2="no"
 AS_IF([test "x$with_system_pcre2" = "xyes"],[
-PKG_CHECK_MODULES([PCRE2], libpcre2-8 >= 10.34,[has_system_pcre2=yes
+PKG_CHECK_MODULES([PCRE2], libpcre2-8 >= 10.36,[has_system_pcre2=yes
 AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libpcre2*])],[has_system_pcre2=no])])
 
 AS_IF([test "$has_system_pcre2" = "no"], [
