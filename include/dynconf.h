@@ -128,7 +128,6 @@ struct Configuration {
 	long spamfilter_detectslow_warn;
 	long spamfilter_detectslow_fatal;
 	int spamfilter_stop_on_first_match;
-	int spamfilter_utf8_support;
 	int maxbans;
 	int maxbanlength;
 	int watch_away_notification;
