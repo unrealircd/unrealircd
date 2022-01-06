@@ -122,7 +122,6 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_HANDSHAKE_OUT, 0, geoip_base_handshake);
 	HookAdd(modinfo->handle, HOOKTYPE_CONNECT_EXTINFO, 1, geoip_connect_extinfo); /* (prio: near-first) */
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0,geoip_base_handshake); /* in case the IP changed in registration phase (WEBIRC, HTTP Forwarded) */
-	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, 0, geoip_base_handshake); /* remote user */
 	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, geoip_base_whois);
 
 	CommandAdd(modinfo->handle, "GEOIP", cmd_geoip, MAXPARA, CMD_USER);
@@ -229,12 +228,13 @@ void geoip_base_unserialize(const char *str, ModData *m)
 	m->ptr = res;
 }
 
-EVENT(geoip_base_set_existing_users_evt){
+EVENT(geoip_base_set_existing_users_evt)
+{
 	Client *client;
-	list_for_each_entry(client, &client_list, client_node){
-		if (!IsUser(client))
-			continue;
-		geoip_base_handshake(client);
+	list_for_each_entry(client, &client_list, client_node)
+	{
+		if (MyUser(client))
+			geoip_base_handshake(client);
 	}
 }
 
