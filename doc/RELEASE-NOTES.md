@@ -8,6 +8,14 @@ If you are already running UnrealIRCd 6 then read below on the new
 features in 6.0.2. Otherwise, jump straight to the
 [summary about UnrealIRCd 6](#Summary) to learn more about UnrealIRCd 6.
 
+Fixes:
+* Windows: fix crash with IPv6 clients (local or remote) due to GeoIP lookup
+* Fix infinite hang on "Loading IRCd configuration" if DNS is not working.
+  For example if the 1st DNS server in `/etc/resolv.conf` is down or refusing
+  requests.
+* Some `MODE` server-to-server commands were missing a timestamp at the end,
+  even though this is mandatory for modes coming from a server.
+
 Enhancements:
 * Support for [logging to a channel](https://www.unrealircd.org/docs/Log_block#Logging_to_a_channel).
   Similar to snomasks but then for channels.
@@ -41,13 +49,6 @@ Enhancements:
   search for less than 300 seconds)
 * Rate limiting of `MODE nick -x` and `-t` via new `vhost-flood` option in
   [set::anti-flood block](https://www.unrealircd.org/docs/Anti-flood_settings).
-
-Fixes:
-* Fix infinite hang on "Loading IRCd configuration" if DNS is not working.
-  For example if the 1st DNS server in `/etc/resolv.conf` is down or refusing
-  requests.
-* Some `MODE` server-to-server commands were missing a timestamp at the end,
-  even though this is mandatory for modes coming from a server.
 
 Changes:
 * Update Russian `help.ru.conf`.
