@@ -28,8 +28,8 @@ Enhancements:
     now an `unrealircdctl.exe` that can be used to do similar things to what
     you can do on *NIX. Supported operations are: `rehash`, `reloadtls`,
     `mkpasswd`, `gencloak` and `spkifp`.
-* There is now an option to make [Spamfilter](https://www.unrealircd.org/docs/Spamfilter)
-  UTF8-aware. You need to `set { spamfilter { utf8-support yes; } }`
+* New experimental [Spamfilter](https://www.unrealircd.org/docs/Spamfilter)
+  support for UTF8. You need to `set { spamfilter { utf8-support yes; } }`
   * Case insensitive matches work better. For example, with extended
     Latin, a spamfilter on `ę` now also matches `Ę`.
   * Other PCRE2 features such as [\p](https://www.pcre.org/current/doc/html/pcre2syntax.html#SEC5)
@@ -40,13 +40,13 @@ Enhancements:
     or script is quite a drastic measure.
   * These new features require the PCRE2 10.36 regex library. Most people
     will have a lower version of PCRE2 on the system, so then UnrealIRCd
-    will fallback to using the UnrealIRCd-shipped-library 10.39.
+    will fallback to using the UnrealIRCd-shipped-library (10.39).
     The downside to that is that compiling during `./Config` may take
     a little longer than usual.
-  * If you try this new utf8-support for spamfilter, let us know if it works
-    well for you or not, so we can decide if we want to make this the
-    default in later versions. (In the past there were some issues with it
-    in the PCRE2 library, matching too much or too little)
+  * As said, this is an experimental feature. In the past there have been
+    issues with it, causing a hanging ircd or matchin too much or too little.
+    If you try this new utf8-support for spamfilter, let us know if it
+    works well for you or not.
 * New option [set::server-notice-show-event](https://www.unrealircd.org/docs/Set_block#set::server-notice-show-event)
   which can be set to `no` to hide the event information (eg `connect.LOCAL_CLIENT_CONNECT`)
   in server notices. This can be overriden per-oper in the
