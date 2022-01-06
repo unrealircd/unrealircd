@@ -1083,6 +1083,7 @@ MODVAR const char *floodoption_names[] = {
 	"knock-flood",
 	"max-concurrent-conversations",
 	"lag-penalty",
+	"vhost-flood",
 	NULL
 };
 
