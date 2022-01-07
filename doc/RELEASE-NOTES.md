@@ -4,8 +4,8 @@ UnrealIRCd 6.0.2-git
 
 You are looking at the git version of UnrealIRCd, bleeding edge.
 
-If you are already running UnrealIRCd 6 then read below on the new
-features in 6.0.2. Otherwise, jump straight to the
+If you are already running UnrealIRCd 6 then read below on the fixes
+and new features in 6.0.2. Otherwise, jump straight to the
 [summary about UnrealIRCd 6](#Summary) to learn more about UnrealIRCd 6.
 
 Fixes:
@@ -15,6 +15,11 @@ Fixes:
   requests.
 * Some `MODE` server-to-server commands were missing a timestamp at the end,
   even though this is mandatory for modes coming from a server.
+* The [channeldb](https://www.unrealircd.org/docs/Set_block#set::channeldb)
+  module now converts letter extbans to named extbans (eg `~a` to `~account`).
+  Previously it did not, which caused letter extbans to appear in the banlist,
+  also possibly causing duplicate entries with both the old and new format
+  (the extbans were still effective, though).
 
 Enhancements:
 * Support for [logging to a channel](https://www.unrealircd.org/docs/Log_block#Logging_to_a_channel).
@@ -41,9 +46,10 @@ Enhancements:
   in server notices. This can be overridden per-oper in the
   [Oper block](https://www.unrealircd.org/docs/Oper_block) via oper::server-notice-show-event.
 * Support for IRC over UNIX sockets (on the same machine), if you specify a
-  listen::file instead of ip/port. This probably won't be used much, but
-  the option is there. Users will show up with a host of `localhost`
-  and IP `127.0.0.1` to keep things simple.
+  file in the [listen block](https://www.unrealircd.org/docs/Listen_block)
+  instead of an ip/port. This probably won't be used much, but the option is
+  there. Users will show up with a host of `localhost` and IP `127.0.0.1` to
+  keep things simple.
 * The `MAP` command now shows percentages of users
 * Add `WHO` option to search clients by time connected (eg. `WHO <300 t` to
   search for less than 300 seconds)
