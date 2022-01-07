@@ -384,10 +384,24 @@ int read_listmode(UnrealDB *db, Ban **lst)
 
 	for (i = 0; i < total; i++)
 	{
+		const char *str;
 		e = safe_alloc(sizeof(Ban));
 		R_SAFE(unrealdb_read_str(db, &e->banstr));
 		R_SAFE(unrealdb_read_str(db, &e->who));
 		R_SAFE(unrealdb_read_int64(db, &when));
+		str = clean_ban_mask(e->banstr, MODE_ADD, &me, 0);
+		if (str == NULL)
+		{
+			/* Skip this item */
+			config_warn("[channeldb] listmode skipped (no longer valid?): %s", e->banstr);
+			safe_free(e->banstr);
+			safe_free(e->who);
+			safe_free(e);
+			continue;
+		}
+		safe_strdup(e->banstr, str);
+
+		/* Add to list */
 		e->when = when;
 		e->next = *lst;
 		*lst = e;
