@@ -4,7 +4,7 @@ OUTF="curl-latest.tar.gz"
 OUTD="curl-latest"
 ARESPATH="`pwd`/extras/c-ares"
 UNREALDIR="`pwd`"
-CARESVERSION="1.17.2"
+CARESVERSION="1.18.1"
 LIBDIR="$1"
 
 if [ "x$1" = "x" ]; then
