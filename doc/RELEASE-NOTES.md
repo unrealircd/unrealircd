@@ -1,11 +1,10 @@
-UnrealIRCd 6.0.2-git
-=================
-*THIS IS WORK IN PROGRESS*
-
-You are looking at the git version of UnrealIRCd, bleeding edge.
+UnrealIRCd 6.0.2-rc1
+=====================
+This is the release candidate for UnrealIRCd 6.0.2. You can help us by
+testing this release and reporting any issues at https://bugs.unrealircd.org/.
 
 If you are already running UnrealIRCd 6 then read below on the fixes
-and new features in 6.0.2. Otherwise, jump straight to the
+and nice new features in 6.0.2. Otherwise, jump straight to the
 [summary about UnrealIRCd 6](#Summary) to learn more about UnrealIRCd 6.
 
 Fixes:
@@ -17,9 +16,10 @@ Fixes:
   even though this is mandatory for modes coming from a server.
 * The [channeldb](https://www.unrealircd.org/docs/Set_block#set::channeldb)
   module now converts letter extbans to named extbans (eg `~a` to `~account`).
-  Previously it did not, which caused letter extbans to appear in the banlist,
-  also possibly causing duplicate entries with both the old and new format
-  (the extbans were still effective, though).
+  Previously it did not, which caused letter extbans to appear in the banlist.
+  Later on, when linking servers, this would cause duplicate entries to appear
+  as well, with both the old and new format. The extbans were still effective
+  though, so this is mostly a visual +b/+e/+I list issue.
 
 Enhancements:
 * Support for [logging to a channel](https://www.unrealircd.org/docs/Log_block#Logging_to_a_channel).
@@ -164,6 +164,8 @@ Enhancements
   * Colors are enabled by default in snomask server notices, these can be disabled via
     [set::server-notice-colors](https://www.unrealircd.org/docs/Set_block#set::server-notice-colors)
     and also in [oper::server-notice-colors](https://www.unrealircd.org/docs/Oper_block)
+  * Support for [logging to a channel](https://www.unrealircd.org/docs/Log_block#Logging_to_a_channel).
+    Similar to snomasks but then for channels. *Requires UnrealIRCd 6.0.2 or later*
 * Almost all channel modes are modularized
   * Only the three list modes (+b/+e/+I) are still in the core
   * The five [level modes](https://www.unrealircd.org/docs/Channel_Modes#Access_levels)
