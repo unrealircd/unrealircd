@@ -149,11 +149,21 @@ void dump_flat_map(Client *client, Client *server, int length)
 	char buf[4];
 	char tbuf[256];
 	Client *acptr;
-	int cnt = 0, hide_ulines;
+	int cnt = 0, len = 0, hide_ulines;
 
 	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL)) ? 1 : 0;
 
-	sendnumeric(client, RPL_MAP, "", server->name, "-", umax, server->server->users,
+	len = length - strlen(server->name) + 3;
+	if (len < 0)
+		len = 0;
+	if (len > 255)
+		len = 255;
+
+	tbuf[len--] = '\0';
+	while (len >= 0)
+		tbuf[len--] = '-';
+
+	sendnumeric(client, RPL_MAP, "", server->name, tbuf, umax, server->server->users,
 		(lmax < 10) ? 4 : (lmax == 100) ? 6 : 5,
 		(server->server->users * 100.0 / irccounts.clients), "");
 
@@ -167,13 +177,12 @@ void dump_flat_map(Client *client, Client *server, int length)
 	strcpy(buf, "|-");
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		int len = 0;
 		if ((IsULine(acptr) && hide_ulines) || (acptr == server))
 			continue;
 		if (--cnt == 0)
 			*buf = '`';
 
-		len = length - strlen(server->name) + 1;
+		len = length - strlen(acptr->name) + 1;
 		if (len < 0)
 			len = 0;
 		if (len > 255)
@@ -183,9 +192,9 @@ void dump_flat_map(Client *client, Client *server, int length)
 		while (len >= 0)
 			tbuf[len--] = '-';
 
-		sendnumeric(client, RPL_MAP, buf, server->name, tbuf, umax, server->server->users,
+		sendnumeric(client, RPL_MAP, buf, acptr->name, tbuf, umax, acptr->server->users,
 			(lmax < 10) ? 4 : (lmax == 100) ? 6 : 5,
-			(server->server->users * 100.0 / irccounts.clients), "");
+			(acptr->server->users * 100.0 / irccounts.clients), "");
 	}
 }
 
