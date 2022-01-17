@@ -8,7 +8,7 @@
 # in case it misbehaves
 #
 set +ex
-timeout --kill-after=5 600 extras/build-tests/nix/run-tests
+timeout --kill-after=5 900 extras/build-tests/nix/run-tests
 EX="$?"
 killall -9 valgrind valgrind.bin memcheck memcheck-amd64-linux memcheck-x86-linux ircd unrealircd val 1>/dev/null 2>&1
 exit $EX
