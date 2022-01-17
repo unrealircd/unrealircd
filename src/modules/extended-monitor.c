@@ -26,8 +26,8 @@ long CAP_EXTENDED_MONITOR = 0L;
 
 int extended_monitor_away(Client *client, MessageTag *mtags, const char *reason, int already_as_away);
 int extended_monitor_account_login(Client *client, MessageTag *mtags);
-int extended_monitor_userhost_changed(Client *client, const char *olduser, const char *oldhost);
-int extended_monitor_realname_changed(Client *client, const char *oldinfo);
+int extended_monitor_userhost_change(Client *client, const char *olduser, const char *oldhost);
+int extended_monitor_realname_change(Client *client, const char *oldinfo);
 int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int event);
 
 ModuleHeader MOD_HEADER
@@ -59,8 +59,8 @@ MOD_INIT()
 
 	HookAdd(modinfo->handle, HOOKTYPE_AWAY, 0, extended_monitor_away);
 	HookAdd(modinfo->handle, HOOKTYPE_ACCOUNT_LOGIN, 0, extended_monitor_account_login);
-	HookAdd(modinfo->handle, HOOKTYPE_USERHOST_CHANGED, 0, extended_monitor_userhost_changed);
-	HookAdd(modinfo->handle, HOOKTYPE_REALNAME_CHANGED, 0, extended_monitor_realname_changed);
+	HookAdd(modinfo->handle, HOOKTYPE_USERHOST_CHANGE, 0, extended_monitor_userhost_change);
+	HookAdd(modinfo->handle, HOOKTYPE_REALNAME_CHANGE, 0, extended_monitor_realname_change);
 
 	return MOD_SUCCESS;
 }
@@ -95,13 +95,13 @@ int extended_monitor_account_login(Client *client, MessageTag *mtags)
 	return 0;
 }
 
-int extended_monitor_userhost_changed(Client *client, const char *olduser, const char *oldhost)
+int extended_monitor_userhost_change(Client *client, const char *olduser, const char *oldhost)
 {
 	watch_check(client, WATCH_EVENT_USERHOST, extended_monitor_notification);
 	return 0;
 }
 
-int extended_monitor_realname_changed(Client *client, const char *oldinfo)
+int extended_monitor_realname_change(Client *client, const char *oldinfo)
 {
 	watch_check(client, WATCH_EVENT_REALNAME, extended_monitor_notification);
 	return 0;

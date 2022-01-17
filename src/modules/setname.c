@@ -158,5 +158,5 @@ CMD_FUNC(cmd_setname)
 	}
 	free_message_tags(mtags);
 	
-	RunHook(HOOKTYPE_REALNAME_CHANGED, client, oldinfo);
+	RunHook(HOOKTYPE_REALNAME_CHANGE, client, oldinfo);
 }

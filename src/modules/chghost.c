@@ -219,7 +219,7 @@ void _userhost_changed(Client *client)
 		}
 	}
 	
-	RunHook(HOOKTYPE_USERHOST_CHANGED, client, remember_user, remember_host);
+	RunHook(HOOKTYPE_USERHOST_CHANGE, client, remember_user, remember_host);
 
 	if (MyUser(client))
 	{
