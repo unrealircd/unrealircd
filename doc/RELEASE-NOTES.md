@@ -20,6 +20,9 @@ Fixes:
   Later on, when linking servers, this would cause duplicate entries to appear
   as well, with both the old and new format. The extbans were still effective
   though, so this is mostly a visual +b/+e/+I list issue.
+* Some [Extended Server Bans](https://www.unrealircd.org/docs/Extended_server_bans)
+  were not working correctly for WEBIRC proxies. In particular, a server ban
+  or exempt (ELINE) on `~country:XX` was only checked against the WEBIRC proxy.
 
 Enhancements:
 * Support for [logging to a channel](https://www.unrealircd.org/docs/Log_block#Logging_to_a_channel).
