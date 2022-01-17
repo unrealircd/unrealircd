@@ -99,6 +99,7 @@ void blacklist_free_conf(void);
 void delete_blacklist_block(Blacklist *e);
 void blacklist_md_free(ModData *md);
 int blacklist_handshake(Client *client);
+int blacklist_ip_change(Client *client, const char *oldip);
 int blacklist_quit(Client *client, MessageTag *mtags, const char *comment);
 int blacklist_preconnect(Client *client);
 void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hostent *he);
@@ -146,6 +147,7 @@ MOD_INIT()
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, blacklist_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, blacklist_handshake);
+	HookAdd(modinfo->handle, HOOKTYPE_IP_CHANGE, 0, blacklist_ip_change);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0, blacklist_preconnect);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH, 0, blacklist_rehash);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH_COMPLETE, 0, blacklist_rehash_complete);
@@ -548,6 +550,12 @@ void blacklist_md_free(ModData *md)
 }
 
 int blacklist_handshake(Client *client)
+{
+	blacklist_start_check(client);
+	return 0;
+}
+
+int blacklist_ip_change(Client *client, const char *oldip)
 {
 	blacklist_start_check(client);
 	return 0;

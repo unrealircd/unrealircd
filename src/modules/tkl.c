@@ -41,6 +41,7 @@ int tkl_config_test_except(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_except(ConfigFile *, ConfigEntry *, int);
 int tkl_config_test_set(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_set(ConfigFile *, ConfigEntry *, int);
+int tkl_ip_change(Client *client, const char *oldip);
 CMD_FUNC(cmd_gline);
 CMD_FUNC(cmd_shun);
 CMD_FUNC(cmd_tempshun);
@@ -213,6 +214,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_ban);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_except);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_set);
+	HookAdd(modinfo->handle, HOOKTYPE_IP_CHANGE, 2000000000, tkl_ip_change);
 	CommandAdd(modinfo->handle, "GLINE", cmd_gline, 3, CMD_OPER);
 	CommandAdd(modinfo->handle, "SHUN", cmd_shun, 3, CMD_OPER);
 	CommandAdd(modinfo->handle, "TEMPSHUN", cmd_tempshun, 2, CMD_OPER);
@@ -950,6 +952,12 @@ char *spamfilter_id(TKL *tk)
 
 	snprintf(buf, sizeof(buf), "%p", (void *)tk);
 	return buf;
+}
+
+int tkl_ip_change(Client *client, const char *oldip)
+{
+	check_banned(client, 0);
+	return 0;
 }
 
 /** GLINE - Global kline.

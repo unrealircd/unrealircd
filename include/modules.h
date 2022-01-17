@@ -1157,6 +1157,8 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, const char *varshortname, l
 #define HOOKTYPE_REALNAME_CHANGED 109
 /** See hooktype_can_set_topic() */
 #define HOOKTYPE_CAN_SET_TOPIC	110
+/** See hooktype_ip_change() */
+#define HOOKTYPE_IP_CHANGE	111
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
  * 2) Add a hook prototype (see below)
@@ -2127,14 +2129,22 @@ int hooktype_post_remote_nickchange(Client *client, MessageTag *mtags, const cha
  * @param oldhost		Old hostname of the client
  * @return The return value is ignored (use return 0)
  */
- 
-int hooktype_realname_changed(Client *client, const char *oldinfo);
+int hooktype_userhost_changed(Client *client, const char *olduser, const char *oldhost);
+
 /** Called when user realname has changed.
  * @param client		The client whose realname has changed
  * @param oldinfo		Old realname of the client
  * @return The return value is ignored (use return 0)
  */
-int hooktype_userhost_changed(Client *client, const char *olduser, const char *oldhost);
+int hooktype_realname_changed(Client *client, const char *oldinfo);
+
+/** Called when changing IP (eg due to PROXY/WEBIRC/etc).
+ * @param client		The client whose IP has changed
+ * @param oldip			Old IP of the client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_ip_change(Client *client, const char *oldip);
+
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2248,7 +2258,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_POST_LOCAL_NICKCHANGE) && !ValidateHook(hooktype_post_local_nickchange, func)) || \
         ((hooktype == HOOKTYPE_POST_REMOTE_NICKCHANGE) && !ValidateHook(hooktype_post_remote_nickchange, func)) || \
         ((hooktype == HOOKTYPE_USERHOST_CHANGED) && !ValidateHook(hooktype_userhost_changed, func)) || \
-        ((hooktype == HOOKTYPE_REALNAME_CHANGED) && !ValidateHook(hooktype_realname_changed, func)) )\
+        ((hooktype == HOOKTYPE_REALNAME_CHANGED) && !ValidateHook(hooktype_realname_changed, func)) || \
+        ((hooktype == HOOKTYPE_IP_CHANGE) && !ValidateHook(hooktype_ip_change, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

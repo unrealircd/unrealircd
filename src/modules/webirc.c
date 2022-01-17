@@ -336,6 +336,7 @@ ConfigItem_webirc *find_webirc(Client *client, const char *password, WEBIRCType 
 /* Does the CGI:IRC host spoofing work */
 void dowebirc(Client *client, const char *ip, const char *host, const char *options)
 {
+	char oldip[64];
 	char scratch[64];
 
 	if (IsWEBIRC(client))
@@ -357,6 +358,7 @@ void dowebirc(Client *client, const char *ip, const char *host, const char *opti
 	}
 
 	/* STEP 2: Update GetIP() */
+	strlcpy(oldip, client->ip, sizeof(oldip));
 	safe_strdup(client->ip, ip);
 		
 	/* STEP 3: Update client->local->hostp */
@@ -397,15 +399,7 @@ void dowebirc(Client *client, const char *ip, const char *host, const char *opti
 		}
 	}
 
-	/* blacklist_start_check() */
-	if (RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK] != NULL)
-		RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK]->func.intfunc(client);
-
-	/* Check (g)zlines right now; these are normally checked upon accept(),
-	 * but since we know the IP only now after PASS/WEBIRC, we have to check
-	 * here again...
-	 */
-	check_banned(client, 0);
+	RunHook(HOOKTYPE_IP_CHANGE, client, oldip);
 }
 
 /* WEBIRC <pass> "cgiirc" <hostname> <ip> [:option1 [option2...]]*/

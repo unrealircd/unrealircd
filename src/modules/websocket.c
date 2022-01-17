@@ -686,6 +686,9 @@ int websocket_handshake_valid(Client *client)
 	}
 	if (WSU(client)->forwarded)
 	{
+		struct HTTPForwardedHeader *forwarded;
+		char oldip[64];
+
 		/* check for source ip */
 		if (BadPtr(client->local->listener->websocket_forward) || !websocket_ip_compare(client->local->listener->websocket_forward, client->ip))
 		{
@@ -694,7 +697,6 @@ int websocket_handshake_valid(Client *client)
 			return 0;
 		}
 		/* parse the header */
-		struct HTTPForwardedHeader *forwarded;
 		forwarded = websocket_parse_forwarded_header(WSU(client)->forwarded);
 		/* check header values */
 		if (!is_valid_ip(forwarded->ip))
@@ -705,6 +707,7 @@ int websocket_handshake_valid(Client *client)
 		}
 		/* store data */
 		WSU(client)->secure = forwarded->secure;
+		strlcpy(oldip, client->ip, sizeof(oldip));
 		safe_strdup(client->ip, forwarded->ip);
 		/* Update client->local->hostp */
 		strlcpy(client->local->sockhost, forwarded->ip, sizeof(client->local->sockhost)); /* in case dns lookup fails or is disabled */
@@ -733,15 +736,7 @@ int websocket_handshake_valid(Client *client)
 				/* Race condition detected, DNS has been done, continue with auth */
 			}
 		}
-		/* blacklist_start_check() */
-		if (RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK] != NULL)
-			RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK]->func.intfunc(client);
-
-		/* Check (g)zlines right now; these are normally checked upon accept(),
-		 * but since we know the IP only now after PASS/WEBIRC, we have to check
-		 * here again...
-		 */
-		check_banned(client, 0);
+		RunHook(HOOKTYPE_IP_CHANGE, client, oldip);
 	}
 	return 1;
 }
