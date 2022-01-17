@@ -141,6 +141,7 @@ CMD_FUNC(reputationunperm);
 int reputation_whois(Client *client, Client *target, NameValuePrioList **list);
 int reputation_set_on_connect(Client *client);
 int reputation_pre_lconnect(Client *client);
+int reputation_ip_change(Client *client, const char *oldip);
 int reputation_connect_extinfo(Client *client, NameValuePrioList **list);
 int reputation_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int reputation_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
@@ -192,6 +193,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, reputation_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, reputation_whois);
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, reputation_set_on_connect);
+	HookAdd(modinfo->handle, HOOKTYPE_IP_CHANGE, 0, reputation_ip_change);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 2000000000, reputation_pre_lconnect); /* (prio: last) */
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, -1000000000, reputation_set_on_connect); /* (prio: near-first) */
 	HookAdd(modinfo->handle, HOOKTYPE_CONNECT_EXTINFO, 0, reputation_connect_extinfo); /* (prio: near-first) */
@@ -799,6 +801,12 @@ int reputation_lookup_score_and_set(Client *client)
  * Remote user: early in the HOOKTYPE_REMOTE_CONNECT hook.
  */
 int reputation_set_on_connect(Client *client)
+{
+	reputation_lookup_score_and_set(client);
+	return 0;
+}
+
+int reputation_ip_change(Client *client, const char *oldip)
 {
 	reputation_lookup_score_and_set(client);
 	return 0;

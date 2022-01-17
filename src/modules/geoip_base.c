@@ -25,6 +25,7 @@ void geoip_base_free(ModData *m);
 const char *geoip_base_serialize(ModData *m);
 void geoip_base_unserialize(const char *str, ModData *m);
 int geoip_base_handshake(Client *client);
+int geoip_base_ip_change(Client *client, const char *oldip);
 int geoip_base_whois(Client *client, Client *target, NameValuePrioList **list);
 int geoip_connect_extinfo(Client *client, NameValuePrioList **list);
 int geoip_base_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
@@ -119,6 +120,7 @@ MOD_INIT()
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, geoip_base_configrun);
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, geoip_base_handshake);
+	HookAdd(modinfo->handle, HOOKTYPE_IP_CHANGE, 0, geoip_base_ip_change);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_HANDSHAKE_OUT, 0, geoip_base_handshake);
 	HookAdd(modinfo->handle, HOOKTYPE_CONNECT_EXTINFO, 1, geoip_connect_extinfo); /* (prio: near-first) */
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0,geoip_base_handshake); /* in case the IP changed in registration phase (WEBIRC, HTTP Forwarded) */
@@ -163,6 +165,12 @@ int geoip_base_handshake(Client *client)
 		GEOIPDATARAW(client) = NULL;
 	}
 	GEOIPDATARAW(client) = res;
+	return 0;
+}
+
+int geoip_base_ip_change(Client *client, const char *oldip)
+{
+	geoip_base_handshake(client);
 	return 0;
 }
 
