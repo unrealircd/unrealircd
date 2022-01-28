@@ -276,6 +276,8 @@ else
 	echo "unrealircd rehash        Reload the configuration file"
 	echo "unrealircd reloadtls     Reload the SSL/TLS certificates"
 	echo "unrealircd restart       Restart the IRC Server (stop+start)"
+	echo "unrealircd status        Show current status of the IRC Server"
+	echo "unrealircd module-status Show all currently loaded modules"
 	echo "unrealircd upgrade       Upgrade UnrealIRCd to the latest version"
 	echo "unrealircd upgrade-conf  Upgrade the configuration file from UnrealIRCd"
 	echo "                         3.2.x/4.x to 5.x format"
