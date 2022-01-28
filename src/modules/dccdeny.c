@@ -25,7 +25,7 @@
 ModuleHeader MOD_HEADER
   = {
 	"dccdeny",
-	"5.0",
+	"6.0.2",
 	"command /dccdeny", 
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -525,11 +525,8 @@ int dccdeny_can_send_to_channel(Client *client, Channel *channel, Membership *lp
 		const char *filename = get_dcc_filename(*msg);
 		if (filename && !can_dcc(client, channel->name, NULL, filename, &err))
 		{
-			if (!IsDead(client) && (sendtype != SEND_TYPE_NOTICE))
-			{
-				strlcpy(errbuf, err, sizeof(errbuf));
-				*errmsg = errbuf;
-			}
+			strlcpy(errbuf, err, sizeof(errbuf));
+			*errmsg = errbuf;
 			return HOOK_DENY;
 		}
 	}
@@ -649,7 +646,11 @@ static int can_dcc(Client *client, const char *target, Client *targetcli, const 
 	}
 
 	if (match_spamfilter(client, filename, SPAMF_DCC, "PRIVMSG", target, 0, NULL))
+	{
+		/* Dirty hack, yeah spamfilter already sent the error message :( */
+		*errmsg = "";
 		return 0;
+	}
 
 	if ((fl = dcc_isforbidden(client, filename)))
 	{

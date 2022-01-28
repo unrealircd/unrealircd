@@ -1,13 +1,18 @@
-UnrealIRCd 6.0.2-rc1
-=====================
-This is the release candidate for UnrealIRCd 6.0.2. You can help us by
-testing this release and reporting any issues at https://bugs.unrealircd.org/.
+UnrealIRCd 6.0.2
+=================
+UnrealIRCd 6.0.2 comes with several nice feature enhancements along with
+some fixes. It also includes a fix for a crash bug that can be triggered
+by ordinary users.
 
 If you are already running UnrealIRCd 6 then read below on the fixes
 and nice new features in 6.0.2. Otherwise, jump straight to the
 [summary about UnrealIRCd 6](#Summary) to learn more about UnrealIRCd 6.
 
 Fixes:
+* Fix crash that can be triggered by regular users if you have any `deny dcc`
+  blocks in the config or any spamfilters with the `d` (DCC) target.
+  NOTE: You don't *have* to upgrade to 6.0.2 to fix this, you can also
+  hot-patch this issue without restart, see the news announcement.
 * Windows: fix crash with IPv6 clients (local or remote) due to GeoIP lookup
 * Fix infinite hang on "Loading IRCd configuration" if DNS is not working.
   For example if the 1st DNS server in `/etc/resolv.conf` is down or refusing
