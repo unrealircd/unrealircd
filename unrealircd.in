@@ -91,6 +91,8 @@ elif [ "$1" = "rehash" ] ; then
 	$UNREALIRCDCTL $*
 elif [ "$1" = "status" ] ; then
 	$UNREALIRCDCTL $*
+elif [ "$1" = "module-status" ] ; then
+	$UNREALIRCDCTL $*
 elif [ "$1" = "reloadtls" ] ; then
 	$UNREALIRCDCTL $*
 elif [ "$1" = "restart" ] ; then

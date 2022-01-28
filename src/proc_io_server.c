@@ -27,6 +27,7 @@
 #include <ares.h>
 
 CMD_FUNC(procio_status);
+CMD_FUNC(procio_modules);
 CMD_FUNC(procio_rehash);
 CMD_FUNC(procio_exit);
 CMD_FUNC(procio_help);
@@ -50,6 +51,7 @@ void add_proc_io_server(void)
 	if (add_listener(listener) == -1)
 		exit(-1);
 	CommandAdd(NULL, "STATUS", procio_status, MAXPARA, CMD_CONTROL);
+	CommandAdd(NULL, "MODULES", procio_modules, MAXPARA, CMD_CONTROL);
 	CommandAdd(NULL, "REHASH", procio_rehash, MAXPARA, CMD_CONTROL);
 	CommandAdd(NULL, "EXIT", procio_exit, MAXPARA, CMD_CONTROL);
 	CommandAdd(NULL, "HELP", procio_help, MAXPARA, CMD_CONTROL);
@@ -80,6 +82,33 @@ CMD_FUNC(procio_status)
 	sendto_one(client, NULL, "REPLY operators %ld", (long)irccounts.operators);
 	sendto_one(client, NULL, "REPLY servers %ld", (long)irccounts.servers);
 	sendto_one(client, NULL, "REPLY channels %ld", (long)irccounts.channels);
+	sendto_one(client, NULL, "END 0");
+}
+
+extern MODVAR Module *Modules;
+CMD_FUNC(procio_modules)
+{
+	char tmp[1024];
+	Module *m;
+
+	for (m = Modules; m; m = m->next)
+	{
+		tmp[0] = '\0';
+		if (m->flags & MODFLAG_DELAYED)
+			strlcat(tmp, "[Unloading] ", sizeof(tmp));
+		if (m->options & MOD_OPT_PERM_RELOADABLE)
+			strlcat(tmp, "[PERM-BUT-RELOADABLE] ", sizeof(tmp));
+		if (m->options & MOD_OPT_PERM)
+			strlcat(tmp, "[PERM] ", sizeof(tmp));
+		if (!(m->options & MOD_OPT_OFFICIAL))
+			strlcat(tmp, "[3RD] ", sizeof(tmp));
+		sendto_one(client, NULL, "REPLY %s %s - %s - by %s %s",
+		           m->header->name,
+		           m->header->version,
+		           m->header->description,
+		           m->header->author,
+		           tmp);
+	}
 	sendto_one(client, NULL, "END 0");
 }
 
@@ -121,6 +150,7 @@ CMD_FUNC(procio_help)
 	sendto_one(client, NULL, "REPLY HELP");
 	sendto_one(client, NULL, "REPLY REHASH");
 	sendto_one(client, NULL, "REPLY STATUS");
+	sendto_one(client, NULL, "REPLY MODULES");
 	sendto_one(client, NULL, "END 0");
 }
 

@@ -31,9 +31,10 @@ void unrealircdctl_usage(const char *program_name)
 {
 	printf("Usage: %s <option>\n"
 	       "Where <option> is one of:\n"
-	       "rehash      - Rehash the server (reread configuration files)\n"
-	       "reloadtls   - Reload the SSL/TLS certificates\n"
-	       "status      - Show current status of server\n"
+	       "rehash         - Rehash the server (reread configuration files)\n"
+	       "reloadtls      - Reload the SSL/TLS certificates\n"
+	       "status         - Show current status of server\n"
+	       "module-status  - Show currently loaded modules\n"
 	       "\n", program_name);
 	exit(-1);
 }
@@ -68,6 +69,14 @@ void unrealircdctl_status(void)
 		exit(0);
 	}
 	printf("UnrealIRCd status report failed.\n");
+	exit(1);
+}
+
+void unrealircdctl_module_status(void)
+{
+	if (procio_client("MODULES", 2) == 0)
+		exit(0);
+	printf("Could not retrieve complete module list.\n");
 	exit(1);
 }
 
@@ -233,6 +242,8 @@ int main(int argc, char *argv[])
 		unrealircdctl_reloadtls();
 	else if (!strcmp(argv[1], "status"))
 		unrealircdctl_status();
+	else if (!strcmp(argv[1], "module-status"))
+		unrealircdctl_module_status();
 	else if (!strcmp(argv[1], "mkpasswd"))
 		unrealircdctl_mkpasswd(argc, argv);
 	else if (!strcmp(argv[1], "gencloak"))
