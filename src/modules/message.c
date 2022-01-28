@@ -37,7 +37,7 @@ long CAP_MESSAGE_TAGS = 0; /**< Looked up at MOD_LOAD, may stay 0 if message-tag
 ModuleHeader MOD_HEADER
   = {
 	"message",	/* Name of module */
-	"5.0", /* Version */
+	"5.2.4", /* Version */
 	"private message and notice", /* Short description of module */
 	"UnrealIRCd Team",
 	"unrealircd-5",
@@ -371,7 +371,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 					 */
 					if (IsDead(client))
 						return;
-					if (!IsDead(client) && (sendtype != SEND_TYPE_NOTICE) && errmsg)
+					if (!IsDead(client) && (sendtype != SEND_TYPE_NOTICE) && !BadPtr(errmsg))
 						sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname, errmsg, p2);
 					continue; /* skip delivery to this target */
 				}
@@ -476,7 +476,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 				/* Message is discarded */
 				if (IsDead(client))
 					return;
-				if ((sendtype != SEND_TYPE_NOTICE) && errmsg)
+				if ((sendtype != SEND_TYPE_NOTICE) && !BadPtr(errmsg))
 					sendnumeric(client, ERR_CANTSENDTOUSER, target->name, errmsg);
 			} else
 			{

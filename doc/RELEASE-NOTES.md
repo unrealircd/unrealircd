@@ -1,14 +1,25 @@
-UnrealIRCd 5.2.3 Release Notes
+UnrealIRCd 5.2.4 Release Notes
 ===============================
 
-This release contains a couple of small changes.
+This release fixes a crash bug that can be triggered by ordinary users.
 
-Important:
+Fixes:
+* Fix crash that can be triggered by regular users if you have any `deny dcc`
+  blocks in the config or any spamfilters with the `d` (DCC) target.
+  NOTE: You don't *have* to upgrade to 5.2.4 to fix this, you can also
+  hot-patch this issue without restart, see the news announcement.
+
+Also important:
 * [UnrealIRCd 6](https://www.unrealircd.org/docs/What's_new_in_UnrealIRCd_6) is the new "stable"
 * UnrealIRCd 5.2.x ("oldstable")
   [end of support dates](https://www.unrealircd.org/docs/UnrealIRCd_5_EOL):
   * Bug fixes until July 1, 2022 (no more feature enhancements)
   * Security fixes until July 1, 2023
+
+UnrealIRCd 5.2.3
+-----------------
+
+This release contains a couple of small changes.
 
 Enhancements:
 * Spanish example conf was added (`conf/help/example.es.conf`)
