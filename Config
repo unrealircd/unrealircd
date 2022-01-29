@@ -18,7 +18,24 @@
 
 # some bits edited by baafie on March 17 2004, every change marked.
 
+# Remove trailing slash in paths (if any)
+FIX_PATHNAMES () {
+	BASEPATH="${BASEPATH%/}"
+	BINDIR="${BINDIR%/}"
+	DATADIR="${DATADIR%/}"
+	CONFDIR="${CONFDIR%/}"
+	MODULESDIR="${MODULESDIR%/}"
+	LOGDIR="${LOGDIR%/}"
+	CACHEDIR="${CACHEDIR%/}"
+	DOCDIR="${DOCDIR%/}"
+	TMPDIR="${TMPDIR%/}"
+	PRIVATELIBDIR="${PRIVATELIBDIR%/}"
+	SSLDIR="${SSLDIR%/}"
+	CURLDIR="${CURLDIR%/}"
+}
 
+# Create and run the ./configure command with the appropriate
+# options based on the users settings.
 RUN_CONFIGURE () {
 ARG=" "
 
@@ -293,6 +310,7 @@ while [ $# -ge 1 ] ; do
 		if [ -f "config.settings" ] ; then
 			. ./config.settings
 		fi
+		FIX_PATHNAMES
 		RUN_CONFIGURE
 		cd "$UNREALCWD"
 		exit 0
@@ -815,6 +833,8 @@ read EXTRAPARA
 if [ -z "$EXTRAPARA" ]; then
 	EXTRAPARA="$TEST"
 fi
+
+FIX_PATHNAMES
 
 rm -f config.settings
 cat > config.settings << __EOF__
