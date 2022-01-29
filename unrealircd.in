@@ -259,8 +259,15 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 	cd @SCRIPTDIR@
 	if [ "$1" = "hot-patch" ]; then
 		echo "Patch applied successfully and installed. Rehashing your IRCd..."
-		./unrealircd rehash
-		echo "Done! All should be good now."
+		if ./unrealircd rehash; then
+			echo "Patch installed and server rehashed correctly. All should be good now!"
+		else
+			echo "Patching the source code and recompiling succeeded,"
+			echo "however rehashing the current UnrealIRCd process FAILED"
+			echo "so it is NOT running the patched code yet."
+			echo "IMPORTANT: Check error output above!"
+			exit 1
+		fi
 	else
 		echo "Patch applied successfully. You must now restart your IRC server."
 	fi
