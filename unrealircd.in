@@ -242,6 +242,11 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 		exit 1
 	fi
 
+	if ! patch --dry-run -p1 -N <patch 1>/dev/null 2>&1; then
+		echo "Patch failed to apply (no files changed)"
+		exit 1
+	fi
+
 	if ! patch -p1 <patch; then
 		echo "Patch failed to apply"
 		exit 1
