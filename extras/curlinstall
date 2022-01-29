@@ -5,7 +5,7 @@ OUTD="curl-latest"
 ARESPATH="`pwd`/extras/c-ares"
 UNREALDIR="`pwd`"
 CARESVERSION="1.18.1"
-LIBDIR="$1"
+PRIVATELIBDIR="$1"
 
 if [ "x$1" = "x" ]; then
 	echo "You should (no longer) run this program directly."
@@ -78,7 +78,7 @@ if [ ! -d "$ARESPATH/lib" ]; then
 	cd ../extras/
 	tar xzf c-ares.tar.gz || exit 1
 	cd c-ares-$CARESVERSION || exit 1
-	./configure --prefix=$ARESPATH || exit 1
+	./configure --prefix=$ARESPATH --libdir=$PRIVATELIBDIR --enable-shared --disable-tests || exit 1
 	(make && make install) || exit 1
 	cd ../../tmp/
 	echo "c-ares built."
@@ -89,7 +89,7 @@ fi
 cd "$OUTD" || exit 1
 
 echo "Building and installing libcurl"
-CPPFLAGS="-I$ARESPATH/include" ./configure --prefix=$UNREALDIR/extras/curl --libdir=$LIBDIR --enable-shared \
+CPPFLAGS="-I$ARESPATH/include" ./configure --prefix=$UNREALDIR/extras/curl --libdir=$PRIVATELIBDIR --enable-shared \
  --enable-ares=$ARESPATH --with-openssl
 cp -R $ARESPATH/lib ares
 make && make install
