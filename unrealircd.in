@@ -256,7 +256,7 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 	make || gmake || exit 1
 	make install || gmake install || exit 1
 
-	cd -
+	cd @SCRIPTDIR@
 	if [ "$1" = "hot-patch" ]; then
 		echo "Patch applied successfully and installed. Rehashing your IRCd..."
 		./unrealircd rehash
