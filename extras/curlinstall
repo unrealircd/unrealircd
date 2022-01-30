@@ -2,9 +2,7 @@
 URL="https://www.unrealircd.org/files/curl-latest.tar.gz"
 OUTF="curl-latest.tar.gz"
 OUTD="curl-latest"
-ARESPATH="`pwd`/extras/c-ares"
 UNREALDIR="`pwd`"
-CARESVERSION="1.18.1"
 PRIVATELIBDIR="$1"
 
 if [ "x$1" = "x" ]; then
@@ -73,26 +71,9 @@ else
         n="-n"
 fi
 
-if [ ! -d "$ARESPATH/lib" ]; then
-	echo "c-ares has not been build yet, let's do that now..."
-	cd ../extras/
-	tar xzf c-ares.tar.gz || exit 1
-	cd c-ares-$CARESVERSION || exit 1
-	./configure --prefix=$ARESPATH --libdir=$PRIVATELIBDIR --enable-shared --disable-tests || exit 1
-	(make && make install) || exit 1
-	cd ../../tmp/
-	echo "c-ares built."
-	echo ""
-fi
-
 # We assume curl has been packaged in a way it will extract to "$OUTD"/
 cd "$OUTD" || exit 1
 
 echo "Building and installing libcurl"
-CPPFLAGS="-I$ARESPATH/include" ./configure --prefix=$UNREALDIR/extras/curl --libdir=$PRIVATELIBDIR --enable-shared \
- --enable-ares=$ARESPATH --with-openssl
-cp -R $ARESPATH/lib ares
+./configure --prefix=$UNREALDIR/extras/curl --libdir=$PRIVATELIBDIR --enable-shared --with-openssl
 make && make install
-
-#cp $ARESPATH/lib/libcares.a $HOME/curl/lib
-# that isn't needed anymore as the lib is already in unreal...
