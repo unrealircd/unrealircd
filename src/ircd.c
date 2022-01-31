@@ -914,6 +914,9 @@ void SocketLoop(void *dummy)
 			reinit_tls();
 			doreloadcert = 0;
 		}
+		/* If rehashing, check if we are done. */
+		if (loop.rehashing && is_config_read_finished())
+			rehash_internal(loop.rehash_save_client);
 	}
 }
 

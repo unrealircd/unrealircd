@@ -10638,13 +10638,6 @@ void resource_download_complete(const char *url, const char *file, const char *e
 				safe_strdup(wce->ce->value, rs->file); // now information of url is lost, hm!!
 		}
 	}
-
-	/* If rehashing, check if we are done.
-	 * If booting (not rehashing), this is done from the
-	 * startup loop where it also checks is_config_read_finished().
-	 */
-	if (loop.rehashing && is_config_read_finished())
-		rehash_internal(loop.rehash_save_client);
 }
 
 /** Request to REHASH the configuration file.

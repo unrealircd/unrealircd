@@ -518,6 +518,7 @@ extern int  channel_canjoin(Client *client, const char *name);
 extern char *collapse(char *pattern);
 extern void dcc_sync(Client *client);
 extern void request_rehash(Client *client);
+extern int rehash_internal(Client *client);
 extern void s_die();
 extern int match_simple(const char *mask, const char *name);
 extern int match_esc(const char *mask, const char *name);
