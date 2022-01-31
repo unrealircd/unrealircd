@@ -1191,7 +1191,7 @@ literal:
 }
 
 /** Do the actual writing to log files */
-void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized)
+void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized, Client *from_server)
 {
 	static int last_log_file_warning = 0;
 	Log *l;
@@ -1343,13 +1343,9 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 			for (m = msg; m; m = m->next)
 			{
 				char text_buf[8192];
-				snprintf(text_buf, sizeof(text_buf), "%s.%s%s %s: %s\n", subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
-				// FIXME: don't write in 2 stages, waste of slow system calls
-				if (write(l->logfd, timebuf, strlen(timebuf)) < 0)
-				{
-					/* Let's ignore any write errors for this one. Next write() will catch it... */
-					;
-				}
+				snprintf(text_buf, sizeof(text_buf), "%s%s %s.%s%s %s: %s\n",
+					timebuf, from_server->name,
+					subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
 				n = write(l->logfd, text_buf, strlen(text_buf));
 				if (n < strlen(text_buf))
 				{
@@ -1824,15 +1820,16 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 	/* Convert the message buffer to MultiLine */
 	mmsg = line2multiline(msgbuf);
 
-	/* Now call the disk loggers */
-	do_unreal_log_disk(loglevel, subsystem, event_id, mmsg, json_serialized);
-
-	/* And the ircops stuff */
+	/* Parse the "from server" info, if any */
 	t = json_object_get(j_details, "from_server_name");
 	if (t && (str = json_get_value(t)))
 		from_server = find_server(str, NULL);
 	if (from_server == NULL)
 		from_server = &me;
+
+	/* Now call all the loggers: */
+
+	do_unreal_log_disk(loglevel, subsystem, event_id, mmsg, json_serialized, from_server);
 
 	if ((loop.rehashing == 2) || !strcmp(subsystem, "config"))
 		do_unreal_log_control(loglevel, subsystem, event_id, mmsg, json_serialized, from_server);
@@ -1860,7 +1857,7 @@ void do_unreal_log_internal_from_remote(LogLevel loglevel, const char *subsystem
 	unreal_log_recursion_trap = 1;
 
 	/* Call the disk loggers */
-	do_unreal_log_disk(loglevel, subsystem, event_id, msg, json_serialized);
+	do_unreal_log_disk(loglevel, subsystem, event_id, msg, json_serialized, from_server);
 
 	/* And to IRC */
 	do_unreal_log_opers(loglevel, subsystem, event_id, msg, json_serialized, from_server);
