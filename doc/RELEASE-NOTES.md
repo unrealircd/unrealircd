@@ -9,8 +9,9 @@ about UnrealIRCd 6.
 
 Fixes:
 * A `REHASH` with certain remote includes setups could cause a crash or
-  other weird problems complaining about unable to open ipv6 geoip stuff.
-  This only affected some people with remote includes and not the majority.
+  other weird and confusing problems such as complaining about unable
+  to open an ipv6-database or missing snomask configuration.
+  This only affected some people with remote includes, not all.
 
 Enhancements:
 * The default text log format on disk changed. It now includes the server
