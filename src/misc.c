@@ -2480,6 +2480,7 @@ void server_reboot(const char *mesg)
 		(void)close(2);
 	(void)close(1);
 	(void)close(0);
+	close_std_descriptors();
 	(void)execv(MYNAME, myargv);
 #else
 	close_connections();
