@@ -8,10 +8,18 @@ straight to the [summary about UnrealIRCd 6](#Summary) to learn more
 about UnrealIRCd 6.
 
 Fixes:
-* 
+* A `REHASH` with certain remote includes setups could cause a crash or
+  other weird problems complaining about unable to open ipv6 geoip stuff.
+  This only affected some people with remote includes and not the majority.
 
 Enhancements:
-* 
+* The default text log format on disk changed. It now includes the server
+  name where the event was generated. Without this, it is sometimes
+  difficult to trace problems since previously it sometimes looked like
+  there was a problem on your server when it was actually another server
+  on the network.
+  * Old log format: `[DATE TIME] subsystem.EVENT_ID loglevel: ........`
+  * New log format: `[DATE TIME] servername subsystem.EVENT_ID loglevel: ........`
 
 UnrealIRCd 6.0.2
 -----------------
