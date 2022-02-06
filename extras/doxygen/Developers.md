@@ -1,11 +1,10 @@
 Welcome to the doxygen-generated documentation for the UnrealIRCd 5.x API.
 This is intended **for developers only!**
 
-If you are creating a 3rd party module for UnrealIRCd or are interested
-in contributing to UnrealIRCd then this is the right place.
-
-Here you should be able to find a lot of information on the data structures
-and functions available to you when coding for UnrealIRCd.
+Note that UnrealIRCd 5 is the **old stable**, it is no longer receiving new
+features and is bug fix only. If you are developing a new 3rd party module
+then you are suggested to develop for UnrealIRCd 6 and go to the
+[UnrealIRCd 6 module api](https://www.unrealircd.org/api/6/) page instead.
 
 ## Wiki documentation ##
 * Be sure to check the [Module API](https://www.unrealircd.org/docs/Dev:Module_API) article on the wiki
