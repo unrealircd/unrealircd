@@ -807,7 +807,7 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 
 	RunHook(HOOKTYPE_WELCOME, client, 266);
 
-	short_motd(client);
+	do_cmd(client, NULL, "MOTD", 0, NULL);
 
 	RunHook(HOOKTYPE_WELCOME, client, 376);
 
