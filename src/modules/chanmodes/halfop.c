@@ -73,7 +73,9 @@ int cmode_halfop_is_ok(Client *client, Channel *channel, char mode, const char *
 			/* User may always remove their own modes */
 			return EX_ALLOW;
 		}
-		if ((what == MODE_ADD) && check_channel_access(client, channel, "hoaq"))
+		
+		/* assumed MODE_ADD at this point */
+		if (check_channel_access(client, channel, "hoaq"))
 		{
 			/* Permitted for +hoaq */
 			return EX_ALLOW;
