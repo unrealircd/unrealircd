@@ -8,10 +8,15 @@ straight to the [summary about UnrealIRCd 6](#Summary) to learn more
 about UnrealIRCd 6.
 
 Fixes:
+* Channel ops could not remove halfops from a user (`-h`).
 * A `REHASH` with certain remote includes setups could cause a crash or
   other weird and confusing problems such as complaining about unable
   to open an ipv6-database or missing snomask configuration.
   This only affected some people with remote includes, not all.
+* After using the `RESTART` command (not recommended) the new IRCd was
+  often no longer writing to log files.
+* Fix compile problem if you choose to use cURL remote includes but don't
+  have cURL on the system and use the local-curl method (`./curlinstall`).
 
 Enhancements:
 * The default text log format on disk changed. It now includes the server
