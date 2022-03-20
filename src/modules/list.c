@@ -138,9 +138,11 @@ CMD_FUNC(cmd_list)
 		"<number  List channels with less than <number> people.",
 		"C>number List channels created between now and <number> minutes ago.",
 		"C<number List channels created earlier than <number> minutes ago.",
+#ifdef LIST_USE_T
 		"T>number List channels whose topics are older than <number> minutes",
 		"         (Ie, they have not changed in the last <number> minutes.",
 		"T<number List channels whose topics are not older than <number> minutes.",
+#endif
 		"*mask*   List channels that match *mask*",
 		"!*mask*  List channels that do not match *mask*",
 		NULL

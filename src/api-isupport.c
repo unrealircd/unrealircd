@@ -86,7 +86,11 @@ void isupport_init(void)
 {
 	ISupportSet(NULL, "INVEX", NULL);
 	ISupportSet(NULL, "EXCEPTS", NULL);
+#ifdef LIST_USE_T
 	ISupportSet(NULL, "ELIST", "MNUCT");
+#else
+	ISupportSet(NULL, "ELIST", "MNUC");
+#endif
 	ISupportSet(NULL, "CASEMAPPING", "ascii");
 	ISupportSet(NULL, "NETWORK", NETWORK_NAME_005);
 	ISupportSetFmt(NULL, "CHANMODES",
