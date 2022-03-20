@@ -136,8 +136,8 @@ CMD_FUNC(cmd_list)
 		"use, and what channels LIST will return when you use them.",
 		">number  List channels with more than <number> people.",
 		"<number  List channels with less than <number> people.",
-		"C>number List channels created between now and <number> minutes ago.",
-		"C<number List channels created earlier than <number> minutes ago.",
+		"C>number List channels created more than <number> minutes ago.",
+		"C<number List channels created less than <number> minutes ago.",
 		"T>number List channels whose topics are older than <number> minutes",
 		"         (Ie, they have not changed in the last <number> minutes.",
 		"T<number List channels whose topics are not older than <number> minutes.",
@@ -213,11 +213,11 @@ CMD_FUNC(cmd_list)
 			  switch (*name++)
 			  {
 			    case '<':
-				    chantimemax = currenttime - 60 * atoi(name);
+				    chantimemin = currenttime - 60 * atoi(name);
 				    doall = 1;
 				    break;
 			    case '>':
-				    chantimemin = currenttime - 60 * atoi(name);
+				    chantimemax = currenttime - 60 * atoi(name);
 				    doall = 1;
 				    break;
 			    default:
@@ -232,13 +232,11 @@ CMD_FUNC(cmd_list)
 			  switch (*name++)
 			  {
 			    case '<':
-				    topictimemax =
-					currenttime - 60 * atoi(name);
+				    topictimemin = currenttime - 60 * atoi(name);
 				    doall = 1;
 				    break;
 			    case '>':
-				    topictimemin =
-					currenttime - 60 * atoi(name);
+				    topictimemax = currenttime - 60 * atoi(name);
 				    doall = 1;
 				    break;
 			    default:
