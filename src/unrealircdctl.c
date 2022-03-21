@@ -35,6 +35,9 @@ void unrealircdctl_usage(const char *program_name)
 	       "reloadtls      - Reload the SSL/TLS certificates\n"
 	       "status         - Show current status of server\n"
 	       "module-status  - Show currently loaded modules\n"
+	       "mkpasswd       - Hash a password\n"
+	       "gencloak       - Display 3 random cloak keys\n"
+	       "spkifp         - Display SPKI Fingerprint\n"
 	       "\n", program_name);
 	exit(-1);
 }
