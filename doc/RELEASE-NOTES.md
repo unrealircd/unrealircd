@@ -27,6 +27,16 @@ Enhancements:
   * Old log format: `[DATE TIME] subsystem.EVENT_ID loglevel: ........`
   * New log format: `[DATE TIME] servername subsystem.EVENT_ID loglevel: ........`
 
+Changes:
+* Any MOTD lines added by services via `SVSMOTD` are now shown in the
+  MOTD-on-connect (unless using a shortmotd). Previously the lines were
+  only shown if you manually ran the `MOTD` command.
+
+Developers and protocol:
+* `LIST C<xx` now means: filter on channels that are created less
+  than `xx` minutes ago. This is the opposite of what we had earlier.
+  `LIST T<xx` is now supported as well (topic changed in last xx minutes.
+
 UnrealIRCd 6.0.2
 -----------------
 UnrealIRCd 6.0.2 comes with several nice feature enhancements along with
