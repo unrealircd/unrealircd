@@ -716,62 +716,77 @@ CMD_FUNC(cmd_restart)
 /** Send short message of the day to the client */
 void short_motd(Client *client)
 {
-       ConfigItem_tld *tld;
-       MOTDFile *themotd;
-       MOTDLine *motdline;
-       struct tm *tm;
-       char is_short;
+	ConfigItem_tld *tld;
+	MOTDFile *themotd;
+	MOTDLine *motdline;
+	struct tm *tm;
+	char is_short;
 
-       tm = NULL;
-       is_short = 1;
+	tm = NULL;
+	is_short = 1;
 
-       tld = find_tld(client);
+	tld = find_tld(client);
 
-       /*
+	/*
 	* Try different sources of short MOTDs, falling back to the
 	* long MOTD.
-       */
-       themotd = &smotd;
-       if (tld && tld->smotd.lines)
-	       themotd = &tld->smotd;
+	*/
+	themotd = &smotd;
+	if (tld && tld->smotd.lines)
+		themotd = &tld->smotd;
 
-       /* try long MOTDs */
-       if (!themotd->lines)
-       {
-	       is_short = 0;
-	       if (tld && tld->motd.lines)
-		       themotd = &tld->motd;
-	       else
-		       themotd = &motd;
-       }
+	/* try long MOTDs */
+	if (!themotd->lines)
+	{
+		is_short = 0;
+		if (tld && tld->motd.lines)
+			themotd = &tld->motd;
+		else
+			themotd = &motd;
+	}
 
-       if (!themotd->lines)
-       {
-               sendnumeric(client, ERR_NOMOTD);
-               return;
-       }
-       if (themotd->last_modified.tm_year)
-       {
-	       tm = &themotd->last_modified; /* for readability */
-               sendnumeric(client, RPL_MOTDSTART, me.name);
-               sendnumericfmt(client, RPL_MOTD, ":- %d/%d/%d %d:%02d", tm->tm_mday, tm->tm_mon + 1,
-                   1900 + tm->tm_year, tm->tm_hour, tm->tm_min);
-       }
-       if (is_short)
-       {
-               sendnumeric(client, RPL_MOTD, "This is the short MOTD. To view the complete MOTD type /motd");
-               sendnumeric(client, RPL_MOTD, "");
-       }
+	if (!themotd->lines)
+	{
+		sendnumeric(client, ERR_NOMOTD);
+		return;
+	}
+	if (themotd->last_modified.tm_year)
+	{
+		tm = &themotd->last_modified; /* for readability */
+		sendnumeric(client, RPL_MOTDSTART, me.name);
+		sendnumericfmt(client, RPL_MOTD, ":- %d/%d/%d %d:%02d", tm->tm_mday, tm->tm_mon + 1,
+		               1900 + tm->tm_year, tm->tm_hour, tm->tm_min);
+	}
+	if (is_short)
+	{
+		sendnumeric(client, RPL_MOTD, "This is the short MOTD. To view the complete MOTD type /motd");
+		sendnumeric(client, RPL_MOTD, "");
+	}
 
-       motdline = NULL;
-       if (themotd)
-	       motdline = themotd->lines;
-       while (motdline)
-       {
-               sendnumeric(client, RPL_MOTD, motdline->line);
-               motdline = motdline->next;
-       }
-       sendnumeric(client, RPL_ENDOFMOTD);
+	motdline = NULL;
+	if (themotd)
+		motdline = themotd->lines;
+	while (motdline)
+	{
+		sendnumeric(client, RPL_MOTD, motdline->line);
+		motdline = motdline->next;
+	}
+
+	if (!is_short)
+	{
+		/* If the admin does not use a short MOTD then we append the SVSMOTD here...
+		 * If we did show a short motd then we don't append SVSMOTD,
+		 * since they want to keep it short.
+		 */
+		motdline = svsmotd.lines;
+		while (motdline)
+		{
+			sendnumeric(client, RPL_MOTD, motdline->line);
+			motdline = motdline->next;
+		}
+	}
+
+	sendnumeric(client, RPL_ENDOFMOTD);
 }
 
 /** Read motd-like file, used for rules/motd/botmotd/opermotd/etc.
