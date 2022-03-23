@@ -520,17 +520,17 @@ int stats_command(Client *client, const char *para)
 
 int stats_oper(Client *client, const char *para)
 {
-	ConfigItem_oper *oper_p;
+	ConfigItem_oper *o;
 	ConfigItem_mask *m;
 
-	for (oper_p = conf_oper; oper_p; oper_p = oper_p->next)
+	for (o = conf_oper; o; o = o->next)
 	{
-		for (m = oper_p->mask; m; m = m->next)
+		for (m = o->mask; m; m = m->next)
 		{
-	  		sendnumeric(client, RPL_STATSOLINE,
-	  			'O', m->mask, oper_p->name,
-	  			"-",
-	  			oper_p->class->name? oper_p->class->name : "");
+			sendnumeric(client, RPL_STATSOLINE,
+			            'O', m->mask, o->name,
+			            o->operclass ? o->operclass: "",
+			            o->class->name ? o->class->name : "");
 		}
 	}
 	return 0;
