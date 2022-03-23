@@ -225,7 +225,6 @@ CMD_FUNC(cmd_list)
 				    error = 1;
 			  }
 			  break;
-#ifdef LIST_USE_T
 		  case 'T':
 		  case 't':
 			  ++name;
@@ -240,12 +239,10 @@ CMD_FUNC(cmd_list)
 				    doall = 1;
 				    break;
 			    default:
-				    sendnumeric(client, ERR_LISTSYNTAX,
-					"Bad list syntax, type /list ?");
+				    sendnumeric(client, ERR_LISTSYNTAX);
 				    error = 1;
 			  }
 			  break;
-#endif
 		  default:	/* A channel, possibly with wildcards.
 				 * Thought for the future: Consider turning wildcard
 				 * processing on the fly.
