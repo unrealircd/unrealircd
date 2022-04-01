@@ -29,9 +29,9 @@
 
 ModDataInfo *watchCounterMD;
 ModDataInfo *watchListMD;
-static Watch *watchTable[WATCH_HASH_TABLE_SIZE];
-static int watch_initialized = 0;
-static char siphashkey_watch[SIPHASH_KEY_LENGTH];
+
+static Watch **watchTable = NULL;
+static char *siphashkey_watch = NULL;
 
 void dummy_free(ModData *md);
 void watch_free(ModData *md);
@@ -47,8 +47,8 @@ uint64_t hash_watch_nick_name(const char *name);
 ModuleHeader MOD_HEADER
 = {
 	"watch-backend",
-	"5.0",
-	"backend for /watch", 
+	"6.0.3",
+	"backend for /WATCH",
 	"UnrealIRCd Team",
 	"unrealircd-6",
 };
@@ -65,20 +65,28 @@ MOD_TEST()
 	return MOD_SUCCESS;
 }
 
+void watch_generic_free(ModData *m)
+{
+	safe_free(m->ptr);
+}
+
 MOD_INIT()
 {	
 	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM_RELOADABLE, 1); /* or do a complex memory freeing algorithm instead */
-	
-	if (!watch_initialized)
+
+	LoadPersistentPointer(modinfo, siphashkey_watch, watch_generic_free);
+	if (siphashkey_watch == NULL)
 	{
-		memset(watchTable, 0, sizeof(watchTable));
+		siphashkey_watch = safe_alloc(SIPHASH_KEY_LENGTH);
 		siphash_generate_key(siphashkey_watch);
-		watch_initialized = 1;
 	}
-	
+	LoadPersistentPointer(modinfo, watchTable, watch_generic_free);
+	if (watchTable == NULL)
+		watchTable = safe_alloc(sizeof(Watch) * WATCH_HASH_TABLE_SIZE);
+
 	memset(&mreq, 0 , sizeof(mreq));
 	mreq.type = MODDATATYPE_LOCAL_CLIENT;
 	mreq.name = "watchCount",
@@ -113,6 +121,8 @@ MOD_LOAD()
 
 MOD_UNLOAD()
 {
+	SavePersistentPointer(modinfo, siphashkey_watch);
+	SavePersistentPointer(modinfo, watchTable);
 	return MOD_SUCCESS;
 }
 
@@ -151,13 +161,13 @@ int _watch_add(char *nick, Client *client, int flags)
 	hashv = hash_watch_nick_name(nick);
 	
 	/* Find the right nick (header) in the bucket, or NULL... */
-	if ((watch = (Watch *)watchTable[hashv]))
+	if ((watch = watchTable[hashv]))
 		while (watch && mycmp(watch->nick, nick))
 		 watch = watch->hnext;
 	
 	/* If found NULL (no header for this nick), make one... */
 	if (!watch) {
-		watch = (Watch *)safe_alloc(sizeof(Watch)+strlen(nick));
+		watch = safe_alloc(sizeof(Watch)+strlen(nick));
 		watch->lasttime = timeofday;
 		strcpy(watch->nick, nick);
 		
@@ -203,7 +213,7 @@ int _watch_check(Client *client, int event, int (*watch_notify)(Client *client, 
 	hashv = hash_watch_nick_name(client->name);
 	
 	/* Find the right header in this bucket */
-	if ((watch = (Watch *)watchTable[hashv]))
+	if ((watch = watchTable[hashv]))
 		while (watch && mycmp(watch->nick, client->name))
 		 watch = watch->hnext;
 	if (!watch)
@@ -231,7 +241,7 @@ Watch *_watch_get(char *nick)
 	
 	hashv = hash_watch_nick_name(nick);
 	
-	if ((watch = (Watch *)watchTable[hashv]))
+	if ((watch = watchTable[hashv]))
 		while (watch && mycmp(watch->nick, nick))
 		 watch = watch->hnext;
 	
