@@ -1,27 +1,38 @@
-UnrealIRCd 6.0.3-git
-=====================
+UnrealIRCd 6.0.3
+=================
 
-This is work in progress!
+A number of serious issues were discovered in UnrealIRCd 6. Among these is
+an issue which will likely crash the IRCd sooner or later if you /REHASH
+with any active clients connected.
+We suggest everyone who is running UnrealIRCd 6 to upgrade to 6.0.3.
 
 If you are already running UnrealIRCd 6 then read below. Otherwise, jump
 straight to the [summary about UnrealIRCd 6](#Summary) to learn more
 about UnrealIRCd 6.
 
 Fixes:
-* Channel ops could not remove halfops from a user (`-h`).
+* Crash in `WATCH` if the IRCd has been rehashed at least once. After doing
+  a `REHASH` with active clients it will likely corrupt memory. It may take
+  several days until after the rehash for the crash to occur, or even
+  weeks/months on smaller networks (accidental triggering, that is).
 * A `REHASH` with certain remote includes setups could cause a crash or
   other weird and confusing problems such as complaining about unable
   to open an ipv6-database or missing snomask configuration.
   This only affected some people with remote includes, not all.
+* Potential out-of-bounds write in sending code. In practice it seems
+  harmless on most servers but this cannot be 100% guaranteed.
+* Unlikely triggered log message would log uninitialized stack data to the
+  log file or send it to ircops.
+* Channel ops could not remove halfops from a user (`-h`).
 * After using the `RESTART` command (not recommended) the new IRCd was
   often no longer writing to log files.
 * Fix compile problem if you choose to use cURL remote includes but don't
-  have cURL on the system and use the local-curl method (`./curlinstall`).
+  have cURL on the system and ask UnrealIRCd to compile cURL.
 
 Enhancements:
 * The default text log format on disk changed. It now includes the server
-  name where the event was generated. Without this, it is sometimes
-  difficult to trace problems since previously it sometimes looked like
+  name where the event was generated. Without this, it was sometimes
+  difficult to trace problems, since previously it sometimes looked like
   there was a problem on your server when it was actually another server
   on the network.
   * Old log format: `[DATE TIME] subsystem.EVENT_ID loglevel: ........`
