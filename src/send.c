@@ -339,10 +339,10 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 
 	if (IsMe(to))
 	{
-		char tmp_msg[500], *p;
+		char tmp_msg[500];
 
-		p = strchr(msg, '\r');
-		if (p) *p = '\0';
+		strlcpy(tmp_msg, msg, sizeof(tmp_msg));
+		stripcrlf(tmp_msg);
 		unreal_log(ULOG_WARNING, "send", "SENDBUFTO_ONE_ME_MESSAGE", to,
 			   "Trying to send data to myself: $buf",
 			   log_data_string("buf", tmp_msg));
