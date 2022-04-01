@@ -196,7 +196,7 @@ int lr_post_command(Client *from, MessageTag *mtags, const char *buf)
 			 */
 			int more_tags = currentcmd.firstbuf[0] == '@';
 			currentcmd.client = NULL; /* prevent lr_packet from interfering */
-			snprintf(packet, sizeof(packet),
+			snprintf(packet, sizeof(packet)-3,
 				 "@label=%s%s%s\r\n",
 				 currentcmd.label,
 				 more_tags ? ";" : " ",

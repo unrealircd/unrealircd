@@ -218,7 +218,7 @@ void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
-	ircvsnprintf(sendbuf, sizeof(sendbuf), pattern, vl);
+	ircvsnprintf(sendbuf, sizeof(sendbuf)-3, pattern, vl);
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
@@ -229,7 +229,7 @@ void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl)
 		sendbufto_one(to, sendbuf, 0);
 	} else {
 		/* Message tags need to be prepended */
-		snprintf(sendbuf2, sizeof(sendbuf2), "@%s %s", mtags_str, sendbuf);
+		snprintf(sendbuf2, sizeof(sendbuf2)-3, "@%s %s", mtags_str, sendbuf);
 		sendbufto_one(to, sendbuf2, 0);
 	}
 }
