@@ -1,14 +1,23 @@
-UnrealIRCd 6.0.3
+UnrealIRCd 6.0.4-git
 =================
-
-A number of serious issues were discovered in UnrealIRCd 6. Among these is
-an issue which will likely crash the IRCd sooner or later if you /REHASH
-with any active clients connected.
-We suggest everyone who is running UnrealIRCd 6 to upgrade to 6.0.3.
+This is work in progress!
 
 If you are already running UnrealIRCd 6 then read below. Otherwise, jump
 straight to the [summary about UnrealIRCd 6](#Summary) to learn more
 about UnrealIRCd 6.
+
+Fixes:
+* 
+
+Enhancements:
+* 
+
+UnrealIRCd 6.0.3
+-----------------
+A number of serious issues were discovered in UnrealIRCd 6. Among these is
+an issue which will likely crash the IRCd sooner or later if you /REHASH
+with any active clients connected.
+We suggest everyone who is running UnrealIRCd 6 to upgrade to 6.0.3.
 
 Fixes:
 * Crash in `WATCH` if the IRCd has been rehashed at least once. After doing
