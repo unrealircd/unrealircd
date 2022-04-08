@@ -85,7 +85,7 @@ MOD_INIT()
 	}
 	LoadPersistentPointer(modinfo, watchTable, watch_generic_free);
 	if (watchTable == NULL)
-		watchTable = safe_alloc(sizeof(Watch) * WATCH_HASH_TABLE_SIZE);
+		watchTable = safe_alloc(sizeof(Watch *) * WATCH_HASH_TABLE_SIZE);
 
 	memset(&mreq, 0 , sizeof(mreq));
 	mreq.type = MODDATATYPE_LOCAL_CLIENT;
