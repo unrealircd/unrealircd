@@ -472,8 +472,8 @@ MultiLineMode *make_mode_str(Client *client, Channel *channel, Cmode_t oldem, in
 			if (curr == MAXMULTILINEMODES)
 			{
 				/* Should be impossible.. */
-				unreal_log(ULOG_ERROR, "mode", "MODE_MULTINE_EXCEEDED", client,
-				           "A mode string caused an avalanche effect of more than $max_multiline modes "
+				unreal_log(ULOG_ERROR, "mode", "MODE_MULTILINE_EXCEEDED", client,
+				           "A mode string caused an avalanche effect of more than $max_multiline_modes modes "
 				           "in channel $channel. Caused by client $client. Expect a desync.",
 				           log_data_integer("max_multiline_modes", MAXMULTILINEMODES),
 				           log_data_channel("channel", channel));
@@ -807,6 +807,7 @@ void do_mode_char_member_mode_new(Channel *channel, Cmode *handler, const char *
 			   "[BUG] Client $target.details on channel $channel: "
 			   "found via find_membership_link() but NOT found via find_member_link(). "
 			   "This should never happen! Please report on https://bugs.unrealircd.org/",
+			   log_data_client("target", target),
 			   log_data_channel("channel", channel));
 		return;
 	}

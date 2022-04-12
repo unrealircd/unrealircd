@@ -57,7 +57,7 @@ EVENT(garbage_collect)
 		if (loop.do_garbage_collect == 1) {
 			loop.do_garbage_collect = 0;
 			unreal_log(ULOG_INFO, "main", "GARBAGE_COLLECT_STARTED", NULL, "Cleaned up $count garbage blocks",
-			           (ii - freelinks));
+			           log_data_integer("count", (ii - freelinks)));
 		}
 	}
 	if (loop.do_garbage_collect == 1)
@@ -83,7 +83,7 @@ int match_tkls(Client *client)
 		{
 			unreal_log(ULOG_INFO, "tkl", "BAN_REALNAME", client,
 			           "Banned client $client.details due to realname ban: $reason",
-			           bconf->reason ? bconf->reason : "no reason");
+			           log_data_string("reason", bconf->reason ? bconf->reason : "no reason"));
 
 			if (bconf->reason) {
 				if (IsUser(client))

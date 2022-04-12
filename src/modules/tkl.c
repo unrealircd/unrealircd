@@ -3706,7 +3706,7 @@ void tkl_sync_send_entry(int add, Client *sender, Client *to, TKL *tkl)
 	} else
 	{
 		unreal_log(ULOG_FATAL, "tkl", "BUG_TKL_SYNC_SEND_ENTRY", NULL,
-			   "[BUG] tkl_sync_send_entry() called for '%s' but unknown type: $tkl.type_string ($tkl_type_int)",
+			   "[BUG] tkl_sync_send_entry() called, but unknown type: $tkl.type_string ($tkl_type_int)",
 			   log_data_tkl("tkl", tkl),
 			   log_data_integer("tkl_type_int", typ));
 		abort();
@@ -4123,7 +4123,7 @@ CMD_FUNC(cmd_tkl_add)
 		{
 			unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
 				"Invalid TKL entry from $client: "
-				"Spamfilter '$spamfilter_string' has unkown match-type '$spamfilter_type'",
+				"Spamfilter '$spamfilter_string' has unknown match-type '$spamfilter_type'",
 				log_data_string("spamfilter_string", match_string),
 				log_data_string("spamfilter_type", parv[10]));
 			return;
@@ -4133,7 +4133,7 @@ CMD_FUNC(cmd_tkl_add)
 		{
 			unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
 				"Invalid TKL entry from $client: "
-				"Spamfilter '$spamfilter_string' has unkown targets '$spamfilter_targets'",
+				"Spamfilter '$spamfilter_string' has unknown targets '$spamfilter_targets'",
 				log_data_string("spamfilter_string", match_string),
 				log_data_string("spamfilter_targets", parv[3]));
 			return;
@@ -4143,7 +4143,7 @@ CMD_FUNC(cmd_tkl_add)
 		{
 			unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
 				"Invalid TKL entry from $client: "
-				"Spamfilter '$spamfilter_string' has unkown action '$spamfilter_action'",
+				"Spamfilter '$spamfilter_string' has unknown action '$spamfilter_action'",
 				log_data_string("spamfilter_string", match_string),
 				log_data_string("spamfilter_action", parv[4]));
 			return;
@@ -4312,7 +4312,7 @@ CMD_FUNC(cmd_tkl_del)
 		{
 			unreal_log(ULOG_WARNING, "tkl", "TKL_DEL_INVALID", client,
 				"Invalid TKL deletion request from $client: "
-				"Spamfilter '$spamfilter_string' has unkown targets '$spamfilter_targets'",
+				"Spamfilter '$spamfilter_string' has unknown targets '$spamfilter_targets'",
 				log_data_string("spamfilter_string", match_string),
 				log_data_string("spamfilter_targets", parv[3]));
 			return;
@@ -4322,7 +4322,7 @@ CMD_FUNC(cmd_tkl_del)
 		{
 			unreal_log(ULOG_WARNING, "tkl", "TKL_DEL_INVALID", client,
 				"Invalid TKL deletion request from $client: "
-				"Spamfilter '$spamfilter_string' has unkown action '$spamfilter_action'",
+				"Spamfilter '$spamfilter_string' has unknown action '$spamfilter_action'",
 				log_data_string("spamfilter_string", match_string),
 				log_data_string("spamfilter_action", parv[4]));
 			return;

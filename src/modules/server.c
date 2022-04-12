@@ -1200,6 +1200,7 @@ CMD_FUNC(cmd_sid)
 		unreal_log(ULOG_ERROR, "link", "REMOTE_LINK_DENIED_SERVER_BAN", client,
 		           "Denied remote server $servername which was introduced by $client: "
 		           "Server is banned ($ban_reason)",
+		           log_data_string("servername", servername),
 		           log_data_string("ban_reason", bconf->reason));
 		/* Before UnrealIRCd 6 this would SQUIT the server who introduced
 		 * this server. That seems a bit of an overreaction, so we now

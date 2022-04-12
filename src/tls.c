@@ -354,7 +354,7 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 	if (SSL_CTX_set_ciphersuites(ctx, tlsoptions->ciphersuites) == 0)
 	{
 		unreal_log(ULOG_ERROR, "config", "TLS_INVALID_CIPHERSUITES_LIST", NULL,
-		           "Failed to set TLS ciphersuites list '$tls_ciphers_list'\n$tls_error.all",
+		           "Failed to set TLS ciphersuites list '$tls_ciphersuites_list'\n$tls_error.all",
 		           log_data_string("tls_ciphersuites_list", tlsoptions->ciphersuites),
 		           log_data_tls_error());
 		goto fail;
