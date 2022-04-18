@@ -359,6 +359,14 @@ int write_channel_entry(UnrealDB *db, const char *tmpfname, Channel *channel)
 	return 1;
 }
 
+int ban_exists(Ban *lst, Ban *e)
+{
+	for (; lst; lst = lst->next)
+		if (!mycmp(lst->banstr, e->banstr))
+			return 1;
+	return 0;
+}
+
 #define R_SAFE(x) \
 	do { \
 		if (!(x)) { \
@@ -401,10 +409,18 @@ int read_listmode(UnrealDB *db, Ban **lst)
 		}
 		safe_strdup(e->banstr, str);
 
-		/* Add to list */
-		e->when = when;
-		e->next = *lst;
-		*lst = e;
+		if (ban_exists(*lst, e))
+		{
+			/* Free again - duplicate item */
+			safe_free(e->banstr);
+			safe_free(e->who);
+			safe_free(e);
+		} else {
+			/* Add to list */
+			e->when = when;
+			e->next = *lst;
+			*lst = e;
+		}
 	}
 
 	return 1;
