@@ -137,7 +137,6 @@
 #define MSG_SAPART 	"SAPART"
 #define MSG_CHGIDENT 	"CHGIDENT"
 #define MSG_SWHOIS 	"SWHOIS"
-#define MSG_SVSO 	"SVSO"
 #define MSG_SVSFLINE 	"SVSFLINE"
 #define MSG_TKL		"TKL"
 #define MSG_VHOST 	"VHOST"
