@@ -71,7 +71,7 @@ MODULES= \
 	message-tags.so batch.so \
 	account-tag.so labeled-response.so link-security.so \
 	message-ids.so plaintext-policy.so server-time.so sts.so \
-	echo-message.so userip-tag.so userhost-tag.so \
+	echo-message.so userip-tag.so userhost-tag.so geoip-tag.so \
 	bot-tag.so reply-tag.so json-log-tag.so \
 	typing-indicator.so \
 	ident_lookup.so history.so chathistory.so \
