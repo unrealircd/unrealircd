@@ -3,7 +3,7 @@
  * (C) 2021 Bram Matthys (Syzop) and the UnrealIRCd Team
  *
  * See file AUTHORS in IRC package for additional names of
- * the programmers. 
+ * the programmers.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -886,6 +886,7 @@ LogData *log_data_link_block(ConfigItem_link *link)
 	json_object_set_new(j, "hostname", json_string_unreal(link->outgoing.hostname));
 	json_object_set_new(j, "ip", json_string_unreal(link->connect_ip));
 	json_object_set_new(j, "port", json_integer(link->outgoing.port));
+	json_object_set_new(j, "class", json_string_unreal(link->class->name));
 
 	if (!link->outgoing.bind_ip && iConf.link_bindip)
 		bind_ip = iConf.link_bindip;
