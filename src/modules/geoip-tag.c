@@ -1,6 +1,6 @@
 /*
  *   IRC - Internet Relay Chat, src/modules/geoip-tag.c
- *   (C) 2020 Syzop & The UnrealIRCd Team
+ *   (C) 2022 westor, Syzop and The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
@@ -25,15 +25,13 @@
 ModuleHeader MOD_HEADER
   = {
 	"geoip-tag",
-	"5.0",
+	"6.0",
 	"geoip message tag",
 	"UnrealIRCd Team",
 	"unrealircd-6",
 	};
 
-/* Variables */
-long CAP_ACCOUNT_TAG = 0L;
-
+/* Forward declarations */
 int geoip_mtag_is_ok(Client *client, const char *name, const char *value);
 int geoip_mtag_should_send_to_client(Client *target);
 void mtag_add_geoip(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature);
@@ -83,9 +81,9 @@ void mtag_add_geoip(Client *client, MessageTag *recv_mtags, MessageTag **mtag_li
 {
 	MessageTag *m;
 	
-	GeoIPResult *geoip = geoip_lookup(client->ip);
+	GeoIPResult *geoip;
 
-	if (IsUser(client) && geoip)
+	if (IsUser(client) && ((geoip = geoip_client(client))))
 	{
 		MessageTag *m = find_mtag(recv_mtags, "unrealircd.org/geoip");
 		if (m)
