@@ -13,10 +13,17 @@ online documentation.
 * UnrealIRCd 6 is the *stable* series since December 2021. All new features go in there.
 * UnrealIRCd 5 is the *oldstable* series. It will receive bug fixes until
   July 1, 2022 plus another 12 months of security fixes.
+* For full details of release scheduling and EOL dates, see
+  [UnrealIRCd releases](https://www.unrealircd.org/docs/UnrealIRCd_releases) on the wiki
 
 ## How to get started
-Please consult our excellent online documentation at https://www.unrealircd.org/docs/
-when setting up the IRCd!
+### Use the wiki!
+**IMPORTANT:** We recommend you follow our installation guide on the wiki instead of the
+steps in this README. The wiki has more detailed information and is more easy to navigate.
+* [Installing from source for *NIX](https://www.unrealircd.org/docs/Installing_from_source)
+* [Installating instructions for Windows](https://www.unrealircd.org/docs/Installing_(Windows))
+
+Please consult the online documentation at https://www.unrealircd.org/docs/ when setting up the IRCd!
 
 ### Step 1: Installation
 #### Windows
@@ -36,11 +43,11 @@ Do the following steps under a separate account for running UnrealIRCd,
 * Now change to the directory where you installed UnrealIRCd, e.g. `cd /home/xxxx/unrealircd`
 
 ### Step 2: Configuration
-Configuration files are stored in the conf/ folder by default (eg: /home/xxxx/unrealircd/conf)
+Configuration files are stored in the `conf/` folder by default (eg: `/home/xxxx/unrealircd/conf`)
 
 #### Create a configuration file
 If you are new, then you need to create your own configuration file:
-Copy conf/examples/example.conf to conf/ and call it unrealircd.conf.
+Copy `conf/examples/example.conf` to `conf/` and call it `unrealircd.conf`.
 Then open it in an editor and carefully modify it using the documentation and FAQ as a guide (see below).
 
 ### Step 3: Booting
