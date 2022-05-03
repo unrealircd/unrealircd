@@ -1,5 +1,5 @@
-UnrealIRCd 5.2.4 Release Notes
-===============================
+UnrealIRCd 5.2.4
+=================
 
 This release fixes a crash bug that can be triggered by ordinary users.
 
