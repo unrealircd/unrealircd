@@ -1655,21 +1655,23 @@ void mm_parse_c_file(int argc, char *args[])
 void mm_self_test(void)
 {
 	char name[512];
-	snprintf(name, sizeof(name), "%s/src/modules/third", BUILDDIR);
-	if (file_exists(name))
-		return;
+
 	if (!file_exists(BUILDDIR))
 	{
 		fprintf(stderr, "ERROR: Directory %s does not exist.\n"
 				"The UnrealIRCd source is required for the module manager to work!\n",
 				BUILDDIR);
+		exit(-1);
 	} else {
-		fprintf(stderr, "ERROR: Directory %s exists, but %s does not.\n"
-		                "The UnrealIRCd source is required for the module manager to work.\n"
-		                "It seems you only have a partial build directory??\n",
-		                BUILDDIR, name);
+		snprintf(name, sizeof(name), "%s/src/modules/third/Makefile", BUILDDIR);
+		if (!file_exists(name))
+		{
+			fprintf(stderr, "ERROR: Directory %s exists, but your UnrealIRCd is not compiled yet.\n"
+					"You must compile your UnrealIRCd first (run './Config', then 'make install')\n",
+					BUILDDIR);
+			exit(-1);
+		}
 	}
-	exit(-1);
 }
 
 void modulemanager(int argc, char *args[])
