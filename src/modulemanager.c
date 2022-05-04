@@ -1206,7 +1206,7 @@ int mm_compile(ManagedModule *m, char *tmpfile, int test)
 	fprintf(stderr, "ERROR: Compile errors encountered while compiling module '%s'\n"
 	                "You are suggested to contact the author (%s) of this module:\n%s\n",
 	                m->name, m->author, m->troubleshooting);
-	return 1;
+	return 0;
 }
 
 /** Actually download and install the module.
@@ -1222,7 +1222,7 @@ void mm_install_module(ManagedModule *m)
 		basename = "mod.c";
 	tmpfile = unreal_mktemp(TMPDIR, basename);
 
-	printf("ConfigResourceing %s from %s...\n", m->name, m->source);
+	printf("Downloading %s from %s...\n", m->name, m->source);
 	if (!mm_http_request(m->source, tmpfile, 1))
 	{
 		fprintf(stderr, "Repository %s seems to list a module file that cannot be retrieved (%s).\n", m->repo_url, m->source);
