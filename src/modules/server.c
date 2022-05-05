@@ -1808,13 +1808,13 @@ void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 {
 	Client *client;
 
-	if (!aconf->outgoing.hostname)
+	if (!aconf->outgoing.hostname && !aconf->outgoing.file)
 	{
 		/* Actually the caller should make sure that this doesn't happen,
 		 * so this error may never be triggered:
 		 */
 		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_NO_OUTGOING", NULL,
-		           "Connect to $link_block failed: link block is for incoming only (no link::outgoing::hostname set)",
+		           "Connect to $link_block failed: link block is for incoming only (no link::outgoing::hostname or link::outgoing::file set)",
 		           log_data_link_block(aconf));
 		return;
 	}
@@ -1828,7 +1828,7 @@ void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	 * If we dont know the IP# for this host and itis a hostname and
 	 * not a ip# string, then try and find the appropriate host record.
 	 */
-	if (!aconf->connect_ip)
+	if (!aconf->connect_ip && !aconf->outgoing.file)
 	{
 		if (is_valid_ip(aconf->outgoing.hostname))
 		{
@@ -1862,7 +1862,7 @@ void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	 * Copy these in so we have something for error detection.
 	 */
 	strlcpy(client->name, aconf->servername, sizeof(client->name));
-	strlcpy(client->local->sockhost, aconf->outgoing.hostname, HOSTLEN + 1);
+	strlcpy(client->local->sockhost, aconf->outgoing.hostname ? aconf->outgoing.hostname : aconf->outgoing.file, HOSTLEN + 1);
 
 	if (!connect_server_helper(aconf, client))
 	{
@@ -1885,7 +1885,7 @@ void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	SetOutgoing(client);
 	irccounts.unknown++;
 	list_add(&client->lclient_node, &unknown_list);
-	set_sockhost(client, aconf->outgoing.hostname);
+	set_sockhost(client, aconf->outgoing.hostname ? aconf->outgoing.hostname : "127.0.0.1");
 	add_client_to_list(client);
 
 	if (aconf->outgoing.options & CONNECT_TLS)
@@ -1897,7 +1897,9 @@ void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 		fd_setselect(client->local->fd, FD_SELECT_WRITE, completed_connection, client);
 
 	unreal_log(ULOG_INFO, "link", "LINK_CONNECTING", client,
-		   "Trying to activate link with server $client ($link_block.ip:$link_block.port)...",
+		   aconf->outgoing.file
+		   ? "Trying to activate link with server $client ($link_block.file)..."
+		   : "Trying to activate link with server $client ($link_block.ip:$link_block.port)...",
 		   log_data_link_block(aconf));
 }
 
@@ -1912,21 +1914,23 @@ static int connect_server_helper(ConfigItem_link *aconf, Client *client)
 	char *bindip;
 	char buf[BUFSIZE];
 
-	if (!aconf->connect_ip)
+	if (!aconf->connect_ip && !aconf->outgoing.file)
 	{
 		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_NOIP", client,
-		           "Connect to $client failed: no IP address to connect to",
+		           "Connect to $client failed: no IP address or file to connect to",
 		           log_data_link_block(aconf));
 		return 0; /* handled upstream or shouldn't happen */
 	}
-	
-	if (strchr(aconf->connect_ip, ':'))
+
+	if (aconf->outgoing.file)
+		SetUnixSocket(client);
+	else if (strchr(aconf->connect_ip, ':'))
 		SetIPV6(client);
 	
-	safe_strdup(client->ip, aconf->connect_ip);
+	safe_strdup(client->ip, aconf->connect_ip ? aconf->connect_ip : "127.0.0.1");
 	
 	snprintf(buf, sizeof buf, "Outgoing connection: %s", get_client_name(client, TRUE));
-	client->local->fd = fd_socket(IsIPV6(client) ? AF_INET6 : AF_INET, SOCK_STREAM, 0, buf);
+	client->local->fd = fd_socket(IsUnixSocket(client) ? AF_UNIX : (IsIPV6(client) ? AF_INET6 : AF_INET), SOCK_STREAM, 0, buf);
 	if (client->local->fd < 0)
 	{
 		if (ERRNO == P_EMFILE)
@@ -1950,7 +1954,7 @@ static int connect_server_helper(ConfigItem_link *aconf, Client *client)
 		return 0;
 	}
 
-	set_sockhost(client, aconf->outgoing.hostname);
+	set_sockhost(client, aconf->outgoing.hostname ? aconf->outgoing.hostname : "127.0.0.1");
 
 	if (!aconf->outgoing.bind_ip && iConf.link_bindip)
 		bindip = iConf.link_bindip;
@@ -1972,10 +1976,14 @@ static int connect_server_helper(ConfigItem_link *aconf, Client *client)
 
 	set_sock_opts(client->local->fd, client, IsIPV6(client));
 
-	if (!unreal_connect(client->local->fd, client->ip, aconf->outgoing.port, IsIPV6(client)))
+	if (!unreal_connect(client->local->fd,
+			    aconf->outgoing.file ? aconf->outgoing.file : client->ip,
+			    aconf->outgoing.port, client->local->socket_type))
 	{
 			unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
-				   "Connect to $client ($link_block.ip:$link_block.port) failed: $socket_error",
+				   aconf->outgoing.file
+				   ? "Connect to $client ($link_block.file) failed: $socket_error"
+				   : "Connect to $client ($link_block.ip:$link_block.port) failed: $socket_error",
 				   log_data_socket_error(client->local->fd),
 				   log_data_link_block(aconf));
 		return 0;

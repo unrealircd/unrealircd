@@ -1300,11 +1300,11 @@ int deliver_it(Client *client, char *str, int len, int *want_read)
 }
 
 /** Initiate an outgoing connection, the actual connect() call. */
-int unreal_connect(int fd, const char *ip, int port, int ipv6)
+int unreal_connect(int fd, const char *ip, int port, SocketType socket_type)
 {
 	int n;
 
-	if (ipv6)
+	if (socket_type == SOCKET_TYPE_IPV6)
 	{
 		struct sockaddr_in6 server;
 		memset(&server, 0, sizeof(server));
@@ -1312,12 +1312,21 @@ int unreal_connect(int fd, const char *ip, int port, int ipv6)
 		inet_pton(AF_INET6, ip, &server.sin6_addr);
 		server.sin6_port = htons(port);
 		n = connect(fd, (struct sockaddr *)&server, sizeof(server));
-	} else {
+	}
+	else if (socket_type == SOCKET_TYPE_IPV4)
+	{
 		struct sockaddr_in server;
 		memset(&server, 0, sizeof(server));
 		server.sin_family = AF_INET;
 		inet_pton(AF_INET, ip, &server.sin_addr);
 		server.sin_port = htons(port);
+		n = connect(fd, (struct sockaddr *)&server, sizeof(server));
+	} else
+	{
+		struct sockaddr_un server;
+		memset(&server, 0, sizeof(server));
+		server.sun_family = AF_UNIX;
+		strlcpy(server.sun_path, ip, sizeof(server.sun_path));
 		n = connect(fd, (struct sockaddr *)&server, sizeof(server));
 	}
 

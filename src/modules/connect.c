@@ -106,10 +106,10 @@ CMD_FUNC(cmd_connect)
 		return;
 	}
 
-	if (!aconf->outgoing.hostname)
+	if (!aconf->outgoing.hostname && !aconf->outgoing.file)
 	{
 		sendnotice(client,
-		    "*** Connect: Server %s is not configured to be an outgoing link (has a link block, but no link::outgoing::hostname)",
+		    "*** Connect: Server %s is not configured to be an outgoing link (has a link block, but no link::outgoing::hostname or link::outgoing::file)",
 		    parv[1]);
 		return;
 	}

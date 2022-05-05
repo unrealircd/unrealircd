@@ -559,6 +559,7 @@ typedef enum ClientStatus {
 #define IsIPV6(x)			((x)->local->socket_type == SOCKET_TYPE_IPV6)
 #define IsUnixSocket(x)			((x)->local->socket_type == SOCKET_TYPE_UNIX)
 #define SetIPV6(x)			do { (x)->local->socket_type = SOCKET_TYPE_IPV6; } while(0)
+#define SetUnixSocket(x)			do { (x)->local->socket_type = SOCKET_TYPE_UNIX; } while(0)
 /** @} */
 
 
@@ -1728,6 +1729,7 @@ struct ConfigItem_link {
 		ConfigItem_mask *mask; /**< incoming mask(s) to accept */
 	} incoming;
 	struct {
+		char *file; /**< UNIX domain socket to connect to */
 		char *bind_ip; /**< Our IP to bind to when doing the connect */
 		char *hostname; /**< Hostname or IP to connect to */
 		int port; /**< Port to connect to */

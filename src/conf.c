@@ -6184,6 +6184,8 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			{
 				if (!strcmp(cepp->name, "bind-ip"))
 					safe_strdup(link->outgoing.bind_ip, cepp->value);
+				else if (!strcmp(cepp->name, "file"))
+					safe_strdup(link->outgoing.file, cepp->value);
 				else if (!strcmp(cepp->name, "hostname"))
 					safe_strdup(link->outgoing.hostname, cepp->value);
 				else if (!strcmp(cepp->name, "port"))
@@ -6273,7 +6275,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp, *ceppp;
 	int errors = 0;
 
-	int has_incoming = 0, has_incoming_mask = 0, has_outgoing = 0;
+	int has_incoming = 0, has_incoming_mask = 0, has_outgoing = 0, has_outgoing_file = 0;
 	int has_outgoing_bind_ip = 0, has_outgoing_hostname = 0, has_outgoing_port = 0;
 	int has_outgoing_options = 0, has_hub = 0, has_leaf = 0, has_leaf_depth = 0;
 	int has_password = 0, has_class = 0, has_options = 0;
@@ -6327,6 +6329,15 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 					}
 					config_detect_duplicate(&has_outgoing_bind_ip, cepp, &errors);
 					// todo: ipv4 vs ipv6
+				}
+				else if (!strcmp(cepp->name, "file"))
+				{
+					if (config_is_blankorempty(cepp, "link::outgoing"))
+					{
+						errors++;
+						continue;
+					}
+					config_detect_duplicate(&has_outgoing_file, cepp, &errors);
 				}
 				else if (!strcmp(cepp->name, "hostname"))
 				{
@@ -6500,15 +6511,25 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 
 	if (has_outgoing)
 	{
-		/* If we have an outgoing sub-block then we need at least a hostname and port */
-		if (!has_outgoing_hostname)
+		/* If we have an outgoing sub-block then we need at least a hostname and port or a file */
+		if (!has_outgoing_file)
 		{
-			config_error_missing(ce->file->filename, ce->line_number, "link::outgoing::hostname");
-			errors++;
+			if (!has_outgoing_hostname)
+			{
+				config_error_missing(ce->file->filename, ce->line_number, "link::outgoing::hostname");
+				errors++;
+			}
+			if (!has_outgoing_port)
+			{
+				config_error_missing(ce->file->filename, ce->line_number, "link::outgoing::port");
+				errors++;
+			}
 		}
-		if (!has_outgoing_port)
+		else if (has_outgoing_file && (has_outgoing_hostname || has_outgoing_port))
 		{
-			config_error_missing(ce->file->filename, ce->line_number, "link::outgoing::port");
+			config_error("%s:%d: link block should either have a 'file' (for *NIX domain socket), "
+			             "OR have a 'hostname' and 'port' (for IPv4/IPv6). You cannot combine both in one link block.",
+			             ce->file->filename, ce->line_number);
 			errors++;
 		}
 	}
@@ -10705,6 +10726,7 @@ void link_cleanup(ConfigItem_link *link_ptr)
 	safe_free(link_ptr->servername);
 	unreal_delete_masks(link_ptr->incoming.mask);
 	Auth_FreeAuthConfig(link_ptr->auth);
+	safe_free(link_ptr->outgoing.file);
 	safe_free(link_ptr->outgoing.bind_ip);
 	safe_free(link_ptr->outgoing.hostname);
 	safe_free(link_ptr->hub);
