@@ -254,8 +254,13 @@ int server_needs_linking(ConfigItem_link *aconf)
 	Client *client;
 	ConfigItem_class *class;
 
-	/* We're only interested in autoconnect blocks that are valid. Also, we ignore temporary link blocks. */
-	if (!(aconf->outgoing.options & CONNECT_AUTO) || !aconf->outgoing.hostname || (aconf->flag.temporary == 1))
+	/* We're only interested in autoconnect blocks that also have
+	 * a valid link::outgoing configuration. We also ignore
+	 * temporary link blocks (not that they should exist...).
+	 */
+	if (!(aconf->outgoing.options & CONNECT_AUTO) ||
+	    (!aconf->outgoing.hostname && !aconf->outgoing.file) ||
+	    (aconf->flag.temporary == 1))
 		return 0;
 
 	class = aconf->class;
