@@ -946,7 +946,7 @@ extern void modulemanager(int argc, char *argv[]);
 extern int inet_pton4(const char *src, unsigned char *dst);
 extern int inet_pton6(const char *src, unsigned char *dst);
 extern int unreal_bind(int fd, const char *ip, int port, SocketType socket_type);
-extern int unreal_connect(int fd, const char *ip, int port, int ipv6);
+extern int unreal_connect(int fd, const char *ip, int port, SocketType socket_type);
 extern int is_valid_ip(const char *str);
 extern int ipv6_capable(void);
 extern int unix_sockets_capable(void);

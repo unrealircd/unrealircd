@@ -883,6 +883,7 @@ LogData *log_data_link_block(ConfigItem_link *link)
 	safe_strdup(d->key, "link_block");
 	d->value.object = j = json_object();
 	json_object_set_new(j, "name", json_string_unreal(link->servername));
+	json_object_set_new(j, "file", json_string_unreal(link->outgoing.file));
 	json_object_set_new(j, "hostname", json_string_unreal(link->outgoing.hostname));
 	json_object_set_new(j, "ip", json_string_unreal(link->connect_ip));
 	json_object_set_new(j, "port", json_integer(link->outgoing.port));

@@ -1208,7 +1208,9 @@ void lost_server_link(Client *client, const char *tls_error_string)
 			if (client->server->conf)
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
-					   "Unable to link with server $client [$link_block.ip:$link_block.port]: $tls_error_string",
+					   client->server->conf->outgoing.file
+					   ? "Unable to link with server $client [$link_block.file]: $tls_error_string"
+					   : "Unable to link with server $client [$link_block.ip:$link_block.port]: $tls_error_string",
 					   log_data_string("tls_error_string", tls_error_string),
 					   log_data_link_block(client->server->conf));
 			} else {
@@ -1221,7 +1223,9 @@ void lost_server_link(Client *client, const char *tls_error_string)
 			if (client->server->conf)
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
-					   "Unable to link with server $client [$link_block.ip:$link_block.port]: $socket_error",
+					   client->server->conf->outgoing.file
+					   ? "Unable to link with server $client [$link_block.file]: $socket_error"
+					   : "Unable to link with server $client [$link_block.ip:$link_block.port]: $socket_error",
 					   log_data_socket_error(client->local->fd),
 					   log_data_link_block(client->server->conf));
 			} else {
