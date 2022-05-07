@@ -796,7 +796,7 @@ void config_create_tkl_except(char *mask, char *bantypes)
 	if (is_extended_server_ban(buf))
 	{
 		char *err = NULL;
-		if (!parse_extended_server_ban(buf, NULL, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
+		if (!parse_extended_server_ban(buf, NULL, &err, 1, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
 		{
 			config_warn("Could not add extended server ban '%s': %s", buf, err);
 			return;
