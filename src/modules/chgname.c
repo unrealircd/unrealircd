@@ -99,7 +99,6 @@ CMD_FUNC(cmd_chgname)
 	{
 		unreal_log(ULOG_INFO, "chgcmds", "CHGNAME_COMMAND", client,
 		           "CHGNAME: $client changed the realname of $target.details to be $new_realname",
-		           log_data_string("change_type", "realname"),
 			   log_data_client("target", target),
 		           log_data_string("new_realname", parv[2]));
 	}
