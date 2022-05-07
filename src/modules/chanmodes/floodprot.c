@@ -110,7 +110,7 @@ struct ChannelFloodProtection {
 /* Global variables */
 ModDataInfo *mdflood = NULL;
 Cmode_t EXTMODE_FLOODLIMIT = 0L;
-static int timedban_available = 0; /**< Set to 1 if extbans/timedban module is loaded. */
+static int timedban_available = 1; /**< Set to 1 if extbans/timedban module is loaded. Assumed 1 during config load due to set::modes-on-join race. */
 RemoveChannelModeTimer *removechannelmodetimer_list = NULL;
 char *floodprot_msghash_key = NULL;
 
