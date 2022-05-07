@@ -1683,9 +1683,10 @@ int hooktype_stats(Client *client, const char *str);
  * @param client		The client
  * @param add			1 if the user becomes IRCOp, 0 if the user is no longer IRCOp
  * @param oper_block		The name of the oper block used to oper up
+ * @param operclass		The name of the operclass
  * @return The return value is ignored (use return 0)
  */
-int hooktype_local_oper(Client *client, int add, ConfigItem_oper *oper_block);
+int hooktype_local_oper(Client *client, int add, const char *oper_block, const char *operclass);
 
 /** Called when a client sends a PASS command (function prototype for HOOKTYPE_LOCAL_PASS).
  * @param client		The client
@@ -2384,6 +2385,7 @@ enum EfunctionType {
 	EFUNC_DO_UNREAL_LOG_REMOTE_DELIVER,
 	EFUNC_GET_CHMODES_FOR_USER,
 	EFUNC_WHOIS_GET_POLICY,
+	EFUNC_MAKE_OPER,
 };
 
 /* Module flags */

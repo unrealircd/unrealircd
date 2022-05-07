@@ -1461,6 +1461,11 @@ void do_unreal_log_remote_deliver_default_handler(LogLevel loglevel, const char 
 {
 }
 
+int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost)
+{
+	return 0;
+}
+
 /** my_timegm: mktime()-like function which will use GMT/UTC.
  * Strangely enough there is no standard function for this.
  * On some *NIX OS's timegm() may be available, sometimes only

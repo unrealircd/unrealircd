@@ -282,6 +282,7 @@ OperPermission ValidatePermissionsForPathEx(OperClassACL *acl, OperClassACLPath 
 OperPermission ValidatePermissionsForPath(const char *path, Client *client, Client *victim, Channel *channel, const void *extra)
 {
 	ConfigItem_oper *ce_oper;
+	const char *operclass;
 	ConfigItem_operclass *ce_operClass;
 	OperClass *oc = NULL;
 	OperClassACLPath *operPath;
@@ -299,14 +300,17 @@ OperPermission ValidatePermissionsForPath(const char *path, Client *client, Clie
 	ce_oper = find_oper(client->user->operlogin);
 	if (!ce_oper)
 	{
-		return OPER_DENY;
-	}
-	
-	ce_operClass = find_operclass(ce_oper->operclass);
-	if (!ce_operClass)
+		operclass = moddata_client_get(client, "operclass");
+		if (!operclass)
+			return OPER_DENY;
+	} else
 	{
-		return OPER_DENY;
+		operclass = ce_oper->operclass;
 	}
+
+	ce_operClass = find_operclass(operclass);
+	if (!ce_operClass)
+		return OPER_DENY;
 
 	oc = ce_operClass->classStruct;
 	operPath = OperClass_parsePath(path);

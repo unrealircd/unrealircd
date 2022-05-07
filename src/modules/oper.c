@@ -20,10 +20,6 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(cmd_oper);
-
-
-/* Place includes here */
 #define MSG_OPER        "OPER"  /* OPER */
 
 ModuleHeader MOD_HEADER
@@ -35,27 +31,35 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
-/* This is called on module init, before Server Ready */
-MOD_INIT()
+/* Forward declarations */
+CMD_FUNC(cmd_oper);
+int _make_oper(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost);
+
+MOD_TEST()
 {
-	CommandAdd(modinfo->handle, MSG_OPER, cmd_oper, MAXPARA, CMD_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	EfunctionAdd(modinfo->handle, EFUNC_MAKE_OPER, _make_oper);
 	return MOD_SUCCESS;
 }
 
-/* Is first run when server is 100% ready */
+MOD_INIT()
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	CommandAdd(modinfo->handle, MSG_OPER, cmd_oper, MAXPARA, CMD_USER);
+	return MOD_SUCCESS;
+}
+
 MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-/* Called when module is unloaded */
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }
 
-void set_oper_host(Client *client, char *host)
+void set_oper_host(Client *client, const char *host)
 {
         char uhost[HOSTLEN + USERLEN + 1];
         char *p;
@@ -74,6 +78,88 @@ void set_oper_host(Client *client, char *host)
 	SetHidden(client);
 }
 
+int _make_oper(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost)
+{
+	long old_umodes = client->umodes & ALL_UMODES;
+
+	/* Put in the right class (if any) */
+	if (clientclass)
+	{
+		if (client->local->class)
+			client->local->class->clients--;
+		client->local->class = clientclass;
+		client->local->class->clients++;
+	}
+
+	/* set oper user modes */
+	client->umodes |= UMODE_OPER;
+	if (modes)
+		client->umodes |= modes; /* oper::modes */
+	else
+		client->umodes |= OPER_MODES; /* set::modes-on-oper */
+
+	/* oper::vhost */
+	if (vhost)
+	{
+		set_oper_host(client, vhost);
+	} else
+	if (IsHidden(client) && !client->user->virthost)
+	{
+		/* +x has just been set by modes-on-oper and no vhost. cloak the oper! */
+		safe_strdup(client->user->virthost, client->user->cloakedhost);
+	}
+
+	unreal_log(ULOG_INFO, "oper", "OPER_SUCCESS", client,
+		   "$client.details is now an IRC Operator [oper-block: $oper_block] [operclass: $operclass]",
+		   log_data_string("oper_block", operblock_name),
+		   log_data_string("operclass", operclass));
+
+	/* set oper snomasks */
+	if (snomask)
+		set_snomask(client, snomask); /* oper::snomask */
+	else
+		set_snomask(client, OPER_SNOMASK); /* set::snomask-on-oper */
+
+	send_umode_out(client, 1, old_umodes);
+	if (client->user->snomask)
+		sendnumeric(client, RPL_SNOMASK, client->user->snomask);
+
+	list_add(&client->special_node, &oper_list);
+
+	RunHook(HOOKTYPE_LOCAL_OPER, client, 1, operblock_name, operclass);
+
+	sendnumeric(client, RPL_YOUREOPER);
+
+	/* Update statistics */
+	if (IsInvisible(client) && !(old_umodes & UMODE_INVISIBLE))
+		irccounts.invisible++;
+	if (IsOper(client) && !IsHideOper(client))
+		irccounts.operators++;
+
+	if (SHOWOPERMOTD == 1)
+	{
+		const char *args[1] = { NULL };
+		do_cmd(client, NULL, "OPERMOTD", 1, args);
+	}
+
+	if (!BadPtr(OPER_AUTO_JOIN_CHANS) && strcmp(OPER_AUTO_JOIN_CHANS, "0"))
+	{
+		char *chans = strdup(OPER_AUTO_JOIN_CHANS);
+		const char *args[3] = {
+			client->name,
+			chans,
+			NULL
+		};
+		do_cmd(client, NULL, "JOIN", 3, args);
+		safe_free(chans);
+		/* Theoretically the oper may be killed on join. Would be fun, though */
+		if (IsDead(client))
+			return 0;
+	}
+
+	return 1;
+}
+
 /*
 ** cmd_oper
 **	parv[1] = oper name
@@ -83,7 +169,6 @@ CMD_FUNC(cmd_oper)
 {
 	ConfigItem_oper *operblock;
 	const char *operblock_name, *password;
-	long old_umodes = client->umodes & ALL_UMODES;
 
 	if (!MyUser(client))
 		return;
@@ -227,12 +312,6 @@ CMD_FUNC(cmd_oper)
 	/* Store which oper block was used to become IRCOp (for maxlogins and whois) */
 	safe_strdup(client->user->operlogin, operblock->name);
 
-	/* Put in the right class */
-	if (client->local->class)
-		client->local->class->clients--;
-	client->local->class = operblock->class;
-	client->local->class->clients++;
-
 	/* oper::swhois */
 	if (operblock->swhois)
 	{
@@ -241,67 +320,7 @@ CMD_FUNC(cmd_oper)
 			swhois_add(client, "oper", -100, s->line, &me, NULL);
 	}
 
-	/* set oper user modes */
-	client->umodes |= UMODE_OPER;
-	if (operblock->modes)
-		client->umodes |= operblock->modes; /* oper::modes */
-	else
-		client->umodes |= OPER_MODES; /* set::modes-on-oper */
-
-	/* oper::vhost */
-	if (operblock->vhost)
-	{
-		set_oper_host(client, operblock->vhost);
-	} else
-	if (IsHidden(client) && !client->user->virthost)
-	{
-		/* +x has just been set by modes-on-oper and no vhost. cloak the oper! */
-		safe_strdup(client->user->virthost, client->user->cloakedhost);
-	}
-
-	unreal_log(ULOG_INFO, "oper", "OPER_SUCCESS", client,
-		   "$client.details is now an IRC Operator [oper-block: $oper_block]",
-		   log_data_string("oper_block", parv[1]));
-
-	/* set oper snomasks */
-	if (operblock->snomask)
-		set_snomask(client, operblock->snomask); /* oper::snomask */
-	else
-		set_snomask(client, OPER_SNOMASK); /* set::snomask-on-oper */
-
-	send_umode_out(client, 1, old_umodes);
-	if (client->user->snomask)
-		sendnumeric(client, RPL_SNOMASK, client->user->snomask);
-
-	list_add(&client->special_node, &oper_list);
-
-	RunHook(HOOKTYPE_LOCAL_OPER, client, 1, operblock);
-
-	sendnumeric(client, RPL_YOUREOPER);
-
-	/* Update statistics */
-	if (IsInvisible(client) && !(old_umodes & UMODE_INVISIBLE))
-		irccounts.invisible++;
-	if (IsOper(client) && !IsHideOper(client))
-		irccounts.operators++;
-
-	if (SHOWOPERMOTD == 1)
-		do_cmd(client, NULL, "OPERMOTD", parc, parv);
-
-	if (!BadPtr(OPER_AUTO_JOIN_CHANS) && strcmp(OPER_AUTO_JOIN_CHANS, "0"))
-	{
-		char *chans = strdup(OPER_AUTO_JOIN_CHANS);
-		const char *args[3] = {
-			client->name,
-			chans,
-			NULL
-		};
-		do_cmd(client, NULL, "JOIN", 3, args);
-		safe_free(chans);
-		/* Theoretically the oper may be killed on join. Would be fun, though */
-		if (IsDead(client))
-			return;
-	}
+	make_oper(client, operblock->name, operblock->operclass, operblock->class, operblock->modes, operblock->snomask, operblock->vhost);
 
 	/* set::plaintext-policy::oper 'warn' */
 	if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_oper == POLICY_WARN))

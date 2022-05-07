@@ -1338,7 +1338,7 @@ CMD_FUNC(_cmd_umode)
 	{
 		list_del(&client->special_node);
 		if (MyUser(client))
-			RunHook(HOOKTYPE_LOCAL_OPER, client, 0, NULL);
+			RunHook(HOOKTYPE_LOCAL_OPER, client, 0, NULL, NULL);
 		remove_oper_privileges(client, 0);
 	}
 

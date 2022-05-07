@@ -365,6 +365,7 @@ DLL_FILES=\
  src/modules/svsnline.dll \
  src/modules/svsnolag.dll \
  src/modules/svsnoop.dll \
+ src/modules/svso.dll \
  src/modules/svspart.dll \
  src/modules/svssilence.dll \
  src/modules/svssno.dll \
@@ -1164,6 +1165,9 @@ src/modules/svsnolag.dll: src/modules/svsnolag.c $(INCLUDES)
 
 src/modules/svsnoop.dll: src/modules/svsnoop.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/svsnoop.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/svsnoop.pdb $(MODLFLAGS)
+
+src/modules/svso.dll: src/modules/svso.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/svso.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/svso.pdb $(MODLFLAGS)
 
 src/modules/svspart.dll: src/modules/svspart.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/svspart.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/svspart.pdb $(MODLFLAGS)

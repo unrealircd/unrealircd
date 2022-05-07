@@ -16,7 +16,7 @@ ModuleHeader MOD_HEADER
     };
 
 /* Forward declarations */
-int operinfo_local_oper(Client *client, int up, ConfigItem_oper *oper_block);
+int operinfo_local_oper(Client *client, int up, const char *oper_block, const char *operclass);
 void operinfo_free(ModData *m);
 const char *operinfo_serialize(ModData *m);
 void operinfo_unserialize(const char *str, ModData *m);
@@ -68,12 +68,12 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int operinfo_local_oper(Client *client, int up, ConfigItem_oper *oper_block)
+int operinfo_local_oper(Client *client, int up, const char *oper_block, const char *operclass)
 {
 	if (up)
 	{
-		moddata_client_set(client, "operlogin", oper_block->name);
-		moddata_client_set(client, "operclass", oper_block->operclass);
+		moddata_client_set(client, "operlogin", oper_block);
+		moddata_client_set(client, "operclass", operclass);
 	} else {
 		moddata_client_set(client, "operlogin", NULL);
 		moddata_client_set(client, "operclass", NULL);

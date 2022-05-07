@@ -834,6 +834,7 @@ extern MODVAR char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options
 extern MODVAR void (*do_unreal_log_remote_deliver)(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
 extern MODVAR char *(*get_chmodes_for_user)(Client *client, const char *flags);
 extern MODVAR WhoisConfigDetails (*whois_get_policy)(Client *client, Client *target, const char *name);
+extern MODVAR int (*make_oper)(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost);
 /* /Efuncs */
 
 /* TLS functions */
@@ -859,6 +860,7 @@ extern MODVAR EVP_MD *sha1_function;
 extern MODVAR EVP_MD *md5_function;
 /* End of TLS functions */
 
+/* Default handlers for efunctions */
 extern void parse_message_tags_default_handler(Client *client, char **str, MessageTag **mtag_list);
 extern const char *mtags_to_string_default_handler(MessageTag *m, Client *client);
 extern void *labeled_response_save_context_default_handler(void);
@@ -868,6 +870,8 @@ extern int add_silence_default_handler(Client *client, const char *mask, int sen
 extern int del_silence_default_handler(Client *client, const char *mask);
 extern int is_silenced_default_handler(Client *client, Client *acptr);
 extern void do_unreal_log_remote_deliver_default_handler(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
+extern int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost);
+/* End of default handlers for efunctions */
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;
 extern MODVAR int max_connection_count;

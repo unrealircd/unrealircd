@@ -395,7 +395,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 					 * so remove all oper-only modes and snomasks.
 					 */
 					if (MyUser(client))
-						RunHook(HOOKTYPE_LOCAL_OPER, client, 0, NULL);
+						RunHook(HOOKTYPE_LOCAL_OPER, client, 0, NULL, NULL);
 					remove_oper_privileges(target, 0);
 				}
 				goto setmodex;
