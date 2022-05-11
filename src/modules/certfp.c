@@ -6,7 +6,7 @@
  *
  * (C) Copyright 2014-2015 The UnrealIRCd team (Syzop, DBoyz, Nath and others)
  * 
- * License: GPLv2
+ * License: GPLv2 or later
  */
 
 #include "unrealircd.h"

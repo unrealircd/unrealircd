@@ -1,7 +1,7 @@
 /*
  * connthrottle - Connection throttler
  * (C) Copyright 2004-2020 Bram Matthys (Syzop) and the UnrealIRCd team
- * License: GPLv2
+ * License: GPLv2 or later
  * See https://www.unrealircd.org/docs/Connthrottle
  */
 

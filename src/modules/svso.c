@@ -1,6 +1,6 @@
 /* src/modules/svso.c - Grant IRCOp rights (for Services)
  * (C) Copyright 2022 Bram Matthys (Syzop) and the UnrealIRCd team
- * License: GPLv2
+ * License: GPLv2 or later
  */
 #include "unrealircd.h"
 

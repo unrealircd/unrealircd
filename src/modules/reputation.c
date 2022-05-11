@@ -1,7 +1,7 @@
 /*
  * reputation - Provides a scoring system for "known users".
  * (C) Copyright 2015-2019 Bram Matthys (Syzop) and the UnrealIRCd team.
- * License: GPLv2
+ * License: GPLv2 or later
  *
  * How this works is simple:
  * Every 5 minutes the IP address of all the connected users receive

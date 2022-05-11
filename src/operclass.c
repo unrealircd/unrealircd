@@ -1,6 +1,6 @@
 /** Oper classes code.
  * (C) Copyright 2015-present tmcarthur and the UnrealIRCd team
- * License: GPLv2
+ * License: GPLv2 or later
  */
 
 #include "unrealircd.h"

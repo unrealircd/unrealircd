@@ -2,7 +2,7 @@
  * GEOIP Base module, needed for all geoip functions
  * as this stores the geo information in ModData.
  * (C) Copyright 2021-.. Syzop and The UnrealIRCd Team
- * License: GPLv2
+ * License: GPLv2 or later
  */
 
 #include "unrealircd.h"

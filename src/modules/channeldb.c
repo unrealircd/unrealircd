@@ -1,7 +1,7 @@
 /*
  * Stores channel settings for +P channels in a .db file
  * (C) Copyright 2019 Syzop, Gottem and the UnrealIRCd team
- * License: GPLv2
+ * License: GPLv2 or later
  */
 
 #include "unrealircd.h"

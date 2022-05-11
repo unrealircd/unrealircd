@@ -3,7 +3,7 @@
  * was originally made for tircd and modified to work with u4.
  * - 2018 i <ircd@servx.org>
  * - 2019 Bram Matthys (Syzop) <syzop@vulnscan.org>
- * License: GPLv2
+ * License: GPLv2 or later
  */
 
 #include "unrealircd.h"

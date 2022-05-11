@@ -1,7 +1,7 @@
 /*
  * timedban - Timed bans that are automatically unset.
  * (C) Copyright 2009-2017 Bram Matthys (Syzop) and the UnrealIRCd team.
- * License: GPLv2
+ * License: GPLv2 or later
  *
  * This module adds an extended ban ~t:time:mask
  * Where 'time' is the time in minutes after which the ban will be removed.

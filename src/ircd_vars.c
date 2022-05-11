@@ -1,7 +1,7 @@
 /************************************************************************
  * UnrealIRCd - Unreal Internet Relay Chat Daemon - src/ircd_vars.c
  * (c) 2021- Bram Matthys and The UnrealIRCd team
- * License: GPLv2
+ * License: GPLv2 or later
  */
 #include "unrealircd.h"
 

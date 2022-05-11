@@ -1,6 +1,6 @@
 /* src/modules/chathistory.c - IRCv3 CHATHISTORY command.
  * (C) Copyright 2021 Bram Matthys (Syzop) and the UnrealIRCd team
- * License: GPLv2
+ * License: GPLv2 or later
  *
  * This implements the "CHATHISTORY" command, the CAP and 005 token.
  * https://ircv3.net/specs/extensions/chathistory

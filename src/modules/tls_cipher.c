@@ -1,7 +1,7 @@
 /*
  * Store TLS cipher in ModData
  * (C) Copyright 2021-.. Syzop and The UnrealIRCd Team
- * License: GPLv2
+ * License: GPLv2 or later
  */
 
 #include "unrealircd.h"

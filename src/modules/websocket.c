@@ -1,7 +1,7 @@
 /*
  * websocket - WebSocket support (RFC6455)
  * (C)Copyright 2016 Bram Matthys and the UnrealIRCd team
- * License: GPLv2
+ * License: GPLv2 or later
  * This module was sponsored by Aberrant Software Inc.
  */
    

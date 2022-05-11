@@ -1,6 +1,6 @@
 /* UnrealIRCd configuration preprocessor
  * (C) Copyright 2019 Bram Matthys ("Syzop") and the UnrealIRCd team
- * License: GPLv2
+ * License: GPLv2 or later
  *
  * Technically this isn't a 100% true preprocessor, but to the end user
  * it will certainly look like it, hence the name.

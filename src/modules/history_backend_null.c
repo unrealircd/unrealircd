@@ -1,6 +1,6 @@
 /* src/modules/history_backend_null.c - History Backend: null / none
  * (C) Copyright 2019 Bram Matthys (Syzop) and the UnrealIRCd team
- * License: GPLv2
+ * License: GPLv2 or later
  */
 #include "unrealircd.h"
 

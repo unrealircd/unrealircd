@@ -1,6 +1,6 @@
 /* GEOIP maxmind module
  * (C) Copyright 2021 Bram Matthys and the UnrealIRCd team
- * License: GPLv2
+ * License: GPLv2 or later
  */
 
 #include "unrealircd.h"

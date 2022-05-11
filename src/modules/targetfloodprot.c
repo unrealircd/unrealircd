@@ -1,6 +1,6 @@
 /* Target flood protection
  * (C)Copyright 2020 Bram Matthys and the UnrealIRCd team
- * License: GPLv2
+ * License: GPLv2 or later
  */
    
 #include "unrealircd.h"

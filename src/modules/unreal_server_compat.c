@@ -1,7 +1,7 @@
 /*
  * unreal_server_compat - Compatibility with pre-U6 servers
  * (C) Copyright 2016-2021 Bram Matthys (Syzop)
- * License: GPLv2
+ * License: GPLv2 or later
  *
  * Currently the only purpose of this module is to rewrite MODE
  * and SJOIN lines to older servers so any bans/exempts/invex

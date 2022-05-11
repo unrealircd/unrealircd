@@ -1,6 +1,6 @@
 /* src/modules/history_backend_mem.c - History Backend: memory
  * (C) Copyright 2019-2021 Bram Matthys (Syzop) and the UnrealIRCd team
- * License: GPLv2
+ * License: GPLv2 or later
  */
 #include "unrealircd.h"
 
