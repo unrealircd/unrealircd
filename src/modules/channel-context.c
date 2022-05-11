@@ -67,10 +67,9 @@ int chancontext_mtag_is_ok(Client *client, const char *name, const char *value)
 	if (BadPtr(value))
 		return 0;
 
-	Client *v = find_user("Valware", NULL);
-
 	if (!strlen(value))
 		return 0;
+	
 	Channel *channel = find_channel(value);
 
 	if (!channel)
