@@ -381,6 +381,7 @@ DLL_FILES=\
  src/modules/trace.dll \
  src/modules/tsctl.dll \
  src/modules/typing-indicator.dll \
+ src/modules/channel-context.dll \
  src/modules/umode2.dll \
  src/modules/unreal_server_compat.dll \
  src/modules/unsqline.dll \
@@ -1213,6 +1214,9 @@ src/modules/tsctl.dll: src/modules/tsctl.c $(INCLUDES)
 
 src/modules/typing-indicator.dll: src/modules/typing-indicator.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/typing-indicator.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/typing-indicator.pdb $(MODLFLAGS)
+
+src/modules/channel-context.dll: src/modules/channel-context.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/channel-context.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/channel-context.pdb $(MODLFLAGS)
 
 src/modules/umode2.dll: src/modules/umode2.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/umode2.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/umode2.pdb $(MODLFLAGS)
