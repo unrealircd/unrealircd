@@ -1870,7 +1870,7 @@ struct SecurityGroup {
 	long connect_time;
 	int webirc;
 	int tls;
-	ConfigItem_mask *include_mask;
+	ConfigItem_mask *mask;
 	NameList *security_group;
 	/* Exclude */
 	int exclude_identified;

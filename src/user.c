@@ -806,7 +806,7 @@ SecurityGroup *add_security_group(const char *name, int priority)
 /** Free a SecurityGroup struct */
 void free_security_group(SecurityGroup *s)
 {
-	unreal_delete_masks(s->include_mask);
+	unreal_delete_masks(s->mask);
 	unreal_delete_masks(s->exclude_mask);
 	free_entire_name_list(s->security_group);
 	free_entire_name_list(s->exclude_security_group);
@@ -950,7 +950,7 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 	}
 	if (s->tls && (IsSecureConnect(client) || (MyConnect(client) && IsSecure(client))))
 		goto user_allowed;
-	if (s->include_mask && unreal_mask_match(client, s->include_mask))
+	if (s->mask && unreal_mask_match(client, s->mask))
 		goto user_allowed;
 	if (s->security_group && user_allowed_by_security_group_list(client, s->security_group))
 		goto user_allowed;

@@ -10321,9 +10321,9 @@ int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
 			else
 				s->connect_time = config_checkval(cep->value, CFG_TIME);
 		}
-		else if (!strcmp(cep->name, "include-mask"))
+		else if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "include-mask"))
 		{
-			unreal_add_masks(&s->include_mask, cep);
+			unreal_add_masks(&s->mask, cep);
 		}
 		else if (!strcmp(cep->name, "security-group"))
 		{
