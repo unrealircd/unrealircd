@@ -863,14 +863,14 @@ int antirandom_preconnect(Client *client)
 		if (cfg.ban_action == BAN_ACT_WARN)
 		{
 			unreal_log(ULOG_INFO, "antirandom", "ANTIRANDOM_DENIED_USER", client,
-			           "[antirandom] would have denied access to user with score $score: $client:$client.info",
+			           "[antirandom] would have denied access to user with score $score: $client.details:$client.user.realname",
 			           log_data_integer("score", score));
 			return HOOK_CONTINUE;
 		}
 		if (cfg.show_failedconnects)
 		{
 			unreal_log(ULOG_INFO, "antirandom", "ANTIRANDOM_DENIED_USER", client,
-			           "[antirandom] denied access to user with score $score: $client:$client.info",
+			           "[antirandom] denied access to user with score $score: $client.details:$client.user.realname",
 			           log_data_integer("score", score));
 		}
 		place_host_ban(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time);
