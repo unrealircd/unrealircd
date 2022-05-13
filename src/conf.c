@@ -10256,6 +10256,21 @@ int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		} else
+		if (!strcmp(cep->name, "connect-time") || !strcmp(cep->name, "exclude-connect-time"))
+		{
+			const char *str = cep->value;
+			long v;
+			CheckNull(cep);
+			if (*str == '<')
+				str++;
+			v = config_checkval(str, CFG_TIME);
+			if (v < 1)
+			{
+				config_error("%s:%i: security-group::%s needs to be a time value (and more than 0 seconds)",
+					cep->file->filename, cep->line_number, cep->name);
+				errors++;
+			}
+		} else
 		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "include-mask") || !strcmp(cep->name, "exclude-mask"))
 		{
 		} else
@@ -10295,6 +10310,13 @@ int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
 				s->reputation_score = 0 - atoi(cep->value+1);
 			else
 				s->reputation_score = atoi(cep->value);
+		}
+		else if (!strcmp(cep->name, "connect-time"))
+		{
+			if (*cep->value == '<')
+				s->connect_time = 0 - config_checkval(cep->value+1, CFG_TIME);
+			else
+				s->connect_time = config_checkval(cep->value, CFG_TIME);
 		}
 		else if (!strcmp(cep->name, "include-mask"))
 		{

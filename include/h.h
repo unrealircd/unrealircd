@@ -1253,3 +1253,4 @@ extern void add_proc_io_server(void);
 extern void procio_post_rehash(int failure);
 /* end of proc i/o */
 extern int minimum_msec_since_last_run(struct timeval *tv_old, long minimum);
+extern long get_connected_time(Client *client);

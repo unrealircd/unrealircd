@@ -1865,12 +1865,14 @@ struct SecurityGroup {
 	/* Include */
 	int identified;
 	int reputation_score;
+	long connect_time;
 	int webirc;
 	int tls;
 	ConfigItem_mask *include_mask;
 	/* Exclude */
 	int exclude_identified;
 	int exclude_reputation_score;
+	long exclude_connect_time;
 	int exclude_webirc;
 	int exclude_tls;
 	ConfigItem_mask *exclude_mask;

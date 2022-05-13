@@ -845,6 +845,26 @@ void set_security_group_defaults(void)
 	s->tls = 1;
 }
 
+/** Get how long a client is connected to IRC.
+ * @param client	The client to check
+ * @returns how long the client is connected to IRC (number of seconds)
+ */
+long get_connected_time(Client *client)
+{
+	const char *str;
+	long connect_time = 0;
+
+	/* Shortcut for local clients */
+	if (client->local)
+		return TStime() - client->local->creationtime;
+
+	/* Otherwise, hopefully available through this... */
+	str = moddata_client_get(client, "creationtime");
+	if (!BadPtr(str) && (*str != '0'))
+		return TStime() - atoll(str);
+	return 0;
+}
+
 /** Returns 1 if the user is OK as far as the security-group is concerned.
  * @param client	The client to check
  * @param s		The security-group to check against
@@ -861,6 +881,14 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 		return 0;
 	if ((s->exclude_reputation_score < 0) && (GetReputation(client) < 0 - s->exclude_reputation_score))
 		return 0;
+	if (s->exclude_connect_time != 0)
+	{
+		long connect_time = get_connected_time(client);
+		if ((s->exclude_connect_time > 0) && (connect_time >= s->exclude_connect_time))
+			return 0;
+		if ((s->exclude_connect_time < 0) && (connect_time < 0 - s->exclude_connect_time))
+			return 0;
+	}
 	if (s->exclude_tls && (IsSecureConnect(client) || (MyConnect(client) && IsSecure(client))))
 		return 0;
 	if (s->exclude_mask && unreal_mask_match(client, s->exclude_mask))
@@ -875,6 +903,14 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 		return 1;
 	if ((s->reputation_score < 0) && (GetReputation(client) < 0 - s->reputation_score))
 		return 1;
+	if (s->connect_time != 0)
+	{
+		long connect_time = get_connected_time(client);
+		if ((s->connect_time > 0) && (connect_time >= s->connect_time))
+			return 1;
+		if ((s->connect_time < 0) && (connect_time < 0 - s->connect_time))
+			return 1;
+	}
 	if (s->tls && (IsSecureConnect(client) || (MyConnect(client) && IsSecure(client))))
 		return 1;
 	if (s->include_mask && unreal_mask_match(client, s->include_mask))
