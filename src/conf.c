@@ -185,6 +185,7 @@ ConfigEntry		*config_find_entry(ConfigEntry *ce, const char *name);
 extern void add_entropy_configfile(struct stat *st, const char *buf);
 extern void unload_all_unused_umodes(void);
 extern void unload_all_unused_extcmodes(void);
+extern void unload_all_unused_extbans(void);
 extern void unload_all_unused_caps(void);
 extern void unload_all_unused_history_backends(void);
 int reloadable_perm_module_unloaded(void);
@@ -10223,7 +10224,7 @@ int test_match_block(ConfigFile *conf, ConfigEntry *cep, int *errors)
 		v = atoi(str);
 		if ((v < 1) || (v > 10000))
 		{
-			config_error("%s:%i: security-group::%s needs to be a value of 1-10000",
+			config_error("%s:%i: %s needs to be a value of 1-10000",
 				cep->file->filename, cep->line_number, cep->name);
 			*errors = *errors + 1;
 		}
@@ -10238,7 +10239,7 @@ int test_match_block(ConfigFile *conf, ConfigEntry *cep, int *errors)
 		v = config_checkval(str, CFG_TIME);
 		if (v < 1)
 		{
-			config_error("%s:%i: security-group::%s needs to be a time value (and more than 0 seconds)",
+			config_error("%s:%i: %s needs to be a time value (and more than 0 seconds)",
 				cep->file->filename, cep->line_number, cep->name);
 			*errors = *errors + 1;
 		}
@@ -10252,6 +10253,18 @@ int test_match_block(ConfigFile *conf, ConfigEntry *cep, int *errors)
 		CheckNullX(cep);
 	} else
 	{
+		/* Let's see if an extended server ban exists for this item... */
+		Extban *extban;
+		if (!strncmp(cep->name, "exclude-", 8))
+			extban = findmod_by_bantype_raw(cep->name+8, strlen(cep->name+8));
+		else
+			extban = findmod_by_bantype_raw(cep->name, strlen(cep->name));
+		if (extban && (extban->options & EXTBOPT_TKL) && (extban->is_banned_events & BANCHK_TKL))
+		{
+			CheckNullX(cep);
+			test_extended_list(extban, cep, errors);
+			return 1; /* Yup, handled */
+		}
 		return 0; /* Unhandled: unknown item for us */
 	}
 	return 1; /* Handled, but there could be errors */
@@ -10368,6 +10381,27 @@ int conf_match_block(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
 	else if (!strcmp(cep->name, "exclude-security-group"))
 	{
 		unreal_add_names(&s->security_group, cep);
+	}
+	else
+	{
+		/* Let's see if an extended server ban exists for this item... this needs to be LAST! */
+		Extban *extban;
+		const char *name = cep->name;
+
+		if (!strncmp(cep->name, "exclude-", 8))
+		{
+			/* Extended (exclusive) ? */
+			name = cep->name + 8;
+			if (findmod_by_bantype_raw(name, strlen(name)))
+				unreal_add_name_values(&s->exclude_extended, name, cep);
+			else
+				return 0; /* Unhandled */
+		} else {
+			/* Extended (inclusive) */
+			if (findmod_by_bantype_raw(name, strlen(name)))
+				unreal_add_name_values(&s->extended, name, cep);
+			return 0; /* Unhandled */
+		}
 	}
 	return 1; /* Handled by us (guaranteed earlier) */
 }
@@ -10802,6 +10836,7 @@ int rehash_internal(Client *client)
 	reread_motdsandrules();
 	unload_all_unused_umodes();
 	unload_all_unused_extcmodes();
+	unload_all_unused_extbans();
 	unload_all_unused_caps();
 	unload_all_unused_history_backends();
 	// unload_all_unused_moddata(); -- this will crash

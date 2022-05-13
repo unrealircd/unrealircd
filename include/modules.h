@@ -450,8 +450,11 @@ struct Extban {
 	/** extbans module */
 	Module *owner;
 
-	/* Set to 1 during rehash when module is unloading (which may be re-used, and then set to 0) */
+	/** Set to 1 during rehash when module is unloading (which may be re-used, and then set to 0) */
 	char unloaded;
+
+	/** Set to 1 when it is preregistered in MOD_TEST already */
+	char preregistered;
 };
 
 typedef struct {

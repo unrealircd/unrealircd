@@ -677,6 +677,7 @@ extern void unreal_setfilemodtime(const char *filename, time_t mtime);
 extern void DeleteTempModules(void);
 extern MODVAR Extban *extbaninfo;
 extern Extban *findmod_by_bantype(const char *str, const char **remainder);
+extern Extban *findmod_by_bantype_raw(const char *str, int ban_name_length);
 extern Extban *ExtbanAdd(Module *reserved, ExtbanInfo req);
 extern void ExtbanDel(Extban *);
 extern void extban_init(void);
@@ -1106,6 +1107,7 @@ extern int user_allowed_by_security_group(Client *client, SecurityGroup *s);
 extern int user_allowed_by_security_group_name(Client *client, const char *secgroupname);
 extern int test_match_block(ConfigFile *conf, ConfigEntry *cep, int *errors);
 extern int conf_match_block(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block);
+extern int test_extended_list(Extban *extban, ConfigEntry *cep, int *errors);
 #define nv_find_by_name(stru, name)       do_nv_find_by_name(stru, name, ARRAY_SIZEOF((stru)))
 extern long do_nv_find_by_name(NameValue *table, const char *cmd, int numelements);
 #define nv_find_by_value(stru, value)       do_nv_find_by_value(stru, value, ARRAY_SIZEOF((stru)))
@@ -1125,6 +1127,7 @@ extern void add_fmt_nvplist(NameValuePrioList **lst, int priority, const char *n
 extern void add_nvplist_numeric_fmt(NameValuePrioList **lst, int priority, const char *name, Client *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,6,7)));
 extern NameValuePrioList *find_nvplist(NameValuePrioList *list, const char *name);
 extern void free_nvplist(NameValuePrioList *lst);
+extern void unreal_add_name_values(NameValuePrioList **n, const char *name, ConfigEntry *ce);
 extern const char *get_connect_extinfo(Client *client);
 extern char *unreal_strftime(const char *str);
 extern void strtolower(char *str);

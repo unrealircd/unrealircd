@@ -1872,6 +1872,7 @@ struct SecurityGroup {
 	int tls;
 	ConfigItem_mask *mask;
 	NameList *security_group;
+	NameValuePrioList *extended;
 	/* Exclude */
 	int exclude_identified;
 	int exclude_reputation_score;
@@ -1880,6 +1881,7 @@ struct SecurityGroup {
 	int exclude_tls;
 	ConfigItem_mask *exclude_mask;
 	NameList *exclude_security_group;
+	NameValuePrioList *exclude_extended;
 };
 
 #define HM_HOST 1

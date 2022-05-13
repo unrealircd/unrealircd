@@ -31,11 +31,10 @@ ModuleHeader MOD_HEADER
 const char *extban_realname_conv_param(BanContext *b, Extban *extban);
 int extban_realname_is_banned(BanContext *b);
 
-/** Called upon module init */
-MOD_INIT()
+Extban *register_realname_extban(ModuleInfo *modinfo)
 {
 	ExtbanInfo req;
-	
+
 	memset(&req, 0, sizeof(req));
 	req.letter = 'r';
 	req.name = "realname";
@@ -44,14 +43,30 @@ MOD_INIT()
 	req.is_banned = extban_realname_is_banned;
 	req.is_banned_events = BANCHK_ALL|BANCHK_TKL;
 	req.options = EXTBOPT_INVEX|EXTBOPT_TKL;
-	if (!ExtbanAdd(modinfo->handle, req))
+	return ExtbanAdd(modinfo->handle, req);
+}
+
+/** Called upon module test */
+MOD_TEST()
+{
+	if (!register_realname_extban(modinfo))
+	{
+		config_error("could not register extended ban type");
+		return MOD_FAILED;
+	}
+	return MOD_SUCCESS;
+}
+
+/** Called upon module init */
+MOD_INIT()
+{
+	if (!register_realname_extban(modinfo))
 	{
 		config_error("could not register extended ban type");
 		return MOD_FAILED;
 	}
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	
 	return MOD_SUCCESS;
 }
 

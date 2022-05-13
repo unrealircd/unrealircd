@@ -806,10 +806,14 @@ SecurityGroup *add_security_group(const char *name, int priority)
 /** Free a SecurityGroup struct */
 void free_security_group(SecurityGroup *s)
 {
+	if (s == NULL)
+		return;
 	unreal_delete_masks(s->mask);
 	unreal_delete_masks(s->exclude_mask);
 	free_entire_name_list(s->security_group);
 	free_entire_name_list(s->exclude_security_group);
+	free_nvplist(s->extended);
+	free_nvplist(s->exclude_extended);
 	safe_free(s);
 }
 
@@ -866,6 +870,69 @@ long get_connected_time(Client *client)
 	if (!BadPtr(str) && (*str != '0'))
 		return TStime() - atoll(str);
 	return 0;
+}
+
+int user_matches_extended_list(Client *client, NameValuePrioList *e)
+{
+	Extban *extban;
+	BanContext b;
+
+	for (; e; e = e->next)
+	{
+		extban = findmod_by_bantype_raw(e->name, strlen(e->name));
+		if (!extban ||
+		    !(extban->options & EXTBOPT_TKL) ||
+		    !(extban->is_banned_events & BANCHK_TKL))
+		{
+			continue; /* extban not found or of incorrect type */
+		}
+
+		memset(&b, 0, sizeof(BanContext));
+		b.client = client;
+		b.banstr = e->value;
+		b.ban_check_types = BANCHK_TKL;
+		if (extban->is_banned(&b))
+			return 1;
+	}
+
+	return 0;
+}
+
+int test_extended_list(Extban *extban, ConfigEntry *cep, int *errors)
+{
+	BanContext b;
+
+	if (cep->value)
+	{
+		memset(&b, 0, sizeof(BanContext));
+		b.banstr = cep->value;
+		b.ban_check_types = BANCHK_TKL;
+		b.what = MODE_ADD;
+		if (!extban->conv_param(&b, extban))
+		{
+			config_error("%s:%i: %s has an invalid value",
+			             cep->file->filename, cep->line_number, cep->name);
+			*errors = *errors + 1;
+			return 0;
+		}
+	}
+
+	for (cep = cep->items; cep; cep = cep->next)
+	{
+		memset(&b, 0, sizeof(BanContext));
+		b.banstr = cep->name;
+		b.ban_check_types = BANCHK_TKL;
+		b.what = MODE_ADD;
+		if (!extban->conv_param(&b, extban))
+		{
+			config_error("%s:%i: %s has an invalid value",
+			             cep->file->filename, cep->line_number, cep->name);
+			*errors = *errors + 1;
+			return 0;
+		}
+	}
+
+	return 1;
 }
 
 /** Returns 1 if the user is allowed by any of the security groups in the named list.
@@ -930,6 +997,8 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 		goto user_not_allowed;
 	if (s->exclude_security_group && user_allowed_by_security_group_list(client, s->exclude_security_group))
 		goto user_not_allowed;
+	if (s->exclude_extended && user_matches_extended_list(client, s->exclude_extended))
+		goto user_not_allowed;
 
 	/* Then process INCLUSION criteria... */
 	if (s->identified && IsLoggedIn(client))
@@ -953,6 +1022,8 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 	if (s->mask && unreal_mask_match(client, s->mask))
 		goto user_allowed;
 	if (s->security_group && user_allowed_by_security_group_list(client, s->security_group))
+		goto user_allowed;
+	if (s->extended && user_matches_extended_list(client, s->extended))
 		goto user_allowed;
 
 user_not_allowed:

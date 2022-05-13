@@ -32,8 +32,7 @@ const char *extban_securitygroup_conv_param(BanContext *b, Extban *extban);
 int extban_securitygroup_is_ok(BanContext *b);
 int extban_securitygroup_is_banned(BanContext *b);
 
-/** Called upon module init */
-MOD_INIT()
+Extban *register_securitygroup_extban(ModuleInfo *modinfo)
 {
 	ExtbanInfo req;
 
@@ -45,7 +44,25 @@ MOD_INIT()
 	req.is_banned = extban_securitygroup_is_banned;
 	req.is_banned_events = BANCHK_ALL|BANCHK_TKL;
 	req.options = EXTBOPT_INVEX|EXTBOPT_TKL;
-	if (!ExtbanAdd(modinfo->handle, req))
+	return ExtbanAdd(modinfo->handle, req);
+}
+
+/** Called upon module test */
+MOD_TEST()
+{
+	if (!register_securitygroup_extban(modinfo))
+	{
+		config_error("could not register extended ban type ~G");
+		return MOD_FAILED;
+	}
+
+	return MOD_SUCCESS;
+}
+
+/** Called upon module init */
+MOD_INIT()
+{
+	if (!register_securitygroup_extban(modinfo))
 	{
 		config_error("could not register extended ban type ~G");
 		return MOD_FAILED;

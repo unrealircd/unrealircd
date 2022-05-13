@@ -1057,7 +1057,7 @@ int unreal_mask_match_string(const char *name, ConfigItem_mask *mask)
 	return retval;
 }
 
-/** Add mask entries from config */
+/** Add name entries from config */
 void unreal_add_names(NameList **n, ConfigEntry *ce)
 {
 	if (ce->items)
@@ -1069,6 +1069,21 @@ void unreal_add_names(NameList **n, ConfigEntry *ce)
 	if (ce->value)
 	{
 		_add_name_list(n, ce->value);
+	}
+}
+
+/** Add name/value entries from config */
+void unreal_add_name_values(NameValuePrioList **n, const char *name, ConfigEntry *ce)
+{
+	if (ce->items)
+	{
+		ConfigEntry *cep;
+		for (cep = ce->items; cep; cep = cep->next)
+			add_nvplist(n, 0, name, cep->value ? cep->value : cep->name);
+	} else
+	if (ce->value)
+	{
+		add_nvplist(n, 0, name, ce->value);
 	}
 }
 
