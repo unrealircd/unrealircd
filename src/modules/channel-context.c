@@ -63,19 +63,19 @@ MOD_UNLOAD()
 
 int chancontext_mtag_is_ok(Client *client, const char *name, const char *value)
 {
-	Channel *channel;
-
 	if (BadPtr(value))
 		return 0;
-	
-	channel = find_channel(value);
 
-	if (!channel)
-		return 0;
-	
-	if (!IsMember(client, channel) && !IsULine(client))
-		return 0;
-		
+	/* Validate a bit further, but only for local users.. */
+	if (MyUser(client))
+	{
+		Channel *channel = find_channel(value);
+		if (!channel)
+			return 0;
+		if (!IsMember(client, channel))
+			return 0;
+	}
+
 	return 1;
 }
 
