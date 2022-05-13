@@ -10198,11 +10198,71 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 	return errors;
 }
 
+#define CheckNullX(x) if ((!(x)->value) || (!(*((x)->value)))) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); *errors = *errors + 1; return 0; }
+int test_match_block(ConfigFile *conf, ConfigEntry *cep, int *errors)
+{
+	if (!strcmp(cep->name, "webirc") || !strcmp(cep->name, "exclude-webirc"))
+	{
+		CheckNullX(cep);
+	} else
+	if (!strcmp(cep->name, "identified") || !strcmp(cep->name, "exclude-identified"))
+	{
+		CheckNullX(cep);
+	} else
+	if (!strcmp(cep->name, "tls") || !strcmp(cep->name, "exclude-tls"))
+	{
+		CheckNullX(cep);
+	} else
+	if (!strcmp(cep->name, "reputation-score") || !strcmp(cep->name, "exclude-reputation-score"))
+	{
+		const char *str = cep->value;
+		int v;
+		CheckNullX(cep);
+		if (*str == '<')
+			str++;
+		v = atoi(str);
+		if ((v < 1) || (v > 10000))
+		{
+			config_error("%s:%i: security-group::%s needs to be a value of 1-10000",
+				cep->file->filename, cep->line_number, cep->name);
+			*errors = *errors + 1;
+		}
+	} else
+	if (!strcmp(cep->name, "connect-time") || !strcmp(cep->name, "exclude-connect-time"))
+	{
+		const char *str = cep->value;
+		long v;
+		CheckNullX(cep);
+		if (*str == '<')
+			str++;
+		v = config_checkval(str, CFG_TIME);
+		if (v < 1)
+		{
+			config_error("%s:%i: security-group::%s needs to be a time value (and more than 0 seconds)",
+				cep->file->filename, cep->line_number, cep->name);
+			*errors = *errors + 1;
+		}
+	} else
+	if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "include-mask") || !strcmp(cep->name, "exclude-mask"))
+	{
+		CheckNullX(cep);
+	} else
+	if (!strcmp(cep->name, "security-group") || !strcmp(cep->name, "exclude-security-group"))
+	{
+		CheckNullX(cep);
+	} else
+	{
+		return 0; /* Unhandled: unknown item for us */
+	}
+	return 1; /* Handled, but there could be errors */
+}
+
 int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 {
 	int errors = 0;
 	ConfigEntry *cep;
 
+	/* First, check the name of the security group */
 	if (!ce->value)
 	{
 		config_error("%s:%i: security-group block needs a name, eg: security-group web-users {",
@@ -10229,54 +10289,7 @@ int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "webirc") || !strcmp(cep->name, "exclude-webirc"))
-		{
-			CheckNull(cep);
-		} else
-		if (!strcmp(cep->name, "identified") || !strcmp(cep->name, "exclude-identified"))
-		{
-			CheckNull(cep);
-		} else
-		if (!strcmp(cep->name, "tls") || !strcmp(cep->name, "exclude-tls"))
-		{
-			CheckNull(cep);
-		} else
-		if (!strcmp(cep->name, "reputation-score") || !strcmp(cep->name, "exclude-reputation-score"))
-		{
-			const char *str = cep->value;
-			int v;
-			CheckNull(cep);
-			if (*str == '<')
-				str++;
-			v = atoi(str);
-			if ((v < 1) || (v > 10000))
-			{
-				config_error("%s:%i: security-group::%s needs to be a value of 1-10000",
-					cep->file->filename, cep->line_number, cep->name);
-				errors++;
-			}
-		} else
-		if (!strcmp(cep->name, "connect-time") || !strcmp(cep->name, "exclude-connect-time"))
-		{
-			const char *str = cep->value;
-			long v;
-			CheckNull(cep);
-			if (*str == '<')
-				str++;
-			v = config_checkval(str, CFG_TIME);
-			if (v < 1)
-			{
-				config_error("%s:%i: security-group::%s needs to be a time value (and more than 0 seconds)",
-					cep->file->filename, cep->line_number, cep->name);
-				errors++;
-			}
-		} else
-		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "include-mask") || !strcmp(cep->name, "exclude-mask"))
-		{
-		} else
-		if (!strcmp(cep->name, "security-group") || !strcmp(cep->name, "exclude-security-group"))
-		{
-		} else
+		if (!test_match_block(conf, cep, &errors))
 		{
 			config_error_unknown(cep->file->filename, cep->line_number,
 				"security-group", cep->name);
@@ -10286,6 +10299,77 @@ int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 	}
 
 	return errors;
+}
+
+int conf_match_block(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
+{
+	int errors = 0; /* unused */
+	SecurityGroup *s = *block;
+
+	/* The following code is there so we don't create a security group
+	 * unless there is actually a valid config item for it encountered.
+	 * This so the security group '*s' can stay NULL if there are zero
+	 * items, so we don't waste any CPU if it is unused.
+	 */
+	if (*block == NULL)
+	{
+		/* Yeah we call a TEST routine from a CONFIG RUN routine ;). */
+		if (!test_match_block(conf, cep, &errors))
+			return 0; /* not for us */
+		/* If we are still here then we must create the security group */
+		*block = s = safe_alloc(sizeof(SecurityGroup));
+	}
+
+	if (!strcmp(cep->name, "webirc"))
+		s->webirc = config_checkval(cep->value, CFG_YESNO);
+	else if (!strcmp(cep->name, "identified"))
+		s->identified = config_checkval(cep->value, CFG_YESNO);
+	else if (!strcmp(cep->name, "tls"))
+		s->tls = config_checkval(cep->value, CFG_YESNO);
+	else if (!strcmp(cep->name, "reputation-score"))
+	{
+		if (*cep->value == '<')
+			s->reputation_score = 0 - atoi(cep->value+1);
+		else
+			s->reputation_score = atoi(cep->value);
+	}
+	else if (!strcmp(cep->name, "connect-time"))
+	{
+		if (*cep->value == '<')
+			s->connect_time = 0 - config_checkval(cep->value+1, CFG_TIME);
+		else
+			s->connect_time = config_checkval(cep->value, CFG_TIME);
+	}
+	else if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "include-mask"))
+	{
+		unreal_add_masks(&s->mask, cep);
+	}
+	else if (!strcmp(cep->name, "security-group"))
+	{
+		unreal_add_names(&s->security_group, cep);
+	}
+	else if (!strcmp(cep->name, "exclude-webirc"))
+		s->exclude_webirc = config_checkval(cep->value, CFG_YESNO);
+	else if (!strcmp(cep->name, "exclude-identified"))
+		s->exclude_identified = config_checkval(cep->value, CFG_YESNO);
+	else if (!strcmp(cep->name, "exclude-tls"))
+		s->exclude_tls = config_checkval(cep->value, CFG_YESNO);
+	else if (!strcmp(cep->name, "exclude-reputation-score"))
+	{
+		if (*cep->value == '<')
+			s->exclude_reputation_score = 0 - atoi(cep->value+1);
+		else
+			s->exclude_reputation_score = atoi(cep->value);
+	}
+	else if (!strcmp(cep->name, "exclude-mask"))
+	{
+		unreal_add_masks(&s->exclude_mask, cep);
+	}
+	else if (!strcmp(cep->name, "exclude-security-group"))
+	{
+		unreal_add_names(&s->security_group, cep);
+	}
+	return 1; /* Handled by us (guaranteed earlier) */
 }
 
 int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
@@ -10300,56 +10384,8 @@ int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
 			s->priority = atoi(cep->value);
 			DelListItem(s, securitygroups);
 			AddListItemPrio(s, securitygroups, s->priority);
-		}
-		else if (!strcmp(cep->name, "webirc"))
-			s->webirc = config_checkval(cep->value, CFG_YESNO);
-		else if (!strcmp(cep->name, "identified"))
-			s->identified = config_checkval(cep->value, CFG_YESNO);
-		else if (!strcmp(cep->name, "tls"))
-			s->tls = config_checkval(cep->value, CFG_YESNO);
-		else if (!strcmp(cep->name, "reputation-score"))
-		{
-			if (*cep->value == '<')
-				s->reputation_score = 0 - atoi(cep->value+1);
-			else
-				s->reputation_score = atoi(cep->value);
-		}
-		else if (!strcmp(cep->name, "connect-time"))
-		{
-			if (*cep->value == '<')
-				s->connect_time = 0 - config_checkval(cep->value+1, CFG_TIME);
-			else
-				s->connect_time = config_checkval(cep->value, CFG_TIME);
-		}
-		else if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "include-mask"))
-		{
-			unreal_add_masks(&s->mask, cep);
-		}
-		else if (!strcmp(cep->name, "security-group"))
-		{
-			unreal_add_names(&s->security_group, cep);
-		}
-		else if (!strcmp(cep->name, "exclude-webirc"))
-			s->exclude_webirc = config_checkval(cep->value, CFG_YESNO);
-		else if (!strcmp(cep->name, "exclude-identified"))
-			s->exclude_identified = config_checkval(cep->value, CFG_YESNO);
-		else if (!strcmp(cep->name, "exclude-tls"))
-			s->exclude_tls = config_checkval(cep->value, CFG_YESNO);
-		else if (!strcmp(cep->name, "exclude-reputation-score"))
-		{
-			if (*cep->value == '<')
-				s->exclude_reputation_score = 0 - atoi(cep->value+1);
-			else
-				s->exclude_reputation_score = atoi(cep->value);
-		}
-		else if (!strcmp(cep->name, "exclude-mask"))
-		{
-			unreal_add_masks(&s->exclude_mask, cep);
-		}
-		else if (!strcmp(cep->name, "exclude-security-group"))
-		{
-			unreal_add_names(&s->security_group, cep);
-		}
+		} else
+			conf_match_block(conf, cep, &s);
 	}
 	return 1;
 }

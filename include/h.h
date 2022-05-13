@@ -1104,6 +1104,8 @@ extern void free_security_group(SecurityGroup *s);
 extern void set_security_group_defaults(void);
 extern int user_allowed_by_security_group(Client *client, SecurityGroup *s);
 extern int user_allowed_by_security_group_name(Client *client, const char *secgroupname);
+extern int test_match_block(ConfigFile *conf, ConfigEntry *cep, int *errors);
+extern int conf_match_block(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block);
 #define nv_find_by_name(stru, name)       do_nv_find_by_name(stru, name, ARRAY_SIZEOF((stru)))
 extern long do_nv_find_by_name(NameValue *table, const char *cmd, int numelements);
 #define nv_find_by_value(stru, value)       do_nv_find_by_value(stru, value, ARRAY_SIZEOF((stru)))
