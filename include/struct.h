@@ -1861,11 +1861,18 @@ struct SecurityGroup {
 	SecurityGroup *prev, *next;
 	int priority;
 	char name[SECURITYGROUPLEN+1];
+	/* Include */
 	int identified;
 	int reputation_score;
 	int webirc;
 	int tls;
 	ConfigItem_mask *include_mask;
+	/* Exclude */
+	int exclude_identified;
+	int exclude_reputation_score;
+	int exclude_webirc;
+	int exclude_tls;
+	ConfigItem_mask *exclude_mask;
 };
 
 #define HM_HOST 1

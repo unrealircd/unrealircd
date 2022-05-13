@@ -852,11 +852,28 @@ void set_security_group_defaults(void)
  */
 int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 {
+	/* Process EXCLUSION criteria first... */
+	if (s->exclude_identified && IsLoggedIn(client))
+		return 0;
+	if (s->exclude_webirc && moddata_client_get(client, "webirc"))
+		return 0;
+	if ((s->exclude_reputation_score > 0) && (GetReputation(client) >= s->exclude_reputation_score))
+		return 0;
+	if ((s->exclude_reputation_score < 0) && (GetReputation(client) < 0 - s->exclude_reputation_score))
+		return 0;
+	if (s->exclude_tls && (IsSecureConnect(client) || (MyConnect(client) && IsSecure(client))))
+		return 0;
+	if (s->exclude_mask && unreal_mask_match(client, s->exclude_mask))
+		return 0;
+
+	/* Then process INCLUSION criteria... */
 	if (s->identified && IsLoggedIn(client))
 		return 1;
 	if (s->webirc && moddata_client_get(client, "webirc"))
 		return 1;
-	if (s->reputation_score && (GetReputation(client) >= s->reputation_score))
+	if ((s->reputation_score > 0) && (GetReputation(client) >= s->reputation_score))
+		return 1;
+	if ((s->reputation_score < 0) && (GetReputation(client) < 0 - s->reputation_score))
 		return 1;
 	if (s->tls && (IsSecureConnect(client) || (MyConnect(client) && IsSecure(client))))
 		return 1;

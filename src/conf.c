@@ -10229,31 +10229,34 @@ int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "webirc"))
+		if (!strcmp(cep->name, "webirc") || !strcmp(cep->name, "exclude-webirc"))
 		{
 			CheckNull(cep);
 		} else
-		if (!strcmp(cep->name, "identified"))
+		if (!strcmp(cep->name, "identified") || !strcmp(cep->name, "exclude-identified"))
 		{
 			CheckNull(cep);
 		} else
-		if (!strcmp(cep->name, "tls"))
+		if (!strcmp(cep->name, "tls") || !strcmp(cep->name, "exclude-tls"))
 		{
 			CheckNull(cep);
 		} else
-		if (!strcmp(cep->name, "reputation-score"))
+		if (!strcmp(cep->name, "reputation-score") || !strcmp(cep->name, "exclude-reputation-score"))
 		{
+			const char *str = cep->value;
 			int v;
 			CheckNull(cep);
-			v = atoi(cep->value);
+			if (*str == '<')
+				str++;
+			v = atoi(str);
 			if ((v < 1) || (v > 10000))
 			{
-				config_error("%s:%i: security-group::reputation-score needs to be a value of 1-10000",
-					cep->file->filename, cep->line_number);
+				config_error("%s:%i: security-group::%s needs to be a value of 1-10000",
+					cep->file->filename, cep->line_number, cep->name);
 				errors++;
 			}
 		} else
-		if (!strcmp(cep->name, "include-mask"))
+		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "include-mask") || !strcmp(cep->name, "exclude-mask"))
 		{
 		} else
 		{
@@ -10274,23 +10277,45 @@ int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "webirc"))
+		if (!strcmp(cep->name, "priority"))
+		{
+			s->priority = atoi(cep->value);
+			DelListItem(s, securitygroups);
+			AddListItemPrio(s, securitygroups, s->priority);
+		}
+		else if (!strcmp(cep->name, "webirc"))
 			s->webirc = config_checkval(cep->value, CFG_YESNO);
 		else if (!strcmp(cep->name, "identified"))
 			s->identified = config_checkval(cep->value, CFG_YESNO);
 		else if (!strcmp(cep->name, "tls"))
 			s->tls = config_checkval(cep->value, CFG_YESNO);
 		else if (!strcmp(cep->name, "reputation-score"))
-			s->reputation_score = atoi(cep->value);
-		else if (!strcmp(cep->name, "priority"))
 		{
-			s->priority = atoi(cep->value);
-			DelListItem(s, securitygroups);
-			AddListItemPrio(s, securitygroups, s->priority);
+			if (*cep->value == '<')
+				s->reputation_score = 0 - atoi(cep->value+1);
+			else
+				s->reputation_score = atoi(cep->value);
 		}
 		else if (!strcmp(cep->name, "include-mask"))
 		{
 			unreal_add_masks(&s->include_mask, cep);
+		}
+		else if (!strcmp(cep->name, "exclude-webirc"))
+			s->exclude_webirc = config_checkval(cep->value, CFG_YESNO);
+		else if (!strcmp(cep->name, "exclude-identified"))
+			s->exclude_identified = config_checkval(cep->value, CFG_YESNO);
+		else if (!strcmp(cep->name, "exclude-tls"))
+			s->exclude_tls = config_checkval(cep->value, CFG_YESNO);
+		else if (!strcmp(cep->name, "exclude-reputation-score"))
+		{
+			if (*cep->value == '<')
+				s->exclude_reputation_score = 0 - atoi(cep->value+1);
+			else
+				s->exclude_reputation_score = atoi(cep->value);
+		}
+		else if (!strcmp(cep->name, "exclude-mask"))
+		{
+			unreal_add_masks(&s->exclude_mask, cep);
 		}
 	}
 	return 1;
