@@ -63,14 +63,12 @@ MOD_UNLOAD()
 
 int chancontext_mtag_is_ok(Client *client, const char *name, const char *value)
 {
-	
+	Channel *channel;
+
 	if (BadPtr(value))
 		return 0;
-
-	if (!strlen(value))
-		return 0;
 	
-	Channel *channel = find_channel(value);
+	channel = find_channel(value);
 
 	if (!channel)
 		return 0;
