@@ -147,6 +147,8 @@ static void whois_config_setdefaults(void)
 
 	whois_config_add("reputation", WHOIS_CONFIG_USER_OPER, WHOIS_CONFIG_DETAILS_FULL);
 
+	whois_config_add("security-groups", WHOIS_CONFIG_USER_OPER, WHOIS_CONFIG_DETAILS_FULL);
+
 	whois_config_add("geo", WHOIS_CONFIG_USER_OPER, WHOIS_CONFIG_DETAILS_FULL);
 
 	whois_config_add("certfp", WHOIS_CONFIG_USER_EVERYONE, WHOIS_CONFIG_DETAILS_FULL);
@@ -561,6 +563,51 @@ CMD_FUNC(cmd_whois)
 			}
 		}
 
+		/* The following code deals with security-groups */
+		policy = whois_get_policy(client, target, "security-groups");
+		if (policy > WHOIS_CONFIG_DETAILS_NONE)
+		{
+			SecurityGroup *s;
+			int security_groups_whois_lines = 0;
+
+			mlen = strlen(me.name) + strlen(client->name) + 10 + strlen(target->name) + strlen("is in security-groups: ");
+
+			if (user_allowed_by_security_group_name(target, "known-users"))
+				strlcpy(buf, "known-users,", sizeof(buf));
+			else
+				strlcpy(buf, "unknown-users,", sizeof(buf));
+			len = strlen(buf);
+
+			for (s = securitygroups; s; s = s->next)
+			{
+				if (len + strlen(s->name) > (size_t)BUFSIZE - 4 - mlen)
+				{
+					buf[len-1] = '\0';
+					add_nvplist_numeric_fmt(&list, -15000-security_groups_whois_lines, "security-groups",
+					                        target, RPL_WHOISSPECIAL,
+								"%s :is in security-groups: %s", target->name, buf);
+					security_groups_whois_lines++;
+					*buf = '\0';
+					len = 0;
+				}
+				if (strcmp(s->name, "known-users") && user_allowed_by_security_group(target, s))
+				{
+					strcpy(buf + len, s->name);
+					len += strlen(buf+len);
+					strcpy(buf + len, ",");
+					len++;
+				}
+			}
+
+			if (*buf)
+			{
+				buf[len-1] = '\0';
+				add_nvplist_numeric_fmt(&list, -15000-security_groups_whois_lines, "security-groups",
+				                        client, RPL_WHOISSPECIAL,
+							"%s :is in security-groups: %s", target->name, buf);
+				security_groups_whois_lines++;
+			}
+		}
 		if (MyUser(target) && IsShunned(target) && (whois_get_policy(client, target, "shunned") > WHOIS_CONFIG_DETAILS_NONE))
 		{
 			add_nvplist_numeric(&list, -20000, "shunned", client, RPL_WHOISSPECIAL,
