@@ -254,6 +254,7 @@ DLL_FILES=\
  src/modules/close.dll \
  src/modules/connect.dll \
  src/modules/connthrottle.dll \
+ src/modules/creationtime.dll \
  src/modules/cycle.dll \
  src/modules/dccallow.dll \
  src/modules/dccdeny.dll \
@@ -830,6 +831,9 @@ src/modules/connect.dll: src/modules/connect.c $(INCLUDES)
 
 src/modules/connthrottle.dll: src/modules/connthrottle.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/connthrottle.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/connthrottle.pdb $(MODLFLAGS)
+
+src/modules/creationtime.dll: src/modules/creationtime.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/creationtime.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/creationtime.pdb $(MODLFLAGS)
 
 src/modules/cycle.dll: src/modules/cycle.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/cycle.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/cycle.pdb $(MODLFLAGS)

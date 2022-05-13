@@ -758,10 +758,20 @@ CMD_FUNC(cmd_nick)
 	}
 }
 
+/** Welcome the user on IRC.
+ * Send the RPL_WELCOME, LUSERS, MOTD, auto join channels, everything...
+ */
 void welcome_user(Client *client, TKL *viruschan_tkl)
 {
 	int i;
 	ConfigItem_tld *tlds;
+
+	/* Make creation time the real 'online since' time, excluding registration time.
+	 * Otherwise things like set::anti-spam-quit-messagetime 10s could mean
+	 * 1 second in practice (#2174).
+	 */
+	client->local->creationtime = TStime();
+	client->local->idle_since = TStime();
 
 	RunHook(HOOKTYPE_WELCOME, client, 0);
 	sendnumeric(client, RPL_WELCOME, NETWORK_NAME, client->name, client->user->username, client->user->realhost);
@@ -826,10 +836,13 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 	sendto_serv_butone_nickcmd(client->direction, NULL, client, (*buf == '\0' ? "+" : buf));
 
 	broadcast_moddata_client(client);
+
 	RunHook(HOOKTYPE_LOCAL_CONNECT, client);
+
 	if (buf[0] != '\0' && buf[1] != '\0')
 		sendto_one(client, NULL, ":%s MODE %s :%s", client->name,
 		    client->name, buf);
+
 	if (client->user->snomask)
 		sendnumeric(client, RPL_SNOMASK, client->user->snomask);
 
@@ -839,12 +852,6 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 	if (IsSecure(client) && (iConf.outdated_tls_policy_user == POLICY_WARN) && outdated_tls_client(client))
 		sendnotice(client, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, client));
 
-	/* Make creation time the real 'online since' time, excluding registration time.
-	 * Otherwise things like set::anti-spam-quit-messagetime 10s could mean
-	 * 1 second in practice (#2174).
-	 */
-	client->local->creationtime = TStime();
-	client->local->idle_since = TStime();
 
 	/* Give the user a fresh start as far as fake-lag is concerned.
 	 * Otherwise the user could be lagged up already due to all the CAP stuff.

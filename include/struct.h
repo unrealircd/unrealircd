@@ -609,6 +609,7 @@ union ModData
 {
         int i;
         long l;
+        long long ll;
         char *str;
         void *ptr;
 };
