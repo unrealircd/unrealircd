@@ -1057,6 +1057,21 @@ int unreal_mask_match_string(const char *name, ConfigItem_mask *mask)
 	return retval;
 }
 
+/** Add mask entries from config */
+void unreal_add_names(NameList **n, ConfigEntry *ce)
+{
+	if (ce->items)
+	{
+		ConfigEntry *cep;
+		for (cep = ce->items; cep; cep = cep->next)
+			_add_name_list(n, cep->value ? cep->value : cep->name);
+	} else
+	if (ce->value)
+	{
+		_add_name_list(n, ce->value);
+	}
+}
+
 /** Our own strcasestr implementation because strcasestr is
  * often not available or is not working correctly.
  */

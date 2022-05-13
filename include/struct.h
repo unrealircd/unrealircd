@@ -764,6 +764,8 @@ struct NameList {
 /** Delete an entry from a NameList - AND free it */
 #define del_name_list(list, str)  _del_name_list(&list, str)
 
+extern void unreal_add_names(NameList **n, ConfigEntry *ce);
+
 /** @} */
 
 typedef struct MultiLine MultiLine;
@@ -1869,6 +1871,7 @@ struct SecurityGroup {
 	int webirc;
 	int tls;
 	ConfigItem_mask *include_mask;
+	NameList *security_group;
 	/* Exclude */
 	int exclude_identified;
 	int exclude_reputation_score;
@@ -1876,6 +1879,7 @@ struct SecurityGroup {
 	int exclude_webirc;
 	int exclude_tls;
 	ConfigItem_mask *exclude_mask;
+	NameList *exclude_security_group;
 };
 
 #define HM_HOST 1

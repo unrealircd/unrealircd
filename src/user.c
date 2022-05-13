@@ -807,6 +807,9 @@ SecurityGroup *add_security_group(const char *name, int priority)
 void free_security_group(SecurityGroup *s)
 {
 	unreal_delete_masks(s->include_mask);
+	unreal_delete_masks(s->exclude_mask);
+	free_entire_name_list(s->security_group);
+	free_entire_name_list(s->exclude_security_group);
 	safe_free(s);
 }
 
@@ -865,6 +868,21 @@ long get_connected_time(Client *client)
 	return 0;
 }
 
+/** Returns 1 if the user is allowed by any of the security groups in the named list.
+ * This is only used by security-group::security-group and
+ * security-group::exclude-security-group.
+ * @param client	Client to check
+ * @param l		The NameList
+ * @returns 1 if any of the security groups match, 0 if none of them matched.
+ */
+int user_allowed_by_security_group_list(Client *client, NameList *l)
+{
+	for (; l; l = l->next)
+		if (user_allowed_by_security_group_name(client, l->name))
+			return 1;
+	return 0;
+}
+
 /** Returns 1 if the user is OK as far as the security-group is concerned.
  * @param client	The client to check
  * @param s		The security-group to check against
@@ -910,6 +928,8 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 		goto user_not_allowed;
 	if (s->exclude_mask && unreal_mask_match(client, s->exclude_mask))
 		goto user_not_allowed;
+	if (s->exclude_security_group && user_allowed_by_security_group_list(client, s->exclude_security_group))
+		goto user_not_allowed;
 
 	/* Then process INCLUSION criteria... */
 	if (s->identified && IsLoggedIn(client))
@@ -931,6 +951,8 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 	if (s->tls && (IsSecureConnect(client) || (MyConnect(client) && IsSecure(client))))
 		goto user_allowed;
 	if (s->include_mask && unreal_mask_match(client, s->include_mask))
+		goto user_allowed;
+	if (s->security_group && user_allowed_by_security_group_list(client, s->security_group))
 		goto user_allowed;
 
 user_not_allowed:

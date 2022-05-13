@@ -10274,6 +10274,9 @@ int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "include-mask") || !strcmp(cep->name, "exclude-mask"))
 		{
 		} else
+		if (!strcmp(cep->name, "security-group") || !strcmp(cep->name, "exclude-security-group"))
+		{
+		} else
 		{
 			config_error_unknown(cep->file->filename, cep->line_number,
 				"security-group", cep->name);
@@ -10322,6 +10325,10 @@ int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
 		{
 			unreal_add_masks(&s->include_mask, cep);
 		}
+		else if (!strcmp(cep->name, "security-group"))
+		{
+			unreal_add_names(&s->security_group, cep);
+		}
 		else if (!strcmp(cep->name, "exclude-webirc"))
 			s->exclude_webirc = config_checkval(cep->value, CFG_YESNO);
 		else if (!strcmp(cep->name, "exclude-identified"))
@@ -10338,6 +10345,10 @@ int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "exclude-mask"))
 		{
 			unreal_add_masks(&s->exclude_mask, cep);
+		}
+		else if (!strcmp(cep->name, "exclude-security-group"))
+		{
+			unreal_add_names(&s->security_group, cep);
 		}
 	}
 	return 1;
