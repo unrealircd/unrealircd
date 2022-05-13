@@ -872,50 +872,74 @@ long get_connected_time(Client *client)
  */
 int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 {
+	static int recursion_security_group = 0;
+
+	if (recursion_security_group > 8)
+	{
+		unreal_log(ULOG_WARNING, "main", "SECURITY_GROUP_LOOP_DETECTED", client,
+		           "Loop detected while processing security-group '$security_group' -- "
+		           "are you perhaps referencing a security-group from a security-group?",
+		           log_data_string("security_group", s->name));
+		return 0;
+	}
+	recursion_security_group++;
+
+	/* DO NOT USE 'return' IN CODE BELOW!!!!!!!!!
+	 * - use 'goto user_not_allowed' to reject
+	 * - use 'goto user_allowed' to accept
+	 */
+
 	/* Process EXCLUSION criteria first... */
 	if (s->exclude_identified && IsLoggedIn(client))
-		return 0;
+		goto user_not_allowed;
 	if (s->exclude_webirc && moddata_client_get(client, "webirc"))
-		return 0;
+		goto user_not_allowed;
 	if ((s->exclude_reputation_score > 0) && (GetReputation(client) >= s->exclude_reputation_score))
-		return 0;
+		goto user_not_allowed;
 	if ((s->exclude_reputation_score < 0) && (GetReputation(client) < 0 - s->exclude_reputation_score))
-		return 0;
+		goto user_not_allowed;
 	if (s->exclude_connect_time != 0)
 	{
 		long connect_time = get_connected_time(client);
 		if ((s->exclude_connect_time > 0) && (connect_time >= s->exclude_connect_time))
-			return 0;
+			goto user_not_allowed;
 		if ((s->exclude_connect_time < 0) && (connect_time < 0 - s->exclude_connect_time))
-			return 0;
+			goto user_not_allowed;
 	}
 	if (s->exclude_tls && (IsSecureConnect(client) || (MyConnect(client) && IsSecure(client))))
-		return 0;
+		goto user_not_allowed;
 	if (s->exclude_mask && unreal_mask_match(client, s->exclude_mask))
-		return 0;
+		goto user_not_allowed;
 
 	/* Then process INCLUSION criteria... */
 	if (s->identified && IsLoggedIn(client))
-		return 1;
+		goto user_allowed;
 	if (s->webirc && moddata_client_get(client, "webirc"))
-		return 1;
+		goto user_allowed;
 	if ((s->reputation_score > 0) && (GetReputation(client) >= s->reputation_score))
-		return 1;
+		goto user_allowed;
 	if ((s->reputation_score < 0) && (GetReputation(client) < 0 - s->reputation_score))
-		return 1;
+		goto user_allowed;
 	if (s->connect_time != 0)
 	{
 		long connect_time = get_connected_time(client);
 		if ((s->connect_time > 0) && (connect_time >= s->connect_time))
-			return 1;
+			goto user_allowed;
 		if ((s->connect_time < 0) && (connect_time < 0 - s->connect_time))
-			return 1;
+			goto user_allowed;
 	}
 	if (s->tls && (IsSecureConnect(client) || (MyConnect(client) && IsSecure(client))))
-		return 1;
+		goto user_allowed;
 	if (s->include_mask && unreal_mask_match(client, s->include_mask))
-		return 1;
+		goto user_allowed;
+
+user_not_allowed:
+	recursion_security_group--;
 	return 0;
+
+user_allowed:
+	recursion_security_group--;
+	return 1;
 }
 
 /** Returns 1 if the user is OK as far as the security-group is concerned - "by name" version.
