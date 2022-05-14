@@ -703,10 +703,10 @@ int _verify_link(Client *client, ConfigItem_link **link_out)
 		return 0;
 	}
 	
-	if (!link->incoming.mask)
+	if (!link->incoming.match)
 	{
 		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_NO_INCOMING", client,
-		           "Link with server $client.details denied: Link block exists, but there is no link::incoming::mask set.",
+		           "Link with server $client.details denied: Link block exists, but there is no link::incoming::match set.",
 		           log_data_link_block(link));
 		exit_client(client, NULL, LINK_DEFAULT_ERROR_MSG);
 		return 0;

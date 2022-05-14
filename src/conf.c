@@ -3059,7 +3059,8 @@ ConfigItem_link *find_link(const char *servername, Client *client)
 
 	for (link = conf_link; link; link = link->next)
 	{
-		if (match_simple(link->servername, servername) && unreal_mask_match(client, link->incoming.mask))
+		if (match_simple(link->servername, servername) &&
+		    user_allowed_by_security_group(client, link->incoming.match))
 		{
 		    return link;
 		}
@@ -6250,9 +6251,9 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				if (!strcmp(cepp->name, "mask"))
+				if (!strcmp(cepp->name, "match") || !strcmp(cepp->name, "mask"))
 				{
-					unreal_add_masks(&link->incoming.mask, cepp);
+					conf_match_block(conf, cepp, &link->incoming.match);
 				}
 			}
 		}
@@ -6353,7 +6354,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp, *ceppp;
 	int errors = 0;
 
-	int has_incoming = 0, has_incoming_mask = 0, has_outgoing = 0, has_outgoing_file = 0;
+	int has_incoming = 0, has_incoming_mask = 0, has_incoming_match = 0, has_outgoing = 0, has_outgoing_file = 0;
 	int has_outgoing_bind_ip = 0, has_outgoing_hostname = 0, has_outgoing_port = 0;
 	int has_outgoing_options = 0, has_hub = 0, has_leaf = 0, has_leaf_depth = 0;
 	int has_password = 0, has_class = 0, has_options = 0;
@@ -6380,11 +6381,26 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			config_detect_duplicate(&has_incoming, cep, &errors);
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
+				if (!strcmp(cepp->name, "match"))
+				{
+					if (cepp->value || cepp->items)
+					{
+						has_incoming_match = 1;
+						test_match_block(conf, cepp, &errors);
+					} else
+					if (config_is_blankorempty(cepp, "link::incoming"))
+					{
+						errors++;
+						continue;
+					}
+				} else
 				if (!strcmp(cepp->name, "mask"))
 				{
 					if (cepp->value || cepp->items)
+					{
 						has_incoming_mask = 1;
-					else
+						test_match_block(conf, cepp, &errors);
+					} else
 					if (config_is_blankorempty(cepp, "link::incoming"))
 					{
 						errors++;
@@ -6580,9 +6596,16 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	if (has_incoming)
 	{
 		/* If we have an incoming sub-block then we need at least 'mask' and 'password' */
-		if (!has_incoming_mask)
+		if (!has_incoming_mask && !has_incoming_match)
 		{
-			config_error_missing(ce->file->filename, ce->line_number, "link::incoming::mask");
+			config_error_missing(ce->file->filename, ce->line_number, "link::incoming::match");
+			errors++;
+		}
+		if (has_incoming_mask && has_incoming_match)
+		{
+			config_error("%s:%d: You cannot have both link::incoming::mask and link::incoming::match. "
+				     "You should only use link::incoming::match.",
+				     ce->file->filename, ce->line_number);
 			errors++;
 		}
 	}
@@ -10989,7 +11012,7 @@ int rehash_internal(Client *client)
 void link_cleanup(ConfigItem_link *link_ptr)
 {
 	safe_free(link_ptr->servername);
-	unreal_delete_masks(link_ptr->incoming.mask);
+	free_security_group(link_ptr->incoming.match);
 	Auth_FreeAuthConfig(link_ptr->auth);
 	safe_free(link_ptr->outgoing.file);
 	safe_free(link_ptr->outgoing.bind_ip);

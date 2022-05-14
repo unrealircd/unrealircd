@@ -1729,7 +1729,7 @@ struct ConfigItem_link {
 	/* config options: */
 	char *servername; /**< Name of the server ('link <servername> { }') */
 	struct {
-		ConfigItem_mask *mask; /**< incoming mask(s) to accept */
+		SecurityGroup *match; /**< incoming mask(s) to accept */
 	} incoming;
 	struct {
 		char *file; /**< UNIX domain socket to connect to */
