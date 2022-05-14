@@ -25,7 +25,7 @@
 ModuleHeader MOD_HEADER
   = {
 	"antirandom",
-	"1.4",
+	"1.5",
 	"Detect and ban users with random names",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -504,8 +504,7 @@ struct {
 	long ban_time;
 	int convert_to_lowercase;
 	int show_failedconnects;
-	ConfigItem_mask *except_hosts;
-	int except_webirc;
+	SecurityGroup *except;
 } cfg;
 
 /* Forward declarations */
@@ -542,7 +541,8 @@ MOD_INIT()
 
 	/* Some default values: */
 	cfg.convert_to_lowercase = 1;
-	cfg.except_webirc = 1;
+	cfg.except = safe_alloc(sizeof(SecurityGroup));
+	cfg.except->webirc = 1;
 
 	return MOD_SUCCESS;
 }
@@ -562,7 +562,7 @@ MOD_UNLOAD()
 static void free_config(void)
 {
 	safe_free(cfg.ban_reason);
-	unreal_delete_masks(cfg.except_hosts);
+	free_security_group(cfg.except);
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
 
@@ -580,6 +580,10 @@ int antirandom_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		if (!strcmp(cep->name, "except"))
+		{
+			test_match_block(cf, cep, &errors);
+		} else
 		if (!strcmp(cep->name, "except-hosts"))
 		{
 		} else
@@ -653,14 +657,20 @@ int antirandom_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		if (!strcmp(cep->name, "except"))
+		{
+			conf_match_block(cf, cep, &cfg.except);
+		} else
 		if (!strcmp(cep->name, "except-hosts"))
 		{
+			/* backwards compatible with set::antirandom::except */
 			for (cep2 = cep->items; cep2; cep2 = cep2->next)
-				unreal_add_masks(&cfg.except_hosts, cep2);
+				unreal_add_masks(&cfg.except->mask, cep2);
 		} else
 		if (!strcmp(cep->name, "except-webirc"))
 		{
-			cfg.except_webirc = config_checkval(cep->value, CFG_YESNO);
+			/* backwards compatible with set::antirandom::except */
+			cfg.except->webirc = config_checkval(cep->value, CFG_YESNO);
 		} else
 		if (!strcmp(cep->name, "threshold"))
 		{
@@ -894,13 +904,8 @@ static void free_stuff(void)
 /** Is this user exempt from antirandom interventions? */
 static int is_exempt(Client *client)
 {
-	/* WEBIRC gateway and exempt? */
-	if (cfg.except_webirc)
-	{
-		const char *val = moddata_client_get(client, "webirc");
-		if (val && (atoi(val)>0))
-			return 1;
-	}
+	if (user_allowed_by_security_group(client, cfg.except))
+		return 1;
 
 	if (find_tkl_exception(TKL_ANTIRANDOM, client))
 		return 1;
@@ -909,6 +914,5 @@ static int is_exempt(Client *client)
 	if (IsSoftBanAction(cfg.ban_action) && IsLoggedIn(client))
 		return 1;
 
-	/* On except host? */
-	return unreal_mask_match(client, cfg.except_hosts);
+	return 0;
 }
