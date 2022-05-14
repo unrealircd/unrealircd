@@ -89,7 +89,7 @@ CMD_FUNC(cmd_vhost)
 		return;
 	}
 	
-	if (!unreal_mask_match(client, vhost->mask))
+	if (!user_allowed_by_security_group(client, vhost->match))
 	{
 		unreal_log(ULOG_WARNING, "vhost", "VHOST_FAILED", client,
 		           "Failed VHOST attempt by $client.details [reason: $reason] [vhost-block: $vhost_block]",

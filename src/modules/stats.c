@@ -668,15 +668,19 @@ int stats_uline(Client *client, const char *para)
 }
 int stats_vhost(Client *client, const char *para)
 {
-	ConfigItem_mask *m;
 	ConfigItem_vhost *vhosts;
+	NameValuePrioList *m;
 
 	for (vhosts = conf_vhost; vhosts; vhosts = vhosts->next)
 	{
-		for (m = vhosts->mask; m; m = m->next)
+		for (m = vhosts->match->printable_list; m; m = m->next)
 		{
-			sendtxtnumeric(client, "vhost %s%s%s %s %s", vhosts->virtuser ? vhosts->virtuser : "", vhosts->virtuser ? "@" : "",
-			     vhosts->virthost, vhosts->login, m->mask);
+			sendtxtnumeric(client, "vhost %s%s%s %s %s",
+			               vhosts->virtuser ? vhosts->virtuser : "",
+			               vhosts->virtuser ? "@" : "",
+			               vhosts->virthost,
+			               vhosts->login,
+			               namevalue_nospaces(m));
 		}
 	}
 	return 0;

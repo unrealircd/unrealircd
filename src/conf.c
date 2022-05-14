@@ -2453,7 +2453,7 @@ void config_rehash()
 		Auth_FreeAuthConfig(vhost_ptr->auth);
 		safe_free(vhost_ptr->virthost);
 		safe_free(vhost_ptr->virtuser);
-		unreal_delete_masks(vhost_ptr->mask);
+		free_security_group(vhost_ptr->match);
 		for (s = vhost_ptr->swhois; s; s = s_next)
 		{
 			s_next = s->next;
@@ -5924,6 +5924,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_vhost *vhost;
 	ConfigEntry *cep, *cepp;
 	vhost = safe_alloc(sizeof(ConfigItem_vhost));
+	vhost->match = safe_alloc(sizeof(SecurityGroup));
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
@@ -5944,9 +5945,9 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 			safe_strdup(vhost->login, cep->value);
 		else if (!strcmp(cep->name, "password"))
 			vhost->auth = AuthBlockToAuthConfig(cep);
-		else if (!strcmp(cep->name, "mask"))
+		else if (!strcmp(cep->name, "match") || !strcmp(cep->name, "mask"))
 		{
-			unreal_add_masks(&vhost->mask, cep);
+			conf_match_block(conf, cep, &vhost->match);
 		}
 		else if (!strcmp(cep->name, "swhois"))
 		{
@@ -5978,7 +5979,7 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 {
 	int errors = 0;
 	ConfigEntry *cep;
-	char has_vhost = 0, has_login = 0, has_password = 0, has_mask = 0;
+	char has_vhost = 0, has_login = 0, has_password = 0, has_mask = 0, has_match = 0;
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
@@ -6071,6 +6072,12 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "mask"))
 		{
 			has_mask = 1;
+			test_match_block(conf, cep, &errors);
+		}
+		else if (!strcmp(cep->name, "match"))
+		{
+			has_match = 1;
+			test_match_block(conf, cep, &errors);
 		}
 		else if (!strcmp(cep->name, "swhois"))
 		{
@@ -6102,10 +6109,17 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 			"vhost::password");
 		errors++;
 	}
-	if (!has_mask)
+	if (!has_mask && !has_match)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"vhost::mask");
+			"vhost::match");
+		errors++;
+	}
+	if (has_mask && has_match)
+	{
+		config_error("%s:%d: You cannot have both ::mask and ::match. "
+		             "You should only use %s::match.",
+		             ce->file->filename, ce->line_number, ce->name);
 		errors++;
 	}
 	return errors;

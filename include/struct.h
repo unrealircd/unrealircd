@@ -1717,7 +1717,7 @@ struct ConfigItem_sni {
 struct ConfigItem_vhost {
 	ConfigItem_vhost 	*prev, *next;
 	ConfigFlag 	flag;
-	ConfigItem_mask *mask;
+	SecurityGroup	*match;
 	char		*login, *virthost, *virtuser;
 	SWhois *swhois;
 	AuthConfig	*auth;
