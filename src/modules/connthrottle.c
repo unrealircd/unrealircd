@@ -31,10 +31,8 @@ struct cfgstruct {
 	/* set::connthrottle::known-users: */
 	ThrottleSetting local;
 	ThrottleSetting global;
-	/* set::connthrottle::new-users: */
-	int minimum_reputation_score;
-	int sasl_bypass;
-	int webirc_bypass;
+	/* set::connthrottle::except: */
+	SecurityGroup *except;
 	/* set::connthrottle::disabled-when: */
 	long reputation_gathering;
 	int start_delay;
@@ -53,10 +51,8 @@ struct UCounter {
 	ThrottleCounter local;		/**< Local counter */
 	ThrottleCounter global;		/**< Global counter */
 	int rejected_clients;		/**< Number of rejected clients this minute */
-	int allowed_score;		/**< Number of allowed clients of type known-user */
-	int allowed_sasl;		/**< Number of allowed clients of type SASL */
-	int allowed_webirc;		/**< Number of allowed clients of type WEBIRC */
-	int allowed_other;		/**< Number of allowed clients of type other (new) */
+	int allowed_except;		/**< Number of allowed clients - on except list */
+	int allowed_unknown_users;		/**< Number of allowed clients - not on except list */
 	char disabled;			/**< Module disabled by oper? */
 	int throttling_this_minute;	/**< Did we do any throttling this minute? */
 	int throttling_previous_minute;	/**< Did we do any throttling previous minute? */
@@ -87,9 +83,10 @@ MOD_TEST()
 	cfg.global.count = 30; cfg.global.period = 60;
 	cfg.start_delay = 180;		/* 3 minutes */
 	safe_strdup(cfg.reason, "Throttled: Too many users trying to connect, please wait a while and try again");
-	cfg.minimum_reputation_score = 24;
-	cfg.sasl_bypass = 1;
-	cfg.webirc_bypass = 0;
+	cfg.except = safe_alloc(sizeof(SecurityGroup));
+	cfg.except->reputation_score = 24;
+	cfg.except->identified = 1;
+	cfg.except->webirc = 0;
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, ct_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, ct_config_posttest);
@@ -120,6 +117,7 @@ MOD_UNLOAD()
 {
 	SavePersistentPointer(modinfo, ucounter);
 	safe_free(cfg.reason);
+	free_security_group(cfg.except);
 	return MOD_SUCCESS;
 }
 
@@ -161,6 +159,10 @@ int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		if (!strcmp(cep->name, "except"))
+		{
+			test_match_block(cf, cep, &errors);
+		} else
 		if (!strcmp(cep->name, "known-users"))
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
@@ -286,16 +288,20 @@ int ct_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		if (!strcmp(cep->name, "except"))
+		{
+			conf_match_block(cf, cep, &cfg.except);
+		} else
 		if (!strcmp(cep->name, "known-users"))
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
 				if (!strcmp(cepp->name, "minimum-reputation-score"))
-					cfg.minimum_reputation_score = atoi(cepp->value);
+					cfg.except->reputation_score = atoi(cepp->value);
 				else if (!strcmp(cepp->name, "sasl-bypass"))
-					cfg.sasl_bypass = config_checkval(cepp->value, CFG_YESNO);
+					cfg.except->identified = config_checkval(cepp->value, CFG_YESNO);
 				else if (!strcmp(cepp->name, "webirc-bypass"))
-					cfg.webirc_bypass = config_checkval(cepp->value, CFG_YESNO);
+					cfg.except->webirc = config_checkval(cepp->value, CFG_YESNO);
 			}
 		} else
 		if (!strcmp(cep->name, "new-users"))
@@ -365,18 +371,14 @@ EVENT(connthrottle_evt)
 		           "$num_accepted_webirc WEBIRC and "
 		           "$num_accepted_unknown_users new user(s).",
 		           log_data_integer("num_rejected", ucounter->rejected_clients),
-		           log_data_integer("num_accepted_known_users", ucounter->allowed_score),
-		           log_data_integer("num_accepted_sasl", ucounter->allowed_sasl),
-		           log_data_integer("num_accepted_webirc", ucounter->allowed_webirc),
-		           log_data_integer("num_accepted_unknown_users", ucounter->allowed_other));
+		           log_data_integer("num_accepted_except", ucounter->allowed_except),
+		           log_data_integer("num_accepted_unknown_users", ucounter->allowed_unknown_users));
 	}
 
 	/* Reset stats for next message */
 	ucounter->rejected_clients = 0;
-	ucounter->allowed_score = 0;
-	ucounter->allowed_sasl = 0;
-	ucounter->allowed_webirc = 0;
-	ucounter->allowed_other = 0;
+	ucounter->allowed_except = 0;
+	ucounter->allowed_unknown_users = 0;
 
 	ucounter->throttling_previous_minute = ucounter->throttling_this_minute;
 	ucounter->throttling_this_minute = 0; /* reset */
@@ -399,24 +401,8 @@ int ct_pre_lconnect(Client *client)
 	if (still_reputation_gathering())
 		return HOOK_CONTINUE; /* still gathering reputation data */
 
-	if (cfg.sasl_bypass && IsLoggedIn(client))
-	{
-		/* Allowed in: user authenticated using SASL */
-		return HOOK_CONTINUE;
-	}
-	
-	if (cfg.webirc_bypass && moddata_client_get(client, "webirc"))
-	{
-		/* Allowed in: user using WEBIRC */
-		return HOOK_CONTINUE;
-	}
-
-	score = GetReputation(client);
-	if (score >= cfg.minimum_reputation_score)
-	{
-		/* Allowed in: IP has enough reputation ("known user") */
-		return HOOK_CONTINUE;
-	}
+	if (user_allowed_by_security_group(client, cfg.except))
+		return HOOK_CONTINUE; /* allowed: user is exempt (known user or otherwise) */
 
 	/* If we reach this then the user is NEW */
 
@@ -486,30 +472,14 @@ int ct_lconnect(Client *client)
 	if (still_reputation_gathering())
 		return 0; /* still gathering reputation data */
 
-	if (cfg.sasl_bypass && IsLoggedIn(client))
+	if (user_allowed_by_security_group(client, cfg.except))
 	{
-		/* Allowed in: user authenticated using SASL */
-		ucounter->allowed_sasl++;
-		return 0;
-	}
-	
-	if (cfg.webirc_bypass && moddata_client_get(client, "webirc"))
-	{
-		/* Allowed in: user using WEBIRC */
-		ucounter->allowed_webirc++;
-		return 0;
-	}
-
-	score = GetReputation(client);
-	if (score >= cfg.minimum_reputation_score)
-	{
-		/* Allowed in: IP has enough reputation ("known user") */
-		ucounter->allowed_score++;
-		return 0;
+		ucounter->allowed_except++;
+		return HOOK_CONTINUE; /* allowed: user is exempt (known user or otherwise) */
 	}
 
 	/* Allowed NEW user */
-	ucounter->allowed_other++;
+	ucounter->allowed_unknown_users++;
 
 	bump_connect_counter(1);
 
@@ -539,9 +509,8 @@ int ct_rconnect(Client *client)
 	}
 #endif
 
-	score = GetReputation(client);
-	if (score >= cfg.minimum_reputation_score)
-		return 0; /* sufficient reputation: "known-user" */
+	if (user_allowed_by_security_group(client, cfg.except))
+		return 0; /* user is on except list (known user or otherwise) */
 
 	bump_connect_counter(0);
 
