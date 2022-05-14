@@ -959,6 +959,10 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 {
 	static int recursion_security_group = 0;
 
+	/* Allow NULL securitygroup, makes it easier in the code elsewhere */
+	if (!s)
+		return 0;
+
 	if (recursion_security_group > 8)
 	{
 		unreal_log(ULOG_WARNING, "main", "SECURITY_GROUP_LOOP_DETECTED", client,
