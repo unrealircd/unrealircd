@@ -32,11 +32,7 @@ struct RestrictedCommand {
 	RestrictedCommand *prev, *next;
 	char *cmd;
 	char *conftag;
-	long connect_delay;
-	int exempt_identified;
-	int exempt_reputation_score;
-	int exempt_webirc;
-	int exempt_tls;
+	SecurityGroup *except;
 };
 
 typedef struct {
@@ -103,6 +99,7 @@ MOD_UNLOAD()
 		next = rcmd->next;
 		safe_free(rcmd->conftag);
 		safe_free(rcmd->cmd);
+		free_security_group(rcmd->except);
 		DelListItem(rcmd, RestrictedCommandList);
 		safe_free(rcmd);
 	}
@@ -168,6 +165,11 @@ int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					warn_disable = 1;
 				}
 				continue;
+			}
+
+			if (!strcmp(cep2->name, "except"))
+			{
+				test_match_block(cf, cep2, &errors);
 			}
 
 			if (!cep2->value)
@@ -260,38 +262,45 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 		rcmd = safe_alloc(sizeof(RestrictedCommand));
 		safe_strdup(rcmd->cmd, cmd);
 		safe_strdup(rcmd->conftag, conftag);
+		rcmd->except = safe_alloc(sizeof(SecurityGroup));
+
 		for (cep2 = cep->items; cep2; cep2 = cep2->next)
 		{
+			if (!strcmp(cep2->name, "except"))
+			{
+				conf_match_block(cf, cep2, &rcmd->except);
+			}
+
 			if (!cep2->value)
 				continue;
 
 			if (!strcmp(cep2->name, "connect-delay"))
 			{
-				rcmd->connect_delay = config_checkval(cep2->value, CFG_TIME);
+				rcmd->except->connect_time = config_checkval(cep2->value, CFG_TIME);
 				continue;
 			}
 
 			if (!strcmp(cep2->name, "exempt-identified"))
 			{
-				rcmd->exempt_identified = config_checkval(cep2->value, CFG_YESNO);
+				rcmd->except->identified = config_checkval(cep2->value, CFG_YESNO);
 				continue;
 			}
 			
 			if (!strcmp(cep2->name, "exempt-webirc"))
 			{
-				rcmd->exempt_webirc = config_checkval(cep2->value, CFG_YESNO);
+				rcmd->except->webirc = config_checkval(cep2->value, CFG_YESNO);
 				continue;
 			}
 
 			if (!strcmp(cep2->name, "exempt-tls"))
 			{
-				rcmd->exempt_tls = config_checkval(cep2->value, CFG_YESNO);
+				rcmd->except->tls = config_checkval(cep2->value, CFG_YESNO);
 				continue;
 			}
 
 			if (!strcmp(cep2->name, "exempt-reputation-score"))
 			{
-				rcmd->exempt_reputation_score = atoi(cep2->value);
+				rcmd->except->reputation_score = atoi(cep2->value);
 				continue;
 			}
 		}
@@ -305,15 +314,7 @@ int rcmd_canbypass(Client *client, RestrictedCommand *rcmd)
 {
 	if (!client || !rcmd)
 		return 1;
-	if (rcmd->exempt_identified && IsLoggedIn(client))
-		return 1;
-	if (rcmd->exempt_webirc && moddata_client_get(client, "webirc"))
-		return 1;
-	if (rcmd->exempt_tls && IsSecureConnect(client))
-		return 1;
-	if (rcmd->exempt_reputation_score > 0 && (GetReputation(client) >= rcmd->exempt_reputation_score))
-		return 1;
-	if (rcmd->connect_delay && client->local && (TStime() - client->local->creationtime >= rcmd->connect_delay))
+	if (user_allowed_by_security_group(client, rcmd->except))
 		return 1;
 	return 0;
 }
@@ -351,11 +352,11 @@ int rcmd_block_message(Client *client, const char *text, SendType sendtype, cons
 	if (rcmd && !rcmd_canbypass(client, rcmd))
 	{
 		int notice = (sendtype == SEND_TYPE_NOTICE ? 1 : 0); // temporary hack FIXME !!!
-		if (rcmd->connect_delay)
+		if (rcmd->except->connect_time)
 		{
 			ircsnprintf(errbuf, sizeof(errbuf),
 				    "You cannot send %ss to %ss until you've been connected for %ld seconds or more",
-				    (notice ? "notice" : "message"), display, rcmd->connect_delay);
+				    (notice ? "notice" : "message"), display, rcmd->except->connect_time);
 		} else {
 			ircsnprintf(errbuf, sizeof(errbuf),
 				    "Sending of %ss to %ss been disabled by the network administrators",
@@ -382,11 +383,11 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 	rcmd = find_restrictions_bycmd(ovr->command->cmd);
 	if (rcmd && !rcmd_canbypass(client, rcmd))
 	{
-		if (rcmd->connect_delay)
+		if (rcmd->except->connect_time)
 		{
 			sendnumericfmt(client, ERR_UNKNOWNCOMMAND,
 			               "%s :You must be connected for at least %ld seconds before you can use this command",
-			               ovr->command->cmd, rcmd->connect_delay);
+			               ovr->command->cmd, rcmd->except->connect_time);
 		} else {
 			sendnumericfmt(client, ERR_UNKNOWNCOMMAND,
 			               "%s :This command is disabled by the network administrator",
