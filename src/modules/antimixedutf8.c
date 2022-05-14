@@ -18,6 +18,8 @@
  *                 ban-action block;
  *                 ban-reason "Possible mixed character spam";
  *                 ban-time 4h; // For other types
+ *                 except {
+ *                 }
  *         };
  * };
  *
@@ -56,6 +58,7 @@ struct {
 	BanAction ban_action;
 	char *ban_reason;
 	long ban_time;
+	SecurityGroup *except;
 } cfg;
 
 static void free_config(void);
@@ -196,9 +199,12 @@ CMD_OVERRIDE_FUNC(override_msg)
 {
 	int score, ret;
 	
-	if (!MyUser(client) || (parc < 3) || BadPtr(parv[2]))
+	if (!MyUser(client) || (parc < 3) || BadPtr(parv[2]) ||
+	    user_allowed_by_security_group(client, cfg.except))
 	{
-		/* Short circuit for: remote clients or insufficient parameters */
+		/* Short circuit for: remote clients, insufficient parameters,
+		 * antimixedutf8::except.
+		 */
 		CallCommandOverride(ovr, client, recv_mtags, parc, parv);
 		return;
 	}
@@ -271,6 +277,7 @@ static void init_config(void)
 static void free_config(void)
 {
 	safe_free(cfg.ban_reason);
+	free_security_group(cfg.except);
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
 
@@ -319,6 +326,10 @@ int antimixedutf8_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 		if (!strcmp(cep->name, "ban-time"))
 		{
 		} else
+		if (!strcmp(cep->name, "except"))
+		{
+			test_match_block(cf, cep, &errors);
+		} else
 		{
 			config_error("%s:%i: unknown directive set::antimixedutf8::%s",
 				cep->file->filename, cep->line_number, cep->name);
@@ -357,6 +368,10 @@ int antimixedutf8_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		if (!strcmp(cep->name, "ban-time"))
 		{
 			cfg.ban_time = config_checkval(cep->value, CFG_TIME);
+		} else
+		if (!strcmp(cep->name, "except"))
+		{
+			conf_match_block(cf, cep, &cfg.except);
 		}
 	}
 	return 1;
