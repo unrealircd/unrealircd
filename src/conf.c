@@ -2491,7 +2491,7 @@ void config_rehash()
 		safe_free(deny_channel_ptr->reason);
 		safe_free(deny_channel_ptr->class);
 		DelListItem(deny_channel_ptr, conf_deny_channel);
-		unreal_delete_masks(deny_channel_ptr->mask);
+		free_security_group(deny_channel_ptr->match);
 		safe_free(deny_channel_ptr);
 	}
 
@@ -2501,7 +2501,7 @@ void config_rehash()
 		safe_free(allow_channel_ptr->channel);
 		safe_free(allow_channel_ptr->class);
 		DelListItem(allow_channel_ptr, conf_allow_channel);
-		unreal_delete_masks(allow_channel_ptr->mask);
+		free_security_group(allow_channel_ptr->match);
 		safe_free(allow_channel_ptr);
 	}
 
@@ -3141,7 +3141,7 @@ ConfigItem_deny_channel *find_channel_allowed(Client *client, const char *name)
 		{
 			if (dchannel->class && strcmp(client->local->class->name, dchannel->class))
 				continue;
-			if (dchannel->mask && !unreal_mask_match(client, dchannel->mask))
+			if (dchannel->match && !user_allowed_by_security_group(client, dchannel->match))
 				continue;
 			break; /* MATCH deny channel { } */
 		}
@@ -3156,7 +3156,7 @@ ConfigItem_deny_channel *find_channel_allowed(Client *client, const char *name)
 			{
 				if (achannel->class && strcmp(client->local->class->name, achannel->class))
 					continue;
-				if (achannel->mask && !unreal_mask_match(client, achannel->mask))
+				if (achannel->match && !user_allowed_by_security_group(client, achannel->match))
 					continue;
 				break; /* MATCH allow channel { } */
 			}
@@ -5516,6 +5516,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (strcmp(cep->name, "options") &&
+		    strcmp(cep->name, "match") &&
 		    strcmp(cep->name, "mask") &&
 		    config_is_blankorempty(cep, "allow"))
 		{
@@ -5767,15 +5768,15 @@ int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_allow_channel 	*allow = NULL;
 	ConfigEntry 	    	*cep;
 	char *class = NULL;
-	ConfigEntry *mask = NULL;
+	ConfigEntry *match = NULL;
 
 	/* First, search for ::class, if any */
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "class"))
 			class = cep->value;
-		else if (!strcmp(cep->name, "mask"))
-			mask = cep;
+		else if (!strcmp(cep->name, "match") || !strcmp(cep->name, "mask"))
+			match = cep;
 	}
 
 	for (cep = ce->items; cep; cep = cep->next)
@@ -5787,8 +5788,8 @@ int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 			safe_strdup(allow->channel, cep->value);
 			if (class)
 				safe_strdup(allow->class, class);
-			if (mask)
-				unreal_add_masks(&allow->mask, mask);
+			if (match)
+				conf_match_block(conf, match, &allow->match);
 			AddListItem(allow, conf_allow_channel);
 		}
 	}
@@ -5797,9 +5798,10 @@ int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry		*cep;
-	int			errors = 0;
-	char			has_channel = 0, has_class = 0;
+	ConfigEntry	*cep;
+	int		errors = 0;
+	char		has_match = 0, has_mask = 0, has_channel = 0, has_class = 0;
+
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (config_is_blankorempty(cep, "allow channel"))
@@ -5823,8 +5825,15 @@ int	_test_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 			}
 			has_class = 1;
 		}
+		else if (!strcmp(cep->name, "match"))
+		{
+			has_match = 1;
+			test_match_block(conf, cep, &errors);
+		}
 		else if (!strcmp(cep->name, "mask"))
 		{
+			has_mask = 1;
+			test_match_block(conf, cep, &errors);
 		}
 		else
 		{
@@ -5832,6 +5841,13 @@ int	_test_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 				"allow channel", cep->name);
 			errors++;
 		}
+	}
+	if (has_mask && has_match)
+	{
+		config_error("%s:%d: You cannot have both ::mask and ::match. "
+		             "You should only use %s::match.",
+		             ce->file->filename, ce->line_number, ce->name);
+		errors++;
 	}
 	if (!has_channel)
 	{
@@ -9940,9 +9956,9 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 		{
 			safe_strdup(deny->class, cep->value);
 		}
-		else if (!strcmp(cep->name, "mask"))
+		else if (!strcmp(cep->name, "match") || !strcmp(cep->name, "mask"))
 		{
-			unreal_add_masks(&deny->mask, cep);
+			conf_match_block(conf, cep, &deny->match);
 		}
 	}
 	AddListItem(deny, conf_deny_channel);
@@ -10016,6 +10032,7 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 	if (!strcmp(ce->value, "channel"))
 	{
 		char has_channel = 0, has_warn = 0, has_reason = 0, has_redirect = 0, has_class = 0;
+		char has_mask = 0, has_match = 0;
 		for (cep = ce->items; cep; cep = cep->next)
 		{
 			if (config_is_blankorempty(cep, "deny channel"))
@@ -10073,8 +10090,15 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 				}
 				has_class = 1;
 			}
+			else if (!strcmp(cep->name, "match"))
+			{
+				has_match = 1;
+				test_match_block(conf, cep, &errors);
+			}
 			else if (!strcmp(cep->name, "mask"))
 			{
+				has_mask = 1;
+				test_match_block(conf, cep, &errors);
 			}
 			else
 			{
@@ -10093,6 +10117,13 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 		{
 			config_error_missing(ce->file->filename, ce->line_number,
 				"deny channel::reason");
+			errors++;
+		}
+		if (has_mask && has_match)
+		{
+			config_error("%s:%d: You cannot have both ::mask and ::match. "
+				     "You should only use %s %s::match.",
+				     ce->file->filename, ce->line_number, ce->name, ce->value);
 			errors++;
 		}
 	}

@@ -1784,14 +1784,14 @@ struct ConfigItem_deny_channel {
 	ConfigFlag		flag;
 	char			*channel, *reason, *redirect, *class;
 	unsigned char	warn;
-	ConfigItem_mask *mask;
+	SecurityGroup		*match;
 };
 
 struct ConfigItem_allow_channel {
 	ConfigItem_allow_channel		*prev, *next;
 	ConfigFlag		flag;
 	char			*channel, *class;
-	ConfigItem_mask *mask;
+	SecurityGroup		*match;
 };
 
 struct ConfigItem_allow_dcc {
