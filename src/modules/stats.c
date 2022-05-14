@@ -935,12 +935,16 @@ int stats_set(Client *client, const char *para)
 int stats_tld(Client *client, const char *para)
 {
 	ConfigItem_tld *tld;
-	ConfigItem_mask *m;
+	NameValuePrioList *m;
 
 	for (tld = conf_tld; tld; tld = tld->next)
 	{
-		for (m = tld->mask; m; m = m->next)
-			sendnumeric(client, RPL_STATSTLINE, m->mask, tld->motd_file, tld->rules_file ? tld->rules_file : "none");
+		for (m = tld->match->printable_list; m; m = m->next)
+		{
+			sendnumeric(client, RPL_STATSTLINE, namevalue_nospaces(m),
+			            tld->motd_file,
+			            tld->rules_file ? tld->rules_file : "none");
+		}
 	}
 
 	return 0;

@@ -3037,7 +3037,7 @@ ConfigItem_tld *find_tld(Client *client)
 
 	for (tld = conf_tld; tld; tld = tld->next)
 	{
-		if (unreal_mask_match(client, tld->mask))
+		if (user_allowed_by_security_group(client, tld->match))
 		{
 			if ((tld->options & TLD_TLS) && !IsSecureConnect(client))
 				continue;
@@ -4621,8 +4621,8 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "mask"))
-			unreal_add_masks(&ca->mask, cep);
+		if (!strcmp(cep->name, "match") || !strcmp(cep->name, "mask"))
+			conf_match_block(conf, cep, &ca->match);
 		else if (!strcmp(cep->name, "motd"))
 		{
 			safe_strdup(ca->motd_file, cep->value);
@@ -4671,8 +4671,8 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	int	    errors = 0;
 	int	    fd = -1;
-	char has_mask = 0, has_motd = 0, has_rules = 0, has_shortmotd = 0, has_channel = 0;
-	char has_opermotd = 0, has_botmotd = 0, has_options = 0;
+	char has_mask = 0, has_match = 0, has_motd = 0, has_rules = 0, has_shortmotd = 0;
+	char has_channel = 0, has_opermotd = 0, has_botmotd = 0, has_options = 0;
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
@@ -4687,7 +4687,18 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->name, "mask"))
 		{
 			if (cep->value || cep->items)
+			{
 				has_mask = 1;
+				test_match_block(conf, cep, &errors);
+			}
+		}
+		else if (!strcmp(cep->name, "match"))
+		{
+			if (cep->value || cep->items)
+			{
+				has_match = 1;
+				test_match_block(conf, cep, &errors);
+			}
 		}
 		/* tld::motd */
 		else if (!strcmp(cep->name, "motd"))
@@ -4837,10 +4848,17 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 	}
-	if (!has_mask)
+	if (!has_mask && !has_match)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"tld::mask");
+			"tld::match");
+		errors++;
+	}
+	if (has_mask && has_match)
+	{
+		config_error("%s:%d: You cannot have both ::mask and ::match. "
+		             "You should only use %s::match.",
+		             ce->file->filename, ce->line_number, ce->name);
 		errors++;
 	}
 	if (!has_motd)

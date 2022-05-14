@@ -1683,7 +1683,7 @@ struct ConfigItem_ulines {
 struct ConfigItem_tld {
 	ConfigItem_tld 	*prev, *next;
 	ConfigFlag_tld 	flag;
-	ConfigItem_mask *mask;
+	SecurityGroup	*match;
 	char 		*channel;
 	char 		*motd_file, *rules_file, *smotd_file;
 	char 		*botmotd_file, *opermotd_file;
