@@ -71,7 +71,7 @@ Extban *findmod_by_bantype(const char *str, const char **remainder)
 	if (remainder)
 		*remainder = p+1;
 
-	ban_name_length = p - str - 2;
+	ban_name_length = p - str - 1;
 	return findmod_by_bantype_raw(str+1, ban_name_length);
 }
 
