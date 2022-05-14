@@ -1087,6 +1087,46 @@ void unreal_add_name_values(NameValuePrioList **n, const char *name, ConfigEntry
 	}
 }
 
+/** Prints the name:value pair of a NameValuePrioList */
+const char *namevalue(NameValuePrioList *n)
+{
+	static char buf[512];
+
+	if (!n->name)
+		return "";
+
+	if (!n->value)
+		return n->name;
+
+	snprintf(buf, sizeof(buf), "%s:%s", n->name, n->value);
+	return buf;
+}
+
+/** Version of namevalue() but replaces spaces with underscores.
+ * Used in for example numeric sending routines where a field
+ * may not contain any spaces.
+ */
+const char *namevalue_nospaces(NameValuePrioList *n)
+{
+	static char buf[512];
+	char *p;
+
+	if (!n->name)
+		return "";
+
+	if (!n->value)
+		strlcpy(buf, n->name, sizeof(n->name));
+
+	snprintf(buf, sizeof(buf), "%s:%s", n->name, n->value);
+
+	/* Replace spaces with underscores */
+	for (p=buf; *p; p++)
+		if (*p == ' ')
+			*p = '_';
+
+	return buf;
+}
+
 /** Our own strcasestr implementation because strcasestr is
  * often not available or is not working correctly.
  */

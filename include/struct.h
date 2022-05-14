@@ -1561,7 +1561,7 @@ struct ConfigFlag_allow {
 struct ConfigItem_allow {
 	ConfigItem_allow *prev, *next;
 	ConfigFlag flag;
-	ConfigItem_mask *mask;
+	SecurityGroup *match;
 	char *server;
 	AuthConfig *auth;
 	int maxperip; /**< Maximum connections permitted per IP address (locally) */
@@ -1864,6 +1864,8 @@ struct SecurityGroup {
 	SecurityGroup *prev, *next;
 	int priority;
 	char name[SECURITYGROUPLEN+1];
+	NameValuePrioList *printable_list;
+	int printable_list_counter;
 	/* Include */
 	int identified;
 	int reputation_score;

@@ -1268,7 +1268,7 @@ int AllowClient(Client *client)
 		if (aconf->flags.tls && !IsSecure(client))
 			continue;
 
-		if (!unreal_mask_match(client, aconf->mask))
+		if (!user_allowed_by_security_group(client, aconf->match))
 			continue;
 
 		/* Check authentication */

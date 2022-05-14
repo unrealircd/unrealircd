@@ -2401,7 +2401,7 @@ void config_rehash()
 	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) next)
 	{
 		next = (ListStruct *)allow_ptr->next;
-		unreal_delete_masks(allow_ptr->mask);
+		free_security_group(allow_ptr->match);
 		Auth_FreeAuthConfig(allow_ptr->auth);
 		DelListItem(allow_ptr, conf_allow);
 		safe_free(allow_ptr);
@@ -5343,12 +5343,13 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	}
 	allow = safe_alloc(sizeof(ConfigItem_allow));
 	allow->ipv6_clone_mask = tempiConf.default_ipv6_clone_mask;
+	allow->match = safe_alloc(sizeof(SecurityGroup));
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "ip") || !strcmp(cep->name, "hostname"))
+		if (!strcmp(cep->name, "match") || !strcmp(cep->name, "mask") || !strcmp(cep->name, "ip") || !strcmp(cep->name, "hostname"))
 		{
-			unreal_add_masks(&allow->mask, cep);
+			conf_match_block(conf, cep, &allow->match);
 		}
 		else if (!strcmp(cep->name, "password"))
 			allow->auth = AuthBlockToAuthConfig(cep);
@@ -5414,7 +5415,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp;
 	int		errors = 0;
 	Hook *h;
-	char has_ip = 0, has_hostname = 0, has_mask = 0;
+	char has_ip = 0, has_hostname = 0, has_mask = 0, has_match = 0;
 	char has_maxperip = 0, has_global_maxperip = 0, has_password = 0, has_class = 0;
 	char has_redirectserver = 0, has_redirectport = 0, has_options = 0;
 	int hostname_possible_silliness = 0;
@@ -5495,6 +5496,12 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "mask"))
 		{
 			has_mask = 1;
+			test_match_block(conf, cep, &errors);
+		}
+		else if (!strcmp(cep->name, "match"))
+		{
+			has_match = 1;
+			test_match_block(conf, cep, &errors);
 		}
 		else if (!strcmp(cep->name, "maxperip"))
 		{
@@ -5642,27 +5649,33 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	if (has_mask && (has_ip || has_hostname))
+	if ((has_mask || has_match) && (has_ip || has_hostname))
 	{
-		config_error("%s:%d: The allow block uses allow::mask, but you also have an allow::ip and allow::hostname.",
+		config_error("%s:%d: The allow block uses allow::match, but you also have an allow::ip and allow::hostname.",
 			ce->file->filename, ce->line_number);
-		config_error("Please delete your allow::ip and allow::hostname entries and/or integrate them into allow::mask");
+		config_error("Please delete your allow::ip and allow::hostname entries and/or integrate them into allow::match");
 	} else
 	if (has_ip)
 	{
-		config_warn("%s:%d: The allow block uses allow::mask nowadays. Rename your allow::ip item to allow::mask.",
+		config_warn("%s:%d: The allow block uses allow::match nowadays. Rename your allow::ip item to allow::match.",
 			ce->file->filename, ce->line_number);
 		config_warn("See https://www.unrealircd.org/docs/FAQ#allow-mask for more information");
 	} else
 	if (has_hostname)
 	{
-		config_warn("%s:%d: The allow block uses allow::mask nowadays. Rename your allow::hostname item to allow::mask.",
+		config_warn("%s:%d: The allow block uses allow::match nowadays. Rename your allow::hostname item to allow::match.",
 			ce->file->filename, ce->line_number);
 		config_warn("See https://www.unrealircd.org/docs/FAQ#allow-mask for more information");
 	} else
-	if (!has_mask)
+	if (has_mask && has_match)
 	{
-		config_error("%s:%d: allow block needs an allow::mask",
+		config_error("%s:%d: You cannot have both ::mask and ::match. You should only use allow::match.",
+				 ce->file->filename, ce->line_number);
+		errors++;
+	} else
+	if (!has_match && !has_mask)
+	{
+		config_error("%s:%d: allow block needs an allow::match",
 				 ce->file->filename, ce->line_number);
 		errors++;
 	}
@@ -10200,7 +10213,7 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 }
 
 #define CheckNullX(x) if ((!(x)->value) || (!(*((x)->value)))) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); *errors = *errors + 1; return 0; }
-int test_match_block(ConfigFile *conf, ConfigEntry *cep, int *errors)
+int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 {
 	if (!strcmp(cep->name, "webirc") || !strcmp(cep->name, "exclude-webirc"))
 	{
@@ -10270,6 +10283,33 @@ int test_match_block(ConfigFile *conf, ConfigEntry *cep, int *errors)
 	return 1; /* Handled, but there could be errors */
 }
 
+int test_match_block(ConfigFile *conf, ConfigEntry *ce, int *errors_out)
+{
+	int errors = 0;
+	ConfigEntry *cep;
+
+	/* (If there is only a ce->value, trust that it is OK) */
+
+	/* Test ce->items... */
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		/* Only complain about things with values,
+		 * as valueless things like "10.0.0.0/8" are treated as a mask.
+		 */
+		if (!test_match_item(conf, cep, &errors) && cep->value)
+		{
+			config_error_unknown(cep->file->filename, cep->line_number,
+				ce->name, cep->name);
+			errors++;
+			continue;
+		}
+	}
+
+	*errors_out = *errors_out + errors;
+	return errors ? 0 : 1;
+}
+
+
 int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 {
 	int errors = 0;
@@ -10302,7 +10342,7 @@ int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!test_match_block(conf, cep, &errors))
+		if (!test_match_item(conf, cep, &errors))
 		{
 			config_error_unknown(cep->file->filename, cep->line_number,
 				"security-group", cep->name);
@@ -10314,7 +10354,7 @@ int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 	return errors;
 }
 
-int conf_match_block(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
+int conf_match_item(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
 {
 	int errors = 0; /* unused */
 	SecurityGroup *s = *block;
@@ -10327,7 +10367,7 @@ int conf_match_block(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
 	if (*block == NULL)
 	{
 		/* Yeah we call a TEST routine from a CONFIG RUN routine ;). */
-		if (!test_match_block(conf, cep, &errors))
+		if (!test_match_item(conf, cep, &errors))
 			return 0; /* not for us */
 		/* If we are still here then we must create the security group */
 		*block = s = safe_alloc(sizeof(SecurityGroup));
@@ -10400,10 +10440,42 @@ int conf_match_block(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
 			/* Extended (inclusive) */
 			if (findmod_by_bantype_raw(name, strlen(name)))
 				unreal_add_name_values(&s->extended, name, cep);
-			return 0; /* Unhandled */
+			else
+				return 0; /* Unhandled */
 		}
 	}
+
+	add_nvplist(&s->printable_list, s->printable_list_counter++, cep->name, cep->value);
+
 	return 1; /* Handled by us (guaranteed earlier) */
+}
+
+int conf_match_block(ConfigFile *conf, ConfigEntry *ce, SecurityGroup **block)
+{
+	ConfigEntry *cep;
+	SecurityGroup *s = *block;
+
+	if (*block == NULL)
+		*block = s = safe_alloc(sizeof(SecurityGroup));
+
+	/* Check for simple form: match *; / mask *; */
+	if (ce->value)
+	{
+		unreal_add_masks(&s->mask, ce);
+		add_nvplist(&s->printable_list, s->printable_list_counter++, "mask", ce->value);
+	}
+
+	/* Check for long form: match { .... } / mask { .... } */
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!conf_match_item(conf, cep, &s) && !cep->value && !cep->items)
+		{
+			/* Valueless? Then it must be a mask like 10.0.0.0/8 */
+			unreal_add_masks(&s->mask, cep);
+			add_nvplist(&s->printable_list, s->printable_list_counter++, "mask", cep->name);
+		}
+	}
+	return 1;
 }
 
 int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
@@ -10419,7 +10491,7 @@ int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
 			DelListItem(s, securitygroups);
 			AddListItemPrio(s, securitygroups, s->priority);
 		} else
-			conf_match_block(conf, cep, &s);
+			conf_match_item(conf, cep, &s);
 	}
 	return 1;
 }

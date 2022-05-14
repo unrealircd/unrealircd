@@ -487,14 +487,14 @@ int stats_except(Client *client, const char *para)
 int stats_allow(Client *client, const char *para)
 {
 	ConfigItem_allow *allows;
-	ConfigItem_mask *m;
+	NameValuePrioList *m;
 
 	for (allows = conf_allow; allows; allows = allows->next)
 	{
-		for (m = allows->mask; m; m = m->next)
+		for (m = allows->match->printable_list; m; m = m->next)
 		{
 			sendnumeric(client, RPL_STATSILINE,
-				    m->mask, "-",
+				    namevalue_nospaces(m), "-",
 				    allows->maxperip,
 				    allows->global_maxperip,
 				    allows->class->name,
