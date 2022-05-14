@@ -2438,6 +2438,8 @@ void config_rehash()
 		free_motd(&tld_ptr->opermotd);
 		free_motd(&tld_ptr->botmotd);
 
+		free_security_group(tld_ptr->match);
+
 		DelListItem(tld_ptr, conf_tld);
 		safe_free(tld_ptr);
 	}
