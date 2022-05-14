@@ -10377,7 +10377,6 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 	} else
 	if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "include-mask") || !strcmp(cep->name, "exclude-mask"))
 	{
-		CheckNullX(cep);
 	} else
 	if (!strcmp(cep->name, "security-group") || !strcmp(cep->name, "exclude-security-group"))
 	{
