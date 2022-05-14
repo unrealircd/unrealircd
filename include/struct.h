@@ -1628,7 +1628,7 @@ struct ConfigItem_oper {
 	AuthConfig *auth;
 	char *operclass;
 	ConfigItem_class *class;
-	ConfigItem_mask *mask;
+	SecurityGroup *match;
 	unsigned long modes, require_modes;
 	char *vhost;
 	int maxlogins;

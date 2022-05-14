@@ -2354,7 +2354,7 @@ void config_rehash()
 		safe_free(oper_ptr->operclass);
 		safe_free(oper_ptr->vhost);
 		Auth_FreeAuthConfig(oper_ptr->auth);
-		unreal_delete_masks(oper_ptr->mask);
+		free_security_group(oper_ptr->match);
 		DelListItem(oper_ptr, conf_oper);
 		for (s = oper_ptr->swhois; s; s = s_next)
 		{
@@ -3936,6 +3936,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 
 	oper =  safe_alloc(sizeof(ConfigItem_oper));
 	safe_strdup(oper->name, ce->value);
+	oper->match = safe_alloc(sizeof(SecurityGroup));
 
 	/* Inherit some defaults: */
 	oper->server_notice_colors = tempiConf.server_notice_colors;
@@ -4003,9 +4004,9 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		{
 			oper->maxlogins = atoi(cep->value);
 		}
-		else if (!strcmp(cep->name, "mask"))
+		else if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "match"))
 		{
-			unreal_add_masks(&oper->mask, cep);
+			conf_match_block(conf, cep, &oper->match);
 		}
 		else if (!strcmp(cep->name, "vhost"))
 		{
@@ -4019,7 +4020,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 {
 	char has_class = 0, has_password = 0, has_snomask = 0;
-	char has_modes = 0, has_require_modes = 0, has_mask = 0, has_maxlogins = 0;
+	char has_modes = 0, has_require_modes = 0, has_mask = 0, has_match = 0, has_maxlogins = 0;
 	char has_operclass = 0, has_vhost = 0;
 	ConfigEntry *cep;
 	int errors = 0;
@@ -4188,7 +4189,18 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			else if (!strcmp(cep->name, "mask"))
 			{
 				if (cep->value || cep->items)
+				{
 					has_mask = 1;
+					test_match_block(conf, cep, &errors);
+				}
+			}
+			else if (!strcmp(cep->name, "match"))
+			{
+				if (cep->value || cep->items)
+				{
+					has_match = 1;
+					test_match_block(conf, cep, &errors);
+				}
 			}
 			else
 			{
@@ -4208,7 +4220,18 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			else if (!strcmp(cep->name, "mask"))
 			{
 				if (cep->value || cep->items)
+				{
 					has_mask = 1;
+					test_match_block(conf, cep, &errors);
+				}
+			}
+			else if (!strcmp(cep->name, "match"))
+			{
+				if (cep->value || cep->items)
+				{
+					has_match = 1;
+					test_match_block(conf, cep, &errors);
+				}
 			}
 			else if (!strcmp(cep->name, "password"))
 			{
@@ -4237,10 +4260,17 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			"oper::password");
 		errors++;
 	}
-	if (!has_mask)
+	if (!has_mask && !has_match)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"oper::mask");
+			"oper::match");
+		errors++;
+	}
+	if (has_mask && has_match)
+	{
+		config_error("%s:%d: You cannot have both ::mask and ::match. "
+		             "You should only use oper::match.",
+		             ce->file->filename, ce->line_number);
 		errors++;
 	}
 	if (!has_class)

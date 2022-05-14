@@ -237,7 +237,7 @@ CMD_FUNC(cmd_oper)
 	 * more seriously, they are logged as errors instead of warnings.
 	 */
 
-	if (!unreal_mask_match(client, operblock->mask))
+	if (!user_allowed_by_security_group(client, operblock->match))
 	{
 		sendnumeric(client, ERR_NOOPERHOST);
 		unreal_log(ULOG_ERROR, "oper", "OPER_FAILED", client,

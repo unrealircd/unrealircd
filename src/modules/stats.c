@@ -521,14 +521,14 @@ int stats_command(Client *client, const char *para)
 int stats_oper(Client *client, const char *para)
 {
 	ConfigItem_oper *o;
-	ConfigItem_mask *m;
+	NameValuePrioList *m;
 
 	for (o = conf_oper; o; o = o->next)
 	{
-		for (m = o->mask; m; m = m->next)
+		for (m = o->match->printable_list; m; m = m->next)
 		{
 			sendnumeric(client, RPL_STATSOLINE,
-			            'O', m->mask, o->name,
+			            'O', namevalue_nospaces(m), o->name,
 			            o->operclass ? o->operclass: "",
 			            o->class->name ? o->class->name : "");
 		}
