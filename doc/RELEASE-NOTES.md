@@ -6,10 +6,49 @@ If you are already running UnrealIRCd 6 then read below. Otherwise, jump
 straight to the [summary about UnrealIRCd 6](#Summary) to learn more
 about UnrealIRCd 6.
 
-Fixes:
-* 
-
 Enhancements:
+* The [security-group block](https://www.unrealircd.org/docs/Security-group_block)
+  has been expanded and the same functionality is now available in
+  [mask items](https://www.unrealircd.org/docs/Mask_item) too:
+  * This means the existing options like identified, webirc, tls and
+    reputation-score can be used in allow::mask, tld::mask, etc.
+  * New options (in both security-group and mask) are:
+    * connect-time: time a user is connected to IRC
+    * security-group: to check another security group
+    * account: services account name
+    * country: country as found by GeoIP
+    * realname: realname (gecos) of the user
+    * certfp: certificate fingerprint
+    * Some of this functionality was already available in a different way
+      (extended server bans) but this makes it easier to read in the config file
+      and is more flexible.
+  * Every option also has an exclude- variant, eg. *exclude-country*.
+    If a user matches any exclude- option then it is considered not a match.
+  * Example of direct use in a ::mask item:
+    ```
+    tld {
+        mask { country { ES; MX; } }
+        motd "motd.es.txt";
+        rules "rules.es.txt";
+    }
+    ```
+  * Example of defining a security group and using it in a mask item later:
+    ```
+    security-group irccloud {
+        mask { ip1; ip2; ip3; ip4 }
+    }
+    allow {
+        mask { security-group irccloud; }
+        class clients;
+        maxperip 128;
+    }
+    except ban {
+        mask { security-group irccloud; }
+        type { blacklist; connect-flood; handshake-data-flood; }
+    }
+    ```
+
+Fixes:
 * 
 
 UnrealIRCd 6.0.3
