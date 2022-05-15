@@ -1115,7 +1115,7 @@ const char *namevalue_nospaces(NameValuePrioList *n)
 		return "";
 
 	if (!n->value)
-		strlcpy(buf, n->name, sizeof(n->name));
+		strlcpy(buf, n->name, sizeof(buf));
 
 	snprintf(buf, sizeof(buf), "%s:%s", n->name, n->value);
 
