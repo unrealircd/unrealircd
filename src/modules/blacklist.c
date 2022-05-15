@@ -67,6 +67,7 @@ struct Blacklist {
 	int action;
 	long ban_time;
 	char *reason;
+	SecurityGroup *except;
 };
 
 /* Blacklist user struct. In the c-ares DNS reply callback we need to pass
@@ -236,6 +237,8 @@ void delete_blacklist_block(Blacklist *e)
 
 	safe_free(e->name);
 	safe_free(e->reason);
+	free_security_group(e->except);
+
 	safe_free(e);
 }
 
@@ -356,6 +359,10 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				}
 			}
 		} else
+		if (!strcmp(cep->name, "except"))
+		{
+			test_match_block(cf, cep, &errors);
+		} else
 		if (!cep->value)
 		{
 			config_error_empty(cep->file->filename, cep->line_number,
@@ -388,8 +395,8 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				continue;
 			}
 			has_ban_time = 1;
-		} else
-		if (!strcmp(cep->name, "reason"))
+		}
+		else if (!strcmp(cep->name, "reason"))
 		{
 			if (has_reason)
 			{
@@ -524,13 +531,17 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		{
 			d->action = banact_stringtoval(cep->value);
 		}
+		else if (!strcmp(cep->name, "ban-time"))
+		{
+			d->ban_time = config_checkval(cep->value, CFG_TIME);
+		}
 		else if (!strcmp(cep->name, "reason"))
 		{
 			safe_strdup(d->reason, cep->value);
 		}
-		else if (!strcmp(cep->name, "ban-time"))
+		else if (!strcmp(cep->name, "except"))
 		{
-			d->ban_time = config_checkval(cep->value, CFG_TIME);
+			conf_match_block(cf, cep, &d->except);
 		}
 	}
 
@@ -574,7 +585,7 @@ int blacklist_start_check(Client *client)
 		SetNoHandshakeDelay(client);
 		return 0;
 	}
-	
+
 	if (!BLUSER(client))
 	{
 		SetBLUser(client, safe_alloc(sizeof(BLUser)));
@@ -586,6 +597,10 @@ int blacklist_start_check(Client *client)
 		/* Stop processing if client is (being) killed already */
 		if (!BLUSER(client))
 			break;
+
+		/* Check if user is exempt (then don't bother checking) */
+		if (user_allowed_by_security_group(client, bl->except))
+			continue;
 
 		/* Initiate blacklist requests */
 		if (bl->backend_type == BLACKLIST_BACKEND_DNS)
