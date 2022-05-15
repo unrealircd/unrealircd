@@ -206,7 +206,7 @@ void geoip_base_unserialize(const char *str, ModData *m)
 	char *country_code = NULL;
 	GeoIPResult *res;
 
-	if (m->ptr == NULL)
+	if (m->ptr)
 	{
 		free_geoip_result((GeoIPResult *)m->ptr);
 		m->ptr = NULL;
