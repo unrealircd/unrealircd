@@ -812,6 +812,7 @@ void free_security_group(SecurityGroup *s)
 	free_entire_name_list(s->exclude_security_group);
 	free_nvplist(s->extended);
 	free_nvplist(s->exclude_extended);
+	free_nvplist(s->printable_list);
 	safe_free(s);
 }
 
