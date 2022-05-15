@@ -143,7 +143,6 @@ CMD_FUNC(cmd_sethost)
 	if (MyConnect(client))
 	{
 		sendto_one(client, NULL, ":%s MODE %s :+xt", client->name, client->name);
-		sendnumeric(client, RPL_HOSTHIDDEN, vhost);
 		sendnotice(client, 
 		    "Your nick!user@host-mask is now (%s!%s@%s) - To disable it type /mode %s -x",
 		     client->name, client->user->username, vhost,

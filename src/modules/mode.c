@@ -1307,8 +1307,6 @@ CMD_FUNC(_cmd_umode)
 
 		/* Notify */
 		userhost_changed(client);
-		if (MyUser(client))
-			sendnumeric(client, RPL_HOSTHIDDEN, client->user->virthost);
 	}
 
 	/* -x */
@@ -1322,8 +1320,6 @@ CMD_FUNC(_cmd_umode)
 
 		/* Notify */
 		userhost_changed(client);
-		if (MyUser(client))
-			sendnumeric(client, RPL_HOSTHIDDEN, client->user->realhost);
 	}
 	/*
 	 * If I understand what this code is doing correctly...

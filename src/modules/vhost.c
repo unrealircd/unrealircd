@@ -157,7 +157,6 @@ CMD_FUNC(cmd_vhost)
 		for (s = vhost->swhois; s; s = s->next)
 			swhois_add(client, "vhost", -100, s->line, &me, NULL);
 	}
-	sendnumeric(client, RPL_HOSTHIDDEN, vhost->virthost);
 	sendnotice(client, "*** Your vhost is now %s%s%s",
 		vhost->virtuser ? vhost->virtuser : "",
 		vhost->virtuser ? "@" : "",

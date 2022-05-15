@@ -231,6 +231,9 @@ void _userhost_changed(Client *client)
 		if (HasCapabilityFast(client, CAP_CHGHOST))
 			sendto_one(client, NULL, "%s", buf);
 
+		if (MyUser(client))
+			sendnumeric(client, RPL_HOSTHIDDEN, GetHost(client));
+
 		/* A userhost change always generates the following network traffic:
 		 * server to server traffic, CAP "chghost" notifications, and
 		 * possibly PART+JOIN+MODE if force-rejoin had work to do.
@@ -338,7 +341,4 @@ CMD_FUNC(cmd_chghost)
 	safe_strdup(target->user->virthost, parv[2]);
 	
 	userhost_changed(target);
-
-	if (MyUser(target))
-		sendnumeric(target, RPL_HOSTHIDDEN, parv[2]);
 }

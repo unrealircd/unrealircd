@@ -74,13 +74,17 @@ void set_oper_host(Client *client, const char *host)
 		    client->id, client->user->username);
 	        host = p;
 	}
-	iNAH_host(client, host);
-	SetHidden(client);
+	safe_strdup(client->user->virthost, host);
+	if (MyConnect(client))
+		sendto_server(NULL, 0, 0, NULL, ":%s SETHOST :%s", client->id, client->user->virthost);
+	client->umodes |= UMODE_SETHOST|UMODE_HIDE;
 }
 
 int _make_oper(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost)
 {
 	long old_umodes = client->umodes & ALL_UMODES;
+
+	userhost_save_current(client);
 
 	/* Put in the right class (if any) */
 	if (clientclass)
@@ -108,6 +112,8 @@ int _make_oper(Client *client, const char *operblock_name, const char *operclass
 		/* +x has just been set by modes-on-oper and no vhost. cloak the oper! */
 		safe_strdup(client->user->virthost, client->user->cloakedhost);
 	}
+
+	userhost_changed(client);
 
 	unreal_log(ULOG_INFO, "oper", "OPER_SUCCESS", client,
 		   "$client.details is now an IRC Operator [oper-block: $oper_block] [operclass: $operclass]",
