@@ -126,6 +126,7 @@ static void extban_add_sorted(Extban *n)
 Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 {
 	Extban *e;
+	ModuleObject *banobj;
 	int existing = 0;
 
 	if (!req.name)
@@ -200,8 +201,7 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 				return e;
 			} else
 			{
-				if (module)
-					module->errorcode = MODERR_EXISTS;
+				module->errorcode = MODERR_EXISTS;
 				return NULL;
 			}
 		}
@@ -222,16 +222,16 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 	e->is_banned_events = req.is_banned_events;
 	e->owner = module;
 	e->options = req.options;
+
 	if (module->flags == MODFLAG_NONE)
 		e->preregistered = 1;
-	if (module)
-	{
-		ModuleObject *banobj = safe_alloc(sizeof(ModuleObject));
-		banobj->object.extban = e;
-		banobj->type = MOBJ_EXTBAN;
-		AddListItem(banobj, module->objects);
-		module->errorcode = MODERR_NOERROR;
-	}
+
+	banobj = safe_alloc(sizeof(ModuleObject));
+	banobj->object.extban = e;
+	banobj->type = MOBJ_EXTBAN;
+	AddListItem(banobj, module->objects);
+	module->errorcode = MODERR_NOERROR;
+
 	set_isupport_extban();
 	return e;
 }
