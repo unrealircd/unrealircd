@@ -10,24 +10,34 @@ Enhancements:
 * The [security-group block](https://www.unrealircd.org/docs/Security-group_block)
   has been expanded and the same functionality is now available in
   [mask items](https://www.unrealircd.org/docs/Mask_item) too:
-  * This means the existing options like identified, webirc, tls and
-    reputation-score can be used in allow::mask, tld::mask, etc.
+  * This means the existing options like `identified`, `webirc`, `tls` and
+    `reputation-score` can be used in `allow::mask` etc.
   * New options (in both security-group and mask) are:
-    * connect-time: time a user is connected to IRC
-    * security-group: to check another security group
-    * account: services account name
-    * country: country as found by GeoIP
-    * realname: realname (gecos) of the user
-    * certfp: certificate fingerprint
-    * Some of this functionality was already available in a different way
-      (extended server bans) but this makes it easier to read in the config file
-      and is more flexible.
-  * Every option also has an exclude- variant, eg. *exclude-country*.
-    If a user matches any exclude- option then it is considered not a match.
+    * `connect-time`: time a user is connected to IRC
+    * `security-group`: to check another security group
+    * `account`: services account name
+    * `country`: country as found by GeoIP
+    * `realname`: realname (gecos) of the user
+    * `certfp`: certificate fingerprint
+  * Every option also has an exclude- variant, eg. `exclude-country`.
+    If a user matches any `exclude-` option then it is considered not a match.
+  * The modules [connthrottle](https://www.unrealircd.org/docs/Connthrottle),
+    [restrict-commands](https://www.unrealircd.org/docs/Set_block#set::restrict-commands)
+    and [antirandom](https://www.unrealircd.org/docs/Set_block#set::antirandom)
+    now use the new `except` sub-block which is a mask item. The old syntax
+    (eg <code>set::antirandom::except-webirc</code>) is still accepted by UnrealIRCd
+    and converted to the appropriate new setting behind the scenes
+    (<code>set::antirandom::except::webirc</code>).
+  * The modules [blacklist](https://www.unrealircd.org/docs/Blacklist_block)
+    and [antimixedutf8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8)
+    now also support the `except` block (a mask item).
+  * Other than that the extended functionality is available in these blocks:
+    `allow`, `oper`, `tld`, `vhost`, `deny channel`, `allow channel`.
   * Example of direct use in a ::mask item:
     ```
+    /* Spanish MOTD for Spanish speaking countries */
     tld {
-        mask { country { ES; MX; } }
+        mask { country { ES; AR; BO; CL; CO; CR; DO; EC; SV; GT; HN; MX; NI; PA; PY; PE; PR; UY; VE; } }
         motd "motd.es.txt";
         rules "rules.es.txt";
     }
