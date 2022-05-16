@@ -565,7 +565,7 @@ CMD_FUNC(cmd_whois)
 
 		/* The following code deals with security-groups */
 		policy = whois_get_policy(client, target, "security-groups");
-		if (policy > WHOIS_CONFIG_DETAILS_NONE)
+		if ((policy > WHOIS_CONFIG_DETAILS_NONE) && !IsULine(target))
 		{
 			SecurityGroup *s;
 			int security_groups_whois_lines = 0;
