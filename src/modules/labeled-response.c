@@ -197,11 +197,15 @@ int lr_post_command(Client *from, MessageTag *mtags, const char *buf)
 			int more_tags = currentcmd.firstbuf[0] == '@';
 			currentcmd.client = NULL; /* prevent lr_packet from interfering */
 			snprintf(packet, sizeof(packet)-3,
-				 "@label=%s%s%s\r\n",
+				 "@label=%s%s%s",
 				 currentcmd.label,
 				 more_tags ? ";" : " ",
 				 more_tags ? currentcmd.firstbuf+1 : currentcmd.firstbuf);
-			sendbufto_one(from, packet, 0);
+			/* Format the IRC message correctly here, so we can take the
+			 * quick path through sendbufto_one().
+			 */
+			strlcat(packet, "\r\n", sizeof(packet));
+			sendbufto_one(from, packet, strlen(packet));
 			goto done;
 		}
 
