@@ -25,7 +25,7 @@ OBJS=ircd_vars.o dns.o auth.o channel.o crule.o dbuf.o \
 	fdlist.o hash.o ircsprintf.o list.o \
 	match.o modules.o parse.o mempool.o operclass.o \
 	conf_preprocessor.o conf.o proc_io_server.o debug.o dispatch.o \
-	misc.o serv.o aliases.o socket.o \
+	securitygroup.o misc.o serv.o aliases.o socket.o \
 	tls.o user.o scache.o send.o support.o \
 	version.o whowas.o random.o api-usermode.o api-channelmode.o \
 	api-moddata.o api-extban.o api-isupport.o api-command.o \

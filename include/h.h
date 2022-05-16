@@ -111,7 +111,6 @@ extern MODVAR ConfigItem_deny_version	*conf_deny_version;
 extern MODVAR ConfigItem_alias		*conf_alias;
 extern MODVAR ConfigItem_help		*conf_help;
 extern MODVAR ConfigItem_offchans	*conf_offchans;
-extern MODVAR SecurityGroup		*securitygroups;
 extern void		completed_connection(int, int, void *);
 extern void clear_unknown();
 extern EVENT(e_unload_module_delayed);
@@ -930,10 +929,6 @@ extern void unreal_delete_match(Match *m);
 extern int unreal_match(Match *m, const char *str);
 extern int unreal_match_method_strtoval(const char *str);
 extern char *unreal_match_method_valtostr(int val);
-extern void unreal_delete_masks(ConfigItem_mask *m);
-extern void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce);
-extern int unreal_mask_match(Client *acptr, ConfigItem_mask *m);
-extern int unreal_mask_match_string(const char *name, ConfigItem_mask *m);
 #ifdef _WIN32
 extern MODVAR BOOL IsService;
 #endif
@@ -1097,19 +1092,6 @@ extern int hide_idle_time(Client *client, Client *target);
 extern void lost_server_link(Client *serv, const char *tls_error_string);
 extern const char *sendtype_to_cmd(SendType sendtype);
 extern MODVAR MessageTagHandler *mtaghandlers;
-extern int security_group_valid_name(const char *name);
-extern int security_group_exists(const char *name);
-extern SecurityGroup *add_security_group(const char *name, int order);
-extern SecurityGroup *find_security_group(const char *name);
-extern void free_security_group(SecurityGroup *s);
-extern void set_security_group_defaults(void);
-extern int user_allowed_by_security_group(Client *client, SecurityGroup *s);
-extern int user_allowed_by_security_group_name(Client *client, const char *secgroupname);
-extern int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors);
-extern int conf_match_item(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block);
-extern int test_match_block(ConfigFile *conf, ConfigEntry *ce, int *errors_out);
-extern int conf_match_block(ConfigFile *conf, ConfigEntry *ce, SecurityGroup **block);
-extern int test_extended_list(Extban *extban, ConfigEntry *cep, int *errors);
 #define nv_find_by_name(stru, name)       do_nv_find_by_name(stru, name, ARRAY_SIZEOF((stru)))
 extern long do_nv_find_by_name(NameValue *table, const char *cmd, int numelements);
 #define nv_find_by_value(stru, value)       do_nv_find_by_value(stru, value, ARRAY_SIZEOF((stru)))
@@ -1145,6 +1127,29 @@ extern void read_until(char **p, char *stopchars);
 extern int is_ip_valid(const char *ip);
 extern int is_file_readable(const char *file, const char *dir);
 json_t *json_string_unreal(const char *s);
+/* securitygroup.c start */
+extern MODVAR SecurityGroup *securitygroups;
+extern void unreal_delete_masks(ConfigItem_mask *m);
+extern void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce);
+extern int unreal_mask_match(Client *acptr, ConfigItem_mask *m);
+extern int unreal_mask_match_string(const char *name, ConfigItem_mask *m);
+extern int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors);
+extern int test_match_block(ConfigFile *conf, ConfigEntry *ce, int *errors_out);
+extern int security_group_valid_name(const char *name);
+extern int security_group_exists(const char *name);
+extern SecurityGroup *add_security_group(const char *name, int order);
+extern SecurityGroup *find_security_group(const char *name);
+extern void free_security_group(SecurityGroup *s);
+extern void set_security_group_defaults(void);
+extern int user_allowed_by_security_group(Client *client, SecurityGroup *s);
+extern int user_allowed_by_security_group_name(Client *client, const char *secgroupname);
+extern const char *get_security_groups(Client *client);
+extern int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors);
+extern int conf_match_item(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block);
+extern int test_match_block(ConfigFile *conf, ConfigEntry *ce, int *errors_out);
+extern int conf_match_block(ConfigFile *conf, ConfigEntry *ce, SecurityGroup **block);
+extern int test_extended_list(Extban *extban, ConfigEntry *cep, int *errors);
+/* securitygroup.c end */
 /* src/unrealdb.c start */
 extern UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_block);
 extern int unrealdb_close(UnrealDB *c);
