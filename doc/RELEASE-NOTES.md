@@ -16,7 +16,7 @@ Enhancements:
     * `connect-time`: time a user is connected to IRC
     * `security-group`: to check another security group
     * `account`: services account name
-    * `country`: country as found by GeoIP
+    * `country`: country code, as found by GeoIP
     * `realname`: realname (gecos) of the user
     * `certfp`: certificate fingerprint
   * Every option also has an exclude- variant, eg. `exclude-country`.
