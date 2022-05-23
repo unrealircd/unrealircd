@@ -22,6 +22,7 @@ void tls_cipher_unserialize(const char *str, ModData *m);
 int tls_cipher_handshake(Client *client);
 int tls_cipher_connect(Client *client);
 int tls_cipher_whois(Client *client, Client *target);
+int log_tls_cipher(Client *client, int detail, json_t *j);
 
 ModDataInfo *tls_cipher_md; /* Module Data structure which we acquire */
 
@@ -44,6 +45,8 @@ ModDataInfo mreq;
 
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, tls_cipher_handshake);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_HANDSHAKE_OUT, 0, tls_cipher_handshake);
+
+	HookAdd(modinfo->handle, HOOKTYPE_JSON_EXPAND_CLIENT, 0, log_tls_cipher);
 
 	return MOD_SUCCESS;
 }
@@ -88,4 +91,25 @@ const char *tls_cipher_serialize(ModData *m)
 void tls_cipher_unserialize(const char *str, ModData *m)
 {
 	safe_strdup(m->str, str);
+}
+
+int log_tls_cipher(Client *client, int detail, json_t *j)
+{
+	json_t *tls;
+	const char *str;
+
+	str = moddata_client_get(client, "tls_cipher");
+	if (!str)
+		return 0;
+
+	tls = json_object_get(j, "tls");
+	if (!tls)
+	{
+		tls = json_object();
+		json_object_set_new(j, "tls", tls);
+	}
+
+	json_object_set_new(tls, "cipher", json_string_unreal(str));
+
+	return 0;
 }

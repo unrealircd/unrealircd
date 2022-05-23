@@ -27,6 +27,7 @@ void certfp_unserialize(const char *str, ModData *m);
 int certfp_handshake(Client *client);
 int certfp_connect(Client *client);
 int certfp_whois(Client *client, Client *target, NameValuePrioList **list);
+int certfp_log(Client *client, int detail, json_t *j);
 
 ModDataInfo *certfp_md; /* Module Data structure which we acquire */
 
@@ -51,6 +52,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, certfp_handshake);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_HANDSHAKE_OUT, 0, certfp_handshake);
 	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, certfp_whois);
+	HookAdd(modinfo->handle, HOOKTYPE_JSON_EXPAND_CLIENT, 0, certfp_log);
 
 	return MOD_SUCCESS;
 }
@@ -157,4 +159,25 @@ const char *certfp_serialize(ModData *m)
 void certfp_unserialize(const char *str, ModData *m)
 {
 	safe_strdup(m->str, str);
+}
+
+int certfp_log(Client *client, int detail, json_t *j)
+{
+	json_t *tls;
+	const char *str;
+
+	str = moddata_client_get(client, "certfp");
+	if (!str)
+		return 0;
+
+	tls = json_object_get(j, "tls");
+	if (!tls)
+	{
+		tls = json_object();
+		json_object_set_new(j, "tls", tls);
+	}
+
+	json_object_set_new(tls, "certfp", json_string_unreal(str));
+
+	return 0;
 }
