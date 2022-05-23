@@ -178,7 +178,7 @@ EXP_OBJ_FILES=src/ircd_vars.obj src/channel.obj src/send.obj src/socket.obj \
  src/fdlist.obj src/dbuf.obj  \
  src/hash.obj src/parse.obj \
  src/whowas.obj \
- src/misc.obj src/match.obj src/crule.obj \
+ src/securitygroup.obj src/misc.obj src/match.obj src/crule.obj \
  src/debug.obj  src/support.obj src/list.obj \
  src/serv.obj src/user.obj \
  src/version.obj src/ircsprintf.obj \
@@ -506,6 +506,9 @@ src/conf_preprocessor.obj: src/conf_preprocessor.c $(INCLUDES)
 
 src/debug.obj: src/debug.c $(INCLUDES)
         $(CC) $(CFLAGS) src/debug.c
+
+src/securitygroup.obj: src/securitygroup.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/securitygroup.c
 
 src/misc.obj: src/misc.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/misc.c

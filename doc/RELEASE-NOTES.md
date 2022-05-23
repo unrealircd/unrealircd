@@ -86,7 +86,7 @@ about UnrealIRCd 6.
 * Infinite loop if one security-group referred to another.
 * Duplicate entries in the `+beI` lists of `+P` channels.
 * Module manager did not stop on compile error
-* [set::modes-on-join]](https://www.unrealircd.org/docs/Set_block#set::modes-on-join)
+* [`set::modes-on-join`](https://www.unrealircd.org/docs/Set_block#set::modes-on-join)
   did not work with `+f` + timed bans properly, eg `[3t#b1]:10`
 * Several log messages were missing some information.
 
