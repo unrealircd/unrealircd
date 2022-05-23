@@ -595,6 +595,7 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		str = get_operclass(client);
 		if (str)
 			json_object_set_new(user, "operclass", json_string_unreal(str));
+		RunHook(HOOKTYPE_JSON_EXPAND_CLIENT_USER, client, detail, child, user);
 	} else
 	if (IsMe(client))
 	{
@@ -648,7 +649,9 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		}
 		if (!BadPtr(client->server->features.nickchars))
 			json_object_set_new(features, "nick_character_sets", json_string_unreal(client->server->features.nickchars));
+		RunHook(HOOKTYPE_JSON_EXPAND_CLIENT_SERVER, client, detail, child, server);
 	}
+	RunHook(HOOKTYPE_JSON_EXPAND_CLIENT, client, detail, child);
 }
 
 void json_expand_channel(json_t *j, const char *key, Channel *channel, int detail)
@@ -678,6 +681,7 @@ void json_expand_channel(json_t *j, const char *key, Channel *channel, int detai
 	}
 
 	// Possibly later: If detail is set to 1 then expand more...
+	RunHook(HOOKTYPE_JSON_EXPAND_CHANNEL, channel, detail, child);
 }
 
 const char *timestamp_iso8601_now(void)

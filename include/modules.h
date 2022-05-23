@@ -1162,6 +1162,15 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, const char *varshortname, l
 #define HOOKTYPE_CAN_SET_TOPIC	110
 /** See hooktype_ip_change() */
 #define HOOKTYPE_IP_CHANGE	111
+/** See hooktype_json_expand_client() */
+#define HOOKTYPE_JSON_EXPAND_CLIENT	112
+/** See hooktype_json_expand_client() */
+#define HOOKTYPE_JSON_EXPAND_CLIENT_USER	113
+/** See hooktype_json_expand_client() */
+#define HOOKTYPE_JSON_EXPAND_CLIENT_SERVER	114
+/** See hooktype_json_expand_channel() */
+#define HOOKTYPE_JSON_EXPAND_CHANNEL	115
+
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
  * 2) Add a hook prototype (see below)
@@ -2149,6 +2158,46 @@ int hooktype_realname_change(Client *client, const char *oldinfo);
  */
 int hooktype_ip_change(Client *client, const char *oldip);
 
+/** Called when json_expand_client() is called.
+ * Used for expanding information about 'client' in logging routines.
+ * @param client		The client that should be expanded
+ * @param detail		The amount of detail to provide (always 0 at the moment)
+ * @param j			The JSON object
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_json_expand_client(Client *client, int detail, json_t *j);
+
+/** Called when json_expand_client_user() is called.
+ * Used for expanding information about 'client' in logging routines
+ * when the client is a USER.
+ * @param client		The client that should be expanded
+ * @param detail		The amount of detail to provide (always 0 at the moment)
+ * @param j			The JSON object - root
+ * @param child			The JSON object - "user" child item
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_json_expand_client_user(Client *client, int detail, json_t *j, json_t *child);
+
+/** Called when json_expand_client_server() is called.
+ * Used for expanding information about 'client' in logging routines
+ * when the client is a SERVER.
+ * @param client		The client that should be expanded
+ * @param detail		The amount of detail to provide (always 0 at the moment)
+ * @param j			The JSON object - root
+ * @param child			The JSON object - "server" child item
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_json_expand_client_server(Client *client, int detail, json_t *j, json_t *child);
+
+/** Called when json_expand_channel() is called.
+ * Used for expanding information about 'channel' in logging routines.
+ * @param channel		The channel that should be expanded
+ * @param detail		The amount of detail to provide (always 0 at the moment)
+ * @param j			The JSON object
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_json_expand_channel(Channel *channel, int detail, json_t *j);
+
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2263,7 +2312,11 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_POST_REMOTE_NICKCHANGE) && !ValidateHook(hooktype_post_remote_nickchange, func)) || \
         ((hooktype == HOOKTYPE_USERHOST_CHANGE) && !ValidateHook(hooktype_userhost_change, func)) || \
         ((hooktype == HOOKTYPE_REALNAME_CHANGE) && !ValidateHook(hooktype_realname_change, func)) || \
-        ((hooktype == HOOKTYPE_IP_CHANGE) && !ValidateHook(hooktype_ip_change, func)) ) \
+        ((hooktype == HOOKTYPE_IP_CHANGE) && !ValidateHook(hooktype_ip_change, func)) || \
+        ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT) && !ValidateHook(hooktype_json_expand_client, func)) || \
+        ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT_USER) && !ValidateHook(hooktype_json_expand_client_user, func)) || \
+        ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT_SERVER) && !ValidateHook(hooktype_json_expand_client_server, func)) || \
+        ((hooktype == HOOKTYPE_JSON_EXPAND_CHANNEL) && !ValidateHook(hooktype_json_expand_channel, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
