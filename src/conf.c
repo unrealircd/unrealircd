@@ -9102,6 +9102,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			/* keep this in sync with _test_allow() */
 			int ipv6mask;
+			CheckNull(cep);
 			ipv6mask = atoi(cep->value);
 			if (ipv6mask == 0)
 			{
