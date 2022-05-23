@@ -2473,3 +2473,100 @@ int minimum_msec_since_last_run(struct timeval *tv_old, long minimum)
 	}
 	return 0;
 }
+
+/* strip color, bold, underline, and reverse codes from a string */
+const char *StripControlCodes(const char *text)
+{
+	int i = 0, len = strlen(text), save_len=0;
+	char nc = 0, col = 0, rgb = 0;
+	const char *save_text=NULL;
+	static unsigned char new_str[4096];
+	while (len > 0) 
+	{
+		if ( col && ((isdigit(*text) && nc < 2) || (*text == ',' && nc < 3)))
+		{
+			nc++;
+			if (*text == ',')
+				nc = 0;
+		}
+		/* Syntax for RGB is ^DHHHHHH where H is a hex digit.
+		 * If < 6 hex digits are specified, the code is displayed
+		 * as text
+		 */
+		else if ((rgb && isxdigit(*text) && nc < 6) || (rgb && *text == ',' && nc < 7))
+		{
+			nc++;
+			if (*text == ',')
+				nc = 0;
+		}
+		else 
+		{
+			if (col)
+				col = 0;
+			if (rgb)
+			{
+				if (nc != 6)
+				{
+					text = save_text+1;
+					len = save_len-1;
+					rgb = 0;
+					continue;
+				}
+				rgb = 0;
+			}
+			switch (*text)
+			{
+			case 3:
+				/* color */
+				col = 1;
+				nc = 0;
+				break;
+			case 4:
+				/* RGB */
+				save_text = text;
+				save_len = len;
+				rgb = 1;
+				nc = 0;
+				break;
+			case 2:
+				/* bold */
+				break;
+			case 31:
+				/* underline */
+				break;
+			case 22:
+				/* reverse */
+				break;
+			case 15:
+				/* plain */
+				break;
+			case 29:
+				/* italic */
+				break;
+			case 30:
+				/* strikethrough */
+				break;
+			case 17:
+				/* monospace */
+				break;
+			case 0xe2:
+				if (!strncmp(text+1, "\x80\x8b", 2))
+				{
+					/* +2 means we skip 3 */
+					text += 2;
+					len  -= 2;
+					break;
+				}
+				/*fallthrough*/
+			default:
+				new_str[i] = *text;
+				i++;
+				break;
+			}
+		}
+		text++;
+		len--;
+	}
+	new_str[i] = 0;
+	return new_str;
+}

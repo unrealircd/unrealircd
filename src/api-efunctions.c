@@ -74,7 +74,6 @@ int (*match_spamfilter)(Client *client, const char *str_in, int type, const char
 int (*match_spamfilter_mtags)(Client *client, MessageTag *mtags, const char *cmd);
 int (*join_viruschan)(Client *client, TKL *tk, int type);
 const char *(*StripColors)(const char *text);
-const char *(*StripControlCodes)(const char *text);
 void (*spamfilter_build_user_string)(char *buf, const char *nick, Client *client);
 void (*send_protoctl_servers)(Client *client, int response);
 int (*verify_link)(Client *client, ConfigItem_link **link_out);
@@ -340,7 +339,6 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_MATCH_SPAMFILTER_MTAGS, match_spamfilter_mtags, NULL);
 	efunc_init_function(EFUNC_JOIN_VIRUSCHAN, join_viruschan, NULL);
 	efunc_init_function(EFUNC_STRIPCOLORS, StripColors, NULL);
-	efunc_init_function(EFUNC_STRIPCONTROLCODES, StripControlCodes, NULL);
 	efunc_init_function(EFUNC_SPAMFILTER_BUILD_USER_STRING, spamfilter_build_user_string, NULL);
 	efunc_init_function(EFUNC_SEND_PROTOCTL_SERVERS, send_protoctl_servers, NULL);
 	efunc_init_function(EFUNC_VERIFY_LINK, verify_link, NULL);

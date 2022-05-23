@@ -779,7 +779,6 @@ extern MODVAR int (*match_spamfilter)(Client *client, const char *str_in, int ty
 extern MODVAR int (*match_spamfilter_mtags)(Client *client, MessageTag *mtags, const char *cmd);
 extern MODVAR int (*join_viruschan)(Client *client, TKL *tk, int type);
 extern MODVAR const char *(*StripColors)(const char *text);
-extern MODVAR const char *(*StripControlCodes)(const char *text);
 extern MODVAR void (*spamfilter_build_user_string)(char *buf, const char *nick, Client *acptr);
 extern MODVAR void (*send_protoctl_servers)(Client *client, int response);
 extern MODVAR int (*verify_link)(Client *client, ConfigItem_link **link_out);
@@ -1268,3 +1267,4 @@ extern void procio_post_rehash(int failure);
 /* end of proc i/o */
 extern int minimum_msec_since_last_run(struct timeval *tv_old, long minimum);
 extern long get_connected_time(Client *client);
+extern const char *StripControlCodes(const char *text);
