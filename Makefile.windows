@@ -340,7 +340,6 @@ DLL_FILES=\
  src/modules/sapart.dll \
  src/modules/sasl.dll \
  src/modules/sdesc.dll \
- src/modules/securitygroup.dll \
  src/modules/sendsno.dll \
  src/modules/sendumode.dll \
  src/modules/server.dll \
@@ -1096,9 +1095,6 @@ src/modules/sasl.dll: src/modules/sasl.c $(INCLUDES)
 
 src/modules/sdesc.dll: src/modules/sdesc.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/sdesc.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/sdesc.pdb $(MODLFLAGS)
-
-src/modules/securitygroup.dll: src/modules/securitygroup.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/securitygroup.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/securitygroup.pdb $(MODLFLAGS)
 
 src/modules/sendsno.dll: src/modules/sendsno.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/sendsno.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/sendsno.pdb $(MODLFLAGS)
