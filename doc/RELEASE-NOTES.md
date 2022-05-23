@@ -58,6 +58,19 @@ Enhancements:
         type { blacklist; connect-flood; handshake-data-flood; }
     }
     ```
+* For [JSON logging](https://www.unrealircd.org/docs/JSON_logging) a number
+  of fields were added when a client is expanded:
+  * `geoip`: with subitem `country_code` (eg. `NL`)
+  * `tls`: with subitems `cipher` and `certfp`
+  * Under subitem `users`:
+    * `vhost`: if the visible host differs from the realhost then this is
+      set (thus for both vhost and cloaked host)
+    * `cloakedhost`: this is always set (except for eg. services users), even
+      if the user is not cloaked so you can easily search on a cloaked host.
+    * `idle_since`: abc
+    * `channels`: list of channels (array), with a maximum of 384 chars.
+* The JSON logging now also strips ASCII below 32, so color- and
+  control codes.
 
 Fixes:
 * 
