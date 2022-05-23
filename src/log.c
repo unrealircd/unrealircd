@@ -600,7 +600,7 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 			json_object_set_new(user, "realname", json_string_unreal(client->info));
 		if (has_user_mode(client, 'x') && client->user->virthost && strcmp(client->user->virthost, client->user->realhost))
 			json_object_set_new(user, "vhost", json_string_unreal(client->user->virthost));
-		if (client->user->cloakedhost)
+		if (*client->user->cloakedhost)
 			json_object_set_new(user, "cloakedhost", json_string_unreal(client->user->cloakedhost));
 		if (client->uplink)
 			json_object_set_new(user, "servername", json_string_unreal(client->uplink->name));
