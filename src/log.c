@@ -43,6 +43,26 @@ int log_sources_match(LogSource *logsource, LogLevel loglevel, const char *subsy
 void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, int expand_msg, const char *msg, va_list vl);
 void log_blocks_switchover(void);
 
+/** Calculate expansion of a JSON string thanks to double escaping.
+ * orig => JSON => IRC
+ *    " => \"   => \\"
+ *    \ => \\   => \\\\
+ */
+int json_dump_string_length(const char *s)
+{
+	int len = 0;
+	for (; *s; s++)
+	{
+		if (*s == '\\')
+			len += 4;
+		else if (*s == '"')
+			len += 3;
+		else
+			len++;
+	}
+	return len;
+}
+
 /** Convert a regular string value to a JSON string.
  * In UnrealIRCd, this must be used instead of json_string()
  * as we may use non-UTF8 sequences. Also, this takes care
@@ -602,6 +622,25 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		str = get_operclass(client);
 		if (str)
 			json_object_set_new(user, "operclass", json_string_unreal(str));
+		if (client->user->channel)
+		{
+			Membership *m;
+			int cnt = 0;
+			int len = 0;
+			json_t *channels = json_array();
+			json_object_set_new(user, "channels", channels);
+			for (m = client->user->channel; m; m = m->next)
+			{
+				len += json_dump_string_length(m->channel->name);
+				if (len > 384)
+				{
+					/* Truncated */
+					json_array_append_new(channels, json_string_unreal("..."));
+					break;
+				}
+				json_array_append_new(channels, json_string_unreal(m->channel->name));
+			}
+		}
 		RunHook(HOOKTYPE_JSON_EXPAND_CLIENT_USER, client, detail, child, user);
 	} else
 	if (IsMe(client))
