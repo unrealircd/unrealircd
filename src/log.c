@@ -53,13 +53,16 @@ void log_blocks_switchover(void);
  */
 json_t *json_string_unreal(const char *s)
 {
-	static char buf[8192];
+	char buf1[512], buf2[512];
 	char *verified_s;
+	const char *stripped;
 
 	if (s == NULL)
 		return json_null();
 
-	verified_s = unrl_utf8_make_valid(s, buf, sizeof(buf), 0);
+	stripped = StripControlCodesEx(s, buf1, sizeof(buf1), 1);
+	verified_s = unrl_utf8_make_valid(buf1, buf2, sizeof(buf2), 0);
+
 	return json_string(verified_s);
 }
 

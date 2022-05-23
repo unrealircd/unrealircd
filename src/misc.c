@@ -2474,13 +2474,36 @@ int minimum_msec_since_last_run(struct timeval *tv_old, long minimum)
 	return 0;
 }
 
-/* strip color, bold, underline, and reverse codes from a string */
-const char *StripControlCodes(const char *text)
+/** Strip color, bold, underline, and reverse codes from a string.
+ * @param text			The input text
+ * @param output		The buffer for the output text
+ * @param outputlen		The length of the output buffer
+ * @param strip_all_low_ascii	If set to 1 then all ASCII < 32 is stripped
+ *				(the ASCII control codes), otherwise we only
+ *				strip the IRC control- and color codes.
+ * @returns The new string, which will be 'output', or in unusual cases (outputlen==0) will be NULL.
+ */
+const char *StripControlCodesEx(const char *text, char *output, size_t outputlen, int strip_all_low_ascii)
 {
 	int i = 0, len = strlen(text), save_len=0;
 	char nc = 0, col = 0, rgb = 0;
+	char *o = output;
 	const char *save_text=NULL;
-	static unsigned char new_str[4096];
+
+	/* Handle special cases first.. */
+
+	if (outputlen == 0)
+		return NULL;
+
+	if (outputlen == 1)
+	{
+		*output = '\0';
+		return output;
+	}
+
+	/* Reserve room for the NUL byte */
+	outputlen--;
+
 	while (len > 0) 
 	{
 		if ( col && ((isdigit(*text) && nc < 2) || (*text == ',' && nc < 3)))
@@ -2559,14 +2582,31 @@ const char *StripControlCodes(const char *text)
 				}
 				/*fallthrough*/
 			default:
-				new_str[i] = *text;
-				i++;
+				if ((*text >= ' ') || !strip_all_low_ascii)
+				{
+					*o++ = *text;
+					outputlen--;
+					if (outputlen == 0)
+					{
+						*o = '\0';
+						return output;
+					}
+				}
 				break;
 			}
 		}
 		text++;
 		len--;
 	}
-	new_str[i] = 0;
-	return new_str;
+
+	*o = '\0';
+	return output;
+}
+
+/* strip color, bold, underline, and reverse codes from a string */
+const char *StripControlCodes(const char *text)
+{
+	static unsigned char new_str[4096];
+
+	return StripControlCodesEx(text, new_str, sizeof(new_str), 0);
 }

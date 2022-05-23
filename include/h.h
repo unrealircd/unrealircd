@@ -1268,3 +1268,4 @@ extern void procio_post_rehash(int failure);
 extern int minimum_msec_since_last_run(struct timeval *tv_old, long minimum);
 extern long get_connected_time(Client *client);
 extern const char *StripControlCodes(const char *text);
+extern const char *StripControlCodesEx(const char *text, char *output, size_t outputlen, int strip_all_low_ascii);
