@@ -796,6 +796,10 @@ const char *get_connect_extinfo(Client *client)
 	secgroups = get_security_groups(client);
 	if (secgroups)
 		add_nvplist(&list, 100, "security-groups", secgroups);
+	
+	/* tkl shunned */
+	if (IsShunned(client))
+		add_nvplist(&list, 110, "shunned", NULL);
 
 	*retbuf = '\0';
 	for (e = list; e; e = e->next)
