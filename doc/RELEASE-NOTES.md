@@ -7,6 +7,8 @@ straight to the [summary about UnrealIRCd 6](#Summary) to learn more
 about UnrealIRCd 6.
 
 Enhancements:
+* Support IRCv3 `+draft/channel-context`
+* Show security groups in `WHOIS`
 * The [security-group block](https://www.unrealircd.org/docs/Security-group_block)
   has been expanded and the same functionality is now available in
   [mask items](https://www.unrealircd.org/docs/Mask_item) too:
@@ -71,9 +73,38 @@ Enhancements:
     * `channels`: list of channels (array), with a maximum of 384 chars.
 * The JSON logging now also strips ASCII below 32, so color- and
   control codes.
+* Add `example.es.conf` (Spanish example configuration file)
+* The country of users is now communicated in the
+  [message-tag](https://www.unrealircd.org/docs/Message_tags)
+  `unrealircd.org/geoip` (only to IRCOps).
+* Add support for linking servers via UNIX domain sockets
+  (`link::outgoing::file`).
 
 Fixes:
-* 
+* Crash in `except ban` with `~security-group:xyz`
+* Crash if hideserver module was loaded but `LINKS` was not blocked.
+* Infinite loop if one security-group referred to another.
+* Duplicate entries in the `+beI` lists of `+P` channels.
+* Module manager did not stop on compile error
+* [set::modes-on-join]](https://www.unrealircd.org/docs/Set_block#set::modes-on-join)
+  did not work with `+f` + timed bans properly, eg `[3t#b1]:10`
+* Several log messages were missing some information.
+
+Changes:
+* Clarified that UnrealIRCd is licensed as "GPLv2 or later"
+
+Developers and protocol:
+* The `creationtime` is now communicated of users. Until now this
+  information was only known locally (the thing that was communicated
+  that came close was "last nick change" but that is not the same).
+  This is synced via (early) moddata across servers.
+  Module coders can use `get_connected_time()`.
+* The `RPL_HOSTHIDDEN` is now sent from `userhost_changed()` so you
+  don't explicitly send it yourself anymore.
+* Module coders can enhance the
+  [JSON logging](https://www.unrealircd.org/docs/JSON_logging)
+  expansion items for clients and channels via new hooks like
+  `HOOKTYPE_JSON_EXPAND_CLIENT`. This is used by the geoip and tls modules.
 
 UnrealIRCd 6.0.3
 -----------------
