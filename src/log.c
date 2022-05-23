@@ -564,6 +564,9 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 	if (client->local && client->local->creationtime)
 		json_object_set_new(child, "connected_since", json_timestamp(client->local->creationtime));
 
+	if (client->local && client->local->idle_since)
+		json_object_set_new(child, "idle_since", json_timestamp(client->local->idle_since));
+
 	if (client->user)
 	{
 		char buf[512];
