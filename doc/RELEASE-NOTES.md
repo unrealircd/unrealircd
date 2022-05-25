@@ -7,7 +7,6 @@ straight to the [summary about UnrealIRCd 6](#Summary) to learn more
 about UnrealIRCd 6.
 
 ### Enhancements:
-* Support IRCv3 `+draft/channel-context`
 * Show security groups in `WHOIS`
 * The [security-group block](https://www.unrealircd.org/docs/Security-group_block)
   has been expanded and the same functionality is now available in
@@ -72,6 +71,7 @@ about UnrealIRCd 6.
     * `channels`: list of channels (array), with a maximum of 384 chars.
 * The JSON logging now also strips ASCII below 32, so color- and
   control codes.
+* Support IRCv3 `+draft/channel-context`
 * Add `example.es.conf` (Spanish example configuration file)
 * The country of users is now communicated in the
   [message-tag](https://www.unrealircd.org/docs/Message_tags)
@@ -82,6 +82,7 @@ about UnrealIRCd 6.
 ### Fixes:
 * Crash in `except ban` with `~security-group:xyz`
 * Crash if hideserver module was loaded but `LINKS` was not blocked.
+* Crash on Windows when using the "Rehash" GUI option.
 * Infinite loop if one security-group referred to another.
 * Duplicate entries in the `+beI` lists of `+P` channels.
 * Module manager did not stop on compile error

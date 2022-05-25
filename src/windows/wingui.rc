@@ -362,12 +362,7 @@ MENU_REHASH MENU
 BEGIN
     POPUP "Rehash"
     BEGIN
-        MENUITEM "&All Files",                  IDM_RHALL
-        MENUITEM SEPARATOR
-        MENUITEM "&Config file",                IDM_RHCONF
-        MENUITEM "&All MOTD and Rules",         IDM_RHMOTD
-        MENUITEM "&OperMOTD",                   IDM_RHOMOTD
-        MENUITEM "&BotMOTD",                    IDM_RHBMOTD
+        MENUITEM "Rehash &All Files",           IDM_RHALL
     END
 END
 

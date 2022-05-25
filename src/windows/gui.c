@@ -536,25 +536,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					return AskCloseUnreal(hDlg);
 				case IDM_RHALL:
 					MessageBox(NULL, "Rehashing all files", "Rehashing", MB_OK);
-					request_rehash(NULL);
-					break;
-				case IDM_RHCONF:
-					MessageBox(NULL, "Rehashing the Config file", "Rehashing", MB_OK);
-					request_rehash(NULL);
-					break;
-				case IDM_RHMOTD: 
-				{
-					MessageBox(NULL, "Rehashing all MOTD and Rules files", "Rehashing", MB_OK);
-					rehash_motdrules();
-					break;
-				}
-				case IDM_RHOMOTD:
-					MessageBox(NULL, "Rehashing the OperMOTD", "Rehashing", MB_OK);
-					read_motd(conf_files->opermotd_file, &opermotd);
-					break;
-				case IDM_RHBMOTD:
-					MessageBox(NULL, "Rehashing the BotMOTD", "Rehashing", MB_OK);
-					read_motd(conf_files->botmotd_file, &botmotd);
+					dorehash = 1;
 					break;
 				case IDM_LICENSE: 
 					DialogBox(hInst, "FromVar", hDlg, (DLGPROC)LicenseDLG);
