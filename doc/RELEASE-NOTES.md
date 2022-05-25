@@ -1,6 +1,7 @@
-UnrealIRCd 6.0.4-git
-=================
-This is work in progress!
+UnrealIRCd 6.0.4-rc1
+=====================
+This is the release candidate for UnrealIRCd 6.0.4.
+You can help us by testing this release and reporting any issues at https://bugs.unrealircd.org/.
 
 If you are already running UnrealIRCd 6 then read below. Otherwise, jump
 straight to the [summary about UnrealIRCd 6](#Summary) to learn more
@@ -46,7 +47,7 @@ about UnrealIRCd 6.
   * Example of defining a security group and using it in a mask item later:
     ```
     security-group irccloud {
-        mask { ip1; ip2; ip3; ip4 }
+        mask { ip1; ip2; ip3; ip4; }
     }
     allow {
         mask { security-group irccloud; }
