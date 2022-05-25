@@ -835,6 +835,7 @@ extern MODVAR void (*do_unreal_log_remote_deliver)(LogLevel loglevel, const char
 extern MODVAR char *(*get_chmodes_for_user)(Client *client, const char *flags);
 extern MODVAR WhoisConfigDetails (*whois_get_policy)(Client *client, Client *target, const char *name);
 extern MODVAR int (*make_oper)(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost);
+extern MODVAR int (*unreal_match_iplist)(Client *client, NameList *l);
 /* /Efuncs */
 
 /* TLS functions */

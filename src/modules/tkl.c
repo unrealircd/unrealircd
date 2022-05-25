@@ -92,6 +92,7 @@ int check_mtag_spamfilters_present(void);
 int _join_viruschan(Client *client, TKL *tk, int type);
 void _spamfilter_build_user_string(char *buf, char *nick, Client *client);
 int _match_user(const char *rmask, Client *client, int options);
+int _unreal_match_iplist(Client *client, NameList *l);
 int _match_user_extended_server_ban(const char *banstr, Client *client);
 void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *client, const char **tkl_username, const char **tkl_hostname);
 int _tkl_ip_hash(char *ip);
@@ -205,6 +206,7 @@ MOD_TEST()
 	EfunctionAddVoid(modinfo->handle, EFUNC_SENDNOTICE_TKL_DEL, _sendnotice_tkl_del);
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_TKL_EXCEPTION, _find_tkl_exception);
 	EfunctionAddString(modinfo->handle, EFUNC_TKL_UHOST, _tkl_uhost);
+	EfunctionAdd(modinfo->handle, EFUNC_UNREAL_MATCH_IPLIST, _unreal_match_iplist);
 	return MOD_SUCCESS;
 }
 
@@ -5102,6 +5104,92 @@ int _match_user(const char *rmask, Client *client, int options)
 
 	return 0; /* NOMATCH: nothing of the above matched */
 }
+
+/** Returns 1 if the user is allowed by any of the security groups in the named list.
+ * This is only used by security-group::security-group and
+ * security-group::exclude-security-group.
+ * @param client	Client to check
+ * @param l		The NameList
+ * @returns 1 if any of the security groups match, 0 if none of them matched.
+ */
+int _unreal_match_iplist(Client *client, NameList *l)
+{
+	char client_ipv6 = 0;
+	char clientip[IPSZ], maskip[IPSZ];
+	int cidr = -1; /* CIDR length, -1 for no CIDR */
+
+	if (!client->ip)
+		return 0; /* unusual, maybe services? */
+
+	if (strchr(client->ip, ':'))
+	{
+		client_ipv6 = 1;
+		if (!inet_pton(AF_INET6, client->ip, clientip))
+			return 0; /* unusual failure */
+	} else {
+		if (!inet_pton(AF_INET, client->ip, clientip))
+			return 0; /* unusual failure */
+	}
+
+	for (; l; l = l->next)
+	{
+		const char *mask = l->name;
+
+		/* Three possible types: wildcard, ipv6, ipv4 */
+
+		if (strchr(mask, '*') || strchr(mask, '?'))
+		{
+			/* Wildcards */
+			if (match_simple(mask, client->ip))
+				return 1; /* MATCH by wildcard IP */
+		}
+		else if (strchr(mask, ':'))
+		{
+			/* IPv6 */
+			if (!client_ipv6)
+				continue; /* NOMATCH: client is IPv4 */
+			if (!inet_pton(AF_INET6, mask, maskip))
+				continue; /* NOMATCH: invalid IPv6 IP in mask */
+			if (cidr < 0)
+			{
+				/* Try to match by exact IP */
+				if (comp_with_mask(clientip, maskip, 128))
+					return 1; /* MATCH by exact IP */
+			} else
+			if (cidr > 128)
+			{
+				continue; /* NOMATCH: invalid CIDR */
+			} else
+			if (comp_with_mask(clientip, maskip, cidr))
+			{
+				return 1; /* MATCH by CIDR */
+			}
+		} else
+		{
+			/* IPv4 */
+			if (client_ipv6)
+				continue; /* NOMATCH: client is IPv6 */
+			if (!inet_pton(AF_INET, mask, maskip))
+				continue; /* NOMATCH: invalid IPv6 IP in mask */
+			if (cidr < 0)
+			{
+				/* Try to match by exact IP */
+				if (comp_with_mask(clientip, maskip, 32))
+					return 1; /* MATCH: by exact IP */
+			} else
+			if (cidr > 32)
+			{
+				continue; /* NOMATCH: invalid CIDR */
+			} else
+			if (comp_with_mask(clientip, maskip, cidr))
+			{
+				return 1; /* MATCH by CIDR */
+			}
+		}
+	}
+	return 0;
+}
+
 
 int _match_user_extended_server_ban(const char *banstr, Client *client)
 {

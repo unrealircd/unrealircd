@@ -1873,6 +1873,7 @@ struct SecurityGroup {
 	long connect_time;
 	int webirc;
 	int tls;
+	NameList *ip;
 	ConfigItem_mask *mask;
 	NameList *security_group;
 	NameValuePrioList *extended;
@@ -1882,6 +1883,7 @@ struct SecurityGroup {
 	long exclude_connect_time;
 	int exclude_webirc;
 	int exclude_tls;
+	NameList *exclude_ip;
 	ConfigItem_mask *exclude_mask;
 	NameList *exclude_security_group;
 	NameValuePrioList *exclude_extended;

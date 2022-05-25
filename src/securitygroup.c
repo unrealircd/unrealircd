@@ -207,6 +207,9 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 	if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "include-mask") || !strcmp(cep->name, "exclude-mask"))
 	{
 	} else
+	if (!strcmp(cep->name, "ip"))
+	{
+	} else
 	if (!strcmp(cep->name, "security-group") || !strcmp(cep->name, "exclude-security-group"))
 	{
 		CheckNullX(cep);
@@ -342,6 +345,10 @@ int conf_match_item(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
 	else if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "include-mask"))
 	{
 		unreal_add_masks(&s->mask, cep);
+	}
+	else if (!strcmp(cep->name, "ip"))
+	{
+		unreal_add_names(&s->ip, cep);
 	}
 	else if (!strcmp(cep->name, "security-group"))
 	{
@@ -515,6 +522,8 @@ void free_security_group(SecurityGroup *s)
 	unreal_delete_masks(s->exclude_mask);
 	free_entire_name_list(s->security_group);
 	free_entire_name_list(s->exclude_security_group);
+	free_entire_name_list(s->ip);
+	free_entire_name_list(s->exclude_ip);
 	free_nvplist(s->extended);
 	free_nvplist(s->exclude_extended);
 	free_nvplist(s->printable_list);
@@ -683,6 +692,8 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 		goto user_not_allowed;
 	if (s->exclude_mask && unreal_mask_match(client, s->exclude_mask))
 		goto user_not_allowed;
+	if (s->exclude_ip && unreal_match_iplist(client, s->exclude_ip))
+		goto user_not_allowed;
 	if (s->exclude_security_group && user_allowed_by_security_group_list(client, s->exclude_security_group))
 		goto user_not_allowed;
 	if (s->exclude_extended && user_matches_extended_list(client, s->exclude_extended))
@@ -708,6 +719,8 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 	if (s->tls && (IsSecureConnect(client) || (MyConnect(client) && IsSecure(client))))
 		goto user_allowed;
 	if (s->mask && unreal_mask_match(client, s->mask))
+		goto user_allowed;
+	if (s->ip && unreal_match_iplist(client, s->ip))
 		goto user_allowed;
 	if (s->security_group && user_allowed_by_security_group_list(client, s->security_group))
 		goto user_allowed;
