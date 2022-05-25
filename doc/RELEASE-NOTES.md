@@ -89,6 +89,8 @@ about UnrealIRCd 6.
 * [`set::modes-on-join`](https://www.unrealircd.org/docs/Set_block#set::modes-on-join)
   did not work with `+f` + timed bans properly, eg `[3t#b1]:10`
 * Several log messages were missing some information.
+* Reputation syncing across servers had a small glitch. Fix is mostly
+  useful for servers that were not linked to the network for days or weeks.
 
 ### Changes:
 * Clarified that UnrealIRCd is licensed as "GPLv2 or later"
