@@ -246,6 +246,7 @@ static void unload_extban_commit(Extban *e)
 
 	/* Then unload the extban */
 	DelListItem(e, extbans);
+	safe_free(e->name);
 	safe_free(e);
 	set_isupport_extban();
 }
