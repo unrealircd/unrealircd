@@ -1106,6 +1106,7 @@ struct Spamfilter {
 struct BanException {
 	char *usermask; /**< User mask */
 	char *hostmask; /**< Host mask */
+	SecurityGroup *match; /**< Security group (for config file items only) */
 	unsigned short subtype; /**< See TKL_SUBTYPE_* */
 	char *bantypes; /**< Exception types */
 	char *reason; /**< Reason */

@@ -60,8 +60,9 @@ char *_tkl_type_config_string(TKL *tk);
 char *tkl_banexception_configname_to_chars(char *name);
 TKL *_tkl_add_serverban(int type, char *usermask, char *hostmask, char *reason, char *set_by,
                             time_t expire_at, time_t set_at, int soft, int flags);
-TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, char *reason, char *set_by,
-                               time_t expire_at, time_t set_at, int soft, char *bantypes, int flags);
+TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, SecurityGroup *match,
+                           char *reason, char *set_by,
+                           time_t expire_at, time_t set_at, int soft, char *bantypes, int flags);
 TKL *_tkl_add_nameban(int type, char *name, int hold, char *reason, char *set_by,
                           time_t expire_at, time_t set_at, int flags);
 TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction action, Match *match, char *set_by,
@@ -678,7 +679,7 @@ int tkl_config_test_except(ConfigFile *cf, ConfigEntry *ce, int configtype, int 
 {
 	ConfigEntry *cep, *cepp;
 	int errors = 0;
-	int has_mask = 0;
+	char has_mask = 0, has_match = 0;
 
 	/* We are only interested in except { } blocks */
 	if (configtype != CONFIG_EXCEPT)
@@ -705,32 +706,18 @@ int tkl_config_test_except(ConfigFile *cf, ConfigEntry *ce, int configtype, int 
 	{
 		if (!strcmp(cep->name, "mask"))
 		{
-			if (cep->items)
+			if (cep->value || cep->items)
 			{
-				/* mask { *@1.1.1.1; *@2.2.2.2; *@3.3.3.3; }; */
-				for (cepp = cep->items; cepp; cepp = cepp->next)
-				{
-					if (!cepp->name)
-					{
-						config_error_empty(cepp->file->filename,
-							cepp->line_number, "except ban", "mask");
-						errors++;
-						continue;
-					}
-					has_mask = 1;
-				}
-			} else
-			if (cep->value)
-			{
-				/* mask *@1.1.1.1; */
-				if (!cep->value)
-				{
-					config_error_empty(cep->file->filename,
-						cep->line_number, "except ban", "mask");
-					errors++;
-					continue;
-				}
 				has_mask = 1;
+				test_match_block(cf, cep, &errors);
+			}
+		} else
+		if (!strcmp(cep->name, "match"))
+		{
+			if (cep->value || cep->items)
+			{
+				has_match = 1;
+				test_match_block(cf, cep, &errors);
 			}
 		} else
 		if (!strcmp(cep->name, "type"))
@@ -766,10 +753,17 @@ int tkl_config_test_except(ConfigFile *cf, ConfigEntry *ce, int configtype, int 
 		}
 	}
 
-	if (!has_mask)
+	if (!has_mask && !has_match)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"except ban::mask");
+			"except ban::match");
+		errors++;
+	}
+	if (has_mask && has_match)
+	{
+		config_error("%s:%d: You cannot have both ::mask and ::match. "
+		             "You should only use except::match.",
+		             ce->file->filename, ce->line_number);
 		errors++;
 	}
 
@@ -777,60 +771,10 @@ int tkl_config_test_except(ConfigFile *cf, ConfigEntry *ce, int configtype, int 
 	return errors ? -1 : 1;
 }
 
-void config_create_tkl_except(char *mask, char *bantypes)
-{
-	char *usermask = NULL;
-	char *hostmask = NULL;
-	int soft = 0;
-	char buf[256];
-	char mask1buf[512];
-	char mask2buf[512];
-	char *p;
-
-	if (*mask == '%')
-	{
-		soft = 1;
-		mask++;
-	}
-	strlcpy(buf, mask, sizeof(buf));
-	if (is_extended_server_ban(buf))
-	{
-		char *err = NULL;
-		if (!parse_extended_server_ban(buf, NULL, &err, 1, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
-		{
-			config_warn("Could not add extended server ban '%s': %s", buf, err);
-			return;
-		}
-		usermask = mask1buf;
-		hostmask = mask2buf;
-	} else
-	{
-		p = strchr(buf, '@');
-		if (!p)
-		{
-			usermask = "*";
-			hostmask = buf;
-		} else {
-			*p++ = '\0';
-			usermask = buf;
-			hostmask = p;
-		}
-	}
-
-	if ((*usermask == ':') || (*hostmask == ':'))
-	{
-		config_error("Cannot add illegal ban '%s': for a given user@host - neither "
-		             "user nor host may start with a : character (semicolon)", mask);
-		return;
-	}
-
-	tkl_add_banexception(TKL_EXCEPTION, usermask, hostmask, "Added in configuration file",
-	                     "-config-", 0, TStime(), soft, bantypes, TKL_FLAG_CONFIG);
-}
-
 int tkl_config_run_except(ConfigFile *cf, ConfigEntry *ce, int configtype)
 {
 	ConfigEntry *cep, *cepp;
+	SecurityGroup *match = NULL;
 	char bantypes[64];
 
 	/* We are only interested in except { } blocks */
@@ -867,6 +811,10 @@ int tkl_config_run_except(ConfigFile *cf, ConfigEntry *ce, int configtype)
 				char *str = tkl_banexception_configname_to_chars(cep->value);
 				strlcat(bantypes, str, sizeof(bantypes));
 			}
+		} else
+		if (!strcmp(cep->name, "match") || !strcmp(cep->name, "mask"))
+		{
+			conf_match_block(cf, cep, &match);
 		}
 	}
 
@@ -885,24 +833,8 @@ int tkl_config_run_except(ConfigFile *cf, ConfigEntry *ce, int configtype)
 			abort(); /* someone can't code */
 	}
 
-	/* Now walk through all mask entries */
-	for (cep = ce->items; cep; cep = cep->next)
-	{
-		if (!strcmp(cep->name, "mask"))
-		{
-			if (cep->items)
-			{
-				/* mask { *@1.1.1.1; *@2.2.2.2; *@3.3.3.3; }; */
-				for (cepp = cep->items; cepp; cepp = cepp->next)
-					config_create_tkl_except(cepp->name, bantypes);
-			} else
-			if (cep->value)
-			{
-				/* mask *@1.1.1.1; */
-				config_create_tkl_except(cep->value, bantypes);
-			}
-		}
-	}
+	tkl_add_banexception(TKL_EXCEPTION, "-", "-", match, "Added in configuration file",
+	                     "-config-", 0, TStime(), 0, bantypes, TKL_FLAG_CONFIG);
 
 	return 1;
 }
@@ -2564,6 +2496,9 @@ TKL *_tkl_add_serverban(int type, char *usermask, char *hostmask, char *reason, 
  * @param type                TKL_EXCEPTION or TKLEXCEPT|TKL_GLOBAL.
  * @param usermask            The user mask
  * @param hostmask            The host mask
+ * @param match               A securitygroup used for matching (can be NULL,
+ *                            if not NULL then this field is used as-is and not copied
+ *                            so caller should not free!)
  * @param reason              The reason for the ban
  * @param set_by              Who (or what) set the ban
  * @param expire_at           When will the ban expire (0 for permanent)
@@ -2577,15 +2512,15 @@ TKL *_tkl_add_serverban(int type, char *usermask, char *hostmask, char *reason, 
  * Be sure not to call this function for spamfilters,
  * qlines or exempts, which have their own function!
  */
-TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, char *reason, char *set_by,
-                               time_t expire_at, time_t set_at, int soft, char *bantypes, int flags)
+TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, SecurityGroup *match,
+                           char *reason, char *set_by,
+                           time_t expire_at, time_t set_at, int soft, char *bantypes, int flags)
 {
 	TKL *tkl;
 	int index, index2;
 
 	if (!TKLIsBanExceptionType(type))
 		abort();
-
 	tkl = safe_alloc(sizeof(TKL));
 	/* First the common fields */
 	tkl->type = type;
@@ -2597,6 +2532,7 @@ TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, char *reaso
 	tkl->ptr.banexception = safe_alloc(sizeof(BanException));
 	safe_strdup(tkl->ptr.banexception->usermask, usermask);
 	safe_strdup(tkl->ptr.banexception->hostmask, hostmask);
+	tkl->ptr.banexception->match = match;
 	if (soft)
 		tkl->ptr.banexception->subtype = TKL_SUBTYPE_SOFT;
 	safe_strdup(tkl->ptr.banexception->bantypes, bantypes);
@@ -2702,6 +2638,8 @@ void _free_tkl(TKL *tkl)
 	{
 		safe_free(tkl->ptr.banexception->usermask);
 		safe_free(tkl->ptr.banexception->hostmask);
+		if (tkl->ptr.banexception->match)
+			free_security_group(tkl->ptr.banexception->match);
 		safe_free(tkl->ptr.banexception->bantypes);
 		safe_free(tkl->ptr.banexception->reason);
 		safe_free(tkl->ptr.banexception);
@@ -2770,7 +2708,7 @@ static void add_default_exempts(void)
 	 * Currently the list is: gline, kline, gzline, zline, shun, blacklist,
 	 *                        connect-flood, handshake-data-flood.
 	 */
-	tkl_add_banexception(TKL_EXCEPTION, "*", "127.0.0.0/8", "localhost is always exempt",
+	tkl_add_banexception(TKL_EXCEPTION, "*", "127.0.0.0/8", NULL, "localhost is always exempt",
 	                     "-default-", 0, TStime(), 0, "GkZzsbcd", TKL_FLAG_CONFIG);
 }
 
@@ -2961,6 +2899,10 @@ static int find_tkl_exception_matcher(Client *client, int ban_type, TKL *except_
 
 	if (!tkl_banexception_matches_type(except_tkl, ban_type))
 		return 0;
+
+	/* For config file except ban { } we use security groups instead of simple user/host */
+	if (except_tkl->ptr.banexception->match)
+		return user_allowed_by_security_group(client, except_tkl->ptr.banexception->match);
 
 	tkl_uhost(except_tkl, uhost, sizeof(uhost), NO_SOFT_PREFIX);
 
@@ -3565,12 +3507,26 @@ int tkl_stats_matcher(Client *client, int type, const char *para, TKLFlag *tklfl
 	} else
 	if (TKLIsBanException(tkl))
 	{
-		char uhostbuf[BUFSIZE];
-		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
-		sendnumeric(client, RPL_STATSEXCEPTTKL, uhost,
-			   tkl->ptr.banexception->bantypes,
-			   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
-			   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->ptr.banexception->reason);
+		if (tkl->ptr.banexception->match)
+		{
+			/* Config-added: uses security groups */
+			NameValuePrioList *m;
+			for (m = tkl->ptr.banexception->match->printable_list; m; m = m->next)
+			{
+				sendnumeric(client, RPL_STATSEXCEPTTKL, namevalue_nospaces(m),
+					   tkl->ptr.banexception->bantypes,
+					   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
+					   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->ptr.banexception->reason);
+			}
+		} else {
+			/* IRC-added: uses simple user/host mask */
+			char uhostbuf[BUFSIZE];
+			char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
+			sendnumeric(client, RPL_STATSEXCEPTTKL, uhost,
+				   tkl->ptr.banexception->bantypes,
+				   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
+				   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->ptr.banexception->reason);
+		}
 	} else
 	{
 		/* That's weird, unknown TKL type */
@@ -4072,7 +4028,7 @@ CMD_FUNC(cmd_tkl_add)
 		{
 			tkl_entry_exists = 1;
 		} else {
-			tkl = tkl_add_banexception(type, usermask, hostmask, reason,
+			tkl = tkl_add_banexception(type, usermask, hostmask, NULL, reason,
 			                           set_by, expire_at, set_at, softban, bantypes, 0);
 		}
 	} else

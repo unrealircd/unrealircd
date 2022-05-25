@@ -625,6 +625,7 @@ int read_tkldb(void)
 			{
 				tkl_add_banexception(tkl->type, tkl->ptr.banexception->usermask,
 				                     tkl->ptr.banexception->hostmask,
+				                     NULL,
 				                     tkl->ptr.banexception->reason,
 				                     tkl->set_by, tkl->expire_at,
 				                     tkl->set_at, softban,

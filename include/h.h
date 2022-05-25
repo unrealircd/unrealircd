@@ -749,8 +749,9 @@ extern MODVAR const char *(*tkl_type_string)(TKL *tk);
 extern MODVAR const char *(*tkl_type_config_string)(TKL *tk);
 extern MODVAR TKL *(*tkl_add_serverban)(int type, const char *usermask, const char *hostmask, const char *reason, const char *setby,
                                             time_t expire_at, time_t set_at, int soft, int flags);
-extern MODVAR TKL *(*tkl_add_banexception)(int type, const char *usermask, const char *hostmask, const char *reason, const char *set_by,
-                                               time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags);
+extern MODVAR TKL *(*tkl_add_banexception)(int type, const char *usermask, const char *hostmask, SecurityGroup *match,
+                                           const char *reason, const char *set_by,
+                                           time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags);
 extern MODVAR TKL *(*tkl_add_nameban)(int type, const char *name, int hold, const char *reason, const char *setby,
                                           time_t expire_at, time_t set_at, int flags);
 extern MODVAR TKL *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short action, Match *match, const char *setby,

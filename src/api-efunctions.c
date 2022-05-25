@@ -57,8 +57,9 @@ TKL *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short actio
                                time_t expire_at, time_t set_at,
                                time_t spamf_tkl_duration, const char *spamf_tkl_reason,
                                int flags);
-TKL *(*tkl_add_banexception)(int type, const char *usermask, const char *hostmask, const char *reason, const char *set_by,
-                                time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags);
+TKL *(*tkl_add_banexception)(int type, const char *usermask, const char *hostmask, SecurityGroup *match,
+                             const char *reason, const char *set_by,
+                             time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags);
 TKL *(*tkl_del_line)(TKL *tkl);
 void (*tkl_check_local_remove_shun)(TKL *tmp);
 int (*find_tkline_match)(Client *client, int skip_soft);

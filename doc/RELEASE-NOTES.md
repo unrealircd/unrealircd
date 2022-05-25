@@ -54,7 +54,6 @@ about UnrealIRCd 6.
         class clients;
         maxperip 128;
     }
-    // Not working yet (work in progress):
     except ban {
         mask { security-group irccloud; }
         type { blacklist; connect-flood; handshake-data-flood; }
