@@ -104,6 +104,10 @@ about UnrealIRCd 6.
   Module coders can use `get_connected_time()`.
 * The `RPL_HOSTHIDDEN` is now sent from `userhost_changed()` so you
   don't explicitly send it yourself anymore.
+* The `SVSO` command is back, so services can make people IRCOp again.
+  See `HELPOP SVSO` or [the commit](https://github.com/unrealircd/unrealircd/commit/50e5d91c798e7d07ca0c68d9fca302a6b6610786)
+  for more information.
+* Due to last change the `HOOKTYPE_LOCAL_OPER` parameters were changed.
 * Module coders can enhance the
   [JSON logging](https://www.unrealircd.org/docs/JSON_logging)
   expansion items for clients and channels via new hooks like
