@@ -59,6 +59,26 @@ about UnrealIRCd 6.
         type { blacklist; connect-flood; handshake-data-flood; }
     }
     ```
+* Because the mask item is so powerful now, the `password` in the
+  [oper block](https://www.unrealircd.org/docs/Oper_block) is optional now.
+* We now support oper::auto-login, which means the user will become IRCOp
+  automatically if they match the conditions on-connect. This can be used
+  in combination with
+  [certificate fingerprint](https://www.unrealircd.org/docs/Certificate_fingerprint)
+  authentication for example:
+  ```
+  security-group Syzop { mask { certfp "1234etc."; } }
+  oper Syzop {
+      auto-login yes;
+      mask { security-group Syzop; }
+      operclass netadmin-with-override;
+      class opers;
+  }
+  except ban {
+      mask { security-group Syzop; }
+      type all;
+  }
+  ```
 * For [JSON logging](https://www.unrealircd.org/docs/JSON_logging) a number
   of fields were added when a client is expanded:
   * `geoip`: with subitem `country_code` (eg. `NL`)
