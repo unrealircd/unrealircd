@@ -212,7 +212,6 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 	} else
 	if (!strcmp(cep->name, "security-group") || !strcmp(cep->name, "exclude-security-group"))
 	{
-		CheckNullX(cep);
 	} else
 	{
 		/* Let's see if an extended server ban exists for this item... */
