@@ -196,6 +196,9 @@ install: all
 	-@if [ ! -f "$(DESTDIR)@CONFDIR@/badwords.conf" ] ; then \
 		$(INSTALL) -m 0600 doc/conf/badwords.conf $(DESTDIR)@CONFDIR@ ; \
 	fi
+	-@if [ ! -f "$(DESTDIR)@CONFDIR@/history.conf" ] ; then \
+		$(INSTALL) -m 0600 doc/conf/history.conf $(DESTDIR)@CONFDIR@ ; \
+	fi
 	-@if [ ! -f "$(DESTDIR)@CONFDIR@/dccallow.conf" ] ; then \
 		$(INSTALL) -m 0600 doc/conf/dccallow.conf $(DESTDIR)@CONFDIR@ ; \
 	fi
