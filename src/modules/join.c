@@ -262,6 +262,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, con
 			MessageTag *mtags_mode = NULL;
 			Cmode *cm;
 			char modebuf[BUFSIZE], parabuf[BUFSIZE];
+			int should_destroy = 0;
 
 			channel->mode.mode = MODES_ON_JOIN;
 
@@ -281,6 +282,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, con
 			sendto_server(NULL, 0, 0, mtags_mode, ":%s MODE %s %s %s %lld",
 			    me.id, channel->name, modebuf, parabuf, (long long)channel->creationtime);
 			sendto_one(client, mtags_mode, ":%s MODE %s %s %s", me.name, channel->name, modebuf, parabuf);
+			RunHook(HOOKTYPE_LOCAL_CHANMODE, &me, channel, mtags_mode, modebuf, parabuf, 0, 0, &should_destroy);
 			free_message_tags(mtags_mode);
 		}
 
