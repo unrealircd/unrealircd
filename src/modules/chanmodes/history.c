@@ -439,6 +439,10 @@ int history_parse_chanmode(Channel *channel, const char *param, int *lines, long
 	{
 		if (!isdigit(*q))
 		{
+			if (*q && *q != 'd' && *q != 'h' && *q != 'm')
+			{
+				return 0;
+			}
 			contains_non_digit = 1;
 			break;
 		}
