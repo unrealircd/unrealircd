@@ -110,7 +110,7 @@ int extban_account_is_banned(BanContext *b)
 	if (!strcmp(b->banstr, "*") && IsLoggedIn(b->client))
 		return 1;
 
-	if (match_simple(b->banstr, b->client->user->account))
+	if (b->client->user && match_simple(b->banstr, b->client->user->account))
 		return 1;
 
 	return 0;
