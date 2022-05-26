@@ -4027,8 +4027,8 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 {
 	char has_class = 0, has_password = 0, has_snomask = 0;
-	char has_modes = 0, has_require_modes = 0, has_mask = 0, has_match = 0, has_maxlogins = 0;
-	char has_operclass = 0, has_vhost = 0;
+	char has_modes = 0, has_require_modes = 0, has_mask = 0, has_match = 0, has_broad_match = 0;
+	char has_maxlogins = 0, has_operclass = 0, has_vhost = 0;
 	ConfigEntry *cep;
 	int errors = 0;
 
@@ -4199,6 +4199,8 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 				{
 					has_mask = 1;
 					test_match_block(conf, cep, &errors);
+					if (test_match_block_too_broad(conf, cep))
+						has_broad_match = 1;
 				}
 			}
 			else if (!strcmp(cep->name, "match"))
@@ -4207,6 +4209,8 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 				{
 					has_match = 1;
 					test_match_block(conf, cep, &errors);
+					if (test_match_block_too_broad(conf, cep))
+						has_broad_match = 1;
 				}
 			}
 			else
@@ -4230,6 +4234,8 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 				{
 					has_mask = 1;
 					test_match_block(conf, cep, &errors);
+					if (test_match_block_too_broad(conf, cep))
+						has_broad_match = 1;
 				}
 			}
 			else if (!strcmp(cep->name, "match"))
@@ -4238,6 +4244,8 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 				{
 					has_match = 1;
 					test_match_block(conf, cep, &errors);
+					if (test_match_block_too_broad(conf, cep))
+						has_broad_match = 1;
 				}
 			}
 			else if (!strcmp(cep->name, "password"))
@@ -4261,10 +4269,11 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 	}
-	if (!has_password)
+
+	if (!has_password && has_broad_match)
 	{
-		config_error_missing(ce->file->filename, ce->line_number,
-			"oper::password");
+		config_error("%s:%i: your oper block for '%s' has no password and is completely unrestricted (mask *@*)!",
+		             ce->file->filename, ce->line_number, ce->value);
 		errors++;
 	}
 	if (!has_mask && !has_match)

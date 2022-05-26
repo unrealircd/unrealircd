@@ -255,7 +255,7 @@ CMD_FUNC(cmd_oper)
 		return;
 	}
 
-	if (!Auth_Check(client, operblock->auth, password))
+	if (operblock->auth && !Auth_Check(client, operblock->auth, password))
 	{
 		sendnumeric(client, ERR_PASSWDMISMATCH);
 		if (FAILOPER_WARN)

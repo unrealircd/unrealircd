@@ -256,6 +256,34 @@ int test_match_block(ConfigFile *conf, ConfigEntry *ce, int *errors_out)
 	return errors ? 0 : 1;
 }
 
+#define tmbbw_is_wildcard(x)	(!strcmp(x, "*") || !strcmp(x, "*@*"))
+int test_match_block_too_broad(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep, *cepp;
+
+	// match *;
+	if (ce->value && tmbbw_is_wildcard(ce->value))
+		return 1;
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		// match { *; }
+		if (!cep->value && tmbbw_is_wildcard(cep->name))
+			return 1;
+		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "include-mask") || !strcmp(cep->name, "ip"))
+		{
+			// match { mask *; }
+			if (cep->value && tmbbw_is_wildcard(cep->value))
+				return 1;
+			// match { mask { *; } }
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+				if (tmbbw_is_wildcard(cepp->name))
+					return 1;
+		}
+	}
+
+	return 0;
+}
 
 int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 {

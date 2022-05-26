@@ -1136,6 +1136,7 @@ extern int unreal_mask_match(Client *acptr, ConfigItem_mask *m);
 extern int unreal_mask_match_string(const char *name, ConfigItem_mask *m);
 extern int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors);
 extern int test_match_block(ConfigFile *conf, ConfigEntry *ce, int *errors_out);
+extern int test_match_block_too_broad(ConfigFile *conf, ConfigEntry *ce);
 extern int security_group_valid_name(const char *name);
 extern int security_group_exists(const char *name);
 extern SecurityGroup *add_security_group(const char *name, int order);
