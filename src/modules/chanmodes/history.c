@@ -449,7 +449,7 @@ int history_parse_chanmode(Channel *channel, const char *param, int *lines, long
 		*t = atoi(p) * 60;
 
 	/* Sanity checking... */
-	if (*lines < 1)
+	if (*lines < 1 || !isdigit(*lines))
 		return 0;
 
 	if (*t < 60)
