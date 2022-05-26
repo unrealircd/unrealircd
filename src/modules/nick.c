@@ -837,8 +837,6 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 
 	broadcast_moddata_client(client);
 
-	RunHook(HOOKTYPE_LOCAL_CONNECT, client);
-
 	if (buf[0] != '\0' && buf[1] != '\0')
 		sendto_one(client, NULL, ":%s MODE %s :%s", client->name,
 		    client->name, buf);
@@ -852,6 +850,7 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 	if (IsSecure(client) && (iConf.outdated_tls_policy_user == POLICY_WARN) && outdated_tls_client(client))
 		sendnotice(client, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, client));
 
+	RunHook(HOOKTYPE_LOCAL_CONNECT, client);
 
 	/* Give the user a fresh start as far as fake-lag is concerned.
 	 * Otherwise the user could be lagged up already due to all the CAP stuff.
