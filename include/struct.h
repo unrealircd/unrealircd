@@ -1635,6 +1635,7 @@ struct ConfigItem_oper {
 	int maxlogins;
 	int server_notice_colors;
 	int server_notice_show_event;
+	int auto_login;
 };
 
 /** The TLS options that are used in set::tls and otherblocks::tls-options.

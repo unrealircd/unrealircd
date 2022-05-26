@@ -34,6 +34,7 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 CMD_FUNC(cmd_oper);
 int _make_oper(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost);
+int oper_connect(Client *client);
 
 MOD_TEST()
 {
@@ -46,6 +47,7 @@ MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	CommandAdd(modinfo->handle, MSG_OPER, cmd_oper, MAXPARA, CMD_USER);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, oper_connect);
 	return MOD_SUCCESS;
 }
 
@@ -347,4 +349,30 @@ CMD_FUNC(cmd_oper)
 			   log_data_string("oper_block", parv[1]),
 		           log_data_string("warn_type", "OUTDATED_TLS_PROTOCOL_OR_CIPHER"));
 	}
+}
+
+int oper_connect(Client *client)
+{
+	ConfigItem_oper *e;
+
+	if (IsOper(client))
+		return 0;
+
+	for (e = conf_oper; e; e = e->next)
+	{
+		if (e->auto_login && user_allowed_by_security_group(client, e->match))
+		{
+			/* Ideally we would check all the criteria that cmd_oper does.
+			 * I'm taking a shortcut for now that is not ideal...
+			 */
+			const char *parx[3];
+			parx[0] = NULL;
+			parx[1] = e->name;
+			parx[2] = NULL;
+			do_cmd(client, NULL, "OPER", 3, parx);
+			return 0;
+		}
+	}
+
+	return 0;
 }

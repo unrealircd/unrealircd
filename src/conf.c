@@ -3999,6 +3999,10 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		{
 			oper->server_notice_show_event = config_checkval(cep->value, CFG_YESNO);
 		}
+		else if (!strcmp(cep->name, "auto-login"))
+		{
+			oper->auto_login = config_checkval(cep->value, CFG_YESNO);
+		}
 		else if (!strcmp(cep->name, "modes"))
 		{
 			oper->modes = set_usermode(cep->value);
@@ -4028,7 +4032,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 {
 	char has_class = 0, has_password = 0, has_snomask = 0;
 	char has_modes = 0, has_require_modes = 0, has_mask = 0, has_match = 0, has_broad_match = 0;
-	char has_maxlogins = 0, has_operclass = 0, has_vhost = 0;
+	char has_maxlogins = 0, has_operclass = 0, has_vhost = 0, has_auto_login = 0;
 	ConfigEntry *cep;
 	int errors = 0;
 
@@ -4133,6 +4137,10 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			}
 			else if (!strcmp(cep->name, "server-notice-show-event"))
 			{
+			}
+			else if (!strcmp(cep->name, "auto-login"))
+			{
+				has_auto_login = config_checkval(cep->value, CFG_YESNO);
 			}
 			/* oper::modes */
 			else if (!strcmp(cep->name, "modes"))
@@ -4270,9 +4278,24 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
+	if (has_auto_login && has_broad_match)
+	{
+		config_error("%s:%i: your oper block for '%s' has auto-login but is completely unrestricted (mask *@*)!",
+		             ce->file->filename, ce->line_number, ce->value);
+		errors++;
+	} else
 	if (!has_password && has_broad_match)
 	{
 		config_error("%s:%i: your oper block for '%s' has no password and is completely unrestricted (mask *@*)!",
+		             ce->file->filename, ce->line_number, ce->value);
+		errors++;
+	}
+
+	/* The rest should NOT be in an 'else'... */
+	if (has_password && has_auto_login)
+	{
+		config_error("%s:%i: You have auto-login enabled for your oper block '%s' but you also have a password set. "
+		             "Remove the password if you want to use auto-login.",
 		             ce->file->filename, ce->line_number, ce->value);
 		errors++;
 	}
