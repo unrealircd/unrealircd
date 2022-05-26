@@ -222,7 +222,6 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 			extban = findmod_by_bantype_raw(cep->name, strlen(cep->name));
 		if (extban && (extban->options & EXTBOPT_TKL) && (extban->is_banned_events & BANCHK_TKL))
 		{
-			CheckNullX(cep);
 			test_extended_list(extban, cep, errors);
 			return 1; /* Yup, handled */
 		}
