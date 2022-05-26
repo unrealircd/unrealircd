@@ -5116,7 +5116,6 @@ int _unreal_match_iplist(Client *client, NameList *l)
 {
 	char client_ipv6 = 0;
 	char clientip[IPSZ], maskip[IPSZ];
-	int cidr = -1; /* CIDR length, -1 for no CIDR */
 
 	if (!client->ip)
 		return 0; /* unusual, maybe services? */
@@ -5133,7 +5132,18 @@ int _unreal_match_iplist(Client *client, NameList *l)
 
 	for (; l; l = l->next)
 	{
-		const char *mask = l->name;
+		char mask[512], *p;
+		int cidr = -1; /* CIDR length, -1 for no CIDR */
+
+		strlcpy(mask, l->name, sizeof(mask));
+		p = strchr(mask, '/');
+		if (p)
+		{
+			*p++ = '\0';
+			cidr = atoi(p);
+			if (cidr <= 0)
+				return 0; /* NOMATCH: invalid CIDR */
+		}
 
 		/* Three possible types: wildcard, ipv6, ipv4 */
 
