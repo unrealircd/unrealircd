@@ -119,5 +119,5 @@ fi
 chmod +x unrealircd-upgrade-script.stage2
 ./unrealircd-upgrade-script.stage2 $*
 SAVERET="$?"
-rm -f unrealircd-upgrade-script.stage2 unrealircd-upgrade-script.stage2
+rm -f unrealircd-upgrade-script.stage2 unrealircd-upgrade-script.stage2.asc
 exit $SAVERET
