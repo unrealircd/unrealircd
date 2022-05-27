@@ -72,7 +72,7 @@ fi
 
 # Weird way to get version, but ok.
 cd "$BUILDDIR" || fail "Could not cd to builddir"
-UNREALVER="`./configure --version|head -n1|awk '{ print $3 }'`"
+UNREALVER="$(./configure --version|head -n1|awk '{ print $3 }')"
 cd .. || fail "Could not cd back"
 
 # Set and export all variables with settings
