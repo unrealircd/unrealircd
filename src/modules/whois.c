@@ -614,7 +614,7 @@ CMD_FUNC(cmd_whois)
 			                    target->name, "is shunned");
 		}
 
-		if (target->user->swhois && !hideoper && (whois_get_policy(client, target, "swhois") > WHOIS_CONFIG_DETAILS_NONE))
+		if (target->user->swhois && (whois_get_policy(client, target, "swhois") > WHOIS_CONFIG_DETAILS_NONE))
 		{
 			SWhois *s;
 			int swhois_lines = 0;
