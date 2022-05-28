@@ -306,7 +306,7 @@ int crash_report_asan_log(FILE *reportfd, char *coredump)
 		stripcrlf(buf);
 		fprintf(reportfd, " %s\n", buf);
 	}
-	n = pclose(fd);
+	n = fclose(fd);
 	fprintf(reportfd, "END OF ASAN LOG\n");
 
 	if (WEXITSTATUS(n) == 127)
