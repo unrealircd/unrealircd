@@ -237,6 +237,8 @@ check_cc_flag([-Wformat-zero-length], [CFLAGS="$CFLAGS -Wno-format-zero-length"]
 
 check_cc_flag([-Wformat-truncation], [CFLAGS="$CFLAGS -Wno-format-truncation"])
 
+check_cc_flag([-Wformat-overflow], [CFLAGS="$CFLAGS -Wno-format-overflow"])
+
 dnl While it can be useful to occasionally to compile with warnings about
 dnl unused variables and parameters, we often 'think ahead' when coding things
 dnl so they may be useless now but not later. Similarly, for variables, we
