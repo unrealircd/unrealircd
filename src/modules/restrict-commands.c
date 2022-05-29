@@ -170,6 +170,7 @@ int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			if (!strcmp(cep2->name, "except"))
 			{
 				test_match_block(cf, cep2, &errors);
+				continue;
 			}
 
 			if (!cep2->value)
@@ -269,6 +270,7 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 			if (!strcmp(cep2->name, "except"))
 			{
 				conf_match_block(cf, cep2, &rcmd->except);
+				continue;
 			}
 
 			if (!cep2->value)
