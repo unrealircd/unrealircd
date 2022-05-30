@@ -2478,12 +2478,10 @@ int minimum_msec_since_last_run(struct timeval *tv_old, long minimum)
  * @param text			The input text
  * @param output		The buffer for the output text
  * @param outputlen		The length of the output buffer
- * @param strip_all_low_ascii	If set to 1 then all ASCII < 32 is stripped
- *				(the ASCII control codes), otherwise we only
- *				strip the IRC control- and color codes.
+ * @param strip_flags		Zero or (a combination of) UNRL_STRIP_LOW_ASCII / UNRL_STRIP_KEEP_LF.
  * @returns The new string, which will be 'output', or in unusual cases (outputlen==0) will be NULL.
  */
-const char *StripControlCodesEx(const char *text, char *output, size_t outputlen, int strip_all_low_ascii)
+const char *StripControlCodesEx(const char *text, char *output, size_t outputlen, int strip_flags)
 {
 	int i = 0, len = strlen(text), save_len=0;
 	char nc = 0, col = 0, rgb = 0;
@@ -2582,7 +2580,10 @@ const char *StripControlCodesEx(const char *text, char *output, size_t outputlen
 				}
 				/*fallthrough*/
 			default:
-				if ((*text >= ' ') || !strip_all_low_ascii)
+				if ((*text >= ' ') ||
+				    !(strip_flags & UNRL_STRIP_LOW_ASCII) ||
+				    ((strip_flags & UNRL_STRIP_KEEP_LF) && (*text == '\n'))
+				    )
 				{
 					*o++ = *text;
 					outputlen--;

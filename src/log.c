@@ -80,7 +80,7 @@ json_t *json_string_unreal(const char *s)
 	if (s == NULL)
 		return json_null();
 
-	stripped = StripControlCodesEx(s, buf1, sizeof(buf1), 1);
+	stripped = StripControlCodesEx(s, buf1, sizeof(buf1), UNRL_STRIP_LOW_ASCII|UNRL_STRIP_KEEP_LF);
 	verified_s = unrl_utf8_make_valid(buf1, buf2, sizeof(buf2), 0);
 
 	return json_string(verified_s);

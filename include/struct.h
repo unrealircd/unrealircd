@@ -2266,6 +2266,10 @@ typedef enum WhoisConfigDetails {
 	WHOIS_CONFIG_DETAILS_FULL	= 3,
 } WhoisConfigDetails;
 
+/* Options for StripControlCodesEx() */
+#define UNRL_STRIP_LOW_ASCII    0x1     /**< Strip all ASCII < 32 (control codes) */
+#define UNRL_STRIP_KEEP_LF      0x2     /**< Do not strip LF (line feed, \n) */
+
 #endif /* __struct_include__ */
 
 #include "dynconf.h"
