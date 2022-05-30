@@ -252,7 +252,13 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 				config_warn("[restrict-commands] Command '%s' does not exist. Did you mistype? Or is the module providing it not loaded?", cmd);
 				continue;
 			}
-
+			if (find_restrictions_bycmd(cmd))
+			{
+				config_warn("[restrict-commands] Multiple set::restrict-commands items for command '%s'. "
+				            "Only one config block will be effective.",
+				            cmd);
+				continue;
+			}
 			if (!CommandOverrideAdd(ModInf.handle, cmd, 0, rcmd_override))
 			{
 				config_warn("[restrict-commands] Failed to add override for '%s' (NO RESTRICTIONS APPLY)", cmd);
