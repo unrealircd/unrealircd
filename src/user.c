@@ -527,7 +527,7 @@ int max_targets_for_command(const char *cmd)
 
 void set_isupport_targmax(void)
 {
-	char buf[512], tbuf[64];
+	char buf[BUFSIZE], tbuf[64];
 	MaxTarget *m;
 
 	*buf = '\0';
@@ -762,8 +762,8 @@ long get_connected_time(Client *client)
  */
 const char *get_connect_extinfo(Client *client)
 {
-	static char retbuf[512];
-	char tmp[512];
+	static char retbuf[BUFSIZE];
+	char tmp[BUFSIZE];
 	const char *s;
 	const char *secgroups;
 	NameValuePrioList *list = NULL, *e;
@@ -811,8 +811,8 @@ const char *get_connect_extinfo(Client *client)
 		strlcat(retbuf, tmp, sizeof(retbuf));
 	}
 	/* Cut off last space (unless empty string) */
-	if (*buf)
-		buf[strlen(buf)-1] = '\0';
+	if (*retbuf)
+		retbuf[strlen(retbuf)-1] = '\0';
 
 	/* Free the list, as it was only used to build retbuf */
 	free_nvplist(list);
