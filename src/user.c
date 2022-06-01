@@ -811,8 +811,8 @@ const char *get_connect_extinfo(Client *client)
 		strlcat(retbuf, tmp, sizeof(retbuf));
 	}
 	/* Cut off last space (unless empty string) */
-	if (*buf)
-		buf[strlen(buf)-1] = '\0';
+	if (*retbuf)
+		retbuf[strlen(retbuf)-1] = '\0';
 
 	/* Free the list, as it was only used to build retbuf */
 	free_nvplist(list);
