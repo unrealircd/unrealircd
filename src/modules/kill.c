@@ -21,7 +21,6 @@
 #include "unrealircd.h"
 
 CMD_FUNC(cmd_kill);
-static char buf[BUFSIZE], buf2[BUFSIZE];
 
 ModuleHeader MOD_HEADER
   = {
@@ -58,6 +57,7 @@ CMD_FUNC(cmd_kill)
 {
 	char targetlist[BUFSIZE];
 	char reason[BUFSIZE];
+	char buf2[BUFSIZE];
 	char *str;
 	char *nick, *save = NULL;
 	Client *target;

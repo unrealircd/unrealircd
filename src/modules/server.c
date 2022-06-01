@@ -59,7 +59,6 @@ void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp);
 static int connect_server_helper(ConfigItem_link *, Client *);
 
 /* Global variables */
-static char buf[BUFSIZE];
 static cfgstruct cfg;
 static char *last_autoconnect_server = NULL;
 
@@ -1336,6 +1335,8 @@ CMD_FUNC(cmd_sid)
 
 void _introduce_user(Client *to, Client *acptr)
 {
+	char buf[512];
+
 	build_umode_string(acptr, 0, SEND_UMODES, buf);
 
 	sendto_one_nickcmd(to, NULL, acptr, buf);

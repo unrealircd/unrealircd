@@ -30,7 +30,6 @@
 #include "unrealircd.h"
 
 MODVAR int dontspread = 0;
-static char buf[BUFSIZE];
 
 /** Inhibit labeled/response reply. This means it will result in an empty ACK
  *  because we cannot handle the command via labeled-reponse. Rare, but
@@ -418,6 +417,7 @@ void build_umode_string(Client *client, long old, long sendmask, char *umode_buf
 void send_umode_out(Client *client, int show_to_user, long old)
 {
 	Client *acptr;
+	char buf[512];
 
 	build_umode_string(client, old, SEND_UMODES, buf);
 

@@ -52,7 +52,6 @@ struct WhoisConfig {
 };
 
 /* Global variables */
-static char buf[BUFSIZE];
 WhoisConfig *whoisconfig = NULL;
 
 /* Forward declarations */
@@ -296,6 +295,7 @@ CMD_FUNC(cmd_whois)
 	char *p = NULL;
 	int len, mlen;
 	char querybuf[BUFSIZE];
+	char buf[BUFSIZE];
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("WHOIS");
 

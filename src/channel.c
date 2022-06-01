@@ -40,9 +40,6 @@ long sajoinmode = 0;
  */
 Channel *channels = NULL;
 
-/* A buffer for rebuilding channel/nick lists with comma's */
-static char buf[BUFSIZE];
-
 static mp_pool_t *channel_pool = NULL;
 
 /** This describes the letters, modes and options for core channel modes.

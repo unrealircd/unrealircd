@@ -119,8 +119,6 @@ static void show_watch_removed(Client *client, char *name)
 	}
 }
 
-static char buf[BUFSIZE];
-
 #define WATCHES(client) (moddata_local_client(client, watchCounterMD).i)
 #define WATCH(client) (moddata_local_client(client, watchListMD).ptr)
 
@@ -130,6 +128,7 @@ static char buf[BUFSIZE];
 CMD_FUNC(cmd_watch)
 {
 	char request[BUFSIZE];
+	char buf[BUFSIZE];
 	Client *target;
 	char *s, *user;
 	char *p = NULL, *def = "l";

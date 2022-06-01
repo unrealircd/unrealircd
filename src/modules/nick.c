@@ -46,7 +46,6 @@ ModuleHeader MOD_HEADER
 #define ASSUME_NICK_IN_FLIGHT
 
 /* Variables */
-static char buf[BUFSIZE];
 static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
 
 /* Forward declarations */
@@ -489,6 +488,7 @@ CMD_FUNC(cmd_uid)
 	Client *acptr, *serv = NULL;
 	Client *acptrs;
 	char nick[NICKLEN + 1];
+	char buf[BUFSIZE];
 	long lastnick = 0;
 	int differ = 1;
 	const char *hostname, *username, *sstamp, *umodes, *virthost, *ip_raw, *realname;
@@ -765,6 +765,7 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 {
 	int i;
 	ConfigItem_tld *tlds;
+	char buf[BUFSIZE];
 
 	/* Make creation time the real 'online since' time, excluding registration time.
 	 * Otherwise things like set::anti-spam-quit-messagetime 10s could mean

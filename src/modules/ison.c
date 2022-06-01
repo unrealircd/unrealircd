@@ -62,10 +62,9 @@ MOD_UNLOAD()
  * ISON :nicklist
  */
 
-static char buf[BUFSIZE];
-
 CMD_FUNC(cmd_ison)
 {
+	char buf[BUFSIZE];
 	char request[BUFSIZE];
 	char namebuf[USERLEN + HOSTLEN + 4];
 	Client *acptr;

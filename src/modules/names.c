@@ -68,8 +68,6 @@ MOD_UNLOAD()
  * 12 Feb 2000 - geesh, time for a rewrite -lucas
  ************************************************************************/
 
-static char buf[BUFSIZE];
-
 /*
 ** cmd_names
 **	parv[1] = channel
@@ -88,6 +86,7 @@ CMD_FUNC(cmd_names)
 	int idx, flag = 1, spos;
 	const char *para = parv[1], *s;
 	char nuhBuffer[NICKLEN+USERLEN+HOSTLEN+3];
+	char buf[BUFSIZE];
 
 	if (parc < 2 || !MyConnect(client))
 	{
