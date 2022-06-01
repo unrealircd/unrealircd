@@ -52,7 +52,7 @@ struct UCounter {
 	ThrottleCounter global;		/**< Global counter */
 	int rejected_clients;		/**< Number of rejected clients this minute */
 	int allowed_except;		/**< Number of allowed clients - on except list */
-	int allowed_unknown_users;		/**< Number of allowed clients - not on except list */
+	int allowed_unknown_users;	/**< Number of allowed clients - not on except list */
 	char disabled;			/**< Module disabled by oper? */
 	int throttling_this_minute;	/**< Did we do any throttling this minute? */
 	int throttling_previous_minute;	/**< Did we do any throttling previous minute? */
@@ -366,9 +366,7 @@ EVENT(connthrottle_evt)
 		unreal_log(ULOG_INFO, "connthrottle", "CONNTHROTLE_REPORT", NULL,
 		           "ConnThrottle] Stats for this server past 60 secs: "
 		           "Connections rejected: $num_rejected. "
-		           "Accepted: $num_accepted_known_users known user(s), "
-		           "$num_accepted_sasl SASL, "
-		           "$num_accepted_webirc WEBIRC and "
+		           "Accepted: $num_accepted_except except user(s) and "
 		           "$num_accepted_unknown_users new user(s).",
 		           log_data_integer("num_rejected", ucounter->rejected_clients),
 		           log_data_integer("num_accepted_except", ucounter->allowed_except),
