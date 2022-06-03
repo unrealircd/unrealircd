@@ -1,11 +1,16 @@
-UnrealIRCd 6.0.4-rc1
+UnrealIRCd 6.0.4-rc2
 =====================
-This is the release candidate for UnrealIRCd 6.0.4.
+This is the second release candidate for UnrealIRCd 6.0.4.
 You can help us by testing this release and reporting any issues at https://bugs.unrealircd.org/.
 
 If you are already running UnrealIRCd 6 then read below. Otherwise, jump
 straight to the [summary about UnrealIRCd 6](#Summary) to learn more
 about UnrealIRCd 6.
+
+Compared to 6.0.4-rc1, this rc2 adds an oper autologin feature, fixes set::restrict-commands
+not working, fixes for security-group for account and CIDR, fix multiline log
+messages being cut, fix Ubuntu 22.04 compile problem and fix +H not working
+on set::modes-on-join. Also update various example.*conf files.
 
 ### Enhancements:
 * Show security groups in `WHOIS`
