@@ -72,7 +72,7 @@ on set::modes-on-join. Also update various example.*conf files.
   [certificate fingerprint](https://www.unrealircd.org/docs/Certificate_fingerprint)
   authentication for example:
   ```
-  security-group Syzop { mask { certfp "1234etc."; } }
+  security-group Syzop { certfp "1234etc."; }
   oper Syzop {
       auto-login yes;
       mask { security-group Syzop; }

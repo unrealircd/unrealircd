@@ -162,6 +162,8 @@ int unreal_mask_match_string(const char *name, ConfigItem_mask *mask)
 #define CheckNullX(x) if ((!(x)->value) || (!(*((x)->value)))) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); *errors = *errors + 1; return 0; }
 int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 {
+	ConfigEntry *cepp;
+
 	if (!strcmp(cep->name, "webirc") || !strcmp(cep->name, "exclude-webirc"))
 	{
 		CheckNullX(cep);
@@ -206,6 +208,19 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 	} else
 	if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "include-mask") || !strcmp(cep->name, "exclude-mask"))
 	{
+		for (cepp = cep->items; cepp; cepp = cepp->next)
+		{
+			if (!strcmp(cepp->name, "mask"))
+				continue;
+			if (cepp->items || cepp->value)
+			{
+				config_error("%s:%i: security-group::mask should contain hostmasks only. "
+				             "Perhaps you meant to use it in security-group { %s ... } directly?",
+				             cepp->file->filename, cepp->line_number,
+				             cepp->name);
+				*errors = *errors + 1;
+			}
+		}
 	} else
 	if (!strcmp(cep->name, "ip"))
 	{
