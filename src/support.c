@@ -1269,7 +1269,7 @@ void buildvarstring(const char *inbuf, char *outbuf, size_t len, const char *nam
 			/* find variable name in list */
 			found = 0;
 			for (cnt = 0; name[cnt]; cnt++)
-				if (!strncasecmp(name[cnt], i, p - i))
+				if (!strncasecmp(name[cnt], i, strlen(name[cnt])))
 				{
 					/* Found */
 					found = 1;
