@@ -1734,6 +1734,7 @@ struct ConfigItem_listen {
 	TLSOptions *tls_options;
 	WebServer *webserver;
 	int websocket_options; /* should be in module, but lazy */
+	int rpc_options;
 	char *websocket_forward;
 };
 
