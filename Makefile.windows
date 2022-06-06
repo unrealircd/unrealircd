@@ -184,7 +184,7 @@ EXP_OBJ_FILES=src/ircd_vars.obj src/channel.obj src/send.obj src/socket.obj \
  src/version.obj src/ircsprintf.obj \
  src/scache.obj src/dns.obj src/modules.obj \
  src/aliases.obj src/api-event.obj src/api-usermode.obj src/auth.obj src/tls.obj \
- src/random.obj src/api-channelmode.obj src/api-moddata.obj src/mempool.obj \
+ src/random.obj src/api-channelmode.obj src/api-moddata.obj src/api-rpc.obj src/mempool.obj \
  src/dispatch.obj src/api-isupport.obj src/api-command.obj \
  src/api-clicap.obj src/api-messagetag.obj src/api-history-backend.obj \
  src/api-extban.obj src/api-efunctions.obj src/crypt_blowfish.obj \
@@ -582,6 +582,9 @@ src/api-channelmode.obj: src/api-channelmode.c $(INCLUDES)
 
 src/api-moddata.obj: src/api-moddata.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/api-moddata.c
+
+src/api-rpc.obj: src/api-rpc.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/api-rpc.c
 
 src/mempool.obj: src/mempool.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/mempool.c
