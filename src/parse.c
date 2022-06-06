@@ -105,7 +105,7 @@ void parse_client_queued(Client *client)
 
 	if (!IsUser(client) && !IsServer(client) && (iConf.handshake_delay > 0) &&
 	    !IsNoHandshakeDelay(client) &&
-	    !IsControl(client) &&
+	    !IsUnixSocket(client) &&
 	    (TStime() - client->local->creationtime < iConf.handshake_delay))
 	{
 		return; /* we delay processing of data until set::handshake-delay is reached */
