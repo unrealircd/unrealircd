@@ -838,6 +838,8 @@ extern MODVAR int (*make_oper)(Client *client, const char *operblock_name, const
 extern MODVAR int (*unreal_match_iplist)(Client *client, NameList *l);
 extern MODVAR void (*webserver_send_response)(Client *client, int status, char *msg);
 extern MODVAR void (*webserver_close_client)(Client *client);
+extern MODVAR void (*rpc_response)(Client *client, json_t *request, json_t *result);
+extern MODVAR void (*rpc_error)(Client *client, json_t *request, const char *msg);
 /* /Efuncs */
 
 /* TLS functions */
@@ -876,6 +878,8 @@ extern void do_unreal_log_remote_deliver_default_handler(LogLevel loglevel, cons
 extern int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost);
 extern void webserver_send_response_default_handler(Client *client, int status, char *msg);
 extern void webserver_close_client_default_handler(Client *client);
+extern void rpc_response_default_handler(Client *client, json_t *request, json_t *result);
+extern void rpc_error_default_handler(Client *client, json_t *request, const char *msg);
 /* End of default handlers for efunctions */
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;
@@ -1131,7 +1135,9 @@ extern void skip_whitespace(char **p);
 extern void read_until(char **p, char *stopchars);
 extern int is_ip_valid(const char *ip);
 extern int is_file_readable(const char *file, const char *dir);
-json_t *json_string_unreal(const char *s);
+extern json_t *json_string_unreal(const char *s);
+extern const char *json_object_get_string(json_t *j, const char *name);
+extern void json_expand_client(json_t *j, const char *key, Client *client, int detail);
 /* securitygroup.c start */
 extern MODVAR SecurityGroup *securitygroups;
 extern void unreal_delete_masks(ConfigItem_mask *m);

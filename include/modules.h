@@ -616,11 +616,11 @@ typedef struct {
 typedef struct RPCHandler RPCHandler;
 struct RPCHandler {
 	RPCHandler *prev, *next;
-	char *method;                               /**< Name of the method handler, eg "client.get" */
-	int flags;                                  /**< A flag of RPC_HANDLER_FLAG_* */
-	int (*call)(Client *, json_t *request);     /**< RPC call */
-	Module *owner;                              /**< Module introducing this. */
-	char unloaded;                              /**< Internal flag to indicate module is being unloaded */
+	char *method;                                             /**< Name of the method handler, eg "client.get" */
+	int flags;                                                /**< A flag of RPC_HANDLER_FLAG_* */
+	void (*call)(Client *, json_t *request, json_t *params);  /**< RPC call */
+	Module *owner;                                            /**< Module introducing this. */
+	char unloaded;                                            /**< Internal flag to indicate module is being unloaded */
 };
 
 /** The struct used to register a RPC handler.
@@ -629,7 +629,7 @@ struct RPCHandler {
 typedef struct {
 	char *method;
 	int flags;
-	int (*call)(Client *, json_t *request);
+	void (*call)(Client *, json_t *request, json_t *params);
 } RPCHandlerInfo;
 
 /** @} */
@@ -2479,6 +2479,8 @@ enum EfunctionType {
 	EFUNC_UNREAL_MATCH_IPLIST,
 	EFUNC_WEBSERVER_SEND_RESPONSE,
 	EFUNC_WEBSERVER_CLOSE_CLIENT,
+	EFUNC_RPC_RESPONSE,
+	EFUNC_RPC_ERROR,
 };
 
 /* Module flags */
