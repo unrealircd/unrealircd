@@ -716,9 +716,16 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 void json_expand_channel(json_t *j, const char *key, Channel *channel, int detail)
 {
 	char mode1[512], mode2[512], modes[512];
+	json_t *child;
 
-	json_t *child = json_object();
-	json_object_set_new(j, key, child);
+	if (key)
+	{
+		child = json_object();
+		json_object_set_new(j, key, child);
+	} else {
+		child = j;
+	}
+
 	json_object_set_new(child, "name", json_string_unreal(channel->name));
 	json_object_set_new(child, "creation_time", json_timestamp(channel->creationtime));
 	json_object_set_new(child, "num_users", json_integer(channel->users));
