@@ -32,7 +32,7 @@ INCLUDES = ../../include/channel.h \
 	../../include/version.h ../../include/whowas.h
 
 R_MODULES= \
-	user.so
+	rpc.so user.so
 
 MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
