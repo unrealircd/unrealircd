@@ -1140,6 +1140,7 @@ extern int is_file_readable(const char *file, const char *dir);
 extern json_t *json_string_unreal(const char *s);
 extern const char *json_object_get_string(json_t *j, const char *name);
 extern void json_expand_client(json_t *j, const char *key, Client *client, int detail);
+extern void json_expand_channel(json_t *j, const char *key, Channel *channel, int detail);
 /* securitygroup.c start */
 extern MODVAR SecurityGroup *securitygroups;
 extern void unreal_delete_masks(ConfigItem_mask *m);
