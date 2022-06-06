@@ -1395,11 +1395,19 @@ int make_oper_default_handler(Client *client, const char *operblock_name, const 
 	return 0;
 }
 
-extern void webserver_send_response_default_handler(Client *client, int status, char *msg)
+void webserver_send_response_default_handler(Client *client, int status, char *msg)
 {
 }
 
-extern void webserver_close_client_default_handler(Client *client)
+void webserver_close_client_default_handler(Client *client)
+{
+}
+
+void rpc_response_default_handler(Client *client, json_t *request, json_t *result)
+{
+}
+
+void rpc_error_default_handler(Client *client, json_t *request, const char *msg)
 {
 }
 

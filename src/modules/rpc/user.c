@@ -15,7 +15,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-int rpc_user_list(Client *client, json_t *request);
+void rpc_user_list(Client *client, json_t *request, json_t *params);
 
 MOD_INIT()
 {
@@ -45,8 +45,29 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int rpc_user_list(Client *client, json_t *request)
+#define RPC_USER_LIST_EXPAND_NONE	0
+#define RPC_USER_LIST_EXPAND_SELECT	1
+#define RPC_USER_LIST_EXPAND_ALL	2
+
+void rpc_user_list(Client *client, json_t *request, json_t *params)
 {
-	config_status("YAY! user.list() called via RPC!");
-	return 0;
+	json_t *result, *list, *item;
+	Client *acptr;
+
+	result = json_object();
+	list = json_array();
+	json_object_set_new(result, "list", list);
+
+	list_for_each_entry(acptr, &client_list, client_node)
+	{
+		if (!IsUser(acptr))
+			continue;
+
+		item = json_object();
+		json_expand_client(item, NULL, acptr, 1);
+		json_array_append_new(list, item);
+	}
+
+	rpc_response(client, request, result);
+	json_decref(result);
 }

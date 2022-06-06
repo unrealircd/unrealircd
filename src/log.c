@@ -86,6 +86,12 @@ json_t *json_string_unreal(const char *s)
 	return json_string(verified_s);
 }
 
+const char *json_object_get_string(json_t *j, const char *name)
+{
+	json_t *v = json_object_get(j, name);
+	return v ? json_string_value(v) : NULL;
+}
+
 #define json_string __BAD___DO__NOT__USE__JSON__STRING__PLZ
 
 json_t *json_timestamp(time_t v)
@@ -540,9 +546,16 @@ void json_expand_client_security_groups(json_t *parent, Client *client)
 void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 {
 	char buf[BUFSIZE+1];
-	json_t *child = json_object();
+	json_t *child;
 	json_t *user = NULL;
-	json_object_set_new(j, key, child);
+
+	if (key)
+	{
+		child = json_object();
+		json_object_set_new(j, key, child);
+	} else {
+		child = j;
+	}
 
 	/* First the information that is available for ALL client types: */
 

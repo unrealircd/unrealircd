@@ -46,6 +46,7 @@ ModDataInfo *webserver_md;
 
 MOD_TEST()
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_WEBSERVER_SEND_RESPONSE, _webserver_send_response);
 	EfunctionAddVoid(modinfo->handle, EFUNC_WEBSERVER_CLOSE_CLIENT, _webserver_close_client);
 	return MOD_SUCCESS;
