@@ -107,6 +107,7 @@ typedef enum ModuleObjectType {
 	MOBJ_CLICAP = 16,
 	MOBJ_MTAG = 17,
 	MOBJ_HISTORY_BACKEND = 18,
+	MOBJ_RPC = 18,
 } ModuleObjectType;
 
 typedef struct Umode Umode;
@@ -604,6 +605,35 @@ typedef struct {
 	int (*history_destroy)(const char *object);
 } HistoryBackendInfo;
 
+/** @defgroup RPCAPI RPC API
+ * @{
+ */
+
+/** No special flags set */
+#define RPC_HANDLER_FLAGS_NONE			0x0
+
+/** Message Tag Handler */
+typedef struct RPCHandler RPCHandler;
+struct RPCHandler {
+	RPCHandler *prev, *next;
+	char *method;                               /**< Name of the method handler, eg "client.get" */
+	int flags;                                  /**< A flag of RPC_HANDLER_FLAG_* */
+	int (*call)(Client *, json_t *request);     /**< RPC call */
+	Module *owner;                              /**< Module introducing this. */
+	char unloaded;                              /**< Internal flag to indicate module is being unloaded */
+};
+
+/** The struct used to register a RPC handler.
+ * For documentation, see the RPCHandler struct.
+ */
+typedef struct {
+	char *method;
+	int flags;
+	int (*call)(Client *, json_t *request);
+} RPCHandlerInfo;
+
+/** @} */
+
 struct Hook {
 	Hook *prev, *next;
 	int priority;
@@ -688,6 +718,7 @@ typedef struct ModuleObject {
 		ClientCapability *clicap;
 		MessageTagHandler *mtag;
 		HistoryBackend *history_backend;
+		RPCHandler *rpc;
 	} object;
 } ModuleObject;
 
@@ -824,6 +855,10 @@ extern void MessageTagHandlerDel(MessageTagHandler *m);
 extern HistoryBackend *HistoryBackendFind(const char *name);
 extern HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq);
 extern void HistoryBackendDel(HistoryBackend *m);
+
+extern RPCHandler *RPCHandlerFind(const char *method);
+extern RPCHandler *RPCHandlerAdd(Module *module, RPCHandlerInfo *mreq);
+extern void RPCHandlerDel(RPCHandler *m);
 
 #ifndef GCC_TYPECHECKING
 #define HookAdd(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, func, NULL, NULL, NULL)

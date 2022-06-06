@@ -560,6 +560,9 @@ void FreeModObj(ModuleObject *obj, Module *m)
 	else if (obj->type == MOBJ_HISTORY_BACKEND) {
 		HistoryBackendDel(obj->object.history_backend);
 	}
+	else if (obj->type == MOBJ_RPC) {
+		RPCHandlerDel(obj->object.rpc);
+	}
 	else
 	{
 		unreal_log(ULOG_FATAL, "module", "FREEMODOBJ_UNKNOWN_TYPE", NULL,
