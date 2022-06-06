@@ -400,8 +400,8 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 		if ((n <= 0) || IsDead(client))
 			return n; /* byebye */
 		
-		/* There could be data directly after the request header (eg for a PUT),
-		 * check for it here so it isn't lost.
+		/* There could be data directly after the request header (eg for
+		 * a POST or PUT), check for it here so it isn't lost.
 		 */
 		nextframe = find_end_of_request(netbuf2, totalsize, &remaining_bytes);
 		if (nextframe)

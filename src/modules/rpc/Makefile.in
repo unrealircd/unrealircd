@@ -1,0 +1,53 @@
+#************************************************************************
+#*   IRC - Internet Relay Chat, src/modules/rpc/Makefile
+#*   Copyright (C) Carsten V. Munk 2001 & The UnrealIRCd Team
+#*
+#*   This program is free software; you can redistribute it and/or modify
+#*   it under the terms of the GNU General Public License as published by
+#*   the Free Software Foundation; either version 1, or (at your option)
+#*   any later version.
+#*
+#*   This program is distributed in the hope that it will be useful,
+#*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#*   GNU General Public License for more details.
+#*
+#*   You should have received a copy of the GNU General Public License
+#*   along with this program; if not, write to the Free Software
+#*   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#*/
+
+CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
+
+INCLUDES = ../../include/channel.h \
+	../../include/common.h ../../include/config.h ../../include/dbuf.h \
+	../../include/dynconf.h ../../include/fdlist.h ../../include/h.h \
+	../../include/ircsprintf.h \
+	../../include/license.h \
+	../../include/modules.h ../../include/modversion.h ../../include/msg.h \
+	../../include/numeric.h ../../include/dns.h \
+	../../include/resource.h ../../include/setup.h \
+	../../include/struct.h ../../include/sys.h \
+	../../include/types.h \
+	../../include/version.h ../../include/whowas.h
+
+R_MODULES= \
+	user.so
+
+MODULES=$(R_MODULES)
+MODULEFLAGS=@MODULEFLAGS@
+RM=@RM@
+
+.SUFFIXES:
+.SUFFIXES: .c .h .so
+
+all: build
+
+build: $(MODULES)
+
+clean:
+	$(RM) -f *.o *.so *~ core
+
+%.so: %.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o $@ $<

@@ -8954,7 +8954,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/extbans/Makefile src/modules/third/Makefile extras/unrealircd-upgrade-script unrealircd"
+ac_config_files="$ac_config_files Makefile src/Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/extbans/Makefile src/modules/rpc/Makefile src/modules/third/Makefile extras/unrealircd-upgrade-script unrealircd"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -9653,6 +9653,7 @@ do
     "src/modules/chanmodes/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/chanmodes/Makefile" ;;
     "src/modules/usermodes/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/usermodes/Makefile" ;;
     "src/modules/extbans/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/extbans/Makefile" ;;
+    "src/modules/rpc/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/rpc/Makefile" ;;
     "src/modules/third/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/third/Makefile" ;;
     "extras/unrealircd-upgrade-script") CONFIG_FILES="$CONFIG_FILES extras/unrealircd-upgrade-script" ;;
     "unrealircd") CONFIG_FILES="$CONFIG_FILES unrealircd" ;;
