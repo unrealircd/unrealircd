@@ -124,6 +124,11 @@ MOD_LOAD()
 {
 	if (non_utf8_nick_chars_in_use || (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY))
 		ws_text_mode_available = 0;
+	if (!is_module_loaded("webserver"))
+	{
+		config_warn("The 'websocket' module requires the 'webserver' module to be loaded, otherwise websocket connections will not work!");
+		config_warn("Please add the following line to your config file: loadmodule \"webserver\";");
+	}
 	return MOD_SUCCESS;
 }
 
