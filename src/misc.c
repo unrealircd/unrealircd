@@ -1395,6 +1395,14 @@ int make_oper_default_handler(Client *client, const char *operblock_name, const 
 	return 0;
 }
 
+extern void webserver_send_response_default_handler(Client *client, int status, char *msg)
+{
+}
+
+extern void webserver_close_client_default_handler(Client *client)
+{
+}
+
 /** my_timegm: mktime()-like function which will use GMT/UTC.
  * Strangely enough there is no standard function for this.
  * On some *NIX OS's timegm() may be available, sometimes only

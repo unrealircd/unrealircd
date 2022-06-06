@@ -59,7 +59,7 @@ MODULES= \
 	botmotd.so lusers.so names.so svsnolag.so addmotd.so \
 	svslusers.so starttls.so webredir.so cap.so \
 	sasl.so md.so certfp.so \
-	tls_antidos.so webirc.so websocket.so \
+	tls_antidos.so webirc.so webserver.so websocket.so \
 	blacklist.so jointhrottle.so \
 	antirandom.so hideserver.so jumpserver.so \
 	ircops.so staff.so nocodes.so \

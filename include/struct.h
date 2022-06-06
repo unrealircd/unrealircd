@@ -1693,6 +1693,34 @@ struct ConfigItem_tld {
 	u_short		options;
 };
 
+#define WEB_OPT_ENABLE	0x1
+
+typedef enum HttpMethod {
+	HTTP_METHOD_NONE = 0,	/**< No valid HTTP request (yet) */
+	HTTP_METHOD_HEAD = 1,	/**< HEAD request */
+	HTTP_METHOD_GET = 2,	/**< GET request */
+	HTTP_METHOD_PUT = 3,	/**< PUT request */
+	HTTP_METHOD_POST = 4,	/**< POST request */
+} HttpMethod;
+
+typedef struct WebRequest WebRequest;
+struct WebRequest {
+	HttpMethod method; /**< GET/PUT/POST */
+	char *uri; /**< Requested resource, eg "/api" */
+	NameValuePrioList *headers; /**< HTTP request headers */
+	int num_headers; /**< Number of HTTP request headers (also used for sorting the list) */
+	char request_header_parsed; /**< Done parsing? */
+	char *lefttoparse; /**< Leftover buffer to parse */
+	int lefttoparselen; /**< Length of lefttoparse buffer */
+	int pending_close; /**< Set to 1 when connection should be closed as soon as all data is sent (sendq==0) */
+};
+
+typedef struct WebServer WebServer;
+struct WebServer {
+	int (*handle_request)(Client *client, WebRequest *web);
+	int (*handle_data)(Client *client, WebRequest *web, const char *buf, int length);
+};
+
 struct ConfigItem_listen {
 	ConfigItem_listen *prev, *next;
 	ConfigFlag flag;
@@ -1704,6 +1732,7 @@ struct ConfigItem_listen {
 	int fd;
 	SSL_CTX *ssl_ctx;
 	TLSOptions *tls_options;
+	WebServer *webserver;
 	int websocket_options; /* should be in module, but lazy */
 	char *websocket_forward;
 };

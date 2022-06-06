@@ -407,6 +407,7 @@ DLL_FILES=\
  src/modules/watch.dll \
  src/modules/webirc.dll \
  src/modules/webredir.dll \
+ src/modules/webserver.dll \
  src/modules/websocket.dll \
  src/modules/whois.dll \
  src/modules/who_old.dll \
@@ -1296,6 +1297,9 @@ src/modules/webirc.dll: src/modules/webirc.c $(INCLUDES)
 
 src/modules/webredir.dll: src/modules/webredir.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/webredir.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/webredir.pdb $(MODLFLAGS)
+
+src/modules/webserver.dll: src/modules/webserver.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/webserver.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/webserver.pdb $(MODLFLAGS)
 
 src/modules/websocket.dll: src/modules/websocket.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/websocket.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/websocket.pdb $(MODLFLAGS)
