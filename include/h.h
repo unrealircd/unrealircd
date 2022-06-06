@@ -836,6 +836,8 @@ extern MODVAR char *(*get_chmodes_for_user)(Client *client, const char *flags);
 extern MODVAR WhoisConfigDetails (*whois_get_policy)(Client *client, Client *target, const char *name);
 extern MODVAR int (*make_oper)(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost);
 extern MODVAR int (*unreal_match_iplist)(Client *client, NameList *l);
+extern MODVAR void (*webserver_send_response)(Client *client, int status, char *msg);
+extern MODVAR void (*webserver_close_client)(Client *client);
 /* /Efuncs */
 
 /* TLS functions */
@@ -872,6 +874,8 @@ extern int del_silence_default_handler(Client *client, const char *mask);
 extern int is_silenced_default_handler(Client *client, Client *acptr);
 extern void do_unreal_log_remote_deliver_default_handler(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
 extern int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost);
+extern void webserver_send_response_default_handler(Client *client, int status, char *msg);
+extern void webserver_close_client_default_handler(Client *client);
 /* End of default handlers for efunctions */
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;
