@@ -94,6 +94,7 @@ build: $(MODULES)
 	cd chanmodes; $(MAKE) all
 	cd usermodes; $(MAKE) all
 	cd extbans; $(MAKE) all
+	cd rpc; $(MAKE) all
 	cd third; $(MAKE) all
 
 clean:
@@ -101,6 +102,7 @@ clean:
 	cd chanmodes; $(MAKE) clean
 	cd usermodes; $(MAKE) clean
 	cd extbans; $(MAKE) clean
+	cd rpc; $(MAKE) clean
 	cd third; $(MAKE) clean
 
 # Generic *.so rule:

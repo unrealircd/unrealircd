@@ -218,6 +218,9 @@ install: all
 	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/extbans
 	@rm -f $(DESTDIR)@MODULESDIR@/extbans/*.so 1>/dev/null 2>&1
 	$(INSTALL) -m 0700 src/modules/extbans/*.so $(DESTDIR)@MODULESDIR@/extbans
+	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/rpc
+	@rm -f $(DESTDIR)@MODULESDIR@/rpc/*.so 1>/dev/null 2>&1
+	$(INSTALL) -m 0700 src/modules/rpc/*.so $(DESTDIR)@MODULESDIR@/rpc
 	@#If the conf/ssl directory exists then rename it here to conf/tls
 	@#and add a symlink for backwards compatibility (so that f.e. certbot
 	@#doesn't randomly fail after an upgrade to U5).
