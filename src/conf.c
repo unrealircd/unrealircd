@@ -4997,6 +4997,40 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 			AddListItem(listen, conf_listen);
 		listen->flag.temporary = 0;
 
+		/* For modules that hook CONFIG_LISTEN and CONFIG_LISTEN_OPTIONS.
+		 * Yeah, ugly we have this here..
+		 */
+		for (cep = ce->items; cep; cep = cep->next)
+		{
+			if (!strcmp(cep->name, "file"))
+				;
+			else if (!strcmp(cep->name, "ssl-options") || !strcmp(cep->name, "tls-options"))
+				;
+			else if (!strcmp(cep->name, "options"))
+			{
+				for (cepp = cep->items; cepp; cepp = cepp->next)
+				{
+					if (!nv_find_by_name(_ListenerFlags, cepp->name))
+					{
+						for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
+						{
+							int value = (*(h->func.intfunc))(conf, cepp, CONFIG_LISTEN_OPTIONS, listen);
+							if (value == 1)
+								break;
+						}
+					}
+				}
+			} else
+			{
+				for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
+				{
+					int value = (*(h->func.intfunc))(conf, cep, CONFIG_LISTEN, listen);
+					if (value == 1)
+						break;
+				}
+			}
+		}
+
 		return 1;
 	}
 
