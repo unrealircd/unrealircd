@@ -839,7 +839,8 @@ extern MODVAR int (*unreal_match_iplist)(Client *client, NameList *l);
 extern MODVAR void (*webserver_send_response)(Client *client, int status, char *msg);
 extern MODVAR void (*webserver_close_client)(Client *client);
 extern MODVAR void (*rpc_response)(Client *client, json_t *request, json_t *result);
-extern MODVAR void (*rpc_error)(Client *client, json_t *request, const char *msg);
+extern MODVAR void (*rpc_error)(Client *client, json_t *request, int error_code, const char *error_message);
+extern MODVAR void (*rpc_error_fmt)(Client *client, json_t *request, int error_code, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,4,5)));
 /* /Efuncs */
 
 /* TLS functions */
@@ -879,7 +880,8 @@ extern int make_oper_default_handler(Client *client, const char *operblock_name,
 extern void webserver_send_response_default_handler(Client *client, int status, char *msg);
 extern void webserver_close_client_default_handler(Client *client);
 extern void rpc_response_default_handler(Client *client, json_t *request, json_t *result);
-extern void rpc_error_default_handler(Client *client, json_t *request, const char *msg);
+extern void rpc_error_default_handler(Client *client, json_t *request, int error_code, const char *error_message);
+extern void rpc_error_fmt_default_handler(Client *client, json_t *request, int error_code, const char *fmt, ...);
 /* End of default handlers for efunctions */
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;
