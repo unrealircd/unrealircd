@@ -2300,6 +2300,13 @@ typedef enum WhoisConfigDetails {
 #define UNRL_STRIP_LOW_ASCII    0x1     /**< Strip all ASCII < 32 (control codes) */
 #define UNRL_STRIP_KEEP_LF      0x2     /**< Do not strip LF (line feed, \n) */
 
+/* JSON RPC API Errors, according to jsonrpc.org spec */
+#define JSON_RPC_ERROR_PARSE_ERROR      -32700
+#define JSON_RPC_ERROR_INVALID_REQUEST  -32600
+#define JSON_RPC_ERROR_METHOD_NOT_FOUND -32601
+#define JSON_RPC_ERROR_INVALID_PARAMS   -32602
+#define JSON_RPC_ERROR_INTERNAL_ERROR   -32603
+
 #endif /* __struct_include__ */
 
 #include "dynconf.h"

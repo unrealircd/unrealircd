@@ -140,7 +140,8 @@ int (*unreal_match_iplist)(Client *client, NameList *l);
 void (*webserver_send_response)(Client *client, int status, char *msg);
 void (*webserver_close_client)(Client *client);
 void (*rpc_response)(Client *client, json_t *request, json_t *result);
-void (*rpc_error)(Client *client, json_t *request, const char *msg);
+void (*rpc_error)(Client *client, json_t *request, int error_code, const char *error_message);
+void (*rpc_error_fmt)(Client *client, json_t *request, int error_code, const char *fmt, ...);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
@@ -417,4 +418,5 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_WEBSERVER_CLOSE_CLIENT, webserver_close_client, webserver_close_client_default_handler);
 	efunc_init_function(EFUNC_RPC_RESPONSE, rpc_response, rpc_response_default_handler);
 	efunc_init_function(EFUNC_RPC_ERROR, rpc_error, rpc_error_default_handler);
+	efunc_init_function(EFUNC_RPC_ERROR_FMT, rpc_error_fmt, rpc_error_fmt_default_handler);
 }

@@ -27,7 +27,8 @@ int rpc_packet_in(Client *client, const char *readbuf, int *length);
 void rpc_call_text(Client *client, const char *buf, int len);
 void rpc_call(Client *client, json_t *request);
 void _rpc_response(Client *client, json_t *request, json_t *result);
-void _rpc_error(Client *client, json_t *request, const char *msg);
+void _rpc_error(Client *client, json_t *request, int error_code, const char *error_message);
+void _rpc_error_fmt(Client *client, json_t *request, int error_code, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,4,5)));
 
 /* Structs */
 typedef struct RPCUser RPCUser;
@@ -48,6 +49,7 @@ MOD_TEST()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, rpc_config_test);
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_RESPONSE, _rpc_response);
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_ERROR, _rpc_error);
+	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_ERROR_FMT, TO_VOIDFUNC(_rpc_error_fmt));
 	return MOD_SUCCESS;
 }
 
@@ -238,7 +240,7 @@ void rpc_call_text(Client *client, const char *readbuf, int len)
 		unreal_log(ULOG_INFO, "log", "RPC_INVALID_JSON", client,
 		           "Received unparsable JSON request from $client",
 		           log_data_string("json_incoming", buf));
-		rpc_error(client, NULL, "Unparsable JSON data");
+		rpc_error(client, NULL, JSON_RPC_ERROR_PARSE_ERROR, "Unparsable JSON data");
 		/* This is a fatal error */
 		rpc_close(client);
 		return;
@@ -247,25 +249,73 @@ void rpc_call_text(Client *client, const char *readbuf, int len)
 	json_decref(request);
 }
 
-void _rpc_error(Client *client, json_t *request, const char *msg)
+void _rpc_error(Client *client, json_t *request, int error_code, const char *error_message)
 {
-	// FIXME
-	//json_t *response = json_object;
-	sendto_one(client, NULL, "{ ERROR: %s }", msg);
+	/* Careful, we are in the "error" routine, so everything can be NULL */
+	const char *method = NULL;
+	json_t *id = NULL;
+	char *json_serialized;
+	json_t *error;
+
+	/* Start a new object for the error response */
+	json_t *j = json_object();
+
+	if (request)
+	{
+		method = json_object_get_string(request, "method");
+		id = json_object_get(request, "id");
+	}
+
+	json_object_set_new(j, "jsonrpc", json_string_unreal("2.0"));
+	if (method)
+		json_object_set_new(j, "method", json_string_unreal(method));
+	if (id)
+		json_object_set_new(j, "id", id);
+
+	error = json_object();
+	json_object_set_new(j, "error", error);
+	json_object_set_new(error, "code", json_integer(error_code));
+	json_object_set_new(error, "message", json_string_unreal(error_message));
+
+	json_serialized = json_dumps(j, 0);
+	if (!json_serialized)
+	{
+		unreal_log(ULOG_WARNING, "rpc", "BUG_RPC_ERROR_SERIALIZE_FAILED", NULL,
+		           "[BUG] rpc_error() failed to serialize response "
+		           "for request from $client ($method)",
+		           log_data_string("method", method));
+		json_decref(j);
+		return;
+	}
+	dbuf_put(&client->local->sendQ, json_serialized, strlen(json_serialized));
+	dbuf_put(&client->local->sendQ, "\n", 1);
+	json_decref(j);
+	safe_free(json_serialized);
+}
+
+void _rpc_error_fmt(Client *client, json_t *request, int error_code, const char *fmt, ...)
+{
+	char buf[512];
+
+	va_list vl;
+	va_start(vl, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, vl);
+	va_end(vl);
+	rpc_error(client, request, error_code, buf);
 }
 
 void _rpc_response(Client *client, json_t *request, json_t *result)
 {
 	const char *method = json_object_get_string(request, "method");
 	json_t *id = json_object_get(request, "id");
-	const char *json_serialized;
+	char *json_serialized;
 	json_t *j = json_object();
 
 	json_object_set_new(j, "jsonrpc", json_string_unreal("2.0"));
 	json_object_set_new(j, "method", json_string_unreal(method));
 	if (id)
 		json_object_set_new(j, "id", id); /* 'id' is optional */
-	json_object_set_new(j, "response", result);
+	json_object_set(j, "response", result);
 
 	json_serialized = json_dumps(j, 0);
 	if (!json_serialized)
@@ -274,10 +324,13 @@ void _rpc_response(Client *client, json_t *request, json_t *result)
 		           "[BUG] rpc_response() failed to serialize response "
 		           "for request from $client ($method)",
 		           log_data_string("method", method));
+		json_decref(j);
 		return;
 	}
 	dbuf_put(&client->local->sendQ, json_serialized, strlen(json_serialized));
 	dbuf_put(&client->local->sendQ, "\n", 1);
+	json_decref(j);
+	safe_free(json_serialized);
 }
 
 
@@ -293,13 +346,13 @@ void rpc_call(Client *client, json_t *request)
 	jsonrpc = json_object_get_string(request, "jsonrpc");
 	if (!jsonrpc || strcasecmp(jsonrpc, "2.0"))
 	{
-		rpc_error(client, request, "Only JSON-RPC version 2.0 is supported");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "Only JSON-RPC version 2.0 is supported");
 		return;
 	}
 	method = json_object_get_string(request, "method");
 	if (!method)
 	{
-		rpc_error(client, request, "Missing 'method' to call");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "Missing 'method' to call");
 		return;
 	}
 	params = json_object_get(request, "params");
@@ -314,7 +367,7 @@ void rpc_call(Client *client, json_t *request)
 	handler = RPCHandlerFind(method);
 	if (!handler)
 	{
-		rpc_error(client, request, "Unsupported method");
+		rpc_error(client, request, JSON_RPC_ERROR_METHOD_NOT_FOUND, "Unsupported method");
 		return;
 	}
 	handler->call(client, request, params);
