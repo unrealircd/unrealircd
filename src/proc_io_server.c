@@ -47,7 +47,7 @@ void add_proc_io_server(void)
 	listener = safe_alloc(sizeof(ConfigItem_listen));
 	safe_strdup(listener->file, CONTROLFILE);
 	listener->socket_type = SOCKET_TYPE_UNIX;
-	listener->options = LISTENER_CONTROL;
+	listener->options = LISTENER_CONTROL|LISTENER_NO_CHECK_CONNECT_FLOOD|LISTENER_NO_CHECK_ZLINED;
 	listener->fd = -1;
 	AddListItem(listener, conf_listen);
 	if (add_listener(listener) == -1)

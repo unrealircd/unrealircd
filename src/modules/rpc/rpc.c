@@ -142,6 +142,7 @@ int rpc_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr)
 			return 0;
 
 		l = (ConfigItem_listen *)ptr;
+		l->options |= LISTENER_NO_CHECK_CONNECT_FLOOD;
 		l->webserver = safe_alloc(sizeof(WebServer));
 		l->webserver->handle_request = rpc_handle_request;
 		l->webserver->handle_data = rpc_handle_request_data;
