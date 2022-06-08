@@ -209,7 +209,7 @@ int webserver_handshake_helper(char *buffer, int len, char **key, char **value, 
 	/* Note: p *could* point to the NUL byte ('\0') */
 
 	/* Special handling for GET line itself. */
-	if (!strncmp(p, "HEAD ", 5) ||!strncmp(p, "GET ", 4) || !strncmp(p, "PUT ", 4) || !strncmp(p, "POST ", 5))
+	if (webserver_get_method(p) != HTTP_METHOD_NONE)
 	{
 		k = "REQUEST";
 		p = strchr(p, ' ') + 1; /* space (0x20) is guaranteed to be there, see strncmp above */
