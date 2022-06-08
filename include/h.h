@@ -1120,6 +1120,7 @@ extern void add_fmt_nvplist(NameValuePrioList **lst, int priority, const char *n
 #define add_nvplist_numeric(lst, priority, name, to, numeric, ...) add_nvplist_numeric_fmt(lst, priority, name, to, numeric, STR_ ## numeric, ##__VA_ARGS__)
 extern void add_nvplist_numeric_fmt(NameValuePrioList **lst, int priority, const char *name, Client *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,6,7)));
 extern NameValuePrioList *find_nvplist(NameValuePrioList *list, const char *name);
+extern const char *get_nvplist(NameValuePrioList *list, const char *name);
 extern void free_nvplist(NameValuePrioList *lst);
 extern void unreal_add_name_values(NameValuePrioList **n, const char *name, ConfigEntry *ce);
 extern const char *namevalue(NameValuePrioList *n);

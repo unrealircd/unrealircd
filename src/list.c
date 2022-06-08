@@ -603,6 +603,12 @@ NameValuePrioList *find_nvplist(NameValuePrioList *list, const char *name)
 	return NULL;
 }
 
+const char *get_nvplist(NameValuePrioList *list, const char *name)
+{
+	NameValuePrioList *e = find_nvplist(list, name);
+	return e ? e->value : NULL;
+}
+
 void add_fmt_nvplist(NameValuePrioList **lst, int priority, const char *name, FORMAT_STRING(const char *format), ...)
 {
 	char value[512];
