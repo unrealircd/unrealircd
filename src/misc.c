@@ -594,17 +594,6 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, cons
 			}
 		}
 		free_pending_net(client);
-		if (client->local->listener)
-			if (client->local->listener && !IsOutgoing(client))
-			{
-				listen_conf = client->local->listener;
-				listen_conf->clients--;
-				if (listen_conf->flag.temporary && (listen_conf->clients == 0))
-				{
-					/* Call listen cleanup */
-					listen_cleanup();
-				}
-			}
 		SetClosing(client);
 		if (IsUser(client))
 		{
