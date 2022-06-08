@@ -40,7 +40,7 @@ int webserver_handle_handshake(Client *client, const char *readbuf, int *length)
 int webserver_handle_request_header(Client *client, const char *readbuf, int *length);
 void _webserver_send_response(Client *client, int status, char *msg);
 void _webserver_close_client(Client *client);
-int _webserver_handle_body_data(Client *client, WebRequest *web, const char *readbuf, int length);
+int _webserver_handle_request_body(Client *client, WebRequest *web, const char *readbuf, int length);
 
 /* Global variables */
 ModDataInfo *webserver_md;
@@ -50,7 +50,7 @@ MOD_TEST()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_WEBSERVER_SEND_RESPONSE, _webserver_send_response);
 	EfunctionAddVoid(modinfo->handle, EFUNC_WEBSERVER_CLOSE_CLIENT, _webserver_close_client);
-	EfunctionAdd(modinfo->handle, EFUNC_WEBSERVER_HANDLE_BODY_DATA, _webserver_handle_body_data);
+	EfunctionAdd(modinfo->handle, EFUNC_WEBSERVER_HANDLE_BODY_DATA, _webserver_handle_request_body);
 	return MOD_SUCCESS;
 }
 
@@ -474,7 +474,7 @@ void _webserver_close_client(Client *client)
 	}
 }
 
-int webserver_handle_body_data_append_buffer(Client *client, const char *buf, int len)
+int webserver_handle_request_body_append_buffer(Client *client, const char *buf, int len)
 {
 	/* Guard.. */
 	if (len <= 0)
@@ -490,7 +490,7 @@ int webserver_handle_body_data_append_buffer(Client *client, const char *buf, in
 	return 1;
 }
 
-int _webserver_handle_body_data(Client *client, WebRequest *web, const char *readbuf, int length)
+int _webserver_handle_request_body(Client *client, WebRequest *web, const char *readbuf, int length)
 {
 	char *buf;
 	long long n;
@@ -499,7 +499,7 @@ int _webserver_handle_body_data(Client *client, WebRequest *web, const char *rea
 	if (1) // (WEB(client)->transfer_encoding == TRANSFER_ENCODING_NONE)
 	{
 		/* Ohh.. so easy! */
-		webserver_handle_body_data_append_buffer(client, readbuf, length);
+		webserver_handle_request_body_append_buffer(client, readbuf, length);
 		WEB(client)->request_body_complete = 1; // FIXME: WRONG! But for testing ;)
 		return 1;
 	}

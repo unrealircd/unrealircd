@@ -207,7 +207,7 @@ int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *buf,
 
 	// NB: content_length
 	// NB: chunked transfers?
-	if (!webserver_handle_body_data(client, web, buf, len))
+	if (!webserver_handle_request_body(client, web, buf, len))
 	{
 		webserver_send_response(client, 400, "Error handling POST body data\n");
 		return 0;
