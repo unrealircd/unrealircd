@@ -834,6 +834,10 @@ Client *add_connection(ConfigItem_listen *listener, int fd)
 refuse_client:
 			ircstats.is_ref++;
 			client->local->fd = -2;
+			if (!list_empty(&client->client_node))
+				list_del(&client->client_node);
+			if (!list_empty(&client->lclient_node))
+				list_del(&client->lclient_node);
 			free_client(client);
 			fd_close(fd);
 			--OpenFiles;
@@ -853,6 +857,11 @@ refuse_client:
 		SetLocalhost(client);
 	}
 
+	add_client_to_list(client);
+	irccounts.unknown++;
+	client->status = CLIENT_STATUS_UNKNOWN;
+	list_add(&client->lclient_node, &unknown_list);
+
 	for (h = Hooks[HOOKTYPE_ACCEPT]; h; h = h->next)
 	{
 		int value = (*(h->func.intfunc))(client);
@@ -860,19 +869,6 @@ refuse_client:
 			goto refuse_client;
 		if (value != HOOK_CONTINUE)
 			break;
-	}
-
-	add_client_to_list(client);
-
-	if (!(listener->options & LISTENER_CONTROL))
-	{
-		/* IRC: unknown connection */
-		irccounts.unknown++;
-		client->status = CLIENT_STATUS_UNKNOWN;
-		list_add(&client->lclient_node, &unknown_list);
-	} else {
-		client->status = CLIENT_STATUS_CONTROL;
-		list_add(&client->lclient_node, &control_list);
 	}
 
 	if ((listener->options & LISTENER_TLS) && ctx_server)
