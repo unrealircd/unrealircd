@@ -114,8 +114,23 @@ int webserver_packet_out(Client *from, Client *to, Client *intended_to, char **m
 	return 0;
 }
 
+HttpMethod webserver_get_method(const char *buf)
+{
+	if (!strncmp(buf, "HEAD ", 5))
+		return HTTP_METHOD_HEAD;
+	if (!strncmp(buf, "GET ", 4))
+		return HTTP_METHOD_GET;
+	if (!strncmp(buf, "PUT ", 4))
+		return HTTP_METHOD_PUT;
+	if (!strncmp(buf, "POST ", 5))
+		return HTTP_METHOD_POST;
+	return HTTP_METHOD_NONE; /* invalid */
+}
+
 void webserver_possible_request(Client *client, const char *buf, int len)
 {
+	HttpMethod method;
+
 	if (len < 8)
 		return;
 
@@ -123,26 +138,15 @@ void webserver_possible_request(Client *client, const char *buf, int len)
 	if (WEB(client))
 		return;
 
-	if (!strncmp(buf, "HEAD ", 5))
-	{
-		moddata_client(client, webserver_md).ptr = safe_alloc(sizeof(WebRequest));
-		WEB(client)->method = HTTP_METHOD_HEAD;
-	} else
-	if (!strncmp(buf, "GET ", 4))
-	{
-		moddata_client(client, webserver_md).ptr = safe_alloc(sizeof(WebRequest));
-		WEB(client)->method = HTTP_METHOD_GET;
-	} else
-	if (!strncmp(buf, "PUT ", 4))
-	{
-		moddata_client(client, webserver_md).ptr = safe_alloc(sizeof(WebRequest));
-		WEB(client)->method = HTTP_METHOD_PUT;
-	} else
-	if (!strncmp(buf, "POST ", 5))
-	{
-		moddata_client(client, webserver_md).ptr = safe_alloc(sizeof(WebRequest));
-		WEB(client)->method = HTTP_METHOD_POST;
-	}
+	method = webserver_get_method(buf);
+	if (method == HTTP_METHOD_NONE)
+		return; /* invalid */
+
+	moddata_client(client, webserver_md).ptr = safe_alloc(sizeof(WebRequest));
+	WEB(client)->method = method;
+
+	/* Set some default values: */
+	WEB(client)->content_length = -1;
 }
 
 /** Incoming packet hook. This processes web requests.
@@ -388,6 +392,15 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 			safe_strdup(WEB(client)->uri, value);
 		} else
 		{
+			if (!strcasecmp(key, "Content-Length"))
+			{
+				WEB(client)->content_length = atoll(value);
+			} else
+			if (!strcasecmp(key, "Transfer-Encoding"))
+			{
+				if (!strcasecmp(value, "chunked"))
+					WEB(client)->transfer_encoding = TRANSFER_ENCODING_CHUNKED;
+			}
 			add_nvplist(&WEB(client)->headers, WEB(client)->num_headers, key, value);
 		}
 	}
@@ -490,20 +503,33 @@ int webserver_handle_body_append_buffer(Client *client, const char *buf, int len
 	return 1;
 }
 
-int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf, int length)
+/** Handle HTTP body parsing, eg for a PUT request, concatting it all together.
+ * @param client	The client
+ * @param web		The WEB(client)
+ * @param readbuf	Packet in the read buffer
+ * @param pktsize	Packet size of the read buffer
+ * @return 1 to continue processing, 0 if client is killed.
+ */
+int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf, int pktsize)
 {
 	char *buf;
 	long long n;
 	char *free_this_buffer = NULL;
 
-	if (1) // (WEB(client)->transfer_encoding == TRANSFER_ENCODING_NONE)
+	// FIXME: currently there is no size limit, so someone can eat 1G or whatever.
+
+	if (WEB(client)->transfer_encoding == TRANSFER_ENCODING_NONE)
 	{
 		/* Ohh.. so easy! */
-		webserver_handle_body_append_buffer(client, readbuf, length);
-		WEB(client)->request_body_complete = 1; // FIXME: WRONG! But for testing ;)
+		webserver_handle_body_append_buffer(client, readbuf, pktsize);
+		if ((WEB(client)->content_length >= 0) &&
+		    (WEB(client)->request_buffer_size >= WEB(client)->content_length))
+		{
+			WEB(client)->request_body_complete = 1;
+		}
 		return 1;
 	}
-#if 0
+
 	/* Fill 'buf' nd set 'buflen' with what we had + what we have now.
 	 * Makes things easy.
 	 */
@@ -517,7 +543,7 @@ int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf,
 		WEB(client)->lefttoparselen = 0;
 	} else {
 		n = pktsize;
-		buf = readbuf;
+		buf = (char *)readbuf; // FIXME: casting away a const AND writing later -- BAD!
 	}
 
 	/* Chunked transfers.. yayyyy.. */
@@ -527,7 +553,7 @@ int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf,
 		{
 			/* Eat it */
 			int eat = MIN(WEB(client)->chunk_remaining, n);
-			fwrite(buf, 1, eat, WEB(client)->file_fd);
+			webserver_handle_body_append_buffer(client, buf, eat);
 			n -= eat;
 			buf += eat;
 			WEB(client)->chunk_remaining -= eat;
@@ -583,15 +609,18 @@ int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf,
 			WEB(client)->chunk_remaining = strtol(buf, NULL, 16);
 			if (WEB(client)->chunk_remaining < 0)
 			{
-				https_cancel(handle, "Negative chunk encountered (%ld)", WEB(client)->chunk_remaining);
+				unreal_log(ULOG_WARNING, "webserver", "WEB_NEGATIVE_CHUNK", client,
+				           "Webrequest from $client: Negative chunk encountered");
 				safe_free(free_this_buffer);
+				exit_client(client, NULL, "");
 				return 0;
 			}
 			if (WEB(client)->chunk_remaining == 0)
 			{
-				https_done(handle);
+				/* DONE! */
+				WEB(client)->request_body_complete = 1;
 				safe_free(free_this_buffer);
-				return 0;
+				return 1;
 			}
 			buf += i;
 			n -= i;
@@ -600,5 +629,4 @@ int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf,
 
 	safe_free(free_this_buffer);
 	return 1;
-#endif
 }

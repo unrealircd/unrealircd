@@ -1708,6 +1708,11 @@ typedef enum HttpMethod {
 	HTTP_METHOD_POST = 4,	/**< POST request */
 } HttpMethod;
 
+typedef enum TransferEncoding {
+	TRANSFER_ENCODING_NONE=0,
+	TRANSFER_ENCODING_CHUNKED=1
+} TransferEncoding;
+
 typedef struct WebRequest WebRequest;
 struct WebRequest {
 	HttpMethod method; /**< GET/PUT/POST */
@@ -1721,6 +1726,9 @@ struct WebRequest {
 	char *request_buffer; /**< Buffer for POST data */
 	int request_buffer_size; /**< Size of buffer for POST data */
 	int request_body_complete; /**< POST data has all been read */
+	long long content_length; /**< "Content-Length" as sent by the client */
+	long long chunk_remaining;
+	TransferEncoding transfer_encoding;
 };
 
 typedef struct WebServer WebServer;

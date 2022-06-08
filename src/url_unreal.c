@@ -22,11 +22,6 @@
 
 /* Structs */
 
-typedef enum TransferEncoding {
-	TRANSFER_ENCODING_NONE=0,
-	TRANSFER_ENCODING_CHUNKED=1
-} TransferEncoding;
-
 /* Stores information about the async transfer.
  * Used to maintain information about the transfer
  * to trigger the callback upon completion.
