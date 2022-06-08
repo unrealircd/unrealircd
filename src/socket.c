@@ -1240,7 +1240,8 @@ int deliver_it(Client *client, char *str, int len, int *want_read)
 
 	if (IsDeadSocket(client) ||
 	    (!IsServer(client) && !IsUser(client) && !IsHandshake(client) &&
-	     !IsTLSHandshake(client) && !IsUnknown(client)))
+	     !IsTLSHandshake(client) && !IsUnknown(client) &&
+	     !IsControl(client) && !IsRPC(client)))
 	{
 		return -1;
 	}

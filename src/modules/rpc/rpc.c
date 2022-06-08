@@ -21,6 +21,7 @@ int rpc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rpc_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
 //int rpc_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length);
 void rpc_mdata_free(ModData *m);
+int rpc_client_handshake(Client *client);
 int rpc_handle_request(Client *client, WebRequest *web);
 int rpc_handle_request_data(Client *client, WebRequest *web, const char *readbuf2, int length2);
 int rpc_packet_in(Client *client, const char *readbuf, int *length);
@@ -60,6 +61,7 @@ MOD_INIT()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, rpc_config_run_ex);
+	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, INT_MIN, rpc_client_handshake);
 	//HookAdd(modinfo->handle, HOOKTYPE_PACKET, INT_MAX, rpc_packet_out);
 	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, INT_MIN, rpc_packet_in);
 
@@ -371,4 +373,14 @@ void rpc_call(Client *client, json_t *request)
 		return;
 	}
 	handler->call(client, request, params);
+}
+
+int rpc_client_handshake(Client *client)
+{
+	if (RPC_PORT(client))
+	{
+		// FIXME: do access control here immediately, reject the client if needed.
+		SetRPC(client);
+	}
+	return 0;
 }

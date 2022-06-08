@@ -323,9 +323,10 @@ typedef enum LogDestination { LOG_DEST_SNOMASK=0, LOG_DEST_OPER=1, LOG_DEST_REMO
  * @{
  */
 typedef enum ClientStatus {
-	CLIENT_STATUS_CONTROL			= -8,	/**< Client is on the control channel */
-	CLIENT_STATUS_LOG			= -7,	/**< Client is a log file */
-	CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE	= -8,	/**< Client is doing a STARTTLS handshake */
+	CLIENT_STATUS_RPC			= -10,	/**< RPC Client (either local or remote) */
+	CLIENT_STATUS_CONTROL			= -9,	/**< Client is on the control channel */
+	CLIENT_STATUS_LOG			= -8,	/**< Client is a log file */
+	CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE	= -7,	/**< Client is doing a STARTTLS handshake */
 	CLIENT_STATUS_CONNECTING		= -6,	/**< Client is an outgoing connect */
 	CLIENT_STATUS_TLS_CONNECT_HANDSHAKE	= -5,	/**< Client is doing an TLS handshake - outgoing connection */
 	CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE	= -4,	/**< Client is doing an TLS handshake - incoming connection */
@@ -346,7 +347,8 @@ typedef enum ClientStatus {
 /** Client is not fully registered yet. May become a user or a server, we don't know yet. */
 #define	IsUnknown(x)		(((x)->status == CLIENT_STATUS_UNKNOWN) || ((x)->status == CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE))	
 #define	IsServer(x)		((x)->status == CLIENT_STATUS_SERVER)	/**< Is a server that has completed the connection handshake */
-#define	IsControl(x)		((x)->status == CLIENT_STATUS_CONTROL)	/**< Is on the control channel (not on IRC) */
+#define	IsControl(x)		((x)->status == CLIENT_STATUS_CONTROL)	/**< Is on the control channel (not an IRC client) */
+#define	IsRPC(x)		((x)->status == CLIENT_STATUS_RPC)	/**< Is doing RPC (not an IRC client) */
 #define	IsLog(x)		((x)->status == CLIENT_STATUS_LOG)	/**< Is a log file, not a user or server */
 #define IsStartTLSHandshake(x)	((x)->status == CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE)	/**< Currently doing a STARTTLS handshake */
 #define IsTLSAcceptHandshake(x)	((x)->status == CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE)	/**< Currently doing a TLS handshake - incoming */
@@ -364,6 +366,7 @@ typedef enum ClientStatus {
 #define	SetUser(x)		((x)->status = CLIENT_STATUS_USER)
 #define	SetLog(x)		((x)->status = CLIENT_STATUS_LOG)
 #define	SetControl(x)		((x)->status = CLIENT_STATUS_CONTROL)
+#define	SetRPC(x)		((x)->status = CLIENT_STATUS_RPC)
 #define	SetUser(x)		((x)->status = CLIENT_STATUS_USER)
 
 /** @} */
