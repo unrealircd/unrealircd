@@ -1229,13 +1229,15 @@ extern ModDataInfo *ModDataAdd(Module *module, ModDataInfo req);
 extern void ModDataDel(ModDataInfo *md);
 extern void unload_all_unused_moddata(void);
 
-#define LISTENER_NORMAL		0x000001
-#define LISTENER_CLIENTSONLY	0x000002
-#define LISTENER_SERVERSONLY	0x000004
-#define LISTENER_TLS		0x000010
-#define LISTENER_BOUND		0x000020
-#define LISTENER_DEFER_ACCEPT	0x000040
-#define LISTENER_CONTROL	0x000080	/**< Control channel */
+#define LISTENER_NORMAL			0x000001
+#define LISTENER_CLIENTSONLY		0x000002
+#define LISTENER_SERVERSONLY		0x000004
+#define LISTENER_TLS			0x000010
+#define LISTENER_BOUND			0x000020
+#define LISTENER_DEFER_ACCEPT		0x000040
+#define LISTENER_CONTROL		0x000080	/**< Control channel */
+#define LISTENER_NO_CHECK_CONNECT_FLOOD	0x000100	/**< Don't check for connect-flood and max-unknown-connections-per-ip (eg for RPC) */
+#define LISTENER_NO_CHECK_ZLINED	0x000200	/**< Don't check for zlines */
 
 #define IsServersOnlyListener(x)	((x) && ((x)->options & LISTENER_SERVERSONLY))
 

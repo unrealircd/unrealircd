@@ -65,6 +65,9 @@ static int check_too_many_unknown_connections(Client *client)
 
 int max_unknown_connections_accept(Client *client)
 {
+	if (client->local->listener->options & LISTENER_NO_CHECK_CONNECT_FLOOD)
+		return 0;
+
 	/* Check set::max-unknown-connections-per-ip */
 	if (check_too_many_unknown_connections(client))
 	{
