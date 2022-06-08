@@ -121,7 +121,9 @@ EVENT(handshake_timeout)
 
 	list_for_each_entry_safe(client, next, &unknown_list, lclient_node)
 	{
-		if (client->local->creationtime && ((TStime() - client->local->creationtime) > iConf.handshake_timeout))
+		if (client->local->creationtime &&
+		    ((TStime() - client->local->creationtime) > iConf.handshake_timeout) &&
+		    !(client->local->listener && (client->local->listener->socket_type == SOCKET_TYPE_UNIX)))
 		{
 			if (client->server && *client->server->by)
 				continue; /* handled by server module */
