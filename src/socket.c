@@ -41,7 +41,6 @@ extern char *version;
 MODVAR time_t last_allinuse = 0;
 
 void start_of_normal_client_handshake(Client *client);
-extern void start_of_control_client_handshake(Client *client);
 void proceed_normal_client_handshake(Client *client, struct hostent *he);
 
 /** Close all connections - only used when we terminate the server (eg: /DIE or SIGTERM) */
@@ -895,10 +894,9 @@ refuse_client:
 			}
 		}
 	} else
-	if (listener->options & LISTENER_CONTROL)
-		start_of_control_client_handshake(client);
-	else
-		start_of_normal_client_handshake(client);
+	{
+		listener->start_handshake(client);
+	}
 	return client;
 }
 
