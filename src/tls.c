@@ -780,7 +780,7 @@ int unreal_tls_accept(Client *client, int fd)
 		return -1;
 	}
 
-	start_of_normal_client_handshake(client);
+	client->local->listener->start_handshake(client);
 
 	return 1;
 }

@@ -4990,6 +4990,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		} else {
 			isnew = 0;
 		}
+		listen->start_handshake = start_of_normal_client_handshake;
 
 		if (listen->options & LISTENER_BOUND)
 			tmpflags |= LISTENER_BOUND;
@@ -5051,6 +5052,8 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 				isnew = 1;
 			} else
 				isnew = 0;
+
+			listen->start_handshake = start_of_normal_client_handshake;
 
 			if (listen->options & LISTENER_BOUND)
 				tmpflags |= LISTENER_BOUND;
@@ -5136,6 +5139,8 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 					isnew = 1;
 				} else
 					isnew = 0;
+
+				listen->start_handshake = start_of_normal_client_handshake;
 
 				if (listen->options & LISTENER_BOUND)
 					tmpflags |= LISTENER_BOUND;

@@ -1738,6 +1738,7 @@ struct ConfigItem_listen {
 	SSL_CTX *ssl_ctx;
 	TLSOptions *tls_options;
 	WebServer *webserver;
+	void (*start_handshake)(Client *client); /**< Function to call on accept() */
 	int websocket_options; /* should be in module, but lazy */
 	int rpc_options;
 	char *websocket_forward;
