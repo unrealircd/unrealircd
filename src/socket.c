@@ -790,30 +790,6 @@ const char *getpeerip(Client *client, int fd, int *port)
 	}
 }
 
-/** This checks set::max-unknown-connections-per-ip,
- * which is an important safety feature.
- */
-static int check_too_many_unknown_connections(Client *client)
-{
-	int cnt = 1;
-	Client *c;
-
-	if (!find_tkl_exception(TKL_CONNECT_FLOOD, client))
-	{
-		list_for_each_entry(c, &unknown_list, lclient_node)
-		{
-			if (!strcmp(client->ip,GetIP(c)))
-			{
-				cnt++;
-				if (cnt > iConf.max_unknown_connections_per_ip)
-					return 1;
-			}
-		}
-	}
-
-	return 0;
-}
-
 /** Process the incoming connection which has just been accepted.
  * This creates a client structure for the user.
  * The sockhost field is initialized with the ip# of the host.
@@ -830,6 +806,7 @@ Client *add_connection(ConfigItem_listen *listener, int fd)
 	Client *client;
 	const char *ip;
 	int port = 0;
+	Hook *h;
 
 	client = make_client(NULL, &me);
 	client->local->socket_type = listener->socket_type;
@@ -874,21 +851,13 @@ refuse_client:
 		SetLocalhost(client);
 	}
 
-	if (!(listener->options & LISTENER_CONTROL))
+	for (h = Hooks[HOOKTYPE_ACCEPT]; h; h = h->next)
 	{
-		/* Check set::max-unknown-connections-per-ip */
-		if (check_too_many_unknown_connections(client))
-		{
-			ircsnprintf(zlinebuf, sizeof(zlinebuf),
-				    "ERROR :Closing Link: [%s] (Too many unknown connections from your IP)\r\n",
-				    client->ip);
-			(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
+		int value = (*(h->func.intfunc))(client);
+		if (value == HOOK_DENY)
 			goto refuse_client;
-		}
-
-		/* Check (G)Z-Lines and set::anti-flood::connect-flood */
-		if (check_banned(client, NO_EXIT_CLIENT))
-			goto refuse_client;
+		if (value != HOOK_CONTINUE)
+			break;
 	}
 
 	client->local->listener = listener;
