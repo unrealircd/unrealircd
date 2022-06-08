@@ -32,6 +32,8 @@ CMD_FUNC(procio_rehash);
 CMD_FUNC(procio_exit);
 CMD_FUNC(procio_help);
 
+int procio_accept(Client *client);
+
 /** Create the unrealircd.ctl socket (server-side) */
 void add_proc_io_server(void)
 {
@@ -55,6 +57,19 @@ void add_proc_io_server(void)
 	CommandAdd(NULL, "REHASH", procio_rehash, MAXPARA, CMD_CONTROL);
 	CommandAdd(NULL, "EXIT", procio_exit, MAXPARA, CMD_CONTROL);
 	CommandAdd(NULL, "HELP", procio_help, MAXPARA, CMD_CONTROL);
+	HookAdd(NULL, HOOKTYPE_ACCEPT, -1000000, procio_accept);
+}
+
+int procio_accept(Client *client)
+{
+	if (client->local->listener->options & LISTENER_CONTROL)
+	{
+		irccounts.unknown--;
+		client->status = CLIENT_STATUS_CONTROL;
+		list_del(&client->lclient_node);
+		list_add(&client->lclient_node, &control_list);
+	}
+	return 0;
 }
 
 /** Start of "control channel" client handshake - this is minimal
