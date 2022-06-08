@@ -23,8 +23,8 @@ int rpc_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
 void rpc_mdata_free(ModData *m);
 int rpc_client_accept(Client *client);
 void rpc_client_handshake(Client *client);
-int rpc_handle_request(Client *client, WebRequest *web);
-int rpc_handle_request_data(Client *client, WebRequest *web, const char *readbuf2, int length2);
+int rpc_handle_webrequest(Client *client, WebRequest *web);
+int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *readbuf2, int length2);
 int rpc_packet_in(Client *client, const char *readbuf, int *length);
 void rpc_call_text(Client *client, const char *buf, int len);
 void rpc_call(Client *client, json_t *request);
@@ -146,8 +146,8 @@ int rpc_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr)
 		l->options |= LISTENER_NO_CHECK_CONNECT_FLOOD;
 		l->start_handshake = rpc_client_handshake;
 		l->webserver = safe_alloc(sizeof(WebServer));
-		l->webserver->handle_request = rpc_handle_request;
-		l->webserver->handle_data = rpc_handle_request_data;
+		l->webserver->handle_request = rpc_handle_webrequest;
+		l->webserver->handle_data = rpc_handle_webrequest_data;
 		l->rpc_options = 1;
 
 		return 1;
@@ -180,16 +180,39 @@ int rpc_packet_out(Client *from, Client *to, Client *intended_to, char **msg, in
 	return 0;
 }
 
-int rpc_handle_request(Client *client, WebRequest *web)
+int rpc_handle_webrequest(Client *client, WebRequest *web)
 {
-	// FIXME: currently returns 1 (success) for all URLs
-	return 1;
+	if (!strcmp(web->uri, "/api"))
+	{
+		if (web->method != HTTP_METHOD_POST)
+		{
+			webserver_send_response(client, 200, "To use the UnrealIRCd RPC API you need to make a POST request. See https://www.unrealircd.org/docs/RPC\n");
+			return 0;
+		}
+		return 1; /* accept */
+	}
+	webserver_send_response(client, 404, "Page not found.\n");
+	return 0;
 }
 
-int rpc_handle_request_data(Client *client, WebRequest *web, const char *readbuf2, int length2)
+int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *readbuf2, int length2)
 {
+	if (strcmp(web->uri, "/api") || (web->method != HTTP_METHOD_POST))
+	{
+		webserver_send_response(client, 404, "Page not found\n");
+		return 0;
+	}
+
 	// NB: content_length
 	// NB: chunked transfers?
+
+	//config_status("GOT: '%s'", readbuf2);
+
+	webserver_send_response(client, 200, NULL);
+	rpc_call_text(client, readbuf2, length2);
+	send_queued(client);
+	webserver_close_client(client);
+
 	return 0;
 }
 
@@ -228,7 +251,7 @@ void rpc_close(Client *client)
 }
 
 /** Handle the RPC request: input is a buffer with a certain length.
- * This calls rpc_handle_request()
+ * This calls rpc_call()
  */
 void rpc_call_text(Client *client, const char *readbuf, int len)
 {

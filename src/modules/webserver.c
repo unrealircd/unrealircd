@@ -418,6 +418,12 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 	return 0; /* don't let UnrealIRCd process this */
 }
 
+/** Send a HTTP(S) response.
+ * @param client	Client to send to
+ * @param status	HTTP status code
+ * @param msg		The message body.
+ * @note if 'msgs' is NULL then don't close the connection.
+ */
 void _webserver_send_response(Client *client, int status, char *msg)
 {
 	char buf[512];
@@ -437,12 +443,20 @@ void _webserver_send_response(Client *client, int status, char *msg)
 		statusmsg = "Range Not Satisfiable";
 
 	snprintf(buf, sizeof(buf),
-		"HTTP/1.1 %d %s\r\nServer: %s\r\nConnection: close\r\n\r\n%s\n",
-		status, statusmsg, WEB_SOFTWARE, msg);
+		"HTTP/1.1 %d %s\r\nServer: %s\r\nConnection: close\r\n\r\n",
+		status, statusmsg, WEB_SOFTWARE);
+	if (msg)
+	{
+		strlcat(buf, msg, sizeof(buf));
+		strlcat(buf, "\n", sizeof(buf));
+	}
 
 	dbuf_put(&client->local->sendQ, buf, strlen(buf));
-	send_queued(client);
-	webserver_close_client(client);
+	if (msg)
+	{
+		send_queued(client);
+		webserver_close_client(client);
+	}
 }
 
 /** Close a web client softly, after data has been sent. */
