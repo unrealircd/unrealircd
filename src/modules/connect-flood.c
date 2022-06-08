@@ -71,6 +71,8 @@ int connect_flood_throttle(Client *client, int exitflags)
 
 int connect_flood_accept(Client *client)
 {
+	if (client->local->listener->options & LISTENER_NO_CHECK_CONNECT_FLOOD)
+		return 0;
 	return connect_flood_throttle(client, NO_EXIT_CLIENT);
 }
 
