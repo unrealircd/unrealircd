@@ -24,7 +24,7 @@ void rpc_mdata_free(ModData *m);
 int rpc_client_accept(Client *client);
 void rpc_client_handshake(Client *client);
 int rpc_handle_webrequest(Client *client, WebRequest *web);
-int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *readbuf2, int length2);
+int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *buf, int len);
 int rpc_packet_in(Client *client, const char *readbuf, int *length);
 void rpc_call_text(Client *client, const char *buf, int len);
 void rpc_call(Client *client, json_t *request);
@@ -189,14 +189,16 @@ int rpc_handle_webrequest(Client *client, WebRequest *web)
 			webserver_send_response(client, 200, "To use the UnrealIRCd RPC API you need to make a POST request. See https://www.unrealircd.org/docs/RPC\n");
 			return 0;
 		}
+		webserver_send_response(client, 200, NULL); /* continue.. */
 		return 1; /* accept */
 	}
 	webserver_send_response(client, 404, "Page not found.\n");
 	return 0;
 }
 
-int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *readbuf2, int length2)
+int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *buf, int len)
 {
+	/* We only handle POST to /api -- reject all the rest */
 	if (strcmp(web->uri, "/api") || (web->method != HTTP_METHOD_POST))
 	{
 		webserver_send_response(client, 404, "Page not found\n");
@@ -205,13 +207,25 @@ int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *read
 
 	// NB: content_length
 	// NB: chunked transfers?
+	if (!webserver_handle_body_data(client, web, buf, len))
+	{
+		webserver_send_response(client, 400, "Error handling POST body data\n");
+		return 0;
+	}
 
-	//config_status("GOT: '%s'", readbuf2);
 
-	webserver_send_response(client, 200, NULL);
-	rpc_call_text(client, readbuf2, length2);
-	send_queued(client);
-	webserver_close_client(client);
+	if (web->request_body_complete)
+	{
+		if (!web->request_buffer)
+		{
+			webserver_send_response(client, 500, "Error while processing POST body data\n");
+			return 0;
+		}
+		//config_status("GOT: '%s'", buf);
+		rpc_call_text(client, web->request_buffer, web->request_buffer_size);
+		send_queued(client);
+		webserver_close_client(client);
+	}
 
 	return 0;
 }

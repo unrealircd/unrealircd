@@ -1718,6 +1718,9 @@ struct WebRequest {
 	char *lefttoparse; /**< Leftover buffer to parse */
 	int lefttoparselen; /**< Length of lefttoparse buffer */
 	int pending_close; /**< Set to 1 when connection should be closed as soon as all data is sent (sendq==0) */
+	char *request_buffer; /**< Buffer for POST data */
+	int request_buffer_size; /**< Size of buffer for POST data */
+	int request_body_complete; /**< POST data has all been read */
 };
 
 typedef struct WebServer WebServer;
