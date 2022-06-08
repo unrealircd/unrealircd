@@ -4715,7 +4715,7 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!cep->value && strcmp(cep->name, "options"))
+		if (!cep->value && strcmp(cep->name, "options") && strcmp(cep->name, "mask") && strcmp(cep->name, "match"))
 		{
 			config_error_empty(cep->file->filename, cep->line_number,
 				"tld", cep->name);
