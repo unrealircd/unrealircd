@@ -160,6 +160,19 @@ void free_client(Client *client)
 		RunHook(HOOKTYPE_FREE_CLIENT, client);
 		if (client->local)
 		{
+			if (client->local->listener)
+			{
+				if (client->local->listener && !IsOutgoing(client))
+				{
+					ConfigItem_listen *listener = client->local->listener;
+					listener->clients--;
+					if (listener->flag.temporary && (listener->clients == 0))
+					{
+						/* Call listen cleanup */
+						listen_cleanup();
+					}
+				}
+			}
 			safe_free(client->local->passwd);
 			safe_free(client->local->error_str);
 			if (client->local->hostp)
