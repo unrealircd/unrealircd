@@ -231,7 +231,7 @@ int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr
 	l = (ConfigItem_listen *)ptr;
 	l->webserver = safe_alloc(sizeof(WebServer));
 	l->webserver->handle_request = websocket_handle_request;
-	l->webserver->handle_data = websocket_handle_websocket;
+	l->webserver->handle_body = websocket_handle_websocket;
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{

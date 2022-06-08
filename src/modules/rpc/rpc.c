@@ -147,7 +147,7 @@ int rpc_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr)
 		l->start_handshake = rpc_client_handshake;
 		l->webserver = safe_alloc(sizeof(WebServer));
 		l->webserver->handle_request = rpc_handle_webrequest;
-		l->webserver->handle_data = rpc_handle_webrequest_data;
+		l->webserver->handle_body = rpc_handle_webrequest_data;
 		l->rpc_options = 1;
 
 		return 1;
@@ -207,7 +207,7 @@ int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *buf,
 
 	// NB: content_length
 	// NB: chunked transfers?
-	if (!webserver_handle_request_body(client, web, buf, len))
+	if (!webserver_handle_body(client, web, buf, len))
 	{
 		webserver_send_response(client, 400, "Error handling POST body data\n");
 		return 0;
