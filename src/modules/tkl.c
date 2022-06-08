@@ -42,6 +42,7 @@ int tkl_config_run_except(ConfigFile *, ConfigEntry *, int);
 int tkl_config_test_set(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_set(ConfigFile *, ConfigEntry *, int);
 int tkl_ip_change(Client *client, const char *oldip);
+int tkl_accept(Client *client);
 CMD_FUNC(cmd_gline);
 CMD_FUNC(cmd_shun);
 CMD_FUNC(cmd_tempshun);
@@ -218,6 +219,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_except);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_set);
 	HookAdd(modinfo->handle, HOOKTYPE_IP_CHANGE, 2000000000, tkl_ip_change);
+	HookAdd(modinfo->handle, HOOKTYPE_ACCEPT, -1000, tkl_accept);
 	CommandAdd(modinfo->handle, "GLINE", cmd_gline, 3, CMD_OPER);
 	CommandAdd(modinfo->handle, "SHUN", cmd_shun, 3, CMD_OPER);
 	CommandAdd(modinfo->handle, "TEMPSHUN", cmd_tempshun, 2, CMD_OPER);
@@ -890,7 +892,20 @@ char *spamfilter_id(TKL *tk)
 
 int tkl_ip_change(Client *client, const char *oldip)
 {
-	check_banned(client, 0);
+	TKL *tkl;
+	if ((tkl = find_tkline_match_zap(client)))
+		banned_client(client, "Z-Lined", tkl->ptr.serverban->reason, (tkl->type & TKL_GLOBAL)?1:0, 0);
+	return 0;
+}
+
+int tkl_accept(Client *client)
+{
+	TKL *tkl;
+	if ((tkl = find_tkline_match_zap(client)))
+	{
+		banned_client(client, "Z-Lined", tkl->ptr.serverban->reason, (tkl->type & TKL_GLOBAL)?1:0, NO_EXIT_CLIENT);
+		return HOOK_DENY;
+	}
 	return 0;
 }
 

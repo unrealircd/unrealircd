@@ -84,7 +84,6 @@ void (*broadcast_md_client)(ModDataInfo *mdi, Client *client, ModData *md);
 void (*broadcast_md_channel)(ModDataInfo *mdi, Channel *channel, ModData *md);
 void (*broadcast_md_member)(ModDataInfo *mdi, Channel *channel, Member *m, ModData *md);
 void (*broadcast_md_membership)(ModDataInfo *mdi, Client *client, Membership *m, ModData *md);
-int (*check_banned)(Client *client, int exitflags);
 int (*check_deny_version)(Client *client, const char *software, int protocol, const char *flags);
 void (*broadcast_md_client_cmd)(Client *except, Client *sender, Client *acptr, const char *varname, const char *value);
 void (*broadcast_md_channel_cmd)(Client *except, Client *sender, Channel *channel, const char *varname, const char *value);
@@ -354,7 +353,6 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_BROADCAST_MD_CHANNEL, broadcast_md_channel, NULL);
 	efunc_init_function(EFUNC_BROADCAST_MD_MEMBER, broadcast_md_member, NULL);
 	efunc_init_function(EFUNC_BROADCAST_MD_MEMBERSHIP, broadcast_md_membership, NULL);
-	efunc_init_function(EFUNC_CHECK_BANNED, check_banned, NULL);
 	efunc_init_function(EFUNC_INTRODUCE_USER, introduce_user, NULL);
 	efunc_init_function(EFUNC_CHECK_DENY_VERSION, check_deny_version, NULL);
 	efunc_init_function(EFUNC_BROADCAST_MD_CLIENT_CMD, broadcast_md_client_cmd, NULL);

@@ -35,18 +35,6 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
-/* Forward declarations */
-int _check_banned(Client *client, int exitflags);
-
-MOD_TEST()
-{
-	MARK_AS_OFFICIAL_MODULE(modinfo);
-
-	EfunctionAdd(modinfo->handle, EFUNC_CHECK_BANNED, _check_banned);
-	
-	return MOD_SUCCESS;
-}
-
 MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_PASS, cmd_pass, 1, CMD_UNREGISTERED|CMD_USER|CMD_SERVER);
@@ -63,51 +51,6 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
-}
-
-/** Handles zlines/gzlines/throttling/unknown connections
- * @param client     Client to be checked
- * @param exitflags  Special flag (NO_EXIT_CLIENT) -- only used in very early stages of the connection
- * @returns 1 if user is banned and is or should be killed, 0 if not.
- */
-int _check_banned(Client *client, int exitflags)
-{
-	TKL *tk;
-
-	if ((tk = find_tkline_match_zap(client)))
-	{
-		banned_client(client, "Z-Lined", tk->ptr.serverban->reason, (tk->type & TKL_GLOBAL)?1:0, exitflags);
-		return 1;
-	}
-	else
-	{
-		int val;
-		char zlinebuf[512];
-
-		if (!(val = throttle_can_connect(client)))
-		{
-			if (exitflags & NO_EXIT_CLIENT)
-			{
-				ircsnprintf(zlinebuf, sizeof(zlinebuf),
-					"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) - "
-					"Email %s for more information.\r\n",
-					client->ip, KLINE_ADDRESS);
-				(void)send(client->local->fd, zlinebuf, strlen(zlinebuf), 0);
-				return 1;
-			} else {
-				ircsnprintf(zlinebuf, sizeof(zlinebuf),
-				            "Throttled: Reconnecting too fast - "
-				            "Email %s for more information.",
-				            KLINE_ADDRESS);
-				exit_client(client, NULL, zlinebuf);
-				return 1;
-			}
-		}
-		else if (val == 1)
-			add_throttling_bucket(client);
-	}
-
-	return 0;
 }
 
 /***************************************************************************

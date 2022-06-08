@@ -253,6 +253,7 @@ DLL_FILES=\
  src/modules/clienttagdeny.dll \
  src/modules/close.dll \
  src/modules/connect.dll \
+ src/modules/connect-flood.dll \
  src/modules/connthrottle.dll \
  src/modules/creationtime.dll \
  src/modules/cycle.dll \
@@ -305,6 +306,7 @@ DLL_FILES=\
  src/modules/locops.dll \
  src/modules/lusers.dll \
  src/modules/map.dll \
+ src/modules/max-unknown-connections-per-ip.dll \
  src/modules/md.dll \
  src/modules/message.dll \
  src/modules/message-ids.dll \
@@ -836,6 +838,9 @@ src/modules/close.dll: src/modules/close.c $(INCLUDES)
 src/modules/connect.dll: src/modules/connect.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/connect.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/connect.pdb $(MODLFLAGS)
 
+src/modules/connect-flood.dll: src/modules/connect-flood.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/connect-flood.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/connect-flood.pdb $(MODLFLAGS)
+
 src/modules/connthrottle.dll: src/modules/connthrottle.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/connthrottle.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/connthrottle.pdb $(MODLFLAGS)
 
@@ -994,6 +999,9 @@ src/modules/lusers.dll: src/modules/lusers.c $(INCLUDES)
 
 src/modules/map.dll: src/modules/map.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/map.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/map.pdb $(MODLFLAGS)
+
+src/modules/max-unknown-connections-per-ip.dll: src/modules/max-unknown-connections-per-ip.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/max-unknown-connections-per-ip.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/max-unknown-connections-per-ip.pdb $(MODLFLAGS)
 
 src/modules/md.dll: src/modules/md.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/md.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/md.pdb $(MODLFLAGS)

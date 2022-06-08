@@ -798,7 +798,6 @@ extern MODVAR void (*send_moddata_client)(Client *srv, Client *acptr);
 extern MODVAR void (*send_moddata_channel)(Client *srv, Channel *channel);
 extern MODVAR void (*send_moddata_members)(Client *srv);
 extern MODVAR void (*broadcast_moddata_client)(Client *acptr);
-extern MODVAR int (*check_banned)(Client *cptr, int exitflags);
 extern MODVAR void (*introduce_user)(Client *to, Client *acptr);
 extern MODVAR int (*check_deny_version)(Client *cptr, const char *software, int protocol, const char *flags);
 extern MODVAR int (*match_user)(const char *rmask, Client *acptr, int options);

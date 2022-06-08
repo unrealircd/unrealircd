@@ -1205,6 +1205,8 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, const char *varshortname, l
 #define HOOKTYPE_JSON_EXPAND_CLIENT_SERVER	114
 /** See hooktype_json_expand_channel() */
 #define HOOKTYPE_JSON_EXPAND_CHANNEL	115
+/** See hooktype_accept() */
+#define HOOKTYPE_ACCEPT		116
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -1856,6 +1858,18 @@ int hooktype_packet(Client *from, Client *to, Client *intended_to, char **msg, i
  */
 int hooktype_handshake(Client *client);
 
+/** Called very early when a client connects (function prototype for HOOKTYPE_ACCEPT).
+ * Module coders: have a look at hooktype_handshake() instead of this one!
+ * HOOKTYPE_ACCEPT is called even before HOOKTYPE_HANDSHAKE, as soon as the socket
+ * is connected and during the client is being set up, before the SSL/TLS handshake.
+ * It is only used for connection flood detection and checking (G)Z-lines.
+ * Note that this connection is also called for *NIX domain socket connections,
+ * HTTP(S) requests, and so on.
+ * @param client		The client
+ * @return One of HOOK_*. Use HOOK_DENY to reject the client.
+ */
+int hooktype_accept(Client *client);
+
 /** Called when a client structure is freed (function prototype for HOOKTYPE_FREE_CLIENT).
  * @param client		The client
  * @note Normally you use hooktype_local_quit(), hooktype_remote_quit() and hooktype_unkuser_quit() for this.
@@ -2415,7 +2429,6 @@ enum EfunctionType {
 	EFUNC_BROADCAST_MD_CHANNEL,
 	EFUNC_BROADCAST_MD_MEMBER,
 	EFUNC_BROADCAST_MD_MEMBERSHIP,
-	EFUNC_CHECK_BANNED,
 	EFUNC_INTRODUCE_USER,
 	EFUNC_CHECK_DENY_VERSION,
 	EFUNC_BROADCAST_MD_CLIENT_CMD,
