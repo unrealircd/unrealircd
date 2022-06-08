@@ -1392,6 +1392,11 @@ void webserver_close_client_default_handler(Client *client)
 {
 }
 
+int webserver_handle_body_data_default_handler(Client *client, WebRequest *web, const char *readbuf, int length)
+{
+	return 0;
+}
+
 void rpc_response_default_handler(Client *client, json_t *request, json_t *result)
 {
 }

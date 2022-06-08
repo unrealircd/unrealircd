@@ -40,6 +40,7 @@ int webserver_handle_handshake(Client *client, const char *readbuf, int *length)
 int webserver_handle_request_header(Client *client, const char *readbuf, int *length);
 void _webserver_send_response(Client *client, int status, char *msg);
 void _webserver_close_client(Client *client);
+int _webserver_handle_body_data(Client *client, WebRequest *web, const char *readbuf, int length);
 
 /* Global variables */
 ModDataInfo *webserver_md;
@@ -49,6 +50,7 @@ MOD_TEST()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_WEBSERVER_SEND_RESPONSE, _webserver_send_response);
 	EfunctionAddVoid(modinfo->handle, EFUNC_WEBSERVER_CLOSE_CLIENT, _webserver_close_client);
+	EfunctionAdd(modinfo->handle, EFUNC_WEBSERVER_HANDLE_BODY_DATA, _webserver_handle_body_data);
 	return MOD_SUCCESS;
 }
 
@@ -433,6 +435,8 @@ void _webserver_send_response(Client *client, int status, char *msg)
 		statusmsg = "OK";
 	else if (status == 201)
 		statusmsg = "Created";
+	else if (status == 500)
+		statusmsg = "Internal Server Error";
 	else if (status == 400)
 		statusmsg = "Bad Request";
 	else if (status == 403)
@@ -468,4 +472,133 @@ void _webserver_close_client(Client *client)
 		send_queued(client);
 		reset_handshake_timeout(client, WEB_CLOSE_TIME);
 	}
+}
+
+int webserver_handle_body_data_append_buffer(Client *client, const char *buf, int len)
+{
+	/* Guard.. */
+	if (len <= 0)
+		return 0;
+
+	if (WEB(client)->request_buffer)
+		WEB(client)->request_buffer = realloc(WEB(client)->request_buffer, WEB(client)->request_buffer_size + len + 1);
+	else
+		WEB(client)->request_buffer = malloc(len+1);
+	memcpy(WEB(client)->request_buffer + WEB(client)->request_buffer_size, buf, len);
+	WEB(client)->request_buffer_size += len;
+	WEB(client)->request_buffer[WEB(client)->request_buffer_size] = '\0';
+	return 1;
+}
+
+int _webserver_handle_body_data(Client *client, WebRequest *web, const char *readbuf, int length)
+{
+	char *buf;
+	long long n;
+	char *free_this_buffer = NULL;
+
+	if (1) // (WEB(client)->transfer_encoding == TRANSFER_ENCODING_NONE)
+	{
+		/* Ohh.. so easy! */
+		webserver_handle_body_data_append_buffer(client, readbuf, length);
+		WEB(client)->request_body_complete = 1; // FIXME: WRONG! But for testing ;)
+		return 1;
+	}
+#if 0
+	/* Fill 'buf' nd set 'buflen' with what we had + what we have now.
+	 * Makes things easy.
+	 */
+	if (WEB(client)->lefttoparse)
+	{
+		n = WEB(client)->lefttoparselen + pktsize;
+		free_this_buffer = buf = safe_alloc(n);
+		memcpy(buf, WEB(client)->lefttoparse, WEB(client)->lefttoparselen);
+		memcpy(buf+WEB(client)->lefttoparselen, readbuf, pktsize);
+		safe_free(WEB(client)->lefttoparse);
+		WEB(client)->lefttoparselen = 0;
+	} else {
+		n = pktsize;
+		buf = readbuf;
+	}
+
+	/* Chunked transfers.. yayyyy.. */
+	while (n > 0)
+	{
+		if (WEB(client)->chunk_remaining > 0)
+		{
+			/* Eat it */
+			int eat = MIN(WEB(client)->chunk_remaining, n);
+			fwrite(buf, 1, eat, WEB(client)->file_fd);
+			n -= eat;
+			buf += eat;
+			WEB(client)->chunk_remaining -= eat;
+		} else
+		{
+			int gotlf = 0;
+			int i;
+
+			/* First check if it is a (trailing) empty line,
+			 * eg from a previous chunk. Skip over.
+			 */
+			if ((n >= 2) && !strncmp(buf, "\r\n", 2))
+			{
+				buf += 2;
+				n -= 2;
+			} else
+			if ((n >= 1) && !strncmp(buf, "\n", 1))
+			{
+				buf++;
+				n--;
+			}
+
+			/* Now we are (possibly) at the chunk size line,
+			 * this is or example '7f' + newline.
+			 * So first, check if we have a newline at all.
+			 */
+			for (i=0; i < n; i++)
+			{
+				if (buf[i] == '\n')
+				{
+					gotlf = 1;
+					break;
+				}
+			}
+			if (!gotlf)
+			{
+				/* The line telling us the chunk size is incomplete,
+				 * as it does not contain an \n. Wait for more data
+				 * from the network socket.
+				 */
+				if (n > 0)
+				{
+					/* Store what we have first.. */
+					WEB(client)->lefttoparselen = n;
+					WEB(client)->lefttoparse = safe_alloc(n);
+					memcpy(WEB(client)->lefttoparse, buf, n);
+				}
+				safe_free(free_this_buffer);
+				return 1; /* WE WANT MORE! */
+			}
+			buf[i] = '\0'; /* cut at LF */
+			i++; /* point to next data */
+			WEB(client)->chunk_remaining = strtol(buf, NULL, 16);
+			if (WEB(client)->chunk_remaining < 0)
+			{
+				https_cancel(handle, "Negative chunk encountered (%ld)", WEB(client)->chunk_remaining);
+				safe_free(free_this_buffer);
+				return 0;
+			}
+			if (WEB(client)->chunk_remaining == 0)
+			{
+				https_done(handle);
+				safe_free(free_this_buffer);
+				return 0;
+			}
+			buf += i;
+			n -= i;
+		}
+	}
+
+	safe_free(free_this_buffer);
+	return 1;
+#endif
 }
