@@ -623,7 +623,7 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, cons
 
 		if (client->local->fd >= 0 && !IsConnecting(client))
 		{
-			if (!IsControl(client))
+			if (!IsControl(client) && !IsRPC(client))
 				sendto_one(client, NULL, "ERROR :Closing Link: %s (%s)", get_client_name(client, FALSE), comment);
 		}
 		close_connection(client);
