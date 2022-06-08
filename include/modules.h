@@ -107,7 +107,7 @@ typedef enum ModuleObjectType {
 	MOBJ_CLICAP = 16,
 	MOBJ_MTAG = 17,
 	MOBJ_HISTORY_BACKEND = 18,
-	MOBJ_RPC = 18,
+	MOBJ_RPC = 19,
 } ModuleObjectType;
 
 typedef struct Umode Umode;

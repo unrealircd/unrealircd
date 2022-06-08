@@ -188,6 +188,8 @@ extern void unload_all_unused_extcmodes(void);
 extern void unload_all_unused_extbans(void);
 extern void unload_all_unused_caps(void);
 extern void unload_all_unused_history_backends(void);
+extern void unload_all_unused_rpc_handlers(void);
+
 int reloadable_perm_module_unloaded(void);
 int tls_tests(void);
 
@@ -10816,6 +10818,7 @@ int rehash_internal(Client *client)
 	unload_all_unused_extbans();
 	unload_all_unused_caps();
 	unload_all_unused_history_backends();
+	unload_all_unused_rpc_handlers();
 	// unload_all_unused_moddata(); -- this will crash
 	umodes_check_for_changes();
 	charsys_check_for_changes();
