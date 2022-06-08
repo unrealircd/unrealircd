@@ -1392,7 +1392,7 @@ void webserver_close_client_default_handler(Client *client)
 {
 }
 
-int webserver_handle_request_body_default_handler(Client *client, WebRequest *web, const char *readbuf, int length)
+int webserver_handle_body_default_handler(Client *client, WebRequest *web, const char *readbuf, int length)
 {
 	return 0;
 }

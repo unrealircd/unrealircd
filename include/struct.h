@@ -1726,7 +1726,7 @@ struct WebRequest {
 typedef struct WebServer WebServer;
 struct WebServer {
 	int (*handle_request)(Client *client, WebRequest *web);
-	int (*handle_data)(Client *client, WebRequest *web, const char *buf, int length);
+	int (*handle_body)(Client *client, WebRequest *web, const char *buf, int length);
 };
 
 struct ConfigItem_listen {
