@@ -810,6 +810,8 @@ Client *add_connection(ConfigItem_listen *listener, int fd)
 
 	client = make_client(NULL, &me);
 	client->local->socket_type = listener->socket_type;
+	client->local->listener = listener;
+	client->local->listener->clients++;
 
 	if (listener->socket_type == SOCKET_TYPE_UNIX)
 		ip = "127.0.0.1";
@@ -860,9 +862,6 @@ refuse_client:
 			break;
 	}
 
-	client->local->listener = listener;
-	if (client->local->listener != NULL)
-		client->local->listener->clients++;
 	add_client_to_list(client);
 
 	if (!(listener->options & LISTENER_CONTROL))
