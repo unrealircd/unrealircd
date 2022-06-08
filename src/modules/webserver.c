@@ -453,18 +453,17 @@ void _webserver_send_response(Client *client, int status, char *msg)
 
 	dbuf_put(&client->local->sendQ, buf, strlen(buf));
 	if (msg)
-	{
-		send_queued(client);
 		webserver_close_client(client);
-	}
 }
 
 /** Close a web client softly, after data has been sent. */
 void _webserver_close_client(Client *client)
 {
+	send_queued(client);
 	if (DBufLength(&client->local->sendQ) == 0)
 	{
-		dead_socket(client, "");
+		exit_client(client, NULL, "End of request");
+		//dead_socket(client, "");
 	} else {
 		send_queued(client);
 		reset_handshake_timeout(client, WEB_CLOSE_TIME);
