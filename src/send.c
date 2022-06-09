@@ -75,7 +75,7 @@ int dead_socket(Client *to, const char *notice)
 	if (to->local->error_str)
 		return -1; /* don't overwrite & don't send multiple times */
 	
-	if (!IsUser(to) && !IsUnknown(to) && !IsClosing(to))
+	if (!IsUser(to) && !IsUnknown(to) && !IsRPC(to) && !IsControl(to) && !IsClosing(to))
 	{
 		/* Looks like a duplicate error message to me?
 		 * If so, remove it here.
