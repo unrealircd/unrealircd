@@ -1729,6 +1729,7 @@ struct WebRequest {
 	long long content_length; /**< "Content-Length" as sent by the client */
 	long long chunk_remaining;
 	TransferEncoding transfer_encoding;
+	long long config_max_request_buffer_size; /**< CONFIG: Maximum request length allowed */
 };
 
 typedef struct WebServer WebServer;
