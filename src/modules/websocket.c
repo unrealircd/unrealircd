@@ -27,37 +27,10 @@ ModuleHeader MOD_HEADER
  #define WEBSOCKET_SEND_BUFFER_SIZE 16384
 #endif
 
-typedef enum WebSocketType {
-	WEBSOCKET_TYPE_BINARY = 1,
-	WEBSOCKET_TYPE_TEXT   = 2
-} WebSocketType;
-
-typedef struct WebSocketUser WebSocketUser;
-struct WebSocketUser {
-	char get; /**< GET initiated */
-	char handshake_completed; /**< Handshake completed, use websocket frames */
-	char *handshake_key; /**< Handshake key (used during handshake) */
-	char *lefttoparse; /**< Leftover buffer to parse */
-	int lefttoparselen; /**< Length of lefttoparse buffer */
-	WebSocketType type; /**< WEBSOCKET_TYPE_BINARY or WEBSOCKET_TYPE_TEXT */
-	char *sec_websocket_protocol; /**< Only valid during parsing of the request, after that it is NULL again */
-	char *forwarded; /**< Unparsed `Forwarded:` header, RFC 7239 */
-	int secure; /**< If there is a Forwarded header, this indicates if the remote connection is secure */
-};
-
 #define WSU(client)	((WebSocketUser *)moddata_client(client, websocket_md).ptr)
 
 #define WEBSOCKET_PORT(client)	((client->local && client->local->listener) ? client->local->listener->websocket_options : 0)
 #define WEBSOCKET_TYPE(client)	(WSU(client)->type)
-
-#define WEBSOCKET_MAGIC_KEY "258EAFA5-E914-47DA-95CA-C5AB0DC85B11" /* see RFC6455 */
-
-#define WSOP_CONTINUATION 0x00
-#define WSOP_TEXT         0x01
-#define WSOP_BINARY       0x02
-#define WSOP_CLOSE        0x08
-#define WSOP_PING         0x09
-#define WSOP_PONG         0x0a
 
 /* used to parse http Forwarded header (RFC 7239) */
 #define IPLEN 48
@@ -74,18 +47,12 @@ struct HTTPForwardedHeader
 int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
 int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length);
-void websocket_mdata_free(ModData *m);
-int websocket_handle_packet(Client *client, const char *readbuf, int length);
 int websocket_handle_handshake(Client *client, const char *readbuf, int *length);
 int websocket_handshake_send_response(Client *client);
-int websocket_handle_packet_ping(Client *client, const char *buf, int len);
-int websocket_handle_packet_pong(Client *client, const char *buf, int len);
-int websocket_create_packet(int opcode, char **buf, int *len);
-int websocket_send_pong(Client *client, const char *buf, int len);
+int websocket_handle_body_websocket(Client *client, WebRequest *web, const char *readbuf2, int length2);
 int websocket_secure_connect(Client *client);
 struct HTTPForwardedHeader *websocket_parse_forwarded_header(char *input);
 int websocket_ip_compare(const char *ip1, const char *ip2);
-int websocket_handle_websocket(Client *client, WebRequest *web, const char *readbuf2, int length2);
 int websocket_handle_request(Client *client, WebRequest *web);
 
 /* Global variables */
@@ -108,15 +75,6 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_PACKET, INT_MAX, websocket_packet_out);
 	HookAdd(modinfo->handle, HOOKTYPE_SECURE_CONNECT, 0, websocket_secure_connect);
 
-	memset(&mreq, 0, sizeof(mreq));
-	mreq.name = "websocket";
-	mreq.serialize = NULL;
-	mreq.unserialize = NULL;
-	mreq.free = websocket_mdata_free;
-	mreq.sync = 0;
-	mreq.type = MODDATATYPE_CLIENT;
-	websocket_md = ModDataAdd(modinfo->handle, mreq);
-
 	return MOD_SUCCESS;
 }
 
@@ -128,6 +86,12 @@ MOD_LOAD()
 	{
 		config_warn("The 'websocket' module requires the 'webserver' module to be loaded, otherwise websocket connections will not work!");
 		config_warn("Please add the following line to your config file: loadmodule \"webserver\";");
+	}
+	websocket_md = findmoddata_byname("websocket", MODDATATYPE_CLIENT);
+	if (!websocket_md)
+	{
+		config_warn("The 'websocket' module requires the 'websocket_common' module to be loaded, otherwise websocket connections will not work!");
+		config_warn("Please add the following line to your config file: loadmodule \"websocket_common\";");
 	}
 	return MOD_SUCCESS;
 }
@@ -231,7 +195,7 @@ int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr
 	l = (ConfigItem_listen *)ptr;
 	l->webserver = safe_alloc(sizeof(WebServer));
 	l->webserver->handle_request = websocket_handle_request;
-	l->webserver->handle_body = websocket_handle_websocket;
+	l->webserver->handle_body = websocket_handle_body_websocket;
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
@@ -261,18 +225,44 @@ int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr
 	return 1;
 }
 
-/** UnrealIRCd internals: free WebSocketUser object. */
-void websocket_mdata_free(ModData *m)
+/* Add LF (if needed) to a buffer. Max 4K. */
+void add_lf_if_needed(char **buf, int *len)
 {
-	WebSocketUser *wsu = (WebSocketUser *)m->ptr;
-	if (wsu)
-	{
-		safe_free(wsu->handshake_key);
-		safe_free(wsu->lefttoparse);
-		safe_free(wsu->sec_websocket_protocol);
-		safe_free(wsu->forwarded);
-		safe_free(m->ptr);
-	}
+	static char newbuf[4096];
+	char *b = *buf;
+	int l = *len;
+
+	if (l <= 0)
+		return; /* too short */
+
+	if (b[l - 1] == '\n')
+		return; /* already contains \n */
+
+	if (l >= sizeof(newbuf)-2)
+		l = sizeof(newbuf)-2; /* cut-off if necessary */
+
+	memcpy(newbuf, b, l);
+	newbuf[l] = '\n';
+	newbuf[l + 1] = '\0'; /* not necessary, but I like zero termination */
+	l++;
+	*buf = newbuf; /* new buffer */
+	*len = l; /* new length */
+}
+
+/** Called on decoded websocket frame (INPUT).
+ * Should contain exactly 1 IRC line (command)
+ */
+int websocket_irc_callback(Client *client, char *buf, int len)
+{
+	add_lf_if_needed(&buf, &len);
+	if (!process_packet(client, buf, len, 1)) /* Let UnrealIRCd handle this as usual */
+		return 0; /* client killed */
+	return 1;
+}
+
+int websocket_handle_body_websocket(Client *client, WebRequest *web, const char *readbuf2, int length2)
+{
+	return websocket_handle_websocket(client, web, readbuf2, length2, websocket_irc_callback);
 }
 
 /** Outgoing packet hook.
@@ -296,51 +286,6 @@ int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **m
 		}
 		return 0;
 	}
-	return 0;
-}
-
-int websocket_handle_websocket(Client *client, WebRequest *web, const char *readbuf2, int length2)
-{
-	int n;
-	char *ptr;
-	int length;
-	int length1 = WSU(client)->lefttoparselen;
-	char readbuf[4096];
-
-	length = length1 + length2;
-	if (length > sizeof(readbuf)-1)
-	{
-		dead_socket(client, "Illegal buffer stacking/Excess flood");
-		return 0;
-	}
-
-	if (length1 > 0)
-		memcpy(readbuf, WSU(client)->lefttoparse, length1);
-	memcpy(readbuf+length1, readbuf2, length2);
-
-	safe_free(WSU(client)->lefttoparse);
-	WSU(client)->lefttoparselen = 0;
-
-	ptr = readbuf;
-	do {
-		n = websocket_handle_packet(client, ptr, length);
-		if (n < 0)
-			return -1; /* killed -- STOP processing */
-		if (n == 0)
-		{
-			/* Short read. Stop processing for now, but save data for next time */
-			safe_free(WSU(client)->lefttoparse);
-			WSU(client)->lefttoparse = safe_alloc(length);
-			WSU(client)->lefttoparselen = length;
-			memcpy(WSU(client)->lefttoparse, ptr, length);
-			return 0;
-		}
-		length -= n;
-		ptr += n;
-		if (length < 0)
-			abort(); /* less than 0 is impossible */
-	} while(length > 0);
-
 	return 0;
 }
 
@@ -680,313 +625,6 @@ int websocket_handshake_send_response(Client *client)
 	dbuf_put(&client->local->sendQ, buf, strlen(buf));
 	send_queued(client);
 
-	return 0;
-}
-
-/* Add LF (if needed) to a buffer. Max 4K. */
-void add_lf_if_needed(char **buf, int *len)
-{
-	static char newbuf[4096];
-	char *b = *buf;
-	int l = *len;
-
-	if (l <= 0)
-		return; /* too short */
-
-	if (b[l - 1] == '\n')
-		return; /* already contains \n */
-
-	if (l >= sizeof(newbuf)-2)
-		l = sizeof(newbuf)-2; /* cut-off if necessary */
-
-	memcpy(newbuf, b, l);
-	newbuf[l] = '\n';
-	newbuf[l + 1] = '\0'; /* not necessary, but I like zero termination */
-	l++;
-	*buf = newbuf; /* new buffer */
-	*len = l; /* new length */
-}
-
-/** WebSocket packet handler.
- * For more information on the format, check out page 28 of RFC6455.
- * @returns The number of bytes processed (the size of the frame)
- *          OR 0 to indicate a possible short read (want more data)
- *          OR -1 in case of an error.
- */
-int websocket_handle_packet(Client *client, const char *readbuf, int length)
-{
-	char opcode; /**< Opcode */
-	char masked; /**< Masked */
-	int len; /**< Length of the packet */
-	char maskkey[4]; /**< Key used for masking */
-	const char *p;
-	int total_packet_size;
-	char *payload = NULL;
-	static char payloadbuf[READBUF_SIZE];
-
-	if (length < 4)
-	{
-		/* WebSocket packet too short */
-		return 0;
-	}
-
-	/* fin    = readbuf[0] & 0x80; -- unused */
-	opcode = readbuf[0] & 0x7F;
-	masked = readbuf[1] & 0x80;
-	len    = readbuf[1] & 0x7F;
-	p = &readbuf[2]; /* point to next element */
-
-	/* actually 'fin' is unused.. we don't care. */
-
-	if (!masked)
-	{
-		dead_socket(client, "WebSocket packet not masked");
-		return -1; /* Having the masked bit set is required (RFC6455 p29) */
-	}
-
-	if (len == 127)
-	{
-		dead_socket(client, "WebSocket packet with insane size");
-		return -1; /* Packets requiring 64bit lengths are not supported. Would be insane. */
-	}
-
-	total_packet_size = len + 2 + 4; /* 2 for header, 4 for mask key, rest for payload */
-
-	/* Early (minimal) length check */
-	if (length < total_packet_size)
-	{
-		/* WebSocket frame too short */
-		return 0;
-	}
-
-	/* Len=126 is special. It indicates the data length is actually "126 or more" */
-	if (len == 126)
-	{
-		/* Extended payload length (16 bit). For packets of >=126 bytes */
-		len = (readbuf[2] << 8) + readbuf[3];
-		if (len < 126)
-		{
-			dead_socket(client, "WebSocket protocol violation (extended payload length too short)");
-			return -1; /* This is a violation (not a short read), see page 29 */
-		}
-		p += 2; /* advance pointer 2 bytes */
-
-		/* Need to check the length again, now it has changed: */
-		if (length < len + 4 + 4)
-		{
-			/* WebSocket frame too short */
-			return 0;
-		}
-		/* And update the packet size */
-		total_packet_size = len + 4 + 4; /* 4 for header, 4 for mask key, rest for payload */
-	}
-
-	memcpy(maskkey, p, 4);
-	p+= 4;
-
-	if (len > 0)
-	{
-		memcpy(payloadbuf, p, len);
-		payload = payloadbuf;
-	} /* else payload is NULL */
-
-	if (len > 0)
-	{
-		/* Unmask this thing (page 33, section 5.3) */
-		int n;
-		char v;
-		char *p;
-		for (p = payload, n = 0; n < len; n++)
-		{
-			v = *p;
-			*p++ = v ^ maskkey[n % 4];
-		}
-	}
-
-	switch(opcode)
-	{
-		case WSOP_CONTINUATION:
-		case WSOP_TEXT:
-		case WSOP_BINARY:
-			if (len > 0)
-			{
-				add_lf_if_needed(&payload, &len);
-				if (!process_packet(client, payload, len, 1)) /* let UnrealIRCd process this data */
-					return -1; /* fatal error occured (such as flood kill) */
-			}
-			return total_packet_size;
-
-		case WSOP_CLOSE:
-			dead_socket(client, "Connection closed"); /* TODO: Improve I guess */
-			return -1;
-
-		case WSOP_PING:
-			if (websocket_handle_packet_ping(client, payload, len) < 0)
-				return -1;
-			return total_packet_size;
-
-		case WSOP_PONG:
-			if (websocket_handle_packet_pong(client, payload, len) < 0)
-				return -1;
-			return total_packet_size;
-
-		default:
-			dead_socket(client, "WebSocket: Unknown opcode");
-			return -1;
-	}
-
-	return -1; /* NOTREACHED */
-}
-
-int websocket_handle_packet_ping(Client *client, const char *buf, int len)
-{
-	if (len > 500)
-	{
-		dead_socket(client, "WebSocket: oversized PING request");
-		return -1;
-	}
-	websocket_send_pong(client, buf, len);
-	add_fake_lag(client, 1000); /* lag penalty of 1 second */
-	return 0;
-}
-
-int websocket_handle_packet_pong(Client *client, const char *buf, int len)
-{
-	/* We don't care */
-	return 0;
-}
-
-/** Create a simple websocket packet that is ready to be send.
- * This is the simple version that is used ONLY for WSOP_PONG,
- * as it does not take \r\n into account.
- */
-int websocket_create_packet_simple(int opcode, const char **buf, int *len)
-{
-	static char sendbuf[8192];
-
-	sendbuf[0] = opcode | 0x80; /* opcode & final */
-
-	if (*len > sizeof(sendbuf) - 8)
-		return -1; /* should never happen (safety) */
-
-	if (*len < 126)
-	{
-		/* Short payload */
-		sendbuf[1] = (char)*len;
-		memcpy(&sendbuf[2], *buf, *len);
-		*buf = sendbuf;
-		*len += 2;
-	} else {
-		/* Long payload */
-		sendbuf[1] = 126;
-		sendbuf[2] = (char)((*len >> 8) & 0xFF);
-		sendbuf[3] = (char)(*len & 0xFF);
-		memcpy(&sendbuf[4], *buf, *len);
-		*buf = sendbuf;
-		*len += 4;
-	}
-	return 0;
-}
-
-/** Create a websocket packet that is ready to be send.
- * This is the more complex version that takes into account
- * stripping off \r and \n, and possibly multi line due to
- * labeled-response. It is used for WSOP_TEXT and WSOP_BINARY.
- * The end result is one or more websocket frames,
- * all in a single packet *buf with size *len.
- */
-int websocket_create_packet(int opcode, char **buf, int *len)
-{
-	static char sendbuf[WEBSOCKET_SEND_BUFFER_SIZE];
-	char *s = *buf; /* points to start of current line */
-	char *s2; /* used for searching of end of current line */
-	char *lastbyte = *buf + *len - 1; /* points to last byte in *buf that can be safely read */
-	int bytes_to_copy;
-	char newline;
-	char *o = sendbuf; /* points to current byte within 'sendbuf' of output buffer */
-	int bytes_in_sendbuf = 0;
-	int bytes_single_frame;
-
-	/* Sending 0 bytes makes no sense, and the code below may assume >0, so reject this. */
-	if (*len == 0)
-		return -1;
-
-	do {
-		/* Find next \r or \n */
-		for (s2 = s; *s2 && (s2 <= lastbyte); s2++)
-		{
-			if ((*s2 == '\n') || (*s2 == '\r'))
-				break;
-		}
-
-		/* Now 's' points to start of line and 's2' points to beyond end of the line
-		 * (either at \r, \n or beyond the buffer).
-		 */
-		bytes_to_copy = s2 - s;
-
-		if (bytes_to_copy < 126)
-			bytes_single_frame = 2 + bytes_to_copy;
-		else
-			bytes_single_frame = 4 + bytes_to_copy;
-
-		if (bytes_in_sendbuf + bytes_single_frame > sizeof(sendbuf))
-		{
-			/* Overflow. This should never happen. */
-			unreal_log(ULOG_WARNING, "websocket", "BUG_WEBSOCKET_OVERFLOW", NULL,
-			           "[BUG] [websocket] Overflow prevented in websocket_create_packet(): "
-			           "$bytes_in_sendbuf + $bytes_single_frame > $sendbuf_size",
-			           log_data_integer("bytes_in_sendbuf", bytes_in_sendbuf),
-			           log_data_integer("bytes_single_frame", bytes_single_frame),
-			           log_data_integer("sendbuf_size", sizeof(sendbuf)));
-			return -1;
-		}
-
-		/* Create the new frame */
-		o[0] = opcode | 0x80; /* opcode & final */
-
-		if (bytes_to_copy < 126)
-		{
-			/* Short payload */
-			o[1] = (char)bytes_to_copy;
-			memcpy(&o[2], s, bytes_to_copy);
-		} else {
-			/* Long payload */
-			o[1] = 126;
-			o[2] = (char)((bytes_to_copy >> 8) & 0xFF);
-			o[3] = (char)(bytes_to_copy & 0xFF);
-			memcpy(&o[4], s, bytes_to_copy);
-		}
-
-		/* Advance destination pointer and counter */
-		o += bytes_single_frame;
-		bytes_in_sendbuf += bytes_single_frame;
-
-		/* Advance source pointer and skip all trailing \n and \r */
-		for (s = s2; *s && (s <= lastbyte) && ((*s == '\n') || (*s == '\r')); s++);
-	} while(s <= lastbyte);
-
-	*buf = sendbuf;
-	*len = bytes_in_sendbuf;
-	return 0;
-}
-
-/** Create and send a WSOP_PONG frame */
-int websocket_send_pong(Client *client, const char *buf, int len)
-{
-	const char *b = buf;
-	int l = len;
-
-	if (websocket_create_packet_simple(WSOP_PONG, &b, &l) < 0)
-		return -1;
-
-	if (DBufLength(&client->local->sendQ) > get_sendq(client))
-	{
-		dead_socket(client, "Max SendQ exceeded");
-		return -1;
-	}
-
-	dbuf_put(&client->local->sendQ, b, l);
-	send_queued(client);
 	return 0;
 }
 

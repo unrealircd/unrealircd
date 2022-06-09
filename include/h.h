@@ -841,6 +841,9 @@ extern MODVAR int (*webserver_handle_body)(Client *client, WebRequest *web, cons
 extern MODVAR void (*rpc_response)(Client *client, json_t *request, json_t *result);
 extern MODVAR void (*rpc_error)(Client *client, json_t *request, int error_code, const char *error_message);
 extern MODVAR void (*rpc_error_fmt)(Client *client, json_t *request, int error_code, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,4,5)));
+extern MODVAR int (*websocket_handle_websocket)(Client *client, WebRequest *web, const char *readbuf2, int length2, int callback(Client *client, char *buf, int len));
+extern MODVAR int (*websocket_create_packet)(int opcode, char **buf, int *len);
+extern MODVAR int (*websocket_create_packet_simple)(int opcode, const char **buf, int *len);
 /* /Efuncs */
 
 /* TLS functions */
@@ -883,6 +886,9 @@ extern int webserver_handle_body_default_handler(Client *client, WebRequest *web
 extern void rpc_response_default_handler(Client *client, json_t *request, json_t *result);
 extern void rpc_error_default_handler(Client *client, json_t *request, int error_code, const char *error_message);
 extern void rpc_error_fmt_default_handler(Client *client, json_t *request, int error_code, const char *fmt, ...);
+extern int websocket_handle_websocket_default_handler(Client *client, WebRequest *web, const char *readbuf2, int length2, int callback(Client *client, char *buf, int len));
+extern int websocket_create_packet_default_handler(int opcode, char **buf, int *len);
+extern int websocket_create_packet_simple_default_handler(int opcode, const char **buf, int *len);
 /* End of default handlers for efunctions */
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;

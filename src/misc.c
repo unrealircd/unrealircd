@@ -1409,6 +1409,21 @@ void rpc_error_fmt_default_handler(Client *client, json_t *request, int error_co
 {
 }
 
+int websocket_handle_websocket_default_handler(Client *client, WebRequest *web, const char *readbuf2, int length2, int callback(Client *client, char *buf, int len))
+{
+	return -1;
+}
+
+int websocket_create_packet_default_handler(int opcode, char **buf, int *len)
+{
+	return -1;
+}
+
+int websocket_create_packet_simple_default_handler(int opcode, const char **buf, int *len)
+{
+	return -1;
+}
+
 /** my_timegm: mktime()-like function which will use GMT/UTC.
  * Strangely enough there is no standard function for this.
  * On some *NIX OS's timegm() may be available, sometimes only

@@ -411,6 +411,7 @@ DLL_FILES=\
  src/modules/webredir.dll \
  src/modules/webserver.dll \
  src/modules/websocket.dll \
+ src/modules/websocket_common.dll \
  src/modules/whois.dll \
  src/modules/who_old.dll \
  src/modules/whowas.dll \
@@ -1314,6 +1315,9 @@ src/modules/webserver.dll: src/modules/webserver.c $(INCLUDES)
 
 src/modules/websocket.dll: src/modules/websocket.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/websocket.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/websocket.pdb $(MODLFLAGS)
+
+src/modules/websocket_common.dll: src/modules/websocket_common.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/websocket_common.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/websocket_common.pdb $(MODLFLAGS)
 
 src/modules/whois.dll: src/modules/whois.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/whois.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/whois.pdb $(MODLFLAGS)
