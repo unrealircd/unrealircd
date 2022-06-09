@@ -567,7 +567,8 @@ int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf,
 		WEB(client)->lefttoparselen = 0;
 	} else {
 		n = pktsize;
-		buf = (char *)readbuf; // FIXME: casting away a const AND writing later -- BAD!
+		free_this_buffer = buf = safe_alloc(n);
+		memcpy(buf, readbuf, n);
 	}
 
 	/* Chunked transfers.. yayyyy.. */
