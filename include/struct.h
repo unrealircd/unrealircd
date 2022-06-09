@@ -1738,6 +1738,34 @@ struct WebServer {
 	int (*handle_body)(Client *client, WebRequest *web, const char *buf, int length);
 };
 
+typedef enum WebSocketType {
+	WEBSOCKET_TYPE_BINARY = 1,
+	WEBSOCKET_TYPE_TEXT   = 2
+} WebSocketType;
+
+typedef struct WebSocketUser WebSocketUser;
+struct WebSocketUser {
+	char get; /**< GET initiated */
+	char handshake_completed; /**< Handshake completed, use websocket frames */
+	char *handshake_key; /**< Handshake key (used during handshake) */
+	char *lefttoparse; /**< Leftover buffer to parse */
+	int lefttoparselen; /**< Length of lefttoparse buffer */
+	WebSocketType type; /**< WEBSOCKET_TYPE_BINARY or WEBSOCKET_TYPE_TEXT */
+	char *sec_websocket_protocol; /**< Only valid during parsing of the request, after that it is NULL again */
+	char *forwarded; /**< Unparsed `Forwarded:` header, RFC 7239 */
+	int secure; /**< If there is a Forwarded header, this indicates if the remote connection is secure */
+};
+
+#define WEBSOCKET_MAGIC_KEY "258EAFA5-E914-47DA-95CA-C5AB0DC85B11" /* see RFC6455 */
+
+/* Websocket operations: */
+#define WSOP_CONTINUATION 0x00
+#define WSOP_TEXT         0x01
+#define WSOP_BINARY       0x02
+#define WSOP_CLOSE        0x08
+#define WSOP_PING         0x09
+#define WSOP_PONG         0x0a
+
 struct ConfigItem_listen {
 	ConfigItem_listen *prev, *next;
 	ConfigFlag flag;

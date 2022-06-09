@@ -60,7 +60,7 @@ MODULES= \
 	svslusers.so starttls.so webredir.so cap.so \
 	sasl.so md.so certfp.so \
 	tls_antidos.so connect-flood.so max-unknown-connections-per-ip.so \
-	webirc.so webserver.so websocket.so \
+	webirc.so webserver.so websocket_common.so websocket.so \
 	blacklist.so jointhrottle.so \
 	antirandom.so hideserver.so jumpserver.so \
 	ircops.so staff.so nocodes.so \
