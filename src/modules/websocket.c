@@ -272,7 +272,7 @@ int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **m
 {
 	static char utf8buf[510];
 
-	if (MyConnect(to) && WSU(to) && WSU(to)->handshake_completed)
+	if (MyConnect(to) && !IsRPC(to) && WSU(to) && WSU(to)->handshake_completed)
 	{
 		if (WEBSOCKET_TYPE(to) == WEBSOCKET_TYPE_BINARY)
 			websocket_create_packet(WSOP_BINARY, msg, length);

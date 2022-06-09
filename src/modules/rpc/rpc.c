@@ -24,7 +24,11 @@ void rpc_mdata_free(ModData *m);
 int rpc_client_accept(Client *client);
 void rpc_client_handshake(Client *client);
 int rpc_handle_webrequest(Client *client, WebRequest *web);
+int rpc_handle_webrequest_websocket(Client *client, WebRequest *web);
+int rpc_websocket_handshake_send_response(Client *client);
 int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *buf, int len);
+int rpc_handle_body_websocket(Client *client, WebRequest *web, const char *readbuf2, int length2);
+int rpc_packet_in_websocket(Client *client, char *readbuf, int length);
 int rpc_packet_in(Client *client, const char *readbuf, int *length);
 void rpc_call_text(Client *client, const char *buf, int len);
 void rpc_call(Client *client, json_t *request);
@@ -41,9 +45,11 @@ struct RPCUser {
 /* Macros */
 #define RPC(client)       ((RPCUser *)moddata_client(client, rpc_md).ptr)
 #define RPC_PORT(client)  ((client->local && client->local->listener) ? client->local->listener->rpc_options : 0)
+#define WSU(client)     ((WebSocketUser *)moddata_client(client, websocket_md).ptr)
 
 /* Global variables */
 ModDataInfo *rpc_md;
+ModDataInfo *websocket_md; /* (imported) */
 
 MOD_TEST()
 {
@@ -80,6 +86,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	websocket_md = findmoddata_byname("websocket", MODDATATYPE_CLIENT); /* can be NULL */
 	return MOD_SUCCESS;
 }
 
@@ -171,17 +178,16 @@ int rpc_packet_out(Client *from, Client *to, Client *intended_to, char **msg, in
 {
 	static char utf8buf[510];
 
-	if (MyConnect(to) && RPC(to))
-	{
-		// TODO: Inhibit all?
-		// Websocket can override though?
-		return 0;
-	}
+
 	return 0;
 }
 
+/** Incoming HTTP request: delegate it to websocket handler or HTTP POST */
 int rpc_handle_webrequest(Client *client, WebRequest *web)
 {
+	if (get_nvplist(web->headers, "Sec-WebSocket-Key"))
+		return rpc_handle_webrequest_websocket(client, web);
+
 	if (!strcmp(web->uri, "/api"))
 	{
 		if (web->method != HTTP_METHOD_POST)
@@ -192,12 +198,79 @@ int rpc_handle_webrequest(Client *client, WebRequest *web)
 		webserver_send_response(client, 200, NULL); /* continue.. */
 		return 1; /* accept */
 	}
+
 	webserver_send_response(client, 404, "Page not found.\n");
+	return 0;
+}
+
+/** Handle HTTP request - websockets handshake.
+ */
+int rpc_handle_webrequest_websocket(Client *client, WebRequest *web)
+{
+	NameValuePrioList *r;
+	const char *value;
+
+	if (!websocket_md)
+	{
+		webserver_send_response(client, 405, "Websockets are disabled on this server (module 'websocket_common' not loaded).\n");
+		return 0;
+	}
+
+	/* Allocate a new WebSocketUser struct for this session */
+	moddata_client(client, websocket_md).ptr = safe_alloc(sizeof(WebSocketUser));
+	/* ...and set the default protocol (text or binary) */
+	WSU(client)->type = WEBSOCKET_TYPE_TEXT;
+
+	value = get_nvplist(web->headers, "Sec-WebSocket-Key");
+	if (strchr(value, ':'))
+	{
+		/* This would cause unserialization issues. Should be base64 anyway */
+		webserver_send_response(client, 400, "Invalid characters in Sec-WebSocket-Key");
+		return 0; // FIXME: 0 here, -1 in the other, what is it ???
+	}
+	safe_strdup(WSU(client)->handshake_key, value);
+
+	rpc_websocket_handshake_send_response(client);
+	return 1; /* ACCEPT */
+}
+
+/** Complete the handshake by sending the appropriate HTTP 101 response etc. */
+int rpc_websocket_handshake_send_response(Client *client)
+{
+	char buf[512], hashbuf[64];
+	char sha1out[20]; /* 160 bits */
+
+	WSU(client)->handshake_completed = 1;
+
+	snprintf(buf, sizeof(buf), "%s%s", WSU(client)->handshake_key, WEBSOCKET_MAGIC_KEY);
+	sha1hash_binary(sha1out, buf, strlen(buf));
+	b64_encode(sha1out, sizeof(sha1out), hashbuf, sizeof(hashbuf));
+
+	snprintf(buf, sizeof(buf),
+	         "HTTP/1.1 101 Switching Protocols\r\n"
+	         "Upgrade: websocket\r\n"
+	         "Connection: Upgrade\r\n"
+	         "Sec-WebSocket-Accept: %s\r\n\r\n",
+	         hashbuf);
+
+	/* Caution: we bypass sendQ flood checking by doing it this way.
+	 * Risk is minimal, though, as we only permit limited text only
+	 * once per session.
+	 */
+	dbuf_put(&client->local->sendQ, buf, strlen(buf));
+	send_queued(client);
+
 	return 0;
 }
 
 int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *buf, int len)
 {
+	if (WSU(client))
+	{
+		/* Websocket user */
+		return rpc_handle_body_websocket(client, web, buf, len);
+	}
+
 	/* We only handle POST to /api -- reject all the rest */
 	if (strcmp(web->uri, "/api") || (web->method != HTTP_METHOD_POST))
 	{
@@ -228,6 +301,17 @@ int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *buf,
 	}
 
 	return 0;
+}
+
+int rpc_handle_body_websocket(Client *client, WebRequest *web, const char *readbuf2, int length2)
+{
+	return websocket_handle_websocket(client, web, readbuf2, length2, rpc_packet_in_websocket);
+}
+
+int rpc_packet_in_websocket(Client *client, char *readbuf, int length)
+{
+	rpc_call_text(client, readbuf, length);
+	return 0; /* and if dead?? */
 }
 
 // TODO: exempt the web port from throttling for defined trusted IP's, or at a different rate.
@@ -291,6 +375,23 @@ void rpc_call_text(Client *client, const char *readbuf, int len)
 	json_decref(request);
 }
 
+void rpc_sendto(Client *client, const char *buf, int len)
+{
+	if (MyConnect(client) && IsRPC(client) && WSU(client) && WSU(client)->handshake_completed)
+	{
+		/* Websocket */
+		static char utf8buf[65535]; // todo: dynamic!!!
+		char *newbuf = unrl_utf8_make_valid(buf, utf8buf, sizeof(utf8buf), 1);
+		int newlen = strlen(newbuf);
+		websocket_create_packet(WSOP_TEXT, &newbuf, &newlen);
+		dbuf_put(&client->local->sendQ, newbuf, newlen);
+	} else {
+		/* Unix domain socket or HTTP */
+		dbuf_put(&client->local->sendQ, buf, len);
+		dbuf_put(&client->local->sendQ, "\n", 1);
+	}
+}
+
 void _rpc_error(Client *client, json_t *request, int error_code, const char *error_message)
 {
 	/* Careful, we are in the "error" routine, so everything can be NULL */
@@ -329,8 +430,7 @@ void _rpc_error(Client *client, json_t *request, int error_code, const char *err
 		json_decref(j);
 		return;
 	}
-	dbuf_put(&client->local->sendQ, json_serialized, strlen(json_serialized));
-	dbuf_put(&client->local->sendQ, "\n", 1);
+	rpc_sendto(client, json_serialized, strlen(json_serialized));
 	json_decref(j);
 	safe_free(json_serialized);
 }
@@ -369,8 +469,7 @@ void _rpc_response(Client *client, json_t *request, json_t *result)
 		json_decref(j);
 		return;
 	}
-	dbuf_put(&client->local->sendQ, json_serialized, strlen(json_serialized));
-	dbuf_put(&client->local->sendQ, "\n", 1);
+	rpc_sendto(client, json_serialized, strlen(json_serialized));
 	json_decref(j);
 	safe_free(json_serialized);
 }
