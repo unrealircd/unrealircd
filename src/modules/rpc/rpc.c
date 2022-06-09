@@ -19,7 +19,6 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 int rpc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rpc_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
-//int rpc_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length);
 void rpc_mdata_free(ModData *m);
 int rpc_client_accept(Client *client);
 void rpc_client_handshake(Client *client);
@@ -29,7 +28,7 @@ int rpc_websocket_handshake_send_response(Client *client);
 int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *buf, int len);
 int rpc_handle_body_websocket(Client *client, WebRequest *web, const char *readbuf2, int length2);
 int rpc_packet_in_websocket(Client *client, char *readbuf, int length);
-int rpc_packet_in(Client *client, const char *readbuf, int *length);
+int rpc_packet_in_unix_socket(Client *client, const char *readbuf, int *length);
 void rpc_call_text(Client *client, const char *buf, int len);
 void rpc_call(Client *client, json_t *request);
 void _rpc_response(Client *client, json_t *request, json_t *result);
@@ -69,8 +68,7 @@ MOD_INIT()
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, rpc_config_run_ex);
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, -5000, rpc_client_accept);
-	//HookAdd(modinfo->handle, HOOKTYPE_PACKET, INT_MAX, rpc_packet_out);
-	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, INT_MIN, rpc_packet_in);
+	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, INT_MIN, rpc_packet_in_unix_socket);
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "rpc";
@@ -171,15 +169,6 @@ void rpc_mdata_free(ModData *m)
 		//safe_free(r->something);
 		safe_free(m->ptr);
 	}
-}
-
-/** Outgoing packet hook. */
-int rpc_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length)
-{
-	static char utf8buf[510];
-
-
-	return 0;
 }
 
 /** Incoming HTTP request: delegate it to websocket handler or HTTP POST */
@@ -314,21 +303,10 @@ int rpc_packet_in_websocket(Client *client, char *readbuf, int length)
 	return 0; /* and if dead?? */
 }
 
-// TODO: exempt the web port from throttling for defined trusted IP's, or at a different rate.
-// perhaps hook on create/accept and then immediately reject if not trusted IP,
-// that would be safest.
-
-int rpc_packet_in(Client *client, const char *readbuf, int *length)
+int rpc_packet_in_unix_socket(Client *client, const char *readbuf, int *length)
 {
-	/* Don't care about EOF and errors - are we even called for those? */
-	if (*length <= 0)
-		return 1;
-
-	if (!RPC_PORT(client) || !(client->local->listener->socket_type == SOCKET_TYPE_UNIX))
-	{
-		/* Not for us */
-		return 1;
-	}
+	if (!RPC_PORT(client) || !(client->local->listener->socket_type == SOCKET_TYPE_UNIX) || (*length <= 0))
+		return 1; /* Not for us */
 
 	// FIXME: this assumes a single request in 'readbuf' while in fact:
 	// - it could only contain partial JSON, eg no ending } yet
@@ -340,8 +318,6 @@ int rpc_packet_in(Client *client, const char *readbuf, int *length)
 
 void rpc_close(Client *client)
 {
-	// FIXME: need to stop input here.
-	
 	send_queued(client);
 
 	/* May not be a web request actually, but this works: */
