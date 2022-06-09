@@ -147,6 +147,7 @@ void webserver_possible_request(Client *client, const char *buf, int len)
 
 	/* Set some default values: */
 	WEB(client)->content_length = -1;
+	WEB(client)->config_max_request_buffer_size = 4096; /* 4k */
 }
 
 /** Incoming packet hook. This processes web requests.
@@ -388,7 +389,6 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 	{
 		if (!strcasecmp(key, "REQUEST"))
 		{
-			// TODO: guard for a 16k URI ? ;D
 			safe_strdup(WEB(client)->uri, value);
 		} else
 		{
@@ -491,12 +491,37 @@ int webserver_handle_body_append_buffer(Client *client, const char *buf, int len
 {
 	/* Guard.. */
 	if (len <= 0)
+	{
+		dead_socket(client, "HTTP request error");
 		return 0;
+	}
 
 	if (WEB(client)->request_buffer)
-		WEB(client)->request_buffer = realloc(WEB(client)->request_buffer, WEB(client)->request_buffer_size + len + 1);
-	else
+	{
+		long long newsize = WEB(client)->request_buffer_size + len + 1;
+		if (newsize > WEB(client)->config_max_request_buffer_size)
+		{
+			/* We would overflow */
+			unreal_log(ULOG_WARNING, "webserver", "HTTP_BODY_TOO_LARGE", client,
+			           "[webserver] Client $client: request body too large ($length)",
+			           log_data_integer("length", newsize));
+			dead_socket(client, "");
+			return 0;
+		}
+		WEB(client)->request_buffer = realloc(WEB(client)->request_buffer, newsize);
+	} else
+	{
+		if (len + 1 > WEB(client)->config_max_request_buffer_size)
+		{
+			/* We would overflow */
+			unreal_log(ULOG_WARNING, "webserver", "HTTP_BODY_TOO_LARGE", client,
+			           "[webserver] Client $client: request body too large ($length)",
+			           log_data_integer("length", len+1));
+			dead_socket(client, "");
+			return 0;
+		}
 		WEB(client)->request_buffer = malloc(len+1);
+	}
 	memcpy(WEB(client)->request_buffer + WEB(client)->request_buffer_size, buf, len);
 	WEB(client)->request_buffer_size += len;
 	WEB(client)->request_buffer[WEB(client)->request_buffer_size] = '\0';
@@ -516,12 +541,11 @@ int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf,
 	long long n;
 	char *free_this_buffer = NULL;
 
-	// FIXME: currently there is no size limit, so someone can eat 1G or whatever.
-
 	if (WEB(client)->transfer_encoding == TRANSFER_ENCODING_NONE)
 	{
-		/* Ohh.. so easy! */
-		webserver_handle_body_append_buffer(client, readbuf, pktsize);
+		if (!webserver_handle_body_append_buffer(client, readbuf, pktsize))
+			return 0;
+
 		if ((WEB(client)->content_length >= 0) &&
 		    (WEB(client)->request_buffer_size >= WEB(client)->content_length))
 		{
@@ -553,7 +577,8 @@ int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf,
 		{
 			/* Eat it */
 			int eat = MIN(WEB(client)->chunk_remaining, n);
-			webserver_handle_body_append_buffer(client, buf, eat);
+			if (!webserver_handle_body_append_buffer(client, buf, eat))
+				return 0;
 			n -= eat;
 			buf += eat;
 			WEB(client)->chunk_remaining -= eat;
@@ -612,7 +637,7 @@ int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf,
 				unreal_log(ULOG_WARNING, "webserver", "WEB_NEGATIVE_CHUNK", client,
 				           "Webrequest from $client: Negative chunk encountered");
 				safe_free(free_this_buffer);
-				exit_client(client, NULL, "");
+				dead_socket(client, "");
 				return 0;
 			}
 			if (WEB(client)->chunk_remaining == 0)
