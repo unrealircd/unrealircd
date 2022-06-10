@@ -452,6 +452,8 @@ void _webserver_send_response(Client *client, int status, char *msg)
 		statusmsg = "Internal Server Error";
 	else if (status == 400)
 		statusmsg = "Bad Request";
+	else if (status == 401)
+		statusmsg = "Unauthorized";
 	else if (status == 403)
 		statusmsg = "Forbidden";
 	else if (status == 404)

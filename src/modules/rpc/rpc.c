@@ -17,9 +17,10 @@ ModuleHeader MOD_HEADER
     };
 
 /* Forward declarations */
-int rpc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
-int rpc_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
-void rpc_mdata_free(ModData *m);
+int rpc_config_test_listen(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int rpc_config_run_ex_listen(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
+int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int rpc_config_run_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type);
 int rpc_client_accept(Client *client);
 void rpc_client_handshake(Client *client);
 int rpc_handle_webrequest(Client *client, WebRequest *web);
@@ -34,26 +35,36 @@ void rpc_call(Client *client, json_t *request);
 void _rpc_response(Client *client, json_t *request, json_t *result);
 void _rpc_error(Client *client, json_t *request, int error_code, const char *error_message);
 void _rpc_error_fmt(Client *client, json_t *request, int error_code, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,4,5)));
+int rpc_handle_auth(Client *client, WebRequest *web);
+int rpc_parse_auth_basic_auth(Client *client, WebRequest *web, char **username, char **password);
 
 /* Structs */
 typedef struct RPCUser RPCUser;
 struct RPCUser {
-	int something;
+	RPCUser *prev, *next;
+	SecurityGroup *match;
+	char *name;
+	AuthConfig *auth;
+};
+
+typedef struct RPCConnection RPCConnection;
+struct RPCConnection {
+	char *rpc_user; /**< Name of the rpc-user block after authentication, NULL during pre-auth */
 };
 
 /* Macros */
-#define RPC(client)       ((RPCUser *)moddata_client(client, rpc_md).ptr)
 #define RPC_PORT(client)  ((client->local && client->local->listener) ? client->local->listener->rpc_options : 0)
 #define WSU(client)     ((WebSocketUser *)moddata_client(client, websocket_md).ptr)
 
 /* Global variables */
-ModDataInfo *rpc_md;
-ModDataInfo *websocket_md; /* (imported) */
+ModDataInfo *websocket_md = NULL; /* (imported) */
+RPCUser *rpcusers = NULL;
 
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, rpc_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, rpc_config_test_listen);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, rpc_config_test_rpc_user);
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_RESPONSE, _rpc_response);
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_ERROR, _rpc_error);
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_ERROR_FMT, TO_VOIDFUNC(_rpc_error_fmt));
@@ -66,18 +77,10 @@ MOD_INIT()
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, rpc_config_run_ex);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, rpc_config_run_ex_listen);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, rpc_config_run_rpc_user);
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, -5000, rpc_client_accept);
 	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, INT_MIN, rpc_packet_in_unix_socket);
-
-	memset(&mreq, 0, sizeof(mreq));
-	mreq.name = "rpc";
-	mreq.serialize = NULL;
-	mreq.unserialize = NULL;
-	mreq.free = rpc_mdata_free;
-	mreq.sync = 0;
-	mreq.type = MODDATATYPE_CLIENT;
-	rpc_md = ModDataAdd(modinfo->handle, mreq);
 
 	return MOD_SUCCESS;
 }
@@ -88,92 +91,136 @@ MOD_LOAD()
 	return MOD_SUCCESS;
 }
 
+void free_config(void)
+{
+	RPCUser *e, *e_next;
+	for (e = rpcusers; e; e = e_next)
+	{
+		e_next = e->next;
+		free_security_group(e->match);
+		Auth_FreeAuthConfig(e->auth);
+		safe_free(e);
+	}
+	rpcusers = NULL;
+}
+
 MOD_UNLOAD()
 {
+	free_config();
 	return MOD_SUCCESS;
 }
 
-int rpc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int rpc_config_test_listen(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
+	int ext = 0;
 	ConfigEntry *cep;
 
-	// FIXME: CONFIG_SET is not handled here as this is xxx_EX and not xxx
-	if (type == CONFIG_SET)
-	{
-		/* We are only interested in set::rpc.. */
-		if (!ce || !ce->name || strcmp(ce->name, "rpc"))
-			return 0;
+	if (type != CONFIG_LISTEN_OPTIONS)
+		return 0;
 
-		/* No options atm */
+	/* We are only interested in listen::options::rpc.. */
+	if (!ce || !ce->name || strcmp(ce->name, "rpc"))
+		return 0;
 
-		*errs = errors;
-		return errors ? -1 : 1;
-	} else
-	if (type == CONFIG_LISTEN_OPTIONS)
-	{
-		/* We are only interested in listen::options::rpc.. */
-		if (!ce || !ce->name || strcmp(ce->name, "rpc"))
-			return 0;
+	/* No options atm */
 
-		/* No options atm */
-
-		*errs = errors;
-		return errors ? -1 : 1;
-	}
-	return 0;
+	*errs = errors;
+	return errors ? -1 : 1;
 }
 
-int rpc_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr)
+int rpc_config_run_ex_listen(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr)
 {
 	ConfigEntry *cep, *cepp;
 	ConfigItem_listen *l;
-	static char warned_once_channel = 0;
 
-	// FIXME: CONFIG_SET is not handled here as this is xxx_EX and not xxx
-	if (type == CONFIG_SET)
-	{
-		/* We are only interested in set::rpc.. */
-		if (!ce || !ce->name || strcmp(ce->name, "rpc"))
-			return 0;
+	if (type != CONFIG_LISTEN_OPTIONS)
+		return 0;
 
-		/* Do something useful here */
+	/* We are only interrested in listen::options::rpc.. */
+	if (!ce || !ce->name || strcmp(ce->name, "rpc"))
+		return 0;
 
-		return 1;
-	} else
-	if (type == CONFIG_LISTEN_OPTIONS)
-	{
-		/* We are only interrested in listen::options::rpc.. */
-		if (!ce || !ce->name || strcmp(ce->name, "rpc"))
-			return 0;
+	l = (ConfigItem_listen *)ptr;
+	l->options |= LISTENER_NO_CHECK_CONNECT_FLOOD;
+	l->start_handshake = rpc_client_handshake;
+	l->webserver = safe_alloc(sizeof(WebServer));
+	l->webserver->handle_request = rpc_handle_webrequest;
+	l->webserver->handle_body = rpc_handle_webrequest_data;
+	l->rpc_options = 1;
 
-		l = (ConfigItem_listen *)ptr;
-		l->options |= LISTENER_NO_CHECK_CONNECT_FLOOD;
-		l->start_handshake = rpc_client_handshake;
-		l->webserver = safe_alloc(sizeof(WebServer));
-		l->webserver->handle_request = rpc_handle_webrequest;
-		l->webserver->handle_body = rpc_handle_webrequest_data;
-		l->rpc_options = 1;
-
-		return 1;
-	}
-	return 0;
+	return 1;
 }
 
-/** UnrealIRCd internals: free WebRequest object. */
-void rpc_mdata_free(ModData *m)
+int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
-	RPCUser *r = (RPCUser *)m->ptr;
-	if (r)
+	int errors = 0;
+	char has_match = 1, has_password = 1;
+	ConfigEntry *cep;
+
+	/* We are only interested in rpc-user { } */
+	if ((type != CONFIG_MAIN) || !ce || !ce->name || strcmp(ce->name, "rpc-user"))
+		return 0;
+
+	if (!ce->value)
 	{
-		//safe_free(r->something);
-		safe_free(m->ptr);
+		config_error("%s:%d: rpc-user block needs to have a name, eg: rpc-user apiuser { }",
+		             ce->file->filename, ce->line_number);
+		errors++;
 	}
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "match"))
+		{
+			has_match = 1;
+			test_match_block(cf, cep, &errors);
+		} else
+		if (!strcmp(cep->name, "password"))
+		{
+			has_password = 1;
+			if (Auth_CheckError(cep) < 0)
+				errors++;
+		}
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+int rpc_config_run_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type)
+{
+	ConfigEntry *cep;
+	RPCUser *e;
+
+	/* We are only interested in rpc-user { } */
+	if ((type != CONFIG_MAIN) || !ce || !ce->name || strcmp(ce->name, "rpc-user"))
+		return 0;
+
+	e = safe_alloc(sizeof(RPCUser));
+	safe_strdup(e->name, ce->value);
+	AddListItem(e, rpcusers);
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "match"))
+		{
+			conf_match_block(cf, cep, &e->match);
+		} else
+		if (!strcmp(cep->name, "password"))
+		{
+			e->auth = AuthBlockToAuthConfig(cep);
+		}
+	}
+	return 1;
 }
 
 /** Incoming HTTP request: delegate it to websocket handler or HTTP POST */
 int rpc_handle_webrequest(Client *client, WebRequest *web)
 {
+	if (!rpc_handle_auth(client, web))
+		return 0; /* rejected */
+
 	if (get_nvplist(web->headers, "Sec-WebSocket-Key"))
 		return rpc_handle_webrequest_websocket(client, web);
 
@@ -396,6 +443,11 @@ void _rpc_error(Client *client, json_t *request, int error_code, const char *err
 	json_object_set_new(error, "code", json_integer(error_code));
 	json_object_set_new(error, "message", json_string_unreal(error_message));
 
+	unreal_log(ULOG_INFO, "rpc", "RPC_CALL_ERROR", client,
+	           "[rpc] Client $client: RPC call $method",
+	           log_data_string("method", method ? method : "<invalid>"));
+
+
 	json_serialized = json_dumps(j, 0);
 	if (!json_serialized)
 	{
@@ -487,6 +539,11 @@ void rpc_call(Client *client, json_t *request)
 		rpc_error(client, request, JSON_RPC_ERROR_METHOD_NOT_FOUND, "Unsupported method");
 		return;
 	}
+
+	unreal_log(ULOG_INFO, "rpc", "RPC_CALL", client,
+	           "[rpc] Client $client: RPC call $method",
+	           log_data_string("method", method));
+
 	handler->call(client, request, params);
 }
 
@@ -498,10 +555,107 @@ int rpc_client_accept(Client *client)
 	return 0;
 }
 
+/** Called upon handshake, after TLS is ready */
 void rpc_client_handshake(Client *client)
 {
-	SetRPC(client); /* explicit set due to TLS */
-	fd_setselect(client->local->fd, FD_SELECT_READ, read_packet, client);
+	RPCUser *r;
+	char found = 0;
 
-	/* FIXME: IP Access checks here (if possible) */
+	/* Explicitly mark as RPC, since the TLS layer may
+	 * have set us to SetUnknown() after the TLS handshake.
+	 */
+	SetRPC(client);
+
+	/* Is the client allowed by any rpc-user { } block?
+	 * If not, reject the client immediately, before
+	 * processing any HTTP data.
+	 */
+	for (r = rpcusers; r; r = r->next)
+	{
+		if (user_allowed_by_security_group(client, r->match))
+		{
+			found = 1;
+			break;
+		}
+	}
+	if (!found)
+	{
+		webserver_send_response(client, 403, "Access denied");
+		return;
+	}
+
+	/* Allow incoming data to be read from now on.. */
+	fd_setselect(client->local->fd, FD_SELECT_READ, read_packet, client);
+}
+
+RPCUser *find_rpc_user(const char *username)
+{
+	RPCUser *r;
+	for (r = rpcusers; r; r = r->next)
+		if (!strcmp(r->name, username))
+			return r;
+	return NULL;
+}
+
+/** This function deals with authentication after the HTTP request was received.
+ * It is called for both ordinary HTTP(S) requests and Websockets.
+ * Note that there has also been some pre-filtering done in rpc_client_handshake()
+ * to see if the IP address was allowed to connect at all (::match),
+ * but here we actually check the 'correct' rpc-user { } block.
+ * @param client	The client to authenticate
+ * @param web		The webrequest (containing the headers)
+ * @return 1 on success, 0 on failure
+ */
+int rpc_handle_auth(Client *client, WebRequest *web)
+{
+	char *username = NULL, *password = NULL;
+	RPCUser *r;
+
+	if (!rpc_parse_auth_basic_auth(client, web, &username, &password))
+	{
+		webserver_send_response(client, 401, "Authentication required");
+		return 0;
+	}
+
+	if (username && password && ((r = find_rpc_user(username))))
+	{
+		if (user_allowed_by_security_group(client, r->match) &&
+		    Auth_Check(client, r->auth, password))
+		{
+			/* Authenticated! */
+			snprintf(client->name, sizeof(client->name), "RPC:%s", r->name);
+			return 1;
+		}
+	}
+	return 0;
+}
+
+int rpc_parse_auth_basic_auth(Client *client, WebRequest *web, char **username, char **password)
+{
+	const char *auth_header = get_nvplist(web->headers, "Authorization");
+	static char buf[512];
+	char *p;
+	int n;
+
+	if (!auth_header)
+		return 0;
+
+	/* We only support basic auth */
+	if (strncasecmp(auth_header, "Basic ", 6))
+		return 0;
+
+	p = strchr(auth_header, ' ');
+	skip_whitespace(&p);
+	n = b64_decode(p, buf, sizeof(buf));
+	if (n <= 1)
+		return 0;
+
+	p = strchr(buf, ':');
+	if (!p)
+		return 0;
+	*p++ = '\0';
+
+	*username = buf;
+	*password = p;
+	return 1;
 }
