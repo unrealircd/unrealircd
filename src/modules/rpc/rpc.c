@@ -37,6 +37,7 @@ void _rpc_error(Client *client, json_t *request, int error_code, const char *err
 void _rpc_error_fmt(Client *client, json_t *request, int error_code, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,4,5)));
 int rpc_handle_auth(Client *client, WebRequest *web);
 int rpc_parse_auth_basic_auth(Client *client, WebRequest *web, char **username, char **password);
+int rpc_parse_auth_uri(Client *client, WebRequest *web, char **username, char **password);
 
 /* Structs */
 typedef struct RPCUser RPCUser;
@@ -611,7 +612,8 @@ int rpc_handle_auth(Client *client, WebRequest *web)
 	char *username = NULL, *password = NULL;
 	RPCUser *r;
 
-	if (!rpc_parse_auth_basic_auth(client, web, &username, &password))
+	if (!rpc_parse_auth_basic_auth(client, web, &username, &password) &&
+	    !rpc_parse_auth_uri(client, web, &username, &password))
 	{
 		webserver_send_response(client, 401, "Authentication required");
 		return 0;
@@ -657,5 +659,36 @@ int rpc_parse_auth_basic_auth(Client *client, WebRequest *web, char **username, 
 
 	*username = buf;
 	*password = p;
+	return 1;
+}
+
+int rpc_parse_auth_uri(Client *client, WebRequest *web, char **username, char **password)
+{
+	static char buf[2048];
+	char *str, *p;
+
+	if (!web->uri)
+		return 0;
+
+	strlcpy(buf, web->uri, sizeof(buf));
+	str = strstr(buf, "username=");
+	if (!str)
+		return 0;
+	str += 9;
+	*username = str;
+	p = strchr(str, '&');
+	if (p)
+	{
+		*p++ = '\0';
+		p = strstr(p, "password=");
+		if (p)
+		{
+			p += 9;
+			*password = p;
+			p = strchr(str, '&');
+			if (p)
+				*p = '\0';
+		}
+	}
 	return 1;
 }
