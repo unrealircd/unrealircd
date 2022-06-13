@@ -167,7 +167,7 @@ CMD_FUNC(cmd_sajoin)
 
 			if (!parted && channel && (lp = find_membership_link(target->user->channel, channel)))
 			{
-				sendnumeric(client, ERR_USERONCHANNEL, target->name, name);
+				sendnumeric(client, ERR_USERONCHANNEL, name, target->name);
 				continue;
 			}
 			if (*jbuf)
