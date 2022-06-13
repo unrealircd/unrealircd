@@ -151,7 +151,7 @@ CMD_FUNC(cmd_sapart)
 
 		if (!(lp = find_membership_link(target->user->channel, channel)))
 		{
-			sendnumeric(client, ERR_USERNOTINCHANNEL, target->name, name);
+			sendnumeric(client, ERR_USERNOTINCHANNEL, name, target->name);
 			continue;
 		}
 		if (*jbuf)
