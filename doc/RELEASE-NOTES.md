@@ -1,16 +1,13 @@
-UnrealIRCd 6.0.4-rc2
-=====================
-This is the second release candidate for UnrealIRCd 6.0.4.
-You can help us by testing this release and reporting any issues at https://bugs.unrealircd.org/.
+UnrealIRCd 6.0.4
+=================
+This release comes with lots of features and enhancements. In particular,
+security groups and mask items now allow you to write cleaner and more
+flexible configuration files. There are also JSON logging enhancements and
+several bug fixes. Thanks a lot to everyone who tested the release candidates!
 
 If you are already running UnrealIRCd 6 then read below. Otherwise, jump
 straight to the [summary about UnrealIRCd 6](#Summary) to learn more
 about UnrealIRCd 6.
-
-Compared to 6.0.4-rc1, this rc2 adds an oper autologin feature, fixes set::restrict-commands
-not working, fixes for security-group for account and CIDR, fix multiline log
-messages being cut, fix Ubuntu 22.04 compile problem and fix +H not working
-on set::modes-on-join. Also update various example.*conf files.
 
 ### Enhancements:
 * Show security groups in `WHOIS`
@@ -111,6 +108,7 @@ on set::modes-on-join. Also update various example.*conf files.
 * Crash on Windows when using the "Rehash" GUI option.
 * Infinite loop if one security-group referred to another.
 * Duplicate entries in the `+beI` lists of `+P` channels.
+* Regular users were able to -o a service bot (that has umode +S)
 * Module manager did not stop on compile error
 * [`set::modes-on-join`](https://www.unrealircd.org/docs/Set_block#set::modes-on-join)
   did not work with `+f` + timed bans properly, eg `[3t#b1]:10`
@@ -120,6 +118,12 @@ on set::modes-on-join. Also update various example.*conf files.
 
 ### Changes:
 * Clarified that UnrealIRCd is licensed as "GPLv2 or later"
+* Fix use of variables in
+  [`set::reject-message](https://www.unrealircd.org/docs/Set_block#set::reject-message)
+  and in [`blacklist::reason](https://www.unrealircd.org/docs/Blacklist_block):
+  previously short forms of variables were (unintentionally) expanded
+  as well, such as `$serv` for `$server`. This is no longer supported, you need
+  to use the correct full variable names.
 
 ### Developers and protocol:
 * The `creationtime` is now communicated of users. Until now this
