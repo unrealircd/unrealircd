@@ -119,8 +119,8 @@ about UnrealIRCd 6.
 ### Changes:
 * Clarified that UnrealIRCd is licensed as "GPLv2 or later"
 * Fix use of variables in
-  [`set::reject-message](https://www.unrealircd.org/docs/Set_block#set::reject-message)
-  and in [`blacklist::reason](https://www.unrealircd.org/docs/Blacklist_block):
+  [`set::reject-message`](https://www.unrealircd.org/docs/Set_block#set::reject-message)
+  and in [`blacklist::reason`](https://www.unrealircd.org/docs/Blacklist_block):
   previously short forms of variables were (unintentionally) expanded
   as well, such as `$serv` for `$server`. This is no longer supported, you need
   to use the correct full variable names.
