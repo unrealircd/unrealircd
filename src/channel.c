@@ -626,22 +626,9 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 	*pbuf = '\0';
 	strlcpy(mbuf, "+", mbuf_size);
 
-	/* Paramless first */
 	for (cm=channelmodes; cm; cm = cm->next)
 	{
 		if (cm->letter &&
-		    !cm->paracount &&
-		    !(hide_local_modes && cm->local) &&
-		    (channel->mode.mode & cm->mode))
-		{
-			strlcat_letter(mbuf, cm->letter, mbuf_size);
-		}
-	}
-
-	for (cm=channelmodes; cm; cm = cm->next)
-	{
-		if (cm->letter &&
-		    cm->paracount &&
 		    !(hide_local_modes && cm->local) &&
 		    (channel->mode.mode & cm->mode))
 		{
@@ -650,7 +637,7 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 			if (mbuf_size)
 				strlcat_letter(mbuf, flag, mbuf_size);
 
-			if (ismember)
+			if (cm->paracount && ismember)
 			{
 				strlcat(pbuf, cm_getparameter(channel, flag), pbuf_size);
 				strlcat(pbuf, " ", pbuf_size);
