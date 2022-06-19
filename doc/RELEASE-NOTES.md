@@ -1,5 +1,11 @@
-UnrealIRCd 6.0.4
+UnrealIRCd 6.0.5-git
 =================
+This is work in progress. Current git is NOT stable.
+
+If you want a stable IRCd, download 6.0.4 or upgrade to it via `./unrealircd upgrade`
+
+UnrealIRCd 6.0.4
+-----------------
 This release comes with lots of features and enhancements. In particular,
 security groups and mask items now allow you to write cleaner and more
 flexible configuration files. There are also JSON logging enhancements and
