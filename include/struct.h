@@ -876,8 +876,9 @@ struct SWhois {
 
 /** Command function - used by all command handlers.
  * This is used in the code like <pre>CMD_FUNC(cmd_yourcmd)</pre> as a function definition.
- * @param cptr        The client direction pointer.
- * @param client        The source client pointer (you usually need this one).
+ * It allows UnrealIRCd devs to change the parameters in the function without
+ * (necessarily) breaking your code.
+ * @param client      The client
  * @param recv_mtags  Received message tags for this command.
  * @param parc        Parameter count *plus* 1.
  * @param parv        Parameter values.
