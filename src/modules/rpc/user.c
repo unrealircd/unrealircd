@@ -16,6 +16,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 void rpc_user_list(Client *client, json_t *request, json_t *params);
+void rpc_user_get(Client *client, json_t *request, json_t *params);
 
 MOD_INIT()
 {
@@ -26,6 +27,14 @@ MOD_INIT()
 	memset(&r, 0, sizeof(r));
 	r.method = "user.list";
 	r.call = rpc_user_list;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/user] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+	memset(&r, 0, sizeof(r));
+	r.method = "user.get";
+	r.call = rpc_user_get;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/user] Could not register RPC handler");
@@ -68,6 +77,33 @@ void rpc_user_list(Client *client, json_t *request, json_t *params)
 		json_array_append_new(list, item);
 	}
 
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+void rpc_user_get(Client *client, json_t *request, json_t *params)
+{
+	json_t *result, *list, *item;
+	const char *nick;
+	Client *acptr;
+
+	nick = json_object_get_string(params, "nick");
+	if (!nick)
+	{
+		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'nick'");
+		return;
+	}
+
+	if (!(acptr = find_user(nick, NULL)))
+	{
+		// FIXME: wrong error!
+		// consider re-using IRC numerics? the positive ones, eg ERR_NOSUCHNICK
+		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_REQUEST, "Nickname not found");
+		return;
+	}
+
+	result = json_object();
+	json_expand_client(result, "client", acptr, 1);
 	rpc_response(client, request, result);
 	json_decref(result);
 }
