@@ -92,8 +92,9 @@ void webserver_mdata_free(ModData *m)
 	if (wsu)
 	{
 		safe_free(wsu->uri);
-		safe_free(wsu->lefttoparse);
 		free_nvplist(wsu->headers);
+		safe_free(wsu->lefttoparse);
+		safe_free(wsu->request_buffer);
 		safe_free(m->ptr);
 	}
 }
