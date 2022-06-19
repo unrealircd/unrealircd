@@ -144,10 +144,16 @@ int rpc_config_run_ex_listen(ConfigFile *cf, ConfigEntry *ce, int type, void *pt
 
 	l = (ConfigItem_listen *)ptr;
 	l->options |= LISTENER_NO_CHECK_CONNECT_FLOOD;
-	l->start_handshake = rpc_client_handshake;
-	l->webserver = safe_alloc(sizeof(WebServer));
-	l->webserver->handle_request = rpc_handle_webrequest;
-	l->webserver->handle_body = rpc_handle_webrequest_data;
+	if (l->socket_type == SOCKET_TYPE_UNIX)
+	{
+		l->start_handshake = rpc_client_handshake;
+	} else {
+		l->options |= LISTENER_TLS;
+		l->start_handshake = rpc_client_handshake;
+		l->webserver = safe_alloc(sizeof(WebServer));
+		l->webserver->handle_request = rpc_handle_webrequest;
+		l->webserver->handle_body = rpc_handle_webrequest_data;
+	}
 	l->rpc_options = 1;
 
 	return 1;
@@ -557,32 +563,36 @@ int rpc_client_accept(Client *client)
 }
 
 /** Called upon handshake, after TLS is ready */
+// TODO: split it up? this is called for both unix sockets and HTTPS
 void rpc_client_handshake(Client *client)
 {
 	RPCUser *r;
-	char found = 0;
 
 	/* Explicitly mark as RPC, since the TLS layer may
 	 * have set us to SetUnknown() after the TLS handshake.
 	 */
 	SetRPC(client);
 
-	/* Is the client allowed by any rpc-user { } block?
-	 * If not, reject the client immediately, before
-	 * processing any HTTP data.
-	 */
-	for (r = rpcusers; r; r = r->next)
+	if (client->local->listener->socket_type != SOCKET_TYPE_UNIX)
 	{
-		if (user_allowed_by_security_group(client, r->match))
+		/* Is the client allowed by any rpc-user { } block?
+		 * If not, reject the client immediately, before
+		 * processing any HTTP data.
+		 */
+		char found = 0;
+		for (r = rpcusers; r; r = r->next)
 		{
-			found = 1;
-			break;
+			if (user_allowed_by_security_group(client, r->match))
+			{
+				found = 1;
+				break;
+			}
 		}
-	}
-	if (!found)
-	{
-		webserver_send_response(client, 403, "Access denied");
-		return;
+		if (!found)
+		{
+			webserver_send_response(client, 403, "Access denied");
+			return;
+		}
 	}
 
 	/* Allow incoming data to be read from now on.. */
