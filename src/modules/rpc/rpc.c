@@ -404,7 +404,7 @@ void rpc_sendto(Client *client, const char *buf, int len)
 	if (MyConnect(client) && IsRPC(client) && WSU(client) && WSU(client)->handshake_completed)
 	{
 		/* Websocket */
-		static char utf8buf[65535]; // todo: dynamic!!!
+		static char utf8buf[65535]; // TODO: dynamic!!!
 		char *newbuf = unrl_utf8_make_valid(buf, utf8buf, sizeof(utf8buf), 1);
 		int newlen = strlen(newbuf);
 		websocket_create_packet(WSOP_TEXT, &newbuf, &newlen);
@@ -662,6 +662,7 @@ int rpc_parse_auth_basic_auth(Client *client, WebRequest *web, char **username, 
 	return 1;
 }
 
+// TODO: the ?a=b&c=d stuff should be urldecoded by 'webserver'
 int rpc_parse_auth_uri(Client *client, WebRequest *web, char **username, char **password)
 {
 	static char buf[2048];
