@@ -618,7 +618,7 @@ struct RPCHandler {
 	RPCHandler *prev, *next;
 	char *method;                                             /**< Name of the method handler, eg "client.get" */
 	int flags;                                                /**< A flag of RPC_HANDLER_FLAG_* */
-	void (*call)(Client *, json_t *request, json_t *params);  /**< RPC call */
+	void (*call)(Client *, json_t *request, json_t *params);  /**< RPC call: use RPC_CALL_FUNC() ! */
 	Module *owner;                                            /**< Module introducing this. */
 	char unloaded;                                            /**< Internal flag to indicate module is being unloaded */
 };
@@ -631,6 +631,17 @@ typedef struct {
 	int flags;
 	void (*call)(Client *, json_t *request, json_t *params);
 } RPCHandlerInfo;
+
+/** RPC function - used by all RPC call functions.
+ * This is used in the code like <pre>RPC_CALL_FUNC(rpc_call_xyz)</pre> as a function definition.
+ * It allows the UnrealIRCd devs to add or change parameters to the function without
+ * (necessarily) breaking your code.
+ * @param client      The client issueing the request
+ * @param request     The full JSON-RPC request
+ * @param params      Parameters of the JSON-RPC call
+ * @note You are expected to call rpc_response() or rpc_error() on the request.
+ */
+#define RPC_CALL_FUNC(x) void (x) (Client *client, json_t *request, json_t *params)
 
 /** @} */
 

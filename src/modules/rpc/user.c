@@ -15,8 +15,8 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-void rpc_user_list(Client *client, json_t *request, json_t *params);
-void rpc_user_get(Client *client, json_t *request, json_t *params);
+RPC_CALL_FUNC(rpc_user_list);
+RPC_CALL_FUNC(rpc_user_get);
 
 MOD_INIT()
 {
@@ -58,7 +58,7 @@ MOD_UNLOAD()
 #define RPC_USER_LIST_EXPAND_SELECT	1
 #define RPC_USER_LIST_EXPAND_ALL	2
 
-void rpc_user_list(Client *client, json_t *request, json_t *params)
+RPC_CALL_FUNC(rpc_user_list)
 {
 	json_t *result, *list, *item;
 	Client *acptr;
@@ -81,7 +81,7 @@ void rpc_user_list(Client *client, json_t *request, json_t *params)
 	json_decref(result);
 }
 
-void rpc_user_get(Client *client, json_t *request, json_t *params)
+RPC_CALL_FUNC(rpc_user_get)
 {
 	json_t *result, *list, *item;
 	const char *nick;
