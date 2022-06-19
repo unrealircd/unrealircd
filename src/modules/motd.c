@@ -58,7 +58,7 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_motd)
 {
-	ConfigItem_tld *ptr;
+	ConfigItem_tld *tld;
 	MOTDFile *themotd;
 	MOTDLine *motdline;
 	int  svsnofile = 0;
@@ -73,10 +73,10 @@ CMD_FUNC(cmd_motd)
 		return;
 	}
 
-	ptr = find_tld(client);
+	tld = find_tld(client);
 
-	if (ptr)
-		themotd = &ptr->motd;
+	if (tld && tld->motd.lines)
+		themotd = &tld->motd;
 	else
 		themotd = &motd;
 

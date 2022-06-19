@@ -764,7 +764,7 @@ CMD_FUNC(cmd_nick)
 void welcome_user(Client *client, TKL *viruschan_tkl)
 {
 	int i;
-	ConfigItem_tld *tlds;
+	ConfigItem_tld *tld;
 	char buf[BUFSIZE];
 
 	/* Make creation time the real 'online since' time, excluding registration time.
@@ -871,11 +871,11 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 	}
 
 	/* Force the user to join the given chans -- codemastr */
-	tlds = find_tld(client);
+	tld = find_tld(client);
 
-	if (tlds && !BadPtr(tlds->channel))
+	if (tld && !BadPtr(tld->channel))
 	{
-		char *chans = strdup(tlds->channel);
+		char *chans = strdup(tld->channel);
 		const char *args[3] = {
 			NULL,
 			chans,

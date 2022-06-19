@@ -67,11 +67,9 @@ CMD_FUNC(cmd_botmotd)
 		return;
 
 	tld = find_tld(client);
-
-	motdline = NULL;
-	if (tld)
+	if (tld && tld->botmotd.lines)
 		motdline = tld->botmotd.lines;
-	if (!motdline)
+	else
 		motdline = botmotd.lines;
 
 	if (!motdline)

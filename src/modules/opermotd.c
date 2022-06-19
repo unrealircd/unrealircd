@@ -67,11 +67,9 @@ CMD_FUNC(cmd_opermotd)
 	}
 
 	tld = find_tld(client);
-
-	motdline = NULL;
-	if (tld)
+	if (tld && tld->opermotd.lines)
 		motdline = tld->opermotd.lines;
-	if (!motdline)
+	else
 		motdline = opermotd.lines;
 
 	if (!motdline)

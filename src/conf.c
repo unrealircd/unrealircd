@@ -4902,18 +4902,6 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 		             ce->file->filename, ce->line_number, ce->name);
 		errors++;
 	}
-	if (!has_motd)
-	{
-		config_error_missing(ce->file->filename, ce->line_number,
-			"tld::motd");
-		errors++;
-	}
-	if (!has_rules)
-	{
-		config_error_missing(ce->file->filename, ce->line_number,
-			"tld::rules");
-		errors++;
-	}
 	return errors;
 }
 

@@ -58,19 +58,16 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_rules)
 {
-	ConfigItem_tld *ptr;
+	ConfigItem_tld *tld;
 	MOTDLine *temp;
-
-	temp = NULL;
 
 	if (hunt_server(client, recv_mtags, "RULES", 1, parc, parv) != HUNTED_ISME)
 		return;
 
-	ptr = find_tld(client);
-
-	if (ptr)
-		temp = ptr->rules.lines;
-	if (!temp)
+	tld = find_tld(client);
+	if (tld && tld->rules.lines)
+		temp = tld->rules.lines;
+	else
 		temp = rules.lines;
 
 	if (temp == NULL)
