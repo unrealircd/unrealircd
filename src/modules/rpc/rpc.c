@@ -658,9 +658,10 @@ int rpc_parse_auth_basic_auth(Client *client, WebRequest *web, char **username, 
 
 	p = strchr(auth_header, ' ');
 	skip_whitespace(&p);
-	n = b64_decode(p, buf, sizeof(buf));
+	n = b64_decode(p, buf, sizeof(buf)-1);
 	if (n <= 1)
 		return 0;
+	buf[n] = '\0';
 
 	p = strchr(buf, ':');
 	if (!p)
