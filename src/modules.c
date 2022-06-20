@@ -1338,6 +1338,12 @@ int is_module_loaded(const char *name)
 		if (mi->flags & MODFLAG_DELAYED)
 			continue; /* unloading (delayed) */
 
+		/* During testing/rehashing, ignore modules that are loaded,
+		 * since we only care about the 'future' state.
+		 */
+		if ((loop.rehashing == 2) && (mi->flags == MODFLAG_LOADED))
+			continue;
+
 		if (!strcasecmp(mi->relpath, name))
 			return 1;
 	}

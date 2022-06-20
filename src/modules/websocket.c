@@ -45,6 +45,7 @@ struct HTTPForwardedHeader
 
 /* Forward declarations */
 int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int websocket_config_posttest(int *);
 int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
 int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length);
 int websocket_handle_handshake(Client *client, const char *readbuf, int *length);
@@ -62,6 +63,7 @@ static int ws_text_mode_available = 1;
 MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, websocket_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, websocket_config_posttest);
 	return MOD_SUCCESS;
 }
 
@@ -80,19 +82,11 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	if (non_utf8_nick_chars_in_use || (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY))
-		ws_text_mode_available = 0;
-	if (!is_module_loaded("webserver"))
-	{
-		config_warn("The 'websocket' module requires the 'webserver' module to be loaded, otherwise websocket connections will not work!");
-		config_warn("Please add the following line to your config file: loadmodule \"webserver\";");
-	}
 	websocket_md = findmoddata_byname("websocket", MODDATATYPE_CLIENT);
 	if (!websocket_md)
-	{
-		config_warn("The 'websocket' module requires the 'websocket_common' module to be loaded, otherwise websocket connections will not work!");
-		config_warn("Please add the following line to your config file: loadmodule \"websocket_common\";");
-	}
+		config_warn("The 'websocket_common' module is not loaded, even though it was promised to be ???");
+	if (non_utf8_nick_chars_in_use || (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY))
+		ws_text_mode_available = 0;
 	return MOD_SUCCESS;
 }
 
@@ -223,6 +217,35 @@ int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr
 		}
 	}
 	return 1;
+}
+
+int websocket_config_posttest(int *errs)
+{
+	int errors = 0;
+	char webserver_module = 1, websocket_common_module = 1;
+
+	if (!is_module_loaded("webserver"))
+	{
+		config_error("The 'websocket' module requires the 'webserver' module to be loaded, otherwise websocket connections will not work!");
+		webserver_module = 0;
+		errors++;
+	}
+
+	if (!is_module_loaded("websocket_common"))
+	{
+		config_error("The 'websocket' module requires the 'websocket_common' module to be loaded, otherwise websocket connections will not work!");
+		websocket_common_module = 0;
+		errors++;
+	}
+
+	/* Is nicer for the admin when these are grouped... */
+	if (!webserver_module)
+		config_error("Add the following line to your config file: loadmodule \"webserver\";");
+	if (!websocket_common_module)
+		config_error("Add the following line to your config file: loadmodule \"websocket_common\";");
+
+	*errs = errors;
+	return errors ? -1 : 1;
 }
 
 /* Add LF (if needed) to a buffer. Max 4K. */
