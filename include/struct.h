@@ -2362,13 +2362,24 @@ typedef enum WhoisConfigDetails {
 #define UNRL_STRIP_LOW_ASCII    0x1     /**< Strip all ASCII < 32 (control codes) */
 #define UNRL_STRIP_KEEP_LF      0x2     /**< Do not strip LF (line feed, \n) */
 
-/* JSON RPC API Errors, according to jsonrpc.org spec */
-#define JSON_RPC_ERROR_PARSE_ERROR      -32700
-#define JSON_RPC_ERROR_INVALID_REQUEST  -32600
-#define JSON_RPC_ERROR_METHOD_NOT_FOUND -32601
-#define JSON_RPC_ERROR_INVALID_PARAMS   -32602
-#define JSON_RPC_ERROR_INTERNAL_ERROR   -32603
-
+/** JSON-RPC API Errors, according to jsonrpc.org spec */
+typedef enum JsonRpcError {
+	// Official JSON-RPC error codes:
+	JSON_RPC_ERROR_PARSE_ERROR	= -32700, /**< JSON parse error (fatal) */
+	JSON_RPC_ERROR_INVALID_REQUEST	= -32600, /**< Invalid JSON-RPC Request */
+	JSON_RPC_ERROR_METHOD_NOT_FOUND	= -32601, /**< Method not found */
+	JSON_RPC_ERROR_INVALID_PARAMS	= -32602, /**< Method parameters invalid */
+	JSON_RPC_ERROR_INTERNAL_ERROR	= -32603, /**< Internal server error */
+	// UnrealIRCd JSON-RPC server specific error codes:
+	JSON_RPC_ERROR_API_CALL_DENIED	= -32000, /**< The api user does not have enough permissions to do this call */
+	// UnrealIRCd specific application error codes:
+	JSON_RPC_ERROR_NOT_FOUND	=  -1000, /**< Target not found (no such nick / channel / ..) */
+	JSON_RPC_ERROR_ALREADY_EXISTS	=  -1001, /**< Resource already exists by that name (eg on nickchange request, a gline, etc) */
+	JSON_RPC_ERROR_INVALID_NAME	=  -1002, /**< Name is not permitted (eg: nick, channel, ..) */
+	JSON_RPC_ERROR_USERNOTINCHANNEL	=  -1003, /**< The user is not in the channel */
+	JSON_RPC_ERROR_TOO_MANY_ENTRIES	=  -1004, /**< Too many entries (eg: banlist, ..) */
+	JSON_RPC_ERROR_DENIED		=  -1005, /**< Permission denied for user (unrelated to api user permissions) */
+} JsonRpcError;
 #endif /* __struct_include__ */
 
 #include "dynconf.h"

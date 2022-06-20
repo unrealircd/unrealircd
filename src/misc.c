@@ -1401,11 +1401,11 @@ void rpc_response_default_handler(Client *client, json_t *request, json_t *resul
 {
 }
 
-void rpc_error_default_handler(Client *client, json_t *request, int error_code, const char *error_message)
+void rpc_error_default_handler(Client *client, json_t *request, JsonRpcError error_code, const char *error_message)
 {
 }
 
-void rpc_error_fmt_default_handler(Client *client, json_t *request, int error_code, const char *fmt, ...)
+void rpc_error_fmt_default_handler(Client *client, json_t *request, JsonRpcError error_code, const char *fmt, ...)
 {
 }
 

@@ -33,8 +33,8 @@ int rpc_packet_in_unix_socket(Client *client, const char *readbuf, int *length);
 void rpc_call_text(Client *client, const char *buf, int len);
 void rpc_call(Client *client, json_t *request);
 void _rpc_response(Client *client, json_t *request, json_t *result);
-void _rpc_error(Client *client, json_t *request, int error_code, const char *error_message);
-void _rpc_error_fmt(Client *client, json_t *request, int error_code, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,4,5)));
+void _rpc_error(Client *client, json_t *request, JsonRpcError error_code, const char *error_message);
+void _rpc_error_fmt(Client *client, json_t *request, JsonRpcError error_code, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,4,5)));
 int rpc_handle_auth(Client *client, WebRequest *web);
 int rpc_parse_auth_basic_auth(Client *client, WebRequest *web, char **username, char **password);
 int rpc_parse_auth_uri(Client *client, WebRequest *web, char **username, char **password);
@@ -422,7 +422,7 @@ void rpc_sendto(Client *client, const char *buf, int len)
 	}
 }
 
-void _rpc_error(Client *client, json_t *request, int error_code, const char *error_message)
+void _rpc_error(Client *client, json_t *request, JsonRpcError error_code, const char *error_message)
 {
 	/* Careful, we are in the "error" routine, so everything can be NULL */
 	const char *method = NULL;
@@ -470,7 +470,7 @@ void _rpc_error(Client *client, json_t *request, int error_code, const char *err
 	safe_free(json_serialized);
 }
 
-void _rpc_error_fmt(Client *client, json_t *request, int error_code, const char *fmt, ...)
+void _rpc_error_fmt(Client *client, json_t *request, JsonRpcError error_code, const char *fmt, ...)
 {
 	char buf[512];
 
