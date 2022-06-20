@@ -582,7 +582,11 @@ int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf,
 			/* Eat it */
 			int eat = MIN(WEB(client)->chunk_remaining, n);
 			if (!webserver_handle_body_append_buffer(client, buf, eat))
+			{
+				/* fatal error such as size exceeded */
+				safe_free(free_this_buffer);
 				return 0;
+			}
 			n -= eat;
 			buf += eat;
 			WEB(client)->chunk_remaining -= eat;
