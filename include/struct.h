@@ -791,6 +791,20 @@ struct MOTDLine {
 	struct MOTDLine *next;
 };
 
+/** Current status of configuration in memory (what stage are we in..) */
+typedef enum ConfigStatus {
+	CONFIG_STATUS_NONE = 0,		/**< Config files have not been parsed yet */
+	CONFIG_STATUS_TEST = 1,		/**< Currently running MOD_TEST() */
+	CONFIG_STATUS_POSTTEST = 2,	/**< Currently running post_config_test hooks */
+	CONFIG_STATUS_PRE_INIT = 3,	/**< In-between */
+	CONFIG_STATUS_INIT = 4,		/**< Currently running MOD_INIT() */
+	CONFIG_STATUS_RUN_CONFIG = 5,	/**< Currently running CONFIG_RUN hooks */
+	CONFIG_STATUS_LOAD = 6,		/**< Currently running MOD_LOAD() */
+	CONFIG_STATUS_POSTLOAD = 7,	/**< Doing post-load stuff like activating listeners */
+	CONFIG_STATUS_COMPLETE = 8,	/**< Load or rehash complete */
+	CONFIG_STATUS_ROLLBACK = 99,	/**< Configuration failed, rolling back changes */
+} ConfigStatus;
+
 struct LoopStruct {
 	unsigned do_garbage_collect : 1;
 	unsigned config_test : 1;
@@ -804,6 +818,7 @@ struct LoopStruct {
 	unsigned rehash_download_busy : 1; /* don't return "all downloads complete", needed for race condition */
 	unsigned tainted : 1;
 	int rehashing;
+	ConfigStatus config_status;
 	Client *rehash_save_client;
 	void (*boot_function)();
 };

@@ -734,6 +734,8 @@ void module_loadall(void)
 	iFP	fp;
 	Module *mi, *next;
 	
+	loop.config_status = CONFIG_STATUS_LOAD;
+
 	/* Run through all modules and check for module load */
 	for (mi = Modules; mi; mi = next)
 	{
@@ -1338,11 +1340,15 @@ int is_module_loaded(const char *name)
 		if (mi->flags & MODFLAG_DELAYED)
 			continue; /* unloading (delayed) */
 
-		/* During testing/rehashing, ignore modules that are loaded,
+		/* During config_posttest ignore modules that are loaded,
 		 * since we only care about the 'future' state.
 		 */
-		if ((loop.rehashing == 2) && (mi->flags == MODFLAG_LOADED))
+		if ((loop.config_status < CONFIG_STATUS_LOAD) &&
+		    (loop.config_status >= CONFIG_STATUS_POSTTEST) &&
+		    (mi->flags == MODFLAG_LOADED))
+		{
 			continue;
+		}
 
 		if (!strcasecmp(mi->relpath, name))
 			return 1;

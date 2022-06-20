@@ -1981,6 +1981,7 @@ void config_load_failed(void)
 {
 	if (conf)
 		unreal_log(ULOG_ERROR, "config", "CONFIG_NOT_LOADED", NULL, "IRCd configuration failed to load");
+	loop.config_status = CONFIG_STATUS_ROLLBACK;
 	Unload_all_testing_modules();
 	free_all_config_resources();
 	config_free(conf);
@@ -2053,6 +2054,7 @@ int config_test(void)
 	}
 
 	config_status("Testing IRCd configuration..");
+	loop.config_status = CONFIG_STATUS_TEST;
 
 	memset(&tempiConf, 0, sizeof(iConf));
 	memset(&settings, 0, sizeof(settings));
@@ -2071,12 +2073,14 @@ int config_test(void)
 
 	preprocessor_resolve_conditionals_all(PREPROCESSOR_PHASE_MODULE);
 
+	loop.config_status = CONFIG_STATUS_POSTTEST;
 	if (!config_test_all())
 	{
 		config_error("IRCd configuration failed to pass testing");
 		config_load_failed();
 		return -1;
 	}
+	loop.config_status = CONFIG_STATUS_PRE_INIT;
 	callbacks_switchover();
 	efunctions_switchover();
 	set_targmax_defaults();
@@ -2101,8 +2105,10 @@ int config_test(void)
 	}
 	config_pre_run_log();
 
+	loop.config_status = CONFIG_STATUS_INIT;
 	Init_all_testing_modules();
 
+	loop.config_status = CONFIG_STATUS_RUN_CONFIG;
 	if (config_run_blocks() < 0)
 	{
 		config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
@@ -2126,9 +2132,11 @@ int config_test(void)
 	conf = NULL;
 	if (loop.rehashing)
 	{
+		/* loop.config_status = CONFIG_STATUS_LOAD is done by module_loadall() */
 		module_loadall();
 		RunHook(HOOKTYPE_REHASH_COMPLETE);
 	}
+	loop.config_status = CONFIG_STATUS_POSTLOAD;
 	postconf();
 	unreal_log(ULOG_INFO, "config", "CONFIG_LOADED", NULL, "Configuration loaded");
 	clicap_post_rehash();
@@ -9608,6 +9616,7 @@ void start_listeners(void)
 /* Actually use configuration */
 void config_run(void)
 {
+	loop.config_status = CONFIG_STATUS_POSTLOAD;
 	extcmodes_check_for_changes();
 	start_listeners();
 	add_proc_io_server();
@@ -10820,6 +10829,7 @@ int rehash_internal(Client *client)
 	loop.rehashing = 0;
 	remote_rehash_client = NULL;
 	procio_post_rehash(failure);
+	loop.config_status = CONFIG_STATUS_COMPLETE;
 	return 1;
 }
 

@@ -856,6 +856,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	PS_STRINGS->ps_argvstr = me.name;
 #endif
 	module_loadall();
+	loop.config_status = CONFIG_STATUS_COMPLETE;
 
 #ifndef _WIN32
 	SocketLoop(NULL);
