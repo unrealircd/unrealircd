@@ -388,6 +388,9 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 	     r;
 	     r = webserver_handshake_helper(NULL, 0, &key, &value, &lastloc, &end_of_request))
 	{
+		if (BadPtr(value))
+			continue; /* skip empty values */
+
 		if (!strcasecmp(key, "REQUEST"))
 		{
 			safe_strdup(WEB(client)->uri, value);
