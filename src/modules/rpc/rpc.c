@@ -99,6 +99,7 @@ void free_config(void)
 	for (e = rpcusers; e; e = e_next)
 	{
 		e_next = e->next;
+		safe_free(e->name);
 		free_security_group(e->match);
 		Auth_FreeAuthConfig(e->auth);
 		safe_free(e);
@@ -518,6 +519,7 @@ void rpc_call(Client *client, json_t *request)
 	const char *jsonrpc;
 	const char *method;
 	json_t *params;
+	char params_allocated = 0;
 	RPCHandler *handler;
 
 	jsonrpc = json_object_get_string(request, "jsonrpc");
@@ -532,14 +534,6 @@ void rpc_call(Client *client, json_t *request)
 		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "Missing 'method' to call");
 		return;
 	}
-	params = json_object_get(request, "params");
-	if (!params)
-	{
-		/* Params is optional, so create an empty params object instead
-		 * to make life easier of the RPC handlers (no need to check NULL).
-		 */
-		params = json_object();
-	}
 
 	handler = RPCHandlerFind(method);
 	if (!handler)
@@ -548,11 +542,23 @@ void rpc_call(Client *client, json_t *request)
 		return;
 	}
 
+	params = json_object_get(request, "params");
+	if (!params)
+	{
+		/* Params is optional, so create an empty params object instead
+		 * to make life easier of the RPC handlers (no need to check NULL).
+		 */
+		params = json_object();
+		params_allocated = 1;
+	}
+
 	unreal_log(ULOG_INFO, "rpc", "RPC_CALL", client,
 	           "[rpc] Client $client: RPC call $method",
 	           log_data_string("method", method));
 
 	handler->call(client, request, params);
+	if (params_allocated)
+		json_decref(params);
 }
 
 /** Called very early on accept() of the socket, before TLS is ready */
