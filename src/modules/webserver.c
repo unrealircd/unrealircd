@@ -415,6 +415,13 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 		int remaining_bytes = 0;
 		char *nextframe;
 
+		/* Some sanity checks */
+		if (!WEB(client)->uri)
+		{
+			webserver_send_response(client, 400, "Malformed HTTP request");
+			return -1;
+		}
+
 		WEB(client)->request_header_parsed = 1;
 		n = WEBSERVER(client)->handle_request(client, WEB(client));
 		if ((n <= 0) || IsDead(client))
