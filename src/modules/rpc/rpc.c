@@ -575,6 +575,8 @@ void rpc_client_handshake_unix_socket(Client *client)
 	if (client->local->listener->socket_type != SOCKET_TYPE_UNIX)
 		abort(); /* impossible */
 
+	strlcpy(client->name, "RPC:local", sizeof(client->name));
+
 	/* Allow incoming data to be read from now on.. */
 	fd_setselect(client->local->fd, FD_SELECT_READ, read_packet, client);
 }

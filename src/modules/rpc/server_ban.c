@@ -17,6 +17,7 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 RPC_CALL_FUNC(rpc_server_ban_list);
 RPC_CALL_FUNC(rpc_server_ban_get);
+RPC_CALL_FUNC(rpc_server_ban_del);
 
 MOD_INIT()
 {
@@ -34,6 +35,13 @@ MOD_INIT()
 	}
 	r.method = "server_ban.get";
 	r.call = rpc_server_ban_get;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/server_ban] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+	r.method = "server_ban.del";
+	r.call = rpc_server_ban_del;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/server_ban] Could not register RPC handler");
@@ -150,5 +158,78 @@ RPC_CALL_FUNC(rpc_server_ban_get)
 	result = json_object();
 	json_expand_tkl(result, "tkl", tkl, 1);
 	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+// Wonderful duplicate code atm
+RPC_CALL_FUNC(rpc_server_ban_del)
+{
+	json_t *result, *list, *item;
+	const char *name, *type_name;
+	const char *error;
+	char *usermask, *hostmask;
+	int soft;
+	TKL *tkl;
+	char tkl_type_char;
+	int tkl_type_int;
+	const char *tkllayer[10];
+	char tkl_type_str[2];
+
+	name = json_object_get_string(params, "name");
+	if (!name)
+	{
+		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'name'");
+		return;
+	}
+
+	type_name = json_object_get_string(params, "type");
+	if (!type_name)
+	{
+		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'type'");
+		return;
+	}
+
+	tkl_type_char = tkl_configtypetochar(type_name);
+	if (!tkl_type_char)
+	{
+		rpc_error_fmt(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid type: '%s'", type_name);
+		return;
+	}
+	tkl_type_int = tkl_chartotype(tkl_type_char);
+	tkl_type_str[0] = tkl_type_char;
+	tkl_type_str[1] = '\0';
+
+	if (!server_ban_parse_mask(client, 0, tkl_type_int, name, &usermask, &hostmask, &soft, &error))
+	{
+		rpc_error_fmt(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", error);
+		return;
+	}
+
+	if (!(tkl = find_tkl_serverban(tkl_type_int, usermask, hostmask, soft)))
+	{
+		rpc_error(client, NULL, JSON_RPC_ERROR_NOT_FOUND, "Ban not found");
+		return;
+	}
+
+	result = json_object();
+	json_expand_tkl(result, "tkl", tkl, 1);
+
+	tkllayer[1] = "-";
+	tkllayer[2] = tkl_type_str;
+	tkllayer[3] = usermask;
+	tkllayer[4] = hostmask;
+	tkllayer[5] = client->name;
+	tkllayer[6] = NULL;
+	cmd_tkl(&me, NULL, 6, tkllayer);
+
+	if (!find_tkl_serverban(tkl_type_int, usermask, hostmask, soft))
+	{
+		rpc_response(client, request, result);
+	} else {
+		/* Actually this may not be an internal error, it could be an
+		 * incorrect request, such as asking to remove a config-based ban.
+		 */
+		rpc_error(client, NULL, JSON_RPC_ERROR_INTERNAL_ERROR, "Unable to remove item");
+	}
 	json_decref(result);
 }
