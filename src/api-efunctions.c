@@ -121,6 +121,7 @@ TKL *(*find_tkl_nameban)(int type, const char *name, int hold);
 TKL *(*find_tkl_spamfilter)(int type, const char *match_string, unsigned short action, unsigned short target);
 int (*find_tkl_exception)(int ban_type, Client *client);
 int (*server_ban_parse_mask)(Client *client, int add, char type, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
+void (*tkl_added)(Client *client, TKL *tkl);
 int (*is_silenced)(Client *client, Client *acptr);
 int (*del_silence)(Client *client, const char *mask);
 int (*add_silence)(Client *client, const char *mask, int senderr);
@@ -402,6 +403,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_FIND_TKL_SPAMFILTER, find_tkl_spamfilter, NULL);
 	efunc_init_function(EFUNC_FIND_TKL_EXCEPTION, find_tkl_exception, NULL);
 	efunc_init_function(EFUNC_SERVER_BAN_PARSE_MASK, server_ban_parse_mask, NULL);
+	efunc_init_function(EFUNC_TKL_ADDED, tkl_added, NULL);
 	efunc_init_function(EFUNC_ADD_SILENCE, add_silence, add_silence_default_handler);
 	efunc_init_function(EFUNC_DEL_SILENCE, del_silence, del_silence_default_handler);
 	efunc_init_function(EFUNC_IS_SILENCED, is_silenced, is_silenced_default_handler);

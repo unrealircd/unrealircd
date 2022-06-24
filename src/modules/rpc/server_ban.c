@@ -18,6 +18,7 @@ ModuleHeader MOD_HEADER
 RPC_CALL_FUNC(rpc_server_ban_list);
 RPC_CALL_FUNC(rpc_server_ban_get);
 RPC_CALL_FUNC(rpc_server_ban_del);
+RPC_CALL_FUNC(rpc_server_ban_add);
 
 MOD_INIT()
 {
@@ -42,6 +43,13 @@ MOD_INIT()
 	}
 	r.method = "server_ban.del";
 	r.call = rpc_server_ban_del;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/server_ban] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+	r.method = "server_ban.add";
+	r.call = rpc_server_ban_add;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/server_ban] Could not register RPC handler");
@@ -231,5 +239,98 @@ RPC_CALL_FUNC(rpc_server_ban_del)
 		 */
 		rpc_error(client, NULL, JSON_RPC_ERROR_INTERNAL_ERROR, "Unable to remove item");
 	}
+	json_decref(result);
+}
+
+// Wonderful duplicate code atm
+RPC_CALL_FUNC(rpc_server_ban_add)
+{
+	json_t *result, *list, *item;
+	const char *name, *type_name;
+	const char *error;
+	char *usermask, *hostmask;
+	int soft;
+	TKL *tkl;
+	char tkl_type_char;
+	int tkl_type_int;
+	char tkl_type_str[2];
+	const char *reason;
+	const char *str;
+	time_t tkl_expire_at;
+	time_t tkl_set_at = TStime();
+
+	name = json_object_get_string(params, "name");
+	if (!name)
+	{
+		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'name'");
+		return;
+	}
+
+	type_name = json_object_get_string(params, "type");
+	if (!type_name)
+	{
+		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'type'");
+		return;
+	}
+
+	tkl_type_char = tkl_configtypetochar(type_name);
+	if (!tkl_type_char)
+	{
+		rpc_error_fmt(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid type: '%s'", type_name);
+		return;
+	}
+	tkl_type_int = tkl_chartotype(tkl_type_char);
+	tkl_type_str[0] = tkl_type_char;
+	tkl_type_str[1] = '\0';
+
+	reason = json_object_get_string(params, "reason");
+	if (!reason)
+	{
+		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'reason'");
+		return;
+	}
+
+	/* Duration / expiry time */
+	if ((str = json_object_get_string(params, "duration_string")))
+	{
+		tkl_expire_at = config_checkval(str, CFG_TIME);
+	} else
+	if ((str = json_object_get_string(params, "expire_at")))
+	{
+		// TODO: handle this
+		tkl_expire_at = 5;
+	} else
+	{
+		/* Never expire */
+		tkl_expire_at = 0;
+	}
+
+	if (!server_ban_parse_mask(client, 0, tkl_type_int, name, &usermask, &hostmask, &soft, &error))
+	{
+		rpc_error_fmt(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", error);
+		return;
+	}
+
+	if (find_tkl_serverban(tkl_type_int, usermask, hostmask, soft))
+	{
+		rpc_error(client, NULL, JSON_RPC_ERROR_ALREADY_EXISTS, "A ban with that mask already exists");
+		return;
+	}
+
+	tkl = tkl_add_serverban(tkl_type_int, usermask, hostmask, reason,
+	                        client->name, tkl_expire_at, tkl_set_at,
+	                        soft, 0);
+
+	if (!tkl)
+	{
+		rpc_error(client, NULL, JSON_RPC_ERROR_INTERNAL_ERROR, "Unable to add item");
+		return;
+	}
+
+	tkl_added(client, tkl);
+
+	result = json_object();
+	json_expand_tkl(result, "tkl", tkl, 1);
+	rpc_response(client, request, result);
 	json_decref(result);
 }

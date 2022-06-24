@@ -107,6 +107,7 @@ int _find_tkl_exception(int ban_type, Client *client);
 int _server_ban_parse_mask(Client *client, int add, char type, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
 static void add_default_exempts(void);
 int parse_extended_server_ban(const char *mask_in, Client *client, char **error, int skip_checking, char *buf1, size_t buf1len, char *buf2, size_t buf2len);
+void _tkl_added(Client *client, TKL *tkl);
 
 /* Externals (only for us :D) */
 extern int MODVAR spamf_ugly_vchanoverride;
@@ -212,6 +213,7 @@ MOD_TEST()
 	EfunctionAddString(modinfo->handle, EFUNC_TKL_UHOST, _tkl_uhost);
 	EfunctionAdd(modinfo->handle, EFUNC_UNREAL_MATCH_IPLIST, _unreal_match_iplist);
 	EfunctionAdd(modinfo->handle, EFUNC_SERVER_BAN_PARSE_MASK, TO_INTFUNC(_server_ban_parse_mask));
+	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_ADDED, _tkl_added);
 	return MOD_SUCCESS;
 }
 
@@ -3965,6 +3967,26 @@ void _sendnotice_tkl_del(char *removed_by, TKL *tkl)
 	}
 }
 
+/** Called when a TKL is added by a remote user, local user, RPC user, ..
+ * (but not when a TKL is added via the config)
+ */
+void _tkl_added(Client *client, TKL *tkl)
+{
+	RunHook(HOOKTYPE_TKL_ADD, client, tkl);
+
+	sendnotice_tkl_add(tkl);
+
+	/* spamfilter 'warn' action is special */
+	if ((tkl->type & TKL_SPAMF) && (tkl->ptr.spamfilter->action == BAN_ACT_WARN) && (tkl->ptr.spamfilter->target & SPAMF_USER))
+		spamfilter_check_users(tkl);
+
+	/* Ban checking executes during run loop for efficiency */
+	loop.do_bancheck = 1;
+
+	if (tkl->type & TKL_GLOBAL)
+		tkl_broadcast_entry(1, client, client, tkl);
+}
+
 /** Add a TKL using the TKL layer. See cmd_tkl for parv[] and protocol documentation. */
 CMD_FUNC(cmd_tkl_add)
 {
@@ -4247,21 +4269,7 @@ CMD_FUNC(cmd_tkl_add)
 		return;
 	}
 
-	/* Below this line we will only use 'tkl'. No parc/parv reading anymore. */
-
-	RunHook(HOOKTYPE_TKL_ADD, client, tkl);
-
-	sendnotice_tkl_add(tkl);
-
-	/* spamfilter 'warn' action is special */
-	if ((tkl->type & TKL_SPAMF) && (tkl->ptr.spamfilter->action == BAN_ACT_WARN) && (tkl->ptr.spamfilter->target & SPAMF_USER))
-		spamfilter_check_users(tkl);
-
-	/* Ban checking executes during run loop for efficiency */
-	loop.do_bancheck = 1;
-
-	if (type & TKL_GLOBAL)
-		tkl_broadcast_entry(1, client, client, tkl);
+	tkl_added(client, tkl);
 }
 
 /** Delete a TKL using the TKL layer. See cmd_tkl for parv[] and protocol documentation. */
