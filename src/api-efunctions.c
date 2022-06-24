@@ -46,6 +46,7 @@ int (*register_user)(Client *client);
 int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
 int (*tkl_chartotype)(char c);
+char (*tkl_configtypetochar)(const char *name);
 const char *(*tkl_type_string)(TKL *tk);
 const char *(*tkl_type_config_string)(TKL *tk);
 char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options);
@@ -119,6 +120,7 @@ TKL *(*find_tkl_banexception)(int type, const char *usermask, const char *hostma
 TKL *(*find_tkl_nameban)(int type, const char *name, int hold);
 TKL *(*find_tkl_spamfilter)(int type, const char *match_string, unsigned short action, unsigned short target);
 int (*find_tkl_exception)(int ban_type, Client *client);
+int (*server_ban_parse_mask)(Client *client, int add, char type, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
 int (*is_silenced)(Client *client, Client *acptr);
 int (*del_silence)(Client *client, const char *mask);
 int (*add_silence)(Client *client, const char *mask, int senderr);
@@ -381,6 +383,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_PARSE_MESSAGE_TAGS, parse_message_tags, &parse_message_tags_default_handler);
 	efunc_init_function(EFUNC_MTAGS_TO_STRING, mtags_to_string, &mtags_to_string_default_handler);
 	efunc_init_function(EFUNC_TKL_CHARTOTYPE, tkl_chartotype, NULL);
+	efunc_init_function(EFUNC_TKL_CONFIGTYPETOCHAR, tkl_configtypetochar, NULL);
 	efunc_init_function(EFUNC_TKL_TYPE_STRING, tkl_type_string, NULL);
 	efunc_init_function(EFUNC_TKL_TYPE_CONFIG_STRING, tkl_type_config_string, NULL);
 	efunc_init_function(EFUNC_CAN_SEND_TO_CHANNEL, can_send_to_channel, NULL);
@@ -398,6 +401,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_FIND_TKL_NAMEBAN, find_tkl_nameban, NULL);
 	efunc_init_function(EFUNC_FIND_TKL_SPAMFILTER, find_tkl_spamfilter, NULL);
 	efunc_init_function(EFUNC_FIND_TKL_EXCEPTION, find_tkl_exception, NULL);
+	efunc_init_function(EFUNC_SERVER_BAN_PARSE_MASK, server_ban_parse_mask, NULL);
 	efunc_init_function(EFUNC_ADD_SILENCE, add_silence, add_silence_default_handler);
 	efunc_init_function(EFUNC_DEL_SILENCE, del_silence, del_silence_default_handler);
 	efunc_init_function(EFUNC_IS_SILENCED, is_silenced, is_silenced_default_handler);

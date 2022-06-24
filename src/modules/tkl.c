@@ -55,6 +55,7 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type);
 int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);
+char _tkl_configtypetochar(const char *name);
 int tkl_banexception_chartotype(char c);
 char *_tkl_type_string(TKL *tk);
 char *_tkl_type_config_string(TKL *tk);
@@ -103,6 +104,7 @@ TKL *_find_tkl_banexception(int type, char *usermask, char *hostmask, int softba
 TKL *_find_tkl_nameban(int type, char *name, int hold);
 TKL *_find_tkl_spamfilter(int type, char *match_string, BanAction action, unsigned short target);
 int _find_tkl_exception(int ban_type, Client *client);
+int _server_ban_parse_mask(Client *client, int add, char type, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
 static void add_default_exempts(void);
 int parse_extended_server_ban(const char *mask_in, Client *client, char **error, int skip_checking, char *buf1, size_t buf1len, char *buf2, size_t buf2len);
 
@@ -171,6 +173,7 @@ MOD_TEST()
 #endif
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_TYPETOCHAR, TO_INTFUNC(_tkl_typetochar));
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_CHARTOTYPE, TO_INTFUNC(_tkl_chartotype));
+	EfunctionAdd(modinfo->handle, EFUNC_TKL_CONFIGTYPETOCHAR, TO_INTFUNC(_tkl_configtypetochar));
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
@@ -208,6 +211,7 @@ MOD_TEST()
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_TKL_EXCEPTION, _find_tkl_exception);
 	EfunctionAddString(modinfo->handle, EFUNC_TKL_UHOST, _tkl_uhost);
 	EfunctionAdd(modinfo->handle, EFUNC_UNREAL_MATCH_IPLIST, _unreal_match_iplist);
+	EfunctionAdd(modinfo->handle, EFUNC_SERVER_BAN_PARSE_MASK, TO_INTFUNC(_server_ban_parse_mask));
 	return MOD_SUCCESS;
 }
 
@@ -1339,6 +1343,175 @@ fail_parse_extended_server_ban:
 	return 0;
 }
 
+/** Parse a server ban request such as 'blah@blah.com' or '~account:EvilUser'
+ * @param client	Client requesting the operation (can be NULL)
+ * @param add		Set to 1 for add ban, 0 for remove ban
+ * @param type		TKL type (character), see 2nd column of tkl_types[], eg 'G' for gline.
+ * @param str		The input string
+ * @param usermask_out	Will be set to the TKL usermask
+ * @param hostmask_out	Will be set to the TKL hostmask
+ * @param soft		Will be set to 1 if it's a softban, otherwise 0
+ * @param error		On failure, this will contain the error string
+ * @retval 1	Success: usermask_out, hostmask_out and soft are set appropriately.
+ * @retval 0	Failed: error is set appropriately
+ */
+int _server_ban_parse_mask(Client *client, int add, char type, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error)
+{
+	static char maskbuf[512];
+	char mask1buf[BUFSIZE], mask2buf[BUFSIZE];
+	char *hostmask = NULL, *usermask = NULL;
+	char *mask, *p;
+
+	/* Set defaults */
+	*usermask_out = *hostmask_out = NULL;
+	*soft = 0;
+
+	strlcpy(maskbuf, str, sizeof(maskbuf));
+	mask = maskbuf;
+
+	if ((*mask != '~') && strchr(mask, '!'))
+	{
+		*error = "Cannot have '!' in masks.";
+		return 0;
+	}
+
+	if (*mask == ':')
+	{
+		*error = "Mask cannot start with a ':'.";
+		return 0;
+	}
+
+	if (strchr(mask, ' '))
+	{
+		*error = "Mask may not contain spaces";
+		return 0;
+	}
+
+	/* Check if it's a softban */
+	if (*mask == '%')
+	{
+		*soft = 1;
+		if (!strchr("kGs", type))
+		{
+			*error = "The %% prefix (soft ban) is only available for KLINE, GLINE and SHUN. "
+			         "For technical reasons this will not work for (G)ZLINE.";
+			return 0;
+		}
+	}
+
+	/* Check if it's an extended server ban */
+	if (is_extended_server_ban(mask))
+	{
+		char *err;
+
+		if (!parse_extended_server_ban(mask, client, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
+		{
+			/* If adding, reject it */
+			if (add)
+			{
+				*error = err;
+				return 0;
+			} else
+			{
+				/* Always allow any removal attempt... */
+				char *p;
+				char save;
+				p = strchr(mask, ':');
+				p++;
+				save = *p;
+				*p = '\0';
+				strlcpy(mask1buf, mask, sizeof(mask1buf));
+				*p = save;
+				strlcpy(mask2buf, p, sizeof(mask2buf));
+				/* fallthrough */
+			}
+		}
+		if (add && ((type == 'z') || (type == 'Z')))
+		{
+			*error = "(G)Zlines must be placed at *@\037IPMASK\037. "
+			         "Extended server bans don't work here because (g)zlines are processed "
+			         "BEFORE dns and ident lookups are done and before reading any client data. "
+			         "If you want to use extended server bans then use a KLINE/GLINE instead.";
+			return 0;
+		}
+		usermask = mask1buf; /* eg ~S: */
+		hostmask = mask2buf; /* eg 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef */
+	} else
+	{
+		/* Check if it's a hostmask and legal .. */
+		p = strchr(mask, '@');
+		if (p) {
+			if ((p == mask) || !p[1])
+			{
+				*error = "No user@host specified";
+				return 0;
+			}
+			usermask = strtok(mask, "@");
+			hostmask = strtok(NULL, "");
+			if (BadPtr(hostmask))
+			{
+				if (BadPtr(usermask))
+				{
+					*error = "Invalid mask";
+					return 0;
+				}
+				hostmask = usermask;
+				usermask = "*";
+			}
+			if (*hostmask == ':')
+			{
+				*error = "For technical reasons you cannot start the host with a ':', sorry";
+				return 0;
+			}
+			if (add && ((type == 'z') || (type == 'Z')))
+			{
+				/* It's a (G)ZLINE, make sure the user isn't specyfing a HOST.
+				 * Just a warning in 3.2.3, but an error in 3.2.4.
+				 */
+				if (strcmp(usermask, "*"))
+				{
+					*error = "(G)Zlines must be placed at \037*\037@ipmask, not \037user\037@ipmask. This is "
+					         "because (g)zlines are processed BEFORE dns and ident lookups are done. "
+					         "If you want to use usermasks, use a KLINE/GLINE instead.";
+					return 0;
+				}
+				for (p=hostmask; *p; p++)
+				{
+					if (isalpha(*p) && !isxdigit(*p))
+					{
+						*error = "ERROR: (g)zlines must be placed at *@\037IPMASK\037, not *@\037HOSTMASK\037 "
+						         "(so for example *@192.168.* is ok, but *@*.aol.com is not). "
+						         "This is because (g)zlines are processed BEFORE dns and ident lookups are done. "
+						         "If you want to use hostmasks instead of ipmasks, use a KLINE/GLINE instead.";
+						return 0;
+					}
+				}
+			}
+		}
+		else
+		{
+			/* It's seemingly a nick .. let's see if we can find the user */
+			Client *acptr;
+			if ((acptr = find_user(mask, NULL)))
+			{
+				BanAction action = BAN_ACT_KLINE; // just a dummy default
+				if ((type == 'z') || (type == 'Z'))
+					action = BAN_ACT_ZLINE; // to indicate zline (no hostname, no dns, etc)
+				ban_target_to_tkl_layer(iConf.manual_ban_target, action, acptr, (const char **)&usermask, (const char **)&hostmask);
+			}
+			else
+			{
+				*error = "Nickname not found";
+				return 0;
+			}
+		}
+	}
+
+	/* Success! */
+	*usermask_out = usermask;
+	*hostmask_out = hostmask;
+	return 1;
+}
 
 /** Intermediate layer between user functions such as KLINE/GLINE
  * and the TKL layer (cmd_tkl).
@@ -1348,14 +1521,12 @@ fail_parse_extended_server_ban:
 void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 {
 	time_t secs;
-	int add = 1;
+	int add = 1, soft;
 	time_t i;
 	Client *acptr = NULL;
-	char maskbuf[BUFSIZE];
-	char *mask;
+	const char *mask;
+	const char *error;
 	char mo[64], mo2[64];
-	char mask1buf[BUFSIZE];
-	char mask2buf[BUFSIZE];
 	char *p, *usermask, *hostmask;
 	const char *tkllayer[10] = {
 		me.name,		/*0  server.name */
@@ -1374,8 +1545,8 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 	if ((parc == 1) || BadPtr(parv[1]))
 		return; /* shouldn't happen */
 
-	strlcpy(maskbuf, parv[1], sizeof(maskbuf));
-	mask = maskbuf;
+	mask = parv[1];
+
 	if (*mask == '-')
 	{
 		add = 0;
@@ -1387,130 +1558,10 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 		mask++;
 	}
 
-	if ((*mask != '~') && strchr(mask, '!'))
+	if (!server_ban_parse_mask(client, add, *type, mask, &usermask, &hostmask, &soft, &error))
 	{
-		sendnotice(client, "[error] Cannot have '!' in masks.");
+		sendnotice(client, "[ERROR] %s", error);
 		return;
-	}
-	if (*mask == ':')
-	{
-		sendnotice(client, "[error] Mask cannot start with a ':'.");
-		return;
-	}
-	if (strchr(mask, ' '))
-		return;
-
-	/* Check if it's a softban */
-	if (*mask == '%')
-	{
-		if (!strchr("kGs", *type))
-		{
-			sendnotice(client, "The %% prefix (soft ban) is only available for KLINE, GLINE and SHUN."
-			                 "For technical reasons this will not work for (G)ZLINE.");
-			return;
-		}
-	}
-
-	/* Check if it's an extended server ban */
-	if (is_extended_server_ban(mask))
-	{
-		char *err;
-
-		if (!parse_extended_server_ban(mask, client, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
-		{
-			/* If adding, reject it */
-			if (add)
-			{
-				sendnotice(client, "ERROR: %s", err);
-				return;
-			} else
-			{
-				/* Always allow any removal attempt... */
-				char *p;
-				char save;
-				p = strchr(mask, ':');
-				p++;
-				save = *p;
-				*p = '\0';
-				strlcpy(mask1buf, mask, sizeof(mask1buf));
-				*p = save;
-				strlcpy(mask2buf, p, sizeof(mask2buf));
-				/* fallthrough */
-			}
-		}
-		if (add && ((*type == 'z') || (*type == 'Z')))
-		{
-			sendnotice(client, "ERROR: (g)zlines must be placed at *@\037IPMASK\037. "
-					   "Extended server bans don't work here because (g)zlines are processed"
-					   "BEFORE dns and ident lookups are done and before reading any client data. "
-					   "If you want to use extended server bans then use a KLINE/GLINE instead.");
-			return;
-		}
-		usermask = mask1buf; /* eg ~S: */
-		hostmask = mask2buf; /* eg 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef */
-	} else
-	{
-		/* Check if it's a hostmask and legal .. */
-		p = strchr(mask, '@');
-		if (p) {
-			if ((p == mask) || !p[1])
-			{
-				sendnotice(client, "Error: no user@host specified");
-				return;
-			}
-			usermask = strtok(mask, "@");
-			hostmask = strtok(NULL, "");
-			if (BadPtr(hostmask)) {
-				if (BadPtr(usermask)) {
-					return;
-				}
-				hostmask = usermask;
-				usermask = "*";
-			}
-			if (*hostmask == ':')
-			{
-				sendnotice(client, "[error] For technical reasons you cannot start the host with a ':', sorry");
-				return;
-			}
-			if (add && ((*type == 'z') || (*type == 'Z')))
-			{
-				/* It's a (G)ZLINE, make sure the user isn't specyfing a HOST.
-				 * Just a warning in 3.2.3, but an error in 3.2.4.
-				 */
-				if (strcmp(usermask, "*"))
-				{
-					sendnotice(client, "ERROR: (g)zlines must be placed at \037*\037@ipmask, not \037user\037@ipmask. This is "
-							 "because (g)zlines are processed BEFORE dns and ident lookups are done. "
-							 "If you want to use usermasks, use a KLINE/GLINE instead.");
-					return;
-				}
-				for (p=hostmask; *p; p++)
-					if (isalpha(*p) && !isxdigit(*p))
-					{
-						sendnotice(client, "ERROR: (g)zlines must be placed at *@\037IPMASK\037, not *@\037HOSTMASK\037 "
-								 "(so for example *@192.168.* is ok, but *@*.aol.com is not). "
-								 "This is because (g)zlines are processed BEFORE dns and ident lookups are done. "
-								 "If you want to use hostmasks instead of ipmasks, use a KLINE/GLINE instead.");
-						return;
-					}
-			}
-		}
-		else
-		{
-			/* It's seemingly a nick .. let's see if we can find the user */
-			if ((acptr = find_user(mask, NULL)))
-			{
-				BanAction action = BAN_ACT_KLINE; // just a dummy default
-				if ((*type == 'z') || (*type == 'Z'))
-					action = BAN_ACT_ZLINE; // to indicate zline (no hostname, no dns, etc)
-				ban_target_to_tkl_layer(iConf.manual_ban_target, action, acptr, (const char **)&usermask, (const char **)&hostmask);
-			}
-			else
-			{
-				sendnumeric(client, ERR_NOSUCHNICK, mask);
-				return;
-			}
-		}
 	}
 
 	if (add && ban_too_broad(usermask, hostmask))
@@ -2198,6 +2249,15 @@ int _tkl_chartotype(char c)
 	for (i=0; tkl_types[i].config_name; i++)
 		if ((tkl_types[i].letter == c) && tkl_types[i].tkltype)
 			return tkl_types[i].type;
+	return 0;
+}
+
+char _tkl_configtypetochar(const char *name)
+{
+	int i;
+	for (i=0; tkl_types[i].config_name; i++)
+		if (!strcmp(tkl_types[i].config_name, name))
+			return tkl_types[i].letter;
 	return 0;
 }
 
