@@ -1145,10 +1145,18 @@ extern void skip_whitespace(char **p);
 extern void read_until(char **p, char *stopchars);
 extern int is_ip_valid(const char *ip);
 extern int is_file_readable(const char *file, const char *dir);
+/* json.c */
 extern json_t *json_string_unreal(const char *s);
 extern const char *json_object_get_string(json_t *j, const char *name);
+extern json_t *json_timestamp(time_t v);
+extern const char *timestamp_iso8601_now(void);
+extern const char *timestamp_iso8601(time_t v);
+extern const char *json_get_value(json_t *t);
 extern void json_expand_client(json_t *j, const char *key, Client *client, int detail);
+extern void json_expand_client_security_groups(json_t *parent, Client *client);
 extern void json_expand_channel(json_t *j, const char *key, Channel *channel, int detail);
+extern void json_expand_tkl(json_t *j, const char *key, TKL *tkl, int detail);
+/* end of json.c */
 /* securitygroup.c start */
 extern MODVAR SecurityGroup *securitygroups;
 extern void unreal_delete_masks(ConfigItem_mask *m);

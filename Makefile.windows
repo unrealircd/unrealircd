@@ -190,7 +190,7 @@ EXP_OBJ_FILES=src/ircd_vars.obj src/channel.obj src/send.obj src/socket.obj \
  src/api-extban.obj src/api-efunctions.obj src/crypt_blowfish.obj \
  src/operclass.obj src/crashreport.obj src/unrealdb.obj \
  src/openssl_hostname_validation.obj \
- src/utf8.obj src/log.obj $(CURLOBJ)
+ src/utf8.obj src/json.obj src/log.obj $(CURLOBJ)
 
 OBJ_FILES=$(EXP_OBJ_FILES) src/gui.obj src/service.obj src/windebug.obj src/rtf.obj \
  src/editor.obj src/win.obj src/ircd.obj src/proc_io_client.obj
@@ -639,6 +639,9 @@ src/utf8.obj: src/utf8.c $(INCLUDES) ./include/dbuf.h
 
 src/openssl_hostname_validation.obj: src/openssl_hostname_validation.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/openssl_hostname_validation.c
+
+src/json.obj: src/json.c $(INCLUDES) ./include/dbuf.h
+        $(CC) $(CFLAGS) src/json.c
 
 src/log.obj: src/log.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/log.c
