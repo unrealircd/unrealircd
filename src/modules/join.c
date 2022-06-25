@@ -212,7 +212,8 @@ void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mta
 }
 
 /* Routine that actually makes a user join the channel
- * this does no actual checking (banned, etc.) it just adds the user
+ * this does no actual checking (banned, etc.) it just adds the user.
+ * Note: this is called for local JOIN and remote JOIN, but not for SJOIN.
  */
 void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, const char *member_modes)
 {

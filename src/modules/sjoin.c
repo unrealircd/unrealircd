@@ -452,6 +452,10 @@ CMD_FUNC(cmd_sjoin)
 				MessageTag *mtags = NULL;
 
 				add_user_to_channel(channel, acptr, item_modes);
+				unreal_log(ULOG_INFO, "join", "REMOTE_CLIENT_JOIN", acptr,
+					   "User $client joined $channel",
+					   log_data_channel("channel", channel),
+					   log_data_string("modes", item_modes));
 				RunHook(HOOKTYPE_REMOTE_JOIN, acptr, channel, recv_mtags);
 				new_message_special(acptr, recv_mtags, &mtags, ":%s JOIN %s", acptr->name, channel->name);
 				send_join_to_local_users(acptr, channel, mtags);
