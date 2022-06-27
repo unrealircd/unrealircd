@@ -364,7 +364,6 @@ void json_expand_channel(json_t *j, const char *key, Channel *channel, int detai
 void json_expand_tkl(json_t *root, const char *key, TKL *tkl, int detail)
 {
 	char buf[BUFSIZE];
-	LogData *d = safe_alloc(sizeof(LogData));
 	json_t *j;
 
 	if (key)
