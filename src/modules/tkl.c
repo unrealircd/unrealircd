@@ -1359,8 +1359,7 @@ fail_parse_extended_server_ban:
  */
 int _server_ban_parse_mask(Client *client, int add, char type, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error)
 {
-	static char maskbuf[512];
-	char mask1buf[BUFSIZE], mask2buf[BUFSIZE];
+	static char maskbuf[BUFSIZE], mask1buf[BUFSIZE], mask2buf[BUFSIZE];
 	char *hostmask = NULL, *usermask = NULL;
 	char *mask, *p;
 
