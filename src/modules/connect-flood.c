@@ -59,7 +59,14 @@ int connect_flood_throttle(Client *client, int exitflags)
 				    "Throttled: Reconnecting too fast - "
 				    "Email %s for more information.",
 				    KLINE_ADDRESS);
-			exit_client(client, NULL, zlinebuf);
+			/* WAS: exit_client(client, NULL, zlinebuf);
+			 * Can't use exit_client() here because HOOKTYPE_IP_CHANGE call
+			 * may be too deep. Eg: read_packet -> webserver_packet_in ->
+			 * webserver_handle_request_header -> webserver_handle_request ->
+			 * RunHook().... and then returning without touching anything
+			 * after an exit_client() would not be feasible.
+			 */
+			dead_socket(client, zlinebuf);
 			return HOOK_DENY;
 		}
 	}
