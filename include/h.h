@@ -900,6 +900,7 @@ extern int add_listmode(Ban **list, Client *cptr, Channel *channel, const char *
 extern int add_listmode_ex(Ban **list, Client *cptr, Channel *channel, const char *banid, const char *setby, time_t seton);
 extern int del_listmode(Ban **list, Channel *channel, const char *banid);
 extern int Halfop_mode(long mode);
+extern const char *convert_regular_ban(char *mask, char *buf, size_t buflen);
 extern const char *clean_ban_mask(const char *, int, Client *, int);
 extern int find_invex(Channel *channel, Client *client);
 extern void DoMD5(char *mdout, const char *src, unsigned long n);

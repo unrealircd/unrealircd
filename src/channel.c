@@ -691,6 +691,59 @@ char *trim_str(char *str, int len)
 	return str;
 }
 
+/* Convert regular ban (non-extban) if needed.
+ * This does things like:
+ * nick!user@host -> nick!user@host (usually no change)
+ * nickkkkkkkkkkkkkkkkkkkkkkkkkk!user@host -> nickkkkkkk*!user@host (dealing with NICKLEN restrictions and such).
+ * user@host -> *!user@host
+ * 1.2.3.4 -> *!*@1.2.3.4 (converting IP to a proper mask)
+ * @param mask		Incoming mask (this will be touched/fragged!)
+ * @param buf		Output buffer
+ * @param buflen	Length of the output buffer, eg sizeof(buf)
+ * @retval The sanitized mask, or NULL if it should be rejected fully.
+ * @note Since 'mask' will be fragged, you most likely wish to pass a copy of it rather than the original.
+ */
+const char *convert_regular_ban(char *mask, char *buf, size_t buflen)
+{
+	static char namebuf[USERLEN + HOSTLEN + 6];
+	char *user, *host;
+
+	if (!*mask)
+		return NULL; /* empty extban */
+
+	if (!buf)
+	{
+		buf = namebuf;
+		buflen = sizeof(namebuf);
+	}
+
+	if ((*mask == '~') && !strchr(mask, '@'))
+	{
+		/* has a '~', which makes it look like an extban,
+		 * but is not a user@host ban, too confusing.
+		 */
+		return NULL;
+	}
+
+	if ((user = strchr(mask, '!')))
+		*user++ = '\0';
+
+	if ((host = strrchr(user ? user : mask, '@')))
+	{
+		*host++ = '\0';
+		if (!user)
+			return make_nick_user_host(NULL, trim_str(mask,USERLEN), trim_str(host,HOSTLEN));
+	}
+	else if (!user && (strchr(mask, '.') || strchr(mask, ':')))
+	{
+		/* 1.2.3.4 -> *!*@1.2.3.4 (and the same for IPv6) */
+		return make_nick_user_host(NULL, NULL, trim_str(mask,HOSTLEN));
+	}
+
+	/* regular nick!user@host with the auto-trimming feature */
+	return make_nick_user_host(trim_str(mask,NICKLEN), trim_str(user,USERLEN), trim_str(host,HOSTLEN));
+}
+
 /** Make a proper ban mask.
  * This takes user input (eg: "nick") and converts it to a mask suitable
  * in the +beI lists (eg: "nick!*@*"). It also deals with extended bans,
@@ -706,8 +759,6 @@ char *trim_str(char *str, int len)
 const char *clean_ban_mask(const char *mask_in, int what, Client *client, int conv_options)
 {
 	char *cp, *x;
-	char *user;
-	char *host;
 	static char mask[512];
 
 	/* Strip any ':' at beginning since that would cause a desync */
@@ -785,21 +836,7 @@ const char *clean_ban_mask(const char *mask_in, int what, Client *client, int co
 		return mask;
 	}
 
-	if ((*mask == '~') && !strchr(mask, '@'))
-		return NULL; /* not an extended ban and not a ~user@host ban either. */
-
-	if ((user = strchr((cp = mask), '!')))
-		*user++ = '\0';
-	if ((host = strrchr(user ? user : cp, '@')))
-	{
-		*host++ = '\0';
-
-		if (!user)
-			return make_nick_user_host(NULL, trim_str(cp,USERLEN), trim_str(host,HOSTLEN));
-	}
-	else if (!user && strchr(cp, '.'))
-		return make_nick_user_host(NULL, NULL, trim_str(cp,HOSTLEN));
-	return make_nick_user_host(trim_str(cp,NICKLEN), trim_str(user,USERLEN), trim_str(host,HOSTLEN));
+	return convert_regular_ban(mask, NULL, 0);
 }
 
 /** Check if 'client' matches an invite exception (+I) on 'channel' */

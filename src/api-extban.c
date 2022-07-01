@@ -360,33 +360,12 @@ int extban_is_ok_nuh_extban(BanContext *b)
  */
 const char *extban_conv_param_nuh(BanContext *b, Extban *extban)
 {
-	char *cp, *user, *host, *mask, *ret = NULL;
-	static char retbuf[USERLEN + NICKLEN + HOSTLEN + 32];
 	char tmpbuf[USERLEN + NICKLEN + HOSTLEN + 32];
+	static char retbuf[USERLEN + NICKLEN + HOSTLEN + 32];
 
 	/* Work on a copy */
 	strlcpy(tmpbuf, b->banstr, sizeof(retbuf));
-	mask = tmpbuf;
-
-	if (!*mask)
-		return NULL; /* empty extban */
-	if ((*mask == '~') && !strchr(mask, '@'))
-		return NULL; /* not a user@host ban, too confusing. */
-	if ((user = strchr((cp = mask), '!')))
-		*user++ = '\0';
-	if ((host = strrchr(user ? user : cp, '@')))
-	{
-		*host++ = '\0';
-		if (!user)
-			ret = make_nick_user_host(NULL, trim_str(cp,USERLEN), trim_str(host,HOSTLEN));
-	}
-	else if (!user && strchr(cp, '.'))
-		ret = make_nick_user_host(NULL, NULL, trim_str(cp,HOSTLEN));
-	if (!ret)
-		ret = make_nick_user_host(trim_str(cp,NICKLEN), trim_str(user,USERLEN), trim_str(host,HOSTLEN));
-
-	strlcpy(retbuf, ret, sizeof(retbuf));
-	return retbuf;
+	return convert_regular_ban(tmpbuf, retbuf, sizeof(retbuf));
 }
 
 /** conv_param to deal with stacked extbans.
