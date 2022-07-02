@@ -4913,16 +4913,108 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 	return errors;
 }
 
+/* Helper for _conf_listen() */
+void conf_listen_configure(const char *ip, int port, SocketType socket_type, int options, ConfigEntry *ce, ConfigEntry *tlsconfig)
+{
+	ConfigItem_listen *listen;
+	ConfigEntry *cep, *cepp;
+	Hook *h;
+	char isnew = 0;
+
+	if (!(listen = find_listen(ip, port, socket_type)))
+	{
+		listen = safe_alloc(sizeof(ConfigItem_listen));
+		if (socket_type == SOCKET_TYPE_UNIX)
+		{
+			safe_strdup(listen->file, ip);
+		} else {
+			safe_strdup(listen->ip, ip);
+			listen->port = port;
+		}
+		listen->fd = -1;
+		listen->socket_type = socket_type;
+		isnew = 1;
+	}
+
+	if (listen->options & LISTENER_BOUND)
+		options |= LISTENER_BOUND;
+	listen->options = options;
+
+	if (isnew)
+		AddListItem(listen, conf_listen);
+
+	/* Reset all settings of the current listener (free and set defaults): */
+	listen->flag.temporary = 0;
+	listen->start_handshake = start_of_normal_client_handshake;
+	if (listen->ssl_ctx)
+	{
+		SSL_CTX_free(listen->ssl_ctx);
+		listen->ssl_ctx = NULL;
+	}
+	if (listen->tls_options)
+	{
+		free_tls_options(listen->tls_options);
+		listen->tls_options = NULL;
+	}
+	safe_free(listen->websocket_forward);
+	safe_free(listen->webserver);
+
+	/* Now set the new settings: */
+	if (tlsconfig)
+	{
+		listen->tls_options = safe_alloc(sizeof(TLSOptions));
+		conf_tlsblock(conf, tlsconfig, listen->tls_options);
+		listen->ssl_ctx = init_ctx(listen->tls_options, 1);
+	}
+
+	/* For modules that hook CONFIG_LISTEN and CONFIG_LISTEN_OPTIONS.
+	 * Yeah, ugly we have this here..
+	 * and again about 100 lines down too.
+	 */
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "ip"))
+			;
+		else if (!strcmp(cep->name, "port"))
+			;
+		else if (!strcmp(cep->name, "options"))
+		{
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				NameValue *ofp;
+				if (!nv_find_by_name(_ListenerFlags, cepp->name))
+				{
+					for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
+					{
+						int value = (*(h->func.intfunc))(conf, cepp, CONFIG_LISTEN_OPTIONS, listen);
+						if (value == 1)
+							break;
+					}
+				}
+			}
+		} else
+		if (!strcmp(cep->name, "ssl-options") || !strcmp(cep->name, "tls-options"))
+			;
+		else
+		{
+			for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
+			{
+				int value = (*(h->func.intfunc))(conf, cep, CONFIG_LISTEN, listen);
+				if (value == 1)
+					break;
+			}
+		}
+	}
+}
+
 int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep;
-	ConfigEntry *cepp;
+	ConfigEntry *cep, *cepp;
 	ConfigEntry *tlsconfig = NULL;
-	ConfigItem_listen *listen = NULL;
 	char *file = NULL;
 	char *ip = NULL;
-	int start=0, end=0, port, isnew;
-	int tmpflags =0;
+	int start=0, end=0, port;
+	int listener_flags =0;
 	Hook *h;
 
 	for (cep = ce->items; cep; cep = cep->next)
@@ -4948,7 +5040,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 				long v;
 				if ((v = nv_find_by_name(_ListenerFlags, cepp->name)))
 				{
-					tmpflags |= v;
+					listener_flags |= v;
 				} else {
 					for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 					{
@@ -4973,63 +5065,10 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	/* UNIX domain socket code */
+	/* UNIX domain socket */
 	if (file)
 	{
-		if (!(listen = find_listen(file, 0, SOCKET_TYPE_UNIX)))
-		{
-			listen = safe_alloc(sizeof(ConfigItem_listen));
-			safe_strdup(listen->file, file);
-			listen->socket_type = SOCKET_TYPE_UNIX;
-			listen->fd = -1;
-			isnew = 1;
-		} else {
-			isnew = 0;
-		}
-		listen->start_handshake = start_of_normal_client_handshake;
-
-		if (listen->options & LISTENER_BOUND)
-			tmpflags |= LISTENER_BOUND;
-
-		listen->options = tmpflags;
-		if (isnew)
-			AddListItem(listen, conf_listen);
-		listen->flag.temporary = 0;
-
-		/* For modules that hook CONFIG_LISTEN and CONFIG_LISTEN_OPTIONS.
-		 * Yeah, ugly we have this here..
-		 */
-		for (cep = ce->items; cep; cep = cep->next)
-		{
-			if (!strcmp(cep->name, "file"))
-				;
-			else if (!strcmp(cep->name, "ssl-options") || !strcmp(cep->name, "tls-options"))
-				;
-			else if (!strcmp(cep->name, "options"))
-			{
-				for (cepp = cep->items; cepp; cepp = cepp->next)
-				{
-					if (!nv_find_by_name(_ListenerFlags, cepp->name))
-					{
-						for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
-						{
-							int value = (*(h->func.intfunc))(conf, cepp, CONFIG_LISTEN_OPTIONS, listen);
-							if (value == 1)
-								break;
-						}
-					}
-				}
-			} else
-			{
-				for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
-				{
-					int value = (*(h->func.intfunc))(conf, cep, CONFIG_LISTEN, listen);
-					if (value == 1)
-						break;
-				}
-			}
-		}
-
+		conf_listen_configure(file, 0, SOCKET_TYPE_UNIX, listener_flags, ce, tlsconfig);
 		return 1;
 	}
 
@@ -5037,175 +5076,13 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	{
 		/* First deal with IPv4 */
 		if (!strchr(ip, ':'))
-		{
-			if (!(listen = find_listen(ip, port, SOCKET_TYPE_IPV4)))
-			{
-				listen = safe_alloc(sizeof(ConfigItem_listen));
-				safe_strdup(listen->ip, ip);
-				listen->port = port;
-				listen->fd = -1;
-				listen->socket_type = SOCKET_TYPE_IPV4;
-				isnew = 1;
-			} else
-				isnew = 0;
-
-			listen->start_handshake = start_of_normal_client_handshake;
-
-			if (listen->options & LISTENER_BOUND)
-				tmpflags |= LISTENER_BOUND;
-
-			listen->options = tmpflags;
-			if (isnew)
-				AddListItem(listen, conf_listen);
-			listen->flag.temporary = 0;
-
-			if (listen->ssl_ctx)
-			{
-				SSL_CTX_free(listen->ssl_ctx);
-				listen->ssl_ctx = NULL;
-			}
-
-			if (listen->tls_options)
-			{
-				free_tls_options(listen->tls_options);
-				listen->tls_options = NULL;
-			}
-
-			if (tlsconfig)
-			{
-				listen->tls_options = safe_alloc(sizeof(TLSOptions));
-				conf_tlsblock(conf, tlsconfig, listen->tls_options);
-				listen->ssl_ctx = init_ctx(listen->tls_options, 1);
-			}
-			
-			safe_free(listen->websocket_forward);
-
-			/* For modules that hook CONFIG_LISTEN and CONFIG_LISTEN_OPTIONS.
-			 * Yeah, ugly we have this here..
-			 * and again about 100 lines down too.
-			 */
-			for (cep = ce->items; cep; cep = cep->next)
-			{
-				if (!strcmp(cep->name, "ip"))
-					;
-				else if (!strcmp(cep->name, "port"))
-					;
-				else if (!strcmp(cep->name, "options"))
-				{
-					for (cepp = cep->items; cepp; cepp = cepp->next)
-					{
-						NameValue *ofp;
-						if (!nv_find_by_name(_ListenerFlags, cepp->name))
-						{
-							for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
-							{
-								int value = (*(h->func.intfunc))(conf, cepp, CONFIG_LISTEN_OPTIONS, listen);
-								if (value == 1)
-									break;
-							}
-						}
-					}
-				} else
-				if (!strcmp(cep->name, "ssl-options") || !strcmp(cep->name, "tls-options"))
-					;
-				else
-				{
-					for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
-					{
-						int value = (*(h->func.intfunc))(conf, cep, CONFIG_LISTEN, listen);
-						if (value == 1)
-							break;
-					}
-				}
-			}
-		}
+			conf_listen_configure(ip, port, SOCKET_TYPE_IPV4, listener_flags, ce, tlsconfig);
 
 		/* Then deal with IPv6 (if available/enabled) */
-		if (!DISABLE_IPV6)
-		{
-			if (strchr(ip, ':') || (*ip == '*'))
-			{
-				if (!(listen = find_listen(ip, port, SOCKET_TYPE_IPV6)))
-				{
-					listen = safe_alloc(sizeof(ConfigItem_listen));
-					safe_strdup(listen->ip, ip);
-					listen->port = port;
-					listen->fd = -1;
-					listen->socket_type = SOCKET_TYPE_IPV6;
-					isnew = 1;
-				} else
-					isnew = 0;
-
-				listen->start_handshake = start_of_normal_client_handshake;
-
-				if (listen->options & LISTENER_BOUND)
-					tmpflags |= LISTENER_BOUND;
-
-				listen->options = tmpflags;
-				if (isnew)
-					AddListItem(listen, conf_listen);
-				listen->flag.temporary = 0;
-
-				if (listen->ssl_ctx)
-				{
-					SSL_CTX_free(listen->ssl_ctx);
-					listen->ssl_ctx = NULL;
-				}
-
-				if (listen->tls_options)
-				{
-					free_tls_options(listen->tls_options);
-					listen->tls_options = NULL;
-				}
-
-				if (tlsconfig)
-				{
-					listen->tls_options = safe_alloc(sizeof(TLSOptions));
-					conf_tlsblock(conf, tlsconfig, listen->tls_options);
-					listen->ssl_ctx = init_ctx(listen->tls_options, 1);
-				}
-				
-				safe_free(listen->websocket_forward);
-				
-				/* For modules that hook CONFIG_LISTEN and CONFIG_LISTEN_OPTIONS.
-				 * Yeah, ugly we have this here..
-				 */
-				for (cep = ce->items; cep; cep = cep->next)
-				{
-					if (!strcmp(cep->name, "ip"))
-						;
-					else if (!strcmp(cep->name, "port"))
-						;
-					else if (!strcmp(cep->name, "options"))
-					{
-						for (cepp = cep->items; cepp; cepp = cepp->next)
-						{
-							if (!nv_find_by_name(_ListenerFlags, cepp->name))
-							{
-								for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
-								{
-									int value = (*(h->func.intfunc))(conf, cepp, CONFIG_LISTEN_OPTIONS, listen);
-									if (value == 1)
-										break;
-								}
-							}
-						}
-					} else
-					if (!strcmp(cep->name, "ssl-options") || !strcmp(cep->name, "tls-options"))
-						;
-					else
-					{
-						for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
-						{
-							int value = (*(h->func.intfunc))(conf, cep, CONFIG_LISTEN, listen);
-							if (value == 1)
-								break;
-						}
-					}
-				}
-			}
-		}
+		if (!DISABLE_IPV6 && (strchr(ip, ':') || (*ip == '*')))
+			conf_listen_configure(ip, port, SOCKET_TYPE_IPV6, listener_flags, ce, tlsconfig);
 	}
+
 	return 1;
 }
 
@@ -10893,6 +10770,7 @@ void	listen_cleanup()
 			safe_free(listen_ptr->ip);
 			free_tls_options(listen_ptr->tls_options);
 			DelListItem(listen_ptr, conf_listen);
+			safe_free(listen_ptr->webserver);
 			safe_free(listen_ptr->websocket_forward);
 			safe_free(listen_ptr);
 			i++;
