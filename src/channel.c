@@ -732,16 +732,16 @@ const char *convert_regular_ban(char *mask, char *buf, size_t buflen)
 	{
 		*host++ = '\0';
 		if (!user)
-			return make_nick_user_host(NULL, trim_str(mask,USERLEN), trim_str(host,HOSTLEN));
+			return make_nick_user_host_r(buf, buflen, NULL, trim_str(mask,USERLEN), trim_str(host,HOSTLEN));
 	}
 	else if (!user && (strchr(mask, '.') || strchr(mask, ':')))
 	{
 		/* 1.2.3.4 -> *!*@1.2.3.4 (and the same for IPv6) */
-		return make_nick_user_host(NULL, NULL, trim_str(mask,HOSTLEN));
+		return make_nick_user_host_r(buf, buflen, NULL, NULL, trim_str(mask,HOSTLEN));
 	}
 
 	/* regular nick!user@host with the auto-trimming feature */
-	return make_nick_user_host(trim_str(mask,NICKLEN), trim_str(user,USERLEN), trim_str(host,HOSTLEN));
+	return make_nick_user_host_r(buf, buflen, trim_str(mask,NICKLEN), trim_str(user,USERLEN), trim_str(host,HOSTLEN));
 }
 
 /** Make a proper ban mask.
