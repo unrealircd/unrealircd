@@ -1203,7 +1203,7 @@ int ban_too_broad(char *usermask, char *hostmask)
 	 * CIDR mask will also pass this test (which is fine).
 	 */
 	for (p = hostmask; *p; p++)
-		if (*p != '*' && *p != '.' && *p != '?')
+		if (*p != '*' && *p != '.' && *p != '?' && *p != ':')
 			cnt++;
 
 	if (cnt >= 4)
