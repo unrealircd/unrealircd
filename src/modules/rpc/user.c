@@ -93,7 +93,7 @@ RPC_CALL_FUNC(rpc_user_get)
 	nick = json_object_get_string(params, "nick");
 	if (!nick)
 	{
-		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'nick'");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'nick'");
 		return;
 	}
 
@@ -101,7 +101,7 @@ RPC_CALL_FUNC(rpc_user_get)
 	{
 		// FIXME: wrong error!
 		// consider re-using IRC numerics? the positive ones, eg ERR_NOSUCHNICK
-		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_REQUEST, "Nickname not found");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "Nickname not found");
 		return;
 	}
 

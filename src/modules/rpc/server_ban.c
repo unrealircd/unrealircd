@@ -132,34 +132,34 @@ RPC_CALL_FUNC(rpc_server_ban_get)
 	name = json_object_get_string(params, "name");
 	if (!name)
 	{
-		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'name'");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'name'");
 		return;
 	}
 
 	type_name = json_object_get_string(params, "type");
 	if (!type_name)
 	{
-		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'type'");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'type'");
 		return;
 	}
 
 	tkl_type_char = tkl_configtypetochar(type_name);
 	if (!tkl_type_char)
 	{
-		rpc_error_fmt(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid type: '%s'", type_name);
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid type: '%s'", type_name);
 		return;
 	}
 	tkl_type_int = tkl_chartotype(tkl_type_char);
 
 	if (!server_ban_parse_mask(client, 0, tkl_type_int, name, &usermask, &hostmask, &soft, &error))
 	{
-		rpc_error_fmt(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", error);
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", error);
 		return;
 	}
 
 	if (!(tkl = find_tkl_serverban(tkl_type_int, usermask, hostmask, soft)))
 	{
-		rpc_error(client, NULL, JSON_RPC_ERROR_NOT_FOUND, "Ban not found");
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Ban not found");
 		return;
 	}
 
@@ -186,21 +186,21 @@ RPC_CALL_FUNC(rpc_server_ban_del)
 	name = json_object_get_string(params, "name");
 	if (!name)
 	{
-		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'name'");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'name'");
 		return;
 	}
 
 	type_name = json_object_get_string(params, "type");
 	if (!type_name)
 	{
-		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'type'");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'type'");
 		return;
 	}
 
 	tkl_type_char = tkl_configtypetochar(type_name);
 	if (!tkl_type_char)
 	{
-		rpc_error_fmt(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid type: '%s'", type_name);
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid type: '%s'", type_name);
 		return;
 	}
 	tkl_type_int = tkl_chartotype(tkl_type_char);
@@ -209,13 +209,13 @@ RPC_CALL_FUNC(rpc_server_ban_del)
 
 	if (!server_ban_parse_mask(client, 0, tkl_type_int, name, &usermask, &hostmask, &soft, &error))
 	{
-		rpc_error_fmt(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", error);
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", error);
 		return;
 	}
 
 	if (!(tkl = find_tkl_serverban(tkl_type_int, usermask, hostmask, soft)))
 	{
-		rpc_error(client, NULL, JSON_RPC_ERROR_NOT_FOUND, "Ban not found");
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Ban not found");
 		return;
 	}
 
@@ -237,7 +237,7 @@ RPC_CALL_FUNC(rpc_server_ban_del)
 		/* Actually this may not be an internal error, it could be an
 		 * incorrect request, such as asking to remove a config-based ban.
 		 */
-		rpc_error(client, NULL, JSON_RPC_ERROR_INTERNAL_ERROR, "Unable to remove item");
+		rpc_error(client, request, JSON_RPC_ERROR_INTERNAL_ERROR, "Unable to remove item");
 	}
 	json_decref(result);
 }
@@ -262,21 +262,21 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 	name = json_object_get_string(params, "name");
 	if (!name)
 	{
-		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'name'");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'name'");
 		return;
 	}
 
 	type_name = json_object_get_string(params, "type");
 	if (!type_name)
 	{
-		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'type'");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'type'");
 		return;
 	}
 
 	tkl_type_char = tkl_configtypetochar(type_name);
 	if (!tkl_type_char)
 	{
-		rpc_error_fmt(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid type: '%s'", type_name);
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid type: '%s'", type_name);
 		return;
 	}
 	tkl_type_int = tkl_chartotype(tkl_type_char);
@@ -286,7 +286,7 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 	reason = json_object_get_string(params, "reason");
 	if (!reason)
 	{
-		rpc_error(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'reason'");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'reason'");
 		return;
 	}
 
@@ -306,19 +306,19 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 
 	if ((tkl_expire_at != 0) && (tkl_expire_at < TStime()))
 	{
-		rpc_error_fmt(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Error: the specified expiry time is before current time (before now)");
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: the specified expiry time is before current time (before now)");
 		return;
 	}
 
 	if (!server_ban_parse_mask(client, 0, tkl_type_int, name, &usermask, &hostmask, &soft, &error))
 	{
-		rpc_error_fmt(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", error);
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", error);
 		return;
 	}
 
 	if (find_tkl_serverban(tkl_type_int, usermask, hostmask, soft))
 	{
-		rpc_error(client, NULL, JSON_RPC_ERROR_ALREADY_EXISTS, "A ban with that mask already exists");
+		rpc_error(client, request, JSON_RPC_ERROR_ALREADY_EXISTS, "A ban with that mask already exists");
 		return;
 	}
 
@@ -328,7 +328,7 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 
 	if (!tkl)
 	{
-		rpc_error(client, NULL, JSON_RPC_ERROR_INTERNAL_ERROR, "Unable to add item");
+		rpc_error(client, request, JSON_RPC_ERROR_INTERNAL_ERROR, "Unable to add item");
 		return;
 	}
 
