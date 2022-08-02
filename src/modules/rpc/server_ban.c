@@ -297,12 +297,17 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 	} else
 	if ((str = json_object_get_string(params, "expire_at")))
 	{
-		// TODO: handle this
-		tkl_expire_at = 5;
+		tkl_expire_at = server_time_to_unix_time(str);
 	} else
 	{
 		/* Never expire */
 		tkl_expire_at = 0;
+	}
+
+	if ((tkl_expire_at != 0) && (tkl_expire_at < TStime()))
+	{
+		rpc_error_fmt(client, NULL, JSON_RPC_ERROR_INVALID_PARAMS, "Error: the specified expiry time is before current time (before now)");
+		return;
 	}
 
 	if (!server_ban_parse_mask(client, 0, tkl_type_int, name, &usermask, &hostmask, &soft, &error))
