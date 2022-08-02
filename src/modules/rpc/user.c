@@ -99,9 +99,7 @@ RPC_CALL_FUNC(rpc_user_get)
 
 	if (!(acptr = find_user(nick, NULL)))
 	{
-		// FIXME: wrong error!
-		// consider re-using IRC numerics? the positive ones, eg ERR_NOSUCHNICK
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "Nickname not found");
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Nickname not found");
 		return;
 	}
 
