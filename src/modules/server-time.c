@@ -91,26 +91,9 @@ void mtag_add_or_inherit_time(Client *sender, MessageTag *recv_mtags, MessageTag
 		m = duplicate_mtag(m);
 	} else
 	{
-		struct timeval t;
-		struct tm *tm;
-		time_t sec;
-		char buf[64];
-
-		gettimeofday(&t, NULL);
-		sec = t.tv_sec;
-		tm = gmtime(&sec);
-		snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
-			tm->tm_year + 1900,
-			tm->tm_mon + 1,
-			tm->tm_mday,
-			tm->tm_hour,
-			tm->tm_min,
-			tm->tm_sec,
-			(int)(t.tv_usec / 1000));
-
 		m = safe_alloc(sizeof(MessageTag));
 		safe_strdup(m->name, "time");
-		safe_strdup(m->value, buf);
+		safe_strdup(m->value, timestamp_iso8601_now());
 	}
 	AddListItem(m, *mtag_list);
 }
