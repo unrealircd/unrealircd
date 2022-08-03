@@ -783,7 +783,7 @@ extern MODVAR int (*join_viruschan)(Client *client, TKL *tk, int type);
 extern MODVAR const char *(*StripColors)(const char *text);
 extern MODVAR void (*spamfilter_build_user_string)(char *buf, const char *nick, Client *acptr);
 extern MODVAR void (*send_protoctl_servers)(Client *client, int response);
-extern MODVAR int (*verify_link)(Client *client, ConfigItem_link **link_out);
+extern MODVAR ConfigItem_link *(*verify_link)(Client *client);
 extern MODVAR void (*send_server_message)(Client *client);
 extern MODVAR void (*broadcast_md_client)(ModDataInfo *mdi, Client *acptr, ModData *md);
 extern MODVAR void (*broadcast_md_channel)(ModDataInfo *mdi, Channel *channel, ModData *md);

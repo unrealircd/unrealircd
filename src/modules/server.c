@@ -45,7 +45,7 @@ EVENT(server_handshake_timeout);
 void send_channel_modes_sjoin3(Client *to, Channel *channel);
 CMD_FUNC(cmd_server);
 CMD_FUNC(cmd_sid);
-int _verify_link(Client *client, ConfigItem_link **link_out);
+ConfigItem_link *_verify_link(Client *client);
 void _send_protoctl_servers(Client *client, int response);
 void _send_server_message(Client *client);
 void _introduce_user(Client *to, Client *acptr);
@@ -76,7 +76,7 @@ MOD_TEST()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_PROTOCTL_SERVERS, _send_protoctl_servers);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_SERVER_MESSAGE, _send_server_message);
-	EfunctionAdd(modinfo->handle, EFUNC_VERIFY_LINK, _verify_link);
+	EfunctionAddPVoid(modinfo->handle, EFUNC_VERIFY_LINK, TO_PVOIDFUNC(_verify_link));
 	EfunctionAddVoid(modinfo->handle, EFUNC_INTRODUCE_USER, _introduce_user);
 	EfunctionAdd(modinfo->handle, EFUNC_CHECK_DENY_VERSION, _check_deny_version);
 	EfunctionAddVoid(modinfo->handle, EFUNC_BROADCAST_SINFO, _broadcast_sinfo);
@@ -639,12 +639,10 @@ void _send_server_message(Client *client)
 
 /** Verify server link.
  * This does authentication and authorization checks.
- * @param cptr The client directly connected to us (cptr).
- * @param client The client which (originally) issued the server command (client).
- * @param link_out Pointer-to-pointer-to-link block. Will be set when auth OK. Caller may pass NULL if he doesn't care.
- * @returns This function returns 1 on successful authentication, 0 otherwise - in which case the client has been killed.
+ * @param client The client which issued the command
+ * @returns On successfull authentication, the link block is returned. On failure NULL is returned (client has been killed!).
  */
-int _verify_link(Client *client, ConfigItem_link **link_out)
+ConfigItem_link *_verify_link(Client *client)
 {
 	ConfigItem_link *link, *orig_link;
 	Client *acptr = NULL, *ocptr = NULL;
@@ -656,15 +654,12 @@ int _verify_link(Client *client, ConfigItem_link **link_out)
 	if (client->local->hostp && client->local->hostp->h_name)
 		set_sockhost(client, client->local->hostp->h_name);
 
-	if (link_out)
-		*link_out = NULL;
-	
 	if (!client->local->passwd)
 	{
 		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_NO_PASSWORD", client,
 			   "Link with server $client.details denied: No password provided. Protocol error.");
 		exit_client(client, NULL, "Missing password");
-		return 0;
+		return NULL;
 	}
 
 	if (client->server && client->server->conf)
@@ -683,7 +678,7 @@ int _verify_link(Client *client, ConfigItem_link **link_out)
 			           log_data_link_block(client->server->conf));
 			exit_client_fmt(client, NULL, "Servername (%s) does not match name in my link block (%s)",
 			                client->name, client->server->conf->servername);
-			return 0;
+			return NULL;
 		}
 		link = client->server->conf;
 		goto skip_host_check;
@@ -699,7 +694,7 @@ int _verify_link(Client *client, ConfigItem_link **link_out)
 		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_UNKNOWN_SERVER", client,
 		           "Link with server $client.details denied: No link block named '$client'");
 		exit_client(client, NULL, LINK_DEFAULT_ERROR_MSG);
-		return 0;
+		return NULL;
 	}
 	
 	if (!link->incoming.match)
@@ -708,7 +703,7 @@ int _verify_link(Client *client, ConfigItem_link **link_out)
 		           "Link with server $client.details denied: Link block exists, but there is no link::incoming::match set.",
 		           log_data_link_block(link));
 		exit_client(client, NULL, LINK_DEFAULT_ERROR_MSG);
-		return 0;
+		return NULL;
 	}
 
 	orig_link = link;
@@ -720,7 +715,7 @@ int _verify_link(Client *client, ConfigItem_link **link_out)
 		           "Link with server $client.details denied: Server is in link block but link::incoming::mask didn't match",
 		           log_data_link_block(orig_link));
 		exit_client(client, NULL, LINK_DEFAULT_ERROR_MSG);
-		return 0;
+		return NULL;
 	}
 
 skip_host_check:
@@ -771,7 +766,7 @@ skip_host_check:
 			           log_data_link_block(link));
 		}
 		exit_client(client, NULL, "Link denied (Authentication failed)");
-		return 0;
+		return NULL;
 	}
 
 	/* Verify the TLS certificate (if requested) */
@@ -786,7 +781,7 @@ skip_host_check:
 			           log_data_string("certificate_failure_msg", "not using TLS"),
 			           log_data_link_block(link));
 			exit_client(client, NULL, "Link denied (Not using TLS)");
-			return 0;
+			return NULL;
 		}
 		if (!verify_certificate(client->local->ssl, link->servername, &errstr))
 		{
@@ -795,7 +790,7 @@ skip_host_check:
 			           log_data_string("certificate_failure_msg", errstr),
 			           log_data_link_block(link));
 			exit_client(client, NULL, "Link denied (Certificate verification failed)");
-			return 0;
+			return NULL;
 		}
 	}
 
@@ -807,7 +802,7 @@ skip_host_check:
 		           log_data_string("ban_reason", bconf->reason),
 		           log_data_link_block(link));
 		exit_client_fmt(client, NULL, "Banned server: %s", bconf->reason);
-		return 0;
+		return NULL;
 	}
 
 	if (link->class->clients + 1 > link->class->maxclients)
@@ -817,7 +812,7 @@ skip_host_check:
 		           "class '$link_block.class' is full",
 		           log_data_link_block(link));
 		exit_client(client, NULL, "Full class");
-		return 0;
+		return NULL;
 	}
 	if (!IsLocalhost(client) && (iConf.plaintext_policy_server == POLICY_DENY) && !IsSecure(client))
 	{
@@ -827,7 +822,7 @@ skip_host_check:
 		           "See https://www.unrealircd.org/docs/FAQ#server-requires-tls",
 		           log_data_link_block(link));
 		exit_client(client, NULL, "Servers need to use TLS (set::plaintext-policy::server is 'deny')");
-		return 0;
+		return NULL;
 	}
 	if (IsSecure(client) && (iConf.outdated_tls_policy_server == POLICY_DENY) && outdated_tls_client(client))
 	{
@@ -838,7 +833,7 @@ skip_host_check:
 		           log_data_link_block(link),
 			   log_data_string("tls_cipher", tls_get_cipher(client)));
 		exit_client(client, NULL, "Server using outdates TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
-		return 0;
+		return NULL;
 	}
 	/* This one is at the end, because it causes us to delink another server,
 	 * so we want to be (reasonably) sure that this one will succeed before
@@ -854,7 +849,7 @@ skip_host_check:
 			           log_data_string("me_name", me.name),
 			           log_data_link_block(link));
 			exit_client(client, NULL, "Server Exists (server trying to link with same name as myself)");
-			return 0;
+			return NULL;
 		} else {
 			unreal_log(ULOG_ERROR, "link", "LINK_DROPPED_REINTRODUCED", client,
 				   "Link with server $client.details causes older link "
@@ -865,9 +860,7 @@ skip_host_check:
 		}
 	}
 
-	if (link_out)
-		*link_out = link;
-	return 1;
+	return link;
 }
 
 /** Server command. Only for locally connected servers!!.
@@ -939,7 +932,7 @@ CMD_FUNC(cmd_server)
 	 */
 	strlcpy(client->name, servername, sizeof(client->name));
 
-	if (!verify_link(client, &aconf))
+	if (!(aconf = verify_link(client)))
 		return; /* Rejected */
 
 	/* From this point the server is authenticated, so we can be more verbose

@@ -78,7 +78,7 @@ int (*join_viruschan)(Client *client, TKL *tk, int type);
 const char *(*StripColors)(const char *text);
 void (*spamfilter_build_user_string)(char *buf, const char *nick, Client *client);
 void (*send_protoctl_servers)(Client *client, int response);
-int (*verify_link)(Client *client, ConfigItem_link **link_out);
+ConfigItem_link *(*verify_link)(Client *client);
 void (*introduce_user)(Client *to, Client *client);
 void (*send_server_message)(Client *client);
 void (*broadcast_md_client)(ModDataInfo *mdi, Client *client, ModData *md);

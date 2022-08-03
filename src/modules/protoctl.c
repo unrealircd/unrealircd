@@ -266,7 +266,7 @@ CMD_FUNC(cmd_protoctl)
 			 */
 			strlcpy(client->name, servername, sizeof(client->name));
 
-			if (!verify_link(client, &aconf))
+			if (!(aconf = verify_link(client)))
 				return;
 
 			/* note: software, protocol and flags may be NULL */
