@@ -856,6 +856,63 @@ const char *unreal_getfilename(const char *path)
 	return end;
 }
 
+/** Wrapper for mkdir() so you don't need ifdefs everywhere for Windows.
+ * @returns 0 on failure!! (like mkdir)
+ */
+int unreal_mkdir(const char *pathname, mode_t mode)
+{
+#ifdef _WIN32
+	return mkdir(pathname);
+#else
+	return mkdir(pathname, mode);
+#endif
+}
+
+/** Create the entire directory structure.
+ * @param dname	The directory name, eg /home/irc/unrealircd/logs/2022/08/05
+ * @param mode	The mode to create with, eg 0777. Ignored on Windows.
+ * @returns 1 on success, 0 on failure.
+ */
+int unreal_create_directory_structure(const char *dname, mode_t mode)
+{
+	if (unreal_mkdir(dname, mode) == 0)
+	{
+		/* Ok, that failed as well, we have some work to do:
+		 * for every path element run mkdir().
+		 */
+		int lastresult;
+		char buf[512], *p;
+		strlcpy(buf, dname, sizeof(buf)); /* work on a copy */
+		for (p=strchr(buf+1, '/'); p; p=strchr(p+1, '/'))
+		{
+			*p = '\0';
+			unreal_mkdir(buf,mode);
+			*p = '/';
+		}
+		/* Finally, try the complete path */
+		if (unreal_mkdir(dname, mode))
+			return 0; /* failed */
+		/* fallthrough.... */
+	}
+	return 1; /* success */
+}
+
+/** Create entire directory structure for a path with a filename.
+ * @param fname	The full path name, eg /home/irc/unrealircd/logs/2022/08/05/ircd.log
+ * @param mode	The mode to create with, eg 0777. Ignored on Windows.
+ * @notes This is used as an easier way to call unreal_create_directory_structure()
+ *        if you have a filename instead of the directory part.
+ * @returns 1 on success, 0 on failure.
+ */
+int unreal_create_directory_structure_for_file(const char *fname, mode_t mode)
+{
+	char buf[PATH_MAX+1];
+	const char *path = unreal_getpathname(fname, buf);
+	if (!path)
+		return 0;
+	return unreal_create_directory_structure(path, mode);
+}
+
 /** Returns the special module tmp name for a given path.
  * The original string is not modified.
  */

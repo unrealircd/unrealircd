@@ -986,17 +986,27 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 			l->logfd = fd_fileopen(l->file, O_CREAT|O_APPEND|O_WRONLY);
 			if (l->logfd == -1)
 			{
-				if (!loop.booted)
+				if (errno == ENOENT)
 				{
-					config_status("WARNING: Unable to write to '%s': %s", l->file, strerror(errno));
-				} else {
-					if (last_log_file_warning + 300 < TStime())
-					{
-						config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", l->file, strerror(errno));
-						last_log_file_warning = TStime();
-					}
+					/* Create directory structure and retry */
+					unreal_create_directory_structure_for_file(l->file, 0777);
+					l->logfd = fd_fileopen(l->file, O_CREAT|O_APPEND|O_WRONLY);
 				}
-				continue;
+				if (l->logfd == -1)
+				{
+					/* Still failed! */
+					if (!loop.booted)
+					{
+						config_status("WARNING: Unable to write to '%s': %s", l->file, strerror(errno));
+					} else {
+						if (last_log_file_warning + 300 < TStime())
+						{
+							config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", l->file, strerror(errno));
+							last_log_file_warning = TStime();
+						}
+					}
+					continue;
+				}
 			}
 		}
 
