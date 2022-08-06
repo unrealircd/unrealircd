@@ -35,7 +35,7 @@ Cmode_t EXTCMODE_OPERONLY;
 int operonly_require_oper(Client *client, Channel *channel, char mode, const char *para, int checkt, int what);
 int operonly_can_join(Client *client, Channel *channel, const char *key, char **errmsg);
 int operonly_view_topic_outside_channel(Client *client, Channel *channel);
-int operonly_oper_invite_ban(Client *client, Channel *channel);
+int operonly_invite_bypass(Client *client, Channel *channel);
 
 MOD_TEST()
 {
@@ -53,7 +53,7 @@ CmodeInfo req;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_OPERONLY);
 	
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, operonly_can_join);
-	HookAdd(modinfo->handle, HOOKTYPE_OPER_INVITE_BAN, 0, operonly_oper_invite_ban);
+	HookAdd(modinfo->handle, HOOKTYPE_INVITE_BYPASS, 0, operonly_invite_bypass);
 	HookAdd(modinfo->handle, HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL, 0, operonly_view_topic_outside_channel);
 
 	
@@ -81,10 +81,9 @@ int operonly_can_join(Client *client, Channel *channel, const char *key, char **
 	return 0;
 }
 
-int operonly_oper_invite_ban(Client *client, Channel *channel)
+int operonly_invite_bypass(Client *client, Channel *channel)
 {
-	 if ((channel->mode.mode & EXTCMODE_OPERONLY) &&
-		    !ValidatePermissionsForPath("channel:operonly:ban",client,NULL,NULL,NULL))
+	 if ((channel->mode.mode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:ban",client,NULL,NULL,NULL))
 		 return HOOK_DENY;
 
 	 return HOOK_CONTINUE;

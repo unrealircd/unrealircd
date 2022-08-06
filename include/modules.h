@@ -1146,8 +1146,8 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, const char *varshortname, l
 #define HOOKTYPE_SEE_CHANNEL_IN_WHOIS	77
 /** See hooktype_join_data() */
 #define HOOKTYPE_JOIN_DATA	78
-/** See hooktype_oper_invite_ban() */
-#define HOOKTYPE_OPER_INVITE_BAN	79
+/** See hooktype_invite_bypass() */
+#define HOOKTYPE_INVITE_BYPASS	79
 /** See hooktype_view_topic_outside_channel() */
 #define HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL	80
 /** See hooktype_chan_permit_nick_change() */
@@ -1931,14 +1931,16 @@ int hooktype_see_channel_in_whois(Client *client, Client *target, Channel *chann
  */
 int hooktype_join_data(Client *who, Channel *channel);
 
-/** Should the user be able to bypass bans? (function prototype for HOOKTYPE_OPER_INVITE_BAN).
+/** Should the user be able to bypass channel restrictions because they are invited? (function prototype for HOOKTYPE_INVITE_BYPASS).
  * @param client		The client
  * @param channel		The channel
- * @note The actual meaning of this hook is more complex, you are unlikely to use it, anyway.
- * @retval HOOK_DENY		Deny the join if the user is also banned
+ * @retval HOOK_DENY		Don't allow the user to bypass channel restrictions when they are invited
  * @retval HOOK_CONTINUE	Obey the normal rules
+ * @note Usually you want a user to be able to bypass channel restrictions such as +l or +b when they are /INVITEd by another user
+ *       or have invited themselves (OperOverride). But, there may be special cases where you don't want this.
+ *       For example, this hook is used by +O to still not allow ircops to join +O channels even if they have OperOverride capability.
  */
-int hooktype_oper_invite_ban(Client *client, Channel *channel);
+int hooktype_invite_bypass(Client *client, Channel *channel);
 
 /** Should a user be able to view the topic when not in the channel? (function prototype for HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL).
  * @param client		The client requesting the topic
@@ -2336,7 +2338,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_JOIN_DATA) && !ValidateHook(hooktype_join_data, func)) || \
         ((hooktype == HOOKTYPE_PRE_KNOCK) && !ValidateHook(hooktype_pre_knock, func)) || \
         ((hooktype == HOOKTYPE_PRE_INVITE) && !ValidateHook(hooktype_pre_invite, func)) || \
-        ((hooktype == HOOKTYPE_OPER_INVITE_BAN) && !ValidateHook(hooktype_oper_invite_ban, func)) || \
+        ((hooktype == HOOKTYPE_INVITE_BYPASS) && !ValidateHook(hooktype_invite_bypass, func)) || \
         ((hooktype == HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL) && !ValidateHook(hooktype_view_topic_outside_channel, func)) || \
         ((hooktype == HOOKTYPE_CHAN_PERMIT_NICK_CHANGE) && !ValidateHook(hooktype_chan_permit_nick_change, func)) || \
         ((hooktype == HOOKTYPE_IS_CHANNEL_SECURE) && !ValidateHook(hooktype_is_channel_secure, func)) || \

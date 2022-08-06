@@ -94,37 +94,32 @@ MOD_UNLOAD()
  */
 int _can_join(Client *client, Channel *channel, const char *key, char **errmsg)
 {
-	Link *lp;
-	Ban *banned;
 	Hook *h;
-	int i=0, j=0;
+
+	/* An /INVITE lets you bypass all restrictions */
+	if (is_invited(client, channel))
+	{
+		int j = 0;
+		for (h = Hooks[HOOKTYPE_INVITE_BYPASS]; h; h = h->next)
+		{
+			j = (*(h->func.intfunc))(client,channel);
+			if (j != 0)
+				break;
+		}
+		/* Bypass is OK, unless a HOOKTYPE_INVITE_BYPASS hook returns HOOK_DENY */
+		if (j != HOOK_DENY)
+			return 0;
+	}
 
 	for (h = Hooks[HOOKTYPE_CAN_JOIN]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(client,channel,key, errmsg);
+		int i = (*(h->func.intfunc))(client,channel,key, errmsg);
 		if (i != 0)
 			return i;
 	}
 
-	for (h = Hooks[HOOKTYPE_OPER_INVITE_BAN]; h; h = h->next)
-	{
-		j = (*(h->func.intfunc))(client,channel);
-		if (j != 0)
-			break;
-	}
-
 	/* See if we can evade this ban */
-	banned = is_banned(client, channel, BANCHK_JOIN, NULL, NULL);
-	if (banned && j == HOOK_DENY)
-	{
-		*errmsg = STR_ERR_BANNEDFROMCHAN;
-		return ERR_BANNEDFROMCHAN;
-	}
-
-	if (is_invited(client, channel))
-		return 0; /* allowed to walk through all the other modes */
-
-	if (banned)
+	if (is_banned(client, channel, BANCHK_JOIN, NULL, NULL))
 	{
 		*errmsg = STR_ERR_BANNEDFROMCHAN;
 		return ERR_BANNEDFROMCHAN;
