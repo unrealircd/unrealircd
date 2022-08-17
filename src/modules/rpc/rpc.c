@@ -494,7 +494,7 @@ void _rpc_response(Client *client, json_t *request, json_t *result)
 	json_object_set_new(j, "method", json_string_unreal(method));
 	if (id)
 		json_object_set_new(j, "id", id); /* 'id' is optional */
-	json_object_set(j, "response", result);
+	json_object_set(j, "result", result);
 
 	json_serialized = json_dumps(j, 0);
 	if (!json_serialized)
