@@ -39,6 +39,7 @@
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
 #define HAVE_EXPLICIT_BZERO
+#define HAVE_STRNLEN
 #define explicit_bzero(a,b) SecureZeroMemory(a,b)
 
 /* mode_t: Needed in s_conf.c for the third argument of open(3p).
