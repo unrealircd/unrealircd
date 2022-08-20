@@ -155,6 +155,14 @@ void stripcrlf(char *c)
 	}
 }
 
+#ifndef HAVE_STRNLEN
+size_t strnlen(const char *s, size_t maxlen)
+{
+	const char *end = memchr (s, 0, maxlen);
+	return end ? (size_t)(end - s) : maxlen;
+}
+#endif
+
 #ifndef HAVE_STRLCPY
 /** BSD'ish strlcpy().
  * The strlcpy() function copies up to size-1 characters from the
@@ -182,13 +190,11 @@ size_t strlcpy(char *dst, const char *src, size_t size)
  */
 size_t strlncpy(char *dst, const char *src, size_t size, size_t n)
 {
-	size_t len = strlen(src);
+	size_t len = strnlen(src, n);
 	size_t ret = len;
 
 	if (size <= 0)
 		return 0;
-	if (len > n)
-		len = n;
 	if (len >= size)
 		len = size - 1;
 	memcpy(dst, src, len);
@@ -230,15 +236,12 @@ size_t strlcat(char *dst, const char *src, size_t size)
 size_t strlncat(char *dst, const char *src, size_t size, size_t n)
 {
 	size_t len1 = strlen(dst);
-	size_t len2 = strlen(src);
+	size_t len2 = strnlen(src, n);
 	size_t ret = len1 + len2;
 
 	if (size <= len1)
 		return size;
 		
-	if (len2 > n)
-		len2 = n;
-
 	if (len1 + len2 >= size)
 		len2 = size - (len1 + 1);
 

@@ -454,6 +454,9 @@ extern MODVAR long SNO_SNOTICE;
 extern MODVAR long SNO_SPAMF;
 extern MODVAR long SNO_OPER;
 
+#ifndef HAVE_STRNLEN
+extern size_t strnlen(const char *s, size_t maxlen);
+#endif
 #ifndef HAVE_STRLCPY
 extern size_t strlcpy(char *dst, const char *src, size_t size);
 #endif

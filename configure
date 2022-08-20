@@ -6357,6 +6357,19 @@ $as_echo "#define HAVE_SYSLOG /**/" >>confdefs.h
 fi
 done
 
+for ac_func in strnlen
+do :
+  ac_fn_c_check_func "$LINENO" "strnlen" "ac_cv_func_strnlen"
+if test "x$ac_cv_func_strnlen" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_STRNLEN 1
+_ACEOF
+
+$as_echo "#define HAVE_STRNLEN /**/" >>confdefs.h
+
+fi
+done
+
 
 
 

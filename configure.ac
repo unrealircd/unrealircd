@@ -405,6 +405,7 @@ AC_CHECK_FUNCS([setproctitle],
 
 AC_CHECK_FUNCS(explicit_bzero,AC_DEFINE([HAVE_EXPLICIT_BZERO], [], [Define if you have explicit_bzero]))
 AC_CHECK_FUNCS(syslog,AC_DEFINE([HAVE_SYSLOG], [], [Define if you have syslog]))
+AC_CHECK_FUNCS(strnlen,AC_DEFINE([HAVE_STRNLEN], [], [Define if you have strnlen]))
 AC_SUBST(CRYPTOLIB)
 AC_SUBST(MODULEFLAGS)
 AC_SUBST(DYNAMIC_LDFLAGS)
