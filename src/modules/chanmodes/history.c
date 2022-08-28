@@ -731,7 +731,7 @@ CMD_OVERRIDE_FUNC(override_mode)
 			had_r = 1;
 		}
 	}
-	CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+	CALL_NEXT_COMMAND_OVERRIDE();
 
 	/* If..
 	 * - channel was +r

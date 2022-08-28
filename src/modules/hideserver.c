@@ -386,7 +386,7 @@ CMD_OVERRIDE_FUNC(override_map)
 	
 	if (IsOper(client))
 	{
-		CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+		CALL_NEXT_COMMAND_OVERRIDE();
 		return;
 	}
 
@@ -435,7 +435,7 @@ CMD_OVERRIDE_FUNC(override_links)
 
 	if (IsOper(client))
 	{
-		CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+		CALL_NEXT_COMMAND_OVERRIDE();
 		return;
 	}
 

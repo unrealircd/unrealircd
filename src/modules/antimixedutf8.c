@@ -205,7 +205,7 @@ CMD_OVERRIDE_FUNC(override_msg)
 		/* Short circuit for: remote clients, insufficient parameters,
 		 * antimixedutf8::except.
 		 */
-		CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+		CALL_NEXT_COMMAND_OVERRIDE();
 		return;
 	}
 
@@ -227,7 +227,7 @@ CMD_OVERRIDE_FUNC(override_msg)
 		}
 	}
 
-	CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+	CALL_NEXT_COMMAND_OVERRIDE();
 }
 
 /*** rest is module and config stuff ****/

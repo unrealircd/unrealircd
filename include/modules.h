@@ -955,6 +955,11 @@ extern int CommandExists(const char *name);
 extern CommandOverride *CommandOverrideAdd(Module *module, const char *name, int priority, OverrideCmdFunc func);
 extern void CommandOverrideDel(CommandOverride *ovr);
 extern void CallCommandOverride(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, const char *parv[]);
+/** Call next command override function - easy way to do it.
+ * This way you don't have to call CallCommandOverride() with the right arguments.
+ * Which is nice because command (override) arguments may change in future UnrealIRCd versions.
+ */
+#define CALL_NEXT_COMMAND_OVERRIDE()	CallCommandOverride(ovr, client, recv_mtags, parc, parv)
 
 extern void moddata_free_client(Client *acptr);
 extern void moddata_free_local_client(Client *acptr);

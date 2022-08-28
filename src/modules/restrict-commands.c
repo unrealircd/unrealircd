@@ -384,7 +384,7 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 
 	if (!MyUser(client) || !client->local || IsOper(client) || IsULine(client))
 	{
-		CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+		CALL_NEXT_COMMAND_OVERRIDE();
 		return;
 	}
 
@@ -405,5 +405,5 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 	}
 
 	// No restrictions apply, process command as normal =]
-	CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+	CALL_NEXT_COMMAND_OVERRIDE();
 }
