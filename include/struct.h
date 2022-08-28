@@ -904,6 +904,15 @@ struct SWhois {
  *        E.g. parv[3] in the above example is out of bounds.
  */
 #define CMD_FUNC(x) void (x) (Client *client, MessageTag *recv_mtags, int parc, const char *parv[])
+
+/** Call a command function - can be useful if you are calling another command function in your own module.
+ * For example in cmd_nick() we call cmd_nick_local() for local functions,
+ * and then we can just use CALL_CMD_FUNC(cmd_nick_local); and don't have
+ * to bother with passing the right command arguments. Which is nice because
+ * command arguments may change in future UnrealIRCd versions.
+ */
+#define CALL_CMD_FUNC(x)	(x)(client, recv_mtags, parc, parv)
+
 /** @} */
 
 /** Command override function - used by all command override handlers.

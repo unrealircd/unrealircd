@@ -107,12 +107,12 @@ CMD_FUNC(cmd_mode)
 			channel = find_channel(parv[1]);
 			if (!channel)
 			{
-				cmd_umode(client, recv_mtags, parc, parv);
+				CALL_CMD_FUNC(cmd_umode);
 				return;
 			}
 		} else
 		{
-			cmd_umode(client, recv_mtags, parc, parv);
+			CALL_CMD_FUNC(cmd_umode);
 			return;
 		}
 	} else

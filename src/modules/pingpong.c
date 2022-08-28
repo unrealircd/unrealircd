@@ -162,7 +162,7 @@ CMD_FUNC(cmd_pong)
 
 	if (!IsRegistered(client))
 	{
-		cmd_nospoof(client, recv_mtags, parc, parv);
+		CALL_CMD_FUNC(cmd_nospoof);
 		return;
 	}
 

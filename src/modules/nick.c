@@ -740,7 +740,7 @@ CMD_FUNC(cmd_nick)
 
 	if (MyConnect(client) && !IsServer(client))
 	{
-		cmd_nick_local(client, recv_mtags, parc, parv);
+		CALL_CMD_FUNC(cmd_nick_local);
 	} else
 	if (!IsUser(client))
 	{
@@ -754,7 +754,7 @@ CMD_FUNC(cmd_nick)
 		return;
 	} else
 	{
-		cmd_nick_remote(client, recv_mtags, parc, parv);
+		CALL_CMD_FUNC(cmd_nick_remote);
 	}
 }
 

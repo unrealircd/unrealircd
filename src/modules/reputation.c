@@ -1330,9 +1330,9 @@ CMD_FUNC(reputation_server_cmd)
 CMD_FUNC(reputation_cmd)
 {
 	if (MyUser(client))
-		reputation_user_cmd(client, recv_mtags, parc, parv);
+		CALL_CMD_FUNC(reputation_user_cmd);
 	else if (IsServer(client) || IsMe(client))
-		reputation_server_cmd(client, recv_mtags, parc, parv);
+		CALL_CMD_FUNC(reputation_server_cmd);
 }
 
 int reputation_whois(Client *client, Client *target, NameValuePrioList **list)

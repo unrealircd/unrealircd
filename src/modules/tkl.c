@@ -4451,10 +4451,10 @@ CMD_FUNC(_cmd_tkl)
 	switch (*parv[1])
 	{
 		case '+':
-			cmd_tkl_add(client, recv_mtags, parc, parv);
+			CALL_CMD_FUNC(cmd_tkl_add);
 			break;
 		case '-':
-			cmd_tkl_del(client, recv_mtags, parc, parv);
+			CALL_CMD_FUNC(cmd_tkl_del);
 			break;
 		default:
 			break;
