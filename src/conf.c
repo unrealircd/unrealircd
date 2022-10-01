@@ -3066,15 +3066,14 @@ ConfigItem_tld *find_tld(Client *client)
 	return NULL;
 }
 
-
-ConfigItem_link *find_link(const char *servername, Client *client)
+/** Find a link block by server name (but don't check any restrictions like IP or auth) */
+ConfigItem_link *find_link(const char *servername)
 {
 	ConfigItem_link	*link;
 
 	for (link = conf_link; link; link = link->next)
 	{
-		if (match_simple(link->servername, servername) &&
-		    user_allowed_by_security_group(client, link->incoming.match))
+		if (!link->flag.temporary && match_simple(link->servername, servername))
 		{
 		    return link;
 		}

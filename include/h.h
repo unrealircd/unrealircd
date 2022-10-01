@@ -148,7 +148,7 @@ extern ConfigItem_listen *find_listen(const char *ipmask, int port, SocketType s
 extern ConfigItem_sni *find_sni(const char *name);
 extern ConfigItem_ulines	*find_uline(const char *host);
 extern ConfigItem_tld		*find_tld(Client *cptr);
-extern ConfigItem_link		*find_link(const char *servername, Client *acptr);
+extern ConfigItem_link		*find_link(const char *servername);
 extern ConfigItem_ban 		*find_ban(Client *, const char *host, short type);
 extern ConfigItem_ban 		*find_banEx(Client *,const char *host, short type, short type2);
 extern ConfigItem_vhost	*find_vhost(const char *name);

@@ -684,9 +684,7 @@ ConfigItem_link *_verify_link(Client *client)
 		goto skip_host_check;
 	} else {
 		/* Hunt the linkblock down ;) */
-		for(link = conf_link; link; link = link->next)
-			if (match_simple(link->servername, client->name))
-				break;
+		link = find_link(client->name);
 	}
 	
 	if (!link)
@@ -707,9 +705,7 @@ ConfigItem_link *_verify_link(Client *client)
 	}
 
 	orig_link = link;
-	link = find_link(client->name, client);
-
-	if (!link)
+	if (!user_allowed_by_security_group(client, link->incoming.match))
 	{
 		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_INCOMING_MASK_MISMATCH", client,
 		           "Link with server $client.details denied: Server is in link block but link::incoming::mask didn't match",
