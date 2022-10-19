@@ -1,4 +1,4 @@
-/* server_ban.* RPC calls
+/* auth.* RPC calls
  * (C) Copyright 2022-.. Bram Matthys (Syzop) and the UnrealIRCd team
  * License: GPLv2 or later
  */
