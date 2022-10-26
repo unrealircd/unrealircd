@@ -60,7 +60,6 @@ MOD_INIT()
 	memset(&mtag, 0, sizeof(mtag));
 	mtag.name = MTAG_OPER;
 	mtag.is_ok = oper_mtag_is_ok;
-	mtag.should_send_to_client = oper_mtag_should_send_to_client;
 	mtag.flags = MTAG_HANDLER_FLAGS_NO_CAP_NEEDED;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
 
