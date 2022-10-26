@@ -41,8 +41,6 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
 	};
 
-/* Variables */
-long CAP_ACCOUNT_TAG = 0L;
 
 int oper_mtag_is_ok(Client *client, const char *name, const char *value);
 int oper_name_mtag_should_send_to_client(Client *target);
