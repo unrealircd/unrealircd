@@ -73,7 +73,7 @@ MODULES= \
 	account-tag.so labeled-response.so link-security.so \
 	message-ids.so plaintext-policy.so server-time.so sts.so \
 	echo-message.so userip-tag.so userhost-tag.so geoip-tag.so \
-	bot-tag.so reply-tag.so json-log-tag.so \
+	bot-tag.so reply-tag.so json-log-tag.so oper-tag.so \
 	typing-indicator.so channel-context.so \
 	ident_lookup.so history.so chathistory.so \
 	targetfloodprot.so clienttagdeny.so watch-backend.so \
