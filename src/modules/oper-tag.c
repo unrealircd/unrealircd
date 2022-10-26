@@ -1,6 +1,6 @@
 /*
  *   IRC - Internet Relay Chat, src/modules/oper-tag.c
- *   (C) 2020 Syzop & The UnrealIRCd Team
+ *   (C) 2022 Valware & The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
