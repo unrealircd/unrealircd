@@ -163,14 +163,6 @@ void mtag_add_oper_class(Client *client, MessageTag *recv_mtags, MessageTag **mt
 	}
 }
 
-/** Outgoing filter for draft/oper message tag */
-int oper_name_mtag_should_send_to_client(Client *target)
-{
-	if (IsServer(target) || IsOper(target))
-		return 1;
-	return 0;
-}
-
 /** Outgoing filter for unrealircd.org/opername message tag */
 int oper_name_mtag_should_send_to_client(Client *target)
 {
