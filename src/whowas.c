@@ -47,6 +47,7 @@ void add_history(Client *client, int online)
 		safe_free(new->virthost);
 		safe_free(new->realname);
 		safe_free(new->username);
+		safe_free(new->account);
 		new->servername = NULL;
 
 		if (new->online)
@@ -65,6 +66,7 @@ void add_history(Client *client, int online)
 		safe_strdup(new->virthost, "");
 	new->servername = client->user->server;
 	safe_strdup(new->realname, client->info);
+	safe_strdup(new->account, client->user->account);
 
 	/* Its not string copied, a pointer to the scache hash is copied
 	   -Dianora
