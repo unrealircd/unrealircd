@@ -80,7 +80,7 @@ MODULES= \
 	monitor.so slog.so tls_cipher.so operinfo.so creationtime.so \
 	unreal_server_compat.so \
 	extended-monitor.so geoip_csv.so \
-	geoip_base.so extjwt.so \
+	geoip_base.so extjwt.so tline.so \
 	$(GEOIP_CLASSIC_OBJECTS) $(GEOIP_MAXMIND_OBJECTS)
 
 MODULEFLAGS=@MODULEFLAGS@
