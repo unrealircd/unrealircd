@@ -49,7 +49,7 @@ MOD_INIT()
 	ModDataInfo mreq;
 
 	memset(&cap, 0, sizeof(cap));
-	cap.name = "draft/extended-monitor";
+	cap.name = "extended-monitor";
 	c = ClientCapabilityAdd(modinfo->handle, &cap, &CAP_EXTENDED_MONITOR);
 	if (!c)
 	{
