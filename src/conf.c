@@ -10647,8 +10647,9 @@ void resource_download_complete(const char *url, const char *file, const char *e
 }
 
 /** Request to REHASH the configuration file.
- * There is no guarantee that the request will be done immediately
- * (eg: it won't in case of remote includes).
+ * The rehash will not be done immediately, just scheduled.
+ * This means this function can safely be called from modules or
+ * other areas.
  * @param client	The client requesting the /REHASH.
  *                      If this is NULL then the rehash was requested
  *                      via a signal to the process or GUI.
@@ -10665,14 +10666,8 @@ void request_rehash(Client *client)
 	loop.rehashing = 1;
 	loop.rehash_save_client = client;
 	config_read_start();
-	/* If we already have everything, then can we proceed with the rehash */
-	if (is_config_read_finished())
-	{
-		rehash_internal(client);
-		return;
-	}
-	/* Otherwise, I/O events will take care of it later
-	 * after all remote includes have been downloaded.
+	/* More config reading (or network I/O), and the actual rehash will
+	 * happen in "the main loop". See end of SocketLoop() in src/ircd.c.
 	 */
 }
 
