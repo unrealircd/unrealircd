@@ -227,6 +227,9 @@ CMD_FUNC(cmd_version)
 #endif
 			sendnotice(client, "c-ares %s", ares_version(NULL));
 			sendnotice(client, "%s", pcre2_version());
+#if JANSSON_VERSION_HEX >= 0x020D00
+			sendnotice(client, "jansson %s\n", jansson_version_str());
+#endif
 		}
 		if (MyUser(client))
 			send_version(client,0);

@@ -94,6 +94,9 @@ CMD_FUNC(procio_status)
 #endif
 	sendto_one(client, NULL, "REPLY libcares_version %s", ares_version(NULL));
 	sendto_one(client, NULL, "REPLY libpcre2_version %s", pcre2_version());
+#if JANSSON_VERSION_HEX >= 0x020D00
+	sendto_one(client, NULL, "REPLY libjansson %s\n", jansson_version_str());
+#endif
 	sendto_one(client, NULL, "REPLY global_clients %ld", (long)irccounts.clients);
 	sendto_one(client, NULL, "REPLY local_clients %ld", (long)irccounts.me_clients);
 	sendto_one(client, NULL, "REPLY operators %ld", (long)irccounts.operators);

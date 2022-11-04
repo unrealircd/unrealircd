@@ -715,6 +715,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 	fprintf(stderr, "* c-ares %s\n", ares_version(NULL));
 	fprintf(stderr, "* %s\n", pcre2_version());
 #endif
+#if JANSSON_VERSION_HEX >= 0x020D00
+	fprintf(stderr, "* jansson %s\n", jansson_version_str());
+#endif
 	check_user_limit();
 #ifndef _WIN32
 	fprintf(stderr, "\n");
