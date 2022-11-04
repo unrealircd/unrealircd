@@ -2091,8 +2091,6 @@ int config_test(void)
 		safe_strdup(old_pid_file, conf_files->pid_file);
 		unrealdns_delasyncconnects();
 		config_rehash();
-		Unload_all_loaded_modules();
-
 		/* Notify permanent modules of the rehash */
 		for (h = Hooks[HOOKTYPE_REHASH]; h; h = h->next)
 		{
@@ -2102,6 +2100,8 @@ int config_test(void)
 				continue;
 			(*(h->func.intfunc))();
 		}
+		/* Last step: */
+		Unload_all_loaded_modules();
 	}
 	config_pre_run_log();
 

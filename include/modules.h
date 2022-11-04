@@ -777,8 +777,14 @@ struct Module
 #define MOD_OPT_OFFICIAL	0x0002 /* Official module, do not set "tainted" */
 #define MOD_OPT_PERM_RELOADABLE	0x0004 /* Module is semi-permanent: it can be re-loaded but not un-loaded */
 #define MOD_OPT_GLOBAL		0x0008 /* Module is required to be loaded globally (i.e. across the entire network) */
-#define MOD_OPT_UNLOAD_PRIORITY	0x1000 /* Module wants a higher or lower unload priority */
+#define MOD_OPT_PRIORITY	0x1000 /* Module wants a higher or lower priority for unloading, init, load, etc */
+#define MOD_OPT_UNLOAD_PRIORITY	0x1000 /* Alias for MOD_OPT_PRIORITY */
 #define MOD_Dep(name, container,module) {#name, (vFP *) &container, module}
+
+/** Websocket module should init 'first' because it handles sockets */
+#define WEBSOCKET_MODULE_PRIORITY_INIT		-1000000000
+/** Websocket module should unload 'last' because it handles sockets */
+#define WEBSOCKET_MODULE_PRIORITY_UNLOAD	1000000000
 
 /** Event structs */
 struct Event {

@@ -64,6 +64,9 @@ MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, websocket_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, websocket_config_posttest);
+
+	/* Call MOD_INIT very early, since we manage sockets, but depend on websocket_common */
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_INIT+1);
 	return MOD_SUCCESS;
 }
 
@@ -73,18 +76,21 @@ MOD_INIT()
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
+	websocket_md = findmoddata_byname("websocket", MODDATATYPE_CLIENT);
+	if (!websocket_md)
+		config_warn("The 'websocket_common' module is not loaded, even though it was promised to be ???");
+
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, websocket_config_run_ex);
 	HookAdd(modinfo->handle, HOOKTYPE_PACKET, INT_MAX, websocket_packet_out);
 	HookAdd(modinfo->handle, HOOKTYPE_SECURE_CONNECT, 0, websocket_secure_connect);
 
+	/* Call MOD_LOAD very late, since we manage sockets, but depend on websocket_common */
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_UNLOAD-1);
 	return MOD_SUCCESS;
 }
 
 MOD_LOAD()
 {
-	websocket_md = findmoddata_byname("websocket", MODDATATYPE_CLIENT);
-	if (!websocket_md)
-		config_warn("The 'websocket_common' module is not loaded, even though it was promised to be ???");
 	if (non_utf8_nick_chars_in_use || (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY))
 		ws_text_mode_available = 0;
 	return MOD_SUCCESS;

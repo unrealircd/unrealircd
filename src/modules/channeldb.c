@@ -93,7 +93,7 @@ MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	/* We must unload early, when all channel modes and such are still in place: */
-	ModuleSetOptions(modinfo->handle, MOD_OPT_UNLOAD_PRIORITY, -99999999);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, -99999999);
 
 	LoadPersistentLong(modinfo, channeldb_next_event);
 

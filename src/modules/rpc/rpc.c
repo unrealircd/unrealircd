@@ -70,6 +70,10 @@ MOD_TEST()
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_RESPONSE, _rpc_response);
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_ERROR, _rpc_error);
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_ERROR_FMT, TO_VOIDFUNC(_rpc_error_fmt));
+
+	/* Call MOD_INIT very early, since we manage sockets, but depend on websocket_common */
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_INIT+1);
+
 	return MOD_SUCCESS;
 }
 
@@ -79,17 +83,21 @@ MOD_INIT()
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
+	websocket_md = findmoddata_byname("websocket", MODDATATYPE_CLIENT); /* can be NULL */
+
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, rpc_config_run_ex_listen);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, rpc_config_run_rpc_user);
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, -5000, rpc_client_accept);
 	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, INT_MIN, rpc_packet_in_unix_socket);
+
+	/* Call MOD_LOAD very late, since we manage sockets, but depend on websocket_common */
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_UNLOAD-1);
 
 	return MOD_SUCCESS;
 }
 
 MOD_LOAD()
 {
-	websocket_md = findmoddata_byname("websocket", MODDATATYPE_CLIENT); /* can be NULL */
 	return MOD_SUCCESS;
 }
 

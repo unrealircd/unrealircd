@@ -128,7 +128,7 @@ MOD_TEST()
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	ModuleSetOptions(modinfo->handle, MOD_OPT_UNLOAD_PRIORITY, -9999);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, -9999);
 
 	LoadPersistentLong(modinfo, tkldb_next_event);
 

@@ -58,6 +58,10 @@ MOD_TEST()
 	EfunctionAdd(modinfo->handle, EFUNC_WEBSOCKET_HANDLE_WEBSOCKET, _websocket_handle_websocket);
 	EfunctionAdd(modinfo->handle, EFUNC_WEBSOCKET_CREATE_PACKET, _websocket_create_packet);
 	EfunctionAdd(modinfo->handle, EFUNC_WEBSOCKET_CREATE_PACKET_SIMPLE, _websocket_create_packet_simple);
+
+	/* Init first, since we manage sockets */
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_INIT);
+
 	return MOD_SUCCESS;
 }
 
@@ -75,6 +79,9 @@ MOD_INIT()
 	mreq.sync = 0;
 	mreq.type = MODDATATYPE_CLIENT;
 	websocket_md = ModDataAdd(modinfo->handle, mreq);
+
+	/* Unload last, since we manage sockets */
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_UNLOAD);
 
 	return MOD_SUCCESS;
 }

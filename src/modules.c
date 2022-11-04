@@ -430,18 +430,19 @@ const char *Module_Create(const char *path_)
 		if (Mod_Handle)
 			*Mod_Handle = mod;
 		irc_dlsym(Mod, "Mod_Test", Mod_Test);
+		/* add module here, so ModuleSetOptions() w/MOD_OPT_PRIORITY is available in Mod_Test() */
+		AddListItemPrio(mod, Modules, 0);
 		if (Mod_Test)
 		{
-			if ((ret = (*Mod_Test)(&mod->modinfo)) < MOD_SUCCESS) {
-				ircsnprintf(errorbuf, sizeof(errorbuf), "Mod_Test returned %i",
-					   ret);
+			if ((ret = (*Mod_Test)(&mod->modinfo)) < MOD_SUCCESS)
+			{
+				ircsnprintf(errorbuf, sizeof(errorbuf), "Mod_Test returned %i", ret);
 				/* We EXPECT the module to have cleaned up its mess */
 				Module_free(mod);
 				return (errorbuf);
 			}
 		}
 		mod->flags = MODFLAG_TESTING;		
-		AddListItemPrio(mod, Modules, 0);
 		return NULL;
 	}
 	else
@@ -1221,7 +1222,7 @@ void ModuleSetOptions(Module *module, unsigned int options, int action)
 {
 	unsigned int oldopts = module->options;
 
-	if (options == MOD_OPT_UNLOAD_PRIORITY)
+	if (options == MOD_OPT_PRIORITY)
 	{
 		DelListItem(module, Modules);
 		AddListItemPrio(module, Modules, action);
