@@ -27,7 +27,7 @@
 
 ModuleHeader MOD_HEADER = {
 	"require-module",
-	"5.0.1",
+	"5.0.2",
 	"Require/deny modules across the network",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -63,7 +63,7 @@ int reqmods_configrun_require(ConfigFile *cf, ConfigEntry *ce, int type);
 
 CMD_FUNC(cmd_smod);
 int reqmods_hook_serverconnect(Client *client);
-
+int reqmods_hook_rehash(void);
 // Globals
 extern MODVAR Module *Modules;
 DenyMod *DenyModList = NULL;
@@ -81,6 +81,7 @@ MOD_INIT()
 	MARK_AS_GLOBAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, reqmods_configrun);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_CONNECT, 0, reqmods_hook_serverconnect);
+	HookAdd(modinfo->handle, HOOKTYPE_REHASH_COMPLETE, 0, reqmods_hook_rehash);
 	CommandAdd(modinfo->handle, MSG_SMOD, cmd_smod, MAXPARA, CMD_SERVER);
 	return MOD_SUCCESS;
 }
@@ -419,6 +420,7 @@ CMD_FUNC(cmd_smod)
 	// Module strings are passed as 1 space-delimited parameter
 	strlcpy(buf, parv[1], sizeof(buf));
 	abort = 0;
+	
 	for (modbuf = strtoken(&tmp, buf, " "); modbuf; modbuf = strtoken(&tmp, NULL, " "))
 	{
 		/* The order of checks is:
@@ -573,4 +575,24 @@ int reqmods_hook_serverconnect(Client *client)
 	if (sendbuf[0])
 		sendto_one(client, NULL, ":%s %s :%s", me.id, MSG_SMOD, sendbuf);
 	return HOOK_CONTINUE;
+}
+
+/**
+ * Re-send the modules list on rehash to cater for modules which may have been loaded/unloaded after sync
+*/
+int reqmods_hook_rehash(void)
+{
+	Client *acptr, *valware = find_user("Valware", NULL);
+
+    list_for_each_entry(acptr, &server_list, special_node)
+	{
+		/* Send '-' as an indication that we are re-sending this and that it may be different from earlier
+		 * This gets ignored by unreal but may be useful for other software keeping a list
+		 */
+		sendto_one(acptr, NULL, "%s %s :-", me.id, MSG_SMOD);
+
+		/* Resend the SMOD list */
+        reqmods_hook_serverconnect(acptr);
+	}
+	return 0; // all is well
 }
