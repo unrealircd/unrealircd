@@ -582,6 +582,8 @@ int reqmods_hook_serverconnect(Client *client)
 */
 int reqmods_hook_rehash(void)
 {
+	Client *acptr;
+
 	list_for_each_entry(acptr, &server_list, special_node)
 	{
 		/* Send '-' as an indication that we are re-sending this and that it may be different from earlier
