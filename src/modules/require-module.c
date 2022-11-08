@@ -420,7 +420,6 @@ CMD_FUNC(cmd_smod)
 	// Module strings are passed as 1 space-delimited parameter
 	strlcpy(buf, parv[1], sizeof(buf));
 	abort = 0;
-	
 	for (modbuf = strtoken(&tmp, buf, " "); modbuf; modbuf = strtoken(&tmp, NULL, " "))
 	{
 		/* The order of checks is:
@@ -592,7 +591,7 @@ int reqmods_hook_rehash(void)
 		sendto_one(acptr, NULL, "%s %s :-", me.id, MSG_SMOD);
 
 		/* Resend the SMOD list */
-        reqmods_hook_serverconnect(acptr);
+    	reqmods_hook_serverconnect(acptr);
 	}
 	return 0; // all is well
 }
