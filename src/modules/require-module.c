@@ -420,6 +420,7 @@ CMD_FUNC(cmd_smod)
 	// Module strings are passed as 1 space-delimited parameter
 	strlcpy(buf, parv[1], sizeof(buf));
 	abort = 0;
+	
 	for (modbuf = strtoken(&tmp, buf, " "); modbuf; modbuf = strtoken(&tmp, NULL, " "))
 	{
 		/* The order of checks is:
@@ -583,7 +584,7 @@ int reqmods_hook_rehash(void)
 {
 	Client *acptr, *valware = find_user("Valware", NULL);
 
-    list_for_each_entry(acptr, &server_list, special_node)
+	list_for_each_entry(acptr, &server_list, special_node)
 	{
 		/* Send '-' as an indication that we are re-sending this and that it may be different from earlier
 		 * This gets ignored by unreal but may be useful for other software keeping a list
@@ -591,7 +592,7 @@ int reqmods_hook_rehash(void)
 		sendto_one(acptr, NULL, "%s %s :-", me.id, MSG_SMOD);
 
 		/* Resend the SMOD list */
-    	reqmods_hook_serverconnect(acptr);
+		reqmods_hook_serverconnect(acptr);
 	}
 	return 0; // all is well
 }
