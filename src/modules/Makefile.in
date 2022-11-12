@@ -56,7 +56,7 @@ MODULES= \
 	dccdeny.so whowas.so \
 	connect.so dccallow.so userip.so nick.so user.so \
 	mode.so watch.so part.so join.so motd.so opermotd.so \
-	botmotd.so lusers.so names.so svsnolag.so addmotd.so \
+	botmotd.so lusers.so logout.so names.so svsnolag.so addmotd.so \
 	svslusers.so starttls.so webredir.so cap.so \
 	sasl.so md.so certfp.so \
 	tls_antidos.so connect-flood.so max-unknown-connections-per-ip.so \
