@@ -39,7 +39,7 @@ MODULES= \
 	sethost.so chghost.so chgident.so setname.so \
 	setident.so sdesc.so svsmode.so swhois.so\
 	svsmotd.so svsnline.so who_old.so whox.so mkpasswd.so \
-	away.so svsnoop.so svsnick.so svso.so \
+	away.so svsnoop.so svsnick.so svso.so svslogin.so \
 	chgname.so kill.so \
 	lag.so message.so oper.so pingpong.so \
 	quit.so sendumode.so sqline.so \
