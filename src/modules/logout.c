@@ -54,6 +54,9 @@ MOD_UNLOAD()
 
 CMD_FUNC(cmd_logout)
 {
+	Client *nickserv = find_user("NickServ", NULL);
+	Client *server = find_server(iConf.services_name, NULL);
+
 	if (!IsUser(client)) // we don't want anything to do with pre-connect
 		return;
 	if (!IsLoggedIn(client))
@@ -61,12 +64,30 @@ CMD_FUNC(cmd_logout)
 		sendto_one(client, NULL, "FAIL LOGOUT NOT_LOGGED_IN :You are not logged in");
 		return;
 	}
-
-	strlcpy(client->user->account, "0", sizeof(client->user->account));
-	user_account_login(recv_mtags, client);
 	
-	/* We are sending this out with SVSLOGIN because this is the current best way to tell other
-	 * servers including services that the user is no longer logged in.
+	/* If the server does not exist, still log them out. Services will see they're not logged in when they burst back */
+	if (!server)
+	{
+		strlcpy(client->user->account, "0", sizeof(client->user->account));
+		user_account_login(recv_mtags, client);
+		
+		/* We are sending this out with SVSLOGIN because this is the current best way to tell other
+		* servers including services that the user is no longer logged in.
+		*/
+		sendto_server(client, 0, 0, NULL, ":%s SVSLOGIN * %s 0", me.id, client->name);
+	}
+	
+	/* If NickServ is online and also part of the services server, ask them*/
+	else if (nickserv && nickserv->uplink == server)
+		sendto_one(nickserv, recv_mtags, ":%s PRIVMSG %s :LOGOUT", client->id, nickserv->id);
+
+	/* Well, we tried. Can't verify any valid NickServ, sorry
+	 * It would be good if the services pseudoserver supported a logout S2S or incoming SVSLOGIN
+	 * But seeing as it doesn't, we're forced to rely on messaging a bot which may or may not be called
+	 * NickServ.
 	 */
-	sendto_server(client, 0, 0, NULL, ":%s SVSLOGIN * %s 0", me.id, client->name);
+	else
+		sendto_one(client, NULL, "FAIL LOGOUT NICKSERV_NOT_FOUND :Could not find NickServ.");
+
 }
+
