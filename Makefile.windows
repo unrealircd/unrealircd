@@ -361,6 +361,7 @@ DLL_FILES=\
  src/modules/sts.dll \
  src/modules/svsjoin.dll \
  src/modules/svskill.dll \
+ src/modules/svslogin.dll \
  src/modules/svslusers.dll \
  src/modules/svsmode.dll \
  src/modules/svsmotd.dll \
@@ -1168,6 +1169,9 @@ src/modules/svsjoin.dll: src/modules/svsjoin.c $(INCLUDES)
 
 src/modules/svskill.dll: src/modules/svskill.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/svskill.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/svskill.pdb $(MODLFLAGS)
+
+src/modules/svslogin.dll: src/modules/svslogin.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/svslogin.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/svslogin.pdb $(MODLFLAGS)
 
 src/modules/svslusers.dll: src/modules/svslusers.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/svslusers.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/svslusers.pdb $(MODLFLAGS)
