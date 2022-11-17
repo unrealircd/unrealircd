@@ -9,7 +9,7 @@
 ModuleHeader MOD_HEADER
   = {
 	"creationtime",
-	"6.0",
+	"6.1",
 	"Store and retrieve creation time of clients",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -38,6 +38,7 @@ MOD_INIT()
 	mreq.free = creationtime_free;
 	mreq.serialize = creationtime_serialize;
 	mreq.unserialize = creationtime_unserialize;
+	mreq.self_write = 1;
 	mreq.sync = MODDATA_SYNC_EARLY;
 	mreq.type = MODDATATYPE_CLIENT;
 	creationtime_md = ModDataAdd(modinfo->handle, mreq);
