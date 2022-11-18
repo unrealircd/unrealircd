@@ -5,8 +5,9 @@ If you want a stable IRCd, download 6.0.4 or upgrade to it via `./unrealircd upg
 
 ### Enhancements:
 * Internally the websocket module has been split up into `websocket_common`,
-  `webserver` and `websocket`. This means that if you use websockets then you
-  need to load two modules now (and not just one):
+  `webserver` and `websocket`. The websocket_common one is loaded through
+  modules.default.conf. Important: if you use websockets then you need to
+  load two modules now (and not just one):
   ```
   loadmodule "websocket";
   loadmodule "webserver";
