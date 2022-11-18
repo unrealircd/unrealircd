@@ -785,12 +785,15 @@ void blacklist_hit(Client *client, Blacklist *bl, int reply)
 	value[0] = GetIP(client);
 	name[1] = "server";
 	value[1] = me.name;
-	name[2] = "name";
-	value[2] = bl->backend->dns->name;
-	name[3] = "reply";
-	value[3] = reply_num;
-	name[4] = NULL;
-	value[4] = NULL;
+	name[2] = "blacklist";
+	value[2] = bl->name;
+	name[3] = "dnsname";
+	value[3] = bl->backend->dns->name;
+	name[4] = "dnsreply";
+	value[4] = reply_num;
+	name[5] = NULL;
+	value[5] = NULL;
+	/* when adding more, be sure to update the array elements number in the definition of const char *name[] and value[] */
 
 	buildvarstring(bl->reason, banbuf, sizeof(banbuf), name, value);
 
