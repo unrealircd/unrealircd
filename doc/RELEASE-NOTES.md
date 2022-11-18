@@ -4,8 +4,15 @@ This is work in progress. Current git is NOT stable.
 If you want a stable IRCd, download 6.0.4 or upgrade to it via `./unrealircd upgrade`
 
 ### Enhancements:
+* Internally the websocket module has been split up into `websocket_common`,
+  `webserver` and `websocket`. This means that if you use websockets then you
+  need to load two modules now (and not just one):
+  ```
+  loadmodule "websocket";
+  loadmodule "webserver";
+  ```
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) API for UnrealIRCd.
-  This is work in progress, only listing users and channels at the moment.
+  This is work in progress.
 
 UnrealIRCd 6.0.4.2
 -------------------
