@@ -66,6 +66,8 @@ MOD_INIT()
 		return MOD_FAILED;
 	}
 
+	ISupportAdd(modinfo->handle, "ACCOUNTEXTBAN", "account,a");
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
