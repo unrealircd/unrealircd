@@ -355,6 +355,7 @@ DLL_FILES=\
  src/modules/slog.dll \
  src/modules/sqline.dll \
  src/modules/squit.dll \
+ src/modules/sreply.dll \
  src/modules/staff.dll \
  src/modules/starttls.dll \
  src/modules/stats.dll \
