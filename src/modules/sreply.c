@@ -39,7 +39,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SREPLY, cmd_sreply, 3, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_SREPLY, cmd_sreply, 3, CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -65,9 +65,6 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_sreply)
 {
 	Client *target;
-
-	if (!IsULine(client) && !IsServer(client))
-		return;
 
 	if ((parc < 4) || !(target = find_user(parv[1], NULL)))
 		return;
