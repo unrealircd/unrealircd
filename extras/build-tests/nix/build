@@ -48,8 +48,8 @@ fi
 $MAKE
 yes ''|$MAKE pem
 $MAKE || exit 1
-./unrealircd module install third/dumpcmds
 $MAKE install || exit 1
+./unrealircd module install third/dumpcmds || exit 1
 
 set +x
 echo ""
