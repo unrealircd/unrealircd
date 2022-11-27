@@ -215,7 +215,7 @@ void disable_ssl_protocols(SSL_CTX *ctx, TLSOptions *tlsoptions)
 	if ((tlsoptions->protocols & TLS_PROTOCOL_TLSV1) ||
 	    (tlsoptions->protocols & TLS_PROTOCOL_TLSV1_1))
 	{
-		SSL_CTX_set_security_level(ctx, 1);
+		SSL_CTX_set_security_level(ctx, 0);
 	}
 #endif
 

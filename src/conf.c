@@ -1733,7 +1733,7 @@ void config_setdefaultsettings(Configuration *i)
 	safe_strdup(i->tls_options->trusted_ca_file, tmp);
 	safe_strdup(i->tls_options->ciphers, UNREALIRCD_DEFAULT_CIPHERS);
 	safe_strdup(i->tls_options->ciphersuites, UNREALIRCD_DEFAULT_CIPHERSUITES);
-	i->tls_options->protocols = TLS_PROTOCOL_ALL;
+	i->tls_options->protocols = TLS_PROTOCOL_TLSV1_2|TLS_PROTOCOL_TLSV1_3; /* TLSv1.2 & TLSv1.3 */
 #ifdef HAS_SSL_CTX_SET1_CURVES_LIST
 	safe_strdup(i->tls_options->ecdh_curves, UNREALIRCD_DEFAULT_ECDH_CURVES);
 #endif

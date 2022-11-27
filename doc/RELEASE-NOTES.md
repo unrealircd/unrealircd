@@ -15,6 +15,18 @@ If you want a stable IRCd, download 6.0.4 or upgrade to it via `./unrealircd upg
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) API for UnrealIRCd.
   This is work in progress.
 
+### Changes:
+* SSL/TLS: By default we now require TLSv1.2 or later and a modern cipher
+  with forward secrecy. Otherwise the connection is refused.
+  * Since UnrealIRCd 4.2.2 (March 2019) users see an on-connect notice with
+    a warning when they use an outdated TLS protocol or cipher that does not
+    meet these requirements.
+  * This move also reflects the phase out of TLSv1.2 that happened in
+    browsers in 2020/2021.
+  * If you want to revert back to the previous less secure settings, then
+    look under ''Previous less secure setting'' in
+    [TLS Ciphers and protocols](https://www.unrealircd.org/docs/TLS_Ciphers_and_protocols).
+
 UnrealIRCd 6.0.4.2
 -------------------
 Another small update to 6.0.4.x:
