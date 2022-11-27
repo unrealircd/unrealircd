@@ -84,5 +84,5 @@ CMD_FUNC(cmd_sreply)
 			return;
 	}
 	else
-		sendto_server(client, 0, 0, NULL, ":%s %s %s %s %s", client->name, MSG_SREPLY, parv[1], parv[2], parv[3]);
+		sendto_server(client, 0, 0, recv_mtags, ":%s %s %s %s %s", client->name, MSG_SREPLY, parv[1], parv[2], parv[3]);
 }
