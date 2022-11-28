@@ -72,13 +72,13 @@ CMD_FUNC(cmd_sreply)
 	if (MyUser(target))
 	{
 		if (!strcmp(parv[2],"F"))
-			sendto_one(target, recv_mtags, "FAIL %s", parv[3]);
+			sendto_one(target, recv_mtags, ":%s FAIL %s", target->uplink->name, parv[3]);
 
 		else if (!strcmp(parv[2],"W"))
-			sendto_one(target, recv_mtags, "WARN %s", parv[3]);
+			sendto_one(target, recv_mtags, ":%s WARN %s", target->uplink->name, parv[3]);
 
 		else if (!strcmp(parv[2],"N"))
-			sendto_one(target, recv_mtags, "NOTE %s", parv[3]);
+			sendto_one(target, recv_mtags, ":%s NOTE %s", target->uplink->name, parv[3]);
 
 		else // error
 			return;
@@ -86,3 +86,4 @@ CMD_FUNC(cmd_sreply)
 	else
 		sendto_server(client, 0, 0, recv_mtags, ":%s %s %s %s %s", client->name, MSG_SREPLY, parv[1], parv[2], parv[3]);
 }
+
