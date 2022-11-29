@@ -77,7 +77,7 @@ MOD_UNLOAD()
  */
 int server_time_mtag_is_ok(Client *client, const char *name, const char *value)
 {
-	if (IsServer(client) && !BadPtr(value))
+	if (IsServer(client) && !BadPtr(value) && HasCapability(client,"server-time"))
 		return 1;
 
 	return 0;
