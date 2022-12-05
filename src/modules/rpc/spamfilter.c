@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/spamfilter",
-	"1.0.0",
+	"1.0.1",
 	"spamfilter.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -72,7 +72,7 @@ MOD_UNLOAD()
 RPC_CALL_FUNC(rpc_spamfilter_list)
 {
 	json_t *result, *list, *item;
-	int index, index2;
+	int index;
 	TKL *tkl;
 
 	result = json_object();
@@ -96,19 +96,95 @@ RPC_CALL_FUNC(rpc_spamfilter_list)
 	json_decref(result);
 }
 
-RPC_CALL_FUNC(rpc_spamfilter_get)
+/* Shared code for selecting a spamfilter, for .add/.del/get */
+int spamfilter_select_criteria(Client *client, json_t *request, json_t *params, const char **name, int *match_type,
+                               int *targets, char *targetbuf, size_t targetbuflen, BanAction *action, char *actionbuf)
 {
+	const char *str;
+
+	*name = json_object_get_string(params, "name");
+	if (!*name)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'name'");
+		return 0;
+	}
+
+	str = json_object_get_string(params, "match_type");
+	if (!str)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'match_type'");
+		return 0;
+	}
+	*match_type = unreal_match_method_strtoval(str);
+	if (!*match_type)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid value for parameter 'match_type'");
+		return 0;
+	}
+
+	str = json_object_get_string(params, "spamfilter_targets");
+	if (!str)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'spamfilter_targets'");
+		return 0;
+	}
+	*targets = spamfilter_gettargets(str, NULL);
+	if (!targets)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid value(s) for parameter 'spamfilter_targets'");
+		return 0;
+	}
+	strlcpy(targetbuf, spamfilter_target_inttostring(*targets), targetbuflen);
+
+	str = json_object_get_string(params, "ban_action");
+	if (!str)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'ban_action'");
+		return 0;
+	}
+	*action = banact_stringtoval(str);
+	if (!action)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid value for parameter 'ban_action'");
+		return 0;
+	}
+	actionbuf[0] = banact_valtochar(*action);
+	actionbuf[1] = '\0';
+	return 1;
 }
 
-RPC_CALL_FUNC(rpc_spamfilter_del)
+RPC_CALL_FUNC(rpc_spamfilter_get)
 {
+	json_t *result;
+	int type = TKL_SPAMF|TKL_GLOBAL;
+	const char *name;
+	TKL *tkl;
+	BanAction action;
+	int match_type = 0;
+	int targets = 0;
+	char targetbuf[64];
+	char actionbuf[2];
+
+	if (!spamfilter_select_criteria(client, request, params, &name, &match_type, &targets, targetbuf, sizeof(targetbuf), &action, actionbuf))
+		return; /* Error already communicated to client */
+
+	tkl = find_tkl_spamfilter(type, name, action, targets);
+	if (!tkl)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Spamfilter not found");
+		return;
+	}
+
+	result = json_object();
+	json_expand_tkl(result, "tkl", tkl, 1);
+	rpc_response(client, request, result);
+	json_decref(result);
 }
 
 RPC_CALL_FUNC(rpc_spamfilter_add)
 {
-	json_t *result, *list, *item;
+	json_t *result;
 	int type = TKL_SPAMF|TKL_GLOBAL;
-	const char *error;
 	const char *str;
 	const char *name, *reason;
 	time_t ban_duration = 0;
@@ -121,55 +197,10 @@ RPC_CALL_FUNC(rpc_spamfilter_add)
 	char actionbuf[2];
 	char *err = NULL;
 
-	name = json_object_get_string(params, "name");
-	if (!name)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'name'");
-		return;
-	}
+	if (!spamfilter_select_criteria(client, request, params, &name, &match_type, &targets, targetbuf, sizeof(targetbuf), &action, actionbuf))
+		return; /* Error already communicated to client */
 
-	str = json_object_get_string(params, "match_type");
-	if (!str)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'match_type'");
-		return;
-	}
-	match_type = unreal_match_method_strtoval(str);
-	if (!match_type)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid value for parameter 'match_type'");
-		return;
-	}
-
-	str = json_object_get_string(params, "spamfilter_targets");
-	if (!str)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'spamfilter_targets'");
-		return;
-	}
-	targets = spamfilter_gettargets(str, NULL);
-	if (!targets)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid value(s) for parameter 'spamfilter_targets'");
-		return;
-	}
-	strlcpy(targetbuf, spamfilter_target_inttostring(targets), sizeof(targetbuf));
-
-	str = json_object_get_string(params, "ban_action");
-	if (!str)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'ban_action'");
-		return;
-	}
-	action = banact_stringtoval(str);
-	if (!action)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid value for parameter 'ban_action'");
-		return;
-	}
-	actionbuf[0] = banact_valtochar(action);
-	actionbuf[1] = '\0';
-
+	/* Reason */
 	reason = json_object_get_string(params, "reason");
 	if (!reason)
 	{
@@ -216,5 +247,62 @@ RPC_CALL_FUNC(rpc_spamfilter_add)
 	result = json_object();
 	json_expand_tkl(result, "tkl", tkl, 1);
 	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+RPC_CALL_FUNC(rpc_spamfilter_del)
+{
+	json_t *result;
+	int type = TKL_SPAMF|TKL_GLOBAL;
+	const char *name;
+	TKL *tkl;
+	BanAction action;
+	int match_type = 0;
+	int targets = 0;
+	char targetbuf[64];
+	char actionbuf[2];
+	const char *tkllayer[13];
+
+	if (!spamfilter_select_criteria(client, request, params, &name, &match_type, &targets, targetbuf, sizeof(targetbuf), &action, actionbuf))
+		return; /* Error already communicated to client */
+
+	tkl = find_tkl_spamfilter(type, name, action, targets);
+	if (!tkl)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Spamfilter not found");
+		return;
+	}
+
+	result = json_object();
+	json_expand_tkl(result, "tkl", tkl, 1);
+
+	/* Wait.. this is a bit dull? */
+	tkllayer[1] = "-";
+	tkllayer[2] = "F";
+	tkllayer[3] = targetbuf;
+	tkllayer[4] = actionbuf;
+	tkllayer[5] = client->name;
+	tkllayer[6] = "-";
+	tkllayer[7] = "0";
+	tkllayer[8] = "0";
+	tkllayer[9] = "-";
+	tkllayer[10] = unreal_match_method_valtostr(match_type);
+	tkllayer[11] = name;
+	tkllayer[12] = NULL;
+
+	cmd_tkl(&me, NULL, 12, tkllayer);
+
+	tkl = find_tkl_spamfilter(type, name, action, targets);
+	if (!tkl)
+	{
+		rpc_response(client, request, result);
+	} else {
+		/* Spamfilter still exists so failure to remove.
+		 * Actually this may not be an internal error, it could be an
+		 * incorrect request, such as asking to remove a config-based spamfilter.
+		 */
+		rpc_error(client, request, JSON_RPC_ERROR_INTERNAL_ERROR, "Unable to remove item");
+		return;
+	}
 	json_decref(result);
 }
