@@ -5,13 +5,17 @@ This is work in progress.
 ### Enhancements:
 * Internally the websocket module has been split up into 3 modules:
   `websocket_common`, `webserver` and `websocket`. The `websocket_common` one
-  is loaded by default via modules.default.conf, the other two are not.
+  is loaded by default via modules.default.conf, the other two are not.  
   **Important:** if you use websockets then you need to load two modules now (and not just one):
   ```
   loadmodule "websocket";
   loadmodule "webserver";
   ```
-* New `TLINE` command to test *LINEs (to see what users it matches)
+* [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) API for UnrealIRCd.
+  This is work in progress.
+* New `TLINE` command to test *LINEs. This can be especially useful for 
+  checking how many people match an [extended server ban](https://www.unrealircd.org/docs/Extended_server_bans)
+  such as `TLINE ~C:NL`
 * [Logging to a file](https://www.unrealircd.org/docs/Log_block) now creates
   a directory structure if needed.
   * You could already use:
@@ -25,11 +29,9 @@ This is work in progress.
     This is especially useful if you output to multiple log files and then
     want them grouped by date in a directory.
 * When an IRCOp is outside the channel and does `MODE #channel` they will
-  now get to see the mode parameters too, if they have the `channel:see:mode:remote`
-  [operclass permission](https://www.unrealircd.org/docs/Operclass_permissions).
-  With the default operclasses all IRCOps have this permission included.
-* [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) API for UnrealIRCd.
-  This is work in progress.
+  now get to see the mode parameters too. This depends on the `channel:see:mode:remote`
+  [operclass permission](https://www.unrealircd.org/docs/Operclass_permissions)
+  which all IRCOps have by default if you use the default operclasses.
 * Add additional variables in
   [blacklist::reason](https://www.unrealircd.org/docs/Blacklist_block):
   * `$blacklist`: name of the blacklist block
@@ -38,7 +40,7 @@ This is work in progress.
 * Resolved technical issue so opers can `REHASH` from
   [Websocket connections](https://www.unrealircd.org/docs/WebSocket_support).
 * In the [TLD block](https://www.unrealircd.org/docs/Tld_block) the use
-  of tld::motd and tld::rules is now optional.
+  of `tld::motd` and `tld::rules` is now optional.
 
 ### Changes:
 * SSL/TLS: By default we now require TLSv1.2 or later and a modern cipher
@@ -52,7 +54,7 @@ This is work in progress.
     * OpenSSL 1.0.1 (released in 2012)
     * GnuTLS 3.2.6 (2013)
     * Android 4.4.2 (2013)
-    * Or any other SSL/TLS library that is not 9+ years old
+    * Or presumably any other SSL/TLS library that is not 9+ years old
   * If you want to revert back to the previous less secure settings, then
     look under ''Previous less secure setting'' in
     [TLS Ciphers and protocols](https://www.unrealircd.org/docs/TLS_Ciphers_and_protocols).
