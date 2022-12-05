@@ -12,8 +12,34 @@ If you want a stable IRCd, download 6.0.4 or upgrade to it via `./unrealircd upg
   loadmodule "websocket";
   loadmodule "webserver";
   ```
+* New `TLINE` command to test *LINEs (to see what users it matches)
+* [Logging to a file](https://www.unrealircd.org/docs/Log_block) now creates
+  a directory structure if needed.
+  * You could already use:
+    ```
+    log { source { !debug; all; } destination { file "ircd.%Y-%m-%d.log"; } }
+    ```
+  * But now you can also use:
+    ```
+    log { source { !debug; all; } destination { file "%Y-%m-%d/ircd.log"; } }
+    ```
+    This is especially useful if you output to multiple log files and then
+    want them grouped by date in a directory.
+* When an IRCOp is outside the channel and does `MODE #channel` they will
+  now get to see the mode parameters too, if they have the channel:see:mode:remote
+  [operclass permission](https://www.unrealircd.org/docs/Operclass_permissions).
+  With the default operclasses all IRCOps have this permission included.
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) API for UnrealIRCd.
   This is work in progress.
+* Add additional variables in
+  [blacklist::reason](https://www.unrealircd.org/docs/Blacklist_block):
+  * `$blacklist`: name of the blacklist block
+  * `$dnsname`: the blacklist::dns::name
+  * `$dnsreply`: the DNS reply code
+* Resolved technical issue so opers can `REHASH` from
+  [Websocket connections](https://www.unrealircd.org/docs/WebSocket_support).
+* In the [TLD block](https://www.unrealircd.org/docs/Tld_block) the use
+  of tld::motd and tld::rules is now optional.
 
 ### Changes:
 * SSL/TLS: By default we now require TLSv1.2 or later and a modern cipher
@@ -26,6 +52,31 @@ If you want a stable IRCd, download 6.0.4 or upgrade to it via `./unrealircd upg
   * If you want to revert back to the previous less secure settings, then
     look under ''Previous less secure setting'' in
     [TLS Ciphers and protocols](https://www.unrealircd.org/docs/TLS_Ciphers_and_protocols).
+* The code for handling
+  [`set::anti-flood::everyone::connect-flood`](https://www.unrealircd.org/docs/Anti-flood_settings)
+  is now in its own module `connect-flood`. This module is loaded by default,
+  no changes needed in your configuration file.
+* Similarly,
+  [`set:max-unknown-connections-per-ip`](https://www.unrealircd.org/docs/Set_block#set::max-unknown-connections-per-ip)
+  is now handled by the new module `max-unknown-connections-per-ip`. This module is loaded
+  by default as well, no changes needed in your configuration file.
+
+### Fixes:
+* [Snomask `+j`](https://www.unrealircd.org/docs/Snomasks) was not showing
+  remote joins, even though it did show remote parts and kicks.
+
+### Developers and protocol:
+* Add `CALL_CMD_FUNC(cmd_func_name)` for calling commands in the same
+  module, see [this commit](https://github.com/unrealircd/unrealircd/commit/dc55c3ec9f19e5ed284e5a786f646d0e6bb60ef9).
+  Benefit of this is that it will keep working if we ever change command paramters.
+* Add `CALL_NEXT_COMMAND_OVERRIDE()` which can be used instead of
+  `CallCommandOverride()`, see also [this commit](https://github.com/unrealircd/unrealircd/commit/4e5598b6cf0986095f757f31a2540b03e4d235dc).
+  This too, will keep working if we ever change command parameters.
+* During loading and rehash we now set `loop.config_state` to one of
+  `CONFIG_STATE_*` so modules (and core) can track at what step we are
+  during configuration file and module processing.
+* New RPC API. See the `src/modules/rpc/` directory for examples.
+* New function `get_nvplist(NameValuePrioList *list, const char *name)`
 
 UnrealIRCd 6.0.4.2
 -------------------
