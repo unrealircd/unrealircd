@@ -73,7 +73,7 @@ MOD_UNLOAD()
 #define RPC_USER_LIST_EXPAND_SELECT	1
 #define RPC_USER_LIST_EXPAND_ALL	2
 
-// TODO: right now returns everything for everyone,
+// TODO: right now returns everything
 // give the option to return a list of names only or
 // certain options (hence the placeholder #define's above)
 RPC_CALL_FUNC(rpc_server_ban_list)
