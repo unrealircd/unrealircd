@@ -1,13 +1,12 @@
 UnrealIRCd 6.0.5-git
 =================
-This is work in progress. Current git is NOT stable.
-If you want a stable IRCd, download 6.0.4 or upgrade to it via `./unrealircd upgrade`
+This is work in progress.
 
 ### Enhancements:
-* Internally the websocket module has been split up into `websocket_common`,
-  `webserver` and `websocket`. The websocket_common one is loaded through
-  modules.default.conf. Important: if you use websockets then you need to
-  load two modules now (and not just one):
+* Internally the websocket module has been split up into 3 modules:
+  `websocket_common`, `webserver` and `websocket`. The `websocket_common` one
+  is loaded by default via modules.default.conf, the other two are not.
+  **Important:** if you use websockets then you need to load two modules now (and not just one):
   ```
   loadmodule "websocket";
   loadmodule "webserver";
@@ -26,7 +25,7 @@ If you want a stable IRCd, download 6.0.4 or upgrade to it via `./unrealircd upg
     This is especially useful if you output to multiple log files and then
     want them grouped by date in a directory.
 * When an IRCOp is outside the channel and does `MODE #channel` they will
-  now get to see the mode parameters too, if they have the channel:see:mode:remote
+  now get to see the mode parameters too, if they have the `channel:see:mode:remote`
   [operclass permission](https://www.unrealircd.org/docs/Operclass_permissions).
   With the default operclasses all IRCOps have this permission included.
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) API for UnrealIRCd.
@@ -49,11 +48,16 @@ If you want a stable IRCd, download 6.0.4 or upgrade to it via `./unrealircd upg
     meet these requirements.
   * This move also reflects the phase out of TLSv1.2 that happened in
     browsers in 2020/2021.
+  * In practice on the client-side this requires at least:
+    * OpenSSL 1.0.1 (released in 2012)
+    * GnuTLS 3.2.6 (2013)
+    * Android 4.4.2 (2013)
+    * Or any other SSL/TLS library that is not 9+ years old
   * If you want to revert back to the previous less secure settings, then
     look under ''Previous less secure setting'' in
     [TLS Ciphers and protocols](https://www.unrealircd.org/docs/TLS_Ciphers_and_protocols).
 * The code for handling
-  [`set::anti-flood::everyone::connect-flood`](https://www.unrealircd.org/docs/Anti-flood_settings)
+  [`set::anti-flood::everyone::connect-flood`](https://www.unrealircd.org/docs/Anti-flood_settings#connect-flood)
   is now in its own module `connect-flood`. This module is loaded by default,
   no changes needed in your configuration file.
 * Similarly,
@@ -72,8 +76,8 @@ If you want a stable IRCd, download 6.0.4 or upgrade to it via `./unrealircd upg
 * Add `CALL_NEXT_COMMAND_OVERRIDE()` which can be used instead of
   `CallCommandOverride()`, see also [this commit](https://github.com/unrealircd/unrealircd/commit/4e5598b6cf0986095f757f31a2540b03e4d235dc).
   This too, will keep working if we ever change command parameters.
-* During loading and rehash we now set `loop.config_state` to one of
-  `CONFIG_STATE_*` so modules (and core) can track at what step we are
+* During loading and rehash we now set `loop.config_status` to one of
+  `CONFIG_STATUS_*` so modules (and core) can see at what step we are
   during configuration file and module processing.
 * New RPC API. See the `src/modules/rpc/` directory for examples.
 * New function `get_nvplist(NameValuePrioList *list, const char *name)`
