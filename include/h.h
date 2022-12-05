@@ -1120,6 +1120,7 @@ extern int hide_idle_time(Client *client, Client *target);
 extern void lost_server_link(Client *serv, const char *tls_error_string);
 extern const char *sendtype_to_cmd(SendType sendtype);
 extern MODVAR MessageTagHandler *mtaghandlers;
+extern MODVAR RPCHandler *rpchandlers;
 #define nv_find_by_name(stru, name)       do_nv_find_by_name(stru, name, ARRAY_SIZEOF((stru)))
 extern long do_nv_find_by_name(NameValue *table, const char *cmd, int numelements);
 #define nv_find_by_value(stru, value)       do_nv_find_by_value(stru, value, ARRAY_SIZEOF((stru)))

@@ -39,6 +39,7 @@ void _rpc_error_fmt(Client *client, json_t *request, JsonRpcError error_code, FO
 int rpc_handle_auth(Client *client, WebRequest *web);
 int rpc_parse_auth_basic_auth(Client *client, WebRequest *web, char **username, char **password);
 int rpc_parse_auth_uri(Client *client, WebRequest *web, char **username, char **password);
+RPC_CALL_FUNC(rpc_rpc_info);
 
 /* Structs */
 typedef struct RPCUser RPCUser;
@@ -80,6 +81,7 @@ MOD_TEST()
 MOD_INIT()
 {
 	ModDataInfo mreq;
+	RPCHandlerInfo r;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -89,6 +91,15 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, rpc_config_run_rpc_user);
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, -5000, rpc_client_accept);
 	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, INT_MIN, rpc_packet_in_unix_socket);
+
+	memset(&r, 0, sizeof(r));
+	r.method = "rpc.info";
+	r.call = rpc_rpc_info;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc.info] Could not register RPC handler");
+		return MOD_FAILED;
+	}
 
 	/* Call MOD_LOAD very late, since we manage sockets, but depend on websocket_common */
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_UNLOAD-1);
@@ -726,4 +737,29 @@ int rpc_parse_auth_uri(Client *client, WebRequest *web, char **username, char **
 		}
 	}
 	return 1;
+}
+
+RPC_CALL_FUNC(rpc_rpc_info)
+{
+	json_t *result, *methods, *item;
+	RPCHandler *r;
+
+	result = json_object();
+	methods = json_object();
+	json_object_set_new(result, "methods", methods);
+
+	for (r = rpchandlers; r; r = r->next)
+	{
+		item = json_object();
+		json_object_set_new(item, "name", json_string_unreal(r->method));
+		if (r->owner)
+		{
+			json_object_set_new(item, "module", json_string_unreal(r->owner->header->name));
+			json_object_set_new(item, "version", json_string_unreal(r->owner->header->version));
+		}
+		json_object_set_new(methods, r->method, item);
+	}
+
+	rpc_response(client, request, result);
+	json_decref(result);
 }
