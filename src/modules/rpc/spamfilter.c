@@ -129,7 +129,7 @@ int spamfilter_select_criteria(Client *client, json_t *request, json_t *params, 
 		return 0;
 	}
 	*targets = spamfilter_gettargets(str, NULL);
-	if (!targets)
+	if (!*targets)
 	{
 		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid value(s) for parameter 'spamfilter_targets'");
 		return 0;
@@ -143,7 +143,7 @@ int spamfilter_select_criteria(Client *client, json_t *request, json_t *params, 
 		return 0;
 	}
 	*action = banact_stringtoval(str);
-	if (!action)
+	if (!*action)
 	{
 		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid value for parameter 'ban_action'");
 		return 0;
