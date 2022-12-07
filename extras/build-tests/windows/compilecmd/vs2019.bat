@@ -6,7 +6,7 @@ rem But nowadays we use JOM for parallel builds:
 jom /j32 -f makefile.windows ^
 LIBRESSL_INC_DIR="c:\projects\unrealircd-6-libs\libressl\include" ^
 LIBRESSL_LIB_DIR="c:\projects\unrealircd-6-libs\libressl\lib" ^
-SSLLIB="crypto-47.lib ssl-50.lib" ^
+SSLLIB="crypto-50.lib ssl-53.lib" ^
 USE_REMOTEINC=1 ^
 LIBCURL_INC_DIR="c:\projects\unrealircd-6-libs\curl\include" ^
 LIBCURL_LIB_DIR="c:\projects\unrealircd-6-libs\curl\builds\libcurl-vc-x64-release-dll-ssl-dll-cares-dll-ipv6-obj-lib" ^
