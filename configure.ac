@@ -632,7 +632,7 @@ AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libargon2*])],[ha
 
 AS_IF([test "$has_system_argon2" = "no"],[
 dnl REMEMBER TO CHANGE WITH A NEW ARGON2 RELEASE!
-argon2_version="20181209"
+argon2_version="20190702"
 AC_MSG_RESULT(extracting Argon2 library)
 cur_dir=`pwd`
 cd extras

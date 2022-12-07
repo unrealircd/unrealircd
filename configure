@@ -8083,7 +8083,7 @@ fi
 if test "$has_system_argon2" = "no"
 then :
 
-argon2_version="20181209"
+argon2_version="20190702"
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: extracting Argon2 library" >&5
 printf "%s\n" "extracting Argon2 library" >&6; }
 cur_dir=`pwd`
