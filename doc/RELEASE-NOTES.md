@@ -66,6 +66,7 @@ This is work in progress.
   [`set:max-unknown-connections-per-ip`](https://www.unrealircd.org/docs/Set_block#set::max-unknown-connections-per-ip)
   is now handled by the new module `max-unknown-connections-per-ip`. This module is loaded
   by default as well, no changes needed in your configuration file.
+* Bump shipped PCRE2 to 10.41, update curl-ca-bundle to 2022-10-11
 
 ### Fixes:
 * [Snomask `+j`](https://www.unrealircd.org/docs/Snomasks) was not showing

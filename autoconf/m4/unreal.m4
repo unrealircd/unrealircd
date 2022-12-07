@@ -97,7 +97,7 @@ AC_DEFUN([CHECK_LIBCURL],
   with the system-installed libcURL, this is a bad idea which may result in error
   messages looking like:
 
-  	\`\`[error] unrealircd.conf:9: include: error downloading '(http://example.net/ex.conf)': Could not resolve host: example.net (Successful completion)''
+  	error downloading ... Could not resolve host: example.net (Successful completion)
 
   Or UnrealIRCd might even crash.
 
