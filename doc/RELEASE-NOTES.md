@@ -1,12 +1,14 @@
-UnrealIRCd 6.0.5-git
-=================
-This is work in progress.
+UnrealIRCd 6.0.5-rc1
+=====================
+This is the Release Candidate for UnrealIRCd 6.0.5.
+
+You can help us by testing this release and reporting any issues at https://bugs.unrealircd.org/.
 
 ### Enhancements:
 * Internally the websocket module has been split up into 3 modules:
   `websocket_common`, `webserver` and `websocket`. The `websocket_common` one
   is loaded by default via modules.default.conf, the other two are not.  
-  **Important:** if you use websockets then you need to load two modules now (and not just one):
+  **Important:** if you use websockets then you need to load two modules now (instead of only one):
   ```
   loadmodule "websocket";
   loadmodule "webserver";
@@ -69,6 +71,11 @@ This is work in progress.
 * Bump shipped PCRE2 to 10.41, update curl-ca-bundle to 2022-10-11
 
 ### Fixes:
+* Fix crash when linking. This requires a certain sequence of events: first
+  a server is linked in successfully, then we need to REHASH, and then a new
+  link attempt has to come in with the same server name (for example because
+  there is a network issue and the old link has not timed out yet).
+  If all that happens, then an UnreaIRCd 6 server may crash, but not always.
 * [Snomask `+j`](https://www.unrealircd.org/docs/Snomasks) was not showing
   remote joins, even though it did show remote parts and kicks.
 
@@ -89,11 +96,6 @@ UnrealIRCd 6.0.4.2
 -------------------
 Another small update to 6.0.4.x:
 
-* Fix crash when linking. This requires a certain sequence of events: first
-  a server is linked in successfully, then we need to REHASH, and then a new
-  link attempt has to come in with the same server name (for example because
-  there is a network issue and the old link has not timed out yet).
-  If all that happens, then an UnreaIRCd 6 server may crash, but not always.
 * Two IRCv3 specifications were ratified which we already supported as drafts:
   * Change CAP `draft/extended-monitor` to `extended-monitor`
   * Add message-tag `bot` next to existing (for now) `draft/bot`
