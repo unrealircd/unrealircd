@@ -640,12 +640,12 @@ dnl remove old argon2 directory to force a recompile...
 dnl and remove its installation prefix just to clean things up.
 rm -rf argon2-$argon2_version argon2
 if test "x$ac_cv_path_GUNZIP" = "x" ; then
-	tar xfz argon2-$argon2_version.tar.gz
+	tar xfz argon2.tar.gz
 else
-	cp argon2-$argon2_version.tar.gz argon2-$argon2_version.tar.gz.bak
-	gunzip -f argon2-$argon2_version.tar.gz
-	cp argon2-$argon2_version.tar.gz.bak argon2-$argon2_version.tar.gz
-	tar xf argon2-$argon2_version.tar
+	cp argon2.tar.gz argon2.tar.gz.bak
+	gunzip -f argon2.tar.gz
+	cp argon2.tar.gz.bak argon2.tar.gz
+	tar xf argon2.tar
 fi
 AC_MSG_RESULT(compiling Argon2 library)
 cd argon2-$argon2_version
