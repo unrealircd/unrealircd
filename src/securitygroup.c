@@ -439,7 +439,15 @@ int conf_match_item(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
 		}
 	}
 
-	add_nvplist(&s->printable_list, s->printable_list_counter++, cep->name, cep->value);
+	/* And update the printable list */
+	if (cep->items)
+	{
+		ConfigEntry *cep2;
+		for (cep2 = cep->items; cep2; cep2 = cep2->next)
+			add_nvplist(&s->printable_list, s->printable_list_counter++, cep->name, cep2->name);
+	} else {
+		add_nvplist(&s->printable_list, s->printable_list_counter++, cep->name, cep->value);
+	}
 
 	return 1; /* Handled by us (guaranteed earlier) */
 }
