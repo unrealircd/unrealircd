@@ -210,6 +210,18 @@ void chathistory_targets(Client *client, HistoryFilter *filter, int limit)
 		sendto_one(client, NULL, ":%s BATCH -%s", me.name, batch);
 }
 
+void send_empty_batch(Client *client, const char *target)
+{
+	char batch[BATCHLEN+1];
+
+	if (HasCapability(client, "batch"))
+	{
+		generate_batch_id(batch);
+		sendto_one(client, NULL, ":%s BATCH +%s chathistory %s", me.name, batch, target);
+		sendto_one(client, NULL, ":%s BATCH -%s", me.name, batch);
+	}
+}
+
 CMD_FUNC(cmd_chathistory)
 {
 	HistoryFilter *filter = NULL;
@@ -261,6 +273,13 @@ CMD_FUNC(cmd_chathistory)
 		goto end;
 	}
 
+	/* We don't support retrieving chathistory for PM's. Send empty response/batch, similar to channels without +H. */
+	if (parv[2][0] != '#')
+	{
+		send_empty_batch(client, parv[2]);
+		return;
+	}
+
 	channel = find_channel(parv[2]);
 	if (!channel)
 	{
@@ -279,14 +298,7 @@ CMD_FUNC(cmd_chathistory)
 	/* Channel is not +H? Send empty response/batch (as per IRCv3 discussion) */
 	if (!has_channel_mode(channel, 'H'))
 	{
-		if (HasCapability(client, "batch"))
-		{
-			char batch[BATCHLEN+1];
-
-			generate_batch_id(batch);
-			sendto_one(client, NULL, ":%s BATCH +%s chathistory %s", me.name, batch, channel->name);
-			sendto_one(client, NULL, ":%s BATCH -%s", me.name, batch);
-		}
+		send_empty_batch(client, channel->name);
 		return;
 	}
 
