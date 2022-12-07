@@ -8224,7 +8224,7 @@ cd libsodium-$sodium_version
 save_cflags="$CFLAGS"
 CFLAGS="$orig_cflags"
 export CFLAGS
-./configure --prefix=$cur_dir/extras/sodium --libdir=$PRIVATELIBDIR --enable-shared --disable-static --enable-opt || exit 1
+./configure --prefix=$cur_dir/extras/sodium --libdir=$PRIVATELIBDIR --enable-shared --disable-static || exit 1
 CFLAGS="$save_cflags"
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: compiling sodium resolver library" >&5
 printf "%s\n" "compiling sodium resolver library" >&6; }
