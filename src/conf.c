@@ -9495,7 +9495,8 @@ void config_run(void)
 	loop.config_status = CONFIG_STATUS_POSTLOAD;
 	extcmodes_check_for_changes();
 	start_listeners();
-	add_proc_io_server();
+	if (!loop.booted)
+		add_proc_io_server();
 	free_all_config_resources();
 }
 
