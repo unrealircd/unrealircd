@@ -50,8 +50,8 @@ You can help us by testing this release and reporting any issues at https://bugs
   * Since UnrealIRCd 4.2.2 (March 2019) users see an on-connect notice with
     a warning when they use an outdated TLS protocol or cipher that does not
     meet these requirements.
-  * This move also reflects the phase out of TLSv1.2 that happened in
-    browsers in 2020/2021.
+  * This move also reflects the phase out of versions below TLSv1.2 which
+    happened in browsers in 2020/2021.
   * In practice on the client-side this requires at least:
     * OpenSSL 1.0.1 (released in 2012)
     * GnuTLS 3.2.6 (2013)
