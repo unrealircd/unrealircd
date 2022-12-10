@@ -188,6 +188,7 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 				 */
 				e->preregistered = 0;
 				existing = 1;
+				break;
 			} else
 			if (module->flags == MODFLAG_NONE)
 			{
