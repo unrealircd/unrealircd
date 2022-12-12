@@ -42,14 +42,23 @@ if [ "$1" = "start" ] ; then
 	fi
 	@BINDIR@/unrealircd
 	if [ $? -ne 0 ] ; then
-		echo "====================================================="
-		echo "UnrealIRCd failed to start. Check above for possible errors."
-		echo "If you don't understand the problem, then have a look at our:"
-		echo "* FAQ (Frequently Asked Questions): https://www.unrealircd.org/docs/FAQ"
-		echo "* Documentation: https://www.unrealircd.org/docs/"
-		echo "====================================================="
 		if [ -r $PID_BACKUP ] ; then
 			mv -f $PID_BACKUP $PID_FILE
+		fi
+		# Try to be helpful...
+		if ldd @BINDIR@/unrealircd 2>&1|grep -qF '=> not found'; then
+			echo "========================================================"
+			echo "UnrealIRCd failed to start due to missing libraries."
+			echo "Maybe you need to recompile UnrealIRCd? See"
+			echo "https://www.unrealircd.org/docs/FAQ#shared-library-error"
+			echo "========================================================"
+		else
+			echo "====================================================="
+			echo "UnrealIRCd failed to start. Check above for possible errors."
+			echo "If you don't understand the problem, then have a look at our:"
+			echo "* FAQ (Frequently Asked Questions): https://www.unrealircd.org/docs/FAQ"
+			echo "* Documentation: https://www.unrealircd.org/docs/"
+			echo "====================================================="
 		fi
 		exit 1
 	fi
