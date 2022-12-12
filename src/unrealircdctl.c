@@ -238,6 +238,8 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
 	chdir(".."); /* go up one level from "bin" */
 	init_winsock();
+#else
+	alarm(20); /* 20 second timeout */
 #endif
 	dbuf_init();
 	init_random();
