@@ -43,6 +43,12 @@ You can help us by testing this release and reporting any issues at https://bugs
   [Websocket connections](https://www.unrealircd.org/docs/WebSocket_support).
 * In the [TLD block](https://www.unrealircd.org/docs/Tld_block) the use
   of `tld::motd` and `tld::rules` is now optional.
+* The `./unrealircd start` command will now refuse to start if UnrealIRCd
+  is already running.
+* The `./unrealircd restart` command will validate the configuration file
+  (it will call `./unrealircd configtest`). If there is a configuration
+  error then the restart will not go through and the current UnrealIRCd
+  process is kept running.
 
 ### Changes:
 * SSL/TLS: By default we now require TLSv1.2 or later and a modern cipher

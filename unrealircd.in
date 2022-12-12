@@ -2,21 +2,40 @@
 
 PID_FILE="@PIDFILE@"
 PID_BACKUP="@PIDFILE@.bak"
-UNREALIRCDCTL="@BINDIR@/unrealircdctl"
+BINDIR="@BINDIR@"
+UNREALIRCDCTL="$BINDIR/unrealircdctl"
+IRCD="$BINDIR/unrealircd"
+BUILDDIR="@BUILDDIR@"
+CONFDIR="@CONFDIR@"
+TMPDIR="@TMPDIR@"
+SCRIPTDIR="@SCRIPTDIR@"
+MODULESDIR="@MODULESDIR@"
 
 # When built with --with-asan, ASan does not dump core by default because
 # older gcc/clang might dump a 16TB core file. We explicitly enable it here.
-export ASAN_OPTIONS="abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1:log_path=@TMPDIR@/unrealircd_asan:detect_leaks=0"
+export ASAN_OPTIONS="abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1:log_path=$TMPDIR/unrealircd_asan:detect_leaks=0"
 
-if [ ! -f @BINDIR@/unrealircd ]; then
-	echo "ERROR: Could not find the IRCd binary (@BINDIR@/unrealircd)"
+if [ ! -f $IRCD ]; then
+	echo "ERROR: Could not find the IRCd binary ($IRCD)"
 	echo "This could mean two things:"
 	echo "1) You forgot to run 'make install' after running 'make'"
 	echo "2) You answered a ./Config question incorrectly"
 	exit
 fi
+if [ ! -d "$TMPDIR" ]; then
+	mkdir "$TMPDIR"
+fi
+
 if [ "$1" = "start" ] ; then
-	echo "Starting UnrealIRCd"
+	if [ -r $PID_FILE ] ; then
+		if kill -CHLD `cat $PID_FILE` 1>/dev/null 2>&1; then
+			if $UNREALIRCDCTL status 1>/dev/null 2>&1; then
+				echo "UnrealIRCd is already running (PID `cat $PID_FILE`)."
+				echo "To restart UnrealIRCd, use: $0 restart"
+				exit 1
+			fi
+		fi
+	fi
 	if [ -r $PID_FILE ] ; then
 		mv -f $PID_FILE $PID_BACKUP
 	fi
@@ -24,29 +43,32 @@ if [ "$1" = "start" ] ; then
 	# Check if ~/Unrealxxx/unrealircd.conf exists but the file
 	# ~/unrealircd/conf/unrealircd.conf does not.
 	# If so, then assume a user-build and give the user a nice hint...
-	if [ ! -f @CONFDIR@/unrealircd.conf -a -f @BUILDDIR@/unrealircd.conf ]; then
+	if [ ! -f $CONFDIR/unrealircd.conf -a -f $BUILDDIR/unrealircd.conf ]; then
 		echo ""
-		echo "There is no unrealircd.conf in @CONFDIR@"
-		echo "However I did find an unrealircd.conf in @BUILDDIR@"
-		echo "With UnrealIRCd 4 you should no longer run the IRCd from @BUILDDIR@."
-		echo "You should 'cd @SCRIPTDIR@' and work from there."
+		echo "There is no unrealircd.conf in $CONFDIR"
+		echo "However I did find an unrealircd.conf in $BUILDDIR"
+		echo "With UnrealIRCd 4 you should no longer run the IRCd from $BUILDDIR."
+		echo "You should 'cd $SCRIPTDIR' and work from there."
 		echo "See https://www.unrealircd.org/docs/UnrealIRCd_files_and_directories"
 		exit 1
 	fi
-	if [ ! -f @CONFDIR@/unrealircd.conf ]; then
+	if [ ! -f $CONFDIR/unrealircd.conf ]; then
 		echo ""
-		echo "The configuration file does not exist (@CONFDIR@/unrealircd.conf)."
+		echo "The configuration file does not exist ($CONFDIR/unrealircd.conf)."
 		echo "Create one using the example configuration file, see the documentation:"
 		echo "https://www.unrealircd.org/docs/Installing_from_source#Creating_a_configuration_file"
 		exit 1
 	fi
-	@BINDIR@/unrealircd
+
+	echo "Starting UnrealIRCd"
+
+	$IRCD
 	if [ $? -ne 0 ] ; then
 		if [ -r $PID_BACKUP ] ; then
 			mv -f $PID_BACKUP $PID_FILE
 		fi
 		# Try to be helpful...
-		if ldd @BINDIR@/unrealircd 2>&1|grep -qF '=> not found'; then
+		if ldd $IRCD 2>&1|grep -qF '=> not found'; then
 			echo "========================================================"
 			echo "UnrealIRCd failed to start due to missing libraries."
 			echo "Maybe you need to recompile UnrealIRCd? See"
@@ -63,7 +85,7 @@ if [ "$1" = "start" ] ; then
 		exit 1
 	fi
 	# Now check if we need to create a crash report.
-	@BINDIR@/unrealircd -R
+	$IRCD -R
 elif [ "$1" = "stop" ] ; then
 	echo -n "Stopping UnrealIRCd"
 	if [ ! -r $PID_FILE ] ; then
@@ -105,7 +127,16 @@ elif [ "$1" = "module-status" ] ; then
 elif [ "$1" = "reloadtls" ] ; then
 	$UNREALIRCDCTL $*
 elif [ "$1" = "restart" ] ; then
-	echo "Restarting UnrealIRCd"
+	echo "Validating configuration..."
+	TMPF="$TMPDIR/configtest.txt"
+	if ! $0 configtest 1>$TMPF 2>&1; then
+		cat $TMPF
+		rm -f $TMPF
+		echo ""
+		echo "Configuration test failed. Server is NOT restarted."
+		exit 1
+	fi
+	echo "Configuration test OK."
 	$0 stop
 	$0 start
 elif [ "$1" = "croncheck" ] ; then
@@ -120,20 +151,18 @@ elif [ "$1" = "croncheck" ] ; then
 	echo "UnrealIRCd is not running. Starting now..."
 	$0 start
 elif [ "$1" = "configtest" ] ; then
-	@BINDIR@/unrealircd -c
+	$IRCD -c
 elif [ "$1" = "module" ] ; then
 	shift
-	@BINDIR@/unrealircd -m $*
+	$IRCD -m $*
 elif [ "$1" = "mkpasswd" ] ; then
 	$UNREALIRCDCTL $*
 elif [ "$1" = "version" ] ; then
-	@BINDIR@/unrealircd -v
+	$IRCD -v
 elif [ "$1" = "gencloak" ] ; then
 	$UNREALIRCDCTL $*
 elif [ "$1" = "backtrace" ] ; then
-	cd @TMPDIR@
-
-	modpath="@MODULESDIR@"
+	cd $TMPDIR
 
 	# Find the corefile
 	echo "Core files available:"
@@ -179,15 +208,15 @@ elif [ "$1" = "backtrace" ] ; then
 
 	# The tmp/*.so files are often already deleted. Here we have some
 	# (ugly) scripting to recreate the tmp/*.so links to the modules *.so files...
-	echo 'info sharedlibrary'|gdb @BINDIR@/unrealircd $corefile 2>/dev/null|\
+	echo 'info sharedlibrary'|gdb $IRCD $corefile 2>/dev/null|\
 	grep No|grep tmp/|awk '{ print $2 }'|\
-	awk -F '.' "{ system(\"[ -f $modpath/\" \$2 \"/\" \$3 \".so ] && ln -s $modpath/\" \$2 \"/\" \$3 \".so \" \$0 \" || ln -s $modpath/\" \$2 \".so \" \$0) }"
+	awk -F '.' "{ system(\"[ -f $MODULESDIR/\" \$2 \"/\" \$3 \".so ] && ln -s $MODULESDIR/\" \$2 \"/\" \$3 \".so \" \$0 \" || ln -s $MODULESDIR/\" \$2 \".so \" \$0) }"
 	
 	echo ""
 	echo "=================== START HERE ======================"
 	echo "BACKTRACE:"
 
-cat >@TMPDIR@/gdb.commands << __EOF__
+cat >$TMPDIR/gdb.commands << __EOF__
 bt
 echo \n
 frame
@@ -198,8 +227,8 @@ bt 3 full
 quit
 __EOF__
 
-	gdb -batch -x @TMPDIR@/gdb.commands @BINDIR@/unrealircd $corefile
-	rm -f @TMPDIR@/gdb.commands
+	gdb -batch -x $TMPDIR/gdb.commands $IRCD $corefile
+	rm -f $TMPDIR/gdb.commands
 	echo "GCC: `gcc -v 2>&1|tail -n 1`"
 	echo "UNAME: `uname -a`"
 	echo "UNREAL: `$0 version`"
@@ -222,7 +251,7 @@ __EOF__
 elif [ "$1" = "spki" -o "$1" = "spkifp" ] ; then
 	$UNREALIRCDCTL $*
 elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
-	if [ ! -d "@BUILDDIR@" ]; then
+	if [ ! -d "$BUILDDIR" ]; then
 		echo "UnrealIRCd source not found. Sorry, it is not possible to patch."
 		exit 1
 	fi
@@ -235,7 +264,7 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 		echo "On Linux consider running 'apt install wget' or a similar command."
 		exit 1
 	fi
-	cd "@BUILDDIR@" || exit 1
+	cd "$BUILDDIR" || exit 1
 
 	# Weird way to get version, but ok.
 	UNREALVER="`./configure --version|head -n1|awk '{ print $3 }'`"
@@ -265,7 +294,7 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 	make || gmake || exit 1
 	make install || gmake install || exit 1
 
-	cd @SCRIPTDIR@
+	cd $SCRIPTDIR
 	if [ "$1" = "hot-patch" ]; then
 		echo "Patch applied successfully and installed. Rehashing your IRCd..."
 		if ./unrealircd rehash; then
@@ -281,10 +310,10 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 		echo "Patch applied successfully. You must now restart your IRC server."
 	fi
 elif [ "$1" = "upgrade" ] ; then
-	@BINDIR@/unrealircd-upgrade-script $*
+	$BINDIR/unrealircd-upgrade-script $*
 	exit
 elif [ "$1" = "genlinkblock" ] ; then
-	@BINDIR@/unrealircd -L
+	$IRCD -L
 else
 	if [ "$1" = "" ]; then
 		echo "This script expects a parameter. Use:"
