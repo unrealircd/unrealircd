@@ -18,14 +18,14 @@ by this server"
 Currently UnrealIRCd supports several tokens that are included in numeric 005. A list of
 all tokens, their respective value and a brief description are listed below.
 
-Unreal attempts to follow the proposed ISupport standard as much as possible. Unreal only
-ignores the standard in one regard, the TARGMAX token. This token is believed to be 
+Unrealircd attempts to follow the proposed ISupport standard as much as possible. Unrealircd
+only ignores the standard in one regard, the TARGMAX token. This token is believed to be 
 impractical and technically impossible to correctly implement due to existing limitations
 in the standard. Therefore, this token is not currently supported. 
 
-Unreal does additionally provide a few tokens which are not specified in the standard, these
+Unrealircd does additionally provide a few tokens which are not specified in the standard, these
 include: HCN, AWAYLEN, WATCH, SILENCE, EXTBAN, ELIST, CMDS, NAMESX, UHNAMES, and WATCHOPTS.
-Unreal also maintains a few legacy tokens such as MAXCHANNELS and WALLCHOPS to ensure
+Unrealircd also maintains a few legacy tokens such as MAXCHANNELS and WALLCHOPS to ensure
 compatibility until the ISupport standard is more widely accepted by clients.
 
 Token         Value           Default Value                Description
