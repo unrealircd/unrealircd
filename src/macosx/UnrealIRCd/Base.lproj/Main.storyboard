@@ -134,7 +134,7 @@
                             </button>
                             <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fya-YD-1uu">
                                 <rect key="frame" x="132" y="88" width="274" height="18"/>
-                                <buttonCell key="cell" type="check" title="Automatically start Unrealircd Agent on login" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="VUc-0Q-Rwf">
+                                <buttonCell key="cell" type="check" title="Automatically start UnrealIRCd Agent on login" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="VUc-0Q-Rwf">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
