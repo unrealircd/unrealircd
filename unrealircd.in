@@ -329,8 +329,6 @@ else
 	echo "unrealircd status        Show current status of the IRC Server"
 	echo "unrealircd module-status Show all currently loaded modules"
 	echo "unrealircd upgrade       Upgrade UnrealIRCd to the latest version"
-	echo "unrealircd upgrade-conf  Upgrade the configuration file from UnrealIRCd"
-	echo "                         3.2.x/4.x to 5.x format"
 	echo "unrealircd mkpasswd      Hash a password"
 	echo "unrealircd version       Display the UnrealIRCd version"
 	echo "unrealircd module        Install and uninstall 3rd party modules"
