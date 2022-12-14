@@ -167,7 +167,7 @@ extern MODVAR unsigned char char_atribs[];
  * you are doing.
  */
 
-/* IRCu/Hybrid/Unreal way now :) -Stskeeps */
+/* IRCu/Hybrid/unrealircd way now :) -Stskeeps */
 
 #define EXPAR1	extchmstr[0]
 #define EXPAR2	extchmstr[1]

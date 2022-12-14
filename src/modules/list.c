@@ -107,7 +107,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/* Originally from bahamut, modified a bit for Unreal by codemastr
+/* Originally from bahamut, modified a bit for Unrealircd by codemastr
  * also Opers can now see +s channels -- codemastr */
 
 /*
@@ -316,7 +316,7 @@ CMD_FUNC(cmd_list)
  * Operates by stepping through the hashtable, sending the entries back if
  * they match the criteria.
  * client = Local client to send the output back to.
- * Taken from bahamut, modified for Unreal by codemastr.
+ * Taken from bahamut, modified for Unrealircd by codemastr.
  */
 int send_list(Client *client)
 {

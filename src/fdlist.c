@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-/* new FD management code, based on mowgli.eventloop from atheme, hammered into Unreal by
+/* new FD management code, based on mowgli.eventloop from atheme, hammered into Unrealircd by
  * me, nenolod.
  */
 FDEntry fd_table[MAXCONNECTIONS + 1];
