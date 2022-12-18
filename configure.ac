@@ -326,7 +326,7 @@ fi
 ])
 AC_CACHE_CHECK(if your system prepends an underscore on symbols,ac_cv_underscore,[
 cat >uscore.c << __EOF__
-int main() {
+int main(void) {
 	return 0;
 }
 __EOF__
@@ -354,7 +354,8 @@ AC_CACHE_CHECK([if your system has IPv6 support], [ac_cv_ip6], [
 AC_TRY_RUN([
 #include <sys/types.h>
 #include <sys/socket.h>
-int main() {
+#include <stdlib.h>
+int main(void) {
 int s = socket(AF_INET6, SOCK_STREAM, 0);
 exit(0); /* We only check if the code compiles, that's enough. We can deal with missing runtime IPv6 */
 }
