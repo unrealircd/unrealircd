@@ -423,7 +423,7 @@ int authprompt_find_tkline_match(Client *client, TKL *tkl)
 int authprompt_pre_connect(Client *client)
 {
 	/* If the user is tagged as auth required and not logged in, then.. */
-	if (SEUSER(client) && !IsLoggedIn(client))
+	if (SEUSER(client) && !IsLoggedIn(client) && cgf.enabled)
 	{
 		authprompt_send_auth_required_message(client);
 		return HOOK_DENY; /* do not process register_user() */
