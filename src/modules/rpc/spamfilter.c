@@ -227,8 +227,8 @@ RPC_CALL_FUNC(rpc_spamfilter_add)
 	}
 
 	/* Convert reason to use internal storage and wire format */
+	reason = unreal_encodespace(reason);
 	strlcpy(reasonbuf, reason, sizeof(reasonbuf));
-	unreal_encodespace(reasonbuf);
 	reason = reasonbuf;
 
 	/* now check the regex / match field (only when adding) */

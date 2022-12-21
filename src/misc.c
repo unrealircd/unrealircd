@@ -821,9 +821,10 @@ char *spamfilter_target_inttostring(int v)
 /** Replace underscores back to the space character.
  * This is used for the spamfilter reason.
  */
-char *unreal_decodespace(char *s)
+char *unreal_decodespace(const char *s)
 {
-	static char buf[512], *i, *o;
+	const char *i;
+	static char buf[512], *o;
 
 	for (i = s, o = buf; (*i) && (o < buf+510); i++)
 		if (*i == '_')
@@ -844,9 +845,10 @@ char *unreal_decodespace(char *s)
 /** Replace spaces to underscore characters.
  * This is used for the spamfilter reason.
  */
-char *unreal_encodespace(char *s)
+char *unreal_encodespace(const char *s)
 {
-	static char buf[512], *i, *o;
+	const char *i;
+	static char buf[512], *o;
 
 	if (!s)
 		return NULL; /* NULL in = NULL out */
