@@ -128,7 +128,10 @@ EVENT(handshake_timeout)
 			if (client->server && *client->server->by)
 				continue; /* handled by server module */
 
-			exit_client(client, NULL, "Registration Timeout");
+			if (moddata_client_get_raw(client, "authprompt"))
+				exit_client(client, NULL, "Account required to connect");
+			else
+				exit_client(client, NULL, "Registration Timeout");
 			continue;
 		}
 	}
