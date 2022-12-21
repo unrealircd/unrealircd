@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/spamfilter",
-	"1.0.1",
+	"1.0.2",
 	"spamfilter.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -195,6 +195,7 @@ RPC_CALL_FUNC(rpc_spamfilter_add)
 	int targets = 0;
 	char targetbuf[64];
 	char actionbuf[2];
+	char reasonbuf[512];
 	char *err = NULL;
 
 	if (!spamfilter_select_criteria(client, request, params, &name, &match_type, &targets, targetbuf, sizeof(targetbuf), &action, actionbuf))
@@ -224,6 +225,11 @@ RPC_CALL_FUNC(rpc_spamfilter_add)
 		rpc_error(client, request, JSON_RPC_ERROR_ALREADY_EXISTS, "A spamfilter with that regex+action+target already exists");
 		return;
 	}
+
+	/* Convert reason to use internal storage and wire format */
+	strlcpy(reasonbuf, reason, sizeof(reasonbuf));
+	unreal_encodespace(reasonbuf);
+	reason = reasonbuf;
 
 	/* now check the regex / match field (only when adding) */
 	m = unreal_create_match(match_type, name, &err);
