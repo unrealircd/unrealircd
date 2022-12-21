@@ -125,14 +125,9 @@ CMD_FUNC(cmd_connect)
 		}
 	}
 
-	/* Notify all operators about remote connect requests */
-	if (!MyUser(client))
-	{
-		sendto_server(NULL, 0, 0, NULL,
-		    ":%s SENDUMODE o :Remote CONNECT %s %s from %s",
-		    me.id, parv[1], parv[2] ? parv[2] : "",
-		    get_client_name(client, FALSE));
-	}
+	unreal_log(ULOG_INFO, "link", "LINK_REQUEST", client,
+		   "CONNECT: Link to $link_block requested by $client",
+		   log_data_link_block(aconf));
 
 	connect_server(aconf, client, NULL);
 }
