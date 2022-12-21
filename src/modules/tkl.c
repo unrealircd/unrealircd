@@ -3756,6 +3756,10 @@ void tkl_broadcast_entry(int add, Client *sender, Client *skip, TKL *tkl)
 {
 	Client *acptr;
 
+	/* Silly fix for RPC calls that lead to broadcasts from this sender */
+	if (!IsUser(sender) && !IsServer(sender))
+		sender = &me;
+
 	list_for_each_entry(acptr, &server_list, special_node)
 	{
 		if (skip && acptr == skip->direction)
