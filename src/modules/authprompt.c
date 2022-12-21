@@ -118,7 +118,7 @@ static void init_config(void)
 {
 	/* This sets some default values */
 	memset(&cfg, 0, sizeof(cfg));
-	cfg.enabled = 0;
+	cfg.enabled = 1;
 }
 
 static void config_postdefaults(void)
