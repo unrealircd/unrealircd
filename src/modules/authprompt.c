@@ -374,7 +374,7 @@ void authprompt_tag_as_auth_required(Client *client)
 void authprompt_send_auth_required_message(Client *client)
 {
 	/* Display set::authentication-prompt::message */
-	sendnotice_multiline(client, cfg.message);
+		sendnotice_multiline(client, cfg.message);
 }
 
 /* Called upon "place a host ban on this user" (eg: spamfilter, blacklist, ..) */
@@ -383,7 +383,7 @@ int authprompt_place_host_ban(Client *client, int action, const char *reason, lo
 	/* If it's a soft-xx action and the user is not logged in
 	 * and the user is not yet online, then we will handle this user.
 	 */
-	if (IsSoftBanAction(action) && !IsLoggedIn(client) && !IsUser(client))
+	if (IsSoftBanAction(action) && !IsLoggedIn(client) && !IsUser(client) && cfg.enabled)
 	{
 		/* Send ban reason */
 		if (reason)
@@ -403,7 +403,8 @@ int authprompt_find_tkline_match(Client *client, TKL *tkl)
 	/* If it's a soft-xx action and the user is not logged in
 	 * and the user is not yet online, then we will handle this user.
 	 */
-	if (TKLIsServerBan(tkl) &&
+	if (cfg.enabled &&
+		TKLIsServerBan(tkl) &&
 	   (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) &&
 	   !IsLoggedIn(client) &&
 	   !IsUser(client))
@@ -423,7 +424,7 @@ int authprompt_find_tkline_match(Client *client, TKL *tkl)
 int authprompt_pre_connect(Client *client)
 {
 	/* If the user is tagged as auth required and not logged in, then.. */
-	if (SEUSER(client) && !IsLoggedIn(client) && cgf.enabled)
+	if (SEUSER(client) && !IsLoggedIn(client) && cfg.enabled)
 	{
 		authprompt_send_auth_required_message(client);
 		return HOOK_DENY; /* do not process register_user() */
