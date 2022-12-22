@@ -105,8 +105,6 @@ int oper_mtag_is_ok(Client *client, const char *name, const char *value)
 
 void mtag_add_oper(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature)
 {
-	MessageTag *m;
-
 	if (IsUser(client) && IsOper(client))
 	{
 		MessageTag *m = find_mtag(recv_mtags, MTAG_OPER);
@@ -125,11 +123,9 @@ void mtag_add_oper(Client *client, MessageTag *recv_mtags, MessageTag **mtag_lis
 
 void mtag_add_oper_name(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature)
 {
-	MessageTag *m;
-
 	if (IsUser(client) && IsOper(client))
 	{
-	  MessageTag *m = find_mtag(recv_mtags, MTAG_OPER_NAME);
+	 	MessageTag *m = find_mtag(recv_mtags, MTAG_OPER_NAME);
 		if (m)
 		{
 		  m = duplicate_mtag(m);
@@ -145,16 +141,13 @@ void mtag_add_oper_name(Client *client, MessageTag *recv_mtags, MessageTag **mta
 
 void mtag_add_oper_class(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature)
 {
-	MessageTag *m;
-
 	if (IsUser(client) && IsOper(client))
 	{
 		MessageTag *m = find_mtag(recv_mtags, MTAG_OPER_CLASS);
 		if (m)
-		{
 			m = duplicate_mtag(m);
-		} else {
-			
+		else
+		{
 			m = safe_alloc(sizeof(MessageTag));
 			safe_strdup(m->name, MTAG_OPER_CLASS);
 			safe_strdup(m->value, moddata_client_get(client, "operclass"));
