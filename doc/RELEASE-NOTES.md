@@ -1,8 +1,10 @@
-UnrealIRCd 6.0.5-rc1
+UnrealIRCd 6.0.5-rc2
 =====================
-This is the Release Candidate for UnrealIRCd 6.0.5.
+This is the second Release Candidate for UnrealIRCd 6.0.5.
 
 You can help us by testing this release and reporting any issues at https://bugs.unrealircd.org/.
+
+On *NIX you can use `./unrealircd upgrade --rc` to upgrade to this Release Candidate.
 
 ### Enhancements:
 * Internally the websocket module has been split up into 3 modules:
@@ -18,6 +20,16 @@ You can help us by testing this release and reporting any issues at https://bugs
 * New `TLINE` command to test *LINEs. This can be especially useful for 
   checking how many people match an [extended server ban](https://www.unrealircd.org/docs/Extended_server_bans)
   such as `TLINE ~C:NL`
+* The `./unrealircd start` command will now refuse to start if UnrealIRCd
+  is already running.
+* The `./unrealircd restart` command will validate the configuration file
+  (it will call `./unrealircd configtest`). If there is a configuration
+  error then the restart will not go through and the current UnrealIRCd
+  process is kept running.
+* When an IRCOp is outside the channel and does `MODE #channel` they will
+  now get to see the mode parameters too. This depends on the `channel:see:mode:remote`
+  [operclass permission](https://www.unrealircd.org/docs/Operclass_permissions)
+  which all IRCOps have by default if you use the default operclasses.
 * [Logging to a file](https://www.unrealircd.org/docs/Log_block) now creates
   a directory structure if needed.
   * You could already use:
@@ -30,16 +42,6 @@ You can help us by testing this release and reporting any issues at https://bugs
     ```
     This is especially useful if you output to multiple log files and then
     want them grouped by date in a directory.
-* The `./unrealircd start` command will now refuse to start if UnrealIRCd
-  is already running.
-* The `./unrealircd restart` command will validate the configuration file
-  (it will call `./unrealircd configtest`). If there is a configuration
-  error then the restart will not go through and the current UnrealIRCd
-  process is kept running.
-* When an IRCOp is outside the channel and does `MODE #channel` they will
-  now get to see the mode parameters too. This depends on the `channel:see:mode:remote`
-  [operclass permission](https://www.unrealircd.org/docs/Operclass_permissions)
-  which all IRCOps have by default if you use the default operclasses.
 * Add additional variables in
   [blacklist::reason](https://www.unrealircd.org/docs/Blacklist_block):
   * `$blacklist`: name of the blacklist block
@@ -83,7 +85,8 @@ You can help us by testing this release and reporting any issues at https://bugs
   [FAQ entry](https://www.unrealircd.org/docs/FAQ#shared-library-error)
   about it.
 * When timing out on the [authprompt](https://www.unrealircd.org/docs/Set_block#set::authentication-prompt)
-  module, exit with `Account required to connect` instead of `Registration timeout`.
+  module, the error (quit message) is now `Account required to connect` instead of the
+  generic `Registration timeout`.
 
 ### Fixes:
 * Crash when linking. This requires a certain sequence of events: first
@@ -97,7 +100,7 @@ You can help us by testing this release and reporting any issues at https://bugs
 * Leak of 1 file descriptor per /REHASH (the control socket).
 * Ban letters showing up twice in 005 EXTBAN=
 * Setting [set::authentication-prompt::enabled](https://www.unrealircd.org/docs/Set_block#set::authentication-prompt)
-  to "no" was ignored. The default is still "yes".
+  to `no` was ignored. The default is still `yes`.
 
 ### Developers and protocol:
 * Add `CALL_CMD_FUNC(cmd_func_name)` for calling commands in the same
