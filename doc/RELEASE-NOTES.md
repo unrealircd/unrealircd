@@ -49,6 +49,7 @@ You can help us by testing this release and reporting any issues at https://bugs
   [Websocket connections](https://www.unrealircd.org/docs/WebSocket_support).
 * In the [TLD block](https://www.unrealircd.org/docs/Tld_block) the use
   of `tld::motd` and `tld::rules` is now optional.
+* Log which oper actually initiated a server link request (`CONNECT`)
 
 ### Changes:
 * SSL/TLS: By default we now require TLSv1.2 or later and a modern cipher
@@ -81,15 +82,22 @@ You can help us by testing this release and reporting any issues at https://bugs
   We now print a more helpful message and link to the new
   [FAQ entry](https://www.unrealircd.org/docs/FAQ#shared-library-error)
   about it.
+* When timing out on the [authprompt](https://www.unrealircd.org/docs/Set_block#set::authentication-prompt)
+  module, exit with `Account required to connect` instead of `Registration timeout`.
 
 ### Fixes:
-* Fix crash when linking. This requires a certain sequence of events: first
+* Crash when linking. This requires a certain sequence of events: first
   a server is linked in successfully, then we need to REHASH, and then a new
   link attempt has to come in with the same server name (for example because
   there is a network issue and the old link has not timed out yet).
   If all that happens, then an UnreaIRCd 6 server may crash, but not always.
+* Warning message about moddata creationtime when linking.
 * [Snomask `+j`](https://www.unrealircd.org/docs/Snomasks) was not showing
   remote joins, even though it did show remote parts and kicks.
+* Leak of 1 file descriptor per /REHASH (the control socket).
+* Ban letters showing up twice in 005 EXTBAN=
+* Setting [set::authentication-prompt::enabled](https://www.unrealircd.org/docs/Set_block#set::authentication-prompt)
+  to "no" was ignored. The default is still "yes".
 
 ### Developers and protocol:
 * Add `CALL_CMD_FUNC(cmd_func_name)` for calling commands in the same
