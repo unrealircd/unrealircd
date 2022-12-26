@@ -85,8 +85,8 @@ On *NIX you can use `./unrealircd upgrade --rc` to upgrade to this Release Candi
   [FAQ entry](https://www.unrealircd.org/docs/FAQ#shared-library-error)
   about it.
 * When timing out on the [authprompt](https://www.unrealircd.org/docs/Set_block#set::authentication-prompt)
-  module, the error (quit message) is now `Account required to connect` instead of the
-  generic `Registration timeout`.
+  module, the error (quit message) is now the original (ban) reason for the
+  prompt, instead of the generic `Registration timeout`.
 
 ### Fixes:
 * Crash when linking. This requires a certain sequence of events: first

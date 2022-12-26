@@ -1229,6 +1229,8 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, const char *varshortname, l
 #define HOOKTYPE_JSON_EXPAND_CHANNEL	115
 /** See hooktype_accept() */
 #define HOOKTYPE_ACCEPT		116
+/** See hooktype_pre_local_handshake_timeout */
+#define HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT	117
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -2271,6 +2273,16 @@ int hooktype_json_expand_client_server(Client *client, int detail, json_t *j, js
  */
 int hooktype_json_expand_channel(Channel *channel, int detail, json_t *j);
 
+/** Called when a local user is about to be disconnected due to a registration timeout,
+ * allows changing the disconnect reason (function prototype for HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT).
+ * This is used by the authprompt module.
+ * @param client		The client
+ * @param comment		The quit/disconnect reason (can be changed by you)
+ * @retval HOOK_CONTINUE	Continue as normal
+ * @retval HOOK_ALLOW		Do not exit the user due to a handshake timeout
+ */
+int hooktype_pre_local_handshake_timeout(Client *client, const char **comment);
+
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2389,7 +2401,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT) && !ValidateHook(hooktype_json_expand_client, func)) || \
         ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT_USER) && !ValidateHook(hooktype_json_expand_client_user, func)) || \
         ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT_SERVER) && !ValidateHook(hooktype_json_expand_client_server, func)) || \
-        ((hooktype == HOOKTYPE_JSON_EXPAND_CHANNEL) && !ValidateHook(hooktype_json_expand_channel, func)) ) \
+        ((hooktype == HOOKTYPE_JSON_EXPAND_CHANNEL) && !ValidateHook(hooktype_json_expand_channel, func)) ||
+        ((hooktype == HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT) && !ValidateHook(hooktype_pre_local_handshake_timeout, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

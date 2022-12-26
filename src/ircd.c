@@ -125,13 +125,28 @@ EVENT(handshake_timeout)
 		    ((TStime() - client->local->creationtime) > iConf.handshake_timeout) &&
 		    !(client->local->listener && (client->local->listener->socket_type == SOCKET_TYPE_UNIX)))
 		{
+			Hook *h;
+			int n = HOOK_CONTINUE;
+			const char *quitreason = "Registration Timeout";
+			char reasonbuf[512];
+
 			if (client->server && *client->server->by)
 				continue; /* handled by server module */
 
-			if (moddata_client_get_raw(client, "authprompt"))
-				exit_client(client, NULL, "Account required to connect");
-			else
-				exit_client(client, NULL, "Registration Timeout");
+			for (h = Hooks[HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT]; h; h = h->next)
+			{
+				n = (*(h->func.intfunc))(client, &quitreason);
+				if (n == HOOK_ALLOW)
+					break;
+			}
+			if (n == HOOK_ALLOW)
+				continue; /* Do not exit the client due to registration timeout */
+
+			/* Work on a copy here, since the 'quitreason' may point to
+			 * some kind of buffer that gets freed in the exit code.
+			 */
+			strlcpy(reasonbuf, quitreason ? quitreason : "Registration Timeout", sizeof(reasonbuf));
+			exit_client(client, NULL, reasonbuf);
 			continue;
 		}
 	}
