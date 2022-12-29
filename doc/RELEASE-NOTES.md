@@ -2,7 +2,7 @@ UnrealIRCd 6.0.5-rc2
 =================
 
 This release adds experimental JSON-RPC support, a new TLINE command, the
-./unrealircd restart command has been improved to check for config errors,
+`./unrealircd restart` command has been improved to check for config errors,
 logging to files has been improved and there are several other enhancements.
 
 There are also two important changes: 1) servers that use websockets now also
@@ -11,10 +11,9 @@ file). 2) we now require TLSv1.2 or higher and a modern cipher for IRC clients.
 This should be no problem for clients using any reasonably new SSL/TLS library
 (from 2014 or later).
 
-The full release notes with all the details are below.
+See below for the full release notes with all the details.
 
-As always, you can download UnrealIRCd from https://unrealircd.org/.  
-Or, on *NIX, you can use the follow command to upgrade: ./unrealircd upgrade
+As usual, on *NIX you can upgrade with `./unrealircd upgrade`
 
 ### Enhancements:
 * Internally the websocket module has been split up into 3 modules:
