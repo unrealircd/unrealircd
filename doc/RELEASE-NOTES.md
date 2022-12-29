@@ -1,4 +1,4 @@
-UnrealIRCd 6.0.5-rc2
+UnrealIRCd 6.0.5
 =================
 
 This release adds experimental JSON-RPC support, a new TLINE command, the
@@ -11,9 +11,13 @@ file). 2) we now require TLSv1.2 or higher and a modern cipher for IRC clients.
 This should be no problem for clients using any reasonably new SSL/TLS library
 (from 2014 or later).
 
-See below for the full release notes with all the details.
+I would also like to take this opportunity to say that we are
+[looking for webdevs to create an UnrealIRCd admin panel](https://forums.unrealircd.org/viewtopic.php?t=9257).
+The previous attempt at this failed so we are looking for new people.
 
-As usual, on *NIX you can upgrade with `./unrealircd upgrade`
+See the full release notes below for all changes in more detail.
+
+As usual, on *NIX you can easily upgrade with `./unrealircd upgrade`
 
 ### Enhancements:
 * Internally the websocket module has been split up into 3 modules:

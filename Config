@@ -375,7 +375,7 @@ echo "We will now ask you a number of questions. You can just press ENTER to acc
 echo ""
 
 # This needs to be updated each release so auto-upgrading works for settings, modules, etc!!:
-UNREALRELEASES="unrealircd-6.0.5-rc1 unrealircd-6.0.4.2 unrealircd-6.0.4.1 unrealircd-6.0.4 unrealircd-6.0.4-rc2 unrealircd-6.0.4-rc1 unrealircd-6.0.3 unrealircd-6.0.2 unrealircd-6.0.1.1 unrealircd-6.0.1 unrealircd-6.0.0 unrealircd-6.0.0-rc2 unrealircd-6.0.0-rc1 unrealircd-6.0.0-beta4 unrealircd-6.0.0-beta3 unrealircd-6.0.0-beta2 unrealircd-6.0.0-beta1 unrealircd-5.2.3 unrealircd-5.2.2 unrealircd-5.2.1.1 unrealircd-5.2.1 unrealircd-5.2.1-rc1 unrealircd-5.2.0.2 unrealircd-5.2.0.1 unrealircd-5.2.0 unrealircd-5.2.0-rc1 unrealircd-5.0.9.1 unrealircd-5.0.9 unrealircd-5.0.9-rc1 unrealircd-5.0.8 unrealircd-5.0.8-rc1 unrealircd-5.0.7 unrealircd-5.0.7-rc1 unrealircd-5.0.6"
+UNREALRELEASES="unrealircd-6.0.5-rc2 unrealircd-6.0.5-rc1 unrealircd-6.0.4.2 unrealircd-6.0.4.1 unrealircd-6.0.4 unrealircd-6.0.4-rc2 unrealircd-6.0.4-rc1 unrealircd-6.0.3 unrealircd-6.0.2 unrealircd-6.0.1.1 unrealircd-6.0.1 unrealircd-6.0.0 unrealircd-6.0.0-rc2 unrealircd-6.0.0-rc1 unrealircd-6.0.0-beta4 unrealircd-6.0.0-beta3 unrealircd-6.0.0-beta2 unrealircd-6.0.0-beta1 unrealircd-5.2.3 unrealircd-5.2.2 unrealircd-5.2.1.1 unrealircd-5.2.1 unrealircd-5.2.1-rc1 unrealircd-5.2.0.2 unrealircd-5.2.0.1 unrealircd-5.2.0 unrealircd-5.2.0-rc1 unrealircd-5.0.9.1 unrealircd-5.0.9 unrealircd-5.0.9-rc1 unrealircd-5.0.8 unrealircd-5.0.8-rc1 unrealircd-5.0.7 unrealircd-5.0.7-rc1 unrealircd-5.0.6"
 if [ -f "config.settings" ]; then
 	. ./config.settings
 else
