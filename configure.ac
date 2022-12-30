@@ -696,7 +696,7 @@ cd libsodium-$sodium_version
 save_cflags="$CFLAGS"
 CFLAGS="$orig_cflags"
 export CFLAGS
-./configure --prefix=$cur_dir/extras/sodium --libdir=$PRIVATELIBDIR --enable-shared --disable-static || exit 1
+./configure --prefix=$cur_dir/extras/sodium --libdir=$PRIVATELIBDIR --enable-shared --disable-static --enable-opt || exit 1
 CFLAGS="$save_cflags"
 AC_MSG_RESULT(compiling sodium resolver library)
 $ac_cv_prog_MAKER || exit 1
@@ -821,7 +821,7 @@ cd jansson-$jansson_version
 save_cflags="$CFLAGS"
 CFLAGS="$orig_cflags"
 export CFLAGS
-./configure --prefix=$cur_dir/extras/jansson --libdir=$PRIVATELIBDIR --enable-shared --disable-static --enable-opt || exit 1
+./configure --prefix=$cur_dir/extras/jansson --libdir=$PRIVATELIBDIR --enable-shared --disable-static || exit 1
 CFLAGS="$save_cflags"
 AC_MSG_RESULT(compiling jansson resolver library)
 $ac_cv_prog_MAKER || exit 1
