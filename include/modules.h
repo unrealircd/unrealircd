@@ -434,7 +434,7 @@ struct Extban {
 
 	int (*is_ok)(BanContext *b);
 
-	/** Convert input parameter to output [optional].
+	/** Convert input parameter to output.
 	 * like with normal bans '+b blah' gets '+b blah!*@*', and it allows
 	 * you to limit the length of the ban too.
 	 * return value: pointer to output string (temp. storage)

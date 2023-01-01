@@ -169,6 +169,15 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 		return NULL;
 	}
 
+	if (!req.conv_param)
+	{
+		module->errorcode = MODERR_INVALID;
+		unreal_log(ULOG_ERROR, "module", "EXTBANADD_API_ERROR", NULL,
+			   "ExtbanAdd(): conv_param event missing. Module: $module_name",
+			   log_data_string("module_name", module->header->name));
+		return NULL;
+	}
+
 	for (e=extbans; e; e = e->next)
 	{
 		if (e->letter == req.letter)
@@ -420,25 +429,11 @@ const char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 		return NULL;
 	}
 
-	if (extban->conv_param)
-	{
-		//BanContext *b = safe_alloc(sizeof(BanContext));
-		//b->banstr = mask; <-- this is redundant right? we can use existing 'b' context??
-		extban_recursion++;
-		ret = extban->conv_param(b, extban);
-		extban_recursion--;
-		ret = prefix_with_extban(ret, b, extban, retbuf, sizeof(retbuf));
-		//safe_free(b);
-		return ret;
-	}
-	/* I honestly don't know what the deal is with the 80 char cap in clean_ban_mask is about. So I'm leaving it out here. -- aquanight */
-	/* I don't know why it's 80, but I like a limit anyway. A ban of 500 characters can never be good... -- Syzop */
-	if (strlen(b->banstr) > 80)
-	{
-		strlcpy(retbuf, b->banstr, 128);
-		return retbuf;
-	}
-	return b->banstr;
+	extban_recursion++;
+	ret = extban->conv_param(b, extban);
+	extban_recursion--;
+	ret = prefix_with_extban(ret, b, extban, retbuf, sizeof(retbuf));
+	return ret;
 }
 
 char *prefix_with_extban(const char *remainder, BanContext *b, Extban *extban, char *buf, size_t buflen)
