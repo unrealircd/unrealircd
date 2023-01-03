@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/server_ban",
-	"1.0.0",
+	"1.0.1",
 	"server_ban.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -294,6 +294,8 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 	if ((str = json_object_get_string(params, "duration_string")))
 	{
 		tkl_expire_at = config_checkval(str, CFG_TIME);
+		if (tkl_expire_at > 0)
+			tkl_expire_at = TStime() + tkl_expire_at;
 	} else
 	if ((str = json_object_get_string(params, "expire_at")))
 	{
