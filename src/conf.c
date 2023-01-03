@@ -5020,6 +5020,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!strcmp(cep->name, "file"))
 		{
+			convert_to_absolute_path(&cep->value, PERMDATADIR);
 			file = cep->value;
 		} else
 		if (!strcmp(cep->name, "ip"))
