@@ -22,6 +22,7 @@ int rpc_config_run_ex_listen(ConfigFile *cf, ConfigEntry *ce, int type, void *pt
 int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rpc_config_run_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type);
 int rpc_client_accept(Client *client);
+int rpc_pre_local_handshake_timeout(Client *client, const char **comment);
 void rpc_client_handshake_unix_socket(Client *client);
 void rpc_client_handshake_web(Client *client);
 int rpc_handle_webrequest(Client *client, WebRequest *web);
@@ -90,6 +91,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, rpc_config_run_ex_listen);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, rpc_config_run_rpc_user);
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, -5000, rpc_client_accept);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT, 0, rpc_pre_local_handshake_timeout);
 	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, INT_MIN, rpc_packet_in_unix_socket);
 
 	memset(&r, 0, sizeof(r));
@@ -636,6 +638,39 @@ void rpc_client_handshake_web(Client *client)
 
 	/* Allow incoming data to be read from now on.. */
 	fd_setselect(client->local->fd, FD_SELECT_READ, read_packet, client);
+}
+
+#define RPC_WEBSOCKET_PING_TIME 120
+
+int rpc_pre_local_handshake_timeout(Client *client, const char **comment)
+{
+	/* Don't hang up websocket connections */
+	if (IsRPC(client) && WSU(client) && WSU(client)->handshake_completed)
+	{
+		long t = TStime() - client->local->last_msg_received;
+		if ((t > RPC_WEBSOCKET_PING_TIME*2) && IsPingSent(client))
+		{
+			*comment = "No websocket PONG received in time.";
+			return HOOK_CONTINUE;
+		} else
+		if ((t > RPC_WEBSOCKET_PING_TIME) && !IsPingSent(client) && !IsDead(client))
+		{
+			char pingbuf[4];
+			const char *pkt = pingbuf;
+			int pktlen = sizeof(pingbuf);
+			pingbuf[0] = 0x11;
+			pingbuf[1] = 0x22;
+			pingbuf[2] = 0x33;
+			pingbuf[3] = 0x44;
+			websocket_create_packet_simple(WSOP_PING, &pkt, &pktlen);
+			dbuf_put(&client->local->sendQ, pkt, pktlen);
+			send_queued(client);
+			SetPingSent(client);
+		}
+		return HOOK_ALLOW; /* prevent closing the connection due to timeout */
+	}
+
+	return HOOK_CONTINUE;
 }
 
 RPCUser *find_rpc_user(const char *username)

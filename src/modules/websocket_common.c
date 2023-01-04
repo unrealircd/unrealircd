@@ -287,7 +287,15 @@ int websocket_handle_packet_ping(Client *client, const char *buf, int len)
 
 int websocket_handle_packet_pong(Client *client, const char *buf, int len)
 {
-	/* We don't care */
+	/* We only care about pongs for RPC websocket connections.
+	 * Also, we don't verify the content, actually,
+	 * so don't use this for security like a pingpong cookie.
+	 */
+	if (IsRPC(client))
+	{
+		client->local->last_msg_received = TStime();
+		ClearPingSent(client);
+	}
 	return 0;
 }
 
