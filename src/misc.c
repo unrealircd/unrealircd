@@ -1421,6 +1421,11 @@ int websocket_create_packet_default_handler(int opcode, char **buf, int *len)
 	return -1;
 }
 
+int websocket_create_packet_ex_default_handler(int opcode, char **buf, int *len, char *sendbuf, size_t sendbufsize)
+{
+	return -1;
+}
+
 int websocket_create_packet_simple_default_handler(int opcode, const char **buf, int *len)
 {
 	return -1;

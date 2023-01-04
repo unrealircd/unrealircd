@@ -147,6 +147,7 @@ void (*rpc_error)(Client *client, json_t *request, JsonRpcError error_code, cons
 void (*rpc_error_fmt)(Client *client, json_t *request, JsonRpcError error_code, const char *fmt, ...);
 int (*websocket_handle_websocket)(Client *client, WebRequest *web, const char *readbuf2, int length2, int callback(Client *client, char *buf, int len));
 int (*websocket_create_packet)(int opcode, char **buf, int *len);
+int (*websocket_create_packet_ex)(int opcode, char **buf, int *len, char *sendbuf, size_t sendbufsize);
 int (*websocket_create_packet_simple)(int opcode, const char **buf, int *len);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
@@ -430,5 +431,6 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_RPC_ERROR_FMT, rpc_error_fmt, rpc_error_fmt_default_handler);
 	efunc_init_function(EFUNC_WEBSOCKET_HANDLE_WEBSOCKET, websocket_handle_websocket, websocket_handle_websocket_default_handler);
 	efunc_init_function(EFUNC_WEBSOCKET_CREATE_PACKET, websocket_create_packet, websocket_create_packet_default_handler);
+	efunc_init_function(EFUNC_WEBSOCKET_CREATE_PACKET_EX, websocket_create_packet_ex, websocket_create_packet_ex_default_handler);
 	efunc_init_function(EFUNC_WEBSOCKET_CREATE_PACKET_SIMPLE, websocket_create_packet_simple, websocket_create_packet_simple_default_handler);
 }

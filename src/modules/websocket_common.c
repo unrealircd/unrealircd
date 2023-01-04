@@ -40,6 +40,7 @@ struct HTTPForwardedHeader
 /* Forward declarations - public functions */
 int _websocket_handle_websocket(Client *client, WebRequest *web, const char *readbuf2, int length2, int callback(Client *client, char *buf, int len));
 int _websocket_create_packet(int opcode, char **buf, int *len);
+int _websocket_create_packet_ex(int opcode, char **buf, int *len, char *sendbuf, size_t sendbufsize);
 int _websocket_create_packet_simple(int opcode, const char **buf, int *len);
 /* Forward declarations - other */
 int websocket_handle_packet(Client *client, const char *readbuf, int length, int callback(Client *client, char *buf, int len));
@@ -57,6 +58,7 @@ MOD_TEST()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAdd(modinfo->handle, EFUNC_WEBSOCKET_HANDLE_WEBSOCKET, _websocket_handle_websocket);
 	EfunctionAdd(modinfo->handle, EFUNC_WEBSOCKET_CREATE_PACKET, _websocket_create_packet);
+	EfunctionAdd(modinfo->handle, EFUNC_WEBSOCKET_CREATE_PACKET_EX, _websocket_create_packet_ex);
 	EfunctionAdd(modinfo->handle, EFUNC_WEBSOCKET_CREATE_PACKET_SIMPLE, _websocket_create_packet_simple);
 
 	/* Init first, since we manage sockets */
@@ -289,7 +291,7 @@ int websocket_handle_packet_pong(Client *client, const char *buf, int len)
 	return 0;
 }
 
-/** Create a simple websocket packet that is ready to be send.
+/** Create a simple websocket packet that is ready to be sent.
  * This is the simple version that is used ONLY for WSOP_PONG,
  * as it does not take \r\n into account.
  */
@@ -322,15 +324,18 @@ int _websocket_create_packet_simple(int opcode, const char **buf, int *len)
 }
 
 /** Create a websocket packet that is ready to be send.
- * This is the more complex version that takes into account
- * stripping off \r and \n, and possibly multi line due to
- * labeled-response. It is used for WSOP_TEXT and WSOP_BINARY.
+ * This version takes into account stripping off \r and \n,
+ * and possibly multi line due to labeled-response.
+ * It is used for WSOP_TEXT and WSOP_BINARY.
  * The end result is one or more websocket frames,
  * all in a single packet *buf with size *len.
+ *
+ * This is the version that uses the specified buffer,
+ * it is used from the JSON-RPC code,
+ * and indirectly from websocket_create_packet().
  */
-int _websocket_create_packet(int opcode, char **buf, int *len)
+int _websocket_create_packet_ex(int opcode, char **buf, int *len, char *sendbuf, size_t sendbufsize)
 {
-	static char sendbuf[WEBSOCKET_SEND_BUFFER_SIZE];
 	char *s = *buf; /* points to start of current line */
 	char *s2; /* used for searching of end of current line */
 	char *lastbyte = *buf + *len - 1; /* points to last byte in *buf that can be safely read */
@@ -359,10 +364,12 @@ int _websocket_create_packet(int opcode, char **buf, int *len)
 
 		if (bytes_to_copy < 126)
 			bytes_single_frame = 2 + bytes_to_copy;
-		else
+		else if (bytes_to_copy < 65536)
 			bytes_single_frame = 4 + bytes_to_copy;
+		else
+			bytes_single_frame = 10 + bytes_to_copy;
 
-		if (bytes_in_sendbuf + bytes_single_frame > sizeof(sendbuf))
+		if (bytes_in_sendbuf + bytes_single_frame > sendbufsize)
 		{
 			/* Overflow. This should never happen. */
 			unreal_log(ULOG_WARNING, "websocket", "BUG_WEBSOCKET_OVERFLOW", NULL,
@@ -370,7 +377,7 @@ int _websocket_create_packet(int opcode, char **buf, int *len)
 			           "$bytes_in_sendbuf + $bytes_single_frame > $sendbuf_size",
 			           log_data_integer("bytes_in_sendbuf", bytes_in_sendbuf),
 			           log_data_integer("bytes_single_frame", bytes_single_frame),
-			           log_data_integer("sendbuf_size", sizeof(sendbuf)));
+			           log_data_integer("sendbuf_size", sendbufsize));
 			return -1;
 		}
 
@@ -382,12 +389,27 @@ int _websocket_create_packet(int opcode, char **buf, int *len)
 			/* Short payload */
 			o[1] = (char)bytes_to_copy;
 			memcpy(&o[2], s, bytes_to_copy);
-		} else {
+		} else
+		if (bytes_to_copy < 65536)
+		{
 			/* Long payload */
 			o[1] = 126;
 			o[2] = (char)((bytes_to_copy >> 8) & 0xFF);
 			o[3] = (char)(bytes_to_copy & 0xFF);
 			memcpy(&o[4], s, bytes_to_copy);
+		} else {
+			/* Longest payload */
+			// XXX: yeah we don't support sending more than 4GB.
+			o[1] = 127;
+			o[2] = 0;
+			o[3] = 0;
+			o[4] = 0;
+			o[5] = 0;
+			o[6] = (char)((bytes_to_copy >> 24) & 0xFF);
+			o[7] = (char)((bytes_to_copy >> 16) & 0xFF);
+			o[8] = (char)((bytes_to_copy >> 8) & 0xFF);
+			o[9] = (char)(bytes_to_copy & 0xFF);
+			memcpy(&o[10], s, bytes_to_copy);
 		}
 
 		/* Advance destination pointer and counter */
@@ -401,6 +423,22 @@ int _websocket_create_packet(int opcode, char **buf, int *len)
 	*buf = sendbuf;
 	*len = bytes_in_sendbuf;
 	return 0;
+}
+
+/** Create a websocket packet that is ready to be send.
+ * This version takes into account stripping off \r and \n,
+ * and possibly multi line due to labeled-response.
+ * It is used for WSOP_TEXT and WSOP_BINARY.
+ * The end result is one or more websocket frames,
+ * all in a single packet *buf with size *len.
+ *
+ * This is the version that uses a static sendbuf buffer,
+ * it is used from IRC websockets.
+ */
+int _websocket_create_packet(int opcode, char **buf, int *len)
+{
+	static char sendbuf[WEBSOCKET_SEND_BUFFER_SIZE];
+	return _websocket_create_packet_ex(opcode, buf, len, sendbuf, sizeof(sendbuf));
 }
 
 /** Create and send a WSOP_PONG frame */

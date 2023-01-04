@@ -431,11 +431,16 @@ void rpc_sendto(Client *client, const char *buf, int len)
 	if (MyConnect(client) && IsRPC(client) && WSU(client) && WSU(client)->handshake_completed)
 	{
 		/* Websocket */
-		static char utf8buf[65535]; // TODO: dynamic!!!
-		char *newbuf = unrl_utf8_make_valid(buf, utf8buf, sizeof(utf8buf), 1);
+		int utf8bufsize = len*2 + 16;
+		char *utf8buf = safe_alloc(utf8bufsize);
+		char *newbuf = unrl_utf8_make_valid(buf, utf8buf, utf8bufsize, 1);
 		int newlen = strlen(newbuf);
-		websocket_create_packet(WSOP_TEXT, &newbuf, &newlen);
+		int ws_sendbufsize = newlen + 64 + ((newlen / 1024) * 64); // some random magic
+		char *ws_sendbuf = safe_alloc(ws_sendbufsize);
+		websocket_create_packet_ex(WSOP_TEXT, &newbuf, &newlen, ws_sendbuf, ws_sendbufsize);
 		dbuf_put(&client->local->sendQ, newbuf, newlen);
+		safe_free(ws_sendbuf);
+		safe_free(utf8buf);
 	} else {
 		/* Unix domain socket or HTTP */
 		dbuf_put(&client->local->sendQ, buf, len);
