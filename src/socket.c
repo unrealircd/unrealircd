@@ -310,7 +310,7 @@ int unreal_listen_unix(ConfigItem_listen *listener)
 
 	set_sock_opts(listener->fd, NULL, listener->socket_type);
 
-	if (!unreal_bind(listener->fd, listener->file, 0, SOCKET_TYPE_UNIX))
+	if (!unreal_bind(listener->fd, listener->file, listener->mode, SOCKET_TYPE_UNIX))
 	{
 		unreal_log(ULOG_FATAL, "listen", "LISTEN_BIND_ERROR", NULL,
 		           "Could not listen on UNIX domain socket $file: $socket_error",
@@ -1332,15 +1332,20 @@ int unreal_bind(int fd, const char *ip, int port, SocketType socket_type)
 	} else
 	{
 		struct sockaddr_un server;
-		mode_t saved_umask;
+		mode_t saved_umask, new_umask;
 		int ret;
+
+		if (port == 0)
+			new_umask = 077;
+		else
+			new_umask = port ^ 0777;
 
 		unlink(ip); /* (ignore errors) */
 
 		memset(&server, 0, sizeof(server));
 		server.sun_family = AF_UNIX;
 		strlcpy(server.sun_path, ip, sizeof(server.sun_path));
-		saved_umask = umask(077); // TODO: make this configurable
+		saved_umask = umask(new_umask);
 		ret = !bind(fd, (struct sockaddr *)&server, sizeof(server));
 		umask(saved_umask);
 

@@ -1794,19 +1794,21 @@ struct WebSocketUser {
 struct ConfigItem_listen {
 	ConfigItem_listen *prev, *next;
 	ConfigFlag flag;
-	SocketType socket_type;
-	char *file;
-	char *ip;
-	int port;
-	int options, clients;
-	int fd;
-	SSL_CTX *ssl_ctx;
-	TLSOptions *tls_options;
-	WebServer *webserver;
+	SocketType socket_type;		/**< Socket type, eg. SOCKET_TYPE_IPV4 or SOCKET_TYPE_UNIX */
+	char *file;			/**< If the listener is a file, the full pathname */
+	char *ip;			/**< IP bind address (if IP listener) */
+	int port;			/**< Port to listen on (if IP listener) */
+	int mode;			/**< Mode permissions (if file aka unix socket listener) */
+	int options;			/**< e.g. LISTENER_BOUND if active */
+	int clients;			/**< Clients connected to this socket / listener */
+	int fd;				/**< File descriptor (if open), or -1 (if not open yet) */
+	SSL_CTX *ssl_ctx;		/**< SSL/TLS context */
+	TLSOptions *tls_options;	/**< SSL/TLS options */
+	WebServer *webserver;		/**< For the webserver module */
 	void (*start_handshake)(Client *client); /**< Function to call on accept() */
-	int websocket_options; /* should be in module, but lazy */
-	int rpc_options;
-	char *websocket_forward;
+	int websocket_options;		/**< Websocket options (for the websocket module) */
+	int rpc_options;		/**< For the RPC module */
+	char *websocket_forward;	/**< For websocket module too */
 };
 
 struct ConfigItem_sni {

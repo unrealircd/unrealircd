@@ -4972,7 +4972,12 @@ void conf_listen_configure(const char *ip, int port, SocketType socket_type, int
 	 */
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "ip"))
+		if (!strcmp(cep->name, "mode"))
+		{
+			/* Yeah, we actually do something with this one.. */
+			if (cep->value)
+				listen->mode = strtol(cep->value, NULL, 8); /* octal */
+		} else if (!strcmp(cep->name, "ip"))
 			;
 		else if (!strcmp(cep->name, "port"))
 			;
@@ -5022,6 +5027,10 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		{
 			convert_to_absolute_path(&cep->value, PERMDATADIR);
 			file = cep->value;
+		} else
+		if (!strcmp(cep->name, "mode"))
+		{
+			// Handled elsewhere, but need to be caught here as noop
 		} else
 		if (!strcmp(cep->name, "ip"))
 		{
@@ -5211,6 +5220,18 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 		{
 			has_file = 1;
 			file = cep->value;
+		} else
+		if (!strcmp(cep->name, "mode"))
+		{
+			int mode = strtol(cep->value, NULL, 8);
+			if ((mode != 0700) && (mode != 0770) && (mode != 0777))
+			{
+				config_error("%s:%i: listen::mode must be one of: 0700 (user only, the default), "
+				             "0770 (user and group readable/writable), or "
+				             "0777 (world readable and writable, not recommended).",
+				             cep->file->filename, cep->line_number);
+				errors++;
+			}
 		} else
 		if (!strcmp(cep->name, "ip"))
 		{
