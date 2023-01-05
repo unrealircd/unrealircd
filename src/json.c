@@ -255,7 +255,8 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 			json_object_set_new(user, "channels", channels);
 			for (m = client->user->channel; m; m = m->next)
 			{
-				len += json_dump_string_length(m->channel->name);
+				if (detail < 1) // Limit at detail level 0, but show everything at level 1 and above
+					len += json_dump_string_length(m->channel->name);
 				if (len > 384)
 				{
 					/* Truncated */
