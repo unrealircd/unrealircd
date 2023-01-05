@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/user",
-	"1.0.0",
+	"1.0.1",
 	"user.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",

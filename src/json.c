@@ -253,17 +253,30 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 			int len = 0;
 			json_t *channels = json_array();
 			json_object_set_new(user, "channels", channels);
-			for (m = client->user->channel; m; m = m->next)
+			if (detail == 0)
 			{
-				if (detail < 1) // Limit at detail level 0, but show everything at level 1 and above
-					len += json_dump_string_length(m->channel->name);
-				if (len > 384)
+				/* Short format, mainly for JSON logging */
+				for (m = client->user->channel; m; m = m->next)
 				{
-					/* Truncated */
-					json_array_append_new(channels, json_string_unreal("..."));
-					break;
+					len += json_dump_string_length(m->channel->name);
+					if (len > 384)
+					{
+						/* Truncated */
+						json_array_append_new(channels, json_string_unreal("..."));
+						break;
+					}
+					json_array_append_new(channels, json_string_unreal(m->channel->name));
 				}
-				json_array_append_new(channels, json_string_unreal(m->channel->name));
+			} else {
+				/* Long format for JSON-RPC */
+				for (m = client->user->channel; m; m = m->next)
+				{
+					json_t *e = json_object();
+					json_object_set_new(e, "name", json_string_unreal(m->channel->name));
+					if (*m->member_modes)
+						json_object_set_new(e, "level", json_string_unreal(m->member_modes));
+					json_array_append_new(channels, e);
+				}
 			}
 		}
 		RunHook(HOOKTYPE_JSON_EXPAND_CLIENT_USER, client, detail, child, user);
@@ -385,12 +398,19 @@ void json_expand_channel(json_t *j, const char *key, Channel *channel, int detai
 
 	if (detail > 2)
 	{
-		Member *users;
+		Member *u;
 		json_t *list = json_array();
 		json_object_set_new(child, "members", list);
 
-		for (users = channel->members; users; users = users->next)
-			json_array_append_new(list, json_string_unreal(users->client->name));
+		for (u = channel->members; u; u = u->next)
+		{
+			json_t *e = json_object();
+			json_object_set_new(e, "name", json_string_unreal(u->client->name));
+			json_object_set_new(e, "id", json_string_unreal(u->client->id));
+			if (*u->member_modes)
+				json_object_set_new(e, "level", json_string_unreal(u->member_modes));
+			json_array_append_new(list, e);
+		}
 	}
 
 	// Possibly later: If detail is set to 1 then expand more...
