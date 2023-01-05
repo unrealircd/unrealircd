@@ -324,6 +324,24 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 	RunHook(HOOKTYPE_JSON_EXPAND_CLIENT, client, detail, child);
 }
 
+void json_expand_channel_ban(json_t *child, const char *banlist_name, Ban *banlist)
+{
+	Ban *ban;
+	json_t *list, *e;
+
+	list = json_array();
+	json_object_set_new(child, banlist_name, list);
+	for (ban = banlist; ban; ban = ban->next)
+	{
+		e = json_object();
+		json_array_append_new(list, e);
+		json_object_set_new(e, "name", json_string_unreal(ban->banstr));
+		json_object_set_new(e, "set_by", json_string_unreal(ban->who));
+		json_object_set_new(e, "set_at", json_timestamp(ban->when));
+	}
+}
+
+
 void json_expand_channel(json_t *j, const char *key, Channel *channel, int detail)
 {
 	char mode1[512], mode2[512], modes[512];
@@ -355,6 +373,23 @@ void json_expand_channel(json_t *j, const char *key, Channel *channel, int detai
 		json_object_set_new(child, "modes", json_string_unreal(modes));
 	} else {
 		json_object_set_new(child, "modes", json_string_unreal(mode1+1));
+	}
+
+	if (detail > 1)
+	{
+		json_expand_channel_ban(child, "bans", channel->banlist);
+		json_expand_channel_ban(child, "ban_exemptions", channel->exlist);
+		json_expand_channel_ban(child, "invite_exceptions", channel->invexlist);
+	}
+
+	if (detail > 2)
+	{
+		Member *users;
+		json_t *list = json_array();
+		json_object_set_new(child, "members", list);
+
+		for (users = channel->members; users; users = users->next)
+			json_array_append_new(list, json_string_unreal(users->client->name));
 	}
 
 	// Possibly later: If detail is set to 1 then expand more...

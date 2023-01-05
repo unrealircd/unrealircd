@@ -16,6 +16,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 void rpc_channel_list(Client *client, json_t *request, json_t *params);
+void rpc_channel_get(Client *client, json_t *request, json_t *params);
 
 MOD_INIT()
 {
@@ -26,6 +27,13 @@ MOD_INIT()
 	memset(&r, 0, sizeof(r));
 	r.method = "channel.list";
 	r.call = rpc_channel_list;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/channel] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+	r.method = "channel.get";
+	r.call = rpc_channel_get;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/channel] Could not register RPC handler");
@@ -61,6 +69,31 @@ void rpc_channel_list(Client *client, json_t *request, json_t *params)
 		json_array_append_new(list, item);
 	}
 
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+void rpc_channel_get(Client *client, json_t *request, json_t *params)
+{
+	json_t *result, *item;
+	const char *channelname;
+	Channel *channel;
+
+	channelname = json_object_get_string(params, "channel");
+	if (!channelname)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'channel'");
+		return;
+	}
+
+	if (!(channel = find_channel(channelname)))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Channel not found");
+		return;
+	}
+
+	result = json_object();
+	json_expand_channel(result, "channel", channel, 3);
 	rpc_response(client, request, result);
 	json_decref(result);
 }
