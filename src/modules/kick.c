@@ -228,7 +228,7 @@ CMD_FUNC(cmd_kick)
 			continue;
 		}
 
-		if (IsULine(client) || IsServer(client))
+		if (IsULine(client) || IsServer(client) || IsMe(client))
 			goto attack;
 
 		/* Note for coders regarding oper override:
