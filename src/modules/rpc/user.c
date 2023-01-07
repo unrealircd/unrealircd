@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/user",
-	"1.0.2",
+	"1.0.3",
 	"user.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -21,6 +21,8 @@ RPC_CALL_FUNC(rpc_user_set_nick);
 RPC_CALL_FUNC(rpc_user_set_username);
 RPC_CALL_FUNC(rpc_user_set_realname);
 RPC_CALL_FUNC(rpc_user_set_vhost);
+RPC_CALL_FUNC(rpc_user_set_mode);
+RPC_CALL_FUNC(rpc_user_set_snomask);
 
 MOD_INIT()
 {
@@ -71,6 +73,22 @@ MOD_INIT()
 	memset(&r, 0, sizeof(r));
 	r.method = "user.set_vhost";
 	r.call = rpc_user_set_vhost;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/user] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+	memset(&r, 0, sizeof(r));
+	r.method = "user.set_mode";
+	r.call = rpc_user_set_mode;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/user] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+	memset(&r, 0, sizeof(r));
+	r.method = "user.set_snomask";
+	r.call = rpc_user_set_snomask;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/user] Could not register RPC handler");
@@ -162,9 +180,7 @@ RPC_CALL_FUNC(rpc_user_set_nick)
 		return;
 	}
 
-	str = json_object_get_string(params, "force");
-	if (str)
-		force = config_checkval(str, CFG_YESNO);
+	force = json_object_get_boolean(params, "force", 0);
 
 	newnick_requested = json_object_get_string(params, "newnick");
 	if (!newnick_requested)
@@ -388,6 +404,90 @@ RPC_CALL_FUNC(rpc_user_set_vhost)
 		result = json_boolean(1);
 	else
 		result = json_boolean(0);
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+RPC_CALL_FUNC(rpc_user_set_mode)
+{
+	json_t *result, *list, *item;
+	const char *args[4];
+	const char *nick, *modes, *str;
+	int hidden;
+	Client *acptr;
+
+	nick = json_object_get_string(params, "nick");
+	if (!nick)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'nick'");
+		return;
+	}
+
+	modes = json_object_get_string(params, "modes");
+	if (!modes)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'modes'");
+		return;
+	}
+
+	hidden = json_object_get_boolean(params, "hidden", 0);
+
+	if (!(acptr = find_user(nick, NULL)))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Nickname not found");
+		return;
+	}
+
+	args[0] = NULL;
+	args[1] = acptr->name;
+	args[2] = modes;
+	args[3] = NULL;
+	do_cmd(&me, NULL, hidden ? "SVSMODE" : "SVS2MODE", 3, args);
+
+	/* Return result (always true at the moment) */
+	result = json_boolean(1);
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+RPC_CALL_FUNC(rpc_user_set_snomask)
+{
+	json_t *result, *list, *item;
+	const char *args[4];
+	const char *nick, *snomask, *str;
+	int hidden;
+	Client *acptr;
+
+	nick = json_object_get_string(params, "nick");
+	if (!nick)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'nick'");
+		return;
+	}
+
+	snomask = json_object_get_string(params, "snomask");
+	if (!snomask)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'snomask'");
+		return;
+	}
+
+	hidden = json_object_get_boolean(params, "hidden", 0);
+
+	if (!(acptr = find_user(nick, NULL)))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Nickname not found");
+		return;
+	}
+
+	args[0] = NULL;
+	args[1] = acptr->name;
+	args[2] = snomask;
+	args[3] = NULL;
+	do_cmd(&me, NULL, hidden ? "SVSSNO" : "SVS2SNO", 3, args);
+
+	/* Return result (always true at the moment) */
+	result = json_boolean(1);
 	rpc_response(client, request, result);
 	json_decref(result);
 }
