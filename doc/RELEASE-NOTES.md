@@ -1,5 +1,11 @@
-UnrealIRCd 6.0.5
+UnrealIRCd 6.0.6-git
 =================
+
+This is work in progress.
+
+
+UnrealIRCd 6.0.5
+-----------------
 
 This release adds experimental JSON-RPC support, a new TLINE command, the
 `./unrealircd restart` command has been improved to check for config errors,
