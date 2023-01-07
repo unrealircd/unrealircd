@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/user",
-	"1.0.4",
+	"1.0.5",
 	"user.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -27,6 +27,7 @@ RPC_CALL_FUNC(rpc_user_set_oper);
 RPC_CALL_FUNC(rpc_user_kill);
 RPC_CALL_FUNC(rpc_user_quit);
 RPC_CALL_FUNC(rpc_user_join);
+RPC_CALL_FUNC(rpc_user_part);
 
 MOD_INIT()
 {
@@ -125,6 +126,14 @@ MOD_INIT()
 	memset(&r, 0, sizeof(r));
 	r.method = "user.join";
 	r.call = rpc_user_join;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/user] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+	memset(&r, 0, sizeof(r));
+	r.method = "user.part";
+	r.call = rpc_user_part;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/user] Could not register RPC handler");
@@ -651,12 +660,12 @@ RPC_CALL_FUNC(rpc_user_join)
 	const char *args[5];
 	const char *nick, *channel, *key=NULL;
 	Client *acptr;
-	int bypass = 0;
+	int force = 0;
 
 	REQUIRE_PARAM_STRING("nick", nick);
 	REQUIRE_PARAM_STRING("channel", channel);
 	key = json_object_get_string(params, "key");
-	bypass = json_object_get_boolean(params, "bypass", 0);
+	force = json_object_get_boolean(params, "force", 0);
 
 	if (!(acptr = find_user(nick, NULL)))
 	{
@@ -668,7 +677,7 @@ RPC_CALL_FUNC(rpc_user_join)
 	args[1] = acptr->name;
 	args[2] = channel;
 
-	if (bypass == 0)
+	if (force == 0)
 	{
 		args[3] = key;
 		args[4] = NULL;
@@ -682,6 +691,42 @@ RPC_CALL_FUNC(rpc_user_join)
 	 * It is that way because we (this server) may not actually
 	 * do the SVSJOIN at all, we may be just relaying it to some
 	 * other server.
+	 */
+	result = json_boolean(1);
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+RPC_CALL_FUNC(rpc_user_part)
+{
+	json_t *result, *list, *item;
+	const char *args[5];
+	const char *nick, *channel, *reason=NULL;
+	Client *acptr;
+	int force = 0;
+
+	REQUIRE_PARAM_STRING("nick", nick);
+	REQUIRE_PARAM_STRING("channel", channel);
+	reason = json_object_get_string(params, "reason");
+	force = json_object_get_boolean(params, "force", 0);
+
+	if (!(acptr = find_user(nick, NULL)))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Nickname not found");
+		return;
+	}
+
+	args[0] = NULL;
+	args[1] = acptr->name;
+	args[2] = channel;
+	args[3] = reason;
+	args[4] = NULL;
+	do_cmd(&me, NULL, force ? "SAPART" : "SVSPART", reason ? 4 : 3, args);
+
+	/* Return result. Always 'true' at the moment.
+	 * Technically we could check if the user is in all of these channels.
+	 * But then again, do we really want to return failure if one specified
+	 * channel does not exist out of X channels to be parted? Not worth it.
 	 */
 	result = json_boolean(1);
 	rpc_response(client, request, result);
