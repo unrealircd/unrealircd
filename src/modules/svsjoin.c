@@ -63,7 +63,7 @@ CMD_FUNC(cmd_svsjoin)
 {
 	Client *target;
 
-	if (!IsULine(client))
+	if (!IsSvsCmdOk(client))
 		return;
 
 	if ((parc < 3) || !(target = find_user(parv[1], NULL)))

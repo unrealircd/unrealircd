@@ -7941,6 +7941,12 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				if (!strcmp(cepp->name, "policy"))
 					tempiConf.hide_idle_time = hideidletime_strtoval(cepp->value);
 			}
+		} else if (!strcmp(cep->name, "limit-svscmds"))
+		{
+			if (!strcmp(cep->value, "ulines"))
+				tempiConf.limit_svscmds = LIMIT_SVSCMDS_ULINES;
+			else
+				tempiConf.limit_svscmds = LIMIT_SVSCMDS_SERVERS;
 		} else
 		{
 			int value;
@@ -9285,6 +9291,15 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					errors++;
 					continue;
 				}
+			}
+		} else if (!strcmp(cep->name, "limit-svscmds"))
+		{
+			CheckNull(cep);
+			if (strcmp(cep->value, "servers") && strcmp(cep->value, "ulines"))
+			{
+				config_error("%s:%i: set::limit-svscmds: value must be one of: 'servers' or 'ulines'",
+				             cep->file->filename, cep->line_number);
+				errors++;
 			}
 		} else
 		{

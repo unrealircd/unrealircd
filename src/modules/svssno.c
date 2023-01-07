@@ -67,7 +67,7 @@ void do_svssno(Client *client, int parc, const char *parv[], int show_change)
 	Client *target;
 	int what = MODE_ADD, i;
 
-	if (!IsULine(client))
+	if (!IsSvsCmdOk(client))
 		return;
 
 	if (parc < 2)

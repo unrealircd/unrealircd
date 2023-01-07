@@ -73,7 +73,7 @@ CMD_FUNC(cmd_svskill)
 	if (parc == 3)
 		comment = parv[2];
 
-	if (!IsULine(client))
+	if (!IsSvsCmdOk(client))
 		return;
 
 	if (!(target = find_user(parv[1], NULL)))

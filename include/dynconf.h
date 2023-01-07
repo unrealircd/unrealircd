@@ -53,6 +53,8 @@ typedef enum BanTarget { BAN_TARGET_IP=1, BAN_TARGET_USERIP=2, BAN_TARGET_HOST=3
 
 typedef enum HideIdleTimePolicy { HIDE_IDLE_TIME_NEVER=1, HIDE_IDLE_TIME_ALWAYS=2, HIDE_IDLE_TIME_USERMODE=3, HIDE_IDLE_TIME_OPER_USERMODE=4 } HideIdleTimePolicy;
 
+typedef enum LimitSVSCMDS { LIMIT_SVSCMDS_SERVERS=0, LIMIT_SVSCMDS_ULINES=1 } LimitSVSCMDS;
+
 /** The set { } block configuration */
 typedef struct Configuration Configuration;
 struct Configuration {
@@ -171,6 +173,7 @@ struct Configuration {
 	char *sasl_server;
 	int server_notice_colors;
 	int server_notice_show_event;
+	LimitSVSCMDS limit_svscmds;
 };
 
 extern MODVAR Configuration iConf;

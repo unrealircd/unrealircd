@@ -326,7 +326,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 	int  what;
 	long oldumodes = 0;
 
-	if (!IsULine(client))
+	if (!IsSvsCmdOk(client))
 		return;
 
 	what = MODE_ADD;

@@ -59,7 +59,7 @@ CMD_FUNC(cmd_svsnoop)
 {
 	Client *acptr;
 
-	if (!(IsULine(client) && parc > 2))
+	if (!(IsSvsCmdOk(client) && parc > 2))
 		return;
 
 	if (hunt_server(client, NULL, "SVSNOOP", 1, parc, parv) == HUNTED_ISME)

@@ -112,14 +112,14 @@ CMD_FUNC(cmd_svsnline)
 			AddListItem(bconf, conf_ban);
 		  } 
 		 
-		  if (IsULine(client))
+		  if (IsSvsCmdOk(client))
 			sendto_server(client, 0, 0, NULL, ":%s SVSNLINE + %s :%s",
 			    client->id, parv[2], parv[3]);
 		  break;
 	  }
 	  case '-':
 	  {
-		  if (!IsULine(client))
+		  if (!IsSvsCmdOk(client))
 			  return;
 		  if (parc < 3)
 			  return;
@@ -146,7 +146,7 @@ CMD_FUNC(cmd_svsnline)
 	  }
 	  case '*':
 	  {
-		  if (!IsULine(client))
+		  if (!IsSvsCmdOk(client))
 			  return;
 	          wipe_svsnlines();
 		  sendto_server(client, 0, 0, NULL, ":%s SVSNLINE *", client->id);

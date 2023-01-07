@@ -67,7 +67,7 @@ CMD_FUNC(cmd_svsnick)
 	char nickname[NICKLEN+1];
 	char oldnickname[NICKLEN+1];
 
-	if (!IsULine(client) || parc < 4 || (strlen(parv[2]) > NICKLEN))
+	if (!IsSvsCmdOk(client) || parc < 4 || (strlen(parv[2]) > NICKLEN))
 		return; /* This looks like an error anyway -Studded */
 
 	if (hunt_server(client, NULL, "SVSNICK", 1, parc, parv) != HUNTED_ISME)

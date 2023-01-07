@@ -63,7 +63,7 @@ CMD_FUNC(cmd_svspart)
 {
 	Client *target;
 	const char *comment = (parc > 3 && parv[3] ? parv[3] : NULL);
-	if (!IsULine(client))
+	if (!IsSvsCmdOk(client))
 		return;
 
 	if (parc < 3 || !(target = find_user(parv[1], NULL))) 

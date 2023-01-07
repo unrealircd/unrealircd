@@ -64,7 +64,7 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_svslusers)
 {
-        if (!IsULine(client) || parc < 4)
+        if (!IsSvsCmdOk(client) || parc < 4)
 		return;  
         if (hunt_server(client, NULL, "SVSLUSERS", 1, parc, parv) == HUNTED_ISME)
         {

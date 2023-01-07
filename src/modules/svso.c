@@ -54,7 +54,7 @@ CMD_FUNC(cmd_svso)
 	const char *snomask;
 	const char *vhost;
 
-	if (!IsULine(client))
+	if (!IsSvsCmdOk(client))
 		return;
 
 	if ((parc < 8) || BadPtr(parv[7]))

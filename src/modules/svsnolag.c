@@ -59,7 +59,7 @@ void do_svsnolag(Client *client, int parc, const char *parv[], int show_change)
 	Client *target;
 	char *cmd = show_change ? MSG_SVS2NOLAG : MSG_SVSNOLAG;
 
-	if (!IsULine(client))
+	if (!IsSvsCmdOk(client))
 		return;
 
 	if (parc < 3)

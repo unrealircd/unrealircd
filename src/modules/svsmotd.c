@@ -62,7 +62,7 @@ CMD_FUNC(cmd_svsmotd)
 {
 	FILE *conf = NULL;
 
-	if (!IsULine(client))
+	if (!IsSvsCmdOk(client))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
