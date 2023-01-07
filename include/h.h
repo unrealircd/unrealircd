@@ -667,6 +667,7 @@ extern void IRCToRTF(unsigned char *buffer, unsigned char *string);
 #endif
 extern void verify_opercount(Client *, const char *);
 extern int valid_host(const char *host, int strict);
+extern int valid_username(const char *username);
 extern int count_oper_sessions(const char *);
 extern char *unreal_mktemp(const char *dir, const char *suffix);
 extern char *unreal_getpathname(const char *filepath, char *path);

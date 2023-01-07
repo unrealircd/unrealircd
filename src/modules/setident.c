@@ -103,15 +103,10 @@ CMD_FUNC(cmd_setident)
 	}
 
 	/* Check if the new ident contains illegal characters */
-	for (s = vident; *s; s++)
+	if (!valid_username(vident))
 	{
-		if ((*s == '~') && (s == vident))
-			continue;
-		if (!isallowed(*s))
-		{
-			sendnotice(client, "*** /SETIDENT Error: A username may contain a-z, A-Z, 0-9, '-', '~' & '.'.");
-			return;
-		}
+		sendnotice(client, "*** /SETIDENT Error: A username may contain a-z, A-Z, 0-9, '-', '~' & '.'.");
+		return;
 	}
 
 	userhost_save_current(client);

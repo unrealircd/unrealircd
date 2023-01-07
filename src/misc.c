@@ -722,6 +722,28 @@ int valid_host(const char *host, int strict)
 	return 1;
 }
 
+/** Check if the specified ident / user name does not contain forbidden characters.
+ * @param username	The username / ident to check
+ * @returns 1 if valid, 0 if not.
+ */
+int valid_username(const char *username)
+{
+	const char *s;
+
+	if (strlen(username) > USERLEN)
+		return 0; /* Too long */
+
+	for (s = username; *s; s++)
+	{
+		if ((*s == '~') && (s == username))
+			continue;
+		if (!isallowed(*s))
+			return 0;
+	}
+
+	return 1;
+}
+
 /*|| BAN ACTION ROUTINES FOLLOW ||*/
 
 /** Converts a banaction string (eg: "kill") to an integer value (eg: BAN_ACT_KILL) */

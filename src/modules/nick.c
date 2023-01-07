@@ -901,14 +901,15 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 	}
 }
 
-/** Validate client->user->username.
+/** Make a valid client->user->username, or try to anyway.
  * @param client	The client to check
  * @param noident	Whether we should ignore the first ~ or not
  * @returns 1 if the username is acceptable, 0 if not.
  * @note This function will modify client->user->username to make it valid.
  *       Only if there are zero valid characters it will return 0.
+ * @note There is also valid_username() in src/misc.c
  */
-int valid_username(Client *client, int noident)
+int make_valid_username(Client *client, int noident)
 {
 	static char stripuser[USERLEN + 1];
 	char *i;
@@ -1015,7 +1016,7 @@ int _register_user(Client *client)
 	/* Now validate the username. This may alter client->user->username
 	 * or reject it completely.
 	 */
-	if (!valid_username(client, noident))
+	if (!make_valid_username(client, noident))
 	{
 		exit_client(client, NULL, "Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
 		return 0;

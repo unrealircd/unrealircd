@@ -85,18 +85,7 @@ CMD_FUNC(cmd_chgident)
 		return;
 	}
 
-	/* illegal?! */
-	for (s = parv[2]; *s; s++)
-	{
-		if ((*s == '~') && (s == parv[2]))
-			continue;
-		if (!isallowed(*s))
-		{
-			legalident = 0;
-		}
-	}
-
-	if (legalident == 0)
+	if (!valid_username(parv[2]))
 	{
 		sendnotice(client, "*** /ChgIdent Error: A ident may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them");
 		return;
