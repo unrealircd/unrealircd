@@ -3,6 +3,26 @@ UnrealIRCd 6.0.6-git
 
 This is work in progress.
 
+### Enhancements:
+* The [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) API for
+  UnrealIRCd now supports a lot more methods:
+  * [user.*](https://www.unrealircd.org/docs/JSON-RPC:User)
+    now has: `set_nick`, `set_username`, `set_vhost`, `set_mode`,
+    `set_snomask`, `set_oper`, `join`, `part`, `quit`, `kill`.
+  * IMPORTANT: many user.* calls require *all* servers on the
+    network to be using UnrealIRCd 6.0.6-git or later, because
+    behind the scenes they use SVS* commands (see also below under
+    *Changes*).
+  * [channel.*](https://www.unrealircd.org/docs/JSON-RPC:Channel)
+    now has: `set_mode`, `set_topic`
+
+### Changes:
+* Previously some server protocol commands could only be used by
+  services, commands such as SVSJOIN and SVSPART. We now allow SVS*
+  command to be used by any servers, so the JSON-RPC API can use them.
+  There's a new option
+  [set::limit-svscmds](https://www.unrealircd.org/docs/Set_block#set::limit-svscmds)
+  so one can revert back to the original situation, if needed.
 
 UnrealIRCd 6.0.5
 -----------------
