@@ -24,6 +24,7 @@ RPC_CALL_FUNC(rpc_user_set_vhost);
 RPC_CALL_FUNC(rpc_user_set_mode);
 RPC_CALL_FUNC(rpc_user_set_snomask);
 RPC_CALL_FUNC(rpc_user_set_oper);
+RPC_CALL_FUNC(rpc_user_kill);
 
 MOD_INIT()
 {
@@ -98,6 +99,14 @@ MOD_INIT()
 	memset(&r, 0, sizeof(r));
 	r.method = "user.set_oper";
 	r.call = rpc_user_set_oper;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/user] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+	memset(&r, 0, sizeof(r));
+	r.method = "user.kill";
+	r.call = rpc_user_kill;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/user] Could not register RPC handler");
@@ -552,6 +561,37 @@ RPC_CALL_FUNC(rpc_user_set_oper)
 
 	/* Return result (always true) */
 	result = json_boolean(1);
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+RPC_CALL_FUNC(rpc_user_kill)
+{
+	json_t *result, *list, *item;
+	const char *args[4];
+	const char *nick, *reason;
+	Client *acptr;
+
+	REQUIRE_PARAM_STRING("nick", nick);
+	REQUIRE_PARAM_STRING("reason", reason);
+
+	if (!(acptr = find_user(nick, NULL)))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Nickname not found");
+		return;
+	}
+
+	args[0] = NULL;
+	args[1] = acptr->name;
+	args[2] = reason;
+	args[3] = NULL;
+	do_cmd(&me, NULL, "KILL", 3, args);
+
+	/* Return result */
+	if ((acptr = find_user(nick, NULL)) && !IsDead(acptr))
+		result = json_boolean(0);
+	else
+		result = json_boolean(1);
 	rpc_response(client, request, result);
 	json_decref(result);
 }
