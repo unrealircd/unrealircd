@@ -122,11 +122,11 @@ CMD_FUNC(cmd_svso)
 
 	}
 
-	/* Prefix the oper block name with "services:" if it hasn't already */
-	if (!strncmp(parv[2], "services:", 9))
+	/* Prefix the oper block name with "remote:" if it hasn't already */
+	if (!strncmp(parv[2], "remote:", 7))
 		strlcpy(oper_account, parv[2], sizeof(oper_account));
 	else
-		snprintf(oper_account, sizeof(oper_account), "services:%s", parv[2]);
+		snprintf(oper_account, sizeof(oper_account), "remote:%s", parv[2]);
 
 	/* These needs to be looked up... */
 	clientclass_c = find_class(clientclass); /* NULL is fine! */
