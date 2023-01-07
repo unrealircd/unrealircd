@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/channel",
-	"1.0.3",
+	"1.0.4",
 	"channel.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -149,11 +149,8 @@ void rpc_channel_set_mode(Client *client, json_t *request, json_t *params)
 
 	set_channel_mode(channel, modes, parameters);
 
-	// TODO: hmmm, i have my doubts about returning the whole channel as a result here...
-	// especially with detail level 3 !?
-
-	result = json_object();
-	json_expand_channel(result, "channel", channel, 3);
+	/* Simply return success */
+	result = json_boolean(1);
 	rpc_response(client, request, result);
 	json_decref(result);
 }
@@ -192,11 +189,8 @@ void rpc_channel_set_topic(Client *client, json_t *request, json_t *params)
 
 	set_channel_topic(&me, channel, NULL, topic, set_by, set_at);
 
-	// TODO: hmmm, i have my doubts about returning the whole channel as a result here...
-	// especially with detail level 3 !?
-
-	result = json_object();
-	json_expand_channel(result, "channel", channel, 3);
+	/* Simply return success */
+	result = json_boolean(1);
 	rpc_response(client, request, result);
 	json_decref(result);
 }
