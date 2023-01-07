@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/channel",
-	"1.0.2",
+	"1.0.3",
 	"channel.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -117,27 +117,27 @@ void rpc_channel_get(Client *client, json_t *request, json_t *params)
 void rpc_channel_set_mode(Client *client, json_t *request, json_t *params)
 {
 	json_t *result, *item;
-	const char *channelname, *mode, *parameter;
+	const char *channelname, *modes, *parameters;
 	Channel *channel;
 
 	channelname = json_object_get_string(params, "channel");
 	if (!channelname)
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'channel'");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameters: 'channel'");
 		return;
 	}
 
-	mode = json_object_get_string(params, "mode");
-	if (!mode)
+	modes = json_object_get_string(params, "modes");
+	if (!modes)
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'mode'");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameters: 'modes'");
 		return;
 	}
 
-	parameter = json_object_get_string(params, "parameter");
-	if (!parameter)
+	parameters = json_object_get_string(params, "parameters");
+	if (!parameters)
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'parameter'");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameters: 'parameters'");
 		return;
 	}
 
@@ -147,7 +147,7 @@ void rpc_channel_set_mode(Client *client, json_t *request, json_t *params)
 		return;
 	}
 
-	set_channel_mode(channel, mode, parameter);
+	set_channel_mode(channel, modes, parameters);
 
 	// TODO: hmmm, i have my doubts about returning the whole channel as a result here...
 	// especially with detail level 3 !?
