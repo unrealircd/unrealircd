@@ -59,6 +59,16 @@ const char *json_object_get_string(json_t *j, const char *name)
 	return v ? json_string_value(v) : NULL;
 }
 
+int json_object_get_boolean(json_t *j, const char *name, int default_value)
+{
+	json_t *v = json_object_get(j, name);
+	if (!v)
+		return default_value;
+	if (json_is_true(v))
+		return 1;
+	return 0;
+}
+
 #define json_string __BAD___DO__NOT__USE__JSON__STRING__PLZ
 
 const char *json_get_value(json_t *t)

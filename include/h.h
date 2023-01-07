@@ -1163,6 +1163,7 @@ extern int is_file_readable(const char *file, const char *dir);
 /* json.c */
 extern json_t *json_string_unreal(const char *s);
 extern const char *json_object_get_string(json_t *j, const char *name);
+extern int json_object_get_boolean(json_t *j, const char *name, int default_value);
 extern json_t *json_timestamp(time_t v);
 extern const char *timestamp_iso8601_now(void);
 extern const char *timestamp_iso8601(time_t v);
