@@ -41,6 +41,7 @@ void (*do_mode)(Channel *channel, Client *client, MessageTag *mtags, int parc, c
 MultiLineMode *(*set_mode)(Channel *channel, Client *client, int parc, const char *parv[], u_int *pcount,
                            char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 void (*set_channel_mode)(Channel *channel, const char *modes, const char *parameters);
+void (*set_channel_topic)(Client *client, Channel *channel, MessageTag *recv_mtags, const char *topic, const char *set_by, time_t set_at);
 void (*cmd_umode)(Client *client, MessageTag *mtags, int parc, const char *parv[]);
 int (*register_user)(Client *client);
 int (*tkl_hash)(unsigned int c);
@@ -332,6 +333,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_DO_MODE, do_mode, NULL);
 	efunc_init_function(EFUNC_SET_MODE, set_mode, NULL);
 	efunc_init_function(EFUNC_SET_CHANNEL_MODE, set_channel_mode, NULL);
+	efunc_init_function(EFUNC_SET_CHANNEL_TOPIC, set_channel_topic, NULL);
 	efunc_init_function(EFUNC_CMD_UMODE, cmd_umode, NULL);
 	efunc_init_function(EFUNC_REGISTER_USER, register_user, NULL);
 	efunc_init_function(EFUNC_TKL_HASH, tkl_hash, NULL);

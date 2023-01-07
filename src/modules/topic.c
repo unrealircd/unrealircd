@@ -35,6 +35,16 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
+/* Forward declarations */
+void _set_channel_topic(Client *client, Channel *channel, MessageTag *recv_mtags, const char *topic, const char *set_by, time_t set_at);
+
+MOD_TEST()
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	EfunctionAddVoid(modinfo->handle, EFUNC_SET_CHANNEL_TOPIC, _set_channel_topic);
+	return MOD_SUCCESS;
+}
+
 MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_TOPIC, cmd_topic, 4, CMD_USER|CMD_SERVER);
@@ -110,8 +120,14 @@ CMD_FUNC(cmd_topic)
 		if (parc > 2)
 			topic = parv[2];
 	}
+
 	if (parc > 4)
 	{
+		if (MyUser(client))
+		{
+			sendnumeric(client, ERR_CANNOTDOCOMMAND, "TOPIC", "Invalid parameters. Usage is TOPIC #channel :topic here");
+			return;
+		}
 		tnick = parv[2];
 		ttime = atol(parv[3]);
 		topic = parv[4];
@@ -264,15 +280,33 @@ CMD_FUNC(cmd_topic)
 			tnick = make_nick_user_host(client->name, client->user->username, GetHost(client));
 	}
 
+	_set_channel_topic(client, channel, recv_mtags, topic, tnick, ttime);
+}
+
+/** Set topic on a channel.
+ * @param client	The client setting the topic
+ * @param channel	The channel
+ * @param recv_mtags	Message tags
+ * @param topic		The new topic (TODO: this function does not support unsetting yet)
+ * @param set_by	Who set the topic (can be NULL, means client->name)
+ * @param set_at	When the topic was set (can be 0, means now)
+ */
+void _set_channel_topic(Client *client, Channel *channel, MessageTag *recv_mtags, const char *topic, const char *set_by, time_t set_at)
+{
+	MessageTag *mtags = NULL;
+
+	/* Set default values when needed */
+	if (set_by == NULL)
+		set_by = client->name;
+	if (set_at == 0)
+		set_at = TStime();
+
 	/* Set the topic */
 	safe_strldup(channel->topic, topic, iConf.topic_length+1);
-	safe_strldup(channel->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);
+	safe_strldup(channel->topic_nick, set_by, NICKLEN+USERLEN+HOSTLEN+5);
+	channel->topic_time = set_at;
 
-	if (ttime && !MyUser(client))
-		channel->topic_time = ttime;
-	else
-		channel->topic_time = TStime();
-
+	/* And broadcast the change - locally and remote */
 	new_message(client, recv_mtags, &mtags);
 	RunHook(HOOKTYPE_TOPIC, client, channel, mtags, topic);
 	sendto_server(client, 0, 0, mtags, ":%s TOPIC %s %s %lld :%s",
