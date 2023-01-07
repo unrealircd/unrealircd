@@ -291,7 +291,7 @@ OperPermission ValidatePermissionsForPath(const char *path, Client *client, Clie
 		return OPER_DENY;
 
 	/* Trust Servers, U-Lines and remote opers */
-	if (IsServer(client) || IsULine(client) || (IsOper(client) && !MyUser(client)))
+	if (IsServer(client) || IsMe(client) || IsULine(client) || (IsOper(client) && !MyUser(client)))
 		return OPER_ALLOW;
 
 	if (!IsOper(client))
