@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/user",
-	"1.0.3",
+	"1.0.4",
 	"user.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -517,6 +517,7 @@ RPC_CALL_FUNC(rpc_user_set_oper)
 	const char *nick, *oper_account, *oper_class;
 	const char *class=NULL, *modes=NULL, *snomask=NULL, *vhost=NULL;
 	Client *acptr;
+	char default_modes[64];
 
 	REQUIRE_PARAM_STRING("nick", nick);
 	REQUIRE_PARAM_STRING("oper_account", oper_account);
@@ -532,13 +533,19 @@ RPC_CALL_FUNC(rpc_user_set_oper)
 		return;
 	}
 
+	if (modes == NULL)
+	{
+		strlcpy(default_modes, get_usermode_string_raw(OPER_MODES), sizeof(default_modes));
+		modes = default_modes;
+	}
+
 	args[0] = NULL;
 	args[1] = acptr->name;
 	args[2] = oper_account;
 	args[3] = oper_class;
-	args[4] = class ? class : "-";
-	args[5] = modes ? modes : "-";
-	args[6] = snomask ? snomask : "-";
+	args[4] = class ? class : "opers";
+	args[5] = modes;
+	args[6] = snomask ? snomask : iConf.oper_snomask;
 	args[7] = vhost ? vhost : "-";
 	args[8] = NULL;
 	do_cmd(&me, NULL, "SVSO", 8, args);
