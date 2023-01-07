@@ -20,6 +20,7 @@ RPC_CALL_FUNC(rpc_user_get);
 RPC_CALL_FUNC(rpc_user_set_nick);
 RPC_CALL_FUNC(rpc_user_set_username);
 RPC_CALL_FUNC(rpc_user_set_realname);
+RPC_CALL_FUNC(rpc_user_set_vhost);
 
 MOD_INIT()
 {
@@ -62,6 +63,14 @@ MOD_INIT()
 	memset(&r, 0, sizeof(r));
 	r.method = "user.set_realname";
 	r.call = rpc_user_set_realname;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/user] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+	memset(&r, 0, sizeof(r));
+	r.method = "user.set_vhost";
+	r.call = rpc_user_set_vhost;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/user] Could not register RPC handler");
@@ -304,13 +313,13 @@ RPC_CALL_FUNC(rpc_user_set_realname)
 
 	if (strlen(realname) > REALLEN)
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_NAME, "New realname is too long");
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_NAME, "New real name is too long");
 		return;
 	}
 
 	if (!strcmp(acptr->info, realname))
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_ALREADY_EXISTS, "Old and new user name are identical");
+		rpc_error(client, request, JSON_RPC_ERROR_ALREADY_EXISTS, "Old and new real name are identical");
 		return;
 	}
 
@@ -322,6 +331,60 @@ RPC_CALL_FUNC(rpc_user_set_realname)
 
 	/* Return result */
 	if (!strcmp(acptr->info, realname))
+		result = json_boolean(1);
+	else
+		result = json_boolean(0);
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+RPC_CALL_FUNC(rpc_user_set_vhost)
+{
+	json_t *result, *list, *item;
+	const char *args[4];
+	const char *nick, *vhost, *str;
+	Client *acptr;
+
+	nick = json_object_get_string(params, "nick");
+	if (!nick)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'nick'");
+		return;
+	}
+
+	vhost = json_object_get_string(params, "vhost");
+	if (!vhost)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'vhost'");
+		return;
+	}
+
+	if (!(acptr = find_user(nick, NULL)))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Nickname not found");
+		return;
+	}
+
+	if ((strlen(vhost) > HOSTLEN) || !valid_host(vhost, 0))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_NAME, "New vhost contains forbidden character(s) or is too long");
+		return;
+	}
+
+	if (!strcmp(GetHost(acptr), vhost))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_ALREADY_EXISTS, "Old and new vhost are identical");
+		return;
+	}
+
+	args[0] = NULL;
+	args[1] = acptr->name;
+	args[2] = vhost;
+	args[3] = NULL;
+	do_cmd(&me, NULL, "CHGHOST", 3, args);
+
+	/* Return result */
+	if (!strcmp(GetHost(acptr), vhost))
 		result = json_boolean(1);
 	else
 		result = json_boolean(0);
