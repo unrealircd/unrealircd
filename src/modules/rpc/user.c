@@ -23,6 +23,7 @@ RPC_CALL_FUNC(rpc_user_set_realname);
 RPC_CALL_FUNC(rpc_user_set_vhost);
 RPC_CALL_FUNC(rpc_user_set_mode);
 RPC_CALL_FUNC(rpc_user_set_snomask);
+RPC_CALL_FUNC(rpc_user_set_oper);
 
 MOD_INIT()
 {
@@ -89,6 +90,14 @@ MOD_INIT()
 	memset(&r, 0, sizeof(r));
 	r.method = "user.set_snomask";
 	r.call = rpc_user_set_snomask;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/user] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+	memset(&r, 0, sizeof(r));
+	r.method = "user.set_oper";
+	r.call = rpc_user_set_oper;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/user] Could not register RPC handler");
@@ -444,7 +453,7 @@ RPC_CALL_FUNC(rpc_user_set_mode)
 	args[3] = NULL;
 	do_cmd(&me, NULL, hidden ? "SVSMODE" : "SVS2MODE", 3, args);
 
-	/* Return result (always true at the moment) */
+	/* Return result (always true) */
 	result = json_boolean(1);
 	rpc_response(client, request, result);
 	json_decref(result);
@@ -486,7 +495,55 @@ RPC_CALL_FUNC(rpc_user_set_snomask)
 	args[3] = NULL;
 	do_cmd(&me, NULL, hidden ? "SVSSNO" : "SVS2SNO", 3, args);
 
-	/* Return result (always true at the moment) */
+	/* Return result (always true) */
+	result = json_boolean(1);
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+#define REQUIRE_PARAM_STRING(name, varname)     do { \
+                                                    varname = json_object_get_string(params, name); \
+                                                    if (!varname) \
+                                                    { \
+                                                        rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: '%s'", name); \
+                                                        return; \
+                                                    } \
+                                                   } while(0)
+
+RPC_CALL_FUNC(rpc_user_set_oper)
+{
+	json_t *result, *list, *item;
+	const char *args[9];
+	const char *nick, *oper_account, *oper_class;
+	const char *class=NULL, *modes=NULL, *snomask=NULL, *vhost=NULL;
+	Client *acptr;
+
+	REQUIRE_PARAM_STRING("nick", nick);
+	REQUIRE_PARAM_STRING("oper_account", oper_account);
+	REQUIRE_PARAM_STRING("oper_class", oper_class);
+	class = json_object_get_string(params, "class");
+	modes = json_object_get_string(params, "modes");
+	snomask = json_object_get_string(params, "snomask");
+	vhost = json_object_get_string(params, "vhost");
+
+	if (!(acptr = find_user(nick, NULL)))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Nickname not found");
+		return;
+	}
+
+	args[0] = NULL;
+	args[1] = acptr->name;
+	args[2] = oper_account;
+	args[3] = oper_class;
+	args[4] = class ? class : "-";
+	args[5] = modes ? modes : "-";
+	args[6] = snomask ? snomask : "-";
+	args[7] = vhost ? vhost : "-";
+	args[8] = NULL;
+	do_cmd(&me, NULL, "SVSO", 8, args);
+
+	/* Return result (always true) */
 	result = json_boolean(1);
 	rpc_response(client, request, result);
 	json_decref(result);
