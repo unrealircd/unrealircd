@@ -83,7 +83,7 @@ CMD_FUNC(cmd_svsnick)
 	if ((ocptr = find_client(nickname, NULL)) && ocptr != acptr) /* Collision */
 	{
 		exit_client(acptr, NULL,
-		                   "Nickname collision due to Services enforced "
+		                   "Nickname collision due to forced "
 		                   "nickname change, your nick was overruled");
 		return;
 	}
@@ -109,7 +109,7 @@ CMD_FUNC(cmd_svsnick)
 	del_from_client_hash_table(acptr->name, acptr);
 
 	unreal_log(ULOG_INFO, "nick", "FORCED_NICK_CHANGE", acptr,
-	           "$client.details has been forced by services to change their nickname to $new_nick_name",
+	           "$client.details has been forced to change their nickname to $new_nick_name",
 	           log_data_string("new_nick_name", nickname));
 
 	strlcpy(acptr->name, nickname, sizeof acptr->name);

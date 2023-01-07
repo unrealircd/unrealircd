@@ -496,7 +496,7 @@ typedef enum ClientStatus {
 #define IsTLS(x)			((x)->flags & CLIENT_FLAG_TLS)
 #define IsSecure(x)			((x)->flags & CLIENT_FLAG_TLS)
 #define IsULine(x)			((x)->flags & CLIENT_FLAG_ULINE)
-#define IsSvsCmdOk(x)			(((x)->flags & CLIENT_FLAG_ULINE) || ((iConf.limit_svscmds == LIMIT_SVSCMDS_SERVERS) && IsServer((x))))
+#define IsSvsCmdOk(x)			(((x)->flags & CLIENT_FLAG_ULINE) || ((iConf.limit_svscmds == LIMIT_SVSCMDS_SERVERS) && (IsServer((x)) || IsMe((x)))))
 #define IsVirus(x)			((x)->flags & CLIENT_FLAG_VIRUS)
 #define IsIdentLookupSent(x)		((x)->flags & CLIENT_FLAG_IDENTLOOKUPSENT)
 #define SetIdentLookup(x)		do { (x)->flags |= CLIENT_FLAG_IDENTLOOKUP; } while(0)
