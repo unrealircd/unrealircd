@@ -2392,6 +2392,30 @@ typedef enum JsonRpcError {
 	JSON_RPC_ERROR_TOO_MANY_ENTRIES	=  -1004, /**< Too many entries (eg: banlist, ..) */
 	JSON_RPC_ERROR_DENIED		=  -1005, /**< Permission denied for user (unrelated to api user permissions) */
 } JsonRpcError;
+
+/** Require a parameter in an RPC command */
+#define REQUIRE_PARAM_STRING(name, varname)          do { \
+                                                         varname = json_object_get_string(params, name); \
+                                                         if (!varname) \
+                                                         { \
+                                                             rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: '%s'", name); \
+                                                             return; \
+                                                         } \
+                                                     } while(0)
+
+#define REQUIRE_PARAM_BOOLEAN(name, varname)         do { \
+                                                         json_t *vvv = json_object_get(params, name); \
+                                                         if (!v || !json_is_boolean(v)) \
+                                                         { \
+                                                             rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: '%s'", name); \
+                                                             return; \
+                                                         } \
+                                                         varname = json_is_true(v) ? 1 : 0; \
+                                                     } while(0)
+
+#define OPTIONAL_PARAM_STRING(name, varname)         varname = json_object_get_string(params, name)
+#define OPTIONAL_PARAM_BOOLEAN(name, varname, def)   varname = json_object_get_boolean(params, name, def)
+
 #endif /* __struct_include__ */
 
 #include "dynconf.h"

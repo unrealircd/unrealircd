@@ -189,12 +189,7 @@ RPC_CALL_FUNC(rpc_user_get)
 	const char *nick;
 	Client *acptr;
 
-	nick = json_object_get_string(params, "nick");
-	if (!nick)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'nick'");
-		return;
-	}
+	REQUIRE_PARAM_STRING("nick", nick);
 
 	if (!(acptr = find_user(nick, NULL)))
 	{
@@ -218,22 +213,10 @@ RPC_CALL_FUNC(rpc_user_set_nick)
 	char tsbuf[32];
 	Client *acptr;
 
-	nick = json_object_get_string(params, "nick");
-	if (!nick)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'nick'");
-		return;
-	}
-
-	force = json_object_get_boolean(params, "force", 0);
-
-	newnick_requested = json_object_get_string(params, "newnick");
-	if (!newnick_requested)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'newnick'");
-		return;
-	}
+	REQUIRE_PARAM_STRING("nick", nick);
+	REQUIRE_PARAM_STRING("newnick", newnick_requested);
 	strlcpy(newnick, newnick_requested, iConf.nick_length + 1);
+	OPTIONAL_PARAM_BOOLEAN("force", force, 0);
 
 	if (!(acptr = find_user(nick, NULL)))
 	{
@@ -298,19 +281,8 @@ RPC_CALL_FUNC(rpc_user_set_username)
 	const char *nick, *username, *str;
 	Client *acptr;
 
-	nick = json_object_get_string(params, "nick");
-	if (!nick)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'nick'");
-		return;
-	}
-
-	username = json_object_get_string(params, "username");
-	if (!username)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'username'");
-		return;
-	}
+	REQUIRE_PARAM_STRING("nick", nick);
+	REQUIRE_PARAM_STRING("username", username);
 
 	if (!(acptr = find_user(nick, NULL)))
 	{
@@ -352,19 +324,8 @@ RPC_CALL_FUNC(rpc_user_set_realname)
 	const char *nick, *realname, *str;
 	Client *acptr;
 
-	nick = json_object_get_string(params, "nick");
-	if (!nick)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'nick'");
-		return;
-	}
-
-	realname = json_object_get_string(params, "realname");
-	if (!realname)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'realname'");
-		return;
-	}
+	REQUIRE_PARAM_STRING("nick", nick);
+	REQUIRE_PARAM_STRING("realname", realname);
 
 	if (!(acptr = find_user(nick, NULL)))
 	{
@@ -406,19 +367,8 @@ RPC_CALL_FUNC(rpc_user_set_vhost)
 	const char *nick, *vhost, *str;
 	Client *acptr;
 
-	nick = json_object_get_string(params, "nick");
-	if (!nick)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'nick'");
-		return;
-	}
-
-	vhost = json_object_get_string(params, "vhost");
-	if (!vhost)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'vhost'");
-		return;
-	}
+	REQUIRE_PARAM_STRING("nick", nick);
+	REQUIRE_PARAM_STRING("vhost", vhost);
 
 	if (!(acptr = find_user(nick, NULL)))
 	{
@@ -461,21 +411,9 @@ RPC_CALL_FUNC(rpc_user_set_mode)
 	int hidden;
 	Client *acptr;
 
-	nick = json_object_get_string(params, "nick");
-	if (!nick)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'nick'");
-		return;
-	}
-
-	modes = json_object_get_string(params, "modes");
-	if (!modes)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'modes'");
-		return;
-	}
-
-	hidden = json_object_get_boolean(params, "hidden", 0);
+	REQUIRE_PARAM_STRING("nick", nick);
+	REQUIRE_PARAM_STRING("modes", modes);
+	OPTIONAL_PARAM_BOOLEAN("hidden", hidden, 0);
 
 	if (!(acptr = find_user(nick, NULL)))
 	{
@@ -503,21 +441,9 @@ RPC_CALL_FUNC(rpc_user_set_snomask)
 	int hidden;
 	Client *acptr;
 
-	nick = json_object_get_string(params, "nick");
-	if (!nick)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'nick'");
-		return;
-	}
-
-	snomask = json_object_get_string(params, "snomask");
-	if (!snomask)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'snomask'");
-		return;
-	}
-
-	hidden = json_object_get_boolean(params, "hidden", 0);
+	REQUIRE_PARAM_STRING("nick", nick);
+	REQUIRE_PARAM_STRING("snomask", snomask);
+	OPTIONAL_PARAM_BOOLEAN("hidden", hidden, 0);
 
 	if (!(acptr = find_user(nick, NULL)))
 	{
@@ -537,15 +463,6 @@ RPC_CALL_FUNC(rpc_user_set_snomask)
 	json_decref(result);
 }
 
-#define REQUIRE_PARAM_STRING(name, varname)     do { \
-                                                    varname = json_object_get_string(params, name); \
-                                                    if (!varname) \
-                                                    { \
-                                                        rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: '%s'", name); \
-                                                        return; \
-                                                    } \
-                                                   } while(0)
-
 RPC_CALL_FUNC(rpc_user_set_oper)
 {
 	json_t *result, *list, *item;
@@ -558,10 +475,10 @@ RPC_CALL_FUNC(rpc_user_set_oper)
 	REQUIRE_PARAM_STRING("nick", nick);
 	REQUIRE_PARAM_STRING("oper_account", oper_account);
 	REQUIRE_PARAM_STRING("oper_class", oper_class);
-	class = json_object_get_string(params, "class");
-	modes = json_object_get_string(params, "modes");
-	snomask = json_object_get_string(params, "snomask");
-	vhost = json_object_get_string(params, "vhost");
+	OPTIONAL_PARAM_STRING("class", class);
+	OPTIONAL_PARAM_STRING("modes", modes);
+	OPTIONAL_PARAM_STRING("snomask", snomask);
+	OPTIONAL_PARAM_STRING("vhost", vhost);
 
 	if (!(acptr = find_user(nick, NULL)))
 	{
@@ -664,8 +581,8 @@ RPC_CALL_FUNC(rpc_user_join)
 
 	REQUIRE_PARAM_STRING("nick", nick);
 	REQUIRE_PARAM_STRING("channel", channel);
-	key = json_object_get_string(params, "key");
-	force = json_object_get_boolean(params, "force", 0);
+	OPTIONAL_PARAM_STRING("key", key);
+	OPTIONAL_PARAM_BOOLEAN("force", force, 0);
 
 	if (!(acptr = find_user(nick, NULL)))
 	{
@@ -707,8 +624,8 @@ RPC_CALL_FUNC(rpc_user_part)
 
 	REQUIRE_PARAM_STRING("nick", nick);
 	REQUIRE_PARAM_STRING("channel", channel);
-	reason = json_object_get_string(params, "reason");
-	force = json_object_get_boolean(params, "force", 0);
+	OPTIONAL_PARAM_STRING("reason", reason);
+	OPTIONAL_PARAM_BOOLEAN("force", force, 0);
 
 	if (!(acptr = find_user(nick, NULL)))
 	{
