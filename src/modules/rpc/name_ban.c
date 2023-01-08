@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/name_ban",
-	"1.0.0",
+	"1.0.1",
 	"name_ban.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",

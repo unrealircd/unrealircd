@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/spamfilter",
-	"1.0.2",
+	"1.0.3",
 	"spamfilter.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",

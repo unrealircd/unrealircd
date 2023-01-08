@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/server_ban_exception",
-	"1.0.0",
+	"1.0.1",
 	"server_ban_exception.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
