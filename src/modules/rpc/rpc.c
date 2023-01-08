@@ -416,7 +416,7 @@ void rpc_call_text(Client *client, const char *readbuf, int len)
 	request = json_loads(buf, JSON_REJECT_DUPLICATES, &jerr);
 	if (!request)
 	{
-		unreal_log(ULOG_INFO, "log", "RPC_INVALID_JSON", client,
+		unreal_log(ULOG_INFO, "rpc", "RPC_INVALID_JSON", client,
 		           "Received unparsable JSON request from $client",
 		           log_data_string("json_incoming", buf));
 		rpc_error(client, NULL, JSON_RPC_ERROR_PARSE_ERROR, "Unparsable JSON data");
@@ -494,6 +494,11 @@ void _rpc_error(Client *client, json_t *request, JsonRpcError error_code, const 
 		return;
 	}
 	rpc_sendto(client, json_serialized, strlen(json_serialized));
+#ifdef DEBUGMODE
+	unreal_log(ULOG_DEBUG, "rpc", "RPC_CALL_DEBUG", client,
+		   "[rpc] Client $client: RPC result error: $response",
+		   log_data_string("response", json_serialized));
+#endif
 	json_decref(j);
 	safe_free(json_serialized);
 }
@@ -533,6 +538,11 @@ void _rpc_response(Client *client, json_t *request, json_t *result)
 		return;
 	}
 	rpc_sendto(client, json_serialized, strlen(json_serialized));
+#ifdef DEBUGMODE
+	unreal_log(ULOG_DEBUG, "rpc", "RPC_CALL_DEBUG", client,
+		   "[rpc] Client $client: RPC response result: $response",
+		   log_data_string("response", json_serialized));
+#endif
 	json_decref(j);
 	safe_free(json_serialized);
 }
@@ -582,6 +592,18 @@ void rpc_call(Client *client, json_t *request)
 	           "[rpc] Client $client: RPC call $method",
 	           log_data_string("method", method));
 
+#ifdef DEBUGMODE
+	{
+		char *call = json_dumps(request, 0);
+		if (call)
+		{
+			unreal_log(ULOG_DEBUG, "rpc", "RPC_CALL_DEBUG", client,
+				   "[rpc] Client $client: RPC call: $call",
+				   log_data_string("call", call));
+			safe_free(call);
+		}
+	}
+#endif
 	handler->call(client, request, params);
 	if (params_allocated)
 		json_decref(params);
