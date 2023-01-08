@@ -118,6 +118,53 @@ RPC_CALL_FUNC(rpc_server_ban_list)
 	json_decref(result);
 }
 
+/** Shared code for selecting a server ban, for .add/.del/.get */
+int server_ban_select_criteria(Client *client, json_t *request, json_t *params,
+                               const char **name,
+                               const char **type_name,
+                               char *tkl_type_char,
+                               int *tkl_type_int,
+                               char **usermask,
+                               char **hostmask,
+                               int *soft,
+                               const char **error)
+{
+	*name = json_object_get_string(params, "name");
+	if (!*name)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'name'");
+		return 0;
+	}
+
+	*type_name = json_object_get_string(params, "type");
+	if (!*type_name)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'type'");
+		return 0;
+	}
+
+	*tkl_type_char = tkl_configtypetochar(*type_name);
+	if (!*tkl_type_char)
+	{
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid type: '%s'", *type_name);
+		return 0;
+	}
+	*tkl_type_int = tkl_chartotype(*tkl_type_char);
+	if (!TKLIsServerBanType(*tkl_type_int))
+	{
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid type: '%s' (type exists but is not valid for in server_ban.*)", *type_name);
+		return 0;
+	}
+
+	if (!server_ban_parse_mask(client, 0, *tkl_type_int, *name, usermask, hostmask, soft, error))
+	{
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", *error);
+		return 0;
+	}
+
+	return 1;
+}
+
 RPC_CALL_FUNC(rpc_server_ban_get)
 {
 	json_t *result, *list, *item;
@@ -129,31 +176,11 @@ RPC_CALL_FUNC(rpc_server_ban_get)
 	char tkl_type_char;
 	int tkl_type_int;
 
-	name = json_object_get_string(params, "name");
-	if (!name)
+	if (!server_ban_select_criteria(client, request, params,
+	                                &name, &type_name,
+	                                &tkl_type_char, &tkl_type_int,
+	                                &usermask, &hostmask, &soft, &error))
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'name'");
-		return;
-	}
-
-	type_name = json_object_get_string(params, "type");
-	if (!type_name)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'type'");
-		return;
-	}
-
-	tkl_type_char = tkl_configtypetochar(type_name);
-	if (!tkl_type_char)
-	{
-		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid type: '%s'", type_name);
-		return;
-	}
-	tkl_type_int = tkl_chartotype(tkl_type_char);
-
-	if (!server_ban_parse_mask(client, 0, tkl_type_int, name, &usermask, &hostmask, &soft, &error))
-	{
-		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", error);
 		return;
 	}
 
@@ -169,7 +196,6 @@ RPC_CALL_FUNC(rpc_server_ban_get)
 	json_decref(result);
 }
 
-// Wonderful duplicate code atm
 RPC_CALL_FUNC(rpc_server_ban_del)
 {
 	json_t *result, *list, *item;
@@ -183,35 +209,16 @@ RPC_CALL_FUNC(rpc_server_ban_del)
 	const char *tkllayer[10];
 	char tkl_type_str[2];
 
-	name = json_object_get_string(params, "name");
-	if (!name)
+	if (!server_ban_select_criteria(client, request, params,
+	                                &name, &type_name,
+	                                &tkl_type_char, &tkl_type_int,
+	                                &usermask, &hostmask, &soft, &error))
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'name'");
 		return;
 	}
 
-	type_name = json_object_get_string(params, "type");
-	if (!type_name)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'type'");
-		return;
-	}
-
-	tkl_type_char = tkl_configtypetochar(type_name);
-	if (!tkl_type_char)
-	{
-		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid type: '%s'", type_name);
-		return;
-	}
-	tkl_type_int = tkl_chartotype(tkl_type_char);
 	tkl_type_str[0] = tkl_type_char;
 	tkl_type_str[1] = '\0';
-
-	if (!server_ban_parse_mask(client, 0, tkl_type_int, name, &usermask, &hostmask, &soft, &error))
-	{
-		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", error);
-		return;
-	}
 
 	if (!(tkl = find_tkl_serverban(tkl_type_int, usermask, hostmask, soft)))
 	{
@@ -242,7 +249,6 @@ RPC_CALL_FUNC(rpc_server_ban_del)
 	json_decref(result);
 }
 
-// Wonderful duplicate code atm
 RPC_CALL_FUNC(rpc_server_ban_add)
 {
 	json_t *result, *list, *item;
@@ -259,36 +265,18 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 	time_t tkl_expire_at;
 	time_t tkl_set_at = TStime();
 
-	name = json_object_get_string(params, "name");
-	if (!name)
+	if (!server_ban_select_criteria(client, request, params,
+	                                &name, &type_name,
+	                                &tkl_type_char, &tkl_type_int,
+	                                &usermask, &hostmask, &soft, &error))
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'name'");
 		return;
 	}
 
-	type_name = json_object_get_string(params, "type");
-	if (!type_name)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'type'");
-		return;
-	}
-
-	tkl_type_char = tkl_configtypetochar(type_name);
-	if (!tkl_type_char)
-	{
-		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid type: '%s'", type_name);
-		return;
-	}
-	tkl_type_int = tkl_chartotype(tkl_type_char);
 	tkl_type_str[0] = tkl_type_char;
 	tkl_type_str[1] = '\0';
 
-	reason = json_object_get_string(params, "reason");
-	if (!reason)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'reason'");
-		return;
-	}
+	REQUIRE_PARAM_STRING("reason", reason);
 
 	/* Duration / expiry time */
 	if ((str = json_object_get_string(params, "duration_string")))
@@ -309,12 +297,6 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 	if ((tkl_expire_at != 0) && (tkl_expire_at < TStime()))
 	{
 		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: the specified expiry time is before current time (before now)");
-		return;
-	}
-
-	if (!server_ban_parse_mask(client, 0, tkl_type_int, name, &usermask, &hostmask, &soft, &error))
-	{
-		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", error);
 		return;
 	}
 
