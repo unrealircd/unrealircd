@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/server_ban",
-	"1.0.1",
+	"1.0.2",
 	"server_ban.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -69,13 +69,6 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-#define RPC_USER_LIST_EXPAND_NONE	0
-#define RPC_USER_LIST_EXPAND_SELECT	1
-#define RPC_USER_LIST_EXPAND_ALL	2
-
-// TODO: right now returns everything
-// give the option to return a list of names only or
-// certain options (hence the placeholder #define's above)
 RPC_CALL_FUNC(rpc_server_ban_list)
 {
 	json_t *result, *list, *item;
