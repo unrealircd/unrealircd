@@ -187,6 +187,7 @@ RPC_CALL_FUNC(rpc_spamfilter_add)
 	int type = TKL_SPAMF|TKL_GLOBAL;
 	const char *str;
 	const char *name, *reason;
+	const char *set_by;
 	time_t ban_duration = 0;
 	TKL *tkl;
 	Match *m;
@@ -220,6 +221,10 @@ RPC_CALL_FUNC(rpc_spamfilter_add)
 		}
 	}
 
+	OPTIONAL_PARAM_STRING("set_by", set_by);
+	if (!set_by)
+		set_by = client->name;
+
 	if (find_tkl_spamfilter(type, name, action, targets))
 	{
 		rpc_error(client, request, JSON_RPC_ERROR_ALREADY_EXISTS, "A spamfilter with that regex+action+target already exists");
@@ -239,7 +244,7 @@ RPC_CALL_FUNC(rpc_spamfilter_add)
 		return;
 	}
 
-	tkl = tkl_add_spamfilter(type, targets, action, m, client->name, 0, TStime(),
+	tkl = tkl_add_spamfilter(type, targets, action, m, set_by, 0, TStime(),
 	                         ban_duration, reason, 0);
 
 	if (!tkl)
@@ -261,6 +266,7 @@ RPC_CALL_FUNC(rpc_spamfilter_del)
 	json_t *result;
 	int type = TKL_SPAMF|TKL_GLOBAL;
 	const char *name;
+	const char *set_by;
 	TKL *tkl;
 	BanAction action;
 	int match_type = 0;
@@ -271,6 +277,10 @@ RPC_CALL_FUNC(rpc_spamfilter_del)
 
 	if (!spamfilter_select_criteria(client, request, params, &name, &match_type, &targets, targetbuf, sizeof(targetbuf), &action, actionbuf))
 		return; /* Error already communicated to client */
+
+	OPTIONAL_PARAM_STRING("set_by", set_by);
+	if (!set_by)
+		set_by = client->name;
 
 	tkl = find_tkl_spamfilter(type, name, action, targets);
 	if (!tkl)
@@ -287,7 +297,7 @@ RPC_CALL_FUNC(rpc_spamfilter_del)
 	tkllayer[2] = "F";
 	tkllayer[3] = targetbuf;
 	tkllayer[4] = actionbuf;
-	tkllayer[5] = client->name;
+	tkllayer[5] = set_by;
 	tkllayer[6] = "-";
 	tkllayer[7] = "0";
 	tkllayer[8] = "0";

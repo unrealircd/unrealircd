@@ -193,6 +193,7 @@ RPC_CALL_FUNC(rpc_server_ban_del)
 {
 	json_t *result, *list, *item;
 	const char *name, *type_name;
+	const char *set_by;
 	char *usermask, *hostmask;
 	int soft;
 	TKL *tkl;
@@ -218,6 +219,10 @@ RPC_CALL_FUNC(rpc_server_ban_del)
 		return;
 	}
 
+	OPTIONAL_PARAM_STRING("set_by", set_by);
+	if (!set_by)
+		set_by = client->name;
+
 	result = json_object();
 	json_expand_tkl(result, "tkl", tkl, 1);
 
@@ -225,7 +230,7 @@ RPC_CALL_FUNC(rpc_server_ban_del)
 	tkllayer[2] = tkl_type_str;
 	tkllayer[3] = usermask;
 	tkllayer[4] = hostmask;
-	tkllayer[5] = client->name;
+	tkllayer[5] = set_by;
 	tkllayer[6] = NULL;
 	cmd_tkl(&me, NULL, 6, tkllayer);
 
@@ -245,6 +250,7 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 {
 	json_t *result, *list, *item;
 	const char *name, *type_name;
+	const char *set_by;
 	char *usermask, *hostmask;
 	int soft;
 	TKL *tkl;
@@ -285,6 +291,10 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 		tkl_expire_at = 0;
 	}
 
+	OPTIONAL_PARAM_STRING("set_by", set_by);
+	if (!set_by)
+		set_by = client->name;
+
 	if ((tkl_expire_at != 0) && (tkl_expire_at < TStime()))
 	{
 		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: the specified expiry time is before current time (before now)");
@@ -298,7 +308,7 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 	}
 
 	tkl = tkl_add_serverban(tkl_type_int, usermask, hostmask, reason,
-	                        client->name, tkl_expire_at, tkl_set_at,
+	                        set_by, tkl_expire_at, tkl_set_at,
 	                        soft, 0);
 
 	if (!tkl)

@@ -134,15 +134,15 @@ RPC_CALL_FUNC(rpc_name_ban_del)
 {
 	json_t *result, *list, *item;
 	const char *name;
-	const char *error;
-	char *usermask, *hostmask;
-	int soft;
+	const char *set_by;
 	TKL *tkl;
-	char tkl_type_char;
-	int tkl_type_int;
-	const char *tkllayer[10];
+	const char *tkllayer[7];
 
 	REQUIRE_PARAM_STRING("name", name);
+
+	OPTIONAL_PARAM_STRING("set_by", set_by);
+	if (!set_by)
+		set_by = client->name;
 
 	if (!(tkl = my_find_tkl_nameban(name)))
 	{
@@ -158,7 +158,7 @@ RPC_CALL_FUNC(rpc_name_ban_del)
 	tkllayer[2] = "Q";
 	tkllayer[3] = "*";
 	tkllayer[4] = name;
-	tkllayer[5] = client->name;
+	tkllayer[5] = set_by;
 	tkllayer[6] = NULL;
 	cmd_tkl(&me, NULL, 6, tkllayer);
 
@@ -179,10 +179,11 @@ RPC_CALL_FUNC(rpc_name_ban_add)
 	json_t *result, *list, *item;
 	const char *name;
 	const char *str;
-	TKL *tkl;
 	const char *reason;
+	const char *set_by;
 	time_t tkl_expire_at;
 	time_t tkl_set_at = TStime();
+	TKL *tkl;
 
 	REQUIRE_PARAM_STRING("name", name);
 	REQUIRE_PARAM_STRING("reason", reason);
@@ -203,6 +204,10 @@ RPC_CALL_FUNC(rpc_name_ban_add)
 		tkl_expire_at = 0;
 	}
 
+	OPTIONAL_PARAM_STRING("set_by", set_by);
+	if (!set_by)
+		set_by = client->name;
+
 	if ((tkl_expire_at != 0) && (tkl_expire_at < TStime()))
 	{
 		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: the specified expiry time is before current time (before now)");
@@ -216,8 +221,8 @@ RPC_CALL_FUNC(rpc_name_ban_add)
 	}
 
 	tkl = tkl_add_nameban(TKL_NAME|TKL_GLOBAL, name, 0, reason,
-	                        client->name, tkl_expire_at, tkl_set_at,
-	                        0);
+	                      set_by, tkl_expire_at, tkl_set_at,
+	                      0);
 
 	if (!tkl)
 	{
