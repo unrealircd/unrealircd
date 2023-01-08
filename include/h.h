@@ -827,6 +827,7 @@ extern MODVAR int (*tkl_ip_hash)(const char *ip);
 extern MODVAR int (*tkl_ip_hash_type)(int type);
 extern MODVAR int (*find_tkl_exception)(int ban_type, Client *cptr);
 extern MODVAR int (*server_ban_parse_mask)(Client *client, int add, char type, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
+extern MODVAR int (*server_ban_exception_parse_mask)(Client *client, int add, const char *bantypes, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
 extern MODVAR void (*tkl_added)(Client *client, TKL *tkl);
 extern MODVAR int (*del_silence)(Client *client, const char *mask);
 extern MODVAR int (*add_silence)(Client *client, const char *mask, int senderr);

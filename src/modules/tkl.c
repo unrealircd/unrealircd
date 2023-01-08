@@ -105,6 +105,7 @@ TKL *_find_tkl_nameban(int type, char *name, int hold);
 TKL *_find_tkl_spamfilter(int type, char *match_string, BanAction action, unsigned short target);
 int _find_tkl_exception(int ban_type, Client *client);
 int _server_ban_parse_mask(Client *client, int add, char type, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
+int _server_ban_exception_parse_mask(Client *client, int add, const char *bantypes, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
 static void add_default_exempts(void);
 int parse_extended_server_ban(const char *mask_in, Client *client, char **error, int skip_checking, char *buf1, size_t buf1len, char *buf2, size_t buf2len);
 void _tkl_added(Client *client, TKL *tkl);
@@ -213,6 +214,7 @@ MOD_TEST()
 	EfunctionAddString(modinfo->handle, EFUNC_TKL_UHOST, _tkl_uhost);
 	EfunctionAdd(modinfo->handle, EFUNC_UNREAL_MATCH_IPLIST, _unreal_match_iplist);
 	EfunctionAdd(modinfo->handle, EFUNC_SERVER_BAN_PARSE_MASK, TO_INTFUNC(_server_ban_parse_mask));
+	EfunctionAdd(modinfo->handle, EFUNC_SERVER_BAN_EXCEPTION_PARSE_MASK, TO_INTFUNC(_server_ban_exception_parse_mask));
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_ADDED, _tkl_added);
 	return MOD_SUCCESS;
 }
@@ -1686,10 +1688,181 @@ int contains_invalid_server_ban_exception_type(const char *str, char *c)
 	return 0;
 }
 
+/** Parse a server ban exception (ELINE) request such as 'blah@blah.com' or '~account:EvilUser'
+ * @param client	Client requesting the operation (can be NULL)
+ * @param add		Set to 1 for add ban, 0 for remove ban
+ * @param bantypes	Ban types to exempt from
+ * @param str		The input string
+ * @param usermask_out	Will be set to the TKL usermask
+ * @param hostmask_out	Will be set to the TKL hostmask
+ * @param soft		Will be set to 1 if it's a softban, otherwise 0
+ * @param error		On failure, this will contain the error string
+ * @retval 1	Success: usermask_out, hostmask_out and soft are set appropriately.
+ * @retval 0	Failed: error is set appropriately
+ */
+int _server_ban_exception_parse_mask(Client *client, int add, const char *bantypes, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error)
+{
+	static char maskbuf[BUFSIZE], mask1buf[BUFSIZE], mask2buf[BUFSIZE], errbuf[BUFSIZE];
+	char *hostmask = NULL, *usermask = NULL;
+	char *mask, *p;
+	TKLTypeTable *t;
+
+	/* Set defaults */
+	*usermask_out = *hostmask_out = NULL;
+	*soft = 0;
+
+	strlcpy(maskbuf, str, sizeof(maskbuf));
+	mask = maskbuf;
+
+	if ((*mask != '~') && strchr(mask, '!'))
+	{
+		*error = "Cannot have '!' in masks.";
+		return 0;
+	}
+
+	if (*mask == ':')
+	{
+		*error = "Mask cannot start with a ':'.";
+		return 0;
+	}
+
+	if (strchr(mask, ' '))
+	{
+		*error = "Mask may not contain spaces";
+		return 0;
+	}
+
+	if (*mask == '%')
+	{
+		*soft = 1;
+		/* do we need more sanity checks here? */
+	}
+
+	/* Check if it's an extended server ban */
+	if (is_extended_server_ban(mask))
+	{
+		char *err;
+
+		if (!parse_extended_server_ban(mask, client, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
+		{
+			/* If adding, reject it */
+			if (add)
+			{
+				*error = err;
+				return 0;
+			} else
+			{
+				/* Always allow any removal attempt... */
+				char *p;
+				char save;
+				p = strchr(mask, ':');
+				p++;
+				save = *p;
+				*p = '\0';
+				strlcpy(mask1buf, mask, sizeof(mask1buf));
+				*p = save;
+				strlcpy(mask2buf, p, sizeof(mask2buf));
+				/* fallthrough */
+			}
+		}
+		if (add && (t = eline_type_requires_ip(bantypes)))
+		{
+			snprintf(errbuf, sizeof(errbuf),
+			         "ERROR: Ban exception with type '%c' does not work on extended server bans. "
+			         "This is because checking for %s takes places BEFORE "
+			         "extended bans can be checked.", t->letter, t->log_name);
+			*error = errbuf;
+			return 0;
+		}
+		usermask = mask1buf; /* eg ~S: */
+		hostmask = mask2buf; /* eg 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef */
+	} else
+	{
+		/* Check if it's a hostmask and legal .. */
+		p = strchr(mask, '@');
+		if (p) {
+			if ((p == mask) || !p[1])
+			{
+				*error = "No user@host specified";
+				return 0;
+			}
+			usermask = strtok(mask, "@");
+			hostmask = strtok(NULL, "");
+			if (BadPtr(hostmask))
+			{
+				if (BadPtr(usermask))
+				{
+					*error = "Invalid mask";
+					return 0;
+				}
+				hostmask = usermask;
+				usermask = "*";
+			}
+			if (*hostmask == ':')
+			{
+				*error = "For technical reasons you cannot start the host with a ':', sorry";
+				return 0;
+			}
+			if (add && ((t = eline_type_requires_ip(bantypes))))
+			{
+				/* Trying to exempt a user from a (G)ZLINE,
+				 * make sure the user isn't specifying a host then.
+				 */
+				if (strcmp(usermask, "*"))
+				{
+					snprintf(errbuf, sizeof(errbuf),
+					         "Ban exception with type '%c' need to be placed at \037*\037@ipmask, not \037user\037@ipmask. "
+					         "This is because checking %s takes places (possibly) BEFORE any dns and ident lookups.",
+					         t->letter, t->log_name);
+					*error = errbuf;
+					return 0;
+				}
+				for (p=hostmask; *p; p++)
+				{
+					if (isalpha(*p) && !isxdigit(*p))
+					{
+						snprintf(errbuf, sizeof(errbuf),
+						         "Ban exception with type '%c' needs to be placed at *@\037ipmask\037, not *@\037hostmask\037. "
+						         "(so for example *@192.168.* is OK, but *@*.aol.com is not). "
+						         "This is because checking %s takes places (possibly) BEFORE any dns and ident lookups.",
+						         t->letter, t->log_name);
+						*error = errbuf;
+						return 0;
+					}
+				}
+			}
+		}
+		else
+		{
+			/* It's seemingly a nick .. let's see if we can find the user */
+			Client *acptr;
+			if ((acptr = find_user(mask, NULL)))
+			{
+				BanAction action = BAN_ACT_KLINE; // just a dummy default
+				if (add && eline_type_requires_ip(bantypes))
+					action = BAN_ACT_ZLINE; // to indicate zline (no hostname, no dns, etc)
+				ban_target_to_tkl_layer(iConf.manual_ban_target, action, acptr, (const char **)&usermask, (const char **)&hostmask);
+			}
+			else
+			{
+				*error = "Nickname not found";
+				return 0;
+			}
+		}
+	}
+
+	/* Success! */
+	*usermask_out = usermask;
+	*hostmask_out = hostmask;
+	return 1;
+}
+
 CMD_FUNC(cmd_eline)
 {
 	time_t secs = 0;
 	int add = 1;
+	int soft = 0;
+	const char *error = NULL;
 	Client *acptr = NULL;
 	char *mask = NULL;
 	char mo[64], mo2[64];
@@ -1759,122 +1932,10 @@ CMD_FUNC(cmd_eline)
 		reason = parv[4];
 	}
 
-	if ((*mask != '~') && strchr(mask, '!'))
+	if (!server_ban_exception_parse_mask(client, add, bantypes, mask, &usermask, &hostmask, &soft, &error))
 	{
-		sendnotice(client, "[error] Cannot have '!' in masks.");
+		sendnotice(client, "[ERROR] %s", error);
 		return;
-	}
-	if (*mask == ':')
-	{
-		sendnotice(client, "[error] Mask cannot start with a ':'.");
-		return;
-	}
-	if (strchr(mask, ' '))
-		return;
-
-	/* Check if it's an extended server ban */
-	if (is_extended_server_ban(mask))
-	{
-		char *err;
-		if (!parse_extended_server_ban(mask, client, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
-		{
-			/* If adding, reject it */
-			if (add)
-			{
-				sendnotice(client, "ERROR: %s", err);
-				return;
-			} else
-			{
-				/* Always allow any removal attempt... */
-				char *p;
-				char save;
-				p = strchr(mask, ':');
-				p++;
-				save = *p;
-				*p = '\0';
-				strlcpy(mask1buf, mask, sizeof(mask1buf));
-				*p = save;
-				strlcpy(mask2buf, p, sizeof(mask2buf));
-				/* fallthrough */
-			}
-		}
-		if (add && (t = eline_type_requires_ip(bantypes)))
-		{
-			sendnotice(client, "ERROR: Ban exception with type '%c' does not work on extended server bans. "
-					   "This is because checking for %s takes places BEFORE "
-					   "extended bans can be checked.", t->letter, t->log_name);
-			return;
-		}
-		usermask = mask1buf; /* eg ~S: */
-		hostmask = mask2buf; /* eg 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef */
-	} else
-	{
-		/* Check if it's a hostmask and legal .. */
-		p = strchr(mask, '@');
-		if (p)
-		{
-			if ((p == mask) || !p[1])
-			{
-				sendnotice(client, "Error: no user@host specified");
-				return;
-			}
-			usermask = strtok(mask, "@");
-			hostmask = strtok(NULL, "");
-			if (BadPtr(hostmask)) {
-				if (BadPtr(usermask)) {
-					return;
-				}
-				hostmask = usermask;
-				usermask = "*";
-			}
-			if (*hostmask == ':')
-			{
-				sendnotice(client, "[error] For technical reasons you cannot start the host with a ':', sorry");
-				return;
-			}
-			if (add && ((t = eline_type_requires_ip(bantypes))))
-			{
-				/* Trying to exempt a user from a (G)ZLINE,
-				 * make sure the user isn't specifying a host then.
-				 */
-				if (strcmp(usermask, "*"))
-				{
-					sendnotice(client, "ERROR: Ban exception with type '%c' need to be placed at \037*\037@ipmask, not \037user\037@ipmask. "
-					                   "This is because checking %s takes places (possibly) BEFORE any dns and ident lookups.",
-					                   t->letter,
-					                   t->log_name);
-					return;
-				}
-				for (p=hostmask; *p; p++)
-				{
-					if (isalpha(*p) && !isxdigit(*p))
-					{
-						sendnotice(client, "ERROR: Ban exception with type '%c' needs to be placed at *@\037ipmask\037, not *@\037hostmask\037. "
-						                   "(so for example *@192.168.* is OK, but *@*.aol.com is not). "
-						                   "This is because checking %s takes places (possibly) BEFORE any dns and ident lookups.",
-						                   t->letter,
-						                   t->log_name);
-						return;
-					}
-				}
-			}
-		}
-		else
-		{
-			/* It's seemingly a nick .. let's see if we can find the user */
-			if ((acptr = find_user(mask, NULL)))
-			{
-				BanAction action = BAN_ACT_KLINE; // just a dummy default
-				if (add && eline_type_requires_ip(bantypes))
-					action = BAN_ACT_ZLINE; // to indicate zline (no hostname, no dns, etc)
-				ban_target_to_tkl_layer(iConf.manual_ban_target, action, acptr, (const char **)&usermask, (const char **)&hostmask);
-			}
-			else
-			{
-				sendnumeric(client, ERR_NOSUCHNICK, mask);
-				return;
-			}
-		}
 	}
 
 	if (add)
