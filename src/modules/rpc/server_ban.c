@@ -119,9 +119,10 @@ int server_ban_select_criteria(Client *client, json_t *request, json_t *params,
                                int *tkl_type_int,
                                char **usermask,
                                char **hostmask,
-                               int *soft,
-                               const char **error)
+                               int *soft)
 {
+	const char *error;
+
 	*name = json_object_get_string(params, "name");
 	if (!*name)
 	{
@@ -149,9 +150,9 @@ int server_ban_select_criteria(Client *client, json_t *request, json_t *params,
 		return 0;
 	}
 
-	if (!server_ban_parse_mask(client, 0, *tkl_type_int, *name, usermask, hostmask, soft, error))
+	if (!server_ban_parse_mask(client, 0, *tkl_type_int, *name, usermask, hostmask, soft, &error))
 	{
-		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", *error);
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", error);
 		return 0;
 	}
 
@@ -162,7 +163,6 @@ RPC_CALL_FUNC(rpc_server_ban_get)
 {
 	json_t *result, *list, *item;
 	const char *name, *type_name;
-	const char *error;
 	char *usermask, *hostmask;
 	int soft;
 	TKL *tkl;
@@ -172,7 +172,7 @@ RPC_CALL_FUNC(rpc_server_ban_get)
 	if (!server_ban_select_criteria(client, request, params,
 	                                &name, &type_name,
 	                                &tkl_type_char, &tkl_type_int,
-	                                &usermask, &hostmask, &soft, &error))
+	                                &usermask, &hostmask, &soft))
 	{
 		return;
 	}
@@ -193,7 +193,6 @@ RPC_CALL_FUNC(rpc_server_ban_del)
 {
 	json_t *result, *list, *item;
 	const char *name, *type_name;
-	const char *error;
 	char *usermask, *hostmask;
 	int soft;
 	TKL *tkl;
@@ -205,7 +204,7 @@ RPC_CALL_FUNC(rpc_server_ban_del)
 	if (!server_ban_select_criteria(client, request, params,
 	                                &name, &type_name,
 	                                &tkl_type_char, &tkl_type_int,
-	                                &usermask, &hostmask, &soft, &error))
+	                                &usermask, &hostmask, &soft))
 	{
 		return;
 	}
@@ -246,7 +245,6 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 {
 	json_t *result, *list, *item;
 	const char *name, *type_name;
-	const char *error;
 	char *usermask, *hostmask;
 	int soft;
 	TKL *tkl;
@@ -261,7 +259,7 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 	if (!server_ban_select_criteria(client, request, params,
 	                                &name, &type_name,
 	                                &tkl_type_char, &tkl_type_int,
-	                                &usermask, &hostmask, &soft, &error))
+	                                &usermask, &hostmask, &soft))
 	{
 		return;
 	}
