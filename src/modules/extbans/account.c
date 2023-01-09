@@ -102,15 +102,15 @@ const char *extban_account_conv_param(BanContext *b, Extban *extban)
 int extban_account_is_banned(BanContext *b)
 {
 	/* ~a:0 is special and matches all unauthenticated users */
-	if (!strcmp(b->banstr, "0") && !IsLoggedIn(b->client))
-		return 1;
+	if (!strcmp(b->banstr, "0"))
+		return IsLoggedIn(b->client) ? 0 : 1;
 
 	/* ~a:* matches all authenticated users
 	 * (Yes this special code is needed because account
 	 *  is 0 or * for unauthenticated users)
 	 */
-	if (!strcmp(b->banstr, "*") && IsLoggedIn(b->client))
-		return 1;
+	if (!strcmp(b->banstr, "*"))
+		return IsLoggedIn(b->client) ? 1 : 0;
 
 	if (b->client->user && match_simple(b->banstr, b->client->user->account))
 		return 1;
