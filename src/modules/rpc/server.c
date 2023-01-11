@@ -19,6 +19,7 @@ RPC_CALL_FUNC(rpc_server_list);
 RPC_CALL_FUNC(rpc_server_get);
 RPC_CALL_FUNC(rpc_server_rehash);
 RPC_CALL_FUNC(rpc_server_connect);
+RPC_CALL_FUNC(rpc_server_disconnect);
 
 int rpc_server_rehash_log(int failure, json_t *rehash_log);
 
@@ -55,6 +56,14 @@ MOD_INIT()
 	memset(&r, 0, sizeof(r));
 	r.method = "server.connect";
 	r.call = rpc_server_connect;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/server] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+	memset(&r, 0, sizeof(r));
+	r.method = "server.disconnect";
+	r.call = rpc_server_disconnect;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/server] Could not register RPC handler");
@@ -249,6 +258,67 @@ RPC_CALL_FUNC(rpc_server_connect)
 		   log_data_link_block(link));
 
 	connect_server(link, client, NULL);
+	result = json_boolean(1);
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+RPC_CALL_FUNC(rpc_server_disconnect)
+{
+	json_t *result, *list, *item;
+	const char *server, *link_name, *reason;
+	Client *acptr, *target;
+	ConfigItem_link *link;
+	ConfigItem_deny_link *deny;
+	MessageTag *mtags = NULL;
+
+	OPTIONAL_PARAM_STRING("server", server);
+	if (server)
+	{
+		if (!(acptr = find_server(server, NULL)))
+		{
+			rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Server not found");
+			return;
+		}
+	} else {
+		acptr = &me;
+	}
+	REQUIRE_PARAM_STRING("link", link_name);
+	REQUIRE_PARAM_STRING("reason", reason);
+
+	if (acptr != &me)
+	{
+		/* Not supported atm */
+		result = json_boolean(0);
+		rpc_response(client, request, result);
+		json_decref(result);
+		return;
+	}
+
+	target = find_server_quick(link_name);
+	if (!target)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Server link not found");
+		return;
+	}
+
+	if (target == &me)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "We cannot disconnect ourselves");
+		return;
+	}
+
+	unreal_log(ULOG_INFO, "link", "SQUIT", client,
+	           "SQUIT: Forced server disconnect of $target by $client ($reason)",
+	           log_data_client("target", target),
+	           log_data_string("reason", reason));
+
+	/* The actual SQUIT: */
+	new_message(client, NULL, &mtags);
+	exit_client_ex(target, NULL, mtags, reason);
+	free_message_tags(mtags);
+
+	/* Return true */
 	result = json_boolean(1);
 	rpc_response(client, request, result);
 	json_decref(result);
