@@ -303,6 +303,31 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 			json_object_set_new(server, "info", json_string_unreal(client->info));
 		json_object_set_new(server, "num_users", json_integer(client->server->users));
 		json_object_set_new(server, "boot_time", json_timestamp(client->server->boottime));
+
+		/* client.server.features */
+		features = json_object();
+		json_object_set_new(server, "features", features);
+		if (!BadPtr(client->server->features.software))
+			json_object_set_new(features, "software", json_string_unreal(version));
+		json_object_set_new(features, "protocol", json_integer(UnrealProtocol));
+		if (!BadPtr(client->server->features.usermodes))
+			json_object_set_new(features, "usermodes", json_string_unreal(umodestring));
+
+		/* client.server.features.chanmodes (array) */
+		{
+			int i;
+			char buf[512];
+			json_t *chanmodes = json_array();
+			json_object_set_new(features, "chanmodes", chanmodes);
+			/* first one is special - wait.. is this still the case? lol. */
+			snprintf(buf, sizeof(buf), "%s%s", CHPAR1, EXPAR1);
+			json_array_append_new(chanmodes, json_string_unreal(buf));
+			for (i=1; i < 4; i++)
+				json_array_append_new(chanmodes, json_string_unreal(extchmstr[i]));
+		}
+		if (!BadPtr(client->server->features.nickchars))
+			json_object_set_new(features, "nick_character_sets", json_string_unreal(charsys_get_current_languages()));
+
 	} else
 	if (IsServer(client) && client->server)
 	{
