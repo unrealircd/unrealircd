@@ -152,6 +152,7 @@ CMD_FUNC(procio_rehash)
 		ClearMonitorRehash(client);
 	} else {
 		SetMonitorRehash(client);
+		unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [./unrealircd rehash]");
 		request_rehash(client);
 		/* completion will go via procio_post_rehash() */
 	}

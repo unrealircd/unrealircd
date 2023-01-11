@@ -10715,7 +10715,7 @@ int rehash_internal(Client *client)
 
 	/* Log it here if it is by a signal */
 	if (client == NULL)
-		unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [./unrealircd rehash]");
+		unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", NULL, "Rehashing server configuration file [./unrealircd rehash]");
 
 	loop.rehashing = 2; /* now doing the actual rehash */
 
