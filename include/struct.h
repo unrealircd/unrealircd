@@ -128,6 +128,7 @@ typedef struct LocalClient LocalClient;
 typedef struct Channel Channel;
 typedef struct User User;
 typedef struct Server Server;
+typedef struct RPCClient RPCClient;
 typedef struct Link Link;
 typedef struct Ban Ban;
 typedef struct Mode Mode;
@@ -1380,6 +1381,7 @@ struct LocalClient {
 	char sockhost[HOSTLEN + 1];	/**< Hostname from the socket */
 	u_short port;			/**< Remote TCP port of client */
 	FloodCounter flood[MAXFLOODOPTIONS];
+	RPCClient *rpc;			/**< RPC Client, or NULL */
 };
 
 /** User information (persons, not servers), you use client->user to access these (see also @link Client @endlink).
@@ -1423,6 +1425,13 @@ struct Server {
 };
 
 /** @} */
+
+typedef struct RPCClient RPCClient;
+/** RPC Client information */
+struct RPCClient {
+	char *rpc_user; /**< Name of the rpc-user block after authentication, NULL during pre-auth */
+	json_t *rehash_request; /**< If a REHASH (request) is currently running, otherwise NULL */
+};
 
 struct MessageTag {
 	MessageTag *prev, *next;

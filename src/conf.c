@@ -243,6 +243,7 @@ MODVAR ConfigFile		*conf = NULL;
 extern NameValueList *config_defines;
 MODVAR int ipv6_disabled = 0;
 MODVAR Client *remote_rehash_client = NULL;
+MODVAR json_t *json_rehash_log = NULL;
 
 MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
@@ -10694,6 +10695,8 @@ void resource_download_complete(const char *url, const char *file, const char *e
  */
 void request_rehash(Client *client)
 {
+	json_t *j;
+
 	if (loop.rehashing)
 	{
 		if (client)
@@ -10701,6 +10704,21 @@ void request_rehash(Client *client)
 		return;
 	}
 
+	/* Free any old json_rehash_log */
+	if (json_rehash_log)
+	{
+		json_decref(json_rehash_log);
+		json_rehash_log = NULL;
+	}
+
+	/* Start a new json_rehash_log */
+	json_rehash_log = json_object();
+	if (client)
+		json_expand_client(json_rehash_log, "rehash_client", client, 1);
+	j = json_array();
+	json_object_set_new(json_rehash_log, "log", j);
+
+	/* Now actually process the rehash request... */
 	loop.rehashing = 1;
 	loop.rehash_save_client = client;
 	config_read_start();
@@ -10738,6 +10756,9 @@ int rehash_internal(Client *client)
 	loop.rehashing = 0;
 	remote_rehash_client = NULL;
 	procio_post_rehash(failure);
+	json_object_set_new(json_rehash_log, "success", json_boolean(failure ? 0 : 1));
+	RunHook(HOOKTYPE_REHASH_LOG, failure, json_rehash_log);
+
 	loop.config_status = CONFIG_STATUS_COMPLETE;
 	return 1;
 }

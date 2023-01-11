@@ -987,6 +987,7 @@ extern int unix_sockets_capable(void);
 extern void init_winsock(void);
 #endif
 extern MODVAR Client *remote_rehash_client;
+extern MODVAR json_t *json_rehash_log;
 extern MODVAR int debugfd;
 extern void convert_to_absolute_path(char **path, const char *reldir);
 extern int has_user_mode(Client *acptr, char mode);
@@ -1295,6 +1296,7 @@ extern EVENT(url_socket_timeout);
 extern char *collapse(char *pattern);
 extern void clear_scache_hash_table(void);
 extern void sendto_one(Client *, MessageTag *mtags, FORMAT_STRING(const char *), ...) __attribute__((format(printf,3,4)));
+extern void mark_data_to_send(Client *to);
 extern EVENT(garbage_collect);
 extern EVENT(loop_event);
 extern EVENT(check_pings);

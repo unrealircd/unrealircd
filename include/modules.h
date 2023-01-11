@@ -22,7 +22,7 @@
 #define MODULES_H
 #include "types.h"
 #define MAXCUSTOMHOOKS  30
-#define MAXHOOKTYPES	150
+#define MAXHOOKTYPES	200
 #define MAXCALLBACKS	30
 #define MAXEFUNCTIONS	128
 #if defined(_WIN32)
@@ -1231,6 +1231,8 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, const char *varshortname, l
 #define HOOKTYPE_ACCEPT		116
 /** See hooktype_pre_local_handshake_timeout */
 #define HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT	117
+/** See hooktype_rehash_log */
+#define HOOKTYPE_REHASH_LOG	118
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -2283,6 +2285,14 @@ int hooktype_json_expand_channel(Channel *channel, int detail, json_t *j);
  */
 int hooktype_pre_local_handshake_timeout(Client *client, const char **comment);
 
+/** Called when a REHASH completed (either succesfully or with a failure).
+ * This gives the full rehash log. Used by the JSON-RPC interface.
+ * @param failure		Set to 1 if the rehash failed, otherwise 0.
+ * @param t			The JSON object containing the rehash log and other information.
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_rehash_log(int failure, json_t *rehash_log);
+
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2402,7 +2412,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT_USER) && !ValidateHook(hooktype_json_expand_client_user, func)) || \
         ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT_SERVER) && !ValidateHook(hooktype_json_expand_client_server, func)) || \
         ((hooktype == HOOKTYPE_JSON_EXPAND_CHANNEL) && !ValidateHook(hooktype_json_expand_channel, func)) || \
-        ((hooktype == HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT) && !ValidateHook(hooktype_pre_local_handshake_timeout, func)) ) \
+        ((hooktype == HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT) && !ValidateHook(hooktype_pre_local_handshake_timeout, func)) || \
+        ((hooktype == HOOKTYPE_REHASH_LOG) && !ValidateHook(hooktype_rehash_log, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

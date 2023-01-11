@@ -51,11 +51,6 @@ struct RPCUser {
 	AuthConfig *auth;
 };
 
-typedef struct RPCConnection RPCConnection;
-struct RPCConnection {
-	char *rpc_user; /**< Name of the rpc-user block after authentication, NULL during pre-auth */
-};
-
 /* Macros */
 #define RPC_PORT(client)  ((client->local && client->local->listener) ? client->local->listener->rpc_options : 0)
 #define WSU(client)     ((WebSocketUser *)moddata_client(client, websocket_md).ptr)
@@ -448,6 +443,7 @@ void rpc_sendto(Client *client, const char *buf, int len)
 		dbuf_put(&client->local->sendQ, buf, len);
 		dbuf_put(&client->local->sendQ, "\n", 1);
 	}
+	mark_data_to_send(client);
 }
 
 void _rpc_error(Client *client, json_t *request, JsonRpcError error_code, const char *error_message)
@@ -613,7 +609,10 @@ void rpc_call(Client *client, json_t *request)
 int rpc_client_accept(Client *client)
 {
 	if (RPC_PORT(client))
+	{
 		SetRPC(client);
+		client->local->rpc = safe_alloc(sizeof(RPCClient));
+	}
 	return 0;
 }
 
@@ -624,6 +623,9 @@ void rpc_client_handshake_unix_socket(Client *client)
 		abort(); /* impossible */
 
 	strlcpy(client->name, "RPC:local", sizeof(client->name));
+	SetRPC(client);
+	client->local->rpc = safe_alloc(sizeof(RPCClient));
+	safe_strdup(client->local->rpc->rpc_user, "<local>");
 
 	/* Allow incoming data to be read from now on.. */
 	fd_setselect(client->local->fd, FD_SELECT_READ, read_packet, client);
@@ -639,6 +641,8 @@ void rpc_client_handshake_web(Client *client)
 	 * have set us to SetUnknown() after the TLS handshake.
 	 */
 	SetRPC(client);
+	if (!client->local->rpc)
+		client->local->rpc = safe_alloc(sizeof(RPCClient));
 
 	/* Is the client allowed by any rpc-user { } block?
 	 * If not, reject the client immediately, before
@@ -732,6 +736,7 @@ int rpc_handle_auth(Client *client, WebRequest *web)
 		{
 			/* Authenticated! */
 			snprintf(client->name, sizeof(client->name), "RPC:%s", r->name);
+			safe_strdup(client->local->rpc->rpc_user, r->name);
 			return 1;
 		}
 	}

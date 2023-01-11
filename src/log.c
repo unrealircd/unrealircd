@@ -1316,7 +1316,7 @@ void do_unreal_log_remote(LogLevel loglevel, const char *subsystem, const char *
 }
 
 /** Send server notices to control channel */
-void do_unreal_log_control(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized, Client *from_server)
+void do_unreal_log_control(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, json_t *j, const char *json_serialized, Client *from_server)
 {
 	Client *client;
 	MultiLine *m;
@@ -1329,9 +1329,16 @@ void do_unreal_log_control(LogLevel loglevel, const char *subsystem, const char 
 		return;
 
 	list_for_each_entry(client, &control_list, lclient_node)
-		if (IsMonitorRehash(client))
+		if (IsMonitorRehash(client) && IsControl(client))
 			for (m = msg; m; m = m->next)
 				sendto_one(client, NULL, "REPLY [%s] %s", log_level_valtostring(loglevel), m->line);
+
+	if (json_rehash_log)
+	{
+		json_t *log = json_object_get(json_rehash_log, "log");
+		if (log)
+			json_array_append(log, j); // not xxx_new, right?
+	}
 }
 
 void do_unreal_log_free_args(va_list vl)
@@ -1517,7 +1524,7 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 	do_unreal_log_disk(loglevel, subsystem, event_id, mmsg, json_serialized, from_server);
 
 	if ((loop.rehashing == 2) || !strcmp(subsystem, "config"))
-		do_unreal_log_control(loglevel, subsystem, event_id, mmsg, json_serialized, from_server);
+		do_unreal_log_control(loglevel, subsystem, event_id, mmsg, j, json_serialized, from_server);
 
 	do_unreal_log_opers(loglevel, subsystem, event_id, mmsg, json_serialized, from_server);
 
