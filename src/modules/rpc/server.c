@@ -134,9 +134,9 @@ RPC_CALL_FUNC(rpc_server_rehash)
 
 	if (acptr != &me)
 	{
-		/* Not implemented yet */
-		// TODO: forward, simply with no true response?
-		result = json_boolean(0);
+		sendto_one(acptr, NULL, ":%s REHASH %s", me.id, acptr->name);
+		/* We don't get to see the rehash status.. for now just respond with boolean TRUE */
+		result = json_boolean(1);
 		rpc_response(client, request, result);
 		json_decref(result);
 		return;
