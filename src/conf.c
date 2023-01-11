@@ -3082,6 +3082,30 @@ ConfigItem_link *find_link(const char *servername)
 	return NULL;
 }
 
+/** Check if this link should be denied due to deny link { } configuration
+ * @param link		The link block
+ * @param auto_connect	Set this to 1 if this is called from auto connect code
+ *			(it will then check both CRULE_AUTO + CRULE_ALL)
+ *			set it to 0 otherwise (will not check CRULE_AUTO blocks).
+ * @returns The deny block if the server should be denied, or NULL if no deny block.
+ */
+ConfigItem_deny_link *check_deny_link(ConfigItem_link *link, int auto_connect)
+{
+	ConfigItem_deny_link *d;
+
+	for (d = conf_deny_link; d; d = d->next)
+	{
+		if ((auto_connect == 0) && (d->flag.type == CRULE_AUTO))
+			continue;
+		if (unreal_mask_match_string(link->servername, d->mask) &&
+		    crule_eval(d->rule))
+		{
+			return d;
+		}
+	}
+	return NULL;
+}
+
 /** Find a ban of type CONF_BAN_*, which is currently only
  * CONF_BAN_SERVER, CONF_BAN_VERSION and CONF_BAN_REALNAME
  */

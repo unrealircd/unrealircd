@@ -18,6 +18,7 @@ ModuleHeader MOD_HEADER
 RPC_CALL_FUNC(rpc_server_list);
 RPC_CALL_FUNC(rpc_server_get);
 RPC_CALL_FUNC(rpc_server_rehash);
+RPC_CALL_FUNC(rpc_server_connect);
 
 int rpc_server_rehash_log(int failure, json_t *rehash_log);
 
@@ -46,6 +47,14 @@ MOD_INIT()
 	memset(&r, 0, sizeof(r));
 	r.method = "server.rehash";
 	r.call = rpc_server_rehash;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/server] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+	memset(&r, 0, sizeof(r));
+	r.method = "server.connect";
+	r.call = rpc_server_connect;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/server] Could not register RPC handler");
@@ -179,4 +188,68 @@ int rpc_server_rehash_log(int failure, json_t *rehash_log)
 		}
 	}
 	return 0;
+}
+
+RPC_CALL_FUNC(rpc_server_connect)
+{
+	json_t *result, *list, *item;
+	const char *server, *link_name;
+	Client *acptr;
+	ConfigItem_link *link;
+	ConfigItem_deny_link *deny;
+
+	OPTIONAL_PARAM_STRING("server", server);
+	if (server)
+	{
+		if (!(acptr = find_server(server, NULL)))
+		{
+			rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Server not found");
+			return;
+		}
+	} else {
+		acptr = &me;
+	}
+	REQUIRE_PARAM_STRING("link", link_name);
+
+	if (acptr != &me)
+	{
+		/* Not supported atm */
+		result = json_boolean(0);
+		rpc_response(client, request, result);
+		json_decref(result);
+		return;
+	}
+
+	if (find_server_quick(link_name))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_ALREADY_EXISTS, "Server is already linked");
+		return;
+	}
+
+	link = find_link(link_name);
+	if (!link)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Server with that name does not exist in any link block");
+		return;
+	}
+	if (!link->outgoing.hostname && !link->outgoing.file)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Server with that name exists but is not configured as an OUTGOING server.");
+		return;
+	}
+
+	if (check_deny_link(link, 0))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_DENIED, "Server linking is denied via a deny link { } block");
+		return;
+	}
+
+	unreal_log(ULOG_INFO, "link", "LINK_REQUEST", client,
+		   "CONNECT: Link to $link_block requested by $client",
+		   log_data_link_block(link));
+
+	connect_server(link, client, NULL);
+	result = json_boolean(1);
+	rpc_response(client, request, result);
+	json_decref(result);
 }

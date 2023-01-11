@@ -249,7 +249,6 @@ int server_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 int server_needs_linking(ConfigItem_link *aconf)
 {
-	ConfigItem_deny_link *deny;
 	Client *client;
 	ConfigItem_class *class;
 
@@ -278,9 +277,8 @@ int server_needs_linking(ConfigItem_link *aconf)
 		return 0; /* Class is full */
 
 	/* Check connect rules to see if we're allowed to try the link */
-	for (deny = conf_deny_link; deny; deny = deny->next)
-		if (unreal_mask_match_string(aconf->servername, deny->mask) && crule_eval(deny->rule))
-			return 0;
+	if (check_deny_link(aconf, 1))
+		return 0;
 
 	/* Yes, this server is a linking candidate */
 	return 1;
@@ -872,7 +870,6 @@ CMD_FUNC(cmd_server)
 	int  hop = 0;
 	char info[REALLEN + 61];
 	ConfigItem_link *aconf = NULL;
-	ConfigItem_deny_link *deny;
 	char *flags = NULL, *protocol = NULL, *inf = NULL, *num = NULL;
 	int incoming;
 
@@ -992,18 +989,13 @@ CMD_FUNC(cmd_server)
 		strlcpy(client->info, info[0] ? info : "server", sizeof(client->info));
 	}
 
-	/* Process deny server { } restrictions */
-	for (deny = conf_deny_link; deny; deny = deny->next)
+	if (check_deny_link(aconf, 0))
 	{
-		if (deny->flag.type == CRULE_ALL && unreal_mask_match_string(servername, deny->mask)
-			&& crule_eval(deny->rule))
-		{
-			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_DENY_LINK_BLOCK", client,
-			           "Server link $servername rejected by deny link { } block.",
-			           log_data_string("servername", servername));
-			exit_client(client, NULL, "Disallowed by connection rule");
-			return;
-		}
+		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_DENY_LINK_BLOCK", client,
+			   "Server link $servername rejected by deny link { } block.",
+			   log_data_string("servername", servername));
+		exit_client(client, NULL, "Disallowed by connection rule");
+		return;
 	}
 
 	if (aconf->options & CONNECT_QUARANTINE)

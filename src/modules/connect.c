@@ -92,12 +92,7 @@ CMD_FUNC(cmd_connect)
 		return;
 	}
 
-	for (aconf = conf_link; aconf; aconf = aconf->next)
-		if (match_simple(parv[1], aconf->servername))
-			break;
-
-	/* Checked first servernames, then try hostnames. */
-
+	aconf = find_link(parv[1]);
 	if (!aconf)
 	{
 		sendnotice(client,
@@ -114,15 +109,11 @@ CMD_FUNC(cmd_connect)
 		return;
 	}
 
-	/* Evaluate deny link */
-	for (deny = conf_deny_link; deny; deny = deny->next)
+	deny = check_deny_link(aconf, 0);
+	if (deny)
 	{
-		if (deny->flag.type == CRULE_ALL && unreal_mask_match_string(aconf->servername, deny->mask)
-			&& crule_eval(deny->rule))
-		{
-			sendnotice(client, "*** Connect: Disallowed by connection rule");
-			return;
-		}
+		sendnotice(client, "*** Connect: Disallowed by connection rule");
+		return;
 	}
 
 	unreal_log(ULOG_INFO, "link", "LINK_REQUEST", client,
