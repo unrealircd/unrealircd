@@ -161,11 +161,8 @@ RPC_CALL_FUNC(rpc_server_rehash)
 
 	if (acptr != &me)
 	{
-		sendto_one(acptr, NULL, ":%s REHASH %s", me.id, acptr->name);
-		/* We don't get to see the rehash status.. for now just respond with boolean TRUE */
-		result = json_boolean(1);
-		rpc_response(client, request, result);
-		json_decref(result);
+		/* Forward to remote */
+		rpc_send_request_to_remote(client, acptr, request);
 		return;
 	}
 
@@ -176,16 +173,16 @@ RPC_CALL_FUNC(rpc_server_rehash)
 	}
 
 	/* It's for me... */
-	if (loop.rehashing)
+
+	SetMonitorRehash(client);
+	SetAsyncRPC(client);
+	client->rpc->rehash_request = json_copy(request); // or json_deep_copy ??
+
+	if (!loop.rehashing)
 	{
-		/* simply join an existing rehash? */
-		SetMonitorRehash(client);
-	} else {
 		unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [by: $client.details]");
-		client->rpc->rehash_request = json_copy(request); // or json_deep_copy ??
-		SetMonitorRehash(client);
 		request_rehash(client);
-	}
+	} /* else.. we simply joined the rehash request so we are notified as well ;) */
 
 	/* Do NOT send the JSON Response here, it is done by rpc_server_rehash_log()
 	 * after the REHASH completed (which may take several seconds).
@@ -194,7 +191,7 @@ RPC_CALL_FUNC(rpc_server_rehash)
 
 int rpc_server_rehash_log(int failure, json_t *rehash_log)
 {
-	Client *client;
+	Client *client, *next;
 
 	list_for_each_entry(client, &unknown_list, lclient_node)
 	{
@@ -203,6 +200,16 @@ int rpc_server_rehash_log(int failure, json_t *rehash_log)
 			rpc_response(client, client->rpc->rehash_request, rehash_log);
 			json_decref(client->rpc->rehash_request);
 			client->rpc->rehash_request = NULL;
+		}
+	}
+	list_for_each_entry_safe(client, next, &rpc_remote_list, client_node)
+	{
+		if (IsMonitorRehash(client) && client->rpc && client->rpc->rehash_request)
+		{
+			rpc_response(client, client->rpc->rehash_request, rehash_log);
+			json_decref(client->rpc->rehash_request);
+			client->rpc->rehash_request = NULL;
+			free_client(client);
 		}
 	}
 	return 0;

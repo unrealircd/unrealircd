@@ -135,7 +135,7 @@ MOD_INIT()
 	LoadPersistentPointer(modinfo, rrpc_list, free_rrpc_list);
 	LoadPersistentPointer(modinfo, outstanding_rrpc_list, free_outstanding_rrpc_list);
 
-	CommandAdd(NULL, "RRPC", cmd_rrpc, MAXPARA, CMD_SERVER);
+	CommandAdd(modinfo->handle, "RRPC", cmd_rrpc, MAXPARA, CMD_SERVER);
 
 	EventAdd(modinfo->handle, "rpc_remote_timeout", rpc_remote_timeout, NULL, 1000, 0);
 
@@ -1177,10 +1177,17 @@ void rpc_call_remote(RRPC *r)
 	}
 	client = make_client(server->direction, server);
 	strlcpy(client->id, r->source, sizeof(client->id));
-	/* not added to hash table */
+	client->rpc = safe_alloc(sizeof(RPCClient));
+	strlcpy(client->name, "RPC:remote", sizeof(client->name));
+	safe_strdup(client->rpc->rpc_user, "<remote>");
+	// Note: NOT added to hash table or id table etc.
+	list_add(&client->client_node, &rpc_remote_list);
 	rpc_call(client, request);
 	json_decref(request);
-	free_client(client);
+
+	/* And free the temporary client, unless it is async... */
+	if (!IsAsyncRPC(client))
+		free_client(client);
 }
 
 /** Received a remote RPC response (from another server) to our local RPC client */

@@ -637,6 +637,7 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, cons
 	if (IsServer(client))
 	{
 		char splitstr[HOSTLEN + HOSTLEN + 2];
+		Client *acptr, *next;
 
 		assert(client->server != NULL && client->uplink != NULL);
 
@@ -646,6 +647,11 @@ void exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, cons
 			ircsnprintf(splitstr, sizeof splitstr, "%s %s", client->uplink->name, client->name);
 
 		remove_dependents(client, origin, recv_mtags, comment, splitstr);
+
+		/* Special case for remote async RPC, server.rehash in particular.. */
+		list_for_each_entry_safe(acptr, next, &rpc_remote_list, client_node)
+			if (!strncmp(client->id, acptr->id, SIDLEN))
+				free_client(acptr);
 
 		RunHook(HOOKTYPE_SERVER_QUIT, client, recv_mtags);
 	}

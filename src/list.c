@@ -51,6 +51,7 @@ MODVAR struct list_head server_list;		/**< Locally connected servers */
 MODVAR struct list_head oper_list;		/**< Locally connected IRC Operators */
 MODVAR struct list_head global_server_list;	/**< All servers (local and remote) */
 MODVAR struct list_head dead_list;		/**< All dead clients (local and remote) that will soon be freed in the main loop */
+MODVAR struct list_head rpc_remote_list;	/**< All remote RPC clients (very specific use-case) */
 
 static mp_pool_t *client_pool = NULL;
 static mp_pool_t *local_client_pool = NULL;
@@ -75,6 +76,7 @@ void initlists(void)
 	INIT_LIST_HEAD(&control_list);
 	INIT_LIST_HEAD(&global_server_list);
 	INIT_LIST_HEAD(&dead_list);
+	INIT_LIST_HEAD(&rpc_remote_list);
 
 	client_pool = mp_pool_new(sizeof(Client), 512 * 1024);
 	local_client_pool = mp_pool_new(sizeof(LocalClient), 512 * 1024);
@@ -188,6 +190,13 @@ void free_client(Client *client)
 			 */
 			del_from_id_hash_table(client->id, client);
 		}
+	}
+	if (client->rpc)
+	{
+		safe_free(client->rpc->rpc_user);
+		if (client->rpc->rehash_request)
+			json_decref(client->rpc->rehash_request);
+		safe_free(client->rpc);
 	}
 	
 	safe_free(client->ip);
@@ -341,13 +350,6 @@ void remove_client_from_list(Client *client)
 #ifdef	DEBUGMODE
 		servs.inuse--;
 #endif
-	}
-	if (client->rpc)
-	{
-		safe_free(client->rpc->rpc_user);
-		if (client->rpc->rehash_request)
-			json_decref(client->rpc->rehash_request);
-		safe_free(client->rpc);
 	}
 #ifdef	DEBUGMODE
 	if (client->local && client->local->fd == -2)

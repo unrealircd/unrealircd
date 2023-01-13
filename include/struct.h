@@ -407,6 +407,7 @@ typedef enum ClientStatus {
 #define CLIENT_FLAG_PINGWARN		0x10000000	/**< Server ping warning (remote server slow with responding to PINGs) */
 #define CLIENT_FLAG_NOHANDSHAKEDELAY	0x20000000	/**< No handshake delay */
 #define CLIENT_FLAG_SERVER_DISCONNECT_LOGGED	0x40000000	/**< Server disconnect message is (already) logged */
+#define CLIENT_FLAG_ASYNC_RPC			0x80000000	/**< Asynchronous remote RPC request - special case for rehash etc. */
 
 /** @} */
 
@@ -500,6 +501,7 @@ typedef enum ClientStatus {
 #define IsSvsCmdOk(x)			(((x)->flags & CLIENT_FLAG_ULINE) || ((iConf.limit_svscmds == LIMIT_SVSCMDS_SERVERS) && (IsServer((x)) || IsMe((x)))))
 #define IsVirus(x)			((x)->flags & CLIENT_FLAG_VIRUS)
 #define IsIdentLookupSent(x)		((x)->flags & CLIENT_FLAG_IDENTLOOKUPSENT)
+#define IsAsyncRPC(x)			((x)->flags & CLIENT_FLAG_ASYNC_RPC)
 #define SetIdentLookup(x)		do { (x)->flags |= CLIENT_FLAG_IDENTLOOKUP; } while(0)
 #define SetClosing(x)			do { (x)->flags |= CLIENT_FLAG_CLOSING; } while(0)
 #define SetDCCBlock(x)			do { (x)->flags |= CLIENT_FLAG_DCCBLOCK; } while(0)
@@ -531,6 +533,7 @@ typedef enum ClientStatus {
 #define SetULine(x)			do { (x)->flags |= CLIENT_FLAG_ULINE; } while(0)
 #define SetVirus(x)			do { (x)->flags |= CLIENT_FLAG_VIRUS; } while(0)
 #define SetIdentLookupSent(x)		do { (x)->flags |= CLIENT_FLAG_IDENTLOOKUPSENT; } while(0)
+#define SetAsyncRPC(x)			do { (x)->flags |= CLIENT_FLAG_ASYNC_RPC; } while(0)
 #define ClearIdentLookup(x)		do { (x)->flags &= ~CLIENT_FLAG_IDENTLOOKUP; } while(0)
 #define ClearClosing(x)			do { (x)->flags &= ~CLIENT_FLAG_CLOSING; } while(0)
 #define ClearDCCBlock(x)		do { (x)->flags &= ~CLIENT_FLAG_DCCBLOCK; } while(0)
@@ -561,12 +564,13 @@ typedef enum ClientStatus {
 #define ClearULine(x)			do { (x)->flags &= ~CLIENT_FLAG_ULINE; } while(0)
 #define ClearVirus(x)			do { (x)->flags &= ~CLIENT_FLAG_VIRUS; } while(0)
 #define ClearIdentLookupSent(x)		do { (x)->flags &= ~CLIENT_FLAG_IDENTLOOKUPSENT; } while(0)
+#define ClearAsyncRPC(x)		do { (x)->flags &= ~CLIENT_FLAG_ASYNC_RPC; } while(0)
+/** @} */
+
 #define IsIPV6(x)			((x)->local->socket_type == SOCKET_TYPE_IPV6)
 #define IsUnixSocket(x)			((x)->local->socket_type == SOCKET_TYPE_UNIX)
 #define SetIPV6(x)			do { (x)->local->socket_type = SOCKET_TYPE_IPV6; } while(0)
 #define SetUnixSocket(x)			do { (x)->local->socket_type = SOCKET_TYPE_UNIX; } while(0)
-/** @} */
-
 
 /* Others that access client structs: */
 #define	IsNotSpoof(x)	((x)->local->nospoof == 0)

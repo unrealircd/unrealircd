@@ -184,6 +184,7 @@ extern MODVAR struct list_head unknown_list;
 extern MODVAR struct list_head control_list;
 extern MODVAR struct list_head global_server_list;
 extern MODVAR struct list_head dead_list;
+extern MODVAR struct list_head rpc_remote_list;
 extern RealCommand *find_command(const char *cmd, int flags);
 extern RealCommand *find_command_simple(const char *cmd);
 extern Membership *find_membership_link(Membership *lp, Channel *ptr);
