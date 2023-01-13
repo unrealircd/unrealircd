@@ -137,7 +137,7 @@ MOD_INIT()
 
 	CommandAdd(NULL, "RRPC", cmd_rrpc, MAXPARA, CMD_SERVER);
 
-	EventAdd(NULL, "rpc_remote_timeout", rpc_remote_timeout, NULL, 1000, 0);
+	EventAdd(modinfo->handle, "rpc_remote_timeout", rpc_remote_timeout, NULL, 1000, 0);
 
 	/* Call MOD_LOAD very late, since we manage sockets, but depend on websocket_common */
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_UNLOAD-1);
