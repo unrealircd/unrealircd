@@ -2400,6 +2400,7 @@ typedef enum JsonRpcError {
 	JSON_RPC_ERROR_API_CALL_DENIED	= -32000, /**< The api user does not have enough permissions to do this call */
 	JSON_RPC_ERROR_SERVER_GONE	= -32001, /**< The request was forwarded to a remote server, but this server went gone while processing the request */
 	JSON_RPC_ERROR_TIMEOUT		= -32002, /**< The request was forwarded to a remote server, but the request/response timed out (15 seconds) */
+	JSON_RPC_ERROR_REMOTE_SERVER_NO_RPC	= -32003, /**< The request was going to be forwarded to a remote server, but the remote server does not support JSON-RPC */
 	// UnrealIRCd specific application error codes:
 	JSON_RPC_ERROR_NOT_FOUND	=  -1000, /**< Target not found (no such nick / channel / ..) */
 	JSON_RPC_ERROR_ALREADY_EXISTS	=  -1001, /**< Resource already exists by that name (eg on nickchange request, a gline, etc) */

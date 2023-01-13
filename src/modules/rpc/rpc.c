@@ -79,6 +79,8 @@ void free_outstanding_rrpc_list(ModData *m);
 void rpc_call_remote(RRPC *r);
 void rpc_response_remote(RRPC *r);
 int rpc_handle_server_quit(Client *client, MessageTag *mtags);
+const char *rrpc_md_serialize(ModData *m);
+void rrpc_md_unserialize(const char *str, ModData *m);
 
 /* Macros */
 #define RPC_PORT(client)  ((client->local && client->local->listener) ? client->local->listener->rpc_options : 0)
@@ -89,6 +91,7 @@ ModDataInfo *websocket_md = NULL; /* (imported) */
 RPCUser *rpcusers = NULL;
 RRPC *rrpc_list = NULL;
 OutstandingRRPC *outstanding_rrpc_list = NULL;
+ModDataInfo *rrpc_md;
 
 MOD_TEST()
 {
@@ -132,6 +135,20 @@ MOD_INIT()
 		return MOD_FAILED;
 	}
 
+	memset(&mreq, 0, sizeof(mreq));
+	mreq.name = "rrpc";
+	mreq.type = MODDATATYPE_CLIENT;
+	mreq.serialize = rrpc_md_serialize;
+	mreq.unserialize = rrpc_md_unserialize;
+	mreq.sync = 1;
+	mreq.self_write = 1;
+	rrpc_md = ModDataAdd(modinfo->handle, mreq);
+	if (!rrpc_md)
+	{
+		config_error("[rpc/rpc] Unable to ModDataAdd() -- too many 3rd party modules loaded perhaps?");
+		abort();
+	}
+
 	LoadPersistentPointer(modinfo, rrpc_list, free_rrpc_list);
 	LoadPersistentPointer(modinfo, outstanding_rrpc_list, free_outstanding_rrpc_list);
 
@@ -147,6 +164,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	moddata_client_set(&me, "rrpc", "1");
 	return MOD_SUCCESS;
 }
 
@@ -1300,11 +1318,25 @@ void rpc_send_generic_to_remote(Client *source, Client *target, const char *requ
 	safe_free(json_serialized);
 }
 
+int verify_rrpc_in_link_path(Client *target, char **problem_server)
+{
+	if (!moddata_client_get(target, "rrpc"))
+	{
+		if (problem_server)
+			*problem_server = target->name;
+		return 0;
+	}
+	if ((target != target->direction) && !verify_rrpc_in_link_path(target->direction, problem_server))
+		return 0;
+	return 1;
+}
+
 /** Send a remote RPC (RRPC) request 'request' to server 'target'. */
 void _rpc_send_request_to_remote(Client *source, Client *target, json_t *request)
 {
 	OutstandingRRPC *r;
 	const char *requestid = rpc_id(request);
+	char *problem_server = NULL;
 
 	if (!requestid)
 	{
@@ -1316,6 +1348,13 @@ void _rpc_send_request_to_remote(Client *source, Client *target, json_t *request
 	if (find_outstandingrrpc(source->id, requestid))
 	{
 		rpc_error(source, NULL, JSON_RPC_ERROR_INVALID_REQUEST, "A request with that id is already in progress. Use unique id's!");
+		return;
+	}
+
+	/* If we already detect that next server cannot satisfy the request then stop it right now */
+	if (!verify_rrpc_in_link_path(target, &problem_server))
+	{
+		rpc_error_fmt(source, request, JSON_RPC_ERROR_REMOTE_SERVER_NO_RPC, "Server %s does not support remote JSON-RPC", problem_server);
 		return;
 	}
 
@@ -1335,4 +1374,14 @@ void _rpc_send_request_to_remote(Client *source, Client *target, json_t *request
 void _rpc_send_response_to_remote(Client *source, Client *target, json_t *response)
 {
 	rpc_send_generic_to_remote(source, target, "RES", response);
+}
+
+const char *rrpc_md_serialize(ModData *m)
+{
+	return m->str;
+}
+
+void rrpc_md_unserialize(const char *str, ModData *m)
+{
+	safe_strdup(m->str, str);
 }
