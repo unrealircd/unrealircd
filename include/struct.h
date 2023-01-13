@@ -1324,6 +1324,7 @@ struct Client {
 	LocalClient *local;			/**< Additional information regarding locally connected clients */
 	User *user;				/**< Additional information, if this client is a user */
 	Server *server;				/**< Additional information, if this is a server */
+	RPCClient *rpc;				/**< RPC Client, or NULL */
 	ClientStatus status;			/**< Client status, one of CLIENT_STATUS_* */
 	struct list_head client_hash;		/**< For name hash table (clientTable) */
 	char name[HOSTLEN + 1];			/**< Unique name of the client: nickname for users, hostname for servers */

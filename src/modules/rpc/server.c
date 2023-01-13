@@ -169,7 +169,7 @@ RPC_CALL_FUNC(rpc_server_rehash)
 		return;
 	}
 
-	if (client->local->rpc->rehash_request)
+	if (client->rpc->rehash_request)
 	{
 		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "A rehash initiated by you is already in progress");
 		return;
@@ -182,7 +182,7 @@ RPC_CALL_FUNC(rpc_server_rehash)
 		SetMonitorRehash(client);
 	} else {
 		unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [by: $client.details]");
-		client->local->rpc->rehash_request = json_copy(request); // or json_deep_copy ??
+		client->rpc->rehash_request = json_copy(request); // or json_deep_copy ??
 		SetMonitorRehash(client);
 		request_rehash(client);
 	}
@@ -198,11 +198,11 @@ int rpc_server_rehash_log(int failure, json_t *rehash_log)
 
 	list_for_each_entry(client, &unknown_list, lclient_node)
 	{
-		if (IsRPC(client) && IsMonitorRehash(client) && client->local->rpc && client->local->rpc->rehash_request)
+		if (IsRPC(client) && IsMonitorRehash(client) && client->rpc && client->rpc->rehash_request)
 		{
-			rpc_response(client, client->local->rpc->rehash_request, rehash_log);
-			json_decref(client->local->rpc->rehash_request);
-			client->local->rpc->rehash_request = NULL;
+			rpc_response(client, client->rpc->rehash_request, rehash_log);
+			json_decref(client->rpc->rehash_request);
+			client->rpc->rehash_request = NULL;
 		}
 	}
 	return 0;

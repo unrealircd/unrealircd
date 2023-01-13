@@ -677,7 +677,7 @@ int rpc_client_accept(Client *client)
 	if (RPC_PORT(client))
 	{
 		SetRPC(client);
-		client->local->rpc = safe_alloc(sizeof(RPCClient));
+		client->rpc = safe_alloc(sizeof(RPCClient));
 	}
 	return 0;
 }
@@ -690,8 +690,8 @@ void rpc_client_handshake_unix_socket(Client *client)
 
 	strlcpy(client->name, "RPC:local", sizeof(client->name));
 	SetRPC(client);
-	client->local->rpc = safe_alloc(sizeof(RPCClient));
-	safe_strdup(client->local->rpc->rpc_user, "<local>");
+	client->rpc = safe_alloc(sizeof(RPCClient));
+	safe_strdup(client->rpc->rpc_user, "<local>");
 
 	/* Allow incoming data to be read from now on.. */
 	fd_setselect(client->local->fd, FD_SELECT_READ, read_packet, client);
@@ -707,8 +707,8 @@ void rpc_client_handshake_web(Client *client)
 	 * have set us to SetUnknown() after the TLS handshake.
 	 */
 	SetRPC(client);
-	if (!client->local->rpc)
-		client->local->rpc = safe_alloc(sizeof(RPCClient));
+	if (!client->rpc)
+		client->rpc = safe_alloc(sizeof(RPCClient));
 
 	/* Is the client allowed by any rpc-user { } block?
 	 * If not, reject the client immediately, before
@@ -802,7 +802,7 @@ int rpc_handle_auth(Client *client, WebRequest *web)
 		{
 			/* Authenticated! */
 			snprintf(client->name, sizeof(client->name), "RPC:%s", r->name);
-			safe_strdup(client->local->rpc->rpc_user, r->name);
+			safe_strdup(client->rpc->rpc_user, r->name);
 			return 1;
 		}
 	}

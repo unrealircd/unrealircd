@@ -342,12 +342,12 @@ void remove_client_from_list(Client *client)
 		servs.inuse--;
 #endif
 	}
-	if (client->local && client->local->rpc)
+	if (client->rpc)
 	{
-		safe_free(client->local->rpc->rpc_user);
-		if (client->local->rpc->rehash_request)
-			json_decref(client->local->rpc->rehash_request);
-		safe_free(client->local->rpc);
+		safe_free(client->rpc->rpc_user);
+		if (client->rpc->rehash_request)
+			json_decref(client->rpc->rehash_request);
+		safe_free(client->rpc);
 	}
 #ifdef	DEBUGMODE
 	if (client->local && client->local->fd == -2)
