@@ -902,6 +902,7 @@ void free_rrpc(RRPC *r)
 	safe_free(r->requestid);
 	DBufClear(&r->data);
 	DelListItem(r, rrpc_list);
+	safe_free(r);
 }
 
 /* Admin unloading the RPC module for good (not called on rehash) */
@@ -920,6 +921,7 @@ void free_outstanding_rrpc(OutstandingRRPC *r)
 {
 	safe_free(r->requestid);
 	DelListItem(r, outstanding_rrpc_list);
+	safe_free(r);
 }
 
 /* Admin unloading the RPC module for good (not called on rehash) */
@@ -1178,6 +1180,7 @@ void rpc_call_remote(RRPC *r)
 	/* not added to hash table */
 	rpc_call(client, request);
 	json_decref(request);
+	free_client(client);
 }
 
 /** Received a remote RPC response (from another server) to our local RPC client */
@@ -1286,6 +1289,8 @@ void rpc_send_generic_to_remote(Client *source, Client *target, const char *requ
 		           type,
 		           data);
 	}
+
+	safe_free(json_serialized);
 }
 
 /** Send a remote RPC (RRPC) request 'request' to server 'target'. */
