@@ -1333,7 +1333,7 @@ struct Client {
 	struct list_head client_hash;		/**< For name hash table (clientTable) */
 	char name[HOSTLEN + 1];			/**< Unique name of the client: nickname for users, hostname for servers */
 	time_t lastnick;			/**< Timestamp on nick */
-	long flags;				/**< Client flags (one or more of CLIENT_FLAG_*) */
+	uint64_t flags;				/**< Client flags (one or more of CLIENT_FLAG_*) */
 	long umodes;				/**< Client usermodes (if user) */
 	Client *direction;			/**< Direction from which this client originated.
 	                                             This always points to a directly connected server or &me.
