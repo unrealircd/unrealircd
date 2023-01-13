@@ -348,6 +348,7 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		json_object_set_new(server, "num_users", json_integer(client->server->users));
 		json_object_set_new(server, "boot_time", json_timestamp(client->server->boottime));
 		json_object_set_new(server, "synced", json_boolean(client->server->flags.synced));
+		json_object_set_new(server, "ulined", json_boolean(IsULine(client)));
 
 		/* client.server.features */
 		features = json_object();
