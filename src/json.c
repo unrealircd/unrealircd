@@ -327,7 +327,7 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		}
 		if (!BadPtr(client->server->features.nickchars))
 			json_object_set_new(features, "nick_character_sets", json_string_unreal(charsys_get_current_languages()));
-
+		RunHook(HOOKTYPE_JSON_EXPAND_CLIENT_SERVER, client, detail, child, server);
 	} else
 	if (IsServer(client) && client->server)
 	{

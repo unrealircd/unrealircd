@@ -81,6 +81,7 @@ void free_outstanding_rrpc_list(ModData *m);
 void rpc_call_remote(RRPC *r);
 void rpc_response_remote(RRPC *r);
 int rpc_handle_server_quit(Client *client, MessageTag *mtags);
+int rpc_json_expand_client_server(Client *client, int detail, json_t *j, json_t *child);
 const char *rrpc_md_serialize(ModData *m);
 void rrpc_md_unserialize(const char *str, ModData *m);
 
@@ -129,6 +130,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT, 0, rpc_pre_local_handshake_timeout);
 	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, INT_MIN, rpc_packet_in_unix_socket);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_QUIT, 0, rpc_handle_server_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_JSON_EXPAND_CLIENT_SERVER, 0, rpc_json_expand_client_server);
 
 	memset(&r, 0, sizeof(r));
 	r.method = "rpc.info";
@@ -166,23 +168,19 @@ MOD_INIT()
 	return MOD_SUCCESS;
 }
 
+#define MYRRPCMODULES		me.moddata[rrpc_md->slot].ptr
+#define RRPCMODULES(client)	((NameValuePrioList *)moddata_client(client, rrpc_md).ptr)
+
 void rpc_do_moddata(void)
 {
 	Module *m;
-	char buf[512], tmp[128];
 
-	*buf = '\0';
+	free_nvplist(MYRRPCMODULES);
+	MYRRPCMODULES = NULL;
+
 	for (m = Modules; m; m = m->next)
-	{
 		if (!strncmp(m->header->name, "rpc/", 4))
-		{
-			snprintf(tmp, sizeof(tmp), "%s:%s,", m->header->name + 4, m->header->version);
-			strlcat(buf, tmp, sizeof(buf));
-		}
-	}
-	if (*buf)
-		buf[strlen(buf)-1] = '\0'; /* cut off last comma */
-	moddata_client_set(&me, "rrpc", buf);
+			add_nvplist((NameValuePrioList **)&MYRRPCMODULES, 0, m->header->name + 4, m->header->version);
 }
 
 MOD_LOAD()
@@ -1414,10 +1412,71 @@ void _rpc_send_response_to_remote(Client *source, Client *target, json_t *respon
 
 const char *rrpc_md_serialize(ModData *m)
 {
-	return m->str;
+	static char buf[512];
+	char tmp[128];
+	NameValuePrioList *nv;
+
+	if (m->ptr == NULL)
+		return NULL;
+
+	*buf = '\0';
+	for (nv = m->ptr; nv; nv = nv->next)
+	{
+		snprintf(tmp, sizeof(tmp), "%s:%s,", nv->name, nv->value);
+		strlcat(buf, tmp, sizeof(buf));
+	}
+	if (*buf)
+		buf[strlen(buf)-1] = '\0'; // strip last comma
+
+	return buf;
 }
 
 void rrpc_md_unserialize(const char *str, ModData *m)
 {
-	safe_strdup(m->str, str);
+	char buf[1024], *p, *name, *value;
+
+	/* First free everything if needed */
+	if (m->ptr)
+	{
+		free_nvplist(m->ptr);
+		m->ptr = NULL;
+	}
+
+	if (BadPtr(str))
+		return; /* Done already */
+
+	strlcpy(buf, str, sizeof(buf));
+	for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
+	{
+		value = strchr(name, ':');
+		if (!value)
+			continue;
+		*value++ = '\0';
+		add_nvplist((NameValuePrioList **)&m->ptr, 0, name, value);
+	}
+}
+
+int rpc_json_expand_client_server(Client *client, int detail, json_t *j, json_t *child)
+{
+	NameValuePrioList *nv = RRPCMODULES(client);
+	json_t *rpc_modules;
+
+	if (!nv || (detail < 1))
+		return 0;
+
+	/* All this belongs under 'features' */
+	child = json_object_get(child, "features");
+	if (!child)
+		return 0;
+
+	rpc_modules = json_array();
+	json_object_set_new(child, "rpc_modules", rpc_modules);
+	for (; nv; nv = nv->next)
+	{
+		json_t *e = json_object();
+		json_object_set_new(e, "name", json_string_unreal(nv->name));
+		json_object_set_new(e, "version", json_string_unreal(nv->value));
+		json_array_append_new(rpc_modules, e);
+	}
+	return 0;
 }
