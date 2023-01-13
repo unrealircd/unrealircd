@@ -162,7 +162,17 @@ RPC_CALL_FUNC(rpc_server_rehash)
 	if (acptr != &me)
 	{
 		/* Forward to remote */
-		rpc_send_request_to_remote(client, acptr, request);
+		if (rrpc_supported_simple(acptr, NULL))
+		{
+			/* Server supports RRPC and will handle the response */
+			rpc_send_request_to_remote(client, acptr, request);
+		} else {
+			/* Server does not support RRPC, so we can only do best effort: */
+			sendto_one(acptr, NULL, ":%s REHASH %s", me.id, acptr->name);
+			result = json_boolean(1);
+			rpc_response(client, request, result);
+			json_decref(result);
+		}
 		return;
 	}
 

@@ -1447,6 +1447,20 @@ void rpc_send_response_to_remote_default_handler(Client *source, Client *target,
 {
 }
 
+int rrpc_supported_simple_default_handler(Client *target, char **problem_server)
+{
+	if (problem_server)
+		*problem_server = me.name;
+	return 0;
+}
+
+int rrpc_supported_default_handler(Client *target, const char *module, const char *minimum_version, char **problem_server)
+{
+	if (problem_server)
+		*problem_server = me.name;
+	return 0;
+}
+
 int websocket_handle_websocket_default_handler(Client *client, WebRequest *web, const char *readbuf2, int length2, int callback(Client *client, char *buf, int len))
 {
 	return -1;

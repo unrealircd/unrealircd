@@ -67,6 +67,8 @@ void _rpc_error(Client *client, json_t *request, JsonRpcError error_code, const 
 void _rpc_error_fmt(Client *client, json_t *request, JsonRpcError error_code, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,4,5)));
 void _rpc_send_request_to_remote(Client *source, Client *target, json_t *request);
 void _rpc_send_response_to_remote(Client *source, Client *target, json_t *response);
+int _rrpc_supported_simple(Client *target, char **problem_server);
+int _rrpc_supported(Client *target, const char *module, const char *minimum_version, char **problem_server);
 int rpc_handle_auth(Client *client, WebRequest *web);
 int rpc_parse_auth_basic_auth(Client *client, WebRequest *web, char **username, char **password);
 int rpc_parse_auth_uri(Client *client, WebRequest *web, char **username, char **password);
@@ -101,8 +103,10 @@ MOD_TEST()
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_RESPONSE, _rpc_response);
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_ERROR, _rpc_error);
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_ERROR_FMT, TO_VOIDFUNC(_rpc_error_fmt));
-	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_SEND_REQUEST_TO_REMOTE, TO_VOIDFUNC(_rpc_send_request_to_remote));
-	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_SEND_RESPONSE_TO_REMOTE, TO_VOIDFUNC(_rpc_send_response_to_remote));
+	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_SEND_REQUEST_TO_REMOTE, _rpc_send_request_to_remote);
+	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_SEND_RESPONSE_TO_REMOTE, _rpc_send_response_to_remote);
+	EfunctionAdd(modinfo->handle, EFUNC_RRPC_SUPPORTED, _rrpc_supported);
+	EfunctionAdd(modinfo->handle, EFUNC_RRPC_SUPPORTED_SIMPLE, _rrpc_supported_simple);
 
 	/* Call MOD_INIT very early, since we manage sockets, but depend on websocket_common */
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_INIT+1);
@@ -1318,7 +1322,7 @@ void rpc_send_generic_to_remote(Client *source, Client *target, const char *requ
 	safe_free(json_serialized);
 }
 
-int verify_rrpc_in_link_path(Client *target, char **problem_server)
+int _rrpc_supported_simple(Client *target, char **problem_server)
 {
 	if (!moddata_client_get(target, "rrpc"))
 	{
@@ -1326,7 +1330,20 @@ int verify_rrpc_in_link_path(Client *target, char **problem_server)
 			*problem_server = target->name;
 		return 0;
 	}
-	if ((target != target->direction) && !verify_rrpc_in_link_path(target->direction, problem_server))
+	if ((target != target->direction) && !rrpc_supported_simple(target->direction, problem_server))
+		return 0;
+	return 1;
+}
+
+int _rrpc_supported(Client *target, const char *module, const char *minimum_version, char **problem_server)
+{
+	if (!moddata_client_get(target, "rrpc"))
+	{
+		if (problem_server)
+			*problem_server = target->name;
+		return 0;
+	}
+	if ((target != target->direction) && !rrpc_supported_simple(target->direction, problem_server))
 		return 0;
 	return 1;
 }
@@ -1352,7 +1369,7 @@ void _rpc_send_request_to_remote(Client *source, Client *target, json_t *request
 	}
 
 	/* If we already detect that next server cannot satisfy the request then stop it right now */
-	if (!verify_rrpc_in_link_path(target, &problem_server))
+	if (!rrpc_supported_simple(target, &problem_server))
 	{
 		rpc_error_fmt(source, request, JSON_RPC_ERROR_REMOTE_SERVER_NO_RPC, "Server %s does not support remote JSON-RPC", problem_server);
 		return;
