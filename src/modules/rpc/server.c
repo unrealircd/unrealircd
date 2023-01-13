@@ -377,10 +377,8 @@ RPC_CALL_FUNC(rpc_server_module_list)
 
 	if (acptr != &me)
 	{
-		/* Not supported atm */
-		result = json_boolean(0);
-		rpc_response(client, request, result);
-		json_decref(result);
+		/* Forward to remote */
+		rpc_send_request_to_remote(client, acptr, request);
 		return;
 	}
 

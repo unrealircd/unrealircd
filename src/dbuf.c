@@ -189,3 +189,32 @@ int  dbuf_getmsg(dbuf *dyn, char *buf)
 	dbuf_delete(dyn, line_bytes + empty_bytes);
 	return MIN(line_bytes, READBUFSIZE - 2);
 }
+
+/*
+** dbuf_get
+**
+** Get the entire dbuf buffer as a newly allocated string. There is NO CR/LF processing.
+*/
+int dbuf_get(dbuf *dyn, char **buf)
+{
+	dbufbuf *block;
+	char *d;
+	int bytes = 0;
+
+	/* First calculate the room needed... */
+	list_for_each_entry2(block, dbufbuf, &dyn->dbuf_list, dbuf_node)
+		bytes += block->size;
+
+	d = *buf = safe_alloc(bytes + 1);
+
+	list_for_each_entry2(block, dbufbuf, &dyn->dbuf_list, dbuf_node)
+	{
+		memcpy(d, block->data, block->size);
+		d += block->size;
+	}
+	*d = '\0'; /* zero terminate */
+
+	/* Remove what is now unnecessary */
+	dbuf_delete(dyn, bytes);
+	return bytes;
+}

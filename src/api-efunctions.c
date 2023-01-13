@@ -147,6 +147,8 @@ int (*webserver_handle_body)(Client *client, WebRequest *web, const char *readbu
 void (*rpc_response)(Client *client, json_t *request, json_t *result);
 void (*rpc_error)(Client *client, json_t *request, JsonRpcError error_code, const char *error_message);
 void (*rpc_error_fmt)(Client *client, json_t *request, JsonRpcError error_code, const char *fmt, ...);
+void (*rpc_send_request_to_remote)(Client *source, Client *target, json_t *request);
+void (*rpc_send_response_to_remote)(Client *source, Client *target, json_t *response);
 int (*websocket_handle_websocket)(Client *client, WebRequest *web, const char *readbuf2, int length2, int callback(Client *client, char *buf, int len));
 int (*websocket_create_packet)(int opcode, char **buf, int *len);
 int (*websocket_create_packet_ex)(int opcode, char **buf, int *len, char *sendbuf, size_t sendbufsize);
@@ -433,6 +435,8 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_RPC_RESPONSE, rpc_response, rpc_response_default_handler);
 	efunc_init_function(EFUNC_RPC_ERROR, rpc_error, rpc_error_default_handler);
 	efunc_init_function(EFUNC_RPC_ERROR_FMT, rpc_error_fmt, rpc_error_fmt_default_handler);
+	efunc_init_function(EFUNC_RPC_SEND_REQUEST_TO_REMOTE, rpc_send_request_to_remote, rpc_send_request_to_remote_default_handler);
+	efunc_init_function(EFUNC_RPC_SEND_RESPONSE_TO_REMOTE, rpc_send_response_to_remote, rpc_send_response_to_remote_default_handler);
 	efunc_init_function(EFUNC_WEBSOCKET_HANDLE_WEBSOCKET, websocket_handle_websocket, websocket_handle_websocket_default_handler);
 	efunc_init_function(EFUNC_WEBSOCKET_CREATE_PACKET, websocket_create_packet, websocket_create_packet_default_handler);
 	efunc_init_function(EFUNC_WEBSOCKET_CREATE_PACKET_EX, websocket_create_packet_ex, websocket_create_packet_ex_default_handler);

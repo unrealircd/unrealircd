@@ -854,6 +854,8 @@ extern MODVAR int (*webserver_handle_body)(Client *client, WebRequest *web, cons
 extern MODVAR void (*rpc_response)(Client *client, json_t *request, json_t *result);
 extern MODVAR void (*rpc_error)(Client *client, json_t *request, JsonRpcError error_code, const char *error_message);
 extern MODVAR void (*rpc_error_fmt)(Client *client, json_t *request, JsonRpcError error_code, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,4,5)));
+extern MODVAR void (*rpc_send_request_to_remote)(Client *source, Client *target, json_t *request);
+extern MODVAR void (*rpc_send_response_to_remote)(Client *source, Client *target, json_t *request);
 extern MODVAR int (*websocket_handle_websocket)(Client *client, WebRequest *web, const char *readbuf2, int length2, int callback(Client *client, char *buf, int len));
 extern MODVAR int (*websocket_create_packet)(int opcode, char **buf, int *len);
 extern MODVAR int (*websocket_create_packet_ex)(int opcode, char **buf, int *len, char *sendbuf, size_t sendbufsize);
@@ -900,6 +902,8 @@ extern int webserver_handle_body_default_handler(Client *client, WebRequest *web
 extern void rpc_response_default_handler(Client *client, json_t *request, json_t *result);
 extern void rpc_error_default_handler(Client *client, json_t *request, JsonRpcError error_code, const char *error_message);
 extern void rpc_error_fmt_default_handler(Client *client, json_t *request, JsonRpcError error_code, const char *fmt, ...);
+extern void rpc_send_request_to_remote_default_handler(Client *source, Client *target, json_t *request);
+extern void rpc_send_response_to_remote_default_handler(Client *source, Client *target, json_t *response);
 extern int websocket_handle_websocket_default_handler(Client *client, WebRequest *web, const char *readbuf2, int length2, int callback(Client *client, char *buf, int len));
 extern int websocket_create_packet_default_handler(int opcode, char **buf, int *len);
 extern int websocket_create_packet_ex_default_handler(int opcode, char **buf, int *len, char *sendbuf, size_t sendbufsize);

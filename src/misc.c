@@ -1433,6 +1433,14 @@ void rpc_error_fmt_default_handler(Client *client, json_t *request, JsonRpcError
 {
 }
 
+void rpc_send_request_to_remote_default_handler(Client *source, Client *target, json_t *request)
+{
+}
+
+void rpc_send_response_to_remote_default_handler(Client *source, Client *target, json_t *response)
+{
+}
+
 int websocket_handle_websocket_default_handler(Client *client, WebRequest *web, const char *readbuf2, int length2, int callback(Client *client, char *buf, int len))
 {
 	return -1;

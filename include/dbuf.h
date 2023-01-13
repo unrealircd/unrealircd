@@ -95,6 +95,7 @@ void dbuf_delete(dbuf *, size_t);
 #define DBufClear(dyn)	dbuf_delete((dyn),DBufLength(dyn))
 
 extern int dbuf_getmsg(dbuf *, char *);
+extern int dbuf_get(dbuf *dyn, char **buf);
 extern void dbuf_queue_init(dbuf *dyn);
 extern void dbuf_init(void);
 

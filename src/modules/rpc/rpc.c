@@ -10,11 +10,30 @@
 ModuleHeader MOD_HEADER
   = {
 	"rpc/rpc",
-	"1.0.0",
+	"1.0.1",
 	"RPC module for remote management",
 	"UnrealIRCd Team",
 	"unrealircd-6",
     };
+
+/* Structs */
+typedef struct RPCUser RPCUser;
+struct RPCUser {
+	RPCUser *prev, *next;
+	SecurityGroup *match;
+	char *name;
+	AuthConfig *auth;
+};
+
+typedef struct RRPC RRPC;
+struct RRPC {
+	RRPC *prev, *next;
+	int request;
+	char source[IDLEN+1];
+	char destination[IDLEN+1];
+	char *requestid;
+	dbuf data;
+};
 
 /* Forward declarations */
 int rpc_config_test_listen(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
@@ -37,19 +56,18 @@ void rpc_call(Client *client, json_t *request);
 void _rpc_response(Client *client, json_t *request, json_t *result);
 void _rpc_error(Client *client, json_t *request, JsonRpcError error_code, const char *error_message);
 void _rpc_error_fmt(Client *client, json_t *request, JsonRpcError error_code, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,4,5)));
+void _rpc_send_request_to_remote(Client *source, Client *target, json_t *request);
+void _rpc_send_response_to_remote(Client *source, Client *target, json_t *response);
 int rpc_handle_auth(Client *client, WebRequest *web);
 int rpc_parse_auth_basic_auth(Client *client, WebRequest *web, char **username, char **password);
 int rpc_parse_auth_uri(Client *client, WebRequest *web, char **username, char **password);
 RPC_CALL_FUNC(rpc_rpc_info);
-
-/* Structs */
-typedef struct RPCUser RPCUser;
-struct RPCUser {
-	RPCUser *prev, *next;
-	SecurityGroup *match;
-	char *name;
-	AuthConfig *auth;
-};
+CMD_FUNC(cmd_rrpc);
+json_t *rrpc_data(RRPC *r);
+void free_rrpc_list(ModData *m);
+void rpc_call_remote(RRPC *r);
+void rpc_response_remote(RRPC *r);
+int rpc_handle_server_quit(Client *client, MessageTag *mtags);
 
 /* Macros */
 #define RPC_PORT(client)  ((client->local && client->local->listener) ? client->local->listener->rpc_options : 0)
@@ -58,6 +76,7 @@ struct RPCUser {
 /* Global variables */
 ModDataInfo *websocket_md = NULL; /* (imported) */
 RPCUser *rpcusers = NULL;
+RRPC *rrpc_list = NULL;
 
 MOD_TEST()
 {
@@ -67,6 +86,8 @@ MOD_TEST()
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_RESPONSE, _rpc_response);
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_ERROR, _rpc_error);
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_ERROR_FMT, TO_VOIDFUNC(_rpc_error_fmt));
+	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_SEND_REQUEST_TO_REMOTE, TO_VOIDFUNC(_rpc_send_request_to_remote));
+	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_SEND_RESPONSE_TO_REMOTE, TO_VOIDFUNC(_rpc_send_response_to_remote));
 
 	/* Call MOD_INIT very early, since we manage sockets, but depend on websocket_common */
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_INIT+1);
@@ -88,6 +109,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, -5000, rpc_client_accept);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT, 0, rpc_pre_local_handshake_timeout);
 	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, INT_MIN, rpc_packet_in_unix_socket);
+	HookAdd(modinfo->handle, HOOKTYPE_SERVER_QUIT, 0, rpc_handle_server_quit);
 
 	memset(&r, 0, sizeof(r));
 	r.method = "rpc.info";
@@ -97,6 +119,10 @@ MOD_INIT()
 		config_error("[rpc.info] Could not register RPC handler");
 		return MOD_FAILED;
 	}
+
+	LoadPersistentPointer(modinfo, rrpc_list, free_rrpc_list);
+
+	CommandAdd(NULL, "RRPC", cmd_rrpc, MAXPARA, CMD_SERVER);
 
 	/* Call MOD_LOAD very late, since we manage sockets, but depend on websocket_common */
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_UNLOAD-1);
@@ -489,7 +515,12 @@ void _rpc_error(Client *client, json_t *request, JsonRpcError error_code, const 
 		json_decref(j);
 		return;
 	}
-	rpc_sendto(client, json_serialized, strlen(json_serialized));
+
+	if (MyConnect(client))
+		rpc_sendto(client, json_serialized, strlen(json_serialized));
+	else
+		rpc_send_response_to_remote(&me, client, j);
+
 #ifdef DEBUGMODE
 	unreal_log(ULOG_DEBUG, "rpc", "RPC_CALL_DEBUG", client,
 		   "[rpc] Client $client: RPC result error: $response",
@@ -533,7 +564,12 @@ void _rpc_response(Client *client, json_t *request, json_t *result)
 		json_decref(j);
 		return;
 	}
-	rpc_sendto(client, json_serialized, strlen(json_serialized));
+
+	if (MyConnect(client))
+		rpc_sendto(client, json_serialized, strlen(json_serialized));
+	else
+		rpc_send_response_to_remote(&me, client, j);
+
 #ifdef DEBUGMODE
 	unreal_log(ULOG_DEBUG, "rpc", "RPC_CALL_DEBUG", client,
 		   "[rpc] Client $client: RPC response result: $response",
@@ -550,6 +586,7 @@ void rpc_call(Client *client, json_t *request)
 	json_t *t;
 	const char *jsonrpc;
 	const char *method;
+	json_t *id;
 	json_t *params;
 	char params_allocated = 0;
 	RPCHandler *handler;
@@ -560,6 +597,20 @@ void rpc_call(Client *client, json_t *request)
 		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "Only JSON-RPC version 2.0 is supported");
 		return;
 	}
+
+	id = json_object_get(request, "id");
+	if (!id)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "Missing 'id'");
+		return;
+	}
+
+	if (!json_is_string(id) && !json_is_integer(id))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "The 'id' must be a string or an integer in UnrealIRCd JSON-RPC");
+		return;
+	}
+
 	method = json_object_get_string(request, "method");
 	if (!method)
 	{
@@ -829,4 +880,315 @@ RPC_CALL_FUNC(rpc_rpc_info)
 
 	rpc_response(client, request, result);
 	json_decref(result);
+}
+
+void free_rrpc(RRPC *r)
+{
+	safe_free(r->requestid);
+	DBufClear(&r->data);
+	DelListItem(r, rrpc_list);
+}
+
+/* Admin unloading the RPC module for good (not called on rehash) */
+void free_rrpc_list(ModData *m)
+{
+	RRPC *r, *r_next;
+
+	for (r = rrpc_list; r; r = r_next)
+	{
+		r_next = r->next;
+		free_rrpc(r);
+	}
+}
+
+/** When a server quits, cancel all the RPC requests to/from those clients */
+int rpc_handle_server_quit(Client *client, MessageTag *mtags)
+{
+	RRPC *r, *r_next;
+
+	for (r = rrpc_list; r; r = r_next)
+	{
+		r_next = r->next;
+		if (!strncmp(client->id, r->source, SIDLEN) ||
+		    !strncmp(client->id, r->destination, SIDLEN))
+		{
+			// TODO: if it was actually my request then ideally notify the RPC client
+			// that the request failed. (Yeah but such requests are not in the list atm)
+			free_rrpc(r);
+		}
+	}
+	return 0;
+}
+
+RRPC *find_rrpc(const char *source, const char *destination, const char *requestid)
+{
+	RRPC *r;
+	for (r = rrpc_list; r; r = r->next)
+	{
+		if (!strcmp(r->source, source) &&
+		    !strcmp(r->destination, destination) &&
+		    !strcmp(r->requestid, requestid))
+		{
+			return r;
+		}
+	}
+	return NULL;
+}
+
+/* Remote RPC call over the network (RRPC)
+ * :<server> RRPC <REQ|RES> <source> <destination> <requestid> [S|C|F] :<request data>
+ * S = Start
+ * C = Continuation
+ * F = Finish
+ */
+CMD_FUNC(cmd_rrpc)
+{
+	int request;
+	const char *source, *destination, *requestid, *type, *data;
+	RRPC *r;
+	Client *dest;
+	char sid[SIDLEN+1];
+	char binarydata[BUFSIZE+1];
+	int binarydatalen;
+
+	if ((parc < 7) || BadPtr(parv[6]))
+	{
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "KNOCK");
+		return;
+	}
+
+	if (!strcmp(parv[1], "REQ"))
+	{
+		request = 1;
+	} else if (!strcmp(parv[1], "RES"))
+	{
+		request = 0;
+	} else {
+		sendnumeric(client, ERR_CANNOTDOCOMMAND, "RRPC", "Invalid parameter");
+		return;
+	}
+
+	source = parv[2];
+	destination = parv[3];
+	requestid = parv[4];
+	type = parv[5];
+	data = parv[6];
+
+	/* Search by SID (first 3 characters of destination)
+	 * so we can always deliver, even forn unknown UID destinations
+	 * in case this is a response.
+	 */
+	strlcpy(sid, destination, sizeof(sid));
+	dest = find_server_quick(sid);
+	if (!dest)
+	{
+		sendnumeric(client, ERR_NOSUCHSERVER, sid);
+		return;
+	}
+
+	if (dest != &me)
+	{
+		/* Just pass it along... */
+		sendto_one(dest, recv_mtags, ":%s RRPC %s %s %s %s %s :%s",
+		           client->id, parv[1], parv[2], parv[3], parv[4], parv[5], parv[6]);
+		return;
+	}
+
+	/* It's for us! So handle it ;) */
+
+	if (strchr(type, 'S'))
+	{
+		r = find_rrpc(source, destination, requestid);
+		if (r)
+		{
+			sendnumeric(client, ERR_CANNOTDOCOMMAND, "RRPC", "Duplicate request found");
+			/* We actually terminate the existing RRPC as well,
+			 * because there's a big risk of the the two different ones
+			 * merging in subsequent RRPC... C ... commands. Bad!
+			 * (and yeah this does not handle the case where you have
+			 *  like 3 or more duplicate request id requests... so be it..)
+			 */
+			free_rrpc(r);
+			return;
+		}
+		/* A new request */
+		r = safe_alloc(sizeof(RRPC));
+		strlcpy(r->source, source, sizeof(r->source));
+		strlcpy(r->destination, destination, sizeof(r->destination));
+		safe_strdup(r->requestid, requestid);
+		r->request = request;
+		dbuf_queue_init(&r->data);
+		AddListItem(r, rrpc_list);
+	} else
+	if (strchr(type, 'C') || strchr(type, 'F'))
+	{
+		r = find_rrpc(source, destination, requestid);
+		if (!r)
+		{
+			sendnumeric(client, ERR_CANNOTDOCOMMAND, "RRPC", "Request not found");
+			return;
+		}
+	} else
+	{
+		sendnumeric(client, ERR_CANNOTDOCOMMAND, "RRPC", "Only actions S/C/F are supported");
+		return;
+	}
+
+	/* Append the data */
+	dbuf_put(&r->data, data, strlen(data));
+
+	/* Now check if the request happens to be terminated */
+	if (strchr(type, 'F'))
+	{
+		if (r->request)
+			rpc_call_remote(r);
+		else
+			rpc_response_remote(r);
+		free_rrpc(r);
+		return;
+	}
+}
+
+/** Convert the RRPC data to actual workable JSON output */
+json_t *rrpc_data(RRPC *r)
+{
+	int datalen;
+	char *data;
+	json_t *j;
+	json_error_t jerr;
+
+	datalen = dbuf_get(&r->data, &data);
+	j = json_loads(data, JSON_REJECT_DUPLICATES, &jerr);
+	safe_free(data);
+
+	return j;
+}
+
+/** Received a remote RPC request (from a client on another server) */
+void rpc_call_remote(RRPC *r)
+{
+	json_t *request = NULL;
+	Client *server;
+	Client *client;
+	char sid[SIDLEN+1];
+
+	request = rrpc_data(r);
+	if (!request)
+	{
+		// TODO: handle invalid JSON
+		return;
+	}
+
+	/* Create a (fake) client structure */
+	strlcpy(sid, r->source, sizeof(sid));
+	server = find_server_quick(sid);
+	if (!server)
+	{
+		return;
+	}
+	client = make_client(server->direction, server);
+	strlcpy(client->id, r->source, sizeof(client->id));
+	/* not added to hash table */
+	rpc_call(client, request);
+	json_decref(request);
+}
+
+/** Received a remote RPC response (from another server) to our local RPC client */
+void rpc_response_remote(RRPC *r)
+{
+	Client *client = find_client(r->destination, NULL);
+	json_t *j;
+
+	if (!client)
+		return;
+
+	j = rrpc_data(r);
+	if (!j)
+		return;
+
+	// TODO: probably wise to do some minimal checking here,
+	// and maybe also differentiate between rpc response and error
+	rpc_response(client, j, j);
+	json_decref(j);
+}
+
+/** Send a remote RPC (RRPC) request 'request' to server 'target'. */
+void rpc_send_generic_to_remote(Client *source, Client *target, const char *requesttype, json_t *json)
+{
+	char *json_serialized;
+	json_t *j;
+	const char *type;
+	const char *requestid;
+	char *str;
+	int bytes; /* bytes in this frame */
+	int bytes_remaining; /* bytes remaining overall */
+	int start_frame = 1; /* set to 1 if this is the start frame */
+	char data[451];
+	char rid[128];
+
+	j = json_object_get(json, "id");
+	requestid = json_string_value(j);
+	if (!requestid)
+	{
+		json_int_t v = json_integer_value(j);
+		if (v == 0)
+			return;
+		snprintf(rid, sizeof(rid), "%lld", (long long)v);
+		requestid = rid;
+	}
+
+	json_serialized = json_dumps(json, 0);
+	if (!json_serialized)
+		return;
+
+	/* :<server> RRPC REQ <source> <destination> <requestid> [S|C|F] :<request data>
+	 * S = Start
+	 * C = Continuation
+	 * F = Finish
+	 */
+
+	bytes_remaining = strlen(json_serialized);
+	for (str = json_serialized, bytes = MIN(bytes_remaining, 450);
+	     str && *str && bytes_remaining;
+	     str += bytes, bytes = MIN(bytes_remaining, 450))
+	{
+		bytes_remaining -= bytes;
+		if (start_frame == 1)
+		{
+			start_frame = 0;
+			if (bytes_remaining > 0)
+				type = "S"; /* start (with later continuation frames) */
+			else
+				type = "SF"; /* start and finish */
+		} else
+		if (bytes_remaining > 0)
+		{
+			type = "C"; /* continuation frame (with later a finish frame) */
+		} else {
+			type = "F"; /* finish frame (the last frame) */
+		}
+
+		strlncpy(data, str, sizeof(data), bytes);
+
+		sendto_one(target, NULL, ":%s RRPC %s %s %s %s %s :%s",
+		           me.id,
+		           requesttype,
+		           source->id,
+		           target->id,
+		           requestid,
+		           type,
+		           data);
+	}
+}
+
+/** Send a remote RPC (RRPC) request 'request' to server 'target'. */
+void _rpc_send_request_to_remote(Client *source, Client *target, json_t *request)
+{
+	rpc_send_generic_to_remote(source, target, "REQ", request);
+}
+
+/** Send a remote RPC (RRPC) request 'request' to server 'target'. */
+void _rpc_send_response_to_remote(Client *source, Client *target, json_t *response)
+{
+	rpc_send_generic_to_remote(source, target, "RES", response);
 }
