@@ -82,6 +82,54 @@ char *strtoken(char **save, char *str, char *fs)
 	return (tmp);
 }
 
+/** Walk through a string of tokens, using a set of separators.
+ * This is the special version that won't skip/merge tokens,
+ * eg "a,,c" would return "a", then "" (empty), then "c".
+ * This in contrast to strtoken() which would return "a" and then "c".
+ * This strtoken_noskip() will also not skip tokens at the
+ * beginning, eg ",,c" would return "" (empty), "" (empty), "c".
+ *
+ * @param save	Pointer used for saving between calls
+ * @param str	String to parse (will be altered!)
+ * @param fs	Separator character(s)
+ * @returns substring (token)
+ * @note This function works similar to (but not identical?) to strtok_r().
+ */
+char *strtoken_noskip(char **save, char *str, char *fs)
+{
+	char *pos, *tmp;
+
+	if (str)
+	{
+		pos = str;	/* new string scan */
+	} else {
+		if (*save == NULL)
+		{
+			/* We reached the end of the string */
+			return NULL;
+		}
+		pos = *save; /* keep last position across calls */
+	}
+
+	tmp = pos; /* start position, used for returning later */
+
+	/* Hunt for next separator (fs in pos) */
+	while (*pos && !strchr(fs, *pos))
+		pos++;
+
+	if (!*pos)
+	{
+		/* Next call is end of string */
+		*save = NULL;
+		*pos++ = '\0';
+	} else {
+		*pos++ = '\0';
+		*save = pos;
+	}
+
+	return tmp;
+}
+
 /** Convert binary address to an IP string - like inet_ntop but will always return the uncompressed IPv6 form.
  * @param af	Address family (AF_INET, AF_INET6)
  * @param in	Address (binary)

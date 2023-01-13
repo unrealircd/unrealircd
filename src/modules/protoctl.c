@@ -243,7 +243,7 @@ CMD_FUNC(cmd_protoctl)
 				p = NULL;
 			}
 			
-			servername = strtoken(&p, buf, ",");
+			servername = strtoken_noskip(&p, buf, ",");
 			if (!servername || !valid_server_name(servername))
 			{
 				exit_client(client, NULL, "Bogus server name");
@@ -251,14 +251,12 @@ CMD_FUNC(cmd_protoctl)
 			}
 			
 			
-			protocol = strtoken(&p, NULL, ",");
+			protocol = strtoken_noskip(&p, NULL, ",");
 			if (protocol)
 			{
-				flags = strtoken(&p, NULL, ",");
+				flags = strtoken_noskip(&p, NULL, ",");
 				if (flags)
-				{
-					software = strtoken(&p, NULL, ",");
-				}
+					software = strtoken_noskip(&p, NULL, ",");
 			}
 			
 			/* Set client->name but don't add to hash list, this gives better

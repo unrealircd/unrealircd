@@ -96,6 +96,7 @@ extern int myncmp(const char *, const char *, int);
 #endif
 
 extern char *strtoken(char **, char *, char *);
+extern char *strtoken_noskip(char **, char *, char *);
 
 extern MODVAR int  global_count, max_global_count;
 #ifdef _WIN32
