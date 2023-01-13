@@ -20,6 +20,7 @@ RPC_CALL_FUNC(rpc_server_get);
 RPC_CALL_FUNC(rpc_server_rehash);
 RPC_CALL_FUNC(rpc_server_connect);
 RPC_CALL_FUNC(rpc_server_disconnect);
+RPC_CALL_FUNC(rpc_server_module_list);
 
 int rpc_server_rehash_log(int failure, json_t *rehash_log);
 
@@ -64,6 +65,14 @@ MOD_INIT()
 	memset(&r, 0, sizeof(r));
 	r.method = "server.disconnect";
 	r.call = rpc_server_disconnect;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/server] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+	memset(&r, 0, sizeof(r));
+	r.method = "server.module_list";
+	r.call = rpc_server_module_list;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/server] Could not register RPC handler");
@@ -320,6 +329,73 @@ RPC_CALL_FUNC(rpc_server_disconnect)
 
 	/* Return true */
 	result = json_boolean(1);
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+extern MODVAR Module *Modules;
+void json_expand_module(json_t *j, const char *key, Module *m, int detail)
+{
+	char buf[BUFSIZE+1];
+	json_t *child;
+
+	if (key)
+	{
+		child = json_object();
+		json_object_set_new(j, key, child);
+	} else {
+		child = j;
+	}
+
+	json_object_set_new(child, "name", json_string_unreal(m->header->name));
+	json_object_set_new(child, "version", json_string_unreal(m->header->version));
+	json_object_set_new(child, "author", json_string_unreal(m->header->author));
+	json_object_set_new(child, "description", json_string_unreal(m->header->description));
+	json_object_set_new(child, "third_party", json_boolean(m->options & MOD_OPT_OFFICIAL ? 0 : 1));
+	json_object_set_new(child, "permanent", json_boolean(m->options & MOD_OPT_PERM ? 1 : 0));
+	json_object_set_new(child, "permanent_but_reloadable", json_boolean(m->options & MOD_OPT_PERM_RELOADABLE ? 1 : 0));
+}
+
+RPC_CALL_FUNC(rpc_server_module_list)
+{
+	json_t *result, *list, *item;
+	const char *server;
+	Client *acptr;
+	Module *m;
+
+	OPTIONAL_PARAM_STRING("server", server);
+	if (server)
+	{
+		if (!(acptr = find_server(server, NULL)))
+		{
+			rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Server not found");
+			return;
+		}
+	} else {
+		acptr = &me;
+	}
+
+	if (acptr != &me)
+	{
+		/* Not supported atm */
+		result = json_boolean(0);
+		rpc_response(client, request, result);
+		json_decref(result);
+		return;
+	}
+
+	/* Return true */
+	result = json_object();
+	list = json_array();
+	json_object_set_new(result, "list", list);
+
+	for (m = Modules; m; m = m->next)
+	{
+		item = json_object();
+		json_expand_module(item, NULL, m, 1);
+		json_array_append_new(list, item);
+	}
+
 	rpc_response(client, request, result);
 	json_decref(result);
 }
