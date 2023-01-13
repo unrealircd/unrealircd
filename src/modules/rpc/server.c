@@ -350,7 +350,6 @@ RPC_CALL_FUNC(rpc_server_disconnect)
 	json_decref(result);
 }
 
-extern MODVAR Module *Modules;
 void json_expand_module(json_t *j, const char *key, Module *m, int detail)
 {
 	char buf[BUFSIZE+1];

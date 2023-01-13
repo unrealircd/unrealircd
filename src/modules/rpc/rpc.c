@@ -10,7 +10,7 @@
 ModuleHeader MOD_HEADER
   = {
 	"rpc/rpc",
-	"1.0.1",
+	"1.0.2",
 	"RPC module for remote management",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -166,9 +166,28 @@ MOD_INIT()
 	return MOD_SUCCESS;
 }
 
+void rpc_do_moddata(void)
+{
+	Module *m;
+	char buf[512], tmp[128];
+
+	*buf = '\0';
+	for (m = Modules; m; m = m->next)
+	{
+		if (!strncmp(m->header->name, "rpc/", 4))
+		{
+			snprintf(tmp, sizeof(tmp), "%s:%s,", m->header->name + 4, m->header->version);
+			strlcat(buf, tmp, sizeof(buf));
+		}
+	}
+	if (*buf)
+		buf[strlen(buf)-1] = '\0'; /* cut off last comma */
+	moddata_client_set(&me, "rrpc", buf);
+}
+
 MOD_LOAD()
 {
-	moddata_client_set(&me, "rrpc", "1");
+	rpc_do_moddata();
 	return MOD_SUCCESS;
 }
 
