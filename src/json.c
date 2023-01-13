@@ -487,6 +487,8 @@ void json_expand_tkl(json_t *root, const char *key, TKL *tkl, int detail)
 		json_object_set_new(j, "duration_string", json_string_unreal(pretty_time_val_r(buf, sizeof(buf), tkl->expire_at - tkl->set_at)));
 	}
 	json_object_set_new(j, "set_at_delta", json_integer(TStime() - tkl->set_at));
+	if (tkl->flags & TKL_FLAG_CONFIG)
+		json_object_set_new(j, "set_in_config", json_boolean(1));
 	if (TKLIsServerBan(tkl))
 	{
 		json_object_set_new(j, "name", json_string_unreal(tkl_uhost(tkl, buf, sizeof(buf), 0)));
