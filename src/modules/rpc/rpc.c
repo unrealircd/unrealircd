@@ -35,6 +35,15 @@ struct RRPC {
 	dbuf data;
 };
 
+typedef struct OutstandingRRPC OutstandingRRPC;
+struct OutstandingRRPC {
+	OutstandingRRPC *prev, *next;
+	time_t sent;
+	char source[IDLEN+1];
+	char destination[IDLEN+1];
+	char *requestid;
+};
+
 /* Forward declarations */
 int rpc_config_test_listen(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rpc_config_run_ex_listen(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
@@ -63,8 +72,10 @@ int rpc_parse_auth_basic_auth(Client *client, WebRequest *web, char **username, 
 int rpc_parse_auth_uri(Client *client, WebRequest *web, char **username, char **password);
 RPC_CALL_FUNC(rpc_rpc_info);
 CMD_FUNC(cmd_rrpc);
+EVENT(rpc_remote_timeout);
 json_t *rrpc_data(RRPC *r);
 void free_rrpc_list(ModData *m);
+void free_outstanding_rrpc_list(ModData *m);
 void rpc_call_remote(RRPC *r);
 void rpc_response_remote(RRPC *r);
 int rpc_handle_server_quit(Client *client, MessageTag *mtags);
@@ -77,6 +88,7 @@ int rpc_handle_server_quit(Client *client, MessageTag *mtags);
 ModDataInfo *websocket_md = NULL; /* (imported) */
 RPCUser *rpcusers = NULL;
 RRPC *rrpc_list = NULL;
+OutstandingRRPC *outstanding_rrpc_list = NULL;
 
 MOD_TEST()
 {
@@ -121,8 +133,11 @@ MOD_INIT()
 	}
 
 	LoadPersistentPointer(modinfo, rrpc_list, free_rrpc_list);
+	LoadPersistentPointer(modinfo, outstanding_rrpc_list, free_outstanding_rrpc_list);
 
 	CommandAdd(NULL, "RRPC", cmd_rrpc, MAXPARA, CMD_SERVER);
+
+	EventAdd(NULL, "rpc_remote_timeout", rpc_remote_timeout, NULL, 1000, 0);
 
 	/* Call MOD_LOAD very late, since we manage sockets, but depend on websocket_common */
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_UNLOAD-1);
@@ -901,10 +916,29 @@ void free_rrpc_list(ModData *m)
 	}
 }
 
+void free_outstanding_rrpc(OutstandingRRPC *r)
+{
+	safe_free(r->requestid);
+	DelListItem(r, outstanding_rrpc_list);
+}
+
+/* Admin unloading the RPC module for good (not called on rehash) */
+void free_outstanding_rrpc_list(ModData *m)
+{
+	OutstandingRRPC *r, *r_next;
+
+	for (r = outstanding_rrpc_list; r; r = r_next)
+	{
+		r_next = r->next;
+		free_outstanding_rrpc(r);
+	}
+}
+
 /** When a server quits, cancel all the RPC requests to/from those clients */
 int rpc_handle_server_quit(Client *client, MessageTag *mtags)
 {
 	RRPC *r, *r_next;
+	OutstandingRRPC *or, *or_next;
 
 	for (r = rrpc_list; r; r = r_next)
 	{
@@ -912,12 +946,51 @@ int rpc_handle_server_quit(Client *client, MessageTag *mtags)
 		if (!strncmp(client->id, r->source, SIDLEN) ||
 		    !strncmp(client->id, r->destination, SIDLEN))
 		{
-			// TODO: if it was actually my request then ideally notify the RPC client
-			// that the request failed. (Yeah but such requests are not in the list atm)
 			free_rrpc(r);
 		}
 	}
+
+	for (or = outstanding_rrpc_list; or; or = or_next)
+	{
+		or_next = or->next;
+		if (!strcmp(client->id, or->destination))
+		{
+			Client *client = find_client(or->source, NULL);
+			if (client)
+			{
+				json_t *j = json_object();
+				json_object_set_new(j, "id", json_string_unreal(or->requestid));
+				rpc_error(client, NULL, JSON_RPC_ERROR_SERVER_GONE, "Remote server disconnected while processing the request");
+				json_decref(j);
+			}
+			free_outstanding_rrpc(or);
+		}
+	}
+
 	return 0;
+}
+
+EVENT(rpc_remote_timeout)
+{
+	OutstandingRRPC *or, *or_next;
+	time_t deadline = TStime() - 15;
+
+	for (or = outstanding_rrpc_list; or; or = or_next)
+	{
+		or_next = or->next;
+		if (or->sent < deadline)
+		{
+			Client *client = find_client(or->source, NULL);
+			if (client)
+			{
+				json_t *request = json_object();
+				json_object_set_new(request, "id", json_string_unreal(or->requestid));
+				rpc_error(client, request, JSON_RPC_ERROR_TIMEOUT, "Request timed out");
+				json_decref(request);
+			}
+			free_outstanding_rrpc(or);
+		}
+	}
 }
 
 RRPC *find_rrpc(const char *source, const char *destination, const char *requestid)
@@ -927,6 +1000,20 @@ RRPC *find_rrpc(const char *source, const char *destination, const char *request
 	{
 		if (!strcmp(r->source, source) &&
 		    !strcmp(r->destination, destination) &&
+		    !strcmp(r->requestid, requestid))
+		{
+			return r;
+		}
+	}
+	return NULL;
+}
+
+OutstandingRRPC *find_outstandingrrpc(const char *source, const char *requestid)
+{
+	OutstandingRRPC *r;
+	for (r = outstanding_rrpc_list; r; r = r->next)
+	{
+		if (!strcmp(r->source, source) &&
 		    !strcmp(r->requestid, requestid))
 		{
 			return r;
@@ -1096,20 +1183,48 @@ void rpc_call_remote(RRPC *r)
 /** Received a remote RPC response (from another server) to our local RPC client */
 void rpc_response_remote(RRPC *r)
 {
+	OutstandingRRPC *or;
 	Client *client = find_client(r->destination, NULL);
 	json_t *j;
 
 	if (!client)
 		return;
 
+	or = find_outstandingrrpc(client->id, r->requestid);
+	if (!or)
+		return; /* Not a known outstanding request, maybe the client left already */
+
 	j = rrpc_data(r);
 	if (!j)
 		return;
 
-	// TODO: probably wise to do some minimal checking here,
-	// and maybe also differentiate between rpc response and error
 	rpc_response(client, j, j);
 	json_decref(j);
+
+	free_outstanding_rrpc(or);
+}
+
+const char *rpc_id(json_t *request)
+{
+	static char rid[128];
+	const char *requestid;
+	json_t *j;
+
+	j = json_object_get(request, "id");
+	if (!j)
+		return NULL;
+
+	requestid = json_string_value(j);
+	if (!requestid)
+	{
+		json_int_t v = json_integer_value(j);
+		if (v == 0)
+			return NULL;
+		snprintf(rid, sizeof(rid), "%lld", (long long)v);
+		requestid = rid;
+	}
+
+	return requestid;
 }
 
 /** Send a remote RPC (RRPC) request 'request' to server 'target'. */
@@ -1124,18 +1239,10 @@ void rpc_send_generic_to_remote(Client *source, Client *target, const char *requ
 	int bytes_remaining; /* bytes remaining overall */
 	int start_frame = 1; /* set to 1 if this is the start frame */
 	char data[451];
-	char rid[128];
 
-	j = json_object_get(json, "id");
-	requestid = json_string_value(j);
+	requestid = rpc_id(json);
 	if (!requestid)
-	{
-		json_int_t v = json_integer_value(j);
-		if (v == 0)
-			return;
-		snprintf(rid, sizeof(rid), "%lld", (long long)v);
-		requestid = rid;
-	}
+		return;
 
 	json_serialized = json_dumps(json, 0);
 	if (!json_serialized)
@@ -1184,6 +1291,31 @@ void rpc_send_generic_to_remote(Client *source, Client *target, const char *requ
 /** Send a remote RPC (RRPC) request 'request' to server 'target'. */
 void _rpc_send_request_to_remote(Client *source, Client *target, json_t *request)
 {
+	OutstandingRRPC *r;
+	const char *requestid = rpc_id(request);
+
+	if (!requestid)
+	{
+		/* should never happen, since already covered upstream, but just to be sure... */
+		rpc_error(source, NULL, JSON_RPC_ERROR_INVALID_REQUEST, "The 'id' must be a string or an integer in UnrealIRCd JSON-RPC");
+		return;
+	}
+
+	if (find_outstandingrrpc(source->id, requestid))
+	{
+		rpc_error(source, NULL, JSON_RPC_ERROR_INVALID_REQUEST, "A request with that id is already in progress. Use unique id's!");
+		return;
+	}
+
+	/* Add the request to the "Outstanding RRPC list" */
+	r = safe_alloc(sizeof(OutstandingRRPC));
+	r->sent = TStime();
+	strlcpy(r->source, source->id, sizeof(r->source));
+	strlcpy(r->destination, target->id, sizeof(r->destination));
+	safe_strdup(r->requestid, requestid);
+	AddListItem(r, outstanding_rrpc_list);
+
+	/* And send it! */
 	rpc_send_generic_to_remote(source, target, "REQ", request);
 }
 
