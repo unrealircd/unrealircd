@@ -91,12 +91,12 @@ void close_connections(void)
 }
 
 /** Accept an incoming connection.
- * @param listener_fd	The file descriptor of a listen() socket.
- * @param data		The listen { } block configuration data.
+ * @param listener	The listen { } block configuration data.
+ * @returns 1 if the connection was accepted (even if it was rejected),
+ * 0 if there is no more work to do (accept returned an error).
  */
-static void listener_accept(int listener_fd, int revents, void *data)
+static int listener_accept_wrapper(ConfigItem_listen *listener)
 {
-	ConfigItem_listen *listener = data;
 	int cli_fd;
 
 	if ((cli_fd = fd_accept(listener->fd)) < 0)
@@ -124,7 +124,7 @@ static void listener_accept(int listener_fd, int revents, void *data)
 			close_listener(listener);
 			start_listeners();
 		}
-		return;
+		return 0;
 	}
 
 	ircstats.is_ac++;
@@ -146,7 +146,7 @@ static void listener_accept(int listener_fd, int revents, void *data)
 			}
 			fd_close(cli_fd);
 			--OpenFiles;
-			return;
+			return 1;
 		}
 	} else
 	{
@@ -171,12 +171,31 @@ static void listener_accept(int listener_fd, int revents, void *data)
 
 			fd_close(cli_fd);
 			--OpenFiles;
-			return;
+			return 1;
 		}
 	}
 
 	/* add_connection() may fail. we just don't care. */
 	add_connection(listener, cli_fd);
+	return 1;
+}
+
+/** Accept an incoming connection.
+ * @param listener_fd	The file descriptor of a listen() socket.
+ * @param data		The listen { } block configuration data.
+ */
+static void listener_accept(int listener_fd, int revents, void *data)
+{
+	int i;
+
+	/* Accept clients, but only up to a maximum in each run,
+	 * as to allow some CPU available to existing clients.
+	 * Better refuse or lag a few new clients than become
+	 * unresponse to existing clients.
+	 */
+	for (i=0; i < 100; i++)
+		if (!listener_accept_wrapper((ConfigItem_listen *)data))
+			break;
 }
 
 int unreal_listen_inet(ConfigItem_listen *listener)
