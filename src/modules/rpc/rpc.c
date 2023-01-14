@@ -764,7 +764,7 @@ void rpc_client_handshake_web(Client *client)
 	}
 	if (!found)
 	{
-		webserver_send_response(client, 403, "Access denied");
+		webserver_send_response(client, 401, "Access denied");
 		return;
 	}
 
@@ -846,6 +846,9 @@ int rpc_handle_auth(Client *client, WebRequest *web)
 			return 1;
 		}
 	}
+
+	/* Authentication failed */
+	webserver_send_response(client, 401, "Authentication required");
 	return 0;
 }
 
