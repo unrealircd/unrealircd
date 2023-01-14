@@ -547,7 +547,7 @@ void _rpc_error(Client *client, json_t *request, JsonRpcError error_code, const 
 	if (method)
 		json_object_set_new(j, "method", json_string_unreal(method));
 	if (id)
-		json_object_set_new(j, "id", id);
+		json_object_set(j, "id", id);
 
 	error = json_object();
 	json_object_set_new(j, "error", error);
@@ -605,7 +605,7 @@ void _rpc_response(Client *client, json_t *request, json_t *result)
 	json_object_set_new(j, "jsonrpc", json_string_unreal("2.0"));
 	json_object_set_new(j, "method", json_string_unreal(method));
 	if (id)
-		json_object_set_new(j, "id", id); /* 'id' is optional */
+		json_object_set(j, "id", id); /* 'id' is optional */
 	json_object_set(j, "result", result);
 
 	json_serialized = json_dumps(j, 0);
