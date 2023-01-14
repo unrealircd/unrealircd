@@ -1276,6 +1276,7 @@ extern int log_tests(void);
 extern void config_pre_run_log(void);
 extern void log_blocks_switchover(void);
 extern void postconf_defaults_log_block(void);
+extern int valid_loglevel(int v);
 extern LogLevel log_level_stringtoval(const char *str);
 extern const char *log_level_valtostring(LogLevel loglevel);
 extern LogLevel log_level_stringtoval(const char *str);

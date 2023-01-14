@@ -28,6 +28,7 @@ MOD_INIT()
 
 	memset(&r, 0, sizeof(r));
 	r.method = "spamfilter.list";
+	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_spamfilter_list;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
@@ -35,6 +36,7 @@ MOD_INIT()
 		return MOD_FAILED;
 	}
 	r.method = "spamfilter.get";
+	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_spamfilter_get;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{

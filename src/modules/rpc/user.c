@@ -37,6 +37,7 @@ MOD_INIT()
 
 	memset(&r, 0, sizeof(r));
 	r.method = "user.list";
+	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_user_list;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
@@ -45,6 +46,7 @@ MOD_INIT()
 	}
 	memset(&r, 0, sizeof(r));
 	r.method = "user.get";
+	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_user_get;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{

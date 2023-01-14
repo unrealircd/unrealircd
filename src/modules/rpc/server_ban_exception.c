@@ -28,6 +28,7 @@ MOD_INIT()
 
 	memset(&r, 0, sizeof(r));
 	r.method = "server_ban_exception.list";
+	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_server_ban_exception_list;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
@@ -35,6 +36,7 @@ MOD_INIT()
 		return MOD_FAILED;
 	}
 	r.method = "server_ban_exception.get";
+	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_server_ban_exception_get;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{

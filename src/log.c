@@ -65,6 +65,18 @@ const char *log_type_valtostring(LogType v)
 	}
 }
 
+/** Checks if 'v' is a valid loglevel */
+int valid_loglevel(int v)
+{
+	if ((v == ULOG_DEBUG) || (v == ULOG_INFO) ||
+	    (v == ULOG_WARNING) || (v == ULOG_ERROR) ||
+	    (v == ULOG_FATAL))
+	{
+		return 1;
+	}
+	return 0;
+}
+
 /***** CONFIGURATION ******/
 
 LogSource *add_log_source(const char *str)

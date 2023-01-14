@@ -134,6 +134,7 @@ MOD_INIT()
 
 	memset(&r, 0, sizeof(r));
 	r.method = "rpc.info";
+	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_rpc_info;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
@@ -689,7 +690,7 @@ void rpc_call(Client *client, json_t *request)
 		params_allocated = 1;
 	}
 
-	unreal_log(ULOG_INFO, "rpc", "RPC_CALL", client,
+	unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
 	           "[rpc] Client $client: RPC call $method",
 	           log_data_string("method", method));
 

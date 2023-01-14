@@ -28,6 +28,7 @@ MOD_INIT()
 
 	memset(&r, 0, sizeof(r));
 	r.method = "name_ban.list";
+	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_name_ban_list;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
@@ -35,6 +36,7 @@ MOD_INIT()
 		return MOD_FAILED;
 	}
 	r.method = "name_ban.get";
+	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_name_ban_get;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{

@@ -612,12 +612,13 @@ typedef struct {
 /** No special flags set */
 #define RPC_HANDLER_FLAGS_NONE			0x0
 
-/** Message Tag Handler */
+/** RPC Tag Handler */
 typedef struct RPCHandler RPCHandler;
 struct RPCHandler {
 	RPCHandler *prev, *next;
 	char *method;                                             /**< Name of the method handler, eg "client.get" */
 	int flags;                                                /**< A flag of RPC_HANDLER_FLAG_* */
+	LogLevel loglevel;                                        /**< Log level to use for this call: for example ULOG_DEBUG for .list calls, leave 0 for default */
 	void (*call)(Client *, json_t *request, json_t *params);  /**< RPC call: use RPC_CALL_FUNC() ! */
 	Module *owner;                                            /**< Module introducing this. */
 	char unloaded;                                            /**< Internal flag to indicate module is being unloaded */
@@ -629,6 +630,7 @@ struct RPCHandler {
 typedef struct {
 	char *method;
 	int flags;
+	LogLevel loglevel;
 	void (*call)(Client *, json_t *request, json_t *params);
 } RPCHandlerInfo;
 

@@ -32,6 +32,7 @@ MOD_INIT()
 
 	memset(&r, 0, sizeof(r));
 	r.method = "server.list";
+	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_server_list;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
@@ -40,6 +41,7 @@ MOD_INIT()
 	}
 	memset(&r, 0, sizeof(r));
 	r.method = "server.get";
+	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_server_get;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
@@ -72,6 +74,7 @@ MOD_INIT()
 	}
 	memset(&r, 0, sizeof(r));
 	r.method = "server.module_list";
+	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_server_module_list;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{

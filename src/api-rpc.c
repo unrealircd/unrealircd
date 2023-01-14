@@ -64,6 +64,9 @@ RPCHandler *RPCHandlerAdd(Module *module, RPCHandlerInfo *mreq)
 	/* Add or update the following fields: */
 	m->owner = module;
 	m->flags = mreq->flags;
+	m->loglevel = mreq->loglevel;
+	if (!valid_loglevel(m->loglevel))
+		m->loglevel = ULOG_INFO;
 	m->call = mreq->call;
 
 	/* Add module object */
