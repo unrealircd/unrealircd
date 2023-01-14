@@ -1234,7 +1234,7 @@ void rpc_response_remote(RRPC *r)
 {
 	OutstandingRRPC *or;
 	Client *client = find_client(r->destination, NULL);
-	json_t *j;
+	json_t *json, *j;
 
 	if (!client)
 		return;
@@ -1243,12 +1243,26 @@ void rpc_response_remote(RRPC *r)
 	if (!or)
 		return; /* Not a known outstanding request, maybe the client left already */
 
-	j = rrpc_data(r);
-	if (!j)
+	json = rrpc_data(r);
+	if (!json)
 		return;
 
-	rpc_response(client, j, j);
-	json_decref(j);
+	if ((j = json_object_get(json, "result")))
+	{
+		rpc_response(client, json, j);
+	} else if ((j = json_object_get(json, "error")))
+	{
+		json_t *x;
+		int errorcode = 0;
+		const char *error_message = json_object_get_string(j, "message");
+		if ((x = json_object_get(j, "errorcode")))
+			errorcode = json_integer_value(x);
+		if (errorcode == 0)
+			errorcode = JSON_RPC_ERROR_INTERNAL_ERROR;
+		rpc_error(client, json, errorcode, error_message ? error_message : "");
+	}
+
+	json_decref(json);
 
 	free_outstanding_rrpc(or);
 }
