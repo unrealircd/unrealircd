@@ -308,7 +308,11 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		features = json_object();
 		json_object_set_new(server, "features", features);
 		if (!BadPtr(client->server->features.software))
-			json_object_set_new(features, "software", json_string_unreal(version));
+		{
+			char buf[256];
+			snprintf(buf, sizeof(buf), "UnrealIRCd-%s", buildid);
+			json_object_set_new(features, "software", json_string_unreal(buf));
+		}
 		json_object_set_new(features, "protocol", json_integer(UnrealProtocol));
 		if (!BadPtr(client->server->features.usermodes))
 			json_object_set_new(features, "usermodes", json_string_unreal(umodestring));

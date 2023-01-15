@@ -588,8 +588,8 @@ void _send_protoctl_servers(Client *client, int response)
 	Client *acptr;
 	int sendit = 1;
 
-	sendto_one(client, NULL, "PROTOCTL EAUTH=%s,%d,%s%s,%s",
-		me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", version);
+	sendto_one(client, NULL, "PROTOCTL EAUTH=%s,%d,%s%s,UnrealIRCd-%s",
+		me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", buildid);
 		
 	ircsnprintf(buf, sizeof(buf), "PROTOCTL SERVERS=%s", response ? "*" : "");
 
