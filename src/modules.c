@@ -1460,6 +1460,38 @@ void SavePersistentLongX(ModuleInfo *modinfo, const char *varshortname, long var
 	moddata_local_variable(m).l = var;
 }
 
+int LoadPersistentLongLongX(ModuleInfo *modinfo, const char *varshortname, long long *var)
+{
+	ModDataInfo *m;
+	const char *fullname = mod_var_name(modinfo, varshortname);
+
+	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
+	if (m)
+	{
+		*var = moddata_local_variable(m).ll;
+		return 1;
+	} else {
+		ModDataInfo mreq;
+		memset(&mreq, 0, sizeof(mreq));
+		mreq.type = MODDATATYPE_LOCAL_VARIABLE;
+		mreq.name = strdup(fullname);
+		mreq.free = NULL;
+		m = ModDataAdd(modinfo->handle, mreq);
+		moddata_local_variable(m).ll = 0;
+		safe_free(mreq.name);
+		return 0;
+	}
+}
+
+void SavePersistentLongLongX(ModuleInfo *modinfo, const char *varshortname, long long var)
+{
+	ModDataInfo *m;
+	const char *fullname = mod_var_name(modinfo, varshortname);
+
+	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
+	moddata_local_variable(m).ll = var;
+}
+
 extern int module_has_moddata(Module *mod);
 extern int module_has_extcmode_param_mode(Module *mod);
 

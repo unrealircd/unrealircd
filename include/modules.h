@@ -996,6 +996,11 @@ extern int LoadPersistentLongX(ModuleInfo *modinfo, const char *varshortname, lo
 extern void SavePersistentLongX(ModuleInfo *modinfo, const char *varshortname, long var);
 #define SavePersistentLong(modinfo, var) SavePersistentLongX(modinfo, #var, var)
 
+extern int LoadPersistentLongLongX(ModuleInfo *modinfo, const char *varshortname, long long *var);
+#define LoadPersistentLongLong(modinfo, var) LoadPersistentLongLongX(modinfo, #var, &var)
+extern void SavePersistentLongLongX(ModuleInfo *modinfo, const char *varshortname, long long var);
+#define SavePersistentLongLong(modinfo, var) SavePersistentLongLongX(modinfo, #var, var)
+
 /** Hooks trigger on "events", such as a new user connecting or joining a channel,
  * see https://www.unrealircd.org/docs/Dev:Hook_API for background info.
  * You are suggested to use CTRL+F on this page to search for any useful hook,
