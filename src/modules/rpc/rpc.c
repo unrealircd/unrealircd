@@ -687,7 +687,7 @@ void rpc_call(Client *client, json_t *request)
 		 * to make life easier of the RPC handlers (no need to check NULL).
 		 */
 		params = json_object();
-		params_allocated = 1;
+		json_object_set_new(request, "params", params);
 	}
 
 	unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
@@ -707,8 +707,6 @@ void rpc_call(Client *client, json_t *request)
 	}
 #endif
 	handler->call(client, request, params);
-	if (params_allocated)
-		json_decref(params);
 }
 
 /** Called very early on accept() of the socket, before TLS is ready */
