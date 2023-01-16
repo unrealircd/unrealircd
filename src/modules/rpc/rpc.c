@@ -634,6 +634,60 @@ void _rpc_response(Client *client, json_t *request, json_t *result)
 	safe_free(json_serialized);
 }
 
+int sanitize_params_actual(Client *client, json_t *request, const char *str)
+{
+	if (!str)
+		return 1;
+
+	if (strlen(str) > 510)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "Strings cannot be longer than 510 characters in the request");
+		return 0;
+	}
+
+	if (strchr(str, '\n') || strchr(str, '\r'))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "Strings may not contain \n or \r in the request");
+		return 0;
+	}
+
+	return 1;
+}
+
+int sanitize_params(Client *client, json_t *request, json_t *j)
+{
+	/* Check the current object itself */
+	const char *str = json_string_value(j);
+	if (str && !sanitize_params_actual(client, request, str))
+		return 0;
+
+	/* Now walk through the object, if needed */
+
+	if (json_is_array(j))
+	{
+		size_t index;
+		json_t *value;
+		json_array_foreach(j, index, value)
+		{
+			if (!sanitize_params(client, request, value))
+				return 0;
+		}
+	} else
+	if (json_is_object(j))
+	{
+		const char *key;
+		json_t *value;
+		json_object_foreach(j, key, value)
+		{
+			if (!sanitize_params_actual(client, request, key))
+				return 0;
+			if (!sanitize_params(client, request, value))
+				return 0;
+		}
+	}
+
+	return 1;
+}
 
 /** Handle the RPC request: request is in JSON */
 void rpc_call(Client *client, json_t *request)
@@ -643,7 +697,6 @@ void rpc_call(Client *client, json_t *request)
 	const char *method;
 	json_t *id;
 	json_t *params;
-	char params_allocated = 0;
 	RPCHandler *handler;
 
 	jsonrpc = json_object_get_string(request, "jsonrpc");
@@ -681,7 +734,14 @@ void rpc_call(Client *client, json_t *request)
 	}
 
 	params = json_object_get(request, "params");
-	if (!params)
+	if (params)
+	{
+		if (!(handler->flags & RPC_HANDLER_FLAGS_UNFILTERED) &&
+		    !sanitize_params(client, request, params))
+		{
+			return;
+		}
+	} else
 	{
 		/* Params is optional, so create an empty params object instead
 		 * to make life easier of the RPC handlers (no need to check NULL).

@@ -611,6 +611,7 @@ typedef struct {
 
 /** No special flags set */
 #define RPC_HANDLER_FLAGS_NONE			0x0
+#define RPC_HANDLER_FLAGS_UNFILTERED		0x1	/**< Don't filter input (don't reject strings bigger than 510 in length or containing \r or \n) */
 
 /** RPC Tag Handler */
 typedef struct RPCHandler RPCHandler;
