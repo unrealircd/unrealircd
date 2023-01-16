@@ -695,6 +695,7 @@ void rpc_call(Client *client, json_t *request)
 	json_t *t;
 	const char *jsonrpc;
 	const char *method;
+	const char *str;
 	json_t *id;
 	json_t *params;
 	RPCHandler *handler;
@@ -713,7 +714,19 @@ void rpc_call(Client *client, json_t *request)
 		return;
 	}
 
-	if (!json_is_string(id) && !json_is_integer(id))
+	if ((str = json_string_value(id)))
+	{
+		if (strlen(str) > 32)
+		{
+			rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "The 'id' cannot be longer than 32 characters in UnrealIRCd JSON-RPC");
+			return;
+		}
+		if (strchr(str, '\n') || strchr(str, '\r'))
+		{
+			rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "The 'id' may not contain \n or \r in UnrealIRCd JSON-RPC");
+			return;
+		}
+	} else if (!json_is_integer(id))
 	{
 		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "The 'id' must be a string or an integer in UnrealIRCd JSON-RPC");
 		return;
