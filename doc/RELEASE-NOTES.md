@@ -2,14 +2,14 @@ UnrealIRCd 6.0.6-git
 =================
 
 The main objective of this upcoming release is to bring out a lot of
-new JSON-RPC functionality. In 6.0.5 we made a start, in 6.0.6 it is
-expanded a lot more and a number of important bugs were fixed, thanks
+new JSON-RPC functionality. In 6.0.5 we made a start and in 6.0.6 it is
+expanded a lot, plus some important bugs were fixed. All this thanks
 to all the users who have been testing the functionality.
 
 The new [UnrealIRCd Administration Webpanel](https://github.com/unrealircd/unrealircd-webpanel/)
-is usable now. It allows admins to view the users/channels/servers lists,
-view detailed information on users and channels, manage server bans and
-spamfilters, etc.
+is very much usable now. It allows admins to view the users/channels/servers
+lists, view detailed information on users and channels, manage server bans
+and spamfilters, all from your browser.
 
 Both the JSON-RPC and the webpanel are work in progress. They will improve
 and expand with more features over time.
@@ -41,22 +41,41 @@ JSON-RPC or the webpanel then there is no reason to upgrade to 6.0.6.
     [Technical documentation](https://www.unrealircd.org/docs/JSON-RPC:Technical_documentation)
     for all info on the different RPC calls and the protocol.
   * Some functionality requires all servers to be on 6.0.6 or later.
-  * We now support RPC calls over the network as well. This means you
-    only need to have one server with a listen::options::rpc block,
-    where the webpanel (or other software) only accesses that single server,
-    and UnrealIRCd takes care of distributing RPC requests to other servers.
-    If you load the `rpc.modules.default.conf` on all servers then `server.module_list`
-    work for remote servers too, and `server.rehash` can return output.
-    Right now this is only needed for these 2 API calls, but in the future it
-    may be needed for more.
+  * Some functionality requires all servers to include
+    `rpc.modules.default.conf` instead of only the single server that
+    the webpanel (or whatever) interfaces with through JSON-RPC.
+    When all servers have that file included then the API call
+    `server.module_list` can work for remote servers, and the API call
+    `server.rehash` for remote servers can return the actual rehash result
+    and a full log of the rehash process. It is not used for any other
+    API call at the moment, but in the future more API calls may need this
+    functionality because it allows us to do things that are otherwise impossible
+    or very hard.
+  * Known issue: logging of RPC actions needs to be improved. For some API calls,
+    like adding of server bans and spamfilters, this already works, but in
+    other API calls it is not clearly logged yet "who did what".
 
 ### Changes:
 * Previously some server protocol commands could only be used by
-  services, commands such as SVSJOIN and SVSPART. We now allow SVS*
+  services, commands such as `SVSJOIN` and `SVSPART`. We now allow SVS*
   command to be used by any servers, so the JSON-RPC API can use them.
   There's a new option
   [set::limit-svscmds](https://www.unrealircd.org/docs/Set_block#set::limit-svscmds)
   so one can revert back to the original situation, if needed.
+* All JSON-RPC calls that don't change anything, such as `user.list`
+  are now logged in the `rpc.debug` facility. Any call that changes
+  anything like `user.join` or `spamfilter.add` is logged via `rpc.info`.
+  This because JSON-RPC calls can be quite noisy and logging the
+  read-only calls is generally not so interesting.
+
+### Fixes:
+* A crash in UnrealIRCd 6.0.5 when using JSON-RPC that happened quite often
+* Fix parsing services version (anope) in `EAUTH`.
+
+### Developers and protocol:
+* A new `RRPC` server to server command to handle RPC-over-IRC.
+  This way the JSON-RPC user, like the admin panel, can interface with
+  a remote server.
 
 UnrealIRCd 6.0.5
 -----------------
