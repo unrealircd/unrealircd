@@ -1,20 +1,54 @@
 UnrealIRCd 6.0.6-git
 =================
 
-This is work in progress.
+The main objective of this upcoming release is to bring out a lot of
+new JSON-RPC functionality. In 6.0.5 we made a start, in 6.0.6 it is
+expanded a lot more and a number of important bugs were fixed, thanks
+to all the users who have been testing the functionality.
+
+The new [UnrealIRCd Administration Webpanel](https://github.com/unrealircd/unrealircd-webpanel/)
+is usable now. It allows admins to view the users/channels/servers lists,
+view detailed information on users and channels, manage server bans and
+spamfilters, etc.
+
+Both the JSON-RPC and the webpanel are work in progress. They will improve
+and expand with more features over time.
+
+If you are already using UnrealIRCd 6.0.5 and you are not interested in
+JSON-RPC or the webpanel then there is no reason to upgrade to 6.0.6.
 
 ### Enhancements:
 * The [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) API for
-  UnrealIRCd now supports a lot more methods:
-  * [user.*](https://www.unrealircd.org/docs/JSON-RPC:User)
-    now has: `set_nick`, `set_username`, `set_vhost`, `set_mode`,
-    `set_snomask`, `set_oper`, `join`, `part`, `quit`, `kill`.
-  * IMPORTANT: many user.* calls require *all* servers on the
-    network to be using UnrealIRCd 6.0.6-git or later, because
-    behind the scenes they use SVS* commands (see also below under
-    *Changes*).
-  * [channel.*](https://www.unrealircd.org/docs/JSON-RPC:Channel)
-    now has: `set_mode`, `set_topic`
+  UnrealIRCd has been expanded a lot. From 12 API methods to 42:
+  <code>stats.get</code>, <code>rpc.info</code>, <code>user.part</code>,
+  <code>user.join</code>, <code>user.quit</code>, <code>user.kill</code>,
+  <code>user.set_oper</code>, <code>user.set_snomask</code>, <code>user.set_mode</code>,
+  <code>user.set_vhost</code>, <code>user.set_realname</code>,
+  <code>user.set_username</code>, <code>user.set_nick</code>, <code>user.get</code>,
+  <code>user.list</code>, <code>server.module_list</code>, <code>server.disconnect</code>,
+  <code>server.connect</code>, <code>server.rehash</code>, <code>server.get</code>,
+  <code>server.list</code>, <code>channel.kick</code>, <code>channel.set_topic</code>,
+  <code>channel.set_mode</code>, <code>channel.get</code>, <code>channel.list</code>,
+  <code>server_ban.add</code>, <code>server_ban.del</code>, <code>server_ban.get</code>,
+  <code>server_ban.list</code>, <code>server_ban_exception.add</code>,
+  <code>server_ban_exception.del</code>, <code>server_ban_exception.get</code>,
+  <code>server_ban_exception.list</code>, <code>name_ban.add</code>,
+  <code>name_ban.del</code>, <code>name_ban.get</code>, <code>name_ban.list</code>,
+  <code>spamfilter.add</code>, <code>spamfilter.del</code>, <code>spamfilter.get</code>,
+  <code>spamfilter.list</code>.
+  * Server admins can read the [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC)
+    documentation on how to get started. For developers, see the
+    [Technical documentation](https://www.unrealircd.org/docs/JSON-RPC:Technical_documentation)
+    for all info on the different RPC calls and the protocol.
+  * Some functionality requires all servers to be on 6.0.6 or later.
+  * We now support RPC calls over the network as well. This means you
+    only need to have one server with a listen::options::rpc block,
+    where the webpanel (or other software) only accesses that single server,
+    and UnrealIRCd takes care of distributing RPC requests to other servers.
+    If you load the `rpc.modules.default.conf` on all servers then `server.module_list`
+    work for remote servers too, and `server.rehash` can return output.
+    Right now this is only needed for these 2 API calls, but in the future it
+    may be needed for more.
 
 ### Changes:
 * Previously some server protocol commands could only be used by
