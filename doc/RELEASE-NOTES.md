@@ -9,12 +9,12 @@ to all the users who have been testing the functionality.
 The new [UnrealIRCd Administration Webpanel](https://github.com/unrealircd/unrealircd-webpanel/)
 is very much usable now. It allows admins to view the users/channels/servers
 lists, view detailed information on users and channels, manage server bans
-and spamfilters, all from your browser.
+and spamfilters, all from the browser.
 
 Both the JSON-RPC and the webpanel are work in progress. They will improve
 and expand with more features over time.
 
-If you are already using UnrealIRCd 6.0.5 and you are not interested in
+If you are already using UnrealIRCd 6.0.5 and you are NOT interested in
 JSON-RPC or the webpanel then there is no reason to upgrade to 6.0.6.
 
 ### Enhancements:
@@ -69,13 +69,16 @@ JSON-RPC or the webpanel then there is no reason to upgrade to 6.0.6.
   read-only calls is generally not so interesting.
 
 ### Fixes:
-* A crash in UnrealIRCd 6.0.5 when using JSON-RPC that happened quite often
+* When using JSON-RPC with UnrealIRCd 6.0.5 it would often crash
 * Fix parsing services version (anope) in `EAUTH`.
 
 ### Developers and protocol:
 * A new `RRPC` server to server command to handle RPC-over-IRC.
   This way the JSON-RPC user, like the admin panel, can interface with
-  a remote server.
+  a remote server. If you are writing an RPC handler, then the remote
+  RPC request does not look much different than a local one, so you
+  can just process it as usual. See the code for `server.rehash` or
+  `server.module_list` for an example (src/modules/rpc/server.c).
 
 UnrealIRCd 6.0.5
 -----------------
