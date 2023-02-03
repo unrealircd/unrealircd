@@ -1,41 +1,40 @@
-UnrealIRCd 6.0.6-git
+UnrealIRCd 6.0.6
 =================
 
-The main objective of this upcoming release is to bring out a lot of
-new JSON-RPC functionality. In 6.0.5 we made a start and in 6.0.6 it is
-expanded a lot, plus some important bugs were fixed. All this thanks
-to all the users who have been testing the functionality.
+The main objective of this release is to enhance the new JSON-RPC functionality.
+In 6.0.5 we made a start and in 6.0.6 it is expanded a lot, plus some important
+bugs were fixed in it. Thanks everyone who has been testing the functionality!
 
 The new [UnrealIRCd Administration Webpanel](https://github.com/unrealircd/unrealircd-webpanel/)
-is very much usable now. It allows admins to view the users/channels/servers
-lists, view detailed information on users and channels, manage server bans
-and spamfilters, all from the browser.
+(which uses JSON-RPC) is very much usable now. It allows admins to view the
+users/channels/servers lists, view detailed information on users and channels,
+manage server bans and spamfilters, all from the browser.
 
-Both the JSON-RPC and the webpanel are work in progress. They will improve
+Both the JSON-RPC API and the webpanel are work in progress. They will improve
 and expand with more features over time.
 
 If you are already using UnrealIRCd 6.0.5 and you are NOT interested in
-JSON-RPC or the webpanel then there is no reason to upgrade to 6.0.6.
+JSON-RPC or the webpanel then there is NO reason to upgrade to 6.0.6.
 
 ### Enhancements:
 * The [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) API for
   UnrealIRCd has been expanded a lot. From 12 API methods to 42:
-  <code>stats.get</code>, <code>rpc.info</code>, <code>user.part</code>,
-  <code>user.join</code>, <code>user.quit</code>, <code>user.kill</code>,
-  <code>user.set_oper</code>, <code>user.set_snomask</code>, <code>user.set_mode</code>,
-  <code>user.set_vhost</code>, <code>user.set_realname</code>,
-  <code>user.set_username</code>, <code>user.set_nick</code>, <code>user.get</code>,
-  <code>user.list</code>, <code>server.module_list</code>, <code>server.disconnect</code>,
-  <code>server.connect</code>, <code>server.rehash</code>, <code>server.get</code>,
-  <code>server.list</code>, <code>channel.kick</code>, <code>channel.set_topic</code>,
-  <code>channel.set_mode</code>, <code>channel.get</code>, <code>channel.list</code>,
-  <code>server_ban.add</code>, <code>server_ban.del</code>, <code>server_ban.get</code>,
-  <code>server_ban.list</code>, <code>server_ban_exception.add</code>,
-  <code>server_ban_exception.del</code>, <code>server_ban_exception.get</code>,
-  <code>server_ban_exception.list</code>, <code>name_ban.add</code>,
-  <code>name_ban.del</code>, <code>name_ban.get</code>, <code>name_ban.list</code>,
-  <code>spamfilter.add</code>, <code>spamfilter.del</code>, <code>spamfilter.get</code>,
-  <code>spamfilter.list</code>.
+  `stats.get`, `rpc.info`, `user.part`,
+  `user.join`, `user.quit`, `user.kill`,
+  `user.set_oper`, `user.set_snomask`, `user.set_mode`,
+  `user.set_vhost`, `user.set_realname`,
+  `user.set_username`, `user.set_nick`, `user.get`,
+  `user.list`, `server.module_list`, `server.disconnect`,
+  `server.connect`, `server.rehash`, `server.get`,
+  `server.list`, `channel.kick`, `channel.set_topic`,
+  `channel.set_mode`, `channel.get`, `channel.list`,
+  `server_ban.add`, `server_ban.del`, `server_ban.get`,
+  `server_ban.list`, `server_ban_exception.add`,
+  `server_ban_exception.del`, `server_ban_exception.get`,
+  `server_ban_exception.list`, `name_ban.add`,
+  `name_ban.del`, `name_ban.get`, `name_ban.list`,
+  `spamfilter.add`, `spamfilter.del`, `spamfilter.get`,
+  `spamfilter.list`.
   * Server admins can read the [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC)
     documentation on how to get started. For developers, see the
     [Technical documentation](https://www.unrealircd.org/docs/JSON-RPC:Technical_documentation)
@@ -43,7 +42,7 @@ JSON-RPC or the webpanel then there is no reason to upgrade to 6.0.6.
   * Some functionality requires all servers to be on 6.0.6 or later.
   * Some functionality requires all servers to include
     `rpc.modules.default.conf` instead of only the single server that
-    the webpanel (or whatever) interfaces with through JSON-RPC.
+    the webpanel interfaces with through JSON-RPC.
     When all servers have that file included then the API call
     `server.module_list` can work for remote servers, and the API call
     `server.rehash` for remote servers can return the actual rehash result
