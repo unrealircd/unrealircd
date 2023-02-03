@@ -16,6 +16,8 @@ and expand with more features over time.
 If you are already using UnrealIRCd 6.0.5 and you are NOT interested in
 JSON-RPC or the webpanel then there is NO reason to upgrade to 6.0.6.
 
+As usual, on *NIX you can easily upgrade with `./unrealircd upgrade`
+
 ### Enhancements:
 * The [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) API for
   UnrealIRCd has been expanded a lot. From 12 API methods to 42:
