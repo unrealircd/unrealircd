@@ -5,13 +5,19 @@ This is the git version (development version) for future 6.0.7. This is work
 in progress.
 
 ### Enhancements:
-* Add support for remote IRCv3 Standard Replies (`SREPLY` server-to-server command)
+* Add support for remote IRCv3 Standard Replies (`SREPLY` server-to-server
+  command)
 * Allow services to send a couple of protocol messages in the
   unregistered / SASL stage. These are: `CHGHOST`, `CHGIDENT`
   and `SREPLY`
   * This allows services to set the vhost on a user during SASL,
     so the user receives the vhost straight from the start, before
     all the auto-joining/re-rejoining of channels.
+
+### Changes:
+* We now verify that all servers have
+  [ulines { }](https://www.unrealircd.org/docs/Ulines_block) for Anope and
+  Atheme servers and reject the link if this is not the case.
 
 UnrealIRCd 6.0.6
 -----------------
