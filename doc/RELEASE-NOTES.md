@@ -1,5 +1,12 @@
-UnrealIRCd 6.0.6
+UnrealIRCd 6.0.7-git
 =================
+
+This is the git version (development version) for future 6.0.7. This is work
+in progress.
+
+
+UnrealIRCd 6.0.6
+-----------------
 
 The main objective of this release is to enhance the new JSON-RPC functionality.
 In 6.0.5 we made a start and in 6.0.6 it is expanded a lot, plus some important
