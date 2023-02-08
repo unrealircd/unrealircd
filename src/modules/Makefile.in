@@ -42,7 +42,7 @@ MODULES= \
 	away.so svsnoop.so svsnick.so svso.so svslogin.so \
 	chgname.so kill.so \
 	lag.so message.so oper.so pingpong.so \
-	quit.so sendumode.so sqline.so \
+	quit.so sendumode.so sqline.so sreply.so \
 	tsctl.so unsqline.so whois.so \
 	tkl.so vhost.so cycle.so svsjoin.so svspart.so \
 	svswatch.so svssilence.so sendsno.so svssno.so \
