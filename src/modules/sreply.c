@@ -69,13 +69,13 @@ CMD_FUNC(cmd_sreply)
 	if (MyUser(target))
 	{
 		if (!strcmp(parv[2],"F"))
-			sendto_one(target, recv_mtags, ":%s FAIL %s", target->uplink->name, parv[3]);
+			sendto_one(target, recv_mtags, ":%s FAIL %s", client->name, parv[3]);
 
 		else if (!strcmp(parv[2],"W"))
-			sendto_one(target, recv_mtags, ":%s WARN %s", target->uplink->name, parv[3]);
+			sendto_one(target, recv_mtags, ":%s WARN %s", client->name, parv[3]);
 
 		else if (!strcmp(parv[2],"N"))
-			sendto_one(target, recv_mtags, ":%s NOTE %s", target->uplink->name, parv[3]);
+			sendto_one(target, recv_mtags, ":%s NOTE %s", client->name, parv[3]);
 
 		else // error
 			return;
