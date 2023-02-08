@@ -63,12 +63,16 @@ CMD_FUNC(cmd_sreply)
 {
 	Client *target;
 
-	if ((parc < 4) || !(target = find_user(parv[1], NULL)))
+	if (parc < 4)
+		return;
+
+	target = find_user(parv[1], NULL);
+	if (!target && !(target = find_server_by_uid(parv[1])))
 		return;
 
 	if (!MyUser(target))
 	{
-		/* Remote user... */
+		/* Target is a remote user/server */
 		sendto_one(target, recv_mtags, ":%s SREPLY %s %s :%s", client->name, parv[1], parv[2], parv[3]);
 		return;
 	}
