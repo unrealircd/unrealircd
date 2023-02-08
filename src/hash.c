@@ -720,3 +720,21 @@ int throttle_can_connect(Client *client)
 		return 2;
 	}
 }
+
+/** Find a server by the SID-part of a UID.
+ * Eg you pass "001ABCDEFG" and it would look up server "001".
+ *
+ * @param uid	The UID, eg 001ABCDEFG
+ * @returns Server where the UID would be hosted on, or NULL
+ * if no such server is linked.
+ */
+Client *find_server_by_uid(const char *uid)
+{
+	char sid[SIDLEN+1];
+
+	if (!isdigit(*uid))
+		return NULL; /* not a UID/SID */
+
+	strlcpy(sid, uid, sizeof(sid));
+	return hash_find_id(sid, NULL);
+}
