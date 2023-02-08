@@ -104,6 +104,14 @@ CMD_FUNC(sinfo_server)
 	else
 		safe_strdup(client->server->features.software, parv[parc-1]);
 
+	if (is_services_but_not_ulined(client))
+	{
+		char buf[512];
+		snprintf(buf, sizeof(buf), "Services detected but no ulines { } for server name %s", client->name);
+		exit_client_ex(client, &me, NULL, buf);
+		return;
+	}
+
 	/* Broadcast to 'the other side' of the net */
 	concat_params(buf, sizeof(buf), parc, parv);
 	sendto_server(client, 0, 0, NULL, ":%s SINFO %s", client->id, buf);

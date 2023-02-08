@@ -106,6 +106,7 @@ int (*do_remote_nick_name)(char *nick);
 const char *(*charsys_get_current_languages)(void);
 void (*broadcast_sinfo)(Client *client, Client *to, Client *except);
 void (*connect_server)(ConfigItem_link *aconf, Client *by, struct hostent *hp);
+int (*is_services_but_not_ulined)(Client *client);
 void (*parse_message_tags)(Client *client, char **str, MessageTag **mtag_list);
 const char *(*mtags_to_string)(MessageTag *m, Client *client);
 int (*can_send_to_channel)(Client *client, Channel *channel, const char **msgtext, const char **errmsg, int notice);
@@ -389,6 +390,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_CHARSYS_GET_CURRENT_LANGUAGES, charsys_get_current_languages, NULL);
 	efunc_init_function(EFUNC_BROADCAST_SINFO, broadcast_sinfo, NULL);
 	efunc_init_function(EFUNC_CONNECT_SERVER, connect_server, NULL);
+	efunc_init_function(EFUNC_IS_SERVICES_BUT_NOT_ULINED, is_services_but_not_ulined, NULL);
 	efunc_init_function(EFUNC_PARSE_MESSAGE_TAGS, parse_message_tags, &parse_message_tags_default_handler);
 	efunc_init_function(EFUNC_MTAGS_TO_STRING, mtags_to_string, &mtags_to_string_default_handler);
 	efunc_init_function(EFUNC_TKL_CHARTOTYPE, tkl_chartotype, NULL);

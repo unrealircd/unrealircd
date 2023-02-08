@@ -57,6 +57,7 @@ void server_generic_free(ModData *m);
 int server_post_connect(Client *client);
 void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp);
 static int connect_server_helper(ConfigItem_link *, Client *);
+int _is_services_but_not_ulined(Client *client);
 
 /* Global variables */
 static cfgstruct cfg;
@@ -81,6 +82,7 @@ MOD_TEST()
 	EfunctionAdd(modinfo->handle, EFUNC_CHECK_DENY_VERSION, _check_deny_version);
 	EfunctionAddVoid(modinfo->handle, EFUNC_BROADCAST_SINFO, _broadcast_sinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_CONNECT_SERVER, _connect_server);
+	EfunctionAdd(modinfo->handle, EFUNC_IS_SERVICES_BUT_NOT_ULINED, _is_services_but_not_ulined);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, server_config_test);
 	return MOD_SUCCESS;
 }
@@ -1979,3 +1981,25 @@ static int connect_server_helper(ConfigItem_link *aconf, Client *client)
 	return 1;
 }
 
+int _is_services_but_not_ulined(Client *client)
+{
+	if (!client->server || !client->server->features.software || !*client->name)
+		return 0; /* cannot detect software version or name not available yet */
+
+	if (our_strcasestr(client->server->features.software, "anope") ||
+	    our_strcasestr(client->server->features.software, "atheme"))
+	{
+		if (!find_uline(client->name))
+		{
+			unreal_log(ULOG_ERROR, "link", "LINK_NO_ULINES", client,
+			           "Server $client is a services server ($software). "
+			           "However, server $me does not have $client in the ulines { } block, "
+			           "which is required for services servers. "
+			           "See https://www.unrealircd.org/docs/Ulines_block",
+			           log_data_client("me", &me),
+			           log_data_string("software", client->server->features.software));
+			return 1; /* Is services AND no ulines { } entry */
+		}
+	}
+	return 0;
+}

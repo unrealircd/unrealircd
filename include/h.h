@@ -820,6 +820,7 @@ extern MODVAR int (*do_remote_nick_name)(char *nick);
 extern MODVAR const char *(*charsys_get_current_languages)(void);
 extern MODVAR void (*broadcast_sinfo)(Client *acptr, Client *to, Client *except);
 extern MODVAR void (*connect_server)(ConfigItem_link *aconf, Client *by, struct hostent *hp);
+extern MODVAR int (*is_services_but_not_ulined)(Client *client);
 extern MODVAR void (*parse_message_tags)(Client *cptr, char **str, MessageTag **mtag_list);
 extern MODVAR const char *(*mtags_to_string)(MessageTag *m, Client *acptr);
 extern MODVAR int (*can_send_to_channel)(Client *cptr, Channel *channel, const char **msgtext, const char **errmsg, int notice);

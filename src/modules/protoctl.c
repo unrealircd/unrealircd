@@ -277,6 +277,11 @@ CMD_FUNC(cmd_protoctl)
 				client->server->features.protocol = atoi(protocol);
 			if (software)
 				safe_strdup(client->server->features.software, software);
+			if (is_services_but_not_ulined(client))
+			{
+				exit_client_fmt(client, NULL, "Services detected but no ulines { } for server name %s", client->name);
+				return;
+			}
 			if (!IsHandshake(client) && aconf) /* Send PASS early... */
 				sendto_one(client, NULL, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 		}
