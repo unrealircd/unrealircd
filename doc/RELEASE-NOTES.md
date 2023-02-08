@@ -4,6 +4,14 @@ UnrealIRCd 6.0.7-git
 This is the git version (development version) for future 6.0.7. This is work
 in progress.
 
+### Enhancements:
+* Add support for remote IRCv3 Standard Replies (`SREPLY` server-to-server command)
+* Allow services to send a couple of protocol messages in the
+  unregistered / SASL stage. These are: `CHGHOST`, `CHGIDENT`
+  and `SREPLY`
+  * This allows services to set the vhost on a user during SASL,
+    so the user receives the vhost straight from the start, before
+    all the auto-joining/re-rejoining of channels.
 
 UnrealIRCd 6.0.6
 -----------------
