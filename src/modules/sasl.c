@@ -179,6 +179,9 @@ CMD_FUNC(cmd_authenticate)
 		return;
 	}
 
+	if (client->user == NULL)
+		make_user(client);
+
 	if (*client->local->sasl_agent)
 		agent_p = find_client(client->local->sasl_agent, NULL);
 

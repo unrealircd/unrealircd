@@ -298,12 +298,17 @@ void send_first_auth(Client *client)
 	Client *sasl_server;
 	char *addr = BadPtr(client->ip) ? "0" : client->ip;
 	const char *certfp = moddata_client_get(client, "certfp");
+
 	sasl_server = find_client(SASL_SERVER, NULL);
 	if (!sasl_server)
 	{
 		/* Services down. */
 		return;
 	}
+
+	/* Make them a user, needed for CHGHOST etc that we may receive */
+	if (!client->user)
+		make_user(client);
 
 	sendto_one(sasl_server, NULL, ":%s SASL %s %s H %s %s",
 	    me.id, SASL_SERVER, client->id, addr, addr);

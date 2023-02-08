@@ -91,7 +91,21 @@ CMD_FUNC(cmd_chgident)
 		return;
 	}
 
-	if (!(target = find_user(parv[1], NULL)))
+	target = find_client(parv[1], NULL);
+	if (!MyUser(client) && !target && (target = find_server_by_uid(parv[1])))
+	{
+		/* CHGIDENT for a UID that is not online.
+		 * Let's assume it may not YET be online and forward the message to
+		 * the remote server and stop processing ourselves.
+		 * That server will then handle pre-registered processing of the
+		 * CHGIDENT and later communicate the host when the user actually
+		 * comes online in the UID message.
+		 */
+		sendto_one(target, recv_mtags, ":%s CHGIDENT %s %s", client->id, parv[1], parv[2]);
+		return;
+	}
+
+	if (!target || !target->user)
 	{
 		sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
 		return;
@@ -130,9 +144,10 @@ CMD_FUNC(cmd_chgident)
 		           log_data_string("new_username", parv[2]));
 	}
 
-	sendto_server(client, 0, 0, NULL, ":%s CHGIDENT %s %s",
-	    client->id, target->id, parv[2]);
-	ircsnprintf(target->user->username, sizeof(target->user->username), "%s", parv[2]);
+	/* Send to other servers too, unless the client is still in the registration phase (SASL) */
+	if (IsUser(target))
+		sendto_server(client, 0, 0, NULL, ":%s CHGIDENT %s %s", client->id, target->id, parv[2]);
 
+	ircsnprintf(target->user->username, sizeof(target->user->username), "%s", parv[2]);
 	userhost_changed(target);
 }

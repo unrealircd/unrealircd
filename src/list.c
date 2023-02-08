@@ -229,8 +229,12 @@ User *make_user(Client *client)
 		} else {
 			*user->realhost = '\0';
 		}
-		user->virthost = NULL;
-		client->user = user;		
+		client->user = user;
+		/* These may change later (eg when using hostname instead of IP),
+		 * but we now set it early.
+		 */
+		make_cloakedhost(client, client->user->realhost, client->user->cloakedhost, sizeof(client->user->cloakedhost));
+		safe_strdup(client->user->virthost, client->user->cloakedhost);
 	}
 	return user;
 }

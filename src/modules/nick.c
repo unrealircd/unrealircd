@@ -1082,7 +1082,10 @@ int _register_user(Client *client)
 	SetUser(client);
 
 	make_cloakedhost(client, client->user->realhost, client->user->cloakedhost, sizeof(client->user->cloakedhost));
-	safe_strdup(client->user->virthost, client->user->cloakedhost);
+
+	/* client->user->virthost should never be empty */
+	if (!IsSetHost(client) || !client->user->virthost)
+		safe_strdup(client->user->virthost, client->user->cloakedhost);
 
 	snprintf(descbuf, sizeof descbuf, "Client: %s", client->name);
 	fd_desc(client->local->fd, descbuf);
