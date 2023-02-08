@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SREPLY, cmd_sreply, MAXPARA, CMD_SERVER);
+	CommandAdd(modinfo->handle, "SREPLY", cmd_sreply, MAXPARA, CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -66,21 +66,18 @@ CMD_FUNC(cmd_sreply)
 	if ((parc < 4) || !(target = find_user(parv[1], NULL)))
 		return;
 
-	if (MyUser(target))
+	if (!MyUser(target))
 	{
-		if (!strcmp(parv[2],"F"))
-			sendto_one(target, recv_mtags, ":%s FAIL %s", client->name, parv[3]);
-
-		else if (!strcmp(parv[2],"W"))
-			sendto_one(target, recv_mtags, ":%s WARN %s", client->name, parv[3]);
-
-		else if (!strcmp(parv[2],"N"))
-			sendto_one(target, recv_mtags, ":%s NOTE %s", client->name, parv[3]);
-
-		else // error
-			return;
-	}
-	else
+		/* Remote user... */
 		sendto_one(target, recv_mtags, ":%s SREPLY %s %s :%s", client->name, parv[1], parv[2], parv[3]);
-}
+		return;
+	}
 
+	/* For a locally connected user... */
+	if (!strcmp(parv[2],"F"))
+		sendto_one(target, recv_mtags, ":%s FAIL %s", client->name, parv[3]);
+	else if (!strcmp(parv[2],"W"))
+		sendto_one(target, recv_mtags, ":%s WARN %s", client->name, parv[3]);
+	else if (!strcmp(parv[2],"N"))
+		sendto_one(target, recv_mtags, ":%s NOTE %s", client->name, parv[3]);
+}
