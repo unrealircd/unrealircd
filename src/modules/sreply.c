@@ -24,9 +24,6 @@
 
 CMD_FUNC(cmd_sreply);
 
-/* Place includes here */
-#define MSG_SREPLY       "SREPLY"
-
 ModuleHeader MOD_HEADER
   = {
 	"sreply",	/* Name of module */
@@ -39,7 +36,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SREPLY, cmd_sreply, 3, CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_SREPLY, cmd_sreply, MAXPARA, CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -84,6 +81,6 @@ CMD_FUNC(cmd_sreply)
 			return;
 	}
 	else
-		sendto_server(client, 0, 0, recv_mtags, ":%s %s %s %s %s", client->name, MSG_SREPLY, parv[1], parv[2], parv[3]);
+		sendto_one(target, recv_mtags, ":%s SREPLY %s %s :%s", client->name, parv[1], parv[2], parv[3]);
 }
 
