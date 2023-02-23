@@ -1343,3 +1343,5 @@ src/modules/whowas.dll: src/modules/whowas.c $(INCLUDES)
 src/modules/whox.dll: src/modules/whox.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/whox.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/whox.pdb $(MODLFLAGS)
 
+src/modules/oper-tag.dll: src/modules/oper-tag.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/oper-tag.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/oper-tag.pdb $(MODLFLAGS)
