@@ -2154,7 +2154,12 @@ int terminal_supports_color(void)
 #ifndef _WIN32
 	char *s;
 
-	/* Yeah we check all of stdin, stdout, stderr, because
+	/* Support NO_COLOR as per https://no-color.org */
+	s = getenv("NO_COLOR");
+	if (s != NULL && s[0] != '\0')
+		return 0;
+
+	/* Yeah we check all of stdin, stdout, stderr, because one
 	 * or more may be redirected (bin/unrealircd >log 2>&1),
 	 * and then we want to say no to color support.
 	 */
