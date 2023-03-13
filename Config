@@ -364,7 +364,7 @@ fi
 clear
 
 if [ -f "doc/Config.header" -a -z "$NOINTRO" ] ; then
-	more doc/Config.header
+	cat doc/Config.header
 	echo ""
 	echo $n "[Press Enter to continue]"
 	read cc
