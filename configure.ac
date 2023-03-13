@@ -257,6 +257,9 @@ check_cc_flag([-Wsign-compare], [CFLAGS="$CFLAGS -Wno-sign-compare"])
 dnl Don't warn about empty body, we use this, eg via Debug(()) or in if's.
 check_cc_flag([-Wempty-body], [CFLAGS="$CFLAGS -Wno-empty-body"])
 
+dnl This warns about all our hook calls - RunHook() and others
+check_cc_flag([-Wdeprecated-non-prototype], [CFLAGS="$CFLAGS -Wno-deprecated-non-prototype"])
+
 dnl Yeah this old clang version is a bit problematic
 dnl (ships in Ubuntu 16.04 for example)
 dnl -Wtautological-compare has false positives
