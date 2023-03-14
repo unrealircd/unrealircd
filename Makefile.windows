@@ -1154,6 +1154,9 @@ src/modules/sqline.dll: src/modules/sqline.c $(INCLUDES)
 src/modules/squit.dll: src/modules/squit.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/squit.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/squit.pdb $(MODLFLAGS)
 
+src/modules/sreply.dll: src/modules/sreply.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/sreply.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/sreply.pdb $(MODLFLAGS)
+
 src/modules/staff.dll: src/modules/staff.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/staff.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/staff.pdb $(MODLFLAGS)
 
