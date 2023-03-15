@@ -38,6 +38,12 @@ long CAP_JSON_LOG = 0L;
 int json_log_mtag_is_ok(Client *client, const char *name, const char *value);
 int json_log_mtag_should_send_to_client(Client *target);
 
+MOD_TEST()
+{
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, -1000000001); /* load very early */
+	return MOD_SUCCESS;
+}
+
 MOD_INIT()
 {
 	ClientCapabilityInfo cap;
@@ -57,6 +63,7 @@ MOD_INIT()
 	mtag.clicap_handler = c;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
 
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, 1000000001); /* unload very late */
 	return MOD_SUCCESS;
 }
 
