@@ -850,8 +850,10 @@ typedef struct Whowas {
 	char *username;
 	char *hostname;
 	char *virthost;
+	char *ip;
 	char *servername;
 	char *realname;
+	char *account;
 	long umodes;
 	time_t   logoff;
 	struct Client *online;	/* Pointer to new nickname for chasing or NULL */

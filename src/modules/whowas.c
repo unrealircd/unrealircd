@@ -104,6 +104,19 @@ CMD_FUNC(cmd_whowas)
 			    (*temp->virthost !=
 			    '\0') ? temp->virthost : temp->hostname),
 			    temp->realname);
+			if (!BadPtr(temp->ip) && ValidatePermissionsForPath("client:see:ip",client,NULL,NULL,NULL))
+			{
+				sendnumericfmt(client, RPL_WHOISHOST, "%s :was connecting from %s@%s %s",
+					temp->name,
+					temp->username, temp->hostname,
+					temp->ip ? temp->ip : "");
+			}
+			if (IsOper(client) && !BadPtr(temp->account))
+			{
+				sendnumericfmt(client, RPL_WHOISLOGGEDIN, "%s %s :was logged in as",
+					temp->name,
+					temp->account);
+			}
 			if (!((find_uline(temp->servername)) && !IsOper(client) && HIDE_ULINES))
 			{
 				sendnumeric(client, RPL_WHOISSERVER, temp->name, temp->servername,
