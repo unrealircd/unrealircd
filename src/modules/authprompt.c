@@ -383,8 +383,18 @@ void authprompt_tag_as_auth_required(Client *client, const char *reason)
 
 void authprompt_send_auth_required_message(Client *client)
 {
+	/* Send the standard-reply ACCOUNT_REQUIRED_TO_CONNECT if the client supports receiving it */
+	if (HasCapability(client, "standard-replies"))
+	{
+		const char *reason = SEUSER(client) && SEUSER(client)->reason ? SEUSER(client)->reason : NULL;
+		if (reason)
+			sendto_one(client, NULL, "FAIL * ACCOUNT_REQUIRED_TO_CONNECT :An account is required to connect: %s", reason);
+		else
+			sendto_one(client, NULL, "FAIL * ACCOUNT_REQUIRED_TO_CONNECT :An account is required to connect");
+	}
+
 	/* Display set::authentication-prompt::message */
-		sendnotice_multiline(client, cfg.message);
+	sendnotice_multiline(client, cfg.message);
 }
 
 /* Called upon "place a host ban on this user" (eg: spamfilter, blacklist, ..) */
@@ -395,10 +405,6 @@ int authprompt_place_host_ban(Client *client, int action, const char *reason, lo
 	 */
 	if (IsSoftBanAction(action) && !IsLoggedIn(client) && !IsUser(client) && cfg.enabled)
 	{
-		/* Send ban reason */
-		if (reason)
-			sendnotice(client, "%s", reason);
-
 		/* And tag the user */
 		authprompt_tag_as_auth_required(client, reason);
 		authprompt_send_auth_required_message(client);
@@ -419,10 +425,6 @@ int authprompt_find_tkline_match(Client *client, TKL *tkl)
 	   !IsLoggedIn(client) &&
 	   !IsUser(client))
 	{
-		/* Send ban reason */
-		if (tkl->ptr.serverban->reason)
-			sendnotice(client, "%s", tkl->ptr.serverban->reason);
-
 		/* And tag the user */
 		authprompt_tag_as_auth_required(client, tkl->ptr.serverban->reason);
 		authprompt_send_auth_required_message(client);
