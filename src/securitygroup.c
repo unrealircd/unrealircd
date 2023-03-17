@@ -168,6 +168,10 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 	{
 		CheckNullX(cep);
 	} else
+	if (!strcmp(cep->name, "websocket") || !strcmp(cep->name, "exclude-websocket"))
+	{
+		CheckNullX(cep);
+	} else
 	if (!strcmp(cep->name, "identified") || !strcmp(cep->name, "exclude-identified"))
 	{
 		CheckNullX(cep);
@@ -365,6 +369,8 @@ int conf_match_item(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
 
 	if (!strcmp(cep->name, "webirc"))
 		s->webirc = config_checkval(cep->value, CFG_YESNO);
+	if (!strcmp(cep->name, "websocket"))
+		s->websocket = config_checkval(cep->value, CFG_YESNO);
 	else if (!strcmp(cep->name, "identified"))
 		s->identified = config_checkval(cep->value, CFG_YESNO);
 	else if (!strcmp(cep->name, "tls"))
@@ -397,6 +403,8 @@ int conf_match_item(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
 	}
 	else if (!strcmp(cep->name, "exclude-webirc"))
 		s->exclude_webirc = config_checkval(cep->value, CFG_YESNO);
+	else if (!strcmp(cep->name, "exclude-websocket"))
+		s->exclude_websocket = config_checkval(cep->value, CFG_YESNO);
 	else if (!strcmp(cep->name, "exclude-identified"))
 		s->exclude_identified = config_checkval(cep->value, CFG_YESNO);
 	else if (!strcmp(cep->name, "exclude-tls"))
@@ -596,6 +604,10 @@ void set_security_group_defaults(void)
 	s = add_security_group("webirc-users", 50);
 	s->webirc = 1;
 
+	/* Default group: websocket */
+	s = add_security_group("websocket-users", 51);
+	s->websocket = 1;
+
 	/* Default group: known-users */
 	s = add_security_group("known-users", 100);
 	s->identified = 1;
@@ -725,6 +737,8 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 		goto user_not_allowed;
 	if (s->exclude_webirc && moddata_client_get(client, "webirc"))
 		goto user_not_allowed;
+	if (s->exclude_websocket && moddata_client_get(client, "websocket"))
+		goto user_not_allowed;
 	if ((s->exclude_reputation_score > 0) && (GetReputation(client) >= s->exclude_reputation_score))
 		goto user_not_allowed;
 	if ((s->exclude_reputation_score < 0) && (GetReputation(client) < 0 - s->exclude_reputation_score))
@@ -752,6 +766,8 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 	if (s->identified && IsLoggedIn(client))
 		goto user_allowed;
 	if (s->webirc && moddata_client_get(client, "webirc"))
+		goto user_allowed;
+	if (s->websocket && moddata_client_get(client, "websocket"))
 		goto user_allowed;
 	if ((s->reputation_score > 0) && (GetReputation(client) >= s->reputation_score))
 		goto user_allowed;

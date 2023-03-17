@@ -1993,6 +1993,7 @@ struct SecurityGroup {
 	int reputation_score;
 	long connect_time;
 	int webirc;
+	int websocket;
 	int tls;
 	NameList *ip;
 	ConfigItem_mask *mask;
@@ -2003,6 +2004,7 @@ struct SecurityGroup {
 	int exclude_reputation_score;
 	long exclude_connect_time;
 	int exclude_webirc;
+	int exclude_websocket;
 	int exclude_tls;
 	NameList *exclude_ip;
 	ConfigItem_mask *exclude_mask;
