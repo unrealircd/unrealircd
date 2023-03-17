@@ -264,7 +264,7 @@ int delayjoin_is_ok(Client *client, Channel *channel, char mode, const char *par
 
 int visible_in_channel(Client *client, Channel *channel)
 {
-	return channel_is_delayed(channel) && moded_user_invisible(client, channel);
+	return (channel_is_delayed(channel) || channel_is_post_delayed(channel)) && moded_user_invisible(client, channel);
 }
 
 
