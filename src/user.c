@@ -829,6 +829,9 @@ void flood_limit_exceeded_log(Client *client, const char *floodname)
 {
 	char buf[1024];
 
+	// NOTE: If you ever change this format, there are a few more
+	// direct unreal_log() calls with "FLOOD_BLOCKED" in the file
+	// src/modules/targetfloodprot.c, so update those as well.
 	unreal_log(ULOG_INFO, "flood", "FLOOD_BLOCKED", client,
 	           "Flood blocked ($flood_type) from $client.details [$client.ip]",
 	           log_data_string("flood_type", floodname));

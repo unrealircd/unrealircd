@@ -259,7 +259,10 @@ int targetfloodprot_can_send_to_channel(Client *client, Channel *channel, Member
 	if (flood->cnt[what] >= channelcfg->cnt[what])
 	{
 		/* Flood detected */
-		flood_limit_exceeded_log(client, "target-flood-channel");
+		unreal_log(ULOG_INFO, "flood", "FLOOD_BLOCKED", client,
+			   "Flood blocked ($flood_type) from $client.details [$client.ip] to $channel",
+			   log_data_string("flood_type", "target-flood-channel"),
+			   log_data_channel("channel", channel));
 		snprintf(errbuf, sizeof(errbuf), "Channel is being flooded. Message not delivered.");
 		*errmsg = errbuf;
 		return HOOK_DENY;
@@ -306,7 +309,10 @@ int targetfloodprot_can_send_to_user(Client *client, Client *target, const char 
 	if (flood->cnt[what] >= privatecfg->cnt[what])
 	{
 		/* Flood detected */
-		flood_limit_exceeded_log(client, "target-flood-user");
+		unreal_log(ULOG_INFO, "flood", "FLOOD_BLOCKED", client,
+			   "Flood blocked ($flood_type) from $client.details [$client.ip] to $target",
+			   log_data_string("flood_type", "target-flood-user"),
+			   log_data_client("target", target));
 		snprintf(errbuf, sizeof(errbuf), "User is being flooded. Message not delivered.");
 		*errmsg = errbuf;
 		return HOOK_DENY;
