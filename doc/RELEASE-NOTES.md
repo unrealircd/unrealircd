@@ -5,14 +5,18 @@ This is the git version (development version) for future 6.0.7. This is work
 in progress.
 
 ### Enhancements:
-* Add support for remote IRCv3 Standard Replies (`SREPLY` server-to-server
-  command)
 * Allow services to send a couple of protocol messages in the
   unregistered / SASL stage. These are: `CHGHOST`, `CHGIDENT`
   and `SREPLY`
   * This allows services to set the vhost on a user during SASL,
     so the user receives the vhost straight from the start, before
     all the auto-joining/re-rejoining of channels.
+* Support for IRCv3 [Standard Replies](https://ircv3.net/specs/extensions/standard-replies).
+  Right now nothing fancy yet, other than us sending `ACCOUNT_REQUIRED_TO_CONNECT`
+  from the authprompt module when a user is
+  [soft-banned](https://www.unrealircd.org/docs/Soft_ban).
+* Add support for sending IRCv3 Standard Replies intra-server, eg
+  from services (`SREPLY` server-to-server command)
 * Support `NO_COLOR` environment variable, as per [no-color.org](https://no-color.org).
 
 ### Changes:
