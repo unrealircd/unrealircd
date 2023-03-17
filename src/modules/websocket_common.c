@@ -47,6 +47,8 @@ int websocket_handle_packet(Client *client, const char *readbuf, int length, int
 int websocket_handle_packet_ping(Client *client, const char *buf, int len);
 int websocket_handle_packet_pong(Client *client, const char *buf, int len);
 int websocket_send_pong(Client *client, const char *buf, int len);
+const char *websocket_mdata_serialize(ModData *m);
+void websocket_mdata_unserialize(const char *str, ModData *m);
 void websocket_mdata_free(ModData *m);
 
 /* Global variables */
@@ -75,10 +77,10 @@ MOD_INIT()
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "websocket";
-	mreq.serialize = NULL;
-	mreq.unserialize = NULL;
+	mreq.serialize = websocket_mdata_serialize;
+	mreq.unserialize = websocket_mdata_unserialize;
 	mreq.free = websocket_mdata_free;
-	mreq.sync = 0;
+	mreq.sync = MODDATA_SYNC_EARLY;
 	mreq.type = MODDATATYPE_CLIENT;
 	websocket_md = ModDataAdd(modinfo->handle, mreq);
 
@@ -481,4 +483,29 @@ void websocket_mdata_free(ModData *m)
 		safe_free(wsu->forwarded);
 		safe_free(m->ptr);
 	}
+}
+
+/** This only serializes wsu->type atm */
+const char *websocket_mdata_serialize(ModData *m)
+{
+	static char buf[32];
+	WebSocketUser *wsu = m->ptr;
+
+	if (!wsu)
+		return NULL; /* not set */
+
+	snprintf(buf, sizeof(buf), "%d", wsu->type);
+	return buf;
+}
+
+/** This only sets wsu->type atm */
+void websocket_mdata_unserialize(const char *str, ModData *m)
+{
+	WebSocketUser *wsu;
+	if (m)
+		websocket_mdata_free(m);
+	if (BadPtr(str))
+		return; /* empty/freed */
+	m->ptr = wsu = safe_alloc(sizeof(WebSocketUser));
+	wsu->type = atoi(str);
 }
