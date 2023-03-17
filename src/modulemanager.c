@@ -1173,7 +1173,7 @@ int mm_compile(ManagedModule *m, char *tmpfile, int test)
 		return 0;
 
 	snprintf(cmd, sizeof(cmd),
-	         "cd \"%s\"; make custommodule MODULEFILE=\"%s\"",
+	         "cd \"%s\"; $MAKE custommodule MODULEFILE=\"%s\"",
 	         BUILDDIR,
 	         filename_strip_suffix(basename, ".c")
 	         );
@@ -1312,7 +1312,7 @@ void mm_make_install(void)
 	if (no_make_install)
 		return;
 	printf("Running 'make install'...\n");
-	snprintf(cmd, sizeof(cmd), "cd \"%s\"; make install 1>/dev/null 2>&1", BUILDDIR);
+	snprintf(cmd, sizeof(cmd), "cd \"%s\"; $MAKE install 1>/dev/null 2>&1", BUILDDIR);
 	n = system(cmd);
 }
 
@@ -1652,6 +1652,46 @@ void mm_parse_c_file(int argc, char *args[])
 	exit(0);
 }
 
+int mm_detect_make_is_gmake(void)
+{
+	FILE *fd;
+	char buf[512];
+
+	fd = popen("$MAKE --version 2>&1", "r");
+	if (fd)
+	{
+		*buf = '\0';
+		fgets(buf, sizeof(buf), fd);
+		pclose(fd);
+		if (strstr(buf, "GNU Make"))
+			return 1; /* Good! We are done. */
+	}
+	return 0;
+}
+
+void mm_detect_make(void)
+{
+	FILE *fd;
+	char *s;
+	char buf[512];
+
+	/* Get or set $MAKE */
+	s = getenv("MAKE");
+	if (!s)
+		setenv("MAKE", "make", 1);
+
+	if (mm_detect_make_is_gmake())
+		return;
+
+	/* Try again with MAKE=gmake */
+	setenv("MAKE", "gmake", 1);
+	if (mm_detect_make_is_gmake())
+		return;
+
+	fprintf(stderr, "ERROR: GNU Make is not found as 'make' or 'gmake'\n");
+	exit(-1);
+}
+
 void mm_self_test(void)
 {
 	char name[512];
@@ -1672,6 +1712,7 @@ void mm_self_test(void)
 			exit(-1);
 		}
 	}
+	mm_detect_make();
 }
 
 void modulemanager(int argc, char *args[])
