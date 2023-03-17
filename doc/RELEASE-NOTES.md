@@ -33,9 +33,10 @@ in progress.
   for `target-flood-user` and `target-flood-channel`.
 
 ### Fixes:
-* Crash if an IRCOp uses `unrealircd.org/json-log` on IRC and during
-  `REHASH` some module sends log output during MOD_INIT (eg with some
-  3rd party modules)
+* Crash if an IRCOp uses
+  [`unrealircd.org/json-log`](https://www.unrealircd.org/docs/JSON_logging#Enabling_on_IRC)
+  on IRC and during `REHASH` some module sends log output during MOD_INIT
+  (eg. with some 3rd party modules)
 * The [Module manager](https://www.unrealircd.org/docs/Module_manager)
   now works on FreeBSD and similar.
 * Silence warnings on Clang 15+ (eg. Ubuntu 23.04)
