@@ -12,6 +12,11 @@ in progress.
   * This allows services to set the vhost on a user during SASL,
     so the user receives the vhost straight from the start, before
     all the auto-joining/re-rejoining of channels.
+* [WebSocket](https://www.unrealircd.org/docs/WebSocket_support) status is
+  now synced over the network and an extra default
+  [Security group](https://www.unrealircd.org/docs/Security-group_block)
+  `websocket-users` has been added. Similarly there is now
+  security-group::websocket and security-group::exclude-websocket.
 * Support for IRCv3 [Standard Replies](https://ircv3.net/specs/extensions/standard-replies).
   Right now nothing fancy yet, other than us sending `ACCOUNT_REQUIRED_TO_CONNECT`
   from the authprompt module when a user is
