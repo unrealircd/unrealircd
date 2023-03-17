@@ -26,7 +26,7 @@ ModuleHeader MOD_HEADER
   = {
 	"echo-message",
 	"5.0",
-	"Batch CAP", 
+	"echo-message CAP",
 	"UnrealIRCd Team",
 	"unrealircd-6",
 	};
