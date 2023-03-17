@@ -73,11 +73,15 @@ CMD_FUNC(cmd_whowas)
 		sendnumeric(client, ERR_NONICKNAMEGIVEN);
 		return;
 	}
+
 	if (parc > 2)
 		max = atoi(parv[2]);
+
 	if (parc > 3)
+	{
 		if (hunt_server(client, recv_mtags, "WHOWAS", 3, parc, parv))
-			return;
+			return; /* Not for us */
+	}
 
 	if (!MyConnect(client) && (max > 20))
 		max = 20;
@@ -85,7 +89,8 @@ CMD_FUNC(cmd_whowas)
 	strlcpy(request, parv[1], sizeof(request));
 	p = strchr(request, ',');
 	if (p)
-		*p = '\0';
+		*p = '\0'; /* cut off at first */
+
 	nick = request;
 	temp = WHOWASHASH[hash_whowas_name(nick)];
 	found = 0;
@@ -99,9 +104,11 @@ CMD_FUNC(cmd_whowas)
 			    (*temp->virthost !=
 			    '\0') ? temp->virthost : temp->hostname),
 			    temp->realname);
-                	if (!((find_uline(temp->servername)) && !IsOper(client) && HIDE_ULINES))
+			if (!((find_uline(temp->servername)) && !IsOper(client) && HIDE_ULINES))
+			{
 				sendnumeric(client, RPL_WHOISSERVER, temp->name, temp->servername,
-				    myctime(temp->logoff));
+				            myctime(temp->logoff));
+			}
 			cur++;
 			found++;
 		}
