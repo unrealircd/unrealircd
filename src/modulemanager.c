@@ -1655,15 +1655,15 @@ void mm_parse_c_file(int argc, char *args[])
 int mm_detect_make_is_gmake(void)
 {
 	FILE *fd;
-	char buf[512];
+	char buf[512], *s;
 
 	fd = popen("$MAKE --version 2>&1", "r");
 	if (fd)
 	{
 		*buf = '\0';
-		fgets(buf, sizeof(buf), fd);
+		s = fgets(buf, sizeof(buf), fd);
 		pclose(fd);
-		if (strstr(buf, "GNU Make"))
+		if (s && strstr(s, "GNU Make"))
 			return 1; /* Good! We are done. */
 	}
 	return 0;
