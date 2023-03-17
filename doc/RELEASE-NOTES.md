@@ -5,6 +5,7 @@ This is the git version (development version) for future 6.0.7. This is work
 in progress.
 
 ### Enhancements:
+* `WHOWAS` now shows IP address and account information to IRCOps
 * Allow services to send a couple of protocol messages in the
   unregistered / SASL stage. These are: `CHGHOST`, `CHGIDENT`
   and `SREPLY`
