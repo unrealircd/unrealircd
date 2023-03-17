@@ -13,11 +13,22 @@ in progress.
   * This allows services to set the vhost on a user during SASL,
     so the user receives the vhost straight from the start, before
     all the auto-joining/re-rejoining of channels.
+* Support `NO_COLOR` environment variable, as per [no-color.org](https://no-color.org).
 
 ### Changes:
 * We now verify that all servers have
   [ulines { }](https://www.unrealircd.org/docs/Ulines_block) for Anope and
   Atheme servers and reject the link if this is not the case.
+* The `FLOOD_BLOCKED` log message now shows the target of the flood
+  for `target-flood-user` and `target-flood-channel`.
+
+### Fixes:
+* Crash if an IRCOp uses `unrealircd.org/json-log` on IRC and during
+  `REHASH` some module sends log output during MOD_INIT (eg with some
+  3rd party modules)
+* The [Module manager](https://www.unrealircd.org/docs/Module_manager)
+  now works on FreeBSD and similar.
+* Silence warnings on Clang 15+ (eg. Ubuntu 23.04)
 
 UnrealIRCd 6.0.6
 -----------------
