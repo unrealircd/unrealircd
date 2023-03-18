@@ -502,7 +502,7 @@ const char *websocket_mdata_serialize(ModData *m)
 void websocket_mdata_unserialize(const char *str, ModData *m)
 {
 	WebSocketUser *wsu;
-	if (m)
+	if (m->ptr)
 		websocket_mdata_free(m);
 	if (BadPtr(str))
 		return; /* empty/freed */
