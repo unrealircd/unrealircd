@@ -122,9 +122,9 @@ CMD_FUNC(cmd_nick_remote)
 	{
 		ircstats.is_kill++;
 		unreal_log(ULOG_ERROR, "nick", "BAD_NICK_REMOTE", client,
-		           "Server link $server tried to introduce bad nick '$nick' -- rejected.",
+		           "Server link $server tried to change '$client' to bad nick '$nick' -- rejected.",
 		           log_data_string("nick", parv[1]),
-		           log_data_client("server", client->direction));
+		           log_data_client("server", client->uplink));
 		mtags = NULL;
 		new_message(client, NULL, &mtags);
 		sendto_one(client, mtags, ":%s KILL %s :Illegal nick name", me.id, client->id);
