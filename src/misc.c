@@ -2600,7 +2600,10 @@ const char *StripControlCodesEx(const char *text, char *output, size_t outputlen
 		{
 			nc++;
 			if (*text == ',')
+			{
 				nc = 0;
+				col++;
+			}
 		}
 		/* Syntax for RGB is ^DHHHHHH where H is a hex digit.
 		 * If < 6 hex digits are specified, the code is displayed
