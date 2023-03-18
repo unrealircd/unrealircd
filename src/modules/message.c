@@ -537,11 +537,15 @@ const char *_StripColors(const char *text)
 
 	while (len > 0) 
 	{
-		if ((col && isdigit(*text) && nc < 2) || (col && *text == ',' && nc < 3)) 
+		if ((col && isdigit(*text) && nc < 2) ||
+		    ((col == 1) && (*text == ',') && isdigit(text[1]) && (nc > 0) && (nc < 3)))
 		{
 			nc++;
 			if (*text == ',')
+			{
 				nc = 0;
+				col++;
+			}
 		}
 		/* Syntax for RGB is ^DHHHHHH where H is a hex digit.
 		 * If < 6 hex digits are specified, the code is displayed

@@ -2595,7 +2595,8 @@ const char *StripControlCodesEx(const char *text, char *output, size_t outputlen
 
 	while (len > 0) 
 	{
-		if ( col && ((isdigit(*text) && nc < 2) || (*text == ',' && nc < 3)))
+		if ((col && isdigit(*text) && nc < 2) ||
+		    ((col == 1) && (*text == ',') && isdigit(text[1]) && (nc > 0) && (nc < 3)))
 		{
 			nc++;
 			if (*text == ',')
