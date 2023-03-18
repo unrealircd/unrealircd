@@ -279,8 +279,8 @@ int remotecmdfilter(Client *client, int parc, const char *parv[])
 	/* no remote requests permitted from non-ircops */
 	if (MyUser(client) && !ValidatePermissionsForPath("server:remote",client,NULL,NULL,NULL) && !BadPtr(parv[1]))
 	{
-		parv[1] = NULL;
-		parc = 1;
+		sendnumeric(client, ERR_NOPRIVILEGES);
+		return 1; /* STOP */
 	}
 
 	/* same as above, but in case an old server forwards a request to us: we ignore it */
