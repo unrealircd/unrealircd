@@ -2072,9 +2072,10 @@ int config_test(void)
 		return -1;
 	}
 
+	loop.config_status = CONFIG_STATUS_POSTTEST;
+
 	preprocessor_resolve_conditionals_all(PREPROCESSOR_PHASE_MODULE);
 
-	loop.config_status = CONFIG_STATUS_POSTTEST;
 	if (!config_test_all())
 	{
 		config_error("IRCd configuration failed to pass testing");
