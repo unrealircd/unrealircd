@@ -59,6 +59,7 @@
 #define ERR_NORECIPIENT      411
 #define ERR_NOTEXTTOSEND     412
 #define ERR_TOOMANYMATCHES   416
+#define ERR_INPUTTOOLONG     417
 
 #define ERR_UNKNOWNCOMMAND   421
 #define	ERR_NOMOTD           422
@@ -482,6 +483,7 @@
 #define STR_ERR_NORECIPIENT		/* 411 */	":No recipient given (%s)"
 #define STR_ERR_NOTEXTTOSEND		/* 412 */	":No text to send"
 #define STR_ERR_TOOMANYMATCHES		/* 416 */	"%s :%s"
+#define STR_ERR_INPUTTOOLONG		/* 417 */	":Input line was too long"
 #define STR_ERR_UNKNOWNCOMMAND		/* 421 */	"%s :Unknown command"
 #define STR_ERR_NOMOTD			/* 422 */	":MOTD File is missing"
 #define STR_ERR_NOADMININFO		/* 423 */	"%s :No administrative info available"

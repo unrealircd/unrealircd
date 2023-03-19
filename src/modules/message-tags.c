@@ -170,17 +170,26 @@ void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list)
 	MessageTag *m;
 
 	remainder = strchr(*str, ' ');
+	if (remainder)
+		*remainder = '\0';
+
+	if (!IsServer(client) && (strlen(*str) > 4094))
+	{
+		sendnumeric(client, ERR_INPUTTOOLONG);
+		remainder = NULL; /* stop parsing */
+	}
+
 	if (!remainder)
 	{
 		/* A message with only message tags (or starting with @ anyway).
 		 * This is useless. So we make it point to the NUL byte,
 		 * aka: empty message.
+		 * This is also used by a line-length-check above to force the
+		 * same error condition ("don't parse this").
 		 */
 		for (; **str; *str += 1);
 		return;
 	}
-
-	*remainder = '\0';
 
 	/* Now actually parse the tags: */
 	for (element = strtoken(&p, *str+1, ";"); element; element = strtoken(&p, NULL, ";"))
