@@ -614,13 +614,15 @@ CMD_FUNC(cmd_whois)
 			                    target->name, "is shunned");
 		}
 
-		if (target->user->swhois && !hideoper && (whois_get_policy(client, target, "swhois") > WHOIS_CONFIG_DETAILS_NONE))
+		if (target->user->swhois && (whois_get_policy(client, target, "swhois") > WHOIS_CONFIG_DETAILS_NONE))
 		{
 			SWhois *s;
 			int swhois_lines = 0;
 
 			for (s = target->user->swhois; s; s = s->next)
 			{
+				if (hideoper && !IsOper(client) && s->setby && !strcmp(s->setby, "oper"))
+					continue; /* hide oper-based swhois entries */
 				add_nvplist_numeric(&list, 100000+swhois_lines, "swhois", client, RPL_WHOISSPECIAL,
 				                    target->name, s->line);
 				swhois_lines++;
