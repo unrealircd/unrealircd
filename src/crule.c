@@ -1,9 +1,11 @@
-/*
- * SmartRoute phase 1
- * connection rule patch
+/**
+ * @file
+ * @brief Connection rule parser and checker
+ * @version $Id$
+ *
  * by Tony Vencill (Tonto on IRC) <vencill@bga.com>
  *
- * The majority of this file is a recusive descent parser used to convert
+ * The majority of this file is a recursive descent parser used to convert
  * connection rules into expression trees when the conf file is read.
  * All parsing structures and types are hidden in the interest of good
  * programming style and to make possible future data structure changes
@@ -29,6 +31,35 @@
  * more closely simulate the actual ircd environment).  crule_eval and
  * the rule functions are made empty functions as in the stand-alone
  * test parser.
+ *
+ * The production rules for the grammar are as follows ("rule" is the
+ * starting production):
+ *
+ *   rule:
+ *     orexpr END          END is end of input or :
+ *   orexpr:
+ *     andexpr
+ *     andexpr || orexpr
+ *   andexpr:
+ *     primary
+ *     primary && andexpr
+ *  primary:
+ *    function
+ *    ! primary
+ *    ( orexpr )
+ *  function:
+ *    word ( )             word is alphanumeric string, first character
+ *    word ( arglist )       must be a letter
+ *  arglist:
+ *    word
+ *    word , arglist
+ */
+
+/* Last update of parser functions taken from ircu on 2023-03-19
+ * matching ircu's ircd/crule.c from 2021-09-04.
+ * Then ported / UnrealIRCd-ized by Syzop and re-adding crule_test()
+ * and such. All the actual "functions" like crule_connected() are
+ * our own and not re-feteched (but were based on older versions).
  */
 
 #ifndef CR_DEBUG
@@ -57,56 +88,67 @@ ID_Copyright("(C) Tony Vincell");
 #define safe_free free
 #endif
 
-/* some constants and shared data types */
-#define CR_MAXARGLEN 80		/* why 80? why not? it's > hostname lengths */
-#define CR_MAXARGS 3		/* there's a better way to do this, but not now */
+/*
+ * Some symbols for easy reading
+ */
 
-/* some symbols for easy reading */
-enum crule_token
-    { CR_UNKNOWN, CR_END, CR_AND, CR_OR, CR_NOT, CR_OPENPAREN, CR_CLOSEPAREN,
-	CR_COMMA, CR_WORD
-};
-enum crule_errcode
-    { CR_NOERR, CR_UNEXPCTTOK, CR_UNKNWTOK, CR_EXPCTAND, CR_EXPCTOR,
-	CR_EXPCTPRIM, CR_EXPCTOPEN, CR_EXPCTCLOSE, CR_UNKNWFUNC, CR_ARGMISMAT
+/** Input scanner tokens. */
+enum crule_token {
+  CR_UNKNOWN,    /**< Unknown token type. */
+  CR_END,        /**< End of input ('\\0' or ':'). */
+  CR_AND,        /**< Logical and operator (&&). */
+  CR_OR,         /**< Logical or operator (||). */
+  CR_NOT,        /**< Logical not operator (!). */
+  CR_OPENPAREN,  /**< Open parenthesis. */
+  CR_CLOSEPAREN, /**< Close parenthesis. */
+  CR_COMMA,      /**< Comma. */
+  CR_WORD        /**< Something that looks like a hostmask (alphanumerics, "*?.-"). */
 };
 
-/* expression tree structure, function pointer, and tree pointer */
-/* local! */
-typedef int (*crule_funcptr) (int, void **);
-struct crule_treestruct {
-	crule_funcptr funcptr;
-	int  numargs;
-	void *arg[CR_MAXARGS];	/* for operators arg points to a tree element;
-				   for functions arg points to a char string */
+/** Parser error codes. */
+enum crule_errcode {
+  CR_NOERR,      /**< No error. */
+  CR_UNEXPCTTOK, /**< Invalid token given context. */
+  CR_UNKNWTOK,   /**< Input did not form a valid token. */
+  CR_EXPCTAND,   /**< Did not see expected && operator. */
+  CR_EXPCTOR,    /**< Did not see expected || operator. */
+  CR_EXPCTPRIM,  /**< Expected a primitive (parentheses, ! or word). */
+  CR_EXPCTOPEN,  /**< Expected an open parenthesis after function name. */
+  CR_EXPCTCLOSE, /**< Expected a close parenthesis to match open parenthesis. */
+  CR_UNKNWFUNC,  /**< Attempt to use an unknown function. */
+  CR_ARGMISMAT   /**< Wrong number of arguments to function. */
 };
-typedef struct crule_treestruct crule_treeelem;
-typedef crule_treeelem *crule_treeptr;
+
+/*
+ * Expression tree structure, function pointer, and tree pointer local!
+ */
 
 /* rule function prototypes - local! */
-int crule_connected(int, void **);
-int crule_directcon(int, void **);
-int crule_via(int, void **);
-int crule_directop(int, void **);
-int crule__andor(int, void **);
-int crule__not(int, void **);
+static int crule_connected(int, void **);
+static int crule_directcon(int, void **);
+static int crule_via(int, void **);
+static int crule_directop(int, void **);
+static int crule__andor(int, void **);
+static int crule__not(int, void **);
 
 /* parsing function prototypes - local! */
-int crule_gettoken(int *, char **);
-void crule_getword(char *, int *, int, char **);
-int crule_parseandexpr(crule_treeptr *, int *, char **);
-int crule_parseorexpr(crule_treeptr *, int *, char **);
-int crule_parseprimary(crule_treeptr *, int *, char **);
-int crule_parsefunction(crule_treeptr *, int *, char **);
-int crule_parsearglist(crule_treeptr, int *, char **);
+static int crule_gettoken(int* token, const char** str);
+static void crule_getword(char*, int*, size_t, const char**);
+static int crule_parseandexpr(CRuleNodePtr*, int *, const char**);
+static int crule_parseorexpr(CRuleNodePtr*, int *, const char**);
+static int crule_parseprimary(CRuleNodePtr*, int *, const char**);
+static int crule_parsefunction(CRuleNodePtr*, int *, const char**);
+static int crule_parsearglist(CRuleNodePtr, int *, const char**);
 
 #if defined(CR_DEBUG) || defined(CR_CHKCONF)
-/* prototypes for the test parser; if not debugging, these are
- * defined in h.h */
-char *crule_parse(char *);
-void crule_free(char **);
+/*
+ * Prototypes for the test parser; if not debugging,
+ * these are defined in h.h
+ */
+struct CRuleNode* crule_parse(const char*);
+void crule_free(struct CRuleNode**);
 #ifdef CR_DEBUG
-void print_tree(crule_treeptr));
+void print_tree(CRuleNodePtr);
 #endif
 #endif
 
@@ -139,7 +181,7 @@ struct crule_funclistent crule_funclist[] = {
 	{"", 0, NULL}		/* this must be here to mark end of list */
 };
 
-int  crule_connected(int numargs, void *crulearg[])
+static int crule_connected(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *client;
@@ -156,7 +198,7 @@ int  crule_connected(int numargs, void *crulearg[])
 #endif
 }
 
-int  crule_directcon(int numargs, void *crulearg[])
+static int crule_directcon(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *client;
@@ -175,7 +217,7 @@ int  crule_directcon(int numargs, void *crulearg[])
 #endif
 }
 
-int  crule_via(int numargs, void *crulearg[])
+static int crule_via(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *client;
@@ -194,7 +236,7 @@ int  crule_via(int numargs, void *crulearg[])
 #endif
 }
 
-int  crule_directop(int numargs, void *crulearg[])
+static int crule_directop(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *client;
@@ -212,577 +254,597 @@ int  crule_directop(int numargs, void *crulearg[])
 #endif
 }
 
-int  crule__andor(int numargs, void *crulearg[])
+/** Evaluate a connection rule.
+ * @param[in] rule Rule to evalute.
+ * @return Non-zero if the rule allows the connection, zero otherwise.
+ */
+int crule_eval(struct CRuleNode* rule)
 {
-	int  result1;
-
-	result1 = ((crule_treeptr) crulearg[0])->funcptr
-	    (((crule_treeptr) crulearg[0])->numargs,
-	    (void *)((crule_treeptr) crulearg[0])->arg);
-	if (crulearg[2])	/* or */
-		return (result1 ||
-		    ((crule_treeptr) crulearg[1])->funcptr
-		    (((crule_treeptr) crulearg[1])->numargs,
-		    (void *)((crule_treeptr) crulearg[1])->arg));
-	else
-		return (result1 &&
-		    ((crule_treeptr) crulearg[1])->funcptr
-		    (((crule_treeptr) crulearg[1])->numargs,
-		    (void *)((crule_treeptr) crulearg[1])->arg));
+  return (rule->funcptr(rule->numargs, rule->arg));
 }
 
-int  crule__not(int numargs, void *crulearg[])
+/** Perform an and-or-or test on crulearg[0] and crulearg[1].
+ * If crulearg[2] is non-NULL, it means do OR; if it is NULL, do AND.
+ * @param[in] numargs Number of valid args in \a crulearg.
+ * @param[in] crulearg Argument array.
+ * @return Non-zero if the condition is true, zero if not.
+ */
+static int crule__andor(int numargs, void *crulearg[])
 {
-	return (!((crule_treeptr) crulearg[0])->funcptr
-	    (((crule_treeptr) crulearg[0])->numargs,
-	    (void *)((crule_treeptr) crulearg[0])->arg));
+  int result1;
+
+  result1 = crule_eval(crulearg[0]);
+  if (crulearg[2])              /* or */
+    return (result1 || crule_eval(crulearg[1]));
+  else
+    return (result1 && crule_eval(crulearg[1]));
 }
 
-#if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-int  crule_eval(rule)
-	char *rule;
+/** Logically invert the result of crulearg[0].
+ * @param[in] numargs Number of valid args in \a crulearg.
+ * @param[in] crulearg Argument array.
+ * @return Non-zero if the condition is true, zero if not.
+ */
+static int crule__not(int numargs, void *crulearg[])
 {
-	return (((crule_treeptr) rule)->funcptr
-	    (((crule_treeptr) rule)->numargs, ((crule_treeptr) rule)->arg));
+  return (!crule_eval(crulearg[0]));
 }
+
+/** Scan an input token from \a ruleptr.
+ * @param[out] next_tokp Receives type of next token.
+ * @param[in,out] ruleptr Next readable character from input.
+ * @return Either CR_UNKNWTOK if the input was unrecognizable, else CR_NOERR.
+ */
+static int crule_gettoken(int* next_tokp, const char** ruleptr)
+{
+  char pending = '\0';
+
+  *next_tokp = CR_UNKNOWN;
+  while (*next_tokp == CR_UNKNOWN)
+    switch (*(*ruleptr)++)
+    {
+      case ' ':
+      case '\t':
+        break;
+      case '&':
+        if (pending == '\0')
+          pending = '&';
+        else if (pending == '&')
+          *next_tokp = CR_AND;
+        else
+          return (CR_UNKNWTOK);
+        break;
+      case '|':
+        if (pending == '\0')
+          pending = '|';
+        else if (pending == '|')
+          *next_tokp = CR_OR;
+        else
+          return (CR_UNKNWTOK);
+        break;
+      case '!':
+        *next_tokp = CR_NOT;
+        break;
+      case '(':
+        *next_tokp = CR_OPENPAREN;
+        break;
+      case ')':
+        *next_tokp = CR_CLOSEPAREN;
+        break;
+      case ',':
+        *next_tokp = CR_COMMA;
+        break;
+      case '\0':
+        (*ruleptr)--;
+        *next_tokp = CR_END;
+        break;
+      case ':':
+        *next_tokp = CR_END;
+        break;
+      default:
+        if ((isalpha(*(--(*ruleptr)))) || (**ruleptr == '*') ||
+            (**ruleptr == '?') || (**ruleptr == '.') || (**ruleptr == '-'))
+          *next_tokp = CR_WORD;
+        else
+          return (CR_UNKNWTOK);
+        break;
+    }
+  return CR_NOERR;
+}
+
+/** Scan a word from \a ruleptr.
+ * @param[out] word Output buffer.
+ * @param[out] wordlenp Length of word written to \a word (not including terminating NUL).
+ * @param[in] maxlen Maximum number of bytes writable to \a word.
+ * @param[in,out] ruleptr Next readable character from input.
+ */
+static void crule_getword(char* word, int* wordlenp, size_t maxlen, const char** ruleptr)
+{
+  char *word_ptr;
+
+  word_ptr = word;
+  while ((size_t)(word_ptr - word) < maxlen
+      && (isalnum(**ruleptr)
+      || **ruleptr == '*' || **ruleptr == '?'
+      || **ruleptr == '.' || **ruleptr == '-'))
+    *word_ptr++ = *(*ruleptr)++;
+  *word_ptr = '\0';
+  *wordlenp = word_ptr - word;
+}
+
+/** Parse an entire rule.
+ * @param[in] rule Text form of rule.
+ * @return CRuleNode for rule, or NULL if there was a parse error.
+ */
+struct CRuleNode* crule_parse(const char *rule)
+{
+  const char* ruleptr = rule;
+  int next_tok;
+  struct CRuleNode* ruleroot = 0;
+  int errcode = CR_NOERR;
+
+  if ((errcode = crule_gettoken(&next_tok, &ruleptr)) == CR_NOERR) {
+    if ((errcode = crule_parseorexpr(&ruleroot, &next_tok, &ruleptr)) == CR_NOERR) {
+      if (ruleroot != NULL) {
+        if (next_tok == CR_END)
+          return (ruleroot);
+        else
+          errcode = CR_UNEXPCTTOK;
+      }
+      else
+        errcode = CR_EXPCTOR;
+    }
+  }
+  if (ruleroot != NULL)
+    crule_free(&ruleroot);
+#if defined(CR_DEBUG) || defined(CR_CHKCONF)
+  fprintf(stderr, "%s in rule: %s\n", crule_errstr[errcode], rule);
 #endif
-
-int  crule_gettoken(int *next_tokp, char **ruleptr)
-{
-	char pending = '\0';
-
-	*next_tokp = CR_UNKNOWN;
-	while (*next_tokp == CR_UNKNOWN)
-		switch (*(*ruleptr)++)
-		{
-		  case ' ':
-		  case '\t':
-			  break;
-		  case '&':
-			  if (pending == '\0')
-				  pending = '&';
-			  else if (pending == '&')
-				  *next_tokp = CR_AND;
-			  else
-				  return (CR_UNKNWTOK);
-			  break;
-		  case '|':
-			  if (pending == '\0')
-				  pending = '|';
-			  else if (pending == '|')
-				  *next_tokp = CR_OR;
-			  else
-				  return (CR_UNKNWTOK);
-			  break;
-		  case '!':
-			  *next_tokp = CR_NOT;
-			  break;
-		  case '(':
-			  *next_tokp = CR_OPENPAREN;
-			  break;
-		  case ')':
-			  *next_tokp = CR_CLOSEPAREN;
-			  break;
-		  case ',':
-			  *next_tokp = CR_COMMA;
-			  break;
-		  case '\0':
-			  (*ruleptr)--;
-			  *next_tokp = CR_END;
-			  break;
-		  /* Both - and : can appear in hostnames so they must not be 
-		   * treated as separators -- codemastr */
-		  default:
-			  if ((isalpha(*(--(*ruleptr)))) || (**ruleptr == '*')
-			      || (**ruleptr == '?') || (**ruleptr == '.')
-			      || (**ruleptr == '-') || (**ruleptr == ':'))
-				  *next_tokp = CR_WORD;
-			  else
-				  return (CR_UNKNWTOK);
-			  break;
-		}
-	return CR_NOERR;
+  return 0;
 }
 
-void crule_getword(char *word, int *wordlenp, int maxlen, char **ruleptr)
+/** Test-parse an entire rule.
+ * @param[in] rule Text form of rule.
+ * @return error code, or 0 for no failure
+ */
+int crule_test(const char *rule)
 {
-	char *word_ptr, c;
+  const char* ruleptr = rule;
+  int next_tok;
+  struct CRuleNode* ruleroot = 0;
+  int errcode = CR_NOERR;
 
-	word_ptr = word;
-	/* Both - and : can appear in hostnames so they must not be 
-	 * treated as separators -- codemastr */
+  if ((errcode = crule_gettoken(&next_tok, &ruleptr)) == CR_NOERR) {
+    if ((errcode = crule_parseorexpr(&ruleroot, &next_tok, &ruleptr)) == CR_NOERR) {
+      if (ruleroot != NULL) {
+        if (next_tok == CR_END)
+        {
+          /* PASS */
+          crule_free(&ruleroot);
+          return 0;
+        } else {
+          errcode = CR_UNEXPCTTOK;
+        }
+      }
+      else
+        errcode = CR_EXPCTOR;
+    }
+  }
+  if (ruleroot != NULL)
+    crule_free(&ruleroot);
+#if defined(CR_DEBUG) || defined(CR_CHKCONF)
+  fprintf(stderr, "%s in rule: %s\n", crule_errstr[errcode], rule);
+#endif
+  return errcode + 1;
+}
 
-	while ((isalnum(**ruleptr)) || (**ruleptr == '*') ||
-	    (**ruleptr == '?') || (**ruleptr == '.') || (**ruleptr == '-') ||
-	    (**ruleptr == ':'))
-	{
-		c = *(*ruleptr)++;
-		if (maxlen > 1) /* >1 instead of >0 so we (possibly) still have room for NUL */
-		{
-			*word_ptr++ = c;
-			maxlen--;
-		}
-	}
-	if (maxlen)
-		*word_ptr = '\0';
-	*wordlenp = word_ptr - word;
+const char *crule_errstring(int errcode)
+{
+  if (errcode == 0)
+    return "No error";
+  else
+    return crule_errstr[errcode-1];
+}
+
+/** Parse an or expression.
+ * @param[out] orrootp Receives parsed node.
+ * @param[in,out] next_tokp Next input token type.
+ * @param[in,out] ruleptr Next input character.
+ * @return A crule_errcode value.
+ */
+static int crule_parseorexpr(CRuleNodePtr * orrootp, int *next_tokp, const char** ruleptr)
+{
+  int errcode = CR_NOERR;
+  CRuleNodePtr andexpr;
+  CRuleNodePtr orptr;
+
+  *orrootp = NULL;
+  while (errcode == CR_NOERR)
+  {
+    errcode = crule_parseandexpr(&andexpr, next_tokp, ruleptr);
+    if ((errcode == CR_NOERR) && (*next_tokp == CR_OR))
+    {
+      orptr = safe_alloc(sizeof(struct CRuleNode));
+#ifdef CR_DEBUG
+      fprintf(stderr, "allocating or element at %ld\n", orptr);
+#endif
+      orptr->funcptr = crule__andor;
+      orptr->numargs = 3;
+      orptr->arg[2] = (void *)1;
+      if (*orrootp != NULL)
+      {
+        (*orrootp)->arg[1] = andexpr;
+        orptr->arg[0] = *orrootp;
+      }
+      else
+        orptr->arg[0] = andexpr;
+      *orrootp = orptr;
+    }
+    else
+    {
+      if (*orrootp != NULL)
+      {
+        if (andexpr != NULL)
+        {
+          (*orrootp)->arg[1] = andexpr;
+          return (errcode);
+        }
+        else
+        {
+          (*orrootp)->arg[1] = NULL;    /* so free doesn't seg fault */
+          return (CR_EXPCTAND);
+        }
+      }
+      else
+      {
+        *orrootp = andexpr;
+        return (errcode);
+      }
+    }
+    errcode = crule_gettoken(next_tokp, ruleptr);
+  }
+  return (errcode);
+}
+
+/** Parse an and expression.
+ * @param[out] androotp Receives parsed node.
+ * @param[in,out] next_tokp Next input token type.
+ * @param[in,out] ruleptr Next input character.
+ * @return A crule_errcode value.
+ */
+static int crule_parseandexpr(CRuleNodePtr * androotp, int *next_tokp, const char** ruleptr)
+{
+  int errcode = CR_NOERR;
+  CRuleNodePtr primary;
+  CRuleNodePtr andptr;
+
+  *androotp = NULL;
+  while (errcode == CR_NOERR)
+  {
+    errcode = crule_parseprimary(&primary, next_tokp, ruleptr);
+    if ((errcode == CR_NOERR) && (*next_tokp == CR_AND))
+    {
+      andptr = safe_alloc(sizeof(struct CRuleNode));
+#ifdef CR_DEBUG
+      fprintf(stderr, "allocating and element at %ld\n", andptr);
+#endif
+      andptr->funcptr = crule__andor;
+      andptr->numargs = 3;
+      andptr->arg[2] = (void *)0;
+      if (*androotp != NULL)
+      {
+        (*androotp)->arg[1] = primary;
+        andptr->arg[0] = *androotp;
+      }
+      else
+        andptr->arg[0] = primary;
+      *androotp = andptr;
+    }
+    else
+    {
+      if (*androotp != NULL)
+      {
+        if (primary != NULL)
+        {
+          (*androotp)->arg[1] = primary;
+          return (errcode);
+        }
+        else
+        {
+          (*androotp)->arg[1] = NULL;   /* so free doesn't seg fault */
+          return (CR_EXPCTPRIM);
+        }
+      }
+      else
+      {
+        *androotp = primary;
+        return (errcode);
+      }
+    }
+    errcode = crule_gettoken(next_tokp, ruleptr);
+  }
+  return (errcode);
+}
+
+/** Parse a primary expression.
+ * @param[out] primrootp Receives parsed node.
+ * @param[in,out] next_tokp Next input token type.
+ * @param[in,out] ruleptr Next input character.
+ * @return A crule_errcode value.
+ */
+static int crule_parseprimary(CRuleNodePtr* primrootp, int *next_tokp, const char** ruleptr)
+{
+  CRuleNodePtr *insertionp;
+  int errcode = CR_NOERR;
+
+  *primrootp = NULL;
+  insertionp = primrootp;
+  while (errcode == CR_NOERR)
+  {
+    switch (*next_tokp)
+    {
+      case CR_OPENPAREN:
+        if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
+          break;
+        if ((errcode = crule_parseorexpr(insertionp, next_tokp, ruleptr)) != CR_NOERR)
+          break;
+        if (*insertionp == NULL)
+        {
+          errcode = CR_EXPCTAND;
+          break;
+        }
+        if (*next_tokp != CR_CLOSEPAREN)
+        {
+          errcode = CR_EXPCTCLOSE;
+          break;
+        }
+        errcode = crule_gettoken(next_tokp, ruleptr);
+        break;
+      case CR_NOT:
+        *insertionp = safe_alloc(sizeof(struct CRuleNode));
+#ifdef CR_DEBUG
+        fprintf(stderr, "allocating primary element at %ld\n", *insertionp);
+#endif
+        (*insertionp)->funcptr = crule__not;
+        (*insertionp)->numargs = 1;
+        (*insertionp)->arg[0] = NULL;
+        insertionp = (CRuleNodePtr *) & ((*insertionp)->arg[0]);
+        if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
+          break;
+        continue;
+      case CR_WORD:
+        errcode = crule_parsefunction(insertionp, next_tokp, ruleptr);
+        break;
+      default:
+        if (*primrootp == NULL)
+          errcode = CR_NOERR;
+        else
+          errcode = CR_EXPCTPRIM;
+        break;
+    }
+    break; /* loop only continues after a CR_NOT */
+  }
+  return (errcode);
+}
+
+/** Parse a function call.
+ * @param[out] funcrootp Receives parsed node.
+ * @param[in,out] next_tokp Next input token type.
+ * @param[in,out] ruleptr Next input character.
+ * @return A crule_errcode value.
+ */
+static int crule_parsefunction(CRuleNodePtr* funcrootp, int* next_tokp, const char** ruleptr)
+{
+  int errcode = CR_NOERR;
+  char funcname[CR_MAXARGLEN];
+  int namelen;
+  int funcnum;
+
+  *funcrootp = NULL;
+  crule_getword(funcname, &namelen, CR_MAXARGLEN - 1, ruleptr);
+  if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
+    return (errcode);
+  if (*next_tokp == CR_OPENPAREN)
+  {
+    for (funcnum = 0;; funcnum++)
+    {
+      if (0 == strcasecmp(crule_funclist[funcnum].name, funcname))
+        break;
+      if (crule_funclist[funcnum].name[0] == '\0')
+        return (CR_UNKNWFUNC);
+    }
+    if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
+      return (errcode);
+    *funcrootp = safe_alloc(sizeof(struct CRuleNode));
+#ifdef CR_DEBUG
+    fprintf(stderr, "allocating function element at %ld\n", *funcrootp);
+#endif
+    (*funcrootp)->funcptr = NULL;       /* for freeing aborted trees */
+    if ((errcode =
+        crule_parsearglist(*funcrootp, next_tokp, ruleptr)) != CR_NOERR)
+      return (errcode);
+    if (*next_tokp != CR_CLOSEPAREN)
+      return (CR_EXPCTCLOSE);
+    if ((crule_funclist[funcnum].reqnumargs != (*funcrootp)->numargs) &&
+        (crule_funclist[funcnum].reqnumargs != -1))
+      return (CR_ARGMISMAT);
+    if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
+      return (errcode);
+    (*funcrootp)->funcptr = crule_funclist[funcnum].funcptr;
+    return (CR_NOERR);
+  }
+  else
+    return (CR_EXPCTOPEN);
+}
+
+/** Parse the argument list to a CRuleNode.
+ * @param[in,out] argrootp Node whos argument list is being populated.
+ * @param[in,out] next_tokp Next input token type.
+ * @param[in,out] ruleptr Next input character.
+ * @return A crule_errcode value.
+ */
+static int crule_parsearglist(CRuleNodePtr argrootp, int *next_tokp, const char** ruleptr)
+{
+  int errcode = CR_NOERR;
+  char *argelemp = NULL;
+  char currarg[CR_MAXARGLEN];
+  int arglen = 0;
+  char word[CR_MAXARGLEN];
+  int wordlen = 0;
+
+  argrootp->numargs = 0;
+  currarg[0] = '\0';
+  while (errcode == CR_NOERR)
+  {
+    switch (*next_tokp)
+    {
+      case CR_WORD:
+        crule_getword(word, &wordlen, CR_MAXARGLEN - 1, ruleptr);
+        if (currarg[0] != '\0')
+        {
+          if ((arglen + wordlen) < (CR_MAXARGLEN - 1))
+          {
+            strcat(currarg, " ");
+            strcat(currarg, word);
+            arglen += wordlen + 1;
+          }
+        }
+        else
+        {
+          strcpy(currarg, word);
+          arglen = wordlen;
+        }
+        errcode = crule_gettoken(next_tokp, ruleptr);
+        break;
+      default:
+#if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
+        collapse(currarg);
+#endif
+        if (currarg[0] != '\0')
+        {
+          argelemp = raw_strdup(currarg);
+          argrootp->arg[argrootp->numargs++] = (void *)argelemp;
+        }
+        if (*next_tokp != CR_COMMA)
+          return (CR_NOERR);
+        currarg[0] = '\0';
+        errcode = crule_gettoken(next_tokp, ruleptr);
+        break;
+    }
+  }
+  return (errcode);
 }
 
 /*
- * Grammar
- *   rule:
- *     orexpr END          END is end of input
- *   orexpr:
- *     andexpr
- *     andexpr || orexpr
- *   andexpr:
- *     primary
- *     primary && andexpr
- *  primary:
- *    function
- *    ! primary
- *    ( orexpr )
- *  function:
- *    word ( )             word is alphanumeric string, first character
- *    word ( arglist )       must be a letter
- *  arglist:
- *    word
- *    word , arglist
+ * This function is recursive..  I wish I knew a nonrecursive way but
+ * I don't.  Anyway, recursion is fun..  :)
+ * DO NOT CALL THIS FUNCTION WITH A POINTER TO A NULL POINTER
+ * (i.e.: If *elem is NULL, you're doing it wrong - seg fault)
  */
-
-char *crule_parse(char *rule)
-{
-	char *ruleptr = rule;
-	int  next_tok;
-	crule_treeptr ruleroot = NULL;
-	int  errcode = CR_NOERR;
-
-	if ((errcode = crule_gettoken(&next_tok, &ruleptr)) == CR_NOERR) {
-		if ((errcode = crule_parseorexpr(&ruleroot, &next_tok,
-		    &ruleptr)) == CR_NOERR) {
-			if (ruleroot != NULL) {
-				if (next_tok == CR_END)
-					return ((char *)ruleroot);
-				else
-					errcode = CR_UNEXPCTTOK;
-			}
-			else
-				errcode = CR_EXPCTOR;
-		}
-	}
-	if (ruleroot != NULL)
-		crule_free((char **)&ruleroot);
-	return NULL;
-}
-
-int  crule_parseorexpr(crule_treeptr *orrootp, int *next_tokp, char **ruleptr)
-{
-	int  errcode = CR_NOERR;
-	crule_treeptr andexpr;
-	crule_treeptr orptr;
-
-	*orrootp = NULL;
-	while (errcode == CR_NOERR)
-	{
-		errcode = crule_parseandexpr(&andexpr, next_tokp, ruleptr);
-		if ((errcode == CR_NOERR) && (*next_tokp == CR_OR))
-		{
-			orptr =
-			    (crule_treeptr) safe_alloc(sizeof(crule_treeelem));
-#ifdef CR_DEBUG
-			(void)fprintf(stderr, "allocating or element at %ld\n", orptr);
-#endif
-			orptr->funcptr = crule__andor;
-			orptr->numargs = 3;
-			orptr->arg[2] = (void *)1;
-			if (*orrootp != NULL)
-			{
-				(*orrootp)->arg[1] = andexpr;
-				orptr->arg[0] = *orrootp;
-			}
-			else
-				orptr->arg[0] = andexpr;
-			*orrootp = orptr;
-		}
-		else
-		{
-			if (*orrootp != NULL)
-				if (andexpr != NULL)
-				{
-					(*orrootp)->arg[1] = andexpr;
-					return (errcode);
-				}
-				else
-				{
-					(*orrootp)->arg[1] = NULL;	/* so free doesn't seg fault */
-					return (CR_EXPCTAND);
-				}
-			else
-			{
-				*orrootp = andexpr;
-				return (errcode);
-			}
-		}
-		if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
-			return (errcode);
-	}
-	return (errcode);
-}
-
-int  crule_parseandexpr(crule_treeptr *androotp, int *next_tokp, char **ruleptr)
-{
-	int  errcode = CR_NOERR;
-	crule_treeptr primary;
-	crule_treeptr andptr;
-
-	*androotp = NULL;
-	while (errcode == CR_NOERR)
-	{
-		errcode = crule_parseprimary(&primary, next_tokp, ruleptr);
-		if ((errcode == CR_NOERR) && (*next_tokp == CR_AND))
-		{
-			andptr =
-			    (crule_treeptr) safe_alloc(sizeof(crule_treeelem));
-#ifdef CR_DEBUG
-			(void)fprintf(stderr, "allocating and element at %ld\n", andptr);
-#endif
-			andptr->funcptr = crule__andor;
-			andptr->numargs = 3;
-			andptr->arg[2] = (void *)0;
-			if (*androotp != NULL)
-			{
-				(*androotp)->arg[1] = primary;
-				andptr->arg[0] = *androotp;
-			}
-			else
-				andptr->arg[0] = primary;
-			*androotp = andptr;
-		}
-		else
-		{
-			if (*androotp != NULL)
-				if (primary != NULL)
-				{
-					(*androotp)->arg[1] = primary;
-					return (errcode);
-				}
-				else
-				{
-					(*androotp)->arg[1] = NULL;	/* so free doesn't seg fault */
-					return (CR_EXPCTPRIM);
-				}
-			else
-			{
-				*androotp = primary;
-				return (errcode);
-			}
-		}
-		if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
-			return (errcode);
-	}
-	return (errcode);
-}
-
-int  crule_parseprimary(crule_treeptr *primrootp, int *next_tokp, char **ruleptr)
-{
-	crule_treeptr *insertionp;
-	int  errcode = CR_NOERR;
-
-	*primrootp = NULL;
-	insertionp = primrootp;
-	while (errcode == CR_NOERR)
-	{
-		switch (*next_tokp)
-		{
-		  case CR_OPENPAREN:
-			  if ((errcode =
-			      crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
-				  break;
-			  if ((errcode =
-			      crule_parseorexpr(insertionp, next_tokp,
-			      ruleptr)) != CR_NOERR)
-				  break;
-			  if (*insertionp == NULL)
-			  {
-				  errcode = CR_EXPCTAND;
-				  break;
-			  }
-			  if (*next_tokp != CR_CLOSEPAREN)
-			  {
-				  errcode = CR_EXPCTCLOSE;
-				  break;
-			  }
-			  errcode = crule_gettoken(next_tokp, ruleptr);
-			  break;
-		  case CR_NOT:
-			  *insertionp =
-			      (crule_treeptr) safe_alloc(sizeof(crule_treeelem));
-#ifdef CR_DEBUG
-			  (void)fprintf(stderr,
-			      "allocating primary element at %ld\n",
-			      *insertionp);
-#endif
-			  (*insertionp)->funcptr = crule__not;
-			  (*insertionp)->numargs = 1;
-			  (*insertionp)->arg[0] = NULL;
-			  insertionp =
-			      (crule_treeptr *) & ((*insertionp)->arg[0]);
-			  if ((errcode =
-			      crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
-				  break;
-			  continue;
-		  case CR_WORD:
-			  errcode =
-			      crule_parsefunction(insertionp, next_tokp,
-			      ruleptr);
-			  break;
-		  default:
-			  if (*primrootp == NULL)
-				  errcode = CR_NOERR;
-			  else
-				  errcode = CR_EXPCTPRIM;
-			  break;
-		}
-		return (errcode);
-	}
-	return (errcode);
-}
-
-int  crule_parsefunction(crule_treeptr *funcrootp, int *next_tokp, char **ruleptr)
-{
-	int  errcode = CR_NOERR;
-	char funcname[CR_MAXARGLEN];
-	int  namelen;
-	int  funcnum;
-
-	*funcrootp = NULL;
-	crule_getword(funcname, &namelen, CR_MAXARGLEN, ruleptr);
-	if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
-		return (errcode);
-	if (*next_tokp == CR_OPENPAREN)
-	{
-		for (funcnum = 0;; funcnum++)
-		{
-			if (strcasecmp(crule_funclist[funcnum].name, funcname) == 0)
-				break;
-			if (crule_funclist[funcnum].name[0] == '\0')
-				return (CR_UNKNWFUNC);
-		}
-		if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
-			return (errcode);
-		*funcrootp = (crule_treeptr) safe_alloc(sizeof(crule_treeelem));
-#ifdef CR_DEBUG
-		(void)fprintf(stderr, "allocating function element at %ld\n",
-		    *funcrootp);
-#endif
-		(*funcrootp)->funcptr = NULL;	/* for freeing aborted trees */
-		if ((errcode = crule_parsearglist(*funcrootp, next_tokp,
-		    ruleptr)) != CR_NOERR)
-			return (errcode);
-		if (*next_tokp != CR_CLOSEPAREN)
-			return (CR_EXPCTCLOSE);
-		if ((crule_funclist[funcnum].reqnumargs !=
-		    (*funcrootp)->numargs)
-		    && (crule_funclist[funcnum].reqnumargs != -1))
-			return (CR_ARGMISMAT);
-		if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
-			return (errcode);
-		(*funcrootp)->funcptr = crule_funclist[funcnum].funcptr;
-		return (CR_NOERR);
-	}
-	else
-		return (CR_EXPCTOPEN);
-}
-
-int  crule_parsearglist(crule_treeptr argrootp, int *next_tokp, char **ruleptr)
-{
-	int  errcode = CR_NOERR;
-	char *argelemp = NULL;
-	char currarg[CR_MAXARGLEN];
-	int  arglen = 0;
-	char word[CR_MAXARGLEN];
-	int  wordlen = 0;
-
-	argrootp->numargs = 0;
-	currarg[0] = '\0';
-	while (errcode == CR_NOERR)
-	{
-		switch (*next_tokp)
-		{
-		  case CR_WORD:
-			  crule_getword(word, &wordlen, CR_MAXARGLEN, ruleptr);
-			  if (currarg[0] != '\0')
-			  {
-				  if ((arglen + wordlen) < (CR_MAXARGLEN - 1))
-				  {
-					  strlcat(currarg, " ", sizeof currarg);
-					  strlcat(currarg, word, sizeof currarg);
-					  arglen += wordlen + 1;
-				  }
-			  }
-			  else
-			  {
-				  strlcpy(currarg, word, sizeof currarg);
-				  arglen = wordlen;
-			  }
-			  errcode = crule_gettoken(next_tokp, ruleptr);
-			  break;
-		  default:
-#if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-			  collapse(currarg);
-#endif
-			  if (*currarg)
-			  {
-				  safe_strdup(argelemp, currarg);
-				  argrootp->arg[argrootp->numargs++] = (void *)argelemp;
-			  }
-			  if (*next_tokp != CR_COMMA)
-				  return (CR_NOERR);
-			  currarg[0] = '\0';
-			  errcode = crule_gettoken(next_tokp, ruleptr);
-			  break;
-		}
-	}
-	return (errcode);
-}
-
-/*
- * this function is recursive..  i wish i knew a nonrecursive way but
- * i dont.  anyway, recursion is fun..  :)
- * DO NOT CALL THIS FUNTION WITH A POINTER TO A NULL POINTER
- * (ie: if *elem is NULL, you're doing it wrong - seg fault)
+/** Free a connection rule and all its children.
+ * @param[in,out] elem Pointer to pointer to element to free.  MUST NOT BE NULL.
  */
-void crule_free(char **elem)
+void crule_free(struct CRuleNode** elem)
 {
-	int  arg, numargs;
+  int arg, numargs;
 
-	if ((*((crule_treeptr *) elem))->funcptr == crule__not)
-	{
-		/* type conversions and ()'s are fun! ;)  here have an asprin.. */
-		if ((*((crule_treeptr *) elem))->arg[0] != NULL)
-			crule_free((char **)&((*((crule_treeptr *)
-			    elem))->arg[0]));
-	}
-	else if ((*((crule_treeptr *) elem))->funcptr == crule__andor)
-	{
-		crule_free((char **)&((*((crule_treeptr *) elem))->arg[0]));
-		if ((*((crule_treeptr *) elem))->arg[1] != NULL)
-			crule_free((char **)&((*((crule_treeptr *)
-			    elem))->arg[1]));
-	}
-	else
-	{
-		numargs = (*((crule_treeptr *) elem))->numargs;
-		for (arg = 0; arg < numargs; arg++)
-			safe_free_raw((char *)(*((crule_treeptr *) elem))->arg[arg]);
-	}
+  if ((*(elem))->funcptr == crule__not)
+  {
+    /* type conversions and ()'s are fun! ;)  here have an aspirin.. */
+    if ((*(elem))->arg[0] != NULL)
+      crule_free((struct CRuleNode**) &((*(elem))->arg[0]));
+  }
+  else if ((*(elem))->funcptr == crule__andor)
+  {
+    crule_free((struct CRuleNode**) &((*(elem))->arg[0]));
+    if ((*(elem))->arg[1] != NULL)
+      crule_free((struct CRuleNode**) &((*(elem))->arg[1]));
+  }
+  else
+  {
+    numargs = (*(elem))->numargs;
+    for (arg = 0; arg < numargs; arg++)
+      safe_free((*(elem))->arg[arg]);
+  }
 #ifdef CR_DEBUG
-	(void)fprintf(stderr, "freeing element at %ld\n", *elem);
+  fprintf(stderr, "freeing element at %ld\n", *elem);
 #endif
-	safe_free(*elem);
-	*elem = NULL;
-}
-
-char *crule_errstring(int errcode)
-{
-	return crule_errstr[errcode-1];
-}
-
-int crule_test(char *rule)
-{
-	char *ruleptr = rule;
-	int  next_tok;
-	crule_treeptr ruleroot = NULL;
-	int  errcode = CR_NOERR;
-
-	if ((errcode = crule_gettoken(&next_tok, &ruleptr)) == CR_NOERR) {
-		if ((errcode = crule_parseorexpr(&ruleroot, &next_tok,
-		    &ruleptr)) == CR_NOERR) {
-			if (ruleroot != NULL) {
-				if (next_tok == CR_END)
-				{
-					crule_free((char **)&ruleroot);
-					return 0;
-				}
-				else
-					errcode = CR_UNEXPCTTOK;
-			}
-			else
-				errcode = CR_EXPCTOR;
-		}
-	}
-	if (ruleroot != NULL)
-		crule_free((char **)&ruleroot);
-	return errcode+1;
+  safe_free(*elem);
+  *elem = 0;
 }
 
 #ifdef CR_DEBUG
-void print_tree(crule_treeptr printelem)
+/** Display a connection rule as text.
+ * @param[in] printelem Connection rule to display.
+ */
+static void print_tree(CRuleNodePtr printelem)
 {
-	int  funcnum, arg;
+  int funcnum, arg;
 
-	if (printelem->funcptr == crule__not)
-	{
-		printf("!( ");
-		print_tree((crule_treeptr) printelem->arg[0]);
-		printf(") ");
-	}
-	else if (printelem->funcptr == crule__andor)
-	{
-		printf("( ");
-		print_tree((crule_treeptr) printelem->arg[0]);
-		if (printelem->arg[2])
-			printf("|| ");
-		else
-			printf("&& ");
-		print_tree((crule_treeptr) printelem->arg[1]);
-		printf(") ");
-	}
-	else
-	{
-		for (funcnum = 0;; funcnum++)
-		{
-			if (printelem->funcptr ==
-			    crule_funclist[funcnum].funcptr)
-				break;
-			if (crule_funclist[funcnum].funcptr == NULL)
-			{
-				printf("\nACK!  *koff*  *sputter*\n");
-				exit(1);
-			}
-		}
-		printf("%s(", crule_funclist[funcnum].name);
-		for (arg = 0; arg < printelem->numargs; arg++)
-		{
-			if (arg != 0)
-				printf(",");
-			printf("%s", (char *)printelem->arg[arg]);
-		}
-		printf(") ");
-	}
+  if (printelem->funcptr == crule__not)
+  {
+    printf("!( ");
+    print_tree((CRuleNodePtr) printelem->arg[0]);
+    printf(") ");
+  }
+  else if (printelem->funcptr == crule__andor)
+  {
+    printf("( ");
+    print_tree((CRuleNodePtr) printelem->arg[0]);
+    if (printelem->arg[2])
+      printf("|| ");
+    else
+      printf("&& ");
+    print_tree((CRuleNodePtr) printelem->arg[1]);
+    printf(") ");
+  }
+  else
+  {
+    for (funcnum = 0;; funcnum++)
+    {
+      if (printelem->funcptr == crule_funclist[funcnum].funcptr)
+        break;
+      if (crule_funclist[funcnum].funcptr == NULL)
+        MyCoreDump;
+    }
+    printf("%s(", crule_funclist[funcnum].name);
+    for (arg = 0; arg < printelem->numargs; arg++)
+    {
+      if (arg != 0)
+        printf(",");
+      printf("%s", (char *)printelem->arg[arg]);
+    }
+    printf(") ");
+  }
 }
 
 #endif
 
 #ifdef CR_DEBUG
-void main()
+/** Read connection rules from stdin and display parsed forms as text.
+ * @return Zero.
+ */
+int main(void)
 {
-	char indata[256];
-	char *rule;
+  char indata[256];
+  CRuleNode* rule;
 
-	printf("rule: ");
-	while (fgets(indata, 256, stdin) != NULL)
-	{
-		indata[strlen(indata) - 1] = '\0';	/* lose the newline */
-		if ((rule = crule_parse(indata)) != NULL)
-		{
-			printf("equivalent rule: ");
-			print_tree((crule_treeptr) rule);
-			printf("\n");
-			crule_free(&rule);
-		}
-		printf("\nrule: ");
-	}
-	printf("\n");
+  printf("rule: ");
+  while (fgets(indata, 256, stdin) != NULL)
+  {
+    indata[strlen(indata) - 1] = '\0';  /* lose the newline */
+    if ((rule = crule_parse(indata)) != NULL)
+    {
+      printf("equivalent rule: ");
+      print_tree((CRuleNodePtr) rule);
+      printf("\n");
+      crule_free(&rule);
+    }
+    printf("\nrule: ");
+  }
+  printf("\n");
+
+  return 0;
 }
+
 #endif

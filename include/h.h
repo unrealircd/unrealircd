@@ -495,11 +495,11 @@ extern MODVAR RealCommand *CommandHash[256];
 extern void init_CommandHash(void);
 
 /* CRULE */
-char *crule_parse(char *);
-int crule_test(char *);
-char *crule_errstring(int);
-int crule_eval(char *);
-void crule_free(char **);
+extern struct CRuleNode* crule_parse(const char*);
+extern void crule_free(struct CRuleNode**);
+extern int crule_eval(struct CRuleNode* rule);
+extern int crule_test(const char *rule);
+extern const char *crule_errstring(int errcode);
 
 /*
  * Close all local socket connections, invalidate client fd's

@@ -1484,6 +1484,30 @@ struct AuthConfig {
 #define crypt DES_crypt
 #endif
 
+/* CRULE stuff */
+
+#define CRULE_ALL		0
+#define CRULE_AUTO		1
+
+/* some constants and shared data types */
+#define CR_MAXARGLEN 80         /**< Maximum arg length (must be > HOSTLEN) */
+#define CR_MAXARGS 3            /**< Maximum number of args for a rule */
+
+/** Evaluation function for a connection rule. */
+typedef int (*crule_funcptr) (int, void **);
+
+/** CRULE - Node in a connection rule tree. */
+struct CRuleNode {
+  crule_funcptr funcptr; /**< Evaluation function for this node. */
+  int numargs;           /**< Number of arguments. */
+  void *arg[CR_MAXARGS]; /**< Array of arguments.  For operators, each arg
+                            is a tree element; for functions, each arg is
+                            a string. */
+};
+typedef struct CRuleNode CRuleNode;
+typedef struct CRuleNode* CRuleNodePtr;
+
+
 /*
  * conf2 stuff -stskeeps
 */
@@ -1560,9 +1584,6 @@ struct ConfigFlag_tld
 #define CONF_BAN_TYPE_CONF	0
 #define CONF_BAN_TYPE_AKILL	1
 #define CONF_BAN_TYPE_TEMPORARY 2
-
-#define CRULE_ALL		0
-#define CRULE_AUTO		1
 
 struct ConfigItem {
 	ConfigItem *prev, *next;
@@ -1892,7 +1913,8 @@ struct ConfigItem_deny_link {
 	ConfigItem_deny_link *prev, *next;
 	ConfigFlag_except flag;
 	ConfigItem_mask  *mask;
-	char *rule, *prettyrule;
+	CRuleNode *rule;
+	char *prettyrule; /** human printable version */
 };
 
 struct ConfigItem_deny_version {

@@ -9993,7 +9993,7 @@ int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->name, "rule"))
 		{
-			deny->rule = (char *)crule_parse(cep->value);
+			deny->rule = crule_parse(cep->value);
 			safe_strdup(deny->prettyrule, cep->value);
 		}
 		else if (!strcmp(cep->name, "type")) {
