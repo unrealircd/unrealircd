@@ -1592,7 +1592,7 @@ void free_log_block(Log *l)
 
 int log_tests(void)
 {
-	if (snomask_num_destinations <= 1)
+	if (snomask_num_destinations == 0)
 	{
 		unreal_log(ULOG_ERROR, "config", "LOG_SNOMASK_BLOCK_MISSING", NULL,
 		           "Missing snomask logging configuration:\n"
@@ -1600,7 +1600,6 @@ int log_tests(void)
 		           "include \"snomasks.default.conf\";");
 		return 0;
 	}
-	snomask_num_destinations = 0;
 	return 1;
 }
 
@@ -1649,6 +1648,7 @@ void postconf_defaults_log_block(void)
 void log_pre_rehash(void)
 {
 	*snomasks_in_use_testing = '\0';
+	snomask_num_destinations = 0;
 }
 
 /* Called after CONFIG_TEST right before CONFIG_RUN */
