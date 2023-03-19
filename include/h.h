@@ -1047,6 +1047,7 @@ extern MODVAR int current_serial;
 extern const char *spki_fingerprint(Client *acptr);
 extern const char *spki_fingerprint_ex(X509 *x509_cert);
 extern int is_module_loaded(const char *name);
+extern int is_blacklisted_module(const char *name);
 extern void close_std_descriptors(void);
 extern void banned_client(Client *acptr, const char *bantype, const char *reason, int global, int noexit);
 extern char *mystpcpy(char *dst, const char *src);

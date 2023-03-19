@@ -348,7 +348,17 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 	if (cc->condition == IF_MODULE)
 	{
 		if (phase == PREPROCESSOR_PHASE_INITIAL)
-			return 1; /* we cannot handle @if module-loaded() yet.. */
+		{
+			/* We cannot handle @if module-loaded() yet.. */
+			return 1;
+		}
+		if (phase == PREPROCESSOR_PHASE_SECONDARY)
+		{
+			/* We can only handle blacklisted modules at this point, so: */
+			if (is_blacklisted_module(cc->name))
+				return 0;
+			return 1;
+		}
 		if (is_module_loaded(cc->name))
 		{
 			result = 1;

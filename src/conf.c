@@ -2242,6 +2242,8 @@ int config_read_file(const char *filename, const char *display_name)
 			if (!strcmp(ce->name, "blacklist-module"))
 				 _test_blacklist_module(cfptr, ce);
 
+		preprocessor_resolve_conditionals_ce(&cfptr->items, PREPROCESSOR_PHASE_SECONDARY);
+
 		/* Load urls */
 		config_parse_and_queue_urls(cfptr->items);
 

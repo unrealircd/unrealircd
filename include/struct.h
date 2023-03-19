@@ -1456,7 +1456,8 @@ typedef enum PreprocessorItem {
 
 typedef enum PreprocessorPhase {
 	PREPROCESSOR_PHASE_INITIAL	= 1,
-	PREPROCESSOR_PHASE_MODULE	= 2
+	PREPROCESSOR_PHASE_SECONDARY	= 2,
+	PREPROCESSOR_PHASE_MODULE	= 3
 } PreprocessorPhase;
 
 typedef enum AuthenticationType {
