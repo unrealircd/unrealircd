@@ -37,14 +37,15 @@ in progress.
   [`unrealircd.org/json-log`](https://www.unrealircd.org/docs/JSON_logging#Enabling_on_IRC)
   on IRC and during `REHASH` some module sends log output during MOD_INIT
   (eg. with some 3rd party modules)
+* Crash when parsing [deny link block](https://www.unrealircd.org/docs/Deny_link_block)
 * The [Module manager](https://www.unrealircd.org/docs/Module_manager)
   now works on FreeBSD and similar.
-* Crash when parsing deny server block
 * Silence warnings on Clang 15+ (eg. Ubuntu 23.04)
-* Don't try to fetch `GeoIP.dat` upon `blacklist-module geoip_classic;`
+* Don't download `GeoIP.dat` if you have 
+  [`blacklist-module geoip_classic;`](https://www.unrealircd.org/docs/Blacklist-module_directive)
 * Channel mode `+S` stripping too much on incorrect color codes.
-* Make `@if module-loaded()` work correctly for modules that are about
-  to be unloaded during REHASH.
+* Make [`@if module-loaded()`](https://www.unrealircd.org/docs/Defines_and_conditional_config)
+  work correctly for modules that are about to be unloaded during REHASH.
 
 UnrealIRCd 6.0.6
 -----------------
