@@ -1546,6 +1546,22 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 
 	// NOTE: code duplication further down!
 
+	/* This one should only be in do_unreal_log_internal()
+	 * and never in do_unreal_log_internal_from_remote()
+	 */
+	if (remote_rehash_client &&
+	    ((!strcmp(event_id, "CONFIG_ERROR_GENERIC") ||
+	      !strcmp(event_id, "CONFIG_WARNING_GENERIC") ||
+	      !strcmp(event_id, "CONFIG_INFO_GENERIC"))
+	     ||
+	     (loop.config_status >= CONFIG_STATUS_TEST)) &&
+	    strcmp(subsystem, "rawtraffic"))
+	{
+		sendto_log(remote_rehash_client, "NOTICE", remote_rehash_client->name,
+		           iConf.server_notice_colors, iConf.server_notice_show_event,
+		           loglevel, subsystem, event_id, mmsg, json_serialized, from_server);
+	}
+
 	/* Free everything */
 	safe_free(json_serialized);
 	safe_free_multiline(mmsg);

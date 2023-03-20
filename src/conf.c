@@ -1414,8 +1414,6 @@ void config_error(FORMAT_STRING(const char *format), ...)
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
 	unreal_log_raw(ULOG_ERROR, "config", "CONFIG_ERROR_GENERIC", NULL, buffer);
-	if (remote_rehash_client)
-		sendnotice(remote_rehash_client, "error: %s", buffer);
 	/* We cannot live with this */
 	config_error_flag = 1;
 }
@@ -1472,8 +1470,6 @@ void config_status(FORMAT_STRING(const char *format), ...)
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
 	unreal_log_raw(ULOG_INFO, "config", "CONFIG_INFO_GENERIC", NULL, buffer);
-	if (remote_rehash_client)
-		sendnotice(remote_rehash_client, "%s", buffer);
 }
 
 void config_warn(FORMAT_STRING(const char *format), ...)
@@ -1488,8 +1484,6 @@ void config_warn(FORMAT_STRING(const char *format), ...)
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
 	unreal_log_raw(ULOG_WARNING, "config", "CONFIG_WARNING_GENERIC", NULL, buffer);
-	if (remote_rehash_client)
-		sendnotice(remote_rehash_client, "[warning] %s", buffer);
 }
 
 void config_warn_duplicate(const char *filename, int line, const char *entry)

@@ -569,7 +569,6 @@ CMD_FUNC(cmd_rehash)
 				sendnotice(client, "A rehash is already in progress");
 				return;
 			}
-			unreal_log(ULOG_INFO, "config", "CONFIG_RELOAD", client, "Rehashing server configuration file [by: $client.details]");
 			remote_rehash_client = client;
 			/* fallthrough... so we deal with this the same way as local rehashes */
 		}

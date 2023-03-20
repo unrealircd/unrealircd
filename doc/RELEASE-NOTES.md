@@ -31,6 +31,9 @@ in progress.
   Atheme servers and reject the link if this is not the case.
 * The `FLOOD_BLOCKED` log message now shows the target of the flood
   for `target-flood-user` and `target-flood-channel`.
+* When an IRCOp sets `+H` to hide ircop status only the swhois items that
+  were added through oper will be hidden (and not the ones added by eg. vhost).
+  Previously all were hidden.
 
 ### Fixes:
 * Crash if an IRCOp uses
@@ -46,6 +49,7 @@ in progress.
 * Channel mode `+S` stripping too much on incorrect color codes.
 * Make [`@if module-loaded()`](https://www.unrealircd.org/docs/Defines_and_conditional_config)
   work correctly for modules that are about to be unloaded during REHASH.
+* Some missing notices if remotely REHASHing a server, and one duplicate line.
 
 UnrealIRCd 6.0.6
 -----------------
