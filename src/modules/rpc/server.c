@@ -234,6 +234,7 @@ RPC_CALL_FUNC(rpc_server_connect)
 	const char *server, *link_name;
 	Client *acptr;
 	ConfigItem_link *link;
+	const char *err;
 
 	OPTIONAL_PARAM_STRING("server", server);
 	if (server)
@@ -275,9 +276,9 @@ RPC_CALL_FUNC(rpc_server_connect)
 		return;
 	}
 
-	if (check_deny_link(link, 0))
+	if ((err = check_deny_link(link, 0)))
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_DENIED, "Server linking is denied via a deny link { } block");
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_DENIED, "Server linking is denied via a deny link { } block: %s", err);
 		return;
 	}
 

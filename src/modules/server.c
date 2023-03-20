@@ -43,6 +43,7 @@ struct ConfigItem_deny_link {
 	ConfigItem_mask  *mask;
 	CRuleNode *rule; /**< parsed crule */
 	char *prettyrule; /**< human printable version */
+	char *reason; /**< Reason for the deny link */
 };
 
 /* Forward declarations */
@@ -179,9 +180,10 @@ void server_config_free(void)
 	for (d = conf_deny_link; d; d = d_next)
 	{
 		d_next = d->next;
-		safe_free(d->prettyrule);
 		unreal_delete_masks(d->mask);
 		crule_free(&d->rule);
+		safe_free(d->prettyrule);
+		safe_free(d->reason);
 		DelListItem(d, conf_deny_link);
 		safe_free(d);
 	}
@@ -325,6 +327,8 @@ int server_config_test_deny_link(ConfigFile *cf, ConfigEntry *ce, int type, int 
 					cep->file->filename, cep->line_number);
 					errors++;
 				}
+			} else if (!strcmp(cep->name, "reason"))
+			{
 			}
 			else
 			{
@@ -391,6 +395,10 @@ int server_config_run_deny_link(ConfigFile *cf, ConfigEntry *ce, int type)
 			deny->rule = crule_parse(cep->value);
 			safe_strdup(deny->prettyrule, cep->value);
 		}
+		else if (!strcmp(cep->name, "reason"))
+		{
+			safe_strdup(deny->reason, cep->value);
+		}
 		else if (!strcmp(cep->name, "type")) {
 			if (!strcmp(cep->value, "all"))
 				deny->flag.type = CRULE_ALL;
@@ -398,6 +406,10 @@ int server_config_run_deny_link(ConfigFile *cf, ConfigEntry *ce, int type)
 				deny->flag.type = CRULE_AUTO;
 		}
 	}
+
+	/* Set a default reason, if needed */
+	if (!deny->reason)
+		safe_strdup(deny->reason, "Denied");
 
 	AddListItem(deny, conf_deny_link);
 	return 1;
@@ -1050,6 +1062,7 @@ CMD_FUNC(cmd_server)
 	ConfigItem_link *aconf = NULL;
 	char *flags = NULL, *protocol = NULL, *inf = NULL, *num = NULL;
 	int incoming;
+	const char *err;
 
 	if (IsUser(client))
 	{
@@ -1167,12 +1180,13 @@ CMD_FUNC(cmd_server)
 		strlcpy(client->info, info[0] ? info : "server", sizeof(client->info));
 	}
 
-	if (check_deny_link(aconf, 0))
+	if ((err = check_deny_link(aconf, 0)))
 	{
 		unreal_log(ULOG_ERROR, "link", "LINK_DENIED_DENY_LINK_BLOCK", client,
-			   "Server link $servername rejected by deny link { } block.",
-			   log_data_string("servername", servername));
-		exit_client(client, NULL, "Disallowed by connection rule");
+			   "Server link $servername rejected by deny link { } block: $reason",
+			   log_data_string("servername", servername),
+			   log_data_string("reason", err));
+		exit_client_fmt(client, NULL, "Disallowed by connection rule: %s", err);
 		return;
 	}
 
@@ -2198,7 +2212,7 @@ const char *_check_deny_link(ConfigItem_link *link, int auto_connect)
 		if (unreal_mask_match_string(link->servername, d->mask) &&
 		    crule_eval(d->rule))
 		{
-			return "Denied"; // TODO: implement deny link::reason
+			return d->reason;
 		}
 	}
 	return NULL;

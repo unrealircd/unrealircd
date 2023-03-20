@@ -63,6 +63,7 @@ CMD_FUNC(cmd_connect)
 	int  retval;
 	ConfigItem_link	*aconf;
 	Client *server;
+	const char *str;
 
 	if (!IsServer(client) && MyConnect(client) && !ValidatePermissionsForPath("route:global",client,NULL,NULL,NULL) && parc > 3)
 	{			/* Only allow LocOps to make */
@@ -108,9 +109,9 @@ CMD_FUNC(cmd_connect)
 		return;
 	}
 
-	if (check_deny_link(aconf, 0))
+	if ((str = check_deny_link(aconf, 0)))
 	{
-		sendnotice(client, "*** Connect: Disallowed by connection rule");
+		sendnotice(client, "*** Connect: Disallowed by connection rule: %s", str);
 		return;
 	}
 
