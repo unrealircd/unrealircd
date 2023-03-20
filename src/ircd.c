@@ -753,6 +753,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 	init_dynconf();
 	init_sys();
+	clicap_init();
 	/*
 	 * Add default class
 	 */
@@ -783,7 +784,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	make_server(&me);
 	umodes_check_for_changes();
 	charsys_check_for_changes();
-	clicap_init();
 	if (!find_command_simple("PRIVMSG"))
 	{
 		config_error("Someone forgot to load modules with proper commands in them. READ THE DOCUMENTATION");

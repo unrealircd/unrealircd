@@ -22,10 +22,20 @@
 
 #include "unrealircd.h"
 
+#define ADVERTISEONLYCAPS 16
+/* Advertise only caps are not counted anywhere, this only provides space in rehash temporary storage arrays.
+ * If exceeded, the caps just won't be stored and will be re-added safely. --k4be
+ */
+
+#define MAXCLICAPS ((int)(sizeof(long)*8 - 1 + ADVERTISEONLYCAPS)) /* how many cap bits will fit in `long`? */
+static char *old_caps[MAXCLICAPS]; /**< List of old CAP names - used for /rehash */
+int old_caps_proto[MAXCLICAPS]; /**< List of old CAP protocol values - used for /rehash */
+
 MODVAR ClientCapability *clicaps = NULL; /* List of client capabilities */
 
 void clicap_init(void)
 {
+	memset(&old_caps, 0, sizeof(old_caps));
 }
 
 /**
@@ -211,7 +221,7 @@ void unload_clicap_commit(ClientCapability *clicap)
 	           log_data_string("token", clicap->name));
 
 	/* NOTE: Stripping the CAP from local clients is done
-	 * in clicap_post_rehash(), so not here.
+	 * in clicap_check_for_changes(), so not here.
 	 */
 
 	/* A message tag handler may depend on us, remove it */
@@ -266,24 +276,19 @@ void unload_all_unused_caps(void)
 	}
 }
 
-#define ADVERTISEONLYCAPS 16
-/* Advertise only caps are not counted anywhere, this only provides space in rehash temporary storage arrays.
- * If exceeded, the caps just won't be stored and will be re-added safely. --k4be
- */
-
-#define MAXCLICAPS ((int)(sizeof(long)*8 - 1 + ADVERTISEONLYCAPS)) /* how many cap bits will fit in `long`? */
-static char *old_caps[MAXCLICAPS]; /**< List of old CAP names - used for /rehash */
-int old_caps_proto[MAXCLICAPS]; /**< List of old CAP protocol values - used for /rehash */
-
 /** Called before REHASH. This saves the list of cap names and protocol values */
 void clicap_pre_rehash(void)
 {
 	ClientCapability *clicap;
 	int i = 0;
 
-	memset(&old_caps, 0, sizeof(old_caps));
+	for (i=0; i < MAXCLICAPS; i++)
+	{
+		safe_free(old_caps[i]);
+		old_caps_proto[i] = 0;
+	}
 
-	for (clicap = clicaps; clicap; clicap = clicap->next)
+	for (i=0, clicap = clicaps; clicap; clicap = clicap->next)
 	{
 		if (i == MAXCLICAPS)
 		{
@@ -321,7 +326,7 @@ void clear_cap_for_users(long cap)
  * 2. Sending any CAP DEL
  * 3. Sending any CAP NEW
  */
-void clicap_post_rehash(void)
+void clicap_check_for_changes(void)
 {
 	ClientCapability *clicap;
 	char *name;

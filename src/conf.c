@@ -2139,7 +2139,6 @@ int config_test(void)
 	loop.config_status = CONFIG_STATUS_POSTLOAD;
 	postconf();
 	unreal_log(ULOG_INFO, "config", "CONFIG_LOADED", NULL, "Configuration loaded");
-	clicap_post_rehash();
 	unload_all_unused_mtag_handlers();
 	return 0;
 }
@@ -10615,6 +10614,7 @@ int rehash_internal(Client *client)
 	unload_all_unused_history_backends();
 	unload_all_unused_rpc_handlers();
 	// unload_all_unused_moddata(); -- this will crash
+	clicap_check_for_changes();
 	umodes_check_for_changes();
 	charsys_check_for_changes();
 
