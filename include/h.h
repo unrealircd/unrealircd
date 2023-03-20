@@ -105,7 +105,6 @@ extern MODVAR ConfigItem_link		*conf_link;
 extern MODVAR ConfigItem_sni		*conf_sni;
 extern MODVAR ConfigItem_ban		*conf_ban;
 extern MODVAR ConfigItem_deny_channel  *conf_deny_channel;
-extern MODVAR ConfigItem_deny_link	*conf_deny_link;
 extern MODVAR ConfigItem_allow_channel *conf_allow_channel;
 extern MODVAR ConfigItem_deny_version	*conf_deny_version;
 extern MODVAR ConfigItem_alias		*conf_alias;
@@ -149,7 +148,6 @@ extern ConfigItem_sni *find_sni(const char *name);
 extern ConfigItem_ulines	*find_uline(const char *host);
 extern ConfigItem_tld		*find_tld(Client *cptr);
 extern ConfigItem_link		*find_link(const char *servername);
-extern ConfigItem_deny_link *check_deny_link(ConfigItem_link *link, int auto_connect);
 extern ConfigItem_ban 		*find_ban(Client *, const char *host, short type);
 extern ConfigItem_ban 		*find_banEx(Client *,const char *host, short type, short type2);
 extern ConfigItem_vhost	*find_vhost(const char *name);
@@ -865,6 +863,7 @@ extern MODVAR int (*websocket_handle_websocket)(Client *client, WebRequest *web,
 extern MODVAR int (*websocket_create_packet)(int opcode, char **buf, int *len);
 extern MODVAR int (*websocket_create_packet_ex)(int opcode, char **buf, int *len, char *sendbuf, size_t sendbufsize);
 extern MODVAR int (*websocket_create_packet_simple)(int opcode, const char **buf, int *len);
+extern MODVAR const char *(*check_deny_link)(ConfigItem_link *link, int auto_connect);
 /* /Efuncs */
 
 /* TLS functions */

@@ -56,7 +56,6 @@ extern MODVAR int  max_connection_count;
 
 int stats_banversion(Client *, const char *);
 int stats_links(Client *, const char *);
-int stats_denylinkall(Client *, const char *);
 int stats_gline(Client *, const char *);
 int stats_except(Client *, const char *);
 int stats_allow(Client *, const char *);
@@ -67,7 +66,6 @@ int stats_bannick(Client *, const char *);
 int stats_traffic(Client *, const char *);
 int stats_uline(Client *, const char *);
 int stats_vhost(Client *, const char *);
-int stats_denylinkauto(Client *, const char *);
 int stats_kline(Client *, const char *);
 int stats_banrealname(Client *, const char *);
 int stats_sqline(Client *, const char *);
@@ -101,7 +99,6 @@ struct statstab {
 struct statstab StatsTable[] = {
 	{ 'B', "banversion",	stats_banversion,	0		},
 	{ 'C', "link", 		stats_links,		0 		},
-	{ 'D', "denylinkall",	stats_denylinkall,	0		},
 	{ 'G', "gline",		stats_gline,		FLAGS_AS_PARA	},
 	{ 'H', "link",	 	stats_links,		0 		},
 	{ 'I', "allow",		stats_allow,		0 		},
@@ -119,7 +116,6 @@ struct statstab StatsTable[] = {
 	{ 'X', "notlink",	stats_notlink,		0 		},
 	{ 'Y', "class",		stats_class,		0 		},
 	{ 'c', "link", 		stats_links,		0 		},
-	{ 'd', "denylinkauto",	stats_denylinkauto,	0 		},
 	{ 'e', "except",	stats_except,		0 		},
 	{ 'f', "spamfilter",	stats_spamfilter,	FLAGS_AS_PARA	},
 	{ 'g', "gline",		stats_gline,		FLAGS_AS_PARA	},
@@ -444,22 +440,6 @@ int stats_links(Client *client, const char *para)
 	return 0;
 }
 
-int stats_denylinkall(Client *client, const char *para)
-{
-	ConfigItem_deny_link *links;
-	ConfigItem_mask *m;
-
-	for (links = conf_deny_link; links; links = links->next)
-	{
-		if (links->flag.type == CRULE_ALL)
-		{
-			for (m = links->mask; m; m = m->next)
-				sendnumeric(client, RPL_STATSDLINE, 'D', m->mask, links->prettyrule);
-		}
-	}
-	return 0;
-}
-
 int stats_gline(Client *client, const char *para)
 {
 	int cnt = 0;
@@ -681,22 +661,6 @@ int stats_vhost(Client *client, const char *para)
 			               vhosts->virthost,
 			               vhosts->login,
 			               namevalue_nospaces(m));
-		}
-	}
-	return 0;
-}
-
-int stats_denylinkauto(Client *client, const char *para)
-{
-	ConfigItem_deny_link *links;
-	ConfigItem_mask *m;
-
-	for (links = conf_deny_link; links; links = links->next)
-	{
-		if (links->flag.type == CRULE_AUTO)
-		{
-			for (m = links->mask; m; m = m->next)
-				sendnumeric(client, RPL_STATSDLINE, 'd', m->mask, links->prettyrule);
 		}
 	}
 	return 0;

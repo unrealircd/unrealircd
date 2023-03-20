@@ -104,7 +104,6 @@ typedef struct ConfigItem_vhost ConfigItem_vhost;
 typedef struct ConfigItem_link	ConfigItem_link;
 typedef struct ConfigItem_ban ConfigItem_ban;
 typedef struct ConfigItem_deny_dcc ConfigItem_deny_dcc;
-typedef struct ConfigItem_deny_link ConfigItem_deny_link;
 typedef struct ConfigItem_deny_channel ConfigItem_deny_channel;
 typedef struct ConfigItem_deny_version ConfigItem_deny_version;
 typedef struct ConfigItem_alias ConfigItem_alias;
@@ -1908,14 +1907,6 @@ struct ConfigItem_deny_dcc {
 	ConfigItem_deny_dcc		*prev, *next;
 	ConfigFlag_ban		flag;
 	char			*filename, *reason;
-};
-
-struct ConfigItem_deny_link {
-	ConfigItem_deny_link *prev, *next;
-	ConfigFlag_except flag;
-	ConfigItem_mask  *mask;
-	CRuleNode *rule;
-	char *prettyrule; /** human printable version */
 };
 
 struct ConfigItem_deny_version {

@@ -234,7 +234,6 @@ RPC_CALL_FUNC(rpc_server_connect)
 	const char *server, *link_name;
 	Client *acptr;
 	ConfigItem_link *link;
-	ConfigItem_deny_link *deny;
 
 	OPTIONAL_PARAM_STRING("server", server);
 	if (server)
@@ -297,8 +296,6 @@ RPC_CALL_FUNC(rpc_server_disconnect)
 	json_t *result, *list, *item;
 	const char *server, *link_name, *reason;
 	Client *acptr, *target;
-	ConfigItem_link *link;
-	ConfigItem_deny_link *deny;
 	MessageTag *mtags = NULL;
 
 	OPTIONAL_PARAM_STRING("server", server);

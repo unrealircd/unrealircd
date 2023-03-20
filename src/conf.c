@@ -52,7 +52,6 @@ static int	_conf_link		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_ban		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_set		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny		(ConfigFile *conf, ConfigEntry *ce);
-static int	_conf_deny_link		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_channel	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_version	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_require		(ConfigFile *conf, ConfigEntry *ce);
@@ -228,7 +227,6 @@ ConfigItem_link		*conf_link = NULL;
 ConfigItem_ban		*conf_ban = NULL;
 ConfigItem_deny_channel *conf_deny_channel = NULL;
 ConfigItem_allow_channel *conf_allow_channel = NULL;
-ConfigItem_deny_link	*conf_deny_link = NULL;
 ConfigItem_deny_version *conf_deny_version = NULL;
 ConfigItem_alias	*conf_alias = NULL;
 ConfigResource	*config_resources = NULL;
@@ -2340,7 +2338,6 @@ void config_rehash()
 	ConfigItem_listen	 	*listen_ptr;
 	ConfigItem_tld			*tld_ptr;
 	ConfigItem_vhost		*vhost_ptr;
-	ConfigItem_deny_link		*deny_link_ptr;
 	ConfigItem_deny_channel		*deny_channel_ptr;
 	ConfigItem_allow_channel	*allow_channel_ptr;
 	ConfigItem_admin		*admin_ptr;
@@ -2485,14 +2482,6 @@ void config_rehash()
 
 	remove_config_tkls();
 
-	for (deny_link_ptr = conf_deny_link; deny_link_ptr; deny_link_ptr = (ConfigItem_deny_link *) next) {
-		next = (ListStruct *)deny_link_ptr->next;
-		safe_free(deny_link_ptr->prettyrule);
-		unreal_delete_masks(deny_link_ptr->mask);
-		crule_free(&deny_link_ptr->rule);
-		DelListItem(deny_link_ptr, conf_deny_link);
-		safe_free(deny_link_ptr);
-	}
 	for (deny_version_ptr = conf_deny_version; deny_version_ptr; deny_version_ptr = (ConfigItem_deny_version *) next) {
 		next = (ListStruct *)deny_version_ptr->next;
 		safe_free(deny_version_ptr->mask);
@@ -3080,30 +3069,6 @@ ConfigItem_link *find_link(const char *servername)
 		if (!link->flag.temporary && match_simple(link->servername, servername))
 		{
 		    return link;
-		}
-	}
-	return NULL;
-}
-
-/** Check if this link should be denied due to deny link { } configuration
- * @param link		The link block
- * @param auto_connect	Set this to 1 if this is called from auto connect code
- *			(it will then check both CRULE_AUTO + CRULE_ALL)
- *			set it to 0 otherwise (will not check CRULE_AUTO blocks).
- * @returns The deny block if the server should be denied, or NULL if no deny block.
- */
-ConfigItem_deny_link *check_deny_link(ConfigItem_link *link, int auto_connect)
-{
-	ConfigItem_deny_link *d;
-
-	for (d = conf_deny_link; d; d = d->next)
-	{
-		if ((auto_connect == 0) && (d->flag.type == CRULE_AUTO))
-			continue;
-		if (unreal_mask_match_string(link->servername, d->mask) &&
-		    crule_eval(d->rule))
-		{
-			return d;
 		}
 	}
 	return NULL;
@@ -9927,8 +9892,6 @@ Hook *h;
 
 	if (!strcmp(ce->value, "channel"))
 		_conf_deny_channel(conf, ce);
-	else if (!strcmp(ce->value, "link"))
-		_conf_deny_link(conf, ce);
 	else if (!strcmp(ce->value, "version"))
 		_conf_deny_version(conf, ce);
 	else
@@ -9981,34 +9944,6 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 	AddListItem(deny, conf_deny_channel);
 	return 0;
 }
-int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
-{
-	ConfigItem_deny_link 	*deny = NULL;
-	ConfigEntry 	    	*cep;
-
-	deny = safe_alloc(sizeof(ConfigItem_deny_link));
-	for (cep = ce->items; cep; cep = cep->next)
-	{
-		if (!strcmp(cep->name, "mask"))
-		{
-			unreal_add_masks(&deny->mask, cep);
-		}
-		else if (!strcmp(cep->name, "rule"))
-		{
-			deny->rule = crule_parse(cep->value);
-			safe_strdup(deny->prettyrule, cep->value);
-		}
-		else if (!strcmp(cep->name, "type")) {
-			if (!strcmp(cep->value, "all"))
-				deny->flag.type = CRULE_ALL;
-			else if (!strcmp(cep->value, "auto"))
-				deny->flag.type = CRULE_AUTO;
-		}
-	}
-	AddListItem(deny, conf_deny_link);
-	return 0;
-}
-
 int	_conf_deny_version(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigItem_deny_version *deny = NULL;
@@ -10141,102 +10076,6 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 			config_error("%s:%d: You cannot have both ::mask and ::match. "
 				     "You should only use %s %s::match.",
 				     ce->file->filename, ce->line_number, ce->name, ce->value);
-			errors++;
-		}
-	}
-	else if (!strcmp(ce->value, "link"))
-	{
-		char has_mask = 0, has_rule = 0, has_type = 0;
-		for (cep = ce->items; cep; cep = cep->next)
-		{
-			if (!cep->items)
-			{
-				if (config_is_blankorempty(cep, "deny link"))
-				{
-					errors++;
-					continue;
-				}
-				else if (!strcmp(cep->name, "mask"))
-				{
-					has_mask = 1;
-				} else if (!strcmp(cep->name, "rule"))
-				{
-					int val = 0;
-					if (has_rule)
-					{
-						config_warn_duplicate(cep->file->filename,
-							cep->line_number, "deny link::rule");
-						continue;
-					}
-					has_rule = 1;
-					if ((val = crule_test(cep->value)))
-					{
-						config_error("%s:%i: deny link::rule contains an invalid expression: %s",
-							cep->file->filename,
-							cep->line_number,
-							crule_errstring(val));
-						errors++;
-					}
-				}
-				else if (!strcmp(cep->name, "type"))
-				{
-					if (has_type)
-					{
-						config_warn_duplicate(cep->file->filename,
-							cep->line_number, "deny link::type");
-						continue;
-					}
-					has_type = 1;
-					if (!strcmp(cep->value, "auto"))
-					;
-					else if (!strcmp(cep->value, "all"))
-					;
-					else {
-						config_status("%s:%i: unknown deny link type",
-						cep->file->filename, cep->line_number);
-						errors++;
-					}
-				}
-				else
-				{
-					config_error_unknown(cep->file->filename,
-						cep->line_number, "deny link", cep->name);
-					errors++;
-				}
-			}
-			else
-			{
-				// Sections
-				if (!strcmp(cep->name, "mask"))
-				{
-					if (cep->value || cep->items)
-						has_mask = 1;
-				}
-				else
-				{
-					config_error_unknown(cep->file->filename,
-						cep->line_number, "deny link", cep->name);
-					errors++;
-					continue;
-				}
-			}
-		}
-		if (!has_mask)
-		{
-			config_error_missing(ce->file->filename, ce->line_number,
-				"deny link::mask");
-			errors++;
-		}
-		if (!has_rule)
-		{
-			config_error_missing(ce->file->filename, ce->line_number,
-				"deny link::rule");
-			errors++;
-		}
-		if (!has_type)
-		{
-			config_error_missing(ce->file->filename, ce->line_number,
-				"deny link::type");
 			errors++;
 		}
 	}
