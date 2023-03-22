@@ -47,6 +47,7 @@ in progress.
 * When an IRCOp sets `+H` to hide ircop status only the swhois items that
   were added through oper will be hidden (and not the ones added by eg. vhost).
   Previously all were hidden.
+* Update shipped libraries: c-ares 1.19.0, Jansson 2.14, PCRE2 10.42
 
 ### Fixes:
 * Crash if an IRCOp uses
@@ -56,6 +57,8 @@ in progress.
 * Crash when parsing [deny link block](https://www.unrealircd.org/docs/Deny_link_block)
 * The [Module manager](https://www.unrealircd.org/docs/Module_manager)
   now works on FreeBSD and similar.
+* In `LUSERS` the "unknown connection(s)" figure was wrong. This was just a
+  harmless counting error with no other effects.
 * Silence warnings on Clang 15+ (eg. Ubuntu 23.04)
 * Don't download `GeoIP.dat` if you have 
   [`blacklist-module geoip_classic;`](https://www.unrealircd.org/docs/Blacklist-module_directive)
