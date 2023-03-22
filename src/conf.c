@@ -4106,6 +4106,12 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 						cep->line_number, "oper::vhost");
 					continue;
 				}
+				if (!valid_vhost(cep->value))
+				{
+					config_error("%s:%i: oper::vhost contains illegal characters or is too long: '%s'",
+					             cep->file->filename, cep->line_number, cep->value);
+					errors++;
+				}
 				has_vhost = 1;
 			}
 			/* oper::snomask */
@@ -5974,39 +5980,11 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 				continue;
 			}
-			if ((at = strchr(cep->value, '@')))
+			if (!valid_vhost(cep->value))
 			{
-				for (tmp = cep->value; tmp != at; tmp++)
-				{
-					if (*tmp == '~' && tmp == cep->value)
-						continue;
-					if (!isallowed(*tmp))
-						break;
-				}
-				if (tmp != at)
-				{
-					config_error("%s:%i: vhost::vhost contains an invalid ident",
-						cep->file->filename, cep->line_number);
-					errors++;
-				}
-				host = at+1;
-			}
-			else
-				host = cep->value;
-			if (!*host)
-			{
-				config_error("%s:%i: vhost::vhost does not have a host set",
-					cep->file->filename, cep->line_number);
+				config_error("%s:%i: oper::vhost contains illegal characters or is too long: '%s'",
+					     cep->file->filename, cep->line_number, cep->value);
 				errors++;
-			}
-			else
-			{
-				if (!valid_host(host, 0))
-				{
-					config_error("%s:%i: vhost::vhost contains an invalid host",
-						cep->file->filename, cep->line_number);
-					errors++;
-				}
 			}
 		}
 		else if (!strcmp(cep->name, "login"))

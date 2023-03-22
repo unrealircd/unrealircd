@@ -750,6 +750,32 @@ int valid_username(const char *username)
 	return 1;
 }
 
+/** Check validity of a vhost which can be both in 'host' or 'user@host' format.
+ * This will call valid_username() and valid_host(xxx, 0) accordingly.
+ * @param userhost the "host" or "user@host"
+ * @returns 1 if valid, 0 if not.
+ */
+int valid_vhost(const char *userhost)
+{
+	char uhost[512], *p;
+	const char *host = userhost;
+
+        strlcpy(uhost, userhost, sizeof(uhost));
+
+	if ((p = strchr(uhost, '@')))
+	{
+		*p++ = '\0';
+		if (!valid_username(uhost))
+			return 0;
+		host = p;
+	}
+
+	if (!valid_host(userhost, 0))
+		return 0;
+
+	return 1;
+}
+
 /*|| BAN ACTION ROUTINES FOLLOW ||*/
 
 /** Converts a banaction string (eg: "kill") to an integer value (eg: BAN_ACT_KILL) */

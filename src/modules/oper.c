@@ -63,18 +63,21 @@ MOD_UNLOAD()
 
 void set_oper_host(Client *client, const char *host)
 {
-        char uhost[HOSTLEN + USERLEN + 1];
-        char *p;
-        
-        strlcpy(uhost, host, sizeof(uhost));
-        
+	char uhost[HOSTLEN + USERLEN + 1];
+	char *p;
+
+	if (!valid_vhost(host))
+		return;
+
+	strlcpy(uhost, host, sizeof(uhost));
+
 	if ((p = strchr(uhost, '@')))
 	{
-	        *p++ = '\0';
+		*p++ = '\0';
 		strlcpy(client->user->username, uhost, sizeof(client->user->username));
 		sendto_server(NULL, 0, 0, NULL, ":%s SETIDENT %s",
-		    client->id, client->user->username);
-	        host = p;
+		              client->id, client->user->username);
+		host = p;
 	}
 	safe_strdup(client->user->virthost, host);
 	if (MyConnect(client))
