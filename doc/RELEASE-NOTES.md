@@ -49,7 +49,8 @@ in progress.
 * When an IRCOp sets `+H` to hide ircop status, only the swhois items that
   were added through oper will be hidden (and not the ones added by eg. vhost).
   Previously all were hidden.
-* Update shipped libraries: c-ares 1.19.0, Jansson 2.14, PCRE2 10.42
+* Update shipped libraries: c-ares to 1.19.0, Jansson to 2.14, PCRE2 to 10.42,
+  and on Windows LibreSSL to 3.6.2 and cURL to 8.0.1.
 
 ### Fixes:
 * Crash if an IRCOp uses
