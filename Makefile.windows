@@ -357,6 +357,7 @@ DLL_FILES=\
  src/modules/squit.dll \
  src/modules/sreply.dll \
  src/modules/staff.dll \
+ src/modules/standard-replies.dll \
  src/modules/starttls.dll \
  src/modules/stats.dll \
  src/modules/sts.dll \
@@ -1159,6 +1160,9 @@ src/modules/sreply.dll: src/modules/sreply.c $(INCLUDES)
 
 src/modules/staff.dll: src/modules/staff.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/staff.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/staff.pdb $(MODLFLAGS)
+
+src/modules/standard-replies.dll: src/modules/standard-replies.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/standard-replies.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/standard-replies.pdb $(MODLFLAGS)
 
 src/modules/starttls.dll: src/modules/starttls.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/starttls.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/starttls.pdb $(MODLFLAGS)
