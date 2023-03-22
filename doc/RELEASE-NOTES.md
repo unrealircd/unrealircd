@@ -14,14 +14,13 @@ in progress.
     all the auto-joining/re-rejoining of channels.
   * Future anope/atheme/etc services will presumably support this.
 * [Spamfilter](https://www.unrealircd.org/docs/Spamfilter) can be made UTF8-aware.
-  * This is experimental, to enable: `set { spamfilter { utf8 yes; } }``
+  * This is experimental, to enable: `set { spamfilter { utf8 yes; } }`
   * Case insensitive matches will then work better. For example, with extended
     Latin, a spamfilter on `ę` then also matches `Ę`.
   * Other PCRE2 features such as [\p](https://www.pcre.org/current/doc/html/pcre2syntax.html#SEC5)
     can then be used. For example you can then set a spamfilter with the regex
-    `\p{Arabic}` to block all Arabic script.  
-    Please do use these new tools with care. Blocking an entire language
-    or script is quite a drastic measure.
+    `\p{Arabic}` to block all Arabic script. Please do use this new tool with care.
+    Blocking an entire language or script is quite a drastic measure.
   * As a consequence of this we require PCRE2 10.36 or newer. If your system
     PCRE2 is older than this will mean the UnrealIRCd-shipped-library version
     will be compiled and `./Config` may take a little longer than usual.
