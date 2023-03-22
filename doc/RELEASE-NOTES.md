@@ -13,18 +13,18 @@ in progress.
     so the user receives the vhost straight from the start, before
     all the auto-joining/re-rejoining of channels.
   * Future anope/atheme/etc services will presumably support this.
-* [Spamfilter](https://www.unrealircd.org/docs/Spamfilter) can be made UTF8-aware.
+* [Spamfilter](https://www.unrealircd.org/docs/Spamfilter) can now be made UTF8-aware:
   * This is experimental, to enable: `set { spamfilter { utf8 yes; } }`
-  * Case insensitive matches will then work better. For example, with extended
+  * Case insensitive matches will then work better. For example, for extended
     Latin, a spamfilter on `ę` then also matches `Ę`.
   * Other PCRE2 features such as [\p](https://www.pcre.org/current/doc/html/pcre2syntax.html#SEC5)
     can then be used. For example the regex `\p{Arabic}` would block all Arabic script.
-    See also this [full list of scripts](https://www.pcre.org/current/doc/html/pcre2syntax.html#SEC7)  
+    See also this [full list of scripts](https://www.pcre.org/current/doc/html/pcre2syntax.html#SEC7).
     Please use this new tool with care. Blocking an entire language or script
     is quite a drastic measure.
   * As a consequence of this we require PCRE2 10.36 or newer. If your system
-    PCRE2 is older than this will mean the UnrealIRCd-shipped-library version
-    will be compiled and `./Config` may take a little longer than usual.
+    PCRE2 is older, then the UnrealIRCd-shipped-library version will be compiled
+    and `./Config` may take a little longer than usual.
 * [WebSocket](https://www.unrealircd.org/docs/WebSocket_support) status is
   now synced over the network and an extra default
   [Security group](https://www.unrealircd.org/docs/Security-group_block)

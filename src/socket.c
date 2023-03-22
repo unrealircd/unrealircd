@@ -884,7 +884,10 @@ refuse_client:
 	{
 		int value = (*(h->func.intfunc))(client);
 		if (value == HOOK_DENY)
+		{
+			irccounts.unknown--;
 			goto refuse_client;
+		}
 		if (value != HOOK_CONTINUE)
 			break;
 	}
@@ -898,6 +901,7 @@ refuse_client:
 			SetTLSAcceptHandshake(client);
 			if ((client->local->ssl = SSL_new(ctx)) == NULL)
 			{
+				irccounts.unknown--;
 				goto refuse_client;
 			}
 			SetTLS(client);
@@ -909,6 +913,7 @@ refuse_client:
 				SSL_set_shutdown(client->local->ssl, SSL_RECEIVED_SHUTDOWN);
 				SSL_smart_shutdown(client->local->ssl);
 				SSL_free(client->local->ssl);
+				irccounts.unknown--;
 				goto refuse_client;
 			}
 		}
