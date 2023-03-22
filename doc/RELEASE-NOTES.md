@@ -5,14 +5,6 @@ This is the git version (development version) for future 6.0.7. This is work
 in progress.
 
 ### Enhancements:
-* `WHOWAS` now shows IP address and account information to IRCOps
-* Allow services to send a couple of protocol messages in the
-  unregistered / SASL stage. These are: `CHGHOST`, `CHGIDENT`
-  and `SREPLY`
-  * This allows services to set the vhost on a user during SASL,
-    so the user receives the vhost straight from the start, before
-    all the auto-joining/re-rejoining of channels.
-  * Future anope/atheme/etc services will presumably support this.
 * [Spamfilter](https://www.unrealircd.org/docs/Spamfilter) can now be made UTF8-aware:
   * This is experimental, to enable: `set { spamfilter { utf8 yes; } }`
   * Case insensitive matches will then work better. For example, for extended
@@ -25,11 +17,21 @@ in progress.
   * As a consequence of this we require PCRE2 10.36 or newer. If your system
     PCRE2 is older, then the UnrealIRCd-shipped-library version will be compiled
     and `./Config` may take a little longer than usual.
+* `WHOWAS` now shows IP address and account information to IRCOps
+* Allow services to send a couple of protocol messages in the
+  unregistered / SASL stage. These are: `CHGHOST`, `CHGIDENT`
+  and `SREPLY`
+  * This allows services to set the vhost on a user during SASL,
+    so the user receives the vhost straight from the start, before
+    all the auto-joining/re-rejoining of channels.
+  * Future anope/atheme/etc services will presumably support this.
 * [WebSocket](https://www.unrealircd.org/docs/WebSocket_support) status is
   now synced over the network and an extra default
-  [Security group](https://www.unrealircd.org/docs/Security-group_block)
+  [security group](https://www.unrealircd.org/docs/Security-group_block)
   `websocket-users` has been added. Similarly there is now
-  security-group::websocket and security-group::exclude-websocket.
+  security-group::websocket and security-group::exclude-websocket item.
+  Same for [mask items](https://www.unrealircd.org/docs/Mask_item) such
+  as in [set::restrict-commands::command::except](https://www.unrealircd.org/docs/Restrict_commands).
 * Support for IRCv3 [Standard Replies](https://ircv3.net/specs/extensions/standard-replies).
   Right now nothing fancy yet, other than us sending `ACCOUNT_REQUIRED_TO_CONNECT`
   from the authprompt module when a user is
@@ -44,7 +46,7 @@ in progress.
   Atheme servers and reject the link if this is not the case.
 * The `FLOOD_BLOCKED` log message now shows the target of the flood
   for `target-flood-user` and `target-flood-channel`.
-* When an IRCOp sets `+H` to hide ircop status only the swhois items that
+* When an IRCOp sets `+H` to hide ircop status, only the swhois items that
   were added through oper will be hidden (and not the ones added by eg. vhost).
   Previously all were hidden.
 * Update shipped libraries: c-ares 1.19.0, Jansson 2.14, PCRE2 10.42
@@ -57,7 +59,7 @@ in progress.
 * Crash when parsing [deny link block](https://www.unrealircd.org/docs/Deny_link_block)
 * The [Module manager](https://www.unrealircd.org/docs/Module_manager)
   now works on FreeBSD and similar.
-* In `LUSERS` the "unknown connection(s)" figure was wrong. This was just a
+* In `LUSERS` the "unknown connection(s)" count was wrong. This was just a
   harmless counting error with no other effects.
 * Silence warnings on Clang 15+ (eg. Ubuntu 23.04)
 * Don't download `GeoIP.dat` if you have 
@@ -66,6 +68,7 @@ in progress.
 * Make [`@if module-loaded()`](https://www.unrealircd.org/docs/Defines_and_conditional_config)
   work correctly for modules that are about to be unloaded during REHASH.
 * Some missing notices if remotely REHASHing a server, and one duplicate line.
+* Check invalid host setting in oper::vhost, just like we already have in vhost::vhost.
 
 UnrealIRCd 6.0.6
 -----------------
