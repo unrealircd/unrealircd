@@ -122,7 +122,7 @@ CMD_FUNC(cmd_svso)
 
 	}
 
-	if (strcmp(vhost, "-") && !valid_vhost(vhost))
+	if (vhost)
 		sendnumeric(client, ERR_CANNOTDOCOMMAND, "SVSO", "Failed to make user oper: vhost contains illegal characters or is too long");
 
 	/* Prefix the oper block name with "remote:" if it hasn't already */
