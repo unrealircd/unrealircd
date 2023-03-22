@@ -43,6 +43,7 @@ int tkl_config_test_set(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_set(ConfigFile *, ConfigEntry *, int);
 int tkl_ip_change(Client *client, const char *oldip);
 int tkl_accept(Client *client);
+void check_set_spamfilter_utf8_setting_changed(void);
 CMD_FUNC(cmd_gline);
 CMD_FUNC(cmd_shun);
 CMD_FUNC(cmd_tempshun);
@@ -158,8 +159,12 @@ TKLTypeTable tkl_types[] = {
 };
 #define ALL_VALID_EXCEPTION_TYPES "kline, gline, zline, gzline, spamfilter, shun, qline, blacklist, connect-flood, handshake-data-flood, antirandom, antimixedutf8, ban-version"
 
+/* Global variables for this module */
+
 int max_stats_matches = 1000;
 int mtag_spamfilters_present = 0; /**< Are any spamfilters with type SPAMF_MTAG present? */
+long previous_spamfilter_utf8 = 0;
+static int firstboot = 0;
 
 MOD_TEST()
 {
@@ -222,6 +227,9 @@ MOD_TEST()
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	if (loop.booted == 0)
+		firstboot = 1;
+	LoadPersistentLong(modinfo, previous_spamfilter_utf8);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamfilter);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_ban);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_except);
@@ -238,19 +246,20 @@ MOD_INIT()
 	CommandAdd(modinfo->handle, "ELINE", cmd_eline, 4, CMD_OPER);
 	CommandAdd(modinfo->handle, "TKL", _cmd_tkl, MAXPARA, CMD_OPER|CMD_SERVER);
 	add_default_exempts();
-	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
 MOD_LOAD()
 {
 	check_mtag_spamfilters_present();
+	check_set_spamfilter_utf8_setting_changed();
 	EventAdd(modinfo->handle, "tklexpire", tkl_check_expire, NULL, 5000, 0);
 	return MOD_SUCCESS;
 }
 
 MOD_UNLOAD()
 {
+	SavePersistentLong(modinfo, previous_spamfilter_utf8);
 	return MOD_SUCCESS;
 }
 
@@ -887,6 +896,56 @@ int tkl_config_run_set(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	}
 
 	return 0;
+}
+
+/** Recompile all spamfilters due to set::spamfilter::utf8 setting change */
+void recompile_spamfilters(void)
+{
+	TKL *tkl;
+	Match *m;
+	char *err;
+	int converted = 0;
+	int index;
+
+	index = tkl_hash('F');
+	for (tkl = tklines[index]; tkl; tkl = tkl->next)
+	{
+		if (!TKLIsSpamfilter(tkl) || (tkl->ptr.spamfilter->match->type != MATCH_PCRE_REGEX))
+			continue;
+		m = unreal_create_match(MATCH_PCRE_REGEX, tkl->ptr.spamfilter->match->str, &err);
+		if (!m)
+		{
+			unreal_log(ULOG_WARNING, "tkl", "SPAMFILTER_COMPILE_ERROR", NULL,
+			           "Spamfilter no longer compiles upon utf8 change, error: $error. "
+			           "Spamfilter '$tkl' ($tkl.reason). "
+			           "Spamfilter not transformed to/from utf8.",
+			           log_data_tkl("tkl", tkl),
+			           log_data_string("error", err ? err : "Unknown"));
+			continue;
+		}
+
+		unreal_delete_match(tkl->ptr.spamfilter->match); /* unset old one */
+		tkl->ptr.spamfilter->match = m; /* set new one */
+		converted++;
+	}
+	unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_UTF8_CONVERTED", NULL,
+	           "Spamfilter: Recompiled $count spamfilters due to set::spamfilter::utf8 change.",
+	           log_data_integer("count", converted));
+}
+
+void check_set_spamfilter_utf8_setting_changed(void)
+{
+	if (firstboot)
+	{
+		/* First boot, not a rehash */
+		previous_spamfilter_utf8 = iConf.spamfilter_utf8;
+		return;
+	}
+
+	if (previous_spamfilter_utf8 != iConf.spamfilter_utf8)
+		recompile_spamfilters();
+
+	previous_spamfilter_utf8 = iConf.spamfilter_utf8;
 }
 
 /** Return unique spamfilter id for TKL */

@@ -7761,6 +7761,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					tempiConf.spamfilter_stop_on_first_match = config_checkval(cepp->value, CFG_YESNO);
 				}
+				else if (!strcmp(cepp->name, "utf8"))
+				{
+					tempiConf.spamfilter_utf8 = config_checkval(cepp->value, CFG_YESNO);
+				}
 			}
 		}
 		else if (!strcmp(cep->name, "default-bantime"))
@@ -8891,6 +8895,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				} else
 #endif
 				if (!strcmp(cepp->name, "stop-on-first-match"))
+				{
+				} else
+				if (!strcmp(cepp->name, "utf8"))
 				{
 				} else
 				{
