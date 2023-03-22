@@ -8529,7 +8529,7 @@ fi
 if test "$has_system_jansson" = "no"
 then :
 
-jansson_version="2.13.1"
+jansson_version="2.14"
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: extracting jansson library" >&5
 printf "%s\n" "extracting jansson library" >&6; }
 cur_dir=`pwd`

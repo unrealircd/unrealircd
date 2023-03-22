@@ -804,7 +804,7 @@ AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libjansson*])],[h
 
 AS_IF([test "$has_system_jansson" = "no"],[
 dnl REMEMBER TO CHANGE WITH A NEW JANSSON RELEASE!
-jansson_version="2.13.1"
+jansson_version="2.14"
 AC_MSG_RESULT(extracting jansson library)
 cur_dir=`pwd`
 cd extras
