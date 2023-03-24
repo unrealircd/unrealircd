@@ -770,7 +770,7 @@ int valid_vhost(const char *userhost)
 		host = p;
 	}
 
-	if (!valid_host(userhost, 0))
+	if (!valid_host(host, 0))
 		return 0;
 
 	return 1;
