@@ -1,4 +1,4 @@
-UnrealIRCd 6.0.7-git
+UnrealIRCd 6.0.7
 =================
 
 UnrealIRCd 6.0.7 makes WHOWAS show more information to IRCOps and adds an
@@ -57,6 +57,8 @@ desyncs or other weird problems.
   and on Windows LibreSSL to 3.6.2 and cURL to 8.0.1.
 
 ### Fixes:
+* Crash if a third party module is loaded which allows very large message tags
+  (e.g. has no length check)
 * Crash if an IRCOp uses
   [`unrealircd.org/json-log`](https://www.unrealircd.org/docs/JSON_logging#Enabling_on_IRC)
   on IRC and during `REHASH` some module sends log output during MOD_INIT

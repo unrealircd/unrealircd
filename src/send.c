@@ -36,7 +36,7 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, con
 
 /* These are two local (static) buffers used by the various send functions */
 static char sendbuf[2048];
-static char sendbuf2[4096];
+static char sendbuf2[8192+512];
 
 /** This is used to ensure no duplicate messages are sent
  * to the same server uplink/direction. In send functions
@@ -899,9 +899,9 @@ void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char 
 	const char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
 
 	if (to && from && MyUser(to) && from->user)
-		vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, from, pattern, vl);
+		vmakebuf_local_withprefix(sendbuf, sizeof(sendbuf)-3, from, pattern, vl);
 	else
-		ircvsnprintf(sendbuf, sizeof(sendbuf), pattern, vl);
+		ircvsnprintf(sendbuf, sizeof(sendbuf)-3, pattern, vl);
 
 	if (BadPtr(mtags_str))
 	{
@@ -909,7 +909,7 @@ void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char 
 		sendbufto_one(to, sendbuf, 0);
 	} else {
 		/* Message tags need to be prepended */
-		snprintf(sendbuf2, sizeof(sendbuf2), "@%s %s", mtags_str, sendbuf);
+		snprintf(sendbuf2, sizeof(sendbuf2)-3, "@%s %s", mtags_str, sendbuf);
 		sendbufto_one(to, sendbuf2, 0);
 	}
 }
