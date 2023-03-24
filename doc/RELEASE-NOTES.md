@@ -1,8 +1,12 @@
 UnrealIRCd 6.0.7-git
 =================
 
-This is the git version (development version) for future 6.0.7. This is work
-in progress.
+UnrealIRCd 6.0.7 makes WHOWAS show more information to IRCOps and adds an
+experimental spamfilter feature. It also contains other enhancements and
+quite a number of bug fixes. One notable change is that on linking of anope
+or atheme, every server will now check if they have ulines { } for that
+services server, since it's a common mistake to forget this, leading to
+desyncs or other weird problems.
 
 ### Enhancements:
 * [Spamfilter](https://www.unrealircd.org/docs/Spamfilter) can now be made UTF8-aware:
