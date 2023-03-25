@@ -39,6 +39,7 @@
 #include <openssl/rand.h>
 #include <openssl/md5.h>
 #include <openssl/ripemd.h>
+#include <openssl/x509.h>
 #include <jansson.h>
 #include "common.h"
 #include "sys.h"
