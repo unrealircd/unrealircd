@@ -44,6 +44,8 @@ struct {
 	unsigned char modef_default_unsettime;
 	unsigned char modef_max_unsettime;
 	long modef_boot_delay;
+	int modef_alternate_action_percentage_threshold;
+	unsigned char modef_alternative_ban_action_unsettime;
 } cfg;
 
 typedef struct FloodType {
@@ -52,6 +54,7 @@ typedef struct FloodType {
 	char *description;
 	char default_action;
 	char *actions;
+	char *alternative_ban_action;
 	int timedban_required;
 } FloodType;
 
@@ -59,13 +62,13 @@ typedef struct FloodType {
  * IMPORTANT: MUST be in alphabetic order!!
  */
 FloodType floodtypes[] = {
-	{ 'c', CHFLD_CTCP,	"CTCPflood",		'C',	"mM",	0, },
-	{ 'j', CHFLD_JOIN,	"joinflood",		'i',	"R",	0, },
-	{ 'k', CHFLD_KNOCK,	"knockflood",		'K',	"",	0, },
-	{ 'm', CHFLD_MSG,	"msg/noticeflood",	'm',	"M",	0, },
-	{ 'n', CHFLD_NICK,	"nickflood",		'N',	"",	0, },
-	{ 't', CHFLD_TEXT,	"msg/noticeflood",	'\0',	"bd",	1, },
-	{ 'r', CHFLD_REPEAT,	"repeating",		'\0',	"bd",	1, },
+	{ 'c', CHFLD_CTCP,	"CTCPflood",		'C',	"mM",	NULL,						0, },
+	{ 'j', CHFLD_JOIN,	"joinflood",		'i',	"R",	"~security-group:unknown-users",		0, },
+	{ 'k', CHFLD_KNOCK,	"knockflood",		'K',	"",	NULL,						0, },
+	{ 'm', CHFLD_MSG,	"msg/noticeflood",	'm',	"M",	"~quiet:~security-group:unknown-users",		0, },
+	{ 'n', CHFLD_NICK,	"nickflood",		'N',	"",	"~nickchange:~security-group:unknown-users",	0, },
+	{ 't', CHFLD_TEXT,	"msg/noticeflood",	'\0',	"bd",	NULL,						1, },
+	{ 'r', CHFLD_REPEAT,	"repeating",		'\0',	"bd",	NULL,						1, },
 };
 
 #define MODEF_DEFAULT_UNSETTIME		cfg.modef_default_unsettime
@@ -101,6 +104,7 @@ struct ChannelFloodProtection {
 	unsigned short	per; /**< setting: per <XX> seconds */
 	time_t		timer[NUMFLD]; /**< runtime: timers */
 	unsigned short	counter[NUMFLD]; /**< runtime: counters */
+	unsigned short	counter_unknown_users[NUMFLD]; /**< runtime: counters */
 	unsigned short	limit[NUMFLD]; /**< setting: limit */
 	unsigned char	action[NUMFLD]; /**< setting: action */
 	unsigned char	remove_after[NUMFLD]; /**< setting: remove-after <this> minutes */
@@ -236,6 +240,8 @@ static void init_config(void)
 	cfg.modef_default_unsettime = 0;
 	cfg.modef_max_unsettime = 60; /* 1 hour seems enough :p */
 	cfg.modef_boot_delay = 75;
+	cfg.modef_alternate_action_percentage_threshold = 75; /* 75% */
+	cfg.modef_alternative_ban_action_unsettime = 1; /* FIXME: set to 15 minutes */
 }
 
 int floodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
@@ -563,6 +569,7 @@ void *cmodef_put_param(void *fld_in, const char *param)
 		{
 			fld->timer[i] = 0;
 			fld->counter[i] = 0;
+			fld->counter_unknown_users[i] = 0;
 		}
 	}
 	fld->per = v;
@@ -1007,26 +1014,35 @@ int floodprot_chanmode_del(Channel *channel, int modechar)
 	{
 		case 'C':
 			chp->counter[CHFLD_CTCP] = 0;
+			chp->counter_unknown_users[CHFLD_CTCP] = 0;
 			break;
 		case 'N':
 			chp->counter[CHFLD_NICK] = 0;
+			chp->counter_unknown_users[CHFLD_NICK] = 0;
 			break;
 		case 'm':
 			chp->counter[CHFLD_MSG] = 0;
 			chp->counter[CHFLD_CTCP] = 0;
+			chp->counter_unknown_users[CHFLD_MSG] = 0;
+			chp->counter_unknown_users[CHFLD_CTCP] = 0;
 			break;
 		case 'K':
 			chp->counter[CHFLD_KNOCK] = 0;
+			chp->counter_unknown_users[CHFLD_KNOCK] = 0;
 			break;
 		case 'i':
 			chp->counter[CHFLD_JOIN] = 0;
+			chp->counter_unknown_users[CHFLD_JOIN] = 0;
 			break;
 		case 'M':
 			chp->counter[CHFLD_MSG] = 0;
 			chp->counter[CHFLD_CTCP] = 0;
+			chp->counter_unknown_users[CHFLD_MSG] = 0;
+			chp->counter_unknown_users[CHFLD_CTCP] = 0;
 			break;
 		case 'R':
 			chp->counter[CHFLD_JOIN] = 0;
+			chp->counter_unknown_users[CHFLD_JOIN] = 0;
 			break;
 		default:
 			break;
@@ -1184,19 +1200,28 @@ void floodprottimer_stopchantimers(Channel *channel)
 int do_floodprot(Channel *channel, Client *client, int what)
 {
 	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+	char unknown_user;
 
 	if (!chp)
 		return 0; /* no +f active */
+
+	unknown_user = user_allowed_by_security_group_name(client, "known-users") ? 0 : 1;
 
 	if (chp->limit[what])
 	{
 		if (TStime() - chp->timer[what] >= chp->per)
 		{
+			/* reset */
 			chp->timer[what] = TStime();
 			chp->counter[what] = 1;
+			chp->counter_unknown_users[what] = unknown_user;
 		} else
 		{
 			chp->counter[what]++;
+
+			if (unknown_user)
+				chp->counter_unknown_users[what]++;
+
 			if ((chp->counter[what] > chp->limit[what]) &&
 			    (TStime() - chp->timer[what] < chp->per))
 			{
@@ -1209,21 +1234,94 @@ int do_floodprot(Channel *channel, Client *client, int what)
 	return 0;
 }
 
+/** Helper for do_floodprot_action() - standard action +i/+R/etc.. */
+void do_floodprot_action_standard(Channel *channel, int what, FloodType *floodtype, Cmode_t extmode, char m)
+{
+	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+	char comment[512], target[CHANNELLEN + 8];
+	MessageTag *mtags;
+	const char *text = floodtype->description;
+
+	/* First the notice to the chanops */
+	mtags = NULL;
+	new_message(&me, NULL, &mtags);
+	ircsnprintf(comment, sizeof(comment), "*** Channel %s detected (limit is %d per %d seconds), setting mode +%c",
+		text, chp->limit[what], chp->per, m);
+	ircsnprintf(target, sizeof(target), "%%%s", channel->name);
+	sendto_channel(channel, &me, NULL, "ho",
+		       0, SEND_ALL, mtags,
+		       ":%s NOTICE %s :%s", me.name, target, comment);
+	free_message_tags(mtags);
+
+	/* Then the MODE broadcast */
+	mtags = NULL;
+	new_message(&me, NULL, &mtags);
+	sendto_server(NULL, 0, 0, mtags, ":%s MODE %s +%c 0", me.id, channel->name, m);
+	sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +%c", me.name, channel->name, m);
+	free_message_tags(mtags);
+
+	/* Actually set the mode internally */
+	channel->mode.mode |= extmode;
+
+	/* Add remove-chanmode timer */
+	if (chp->remove_after[what])
+	{
+		floodprottimer_add(channel, m, TStime() + ((long)chp->remove_after[what] * 60) - 5);
+		/* (since the floodprot timer event is called every 10s, we do -5 here so the accurancy will
+		 *  be -5..+5, without it it would be 0..+10.)
+		 */
+	}
+}
+
+/** Helper for do_floodprot_action() - alternative action like +b ~security-group:unknown-users */
+int do_floodprot_action_alternative(Channel *channel, int what, FloodType *floodtype)
+{
+	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+	char ban[512];
+	char comment[512], target[CHANNELLEN + 8];
+	MessageTag *mtags;
+	const char *text = floodtype->description;
+
+	snprintf(ban, sizeof(ban), "~time:%d:%s",
+	         chp->remove_after[what] ? chp->remove_after[what] : cfg.modef_alternative_ban_action_unsettime,
+	         floodtype->alternative_ban_action);
+
+	/* Add the ban internally */
+	if (add_listmode(&channel->banlist, &me, channel, ban) == -1)
+		return 0; /* ban list full (or ban already exists) */
+
+	/* First the notice to the chanops */
+	mtags = NULL;
+	new_message(&me, NULL, &mtags);
+	ircsnprintf(comment, sizeof(comment),
+	            "*** Channel %s detected (limit is %d per %d seconds), "
+	            "mostly caused by 'unknown-users', setting mode +b %s",
+		text, chp->limit[what], chp->per, ban);
+	ircsnprintf(target, sizeof(target), "%%%s", channel->name);
+	sendto_channel(channel, &me, NULL, "ho",
+		       0, SEND_ALL, mtags,
+		       ":%s NOTICE %s :%s", me.name, target, comment);
+	free_message_tags(mtags);
+
+	/* Then the MODE broadcast */
+	mtags = NULL;
+	new_message(&me, NULL, &mtags);
+	sendto_server(NULL, 0, 0, mtags, ":%s MODE %s +b %s 0", me.id, channel->name, ban);
+	sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +b %s", me.name, channel->name, ban);
+	free_message_tags(mtags);
+
+	return 1;
+}
+
+
 void do_floodprot_action(Channel *channel, int what)
 {
-	char m;
 	Cmode_t extmode = 0;
 	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
 	FloodType *floodtype = find_floodprot_by_index(what);
-	char *text;
-
-	if (!floodtype)
-		return;
-	text = floodtype->description;
-
-	m = chp->action[what];
-	if (!m)
-		return;
+	char ban_exists;
+	double perc;
+	char m;
 
 	/* For drop action we don't actually have to do anything here, but we still have to prevent Unreal
 	 * from setting chmode +d (which is useless against floods anyways) =]
@@ -1231,45 +1329,51 @@ void do_floodprot_action(Channel *channel, int what)
 	if (chp->action[what] == 'd')
 		return;
 
+	if (!floodtype)
+		return;
+
+	m = chp->action[what];
+	if (!m)
+		return;
+
 	extmode = get_extmode_bitbychar(m);
 	if (!extmode)
 		return;
 
-	if (!(extmode && (channel->mode.mode & extmode)))
+	if (extmode && (channel->mode.mode & extmode))
+		return; /* channel mode is already set, so nothing to do */
+
+	/* Do we have other options, instead of setting the channel +i/etc ? */
+	if (floodtype->alternative_ban_action)
 	{
-		char comment[512], target[CHANNELLEN + 8];
-		MessageTag *mtags;
+		/* The 'ban_exists' assignments and checks below are carefully ordered and checked.
+		 * Don't try to "optimize" this code by rearranging or scratching certain checks
+		 * or assignments! -- Syzop
+		 */
+		ban_exists = ban_exists_ignore_time(channel->banlist, floodtype->alternative_ban_action);
 
-		/* First the notice to the chanops */
-		mtags = NULL;
-		new_message(&me, NULL, &mtags);
-		ircsnprintf(comment, sizeof(comment), "*** Channel %s detected (limit is %d per %d seconds), setting mode +%c",
-			text, chp->limit[what], chp->per, m);
-		ircsnprintf(target, sizeof(target), "%%%s", channel->name);
-		sendto_channel(channel, &me, NULL, "ho",
-		               0, SEND_ALL, mtags,
-		               ":%s NOTICE %s :%s", me.name, target, comment);
-		free_message_tags(mtags);
-
-		/* Then the MODE broadcast */
-		mtags = NULL;
-		new_message(&me, NULL, &mtags);
-		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s +%c 0", me.id, channel->name, m);
-		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +%c", me.name, channel->name, m);
-		free_message_tags(mtags);
-
-		/* Actually set the mode internally */
-		channel->mode.mode |= extmode;
-
-		/* Add remove-chanmode timer */
-		if (chp->remove_after[what])
+		if (!ban_exists)
 		{
-			floodprottimer_add(channel, m, TStime() + ((long)chp->remove_after[what] * 60) - 5);
-			/* (since the floodprot timer event is called every 10s, we do -5 here so the accurancy will
-			 *  be -5..+5, without it it would be 0..+10.)
-			 */
+			/* Calculate the percentage of unknown-users that is responsible for the action trigger */
+			perc = ((double)chp->counter_unknown_users[what] / (double)chp->counter[what])*100;
+			if (perc >= cfg.modef_alternate_action_percentage_threshold)
+			{
+				/* ACTION: We need to add the ban (+b) */
+				ban_exists = do_floodprot_action_alternative(channel, what, floodtype);
+			}
 		}
+
+		/* Now recheck, before we fallback to do_floodprot_action_standard() below,
+		 * taking into account that all unknown-users are banned now
+		 * or will be banned (eg: some actions still go through because of lag
+		 * between servers).
+		 */
+		if (ban_exists && (chp->counter[what] - chp->counter_unknown_users[what] <= chp->limit[what]))
+			return; /* flood limit not reached by known-users group */
 	}
+
+	/* ACTION: We need to set the channel mode */
+	do_floodprot_action_standard(channel, what, floodtype, extmode, m);
 }
 
 uint64_t gen_floodprot_msghash(const char *text)

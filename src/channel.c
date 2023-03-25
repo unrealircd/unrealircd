@@ -500,7 +500,7 @@ int ban_exists_ignore_time(Ban *lst, const char *str)
 			if (p)
 			{
 				p++;
-				if (!mycmp(lst->banstr, p))
+				if (!mycmp(p, str))
 					return 1;
 			}
 		} else

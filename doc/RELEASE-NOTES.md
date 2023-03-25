@@ -3,6 +3,13 @@ UnrealIRCd 6.0.8-git
 This is the git version (development version) for future 6.0.8. This is work
 in progress.
 
+### Enhancements:
+* When channel mode +f detects that a flood is caused by >75% of
+  "unknown-users" it will now set a temporary ban on
+  `~security-group:unknown-users`. It will still set `+i` etc. if
+  the flood keeps on going (eg. is caused by known-users too).
+  * This is work in progress
+
 UnrealIRCd 6.0.7
 -----------------
 
