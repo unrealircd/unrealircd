@@ -1,6 +1,6 @@
 /*
- * Channel Mode +f
- * (C) Copyright 2019 Syzop and the UnrealIRCd team
+ * Channel Mode +f and +F
+ * (C) Copyright 2019-.. Syzop and the UnrealIRCd team
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@
 ModuleHeader MOD_HEADER
   = {
 	"chanmodes/floodprot",
-	"5.0",
-	"Channel Mode +f",
+	"6.0",
+	"Channel Mode +f and +F",
 	"UnrealIRCd Team",
 	"unrealircd-6",
     };
@@ -59,7 +59,7 @@ typedef struct FloodType {
 } FloodType;
 
 /* All the floodtypes that are tracked.
- * IMPORTANT: MUST be in alphabetic order!!
+ * IMPORTANT: the first row MUST be in alphabetic order!!
  */
 FloodType floodtypes[] = {
 	{ 'c', CHFLD_CTCP,	"CTCPflood",		'C',	"mM",	NULL,						0, },
@@ -76,6 +76,7 @@ FloodType floodtypes[] = {
 #define MODEF_BOOT_DELAY		cfg.modef_boot_delay
 
 typedef struct ChannelFloodProtection ChannelFloodProtection;
+typedef struct ChannelFloodProfile ChannelFloodProfile;
 typedef struct RemoveChannelModeTimer RemoveChannelModeTimer;
 
 struct RemoveChannelModeTimer {
@@ -109,16 +110,24 @@ struct ChannelFloodProtection {
 	unsigned char	action[NUMFLD]; /**< setting: action */
 	unsigned char	remove_after[NUMFLD]; /**< setting: remove-after <this> minutes */
 	unsigned char   timers_running[MAXCHMODEFACTIONS+1]; /**< if for example a '-m' timer is running then this contains 'm' */
+	char *profile;
+};
+
+struct ChannelFloodProfile {
+	ChannelFloodProfile *prev, *next;
+	ChannelFloodProtection settings;
 };
 
 /* Global variables */
 ModDataInfo *mdflood = NULL;
 Cmode_t EXTMODE_FLOODLIMIT = 0L;
+Cmode_t EXTMODE_FLOOD_PROFILE = 0L;
 static int timedban_available = 1; /**< Set to 1 if extbans/timedban module is loaded. Assumed 1 during config load due to set::modes-on-join race. */
 RemoveChannelModeTimer *removechannelmodetimer_list = NULL;
+ChannelFloodProfile *channel_flood_profiles = NULL;
 char *floodprot_msghash_key = NULL;
 
-#define IsFloodLimit(x)	((x)->mode.mode & EXTMODE_FLOODLIMIT)
+#define IsFloodLimit(x)	(((x)->mode.mode & EXTMODE_FLOODLIMIT) || ((x)->mode.mode & EXTMODE_FLOOD_PROFILE))
 
 /* Forward declarations */
 static void init_config(void);
@@ -141,6 +150,11 @@ const char *cmodef_conv_param(const char *param_in, Client *client, Channel *cha
 void cmodef_free_param(void *r);
 void *cmodef_dup_struct(void *r_in);
 int cmodef_sjoin_check(Channel *channel, void *ourx, void *theirx);
+int cmodef_profile_is_ok(Client *client, Channel *channel, char mode, const char *param, int type, int what);
+void *cmodef_profile_put_param(void *r_in, const char *param);
+const char *cmodef_profile_get_param(void *r_in);
+const char *cmodef_profile_conv_param(const char *param_in, Client *client, Channel *channel);
+int cmodef_profile_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int floodprot_join(Client *client, Channel *channel, MessageTag *mtags);
 EVENT(modef_event);
 int cmodef_channel_destroy(Channel *channel, int *should_destroy);
@@ -149,10 +163,12 @@ int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, cons
 int floodprot_knock(Client *client, Channel *channel, MessageTag *mtags, const char *comment);
 int floodprot_nickchange(Client *client, MessageTag *mtags, const char *oldnick);
 int floodprot_chanmode_del(Channel *channel, int m);
+int floodprot_chanmode_add(Channel *channel, int modechar);
 void memberflood_free(ModData *md);
 int floodprot_stats(Client *client, const char *flag);
 void floodprot_free_removechannelmodetimer_list(ModData *m);
 void floodprot_free_msghash_key(ModData *m);
+CMD_OVERRIDE_FUNC(floodprot_override_mode);
 
 MOD_TEST()
 {
@@ -180,6 +196,18 @@ MOD_INIT()
 	creq.sjoin_check = cmodef_sjoin_check;
 	CmodeAdd(modinfo->handle, creq, &EXTMODE_FLOODLIMIT);
 
+	memset(&creq, 0, sizeof(creq));
+	creq.paracount = 1;
+	creq.is_ok = cmodef_profile_is_ok;
+	creq.letter = 'F';
+	creq.put_param = cmodef_profile_put_param;
+	creq.get_param = cmodef_profile_get_param;
+	creq.conv_param = cmodef_profile_conv_param;
+	creq.free_param = cmodef_free_param; // +f & +F uses same code
+	creq.dup_struct = cmodef_dup_struct; // +f & +F uses same code
+	creq.sjoin_check = cmodef_profile_sjoin_check;
+	CmodeAdd(modinfo->handle, creq, &EXTMODE_FLOOD_PROFILE);
+
 	init_config();
 
 	LoadPersistentPointer(modinfo, removechannelmodetimer_list, floodprot_free_removechannelmodetimer_list);
@@ -205,6 +233,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_NICKCHANGE, 0, floodprot_nickchange);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_NICKCHANGE, 0, floodprot_nickchange);
 	HookAdd(modinfo->handle, HOOKTYPE_MODECHAR_DEL, 0, floodprot_chanmode_del);
+	HookAdd(modinfo->handle, HOOKTYPE_MODECHAR_ADD, 0, floodprot_chanmode_add);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, floodprot_join);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_JOIN, 0, floodprot_join);
 	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 0, cmodef_channel_destroy);
@@ -216,14 +245,28 @@ MOD_INIT()
 MOD_LOAD()
 {
 	EventAdd(modinfo->handle, "modef_event", modef_event, NULL, 10000, 0);
+	CommandOverrideAdd(modinfo->handle, "MODE", 0, floodprot_override_mode);
 	floodprot_rehash_complete();
 	return MOD_SUCCESS;
+}
+
+void free_channel_flood_profiles(void)
+{
+	ChannelFloodProfile *f, *f_next;
+
+	for (f = channel_flood_profiles; f; f = f_next)
+	{
+		f_next = f->next;
+		DelListItem(f, channel_flood_profiles);
+		cmodef_free_param(f);
+	}
 }
 
 MOD_UNLOAD()
 {
 	SavePersistentPointer(modinfo, removechannelmodetimer_list);
 	SavePersistentPointer(modinfo, floodprot_msghash_key);
+	free_channel_flood_profiles();
 	return MOD_SUCCESS;
 }
 
@@ -231,6 +274,40 @@ int floodprot_rehash_complete(void)
 {
 	timedban_available = is_module_loaded("extbans/timedban");
 	return 0;
+}
+
+static void init_default_channel_flood_profiles(void)
+{
+	ChannelFloodProfile *f;
+
+	f = safe_alloc(sizeof(ChannelFloodProfile));
+	cmodef_put_param(&f->settings, "[10j#R10,30m#M10,7c#C15,10n#N15,10k#K15]:15");
+	safe_strdup(f->settings.profile, "very-strict");
+	AddListItem(f, channel_flood_profiles);
+
+	f = safe_alloc(sizeof(ChannelFloodProfile));
+	cmodef_put_param(&f->settings, "[15j#R10,40m#M10,7c#C15,10n#N15,10k#K15]:15");
+	safe_strdup(f->settings.profile, "strict");
+	AddListItem(f, channel_flood_profiles);
+
+	f = safe_alloc(sizeof(ChannelFloodProfile));
+	cmodef_put_param(&f->settings, "[30j#R10,40m#M10,7c#C15,10n#N15,10k#K15]:15");
+	safe_strdup(f->settings.profile, "normal");
+	AddListItem(f, channel_flood_profiles);
+
+	f = safe_alloc(sizeof(ChannelFloodProfile));
+	cmodef_put_param(&f->settings, "[45j#R10,60m#M10,7c#C15,10n#N15,10k#K15]:15");
+	safe_strdup(f->settings.profile, "relaxed");
+	AddListItem(f, channel_flood_profiles);
+
+	f = safe_alloc(sizeof(ChannelFloodProfile));
+	cmodef_put_param(&f->settings, "[60j#R10,90m#M10,7c#C15,10n#N15,10k#K15]:15");
+	safe_strdup(f->settings.profile, "very-relaxed");
+	AddListItem(f, channel_flood_profiles);
+
+	f = safe_alloc(sizeof(ChannelFloodProfile));
+	safe_strdup(f->settings.profile, "none");
+	AddListItem(f, channel_flood_profiles);
 }
 
 static void init_config(void)
@@ -242,6 +319,7 @@ static void init_config(void)
 	cfg.modef_boot_delay = 75;
 	cfg.modef_alternate_action_percentage_threshold = 75; /* 75% */
 	cfg.modef_alternative_ban_action_unsettime = 1; /* FIXME: set to 15 minutes */
+	init_default_channel_flood_profiles();
 }
 
 int floodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
@@ -344,6 +422,17 @@ FloodType *find_floodprot_by_index(Flood index)
 	for (i=0; i < ARRAY_SIZEOF(floodtypes); i++)
 		if (floodtypes[i].index == index)
 			return &floodtypes[i];
+
+	return NULL;
+}
+
+ChannelFloodProtection *get_channel_flood_profile(const char *name)
+{
+	ChannelFloodProfile *f;
+
+	for (f = channel_flood_profiles; f; f = f->next)
+		if (!strcasecmp(f->settings.profile, name))
+			return &f->settings;
 
 	return NULL;
 }
@@ -711,8 +800,13 @@ const char *cmodef_conv_param(const char *param_in, Client *client, Channel *cha
 
 void cmodef_free_param(void *r)
 {
-	// TODO: consider cancelling timers just to e sure? or maybe in DEBUGMODE?
-	safe_free(r);
+	ChannelFloodProtection *fld = (ChannelFloodProtection *)r;
+	if (fld)
+	{
+		// TODO: consider cancelling timers just to be sure? or maybe in DEBUGMODE?
+		safe_free(fld->profile);
+		safe_free(r);
+	}
 }
 
 void *cmodef_dup_struct(void *r_in)
@@ -743,6 +837,143 @@ int cmodef_sjoin_check(Channel *channel, void *ourx, void *theirx)
 
 	return EXSJ_MERGE;
 }
+
+///// MARKER (START)
+void floodprot_show_profiles(Client *client)
+{
+	ChannelFloodProfile *fld;
+	char buf[512];
+	int padding;
+	int max_length = 0;
+
+	sendnotice(client, "List of available flood profiles for +F:");
+	for (fld = channel_flood_profiles; fld; fld = fld->next)
+	{
+		int n = strlen(fld->settings.profile);
+		if (n > max_length)
+			max_length = n;
+	}
+
+	for (fld = channel_flood_profiles; fld; fld = fld->next)
+	{
+		*buf = '\0';
+		channel_modef_string(&fld->settings, buf);
+		padding = max_length - strlen(fld->settings.profile);
+		sendnotice(client, " %*s%s: %s",
+		           padding, "",
+		           fld->settings.profile,
+		           buf);
+	}
+}
+
+int cmodef_profile_is_ok(Client *client, Channel *channel, char mode, const char *param, int type, int what)
+{
+	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
+	{
+		if (IsUser(client) && check_channel_access(client, channel, "oaq"))
+			return EX_ALLOW;
+		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
+			sendnumeric(client, ERR_NOTFORHALFOPS, 'f');
+		return EX_DENY;
+	} else
+	if (type == EXCHK_PARAM)
+	{
+		if (get_channel_flood_profile(param))
+			return EX_ALLOW;
+		sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'F', "Invalid flood profile specified for +F");
+		floodprot_show_profiles(client);
+		return EX_DENY;
+	}
+
+	/* fallthrough -- should not be used */
+	return EX_DENY;
+}
+
+void *cmodef_profile_put_param(void *fld_in, const char *param)
+{
+	ChannelFloodProtection *fld = (ChannelFloodProtection *)fld_in;
+	ChannelFloodProtection *base;
+	int v;
+
+	if (!fld)
+		fld = safe_alloc(sizeof(ChannelFloodProtection));
+
+	base = get_channel_flood_profile(param);
+	if (!base)
+	{
+		base = get_channel_flood_profile("normal");
+		if (!base)
+			goto fail_cmodef_profile_put_param; // is this the right order? first alocate then memset? ehh :D
+	}
+
+	safe_strdup(fld->profile, param);
+
+	/* inherit settings (limit/action/remove_after) */
+	for (v=0; v < NUMFLD; v++)
+	{
+		fld->limit[v] = base->limit[v];
+		fld->action[v] = base->action[v];
+		fld->remove_after[v] = base->remove_after[v];
+	}
+	fld->per = base->per;
+
+	return (void *)fld;
+
+fail_cmodef_profile_put_param:
+	memset(fld, 0, sizeof(ChannelFloodProtection));
+	return fld; /* FAIL */
+}
+
+const char *cmodef_profile_get_param(void *r_in)
+{
+	ChannelFloodProtection *r = (ChannelFloodProtection *)r_in;
+	static char retbuf[512];
+
+	if (!r)
+		return NULL;
+
+	strlcpy(retbuf, r->profile ? r->profile : "???", sizeof(retbuf));
+	return retbuf;
+}
+
+/** Convert parameter to something proper.
+ * NOTE: client may be NULL if called for e.g. set::modes-on-join
+ */
+const char *cmodef_profile_conv_param(const char *param_in, Client *client, Channel *channel)
+{
+	static char retbuf[256];
+	ChannelFloodProtection *fld;
+
+	fld = get_channel_flood_profile(param_in);
+	if (!fld)
+		return NULL;
+
+	strlcpy(retbuf, fld->profile, sizeof(retbuf));
+
+	return retbuf;
+}
+
+int cmodef_profile_sjoin_check(Channel *channel, void *ourx, void *theirx)
+{
+	ChannelFloodProtection *our = (ChannelFloodProtection *)ourx;
+	ChannelFloodProtection *their = (ChannelFloodProtection *)theirx;
+	int i;
+
+	if (!strcmp(our->profile, their->profile))
+		return EXSJ_SAME;
+
+	if (our->profile && !their->profile)
+		return EXSJ_WEWON;
+
+	if (their->profile && !our->profile)
+		return EXSJ_THEYWON;
+
+	if (strcmp(our->profile, their->profile) < 0)
+		return EXSJ_THEYWON;
+
+	return EXSJ_WEWON;
+}
+///// MARKER (END)
 
 int floodprot_join(Client *client, Channel *channel, MessageTag *mtags)
 {
@@ -826,6 +1057,15 @@ char *channel_modef_string(ChannelFloodProtection *x, char *retbuf)
 	return retbuf;
 }
 
+ChannelFloodProtection *get_channel_flood_settings(Channel *channel)
+{
+	if (channel->mode.mode & EXTMODE_FLOODLIMIT)
+		return (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+	if (channel->mode.mode & EXTMODE_FLOOD_PROFILE)
+		return (ChannelFloodProtection *)GETPARASTRUCT(channel, 'F');
+	return NULL;
+}
+
 int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
 {
 	Membership *mb;
@@ -848,7 +1088,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 	if (!(mb = find_membership_link(client->user->channel, channel)))
 		return HOOK_CONTINUE; /* not in channel */
 
-	chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+	chp = get_channel_flood_settings(channel);
 
 	if (!chp || !(chp->limit[CHFLD_TEXT] || chp->limit[CHFLD_REPEAT]))
 		return HOOK_CONTINUE;
@@ -1005,7 +1245,7 @@ int floodprot_chanmode_del(Channel *channel, int modechar)
 	if (!IsFloodLimit(channel))
 		return 0;
 
-	chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+	chp = get_channel_flood_settings(channel);
 	if (!chp)
 		return 0;
 
@@ -1051,6 +1291,28 @@ int floodprot_chanmode_del(Channel *channel, int modechar)
 	return 0;
 }
 
+int floodprot_chanmode_add(Channel *channel, int modechar)
+{
+#if 0
+	if (modechar == 'F')
+	{
+		/* +F ? Then set -f */
+		channel->mode.mode &= ~EXTMODE_FLOODLIMIT;
+	} else
+	if (modechar == 'f')
+	{
+		/* +f ? Then set -F */
+		channel->mode.mode &= ~EXTMODE_FLOOD_PROFILE;
+	}
+	// XXX: Verify that freeing of the setting struct automatically happens?
+
+	// nope that does not work properly, well only one way but not
+	// the other way around, and i doubt it frees, would cause issues
+	// too because the value is needed in make_mode_str()
+#endif
+	return 0;
+}
+
 RemoveChannelModeTimer *floodprottimer_find(Channel *channel, char mflag)
 {
 	RemoveChannelModeTimer *e;
@@ -1087,7 +1349,7 @@ void floodprottimer_add(Channel *channel, char mflag, time_t when)
 {
 	RemoveChannelModeTimer *e = NULL;
 	unsigned char add=1;
-	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+	ChannelFloodProtection *chp = get_channel_flood_settings(channel);
 
 	if (strchr(chp->timers_running, mflag))
 	{
@@ -1124,7 +1386,7 @@ void floodprottimer_add(Channel *channel, char mflag, time_t when)
 void floodprottimer_del(Channel *channel, char mflag)
 {
 	RemoveChannelModeTimer *e;
-	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+	ChannelFloodProtection *chp = get_channel_flood_settings(channel);
 
 	if (chp && !strchr(chp->timers_running, mflag))
 		return; /* nothing to remove.. */
@@ -1199,7 +1461,7 @@ void floodprottimer_stopchantimers(Channel *channel)
 
 int do_floodprot(Channel *channel, Client *client, int what)
 {
-	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+	ChannelFloodProtection *chp = get_channel_flood_settings(channel);
 	char unknown_user;
 
 	if (!chp)
@@ -1237,7 +1499,7 @@ int do_floodprot(Channel *channel, Client *client, int what)
 /** Helper for do_floodprot_action() - standard action +i/+R/etc.. */
 void do_floodprot_action_standard(Channel *channel, int what, FloodType *floodtype, Cmode_t extmode, char m)
 {
-	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+	ChannelFloodProtection *chp = get_channel_flood_settings(channel);
 	char comment[512], target[CHANNELLEN + 8];
 	MessageTag *mtags;
 	const char *text = floodtype->description;
@@ -1276,7 +1538,7 @@ void do_floodprot_action_standard(Channel *channel, int what, FloodType *floodty
 /** Helper for do_floodprot_action() - alternative action like +b ~security-group:unknown-users */
 int do_floodprot_action_alternative(Channel *channel, int what, FloodType *floodtype)
 {
-	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+	ChannelFloodProtection *chp = get_channel_flood_settings(channel);
 	char ban[512];
 	char comment[512], target[CHANNELLEN + 8];
 	MessageTag *mtags;
@@ -1317,7 +1579,7 @@ int do_floodprot_action_alternative(Channel *channel, int what, FloodType *flood
 void do_floodprot_action(Channel *channel, int what)
 {
 	Cmode_t extmode = 0;
-	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+	ChannelFloodProtection *chp = get_channel_flood_settings(channel);
 	FloodType *floodtype = find_floodprot_by_index(what);
 	char ban_exists;
 	double perc;
@@ -1461,3 +1723,47 @@ void floodprot_free_msghash_key(ModData *m)
 {
 	safe_free(floodprot_msghash_key);
 }
+
+CMD_OVERRIDE_FUNC(floodprot_override_mode)
+{
+	if (MyUser(client) && (parc == 3) &&
+	    (parv[1][0] == '#') &&
+	    (!strcasecmp(parv[2], "f") || !strcasecmp(parv[2], "+f")))
+	{
+		/* Query (not set!) request for #channel */
+		Channel *channel = find_channel(parv[1]);
+		ChannelFloodProtection *fld;
+		char buf[512];
+
+		if (!channel)
+		{
+			sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);
+			return;
+		}
+		fld = get_channel_flood_settings(channel);
+		if (!fld)
+		{
+			sendnotice(client, "No channel mode +f/+F is active on %s", channel->name);
+		} else {
+			channel_modef_string(fld, buf);
+			if (fld->profile)
+				sendnotice(client, "Channel '%s' has effective flood setting '%s' (flood profile '%s')",
+					   channel->name, buf, fld->profile);
+			else
+				sendnotice(client, "Channel '%s' has effective flood setting '%s' (custom settings via +f)",
+					   channel->name, buf);
+		}
+		floodprot_show_profiles(client);
+		return;
+	}
+
+	CALL_NEXT_COMMAND_OVERRIDE();
+}
+
+// TODO: customizing of flood profiles (and adding new ones) in the config file
+
+// TODO: if flood profiles change during REHASH (or otherwise) they are not re-applied to channels
+
+// TODO: handle mismatch of flood profiles between servers
+
+// TODO: perhaps an option to turn off +F in the IRCd without turning off +f ? maybe as a multi-option.
