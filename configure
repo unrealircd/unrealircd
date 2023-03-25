@@ -7576,7 +7576,7 @@ SAVE_LIBS="$LIBS"
 LIBS="$LIBS $CRYPTOLIB"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#include <openssl/ssl.h>
+#include <openssl/x509v3.h>
 int
 main (void)
 {

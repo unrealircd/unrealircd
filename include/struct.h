@@ -39,7 +39,9 @@
 #include <openssl/rand.h>
 #include <openssl/md5.h>
 #include <openssl/ripemd.h>
-#include <openssl/x509.h>
+#ifdef HAS_X509_check_host
+#include <openssl/x509v3.h>
+#endif
 #include <jansson.h>
 #include "common.h"
 #include "sys.h"

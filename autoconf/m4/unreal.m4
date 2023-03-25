@@ -327,7 +327,7 @@ AC_MSG_CHECKING([for X509_check_host in SSL library])
 AC_LANG_PUSH(C)
 SAVE_LIBS="$LIBS"
 LIBS="$LIBS $CRYPTOLIB"
-AC_TRY_LINK([#include <openssl/ssl.h>],
+AC_TRY_LINK([#include <openssl/x509v3.h>],
 	[X509_check_host(NULL, NULL, 0, 0, NULL);],
 	has_function=1,
 	has_function=0)

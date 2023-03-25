@@ -1074,6 +1074,9 @@ int verify_certificate(SSL *ssl, const char *hostname, char **errstr)
 	 * so why do we even support that in 2023 ?
 	 * An well, TODO: ditch this old TLS support in next major UnrealIRCd
 	 * along with all the other old OpenSSL checks in this tls.c :D
+	 * XXX: Actually our HAS_X509_check_host includes openssl/x509v3.h
+	 * which does not exist in 1.0.2 yet either (it is openssl/x509.h there).
+	 * And 1.0.2 is out of support since January 1st, 2020... just saying.
 	 */
 	n = validate_hostname(hostname, cert);
 	X509_free(cert);
