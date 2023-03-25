@@ -1064,7 +1064,7 @@ int verify_certificate(SSL *ssl, const char *hostname, char **errstr)
 	}
 
 #ifdef HAS_X509_check_host
-	n = X509_check_host(cert, hostname, strlen(hostname), X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS, NULL);
+	n = X509_check_host(cert, hostname, strlen(hostname), 0, NULL);
 	X509_free(cert);
 	if (n == 1)
 		return 1; /* Hostname matched. All tests passed. */
