@@ -100,9 +100,7 @@ CMD_FUNC(cmd_whowas)
 		{
 			sendnumeric(client, RPL_WHOWASUSER, temp->name,
 			    temp->username,
-			    (IsOper(client) ? temp->hostname :
-			    (*temp->virthost !=
-			    '\0') ? temp->virthost : temp->hostname),
+			    BadPtr(temp->virthost) ? temp->hostname : temp->virthost,
 			    temp->realname);
 			if (!BadPtr(temp->ip) && ValidatePermissionsForPath("client:see:ip",client,NULL,NULL,NULL))
 			{
