@@ -226,6 +226,7 @@ extern const char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *extban
 extern const char *extban_conv_param_nuh(BanContext *b, Extban *extban);
 extern Ban *is_banned(Client *, Channel *, int, const char **, const char **);
 extern Ban *is_banned_with_nick(Client *, Channel *, int, const char *, const char **, const char **);
+extern int ban_exists(Ban *lst, const char *str);
 
 extern Client *find_client(const char *, Client *);
 extern Client *find_name(const char *, Client *);
