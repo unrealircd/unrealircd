@@ -552,6 +552,7 @@ CHECK_SSL_CTX_SET_MIN_PROTO_VERSION
 CHECK_SSL_CTX_SET_SECURITY_LEVEL
 CHECK_ASN1_TIME_diff
 CHECK_X509_get0_notAfter
+CHECK_X509_check_host
 AC_ARG_ENABLE(dynamic-linking, [AS_HELP_STRING([--disable-dynamic-linking], [Make the IRCd statically link with shared objects rather than dynamically (noone knows if disabling dynamic linking actually does anything or not)])],
 	[enable_dynamic_linking=$enableval], [enable_dynamic_linking="yes"])
 AS_IF([test $enable_dynamic_linking = "yes"],

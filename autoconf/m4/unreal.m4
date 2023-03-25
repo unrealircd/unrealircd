@@ -321,6 +321,26 @@ else
 fi
 ])
 
+AC_DEFUN([CHECK_X509_check_host],
+[
+AC_MSG_CHECKING([for X509_check_host in SSL library])
+AC_LANG_PUSH(C)
+SAVE_LIBS="$LIBS"
+LIBS="$LIBS $CRYPTOLIB"
+AC_TRY_LINK([#include <openssl/ssl.h>],
+	[X509_check_host(NULL, NULL, 0, 0, NULL);],
+	has_function=1,
+	has_function=0)
+LIBS="$SAVE_LIBS"
+AC_LANG_POP(C)
+if test $has_function = 1; then
+	AC_MSG_RESULT([yes])
+	AC_DEFINE([HAS_X509_check_host], [], [Define if ssl library has X509_check_host])
+else
+	AC_MSG_RESULT([no])
+fi
+])
+
 dnl For geoip-api-c
 AC_DEFUN([CHECK_GEOIP_CLASSIC],
 [

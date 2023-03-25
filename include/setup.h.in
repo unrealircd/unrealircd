@@ -43,6 +43,9 @@
 /* Define if ssl library has SSL_CTX_set_security_level */
 #undef HAS_SSL_CTX_SET_SECURITY_LEVEL
 
+/* Define if ssl library has X509_check_host */
+#undef HAS_X509_check_host
+
 /* Define if ssl library has X509_get0_notAfter */
 #undef HAS_X509_get0_notAfter
 

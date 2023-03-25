@@ -1063,19 +1063,21 @@ int verify_certificate(SSL *ssl, const char *hostname, char **errstr)
 		return 0;
 	}
 
-#if 1
-	n = validate_hostname(hostname, cert);
-	X509_free(cert);
-	if (n == MatchFound)
-		return 1; /* Hostname matched. All tests passed. */
-#else
-	/* TODO: make autoconf test for X509_check_host() and verify that this code works:
-	 * (When doing that, also disable the openssl_hostname_validation.c/.h code since
-	 *  it would be unused)
-	 */
+#ifdef HAS_X509_check_host
 	n = X509_check_host(cert, hostname, strlen(hostname), X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS, NULL);
 	X509_free(cert);
 	if (n == 1)
+		return 1; /* Hostname matched. All tests passed. */
+#else
+	/* Fallback code for OpenSSL <1.0.2.
+	 * Wait... 1.0.1 is out of support since January 2017,
+	 * so why do we even support that in 2023 ?
+	 * An well, TODO: ditch this old TLS support in next major UnrealIRCd
+	 * along with all the other old OpenSSL checks in this tls.c :D
+	 */
+	n = validate_hostname(hostname, cert);
+	X509_free(cert);
+	if (n == MatchFound)
 		return 1; /* Hostname matched. All tests passed. */
 #endif
 

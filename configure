@@ -7563,6 +7563,54 @@ else
 printf "%s\n" "no" >&6; }
 fi
 
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for X509_check_host in SSL library" >&5
+printf %s "checking for X509_check_host in SSL library... " >&6; }
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+SAVE_LIBS="$LIBS"
+LIBS="$LIBS $CRYPTOLIB"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <openssl/ssl.h>
+int
+main (void)
+{
+X509_check_host(NULL, NULL, 0, 0, NULL);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  has_function=1
+else $as_nop
+  has_function=0
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS="$SAVE_LIBS"
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+if test $has_function = 1; then
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+
+printf "%s\n" "#define HAS_X509_check_host /**/" >>confdefs.h
+
+else
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
 # Check whether --enable-dynamic-linking was given.
 if test ${enable_dynamic_linking+y}
 then :
