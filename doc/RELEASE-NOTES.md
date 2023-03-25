@@ -1,5 +1,10 @@
-UnrealIRCd 6.0.7
+UnrealIRCd 6.0.8-git
 =================
+This is the git version (development version) for future 6.0.8. This is work
+in progress.
+
+UnrealIRCd 6.0.7
+-----------------
 
 UnrealIRCd 6.0.7 makes WHOWAS show more information to IRCOps and adds an
 experimental spamfilter feature. It also contains other enhancements and
