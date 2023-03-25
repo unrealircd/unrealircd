@@ -106,7 +106,7 @@ int _websocket_handle_websocket(Client *client, WebRequest *web, const char *rea
 	char *ptr;
 	int length;
 	int length1 = WSU(client)->lefttoparselen;
-	char readbuf[4096];
+	char readbuf[MAXLINELENGTH];
 
 	length = length1 + length2;
 	if (length > sizeof(readbuf)-1)

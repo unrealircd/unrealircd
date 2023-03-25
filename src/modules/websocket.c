@@ -257,7 +257,7 @@ int websocket_config_posttest(int *errs)
 /* Add LF (if needed) to a buffer. Max 4K. */
 void add_lf_if_needed(char **buf, int *len)
 {
-	static char newbuf[4096];
+	static char newbuf[MAXLINELENGTH];
 	char *b = *buf;
 	int l = *len;
 

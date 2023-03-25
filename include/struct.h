@@ -179,7 +179,9 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	KEYLEN		23
 #define LINKLEN		32
 #define	BUFSIZE		512	/* WARNING: *DONT* CHANGE THIS!!!! */
-#define READBUFSIZE	8192	/* for the read buffer */
+#define MAXTAGSIZE	8192	/**< Maximum length of message tags (4K user + 4K server) */
+#define MAXLINELENGTH	(MAXTAGSIZE+BUFSIZE)	/**< Maximum length of a line on IRC: 4k client tags + 4k server tags + 512 bytes (IRCv3) */
+#define READBUFSIZE	MAXLINELENGTH	/* for the read buffer */
 #define	MAXRECIPIENTS 	20
 #define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
 #define IDLEN		12

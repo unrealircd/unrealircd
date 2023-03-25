@@ -36,7 +36,7 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, con
 
 /* These are two local (static) buffers used by the various send functions */
 static char sendbuf[2048];
-static char sendbuf2[8192+512];
+static char sendbuf2[MAXLINELENGTH];
 
 /** This is used to ensure no duplicate messages are sent
  * to the same server uplink/direction. In send functions
@@ -284,13 +284,8 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 		{
 			/* The message includes one or more message tags:
 			 * Spec-wise the rules allow about 8K for message tags
-			 * and then 512 bytes for the remainder of the message.
-			 * Since we do not allow user tags and only permit a
-			 * limited set of tags we can have our own limits for
-			 * the outgoing messages that we generate: a maximum of
-			 * 500 bytes for message tags and 512 for the remainder.
-			 * These limits will never be hit unless there is a bug
-			 * somewhere.
+			 * (MAXTAGSIZE) and then 512 bytes for
+			 * the remainder of the message (BUFSIZE).
 			 */
 			p = strchr(msg+1, ' ');
 			if (!p)
@@ -300,7 +295,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 				           log_data_string("buf", msg));
 				return;
 			}
-			if (p - msg > 4094)
+			if (p - msg > MAXTAGSIZE)
 			{
 				unreal_log(ULOG_WARNING, "send", "SENDBUFTO_ONE_OVERSIZED_MSG", to,
 				           "Oversized message to $client (length $length): $buf",
@@ -324,7 +319,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 		len = quick;
 	}
 
-	if (len >= 10240)
+	if (len >= MAXLINELENGTH)
 	{
 		unreal_log(ULOG_WARNING, "send", "SENDBUFTO_ONE_OVERSIZED_MSG2", to,
 			   "Oversized message to $client (length $length): $buf",

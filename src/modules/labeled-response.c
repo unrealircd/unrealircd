@@ -39,7 +39,7 @@ struct LabeledResponseContext {
 	char batch[BATCHLEN+1]; /**< The generated batch id */
 	int responses; /**< Number of lines sent back to client */
 	int sent_remote; /**< Command has been sent to remote server */
-	char firstbuf[4096]; /**< First buffered response */
+	char firstbuf[MAXLINELENGTH]; /**< First buffered response */
 };
 
 /* Forward declarations */
@@ -59,7 +59,7 @@ void _labeled_response_force_end(void);
 static LabeledResponseContext currentcmd;
 static long CAP_LABELED_RESPONSE = 0L;
 
-static char packet[8192];
+static char packet[MAXLINELENGTH*2];
 
 int labeled_response_mtag_is_ok(Client *client, const char *name, const char *value);
 
