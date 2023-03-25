@@ -473,6 +473,46 @@ Ban *is_banned_with_nick(Client *client, Channel *channel, int type, const char 
 	return ban;
 }
 
+/** Checks if a ban already exists */
+int ban_exists(Ban *lst, const char *str)
+{
+	for (; lst; lst = lst->next)
+		if (!mycmp(lst->banstr, str))
+			return 1;
+	return 0;
+}
+
+/** Checks if a ban already exists - special version.
+ * This ignores the "~time:xx:" suffixes in the banlist.
+ * So it will return 1 if a ban is there for ~time:5:blah!*@*
+ * and you call ban_exists_ignore_time(channel->banlist, "blah!*@*")
+ */
+int ban_exists_ignore_time(Ban *lst, const char *str)
+{
+	const char *p;
+
+	for (; lst; lst = lst->next)
+	{
+		if (!strncmp(lst->banstr, "~time:", 6))
+		{
+			/* Special treatment for ~time:xx: */
+			p = strchr(lst->banstr+6, ':');
+			if (p)
+			{
+				p++;
+				if (!mycmp(lst->banstr, p))
+					return 1;
+			}
+		} else
+		{
+			/* The simple version */
+			if (!mycmp(lst->banstr, str))
+				return 1;
+		}
+	}
+	return 0;
+}
+
 /** Add user to the channel.
  * This adds both the Member struct to the channel->members linked list
  * and also the Membership struct to the client->user->channel linked list.
