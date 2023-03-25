@@ -30,6 +30,8 @@
 // TODO: Make configurable at compile time (runtime won't do, as we haven't read the config file)
 #define show_event_console 0
 
+#define MAXLOGLENGTH 16384	/**< Maximum length of a log entry (which may be multiple lines) */
+
 /* Variables */
 Log *logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
 Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
@@ -1039,7 +1041,7 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 		{
 			for (m = msg; m; m = m->next)
 			{
-				char text_buf[8192];
+				static char text_buf[MAXLOGLENGTH];
 				snprintf(text_buf, sizeof(text_buf), "%s%s %s.%s%s %s: %s\n",
 					timebuf, from_server->name,
 					subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
@@ -1426,7 +1428,7 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 	json_t *j = NULL;
 	json_t *j_details = NULL;
 	json_t *t;
-	char msgbuf[8192];
+	char msgbuf[MAXLOGLENGTH];
 	const char *loglevel_string = log_level_valtostring(loglevel);
 	MultiLine *mmsg;
 	Client *from_server = NULL;
