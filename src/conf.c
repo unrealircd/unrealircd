@@ -7543,6 +7543,16 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				int lag_penalty_bytes = -1;
 				for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
 				{
+					/* Check hooks first */
+					int used = 0;
+					for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+					{
+						int used = (*(h->func.intfunc))(conf,ceppp,CONFIG_SET_ANTI_FLOOD);
+						if (used == 1)
+							break;
+					}
+					if (used)
+						continue; /* hook already took care of it */
 					if (!strcmp(ceppp->name, "handshake-data-flood"))
 					{
 						for (cep4 = ceppp->items; cep4; cep4 = cep4->next)
@@ -7596,7 +7606,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 						tempiConf.throttle_count = cnt;
 						tempiConf.throttle_period = period;
 					}
-					if (!strcmp(ceppp->name, "max-concurrent-conversations"))
+					else if (!strcmp(ceppp->name, "max-concurrent-conversations"))
 					{
 						/* We use a hack here to make it fit our storage format */
 						char buf[64];
@@ -7615,15 +7625,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 						}
 						snprintf(buf, sizeof(buf), "%d:%ld", users, every);
 						config_parse_flood_generic(buf, &tempiConf, cepp->name, FLD_CONVERSATIONS);
-					}
-					else
-					{
-						for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
-						{
-							int value = (*(h->func.intfunc))(conf,ceppp,CONFIG_SET_ANTI_FLOOD);
-							if (value == 1)
-								break;
-						}
 					}
 				}
 				if ((lag_penalty != -1) && (lag_penalty_bytes != -1))
@@ -8386,9 +8387,46 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 
 				for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
 				{
-					int everyone = !strcmp(cepp->name, "everyone") ? 1 : 0;
-					int for_everyone = flood_option_is_for_everyone(ceppp->name);
+					int everyone;
+					int for_everyone;
+					int used = 0;
+					Hook *h;
 
+					/* First, check hooks... */
+					for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
+					{
+						int value, errs = 0;
+						if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+							&& !(h->owner->options & MOD_OPT_PERM))
+							continue;
+						value = (*(h->func.intfunc))(conf,ceppp,CONFIG_SET_ANTI_FLOOD,&errs);
+						if (value == 2)
+							used = 1;
+						if (value == 1)
+						{
+							used = 1;
+							break;
+						}
+						if (value == -1)
+						{
+							used = 1;
+							errors += errs;
+							break;
+						}
+						if (value == -2)
+						{
+							used = 1;
+							errors += errs;
+						}
+					}
+					if (used)
+						continue; /* module handled it */
+
+					/* Prevent users from using options that belong in "everyone"
+					 * at other places, and vice-versa.
+					 */
+					everyone = !strcmp(cepp->name, "everyone") ? 1 : 0;
+					for_everyone = flood_option_is_for_everyone(ceppp->name);
 					if (everyone && !for_everyone)
 					{
 						config_error("%s:%i: %s cannot be in the set::anti-flood::everyone block. "
@@ -8633,43 +8671,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					}
 					else
 					{
-						/* hmm.. I don't like this method. but I just quickly copied it from CONFIG_ALLOW for now... */
-						int used = 0;
-						Hook *h;
-						for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
-						{
-							int value, errs = 0;
-							if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
-								&& !(h->owner->options & MOD_OPT_PERM))
-								continue;
-							value = (*(h->func.intfunc))(conf,ceppp,CONFIG_SET_ANTI_FLOOD,&errs);
-							if (value == 2)
-								used = 1;
-							if (value == 1)
-							{
-								used = 1;
-								break;
-							}
-							if (value == -1)
-							{
-								used = 1;
-								errors += errs;
-								break;
-							}
-							if (value == -2)
-							{
-								used = 1;
-								errors += errs;
-							}
-						}
-						if (!used)
-						{
-							config_error_unknownopt(ceppp->file->filename,
-								ceppp->line_number, "set::anti-flood",
-								ceppp->name);
-							errors++;
-						}
-						continue;
+						config_error_unknownopt(ceppp->file->filename,
+							ceppp->line_number, "set::anti-flood",
+							ceppp->name);
+						errors++;
 					}
 				}
 				if (has_lag_penalty+has_lag_penalty_bytes == 1)
