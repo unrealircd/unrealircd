@@ -503,6 +503,14 @@ int floodprot_config_test_antiflood_block(ConfigFile *cf, ConfigEntry *ce, int t
 						             ce->value,
 						             err);
 					}
+					if (fld.limit[CHFLD_TEXT] || fld.limit[CHFLD_REPEAT])
+					{
+						config_error("%s:%i: set::anti-flood::channel::profile %s::flood-mode: "
+						             "subtypes 't' and 'r' are not supported for +F profiles at the moment.",
+						             cep->file->filename, cep->line_number,
+						             ce->value);
+						errors++;
+					}
 				} else {
 					config_error_unknown(cep->file->filename, cep->line_number,
 							     "set::anti-flood::channel::profile", cep->name);
@@ -1138,7 +1146,9 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 	if (!(mb = find_membership_link(client->user->channel, channel)))
 		return HOOK_CONTINUE; /* not in channel */
 
-	// FIXME: can't have 't' in +F and 'r' in +f or vice versa
+	/* config test rejects having 't' in +F and 'r' in +f or vice versa,
+	 * otherwise we would be screwed here :D.
+	 */
 	fld = get_channel_flood_settings(channel, CHFLD_TEXT);
 
 	if (!fld || !(fld->limit[CHFLD_TEXT] || fld->limit[CHFLD_REPEAT]))
