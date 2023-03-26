@@ -903,6 +903,7 @@ void floodprot_show_profiles(Client *client)
 		           fld->settings.profile,
 		           buf);
 	}
+	sendnotice(client, "See also https://www.unrealircd.org/docs/Channel_anti-flood_settings");
 }
 
 int cmodef_profile_is_ok(Client *client, Channel *channel, char mode, const char *param, int type, int what)
@@ -1796,7 +1797,7 @@ CMD_OVERRIDE_FUNC(floodprot_override_mode)
 	{
 		/* Query (not set!) request for #channel */
 		Channel *channel = find_channel(parv[1]);
-		ChannelFloodProtection *fld;
+		ChannelFloodProtection *profile, *advanced;
 		char buf[512];
 
 		if (!channel)
@@ -1804,22 +1805,57 @@ CMD_OVERRIDE_FUNC(floodprot_override_mode)
 			sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);
 			return;
 		}
-#if 0
-		// FIXME: show both +f and +F if they are both set, on different lines as they have different 'per'
-		fld = get_channel_flood_settings(channel);
-		if (!fld)
+
+		advanced = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+		profile = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'F');
+		if (!advanced && !profile)
 		{
 			sendnotice(client, "No channel mode +f/+F is active on %s", channel->name);
+		} else
+		if (advanced && !profile)
+		{
+			channel_modef_string(advanced, buf);
+			sendnotice(client, "Channel '%s' has effective flood setting '%s' (custom settings via +f)",
+			           channel->name, buf);
+		} else
+		if (profile && !advanced)
+		{
+			channel_modef_string(profile, buf);
+			sendnotice(client, "Channel '%s' has effective flood setting '%s' (flood profile '%s')",
+			           channel->name, buf, profile->profile);
 		} else {
-			channel_modef_string(fld, buf);
-			if (fld->profile)
+			/* Both +f and +F are set */
+			int v;
+			ChannelFloodProtection mix;
+			FloodType *t;
+			char overridden[64];
+			*overridden = '\0';
+			memcpy(&mix, profile, sizeof(mix));
+			for (v=0; v < NUMFLD; v++)
+			{
+				if ((advanced->limit[v]>0) && (mix.limit[v]>0))
+				{
+					mix.limit[v] = 0;
+					mix.action[v] = 0;
+					t = find_floodprot_by_index(v);
+					if (t)
+						strlcat_letter(overridden, t->letter, sizeof(overridden));
+				}
+			}
+			channel_modef_string(&mix, buf);
+			if (*overridden)
+			{
+				sendnotice(client, "Channel '%s' uses flood profile '%s', without action(s) '%s' as they are overridden by +f.",
+					   channel->name, profile->profile, overridden);
+				sendnotice(client, "Effective flood setting via +F: '%s'", buf);
+			} else {
 				sendnotice(client, "Channel '%s' has effective flood setting '%s' (flood profile '%s')",
-					   channel->name, buf, fld->profile);
-			else
-				sendnotice(client, "Channel '%s' has effective flood setting '%s' (custom settings via +f)",
-					   channel->name, buf);
+					   channel->name, buf, profile->profile);
+			}
+			channel_modef_string(advanced, buf);
+			sendnotice(client, "Plus flood setting via +f: '%s'", buf);
 		}
-#endif
+		sendnotice(client, "-");
 		floodprot_show_profiles(client);
 		return;
 	}
