@@ -172,6 +172,8 @@ void floodprot_free_removechannelmodetimer_list(ModData *m);
 void floodprot_free_msghash_key(ModData *m);
 CMD_OVERRIDE_FUNC(floodprot_override_mode);
 ChannelFloodProtection *get_channel_flood_profile(const char *name);
+int parse_channel_mode_flood(const char *param, ChannelFloodProtection *fld, int strict, Client *client, const char **error_out);
+int parse_channel_mode_flood_failed(const char **error_out, ChannelFloodProtection *fld, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,3,4)));
 
 MOD_TEST()
 {
@@ -476,7 +478,31 @@ int floodprot_config_test_antiflood_block(ConfigFile *cf, ConfigEntry *ce, int t
 			{
 				if (!strcmp(cep->name, "flood-mode"))
 				{
-					// TODO: validation
+					ChannelFloodProtection fld;
+					const char *err;
+
+					if (!cep->value)
+					{
+						config_error("%s:%i: set::anti-flood::channel::profile %s::flood-mode has no value",
+						             cep->file->filename, cep->line_number, ce->value);
+						errors++;
+						continue;
+					}
+					memset(&fld, 0, sizeof(fld));
+					if (!parse_channel_mode_flood(cep->value, &fld, 1, NULL, &err))
+					{
+						config_error("%s:%i: set::anti-flood::channel::profile %s::flood-mode: %s",
+						             cep->file->filename, cep->line_number,
+						             ce->value,
+						             cep->value);
+						errors++;
+					} else if (!BadPtr(err))
+					{
+						config_warn("%s:%i: set::anti-flood::channel::profile %s::flood-mode: %s",
+						             cep->file->filename, cep->line_number,
+						             ce->value,
+						             err);
+					}
 				} else {
 					config_error_unknown(cep->file->filename, cep->line_number,
 							     "set::anti-flood::channel::profile", cep->name);
@@ -552,146 +578,61 @@ ChannelFloodProtection *get_channel_flood_profile(const char *name)
 	return NULL;
 }
 
-int cmodef_is_ok(Client *client, Channel *channel, char mode, const char *param, int type, int what)
+/** Helper function for parse_channel_mode_flood() */
+int parse_channel_mode_flood_failed(const char **error_out, ChannelFloodProtection *fld, const char *fmt, ...)
 {
-	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
+	static char retbuf[512];
+	int v;
+
+	va_list vl;
+	va_start(vl, fmt);
+	vsnprintf(retbuf, sizeof(retbuf), fmt, vl);
+	va_end(vl);
+
+	/* Zero out all settings */
+	for (v=0; v < NUMFLD; v++)
 	{
-		if (IsUser(client) && check_channel_access(client, channel, "oaq"))
-			return EX_ALLOW;
-		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
-			sendnumeric(client, ERR_NOTFORHALFOPS, 'f');
-		return EX_DENY;
-	} else
-	if (type == EXCHK_PARAM)
-	{
-		ChannelFloodProtection newf;
-		char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
-		int v;
-		unsigned short warnings = 0, breakit;
-		unsigned char r;
-		FloodType *floodtype;
-		Flood index;
-
-		memset(&newf, 0, sizeof(newf));
-
-		/* old +f was like +f 10:5 or +f *10:5 - no longer supported */
-		if ((param[0] != '[') || strlen(param) < 3)
-			goto invalidsyntax;;
-
-		/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
-		strlcpy(xbuf, param, sizeof(xbuf));
-		p2 = strchr(xbuf+1, ']');
-		if (!p2)
-			goto invalidsyntax;
-		*p2 = '\0';
-		if (*(p2+1) != ':')
-			goto invalidsyntax;
-
-		breakit = 0;
-		for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
-		{
-			/* <number><1 letter>[optional: '#'+1 letter] */
-			p = x;
-			while(isdigit(*p)) { p++; }
-			c = *p;
-			floodtype = find_floodprot_by_letter(c);
-			if (!floodtype)
-			{
-				if (MyUser(client) && *p && (warnings++ < 3))
-					sendnotice(client, "warning: channelmode +f: floodtype '%c' unknown, ignored.", *p);
-				continue; /* continue instead of break for forward compatability. */
-			}
-			*p = '\0';
-			v = atoi(x);
-			if ((v < 1) || (v > 999)) /* out of range... */
-			{
-				if (MyUser(client))
-				{
-					sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'f', "value should be from 1-999");
-					goto invalidsyntax;
-				} else
-					continue; /* just ignore for remote servers */
-			}
-			p++;
-			a = '\0';
-			r = MyUser(client) ? MODEF_DEFAULT_UNSETTIME : 0;
-			if (*p != '\0')
-			{
-				if (*p == '#')
-				{
-					p++;
-					a = *p;
-					p++;
-					if (*p != '\0')
-					{
-						int tv;
-						tv = atoi(p);
-						if (tv <= 0)
-							tv = 0; /* (ignored) */
-						if (tv > (MyUser(client) ? MODEF_MAX_UNSETTIME : 255))
-							tv = (MyUser(client) ? MODEF_MAX_UNSETTIME : 255); /* set to max */
-						r = (unsigned char)tv;
-					}
-				}
-			}
-
-			index = floodtype->index;
-			newf.limit[index] = v;
-			if (a && strchr(floodtype->actions, a))
-				newf.action[index] = a;
-			else
-				newf.action[index] = floodtype->default_action;
-			if (!floodtype->timedban_required || (floodtype->timedban_required && timedban_available))
-				newf.remove_after[index] = r;
-		} /* for */
-		/* parse 'per' */
-		p2++;
-		if (*p2 != ':')
-			goto invalidsyntax;
-		p2++;
-		if (!*p2)
-			goto invalidsyntax;
-		v = atoi(p2);
-		if ((v < 1) || (v > 999)) /* 'per' out of range */
-		{
-			if (MyUser(client))
-				sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'f', "time range should be 1-999");
-			goto invalidsyntax;
-		}
-		newf.per = v;
-
-		/* Is anything turned on? (to stop things like '+f []:15' */
-		breakit = 1;
-		for (v=0; v < NUMFLD; v++)
-			if (newf.limit[v])
-				breakit=0;
-		if (breakit)
-			goto invalidsyntax;
-
-		return EX_ALLOW;
-invalidsyntax:
-		sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'f', "Invalid syntax for MODE +f");
-		return EX_DENY;
+		fld->limit[v] = 0;
+		fld->action[v] = 0;
+		fld->remove_after[v] = 0;
 	}
 
-	/* fallthrough -- should not be used */
-	return EX_DENY;
+	if (error_out)
+		*error_out = retbuf;
+
+	return 0;
 }
 
-void *cmodef_put_param(void *fld_in, const char *param)
+/** Parse channel mode +f string.
+ * @param param		The parameter string to parse
+ * @param fld		The setting struct to fill, this MAY already contain data.
+ * @param strict	If set to 1 then reject invalid setting, used for ex .is_ok().
+ *			If set to 0 then do your best to make something out of it,
+ *			and skip invalid stuff for forward-compatibility, eg for .put_param().
+ * @param client	The client requesting the mode change, can be NULL
+ *			(used for local vs remote things, not for sending errors)
+ * @param error		Used for returning the error or warning string, can be NULL.
+ * @retval 1 On success, although there could still be a warning stored in *error_out.
+ * @retval 0 On failure, the error will be in *error_out
+ */
+int parse_channel_mode_flood(const char *param, ChannelFloodProtection *fld, int strict, Client *client, const char **error_out)
 {
-	ChannelFloodProtection *fld = (ChannelFloodProtection *)fld_in;
+	static char retbuf[512];
 	char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
 	int v;
 	unsigned short breakit;
 	unsigned char r;
 	FloodType *floodtype;
 	Flood index;
+	char localclient = (client && MyUser(client)) ? 1 : 0;
+	char warn_unknown_flood_type[32];
+
+	*warn_unknown_flood_type = '\0';
+	if (error_out)
+		*error_out = NULL;
 
 	strlcpy(xbuf, param, sizeof(xbuf));
 
-	if (!fld)
-		fld = safe_alloc(sizeof(ChannelFloodProtection));
 
 	/* always reset settings (l, a, r) */
 	for (v=0; v < NUMFLD; v++)
@@ -704,10 +645,10 @@ void *cmodef_put_param(void *fld_in, const char *param)
 	/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
 	p2 = strchr(xbuf+1, ']');
 	if (!p2)
-		goto fail_cmodef_put_param; /* FAIL */
+		return parse_channel_mode_flood_failed(error_out, fld, "Invalid format (brackets missing)");
 	*p2 = '\0';
 	if (*(p2+1) != ':')
-		goto fail_cmodef_put_param; /* FAIL */
+		return parse_channel_mode_flood_failed(error_out, fld, "Invalid format (:XX period missing)");
 
 	breakit = 0;
 	for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
@@ -715,17 +656,33 @@ void *cmodef_put_param(void *fld_in, const char *param)
 		/* <number><1 letter>[optional: '#'+1 letter] */
 		p = x;
 		while(isdigit(*p)) { p++; }
+
+		/* letter */
 		c = *p;
 		floodtype = find_floodprot_by_letter(c);
 		if (!floodtype)
+		{
+			strlcat_letter(warn_unknown_flood_type, c, sizeof(warn_unknown_flood_type));
 			continue; /* continue instead of break for forward compatability. */
+		}
 		*p = '\0';
+
+		/* floodcount (number) */
 		v = atoi(x);
+		if (strict)
+		{
+			if ((v < 1) || (v > 999))
+				return parse_channel_mode_flood_failed(error_out, fld, "Flood count for '%c' must be 1-999 (got %d)", c, v);
+		}
 		if (v < 1)
 			v = 1;
+		if (v > 999)
+			v = 999;
 		p++;
 		a = '\0';
-		r = 0;
+
+		/* Removal */
+		r = localclient ? MODEF_DEFAULT_UNSETTIME : 0;
 		if (*p != '\0')
 		{
 			if (*p == '#')
@@ -739,6 +696,10 @@ void *cmodef_put_param(void *fld_in, const char *param)
 					tv = atoi(p);
 					if (tv <= 0)
 						tv = 0; /* (ignored) */
+					if (tv > 255)
+						tv = 255; /* always max limit, as it is a char */
+					if (strict && localclient && (tv > MODEF_MAX_UNSETTIME))
+						tv = MODEF_MAX_UNSETTIME;
 					r = (unsigned char)tv;
 				}
 			}
@@ -757,10 +718,10 @@ void *cmodef_put_param(void *fld_in, const char *param)
 	/* parse 'per' */
 	p2++;
 	if (*p2 != ':')
-		goto fail_cmodef_put_param; /* FAIL */
+		return parse_channel_mode_flood_failed(error_out, fld, "Invalid format (:XX period missing)");
 	p2++;
 	if (!*p2)
-		goto fail_cmodef_put_param; /* FAIL */
+		return parse_channel_mode_flood_failed(error_out, fld, "Invalid format (:XX period missing)");
 	v = atoi(p2);
 	if (v < 1)
 		v = 1;
@@ -784,13 +745,66 @@ void *cmodef_put_param(void *fld_in, const char *param)
 		if (fld->limit[v])
 			breakit=0;
 	if (breakit)
-		goto fail_cmodef_put_param; /* FAIL */
+	{
+		/* Nothing is turned on.. */
+		if (*warn_unknown_flood_type)
+			return parse_channel_mode_flood_failed(error_out, fld, "Unknown flood type(s) '%s'", warn_unknown_flood_type);
+		return parse_channel_mode_flood_failed(error_out, fld, "None of the floodtypes set");
+	}
 
-	return (void *)fld;
+	/* Finally, this is a warning only */
+	if (*warn_unknown_flood_type && error_out)
+	{
+		snprintf(retbuf, sizeof(retbuf), "Unknown flood type(s) '%s'", warn_unknown_flood_type);
+		*error_out = retbuf;
+	}
 
-fail_cmodef_put_param:
-	memset(fld, 0, sizeof(ChannelFloodProtection));
-	return fld; /* FAIL */
+	return 1;
+}
+
+int cmodef_is_ok(Client *client, Channel *channel, char mode, const char *param, int type, int what)
+{
+	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
+	{
+		if (IsUser(client) && check_channel_access(client, channel, "oaq"))
+			return EX_ALLOW;
+		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
+			sendnumeric(client, ERR_NOTFORHALFOPS, 'f');
+		return EX_DENY;
+	} else
+	if (type == EXCHK_PARAM)
+	{
+		ChannelFloodProtection fld;
+		const char *err;
+
+		memset(&fld, 0, sizeof(fld));
+		if (!parse_channel_mode_flood(param, &fld, 1, client, &err))
+		{
+			sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'f', err);
+			return EX_DENY;
+		} else if (err)
+		{
+			sendnotice(client, "WARNING: Channel mode +f: %s", err);
+			/* fallthrough */
+		}
+		return EX_ALLOW;
+	}
+
+	/* fallthrough -- should not be used */
+	return EX_DENY;
+}
+
+void *cmodef_put_param(void *fld_in, const char *param)
+{
+	ChannelFloodProtection *fld = (ChannelFloodProtection *)fld_in;
+	int v;
+
+	if (!fld)
+		fld = safe_alloc(sizeof(ChannelFloodProtection));
+
+	parse_channel_mode_flood(param, fld, 0, NULL, NULL);
+
+	return fld;
 }
 
 const char *cmodef_get_param(void *r_in)
@@ -811,105 +825,15 @@ const char *cmodef_get_param(void *r_in)
 const char *cmodef_conv_param(const char *param_in, Client *client, Channel *channel)
 {
 	static char retbuf[256];
-	char param[256];
-	ChannelFloodProtection newf;
-	int localclient = (!client || MyUser(client)) ? 1 : 0;
-	char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
-	int v;
-	unsigned short breakit;
-	unsigned char r;
-	FloodType *floodtype;
-	Flood index;
+	ChannelFloodProtection fld;
+	const char *err;
 
-	memset(&newf, 0, sizeof(newf));
-
-	strlcpy(param, param_in, sizeof(param));
-
-	/* old +f was like +f 10:5 or +f *10:5 - no longer supported */
-	if (param[0] != '[')
+	memset(&fld, 0, sizeof(fld));
+	if (!parse_channel_mode_flood(param_in, &fld, 0, client, &err))
 		return NULL;
 
-	/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
-	strlcpy(xbuf, param, sizeof(xbuf));
-	p2 = strchr(xbuf+1, ']');
-	if (!p2)
-		return NULL;
-	*p2 = '\0';
-	if (*(p2+1) != ':')
-		return NULL;
-	breakit = 0;
-	for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
-	{
-		/* <number><1 letter>[optional: '#'+1 letter] */
-		p = x;
-		while(isdigit(*p)) { p++; }
-		c = *p;
-		floodtype = find_floodprot_by_letter(c);
-		if (!floodtype)
-			continue; /* continue instead of break for forward compatability. */
-		*p = '\0';
-		v = atoi(x);
-		if ((v < 1) || (v > 999)) /* out of range... */
-		{
-			if (localclient || (v < 1))
-				return NULL;
-		}
-		p++;
-		a = '\0';
-		r = localclient ? MODEF_DEFAULT_UNSETTIME : 0;
-		if (*p != '\0')
-		{
-			if (*p == '#')
-			{
-				p++;
-				a = *p;
-				p++;
-				if (*p != '\0')
-				{
-					int tv;
-					tv = atoi(p);
-					if (tv <= 0)
-						tv = 0; /* (ignored) */
-					if (tv > (localclient ? MODEF_MAX_UNSETTIME : 255))
-						tv = (localclient ? MODEF_MAX_UNSETTIME : 255); /* set to max */
-					r = (unsigned char)tv;
-				}
-			}
-		}
-
-		index = floodtype->index;
-		newf.limit[index] = v;
-		if (a && strchr(floodtype->actions, a))
-			newf.action[index] = a;
-		else
-			newf.action[index] = floodtype->default_action;
-		if (!floodtype->timedban_required || (floodtype->timedban_required && timedban_available))
-			newf.remove_after[index] = r;
-	} /* for */
-	/* parse 'per' */
-	p2++;
-	if (*p2 != ':')
-		return NULL;
-	p2++;
-	if (!*p2)
-		return NULL;
-	v = atoi(p2);
-	if ((v < 1) || (v > 999)) /* 'per' out of range */
-	{
-		if (localclient || (v < 1))
-			return NULL;
-	}
-	newf.per = v;
-
-	/* Is anything turned on? (to stop things like '+f []:15' */
-	breakit = 1;
-	for (v=0; v < NUMFLD; v++)
-		if (newf.limit[v])
-			breakit=0;
-	if (breakit)
-		return NULL;
-
-	channel_modef_string(&newf, retbuf);
+	*retbuf = '\0';
+	channel_modef_string(&fld, retbuf);
 	return retbuf;
 }
 
