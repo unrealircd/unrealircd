@@ -1142,7 +1142,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 	/* config test rejects having 't' in +F and 'r' in +f or vice versa,
 	 * otherwise we would be screwed here :D.
 	 */
-	fld = get_channel_flood_settings(channel, CHFLD_TEXT);
+	fld = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
 
 	if (!fld || !(fld->limit[CHFLD_TEXT] || fld->limit[CHFLD_REPEAT]))
 		return HOOK_CONTINUE;
