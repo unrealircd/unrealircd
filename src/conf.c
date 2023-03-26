@@ -7551,8 +7551,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 						if (used == 1)
 							break;
 					}
-					if (used)
-						continue; /* hook already took care of it */
+					if (used == 1)
+						continue; /* module handled it */
+					if (used == 2)
+						break; /* module handled it and we must stop entire block processing */
 					if (!strcmp(ceppp->name, "handshake-data-flood"))
 					{
 						for (cep4 = ceppp->items; cep4; cep4 = cep4->next)
@@ -8401,26 +8403,32 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 							continue;
 						value = (*(h->func.intfunc))(conf,ceppp,CONFIG_SET_ANTI_FLOOD,&errs);
 						if (value == 2)
-							used = 1;
+						{
+							used = 2;
+							break;
+						} else
 						if (value == 1)
 						{
 							used = 1;
 							break;
-						}
+						} else
 						if (value == -1)
 						{
 							used = 1;
 							errors += errs;
 							break;
-						}
+						} else
 						if (value == -2)
 						{
-							used = 1;
+							used = 2;
 							errors += errs;
+							break;
 						}
 					}
-					if (used)
+					if (used == 1)
 						continue; /* module handled it */
+					if (used == 2)
+						break; /* module handled it and we must stop entire block processing */
 
 					/* Prevent users from using options that belong in "everyone"
 					 * at other places, and vice-versa.

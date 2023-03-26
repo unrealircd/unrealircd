@@ -132,8 +132,10 @@ char *floodprot_msghash_key = NULL;
 /* Forward declarations */
 static void init_config(void);
 int floodprot_rehash_complete(void);
-int floodprot_config_test(ConfigFile *, ConfigEntry *, int, int *);
-int floodprot_config_run(ConfigFile *, ConfigEntry *, int);
+int floodprot_config_test_set_block(ConfigFile *, ConfigEntry *, int, int *);
+int floodprot_config_run_set_block(ConfigFile *, ConfigEntry *, int);
+int floodprot_config_test_antiflood_block(ConfigFile *, ConfigEntry *, int, int *);
+int floodprot_config_run_antiflood_block(ConfigFile *, ConfigEntry *, int);
 void floodprottimer_del(Channel *channel, char mflag);
 void floodprottimer_stopchantimers(Channel *channel);
 static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a, unsigned char r);
@@ -169,10 +171,12 @@ int floodprot_stats(Client *client, const char *flag);
 void floodprot_free_removechannelmodetimer_list(ModData *m);
 void floodprot_free_msghash_key(ModData *m);
 CMD_OVERRIDE_FUNC(floodprot_override_mode);
+ChannelFloodProtection *get_channel_flood_profile(const char *name);
 
 MOD_TEST()
 {
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, floodprot_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, floodprot_config_test_set_block);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, floodprot_config_test_antiflood_block);
 	return MOD_SUCCESS;
 }
 
@@ -226,7 +230,8 @@ MOD_INIT()
 		siphash_generate_key(floodprot_msghash_key);
 	}
 
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, floodprot_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, floodprot_config_run_set_block);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, floodprot_config_run_antiflood_block);
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, floodprot_can_send_to_channel);
 	HookAdd(modinfo->handle, HOOKTYPE_CHANMSG, 0, floodprot_post_chanmsg);
 	HookAdd(modinfo->handle, HOOKTYPE_KNOCK, 0, floodprot_knock);
@@ -250,6 +255,12 @@ MOD_LOAD()
 	return MOD_SUCCESS;
 }
 
+void free_channel_flood_profile(ChannelFloodProfile *f)
+{
+	safe_free(f->settings.profile);
+	safe_free(f);
+}
+
 void free_channel_flood_profiles(void)
 {
 	ChannelFloodProfile *f, *f_next;
@@ -258,7 +269,7 @@ void free_channel_flood_profiles(void)
 	{
 		f_next = f->next;
 		DelListItem(f, channel_flood_profiles);
-		cmodef_free_param(f);
+		free_channel_flood_profile(f);
 	}
 }
 
@@ -274,6 +285,35 @@ int floodprot_rehash_complete(void)
 {
 	timedban_available = is_module_loaded("extbans/timedban");
 	return 0;
+}
+
+static void set_channel_flood_profile(const char *name, const char *value)
+{
+	ChannelFloodProfile *f = safe_alloc(sizeof(ChannelFloodProfile));
+	ChannelFloodProfile *ex;
+
+	safe_strdup(f->settings.profile, name);
+	cmodef_put_param(&f->settings, value);
+	if (f->settings.per == 0)
+	{
+		/* FAILED */
+		free_channel_flood_profile(f);
+		return;
+	}
+
+	/* Free existing, if any */
+	for (ex = channel_flood_profiles; ex; ex = ex->next)
+	{
+		if (!strcasecmp(ex->settings.profile, name))
+		{
+			DelListItem(ex, channel_flood_profiles);
+			free_channel_flood_profile(ex);
+			break;
+		}
+	}
+
+	/* And add the new one.. */
+	AddListItem(f, channel_flood_profiles);
 }
 
 static void init_default_channel_flood_profiles(void)
@@ -322,7 +362,7 @@ static void init_config(void)
 	init_default_channel_flood_profiles();
 }
 
-int floodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int floodprot_config_test_set_block(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
 
@@ -389,7 +429,7 @@ int floodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	return errors ? -1 : 1;
 }
 
-int floodprot_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+int floodprot_config_run_set_block(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	if (type != CONFIG_SET)
 		return 0;
@@ -404,6 +444,81 @@ int floodprot_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		return 0; /* not handled by us */
 
 	return 1;
+}
+
+int floodprot_config_test_antiflood_block(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
+	int errors = 0;
+	ConfigEntry *cep;
+
+	/* We only deal with set::anti-flood::channel */
+	if ((type != CONFIG_SET_ANTI_FLOOD) || strcmp(ce->parent->name, "channel"))
+		return 0;
+
+	for (; ce; ce = ce->next)
+	{
+		if (!strcmp(ce->name, "default-profile"))
+		{
+			config_warn("%s:%i: set::anti-flood::channel::default-profile is not implemented yet",
+			            ce->file->filename, ce->line_number);
+			continue;
+		} else
+		if (!strcmp(ce->name, "profile"))
+		{
+			if (!ce->value)
+			{
+				config_error_noname(ce->file->filename, ce->line_number,
+				                    "set::anti-flood::channel::profile");
+				errors++;
+				continue;
+			}
+			for (cep = ce->items; cep; cep = cep->next)
+			{
+				if (!strcmp(cep->name, "flood-mode"))
+				{
+					// TODO: validation
+				} else {
+					config_error_unknown(cep->file->filename, cep->line_number,
+							     "set::anti-flood::channel::profile", cep->name);
+					errors++;
+				}
+			}
+		} else
+		{
+			config_error_unknown(ce->file->filename, ce->line_number,
+			                     "set::anti-flood::channel", ce->name);
+			errors++;
+		}
+	}
+
+	*errs = errors;
+	return errors ? -2 : 2;
+}
+
+int floodprot_config_run_antiflood_block(ConfigFile *cf, ConfigEntry *ce, int type)
+{
+	ConfigEntry *cep;
+
+	/* We only deal with set::anti-flood::channel */
+	if ((type != CONFIG_SET_ANTI_FLOOD) || strcmp(ce->parent->name, "channel"))
+		return 0;
+
+	for (; ce; ce = ce->next)
+	{
+		if (!strcmp(ce->name, "default-profile"))
+		{
+			// Not implemented yet
+		} else
+		if (!strcmp(ce->name, "profile"))
+		{
+			for (cep = ce->items; cep; cep = cep->next)
+			{
+				if (!strcmp(cep->name, "flood-mode"))
+					set_channel_flood_profile(ce->value, cep->value);
+			}
+		}
+	}
+	return 2;
 }
 
 FloodType *find_floodprot_by_letter(char c)
