@@ -1119,7 +1119,7 @@ ChannelFloodProtection *get_channel_flood_settings(Channel *channel, int what)
 int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
 {
 	Membership *mb;
-	ChannelFloodProtection *chp;
+	ChannelFloodProtection *fld;
 	MemberFlood *memberflood;
 	uint64_t msghash;
 	unsigned char is_flooding_text=0, is_flooding_repeat=0;
@@ -1139,9 +1139,9 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 		return HOOK_CONTINUE; /* not in channel */
 
 	// FIXME: can't have 't' in +F and 'r' in +f or vice versa
-	chp = get_channel_flood_settings(channel, CHFLD_TEXT);
+	fld = get_channel_flood_settings(channel, CHFLD_TEXT);
 
-	if (!chp || !(chp->limit[CHFLD_TEXT] || chp->limit[CHFLD_REPEAT]))
+	if (!fld || !(fld->limit[CHFLD_TEXT] || fld->limit[CHFLD_REPEAT]))
 		return HOOK_CONTINUE;
 
 	if (moddata_membership(mb, mdflood).ptr == NULL)
@@ -1152,13 +1152,13 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 
 	memberflood = (MemberFlood *)moddata_membership(mb, mdflood).ptr;
 
-	if ((TStime() - memberflood->firstmsg) >= chp->per)
+	if ((TStime() - memberflood->firstmsg) >= fld->per)
 	{
 		/* Reset due to moving into a new time slot */
 		memberflood->firstmsg = TStime();
 		memberflood->nmsg = 1;
 		memberflood->nmsg_repeat = 1;
-		if (chp->limit[CHFLD_REPEAT])
+		if (fld->limit[CHFLD_REPEAT])
 		{
 			memberflood->lastmsg = gen_floodprot_msghash(*msg);
 			memberflood->prevmsg = 0;
@@ -1167,7 +1167,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 	}
 
 	/* Anti-repeat ('r') */
-	if (chp->limit[CHFLD_REPEAT])
+	if (fld->limit[CHFLD_REPEAT])
 	{
 		msghash = gen_floodprot_msghash(*msg);
 		if (memberflood->lastmsg)
@@ -1175,7 +1175,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 			if ((memberflood->lastmsg == msghash) || (memberflood->prevmsg == msghash))
 			{
 				memberflood->nmsg_repeat++;
-				if (memberflood->nmsg_repeat > chp->limit[CHFLD_REPEAT])
+				if (memberflood->nmsg_repeat > fld->limit[CHFLD_REPEAT])
 					is_flooding_repeat = 1;
 			}
 			memberflood->prevmsg = memberflood->lastmsg;
@@ -1183,11 +1183,11 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 		memberflood->lastmsg = msghash;
 	}
 
-	if (chp->limit[CHFLD_TEXT])
+	if (fld->limit[CHFLD_TEXT])
 	{
 		/* increase msgs */
 		memberflood->nmsg++;
-		if (memberflood->nmsg > chp->limit[CHFLD_TEXT])
+		if (memberflood->nmsg > fld->limit[CHFLD_TEXT])
 			is_flooding_text = 1;
 	}
 
@@ -1205,26 +1205,26 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 			flood_type = CHFLD_REPEAT;
 		} else
 		{
-			snprintf(errbuf, sizeof(errbuf), "Flooding (Limit is %i lines per %i seconds)", chp->limit[CHFLD_TEXT], chp->per);
+			snprintf(errbuf, sizeof(errbuf), "Flooding (Limit is %i lines per %i seconds)", fld->limit[CHFLD_TEXT], fld->per);
 			flood_type = CHFLD_TEXT;
 		}
 
-		if (chp->action[flood_type] == 'd')
+		if (fld->action[flood_type] == 'd')
 		{
 			/* Drop the message */
 			*errmsg = errbuf;
 			return HOOK_DENY;
 		}
 
-		if (chp->action[flood_type] == 'b')
+		if (fld->action[flood_type] == 'b')
 		{
 			/* Ban the user */
-			if (timedban_available && (chp->remove_after[flood_type] > 0))
+			if (timedban_available && (fld->remove_after[flood_type] > 0))
 			{
 				if (iConf.named_extended_bans)
-					snprintf(mask, sizeof(mask), "~time:%d:*!*@%s", chp->remove_after[flood_type], GetHost(client));
+					snprintf(mask, sizeof(mask), "~time:%d:*!*@%s", fld->remove_after[flood_type], GetHost(client));
 				else
-					snprintf(mask, sizeof(mask), "~t:%d:*!*@%s", chp->remove_after[flood_type], GetHost(client));
+					snprintf(mask, sizeof(mask), "~t:%d:*!*@%s", fld->remove_after[flood_type], GetHost(client));
 			} else {
 				snprintf(mask, sizeof(mask), "*!*@%s", GetHost(client));
 			}
@@ -1409,12 +1409,12 @@ void strccat(char *s, char c)
  *   do not modify it yourself.
  * - channel->mode.floodprot is asumed to be non-NULL.
  */
-void floodprottimer_add(Channel *channel, ChannelFloodProtection *chp, char mflag, time_t when)
+void floodprottimer_add(Channel *channel, ChannelFloodProtection *fld, char mflag, time_t when)
 {
 	RemoveChannelModeTimer *e = NULL;
 	unsigned char add=1;
 
-	if (strchr(chp->timers_running, mflag))
+	if (strchr(fld->timers_running, mflag))
 	{
 		/* Already exists... */
 		e = floodprottimer_find(channel, mflag);
@@ -1422,17 +1422,17 @@ void floodprottimer_add(Channel *channel, ChannelFloodProtection *chp, char mfla
 			add = 0;
 	}
 
-	if (!strchr(chp->timers_running, mflag))
+	if (!strchr(fld->timers_running, mflag))
 	{
-		if (strlen(chp->timers_running)+1 >= sizeof(chp->timers_running))
+		if (strlen(fld->timers_running)+1 >= sizeof(fld->timers_running))
 		{
 			unreal_log(ULOG_WARNING, "flood", "BUG_FLOODPROTTIMER_ADD", NULL,
 			           "[BUG] floodprottimer_add: too many timers running for $channel ($timers_running)",
 			           log_data_channel("channel", channel),
-			           log_data_string("timers_running", chp->timers_running));
+			           log_data_string("timers_running", fld->timers_running));
 			return;
 		}
-		strccat(chp->timers_running, mflag); /* bounds already checked ^^ */
+		strccat(fld->timers_running, mflag); /* bounds already checked ^^ */
 	}
 
 	if (add)
@@ -1523,31 +1523,31 @@ void floodprottimer_stopchantimers(Channel *channel)
 
 int do_floodprot(Channel *channel, Client *client, int what)
 {
-	ChannelFloodProtection *chp = get_channel_flood_settings(channel, what);
+	ChannelFloodProtection *fld = get_channel_flood_settings(channel, what);
 	char unknown_user;
 
-	if (!chp)
+	if (!fld)
 		return 0; /* no +f active */
 
 	unknown_user = user_allowed_by_security_group_name(client, "known-users") ? 0 : 1;
 
-	if (chp->limit[what])
+	if (fld->limit[what])
 	{
-		if (TStime() - chp->timer[what] >= chp->per)
+		if (TStime() - fld->timer[what] >= fld->per)
 		{
 			/* reset */
-			chp->timer[what] = TStime();
-			chp->counter[what] = 1;
-			chp->counter_unknown_users[what] = unknown_user;
+			fld->timer[what] = TStime();
+			fld->counter[what] = 1;
+			fld->counter_unknown_users[what] = unknown_user;
 		} else
 		{
-			chp->counter[what]++;
+			fld->counter[what]++;
 
 			if (unknown_user)
-				chp->counter_unknown_users[what]++;
+				fld->counter_unknown_users[what]++;
 
-			if ((chp->counter[what] > chp->limit[what]) &&
-			    (TStime() - chp->timer[what] < chp->per))
+			if ((fld->counter[what] > fld->limit[what]) &&
+			    (TStime() - fld->timer[what] < fld->per))
 			{
 				if (MyUser(client))
 					do_floodprot_action(channel, what);
@@ -1561,7 +1561,7 @@ int do_floodprot(Channel *channel, Client *client, int what)
 /** Helper for do_floodprot_action() - standard action +i/+R/etc.. */
 void do_floodprot_action_standard(Channel *channel, int what, FloodType *floodtype, Cmode_t extmode, char m)
 {
-	ChannelFloodProtection *chp = get_channel_flood_settings(channel, what);
+	ChannelFloodProtection *fld = get_channel_flood_settings(channel, what);
 	char comment[512], target[CHANNELLEN + 8];
 	MessageTag *mtags;
 	const char *text = floodtype->description;
@@ -1570,7 +1570,7 @@ void do_floodprot_action_standard(Channel *channel, int what, FloodType *floodty
 	mtags = NULL;
 	new_message(&me, NULL, &mtags);
 	ircsnprintf(comment, sizeof(comment), "*** Channel %s detected (limit is %d per %d seconds), setting mode +%c",
-		text, chp->limit[what], chp->per, m);
+		text, fld->limit[what], fld->per, m);
 	ircsnprintf(target, sizeof(target), "%%%s", channel->name);
 	sendto_channel(channel, &me, NULL, "ho",
 		       0, SEND_ALL, mtags,
@@ -1588,9 +1588,9 @@ void do_floodprot_action_standard(Channel *channel, int what, FloodType *floodty
 	channel->mode.mode |= extmode;
 
 	/* Add remove-chanmode timer */
-	if (chp->remove_after[what])
+	if (fld->remove_after[what])
 	{
-		floodprottimer_add(channel, chp, m, TStime() + ((long)chp->remove_after[what] * 60) - 5);
+		floodprottimer_add(channel, fld, m, TStime() + ((long)fld->remove_after[what] * 60) - 5);
 		/* (since the floodprot timer event is called every 10s, we do -5 here so the accurancy will
 		 *  be -5..+5, without it it would be 0..+10.)
 		 */
@@ -1600,14 +1600,14 @@ void do_floodprot_action_standard(Channel *channel, int what, FloodType *floodty
 /** Helper for do_floodprot_action() - alternative action like +b ~security-group:unknown-users */
 int do_floodprot_action_alternative(Channel *channel, int what, FloodType *floodtype)
 {
-	ChannelFloodProtection *chp = get_channel_flood_settings(channel, what);
+	ChannelFloodProtection *fld = get_channel_flood_settings(channel, what);
 	char ban[512];
 	char comment[512], target[CHANNELLEN + 8];
 	MessageTag *mtags;
 	const char *text = floodtype->description;
 
 	snprintf(ban, sizeof(ban), "~time:%d:%s",
-	         chp->remove_after[what] ? chp->remove_after[what] : cfg.modef_alternative_ban_action_unsettime,
+	         fld->remove_after[what] ? fld->remove_after[what] : cfg.modef_alternative_ban_action_unsettime,
 	         floodtype->alternative_ban_action);
 
 	/* Add the ban internally */
@@ -1620,7 +1620,7 @@ int do_floodprot_action_alternative(Channel *channel, int what, FloodType *flood
 	ircsnprintf(comment, sizeof(comment),
 	            "*** Channel %s detected (limit is %d per %d seconds), "
 	            "mostly caused by 'unknown-users', setting mode +b %s",
-		text, chp->limit[what], chp->per, ban);
+		text, fld->limit[what], fld->per, ban);
 	ircsnprintf(target, sizeof(target), "%%%s", channel->name);
 	sendto_channel(channel, &me, NULL, "ho",
 		       0, SEND_ALL, mtags,
@@ -1641,22 +1641,22 @@ int do_floodprot_action_alternative(Channel *channel, int what, FloodType *flood
 void do_floodprot_action(Channel *channel, int what)
 {
 	Cmode_t extmode = 0;
-	ChannelFloodProtection *chp = get_channel_flood_settings(channel, what);
+	ChannelFloodProtection *fld = get_channel_flood_settings(channel, what);
 	FloodType *floodtype = find_floodprot_by_index(what);
 	char ban_exists;
 	double perc;
 	char m;
 
-	if (!chp || !floodtype)
+	if (!fld || !floodtype)
 		return;
 
 	/* For drop action we don't actually have to do anything here, but we still have to prevent Unreal
 	 * from setting chmode +d (which is useless against floods anyways) =]
 	 */
-	if (chp->action[what] == 'd')
+	if (fld->action[what] == 'd')
 		return;
 
-	m = chp->action[what];
+	m = fld->action[what];
 	if (!m)
 		return;
 
@@ -1679,7 +1679,7 @@ void do_floodprot_action(Channel *channel, int what)
 		if (!ban_exists)
 		{
 			/* Calculate the percentage of unknown-users that is responsible for the action trigger */
-			perc = ((double)chp->counter_unknown_users[what] / (double)chp->counter[what])*100;
+			perc = ((double)fld->counter_unknown_users[what] / (double)fld->counter[what])*100;
 			if (perc >= cfg.modef_alternate_action_percentage_threshold)
 			{
 				/* ACTION: We need to add the ban (+b) */
@@ -1692,7 +1692,7 @@ void do_floodprot_action(Channel *channel, int what)
 		 * or will be banned (eg: some actions still go through because of lag
 		 * between servers).
 		 */
-		if (ban_exists && (chp->counter[what] - chp->counter_unknown_users[what] <= chp->limit[what]))
+		if (ban_exists && (fld->counter[what] - fld->counter_unknown_users[what] <= fld->limit[what]))
 			return; /* flood limit not reached by known-users group */
 	}
 
