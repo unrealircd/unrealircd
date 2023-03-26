@@ -4,19 +4,22 @@ This is the git version (development version) for future 6.0.8. This is work
 in progress and not a stable version.
 
 ### Enhancements:
-* A [new channel mode `+F`](https://www.unrealircd.org/docs/Channel_anti-flood_settings)
-  (uppercase f). This allows the user pick a "flood profile"
+* New [channel mode `+F`](https://www.unrealircd.org/docs/Channel_anti-flood_settings)
+  (uppercase f). This allows the user to choose a "flood profile",
   which (behind the scenes) translates to something similar as an `+f` mode.
   * For example `+F normal` effectively results in
     `[7c#C15,30j#R10,10k#K15,40m#M10,10n#N15]:15`
   * Multiple profiles are available and changing them is possible,
     see [the documentation](https://www.unrealircd.org/docs/Channel_anti-flood_settings).
+  * This way end-users can easily choose a `+F` profile without having to learn
+    the more complex channel mode `+f`.
   * Any settings in mode `+f` will override the ones of the `+F` profile.
     To see the effective flood settings, use `MODE #channel F`.
-* When channel mode `+f` detects that a flood is caused by >75% of
-  "unknown-users", the server will now set a temporary ban on
-  `~security-group:unknown-users`. It will still set `+i` and other
-  modes if the flood keeps on going (eg. is caused by known-users).
+* When channel mode `+f` or `+F` detect that a flood is caused by >75% of
+  ["unknown-users"](https://www.unrealircd.org/docs/Security-group_block),
+  the server will now set a temporary ban on `~security-group:unknown-users`.
+  It will still set `+i` and other modes if the flood keeps on going
+  (eg. is caused by known-users).
 * Both features only work properly if all servers are on 6.0.8-git or later.
 
 UnrealIRCd 6.0.7
