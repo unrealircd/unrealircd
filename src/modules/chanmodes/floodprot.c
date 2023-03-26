@@ -62,7 +62,7 @@ typedef struct FloodType {
  * IMPORTANT: the first row MUST be in alphabetic order!!
  */
 FloodType floodtypes[] = {
-	{ 'c', CHFLD_CTCP,	"CTCPflood",		'C',	"mM",	NULL,						0, },
+	{ 'c', CHFLD_CTCP,	"CTCPflood",		'C',	"",	NULL,						0, },
 	{ 'j', CHFLD_JOIN,	"joinflood",		'i',	"R",	"~security-group:unknown-users",		0, },
 	{ 'k', CHFLD_KNOCK,	"knockflood",		'K',	"",	NULL,						0, },
 	{ 'm', CHFLD_MSG,	"msg/noticeflood",	'm',	"M",	"~quiet:~security-group:unknown-users",		0, },
@@ -360,7 +360,7 @@ static void init_config(void)
 	cfg.modef_max_unsettime = 60; /* 1 hour seems enough :p */
 	cfg.modef_boot_delay = 75;
 	cfg.modef_alternate_action_percentage_threshold = 75; /* 75% */
-	cfg.modef_alternative_ban_action_unsettime = 1; /* FIXME: set to 15 minutes */
+	cfg.modef_alternative_ban_action_unsettime = 15; /* 15min */
 	init_default_channel_flood_profiles();
 }
 
@@ -1285,6 +1285,7 @@ int floodprot_chanmode_del(Channel *channel, int modechar)
 		return 0;
 
 	chp = get_channel_flood_settings(channel);
+	// FIXME: this should use individual get_.._settings as BOTH +f and +F may need to be reset.
 	if (!chp)
 		return 0;
 
