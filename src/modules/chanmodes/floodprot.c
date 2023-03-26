@@ -289,33 +289,25 @@ int floodprot_rehash_complete(void)
 	return 0;
 }
 
+/** Set a new channel anti flood profile.
+ * Caller MUST ensure that the 'value' is valid, eg by calling
+ * parse_channel_mode_flood() or is_ok() prior.
+ */
 static void set_channel_flood_profile(const char *name, const char *value)
 {
-	ChannelFloodProfile *f = safe_alloc(sizeof(ChannelFloodProfile));
-	ChannelFloodProfile *ex;
+	ChannelFloodProfile *f;
+
+	for (f = channel_flood_profiles; f; f = f->next)
+		if (!strcasecmp(f->settings.profile, name))
+			break;
+	if (!f)
+	{
+		f = safe_alloc(sizeof(ChannelFloodProfile));
+		AddListItem(f, channel_flood_profiles);
+	}
 
 	safe_strdup(f->settings.profile, name);
 	cmodef_put_param(&f->settings, value);
-	if (f->settings.per == 0)
-	{
-		/* FAILED */
-		free_channel_flood_profile(f);
-		return;
-	}
-
-	/* Free existing, if any */
-	for (ex = channel_flood_profiles; ex; ex = ex->next)
-	{
-		if (!strcasecmp(ex->settings.profile, name))
-		{
-			DelListItem(ex, channel_flood_profiles);
-			free_channel_flood_profile(ex);
-			break;
-		}
-	}
-
-	/* And add the new one.. */
-	AddListItem(f, channel_flood_profiles);
 }
 
 static void init_default_channel_flood_profiles(void)
