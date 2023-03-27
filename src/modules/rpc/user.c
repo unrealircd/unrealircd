@@ -155,17 +155,18 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-#define RPC_USER_LIST_EXPAND_NONE	0
-#define RPC_USER_LIST_EXPAND_SELECT	1
-#define RPC_USER_LIST_EXPAND_ALL	2
-
-// TODO: right now returns everything for everyone,
-// give the option to return a list of names only or
-// certain options (hence the placeholder #define's above)
 RPC_CALL_FUNC(rpc_user_list)
 {
 	json_t *result, *list, *item;
 	Client *acptr;
+	int details;
+
+	OPTIONAL_PARAM_INTEGER("object_detail_level", details, 2);
+	if (details == 3)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Using an 'object_detail_level' of 3 is not allowed in user.* calls, use 0, 1, 2 or 4.");
+		return;
+	}
 
 	result = json_object();
 	list = json_array();
@@ -177,7 +178,7 @@ RPC_CALL_FUNC(rpc_user_list)
 			continue;
 
 		item = json_object();
-		json_expand_client(item, NULL, acptr, 99);
+		json_expand_client(item, NULL, acptr, details);
 		json_array_append_new(list, item);
 	}
 
@@ -190,8 +191,16 @@ RPC_CALL_FUNC(rpc_user_get)
 	json_t *result, *list, *item;
 	const char *nick;
 	Client *acptr;
+	int details;
 
 	REQUIRE_PARAM_STRING("nick", nick);
+
+	OPTIONAL_PARAM_INTEGER("object_detail_level", details, 4);
+	if (details == 3)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Using an 'object_detail_level' of 3 is not allowed in user.* calls, use 0, 1, 2 or 4.");
+		return;
+	}
 
 	if (!(acptr = find_user(nick, NULL)))
 	{
@@ -200,7 +209,7 @@ RPC_CALL_FUNC(rpc_user_get)
 	}
 
 	result = json_object();
-	json_expand_client(result, "client", acptr, 99);
+	json_expand_client(result, "client", acptr, details);
 	rpc_response(client, request, result);
 	json_decref(result);
 }
