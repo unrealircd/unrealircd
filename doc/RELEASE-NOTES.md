@@ -22,6 +22,15 @@ in progress and not a stable version.
   (eg. is caused by known-users).
 * Both features only work properly if all servers are on 6.0.8-git or later.
 
+### Changes:
+* The [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) calls
+  `channel.list`, `channel.get`, `user.list` and `user.get` now support
+  an optional argument `object_detail_level` which specifies how detailed
+  the [Channel](https://www.unrealircd.org/docs/JSON-RPC:Channel#Structure_of_a_channel)
+  and [User](https://www.unrealircd.org/docs/JSON-RPC:User#Structure_of_a_client_object)
+  response object will be. Especially useful if you don't need all the
+  details in the `.list` calls.
+
 UnrealIRCd 6.0.7
 -----------------
 
