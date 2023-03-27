@@ -1493,10 +1493,10 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 					json_object_set_new(j_details, d->key, json_null());
 				break;
 			case LOG_FIELD_CLIENT:
-				json_expand_client(j_details, d->key, d->value.client, 0);
+				json_expand_client(j_details, d->key, d->value.client, 99);
 				break;
 			case LOG_FIELD_CHANNEL:
-				json_expand_channel(j_details, d->key, d->value.channel, 0);
+				json_expand_channel(j_details, d->key, d->value.channel, 1);
 				break;
 			case LOG_FIELD_OBJECT:
 				json_object_set_new(j_details, d->key, d->value.object);
