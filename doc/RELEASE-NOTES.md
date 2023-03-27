@@ -6,13 +6,13 @@ in progress and not a stable version.
 ### Enhancements:
 * New [channel mode `+F`](https://www.unrealircd.org/docs/Channel_anti-flood_settings)
   (uppercase f). This allows the user to choose a "flood profile",
-  which (behind the scenes) translates to something similar as an `+f` mode.
+  which (behind the scenes) translates to something similar to an `+f` mode.
+  This so end-users can simply choose an `+F` profile without having to learn
+  the complex channel mode `+f`.
   * For example `+F normal` effectively results in
     `[7c#C15,30j#R10,10k#K15,40m#M10,10n#N15]:15`
   * Multiple profiles are available and changing them is possible,
     see [the documentation](https://www.unrealircd.org/docs/Channel_anti-flood_settings).
-  * This way end-users can easily choose a `+F` profile without having to learn
-    the more complex channel mode `+f`.
   * Any settings in mode `+f` will override the ones of the `+F` profile.
     To see the effective flood settings, use `MODE #channel F`.
 * When channel mode `+f` or `+F` detect that a flood is caused by >75% of
