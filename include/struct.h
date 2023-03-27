@@ -2443,6 +2443,16 @@ typedef enum JsonRpcError {
                                                          } \
                                                      } while(0)
 
+#define REQUIRE_PARAM_INTEGER(name, varname)         do { \
+                                                         json_t *t = json_object_get(params, name); \
+                                                         if (!t || !json_is_integer(t)) \
+                                                         { \
+                                                             rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: '%s'", name); \
+                                                             return; \
+                                                         } \
+                                                         varname = json_integer_value(t); \
+                                                     } while(0)
+
 #define REQUIRE_PARAM_BOOLEAN(name, varname)         do { \
                                                          json_t *vvv = json_object_get(params, name); \
                                                          if (!v || !json_is_boolean(v)) \
@@ -2454,6 +2464,7 @@ typedef enum JsonRpcError {
                                                      } while(0)
 
 #define OPTIONAL_PARAM_STRING(name, varname)         varname = json_object_get_string(params, name)
+#define OPTIONAL_PARAM_INTEGER(name, varname, def)   varname = json_object_get_integer(params, name, def)
 #define OPTIONAL_PARAM_BOOLEAN(name, varname, def)   varname = json_object_get_boolean(params, name, def)
 
 #endif /* __struct_include__ */

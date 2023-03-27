@@ -139,7 +139,7 @@ RPC_CALL_FUNC(rpc_server_get)
 	}
 
 	result = json_object();
-	json_expand_client(result, "server", acptr, 1);
+	json_expand_client(result, "server", acptr, 99);
 	rpc_response(client, request, result);
 	json_decref(result);
 }

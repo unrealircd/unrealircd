@@ -10571,7 +10571,7 @@ void request_rehash(Client *client)
 	/* Start a new json_rehash_log */
 	json_rehash_log = json_object();
 	if (client)
-		json_expand_client(json_rehash_log, "rehash_client", client, 1);
+		json_expand_client(json_rehash_log, "rehash_client", client, 99);
 	j = json_array();
 	json_object_set_new(json_rehash_log, "log", j);
 

@@ -87,6 +87,14 @@ void rpc_channel_list(Client *client, json_t *request, json_t *params)
 {
 	json_t *result, *list, *item;
 	Channel *channel;
+	int details;
+
+	OPTIONAL_PARAM_INTEGER("object_detail_level", details, 1);
+	if (details >= 5)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Using an 'object_detail_level' of >=5 is not allowed in this call");
+		return;
+	}
 
 	result = json_object();
 	list = json_array();
@@ -95,7 +103,7 @@ void rpc_channel_list(Client *client, json_t *request, json_t *params)
 	for (channel = channels; channel; channel=channel->nextch)
 	{
 		item = json_object();
-		json_expand_channel(item, NULL, channel, 1);
+		json_expand_channel(item, NULL, channel, details);
 		json_array_append_new(list, item);
 	}
 
@@ -108,8 +116,10 @@ void rpc_channel_get(Client *client, json_t *request, json_t *params)
 	json_t *result, *item;
 	const char *channelname;
 	Channel *channel;
+	int details;
 
 	REQUIRE_PARAM_STRING("channel", channelname);
+	OPTIONAL_PARAM_INTEGER("object_detail_level", details, 3);
 
 	if (!(channel = find_channel(channelname)))
 	{
@@ -118,7 +128,7 @@ void rpc_channel_get(Client *client, json_t *request, json_t *params)
 	}
 
 	result = json_object();
-	json_expand_channel(result, "channel", channel, 3);
+	json_expand_channel(result, "channel", channel, details);
 	rpc_response(client, request, result);
 	json_decref(result);
 }

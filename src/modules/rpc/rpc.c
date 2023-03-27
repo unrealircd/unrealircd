@@ -1550,7 +1550,7 @@ int rpc_json_expand_client_server(Client *client, int detail, json_t *j, json_t 
 	NameValuePrioList *nv = RRPCMODULES(client);
 	json_t *rpc_modules;
 
-	if (!nv || (detail < 1))
+	if (!nv || (detail < 2))
 		return 0;
 
 	/* All this belongs under 'features' */

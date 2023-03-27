@@ -28,7 +28,7 @@ int geoip_base_handshake(Client *client);
 int geoip_base_ip_change(Client *client, const char *oldip);
 int geoip_base_whois(Client *client, Client *target, NameValuePrioList **list);
 int geoip_connect_extinfo(Client *client, NameValuePrioList **list);
-int geoip_log(Client *client, int detail, json_t *j);
+int geoip_json_expand_client(Client *client, int detail, json_t *j);
 int geoip_base_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int geoip_base_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 EVENT(geoip_base_set_existing_users_evt);
@@ -126,7 +126,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONNECT_EXTINFO, 1, geoip_connect_extinfo); /* (prio: near-first) */
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0,geoip_base_handshake); /* in case the IP changed in registration phase (WEBIRC, HTTP Forwarded) */
 	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, geoip_base_whois);
-	HookAdd(modinfo->handle, HOOKTYPE_JSON_EXPAND_CLIENT, 0, geoip_log);
+	HookAdd(modinfo->handle, HOOKTYPE_JSON_EXPAND_CLIENT, 0, geoip_json_expand_client);
 
 	CommandAdd(modinfo->handle, "GEOIP", cmd_geoip, MAXPARA, CMD_USER);
 
@@ -256,7 +256,7 @@ int geoip_connect_extinfo(Client *client, NameValuePrioList **list)
 	return 0;
 }
 
-int geoip_log(Client *client, int detail, json_t *j)
+int geoip_json_expand_client(Client *client, int detail, json_t *j)
 {
 	GeoIPResult *geo = GEOIPDATA(client);
 	json_t *geoip;

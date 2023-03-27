@@ -59,6 +59,21 @@ const char *json_object_get_string(json_t *j, const char *name)
 	return v ? json_string_value(v) : NULL;
 }
 
+/** Get integer value of a JSON object.
+ * @param j		The JSON object that should contain a 'name' item
+ * @param name		The item to search for
+ * @param default_value	The value to return when the JSON object 'name' is not found
+ *			or not an integer.
+ * @returns The integer value, or default_value if the object does not exist or is not an integer.
+ */
+int json_object_get_integer(json_t *j, const char *name, int default_value)
+{
+	json_t *v = json_object_get(j, name);
+	if (!v || !json_is_integer(v))
+		return default_value;
+	return json_integer_value(v);
+}
+
 int json_object_get_boolean(json_t *j, const char *name, int default_value)
 {
 	json_t *v = json_object_get(j, name);
@@ -164,6 +179,10 @@ void json_expand_client_security_groups(json_t *parent, Client *client)
 			json_array_append_new(child, json_string_unreal(s->name));
 }
 
+/* detail=0:	only name, id
+ * detail=1:	only name, id, hostname, ip, details, geoip
+ * detail=2:	everything
+ */
 void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 {
 	char buf[BUFSIZE+1];
@@ -179,9 +198,11 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 	}
 
 	/* First the information that is available for ALL client types: */
-
 	json_object_set_new(child, "name", json_string_unreal(client->name));
 	json_object_set_new(child, "id", json_string_unreal(client->id));
+
+	if (detail == 0)
+		return;
 
 	/* hostname is available for all, it just depends a bit on whether it is DNS or IP */
 	if (client->user && *client->user->realhost)
@@ -193,11 +214,6 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 
 	/* same for ip, is there for all (well, some services pseudo-users may not have one) */
 	json_object_set_new(child, "ip", json_string_unreal(client->ip));
-	if (client->local && client->local->listener)
-		json_object_set_new(child, "server_port", json_integer(client->local->listener->port));
-	if (client->local && client->local->port)
-		json_object_set_new(child, "client_port", json_integer(client->local->port));
-
 	/* client.details is always available: it is nick!user@host, nick@host, server@host
 	 * server@ip, or just server.
 	 */
@@ -215,9 +231,18 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		json_object_set_new(child, "details", json_string_unreal(client->name));
 	}
 
+	if (detail < 2)
+	{
+		RunHook(HOOKTYPE_JSON_EXPAND_CLIENT, client, detail, child);
+		return;
+	}
+
+	if (client->local && client->local->listener)
+		json_object_set_new(child, "server_port", json_integer(client->local->listener->port));
+	if (client->local && client->local->port)
+		json_object_set_new(child, "client_port", json_integer(client->local->port));
 	if (client->local && client->local->creationtime)
 		json_object_set_new(child, "connected_since", json_timestamp(client->local->creationtime));
-
 	if (client->local && client->local->idle_since)
 		json_object_set_new(child, "idle_since", json_timestamp(client->local->idle_since));
 
@@ -396,6 +421,10 @@ void json_expand_channel_ban(json_t *child, const char *banlist_name, Ban *banli
 }
 
 
+/* detail=1 adds bans, ban_exemptions and invite_exceptions
+ * detail=2 adds members
+ * detail=3+ makes the members more detailed
+ */
 void json_expand_channel(json_t *j, const char *key, Channel *channel, int detail)
 {
 	char mode1[512], mode2[512], modes[512];
@@ -410,6 +439,9 @@ void json_expand_channel(json_t *j, const char *key, Channel *channel, int detai
 	}
 
 	json_object_set_new(child, "name", json_string_unreal(channel->name));
+	if (detail == 0)
+		return;
+
 	json_object_set_new(child, "creation_time", json_timestamp(channel->creationtime));
 	json_object_set_new(child, "num_users", json_integer(channel->users));
 	if (channel->topic)
@@ -436,7 +468,7 @@ void json_expand_channel(json_t *j, const char *key, Channel *channel, int detai
 		json_expand_channel_ban(child, "invite_exceptions", channel->invexlist);
 	}
 
-	if (detail > 2)
+	if (detail >= 3)
 	{
 		Member *u;
 		json_t *list = json_array();
@@ -445,10 +477,9 @@ void json_expand_channel(json_t *j, const char *key, Channel *channel, int detai
 		for (u = channel->members; u; u = u->next)
 		{
 			json_t *e = json_object();
-			json_object_set_new(e, "name", json_string_unreal(u->client->name));
-			json_object_set_new(e, "id", json_string_unreal(u->client->id));
 			if (*u->member_modes)
 				json_object_set_new(e, "level", json_string_unreal(u->member_modes));
+			json_expand_client(e, NULL, u->client, detail-3);
 			json_array_append_new(list, e);
 		}
 	}

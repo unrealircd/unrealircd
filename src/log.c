@@ -1477,7 +1477,7 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 	 * details later on.
 	 */
 	if (client)
-		json_expand_client(j_details, "client", client, 0);
+		json_expand_client(j_details, "client", client, 99);
 	/* Additional details (if any) */
 	while ((d = va_arg(vl, LogData *)))
 	{

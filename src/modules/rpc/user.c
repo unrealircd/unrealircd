@@ -177,7 +177,7 @@ RPC_CALL_FUNC(rpc_user_list)
 			continue;
 
 		item = json_object();
-		json_expand_client(item, NULL, acptr, 1);
+		json_expand_client(item, NULL, acptr, 99);
 		json_array_append_new(list, item);
 	}
 
@@ -200,7 +200,7 @@ RPC_CALL_FUNC(rpc_user_get)
 	}
 
 	result = json_object();
-	json_expand_client(result, "client", acptr, 1);
+	json_expand_client(result, "client", acptr, 99);
 	rpc_response(client, request, result);
 	json_decref(result);
 }
