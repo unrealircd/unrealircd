@@ -181,7 +181,9 @@ void json_expand_client_security_groups(json_t *parent, Client *client)
 
 /* detail=0:	only name, id
  * detail=1:	only name, id, hostname, ip, details, geoip
- * detail=2:	everything
+ * detail=2:	everything, except 'channels'
+ * detail=3:	everything, with 'channels' being a max 384 character string (meant for JSON logging only)
+ * detail=4:	everything, with 'channels' object (full).
  */
 void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 {
@@ -281,14 +283,20 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		str = get_operclass(client);
 		if (str)
 			json_object_set_new(user, "operclass", json_string_unreal(str));
-		if (client->user->channel)
+		/* For detail>2 we will include the channels.
+		 * Even if the user is on 0 channels we include "channels":[]
+		 * so it is clear that the user is on 0 channels and it is
+		 * not because of low detail level that channels are skipped.
+		 */
+		if (detail > 2)
 		{
 			Membership *m;
 			int cnt = 0;
 			int len = 0;
 			json_t *channels = json_array();
 			json_object_set_new(user, "channels", channels);
-			if (detail == 0)
+
+			if (detail == 3)
 			{
 				/* Short format, mainly for JSON logging */
 				for (m = client->user->channel; m; m = m->next)
