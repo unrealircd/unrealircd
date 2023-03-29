@@ -440,6 +440,18 @@ int floodprot_config_run_set_block(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 1;
 }
 
+/** Check if 'str' is a flood profile name
+ */
+int valid_flood_profile_name(const char *str)
+{
+	if (strlen(str) > 24)
+		return 0;
+	for (; *str; str++)
+		if (!islower(*str) && !isdigit(*str) && !strchr("_-", *str))
+			return 0;
+	return 1;
+}
+
 int floodprot_config_test_antiflood_block(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
@@ -463,6 +475,14 @@ int floodprot_config_test_antiflood_block(ConfigFile *cf, ConfigEntry *ce, int t
 			{
 				config_error_noname(ce->file->filename, ce->line_number,
 				                    "set::anti-flood::channel::profile");
+				errors++;
+				continue;
+			}
+			if (!valid_flood_profile_name(ce->value))
+			{
+				config_error("%s:%i: set::anti-flood::channel: profile '%s' name is invalid. "
+				             "Name can be 24 characters max and may only contain characters a-z, 0-9, _ and -",
+				             cep->file->filename, cep->line_number, ce->value);
 				errors++;
 				continue;
 			}
