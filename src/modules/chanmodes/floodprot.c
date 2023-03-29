@@ -879,7 +879,6 @@ int cmodef_sjoin_check(Channel *channel, void *ourx, void *theirx)
 	return EXSJ_MERGE;
 }
 
-///// MARKER (START)
 void floodprot_show_profiles(Client *client)
 {
 	ChannelFloodProfile *fld;
@@ -942,11 +941,7 @@ void *cmodef_profile_put_param(void *fld_in, const char *param)
 
 	base = get_channel_flood_profile(param);
 	if (!base)
-	{
-		base = get_channel_flood_profile("normal");
-		if (!base)
-			goto fail_cmodef_profile_put_param; // is this the right order? first alocate then memset? ehh :D
-	}
+		base = get_channel_flood_profile("normal"); /* fallback, always exists */
 
 	safe_strdup(fld->profile, param);
 
@@ -960,10 +955,6 @@ void *cmodef_profile_put_param(void *fld_in, const char *param)
 	fld->per = base->per;
 
 	return (void *)fld;
-
-fail_cmodef_profile_put_param:
-	memset(fld, 0, sizeof(ChannelFloodProtection));
-	return fld; /* FAIL */
 }
 
 const char *cmodef_profile_get_param(void *r_in)
@@ -1004,18 +995,11 @@ int cmodef_profile_sjoin_check(Channel *channel, void *ourx, void *theirx)
 	if (!strcmp(our->profile, their->profile))
 		return EXSJ_SAME;
 
-	if (our->profile && !their->profile)
-		return EXSJ_WEWON;
-
-	if (their->profile && !our->profile)
-		return EXSJ_THEYWON;
-
 	if (strcmp(our->profile, their->profile) < 0)
 		return EXSJ_THEYWON;
 
 	return EXSJ_WEWON;
 }
-///// MARKER (END)
 
 int floodprot_join(Client *client, Channel *channel, MessageTag *mtags)
 {
