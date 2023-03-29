@@ -80,8 +80,10 @@ int is_valid_extban_name(const char *p)
 {
 	if (!*p)
 		return 0; /* empty name */
+	if (strlen(p) > 32)
+		return 0; /* too long */
 	for (; *p; p++)
-		if (!isalnum(*p) && !strchr("_-", *p))
+		if (!islower(*p) && !isdigit(*p) && !strchr("_-", *p))
 			return 0;
 	return 1;
 }
