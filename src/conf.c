@@ -7547,7 +7547,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					int used = 0;
 					for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 					{
-						int used = (*(h->func.intfunc))(conf,ceppp,CONFIG_SET_ANTI_FLOOD);
+						used = (*(h->func.intfunc))(conf,ceppp,CONFIG_SET_ANTI_FLOOD);
 						if (used == 1)
 							break;
 					}
