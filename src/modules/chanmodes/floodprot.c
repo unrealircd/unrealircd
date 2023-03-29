@@ -631,9 +631,6 @@ int parse_channel_mode_flood(const char *param, ChannelFloodProtection *fld, int
 	if (error_out)
 		*error_out = NULL;
 
-	strlcpy(xbuf, param, sizeof(xbuf));
-
-
 	/* always reset settings (l, a, r) */
 	for (v=0; v < NUMFLD; v++)
 	{
@@ -641,6 +638,11 @@ int parse_channel_mode_flood(const char *param, ChannelFloodProtection *fld, int
 		fld->action[v] = 0;
 		fld->remove_after[v] = 0;
 	}
+
+	strlcpy(xbuf, param, sizeof(xbuf));
+
+	if (*xbuf != '[')
+		return parse_channel_mode_flood_failed(error_out, fld, "Invalid format (brackets missing)");
 
 	/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
 	p2 = strchr(xbuf+1, ']');
