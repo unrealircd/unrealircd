@@ -43,6 +43,11 @@ in progress and not a stable version.
   and [User](https://www.unrealircd.org/docs/JSON-RPC:User#Structure_of_a_client_object)
   response object will be. Especially useful if you don't need all the
   details in the `.list` calls.
+* The RPC modules are enabled by default now. This so remote RPC works
+  from other IRC servers for calls like `modules.list`. The default
+  configuration does not enable the webserver nor does it cause
+  listening on any socket for RPC, for that you need to follow the
+  [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) instructions.
 
 UnrealIRCd 6.0.7
 -----------------
