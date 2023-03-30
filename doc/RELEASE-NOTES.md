@@ -20,7 +20,20 @@ in progress and not a stable version.
   the server will now set a temporary ban on `~security-group:unknown-users`.
   It will still set `+i` and other modes if the flood keeps on going
   (eg. is caused by known-users).
-* Both features only work properly if all servers are on 6.0.8-git or later.
+* When a server splits on the network, we now temporarily disable +f/+F
+  join-flood protection for 75 seconds
+  ([set::modef-split-delay](https://www.unrealircd.org/docs/Set_block#set::modef-split-delay)).
+  This because a server splitting could mean that server has network problems
+  or has died (or restarted), in which case the clients would typically
+  reconnect to the remaining other servers, triggering an +f/+F join-flood and
+  channels ending up being `+i` and such. That is not good because we want
+  +f/+F to be as efortless as possible, with as little false positives as
+  possible.
+  * If your network has 5+ servers and the user load is spread evenly among
+    them, then you could disable this feature by setting the amount of seconds
+    to `0`. This because in such a scenario only 1/5th (20%) of the users
+    would reconnect and hopefully don't trigger +f/+F join floods.
+* All these features only work properly if all servers are on 6.0.8-git or later.
 
 ### Changes:
 * The [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) calls
