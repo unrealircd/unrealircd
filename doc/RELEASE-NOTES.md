@@ -48,6 +48,8 @@ in progress and not a stable version.
   configuration does not enable the webserver nor does it cause
   listening on any socket for RPC, for that you need to follow the
   [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) instructions.
+* The [blacklist-module](https://www.unrealircd.org/docs/Blacklist-module_directive)
+  directive now accepts wildcards, eg `blacklist-module rpc/*;`
 
 UnrealIRCd 6.0.7
 -----------------

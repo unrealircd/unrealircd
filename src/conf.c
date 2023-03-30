@@ -9370,20 +9370,6 @@ int	_test_blacklist_module(ConfigFile *conf, ConfigEntry *ce)
 
 	path = Module_TransformPath(ce->value);
 
-	/* Is it a good idea to warn about this?
-	 * Yes, the user may have made a typo, thinking (s)he blacklisted something
-	 *      but due to the typo the blacklist-module is not effective.
-	 *  No, the user may have blacklisted a bunch of modules of which not all may
-	 *      be installed at the time.
-	 * Hmmmmmm.
-	 */
-	if (!file_exists(path))
-	{
-		config_warn("%s:%i: blacklist-module for '%s' but module does not exist anyway",
-			ce->file->filename, ce->line_number, ce->value);
-		/* fallthrough */
-	}
-
 	m = safe_alloc(sizeof(ConfigItem_blacklist_module));
 	safe_strdup(m->name, ce->value);
 	AddListItem(m, conf_blacklist_module);
@@ -9397,7 +9383,7 @@ int is_blacklisted_module(const char *name)
 	ConfigItem_blacklist_module *m;
 
 	for (m = conf_blacklist_module; m; m = m->next)
-		if (!strcasecmp(m->name, name) || !strcasecmp(m->name, path))
+		if (match_simple(m->name, name) || match_simple(m->name, path))
 			return 1;
 
 	return 0;
