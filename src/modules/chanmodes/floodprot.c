@@ -44,6 +44,7 @@ struct {
 	unsigned char modef_default_unsettime;
 	unsigned char modef_max_unsettime;
 	long modef_boot_delay;
+	long modef_split_delay;
 	int modef_alternate_action_percentage_threshold;
 	unsigned char modef_alternative_ban_action_unsettime;
 } cfg;
@@ -126,6 +127,7 @@ static int timedban_available = 1; /**< Set to 1 if extbans/timedban module is l
 RemoveChannelModeTimer *removechannelmodetimer_list = NULL;
 ChannelFloodProfile *channel_flood_profiles = NULL;
 char *floodprot_msghash_key = NULL;
+long long floodprot_splittime = 0;
 
 #define IsFloodLimit(x)	(((x)->mode.mode & EXTMODE_FLOODLIMIT) || ((x)->mode.mode & EXTMODE_FLOOD_PROFILE))
 
@@ -174,6 +176,7 @@ CMD_OVERRIDE_FUNC(floodprot_override_mode);
 ChannelFloodProtection *get_channel_flood_profile(const char *name);
 int parse_channel_mode_flood(const char *param, ChannelFloodProtection *fld, int strict, Client *client, const char **error_out);
 int parse_channel_mode_flood_failed(const char **error_out, ChannelFloodProtection *fld, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,3,4)));
+int floodprot_server_quit(Client *client, MessageTag *mtags);
 
 MOD_TEST()
 {
@@ -188,6 +191,8 @@ MOD_INIT()
 	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+
+	LoadPersistentLongLong(modinfo, floodprot_splittime);
 
 	memset(&creq, 0, sizeof(creq));
 	creq.paracount = 1;
@@ -246,6 +251,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 0, cmodef_channel_destroy);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH_COMPLETE, 0, floodprot_rehash_complete);
 	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, floodprot_stats);
+	HookAdd(modinfo->handle, HOOKTYPE_SERVER_QUIT, 0, floodprot_server_quit);
 	return MOD_SUCCESS;
 }
 
@@ -279,7 +285,10 @@ MOD_UNLOAD()
 {
 	SavePersistentPointer(modinfo, removechannelmodetimer_list);
 	SavePersistentPointer(modinfo, floodprot_msghash_key);
+	SavePersistentLongLong(modinfo, floodprot_splittime);
+
 	free_channel_flood_profiles();
+
 	return MOD_SUCCESS;
 }
 
@@ -351,6 +360,7 @@ static void init_config(void)
 	cfg.modef_default_unsettime = 0;
 	cfg.modef_max_unsettime = 60; /* 1 hour seems enough :p */
 	cfg.modef_boot_delay = 75;
+	cfg.modef_split_delay = 75;
 	cfg.modef_alternate_action_percentage_threshold = 75; /* 75% */
 	cfg.modef_alternative_ban_action_unsettime = 15; /* 15min */
 	init_default_channel_flood_profiles();
@@ -397,7 +407,7 @@ int floodprot_config_test_set_block(ConfigFile *cf, ConfigEntry *ce, int type, i
 			}
 		}
 	} else
-	if (!strcmp(ce->name, "modef-boot-delay"))
+	if (!strcmp(ce->name, "modef-boot-delay") || !strcmp(ce->name, "modef-split-delay"))
 	{
 		if (!ce->value)
 		{
@@ -408,8 +418,10 @@ int floodprot_config_test_set_block(ConfigFile *cf, ConfigEntry *ce, int type, i
 			long v = config_checkval(ce->value, CFG_TIME);
 			if ((v < 0) || (v > 600))
 			{
-				config_error("%s:%i: set::modef-boot-delay: value '%ld' out of range (should be 0-600)",
-					ce->file->filename, ce->line_number, v);
+				config_error("%s:%i: set::%s: value '%ld' out of range (should be 0-600)",
+					ce->file->filename, ce->line_number,
+					ce->name,
+					v);
 				errors++;
 			}
 		}
@@ -434,6 +446,8 @@ int floodprot_config_run_set_block(ConfigFile *cf, ConfigEntry *ce, int type)
 		cfg.modef_max_unsettime = (unsigned char)atoi(ce->value);
 	else if (!strcmp(ce->name, "modef-boot-delay"))
 		cfg.modef_boot_delay = config_checkval(ce->value, CFG_TIME);
+	else if (!strcmp(ce->name, "modef-split-delay"))
+		cfg.modef_split_delay = config_checkval(ce->value, CFG_TIME);
 	else
 		return 0; /* not handled by us */
 
@@ -1036,6 +1050,7 @@ int floodprot_join(Client *client, Channel *channel, MessageTag *mtags)
 	if (IsFloodLimit(channel) &&
 	    (MyUser(client) || client->uplink->server->flags.synced) &&
 	    (client->uplink->server->boottime && (TStime() - client->uplink->server->boottime >= MODEF_BOOT_DELAY)) &&
+	    (TStime() - floodprot_splittime >= cfg.modef_split_delay) &&
 	    !IsULine(client))
 	{
 	    do_floodprot(channel, client, CHFLD_JOIN);
@@ -1867,6 +1882,13 @@ CMD_OVERRIDE_FUNC(floodprot_override_mode)
 	}
 
 	CALL_NEXT_COMMAND_OVERRIDE();
+}
+
+int floodprot_server_quit(Client *client, MessageTag *mtags)
+{
+	if (!IsULine(client))
+		floodprot_splittime = TStime();
+	return 0;
 }
 
 // TODO: customizing of flood profiles (and adding new ones) in the config file
