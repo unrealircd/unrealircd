@@ -496,7 +496,7 @@ int floodprot_config_test_antiflood_block(ConfigFile *cf, ConfigEntry *ce, int t
 			{
 				config_error("%s:%i: set::anti-flood::channel: profile '%s' name is invalid. "
 				             "Name can be 24 characters max and may only contain characters a-z, 0-9, _ and -",
-				             cep->file->filename, cep->line_number, ce->value);
+				             ce->file->filename, ce->line_number, ce->value);
 				errors++;
 				continue;
 			}
