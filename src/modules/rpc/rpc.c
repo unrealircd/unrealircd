@@ -16,6 +16,11 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
+/** Maximum length of an rpc-user THIS { }.
+ * As we use the "RPC:" prefix it is nicklen minus that.
+ */
+#define RPCUSERLEN (NICKLEN-4)
+
 /* Structs */
 typedef struct RPCUser RPCUser;
 struct RPCUser {
@@ -258,6 +263,21 @@ int rpc_config_run_ex_listen(ConfigFile *cf, ConfigEntry *ce, int type, void *pt
 	return 1;
 }
 
+/** Valid name for rpc-user THISNAME { } ? */
+static int valid_rpc_user_name(const char *str)
+{
+	const char *p;
+
+	if (strlen(str) > RPCUSERLEN)
+		return 0;
+
+	for (p = str; *p; p++)
+		if (!isalnum(*p) && !strchr("_-", *p))
+			return 0;
+
+	return 1;
+}
+
 int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
@@ -275,6 +295,14 @@ int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *err
 		errors++;
 	}
 
+	if (!valid_rpc_user_name(ce->value))
+	{
+		config_error("%s:%d: rpc-user block has invalid name '%s'. "
+		             "Can be max %d long and may only contain a-z, A-Z, 0-9, - and _.",
+		             ce->file->filename, ce->line_number,
+		             ce->value, RPCUSERLEN);
+		errors++;
+	}
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "match"))
