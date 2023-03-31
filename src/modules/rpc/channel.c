@@ -163,6 +163,7 @@ void rpc_channel_set_topic(Client *client, json_t *request, json_t *params)
 	const char *channelname, *topic, *set_by=NULL, *str;
 	Channel *channel;
 	time_t set_at = 0;
+	MessageTag *mtags = NULL;
 
 	REQUIRE_PARAM_STRING("channel", channelname);
 	REQUIRE_PARAM_STRING("topic", topic);
@@ -177,7 +178,9 @@ void rpc_channel_set_topic(Client *client, json_t *request, json_t *params)
 		return;
 	}
 
-	set_channel_topic(&me, channel, NULL, topic, set_by, set_at);
+	mtag_add_issued_by(&mtags, client, NULL);
+	set_channel_topic(&me, channel, mtags, topic, set_by, set_at);
+	safe_free_message_tags(mtags);
 
 	/* Simply return success */
 	result = json_boolean(1);
