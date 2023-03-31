@@ -867,7 +867,7 @@ extern MODVAR int (*websocket_create_packet)(int opcode, char **buf, int *len);
 extern MODVAR int (*websocket_create_packet_ex)(int opcode, char **buf, int *len, char *sendbuf, size_t sendbufsize);
 extern MODVAR int (*websocket_create_packet_simple)(int opcode, const char **buf, int *len);
 extern MODVAR const char *(*check_deny_link)(ConfigItem_link *link, int auto_connect);
-extern MODVAR void (*mtag_generate_issued_by_irc)(MessageTag **mtags, Client *client);
+extern MODVAR void (*mtag_add_issued_by)(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 /* /Efuncs */
 
 /* TLS functions */
@@ -918,7 +918,7 @@ extern int websocket_handle_websocket_default_handler(Client *client, WebRequest
 extern int websocket_create_packet_default_handler(int opcode, char **buf, int *len);
 extern int websocket_create_packet_ex_default_handler(int opcode, char **buf, int *len, char *sendbuf, size_t sendbufsize);
 extern int websocket_create_packet_simple_default_handler(int opcode, const char **buf, int *len);
-extern void mtag_generate_issued_by_irc_default_handler(MessageTag **mtags, Client *client);
+extern void mtag_add_issued_by_default_handler(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 /* End of default handlers for efunctions */
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;

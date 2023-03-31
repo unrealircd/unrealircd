@@ -83,7 +83,7 @@ CMD_FUNC(cmd_samode)
 	}
 
 	opermode = 0;
-	mtag_generate_issued_by_irc(&mtags, client);
+	mtag_add_issued_by(&mtags, client, NULL);
 	do_mode(channel, client, mtags, parc - 2, parv + 2, 0, 1);
 	safe_free_message_tags(mtags);
 }

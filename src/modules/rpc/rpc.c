@@ -10,7 +10,7 @@
 ModuleHeader MOD_HEADER
   = {
 	"rpc/rpc",
-	"1.0.2",
+	"1.0.3",
 	"RPC module for remote management",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -78,6 +78,7 @@ int rpc_handle_auth(Client *client, WebRequest *web);
 int rpc_parse_auth_basic_auth(Client *client, WebRequest *web, char **username, char **password);
 int rpc_parse_auth_uri(Client *client, WebRequest *web, char **username, char **password);
 RPC_CALL_FUNC(rpc_rpc_info);
+RPC_CALL_FUNC(rpc_rpc_set_issuer);
 CMD_FUNC(cmd_rrpc);
 EVENT(rpc_remote_timeout);
 json_t *rrpc_data(RRPC *r);
@@ -144,6 +145,16 @@ MOD_INIT()
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc.info] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+
+	memset(&r, 0, sizeof(r));
+	r.method = "rpc.set_issuer";
+	r.loglevel = ULOG_DEBUG;
+	r.call = rpc_rpc_set_issuer;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc.set_issuer] Could not register RPC handler");
 		return MOD_FAILED;
 	}
 
@@ -1035,6 +1046,31 @@ RPC_CALL_FUNC(rpc_rpc_info)
 		json_object_set_new(methods, r->method, item);
 	}
 
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+RPC_CALL_FUNC(rpc_rpc_set_issuer)
+{
+	json_t *result;
+	const char *name;
+	char buf[512];
+
+	REQUIRE_PARAM_STRING("name", name);
+
+	/* Do some validation on the name */
+	strlcpy(buf, name, sizeof(buf));
+	if (!do_remote_nick_name(buf) || strcmp(buf, name))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_NAME,
+		          "The 'name' contains illegal characters or is too long. "
+		          "The same rules as for nick names apply.");
+		return;
+	}
+
+	safe_strdup(client->rpc->issuer, name);
+
+	result = json_boolean(1);
 	rpc_response(client, request, result);
 	json_decref(result);
 }

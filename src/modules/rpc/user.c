@@ -217,6 +217,7 @@ RPC_CALL_FUNC(rpc_user_get)
 RPC_CALL_FUNC(rpc_user_set_nick)
 {
 	json_t *result, *list, *item;
+	MessageTag *mtags = NULL;
 	const char *args[5];
 	const char *nick, *newnick_requested, *str;
 	int force = 0;
@@ -277,7 +278,9 @@ RPC_CALL_FUNC(rpc_user_set_nick)
 	snprintf(tsbuf, sizeof(tsbuf), "%lld", (long long)TStime());
 	args[3] = tsbuf;
 	args[4] = NULL;
-	do_cmd(&me, NULL, "SVSNICK", 4, args);
+	mtag_add_issued_by(&mtags, client, NULL);
+	do_cmd(&me, mtags, "SVSNICK", 4, args);
+	safe_free_message_tags(mtags);
 
 	/* Simply return success */
 	result = json_boolean(1);

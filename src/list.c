@@ -194,6 +194,7 @@ void free_client(Client *client)
 	if (client->rpc)
 	{
 		safe_free(client->rpc->rpc_user);
+		safe_free(client->rpc->issuer);
 		if (client->rpc->rehash_request)
 			json_decref(client->rpc->rehash_request);
 		safe_free(client->rpc);

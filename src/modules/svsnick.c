@@ -100,7 +100,7 @@ CMD_FUNC(cmd_svsnick)
 
 	/* no 'recv_mtags' here, we do not inherit from SVSNICK but generate a new NICK event */
 	new_message(acptr, NULL, &mtags);
-	mtag_generate_issued_by_irc(&mtags, client);
+	mtag_add_issued_by(&mtags, client, recv_mtags);
 	RunHook(HOOKTYPE_LOCAL_NICKCHANGE, acptr, mtags, nickname);
 	sendto_local_common_channels(acptr, acptr, 0, mtags, ":%s NICK :%s", acptr->name, nickname);
 	sendto_one(acptr, mtags, ":%s NICK :%s", acptr->name, nickname);
