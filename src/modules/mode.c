@@ -312,6 +312,22 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 		MessageTag *mtags = NULL;
 		int should_destroy = 0;
 
+		if (IsUser(orig_client) && samode && MyUser(orig_client))
+		{
+			if (!sajoinmode)
+			{
+				char buf[512];
+				snprintf(buf, sizeof(buf), "%s%s%s", modebuf, *parabuf ? " " : "", parabuf);
+				unreal_log(ULOG_INFO, "samode", "SAMODE_COMMAND", orig_client,
+					   "Client $client used SAMODE $channel ($mode)",
+					   log_data_channel("channel", channel),
+					   log_data_string("mode", buf));
+			}
+
+			client = &me;
+			sendts = 0;
+		}
+
 		if (m->numlines == 1)
 		{
 			/* Single mode lines are easy: retain original msgid etc */
@@ -349,22 +365,6 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 			sendts = 0;
 		}
 #endif
-
-		if (IsUser(orig_client) && samode && MyUser(orig_client))
-		{
-			if (!sajoinmode)
-			{
-				char buf[512];
-				snprintf(buf, sizeof(buf), "%s%s%s", modebuf, *parabuf ? " " : "", parabuf);
-				unreal_log(ULOG_INFO, "samode", "SAMODE_COMMAND", orig_client,
-					   "Client $client used SAMODE $channel ($mode)",
-					   log_data_channel("channel", channel),
-					   log_data_string("mode", buf));
-			}
-
-			client = &me;
-			sendts = 0;
-		}
 
 		sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 			       ":%s MODE %s %s %s",
