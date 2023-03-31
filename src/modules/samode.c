@@ -61,6 +61,7 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_samode)
 {
 	Channel *channel;
+	MessageTag *mtags = NULL;
 
 	if (parc <= 2)
 	{
@@ -82,5 +83,7 @@ CMD_FUNC(cmd_samode)
 	}
 
 	opermode = 0;
-	do_mode(channel, client, NULL, parc - 2, parv + 2, 0, 1);
+	mtag_generate_issued_by_irc(&mtags, client);
+	do_mode(channel, client, mtags, parc - 2, parv + 2, 0, 1);
+	safe_free_message_tags(mtags);
 }

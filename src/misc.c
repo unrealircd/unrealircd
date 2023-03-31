@@ -1507,6 +1507,10 @@ int websocket_create_packet_simple_default_handler(int opcode, const char **buf,
 	return -1;
 }
 
+void mtag_generate_issued_by_irc_default_handler(MessageTag **mtags, Client *client)
+{
+}
+
 /** my_timegm: mktime()-like function which will use GMT/UTC.
  * Strangely enough there is no standard function for this.
  * On some *NIX OS's timegm() may be available, sometimes only

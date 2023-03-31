@@ -81,7 +81,7 @@ MODULES= \
 	unreal_server_compat.so \
 	extended-monitor.so geoip_csv.so \
 	geoip_base.so extjwt.so tline.so \
-	standard-replies.so \
+	standard-replies.so issued-by-tag.so \
 	$(GEOIP_CLASSIC_OBJECTS) $(GEOIP_MAXMIND_OBJECTS)
 
 MODULEFLAGS=@MODULEFLAGS@
