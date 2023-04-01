@@ -743,6 +743,22 @@ int sanitize_params(Client *client, json_t *request, json_t *j)
 	return 1;
 }
 
+/** Log the RPC request */
+void rpc_call_log(Client *client, RPCHandler *handler, json_t *request, const char *method, json_t *params)
+{
+	if (client->rpc && client->rpc->issuer)
+	{
+		unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
+			   "[rpc] Client $client ($issuer): RPC call $method",
+			   log_data_string("issuer", client->rpc->issuer),
+			   log_data_string("method", method));
+	} else {
+		unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
+			   "[rpc] Client $client: RPC call $method",
+			   log_data_string("method", method));
+	}
+}
+
 /** Handle the RPC request: request is in JSON */
 void rpc_call(Client *client, json_t *request)
 {
@@ -817,9 +833,7 @@ void rpc_call(Client *client, json_t *request)
 		json_object_set_new(request, "params", params);
 	}
 
-	unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
-	           "[rpc] Client $client: RPC call $method",
-	           log_data_string("method", method));
+	rpc_call_log(client, handler, request, method, params);
 
 #ifdef DEBUGMODE
 	{
