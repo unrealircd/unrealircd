@@ -4,57 +4,66 @@ This is the git version (development version) for future 6.0.8. This is work
 in progress and not a stable version.
 
 ### Enhancements:
-* New [channel mode `+F`](https://www.unrealircd.org/docs/Channel_anti-flood_settings)
-  (uppercase f). This allows the user to choose a "flood profile",
-  which (behind the scenes) translates to something similar to an `+f` mode.
-  This so end-users can simply choose an `+F` profile without having to learn
-  the complex channel mode `+f`.
-  * For example `+F normal` effectively results in
-    `[7c#C15,30j#R10,10k#K15,40m#M10,10n#N15]:15`
-  * Multiple profiles are available and changing them is possible,
-    see [the documentation](https://www.unrealircd.org/docs/Channel_anti-flood_settings).
-  * Any settings in mode `+f` will override the ones of the `+F` profile.
-    To see the effective flood settings, use `MODE #channel F`.
-* When channel mode `+f` or `+F` detect that a flood is caused by >75% of
-  ["unknown-users"](https://www.unrealircd.org/docs/Security-group_block),
-  the server will now set a temporary ban on `~security-group:unknown-users`.
-  It will still set `+i` and other modes if the flood keeps on going
-  (eg. is caused by known-users).
-* When a server splits on the network, we now temporarily disable +f/+F
-  join-flood protection for 75 seconds
-  ([set::modef-split-delay](https://www.unrealircd.org/docs/Set_block#set::modef-split-delay)).
-  This because a server splitting could mean that server has network problems
-  or has died (or restarted), in which case the clients would typically
-  reconnect to the remaining other servers, triggering an +f/+F join-flood and
-  channels ending up being `+i` and such. That is not good because we want
-  +f/+F to be as efortless as possible, with as little false positives as
-  possible.
-  * If your network has 5+ servers and the user load is spread evenly among
-    them, then you could disable this feature by setting the amount of seconds
-    to `0`. This because in such a scenario only 1/5th (20%) of the users
-    would reconnect and hopefully don't trigger +f/+F join floods.
-* Forced nick changes (eg. by NickServ) are no longer counted in nick flood
-  for channel mode `+f`/`+F`.
-* All these features only work properly if all servers are on 6.0.8-git or later.
+* Channel flood protection improvements:
+  * New [channel mode `+F`](https://www.unrealircd.org/docs/Channel_anti-flood_settings)
+    (uppercase f). This allows the user to choose a "flood profile",
+    which (behind the scenes) translates to something similar to an `+f` mode.
+    This so end-users can simply choose an `+F` profile without having to learn
+    the complex channel mode `+f`.
+    * For example `+F normal` effectively results in
+      `[7c#C15,30j#R10,10k#K15,40m#M10,10n#N15]:15`
+    * Multiple profiles are available and changing them is possible,
+      see [the documentation](https://www.unrealircd.org/docs/Channel_anti-flood_settings).
+    * Any settings in mode `+f` will override the ones of the `+F` profile.
+      To see the effective flood settings, use `MODE #channel F`.
+  * When channel mode `+f` or `+F` detect that a flood is caused by >75% of
+    ["unknown-users"](https://www.unrealircd.org/docs/Security-group_block),
+    the server will now set a temporary ban on `~security-group:unknown-users`.
+    It will still set `+i` and other modes if the flood keeps on going
+    (eg. is caused by known-users).
+  * Forced nick changes (eg. by NickServ) are no longer counted in nick flood
+    for channel mode `+f`/`+F`.
+  * When a server splits on the network, we now temporarily disable +f/+F
+    join-flood protection for 75 seconds
+    ([set::modef-split-delay](https://www.unrealircd.org/docs/Set_block#set::modef-split-delay)).
+    This because a server splitting could mean that server has network problems
+    or has died (or restarted), in which case the clients would typically
+    reconnect to the remaining other servers, triggering an +f/+F join-flood and
+    channels ending up being `+i` and such. That is not good because we want
+    +f/+F to be as efortless as possible, with as little false positives as
+    possible.
+    * If your network has 5+ servers and the user load is spread evenly among
+      them, then you could disable this feature by setting the amount of seconds
+      to `0`. This because in such a scenario only 1/5th (20%) of the users
+      would reconnect and hopefully don't trigger +f/+F join floods.
+  * All these features only work properly if all servers are on 6.0.8-git or later.
+* [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
+  * Logging of JSON-RPC requests (eg. via snomask `+R`) has been improved,
+    it now shows:
+    * The issuer, such as the user logged in to the admin panel (if known)
+    * The parameters of the request
+  * The JSON-RPC calls
+    [`channel.list`](https://www.unrealircd.org/docs/JSON-RPC:Channel#channel.list),
+    [`channel.get`](https://www.unrealircd.org/docs/JSON-RPC:Channel#channel.get),
+    [`user.list`](https://www.unrealircd.org/docs/JSON-RPC:User#user.list) and
+    [`user.get`](https://www.unrealircd.org/docs/JSON-RPC:User#user.get)
+    now support an optional argument `object_detail_level` which specifies how detailed
+    the [Channel](https://www.unrealircd.org/docs/JSON-RPC:Channel#Structure_of_a_channel)
+    and [User](https://www.unrealircd.org/docs/JSON-RPC:User#Structure_of_a_client_object)
+    response object will be. Especially useful if you don't need all the
+    details in the list calls.
+  * New JSON-RPC method
+    [`rpc.set_issuer`](https://www.unrealircd.org/docs/JSON-RPC:Rpc#rpc.set_issuer)
+    to indiciate who is actually issuing the requests. The admin panel uses this
+    to communicate who is logged in to the panel so this info can be used in logging.
 * A new message tag `unrealircd.org/issued-by` which is IRCOp-only (and
   used intra-server) to communicate who actually issued a command.
   See [docs](https://www.unrealircd.org/issued-by).
 
 ### Changes:
-* The [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) calls
-  `channel.list`, `channel.get`, `user.list` and `user.get` now support
-  an optional argument `object_detail_level` which specifies how detailed
-  the [Channel](https://www.unrealircd.org/docs/JSON-RPC:Channel#Structure_of_a_channel)
-  and [User](https://www.unrealircd.org/docs/JSON-RPC:User#Structure_of_a_client_object)
-  response object will be. Especially useful if you don't need all the
-  details in the `.list` calls.
-* The logging of JSON-RPC requests (eg. via snomask `+R`) has been improved,
-  it now shows:
-  * The issuer, such as the user logged in to the admin panel
-  * The parameters of the request
 * The RPC modules are enabled by default now. This so remote RPC works
   from other IRC servers for calls like `modules.list`. The default
-  configuration does not enable the webserver nor does it cause
+  configuration does NOT enable the webserver nor does it cause
   listening on any socket for RPC, for that you need to follow the
   [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) instructions.
 * The [blacklist-module](https://www.unrealircd.org/docs/Blacklist-module_directive)
@@ -65,9 +74,6 @@ in progress and not a stable version.
   [UNIX domain sockets](https://www.unrealircd.org/docs/JSON-RPC:Technical_documentation#UNIX_domain_socket)
   for making RPC calls. If those are used, we now split on `\n` (newline)
   so multiple parallel requests can be handled properly.
-* If you use JSON-RPC you can now use `rpc.set_issuer` to indiciate who
-  is actually issuing the requests. The admin panel uses this to communicate
-  who is logged in to the panel so this info can be used in logging.
 
 UnrealIRCd 6.0.7
 -----------------
