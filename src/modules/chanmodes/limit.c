@@ -48,7 +48,7 @@ int cmode_limit_is_ok(Client *client, Channel *channel, char mode, const char *p
 void *cmode_limit_put_param(void *r_in, const char *param);
 const char *cmode_limit_get_param(void *r_in);
 const char *cmode_limit_conv_param(const char *param_in, Client *client, Channel *channel);
-void cmode_limit_free_param(void *r);
+int cmode_limit_free_param(void *r);
 void *cmode_limit_dup_struct(void *r_in);
 int cmode_limit_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int transform_channel_limit(const char *param);
@@ -159,9 +159,10 @@ const char *cmode_limit_conv_param(const char *param, Client *client, Channel *c
 	return retbuf;
 }
 
-void cmode_limit_free_param(void *r)
+int cmode_limit_free_param(void *r)
 {
 	safe_free(r);
+	return 0;
 }
 
 void *cmode_limit_dup_struct(void *r_in)

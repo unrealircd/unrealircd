@@ -50,7 +50,7 @@ int history_chanmode_is_ok(Client *client, Channel *channel, char mode, const ch
 void *history_chanmode_put_param(void *r_in, const char *param);
 const char *history_chanmode_get_param(void *r_in);
 const char *history_chanmode_conv_param(const char *param, Client *client, Channel *channel);
-void history_chanmode_free_param(void *r);
+int history_chanmode_free_param(void *r);
 void *history_chanmode_dup_struct(void *r_in);
 int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int history_channel_destroy(Channel *channel, int *should_destroy);
@@ -576,9 +576,10 @@ const char *history_chanmode_get_param(void *h_in)
 }
 
 /** Free channel mode */
-void history_chanmode_free_param(void *r)
+int history_chanmode_free_param(void *r)
 {
 	safe_free(r);
+	return 0;
 }
 
 /** Duplicate the channel mode +H settings */

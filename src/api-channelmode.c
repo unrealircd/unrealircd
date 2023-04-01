@@ -627,8 +627,9 @@ void cm_putparameter(Channel *channel, char mode, const char *str)
  */
 void cm_freeparameter(Channel *channel, char mode)
 {
-	GETPARAMHANDLERBYLETTER(mode)->free_param(GETPARASTRUCT(channel, mode));
-	GETPARASTRUCT(channel, mode) = NULL;
+	int n = GETPARAMHANDLERBYLETTER(mode)->free_param(GETPARASTRUCT(channel, mode));
+	if (n == 0)
+		GETPARASTRUCT(channel, mode) = NULL;
 }
 
 

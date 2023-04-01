@@ -16,6 +16,10 @@ in progress and not a stable version.
       see [the documentation](https://www.unrealircd.org/docs/Channel_anti-flood_settings).
     * Any settings in mode `+f` will override the ones of the `+F` profile.
       To see the effective flood settings, use `MODE #channel F`.
+  * You can optionally set a default profile via
+    [set::anti-flood::channel::default-profile](https://www.unrealircd.org/docs/Channel_anti-flood_settings#Default_profile).
+    This profile is used if the channel is `-F`. If the user does not
+    want channel flood protection then they have to use an explicit `+F none`.
   * When channel mode `+f` or `+F` detect that a flood is caused by >75% of
     ["unknown-users"](https://www.unrealircd.org/docs/Security-group_block),
     the server will now set a temporary ban on `~security-group:unknown-users`.
