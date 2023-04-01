@@ -112,7 +112,7 @@ RPC_CALL_FUNC(rpc_server_list)
 			continue;
 
 		item = json_object();
-		json_expand_client(item, NULL, acptr, 1);
+		json_expand_client(item, NULL, acptr, 99);
 		json_array_append_new(list, item);
 	}
 
