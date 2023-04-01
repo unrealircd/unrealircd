@@ -889,7 +889,10 @@ void *cmodef_dup_struct(void *r_in)
 	ChannelFloodProtection *r = (ChannelFloodProtection *)r_in;
 	ChannelFloodProtection *w = safe_alloc(sizeof(ChannelFloodProtection));
 
+	/* We can copy most members in a lazy way... */
 	memcpy(w, r, sizeof(ChannelFloodProtection));
+	/* ... except this one. */
+	w->profile = raw_strdup(r->profile);
 	return (void *)w;
 }
 
