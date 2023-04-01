@@ -1302,7 +1302,12 @@ int floodprot_nickchange(Client *client, MessageTag *mtags, const char *oldnick)
 {
 	Membership *mp;
 
+	/* Ignore u-lines, as usual */
 	if (IsULine(client))
+		return 0;
+
+	/* Don't count forced nick changes, eg from NickServ */
+	if (find_mtag(mtags, "unrealircd.org/issued-by"))
 		return 0;
 
 	for (mp = client->user->channel; mp; mp = mp->next)

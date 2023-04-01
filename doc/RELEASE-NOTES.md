@@ -33,6 +33,8 @@ in progress and not a stable version.
     them, then you could disable this feature by setting the amount of seconds
     to `0`. This because in such a scenario only 1/5th (20%) of the users
     would reconnect and hopefully don't trigger +f/+F join floods.
+* Forced nick changes (eg. by NickServ) are no longer counted in nick flood
+  for channel mode `+f`/`+F`.
 * All these features only work properly if all servers are on 6.0.8-git or later.
 * A new message tag `unrealircd.org/issued-by` which is IRCOp-only (and
   used intra-server) to communicate who actually issued a command.
