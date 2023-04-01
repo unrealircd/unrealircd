@@ -34,6 +34,9 @@ in progress and not a stable version.
     to `0`. This because in such a scenario only 1/5th (20%) of the users
     would reconnect and hopefully don't trigger +f/+F join floods.
 * All these features only work properly if all servers are on 6.0.8-git or later.
+* A new message tag `unrealircd.org/issued-by` which is IRCOp-only (and
+  used intra-server) to communicate who actually issued a command.
+  See [docs](https://www.unrealircd.org/issued-by).
 
 ### Changes:
 * The [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) calls
@@ -43,6 +46,10 @@ in progress and not a stable version.
   and [User](https://www.unrealircd.org/docs/JSON-RPC:User#Structure_of_a_client_object)
   response object will be. Especially useful if you don't need all the
   details in the `.list` calls.
+* The logging of JSON-RPC requests (eg. via snomask `+R`) has been improved,
+  it now shows:
+  * The issuer, such as the user logged in to the admin panel
+  * The parameters of the request
 * The RPC modules are enabled by default now. This so remote RPC works
   from other IRC servers for calls like `modules.list`. The default
   configuration does not enable the webserver nor does it cause
@@ -56,6 +63,9 @@ in progress and not a stable version.
   [UNIX domain sockets](https://www.unrealircd.org/docs/JSON-RPC:Technical_documentation#UNIX_domain_socket)
   for making RPC calls. If those are used, we now split on `\n` (newline)
   so multiple parallel requests can be handled properly.
+* If you use JSON-RPC you can now use `rpc.set_issuer` to indiciate who
+  is actually issuing the requests. The admin panel uses this to communicate
+  who is logged in to the panel so this info can be used in logging.
 
 UnrealIRCd 6.0.7
 -----------------
