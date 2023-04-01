@@ -770,13 +770,13 @@ void rpc_call_log(Client *client, RPCHandler *handler, json_t *request, const ch
 		if (*params_string)
 		{
 			unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
-				   "[rpc] Client $client ($issuer): RPC call $method: $params_string",
+				   "[rpc] RPC call $method by $client ($issuer): $params_string",
 				   log_data_string("issuer", client->rpc->issuer),
 				   log_data_string("method", method),
 				   log_data_string("params_string", params_string));
 		} else {
 			unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
-				   "[rpc] Client $client ($issuer): RPC call $method",
+				   "[rpc] RPC call $method by $client ($issuer)",
 				   log_data_string("issuer", client->rpc->issuer),
 				   log_data_string("method", method));
 		}
@@ -784,12 +784,12 @@ void rpc_call_log(Client *client, RPCHandler *handler, json_t *request, const ch
 		if (*params_string)
 		{
 			unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
-				   "[rpc] Client $client: RPC call $method: $params_string",
+				   "[rpc] RPC call $method by $client: $params_string",
 				   log_data_string("method", method),
 				   log_data_string("params_string", params_string));
 		} else {
 			unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
-				   "[rpc] Client $client: RPC call $method",
+				   "[rpc] RPC call $method by $client",
 				   log_data_string("method", method));
 		}
 	}
