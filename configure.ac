@@ -7,7 +7,7 @@ dnl src/windows/unrealinst.iss
 dnl doc/Config.header
 dnl src/version.c.SH
 
-AC_INIT([unrealircd], [6.0.8-git], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
+AC_INIT([unrealircd], [6.1.0-git], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
 AC_CONFIG_SRCDIR([src/ircd.c])
 AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])
@@ -30,11 +30,11 @@ UNREAL_VERSION_GENERATION=["6"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_GENERATION], [$UNREAL_VERSION_GENERATION], [Generation version number (e.g.: X for X.Y.Z)])
 
 # Major version number (e.g.: Y in X.Y.Z)
-UNREAL_VERSION_MAJOR=["0"]
+UNREAL_VERSION_MAJOR=["1"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_MAJOR], [$UNREAL_VERSION_MAJOR], [Major version number (e.g.: Y for X.Y.Z)])
 
 # Minor version number (e.g.: Z in X.Y.Z)
-UNREAL_VERSION_MINOR=["8"]
+UNREAL_VERSION_MINOR=["0"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_MINOR], [$UNREAL_VERSION_MINOR], [Minor version number (e.g.: Z for X.Y.Z)])
 
 # The version suffix such as a beta marker or release candidate

@@ -1,6 +1,6 @@
-UnrealIRCd 6.0.8-git
+UnrealIRCd 6.1.0-git
 =================
-This is the git version (development version) for future 6.0.8. This is work
+This is the git version (development version) for future 6.1.0. This is work
 in progress and not a stable version.
 
 ### Enhancements:
@@ -40,7 +40,7 @@ in progress and not a stable version.
       them, then you could disable this feature by setting the amount of seconds
       to `0`. This because in such a scenario only 1/5th (20%) of the users
       would reconnect and hopefully don't trigger +f/+F join floods.
-  * All these features only work properly if all servers are on 6.0.8-git or later.
+  * All these features only work properly if all servers are on 6.1.0-git or later.
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
   * Logging of JSON-RPC requests (eg. via snomask `+R`) has been improved,
     it now shows:
