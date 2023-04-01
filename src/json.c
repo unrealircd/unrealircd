@@ -99,6 +99,16 @@ const char *json_get_value(json_t *t)
 		return buf;
 	}
 
+	if (json_is_boolean(t))
+	{
+		if (json_is_true(t))
+			return "true";
+		return "false";
+	}
+
+	if (json_is_array(t))
+		return "<array>";
+
 	return NULL;
 }
 

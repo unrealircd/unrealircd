@@ -746,16 +746,52 @@ int sanitize_params(Client *client, json_t *request, json_t *j)
 /** Log the RPC request */
 void rpc_call_log(Client *client, RPCHandler *handler, json_t *request, const char *method, json_t *params)
 {
+	const char *key;
+	json_t *value_object;
+	char params_string[512], tbuf[256];
+
+	*params_string = '\0';
+	json_object_foreach(params, key, value_object)
+	{
+		const char *value = json_get_value(value_object);
+		if (value)
+		{
+			snprintf(tbuf, sizeof(tbuf), "%s='%s', ", key, value);
+			strlcat(params_string, tbuf, sizeof(params_string));
+		}
+	}
+	if (*params_string)
+		params_string[strlen(params_string)-2] = '\0'; /* cut off last comma */
+
+	// TODO: pass log_data_json() or something, pass the entire 'request' ? For JSON logging
+
 	if (client->rpc && client->rpc->issuer)
 	{
-		unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
-			   "[rpc] Client $client ($issuer): RPC call $method",
-			   log_data_string("issuer", client->rpc->issuer),
-			   log_data_string("method", method));
+		if (*params_string)
+		{
+			unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
+				   "[rpc] Client $client ($issuer): RPC call $method: $params_string",
+				   log_data_string("issuer", client->rpc->issuer),
+				   log_data_string("method", method),
+				   log_data_string("params_string", params_string));
+		} else {
+			unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
+				   "[rpc] Client $client ($issuer): RPC call $method",
+				   log_data_string("issuer", client->rpc->issuer),
+				   log_data_string("method", method));
+		}
 	} else {
-		unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
-			   "[rpc] Client $client: RPC call $method",
-			   log_data_string("method", method));
+		if (*params_string)
+		{
+			unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
+				   "[rpc] Client $client: RPC call $method: $params_string",
+				   log_data_string("method", method),
+				   log_data_string("params_string", params_string));
+		} else {
+			unreal_log(handler->loglevel, "rpc", "RPC_CALL", client,
+				   "[rpc] Client $client: RPC call $method",
+				   log_data_string("method", method));
+		}
 	}
 }
 
