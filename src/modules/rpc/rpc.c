@@ -303,7 +303,8 @@ int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *err
 	{
 		config_error("%s:%d: rpc-user block needs to have a name, eg: rpc-user apiuser { }",
 		             ce->file->filename, ce->line_number);
-		errors++;
+		*errs = 1;
+		return -1; /* quick return */
 	}
 
 	if (!valid_rpc_user_name(ce->value))
