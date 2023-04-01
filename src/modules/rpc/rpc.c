@@ -531,14 +531,19 @@ void rpc_close(Client *client)
  */
 void rpc_call_text(Client *client, const char *readbuf, int len)
 {
-	char buf[2048];
 	json_t *request = NULL;
 	json_error_t jerr;
+#if JANSSON_VERSION_HEX >= 0x020100
+	const char *buf = readbuf;
+	request = json_loadb(buf, len, JSON_REJECT_DUPLICATES, &jerr);
+#else
+	char buf[2048];
 
 	*buf = '\0';
 	strlncpy(buf, readbuf, sizeof(buf), len);
 
 	request = json_loads(buf, JSON_REJECT_DUPLICATES, &jerr);
+#endif
 	if (!request)
 	{
 		unreal_log(ULOG_INFO, "rpc", "RPC_INVALID_JSON", client,
