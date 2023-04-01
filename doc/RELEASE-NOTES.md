@@ -6,7 +6,7 @@ in progress and not a stable version.
 ### Enhancements:
 * Channel flood protection improvements:
   * New [channel mode `+F`](https://www.unrealircd.org/docs/Channel_anti-flood_settings)
-    (uppercase f). This allows the user to choose a "flood profile",
+    (uppercase F). This allows the user to choose a "flood profile",
     which (behind the scenes) translates to something similar to an `+f` mode.
     This so end-users can simply choose an `+F` profile without having to learn
     the complex channel mode `+f`.
