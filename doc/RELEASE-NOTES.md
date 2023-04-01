@@ -51,6 +51,12 @@ in progress and not a stable version.
 * The [blacklist-module](https://www.unrealircd.org/docs/Blacklist-module_directive)
   directive now accepts wildcards, eg `blacklist-module rpc/*;`
 
+### Developers and protocol:
+* JSON-RPC supports
+  [UNIX domain sockets](https://www.unrealircd.org/docs/JSON-RPC:Technical_documentation#UNIX_domain_socket)
+  for making RPC calls. If those are used, we now split on `\n` (newline)
+  so multiple parallel requests can be handled properly.
+
 UnrealIRCd 6.0.7
 -----------------
 

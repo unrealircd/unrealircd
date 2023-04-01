@@ -498,13 +498,22 @@ int rpc_packet_in_websocket(Client *client, char *readbuf, int length)
 
 int rpc_packet_in_unix_socket(Client *client, const char *readbuf, int *length)
 {
+	char buf[READBUFSIZE];
+
 	if (!RPC_PORT(client) || !(client->local->listener->socket_type == SOCKET_TYPE_UNIX) || (*length <= 0))
 		return 1; /* Not for us */
 
-	// FIXME: this assumes a single request in 'readbuf' while in fact:
-	// - it could only contain partial JSON, eg no ending } yet
-	// - there could be multiple requests
-	rpc_call_text(client, readbuf, *length);
+	dbuf_put(&client->local->recvQ, readbuf, *length);
+
+	while (DBufLength(&client->local->recvQ))
+	{
+		int len = dbuf_getmsg(&client->local->recvQ, buf);
+		if (len <= 0)
+			break;
+		rpc_call_text(client, buf, len);
+		if (IsDead(client))
+			break;
+	}
 
 	return 0;
 }
