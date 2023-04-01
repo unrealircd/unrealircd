@@ -35,7 +35,7 @@ extern int fd_fileopen(const char *path, unsigned int flags);
 #define FD_SELECT_WRITE		0x2
 
 extern void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data);
-extern void fd_select(time_t delay);		/* backend-specific */
+extern void fd_select(int delay);		/* backend-specific */
 extern void fd_refresh(int fd);			/* backend-specific */
 extern void fd_fork(); /* backend-specific */
 

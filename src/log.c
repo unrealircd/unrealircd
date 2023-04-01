@@ -882,7 +882,7 @@ literal:
 /** Do the actual writing to log files */
 void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized, Client *from_server)
 {
-	static int last_log_file_warning = 0;
+	static time_t last_log_file_warning = 0;
 	Log *l;
 	char timebuf[128];
 	struct stat fstats;

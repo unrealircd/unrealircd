@@ -160,7 +160,7 @@ void fd_debug(fd_set *f, int highest, char *name)
 		}
 	}
 }
-void fd_select(time_t delay)
+void fd_select(int delay)
 {
 	struct timeval to;
 	int num, fd;
@@ -360,7 +360,7 @@ void fd_refresh(int fd)
 	}
 }
 
-void fd_select(time_t delay)
+void fd_select(int delay)
 {
 	struct timespec ts;
 	int num, p, revents, fd;
@@ -469,7 +469,7 @@ void fd_refresh(int fd)
 	fde->backend_flags = pflags;
 }
 
-void fd_select(time_t delay)
+void fd_select(int delay)
 {
 	int num, p, revents, fd;
 	struct epoll_event *epfd;
@@ -605,7 +605,7 @@ void fd_refresh(int fd)
 	fde->backend_flags = pflags;
 }
 
-void fd_select(time_t delay)
+void fd_select(int delay)
 {
 	int num, p, revents, fd;
 	struct pollfd *pfd;
