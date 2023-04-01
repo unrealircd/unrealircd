@@ -74,6 +74,9 @@ in progress and not a stable version.
   directive now accepts wildcards, eg `blacklist-module rpc/*;`
 
 ### Developers and protocol:
+* The `cmode.put_param` is now `int` instead of `void`. You normally
+  `return 0` here. You can `return 1` if you resist freeing, which is
+  rare and only used by `+F` with set::anti-flood::channel::default-profile.
 * JSON-RPC supports
   [UNIX domain sockets](https://www.unrealircd.org/docs/JSON-RPC:Technical_documentation#UNIX_domain_socket)
   for making RPC calls. If those are used, we now split on `\n` (newline)
