@@ -1106,6 +1106,54 @@ int cmodef_profile_sjoin_check(Channel *channel, void *ourx, void *theirx)
 	return EXSJ_WEWON;
 }
 
+int is_floodprot_exempt(Client *client, Channel *channel, char flood_type_letter)
+{
+	Ban *ban;
+	char *p;
+	BanContext *b = safe_alloc(sizeof(BanContext));
+
+	b->client = client;
+	b->channel = channel;
+	b->ban_check_types = BANCHK_MSG;
+
+	for (ban = channel->exlist; ban; ban=ban->next)
+	{
+		char *p, *x;
+		char *matchby;
+		char type[16];
+
+		if (!strncmp(ban->banstr, "~F:", 3))
+			p = ban->banstr + 3;
+		else if (!strncmp(ban->banstr, "~flood:", 7))
+			p = ban->banstr + 7;
+		else
+			continue;
+
+		strlcpy(type, p, sizeof(type));
+		x = strchr(type, ':');
+		if (x)
+			*x = '\0';
+
+		if (!strcmp(type, "*") || strchr(type, flood_type_letter))
+		{
+			matchby = strchr(p, ':');
+			if (!matchby)
+				continue;
+			matchby++;
+
+			b->banstr = matchby;
+			if (ban_check_mask(b))
+			{
+				safe_free(b);
+				return HOOK_ALLOW; /* Yes, user is exempt */
+			}
+		}
+	}
+
+	safe_free(b);
+	return HOOK_CONTINUE; /* No, may NOT bypass. */
+}
+
 int floodprot_join(Client *client, Channel *channel, MessageTag *mtags)
 {
 	/* I'll explain this only once:
@@ -1113,6 +1161,7 @@ int floodprot_join(Client *client, Channel *channel, MessageTag *mtags)
 	 * 2. local client OR synced server
 	 * 3. server uptime more than XX seconds (if this information is available)
 	 * 4. is not a uline
+	 * call do_floodprot, which will:
 	 * 5. then, increase floodcounter
 	 * 6. if we reached the limit AND only if source was a local client.. do the action (+i).
 	 * Nr 6 is done because otherwise you would have a noticeflood with 'joinflood detected'
@@ -1310,6 +1359,15 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 		char mask[256];
 		MessageTag *mtags;
 		int flood_type;
+
+		if ((is_flooding_text && is_floodprot_exempt(client, channel, 't')) ||
+		    (is_flooding_repeat && is_floodprot_exempt(client, channel, 'r')))
+		{
+			/* No action taken */
+			memberflood->nmsg = 0;
+			memberflood->nmsg_repeat = 0;
+			return HOOK_CONTINUE;
+		}
 
 		/* Repeat takes precedence over text flood */
 		if (is_flooding_repeat)
@@ -1620,10 +1678,14 @@ void floodprottimer_stopchantimers(Channel *channel)
 int do_floodprot(Channel *channel, Client *client, int what)
 {
 	ChannelFloodProtection *fld = get_channel_flood_settings(channel, what);
+	FloodType *floodtype = find_floodprot_by_index(what);
 	char unknown_user;
 
 	if (!fld)
 		return 0; /* no +f active */
+
+	if (floodtype && is_floodprot_exempt(client, channel, floodtype->letter))
+		return 0; /* exempt: not counted and no action taken */
 
 	unknown_user = user_allowed_by_security_group_name(client, "known-users") ? 0 : 1;
 
