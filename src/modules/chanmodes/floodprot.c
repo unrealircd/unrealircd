@@ -43,8 +43,8 @@ typedef enum Flood {
 struct {
 	unsigned char modef_default_unsettime;
 	unsigned char modef_max_unsettime;
-	long modef_boot_delay;
-	long modef_split_delay;
+	long boot_delay;
+	long split_delay;
 	int modef_alternate_action_percentage_threshold;
 	unsigned char modef_alternative_ban_action_unsettime;
 	char *default_profile;
@@ -75,7 +75,6 @@ FloodType floodtypes[] = {
 
 #define MODEF_DEFAULT_UNSETTIME		cfg.modef_default_unsettime
 #define MODEF_MAX_UNSETTIME		cfg.modef_max_unsettime
-#define MODEF_BOOT_DELAY		cfg.modef_boot_delay
 
 typedef struct ChannelFloodProtection ChannelFloodProtection;
 typedef struct ChannelFloodProfile ChannelFloodProfile;
@@ -361,8 +360,8 @@ static void init_config(void)
 	memset(&cfg, 0, sizeof(cfg));
 	cfg.modef_default_unsettime = 0;
 	cfg.modef_max_unsettime = 60; /* 1 hour seems enough :p */
-	cfg.modef_boot_delay = 75;
-	cfg.modef_split_delay = 75;
+	cfg.boot_delay = 75;
+	cfg.split_delay = 75;
 	cfg.modef_alternate_action_percentage_threshold = 75; /* 75% */
 	cfg.modef_alternative_ban_action_unsettime = 15; /* 15min */
 	init_default_channel_flood_profiles();
@@ -409,24 +408,12 @@ int floodprot_config_test_set_block(ConfigFile *cf, ConfigEntry *ce, int type, i
 			}
 		}
 	} else
-	if (!strcmp(ce->name, "modef-boot-delay") || !strcmp(ce->name, "modef-split-delay"))
+	if (!strcmp(ce->name, "modef-boot-delay"))
 	{
-		if (!ce->value)
-		{
-			config_error_empty(ce->file->filename, ce->line_number,
-				"set", ce->name);
-			errors++;
-		} else {
-			long v = config_checkval(ce->value, CFG_TIME);
-			if ((v < 0) || (v > 600))
-			{
-				config_error("%s:%i: set::%s: value '%ld' out of range (should be 0-600)",
-					ce->file->filename, ce->line_number,
-					ce->name,
-					v);
-				errors++;
-			}
-		}
+		config_error("%s:%i: set::modef-boot-delay is now called set::anti-flood::channel::boot-delay. "
+		             "See https://www.unrealircd.org/docs/Channel_anti-flood_settings#config",
+		             ce->file->filename, ce->line_number);
+		errors++;
 	} else
 	{
 		/* Not handled by us */
@@ -446,10 +433,6 @@ int floodprot_config_run_set_block(ConfigFile *cf, ConfigEntry *ce, int type)
 		cfg.modef_default_unsettime = (unsigned char)atoi(ce->value);
 	else if (!strcmp(ce->name, "modef-max-unsettime"))
 		cfg.modef_max_unsettime = (unsigned char)atoi(ce->value);
-	else if (!strcmp(ce->name, "modef-boot-delay"))
-		cfg.modef_boot_delay = config_checkval(ce->value, CFG_TIME);
-	else if (!strcmp(ce->name, "modef-split-delay"))
-		cfg.modef_split_delay = config_checkval(ce->value, CFG_TIME);
 	else
 		return 0; /* not handled by us */
 
@@ -487,6 +470,25 @@ int floodprot_config_test_antiflood_block(ConfigFile *cf, ConfigEntry *ce, int t
 				                    "set::anti-flood::channel::default-profile");
 				errors++;
 				continue;
+			}
+		} else
+		if (!strcmp(ce->name, "boot-delay") || !strcmp(ce->name, "split-delay"))
+		{
+			if (!ce->value)
+			{
+				config_error_empty(ce->file->filename, ce->line_number,
+					"set", ce->name);
+				errors++;
+			} else {
+				long v = config_checkval(ce->value, CFG_TIME);
+				if ((v < 0) || (v > 600))
+				{
+					config_error("%s:%i: set::anti-flood::channel::%s: value '%ld' out of range (should be 0-600)",
+						ce->file->filename, ce->line_number,
+						ce->name,
+						v);
+					errors++;
+				}
 			}
 		} else
 		if (!strcmp(ce->name, "profile"))
@@ -574,6 +576,14 @@ int floodprot_config_run_antiflood_block(ConfigFile *cf, ConfigEntry *ce, int ty
 		if (!strcmp(ce->name, "default-profile"))
 		{
 			safe_strdup(cfg.default_profile, ce->value);
+		} else
+		if (!strcmp(ce->name, "boot-delay"))
+		{
+			cfg.boot_delay = config_checkval(ce->value, CFG_TIME);
+		} else
+		if (!strcmp(ce->name, "split-delay"))
+		{
+			cfg.split_delay = config_checkval(ce->value, CFG_TIME);
 		} else
 		if (!strcmp(ce->name, "profile"))
 		{
@@ -1093,8 +1103,8 @@ int floodprot_join(Client *client, Channel *channel, MessageTag *mtags)
 	 */
 	if (IsFloodLimit(channel) &&
 	    (MyUser(client) || client->uplink->server->flags.synced) &&
-	    (client->uplink->server->boottime && (TStime() - client->uplink->server->boottime >= MODEF_BOOT_DELAY)) &&
-	    (TStime() - floodprot_splittime >= cfg.modef_split_delay) &&
+	    (client->uplink->server->boottime && (TStime() - client->uplink->server->boottime >= cfg.boot_delay)) &&
+	    (TStime() - floodprot_splittime >= cfg.split_delay) &&
 	    !IsULine(client))
 	{
 	    do_floodprot(channel, client, CHFLD_JOIN);

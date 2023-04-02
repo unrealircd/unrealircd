@@ -29,7 +29,7 @@ in progress and not a stable version.
     for channel mode `+f`/`+F`.
   * When a server splits on the network, we now temporarily disable +f/+F
     join-flood protection for 75 seconds
-    ([set::modef-split-delay](https://www.unrealircd.org/docs/Set_block#set::modef-split-delay)).
+    ([set::anti-flood::channel::split-delay](https://www.unrealircd.org/docs/Channel_anti-flood_settings#config)).
     This because a server splitting could mean that server has network problems
     or has died (or restarted), in which case the clients would typically
     reconnect to the remaining other servers, triggering an +f/+F join-flood and
@@ -72,6 +72,8 @@ in progress and not a stable version.
   [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) instructions.
 * The [blacklist-module](https://www.unrealircd.org/docs/Blacklist-module_directive)
   directive now accepts wildcards, eg `blacklist-module rpc/*;`
+* The setting set::modef-boot-delay has been moved to
+  [set::anti-flood::channel::boot-delay](https://www.unrealircd.org/docs/Channel_anti-flood_settings#config).
 
 ### Developers and protocol:
 * The `cmode.free_param` definition changed. It now has an extra argument
