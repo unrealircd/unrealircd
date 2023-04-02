@@ -137,16 +137,27 @@ CMD_FUNC(cmd_chgident)
 	}
 	if (!IsULine(client))
 	{
-		unreal_log(ULOG_INFO, "chgcmds", "CHGIDENT_COMMAND", client,
-		           "CHGIDENT: $client changed the username of $target.details to be $new_username",
-		           log_data_string("change_type", "username"),
-			   log_data_client("target", target),
-		           log_data_string("new_username", parv[2]));
+		const char *issuer = command_issued_by_rpc(recv_mtags);
+		if (issuer)
+		{
+			unreal_log(ULOG_INFO, "chgcmds", "CHGIDENT_COMMAND", client,
+				   "CHGIDENT: $issuer changed the username of $target.details to be $new_username",
+				   log_data_string("issuer", issuer),
+				   log_data_string("change_type", "username"),
+				   log_data_client("target", target),
+				   log_data_string("new_username", parv[2]));
+		} else {
+			unreal_log(ULOG_INFO, "chgcmds", "CHGIDENT_COMMAND", client,
+				   "CHGIDENT: $client changed the username of $target.details to be $new_username",
+				   log_data_string("change_type", "username"),
+				   log_data_client("target", target),
+				   log_data_string("new_username", parv[2]));
+		}
 	}
 
 	/* Send to other servers too, unless the client is still in the registration phase (SASL) */
 	if (IsUser(target))
-		sendto_server(client, 0, 0, NULL, ":%s CHGIDENT %s %s", client->id, target->id, parv[2]);
+		sendto_server(client, 0, 0, recv_mtags, ":%s CHGIDENT %s %s", client->id, target->id, parv[2]);
 
 	ircsnprintf(target->user->username, sizeof(target->user->username), "%s", parv[2]);
 	userhost_changed(target);

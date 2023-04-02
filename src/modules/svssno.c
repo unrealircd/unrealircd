@@ -61,7 +61,7 @@ MOD_UNLOAD()
  * parv[2] - snomasks to change
  * show_change determines whether to show the change to the user
  */
-void do_svssno(Client *client, int parc, const char *parv[], int show_change)
+void do_svssno(Client *client, MessageTag *recv_mtags, int parc, const char *parv[], int show_change)
 {
 	const char *p;
 	Client *target;
@@ -79,7 +79,7 @@ void do_svssno(Client *client, int parc, const char *parv[], int show_change)
 	if (!(target = find_user(parv[1], NULL)))
 		return;
 
-	if (hunt_server(client, NULL, show_change ? "SVS2SNO" : "SVSSNO", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, show_change ? "SVS2SNO" : "SVSSNO", 1, parc, parv) != HUNTED_ISME)
 		return;
 
 	if (MyUser(target))
@@ -91,15 +91,21 @@ void do_svssno(Client *client, int parc, const char *parv[], int show_change)
 	}
 
 	if (show_change && target->user->snomask)
+	{
+		MessageTag *mtags = NULL;
+		new_message(client, recv_mtags, &mtags);
+		// TODO: sendnumeric has no mtags support :D
 		sendnumeric(target, RPL_SNOMASK, target->user->snomask);
+		safe_free_message_tags(mtags);
+	}
 }
 
 CMD_FUNC(cmd_svssno)
 {
-	do_svssno(client, parc, parv, 0);
+	do_svssno(client, recv_mtags, parc, parv, 0);
 }
 
 CMD_FUNC(cmd_svs2sno)
 {
-	do_svssno(client, parc, parv, 1);
+	do_svssno(client, recv_mtags, parc, parv, 1);
 }

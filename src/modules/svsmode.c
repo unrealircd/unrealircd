@@ -520,11 +520,11 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 		} /*switch*/
 
 	if (parc > 3)
-		sendto_server(client, 0, 0, NULL, ":%s %s %s %s %s",
+		sendto_server(client, 0, 0, recv_mtags, ":%s %s %s %s %s",
 		    client->id, show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2], parv[3]);
 	else
-		sendto_server(client, 0, 0, NULL, ":%s %s %s %s",
+		sendto_server(client, 0, 0, recv_mtags, ":%s %s %s %s",
 		    client->id, show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2]);
 
@@ -539,7 +539,12 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 		char buf[BUFSIZE];
 		build_umode_string(target, oldumodes, ALL_UMODES, buf);
 		if (MyUser(target) && *buf)
-			sendto_one(target, NULL, ":%s MODE %s :%s", client->name, target->name, buf);
+		{
+			MessageTag *mtags = NULL;
+			new_message(client, recv_mtags, &mtags);
+			sendto_one(target, mtags, ":%s MODE %s :%s", client->name, target->name, buf);
+			safe_free_message_tags(mtags);
+		}
 	}
 
 	userhost_changed(target); /* we can safely call this, even if nothing changed */

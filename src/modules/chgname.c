@@ -97,11 +97,22 @@ CMD_FUNC(cmd_chgname)
 	/* Let's log this first */
 	if (!IsULine(client))
 	{
-		unreal_log(ULOG_INFO, "chgcmds", "CHGNAME_COMMAND", client,
-		           "CHGNAME: $client changed the realname of $target.details to be $new_realname",
-		           log_data_string("change_type", "realname"),
-			   log_data_client("target", target),
-		           log_data_string("new_realname", parv[2]));
+		const char *issuer = command_issued_by_rpc(recv_mtags);
+		if (issuer)
+		{
+			unreal_log(ULOG_INFO, "chgcmds", "CHGNAME_COMMAND", client,
+				   "CHGNAME: $issuer changed the realname of $target.details to be $new_realname",
+				   log_data_string("issuer", issuer),
+				   log_data_string("change_type", "realname"),
+				   log_data_client("target", target),
+				   log_data_string("new_realname", parv[2]));
+		} else {
+			unreal_log(ULOG_INFO, "chgcmds", "CHGNAME_COMMAND", client,
+				   "CHGNAME: $client changed the realname of $target.details to be $new_realname",
+				   log_data_string("change_type", "realname"),
+				   log_data_client("target", target),
+				   log_data_string("new_realname", parv[2]));
+		}
 	}
 
 	/* set the realname to make ban checking work */
@@ -118,6 +129,6 @@ CMD_FUNC(cmd_chgname)
 		}
 	}
 
-	sendto_server(client, 0, 0, NULL, ":%s CHGNAME %s :%s",
+	sendto_server(client, 0, 0, recv_mtags, ":%s CHGNAME %s :%s",
 	    client->id, target->name, parv[2]);
 }
