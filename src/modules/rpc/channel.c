@@ -194,7 +194,6 @@ void rpc_channel_set_topic(Client *client, json_t *request, json_t *params)
 void rpc_channel_kick(Client *client, json_t *request, json_t *params)
 {
 	json_t *result, *item;
-	const char *args[5];
 	const char *channelname, *nick, *reason;
 	MessageTag *mtags = NULL;
 	Channel *channel;
@@ -217,13 +216,8 @@ void rpc_channel_kick(Client *client, json_t *request, json_t *params)
 		return;
 	}
 
-	args[0] = NULL;
-	args[1] = channel->name;
-	args[2] = acptr->name;
-	args[3] = reason;
-	args[4] = NULL;
 	mtag_add_issued_by(&mtags, client, NULL);
-	do_cmd(&me, mtags, "KICK", reason ? 4 : 3, args);
+	kick_user(mtags, channel, &me, acptr, reason);
 	safe_free_message_tags(mtags);
 
 	/* Simply return success
