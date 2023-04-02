@@ -534,7 +534,7 @@ static void unload_extcmode_commit(Cmode *cmode)
 					}
 					free_message_tags(mtags);
 
-					cmode->free_param(GETPARASTRUCT(channel, cmode->letter));
+					cmode->free_param(GETPARASTRUCT(channel, cmode->letter), 0);
 					channel->mode.mode &= ~cmode->mode;
 				}
 			}
@@ -627,7 +627,7 @@ void cm_putparameter(Channel *channel, char mode, const char *str)
  */
 void cm_freeparameter(Channel *channel, char mode)
 {
-	int n = GETPARAMHANDLERBYLETTER(mode)->free_param(GETPARASTRUCT(channel, mode));
+	int n = GETPARAMHANDLERBYLETTER(mode)->free_param(GETPARASTRUCT(channel, mode), 1);
 	if (n == 0)
 		GETPARASTRUCT(channel, mode) = NULL;
 }
@@ -714,7 +714,7 @@ void extcmode_free_paramlist(void **ar)
 		handler = GETPARAMHANDLERBYSLOT(i);
 		if (!handler)
 			continue; /* nothing here... */
-		handler->free_param(ar[handler->param_slot]);
+		handler->free_param(ar[handler->param_slot], 0);
 		ar[handler->param_slot] = NULL;
 	}
 }

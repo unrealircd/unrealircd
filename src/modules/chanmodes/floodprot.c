@@ -152,7 +152,7 @@ int cmodef_is_ok(Client *client, Channel *channel, char mode, const char *para, 
 void *cmodef_put_param(void *r_in, const char *param);
 const char *cmodef_get_param(void *r_in);
 const char *cmodef_conv_param(const char *param_in, Client *client, Channel *channel);
-int cmodef_free_param(void *r);
+int cmodef_free_param(void *r, int soft);
 void *cmodef_dup_struct(void *r_in);
 int cmodef_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int cmodef_profile_is_ok(Client *client, Channel *channel, char mode, const char *param, int type, int what);
@@ -879,14 +879,14 @@ const char *cmodef_conv_param(const char *param_in, Client *client, Channel *cha
 	return retbuf;
 }
 
-int cmodef_free_param(void *r)
+int cmodef_free_param(void *r, int soft)
 {
 	ChannelFloodProtection *fld = (ChannelFloodProtection *)r;
 
 	if (!fld)
 		return 0;
 
-	if (fld->profile && cfg.default_profile)
+	if (soft && fld->profile && cfg.default_profile)
 	{
 		/* Resist freeing */
 		if (strcmp(fld->profile, cfg.default_profile))

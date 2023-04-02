@@ -285,11 +285,13 @@ struct Cmode {
 
 	/** Free and remove parameter from list.
 	 * This function pointer is NULL (unused) for modes without parameters.
-	 * @param parastruct		The parameter struct
+	 * @param parastruct	The parameter struct
+	 * @param soft		This is set to 1 if you may 'resist freeing'
+	 *			(used by floodprot module to have active F profile even if -F).
 	 * @returns Normally return 0, must return 1 if it 'resisted' freeing.
 	 * @note In most cases you will just call safe_free() on 'list'
 	 */
-	int (*free_param)(void *parastruct);
+	int (*free_param)(void *parastruct, int soft);
 
 	/** duplicate a struct and return a pointer to duplicate.
 	 * This function pointer is NULL (unused) for modes without parameters.
@@ -348,7 +350,7 @@ typedef struct {
 	void *		(*put_param)(void *, const char *);
 	const char *	(*get_param)(void *);
 	const char *	(*conv_param)(const char *, Client *, Channel *);
-	int		(*free_param)(void *);
+	int		(*free_param)(void *, int);
 	void *		(*dup_struct)(void *);
 	int		(*sjoin_check)(Channel *, void *, void *);
 	char		local;

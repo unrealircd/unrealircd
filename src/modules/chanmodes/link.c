@@ -49,7 +49,7 @@ int cmodeL_is_ok(Client *client, Channel *channel, char mode, const char *para, 
 void *cmodeL_put_param(void *r_in, const char *param);
 const char *cmodeL_get_param(void *r_in);
 const char *cmodeL_conv_param(const char *param_in, Client *client, Channel *channel);
-int cmodeL_free_param(void *r);
+int cmodeL_free_param(void *r, int soft);
 void *cmodeL_dup_struct(void *r_in);
 int cmodeL_sjoin_check(Channel *channel, void *ourx, void *theirx);
 
@@ -178,7 +178,7 @@ const char *cmodeL_conv_param(const char *param, Client *client, Channel *channe
 	return param;
 }
 
-int cmodeL_free_param(void *r)
+int cmodeL_free_param(void *r, int soft)
 {
 	safe_free(r);
 	return 0;

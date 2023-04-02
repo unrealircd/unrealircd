@@ -45,7 +45,7 @@ int cmode_key_is_ok(Client *client, Channel *channel, char mode, const char *par
 void *cmode_key_put_param(void *r_in, const char *param);
 const char *cmode_key_get_param(void *r_in);
 const char *cmode_key_conv_param(const char *param_in, Client *client, Channel *channel);
-int cmode_key_free_param(void *r);
+int cmode_key_free_param(void *r, int soft);
 void *cmode_key_dup_struct(void *r_in);
 int cmode_key_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int is_valid_key(const char *key);
@@ -162,7 +162,7 @@ const char *cmode_key_conv_param(const char *param, Client *client, Channel *cha
 	return retbuf;
 }
 
-int cmode_key_free_param(void *r)
+int cmode_key_free_param(void *r, int soft)
 {
 	safe_free(r);
 	return 0;
