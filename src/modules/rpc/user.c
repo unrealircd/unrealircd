@@ -639,6 +639,7 @@ RPC_CALL_FUNC(rpc_user_part)
 	const char *args[5];
 	const char *nick, *channel, *reason=NULL;
 	Client *acptr;
+	MessageTag *mtags = NULL;
 	int force = 0;
 
 	REQUIRE_PARAM_STRING("nick", nick);
@@ -657,7 +658,9 @@ RPC_CALL_FUNC(rpc_user_part)
 	args[2] = channel;
 	args[3] = reason;
 	args[4] = NULL;
+	mtag_add_issued_by(&mtags, client, NULL);
 	do_cmd(&me, NULL, force ? "SAPART" : "SVSPART", reason ? 4 : 3, args);
+	safe_free_message_tags(mtags);
 
 	/* Return result. Always 'true' at the moment.
 	 * Technically we could check if the user is in all of these channels.
