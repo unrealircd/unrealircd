@@ -88,6 +88,21 @@ int issued_by_mtag_should_send_to_client(Client *target)
 	return 0;
 }
 
+/** Add "unrealircd.org/issued-by" tag, if applicable.
+ * @param mtags		Pointer to the message tags linked list head
+ * @param client	The client issuing the command, or NULL for none.
+ * @param recv_mtags	The mtags to inherit from, or NULL for none.
+ * @notes If specifying both 'client' and 'recv_mtags' then
+ * if inheritance through 'recv_mtags' takes precedence (if it exists).
+ *
+ * Typical usage is:
+ * For locally generated:
+ *   mtag_add_issued_by(&mtags, client, NULL);
+ * For inheriting from remote requests:
+ *   mtag_add_issued_by(&mtags, NULL, recv_mtags);
+ * For both, such as if the command is used from RPC:
+ *   mtag_add_issued_by(&mtags, client, recv_mtags);
+ */
 void _mtag_add_issued_by(MessageTag **mtags, Client *client, MessageTag *recv_mtags)
 {
 	MessageTag *m;
@@ -100,6 +115,9 @@ void _mtag_add_issued_by(MessageTag **mtags, Client *client, MessageTag *recv_mt
 		AddListItem(m, *mtags);
 		return;
 	}
+
+	if (client == NULL)
+		return;
 
 	if (IsRPC(client) && client->rpc)
 	{
