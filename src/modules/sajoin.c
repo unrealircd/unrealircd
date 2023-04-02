@@ -54,18 +54,18 @@ MOD_UNLOAD()
 
 static void log_sajoin(Client *client, MessageTag *mtags, Client *target, const char *channels)
 {
-	MessageTag *m = find_mtag(mtags, "unrealircd.org/issued-by");
-	if (m && m->value && !strncmp(m->value, "RPC:", 4))
+	const char *issuer = command_issued_by_rpc(mtags);
+	if (issuer)
 	{
 		unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", client, "SAJOIN: $issuer used SAJOIN to make $target join $channels",
-			   log_data_string("issuer", m->value),
+			   log_data_string("issuer", issuer),
 			   log_data_client("target", target),
 			   log_data_string("channels", channels));
-		return;
+	} else {
+		unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", client, "SAJOIN: $client used SAJOIN to make $target join $channels",
+			   log_data_client("target", target),
+			   log_data_string("channels", channels));
 	}
-	unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", client, "SAJOIN: $client used SAJOIN to make $target join $channels",
-		   log_data_client("target", target),
-		   log_data_string("channels", channels));
 }
 
 /* cmd_sajoin() - Lamego - Wed Jul 21 20:04:48 1999

@@ -2736,3 +2736,11 @@ const char *StripControlCodes(const char *text)
 
 	return StripControlCodesEx(text, new_str, sizeof(new_str), 0);
 }
+
+const char *command_issued_by_rpc(MessageTag *mtags)
+{
+	MessageTag *m = find_mtag(mtags, "unrealircd.org/issued-by");
+	if (m && m->value && !strncmp(m->value, "RPC:", 4))
+		return m->value;
+	return NULL;
+}

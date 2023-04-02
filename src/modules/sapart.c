@@ -54,11 +54,10 @@ MOD_UNLOAD()
 
 static void log_sapart(Client *client, MessageTag *mtags, Client *target, const char *channels, const char *comment)
 {
-	MessageTag *m = find_mtag(mtags, "unrealircd.org/issued-by");
+	const char *issuer = command_issued_by_rpc(mtags);
 
-	if (m && m->value && !strncmp(m->value, "RPC:", 4))
+	if (issuer)
 	{
-		const char *issuer = m->value;
 		if (comment)
 		{
 			unreal_log(ULOG_INFO, "sacmds", "SAPART_COMMAND", client, "SAPART: $issuer used SAPART to make $target part $channels ($reason)",
