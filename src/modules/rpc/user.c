@@ -293,6 +293,7 @@ RPC_CALL_FUNC(rpc_user_set_username)
 	json_t *result, *list, *item;
 	const char *args[4];
 	const char *nick, *username, *str;
+	MessageTag *mtags = NULL;
 	Client *acptr;
 
 	REQUIRE_PARAM_STRING("nick", nick);
@@ -320,7 +321,9 @@ RPC_CALL_FUNC(rpc_user_set_username)
 	args[1] = acptr->name;
 	args[2] = username;
 	args[3] = NULL;
-	do_cmd(&me, NULL, "CHGIDENT", 3, args);
+	mtag_add_issued_by(&mtags, client, NULL);
+	do_cmd(&me, mtags, "CHGIDENT", 3, args);
+	safe_free_message_tags(mtags);
 
 	/* Return result */
 	if (!strcmp(acptr->user->username, username))
@@ -336,6 +339,7 @@ RPC_CALL_FUNC(rpc_user_set_realname)
 	json_t *result, *list, *item;
 	const char *args[4];
 	const char *nick, *realname, *str;
+	MessageTag *mtags = NULL;
 	Client *acptr;
 
 	REQUIRE_PARAM_STRING("nick", nick);
@@ -363,7 +367,9 @@ RPC_CALL_FUNC(rpc_user_set_realname)
 	args[1] = acptr->name;
 	args[2] = realname;
 	args[3] = NULL;
-	do_cmd(&me, NULL, "CHGNAME", 3, args);
+	mtag_add_issued_by(&mtags, client, NULL);
+	do_cmd(&me, mtags, "CHGNAME", 3, args);
+	safe_free_message_tags(mtags);
 
 	/* Return result */
 	if (!strcmp(acptr->info, realname))
@@ -379,6 +385,7 @@ RPC_CALL_FUNC(rpc_user_set_vhost)
 	json_t *result, *list, *item;
 	const char *args[4];
 	const char *nick, *vhost, *str;
+	MessageTag *mtags = NULL;
 	Client *acptr;
 
 	REQUIRE_PARAM_STRING("nick", nick);
@@ -406,7 +413,9 @@ RPC_CALL_FUNC(rpc_user_set_vhost)
 	args[1] = acptr->name;
 	args[2] = vhost;
 	args[3] = NULL;
-	do_cmd(&me, NULL, "CHGHOST", 3, args);
+	mtag_add_issued_by(&mtags, client, NULL);
+	do_cmd(&me, mtags, "CHGHOST", 3, args);
+	safe_free_message_tags(mtags);
 
 	/* Return result */
 	if (!strcmp(GetHost(acptr), vhost))
@@ -423,6 +432,7 @@ RPC_CALL_FUNC(rpc_user_set_mode)
 	const char *args[4];
 	const char *nick, *modes, *str;
 	int hidden;
+	MessageTag *mtags = NULL;
 	Client *acptr;
 
 	REQUIRE_PARAM_STRING("nick", nick);
@@ -439,7 +449,9 @@ RPC_CALL_FUNC(rpc_user_set_mode)
 	args[1] = acptr->name;
 	args[2] = modes;
 	args[3] = NULL;
-	do_cmd(&me, NULL, hidden ? "SVSMODE" : "SVS2MODE", 3, args);
+	mtag_add_issued_by(&mtags, client, NULL);
+	do_cmd(&me, mtags, hidden ? "SVSMODE" : "SVS2MODE", 3, args);
+	safe_free_message_tags(mtags);
 
 	/* Return result (always true) */
 	result = json_boolean(1);
@@ -453,6 +465,7 @@ RPC_CALL_FUNC(rpc_user_set_snomask)
 	const char *args[4];
 	const char *nick, *snomask, *str;
 	int hidden;
+	MessageTag *mtags = NULL;
 	Client *acptr;
 
 	REQUIRE_PARAM_STRING("nick", nick);
@@ -469,7 +482,9 @@ RPC_CALL_FUNC(rpc_user_set_snomask)
 	args[1] = acptr->name;
 	args[2] = snomask;
 	args[3] = NULL;
-	do_cmd(&me, NULL, hidden ? "SVSSNO" : "SVS2SNO", 3, args);
+	mtag_add_issued_by(&mtags, client, NULL);
+	do_cmd(&me, mtags, hidden ? "SVSSNO" : "SVS2SNO", 3, args);
+	safe_free_message_tags(mtags);
 
 	/* Return result (always true) */
 	result = json_boolean(1);
@@ -483,6 +498,7 @@ RPC_CALL_FUNC(rpc_user_set_oper)
 	const char *args[9];
 	const char *nick, *oper_account, *oper_class;
 	const char *class=NULL, *modes=NULL, *snomask=NULL, *vhost=NULL;
+	MessageTag *mtags = NULL;
 	Client *acptr;
 	char default_modes[64];
 
@@ -515,7 +531,9 @@ RPC_CALL_FUNC(rpc_user_set_oper)
 	args[6] = snomask ? snomask : iConf.oper_snomask;
 	args[7] = vhost ? vhost : "-";
 	args[8] = NULL;
-	do_cmd(&me, NULL, "SVSO", 8, args);
+	mtag_add_issued_by(&mtags, client, NULL);
+	do_cmd(&me, mtags, "SVSO", 8, args);
+	safe_free_message_tags(mtags);
 
 	/* Return result (always true) */
 	result = json_boolean(1);
@@ -528,6 +546,7 @@ RPC_CALL_FUNC(rpc_user_kill)
 	json_t *result, *list, *item;
 	const char *args[4];
 	const char *nick, *reason;
+	MessageTag *mtags = NULL;
 	Client *acptr;
 
 	REQUIRE_PARAM_STRING("nick", nick);
@@ -543,7 +562,9 @@ RPC_CALL_FUNC(rpc_user_kill)
 	args[1] = acptr->name;
 	args[2] = reason;
 	args[3] = NULL;
-	do_cmd(&me, NULL, "KILL", 3, args);
+	mtag_add_issued_by(&mtags, client, NULL);
+	do_cmd(&me, mtags, "KILL", 3, args);
+	safe_free_message_tags(mtags);
 
 	/* Return result */
 	if ((acptr = find_user(nick, NULL)) && !IsDead(acptr))
@@ -559,6 +580,7 @@ RPC_CALL_FUNC(rpc_user_quit)
 	json_t *result, *list, *item;
 	const char *args[4];
 	const char *nick, *reason;
+	MessageTag *mtags = NULL;
 	Client *acptr;
 
 	REQUIRE_PARAM_STRING("nick", nick);
@@ -574,7 +596,9 @@ RPC_CALL_FUNC(rpc_user_quit)
 	args[1] = acptr->name;
 	args[2] = reason;
 	args[3] = NULL;
-	do_cmd(&me, NULL, "SVSKILL", 3, args);
+	mtag_add_issued_by(&mtags, client, NULL);
+	do_cmd(&me, mtags, "SVSKILL", 3, args);
+	safe_free_message_tags(mtags);
 
 	/* Return result */
 	if ((acptr = find_user(nick, NULL)) && !IsDead(acptr))
