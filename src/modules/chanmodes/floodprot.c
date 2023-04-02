@@ -350,7 +350,7 @@ static void init_default_channel_flood_profiles(void)
 	AddListItem(f, channel_flood_profiles);
 
 	f = safe_alloc(sizeof(ChannelFloodProfile));
-	safe_strdup(f->settings.profile, "none");
+	safe_strdup(f->settings.profile, "off");
 	AddListItem(f, channel_flood_profiles);
 }
 
