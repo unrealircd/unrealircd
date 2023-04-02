@@ -90,6 +90,7 @@ int rpc_handle_server_quit(Client *client, MessageTag *mtags);
 int rpc_json_expand_client_server(Client *client, int detail, json_t *j, json_t *child);
 const char *rrpc_md_serialize(ModData *m);
 void rrpc_md_unserialize(const char *str, ModData *m);
+void rrpc_md_free(ModData *m);
 
 /* Macros */
 #define RPC_PORT(client)  ((client->local && client->local->listener) ? client->local->listener->rpc_options : 0)
@@ -163,6 +164,7 @@ MOD_INIT()
 	mreq.type = MODDATATYPE_CLIENT;
 	mreq.serialize = rrpc_md_serialize;
 	mreq.unserialize = rrpc_md_unserialize;
+	mreq.free = rrpc_md_free;
 	mreq.sync = 1;
 	mreq.self_write = 1;
 	rrpc_md = ModDataAdd(modinfo->handle, mreq);
@@ -1671,6 +1673,15 @@ void rrpc_md_unserialize(const char *str, ModData *m)
 			continue;
 		*value++ = '\0';
 		add_nvplist((NameValuePrioList **)&m->ptr, 0, name, value);
+	}
+}
+
+void rrpc_md_free(ModData *m)
+{
+	if (m->ptr)
+	{
+		free_nvplist(m->ptr);
+		m->ptr = NULL;
 	}
 }
 
