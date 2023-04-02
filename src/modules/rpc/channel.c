@@ -137,6 +137,7 @@ void rpc_channel_set_mode(Client *client, json_t *request, json_t *params)
 {
 	json_t *result, *item;
 	const char *channelname, *modes, *parameters;
+	MessageTag *mtags = NULL;
 	Channel *channel;
 
 	REQUIRE_PARAM_STRING("channel", channelname);
@@ -149,7 +150,9 @@ void rpc_channel_set_mode(Client *client, json_t *request, json_t *params)
 		return;
 	}
 
-	set_channel_mode(channel, modes, parameters);
+	mtag_add_issued_by(&mtags, client, NULL);
+	set_channel_mode(channel, mtags, modes, parameters);
+	safe_free_message_tags(mtags);
 
 	/* Simply return success */
 	result = json_boolean(1);

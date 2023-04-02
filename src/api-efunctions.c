@@ -40,7 +40,7 @@ int (*can_join)(Client *client, Channel *channel, const char *key, char **errmsg
 void (*do_mode)(Channel *channel, Client *client, MessageTag *mtags, int parc, const char *parv[], time_t sendts, int samode);
 MultiLineMode *(*set_mode)(Channel *channel, Client *client, int parc, const char *parv[], u_int *pcount,
                            char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
-void (*set_channel_mode)(Channel *channel, const char *modes, const char *parameters);
+void (*set_channel_mode)(Channel *channel, MessageTag *mtags, const char *modes, const char *parameters);
 void (*set_channel_topic)(Client *client, Channel *channel, MessageTag *recv_mtags, const char *topic, const char *set_by, time_t set_at);
 void (*cmd_umode)(Client *client, MessageTag *mtags, int parc, const char *parv[]);
 int (*register_user)(Client *client);

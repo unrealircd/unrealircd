@@ -38,7 +38,7 @@ CMD_FUNC(cmd_mlock);
 void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc, const char *parv[], time_t sendts, int samode);
 MultiLineMode *_set_mode(Channel *channel, Client *client, int parc, const char *parv[], u_int *pcount,
                        char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
-void _set_channel_mode(Channel *channel, const char *modes, const char *parameters);
+void _set_channel_mode(Channel *channel, MessageTag *mtags, const char *modes, const char *parameters);
 CMD_FUNC(_cmd_umode);
 
 /* local: */
@@ -1545,7 +1545,7 @@ int list_mode_request(Client *client, Channel *channel, const char *req)
 	return 1; /* handled */
 }
 
-void _set_channel_mode(Channel *channel, const char *modes, const char *parameters)
+void _set_channel_mode(Channel *channel, MessageTag *mtags, const char *modes, const char *parameters)
 {
 	char buf[512];
 	char *p, *param;
@@ -1561,7 +1561,7 @@ void _set_channel_mode(Channel *channel, const char *modes, const char *paramete
 	myparv[myparc] = NULL;
 
 	SetULine(&me); // hack for crash.. set ulined so no access checks.
-	do_mode(channel, &me, NULL, myparc, (const char **)myparv, 0, 0);
+	do_mode(channel, &me, mtags, myparc, (const char **)myparv, 0, 0);
 	ClearULine(&me); // and clear it again..
 
 	for (i = 0; i < myparc; i++)

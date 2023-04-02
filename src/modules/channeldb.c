@@ -537,7 +537,7 @@ int read_channeldb(void)
 		safe_strdup(channel->topic_nick, topic_nick);
 		channel->topic_time = topic_time;
 		safe_strdup(channel->mode_lock, mode_lock);
-		set_channel_mode(channel, modes1, modes2);
+		set_channel_mode(channel, NULL, modes1, modes2);
 		R_SAFE(read_listmode(db, &channel->banlist));
 		R_SAFE(read_listmode(db, &channel->exlist));
 		R_SAFE(read_listmode(db, &channel->invexlist));

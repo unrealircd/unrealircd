@@ -750,7 +750,7 @@ extern MODVAR int (*can_join)(Client *client, Channel *channel, const char *key,
 extern MODVAR void (*do_mode)(Channel *channel, Client *client, MessageTag *mtags, int parc, const char *parv[], time_t sendts, int samode);
 extern MODVAR MultiLineMode *(*set_mode)(Channel *channel, Client *cptr, int parc, const char *parv[], u_int *pcount,
                             char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
-extern MODVAR void (*set_channel_mode)(Channel *channel, const char *modes, const char *parameters);
+extern MODVAR void (*set_channel_mode)(Channel *channel, MessageTag *mtags, const char *modes, const char *parameters);
 extern MODVAR void (*set_channel_topic)(Client *client, Channel *channel, MessageTag *recv_mtags, const char *topic, const char *set_by, time_t set_at);
 extern MODVAR void (*cmd_umode)(Client *, MessageTag *, int, const char **);
 extern MODVAR int (*register_user)(Client *client);
