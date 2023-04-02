@@ -423,6 +423,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 	cm->sjoin_check = req.sjoin_check;
 	cm->local = req.local;
 	cm->unset_with_param = req.unset_with_param;
+	cm->flood_type_action = req.flood_type_action;
 	cm->owner = module;
 	cm->unloaded = 0;
 

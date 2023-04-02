@@ -321,6 +321,11 @@ struct Cmode {
 	/** Unsetting also eats/requires a parameter. Unusual, but possible. */
 	char unset_with_param;
 
+	/** Is this mode available for chanmode +f, and if so for which flood type?
+	 * eg 'j' for join flood.
+	 */
+	char flood_type_action;
+
 	/** Is this mode being unloaded?
 	 * This is set to 1 if the chanmode module providing this mode is unloaded
 	 * and we are waiting to see if in our new round of loads a "new" chanmode
@@ -328,7 +333,7 @@ struct Cmode {
 	 * should never be 0 outside an internal rehash.
 	 */
 	char unloaded;
-	
+
 	/** Slot number - Can be used instead of GETPARAMSLOT() */
 	int param_slot;
 	
@@ -355,6 +360,7 @@ typedef struct {
 	int		(*sjoin_check)(Channel *, void *, void *);
 	char		local;
 	char		unset_with_param;
+	char		flood_type_action;
 } CmodeInfo;
 
 /** Get a slot number for a param - eg GETPARAMSLOT('k') */

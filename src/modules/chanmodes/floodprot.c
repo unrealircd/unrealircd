@@ -98,8 +98,10 @@ struct MemberFlood {
 
 /* Maximum timers, iotw: max number of possible actions.
  * Currently this is: CNmMKiRd (8)
+ * But bumped to 15 because we now have cmode.flood_type_action
+ * so there could be more ;).
  */
-#define MAXCHMODEFACTIONS 8
+#define MAXCHMODEFACTIONS 15
 
 /** Per-channel flood protection settings and counters */
 struct ChannelFloodProtection {
@@ -653,6 +655,21 @@ int parse_channel_mode_flood_failed(const char **error_out, ChannelFloodProtecti
 	return 0;
 }
 
+int floodprot_valid_alternate_action(char action, FloodType *floodtype)
+{
+	Cmode *cm;
+
+	/* Built-in actions */
+	if (strchr(floodtype->actions, action))
+		return 1;
+
+	cm = find_channel_mode_handler(action);
+	if (cm && cm->flood_type_action == floodtype->letter)
+		return 1;
+
+	return 0;
+}
+
 /** Parse channel mode +f string.
  * @param param		The parameter string to parse
  * @param fld		The setting struct to fill, this MAY already contain data.
@@ -759,7 +776,7 @@ int parse_channel_mode_flood(const char *param, ChannelFloodProtection *fld, int
 
 		index = floodtype->index;
 		fld->limit[index] = v;
-		if (a && strchr(floodtype->actions, a))
+		if (a && floodprot_valid_alternate_action(a, floodtype))
 			fld->action[index] = a;
 		else
 			fld->action[index] = floodtype->default_action;

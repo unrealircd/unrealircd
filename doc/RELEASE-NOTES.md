@@ -80,6 +80,9 @@ in progress and not a stable version.
   `int soft` and for return value you will normally `return 0` here.
   You can `return 1` if you resist freeing, which is rare and only used by
   `+F` with set::anti-flood::channel::default-profile.
+* New `cmode.flood_type_action` which can be used to indicate a channel mode
+  can be used from +f/+F as an action. You need to specify for which
+  flood type your mode is, eg `cmode.flood_type_action = 'j';` for joinflood.
 * JSON-RPC supports
   [UNIX domain sockets](https://www.unrealircd.org/docs/JSON-RPC:Technical_documentation#UNIX_domain_socket)
   for making RPC calls. If those are used, we now split on `\n` (newline)
