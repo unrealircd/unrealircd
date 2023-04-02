@@ -325,17 +325,17 @@ static void init_default_channel_flood_profiles(void)
 	ChannelFloodProfile *f;
 
 	f = safe_alloc(sizeof(ChannelFloodProfile));
-	cmodef_put_param(&f->settings, "[10j#R10,30m#M10,7c#C15,10n#N15,10k#K15]:15");
+	cmodef_put_param(&f->settings, "[10j#R10,30m#M10,7c#C15,5n#N15,10k#K15]:15");
 	safe_strdup(f->settings.profile, "very-strict");
 	AddListItem(f, channel_flood_profiles);
 
 	f = safe_alloc(sizeof(ChannelFloodProfile));
-	cmodef_put_param(&f->settings, "[15j#R10,40m#M10,7c#C15,10n#N15,10k#K15]:15");
+	cmodef_put_param(&f->settings, "[15j#R10,40m#M10,7c#C15,8n#N15,10k#K15]:15");
 	safe_strdup(f->settings.profile, "strict");
 	AddListItem(f, channel_flood_profiles);
 
 	f = safe_alloc(sizeof(ChannelFloodProfile));
-	cmodef_put_param(&f->settings, "[30j#R10,40m#M10,7c#C15,10n#N15,10k#K15]:15");
+	cmodef_put_param(&f->settings, "[30j#R10,40m#M10,7c#C15,8n#N15,10k#K15]:15");
 	safe_strdup(f->settings.profile, "normal");
 	AddListItem(f, channel_flood_profiles);
 
@@ -1945,8 +1945,6 @@ int floodprot_server_quit(Client *client, MessageTag *mtags)
 		floodprot_splittime = TStime();
 	return 0;
 }
-
-// TODO: customizing of flood profiles (and adding new ones) in the config file
 
 // TODO: if flood profiles change during REHASH (or otherwise) they are not re-applied to channels
 
