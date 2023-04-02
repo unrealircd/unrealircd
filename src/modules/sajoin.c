@@ -52,8 +52,17 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-static void log_sajoin(Client *client, Client *target, const char *channels)
+static void log_sajoin(Client *client, MessageTag *mtags, Client *target, const char *channels)
 {
+	MessageTag *m = find_mtag(mtags, "unrealircd.org/issued-by");
+	if (m && m->value && !strncmp(m->value, "RPC:", 4))
+	{
+		unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", client, "SAJOIN: $issuer used SAJOIN to make $target join $channels",
+			   log_data_string("issuer", m->value),
+			   log_data_client("target", target),
+			   log_data_string("channels", channels));
+		return;
+	}
 	unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", client, "SAJOIN: $client used SAJOIN to make $target join $channels",
 		   log_data_client("target", target),
 		   log_data_string("channels", channels));
@@ -97,10 +106,10 @@ CMD_FUNC(cmd_sajoin)
 	/* Broadcast so other servers can log it appropriately as an SAJOIN */
 	sendto_server(client, 0, 0, recv_mtags, ":%s SAJOIN %s %s", client->id, target->id, parv[2]);
 
-	/* If it's not for our client, then simply pass on the message... */
+	/* If it's not for our client, then only log... */
 	if (!MyUser(target))
 	{
-		log_sajoin(client, target, parv[2]);
+		log_sajoin(client, recv_mtags, target, parv[2]);
 		return;
 	}
 
@@ -212,6 +221,7 @@ CMD_FUNC(cmd_sajoin)
 					channel = lp->channel;
 
 					new_message(target, NULL, &mtags);
+					mtag_add_issued_by(&mtags, client, recv_mtags);
 					sendto_channel(channel, target, NULL, 0, 0, SEND_LOCAL, mtags,
 					               ":%s PART %s :%s",
 					               target->name, channel->name, "Left all channels");
@@ -246,6 +256,7 @@ CMD_FUNC(cmd_sajoin)
 			 * Each with their own unique msgid.
 			 */
 			new_message(target, NULL, &mtags);
+			mtag_add_issued_by(&mtags, client, recv_mtags);
 			join_channel(channel, target, mtags, member_modes);
 			if (prefix)
 			{
@@ -277,7 +288,7 @@ CMD_FUNC(cmd_sajoin)
 		if (did_anything)
 		{
 			sendnotice(target, "*** You were forced to join %s", jbuf);
-			log_sajoin(client, target, jbuf);
+			log_sajoin(client, recv_mtags, target, jbuf);
 		}
 	}
 }

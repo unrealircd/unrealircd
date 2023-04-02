@@ -591,6 +591,7 @@ RPC_CALL_FUNC(rpc_user_join)
 	const char *args[5];
 	const char *nick, *channel, *key=NULL;
 	Client *acptr;
+	MessageTag *mtags = NULL;
 	int force = 0;
 
 	REQUIRE_PARAM_STRING("nick", nick);
@@ -604,6 +605,8 @@ RPC_CALL_FUNC(rpc_user_join)
 		return;
 	}
 
+	mtag_add_issued_by(&mtags, client, NULL);
+
 	args[0] = NULL;
 	args[1] = acptr->name;
 	args[2] = channel;
@@ -612,11 +615,13 @@ RPC_CALL_FUNC(rpc_user_join)
 	{
 		args[3] = key;
 		args[4] = NULL;
-		do_cmd(&me, NULL, "SVSJOIN", key ? 4 : 3, args);
+		do_cmd(&me, mtags, "SVSJOIN", key ? 4 : 3, args);
 	} else {
 		args[3] = NULL;
-		do_cmd(&me, NULL, "SAJOIN", 3, args);
+		do_cmd(&me, mtags, "SAJOIN", 3, args);
 	}
+
+	safe_free_message_tags(mtags);
 
 	/* Return result -- yeah this is always true, not so good.. :D
 	 * It is that way because we (this server) may not actually
