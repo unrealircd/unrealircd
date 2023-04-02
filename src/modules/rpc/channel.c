@@ -196,6 +196,7 @@ void rpc_channel_kick(Client *client, json_t *request, json_t *params)
 	json_t *result, *item;
 	const char *args[5];
 	const char *channelname, *nick, *reason;
+	MessageTag *mtags = NULL;
 	Channel *channel;
 	Client *acptr;
 	time_t set_at = 0;
@@ -221,7 +222,9 @@ void rpc_channel_kick(Client *client, json_t *request, json_t *params)
 	args[2] = acptr->name;
 	args[3] = reason;
 	args[4] = NULL;
-	do_cmd(&me, NULL, "KICK", reason ? 4 : 3, args);
+	mtag_add_issued_by(&mtags, client, NULL);
+	do_cmd(&me, mtags, "KICK", reason ? 4 : 3, args);
+	safe_free_message_tags(mtags);
 
 	/* Simply return success
 	 * TODO: actually we can do a find_member() check and such to see if the user is kicked!
