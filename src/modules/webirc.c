@@ -174,7 +174,7 @@ int webirc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			errors++;
 			continue;
 		}
-		if (!strcmp(cep->name, "mask"))
+		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "match"))
 		{
 			if (cep->value || cep->items)
 				has_mask = 1;
@@ -260,7 +260,7 @@ int webirc_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "mask"))
+		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "match"))
 			unreal_add_masks(&webirc->mask, cep);
 		else if (!strcmp(cep->name, "password"))
 			webirc->auth = AuthBlockToAuthConfig(cep);
