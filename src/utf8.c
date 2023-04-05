@@ -172,13 +172,20 @@ char *unrl_utf8_make_valid(const char *str, char *outputbuf, size_t outputbuflen
 	{
 		if (unrl_utf8_validate(remainder, &invalid))
 		{
-			if (!replaced && strictlen)
+			if (!replaced)
 			{
-				/* Caller wants us to go through the 'replaced' branch */
-				strlcpy(outputbuf, str, outputbuflen);
-				replaced = 1;
+				if (strictlen)
+				{
+					/* Caller wants us to go through the 'replaced' branch */
+					strlcpy(outputbuf, str, outputbuflen);
+					replaced = 1;
+				}
+				break;
+			} else {
+				/* We already replaced earlier, now just put the rest at the end. */
+				strlcat(outputbuf, remainder, outputbuflen);
+				break;
 			}
-			break;
 		}
 		replaced = 1;
 		valid_bytes = invalid - remainder;
