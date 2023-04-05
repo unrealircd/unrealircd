@@ -942,8 +942,14 @@ void *cmodef_dup_struct(void *r_in)
 
 	/* We can copy most members in a lazy way... */
 	memcpy(w, r, sizeof(ChannelFloodProtection));
-	/* ... except this one. */
-	w->profile = raw_strdup(r->profile);
+	/* ... except this one.
+	 * NOTE: can't use safe_strdup() here because
+	 * w->profile = r->profile at this point due
+	 * to the memcpy and safe_strdup() would free
+	 * it (and thus both).
+	 */
+	if (r->profile)
+		w->profile = raw_strdup(r->profile);
 	return (void *)w;
 }
 
