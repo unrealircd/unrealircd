@@ -286,6 +286,7 @@ extern void sendto_channel(Channel *channel, Client *from, Client *skip,
 extern void sendto_local_common_channels(Client *user, Client *skip,
                                          long clicap, MessageTag *mtags,
                                          FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,5,6)));
+extern void quit_sendto_local_common_channels(Client *user, MessageTag *mtags, const char *reason);
 extern void sendto_match_servs(Channel *, Client *, FORMAT_STRING(const char *), ...) __attribute__((format(printf,3,4)));
 extern void sendto_match_butone(Client *, Client *, const char *, int, MessageTag *,
     FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,6,7)));

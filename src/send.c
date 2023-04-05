@@ -631,6 +631,72 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
 	}
 }
 
+/** Send a QUIT message to all local users on all channels where
+ * the user 'user' is on.
+ * This is used for events such as a nick change and quit.
+ * @param user        The user and source of the message.
+ * @param skip        The client to skip (can be NULL)
+ * @param clicap      Client capability the recipient should have
+ *                    (this only works for local clients, we will
+ *                     always send the message to remote clients and
+ *                     assume the server there will handle it)
+ * @param mtags       The message tags to attach to this message.
+ * @param pattern     The pattern (eg: ":%s NICK %s").
+ * @param ...         The parameters for the pattern.
+ */
+void quit_sendto_local_common_channels(Client *user, MessageTag *mtags, const char *reason)
+{
+	va_list vl;
+	Membership *channels;
+	Member *users;
+	Client *acptr;
+	char sender[512];
+	MessageTag *m;
+	const char *real_quit_reason = NULL;
+
+	m = find_mtag(mtags, "unrealircd.org/real-quit-reason");
+	if (m && m->value)
+		real_quit_reason = m->value;
+
+	if (IsUser(user))
+	{
+		snprintf(sender, sizeof(sender), "%s!%s@%s",
+		         user->name, user->user->username, GetHost(user));
+	} else {
+		strlcpy(sender, user->name, sizeof(sender));
+	}
+
+	++current_serial;
+
+	if (user->user)
+	{
+		for (channels = user->user->channel; channels; channels = channels->next)
+		{
+			for (users = channels->channel->members; users; users = users->next)
+			{
+				acptr = users->client;
+
+				if (!MyConnect(acptr))
+					continue; /* only process local clients */
+
+				if (acptr->local->serial == current_serial)
+					continue; /* message already sent to this client */
+
+				if (!user_can_see_member(acptr, user, channels->channel))
+					continue; /* the sending user (QUITing) is 'invisible' -- skip */
+
+				acptr->local->serial = current_serial;
+				if (!reason)
+					sendto_one(acptr, mtags, ":%s QUIT", sender);
+				else if (!IsOper(acptr) || !real_quit_reason)
+					sendto_one(acptr, mtags, ":%s QUIT :%s", sender, reason);
+				else
+					sendto_one(acptr, mtags, ":%s QUIT :%s", sender, real_quit_reason);
+			}
+		}
+	}
+}
+
 /*
 ** send a msg to all ppl on servers/hosts that match a specified mask
 ** (used for enhanced PRIVMSGs)

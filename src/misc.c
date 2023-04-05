@@ -471,7 +471,10 @@ static void exit_one_client(Client *client, MessageTag *mtags_i, const char *com
 			RunHook(HOOKTYPE_REMOTE_QUIT, client, mtags_i, comment);
 
 		new_message_special(client, mtags_i, &mtags_o, ":%s QUIT", client->name);
-		sendto_local_common_channels(client, NULL, 0, mtags_o, ":%s QUIT :%s", client->name, comment);
+		if (find_mtag(mtags_o, "unrealircd.org/real-quit-reason"))
+			quit_sendto_local_common_channels(client, mtags_o, comment);
+		else
+			sendto_local_common_channels(client, NULL, 0, mtags_o, ":%s QUIT :%s", client->name, comment);
 		free_message_tags(mtags_o);
 
 		while ((mp = client->user->channel))
@@ -1158,9 +1161,10 @@ void banned_client(Client *client, const char *bantype, const char *reason, int 
 	char buf[512];
 	char *fmt = global ? iConf.reject_message_gline : iConf.reject_message_kline;
 	const char *vars[6], *values[6];
+	MessageTag *mtags = NULL;
 
 	if (!MyConnect(client))
-		abort(); /* hmm... or be more flexible? */
+		abort();
 
 	/* This was: "You are not welcome on this %s. %s: %s. %s" but is now dynamic: */
 	vars[0] = "bantype";
@@ -1199,18 +1203,28 @@ void banned_client(Client *client, const char *bantype, const char *reason, int 
 
 	/* The final message in the ERROR is shorter. */
 	if (HIDE_BAN_REASON && IsRegistered(client))
-		snprintf(buf, sizeof(buf), "Banned (%s)", bantype);
-	else
+	{
+		/* Hide the ban reason, but put the real reason in unrealircd.org/real-quit-reason */
+		MessageTag *m = safe_alloc(sizeof(MessageTag));
+		safe_strdup(m->name, "unrealircd.org/real-quit-reason");
 		snprintf(buf, sizeof(buf), "Banned (%s): %s", bantype, reason);
+		safe_strdup(m->value, buf);
+		AddListItem(m, mtags);
+		/* And the quit reason for anyone else, goes here.. */
+		snprintf(buf, sizeof(buf), "Banned (%s)", bantype);
+	} else {
+		snprintf(buf, sizeof(buf), "Banned (%s): %s", bantype, reason);
+	}
 
 	if (noexit != NO_EXIT_CLIENT)
 	{
-		exit_client(client, NULL, buf);
+		exit_client(client, mtags, buf);
 	} else {
 		/* Special handling for direct Z-line code */
 		send_raw_direct(client, "ERROR :Closing Link: [%s] (%s)",
 		           client->ip, buf);
 	}
+	safe_free_message_tags(mtags);
 }
 
 /** Our stpcpy implementation - discouraged due to lack of bounds checking */

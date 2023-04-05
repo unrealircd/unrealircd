@@ -82,6 +82,7 @@ MODULES= \
 	extended-monitor.so geoip_csv.so \
 	geoip_base.so extjwt.so tline.so \
 	standard-replies.so issued-by-tag.so \
+	real-quit-reason.so \
 	$(GEOIP_CLASSIC_OBJECTS) $(GEOIP_MAXMIND_OBJECTS)
 
 MODULEFLAGS=@MODULEFLAGS@
