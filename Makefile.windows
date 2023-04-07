@@ -266,6 +266,7 @@ DLL_FILES=\
  src/modules/extbans/country.dll \
  src/modules/extbans/inchannel.dll \
  src/modules/extbans/join.dll \
+ src/modules/extbans/flood.dll \
  src/modules/extbans/msgbypass.dll \
  src/modules/extbans/nickchange.dll \
  src/modules/extbans/operclass.dll \
@@ -337,6 +338,15 @@ DLL_FILES=\
  src/modules/require-module.dll \
  src/modules/restrict-commands.dll \
  src/modules/rmtkl.dll \
+ src/modules/rpc/channel.dll \
+ src/modules/rpc/name_ban.dll \
+ src/modules/rpc/rpc.dll \
+ src/modules/rpc/stats.dll \
+ src/modules/rpc/server.dll \
+ src/modules/rpc/server_ban.dll \
+ src/modules/rpc/server_ban_exception.dll \
+ src/modules/rpc/spamfilter.dll \
+ src/modules/rpc/user.dll \
  src/modules/rules.dll \
  src/modules/sajoin.dll \
  src/modules/samode.dll \
@@ -886,6 +896,9 @@ src/modules/extbans/inchannel.dll: src/modules/extbans/inchannel.c $(INCLUDES)
 src/modules/extbans/join.dll: src/modules/extbans/join.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/extbans/join.c /Fesrc/modules/extbans/ /Fosrc/modules/extbans/ /Fdsrc/modules/extbans/join.pdb $(MODLFLAGS)
 
+src/modules/extbans/flood.dll: src/modules/extbans/flood.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/extbans/flood.c /Fesrc/modules/extbans/ /Fosrc/modules/extbans/ /Fdsrc/modules/extbans/flood.pdb $(MODLFLAGS)
+
 src/modules/extbans/msgbypass.dll: src/modules/extbans/msgbypass.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/extbans/msgbypass.c /Fesrc/modules/extbans/ /Fosrc/modules/extbans/ /Fdsrc/modules/extbans/msgbypass.pdb $(MODLFLAGS)
 
@@ -1101,6 +1114,33 @@ src/modules/restrict-commands.dll: src/modules/restrict-commands.c $(INCLUDES)
 
 src/modules/rmtkl.dll: src/modules/rmtkl.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/rmtkl.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/rmtkl.pdb $(MODLFLAGS)
+
+src/modules/rpc/channel.dll: src/modules/rpc/channel.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/rpc/channel.c /Fesrc/modules/rpc/ /Fosrc/modules/rpc/ /Fdsrc/modules/rpc/channel.pdb $(MODLFLAGS)
+
+src/modules/rpc/name_ban.dll: src/modules/rpc/name_ban.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/rpc/name_ban.c /Fesrc/modules/rpc/ /Fosrc/modules/rpc/ /Fdsrc/modules/rpc/name_ban.pdb $(MODLFLAGS)
+
+src/modules/rpc/rpc.dll: src/modules/rpc/rpc.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/rpc/rpc.c /Fesrc/modules/rpc/ /Fosrc/modules/rpc/ /Fdsrc/modules/rpc/rpc.pdb $(MODLFLAGS)
+
+src/modules/rpc/stats.dll: src/modules/rpc/stats.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/rpc/stats.c /Fesrc/modules/rpc/ /Fosrc/modules/rpc/ /Fdsrc/modules/rpc/stats.pdb $(MODLFLAGS)
+
+src/modules/rpc/server.dll: src/modules/rpc/server.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/rpc/server.c /Fesrc/modules/rpc/ /Fosrc/modules/rpc/ /Fdsrc/modules/rpc/server.pdb $(MODLFLAGS)
+
+src/modules/rpc/server_ban.dll: src/modules/rpc/server_ban.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/rpc/server_ban.c /Fesrc/modules/rpc/ /Fosrc/modules/rpc/ /Fdsrc/modules/rpc/server_ban.pdb $(MODLFLAGS)
+
+src/modules/rpc/server_ban_exception.dll: src/modules/rpc/server_ban_exception.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/rpc/server_ban_exception.c /Fesrc/modules/rpc/ /Fosrc/modules/rpc/ /Fdsrc/modules/rpc/server_ban_exception.pdb $(MODLFLAGS)
+
+src/modules/rpc/spamfilter.dll: src/modules/rpc/spamfilter.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/rpc/spamfilter.c /Fesrc/modules/rpc/ /Fosrc/modules/rpc/ /Fdsrc/modules/rpc/spamfilter.pdb $(MODLFLAGS)
+
+src/modules/rpc/user.dll: src/modules/rpc/user.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/rpc/user.c /Fesrc/modules/rpc/ /Fosrc/modules/rpc/ /Fdsrc/modules/rpc/user.pdb $(MODLFLAGS)
 
 src/modules/rules.dll: src/modules/rules.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/rules.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/rules.pdb $(MODLFLAGS)
