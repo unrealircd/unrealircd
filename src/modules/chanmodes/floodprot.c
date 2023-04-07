@@ -2042,16 +2042,43 @@ void reapply_profiles(void)
 		ChannelFloodProtection *fld = GETPARASTRUCT(channel, 'F');
 		ChannelFloodProtection *base;
 
-		if (!fld)
+		if (channel->mode.mode & EXTMODE_FLOOD_PROFILE)
 		{
-			/* Is there a default profile? Then set it on channels that don't have +F */
+			/* Channel is +F: simply re-apply the setting the +F <profile> */
+			base = get_channel_flood_profile(fld->profile);
+			if (base)
+				inherit_settings(base, fld);
+		} else
+		{
+			/* Channel is -F */
 			if (cfg.default_profile)
-				cmodef_channel_create(channel);
-			continue;
+			{
+				/* We are -F and set::anti-flood::channel::default-profile
+				 * is configured, so apply it or re-apply it.
+				 */
+				if (!fld)
+				{
+					cmodef_channel_create(channel);
+				} else {
+					base = get_channel_flood_profile(cfg.default_profile);
+					if (base)
+					{
+						inherit_settings(base, fld);
+						safe_strdup(fld->profile, cfg.default_profile);
+					}
+				}
+			} else {
+				if (fld)
+				{
+					/* Not +F, previously we had a default profile
+					 * and now set::anti-flood::channel::default-profile
+					 * is unset, so remove the flood profile.
+					 */
+					cmodef_free_param(fld, 0);
+					GETPARASTRUCT(channel, 'F') = NULL;
+				}
+			}
 		}
-		base = get_channel_flood_profile(fld->profile);
-		if (base)
-			inherit_settings(base, fld);
 	}
 }
 
