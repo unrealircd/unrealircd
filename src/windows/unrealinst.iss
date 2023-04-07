@@ -57,6 +57,7 @@ Source: "src\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion sign
 Source: "src\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags: ignoreversion signonce
 Source: "src\modules\usermodes\*.dll"; DestDir: "{app}\modules\usermodes"; Flags: ignoreversion signonce
 Source: "src\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ignoreversion signonce
+Source: "src\modules\rpc\*.dll"; DestDir: "{app}\modules\rpc"; Flags: ignoreversion signonce
 Source: "src\modules\third\*.dll"; DestDir: "{app}\modules\third"; Flags: ignoreversion skipifsourcedoesntexist signonce
 
 ; Libraries
