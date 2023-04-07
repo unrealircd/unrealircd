@@ -180,6 +180,7 @@ int parse_channel_mode_flood(const char *param, ChannelFloodProtection *fld, int
 int parse_channel_mode_flood_failed(const char **error_out, ChannelFloodProtection *fld, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,3,4)));
 int floodprot_server_quit(Client *client, MessageTag *mtags);
 void inherit_settings(ChannelFloodProtection *from, ChannelFloodProtection *to);
+void reapply_profiles(void);
 
 MOD_TEST()
 {
@@ -263,6 +264,7 @@ MOD_LOAD()
 	EventAdd(modinfo->handle, "modef_event", modef_event, NULL, 10000, 0);
 	CommandOverrideAdd(modinfo->handle, "MODE", 0, floodprot_override_mode);
 	floodprot_rehash_complete();
+	reapply_profiles();
 	return MOD_SUCCESS;
 }
 
@@ -2031,7 +2033,21 @@ int floodprot_server_quit(Client *client, MessageTag *mtags)
 	return 0;
 }
 
-// TODO: if flood profiles change during REHASH (or otherwise) they are not re-applied to channels
+void reapply_profiles(void)
+{
+	Channel *channel;
+
+	for (channel = channels; channel; channel=channel->nextch)
+	{
+		ChannelFloodProtection *fld = GETPARASTRUCT(channel, 'F');
+		ChannelFloodProtection *base;
+		if (!fld)
+			continue;
+		base = get_channel_flood_profile(fld->profile);
+		if (base)
+			inherit_settings(base, fld);
+	}
+}
 
 // TODO: handle mismatch of flood profiles between servers
 
