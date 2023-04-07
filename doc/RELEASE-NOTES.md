@@ -13,7 +13,7 @@ You can help us by testing this release and reporting any issues at https://bugs
     This so end-users can simply choose an `+F` profile without having to learn
     the complex channel mode `+f`.
     * For example `+F normal` effectively results in
-      `[7c#C15,30j#R10,10k#K15,40m#M10,10n#N15]:15`
+      `[7c#C15,30j#R10,10k#K15,40m#M10,8n#N15]:15`
     * Multiple profiles are available and changing them is possible,
       see [the documentation](https://www.unrealircd.org/docs/Channel_anti-flood_settings).
     * Any settings in mode `+f` will override the ones of the `+F` profile.
