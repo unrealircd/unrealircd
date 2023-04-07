@@ -1,7 +1,9 @@
-UnrealIRCd 6.1.0-git
+UnrealIRCd 6.1.0-rc1
 =================
-This is the git version (development version) for future 6.1.0. This is work
-in progress and not a stable version.
+This is the first Release Candidate for future 6.1.0. It is not a "stable version".
+The stable 6.1.0 version is scheduled for May, 2023.
+
+You can help us by testing this release and reporting any issues at https://bugs.unrealircd.org/.
 
 ### Enhancements:
 * Channel flood protection improvements:
@@ -40,7 +42,7 @@ in progress and not a stable version.
       them, then you could disable this feature by setting the amount of seconds
       to `0`. This because in such a scenario only 1/5th (20%) of the users
       would reconnect and hopefully don't trigger +f/+F join floods.
-  * All these features only work properly if all servers are on 6.1.0-git or later.
+  * All these features only work properly if all servers are on 6.1.0-rc1 or later.
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
   * Logging of JSON-RPC requests (eg. via snomask `+R`) has been improved,
     it now shows:
@@ -85,7 +87,7 @@ in progress and not a stable version.
   flood type your mode is, eg `cmode.flood_type_action = 'j';` for joinflood.
 * JSON-RPC supports
   [UNIX domain sockets](https://www.unrealircd.org/docs/JSON-RPC:Technical_documentation#UNIX_domain_socket)
-  for making RPC calls. If those are used, we now split on `\n` (newline)
+  for making RPC calls. If this is used, we now split on `\n` (newline)
   so multiple parallel requests can be handled properly.
 
 UnrealIRCd 6.0.7
