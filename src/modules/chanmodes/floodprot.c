@@ -2041,8 +2041,14 @@ void reapply_profiles(void)
 	{
 		ChannelFloodProtection *fld = GETPARASTRUCT(channel, 'F');
 		ChannelFloodProtection *base;
+
 		if (!fld)
+		{
+			/* Is there a default profile? Then set it on channels that don't have +F */
+			if (cfg.default_profile)
+				cmodef_channel_create(channel);
 			continue;
+		}
 		base = get_channel_flood_profile(fld->profile);
 		if (base)
 			inherit_settings(base, fld);
