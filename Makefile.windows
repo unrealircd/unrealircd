@@ -331,6 +331,7 @@ DLL_FILES=\
  src/modules/plaintext-policy.dll \
  src/modules/protoctl.dll \
  src/modules/quit.dll \
+ src/modules/real-quit-reason.dll \
  src/modules/reply-tag.dll \
  src/modules/reputation.dll \
  src/modules/require-module.dll \
@@ -1082,6 +1083,9 @@ src/modules/protoctl.dll: src/modules/protoctl.c $(INCLUDES)
 
 src/modules/quit.dll: src/modules/quit.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/quit.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/quit.pdb $(MODLFLAGS)
+
+src/modules/real-quit-reason.dll: src/modules/real-quit-reason.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/real-quit-reason.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/real-quit-reason.pdb $(MODLFLAGS)
 
 src/modules/reply-tag.dll: src/modules/reply-tag.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/reply-tag.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/reply-tag.pdb $(MODLFLAGS)
