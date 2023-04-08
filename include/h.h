@@ -1268,7 +1268,7 @@ extern const char *log_type_valtostring(LogType v);
 #endif
 extern void do_unreal_log(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, const char *msg, ...) __attribute__((format(printf,5,0)));
 extern void do_unreal_log_raw(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, const char *msg, ...);
-extern void do_unreal_log_internal_from_remote(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized, Client *from_server);
+extern void do_unreal_log_internal_from_remote(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, json_t *json, const char *json_serialized, Client *from_server);
 extern LogData *log_data_string(const char *key, const char *str);
 extern LogData *log_data_char(const char *key, const char c);
 extern LogData *log_data_integer(const char *key, int64_t integer);
@@ -1291,6 +1291,9 @@ extern const char *log_level_valtostring(LogLevel loglevel);
 extern LogLevel log_level_stringtoval(const char *str);
 extern int valid_event_id(const char *s);
 extern int valid_subsystem(const char *s);
+extern LogSource *add_log_source(const char *str);
+extern void free_log_sources(LogSource *l);
+extern int log_sources_match(LogSource *logsource, LogLevel loglevel, const char *subsystem, const char *event_id, int matched_already);
 extern const char *timestamp_iso8601_now(void);
 extern const char *timestamp_iso8601(time_t v);
 extern int is_valid_snomask(char c);

@@ -1839,11 +1839,12 @@ int hooktype_tkl_del(Client *client, TKL *tkl);
  * @param subsystem		Subsystem (eg "operoverride")
  * @param event_id		Event ID (eg "SAJOIN_COMMAND")
  * @param msg			Message(s) in text form
- * @param json_serialized	The associated JSON text
+ * @param json			The JSON log entry
+ * @param json_serialized	The serialized JSON log entry (as a string)
  * @param timebuf		The [xxxx] time buffer, for convenience
  * @return The return value is ignored (use return 0)
  */
-int hooktype_log(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized, const char *timebuf);
+int hooktype_log(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, json_t *json, const char *json_serialized, const char *timebuf);
 
 /** Called when a local user matches a spamfilter (function prototype for HOOKTYPE_LOCAL_SPAMFILTER).
  * @param client		The client

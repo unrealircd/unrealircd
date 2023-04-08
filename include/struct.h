@@ -1443,6 +1443,7 @@ struct RPCClient {
 	char *rpc_user; /**< Name of the rpc-user block after authentication, NULL during pre-auth */
 	char *issuer; /**< Optional name of the issuer, set by rpc.set_issuer(), eg logged in user on admin panel, can be NULL */
 	json_t *rehash_request; /**< If a REHASH (request) is currently running, otherwise NULL */
+	LogSource *log_sources; /**< Subscribed to which log sources */
 };
 
 struct MessageTag {

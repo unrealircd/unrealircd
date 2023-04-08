@@ -58,6 +58,11 @@ You can help us by testing this release and reporting any issues at https://bugs
     and [User](https://www.unrealircd.org/docs/JSON-RPC:User#Structure_of_a_client_object)
     response object will be. Especially useful if you don't need all the
     details in the list calls.
+  * New JSON-RPC methods
+    [`log.subscribe`](https://www.unrealircd.org/docs/JSON-RPC:Log#log.subscribe) and
+    [`log.unsubscribe`](https://www.unrealircd.org/docs/JSON-RPC:Log#log.unsubscribe)
+    to allow real-time streaming of
+    [JSON log events](https://www.unrealircd.org/docs/JSON_logging).
   * New JSON-RPC method
     [`rpc.set_issuer`](https://www.unrealircd.org/docs/JSON-RPC:Rpc#rpc.set_issuer)
     to indiciate who is actually issuing the requests. The admin panel uses this

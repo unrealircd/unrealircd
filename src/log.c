@@ -880,7 +880,7 @@ literal:
 }
 
 /** Do the actual writing to log files */
-void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized, Client *from_server)
+void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, json_t *json, const char *json_serialized, Client *from_server)
 {
 	static time_t last_log_file_warning = 0;
 	Log *l;
@@ -893,7 +893,7 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 
 	snprintf(timebuf, sizeof(timebuf), "[%s] ", myctime(TStime()));
 
-	RunHook(HOOKTYPE_LOG, loglevel, subsystem, event_id, msg, json_serialized, timebuf);
+	RunHook(HOOKTYPE_LOG, loglevel, subsystem, event_id, msg, json, json_serialized, timebuf);
 
 	if (!loop.forked && (loglevel > ULOG_DEBUG))
 	{
@@ -1535,7 +1535,7 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 
 	/* Now call all the loggers: */
 
-	do_unreal_log_disk(loglevel, subsystem, event_id, mmsg, json_serialized, from_server);
+	do_unreal_log_disk(loglevel, subsystem, event_id, mmsg, j, json_serialized, from_server);
 
 	if ((loop.rehashing == 2) || !strcmp(subsystem, "config"))
 		do_unreal_log_control(loglevel, subsystem, event_id, mmsg, j, json_serialized, from_server);
@@ -1572,14 +1572,14 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 }
 
 void do_unreal_log_internal_from_remote(LogLevel loglevel, const char *subsystem, const char *event_id,
-                                        MultiLine *msg, const char *json_serialized, Client *from_server)
+                                        MultiLine *msg, json_t *json, const char *json_serialized, Client *from_server)
 {
 	if (unreal_log_recursion_trap)
 		return;
 	unreal_log_recursion_trap = 1;
 
 	/* Call the disk loggers */
-	do_unreal_log_disk(loglevel, subsystem, event_id, msg, json_serialized, from_server);
+	do_unreal_log_disk(loglevel, subsystem, event_id, msg, json, json_serialized, from_server);
 
 	/* And to IRC */
 	do_unreal_log_opers(loglevel, subsystem, event_id, msg, json_serialized, from_server);

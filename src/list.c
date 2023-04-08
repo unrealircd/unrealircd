@@ -147,6 +147,19 @@ Client *make_client(Client *from, Client *servr)
 	return client;
 }
 
+/** Free the client->rpc struct.
+ * NOTE: if you want to fully free the entire client, call free_client()
+ */
+void free_client_rpc(Client *client)
+{
+	safe_free(client->rpc->rpc_user);
+	safe_free(client->rpc->issuer);
+	if (client->rpc->rehash_request)
+		json_decref(client->rpc->rehash_request);
+	free_log_sources(client->rpc->log_sources);
+	safe_free(client->rpc);
+}
+
 void free_client(Client *client)
 {
 	if (!list_empty(&client->client_node))
@@ -191,15 +204,10 @@ void free_client(Client *client)
 			del_from_id_hash_table(client->id, client);
 		}
 	}
+
 	if (client->rpc)
-	{
-		safe_free(client->rpc->rpc_user);
-		safe_free(client->rpc->issuer);
-		if (client->rpc->rehash_request)
-			json_decref(client->rpc->rehash_request);
-		safe_free(client->rpc);
-	}
-	
+		free_client_rpc(client);
+
 	safe_free(client->ip);
 
 	mp_pool_release(client);

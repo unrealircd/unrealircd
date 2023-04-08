@@ -157,7 +157,7 @@ CMD_FUNC(cmd_slog)
 	json_serialized = json_dumps(j, JSON_COMPACT);
 
 	if (json_serialized)
-		do_unreal_log_internal_from_remote(loglevel, subsystem, event_id, mmsg, json_serialized, client);
+		do_unreal_log_internal_from_remote(loglevel, subsystem, event_id, mmsg, j, json_serialized, client);
 
 	/* Broadcast to the other servers */
 	sendto_server(client, 0, 0, recv_mtags, ":%s SLOG %s %s %s :%s",
