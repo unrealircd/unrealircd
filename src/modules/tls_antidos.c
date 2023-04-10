@@ -81,7 +81,7 @@ void ssl_info_callback(const SSL *ssl, int where, int ret)
 			e->n++;
 			if (e->n >= HANDSHAKE_LIMIT_COUNT)
 			{
-				unreal_log(ULOG_INFO, "flood", "TLS_HANDSHAKE_FLOOD", client, "TLS Handshake flood detected from $client -- killed");
+				unreal_log(ULOG_INFO, "flood", "TLS_HANDSHAKE_FLOOD", client, "TLS Handshake flood detected from $client.details -- killed");
 				dead_socket(client, "TLS Handshake flood detected");
 			}
 		}
