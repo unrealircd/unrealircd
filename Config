@@ -527,6 +527,29 @@ else
 	SSLDIR=`eval echo $cc` # modified
 fi
 
+if [ "$SSLDIR" != "" -a "$SSLDIR" != "/usr" ]; then
+	echo ""
+	echo "You answered previous question manually. Just note that if the library is not"
+	echo "in your default library path then UnrealIRCd may fail to start with an error"
+	echo "that it cannot find certain .so files (libraries). In that case you would have"
+	echo "to either set the LD_LIBARY_PATH environment variable, or you could update the"
+	echo "Makefile to link with -Wl,-rpath,$SSLDIR or similar."
+	echo ""
+	if [ "$SSLDIR" = "/usr/local" ]; then
+		echo "**** CAUTION ****"
+		echo "You have chosen to use OpenSSL from /usr/local. Just be aware that if you"
+		echo "use the LD_LIBRARY_PATH or -Wl,-rpath,$SSLDIR from above,"
+		echo "that you are diverting OTHER libraries to that path as well."
+		echo "It's not only loading OpenSSL from /usr/local but also potentially other"
+		echo "libraries like PCRE2, Jansson, or any of the other libraries that"
+		echo "UnrealIRCd uses (including dependencies about 40 libs in total!)"
+		echo "All that can result in weird issues and crashes!"
+		echo ""
+	fi
+	echo "Press enter to continue with the rest of the questions, or CTRL+C to abort."
+	read cc
+fi
+
 TEST=""
 while [ -z "$TEST" ] ; do
 	if [ "$REMOTEINC" = "1" ] ; then
