@@ -67,6 +67,10 @@ You can help us by testing this release and reporting any issues at https://bugs
     [`rpc.set_issuer`](https://www.unrealircd.org/docs/JSON-RPC:Rpc#rpc.set_issuer)
     to indiciate who is actually issuing the requests. The admin panel uses this
     to communicate who is logged in to the panel so this info can be used in logging.
+  * New JSON-RPC methods
+    [`rpc.add_timer`](https://www.unrealircd.org/docs/JSON-RPC:Rpc#rpc.add_timer) and
+    [`rpc.del_timer`](https://www.unrealircd.org/docs/JSON-RPC:Rpc#rpc.del_timer)
+    so you can schedule JSON-RPC calls, like stats.get, to be executed every xyz msec.
 * A new message tag `unrealircd.org/issued-by` which is IRCOp-only (and
   used intra-server) to communicate who actually issued a command.
   See [docs](https://www.unrealircd.org/issued-by).

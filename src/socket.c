@@ -659,7 +659,6 @@ void close_connection(Client *client)
 		--OpenFiles;
 		DBufClear(&client->local->sendQ);
 		DBufClear(&client->local->recvQ);
-
 	}
 
 	client->direction = NULL;

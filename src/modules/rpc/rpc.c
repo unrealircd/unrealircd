@@ -10,7 +10,7 @@
 ModuleHeader MOD_HEADER
   = {
 	"rpc/rpc",
-	"1.0.3",
+	"1.0.4",
 	"RPC module for remote management",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -20,6 +20,9 @@ ModuleHeader MOD_HEADER
  * As we use the "RPC:" prefix it is nicklen minus that.
  */
 #define RPCUSERLEN (NICKLEN-4)
+
+/** Timers can be minimum every <this> msec */
+#define RPC_MINIMUM_TIMER_MSEC 250
 
 /* Structs */
 typedef struct RPCUser RPCUser;
@@ -47,6 +50,16 @@ struct OutstandingRRPC {
 	char source[IDLEN+1];
 	char destination[IDLEN+1];
 	char *requestid;
+};
+
+typedef struct RPCTimer RPCTimer;
+struct RPCTimer {
+	RPCTimer *prev, *next;
+	long every_msec;
+	Client *client;
+	char *timer_id;
+	json_t *request;
+	struct timeval last_run;
 };
 
 /* Forward declarations */
@@ -79,13 +92,19 @@ int rpc_parse_auth_basic_auth(Client *client, WebRequest *web, char **username, 
 int rpc_parse_auth_uri(Client *client, WebRequest *web, char **username, char **password);
 RPC_CALL_FUNC(rpc_rpc_info);
 RPC_CALL_FUNC(rpc_rpc_set_issuer);
+RPC_CALL_FUNC(rpc_rpc_add_timer);
+RPC_CALL_FUNC(rpc_rpc_del_timer);
 CMD_FUNC(cmd_rrpc);
 EVENT(rpc_remote_timeout);
+EVENT(rpc_do_timers);
 json_t *rrpc_data(RRPC *r);
 void free_rrpc_list(ModData *m);
 void free_outstanding_rrpc_list(ModData *m);
+void free_rpc_timer(RPCTimer *r);
+void free_rpc_timer_list(ModData *m);
 void rpc_call_remote(RRPC *r);
 void rpc_response_remote(RRPC *r);
+int rpc_handle_free_client(Client *client);
 int rpc_handle_server_quit(Client *client, MessageTag *mtags);
 int rpc_json_expand_client_server(Client *client, int detail, json_t *j, json_t *child);
 const char *rrpc_md_serialize(ModData *m);
@@ -101,6 +120,7 @@ ModDataInfo *websocket_md = NULL; /* (imported) */
 RPCUser *rpcusers = NULL;
 RRPC *rrpc_list = NULL;
 OutstandingRRPC *outstanding_rrpc_list = NULL;
+RPCTimer *rpc_timer_list = NULL;
 ModDataInfo *rrpc_md;
 
 MOD_TEST()
@@ -137,6 +157,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT, 0, rpc_pre_local_handshake_timeout);
 	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, INT_MIN, rpc_packet_in_unix_socket);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_QUIT, 0, rpc_handle_server_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_FREE_CLIENT, 0, rpc_handle_free_client);
 	HookAdd(modinfo->handle, HOOKTYPE_JSON_EXPAND_CLIENT_SERVER, 0, rpc_json_expand_client_server);
 
 	memset(&r, 0, sizeof(r));
@@ -159,6 +180,26 @@ MOD_INIT()
 		return MOD_FAILED;
 	}
 
+	memset(&r, 0, sizeof(r));
+	r.method = "rpc.add_timer";
+	r.loglevel = ULOG_DEBUG;
+	r.call = rpc_rpc_add_timer;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc.add_timer] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+
+	memset(&r, 0, sizeof(r));
+	r.method = "rpc.del_timer";
+	r.loglevel = ULOG_DEBUG;
+	r.call = rpc_rpc_del_timer;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc.del_timer] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "rrpc";
 	mreq.type = MODDATATYPE_CLIENT;
@@ -176,10 +217,12 @@ MOD_INIT()
 
 	LoadPersistentPointer(modinfo, rrpc_list, free_rrpc_list);
 	LoadPersistentPointer(modinfo, outstanding_rrpc_list, free_outstanding_rrpc_list);
+	LoadPersistentPointer(modinfo, rpc_timer_list, free_rpc_timer_list);
 
 	CommandAdd(modinfo->handle, "RRPC", cmd_rrpc, MAXPARA, CMD_SERVER);
 
 	EventAdd(modinfo->handle, "rpc_remote_timeout", rpc_remote_timeout, NULL, 1000, 0);
+	EventAdd(modinfo->handle, "rpc_do_timers", rpc_do_timers, NULL, RPC_MINIMUM_TIMER_MSEC, 0);
 
 	/* Call MOD_LOAD very late, since we manage sockets, but depend on websocket_common */
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_UNLOAD-1);
@@ -227,6 +270,7 @@ MOD_UNLOAD()
 	free_config();
 	SavePersistentPointer(modinfo, rrpc_list);
 	SavePersistentPointer(modinfo, outstanding_rrpc_list);
+	SavePersistentPointer(modinfo, rpc_timer_list);
 	return MOD_SUCCESS;
 }
 
@@ -564,6 +608,8 @@ void rpc_call_text(Client *client, const char *readbuf, int len)
 
 void rpc_sendto(Client *client, const char *buf, int len)
 {
+	if (IsDead(client))
+		return;
 	if (MyConnect(client) && IsRPC(client) && WSU(client) && WSU(client)->handshake_completed)
 	{
 		/* Websocket */
@@ -799,62 +845,82 @@ void rpc_call_log(Client *client, RPCHandler *handler, json_t *request, const ch
 	}
 }
 
-/** Handle the RPC request: request is in JSON */
-void rpc_call(Client *client, json_t *request)
+/** Parse an RPC request, except that it does not validate 'params'.
+ * @param client	The client issuing the request
+ * @param mainrequest	The underlying request that we should send errors to (usually same as 'request')
+ * @param request	The request that needs parsing
+ * @param method	This will be filled in if successfully parsed
+ * @param handler	This will be filled in if the handler is found
+ * @retval 0		An error occured while parsing or the method was not found.
+ * @retval 1		All good. You still need to validate 'params', though.
+ */
+int parse_rpc_call(Client *client, json_t *mainrequest, json_t *request, const char **method, RPCHandler **handler)
 {
-	json_t *t;
 	const char *jsonrpc;
-	const char *method;
-	const char *str;
 	json_t *id;
-	json_t *params;
-	RPCHandler *handler;
+	const char *str;
+
+	*method = NULL;
+	*handler = NULL;
 
 	jsonrpc = json_object_get_string(request, "jsonrpc");
 	if (!jsonrpc || strcasecmp(jsonrpc, "2.0"))
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "Only JSON-RPC version 2.0 is supported");
-		return;
+		rpc_error(client, mainrequest, JSON_RPC_ERROR_INVALID_REQUEST, "Only JSON-RPC version 2.0 is supported");
+		return 0;
 	}
 
 	id = json_object_get(request, "id");
 	if (!id)
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "Missing 'id'");
-		return;
+		rpc_error(client, mainrequest, JSON_RPC_ERROR_INVALID_REQUEST, "Missing 'id'");
+		return 0;
 	}
 
 	if ((str = json_string_value(id)))
 	{
 		if (strlen(str) > 32)
 		{
-			rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "The 'id' cannot be longer than 32 characters in UnrealIRCd JSON-RPC");
-			return;
+			rpc_error(client, mainrequest, JSON_RPC_ERROR_INVALID_REQUEST, "The 'id' cannot be longer than 32 characters in UnrealIRCd JSON-RPC");
+			return 0;
 		}
 		if (strchr(str, '\n') || strchr(str, '\r'))
 		{
-			rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "The 'id' may not contain \n or \r in UnrealIRCd JSON-RPC");
-			return;
+			rpc_error(client, mainrequest, JSON_RPC_ERROR_INVALID_REQUEST, "The 'id' may not contain \n or \r in UnrealIRCd JSON-RPC");
+			return 0;
 		}
 	} else if (!json_is_integer(id))
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "The 'id' must be a string or an integer in UnrealIRCd JSON-RPC");
-		return;
+		rpc_error(client, mainrequest, JSON_RPC_ERROR_INVALID_REQUEST, "The 'id' must be a string or an integer in UnrealIRCd JSON-RPC");
+		return 0;
 	}
 
-	method = json_object_get_string(request, "method");
-	if (!method)
+	*method = json_object_get_string(request, "method");
+	if (!*method)
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_REQUEST, "Missing 'method' to call");
-		return;
+		rpc_error(client, mainrequest, JSON_RPC_ERROR_INVALID_REQUEST, "Missing 'method' to call");
+		return 0;
 	}
 
-	handler = RPCHandlerFind(method);
-	if (!handler)
+	*handler = RPCHandlerFind(*method);
+	if (!*handler)
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_METHOD_NOT_FOUND, "Unsupported method");
-		return;
+		rpc_error(client, mainrequest, JSON_RPC_ERROR_METHOD_NOT_FOUND, "Unsupported method");
+		return 0;
 	}
+
+	return 1;
+}
+
+/** Handle the RPC request: request is in JSON */
+void rpc_call(Client *client, json_t *request)
+{
+	const char *method;
+	json_t *params;
+	RPCHandler *handler;
+
+	if (!parse_rpc_call(client, request, request, &method, &handler))
+		return; /* Error already returned to caller */
 
 	params = json_object_get(request, "params");
 	if (params)
@@ -1181,6 +1247,51 @@ void free_outstanding_rrpc_list(ModData *m)
 		r_next = r->next;
 		free_outstanding_rrpc(r);
 	}
+}
+
+/** Remove timer from rpc_timer_list and free it */
+void free_rpc_timer(RPCTimer *r)
+{
+	json_decref(r->request);
+	DelListItem(r, rpc_timer_list);
+	safe_free(r);
+}
+
+/* Admin unloading the RPC module for good (not called on rehash) */
+void free_rpc_timer_list(ModData *m)
+{
+	RPCTimer *r, *r_next;
+
+	for (r = rpc_timer_list; r; r = r_next)
+	{
+		r_next = r->next;
+		free_rpc_timer(r);
+	}
+}
+
+/* Admin unloading the RPC module for good (not called on rehash) */
+void free_rpc_timers_for_user(Client *client)
+{
+	RPCTimer *r, *r_next;
+
+	for (r = rpc_timer_list; r; r = r_next)
+	{
+		r_next = r->next;
+		if (r->client == client)
+			free_rpc_timer(r);
+	}
+}
+
+RPCTimer *find_rpc_timer(Client *client, const char *timer_id)
+{
+	RPCTimer *r;
+
+	for (r = rpc_timer_list; r; r = r->next)
+	{
+		if ((r->client == client) && !strcmp(timer_id, r->timer_id))
+			return r;
+	}
+	return NULL;
 }
 
 /** When a server quits, cancel all the RPC requests to/from those clients */
@@ -1710,4 +1821,101 @@ int rpc_json_expand_client_server(Client *client, int detail, json_t *j, json_t 
 		json_array_append_new(rpc_modules, e);
 	}
 	return 0;
+}
+
+RPC_CALL_FUNC(rpc_rpc_add_timer)
+{
+	json_t *result;
+	json_t *subrequest;
+	long every_msec;
+	const char *timer_id;
+	const char *method;
+	RPCHandler *handler;
+	RPCTimer *timer;
+
+	REQUIRE_PARAM_INTEGER("every_msec", every_msec);
+	REQUIRE_PARAM_STRING("timer_id", timer_id);
+
+	subrequest = json_object_get(params, "request");
+	if (!subrequest)
+	{
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: '%s'", "request");
+		return;
+	}
+
+	if (every_msec < RPC_MINIMUM_TIMER_MSEC)
+	{
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS,
+		              "Value for every_msec may not be less than %d",
+		              (int)RPC_MINIMUM_TIMER_MSEC);
+		return;
+	}
+
+	/* Do some validation on the name */
+	if (!parse_rpc_call(client, request, subrequest, &method, &handler))
+		return; /* Error already returned to caller */
+
+	/* We don't validate 'params' here, but do so at runtime */
+
+	/* Check if a timer with that same name already exists FOR THIS CLIENT */
+	if (find_rpc_timer(client, timer_id))
+	{
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_ALREADY_EXISTS, "Timer already exists with timer_id '%s'", timer_id);
+		return;
+	}
+
+	timer = safe_alloc(sizeof(RPCTimer));
+	timer->every_msec = every_msec;
+	timer->client = client;
+	safe_strdup(timer->timer_id, timer_id);
+	json_incref(subrequest);
+	timer->request = subrequest;
+	AddListItem(timer, rpc_timer_list);
+	result = json_boolean(1);
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+EVENT(rpc_do_timers)
+{
+	RPCTimer *e, *e_next;
+
+	for (e = rpc_timer_list; e; e = e_next)
+	{
+		e_next = e->next;
+		if (minimum_msec_since_last_run(&e->last_run, e->every_msec))
+		{
+			rpc_call(e->client, e->request);
+		}
+		// TODO: maybe do counts as well?
+	}
+}
+
+/** Client being freed? If RPC then cancel timers, if any */
+int rpc_handle_free_client(Client *client)
+{
+	if (IsRPC(client))
+		free_rpc_timers_for_user(client);
+	return 0;
+}
+
+RPC_CALL_FUNC(rpc_rpc_del_timer)
+{
+	const char *timer_id;
+	RPCTimer *r;
+	json_t *result;
+
+	REQUIRE_PARAM_STRING("timer_id", timer_id);
+
+	r = find_rpc_timer(client, timer_id);
+	if (!r)
+	{
+		rpc_error_fmt(client, request, JSON_RPC_ERROR_NOT_FOUND, "Timer not found with timer_id '%s'", timer_id);
+		return;
+	}
+	free_rpc_timer(r);
+
+	result = json_boolean(1);
+	rpc_response(client, request, result);
+	json_decref(result);
 }
