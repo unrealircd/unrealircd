@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/stats",
-	"1.0.0",
+	"1.0.1",
 	"stats.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -46,11 +46,31 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-void rpc_stats_user(json_t *main)
+void json_expand_top_countries(json_t *main, const char *name, NameValuePrioList *geo)
+{
+	json_t *list = json_array();
+	json_t *item;
+
+	json_object_set_new(main, name, list);
+
+	for (; geo; geo = geo->next)
+	{
+		item = json_object();
+		json_object_set_new(item, "country", json_string_unreal(geo->name));
+		json_object_set_new(item, "count", json_integer(geo->priority));
+		json_array_append_new(list, item);
+	}
+}
+
+void rpc_stats_user(json_t *main, int detail)
 {
 	Client *client;
 	int total = 0, ulined = 0, oper = 0;
-	json_t *child = json_object();
+	json_t *child;
+	GeoIPResult *geo;
+	NameValuePrioList *top_countries = NULL;
+
+	child = json_object();
 	json_object_set_new(main, "user", child);
 
 	list_for_each_entry(client, &client_list, client_node)
@@ -62,6 +82,22 @@ void rpc_stats_user(json_t *main)
 				ulined++;
 			else if (IsOper(client))
 				oper++;
+			if (detail >= 1)
+			{
+				geo = geoip_client(client);
+				if (geo && geo->country_code)
+				{
+					NameValuePrioList *e = find_nvplist(top_countries, geo->country_code);
+					if (e)
+					{
+						DelListItem(e, top_countries);
+						e->priority++;
+						AddListItemPrio(e, top_countries, e->priority);
+					} else {
+						add_nvplist(&top_countries, 1, geo->country_code, NULL);
+					}
+				}
+			}
 		}
 	}
 
@@ -69,6 +105,8 @@ void rpc_stats_user(json_t *main)
 	json_object_set_new(child, "ulined", json_integer(ulined));
 	json_object_set_new(child, "oper", json_integer(oper));
 	json_object_set_new(child, "record", json_integer(irccounts.global_max));
+	if (detail >= 1)
+		json_expand_top_countries(child, "top_countries", top_countries);
 }
 
 void rpc_stats_channel(json_t *main)
@@ -162,10 +200,13 @@ void rpc_stats_get(Client *client, json_t *request, json_t *params)
 	json_t *result, *item;
 	const char *statsname;
 	Channel *stats;
+	int details;
+
+	OPTIONAL_PARAM_INTEGER("object_detail_level", details, 1);
 
 	result = json_object();
 	rpc_stats_server(result);
-	rpc_stats_user(result);
+	rpc_stats_user(result, details);
 	rpc_stats_channel(result);
 	rpc_stats_server_ban(result);
 	rpc_response(client, request, result);
