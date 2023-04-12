@@ -176,7 +176,12 @@ int websocket_handle_packet(Client *client, const char *readbuf, int length, int
 
 	/* actually 'fin' is unused.. we don't care. */
 
-	if (!masked)
+	/* Masked. According to RFC6455 page 29:
+	 * "All frames sent from client to server have this bit set to 1."
+	 * But in practice i see that for PONG this may not always be
+	 * true, so let's make an exception for that...
+	 */
+	if (!masked && (opcode != WSOP_PONG))
 	{
 		dead_socket(client, "WebSocket packet not masked");
 		return -1; /* Having the masked bit set is required (RFC6455 p29) */
@@ -228,7 +233,7 @@ int websocket_handle_packet(Client *client, const char *readbuf, int length, int
 		payload = payloadbuf;
 	} /* else payload is NULL */
 
-	if (len > 0)
+	if (masked && (len > 0))
 	{
 		/* Unmask this thing (page 33, section 5.3) */
 		int n;
