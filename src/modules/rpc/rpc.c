@@ -225,6 +225,8 @@ void free_config(void)
 MOD_UNLOAD()
 {
 	free_config();
+	SavePersistentPointer(modinfo, rrpc_list);
+	SavePersistentPointer(modinfo, outstanding_rrpc_list);
 	return MOD_SUCCESS;
 }
 
