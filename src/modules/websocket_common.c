@@ -161,6 +161,7 @@ int websocket_handle_packet(Client *client, const char *readbuf, int length, int
 	int total_packet_size;
 	char *payload = NULL;
 	static char payloadbuf[READBUF_SIZE];
+	int maskkeylen = 4;
 
 	if (length < 4)
 	{
@@ -187,13 +188,16 @@ int websocket_handle_packet(Client *client, const char *readbuf, int length, int
 		return -1; /* Having the masked bit set is required (RFC6455 p29) */
 	}
 
+	if (!masked)
+		maskkeylen = 0;
+
 	if (len == 127)
 	{
 		dead_socket(client, "WebSocket packet with insane size");
 		return -1; /* Packets requiring 64bit lengths are not supported. Would be insane. */
 	}
 
-	total_packet_size = len + 2 + 4; /* 2 for header, 4 for mask key, rest for payload */
+	total_packet_size = len + 2 + maskkeylen; /* 2 for header, 4 for mask key, rest for payload */
 
 	/* Early (minimal) length check */
 	if (length < total_packet_size)
@@ -215,17 +219,20 @@ int websocket_handle_packet(Client *client, const char *readbuf, int length, int
 		p += 2; /* advance pointer 2 bytes */
 
 		/* Need to check the length again, now it has changed: */
-		if (length < len + 4 + 4)
+		if (length < len + 4 + maskkeylen)
 		{
 			/* WebSocket frame too short */
 			return 0;
 		}
 		/* And update the packet size */
-		total_packet_size = len + 4 + 4; /* 4 for header, 4 for mask key, rest for payload */
+		total_packet_size = len + 4 + maskkeylen; /* 4 for header, 4 for mask key, rest for payload */
 	}
 
-	memcpy(maskkey, p, 4);
-	p+= 4;
+	if (masked)
+	{
+		memcpy(maskkey, p, maskkeylen);
+		p+= maskkeylen;
+	}
 
 	if (len > 0)
 	{
