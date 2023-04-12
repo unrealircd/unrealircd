@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/stats",
-	"1.0.1",
+	"1.0.2",
 	"stats.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -46,7 +46,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-void json_expand_top_countries(json_t *main, const char *name, NameValuePrioList *geo)
+void json_expand_countries(json_t *main, const char *name, NameValuePrioList *geo)
 {
 	json_t *list = json_array();
 	json_t *item;
@@ -57,7 +57,7 @@ void json_expand_top_countries(json_t *main, const char *name, NameValuePrioList
 	{
 		item = json_object();
 		json_object_set_new(item, "country", json_string_unreal(geo->name));
-		json_object_set_new(item, "count", json_integer(geo->priority));
+		json_object_set_new(item, "count", json_integer(0 - geo->priority));
 		json_array_append_new(list, item);
 	}
 }
@@ -68,7 +68,7 @@ void rpc_stats_user(json_t *main, int detail)
 	int total = 0, ulined = 0, oper = 0;
 	json_t *child;
 	GeoIPResult *geo;
-	NameValuePrioList *top_countries = NULL;
+	NameValuePrioList *countries = NULL;
 
 	child = json_object();
 	json_object_set_new(main, "user", child);
@@ -87,14 +87,14 @@ void rpc_stats_user(json_t *main, int detail)
 				geo = geoip_client(client);
 				if (geo && geo->country_code)
 				{
-					NameValuePrioList *e = find_nvplist(top_countries, geo->country_code);
+					NameValuePrioList *e = find_nvplist(countries, geo->country_code);
 					if (e)
 					{
-						DelListItem(e, top_countries);
-						e->priority++;
-						AddListItemPrio(e, top_countries, e->priority);
+						DelListItem(e, countries);
+						e->priority--;
+						AddListItemPrio(e, countries, e->priority);
 					} else {
-						add_nvplist(&top_countries, 1, geo->country_code, NULL);
+						add_nvplist(&countries, -1, geo->country_code, NULL);
 					}
 				}
 			}
@@ -106,7 +106,7 @@ void rpc_stats_user(json_t *main, int detail)
 	json_object_set_new(child, "oper", json_integer(oper));
 	json_object_set_new(child, "record", json_integer(irccounts.global_max));
 	if (detail >= 1)
-		json_expand_top_countries(child, "top_countries", top_countries);
+		json_expand_countries(child, "countries", countries);
 }
 
 void rpc_stats_channel(json_t *main)
