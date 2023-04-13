@@ -114,6 +114,9 @@ int rpc_log_hook(LogLevel loglevel, const char *subsystem, const char *event_id,
 	Client *client;
 	json_t *request = NULL;
 
+	if (!strcmp(subsystem, "rawtraffic"))
+		return 0;
+
 	list_for_each_entry(client, &unknown_list, lclient_node)
 	{
 		if (IsRPC(client) && client->rpc->log_sources &&

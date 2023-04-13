@@ -1433,6 +1433,9 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 	MultiLine *mmsg;
 	Client *from_server = NULL;
 
+	/* Set flag so json_string_unreal() uses more strict filter */
+	log_json_filter = 1;
+
 	if (loglevel_string == NULL)
 	{
 		do_unreal_log_norecursioncheck(ULOG_ERROR, "log", "BUG_LOG_LOGLEVEL", NULL,
@@ -1569,6 +1572,9 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 	safe_free_multiline(mmsg);
 	json_decref(j_details);
 	json_decref(j);
+
+	/* Turn off flag again */
+	log_json_filter = 0;
 }
 
 void do_unreal_log_internal_from_remote(LogLevel loglevel, const char *subsystem, const char *event_id,
@@ -1578,12 +1584,18 @@ void do_unreal_log_internal_from_remote(LogLevel loglevel, const char *subsystem
 		return;
 	unreal_log_recursion_trap = 1;
 
+	/* Set flag so json_string_unreal() uses more strict filter */
+	log_json_filter = 1;
+
 	/* Call the disk loggers */
 	do_unreal_log_disk(loglevel, subsystem, event_id, msg, json, json_serialized, from_server);
 
 	/* And to IRC */
 	do_unreal_log_opers(loglevel, subsystem, event_id, msg, json_serialized, from_server);
 	do_unreal_log_channels(loglevel, subsystem, event_id, msg, json_serialized, from_server);
+
+	/* Turn off flag again */
+	log_json_filter = 0;
 
 	unreal_log_recursion_trap = 0;
 }

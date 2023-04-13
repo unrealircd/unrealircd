@@ -1181,6 +1181,7 @@ extern void read_until(char **p, char *stopchars);
 extern int is_ip_valid(const char *ip);
 extern int is_file_readable(const char *file, const char *dir);
 /* json.c */
+extern int log_json_filter;
 extern json_t *json_string_unreal(const char *s);
 extern const char *json_object_get_string(json_t *j, const char *name);
 extern int json_object_get_integer(json_t *j, const char *name, int default_value);
