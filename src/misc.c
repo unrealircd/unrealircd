@@ -2559,6 +2559,7 @@ void server_reboot(const char *mesg)
 		WinExec(cmdLine, SW_SHOWDEFAULT);
 	}
 #endif
+	loop.terminating = 1;
 	unload_all_modules();
 #ifdef _WIN32
 	if (IsService)
