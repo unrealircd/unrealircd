@@ -430,6 +430,7 @@ DLL_FILES=\
  src/modules/whois.dll \
  src/modules/who_old.dll \
  src/modules/whowas.dll \
+ src/modules/whowasdb.dll \
  src/modules/whox.dll
 
 
@@ -1390,6 +1391,9 @@ src/modules/who_old.dll: src/modules/who_old.c $(INCLUDES)
 
 src/modules/whowas.dll: src/modules/whowas.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/whowas.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/whowas.pdb $(MODLFLAGS)
+
+src/modules/whowasdb.dll: src/modules/whowasdb.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/whowasdb.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/whowasdb.pdb $(MODLFLAGS)
 
 src/modules/whox.dll: src/modules/whox.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/whox.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/whox.pdb $(MODLFLAGS)

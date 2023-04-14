@@ -23,17 +23,30 @@
 // Consider making add_history an efunc? Or via a hook?
 // Some users may not want to load cmd_whowas at all.
 
-/* internally defined function */
-static void add_whowas_to_clist(WhoWas **, WhoWas *);
-static void del_whowas_from_clist(WhoWas **, WhoWas *);
-static void add_whowas_to_list(WhoWas **, WhoWas *);
-static void del_whowas_from_list(WhoWas **, WhoWas *);
+void add_whowas_to_clist(WhoWas **, WhoWas *);
+void del_whowas_from_clist(WhoWas **, WhoWas *);
+void add_whowas_to_list(WhoWas **, WhoWas *);
+void del_whowas_from_list(WhoWas **, WhoWas *);
 
 WhoWas MODVAR WHOWAS[NICKNAMEHISTORYLENGTH];
 WhoWas MODVAR *WHOWASHASH[WHOWAS_HASH_TABLE_SIZE];
 
 MODVAR int whowas_next = 0;
 
+void free_whowas(WhoWas *e)
+{
+	safe_free(e->name);
+	safe_free(e->hostname);
+	safe_free(e->virthost);
+	safe_free(e->realname);
+	safe_free(e->username);
+	safe_free(e->account);
+	e->servername = NULL;
+
+	if (e->online)
+		del_whowas_from_clist(&(e->online->user->whowas), e);
+	del_whowas_from_list(&WHOWASHASH[e->hashv], e);
+}
 void add_history(Client *client, int online)
 {
 	WhoWas *new;
@@ -41,19 +54,8 @@ void add_history(Client *client, int online)
 	new = &WHOWAS[whowas_next];
 
 	if (new->hashv != -1)
-	{
-		safe_free(new->name);
-		safe_free(new->hostname);
-		safe_free(new->virthost);
-		safe_free(new->realname);
-		safe_free(new->username);
-		safe_free(new->account);
-		new->servername = NULL;
+		free_whowas(new);
 
-		if (new->online)
-			del_whowas_from_clist(&(new->online->user->whowas), new);
-		del_whowas_from_list(&WHOWASHASH[new->hashv], new);
-	}
 	new->hashv = hash_whowas_name(client->name);
 	new->logoff = TStime();
 	new->umodes = client->umodes;
@@ -153,7 +155,7 @@ void initwhowas()
 		WHOWASHASH[i] = NULL;
 }
 
-static void add_whowas_to_clist(WhoWas ** bucket, WhoWas * whowas)
+void add_whowas_to_clist(WhoWas ** bucket, WhoWas * whowas)
 {
 	whowas->cprev = NULL;
 	if ((whowas->cnext = *bucket) != NULL)
@@ -161,7 +163,7 @@ static void add_whowas_to_clist(WhoWas ** bucket, WhoWas * whowas)
 	*bucket = whowas;
 }
 
-static void del_whowas_from_clist(WhoWas ** bucket, WhoWas * whowas)
+void del_whowas_from_clist(WhoWas ** bucket, WhoWas * whowas)
 {
 	if (whowas->cprev)
 		whowas->cprev->cnext = whowas->cnext;
@@ -171,7 +173,7 @@ static void del_whowas_from_clist(WhoWas ** bucket, WhoWas * whowas)
 		whowas->cnext->cprev = whowas->cprev;
 }
 
-static void add_whowas_to_list(WhoWas ** bucket, WhoWas * whowas)
+void add_whowas_to_list(WhoWas ** bucket, WhoWas * whowas)
 {
 	whowas->prev = NULL;
 	if ((whowas->next = *bucket) != NULL)
@@ -179,7 +181,7 @@ static void add_whowas_to_list(WhoWas ** bucket, WhoWas * whowas)
 	*bucket = whowas;
 }
 
-static void del_whowas_from_list(WhoWas ** bucket, WhoWas * whowas)
+void del_whowas_from_list(WhoWas ** bucket, WhoWas * whowas)
 {
 	if (whowas->prev)
 		whowas->prev->next = whowas->next;

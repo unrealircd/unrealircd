@@ -66,7 +66,7 @@ MODULES= \
 	ircops.so staff.so nocodes.so \
 	charsys.so antimixedutf8.so authprompt.so sinfo.so \
 	reputation.so connthrottle.so history_backend_mem.so \
-	history_backend_null.so tkldb.so channeldb.so \
+	history_backend_null.so tkldb.so channeldb.so whowasdb.so \
 	restrict-commands.so rmtkl.so require-module.so \
 	account-notify.so \
 	message-tags.so batch.so \
