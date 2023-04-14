@@ -2906,7 +2906,9 @@ static void add_default_exempts(void)
 	 * Currently the list is: gline, kline, gzline, zline, shun, blacklist,
 	 *                        connect-flood, handshake-data-flood.
 	 */
-	tkl_add_banexception(TKL_EXCEPTION, "*", "127.0.0.0/8", NULL, "localhost is always exempt",
+	tkl_add_banexception(TKL_EXCEPTION, "*", "127.0.0.1", NULL, "localhost is always exempt",
+	                     "-default-", 0, TStime(), 0, "GkZzsbcd", TKL_FLAG_CONFIG);
+	tkl_add_banexception(TKL_EXCEPTION, "*", "::1", NULL, "localhost is always exempt",
 	                     "-default-", 0, TStime(), 0, "GkZzsbcd", TKL_FLAG_CONFIG);
 }
 

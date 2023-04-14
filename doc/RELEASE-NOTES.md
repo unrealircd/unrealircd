@@ -85,6 +85,12 @@ You can help us by testing this release and reporting any issues at https://bugs
   directive now accepts wildcards, eg `blacklist-module rpc/*;`
 * The setting set::modef-boot-delay has been moved to
   [set::anti-flood::channel::boot-delay](https://www.unrealircd.org/docs/Channel_anti-flood_settings#config).
+* We now only exempt `127.0.0.1` and `::1` from banning by default
+  (hardcoded in the source). Previously we exempted whole `127.*` but
+  that gets in the way if you want to allow Tor with a
+  [require authentication](https://www.unrealircd.org/docs/Require_authentication_block)
+  block or soft-ban. Now you can just tell Tor to bind to `127.0.0.2`
+  so its not affected by the default exemption.
 
 ### Developers and protocol:
 * The `cmode.free_param` definition changed. It now has an extra argument
