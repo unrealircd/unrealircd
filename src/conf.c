@@ -4969,7 +4969,10 @@ void conf_listen_configure(const char *ip, int port, SocketType socket_type, int
 			/* Yeah, we actually do something with this one.. */
 			if (cep->value)
 				listen->mode = strtol(cep->value, NULL, 8); /* octal */
-		} else if (!strcmp(cep->name, "ip"))
+		}
+		else if (!strcmp(cep->name, "spoof-ip"))
+			safe_strdup(listen->spoof_ip, cep->value);
+		else if (!strcmp(cep->name, "ip"))
 			;
 		else if (!strcmp(cep->name, "port"))
 			;
@@ -5009,6 +5012,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *tlsconfig = NULL;
 	char *file = NULL;
 	char *ip = NULL;
+	char *spoof_ip = NULL;
 	int start=0, end=0, port;
 	int listener_flags =0;
 	Hook *h;
@@ -5027,6 +5031,10 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->name, "ip"))
 		{
 			ip = cep->value;
+		} else
+		if (!strcmp(cep->name, "spoof-ip"))
+		{
+			spoof_ip = cep->value;
 		} else
 		if (!strcmp(cep->name, "port"))
 		{
@@ -5092,7 +5100,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
 	int errors = 0;
-	char has_file = 0, has_ip = 0, has_port = 0, has_options = 0, port_6667 = 0;
+	char has_file = 0, has_ip = 0, has_port = 0, has_options = 0, port_6667 = 0, has_spoof_ip = 0;
 	char *file = NULL;
 	char *ip = NULL;
 	Hook *h;
@@ -5213,6 +5221,16 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			has_file = 1;
 			file = cep->value;
 		} else
+		if (!strcmp(cep->name, "spoof-ip"))
+		{
+			has_spoof_ip = 1;
+			if (!is_valid_ip(cep->value))
+			{
+				config_error("%s:%i: listen::spoof-ip is not a valid IP address (%s)",
+				             cep->file->filename, cep->line_number, cep->value);
+				errors++;
+			}
+		} else
 		if (!strcmp(cep->name, "mode"))
 		{
 			int mode = strtol(cep->value, NULL, 8);
@@ -5323,6 +5341,13 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 				ce->file->filename, ce->line_number);
 			errors++;
 		}
+	}
+
+	if (has_spoof_ip && !has_file)
+	{
+		config_error("%s:%d: listen::spoof-ip is only valid when listen::file is used (UNIX domain sockets)",
+		             ce->file->filename, ce->line_number);
+		errors++;
 	}
 
 	if (port_6667)

@@ -1850,6 +1850,7 @@ struct ConfigItem_listen {
 	int options;			/**< e.g. LISTENER_BOUND if active */
 	int clients;			/**< Clients connected to this socket / listener */
 	int fd;				/**< File descriptor (if open), or -1 (if not open yet) */
+	char *spoof_ip;			/**< listen::spoof-ip (only for listen::file, if you want to override 127.0.0.1) */
 	SSL_CTX *ssl_ctx;		/**< SSL/TLS context */
 	TLSOptions *tls_options;	/**< SSL/TLS options */
 	WebServer *webserver;		/**< For the webserver module */

@@ -831,7 +831,7 @@ Client *add_connection(ConfigItem_listen *listener, int fd)
 	client->local->listener->clients++;
 
 	if (listener->socket_type == SOCKET_TYPE_UNIX)
-		ip = "127.0.0.1";
+		ip = listener->spoof_ip ? listener->spoof_ip : "127.0.0.1";
 	else
 		ip = getpeerip(client, fd, &port);
 

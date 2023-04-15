@@ -81,6 +81,12 @@ You can help us by testing this release and reporting any issues at https://bugs
 * New module `whowasdb` (persistent `WHOWAS` history): this saves the WHOWAS
   history on disk periodically and when we terminate, so next server boot
   still has the WHOWAS history. This module is currently not loaded by default.
+* New option [listen::spoof-ip](https://www.unrealircd.org/docs/Listen_block#spoof-ip),
+  only valid when using UNIX domain sockets (so listen::file).
+  This way you can override the IP address that users come online with when
+  they use the socket (default was and still is `127.0.0.1`).
+* Add a new guide [Running Tor hidden service with UnrealIRCd](https://www.unrealircd.org/docs/Running_Tor_hidden_service_with_UnrealIRCd)
+  which uses the new listen::spoof-ip and optionally requires a services account.
 
 ### Changes:
 * The RPC modules are enabled by default now. This so remote RPC works
