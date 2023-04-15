@@ -364,19 +364,22 @@ int write_whowasdb(void)
 
 int write_whowas_entry(UnrealDB *db, const char *tmpfname, WhoWas *e)
 {
+	char connected_since[64];
 	char logontime[64];
 	char logofftime[64];
 	char event[16];
 
+	snprintf(connected_since, sizeof(connected_since), "%lld", (long long)e->connected_since);
 	snprintf(logontime, sizeof(logontime), "%lld", (long long)e->logon);
 	snprintf(logofftime, sizeof(logofftime), "%lld", (long long)e->logoff);
 	snprintf(event, sizeof(event), "%d", e->event);
 
 	W_SAFE(unrealdb_write_int32(db, MAGIC_WHOWASDB_START));
 	W_SAFE_PROPERTY(db, "nick", e->name);
+	W_SAFE_PROPERTY(db, "event", event);
+	W_SAFE_PROPERTY(db, "connected_since", connected_since);
 	W_SAFE_PROPERTY(db, "logontime", logontime);
 	W_SAFE_PROPERTY(db, "logofftime", logofftime);
-	W_SAFE_PROPERTY(db, "event", event);
 	W_SAFE_PROPERTY(db, "username", e->username);
 	W_SAFE_PROPERTY(db, "hostname", e->hostname);
 	W_SAFE_PROPERTY(db, "ip", e->ip);
@@ -399,7 +402,7 @@ int write_whowas_entry(UnrealDB *db, const char *tmpfname, WhoWas *e)
 		safe_free(hostname); \
 		safe_free(ip); \
 		safe_free(realname); \
-		logontime = logofftime = 0; \
+		connected_since = logontime = logofftime = 0; \
 		event = 0; \
 		safe_free(server); \
 		safe_free(virthost); \
@@ -431,6 +434,7 @@ int read_whowasdb(void)
 	char *hostname = NULL;
 	char *ip = NULL;
 	char *realname = NULL;
+	long long connected_since = 0;
 	long long logontime = 0;
 	long long logofftime = 0;
 	int event = 0;
@@ -491,7 +495,7 @@ int read_whowasdb(void)
 		// Variables
 		key = value = NULL;
 		nick = username = hostname = ip = realname = virthost = account = server = NULL;
-		logontime = logofftime = 0;
+		connected_since = logontime = logofftime = 0;
 		event = 0;
 
 		R_SAFE(unrealdb_read_int32(db, &magic));
@@ -523,6 +527,11 @@ int read_whowasdb(void)
 			if (!strcmp(key, "realname"))
 			{
 				realname = value;
+			} else
+			if (!strcmp(key, "connected_since"))
+			{
+				connected_since = atoll(value);
+				safe_free(value);
 			} else
 			if (!strcmp(key, "logontime"))
 			{
@@ -581,13 +590,14 @@ int read_whowasdb(void)
 			if (e->hashv != -1)
 				free_whowas_fields(e);
 			/* Set values */
-			unreal_log(ULOG_DEBUG, "whowasdb", "WHOWASDB_READ_RECORD", NULL,
-			           "[whowasdb] Adding '$nick'...",
-			           log_data_string("nick", nick));
+			//unreal_log(ULOG_DEBUG, "whowasdb", "WHOWASDB_READ_RECORD", NULL,
+			//           "[whowasdb] Adding '$nick'...",
+			//           log_data_string("nick", nick));
 			e->hashv = hash_whowas_name(nick);
+			e->event = event;
+			e->connected_since = connected_since;
 			e->logon = logontime;
 			e->logoff = logofftime;
-			e->event = event;
 			safe_strdup(e->name, nick);
 			safe_strdup(e->username, username);
 			safe_strdup(e->hostname, hostname);

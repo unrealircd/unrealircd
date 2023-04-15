@@ -339,6 +339,7 @@ DLL_FILES=\
  src/modules/restrict-commands.dll \
  src/modules/rmtkl.dll \
  src/modules/rpc/channel.dll \
+ src/modules/rpc/log.dll \
  src/modules/rpc/name_ban.dll \
  src/modules/rpc/rpc.dll \
  src/modules/rpc/stats.dll \
@@ -346,6 +347,7 @@ DLL_FILES=\
  src/modules/rpc/server_ban.dll \
  src/modules/rpc/server_ban_exception.dll \
  src/modules/rpc/spamfilter.dll \
+ src/modules/rpc/whowas.dll \
  src/modules/rpc/user.dll \
  src/modules/rules.dll \
  src/modules/sajoin.dll \
@@ -1119,6 +1121,9 @@ src/modules/rmtkl.dll: src/modules/rmtkl.c $(INCLUDES)
 src/modules/rpc/channel.dll: src/modules/rpc/channel.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/rpc/channel.c /Fesrc/modules/rpc/ /Fosrc/modules/rpc/ /Fdsrc/modules/rpc/channel.pdb $(MODLFLAGS)
 
+src/modules/rpc/log.dll: src/modules/rpc/log.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/rpc/log.c /Fesrc/modules/rpc/ /Fosrc/modules/rpc/ /Fdsrc/modules/rpc/log.pdb $(MODLFLAGS)
+
 src/modules/rpc/name_ban.dll: src/modules/rpc/name_ban.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/rpc/name_ban.c /Fesrc/modules/rpc/ /Fosrc/modules/rpc/ /Fdsrc/modules/rpc/name_ban.pdb $(MODLFLAGS)
 
@@ -1142,6 +1147,9 @@ src/modules/rpc/spamfilter.dll: src/modules/rpc/spamfilter.c $(INCLUDES)
 
 src/modules/rpc/user.dll: src/modules/rpc/user.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/rpc/user.c /Fesrc/modules/rpc/ /Fosrc/modules/rpc/ /Fdsrc/modules/rpc/user.pdb $(MODLFLAGS)
+
+src/modules/rpc/whowas.dll: src/modules/rpc/whowas.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/rpc/whowas.c /Fesrc/modules/rpc/ /Fosrc/modules/rpc/ /Fdsrc/modules/rpc/whowas.pdb $(MODLFLAGS)
 
 src/modules/rules.dll: src/modules/rules.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/rules.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/rules.pdb $(MODLFLAGS)

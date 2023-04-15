@@ -34,7 +34,7 @@ INCLUDES = ../../include/channel.h \
 R_MODULES= \
 	rpc.so stats.so user.so server.so channel.so server_ban.so \
 	server_ban_exception.so name_ban.so spamfilter.so \
-	log.so
+	log.so whowas.so
 
 MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@

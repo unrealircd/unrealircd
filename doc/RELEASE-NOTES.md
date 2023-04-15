@@ -72,7 +72,7 @@ You can help us by testing this release and reporting any issues at https://bugs
     [`rpc.del_timer`](https://www.unrealircd.org/docs/JSON-RPC:Rpc#rpc.del_timer)
     so you can schedule JSON-RPC calls, like stats.get, to be executed every xyz msec.
   * New JSON-RPC method
-    [`user.get_whowas`](https://www.unrealircd.org/docs/JSON-RPC:User#user.get_whowas)
+    [`whowas.get`](https://www.unrealircd.org/docs/JSON-RPC:Whowas#whowas.get)
     to fetch WHOWAS history.
 * A new message tag `unrealircd.org/issued-by` which is IRCOp-only (and
   used intra-server) to communicate who actually issued a command.

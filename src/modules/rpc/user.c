@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/user",
-	"1.0.6",
+	"1.0.7",
 	"user.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -28,7 +28,6 @@ RPC_CALL_FUNC(rpc_user_kill);
 RPC_CALL_FUNC(rpc_user_quit);
 RPC_CALL_FUNC(rpc_user_join);
 RPC_CALL_FUNC(rpc_user_part);
-RPC_CALL_FUNC(rpc_user_get_whowas);
 
 MOD_INIT()
 {
@@ -137,15 +136,6 @@ MOD_INIT()
 	memset(&r, 0, sizeof(r));
 	r.method = "user.part";
 	r.call = rpc_user_part;
-	if (!RPCHandlerAdd(modinfo->handle, &r))
-	{
-		config_error("[rpc/user] Could not register RPC handler");
-		return MOD_FAILED;
-	}
-	memset(&r, 0, sizeof(r));
-	r.method = "user.get_whowas";
-	r.loglevel = ULOG_DEBUG;
-	r.call = rpc_user_get_whowas;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/user] Could not register RPC handler");
@@ -702,104 +692,6 @@ RPC_CALL_FUNC(rpc_user_part)
 	 * channel does not exist out of X channels to be parted? Not worth it.
 	 */
 	result = json_boolean(1);
-	rpc_response(client, request, result);
-	json_decref(result);
-}
-
-extern WhoWas MODVAR WHOWAS[NICKNAMEHISTORYLENGTH];
-
-const char *whowas_event_to_string(WhoWasEvent event)
-{
-	if (event == WHOWAS_EVENT_QUIT)
-		return "quit";
-	if (event == WHOWAS_EVENT_NICK_CHANGE)
-		return "nick-change";
-	if (event == WHOWAS_EVENT_SERVER_TERMINATING)
-		return "server-terminating";
-	return "unknown";
-}
-
-void json_expand_whowas(json_t *j, const char *key, WhoWas *e, int detail)
-{
-	json_t *child;
-	json_t *user = NULL;
-	char buf[BUFSIZE+1];
-
-	if (key)
-	{
-		child = json_object();
-		json_object_set_new(j, key, child);
-	} else {
-		child = j;
-	}
-
-	json_object_set_new(child, "name", json_string_unreal(e->name));
-
-	if (detail == 0)
-		return;
-
-	json_object_set_new(child, "hostname", json_string_unreal(e->hostname));
-	json_object_set_new(child, "ip", json_string_unreal(e->ip));
-
-	snprintf(buf, sizeof(buf), "%s!%s@%s", e->name, e->username, e->hostname);
-	json_object_set_new(child, "details", json_string_unreal(buf));
-
-	if (detail < 2)
-		return;
-
-	json_object_set_new(child, "event", json_string_unreal(whowas_event_to_string(e->event)));
-	json_object_set_new(child, "logon_time", json_timestamp(e->logon));
-	json_object_set_new(child, "logoff_time", json_timestamp(e->logoff));
-
-	/* client.user */
-	user = json_object();
-	json_object_set_new(child, "user", user);
-
-	json_object_set_new(user, "username", json_string_unreal(e->username));
-	if (!BadPtr(e->realname))
-		json_object_set_new(user, "realname", json_string_unreal(e->realname));
-	if (!BadPtr(e->virthost))
-		json_object_set_new(user, "vhost", json_string_unreal(e->virthost));
-	json_object_set_new(user, "servername", json_string_unreal(e->servername));
-	if (!BadPtr(e->account))
-		json_object_set_new(user, "account", json_string_unreal(e->account));
-}
-
-RPC_CALL_FUNC(rpc_user_get_whowas)
-{
-	json_t *result, *list, *item;
-	int details;
-	int i;
-	const char *name;
-	const char *ip;
-
-	OPTIONAL_PARAM_STRING("name", name);
-	OPTIONAL_PARAM_STRING("ip", ip);
-	OPTIONAL_PARAM_INTEGER("object_detail_level", details, 2);
-	if (details == 3)
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Using an 'object_detail_level' of 3 is not allowed in user.* calls, use 0, 1, 2 or 4.");
-		return;
-	}
-
-	result = json_object();
-	list = json_array();
-	json_object_set_new(result, "list", list);
-
-	for (i=0; i < NICKNAMEHISTORYLENGTH; i++)
-	{
-		WhoWas *e = &WHOWAS[i];
-		if (!e->name)
-			continue;
-		if (name && !match_simple(name, e->name))
-			continue;
-		if (ip && !match_simple(ip, e->ip))
-			continue;
-		item = json_object();
-		json_expand_whowas(item, NULL, e, details);
-		json_array_append_new(list, item);
-	}
-
 	rpc_response(client, request, result);
 	json_decref(result);
 }

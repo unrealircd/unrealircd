@@ -46,6 +46,7 @@ void free_whowas_fields(WhoWas *e)
 	e->event = 0;
 	e->logon = 0;
 	e->logoff = 0;
+	e->connected_since = 0;
 
 	/* Remove from lists and reset hashv */
 	if (e->online)
@@ -57,6 +58,8 @@ void free_whowas_fields(WhoWas *e)
 void create_whowas_entry(Client *client, WhoWas *e, WhoWasEvent event)
 {
 	e->hashv = hash_whowas_name(client->name);
+	e->event = event;
+	e->connected_since = get_creationtime(client);
 	e->logon = client->lastnick;
 	e->logoff = TStime();
 	e->umodes = client->umodes;
@@ -78,8 +81,6 @@ void create_whowas_entry(Client *client, WhoWas *e, WhoWasEvent event)
 	 */
 	/*  strlcpy(e->servername, client->user->server,HOSTLEN); */
 	e->servername = client->user->server;
-
-	e->event = event;
 }
 
 void add_history(Client *client, int online, WhoWasEvent event)
