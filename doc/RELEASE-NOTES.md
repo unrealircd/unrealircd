@@ -6,8 +6,8 @@ The stable 6.1.0 version is scheduled for May, 2023.
 You can help us by testing this release and reporting any issues at https://bugs.unrealircd.org/.
 
 Compared to -rc1 this -rc2 contains some minor +F fixes if setting a default
-profile, lots of JSON-RPC improvements and new API methods, HELPOP updates,
-fixes for streaming logs over websockets, ban exemption change and a Tor guide.
+profile, persistent WHOWAS history (whowasdb), lots of JSON-RPC improvements and new API methods,
+HELPOP updates, fixes for streaming logs over websockets, ban exemption change and a Tor guide.
 
 ### Enhancements:
 * Channel flood protection improvements:
