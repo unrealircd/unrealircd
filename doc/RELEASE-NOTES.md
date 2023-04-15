@@ -74,6 +74,7 @@ You can help us by testing this release and reporting any issues at https://bugs
   * New JSON-RPC method
     [`whowas.get`](https://www.unrealircd.org/docs/JSON-RPC:Whowas#whowas.get)
     to fetch WHOWAS history.
+  * Low ASCII is no longer filtered out in strings in JSON-RPC, only in JSON logging.
 * A new message tag `unrealircd.org/issued-by` which is IRCOp-only (and
   used intra-server) to communicate who actually issued a command.
   See [docs](https://www.unrealircd.org/issued-by).
@@ -100,6 +101,8 @@ You can help us by testing this release and reporting any issues at https://bugs
 
 ### Fixes:
 * Memory leak in WHOWAS
+* Workaround a bug in some websocket implementations where the WSOP_PONG
+  frame is unmasked (now permitted).
 
 ### Developers and protocol:
 * The `cmode.free_param` definition changed. It now has an extra argument
