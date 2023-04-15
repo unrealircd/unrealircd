@@ -208,6 +208,7 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 	char buf[BUFSIZE+1];
 	json_t *child;
 	json_t *user = NULL;
+	time_t ts;
 
 	if (key)
 	{
@@ -261,8 +262,8 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		json_object_set_new(child, "server_port", json_integer(client->local->listener->port));
 	if (client->local && client->local->port)
 		json_object_set_new(child, "client_port", json_integer(client->local->port));
-	if (client->local && client->local->creationtime)
-		json_object_set_new(child, "connected_since", json_timestamp(client->local->creationtime));
+	if ((ts = get_creationtime(client)))
+		json_object_set_new(child, "connected_since", json_timestamp(ts));
 	if (client->local && client->local->idle_since)
 		json_object_set_new(child, "idle_since", json_timestamp(client->local->idle_since));
 
