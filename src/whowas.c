@@ -43,15 +43,21 @@ void free_whowas_fields(WhoWas *e)
 	safe_free(e->account);
 	safe_free(e->ip);
 	e->servername = NULL;
+	e->event = 0;
+	e->logon = 0;
+	e->logoff = 0;
 
+	/* Remove from lists and reset hashv */
 	if (e->online)
 		del_whowas_from_clist(&(e->online->user->whowas), e);
 	del_whowas_from_list(&WHOWASHASH[e->hashv], e);
+	e->hashv = -1;
 }
 
-void create_whowas_entry(Client *client, WhoWas *e)
+void create_whowas_entry(Client *client, WhoWas *e, WhoWasEvent event)
 {
 	e->hashv = hash_whowas_name(client->name);
+	e->logon = client->lastnick;
 	e->logoff = TStime();
 	e->umodes = client->umodes;
 	safe_strdup(e->name, client->name);
@@ -72,9 +78,11 @@ void create_whowas_entry(Client *client, WhoWas *e)
 	 */
 	/*  strlcpy(e->servername, client->user->server,HOSTLEN); */
 	e->servername = client->user->server;
+
+	e->event = event;
 }
 
-void add_history(Client *client, int online)
+void add_history(Client *client, int online, WhoWasEvent event)
 {
 	WhoWas *new;
 
@@ -83,7 +91,7 @@ void add_history(Client *client, int online)
 	if (new->hashv != -1)
 		free_whowas_fields(new);
 
-	create_whowas_entry(client, new);
+	create_whowas_entry(client, new, event);
 
 	if (online)
 	{

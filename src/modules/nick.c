@@ -205,7 +205,7 @@ CMD_FUNC(cmd_nick_remote)
 	new_message(client, recv_mtags, &mtags);
 	RunHook(HOOKTYPE_REMOTE_NICKCHANGE, client, mtags, nick);
 	client->lastnick = lastnick ? lastnick : TStime();
-	add_history(client, 1);
+	add_history(client, 1, WHOWAS_EVENT_NICK_CHANGE);
 	sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
 	    client->id, nick, (long long)client->lastnick);
 	sendto_local_common_channels(client, client, 0, mtags, ":%s NICK :%s", client->name, nick);
@@ -433,8 +433,8 @@ CMD_FUNC(cmd_nick_local)
 
 		new_message(client, recv_mtags, &mtags);
 		RunHook(HOOKTYPE_LOCAL_NICKCHANGE, client, mtags, nick);
-		client->lastnick = TStime();
-		add_history(client, 1);
+		add_history(client, 1, WHOWAS_EVENT_NICK_CHANGE);
+		client->lastnick = TStime(); /* needs to be done AFTER add_history() */
 		sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
 		    client->id, nick, (long long)client->lastnick);
 		sendto_local_common_channels(client, client, 0, mtags, ":%s NICK :%s", client->name, nick);

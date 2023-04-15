@@ -327,7 +327,7 @@ int write_whowasdb(void)
 			WhoWas *e = safe_alloc(sizeof(WhoWas));
 			int ret;
 
-			create_whowas_entry(client, e);
+			create_whowas_entry(client, e, WHOWAS_EVENT_SERVER_TERMINATING);
 			ret = write_whowas_entry(db, tmpfname, e);
 			free_whowas_fields(e);
 			safe_free(e);
@@ -364,13 +364,19 @@ int write_whowasdb(void)
 
 int write_whowas_entry(UnrealDB *db, const char *tmpfname, WhoWas *e)
 {
+	char logontime[64];
 	char logofftime[64];
+	char event[16];
 
+	snprintf(logontime, sizeof(logontime), "%lld", (long long)e->logon);
 	snprintf(logofftime, sizeof(logofftime), "%lld", (long long)e->logoff);
+	snprintf(event, sizeof(event), "%d", e->event);
 
 	W_SAFE(unrealdb_write_int32(db, MAGIC_WHOWASDB_START));
 	W_SAFE_PROPERTY(db, "nick", e->name);
+	W_SAFE_PROPERTY(db, "logontime", logontime);
 	W_SAFE_PROPERTY(db, "logofftime", logofftime);
+	W_SAFE_PROPERTY(db, "event", event);
 	W_SAFE_PROPERTY(db, "username", e->username);
 	W_SAFE_PROPERTY(db, "hostname", e->hostname);
 	W_SAFE_PROPERTY(db, "ip", e->ip);
@@ -393,7 +399,8 @@ int write_whowas_entry(UnrealDB *db, const char *tmpfname, WhoWas *e)
 		safe_free(hostname); \
 		safe_free(ip); \
 		safe_free(realname); \
-		logofftime = 0; \
+		logontime = logofftime = 0; \
+		event = 0; \
 		safe_free(server); \
 		safe_free(virthost); \
 		safe_free(account); \
@@ -424,7 +431,9 @@ int read_whowasdb(void)
 	char *hostname = NULL;
 	char *ip = NULL;
 	char *realname = NULL;
+	long long logontime = 0;
 	long long logofftime = 0;
+	int event = 0;
 	char *server = NULL;
 	char *virthost = NULL;
 	char *account = NULL;
@@ -482,7 +491,8 @@ int read_whowasdb(void)
 		// Variables
 		key = value = NULL;
 		nick = username = hostname = ip = realname = virthost = account = server = NULL;
-		logofftime = 0;
+		logontime = logofftime = 0;
+		event = 0;
 
 		R_SAFE(unrealdb_read_int32(db, &magic));
 		if (magic != MAGIC_WHOWASDB_START)
@@ -495,26 +505,55 @@ int read_whowasdb(void)
 			R_SAFE(unrealdb_read_str(db, &key));
 			R_SAFE(unrealdb_read_str(db, &value));
 			if (!strcmp(key, "nick"))
+			{
 				nick = value;
-			else if (!strcmp(key, "username"))
+			} else
+			if (!strcmp(key, "username"))
+			{
 				username = value;
-			else if (!strcmp(key, "hostname"))
+			} else
+			if (!strcmp(key, "hostname"))
+			{
 				hostname = value;
-			else if (!strcmp(key, "ip"))
+			} else
+			if (!strcmp(key, "ip"))
+			{
 				ip = value;
-			else if (!strcmp(key, "realname"))
+			} else
+			if (!strcmp(key, "realname"))
+			{
 				realname = value;
-			else if (!strcmp(key, "logofftime"))
+			} else
+			if (!strcmp(key, "logontime"))
+			{
+				logontime = atoll(value);
+				safe_free(value);
+			} else
+			if (!strcmp(key, "logofftime"))
 			{
 				logofftime = atoll(value);
 				safe_free(value);
-			} else if (!strcmp(key, "server"))
+			} else
+			if (!strcmp(key, "event"))
+			{
+				event = atoi(value);
+				if ((event < WHOWAS_LOWEST_EVENT) || (event > WHOWAS_HIGHEST_EVENT))
+					event = WHOWAS_EVENT_QUIT; /* safety */
+				safe_free(value);
+			} else
+			if (!strcmp(key, "server"))
+			{
 				server = value;
-			else if (!strcmp(key, "virthost"))
+			} else
+			if (!strcmp(key, "virthost"))
+			{
 				virthost = value;
-			else if (!strcmp(key, "account"))
+			} else
+			if (!strcmp(key, "account"))
+			{
 				account = value;
-			else if (!strcmp(key, "end"))
+			} else
+			if (!strcmp(key, "end"))
 			{
 				safe_free(key);
 				safe_free(value);
@@ -546,7 +585,9 @@ int read_whowasdb(void)
 			           "[whowasdb] Adding '$nick'...",
 			           log_data_string("nick", nick));
 			e->hashv = hash_whowas_name(nick);
+			e->logon = logontime;
 			e->logoff = logofftime;
+			e->event = event;
 			safe_strdup(e->name, nick);
 			safe_strdup(e->username, username);
 			safe_strdup(e->hostname, hostname);

@@ -35,6 +35,15 @@
 #ifndef	__whowas_include__
 #define __whowas_include__
 
+/* NOTE: Don't reorder values of these, as they are used in whowasdb */
+typedef enum WhoWasEvent {
+    WHOWAS_EVENT_QUIT=0,
+    WHOWAS_EVENT_NICK_CHANGE=1,
+    WHOWAS_EVENT_SERVER_TERMINATING=2
+} WhoWasEvent;
+#define WHOWAS_LOWEST_EVENT 0
+#define WHOWAS_HIGHEST_EVENT 2
+
 /*
 ** add_history
 **	Add the currently defined name of the client to history.
@@ -42,7 +51,7 @@
 **	Client must be a fully registered user (specifically,
 **	the user structure must have been allocated).
 */
-void add_history(Client *, int);
+void add_history(Client *, int, WhoWasEvent);
 
 /*
 ** off_history

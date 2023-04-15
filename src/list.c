@@ -344,7 +344,7 @@ void remove_client_from_list(Client *client)
 
 	if (IsUser(client))	/* Only persons can have been added before */
 	{
-		add_history(client, 0);
+		add_history(client, 0, WHOWAS_EVENT_QUIT);
 		off_history(client);	/* Remove all pointers to client */
 	}
 	

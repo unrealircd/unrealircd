@@ -66,6 +66,7 @@ CMD_FUNC(cmd_svsnick)
 	MessageTag *mtags = NULL;
 	char nickname[NICKLEN+1];
 	char oldnickname[NICKLEN+1];
+	time_t ts;
 
 	if (!IsSvsCmdOk(client) || parc < 4 || (strlen(parv[2]) > NICKLEN))
 		return; /* This looks like an error anyway -Studded */
@@ -96,7 +97,7 @@ CMD_FUNC(cmd_svsnick)
 
 	if (acptr != ocptr)
 		acptr->umodes &= ~UMODE_REGNICK;
-	acptr->lastnick = atol(parv[3]);
+	ts = atol(parv[3]);
 
 	/* no 'recv_mtags' here, we do not inherit from SVSNICK but generate a new NICK event */
 	new_message(acptr, NULL, &mtags);
@@ -104,9 +105,10 @@ CMD_FUNC(cmd_svsnick)
 	RunHook(HOOKTYPE_LOCAL_NICKCHANGE, acptr, mtags, nickname);
 	sendto_local_common_channels(acptr, acptr, 0, mtags, ":%s NICK :%s", acptr->name, nickname);
 	sendto_one(acptr, mtags, ":%s NICK :%s", acptr->name, nickname);
-	sendto_server(NULL, 0, 0, mtags, ":%s NICK %s :%lld", acptr->id, nickname, (long long)acptr->lastnick);
+	sendto_server(NULL, 0, 0, mtags, ":%s NICK %s :%lld", acptr->id, nickname, (long long)ts);
 
-	add_history(acptr, 1);
+	add_history(acptr, 1, WHOWAS_EVENT_NICK_CHANGE);
+	acptr->lastnick = ts; /* needs to be done AFTER add_history() */
 	del_from_client_hash_table(acptr->name, acptr);
 
 	unreal_log(ULOG_INFO, "nick", "FORCED_NICK_CHANGE", acptr,

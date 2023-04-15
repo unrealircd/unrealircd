@@ -417,7 +417,7 @@ extern void del_whowas_from_clist(WhoWas **, WhoWas *);
 extern void add_whowas_to_list(WhoWas **, WhoWas *);
 extern void del_whowas_from_list(WhoWas **, WhoWas *);
 extern uint64_t hash_whowas_name(const char *name);
-extern void create_whowas_entry(Client *client, WhoWas *e);
+extern void create_whowas_entry(Client *client, WhoWas *e, WhoWasEvent event);
 extern void free_whowas_fields(WhoWas *e);
 extern int add_to_client_hash_table(const char *, Client *);
 extern int del_from_client_hash_table(const char *, Client *);
@@ -1348,6 +1348,7 @@ extern void procio_post_rehash(int failure);
 /* end of proc i/o */
 extern int minimum_msec_since_last_run(struct timeval *tv_old, long minimum);
 extern long get_connected_time(Client *client);
+extern time_t get_creationtime(Client *client);
 extern const char *StripControlCodes(const char *text);
 extern const char *StripControlCodesEx(const char *text, char *output, size_t outputlen, int strip_flags);
 extern MODVAR Module *Modules;

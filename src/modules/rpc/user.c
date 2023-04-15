@@ -708,6 +708,17 @@ RPC_CALL_FUNC(rpc_user_part)
 
 extern WhoWas MODVAR WHOWAS[NICKNAMEHISTORYLENGTH];
 
+const char *whowas_event_to_string(WhoWasEvent event)
+{
+	if (event == WHOWAS_EVENT_QUIT)
+		return "quit";
+	if (event == WHOWAS_EVENT_NICK_CHANGE)
+		return "nick-change";
+	if (event == WHOWAS_EVENT_SERVER_TERMINATING)
+		return "server-terminating";
+	return "unknown";
+}
+
 void json_expand_whowas(json_t *j, const char *key, WhoWas *e, int detail)
 {
 	json_t *child;
@@ -736,6 +747,8 @@ void json_expand_whowas(json_t *j, const char *key, WhoWas *e, int detail)
 	if (detail < 2)
 		return;
 
+	json_object_set_new(child, "event", json_string_unreal(whowas_event_to_string(e->event)));
+	json_object_set_new(child, "logon_time", json_timestamp(e->logon));
 	json_object_set_new(child, "logoff_time", json_timestamp(e->logoff));
 
 	/* client.user */

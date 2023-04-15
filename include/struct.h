@@ -859,7 +859,9 @@ typedef struct Whowas {
 	char *realname;
 	char *account;
 	long umodes;
-	time_t   logoff;
+	time_t logon;
+	time_t logoff;
+	WhoWasEvent event;
 	struct Client *online;	/* Pointer to new nickname for chasing or NULL */
 	struct Whowas *next;	/* for hash table... */
 	struct Whowas *prev;	/* for hash table... */
