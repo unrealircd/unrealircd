@@ -113,10 +113,10 @@ RPC_CALL_FUNC(rpc_whowas_get)
 	json_t *result, *list, *item;
 	int details;
 	int i;
-	const char *name;
+	const char *nick;
 	const char *ip;
 
-	OPTIONAL_PARAM_STRING("name", name);
+	OPTIONAL_PARAM_STRING("nick", nick);
 	OPTIONAL_PARAM_STRING("ip", ip);
 	OPTIONAL_PARAM_INTEGER("object_detail_level", details, 2);
 	if (details == 3)
@@ -134,7 +134,7 @@ RPC_CALL_FUNC(rpc_whowas_get)
 		WhoWas *e = &WHOWAS[i];
 		if (!e->name)
 			continue;
-		if (name && !match_simple(name, e->name))
+		if (nick && !match_simple(nick, e->name))
 			continue;
 		if (ip && !match_simple(ip, e->ip))
 			continue;
