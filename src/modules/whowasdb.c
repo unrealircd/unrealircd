@@ -48,6 +48,11 @@ ModuleHeader MOD_HEADER = {
 		} \
 	} while(0)
 
+/* Yeah, W_SAFE_PROPERTY raises "the address .. will always evaluate to true" warnings */
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress"
+#endif
 #define W_SAFE_PROPERTY(db, x, y) \
 	do { \
 		if (x && y && (!unrealdb_write_str(db, x) || !unrealdb_write_str(db, y))) \
@@ -57,6 +62,9 @@ ModuleHeader MOD_HEADER = {
 			return 0; \
 		} \
 	} while(0)
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 #define IsMDErr(x, y, z) \
 	do { \
