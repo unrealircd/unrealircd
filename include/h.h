@@ -316,8 +316,33 @@ extern void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...) __at
  * @endcode
  * @ingroup SendFunctions
  */
-#define sendnumeric(to, numeric, ...) sendnumericfmt(to, numeric, STR_ ## numeric, ##__VA_ARGS__)
-extern void sendnumericfmt(Client *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,3,4)));
+#define sendnumeric(to, numeric, ...) sendtaggednumericfmt(to, NULL, numeric, STR_ ## numeric, ##__VA_ARGS__)
+
+/** Send numeric message to a client - format to user specific needs.
+ * This will ignore the numeric definition of src/numeric.c and always send ":me.name numeric clientname "
+ * followed by the pattern and format string you choose.
+ * @param to		The recipient
+ * @param numeric	The numeric, one of RPL_* or ERR_*, see src/numeric.c
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ * @note Don't forget to add a colon if you need it (eg `:%%s`), this is a common mistake.
+ */
+#define sendnumericfmt(to, numeric, ...) sendtaggednumericfmt(to, NULL, numeric, __VA_ARGS__)
+
+/** Send numeric message to a client - format to user specific needs.
+ * This will ignore the numeric definition of src/numeric.c and always send ":me.name numeric clientname "
+ * followed by the pattern and format string you choose.
+ * @param to		The recipient
+ * @param mtags     NULL, or NULL-terminated array of message tags
+ * @param numeric	The numeric, one of RPL_* or ERR_*, see src/numeric.c
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ * @note Don't forget to add a colon if you need it (eg `:%%s`), this is a common mistake.
+ */
+#define sendtaggednumeric(to, mtags, numeric, ...) sendtaggednumericfmt(to, mtags, numeric, STR_ ## numeric, ##__VA_ARGS__)
+
+extern void sendtaggednumericfmt(Client *to, MessageTag *mtags, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,4,5)));
+
 extern void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
 /** Build numeric message so it is ready to be sent to a client - rarely used, normally you use sendnumeric() instead.
  * This function is normally only used in eg CAN_KICK and CAN_SET_TOPIC, where
