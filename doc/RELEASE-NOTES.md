@@ -71,9 +71,15 @@ You can help us by testing this release and reporting any issues at https://bugs
     [`rpc.add_timer`](https://www.unrealircd.org/docs/JSON-RPC:Rpc#rpc.add_timer) and
     [`rpc.del_timer`](https://www.unrealircd.org/docs/JSON-RPC:Rpc#rpc.del_timer)
     so you can schedule JSON-RPC calls, like stats.get, to be executed every xyz msec.
+  * New JSON-RPC method
+    [`user.get_whowas`](https://www.unrealircd.org/docs/JSON-RPC:User#user.get_whowas)
+    to fetch WHOWAS history.
 * A new message tag `unrealircd.org/issued-by` which is IRCOp-only (and
   used intra-server) to communicate who actually issued a command.
   See [docs](https://www.unrealircd.org/issued-by).
+* New module `whowasdb` (persistent `WHOWAS` history): this saves the WHOWAS
+  history on disk periodically and when we terminate, so next server boot
+  still has the WHOWAS history. This module is currently not loaded by default.
 
 ### Changes:
 * The RPC modules are enabled by default now. This so remote RPC works
@@ -91,6 +97,9 @@ You can help us by testing this release and reporting any issues at https://bugs
   [require authentication](https://www.unrealircd.org/docs/Require_authentication_block)
   block or soft-ban. Now you can just tell Tor to bind to `127.0.0.2`
   so its not affected by the default exemption.
+
+### Fixes:
+* Memory leak in WHOWAS
 
 ### Developers and protocol:
 * The `cmode.free_param` definition changed. It now has an extra argument
