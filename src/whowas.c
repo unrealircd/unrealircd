@@ -33,7 +33,7 @@ WhoWas MODVAR *WHOWASHASH[WHOWAS_HASH_TABLE_SIZE];
 
 MODVAR int whowas_next = 0;
 
-void free_whowas(WhoWas *e)
+void free_whowas_fields(WhoWas *e)
 {
 	safe_free(e->name);
 	safe_free(e->hostname);
@@ -41,12 +41,39 @@ void free_whowas(WhoWas *e)
 	safe_free(e->realname);
 	safe_free(e->username);
 	safe_free(e->account);
+	safe_free(e->ip);
 	e->servername = NULL;
 
 	if (e->online)
 		del_whowas_from_clist(&(e->online->user->whowas), e);
 	del_whowas_from_list(&WHOWASHASH[e->hashv], e);
 }
+
+void create_whowas_entry(Client *client, WhoWas *e)
+{
+	e->hashv = hash_whowas_name(client->name);
+	e->logoff = TStime();
+	e->umodes = client->umodes;
+	safe_strdup(e->name, client->name);
+	safe_strdup(e->username, client->user->username);
+	safe_strdup(e->hostname, client->user->realhost);
+	safe_strdup(e->ip, client->ip);
+	if (client->user->virthost)
+		safe_strdup(e->virthost, client->user->virthost);
+	else
+		safe_strdup(e->virthost, "");
+	e->servername = client->user->server;
+	safe_strdup(e->realname, client->info);
+	if (strcmp(client->user->account, "0"))
+		safe_strdup(e->account, client->user->account);
+
+	/* Its not string copied, a pointer to the scache hash is copied
+	   -Dianora
+	 */
+	/*  strlcpy(e->servername, client->user->server,HOSTLEN); */
+	e->servername = client->user->server;
+}
+
 void add_history(Client *client, int online)
 {
 	WhoWas *new;
@@ -54,37 +81,17 @@ void add_history(Client *client, int online)
 	new = &WHOWAS[whowas_next];
 
 	if (new->hashv != -1)
-		free_whowas(new);
+		free_whowas_fields(new);
 
-	new->hashv = hash_whowas_name(client->name);
-	new->logoff = TStime();
-	new->umodes = client->umodes;
-	safe_strdup(new->name, client->name);
-	safe_strdup(new->username, client->user->username);
-	safe_strdup(new->hostname, client->user->realhost);
-	safe_strdup(new->ip, client->ip);
-	if (client->user->virthost)
-		safe_strdup(new->virthost, client->user->virthost);
-	else
-		safe_strdup(new->virthost, "");
-	new->servername = client->user->server;
-	safe_strdup(new->realname, client->info);
-	if (strcmp(client->user->account, "0"))
-		safe_strdup(new->account, client->user->account);
-
-	/* Its not string copied, a pointer to the scache hash is copied
-	   -Dianora
-	 */
-	/*  strlcpy(new->servername, client->user->server,HOSTLEN); */
-	new->servername = client->user->server;
+	create_whowas_entry(client, new);
 
 	if (online)
 	{
 		new->online = client;
 		add_whowas_to_clist(&(client->user->whowas), new);
-	}
-	else
+	} else {
 		new->online = NULL;
+	}
 	add_whowas_to_list(&WHOWASHASH[new->hashv], new);
 	whowas_next++;
 	if (whowas_next == NICKNAMEHISTORYLENGTH)

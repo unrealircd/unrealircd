@@ -83,7 +83,6 @@ EVENT(write_whowasdb_evt);
 int write_whowasdb(void);
 int write_whowas_entry(UnrealDB *db, const char *tmpfname, WhoWas *e);
 int read_whowasdb(void);
-void whowasdb_terminating(void);
 
 /* External variables */
 extern WhoWas MODVAR WHOWAS[NICKNAMEHISTORYLENGTH];
@@ -147,7 +146,7 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	if (loop.terminating)
-		whowasdb_terminating();
+		write_whowasdb();
 	freecfg(&test);
 	freecfg(&cfg);
 	SavePersistentLong(modinfo, whowasdb_next_event);
@@ -262,10 +261,11 @@ EVENT(write_whowasdb_evt)
 	write_whowasdb();
 }
 
-int count_whowas_entries(void)
+int count_whowas_and_user_entries(void)
 {
 	int i;
 	int cnt = 0;
+	Client *client;
 
 	for (i=0; i < NICKNAMEHISTORYLENGTH; i++)
 	{
@@ -273,6 +273,10 @@ int count_whowas_entries(void)
 		if (e->name)
 			cnt++;
 	}
+
+	list_for_each_entry(client, &client_list, client_node)
+		if (IsUser(client))
+			cnt++;
 
 	return cnt;
 }
@@ -282,6 +286,7 @@ int write_whowasdb(void)
 	char tmpfname[512];
 	UnrealDB *db;
 	WhoWas *e;
+	Client *client;
 	int cnt, i;
 #ifdef BENCHMARK
 	struct timeval tv_alpha, tv_beta;
@@ -301,7 +306,7 @@ int write_whowasdb(void)
 	W_SAFE(unrealdb_write_int32(db, WHOWASDB_HEADER));
 	W_SAFE(unrealdb_write_int32(db, whowasdb_version));
 
-	cnt = count_whowas_entries();
+	cnt = count_whowas_and_user_entries();
 	W_SAFE(unrealdb_write_int64(db, cnt));
 
 	for (i=0; i < NICKNAMEHISTORYLENGTH; i++)
@@ -313,6 +318,25 @@ int write_whowasdb(void)
 				return 0;
 		}
 	}
+
+	/* Add all the currently connected users to WHOWAS history (as if they left just now) */
+	list_for_each_entry(client, &client_list, client_node)
+	{
+		if (IsUser(client))
+		{
+			WhoWas *e = safe_alloc(sizeof(WhoWas));
+			int ret;
+
+			create_whowas_entry(client, e);
+			ret = write_whowas_entry(db, tmpfname, e);
+			free_whowas_fields(e);
+			safe_free(e);
+
+			if (ret == 0)
+				return 0;
+		}
+	}
+
 
 	// Everything seems to have gone well, attempt to close and rename the tempfile
 	if (!unrealdb_close(db))
@@ -516,8 +540,11 @@ int read_whowasdb(void)
 		{
 			WhoWas *e = &WHOWAS[whowas_next];
 			if (e->hashv != -1)
-				free_whowas(e);
+				free_whowas_fields(e);
 			/* Set values */
+			unreal_log(ULOG_DEBUG, "whowasdb", "WHOWASDB_READ_RECORD", NULL,
+			           "[whowasdb] Adding '$nick'...",
+			           log_data_string("nick", nick));
 			e->hashv = hash_whowas_name(nick);
 			e->logoff = logofftime;
 			safe_strdup(e->name, nick);
@@ -559,21 +586,3 @@ int read_whowasdb(void)
 }
 #undef FreeWhowasEntry
 #undef R_SAFE
-
-void whowasdb_terminating(void)
-{
-	Client *client;
-
-	/* Add all the currently connected users to WHOWAS history: */
-	list_for_each_entry(client, &client_list, client_node)
-	{
-		if (IsUser(client))
-		{
-			add_history(client, 0);
-			off_history(client);
-		}
-	}
-
-	/* And write the database... */
-	write_whowasdb();
-}
