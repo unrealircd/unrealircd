@@ -1,9 +1,13 @@
-UnrealIRCd 6.1.0-rc1
+UnrealIRCd 6.1.0-rc2
 =================
-This is the first Release Candidate for future 6.1.0. It is not a "stable version".
+This is the second Release Candidate for future 6.1.0. It is not a "stable version".
 The stable 6.1.0 version is scheduled for May, 2023.
 
 You can help us by testing this release and reporting any issues at https://bugs.unrealircd.org/.
+
+Compared to -rc1 this -rc2 contains some minor +F fixes if setting a default
+profile, lots of JSON-RPC improvements and new API methods, HELPOP updates,
+fixes for streaming logs over websockets, ban exemption change and a Tor guide.
 
 ### Enhancements:
 * Channel flood protection improvements:
@@ -43,6 +47,15 @@ You can help us by testing this release and reporting any issues at https://bugs
       to `0`. This because in such a scenario only 1/5th (20%) of the users
       would reconnect and hopefully don't trigger +f/+F join floods.
   * All these features only work properly if all servers are on 6.1.0-rc1 or later.
+* New module `whowasdb` (persistent `WHOWAS` history): this saves the WHOWAS
+  history on disk periodically and when we terminate, so next server boot
+  still has the WHOWAS history. This module is currently not loaded by default.
+* New option [listen::spoof-ip](https://www.unrealircd.org/docs/Listen_block#spoof-ip),
+  only valid when using UNIX domain sockets (so listen::file).
+  This way you can override the IP address that users come online with when
+  they use the socket (default was and still is `127.0.0.1`).
+* Add a new guide [Running Tor Onion service with UnrealIRCd](https://www.unrealircd.org/docs/Running_Tor_Onion_service_with_UnrealIRCd)
+  which uses the new listen::spoof-ip and optionally requires a services account.
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
   * Logging of JSON-RPC requests (eg. via snomask `+R`) has been improved,
     it now shows:
@@ -78,15 +91,6 @@ You can help us by testing this release and reporting any issues at https://bugs
 * A new message tag `unrealircd.org/issued-by` which is IRCOp-only (and
   used intra-server) to communicate who actually issued a command.
   See [docs](https://www.unrealircd.org/issued-by).
-* New module `whowasdb` (persistent `WHOWAS` history): this saves the WHOWAS
-  history on disk periodically and when we terminate, so next server boot
-  still has the WHOWAS history. This module is currently not loaded by default.
-* New option [listen::spoof-ip](https://www.unrealircd.org/docs/Listen_block#spoof-ip),
-  only valid when using UNIX domain sockets (so listen::file).
-  This way you can override the IP address that users come online with when
-  they use the socket (default was and still is `127.0.0.1`).
-* Add a new guide [Running Tor hidden service with UnrealIRCd](https://www.unrealircd.org/docs/Running_Tor_hidden_service_with_UnrealIRCd)
-  which uses the new listen::spoof-ip and optionally requires a services account.
 
 ### Changes:
 * The RPC modules are enabled by default now. This so remote RPC works
