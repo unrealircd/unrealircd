@@ -1075,12 +1075,13 @@ void sendnotice_multiline(Client *client, MultiLine *m)
  * This will ignore the numeric definition of src/numeric.c and always send ":me.name numeric clientname "
  * followed by the pattern and format string you choose.
  * @param to		The recipient
+ * @param mtags     NULL, or NULL-terminated array of message tags
  * @param numeric	The numeric, one of RPL_* or ERR_*, see src/numeric.c
  * @param pattern	The format string / pattern to use.
  * @param ...		Format string parameters.
  * @note Don't forget to add a colon if you need it (eg `:%%s`), this is a common mistake.
  */
-void sendnumericfmt(Client *to, int numeric, FORMAT_STRING(const char *pattern), ...)
+void sendtaggednumericfmt(Client *to, MessageTag *mtags, int numeric, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	char realpattern[512];
@@ -1088,7 +1089,7 @@ void sendnumericfmt(Client *to, int numeric, FORMAT_STRING(const char *pattern),
 	snprintf(realpattern, sizeof(realpattern), ":%s %.3d %s %s", me.name, numeric, to->name[0] ? to->name : "*", pattern);
 
 	va_start(vl, pattern);
-	vsendto_one(to, NULL, realpattern, vl);
+	vsendto_one(to, mtags, realpattern, vl);
 	va_end(vl);
 }
 
