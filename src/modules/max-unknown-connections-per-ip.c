@@ -51,7 +51,12 @@ static int check_too_many_unknown_connections(Client *client)
 	{
 		list_for_each_entry(c, &unknown_list, lclient_node)
 		{
-			if (!IsRPC(c) && !strcmp(client->ip,GetIP(c)))
+			if (client->local && client->local->listener &&
+			    (client->local->listener->options & LISTENER_NO_CHECK_CONNECT_FLOOD))
+			{
+				continue;
+			}
+			if (!strcmp(client->ip,GetIP(c)))
 			{
 				cnt++;
 				if (cnt > iConf.max_unknown_connections_per_ip)
