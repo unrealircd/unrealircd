@@ -517,23 +517,23 @@ int read_whowasdb(void)
 			R_SAFE(unrealdb_read_str(db, &value));
 			if (!strcmp(key, "nick"))
 			{
-				nick = value;
+				safe_strdup(nick, value);
 			} else
 			if (!strcmp(key, "username"))
 			{
-				username = value;
+				safe_strdup(username, value);
 			} else
 			if (!strcmp(key, "hostname"))
 			{
-				hostname = value;
+				safe_strdup(hostname, value);
 			} else
 			if (!strcmp(key, "ip"))
 			{
-				ip = value;
+				safe_strdup(ip, value);
 			} else
 			if (!strcmp(key, "realname"))
 			{
-				realname = value;
+				safe_strdup(realname, value);
 			} else
 			if (!strcmp(key, "connected_since"))
 			{
@@ -559,15 +559,15 @@ int read_whowasdb(void)
 			} else
 			if (!strcmp(key, "server"))
 			{
-				server = value;
+				safe_strdup(server, value);
 			} else
 			if (!strcmp(key, "virthost"))
 			{
-				virthost = value;
+				safe_strdup(virthost, value);
 			} else
 			if (!strcmp(key, "account"))
 			{
-				account = value;
+				safe_strdup(account, value);
 			} else
 			if (!strcmp(key, "end"))
 			{
