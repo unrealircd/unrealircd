@@ -386,6 +386,7 @@ AC_DEFUN([CHECK_GEOIP_CLASSIC],
 			AC_MSG_RESULT(compiling GeoIP Classic library)
 			$ac_cv_prog_MAKER || exit 1
 			AC_MSG_RESULT(installing GeoIP Classic library)
+			rm -f "$PRIVATELIBDIR/"libGeoIP.so*
 			$ac_cv_prog_MAKER install || exit 1
 			dnl Try pkg-config first...
 			AS_IF([test -n "$ac_cv_path_PKGCONFIG"],

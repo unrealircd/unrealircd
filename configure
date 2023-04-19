@@ -8082,6 +8082,7 @@ printf "%s\n" "compiling PCRE2 regex library" >&6; }
 $ac_cv_prog_MAKER || exit 1
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: installing PCRE2 regex library" >&5
 printf "%s\n" "installing PCRE2 regex library" >&6; }
+rm -f "$PRIVATELIBDIR/"libpcre2*
 $ac_cv_prog_MAKER install || exit 1
 PCRE2_CFLAGS="-I$cur_dir/extras/pcre2/include"
 
@@ -8331,6 +8332,7 @@ printf "%s\n" "compiling sodium resolver library" >&6; }
 $ac_cv_prog_MAKER || exit 1
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: installing sodium resolver library" >&5
 printf "%s\n" "installing sodium resolver library" >&6; }
+rm -f "$PRIVATELIBDIR/"libsodium*
 $ac_cv_prog_MAKER install || exit 1
 SODIUM_CFLAGS="-I$cur_dir/extras/sodium/include"
 
@@ -8459,6 +8461,7 @@ printf "%s\n" "compiling c-ares resolver library" >&6; }
 $ac_cv_prog_MAKER || exit 1
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: installing c-ares resolver library" >&5
 printf "%s\n" "installing c-ares resolver library" >&6; }
+rm -f "$PRIVATELIBDIR/"libcares*
 $ac_cv_prog_MAKER install || exit 1
 CARES_CFLAGS="-I$cur_dir/extras/c-ares/include"
 
@@ -8604,6 +8607,7 @@ printf "%s\n" "compiling jansson resolver library" >&6; }
 $ac_cv_prog_MAKER || exit 1
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: installing jansson resolver library" >&5
 printf "%s\n" "installing jansson resolver library" >&6; }
+rm -f "$PRIVATELIBDIR/"libjansson*
 $ac_cv_prog_MAKER install || exit 1
 JANSSON_CFLAGS="-I$cur_dir/extras/jansson/include"
 
@@ -9399,6 +9403,7 @@ printf "%s\n" "compiling GeoIP Classic library" >&6; }
 			$ac_cv_prog_MAKER || exit 1
 			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: installing GeoIP Classic library" >&5
 printf "%s\n" "installing GeoIP Classic library" >&6; }
+			rm -f "$PRIVATELIBDIR/"libGeoIP.so*
 			$ac_cv_prog_MAKER install || exit 1
 						if test -n "$ac_cv_path_PKGCONFIG"
 then :

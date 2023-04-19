@@ -612,6 +612,7 @@ cd pcre2-$pcre2_version
 AC_MSG_RESULT(compiling PCRE2 regex library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing PCRE2 regex library)
+rm -f "$PRIVATELIBDIR/"libpcre2*
 $ac_cv_prog_MAKER install || exit 1
 PCRE2_CFLAGS="-I$cur_dir/extras/pcre2/include"
 AC_SUBST(PCRE2_CFLAGS)
@@ -705,6 +706,7 @@ CFLAGS="$save_cflags"
 AC_MSG_RESULT(compiling sodium resolver library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing sodium resolver library)
+rm -f "$PRIVATELIBDIR/"libsodium*
 $ac_cv_prog_MAKER install || exit 1
 SODIUM_CFLAGS="-I$cur_dir/extras/sodium/include"
 AC_SUBST(SODIUM_CFLAGS)
@@ -755,6 +757,7 @@ CFLAGS="$save_cflags"
 AC_MSG_RESULT(compiling c-ares resolver library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing c-ares resolver library)
+rm -f "$PRIVATELIBDIR/"libcares*
 $ac_cv_prog_MAKER install || exit 1
 CARES_CFLAGS="-I$cur_dir/extras/c-ares/include"
 AC_SUBST(CARES_CFLAGS)
@@ -830,6 +833,7 @@ CFLAGS="$save_cflags"
 AC_MSG_RESULT(compiling jansson resolver library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing jansson resolver library)
+rm -f "$PRIVATELIBDIR/"libjansson*
 $ac_cv_prog_MAKER install || exit 1
 JANSSON_CFLAGS="-I$cur_dir/extras/jansson/include"
 AC_SUBST(JANSSON_CFLAGS)

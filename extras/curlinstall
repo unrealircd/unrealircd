@@ -76,4 +76,6 @@ cd "$OUTD" || exit 1
 
 echo "Building and installing libcurl"
 ./configure --prefix=$UNREALDIR/extras/curl --libdir=$PRIVATELIBDIR --enable-shared --with-openssl
-make && make install
+make || exit 1
+rm -f "$PRIVATELIBDIR/"libcurl*
+make install || exit 1
