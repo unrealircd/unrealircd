@@ -692,7 +692,14 @@ void unreal_tls_client_handshake(int fd, int revents, void *data)
 	switch (unreal_tls_connect(client, fd))
 	{
 		case -1:
+			SSL_set_shutdown(client->local->ssl, SSL_RECEIVED_SHUTDOWN);
+			SSL_smart_shutdown(client->local->ssl);
+			SSL_free(client->local->ssl);
+			client->local->ssl = NULL;
+			ClearTLS(client);
+			SetDeadSocket(client);
 			fd_close(fd);
+			fd_unnotify(fd);
 			client->local->fd = -1;
 			--OpenFiles;
 			return;
