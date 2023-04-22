@@ -32,6 +32,7 @@ typedef struct Download Download;
 
 struct Download
 {
+	Download *prev, *next;
 	vFP callback;
 	void *callback_data;
 	FILE *file_fd;		/**< File open for writing (otherwise NULL) */
@@ -43,12 +44,30 @@ struct Download
 
 CURLM *multihandle = NULL;
 
+Download *downloads = NULL;
+
 void url_free_handle(Download *handle)
 {
+	DelListItem(handle, downloads);
 	if (handle->file_fd)
 		fclose(handle->file_fd);
 	safe_free(handle->url);
 	safe_free(handle);
+}
+
+void url_cancel_handle_by_callback_data(void *ptr)
+{
+	Download *d, *d_next;
+
+	for (d = downloads; d; d = d_next)
+	{
+		d_next = d->next;
+		if (d->callback_data == ptr)
+		{
+			d->callback = NULL;
+			d->callback_data = NULL;
+		}
+	}
 }
 
 /*
@@ -112,6 +131,11 @@ static void url_check_multi_handles(void)
 			fclose(handle->file_fd);
 			handle->file_fd = NULL;
 
+			if (handle->callback == NULL)
+			{
+				/* Request is already canceled, we don't care about the result, just clean up */
+				remove(handle->filename);
+			} else
 			if (msg->data.result == CURLE_OK)
 			{
 				if (code == 304 || (last_mod != -1 && last_mod <= handle->cachetime))
@@ -269,6 +293,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 		safe_free(handle);
 		return;
 	}
+	AddListItem(handle, downloads);
 
 	handle->callback = callback;
 	handle->callback_data = callback_data;

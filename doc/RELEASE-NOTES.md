@@ -110,6 +110,8 @@ HELPOP updates, fixes for streaming logs over websockets, ban exemption change a
   so its not affected by the default exemption.
 
 ### Fixes:
+* Crash if there is a parse error in an included file and there are
+  other remote included files still being downloaded.
 * Memory leak in WHOWAS
 * Workaround a bug in some websocket implementations where the WSOP_PONG
   frame is unmasked (now permitted).

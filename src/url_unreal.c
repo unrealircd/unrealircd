@@ -110,13 +110,29 @@ void url_free_handle(Download *handle)
 	safe_free(handle);
 }
 
+void url_cancel_handle_by_callback_data(void *ptr)
+{
+	Download *d, *d_next;
+
+	for (d = downloads; d; d = d_next)
+	{
+		d_next = d->next;
+		if (d->callback_data == ptr)
+		{
+			d->callback = NULL;
+			d->callback_data = NULL;
+		}
+	}
+}
+
 void https_cancel(Download *handle, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	va_start(vl, pattern);
 	vsnprintf(handle->errorbuf, sizeof(handle->errorbuf), pattern, vl);
 	va_end(vl);
-	handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
+	if (handle->callback)
+		handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
 	url_free_handle(handle);
 }
 
@@ -820,6 +836,8 @@ void https_done(Download *handle)
 	fclose(handle->file_fd);
 	handle->file_fd = NULL;
 
+	if (!handle->callback)
+		; /* No special action, request was cancelled */
 	if (!handle->got_response)
 		handle->callback(url, NULL, "HTTPS response not received", 0, handle->callback_data);
 	else
@@ -838,7 +856,8 @@ void https_done_cached(Download *handle)
 
 	fclose(handle->file_fd);
 	handle->file_fd = NULL;
-	handle->callback(url, NULL, NULL, 1, handle->callback_data);
+	if (handle->callback)
+		handle->callback(url, NULL, NULL, 1, handle->callback_data);
 	url_free_handle(handle);
 }
 
@@ -851,8 +870,12 @@ void https_redirect(Download *handle)
 	}
 	handle->redirects_remaining--;
 
-	download_file_async(handle->redirect_new_location, handle->cachetime, handle->callback, handle->callback_data,
-	                    handle->url, handle->redirects_remaining);
+	if (handle->callback)
+	{
+		/* If still an outstanding request (not cancelled), follow the redirect.. */
+		download_file_async(handle->redirect_new_location, handle->cachetime, handle->callback, handle->callback_data,
+				    handle->url, handle->redirects_remaining);
+	}
 	/* Don't call the hook, just free this, the new redirect from above will call the hook later */
 	url_free_handle(handle);
 }

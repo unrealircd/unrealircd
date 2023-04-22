@@ -10828,6 +10828,7 @@ void free_all_config_resources(void)
 		rs->wce = NULL;
 		if (rs->type & RESOURCE_REMOTE)
 		{
+			url_cancel_handle_by_callback_data(rs);
 			/* Delete the file, but only if it's not a cached version */
 			if (rs->file && strncmp(rs->file, CACHEDIR, strlen(CACHEDIR)))
 			{
