@@ -838,7 +838,7 @@ void https_done(Download *handle)
 
 	if (!handle->callback)
 		; /* No special action, request was cancelled */
-	if (!handle->got_response)
+	else if (!handle->got_response)
 		handle->callback(url, NULL, "HTTPS response not received", 0, handle->callback_data);
 	else
 	{
