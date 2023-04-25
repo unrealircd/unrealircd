@@ -158,6 +158,10 @@ int server_ban_select_criteria(Client *client, json_t *request, json_t *params,
 		return 0;
 	}
 
+	/* Hm, shouldn't this be done by server_ban_parse_mask() ? */
+	if (*soft && (*usermask[0] == '%'))
+		*usermask = *usermask + 1;
+
 	return 1;
 }
 
@@ -271,12 +275,6 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 	{
 		return;
 	}
-
-	/* Hm, shouldn't this be done by server_ban_select_criteria()
-	 * which calls server_ban_parse_mask() ?
-	 */
-	if (soft && (*usermask == '%'))
-		usermask++;
 
 	tkl_type_str[0] = tkl_type_char;
 	tkl_type_str[1] = '\0';
