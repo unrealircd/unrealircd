@@ -152,7 +152,7 @@ int server_ban_select_criteria(Client *client, json_t *request, json_t *params,
 		return 0;
 	}
 
-	if (!server_ban_parse_mask(client, 0, *tkl_type_int, *name, usermask, hostmask, soft, &error))
+	if (!server_ban_parse_mask(client, 0, *tkl_type_char, *name, usermask, hostmask, soft, &error))
 	{
 		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", error);
 		return 0;
@@ -271,6 +271,12 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 	{
 		return;
 	}
+
+	/* Hm, shouldn't this be done by server_ban_select_criteria()
+	 * which calls server_ban_parse_mask() ?
+	 */
+	if (soft && (*usermask == '%'))
+		usermask++;
 
 	tkl_type_str[0] = tkl_type_char;
 	tkl_type_str[1] = '\0';
