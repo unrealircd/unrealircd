@@ -574,14 +574,9 @@ int read_whowasdb(void)
 				safe_free(key);
 				safe_free(value);
 				break; /* DONE! */
-			} else
-			{
-				safe_free(value);
-				/* just don't do anything with it -- ignored (future compatible).
-				 * FALLTHROUGH...
-				 */
 			}
 			safe_free(key);
+			safe_free(value);
 		}
 		R_SAFE(unrealdb_read_int32(db, &magic));
 		if (magic != MAGIC_WHOWASDB_END)
