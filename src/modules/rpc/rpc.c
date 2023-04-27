@@ -1252,6 +1252,7 @@ void free_outstanding_rrpc_list(ModData *m)
 /** Remove timer from rpc_timer_list and free it */
 void free_rpc_timer(RPCTimer *r)
 {
+	safe_free(r->timer_id);
 	json_decref(r->request);
 	DelListItem(r, rpc_timer_list);
 	safe_free(r);
