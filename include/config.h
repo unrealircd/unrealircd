@@ -280,7 +280,7 @@
 /* Default TLS 1.3 ciphersuites.
  * This can be changed via set::ssl::options::ciphersuites in the config file.
  */
-#define UNREALIRCD_DEFAULT_CIPHERSUITES "TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256"
+#define UNREALIRCD_DEFAULT_CIPHERSUITES "TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256"
 
 /* Default TLS curves for ECDH(E)
  * This can be changed via set::ssl::options::ecdh-curve in the config file.
