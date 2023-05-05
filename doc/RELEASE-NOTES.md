@@ -1,5 +1,11 @@
-UnrealIRCd 6.1.0
+UnrealIRCd 6.1.1-git
 =================
+This is the git version (development version) for future 6.1.1. This is work
+in progress and may not be a stable version.
+
+
+UnrealIRCd 6.1.0
+-----------------
 This is UnrealIRCd 6.1.0 stable. It is the direct successor to 6.0.7, there
 will be no 6.0.8.
 
