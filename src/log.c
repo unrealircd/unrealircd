@@ -33,17 +33,23 @@
 #define MAXLOGLENGTH 16384	/**< Maximum length of a log entry (which may be multiple lines) */
 
 /* Variables */
-Log *logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
-Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL };
+Log *logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL, NULL };
+Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL, NULL };
 static int snomask_num_destinations = 0;
 
 static char snomasks_in_use[257] = { '\0' };
 static char snomasks_in_use_testing[257] = { '\0' };
 
+LogEntry *memory_log = NULL; /**< Log entries in memory (OLDEST entry) */
+LogEntry *memory_log_tail = NULL; /**< Tail of log entries in memory (NEWEST entry) */
+int memory_log_entries = 0; /**< Number of memory_log entries */
+
 /* Forward declarations */
 int log_sources_match(LogSource *logsource, LogLevel loglevel, const char *subsystem, const char *event_id, int matched_already);
 void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, int expand_msg, const char *msg, va_list vl);
 void log_blocks_switchover(void);
+void memory_log_add_message(time_t t, LogLevel loglevel, const char *subsystem, const char *event_id, json_t *json);
+EVENT(memory_log_cleaner);
 
 LogType log_type_stringtoval(const char *str)
 {
@@ -255,7 +261,7 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 								errors++;
 							}
 						} else
-						if (!strcmp(cepp->name, "maxsize"))
+						if (!strcmp(cepp->name, "maxsize") || !strcmp(cepp->name, "max-size"))
 						{
 							if (!cepp->value)
 							{
@@ -298,6 +304,35 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 						} else
 						{
 							config_error_unknown(cepp->file->filename, cepp->line_number, "log::destination::syslog", cepp->name);
+							errors++;
+						}
+					}
+				} else
+				if (!strcmp(cep->name, "memory"))
+				{
+					destinations++;
+					for (cepp = cep->items; cepp; cepp = cepp->next)
+					{
+						if (!strcmp(cepp->name, "max-lines"))
+						{
+							if (!cepp->value)
+							{
+								config_error_empty(cepp->file->filename,
+									cepp->line_number, "log", cepp->name);
+								errors++;
+							}
+						} else
+						if (!strcmp(cepp->name, "max-time"))
+						{
+							if (!cepp->value)
+							{
+								config_error_empty(cepp->file->filename,
+									cepp->line_number, "log", cepp->name);
+								errors++;
+							}
+						} else
+						{
+							config_error_unknown(cepp->file->filename, cepp->line_number, "log::destination::memory", cepp->name);
 							errors++;
 						}
 					}
@@ -454,9 +489,9 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 						safe_strdup(log->file, cep->value);
 					for (cepp = cep->items; cepp; cepp = cepp->next)
 					{
-						if (!strcmp(cepp->name, "maxsize"))
+						if (!strcmp(cepp->name, "maxsize") || !strcmp(cepp->name, "max-size"))
 						{
-							log->maxsize = config_checkval(cepp->value,CFG_SIZE);
+							log->max_size = config_checkval(cepp->value,CFG_SIZE);
 						}
 						else if (!strcmp(cepp->name, "type"))
 						{
@@ -464,6 +499,33 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 						}
 					}
 					AddListItem(log, temp_logs[LOG_DEST_DISK]);
+				} else
+				if (!strcmp(cep->name, "memory"))
+				{
+					if (temp_logs[LOG_DEST_MEMORY])
+					{
+						config_warn("%s:%d: Ignoring duplicate log block for memory. "
+							    "You cannot have multiple log blocks logging to memory.",
+							    cep->file->filename, cep->line_number);
+						free_log_sources(sources);
+						return 0;
+					}
+					Log *log = safe_alloc(sizeof(Log));
+					log->sources = sources;
+					log->logfd = -1;
+					log->type = LOG_TYPE_JSON;
+					for (cepp = cep->items; cepp; cepp = cepp->next)
+					{
+						if (!strcmp(cepp->name, "max-lines"))
+						{
+							log->max_lines = config_checkval(cepp->value,CFG_SIZE);
+						}
+						else if (!strcmp(cepp->name, "max-time"))
+						{
+							log->max_time = config_checkval(cepp->value,CFG_TIME);
+						}
+					}
+					AddListItem(log, temp_logs[LOG_DEST_MEMORY]);
 				}
 			}
 		}
@@ -893,6 +955,7 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 
 	snprintf(timebuf, sizeof(timebuf), "[%s] ", myctime(TStime()));
 
+	memory_log_add_message(TStime(), loglevel, subsystem, event_id, json);
 	RunHook(HOOKTYPE_LOG, loglevel, subsystem, event_id, msg, json, json_serialized, timebuf);
 
 	if (!loop.forked && (loglevel > ULOG_DEBUG))
@@ -967,7 +1030,7 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 		}
 
 		/* log::maxsize code */
-		if (l->maxsize && (stat(l->file, &fstats) != -1) && fstats.st_size >= l->maxsize)
+		if (l->max_size && (stat(l->file, &fstats) != -1) && fstats.st_size >= l->max_size)
 		{
 			char oldlog[512];
 			if (l->logfd == -1)
@@ -1650,7 +1713,7 @@ void postconf_defaults_log_block(void)
 	l = safe_alloc(sizeof(Log));
 	l->logfd = -1;
 	l->type = LOG_TYPE_TEXT; /* text */
-	l->maxsize = 100000000; /* maxsize 100M */
+	l->max_size = 100000000; /* maxsize 100M */
 	safe_strdup(l->file, "ircd.log");
 	convert_to_absolute_path(&l->file, LOGDIR);
 	AddListItem(l, logs[LOG_DEST_DISK]);
@@ -1737,4 +1800,103 @@ int is_valid_snomask_string_testing(const char *str, char **invalid_snomasks)
 	}
 	*invalid_snomasks = invalid_snomasks_buf;
 	return *invalid_snomasks_buf ? 0 : 1;
+}
+
+void free_memory_log_item(LogEntry *e)
+{
+	if (e == memory_log_tail)
+		memory_log_tail = memory_log_tail->prev;
+	DelListItem(e, memory_log);
+	safe_free(e->subsystem);
+	safe_free(e->event_id);
+	safe_json_decref(e->json);
+	safe_free(e);
+	memory_log_entries--;
+}
+
+/* IMPORTANT: this function only adds and never purges old entries */
+void memory_log_do_add_message(time_t t, LogLevel loglevel, const char *subsystem, const char *event_id, json_t *json)
+{
+	LogEntry *e;
+
+	e = safe_alloc(sizeof(LogEntry));
+	e->t = t;
+	e->loglevel = loglevel;
+	safe_strdup(e->subsystem, subsystem);
+	safe_strdup(e->event_id, event_id);
+	e->json = json_copy(json);
+
+	if (memory_log_tail)
+	{
+		/* We become the new tail */
+		memory_log_tail->next = e;
+		e->prev = memory_log_tail;
+		memory_log_tail = e;
+	} else
+	if (memory_log != memory_log_tail)
+	{
+		/* Impossible: memory_log NULL but memory_log_tail is not NULL, or vice versa */
+		abort();
+	} else
+	{
+		/* First memory log entry, easy */
+		memory_log = memory_log_tail = e;
+	}
+
+	memory_log_entries++;
+};
+
+void memory_log_add_message(time_t t, LogLevel loglevel, const char *subsystem, const char *event_id, json_t *json)
+{
+	Log *l;
+
+	for (l = logs[LOG_DEST_MEMORY]; l; l = l->next)
+	{
+		if (!strcmp(subsystem, "rawtraffic"))
+			continue;
+		if (!log_sources_match(l->sources, loglevel, subsystem, event_id, 0))
+			continue;
+		memory_log_do_add_message(t, loglevel, subsystem, event_id, json);
+		if (l->max_lines && (memory_log_entries > l->max_lines))
+			free_memory_log_item(memory_log);
+		break; /* we are done */
+	}
+}
+
+/** Purge old entries (by time and by line count) */
+EVENT(memory_log_cleaner)
+{
+	LogEntry *e, *e_next;
+	Log *l = logs[LOG_DEST_MEMORY];
+
+	if (!l)
+		return;
+
+	/* First, check if the hard limit has been reached */
+	if (l->max_lines)
+	{
+		int to_delete = memory_log_entries - l->max_lines;
+		if (to_delete > 0)
+		{
+			/* Delete the oldest ### entries */
+			for (e = memory_log; e; e = e_next)
+			{
+				e_next = e->next;
+				free_memory_log_item(e);
+			}
+		}
+	}
+
+	/* Now, erase by date/time */
+	if (l->max_time)
+	{
+		time_t deadline = TStime() - l->max_time;
+		/* Delete the entries before the deadline */
+		for (e = memory_log; e; e = e_next)
+		{
+			e_next = e->next;
+			if (e->t <= deadline)
+				free_memory_log_item(e);
+		}
+	}
 }

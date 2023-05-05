@@ -274,7 +274,9 @@ struct Log {
 	/* for destination::file */
 	char *file;
 	char *filefmt;
-	long maxsize;
+	long max_size;
+	int max_lines;
+	long long max_time;
 	int logfd;
 	/* for destination::channel */
 	int color;
@@ -283,8 +285,18 @@ struct Log {
 };
 
 /** This is used for deciding the <index> in logs[<index>] and temp_logs[<index>] */
-typedef enum LogDestination { LOG_DEST_SNOMASK=0, LOG_DEST_OPER=1, LOG_DEST_REMOTE=2, LOG_DEST_CHANNEL=3, LOG_DEST_DISK=4 } LogDestination;
-#define NUM_LOG_DESTINATIONS 5
+typedef enum LogDestination { LOG_DEST_SNOMASK=0, LOG_DEST_OPER=1, LOG_DEST_REMOTE=2, LOG_DEST_CHANNEL=3, LOG_DEST_DISK=4, LOG_DEST_MEMORY=5 } LogDestination;
+#define NUM_LOG_DESTINATIONS 6
+
+typedef struct LogEntry LogEntry;
+struct LogEntry {
+	LogEntry *prev, *next;
+	time_t t;
+	char loglevel;
+	char *subsystem;
+	char *event_id;
+	json_t *json;
+};
 
 /*
 ** 'offsetof' is defined in ANSI-C. The following definition

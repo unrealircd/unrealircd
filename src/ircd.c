@@ -459,6 +459,7 @@ void SetupEvents(void)
 	EventAdd(NULL, "tls_check_expiry", tls_check_expiry, NULL, (86400/2)*1000, 0);
 	EventAdd(NULL, "unrealdb_expire_secret_cache", unrealdb_expire_secret_cache, NULL, 61000, 0);
 	EventAdd(NULL, "throttling_check_expire", throttling_check_expire, NULL, 1000, 0);
+	EventAdd(NULL, "memory_log_cleaner", memory_log_cleaner, NULL, 61500, 0);
 }
 
 /** The main function. This will call SocketLoop() once the server is ready. */

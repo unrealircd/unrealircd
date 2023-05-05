@@ -1332,6 +1332,13 @@ extern const char *timestamp_iso8601_now(void);
 extern const char *timestamp_iso8601(time_t v);
 extern int is_valid_snomask(char c);
 extern int is_valid_snomask_string_testing(const char *str, char **wrong);
+extern MODVAR LogEntry *memory_log;
+extern MODVAR LogEntry *memory_log_tail;
+extern MODVAR int memory_log_entries;
+extern void free_memory_log_item(LogEntry *e);
+extern void memory_log_do_add_message(time_t t, LogLevel loglevel, const char *subsystem, const char *event_id, json_t *json);
+extern void memory_log_add_message(time_t t, LogLevel loglevel, const char *subsystem, const char *event_id, json_t *json);
+extern EVENT(memory_log_cleaner);
 /* end of logging */
 extern void add_fake_lag(Client *client, long msec);
 extern char *prefix_with_extban(const char *remainder, BanContext *b, Extban *extban, char *buf, size_t buflen);
