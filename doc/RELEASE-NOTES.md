@@ -3,6 +3,8 @@ UnrealIRCd 6.1.1-git
 This is the git version (development version) for future 6.1.1. This is work
 in progress and may not be a stable version.
 
+### Enhancements:
+* JSON-RPC call `log.list` to fetch past 1000 log entries
 
 UnrealIRCd 6.1.0
 -----------------

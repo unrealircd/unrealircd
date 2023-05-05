@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/log",
-	"1.0.0",
+	"1.0.1",
 	"log.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -17,6 +17,7 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 void rpc_log_hook_subscribe(Client *client, json_t *request, json_t *params);
 void rpc_log_hook_unsubscribe(Client *client, json_t *request, json_t *params);
+void rpc_log_list(Client *client, json_t *request, json_t *params);
 int rpc_log_hook(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, json_t *json, const char *json_serialized, const char *timebuf);
 
 MOD_INIT()
@@ -39,6 +40,16 @@ MOD_INIT()
 	r.method = "log.unsubscribe";
 	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_log_hook_unsubscribe;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/log] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+
+	memset(&r, 0, sizeof(r));
+	r.method = "log.list";
+	r.loglevel = ULOG_DEBUG;
+	r.call = rpc_log_list;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/log] Could not register RPC handler");
@@ -114,7 +125,7 @@ int rpc_log_hook(LogLevel loglevel, const char *subsystem, const char *event_id,
 	Client *client;
 	json_t *request = NULL;
 
-	if (!strcmp(subsystem, "rawtraffic"))
+	if (!strcmp(subsystem, "rawtraffic") || (loglevel == ULOG_DEBUG))
 		return 0;
 
 	list_for_each_entry(client, &unknown_list, lclient_node)
@@ -136,4 +147,20 @@ int rpc_log_hook(LogLevel loglevel, const char *subsystem, const char *event_id,
 		json_decref(request);
 
 	return 0;
+}
+
+void rpc_log_list(Client *client, json_t *request, json_t *params)
+{
+	json_t *result = json_object();
+	json_t *list = json_array();
+	LogEntry *e;
+	int i;
+
+	json_object_set_new(result, "list", list);
+
+	for (e = memory_log; e; e = e->next)
+		json_array_append(list, e->json);
+
+	rpc_response(client, request, result);
+	json_decref(result);
 }
