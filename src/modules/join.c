@@ -294,10 +294,13 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, con
 
 		RunHook(HOOKTYPE_LOCAL_JOIN, client, channel, mtags);
 	} else {
-		unreal_log(ULOG_INFO, "join", "REMOTE_CLIENT_JOIN", client,
-			   "User $client joined $channel",
-			   log_data_channel("channel", channel),
-			   log_data_string("modes", member_modes));
+		if (!(client->uplink && !IsSynched(client->uplink)))
+		{
+			unreal_log(ULOG_INFO, "join", "REMOTE_CLIENT_JOIN", client,
+				   "User $client joined $channel",
+				   log_data_channel("channel", channel),
+				   log_data_string("modes", member_modes));
+		}
 		RunHook(HOOKTYPE_REMOTE_JOIN, client, channel, mtags);
 	}
 
