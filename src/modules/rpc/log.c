@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/log",
-	"1.0.1",
+	"1.0.2",
 	"log.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -151,16 +151,46 @@ int rpc_log_hook(LogLevel loglevel, const char *subsystem, const char *event_id,
 
 void rpc_log_list(Client *client, json_t *request, json_t *params)
 {
+	json_t *sources;
+	size_t index;
+	json_t *value;
+	const char *str;
 	json_t *result = json_object();
 	json_t *list = json_array();
 	LogEntry *e;
 	int i;
+	LogSource *log_sources = NULL;
+	LogSource *s;
+
+	/* Optionally filter on sources: */
+	sources = json_object_get(params, "sources");
+	if (sources && json_is_array(sources))
+	{
+		json_array_foreach(sources, index, value)
+		{
+			str = json_get_value(value);
+			if (!str)
+				continue;
+
+			s = add_log_source(str);
+			AddListItem(s, log_sources);
+		}
+	}
 
 	json_object_set_new(result, "list", list);
 
 	for (e = memory_log; e; e = e->next)
+	{
+		if (log_sources &&
+		    !log_sources_match(log_sources, e->loglevel, e->subsystem, e->event_id, 0))
+		{
+			continue;
+		}
 		json_array_append(list, e->json);
+	}
 
 	rpc_response(client, request, result);
 	json_decref(result);
+
+	free_log_sources(log_sources);
 }
