@@ -659,6 +659,8 @@ extern void *safe_alloc_sensitive(size_t size);
 /** Safely destroy a string in memory (but do not free!) */
 #define destroy_string(str) sodium_memzero(str, strlen(str))
 
+#define safe_json_decref(result)	do { json_decref(result); result = NULL; } while(0)
+
 /** @} */
 extern char *our_strdup(const char *str);
 extern char *our_strldup(const char *str, size_t max);
