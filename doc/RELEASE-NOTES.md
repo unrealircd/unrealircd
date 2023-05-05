@@ -1,13 +1,24 @@
-UnrealIRCd 6.1.0-rc2
+UnrealIRCd 6.1.0
 =================
-This is the second Release Candidate for future 6.1.0. It is not a "stable version".
-The stable 6.1.0 version is scheduled for May, 2023.
+This is UnrealIRCd 6.1.0 stable. It is the direct successor to 6.0.7, there
+will be no 6.0.8.
 
-You can help us by testing this release and reporting any issues at https://bugs.unrealircd.org/.
+This release contains several channel mode `+f` enhancements and introduces a
+new channel mode `+F` which works with flood profiles like `+F normal` and
+`+F strict`. It is much easier for users than the scary looking mode +f.
 
-Compared to -rc1 this -rc2 contains some minor +F fixes if setting a default
-profile, persistent WHOWAS history (whowasdb), lots of JSON-RPC improvements and new API methods,
-HELPOP updates, fixes for streaming logs over websockets, ban exemption change and a Tor guide.
+UnrealIRCd 6.1.0 also contains lots of JSON-RPC improvements, which is used
+by the [UnrealIRCd admin panel](https://www.unrealircd.org/docs/UnrealIRCd_webpanel).
+Live streaming of logs has been added and the webpanel now communicates to
+UnrealIRCd which web user issued a command (eg: who issued a kill, who
+changed a channel mode, ..).
+
+Other improvements are whowasdb (persistent WHOWAS history) and a new guide
+on running a Tor Onion service. The release also fixes a crash bug related
+to remote includes and fixes multiple memory leaks.
+
+See the full release notes below. As usual on *NIX you can upgrade easily
+with the command: `./unrealircd upgrade`
 
 ### Enhancements:
 * Channel flood protection improvements:
@@ -40,7 +51,7 @@ HELPOP updates, fixes for streaming logs over websockets, ban exemption change a
     or has died (or restarted), in which case the clients would typically
     reconnect to the remaining other servers, triggering an +f/+F join-flood and
     channels ending up being `+i` and such. That is not good because we want
-    +f/+F to be as efortless as possible, with as little false positives as
+    +f/+F to be as effortless as possible, with as little false positives as
     possible.
     * If your network has 5+ servers and the user load is spread evenly among
       them, then you could disable this feature by setting the amount of seconds
@@ -129,6 +140,8 @@ HELPOP updates, fixes for streaming logs over websockets, ban exemption change a
   [UNIX domain sockets](https://www.unrealircd.org/docs/JSON-RPC:Technical_documentation#UNIX_domain_socket)
   for making RPC calls. If this is used, we now split on `\n` (newline)
   so multiple parallel requests can be handled properly.
+* Message tag `unrealircd.org/issued-by`, sent to IRCOps only.
+  See [docs](https://www.unrealircd.org/issued-by).
 
 UnrealIRCd 6.0.7
 -----------------
