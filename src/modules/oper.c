@@ -237,7 +237,7 @@ CMD_FUNC(cmd_oper)
 		sendnumeric(client, ERR_NOOPERHOST);
 		unreal_log(ULOG_WARNING, "oper", "OPER_FAILED", client,
 		           "Failed OPER attempt by $client.details [reason: $reason] [oper-block: $oper_block]",
-		           log_data_string("reason", "Unknown oper operblock_name"),
+		           log_data_string("reason", "Unknown oper name"),
 		           log_data_string("fail_type", "UNKNOWN_OPER_NAME"),
 		           log_data_string("oper_block", parv[1]));
 		add_fake_lag(client, 7000);
