@@ -148,7 +148,12 @@ void init_resolver(int firsttime)
 	 */
 	options.flags |= ARES_FLAG_NOALIASES|ARES_FLAG_IGNTC;
 	options.sock_state_cb = unrealdns_sock_state_cb;
-	optmask = ARES_OPT_TIMEOUTMS|ARES_OPT_TRIES|ARES_OPT_FLAGS|ARES_OPT_SOCK_STATE_CB;
+	/* Don't search domains or you'll get lookups for like
+	 * 1.1.168.192.dnsbl.dronebl.org.mydomain.org which is a waste.
+	 */
+	options.domains = NULL;
+	options.ndomains = 0;
+	optmask = ARES_OPT_TIMEOUTMS|ARES_OPT_TRIES|ARES_OPT_FLAGS|ARES_OPT_SOCK_STATE_CB|ARES_OPT_DOMAINS;
 #ifndef _WIN32
 	/* on *NIX don't use the hosts file, since it causes countless useless reads.
 	 * on Windows we use it for now, this could be changed in the future.
