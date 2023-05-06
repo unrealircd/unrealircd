@@ -292,6 +292,7 @@ DLL_FILES=\
  src/modules/invite.dll \
  src/modules/ircops.dll \
  src/modules/ison.dll \
+ src/modules/issued-by-tag.dll \
  src/modules/join.dll \
  src/modules/jointhrottle.dll \
  src/modules/json-log-tag.dll \
@@ -979,6 +980,9 @@ src/modules/ircops.dll: src/modules/ircops.c $(INCLUDES)
 
 src/modules/ison.dll: src/modules/ison.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/ison.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/ison.pdb $(MODLFLAGS)
+
+src/modules/issued-by-tag.dll: src/modules/issued-by-tag.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/issued-by-tag.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/issued-by-tag.pdb $(MODLFLAGS)
 
 src/modules/join.dll: src/modules/join.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/join.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/join.pdb $(MODLFLAGS)
