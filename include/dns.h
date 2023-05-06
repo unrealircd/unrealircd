@@ -43,7 +43,8 @@ struct DNSStats {
 };
 
 /** Time to keep cache records. */
-#define DNSCACHE_TTL			600
+#define DNS_CACHE_TTL			600
+#define DNS_NEGCACHE_TTL		60
 
 /** Size of the hash table (prime!).
  * Consumes <this>*4 on ia32 and <this>*4 on 64 bit

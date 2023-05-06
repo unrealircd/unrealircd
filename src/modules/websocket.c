@@ -589,10 +589,12 @@ int websocket_handle_request(Client *client, WebRequest *web)
 			he = unrealdns_doclient(client); /* call this once more */
 			if (!client->local->hostp)
 			{
-				if (he)
-					client->local->hostp = he;
+				if (!he)
+					SetDNSLookup(client); /* DNS lookup in progress */
+				else if (!he->h_name)
+					unreal_free_hostent(he); /* unresolved IP (negcache) */
 				else
-					SetDNSLookup(client);
+					client->local->hostp = he; /* cached */
 			} else
 			{
 				/* Race condition detected, DNS has been done, continue with auth */

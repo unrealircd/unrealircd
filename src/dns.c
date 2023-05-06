@@ -41,7 +41,7 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 void unrealdns_delasyncconnects(void);
 static uint64_t unrealdns_hash_ip(const char *ip);
 static void unrealdns_addtocache(const char *name, const char *ip);
-static const char *unrealdns_findcache_ip(const char *ip);
+static const char *unrealdns_findcache_ip(const char *ip, int *found);
 struct hostent *unreal_create_hostent(const char *name, const char *ip);
 static void unrealdns_freeandremovereq(DNSReq *r);
 void unrealdns_removecacherecord(DNSCache *c);
@@ -207,10 +207,19 @@ struct hostent *unrealdns_doclient(Client *client)
 {
 	DNSReq *r;
 	const char *cache_name;
+	int found;
 
-	cache_name = unrealdns_findcache_ip(client->ip);
+	cache_name = unrealdns_findcache_ip(client->ip, &found);
+	if (found && !cache_name)
+	{
+		/* Negatively cached */
+		return unreal_create_hostent(NULL, client->ip);
+	}
 	if (cache_name)
+	{
+		/* Cached */
 		return unreal_create_hostent(cache_name, client->ip);
+	}
 
 	/* Create a request */
 	r = safe_alloc(sizeof(DNSReq));
@@ -273,6 +282,7 @@ void unrealdns_cb_iptoname(void *arg, int status, int timeouts, struct hostent *
 	if ((status != 0) || !he->h_name || !*he->h_name)
 	{
 		/* Failed */
+		unrealdns_addtocache(NULL, client->ip); /* negcache */
 		proceed_normal_client_handshake(client, NULL);
 		return;
 	}
@@ -301,6 +311,7 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 	if ((status != 0) || (ipv6 && (he->h_length != 16)) || (!ipv6 && (he->h_length != 4)))
 	{
 		/* Failed: error code, or data length is incorrect */
+		unrealdns_addtocache(NULL, client->ip); /* negcache */
 		proceed_normal_client_handshake(client, NULL);
 		goto bad;
 	}
@@ -327,13 +338,15 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 	if (!he->h_addr_list[i])
 	{
 		/* Failed name <-> IP mapping */
+		unrealdns_addtocache(NULL, client->ip); /* negcache */
 		proceed_normal_client_handshake(client, NULL);
 		goto bad;
 	}
 
 	if (!valid_host(r->name, 1))
 	{
-		/* Hostname is bad, don't cache and consider unresolved */
+		/* Hostname is bad, consider it unresolved */
+		unrealdns_addtocache(NULL, client->ip); /* negcache */
 		proceed_normal_client_handshake(client, NULL);
 		goto bad;
 	}
@@ -342,9 +355,7 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 	strtolower(r->name);
 
 	/* Entry was found, verified, and can be added to cache */
-
 	unrealdns_addtocache(r->name, client->ip);
-	
 	he2 = unreal_create_hostent(r->name, client->ip);
 	proceed_normal_client_handshake(client, he2);
 
@@ -444,7 +455,10 @@ static void unrealdns_addtocache(const char *name, const char *ip)
 	c = safe_alloc(sizeof(DNSCache));
 	safe_strdup(c->name, name);
 	safe_strdup(c->ip, ip);
-	c->expires = TStime() + DNSCACHE_TTL;
+	if (c->name == NULL)
+		c->expires = TStime() + DNS_NEGCACHE_TTL;
+	else
+		c->expires = TStime() + DNS_CACHE_TTL;
 	
 	/* Add to hash table */
 	if (cache_hashtbl[hashv])
@@ -469,7 +483,7 @@ static void unrealdns_addtocache(const char *name, const char *ip)
 /** Search the cache for a confirmed ip->name and name->ip match, by address.
  * @returns The resolved hostname, or NULL if not found in cache.
  */
-static const char *unrealdns_findcache_ip(const char *ip)
+static const char *unrealdns_findcache_ip(const char *ip, int *found)
 {
 	unsigned int hashv;
 	DNSCache *c;
@@ -477,13 +491,17 @@ static const char *unrealdns_findcache_ip(const char *ip)
 	hashv = unrealdns_hash_ip(ip);
 	
 	for (c = cache_hashtbl[hashv]; c; c = c->hnext)
+	{
 		if (!strcmp(ip, c->ip))
 		{
+			*found = 1;
 			dnsstats.cache_hits++;
 			return c->name;
 		}
+	}
 	
 	dnsstats.cache_misses++;
+	*found = 0;
 	return NULL;
 }
 
@@ -631,8 +649,14 @@ CMD_FUNC(cmd_dns)
 	if (*param == 'l') /* LIST CACHE */
 	{
 		sendtxtnumeric(client, "DNS CACHE List (%u items):", unrealdns_num_cache);
+		sendtxtnumeric(client, "Positively cached (resolved hosts, cached %d seconds):", DNS_CACHE_TTL);
 		for (c = cache_list; c; c = c->next)
-			sendtxtnumeric(client, " %s [%s]", c->name, c->ip);
+			if (c->name)
+				sendtxtnumeric(client, " %s [%s]", c->name, c->ip);
+		sendtxtnumeric(client, "Negatively cached (unresolved hosts, cached %d seconds):", DNS_NEGCACHE_TTL);
+		for (c = cache_list; c; c = c->next)
+			if (!c->name)
+				sendtxtnumeric(client, " %s", c->ip);
 	} else
 	if (*param == 'r') /* LIST REQUESTS */
 	{
