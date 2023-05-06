@@ -10,28 +10,30 @@ typedef enum {
 
 typedef struct DNSReq DNSReq;
 
-/* Depending on the request type, some fields are filled in:
- * cptr: DNSREQ_CLIENT, DNSREQ_CONNECT
- * link: DNSREQ_LINKCONF, DNSREQ_CONNECT
- */
 
+/** DNS Request that is ongoing - used in src/dns.c.
+ * Depending on the request type, some fields are filled in:
+ * .client: DNSREQ_CLIENT, DNSREQ_CONNECT
+ * .link: DNSREQ_LINKCONF, DNSREQ_CONNECT
+ */
 struct DNSReq {
 	DNSReq *prev, *next;
-	char *name; /**< Name being resolved (only for DNSREQ_LINKCONF and DNSREQ_CONNECT) */
-	char ipv6; /**< Resolving for ipv6 or ipv4? */
-	DNSReqType type; /**< DNS Request type (DNSREQ_*) */
-	Client *client; /**< Client the request is for, NULL if client died OR unavailable */
-	ConfigItem_link *linkblock; /**< Linkblock */
+	char *name;			/**< Name being resolved (only for DNSREQ_LINKCONF and DNSREQ_CONNECT) */
+	char ipv6;			/**< Resolving for ipv6 or ipv4? */
+	DNSReqType type;		/**< DNS Request type (DNSREQ_*) */
+	Client *client;			/**< Client the request is for, NULL if client died OR unavailable */
+	ConfigItem_link *linkblock;	/**< Linkblock */
 };
 
 typedef struct DNSCache DNSCache;
 
+/** DNS Cache entry - used in src/dns.c */
 struct DNSCache {
 	DNSCache *prev, *next;		/**< Previous and next in linked list */
 	DNSCache *hprev, *hnext;	/**< Previous and next in hash list */
-	char *name;					/**< The hostname */
-	char *ip;					/**< The IP address */
-	time_t expires;				/**< When record expires */
+	char *name;			/**< The hostname */
+	char *ip;			/**< The IP address */
+	time_t expires;			/**< When record expires */
 };
 
 typedef struct DNSStats DNSStats;
@@ -46,22 +48,21 @@ struct DNSStats {
 #define DNS_CACHE_TTL			600
 #define DNS_NEGCACHE_TTL		60
 
-/** Size of the hash table (prime!).
- * Consumes <this>*4 on ia32 and <this>*4 on 64 bit
- * 241 seems a good bet.. which ~1k on ia32 and ~2k on ia64.
- */
-#define DNS_HASH_SIZE	241
+/** Size of the DNS cache hash table. */
+#define DNS_HASH_SIZE	4096
 
 /** Max # of entries we want in our cache.
  * This:
  * a) prevents us from using too much memory, and
  * b) prevents us from keeping useless cache records
  *
- * A dnscache item is roughly ~80 bytes in size (slightly more on x86),
- * so 241*80=~20k, which seems reasonable ;).
+ * A dnscache item is roughly ~120 bytes in size,
+ * so 4096*120=480kb, which seems reasonable ;).
+ *
+ * Note that in most situations there will be far
+ * fewer items, as the TTL is rather short.
  */
 #define DNS_MAX_ENTRIES	DNS_HASH_SIZE
-
 
 extern ares_channel resolver_channel;
 
