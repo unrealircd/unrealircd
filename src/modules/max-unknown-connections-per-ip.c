@@ -51,8 +51,8 @@ static int check_too_many_unknown_connections(Client *client)
 	{
 		list_for_each_entry(c, &unknown_list, lclient_node)
 		{
-			if (client->local && client->local->listener &&
-			    (client->local->listener->options & LISTENER_NO_CHECK_CONNECT_FLOOD))
+			if (c->local && c->local->listener &&
+			    (c->local->listener->options & LISTENER_NO_CHECK_CONNECT_FLOOD))
 			{
 				continue;
 			}
