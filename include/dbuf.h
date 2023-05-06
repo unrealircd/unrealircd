@@ -25,8 +25,19 @@
 
 #include "list.h"
 
-/* 512 bytes -- 510 character bytes + \r\n, per rfc1459 */
-#define DBUF_BLOCK_SIZE		(512)
+/** Size of a dbuf block.
+ * This used to be 512 bytes, since that was max line per RFC1459.
+ * Bumped to 4k because lines tend to be bigger nowadays, now
+ * that we have message tags and all. And some other IRCd code
+ * uses dbuf for non-IRC data also, which also prefers larger buffers.
+ * Alignment details:
+ * We don't set it to 4096 bytes exactly because we want the
+ * struct 'dbufdbuf' (see further down) to be exactly 4096 bytes.
+ * Since it includes some other struct members, 4072 seems to do it
+ * on 64 bit archs. Note that there is no need to provide room
+ * for malloc overhead as we use mempools.
+ */
+#define DBUF_BLOCK_SIZE		(4072)
 
 /*
 ** dbuf is a collection of functions which can be used to
@@ -53,10 +64,8 @@ typedef struct dbuf {
 ** And this 'dbufbuf' should never be referenced outside the
 ** implementation of 'dbuf'--would be "hidden" if C had such
 ** keyword...
-** If it was possible, this would compile to be exactly 1 memory
-** page in size. 2048 bytes seems to be the most common size, so
-** as long as a pointer is 4 bytes, we get 2032 bytes for buffer
-** data after we take away a bit for malloc to play with. -avalon
+** This is exactly a page in total, see comment at
+** DBUF_BLOCK_SIZE definition further up.
 */
 typedef struct dbufbuf {
 	struct list_head dbuf_node;
