@@ -148,6 +148,7 @@ struct Configuration {
 	long handshake_timeout;
 	long sasl_timeout;
 	long handshake_delay;
+	long handshake_boot_delay;
 	BanTarget automatic_ban_target;
 	BanTarget manual_ban_target;
 	char *reject_message_too_many_connections;

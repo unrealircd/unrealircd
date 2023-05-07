@@ -4,6 +4,19 @@ This is the git version (development version) for future 6.1.1. This is work
 in progress and may not be a stable version.
 
 ### Enhancements:
+* New setting [set::handshake-boot-delay](https://www.unrealircd.org/docs/Set_block#set%3A%3Ahandshake-boot-delay)
+  which allows server linking autoconnects to kick in (and incoming
+  servers on serversonly ports), before allowing clients in. This
+  potentially avoids part of the mess when initially linking on-boot.
+  This option is not turned on by default, you have to set it explicitly.
+  * This is not a useful feature on hubs, as they don't have clients.
+  * It can be useful on client servers, if you `autoconnect` to your hub.
+  * If you connect services to a server with clients this can be useful
+    as well, especially in single-server setups. You would have to set
+    a low `retrywait` in your anope conf (or similar services package)
+    of like `5s` instead of the default `60s`.
+    Then after an IRCd restart, your services link in before your clients
+    and your IRC users have SASL available straight from the start.
 * JSON-RPC:
   * New call `log.list` to fetch past 1000 log entries. This functionality
     is only loaded if you include `rpc.modules.default.conf`, so not wasting

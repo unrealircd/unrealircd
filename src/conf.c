@@ -7871,6 +7871,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			tempiConf.handshake_delay = config_checkval(cep->value, CFG_TIME);
 		}
+		else if (!strcmp(cep->name, "handshake-boot-delay"))
+		{
+			tempiConf.handshake_boot_delay = config_checkval(cep->value, CFG_TIME);
+		}
 		else if (!strcmp(cep->name, "automatic-ban-target"))
 		{
 			tempiConf.automatic_ban_target = ban_target_strtoval(cep->value);
@@ -9166,6 +9170,18 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			if (v >= 10)
 			{
 				config_error("%s:%i: set::handshake-delay: value should be less than 10 seconds.",
+					cep->file->filename, cep->line_number);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->name, "handshake-boot-delay"))
+		{
+			int v;
+			CheckNull(cep);
+			v = config_checkval(cep->value, CFG_TIME);
+			if (v > 15)
+			{
+				config_error("%s:%i: set::handshake-boot-delay: value cannot be more than 15 seconds.",
 					cep->file->filename, cep->line_number);
 				errors++;
 			}

@@ -103,12 +103,26 @@ void parse_client_queued(Client *client)
 	if (IsIdentLookup(client))
 		return; /* we delay processing of data until identd has replied */
 
-	if (!IsUser(client) && !IsServer(client) && (iConf.handshake_delay > 0) &&
-	    !IsNoHandshakeDelay(client) &&
-	    !IsUnixSocket(client) &&
-	    (TStime() - client->local->creationtime < iConf.handshake_delay))
+	/* Handshake delay and such.. */
+	if (!IsUser(client) && !IsServer(client) && !IsUnixSocket(client) && !IsLocalhost(client))
 	{
-		return; /* we delay processing of data until set::handshake-delay is reached */
+		if ((iConf.handshake_delay > 0) &&
+		    !IsNoHandshakeDelay(client) &&
+		    (TStime() - client->local->creationtime < iConf.handshake_delay))
+		{
+			/* delay processing of data until set::handshake-delay is reached */
+			return;
+		}
+		if ((iConf.handshake_boot_delay > 0) &&
+		    (TStime() - me.local->creationtime < iConf.handshake_boot_delay) &&
+		    client->local->listener &&
+		    !(client->local->listener->options & LISTENER_SERVERSONLY))
+		{
+			/* the first few seconds after boot we only accept server connections
+			 * (set::handshake-boot-delay).
+			 */
+			return;
+		}
 	}
 
 	while (DBufLength(&client->local->recvQ) && !client_lagged_up(client))
