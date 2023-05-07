@@ -4,7 +4,31 @@ This is the git version (development version) for future 6.1.1. This is work
 in progress and may not be a stable version.
 
 ### Enhancements:
-* JSON-RPC call `log.list` to fetch past 1000 log entries
+* JSON-RPC:
+  * New call `log.list` to fetch past 1000 log entries. This functionality
+    is only loaded if you include `rpc.modules.default.conf`, so not wasting
+    any memory on servers that are not used for JSON-RPC.
+
+### Changes:
+* Some small DNS performance improvements:
+  * We already cache DNS lookups of clients that happen during connection.
+    From now on we 'negatively cache' unresolved hosts for 60 seconds too.
+  * The maximum number of cached records was raised to 4096.
+  * We no longer use "search domains" to avoid silly lookups for like
+    `4.3.2.1.dnsbl.dronebl.org.mydomain.org`.
+* Data buffer performance tweak, from 512 bytes to ~4K. This results in
+  less write calls (lower CPU usage) and more data per TCP/IP packet.
+* Blacklist hits are now logged globally. This means they show up with
+  snomask `B`, are logged, and also show up in the webpanel "Logs" view.
+* The event `REMOTE_CLIENT_JOIN` was mass-triggered when servers were
+  syncing. They are now hidden, just like `REMOTE_CLIENT_CONNECT`.
+
+### Fixes:
+* Crash on FreeBSD/NetBSD when using JSON-RPC, due to clashing `rpc_call`
+  symbol in their libc library.
+* When using the webpanel, if an IRC client tried to connect with the same
+  IP as the webpanel server, it would often receive the error "Too many
+  unknown connections". This only affected non-localhost connections.
 
 UnrealIRCd 6.1.0
 -----------------
