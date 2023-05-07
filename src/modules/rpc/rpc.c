@@ -79,7 +79,7 @@ int rpc_handle_body_websocket(Client *client, WebRequest *web, const char *readb
 int rpc_packet_in_websocket(Client *client, char *readbuf, int length);
 int rpc_packet_in_unix_socket(Client *client, const char *readbuf, int *length);
 void rpc_call_text(Client *client, const char *buf, int len);
-void rpc_call(Client *client, json_t *request);
+void rpc_call_json(Client *client, json_t *request);
 void _rpc_response(Client *client, json_t *request, json_t *result);
 void _rpc_error(Client *client, json_t *request, JsonRpcError error_code, const char *error_message);
 void _rpc_error_fmt(Client *client, json_t *request, JsonRpcError error_code, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,4,5)));
@@ -575,7 +575,7 @@ void rpc_close(Client *client)
 }
 
 /** Handle the RPC request: input is a buffer with a certain length.
- * This calls rpc_call()
+ * This calls rpc_call_json()
  */
 void rpc_call_text(Client *client, const char *readbuf, int len)
 {
@@ -602,7 +602,7 @@ void rpc_call_text(Client *client, const char *readbuf, int len)
 		rpc_close(client);
 		return;
 	}
-	rpc_call(client, request);
+	rpc_call_json(client, request);
 	json_decref(request);
 }
 
@@ -913,7 +913,7 @@ int parse_rpc_call(Client *client, json_t *mainrequest, json_t *request, const c
 }
 
 /** Handle the RPC request: request is in JSON */
-void rpc_call(Client *client, json_t *request)
+void rpc_call_json(Client *client, json_t *request)
 {
 	const char *method;
 	json_t *params;
@@ -1541,7 +1541,7 @@ void rpc_call_remote(RRPC *r)
 	safe_strdup(client->rpc->rpc_user, "<remote>");
 	// Note: NOT added to hash table or id table etc.
 	list_add(&client->client_node, &rpc_remote_list);
-	rpc_call(client, request);
+	rpc_call_json(client, request);
 	json_decref(request);
 
 	/* And free the temporary client, unless it is async... */
@@ -1886,7 +1886,7 @@ EVENT(rpc_do_timers)
 		e_next = e->next;
 		if (minimum_msec_since_last_run(&e->last_run, e->every_msec))
 		{
-			rpc_call(e->client, e->request);
+			rpc_call_json(e->client, e->request);
 		}
 		// TODO: maybe do counts as well?
 	}
