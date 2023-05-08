@@ -531,21 +531,21 @@ CMD_FUNC(cmd_sjoin)
 			/* Adding of list modes */
 			if (*item_modes == 'b')
 			{
-				if (add_listmode_ex(&channel->banlist, client, channel, item, setby, setat) != -1)
+				if (add_listmode_ex(&channel->banlist, client, channel, item, setby, setat) == 1)
 				{
 					Addit('b', item);
 				}
 			}
 			if (*item_modes == 'e')
 			{
-				if (add_listmode_ex(&channel->exlist, client, channel, item, setby, setat) != -1)
+				if (add_listmode_ex(&channel->exlist, client, channel, item, setby, setat) == 1)
 				{
 					Addit('e', item);
 				}
 			}
 			if (*item_modes == 'I')
 			{
-				if (add_listmode_ex(&channel->invexlist, client, channel, item, setby, setat) != -1)
+				if (add_listmode_ex(&channel->invexlist, client, channel, item, setby, setat) == 1)
 				{
 					Addit('I', item);
 				}

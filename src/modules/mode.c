@@ -593,10 +593,10 @@ const char *mode_ban_handler(Client *client, Channel *channel, const char *param
 		}
 	}
 
-	if ( (what == MODE_ADD && add_listmode(banlist, client, channel, tmpstr)) ||
+	if ( (what == MODE_ADD && (add_listmode(banlist, client, channel, tmpstr) != 1)) ||
 	     (what == MODE_DEL && del_listmode(banlist, channel, tmpstr)))
 	{
-		return NULL;	/* already exists */
+		return NULL;	/* ban to be added already exists, or ban to be deleted does not exist */
 	}
 
 	return tmpstr;

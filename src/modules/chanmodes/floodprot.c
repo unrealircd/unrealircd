@@ -1407,7 +1407,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 			} else {
 				snprintf(mask, sizeof(mask), "*!*@%s", GetHost(client));
 			}
-			if (add_listmode(&channel->banlist, &me, channel, mask) == 0)
+			if (add_listmode(&channel->banlist, &me, channel, mask) == 1)
 			{
 				mtags = NULL;
 				new_message(&me, NULL, &mtags);
@@ -1415,7 +1415,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 				sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 				    ":%s MODE %s +b %s", me.name, channel->name, mask);
 				free_message_tags(mtags);
-			} /* else.. ban list is full */
+			} /* else.. ban list is full or already exists */
 		}
 		mtags = NULL;
 		kick_user(NULL, channel, &me, client, errbuf);
@@ -1777,7 +1777,7 @@ int do_floodprot_action_alternative(Channel *channel, int what, FloodType *flood
 	         floodtype->alternative_ban_action);
 
 	/* Add the ban internally */
-	if (add_listmode(&channel->banlist, &me, channel, ban) == -1)
+	if (add_listmode(&channel->banlist, &me, channel, ban) != 1)
 		return 0; /* ban list full (or ban already exists) */
 
 	/* First the notice to the chanops */

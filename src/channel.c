@@ -242,12 +242,16 @@ int identical_ban(const char *one, const char *two)
 /** Add a listmode (+beI) with the specified banid to
  *  the specified channel. (Extended version with
  *  set by nick and set on timestamp)
+ * @retval	1	Added
+ * @retval	0	Updated
+ * @retval	-1	Ban list full
  */
 int add_listmode_ex(Ban **list, Client *client, Channel *channel, const char *banid, const char *setby, time_t seton)
 {
 	Ban *ban;
 	int cnt = 0, len;
 	int do_not_add = 0;
+	char isnew = 0;
 
 	//if (MyUser(client))
 	//	collapse(banid);
@@ -294,6 +298,7 @@ int add_listmode_ex(Ban **list, Client *client, Channel *channel, const char *ba
 		ban = make_ban();
 		ban->next = *list;
 		*list = ban;
+		isnew = 1;
 	}
 
 	if ((ban->when > 0) && (seton >= ban->when))
@@ -308,7 +313,7 @@ int add_listmode_ex(Ban **list, Client *client, Channel *channel, const char *ba
 	safe_strdup(ban->banstr, banid); /* cAsE may differ, use oldest version of it */
 	safe_strdup(ban->who, setby);
 	ban->when = seton;
-	return 0;
+	return isnew ? 1 : 0;
 }
 
 /** Add a listmode (+beI) with the specified banid to
