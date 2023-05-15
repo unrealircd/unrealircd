@@ -642,19 +642,17 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
 	Membership *channels;
 	Member *users;
 	Client *acptr;
+	LineCache *cache;
+	char check_invisible;
 
-	/* We now create the buffer _before_ we send it to the clients. -- Syzop */
-	*sendbuf = '\0';
-	va_start(vl, pattern);
-	vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, user, pattern, vl);
-	va_end(vl);
-
+	cache = linecache_init();
 	++current_serial;
-
 	if (user->user)
 	{
 		for (channels = user->user->channel; channels; channels = channels->next)
 		{
+			check_invisible = invisible_user_in_channel(user, channels->channel); // FIXME: we only have a slow version of this function
+
 			for (users = channels->channel->members; users; users = users->next)
 			{
 				acptr = users->client;
@@ -671,14 +669,18 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
 				if (acptr == skip)
 					continue; /* the one to skip */
 
-				if (!user_can_see_member(acptr, user, channels->channel))
+				// FIXME: use user_can_see_member_fast()
+				if (check_invisible && user_can_see_member(acptr, user, channels->channel))
 					continue; /* the sending user (quit'ing or nick changing) is 'invisible' -- skip */
 
 				acptr->local->serial = current_serial;
-				sendto_one(acptr, mtags, "%s", sendbuf);
+				va_start(vl, pattern);
+				vsendto_prefix_one_cached(cache, 0, acptr, user, mtags, pattern, vl);
+				va_end(vl);
 			}
 		}
 	}
+	linecache_free(cache);
 }
 
 /** Send a QUIT message to all local users on all channels where
