@@ -170,40 +170,25 @@ CMD_FUNC(cmd_join)
 }
 
 /** Send JOIN message for 'client' to all users in 'channel'.
- * Taking into account that not everyone in channel should see the JOIN (mode +D)
- * and taking into account the different types of JOIN (due to CAP extended-join).
+ * Taking into account the different types of JOIN (due to CAP extended-join).
  */
 void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mtags)
 {
-	int chanops_only = invisible_user_in_channel(client, channel);
-	Member *lp;
-	Client *acptr;
-	char joinbuf[512];
-	char exjoinbuf[512];
+	sendto_channel(channel, client, NULL, NULL,
+	               CAP_EXTENDED_JOIN|CAP_INVERT,
+	               CHECK_INVISIBLE|SEND_LOCAL,
+	               mtags,
+		       ":%s JOIN :%s",
+		       client->name, channel->name);
 
-	ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN :%s",
-		client->name, client->user->username, GetHost(client), channel->name);
-
-	ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
-		client->name, client->user->username, GetHost(client), channel->name,
-		IsLoggedIn(client) ? client->user->account : "*",
-		client->info);
-
-	for (lp = channel->members; lp; lp = lp->next)
-	{
-		acptr = lp->client;
-
-		if (!MyConnect(acptr))
-			continue; /* only locally connected clients */
-
-		if (chanops_only && !check_channel_access_member(lp, "hoaq") && (client != acptr))
-			continue; /* skip non-ops if requested to (used for mode +D), but always send to 'client' */
-
-		if (HasCapabilityFast(acptr, CAP_EXTENDED_JOIN))
-			sendto_one(acptr, mtags, "%s", exjoinbuf);
-		else
-			sendto_one(acptr, mtags, "%s", joinbuf);
-	}
+	sendto_channel(channel, client, NULL, NULL,
+	               CAP_EXTENDED_JOIN,
+	               CHECK_INVISIBLE|SEND_LOCAL,
+	               mtags,
+		       ":%s JOIN %s %s :%s",
+		       client->name, channel->name,
+		       IsLoggedIn(client) ? client->user->account : "*",
+		       client->info);
 }
 
 /* Routine that actually makes a user join the channel

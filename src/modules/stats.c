@@ -83,6 +83,7 @@ int stats_class(Client *, const char *);
 int stats_officialchannels(Client *, const char *);
 int stats_spamfilter(Client *, const char *);
 int stats_fdtable(Client *, const char *);
+int stats_linecache(Client *client, const char *para);
 
 #define SERVER_AS_PARA 0x1
 #define FLAGS_AS_PARA 0x2
@@ -134,6 +135,7 @@ struct statstab StatsTable[] = {
 	{ 'v', "denyver",	stats_denyver,		0 		},
 	{ 'x', "notlink",	stats_notlink,		0 		},
 	{ 'y', "class",		stats_class,		0 		},
+	{ '9', "linecache",	stats_linecache,	0		},
 	{ 0, 	NULL, 		NULL, 			0		}
 };
 
@@ -1053,5 +1055,26 @@ int stats_linkinfoint(Client *client, const char *para, int all)
 				acptr->name, acptr->server->flags.synced ? "SYNCED" : "NOT SYNCED!!");
 	}
 #endif
+	return 0;
+}
+
+int stats_linecache(Client *client, const char *para)
+{
+	ClientCapability *e;
+
+	if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
+	{
+		sendnumeric(client, ERR_NOPRIVILEGES);
+		return 0;
+	}
+
+	sendtxtnumeric(client, "Line cache: caps that have an effect message tags:");
+	for (e = clicaps; e; e = e->next)
+		if (e->cap & clicaps_affecting_mtag)
+			sendtxtnumeric(client, "CAP %s", e->name);
+
+	//sendtxtnumeric(client, " ");
+	//sendtxtnumeric(client, "Line statistics:");	
+
 	return 0;
 }

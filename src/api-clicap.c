@@ -33,6 +33,8 @@ int old_caps_proto[MAXCLICAPS]; /**< List of old CAP protocol values - used for 
 
 MODVAR ClientCapability *clicaps = NULL; /* List of client capabilities */
 
+MODVAR long clicaps_affecting_mtag = 0; /**< Bitmask of client capabilities that affect message tags (server-time, message-tags, label, etc.) */
+
 void clicap_init(void)
 {
 	memset(&old_caps, 0, sizeof(old_caps));
@@ -132,6 +134,19 @@ long clicap_allocate_cap(void)
 	return 0;
 }
 
+/** This updates 'clicaps_affecting_mtag' which is used in LineCache in src/send.c */
+static void clicap_update_affecting(void)
+{
+	ClientCapability *e;
+	long v = 0;
+
+	for (e = clicaps; e; e = e->next)
+		if (e->mtag_handler || (e->flags & CLICAP_FLAGS_AFFECTS_MTAGS))
+			v |= e->cap;
+
+	clicaps_affecting_mtag = v;
+}
+
 /**
  * Adds a new clicap token.
  *
@@ -210,6 +225,8 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clic
 		module->errorcode = MODERR_NOERROR;
 	}
 
+	clicap_update_affecting();
+
 	return clicap;
 }
 
@@ -237,6 +254,8 @@ void unload_clicap_commit(ClientCapability *clicap)
 	DelListItem(clicap, clicaps);
 	safe_free(clicap->name);
 	safe_free(clicap);
+	clicap_update_affecting();
+
 }
 /**
  * Removes the specified clicap token.

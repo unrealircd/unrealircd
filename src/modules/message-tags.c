@@ -53,6 +53,7 @@ MOD_INIT()
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "message-tags";
+	cap.flags = CLICAP_FLAGS_AFFECTS_MTAGS; /* needed explicitly */
 	ClientCapabilityAdd(modinfo->handle, &cap, &CAP_MESSAGE_TAGS);
 	return MOD_SUCCESS;
 }

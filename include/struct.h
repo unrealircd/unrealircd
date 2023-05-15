@@ -2411,6 +2411,7 @@ struct ConfigItem_badword {
 #define SEND_ALL	(SEND_LOCAL|SEND_REMOTE)
 #define SKIP_DEAF	0x4
 #define SKIP_CTCP	0x8
+#define CHECK_INVISIBLE	0x10
 
 typedef struct GeoIPResult GeoIPResult;
 struct GeoIPResult {

@@ -495,6 +495,7 @@ struct Versionflag {
 typedef struct MessageTagHandler MessageTagHandler;
 
 #define CLICAP_FLAGS_NONE               0x0
+#define CLICAP_FLAGS_AFFECTS_MTAGS	0x1	/**< Setting this clientcapability can have an effect on which message tags are displayed or their content */
 #define CLICAP_FLAGS_ADVERTISE_ONLY     0x4
 
 typedef struct ClientCapability ClientCapability;
@@ -833,6 +834,7 @@ extern MODVAR Hook		*Hooks[MAXHOOKTYPES];
 extern MODVAR Hooktype		Hooktypes[MAXCUSTOMHOOKS];
 extern MODVAR Callback *Callbacks[MAXCALLBACKS], *RCallbacks[MAXCALLBACKS];
 extern MODVAR ClientCapability *clicaps;
+extern MODVAR long clicaps_affecting_mtag;
 
 extern Event *EventAdd(Module *module, const char *name, vFP event, void *data, long every_msec, int count);
 extern void   EventDel(Event *event);
