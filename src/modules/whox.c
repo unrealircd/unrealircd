@@ -505,10 +505,15 @@ static int do_match(Client *client, Client *acptr, char *mask, struct who_format
 static void who_common_channel(Client *client, Channel *channel,
 	char *mask, int *maxmatches, struct who_format *fmt)
 {
-	Member *cm = channel->members;
+	Membership *us;
+	Member *cm;
 	Client *acptr;
 	Hook *h;
 	int i = 0;
+
+	us = find_membership_link(client->user->channel, channel);
+	if (!us)
+		abort(); /* impossible, we are in who_common_channel... */
 
 	for (cm = channel->members; cm; cm = cm->next)
 	{
@@ -520,14 +525,7 @@ static void who_common_channel(Client *client, Channel *channel,
 		if (IsMatch(fmt, WMATCH_OPER) && !IsOper(acptr))
 			continue;
 
-		for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-		{
-			i = (*(h->func.intfunc))(acptr,channel);
-			if (i != 0)
-				break;
-		}
-
-		if (i != 0 && !(check_channel_access(client, channel, "hoaq")) && !(check_channel_access(acptr, channel, "hoaq") || check_channel_access(acptr,channel, "v")))
+		if (!user_can_see_member_fast(client, acptr, channel, cm, us->member_modes))
 			continue;
 
 		SetMark(acptr);
@@ -626,7 +624,8 @@ static void who_global(Client *client, char *mask, int operspy, struct who_forma
 static void do_who_on_channel(Client *client, Channel *channel,
 	int member, int operspy, struct who_format *fmt)
 {
-	Member *cm = channel->members;
+	Membership *us = find_membership_link(client->user->channel, channel);
+	Member *cm;
 	Hook *h;
 	int i = 0;
 
@@ -637,14 +636,7 @@ static void do_who_on_channel(Client *client, Channel *channel,
 		if (IsMatch(fmt, WMATCH_OPER) && !IsOper(acptr))
 			continue;
 
-		for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-		{
-			i = (*(h->func.intfunc))(acptr,channel);
-			if (i != 0)
-				break;
-		}
-
-		if (!operspy && (acptr != client) && i != 0 && !(check_channel_access(client, channel, "hoaq")) && !(check_channel_access(acptr, channel, "hoaq") || check_channel_access(acptr,channel, "v")))
+		if (!operspy && !user_can_see_member_fast(client, acptr, channel, cm, us ? us->member_modes : NULL))
 			continue;
 
 		if (member || !IsInvisible(acptr))

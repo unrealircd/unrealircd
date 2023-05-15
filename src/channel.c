@@ -1278,11 +1278,15 @@ int has_common_channels(Client *c1, Client *c2)
 	return 0;
 }
 
-/** Returns 1 if user 'user' can see channel member 'target'.
+/** Returns 1 if user 'user' can see channel member 'target' - fast version.
  * This may return 0 if the user is 'invisible' due to mode +D rules.
- * NOTE: Membership is unchecked, assumed membership of both.
+ * @param user			The user who is looking around
+ * @param target		The target user who is being investigated
+ * @param channel		The channel
+ * @param target_member		The Member * struct of 'target'
+ * @param user_member_modes	The member modes that 'user' has, eg "o". Can be NULL if not in channel.
  */
-int user_can_see_member(Client *user, Client *target, Channel *channel)
+int user_can_see_member_fast(Client *user, Client *target, Channel *channel, Member *target_member, const char *user_member_modes)
 {
 	Hook *h;
 	int j = 0;
@@ -1292,16 +1296,45 @@ int user_can_see_member(Client *user, Client *target, Channel *channel)
 
 	for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
 	{
-		j = (*(h->func.intfunc))(target,channel);
+		j = (*(h->func.intfunc))(target, channel, target_member);
 		if (j != 0)
 			break;
 	}
 
-	/* We must ensure that user is allowed to "see" target */
-	if (j != 0 && !(check_channel_access(target, channel, "hoaq") || check_channel_access(target,channel, "v")) && !check_channel_access(user, channel, "hoaq"))
+	/* Requested to hide the person, but make sure neither one is +hoaq... */
+	if ((j != 0) &&
+	    !check_channel_access_member(target_member, "vhoaq") &&
+	    !(user_member_modes && check_channel_access_string(user_member_modes, "hoaq")))
+	{
 		return 0;
+	}
 
 	return 1;
+}
+
+/** Returns 1 if user 'user' can see channel member 'target'.
+ * This may return 0 if the user is 'invisible' due to mode +D rules.
+ * NOTE: Membership is unchecked, assumed membership of both.
+ */
+int user_can_see_member(Client *user, Client *target, Channel *channel)
+{
+	Membership *user_member = NULL;
+	Member *target_member = NULL;
+
+	if (user == target)
+		return 1;
+
+	if (IsUser(user))
+		user_member = find_membership_link(user->user->channel, channel);
+
+	if (IsUser(target))
+		target_member = find_member_link(channel->members, target); // SLOW!
+
+	/* User is not in channel, yeah what shall we return? :D */
+	if (!target_member)
+		return 0;
+
+	return user_can_see_member_fast(user, target, channel, target_member, user_member ? user_member->member_modes : NULL);
 }
 
 /** Returns 1 if user 'target' is invisible in channel 'channel'.
@@ -1310,16 +1343,22 @@ int user_can_see_member(Client *user, Client *target, Channel *channel)
 int invisible_user_in_channel(Client *target, Channel *channel)
 {
 	Hook *h;
+	Member *target_member;
 	int j = 0;
+
+	target_member = find_member_link(channel->members, target); // SLOW!
+	if (!target_member)
+		return 0; /* not in channel */
 
 	for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
 	{
-		j = (*(h->func.intfunc))(target,channel);
+		j = (*(h->func.intfunc))(target,channel,target_member);
 		if (j != 0)
 			break;
 	}
 
 	/* We must ensure that user is allowed to "see" target */
+	// SLOW !!!
 	if (j != 0 && !(check_channel_access(target, channel, "hoaq") || check_channel_access(target,channel, "v")))
 		return 1;
 

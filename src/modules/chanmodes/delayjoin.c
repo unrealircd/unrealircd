@@ -23,7 +23,7 @@ static Cmode *CmodePostDelayed = NULL;
 static Cmode_t EXTMODE_DELAYED;
 static Cmode_t EXTMODE_POST_DELAYED;
 
-int visible_in_channel(Client *client, Channel *channel);
+int visible_in_channel(Client *client, Channel *channel, Member *client_member);
 int moded_check_part(Client *client, Channel *channel);
 int moded_join(Client *client, Channel *channel);
 int moded_part(Client *client, Channel *channel, MessageTag *mtags, const char *comment);
@@ -262,11 +262,10 @@ int delayjoin_is_ok(Client *client, Channel *channel, char mode, const char *par
 }
 
 
-int visible_in_channel(Client *client, Channel *channel)
+int visible_in_channel(Client *client, Channel *channel, Member *client_member)
 {
-	return (channel_is_delayed(channel) || channel_is_post_delayed(channel)) && moded_user_invisible(client, channel);
+	return (channel_is_delayed(channel) || channel_is_post_delayed(channel)) && moded_member_invisible(client_member, channel);
 }
-
 
 int moded_join(Client *client, Channel *channel)
 {

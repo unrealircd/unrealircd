@@ -81,12 +81,13 @@ CMD_FUNC(cmd_names)
 	int mlen = strlen(me.name) + bufLen + 7;
 	Channel *channel;
 	Client *acptr;
-	int member;
+	Membership *us = NULL;
 	Member *cm;
 	int idx, flag = 1, spos;
 	const char *para = parv[1], *s;
 	char nuhBuffer[NICKLEN+USERLEN+HOSTLEN+3];
 	char buf[BUFSIZE];
+	char can_see_invisible;
 
 	if (parc < 2 || !MyConnect(client))
 	{
@@ -112,7 +113,8 @@ CMD_FUNC(cmd_names)
 	}
 
 	/* cache whether this user is a member of this channel or not */
-	member = IsMember(client, channel);
+	if (IsUser(client))
+		us = find_membership_link(client->user->channel, channel);
 
 	// FIXME: consider rewriting this whole thing to get rid of pointer juggling and stuff.
 
@@ -137,13 +139,15 @@ CMD_FUNC(cmd_names)
 
 	spos = idx;		/* starting point in buffer for names! */
 
+	can_see_invisible = ValidatePermissionsForPath("channel:see:names:invisible",client,NULL,channel,NULL);
+
 	for (cm = channel->members; cm; cm = cm->next)
 	{
 		acptr = cm->client;
-		if (IsInvisible(acptr) && !member && !ValidatePermissionsForPath("channel:see:names:invisible",client,acptr,channel,NULL))
+		if (IsInvisible(acptr) && !us && !can_see_invisible)
 			continue;
 
-		if (!user_can_see_member(client, acptr, channel))
+		if (!user_can_see_member_fast(client, acptr, channel, cm, us ? us->member_modes : NULL))
 			continue; /* invisible (eg: due to delayjoin) */
 
 		if (!multiprefix)

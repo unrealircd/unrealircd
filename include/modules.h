@@ -1942,10 +1942,11 @@ int hooktype_can_join_limitexceeded(Client *client, Channel *channel, const char
  * For example, the delayjoin module (+d/+D) will 'return 0' here if the user is hidden due to delayed join.
  * @param client		The client
  * @param channel		The channel
+ * @param client_member		The client Member * struct in the channel
  * @retval 0 The user is NOT visible
  * @retval 1 The user is visible
  */
-int hooktype_visible_in_channel(Client *client, Channel *channel);
+int hooktype_visible_in_channel(Client *client, Channel *channel, Member *client_member);
 
 /** Called to check if the channel of a user should be shown in WHOIS/WHO (function prototype for HOOKTYPE_SEE_CHANNEL_IN_WHOIS).
  * @param client		The client ASKING, eg doing the /WHOIS.
