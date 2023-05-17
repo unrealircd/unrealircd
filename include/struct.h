@@ -424,6 +424,7 @@ typedef enum ClientStatus {
 #define CLIENT_FLAG_NOHANDSHAKEDELAY	0x20000000	/**< No handshake delay */
 #define CLIENT_FLAG_SERVER_DISCONNECT_LOGGED	0x40000000	/**< Server disconnect message is (already) logged */
 #define CLIENT_FLAG_ASYNC_RPC			0x80000000	/**< Asynchronous remote RPC request - special case for rehash etc. */
+#define CLIENT_FLAG_IPUSERS_BUMPED	0x100000000	/**< The IpUsersBucket for this IP has been bumped (and needs to be decreased on disconnect) */
 
 /** @} */
 
@@ -583,7 +584,7 @@ typedef enum ClientStatus {
 #define ClearAsyncRPC(x)		do { (x)->flags &= ~CLIENT_FLAG_ASYNC_RPC; } while(0)
 /** @} */
 
-#define IsIPV6(x)			((x)->local->socket_type == SOCKET_TYPE_IPV6)
+#define IsIPV6(x)			((x)->local ? (((x)->local->socket_type == SOCKET_TYPE_IPV6) ? 1 : 0) : (strchr((x)->ip,':') ? 1 : 0))
 #define IsUnixSocket(x)			((x)->local->socket_type == SOCKET_TYPE_UNIX)
 #define SetIPV6(x)			do { (x)->local->socket_type = SOCKET_TYPE_IPV6; } while(0)
 #define SetUnixSocket(x)			do { (x)->local->socket_type = SOCKET_TYPE_UNIX; } while(0)
@@ -2282,6 +2283,15 @@ struct ThrottlingBucket
 	char *ip;
 	time_t since;
 	char count;
+};
+
+typedef struct IpUsersBucket IpUsersBucket;
+struct IpUsersBucket
+{
+	IpUsersBucket *prev, *next;
+	char rawip[16];
+	int local_clients;
+	int global_clients;
 };
 
 typedef struct CoreChannelModeTable CoreChannelModeTable;

@@ -432,6 +432,7 @@ extern void del_queries(const char *);
 #define CHAN_HASH_TABLE_SIZE 32768
 #define WHOWAS_HASH_TABLE_SIZE 32768
 #define THROTTLING_HASH_TABLE_SIZE 8192
+#define IPUSERS_HASH_TABLE_SIZE 8192
 extern uint64_t siphash(const char *in, const char *k);
 extern uint64_t siphash_raw(const char *in, size_t len, const char *k);
 extern uint64_t siphash_nocase(const char *in, const char *k);
@@ -456,8 +457,12 @@ extern Client *hash_find_id(const char *, Client *);
 extern Client *hash_find_nickatserver(const char *, Client *);
 extern Channel *find_channel(const char *name);
 extern Client *hash_find_server(const char *, Client *);
-extern struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_TABLE_SIZE];
-
+extern IpUsersBucket *find_ipusers_bucket(Client *client);
+extern IpUsersBucket *add_ipusers_bucket(Client *client);
+extern void decrease_ipusers_bucket(Client *client);
+extern MODVAR struct ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_TABLE_SIZE];
+extern MODVAR IpUsersBucket *IpUsersHash_ipv4[IPUSERS_HASH_TABLE_SIZE];
+extern MODVAR IpUsersBucket *IpUsersHash_ipv6[IPUSERS_HASH_TABLE_SIZE];
 
 
 /* Mode externs
@@ -1348,6 +1353,7 @@ extern GeoIPResult *geoip_lookup(const char *ip);
 extern void free_geoip_result(GeoIPResult *r);
 extern const char *get_operlogin(Client *client);
 extern const char *get_operclass(Client *client);
+extern struct sockaddr *raw_client_ip(Client *client);
 /* url stuff */
 extern const char *unreal_mkcache(const char *url);
 extern int has_cached_version(const char *url);

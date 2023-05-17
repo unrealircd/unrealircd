@@ -265,6 +265,7 @@ static char siphashkey_nick[SIPHASH_KEY_LENGTH];
 static char siphashkey_chan[SIPHASH_KEY_LENGTH];
 static char siphashkey_whowas[SIPHASH_KEY_LENGTH];
 static char siphashkey_throttling[SIPHASH_KEY_LENGTH];
+static char siphashkey_ipusers[SIPHASH_KEY_LENGTH];
 
 extern char unreallogo[];
 
@@ -277,6 +278,7 @@ void init_hash(void)
 	siphash_generate_key(siphashkey_chan);
 	siphash_generate_key(siphashkey_whowas);
 	siphash_generate_key(siphashkey_throttling);
+	siphash_generate_key(siphashkey_ipusers);
 
 	for (i = 0; i < NICK_HASH_TABLE_SIZE; i++)
 		INIT_LIST_HEAD(&clientTable[i]);
@@ -588,6 +590,24 @@ Channel *hash_get_chan_bucket(uint64_t hashv)
 	return channelTable[hashv];
 }
 
+/** Find a server by the SID-part of a UID.
+ * Eg you pass "001ABCDEFG" and it would look up server "001".
+ *
+ * @param uid	The UID, eg 001ABCDEFG
+ * @returns Server where the UID would be hosted on, or NULL
+ * if no such server is linked.
+ */
+Client *find_server_by_uid(const char *uid)
+{
+	char sid[SIDLEN+1];
+
+	if (!isdigit(*uid))
+		return NULL; /* not a UID/SID */
+
+	strlcpy(sid, uid, sizeof(sid));
+	return hash_find_id(sid, NULL);
+}
+
 /* Throttling - originally by Stskeeps */
 
 /* Note that we call this set::anti-flood::connect-flood nowadays */
@@ -685,7 +705,7 @@ void add_throttling_bucket(Client *client)
 	int hash;
 	struct ThrottlingBucket *n;
 
-	n = safe_alloc(sizeof(struct ThrottlingBucket));	
+	n = safe_alloc(sizeof(struct ThrottlingBucket));
 	n->next = n->prev = NULL; 
 	safe_strdup(n->ip, client->ip);
 	n->since = TStime();
@@ -721,20 +741,103 @@ int throttle_can_connect(Client *client)
 	}
 }
 
-/** Find a server by the SID-part of a UID.
- * Eg you pass "001ABCDEFG" and it would look up server "001".
- *
- * @param uid	The UID, eg 001ABCDEFG
- * @returns Server where the UID would be hosted on, or NULL
- * if no such server is linked.
- */
-Client *find_server_by_uid(const char *uid)
+/**** IP users hash table *****/
+
+MODVAR IpUsersBucket *IpUsersHash_ipv4[IPUSERS_HASH_TABLE_SIZE];
+MODVAR IpUsersBucket *IpUsersHash_ipv6[IPUSERS_HASH_TABLE_SIZE];
+
+uint64_t hash_ipusers(const char *ip)
 {
-	char sid[SIDLEN+1];
+	return siphash(ip, siphashkey_ipusers) % IPUSERS_HASH_TABLE_SIZE;
+}
 
-	if (!isdigit(*uid))
-		return NULL; /* not a UID/SID */
+IpUsersBucket *find_ipusers_bucket(Client *client)
+{
+	int hash = 0;
+	IpUsersBucket *p;
+	struct sockaddr *addr;
 
-	strlcpy(sid, uid, sizeof(sid));
-	return hash_find_id(sid, NULL);
+	addr = raw_client_ip(client);
+	hash = hash_ipusers(client->ip);
+
+	if (IsIPV6(client))
+	{
+		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
+			if (memcmp(p->rawip, &((struct sockaddr_in6 *)addr)->sin6_addr.s6_addr, 16) == 0)
+				return p;
+	} else {
+		for (p = IpUsersHash_ipv4[hash]; p; p = p->next)
+			if (memcmp(p->rawip, &((struct sockaddr_in *)addr)->sin_addr.s_addr, 4) == 0)
+				return p;
+	}
+
+	return NULL;
+}
+
+IpUsersBucket *add_ipusers_bucket(Client *client)
+{
+	int hash;
+	IpUsersBucket *n;
+	struct sockaddr *addr;
+
+	addr = raw_client_ip(client);
+	hash = hash_ipusers(client->ip);
+
+	n = safe_alloc(sizeof(IpUsersBucket));
+	if (addr->sa_family == AF_INET6)
+	{
+		memcpy(n->rawip, &((struct sockaddr_in6 *)addr)->sin6_addr.s6_addr, 16);
+		AddListItem(n, IpUsersHash_ipv6[hash]);
+	} else {
+		memcpy(n->rawip, &((struct sockaddr_in *)addr)->sin_addr.s_addr, 4);
+		AddListItem(n, IpUsersHash_ipv4[hash]);
+	}
+	return n;
+}
+
+void decrease_ipusers_bucket(Client *client)
+{
+	int hash = 0;
+	IpUsersBucket *p;
+	struct sockaddr *addr;
+
+	if (!(client->flags & CLIENT_FLAG_IPUSERS_BUMPED))
+		return; /* nothing to do */
+
+	client->flags &= ~CLIENT_FLAG_IPUSERS_BUMPED;
+
+	addr = raw_client_ip(client);
+	hash = hash_ipusers(client->ip);
+
+	if (IsIPV6(client))
+	{
+		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
+			if (memcmp(p->rawip, &((struct sockaddr_in6 *)addr)->sin6_addr.s6_addr, 16) == 0)
+				break;
+	} else {
+		for (p = IpUsersHash_ipv4[hash]; p; p = p->next)
+			if (memcmp(p->rawip, &((struct sockaddr_in *)addr)->sin_addr.s_addr, 4) == 0)
+				break;
+	}
+
+	if (!p)
+	{
+		unreal_log(ULOG_INFO, "user", "BUG_DECREASE_IPUSERS_BUCKET", client,
+		           "[BUG] decrease_ipusers_bucket() called but bucket is gone for client $client.details");
+		return;
+	}
+
+	p->global_clients--;
+	if (MyConnect(client))
+		p->local_clients--;
+
+	if ((p->global_clients == 0) && (p->local_clients == 0))
+	{
+		if (IsIPV6(client))
+			DelListItem(p, IpUsersHash_ipv6[hash]);
+		else
+			DelListItem(p, IpUsersHash_ipv4[hash]);
+		safe_free(p);
+	}
+	return;
 }

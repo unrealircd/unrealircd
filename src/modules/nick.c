@@ -56,6 +56,7 @@ CMD_FUNC(cmd_uid);
 int _register_user(Client *client);
 void nick_collision(Client *cptr, const char *newnick, const char *newid, Client *new, Client *existing, int type);
 int AllowClient(Client *client);
+int exceeds_maxperip(Client *client, ConfigItem_allow *aconf);
 
 MOD_TEST()
 {
@@ -698,6 +699,9 @@ nickkill2done:
 	if (*virthost != '*')
 		safe_strdup(client->user->virthost, virthost);
 
+	/* Add to ipusers hash table (to track global maxperip) */
+	exceeds_maxperip(client, NULL);
+
 	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
 
 	sendto_serv_butone_nickcmd(client->direction, recv_mtags, client, (*buf == '\0' ? "+" : buf));
@@ -1216,27 +1220,46 @@ void nick_collision(Client *cptr, const char *newnick, const char *newid, Client
 int exceeds_maxperip(Client *client, ConfigItem_allow *aconf)
 {
 	Client *acptr;
-	int local_cnt = 1;
-	int global_cnt = 1;
+	IpUsersBucket *bucket;
+
+	if (!client->ip)
+		return 0; /* eg. services */
+
+	bucket = find_ipusers_bucket(client);
+	if (!bucket)
+	{
+		client->flags |= CLIENT_FLAG_IPUSERS_BUMPED;
+		bucket = add_ipusers_bucket(client);
+		bucket->global_clients = 1;
+		if (MyConnect(client))
+			bucket->local_clients = 1;
+		return 0;
+	}
+
+	/* Bump if we haven't done so yet
+	 * (Actually not sure if this can ever be false, but...
+	 *  who knows with some 3rd party or some future change)
+	 */
+	if (!(client->flags & CLIENT_FLAG_IPUSERS_BUMPED))
+	{
+		bucket->global_clients++;
+		if (MyConnect(client))
+			bucket->local_clients++;
+		client->flags |= CLIENT_FLAG_IPUSERS_BUMPED;
+	}
 
 	if (find_tkl_exception(TKL_MAXPERIP, client))
 		return 0; /* exempt */
 
-	list_for_each_entry(acptr, &client_list, client_node)
+	if (aconf)
 	{
-		if (IsUser(acptr) && !strcmp(GetIP(acptr), GetIP(client)))
+		if ((bucket->local_clients > aconf->maxperip) ||
+		    (bucket->global_clients > aconf->global_maxperip))
 		{
-			if (MyUser(acptr))
-			{
-				local_cnt++;
-				if (local_cnt > aconf->maxperip)
-					return 1;
-			}
-			global_cnt++;
-			if (global_cnt > aconf->global_maxperip)
-				return 1;
+			return 1;
 		}
 	}
+
 	return 0;
 }
 
