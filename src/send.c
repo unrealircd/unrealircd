@@ -73,47 +73,6 @@ static char sendbuf2[MAXLINELENGTH];
  */
 MODVAR int  current_serial;
 
-/** Mark the socket as "dead".
- * This is used when exit_client() cannot be used from the
- * current code because doing so would be (too) unexpected.
- * The socket is closed later in the main loop.
- * NOTE: this function is becoming less important, now that
- *       exit_client() will not actively free the client.
- *       Still, sometimes we need to use dead_socket()
- *       since we don't want to be doing IsDead() checks after
- *       each and every sendto...().
- * @param to		Client to mark as dead
- * @param notice	The quit reason to use
- */
-int dead_socket(Client *to, const char *notice)
-{
-	DBufClear(&to->local->recvQ);
-	DBufClear(&to->local->sendQ);
-
-	if (IsDeadSocket(to))
-		return -1; /* already pending to be closed */
-
-	SetDeadSocket(to);
-
-	/* We may get here because of the 'CPR' in check_deadsockets().
-	 * In which case, we return -1 as well.
-	 */
-	if (to->local->error_str)
-		return -1; /* don't overwrite & don't send multiple times */
-	
-	if (!IsUser(to) && !IsUnknown(to) && !IsRPC(to) && !IsControl(to) && !IsClosing(to))
-	{
-		/* Looks like a duplicate error message to me?
-		 * If so, remove it here.
-		 */
-		unreal_log(ULOG_ERROR, "link", "LINK_CLOSING", to,
-		           "Link to server $client.details closed: $reason",
-		           log_data_string("reason", notice));
-	}
-	safe_strdup(to->local->error_str, notice);
-	return -1;
-}
-
 /** This is a callback function from the event loop.
  * All it does is call send_queued().
  */

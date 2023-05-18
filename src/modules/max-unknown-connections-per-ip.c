@@ -76,7 +76,7 @@ int max_unknown_connections_accept(Client *client)
 	/* Check set::max-unknown-connections-per-ip */
 	if (check_too_many_unknown_connections(client))
 	{
-		send_raw_direct(client, "ERROR :Closing Link: [%s] (Too many unknown connections from your IP)", client->ip);
+		dead_socket(client, "Too many unknown connections from your IP");
 		return HOOK_DENY;
 	}
 
@@ -88,7 +88,7 @@ int max_unknown_connections_ip_change(Client *client, const char *oldip)
 	/* Check set::max-unknown-connections-per-ip */
 	if (check_too_many_unknown_connections(client))
 	{
-		sendto_one(client, NULL, "ERROR :Closing Link: [%s] (Too many unknown connections from your IP)", client->ip);
+		dead_socket(client, "Too many unknown connections from your IP");
 		return HOOK_DENY;
 	}
 

@@ -24,6 +24,7 @@ char *debugmode = "";		/*  -"-    -"-   -"-  */
 int dorehash = 0;		/**< Rehash server on next socket loop */
 int dorestart = 0;		/**< Restart server on next socket loop */
 int doreloadcert = 0;		/**< Reload TLS certificate on next socket loop */
+MODVAR int quick_close = 0;	/**< Quickly close client connections (1) or be friendly to TLS users (0) */
 #ifndef _WIN32
 char **myargv;
 #else

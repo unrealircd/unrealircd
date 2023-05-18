@@ -1192,13 +1192,6 @@ void banned_client(Client *client, const char *bantype, const char *reason, int 
 	{
 		sendnumeric(client, ERR_YOUREBANNEDCREEP, buf);
 		sendnotice(client, "%s", buf);
-	} else {
-		send_raw_direct(client, ":%s %d %s :%s",
-		         me.name, ERR_YOUREBANNEDCREEP,
-		         (*client->name ? client->name : "*"),
-		         buf);
-		send_raw_direct(client, ":%s NOTICE %s :%s",
-		         me.name, (*client->name ? client->name : "*"), buf);
 	}
 
 	/* The final message in the ERROR is shorter. */
@@ -1221,8 +1214,8 @@ void banned_client(Client *client, const char *bantype, const char *reason, int 
 		exit_client(client, mtags, buf);
 	} else {
 		/* Special handling for direct Z-line code */
-		send_raw_direct(client, "ERROR :Closing Link: [%s] (%s)",
-		           client->ip, buf);
+		client->flags |= CLIENT_FLAG_DEADSOCKET_IS_BANNED;
+		dead_socket(client, buf);
 	}
 	safe_free_message_tags(mtags);
 }

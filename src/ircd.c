@@ -238,14 +238,16 @@ EVENT(check_pings)
 EVENT(check_deadsockets)
 {
 	Client *client, *next;
+	time_t deadline = TStime() - 10; // TODO: make TLS handshake timeout configurable, hardcoded to 10s atm
 
 	list_for_each_entry_safe(client, next, &unknown_list, lclient_node)
 	{
 		/* No need to notify opers here. It's already done when dead socket is set */
 		if (IsDeadSocket(client))
 		{
-			ClearDeadSocket(client); /* CPR. So we send the error. */
-			exit_client(client, NULL, client->local->error_str ? client->local->error_str : "Dead socket");
+			if (!quick_close && (client->local->creationtime > deadline) && IsTLSHandshake(client))
+				continue; /* give the client some more time */
+			deadsocket_exit(client, 0);
 			continue;
 		}
 	}
@@ -264,7 +266,7 @@ EVENT(check_deadsockets)
 	/* Next is for clients that are already exited (unlike the above).
 	 * The client is already out of all lists (channels, invites, etc etc)
 	 * and 90% has been freed. Here we actually free the remaining parts.
-	 * We don't have to send anything anymore.
+	 * We don't have to send anything anymore since the socket is already closed.
 	 */
 	list_for_each_entry_safe(client, next, &dead_list, client_node)
 	{

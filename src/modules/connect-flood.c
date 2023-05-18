@@ -46,29 +46,21 @@ int connect_flood_throttle(Client *client, int exitflags)
 
 	if (!(val = throttle_can_connect(client)))
 	{
-		if (exitflags & NO_EXIT_CLIENT)
-		{
-			ircsnprintf(zlinebuf, sizeof(zlinebuf),
-				"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) - "
-				"Email %s for more information.\r\n",
-				client->ip, KLINE_ADDRESS);
-			(void)send(client->local->fd, zlinebuf, strlen(zlinebuf), 0);
-			return HOOK_DENY;
-		} else {
-			ircsnprintf(zlinebuf, sizeof(zlinebuf),
-				    "Throttled: Reconnecting too fast - "
-				    "Email %s for more information.",
-				    KLINE_ADDRESS);
-			/* WAS: exit_client(client, NULL, zlinebuf);
-			 * Can't use exit_client() here because HOOKTYPE_IP_CHANGE call
-			 * may be too deep. Eg: read_packet -> webserver_packet_in ->
-			 * webserver_handle_request_header -> webserver_handle_request ->
-			 * RunHook().... and then returning without touching anything
-			 * after an exit_client() would not be feasible.
-			 */
-			dead_socket(client, zlinebuf);
-			return HOOK_DENY;
-		}
+		ircsnprintf(zlinebuf, sizeof(zlinebuf),
+			    "Throttled: Reconnecting too fast - "
+			    "Email %s for more information.",
+			    KLINE_ADDRESS);
+		/* There are two reasons why we can't use exit_client() here:
+		 * 1) Because the HOOKTYPE_IP_CHANGE call may be too deep.
+		 *    Eg: read_packet -> webserver_packet_in ->
+		 *    webserver_handle_request_header -> webserver_handle_request ->
+		 *    RunHook().... and then returning without touching anything
+		 *    after an exit_client() would not be feasible.
+		 * 2) Because in HOOKTYPE_ACCEPT we always need to use dead_socket
+		 *    if we want to print a friendly message to TLS users.
+		 */
+		dead_socket(client, zlinebuf);
+		return HOOK_DENY;
 	}
 	else if (val == 1)
 		add_throttling_bucket(client);

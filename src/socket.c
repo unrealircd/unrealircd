@@ -884,8 +884,18 @@ refuse_client:
 		int value = (*(h->func.intfunc))(client);
 		if (value == HOOK_DENY)
 		{
-			irccounts.unknown--;
-			goto refuse_client;
+			if (quick_close || !(listener->options & LISTENER_TLS))
+			{
+				/* If we are under attack or the client is
+				 * not using SSL/TLS then take the quick close
+				 * code path which rejects the client immediately.
+				 */
+				deadsocket_exit(client, 1);
+				irccounts.unknown--;
+				goto refuse_client;
+			} else {
+				/* continue, and even do the SSL/TLS handshake */
+			}
 		}
 		if (value != HOOK_CONTINUE)
 			break;
@@ -921,6 +931,70 @@ refuse_client:
 		listener->start_handshake(client);
 	}
 	return client;
+}
+
+/** Mark the socket as "dead".
+ * This is used when exit_client() cannot be used from the
+ * current code because doing so would be (too) unexpected.
+ * The socket is closed later in the main loop.
+ * NOTE: this function is becoming less important, now that
+ *       exit_client() will not actively free the client.
+ *       Still, sometimes we need to use dead_socket()
+ *       since we don't want to be doing IsDead() checks after
+ *       each and every sendto...().
+ * @param to		Client to mark as dead
+ * @param notice	The quit reason to use
+ */
+int dead_socket(Client *to, const char *notice)
+{
+	DBufClear(&to->local->recvQ);
+	DBufClear(&to->local->sendQ);
+
+	if (IsDeadSocket(to))
+		return -1; /* already pending to be closed */
+
+	SetDeadSocket(to);
+
+	/* We may get here because of the 'CPR' in check_deadsockets().
+	 * In which case, we return -1 as well.
+	 */
+	if (to->local->error_str)
+		return -1; /* don't overwrite & don't send multiple times */
+	
+	if (!IsUser(to) && !IsUnknown(to) && !IsRPC(to) && !IsControl(to) && !IsClosing(to))
+	{
+		/* Looks like a duplicate error message to me?
+		 * If so, remove it here.
+		 */
+		unreal_log(ULOG_ERROR, "link", "LINK_CLOSING", to,
+		           "Link to server $client.details closed: $reason",
+		           log_data_string("reason", notice));
+	}
+	safe_strdup(to->local->error_str, notice);
+	return -1;
+}
+
+void deadsocket_exit(Client *client, int special)
+{
+	/* First clear the deadsocket flag, so the sending routines are 'on' again */
+	ClearDeadSocket(client);
+	if (client->flags & CLIENT_FLAG_DEADSOCKET_IS_BANNED)
+	{
+		/* For this case we need to send some extra lines */
+		sendnumeric(client, ERR_YOUREBANNEDCREEP, client->local->error_str);
+		sendnotice(client, "%s", client->local->error_str);
+	}
+
+	if (special)
+	{
+		sendto_one(client, NULL, "ERROR :Closing Link: %s (%s)", get_client_name(client, FALSE),
+			client->local->error_str ? client->local->error_str : "Dead socket");
+		send_queued(client);
+		/* Caller takes care of freeing 'client' - only used by HOOKTYPE_ACCEPT */
+		return;
+	} else {
+		exit_client(client, NULL, client->local->error_str ? client->local->error_str : "Dead socket");
+	}
 }
 
 /** Start of normal client handshake - DNS and ident lookups, etc.
