@@ -4,6 +4,14 @@ This is the git version (development version) for future 6.1.1. This is work
 in progress and may not be a stable version.
 
 ### Enhancements:
+* You can now easily exempt a hostname from both maxperip and connect-flood
+  restrictions. A good example for IRCCloud would be:
+  ```
+  except ban {
+      mask *.irccloud.com;
+      type { maxperip; connect-flood; }
+  }
+  ```
 * New setting [set::handshake-boot-delay](https://www.unrealircd.org/docs/Set_block#set%3A%3Ahandshake-boot-delay)
   which allows server linking autoconnects to kick in (and incoming
   servers on serversonly ports), before allowing clients in. This
