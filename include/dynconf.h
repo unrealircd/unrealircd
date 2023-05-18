@@ -176,6 +176,7 @@ struct Configuration {
 	int server_notice_colors;
 	int server_notice_show_event;
 	LimitSVSCMDS limit_svscmds;
+	int high_connection_rate;
 };
 
 extern MODVAR Configuration iConf;

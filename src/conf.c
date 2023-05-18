@@ -1754,17 +1754,13 @@ void config_setdefaultsettings(Configuration *i)
 	i->topic_setter = SETTER_NICK;
 	i->ban_setter = SETTER_NICK;
 	i->ban_setter_sync = 1;
-
 	i->allowed_channelchars = ALLOWED_CHANNELCHARS_UTF8;
-
 	i->automatic_ban_target = BAN_TARGET_IP;
 	i->manual_ban_target = BAN_TARGET_HOST;
-
 	i->hide_idle_time = HIDE_IDLE_TIME_OPER_USERMODE;
-
 	i->who_limit = 100;
-
 	i->named_extended_bans = 1;
+	i->high_connection_rate = 1000;
 }
 
 /** Similar to config_setdefaultsettings but this one is applied *AFTER*
@@ -7947,6 +7943,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				tempiConf.limit_svscmds = LIMIT_SVSCMDS_ULINES;
 			else
 				tempiConf.limit_svscmds = LIMIT_SVSCMDS_SERVERS;
+		} else if (!strcmp(cep->name, "high-connection-rate"))
+		{
+			tempiConf.high_connection_rate = atoi(cep->value);
 		} else
 		{
 			int value;
@@ -9326,6 +9325,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				             cep->file->filename, cep->line_number);
 				errors++;
 			}
+		} else if (!strcmp(cep->name, "high-connection-rate"))
+		{
+			CheckNull(cep);
 		} else
 		{
 			int used = 0;

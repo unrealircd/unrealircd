@@ -878,6 +878,7 @@ refuse_client:
 	irccounts.unknown++;
 	client->status = CLIENT_STATUS_UNKNOWN;
 	list_add(&client->lclient_node, &unknown_list);
+	connections_past_period++;
 
 	for (h = Hooks[HOOKTYPE_ACCEPT]; h; h = h->next)
 	{

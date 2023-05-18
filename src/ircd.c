@@ -448,6 +448,45 @@ void detect_timeshift_and_warn(void)
 	oldtimeofday = timeofday;
 }
 
+#define DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME	5
+
+EVENT(detect_high_connection_rate)
+{
+	static time_t last_detect_high_connection_rate_warning = 0;
+
+	/* 0 is special, means "never" */
+	if (iConf.high_connection_rate == 0)
+	{
+		quick_close = 0;
+		connections_past_period=0; /* reset */
+		return;
+	}
+
+	if (connections_past_period > iConf.high_connection_rate*DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME)
+	{
+		quick_close = 1;
+	} else {
+		quick_close = 0;
+	}
+
+	/* Send a warning to IRCOps every XYZ time */
+	if (quick_close && (TStime() - last_detect_high_connection_rate_warning > 600) && connections_past_period)
+	{
+		unreal_log(ULOG_WARNING, "htm", "HIGH_CONNECTION_RATE", NULL,
+		           "High rate of connection attempts detected: $connects_per_second/sec exceeds $limit/sec: some minor functionality is now disabled. "
+		           "This could be an attack, or lots of genuine users connecting after a network outage.\n"
+		           "This message will appear every 10 minutes for as long as this is the case. "
+		           "You will NOT get a notification if all is normal again (which is evaluated every $sample_time seconds). "
+		           "See https://www.unrealircd.org/docs/FAQ#hi-conn-rate",
+		           log_data_integer("connects_per_second", connections_past_period/DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME),
+		           log_data_integer("limit", iConf.high_connection_rate),
+		           log_data_integer("sample_time", DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME));
+		last_detect_high_connection_rate_warning = TStime();
+	}
+
+	connections_past_period=0; /* reset */
+}
+
 void SetupEvents(void)
 {
 	/* Start events */
@@ -462,6 +501,7 @@ void SetupEvents(void)
 	EventAdd(NULL, "unrealdb_expire_secret_cache", unrealdb_expire_secret_cache, NULL, 61000, 0);
 	EventAdd(NULL, "throttling_check_expire", throttling_check_expire, NULL, 1000, 0);
 	EventAdd(NULL, "memory_log_cleaner", memory_log_cleaner, NULL, 61500, 0);
+	EventAdd(NULL, "detect_high_connection_rate", detect_high_connection_rate, NULL, 1000*DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME, 0);
 }
 
 /** The main function. This will call SocketLoop() once the server is ready. */

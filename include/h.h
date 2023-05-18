@@ -1396,4 +1396,5 @@ extern const char *StripControlCodesEx(const char *text, char *output, size_t ou
 extern MODVAR Module *Modules;
 extern const char *command_issued_by_rpc(MessageTag *mtags);
 extern MODVAR int quick_close;
+extern MODVAR int connections_past_period;
 extern void deadsocket_exit(Client *client, int special);
