@@ -19,6 +19,8 @@ in progress and may not be a stable version.
   * Both features are temporarily disabled whenever a 
     [high rate of connection attempts](https://www.unrealircd.org/docs/FAQ#hi-conn-rate)
     is detected, to save CPU and other resources during such an attack.
+    The default rate is 1000 per second, so this would be unusual to trigger
+    accidentally.
 * New setting [set::handshake-boot-delay](https://www.unrealircd.org/docs/Set_block#set%3A%3Ahandshake-boot-delay)
   which allows server linking autoconnects to kick in (and incoming
   servers on serversonly ports), before allowing clients in. This
