@@ -997,6 +997,40 @@ void deadsocket_exit(Client *client, int special)
 	}
 }
 
+typedef enum DNSFinishedType {
+	DNS_FINISHED_NONE=0,            /**< We finished because DNS lookups are disabled */
+	DNS_FINISHED_FAIL=1,            /**< DNS lookup failed (cached or uncached) */
+	DNS_FINISHED_SUCCESS=2,         /**< DNS lookup succeeded (uncached) */
+	DNS_FINISHED_SUCCESS_CACHED=3   /**< DNS lookup succeeded (cached DNS entry) */
+} DNSFinishedType;
+
+void dns_finished(Client *client, DNSFinishedType type)
+{
+	switch(type)
+	{
+		case DNS_FINISHED_FAIL:
+			if (should_show_connect_info(client))
+				sendto_one(client, NULL, ":%s %s", me.name, REPORT_FAIL_DNS);
+			break;
+		case DNS_FINISHED_SUCCESS:
+			if (should_show_connect_info(client))
+				sendto_one(client, NULL, ":%s %s", me.name, REPORT_FIN_DNS);
+			break;
+		case DNS_FINISHED_SUCCESS_CACHED:
+			if (should_show_connect_info(client))
+				sendto_one(client, NULL, ":%s %s", me.name, REPORT_FIN_DNSC);
+			break;
+		default:
+			break;
+	}
+
+	/* Set sockhost to resolved hostname already */
+	if (client->local->hostp)
+	        set_sockhost(client, client->local->hostp->h_name);
+
+	RunHook(HOOKTYPE_DNS_FINISHED, client);
+}
+
 /** Start of normal client handshake - DNS and ident lookups, etc.
  * @param client	The client
  * @note This is called directly after accept() -> add_connection() for plaintext.
@@ -1017,7 +1051,18 @@ void start_of_normal_client_handshake(Client *client)
 		he = unrealdns_doclient(client);
 
 		if (client->local->hostp)
-			goto doauth; /* Race condition detected, DNS has been done, continue with auth */
+		{
+			/* Race condition detected, DNS has been done.
+			 * Hmmm.. actually I don't think this can be triggered?
+			 * If this were a legit case then we need to figure out
+			 * how to trigger this and if dns_finished() has been
+			 * called already or not.
+			 */
+#ifdef DEBUGMODE
+			abort();
+#endif
+			goto doauth;
+		}
 
 		if (!he)
 		{
@@ -1028,15 +1073,16 @@ void start_of_normal_client_handshake(Client *client)
 		{
 			/* Host was negatively cached */
 			unreal_free_hostent(he);
-			if (should_show_connect_info(client))
-				sendto_one(client, NULL, ":%s %s", me.name, REPORT_FAIL_DNS);
+			dns_finished(client, DNS_FINISHED_FAIL);
 		} else
 		{
 			/* Host was in our cache */
 			client->local->hostp = he;
-			if (should_show_connect_info(client))
-				sendto_one(client, NULL, ":%s %s", me.name, REPORT_FIN_DNSC);
+			dns_finished(client, DNS_FINISHED_SUCCESS_CACHED);
 		}
+	} else {
+		/* Still need to call this, so our hooks get called */
+		dns_finished(client, DNS_FINISHED_NONE);
 	}
 
 doauth:
@@ -1052,12 +1098,10 @@ void proceed_normal_client_handshake(Client *client, struct hostent *he)
 {
 	ClearDNSLookup(client);
 	client->local->hostp = he;
-	if (should_show_connect_info(client))
-	{
-		sendto_one(client, NULL, ":%s %s",
-		           me.name,
-		           client->local->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
-	}
+	if (client->local->hostp)
+		dns_finished(client, DNS_FINISHED_SUCCESS_CACHED);
+	else
+		dns_finished(client, DNS_FINISHED_FAIL);
 }
 
 /** Read a packet from a client.

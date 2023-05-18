@@ -1252,6 +1252,8 @@ extern void SavePersistentLongLongX(ModuleInfo *modinfo, const char *varshortnam
 #define HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT	117
 /** See hooktype_rehash_log */
 #define HOOKTYPE_REHASH_LOG	118
+/** See hooktype_dns_finished */
+#define HOOKTYPE_DNS_FINISHED	119
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -2314,6 +2316,12 @@ int hooktype_pre_local_handshake_timeout(Client *client, const char **comment);
  */
 int hooktype_rehash_log(int failure, json_t *rehash_log);
 
+/** Called when DNS has been done for a client (or has not been done because it was skipped).
+ * @param client		The client
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_dns_finished(Client *client);
+
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2434,7 +2442,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT_SERVER) && !ValidateHook(hooktype_json_expand_client_server, func)) || \
         ((hooktype == HOOKTYPE_JSON_EXPAND_CHANNEL) && !ValidateHook(hooktype_json_expand_channel, func)) || \
         ((hooktype == HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT) && !ValidateHook(hooktype_pre_local_handshake_timeout, func)) || \
-        ((hooktype == HOOKTYPE_REHASH_LOG) && !ValidateHook(hooktype_rehash_log, func)) ) \
+        ((hooktype == HOOKTYPE_REHASH_LOG) && !ValidateHook(hooktype_rehash_log, func)) || \
+        ((hooktype == HOOKTYPE_DNS_FINISHED) && !ValidateHook(hooktype_dns_finished, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

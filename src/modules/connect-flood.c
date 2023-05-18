@@ -17,6 +17,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declaration */
 int connect_flood_accept(Client *client);
+int connect_flood_dns_finished(Client *client);
 int connect_flood_ip_change(Client *client, const char *oldip);
 
 MOD_INIT()
@@ -24,6 +25,7 @@ MOD_INIT()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	HookAdd(modinfo->handle, HOOKTYPE_ACCEPT, -3000, connect_flood_accept);
+	HookAdd(modinfo->handle, HOOKTYPE_DNS_FINISHED, -3000, connect_flood_dns_finished);
 	HookAdd(modinfo->handle, HOOKTYPE_IP_CHANGE, -3000, connect_flood_ip_change);
 
 	return MOD_SUCCESS;
@@ -70,6 +72,20 @@ int connect_flood_throttle(Client *client, int exitflags)
 
 int connect_flood_accept(Client *client)
 {
+	if (!quick_close)
+		return 0; /* defer to connect_flood_dns_finished so DNS on except ban works */
+
+	if (client->local->listener->options & LISTENER_NO_CHECK_CONNECT_FLOOD)
+		return 0;
+
+	client->flags |= CLIENT_FLAG_CONNECT_FLOOD_CHECKED;
+	return connect_flood_throttle(client, NO_EXIT_CLIENT);
+}
+
+int connect_flood_dns_finished(Client *client)
+{
+	if (client->flags & CLIENT_FLAG_CONNECT_FLOOD_CHECKED)
+		return 0;
 	if (client->local->listener->options & LISTENER_NO_CHECK_CONNECT_FLOOD)
 		return 0;
 	return connect_flood_throttle(client, NO_EXIT_CLIENT);

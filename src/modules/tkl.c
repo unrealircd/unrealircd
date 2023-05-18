@@ -136,7 +136,7 @@ struct TKLTypeTable
  * - more?
  */
 TKLTypeTable tkl_types[] = {
-	/* <config name> <letter> <TKL_xxx type>               <logging name> <tkl option?> <exempt option?> <need ip address?> */
+	/* <config name> <letter> <TKL_xxx type>               <logging name> <tkl option?> <exempt option?> <ip address only?> */
 	{ "gline",                'G', TKL_KILL       | TKL_GLOBAL, "G-Line",               1, 1, 0 },
 	{ "kline",                'k', TKL_KILL,                    "K-Line",               1, 1, 0 },
 	{ "gzline",               'Z', TKL_ZAP        | TKL_GLOBAL, "Global Z-Line",        1, 1, 1 },
@@ -149,7 +149,7 @@ TKLTypeTable tkl_types[] = {
 	{ "local-exception",      'e', TKL_EXCEPTION,               "Local Exception",      1, 0, 0 },
 	{ "local-spamfilter",     'f', TKL_SPAMF,                   "Local Spamfilter",     1, 0, 0 },
 	{ "blacklist",            'b', TKL_BLACKLIST,               "Blacklist",            0, 1, 1 },
-	{ "connect-flood",        'c', TKL_CONNECT_FLOOD,           "Connect flood",        0, 1, 1 },
+	{ "connect-flood",        'c', TKL_CONNECT_FLOOD,           "Connect flood",        0, 1, 0 },
 	{ "maxperip",             'm', TKL_MAXPERIP,                "Max-per-IP",           0, 1, 0 },
 	{ "handshake-data-flood", 'd', TKL_HANDSHAKE_DATA_FLOOD,    "Handshake data flood", 0, 1, 1 },
 	{ "antirandom",           'r', TKL_ANTIRANDOM,              "Antirandom",           0, 1, 0 },
@@ -5305,7 +5305,7 @@ int _match_user(const char *rmask, Client *client, int options)
 	/**** Check real host ****/
 	if (options & MATCH_CHECK_REAL_HOST)
 	{
-		char *hostname = client->user ? client->user->realhost : (MyUser(client) ? client->local->sockhost : NULL);
+		char *hostname = client->user ? client->user->realhost : (MyConnect(client) ? client->local->sockhost : NULL);
 		if (hostname && match_simple(hmask, hostname))
 			return 1; /* MATCH: hostname match */
 	}

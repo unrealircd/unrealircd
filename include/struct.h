@@ -426,7 +426,7 @@ typedef enum ClientStatus {
 #define CLIENT_FLAG_ASYNC_RPC			0x80000000	/**< Asynchronous remote RPC request - special case for rehash etc. */
 #define CLIENT_FLAG_IPUSERS_BUMPED	0x100000000	/**< The IpUsersBucket for this IP has been bumped (and needs to be decreased on disconnect) */
 #define CLIENT_FLAG_DEADSOCKET_IS_BANNED	0x200000000	/**< The deadsocket message should also send ERR_YOUREBANNEDCREEP and such */
-
+#define CLIENT_FLAG_CONNECT_FLOOD_CHECKED	0x400000000	/**< connect-flood has been checked (there are two hooks, so need this) */
 /** @} */
 
 #define OPER_SNOMASKS "+bBcdfkqsSoO"
