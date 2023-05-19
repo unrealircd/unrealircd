@@ -34,6 +34,7 @@ int readcalls = 0;
 void completed_connection(int, int, void *);
 void set_sock_opts(int, Client *, SocketType);
 void set_ipv6_opts(int);
+void close_all_listeners(void);
 void close_listener(ConfigItem_listen *listener);
 static char readbuf[BUFSIZE];
 char zlinebuf[BUFSIZE];
@@ -81,7 +82,7 @@ void close_connections(void)
 		}
 	}
 
-	close_unbound_listeners();
+	close_all_listeners();
 
 	OpenFiles = 0;
 
@@ -420,18 +421,14 @@ void close_listener(ConfigItem_listen *listener)
 	}
 }
 
-/** Close all listeners that were pending to be closed. */
-void close_unbound_listeners(void)
+/** Close all listeners - eg on DIE or RESTART */
+void close_all_listeners(void)
 {
 	ConfigItem_listen *aconf, *aconf_next;
 
 	/* close all 'extra' listening ports we have */
-	for (aconf = conf_listen; aconf != NULL; aconf = aconf_next)
-	{
-		aconf_next = aconf->next;
-		if (aconf->flag.temporary)
-			close_listener(aconf);
-	}
+	for (aconf = conf_listen; aconf != NULL; aconf = aconf->next)
+		close_listener(aconf);
 }
 
 int maxclients = 1024 - CLIENTS_RESERVE;

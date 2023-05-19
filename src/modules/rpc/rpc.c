@@ -110,6 +110,7 @@ int rpc_json_expand_client_server(Client *client, int detail, json_t *j, json_t 
 const char *rrpc_md_serialize(ModData *m);
 void rrpc_md_unserialize(const char *str, ModData *m);
 void rrpc_md_free(ModData *m);
+int rpc_reconfigure_web_listener(ConfigItem_listen *listener);
 
 /* Macros */
 #define RPC_PORT(client)  ((client->local && client->local->listener) ? client->local->listener->rpc_options : 0)
@@ -159,6 +160,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_QUIT, 0, rpc_handle_server_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_FREE_CLIENT, 0, rpc_handle_free_client);
 	HookAdd(modinfo->handle, HOOKTYPE_JSON_EXPAND_CLIENT_SERVER, 0, rpc_json_expand_client_server);
+	HookAdd(modinfo->handle, HOOKTYPE_RECONFIGURE_WEB_LISTENER, 0, rpc_reconfigure_web_listener);
 
 	memset(&r, 0, sizeof(r));
 	r.method = "rpc.info";
@@ -293,6 +295,19 @@ int rpc_config_test_listen(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	return errors ? -1 : 1;
 }
 
+void rpc_listener_set_handler(ConfigItem_listen *l)
+{
+	if (l->socket_type == SOCKET_TYPE_UNIX)
+	{
+		l->start_handshake = rpc_client_handshake_unix_socket;
+	} else {
+		l->options |= LISTENER_TLS;
+		l->start_handshake = rpc_client_handshake_web;
+		l->webserver = safe_alloc(sizeof(WebServer));
+		l->webserver->handle_request = rpc_handle_webrequest;
+		l->webserver->handle_body = rpc_handle_webrequest_data;
+	}
+}
 int rpc_config_run_ex_listen(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr)
 {
 	ConfigEntry *cep, *cepp;
@@ -307,19 +322,17 @@ int rpc_config_run_ex_listen(ConfigFile *cf, ConfigEntry *ce, int type, void *pt
 
 	l = (ConfigItem_listen *)ptr;
 	l->options |= LISTENER_NO_CHECK_CONNECT_FLOOD;
-	if (l->socket_type == SOCKET_TYPE_UNIX)
-	{
-		l->start_handshake = rpc_client_handshake_unix_socket;
-	} else {
-		l->options |= LISTENER_TLS;
-		l->start_handshake = rpc_client_handshake_web;
-		l->webserver = safe_alloc(sizeof(WebServer));
-		l->webserver->handle_request = rpc_handle_webrequest;
-		l->webserver->handle_body = rpc_handle_webrequest_data;
-	}
+	rpc_listener_set_handler(l);
 	l->rpc_options = 1;
 
 	return 1;
+}
+
+int rpc_reconfigure_web_listener(ConfigItem_listen *listener)
+{
+	if (listener->rpc_options)
+		rpc_listener_set_handler(listener);
+	return 0;
 }
 
 /** Valid name for rpc-user THISNAME { } ? */

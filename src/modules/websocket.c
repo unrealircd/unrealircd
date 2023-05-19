@@ -55,6 +55,7 @@ int websocket_secure_connect(Client *client);
 struct HTTPForwardedHeader *websocket_parse_forwarded_header(char *input);
 int websocket_ip_compare(const char *ip1, const char *ip2);
 int websocket_handle_request(Client *client, WebRequest *web);
+int websocket_reconfigure_web_listener(ConfigItem_listen *listener);
 
 /* Global variables */
 ModDataInfo *websocket_md;
@@ -83,6 +84,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, websocket_config_run_ex);
 	HookAdd(modinfo->handle, HOOKTYPE_PACKET, INT_MAX, websocket_packet_out);
 	HookAdd(modinfo->handle, HOOKTYPE_SECURE_CONNECT, 0, websocket_secure_connect);
+	HookAdd(modinfo->handle, HOOKTYPE_RECONFIGURE_WEB_LISTENER, 0, websocket_reconfigure_web_listener);
 
 	/* Call MOD_LOAD very late, since we manage sockets, but depend on websocket_common */
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_UNLOAD-1);
@@ -223,6 +225,16 @@ int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr
 		}
 	}
 	return 1;
+}
+
+int websocket_reconfigure_web_listener(ConfigItem_listen *listener)
+{
+	if (listener->websocket_options)
+	{
+		listener->webserver->handle_request = websocket_handle_request;
+		listener->webserver->handle_body = websocket_handle_body_websocket;
+	}
+	return 0;
 }
 
 int websocket_config_posttest(int *errs)

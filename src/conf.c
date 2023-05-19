@@ -2873,9 +2873,7 @@ int config_run_blocks(void)
 		}
 	}
 
-	close_unbound_listeners();
 	listen_cleanup();
-	close_unbound_listeners();
 	loop.do_bancheck = 1;
 	config_switchover();
 	update_throttling_timer_settings();
@@ -10697,28 +10695,52 @@ void delete_classblock(ConfigItem_class *class_ptr)
 	safe_free(class_ptr);
 }
 
-void	listen_cleanup()
+void listen_cleanup()
 {
-	int	i = 0;
-	ConfigItem_listen *listen_ptr, *next;
+	ConfigItem_listen *listener, *listener_next;
 
-	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = next)
+	for (listener = conf_listen; listener; listener = listener_next)
 	{
-		next = listen_ptr->next;
-		if (listen_ptr->flag.temporary && !listen_ptr->clients)
+		listener_next = listener->next;
+		if (listener->flag.temporary)
 		{
-			safe_free(listen_ptr->ip);
-			free_tls_options(listen_ptr->tls_options);
-			DelListItem(listen_ptr, conf_listen);
-			safe_free(listen_ptr->webserver);
-			safe_free(listen_ptr->websocket_forward);
-			safe_free(listen_ptr);
-			i++;
+			/* First close the listener FD so no new clients can connect */
+			if (listener->fd >= 0)
+				close_listener(listener);
+			if (listener->clients == 0)
+			{
+				/* Zero clients, so can be completely freed */
+				DelListItem(listener, conf_listen);
+				safe_free(listener->ip);
+				safe_free(listener->file);
+				safe_free(listener->spoof_ip);
+				free_tls_options(listener->tls_options);
+				/* listener->ssl_ctx is already freed by close_listener() */
+				safe_free(listener->webserver);
+				safe_free(listener->websocket_forward);
+				safe_free(listener);
+			} else {
+				/* Still has clients */
+				if (listener->webserver)
+				{
+					/* These now point to old module addresses */
+					listener->webserver->handle_request = NULL;
+					listener->webserver->handle_body = NULL;
+					/* Ask modules if they can figure out the handler */
+					RunHook(HOOKTYPE_RECONFIGURE_WEB_LISTENER, listener);
+					/* If not... free the webserver listener.
+					 * TODO: it would be even better if we kill all clients,
+					 * it would be more explicit and clear.
+					 */
+					if ((listener->webserver->handle_request == NULL) ||
+					    (listener->webserver->handle_body == NULL))
+					{
+						safe_free(listener->webserver);
+					}
+				}
+			}
 		}
 	}
-
-	if (i)
-		close_unbound_listeners();
 }
 
 ConfigResource *find_config_resource(const char *resource)

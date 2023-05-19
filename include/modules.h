@@ -1254,6 +1254,8 @@ extern void SavePersistentLongLongX(ModuleInfo *modinfo, const char *varshortnam
 #define HOOKTYPE_REHASH_LOG	118
 /** See hooktype_dns_finished */
 #define HOOKTYPE_DNS_FINISHED	119
+/** See hooktype_reconfigure_web_listener */
+#define HOOKTYPE_RECONFIGURE_WEB_LISTENER	120
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -2309,7 +2311,7 @@ int hooktype_json_expand_channel(Channel *channel, int detail, json_t *j);
 int hooktype_pre_local_handshake_timeout(Client *client, const char **comment);
 
 /** Called when a REHASH completed (either succesfully or with a failure).
- * This gives the full rehash log. Used by the JSON-RPC interface.
+ * This gives the full rehash log. Used by the JSON-RPC interface. (function prototype for HOOKTYPE_REHASH_LOG)
  * @param failure		Set to 1 if the rehash failed, otherwise 0.
  * @param t			The JSON object containing the rehash log and other information.
  * @return The return value is ignored (use return 0)
@@ -2317,10 +2319,18 @@ int hooktype_pre_local_handshake_timeout(Client *client, const char **comment);
 int hooktype_rehash_log(int failure, json_t *rehash_log);
 
 /** Called when DNS has been done for a client (or has not been done because it was skipped).
+ * (function prototype for HOOKTYPE_DNS_FINISHED)
  * @param client		The client
  * @return The return value is ignored (use return 0)
  */
 int hooktype_dns_finished(Client *client);
+
+/** Called when an listener is removed from the conf but there are still clients - very specific corner case.
+ * (function prototype for HOOKTYPE_RECONFIGURE_WEB_LISTENER)
+ * @param listener		The listener
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_reconfigure_web_listener(ConfigItem_listen *listener);
 
 /** @} */
 

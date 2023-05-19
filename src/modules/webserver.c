@@ -165,6 +165,9 @@ int webserver_packet_in(Client *client, const char *readbuf, int *length)
 	if (!WEB(client))
 		return 1; /* "normal" IRC client */
 
+	if (!WEBSERVER(client))
+		return 0; /* handler is gone!? */
+
 	if (WEB(client)->request_header_parsed)
 		return WEBSERVER(client)->handle_body(client, WEB(client), readbuf, *length);
 
