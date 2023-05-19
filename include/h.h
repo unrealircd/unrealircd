@@ -1398,3 +1398,4 @@ extern MODVAR int quick_close;
 extern MODVAR int connections_past_period;
 extern void deadsocket_exit(Client *client, int special);
 extern void close_listener(ConfigItem_listen *listener);
+extern int get_max_channels_per_user(Client *client);

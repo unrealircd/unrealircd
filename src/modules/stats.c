@@ -740,12 +740,14 @@ static void stats_set_anti_flood(Client *client, FloodSettings *f)
 
 	for (i=0; floodoption_names[i]; i++)
 	{
+		if (f->limit[i] == 0)
+			continue; /* unconfigured */
 		if (i == FLD_CONVERSATIONS)
 		{
 			sendtxtnumeric(client, "anti-flood::%s::%s: %d users, new user every %s",
 				f->name, floodoption_names[i],
 				(int)f->limit[i], pretty_time_val(f->period[i]));
-		}
+		} else
 		if (i == FLD_LAG_PENALTY)
 		{
 			sendtxtnumeric(client, "anti-flood::%s::lag-penalty: %d msec",
@@ -753,8 +755,13 @@ static void stats_set_anti_flood(Client *client, FloodSettings *f)
 			sendtxtnumeric(client, "anti-flood::%s::lag-penalty-bytes: %d",
 				f->name,
 				f->limit[i] == INT_MAX ? 0 : (int)f->limit[i]);
-		}
-		else
+		} else
+		if (i == FLD_MAXCHANNELSPERUSER)
+		{
+			sendtxtnumeric(client, "anti-flood::%s::%s: %d",
+				f->name, floodoption_names[i],
+				(int)f->limit[i]);
+		} else
 		{
 			sendtxtnumeric(client, "anti-flood::%s::%s: %d per %s",
 				f->name, floodoption_names[i],
@@ -852,7 +859,7 @@ int stats_set(Client *client, const char *para)
 	sendtxtnumeric(client, "options::mkpasswd-for-everyone: %d", MKPASSWD_FOR_EVERYONE);
 	sendtxtnumeric(client, "options::allow-insane-bans: %d", ALLOW_INSANE_BANS);
 	sendtxtnumeric(client, "options::allow-part-if-shunned: %d", ALLOW_PART_IF_SHUNNED);
-	sendtxtnumeric(client, "maxchannelsperuser: %i", MAXCHANNELSPERUSER);
+	sendtxtnumeric(client, "maxchannelsperuser: %i", iConf.maxchannelsperuser);
 	sendtxtnumeric(client, "ping-warning: %i seconds", PINGWARNING);
 	sendtxtnumeric(client, "auto-join: %s", AUTO_JOIN_CHANS ? AUTO_JOIN_CHANS : "0");
 	sendtxtnumeric(client, "oper-auto-join: %s", OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");

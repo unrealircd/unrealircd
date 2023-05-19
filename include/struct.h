@@ -1321,6 +1321,7 @@ typedef enum FloodOption {
 	FLD_CONVERSATIONS	= 5,	/**< max-concurrent-conversations */
 	FLD_LAG_PENALTY		= 6,	/**< lag-penalty / lag-penalty-bytes */
 	FLD_VHOST		= 7,	/**< vhost-flood */
+	FLD_MAXCHANNELSPERUSER	= 8,	/**< max-channels-per-user */
 } FloodOption;
 #define MAXFLOODOPTIONS 10
 

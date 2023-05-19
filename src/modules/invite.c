@@ -480,7 +480,7 @@ void add_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags)
 
 	del_invite(to, channel);
 	/* If too many invite entries then delete the oldest one */
-	if (link_list_length(CLIENT_INVITES(to)) >= MAXCHANNELSPERUSER)
+	if (link_list_length(CLIENT_INVITES(to)) >= get_max_channels_per_user(from))
 	{
 		for (tmp = CLIENT_INVITES(to); tmp->next; tmp = tmp->next)
 			;
@@ -491,7 +491,7 @@ void add_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags)
 	 * since otherwise mass-inviters could take up some major
 	 * resources -Donwulff
 	 */
-	if (link_list_length(CHANNEL_INVITES(channel)) >= MAXCHANNELSPERUSER)
+	if (link_list_length(CHANNEL_INVITES(channel)) >= get_max_channels_per_user(from))
 	{
 		for (tmp = CHANNEL_INVITES(channel); tmp->next; tmp = tmp->next)
 			;

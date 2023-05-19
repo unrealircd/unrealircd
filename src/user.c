@@ -940,6 +940,7 @@ MODVAR const char *floodoption_names[] = {
 	"max-concurrent-conversations",
 	"lag-penalty",
 	"vhost-flood",
+	"max-channels-per-user",
 	NULL
 };
 
@@ -1027,4 +1028,11 @@ struct sockaddr *raw_client_ip(Client *client)
 		return client_addr;
 	}
 	return NULL;
+}
+
+/* Get the max-channels-per-user setting for this client */
+int get_max_channels_per_user(Client *client)
+{
+	FloodSettings *settings = get_floodsettings_for_user(client, FLD_MAXCHANNELSPERUSER);
+	return (settings && settings->limit[FLD_MAXCHANNELSPERUSER]) ? settings->limit[FLD_MAXCHANNELSPERUSER] : iConf.maxchannelsperuser;
 }

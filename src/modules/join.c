@@ -446,12 +446,15 @@ void _do_join(Client *client, int parc, const char *parv[])
 			member_modes = (ChannelExists(name)) ? "" : LEVEL_ON_JOIN;
 
 			if (!ValidatePermissionsForPath("immune:maxchannelsperuser",client,NULL,NULL,NULL))	/* opers can join unlimited chans */
-				if (client->user->joined >= MAXCHANNELSPERUSER)
+			{
+				if (client->user->joined >= get_max_channels_per_user(client))
 				{
 					sendnumeric(client, ERR_TOOMANYCHANNELS, name);
 					RET();
 				}
-/* RESTRICTCHAN */
+			}
+
+			/* RESTRICTCHAN */
 			if (conf_deny_channel)
 			{
 				if (!ValidatePermissionsForPath("immune:server-ban:deny-channel",client,NULL,NULL,NULL))

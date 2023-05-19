@@ -193,7 +193,6 @@ extern MODVAR int ipv6_disabled;
 #define FLAT_MAP			iConf.flat_map
 #define ALLOW_CHATOPS			iConf.allow_chatops
 #define PINGWARNING			iConf.ping_warning
-#define MAXCHANNELSPERUSER		iConf.maxchannelsperuser
 #define MAXDCCALLOW			iConf.maxdccallow
 #define DONT_RESOLVE			iConf.dont_resolve
 #define AUTO_JOIN_CHANS			iConf.auto_join_chans

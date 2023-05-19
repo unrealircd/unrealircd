@@ -1771,6 +1771,7 @@ void postconf_defaults(void)
 {
 	TKL *tk;
 	char *encoded;
+	FloodSettings *fld;
 
 	if (!iConf.modes_on_join_set)
 	{
@@ -1819,6 +1820,11 @@ void postconf_defaults(void)
 	}
 
 	postconf_defaults_log_block();
+
+	/* Copy set::max-channels-per-user to set::anti-flood::unknown::max-channels-per-user (if not set) */
+	fld = find_floodsettings_block("unknown-users");
+	if (fld && (fld->limit[FLD_MAXCHANNELSPERUSER] == 0))
+		fld->limit[FLD_MAXCHANNELSPERUSER] = iConf.maxchannelsperuser;
 }
 
 void postconf_fixes(void)
@@ -7490,7 +7496,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
-		else if (!strcmp(cep->name, "maxchannelsperuser")) {
+		else if (!strcmp(cep->name, "maxchannelsperuser") || !strcmp(cep->name, "max-channels-per-user")) {
 			tempiConf.maxchannelsperuser = atoi(cep->value);
 		}
 		else if (!strcmp(cep->name, "ping-warning")) {
@@ -7646,6 +7652,13 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 						}
 						snprintf(buf, sizeof(buf), "%d:%ld", users, every);
 						config_parse_flood_generic(buf, &tempiConf, cepp->name, FLD_CONVERSATIONS);
+					}
+					else if (!strcmp(ceppp->name, "max-channels-per-user") || !strcmp(ceppp->name, "maxchannelsperuser"))
+					{
+						/* We use a hack here to make it fit our storage format */
+						char buf[64];
+						snprintf(buf, sizeof(buf), "%d:0", atoi(ceppp->value));
+						config_parse_flood_generic(buf, &tempiConf, cepp->name, FLD_MAXCHANNELSPERUSER);
 					}
 				}
 				if ((lag_penalty != -1) && (lag_penalty_bytes != -1))
@@ -8183,7 +8196,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckDuplicate(cep, allow_user_stats, "allow-user-stats");
 			CheckNull(cep);
 		}
-		else if (!strcmp(cep->name, "maxchannelsperuser")) {
+		else if (!strcmp(cep->name, "maxchannelsperuser") || !strcmp(cep->name, "max-channels-per-user")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, maxchannelsperuser, "maxchannelsperuser");
 			tempi = atoi(cep->value);
@@ -8516,6 +8529,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						}
 						continue; /* required here, due to checknull directly below */
 					}
+					else if (!strcmp(ceppp->name, "maxchannelsperuser"))
+					{
+						CheckNull(ceppp);
+					}
 					else if (!strcmp(ceppp->name, "unknown-flood-amount") ||
 						 !strcmp(ceppp->name, "unknown-flood-bantime"))
 					{
@@ -8702,6 +8719,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 								ceppp->file->filename, ceppp->line_number);
 							errors++;
 						}
+					}
+					else if (!strcmp(ceppp->name, "maxchannelsperuser"))
+					{
+						CheckNull(ceppp);
 					}
 					else
 					{

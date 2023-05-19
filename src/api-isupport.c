@@ -110,8 +110,7 @@ void isupport_init(void)
 	ISupportSetFmt(NULL, "NICKLEN", "%d", iConf.nick_length);
 	ISupportSetFmt(NULL, "MAXNICKLEN", "%d", NICKLEN);
 	ISupportSetFmt(NULL, "MAXLIST", "b:%d,e:%d,I:%d", MAXBANS, MAXBANS, MAXBANS);
-	ISupportSetFmt(NULL, "CHANLIMIT", "#:%d", MAXCHANNELSPERUSER);
-	ISupportSetFmt(NULL, "MAXCHANNELS", "%d", MAXCHANNELSPERUSER);
+	ISupportSetFmt(NULL, "CHANLIMIT", "#:%d", iConf.maxchannelsperuser);
 	ISupportSet(NULL, "SAFELIST", NULL);
 	ISupportSet(NULL, "NAMESX", NULL);
 	if (UHNAMES_ENABLED)
