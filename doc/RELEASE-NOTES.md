@@ -40,6 +40,15 @@ in progress and may not be a stable version.
     any memory on servers that are not used for JSON-RPC.
 
 ### Changes:
+* You can no longer (accidentally) load an old `modules.default.conf`.
+  People must always use the shipped version of this file as the file VERY
+  clearly says in the beginning (see also that file for instructions on
+  how to deal with customizations). People run into lots of (strange)
+  problems, not only missing nice new functionality, but also Services not
+  working because the svslogin module is not loaded, etc.  
+  Usually mistakes with an old modules.default.conf are not deliberate,
+  like a cp *.conf of an old installation, so this error should be helpful
+  for those users (who otherwise tend to bang their head for hours).
 * Some small DNS performance improvements:
   * We now 'negatively cache' unresolved hosts for 60 seconds.
   * The maximum number of cached records (positive and negative) was raised
