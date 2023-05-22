@@ -90,7 +90,7 @@ CMD_FUNC(cmd_user)
 	make_user(client);
 
 	/* set::modes-on-connect */
-	client->umodes |= CONN_MODES;
+	client->umodes |= get_setting_for_user_number(client, SET_MODES_ON_CONNECT);
 	client->user->server = me_hash;
 	strlcpy(client->info, realname, sizeof(client->info));
 	strlcpy(client->user->username, username, sizeof(client->user->username));

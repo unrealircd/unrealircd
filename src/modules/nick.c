@@ -769,6 +769,7 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 {
 	int i;
 	ConfigItem_tld *tld;
+	char *chans;
 	char buf[BUFSIZE];
 
 	/* Make creation time the real 'online since' time, excluding registration time.
@@ -890,9 +891,9 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 		if (IsDead(client))
 			return;
 	}
-	else if (!BadPtr(AUTO_JOIN_CHANS) && strcmp(AUTO_JOIN_CHANS, "0"))
+	else if ((chans = (char *)get_setting_for_user_string(client, SET_AUTO_JOIN)) && strcmp(chans, "0"))
 	{
-		char *chans = strdup(AUTO_JOIN_CHANS);
+		chans = strdup(chans); // work on a copy (wait, is this still needed? we have a const guarantee now right?)
 		const char *args[3] = {
 			NULL,
 			chans,

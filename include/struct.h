@@ -1321,7 +1321,6 @@ typedef enum FloodOption {
 	FLD_CONVERSATIONS	= 5,	/**< max-concurrent-conversations */
 	FLD_LAG_PENALTY		= 6,	/**< lag-penalty / lag-penalty-bytes */
 	FLD_VHOST		= 7,	/**< vhost-flood */
-	FLD_MAXCHANNELSPERUSER	= 8,	/**< max-channels-per-user */
 } FloodOption;
 #define MAXFLOODOPTIONS 10
 
@@ -2021,6 +2020,26 @@ struct ConfigItem_offchans {
 	char *topic;
 };
 
+typedef union DynamicSetOption {
+	long long number;
+	char *string;
+} DynamicSetOption;
+
+typedef enum SetOption {
+	SET_AUTO_JOIN			= 0,	/**< set::auto-join */
+	SET_MODES_ON_CONNECT		= 1,	/**< set::modes-on-connect */
+	SET_RESTRICT_USERMODES		= 2,	/**< set::restrict-usermodes */
+	SET_MAX_CHANNELS_PER_USER	= 3,	/**< set::max-channels-per-user */
+	SET_STATIC_QUIT			= 4,	/**< set::static-quit */
+	SET_STATIC_PART			= 5	/**< set::static-part */
+} SetOption;
+#define MAXDYNAMICSETTINGS 16
+
+typedef struct DynamicSetBlock {
+	DynamicSetOption settings[MAXDYNAMICSETTINGS];
+	char isset[MAXDYNAMICSETTINGS];
+} DynamicSetBlock;
+
 #define SECURITYGROUPLEN 48
 struct SecurityGroup {
 	SecurityGroup *prev, *next;
@@ -2050,6 +2069,8 @@ struct SecurityGroup {
 	ConfigItem_mask *exclude_mask;
 	NameList *exclude_security_group;
 	NameValuePrioList *exclude_extended;
+	/* Settings */
+	DynamicSetBlock settings;
 };
 
 #define HM_HOST 1

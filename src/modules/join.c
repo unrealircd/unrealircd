@@ -128,7 +128,7 @@ int _can_join(Client *client, Channel *channel, const char *key, char **errmsg)
 #ifndef NO_OPEROVERRIDE
 #ifdef OPEROVERRIDE_VERIFY
 	if (ValidatePermissionsForPath("channel:override:privsecret",client,NULL,channel,NULL) && (channel->mode.mode & MODE_SECRET ||
-	    channel->mode.mode & MODE_PRIVATE) && !is_autojoin_chan(channel->name))
+	    channel->mode.mode & MODE_PRIVATE))
 	{
 		*errmsg = STR_ERR_OPERSPVERIFY;
 		return (ERR_OPERSPVERIFY);
@@ -447,7 +447,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 
 			if (!ValidatePermissionsForPath("immune:maxchannelsperuser",client,NULL,NULL,NULL))	/* opers can join unlimited chans */
 			{
-				if (client->user->joined >= get_max_channels_per_user(client))
+				if (client->user->joined >= get_setting_for_user_number(client, SET_MAX_CHANNELS_PER_USER))
 				{
 					sendnumeric(client, ERR_TOOMANYCHANNELS, name);
 					RET();

@@ -77,16 +77,17 @@ CMD_FUNC(cmd_part)
 
 	if (MyUser(client))
 	{
+		const char *str;
 		if (IsShunned(client))
 			commentx = NULL;
-		if (STATIC_PART)
+		if ((str = get_setting_for_user_string(client, SET_STATIC_PART)))
 		{
-			if (!strcasecmp(STATIC_PART, "yes") || !strcmp(STATIC_PART, "1"))
+			if (!strcasecmp(str, "yes") || !strcmp(str, "1"))
 				commentx = NULL;
-			else if (!strcasecmp(STATIC_PART, "no") || !strcmp(STATIC_PART, "0"))
+			else if (!strcasecmp(str, "no") || !strcmp(str, "0"))
 				; /* keep original reason */
 			else
-				commentx = STATIC_PART;
+				commentx = str;
 		}
 		if (commentx)
 		{

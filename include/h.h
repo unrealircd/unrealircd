@@ -980,7 +980,6 @@ extern void unrealdns_delreq_bycptr(Client *cptr);
 extern void unrealdns_gethostbyname_link(const char *name, ConfigItem_link *conf, int ipv4_only);
 extern void unrealdns_delasyncconnects(void);
 extern EVENT(unrealdns_timeout);
-extern int is_autojoin_chan(const char *chname);
 extern void unreal_free_hostent(struct hostent *he);
 extern struct hostent *unreal_create_hostent(const char *name, const char *ip);
 extern const char *unreal_time_sync_error(void);
@@ -1256,6 +1255,8 @@ extern int conf_match_item(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **b
 extern int test_match_block(ConfigFile *conf, ConfigEntry *ce, int *errors_out);
 extern int conf_match_block(ConfigFile *conf, ConfigEntry *ce, SecurityGroup **block);
 extern int test_extended_list(Extban *extban, ConfigEntry *cep, int *errors);
+extern int test_set_security_group(ConfigFile *conf, ConfigEntry *ce);
+extern int config_set_security_group(ConfigFile *conf, ConfigEntry *ce);
 /* securitygroup.c end */
 /* src/unrealdb.c start */
 extern UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_block);
@@ -1398,8 +1399,18 @@ extern MODVAR int quick_close;
 extern MODVAR int connections_past_period;
 extern void deadsocket_exit(Client *client, int special);
 extern void close_listener(ConfigItem_listen *listener);
-extern int get_max_channels_per_user(Client *client);
 extern int str_starts_with_case_sensitive(const char *haystack, const char *needle);
 extern int str_ends_with_case_sensitive(const char *haystack, const char *needle);
 extern int str_starts_with_case_insensitive(const char *haystack, const char *needle);
 extern int str_ends_with_case_insensitive(const char *haystack, const char *needle);
+extern void init_dynamic_set_block(DynamicSetBlock *s);
+extern void free_dynamic_set_block(DynamicSetBlock *s);
+extern int test_dynamic_set_block_item(ConfigFile *conf, const char *security_group, ConfigEntry *cep);
+extern int config_set_dynamic_set_block_item(ConfigFile *conf, DynamicSetBlock *s, ConfigEntry *cep);
+extern DynamicSetOption get_setting_for_user(Client *client, SetOption opt);
+extern long long get_setting_for_user_number(Client *client, SetOption opt);
+extern const char *get_setting_for_user_string(Client *client, SetOption opt);
+extern void dynamic_set_string(DynamicSetBlock *s, int settingname, const char *value);
+extern void dynamic_set_number(DynamicSetBlock *s, int settingname, long long value);
+extern MODVAR DynamicSetBlock unknown_users_set;
+extern MODVAR DynamicSetBlock dynamic_set;

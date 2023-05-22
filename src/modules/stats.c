@@ -756,12 +756,6 @@ static void stats_set_anti_flood(Client *client, FloodSettings *f)
 				f->name,
 				f->limit[i] == INT_MAX ? 0 : (int)f->limit[i]);
 		} else
-		if (i == FLD_MAXCHANNELSPERUSER)
-		{
-			sendtxtnumeric(client, "anti-flood::%s::%s: %d",
-				f->name, floodoption_names[i],
-				(int)f->limit[i]);
-		} else
 		{
 			sendtxtnumeric(client, "anti-flood::%s::%s: %d per %s",
 				f->name, floodoption_names[i],
@@ -804,7 +798,7 @@ int stats_set(Client *client, const char *para)
 	sendtxtnumeric(client, "kline-address: %s", KLINE_ADDRESS);
 	if (GLINE_ADDRESS)
 		sendtxtnumeric(client, "gline-address: %s", GLINE_ADDRESS);
-	sendtxtnumeric(client, "modes-on-connect: %s", get_usermode_string_raw(CONN_MODES));
+	//sendtxtnumeric(client, "modes-on-connect: %s", get_usermode_string_raw(CONN_MODES));
 	sendtxtnumeric(client, "modes-on-oper: %s", get_usermode_string_raw(OPER_MODES));
 	*modebuf = *parabuf = 0;
 	chmode_str(&iConf.modes_on_join, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
@@ -818,8 +812,8 @@ int stats_set(Client *client, const char *para)
 		char *longflags = allow_user_stats_long_to_short();
 		sendtxtnumeric(client, "allow-user-stats: %s%s", ALLOW_USER_STATS, longflags ? longflags : "");
 	}
-	if (RESTRICT_USERMODES)
-		sendtxtnumeric(client, "restrict-usermodes: %s", RESTRICT_USERMODES);
+//	if (RESTRICT_USERMODES)
+//		sendtxtnumeric(client, "restrict-usermodes: %s", RESTRICT_USERMODES);
 	if (RESTRICT_CHANNELMODES)
 		sendtxtnumeric(client, "restrict-channelmodes: %s", RESTRICT_CHANNELMODES);
 	if (RESTRICT_EXTENDEDBANS)
@@ -859,12 +853,12 @@ int stats_set(Client *client, const char *para)
 	sendtxtnumeric(client, "options::mkpasswd-for-everyone: %d", MKPASSWD_FOR_EVERYONE);
 	sendtxtnumeric(client, "options::allow-insane-bans: %d", ALLOW_INSANE_BANS);
 	sendtxtnumeric(client, "options::allow-part-if-shunned: %d", ALLOW_PART_IF_SHUNNED);
-	sendtxtnumeric(client, "maxchannelsperuser: %i", iConf.maxchannelsperuser);
+	//sendtxtnumeric(client, "maxchannelsperuser: %i", iConf.maxchannelsperuser);
 	sendtxtnumeric(client, "ping-warning: %i seconds", PINGWARNING);
-	sendtxtnumeric(client, "auto-join: %s", AUTO_JOIN_CHANS ? AUTO_JOIN_CHANS : "0");
+	//sendtxtnumeric(client, "auto-join: %s", AUTO_JOIN_CHANS ? AUTO_JOIN_CHANS : "0");
 	sendtxtnumeric(client, "oper-auto-join: %s", OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
-	sendtxtnumeric(client, "static-quit: %s", STATIC_QUIT ? STATIC_QUIT : "<none>");
-	sendtxtnumeric(client, "static-part: %s", STATIC_PART ? STATIC_PART : "<none>");
+	//sendtxtnumeric(client, "static-quit: %s", STATIC_QUIT ? STATIC_QUIT : "<none>");
+	//sendtxtnumeric(client, "static-part: %s", STATIC_PART ? STATIC_PART : "<none>");
 	sendtxtnumeric(client, "who-limit: %d", WHOLIMIT);
 	sendtxtnumeric(client, "silence-limit: %d", SILENCE_LIMIT);
 	sendtxtnumeric(client, "ban-version-tkl-time: %s", pretty_time_val(BAN_VERSION_TKL_TIME));

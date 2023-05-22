@@ -78,19 +78,14 @@ struct Configuration {
 	char throttle_count;
 	char *kline_address;
 	char *gline_address;
-	long conn_modes;
 	long oper_modes;
 	char *oper_snomask;
-	char *auto_join_chans;
 	char *oper_auto_join_chans;
 	char *allow_user_stats;
 	OperStat *allow_user_stats_ext;
 	int ping_warning;
-	int maxchannelsperuser;
 	int maxdccallow;
 	int anti_spam_quit_message_time;
-	char *static_quit;
-	char *static_part;
 	TLSOptions *tls_options;
 	Policy plaintext_policy_user;
 	MultiLine *plaintext_policy_user_message;
@@ -103,7 +98,6 @@ struct Configuration {
 	char *outdated_tls_policy_oper_message;
 	Policy outdated_tls_policy_server;
 	enum UHAllowed userhost_allowed;
-	char *restrict_usermodes;
 	char *restrict_channelmodes;
 	char *restrict_extendedbans;
 	int named_extended_bans;
@@ -185,7 +179,6 @@ extern MODVAR int ipv6_disabled;
 
 #define KLINE_ADDRESS			iConf.kline_address
 #define GLINE_ADDRESS			iConf.gline_address
-#define CONN_MODES			iConf.conn_modes
 #define OPER_MODES			iConf.oper_modes
 #define OPER_SNOMASK			iConf.oper_snomask
 #define SHOWOPERMOTD			iConf.show_opermotd
@@ -195,7 +188,6 @@ extern MODVAR int ipv6_disabled;
 #define PINGWARNING			iConf.ping_warning
 #define MAXDCCALLOW			iConf.maxdccallow
 #define DONT_RESOLVE			iConf.dont_resolve
-#define AUTO_JOIN_CHANS			iConf.auto_join_chans
 #define OPER_AUTO_JOIN_CHANS		iConf.oper_auto_join_chans
 #define LINK_BINDIP			iConf.link_bindip
 #define IDENT_CHECK			iConf.ident_check
@@ -216,10 +208,7 @@ extern MODVAR int ipv6_disabled;
 #define iNAH				iConf.inah
 #define PREFIX_QUIT			iConf.prefix_quit
 
-#define STATIC_QUIT			iConf.static_quit
-#define STATIC_PART			iConf.static_part
 #define UHOST_ALLOWED			iConf.userhost_allowed
-#define RESTRICT_USERMODES		iConf.restrict_usermodes
 #define RESTRICT_CHANNELMODES		iConf.restrict_channelmodes
 #define RESTRICT_EXTENDEDBANS		iConf.restrict_extendedbans
 #define THROTTLING_PERIOD		iConf.throttle_period
@@ -288,24 +277,18 @@ struct SetCheck {
 	unsigned has_throttle_connections:1;
 	unsigned has_kline_address:1;
 	unsigned has_gline_address:1;
-	unsigned has_modes_on_connect:1;
 	unsigned has_modes_on_oper:1;
 	unsigned has_snomask_on_connect:1;
 	unsigned has_snomask_on_oper:1;
-	unsigned has_auto_join:1;
 	unsigned has_oper_auto_join:1;
 	unsigned has_check_target_nick_bans:1;
 	unsigned has_watch_away_notification:1;
 	unsigned has_uhnames:1;
 	unsigned has_allow_user_stats:1;
 	unsigned has_ping_warning:1;
-	unsigned has_maxchannelsperuser:1;
 	unsigned has_maxdccallow:1;
 	unsigned has_anti_spam_quit_message_time:1;
-	unsigned has_static_quit:1;
-	unsigned has_static_part:1;
 	unsigned has_allow_userhost_change:1;
-	unsigned has_restrict_usermodes:1;
 	unsigned has_restrict_channelmodes:1;
 	unsigned has_restrict_extendedbans:1;
 	unsigned has_channel_command_prefix:1;

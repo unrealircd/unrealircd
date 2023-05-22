@@ -21,6 +21,29 @@ in progress and may not be a stable version.
     is detected, to save CPU and other resources during such an attack.
     The default rate is 1000 per second, so this would be unusual to trigger
     accidentally.
+* It is now possible to override some set settings per-security group by
+  having a set block with a name, like `set unknown-users { }`
+  * You could use this to set more limitations for unknown-users:
+    ```
+    set unknown-users {
+            max-channels-per-user 5;
+            static-quit "Quit";
+            static-part yes;
+    }
+    ```
+  * Or to set higher values (higher than the normal set block)
+    for trusted users:
+    ```
+    security-group trusted-bots {
+            account { BotOne; BotTwo; }
+    }
+    set trusted-bots {
+            max-channels-per-user 25;
+    }
+    ```
+  * Currently the following settings can be used in a set xxx { } block:
+    set::auto-join, set::modes-on-connect, set::restrict-usermodes,
+    set::max-channels-per-user, set::static-quit, set::static-part.
 * New setting [set::handshake-boot-delay](https://www.unrealircd.org/docs/Set_block#set%3A%3Ahandshake-boot-delay)
   which allows server linking autoconnects to kick in (and incoming
   servers on serversonly ports), before allowing clients in. This

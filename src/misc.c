@@ -937,33 +937,6 @@ const char *cmdname_by_spamftarget(int target)
 	return "???";
 }
 
-/** Returns 1 if this is a channel from set::auto-join or set::oper-auto-join */
-int is_autojoin_chan(const char *chname)
-{
-	char buf[512];
-	char *p, *name;
-
-	if (OPER_AUTO_JOIN_CHANS)
-	{
-		strlcpy(buf, OPER_AUTO_JOIN_CHANS, sizeof(buf));
-
-		for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
-			if (!strcasecmp(name, chname))
-				return 1;
-	}
-
-	if (AUTO_JOIN_CHANS)
-	{
-		strlcpy(buf, AUTO_JOIN_CHANS, sizeof(buf));
-
-		for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
-			if (!strcasecmp(name, chname))
-				return 1;
-	}
-
-	return 0;
-}
-
 /** Add name entries from config */
 void unreal_add_names(NameList **n, ConfigEntry *ce)
 {

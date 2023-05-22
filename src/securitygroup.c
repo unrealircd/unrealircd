@@ -566,6 +566,7 @@ SecurityGroup *add_security_group(const char *name, int priority)
 	s = safe_alloc(sizeof(SecurityGroup));
 	strlcpy(s->name, name, sizeof(s->name));
 	s->priority = priority;
+	init_dynamic_set_block(&s->settings);
 	AddListItemPrio(s, securitygroups, priority);
 	return s;
 }
@@ -584,6 +585,7 @@ void free_security_group(SecurityGroup *s)
 	free_nvplist(s->extended);
 	free_nvplist(s->exclude_extended);
 	free_nvplist(s->printable_list);
+	free_dynamic_set_block(&s->settings);
 	safe_free(s);
 }
 

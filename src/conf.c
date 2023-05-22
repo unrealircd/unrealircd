@@ -242,6 +242,8 @@ extern NameValueList *config_defines;
 MODVAR int ipv6_disabled = 0;
 MODVAR Client *remote_rehash_client = NULL;
 MODVAR json_t *json_rehash_log = NULL;
+MODVAR DynamicSetBlock unknown_users_set;
+MODVAR DynamicSetBlock dynamic_set;
 
 MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
@@ -1606,12 +1608,9 @@ void free_iConf(Configuration *i)
 	safe_free(i->kline_address);
 	safe_free(i->gline_address);
 	safe_free(i->oper_snomask);
-	safe_free(i->auto_join_chans);
 	safe_free(i->oper_auto_join_chans);
 	safe_free(i->allow_user_stats);
 	// allow_user_stats_ext is freed elsewhere
-	safe_free(i->static_quit);
-	safe_free(i->static_part);
 	free_tls_options(i->tls_options);
 	i->tls_options = NULL;
 	safe_free(i->tls_options);
@@ -1619,7 +1618,6 @@ void free_iConf(Configuration *i)
 	safe_free_multiline(i->plaintext_policy_oper_message);
 	safe_free(i->outdated_tls_policy_user_message);
 	safe_free(i->outdated_tls_policy_oper_message);
-	safe_free(i->restrict_usermodes);
 	safe_free(i->restrict_channelmodes);
 	safe_free(i->restrict_extendedbans);
 	safe_free(i->channel_command_prefix);
@@ -1651,6 +1649,11 @@ void free_iConf(Configuration *i)
 	i->floodsettings = NULL;
 }
 
+/** Set default set { } block settings. Note that some of these settings
+ * have been moved to config_setdynamicdefaultsettings() if they use the
+ * new dynamic set system which has per-security-group overrides (eg.
+ * max-channels-per-user).
+ */
 void config_setdefaultsettings(Configuration *i)
 {
 	char tmp[512];
@@ -1667,10 +1670,8 @@ void config_setdefaultsettings(Configuration *i)
 	i->spamfilter_detectslow_warn = 250;
 	i->spamfilter_detectslow_fatal = 500;
 	i->spamfilter_stop_on_first_match = 1;
-	i->maxchannelsperuser = 10;
 	i->maxdccallow = 10;
 	safe_strdup(i->channel_command_prefix, "`!.");
-	i->conn_modes = set_usermode("+ixw");
 	i->check_target_nick_bans = 1;
 	i->maxbans = 60;
 	i->maxbanlength = 2048;
@@ -1770,6 +1771,19 @@ void config_setdefaultsettings(Configuration *i)
 	i->high_connection_rate = 1000;
 }
 
+/* Some settings have been moved to here - we (re)set some defaults */
+void config_setdynamicdefaultsettings()
+{
+	DynamicSetBlock *s;
+	/* Free/reset stuff first: */
+	free_dynamic_set_block(&dynamic_set);
+	free_dynamic_set_block(&unknown_users_set);
+	s = &dynamic_set;
+	/* Set defaults: */
+	dynamic_set_number(s, SET_MAX_CHANNELS_PER_USER, 10);
+	dynamic_set_number(s, SET_MODES_ON_CONNECT, set_usermode("+ixw"));
+}
+
 /** Similar to config_setdefaultsettings but this one is applied *AFTER*
  * the entire configuration has been ran (sometimes this is the only way it can be done..).
  * NOTE: iConf is thus already populated with (non-default) values. Only overwrite if necessary!
@@ -1827,11 +1841,6 @@ void postconf_defaults(void)
 	}
 
 	postconf_defaults_log_block();
-
-	/* Copy set::max-channels-per-user to set::anti-flood::unknown::max-channels-per-user (if not set) */
-	fld = find_floodsettings_block("unknown-users");
-	if (fld && (fld->limit[FLD_MAXCHANNELSPERUSER] == 0))
-		fld->limit[FLD_MAXCHANNELSPERUSER] = iConf.maxchannelsperuser;
 }
 
 void postconf_fixes(void)
@@ -2112,6 +2121,7 @@ int config_test(void)
 	Init_all_testing_modules();
 
 	loop.config_status = CONFIG_STATUS_RUN_CONFIG;
+	config_setdynamicdefaultsettings();
 	if (config_run_blocks() < 0)
 	{
 		config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
@@ -2669,6 +2679,7 @@ static const char *config_test_priority_blocks[] =
 	"me",
 	"secret",
 	"log", /* "log" needs to be before "set" in CONFIG_TEST */
+	"security-group",
 	"set",
 	"class",
 };
@@ -2678,6 +2689,7 @@ static const char *config_run_priority_blocks[] =
 {
 	"me",
 	"secret",
+	"security-group",
 	"set",
 	"log", /* "log" needs to be after "set" in CONFIG_RUN */
 	"class",
@@ -3179,6 +3191,8 @@ void init_dynconf(void)
 {
 	memset(&iConf, 0, sizeof(iConf));
 	memset(&tempiConf, 0, sizeof(iConf));
+	init_dynamic_set_block(&unknown_users_set);
+	init_dynamic_set_block(&dynamic_set);
 }
 
 const char *pretty_time_val_r(char *buf, size_t buflen, long timeval)
@@ -7354,6 +7368,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp, *cep4;
 	Hook *h;
+	int n;
+
+	if (ce->value)
+		return config_set_security_group(conf, ce);
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
@@ -7362,9 +7380,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		if (!strcmp(cep->name, "gline-address")) {
 			safe_strdup(tempiConf.gline_address, cep->value);
-		}
-		else if (!strcmp(cep->name, "modes-on-connect")) {
-			tempiConf.conn_modes = (long) set_usermode(cep->value);
 		}
 		else if (!strcmp(cep->name, "modes-on-oper")) {
 			tempiConf.oper_modes = (long) set_usermode(cep->value);
@@ -7406,12 +7421,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 			safe_strdup(tempiConf.level_on_join, res);
 		}
-		else if (!strcmp(cep->name, "static-quit")) {
-			safe_strdup(tempiConf.static_quit, cep->value);
-		}
-		else if (!strcmp(cep->name, "static-part")) {
-			safe_strdup(tempiConf.static_part, cep->value);
-		}
 		else if (!strcmp(cep->name, "who-limit")) {
 			tempiConf.who_limit = atol(cep->value);
 		}
@@ -7423,9 +7432,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->name, "silence-limit")) {
 			tempiConf.silence_limit = atol(cep->value);
-		}
-		else if (!strcmp(cep->name, "auto-join")) {
-			safe_strdup(tempiConf.auto_join_chans, cep->value);
 		}
 		else if (!strcmp(cep->name, "oper-auto-join")) {
 			safe_strdup(tempiConf.oper_auto_join_chans, cep->value);
@@ -7454,18 +7460,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->name, "channel-command-prefix")) {
 			safe_strdup(tempiConf.channel_command_prefix, cep->value);
-		}
-		else if (!strcmp(cep->name, "restrict-usermodes")) {
-			int i;
-			char *p = safe_alloc(strlen(cep->value) + 1), *x = p;
-			/* The data should be something like 'Gw' or something,
-			 * but just in case users use '+Gw' then ignore the + (and -).
-			 */
-			for (i=0; i < strlen(cep->value); i++)
-				if ((cep->value[i] != '+') && (cep->value[i] != '-'))
-					*x++ = cep->value[i];
-			*x = '\0';
-			tempiConf.restrict_usermodes = p;
 		}
 		else if (!strcmp(cep->name, "restrict-channelmodes")) {
 			int i;
@@ -7502,9 +7496,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					AddListItem(os, tempiConf.allow_user_stats_ext);
 				}
 			}
-		}
-		else if (!strcmp(cep->name, "maxchannelsperuser") || !strcmp(cep->name, "max-channels-per-user")) {
-			tempiConf.maxchannelsperuser = atoi(cep->value);
 		}
 		else if (!strcmp(cep->name, "ping-warning")) {
 			tempiConf.ping_warning = atoi(cep->value);
@@ -7659,13 +7650,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 						}
 						snprintf(buf, sizeof(buf), "%d:%ld", users, every);
 						config_parse_flood_generic(buf, &tempiConf, cepp->name, FLD_CONVERSATIONS);
-					}
-					else if (!strcmp(ceppp->name, "max-channels-per-user") || !strcmp(ceppp->name, "maxchannelsperuser"))
-					{
-						/* We use a hack here to make it fit our storage format */
-						char buf[64];
-						snprintf(buf, sizeof(buf), "%d:0", atoi(ceppp->value));
-						config_parse_flood_generic(buf, &tempiConf, cepp->name, FLD_MAXCHANNELSPERUSER);
 					}
 				}
 				if ((lag_penalty != -1) && (lag_penalty_bytes != -1))
@@ -7964,8 +7948,12 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		} else if (!strcmp(cep->name, "high-connection-rate"))
 		{
 			tempiConf.high_connection_rate = atoi(cep->value);
+		} else if (config_set_dynamic_set_block_item(conf, &dynamic_set, cep))
+		{
+			/* Handled by config_set_dynamic_set_block_item - nothing to do here */
 		} else
 		{
+			/* Call modules that hook HOOKTYPE_CONFIGRUN */
 			int value;
 			for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 			{
@@ -7983,7 +7971,11 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp, *ceppp, *cep4;
 	int tempi;
 	int errors = 0;
+	int n;
 	Hook *h;
+
+	if (ce->value)
+		return test_set_security_group(conf, ce);
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
@@ -8020,18 +8012,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					cep->file->filename, cep->line_number);
 				errors++; continue;
 			}
-		}
-		else if (!strcmp(cep->name, "modes-on-connect")) {
-			char *p;
-			CheckNull(cep);
-			CheckDuplicate(cep, modes_on_connect, "modes-on-connect");
-			for (p = cep->value; *p; p++)
-				if (strchr("orzSHqtW", *p))
-				{
-					config_error("%s:%i: set::modes-on-connect may not include mode '%c'",
-						cep->file->filename, cep->line_number, *p);
-					errors++;
-				}
 		}
 		else if (!strcmp(cep->name, "modes-on-join")) {
 			char *c;
@@ -8107,14 +8087,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		}
-		else if (!strcmp(cep->name, "static-quit")) {
-			CheckNull(cep);
-			CheckDuplicate(cep, static_quit, "static-quit");
-		}
-		else if (!strcmp(cep->name, "static-part")) {
-			CheckNull(cep);
-			CheckDuplicate(cep, static_part, "static-part");
-		}
 		else if (!strcmp(cep->name, "who-limit")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, who_limit, "who-limit");
@@ -8136,10 +8108,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "silence-limit")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, silence_limit, "silence-limit");
-		}
-		else if (!strcmp(cep->name, "auto-join")) {
-			CheckNull(cep);
-			CheckDuplicate(cep, auto_join, "auto-join");
 		}
 		else if (!strcmp(cep->name, "oper-auto-join")) {
 			CheckNull(cep);
@@ -8202,19 +8170,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			CheckDuplicate(cep, allow_user_stats, "allow-user-stats");
 			CheckNull(cep);
-		}
-		else if (!strcmp(cep->name, "maxchannelsperuser") || !strcmp(cep->name, "max-channels-per-user")) {
-			CheckNull(cep);
-			CheckDuplicate(cep, maxchannelsperuser, "maxchannelsperuser");
-			tempi = atoi(cep->value);
-			if (tempi < 1)
-			{
-				config_error("%s:%i: set::maxchannelsperuser must be > 0",
-					cep->file->filename,
-					cep->line_number);
-				errors++;
-				continue;
-			}
 		}
 		else if (!strcmp(cep->name, "ping-warning")) {
 			CheckNull(cep);
@@ -8336,22 +8291,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "hide-ban-reason")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, hide_ban_reason, "hide-ban-reason");
-		}
-		else if (!strcmp(cep->name, "restrict-usermodes"))
-		{
-			CheckNull(cep);
-			CheckDuplicate(cep, restrict_usermodes, "restrict-usermodes");
-			if (cep->name) {
-				int warn = 0;
-				char *p;
-				for (p = cep->value; *p; p++)
-					if ((*p == '+') || (*p == '-'))
-						warn = 1;
-				if (warn) {
-					config_status("%s:%i: warning: set::restrict-usermodes: should only contain modechars, no + or -.\n",
-						cep->file->filename, cep->line_number);
-				}
-			}
 		}
 		else if (!strcmp(cep->name, "restrict-channelmodes"))
 		{
@@ -9354,7 +9293,14 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		} else if (!strcmp(cep->name, "high-connection-rate"))
 		{
 			CheckNull(cep);
-		} else
+		} else if ((n = test_dynamic_set_block_item(conf, NULL, cep)) >= 0)
+		{
+			/* Handled by test_dynamic_set_block_item:
+			 * return value  0: success (mean we do errors += 0)
+			 * return value >0: some error
+			 */
+			errors += n;
+		} else /* n<0 from above */
 		{
 			int used = 0;
 			for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
@@ -11074,3 +11020,238 @@ int modules_default_conf_modified(const char *filebuf)
 	           log_data_string("version", VERSIONONLY));
 	return 1;
 }
+
+/*** START OF DYNAMIC SET CONFIG STUFF (that can be overridden by security group) ***/
+
+void init_dynamic_set_block(DynamicSetBlock *s)
+{
+	memset(s, 0, sizeof(DynamicSetBlock));
+}
+
+void free_dynamic_set_block(DynamicSetBlock *s)
+{
+	safe_free(s->settings[SET_AUTO_JOIN].string);
+	safe_free(s->settings[SET_STATIC_QUIT].string);
+	safe_free(s->settings[SET_STATIC_PART].string);
+	safe_free(s->settings[SET_RESTRICT_USERMODES].string);
+}
+
+void dynamic_set_string(DynamicSetBlock *s, int settingname, const char *value)
+{
+	s->isset[settingname] = 1;
+	safe_strdup(s->settings[settingname].string, value);
+}
+
+void dynamic_set_number(DynamicSetBlock *s, int settingname, long long value)
+{
+	s->isset[settingname] = 1;
+	s->settings[settingname].number = value;
+}
+
+#undef CheckNull
+#define CheckNull(x) if ((!(x)->value) || (!(*((x)->value)))) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); return 1; }
+
+int test_dynamic_set_block_item(ConfigFile *conf, const char *security_group, ConfigEntry *cep)
+{
+	int errors = 0;
+
+	if (!strcmp(cep->name, "modes-on-connect")) {
+		char *p;
+		CheckNull(cep);
+		for (p = cep->value; *p; p++)
+			if (strchr("orzSHqtW", *p))
+			{
+				config_error("%s:%i: set::modes-on-connect may not include mode '%c'",
+					cep->file->filename, cep->line_number, *p);
+				errors++;
+			}
+	}
+	else if (!strcmp(cep->name, "auto-join")) {
+		CheckNull(cep);
+	}
+	else if (!strcmp(cep->name, "maxchannelsperuser") || !strcmp(cep->name, "max-channels-per-user")) {
+		int i;
+		CheckNull(cep);
+		i = atoi(cep->value);
+		if (i < 1)
+		{
+			config_error("%s:%i: set::%s must be > 0",
+				cep->file->filename,
+				cep->line_number,
+				cep->name);
+			errors++;
+		}
+	}
+	else if (!strcmp(cep->name, "static-quit")) {
+		CheckNull(cep);
+	}
+	else if (!strcmp(cep->name, "static-part")) {
+		CheckNull(cep);
+	}
+	else if (!strcmp(cep->name, "restrict-usermodes"))
+	{
+		CheckNull(cep);
+		if (cep->name) {
+			int warn = 0;
+			char *p;
+			for (p = cep->value; *p; p++)
+				if ((*p == '+') || (*p == '-'))
+					warn = 1;
+			if (warn) {
+				config_status("%s:%i: warning: set::restrict-usermodes: should only contain modechars, no + or -.\n",
+					cep->file->filename, cep->line_number);
+			}
+		}
+	} else
+	{
+		/* Unknown option */
+		return -1;
+	}
+	return errors;
+}
+#undef CheckNull
+
+int config_set_dynamic_set_block_item(ConfigFile *conf, DynamicSetBlock *s, ConfigEntry *cep)
+{
+	if (!strcmp(cep->name, "modes-on-connect")) {
+		long v = set_usermode(cep->value);
+		dynamic_set_number(s, SET_MODES_ON_CONNECT, v);
+		return 1;
+	}
+	else if (!strcmp(cep->name, "auto-join")) {
+		dynamic_set_string(s, SET_AUTO_JOIN, cep->value);
+		return 1;
+	}
+	else if (!strcmp(cep->name, "maxchannelsperuser") || !strcmp(cep->name, "max-channels-per-user")) {
+		dynamic_set_number(s, SET_MAX_CHANNELS_PER_USER, atoi(cep->value));
+		return 1;
+	}
+	else if (!strcmp(cep->name, "static-quit")) {
+		dynamic_set_string(s, SET_STATIC_QUIT, cep->value);
+		return 1;
+	}
+	else if (!strcmp(cep->name, "static-part")) {
+		dynamic_set_string(s, SET_STATIC_PART, cep->value);
+		return 1;
+	}
+	else if (!strcmp(cep->name, "restrict-usermodes")) {
+		int i;
+		char buf[512];
+		char *p = buf;
+		/* The data should be something like 'Gw' or something,
+		 * but just in case users use '+Gw' then ignore the + (and -).
+		 */
+		for (i=0; i < MIN(strlen(cep->value),sizeof(buf)-1); i++)
+			if ((cep->value[i] != '+') && (cep->value[i] != '-'))
+				*p++ = cep->value[i];
+		*p = '\0';
+		dynamic_set_string(s, SET_RESTRICT_USERMODES, cep->value);
+		return 1;
+	}
+	return 0; /* unknown item, not taken */
+}
+
+int test_set_security_group(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	int errors = 0;
+	int i;
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		int n = test_dynamic_set_block_item(conf, ce->value, cep);
+		if (n == -1)
+		{
+			config_error("%s:%i: set::%s is not allowed in a set <security group> { } block or is an unrecognized option",
+			             cep->file->filename, cep->line_number, ce->value);
+			errors++;
+		} else
+		if (n > 0)
+		{
+			errors += n;
+		}
+	}
+
+	return errors;
+}
+
+int config_set_security_group(ConfigFile *conf, ConfigEntry *ce)
+{
+	SecurityGroup *s = find_security_group(ce->value);
+	ConfigEntry *cep;
+
+	if (!s)
+	{
+		config_warn("set %s { } block encountered but security-group %s does not exist. Settings ignored",
+		            ce->value, ce->value);
+		return 0;
+	}
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		config_set_dynamic_set_block_item(conf, &s->settings, cep);
+	}
+	return 0;
+}
+
+/** Get the appropriate settings block for this user.
+ * @param client	The client, should be locally connected.
+ * @param opt		The flood option we are interested in
+ * @returns The FloodSettings for this user, never returns NULL.
+ */
+DynamicSetOption get_setting_for_user(Client *client, SetOption opt)
+{
+	SecurityGroup *sg;
+	int in_known_users = 0;
+
+	/* Go through all security groups by order of priority
+	 * (eg: first "known-users", then "unknown-users").
+	 * For each of these:
+	 * - Check if a set::anti-flood::xxxx block exists for this group
+	 * - Check if the limit is non-zero (eg there is any limit set)
+	 * If any of these are false then we continue with next block
+	 * that matches.
+	 */
+
+	for (sg = securitygroups; sg; sg = sg->next)
+	{
+		/* Special caching for 'known-users' */
+		if (!strcmp(sg->name, "known-users"))
+		{
+			in_known_users = user_allowed_by_security_group(client, sg);
+			if (in_known_users)
+			{
+				if (sg->settings.isset[opt])
+					return sg->settings.settings[opt];
+			}
+		} else
+		if (user_allowed_by_security_group(client, sg) &&
+		    sg->settings.isset[opt])
+		{
+			return sg->settings.settings[opt];
+		}
+	}
+
+	/* Not found, then maybe the user is in unknown-users?
+	 * Use the caching info from above.
+	 */
+	if (!in_known_users && unknown_users_set.isset[opt])
+		return unknown_users_set.settings[opt];
+
+	/* If we are still here, then fallback to the generic set:: setting */
+	return dynamic_set.settings[opt];
+}
+
+/** Get configuration that applies to the user - a number value */
+long long get_setting_for_user_number(Client *client, SetOption opt)
+{
+	return get_setting_for_user(client, opt).number;
+}
+
+/** Get configuration that applies to the user - a string config value */
+const char *get_setting_for_user_string(Client *client, SetOption opt)
+{
+	return get_setting_for_user(client, opt).string;
+}
+
+/*** END OF DYNAMIC SET CONFIG STUFF (that can be overridden by security group) ***/

@@ -75,10 +75,11 @@ CMD_FUNC(cmd_quit)
 	{
 		int n;
 		Hook *tmphook;
+		const char *str;
 
-		if (STATIC_QUIT)
+		if ((str = get_setting_for_user_string(client, SET_STATIC_QUIT)))
 		{
-			exit_client(client, recv_mtags, STATIC_QUIT);
+			exit_client(client, recv_mtags, str);
 			return;
 		}
 

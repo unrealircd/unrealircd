@@ -1087,6 +1087,7 @@ CMD_FUNC(_cmd_umode)
 	int what;
 	long oldumodes = 0;
 	char oldsnomask[64];
+	const char *restrict_usermodes = NULL;
 	/* (small note: keep 'what' as an int. -- Syzop). */
 	short rpterror = 0, umode_restrict_err = 0, chk_restrict = 0, modex_err = 0;
 
@@ -1125,8 +1126,8 @@ CMD_FUNC(_cmd_umode)
 
 	oldumodes = client->umodes;
 
-	if (RESTRICT_USERMODES && MyUser(client) && !ValidatePermissionsForPath("immune:restrict-usermodes",client,NULL,NULL,NULL))
-		chk_restrict = 1;
+	if (MyUser(client) && !ValidatePermissionsForPath("immune:restrict-usermodes",client,NULL,NULL,NULL))
+		restrict_usermodes = get_setting_for_user_string(client, SET_RESTRICT_USERMODES);
 
 	if (client->user->snomask)
 		strlcpy(oldsnomask, client->user->snomask, sizeof(oldsnomask));
@@ -1136,12 +1137,12 @@ CMD_FUNC(_cmd_umode)
 	 */
 	for (m = parv[2]; *m; m++)
 	{
-		if (chk_restrict && strchr(RESTRICT_USERMODES, *m))
+		if (restrict_usermodes && strchr(restrict_usermodes, *m))
 		{
 			if (!umode_restrict_err)
 			{
 				sendnotice(client, "Setting/removing of usermode(s) '%s' has been disabled.",
-					RESTRICT_USERMODES);
+					restrict_usermodes);
 				umode_restrict_err = 1;
 			}
 			continue;
