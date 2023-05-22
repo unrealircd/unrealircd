@@ -1399,3 +1399,7 @@ extern MODVAR int connections_past_period;
 extern void deadsocket_exit(Client *client, int special);
 extern void close_listener(ConfigItem_listen *listener);
 extern int get_max_channels_per_user(Client *client);
+extern int str_starts_with_case_sensitive(const char *haystack, const char *needle);
+extern int str_ends_with_case_sensitive(const char *haystack, const char *needle);
+extern int str_starts_with_case_insensitive(const char *haystack, const char *needle);
+extern int str_ends_with_case_insensitive(const char *haystack, const char *needle);

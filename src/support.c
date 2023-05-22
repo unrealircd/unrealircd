@@ -1532,3 +1532,43 @@ void strtoupper(char *str)
 	for (; *str; str++)
 		*str = toupper(*str);
 }
+
+/** Checks if a string starts with a certain substring - case sensitive version.
+ */
+int str_starts_with_case_sensitive(const char *haystack, const char *needle)
+{
+	return !strncmp(haystack, needle, strlen(needle)) ? 1 : 0;
+}
+
+/** Checks if a string ends with a certain substring - case sensitive version.
+ */
+int str_ends_with_case_sensitive(const char *haystack, const char *needle)
+{
+	int haystacklen = strlen(haystack);
+	int needlelen = strlen(needle);
+
+	if (haystacklen < needlelen)
+		return 0;
+
+	return !strncmp(haystack+haystacklen-needlelen, needle, needlelen) ? 1 : 0;
+}
+
+/** Checks if a string starts with a certain substring - case insensitive version.
+ */
+int str_starts_with_case_insensitive(const char *haystack, const char *needle)
+{
+	return !strncasecmp(haystack, needle, strlen(needle)) ? 1 : 0;
+}
+
+/** Checks if a string ends with a certain substring - case insensitive version.
+ */
+int str_ends_with_case_insensitive(const char *haystack, const char *needle)
+{
+	int haystacklen = strlen(haystack);
+	int needlelen = strlen(needle);
+
+	if (haystacklen < needlelen)
+		return 0;
+
+	return !strncasecmp(haystack+haystacklen-needlelen, needle, needlelen) ? 1 : 0;
+}
