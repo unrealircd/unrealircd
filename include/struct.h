@@ -2040,6 +2040,7 @@ typedef enum {
 
 struct ConfigItem_proxy {
 	ConfigItem_proxy *prev, *next;
+	char *name;
 	SecurityGroup *mask;
 	ProxyType type;
 	AuthConfig *auth;

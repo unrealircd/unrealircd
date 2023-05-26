@@ -2345,23 +2345,24 @@ void remove_config_tkls(void)
 	}
 }
 
-void delete_proxyblock(ConfigItem_proxy *e)
+void free_proxy_block(ConfigItem_proxy *e)
 {
 	free_security_group(e->mask);
 	if (e->auth)
 		Auth_FreeAuthConfig(e->auth);
 	DelListItem(e, conf_proxy);
+	safe_free(e->name);
 	safe_free(e);
 }
 
-void proxy_free_conf(void)
+void free_all_proxy_blocks(void)
 {
 	ConfigItem_proxy *proxy_ptr, *next;
 
 	for (proxy_ptr = conf_proxy; proxy_ptr; proxy_ptr = next)
 	{
 		next = proxy_ptr->next;
-		delete_proxyblock(proxy_ptr);
+		free_proxy_block(proxy_ptr);
 	}
 	conf_proxy = NULL;
 }
@@ -2628,6 +2629,8 @@ void config_rehash()
 	conf_sni = NULL;
 
 	free_conf_channelmodes(&iConf.modes_on_join);
+
+	free_all_proxy_blocks();
 
 	/*
 	  reset conf_files -- should this be in its own function? no, because
@@ -4508,6 +4511,8 @@ int _conf_proxy(ConfigFile *conf, ConfigEntry *ce)
 
 	proxy = safe_alloc(sizeof(ConfigItem_proxy));
 	proxy->type = PROXY_WEBIRC; /* default */
+
+	safe_strdup(proxy->name, ce->value); // could be NULL if webirc
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
