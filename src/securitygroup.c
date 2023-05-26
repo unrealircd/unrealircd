@@ -61,6 +61,20 @@ void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce)
 	}
 }
 
+ConfigItem_mask *unreal_duplicate_masks(ConfigItem_mask *existing)
+{
+	ConfigItem_mask *ret = NULL;
+	ConfigItem_mask *n;
+
+	for (; existing; existing = existing->next)
+	{
+		n = safe_alloc(sizeof(ConfigItem_mask));
+		safe_strdup(n->mask, existing->mask);
+		AddListItem(n, ret);
+	}
+	return ret;
+}
+
 /** Check if a client matches any of the masks in the mask list.
  * The following rules apply:
  * - If you have only negating entries, like '!abc' and '!def', then
@@ -576,6 +590,8 @@ void free_security_group(SecurityGroup *s)
 {
 	if (s == NULL)
 		return;
+	// IMPORTANT: if you add anything here,
+	// then also update duplicate_security_group() !!!!
 	unreal_delete_masks(s->mask);
 	unreal_delete_masks(s->exclude_mask);
 	free_entire_name_list(s->security_group);
@@ -587,6 +603,27 @@ void free_security_group(SecurityGroup *s)
 	free_nvplist(s->printable_list);
 	free_dynamic_set_block(&s->settings);
 	safe_free(s);
+}
+
+/** Duplicate a SecurityGroup struct */
+SecurityGroup *duplicate_security_group(SecurityGroup *s)
+{
+	SecurityGroup *n;
+
+	if (s == NULL)
+		return NULL;
+
+	n = safe_alloc(sizeof(SecurityGroup));
+	n->mask = unreal_duplicate_masks(s->mask);
+	n->exclude_mask = unreal_duplicate_masks(s->exclude_mask);
+	n->security_group = duplicate_name_list(s->security_group);
+	n->exclude_security_group = duplicate_name_list(s->exclude_security_group);
+	n->ip = duplicate_name_list(s->exclude_ip);
+	n->extended = duplicate_nvplist(s->extended);
+	n->exclude_extended = duplicate_nvplist(s->exclude_extended);
+	n->printable_list = duplicate_nvplist(s->printable_list);
+	// not duplicated since it makes no sense: s->settings
+	return n;
 }
 
 /** Initialize the default security-group blocks */

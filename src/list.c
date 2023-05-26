@@ -559,6 +559,18 @@ void _free_entire_name_list(NameList *n)
 	}
 }
 
+NameList *duplicate_name_list(NameList *e)
+{
+	NameList *ret = NULL;
+
+	if (e == NULL)
+		return NULL;
+
+	for (; e; e = e->next)
+		add_name_list(ret, e->name);
+	return ret;
+}
+
 void _del_name_list(NameList **list, const char *name)
 {
 	NameList *e = find_name_list(*list, name);
@@ -658,6 +670,16 @@ void free_nvplist(NameValuePrioList *lst)
 		safe_free(e->value);
 		safe_free(e);
 	}
+}
+
+NameValuePrioList *duplicate_nvplist(NameValuePrioList *e)
+{
+	NameValuePrioList *n = NULL;
+
+	for (; e; e = e->next)
+		add_nvplist(&n, e->priority, e->name, e->value);
+
+	return n;
 }
 
 #define nv_find_by_name(stru, name)	do_nv_find_by_name(stru, name, ARRAY_SIZEOF((stru)))
