@@ -2030,7 +2030,7 @@ typedef enum {
 
 struct ConfigItem_proxy {
 	ConfigItem_proxy *prev, *next;
-	ConfigItem_mask *mask;
+	SecurityGroup *mask;
 	ProxyType type;
 	AuthConfig *auth;
 };

@@ -115,7 +115,7 @@ ConfigItem_proxy *find_webirc(Client *client, const char *password, ProxyType ty
 
 	for (e = conf_proxy; e; e = e->next)
 	{
-		if ((e->type == type) && unreal_mask_match(client, e->mask))
+		if ((e->type == type) && user_allowed_by_security_group(client, e->mask))
 		{
 			if (type == PROXY_WEBIRC)
 			{

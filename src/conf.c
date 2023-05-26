@@ -2347,7 +2347,7 @@ void remove_config_tkls(void)
 
 void delete_proxyblock(ConfigItem_proxy *e)
 {
-	unreal_delete_masks(e->mask);
+	free_security_group(e->mask);
 	if (e->auth)
 		Auth_FreeAuthConfig(e->auth);
 	DelListItem(e, conf_proxy);
@@ -4413,7 +4413,10 @@ int _test_proxy(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "match"))
 		{
 			if (cep->value || cep->items)
+			{
 				has_mask = 1;
+				test_match_block(conf, cep, &errors);
+			}
 		}
 		else if (!strcmp(cep->name, "password"))
 		{
@@ -4493,7 +4496,7 @@ int _conf_proxy(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "match"))
-			unreal_add_masks(&proxy->mask, cep);
+			conf_match_block(conf, cep, &proxy->mask);
 		else if (!strcmp(cep->name, "password"))
 			proxy->auth = AuthBlockToAuthConfig(cep);
 		else if (!strcmp(cep->name, "type"))
