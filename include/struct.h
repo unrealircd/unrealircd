@@ -1800,6 +1800,16 @@ typedef enum TransferEncoding {
 	TRANSFER_ENCODING_CHUNKED=1
 } TransferEncoding;
 
+/* Used to parse http Forwarded header (RFC 7239)... */
+#define IPLEN 48
+typedef struct HTTPForwardedHeader HTTPForwardedHeader;
+struct HTTPForwardedHeader
+{
+	int secure;
+	char hostname[HOSTLEN+1];
+	char ip[IPLEN+1];
+};
+
 typedef struct WebRequest WebRequest;
 struct WebRequest {
 	HttpMethod method; /**< GET/PUT/POST */
@@ -1817,6 +1827,7 @@ struct WebRequest {
 	long long chunk_remaining;
 	TransferEncoding transfer_encoding;
 	long long config_max_request_buffer_size; /**< CONFIG: Maximum request length allowed */
+	HTTPForwardedHeader *forwarded; /**< If using a proxy */
 };
 
 typedef struct WebServer WebServer;

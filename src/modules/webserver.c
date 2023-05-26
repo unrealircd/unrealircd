@@ -32,21 +32,10 @@ ModuleHeader MOD_HEADER
 #define reset_handshake_timeout(client, delta)  do { client->local->creationtime = TStime() - iConf.handshake_timeout + delta; } while(0)
 #define WSU(client)     ((WebSocketUser *)moddata_client(client, websocket_md).ptr)
 
-/* Used to parse http Forwarded header (RFC 7239)... */
-#define IPLEN 48
-#define FHEADER_NAMELEN	20
-
-struct HTTPForwardedHeader
-{
-	int secure;
-	char hostname[HOSTLEN+1];
-	char ip[IPLEN+1];
-};
-
 /* Forward declarations */
 int webserver_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length);
 int webserver_packet_in(Client *client, const char *readbuf, int *length);
-void webserver_mdata_free(ModData *m);
+void webserver_webrequest_mdata_free(ModData *m);
 int webserver_handle_packet(Client *client, const char *readbuf, int length);
 int webserver_handle_handshake(Client *client, const char *readbuf, int *length);
 int webserver_handle_request_header(Client *client, const char *readbuf, int *length);
@@ -81,7 +70,7 @@ MOD_INIT()
 	mreq.name = "web";
 	mreq.serialize = NULL;
 	mreq.unserialize = NULL;
-	mreq.free = webserver_mdata_free;
+	mreq.free = webserver_webrequest_mdata_free;
 	mreq.sync = 0;
 	mreq.type = MODDATATYPE_CLIENT;
 	webserver_md = ModDataAdd(modinfo->handle, mreq);
@@ -102,7 +91,7 @@ MOD_UNLOAD()
 }
 
 /** UnrealIRCd internals: free WebRequest object. */
-void webserver_mdata_free(ModData *m)
+void webserver_webrequest_mdata_free(ModData *m)
 {
 	WebRequest *wsu = (WebRequest *)m->ptr;
 	if (wsu)
@@ -111,6 +100,7 @@ void webserver_mdata_free(ModData *m)
 		free_nvplist(wsu->headers);
 		safe_free(wsu->lefttoparse);
 		safe_free(wsu->request_buffer);
+		safe_free(wsu->forwarded);
 		safe_free(m->ptr);
 	}
 }
@@ -694,182 +684,74 @@ int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf,
 	return 1;
 }
 
-#define FHEADER_STATE_NAME	0
-#define FHEADER_STATE_VALUE	1
-#define FHEADER_STATE_VALUE_QUOTED	2
-
-#define FHEADER_ACTION_APPEND	0
-#define FHEADER_ACTION_IGNORE	1
-#define FHEADER_ACTION_PROCESS	2
-
 /** If a valid Forwarded: http header is received from a trusted source (proxy server), this function will
   * extract remote IP address and secure (https) status from it. If more than one field with same name is received,
   * we'll accept the last one. This should work correctly with chained proxies. */
-struct HTTPForwardedHeader *do_parse_forwarded_header(const char *input)
+void do_parse_forwarded_header(const char *input, HTTPForwardedHeader *forwarded)
 {
-	static struct HTTPForwardedHeader forwarded;
-	int i, length;
-	int state = FHEADER_STATE_NAME, action = FHEADER_ACTION_APPEND;
-	char name[FHEADER_NAMELEN+1];
-	char value[IPLEN+1];
-	int name_length = 0;
-	int value_length = 0;
-	char c;
-	
-	memset(&forwarded, 0, sizeof(struct HTTPForwardedHeader));
-	
-	length = strlen(input);
-	for (i = 0; i < length; i++)
+	char buf[512];
+	char *name, *value, *p = NULL;
+
+	memset(forwarded, 0, sizeof(HTTPForwardedHeader));
+	strlcpy(buf, input, sizeof(buf));
+
+	for (name = strtoken(&p, buf, ";"); name; name = strtoken(&p, NULL, ";"))
 	{
-		c = input[i];
-		switch (c)
+		value = strchr(name, '=');
+		if (value)
+			*value++ = '\0';
+		if (!value)
+			continue; /* we don't use value-less items atm anyway */
+		if (!strcmp(name, "for"))
 		{
-			case '"':
-				switch (state)
-				{
-					case FHEADER_STATE_NAME:
-						action = FHEADER_ACTION_APPEND;
-						break;
-					case FHEADER_STATE_VALUE:
-						action = FHEADER_ACTION_IGNORE;
-						state = FHEADER_STATE_VALUE_QUOTED;
-						break;
-					case FHEADER_STATE_VALUE_QUOTED:
-						action = FHEADER_ACTION_IGNORE;
-						state = FHEADER_STATE_VALUE;
-						break;
-				}
-				break;
-			case ',': case ';': case ' ':
-				switch (state)
-				{
-					case FHEADER_STATE_NAME: /* name without value */
-						name_length = 0;
-						action = FHEADER_ACTION_IGNORE;
-						break;
-					case FHEADER_STATE_VALUE: /* end of value */
-						action = FHEADER_ACTION_PROCESS;
-						break;
-					case FHEADER_STATE_VALUE_QUOTED: /* quoted character, process as normal */
-						action = FHEADER_ACTION_APPEND;
-						break;
-				}
-				break;
-			case '=':
-				switch (state)
-				{
-					case FHEADER_STATE_NAME: /* end of name */
-						name[name_length] = '\0';
-						state = FHEADER_STATE_VALUE;
-						action = FHEADER_ACTION_IGNORE;
-						break;
-					case FHEADER_STATE_VALUE: case FHEADER_STATE_VALUE_QUOTED: /* none of the values is expected to contain = but proceed anyway */
-						action = FHEADER_ACTION_APPEND;
-						break;
-				}
-				break;
-			default:
-				action = FHEADER_ACTION_APPEND;
-				break;
-		}
-		switch (action)
+			strlcpy(forwarded->ip, value, sizeof(forwarded->ip));
+		} else
+		if (!strcasecmp(name, "proto"))
 		{
-			case FHEADER_ACTION_APPEND:
-				if (state == FHEADER_STATE_NAME)
-				{
-					if (name_length < FHEADER_NAMELEN)
-					{
-						name[name_length++] = c;
-					} else
-					{
-						/* truncate */
-					}
-				} else
-				{
-					if (value_length < IPLEN)
-					{
-						value[value_length++] = c;
-					} else
-					{
-						/* truncate */
-					}
-				}
-				break;
-			case FHEADER_ACTION_IGNORE: default:
-				break;
-			case FHEADER_ACTION_PROCESS:
-				value[value_length] = '\0';
-				name[name_length] = '\0';
-				if (!strcasecmp(name, "for"))
-				{
-					strlcpy(forwarded.ip, value, IPLEN+1);
-				} else if (!strcasecmp(name, "proto"))
-				{
-					if (!strcasecmp(value, "https"))
-					{
-						forwarded.secure = 1;
-					} else if (!strcasecmp(value, "http"))
-					{
-						forwarded.secure = 0;
-					} else
-					{
-						/* ignore unknown value */
-					}
-				} else
-				{
-					/* ignore unknown field name */
-				}
-				value_length = 0;
-				name_length = 0;
-				state = FHEADER_STATE_NAME;
-				break;
+			if (!strcasecmp(value, "https"))
+			{
+				forwarded->secure = 1;
+			} else if (!strcasecmp(value, "http"))
+			{
+				forwarded->secure = 0;
+			} else
+			{
+				/* ignore unknown value */
+			}
 		}
 	}
-	// temporary workaround because above loop is faulty
-	value[value_length] = '\0';
-	name[name_length] = '\0';
-	if (!strcasecmp(name, "for"))
-	{
-		strlcpy(forwarded.ip, value, IPLEN+1);
-	}
-	
-	return &forwarded;
 }
 
 void webserver_handle_proxy(Client *client, ConfigItem_proxy *proxy)
 {
-	struct HTTPForwardedHeader *forwarded;
+	HTTPForwardedHeader *forwarded;
 	char oldip[64];
 	NameValuePrioList *header;
-	const char *forwarded_line = NULL;
-	int forwarded_type = 0;
 
+	/* Set up 'forwarded' variable */
+	if (WEB(client)->forwarded == NULL)
+	{
+		WEB(client)->forwarded = safe_alloc(sizeof(HTTPForwardedHeader));
+	} else {
+		memset(WEB(client)->forwarded, 0, sizeof(HTTPForwardedHeader));
+	}
+	forwarded = WEB(client)->forwarded;
+
+	/* Go through the headers and parse them */
 	for (header = WEB(client)->headers; header; header = header->next)
 	{
 		if (!strcasecmp(header->name, "Forwarded") || !strcasecmp(header->name, "X-Forwarded"))
-		{
-			forwarded_line = header->value;
-			forwarded_type = 1;
-			break;
-		}
+			do_parse_forwarded_header(header->value, forwarded);
 	}
-
-	if (!forwarded_line)
-	{
-		unreal_log(ULOG_WARNING, "websocket", "MISSING_PROXY_HEADER", client,
-		           "Client on proxy $client.ip has matching proxy { } block "
-		           "but the proxy did not send a forwarded header (or not one we could understand). "
-		           "The IP of the user is now the proxy IP $client.ip (bad!).");
-		return;
-	}
-
-	/* parse the header */
-	forwarded = do_parse_forwarded_header(forwarded_line);
 
 	/* check header values */
 	if (!is_valid_ip(forwarded->ip))
 	{
-		unreal_log(ULOG_DEBUG, "websocket", "INVALID_FORWARDED_IP", client, "Received invalid IP in Forwarded header from $ip", log_data_string("ip", client->ip));
+		unreal_log(ULOG_WARNING, "websocket", "MISSING_PROXY_HEADER", client,
+		           "Client on proxy $client.ip has matching proxy { } block "
+		           "but the proxy did not send a valid forwarded header. "
+		           "The IP of the user is now the proxy IP $client.ip (bad!).");
+		// TODO: or should we reject the user entirely?
 		return;
 	}
 

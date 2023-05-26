@@ -28,6 +28,7 @@ ModuleHeader MOD_HEADER
 #endif
 
 #define WSU(client)	((WebSocketUser *)moddata_client(client, websocket_md).ptr)
+#define WEB(client)		((WebRequest *)moddata_client(client, webserver_md).ptr)
 
 #define WEBSOCKET_PORT(client)	((client->local && client->local->listener) ? client->local->listener->websocket_options : 0)
 #define WEBSOCKET_TYPE(client)	(WSU(client)->type)
@@ -45,7 +46,8 @@ int websocket_handle_request(Client *client, WebRequest *web);
 int websocket_reconfigure_web_listener(ConfigItem_listen *listener);
 
 /* Global variables */
-ModDataInfo *websocket_md;
+ModDataInfo *websocket_md = NULL; /* (by us) */
+ModDataInfo *webserver_md = NULL; /* (external module, looked up) */
 static int ws_text_mode_available = 1;
 
 MOD_TEST()
@@ -80,6 +82,8 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	webserver_md = findmoddata_byname("web", MODDATATYPE_CLIENT);
+
 	if (non_utf8_nick_chars_in_use || (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY))
 		ws_text_mode_available = 0;
 	return MOD_SUCCESS;
@@ -408,6 +412,10 @@ int websocket_handle_request(Client *client, WebRequest *web)
 			safe_free(WSU(client)->sec_websocket_protocol);
 		}
 	}
+
+	/* If using a proxy, set the secure flag depending on what the proxy said */
+	if (WEB(client)->forwarded)
+		WSU(client)->secure = WEB(client)->forwarded->secure;
 
 	websocket_handshake_send_response(client);
 	return 1;

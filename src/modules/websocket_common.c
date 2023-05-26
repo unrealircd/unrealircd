@@ -26,17 +26,6 @@ ModuleHeader MOD_HEADER
 
 #define WSU(client)	((WebSocketUser *)moddata_client(client, websocket_md).ptr)
 
-/* used to parse http Forwarded header (RFC 7239) */
-#define IPLEN 48
-#define FHEADER_NAMELEN	20
-
-struct HTTPForwardedHeader
-{
-	int secure;
-	char hostname[HOSTLEN+1];
-	char ip[IPLEN+1];
-};
-
 /* Forward declarations - public functions */
 int _websocket_handle_websocket(Client *client, WebRequest *web, const char *readbuf2, int length2, int callback(Client *client, char *buf, int len));
 int _websocket_create_packet(int opcode, char **buf, int *len);
