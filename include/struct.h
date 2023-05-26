@@ -2020,6 +2020,21 @@ struct ConfigItem_offchans {
 	char *topic;
 };
 
+typedef struct ConfigItem_proxy ConfigItem_proxy;
+
+typedef enum {
+	PROXY_WEBIRC_PASS=1,
+	PROXY_WEBIRC=2,
+	PROXY_WEB=3,
+} ProxyType;
+
+struct ConfigItem_proxy {
+	ConfigItem_proxy *prev, *next;
+	ConfigItem_mask *mask;
+	ProxyType type;
+	AuthConfig *auth;
+};
+
 typedef union DynamicSetOption {
 	long long number;
 	char *string;

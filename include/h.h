@@ -110,6 +110,7 @@ extern MODVAR ConfigItem_deny_version	*conf_deny_version;
 extern MODVAR ConfigItem_alias		*conf_alias;
 extern MODVAR ConfigItem_help		*conf_help;
 extern MODVAR ConfigItem_offchans	*conf_offchans;
+extern MODVAR ConfigItem_proxy		*conf_proxy;
 extern void		completed_connection(int, int, void *);
 extern void clear_unknown();
 extern EVENT(e_unload_module_delayed);
@@ -1417,3 +1418,5 @@ extern void dynamic_set_number(DynamicSetBlock *s, int settingname, long long va
 extern MODVAR DynamicSetBlock unknown_users_set;
 extern MODVAR DynamicSetBlock dynamic_set;
 extern void start_dns_and_ident_lookup(Client *client);
+extern void free_webserver(WebServer *webserver);
+#define safe_free_webserver(x)	do { if (x) { free_webserver(x); x = NULL; } } while(0)

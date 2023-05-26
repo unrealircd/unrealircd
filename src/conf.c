@@ -63,6 +63,7 @@ static int	_conf_offchans		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_sni		(ConfigFile *conf, ConfigEntry *ce);
 extern int	_conf_security_group	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_secret		(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_proxy		(ConfigFile *conf, ConfigEntry *ce);
 
 /*
  * Validation commands
@@ -96,6 +97,7 @@ static int	_test_offchans		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_sni		(ConfigFile *conf, ConfigEntry *ce);
 extern int	_test_security_group	(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_secret		(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_proxy		(ConfigFile *conf, ConfigEntry *ce);
 
 /* This MUST be alphabetized */
 static ConfigCommand _ConfigCommands[] = {
@@ -119,6 +121,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "official-channels", 	_conf_offchans,		_test_offchans	},
 	{ "oper", 		_conf_oper,		_test_oper	},
 	{ "operclass",		_conf_operclass,	_test_operclass	},
+	{ "proxy", 		_conf_proxy,		_test_proxy	},
 	{ "require", 		_conf_require,		_test_require	},
 	{ "secret",		_conf_secret,		_test_secret	},
 	{ "security-group",	_conf_security_group,	_test_security_group	},
@@ -127,6 +130,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "tld",		_conf_tld,		_test_tld	},
 	{ "ulines",		_conf_ulines,		_test_ulines	},
 	{ "vhost", 		_conf_vhost,		_test_vhost	},
+	{ "webirc", 		_conf_proxy,		_test_proxy	},
 };
 
 /* This MUST be alphabetized */
@@ -233,6 +237,8 @@ ConfigResource	*config_resources = NULL;
 ConfigItem_blacklist_module	*conf_blacklist_module = NULL;
 ConfigItem_help		*conf_help = NULL;
 ConfigItem_offchans	*conf_offchans = NULL;
+ConfigItem_proxy	*conf_proxy = NULL;
+
 Secret			*secrets = NULL;
 
 MODVAR Configuration		iConf;
@@ -2339,6 +2345,27 @@ void remove_config_tkls(void)
 	}
 }
 
+void delete_proxyblock(ConfigItem_proxy *e)
+{
+	unreal_delete_masks(e->mask);
+	if (e->auth)
+		Auth_FreeAuthConfig(e->auth);
+	DelListItem(e, conf_proxy);
+	safe_free(e);
+}
+
+void proxy_free_conf(void)
+{
+	ConfigItem_proxy *proxy_ptr, *next;
+
+	for (proxy_ptr = conf_proxy; proxy_ptr; proxy_ptr = next)
+	{
+		next = proxy_ptr->next;
+		delete_proxyblock(proxy_ptr);
+	}
+	conf_proxy = NULL;
+}
+
 void config_rehash()
 {
 	ConfigItem_oper			*oper_ptr;
@@ -4349,6 +4376,133 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 
 	return errors;
 
+}
+
+ProxyType proxy_type_string_to_value(const char *s)
+{
+	if (!strcmp(s, "webirc"))
+		return PROXY_WEBIRC;
+	else if (!strcmp(s, "old"))
+		return PROXY_WEBIRC_PASS;
+	else if (!strcmp(s, "web"))
+		return PROXY_WEB;
+	return 0;
+}
+
+int _test_proxy(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	int errors = 0;
+	char has_mask = 0; /* mandatory */
+	char has_password = 0; /* mandatory */
+	char has_type = 0;
+	ProxyType proxy_type = 0;
+
+	if (!strcmp(ce->name, "webirc"))
+		proxy_type = PROXY_WEBIRC;
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!cep->value)
+		{
+			config_error_empty(cep->file->filename, cep->line_number,
+				"proxy", cep->name);
+			errors++;
+			continue;
+		}
+		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "match"))
+		{
+			if (cep->value || cep->items)
+				has_mask = 1;
+		}
+		else if (!strcmp(cep->name, "password"))
+		{
+			if (has_password)
+			{
+				config_warn_duplicate(cep->file->filename, 
+					cep->line_number, "proxy::password");
+				continue;
+			}
+			has_password = 1;
+			if (Auth_CheckError(cep) < 0)
+				errors++;
+		}
+		else if (!strcmp(cep->name, "type"))
+		{
+			if (has_type)
+			{
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "proxy::type");
+			}
+			has_type = 1;
+			if (!proxy_type_string_to_value(cep->value))
+			{
+				config_error("%s:%i: unknown proxy::type '%s'. "
+				             "Only the following types are supported: 'webirc', 'old' or 'web'.",
+				             cep->file->filename, cep->line_number, cep->value);
+				errors++;
+			}
+		}
+		else
+		{
+			config_error_unknown(cep->file->filename, cep->line_number,
+				"webirc", cep->name);
+			errors++;
+		}
+	}
+	if (!has_mask)
+	{
+		config_error_missing(ce->file->filename, ce->line_number,
+			"webirc::mask");
+		errors++;
+	}
+
+	if (!has_password && (proxy_type == PROXY_WEBIRC))
+	{
+		config_error_missing(ce->file->filename, ce->line_number,
+			"webirc::password");
+		errors++;
+	}
+	
+	if (has_password && (proxy_type == PROXY_WEBIRC_PASS))
+	{
+		config_error("%s:%i: webirc block has type set to 'old' but has a password set. "
+		             "Passwords are not used with type 'old'. Either remove the password or "
+		             "use the 'webirc' method instead.",
+		             ce->file->filename, ce->line_number);
+		errors++;
+	}
+
+	if (!has_type && !proxy_type)
+	{
+		config_error_missing(ce->file->filename, ce->line_number, "proxy::type");
+		errors++;
+	}
+
+	return errors;
+}
+
+int _conf_proxy(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigItem_proxy *proxy = NULL;
+
+	proxy = safe_alloc(sizeof(ConfigItem_proxy));
+	proxy->type = PROXY_WEBIRC; /* default */
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "match"))
+			unreal_add_masks(&proxy->mask, cep);
+		else if (!strcmp(cep->name, "password"))
+			proxy->auth = AuthBlockToAuthConfig(cep);
+		else if (!strcmp(cep->name, "type"))
+			proxy->type = proxy_type_string_to_value(cep->value);
+	}
+
+	AddListItem(proxy, conf_proxy);
+
+	return 1;
 }
 
 /*
@@ -10669,6 +10823,11 @@ void delete_classblock(ConfigItem_class *class_ptr)
 	safe_free(class_ptr);
 }
 
+void free_webserver(WebServer *webserver)
+{
+	safe_free(webserver);
+}
+
 void listen_cleanup()
 {
 	ConfigItem_listen *listener, *listener_next;
@@ -10690,7 +10849,7 @@ void listen_cleanup()
 				safe_free(listener->spoof_ip);
 				free_tls_options(listener->tls_options);
 				/* listener->ssl_ctx is already freed by close_listener() */
-				safe_free(listener->webserver);
+				safe_free_webserver(listener->webserver);
 				safe_free(listener->websocket_forward);
 				safe_free(listener);
 			} else {
@@ -10709,7 +10868,7 @@ void listen_cleanup()
 					if ((listener->webserver->handle_request == NULL) ||
 					    (listener->webserver->handle_body == NULL))
 					{
-						safe_free(listener->webserver);
+						safe_free_webserver(listener->webserver);
 					}
 				}
 			}

@@ -18,21 +18,6 @@
  */
 #include "unrealircd.h"
 
-/* Types */
-typedef struct ConfigItem_webirc ConfigItem_webirc;
-
-typedef enum {
-	WEBIRC_PASS=1, WEBIRC_WEBIRC=2
-} WEBIRCType;
-
-struct ConfigItem_webirc {
-	ConfigItem_webirc *prev, *next;
-	ConfigFlag flag;
-	ConfigItem_mask *mask;
-	WEBIRCType type;
-	AuthConfig *auth;
-};
-
 /* Module header */
 ModuleHeader MOD_HEADER
 = {
@@ -45,15 +30,10 @@ ModuleHeader MOD_HEADER
 
 /* Global variables */
 ModDataInfo *webirc_md = NULL;
-ConfigItem_webirc *conf_webirc = NULL;
 
 /* Forward declarations */
 CMD_FUNC(cmd_webirc);
 int webirc_local_pass(Client *client, const char *password);
-int webirc_config_test(ConfigFile *, ConfigEntry *, int, int *);
-int webirc_config_run(ConfigFile *, ConfigEntry *, int);
-void webirc_free_conf(void);
-void delete_webircblock(ConfigItem_webirc *e);
 const char *webirc_md_serialize(ModData *m);
 void webirc_md_unserialize(const char *str, ModData *m);
 void webirc_md_free(ModData *md);
@@ -66,12 +46,6 @@ int webirc_secure_connect(Client *client);
 #define SetWEBIRCSecure(x)	do { moddata_client(x, webirc_md).l = 2; } while(0)
 
 #define MSG_WEBIRC "WEBIRC"
-
-MOD_TEST()
-{
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, webirc_config_test);
-	return MOD_SUCCESS;
-}
 
 /** Called upon module init */
 MOD_INIT()
@@ -94,7 +68,6 @@ MOD_INIT()
 		return MOD_FAILED;
 	}
 
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, webirc_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PASS, 0, webirc_local_pass);
 	HookAdd(modinfo->handle, HOOKTYPE_SECURE_CONNECT, 0, webirc_secure_connect);
 
@@ -112,172 +85,7 @@ MOD_LOAD()
 /** Called upon unload */
 MOD_UNLOAD()
 {
-	webirc_free_conf();
 	return MOD_SUCCESS;
-}
-
-void webirc_free_conf(void)
-{
-	ConfigItem_webirc *webirc_ptr, *next;
-
-	for (webirc_ptr = conf_webirc; webirc_ptr; webirc_ptr = next)
-	{
-		next = webirc_ptr->next;
-		delete_webircblock(webirc_ptr);
-	}
-	conf_webirc = NULL;
-}
-
-void delete_webircblock(ConfigItem_webirc *e)
-{
-	unreal_delete_masks(e->mask);
-	if (e->auth)
-		Auth_FreeAuthConfig(e->auth);
-	DelListItem(e, conf_webirc);
-	safe_free(e);
-}
-
-int webirc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
-{
-	ConfigEntry *cep;
-	int errors = 0;
-	char has_mask = 0; /* mandatory */
-	char has_password = 0; /* mandatory */
-	char has_type = 0; /* optional (used for dup checking) */
-	WEBIRCType webirc_type = WEBIRC_WEBIRC; /* the default */
-
-	if (type != CONFIG_MAIN)
-		return 0;
-	
-	if (!ce)
-		return 0;
-	
-	if (!strcmp(ce->name, "cgiirc"))
-	{
-		config_error("%s:%i: the cgiirc block has been renamed to webirc and "
-		             "the syntax has changed in UnrealIRCd 4",
-		             ce->file->filename, ce->line_number);
-		*errs = 1;
-		return -1;
-	}
-
-	if (strcmp(ce->name, "webirc"))
-		return 0; /* not interested in non-webirc stuff.. */
-
-	/* Now actually go parse the webirc { } block */
-	for (cep = ce->items; cep; cep = cep->next)
-	{
-		if (!cep->value)
-		{
-			config_error_empty(cep->file->filename, cep->line_number,
-				"webirc", cep->name);
-			errors++;
-			continue;
-		}
-		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "match"))
-		{
-			if (cep->value || cep->items)
-				has_mask = 1;
-		}
-		else if (!strcmp(cep->name, "password"))
-		{
-			if (has_password)
-			{
-				config_warn_duplicate(cep->file->filename, 
-					cep->line_number, "webirc::password");
-				continue;
-			}
-			has_password = 1;
-			if (Auth_CheckError(cep) < 0)
-				errors++;
-		}
-		else if (!strcmp(cep->name, "type"))
-		{
-			if (has_type)
-			{
-				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "webirc::type");
-			}
-			has_type = 1;
-			if (!strcmp(cep->value, "webirc"))
-				webirc_type = WEBIRC_WEBIRC;
-			else if (!strcmp(cep->value, "old"))
-				webirc_type = WEBIRC_PASS;
-			else
-			{
-				config_error("%s:%i: unknown webirc::type '%s', should be either 'webirc' or 'old'",
-					cep->file->filename, cep->line_number, cep->value);
-				errors++;
-			}
-		}
-		else
-		{
-			config_error_unknown(cep->file->filename, cep->line_number,
-				"webirc", cep->name);
-			errors++;
-		}
-	}
-	if (!has_mask)
-	{
-		config_error_missing(ce->file->filename, ce->line_number,
-			"webirc::mask");
-		errors++;
-	}
-
-	if (!has_password && (webirc_type == WEBIRC_WEBIRC))
-	{
-		config_error_missing(ce->file->filename, ce->line_number,
-			"webirc::password");
-		errors++;
-	}
-	
-	if (has_password && (webirc_type == WEBIRC_PASS))
-	{
-		config_error("%s:%i: webirc block has type set to 'old' but has a password set. "
-		             "Passwords are not used with type 'old'. Either remove the password or "
-		             "use the 'webirc' method instead.",
-		             ce->file->filename, ce->line_number);
-		errors++;
-	}
-
-	*errs = errors;
-	return errors ? -1 : 1;
-}
-
-int webirc_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
-{
-	ConfigEntry *cep;
-	ConfigItem_webirc *webirc = NULL;
-	
-	if (type != CONFIG_MAIN)
-		return 0;
-	
-	if (!ce || !ce->name || strcmp(ce->name, "webirc"))
-		return 0; /* not interested */
-
-	webirc = safe_alloc(sizeof(ConfigItem_webirc));
-	webirc->type = WEBIRC_WEBIRC; /* default */
-
-	for (cep = ce->items; cep; cep = cep->next)
-	{
-		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "match"))
-			unreal_add_masks(&webirc->mask, cep);
-		else if (!strcmp(cep->name, "password"))
-			webirc->auth = AuthBlockToAuthConfig(cep);
-		else if (!strcmp(cep->name, "type"))
-		{
-			if (!strcmp(cep->value, "webirc"))
-				webirc->type = WEBIRC_WEBIRC;
-			else if (!strcmp(cep->value, "old"))
-				webirc->type = WEBIRC_PASS;
-			else
-				abort();
-		}
-	}
-	
-	AddListItem(webirc, conf_webirc);
-	
-	return 0;
 }
 
 const char *webirc_md_serialize(ModData *m)
@@ -300,24 +108,25 @@ void webirc_md_free(ModData *md)
 	md->l = 0;
 }
 
-ConfigItem_webirc *find_webirc(Client *client, const char *password, WEBIRCType type, char **errorstr)
+ConfigItem_proxy *find_webirc(Client *client, const char *password, ProxyType type, char **errorstr)
 {
-	ConfigItem_webirc *e;
+	ConfigItem_proxy *e;
 	char *error = NULL;
 
-	for (e = conf_webirc; e; e = e->next)
+	for (e = conf_proxy; e; e = e->next)
 	{
 		if ((e->type == type) && unreal_mask_match(client, e->mask))
 		{
-			if (type == WEBIRC_WEBIRC)
+			if (type == PROXY_WEBIRC)
 			{
 				/* Check password */
 				if (!Auth_Check(client, e->auth, password))
 					error = "CGI:IRC -- Invalid password";
 				else
 					return e; /* Found matching block, return straight away */
-			} else {
-				return e; /* The WEBIRC_PASS type has no password checking */
+			} else
+			if (type == PROXY_WEBIRC_PASS) {
+				return e; /* The PROXY_WEBIRC_PASS type has no password checking */
 			}
 		}
 	}
@@ -406,7 +215,7 @@ void dowebirc(Client *client, const char *ip, const char *host, const char *opti
 CMD_FUNC(cmd_webirc)
 {
 	const char *ip, *host, *password, *options;
-	ConfigItem_webirc *e;
+	ConfigItem_proxy *e;
 	char *error = NULL;
 
 	if ((parc < 5) || BadPtr(parv[4]))
@@ -421,7 +230,7 @@ CMD_FUNC(cmd_webirc)
 	options = parv[5]; /* can be NULL */
 
 	/* Check if allowed host */
-	e = find_webirc(client, password, WEBIRC_WEBIRC, &error);
+	e = find_webirc(client, password, PROXY_WEBIRC, &error);
 	if (!e)
 	{
 		exit_client(client, NULL, error);
@@ -438,12 +247,12 @@ int webirc_local_pass(Client *client, const char *password)
 	{
 		char buf[512];
 		char *ip, *host;
-		ConfigItem_webirc *e;
+		ConfigItem_proxy *e;
 		char *error = NULL;
 
 		/* Work on a copy as we may trash it */
 		strlcpy(buf, password, sizeof(buf));
-		e = find_webirc(client, NULL, WEBIRC_PASS, &error);
+		e = find_webirc(client, NULL, PROXY_WEBIRC_PASS, &error);
 		if (e)
 		{
 			/* Ok now we got that sorted out, proceed:
