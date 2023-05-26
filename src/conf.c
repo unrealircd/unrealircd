@@ -5125,7 +5125,6 @@ void conf_listen_configure(const char *ip, int port, SocketType socket_type, int
 		free_tls_options(listen->tls_options);
 		listen->tls_options = NULL;
 	}
-	safe_free(listen->websocket_forward);
 	safe_free(listen->webserver);
 
 	/* Now set the new settings: */
@@ -10853,7 +10852,6 @@ void listen_cleanup()
 				free_tls_options(listener->tls_options);
 				/* listener->ssl_ctx is already freed by close_listener() */
 				safe_free_webserver(listener->webserver);
-				safe_free(listener->websocket_forward);
 				safe_free(listener);
 			} else {
 				/* Still has clients */

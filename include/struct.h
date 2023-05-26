@@ -1882,7 +1882,6 @@ struct ConfigItem_listen {
 	void (*start_handshake)(Client *client); /**< Function to call on accept() */
 	int websocket_options;		/**< Websocket options (for the websocket module) */
 	int rpc_options;		/**< For the RPC module */
-	char *websocket_forward;	/**< For websocket module too */
 };
 
 struct ConfigItem_sni {

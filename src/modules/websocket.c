@@ -140,18 +140,10 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			}
 		} else if (!strcmp(cep->name, "forward"))
 		{
-			if (!cep->value)
-			{
-				config_error_empty(cep->file->filename, cep->line_number, "listen::options::websocket::forward", cep->name);
-				errors++;
-				continue;
-			}
-			if (!is_valid_ip(cep->value))
-			{
-				config_error("%s:%i: invalid IP address '%s' in listen::options::websocket::forward", cep->file->filename, cep->line_number, cep->value);
-				errors++;
-				continue;
-			}
+			config_error("%s:%i: this functionality has been moved to the proxy { } block. "
+			             "See https://www.unrealircd.org/docs/Proxy_block",
+			             cep->file->filename, cep->line_number);
+			errors++;
 		} else
 		{
 			config_error("%s:%i: unknown directive listen::options::websocket::%s",
@@ -210,9 +202,6 @@ int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr
 					warned_once_channel = 1;
 				}
 			}
-		} else if (!strcmp(cep->name, "forward"))
-		{
-			safe_strdup(l->websocket_forward, cep->value);
 		}
 	}
 	return 1;
