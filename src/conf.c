@@ -4399,7 +4399,23 @@ int _test_proxy(ConfigFile *conf, ConfigEntry *ce)
 	ProxyType proxy_type = 0;
 
 	if (!strcmp(ce->name, "webirc"))
+	{
 		proxy_type = PROXY_WEBIRC;
+	} else {
+		if (!ce->value)
+		{
+			config_error("%s:%i: proxy { } blocks need to have a name, like proxy myproxy { }",
+				     ce->file->filename, ce->line_number);
+			errors++;
+		} else
+		if (!security_group_valid_name(ce->value))
+		{
+			config_error("%s:%i: the name of the proxy block may only contain a-z, A-Z, 0-9, _ and -. "
+			             "Your block name is invalid: '%s'",
+			             ce->file->filename, ce->line_number, ce->value);
+			errors++;
+		}
+	}
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
