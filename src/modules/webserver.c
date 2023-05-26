@@ -30,6 +30,18 @@ ModuleHeader MOD_HEADER
 #define WEB(client)		((WebRequest *)moddata_client(client, webserver_md).ptr)
 #define WEBSERVER(client)	((client->local && client->local->listener) ? client->local->listener->webserver : NULL)
 #define reset_handshake_timeout(client, delta)  do { client->local->creationtime = TStime() - iConf.handshake_timeout + delta; } while(0)
+#define WSU(client)     ((WebSocketUser *)moddata_client(client, websocket_md).ptr)
+
+/* Used to parse http Forwarded header (RFC 7239)... */
+#define IPLEN 48
+#define FHEADER_NAMELEN	20
+
+struct HTTPForwardedHeader
+{
+	int secure;
+	char hostname[HOSTLEN+1];
+	char ip[IPLEN+1];
+};
 
 /* Forward declarations */
 int webserver_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length);
@@ -41,9 +53,11 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 void _webserver_send_response(Client *client, int status, char *msg);
 void _webserver_close_client(Client *client);
 int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf, int length);
+void parse_proxy_header(Client *client);
 
 /* Global variables */
-ModDataInfo *webserver_md;
+ModDataInfo *webserver_md; /* (by us) */
+ModDataInfo *websocket_md; /* (external module, looked up)*/
 
 MOD_TEST()
 {
@@ -77,6 +91,8 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	websocket_md = findmoddata_byname("websocket", MODDATATYPE_CLIENT);
+
 	return MOD_SUCCESS;
 }
 
@@ -426,6 +442,7 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 		}
 
 		WEB(client)->request_header_parsed = 1;
+		parse_proxy_header(client);
 		n = WEBSERVER(client)->handle_request(client, WEB(client));
 		if ((n <= 0) || IsDead(client))
 			return n; /* byebye */
@@ -675,4 +692,212 @@ int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf,
 
 	safe_free(free_this_buffer);
 	return 1;
+}
+
+#define FHEADER_STATE_NAME	0
+#define FHEADER_STATE_VALUE	1
+#define FHEADER_STATE_VALUE_QUOTED	2
+
+#define FHEADER_ACTION_APPEND	0
+#define FHEADER_ACTION_IGNORE	1
+#define FHEADER_ACTION_PROCESS	2
+
+/** If a valid Forwarded: http header is received from a trusted source (proxy server), this function will
+  * extract remote IP address and secure (https) status from it. If more than one field with same name is received,
+  * we'll accept the last one. This should work correctly with chained proxies. */
+struct HTTPForwardedHeader *do_parse_forwarded_header(const char *input)
+{
+	static struct HTTPForwardedHeader forwarded;
+	int i, length;
+	int state = FHEADER_STATE_NAME, action = FHEADER_ACTION_APPEND;
+	char name[FHEADER_NAMELEN+1];
+	char value[IPLEN+1];
+	int name_length = 0;
+	int value_length = 0;
+	char c;
+	
+	memset(&forwarded, 0, sizeof(struct HTTPForwardedHeader));
+	
+	length = strlen(input);
+	for (i = 0; i < length; i++)
+	{
+		c = input[i];
+		switch (c)
+		{
+			case '"':
+				switch (state)
+				{
+					case FHEADER_STATE_NAME:
+						action = FHEADER_ACTION_APPEND;
+						break;
+					case FHEADER_STATE_VALUE:
+						action = FHEADER_ACTION_IGNORE;
+						state = FHEADER_STATE_VALUE_QUOTED;
+						break;
+					case FHEADER_STATE_VALUE_QUOTED:
+						action = FHEADER_ACTION_IGNORE;
+						state = FHEADER_STATE_VALUE;
+						break;
+				}
+				break;
+			case ',': case ';': case ' ':
+				switch (state)
+				{
+					case FHEADER_STATE_NAME: /* name without value */
+						name_length = 0;
+						action = FHEADER_ACTION_IGNORE;
+						break;
+					case FHEADER_STATE_VALUE: /* end of value */
+						action = FHEADER_ACTION_PROCESS;
+						break;
+					case FHEADER_STATE_VALUE_QUOTED: /* quoted character, process as normal */
+						action = FHEADER_ACTION_APPEND;
+						break;
+				}
+				break;
+			case '=':
+				switch (state)
+				{
+					case FHEADER_STATE_NAME: /* end of name */
+						name[name_length] = '\0';
+						state = FHEADER_STATE_VALUE;
+						action = FHEADER_ACTION_IGNORE;
+						break;
+					case FHEADER_STATE_VALUE: case FHEADER_STATE_VALUE_QUOTED: /* none of the values is expected to contain = but proceed anyway */
+						action = FHEADER_ACTION_APPEND;
+						break;
+				}
+				break;
+			default:
+				action = FHEADER_ACTION_APPEND;
+				break;
+		}
+		switch (action)
+		{
+			case FHEADER_ACTION_APPEND:
+				if (state == FHEADER_STATE_NAME)
+				{
+					if (name_length < FHEADER_NAMELEN)
+					{
+						name[name_length++] = c;
+					} else
+					{
+						/* truncate */
+					}
+				} else
+				{
+					if (value_length < IPLEN)
+					{
+						value[value_length++] = c;
+					} else
+					{
+						/* truncate */
+					}
+				}
+				break;
+			case FHEADER_ACTION_IGNORE: default:
+				break;
+			case FHEADER_ACTION_PROCESS:
+				value[value_length] = '\0';
+				name[name_length] = '\0';
+				if (!strcasecmp(name, "for"))
+				{
+					strlcpy(forwarded.ip, value, IPLEN+1);
+				} else if (!strcasecmp(name, "proto"))
+				{
+					if (!strcasecmp(value, "https"))
+					{
+						forwarded.secure = 1;
+					} else if (!strcasecmp(value, "http"))
+					{
+						forwarded.secure = 0;
+					} else
+					{
+						/* ignore unknown value */
+					}
+				} else
+				{
+					/* ignore unknown field name */
+				}
+				value_length = 0;
+				name_length = 0;
+				state = FHEADER_STATE_NAME;
+				break;
+		}
+	}
+	// temporary workaround because above loop is faulty
+	value[value_length] = '\0';
+	name[name_length] = '\0';
+	if (!strcasecmp(name, "for"))
+	{
+		strlcpy(forwarded.ip, value, IPLEN+1);
+	}
+	
+	return &forwarded;
+}
+
+void webserver_handle_proxy(Client *client, ConfigItem_proxy *proxy)
+{
+	struct HTTPForwardedHeader *forwarded;
+	char oldip[64];
+	NameValuePrioList *header;
+	const char *forwarded_line = NULL;
+	int forwarded_type = 0;
+
+	for (header = WEB(client)->headers; header; header = header->next)
+	{
+		if (!strcasecmp(header->name, "Forwarded") || !strcasecmp(header->name, "X-Forwarded"))
+		{
+			forwarded_line = header->value;
+			forwarded_type = 1;
+			break;
+		}
+	}
+
+	if (!forwarded_line)
+	{
+		unreal_log(ULOG_WARNING, "websocket", "MISSING_PROXY_HEADER", client,
+		           "Client on proxy $client.ip has matching proxy { } block "
+		           "but the proxy did not send a forwarded header (or not one we could understand). "
+		           "The IP of the user is now the proxy IP $client.ip (bad!).");
+		return;
+	}
+
+	/* parse the header */
+	forwarded = do_parse_forwarded_header(forwarded_line);
+
+	/* check header values */
+	if (!is_valid_ip(forwarded->ip))
+	{
+		unreal_log(ULOG_DEBUG, "websocket", "INVALID_FORWARDED_IP", client, "Received invalid IP in Forwarded header from $ip", log_data_string("ip", client->ip));
+		return;
+	}
+
+	/* store data / set new IP */
+	// WSU(client)->secure = forwarded->secure; TODO: FIXME
+	strlcpy(oldip, client->ip, sizeof(oldip));
+	safe_strdup(client->ip, forwarded->ip);
+	strlcpy(client->local->sockhost, forwarded->ip, sizeof(client->local->sockhost)); /* in case dns lookup fails or is disabled */
+
+	/* restart DNS & ident lookups */
+	start_dns_and_ident_lookup(client);
+	RunHook(HOOKTYPE_IP_CHANGE, client, oldip);
+}
+
+/** Parse proxy headers (if any) and run proxy ip change routines (if needed).
+ * This is called after receiving the HTTP request, right before passing
+ * the request on to next handler (eg. the 'websocket' module).
+ */
+void parse_proxy_header(Client *client)
+{
+	ConfigItem_proxy *proxy;
+
+	for (proxy = conf_proxy; proxy; proxy = proxy->next)
+	{
+		if ((proxy->type == PROXY_WEB) && user_allowed_by_security_group(client, proxy->mask))
+		{
+			webserver_handle_proxy(client, proxy);
+			return;
+		}
+	}
 }

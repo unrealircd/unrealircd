@@ -32,17 +32,6 @@ ModuleHeader MOD_HEADER
 #define WEBSOCKET_PORT(client)	((client->local && client->local->listener) ? client->local->listener->websocket_options : 0)
 #define WEBSOCKET_TYPE(client)	(WSU(client)->type)
 
-/* used to parse http Forwarded header (RFC 7239) */
-#define IPLEN 48
-#define FHEADER_NAMELEN	20
-
-struct HTTPForwardedHeader
-{
-	int secure;
-	char hostname[HOSTLEN+1];
-	char ip[IPLEN+1];
-};
-
 /* Forward declarations */
 int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int websocket_config_posttest(int *);
@@ -52,8 +41,6 @@ int websocket_handle_handshake(Client *client, const char *readbuf, int *length)
 int websocket_handshake_send_response(Client *client);
 int websocket_handle_body_websocket(Client *client, WebRequest *web, const char *readbuf2, int length2);
 int websocket_secure_connect(Client *client);
-struct HTTPForwardedHeader *websocket_parse_forwarded_header(char *input);
-int websocket_ip_compare(const char *ip1, const char *ip2);
 int websocket_handle_request(Client *client, WebRequest *web);
 int websocket_reconfigure_web_listener(ConfigItem_listen *listener);
 
@@ -330,141 +317,6 @@ int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **m
 	return 0;
 }
 
-#define FHEADER_STATE_NAME	0
-#define FHEADER_STATE_VALUE	1
-#define FHEADER_STATE_VALUE_QUOTED	2
-
-#define FHEADER_ACTION_APPEND	0
-#define FHEADER_ACTION_IGNORE	1
-#define FHEADER_ACTION_PROCESS	2
-
-/** If a valid Forwarded: http header is received from a trusted source (proxy server), this function will
-  * extract remote IP address and secure (https) status from it. If more than one field with same name is received,
-  * we'll accept the last one. This should work correctly with chained proxies. */
-struct HTTPForwardedHeader *websocket_parse_forwarded_header(char *input)
-{
-	static struct HTTPForwardedHeader forwarded;
-	int i, length;
-	int state = FHEADER_STATE_NAME, action = FHEADER_ACTION_APPEND;
-	char name[FHEADER_NAMELEN+1];
-	char value[IPLEN+1];
-	int name_length = 0;
-	int value_length = 0;
-	char c;
-	
-	memset(&forwarded, 0, sizeof(struct HTTPForwardedHeader));
-	
-	length = strlen(input);
-	for (i = 0; i < length; i++)
-	{
-		c = input[i];
-		switch (c)
-		{
-			case '"':
-				switch (state)
-				{
-					case FHEADER_STATE_NAME:
-						action = FHEADER_ACTION_APPEND;
-						break;
-					case FHEADER_STATE_VALUE:
-						action = FHEADER_ACTION_IGNORE;
-						state = FHEADER_STATE_VALUE_QUOTED;
-						break;
-					case FHEADER_STATE_VALUE_QUOTED:
-						action = FHEADER_ACTION_IGNORE;
-						state = FHEADER_STATE_VALUE;
-						break;
-				}
-				break;
-			case ',': case ';': case ' ':
-				switch (state)
-				{
-					case FHEADER_STATE_NAME: /* name without value */
-						name_length = 0;
-						action = FHEADER_ACTION_IGNORE;
-						break;
-					case FHEADER_STATE_VALUE: /* end of value */
-						action = FHEADER_ACTION_PROCESS;
-						break;
-					case FHEADER_STATE_VALUE_QUOTED: /* quoted character, process as normal */
-						action = FHEADER_ACTION_APPEND;
-						break;
-				}
-				break;
-			case '=':
-				switch (state)
-				{
-					case FHEADER_STATE_NAME: /* end of name */
-						name[name_length] = '\0';
-						state = FHEADER_STATE_VALUE;
-						action = FHEADER_ACTION_IGNORE;
-						break;
-					case FHEADER_STATE_VALUE: case FHEADER_STATE_VALUE_QUOTED: /* none of the values is expected to contain = but proceed anyway */
-						action = FHEADER_ACTION_APPEND;
-						break;
-				}
-				break;
-			default:
-				action = FHEADER_ACTION_APPEND;
-				break;
-		}
-		switch (action)
-		{
-			case FHEADER_ACTION_APPEND:
-				if (state == FHEADER_STATE_NAME)
-				{
-					if (name_length < FHEADER_NAMELEN)
-					{
-						name[name_length++] = c;
-					} else
-					{
-						/* truncate */
-					}
-				} else
-				{
-					if (value_length < IPLEN)
-					{
-						value[value_length++] = c;
-					} else
-					{
-						/* truncate */
-					}
-				}
-				break;
-			case FHEADER_ACTION_IGNORE: default:
-				break;
-			case FHEADER_ACTION_PROCESS:
-				value[value_length] = '\0';
-				name[name_length] = '\0';
-				if (!strcasecmp(name, "for"))
-				{
-					strlcpy(forwarded.ip, value, IPLEN+1);
-				} else if (!strcasecmp(name, "proto"))
-				{
-					if (!strcasecmp(value, "https"))
-					{
-						forwarded.secure = 1;
-					} else if (!strcasecmp(value, "http"))
-					{
-						forwarded.secure = 0;
-					} else
-					{
-						/* ignore unknown value */
-					}
-				} else
-				{
-					/* ignore unknown field name */
-				}
-				value_length = 0;
-				name_length = 0;
-				state = FHEADER_STATE_NAME;
-				break;
-		}
-	}
-	
-	return &forwarded;
-}
-
 /** We got a HTTP(S) request and we need to check if we can upgrade the connection
  * to a websocket connection.
  */
@@ -557,38 +409,6 @@ int websocket_handle_request(Client *client, WebRequest *web)
 		}
 	}
 
-	/* Check forwarded header (by k4be) */
-	if (WSU(client)->forwarded)
-	{
-		struct HTTPForwardedHeader *forwarded;
-		char oldip[64];
-
-		/* check for source ip */
-		if (BadPtr(client->local->listener->websocket_forward) || !websocket_ip_compare(client->local->listener->websocket_forward, client->ip))
-		{
-			unreal_log(ULOG_WARNING, "websocket", "UNAUTHORIZED_FORWARDED_HEADER", client, "Received unauthorized Forwarded header from $ip", log_data_string("ip", client->ip));
-			webserver_send_response(client, 403, "Forwarded: no access");
-			return 0;
-		}
-		/* parse the header */
-		forwarded = websocket_parse_forwarded_header(WSU(client)->forwarded);
-		/* check header values */
-		if (!is_valid_ip(forwarded->ip))
-		{
-			unreal_log(ULOG_WARNING, "websocket", "INVALID_FORWARDED_IP", client, "Received invalid IP in Forwarded header from $ip", log_data_string("ip", client->ip));
-			webserver_send_response(client, 400, "Forwarded: invalid IP");
-			return 0;
-		}
-		/* store data / set new IP */
-		WSU(client)->secure = forwarded->secure;
-		strlcpy(oldip, client->ip, sizeof(oldip));
-		safe_strdup(client->ip, forwarded->ip);
-		strlcpy(client->local->sockhost, forwarded->ip, sizeof(client->local->sockhost)); /* in case dns lookup fails or is disabled */
-		/* restart DNS & ident lookups */
-		start_dns_and_ident_lookup(client);
-		RunHook(HOOKTYPE_IP_CHANGE, client, oldip);
-	}
-
 	websocket_handshake_send_response(client);
 	return 1;
 }
@@ -644,33 +464,3 @@ int websocket_handshake_send_response(Client *client)
 
 	return 0;
 }
-
-/** Compare IP addresses (for authorization checking) */
-int websocket_ip_compare(const char *ip1, const char *ip2)
-{
-	uint32_t ip4[2];
-	uint16_t ip6[16];
-	int i;
-	if (inet_pton(AF_INET, ip1, &ip4[0]) == 1) /* IPv4 */
-	{
-		if (inet_pton(AF_INET, ip2, &ip4[1]) == 1) /* both are valid, let's compare */
-		{
-			return ip4[0] == ip4[1];
-		}
-		return 0;
-	}
-	if (inet_pton(AF_INET6, ip1, &ip6[0]) == 1) /* IPv6 */
-	{
-		if (inet_pton(AF_INET6, ip2, &ip6[8]) == 1)
-		{
-			for (i = 0; i < 8; i++)
-			{
-				if (ip6[i] != ip6[i+8])
-					return 0;
-			}
-			return 1;
-		}
-	}
-	return 0; /* neither valid IPv4 nor IPv6 */
-}
-
