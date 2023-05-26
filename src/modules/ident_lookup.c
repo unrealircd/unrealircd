@@ -273,4 +273,6 @@ void _cancel_ident_lookup(Client *client)
 		client->local->authfd = -1;
 		--OpenFiles;
 	}
+	ClearIdentLookupSent(client);
+	ClearIdentLookup(client);
 }

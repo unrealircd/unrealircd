@@ -1046,6 +1046,7 @@ void start_dns_and_ident_lookup(Client *client)
 
 	/* Remove any outstanding DNS requests */
 	unrealdns_delreq_bycptr(client);
+	ClearDNSLookup(client);
 	cancel_ident_lookup(client);
 
 	if (!DONT_RESOLVE && !IsUnixSocket(client))

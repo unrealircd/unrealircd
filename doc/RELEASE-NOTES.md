@@ -44,6 +44,12 @@ in progress and may not be a stable version.
   * Currently the following settings can be used in a set xxx { } block:
     set::auto-join, set::modes-on-connect, set::restrict-usermodes,
     set::max-channels-per-user, set::static-quit, set::static-part.
+* New [`proxy { }` block](https://www.unrealircd.org/docs/Proxy_block)
+  that can be used for spoofing IP addresses when:
+  * Reverse proxying websocket connections (eg. via NGINX, a load
+    balancer or other reverse proxy)
+  * WEBIRC/CGI:IRC gateways. This will replace the old `webirc { }`
+    block in the future, though the old one will still work for now.
 * New setting [set::handshake-boot-delay](https://www.unrealircd.org/docs/Set_block#set%3A%3Ahandshake-boot-delay)
   which allows server linking autoconnects to kick in (and incoming
   servers on serversonly ports), before allowing clients in. This

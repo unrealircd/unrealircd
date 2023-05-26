@@ -756,7 +756,6 @@ void webserver_handle_proxy(Client *client, ConfigItem_proxy *proxy)
 	}
 
 	/* store data / set new IP */
-	// WSU(client)->secure = forwarded->secure; TODO: FIXME
 	strlcpy(oldip, client->ip, sizeof(oldip));
 	safe_strdup(client->ip, forwarded->ip);
 	strlcpy(client->local->sockhost, forwarded->ip, sizeof(client->local->sockhost)); /* in case dns lookup fails or is disabled */
