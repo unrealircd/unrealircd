@@ -1410,7 +1410,7 @@ extern void init_dynamic_set_block(DynamicSetBlock *s);
 extern void free_dynamic_set_block(DynamicSetBlock *s);
 extern int test_dynamic_set_block_item(ConfigFile *conf, const char *security_group, ConfigEntry *cep);
 extern int config_set_dynamic_set_block_item(ConfigFile *conf, DynamicSetBlock *s, ConfigEntry *cep);
-extern DynamicSetOption get_setting_for_user(Client *client, SetOption opt);
+extern DynamicSetOption *get_setting_for_user(Client *client, SetOption opt);
 extern long long get_setting_for_user_number(Client *client, SetOption opt);
 extern const char *get_setting_for_user_string(Client *client, SetOption opt);
 extern void dynamic_set_string(DynamicSetBlock *s, int settingname, const char *value);

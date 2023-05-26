@@ -11359,7 +11359,7 @@ int config_set_security_group(ConfigFile *conf, ConfigEntry *ce)
  * @param opt		The flood option we are interested in
  * @returns The FloodSettings for this user, never returns NULL.
  */
-DynamicSetOption get_setting_for_user(Client *client, SetOption opt)
+DynamicSetOption *get_setting_for_user(Client *client, SetOption opt)
 {
 	SecurityGroup *sg;
 	int in_known_users = 0;
@@ -11382,13 +11382,13 @@ DynamicSetOption get_setting_for_user(Client *client, SetOption opt)
 			if (in_known_users)
 			{
 				if (sg->settings.isset[opt])
-					return sg->settings.settings[opt];
+					return &sg->settings.settings[opt];
 			}
 		} else
 		if (user_allowed_by_security_group(client, sg) &&
 		    sg->settings.isset[opt])
 		{
-			return sg->settings.settings[opt];
+			return &sg->settings.settings[opt];
 		}
 	}
 
@@ -11396,22 +11396,22 @@ DynamicSetOption get_setting_for_user(Client *client, SetOption opt)
 	 * Use the caching info from above.
 	 */
 	if (!in_known_users && unknown_users_set.isset[opt])
-		return unknown_users_set.settings[opt];
+		return &unknown_users_set.settings[opt];
 
 	/* If we are still here, then fallback to the generic set:: setting */
-	return dynamic_set.settings[opt];
+	return &dynamic_set.settings[opt];
 }
 
 /** Get configuration that applies to the user - a number value */
 long long get_setting_for_user_number(Client *client, SetOption opt)
 {
-	return get_setting_for_user(client, opt).number;
+	return get_setting_for_user(client, opt)->number;
 }
 
 /** Get configuration that applies to the user - a string config value */
 const char *get_setting_for_user_string(Client *client, SetOption opt)
 {
-	return get_setting_for_user(client, opt).string;
+	return get_setting_for_user(client, opt)->string;
 }
 
 /*** END OF DYNAMIC SET CONFIG STUFF (that can be overridden by security group) ***/
