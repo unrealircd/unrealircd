@@ -4505,6 +4505,28 @@ int _conf_proxy(ConfigFile *conf, ConfigEntry *ce)
 
 	AddListItem(proxy, conf_proxy);
 
+	/* For proxy type web, we automatically add the host to except ban { }
+	 * for blacklist, connect-flood, handshake-data-flood
+	 */
+	if (proxy->type == PROXY_WEB)
+	{
+		ConfigItem_mask *m;
+		NameList *n;
+		for (m = proxy->mask->mask; m; m = m->next)
+		{
+			tkl_add_banexception(TKL_EXCEPTION, "*", m->mask, NULL, "proxy { } block",
+					     "-config-", 0, TStime(), 0, "bcd", TKL_FLAG_CONFIG);
+		}
+		for (n = proxy->mask->ip; n; n = n->next)
+		{
+			char ip[64];
+			if (strchr(n->name, '*') || strchr(n->name, '?'))
+				continue; /* we are not this advanced yet ;) */
+			tkl_add_banexception(TKL_EXCEPTION, "*", n->name, NULL, "proxy { } block",
+					     "-config-", 0, TStime(), 0, "bcd", TKL_FLAG_CONFIG);
+		}
+	}
+
 	return 1;
 }
 
