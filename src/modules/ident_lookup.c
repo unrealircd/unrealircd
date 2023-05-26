@@ -19,6 +19,15 @@ static int ident_lookup_connect(Client *client);
 static void ident_lookup_send(int fd, int revents, void *data);
 static void ident_lookup_receive(int fd, int revents, void *data);
 static char *ident_lookup_parse(Client *client, char *buf);
+void _cancel_ident_lookup(Client *client);
+
+MOD_TEST()
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+
+	EfunctionAddVoid(modinfo->handle, EFUNC_CANCEL_IDENT_LOOKUP, _cancel_ident_lookup);
+	return MOD_SUCCESS;
+}
 
 MOD_INIT()
 {
@@ -253,4 +262,15 @@ static char *ident_lookup_parse(Client *client, char *buf)
 	if (*buf == '\0')
 		return NULL;
 	return buf;
+}
+
+/** Stop ident lookup (can safely be called in all cases) */
+void _cancel_ident_lookup(Client *client)
+{
+	if (client->local && (client->local->authfd >= 0))
+	{
+		fd_close(client->local->authfd);
+		client->local->authfd = -1;
+		--OpenFiles;
+	}
 }

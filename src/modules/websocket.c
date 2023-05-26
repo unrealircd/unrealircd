@@ -579,39 +579,13 @@ int websocket_handle_request(Client *client, WebRequest *web)
 			webserver_send_response(client, 400, "Forwarded: invalid IP");
 			return 0;
 		}
-		/* store data */
+		/* store data / set new IP */
 		WSU(client)->secure = forwarded->secure;
 		strlcpy(oldip, client->ip, sizeof(oldip));
 		safe_strdup(client->ip, forwarded->ip);
-		/* Update client->local->hostp */
 		strlcpy(client->local->sockhost, forwarded->ip, sizeof(client->local->sockhost)); /* in case dns lookup fails or is disabled */
-		/* (free old) */
-		if (client->local->hostp)
-		{
-			unreal_free_hostent(client->local->hostp);
-			client->local->hostp = NULL;
-		}
-		/* (create new) */
-		if (!DONT_RESOLVE)
-		{
-			/* taken from socket.c */
-			struct hostent *he;
-			unrealdns_delreq_bycptr(client); /* in case the proxy ip is still in progress of being looked up */
-			ClearDNSLookup(client);
-			he = unrealdns_doclient(client); /* call this once more */
-			if (!client->local->hostp)
-			{
-				if (!he)
-					SetDNSLookup(client); /* DNS lookup in progress */
-				else if (!he->h_name)
-					unreal_free_hostent(he); /* unresolved IP (negcache) */
-				else
-					client->local->hostp = he; /* cached */
-			} else
-			{
-				/* Race condition detected, DNS has been done, continue with auth */
-			}
-		}
+		/* restart DNS & ident lookups */
+		start_dns_and_ident_lookup(client);
 		RunHook(HOOKTYPE_IP_CHANGE, client, oldip);
 	}
 

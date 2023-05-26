@@ -1491,6 +1491,10 @@ void mtag_add_issued_by_default_handler(MessageTag **mtags, Client *client, Mess
 {
 }
 
+void cancel_ident_lookup_default_handler(Client *client)
+{
+}
+
 /** my_timegm: mktime()-like function which will use GMT/UTC.
  * Strangely enough there is no standard function for this.
  * On some *NIX OS's timegm() may be available, sometimes only
