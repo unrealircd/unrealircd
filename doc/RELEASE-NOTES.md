@@ -90,6 +90,7 @@ in progress and may not be a stable version.
   snomask `B`, are logged, and show up in the webpanel "Logs" view.
 * The event `REMOTE_CLIENT_JOIN` was mass-triggered when servers were
   syncing. They are now hidden, like `REMOTE_CLIENT_CONNECT`.
+* Update shipped libraries: c-ares to 1.19.1
 
 ### Fixes:
 * Crash on FreeBSD/NetBSD when using JSON-RPC, due to clashing rpc_call
