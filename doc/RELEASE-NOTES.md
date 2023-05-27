@@ -86,6 +86,10 @@ in progress and may not be a stable version.
     `4.3.2.1.dnsbl.dronebl.org.mydomain.org`.
 * Data buffer chunks bumped from 512 bytes to ~4K. This results in less write
   calls (lower CPU usage) and more data per TCP/IP packet.
+* We now cache sending of lines in `sendto_channel` via a new "LineCache"
+  system. It saves CPU on (very) large channels.
+* Several other performance improvements such as checking maxperip via
+  a hash table and faster invisibility checks for delayjoin.
 * Blacklist hits are now logged globally. This means they show up in
   snomask `B`, are logged, and show up in the webpanel "Logs" view.
 * The event `REMOTE_CLIENT_JOIN` was mass-triggered when servers were
@@ -95,9 +99,13 @@ in progress and may not be a stable version.
 ### Fixes:
 * Crash on FreeBSD/NetBSD when using JSON-RPC, due to clashing rpc_call
   symbol in their libc library.
+* Crash when removing a `listen { }` block for websocket or rpc (or
+  changin the port number)
 * When using the webpanel, if an IRC client tried to connect with the same
   IP as the webpanel server, it would often receive the error "Too many
   unknown connections". This only affected non-localhost connections.
+* The [`require module` block](https://www.unrealircd.org/docs/Require_module_block)
+  was only checked of one side of the link, thus partially not working.
 
 UnrealIRCd 6.1.0
 -----------------
