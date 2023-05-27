@@ -4457,7 +4457,8 @@ int _test_proxy(ConfigFile *conf, ConfigEntry *ce)
 					cep->line_number, "proxy::type");
 			}
 			has_type = 1;
-			if (!proxy_type_string_to_value(cep->value))
+			proxy_type = proxy_type_string_to_value(cep->value);
+			if (proxy_type == 0)
 			{
 				config_error("%s:%i: unknown proxy::type '%s'. "
 				             "Only the following types are supported: 'webirc', 'old' or 'web'.",
