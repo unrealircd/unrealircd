@@ -1273,8 +1273,6 @@ CMD_FUNC(cmd_server)
 	client->server->conf->class->clients++;
 	client->local->class = client->server->conf->class;
 
-	RunHook(HOOKTYPE_SERVER_CONNECT, client);
-
 	server_sync(client, aconf, incoming);
 }
 
@@ -1602,6 +1600,8 @@ int server_sync(Client *client, ConfigItem_link *aconf, int incoming)
 		send_proto(client, aconf);
 		send_server_message(client);
 	}
+
+	RunHook(HOOKTYPE_SERVER_CONNECT, client);
 
 	/* Broadcast new server to the rest of the network */
 	sendto_server(client, 0, 0, NULL, ":%s SID %s 2 %s :%s",
