@@ -841,23 +841,96 @@ static int hbm_return_simple(HistoryResult *r, HistoryLogObject *h, HistoryFilte
  */
 static int hbm_return_around(HistoryResult *r, HistoryLogObject *h, HistoryFilter *filter)
 {
-	int n = 0;
-	int orig_limit = filter->limit;
+	HistoryLogLine *l, *n, *started = NULL;
+	int written = 0;
+	MessageTag *m;
 
-	/* First request 50% above the search term */
-	if (filter->limit > 1)
-		filter->limit = filter->limit / 2;
-	n = hbm_return_before(r, h, filter);
-	/* Then the remainder (50% or more) below the search term.
-	 *
-	 * Ok, well, unless the original limit was 1 and we already
-	 * sent 1 line, then we may not send anything anymore..
+	for (l = h->tail; l; l = l->prev)
+	{
+		/* Not started yet? Check if this is the starting point... */
+		if (!started)
+		{
+			if (filter->timestamp_a && ((m = find_mtag(l->mtags, "time"))) && (strcmp(m->value, filter->timestamp_a) < 0))
+			{
+				started = l->next;
+			} else
+			if (filter->msgid_a && ((m = find_mtag(l->mtags, "msgid"))) && !strcmp(m->value, filter->msgid_a))
+			{
+				started = l;
+				continue;
+			}
+		}
+		if (started)
+		{
+			/* Check if we need to stop */
+			if (filter->timestamp_b && ((m = find_mtag(l->mtags, "time"))) && (strcmp(m->value, filter->timestamp_b) < 0))
+			{
+				break;
+			} else
+			if (filter->msgid_b && ((m = find_mtag(l->mtags, "msgid"))) && !strcmp(m->value, filter->msgid_b))
+			{
+				break;
+			}
+
+			/* Add line to the return buffer */
+			n = duplicate_log_line(l);
+			hbm_result_prepend_line(r, n);
+			if (started->next)
+			{
+				/* Normal case */
+				if (++written >= filter->limit / 2)
+					break;
+			} else {
+				/* Special case: if started->next is NULL then started is the end
+				 * of the buffer, so fill just /under/ the limit
+				 */
+				if (++written >= filter->limit - 1)
+					break;
+			}
+		}
+	}
+
+	/* Special case:
+	 * The timestamp= was not found in our buffer (or it matched the very top),
+	 * now what to do?
+	 * - If it is only <some time> before/at our oldest message timestamp,
+	 *   then we will just print the oldest X messages.
+	 * - If it's older than <some time> we don't, resulting in an empty batch.
 	 */
-	filter->limit = orig_limit - n;
-	if (filter->limit > 0)
-		n += hbm_return_after(r, h, filter);
+	if ((written == 0) && filter->timestamp_a && (started == NULL) && h->tail)
+	{
+		time_t requested_ts;
+		time_t oldest_we_have_ts;
+		char *tail_timestamp;
+		m = find_mtag(h->tail->mtags, "time");
+		tail_timestamp = m ? m->value : NULL;
+		if (tail_timestamp)
+		{
+			requested_ts = server_time_to_unix_time(filter->timestamp_a);
+			oldest_we_have_ts = server_time_to_unix_time(tail_timestamp);
+			if (oldest_we_have_ts - requested_ts < 3600)
+			{
+				/* Just return the oldest # messages */
+				started = h->head;
+				/* we (mis)use the loop further down to achieve this ;) */
+			}
+		}
+	}
 
-	return n;
+	/* In the code at the beginning of this function we added the messages
+	 * before the mid-point. Below we add the message at the mid-point and
+	 * the messages after the mid-point.
+	 */
+	for (l = started; l; l = l->next)
+	{
+		/* Add line to the return buffer */
+		n = duplicate_log_line(l);
+		hbm_result_append_line(r, n);
+		if (++written >= filter->limit)
+			break;
+	}
+
+	return written;
 }
 
 /** Figure out the direction (forwards or backwards) for CHATHISTORY BETWEEN request
