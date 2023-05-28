@@ -1023,9 +1023,23 @@ static int hbm_return_between(HistoryResult *r, HistoryLogObject *h, HistoryFilt
 	direction = hbm_return_between_figure_out_direction(h, filter);
 
 	if (direction == 1)
+	{
 		return hbm_return_after(r, h, filter);
-	else if (direction == 0)
-		return hbm_return_before(r, h, filter);
+	} else
+	if (direction == 0)
+	{
+		/* Create a temporary filter, swapping directions */
+		char *x, *y;
+		HistoryFilter f;
+		memset(&f, 0, sizeof(f));
+		f.cmd = HFC_BEFORE;
+		f.limit = filter->limit;
+		f.timestamp_a = filter->timestamp_b;
+		f.timestamp_b = filter->timestamp_a;
+		f.msgid_a = filter->msgid_b;
+		f.msgid_b = filter->msgid_a;
+		return hbm_return_after(r, h, &f);
+	}
 	/* else direction is -1 which means not found / invalid */
 
 	return 0;
