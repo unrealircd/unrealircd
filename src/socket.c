@@ -659,6 +659,7 @@ void close_connection(Client *client)
 	}
 
 	client->direction = NULL;
+	SetDeadSocket(client); /* stop trying to send to this destination */
 }
 
 /** Set IPv6 socket options, if possible. */

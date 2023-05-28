@@ -374,12 +374,10 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 
 #if defined(RAWCMDLOGGING)
 	{
-		char copy[512], *p;
+		static char copy[16300];
+		char *p;
 		strlcpy(copy, msg, len > sizeof(copy) ? sizeof(copy) : len);
-		p = strchr(copy, '\n');
-		if (p) *p = '\0';
-		p = strchr(copy, '\r');
-		if (p) *p = '\0';
+		stripcrlf(copy);
 		unreal_log(ULOG_INFO, "rawtraffic", "TRAFFIC_OUT", to,
 		           "-> $client: $data",
 		           log_data_string("data", copy));
