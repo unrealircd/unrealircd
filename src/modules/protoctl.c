@@ -122,6 +122,10 @@ CMD_FUNC(cmd_protoctl)
 		{
 			SetNEXTBANS(client);
 		}
+		else if (!strcmp(name, "BIGLINES"))
+		{
+			SetBIGLINES(client);
+		}
 		else if (!strcmp(name, "NICKCHARS") && value)
 		{
 			if (!IsServer(client) && !IsEAuth(client) && !IsHandshake(client))

@@ -264,7 +264,7 @@ void send_proto(Client *client, ConfigItem_link *aconf)
 		me.id, (long long)TStime());
 
 	/* Third line */
-	sendto_one(client, NULL, "PROTOCTL NICKCHARS=%s CHANNELCHARS=%s",
+	sendto_one(client, NULL, "PROTOCTL NICKCHARS=%s CHANNELCHARS=%s BIGLINES",
 		charsys_get_current_languages(),
 		allowed_channelchars_valtostr(iConf.allowed_channelchars));
 }

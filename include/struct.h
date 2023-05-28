@@ -183,8 +183,9 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define LINKLEN		32
 #define	BUFSIZE		512	/* WARNING: *DONT* CHANGE THIS!!!! */
 #define MAXTAGSIZE	8192	/**< Maximum length of message tags (4K user + 4K server) */
-#define MAXLINELENGTH	(MAXTAGSIZE+BUFSIZE)	/**< Maximum length of a line on IRC: 4k client tags + 4k server tags + 512 bytes (IRCv3) */
-#define READBUFSIZE	MAXLINELENGTH	/* for the read buffer */
+#define MAXLINELENGTH_USER	(MAXTAGSIZE+BUFSIZE)	/**< Maximum length of a line on IRC (for non-servers): 4k client tags + 4k server tags + 512 bytes (IRCv3) */
+#define MAXLINELENGTH	16384			/**< Maximum length of a line on IRC: from servers is 16k */
+#define READBUFSIZE	MAXLINELENGTH	/**< for the read buffer */
 #define	MAXRECIPIENTS 	20
 #define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
 #define IDLEN		12
@@ -449,6 +450,7 @@ typedef enum ClientStatus {
 #define PROTO_SJSBY	0x000020	/* SJOIN setby information (TS and nick) */
 #define PROTO_MTAGS	0x000040	/* Support message tags and big buffers */
 #define PROTO_NEXTBANS	0x000080	/* Server supports named extended bans */
+#define PROTO_BIGLINES	0x000100	/* BIGLINES support */
 
 /* For client capabilities: */
 #define CAP_INVERT	1L
@@ -614,6 +616,7 @@ typedef enum ClientStatus {
 #define SupportCLK(x)		(CHECKSERVERPROTO(x, PROTO_CLK))
 #define SupportMTAGS(x)		(CHECKSERVERPROTO(x, PROTO_MTAGS))
 #define SupportNEXTBANS(x)	(CHECKSERVERPROTO(x, PROTO_NEXTBANS))
+#define SupportBIGLINES(x)	(CHECKSERVERPROTO(x, PROTO_BIGLINES))
 
 #define SetVL(x)		((x)->local->proto |= PROTO_VL)
 #define SetSJSBY(x)		((x)->local->proto |= PROTO_SJSBY)
@@ -621,6 +624,7 @@ typedef enum ClientStatus {
 #define SetCLK(x)		((x)->local->proto |= PROTO_CLK)
 #define SetMTAGS(x)		((x)->local->proto |= PROTO_MTAGS)
 #define SetNEXTBANS(x)		((x)->local->proto |= PROTO_NEXTBANS)
+#define SetBIGLINES(x)		((x)->local->proto |= PROTO_BIGLINES)
 
 /* Dcc deny types (see src/s_extra.c) */
 #define DCCDENY_HARD	0
@@ -917,6 +921,8 @@ struct SWhois {
 #define CMD_OPER		0x0200
 /** Command is for control channel only (unrealircd.ctl socket) */
 #define CMD_CONTROL		0x0400
+/** Command is able to receive BIG lines */
+#define CMD_BIGLINES		0x0800
 
 /** Command function - used by all command handlers.
  * This is used in the code like <pre>CMD_FUNC(cmd_yourcmd)</pre> as a function definition.

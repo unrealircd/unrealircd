@@ -33,8 +33,6 @@
  * before Dreamforge aren't safe with more than six. -Donwulff
  */
 #include "msg.h"
-#define	MAXMODEPARAMS	(MAXPARA-3)	/* Maximum modes processed */
-#define RESYNCMODES	12	/* Max modes per MODE in resync */
-#define MODEPARAMS	6	/* Max modes from user */
+#define	MAXMODEPARAMS	(MAXPARA_USER-3)	/* Maximum modes processed */
 
 #endif

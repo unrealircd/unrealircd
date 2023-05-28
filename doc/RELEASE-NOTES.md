@@ -107,6 +107,22 @@ in progress and may not be a stable version.
 * The [`require module` block](https://www.unrealircd.org/docs/Require_module_block)
   was only checked of one side of the link, thus partially not working.
 
+### Developers and protocol:
+* Server to server lines can now be 16384 bytes in size when
+  `PROTOCTL BIGLINES` is set. This will allow us to do things more
+  efficiently and possibly raise some other limits in the future.
+  This 16k is the size of the complete line, including sender,
+  message tags, content and \r\n. Also, in server-to-server traffic
+  we now allow 30 parameters (MAXPARA*2).  
+  The original input size limits for non-servers remain the same: the
+  complete line can be 4k+512, with the non-mtag portion limit set
+  at 512 bytes (including \r\n), and MAXPARA is still 15 as well.
+* To receive BIGLINES in a command, you need to `CommandAdd()` with
+  flags `CMD_BIGLINES`, without it you still get regular 512 max.
+  This is so, because a lot of the code does not expect longer than
+  512 bytes lines or in parameters, so we can gradually change that
+  (where needed).
+
 UnrealIRCd 6.1.0
 -----------------
 This is UnrealIRCd 6.1.0 stable. It is the direct successor to 6.0.7, there

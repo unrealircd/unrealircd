@@ -167,6 +167,7 @@
 
 #define MSG_MLOCK	"MLOCK"
 
-#define MAXPARA    	15
+#define MAXPARA    	30
+#define MAXPARA_USER	15
 
 #endif
