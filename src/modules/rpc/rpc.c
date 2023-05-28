@@ -24,6 +24,9 @@ ModuleHeader MOD_HEADER
 /** Timers can be minimum every <this> msec */
 #define RPC_MINIMUM_TIMER_MSEC 250
 
+#define RRPC_PACKET_SMALL	450
+#define RRPC_PACKET_BIGLINES	16000
+
 /* Structs */
 typedef struct RPCUser RPCUser;
 struct RPCUser {
@@ -221,7 +224,7 @@ MOD_INIT()
 	LoadPersistentPointer(modinfo, outstanding_rrpc_list, free_outstanding_rrpc_list);
 	LoadPersistentPointer(modinfo, rpc_timer_list, free_rpc_timer_list);
 
-	CommandAdd(modinfo->handle, "RRPC", cmd_rrpc, MAXPARA, CMD_SERVER);
+	CommandAdd(modinfo->handle, "RRPC", cmd_rrpc, MAXPARA, CMD_SERVER|CMD_BIGLINES);
 
 	EventAdd(modinfo->handle, "rpc_remote_timeout", rpc_remote_timeout, NULL, 1000, 0);
 	EventAdd(modinfo->handle, "rpc_do_timers", rpc_do_timers, NULL, RPC_MINIMUM_TIMER_MSEC, 0);
@@ -1396,6 +1399,69 @@ OutstandingRRPC *find_outstandingrrpc(const char *source, const char *requestid)
 	return NULL;
 }
 
+void rrpc_pass_on_split(Client *client, Client *dest, MessageTag *recv_mtags, const char *parv[])
+{
+	char buf[MAXLINELENGTH];
+	char *data;
+	char saved;
+	char status[8];
+	char first = 0;
+	char continuation = 0;
+	char final = 0;
+	int remaining;
+
+	strlcpy(buf, parv[6], sizeof(buf));
+
+	if (strchr(parv[5], 'S'))
+		first = 1;
+	if (strchr(parv[5], 'C'))
+		continuation = 2;
+	if (strchr(parv[5], 'F'))
+		final = 1;
+
+	remaining = strlen(buf);
+	for (data = buf; remaining && *data; data += RRPC_PACKET_SMALL)
+	{
+		if (remaining > RRPC_PACKET_SMALL)
+		{
+			saved = data[RRPC_PACKET_SMALL];
+			data[RRPC_PACKET_SMALL] = '\0';
+			remaining -= RRPC_PACKET_SMALL;
+		} else {
+			saved = 0;
+			remaining = 0;
+			continuation = 0;
+		}
+
+		*status = '\0';
+		if (first)
+		{
+			strlcat_letter(status, 'S', sizeof(status));
+			first = 0;
+		}
+		if (!saved && final)
+		{
+			/* Send 'F' - but not just when its the last chunk,
+			 * only if the original also indicated it is the
+			 * last chunk (caveat :D).
+			 */
+			strlcat_letter(status, 'F', sizeof(status));
+		} else
+		if (!first)
+		{
+			strlcat_letter(status, 'C', sizeof(status));
+		}
+
+		sendto_one(dest, recv_mtags, ":%s RRPC %s %s %s %s %s :%s",
+			   client->id, parv[1], parv[2], parv[3], parv[4], status, data);
+
+		if (!saved)
+			break; /* done! */
+
+		data[RRPC_PACKET_SMALL] = saved;
+	}
+}
+
 /* Remote RPC call over the network (RRPC)
  * :<server> RRPC <REQ|RES> <source> <destination> <requestid> [S|C|F] :<request data>
  * S = Start
@@ -1414,7 +1480,7 @@ CMD_FUNC(cmd_rrpc)
 
 	if ((parc < 7) || BadPtr(parv[6]))
 	{
-		sendnumeric(client, ERR_NEEDMOREPARAMS, "KNOCK");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "RRPC");
 		return;
 	}
 
@@ -1436,7 +1502,7 @@ CMD_FUNC(cmd_rrpc)
 	data = parv[6];
 
 	/* Search by SID (first 3 characters of destination)
-	 * so we can always deliver, even forn unknown UID destinations
+	 * so we can always deliver, even for unknown UID destinations
 	 * in case this is a response.
 	 */
 	strlcpy(sid, destination, sizeof(sid));
@@ -1449,9 +1515,16 @@ CMD_FUNC(cmd_rrpc)
 
 	if (dest != &me)
 	{
-		/* Just pass it along... */
-		sendto_one(dest, recv_mtags, ":%s RRPC %s %s %s %s %s :%s",
-		           client->id, parv[1], parv[2], parv[3], parv[4], parv[5], parv[6]);
+		/* Not for us, pass it along... */
+		if ((strlen(parv[6]) > RRPC_PACKET_SMALL) && !SupportBIGLINES(dest->direction))
+		{
+			/* Hard case */
+			rrpc_pass_on_split(client, dest, recv_mtags, parv);
+		} else {
+			/* Simple case */
+			sendto_one(dest, recv_mtags, ":%s RRPC %s %s %s %s %s :%s",
+			           client->id, parv[1], parv[2], parv[3], parv[4], parv[5], parv[6]);
+		}
 		return;
 	}
 
@@ -1634,7 +1707,8 @@ void rpc_send_generic_to_remote(Client *source, Client *target, const char *requ
 	int bytes; /* bytes in this frame */
 	int bytes_remaining; /* bytes remaining overall */
 	int start_frame = 1; /* set to 1 if this is the start frame */
-	char data[451];
+	int packet_split_size; /* chunk size of outgoing packets (depends on BIGLINES support) */
+	char data[RRPC_PACKET_BIGLINES+1];
 
 	requestid = rpc_id(json);
 	if (!requestid)
@@ -1650,10 +1724,15 @@ void rpc_send_generic_to_remote(Client *source, Client *target, const char *requ
 	 * F = Finish
 	 */
 
+	if (SupportBIGLINES(target->direction))
+		packet_split_size = RRPC_PACKET_BIGLINES;
+	else
+		packet_split_size = RRPC_PACKET_SMALL;
+
 	bytes_remaining = strlen(json_serialized);
-	for (str = json_serialized, bytes = MIN(bytes_remaining, 450);
+	for (str = json_serialized, bytes = MIN(bytes_remaining, packet_split_size);
 	     str && *str && bytes_remaining;
-	     str += bytes, bytes = MIN(bytes_remaining, 450))
+	     str += bytes, bytes = MIN(bytes_remaining, packet_split_size))
 	{
 		bytes_remaining -= bytes;
 		if (start_frame == 1)
@@ -1671,7 +1750,7 @@ void rpc_send_generic_to_remote(Client *source, Client *target, const char *requ
 			type = "F"; /* finish frame (the last frame) */
 		}
 
-		strlncpy(data, str, sizeof(data), bytes);
+		strlncpy(data, str, packet_split_size+1, bytes);
 
 		sendto_one(target, NULL, ":%s RRPC %s %s %s %s %s :%s",
 		           me.id,

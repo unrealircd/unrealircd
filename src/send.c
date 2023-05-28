@@ -61,7 +61,7 @@ static LineCacheLine *linecache_get(LineCache *cache, int line_opts, Client *to)
                              buf[len++] = '\r'; buf[len++] = '\n'; buf[len] = '\0'; } while(0)
 
 /* These are two local (static) buffers used by the various send functions */
-static char sendbuf[2048];
+static char sendbuf[MAXLINELENGTH];
 static char sendbuf2[MAXLINELENGTH];
 
 /** This is used to ensure no duplicate messages are sent
