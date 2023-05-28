@@ -111,6 +111,11 @@ in progress and may not be a stable version.
 * The [`require module` block](https://www.unrealircd.org/docs/Require_module_block)
   was only checked of one side of the link, thus partially not working.
 
+### Removed:
+* [set::maxbanlength](https://www.unrealircd.org/docs/Set_block#set::maxbanlength)
+  has been removed as it was not deemed useful and only confusing
+  to users and admins.
+
 ### Developers and protocol:
 * Server to server lines can now be 16384 bytes in size when
   `PROTOCTL BIGLINES` is set. This will allow us to do things more

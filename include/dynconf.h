@@ -126,7 +126,6 @@ struct Configuration {
 	int spamfilter_stop_on_first_match;
 	int spamfilter_utf8;
 	int maxbans;
-	int maxbanlength;
 	int watch_away_notification;
 	int uhnames;
 	unsigned short default_ipv6_clone_mask;
@@ -249,7 +248,6 @@ extern MODVAR int ipv6_disabled;
 #define CHECK_TARGET_NICK_BANS	iConf.check_target_nick_bans
 
 #define MAXBANS		iConf.maxbans
-#define MAXBANLENGTH	iConf.maxbanlength
 
 #define WATCH_AWAY_NOTIFICATION	iConf.watch_away_notification
 
@@ -299,7 +297,6 @@ struct SetCheck {
 	unsigned has_default_bantime:1;
 	unsigned has_who_limit:1;
 	unsigned has_maxbans:1;
-	unsigned has_maxbanlength:1;
 	unsigned has_silence_limit:1;
 	unsigned has_ban_version_tkl_time:1;
 	unsigned has_spamfilter_ban_time:1;

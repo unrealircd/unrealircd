@@ -249,15 +249,14 @@ int identical_ban(const char *one, const char *two)
 int add_listmode_ex(Ban **list, Client *client, Channel *channel, const char *banid, const char *setby, time_t seton)
 {
 	Ban *ban;
-	int cnt = 0, len;
+	int cnt = 0;
 	int do_not_add = 0;
 	char isnew = 0;
 
 	//if (MyUser(client))
 	//	collapse(banid);
 
-	len = strlen(banid);
-	if (!*list && ((len > MAXBANLENGTH) || (MAXBANS < 1)))
+	if (!*list && (MAXBANS < 1))
 	{
 		if (MyUser(client))
 		{
@@ -268,14 +267,10 @@ int add_listmode_ex(Ban **list, Client *client, Channel *channel, const char *ba
 	}
 	for (ban = *list; ban; ban = ban->next)
 	{
-		len += strlen(ban->banstr);
-		/* Check MAXBANLENGTH / MAXBANS only for local clients
-		 * and 'me' (for +b's set during +f).
+		/* Check MAXBANS only for local clients and 'me' (for +b's set during +f).
 		 */
-		if ((MyUser(client) || IsMe(client)) && ((len > MAXBANLENGTH) || (++cnt >= MAXBANS)))
-		{
+		if ((MyUser(client) || IsMe(client)) && (++cnt >= MAXBANS))
 			do_not_add = 1;
-		}
 		if (identical_ban(ban->banstr, banid))
 			break; /* update existing ban (potentially) */
 	}

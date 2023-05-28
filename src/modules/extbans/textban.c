@@ -31,10 +31,6 @@
  * that do not have halfops or higher, and only channels that have any
  * textbans set.
  * UPDATE: The speed impact for 15 bans per channel is 42 usec PEAK.
- * HINT: If you are hitting the "normal banlimit" before you actually hit this
- *       one, then you might want to tweak the #define MAXBANS and #define
- *       MAXBANLENGTH in include/struct.h. Doubling MAXBANLENGTH is usually
- *       a good idea, and then you can enlarge MAXBANS too a bit if you want to.
  */
 #define MAX_EXTBANT_PER_CHAN     15 /* Max number of ~T bans in a channel. */
 

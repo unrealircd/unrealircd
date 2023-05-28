@@ -1680,7 +1680,6 @@ void config_setdefaultsettings(Configuration *i)
 	safe_strdup(i->channel_command_prefix, "`!.");
 	i->check_target_nick_bans = 1;
 	i->maxbans = 60;
-	i->maxbanlength = 2048;
 	safe_strdup(i->level_on_join, "o");
 	i->watch_away_notification = 1;
 	i->uhnames = 1;
@@ -7600,9 +7599,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "maxbans")) {
 			tempiConf.maxbans = atol(cep->value);
 		}
-		else if (!strcmp(cep->name, "maxbanlength")) {
-			tempiConf.maxbanlength = atol(cep->value);
-		}
 		else if (!strcmp(cep->name, "silence-limit")) {
 			tempiConf.silence_limit = atol(cep->value);
 		}
@@ -8275,8 +8271,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckDuplicate(cep, maxbans, "maxbans");
 		}
 		else if (!strcmp(cep->name, "maxbanlength")) {
-			CheckNull(cep);
-			CheckDuplicate(cep, maxbanlength, "maxbanlength");
+			config_warn("%s:%d: set::maxbanlength no longer exists as it was not deemed useful, this setting is now ignored.",
+			            cep->file->filename, cep->line_number);
 		}
 		else if (!strcmp(cep->name, "silence-limit")) {
 			CheckNull(cep);
