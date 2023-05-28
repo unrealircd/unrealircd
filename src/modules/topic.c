@@ -47,7 +47,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_TOPIC, cmd_topic, 4, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_TOPIC, cmd_topic, 4, CMD_USER|CMD_SERVER|CMD_BIGLINES);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -89,6 +89,7 @@ CMD_FUNC(cmd_topic)
 	const char *topic = NULL;
 	const char *name, *tnick = client->name;
 	const char *errmsg = NULL;
+	char topicbuf[MAXTOPICLEN+1];
 	time_t ttime = 0;
 	int i = 0;
 	Hook *h;
@@ -166,6 +167,10 @@ CMD_FUNC(cmd_topic)
 		return;
 	}
 
+	/* Cut topic here, because we are in BIGLINES code */
+	strlcpy(topicbuf, topic, sizeof(topicbuf));
+	topic = topicbuf;
+
 	if (ttime && topic && (IsServer(client) || IsULine(client)))
 	{
 		if (!channel->topic_time || ttime > channel->topic_time || IsULine(client))
@@ -179,7 +184,7 @@ CMD_FUNC(cmd_topic)
 			channel->topic_time = ttime;
 
 			new_message(client, recv_mtags, &mtags);
-			RunHook(HOOKTYPE_TOPIC, client, channel, mtags, topic);
+			RunHook(HOOKTYPE_TOPIC, client, channel, mtags, channel->topic);
 			sendto_server(client, 0, 0, mtags, ":%s TOPIC %s %s %lld :%s",
 			    client->id, channel->name, channel->topic_nick,
 			    (long long)channel->topic_time, channel->topic);

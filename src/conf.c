@@ -1765,8 +1765,8 @@ void config_setdefaultsettings(Configuration *i)
 	safe_strdup(i->reject_message_kline, "You are not welcome on this server. $bantype: $banreason. Email $klineaddr for more information.");
 	safe_strdup(i->reject_message_gline, "You are not welcome on this network. $bantype: $banreason. Email $glineaddr for more information.");
 
-	i->topic_setter = SETTER_NICK;
-	i->ban_setter = SETTER_NICK;
+	i->topic_setter = SETTER_NICK_USER_HOST;
+	i->ban_setter = SETTER_NICK_USER_HOST;
 	i->ban_setter_sync = 1;
 	i->allowed_channelchars = ALLOWED_CHANNELCHARS_UTF8;
 	i->automatic_ban_target = BAN_TARGET_IP;
@@ -1849,20 +1849,6 @@ void postconf_defaults(void)
 	postconf_defaults_log_block();
 }
 
-void postconf_fixes(void)
-{
-	/* If set::topic-setter is set to "nick-user-host" then the
-	 * maximum topic length becomes shorter.
-	 */
-	if ((iConf.topic_setter == SETTER_NICK_USER_HOST) &&
-	    (iConf.topic_length > 340))
-	{
-		config_warn("set::topic-length adjusted from %d to 340, which is the maximum because "
-		            "set::topic-setter is set to 'nick-user-host'.", iConf.topic_length);
-		iConf.topic_length = 340;
-	}
-}
-
 /* Needed for set::options::allow-part-if-shunned,
  * we can't just make it CMD_SHUN and do a ALLOW_PART_IF_SHUNNED in
  * cmd_part itself because that will also block internal calls (like sapart). -- Syzop
@@ -1889,7 +1875,6 @@ RealCommand *cmptr;
 void postconf(void)
 {
 	postconf_defaults();
-	postconf_fixes();
 	do_weird_shun_stuff();
 	isupport_init(); /* for all the 005 values that changed.. */
 	tls_check_expiry(NULL);

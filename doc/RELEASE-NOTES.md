@@ -69,6 +69,10 @@ in progress and may not be a stable version.
     any memory on servers that are not used for JSON-RPC.
 
 ### Changes:
+* [set::topic-setter](https://www.unrealircd.org/docs/Set_block#set::topic-setter) and
+  [set::ban-setter](https://www.unrealircd.org/docs/Set_block#set::ban-setter)
+  are now by default set to `nick-user-host` instead of `nick`, so you can see
+  the full nick!user@host of who set the topic/ban/exempt/invex.
 * You can no longer (accidentally) load an old `modules.default.conf`.
   People must always use the shipped version of this file as the file VERY
   clearly says in the beginning (see also that file for instructions on
