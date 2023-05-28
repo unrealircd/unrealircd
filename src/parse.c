@@ -274,8 +274,8 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 	 * If it is too long, then we cut it off here.
 	 * Note that there is a second check later for the IsServer() case.
 	 */
-	if (!IsServer(cptr) && (strlen(ch) > 510))
-		ch[510] = '\0';
+	if (!IsServer(cptr) && (strlen(line) > 510))
+		line[510] = '\0';
 
 	para[0] = (char *)DEADBEEF_ADDR; /* helps us catch bugs :) */
 
@@ -491,7 +491,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 			int slen = strlen(s);
 			if ((s-line)+slen > 510)
 			{
-				ch[510] = '\0'; /* same as check at beginning of this function */
+				line[510] = '\0'; /* same as check at beginning of this function */
 				if (slen > 510)
 					s[510] = '\0'; /* just in case the earlier cut was like mid-sender instead of in parameters */
 			}
