@@ -48,6 +48,7 @@ MOD_INIT()
 MOD_LOAD()
 {
 	ISupportSetFmt(modinfo->handle, "CHATHISTORY", "%d", CHATHISTORY_LIMIT);
+	ISupportSetFmt(modinfo->handle, "MSGREFTYPES", "msgid,timestamp");
 	return MOD_SUCCESS;
 }
 
