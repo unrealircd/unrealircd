@@ -486,17 +486,6 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 	i = 0;
 	if (s)
 	{
-		if (IsServer(cptr) && (!cmptr || !(cmptr->flags & CMD_BIGLINES)))
-		{
-			int slen = strlen(s);
-			if ((s-line)+slen > 510)
-			{
-				line[510] = '\0'; /* same as check at beginning of this function */
-				if (slen > 510)
-					s[510] = '\0'; /* just in case the earlier cut was like mid-sender instead of in parameters */
-			}
-		}
-
 		/*
 		if (paramcount > MAXPARA)
 			paramcount = MAXPARA;
@@ -532,6 +521,23 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 		}
 	}
 	para[++i] = NULL;
+
+	/* Filter for non-CMD_BIGLINES to cut off each para[] at 510 bytes:
+	 * - Only for servers, as we already covered !IsServer() at
+	 *   the beginning of this function and cut off at 510 bytes.
+	 * - Only if more than 510 bytes, otherwise don't bother.
+	 * - If the command has CMD_BIGLINES then skip this as well.
+	 */
+	if (IsServer(cptr) && (bytes > 510) && !(cmptr && (cmptr->flags & CMD_BIGLINES)))
+	{
+		int n, bytes;
+		for (n = 1; n < i; n++)
+		{
+			bytes = strlen(para[n]);
+			if (bytes > 510)
+				para[n][510] = '\0'; /* cut off */
+		}
+	}
 
 	/* Check if one of the message tags are rejected by spamfilter */
 	if (MyConnect(from) && !IsServer(from) && match_spamfilter_mtags(from, mtags, cmptr ? cmptr->cmd : NULL))

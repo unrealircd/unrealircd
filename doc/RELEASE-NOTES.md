@@ -126,11 +126,15 @@ in progress and may not be a stable version.
   The original input size limits for non-servers remain the same: the
   complete line can be 4k+512, with the non-mtag portion limit set
   at 512 bytes (including \r\n), and MAXPARA is still 15 as well.
-* To receive BIGLINES in a command, you need to `CommandAdd()` with
-  flags `CMD_BIGLINES`, without it you still get regular 512 max.
-  This is so, because a lot of the code does not expect longer than
-  512 bytes lines or in parameters, so we can gradually change that
-  (where needed).
+* In command handlers, individual `parv[]` elements can be 510 bytes
+  max, even if they add up like parv[1] and parv[2] both being 510
+  bytes each. If you need more than that, then you need to set the
+  flag `CMD_BIGLINES` in `CommandAdd()`, then an individual parameter
+  can be near ~16k. This is so, because a lot of the code does not
+  expect parameters bigger than 512 bytes (but can still handle
+  the total of parameters being greater than 512). The new flag allows
+  gradually opting in commands to allow bigger parameters, after
+  such code has been checked and modified to handle it.
 
 UnrealIRCd 6.1.0
 -----------------
