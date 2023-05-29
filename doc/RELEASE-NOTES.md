@@ -64,9 +64,10 @@ in progress and may not be a stable version.
     Then after an IRCd restart, your services link in before your clients
     and your IRC users have SASL available straight from the start.
 * JSON-RPC:
-  * New call `log.list` to fetch past 1000 log entries. This functionality
-    is only loaded if you include `rpc.modules.default.conf`, so not wasting
-    any memory on servers that are not used for JSON-RPC.
+  * New call [`log.list`](https://www.unrealircd.org/docs/JSON-RPC:Log#log.list)
+    to fetch past 1000 log entries. This functionality is only loaded if
+    you include `rpc.modules.default.conf`, so not wasting any memory on
+    servers that are not used for JSON-RPC.
 
 ### Changes:
 * [set::topic-setter](https://www.unrealircd.org/docs/Set_block#set::topic-setter) and
