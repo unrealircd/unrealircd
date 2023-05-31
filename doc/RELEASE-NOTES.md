@@ -1,7 +1,8 @@
-UnrealIRCd 6.1.1-git
+UnrealIRCd 6.1.1-rc1
 =================
-This is the git version (development version) for future 6.1.1. This is work
-in progress and may not be a stable version.
+This is the Release Candidate for future UnrealIRCd 6.1.1.
+
+You can help us by testing this release and reporting any issues at https://bugs.unrealircd.org/.
 
 ### Enhancements:
 * Two new features that are conditionally on:
