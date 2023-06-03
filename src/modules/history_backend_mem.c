@@ -648,6 +648,8 @@ static void hbm_result_prepend_line(HistoryResult *r, HistoryLogLine *n)
 
 /** Put lines in HistoryResult that are after a certain msgid or
  *  timestamp (excluding said msgid/timestamp).
+ *  Also stops at the other given msgid/timestamp (if any); so this can also be
+ *  used by hbm_return_between.
  * @param r		The history result set that we will use
  * @param h		The history log object
  * @param filter	The filter that applies
