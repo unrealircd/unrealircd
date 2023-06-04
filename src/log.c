@@ -460,21 +460,25 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 				if (!strcmp(cep->name, "file") || !strcmp(cep->name, "syslog"))
 				{
 					Log *log;
-					/* First check if already exists... yeah this is a bit late
-					 * and ideally would have been done in config_test but...
-					 * that would have been lots of work for a (hopefully) rare case.
-					 */
-					for (log = temp_logs[LOG_DEST_DISK]; log; log = log->next)
+
+					if (!strcmp(cep->name, "file"))
 					{
-						if ((log->file && !strcmp(log->file, cep->value)) ||
-						    (log->filefmt && !strcmp(log->filefmt, cep->value)))
+						/* First check if already exists... yeah this is a bit late
+						 * and ideally would have been done in config_test but...
+						 * that would have been lots of work for a (hopefully) rare case.
+						 */
+						for (log = temp_logs[LOG_DEST_DISK]; log; log = log->next)
 						{
-							config_warn("%s:%d: Ignoring duplicate log block for file '%s'. "
-							            "You cannot have multiple log blocks logging to the same file.",
-							            cep->file->filename, cep->line_number,
-							            cep->value);
-							free_log_sources(sources);
-							return 0;
+							if ((log->file && !strcmp(log->file, cep->value)) ||
+							    (log->filefmt && !strcmp(log->filefmt, cep->value)))
+							{
+								config_warn("%s:%d: Ignoring duplicate log block for file '%s'. "
+									    "You cannot have multiple log blocks logging to the same file.",
+									    cep->file->filename, cep->line_number,
+									    cep->value);
+								free_log_sources(sources);
+								return 0;
+							}
 						}
 					}
 					log = safe_alloc(sizeof(Log));
