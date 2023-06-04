@@ -469,18 +469,34 @@ EVENT(detect_high_connection_rate)
 		quick_close = 0;
 	}
 
+	if (OpenFiles >= maxclients-10)
+		quick_close = 1;
+
 	/* Send a warning to IRCOps every XYZ time */
 	if (quick_close && (TStime() - last_detect_high_connection_rate_warning > 600) && connections_past_period)
 	{
-		unreal_log(ULOG_WARNING, "htm", "HIGH_CONNECTION_RATE", NULL,
-		           "High rate of connection attempts detected: $connects_per_second/sec exceeds $limit/sec: some minor functionality is now disabled. "
-		           "This could be an attack, or lots of genuine users connecting after a network outage.\n"
-		           "This message will appear every 10 minutes for as long as this is the case. "
-		           "You will NOT get a notification if all is normal again (which is evaluated every $sample_time seconds). "
-		           "See https://www.unrealircd.org/docs/FAQ#hi-conn-rate",
-		           log_data_integer("connects_per_second", connections_past_period/DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME),
-		           log_data_integer("limit", iConf.high_connection_rate),
-		           log_data_integer("sample_time", DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME));
+		if (connections_past_period >= iConf.high_connection_rate*DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME)
+		{
+			unreal_log(ULOG_WARNING, "htm", "HIGH_CONNECTION_RATE", NULL,
+				   "High rate of connection attempts detected: $connects_per_second/sec exceeds $limit/sec: some minor functionality is now disabled. "
+				   "This could be an attack, or lots of genuine users connecting after a network outage.\n"
+				   "This message will appear every 10 minutes for as long as this is the case. "
+				   "You will NOT get a notification if all is normal again (which is evaluated every $sample_time seconds). "
+				   "See https://www.unrealircd.org/docs/FAQ#hi-conn-rate",
+				   log_data_integer("connects_per_second", connections_past_period/DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME),
+				   log_data_integer("limit", iConf.high_connection_rate),
+				   log_data_integer("sample_time", DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME));
+		} else {
+			unreal_log(ULOG_WARNING, "htm", "HIGH_CONNECTION_RATE", NULL,
+				   "High amount of connections in use ($connections is near limit of $maxclients maximum clients). Some minor functionality is now disabled. "
+				   "This could be an attack, or lots of genuine users connecting.\n"
+				   "This message will appear every 10 minutes for as long as this is the case. "
+				   "You will NOT get a notification if all is normal again (which is evaluated every $sample_time seconds). "
+				   "See https://www.unrealircd.org/docs/FAQ#hi-conn-rate",
+				   log_data_integer("connections", OpenFiles),
+				   log_data_integer("maxclients", maxclients),
+				   log_data_integer("sample_time", DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME));
+		}
 		last_detect_high_connection_rate_warning = TStime();
 	}
 
