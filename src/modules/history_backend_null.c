@@ -23,6 +23,7 @@ ModuleHeader MOD_HEADER
 int hbn_history_set_limit(const char *object, int max_lines, long max_time);
 int hbn_history_add(const char *object, MessageTag *mtags, const char *line);
 HistoryResult *hbn_history_request(const char *object, HistoryFilter *filter);
+int hbn_history_delete(const char *object, HistoryFilter *filter, int *rejected_deletes);
 int hbn_history_destroy(const char *object);
 
 MOD_INIT()
@@ -36,6 +37,7 @@ MOD_INIT()
 	hbi.history_set_limit = hbn_history_set_limit;
 	hbi.history_add = hbn_history_add;
 	hbi.history_request = hbn_history_request;
+	hbi.history_delete = hbn_history_delete;
 	hbi.history_destroy = hbn_history_destroy;
 	if (!HistoryBackendAdd(modinfo->handle, &hbi))
 		return MOD_FAILED;
@@ -66,6 +68,13 @@ HistoryResult *hbn_history_request(const char *object, HistoryFilter *filter)
 int hbn_history_set_limit(const char *object, int max_lines, long max_time)
 {
 	return 1;
+}
+
+int hbn_history_delete(const char *object, HistoryFilter *filter, int *rejected_deletes)
+{
+	if (rejected_deletes)
+		*rejected_deletes = 0;
+	return 0;
 }
 
 int hbn_history_destroy(const char *object)

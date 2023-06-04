@@ -62,7 +62,7 @@ HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 	int exists = 0;
 	ModuleObject *mobj;
 
-	if (!mreq->history_add || !mreq->history_request ||
+	if (!mreq->history_add || !mreq->history_request || !mreq->history_delete ||
 	    !mreq->history_destroy || !mreq->history_set_limit)
 	{
 		module->errorcode = MODERR_INVALID;
@@ -92,6 +92,7 @@ HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 	m->owner = module;
 	m->history_add = mreq->history_add;
 	m->history_request = mreq->history_request;
+	m->history_delete = mreq->history_delete;
 	m->history_destroy = mreq->history_destroy;
 	m->history_set_limit = mreq->history_set_limit;
 
@@ -179,6 +180,35 @@ HistoryResult *history_request(const char *object, HistoryFilter *filter)
 			return r;
 
 	return NULL;
+}
+
+int history_delete(const char *object, HistoryFilter *filter, int *rejected_deletes) {
+	HistoryBackend *hb = historybackends;
+	HistoryResult *r;
+	HistoryLogLine *l;
+
+	int deleted, max_deleted = 0, max_rejected_deletes = 0;
+	if (rejected_deletes)
+	    *rejected_deletes = 0;
+
+	if (!hb)
+		return 0; /* no history backend loaded */
+
+	/* Right now we assume each backend stores either a superset or a subset of
+	 * other backends; so the actual number of deleted lines and rejected deletes
+	 * can simply be computed as the maximum */
+	for (hb = historybackends; hb; hb = hb->next) {
+		deleted = hb->history_delete(object, filter, rejected_deletes);
+		if (deleted > max_deleted)
+			max_deleted = deleted;
+		if (!rejected_deletes && *rejected_deletes > max_rejected_deletes)
+			max_rejected_deletes = *rejected_deletes;
+	}
+
+	if (rejected_deletes)
+		*rejected_deletes = max_rejected_deletes;
+
+	return max_deleted;
 }
 
 int history_destroy(const char *object)

@@ -1,5 +1,5 @@
 /* src/modules/history_backend_mem.c - History Backend: memory
- * (C) Copyright 2019-2021 Bram Matthys (Syzop) and the UnrealIRCd team
+ * (C) Copyright 2019-2023 Bram Matthys (Syzop) and the UnrealIRCd team
  * License: GPLv2 or later
  */
 #include "unrealircd.h"
@@ -101,6 +101,7 @@ int hbm_history_add(const char *object, MessageTag *mtags, const char *line);
 int hbm_history_cleanup(HistoryLogObject *h);
 HistoryResult *hbm_history_request(const char *object, HistoryFilter *filter);
 int hbm_history_destroy(const char *object);
+int hbm_history_delete(const char *object, HistoryFilter *filter, int *rejected_deletes);
 int hbm_history_set_limit(const char *object, int max_lines, long max_time);
 EVENT(history_mem_clean);
 EVENT(history_mem_init);
@@ -159,6 +160,7 @@ MOD_INIT()
 	hbi.history_add = hbm_history_add;
 	hbi.history_request = hbm_history_request;
 	hbi.history_destroy = hbm_history_destroy;
+	hbi.history_delete = hbm_history_delete;
 	hbi.history_set_limit = hbm_history_set_limit;
 	if (!HistoryBackendAdd(modinfo->handle, &hbi))
 		return MOD_FAILED;
@@ -1092,6 +1094,82 @@ HistoryResult *hbm_history_request(const char *object, HistoryFilter *filter)
 	}
 
 	return r;
+}
+
+/** Remove lines from the history
+ * @param h		The history log object
+ * @param filter	The filter that applies
+ * @param rejected_deletes    If not NULL, this is set to the number of messages which
+ *                            don't match the 'account' but match other filters.
+ * @returns Number of lines deleted, note that this could be zero,
+ *          which is a perfectly valid result.
+ */
+int hbm_history_delete(const char *object, HistoryFilter *filter, int *rejected_deletes)
+{
+	HistoryLogLine *l;
+	HistoryLogObject *h = hbm_find_object(object);
+	int deleted = 0;
+	int started = 0;
+	MessageTag *m;
+
+	if (rejected_deletes)
+		*rejected_deletes = 0;
+
+	if (!h)
+		return 0;
+
+	for (l = h->head; l; l = l->next)
+	{
+		/* Not started yet? Check if this is the starting point... */
+		if (!started)
+		{
+			if (filter->timestamp_a && ((m = find_mtag(l->mtags, "time"))) && (strcmp(m->value, filter->timestamp_a) > 0))
+			{
+				started = 1;
+			} else
+			if (filter->msgid_a && ((m = find_mtag(l->mtags, "msgid"))) && !strcmp(m->value, filter->msgid_a))
+			{
+				started = 1;
+			}
+		}
+		if (started)
+		{
+			/* Check if we need to stop */
+			if (filter->timestamp_b && ((m = find_mtag(l->mtags, "time"))) && (strcmp(m->value, filter->timestamp_b) >= 0))
+			{
+				break;
+			} else
+			if (filter->msgid_b && ((m = find_mtag(l->mtags, "msgid"))) && !strcmp(m->value, filter->msgid_b))
+			{
+				break;
+			}
+
+			/* Note: account comparison is case-sensitive, just to be safe in case
+			 * services do not casemap the same way we would.
+			 * This means filter->account should probably not be filled directly
+			 * from user input.
+			 */
+			if (filter->account) {
+				// TODO: check account-tag module is loaded?
+				m = find_mtag(l->mtags, "account");
+				if (!m || strcmp(m->value, filter->account)) {
+					if (rejected_deletes)
+						(*rejected_deletes)++;
+					continue;
+				}
+			}
+
+			/* Remove line from the history */
+			hbm_history_del_line(h, l);
+			if (++deleted >= filter->limit)
+				break;
+		}
+
+		if (deleted >= filter->limit)
+			break;
+	}
+
+	return deleted;
 }
 
 /** Clean up expired entries */
