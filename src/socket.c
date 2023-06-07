@@ -881,6 +881,12 @@ refuse_client:
 	for (h = Hooks[HOOKTYPE_ACCEPT]; h; h = h->next)
 	{
 		int value = (*(h->func.intfunc))(client);
+		if (value == 2) // HOOK_DENY_ALWAYS
+		{
+			deadsocket_exit(client, 1);
+			irccounts.unknown--;
+			goto refuse_client;
+		} else
 		if (value == HOOK_DENY)
 		{
 			if (quick_close || !(listener->options & LISTENER_TLS))
@@ -896,6 +902,7 @@ refuse_client:
 				/* continue, and even do the SSL/TLS handshake */
 			}
 		}
+		/* NOT in else block: */
 		if (value != HOOK_CONTINUE)
 			break;
 	}

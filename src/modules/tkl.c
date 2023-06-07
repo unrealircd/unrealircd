@@ -971,7 +971,7 @@ int tkl_accept(Client *client)
 	if ((tkl = find_tkline_match_zap(client)))
 	{
 		banned_client(client, "Z-Lined", tkl->ptr.serverban->reason, (tkl->type & TKL_GLOBAL)?1:0, NO_EXIT_CLIENT);
-		return HOOK_DENY;
+		return 2; // TODO: HOOK_DENY_ALWAYS;
 	}
 	return 0;
 }
