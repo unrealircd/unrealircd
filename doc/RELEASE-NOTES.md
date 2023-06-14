@@ -1,8 +1,16 @@
-UnrealIRCd 6.1.1-rc1
+UnrealIRCd 6.1.1
 =================
-This is the Release Candidate for future UnrealIRCd 6.1.1.
+UnrealIRCd 6.1.1 comes with various bug fixes and performance improvements,
+especially for channels with thousands of users.
 
-You can help us by testing this release and reporting any issues at https://bugs.unrealircd.org/.
+It also has more options to override settings per security group,
+for example if you want to give trusted users or bots more rights or
+higher flood rates than regular users. All these options are now
+in a single [Special users](https://www.unrealircd.org/docs/Special_users)
+article on the wiki.
+
+Other notable features are better connection errors to SSL/TLS users
+and a new proxy { } block for websocket reverse proxies.
 
 ### Enhancements:
 * Two new features that are conditionally on:
@@ -45,6 +53,8 @@ You can help us by testing this release and reporting any issues at https://bugs
   * Currently the following settings can be used in a set xxx { } block:
     set::auto-join, set::modes-on-connect, set::restrict-usermodes,
     set::max-channels-per-user, set::static-quit, set::static-part.
+  * See also [Special users](https://www.unrealircd.org/docs/Special_users)
+    in the documentation for applying settings to a security groups.
 * New [`proxy { }` block](https://www.unrealircd.org/docs/Proxy_block)
   that can be used for spoofing IP addresses when:
   * Reverse proxying websocket connections (eg. via NGINX, a load
