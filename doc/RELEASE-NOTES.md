@@ -12,6 +12,9 @@ article on the wiki.
 Other notable features are better connection errors to SSL/TLS users
 and a new proxy { } block for websocket reverse proxies.
 
+See the full release notes below. As usual on *NIX you can upgrade easily
+with the command: `./unrealircd upgrade`
+
 ### Enhancements:
 * Two new features that are conditionally on:
   * SSL/TLS users will now correctly receive the error message if they are
@@ -166,9 +169,6 @@ changed a channel mode, ..).
 Other improvements are whowasdb (persistent WHOWAS history) and a new guide
 on running a Tor Onion service. The release also fixes a crash bug related
 to remote includes and fixes multiple memory leaks.
-
-See the full release notes below. As usual on *NIX you can upgrade easily
-with the command: `./unrealircd upgrade`
 
 ### Enhancements:
 * Channel flood protection improvements:
