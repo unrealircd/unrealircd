@@ -760,7 +760,7 @@ IpUsersBucket *find_ipusers_bucket(Client *client)
 	addr = raw_client_ip(client);
 	hash = hash_ipusers(client->ip);
 
-	if (IsIPV6(client))
+	if (addr->sa_family == AF_INET6)
 	{
 		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
 			if (memcmp(p->rawip, &((struct sockaddr_in6 *)addr)->sin6_addr.s6_addr, 16) == 0)
@@ -800,6 +800,7 @@ void decrease_ipusers_bucket(Client *client)
 	int hash = 0;
 	IpUsersBucket *p;
 	struct sockaddr *addr;
+	char ipv6 = 0;
 
 	if (!(client->flags & CLIENT_FLAG_IPUSERS_BUMPED))
 		return; /* nothing to do */
@@ -809,7 +810,9 @@ void decrease_ipusers_bucket(Client *client)
 	addr = raw_client_ip(client);
 	hash = hash_ipusers(client->ip);
 
-	if (IsIPV6(client))
+	ipv6 = addr->sa_family == AF_INET6 ? 1 : 0;
+
+	if (ipv6)
 	{
 		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
 			if (memcmp(p->rawip, &((struct sockaddr_in6 *)addr)->sin6_addr.s6_addr, 16) == 0)
@@ -833,7 +836,7 @@ void decrease_ipusers_bucket(Client *client)
 
 	if ((p->global_clients == 0) && (p->local_clients == 0))
 	{
-		if (IsIPV6(client))
+		if (ipv6)
 			DelListItem(p, IpUsersHash_ipv6[hash]);
 		else
 			DelListItem(p, IpUsersHash_ipv4[hash]);
