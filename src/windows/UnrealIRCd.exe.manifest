@@ -3,7 +3,7 @@
 <assemblyIdentity
     processorArchitecture="amd64"
     name="UnrealIRCd.UnrealIRCd.6"
-    version="6.1.1.0"
+    version="6.1.1.1"
     type="win32"
 />
 <description>Internet Relay Chat Daemon</description>
