@@ -1255,7 +1255,7 @@ extern void SavePersistentLongLongX(ModuleInfo *modinfo, const char *varshortnam
 /** See hooktype_dns_finished */
 #define HOOKTYPE_DNS_FINISHED	119
 /** See hooktype_reconfigure_web_listener */
-#define HOOKTYPE_RECONFIGURE_WEB_LISTENER	120
+#define HOOKTYPE_CONFIG_LISTENER	120
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -2325,12 +2325,12 @@ int hooktype_rehash_log(int failure, json_t *rehash_log);
  */
 int hooktype_dns_finished(Client *client);
 
-/** Called when an listener is removed from the conf but there are still clients - very specific corner case.
- * (function prototype for HOOKTYPE_RECONFIGURE_WEB_LISTENER)
+/** Called after an listener block is processed
+ * (function prototype for HOOKTYPE_CONFIG_LISTENER)
  * @param listener		The listener
  * @return The return value is ignored (use return 0)
  */
-int hooktype_reconfigure_web_listener(ConfigItem_listen *listener);
+int hooktype_config_listener(ConfigItem_listen *listener);
 
 /** @} */
 
@@ -2453,7 +2453,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_JSON_EXPAND_CHANNEL) && !ValidateHook(hooktype_json_expand_channel, func)) || \
         ((hooktype == HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT) && !ValidateHook(hooktype_pre_local_handshake_timeout, func)) || \
         ((hooktype == HOOKTYPE_REHASH_LOG) && !ValidateHook(hooktype_rehash_log, func)) || \
-        ((hooktype == HOOKTYPE_DNS_FINISHED) && !ValidateHook(hooktype_dns_finished, func)) ) \
+        ((hooktype == HOOKTYPE_DNS_FINISHED) && !ValidateHook(hooktype_dns_finished, func)) || \
+        ((hooktype == HOOKTYPE_CONFIG_LISTENER) && !ValidateHook(hooktype_config_listener, func)))
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

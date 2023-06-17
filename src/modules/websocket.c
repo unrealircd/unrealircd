@@ -43,7 +43,7 @@ int websocket_handshake_send_response(Client *client);
 int websocket_handle_body_websocket(Client *client, WebRequest *web, const char *readbuf2, int length2);
 int websocket_secure_connect(Client *client);
 int websocket_handle_request(Client *client, WebRequest *web);
-int websocket_reconfigure_web_listener(ConfigItem_listen *listener);
+int websocket_config_listener(ConfigItem_listen *listener);
 
 /* Global variables */
 ModDataInfo *websocket_md = NULL; /* (by us) */
@@ -73,7 +73,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, websocket_config_run_ex);
 	HookAdd(modinfo->handle, HOOKTYPE_PACKET, INT_MAX, websocket_packet_out);
 	HookAdd(modinfo->handle, HOOKTYPE_SECURE_CONNECT, 0, websocket_secure_connect);
-	HookAdd(modinfo->handle, HOOKTYPE_RECONFIGURE_WEB_LISTENER, 0, websocket_reconfigure_web_listener);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIG_LISTENER, 0, websocket_config_listener);
 
 	/* Call MOD_LOAD very late, since we manage sockets, but depend on websocket_common */
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_UNLOAD-1);
@@ -207,7 +207,7 @@ int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr
 	return 1;
 }
 
-int websocket_reconfigure_web_listener(ConfigItem_listen *listener)
+int websocket_config_listener(ConfigItem_listen *listener)
 {
 	if (listener->websocket_options)
 	{

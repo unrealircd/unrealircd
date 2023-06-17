@@ -5197,6 +5197,8 @@ void conf_listen_configure(const char *ip, int port, SocketType socket_type, int
 			}
 		}
 	}
+
+	RunHook(HOOKTYPE_CONFIG_LISTENER, listen);
 }
 
 int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
@@ -10874,7 +10876,7 @@ void listen_cleanup()
 					listener->webserver->handle_request = NULL;
 					listener->webserver->handle_body = NULL;
 					/* Ask modules if they can figure out the handler */
-					RunHook(HOOKTYPE_RECONFIGURE_WEB_LISTENER, listener);
+					RunHook(HOOKTYPE_CONFIG_LISTENER, listener);
 					/* If not... free the webserver listener.
 					 * TODO: it would be even better if we kill all clients,
 					 * it would be more explicit and clear.
