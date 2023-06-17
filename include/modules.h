@@ -572,6 +572,7 @@ struct HistoryFilter {
         char *msgid_a;			/**< First parameter of HFC_* (either this or timestamp_a) */
         char *timestamp_b;		/**< Second parameter of HFC_BETWEEN (either this or msgid_b) */
         char *msgid_b;			/**< Second parameter of HFC_BETWEEN (either this or timestamp_b) */
+        char *account;			/**< (For deletion only) if not NULL, reject deletion of messages not from this account */
         int limit;			/**< Maximum number of lines to return */
 };
 
@@ -599,6 +600,7 @@ struct HistoryBackend {
 	int (*history_set_limit)(const char *object, int max_lines, long max_time); /**< Impose a limit on a history object */
 	int (*history_add)(const char *object, MessageTag *mtags, const char *line); /**< Add to history */
 	HistoryResult *(*history_request)(const char *object, HistoryFilter *filter);  /**< Request history */
+	int (*history_delete)(const char *object, HistoryFilter *filter, int *rejected_deletes);  /**< Delete lines from the history. Returns the number of matching lines and sets rejected_deletes if not NULL */
 	int (*history_destroy)(const char *object);  /**< Destroy history of this object completely */
 	Module *owner;                                /**< Module introducing this */
 	char unloaded;                                /**< Internal flag to indicate module is being unloaded */
@@ -612,6 +614,7 @@ typedef struct {
 	int (*history_set_limit)(const char *object, int max_lines, long max_time);
 	int (*history_add)(const char *object, MessageTag *mtags, const char *line);
 	HistoryResult *(*history_request)(const char *object, HistoryFilter *filter);
+	int (*history_delete)(const char *object, HistoryFilter *filter, int *rejected_deletes);
 	int (*history_destroy)(const char *object);
 } HistoryBackendInfo;
 

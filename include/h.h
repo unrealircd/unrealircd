@@ -1130,6 +1130,7 @@ extern void free_message_tags(MessageTag *m);
 extern int history_set_limit(const char *object, int max_lines, long max_t);
 extern int history_add(const char *object, MessageTag *mtags, const char *line);
 extern HistoryResult *history_request(const char *object, HistoryFilter *filter);
+extern int history_delete(const char *object, HistoryFilter *filter, int *rejected_deletes);
 extern int history_destroy(const char *object);
 extern int can_receive_history(Client *client);
 extern void history_send_result(Client *client, HistoryResult *r);
