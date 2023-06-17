@@ -123,13 +123,13 @@ int webserver_packet_out(Client *from, Client *to, Client *intended_to, char **m
 
 HttpMethod webserver_get_method(const char *buf)
 {
-	if (!strncmp(buf, "HEAD ", 5))
+	if (str_starts_with_case_sensitive(buf, "HEAD "))
 		return HTTP_METHOD_HEAD;
-	if (!strncmp(buf, "GET ", 4))
+	if (str_starts_with_case_sensitive(buf, "GET "))
 		return HTTP_METHOD_GET;
-	if (!strncmp(buf, "PUT ", 4))
+	if (str_starts_with_case_sensitive(buf, "PUT "))
 		return HTTP_METHOD_PUT;
-	if (!strncmp(buf, "POST ", 5))
+	if (str_starts_with_case_sensitive(buf, "POST "))
 		return HTTP_METHOD_POST;
 	return HTTP_METHOD_NONE; /* invalid */
 }

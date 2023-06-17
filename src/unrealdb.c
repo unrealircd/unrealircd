@@ -212,7 +212,7 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 			/* READ: read header, if any, lots of fallback options here... */
 			if (fgets(buf, sizeof(buf), c->fd))
 			{
-				if (!strncmp(buf, "UnrealIRCd-DB-Crypted", 21))
+				if (str_starts_with_case_sensitive(buf, "UnrealIRCd-DB-Crypted"))
 				{
 					unrealdb_set_error(c, UNREALDB_ERROR_CRYPTED, "file is encrypted but no password provided");
 					goto unrealdb_open_fail;
@@ -232,7 +232,7 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 					}
 					/* SUCCESS = fallthrough */
 				} else
-				if (!strncmp(buf, "UnrealIRCd-DB", 13)) /* any other version than v1 = not supported by us */
+				if (str_starts_with_case_sensitive(buf, "UnrealIRCd-DB")) /* any other version than v1 = not supported by us */
 				{
 					/* We don't support this format, so refuse clearly */
 					unrealdb_set_error(c, UNREALDB_ERROR_HEADER,

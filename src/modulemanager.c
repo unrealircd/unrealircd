@@ -90,7 +90,7 @@ int parse_url(const char *url, char **host, int *port, char **document)
 	static char hostbuf[256];
 	static char documentbuf[512];
 
-	if (strncmp(url, "https://", 8))
+	if (!str_starts_with_case_sensitive(url, "https://"))
 	{
 		fprintf(stderr, "ERROR: URL Must start with https! URL: %s\n", url);
 		return 0;
@@ -215,14 +215,14 @@ int mm_http_request(char *url, char *fname, int follow_redirects)
 				{
 					if (http_redirect)
 					{
-						if (!strncmp(line, "Location: ", 10))
+						if (str_starts_with_case_sensitive(line, "Location: "))
 						{
 							line += 10;
 							stripcrlf(line);
 							fclose(fd);
 							BIO_free_all(socket);
 							SSL_CTX_free(ctx_client);
-							if (strncmp(line, "https://", 8))
+							if (!str_starts_with_case_sensitive(line, "https://"))
 							{
 								fprintf(stderr, "Invalid HTTP Redirect to '%s' -- must start with https://\n", line);
 								return 0;
@@ -232,11 +232,11 @@ int mm_http_request(char *url, char *fname, int follow_redirects)
 						}
 						continue;
 					}
-					if (!strncmp(line, "HTTP/1.1 301", 12) ||
-					    !strncmp(line, "HTTP/1.1 302", 12) ||
-					    !strncmp(line, "HTTP/1.1 303", 12) ||
-					    !strncmp(line, "HTTP/1.1 307", 12) ||
-					    !strncmp(line, "HTTP/1.1 308", 12))
+					if (str_starts_with_case_sensitive(line, "HTTP/1.1 301") ||
+					    str_starts_with_case_sensitive(line, "HTTP/1.1 302") ||
+					    str_starts_with_case_sensitive(line, "HTTP/1.1 303") ||
+					    str_starts_with_case_sensitive(line, "HTTP/1.1 307") ||
+					    str_starts_with_case_sensitive(line, "HTTP/1.1 308"))
 					{
 						if (!follow_redirects)
 						{
@@ -246,7 +246,7 @@ int mm_http_request(char *url, char *fname, int follow_redirects)
 						http_redirect = 1;
 						continue;
 					}
-					if (strncmp(line, "HTTP/1.1 200", 12))
+					if (!str_starts_with_case_sensitive(line, "HTTP/1.1 200"))
 					{
 						stripcrlf(line);
 						if (strlen(line) > 128)
@@ -641,7 +641,7 @@ int mm_valid_module_name(char *name)
 {
 	char *p;
 
-	if (strncmp(name, "third/", 6))
+	if (!str_starts_with_case_sensitive(name, "third/"))
 		return 0;
 	name += 6;
 	if (strstr(name, ".."))
@@ -667,7 +667,7 @@ ManagedModule *mm_repo_module_config(char *repo_url, ConfigEntry *ce)
 			repo_url, ce->line_number);
 		goto fail_mm_repo_module_config;
 	}
-	if (strncmp(ce->value, "third/", 6))
+	if (!str_starts_with_case_sensitive(ce->value, "third/"))
 	{
 		config_error("%s:%d: module { } name must start with: third/",
 			repo_url, ce->line_number);
@@ -867,7 +867,7 @@ int mm_refresh_repository(void)
 		/* Skip empty lines and ones that start with a hash mark (#) */
 		if (!*line || (*line == '#'))
 			continue;
-		if (strncmp(line, "https://", 8))
+		if (!str_starts_with_case_sensitive(line, "https://"))
 		{
 			fprintf(stderr, "ERROR in %s on line %d: URL should start with https://",
 				sourceslist, linenr);
@@ -1329,7 +1329,7 @@ void mm_install(int argc, char *args[], int upgrade)
 		exit(-1);
 	}
 
-	if (strncmp(name, "third/", 6))
+	if (!str_starts_with_case_sensitive(name, "third/"))
 	{
 		fprintf(stderr, "ERROR: Use: module install third/name-of-module\nYou must prefix the modulename with third/\n");
 		exit(-1);
@@ -1384,7 +1384,7 @@ void mm_uninstall(int argc, char *args[])
 		exit(-1);
 	}
 
-	if (strncmp(name, "third/", 6))
+	if (!str_starts_with_case_sensitive(name, "third/"))
 	{
 		fprintf(stderr, "ERROR: Use: module uninstall third/name-of-module\nYou must prefix the modulename with third/\n");
 		exit(-1);
