@@ -1,5 +1,10 @@
-UnrealIRCd 6.1.1.1
+UnrealIRCd 6.1.2-git
 =================
+This is the git version (development version) for future 6.1.2. This is work
+in progress and may not be a stable version.
+
+UnrealIRCd 6.1.1.1
+-------------------
 This 6.1.1.1 version is an update to 6.1.1: a bug and memory leak was fixed
 related to maxperip handling if a WEBIRC proxy/gateway was used. To trigger
 this bug the WEBIRC proxy would need to use an IPv6 connection to UnrealIRCd
