@@ -2457,7 +2457,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT) && !ValidateHook(hooktype_pre_local_handshake_timeout, func)) || \
         ((hooktype == HOOKTYPE_REHASH_LOG) && !ValidateHook(hooktype_rehash_log, func)) || \
         ((hooktype == HOOKTYPE_DNS_FINISHED) && !ValidateHook(hooktype_dns_finished, func)) || \
-        ((hooktype == HOOKTYPE_CONFIG_LISTENER) && !ValidateHook(hooktype_config_listener, func)))
+        ((hooktype == HOOKTYPE_CONFIG_LISTENER) && !ValidateHook(hooktype_config_listener, func))) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
