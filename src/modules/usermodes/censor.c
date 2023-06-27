@@ -86,7 +86,8 @@ int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	{
 		config_error("%s:%i: badword without type",
 			ce->file->filename, ce->line_number);
-		return 1;
+		*errs = 1;
+		return -1;
 	}
 	else if (strcmp(ce->value, "message") && strcmp(ce->value, "all")) {
 /*			config_error("%s:%i: badword with unknown type",
