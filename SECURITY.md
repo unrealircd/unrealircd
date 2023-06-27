@@ -1,7 +1,6 @@
 # Security Policy
 
 ## Supported Versions
-* The latest *stable* release of UnrealIRCd 5 (until 2023-07-01)
 * The latest *stable* release of UnrealIRCd 6
 
 See [UnrealIRCd releases](https://www.unrealircd.org/docs/UnrealIRCd_releases) for information on older versions and End Of Life dates.
