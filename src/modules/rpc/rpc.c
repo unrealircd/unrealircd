@@ -380,7 +380,7 @@ int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *err
 	}
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "match"))
+		if (!strcmp(cep->name, "match") || !strcmp(cep->name, "mask"))
 		{
 			has_match = 1;
 			test_match_block(cf, cep, &errors);
@@ -390,6 +390,11 @@ int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *err
 			has_password = 1;
 			if (Auth_CheckError(cep) < 0)
 				errors++;
+		} else
+		{
+			config_error_unknown(cep->file->filename,
+				cep->line_number, "rpc-user", cep->name);
+			errors++;
 		}
 	}
 
@@ -412,7 +417,7 @@ int rpc_config_run_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "match"))
+		if (!strcmp(cep->name, "match") || !strcmp(cep->name, "mask"))
 		{
 			conf_match_block(cf, cep, &e->match);
 		} else
