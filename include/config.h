@@ -245,13 +245,14 @@
 #endif
 
 /* Maximum number of ModData objects that may be attached to an object */
-/* UnrealIRCd 4.0.0 - 4.0.13:  8,     8, 4, 4
- * UnrealIRCd 4.0.14+       : 12,     8, 4, 4
- * UnrealIRCd 5.0.0         : 12,  8, 8, 4, 4, 500, 500
- * UnrealIRCd 6.0.0         : 24, 12, 8, 4, 4, 500, 500
+/* UnrealIRCd 4.0.0:   8,     8, 4, 4
+ * UnrealIRCd 4.0.14: 12,     8, 4, 4
+ * UnrealIRCd 5.0.0:  12,  8, 8, 4, 4, 500, 500
+ * UnrealIRCd 6.0.0:  24, 12, 8, 4, 4, 500, 500
+ * UnrealIRCd 6.1.2:  24, 24, 8, 4, 4, 500, 500
  */
 #define MODDATA_MAX_CLIENT		 24
-#define MODDATA_MAX_LOCAL_CLIENT	 12
+#define MODDATA_MAX_LOCAL_CLIENT	 24
 #define MODDATA_MAX_CHANNEL		  8
 #define MODDATA_MAX_MEMBER		  4
 #define MODDATA_MAX_MEMBERSHIP		  4
