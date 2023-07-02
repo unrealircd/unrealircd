@@ -182,27 +182,24 @@ HistoryResult *history_request(const char *object, HistoryFilter *filter)
 	return NULL;
 }
 
-int history_delete(const char *object, HistoryFilter *filter, int *rejected_deletes) {
+int history_delete(const char *object, HistoryFilter *filter, int *rejected_deletes)
+{
 	HistoryBackend *hb = historybackends;
 	HistoryResult *r;
 	HistoryLogLine *l;
-
-	int deleted, max_deleted = 0, max_rejected_deletes = 0;
-	if (rejected_deletes)
-	    *rejected_deletes = 0;
-
-	if (!hb)
-		return 0; /* no history backend loaded */
+	int deleted, max_deleted = 0;
+	int rejected, max_rejected_deletes = 0;
 
 	/* Right now we assume each backend stores either a superset or a subset of
 	 * other backends; so the actual number of deleted lines and rejected deletes
 	 * can simply be computed as the maximum */
-	for (hb = historybackends; hb; hb = hb->next) {
-		deleted = hb->history_delete(object, filter, rejected_deletes);
+	for (hb = historybackends; hb; hb = hb->next)
+	{
+		deleted = hb->history_delete(object, filter, &rejected);
 		if (deleted > max_deleted)
 			max_deleted = deleted;
-		if (!rejected_deletes && *rejected_deletes > max_rejected_deletes)
-			max_rejected_deletes = *rejected_deletes;
+		if (rejected > max_rejected_deletes)
+			max_rejected_deletes = rejected;
 	}
 
 	if (rejected_deletes)
