@@ -534,7 +534,7 @@ extern void init_CommandHash(void);
 /* CRULE */
 extern struct CRuleNode* crule_parse(const char*);
 extern void crule_free(struct CRuleNode**);
-extern int crule_eval(struct CRuleNode* rule);
+extern int crule_eval(crule_context *context, CRuleNode *rule);
 extern int crule_test(const char *rule);
 extern const char *crule_errstring(int errcode);
 
@@ -818,10 +818,11 @@ extern MODVAR TKL *(*tkl_add_banexception)(int type, const char *usermask, const
                                            time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags);
 extern MODVAR TKL *(*tkl_add_nameban)(int type, const char *name, int hold, const char *reason, const char *setby,
                                           time_t expire_at, time_t set_at, int flags);
-extern MODVAR TKL *(*tkl_add_spamfilter)(int type, unsigned short target, BanAction *action, Match *match, const char *setby,
-                                             time_t expire_at, time_t set_at,
-                                             time_t spamf_tkl_duration, const char *spamf_tkl_reason,
-                                             int flags);
+extern MODVAR TKL *(*tkl_add_spamfilter)(int type, unsigned short target, BanAction *action,
+                                         Match *match, const char *rule, const char *setby,
+                                         time_t expire_at, time_t set_at,
+                                         time_t spamf_tkl_duration, const char *spamf_tkl_reason,
+                                         int flags);
 extern MODVAR TKL *(*find_tkl_serverban)(int type, const char *usermask, const char *hostmask, int softban);
 extern MODVAR TKL *(*find_tkl_banexception)(int type, const char *usermask, const char *hostmask, int softban);
 extern MODVAR TKL *(*find_tkl_nameban)(int type, const char *name, int hold);

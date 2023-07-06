@@ -971,7 +971,7 @@ char *spamfilter_target_inttostring(int v)
 		if (v & e->value)
 			*p++ = e->character;
 	*p = '\0';
-	return buf;
+	return *buf ? buf : "-";
 }
 
 /** Replace underscores back to the space character.

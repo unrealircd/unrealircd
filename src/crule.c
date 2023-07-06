@@ -132,12 +132,15 @@ enum crule_errcode {
  */
 
 /* rule function prototypes - local! */
-static int crule_connected(int, void **);
-static int crule_directcon(int, void **);
-static int crule_via(int, void **);
-static int crule_directop(int, void **);
-static int crule__andor(int, void **);
-static int crule__not(int, void **);
+static int crule_connected(crule_context *, int, void **);
+static int crule_directcon(crule_context *, int, void **);
+static int crule_via(crule_context *, int, void **);
+static int crule_directop(crule_context *, int, void **);
+static int crule__andor(crule_context *, int, void **);
+static int crule__not(crule_context *, int, void **);
+// newstyle
+static int crule_online_time(crule_context *, int, void **);
+static int crule_reputation(crule_context *, int, void **);
 
 /* parsing function prototypes - local! */
 static int crule_gettoken(crule_token *next_tokp, const char** str);
@@ -185,13 +188,15 @@ struct crule_funclistent {
 struct crule_funclistent crule_funclist[] = {
 	/* maximum function name length is 14 chars */
 	{"connected", 1, crule_connected},
+	{"online_time", 0, crule_online_time},
+	{"reputation", 0, crule_reputation},
 	{"directcon", 1, crule_directcon},
 	{"via", 2, crule_via},
 	{"directop", 0, crule_directop},
 	{"", 0, NULL}		/* this must be here to mark end of list */
 };
 
-static int crule_connected(int numargs, void *crulearg[])
+static int crule_connected(crule_context *context, int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *client;
@@ -208,7 +213,7 @@ static int crule_connected(int numargs, void *crulearg[])
 #endif
 }
 
-static int crule_directcon(int numargs, void *crulearg[])
+static int crule_directcon(crule_context *context, int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *client;
@@ -227,7 +232,7 @@ static int crule_directcon(int numargs, void *crulearg[])
 #endif
 }
 
-static int crule_via(int numargs, void *crulearg[])
+static int crule_via(crule_context *context, int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *client;
@@ -246,7 +251,7 @@ static int crule_via(int numargs, void *crulearg[])
 #endif
 }
 
-static int crule_directop(int numargs, void *crulearg[])
+static int crule_directop(crule_context *context, int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *client;
@@ -264,13 +269,27 @@ static int crule_directop(int numargs, void *crulearg[])
 #endif
 }
 
+static int crule_online_time(crule_context *context, int numargs, void *crulearg[])
+{
+  if (context && context->client)
+    return get_connected_time(context->client);
+  return 0;
+}
+
+static int crule_reputation(crule_context *context, int numargs, void *crulearg[])
+{
+  if (context && context->client)
+    return GetReputation(context->client);
+  return 0;
+}
+
 /** Evaluate a connection rule.
  * @param[in] rule Rule to evalute.
  * @return Non-zero if the rule allows the connection, zero otherwise.
  */
-int crule_eval(struct CRuleNode* rule)
+int crule_eval(crule_context *context, struct CRuleNode* rule)
 {
-  int ret = rule->funcptr(rule->numargs, rule->arg);
+  int ret = rule->funcptr(context, rule->numargs, rule->arg);
   switch (rule->func_test_type)
   {
     case CR_EQUAL:
@@ -300,15 +319,15 @@ int crule_eval(struct CRuleNode* rule)
  * @param[in] crulearg Argument array.
  * @return Non-zero if the condition is true, zero if not.
  */
-static int crule__andor(int numargs, void *crulearg[])
+static int crule__andor(crule_context *context, int numargs, void *crulearg[])
 {
   int result1;
 
-  result1 = crule_eval(crulearg[0]);
+  result1 = crule_eval(context, crulearg[0]);
   if (crulearg[2])              /* or */
-    return (result1 || crule_eval(crulearg[1]));
+    return (result1 || crule_eval(context, crulearg[1]));
   else
-    return (result1 && crule_eval(crulearg[1]));
+    return (result1 && crule_eval(context, crulearg[1]));
 }
 
 /** Logically invert the result of crulearg[0].
@@ -316,9 +335,9 @@ static int crule__andor(int numargs, void *crulearg[])
  * @param[in] crulearg Argument array.
  * @return Non-zero if the condition is true, zero if not.
  */
-static int crule__not(int numargs, void *crulearg[])
+static int crule__not(crule_context *context, int numargs, void *crulearg[])
 {
-  return (!crule_eval(crulearg[0]));
+  return (!crule_eval(context, crulearg[0]));
 }
 
 /** Scan an input token from \a ruleptr.
@@ -388,7 +407,7 @@ static int crule_gettoken(crule_token *next_tokp, const char** ruleptr)
         break;
       default:
         if ((isalnum(*(--(*ruleptr)))) || (**ruleptr == '*') ||
-            (**ruleptr == '?') || (**ruleptr == '.') || (**ruleptr == '-'))
+            (**ruleptr == '?') || (**ruleptr == '.') || (**ruleptr == '-') || (**ruleptr == '_'))
           *next_tokp = CR_WORD;
         else
           return (CR_UNKNWTOK);
@@ -411,7 +430,8 @@ static void crule_getword(char* word, int* wordlenp, size_t maxlen, const char**
   while ((size_t)(word_ptr - word) < maxlen
       && (isalnum(**ruleptr)
       || **ruleptr == '*' || **ruleptr == '?'
-      || **ruleptr == '.' || **ruleptr == '-'))
+      || **ruleptr == '.' || **ruleptr == '-'
+      || **ruleptr == '_'))
     *word_ptr++ = *(*ruleptr)++;
   *word_ptr = '\0';
   *wordlenp = word_ptr - word;

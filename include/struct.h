@@ -855,6 +855,7 @@ struct LoopStruct {
 typedef enum {
 	MATCH_SIMPLE=1, /**< Simple pattern with * and ? */
 	MATCH_PCRE_REGEX=2, /**< PCRE2 Perl-like regex (new) */
+	MATCH_NONE=3, /**< No matching at all (rule-based) */
 } MatchType;
 
 /** Match struct, which allows various matching styles, see MATCH_* */
@@ -1063,6 +1064,37 @@ struct Secret {
 	SecretCache *cache;
 };
 
+/* CRULE stuff */
+
+#define CRULE_ALL		0
+#define CRULE_AUTO		1
+
+/* some constants and shared data types */
+#define CR_MAXARGLEN 80         /**< Maximum arg length (must be > HOSTLEN) */
+#define CR_MAXARGS 3            /**< Maximum number of args for a rule */
+
+/* context when running a crule */
+typedef struct crule_context crule_context;
+struct crule_context
+{
+  Client *client;
+};
+
+/** Evaluation function for a connection rule. */
+typedef int (*crule_funcptr) (crule_context *context, int, void **);
+
+/** CRULE - Node in a connection rule tree. */
+struct CRuleNode {
+  crule_funcptr funcptr; /**< Evaluation function for this node. */
+  int numargs;           /**< Number of arguments. */
+  void *arg[CR_MAXARGS]; /**< Array of arguments.  For operators, each arg
+                            is a tree element; for functions, each arg is
+                            a string. */
+  int func_test_type;    /* for >, < and == */
+  int func_test_value;   /* integer value to compare against */
+};
+typedef struct CRuleNode CRuleNode;
+typedef struct CRuleNode* CRuleNodePtr;
 
 /* tkl:
  *   TKL_KILL|TKL_GLOBAL 	= Global K-Line (GLINE)
@@ -1176,6 +1208,8 @@ struct Spamfilter {
 	unsigned short target;
 	BanAction *action; /**< Ban action */
 	Match *match; /**< Spamfilter matcher */
+	CRuleNode *rule; /**< parsed crule */
+	char *prettyrule; /**< human printable version */
 	char *tkl_reason; /**< Reason to use for bans placed by this spamfilter, escaped by unreal_encodespace(). */
 	time_t tkl_duration; /**< Duration of bans placed by this spamfilter */
 };
@@ -1528,32 +1562,6 @@ struct AuthConfig {
 #ifndef HAVE_CRYPT
 #define crypt DES_crypt
 #endif
-
-/* CRULE stuff */
-
-#define CRULE_ALL		0
-#define CRULE_AUTO		1
-
-/* some constants and shared data types */
-#define CR_MAXARGLEN 80         /**< Maximum arg length (must be > HOSTLEN) */
-#define CR_MAXARGS 3            /**< Maximum number of args for a rule */
-
-/** Evaluation function for a connection rule. */
-typedef int (*crule_funcptr) (int, void **);
-
-/** CRULE - Node in a connection rule tree. */
-struct CRuleNode {
-  crule_funcptr funcptr; /**< Evaluation function for this node. */
-  int numargs;           /**< Number of arguments. */
-  void *arg[CR_MAXARGS]; /**< Array of arguments.  For operators, each arg
-                            is a tree element; for functions, each arg is
-                            a string. */
-  int func_test_type;    /* for >, < and == */
-  int func_test_value;   /* integer value to compare against */
-};
-typedef struct CRuleNode CRuleNode;
-typedef struct CRuleNode* CRuleNodePtr;
-
 
 /*
  * conf2 stuff -stskeeps

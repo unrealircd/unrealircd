@@ -2204,13 +2204,14 @@ int _is_services_but_not_ulined(Client *client)
 const char *_check_deny_link(ConfigItem_link *link, int auto_connect)
 {
 	ConfigItem_deny_link *d;
+	crule_context context;
 
 	for (d = conf_deny_link; d; d = d->next)
 	{
 		if ((auto_connect == 0) && (d->flag.type == CRULE_AUTO))
 			continue;
 		if (unreal_mask_match_string(link->servername, d->mask) &&
-		    crule_eval(d->rule))
+		    crule_eval(NULL, d->rule))
 		{
 			return d->reason;
 		}

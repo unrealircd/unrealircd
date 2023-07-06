@@ -68,10 +68,11 @@ TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, SecurityGro
                            time_t expire_at, time_t set_at, int soft, char *bantypes, int flags);
 TKL *_tkl_add_nameban(int type, char *name, int hold, char *reason, char *set_by,
                           time_t expire_at, time_t set_at, int flags);
-TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction *action, Match *match, char *set_by,
-                             time_t expire_at, time_t set_at,
-                             time_t spamf_tkl_duration, char *spamf_tkl_reason,
-                             int flags);
+TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction *action, Match *match,
+                         const char *rule, const char *set_by,
+                         time_t expire_at, time_t set_at,
+                         time_t spamf_tkl_duration, const char *spamf_tkl_reason,
+                         int flags);
 void _sendnotice_tkl_del(char *removed_by, TKL *tkl);
 void _sendnotice_tkl_add(TKL *tkl);
 void _free_tkl(TKL *tkl);
@@ -269,7 +270,7 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	ConfigEntry *cep, *cepp;
 	int errors = 0;
 	char *match = NULL, *reason = NULL;
-	char has_target = 0, has_match = 0, has_action = 0, has_reason = 0, has_bantime = 0, has_match_type = 0;
+	char has_target = 0, has_match = 0, has_rule = 0, has_action = 0, has_reason = 0, has_bantime = 0, has_match_type = 0;
 	int match_type = 0;
 
 	/* We are only interested in spamfilter { } blocks */
@@ -357,6 +358,25 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			has_match = 1;
 			match = cep->value;
 		}
+		else if (!strcmp(cep->name, "rule"))
+		{
+			int val;
+			if (has_rule)
+			{
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "spamfilter::rule");
+				continue;
+			}
+			has_rule = 1;
+			if ((val = crule_test(cep->value)))
+			{
+				config_error("%s:%i: spamfilter::rule contains an invalid expression: %s",
+					cep->file->filename,
+					cep->line_number,
+					crule_errstring(val));
+				errors++;
+			}
+		}
 		else if (!strcmp(cep->name, "ban-time"))
 		{
 			if (has_bantime)
@@ -425,13 +445,19 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		}
 	}
 
-	if (!has_match)
+	if (!has_match && !has_rule)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"spamfilter::match");
+			"spamfilter::match or spamfilter::rule");
 		errors++;
 	}
-	if (!has_target)
+	if (!has_match && has_match_type && has_rule)
+	{
+		config_error("%s:%i: spamfilter::match-type makes no sense if you only have a spamfilter::rule. Remove the match-type.",
+		             ce->file->filename, ce->line_number);
+		errors++;
+	}
+	if (!has_target && match)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
 			"spamfilter::target");
@@ -450,7 +476,7 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		             ce->file->filename, ce->line_number);
 		errors++;
 	}
-	if (!has_match_type)
+	if (!has_match_type && match)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
 			"spamfilter::match-type");
@@ -474,13 +500,14 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
-	char *word = NULL;
+	char *match = NULL;
+	char *rule = NULL;
 	time_t bantime = tempiConf.spamfilter_ban_time;
 	char *banreason = tempiConf.spamfilter_ban_reason;
 	BanAction *action;
 	int target = 0;
 	int match_type = 0;
-	Match *m;
+	Match *m = NULL;
 
 	/* We are only interested in spamfilter { } blocks */
 	if ((type != CONFIG_MAIN) || strcmp(ce->name, "spamfilter"))
@@ -490,7 +517,11 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	{
 		if (!strcmp(cep->name, "match"))
 		{
-			word = cep->value;
+			match = cep->value;
+		}
+		else if (!strcmp(cep->name, "rule"))
+		{
+			rule = cep->value;
 		}
 		else if (!strcmp(cep->name, "target"))
 		{
@@ -520,11 +551,16 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 	}
 
-	m = unreal_create_match(match_type, word, NULL);
+	if (!match && rule)
+		match_type = MATCH_NONE;
+
+	if (match)
+		m = unreal_create_match(match_type, match, NULL);
 	tkl_add_spamfilter(TKL_SPAMF,
 	                    target,
 	                    action,
 	                    m,
+	                    rule,
 	                    "-config-",
 	                    0,
 	                    TStime(),
@@ -2585,9 +2621,10 @@ TKL *tkl_find_head(char type, char *hostmask, TKL *def)
  * @returns                   The TKL entry, or NULL in case of a problem,
  *                            such as a regex failing to compile, memory problem, ..
  */
-TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction *action, Match *match, char *set_by,
+TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction *action,
+                             Match *match, const char *rule, const char *set_by,
                              time_t expire_at, time_t set_at,
-                             time_t tkl_duration, char *tkl_reason,
+                             time_t tkl_duration, const char *tkl_reason,
                              int flags)
 {
 	TKL *tkl;
@@ -2597,14 +2634,26 @@ TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction *action, Mat
 		abort();
 
 	tkl = safe_alloc(sizeof(TKL));
-	/* First the common fields */
 	tkl->type = type;
 	tkl->flags = flags;
 	tkl->set_at = set_at;
 	safe_strdup(tkl->set_by, set_by);
 	tkl->expire_at = expire_at;
-	/* Then the spamfilter fields */
 	tkl->ptr.spamfilter = safe_alloc(sizeof(Spamfilter));
+	if (rule)
+	{
+		tkl->ptr.spamfilter->rule = crule_parse(rule);
+		safe_strdup(tkl->ptr.spamfilter->prettyrule, rule);
+	}
+	if (rule && !match)
+	{
+		/* When no spamfilter::match, name it $RULE:xxx */
+		char buf[512];
+		snprintf(buf, sizeof(buf), "$RULE:%s", rule);
+		match = safe_alloc(sizeof(Match));
+		match->type = MATCH_NONE;
+		safe_strdup(match->str, buf);
+	}
 	tkl->ptr.spamfilter->target = target;
 	tkl->ptr.spamfilter->action = action;
 	tkl->ptr.spamfilter->match = match;
@@ -2826,6 +2875,9 @@ void _free_tkl(TKL *tkl)
 		safe_free(tkl->ptr.spamfilter->tkl_reason);
 		if (tkl->ptr.spamfilter->match)
 			unreal_delete_match(tkl->ptr.spamfilter->match);
+		if (tkl->ptr.spamfilter->rule)
+			crule_free(&tkl->ptr.spamfilter->rule);
+		safe_free(tkl->ptr.spamfilter->prettyrule);
 		safe_free(tkl->ptr.spamfilter);
 	} else
 	if (TKLIsBanException(tkl) && tkl->ptr.banexception)
@@ -4344,7 +4396,7 @@ CMD_FUNC(cmd_tkl_add)
 					log_data_string("spamfilter_regex_error", err));
 				return;
 			}
-			tkl = tkl_add_spamfilter(type, target, banact_value_to_struct(action), m, set_by, expire_at, set_at,
+			tkl = tkl_add_spamfilter(type, target, banact_value_to_struct(action), m, NULL, set_by, expire_at, set_at,
 			                         tkl_duration, tkl_reason, 0);
 		}
 	} else
@@ -4931,39 +4983,57 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 		if (IsLoggedIn(client) && only_soft_actions(tkl->ptr.spamfilter->action))
 			continue;
 
-#ifdef SPAMFILTER_DETECTSLOW
-		memset(&rnow, 0, sizeof(rnow));
-		memset(&rprev, 0, sizeof(rnow));
-
-		getrusage(RUSAGE_SELF, &rprev);
-#endif
-
-		ret = unreal_match(tkl->ptr.spamfilter->match, str);
-
-#ifdef SPAMFILTER_DETECTSLOW
-		getrusage(RUSAGE_SELF, &rnow);
-
-		ms_past = ((rnow.ru_utime.tv_sec - rprev.ru_utime.tv_sec) * 1000) +
-		          ((rnow.ru_utime.tv_usec - rprev.ru_utime.tv_usec) / 1000);
-
-		if ((SPAMFILTER_DETECTSLOW_FATAL > 0) && (ms_past > SPAMFILTER_DETECTSLOW_FATAL))
+		/* Run any pre 'rule' if there is any */
+		if (tkl->ptr.spamfilter->rule)
 		{
-			unreal_log(ULOG_ERROR, "tkl", "SPAMFILTER_SLOW_FATAL", NULL,
-			           "[Spamfilter] WARNING: Too slow spamfilter detected (took $msec_time msec to execute) "
-			           "-- spamfilter will be \002REMOVED!\002: $tkl",
-			           log_data_tkl("tkl", tkl),
-			           log_data_integer("msec_time", ms_past));
-			tkl_del_line(tkl);
-			return 0; /* Act as if it didn't match, even if it did.. it's gone now anyway.. */
-		} else
-		if ((SPAMFILTER_DETECTSLOW_WARN > 0) && (ms_past > SPAMFILTER_DETECTSLOW_WARN))
-		{
-			unreal_log(ULOG_WARNING, "tkl", "SPAMFILTER_SLOW_WARN", NULL,
-			           "[Spamfilter] WARNING: Slow spamfilter detected (took $msec_time msec to execute): $tkl",
-			           log_data_tkl("tkl", tkl),
-			           log_data_integer("msec_time", ms_past));
+			crule_context context;
+			memset(&context, 0, sizeof(context));
+			context.client = client;
+			if (!crule_eval(&context, tkl->ptr.spamfilter->rule))
+				continue;
 		}
+
+		if (tkl->ptr.spamfilter->match && (tkl->ptr.spamfilter->match->type != MATCH_NONE))
+		{
+			// TODO: wait, why are we running slow spamfilter detection for simple (non-regex) too ?
+#ifdef SPAMFILTER_DETECTSLOW
+			memset(&rnow, 0, sizeof(rnow));
+			memset(&rprev, 0, sizeof(rnow));
+
+			getrusage(RUSAGE_SELF, &rprev);
 #endif
+
+			ret = unreal_match(tkl->ptr.spamfilter->match, str);
+
+#ifdef SPAMFILTER_DETECTSLOW
+			getrusage(RUSAGE_SELF, &rnow);
+
+			ms_past = ((rnow.ru_utime.tv_sec - rprev.ru_utime.tv_sec) * 1000) +
+				  ((rnow.ru_utime.tv_usec - rprev.ru_utime.tv_usec) / 1000);
+
+			if ((SPAMFILTER_DETECTSLOW_FATAL > 0) && (ms_past > SPAMFILTER_DETECTSLOW_FATAL))
+			{
+				unreal_log(ULOG_ERROR, "tkl", "SPAMFILTER_SLOW_FATAL", NULL,
+					   "[Spamfilter] WARNING: Too slow spamfilter detected (took $msec_time msec to execute) "
+					   "-- spamfilter will be \002REMOVED!\002: $tkl",
+					   log_data_tkl("tkl", tkl),
+					   log_data_integer("msec_time", ms_past));
+				tkl_del_line(tkl);
+				return 0; /* Act as if it didn't match, even if it did.. it's gone now anyway.. */
+			} else
+			if ((SPAMFILTER_DETECTSLOW_WARN > 0) && (ms_past > SPAMFILTER_DETECTSLOW_WARN))
+			{
+				unreal_log(ULOG_WARNING, "tkl", "SPAMFILTER_SLOW_WARN", NULL,
+					   "[Spamfilter] WARNING: Slow spamfilter detected (took $msec_time msec to execute): $tkl",
+					   log_data_tkl("tkl", tkl),
+					   log_data_integer("msec_time", ms_past));
+			}
+#endif
+		} else {
+			/* There is no ::match but there was a ::rule, and that is enough for a match.. */
+			if (tkl->ptr.spamfilter->rule)
+				ret = 1;
+		}
 
 		if (ret)
 		{

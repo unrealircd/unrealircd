@@ -569,8 +569,13 @@ void json_expand_tkl(json_t *root, const char *key, TKL *tkl, int detail)
 	} else
 	if (TKLIsSpamfilter(tkl))
 	{
-		json_object_set_new(j, "name", json_string_unreal(tkl->ptr.spamfilter->match->str));
-		json_object_set_new(j, "match_type", json_string_unreal(unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type)));
+		if (tkl->ptr.spamfilter->match->str)
+		{
+			json_object_set_new(j, "name", json_string_unreal(tkl->ptr.spamfilter->match->str));
+			json_object_set_new(j, "match_type", json_string_unreal(unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type)));
+		}
+		if (tkl->ptr.spamfilter->prettyrule)
+			json_object_set_new(j, "rule", json_string_unreal(tkl->ptr.spamfilter->prettyrule));
 		json_object_set_new(j, "ban_action", json_string_unreal(ban_actions_to_string(tkl->ptr.spamfilter->action)));
 		json_object_set_new(j, "ban_duration", json_integer(tkl->ptr.spamfilter->tkl_duration));
 		json_object_set_new(j, "ban_duration_string", json_string_unreal(pretty_time_val_r(buf, sizeof(buf), tkl->ptr.spamfilter->tkl_duration)));

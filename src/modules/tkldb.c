@@ -723,6 +723,7 @@ int read_tkldb(void)
 				tkl_add_spamfilter(tkl->type, tkl->ptr.spamfilter->target,
 				                   tkl->ptr.spamfilter->action,
 				                   tkl->ptr.spamfilter->match,
+				                   NULL,
 				                   tkl->set_by, tkl->expire_at, tkl->set_at,
 				                   tkl->ptr.spamfilter->tkl_duration,
 				                   tkl->ptr.spamfilter->tkl_reason,

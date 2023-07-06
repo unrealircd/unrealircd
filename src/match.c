@@ -428,6 +428,9 @@ Match *unreal_create_match(MatchType type, const char *str, char **error)
 		}
 		pcre2_jit_compile(m->ext.pcre2_expr, PCRE2_JIT_COMPLETE);
 		return m;
+	} else if (m->type == MATCH_NONE)
+	{
+		/* Nothing to do */
 	}
 	else {
 		/* Unknown type, how did that happen ? */
@@ -463,6 +466,9 @@ int unreal_match(Match *m, const char *str)
 		return 0; /* NO MATCH */
 	}
 
+	if (m->type == MATCH_NONE)
+		return 1;
+
 	return 0;
 }
 
@@ -472,6 +478,8 @@ int unreal_match_method_strtoval(const char *str)
 		return MATCH_PCRE_REGEX;
 	if (!strcmp(str, "simple") || !strcmp(str, "glob"))
 		return MATCH_SIMPLE;
+	if (!strcmp(str, "none"))
+		return MATCH_NONE;
 	return 0;
 }
 
@@ -481,7 +489,9 @@ char *unreal_match_method_valtostr(int val)
 		return "regex";
 	if (val == MATCH_SIMPLE)
 		return "simple";
-	
+	if (val == MATCH_NONE)
+		return "none";
+
 	return "unknown";
 }
 
