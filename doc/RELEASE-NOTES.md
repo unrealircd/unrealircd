@@ -15,6 +15,9 @@ in progress and may not be a stable version.
     Please use this new tool with care. Blocking an entire language or script
     is quite a drastic measure.
   * You can turn it off via: `set { spamfilter { utf8 yes; } }`
+* The module [antimixedutf8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8)
+  now recognizes more code block transitions and should do a better job at
+  catching mixed UTF8 spam.
 
 UnrealIRCd 6.1.1.1
 -------------------
