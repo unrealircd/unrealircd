@@ -2016,6 +2016,7 @@ struct ConfigResource {
 	char *file; /**< File to read: can be a conf/something file or a downloaded file */
 	char *url; /**< URL, if it is an URL */
 	char *cache_file; /**< Set to filename of local cached copy, if it is available */
+	NameList *restrict_config; /**< If non-NULL: list of permitted config items */
 };
 
 struct ConfigItem_blacklist_module {

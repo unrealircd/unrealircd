@@ -260,11 +260,13 @@ int have_tls_listeners = 0;
 char *port_6667_ip = NULL;
 
 int add_config_resource(const char *resource, int type, ConfigEntry *ce);
+ConfigResource *find_config_resource(const char *resource);
 void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *rs_key);
 void free_all_config_resources(void);
 int rehash_internal(Client *client);
 int is_blacklisted_module(const char *name);
 int modules_default_conf_modified(const char *filebuf);
+int config_item_allowed_for_config_file(const char *resource, const char *item);
 
 /** Return the printable string of a 'cep' location, such as set::something::xyz */
 const char *config_var(ConfigEntry *cep)
@@ -2267,6 +2269,12 @@ int config_read_file(const char *filename, const char *display_name)
 					             ce->file->filename, ce->line_number);
 					return -1;
 				}
+				if (!config_item_allowed_for_config_file(cfptr->filename, NULL))
+				{
+					config_error("%s:%d: You cannot use 'include' from a restricted config file.",
+					             ce->file->filename, ce->line_number);
+					return -1;
+				}
 				ret = _conf_include(cfptr, ce);
 				if (ret < 0)
 					return ret;
@@ -2710,6 +2718,30 @@ static const char *config_run_priority_blocks[] =
 	"class",
 };
 
+int config_item_allowed_for_config_file(const char *resource, const char *item)
+{
+	ConfigResource *rs = find_config_resource(resource);
+	if (!rs)
+	{
+		/* This should never happen */
+#ifdef DEBUGMODE
+		abort();
+#else
+		return 1; /* Fallback to unrestricted */
+#endif
+	}
+
+	if (rs->restrict_config == NULL)
+		return 1; /* No restrictions */
+
+	if (item == NULL)
+		return 0;
+
+	if (find_name_list(rs->restrict_config, item))
+		return 1;
+	return 0;
+}
+
 int config_test_blocks()
 {
 	ConfigEntry 	*ce;
@@ -2732,6 +2764,8 @@ int config_test_blocks()
 			abort(); /* internal fuckup */
 		for (cfptr = conf; cfptr; cfptr = cfptr->next)
 		{
+			if (!config_item_allowed_for_config_file(cfptr->filename, config_block))
+				continue;
 			if (config_verbose > 1)
 				config_status("Running %s", cfptr->filename);
 			for (ce = cfptr->items; ce; ce = ce->next)
@@ -2769,6 +2803,9 @@ int config_test_blocks()
 				}
 			}
 			if (skip)
+				continue;
+
+			if (!config_item_allowed_for_config_file(cfptr->filename, ce->name))
 				continue;
 
 			if ((cc = config_binary_search(ce->name))) {
@@ -2868,6 +2905,8 @@ int config_run_blocks(void)
 				config_status("Running %s", cfptr->filename);
 			for (ce = cfptr->items; ce; ce = ce->next)
 			{
+				if (!config_item_allowed_for_config_file(cfptr->filename, ce->name))
+					continue;
 				if (!strcmp(ce->name, config_block))
 				{
 					if (cc->conffunc(cfptr, ce) < 0)
@@ -2894,6 +2933,9 @@ int config_run_blocks(void)
 				}
 			}
 			if (skip)
+				continue;
+
+			if (!config_item_allowed_for_config_file(cfptr->filename, ce->name))
 				continue;
 
 			if ((cc = config_binary_search(ce->name))) {
@@ -10926,6 +10968,7 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 {
 	ConfigResource *rs;
 	ConfigEntryWrapper *wce;
+	ConfigEntry *cep;
 
 	if (config_verbose)
 		config_status("add_config_resource() for '%s", resource);
@@ -10947,6 +10990,22 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 	rs = safe_alloc(sizeof(ConfigResource));
 	rs->wce = wce;
 	AddListItem(rs, config_resources);
+
+	/* restrict-config handling */
+	if (ce)
+	{
+		for (cep = ce->items; cep; cep = cep->next)
+		{
+			if (!strcmp(cep->name, "restrict-config"))
+			{
+				ConfigEntry *cepp;
+				for (cepp = cep->items; cepp; cepp = cepp->next)
+				{
+					add_name_list(rs->restrict_config, cepp->name);
+				}
+			}
+		}
+	}
 
 	if (!url_is_valid(resource))
 	{
@@ -11028,6 +11087,7 @@ void free_all_config_resources(void)
 		}
 		safe_free(rs->file);
 		safe_free(rs->cache_file);
+		free_entire_name_list(rs->restrict_config);
 		DelListItem(rs, config_resources);
 		safe_free(rs);
 	}
