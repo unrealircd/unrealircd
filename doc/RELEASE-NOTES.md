@@ -3,6 +3,19 @@ UnrealIRCd 6.1.2-git
 This is the git version (development version) for future 6.1.2. This is work
 in progress and may not be a stable version.
 
+### Enhancements:
+* [set::spamfilter::utf8](https://www.unrealircd.org/docs/Set_block#set::spamfilter::utf8)
+  is now on by default:
+  * This means you can safely use UTF8 characters in like `[]` in regex.
+  * Case insensitive matches work better. For example, for extended
+    Latin, a spamfilter on `ę` then also matches `Ę`.
+  * Other PCRE2 features such as [\p](https://www.pcre.org/current/doc/html/pcre2syntax.html#SEC5)
+    can then be used. For example the regex `\p{Arabic}` would block all Arabic script.
+    See also this [full list of scripts](https://www.pcre.org/current/doc/html/pcre2syntax.html#SEC7).
+    Please use this new tool with care. Blocking an entire language or script
+    is quite a drastic measure.
+  * You can turn it off via: `set { spamfilter { utf8 yes; } }`
+
 UnrealIRCd 6.1.1.1
 -------------------
 This 6.1.1.1 version is an update to 6.1.1: a bug and memory leak was fixed

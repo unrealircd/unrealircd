@@ -1671,6 +1671,7 @@ void config_setdefaultsettings(Configuration *i)
 	i->ident_connect_timeout = 3;
 	i->ban_version_tkl_time = 86400; /* 1d */
 	i->spamfilter_ban_time = 86400; /* 1d */
+	i->spamfilter_utf8 = 1;
 	safe_strdup(i->spamfilter_ban_reason, "Spam/advertising");
 	safe_strdup(i->spamfilter_virus_help_channel, "#help");
 	i->spamfilter_detectslow_warn = 250;
