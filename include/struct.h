@@ -1548,6 +1548,8 @@ struct CRuleNode {
   void *arg[CR_MAXARGS]; /**< Array of arguments.  For operators, each arg
                             is a tree element; for functions, each arg is
                             a string. */
+  int func_test_type;    /* for >, < and == */
+  int func_test_value;   /* integer value to compare against */
 };
 typedef struct CRuleNode CRuleNode;
 typedef struct CRuleNode* CRuleNodePtr;

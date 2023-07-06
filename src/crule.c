@@ -93,6 +93,7 @@ ID_Copyright("(C) Tony Vincell");
  */
 
 /** Input scanner tokens. */
+typedef enum crule_token crule_token;
 enum crule_token {
   CR_UNKNOWN,    /**< Unknown token type. */
   CR_END,        /**< End of input ('\\0' or ':'). */
@@ -102,10 +103,16 @@ enum crule_token {
   CR_OPENPAREN,  /**< Open parenthesis. */
   CR_CLOSEPAREN, /**< Close parenthesis. */
   CR_COMMA,      /**< Comma. */
+  CR_EQUAL,       /**< Operator == */
+  CR_LESS_THAN,  /**< Operator < */
+  CR_MORE_THAN,  /**< Operator > */
   CR_WORD        /**< Something that looks like a hostmask (alphanumerics, "*?.-"). */
 };
 
+#define IsComparisson(x)	((x == CR_EQUAL) || (x == CR_LESS_THAN) || (x == CR_MORE_THAN))
+
 /** Parser error codes. */
+typedef enum crule_errcode crule_errcode;
 enum crule_errcode {
   CR_NOERR,      /**< No error. */
   CR_UNEXPCTTOK, /**< Invalid token given context. */
@@ -116,7 +123,8 @@ enum crule_errcode {
   CR_EXPCTOPEN,  /**< Expected an open parenthesis after function name. */
   CR_EXPCTCLOSE, /**< Expected a close parenthesis to match open parenthesis. */
   CR_UNKNWFUNC,  /**< Attempt to use an unknown function. */
-  CR_ARGMISMAT   /**< Wrong number of arguments to function. */
+  CR_ARGMISMAT,  /**< Wrong number of arguments to function. */
+  CR_EXPCTVALUE, /**< Missing value in a comparisson */
 };
 
 /*
@@ -132,13 +140,13 @@ static int crule__andor(int, void **);
 static int crule__not(int, void **);
 
 /* parsing function prototypes - local! */
-static int crule_gettoken(int* token, const char** str);
+static int crule_gettoken(crule_token *next_tokp, const char** str);
 static void crule_getword(char*, int*, size_t, const char**);
-static int crule_parseandexpr(CRuleNodePtr*, int *, const char**);
-static int crule_parseorexpr(CRuleNodePtr*, int *, const char**);
-static int crule_parseprimary(CRuleNodePtr*, int *, const char**);
-static int crule_parsefunction(CRuleNodePtr*, int *, const char**);
-static int crule_parsearglist(CRuleNodePtr, int *, const char**);
+static int crule_parseandexpr(CRuleNodePtr*, crule_token *, const char**);
+static int crule_parseorexpr(CRuleNodePtr*, crule_token *, const char**);
+static int crule_parseprimary(CRuleNodePtr*, crule_token *, const char**);
+static int crule_parsefunction(CRuleNodePtr*, crule_token *, const char**);
+static int crule_parsearglist(CRuleNodePtr, crule_token *, const char**);
 
 #if defined(CR_DEBUG) || defined(CR_CHKCONF)
 /*
@@ -163,7 +171,8 @@ char *crule_errstr[] = {
 	"( expected",		/* EXPCTOPEN */
 	") expected",		/* EXPCTCLOSE */
 	"Unknown function",	/* UNKNWFUNC */
-	"Argument mismatch"	/* ARGMISMAT */
+	"Argument mismatch",	/* ARGMISMAT */
+	"Missing value in comparisson",	/* CR_EXPCTVALUE */
 };
 
 /* function table - null terminated */
@@ -172,6 +181,7 @@ struct crule_funclistent {
 	int  reqnumargs;
 	crule_funcptr funcptr;
 };
+
 struct crule_funclistent crule_funclist[] = {
 	/* maximum function name length is 14 chars */
 	{"connected", 1, crule_connected},
@@ -260,7 +270,28 @@ static int crule_directop(int numargs, void *crulearg[])
  */
 int crule_eval(struct CRuleNode* rule)
 {
-  return (rule->funcptr(rule->numargs, rule->arg));
+  int ret = rule->funcptr(rule->numargs, rule->arg);
+  switch (rule->func_test_type)
+  {
+    case CR_EQUAL:
+      /* something()==xyz */
+      if (ret == rule->func_test_value)
+        return 1;
+      return 0;
+    case CR_LESS_THAN:
+      /* something()<xyz */
+      if (ret < rule->func_test_value)
+        return 1;
+      return 0;
+    case CR_MORE_THAN:
+      /* something()>xyz */
+      if (ret > rule->func_test_value)
+        return 1;
+      return 0;
+    default:
+      /* Basic true/false handling */
+      return ret;
+  }
 }
 
 /** Perform an and-or-or test on crulearg[0] and crulearg[1].
@@ -295,7 +326,7 @@ static int crule__not(int numargs, void *crulearg[])
  * @param[in,out] ruleptr Next readable character from input.
  * @return Either CR_UNKNWTOK if the input was unrecognizable, else CR_NOERR.
  */
-static int crule_gettoken(int* next_tokp, const char** ruleptr)
+static int crule_gettoken(crule_token *next_tokp, const char** ruleptr)
 {
   char pending = '\0';
 
@@ -331,6 +362,20 @@ static int crule_gettoken(int* next_tokp, const char** ruleptr)
       case ')':
         *next_tokp = CR_CLOSEPAREN;
         break;
+      case '<':
+        *next_tokp = CR_LESS_THAN;
+        break;
+      case '>':
+        *next_tokp = CR_MORE_THAN;
+        break;
+      case '=':
+        if (pending == '\0')
+          pending = '=';
+        else if (pending == '=')
+          *next_tokp = CR_EQUAL;
+        else
+          return (CR_UNKNWTOK);
+        break;
       case ',':
         *next_tokp = CR_COMMA;
         break;
@@ -342,7 +387,7 @@ static int crule_gettoken(int* next_tokp, const char** ruleptr)
         *next_tokp = CR_END;
         break;
       default:
-        if ((isalpha(*(--(*ruleptr)))) || (**ruleptr == '*') ||
+        if ((isalnum(*(--(*ruleptr)))) || (**ruleptr == '*') ||
             (**ruleptr == '?') || (**ruleptr == '.') || (**ruleptr == '-'))
           *next_tokp = CR_WORD;
         else
@@ -379,7 +424,7 @@ static void crule_getword(char* word, int* wordlenp, size_t maxlen, const char**
 struct CRuleNode* crule_parse(const char *rule)
 {
   const char* ruleptr = rule;
-  int next_tok;
+  crule_token next_tok;
   struct CRuleNode* ruleroot = 0;
   int errcode = CR_NOERR;
 
@@ -410,7 +455,7 @@ struct CRuleNode* crule_parse(const char *rule)
 int crule_test(const char *rule)
 {
   const char* ruleptr = rule;
-  int next_tok;
+  crule_token next_tok;
   struct CRuleNode* ruleroot = 0;
   int errcode = CR_NOERR;
 
@@ -452,7 +497,7 @@ const char *crule_errstring(int errcode)
  * @param[in,out] ruleptr Next input character.
  * @return A crule_errcode value.
  */
-static int crule_parseorexpr(CRuleNodePtr * orrootp, int *next_tokp, const char** ruleptr)
+static int crule_parseorexpr(CRuleNodePtr * orrootp, crule_token *next_tokp, const char** ruleptr)
 {
   int errcode = CR_NOERR;
   CRuleNodePtr andexpr;
@@ -512,7 +557,7 @@ static int crule_parseorexpr(CRuleNodePtr * orrootp, int *next_tokp, const char*
  * @param[in,out] ruleptr Next input character.
  * @return A crule_errcode value.
  */
-static int crule_parseandexpr(CRuleNodePtr * androotp, int *next_tokp, const char** ruleptr)
+static int crule_parseandexpr(CRuleNodePtr * androotp, crule_token *next_tokp, const char** ruleptr)
 {
   int errcode = CR_NOERR;
   CRuleNodePtr primary;
@@ -572,7 +617,7 @@ static int crule_parseandexpr(CRuleNodePtr * androotp, int *next_tokp, const cha
  * @param[in,out] ruleptr Next input character.
  * @return A crule_errcode value.
  */
-static int crule_parseprimary(CRuleNodePtr* primrootp, int *next_tokp, const char** ruleptr)
+static int crule_parseprimary(CRuleNodePtr* primrootp, crule_token *next_tokp, const char** ruleptr)
 {
   CRuleNodePtr *insertionp;
   int errcode = CR_NOERR;
@@ -633,7 +678,7 @@ static int crule_parseprimary(CRuleNodePtr* primrootp, int *next_tokp, const cha
  * @param[in,out] ruleptr Next input character.
  * @return A crule_errcode value.
  */
-static int crule_parsefunction(CRuleNodePtr* funcrootp, int* next_tokp, const char** ruleptr)
+static int crule_parsefunction(CRuleNodePtr* funcrootp, crule_token *next_tokp, const char** ruleptr)
 {
   int errcode = CR_NOERR;
   char funcname[CR_MAXARGLEN];
@@ -670,6 +715,22 @@ static int crule_parsefunction(CRuleNodePtr* funcrootp, int* next_tokp, const ch
       return (CR_ARGMISMAT);
     if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
       return (errcode);
+    if (IsComparisson(*next_tokp))
+    {
+      char value[CR_MAXARGLEN];
+      int valuelen = 0;
+      /* a > < or == */
+      (*funcrootp)->func_test_type = *next_tokp;
+      if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
+        return (errcode);
+      /* now expect and get the value to compare against, eg '5' */
+      if (*next_tokp != CR_WORD)
+        return (CR_EXPCTVALUE);
+      crule_getword(value, &valuelen, CR_MAXARGLEN - 1, ruleptr);
+      if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
+        return (errcode);
+      (*funcrootp)->func_test_value = atoi(value);
+    }
     (*funcrootp)->funcptr = crule_funclist[funcnum].funcptr;
     return (CR_NOERR);
   }
@@ -683,7 +744,7 @@ static int crule_parsefunction(CRuleNodePtr* funcrootp, int* next_tokp, const ch
  * @param[in,out] ruleptr Next input character.
  * @return A crule_errcode value.
  */
-static int crule_parsearglist(CRuleNodePtr argrootp, int *next_tokp, const char** ruleptr)
+static int crule_parsearglist(CRuleNodePtr argrootp, crule_token *next_tokp, const char** ruleptr)
 {
   int errcode = CR_NOERR;
   char *argelemp = NULL;
