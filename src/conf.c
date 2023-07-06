@@ -1239,7 +1239,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 				/* fall through */
 			case '\t':
 			case ' ':
-			case '=':
+			//case '=': // why would we break on = ??
 			case '\r':
 				break;
 			case '@':
@@ -1293,7 +1293,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 				start = ptr;
 				for(;*ptr;ptr++)
 				{
-					if ((*ptr == ' ') || (*ptr == '=') || (*ptr == '\t') || (*ptr == '\n') || (*ptr == ';'))
+					if ((*ptr == ' ') /*|| (*ptr == '=')*/ || (*ptr == '\t') || (*ptr == '\n') || (*ptr == ';'))
 						break;
 				}
 				if (!*ptr)
