@@ -73,7 +73,7 @@ TKL *(*find_tkline_match_zap)(Client *client);
 void (*tkl_stats)(Client *client, int type, const char *para, int *cnt);
 void (*tkl_sync)(Client *client);
 void (*cmd_tkl)(Client *client, MessageTag *mtags, int parc, const char *parv[]);
-int (*place_host_ban)(Client *client, BanAction *action, const char *reason, long duration);
+int (*place_host_ban)(Client *client, BanAction *action, const char *reason, long duration, int skip_set);
 int (*match_spamfilter)(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, TKL **rettk);
 int (*match_spamfilter_mtags)(Client *client, MessageTag *mtags, const char *cmd);
 int (*join_viruschan)(Client *client, TKL *tk, int type);

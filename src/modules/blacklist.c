@@ -753,7 +753,7 @@ int blacklist_action(Client *client, char *opernotice, BanAction *ban_action, ch
 	               log_data_string("ban_action", ban_actions_to_string(ban_action)),
 	               log_data_string("ban_reason", ban_reason),
 	               log_data_integer("ban_time", ban_time));
-	return place_host_ban(client, ban_action, ban_reason, ban_time);
+	return place_host_ban(client, ban_action, ban_reason, ban_time, 0);
 }
 
 void blacklist_hit(Client *client, Blacklist *bl, int reply)

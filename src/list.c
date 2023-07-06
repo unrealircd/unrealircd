@@ -192,6 +192,7 @@ void free_client(Client *client)
 			safe_free(client->local->error_str);
 			if (client->local->hostp)
 				unreal_free_hostent(client->local->hostp);
+			free_all_tags(client);
 			
 			mp_pool_release(client->local);
 		}
@@ -616,7 +617,7 @@ NameList *find_name_list_match(NameList *list, const char *name)
 	return NULL;
 }
 
-void add_nvplist(NameValuePrioList **lst, int priority, const char *name, const char *value)
+NameValuePrioList *add_nvplist(NameValuePrioList **lst, int priority, const char *name, const char *value)
 {
 	va_list vl;
 	NameValuePrioList *e = safe_alloc(sizeof(NameValuePrioList));
@@ -624,6 +625,7 @@ void add_nvplist(NameValuePrioList **lst, int priority, const char *name, const 
 	if (value && *value)
 		safe_strdup(e->value, value);
 	AddListItemPrio(e, *lst, priority);
+	return e;
 }
 
 NameValuePrioList *find_nvplist(NameValuePrioList *list, const char *name)

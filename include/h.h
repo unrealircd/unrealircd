@@ -840,7 +840,7 @@ extern MODVAR TKL *(*find_tkline_match_zap)(Client *cptr);
 extern MODVAR void (*tkl_stats)(Client *cptr, int type, const char *para, int *cnt);
 extern MODVAR void (*tkl_sync)(Client *client);
 extern MODVAR void (*cmd_tkl)(Client *client, MessageTag *recv_mtags, int parc, const char *parv[]);
-extern MODVAR int (*place_host_ban)(Client *client, BanAction *actions, const char *reason, long duration);
+extern MODVAR int (*place_host_ban)(Client *client, BanAction *actions, const char *reason, long duration, int skip_set);
 extern MODVAR int (*match_spamfilter)(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, TKL **rettk);
 extern MODVAR int (*match_spamfilter_mtags)(Client *client, MessageTag *mtags, const char *cmd);
 extern MODVAR int (*join_viruschan)(Client *client, TKL *tk, int type);
@@ -1204,7 +1204,7 @@ extern MODVAR RPCHandler *rpchandlers;
 extern long do_nv_find_by_name(NameValue *table, const char *cmd, int numelements);
 #define nv_find_by_value(stru, value)       do_nv_find_by_value(stru, value, ARRAY_SIZEOF((stru)))
 extern const char *do_nv_find_by_value(NameValue *table, long value, int numelements);
-extern void add_nvplist(NameValuePrioList **lst, int priority, const char *name, const char *value);
+extern NameValuePrioList *add_nvplist(NameValuePrioList **lst, int priority, const char *name, const char *value);
 extern void add_fmt_nvplist(NameValuePrioList **lst, int priority, const char *name, FORMAT_STRING(const char *format), ...) __attribute__((format(printf,4,5)));
 /** Combination of add_nvplist() and buildnumeric() for convenience - only used in WHOIS response functions.
  * @param lst		The NameValuePrioList &head
@@ -1438,3 +1438,8 @@ extern MODVAR DynamicSetBlock dynamic_set;
 extern void start_dns_and_ident_lookup(Client *client);
 extern void free_webserver(WebServer *webserver);
 #define safe_free_webserver(x)	do { if (x) { free_webserver(x); x = NULL; } } while(0)
+extern Tag *find_tag(Client *client, const char *name);
+extern Tag *add_tag(Client *client, const char *name, int value);
+extern void free_all_tags(Client *client);
+extern void del_tag(Client *client, const char *name);
+extern void bump_tag_serial(Client *client);

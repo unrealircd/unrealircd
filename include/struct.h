@@ -798,6 +798,13 @@ struct NameList {
 extern void unreal_add_names(NameList **n, ConfigEntry *ce);
 
 /** @} */
+typedef struct Tag Tag;
+struct Tag {
+	Tag *prev, *next;
+	int value;
+	char name[1];
+};
+/** @} */
 
 typedef struct MultiLine MultiLine;
 /** Multi-line list.
@@ -1170,6 +1177,7 @@ typedef enum BanActionValue {
 typedef enum VarActionValue {
 	VAR_ACT_SET		= 1,
 	VAR_ACT_INCREASE	= 2,
+	VAR_ACT_DECREASE	= 3,
 } VarActionValue;
 
 typedef struct BanAction BanAction;
@@ -1465,6 +1473,8 @@ struct LocalClient {
 	u_short port;			/**< Remote TCP port of client */
 	FloodCounter flood[MAXFLOODOPTIONS];
 	RPCClient *rpc;			/**< RPC Client, or NULL */
+	Tag *tags;			/**< Tags from spamfilter */
+	int tags_serial;		/**< To keep track of 'tags' changes */
 };
 
 /** User information (persons, not servers), you use client->user to access these (see also @link Client @endlink).

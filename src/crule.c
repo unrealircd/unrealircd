@@ -141,6 +141,7 @@ static int crule__not(crule_context *, int, void **);
 // newstyle
 static int crule_online_time(crule_context *, int, void **);
 static int crule_reputation(crule_context *, int, void **);
+static int crule_tag(crule_context *, int, void **);
 
 /* parsing function prototypes - local! */
 static int crule_gettoken(crule_token *next_tokp, const char** str);
@@ -190,6 +191,7 @@ struct crule_funclistent crule_funclist[] = {
 	{"connected", 1, crule_connected},
 	{"online_time", 0, crule_online_time},
 	{"reputation", 0, crule_reputation},
+	{"tag", 1, crule_tag},
 	{"directcon", 1, crule_directcon},
 	{"via", 2, crule_via},
 	{"directop", 0, crule_directop},
@@ -281,6 +283,17 @@ static int crule_reputation(crule_context *context, int numargs, void *crulearg[
   if (context && context->client)
     return GetReputation(context->client);
   return 0;
+}
+
+static int crule_tag(crule_context *context, int numargs, void *crulearg[])
+{
+	Tag *tag;
+	if (!context || !context->client)
+		return 0;
+	tag = find_tag(context->client, (char *)crulearg[0]);
+	if (tag)
+		return tag->value;
+	return 0;
 }
 
 /** Evaluate a connection rule.

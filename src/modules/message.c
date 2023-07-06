@@ -619,7 +619,7 @@ int ban_version(Client *client, const char *text)
 		if (find_tkl_exception(TKL_BAN_VERSION, client))
 			return 0; /* we are exempt */
 
-		return place_host_ban(client, ban->action, ban->reason, BAN_VERSION_TKL_TIME);
+		return place_host_ban(client, ban->action, ban->reason, BAN_VERSION_TKL_TIME, 0);
 	}
 
 	return 0;

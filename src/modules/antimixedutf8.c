@@ -697,7 +697,7 @@ CMD_OVERRIDE_FUNC(override_msg)
 		           log_data_string("scripts", logbuf));
 
 		/* Take the action */
-		retval = place_host_ban(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time);
+		retval = place_host_ban(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time, 0);
 		if (retval == 1)
 			return;
 		if (retval == BAN_ACT_BLOCK)

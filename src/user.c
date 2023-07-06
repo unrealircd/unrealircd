@@ -1029,3 +1029,62 @@ struct sockaddr *raw_client_ip(Client *client)
 	}
 	return NULL;
 }
+
+/** Find a tag - case insensitive comparisson. */
+Tag *find_tag(Client *client, const char *name)
+{
+	Tag *e;
+
+	if (!MyConnect(client))
+		return NULL;
+
+	for (e = client->local->tags; e; e = e->next)
+	{
+		if (!strcasecmp(e->name, name))
+		{
+			return e;
+		}
+	}
+	return NULL;
+}
+
+void bump_tag_serial(Client *client)
+{
+	client->local->tags_serial++;
+	if (client->local->tags_serial > 10000)
+		client->local->tags_serial = 0;
+}
+
+Tag *add_tag(Client *client, const char *name, int value)
+{
+	Tag *e = safe_alloc(sizeof(Tag)+strlen(name));
+	strcpy(e->name, name); /* safe, allocated above */
+	e->value = value;
+	AddListItem(e, client->local->tags);
+	bump_tag_serial(client);
+	return e;
+}
+
+void free_all_tags(Client *client)
+{
+	Tag *n, *n_next;
+
+	for (n = client->local->tags; n; n = n_next)
+	{
+		n_next = n->next;
+		safe_free(n);
+	}
+	bump_tag_serial(client);
+}
+
+void del_tag(Client *client, const char *name)
+{
+	Tag *e = find_tag(client, name);
+	if (e)
+	{
+		DelListItem(e, client->local->tags);
+		safe_free(e);
+		bump_tag_serial(client);
+		return;
+	}
+}

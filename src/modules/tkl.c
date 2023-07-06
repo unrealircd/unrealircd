@@ -89,7 +89,7 @@ TKL *_find_tkline_match_zap(Client *client);
 void _tkl_stats(Client *client, int type, const char *para, int *cnt);
 void _tkl_sync(Client *client);
 CMD_FUNC(_cmd_tkl);
-int _place_host_ban(Client *client, BanAction *action, char *reason, long duration);
+int _place_host_ban(Client *client, BanAction *action, char *reason, long duration, int skip_set);
 int _match_spamfilter(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, TKL **rettk);
 int _match_spamfilter_mtags(Client *client, MessageTag *mtags, char *cmd);
 int check_mtag_spamfilters_present(void);
@@ -2667,7 +2667,7 @@ TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction *action,
 
 	/* Spamfilters go via the normal TKL list... */
 	index = tkl_hash(tkl_typetochar(type));
-	AddListItem(tkl, tklines[index]);
+	AppendListItem(tkl, tklines[index]);
 
 	if (target & SPAMF_MTAG)
 		mtag_spamfilters_present = 1;
@@ -4690,12 +4690,57 @@ void ban_target_to_tkl_layer(BanTarget ban_target, BanActionValue action, Client
 	*tkl_hostname = hostname;
 }
 
+void ban_act_set(Client *client, BanAction *action)
+{
+	Tag *tag;
+
+	if (!MyConnect(client))
+		return;
+
+	tag = find_tag(client, action->var);
+	if (!tag)
+		tag = add_tag(client, action->var, 0);
+	switch (action->var_action)
+	{
+		case VAR_ACT_SET:
+			tag->value = action->value;
+			break;
+		case VAR_ACT_INCREASE:
+			tag->value += action->value;
+			if (tag->value > 65535)
+				tag->value = 65535;
+			break;
+		case VAR_ACT_DECREASE:
+			tag->value -= action->value;
+			if (tag->value < 0)
+				tag->value = 0;
+			break;
+		default:
+			abort();
+	}
+	bump_tag_serial(client);
+	unreal_log(ULOG_DEBUG, "tkl", "TAG_CLIENT", client,
+	           "Client $nick tag $tag is now set to $value",
+	           log_data_string("tag", tag->name),
+	           log_data_integer("value", tag->value));
+}
+
+void ban_action_run_all_sets(Client *client, BanAction *action)
+{
+	for (; action; action = action->next)
+	{
+		if (action->action == BAN_ACT_SET)
+			ban_act_set(client, action);
+	}
+}
+
 /** Take an action on the user, such as banning or killing.
  * @author Bram Matthys (Syzop), 2003-present
  * @param client     The client which is affected.
- * @param action   The type of ban (one of BAN_ACT_*).
- * @param reason   The ban reason.
- * @param duration The ban duration in seconds.
+ * @param action     The type of ban (one of BAN_ACT_*).
+ * @param reason     The ban reason.
+ * @param duration   The ban duration in seconds.
+ * @param skip_set   Skip BAN_ACT_SET (eg because you already processed them earlier, like in match_spamfilter)
  * @note This function assumes that client is a locally connected user.
  * @retval 0	user is exempt or no action needs to be taken for other reasons (eg only var setting)
  * @retval 1	user is banned/shunned/killed/whatever, caller usually returns
@@ -4703,7 +4748,7 @@ void ban_target_to_tkl_layer(BanTarget ban_target, BanActionValue action, Client
  * @note Be sure to check IsDead(client) if return value is 1 and you are
  *       considering to continue processing.
  */
-int _place_host_ban(Client *client, BanAction *actions, char *reason, long duration)
+int _place_host_ban(Client *client, BanAction *actions, char *reason, long duration, int skip_set)
 {
 	BanAction *action;
 	int retval = 0;
@@ -4716,6 +4761,10 @@ int _place_host_ban(Client *client, BanAction *actions, char *reason, long durat
 
 		switch(action->action)
 		{
+			case BAN_ACT_SET:
+				if (!skip_set)
+					ban_act_set(client, action);
+				break;
 			case BAN_ACT_WARN:
 				/* No action taken by us */
 				break;
@@ -4818,6 +4867,18 @@ int _place_host_ban(Client *client, BanAction *actions, char *reason, long durat
 	return retval;
 }
 
+/* Find the highest value in a BanAction linked list (the strongest action, eg gline>block) */
+int highest_spamfilter_action(BanAction *action)
+{
+	int highest = 0;
+
+	for (; action; action = action->next)
+		if (action->action > highest)
+			highest = action->action;
+
+	return highest;
+}
+
 /** This function compares two spamfilters ('one' and 'two') and will return
  * a 'winner' based on which one has the strongest action.
  * If both have equal action then some additional logic is applied simply
@@ -4827,19 +4888,20 @@ int _place_host_ban(Client *client, BanAction *actions, char *reason, long durat
 TKL *choose_winning_spamfilter(TKL *one, TKL *two)
 {
 	int n;
+	int highest_action_one;
+	int highest_action_two;
 
 	if (!TKLIsSpamfilter(one) || !TKLIsSpamfilter(two))
 		abort();
 
 	/* First, see if the action field differs... */
-	if (one->ptr.spamfilter->action != two->ptr.spamfilter->action)
-	{
-		/* We can simply compare the action. Highest (strongest) wins. */
-		if (one->ptr.spamfilter->action > two->ptr.spamfilter->action)
-			return one;
-		else
-			return two;
-	}
+	highest_action_one = highest_spamfilter_action(one->ptr.spamfilter->action);
+	highest_action_two = highest_spamfilter_action(two->ptr.spamfilter->action);
+	if (highest_action_one > highest_action_two)
+		return one;
+	else if (highest_action_one < highest_action_two)
+		return two;
+	// else.. they are equal..
 
 	/* Ok, try comparing the regex then.. */
 	n = strcmp(one->ptr.spamfilter->match->str, two->ptr.spamfilter->match->str);
@@ -4945,6 +5007,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	struct rusage rnow, rprev;
 	long ms_past;
 #endif
+	int tags_serial = client->local ? client->local->tags_serial : 0;
 
 	if (rettkl)
 		*rettkl = NULL; /* initialize to NULL */
@@ -5037,6 +5100,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 
 		if (ret)
 		{
+			// DUPLICATE CODE ALERT (1 of 2) -- see 2 of 2!
 			/* We have a match! But.. perhaps it's on the exceptions list? */
 			if (!winner_tkl && destination && target_is_spamexcept(destination))
 				return 0; /* No problem! */
@@ -5052,6 +5116,9 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 				   log_data_string("str", str));
 
 			RunHook(HOOKTYPE_LOCAL_SPAMFILTER, client, str, str_in, target, destination, tkl);
+
+			/* Run any SET actions */
+			ban_action_run_all_sets(client, tkl->ptr.spamfilter->action);
 
 			/* If we should stop after the first match, we end here... */
 			if (SPAMFILTER_STOP_ON_FIRST_MATCH)
@@ -5070,8 +5137,69 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 		}
 	}
 
-	tkl = winner_tkl;
+	if (client->local && (client->local->tags_serial != tags_serial))
+	{
+		/* A tag has been changed:
+		 * Run spamfilters that have no 'match' and no 'targets',
+		 * these are special in the sense that they only run
+		 * whenever a tag is changed.
+		 */
+		for (tkl = tklines[tkl_hash('F')]; tkl; tkl = tkl->next)
+		{
+			crule_context context;
+			if (tkl->ptr.spamfilter->target ||
+			    (tkl->ptr.spamfilter->match->type != MATCH_NONE) ||
+			    !tkl->ptr.spamfilter->rule)
+			{
+				continue;
+			}
 
+			if ((flags & SPAMFLAG_NOWARN) && only_actions_of_type(tkl->ptr.spamfilter->action, BAN_ACT_WARN))
+				continue;
+
+			/* If the action is 'soft' (for non-logged in users only) then
+			 * don't bother running the spamfilter if the user is logged in.
+			 */
+			if (IsLoggedIn(client) && only_soft_actions(tkl->ptr.spamfilter->action))
+				continue;
+
+			memset(&context, 0, sizeof(context));
+			context.client = client;
+			if (!crule_eval(&context, tkl->ptr.spamfilter->rule))
+				continue;
+
+			// DUPLICATE CODE ALERT (2 of 2) -- see 1 of 2!
+			/* We have a match! But.. perhaps it's on the exceptions list? */
+			if (!winner_tkl && destination && target_is_spamexcept(destination))
+				return 0; /* No problem! */
+
+			// TODO: if (only_actions_of_type(tkl->ptr.spamfilter->action, BAN_ACT_SET)) then don't show the warning unless debugging or something :)
+			
+			unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
+			           "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
+				   log_data_tkl("tkl", tkl),
+				   log_data_string("command", cmd),
+				   log_data_string("_space", destination ? " " : ""),
+				   log_data_string("destination", destination ? destination : ""),
+				   log_data_string("str", str));
+
+			RunHook(HOOKTYPE_LOCAL_SPAMFILTER, client, str, str_in, target, destination, tkl);
+
+			/* Run any SET actions */
+			ban_action_run_all_sets(client, tkl->ptr.spamfilter->action);
+
+			/* Otherwise.. we set 'winner_tkl' to the spamfilter with the strongest action. */
+			if (!winner_tkl)
+				winner_tkl = tkl;
+			else
+				winner_tkl = choose_winning_spamfilter(tkl, winner_tkl);
+
+			/* and continue.. */
+
+		}
+	}
+
+	tkl = winner_tkl;
 	if (!tkl)
 		return 0; /* NOMATCH, we are done */
 
@@ -5166,7 +5294,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 		return 1;
 	} else
 	{
-		return place_host_ban(client, tkl->ptr.spamfilter->action, reason, tkl->ptr.spamfilter->tkl_duration);
+		return place_host_ban(client, tkl->ptr.spamfilter->action, reason, tkl->ptr.spamfilter->tkl_duration, 1);
 	}
 
 	return 0; /* NOTREACHED */
