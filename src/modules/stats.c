@@ -868,7 +868,7 @@ int stats_set(Client *client, const char *para)
 		sendtxtnumeric(client, "link::bind-ip: %s", LINK_BINDIP);
 	sendtxtnumeric(client, "anti-flood::connect-flood: %d per %s", THROTTLING_COUNT, pretty_time_val(THROTTLING_PERIOD));
 	sendtxtnumeric(client, "anti-flood::handshake-data-flood::amount: %ld bytes", iConf.handshake_data_flood_amount);
-	sendtxtnumeric(client, "anti-flood::handshake-data-flood::ban-action: %s", banact_valtostring(iConf.handshake_data_flood_ban_action));
+	sendtxtnumeric(client, "anti-flood::handshake-data-flood::ban-action: %s", banact_valtostring(iConf.handshake_data_flood_ban_action->action));
 	sendtxtnumeric(client, "anti-flood::handshake-data-flood::ban-time: %s", pretty_time_val(iConf.handshake_data_flood_ban_time));
 
 	/* set::anti-flood */

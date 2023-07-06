@@ -68,7 +68,7 @@ TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, SecurityGro
                            time_t expire_at, time_t set_at, int soft, char *bantypes, int flags);
 TKL *_tkl_add_nameban(int type, char *name, int hold, char *reason, char *set_by,
                           time_t expire_at, time_t set_at, int flags);
-TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction action, Match *match, char *set_by,
+TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction *action, Match *match, char *set_by,
                              time_t expire_at, time_t set_at,
                              time_t spamf_tkl_duration, char *spamf_tkl_reason,
                              int flags);
@@ -88,7 +88,7 @@ TKL *_find_tkline_match_zap(Client *client);
 void _tkl_stats(Client *client, int type, const char *para, int *cnt);
 void _tkl_sync(Client *client);
 CMD_FUNC(_cmd_tkl);
-int _place_host_ban(Client *client, BanAction action, char *reason, long duration);
+int _place_host_ban(Client *client, BanAction *action, char *reason, long duration);
 int _match_spamfilter(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, TKL **rettk);
 int _match_spamfilter_mtags(Client *client, MessageTag *mtags, char *cmd);
 int check_mtag_spamfilters_present(void);
@@ -97,13 +97,13 @@ void _spamfilter_build_user_string(char *buf, char *nick, Client *client);
 int _match_user(const char *rmask, Client *client, int options);
 int _unreal_match_iplist(Client *client, NameList *l);
 int _match_user_extended_server_ban(const char *banstr, Client *client);
-void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *client, const char **tkl_username, const char **tkl_hostname);
+void ban_target_to_tkl_layer(BanTarget ban_target, BanActionValue action, Client *client, const char **tkl_username, const char **tkl_hostname);
 int _tkl_ip_hash(char *ip);
 int _tkl_ip_hash_type(int type);
 TKL *_find_tkl_serverban(int type, char *usermask, char *hostmask, int softban);
 TKL *_find_tkl_banexception(int type, char *usermask, char *hostmask, int softban);
 TKL *_find_tkl_nameban(int type, char *name, int hold);
-TKL *_find_tkl_spamfilter(int type, char *match_string, BanAction action, unsigned short target);
+TKL *_find_tkl_spamfilter(int type, char *match_string, BanActionValue action, unsigned short target);
 int _find_tkl_exception(int ban_type, Client *client);
 int _server_ban_parse_mask(Client *client, int add, char type, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
 int _server_ban_exception_parse_mask(Client *client, int add, const char *bantypes, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
@@ -317,14 +317,25 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			}
 			continue;
 		}
-		if (!cep->value)
+		else if (!strcmp(cep->name, "action"))
+		{
+			if (has_action)
+			{
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "spamfilter::action");
+				continue;
+			}
+			has_action = 1;
+			errors += test_ban_action_config(cep);
+		}
+		else if (!cep->value)
 		{
 			config_error_empty(cep->file->filename, cep->line_number,
 				"spamfilter", cep->name);
 			errors++;
 			continue;
 		}
-		if (!strcmp(cep->name, "reason"))
+		else if (!strcmp(cep->name, "reason"))
 		{
 			if (has_reason)
 			{
@@ -345,22 +356,6 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			}
 			has_match = 1;
 			match = cep->value;
-		}
-		else if (!strcmp(cep->name, "action"))
-		{
-			if (has_action)
-			{
-				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "spamfilter::action");
-				continue;
-			}
-			has_action = 1;
-			if (!banact_stringtoval(cep->value))
-			{
-				config_error("%s:%i: spamfilter::action has unknown action type '%s'",
-					cep->file->filename, cep->line_number, cep->value);
-				errors++;
-			}
 		}
 		else if (!strcmp(cep->name, "ban-time"))
 		{
@@ -482,7 +477,8 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	char *word = NULL;
 	time_t bantime = tempiConf.spamfilter_ban_time;
 	char *banreason = tempiConf.spamfilter_ban_reason;
-	int action = 0, target = 0;
+	BanAction *action;
+	int target = 0;
 	int match_type = 0;
 	Match *m;
 
@@ -508,7 +504,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 		else if (!strcmp(cep->name, "action"))
 		{
-			action = banact_stringtoval(cep->value);
+			action = parse_ban_action_config(cep);
 		}
 		else if (!strcmp(cep->name, "reason"))
 		{
@@ -1556,7 +1552,7 @@ int _server_ban_parse_mask(Client *client, int add, char type, const char *str, 
 			Client *acptr;
 			if ((acptr = find_user(mask, NULL)))
 			{
-				BanAction action = BAN_ACT_KLINE; // just a dummy default
+				BanActionValue action = BAN_ACT_KLINE; // just a dummy default
 				if ((type == 'z') || (type == 'Z'))
 					action = BAN_ACT_ZLINE; // to indicate zline (no hostname, no dns, etc)
 				ban_target_to_tkl_layer(iConf.manual_ban_target, action, acptr, (const char **)&usermask, (const char **)&hostmask);
@@ -1897,7 +1893,7 @@ int _server_ban_exception_parse_mask(Client *client, int add, const char *bantyp
 			Client *acptr;
 			if ((acptr = find_user(mask, NULL)))
 			{
-				BanAction action = BAN_ACT_KLINE; // just a dummy default
+				BanActionValue action = BAN_ACT_KLINE; // just a dummy default
 				if (add && eline_type_requires_ip(bantypes))
 					action = BAN_ACT_ZLINE; // to indicate zline (no hostname, no dns, etc)
 				ban_target_to_tkl_layer(iConf.manual_ban_target, action, acptr, (const char **)&usermask, (const char **)&hostmask);
@@ -2115,7 +2111,7 @@ void spamfilter_del_by_id(Client *client, const char *id)
 	/* Spamfilter found. Now fill the tkllayer */
 	tkllayer[1] = "-";
 	tkllayer[3] = spamfilter_target_inttostring(tk->ptr.spamfilter->target); /* target(s) */
-	mo[0] = banact_valtochar(tk->ptr.spamfilter->action);
+	mo[0] = banact_valtochar(tk->ptr.spamfilter->action->action);
 	mo[1] = '\0';
 	tkllayer[4] = mo; /* action */
 	tkllayer[5] = make_nick_user_host(client->name, client->user->username, GetHost(client));
@@ -2589,7 +2585,7 @@ TKL *tkl_find_head(char type, char *hostmask, TKL *def)
  * @returns                   The TKL entry, or NULL in case of a problem,
  *                            such as a regex failing to compile, memory problem, ..
  */
-TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction action, Match *match, char *set_by,
+TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction *action, Match *match, char *set_by,
                              time_t expire_at, time_t set_at,
                              time_t tkl_duration, char *tkl_reason,
                              int flags)
@@ -3675,7 +3671,7 @@ int tkl_stats_matcher(Client *client, int type, const char *para, TKLFlag *tklfl
 			(tkl->type & TKL_GLOBAL) ? 'F' : 'f',
 			unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type),
 			spamfilter_target_inttostring(tkl->ptr.spamfilter->target),
-			banact_valtostring(tkl->ptr.spamfilter->action),
+			banact_valtostring(tkl->ptr.spamfilter->action->action),
 			(tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
 			(long long)(TStime() - tkl->set_at),
 			(long long)tkl->ptr.spamfilter->tkl_duration,
@@ -3841,7 +3837,7 @@ void tkl_sync_send_entry(int add, Client *sender, Client *to, TKL *tkl)
 			   add ? '+' : '-',
 			   typ,
 			   spamfilter_target_inttostring(tkl->ptr.spamfilter->target),
-			   banact_valtochar(tkl->ptr.spamfilter->action),
+			   banact_valtochar(tkl->ptr.spamfilter->action->action),
 			   tkl->set_by,
 			   (long long)tkl->expire_at, (long long)tkl->set_at,
 			   (long long)tkl->ptr.spamfilter->tkl_duration, tkl->ptr.spamfilter->tkl_reason,
@@ -3991,7 +3987,7 @@ TKL *_find_tkl_nameban(int type, char *name, int hold)
 }
 
 /** Find a spamfilter TKL - only used to prevent duplicates and for deletion */
-TKL *_find_tkl_spamfilter(int type, char *match_string, BanAction action, unsigned short target)
+TKL *_find_tkl_spamfilter(int type, char *match_string, BanActionValue action, unsigned short target)
 {
 	char tpe = tkl_typetochar(type);
 	TKL *tkl;
@@ -4003,7 +3999,7 @@ TKL *_find_tkl_spamfilter(int type, char *match_string, BanAction action, unsign
 	{
 		if ((type == tkl->type) &&
 		    !strcmp(match_string, tkl->ptr.spamfilter->match->str) &&
-		    (action == tkl->ptr.spamfilter->action) &&
+		    (action == tkl->ptr.spamfilter->action->action) &&
 		    (target == tkl->ptr.spamfilter->target))
 		{
 			return tkl;
@@ -4102,7 +4098,7 @@ void _tkl_added(Client *client, TKL *tkl)
 	sendnotice_tkl_add(tkl);
 
 	/* spamfilter 'warn' action is special */
-	if ((tkl->type & TKL_SPAMF) && (tkl->ptr.spamfilter->action == BAN_ACT_WARN) && (tkl->ptr.spamfilter->target & SPAMF_USER))
+	if ((tkl->type & TKL_SPAMF) && (tkl->ptr.spamfilter->action->action == BAN_ACT_WARN) && (tkl->ptr.spamfilter->target & SPAMF_USER))
 		spamfilter_check_users(tkl);
 
 	/* Ban checking executes during run loop for efficiency */
@@ -4283,7 +4279,7 @@ CMD_FUNC(cmd_tkl_add)
 		Match *m; /* compiled match_string */
 		time_t tkl_duration;
 		const char *tkl_reason;
-		BanAction action;
+		BanActionValue action;
 		unsigned short target;
 		/* helper variables */
 		char *err;
@@ -4348,7 +4344,7 @@ CMD_FUNC(cmd_tkl_add)
 					log_data_string("spamfilter_regex_error", err));
 				return;
 			}
-			tkl = tkl_add_spamfilter(type, target, action, m, set_by, expire_at, set_at,
+			tkl = tkl_add_spamfilter(type, target, banact_value_to_struct(action), m, set_by, expire_at, set_at,
 			                         tkl_duration, tkl_reason, 0);
 		}
 	} else
@@ -4458,7 +4454,7 @@ CMD_FUNC(cmd_tkl_del)
 	{
 		const char *match_string;
 		unsigned short target;
-		BanAction action;
+		BanActionValue action;
 
 		if (parc < 9)
 		{
@@ -4588,7 +4584,7 @@ CMD_FUNC(_cmd_tkl)
 }
 
 /** Configure the username/hostname TKL layer based on the BAN_TARGET_* configuration */
-void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *client, const char **tkl_username, const char **tkl_hostname)
+void ban_target_to_tkl_layer(BanTarget ban_target, BanActionValue action, Client *client, const char **tkl_username, const char **tkl_hostname)
 {
 	static char username[USERLEN+1];
 	static char hostname[HOSTLEN+8];
@@ -4649,100 +4645,125 @@ void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *cli
  * @param reason   The ban reason.
  * @param duration The ban duration in seconds.
  * @note This function assumes that client is a locally connected user.
- * @retval 1 if action is taken, 0 if user is exempted.
+ * @retval 0	user is exempt or no action needs to be taken for other reasons (eg only var setting)
+ * @retval 1	user is banned/shunned/killed/whatever, caller usually returns
+ * @retval BAN_ACT_BLOCK	the user was not banned/shunned/killed but should be "blocked"
  * @note Be sure to check IsDead(client) if return value is 1 and you are
  *       considering to continue processing.
  */
-int _place_host_ban(Client *client, BanAction action, char *reason, long duration)
+int _place_host_ban(Client *client, BanAction *actions, char *reason, long duration)
 {
-	/* If this is a soft action and the user is logged in, then the ban does not apply.
-	 * NOTE: Actually in such a case it would be better if place_host_ban() would not
-	 * be called at all. Or at least, the caller should not take any action
-	 * (eg: the message should be delivered, the user may connect, etc..)
-	 * The following is more like secondary protection in case the caller forgets...
-	 */
-	if (IsSoftBanAction(action) && IsLoggedIn(client))
-		return 0;
+	BanAction *action;
+	int retval = 0;
 
-	switch(action)
+	for (action = actions; action; action = action->next)
 	{
-		case BAN_ACT_TEMPSHUN:
-			/* We simply mark this connection as shunned and do not add a ban record */
-			unreal_log(ULOG_INFO, "tkl", "TKL_ADD_TEMPSHUN", &me,
-				   "Temporary shun added on user $target.details [reason: $shun_reason] [by: $client]",
-				   log_data_string("shun_reason", reason),
-				   log_data_client("target", client));
-			SetShunned(client);
-			return 1;
-		case BAN_ACT_GZLINE:
-		case BAN_ACT_GLINE:
-		case BAN_ACT_SOFT_GLINE:
-		case BAN_ACT_ZLINE:
-		case BAN_ACT_KLINE:
-		case BAN_ACT_SOFT_KLINE:
-		case BAN_ACT_SHUN:
-		case BAN_ACT_SOFT_SHUN:
+		/* If this is a soft action and the user is logged in, then the ban does not apply. */
+		if (IsSoftBanAction(action->action) && IsLoggedIn(client))
+			return 0;
+
+		switch(action->action)
 		{
-			char ip[128], user[USERLEN+3], mo[100], mo2[100];
-			const char *tkllayer[9] = {
-				me.name,	/*0  server.name */
-				"+",		/*1  +|- */
-				"?",		/*2  type */
-				"*",		/*3  user */
-				NULL,		/*4  host */
-				NULL,
-				NULL,		/*6  expire_at */
-				NULL,		/*7  set_at */
-				NULL		/*8  reason */
-			};
-
-			ban_target_to_tkl_layer(iConf.automatic_ban_target, action, client, &tkllayer[3], &tkllayer[4]);
-
-			/* For soft bans we need to prefix the % in the username */
-			if (IsSoftBanAction(action))
+			case BAN_ACT_WARN:
+				/* No action taken by us */
+				break;
+			case BAN_ACT_TEMPSHUN:
+				/* We simply mark this connection as shunned and do not add a ban record */
+				unreal_log(ULOG_INFO, "tkl", "TKL_ADD_TEMPSHUN", &me,
+					   "Temporary shun added on user $target.details [reason: $shun_reason] [by: $client]",
+					   log_data_string("shun_reason", reason),
+					   log_data_client("target", client));
+				SetShunned(client);
+				retval = 1;
+				break;
+			case BAN_ACT_GZLINE:
+			case BAN_ACT_GLINE:
+			case BAN_ACT_SOFT_GLINE:
+			case BAN_ACT_ZLINE:
+			case BAN_ACT_KLINE:
+			case BAN_ACT_SOFT_KLINE:
+			case BAN_ACT_SHUN:
+			case BAN_ACT_SOFT_SHUN:
 			{
-				char tmp[USERLEN+3];
-				snprintf(tmp, sizeof(tmp), "%%%s", tkllayer[3]);
-				strlcpy(user, tmp, sizeof(user));
-				tkllayer[3] = user;
+				char ip[128], user[USERLEN+3], mo[100], mo2[100];
+				const char *tkllayer[9] = {
+					me.name,	/*0  server.name */
+					"+",		/*1  +|- */
+					"?",		/*2  type */
+					"*",		/*3  user */
+					NULL,		/*4  host */
+					NULL,
+					NULL,		/*6  expire_at */
+					NULL,		/*7  set_at */
+					NULL		/*8  reason */
+				};
+
+				ban_target_to_tkl_layer(iConf.automatic_ban_target, action->action, client, &tkllayer[3], &tkllayer[4]);
+
+				/* For soft bans we need to prefix the % in the username */
+				if (IsSoftBanAction(action->action))
+				{
+					char tmp[USERLEN+3];
+					snprintf(tmp, sizeof(tmp), "%%%s", tkllayer[3]);
+					strlcpy(user, tmp, sizeof(user));
+					tkllayer[3] = user;
+				}
+
+				if ((action->action == BAN_ACT_KLINE) || (action->action == BAN_ACT_SOFT_KLINE))
+					tkllayer[2] = "k";
+				else if (action->action == BAN_ACT_ZLINE)
+					tkllayer[2] = "z";
+				else if (action->action == BAN_ACT_GZLINE)
+					tkllayer[2] = "Z";
+				else if ((action->action == BAN_ACT_GLINE) || (action->action == BAN_ACT_SOFT_GLINE))
+					tkllayer[2] = "G";
+				else if ((action->action == BAN_ACT_SHUN) || (action->action == BAN_ACT_SOFT_SHUN))
+					tkllayer[2] = "s";
+				tkllayer[5] = me.name;
+				if (!duration)
+					strlcpy(mo, "0", sizeof(mo)); /* perm */
+				else
+					ircsnprintf(mo, sizeof(mo), "%lld", (long long)(duration + TStime()));
+				ircsnprintf(mo2, sizeof(mo2), "%lld", (long long)TStime());
+				tkllayer[6] = mo;
+				tkllayer[7] = mo2;
+				tkllayer[8] = reason;
+				cmd_tkl(&me, NULL, 9, tkllayer);
+				RunHookReturnInt(HOOKTYPE_PLACE_HOST_BAN, !=99, client, action->action, reason, duration);
+				if ((action->action == BAN_ACT_SHUN) || (action->action == BAN_ACT_SOFT_SHUN))
+				{
+					find_shun(client);
+					retval = 1;
+					break;
+				} /* else.. */
+				retval = find_tkline_match(client, 0);
+				break;
 			}
-
-			if ((action == BAN_ACT_KLINE) || (action == BAN_ACT_SOFT_KLINE))
-				tkllayer[2] = "k";
-			else if (action == BAN_ACT_ZLINE)
-				tkllayer[2] = "z";
-			else if (action == BAN_ACT_GZLINE)
-				tkllayer[2] = "Z";
-			else if ((action == BAN_ACT_GLINE) || (action == BAN_ACT_SOFT_GLINE))
-				tkllayer[2] = "G";
-			else if ((action == BAN_ACT_SHUN) || (action == BAN_ACT_SOFT_SHUN))
-				tkllayer[2] = "s";
-			tkllayer[5] = me.name;
-			if (!duration)
-				strlcpy(mo, "0", sizeof(mo)); /* perm */
-			else
-				ircsnprintf(mo, sizeof(mo), "%lld", (long long)(duration + TStime()));
-			ircsnprintf(mo2, sizeof(mo2), "%lld", (long long)TStime());
-			tkllayer[6] = mo;
-			tkllayer[7] = mo2;
-			tkllayer[8] = reason;
-			cmd_tkl(&me, NULL, 9, tkllayer);
-			RunHookReturnInt(HOOKTYPE_PLACE_HOST_BAN, !=99, client, action, reason, duration);
-			if ((action == BAN_ACT_SHUN) || (action == BAN_ACT_SOFT_SHUN))
-			{
-				find_shun(client);
-				return 1;
-			} /* else.. */
-			return find_tkline_match(client, 0);
+			case BAN_ACT_BLOCK:
+				/* We don't actively do something, but we do indicate it is blocked */
+				if (retval != 1)
+					retval = BAN_ACT_BLOCK;
+				break;
+			case BAN_ACT_SOFT_BLOCK:
+				if (!IsLoggedIn(client))
+				{
+					if (retval != 1)
+						retval = BAN_ACT_BLOCK;
+				}
+				break;
+			case BAN_ACT_SOFT_KILL:
+			case BAN_ACT_KILL:
+			default:
+				RunHookReturnInt(HOOKTYPE_PLACE_HOST_BAN, !=99, client, action->action, reason, duration);
+				exit_client(client, NULL, reason);
+				retval = 1;
+				break;
 		}
-		case BAN_ACT_SOFT_KILL:
-		case BAN_ACT_KILL:
-		default:
-			RunHookReturnInt(HOOKTYPE_PLACE_HOST_BAN, !=99, client, action, reason, duration);
-			exit_client(client, NULL, reason);
-			return 1;
+
+		if (IsDead(client))
+			break; /* stop processing actions */
 	}
-	return 0; /* no action taken (weird) */
+	return retval;
 }
 
 /** This function compares two spamfilters ('one' and 'two') and will return
@@ -4901,13 +4922,13 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 		if (!(tkl->ptr.spamfilter->target & target))
 			continue;
 
-		if ((flags & SPAMFLAG_NOWARN) && (tkl->ptr.spamfilter->action == BAN_ACT_WARN))
+		if ((flags & SPAMFLAG_NOWARN) && only_actions_of_type(tkl->ptr.spamfilter->action, BAN_ACT_WARN))
 			continue;
 
 		/* If the action is 'soft' (for non-logged in users only) then
 		 * don't bother running the spamfilter if the user is logged in.
 		 */
-		if (IsSoftBanAction(tkl->ptr.spamfilter->action) && IsLoggedIn(client))
+		if (IsLoggedIn(client) && only_soft_actions(tkl->ptr.spamfilter->action))
 			continue;
 
 #ifdef SPAMFILTER_DETECTSLOW
@@ -4950,6 +4971,8 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			if (!winner_tkl && destination && target_is_spamexcept(destination))
 				return 0; /* No problem! */
 
+			// TODO: if (only_actions_of_type(tkl->ptr.spamfilter->action, BAN_ACT_SET)) then don't show the warning unless debugging or something :)
+			
 			unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
 			           "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
 				   log_data_tkl("tkl", tkl),
@@ -4985,7 +5008,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	/* Spamfilter matched, take action: */
 
 	reason = unreal_decodespace(tkl->ptr.spamfilter->tkl_reason);
-	if ((tkl->ptr.spamfilter->action == BAN_ACT_BLOCK) || (tkl->ptr.spamfilter->action == BAN_ACT_SOFT_BLOCK))
+	if ((tkl->ptr.spamfilter->action->action == BAN_ACT_BLOCK) || (tkl->ptr.spamfilter->action->action == BAN_ACT_SOFT_BLOCK))
 	{
 		switch(target)
 		{
@@ -5038,13 +5061,13 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 		}
 		return 1;
 	} else
-	if ((tkl->ptr.spamfilter->action == BAN_ACT_WARN) || (tkl->ptr.spamfilter->action == BAN_ACT_SOFT_WARN))
+	if ((tkl->ptr.spamfilter->action->action == BAN_ACT_WARN) || (tkl->ptr.spamfilter->action->action == BAN_ACT_SOFT_WARN))
 	{
 		if ((target != SPAMF_USER) && (target != SPAMF_QUIT))
 			sendnumeric(client, RPL_SPAMCMDFWD, cmd, reason);
 		return 0;
 	} else
-	if ((tkl->ptr.spamfilter->action == BAN_ACT_DCCBLOCK) || (tkl->ptr.spamfilter->action == BAN_ACT_SOFT_DCCBLOCK))
+	if ((tkl->ptr.spamfilter->action->action == BAN_ACT_DCCBLOCK) || (tkl->ptr.spamfilter->action->action == BAN_ACT_SOFT_DCCBLOCK))
 	{
 		if (target == SPAMF_DCC)
 		{
@@ -5054,7 +5077,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 		}
 		return 1;
 	} else
-	if ((tkl->ptr.spamfilter->action == BAN_ACT_VIRUSCHAN) || (tkl->ptr.spamfilter->action == BAN_ACT_SOFT_VIRUSCHAN))
+	if ((tkl->ptr.spamfilter->action->action == BAN_ACT_VIRUSCHAN) || (tkl->ptr.spamfilter->action->action == BAN_ACT_SOFT_VIRUSCHAN))
 	{
 		if (IsVirus(client)) /* Already tagged */
 			return 0;

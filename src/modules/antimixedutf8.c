@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER
 
 struct {
 	int score;
-	BanAction ban_action;
+	BanAction *ban_action;
 	char *ban_reason;
 	long ban_time;
 	SecurityGroup *except;
@@ -685,24 +685,25 @@ CMD_OVERRIDE_FUNC(override_msg)
 	score = lookalikespam_score(text, NULL, 0);
 	if ((score >= cfg.score) && !find_tkl_exception(TKL_ANTIMIXEDUTF8, client))
 	{
-		/* Re-run with a log buffer... */
 		char logbuf[512];
+		int retval;
+
+		/* Re-run with a log buffer and log... */
 		logbuf[0] = '\0';
 		lookalikespam_score(text, logbuf, sizeof(logbuf));
-		/* And log... */
 		unreal_log(ULOG_INFO, "antimixedutf8", "ANTIMIXEDUTF8_HIT", client,
 		           "[antimixedutf8] Client $client.details hit score $score -- taking action. Mixed scripts detected: $scripts",
 		           log_data_integer("score", score),
 		           log_data_string("scripts", logbuf));
-		if ((cfg.ban_action == BAN_ACT_BLOCK) ||
-		    ((cfg.ban_action == BAN_ACT_SOFT_BLOCK) && !IsLoggedIn(client)))
+
+		/* Take the action */
+		retval = place_host_ban(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time);
+		if (retval == 1)
+			return;
+		if (retval == BAN_ACT_BLOCK)
 		{
 			sendnotice(client, "%s", cfg.ban_reason);
 			return;
-		} else {
-			if (place_host_ban(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time))
-				return;
-			/* a return value of 0 means the user is exempted, so fallthrough.. */
 		}
 	}
 
@@ -749,7 +750,7 @@ static void init_config(void)
 	/* Default values */
 	cfg.score = 10;
 	safe_strdup(cfg.ban_reason, "Possible mixed character spam");
-	cfg.ban_action = BAN_ACT_BLOCK;
+	cfg.ban_action = banact_value_to_struct(BAN_ACT_BLOCK);
 	cfg.ban_time = 60 * 60 * 4; /* irrelevant for block, but some default for others */
 }
 
@@ -757,6 +758,7 @@ static void free_config(void)
 {
 	safe_free(cfg.ban_reason);
 	free_security_group(cfg.except);
+	safe_free_all_ban_actions(cfg.ban_action);
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
 
@@ -792,12 +794,7 @@ int antimixedutf8_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 		} else
 		if (!strcmp(cep->name, "ban-action"))
 		{
-			if (!banact_stringtoval(cep->value))
-			{
-				config_error("%s:%i: set::antimixedutf8::ban-action: unknown action '%s'",
-					cep->file->filename, cep->line_number, cep->value);
-				errors++;
-			}
+			errors += test_ban_action_config(cep);
 		} else
 		if (!strcmp(cep->name, "ban-reason"))
 		{
@@ -838,7 +835,9 @@ int antimixedutf8_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		} else
 		if (!strcmp(cep->name, "ban-action"))
 		{
-			cfg.ban_action = banact_stringtoval(cep->value);
+			if (cfg.ban_action)
+				safe_free_all_ban_actions(cfg.ban_action);
+			cfg.ban_action = parse_ban_action_config(cep);
 		} else
 		if (!strcmp(cep->name, "ban-reason"))
 		{

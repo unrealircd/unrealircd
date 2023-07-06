@@ -79,6 +79,7 @@ static BanActTable banacttable[] = {
 	{ BAN_ACT_SOFT_VIRUSCHAN,'V',	"soft-viruschan" },
 	{ BAN_ACT_WARN,		'w',	"warn" },
 	{ BAN_ACT_SOFT_WARN,	'W',	"soft-warn" },
+	{ BAN_ACT_SET,		'1',	"set" },
 	{ 0, 0, 0 }
 };
 
@@ -781,8 +782,100 @@ int valid_vhost(const char *userhost)
 
 /*|| BAN ACTION ROUTINES FOLLOW ||*/
 
+int test_ban_action_config_helper(ConfigEntry *ce, const char *name, const char *value)
+{
+	int errors = 0;
+	BanActionValue action;
+
+	action = banact_stringtoval(name);
+	if (!action)
+	{
+		config_error("%s:%d: unknown action: %s",
+			     ce->file->filename, ce->line_number, name);
+		errors++;
+	} else
+	{
+		// TODO: parse values
+	}
+
+	return errors;
+}
+
+/** Test an action item in the config.
+ * @param ce	The config entry to parse
+ * @returns	Number of errors, so 0 means OK.
+ */
+int test_ban_action_config(ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	int errors = 0;
+
+	if (ce->items && !ce->value)
+	{
+		/* action { xxx; } */
+		for (cep = ce->items; cep; cep = cep->next)
+			errors += test_ban_action_config_helper(cep, cep->name, cep->value);
+	} else
+	if (!ce->value)
+	{
+		config_error("%s:%d: action has no value", ce->file->filename, ce->line_number);
+		errors++;
+	} else
+	{
+		/* action xxx; */
+		errors += test_ban_action_config_helper(ce, ce->value, NULL);
+	}
+
+	return errors;
+}
+
+BanAction *parse_ban_action_config_helper(const char *name, const char *value)
+{
+	int errors = 0;
+	BanAction *action = safe_alloc(sizeof(BanAction));
+
+	action->action = banact_stringtoval(name);
+	if (!action->action)
+		abort(); /* impossible, is config tested earlier */
+
+	// TODO: parse values
+
+	return action;
+}
+
+/** Parse an action item in the config.
+ * @param ce	The config entry to parse
+ * @returns	BanAction item (can be more than one, in the linked list)
+ */
+BanAction *parse_ban_action_config(ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	BanAction *action_list = NULL;
+	BanAction *action;
+
+	if (ce->items && !ce->value)
+	{
+		/* action { xxx; } */
+		for (cep = ce->items; cep; cep = cep->next)
+		{
+			action = parse_ban_action_config_helper(cep->name, cep->value);
+			if (action)
+				AppendListItem(action, action_list);
+		}
+	} else
+	if (ce->value)
+	{
+		/* action xxx; */
+		action = parse_ban_action_config_helper(ce->value, NULL);
+		if (action)
+			AppendListItem(action, action_list);
+	}
+
+	return action_list;
+}
+
 /** Converts a banaction string (eg: "kill") to an integer value (eg: BAN_ACT_KILL) */
-BanAction banact_stringtoval(const char *s)
+BanActionValue banact_stringtoval(const char *s)
 {
 	BanActTable *b;
 
@@ -793,7 +886,7 @@ BanAction banact_stringtoval(const char *s)
 }
 
 /** Converts a banaction character (eg: 'K') to an integer value (eg: BAN_ACT_KILL) */
-BanAction banact_chartoval(char c)
+BanActionValue banact_chartoval(char c)
 {
 	BanActTable *b;
 
@@ -804,7 +897,7 @@ BanAction banact_chartoval(char c)
 }
 
 /** Converts a banaction value (eg: BAN_ACT_KILL) to a character value (eg: 'k') */
-char banact_valtochar(BanAction val)
+char banact_valtochar(BanActionValue val)
 {
 	BanActTable *b;
 
@@ -815,7 +908,7 @@ char banact_valtochar(BanAction val)
 }
 
 /** Converts a banaction value (eg: BAN_ACT_KLINE) to a string (eg: "kline") */
-const char *banact_valtostring(BanAction val)
+const char *banact_valtostring(BanActionValue val)
 {
 	BanActTable *b;
 
@@ -825,6 +918,12 @@ const char *banact_valtostring(BanAction val)
 	return "UNKNOWN";
 }
 
+BanAction *banact_value_to_struct(BanActionValue val)
+{
+	BanAction *action = safe_alloc(sizeof(BanAction));
+	action->action = val;
+	return action;
+}
 /*|| BAN TARGET ROUTINES FOLLOW ||*/
 
 /** Extract target flags from string 's'. */
@@ -2728,4 +2827,93 @@ const char *command_issued_by_rpc(MessageTag *mtags)
 	if (m && m->value && !strncmp(m->value, "RPC:", 4))
 		return m->value;
 	return NULL;
+}
+
+/** Check if action is only of type 'what', eg if they are all BAN_ACT_WARN */
+int only_actions_of_type(BanAction *actions, BanActionValue what)
+{
+	for (; actions; actions = actions->next)
+		if (actions->action != what)
+			return 0;
+	return 1;
+}
+
+/** Check if action 'what' is in any of 'actions' */
+int has_actions_of_type(BanAction *actions, BanActionValue what)
+{
+	for (; actions; actions = actions->next)
+		if (actions->action == what)
+			return 1;
+	return 0;
+}
+
+/** Check if only soft ban actions */
+int only_soft_actions(BanAction *actions)
+{
+	for (; actions; actions = actions->next)
+		if (!IsSoftBanAction(actions->action))
+			return 0;
+	return 1;
+}
+
+/** Turn a linked list BanAction * into a string of actions.
+ * Returns something like "gline" or "set, gline"
+ */
+const char *ban_actions_to_string(BanAction *actions)
+{
+	static char buf[512];
+	const char *s;
+	BanAction *action;
+	*buf = '\0';
+
+	for (action = actions; action; action = action->next)
+	{
+		s = banact_valtostring(action->action);
+		if (!s)
+			s = "???";
+		strlcat(buf, s, sizeof(buf));
+		strlcat(buf, ", ", sizeof(buf));
+	}
+
+	/* Cut off trailing ", " */
+	if (*buf)
+		buf[strlen(buf)-2] = '\0';
+
+	return buf;
+}
+
+void free_single_ban_action(BanAction *action)
+{
+	safe_free(action->var);
+	safe_free(action);
+}
+
+void free_all_ban_actions(BanAction *actions)
+{
+	BanAction *next;
+	for (; actions; actions = next)
+	{
+		next = actions->next;
+		free_single_ban_action(actions);
+	}
+}
+
+/** Duplicate an entire BanAction linked list (deep copy) */
+BanAction *duplicate_ban_actions(BanAction *actions)
+{
+	BanAction *newlist = NULL;
+	BanAction *action, *n;
+
+	for (action = actions; action; action = action->next)
+	{
+		n = safe_alloc(sizeof(BanAction));
+		// This matches the struct.h order:
+		n->action = action->action;
+		safe_strdup(n->var, action->var);
+		n->value = action->value;
+		n->var_action = action->var_action;
+		/* And add to the list, maintain action ordering */
+		AppendListItem(n, newlist);
+	}
+	return newlist;
 }

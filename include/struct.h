@@ -1111,7 +1111,7 @@ struct Secret {
 #define SPAMFLAG_NOWARN		0x0001
 
 /* Ban actions. These must be ordered by severity (!) */
-typedef enum BanAction {
+typedef enum BanActionValue {
 	BAN_ACT_GZLINE		=1100,
 	BAN_ACT_GLINE		=1000,
 	BAN_ACT_SOFT_GLINE	= 950,
@@ -1132,7 +1132,22 @@ typedef enum BanAction {
 	BAN_ACT_SOFT_BLOCK	= 150,
 	BAN_ACT_WARN		= 100,
 	BAN_ACT_SOFT_WARN	=  50,
-} BanAction;
+	BAN_ACT_SET		=  40,
+} BanActionValue;
+
+typedef enum VarActionValue {
+	VAR_ACT_SET		= 1,
+	VAR_ACT_INCREASE	= 2,
+} VarActionValue;
+
+typedef struct BanAction BanAction;
+struct BanAction {
+	BanAction *prev, *next;
+	BanActionValue action;
+	char *var;
+	int value;
+	VarActionValue var_action;
+};
 
 #define IsSoftBanAction(x)   ((x == BAN_ACT_SOFT_GLINE) || (x == BAN_ACT_SOFT_KLINE) || \
                               (x == BAN_ACT_SOFT_SHUN) || (x == BAN_ACT_SOFT_KILL) || \
@@ -1159,7 +1174,7 @@ struct NameBan {
 /** Spamfilter sub-struct of TKL entry (Spamfilter) */
 struct Spamfilter {
 	unsigned short target;
-	BanAction action; /**< Ban action, see BAN_ACT* */
+	BanAction *action; /**< Ban action */
 	Match *match; /**< Spamfilter matcher */
 	char *tkl_reason; /**< Reason to use for bans placed by this spamfilter, escaped by unreal_encodespace(). */
 	time_t tkl_duration; /**< Duration of bans placed by this spamfilter */
@@ -1940,8 +1955,8 @@ struct ConfigItem_link {
 struct ConfigItem_ban {
 	ConfigItem_ban	*prev, *next;
 	ConfigFlag_ban	flag;
-	char			*mask, *reason;
-	unsigned short action;
+	char		*mask, *reason;
+	BanAction	*action;
 };
 
 struct ConfigItem_deny_dcc {

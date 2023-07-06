@@ -100,9 +100,10 @@ RPC_CALL_FUNC(rpc_spamfilter_list)
 
 /* Shared code for selecting a spamfilter, for .add/.del/get */
 int spamfilter_select_criteria(Client *client, json_t *request, json_t *params, const char **name, int *match_type,
-                               int *targets, char *targetbuf, size_t targetbuflen, BanAction *action, char *actionbuf)
+                               int *targets, char *targetbuf, size_t targetbuflen, BanActionValue *action, char *actionbuf)
 {
 	const char *str;
+	int actval;
 
 	*name = json_object_get_string(params, "name");
 	if (!*name)
@@ -161,7 +162,7 @@ RPC_CALL_FUNC(rpc_spamfilter_get)
 	int type = TKL_SPAMF|TKL_GLOBAL;
 	const char *name;
 	TKL *tkl;
-	BanAction action;
+	BanActionValue action;
 	int match_type = 0;
 	int targets = 0;
 	char targetbuf[64];
@@ -193,7 +194,7 @@ RPC_CALL_FUNC(rpc_spamfilter_add)
 	time_t ban_duration = 0;
 	TKL *tkl;
 	Match *m;
-	BanAction action;
+	BanActionValue action;
 	int match_type = 0;
 	int targets = 0;
 	char targetbuf[64];
@@ -246,7 +247,7 @@ RPC_CALL_FUNC(rpc_spamfilter_add)
 		return;
 	}
 
-	tkl = tkl_add_spamfilter(type, targets, action, m, set_by, 0, TStime(),
+	tkl = tkl_add_spamfilter(type, targets, banact_value_to_struct(action), m, set_by, 0, TStime(),
 	                         ban_duration, reason, 0);
 
 	if (!tkl)
@@ -270,7 +271,7 @@ RPC_CALL_FUNC(rpc_spamfilter_del)
 	const char *name;
 	const char *set_by;
 	TKL *tkl;
-	BanAction action;
+	BanActionValue action;
 	int match_type = 0;
 	int targets = 0;
 	char targetbuf[64];

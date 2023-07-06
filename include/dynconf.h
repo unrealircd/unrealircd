@@ -104,7 +104,7 @@ struct Configuration {
 	char *channel_command_prefix;
 	long handshake_data_flood_amount;
 	long handshake_data_flood_ban_time;
-	int handshake_data_flood_ban_action;
+	BanAction *handshake_data_flood_ban_action;
 	struct ChMode modes_on_join;
 	int modes_on_join_set;
 	char *level_on_join;

@@ -732,10 +732,22 @@ extern void ExtbanDel(Extban *);
 extern void extban_init(void);
 extern char *trim_str(char *str, int len);
 extern MODVAR char *ban_realhost, *ban_virthost, *ban_ip;
-extern BanAction banact_stringtoval(const char *s);
-extern const char *banact_valtostring(BanAction val);
-extern BanAction banact_chartoval(char c);
-extern char banact_valtochar(BanAction val);
+extern BanAction *parse_ban_action_config(ConfigEntry *ce);
+extern int test_ban_action_config(ConfigEntry *ce);
+extern void free_single_ban_action(BanAction *action);
+extern void free_all_ban_actions(BanAction *actions);
+#define safe_free_all_ban_actions(x) do { free_all_ban_actions(x); x = NULL; } while(0)
+#define safe_free_single_ban_action(x) do { free_single_ban_action(x); x = NULL; } while(0)
+BanAction *duplicate_ban_actions(BanAction *actions);
+extern BanActionValue banact_stringtoval(const char *s);
+extern const char *banact_valtostring(BanActionValue val);
+extern BanActionValue banact_chartoval(char c);
+extern char banact_valtochar(BanActionValue val);
+extern BanAction *banact_value_to_struct(BanActionValue val);
+extern int only_actions_of_type(BanAction *actions, BanActionValue what);
+extern int has_actions_of_type(BanAction *actions, BanActionValue what);
+extern int only_soft_actions(BanAction *actions);
+extern const char *ban_actions_to_string(BanAction *actions);
 extern int spamfilter_gettargets(const char *s, Client *client);
 extern char *spamfilter_target_inttostring(int v);
 extern char *our_strcasestr(const char *haystack, const char *needle);
@@ -806,7 +818,7 @@ extern MODVAR TKL *(*tkl_add_banexception)(int type, const char *usermask, const
                                            time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags);
 extern MODVAR TKL *(*tkl_add_nameban)(int type, const char *name, int hold, const char *reason, const char *setby,
                                           time_t expire_at, time_t set_at, int flags);
-extern MODVAR TKL *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short action, Match *match, const char *setby,
+extern MODVAR TKL *(*tkl_add_spamfilter)(int type, unsigned short target, BanAction *action, Match *match, const char *setby,
                                              time_t expire_at, time_t set_at,
                                              time_t spamf_tkl_duration, const char *spamf_tkl_reason,
                                              int flags);
@@ -827,7 +839,7 @@ extern MODVAR TKL *(*find_tkline_match_zap)(Client *cptr);
 extern MODVAR void (*tkl_stats)(Client *cptr, int type, const char *para, int *cnt);
 extern MODVAR void (*tkl_sync)(Client *client);
 extern MODVAR void (*cmd_tkl)(Client *client, MessageTag *recv_mtags, int parc, const char *parv[]);
-extern MODVAR int (*place_host_ban)(Client *client, BanAction action, const char *reason, long duration);
+extern MODVAR int (*place_host_ban)(Client *client, BanAction *actions, const char *reason, long duration);
 extern MODVAR int (*match_spamfilter)(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, TKL **rettk);
 extern MODVAR int (*match_spamfilter_mtags)(Client *client, MessageTag *mtags, const char *cmd);
 extern MODVAR int (*join_viruschan)(Client *client, TKL *tk, int type);

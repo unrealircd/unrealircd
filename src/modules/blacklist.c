@@ -64,7 +64,7 @@ struct Blacklist {
 	char *name;
 	BlacklistBackendType backend_type;
 	BlacklistBackend *backend;
-	int action;
+	BanAction *action;
 	long ban_time;
 	char *reason;
 	SecurityGroup *except;
@@ -80,7 +80,7 @@ struct BLUser {
 	int is_ipv6;
 	int refcnt;
 	/* The following save_* fields are used by softbans: */
-	int save_action;
+	BanAction *save_action;
 	long save_tkltime;
 	char *save_opernotice;
 	char *save_reason;
@@ -237,6 +237,7 @@ void delete_blacklist_block(Blacklist *e)
 
 	safe_free(e->name);
 	safe_free(e->reason);
+	safe_free_all_ban_actions(e->action);
 	free_security_group(e->except);
 
 	safe_free(e);
@@ -379,12 +380,7 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				continue;
 			}
 			has_action = 1;
-			if (!banact_stringtoval(cep->value))
-			{
-				config_error("%s:%i: blacklist::action has unknown action type '%s'",
-					cep->file->filename, cep->line_number, cep->value);
-				errors++;
-			}
+			errors += test_ban_action_config(cep);
 		}
 		else if (!strcmp(cep->name, "ban-time"))
 		{
@@ -467,8 +463,6 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	d = safe_alloc(sizeof(Blacklist));
 	safe_strdup(d->name, ce->value);
 	/* set some defaults */
-	d->action = BAN_ACT_KILL;
-	safe_strdup(d->reason, "Your IP is on a DNS Blacklist");
 	d->ban_time = 3600;
 	
 	/* assume dns for now ;) */
@@ -529,7 +523,7 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 		else if (!strcmp(cep->name, "action"))
 		{
-			d->action = banact_stringtoval(cep->value);
+			d->action = parse_ban_action_config(cep);
 		}
 		else if (!strcmp(cep->name, "ban-time"))
 		{
@@ -692,6 +686,7 @@ void blacklist_free_bluser_if_able(BLUser *bl)
 
 	safe_free(bl->save_opernotice);
 	safe_free(bl->save_reason);
+	free_all_ban_actions(bl->save_action);
 	safe_free(bl);
 }
 
@@ -747,7 +742,7 @@ int blacklist_parse_reply(struct hostent *he, int entry)
  * from blacklist_preconnect() for softbans that need to be delayed
  * as to give the user the opportunity to do SASL Authentication.
  */
-int blacklist_action(Client *client, char *opernotice, BanAction ban_action, char *ban_reason, long ban_time,
+int blacklist_action(Client *client, char *opernotice, BanAction *ban_action, char *ban_reason, long ban_time,
                      char *blacklist, char *blacklist_dns_name, int blacklist_dns_reply)
 {
 	unreal_log_raw(ULOG_INFO, "blacklist", "BLACKLIST_HIT", client,
@@ -755,11 +750,9 @@ int blacklist_action(Client *client, char *opernotice, BanAction ban_action, cha
 	               log_data_string("blacklist_name", blacklist),
 	               log_data_string("blacklist_dns_name", blacklist_dns_name),
 	               log_data_integer("blacklist_dns_reply", blacklist_dns_reply),
-	               log_data_string("ban_action", banact_valtostring(ban_action)),
+	               log_data_string("ban_action", ban_actions_to_string(ban_action)),
 	               log_data_string("ban_reason", ban_reason),
 	               log_data_integer("ban_time", ban_time));
-	if (ban_action == BAN_ACT_WARN)
-		return 0;
 	return place_host_ban(client, ban_action, ban_reason, ban_time);
 }
 
@@ -797,10 +790,10 @@ void blacklist_hit(Client *client, Blacklist *bl, int reply)
 
 	buildvarstring(bl->reason, banbuf, sizeof(banbuf), name, value);
 
-	if (IsSoftBanAction(bl->action) && blu)
+	if (only_soft_actions(bl->action) && blu)
 	{
 		/* For soft bans, delay the action until later (so user can do SASL auth) */
-		blu->save_action = bl->action;
+		blu->save_action = duplicate_ban_actions(bl->action);
 		blu->save_tkltime = bl->ban_time;
 		safe_strdup(blu->save_opernotice, opernotice);
 		safe_strdup(blu->save_reason, banbuf);

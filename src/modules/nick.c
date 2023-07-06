@@ -1051,8 +1051,9 @@ int _register_user(Client *client)
 	spamfilter_build_user_string(spamfilter_user, client->name, client);
 	if (match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, NULL, 0, &savetkl))
 	{
-		if (savetkl && ((savetkl->ptr.spamfilter->action == BAN_ACT_VIRUSCHAN) ||
-				(savetkl->ptr.spamfilter->action == BAN_ACT_SOFT_VIRUSCHAN)))
+		if (savetkl &&
+		    (has_actions_of_type(savetkl->ptr.spamfilter->action, BAN_ACT_VIRUSCHAN) ||
+		     has_actions_of_type(savetkl->ptr.spamfilter->action, BAN_ACT_SOFT_VIRUSCHAN)))
 		{
 			/* 'viruschan' action:
 			 * Continue with registering the client, and at the end

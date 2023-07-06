@@ -499,7 +499,7 @@ struct {
 
 struct {
 	int threshold;
-	BanAction ban_action;
+	BanAction *ban_action;
 	char *ban_reason;
 	long ban_time;
 	int convert_to_lowercase;
@@ -563,6 +563,7 @@ static void free_config(void)
 {
 	safe_free(cfg.ban_reason);
 	free_security_group(cfg.except);
+	safe_free_all_ban_actions(cfg.ban_action);
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
 
@@ -612,13 +613,8 @@ int antirandom_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		} else
 		if (!strcmp(cep->name, "ban-action"))
 		{
-			if (!banact_stringtoval(cep->value))
-			{
-				config_error("%s:%i: set::antirandom::ban-action: unknown action '%s'",
-					cep->file->filename, cep->line_number, cep->value);
-				errors++;
-			} else
-				req.ban_action = 1;
+			req.ban_action = 1;
+			errors += test_ban_action_config(cep);
 		} else
 		if (!strcmp(cep->name, "ban-reason"))
 		{
@@ -678,7 +674,7 @@ int antirandom_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		} else
 		if (!strcmp(cep->name, "ban-action"))
 		{
-			cfg.ban_action = banact_stringtoval(cep->value);
+			cfg.ban_action = parse_ban_action_config(cep);
 		} else
 		if (!strcmp(cep->name, "ban-reason"))
 		{
@@ -870,21 +866,20 @@ int antirandom_preconnect(Client *client)
 	score = get_spam_score(client);
 	if (score > cfg.threshold)
 	{
-		if (cfg.ban_action == BAN_ACT_WARN)
+		if (has_actions_of_type(cfg.ban_action, BAN_ACT_WARN))
 		{
 			unreal_log(ULOG_INFO, "antirandom", "ANTIRANDOM_DENIED_USER", client,
 			           "[antirandom] would have denied access to user with score $score: $client.details:$client.user.realname",
 			           log_data_integer("score", score));
-			return HOOK_CONTINUE;
-		}
-		if (cfg.show_failedconnects)
+		} else
+		if (cfg.show_failedconnects) // FIXME: this is not entirely correct, with like soft actions or var setting, etc!
 		{
 			unreal_log(ULOG_INFO, "antirandom", "ANTIRANDOM_DENIED_USER", client,
 			           "[antirandom] denied access to user with score $score: $client.details:$client.user.realname",
 			           log_data_integer("score", score));
 		}
-		place_host_ban(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time);
-		return HOOK_DENY;
+		if (place_host_ban(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time))
+			return HOOK_DENY;
 	}
 	return HOOK_CONTINUE;
 }
@@ -911,7 +906,7 @@ static int is_exempt(Client *client)
 		return 1;
 
 	/* Soft ban and logged in? */
-	if (IsSoftBanAction(cfg.ban_action) && IsLoggedIn(client))
+	if (only_soft_actions(cfg.ban_action) && IsLoggedIn(client))
 		return 1;
 
 	return 0;

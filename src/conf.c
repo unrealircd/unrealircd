@@ -1648,6 +1648,7 @@ void free_iConf(Configuration *i)
 	safe_free(i->helpchan);
 	safe_free(i->stats_server);
 	safe_free(i->sasl_server);
+	safe_free_all_ban_actions(i->handshake_data_flood_ban_action);
 	// anti-flood:
 	for (f = i->floodsettings; f; f = f_next)
 	{
@@ -1710,7 +1711,8 @@ void config_setdefaultsettings(Configuration *i)
 	/* - everyone */
 	i->throttle_count = 3; i->throttle_period = 60; /* throttle protection: max 3 per 60s */
 	i->handshake_data_flood_amount = 4096;
-	i->handshake_data_flood_ban_action = BAN_ACT_ZLINE;
+	i->handshake_data_flood_ban_action = safe_alloc(sizeof(BanAction));
+	i->handshake_data_flood_ban_action->action = BAN_ACT_ZLINE;
 	i->handshake_data_flood_ban_time = 600;
 	// (targetflood is in the targetflood module)
 	/* - known-users */
@@ -2462,6 +2464,7 @@ void config_rehash()
 		{
 			safe_free(ban_ptr->mask);
 			safe_free(ban_ptr->reason);
+			free_all_ban_actions(ban_ptr->action);
 			DelListItem(ban_ptr, conf_ban);
 			safe_free(ban_ptr);
 		}
@@ -6901,7 +6904,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "reason"))
 			safe_strdup(ca->reason, cep->value);
 		else if (!strcmp(cep->name, "action"))
-			ca->action = banact_stringtoval(cep->value);
+			ca->action = parse_ban_action_config(cep);
 	}
 	AddListItem(ca, conf_ban);
 	return 0;
@@ -7000,13 +7003,7 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 					cep->line_number, "ban::action");
 			}
 			has_action = 1;
-			if (!banact_stringtoval(cep->value))
-			{
-				config_error("%s:%i: ban::action has unknown action type '%s'",
-					cep->file->filename, cep->line_number,
-					cep->value);
-				errors++;
-			}
+			errors += test_ban_action_config(cep);
 		}
 	}
 
@@ -7800,8 +7797,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 								tempiConf.handshake_data_flood_amount = config_checkval(cep4->value, CFG_SIZE);
 							else if (!strcmp(cep4->name, "ban-time"))
 								tempiConf.handshake_data_flood_ban_time = config_checkval(cep4->value, CFG_TIME);
-							else if (!strcmp(cep4->name, "ban-action"))
-								tempiConf.handshake_data_flood_ban_action = banact_stringtoval(cep4->value);
+							else if (!strcmp(cep4->name, "ban-action") || !strcmp(cep4->name, "action"))
+								tempiConf.handshake_data_flood_ban_action = parse_ban_action_config(cep4);
 						}
 					}
 					else if (!strcmp(ceppp->name, "away-flood"))
@@ -8718,16 +8715,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 									errors++;
 								}
 							} else
-							if (!strcmp(cep4->name, "ban-action"))
+							if (!strcmp(cep4->name, "ban-action") || !strcmp(cep4->name, "action"))
 							{
 								CheckNull(cep4);
-								if (!banact_stringtoval(cep4->value))
-								{
-									config_error("%s:%i: set::anti-flood::handshake-data-flood::ban-action has unknown action type '%s'",
-										cep4->file->filename, cep4->line_number,
-										cep4->value);
-									errors++;
-								}
+								errors += test_ban_action_config(cep4);
 							} else
 							if (!strcmp(cep4->name, "ban-time"))
 							{
