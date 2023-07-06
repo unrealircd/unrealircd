@@ -1679,7 +1679,7 @@ void config_setdefaultsettings(Configuration *i)
 	safe_strdup(i->spamfilter_virus_help_channel, "#help");
 	i->spamfilter_detectslow_warn = 250;
 	i->spamfilter_detectslow_fatal = 500;
-	i->spamfilter_stop_on_first_match = 1;
+	i->spamfilter_stop_on_first_match = 0;
 	i->maxdccallow = 10;
 	safe_strdup(i->channel_command_prefix, "`!.");
 	i->check_target_nick_bans = 1;
