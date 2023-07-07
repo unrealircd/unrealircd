@@ -4,6 +4,13 @@ This is the git version (development version) for future 6.1.2. This is work
 in progress and may not be a stable version.
 
 ### Enhancements:
+* Optional [Central Spamfilter](https://www.unrealircd.org/docs/Central_spamfilter):
+  This will fetch and refresh spamfilter rules every 30 minutes from unrealircd.org. 
+  This feature is not enabled default. Use `set { central-spamfitler { enabled yes; } }` to enable
+* [spamfilter { } block](https://www.unrealircd.org/docs/Spamfilter_block) improvements:
+  * The `action` item now supports multiple actions
+  * A new action is setting a TAG on a user, or increasing the value of a TAG
+  * A new option `rule` with minimal 'if'-like preconditions and functions
 * [set::spamfilter::utf8](https://www.unrealircd.org/docs/Set_block#set::spamfilter::utf8)
   is now on by default:
   * This means you can safely use UTF8 characters in like `[]` in regex.
