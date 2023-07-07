@@ -14,7 +14,7 @@ in progress and may not be a stable version.
     See also this [full list of scripts](https://www.pcre.org/current/doc/html/pcre2syntax.html#SEC7).
     Please use this new tool with care. Blocking an entire language or script
     is quite a drastic measure.
-  * You can turn it off via: `set { spamfilter { utf8 yes; } }`
+  * You can turn it off via: `set { spamfilter { utf8 no; } }`
 * The module [antimixedutf8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8)
   now recognizes more code block transitions and should do a better job at
   catching mixed UTF8 spam.
