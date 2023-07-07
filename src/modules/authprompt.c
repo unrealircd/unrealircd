@@ -54,7 +54,7 @@ int authprompt_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int authprompt_config_run(ConfigFile *, ConfigEntry *, int);
 int authprompt_sasl_continuation(Client *client, const char *buf);
 int authprompt_sasl_result(Client *client, int success);
-int authprompt_place_host_ban(Client *client, int action, const char *reason, long duration);
+int authprompt_place_host_ban(Client *client, BanActionValue action, const char *reason, long duration);
 int authprompt_find_tkline_match(Client *client, TKL *tk);
 int authprompt_pre_local_handshake_timeout(Client *client, const char **comment);
 int authprompt_pre_connect(Client *client);
@@ -398,7 +398,7 @@ void authprompt_send_auth_required_message(Client *client)
 }
 
 /* Called upon "place a host ban on this user" (eg: spamfilter, blacklist, ..) */
-int authprompt_place_host_ban(Client *client, int action, const char *reason, long duration)
+int authprompt_place_host_ban(Client *client, BanActionValue action, const char *reason, long duration)
 {
 	/* If it's a soft-xx action and the user is not logged in
 	 * and the user is not yet online, then we will handle this user.
