@@ -18,6 +18,10 @@ in progress and may not be a stable version.
 * The module [antimixedutf8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8)
   now recognizes more code block transitions and should do a better job at
   catching mixed UTF8 spam.
+* You can restrict includes to only contain certain blocks, the style is:
+  ```
+  include "some-file-or-url" { restrict-config { name-of-block; name-of-block2; } }
+  ```
 
 UnrealIRCd 6.1.1.1
 -------------------
