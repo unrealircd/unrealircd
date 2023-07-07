@@ -1236,7 +1236,8 @@ struct BanException {
 #define TKL_SUBTYPE_NONE	0x0000
 #define TKL_SUBTYPE_SOFT	0x0001 /* (require SASL) */
 
-#define TKL_FLAG_CONFIG		0x0001 /* Entry from configuration file. Cannot be removed by using commands. */
+#define TKL_FLAG_CONFIG			0x0001 /* Entry from configuration file. Cannot be removed by using commands. */
+#define TKL_FLAG_CENTRAL_SPAMFILTER	0x0002 /* Entry from central spamfilter. */
 
 /** A TKL entry, such as a KLINE, GLINE, Spamfilter, QLINE, Exception, .. */
 struct TKL {

@@ -508,10 +508,15 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	int target = 0;
 	int match_type = 0;
 	Match *m = NULL;
+	int flag = TKL_FLAG_CONFIG;
 
 	/* We are only interested in spamfilter { } blocks */
 	if ((type != CONFIG_MAIN) || strcmp(ce->name, "spamfilter"))
 		return 0;
+
+	/* Bit silly hard coded shit... */
+	if (!strcmp(cf->filename, "central_spamfilter.conf"))
+		flag = TKL_FLAG_CENTRAL_SPAMFILTER;
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
@@ -566,7 +571,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	                    TStime(),
 	                    bantime,
 	                    banreason,
-	                    TKL_FLAG_CONFIG);
+	                    flag);
 	return 1;
 }
 

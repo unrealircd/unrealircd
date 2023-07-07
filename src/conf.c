@@ -267,6 +267,7 @@ int rehash_internal(Client *client);
 int is_blacklisted_module(const char *name);
 int modules_default_conf_modified(const char *filebuf);
 int config_item_allowed_for_config_file(const char *resource, const char *item);
+void remove_config_tkls(int flag);
 
 /** Return the printable string of a 'cep' location, such as set::something::xyz */
 const char *config_var(ConfigEntry *cep)
@@ -1779,6 +1780,9 @@ void config_setdefaultsettings(Configuration *i)
 	i->who_limit = 100;
 	i->named_extended_bans = 1;
 	i->high_connection_rate = 1000;
+	safe_strdup(i->central_spamfilter_url, "https://spamfilter.unrealircd.org/spamfilter/central_spamfilter.conf");
+	i->central_spamfilter_refresh_time = 1800;
+	i->central_spamfilter_enabled = 0;
 }
 
 /* Some settings have been moved to here - we (re)set some defaults */
@@ -2309,7 +2313,7 @@ int config_read_file(const char *filename, const char *display_name)
  * This is done after config passed testing and right before
  * adding the (new) entries.
  */
-void remove_config_tkls(void)
+void remove_config_tkls(int flag)
 {
 	TKL *tk, *tk_next;
 	int index, index2;
@@ -2322,7 +2326,7 @@ void remove_config_tkls(void)
 			for (tk = tklines_ip_hash[index][index2]; tk; tk = tk_next)
 			{
 				tk_next = tk->next;
-				if (tk->flags & TKL_FLAG_CONFIG)
+				if (tk->flags & flag)
 					tkl_del_line(tk);
 			}
 		}
@@ -2334,7 +2338,7 @@ void remove_config_tkls(void)
 		for (tk = tklines[index]; tk; tk = tk_next)
 		{
 			tk_next = tk->next;
-			if (tk->flags & TKL_FLAG_CONFIG)
+			if (tk->flags & flag)
 				tkl_del_line(tk);
 		}
 	}
@@ -2516,7 +2520,7 @@ void config_rehash()
 		safe_free(vhost_ptr);
 	}
 
-	remove_config_tkls();
+	remove_config_tkls(TKL_FLAG_CONFIG);
 
 	for (deny_version_ptr = conf_deny_version; deny_version_ptr; deny_version_ptr = (ConfigItem_deny_version *) next) {
 		next = (ListStruct *)deny_version_ptr->next;
@@ -2726,6 +2730,14 @@ int config_item_allowed_for_config_file(const char *resource, const char *item)
 	ConfigResource *rs = find_config_resource(resource);
 	if (!rs)
 	{
+		/* Special hardcoded handling for central spamfilter */
+		if (!strcmp(resource, "central_spamfilter.conf"))
+		{
+			if (!strcmp(item, "spamfilter") ||
+			    !strcmp(item, "ban"))
+				return 1;
+			return 0;
+		}
 		/* This should never happen */
 #ifdef DEBUGMODE
 		abort();
@@ -2743,6 +2755,92 @@ int config_item_allowed_for_config_file(const char *resource, const char *item)
 	if (find_name_list(rs->restrict_config, item))
 		return 1;
 	return 0;
+}
+
+int config_test_blocks_generic(ConfigFile *cfptr, int skip_priority_blocks, int normalconf)
+{
+	ConfigEntry *ce;
+	int errors = 0;
+	int i;
+	Hook *h;
+	ConfigCommand *cc;
+
+	for (ce = cfptr->items; ce; ce = ce->next)
+	{
+		if (skip_priority_blocks)
+		{
+			char skip = 0;
+			for (i=0; i < ARRAY_SIZEOF(config_test_priority_blocks); i++)
+			{
+				if (!strcmp(ce->name, config_test_priority_blocks[i]))
+				{
+					skip = 1;
+					break;
+				}
+			}
+			if (skip)
+				continue;
+		}
+
+		if (!config_item_allowed_for_config_file(cfptr->filename, ce->name))
+			continue;
+
+		if ((cc = config_binary_search(ce->name))) {
+			if (cc->testfunc)
+				errors += (cc->testfunc(cfptr, ce));
+		}
+		else
+		{
+			int used = 0;
+			for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
+			{
+				int value, errs = 0;
+				if (normalconf)
+				{
+					if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+					    && !(h->owner->options & MOD_OPT_PERM))
+					{
+						continue;
+					}
+				}
+				value = (*(h->func.intfunc))(cfptr,ce,CONFIG_MAIN,&errs);
+				if (value == 2)
+					used = 1;
+				if (value == 1)
+				{
+					used = 1;
+					break;
+				}
+				if (value == -1)
+				{
+					used = 1;
+					errors += errs;
+					break;
+				}
+				if (value == -2)
+				{
+					used = 1;
+					errors += errs;
+				}
+
+			}
+			if (!used)
+			{
+				config_error("%s:%i: unknown directive %s",
+					ce->file->filename, ce->line_number,
+					ce->name);
+				errors++;
+				if (strchr(ce->name, ':'))
+				{
+					config_error("You cannot use :: in a directive, you have to write them out. "
+						     "For example 'set::auto-join #something' needs to be written as: "
+						     "set { auto-join \"#something\"; }");
+					config_error("See also https://www.unrealircd.org/docs/Set_block#Syntax_used_in_this_documentation");
+				}
+			}
+		}
+	}
+	return errors;
 }
 
 int config_test_blocks()
@@ -2794,75 +2892,7 @@ int config_test_blocks()
 	{
 		if (config_verbose > 1)
 			config_status("Running %s", cfptr->filename);
-		for (ce = cfptr->items; ce; ce = ce->next)
-		{
-			char skip = 0;
-			for (i=0; i < ARRAY_SIZEOF(config_test_priority_blocks); i++)
-			{
-				if (!strcmp(ce->name, config_test_priority_blocks[i]))
-				{
-					skip = 1;
-					break;
-				}
-			}
-			if (skip)
-				continue;
-
-			if (!config_item_allowed_for_config_file(cfptr->filename, ce->name))
-				continue;
-
-			if ((cc = config_binary_search(ce->name))) {
-				if (cc->testfunc)
-					errors += (cc->testfunc(cfptr, ce));
-			}
-			else
-			{
-				int used = 0;
-				for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
-				{
-					int value, errs = 0;
-					if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
-					    && !(h->owner->options & MOD_OPT_PERM))
-
-
-						continue;
-					value = (*(h->func.intfunc))(cfptr,ce,CONFIG_MAIN,&errs);
-					if (value == 2)
-						used = 1;
-					if (value == 1)
-					{
-						used = 1;
-						break;
-					}
-					if (value == -1)
-					{
-						used = 1;
-						errors += errs;
-						break;
-					}
-					if (value == -2)
-					{
-						used = 1;
-						errors += errs;
-					}
-
-				}
-				if (!used)
-				{
-					config_error("%s:%i: unknown directive %s",
-						ce->file->filename, ce->line_number,
-						ce->name);
-					errors++;
-					if (strchr(ce->name, ':'))
-					{
-						config_error("You cannot use :: in a directive, you have to write them out. "
-						             "For example 'set::auto-join #something' needs to be written as: "
-						             "set { auto-join \"#something\"; }");
-						config_error("See also https://www.unrealircd.org/docs/Set_block#Syntax_used_in_this_documentation");
-					}
-				}
-			}
-		}
+		errors += config_test_blocks_generic(cfptr, 1, 1);
 	}
 
 	errors += config_post_test();
@@ -2879,6 +2909,61 @@ int config_test_blocks()
 	}
 
 	return (errors > 0 ? -1 : 1);
+}
+
+/* This returns the # of processed blocks, NOT errors */
+int config_run_blocks_generic(ConfigFile *cfptr, int skip_priority_blocks)
+{
+	ConfigEntry *ce;
+	int processed = 0;
+	int i;
+	Hook *h;
+	ConfigCommand *cc;
+
+	for (ce = cfptr->items; ce; ce = ce->next)
+	{
+		if (skip_priority_blocks)
+		{
+			char skip = 0;
+			for (i=0; i < ARRAY_SIZEOF(config_run_priority_blocks); i++)
+			{
+				if (!strcmp(ce->name, config_run_priority_blocks[i]))
+				{
+					skip = 1;
+					break;
+				}
+			}
+			if (skip)
+				continue;
+		}
+
+		if (!config_item_allowed_for_config_file(cfptr->filename, ce->name))
+			continue;
+
+		if ((cc = config_binary_search(ce->name)))
+		{
+			if (cc->conffunc)
+			{
+				cc->conffunc(cfptr, ce);
+				processed++;
+			}
+		}
+		else
+		{
+			int value;
+			for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+			{
+				value = (*(h->func.intfunc))(cfptr,ce,CONFIG_MAIN);
+				if (value == 1)
+				{
+					processed++;
+					break;
+				}
+			}
+		}
+	}
+
+	return processed;
 }
 
 int config_run_blocks(void)
@@ -2924,38 +3009,7 @@ int config_run_blocks(void)
 	{
 		if (config_verbose > 1)
 			config_status("Running %s", cfptr->filename);
-		for (ce = cfptr->items; ce; ce = ce->next)
-		{
-			char skip = 0;
-			for (i=0; i < ARRAY_SIZEOF(config_run_priority_blocks); i++)
-			{
-				if (!strcmp(ce->name, config_run_priority_blocks[i]))
-				{
-					skip = 1;
-					break;
-				}
-			}
-			if (skip)
-				continue;
-
-			if (!config_item_allowed_for_config_file(cfptr->filename, ce->name))
-				continue;
-
-			if ((cc = config_binary_search(ce->name))) {
-				if ((cc->conffunc) && (cc->conffunc(cfptr, ce) < 0))
-					errors++;
-			}
-			else
-			{
-				int value;
-				for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
-				{
-					value = (*(h->func.intfunc))(cfptr,ce,CONFIG_MAIN);
-					if (value == 1)
-						break;
-				}
-			}
-		}
+		config_run_blocks_generic(cfptr, 1);
 	}
 
 	listen_cleanup();
@@ -3342,6 +3396,14 @@ int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 	}
 
 	convert_to_absolute_path(&ce->value, CONFDIR);
+
+	if (str_ends_with_case_sensitive(ce->value, "central_spamfilter.conf"))
+	{
+		config_status("%s:%d: you cannot include 'central_spamfilter.conf', "
+		              "this is a special name that cannot be used.",
+		              ce->file->filename, ce->line_number);
+		return -1;
+	}
 
 	if (url_is_valid(ce->value))
 	{
@@ -7982,6 +8044,21 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
+		else if (!strcmp(cep->name, "central-spamfilter"))
+		{
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				if (!strcmp(cepp->name, "url"))
+					safe_strdup(tempiConf.central_spamfilter_url, cepp->value);
+				else if (!strcmp(cepp->name, "refresh-time"))
+					tempiConf.central_spamfilter_refresh_time = config_checkval(cepp->value, CFG_TIME);
+				else if (!strcmp(cepp->name, "verbose"))
+					tempiConf.central_spamfilter_verbose = atoi(cepp->value);
+				else if (!strcmp(cepp->name, "enabled"))
+					tempiConf.central_spamfilter_enabled = config_checkval(cepp->value, CFG_YESNO);
+				// TODO: except, with a default of identified users.
+			}
+		}
 		else if (!strcmp(cep->name, "default-bantime"))
 		{
 			tempiConf.default_bantime = config_checkval(cep->value,CFG_TIME);
@@ -9096,6 +9173,31 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					errors++;
 					continue;
 				}
+			}
+		}
+		else if (!strcmp(cep->name, "central-spamfilter"))
+		{
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				if (!strcmp(cepp->name, "url"))
+				{
+				} else
+				if (!strcmp(cepp->name, "refresh-time"))
+				{
+					int v = config_checkval(cepp->value, CFG_TIME);
+#ifndef DEBUGMODE
+					if (v < 180)
+					{
+						config_error("%s:%i: set::central-spamfilter::refresh-time needs to be more than 3 minutes",
+							cepp->file->filename, cepp->line_number);
+						errors++;
+					}
+#endif
+				}
+				else if (!strcmp(cepp->name, "verbose"))
+				{
+				}
+				// TODO: except
 			}
 		}
 		else if (!strcmp(cep->name, "default-bantime"))
@@ -10816,6 +10918,10 @@ int rehash_internal(Client *client)
 	umodes_check_for_changes();
 	charsys_check_for_changes();
 
+	/* Remove central spamfilter rules upon set::central-spamfilter::enabled no; */
+	if (iConf.central_spamfilter_enabled == 0)
+		remove_config_tkls(TKL_FLAG_CENTRAL_SPAMFILTER);
+
 	/* Clear everything now that we are done */
 	loop.rehashing = 0;
 	remote_rehash_client = NULL;
@@ -11482,3 +11588,87 @@ const char *get_setting_for_user_string(Client *client, SetOption opt)
 }
 
 /*** END OF DYNAMIC SET CONFIG STUFF (that can be overridden by security group) ***/
+
+/*** Central spamfilter ***/
+int central_spamfilter_downloading = 0;
+
+#define DFILTER_CACHE_TIME 0
+
+void central_spamfilter_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *rs_key)
+{
+	ConfigFile *cfptr;
+	int errors;
+	int numrules;
+
+	central_spamfilter_downloading = 0;
+
+	/* Race condition: REHASH (with this new setting) and this download complete callback could cross */
+	if (iConf.central_spamfilter_enabled == 0)
+		return;
+
+	if (iConf.central_spamfilter_verbose > 2)
+	{
+		unreal_log(ULOG_INFO, "central-spamfilter", "CENTRAL_SPAMFILTER_STATUS", NULL,
+		           "Processing central spamfilter rules...");
+	}
+
+	if (errorbuf)
+	{
+		config_error("Central spamfilter URL fetch failed (this could be a temporary problem): %s: %s", url, errorbuf);
+		return;
+	}
+	
+	if (!(cfptr = config_load(file, "central_spamfilter.conf")))
+	{
+		unreal_log(ULOG_ERROR, "central-spamfilter", "CENTRAL_SPAMFILTER_LOAD_FAILED", NULL,
+		           "[Central spamfilter] Failed to load"); // Where is the REASON ???
+		return;
+	}
+
+	preprocessor_resolve_conditionals_ce(&cfptr->items, PREPROCESSOR_PHASE_INITIAL);
+	preprocessor_resolve_conditionals_ce(&cfptr->items, PREPROCESSOR_PHASE_SECONDARY);
+	errors = config_test_blocks_generic(cfptr, 0, 0);
+	if (errors)
+	{
+		unreal_log(ULOG_ERROR, "central-spamfilter", "CENTRAL_SPAMFILTER_LOAD_FAILED", NULL,
+			"[Central spamfilter] Errors in the central central_spamfilter.conf -- not loaded.");
+		return;
+	}
+
+	/* Remove all current central spamfilters */
+	remove_config_tkls(TKL_FLAG_CENTRAL_SPAMFILTER);
+
+	/* And load the new ones... */
+	numrules = config_run_blocks_generic(cfptr, 0);
+
+	if (iConf.central_spamfilter_verbose > 2)
+	{
+		unreal_log(ULOG_INFO, "central-spamfilter", "CENTRAL_SPAMFILTER_STATUS", NULL,
+		           "Central spamfilter loaded (rules: $num_rules)",
+		           log_data_integer("num_rules", numrules));
+	}
+}
+
+void central_spamfilter_start_download(void)
+{
+	if (central_spamfilter_downloading)
+		return;
+	if (iConf.central_spamfilter_verbose > 2)
+	{
+		unreal_log(ULOG_INFO, "central-spamfilter", "CENTRAL_SPAMFILTER_STATUS", NULL,
+		           "Starting download of central spamfilter rules...");
+	}
+	central_spamfilter_downloading = 1;
+	download_file_async(iConf.central_spamfilter_url, DFILTER_CACHE_TIME, central_spamfilter_download_complete, NULL, NULL, DOWNLOAD_MAX_REDIRECTS);
+}
+
+EVENT(central_spamfilter_download_evt)
+{
+	static long long last_download = 0;
+	if (iConf.central_spamfilter_enabled == 0)
+		return;
+	if ((last_download == 0) || (TStime() - last_download > iConf.central_spamfilter_refresh_time))
+		central_spamfilter_start_download();
+}
+
+/*** End of central spamfilter ***/

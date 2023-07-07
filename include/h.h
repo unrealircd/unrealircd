@@ -1399,6 +1399,7 @@ extern EVENT(try_connections);
 extern const char *my_itoa(int i);
 extern void load_tunefile(void);
 extern EVENT(save_tunefile);
+extern EVENT(central_spamfilter_download_evt);
 extern void read_motd(const char *filename, MOTDFile *motd);
 extern int target_limit_exceeded(Client *client, void *target, const char *name);
 extern void make_umodestr(void);
