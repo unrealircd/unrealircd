@@ -10,7 +10,10 @@
 
 extern ConfigFile *conf;
 
-NameValueList *config_defines = NULL; /**< List of @defines, only valid during configuration reading */
+NameValuePrioList *config_defines = NULL; /**< List of @defines, only valid during configuration reading */
+
+/* Forward declarations */
+NameValuePrioList *find_config_define(const char *name);
 
 static inline int ValidVarCharacter(char x)
 {
@@ -239,10 +242,7 @@ PreprocessorItem  evaluate_preprocessor_define(char *statement, const char *file
 		return PREPROCESSOR_ERROR;
 	}
 
-	NameValueList *d = safe_alloc(sizeof(NameValueList));
-	safe_strdup(d->name, name);
-	safe_strdup(d->value, value);
-	AddListItem(d, config_defines);
+	add_nvplist(&config_defines, 0, name, value);
 	return PREPROCESSOR_DEFINE;
 }
 
@@ -327,16 +327,6 @@ void preprocessor_cc_free_list(ConditionalConfig *cc)
 	}
 }
 
-NameValueList *find_config_define(const char *name)
-{
-	NameValueList *n;
-
-	for (n = config_defines; n; n = n->next)
-		if (!strcasecmp(n->name, name))
-			return n;
-	return NULL;
-}
-
 /** Resolve a preprocessor condition to true (=default) or false */
 int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 {
@@ -366,7 +356,7 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 	} else
 	if (cc->condition == IF_DEFINED)
 	{
-		NameValueList *d = find_config_define(cc->name);
+		NameValuePrioList *d = find_config_define(cc->name);
 		if (d)
 		{
 			result = 1;
@@ -374,7 +364,7 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 	} else
 	if (cc->condition == IF_VALUE)
 	{
-		NameValueList *d = find_config_define(cc->name);
+		NameValuePrioList *d = find_config_define(cc->name);
 		if (d && !strcasecmp(d->value, cc->opt))
 		{
 			result = 1;
@@ -427,32 +417,28 @@ void preprocessor_resolve_conditionals_all(PreprocessorPhase phase)
 		preprocessor_resolve_conditionals_ce(&cfptr->items, phase);
 }
 
-/** Frees the list of config_defines, so all @defines */
+/** Frees the list of config_defines, so all @defines, and add the build-in ones */
 void free_config_defines(void)
 {
-	NameValueList *e, *e_next;
-	for (e = config_defines; e; e = e_next)
-	{
-		e_next = e->next;
-		safe_free(e->name);
-		safe_free(e->value);
-		safe_free(e);
-	}
-	config_defines = NULL;
+	safe_free_nvplist(config_defines);
+	add_nvplist(&config_defines, 0, "UNREALIRCD_VERSION", VERSIONONLY);
+	add_nvplist(&config_defines, 0, "UNREALIRCD_VERSION_GENERATION", PATCH1);
+	add_nvplist(&config_defines, 0, "UNREALIRCD_VERSION_MAJOR", PATCH2);
+	add_nvplist(&config_defines, 0, "UNREALIRCD_VERSION_MINOR", PATCH3);
+	add_nvplist(&config_defines, 0, "UNREALIRCD_VERSION_SUFFIX", PATCH4);
+}
+
+/** Return the complete struct for a defined value */
+NameValuePrioList *find_config_define(const char *name)
+{
+	return find_nvplist(config_defines, name);
 }
 
 /** Return value of defined value */
 char *get_config_define(char *name)
 {
-	NameValueList *e;
-
-	for (e = config_defines; e; e = e->next)
-	{
-		if (!strcasecmp(e->name, name))
-			return e->value;
-	}
-
-	return NULL;
+	NameValuePrioList *e = find_nvplist(config_defines, name);
+	return e ? e->value : NULL;
 }
 
 void preprocessor_replace_defines(char **item, ConfigEntry *ce)

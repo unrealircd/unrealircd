@@ -1220,6 +1220,7 @@ extern void add_nvplist_numeric_fmt(NameValuePrioList **lst, int priority, const
 extern NameValuePrioList *find_nvplist(NameValuePrioList *list, const char *name);
 extern const char *get_nvplist(NameValuePrioList *list, const char *name);
 extern void free_nvplist(NameValuePrioList *lst);
+#define safe_free_nvplist(x)	do { free_nvplist(x); x = NULL; } while(0)
 extern NameValuePrioList *duplicate_nvplist(NameValuePrioList *e);
 extern void unreal_add_name_values(NameValuePrioList **n, const char *name, ConfigEntry *ce);
 extern const char *namevalue(NameValuePrioList *n);
