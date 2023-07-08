@@ -4775,15 +4775,16 @@ void ban_action_run_all_sets(Client *client, BanAction *action)
  * @param skip_set   Skip BAN_ACT_SET (eg because you already processed them earlier, like in match_spamfilter)
  * @note This function assumes that client is a locally connected user.
  * @retval 0	user is exempt or no action needs to be taken for other reasons (eg only var setting)
- * @retval 1	user is banned/shunned/killed/whatever, caller usually returns
- * @retval BAN_ACT_BLOCK	the user was not banned/shunned/killed but should be "blocked"
+ * @retval BAN_ACT_*	the highest BAN_ACT_xxx value, eg BAN_ACT_BLOCK or BAN_ACT_GLINE, etc...
+ * @note BAN_ACT_SET and BAN_ACT_REPORT are never returned since they are no 'real actions' (have no impact on user)
  * @note Be sure to check IsDead(client) if return value is 1 and you are
  *       considering to continue processing.
  */
 int _place_host_ban(Client *client, BanAction *actions, char *reason, long duration, int skip_set)
 {
 	BanAction *action;
-	int retval = 0;
+	int previous_highest = 0;
+	int highest = 0;
 
 	for (action = actions; action; action = action->next)
 	{
@@ -4791,27 +4792,12 @@ int _place_host_ban(Client *client, BanAction *actions, char *reason, long durat
 		if (IsSoftBanAction(action->action) && IsLoggedIn(client))
 			return 0;
 
+		previous_highest = highest;
+		if ((action->action > highest) && (action->action != BAN_ACT_SET) && (action->action != BAN_ACT_REPORT))
+			highest = action->action;
+
 		switch(action->action)
 		{
-			case BAN_ACT_SET:
-				if (!skip_set)
-					ban_act_set(client, action);
-				break;
-			case BAN_ACT_REPORT:
-				spamreport(client, client->ip, NULL, action->var);
-				break;
-			case BAN_ACT_WARN:
-				/* No action taken by us */
-				break;
-			case BAN_ACT_TEMPSHUN:
-				/* We simply mark this connection as shunned and do not add a ban record */
-				unreal_log(ULOG_INFO, "tkl", "TKL_ADD_TEMPSHUN", &me,
-					   "Temporary shun added on user $target.details [reason: $shun_reason] [by: $client]",
-					   log_data_string("shun_reason", reason),
-					   log_data_client("target", client));
-				SetShunned(client);
-				retval = 1;
-				break;
 			case BAN_ACT_GZLINE:
 			case BAN_ACT_GLINE:
 			case BAN_ACT_SOFT_GLINE:
@@ -4869,37 +4855,47 @@ int _place_host_ban(Client *client, BanAction *actions, char *reason, long durat
 				if ((action->action == BAN_ACT_SHUN) || (action->action == BAN_ACT_SOFT_SHUN))
 				{
 					find_shun(client);
-					retval = 1;
 					break;
 				} /* else.. */
-				retval = find_tkline_match(client, 0);
-				break;
-			}
-			case BAN_ACT_BLOCK:
-				/* We don't actively do something, but we do indicate it is blocked */
-				if (retval != 1)
-					retval = BAN_ACT_BLOCK;
-				break;
-			case BAN_ACT_SOFT_BLOCK:
-				if (!IsLoggedIn(client))
+				if (!find_tkline_match(client, 0))
 				{
-					if (retval != 1)
-						retval = BAN_ACT_BLOCK;
+					/* Not banned! revert the return value that we had in mind... */
+					highest = previous_highest;
 				}
 				break;
+			}
 			case BAN_ACT_SOFT_KILL:
 			case BAN_ACT_KILL:
-			default:
 				RunHookReturnInt(HOOKTYPE_PLACE_HOST_BAN, !=99, client, action->action, reason, duration);
 				exit_client(client, NULL, reason);
-				retval = 1;
+				break;
+			case BAN_ACT_SOFT_TEMPSHUN:
+			case BAN_ACT_TEMPSHUN:
+				/* We simply mark this connection as shunned and do not add a ban record */
+				unreal_log(ULOG_INFO, "tkl", "TKL_ADD_TEMPSHUN", &me,
+					   "Temporary shun added on user $target.details [reason: $shun_reason] [by: $client]",
+					   log_data_string("shun_reason", reason),
+					   log_data_client("target", client));
+				SetShunned(client);
+				break;
+			case BAN_ACT_REPORT:
+				spamreport(client, client->ip, NULL, action->var);
+				break;
+			case BAN_ACT_SET:
+				if (!skip_set)
+					ban_act_set(client, action);
+				break;
+			default:
+				/* (BAN_ACT_BLOCK, BAN_ACT_SOFT_BLOCK, BAN_ACT_WARN, etc...) */
+				/* We don't actively do something, up to caller */
 				break;
 		}
 
 		if (IsDead(client))
 			break; /* stop processing actions */
 	}
-	return retval;
+
+	return highest;
 }
 
 /* Find the highest value in a BanAction linked list (the strongest action, eg gline>block) */
@@ -5241,98 +5237,99 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	/* Spamfilter matched, take action: */
 
 	reason = unreal_decodespace(tkl->ptr.spamfilter->tkl_reason);
-	if ((tkl->ptr.spamfilter->action->action == BAN_ACT_BLOCK) || (tkl->ptr.spamfilter->action->action == BAN_ACT_SOFT_BLOCK))
+	ret = place_host_ban(client, tkl->ptr.spamfilter->action, reason, tkl->ptr.spamfilter->tkl_duration, 1);
+	if (!IsDead(client))
 	{
-		switch(target)
+		if ((ret == BAN_ACT_BLOCK) || (ret == BAN_ACT_SOFT_BLOCK))
 		{
-			case SPAMF_USERMSG:
-			case SPAMF_USERNOTICE:
+			switch(target)
 			{
-				char errmsg[512];
-				ircsnprintf(errmsg, sizeof(errmsg), "Message blocked: %s", reason);
-				sendnumeric(client, ERR_CANTSENDTOUSER, destination, errmsg);
-				break;
-			}
-			case SPAMF_CHANNOTICE:
-				break; /* no replies to notices */
-			case SPAMF_CHANMSG:
-			{
-				sendto_one(client, NULL, ":%s 404 %s %s :Message blocked: %s",
-					me.name, client->name, destination, reason);
-				break;
-			}
-			case SPAMF_MTAG:
-			{
-				sendnumericfmt(client, ERR_CANNOTDOCOMMAND, "%s :Command blocked: %s",
-					cmd, reason);
-				break;
-			}
-			case SPAMF_DCC:
-			{
-				char errmsg[512];
-				ircsnprintf(errmsg, sizeof(errmsg), "DCC blocked: %s", reason);
-				sendnumeric(client, ERR_CANTSENDTOUSER, destination, errmsg);
-				break;
-			}
-			case SPAMF_AWAY:
-				/* hack to deal with 'after-away-was-set-filters' */
-				if (client->user->away && !strcmp(str_in, client->user->away))
+				case SPAMF_USERMSG:
+				case SPAMF_USERNOTICE:
 				{
-					/* free away & broadcast the unset */
-					safe_free(client->user->away);
-					client->user->away = NULL;
-					sendto_server(client, 0, 0, NULL, ":%s AWAY", client->id);
+					char errmsg[512];
+					ircsnprintf(errmsg, sizeof(errmsg), "Message blocked: %s", reason);
+					sendnumeric(client, ERR_CANTSENDTOUSER, destination, errmsg);
+					break;
 				}
-				break;
-			case SPAMF_TOPIC:
-				//...
-				sendnotice(client, "Setting of topic on %s to that text is blocked: %s",
-					destination, reason);
-				break;
-			default:
-				break;
-		}
-		return 1;
-	} else
-	if ((tkl->ptr.spamfilter->action->action == BAN_ACT_WARN) || (tkl->ptr.spamfilter->action->action == BAN_ACT_SOFT_WARN))
-	{
-		if ((target != SPAMF_USER) && (target != SPAMF_QUIT))
-			sendnumeric(client, RPL_SPAMCMDFWD, cmd, reason);
-		return 0;
-	} else
-	if ((tkl->ptr.spamfilter->action->action == BAN_ACT_DCCBLOCK) || (tkl->ptr.spamfilter->action->action == BAN_ACT_SOFT_DCCBLOCK))
-	{
-		if (target == SPAMF_DCC)
+				case SPAMF_CHANNOTICE:
+					break; /* no replies to notices */
+				case SPAMF_CHANMSG:
+				{
+					sendto_one(client, NULL, ":%s 404 %s %s :Message blocked: %s",
+						me.name, client->name, destination, reason);
+					break;
+				}
+				case SPAMF_MTAG:
+				{
+					sendnumericfmt(client, ERR_CANNOTDOCOMMAND, "%s :Command blocked: %s",
+						cmd, reason);
+					break;
+				}
+				case SPAMF_DCC:
+				{
+					char errmsg[512];
+					ircsnprintf(errmsg, sizeof(errmsg), "DCC blocked: %s", reason);
+					sendnumeric(client, ERR_CANTSENDTOUSER, destination, errmsg);
+					break;
+				}
+				case SPAMF_AWAY:
+					/* hack to deal with 'after-away-was-set-filters' */
+					if (client->user->away && !strcmp(str_in, client->user->away))
+					{
+						/* free away & broadcast the unset */
+						safe_free(client->user->away);
+						client->user->away = NULL;
+						sendto_server(client, 0, 0, NULL, ":%s AWAY", client->id);
+					}
+					break;
+				case SPAMF_TOPIC:
+					//...
+					sendnotice(client, "Setting of topic on %s to that text is blocked: %s",
+						destination, reason);
+					break;
+				default:
+					break;
+			}
+			return 1;
+		} else
+		if ((ret == BAN_ACT_WARN) || (ret == BAN_ACT_SOFT_WARN))
 		{
-			sendnotice(client, "DCC to %s blocked: %s", destination, reason);
-			sendnotice(client, "*** You have been blocked from sending files, reconnect to regain permission to send files");
-			SetDCCBlock(client);
-		}
-		return 1;
-	} else
-	if ((tkl->ptr.spamfilter->action->action == BAN_ACT_VIRUSCHAN) || (tkl->ptr.spamfilter->action->action == BAN_ACT_SOFT_VIRUSCHAN))
-	{
-		if (IsVirus(client)) /* Already tagged */
+			if ((target != SPAMF_USER) && (target != SPAMF_QUIT))
+				sendnumeric(client, RPL_SPAMCMDFWD, cmd, reason);
 			return 0;
-
-		/* There's a race condition for SPAMF_USER, so 'rettk' is used for SPAMF_USER
-		 * when a user is currently connecting and filters are checked:
-		 */
-		if (!IsUser(client))
+		} else
+		if ((ret == BAN_ACT_DCCBLOCK) || (ret == BAN_ACT_SOFT_DCCBLOCK))
 		{
-			if (rettkl)
-				*rettkl = tkl;
+			if (target == SPAMF_DCC)
+			{
+				sendnotice(client, "DCC to %s blocked: %s", destination, reason);
+				sendnotice(client, "*** You have been blocked from sending files, reconnect to regain permission to send files");
+				SetDCCBlock(client);
+			}
+			return 1;
+		} else
+		if ((ret == BAN_ACT_VIRUSCHAN) || (ret == BAN_ACT_SOFT_VIRUSCHAN))
+		{
+			if (IsVirus(client)) /* Already tagged */
+				return 1; // this was 0, but the action should be blocked, right?
+
+			/* There's a race condition for SPAMF_USER, so 'rettk' is used for SPAMF_USER
+			 * when a user is currently connecting and filters are checked:
+			 */
+			if (!IsUser(client))
+			{
+				if (rettkl)
+					*rettkl = tkl;
+				return 1;
+			}
+
+			join_viruschan(client, tkl, target);
 			return 1;
 		}
-
-		join_viruschan(client, tkl, target);
-		return 1;
-	} else
-	{
-		return place_host_ban(client, tkl->ptr.spamfilter->action, reason, tkl->ptr.spamfilter->tkl_duration, 1);
 	}
 
-	return 0; /* NOTREACHED */
+	return ret;
 }
 
 /** Check message-tag spamfilters.
