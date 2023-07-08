@@ -365,12 +365,12 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			has_reason = 1;
 			reason = cep->value;
 		}
-		else if (!strcmp(cep->name, "match"))
+		else if (!strcmp(cep->name, "match") || !strcmp(cep->name, "match-string"))
 		{
 			if (has_match)
 			{
 				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "spamfilter::match");
+					cep->line_number, "spamfilter::match-string");
 				continue;
 			}
 			has_match = 1;
@@ -543,7 +543,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 		{
 			id = cep->value;
 		}
-		if (!strcmp(cep->name, "match"))
+		if (!strcmp(cep->name, "match") || !strcmp(cep->name, "match-string"))
 		{
 			match = cep->value;
 		}
