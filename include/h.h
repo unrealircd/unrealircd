@@ -818,7 +818,7 @@ extern MODVAR TKL *(*tkl_add_banexception)(int type, const char *usermask, const
                                            time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags);
 extern MODVAR TKL *(*tkl_add_nameban)(int type, const char *name, int hold, const char *reason, const char *setby,
                                           time_t expire_at, time_t set_at, int flags);
-extern MODVAR TKL *(*tkl_add_spamfilter)(int type, unsigned short target, BanAction *action,
+extern MODVAR TKL *(*tkl_add_spamfilter)(int type, const char *id, unsigned short target, BanAction *action,
                                          Match *match, const char *rule, const char *setby,
                                          time_t expire_at, time_t set_at,
                                          time_t spamf_tkl_duration, const char *spamf_tkl_reason,
@@ -1445,3 +1445,4 @@ extern Tag *add_tag(Client *client, const char *name, int value);
 extern void free_all_tags(Client *client);
 extern void del_tag(Client *client, const char *name);
 extern void bump_tag_serial(Client *client);
+extern int valid_spamfilter_id(const char *s);

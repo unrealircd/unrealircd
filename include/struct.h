@@ -194,6 +194,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define UMODETABLESZ (sizeof(long) * 8)
 #define MAXCCUSERS		20 /* Maximum for set::anti-flood::max-concurrent-conversations */
 #define BATCHLEN	22
+#define MAXSPAMFILTERIDLEN	24
 
 /*
  * Watch it - Don't change this unless you also change the ERR_TOOMANYWATCH
@@ -1220,6 +1221,7 @@ struct Spamfilter {
 	char *prettyrule; /**< human printable version */
 	char *tkl_reason; /**< Reason to use for bans placed by this spamfilter, escaped by unreal_encodespace(). */
 	time_t tkl_duration; /**< Duration of bans placed by this spamfilter */
+	char *id; /**< ID */
 };
 
 /** Ban exception sub-struct of TKL entry (ELINE) */

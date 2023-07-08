@@ -720,7 +720,7 @@ int read_tkldb(void)
 
 			if (!do_not_add)
 			{
-				tkl_add_spamfilter(tkl->type, tkl->ptr.spamfilter->target,
+				tkl_add_spamfilter(tkl->type, NULL, tkl->ptr.spamfilter->target,
 				                   tkl->ptr.spamfilter->action,
 				                   tkl->ptr.spamfilter->match,
 				                   NULL,

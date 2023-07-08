@@ -68,8 +68,9 @@ TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, SecurityGro
                            time_t expire_at, time_t set_at, int soft, char *bantypes, int flags);
 TKL *_tkl_add_nameban(int type, char *name, int hold, char *reason, char *set_by,
                           time_t expire_at, time_t set_at, int flags);
-TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction *action, Match *match,
-                         const char *rule, const char *set_by,
+TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAction *action,
+                         Match *match, const char *rule,
+                         const char *set_by,
                          time_t expire_at, time_t set_at,
                          time_t spamf_tkl_duration, const char *spamf_tkl_reason,
                          int flags);
@@ -270,7 +271,7 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	ConfigEntry *cep, *cepp;
 	int errors = 0;
 	char *match = NULL, *reason = NULL;
-	char has_target = 0, has_match = 0, has_rule = 0, has_action = 0, has_reason = 0, has_bantime = 0, has_match_type = 0;
+	char has_target = 0, has_id = 0, has_match = 0, has_rule = 0, has_action = 0, has_reason = 0, has_bantime = 0, has_match_type = 0;
 	int match_type = 0;
 
 	/* We are only interested in spamfilter { } blocks */
@@ -279,6 +280,23 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		if (!strcmp(cep->name, "id"))
+		{
+			if (has_id)
+			{
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "spamfilter::id");
+				continue;
+			}
+			has_id = 1;
+			if (!valid_spamfilter_id(cep->value))
+			{
+				config_error("%s:%i: spamfilter::id invalid: maximum size (%d chars) exceeded "
+				             "or forbidden characters encountered: only A-Z, 0-9 and _ are permitted.",
+				             cep->file->filename, cep->line_number, MAXSPAMFILTERIDLEN);
+				errors++;
+			}
+		} else
 		if (!strcmp(cep->name, "target"))
 		{
 			if (has_target)
@@ -500,6 +518,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
+	char *id = NULL;
 	char *match = NULL;
 	char *rule = NULL;
 	time_t bantime = tempiConf.spamfilter_ban_time;
@@ -520,6 +539,10 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		if (!strcmp(cep->name, "id"))
+		{
+			id = cep->value;
+		}
 		if (!strcmp(cep->name, "match"))
 		{
 			match = cep->value;
@@ -562,16 +585,17 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (match)
 		m = unreal_create_match(match_type, match, NULL);
 	tkl_add_spamfilter(TKL_SPAMF,
-	                    target,
-	                    action,
-	                    m,
-	                    rule,
-	                    "-config-",
-	                    0,
-	                    TStime(),
-	                    bantime,
-	                    banreason,
-	                    flag);
+	                   id,
+	                   target,
+	                   action,
+	                   m,
+	                   rule,
+	                   "-config-",
+	                   0,
+	                   TStime(),
+	                   bantime,
+	                   banreason,
+	                   flag);
 	return 1;
 }
 
@@ -2613,6 +2637,7 @@ TKL *tkl_find_head(char type, char *hostmask, TKL *def)
 }
 
 /** Add a spamfilter entry to the list.
+ * @param id                  ID
  * @param type                TKL_SPAMF or TKL_SPAMF|TKL_GLOBAL.
  * @param target              The spamfilter target (SPAMF_*)
  * @param action              The spamfilter action (BAN_ACT_*)
@@ -2626,11 +2651,12 @@ TKL *tkl_find_head(char type, char *hostmask, TKL *def)
  * @returns                   The TKL entry, or NULL in case of a problem,
  *                            such as a regex failing to compile, memory problem, ..
  */
-TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction *action,
-                             Match *match, const char *rule, const char *set_by,
-                             time_t expire_at, time_t set_at,
-                             time_t tkl_duration, const char *tkl_reason,
-                             int flags)
+TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAction *action,
+                         Match *match, const char *rule,
+                         const char *set_by,
+                         time_t expire_at, time_t set_at,
+                         time_t tkl_duration, const char *tkl_reason,
+                         int flags)
 {
 	TKL *tkl;
 	int index;
@@ -2883,6 +2909,7 @@ void _free_tkl(TKL *tkl)
 		if (tkl->ptr.spamfilter->rule)
 			crule_free(&tkl->ptr.spamfilter->rule);
 		safe_free(tkl->ptr.spamfilter->prettyrule);
+		safe_free(tkl->ptr.spamfilter->id);
 		safe_free(tkl->ptr.spamfilter);
 	} else
 	if (TKLIsBanException(tkl) && tkl->ptr.banexception)
@@ -4401,7 +4428,7 @@ CMD_FUNC(cmd_tkl_add)
 					log_data_string("spamfilter_regex_error", err));
 				return;
 			}
-			tkl = tkl_add_spamfilter(type, target, banact_value_to_struct(action), m, NULL, set_by, expire_at, set_at,
+			tkl = tkl_add_spamfilter(type, NULL, target, banact_value_to_struct(action), m, NULL, set_by, expire_at, set_at,
 			                         tkl_duration, tkl_reason, 0);
 		}
 	} else
