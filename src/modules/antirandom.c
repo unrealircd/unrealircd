@@ -878,7 +878,7 @@ int antirandom_preconnect(Client *client)
 			           "[antirandom] denied access to user with score $score: $client.details:$client.user.realname",
 			           log_data_integer("score", score));
 		}
-		if (place_host_ban(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time, 0))
+		if (take_action(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time, 0))
 			return HOOK_DENY;
 	}
 	return HOOK_CONTINUE;

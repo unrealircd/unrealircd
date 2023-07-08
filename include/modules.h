@@ -1203,8 +1203,8 @@ extern void SavePersistentLongLongX(ModuleInfo *modinfo, const char *varshortnam
 #define HOOKTYPE_SASL_CONTINUATION	91
 /** See hooktype_sasl_result() */
 #define HOOKTYPE_SASL_RESULT	92
-/** See hooktype_place_host_ban() */
-#define HOOKTYPE_PLACE_HOST_BAN	93
+/** See hooktype_take_action() */
+#define HOOKTYPE_TAKE_ACTION	93
 /** See hooktype_find_tkline_match() */
 #define HOOKTYPE_FIND_TKLINE_MATCH	94
 /** See hooktype_welcome() */
@@ -2095,7 +2095,7 @@ int hooktype_sasl_continuation(Client *client, const char *buf);
  */
 int hooktype_sasl_result(Client *client, int success);
 
-/** Called when a TKL ban should be added on the host (function prototype for HOOKTYPE_PLACE_HOST_BAN).
+/** Called when a TKL ban should be added on the host (function prototype for HOOKTYPE_TAKE_ACTION).
  * This is called for automated bans such as spamfilter hits, flooding, etc.
  * This hook can be used to prevent the ban, or as used by the authprompt to delay it.
  * @param client		The client that should be banned
@@ -2104,11 +2104,11 @@ int hooktype_sasl_result(Client *client, int success);
  * @param duration		The duration of the ban, 0 for permanent ban
  * @return The magic value 99 is used to exempt the user (=do not ban!), otherwise the ban is added.
  */
-int hooktype_place_host_ban(Client *client, BanActionValue action, const char *reason, long duration);
+int hooktype_take_action(Client *client, BanActionValue action, const char *reason, long duration);
 
 /** Called when a TKL ban is hit by this user (function prototype for HOOKTYPE_FIND_TKLINE_MATCH).
  * This is called when an existing TKL entry is hit by the user.
- * To prevent an automated ban to be added on a host/ip, see hooktype_place_host_ban().
+ * To prevent an automated ban to be added on a host/ip, see hooktype_take_action().
  * @param client		The client
  * @param tkl			The TKL entry
  * @return The magic value 99 is used to exempt the user (=do not kill!), otherwise the ban is executed.
@@ -2431,7 +2431,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION) && !ValidateHook(hooktype_can_bypass_channel_message_restriction, func)) || \
         ((hooktype == HOOKTYPE_SASL_CONTINUATION) && !ValidateHook(hooktype_sasl_continuation, func)) || \
         ((hooktype == HOOKTYPE_SASL_RESULT) && !ValidateHook(hooktype_sasl_result, func)) || \
-        ((hooktype == HOOKTYPE_PLACE_HOST_BAN) && !ValidateHook(hooktype_place_host_ban, func)) || \
+        ((hooktype == HOOKTYPE_TAKE_ACTION) && !ValidateHook(hooktype_take_action, func)) || \
         ((hooktype == HOOKTYPE_FIND_TKLINE_MATCH) && !ValidateHook(hooktype_find_tkline_match, func)) || \
         ((hooktype == HOOKTYPE_WELCOME) && !ValidateHook(hooktype_welcome, func)) || \
         ((hooktype == HOOKTYPE_PRE_COMMAND) && !ValidateHook(hooktype_pre_command, func)) || \
@@ -2507,7 +2507,7 @@ enum EfunctionType {
 	EFUNC_TKL_STATS,
 	EFUNC_TKL_SYNCH,
 	EFUNC_CMD_TKL,
-	EFUNC_PLACE_HOST_BAN,
+	EFUNC_TAKE_ACTION,
 	EFUNC_MATCH_SPAMFILTER,
 	EFUNC_MATCH_SPAMFILTER_MTAGS,
 	EFUNC_JOIN_VIRUSCHAN,

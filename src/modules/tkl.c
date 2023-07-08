@@ -90,7 +90,7 @@ TKL *_find_tkline_match_zap(Client *client);
 void _tkl_stats(Client *client, int type, const char *para, int *cnt);
 void _tkl_sync(Client *client);
 CMD_FUNC(_cmd_tkl);
-int _place_host_ban(Client *client, BanAction *action, char *reason, long duration, int skip_set);
+int _take_action(Client *client, BanAction *action, char *reason, long duration, int skip_set);
 int _match_spamfilter(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, TKL **rettk);
 int _match_spamfilter_mtags(Client *client, MessageTag *mtags, char *cmd);
 int check_mtag_spamfilters_present(void);
@@ -207,7 +207,7 @@ MOD_TEST()
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_STATS, _tkl_stats);
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_SYNCH, _tkl_sync);
 	EfunctionAddVoid(modinfo->handle, EFUNC_CMD_TKL, _cmd_tkl);
-	EfunctionAdd(modinfo->handle, EFUNC_PLACE_HOST_BAN, _place_host_ban);
+	EfunctionAdd(modinfo->handle, EFUNC_TAKE_ACTION, _take_action);
 	EfunctionAdd(modinfo->handle, EFUNC_MATCH_SPAMFILTER, _match_spamfilter);
 	EfunctionAdd(modinfo->handle, EFUNC_MATCH_SPAMFILTER_MTAGS, _match_spamfilter_mtags);
 	EfunctionAdd(modinfo->handle, EFUNC_JOIN_VIRUSCHAN, _join_viruschan);
@@ -4780,7 +4780,7 @@ void ban_action_run_all_sets(Client *client, BanAction *action)
  * @note Be sure to check IsDead(client) if return value is 1 and you are
  *       considering to continue processing.
  */
-int _place_host_ban(Client *client, BanAction *actions, char *reason, long duration, int skip_set)
+int _take_action(Client *client, BanAction *actions, char *reason, long duration, int skip_set)
 {
 	BanAction *action;
 	int previous_highest = 0;
@@ -4851,7 +4851,7 @@ int _place_host_ban(Client *client, BanAction *actions, char *reason, long durat
 				tkllayer[7] = mo2;
 				tkllayer[8] = reason;
 				cmd_tkl(&me, NULL, 9, tkllayer);
-				RunHookReturnInt(HOOKTYPE_PLACE_HOST_BAN, !=99, client, action->action, reason, duration);
+				RunHookReturnInt(HOOKTYPE_TAKE_ACTION, !=99, client, action->action, reason, duration);
 				if ((action->action == BAN_ACT_SHUN) || (action->action == BAN_ACT_SOFT_SHUN))
 				{
 					find_shun(client);
@@ -4866,7 +4866,7 @@ int _place_host_ban(Client *client, BanAction *actions, char *reason, long durat
 			}
 			case BAN_ACT_SOFT_KILL:
 			case BAN_ACT_KILL:
-				RunHookReturnInt(HOOKTYPE_PLACE_HOST_BAN, !=99, client, action->action, reason, duration);
+				RunHookReturnInt(HOOKTYPE_TAKE_ACTION, !=99, client, action->action, reason, duration);
 				exit_client(client, NULL, reason);
 				break;
 			case BAN_ACT_SOFT_TEMPSHUN:
@@ -5237,7 +5237,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	/* Spamfilter matched, take action: */
 
 	reason = unreal_decodespace(tkl->ptr.spamfilter->tkl_reason);
-	ret = place_host_ban(client, tkl->ptr.spamfilter->action, reason, tkl->ptr.spamfilter->tkl_duration, 1);
+	ret = take_action(client, tkl->ptr.spamfilter->action, reason, tkl->ptr.spamfilter->tkl_duration, 1);
 	if (!IsDead(client))
 	{
 		if ((ret == BAN_ACT_BLOCK) || (ret == BAN_ACT_SOFT_BLOCK))
