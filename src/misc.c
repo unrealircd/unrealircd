@@ -80,6 +80,7 @@ static BanActTable banacttable[] = {
 	{ BAN_ACT_WARN,		'w',	"warn" },
 	{ BAN_ACT_SOFT_WARN,	'W',	"soft-warn" },
 	{ BAN_ACT_SET,		'1',	"set" },
+	{ BAN_ACT_REPORT,	'r',	"report" },
 	{ 0, 0, 0 }
 };
 
@@ -894,6 +895,8 @@ int test_ban_action_config_helper(ConfigEntry *ce, const char *name, const char 
 				errors++;
 			}
 		}
+	} else if (action == BAN_ACT_REPORT)
+	{
 	}
 
 	return errors;
@@ -947,6 +950,10 @@ BanAction *parse_ban_action_config_helper(const char *name, const char *value)
 		safe_strdup(action->var, var);
 		action->value = varvalue;
 		action->var_action = op;
+	} else
+	if (action->action == BAN_ACT_REPORT)
+	{
+		safe_strdup(action->var, value); // can be NULL, means all
 	}
 
 	return action;
@@ -1679,6 +1686,11 @@ int del_silence_default_handler(Client *client, const char *mask)
 int is_silenced_default_handler(Client *client, Client *acptr)
 {
 	return 0;
+}
+
+int spamreport_default_handler(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block)
+{
+	return -1;
 }
 
 /** Generate a BATCH id.

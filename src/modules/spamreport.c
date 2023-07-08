@@ -39,6 +39,7 @@ CMD_FUNC(cmd_spamreport);
 int tkl_config_test_spamreport(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_spamreport(ConfigFile *, ConfigEntry *, int);
 void free_spamreport_blocks(void);
+int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
 
 /* Variables */
 Spamreport *spamreports = NULL;
@@ -46,6 +47,7 @@ Spamreport *spamreports = NULL;
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	EfunctionAdd(modinfo->handle, EFUNC_SPAMREPORT, _spamreport);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_spamreport);
 	return MOD_SUCCESS;
 }
@@ -223,6 +225,7 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 		return 0;
 
 	s = safe_alloc(sizeof(Spamreport));
+	safe_strdup(s->name, ce->value);
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
@@ -300,20 +303,25 @@ Spamreport *find_spamreport_block(const char *name)
 	return NULL;
 }
 
-int report_spam(Client *client, const char *ip, NameValuePrioList *details, Spamreport *s)
+int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block)
 {
+	Spamreport *s;
 	char urlbuf[512];
 	char bodybuf[512];
 	char *url = NULL;
 	char *body = NULL;
 
-	if (s == NULL)
+	if (!spamreport_block)
 	{
 		int ret = 0;
 		for (s = spamreports; s; s = s->next)
-			ret += report_spam(client, ip, details, s);
+			ret += spamreport(client, ip, details, s->name);
 		return ret;
 	}
+
+	s = find_spamreport_block(spamreport_block);
+	if (!s)
+		return -1; /* NOTFOUND */
 
 	if (s->except && client && user_allowed_by_security_group(client, s->except))
 		return 0;
@@ -398,7 +406,7 @@ CMD_FUNC(cmd_spamreport)
 		return;
 	}
 
-	if (!((n = report_spam(target, ip, NULL, to))))
+	if (!((n = spamreport(target, ip, NULL, to ? to->name : NULL))))
 		sendnotice(client, "Could not report spam. No spamreport { } blocks configured, or all filtered out/exempt.");
 	else
 		sendnotice(client, "Sending spam report to %d target(s)", n);

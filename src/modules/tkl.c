@@ -4797,6 +4797,9 @@ int _place_host_ban(Client *client, BanAction *actions, char *reason, long durat
 				if (!skip_set)
 					ban_act_set(client, action);
 				break;
+			case BAN_ACT_REPORT:
+				spamreport(client, client->ip, NULL, action->var);
+				break;
 			case BAN_ACT_WARN:
 				/* No action taken by us */
 				break;

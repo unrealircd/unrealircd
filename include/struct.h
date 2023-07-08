@@ -1172,7 +1172,8 @@ typedef enum BanActionValue {
 	BAN_ACT_SOFT_BLOCK	= 150,
 	BAN_ACT_WARN		= 100,
 	BAN_ACT_SOFT_WARN	=  50,
-	BAN_ACT_SET		=  40,
+	BAN_ACT_REPORT		=  40,
+	BAN_ACT_SET		=  30,
 } BanActionValue;
 
 typedef enum VarActionValue {

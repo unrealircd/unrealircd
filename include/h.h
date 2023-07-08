@@ -921,6 +921,7 @@ extern MODVAR int (*websocket_create_packet_simple)(int opcode, const char **buf
 extern MODVAR const char *(*check_deny_link)(ConfigItem_link *link, int auto_connect);
 extern MODVAR void (*mtag_add_issued_by)(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 extern MODVAR void (*cancel_ident_lookup)(Client *client);
+extern MODVAR int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
 /* /Efuncs */
 
 /* TLS functions */
@@ -973,6 +974,7 @@ extern int websocket_create_packet_ex_default_handler(int opcode, char **buf, in
 extern int websocket_create_packet_simple_default_handler(int opcode, const char **buf, int *len);
 extern void mtag_add_issued_by_default_handler(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 extern void cancel_ident_lookup_default_handler(Client *client);
+extern int spamreport_default_handler(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
 /* End of default handlers for efunctions */
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;

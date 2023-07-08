@@ -161,6 +161,7 @@ int (*websocket_create_packet_simple)(int opcode, const char **buf, int *len);
 const char *(*check_deny_link)(ConfigItem_link *link, int auto_connect);
 void (*mtag_add_issued_by)(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 void (*cancel_ident_lookup)(Client *client);
+int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
@@ -455,4 +456,5 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_CHECK_DENY_LINK, check_deny_link, NULL);
 	efunc_init_function(EFUNC_MTAG_GENERATE_ISSUED_BY_IRC, mtag_add_issued_by, mtag_add_issued_by_default_handler);
 	efunc_init_function(EFUNC_CANCEL_IDENT_LOOKUP, cancel_ident_lookup, cancel_ident_lookup_default_handler);
+	efunc_init_function(EFUNC_SPAMREPORT, spamreport, spamreport_default_handler);
 }
