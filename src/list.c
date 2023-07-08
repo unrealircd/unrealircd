@@ -693,6 +693,14 @@ NameValuePrioList *duplicate_nvplist(NameValuePrioList *e)
 	return n;
 }
 
+NameValuePrioList *duplicate_nvplist_append(NameValuePrioList *e, NameValuePrioList **list)
+{
+	for (; e; e = e->next)
+		add_nvplist(list, e->priority, e->name, e->value);
+
+	return *list;
+}
+
 #define nv_find_by_name(stru, name)	do_nv_find_by_name(stru, name, ARRAY_SIZEOF((stru)))
 
 long do_nv_find_by_name(NameValue *table, const char *cmd, int numelements)
