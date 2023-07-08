@@ -129,9 +129,9 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 				continue;
 			}
 			has_http_method = 1;
-			if (strcmp(cep->value, "get"))
+			if (strcmp(cep->value, "get") && strcmp(cep->value, "post"))
 			{
-				config_error("%s:%i: spamreport::http-method: only 'get' is supported at the moment",
+				config_error("%s:%i: spamreport::http-method: only 'get' and 'post' are supported",
 					cep->file->filename, cep->line_number);
 				errors++;
 			}
@@ -198,7 +198,10 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 		else if (!strcmp(cep->name, "http-method"))
 		{
-			s->http_method = HTTP_METHOD_GET;
+			if (!strcmp(cep->value, "get"))
+				s->http_method = HTTP_METHOD_GET;
+			else if (!strcmp(cep->value, "post"))
+				s->http_method = HTTP_METHOD_POST;
 		}
 		else if (!strcmp(cep->name, "rate-limit"))
 		{
@@ -248,6 +251,7 @@ int report_spam(Client *client, const char *ip, NameValuePrioList *details, Spam
 {
 	NameValuePrioList *list;
 	char url[512];
+	char *body = NULL;
 
 	if (s == NULL)
 	{
@@ -266,7 +270,14 @@ int report_spam(Client *client, const char *ip, NameValuePrioList *details, Spam
 	buildvarstring_nvp(s->url, url, sizeof(url), list);
 	safe_free_nvplist(list);
 
-	url_start_async(url, HTTP_METHOD_GET, NULL, 0, 0, download_complete_dontcare, NULL, url, 3);
+	if (s->http_method == HTTP_METHOD_POST)
+	{
+		body = strchr(url, '?');
+		if (body)
+			*body++ = '\0';
+	}
+
+	url_start_async(url, s->http_method, body, 0, 0, download_complete_dontcare, NULL, url, 3);
 	return 1;
 }
 

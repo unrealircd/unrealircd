@@ -34,7 +34,7 @@ struct Download
 	vFP callback;
 	void *callback_data;
 	char *url; /**< must be free()d by url_do_transfers_async() */
-	HttpMethod method;
+	HttpMethod http_method;
 	char *body;
 	int store_in_file;
 	FILE *file_fd;		/**< File open for writing (otherwise NULL) */
@@ -150,7 +150,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	url_start_async(url, HTTP_METHOD_GET, NULL, 1, cachetime, callback, callback_data, original_url, maxredirects);
 }
 
-void url_start_async(const char *url, HttpMethod method, const char *body, int store_in_file, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
+void url_start_async(const char *url, HttpMethod http_method, const char *body, int store_in_file, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
 {
 	char *file;
 	const char *filename;
@@ -171,7 +171,7 @@ void url_start_async(const char *url, HttpMethod method, const char *body, int s
 	safe_strdup(handle->url, url);
 	safe_strdup(handle->redirect_original_url, original_url);
 	handle->redirects_remaining = maxredirects;
-	handle->method = method;
+	handle->http_method = http_method;
 	safe_strdup(handle->body, body);
 	handle->store_in_file = store_in_file;
 	AddListItem(handle, downloads);
@@ -514,13 +514,41 @@ void https_connect_send_header(Download *handle)
 	snprintf(hostandport, sizeof(hostandport), "%s:%d", handle->hostname, handle->port);
 
 	/* Prepare the header */
-	snprintf(buf, sizeof(buf), "GET %s HTTP/1.1\r\n"
-	                    "User-Agent: UnrealIRCd %s\r\n"
-	                    "Host: %s\r\n"
-	                    "Connection: close\r\n",
-	                    handle->document,
-	                    VERSIONONLY,
-	                    hostandport);
+	if (handle->http_method == HTTP_METHOD_GET)
+	{
+		snprintf(buf, sizeof(buf), "GET %s HTTP/1.1\r\n"
+				    "User-Agent: UnrealIRCd %s\r\n"
+				    "Host: %s\r\n"
+				    "Connection: close\r\n",
+				    handle->document,
+				    VERSIONONLY,
+				    hostandport);
+	} else
+	if (handle->http_method == HTTP_METHOD_POST)
+	{
+		if (!handle->body || !strlen(handle->body))
+		{
+			snprintf(buf, sizeof(buf), "POST %s HTTP/1.1\r\n"
+					    "User-Agent: UnrealIRCd %s\r\n"
+					    "Host: %s\r\n"
+					    "Connection: close\r\n",
+					    handle->document,
+					    VERSIONONLY,
+					    hostandport);
+		} else {
+			snprintf(buf, sizeof(buf), "POST %s HTTP/1.1\r\n"
+					    "User-Agent: UnrealIRCd %s\r\n"
+					    "Host: %s\r\n"
+					    "Content-Type: application/x-www-form-urlencoded\r\n"
+					    "Content-Length: %ld\r\n"
+					    "Connection: close\r\n",
+					    handle->document,
+					    VERSIONONLY,
+					    hostandport,
+					    strlen(handle->body));
+		}
+	} else
+		abort();
 	if (handle->username && handle->password)
 	{
 		char wbuf[128];
@@ -545,6 +573,8 @@ void https_connect_send_header(Download *handle)
 		}
 	}
 	strlcat(buf, "\r\n", sizeof(buf));
+	if (handle->body)
+		strlcat(buf, handle->body, sizeof(buf));
 
 	ssl_err = SSL_write(handle->ssl, buf, strlen(buf));
 	if (ssl_err < 0)
@@ -935,7 +965,7 @@ void https_redirect(Download *handle)
 	if (handle->callback)
 	{
 		/* If still an outstanding request (not cancelled), follow the redirect.. */
-		url_start_async(handle->redirect_new_location, handle->method, handle->body, handle->store_in_file,
+		url_start_async(handle->redirect_new_location, handle->http_method, handle->body, handle->store_in_file,
 		                handle->cachetime, handle->callback, handle->callback_data,
 				handle->url, handle->redirects_remaining);
 	}

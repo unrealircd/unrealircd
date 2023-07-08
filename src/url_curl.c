@@ -38,6 +38,8 @@ struct Download
 	FILE *file_fd;		/**< File open for writing (otherwise NULL) */
 	char *filename;
 	char *url; /*< must be free()d by url_do_transfers_async() */
+	HttpMethod http_method;
+	char *body;
 	char errorbuf[CURL_ERROR_SIZE];
 	time_t cachetime;
 	char *memory_data; /**< Memory for writing response (otherwise NULL) */
@@ -54,10 +56,10 @@ void url_free_handle(Download *handle)
 	DelListItem(handle, downloads);
 	if (handle->file_fd)
 		fclose(handle->file_fd);
-	if (handle->memory_data)
-		safe_free(handle->memory_data);
+	safe_free(handle->memory_data);
 	safe_free(handle->filename);
 	safe_free(handle->url);
+	safe_free(handle->body);
 	safe_free(handle);
 }
 
@@ -311,7 +313,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	url_start_async(url, HTTP_METHOD_GET, NULL, 1, cachetime, callback, callback_data, original_url, maxredirects);
 }
 
-void url_start_async(const char *url, HttpMethod method, const char *body, int store_in_file, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
+void url_start_async(const char *url, HttpMethod http_method, const char *body, int store_in_file, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
 {
 	static char errorbuf[CURL_ERROR_SIZE];
 	char user_agent[256];
@@ -369,6 +371,18 @@ void url_start_async(const char *url, HttpMethod method, const char *body, int s
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle);
 		handle->memory_data_allocated = URL_MEMORY_BACKED_CHUNK_SIZE;
 		handle->memory_data = safe_alloc(URL_MEMORY_BACKED_CHUNK_SIZE+1);
+	}
+	if (http_method == HTTP_METHOD_POST)
+	{
+		curl_easy_setopt(curl, CURLOPT_POST, 1);
+#if LIBCURL_VERSION_NUM >= 0x071301
+		curl_easy_setopt(curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
+#endif
+		if (body && strlen(body))
+		{
+			safe_strdup(handle->body, body); // actually redundant?
+			curl_easy_setopt(curl, CURLOPT_COPYPOSTFIELDS, body);
+		}
 	}
 	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
 	set_curl_tls_options(curl);
