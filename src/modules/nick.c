@@ -286,6 +286,7 @@ CMD_FUNC(cmd_nick_local)
 		{
 			add_fake_lag(client, 4000); /* lag them up */
 			sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, tklban->ptr.nameban->reason);
+			unreal_log(ULOG_INFO, "nick", "QLINE_NICK_LOCAL_ATTEMPT", client,
 			 "Attempt to use banned nick $nick [$user!$ident@$ip] blocked ($reason)",
 				   log_data_string("nick", parv[1]),
 				   log_data_string("user", (!BadPtr(client->name)) ? client->name : "<none>"),
