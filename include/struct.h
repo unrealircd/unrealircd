@@ -2600,6 +2600,8 @@ typedef enum JsonRpcError {
 /** Valid character for variable names in logging engine buildlogstring and also in buildvarstring* */
 #define validvarcharacter(x)    (isalnum((x)) || ((x) == '_'))
 
+#define BUILDVARSTRING_URLENCODE	0x1
+
 #endif /* __struct_include__ */
 
 #include "dynconf.h"

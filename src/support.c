@@ -1350,7 +1350,7 @@ void buildvarstring(const char *inbuf, char *outbuf, size_t len, const char *nam
 	for (i=0; name[i]; i++)
 		add_nvplist(&list, 0, name[i], value[i]);
 
-	buildvarstring_nvp(inbuf, outbuf, len, list);
+	buildvarstring_nvp(inbuf, outbuf, len, list, 0);
 	safe_free_nvplist(list);
 }
 
@@ -1361,7 +1361,7 @@ void buildvarstring(const char *inbuf, char *outbuf, size_t len, const char *nam
  * @param len		The maximum size of the output string (including NUL)
  * @param nvp		A list of var=value items in the form of a NameValuePrioList
  */
-void buildvarstring_nvp(const char *inbuf, char *outbuf, size_t len, NameValuePrioList *list)
+void buildvarstring_nvp(const char *inbuf, char *outbuf, size_t len, NameValuePrioList *list, int flags)
 {
 	const char *i, *p;
 	char *o;
@@ -1369,6 +1369,7 @@ void buildvarstring_nvp(const char *inbuf, char *outbuf, size_t len, NameValuePr
 	int cnt, found;
 	NameValuePrioList *n;
 	char varname[256];
+	static char outputbuf[4096];
 
 #ifdef DEBUGMODE
 	if (len <= 0)
@@ -1403,6 +1404,8 @@ void buildvarstring_nvp(const char *inbuf, char *outbuf, size_t len, NameValuePr
 				if (n->value)
 				{
 					const char *output = n->value;
+					if (flags & BUILDVARSTRING_URLENCODE)
+						output = urlencode(output, outputbuf, sizeof(outputbuf));
 					strlcpy(o, output, left);
 					left -= strlen(output); /* may become <0 */
 					if (left <= 0)
