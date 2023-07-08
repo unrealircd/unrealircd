@@ -140,7 +140,7 @@ CMD_FUNC(cmd_nick_remote)
 	if (!IsULine(client) && (tklban = find_qline(client, nick, &ishold)) && !ishold)
 	{
 		unreal_log(ULOG_INFO, "nick", "QLINE_NICK_REMOTE", client,
-			   "Banned nick $nick [$ip] from server $server ($reason)",
+			   "Banned nick $nick [$ip] connected from server $server ($reason)",
 			   log_data_string("nick", parv[1]),
 			   log_data_string("ip", GetIP(client)),
 			   log_data_client("server", client->uplink),
@@ -286,9 +286,10 @@ CMD_FUNC(cmd_nick_local)
 		{
 			add_fake_lag(client, 4000); /* lag them up */
 			sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, tklban->ptr.nameban->reason);
-			unreal_log(ULOG_INFO, "nick", "QLINE_NICK_LOCAL_ATTEMPT", client,
-				   "Attempt to use banned nick $nick [$ip] blocked ($reason)",
+			 "Attempt to use banned nick $nick [$user!$ident@$ip] blocked ($reason)",
 				   log_data_string("nick", parv[1]),
+				   log_data_string("user", (!BadPtr(client->name)) ? client->name : "<none>"),
+				   log_data_string("ident", (client->user && !BadPtr(client->user->username)) ? client->user->username : "<none>"),
 				   log_data_string("ip", GetIP(client)),
 				   log_data_client("server", client->uplink),
 				   log_data_string("reason", tklban->ptr.nameban->reason));
