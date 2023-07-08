@@ -415,3 +415,16 @@ void url_start_async(const char *url, HttpMethod http_method, const char *body, 
 
 	curl_multi_add_handle(multihandle, curl);
 }
+
+char *urlencode(const char *s, char *wbuf, int wlen)
+{
+	char *ret = curl_easy_escape(NULL, s, strlen(s));
+	if (ret == NULL)
+	{
+		if (wlen > 0)
+			*wbuf = '\0';
+		return NULL;
+	}
+	strlcpy(wbuf, ret, wlen);
+	return wbuf;
+}

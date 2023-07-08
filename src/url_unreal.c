@@ -1177,3 +1177,42 @@ void url_init(void)
 	}
 	EventAdd(NULL, "url_socket_timeout", url_socket_timeout, NULL, 500, 0);
 }
+
+char *urlencode(const char *s, char *wbuf, int wlen)
+{
+	const char hexchars[16] = "0123456789abcdef";
+	char *o = wbuf;
+
+	if (s == NULL)
+	{
+		if (wlen > 0)
+			*o = '\0';
+		return NULL;
+	}
+
+	for (; *s; s++)
+	{
+		if (((*s >= 'a') && (*s <= 'z')) ||
+		    ((*s >= 'A') && (*s <= 'Z')) ||
+		    ((*s >= '0') && (*s <= '9')) ||
+		    strchr("-._~", *s))
+		{
+			if (wlen-- <= 1)
+				break;
+			*o++ = *s;
+		} else
+		{
+			if (wlen <= 3)
+				break;
+			wlen -= 3;
+			*o++ = '%';
+			*o++ = hexchars[(*s >> 4) & 0xF];
+			*o++ = hexchars[*s & 0xF];
+		}
+	}
+	/* And zero-terminate.. */
+	if (wlen)
+		*o = '\0';
+
+	return wbuf;
+}
