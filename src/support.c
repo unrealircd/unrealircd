@@ -1344,10 +1344,31 @@ const char *sock_strerror(int error)
  */
 void buildvarstring(const char *inbuf, char *outbuf, size_t len, const char *name[], const char *value[])
 {
+	NameValuePrioList *list = NULL;
+	int i;
+
+	for (i=0; name[i]; i++)
+		add_nvplist(&list, 0, name[i], value[i]);
+
+	buildvarstring_nvp(inbuf, outbuf, len, list);
+	safe_free_nvplist(list);
+}
+
+/** Build a string and replace $variables where needed.
+ * See src/modules/blacklist.c for an example.
+ * @param inbuf		The input string
+ * @param outbuf	The output string
+ * @param len		The maximum size of the output string (including NUL)
+ * @param nvp		A list of var=value items in the form of a NameValuePrioList
+ */
+void buildvarstring_nvp(const char *inbuf, char *outbuf, size_t len, NameValuePrioList *list)
+{
 	const char *i, *p;
 	char *o;
 	int left = len - 1;
 	int cnt, found;
+	NameValuePrioList *n;
+	char varname[256];
 
 #ifdef DEBUGMODE
 	if (len <= 0)
@@ -1364,7 +1385,7 @@ void buildvarstring(const char *inbuf, char *outbuf, size_t len, const char *nam
 			if (*i == '$')
 				goto literal;
 
-			if (!isalnum(*i))
+			if (!validvarcharacter(*i))
 			{
 				/* What do we do with things like '$/' ? -- treat literal */
 				i--;
@@ -1372,29 +1393,24 @@ void buildvarstring(const char *inbuf, char *outbuf, size_t len, const char *nam
 			}
 			
 			/* find termination */
-			for (p=i; isalnum(*p); p++);
+			for (p=i; validvarcharacter(*p); p++);
 			
 			/* find variable name in list */
-			found = 0;
-			for (cnt = 0; name[cnt]; cnt++)
-				if (!strncasecmp(name[cnt], i, strlen(name[cnt])))
+			strlncpy(varname, i, sizeof(varname), p - i);
+			n = find_nvplist(list, varname);
+			if (n)
+			{
+				if (n->value)
 				{
-					/* Found */
-					found = 1;
-
-					if (!BadPtr(value[cnt]))
-					{
-						strlcpy(o, value[cnt], left);
-						left -= strlen(value[cnt]); /* may become <0 */
-						if (left <= 0)
-							return; /* return - don't write \0 to 'o'. ensured by strlcpy already */
-						o += strlen(value[cnt]); /* value entirely written */
-					}
-
-					break; /* done */
+					const char *output = n->value;
+					strlcpy(o, output, left);
+					left -= strlen(output); /* may become <0 */
+					if (left <= 0)
+						return; /* return - don't write \0 to 'o'. ensured by strlcpy already */
+					o += strlen(output); /* value entirely written */
 				}
-			
-			if (!found)
+				break;
+			} else
 			{
 				/* variable name does not exist -- treat literal */
 				i--;

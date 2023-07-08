@@ -1066,6 +1066,7 @@ extern Cmode_t get_extmode_bitbychar(char m);
 extern long find_user_mode(char mode);
 extern void start_listeners(void);
 extern void buildvarstring(const char *inbuf, char *outbuf, size_t len, const char *name[], const char *value[]);
+extern void buildvarstring_nvp(const char *inbuf, char *outbuf, size_t len, NameValuePrioList *list);
 extern int reinit_tls(void);
 extern CMD_FUNC(cmd_error);
 extern CMD_FUNC(cmd_dns);
@@ -1221,6 +1222,7 @@ extern NameValuePrioList *find_nvplist(NameValuePrioList *list, const char *name
 extern const char *get_nvplist(NameValuePrioList *list, const char *name);
 extern void free_nvplist(NameValuePrioList *lst);
 #define safe_free_nvplist(x)	do { free_nvplist(x); x = NULL; } while(0)
+extern void del_nvplist_entry(NameValuePrioList *nvp, NameValuePrioList **lst);
 extern NameValuePrioList *duplicate_nvplist(NameValuePrioList *e);
 extern void unreal_add_name_values(NameValuePrioList **n, const char *name, ConfigEntry *ce);
 extern const char *namevalue(NameValuePrioList *n);
@@ -1383,6 +1385,7 @@ extern int url_is_valid(const char *);
 extern const char *displayurl(const char *url);
 extern char *url_getfilename(const char *url);
 extern void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects);
+extern void url_start_async(const char *url, HttpMethod method, const char *body, int store_in_file, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects);
 extern void url_init(void);
 extern void url_cancel_handle_by_callback_data(void *ptr);
 extern EVENT(url_socket_timeout);
@@ -1446,3 +1449,4 @@ extern void free_all_tags(Client *client);
 extern void del_tag(Client *client, const char *name);
 extern void bump_tag_serial(Client *client);
 extern int valid_spamfilter_id(const char *s);
+extern void download_complete_dontcare(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *ptr);

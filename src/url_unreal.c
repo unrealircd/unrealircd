@@ -33,9 +33,15 @@ struct Download
 	Download *prev, *next;
 	vFP callback;
 	void *callback_data;
+	char *url; /**< must be free()d by url_do_transfers_async() */
+	HttpMethod method;
+	char *body;
+	int store_in_file;
 	FILE *file_fd;		/**< File open for writing (otherwise NULL) */
-	char filename[PATH_MAX];
-	char *url; /*< must be free()d by url_do_transfers_async() */
+	char *filename;
+	char *memory_data; /**< Memory for writing response (otherwise NULL) */
+	int memory_data_len; /**< Size of memory_data */
+	int memory_data_allocated; /**< Total allocated memory for 'memory_data' */
 	char errorbuf[512];
 	time_t cachetime;
 	char *hostname;		/**< Parsed hostname (from 'url') */
@@ -78,7 +84,7 @@ int https_fatal_tls_error(int ssl_error, int my_errno, Download *handle);
 void https_connect_send_header(Download *handle);
 void https_receive_response(int fd, int revents, void *data);
 int https_handle_response_header(Download *handle, char *readbuf, int n);
-int https_handle_response_file(Download *handle, char *readbuf, int n);
+int https_handle_response_body(Download *handle, char *readbuf, int n);
 void https_done(Download *handle);
 void https_done_cached(Download *handle);
 void https_redirect(Download *handle);
@@ -96,7 +102,9 @@ void url_free_handle(Download *handle)
 	}
 	if (handle->file_fd)
 		fclose(handle->file_fd);
-	safe_free(handle->url);
+	safe_free(handle->filename);
+	safe_free(handle->memory_data);
+	safe_free(handle->body);
 	safe_free(handle->hostname);
 	safe_free(handle->username);
 	safe_free(handle->password);
@@ -107,6 +115,7 @@ void url_free_handle(Download *handle)
 	safe_free(handle->lefttoparse);
 	safe_free(handle->redirect_new_location);
 	safe_free(handle->redirect_original_url);
+	safe_free(handle->url);
 	safe_free(handle);
 }
 
@@ -132,11 +141,16 @@ void https_cancel(Download *handle, FORMAT_STRING(const char *pattern), ...)
 	vsnprintf(handle->errorbuf, sizeof(handle->errorbuf), pattern, vl);
 	va_end(vl);
 	if (handle->callback)
-		handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
+		handle->callback(handle->url, NULL, NULL, 0, handle->errorbuf, 0, handle->callback_data);
 	url_free_handle(handle);
 }
 
 void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
+{
+	url_start_async(url, HTTP_METHOD_GET, NULL, 1, cachetime, callback, callback_data, original_url, maxredirects);
+}
+
+void url_start_async(const char *url, HttpMethod method, const char *body, int store_in_file, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
 {
 	char *file;
 	const char *filename;
@@ -157,6 +171,9 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	safe_strdup(handle->url, url);
 	safe_strdup(handle->redirect_original_url, original_url);
 	handle->redirects_remaining = maxredirects;
+	handle->method = method;
+	safe_strdup(handle->body, body);
+	handle->store_in_file = store_in_file;
 	AddListItem(handle, downloads);
 
 	if (strncmp(url, "https://", 8))
@@ -176,20 +193,23 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	safe_strdup(handle->password, password);
 	safe_strdup(handle->document, document);
 
-	file = url_getfilename(url);
-	filename = unreal_getfilename(file);
-	tmp = unreal_mktemp(TMPDIR, filename ? filename : "download.conf");
-
-	handle->file_fd = fopen(tmp, "wb");
-	if (!handle->file_fd)
+	if (store_in_file)
 	{
-		https_cancel(handle, "Cannot create '%s': %s", tmp, strerror(ERRNO));
-		safe_free(file);
-		return;
-	}
+		file = url_getfilename(url);
+		filename = unreal_getfilename(file);
+		tmp = unreal_mktemp(TMPDIR, filename ? filename : "download.conf");
 
-	strlcpy(handle->filename, tmp, sizeof(handle->filename));
-	safe_free(file);
+		handle->file_fd = fopen(tmp, "wb");
+		if (!handle->file_fd)
+		{
+			https_cancel(handle, "Cannot create '%s': %s", tmp, strerror(ERRNO));
+			safe_free(file);
+			return;
+		}
+
+		safe_strdup(handle->filename, tmp);
+		safe_free(file);
+	}
 
 
 	// todo: allocate handle, select en weetikt allemaal
@@ -580,7 +600,7 @@ void https_receive_response(int fd, int revents, void *data)
 	} else
 	if (handle->got_response)
 	{
-		if (!https_handle_response_file(handle, readbuf, n))
+		if (!https_handle_response_body(handle, readbuf, n))
 			return; /* handle is already freed! */
 	}
 }
@@ -701,7 +721,7 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 		nextframe = url_find_end_of_request(netbuf2, totalsize, &remaining_bytes);
 		if (nextframe)
 		{
-			if (!https_handle_response_file(handle, nextframe, remaining_bytes))
+			if (!https_handle_response_body(handle, nextframe, remaining_bytes))
 				return 0;
 		}
 	}
@@ -715,7 +735,37 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 	return 1;
 }
 
-int https_handle_response_file(Download *handle, char *readbuf, int pktsize)
+int https_handle_response_body_memory(Download *handle, const char *ptr, int write_sz)
+{
+	// DUPLICATE CODE: same as src/url_curl.c, well... sortof
+	int size_required = handle->memory_data_len + write_sz;
+
+	if (handle->memory_data == NULL)
+		return 0; /* Normally does not happen as it is preallocated, but could happen upon unwinding cancels.. */
+
+	if (size_required >= handle->memory_data_allocated - 1) // the -1 is for zero termination, even though it is binary..
+	{
+		int newsize = ((size_required / URL_MEMORY_BACKED_CHUNK_SIZE)+1)*URL_MEMORY_BACKED_CHUNK_SIZE;
+		char *newptr = realloc(handle->memory_data, newsize);
+		if (!newptr)
+		{
+			unreal_log(ULOG_ERROR, "url", "URL_DOWNLOAD_MEMORY", NULL, "Async URL callback failed when reading returned data: out of memory?");
+			safe_free(handle->memory_data);
+			handle->memory_data_len = 0;
+			handle->memory_data_allocated = 0;
+			return 0;
+		}
+		handle->memory_data = newptr;
+		/* fill rest with zeroes, yeah.. no trust! ;D */
+		memset(handle->memory_data + handle->memory_data_len, 0, handle->memory_data_allocated - handle->memory_data_len);
+	}
+
+	memcpy(handle->memory_data + handle->memory_data_len, ptr, write_sz);
+	handle->memory_data[handle->memory_data_len] = '\0';
+	return write_sz;
+}
+
+int https_handle_response_body(Download *handle, char *readbuf, int pktsize)
 {
 	char *buf;
 	long long n;
@@ -727,7 +777,10 @@ int https_handle_response_file(Download *handle, char *readbuf, int pktsize)
 	if (handle->transfer_encoding == TRANSFER_ENCODING_NONE)
 	{
 		/* Ohh.. so easy! */
-		fwrite(readbuf, 1, pktsize, handle->file_fd);
+		if (handle->store_in_file == 0)
+			https_handle_response_body_memory(handle, readbuf, pktsize);
+		else if (handle->file_fd)
+			fwrite(readbuf, 1, pktsize, handle->file_fd);
 		return 1;
 	}
 
@@ -754,7 +807,10 @@ int https_handle_response_file(Download *handle, char *readbuf, int pktsize)
 		{
 			/* Eat it */
 			int eat = MIN(handle->chunk_remaining, n);
-			fwrite(buf, 1, eat, handle->file_fd);
+			if (handle->store_in_file == 0)
+				https_handle_response_body_memory(handle, buf, eat);
+			else if (handle->file_fd)
+				fwrite(buf, 1, eat, handle->file_fd);
 			n -= eat;
 			buf += eat;
 			handle->chunk_remaining -= eat;
@@ -833,18 +889,21 @@ void https_done(Download *handle)
 {
 	char *url = handle->redirect_original_url ? handle->redirect_original_url : handle->url;
 
-	fclose(handle->file_fd);
-	handle->file_fd = NULL;
+	if (handle->file_fd)
+	{
+		fclose(handle->file_fd);
+		handle->file_fd = NULL;
+	}
 
 	if (!handle->callback)
 		; /* No special action, request was cancelled */
 	else if (!handle->got_response)
-		handle->callback(url, NULL, "HTTPS response not received", 0, handle->callback_data);
+		handle->callback(url, NULL, NULL, 0, "HTTPS response not received", 0, handle->callback_data);
 	else
 	{
-		if (handle->last_modified > 0)
+		if ((handle->last_modified > 0) && handle->filename)
 			unreal_setfilemodtime(handle->filename, handle->last_modified);
-		handle->callback(url, handle->filename, NULL, 0, handle->callback_data);
+		handle->callback(url, handle->filename, handle->memory_data, handle->memory_data_len, NULL, 0, handle->callback_data);
 	}
 	url_free_handle(handle);
 	return;
@@ -854,10 +913,13 @@ void https_done_cached(Download *handle)
 {
 	char *url = handle->redirect_original_url ? handle->redirect_original_url : handle->url;
 
-	fclose(handle->file_fd);
-	handle->file_fd = NULL;
+	if (handle->file_fd)
+	{
+		fclose(handle->file_fd);
+		handle->file_fd = NULL;
+	}
 	if (handle->callback)
-		handle->callback(url, NULL, NULL, 1, handle->callback_data);
+		handle->callback(url, NULL, NULL, 0, NULL, 1, handle->callback_data);
 	url_free_handle(handle);
 }
 
@@ -873,8 +935,9 @@ void https_redirect(Download *handle)
 	if (handle->callback)
 	{
 		/* If still an outstanding request (not cancelled), follow the redirect.. */
-		download_file_async(handle->redirect_new_location, handle->cachetime, handle->callback, handle->callback_data,
-				    handle->url, handle->redirects_remaining);
+		url_start_async(handle->redirect_new_location, handle->method, handle->body, handle->store_in_file,
+		                handle->cachetime, handle->callback, handle->callback_data,
+				handle->url, handle->redirects_remaining);
 	}
 	/* Don't call the hook, just free this, the new redirect from above will call the hook later */
 	url_free_handle(handle);

@@ -36,10 +36,13 @@ struct Download
 	vFP callback;
 	void *callback_data;
 	FILE *file_fd;		/**< File open for writing (otherwise NULL) */
-	char filename[PATH_MAX];
+	char *filename;
 	char *url; /*< must be free()d by url_do_transfers_async() */
 	char errorbuf[CURL_ERROR_SIZE];
 	time_t cachetime;
+	char *memory_data; /**< Memory for writing response (otherwise NULL) */
+	int memory_data_len; /**< Size of memory_data */
+	int memory_data_allocated; /**< Total allocated memory for 'memory_data' */
 };
 
 CURLM *multihandle = NULL;
@@ -51,6 +54,9 @@ void url_free_handle(Download *handle)
 	DelListItem(handle, downloads);
 	if (handle->file_fd)
 		fclose(handle->file_fd);
+	if (handle->memory_data)
+		safe_free(handle->memory_data);
+	safe_free(handle->filename);
 	safe_free(handle->url);
 	safe_free(handle);
 }
@@ -95,11 +101,44 @@ static void set_curl_tls_options(CURL *curl)
 
 /*
  * Used by CURLOPT_WRITEFUNCTION to actually write the data to
- * a stream.
+ * a stream. - File backed
  */
-static size_t do_download(void *ptr, size_t size, size_t nmemb, void *stream)
+static size_t do_download_file(void *ptr, size_t size, size_t nmemb, void *stream)
 {
 	return fwrite(ptr, size, nmemb, (FILE *)stream);
+}
+
+/*
+ * Used by CURLOPT_WRITEFUNCTION to actually write the data to
+ * a stream. - Memory backed
+ */
+static size_t do_download_memory(void *ptr, size_t size, size_t nmemb, void *stream)
+{
+	// DUPLICATE CODE: same as src/url_unreal.c, well.. sortof
+	Download *handle = (Download *)ptr;
+	int write_sz = size * nmemb;
+	int size_required = handle->memory_data_len + write_sz;
+
+	if (size_required >= handle->memory_data_allocated - 1) // the -1 is for zero termination, even though it is binary..
+	{
+		int newsize = ((size_required / URL_MEMORY_BACKED_CHUNK_SIZE)+1)*URL_MEMORY_BACKED_CHUNK_SIZE;
+		char *newptr = realloc(handle->memory_data, newsize);
+		if (!newptr)
+		{
+			unreal_log(ULOG_ERROR, "url", "URL_DOWNLOAD_MEMORY", NULL, "Async URL callback failed when reading returned data: out of memory?");
+			safe_free(handle->memory_data);
+			handle->memory_data_len = 0;
+			handle->memory_data_allocated = 0;
+			return 0;
+		}
+		handle->memory_data = newptr;
+		/* fill rest with zeroes, yeah.. no trust! ;D */
+		memset(handle->memory_data + handle->memory_data_len, 0, handle->memory_data_allocated - handle->memory_data_len);
+	}
+
+	memcpy(handle->memory_data + handle->memory_data_len, ptr, write_sz);
+	handle->memory_data[handle->memory_data_len] = '\0';
+	return write_sz;
 }
 
 /*
@@ -128,34 +167,41 @@ static void url_check_multi_handles(void)
 			curl_easy_getinfo(easyhand, CURLINFO_RESPONSE_CODE, &code);
 			curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char **) &handle);
 			curl_easy_getinfo(easyhand, CURLINFO_FILETIME, &last_mod);
-			fclose(handle->file_fd);
-			handle->file_fd = NULL;
+			if (handle->file_fd)
+			{
+				fclose(handle->file_fd);
+				handle->file_fd = NULL;
+			}
 
 			if (handle->callback == NULL)
 			{
 				/* Request is already canceled, we don't care about the result, just clean up */
-				remove(handle->filename);
+				if (handle->filename)
+					remove(handle->filename);
 			} else
 			if (msg->data.result == CURLE_OK)
 			{
 				if (code == 304 || (last_mod != -1 && last_mod <= handle->cachetime))
 				{
-					handle->callback(handle->url, NULL, NULL, 1, handle->callback_data);
-					remove(handle->filename);
+					handle->callback(handle->url, NULL, handle->memory_data, handle->memory_data_len, NULL, 1, handle->callback_data);
+					if (handle->filename)
+						remove(handle->filename);
 				}
 				else
 				{
-					if (last_mod != -1)
+					if ((last_mod != -1) && handle->filename)
 						unreal_setfilemodtime(handle->filename, last_mod);
 
-					handle->callback(handle->url, handle->filename, NULL, 0, handle->callback_data);
-					remove(handle->filename);
+					handle->callback(handle->url, handle->filename, handle->memory_data, handle->memory_data_len, NULL, 0, handle->callback_data);
+					if (handle->filename)
+						remove(handle->filename);
 				}
 			}
 			else
 			{
-				handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
-				remove(handle->filename);
+				handle->callback(handle->url, NULL, NULL, 0, handle->errorbuf, 0, handle->callback_data);
+				if (handle->filename)
+					remove(handle->filename);
 			}
 
 			url_free_handle(handle);
@@ -246,7 +292,7 @@ void url_init(void)
  * called when the download completes, or the download fails. The 
  * callback function is defined as:
  *
- * void callback(const char *url, const char *filename, char *errorbuf, int cached, void *data);
+ * void callback(const char *url, const char *filename, const char *memory_data, int memory_data_len, char *errorbuf, int cached, void *data);
  *  - url will contain the original URL used to download the file.
  *  - filename will contain the name of the file (if successful, NULL on error or if cached).
  *    This file will be cleaned up after the callback returns, so save a copy to support caching.
@@ -261,6 +307,11 @@ void url_init(void)
  *    multiple times during that time.
  */
 void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
+{
+	url_start_async(url, HTTP_METHOD_GET, NULL, 1, cachetime, callback, callback_data, original_url, maxredirects);
+}
+
+void url_start_async(const char *url, HttpMethod method, const char *body, int store_in_file, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
 {
 	static char errorbuf[CURL_ERROR_SIZE];
 	char user_agent[256];
@@ -279,34 +330,46 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 		return;
 	}
 
-	file = url_getfilename(url);
-	filename = unreal_getfilename(file);
-	tmp = unreal_mktemp(TMPDIR, filename ? filename : "download.conf");
-
 	handle = safe_alloc(sizeof(Download));
-	handle->file_fd = fopen(tmp, "wb");
-	if (!handle->file_fd)
+
+	if (store_in_file)
 	{
-		snprintf(errorbuf, sizeof(errorbuf), "Cannot create '%s': %s", tmp, strerror(ERRNO));
-		callback(url, NULL, errorbuf, 0, callback_data);
+		file = url_getfilename(url);
+		filename = unreal_getfilename(file);
+		tmp = unreal_mktemp(TMPDIR, filename ? filename : "download.conf");
+		handle->file_fd = fopen(tmp, "wb");
+		if (!handle->file_fd)
+		{
+			snprintf(errorbuf, sizeof(errorbuf), "Cannot create '%s': %s", tmp, strerror(ERRNO));
+			callback(url, NULL, NULL, 0, errorbuf, 0, callback_data);
+			safe_free(file);
+			safe_free(handle);
+			return;
+		}
+		safe_strdup(handle->filename, tmp);
 		safe_free(file);
-		safe_free(handle);
-		return;
 	}
+
 	AddListItem(handle, downloads);
 
 	handle->callback = callback;
 	handle->callback_data = callback_data;
 	handle->cachetime = cachetime;
 	safe_strdup(handle->url, url);
-	strlcpy(handle->filename, tmp, sizeof(handle->filename));
-	safe_free(file);
 
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	snprintf(user_agent, sizeof(user_agent), "UnrealIRCd %s", VERSIONONLY);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, user_agent);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->file_fd);
+	if (store_in_file)
+	{
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download_file);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->file_fd);
+	} else {
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download_memory);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle);
+		handle->memory_data_allocated = URL_MEMORY_BACKED_CHUNK_SIZE;
+		handle->memory_data = safe_alloc(URL_MEMORY_BACKED_CHUNK_SIZE+1);
+	}
 	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
 	set_curl_tls_options(curl);
 	memset(handle->errorbuf, 0, CURL_ERROR_SIZE);

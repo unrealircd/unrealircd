@@ -2057,6 +2057,13 @@ struct ConfigResource {
 	NameList *restrict_config; /**< If non-NULL: list of permitted config items */
 };
 
+/* When doing a HTTP request and it is requested to store the
+ * response to memory (rather than file), we enlarge the buffer
+ * in this chunk size.
+ * XXX: 128 bytes for testing chunks, should be 8k or so in production.
+ */
+#define URL_MEMORY_BACKED_CHUNK_SIZE	128
+
 struct ConfigItem_blacklist_module {
 	ConfigItem_blacklist_module *prev, *next;
 	char *name;
@@ -2589,6 +2596,9 @@ typedef enum JsonRpcError {
 #define OPTIONAL_PARAM_STRING(name, varname)         varname = json_object_get_string(params, name)
 #define OPTIONAL_PARAM_INTEGER(name, varname, def)   varname = json_object_get_integer(params, name, def)
 #define OPTIONAL_PARAM_BOOLEAN(name, varname, def)   varname = json_object_get_boolean(params, name, def)
+
+/** Valid character for variable names in logging engine buildlogstring and also in buildvarstring* */
+#define validvarcharacter(x)    (isalnum((x)) || ((x) == '_'))
 
 #endif /* __struct_include__ */
 

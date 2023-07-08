@@ -367,6 +367,7 @@ DLL_FILES=\
  src/modules/sinfo.dll \
  src/modules/sjoin.dll \
  src/modules/slog.dll \
+ src/modules/spamreport.dll \
  src/modules/sqline.dll \
  src/modules/squit.dll \
  src/modules/sreply.dll \
@@ -1208,6 +1209,9 @@ src/modules/slog.dll: src/modules/slog.c $(INCLUDES)
 
 src/modules/sqline.dll: src/modules/sqline.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/sqline.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/sqline.pdb $(MODLFLAGS)
+
+src/modules/spamreport.dll: src/modules/spamreport.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/spamreport.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/spamreport.pdb $(MODLFLAGS)
 
 src/modules/squit.dll: src/modules/squit.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/squit.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/squit.pdb $(MODLFLAGS)

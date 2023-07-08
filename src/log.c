@@ -801,7 +801,6 @@ LogLevel log_level_stringtoval(const char *str)
 	return ULOG_INVALID;
 }
 
-#define validvarcharacter(x)	(isalnum((x)) || ((x) == '_'))
 #define valideventidcharacter(x)	(isupper((x)) || isdigit((x)) || ((x) == '_'))
 #define validsubsystemcharacter(x)	(islower((x)) || isdigit((x)) || ((x) == '_') || ((x) == '-'))
 

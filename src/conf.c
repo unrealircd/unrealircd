@@ -261,7 +261,7 @@ char *port_6667_ip = NULL;
 
 int add_config_resource(const char *resource, int type, ConfigEntry *ce);
 ConfigResource *find_config_resource(const char *resource);
-void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *rs_key);
+void resource_download_complete(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *rs_key);
 void free_all_config_resources(void);
 int rehash_internal(Client *client);
 int is_blacklisted_module(const char *name);
@@ -10785,7 +10785,7 @@ int _conf_secret(ConfigFile *conf, ConfigEntry *ce)
 	return 1;
 }
 
-void resource_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *rs_key)
+void resource_download_complete(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *rs_key)
 {
 	ConfigResource *rs = (ConfigResource *)rs_key;
 
@@ -11143,7 +11143,7 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 					{
 						/* Don't download, use cached copy */
 						//config_status("DEBUG: using cached copy due to url-refresh %ld", refresh_time);
-						resource_download_complete(rs->url, NULL, NULL, 1, rs);
+						resource_download_complete(rs->url, NULL, NULL, 0, NULL, 1, rs);
 						return 1;
 					} else {
 						//config_status("DEBUG: requires download attempt, out of date url-refresh %ld < %ld", refresh_time, TStime() - modtime);
@@ -11594,7 +11594,7 @@ int central_spamfilter_downloading = 0;
 
 #define DFILTER_CACHE_TIME 0
 
-void central_spamfilter_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *rs_key)
+void central_spamfilter_download_complete(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *rs_key)
 {
 	ConfigFile *cfptr;
 	int errors;

@@ -3035,3 +3035,7 @@ int valid_spamfilter_id(const char *s)
 		return 0;
 	return 1;
 }
+
+void download_complete_dontcare(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *ptr)
+{
+}

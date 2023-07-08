@@ -674,6 +674,15 @@ void free_nvplist(NameValuePrioList *lst)
 	}
 }
 
+void del_nvplist_entry(NameValuePrioList *e, NameValuePrioList **lst)
+{
+	if (lst)
+		del_ListItem((ListStruct *)e, (ListStruct **)lst);
+	safe_free(e->name);
+	safe_free(e->value);
+	safe_free(e);
+}
+
 NameValuePrioList *duplicate_nvplist(NameValuePrioList *e)
 {
 	NameValuePrioList *n = NULL;
