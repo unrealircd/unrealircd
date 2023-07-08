@@ -1409,7 +1409,6 @@ void buildvarstring_nvp(const char *inbuf, char *outbuf, size_t len, NameValuePr
 						return; /* return - don't write \0 to 'o'. ensured by strlcpy already */
 					o += strlen(output); /* value entirely written */
 				}
-				break;
 			} else
 			{
 				/* variable name does not exist -- treat literal */
