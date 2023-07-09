@@ -14,7 +14,7 @@ in progress and may not be a stable version.
     so they can blacklist the IP address and other users on IRC can benefit.
 * Optional [Central Spamfilter](https://www.unrealircd.org/docs/Central_spamfilter):
   This will fetch and refresh spamfilter rules every 30 minutes from unrealircd.org. 
-  This feature is not enabled default. Use `set { central-spamfitler { enabled yes; } }`
+  This feature is not enabled default. Use `set { central-spamfilter { enabled yes; } }`
   to enable. At the moment this does not contain rules yet, but it will be
   at a later point.
 * [set::spamfilter::utf8](https://www.unrealircd.org/docs/Set_block#set::spamfilter::utf8)
