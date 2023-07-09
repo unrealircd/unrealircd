@@ -692,19 +692,25 @@ CMD_OVERRIDE_FUNC(override_msg)
 		logbuf[0] = '\0';
 		lookalikespam_score(text, logbuf, sizeof(logbuf));
 		unreal_log(ULOG_INFO, "antimixedutf8", "ANTIMIXEDUTF8_HIT", client,
-		           "[antimixedutf8] Client $client.details hit score $score -- taking action. Mixed scripts detected: $scripts",
+		           "[antimixedutf8] Client $client.details hit score $score. Mixed scripts detected: $scripts",
 		           log_data_integer("score", score),
 		           log_data_string("scripts", logbuf));
 
 		/* Take the action */
 		retval = take_action(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time, 0);
-		if (retval == 1)
-			return;
-		if (retval == BAN_ACT_BLOCK)
+		if ((retval == BAN_ACT_WARN) || (retval == BAN_ACT_SOFT_WARN))
+		{
+			/* no action */
+		} else
+		if ((retval == BAN_ACT_BLOCK) || (retval == BAN_ACT_SOFT_BLOCK))
 		{
 			sendnotice(client, "%s", cfg.ban_reason);
 			return;
+		} else if (retval > 0)
+		{
+			return;
 		}
+		/* fallthrough for retval <=0 */
 	}
 
 	CALL_NEXT_COMMAND_OVERRIDE();
