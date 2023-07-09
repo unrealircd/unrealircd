@@ -876,7 +876,7 @@ int blacklist_preconnect(Client *client)
 		return HOOK_CONTINUE; /* yup, so the softban does not apply. */
 
 	if (blacklist_action(client, blu->save_opernotice, blu->save_action, blu->save_reason, blu->save_tkltime,
-	                     blu->save_blacklist, blu->save_blacklist_dns_name, blu->save_blacklist_dns_reply))
+	                     blu->save_blacklist, blu->save_blacklist_dns_name, blu->save_blacklist_dns_reply) > 0)
 	{
 		return HOOK_DENY;
 	}

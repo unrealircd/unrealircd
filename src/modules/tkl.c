@@ -3756,7 +3756,7 @@ int tkl_stats_matcher(Client *client, int type, const char *para, TKLFlag *tklfl
 			(tkl->type & TKL_GLOBAL) ? 'F' : 'f',
 			unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type),
 			spamfilter_target_inttostring(tkl->ptr.spamfilter->target),
-			banact_valtostring(tkl->ptr.spamfilter->action->action),
+			ban_actions_to_string(tkl->ptr.spamfilter->action),
 			(tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
 			(long long)(TStime() - tkl->set_at),
 			(long long)tkl->ptr.spamfilter->tkl_duration,
@@ -4183,8 +4183,12 @@ void _tkl_added(Client *client, TKL *tkl)
 	sendnotice_tkl_add(tkl);
 
 	/* spamfilter 'warn' action is special */
-	if ((tkl->type & TKL_SPAMF) && (tkl->ptr.spamfilter->action->action == BAN_ACT_WARN) && (tkl->ptr.spamfilter->target & SPAMF_USER))
+	if ((tkl->type & TKL_SPAMF) &&
+	    has_actions_of_type(tkl->ptr.spamfilter->action, BAN_ACT_WARN) &&
+	    (tkl->ptr.spamfilter->target & SPAMF_USER))
+	{
 		spamfilter_check_users(tkl);
+	}
 
 	/* Ban checking executes during run loop for efficiency */
 	loop.do_bancheck = 1;
@@ -4761,10 +4765,8 @@ void ban_act_set(Client *client, BanAction *action)
 void ban_action_run_all_sets(Client *client, BanAction *action)
 {
 	for (; action; action = action->next)
-	{
 		if (action->action == BAN_ACT_SET)
 			ban_act_set(client, action);
-	}
 }
 
 /** Take an action on the user, such as banning or killing.
@@ -4895,18 +4897,6 @@ int _take_action(Client *client, BanAction *actions, char *reason, long duration
 		if (IsDead(client))
 			break; /* stop processing actions */
 	}
-
-	return highest;
-}
-
-/* Find the highest value in a BanAction linked list (the strongest action, eg gline>block) */
-int highest_spamfilter_action(BanAction *action)
-{
-	int highest = 0;
-
-	for (; action; action = action->next)
-		if (action->action > highest)
-			highest = action->action;
 
 	return highest;
 }
