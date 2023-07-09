@@ -611,7 +611,7 @@ int antirandom_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		{
 			req.threshold = 1;
 		} else
-		if (!strcmp(cep->name, "ban-action"))
+		if (!strcmp(cep->name, "ban-action") || !strcmp(cep->name, "action"))
 		{
 			req.ban_action = 1;
 			errors += test_ban_action_config(cep);
@@ -672,7 +672,7 @@ int antirandom_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		{
 			cfg.threshold = atoi(cep->value);
 		} else
-		if (!strcmp(cep->name, "ban-action"))
+		if (!strcmp(cep->name, "ban-action") || !strcmp(cep->name, "action"))
 		{
 			cfg.ban_action = parse_ban_action_config(cep);
 		} else
@@ -866,20 +866,26 @@ int antirandom_preconnect(Client *client)
 	score = get_spam_score(client);
 	if (score > cfg.threshold)
 	{
-		if (has_actions_of_type(cfg.ban_action, BAN_ACT_WARN))
+		int n = take_action(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time, 0);
+		if ((n == BAN_ACT_WARN) || (n == BAN_ACT_SOFT_WARN))
 		{
 			unreal_log(ULOG_INFO, "antirandom", "ANTIRANDOM_DENIED_USER", client,
 			           "[antirandom] would have denied access to user with score $score: $client.details:$client.user.realname",
 			           log_data_integer("score", score));
 		} else
-		if (cfg.show_failedconnects) // FIXME: this is not entirely correct, with like soft actions or var setting, etc!
+		if (n <= 0)
 		{
-			unreal_log(ULOG_INFO, "antirandom", "ANTIRANDOM_DENIED_USER", client,
-			           "[antirandom] denied access to user with score $score: $client.details:$client.user.realname",
-			           log_data_integer("score", score));
-		}
-		if (take_action(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time, 0))
+			/* No action / exempt */
+		} else
+		{
+			if (cfg.show_failedconnects)
+			{
+				unreal_log(ULOG_INFO, "antirandom", "ANTIRANDOM_DENIED_USER", client,
+					   "[antirandom] denied access to user with score $score: $client.details:$client.user.realname",
+					   log_data_integer("score", score));
+			}
 			return HOOK_DENY;
+		}
 	}
 	return HOOK_CONTINUE;
 }
