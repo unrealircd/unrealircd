@@ -381,6 +381,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 		buildvarstring_nvp(fmtstring, bodybuf, sizeof(bodybuf), list, BUILDVARSTRING_XML|BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY);
 		body = bodybuf;
 		safe_free_nvplist(list); // frees all the duplicated lists
+		add_nvplist(&headers, 0, "Content-Type", "text/xml");
 	} else
 		abort();
 

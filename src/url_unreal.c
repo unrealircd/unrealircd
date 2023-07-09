@@ -510,7 +510,7 @@ int url_parse(const char *url, char **hostname, int *port, char **username, char
 
 void https_connect_send_header(Download *handle)
 {
-	char buf[1024];
+	char buf[8192];
 	char hostandport[512];
 	int ssl_err;
 	char *host;
@@ -543,15 +543,20 @@ void https_connect_send_header(Download *handle)
 					    VERSIONONLY,
 					    hostandport);
 		} else {
+			char add_default_content_type = 0;
+			if (!find_nvplist(handle->request_headers, "Content-Type"))
+				add_default_content_type = 1;
+
 			snprintf(buf, sizeof(buf), "POST %s HTTP/1.1\r\n"
 					    "User-Agent: UnrealIRCd %s\r\n"
 					    "Host: %s\r\n"
-					    "Content-Type: application/x-www-form-urlencoded\r\n"
+					    "%s"
 					    "Content-Length: %ld\r\n"
 					    "Connection: close\r\n",
 					    handle->document,
 					    VERSIONONLY,
 					    hostandport,
+					    add_default_content_type ? "Content-Type: application/x-www-form-urlencoded\r\n" : "",
 					    strlen(handle->body));
 		}
 	} else
@@ -577,6 +582,22 @@ void https_connect_send_header(Download *handle)
 			// snprintf_append...
 			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
 				 "If-Modified-Since: %s\r\n", datestr);
+		}
+	}
+	if (handle->request_headers)
+	{
+		NameValuePrioList *n;
+		char nbuf[256];
+
+		for (n = handle->request_headers; n; n = n->next)
+		{
+			if (n->value)
+				snprintf(nbuf, sizeof(nbuf), "%s: %s\r\n", n->name, n->value);
+			else
+				snprintf(nbuf, sizeof(nbuf), "%s:\r\n", n->name);
+			if (strlen(buf)+strlen(nbuf) > sizeof(buf)-8)
+				break;
+			strlcat(buf, nbuf, sizeof(buf));
 		}
 	}
 	strlcat(buf, "\r\n", sizeof(buf));
