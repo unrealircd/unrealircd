@@ -1240,7 +1240,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 				/* fall through */
 			case '\t':
 			case ' ':
-			//case '=': // why would we break on = ??
+			case '=':
 			case '\r':
 				break;
 			case '@':
