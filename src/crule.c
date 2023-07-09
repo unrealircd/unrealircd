@@ -144,20 +144,20 @@ static int crule_reputation(crule_context *, int, void **);
 static int crule_tag(crule_context *, int, void **);
 
 /* parsing function prototypes - local! */
-static int crule_gettoken(crule_token *next_tokp, const char** str);
-static void crule_getword(char*, int*, size_t, const char**);
-static int crule_parseandexpr(CRuleNodePtr*, crule_token *, const char**);
-static int crule_parseorexpr(CRuleNodePtr*, crule_token *, const char**);
-static int crule_parseprimary(CRuleNodePtr*, crule_token *, const char**);
-static int crule_parsefunction(CRuleNodePtr*, crule_token *, const char**);
-static int crule_parsearglist(CRuleNodePtr, crule_token *, const char**);
+static int crule_gettoken(crule_token *next_tokp, const char **str);
+static void crule_getword(char *, int *, size_t, const char **);
+static int crule_parseandexpr(CRuleNodePtr *, crule_token *, const char **);
+static int crule_parseorexpr(CRuleNodePtr *, crule_token *, const char **);
+static int crule_parseprimary(CRuleNodePtr *, crule_token *, const char **);
+static int crule_parsefunction(CRuleNodePtr *, crule_token *, const char **);
+static int crule_parsearglist(CRuleNodePtr, crule_token *, const char **);
 
 #if defined(CR_DEBUG) || defined(CR_CHKCONF)
 /*
  * Prototypes for the test parser; if not debugging,
  * these are defined in h.h
  */
-struct CRuleNode* crule_parse(const char*);
+struct CRuleNode* crule_parse(const char *);
 void crule_free(struct CRuleNode**);
 #ifdef CR_DEBUG
 void print_tree(CRuleNodePtr);
@@ -358,7 +358,7 @@ static int crule__not(crule_context *context, int numargs, void *crulearg[])
  * @param[in,out] ruleptr Next readable character from input.
  * @return Either CR_UNKNWTOK if the input was unrecognizable, else CR_NOERR.
  */
-static int crule_gettoken(crule_token *next_tokp, const char** ruleptr)
+static int crule_gettoken(crule_token *next_tokp, const char **ruleptr)
 {
 	char pending = '\0';
 
@@ -435,7 +435,7 @@ static int crule_gettoken(crule_token *next_tokp, const char** ruleptr)
  * @param[in] maxlen Maximum number of bytes writable to \a word.
  * @param[in,out] ruleptr Next readable character from input.
  */
-static void crule_getword(char* word, int* wordlenp, size_t maxlen, const char** ruleptr)
+static void crule_getword(char *word, int *wordlenp, size_t maxlen, const char **ruleptr)
 {
 	char *word_ptr;
 
@@ -458,7 +458,7 @@ static void crule_getword(char* word, int* wordlenp, size_t maxlen, const char**
  */
 struct CRuleNode* crule_parse(const char *rule)
 {
-	const char* ruleptr = rule;
+	const char *ruleptr = rule;
 	crule_token next_tok;
 	struct CRuleNode* ruleroot = 0;
 	int errcode = CR_NOERR;
@@ -489,7 +489,7 @@ struct CRuleNode* crule_parse(const char *rule)
  */
 int crule_test(const char *rule)
 {
-	const char* ruleptr = rule;
+	const char *ruleptr = rule;
 	crule_token next_tok;
 	struct CRuleNode* ruleroot = 0;
 	int errcode = CR_NOERR;
@@ -532,7 +532,7 @@ const char *crule_errstring(int errcode)
  * @param[in,out] ruleptr Next input character.
  * @return A crule_errcode value.
  */
-static int crule_parseorexpr(CRuleNodePtr * orrootp, crule_token *next_tokp, const char** ruleptr)
+static int crule_parseorexpr(CRuleNodePtr * orrootp, crule_token *next_tokp, const char **ruleptr)
 {
 	int errcode = CR_NOERR;
 	CRuleNodePtr andexpr;
@@ -592,7 +592,7 @@ static int crule_parseorexpr(CRuleNodePtr * orrootp, crule_token *next_tokp, con
  * @param[in,out] ruleptr Next input character.
  * @return A crule_errcode value.
  */
-static int crule_parseandexpr(CRuleNodePtr * androotp, crule_token *next_tokp, const char** ruleptr)
+static int crule_parseandexpr(CRuleNodePtr * androotp, crule_token *next_tokp, const char **ruleptr)
 {
 	int errcode = CR_NOERR;
 	CRuleNodePtr primary;
@@ -652,7 +652,7 @@ static int crule_parseandexpr(CRuleNodePtr * androotp, crule_token *next_tokp, c
  * @param[in,out] ruleptr Next input character.
  * @return A crule_errcode value.
  */
-static int crule_parseprimary(CRuleNodePtr* primrootp, crule_token *next_tokp, const char** ruleptr)
+static int crule_parseprimary(CRuleNodePtr *primrootp, crule_token *next_tokp, const char **ruleptr)
 {
 	CRuleNodePtr *insertionp;
 	int errcode = CR_NOERR;
@@ -713,7 +713,7 @@ static int crule_parseprimary(CRuleNodePtr* primrootp, crule_token *next_tokp, c
  * @param[in,out] ruleptr Next input character.
  * @return A crule_errcode value.
  */
-static int crule_parsefunction(CRuleNodePtr* funcrootp, crule_token *next_tokp, const char** ruleptr)
+static int crule_parsefunction(CRuleNodePtr *funcrootp, crule_token *next_tokp, const char ** ruleptr)
 {
 	int errcode = CR_NOERR;
 	char funcname[CR_MAXARGLEN];
@@ -779,7 +779,7 @@ static int crule_parsefunction(CRuleNodePtr* funcrootp, crule_token *next_tokp, 
  * @param[in,out] ruleptr Next input character.
  * @return A crule_errcode value.
  */
-static int crule_parsearglist(CRuleNodePtr argrootp, crule_token *next_tokp, const char** ruleptr)
+static int crule_parsearglist(CRuleNodePtr argrootp, crule_token *next_tokp, const char **ruleptr)
 {
 	int errcode = CR_NOERR;
 	char *argelemp = NULL;
