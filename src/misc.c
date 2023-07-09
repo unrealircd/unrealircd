@@ -3050,4 +3050,13 @@ int valid_spamfilter_id(const char *s)
 
 void download_complete_dontcare(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *ptr)
 {
+#ifdef DEBUGMODE
+	if (memory)
+	{
+		unreal_log(ULOG_DEBUG, "url", "DEBUG_URL_RESPONSE", NULL,
+		           "Response for '$url': $response",
+		           log_data_string("url", url),
+		           log_data_string("response", memory));
+	}
+#endif
 }

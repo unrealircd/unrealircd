@@ -2602,7 +2602,9 @@ typedef enum JsonRpcError {
 /** Valid character for variable names in logging engine buildlogstring and also in buildvarstring* */
 #define validvarcharacter(x)    (isalnum((x)) || ((x) == '_'))
 
-#define BUILDVARSTRING_URLENCODE	0x1
+#define BUILDVARSTRING_URLENCODE		0x1
+#define BUILDVARSTRING_XML			0x2
+#define BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY	0x4
 
 #endif /* __struct_include__ */
 

@@ -4,13 +4,19 @@ This is the git version (development version) for future 6.1.2. This is work
 in progress and may not be a stable version.
 
 ### Enhancements:
-* Optional [Central Spamfilter](https://www.unrealircd.org/docs/Central_spamfilter):
-  This will fetch and refresh spamfilter rules every 30 minutes from unrealircd.org. 
-  This feature is not enabled default. Use `set { central-spamfitler { enabled yes; } }` to enable
 * [spamfilter { } block](https://www.unrealircd.org/docs/Spamfilter_block) improvements:
   * The `action` item now supports multiple actions
   * A new action is setting a TAG on a user, or increasing the value of a TAG
   * A new option `rule` with minimal 'if'-like preconditions and functions
+  * A new option `report` to call a spamreport block, see next.
+* A new [spamreport { } block](https://www.unrealircd.org/docs/Spamreport_block):
+  * This can do a HTTP(S) call to services like DroneBL to report spam hits,
+    so they can blacklist the IP address and other users on IRC can benefit.
+* Optional [Central Spamfilter](https://www.unrealircd.org/docs/Central_spamfilter):
+  This will fetch and refresh spamfilter rules every 30 minutes from unrealircd.org. 
+  This feature is not enabled default. Use `set { central-spamfitler { enabled yes; } }`
+  to enable. At the moment this does not contain rules yet, but it will be
+  at a later point.
 * [set::spamfilter::utf8](https://www.unrealircd.org/docs/Set_block#set::spamfilter::utf8)
   is now on by default:
   * This means you can safely use UTF8 characters in like `[]` in regex.
@@ -24,7 +30,8 @@ in progress and may not be a stable version.
   * You can turn it off via: `set { spamfilter { utf8 no; } }`
 * The module [antimixedutf8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8)
   now recognizes more code block transitions and should do a better job at
-  catching mixed UTF8 spam.
+  catching mixed UTF8 spam. It may also have more false positives.
+  This module is (still) not loaded by default.
 * You can restrict includes to only contain certain blocks, the style is:
   ```
   include "some-file-or-url" { restrict-config { name-of-block; name-of-block2; } }

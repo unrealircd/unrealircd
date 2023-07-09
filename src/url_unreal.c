@@ -36,6 +36,7 @@ struct Download
 	char *url; /**< must be free()d by url_do_transfers_async() */
 	HttpMethod http_method;
 	char *body;
+	NameValuePrioList *request_headers;
 	int store_in_file;
 	FILE *file_fd;		/**< File open for writing (otherwise NULL) */
 	char *filename;
@@ -105,6 +106,7 @@ void url_free_handle(Download *handle)
 	safe_free(handle->filename);
 	safe_free(handle->memory_data);
 	safe_free(handle->body);
+	safe_free_nvplist(handle->request_headers);
 	safe_free(handle->hostname);
 	safe_free(handle->username);
 	safe_free(handle->password);
@@ -147,10 +149,10 @@ void https_cancel(Download *handle, FORMAT_STRING(const char *pattern), ...)
 
 void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
 {
-	url_start_async(url, HTTP_METHOD_GET, NULL, 1, cachetime, callback, callback_data, original_url, maxredirects);
+	url_start_async(url, HTTP_METHOD_GET, NULL, NULL, 1, cachetime, callback, callback_data, original_url, maxredirects);
 }
 
-void url_start_async(const char *url, HttpMethod http_method, const char *body, int store_in_file, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
+void url_start_async(const char *url, HttpMethod http_method, const char *body, NameValuePrioList *request_headers, int store_in_file, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
 {
 	char *file;
 	const char *filename;
@@ -209,8 +211,13 @@ void url_start_async(const char *url, HttpMethod http_method, const char *body, 
 
 		safe_strdup(handle->filename, tmp);
 		safe_free(file);
+	} else {
+		handle->memory_data_allocated = URL_MEMORY_BACKED_CHUNK_SIZE;
+		handle->memory_data = safe_alloc(URL_MEMORY_BACKED_CHUNK_SIZE);
 	}
 
+	if (request_headers)
+		handle->request_headers = duplicate_nvplist(request_headers);
 
 	// todo: allocate handle, select en weetikt allemaal
 	// add to some global struct linkedlist, for timeouts
@@ -786,11 +793,13 @@ int https_handle_response_body_memory(Download *handle, const char *ptr, int wri
 			return 0;
 		}
 		handle->memory_data = newptr;
+		handle->memory_data_allocated = newsize;
 		/* fill rest with zeroes, yeah.. no trust! ;D */
 		memset(handle->memory_data + handle->memory_data_len, 0, handle->memory_data_allocated - handle->memory_data_len);
 	}
 
 	memcpy(handle->memory_data + handle->memory_data_len, ptr, write_sz);
+	handle->memory_data_len += write_sz;
 	handle->memory_data[handle->memory_data_len] = '\0';
 	return write_sz;
 }
@@ -965,7 +974,8 @@ void https_redirect(Download *handle)
 	if (handle->callback)
 	{
 		/* If still an outstanding request (not cancelled), follow the redirect.. */
-		url_start_async(handle->redirect_new_location, handle->http_method, handle->body, handle->store_in_file,
+		url_start_async(handle->redirect_new_location, handle->http_method, handle->body,
+		                handle->request_headers, handle->store_in_file,
 		                handle->cachetime, handle->callback, handle->callback_data,
 				handle->url, handle->redirects_remaining);
 	}

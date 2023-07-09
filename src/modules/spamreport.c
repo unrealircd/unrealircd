@@ -110,6 +110,8 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 					has_dronebl_rpckey = 1;
 				else if (!strcmp(cepp->name, "type"))
 					has_dronebl_type = 1;
+				else if (!strcmp(cepp->name, "staging"))
+					;
 			}
 		}
 		else if (!cep->value)
@@ -256,7 +258,14 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 		else if (!strcmp(cep->name, "parameters"))
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				if (!strcmp(cepp->name, "staging"))
+				{
+					if (cepp->value && config_checkval(cepp->value, CFG_YESNO)==0)
+						continue; /* skip on 'staging no;' */
+				}
 				add_nvplist(&s->parameters, 0, cepp->name, cepp->value);
+			}
 		}
 		else if (!strcmp(cep->name, "except"))
 		{
@@ -310,6 +319,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 	char bodybuf[512];
 	char *url = NULL;
 	char *body = NULL;
+	NameValuePrioList *headers = NULL;
 
 	if (!spamreport_block)
 	{
@@ -332,7 +342,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 		NameValuePrioList *list = NULL;
 		list = duplicate_nvplist(details);
 		add_nvplist(&list, -1, "ip", ip);
-		buildvarstring_nvp(s->url, urlbuf, sizeof(urlbuf), list, BUILDVARSTRING_URLENCODE);
+		buildvarstring_nvp(s->url, urlbuf, sizeof(urlbuf), list, BUILDVARSTRING_URLENCODE|BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY);
 		url = urlbuf;
 		safe_free_nvplist(list);
 		if (s->http_method == HTTP_METHOD_POST)
@@ -346,11 +356,18 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 	{
 		NameValuePrioList *list = NULL;
 		NameValuePrioList *list2 = NULL;
-		url = "https://www.unrealircd.org/spamreport.php";
+		char fmtstring[512];
+		url = "https://dronebl.org/rpc2";
 		list = duplicate_nvplist(details);
 		duplicate_nvplist_append(s->parameters, &list);
 		add_nvplist(&list, -1, "ip", ip);
-		buildvarstring_nvp("rpckey=$rpckey&action=add&ip=$ip&type=$type", bodybuf, sizeof(bodybuf), list, BUILDVARSTRING_URLENCODE);
+		snprintf(fmtstring, sizeof(fmtstring),
+		         "<?xml version='1.0'?>\n"
+		         "<request key='$rpckey'%s>\n"
+		         " <add ip='$ip' type='$type' comment='$comment'>\n"
+		         "</request>\n",
+		         find_nvplist(s->parameters, "staging") ? " staging='1'" : "");
+		buildvarstring_nvp(fmtstring, bodybuf, sizeof(bodybuf), list, BUILDVARSTRING_XML|BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY);
 		body = bodybuf;
 		safe_free_nvplist(list); // frees all the duplicated lists
 	} else
@@ -362,7 +379,8 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 	           log_data_string("url", url),
 	           log_data_string("body", (body ? body : "")));
 #endif
-	url_start_async(url, s->http_method, body, 0, 0, download_complete_dontcare, NULL, url, 3);
+	url_start_async(url, s->http_method, body, headers, 0, 0, download_complete_dontcare, NULL, url, 3);
+	safe_free_nvplist(headers);
 	return 1;
 }
 

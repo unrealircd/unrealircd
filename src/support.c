@@ -1354,6 +1354,59 @@ void buildvarstring(const char *inbuf, char *outbuf, size_t len, const char *nam
 	safe_free_nvplist(list);
 }
 
+char *xmlescape(const char *i, char *buf, int bufsize)
+{
+	char *o = buf;
+
+	for (; *i; i++)
+	{
+		if (*i == '"')
+		{
+			if (bufsize <= 6)
+				break;
+			strcpy(o, "&quot;");
+			o += 6;
+		} else
+		if (*i == '\'')
+		{
+			if (bufsize <= 6)
+				break;
+			strcpy(o, "&apos;");
+			o += 6;
+		} else
+		if (*i == '<')
+		{
+			if (bufsize <= 4)
+				break;
+			strcpy(o, "&lt;");
+			o += 4;
+		} else
+		if (*i == '>')
+		{
+			if (bufsize <= 4)
+				break;
+			strcpy(o, "&gt;");
+			o += 4;
+		} else
+		if (*i == '&')
+		{
+			if (bufsize <= 5)
+				break;
+			strcpy(o, "&amp;");
+			o += 5;
+		} else
+		{
+			if (bufsize <= 1)
+				break;
+			*o++ = *i;
+		}
+	}
+
+	if (bufsize >= 0)
+		*o = '\0';
+
+	return buf;
+}
 /** Build a string and replace $variables where needed.
  * See src/modules/blacklist.c for an example.
  * @param inbuf		The input string
@@ -1406,6 +1459,8 @@ void buildvarstring_nvp(const char *inbuf, char *outbuf, size_t len, NameValuePr
 					const char *output = n->value;
 					if (flags & BUILDVARSTRING_URLENCODE)
 						output = urlencode(output, outputbuf, sizeof(outputbuf));
+					if (flags & BUILDVARSTRING_XML)
+						output = xmlescape(output, outputbuf, sizeof(outputbuf));
 					strlcpy(o, output, left);
 					left -= strlen(output); /* may become <0 */
 					if (left <= 0)
@@ -1414,9 +1469,16 @@ void buildvarstring_nvp(const char *inbuf, char *outbuf, size_t len, NameValuePr
 				}
 			} else
 			{
-				/* variable name does not exist -- treat literal */
-				i--;
-				goto literal;
+				/* variable name does not exist */
+				if (flags & BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY)
+				{
+					/* stays empty, so '' in the result */
+				} else
+				{
+					/* treat as literal value, so eg '$xyz' ends up in the result */
+					i--;
+					goto literal;
+				}
 			}
 
 			/* value written. we're done. */

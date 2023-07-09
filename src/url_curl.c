@@ -40,6 +40,8 @@ struct Download
 	char *url; /*< must be free()d by url_do_transfers_async() */
 	HttpMethod http_method;
 	char *body;
+	NameValuePrioList *request_headers;
+	struct curl_slist *request_headers_curl;
 	char errorbuf[CURL_ERROR_SIZE];
 	time_t cachetime;
 	char *memory_data; /**< Memory for writing response (otherwise NULL) */
@@ -60,6 +62,9 @@ void url_free_handle(Download *handle)
 	safe_free(handle->filename);
 	safe_free(handle->url);
 	safe_free(handle->body);
+	safe_free_nvplist(handle->request_headers);
+	if (handle->request_headers_curl)
+		curl_slist_free_all(handle->request_headers_curl);
 	safe_free(handle);
 }
 
@@ -117,7 +122,7 @@ static size_t do_download_file(void *ptr, size_t size, size_t nmemb, void *strea
 static size_t do_download_memory(void *ptr, size_t size, size_t nmemb, void *stream)
 {
 	// DUPLICATE CODE: same as src/url_unreal.c, well.. sortof
-	Download *handle = (Download *)ptr;
+	Download *handle = (Download *)stream;
 	int write_sz = size * nmemb;
 	int size_required = handle->memory_data_len + write_sz;
 
@@ -134,11 +139,13 @@ static size_t do_download_memory(void *ptr, size_t size, size_t nmemb, void *str
 			return 0;
 		}
 		handle->memory_data = newptr;
+		handle->memory_data_allocated = newsize;
 		/* fill rest with zeroes, yeah.. no trust! ;D */
 		memset(handle->memory_data + handle->memory_data_len, 0, handle->memory_data_allocated - handle->memory_data_len);
 	}
 
 	memcpy(handle->memory_data + handle->memory_data_len, ptr, write_sz);
+	handle->memory_data_len += write_sz;
 	handle->memory_data[handle->memory_data_len] = '\0';
 	return write_sz;
 }
@@ -310,10 +317,10 @@ void url_init(void)
  */
 void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
 {
-	url_start_async(url, HTTP_METHOD_GET, NULL, 1, cachetime, callback, callback_data, original_url, maxredirects);
+	url_start_async(url, HTTP_METHOD_GET, NULL, NULL, 1, cachetime, callback, callback_data, original_url, maxredirects);
 }
 
-void url_start_async(const char *url, HttpMethod http_method, const char *body, int store_in_file, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
+void url_start_async(const char *url, HttpMethod http_method, const char *body, NameValuePrioList *request_headers, int store_in_file, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
 {
 	static char errorbuf[CURL_ERROR_SIZE];
 	char user_agent[256];
@@ -384,6 +391,24 @@ void url_start_async(const char *url, HttpMethod http_method, const char *body, 
 			curl_easy_setopt(curl, CURLOPT_COPYPOSTFIELDS, body);
 		}
 	}
+
+	if (request_headers)
+	{
+		NameValuePrioList *n;
+		char buf[512];
+
+		handle->request_headers = duplicate_nvplist(request_headers);
+		for (n = request_headers; n; n = n->next)
+		{
+			if (n->value)
+				snprintf(buf, sizeof(buf), "%s: %s", n->name, n->value);
+			else
+				snprintf(buf, sizeof(buf), "%s:", n->name);
+			handle->request_headers_curl = curl_slist_append(handle->request_headers_curl, buf);
+		}
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, handle->request_headers_curl);
+	}
+
 	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
 	set_curl_tls_options(curl);
 	memset(handle->errorbuf, 0, CURL_ERROR_SIZE);
