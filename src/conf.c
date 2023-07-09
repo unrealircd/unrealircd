@@ -1650,6 +1650,7 @@ void free_iConf(Configuration *i)
 	safe_free(i->stats_server);
 	safe_free(i->sasl_server);
 	safe_free_all_ban_actions(i->handshake_data_flood_ban_action);
+	safe_free(i->central_spamfilter_url);
 	// anti-flood:
 	for (f = i->floodsettings; f; f = f_next)
 	{

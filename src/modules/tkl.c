@@ -523,7 +523,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	char *rule = NULL;
 	time_t bantime = tempiConf.spamfilter_ban_time;
 	char *banreason = tempiConf.spamfilter_ban_reason;
-	BanAction *action;
+	BanAction *action = NULL;
 	int target = 0;
 	int match_type = 0;
 	Match *m = NULL;
@@ -2908,6 +2908,7 @@ void _free_tkl(TKL *tkl)
 			unreal_delete_match(tkl->ptr.spamfilter->match);
 		if (tkl->ptr.spamfilter->rule)
 			crule_free(&tkl->ptr.spamfilter->rule);
+		safe_free_all_ban_actions(tkl->ptr.spamfilter->action);
 		safe_free(tkl->ptr.spamfilter->prettyrule);
 		safe_free(tkl->ptr.spamfilter->id);
 		safe_free(tkl->ptr.spamfilter);
