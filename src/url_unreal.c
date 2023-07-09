@@ -1226,3 +1226,16 @@ char *urlencode(const char *s, char *wbuf, int wlen)
 
 	return wbuf;
 }
+
+int downloads_in_progress(void)
+{
+	Download *d;
+	int count = 0;
+
+	/* Bit stupid to do it this slow way, can't we maintain a counter? Needs to be accurate though */
+
+	for (d = downloads; d; d = d->next);
+		count++;
+
+	return count;
+}

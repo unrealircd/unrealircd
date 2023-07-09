@@ -1392,6 +1392,7 @@ extern void url_start_async(const char *url, HttpMethod http_method, const char 
 extern void url_init(void);
 extern void url_cancel_handle_by_callback_data(void *ptr);
 extern EVENT(url_socket_timeout);
+extern int downloads_in_progress(void);
 /* end of url stuff */
 extern char *collapse(char *pattern);
 extern void clear_scache_hash_table(void);

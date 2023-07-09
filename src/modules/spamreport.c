@@ -320,6 +320,17 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 	char *url = NULL;
 	char *body = NULL;
 	NameValuePrioList *headers = NULL;
+	int num;
+
+	num = downloads_in_progress();
+	if (num > 100)
+	{
+		// TODO: throttle this error
+		unreal_log(ULOG_WARNING, "spamreport", "SPAMREPORT_TOO_MANY_CONCURRENT_REQUESTS", NULL,
+		           "Already $num_requests HTTP(S) requests in progress, new spamreport requests ignored.",
+		           log_data_integer("num_requests", num));
+		return 0;
+	}
 
 	if (!spamreport_block)
 	{
