@@ -11424,16 +11424,16 @@ int test_dynamic_set_block_item(ConfigFile *conf, const char *security_group, Co
 	}
 	else if (!strcmp(cep->name, "restrict-usermodes"))
 	{
+		char *p;
+
 		CheckNull(cep);
-		if (cep->name) {
-			int warn = 0;
-			char *p;
-			for (p = cep->value; *p; p++)
-				if ((*p == '+') || (*p == '-'))
-					warn = 1;
-			if (warn) {
+		for (p = cep->value; *p; p++)
+		{
+			if ((*p == '+') || (*p == '-'))
+			{
 				config_status("%s:%i: warning: set::restrict-usermodes: should only contain modechars, no + or -.\n",
 					cep->file->filename, cep->line_number);
+				break;
 			}
 		}
 	} else
