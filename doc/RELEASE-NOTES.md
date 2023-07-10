@@ -25,10 +25,16 @@ in progress and may not be a stable version.
   * This can do a HTTP(S) call to services like DroneBL to report spam hits,
     so they can blacklist the IP address and other users on IRC can benefit.
 * Optional [Central Spamfilter](https://www.unrealircd.org/docs/Central_spamfilter):
-  This will fetch and refresh spamfilter rules every 30 minutes from unrealircd.org. 
-  This feature is not enabled default. Use `set { central-spamfilter { enabled yes; } }`
-  to enable. At the moment this does not contain rules yet, but it will be
-  at a later point.
+  This will fetch and refresh spamfilter rules every hour from unrealircd.org.
+  * This feature is not enabled default. Use `set { central-spamfilter { enabled yes; } }`
+    to enable.
+  * set::central-spamfilter::except defines who will never be affected by
+    central spamfilters. By default it is: users with a reputation score of
+    more than 2016 (7 days online unregged, or 3.5 days as identified user)
+    or having a host of *.irccloud.com. Spam matches for users that fall
+    in this ::except group are counted as false positives and no action is
+    taken or logged.
+  * At the moment central spamfilter has no rules yet, but it will be at a later point.
 * [set::spamfilter::utf8](https://www.unrealircd.org/docs/Set_block#set::spamfilter::utf8)
   is now on by default:
   * This means you can safely use UTF8 characters in like `[]` in regex.

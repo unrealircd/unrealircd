@@ -1263,6 +1263,7 @@ extern void json_expand_tkl(json_t *j, const char *key, TKL *tkl, int detail);
 extern MODVAR SecurityGroup *securitygroups;
 extern void unreal_delete_masks(ConfigItem_mask *m);
 extern void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce);
+extern void unreal_add_mask_string(ConfigItem_mask **head, const char *name);
 extern ConfigItem_mask *unreal_duplicate_masks(ConfigItem_mask *existing);
 extern int unreal_mask_match(Client *acptr, ConfigItem_mask *m);
 extern int unreal_mask_match_string(const char *name, ConfigItem_mask *m);

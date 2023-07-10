@@ -1783,8 +1783,11 @@ void config_setdefaultsettings(Configuration *i)
 	i->named_extended_bans = 1;
 	i->high_connection_rate = 1000;
 	safe_strdup(i->central_spamfilter_url, "https://spamfilter.unrealircd.org/spamfilter/central_spamfilter.conf");
-	i->central_spamfilter_refresh_time = 1800;
+	i->central_spamfilter_refresh_time = 3600;
 	i->central_spamfilter_enabled = 0;
+	i->central_spamfilter_except = safe_alloc(sizeof(SecurityGroup));
+	i->central_spamfilter_except->reputation_score = 2016; /* 7 days unregged, or 3.5 days identified */
+	unreal_add_mask_string(&i->central_spamfilter_except->mask, "*.irccloud.com");
 }
 
 /* Some settings have been moved to here - we (re)set some defaults */

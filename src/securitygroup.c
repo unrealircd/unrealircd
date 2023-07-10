@@ -33,18 +33,21 @@ void unreal_delete_masks(ConfigItem_mask *m)
 	}
 }
 
+void unreal_add_mask_string(ConfigItem_mask **head, const char *name)
+{
+	ConfigItem_mask *m = safe_alloc(sizeof(ConfigItem_mask));
+	safe_strdup(m->mask, name);
+	add_ListItem((ListStruct *)m, (ListStruct **)head);
+}
+
 /** Internal function to add one individual mask to the list */
 static void unreal_add_mask(ConfigItem_mask **head, ConfigEntry *ce)
 {
-	ConfigItem_mask *m = safe_alloc(sizeof(ConfigItem_mask));
-
 	/* Since we allow both mask "xyz"; and mask { abc; def; };... */
 	if (ce->value)
-		safe_strdup(m->mask, ce->value);
+		unreal_add_mask_string(head, ce->value);
 	else
-		safe_strdup(m->mask, ce->name);
-
-	add_ListItem((ListStruct *)m, (ListStruct **)head);
+		unreal_add_mask_string(head, ce->name);
 }
 
 /** Add mask entries from config */
