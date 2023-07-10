@@ -69,7 +69,7 @@ TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, SecurityGro
 TKL *_tkl_add_nameban(int type, char *name, int hold, char *reason, char *set_by,
                           time_t expire_at, time_t set_at, int flags);
 TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAction *action,
-                         Match *match, const char *rule,
+                         Match *match, const char *rule, SecurityGroup *except,
                          const char *set_by,
                          time_t expire_at, time_t set_at,
                          time_t spamf_tkl_duration, const char *spamf_tkl_reason,
@@ -435,6 +435,10 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			}
 			has_match_type = 1;
 		}
+		else if (!strcmp(cep->name, "except"))
+		{
+			test_match_block(cf, cep, &errors);
+		}
 		else
 		{
 			config_error_unknown(cep->file->filename, cep->line_number,
@@ -528,6 +532,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	int match_type = 0;
 	Match *m = NULL;
 	int flag = TKL_FLAG_CONFIG;
+	SecurityGroup *except;
 
 	/* We are only interested in spamfilter { } blocks */
 	if ((type != CONFIG_MAIN) || strcmp(ce->name, "spamfilter"))
@@ -577,6 +582,10 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 		{
 			match_type = unreal_match_method_strtoval(cep->value);
 		}
+		else if (!strcmp(cep->name, "except"))
+		{
+			conf_match_block(cf, cep, &except);
+		}
 	}
 
 	if (!match && rule)
@@ -590,6 +599,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	                   action,
 	                   m,
 	                   rule,
+	                   except,
 	                   "-config-",
 	                   0,
 	                   TStime(),
@@ -2642,6 +2652,8 @@ TKL *tkl_find_head(char type, char *hostmask, TKL *def)
  * @param target              The spamfilter target (SPAMF_*)
  * @param action              The spamfilter action (BAN_ACT_*)
  * @param match               The match (this struct may contain a regex for example)
+ * @param rule                Rule, if present, then only run spamfilter if true
+ * @param except              When not to run the spamfilter
  * @param set_by              Who (or what) set the ban
  * @param expire_at           When will the ban expire (0 for permanent)
  * @param set_at              When was the ban set
@@ -2652,7 +2664,7 @@ TKL *tkl_find_head(char type, char *hostmask, TKL *def)
  *                            such as a regex failing to compile, memory problem, ..
  */
 TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAction *action,
-                         Match *match, const char *rule,
+                         Match *match, const char *rule, SecurityGroup *except,
                          const char *set_by,
                          time_t expire_at, time_t set_at,
                          time_t tkl_duration, const char *tkl_reason,
@@ -2689,6 +2701,7 @@ TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAct
 	tkl->ptr.spamfilter->action = action;
 	tkl->ptr.spamfilter->match = match;
 	safe_strdup(tkl->ptr.spamfilter->tkl_reason, tkl_reason);
+	tkl->ptr.spamfilter->except = except;
 	tkl->ptr.spamfilter->tkl_duration = tkl_duration;
 
 	if (tkl->ptr.spamfilter->target & SPAMF_USER)
@@ -4435,7 +4448,8 @@ CMD_FUNC(cmd_tkl_add)
 					log_data_string("spamfilter_regex_error", err));
 				return;
 			}
-			tkl = tkl_add_spamfilter(type, NULL, target, banact_value_to_struct(action), m, NULL, set_by, expire_at, set_at,
+			tkl = tkl_add_spamfilter(type, NULL, target, banact_value_to_struct(action), m, NULL, NULL,
+			                         set_by, expire_at, set_at,
 			                         tkl_duration, tkl_reason, 0);
 		}
 	} else
@@ -5092,7 +5106,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 		if (IsLoggedIn(client) && only_soft_actions(tkl->ptr.spamfilter->action))
 			continue;
 
-		/* Run any pre 'rule' if there is any */
+		/* Run any pre 'rule' if there is any (false means 'no hit') */
 		if (tkl->ptr.spamfilter->rule)
 		{
 			crule_context context;
@@ -5101,6 +5115,10 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			if (!crule_eval(&context, tkl->ptr.spamfilter->rule))
 				continue;
 		}
+
+		/* Check any 'except' rule if there is any (true means 'no hit') */
+		if (tkl->ptr.spamfilter->except && user_allowed_by_security_group(client, tkl->ptr.spamfilter->except))
+			continue;
 
 		if (tkl->ptr.spamfilter->match && (tkl->ptr.spamfilter->match->type != MATCH_NONE))
 		{

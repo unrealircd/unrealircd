@@ -5,10 +5,22 @@ in progress and may not be a stable version.
 
 ### Enhancements:
 * [spamfilter { } block](https://www.unrealircd.org/docs/Spamfilter_block) improvements:
-  * The `action` item now supports multiple actions
-  * A new action is setting a TAG on a user, or increasing the value of a TAG
-  * A new option `rule` with minimal 'if'-like preconditions and functions
-  * A new option `report` to call a spamreport block, see next.
+  * Spamfilters now always run, even for users that are exempt via a
+    [except ban block](https://www.unrealircd.org/docs/Except_ban_block)
+    with `type spamfilter`. However, for exempt users no action is taken
+    or logged. This allows us to count hits and hits for except users.
+    The idea is that the hits for except users can be a useful measurement
+    to detect false positives. These hitcounts are exposed in `SPAMFILTER`
+    and `STATS spamfilter`.
+  * Optional items allowing more complex rules:
+    * spamfilter::rule: with minimal 'if'-like preconditions and functions.
+      If this returns false then the spamfilter will not run at all (no hit).
+    * spamfilter::except: this is meant as an alternative to 'rule' and
+      works like a regular [except item](https://www.unrealircd.org/docs/Mask_item).
+      If this matches, then the spamfilter will not run at all (no hit).
+  * The `action` item now supports multiple actions:
+    * A new action `set` to set a TAG on a user, or increasing the value of one
+    * A new action `report` to call a spamreport block, see next.
 * A new [spamreport { } block](https://www.unrealircd.org/docs/Spamreport_block):
   * This can do a HTTP(S) call to services like DroneBL to report spam hits,
     so they can blacklist the IP address and other users on IRC can benefit.

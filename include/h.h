@@ -820,7 +820,8 @@ extern MODVAR TKL *(*tkl_add_banexception)(int type, const char *usermask, const
 extern MODVAR TKL *(*tkl_add_nameban)(int type, const char *name, int hold, const char *reason, const char *setby,
                                           time_t expire_at, time_t set_at, int flags);
 extern MODVAR TKL *(*tkl_add_spamfilter)(int type, const char *id, unsigned short target, BanAction *action,
-                                         Match *match, const char *rule, const char *setby,
+                                         Match *match, const char *rule, SecurityGroup *except,
+                                         const char *setby,
                                          time_t expire_at, time_t set_at,
                                          time_t spamf_tkl_duration, const char *spamf_tkl_reason,
                                          int flags);

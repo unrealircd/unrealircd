@@ -1231,6 +1231,7 @@ struct Spamfilter {
 	char *id; /**< ID */
 	long long hits; /**< Spamfilter hits (except exempts) */
 	long long hits_except; /**< Spamfilter hits by exempt clients */
+	SecurityGroup *except; /**< Don't run this spamfitler at all for these users (not counting towards hits_except btw) */
 };
 
 /** Ban exception sub-struct of TKL entry (ELINE) */
