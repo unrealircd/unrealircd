@@ -82,7 +82,7 @@ SSL_CTX *https_new_ctx(void);
 void unreal_https_connect_handshake(int fd, int revents, void *data);
 int https_connect(Download *handle);
 int https_fatal_tls_error(int ssl_error, int my_errno, Download *handle);
-void https_connect_send_header(Download *handle);
+int https_connect_send_header(Download *handle);
 void https_receive_response(int fd, int revents, void *data);
 int https_handle_response_header(Download *handle, char *readbuf, int n);
 int https_handle_response_body(Download *handle, char *readbuf, int n);
@@ -91,7 +91,7 @@ void https_done_cached(Download *handle);
 void https_redirect(Download *handle);
 int https_parse_header(char *buffer, int len, char **key, char **value, char **lastloc, int *end_of_request);
 char *url_find_end_of_request(char *header, int totalsize, int *remaining_bytes);
-void https_cancel(Download *handle, FORMAT_STRING(const char *pattern), ...)  __attribute__((format(printf,2,3)));
+int https_cancel(Download *handle, FORMAT_STRING(const char *pattern), ...)  __attribute__((format(printf,2,3)));
 
 void url_free_handle(Download *handle)
 {
@@ -136,7 +136,10 @@ void url_cancel_handle_by_callback_data(void *ptr)
 	}
 }
 
-void https_cancel(Download *handle, FORMAT_STRING(const char *pattern), ...)
+/** Cancel and free the HTTPS request.
+ * @returns Always returns -1
+ */
+int https_cancel(Download *handle, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	va_start(vl, pattern);
@@ -145,6 +148,7 @@ void https_cancel(Download *handle, FORMAT_STRING(const char *pattern), ...)
 	if (handle->callback)
 		handle->callback(handle->url, NULL, NULL, 0, handle->errorbuf, 0, handle->callback_data);
 	url_free_handle(handle);
+	return -1;
 }
 
 void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
@@ -311,11 +315,7 @@ void unreal_https_connect_handshake(int fd, int revents, void *data)
 	SSL_set_tlsext_host_name(handle->ssl, handle->hostname);
 
 	if (https_connect(handle) < 0)
-	{
-		/* Some fatal error already */
-		https_cancel(handle, "TLS_connect() failed early");
-		return;
-	}
+		return; /* fatal error, handle is freed */
 
 	/* Is now connecting... */
 }
@@ -369,7 +369,12 @@ void https_connect_retry(int fd, int revents, void *data)
 	https_connect(handle);
 }
 
-// Based on unreal_tls_connect()
+/* Actually do the SSL_connect()
+ * Based on unreal_tls_connect() but different return values.
+ * @retval 1 connected
+ * @retval 0 in progress
+ * @retval -1 error, handle freed!
+ */
 int https_connect(Download *handle)
 {
 	int ssl_err;
@@ -399,21 +404,18 @@ int https_connect(Download *handle)
 				fd_setselect(handle->fd, FD_SELECT_WRITE, https_connect_retry, handle);
 				return 0;
 			default:
-				return https_fatal_tls_error(ssl_err, ERRNO, handle);
+				return https_fatal_tls_error(ssl_err, ERRNO, handle); /* -1 */
 		}
 		/* NOTREACHED */
-		return -1;
+		return 0;
 	}
 
 	/* We are connected now. */
 
 	if (!verify_certificate(handle->ssl, handle->hostname, &errstr))
-	{
-		https_cancel(handle, "TLS Certificate error for server: %s", errstr);
-		return -1;
-	}
-	https_connect_send_header(handle);
-	return 1;
+		return https_cancel(handle, "TLS Certificate error for server: %s", errstr); /* -1 */
+
+	return https_connect_send_header(handle);
 }
 
 /**
@@ -423,6 +425,7 @@ int https_connect(Download *handle)
  * @param where The location, one of the SAFE_SSL_* defines.
  * @param my_errno A preserved value of errno to pass to ssl_error_str().
  * @param client The client the error is associated with.
+ * @returns Always -1
  */
 int https_fatal_tls_error(int ssl_error, int my_errno, Download *handle)
 {
@@ -508,7 +511,7 @@ int url_parse(const char *url, char **hostname, int *port, char **username, char
 	return 1;
 }
 
-void https_connect_send_header(Download *handle)
+int https_connect_send_header(Download *handle)
 {
 	char buf[8192];
 	char hostandport[512];
@@ -606,12 +609,10 @@ void https_connect_send_header(Download *handle)
 
 	ssl_err = SSL_write(handle->ssl, buf, strlen(buf));
 	if (ssl_err < 0)
-	{
-		https_fatal_tls_error(ssl_err, ERRNO, handle);
-		return;
-	}
+		return https_fatal_tls_error(ssl_err, ERRNO, handle);
 	fd_setselect(handle->fd, FD_SELECT_WRITE, NULL, handle);
 	fd_setselect(handle->fd, FD_SELECT_READ, https_receive_response, handle);
+	return 1;
 }
 
 void https_receive_response(int fd, int revents, void *data)
