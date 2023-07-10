@@ -129,6 +129,7 @@ struct Configuration {
 	long central_spamfilter_refresh_time;
 	int central_spamfilter_verbose;
 	int central_spamfilter_enabled;
+	SecurityGroup *central_spamfilter_except;
 	int maxbans;
 	int watch_away_notification;
 	int uhnames;

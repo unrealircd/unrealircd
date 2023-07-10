@@ -1174,6 +1174,7 @@ typedef enum BanActionValue {
 	// do not use 99, it is special in tkl take_action
 	BAN_ACT_SOFT_WARN	=  50,
 	BAN_ACT_REPORT		=  40,
+	// anything above BAN_ACT_SET will will cause a log message to be emitted
 	BAN_ACT_SET		=  30,
 } BanActionValue;
 
@@ -1198,6 +1199,10 @@ struct BanAction {
                               (x == BAN_ACT_SOFT_DCCBLOCK) || (x == BAN_ACT_SOFT_BLOCK) || \
                               (x == BAN_ACT_SOFT_WARN))
 
+/** Skip BAN_ACT_SET (eg because you already processed them earlier, like in match_spamfilter) */
+#define TAKE_ACTION_SKIP_SET			0x1
+/** Don't ban/kill/block/etc, but do return value as if we did */
+#define TAKE_ACTION_SIMULATE_USER_ACTION	0x2
 
 /** Server ban sub-struct of TKL entry (KLINE/GLINE/ZLINE/GZLINE/SHUN) */
 struct ServerBan {
@@ -1224,6 +1229,8 @@ struct Spamfilter {
 	char *tkl_reason; /**< Reason to use for bans placed by this spamfilter, escaped by unreal_encodespace(). */
 	time_t tkl_duration; /**< Duration of bans placed by this spamfilter */
 	char *id; /**< ID */
+	long long hits; /**< Spamfilter hits (except exempts) */
+	long long hits_except; /**< Spamfilter hits by exempt clients */
 };
 
 /** Ban exception sub-struct of TKL entry (ELINE) */

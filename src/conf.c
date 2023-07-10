@@ -1651,6 +1651,7 @@ void free_iConf(Configuration *i)
 	safe_free(i->sasl_server);
 	safe_free_all_ban_actions(i->handshake_data_flood_ban_action);
 	safe_free(i->central_spamfilter_url);
+	free_security_group(i->central_spamfilter_except);
 	// anti-flood:
 	for (f = i->floodsettings; f; f = f_next)
 	{
@@ -8057,7 +8058,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.central_spamfilter_verbose = atoi(cepp->value);
 				else if (!strcmp(cepp->name, "enabled"))
 					tempiConf.central_spamfilter_enabled = config_checkval(cepp->value, CFG_YESNO);
-				// TODO: except, with a default of identified users.
+				else if (!strcmp(cepp->name, "except"))
+					conf_match_block(conf, cepp, &tempiConf.central_spamfilter_except);
 			}
 		}
 		else if (!strcmp(cep->name, "default-bantime"))
@@ -9180,6 +9182,14 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
+				if (!strcmp(cepp->name, "except"))
+				{
+					test_match_block(conf, cepp, &errors);
+				} else
+				if (!cepp->value)
+				{
+					CheckNull(cepp);
+				} else
 				if (!strcmp(cepp->name, "url"))
 				{
 				} else
@@ -9194,11 +9204,20 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						errors++;
 					}
 #endif
-				}
-				else if (!strcmp(cepp->name, "verbose"))
+				} else
+				if (!strcmp(cepp->name, "verbose"))
 				{
+				} else
+				if (!strcmp(cepp->name, "enabled"))
+				{
+				} else
+				{
+					config_error_unknown(cepp->file->filename,
+						cepp->line_number, "set::central-spamfilter",
+						cepp->name);
+					errors++;
+					continue;
 				}
-				// TODO: except
 			}
 		}
 		else if (!strcmp(cep->name, "default-bantime"))

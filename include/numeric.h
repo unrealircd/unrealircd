@@ -380,7 +380,7 @@
 #define STR_RPL_STATSNLINE		/* 226 */	"n %s %s"
 #define STR_RPL_STATSVLINE		/* 227 */	"v %s %s %s"
 #define STR_RPL_STATSBANVER		/* 228 */	"%s %s"
-#define STR_RPL_STATSSPAMF		/* 229 */	"%c %s %s %s %lld %lld %lld %s %s :%s"
+#define STR_RPL_STATSSPAMF		/* 229 */	"%c %s %s %s %lld %lld %lld %s %s %lld %lld :%s"
 #define STR_RPL_STATSEXCEPTTKL		/* 230 */	"%s %s %lld %lld %s :%s"
 #define STR_RPL_RULES			/* 232 */	":- %s"
 #define STR_RPL_STATSLLINE		/* 241 */	"%c %s * %s %d %d"

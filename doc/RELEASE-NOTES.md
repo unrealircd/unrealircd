@@ -37,6 +37,11 @@ in progress and may not be a stable version.
   include "some-file-or-url" { restrict-config { name-of-block; name-of-block2; } }
   ```
 
+### Developers and protocol:
+* Changes in numeric 229 (RPL_STATSSPAMF): Now includes hits and hits for
+  users that are exempt, two counters right inserted right before the last one.
+* Several API changes, like `place_host_ban` to `take_action`
+
 UnrealIRCd 6.1.1.1
 -------------------
 This 6.1.1.1 version is an update to 6.1.1: a bug and memory leak was fixed
