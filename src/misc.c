@@ -81,6 +81,7 @@ static BanActTable banacttable[] = {
 	{ BAN_ACT_SOFT_WARN,	'W',	"soft-warn" },
 	{ BAN_ACT_SET,		'1',	"set" },
 	{ BAN_ACT_REPORT,	'r',	"report" },
+	{ BAN_ACT_STOP,		'0',	"stop" },
 	{ 0, 0, 0 }
 };
 

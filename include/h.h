@@ -843,7 +843,7 @@ extern MODVAR TKL *(*find_tkline_match_zap)(Client *cptr);
 extern MODVAR void (*tkl_stats)(Client *cptr, int type, const char *para, int *cnt);
 extern MODVAR void (*tkl_sync)(Client *client);
 extern MODVAR void (*cmd_tkl)(Client *client, MessageTag *recv_mtags, int parc, const char *parv[]);
-extern MODVAR int (*take_action)(Client *client, BanAction *actions, const char *reason, long duration, int take_action_flags);
+extern MODVAR int (*take_action)(Client *client, BanAction *actions, const char *reason, long duration, int take_action_flags, int *stopped);
 extern MODVAR int (*match_spamfilter)(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, TKL **rettk);
 extern MODVAR int (*match_spamfilter_mtags)(Client *client, MessageTag *mtags, const char *cmd);
 extern MODVAR int (*join_viruschan)(Client *client, TKL *tk, int type);

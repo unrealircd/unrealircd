@@ -866,7 +866,7 @@ int antirandom_preconnect(Client *client)
 	score = get_spam_score(client);
 	if (score > cfg.threshold)
 	{
-		int n = take_action(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time, 0);
+		int n = take_action(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time, 0, NULL);
 		if ((n == BAN_ACT_WARN) || (n == BAN_ACT_SOFT_WARN))
 		{
 			unreal_log(ULOG_INFO, "antirandom", "ANTIRANDOM_DENIED_USER", client,

@@ -340,6 +340,8 @@ int write_tkldb(void)
 			{
 				if (tkl->flags & TKL_FLAG_CONFIG)
 					continue; /* config entry */
+				if (IsCentralSpamfilter(tkl))
+					continue;
 				if (!write_tkline(db, tmpfname, tkl)) // write_tkline() closes the db on errors itself
 					return 0;
 			}

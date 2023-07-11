@@ -1179,6 +1179,7 @@ typedef enum BanActionValue {
 	BAN_ACT_REPORT		=  40,
 	// anything above BAN_ACT_SET will will cause a log message to be emitted
 	BAN_ACT_SET		=  30,
+	BAN_ACT_STOP		=   5,
 } BanActionValue;
 
 typedef enum VarActionValue {

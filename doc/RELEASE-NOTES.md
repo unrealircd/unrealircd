@@ -19,6 +19,7 @@ in progress and may not be a stable version.
       works like a regular [except item](https://www.unrealircd.org/docs/Mask_item).
       If this matches, then the spamfilter will not run at all (no hit).
   * The `action` item now supports multiple actions:
+    * A new action `stop` to stop other spamfilters from processing
     * A new action `set` to set a TAG on a user, or increasing the value of one
     * A new action `report` to call a spamreport block, see next.
 * A new [spamreport { } block](https://www.unrealircd.org/docs/Spamreport_block):

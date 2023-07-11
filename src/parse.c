@@ -603,7 +603,7 @@ static void ban_handshake_data_flooder(Client *client)
 	else
 	{
 		/* take_action also takes care of removing any other clients with same host/ip */
-		take_action(client, iConf.handshake_data_flood_ban_action, "Handshake data flood detected", iConf.handshake_data_flood_ban_time, 0);
+		take_action(client, iConf.handshake_data_flood_ban_action, "Handshake data flood detected", iConf.handshake_data_flood_ban_time, 0, NULL);
 	}
 }
 

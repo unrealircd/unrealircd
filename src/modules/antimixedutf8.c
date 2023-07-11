@@ -697,7 +697,7 @@ CMD_OVERRIDE_FUNC(override_msg)
 		           log_data_string("scripts", logbuf));
 
 		/* Take the action */
-		retval = take_action(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time, 0);
+		retval = take_action(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time, 0, NULL);
 		if ((retval == BAN_ACT_WARN) || (retval == BAN_ACT_SOFT_WARN))
 		{
 			/* no action */

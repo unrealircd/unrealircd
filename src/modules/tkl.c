@@ -90,7 +90,7 @@ TKL *_find_tkline_match_zap(Client *client);
 void _tkl_stats(Client *client, int type, const char *para, int *cnt);
 void _tkl_sync(Client *client);
 CMD_FUNC(_cmd_tkl);
-int _take_action(Client *client, BanAction *action, char *reason, long duration, int take_action_flags);
+int _take_action(Client *client, BanAction *action, char *reason, long duration, int take_action_flags, int *stopped);
 int _match_spamfilter(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, TKL **rettk);
 int _match_spamfilter_mtags(Client *client, MessageTag *mtags, char *cmd);
 int check_mtag_spamfilters_present(void);
@@ -4804,11 +4804,19 @@ void ban_act_set(Client *client, BanAction *action)
 	           log_data_integer("value", tag->value));
 }
 
-void ban_action_run_all_sets(Client *client, BanAction *action)
+void ban_action_run_all_sets_and_stops(Client *client, BanAction *action, int *stopped)
 {
+	*stopped = 0;
 	for (; action; action = action->next)
+	{
 		if (action->action == BAN_ACT_SET)
 			ban_act_set(client, action);
+		if (action->action == BAN_ACT_STOP)
+		{
+			*stopped = 1;
+			break;
+		}
+	}
 }
 
 /** Take an action on the user, such as banning or killing.
@@ -4825,11 +4833,14 @@ void ban_action_run_all_sets(Client *client, BanAction *action)
  * @note Be sure to check IsDead(client) if return value is 1 and you are
  *       considering to continue processing.
  */
-int _take_action(Client *client, BanAction *actions, char *reason, long duration, int take_action_flags)
+int _take_action(Client *client, BanAction *actions, char *reason, long duration, int take_action_flags, int *stopped)
 {
 	BanAction *action;
 	int previous_highest = 0;
 	int highest = 0;
+
+	if (stopped)
+		*stopped = 0;
 
 	for (action = actions; action; action = action->next)
 	{
@@ -4937,6 +4948,10 @@ int _take_action(Client *client, BanAction *actions, char *reason, long duration
 			case BAN_ACT_SET:
 				if (!(take_action_flags & TAKE_ACTION_SKIP_SET))
 					ban_act_set(client, action);
+				break;
+			case BAN_ACT_STOP:
+				if (stopped)
+					*stopped = 1;
 				break;
 			default:
 				/* (BAN_ACT_BLOCK, BAN_ACT_SOFT_BLOCK, BAN_ACT_WARN, etc...) */
@@ -5090,17 +5105,20 @@ static int spamfilter_hide_content(int target)
 /** Called when a spamfilter is hit. Helper for match_spamfilter().
  * @retval 1 to break processing other spamfilters, 0 to continue.
  */
-static int match_spamfilter_hit(Client *client, const char *str_in, const char *str, int target,
-                                const char *cmd, const char *destination, TKL *tkl, TKL **winner_tkl,
-                                char user_is_exempt_general, char user_is_exempt_central,
-                                int *content_revealed,
-                                char no_stop)
+static void match_spamfilter_hit(Client *client, const char *str_in, const char *str, int target,
+                                 const char *cmd, const char *destination, TKL *tkl, TKL **winner_tkl,
+                                 char user_is_exempt_general, char user_is_exempt_central,
+                                 int *stop_processing_general_spamfilters, int *stop_processing_central_spamfilters,
+                                 int *content_revealed,
+                                 char no_stop_first_match)
 {
 	int hide_content = spamfilter_hide_content(target);
+	int stopped;
+	int highest_action;
 
 	/* Perhaps it's on the exceptions list? */
 	if (!*winner_tkl && destination && target_is_spamexcept(destination))
-		return 0; /* No problem! */
+		return; /* No problem! */
 
 	if (match_spamfilter_exempt(tkl, user_is_exempt_general, user_is_exempt_central))
 	{
@@ -5108,7 +5126,8 @@ static int match_spamfilter_hit(Client *client, const char *str_in, const char *
 	} else
 	{
 		tkl->ptr.spamfilter->hits++;
-		if (highest_ban_action(tkl->ptr.spamfilter->action) > BAN_ACT_SET)
+		highest_action = highest_ban_action(tkl->ptr.spamfilter->action);
+		if (highest_action > BAN_ACT_SET)
 		{
 			if (hide_content)
 			{
@@ -5134,23 +5153,29 @@ static int match_spamfilter_hit(Client *client, const char *str_in, const char *
 	}
 
 	/* Run any SET actions */
-	ban_action_run_all_sets(client, tkl->ptr.spamfilter->action);
+	ban_action_run_all_sets_and_stops(client, tkl->ptr.spamfilter->action, &stopped);
 
-	/* If we should stop after the first match, we end here... */
-	if ((no_stop == 0) && SPAMFILTER_STOP_ON_FIRST_MATCH)
-	{
-		*winner_tkl = tkl;
-		return 1;
-	}
-
-	/* Otherwise.. we set 'winner_tkl' to the spamfilter with the strongest action. */
+	/* Set 'winner_tkl' to the spamfilter with the strongest action. */
 	if (!*winner_tkl)
 		*winner_tkl = tkl;
 	else
 		*winner_tkl = choose_winning_spamfilter(tkl, *winner_tkl);
 
-	/* and continue.. */
-	return 0;
+	/* If set::spamfilter::stop-on-first-match is enabled, then we also stop
+	 * (this is different than an ::action stop but the effect is the same...
+	 */
+	if ((no_stop_first_match == 0) && SPAMFILTER_STOP_ON_FIRST_MATCH)
+		stopped = 1;
+
+	/* Tell caller what actually should be stopped... */
+	if (stopped)
+	{
+		if (IsCentralSpamfilter(tkl))
+			*stop_processing_central_spamfilters = 1;
+		else
+			*stop_processing_general_spamfilters = 1;
+	}
+
 }
 
 /** match_spamfilter: executes the spamfilter on the input string.
@@ -5177,6 +5202,8 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	int tags_serial = client->local ? client->local->tags_serial : 0;
 	char user_is_exempt_general = 0;
 	char user_is_exempt_central = 0;
+	int stop_processing_general_spamfilters = 0;
+	int stop_processing_central_spamfilters = 0;
 	int content_revealed = 0;
 
 	if (rettkl)
@@ -5209,6 +5236,20 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	{
 		if (!(tkl->ptr.spamfilter->target & target))
 			continue;
+
+		/* Skip spamfilters due to a 'stop' action from an earlier spamfilter
+		 * or set::spamfilter::stop-on-first-match.
+		 * We treat such stops as separate for central & general spamfilters
+		 * so they don't affect each other.
+		 */
+		if (IsCentralSpamfilter(tkl))
+		{
+			if (stop_processing_central_spamfilters)
+				continue;
+		} else {
+			if (stop_processing_general_spamfilters)
+				continue;
+		}
 
 		if ((flags & SPAMFLAG_NOWARN) && only_actions_of_type(tkl->ptr.spamfilter->action, BAN_ACT_WARN))
 			continue;
@@ -5277,15 +5318,12 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 
 		if (ret)
 		{
-			if (match_spamfilter_hit(client, str_in, str, target, cmd, destination,
-			                           tkl, &winner_tkl,
-			                           user_is_exempt_general, user_is_exempt_central,
-			                           &content_revealed,
-			                           0))
-			{
-				break;
-			}
-			/* otherwise continue.. */
+			match_spamfilter_hit(client, str_in, str, target, cmd, destination,
+			                     tkl, &winner_tkl,
+			                     user_is_exempt_general, user_is_exempt_central,
+			                     &stop_processing_general_spamfilters, &stop_processing_general_spamfilters,
+			                     &content_revealed,
+			                     0);
 		}
 	}
 
@@ -5296,15 +5334,32 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 		 * these are special in the sense that they only run
 		 * whenever a tag is changed.
 		 */
+		stop_processing_general_spamfilters = stop_processing_central_spamfilters = 0; /* reset this */
 		for (tkl = tklines[tkl_hash('F')]; tkl; tkl = tkl->next)
 		{
 			crule_context context;
+
 			if (tkl->ptr.spamfilter->target ||
 			    (tkl->ptr.spamfilter->match->type != MATCH_NONE) ||
 			    !tkl->ptr.spamfilter->rule)
 			{
 				continue;
 			}
+
+			/* Skip spamfilters due to a 'stop' action from an earlier spamfilter
+			 * or set::spamfilter::stop-on-first-match.
+			 * We treat such stops as separate for central & general spamfilters
+			 * so they don't affect each other.
+			 */
+			if (IsCentralSpamfilter(tkl))
+			{
+				if (stop_processing_central_spamfilters)
+					continue;
+			} else {
+				if (stop_processing_general_spamfilters)
+					continue;
+			}
+
 
 			if ((flags & SPAMFLAG_NOWARN) && only_actions_of_type(tkl->ptr.spamfilter->action, BAN_ACT_WARN))
 				continue;
@@ -5323,6 +5378,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			match_spamfilter_hit(client, str_in, str, target, cmd, destination,
 			                       tkl, &winner_tkl,
 			                       user_is_exempt_general, user_is_exempt_central,
+			                       &stop_processing_general_spamfilters, &stop_processing_general_spamfilters,
 			                       &content_revealed,
 			                       1);
 			/* and continue (yes, always, no stopping on first match) */
@@ -5338,7 +5394,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 
 	/* Spamfilter matched */
 	reason = unreal_decodespace(tkl->ptr.spamfilter->tkl_reason);
-	ret = take_action(client, tkl->ptr.spamfilter->action, reason, tkl->ptr.spamfilter->tkl_duration, TAKE_ACTION_SKIP_SET);
+	ret = take_action(client, tkl->ptr.spamfilter->action, reason, tkl->ptr.spamfilter->tkl_duration, TAKE_ACTION_SKIP_SET, NULL);
 	if (!IsDead(client))
 	{
 		if ((ret == BAN_ACT_BLOCK) || (ret == BAN_ACT_SOFT_BLOCK))
