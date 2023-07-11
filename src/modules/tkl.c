@@ -272,11 +272,15 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	int errors = 0;
 	char *match = NULL, *reason = NULL;
 	char has_target = 0, has_id = 0, has_match = 0, has_rule = 0, has_action = 0, has_reason = 0, has_bantime = 0, has_match_type = 0;
+	char central_spamfilter = 0;
 	int match_type = 0;
 
 	/* We are only interested in spamfilter { } blocks */
 	if ((type != CONFIG_MAIN) || strcmp(ce->name, "spamfilter"))
 		return 0;
+
+	if (!strcmp(cf->filename, "central_spamfilter.conf"))
+		central_spamfilter = 1;
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
@@ -513,6 +517,14 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		config_warn("Please read https://www.unrealircd.org/docs/FAQ#old-spamfilter-conf !!!");
 		config_warn("*****************");
 	}
+
+	if (central_spamfilter && errors)
+	{
+		ce->bad = 1;
+		*errs = 0;
+		return 1;
+	}
+
 	*errs = errors;
 	return errors ? -1 : 1;
 }
@@ -541,6 +553,10 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	/* Bit silly hard coded shit... */
 	if (!strcmp(cf->filename, "central_spamfilter.conf"))
 		flag = TKL_FLAG_CENTRAL_SPAMFILTER;
+
+	/* Ignore previously marked 'bad' spamfilter blocks */
+	if (ce->bad)
+		return 1;
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{

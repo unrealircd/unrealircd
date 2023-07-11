@@ -11673,11 +11673,23 @@ int central_spamfilter_downloading = 0;
 
 #define DFILTER_CACHE_TIME 0
 
+int count_central_spamfilter_rules(void)
+{
+	int count = 0;
+	TKL *tkl;
+
+	for (tkl = tklines[tkl_hash('F')]; tkl; tkl = tkl->next)
+		if (IsCentralSpamfilter(tkl))
+			count++;
+
+	return count;
+}
+
 void central_spamfilter_download_complete(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *rs_key)
 {
 	ConfigFile *cfptr;
 	int errors;
-	int numrules;
+	int num_rules, active_rules;
 
 	central_spamfilter_downloading = 0;
 
@@ -11718,13 +11730,15 @@ void central_spamfilter_download_complete(const char *url, const char *file, con
 	remove_config_tkls(TKL_FLAG_CENTRAL_SPAMFILTER);
 
 	/* And load the new ones... */
-	numrules = config_run_blocks_generic(cfptr, 0);
+	num_rules = config_run_blocks_generic(cfptr, 0);
+	active_rules = count_central_spamfilter_rules();
 
 	if (iConf.central_spamfilter_verbose > 2)
 	{
 		unreal_log(ULOG_INFO, "central-spamfilter", "CENTRAL_SPAMFILTER_STATUS", NULL,
-		           "Central spamfilter loaded (rules: $num_rules)",
-		           log_data_integer("num_rules", numrules));
+		           "Central spamfilter loaded (active rules: $active_rules, skipped: $skipped_rules)",
+		           log_data_integer("active_rules", active_rules),
+		           log_data_integer("skipped_rules", num_rules - active_rules));
 	}
 }
 
@@ -11747,7 +11761,10 @@ EVENT(central_spamfilter_download_evt)
 	if (iConf.central_spamfilter_enabled == 0)
 		return;
 	if ((last_download == 0) || (TStime() - last_download > iConf.central_spamfilter_refresh_time))
+	{
+		last_download = TStime();
 		central_spamfilter_start_download();
+	}
 }
 
 /*** End of central spamfilter ***/

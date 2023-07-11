@@ -1634,6 +1634,7 @@ struct ConfigEntry
 	ConfigEntry *parent;		/**< Parent item, can be NULL */
 	ConditionalConfig *conditional_config;	/**< Used for conditional config by the main parser */
 	unsigned escaped:1;
+	unsigned bad:1;
 };
 
 struct ConfigFlag 
