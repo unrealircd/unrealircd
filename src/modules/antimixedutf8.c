@@ -621,7 +621,7 @@ int lookalikespam_score(const char *text, char *logbuf, size_t logbufsize)
 	int points = 0;
 	int last_character_was_word_separator = 0;
 	int skip;
-	u_int32_t utfchar;
+	uint32_t utfchar;
 
 	for (p = text; *p; p++)
 	{
