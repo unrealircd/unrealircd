@@ -11723,6 +11723,7 @@ void central_spamfilter_download_complete(const char *url, const char *file, con
 	{
 		unreal_log(ULOG_ERROR, "central-spamfilter", "CENTRAL_SPAMFILTER_LOAD_FAILED", NULL,
 			"[Central spamfilter] Errors in the central central_spamfilter.conf -- not loaded.");
+		config_free(cfptr);
 		return;
 	}
 
@@ -11740,6 +11741,7 @@ void central_spamfilter_download_complete(const char *url, const char *file, con
 		           log_data_integer("active_rules", active_rules),
 		           log_data_integer("skipped_rules", num_rules - active_rules));
 	}
+	config_free(cfptr);
 }
 
 void central_spamfilter_start_download(void)
