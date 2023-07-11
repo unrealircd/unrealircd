@@ -1276,6 +1276,12 @@ struct SpamExcept {
 	char name[1];
 };
 
+typedef enum SpamfilterShowMessageContentOnHit {
+	SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_ALWAYS = 1,
+	SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_CHANNEL_ONLY = 2,
+	SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_NEVER = 3,
+} SpamfilterShowMessageContentOnHit;
+
 /** IRC Counts, used for /LUSERS */
 typedef struct IRCCounts IRCCounts;
 struct IRCCounts {

@@ -5050,14 +5050,39 @@ int match_spamfilter_exempt(TKL *tkl, char user_is_exempt_general, char user_is_
 	return 0;
 }
 
+/** Tells if the message content should be hidden in the spamfilter hit log message. Helper function. */
+static int spamfilter_hide_content(int target)
+{
+	if ((target == SPAMF_USERMSG) || (target == SPAMF_USERNOTICE))
+	{
+		if (iConf.spamfilter_show_message_content_on_hit == SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_ALWAYS)
+			return 0;
+		return 1;
+	} else
+	if ((target == SPAMF_CHANMSG) || (target == SPAMF_CHANNOTICE))
+	{
+		if ((iConf.spamfilter_show_message_content_on_hit == SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_ALWAYS) ||
+		    (iConf.spamfilter_show_message_content_on_hit == SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_CHANNEL_ONLY))
+		{
+			return 0;
+		}
+		return 1;
+	}
+	return 0;
+}
+
 /** Called when a spamfilter is hit. Helper for match_spamfilter().
  * @retval 1 to break processing other spamfilters, 0 to continue.
  */
 static int match_spamfilter_hit(Client *client, const char *str_in, const char *str, int target,
                                 const char *cmd, const char *destination, TKL *tkl, TKL **winner_tkl,
-                                char user_is_exempt_general, char user_is_exempt_central, char no_stop)
+                                char user_is_exempt_general, char user_is_exempt_central,
+                                int *content_revealed,
+                                char no_stop)
 {
-	/* We have a match! But.. perhaps it's on the exceptions list? */
+	int hide_content = spamfilter_hide_content(target);
+
+	/* Perhaps it's on the exceptions list? */
 	if (!*winner_tkl && destination && target_is_spamexcept(destination))
 		return 0; /* No problem! */
 
@@ -5069,13 +5094,24 @@ static int match_spamfilter_hit(Client *client, const char *str_in, const char *
 		tkl->ptr.spamfilter->hits++;
 		if (highest_ban_action(tkl->ptr.spamfilter->action) > BAN_ACT_SET)
 		{
-			unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
-				   "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
-				   log_data_tkl("tkl", tkl),
-				   log_data_string("command", cmd),
-				   log_data_string("_space", destination ? " " : ""),
-				   log_data_string("destination", destination ? destination : ""),
-				   log_data_string("str", str));
+			if (hide_content)
+			{
+				unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
+					   "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination] [reason: $tkl.reason] [action: $tkl.ban_action]",
+					   log_data_tkl("tkl", tkl),
+					   log_data_string("command", cmd),
+					   log_data_string("_space", destination ? " " : ""),
+					   log_data_string("destination", destination ? destination : ""));
+			} else {
+				unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
+					   "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
+					   log_data_tkl("tkl", tkl),
+					   log_data_string("command", cmd),
+					   log_data_string("_space", destination ? " " : ""),
+					   log_data_string("destination", destination ? destination : ""),
+					   log_data_string("str", str));
+				*content_revealed = 1;
+			}
 
 			RunHook(HOOKTYPE_LOCAL_SPAMFILTER, client, str, str_in, target, destination, tkl);
 		}
@@ -5108,9 +5144,8 @@ static int match_spamfilter_hit(Client *client, const char *str_in, const char *
  * @param destination	The destination as a text string (eg: "somenick", can be NULL.. eg for away)
  * @param flags		Any flags (SPAMFLAG_*)
  * @param rettkl	Pointer to an aTKLline struct, _used for special circumstances only_
- * RETURN VALUE:
- * 1 if spamfilter matched and it should be blocked (or client exited), 0 if not matched.
- * In case of 1, be sure to check IsDead(client)..
+ * @returns 0 if not matched, otherwise one of BAN_ACT_* (>=1) if spamfilter matched
+ *          and it should be blocked or client exited. If >=1 then be sure to check IsDead(client)!!
  */
 int _match_spamfilter(Client *client, const char *str_in, int target, const char *cmd, const char *destination, int flags, TKL **rettkl)
 {
@@ -5126,6 +5161,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	int tags_serial = client->local ? client->local->tags_serial : 0;
 	char user_is_exempt_general = 0;
 	char user_is_exempt_central = 0;
+	int content_revealed = 0;
 
 	if (rettkl)
 		*rettkl = NULL; /* initialize to NULL */
@@ -5227,7 +5263,9 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 		{
 			if (match_spamfilter_hit(client, str_in, str, target, cmd, destination,
 			                           tkl, &winner_tkl,
-			                           user_is_exempt_general, user_is_exempt_central, 0))
+			                           user_is_exempt_general, user_is_exempt_central,
+			                           &content_revealed,
+			                           0))
 			{
 				break;
 			}
@@ -5268,7 +5306,9 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 
 			match_spamfilter_hit(client, str_in, str, target, cmd, destination,
 			                       tkl, &winner_tkl,
-			                       user_is_exempt_general, user_is_exempt_central, 1);
+			                       user_is_exempt_general, user_is_exempt_central,
+			                       &content_revealed,
+			                       1);
 			/* and continue (yes, always, no stopping on first match) */
 		}
 	}
@@ -5336,12 +5376,16 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 				default:
 					break;
 			}
-			return 1;
+			return ret;
 		} else
 		if ((ret == BAN_ACT_WARN) || (ret == BAN_ACT_SOFT_WARN))
 		{
-			if ((target != SPAMF_USER) && (target != SPAMF_QUIT))
+			if (content_revealed &&
+			    ((target == SPAMF_USERMSG) || (target == SPAMF_USERNOTICE) ||
+			     (target == SPAMF_CHANMSG) || (target == SPAMF_CHANNOTICE)))
+			{
 				sendnumeric(client, RPL_SPAMCMDFWD, cmd, reason);
+			}
 			return 0;
 		} else
 		if ((ret == BAN_ACT_DCCBLOCK) || (ret == BAN_ACT_SOFT_DCCBLOCK))
@@ -5352,12 +5396,12 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 				sendnotice(client, "*** You have been blocked from sending files, reconnect to regain permission to send files");
 				SetDCCBlock(client);
 			}
-			return 1;
+			return ret;
 		} else
 		if ((ret == BAN_ACT_VIRUSCHAN) || (ret == BAN_ACT_SOFT_VIRUSCHAN))
 		{
 			if (IsVirus(client)) /* Already tagged */
-				return 1; // this was 0, but the action should be blocked, right?
+				return ret; // this was 0, but the action should be blocked, right?
 
 			/* There's a race condition for SPAMF_USER, so 'rettk' is used for SPAMF_USER
 			 * when a user is currently connecting and filters are checked:
@@ -5366,11 +5410,11 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			{
 				if (rettkl)
 					*rettkl = tkl;
-				return 1;
+				return ret;
 			}
 
 			join_viruschan(client, tkl, target);
-			return 1;
+			return ret;
 		}
 	}
 

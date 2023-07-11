@@ -811,6 +811,18 @@ BanTarget ban_target_strtoval(const char *str)
 	return 0; /* invalid */
 }
 
+/** Convert a set::spamfilter::show-message-content-on-hit value */
+SpamfilterShowMessageContentOnHit spamfilter_show_message_content_on_hit_strtoval(const char *s)
+{
+	if (!strcmp(s, "always"))
+		return SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_ALWAYS;
+	if (!strcmp(s, "channel-only"))
+		return SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_CHANNEL_ONLY;
+	if (!strcmp(s, "never"))
+		return SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_NEVER;
+	return 0;
+}
+
 /* Used for set::automatic-ban-target and set::manual-ban-target */
 const char *ban_target_valtostr(BanTarget v)
 {
@@ -1683,6 +1695,7 @@ void config_setdefaultsettings(Configuration *i)
 	i->spamfilter_detectslow_warn = 250;
 	i->spamfilter_detectslow_fatal = 500;
 	i->spamfilter_stop_on_first_match = 0;
+	i->spamfilter_show_message_content_on_hit = SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_ALWAYS;
 	i->maxdccallow = 10;
 	safe_strdup(i->channel_command_prefix, "`!.");
 	i->check_target_nick_bans = 1;
@@ -8047,6 +8060,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					tempiConf.spamfilter_utf8 = config_checkval(cepp->value, CFG_YESNO);
 				}
+				else if (!strcmp(cepp->name, "show-message-content-on-hit"))
+				{
+					tempiConf.spamfilter_show_message_content_on_hit = spamfilter_show_message_content_on_hit_strtoval(cepp->value);
+				}
 			}
 		}
 		else if (!strcmp(cep->name, "central-spamfilter"))
@@ -9175,6 +9192,16 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				} else
 				if (!strcmp(cepp->name, "utf8"))
 				{
+				} else
+				if (!strcmp(cepp->name, "show-message-content-on-hit"))
+				{
+					if (!spamfilter_show_message_content_on_hit_strtoval(cepp->value))
+					{
+						config_error("%s:%d: set::spamfilter::show-message-content-on-hit: unknown value '%s', "
+						             "must be one of: always, never, channel-only.",
+						             cepp->file->filename, cepp->line_number, cepp->value);
+						errors++;
+					}
 				} else
 				{
 					config_error_unknown(cepp->file->filename,

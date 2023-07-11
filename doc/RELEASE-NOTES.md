@@ -46,6 +46,11 @@ in progress and may not be a stable version.
     Please use this new tool with care. Blocking an entire language or script
     is quite a drastic measure.
   * You can turn it off via: `set { spamfilter { utf8 no; } }`
+* Via [set::spamfilter::show-message-content-on-hit](https://www.unrealircd.org/docs/Set_block#set::spamfilter::show-message-content-on-hit)
+  you can now configure to hide the message content in spamfilter hit
+  messages. Generally it is very useful to see if a spamfilter hit is
+  correct or not, so the default is 'always', but it also has privacy
+  implications so there is now this option to disable it.
 * The module [antimixedutf8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8)
   now recognizes more code block transitions and should do a better job at
   catching mixed UTF8 spam. It may also have more false positives.

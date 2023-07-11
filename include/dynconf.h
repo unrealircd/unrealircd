@@ -125,6 +125,7 @@ struct Configuration {
 	long spamfilter_detectslow_fatal;
 	int spamfilter_stop_on_first_match;
 	int spamfilter_utf8;
+	SpamfilterShowMessageContentOnHit spamfilter_show_message_content_on_hit;
 	char *central_spamfilter_url;
 	long central_spamfilter_refresh_time;
 	int central_spamfilter_verbose;
