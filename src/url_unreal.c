@@ -560,7 +560,7 @@ int https_connect_send_header(Download *handle)
 					    VERSIONONLY,
 					    hostandport,
 					    add_default_content_type ? "Content-Type: application/x-www-form-urlencoded\r\n" : "",
-					    strlen(handle->body));
+					    (long)strlen(handle->body));
 		}
 	} else
 		abort();
