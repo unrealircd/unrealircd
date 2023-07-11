@@ -189,7 +189,7 @@ typedef enum BypassChannelMessageRestrictionType {
 #define EXSJ_MERGE		3 /**< SJOIN: Merging of modes, neither won nor lost */
 
 /** Channel mode bit/value */
-typedef unsigned long Cmode_t;
+typedef unsigned long long Cmode_t;
 
 typedef enum CmodeType {
 	CMODE_NORMAL=0,

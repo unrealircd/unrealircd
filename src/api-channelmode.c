@@ -333,11 +333,12 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 
 	if (!cm)
 	{
-		long l, found = 0;
+		unsigned long long l;
+		char found = 0;
 
 		if (req.type == CMODE_NORMAL)
 		{
-			for (l = 1; l < LONG_MAX/2; l *= 2)
+			for (l = 1; l < ULLONG_MAX/2; l *= 2)
 			{
 				found = 0;
 				for (cm=channelmodes; cm; cm = cm->next)
