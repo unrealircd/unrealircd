@@ -5050,6 +5050,57 @@ int match_spamfilter_exempt(TKL *tkl, char user_is_exempt_general, char user_is_
 	return 0;
 }
 
+/** Called when a spamfilter is hit. Helper for match_spamfilter().
+ * @retval 1 to break processing other spamfilters, 0 to continue.
+ */
+static int match_spamfilter_hit(Client *client, const char *str_in, const char *str, int target,
+                                const char *cmd, const char *destination, TKL *tkl, TKL **winner_tkl,
+                                char user_is_exempt_general, char user_is_exempt_central, char no_stop)
+{
+	/* We have a match! But.. perhaps it's on the exceptions list? */
+	if (!*winner_tkl && destination && target_is_spamexcept(destination))
+		return 0; /* No problem! */
+
+	if (match_spamfilter_exempt(tkl, user_is_exempt_general, user_is_exempt_central))
+	{
+		tkl->ptr.spamfilter->hits_except++;
+	} else
+	{
+		tkl->ptr.spamfilter->hits++;
+		if (highest_ban_action(tkl->ptr.spamfilter->action) > BAN_ACT_SET)
+		{
+			unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
+				   "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
+				   log_data_tkl("tkl", tkl),
+				   log_data_string("command", cmd),
+				   log_data_string("_space", destination ? " " : ""),
+				   log_data_string("destination", destination ? destination : ""),
+				   log_data_string("str", str));
+
+			RunHook(HOOKTYPE_LOCAL_SPAMFILTER, client, str, str_in, target, destination, tkl);
+		}
+	}
+
+	/* Run any SET actions */
+	ban_action_run_all_sets(client, tkl->ptr.spamfilter->action);
+
+	/* If we should stop after the first match, we end here... */
+	if ((no_stop == 0) && SPAMFILTER_STOP_ON_FIRST_MATCH)
+	{
+		*winner_tkl = tkl;
+		return 1;
+	}
+
+	/* Otherwise.. we set 'winner_tkl' to the spamfilter with the strongest action. */
+	if (!*winner_tkl)
+		*winner_tkl = tkl;
+	else
+		*winner_tkl = choose_winning_spamfilter(tkl, *winner_tkl);
+
+	/* and continue.. */
+	return 0;
+}
+
 /** match_spamfilter: executes the spamfilter on the input string.
  * @param str		The text (eg msg text, notice text, part text, quit text, etc
  * @param target	The spamfilter target (SPAMF_*)
@@ -5174,48 +5225,13 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 
 		if (ret)
 		{
-			// DUPLICATE CODE ALERT (1 of 2) -- see 2 of 2!
-			/* We have a match! But.. perhaps it's on the exceptions list? */
-			if (!winner_tkl && destination && target_is_spamexcept(destination))
-				return 0; /* No problem! */
-
-			if (match_spamfilter_exempt(tkl, user_is_exempt_general, user_is_exempt_central))
+			if (match_spamfilter_hit(client, str_in, str, target, cmd, destination,
+			                           tkl, &winner_tkl,
+			                           user_is_exempt_general, user_is_exempt_central, 0))
 			{
-				tkl->ptr.spamfilter->hits_except++;
-			} else
-			{
-				tkl->ptr.spamfilter->hits++;
-				if (highest_ban_action(tkl->ptr.spamfilter->action) > BAN_ACT_SET)
-				{
-					unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
-						   "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
-						   log_data_tkl("tkl", tkl),
-						   log_data_string("command", cmd),
-						   log_data_string("_space", destination ? " " : ""),
-						   log_data_string("destination", destination ? destination : ""),
-						   log_data_string("str", str));
-
-					RunHook(HOOKTYPE_LOCAL_SPAMFILTER, client, str, str_in, target, destination, tkl);
-				}
-			}
-
-			/* Run any SET actions */
-			ban_action_run_all_sets(client, tkl->ptr.spamfilter->action);
-
-			/* If we should stop after the first match, we end here... */
-			if (SPAMFILTER_STOP_ON_FIRST_MATCH)
-			{
-				winner_tkl = tkl;
 				break;
 			}
-
-			/* Otherwise.. we set 'winner_tkl' to the spamfilter with the strongest action. */
-			if (!winner_tkl)
-				winner_tkl = tkl;
-			else
-				winner_tkl = choose_winning_spamfilter(tkl, winner_tkl);
-
-			/* and continue.. */
+			/* otherwise continue.. */
 		}
 	}
 
@@ -5250,42 +5266,10 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			if (!crule_eval(&context, tkl->ptr.spamfilter->rule))
 				continue;
 
-			// DUPLICATE CODE ALERT (2 of 2) -- see 1 of 2!
-			/* We have a match! But.. perhaps it's on the exceptions list? */
-			if (!winner_tkl && destination && target_is_spamexcept(destination))
-				return 0; /* No problem! */
-
-			if (match_spamfilter_exempt(tkl, user_is_exempt_general, user_is_exempt_central))
-			{
-				tkl->ptr.spamfilter->hits_except++;
-			} else
-			{
-				tkl->ptr.spamfilter->hits++;
-				if (highest_ban_action(tkl->ptr.spamfilter->action) > BAN_ACT_SET)
-				{
-					unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
-						   "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
-						   log_data_tkl("tkl", tkl),
-						   log_data_string("command", cmd),
-						   log_data_string("_space", destination ? " " : ""),
-						   log_data_string("destination", destination ? destination : ""),
-						   log_data_string("str", str));
-
-					RunHook(HOOKTYPE_LOCAL_SPAMFILTER, client, str, str_in, target, destination, tkl);
-				}
-			}
-
-			/* Run any SET actions */
-			ban_action_run_all_sets(client, tkl->ptr.spamfilter->action);
-
-			/* Otherwise.. we set 'winner_tkl' to the spamfilter with the strongest action. */
-			if (!winner_tkl)
-				winner_tkl = tkl;
-			else
-				winner_tkl = choose_winning_spamfilter(tkl, winner_tkl);
-
-			/* and continue.. */
-
+			match_spamfilter_hit(client, str_in, str, target, cmd, destination,
+			                       tkl, &winner_tkl,
+			                       user_is_exempt_general, user_is_exempt_central, 1);
+			/* and continue (yes, always, no stopping on first match) */
 		}
 	}
 
