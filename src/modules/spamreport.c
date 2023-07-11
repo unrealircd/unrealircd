@@ -13,6 +13,9 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
 };
 
+/** For rate limiting the rate limit message :D */
+#define SPAMREPORT_RATE_LIMIT_WARNING_EVERY 15
+
 /* Enums and structs */
 typedef enum SpamreportType {
 	SPAMREPORT_TYPE_SIMPLE = 1,
@@ -28,21 +31,31 @@ struct Spamreport {
 	HttpMethod http_method;
 	NameValuePrioList *parameters;
 	SecurityGroup *except;
-	int rate_limit_num;
-	int rate_limit_per;
-	int rate_limit_counter;
-	time_t rate_limit_time;
+	int rate_limit_count;
+	int rate_limit_period;
+};
+
+typedef struct SpamreportCounter SpamreportCounter;
+struct SpamreportCounter {
+	SpamreportCounter *prev, *next;
+	char *name;
+	long long rate_limit_time;
+	int rate_limit_count;
+	time_t last_warning_sent;
 };
 
 /* Forward declarations */
 CMD_FUNC(cmd_spamreport);
 int tkl_config_test_spamreport(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_spamreport(ConfigFile *, ConfigEntry *, int);
+Spamreport *find_spamreport_block(const char *name);
 void free_spamreport_blocks(void);
 int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
+void spamreportcounters_free_all(ModData *m);
 
 /* Variables */
 Spamreport *spamreports = NULL;
+SpamreportCounter *spamreportcounters = NULL;
 
 MOD_TEST()
 {
@@ -57,6 +70,7 @@ MOD_INIT()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	CommandAdd(modinfo->handle, "SPAMREPORT", cmd_spamreport, MAXPARA, CMD_USER);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamreport);
+	LoadPersistentPointer(modinfo, spamreportcounters, spamreportcounters_free_all);
 	return MOD_SUCCESS;
 }
 
@@ -67,6 +81,7 @@ MOD_LOAD()
 
 MOD_UNLOAD()
 {
+	SavePersistentPointer(modinfo, spamreportcounters);
 	free_spamreport_blocks();
 	return MOD_SUCCESS;
 }
@@ -169,9 +184,13 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		}
 		else if (!strcmp(cep->name, "rate-limit"))
 		{
-			config_error("%s:%i: spamreport::rate-limit: not implemented yet",
-				cep->file->filename, cep->line_number);
-			errors++;
+			int count = 0, period = 0;
+			if (!config_parse_flood(cep->value, &count, &period))
+			{
+				config_error("%s:%i: spamreport::rate-limit: invalid format, must be count:time.",
+					cep->file->filename, cep->line_number);
+				errors++;
+			}
 		}
 		else
 		{
@@ -226,6 +245,13 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 	if ((type != CONFIG_MAIN) || strcmp(ce->name, "spamreport"))
 		return 0;
 
+	if (find_spamreport_block(ce->value))
+	{
+		config_error("%s:%d: spamreport block '%s' already exists, this duplicate one is ignored.",
+		             ce->file->filename, ce->line_number, ce->value);
+		return 1;
+	}
+
 	s = safe_alloc(sizeof(Spamreport));
 	safe_strdup(s->name, ce->value);
 
@@ -253,7 +279,7 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 		else if (!strcmp(cep->name, "rate-limit"))
 		{
-			// TODO
+			config_parse_flood(cep->value, &s->rate_limit_count, &s->rate_limit_period);
 		}
 		else if (!strcmp(cep->name, "parameters"))
 		{
@@ -312,6 +338,52 @@ Spamreport *find_spamreport_block(const char *name)
 	return NULL;
 }
 
+/* Returns 1 if ratelimited (don't do the request), otherwise 0 */
+int spamfilter_block_rate_limited(Spamreport *spamreport)
+{
+	SpamreportCounter *s;
+
+	/* First for the case where there is no rate limit configured... */
+	if (spamreport->rate_limit_count == 0)
+		return 0;
+
+	/* First find the block (allocate a new one if not found) */
+	for (s = spamreportcounters; s; s = s->next)
+		if (!strcmp(s->name, spamreport->name))
+			break;
+	if (s == NULL)
+	{
+		s = safe_alloc(sizeof(SpamreportCounter));
+		safe_strdup(s->name, spamreport->name);
+		AddListItem(s, spamreportcounters);
+	}
+
+	/* Now do the flood check */
+	if (s->rate_limit_time + spamreport->rate_limit_period <= TStime())
+	{
+		/* Time exceeded, reset */
+		s->rate_limit_count = 0;
+		s->rate_limit_time = TStime();
+	}
+	if (s->rate_limit_count <= spamreport->rate_limit_count)
+		s->rate_limit_count++;
+	if (s->rate_limit_count > spamreport->rate_limit_count)
+	{
+		if (s->last_warning_sent + SPAMREPORT_RATE_LIMIT_WARNING_EVERY < TStime())
+		{
+			unreal_log(ULOG_WARNING, "spamreport", "SPAMREPORT_RATE_LIMIT", NULL,
+				   "[spamreport] Rate limit of $rate_limit_count:$rate_limit_period hit "
+				   "for block $spamreport_block -- further requests dropped (throttled).",
+				   log_data_integer("rate_limit_count", spamreport->rate_limit_count),
+				   log_data_integer("rate_limit_period", spamreport->rate_limit_period),
+				   log_data_string("spamreport_block", spamreport->name));
+			s->last_warning_sent = TStime();
+		}
+		return 1; /* Limit exceeded */
+	}
+	return 0; /* All OK */
+}
+
 int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block)
 {
 	Spamreport *s;
@@ -347,6 +419,9 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 	if (s->except && client && user_allowed_by_security_group(client, s->except))
 		return 0;
 	// NOTE: 'except' is bypassed for manual SPAMREPORT with an ip and no client.
+
+	if (spamfilter_block_rate_limited(s))
+		return 0; /* spamreport::rate-limit exceeded */
 
 	if (s->type == SPAMREPORT_TYPE_SIMPLE)
 	{
@@ -440,4 +515,15 @@ CMD_FUNC(cmd_spamreport)
 		sendnotice(client, "Could not report spam. No spamreport { } blocks configured, or all filtered out/exempt.");
 	else
 		sendnotice(client, "Sending spam report to %d target(s)", n);
+}
+
+void spamreportcounters_free_all(ModData *m)
+{
+	SpamreportCounter *s, *s_next;
+	for (s = spamreportcounters; s; s = s_next)
+	{
+		s_next = s->next;
+		safe_free(s->name);
+		safe_free(s);
+	}
 }
