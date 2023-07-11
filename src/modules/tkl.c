@@ -532,7 +532,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	int match_type = 0;
 	Match *m = NULL;
 	int flag = TKL_FLAG_CONFIG;
-	SecurityGroup *except;
+	SecurityGroup *except = NULL;
 
 	/* We are only interested in spamfilter { } blocks */
 	if ((type != CONFIG_MAIN) || strcmp(ce->name, "spamfilter"))
