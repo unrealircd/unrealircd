@@ -1095,7 +1095,7 @@ const char *ban_actions_to_string(BanAction *actions)
 }
 
 /* Find the highest value in a BanAction linked list (the strongest action, eg gline>block) */
-int highest_spamfilter_action(BanAction *action)
+int highest_ban_action(BanAction *action)
 {
 	int highest = 0;
 
@@ -1104,6 +1104,16 @@ int highest_spamfilter_action(BanAction *action)
 			highest = action->action;
 
 	return highest;
+}
+
+/**  Lower any 'actions' to a maximum of 'limit_action'.
+ * See the BanActionValue table for what is considered higher/lower.
+ */
+void lower_ban_action_to_maximum(BanAction *actions, BanActionValue limit_action)
+{
+	for (; actions; actions = actions->next)
+		if (actions->action > limit_action)
+			actions->action = limit_action;
 }
 
 void free_single_ban_action(BanAction *action)

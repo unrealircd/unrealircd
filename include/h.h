@@ -739,7 +739,7 @@ extern void free_all_ban_actions(BanAction *actions);
 #define safe_free_all_ban_actions(x) do { free_all_ban_actions(x); x = NULL; } while(0)
 #define safe_free_single_ban_action(x) do { free_single_ban_action(x); x = NULL; } while(0)
 BanAction *duplicate_ban_actions(BanAction *actions);
-extern int highest_spamfilter_action(BanAction *action);
+extern int highest_ban_action(BanAction *action);
 extern BanActionValue banact_stringtoval(const char *s);
 extern const char *banact_valtostring(BanActionValue val);
 extern BanActionValue banact_chartoval(char c);
@@ -749,6 +749,7 @@ extern int only_actions_of_type(BanAction *actions, BanActionValue what);
 extern int has_actions_of_type(BanAction *actions, BanActionValue what);
 extern int only_soft_actions(BanAction *actions);
 extern const char *ban_actions_to_string(BanAction *actions);
+extern void lower_ban_action_to_maximum(BanAction *actions, BanActionValue limit_action);
 extern int spamfilter_gettargets(const char *s, Client *client);
 extern char *spamfilter_target_inttostring(int v);
 extern char *our_strcasestr(const char *haystack, const char *needle);

@@ -591,8 +591,18 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (!match && rule)
 		match_type = MATCH_NONE;
 
+	/* Limiting stuff for central spamfilters */
+	if (IsCentralSpamfilterType(flag))
+	{
+		if (iConf.central_spamfilter_limit_ban_action)
+			lower_ban_action_to_maximum(action, iConf.central_spamfilter_limit_ban_action);
+		if (iConf.central_spamfilter_limit_ban_time && (bantime > iConf.central_spamfilter_limit_ban_time))
+			bantime = iConf.central_spamfilter_limit_ban_time;
+	}
+
 	if (match)
 		m = unreal_create_match(match_type, match, NULL);
+
 	tkl_add_spamfilter(TKL_SPAMF,
 	                   id,
 	                   target,
@@ -4941,8 +4951,8 @@ TKL *choose_winning_spamfilter(TKL *one, TKL *two)
 		abort();
 
 	/* First, see if the action field differs... */
-	highest_action_one = highest_spamfilter_action(one->ptr.spamfilter->action);
-	highest_action_two = highest_spamfilter_action(two->ptr.spamfilter->action);
+	highest_action_one = highest_ban_action(one->ptr.spamfilter->action);
+	highest_action_two = highest_ban_action(two->ptr.spamfilter->action);
 	if (highest_action_one > highest_action_two)
 		return one;
 	else if (highest_action_one < highest_action_two)
@@ -5035,7 +5045,7 @@ int match_spamfilter_exempt(TKL *tkl, char user_is_exempt_general, char user_is_
 {
 	if (user_is_exempt_general)
 		return 1;
-	if ((tkl->flags & TKL_FLAG_CENTRAL_SPAMFILTER) && user_is_exempt_central)
+	if (IsCentralSpamfilter(tkl) && user_is_exempt_central)
 		return 1;
 	return 0;
 }
@@ -5175,7 +5185,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			} else
 			{
 				tkl->ptr.spamfilter->hits++;
-				if (highest_spamfilter_action(tkl->ptr.spamfilter->action) > BAN_ACT_SET)
+				if (highest_ban_action(tkl->ptr.spamfilter->action) > BAN_ACT_SET)
 				{
 					unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
 						   "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
@@ -5251,7 +5261,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			} else
 			{
 				tkl->ptr.spamfilter->hits++;
-				if (highest_spamfilter_action(tkl->ptr.spamfilter->action) > BAN_ACT_SET)
+				if (highest_ban_action(tkl->ptr.spamfilter->action) > BAN_ACT_SET)
 				{
 					unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
 						   "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",

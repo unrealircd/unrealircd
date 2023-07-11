@@ -130,6 +130,8 @@ struct Configuration {
 	int central_spamfilter_verbose;
 	int central_spamfilter_enabled;
 	SecurityGroup *central_spamfilter_except;
+	BanActionValue central_spamfilter_limit_ban_action;
+	long central_spamfilter_limit_ban_time;
 	int maxbans;
 	int watch_away_notification;
 	int uhnames;

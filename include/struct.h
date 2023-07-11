@@ -1135,6 +1135,9 @@ typedef struct CRuleNode* CRuleNodePtr;
 #define TKLIsBanException(tkl)		((tkl)->type & TKL_EXCEPTION)
 #define TKLIsBanExceptionType(tpe)	((tpe) & TKL_EXCEPTION)
 
+#define IsCentralSpamfilter(tkl)	((tkl)->flags & TKL_FLAG_CENTRAL_SPAMFILTER)
+#define IsCentralSpamfilterType(tpe)	((tpe) & TKL_FLAG_CENTRAL_SPAMFILTER)
+
 #define SPAMF_CHANMSG		0x0001 /* c */
 #define SPAMF_USERMSG		0x0002 /* p */
 #define SPAMF_USERNOTICE	0x0004 /* n */

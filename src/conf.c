@@ -8063,6 +8063,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.central_spamfilter_enabled = config_checkval(cepp->value, CFG_YESNO);
 				else if (!strcmp(cepp->name, "except"))
 					conf_match_block(conf, cepp, &tempiConf.central_spamfilter_except);
+				else if (!strcmp(cepp->name, "limit-ban-action"))
+					tempiConf.central_spamfilter_limit_ban_action = banact_stringtoval(cepp->value);
+				else if (!strcmp(cepp->name, "limit-ban-time"))
+					tempiConf.central_spamfilter_limit_ban_time = config_checkval(cepp->value, CFG_TIME);
 			}
 		}
 		else if (!strcmp(cep->name, "default-bantime"))
@@ -9213,6 +9217,31 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				} else
 				if (!strcmp(cepp->name, "enabled"))
 				{
+				} else
+				if (!strcmp(cepp->name, "limit-ban-action"))
+				{
+					int n = banact_stringtoval(cepp->value);
+					if (n == 0)
+					{
+						config_error("%s:%i: set::central-spamfilter::limit-ban-action: unknown ban action '%s'",
+							cepp->file->filename, cepp->line_number, cepp->value);
+						errors++;
+					} else
+					if ((n == BAN_ACT_SET) || (n == BAN_ACT_REPORT))
+					{
+						config_error("%s:%i: set::central-spamfilter::limit-ban-action: you cannot use 'set' or 'report' here",
+							cepp->file->filename, cepp->line_number);
+						errors++;
+					}
+				} else
+				if (!strcmp(cepp->name, "limit-ban-time"))
+				{
+					if (config_checkval(cepp->value, CFG_TIME) < 1)
+					{
+						config_error("%s:%i: set::central-spamfilter::limit-ban-time is zero or less (invalid)",
+							cepp->file->filename, cepp->line_number);
+						errors++;
+					}
 				} else
 				{
 					config_error_unknown(cepp->file->filename,
