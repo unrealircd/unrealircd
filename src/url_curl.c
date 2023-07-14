@@ -461,7 +461,7 @@ int downloads_in_progress(void)
 
 	/* Bit stupid to do it this slow way, can't we maintain a counter? Needs to be accurate though */
 
-	for (d = downloads; d; d = d->next);
+	for (d = downloads; d; d = d->next)
 		count++;
 
 	return count;
