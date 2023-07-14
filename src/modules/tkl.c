@@ -584,7 +584,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 		else if (!strcmp(cep->name, "action"))
 		{
-			action = parse_ban_action_config(cep);
+			parse_ban_action_config(cep, &action);
 		}
 		else if (!strcmp(cep->name, "reason"))
 		{

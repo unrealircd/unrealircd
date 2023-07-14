@@ -523,7 +523,7 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 		else if (!strcmp(cep->name, "action"))
 		{
-			d->action = parse_ban_action_config(cep);
+			parse_ban_action_config(cep, &d->action);
 		}
 		else if (!strcmp(cep->name, "ban-time"))
 		{

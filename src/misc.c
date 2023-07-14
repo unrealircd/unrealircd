@@ -961,14 +961,23 @@ BanAction *parse_ban_action_config_helper(const char *name, const char *value)
 }
 
 /** Parse an action item in the config.
- * @param ce	The config entry to parse
- * @returns	BanAction item (can be more than one, in the linked list)
+ * @param ce		The config entry to parse
+ * @param store_actions	Where to store the linked list in, any previously stored actions are freed.
+ * @notes Be sure to initialize *store_actions before calling (eg to NULL).
+ * The reason this function does not return a BanAction but uses a parameter is because
+ * it is common to have a default config setting and then parsing of config items later,
+ * which would have made it too easy to create memory leaks.
  */
-BanAction *parse_ban_action_config(ConfigEntry *ce)
+void parse_ban_action_config(ConfigEntry *ce, BanAction **store_actions)
 {
 	ConfigEntry *cep;
-	BanAction *action_list = NULL;
 	BanAction *action;
+
+	if (*store_actions)
+	{
+		free_all_ban_actions(*store_actions);
+		*store_actions = NULL;
+	}
 
 	if (ce->items && !ce->value)
 	{
@@ -977,7 +986,7 @@ BanAction *parse_ban_action_config(ConfigEntry *ce)
 		{
 			action = parse_ban_action_config_helper(cep->name, cep->value);
 			if (action)
-				AppendListItem(action, action_list);
+				append_ListItem((ListStruct *)action, (ListStruct **)store_actions);
 		}
 	} else
 	if (ce->value)
@@ -985,10 +994,8 @@ BanAction *parse_ban_action_config(ConfigEntry *ce)
 		/* action xxx; */
 		action = parse_ban_action_config_helper(ce->value, NULL);
 		if (action)
-			AppendListItem(action, action_list);
+			append_ListItem((ListStruct *)action, (ListStruct **)store_actions);
 	}
-
-	return action_list;
 }
 
 /** Converts a banaction string (eg: "kill") to an integer value (eg: BAN_ACT_KILL) */

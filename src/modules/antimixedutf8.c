@@ -841,9 +841,7 @@ int antimixedutf8_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		} else
 		if (!strcmp(cep->name, "ban-action"))
 		{
-			if (cfg.ban_action)
-				safe_free_all_ban_actions(cfg.ban_action);
-			cfg.ban_action = parse_ban_action_config(cep);
+			parse_ban_action_config(cep, &cfg.ban_action);
 		} else
 		if (!strcmp(cep->name, "ban-reason"))
 		{

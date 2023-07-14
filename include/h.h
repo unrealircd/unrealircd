@@ -732,7 +732,7 @@ extern void ExtbanDel(Extban *);
 extern void extban_init(void);
 extern char *trim_str(char *str, int len);
 extern MODVAR char *ban_realhost, *ban_virthost, *ban_ip;
-extern BanAction *parse_ban_action_config(ConfigEntry *ce);
+extern void parse_ban_action_config(ConfigEntry *ce, BanAction **store_action);
 extern int test_ban_action_config(ConfigEntry *ce);
 extern void free_single_ban_action(BanAction *action);
 extern void free_all_ban_actions(BanAction *actions);

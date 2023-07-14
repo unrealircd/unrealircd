@@ -6984,7 +6984,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "reason"))
 			safe_strdup(ca->reason, cep->value);
 		else if (!strcmp(cep->name, "action"))
-			ca->action = parse_ban_action_config(cep);
+			parse_ban_action_config(cep, &ca->action);
 	}
 	AddListItem(ca, conf_ban);
 	return 0;
@@ -7878,7 +7878,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 							else if (!strcmp(cep4->name, "ban-time"))
 								tempiConf.handshake_data_flood_ban_time = config_checkval(cep4->value, CFG_TIME);
 							else if (!strcmp(cep4->name, "ban-action") || !strcmp(cep4->name, "action"))
-								tempiConf.handshake_data_flood_ban_action = parse_ban_action_config(cep4);
+								parse_ban_action_config(cep4, &tempiConf.handshake_data_flood_ban_action);
 						}
 					}
 					else if (!strcmp(ceppp->name, "away-flood"))

@@ -674,7 +674,7 @@ int antirandom_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		} else
 		if (!strcmp(cep->name, "ban-action") || !strcmp(cep->name, "action"))
 		{
-			cfg.ban_action = parse_ban_action_config(cep);
+			parse_ban_action_config(cep, &cfg.ban_action);
 		} else
 		if (!strcmp(cep->name, "ban-reason"))
 		{
