@@ -1498,8 +1498,9 @@ Optional Packages:
                           Require opers to invite themselves to +s/+p channels
   --without-system-pcre2  Use the system pcre2 package instead of bundled,
                           discovered using pkg-config
-  --without-system-argon2 Use bundled version instead of system argon2
-                          library. Normally autodetected via pkg-config
+  --with-system-argon2    Use system argon2 instead of bundled version.
+                          Normally we prefer the one shipped with unrealircd
+                          because it is much faster
   --without-system-sodium Use bundled version instead of system sodium
                           library. Normally autodetected via pkg-config
   --without-system-cares  Use bundled version instead of system c-ares.
@@ -7170,7 +7171,7 @@ if test ${with_system_argon2+y}
 then :
   withval=$with_system_argon2;
 else $as_nop
-  with_system_argon2=yes
+  with_system_argon2=no
 fi
 
 

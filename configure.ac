@@ -542,7 +542,7 @@ AC_ARG_WITH(operoverride-verify, [AS_HELP_STRING([--with-operoverride-verify], [
 	[AS_IF([test $withval = "yes"],
 		[AC_DEFINE([OPEROVERRIDE_VERIFY], [], [Define if you want opers to have to use /invite to join +s/+p channels])])])
 AC_ARG_WITH(system-pcre2, [AS_HELP_STRING([--without-system-pcre2], [Use the system pcre2 package instead of bundled, discovered using pkg-config])], [], [with_system_pcre2=yes])
-AC_ARG_WITH(system-argon2, [AS_HELP_STRING([--without-system-argon2], [Use bundled version instead of system argon2 library. Normally autodetected via pkg-config])], [], [with_system_argon2=yes])
+AC_ARG_WITH(system-argon2, [AS_HELP_STRING([--with-system-argon2], [Use system argon2 instead of bundled version. Normally we prefer the one shipped with unrealircd because it is much faster])], [], [with_system_argon2=no])
 AC_ARG_WITH(system-sodium, [AS_HELP_STRING([--without-system-sodium], [Use bundled version instead of system sodium library. Normally autodetected via pkg-config])], [], [with_system_sodium=yes])
 AC_ARG_WITH(system-cares, [AS_HELP_STRING([--without-system-cares], [Use bundled version instead of system c-ares. Normally autodetected via pkg-config.])], [], [with_system_cares=yes])
 AC_ARG_WITH(system-jansson, [AS_HELP_STRING([--without-system-jansson], [Use bundled version instead of system jansson. Normally autodetected via pkg-config.])], [], [with_system_jansson=yes])
