@@ -859,9 +859,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 		exit(9);
 	}
-	unreal_log(ULOG_INFO, "config", "CONFIG_PASSED", NULL, "Configuration test passed OK");
 	if (loop.config_test)
 	{
+		unreal_log(ULOG_INFO, "config", "CONFIG_PASSED", NULL, "Configuration test passed OK");
 		fflush(stderr);
 		exit(0);
 	}
