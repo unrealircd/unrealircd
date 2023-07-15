@@ -388,6 +388,22 @@ int watch_notification(Client *client, Watch *watch, Link *lp, int event)
 			            (IsUser(client) ? client->user->username : "<N/A>"),
 			            (IsUser(client) ? (IsHidden(client) ? client->user->virthost : client->user->realhost) : "<N/A>"),
 			            (long long)watch->lasttime);
+			/* For watch away notification, a user who is away could change their nick,
+			 * and that nick could be on someones watch list. In such a case we
+			 * should not only send RPL_LOGON but also a RPL_GONEAWAY.
+			 */
+			if ((lp->flags & WATCH_FLAG_AWAYNOTIFY) && IsUser(client) && client->user->away)
+			{
+				/* This is possible if the user is nick changing,
+				 * they come online, and then we send RPL_GONEAWAY
+				 */
+				sendnumeric(lp->value.client, RPL_GONEAWAY,
+					    client->name,
+					    (IsUser(client) ? client->user->username : "<N/A>"),
+					    (IsUser(client) ? (IsHidden(client) ? client->user->virthost : client->user->realhost) : "<N/A>"),
+					    (long long)client->user->away_since,
+					    client->user->away);
+			}
 		}
 	}
 	else
