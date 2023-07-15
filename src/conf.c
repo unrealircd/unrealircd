@@ -4222,7 +4222,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 
 				if (ce->value && cep->value &&
 					!strcmp(ce->value, "bobsmith") &&
-					!strcmp(cep->value, "test"))
+					(!strcmp(cep->value, "test") || !strcmp(cep->value, "$argon2id..etc..")))
 				{
 					config_error("%s:%i: please change the the name and password of the "
 								 "default 'bobsmith' oper block",
