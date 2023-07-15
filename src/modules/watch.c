@@ -404,7 +404,7 @@ int watch_notification(Client *client, Watch *watch, Link *lp, int event)
 			    (IsUser(client) ? (IsHidden(client) ? client->user->virthost : client->user->realhost) : "<N/A>"),
 			    (long long)client->user->away_since);
 		} else
-		if (event == RPL_GONEAWAY)
+		if (event == WATCH_EVENT_AWAY)
 		{
 			sendnumeric(lp->value.client, RPL_GONEAWAY,
 			            client->name,
@@ -413,7 +413,7 @@ int watch_notification(Client *client, Watch *watch, Link *lp, int event)
 			            (long long)client->user->away_since,
 			            client->user->away);
 		} else
-		if (event == RPL_REAWAY)
+		if (event == WATCH_EVENT_REAWAY)
 		{
 			sendnumeric(lp->value.client, RPL_REAWAY,
 			            client->name,
