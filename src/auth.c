@@ -474,8 +474,8 @@ int Auth_Check(Client *client, AuthConfig *as, const char *para)
 	return 0;
 }
 
-#define UNREALIRCD_ARGON2_DEFAULT_TIME_COST             3
-#define UNREALIRCD_ARGON2_DEFAULT_MEMORY_COST           8192
+#define UNREALIRCD_ARGON2_DEFAULT_TIME_COST             2
+#define UNREALIRCD_ARGON2_DEFAULT_MEMORY_COST           6144
 #define UNREALIRCD_ARGON2_DEFAULT_PARALLELISM_COST      2
 #define UNREALIRCD_ARGON2_DEFAULT_HASH_LENGTH           32
 #define UNREALIRCD_ARGON2_DEFAULT_SALT_LENGTH           (128/8)
