@@ -4,6 +4,11 @@ This is the git version (development version) for future 6.1.2. This is work
 in progress and may not be a stable version.
 
 ### Enhancements:
+* We now give tips on (security) best practices depending on settings in your
+  configuration file, such as using plaintext oper passwords in the config
+  file. It is generally suggested to follow this advice, but you could disable
+  such advice via
+  [set::best-practices](https://www.unrealircd.org/docs/Set_block#set::best-practices).
 * [spamfilter { } block](https://www.unrealircd.org/docs/Spamfilter_block) improvements:
   * Spamfilters now always run, even for users that are exempt via a
     [except ban block](https://www.unrealircd.org/docs/Except_ban_block)

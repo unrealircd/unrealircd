@@ -184,6 +184,13 @@ extern MODVAR Configuration iConf;
 extern MODVAR Configuration tempiConf;
 extern MODVAR int ipv6_disabled;
 
+typedef struct BestPractices BestPractices;
+struct BestPractices {
+	int hashed_passwords;		/**< Use hashed passwords */
+	int hashed_passwords_hits;	/**< How many times advice has been given (like 'warnings' but it is advice) */
+};
+extern MODVAR BestPractices bestpractices;
+
 #define KLINE_ADDRESS			iConf.kline_address
 #define GLINE_ADDRESS			iConf.gline_address
 #define OPER_MODES			iConf.oper_modes

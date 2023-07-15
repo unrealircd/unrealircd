@@ -552,7 +552,7 @@ extern AuthConfig	*AuthBlockToAuthConfig(ConfigEntry *ce);
 extern void		Auth_FreeAuthConfig(AuthConfig *as);
 extern int		Auth_Check(Client *cptr, AuthConfig *as, const char *para);
 extern const char	*Auth_Hash(int type, const char *para);
-extern int   		Auth_CheckError(ConfigEntry *ce);
+extern int   		Auth_CheckError(ConfigEntry *ce, int warn_on_plaintext);
 extern int              Auth_AutoDetectHashType(const char *hash);
 
 extern void make_cloakedhost(Client *client, const char *curr, char *buf, size_t buflen);
@@ -1459,3 +1459,4 @@ extern void bump_tag_serial(Client *client);
 extern int valid_spamfilter_id(const char *s);
 extern void download_complete_dontcare(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *ptr);
 extern char *urlencode(const char *s, char *wbuf, int wlen);
+extern const char *config_item_name(ConfigEntry *ce);

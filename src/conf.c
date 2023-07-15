@@ -241,8 +241,9 @@ ConfigItem_proxy	*conf_proxy = NULL;
 
 Secret			*secrets = NULL;
 
-MODVAR Configuration		iConf;
-MODVAR Configuration		tempiConf;
+Configuration		iConf;
+Configuration		tempiConf;
+BestPractices		bestpractices;
 MODVAR ConfigFile		*conf = NULL;
 extern NameValueList *config_defines;
 MODVAR int ipv6_disabled = 0;
@@ -1621,6 +1622,19 @@ ConfigCommand *config_binary_search(const char *cmd) {
 	return NULL;
 }
 
+/** Free set::best-practices after reading config */
+void free_best_practices(void)
+{
+	memset(&bestpractices, 0, sizeof(bestpractices));
+}
+
+/** Initialize and set default values for set::best-practices */
+void init_best_practices(void)
+{
+	memset(&bestpractices, 0, sizeof(bestpractices));
+	bestpractices.hashed_passwords = 1;
+}
+
 void free_iConf(Configuration *i)
 {
 	FloodSettings *f, *f_next;
@@ -2015,6 +2029,7 @@ void config_load_failed(void)
 	config_free(conf);
 	conf = NULL;
 	free_iConf(&tempiConf);
+	free_best_practices();
 #ifdef _WIN32
 	if (!loop.rehashing)
 		win_error(); /* GUI popup */
@@ -2085,6 +2100,7 @@ int config_test(void)
 	loop.config_status = CONFIG_STATUS_TEST;
 
 	memset(&tempiConf, 0, sizeof(iConf));
+	init_best_practices();
 	memset(&settings, 0, sizeof(settings));
 	memset(&requiredstuff, 0, sizeof(requiredstuff));
 	memset(&nicklengths, 0, sizeof(nicklengths));
@@ -2169,7 +2185,23 @@ int config_test(void)
 	loop.config_status = CONFIG_STATUS_POSTLOAD;
 	postconf();
 	unreal_log(ULOG_INFO, "config", "CONFIG_LOADED", NULL, "Configuration loaded");
+	if (bestpractices.hashed_passwords_hits /* || .... || .... */ )
+	{
+		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES", NULL,
+		           "Your config has NO errors, but you received some best practices tips above, in summary:");
+		if (bestpractices.hashed_passwords_hits)
+		{
+			unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_HASHED_PASSWORDS_INFO", NULL,
+			           "* Use hashed passwords, see https://www.unrealircd.org/docs/Authentication_types "
+			           "to learn more about this.");
+		}
+		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_POST_INFO", NULL,
+		           "It is recommended you follow best practices, but if you want to hide "
+		           "such suggestions see "
+		           "https://www.unrealircd.org/docs/Set_block#set::best-practices");
+	}
 	unload_all_unused_mtag_handlers();
+	free_best_practices();
 	return 0;
 }
 
@@ -4217,7 +4249,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 				has_password = 1;
-				if (Auth_CheckError(cep) < 0)
+				if (Auth_CheckError(cep, 1) < 0)
 					errors++;
 
 				if (ce->value && cep->value &&
@@ -4427,7 +4459,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 				has_password = 1;
-				if (Auth_CheckError(cep) < 0)
+				if (Auth_CheckError(cep, 1) < 0)
 					errors++;
 			}
 			else
@@ -4556,7 +4588,7 @@ int _test_proxy(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_password = 1;
-			if (Auth_CheckError(cep) < 0)
+			if (Auth_CheckError(cep, 0) < 0)
 				errors++;
 		}
 		else if (!strcmp(cep->name, "type"))
@@ -4919,7 +4951,7 @@ int     _test_drpass(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_restart = 1;
-			if (Auth_CheckError(cep) < 0)
+			if (Auth_CheckError(cep, 0) < 0)
 				errors++;
 			continue;
 		}
@@ -4933,7 +4965,7 @@ int     _test_drpass(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_die = 1;
-			if (Auth_CheckError(cep) < 0)
+			if (Auth_CheckError(cep, 0) < 0)
 				errors++;
 			continue;
 		}
@@ -5932,7 +5964,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 			}
 			has_password = 1;
 			/* some auth check stuff? */
-			if (Auth_CheckError(cep) < 0)
+			if (Auth_CheckError(cep, 0) < 0)
 				errors++;
 		}
 		else if (!strcmp(cep->name, "class"))
@@ -6364,7 +6396,7 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 				continue;
 			}
-			if (Auth_CheckError(cep) < 0)
+			if (Auth_CheckError(cep, 0) < 0)
 				errors++;
 		}
 		else if (!strcmp(cep->name, "mask"))
@@ -6789,7 +6821,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "password"))
 		{
 			config_detect_duplicate(&has_password, cep, &errors);
-			if (Auth_CheckError(cep) < 0)
+			if (Auth_CheckError(cep, 0) < 0)
 			{
 				errors++;
 			} else {
@@ -8263,6 +8295,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		} else if (!strcmp(cep->name, "high-connection-rate"))
 		{
 			tempiConf.high_connection_rate = atoi(cep->value);
+		} else if (!strcmp(cep->name, "best-practices"))
+		{
+			/* This is handled in config test already (there is no other way) */
 		} else if (config_set_dynamic_set_block_item(conf, &dynamic_set, cep))
 		{
 			/* Handled by config_set_dynamic_set_block_item - nothing to do here */
@@ -9679,6 +9714,23 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		} else if (!strcmp(cep->name, "high-connection-rate"))
 		{
 			CheckNull(cep);
+		} else if (!strcmp(cep->name, "best-practices"))
+		{
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				CheckNull(cepp);
+				if (!strcmp(cepp->name, "hashed-passwords"))
+				{
+					bestpractices.hashed_passwords = config_checkval(cepp->value, CFG_YESNO);
+				} else
+				{
+					config_error_unknown(cepp->file->filename,
+						cepp->line_number, "set::best-practices",
+						cepp->name);
+					errors++;
+					continue;
+				}
+			}
 		} else if ((n = test_dynamic_set_block_item(conf, NULL, cep)) >= 0)
 		{
 			/* Handled by test_dynamic_set_block_item:
@@ -11770,3 +11822,23 @@ EVENT(central_spamfilter_download_evt)
 }
 
 /*** End of central spamfilter ***/
+
+/** Return full name of the config item, eg set::something::priority */
+const char *config_item_name(ConfigEntry *ce)
+{
+	static char buf[512];
+	char tmp[512];
+
+	*buf = '\0';
+	for (; ce; ce = ce->parent)
+	{
+		if (*buf)
+		{
+			strlcpy(tmp, buf, sizeof(tmp));
+			snprintf(buf, sizeof(buf), "%s::%s", ce->name, tmp);
+		} else {
+			strlcpy(buf, ce->name, sizeof(buf));
+		}
+	}
+	return buf;
+}

@@ -388,7 +388,7 @@ int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *err
 		if (!strcmp(cep->name, "password"))
 		{
 			has_password = 1;
-			if (Auth_CheckError(cep) < 0)
+			if (Auth_CheckError(cep, 0) < 0)
 				errors++;
 		} else
 		{

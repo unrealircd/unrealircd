@@ -45,6 +45,9 @@ AuthTypeList MODVAR AuthTypeLists[] = {
 	{NULL,              0}
 };
 
+/* Forward declarations */
+static char *mkpass_argon2(const char *para);
+
 /* Helper function for Auth_AutoDetectHashType() */
 static int parsepass(const char *str, char **salt, char **hash)
 {
@@ -158,7 +161,7 @@ AuthenticationType Auth_FindType(const char *hash, const char *type)
  * This is a block like: password "data" { type; };
  * in the configuration file.
 */
-int Auth_CheckError(ConfigEntry *ce)
+int Auth_CheckError(ConfigEntry *ce, int warn_on_plaintext)
 {
 	AuthenticationType type = AUTHTYPE_PLAINTEXT;
 	X509 *x509_filecert = NULL;
@@ -187,6 +190,21 @@ int Auth_CheckError(ConfigEntry *ce)
 
 	switch (type)
 	{
+		case AUTHTYPE_PLAINTEXT:
+			if (warn_on_plaintext && bestpractices.hashed_passwords)
+			{
+				const char *hashedpass = mkpass_argon2(ce->value);
+				unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_HASHED_PASSWORDS", NULL,
+					   "$file:$line_number: $config_item: Advice: it is not recommended to use plaintext passwords in the config file. "
+					    "You can replace this password with the following password hash:\n"
+					    "password \"$hashed_password\";",
+					    log_data_string("config_item", config_item_name(ce)),
+					    log_data_string("file", ce->file->filename),
+					    log_data_integer("line_number", ce->line_number),
+					    log_data_string("hashed_password", hashedpass));
+				bestpractices.hashed_passwords_hits++;
+			}
+			break;
 		case AUTHTYPE_UNIXCRYPT:
 			/* If our data is like 1 or none, we just let em through .. */
 			if (strlen(ce->value) < 2)
