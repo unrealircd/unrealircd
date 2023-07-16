@@ -444,7 +444,7 @@ static int crule_gettoken(crule_token *next_tokp, const char **ruleptr)
 				break;
 			default:
 				if ((isalnum(*(--(*ruleptr)))) || (**ruleptr == '*') ||
-						(**ruleptr == '?') || (**ruleptr == '.') || (**ruleptr == '-') || (**ruleptr == '_'))
+						(**ruleptr == '?') || (**ruleptr == '.') || (**ruleptr == '-') || (**ruleptr == '_') || (**ruleptr == '\''))
 					*next_tokp = CR_WORD;
 				else
 					return CR_UNKNWTOK;
@@ -462,18 +462,30 @@ static int crule_gettoken(crule_token *next_tokp, const char **ruleptr)
 static void crule_getword(char *word, int *wordlenp, size_t maxlen, const char **ruleptr)
 {
 	char *word_ptr;
+	char quoted = 0;
 
 	word_ptr = word;
+
+	if (**ruleptr == '\'')
+	{
+		*(*ruleptr)++;
+		quoted = 1;
+	}
+
 	while ((size_t)(word_ptr - word) < maxlen
 	       && (isalnum(**ruleptr)
 	           || **ruleptr == '*' || **ruleptr == '?'
 	           || **ruleptr == '.' || **ruleptr == '-'
-	           || **ruleptr == '_'))
+	           || **ruleptr == '_' || (quoted && (**ruleptr != '\''))))
 	{
 		*word_ptr++ = *(*ruleptr)++;
 	}
 	*word_ptr = '\0';
 	*wordlenp = word_ptr - word;
+
+	/* Eat the remaining ' quote, if needed... */
+	if (quoted && (**ruleptr == '\''))
+		*(*ruleptr)++;;
 }
 
 /** Parse an entire rule.
