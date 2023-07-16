@@ -202,7 +202,6 @@ MOD_UNLOAD()
 
 static int crule_connected(crule_context *context, int numargs, void *crulearg[])
 {
-#if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *client;
 
 	/* taken from cmd_links */
@@ -214,12 +213,10 @@ static int crule_connected(crule_context *context, int numargs, void *crulearg[]
 		return 1;
 	}
 	return 0;
-#endif
 }
 
 static int crule_directcon(crule_context *context, int numargs, void *crulearg[])
 {
-#if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *client;
 
 	/* adapted from cmd_trace and exit_one_client */
@@ -233,12 +230,10 @@ static int crule_directcon(crule_context *context, int numargs, void *crulearg[]
 		return 1;
 	}
 	return 0;
-#endif
 }
 
 static int crule_via(crule_context *context, int numargs, void *crulearg[])
 {
-#if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *client;
 
 	/* adapted from cmd_links */
@@ -252,12 +247,10 @@ static int crule_via(crule_context *context, int numargs, void *crulearg[])
 		return 1;
 	}
 	return 0;
-#endif
 }
 
 static int crule_directop(crule_context *context, int numargs, void *crulearg[])
 {
-#if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *client;
 
 	/* adapted from cmd_trace */
@@ -270,7 +263,6 @@ static int crule_directop(crule_context *context, int numargs, void *crulearg[])
 	}
 
 	return 0;
-#endif
 }
 
 static int crule_online_time(crule_context *context, int numargs, void *crulearg[])
@@ -511,9 +503,6 @@ struct CRuleNode *_crule_parse(const char *rule)
 	}
 	if (ruleroot != NULL)
 		crule_free(&ruleroot);
-#if defined(CR_DEBUG) || defined(CR_CHKCONF)
-	fprintf(stderr, "%s in rule: %s\n", crule_errstr[errcode], rule);
-#endif
 	return 0;
 }
 
@@ -546,9 +535,6 @@ int _crule_test(const char *rule)
 	}
 	if (ruleroot != NULL)
 		crule_free(&ruleroot);
-#if defined(CR_DEBUG) || defined(CR_CHKCONF)
-	fprintf(stderr, "%s in rule: %s\n", crule_errstr[errcode], rule);
-#endif
 	return errcode + 1;
 }
 
@@ -579,9 +565,6 @@ static int crule_parseorexpr(CRuleNodePtr * orrootp, crule_token *next_tokp, con
 		if ((errcode == CR_NOERR) && (*next_tokp == CR_OR))
 		{
 			orptr = safe_alloc(sizeof(struct CRuleNode));
-#ifdef CR_DEBUG
-			fprintf(stderr, "allocating or element at %ld\n", orptr);
-#endif
 			orptr->funcptr = crule__andor;
 			orptr->numargs = 3;
 			orptr->arg[2] = (void *)1;
@@ -639,9 +622,6 @@ static int crule_parseandexpr(CRuleNodePtr * androotp, crule_token *next_tokp, c
 		if ((errcode == CR_NOERR) && (*next_tokp == CR_AND))
 		{
 			andptr = safe_alloc(sizeof(struct CRuleNode));
-#ifdef CR_DEBUG
-			fprintf(stderr, "allocating and element at %ld\n", andptr);
-#endif
 			andptr->funcptr = crule__andor;
 			andptr->numargs = 3;
 			andptr->arg[2] = (void *)0;
@@ -716,9 +696,6 @@ static int crule_parseprimary(CRuleNodePtr *primrootp, crule_token *next_tokp, c
 				break;
 			case CR_NOT:
 				*insertionp = safe_alloc(sizeof(struct CRuleNode));
-#ifdef CR_DEBUG
-				fprintf(stderr, "allocating primary element at %ld\n", *insertionp);
-#endif
 				(*insertionp)->funcptr = crule__not;
 				(*insertionp)->numargs = 1;
 				(*insertionp)->arg[0] = NULL;
@@ -772,9 +749,6 @@ static int crule_parsefunction(CRuleNodePtr *funcrootp, crule_token *next_tokp, 
 		if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
 			return errcode;
 		*funcrootp = safe_alloc(sizeof(struct CRuleNode));
-#ifdef CR_DEBUG
-		fprintf(stderr, "allocating function element at %ld\n", *funcrootp);
-#endif
 		(*funcrootp)->funcptr = NULL;			 /* for freeing aborted trees */
 		if ((errcode =
 				crule_parsearglist(*funcrootp, next_tokp, ruleptr)) != CR_NOERR)
@@ -848,9 +822,11 @@ static int crule_parsearglist(CRuleNodePtr argrootp, crule_token *next_tokp, con
 				errcode = crule_gettoken(next_tokp, ruleptr);
 				break;
 			default:
-#if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-				collapse(currarg);
-#endif
+				/* Syzop/2023-07-16: Removed the collapse() call as all crule
+				 * stuff is now about more than just masks and stuff, was this
+				 * really needed at all actually?
+				 */
+				//collapse(currarg);
 				if (currarg[0] != '\0')
 				{
 					argelemp = raw_strdup(currarg);
@@ -897,85 +873,6 @@ void _crule_free(struct CRuleNode** elem)
 		for (arg = 0; arg < numargs; arg++)
 			safe_free((*(elem))->arg[arg]);
 	}
-#ifdef CR_DEBUG
-	fprintf(stderr, "freeing element at %ld\n", *elem);
-#endif
 	safe_free(*elem);
 	*elem = 0;
 }
-
-#ifdef CR_DEBUG
-/** Display a connection rule as text.
- * @param[in] printelem Connection rule to display.
- */
-static void print_tree(CRuleNodePtr printelem)
-{
-	int funcnum, arg;
-
-	if (printelem->funcptr == crule__not)
-	{
-		printf("!( ");
-		print_tree((CRuleNodePtr) printelem->arg[0]);
-		printf(") ");
-	}
-	else if (printelem->funcptr == crule__andor)
-	{
-		printf("( ");
-		print_tree((CRuleNodePtr) printelem->arg[0]);
-		if (printelem->arg[2])
-			printf("|| ");
-		else
-			printf("&& ");
-		print_tree((CRuleNodePtr) printelem->arg[1]);
-		printf(") ");
-	}
-	else
-	{
-		for (funcnum = 0;; funcnum++)
-		{
-			if (printelem->funcptr == crule_funclist[funcnum].funcptr)
-				break;
-			if (crule_funclist[funcnum].funcptr == NULL)
-				MyCoreDump;
-		}
-		printf("%s(", crule_funclist[funcnum].name);
-		for (arg = 0; arg < printelem->numargs; arg++)
-		{
-			if (arg != 0)
-				printf(",");
-			printf("%s", (char *)printelem->arg[arg]);
-		}
-		printf(") ");
-	}
-}
-
-#endif
-
-#ifdef CR_DEBUG
-/** Read connection rules from stdin and display parsed forms as text.
- * @return Zero.
- */
-int main(void)
-{
-	char indata[256];
-	CRuleNode* rule;
-
-	printf("rule: ");
-	while (fgets(indata, 256, stdin) != NULL)
-	{
-		indata[strlen(indata) - 1] = '\0';	/* lose the newline */
-		if ((rule = crule_parse(indata)) != NULL)
-		{
-			printf("equivalent rule: ");
-			print_tree((CRuleNodePtr) rule);
-			printf("\n");
-			crule_free(&rule);
-		}
-		printf("\nrule: ");
-	}
-	printf("\n");
-
-	return 0;
-}
-
-#endif

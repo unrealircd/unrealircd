@@ -1078,8 +1078,8 @@ struct Secret {
 #define CRULE_AUTO		1
 
 /* some constants and shared data types */
-#define CR_MAXARGLEN 80         /**< Maximum arg length (must be > HOSTLEN) */
-#define CR_MAXARGS 3            /**< Maximum number of args for a rule */
+#define CR_MAXARGLEN 160         /**< Maximum arg length (must be > HOSTLEN) */
+#define CR_MAXARGS 5             /**< Maximum number of args for a rule */
 
 /* context when running a crule */
 typedef struct crule_context crule_context;
