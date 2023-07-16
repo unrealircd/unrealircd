@@ -104,6 +104,7 @@ SpamfilterTargetTable spamfiltertargettable[] = {
 	{ SPAMF_AWAY,		'a',	"away",			"AWAY" },
 	{ SPAMF_TOPIC,		't',	"topic",		"TOPIC" },
 	{ SPAMF_MTAG,		'T',	"message-tag",		"message-tag" },
+	{ SPAMF_RAW,		'R',	"raw",			"cmd" },
 	{ 0, 0, 0, 0 }
 };
 

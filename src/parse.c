@@ -340,7 +340,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 			ch++;
 	}
 
-	RunHook(HOOKTYPE_PRE_COMMAND, from, mtags, ch);
+	RunHookReturn(HOOKTYPE_PRE_COMMAND, !=0, from, mtags, ch);
 
 	if (*ch == '\0')
 	{

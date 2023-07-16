@@ -1150,6 +1150,7 @@ typedef struct CRuleNode CRuleNode;
 #define SPAMF_AWAY		0x0100 /* a */
 #define SPAMF_TOPIC		0x0200 /* t */
 #define SPAMF_MTAG		0x0400 /* m */
+#define SPAMF_RAW		0x0800 /* R */
 
 /* Other flags only for function calls: */
 #define SPAMFLAG_NOWARN		0x0001
