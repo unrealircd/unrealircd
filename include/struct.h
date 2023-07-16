@@ -1103,7 +1103,6 @@ struct CRuleNode {
   int func_test_value;   /* integer value to compare against */
 };
 typedef struct CRuleNode CRuleNode;
-typedef struct CRuleNode* CRuleNodePtr;
 
 /* tkl:
  *   TKL_KILL|TKL_GLOBAL 	= Global K-Line (GLINE)

@@ -919,9 +919,9 @@ extern MODVAR void (*mtag_add_issued_by)(MessageTag **mtags, Client *client, Mes
 extern MODVAR void (*cancel_ident_lookup)(Client *client);
 extern MODVAR int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
 extern MODVAR int (*crule_test)(const char *rule);
-extern MODVAR struct CRuleNode *(*crule_parse)(const char *rule);
+extern MODVAR CRuleNode *(*crule_parse)(const char *rule);
 extern int (*crule_eval)(crule_context *context, CRuleNode *rule);
-extern void (*crule_free)(struct CRuleNode**);
+extern void (*crule_free)(CRuleNode **);
 extern const char *(*crule_errstring)(int errcode);
 /* /Efuncs */
 

@@ -166,9 +166,9 @@ void (*mtag_add_issued_by)(MessageTag **mtags, Client *client, MessageTag *recv_
 void (*cancel_ident_lookup)(Client *client);
 int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
 int (*crule_test)(const char *rule);
-struct CRuleNode *(*crule_parse)(const char *rule);
+CRuleNode *(*crule_parse)(const char *rule);
 int (*crule_eval)(crule_context *context, CRuleNode *rule);
-void (*crule_free)(struct CRuleNode**);
+void (*crule_free)(CRuleNode **);
 const char *(*crule_errstring)(int errcode);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
