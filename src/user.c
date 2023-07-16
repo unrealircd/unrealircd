@@ -1088,3 +1088,26 @@ void del_tag(Client *client, const char *name)
 		return;
 	}
 }
+
+int inchannel_compareflags(char symbol, const char *member_modes)
+{
+	const char *required_modes = NULL;
+
+	if (symbol == '+')
+		required_modes = "vhoaq";
+	else if (symbol == '%')
+		required_modes = "hoaq";
+	else if (symbol == '@')
+		required_modes = "oaq";
+	else if (symbol == '&')
+		required_modes = "aq";
+	else if (symbol == '~')
+		required_modes = "q";
+	else
+		return 0; /* unknown prefix character */
+
+	if (check_channel_access_string(member_modes, required_modes))
+		return 1;
+
+	return 0;
+}

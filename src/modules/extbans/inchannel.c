@@ -127,29 +127,6 @@ int extban_inchannel_is_ok(BanContext *b)
 	return 1;
 }
 
-static int extban_inchannel_compareflags(char symbol, const char *member_modes)
-{
-	const char *required_modes = NULL;
-
-	if (symbol == '+')
-		required_modes = "vhoaq";
-	else if (symbol == '%')
-		required_modes = "hoaq";
-	else if (symbol == '@')
-		required_modes = "oaq";
-	else if (symbol == '&')
-		required_modes = "aq";
-	else if (symbol == '~')
-		required_modes = "q";
-	else
-		return 0; /* unknown prefix character */
-
-	if (check_channel_access_string(member_modes, required_modes))
-		return 1;
-
-	return 0;
-}
-
 int extban_inchannel_is_banned(BanContext *b)
 {
 	Membership *lp;
@@ -172,7 +149,7 @@ int extban_inchannel_is_banned(BanContext *b)
 			/* Channel matched, check symbol if needed (+/%/@/etc) */
 			if (symbol)
 			{
-				if (extban_inchannel_compareflags(symbol, lp->member_modes))
+				if (inchannel_compareflags(symbol, lp->member_modes))
 					return 1;
 			} else
 				return 1;

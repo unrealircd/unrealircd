@@ -125,6 +125,7 @@ static int crule__not(crule_context *, int, void **);
 static int crule_online_time(crule_context *, int, void **);
 static int crule_reputation(crule_context *, int, void **);
 static int crule_tag(crule_context *, int, void **);
+static int crule_inchannel(crule_context *, int, void **);
 static int crule_cap_version(crule_context *, int, void **);
 static int crule_cap_set(crule_context *, int, void **);
 
@@ -165,6 +166,7 @@ struct crule_funclistent crule_funclist[] = {
 	{"online_time", 0, crule_online_time},
 	{"reputation", 0, crule_reputation},
 	{"tag", 1, crule_tag},
+	{"inchannel", 1, crule_inchannel},
 	{"cap_version", 0, crule_cap_version},
 	{"cap_set", 1, crule_cap_set},
 	{"directcon", 1, crule_directcon},
@@ -290,6 +292,42 @@ static int crule_tag(crule_context *context, int numargs, void *crulearg[])
 	return 0;
 }
 
+static int crule_inchannel(crule_context *context, int numargs, void *crulearg[])
+{
+	Membership *lp;
+	const char *channelname = (char *)crulearg[0];
+	const char *p = channelname;
+	char symbol = '\0';
+
+	if (!context || !context->client || !context->client->user)
+		return 0;
+
+	/* The following code is taken from src/modules/extbans/inchannel.c
+	 * function extban_inchannel_is_banned()
+	 */
+
+	if (*p != '#')
+	{
+		symbol = *p;
+		p++;
+	}
+
+	for (lp = context->client->user->channel; lp; lp = lp->next)
+	{
+		if (match_esc(p, lp->channel->name))
+		{
+			/* Channel matched, check symbol if needed (+/%/@/etc) */
+			if (symbol)
+			{
+				if (inchannel_compareflags(symbol, lp->member_modes))
+					return 1;
+			} else
+				return 1;
+		}
+	}
+	return 0;
+}
+
 static int crule_cap_version(crule_context *context, int numargs, void *crulearg[])
 {
 	if (context && context->client && context->client->local)
@@ -299,7 +337,6 @@ static int crule_cap_version(crule_context *context, int numargs, void *crulearg
 
 static int crule_cap_set(crule_context *context, int numargs, void *crulearg[])
 {
-	Tag *tag;
 	const char *capname = (char *)crulearg[0];
 
 	if (!context || !context->client)
