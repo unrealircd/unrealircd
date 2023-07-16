@@ -29,6 +29,10 @@ in progress and may not be a stable version.
     * spamfilter::except: this is meant as an alternative to 'rule' and
       works like a regular [except item](https://www.unrealircd.org/docs/Mask_item).
       If this matches, then the spamfilter will not run at all (no hit).
+  * New target type `raw` (or `R` on IRC) to match a raw command / IRC
+    protocol line (except message tags), such as `LIST*`. Naturally one
+    needs to be very careful with these since a wrong filter could cause
+    all/essential traffic to be rejected.
   * The `action` item now supports multiple actions:
     * A new action `stop` to stop other spamfilters from processing.
     * A new action `set` to
