@@ -249,6 +249,18 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 	if (!strcmp(cep->name, "security-group") || !strcmp(cep->name, "exclude-security-group"))
 	{
 	} else
+	if (!strcmp(cep->name, "rule") || !strcmp(cep->name, "exclude-rule"))
+	{
+		int val = crule_test(cep->value);
+		if (val)
+		{
+			config_error("%s:%i: rule contains an invalid expression: %s",
+				cep->file->filename,
+				cep->line_number,
+				crule_errstring(val));
+			errors++;
+		}
+	} else
 	{
 		/* Let's see if an extended server ban exists for this item... */
 		Extban *extban;
@@ -418,6 +430,11 @@ int conf_match_item(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
 	{
 		unreal_add_names(&s->security_group, cep);
 	}
+	else if (!strcmp(cep->name, "rule"))
+	{
+		safe_strdup(s->prettyrule, cep->value);
+		s->rule = crule_parse(s->prettyrule);
+	}
 	else if (!strcmp(cep->name, "exclude-webirc"))
 		s->exclude_webirc = config_checkval(cep->value, CFG_YESNO);
 	else if (!strcmp(cep->name, "exclude-websocket"))
@@ -440,6 +457,11 @@ int conf_match_item(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
 	else if (!strcmp(cep->name, "exclude-security-group"))
 	{
 		unreal_add_names(&s->security_group, cep);
+	}
+	else if (!strcmp(cep->name, "exclude-rule"))
+	{
+		safe_strdup(s->exclude_prettyrule, cep->value);
+		s->exclude_rule = crule_parse(s->exclude_prettyrule);
 	}
 	else
 	{
@@ -599,6 +621,10 @@ void free_security_group(SecurityGroup *s)
 	unreal_delete_masks(s->exclude_mask);
 	free_entire_name_list(s->security_group);
 	free_entire_name_list(s->exclude_security_group);
+	safe_crule_free(s->rule);
+	safe_crule_free(s->exclude_rule);
+	safe_free(s->prettyrule);
+	safe_free(s->exclude_prettyrule);
 	free_entire_name_list(s->ip);
 	free_entire_name_list(s->exclude_ip);
 	free_nvplist(s->extended);
@@ -621,6 +647,16 @@ SecurityGroup *duplicate_security_group(SecurityGroup *s)
 	n->exclude_mask = unreal_duplicate_masks(s->exclude_mask);
 	n->security_group = duplicate_name_list(s->security_group);
 	n->exclude_security_group = duplicate_name_list(s->exclude_security_group);
+	if (s->prettyrule)
+	{
+		safe_strdup(n->prettyrule, s->prettyrule);
+		n->rule = crule_parse(n->prettyrule);
+	}
+	if (s->exclude_prettyrule)
+	{
+		safe_strdup(n->exclude_prettyrule, s->exclude_prettyrule);
+		n->exclude_rule = crule_parse(n->exclude_prettyrule);
+	}
 	n->ip = duplicate_name_list(s->exclude_ip);
 	n->extended = duplicate_nvplist(s->extended);
 	n->exclude_extended = duplicate_nvplist(s->exclude_extended);
@@ -746,6 +782,17 @@ int user_allowed_by_security_group_list(Client *client, NameList *l)
 	return 0;
 }
 
+/** Helper for security-group::rule and mask::rule */
+int user_allowed_by_rule(Client *client, CRuleNode *rule)
+{
+	crule_context context;
+
+	memset(&context, 0, sizeof(context));
+	context.client = client;
+
+	return crule_eval(&context, rule);
+}
+
 /** Returns 1 if the user is OK as far as the security-group is concerned.
  * @param client	The client to check
  * @param s		The security-group to check against
@@ -799,9 +846,11 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 		goto user_not_allowed;
 	if (s->exclude_ip && unreal_match_iplist(client, s->exclude_ip))
 		goto user_not_allowed;
-	if (s->exclude_security_group && user_allowed_by_security_group_list(client, s->exclude_security_group))
+	if (s->exclude_rule && user_allowed_by_rule(client, s->exclude_rule))
 		goto user_not_allowed;
 	if (s->exclude_extended && user_matches_extended_list(client, s->exclude_extended))
+		goto user_not_allowed;
+	if (s->exclude_security_group && user_allowed_by_security_group_list(client, s->exclude_security_group))
 		goto user_not_allowed;
 
 	/* Then process INCLUSION criteria... */
@@ -829,9 +878,11 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 		goto user_allowed;
 	if (s->ip && unreal_match_iplist(client, s->ip))
 		goto user_allowed;
-	if (s->security_group && user_allowed_by_security_group_list(client, s->security_group))
+	if (s->rule && user_allowed_by_rule(client, s->rule))
 		goto user_allowed;
 	if (s->extended && user_matches_extended_list(client, s->extended))
+		goto user_allowed;
+	if (s->security_group && user_allowed_by_security_group_list(client, s->security_group))
 		goto user_allowed;
 
 user_not_allowed:

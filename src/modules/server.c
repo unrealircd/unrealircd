@@ -181,7 +181,7 @@ void server_config_free(void)
 	{
 		d_next = d->next;
 		unreal_delete_masks(d->mask);
-		crule_free(&d->rule);
+		safe_crule_free(d->rule);
 		safe_free(d->prettyrule);
 		safe_free(d->reason);
 		DelListItem(d, conf_deny_link);

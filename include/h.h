@@ -921,6 +921,7 @@ extern MODVAR int (*spamreport)(Client *client, const char *ip, NameValuePrioLis
 extern MODVAR int (*crule_test)(const char *rule);
 extern MODVAR CRuleNode *(*crule_parse)(const char *rule);
 extern int (*crule_eval)(crule_context *context, CRuleNode *rule);
+#define safe_crule_free(x) do { if (x) crule_free(&x); } while(0)
 extern void (*crule_free)(CRuleNode **);
 extern const char *(*crule_errstring)(int errcode);
 /* /Efuncs */

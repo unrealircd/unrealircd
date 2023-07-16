@@ -2945,8 +2945,7 @@ void _free_tkl(TKL *tkl)
 		safe_free(tkl->ptr.spamfilter->tkl_reason);
 		if (tkl->ptr.spamfilter->match)
 			unreal_delete_match(tkl->ptr.spamfilter->match);
-		if (tkl->ptr.spamfilter->rule)
-			crule_free(&tkl->ptr.spamfilter->rule);
+		safe_crule_free(tkl->ptr.spamfilter->rule);
 		safe_free_all_ban_actions(tkl->ptr.spamfilter->action);
 		safe_free(tkl->ptr.spamfilter->prettyrule);
 		safe_free(tkl->ptr.spamfilter->id);
