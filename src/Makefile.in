@@ -21,7 +21,7 @@
 
 CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
 
-OBJS=ircd_vars.o dns.o auth.o channel.o crule.o dbuf.o \
+OBJS=ircd_vars.o dns.o auth.o channel.o dbuf.o \
 	fdlist.o hash.o ircsprintf.o list.o \
 	match.o modules.o parse.o mempool.o operclass.o \
 	conf_preprocessor.o conf.o proc_io_server.o debug.o dispatch.o \

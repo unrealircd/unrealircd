@@ -22,11 +22,14 @@
 
 #include "unrealircd.h"
 
+#define EFUNC_FLAG_EARLY 0x1
+
 /* Types */
 typedef struct {
 	char *name;
 	void **funcptr;
 	void *deffunc;
+	int flags;
 } EfunctionsList;
 
 /* Variables */
@@ -162,6 +165,11 @@ const char *(*check_deny_link)(ConfigItem_link *link, int auto_connect);
 void (*mtag_add_issued_by)(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 void (*cancel_ident_lookup)(Client *client);
 int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
+int (*crule_test)(const char *rule);
+struct CRuleNode *(*crule_parse)(const char *rule);
+int (*crule_eval)(crule_context *context, CRuleNode *rule);
+void (*crule_free)(struct CRuleNode**);
+const char *(*crule_errstring)(int errcode);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
@@ -255,6 +263,7 @@ int efunctions_check(void)
 	int i, n, errors=0;
 
 	for (i=0; i < MAXEFUNCTIONS; i++)
+	{
 		if (efunction_table[i].name)
 		{
 			n = num_efunctions(i);
@@ -277,7 +286,20 @@ int efunctions_check(void)
 				             efunction_table[i].name, n);
 				errors++;
 			}
+
+			if ((efunction_table[i].flags & EFUNC_FLAG_EARLY) && !*efunction_table[i].funcptr)
+			{
+				Efunction *e;
+				for (e = Efunctions[i]; e; e = e->next)
+				{
+					if (e->willberemoved)
+						continue;
+					*efunction_table[i].funcptr = e->func.voidfunc;  /* This is the new one. */
+					break;
+				}
+			}
 		}
+	}
 	return errors ? -1 : 0;
 }
 
@@ -318,9 +340,9 @@ void efunctions_switchover(void)
 	}
 }
 
-#define efunc_init_function(what, func, default_func) efunc_init_function_(what, #func, (void *)&func, (void *)default_func)
+#define efunc_init_function(what, func, default_func, flags) efunc_init_function_(what, #func, (void *)&func, (void *)default_func, flags)
 
-void efunc_init_function_(EfunctionType what, char *name, void *func, void *default_func)
+void efunc_init_function_(EfunctionType what, char *name, void *func, void *default_func, int flags)
 {
 	if (what >= MAXEFUNCTIONS)
 	{
@@ -334,127 +356,133 @@ void efunc_init_function_(EfunctionType what, char *name, void *func, void *defa
 	safe_strdup(efunction_table[what].name, name);
 	efunction_table[what].funcptr = func;
 	efunction_table[what].deffunc = default_func;
+	efunction_table[what].flags = flags;
 }
 
 void efunctions_init(void)
 {
 	memset(&efunction_table, 0, sizeof(efunction_table));
-	efunc_init_function(EFUNC_DO_JOIN, do_join, NULL);
-	efunc_init_function(EFUNC_JOIN_CHANNEL, join_channel, NULL);
-	efunc_init_function(EFUNC_CAN_JOIN, can_join, NULL);
-	efunc_init_function(EFUNC_DO_MODE, do_mode, NULL);
-	efunc_init_function(EFUNC_SET_MODE, set_mode, NULL);
-	efunc_init_function(EFUNC_SET_CHANNEL_MODE, set_channel_mode, NULL);
-	efunc_init_function(EFUNC_SET_CHANNEL_TOPIC, set_channel_topic, NULL);
-	efunc_init_function(EFUNC_CMD_UMODE, cmd_umode, NULL);
-	efunc_init_function(EFUNC_REGISTER_USER, register_user, NULL);
-	efunc_init_function(EFUNC_TKL_HASH, tkl_hash, NULL);
-	efunc_init_function(EFUNC_TKL_TYPETOCHAR, tkl_typetochar, NULL);
-	efunc_init_function(EFUNC_TKL_ADD_SERVERBAN, tkl_add_serverban, NULL);
-	efunc_init_function(EFUNC_TKL_ADD_BANEXCEPTION, tkl_add_banexception, NULL);
-	efunc_init_function(EFUNC_TKL_DEL_LINE, tkl_del_line, NULL);
-	efunc_init_function(EFUNC_TKL_CHECK_LOCAL_REMOVE_SHUN, tkl_check_local_remove_shun, NULL);
-	efunc_init_function(EFUNC_FIND_TKLINE_MATCH, find_tkline_match, NULL);
-	efunc_init_function(EFUNC_FIND_SHUN, find_shun, NULL);
-	efunc_init_function(EFUNC_FIND_SPAMFILTER_USER, find_spamfilter_user, NULL);
-	efunc_init_function(EFUNC_FIND_QLINE, find_qline, NULL);
-	efunc_init_function(EFUNC_FIND_TKLINE_MATCH_ZAP, find_tkline_match_zap, NULL);
-	efunc_init_function(EFUNC_TKL_STATS, tkl_stats, NULL);
-	efunc_init_function(EFUNC_TKL_SYNCH, tkl_sync, NULL);
-	efunc_init_function(EFUNC_CMD_TKL, cmd_tkl, NULL);
-	efunc_init_function(EFUNC_TAKE_ACTION, take_action, NULL);
-	efunc_init_function(EFUNC_MATCH_SPAMFILTER, match_spamfilter, NULL);
-	efunc_init_function(EFUNC_MATCH_SPAMFILTER_MTAGS, match_spamfilter_mtags, NULL);
-	efunc_init_function(EFUNC_JOIN_VIRUSCHAN, join_viruschan, NULL);
-	efunc_init_function(EFUNC_STRIPCOLORS, StripColors, NULL);
-	efunc_init_function(EFUNC_SPAMFILTER_BUILD_USER_STRING, spamfilter_build_user_string, NULL);
-	efunc_init_function(EFUNC_SEND_PROTOCTL_SERVERS, send_protoctl_servers, NULL);
-	efunc_init_function(EFUNC_VERIFY_LINK, verify_link, NULL);
-	efunc_init_function(EFUNC_SEND_SERVER_MESSAGE, send_server_message, NULL);
-	efunc_init_function(EFUNC_BROADCAST_MD_CLIENT, broadcast_md_client, NULL);
-	efunc_init_function(EFUNC_BROADCAST_MD_CHANNEL, broadcast_md_channel, NULL);
-	efunc_init_function(EFUNC_BROADCAST_MD_MEMBER, broadcast_md_member, NULL);
-	efunc_init_function(EFUNC_BROADCAST_MD_MEMBERSHIP, broadcast_md_membership, NULL);
-	efunc_init_function(EFUNC_INTRODUCE_USER, introduce_user, NULL);
-	efunc_init_function(EFUNC_CHECK_DENY_VERSION, check_deny_version, NULL);
-	efunc_init_function(EFUNC_BROADCAST_MD_CLIENT_CMD, broadcast_md_client_cmd, NULL);
-	efunc_init_function(EFUNC_BROADCAST_MD_CHANNEL_CMD, broadcast_md_channel_cmd, NULL);
-	efunc_init_function(EFUNC_BROADCAST_MD_MEMBER_CMD, broadcast_md_member_cmd, NULL);
-	efunc_init_function(EFUNC_BROADCAST_MD_MEMBERSHIP_CMD, broadcast_md_membership_cmd, NULL);
-	efunc_init_function(EFUNC_MODDATA_ADD_S2S_MTAGS, moddata_add_s2s_mtags, NULL);
-	efunc_init_function(EFUNC_MODDATA_EXTRACT_S2S_MTAGS, moddata_extract_s2s_mtags, NULL);
-	efunc_init_function(EFUNC_SEND_MODDATA_CLIENT, send_moddata_client, NULL);
-	efunc_init_function(EFUNC_SEND_MODDATA_CHANNEL, send_moddata_channel, NULL);
-	efunc_init_function(EFUNC_SEND_MODDATA_MEMBERS, send_moddata_members, NULL);
-	efunc_init_function(EFUNC_BROADCAST_MODDATA_CLIENT, broadcast_moddata_client, NULL);
-	efunc_init_function(EFUNC_MATCH_USER, match_user, NULL);
-	efunc_init_function(EFUNC_USERHOST_SAVE_CURRENT, userhost_save_current, NULL);
-	efunc_init_function(EFUNC_USERHOST_CHANGED, userhost_changed, NULL);
-	efunc_init_function(EFUNC_SEND_JOIN_TO_LOCAL_USERS, send_join_to_local_users, NULL);
-	efunc_init_function(EFUNC_DO_NICK_NAME, do_nick_name, NULL);
-	efunc_init_function(EFUNC_DO_REMOTE_NICK_NAME, do_remote_nick_name, NULL);
-	efunc_init_function(EFUNC_CHARSYS_GET_CURRENT_LANGUAGES, charsys_get_current_languages, NULL);
-	efunc_init_function(EFUNC_BROADCAST_SINFO, broadcast_sinfo, NULL);
-	efunc_init_function(EFUNC_CONNECT_SERVER, connect_server, NULL);
-	efunc_init_function(EFUNC_IS_SERVICES_BUT_NOT_ULINED, is_services_but_not_ulined, NULL);
-	efunc_init_function(EFUNC_PARSE_MESSAGE_TAGS, parse_message_tags, &parse_message_tags_default_handler);
-	efunc_init_function(EFUNC_MTAGS_TO_STRING, mtags_to_string, &mtags_to_string_default_handler);
-	efunc_init_function(EFUNC_TKL_CHARTOTYPE, tkl_chartotype, NULL);
-	efunc_init_function(EFUNC_TKL_CONFIGTYPETOCHAR, tkl_configtypetochar, NULL);
-	efunc_init_function(EFUNC_TKL_TYPE_STRING, tkl_type_string, NULL);
-	efunc_init_function(EFUNC_TKL_TYPE_CONFIG_STRING, tkl_type_config_string, NULL);
-	efunc_init_function(EFUNC_CAN_SEND_TO_CHANNEL, can_send_to_channel, NULL);
-	efunc_init_function(EFUNC_BROADCAST_MD_GLOBALVAR, broadcast_md_globalvar, NULL);
-	efunc_init_function(EFUNC_BROADCAST_MD_GLOBALVAR_CMD, broadcast_md_globalvar_cmd, NULL);
-	efunc_init_function(EFUNC_TKL_IP_HASH, tkl_ip_hash, NULL);
-	efunc_init_function(EFUNC_TKL_IP_HASH_TYPE, tkl_ip_hash_type, NULL);
-	efunc_init_function(EFUNC_TKL_ADD_NAMEBAN, tkl_add_nameban, NULL);
-	efunc_init_function(EFUNC_TKL_ADD_SPAMFILTER, tkl_add_spamfilter, NULL);
-	efunc_init_function(EFUNC_SENDNOTICE_TKL_ADD, sendnotice_tkl_add, NULL);
-	efunc_init_function(EFUNC_SENDNOTICE_TKL_DEL, sendnotice_tkl_del, NULL);
-	efunc_init_function(EFUNC_FREE_TKL, free_tkl, NULL);
-	efunc_init_function(EFUNC_FIND_TKL_SERVERBAN, find_tkl_serverban, NULL);
-	efunc_init_function(EFUNC_FIND_TKL_BANEXCEPTION, find_tkl_banexception, NULL);
-	efunc_init_function(EFUNC_FIND_TKL_NAMEBAN, find_tkl_nameban, NULL);
-	efunc_init_function(EFUNC_FIND_TKL_SPAMFILTER, find_tkl_spamfilter, NULL);
-	efunc_init_function(EFUNC_FIND_TKL_EXCEPTION, find_tkl_exception, NULL);
-	efunc_init_function(EFUNC_SERVER_BAN_PARSE_MASK, server_ban_parse_mask, NULL);
-	efunc_init_function(EFUNC_SERVER_BAN_EXCEPTION_PARSE_MASK, server_ban_exception_parse_mask, NULL);
-	efunc_init_function(EFUNC_TKL_ADDED, tkl_added, NULL);
-	efunc_init_function(EFUNC_ADD_SILENCE, add_silence, add_silence_default_handler);
-	efunc_init_function(EFUNC_DEL_SILENCE, del_silence, del_silence_default_handler);
-	efunc_init_function(EFUNC_IS_SILENCED, is_silenced, is_silenced_default_handler);
-	efunc_init_function(EFUNC_LABELED_RESPONSE_SAVE_CONTEXT, labeled_response_save_context, labeled_response_save_context_default_handler);
-	efunc_init_function(EFUNC_LABELED_RESPONSE_SET_CONTEXT, labeled_response_set_context, labeled_response_set_context_default_handler);
-	efunc_init_function(EFUNC_LABELED_RESPONSE_FORCE_END, labeled_response_force_end, labeled_response_force_end_default_handler);
-	efunc_init_function(EFUNC_KICK_USER, kick_user, NULL);
-	efunc_init_function(EFUNC_WATCH_ADD, watch_add, NULL);
-	efunc_init_function(EFUNC_WATCH_DEL, watch_del, NULL);
-	efunc_init_function(EFUNC_WATCH_DEL_LIST, watch_del_list, NULL);
-	efunc_init_function(EFUNC_WATCH_GET, watch_get, NULL);
-	efunc_init_function(EFUNC_WATCH_CHECK, watch_check, NULL);
-	efunc_init_function(EFUNC_TKL_UHOST, tkl_uhost, NULL);
-	efunc_init_function(EFUNC_DO_UNREAL_LOG_REMOTE_DELIVER, do_unreal_log_remote_deliver, do_unreal_log_remote_deliver_default_handler);
-	efunc_init_function(EFUNC_GET_CHMODES_FOR_USER, get_chmodes_for_user, NULL);
-	efunc_init_function(EFUNC_WHOIS_GET_POLICY, whois_get_policy, NULL);
-	efunc_init_function(EFUNC_MAKE_OPER, make_oper, make_oper_default_handler);
-	efunc_init_function(EFUNC_UNREAL_MATCH_IPLIST, unreal_match_iplist, NULL);
-	efunc_init_function(EFUNC_WEBSERVER_SEND_RESPONSE, webserver_send_response, webserver_send_response_default_handler);
-	efunc_init_function(EFUNC_WEBSERVER_CLOSE_CLIENT, webserver_close_client, webserver_close_client_default_handler);
-	efunc_init_function(EFUNC_WEBSERVER_HANDLE_BODY, webserver_handle_body, webserver_handle_body_default_handler);
-	efunc_init_function(EFUNC_RPC_RESPONSE, rpc_response, rpc_response_default_handler);
-	efunc_init_function(EFUNC_RPC_ERROR, rpc_error, rpc_error_default_handler);
-	efunc_init_function(EFUNC_RPC_ERROR_FMT, rpc_error_fmt, rpc_error_fmt_default_handler);
-	efunc_init_function(EFUNC_RPC_SEND_REQUEST_TO_REMOTE, rpc_send_request_to_remote, rpc_send_request_to_remote_default_handler);
-	efunc_init_function(EFUNC_RPC_SEND_RESPONSE_TO_REMOTE, rpc_send_response_to_remote, rpc_send_response_to_remote_default_handler);
-	efunc_init_function(EFUNC_RRPC_SUPPORTED, rrpc_supported, rrpc_supported_default_handler);
-	efunc_init_function(EFUNC_RRPC_SUPPORTED_SIMPLE, rrpc_supported_simple, rrpc_supported_simple_default_handler);
-	efunc_init_function(EFUNC_WEBSOCKET_HANDLE_WEBSOCKET, websocket_handle_websocket, websocket_handle_websocket_default_handler);
-	efunc_init_function(EFUNC_WEBSOCKET_CREATE_PACKET, websocket_create_packet, websocket_create_packet_default_handler);
-	efunc_init_function(EFUNC_WEBSOCKET_CREATE_PACKET_EX, websocket_create_packet_ex, websocket_create_packet_ex_default_handler);
-	efunc_init_function(EFUNC_WEBSOCKET_CREATE_PACKET_SIMPLE, websocket_create_packet_simple, websocket_create_packet_simple_default_handler);
-	efunc_init_function(EFUNC_CHECK_DENY_LINK, check_deny_link, NULL);
-	efunc_init_function(EFUNC_MTAG_GENERATE_ISSUED_BY_IRC, mtag_add_issued_by, mtag_add_issued_by_default_handler);
-	efunc_init_function(EFUNC_CANCEL_IDENT_LOOKUP, cancel_ident_lookup, cancel_ident_lookup_default_handler);
-	efunc_init_function(EFUNC_SPAMREPORT, spamreport, spamreport_default_handler);
+	efunc_init_function(EFUNC_DO_JOIN, do_join, NULL, 0);
+	efunc_init_function(EFUNC_JOIN_CHANNEL, join_channel, NULL, 0);
+	efunc_init_function(EFUNC_CAN_JOIN, can_join, NULL, 0);
+	efunc_init_function(EFUNC_DO_MODE, do_mode, NULL, 0);
+	efunc_init_function(EFUNC_SET_MODE, set_mode, NULL, 0);
+	efunc_init_function(EFUNC_SET_CHANNEL_MODE, set_channel_mode, NULL, 0);
+	efunc_init_function(EFUNC_SET_CHANNEL_TOPIC, set_channel_topic, NULL, 0);
+	efunc_init_function(EFUNC_CMD_UMODE, cmd_umode, NULL, 0);
+	efunc_init_function(EFUNC_REGISTER_USER, register_user, NULL, 0);
+	efunc_init_function(EFUNC_TKL_HASH, tkl_hash, NULL, 0);
+	efunc_init_function(EFUNC_TKL_TYPETOCHAR, tkl_typetochar, NULL, 0);
+	efunc_init_function(EFUNC_TKL_ADD_SERVERBAN, tkl_add_serverban, NULL, 0);
+	efunc_init_function(EFUNC_TKL_ADD_BANEXCEPTION, tkl_add_banexception, NULL, 0);
+	efunc_init_function(EFUNC_TKL_DEL_LINE, tkl_del_line, NULL, 0);
+	efunc_init_function(EFUNC_TKL_CHECK_LOCAL_REMOVE_SHUN, tkl_check_local_remove_shun, NULL, 0);
+	efunc_init_function(EFUNC_FIND_TKLINE_MATCH, find_tkline_match, NULL, 0);
+	efunc_init_function(EFUNC_FIND_SHUN, find_shun, NULL, 0);
+	efunc_init_function(EFUNC_FIND_SPAMFILTER_USER, find_spamfilter_user, NULL, 0);
+	efunc_init_function(EFUNC_FIND_QLINE, find_qline, NULL, 0);
+	efunc_init_function(EFUNC_FIND_TKLINE_MATCH_ZAP, find_tkline_match_zap, NULL, 0);
+	efunc_init_function(EFUNC_TKL_STATS, tkl_stats, NULL, 0);
+	efunc_init_function(EFUNC_TKL_SYNCH, tkl_sync, NULL, 0);
+	efunc_init_function(EFUNC_CMD_TKL, cmd_tkl, NULL, 0);
+	efunc_init_function(EFUNC_TAKE_ACTION, take_action, NULL, 0);
+	efunc_init_function(EFUNC_MATCH_SPAMFILTER, match_spamfilter, NULL, 0);
+	efunc_init_function(EFUNC_MATCH_SPAMFILTER_MTAGS, match_spamfilter_mtags, NULL, 0);
+	efunc_init_function(EFUNC_JOIN_VIRUSCHAN, join_viruschan, NULL, 0);
+	efunc_init_function(EFUNC_STRIPCOLORS, StripColors, NULL, 0);
+	efunc_init_function(EFUNC_SPAMFILTER_BUILD_USER_STRING, spamfilter_build_user_string, NULL, 0);
+	efunc_init_function(EFUNC_SEND_PROTOCTL_SERVERS, send_protoctl_servers, NULL, 0);
+	efunc_init_function(EFUNC_VERIFY_LINK, verify_link, NULL, 0);
+	efunc_init_function(EFUNC_SEND_SERVER_MESSAGE, send_server_message, NULL, 0);
+	efunc_init_function(EFUNC_BROADCAST_MD_CLIENT, broadcast_md_client, NULL, 0);
+	efunc_init_function(EFUNC_BROADCAST_MD_CHANNEL, broadcast_md_channel, NULL, 0);
+	efunc_init_function(EFUNC_BROADCAST_MD_MEMBER, broadcast_md_member, NULL, 0);
+	efunc_init_function(EFUNC_BROADCAST_MD_MEMBERSHIP, broadcast_md_membership, NULL, 0);
+	efunc_init_function(EFUNC_INTRODUCE_USER, introduce_user, NULL, 0);
+	efunc_init_function(EFUNC_CHECK_DENY_VERSION, check_deny_version, NULL, 0);
+	efunc_init_function(EFUNC_BROADCAST_MD_CLIENT_CMD, broadcast_md_client_cmd, NULL, 0);
+	efunc_init_function(EFUNC_BROADCAST_MD_CHANNEL_CMD, broadcast_md_channel_cmd, NULL, 0);
+	efunc_init_function(EFUNC_BROADCAST_MD_MEMBER_CMD, broadcast_md_member_cmd, NULL, 0);
+	efunc_init_function(EFUNC_BROADCAST_MD_MEMBERSHIP_CMD, broadcast_md_membership_cmd, NULL, 0);
+	efunc_init_function(EFUNC_MODDATA_ADD_S2S_MTAGS, moddata_add_s2s_mtags, NULL, 0);
+	efunc_init_function(EFUNC_MODDATA_EXTRACT_S2S_MTAGS, moddata_extract_s2s_mtags, NULL, 0);
+	efunc_init_function(EFUNC_SEND_MODDATA_CLIENT, send_moddata_client, NULL, 0);
+	efunc_init_function(EFUNC_SEND_MODDATA_CHANNEL, send_moddata_channel, NULL, 0);
+	efunc_init_function(EFUNC_SEND_MODDATA_MEMBERS, send_moddata_members, NULL, 0);
+	efunc_init_function(EFUNC_BROADCAST_MODDATA_CLIENT, broadcast_moddata_client, NULL, 0);
+	efunc_init_function(EFUNC_MATCH_USER, match_user, NULL, 0);
+	efunc_init_function(EFUNC_USERHOST_SAVE_CURRENT, userhost_save_current, NULL, 0);
+	efunc_init_function(EFUNC_USERHOST_CHANGED, userhost_changed, NULL, 0);
+	efunc_init_function(EFUNC_SEND_JOIN_TO_LOCAL_USERS, send_join_to_local_users, NULL, 0);
+	efunc_init_function(EFUNC_DO_NICK_NAME, do_nick_name, NULL, 0);
+	efunc_init_function(EFUNC_DO_REMOTE_NICK_NAME, do_remote_nick_name, NULL, 0);
+	efunc_init_function(EFUNC_CHARSYS_GET_CURRENT_LANGUAGES, charsys_get_current_languages, NULL, 0);
+	efunc_init_function(EFUNC_BROADCAST_SINFO, broadcast_sinfo, NULL, 0);
+	efunc_init_function(EFUNC_CONNECT_SERVER, connect_server, NULL, 0);
+	efunc_init_function(EFUNC_IS_SERVICES_BUT_NOT_ULINED, is_services_but_not_ulined, NULL, 0);
+	efunc_init_function(EFUNC_PARSE_MESSAGE_TAGS, parse_message_tags, &parse_message_tags_default_handler, 0);
+	efunc_init_function(EFUNC_MTAGS_TO_STRING, mtags_to_string, &mtags_to_string_default_handler, 0);
+	efunc_init_function(EFUNC_TKL_CHARTOTYPE, tkl_chartotype, NULL, 0);
+	efunc_init_function(EFUNC_TKL_CONFIGTYPETOCHAR, tkl_configtypetochar, NULL, 0);
+	efunc_init_function(EFUNC_TKL_TYPE_STRING, tkl_type_string, NULL, 0);
+	efunc_init_function(EFUNC_TKL_TYPE_CONFIG_STRING, tkl_type_config_string, NULL, 0);
+	efunc_init_function(EFUNC_CAN_SEND_TO_CHANNEL, can_send_to_channel, NULL, 0);
+	efunc_init_function(EFUNC_BROADCAST_MD_GLOBALVAR, broadcast_md_globalvar, NULL, 0);
+	efunc_init_function(EFUNC_BROADCAST_MD_GLOBALVAR_CMD, broadcast_md_globalvar_cmd, NULL, 0);
+	efunc_init_function(EFUNC_TKL_IP_HASH, tkl_ip_hash, NULL, 0);
+	efunc_init_function(EFUNC_TKL_IP_HASH_TYPE, tkl_ip_hash_type, NULL, 0);
+	efunc_init_function(EFUNC_TKL_ADD_NAMEBAN, tkl_add_nameban, NULL, 0);
+	efunc_init_function(EFUNC_TKL_ADD_SPAMFILTER, tkl_add_spamfilter, NULL, 0);
+	efunc_init_function(EFUNC_SENDNOTICE_TKL_ADD, sendnotice_tkl_add, NULL, 0);
+	efunc_init_function(EFUNC_SENDNOTICE_TKL_DEL, sendnotice_tkl_del, NULL, 0);
+	efunc_init_function(EFUNC_FREE_TKL, free_tkl, NULL, 0);
+	efunc_init_function(EFUNC_FIND_TKL_SERVERBAN, find_tkl_serverban, NULL, 0);
+	efunc_init_function(EFUNC_FIND_TKL_BANEXCEPTION, find_tkl_banexception, NULL, 0);
+	efunc_init_function(EFUNC_FIND_TKL_NAMEBAN, find_tkl_nameban, NULL, 0);
+	efunc_init_function(EFUNC_FIND_TKL_SPAMFILTER, find_tkl_spamfilter, NULL, 0);
+	efunc_init_function(EFUNC_FIND_TKL_EXCEPTION, find_tkl_exception, NULL, 0);
+	efunc_init_function(EFUNC_SERVER_BAN_PARSE_MASK, server_ban_parse_mask, NULL, 0);
+	efunc_init_function(EFUNC_SERVER_BAN_EXCEPTION_PARSE_MASK, server_ban_exception_parse_mask, NULL, 0);
+	efunc_init_function(EFUNC_TKL_ADDED, tkl_added, NULL, 0);
+	efunc_init_function(EFUNC_ADD_SILENCE, add_silence, add_silence_default_handler, 0);
+	efunc_init_function(EFUNC_DEL_SILENCE, del_silence, del_silence_default_handler, 0);
+	efunc_init_function(EFUNC_IS_SILENCED, is_silenced, is_silenced_default_handler, 0);
+	efunc_init_function(EFUNC_LABELED_RESPONSE_SAVE_CONTEXT, labeled_response_save_context, labeled_response_save_context_default_handler, 0);
+	efunc_init_function(EFUNC_LABELED_RESPONSE_SET_CONTEXT, labeled_response_set_context, labeled_response_set_context_default_handler, 0);
+	efunc_init_function(EFUNC_LABELED_RESPONSE_FORCE_END, labeled_response_force_end, labeled_response_force_end_default_handler, 0);
+	efunc_init_function(EFUNC_KICK_USER, kick_user, NULL, 0);
+	efunc_init_function(EFUNC_WATCH_ADD, watch_add, NULL, 0);
+	efunc_init_function(EFUNC_WATCH_DEL, watch_del, NULL, 0);
+	efunc_init_function(EFUNC_WATCH_DEL_LIST, watch_del_list, NULL, 0);
+	efunc_init_function(EFUNC_WATCH_GET, watch_get, NULL, 0);
+	efunc_init_function(EFUNC_WATCH_CHECK, watch_check, NULL, 0);
+	efunc_init_function(EFUNC_TKL_UHOST, tkl_uhost, NULL, 0);
+	efunc_init_function(EFUNC_DO_UNREAL_LOG_REMOTE_DELIVER, do_unreal_log_remote_deliver, do_unreal_log_remote_deliver_default_handler, 0);
+	efunc_init_function(EFUNC_GET_CHMODES_FOR_USER, get_chmodes_for_user, NULL, 0);
+	efunc_init_function(EFUNC_WHOIS_GET_POLICY, whois_get_policy, NULL, 0);
+	efunc_init_function(EFUNC_MAKE_OPER, make_oper, make_oper_default_handler, 0);
+	efunc_init_function(EFUNC_UNREAL_MATCH_IPLIST, unreal_match_iplist, NULL, 0);
+	efunc_init_function(EFUNC_WEBSERVER_SEND_RESPONSE, webserver_send_response, webserver_send_response_default_handler, 0);
+	efunc_init_function(EFUNC_WEBSERVER_CLOSE_CLIENT, webserver_close_client, webserver_close_client_default_handler, 0);
+	efunc_init_function(EFUNC_WEBSERVER_HANDLE_BODY, webserver_handle_body, webserver_handle_body_default_handler, 0);
+	efunc_init_function(EFUNC_RPC_RESPONSE, rpc_response, rpc_response_default_handler, 0);
+	efunc_init_function(EFUNC_RPC_ERROR, rpc_error, rpc_error_default_handler, 0);
+	efunc_init_function(EFUNC_RPC_ERROR_FMT, rpc_error_fmt, rpc_error_fmt_default_handler, 0);
+	efunc_init_function(EFUNC_RPC_SEND_REQUEST_TO_REMOTE, rpc_send_request_to_remote, rpc_send_request_to_remote_default_handler, 0);
+	efunc_init_function(EFUNC_RPC_SEND_RESPONSE_TO_REMOTE, rpc_send_response_to_remote, rpc_send_response_to_remote_default_handler, 0);
+	efunc_init_function(EFUNC_RRPC_SUPPORTED, rrpc_supported, rrpc_supported_default_handler, 0);
+	efunc_init_function(EFUNC_RRPC_SUPPORTED_SIMPLE, rrpc_supported_simple, rrpc_supported_simple_default_handler, 0);
+	efunc_init_function(EFUNC_WEBSOCKET_HANDLE_WEBSOCKET, websocket_handle_websocket, websocket_handle_websocket_default_handler, 0);
+	efunc_init_function(EFUNC_WEBSOCKET_CREATE_PACKET, websocket_create_packet, websocket_create_packet_default_handler, 0);
+	efunc_init_function(EFUNC_WEBSOCKET_CREATE_PACKET_EX, websocket_create_packet_ex, websocket_create_packet_ex_default_handler, 0);
+	efunc_init_function(EFUNC_WEBSOCKET_CREATE_PACKET_SIMPLE, websocket_create_packet_simple, websocket_create_packet_simple_default_handler, 0);
+	efunc_init_function(EFUNC_CHECK_DENY_LINK, check_deny_link, NULL, 0);
+	efunc_init_function(EFUNC_MTAG_GENERATE_ISSUED_BY_IRC, mtag_add_issued_by, mtag_add_issued_by_default_handler, 0);
+	efunc_init_function(EFUNC_CANCEL_IDENT_LOOKUP, cancel_ident_lookup, cancel_ident_lookup_default_handler, 0);
+	efunc_init_function(EFUNC_SPAMREPORT, spamreport, spamreport_default_handler, 0);
+	efunc_init_function(EFUNC_CRULE_TEST, crule_test, NULL, EFUNC_FLAG_EARLY);;
+	efunc_init_function(EFUNC_CRULE_PARSE, crule_parse, NULL, EFUNC_FLAG_EARLY);;
+	efunc_init_function(EFUNC_CRULE_EVAL, crule_eval, NULL, EFUNC_FLAG_EARLY);;
+	efunc_init_function(EFUNC_CRULE_FREE, crule_free, NULL, EFUNC_FLAG_EARLY);;
+	efunc_init_function(EFUNC_CRULE_ERRSTRING, crule_errstring, NULL, EFUNC_FLAG_EARLY);;
 }

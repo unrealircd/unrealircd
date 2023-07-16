@@ -1954,7 +1954,7 @@ void applymeblock(void)
 /** Run config test and all post config tests. */
 int config_test_all(void)
 {
-	if ((config_test_blocks() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0) ||
+	if ((efunctions_check() < 0) || (config_test_blocks() < 0) || (callbacks_check() < 0) || 
 	    reloadable_perm_module_unloaded() || !tls_tests() || !log_tests())
 	{
 		return 0;

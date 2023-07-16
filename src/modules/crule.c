@@ -1,9 +1,36 @@
-/**
- * @file
- * @brief Connection rule parser and checker
- * @version $Id$
+/*
+ * Unreal Internet Relay Chat Daemon, src/modules/crule.c
+ * crule parser and checker.
+ * (C) Tony Vencill (Tonto on IRC) <vencill@bga.com>
+ * (C) 2023- Bram Matthys and the UnrealIRCd Team
  *
- * by Tony Vencill (Tonto on IRC) <vencill@bga.com>
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 1, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+#include "unrealircd.h"
+
+ModuleHeader MOD_HEADER
+= {
+	"crule",
+	"1.0.0",
+	"Crule support for and deny link::rule and spamfilter::rule",
+	"UnrealIRCd Team",
+	"unrealircd-6",
+};
+
+/* Originally by Tony Vencill (Tonto on IRC) <vencill@bga.com>
  *
  * The majority of this file is a recursive descent parser used to convert
  * connection rules into expression trees when the conf file is read.
@@ -13,24 +40,6 @@
  * server.  The only functions accessible externally are crule_parse,
  * crule_free, and crule_eval.  Prototypes for these functions can be
  * found in h.h.
- *
- * Please direct any connection rule or SmartRoute questions to Tonto on
- * IRC or by email to vencill@bga.com.
- *
- * For parser testing, defining CR_DEBUG generates a stand-alone parser
- * that takes rules from stdin and prints out memory allocation
- * information and the parsed rule.  This stand alone parser is ignorant
- * of the irc server and thus cannot do rule evaluation.  Do not define
- * this flag when compiling the server!  If you wish to generate the
- * test parser, compile from the ircd directory with a line similar to
- * cc -o parser -DCR_DEBUG crule.c
- *
- * The define CR_CHKCONF is provided to generate routines needed in
- * chkconf.  These consist of the parser, a different crule_parse that
- * prints errors to stderr, and crule_free (just for good style and to
- * more closely simulate the actual ircd environment).  crule_eval and
- * the rule functions are made empty functions as in the stand-alone
- * test parser.
  *
  * The production rules for the grammar are as follows ("rule" is the
  * starting production):
@@ -60,36 +69,6 @@
  * Then ported / UnrealIRCd-ized by Syzop and re-adding crule_test()
  * and such. All the actual "functions" like crule_connected() are
  * our own and not re-feteched (but were based on older versions).
- */
-
-#ifndef CR_DEBUG
-/* ircd functions and types we need */
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "h.h"
-#include <string.h>
-
-char *collapse(char *pattern);
-extern Client *client;
-
-ID_Copyright("(C) Tony Vincell");
-
-#else
-/* includes and defines to make the stand-alone test parser */
-#include <stdio.h>
-#include <string.h>
-#define BadPtr(x) (!(x) || (*(x) == '\0'))
-#endif
-
-#if defined(CR_DEBUG) || defined(CR_CHKCONF)
-#undef safe_free
-#undef free
-#define safe_free free
-#endif
-
-/*
- * Some symbols for easy reading
  */
 
 /** Input scanner tokens. */
@@ -127,9 +106,13 @@ enum crule_errcode {
 	CR_EXPCTVALUE, /**< Missing value in a comparisson */
 };
 
-/*
- * Expression tree structure, function pointer, and tree pointer local!
- */
+/* NOTE: Expression tree structure, function pointer, and tree pointer local! */
+
+int _crule_test(const char *rule);
+struct CRuleNode *_crule_parse(const char *rule);
+void _crule_free(struct CRuleNode**);
+int _crule_eval(crule_context *context, CRuleNode *rule);
+const char *_crule_errstring(int errcode);
 
 /* rule function prototypes - local! */
 static int crule_connected(crule_context *, int, void **);
@@ -153,18 +136,6 @@ static int crule_parseorexpr(CRuleNodePtr *, crule_token *, const char **);
 static int crule_parseprimary(CRuleNodePtr *, crule_token *, const char **);
 static int crule_parsefunction(CRuleNodePtr *, crule_token *, const char **);
 static int crule_parsearglist(CRuleNodePtr, crule_token *, const char **);
-
-#if defined(CR_DEBUG) || defined(CR_CHKCONF)
-/*
- * Prototypes for the test parser; if not debugging,
- * these are defined in h.h
- */
-struct CRuleNode* crule_parse(const char *);
-void crule_free(struct CRuleNode**);
-#ifdef CR_DEBUG
-void print_tree(CRuleNodePtr);
-#endif
-#endif
 
 /* error messages */
 char *crule_errstr[] = {
@@ -201,6 +172,33 @@ struct crule_funclistent crule_funclist[] = {
 	{"directop", 0, crule_directop},
 	{"", 0, NULL}		/* this must be here to mark end of list */
 };
+
+
+MOD_TEST()
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	EfunctionAdd(modinfo->handle, EFUNC_CRULE_TEST, _crule_test);
+	EfunctionAddPVoid(modinfo->handle, EFUNC_CRULE_PARSE, TO_PVOIDFUNC(_crule_parse));
+	EfunctionAddVoid(modinfo->handle, EFUNC_CRULE_FREE, _crule_free);
+	EfunctionAdd(modinfo->handle, EFUNC_CRULE_EVAL, _crule_eval);
+	EfunctionAddConstString(modinfo->handle, EFUNC_CRULE_ERRSTRING, _crule_errstring);
+	return MOD_SUCCESS;
+}
+
+MOD_INIT()
+{
+	return MOD_SUCCESS;
+}
+
+MOD_LOAD()
+{
+	return MOD_SUCCESS;
+}
+
+MOD_UNLOAD()
+{
+	return MOD_SUCCESS;
+}
 
 static int crule_connected(crule_context *context, int numargs, void *crulearg[])
 {
@@ -324,7 +322,7 @@ static int crule_cap_set(crule_context *context, int numargs, void *crulearg[])
  * @param[in] rule Rule to evalute.
  * @return Non-zero if the rule allows the connection, zero otherwise.
  */
-int crule_eval(crule_context *context, struct CRuleNode* rule)
+int _crule_eval(crule_context *context, struct CRuleNode* rule)
 {
 	int ret = rule->funcptr(context, rule->numargs, rule->arg);
 	switch (rule->func_test_type)
@@ -492,7 +490,7 @@ static void crule_getword(char *word, int *wordlenp, size_t maxlen, const char *
  * @param[in] rule Text form of rule.
  * @return CRuleNode for rule, or NULL if there was a parse error.
  */
-struct CRuleNode* crule_parse(const char *rule)
+struct CRuleNode *_crule_parse(const char *rule)
 {
 	const char *ruleptr = rule;
 	crule_token next_tok;
@@ -523,7 +521,7 @@ struct CRuleNode* crule_parse(const char *rule)
  * @param[in] rule Text form of rule.
  * @return error code, or 0 for no failure
  */
-int crule_test(const char *rule)
+int _crule_test(const char *rule)
 {
 	const char *ruleptr = rule;
 	crule_token next_tok;
@@ -554,7 +552,7 @@ int crule_test(const char *rule)
 	return errcode + 1;
 }
 
-const char *crule_errstring(int errcode)
+const char *_crule_errstring(int errcode)
 {
 	if (errcode == 0)
 		return "No error";
@@ -877,7 +875,7 @@ static int crule_parsearglist(CRuleNodePtr argrootp, crule_token *next_tokp, con
 /** Free a connection rule and all its children.
  * @param[in,out] elem Pointer to pointer to element to free.  MUST NOT BE NULL.
  */
-void crule_free(struct CRuleNode** elem)
+void _crule_free(struct CRuleNode** elem)
 {
 	int arg, numargs;
 

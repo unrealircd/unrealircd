@@ -178,7 +178,7 @@ EXP_OBJ_FILES=src/ircd_vars.obj src/channel.obj src/send.obj src/socket.obj \
  src/fdlist.obj src/dbuf.obj  \
  src/hash.obj src/parse.obj \
  src/whowas.obj \
- src/securitygroup.obj src/misc.obj src/match.obj src/crule.obj \
+ src/securitygroup.obj src/misc.obj src/match.obj \
  src/debug.obj  src/support.obj src/list.obj \
  src/serv.obj src/user.obj \
  src/version.obj src/ircsprintf.obj \
@@ -256,6 +256,7 @@ DLL_FILES=\
  src/modules/connect-flood.dll \
  src/modules/connthrottle.dll \
  src/modules/creationtime.dll \
+ src/modules/crule.dll \
  src/modules/cycle.dll \
  src/modules/dccallow.dll \
  src/modules/dccdeny.dll \
@@ -557,9 +558,6 @@ src/whowas.obj: src/whowas.c $(INCLUDES) ./include/dbuf.h ./include/whowas.h
 
 src/hash.obj: src/hash.c $(INCLUDES)
         $(CC) $(CFLAGS) src/hash.c
-
-src/crule.obj: src/crule.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/crule.c
 
 src/gui.obj: src/windows/gui.c $(INCLUDES) ./include/resource.h
         $(CC) $(CFLAGS) src/windows/gui.c
@@ -870,6 +868,9 @@ src/modules/connthrottle.dll: src/modules/connthrottle.c $(INCLUDES)
 
 src/modules/creationtime.dll: src/modules/creationtime.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/creationtime.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/creationtime.pdb $(MODLFLAGS)
+
+src/modules/crule.dll: src/modules/crule.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/crule.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/crule.pdb $(MODLFLAGS)
 
 src/modules/cycle.dll: src/modules/cycle.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/cycle.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/cycle.pdb $(MODLFLAGS)

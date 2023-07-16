@@ -531,13 +531,6 @@ extern int sort_character_lowercase_before_uppercase(char x, char y);
 extern MODVAR RealCommand *CommandHash[256];
 extern void init_CommandHash(void);
 
-/* CRULE */
-extern struct CRuleNode* crule_parse(const char*);
-extern void crule_free(struct CRuleNode**);
-extern int crule_eval(crule_context *context, CRuleNode *rule);
-extern int crule_test(const char *rule);
-extern const char *crule_errstring(int errcode);
-
 /*
  * Close all local socket connections, invalidate client fd's
  * WIN32 cleanup winsock lib
@@ -925,6 +918,11 @@ extern MODVAR const char *(*check_deny_link)(ConfigItem_link *link, int auto_con
 extern MODVAR void (*mtag_add_issued_by)(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 extern MODVAR void (*cancel_ident_lookup)(Client *client);
 extern MODVAR int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
+extern MODVAR int (*crule_test)(const char *rule);
+extern MODVAR struct CRuleNode *(*crule_parse)(const char *rule);
+extern int (*crule_eval)(crule_context *context, CRuleNode *rule);
+extern void (*crule_free)(struct CRuleNode**);
+extern const char *(*crule_errstring)(int errcode);
 /* /Efuncs */
 
 /* TLS functions */

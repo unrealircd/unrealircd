@@ -83,7 +83,7 @@ MODULES= \
 	geoip_base.so extjwt.so tline.so \
 	standard-replies.so issued-by-tag.so \
 	real-quit-reason.so \
-	spamreport.so \
+	spamreport.so crule.so \
 	$(GEOIP_CLASSIC_OBJECTS) $(GEOIP_MAXMIND_OBJECTS)
 
 MODULEFLAGS=@MODULEFLAGS@
