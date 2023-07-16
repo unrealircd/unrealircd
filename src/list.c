@@ -190,6 +190,7 @@ void free_client(Client *client)
 			}
 			safe_free(client->local->passwd);
 			safe_free(client->local->error_str);
+			safe_free(client->local->sni_servername);
 			if (client->local->hostp)
 				unreal_free_hostent(client->local->hostp);
 			free_all_tags(client);
