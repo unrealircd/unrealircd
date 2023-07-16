@@ -1085,7 +1085,8 @@ struct Secret {
 typedef struct crule_context crule_context;
 struct crule_context
 {
-  Client *client;
+	Client *client;		/**< Client that is being processed (can be NULL) */
+	const char *text;	/**< The input string, if any (can be NULL) */
 };
 
 /** Evaluation function for a connection rule. */
