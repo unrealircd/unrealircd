@@ -18,14 +18,17 @@ in progress and may not be a stable version.
     to detect false positives. These hitcounts are exposed in `SPAMFILTER`
     and `STATS spamfilter`.
   * Optional items allowing more complex rules:
-    * spamfilter::rule: with minimal 'if'-like preconditions and functions.
+    * [spamfilter::rule](https://www.unrealircd.org/docs/Spamfilter_block#Spamfilter_rule):
+      with minimal 'if'-like preconditions and functions.
       If this returns false then the spamfilter will not run at all (no hit).
     * spamfilter::except: this is meant as an alternative to 'rule' and
       works like a regular [except item](https://www.unrealircd.org/docs/Mask_item).
       If this matches, then the spamfilter will not run at all (no hit).
   * The `action` item now supports multiple actions:
-    * A new action `stop` to stop other spamfilters from processing
-    * A new action `set` to set a TAG on a user, or increasing the value of one
+    * A new action `stop` to stop other spamfilters from processing.
+    * A new action `set` to
+      [set a TAG](https://www.unrealircd.org/docs/Spamfilter_block#Setting_tags)
+      on a user, or increasing the value of one.
     * A new action `report` to call a spamreport block, see next.
 * A new [spamreport { } block](https://www.unrealircd.org/docs/Spamreport_block):
   * This can do a HTTP(S) call to services like DroneBL to report spam hits,
@@ -40,7 +43,6 @@ in progress and may not be a stable version.
     or having a host of *.irccloud.com. Spam matches for users that fall
     in this ::except group are counted as false positives and no action is
     taken or logged.
-  * At the moment central spamfilter has no rules yet, but it will be at a later point.
 * [set::spamfilter::utf8](https://www.unrealircd.org/docs/Set_block#set::spamfilter::utf8)
   is now on by default:
   * This means you can safely use UTF8 characters in like `[]` in regex.
@@ -65,6 +67,23 @@ in progress and may not be a stable version.
   ```
   include "some-file-or-url" { restrict-config { name-of-block; name-of-block2; } }
   ```
+
+### Changes:
+* We now compile the argon2 library shipped with UnrealIRCd by default,
+  because it is often two times faster than the OS library. If you don't
+  want this, which would be quite rare but for example because you are
+  packaging UnrealIRCd as a .deb or .rpm, then you can use
+  `--with-system-argon2` as a configure option.
+* The argon2 parameters have been lowered a bit, this so the hashing
+  speed is acceptable for our purposes.
+
+### Fixes:
+* UnrealIRCd has watch away notification since 2008, this is indicated in
+  RPL_ISUPPORT via `WATCHOPTS=A` and then the syntax to actually use this
+  is `WATCH A +Nick1 +Nick2 etc.`. In UnrealIRCd 6 there was a bug where
+  it would not always correctly inform about the away status, that bug
+  has now been fixed.
+* On 32 bit architectures you can now use more than 32 channel modes.
 
 ### Developers and protocol:
 * Changes in numeric 229 (RPL_STATSSPAMF): Now includes hits and hits for
