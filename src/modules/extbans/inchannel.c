@@ -32,11 +32,10 @@ int extban_inchannel_is_ok(BanContext *b);
 const char *extban_inchannel_conv_param(BanContext *b, Extban *extban);
 int extban_inchannel_is_banned(BanContext *b);
 
-/** Called upon module init */
-MOD_INIT()
+Extban *register_channel_extban(ModuleInfo *modinfo)
 {
 	ExtbanInfo req;
-	
+
 	memset(&req, 0, sizeof(req));
 	req.letter = 'c';
 	req.name = "channel";
@@ -44,25 +43,39 @@ MOD_INIT()
 	req.conv_param = extban_inchannel_conv_param;
 	req.is_banned = extban_inchannel_is_banned;
 	req.is_banned_events = BANCHK_ALL|BANCHK_TKL;
-	req.options = EXTBOPT_INVEX; /* for +I too */
-	if (!ExtbanAdd(modinfo->handle, req))
+	req.options = EXTBOPT_INVEX|EXTBOPT_TKL;
+	return ExtbanAdd(modinfo->handle, req);
+}
+
+MOD_TEST()
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	if (!register_channel_extban(modinfo))
 	{
 		config_error("could not register extended ban type");
 		return MOD_FAILED;
 	}
 
-	MARK_AS_OFFICIAL_MODULE(modinfo);
-	
 	return MOD_SUCCESS;
 }
 
-/** Called upon module load */
+MOD_INIT()
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	if (!register_channel_extban(modinfo))
+	{
+		config_error("could not register extended ban type");
+		return MOD_FAILED;
+	}
+
+	return MOD_SUCCESS;
+}
+
 MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-/** Called upon unload */
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
@@ -142,6 +155,9 @@ int extban_inchannel_is_banned(BanContext *b)
 	Membership *lp;
 	const char *p = b->banstr;
 	char symbol = '\0';
+
+	if (!b->client->user)
+		return 0;
 
 	if (*p != '#')
 	{
