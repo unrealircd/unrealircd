@@ -5267,6 +5267,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			memset(&context, 0, sizeof(context));
 			context.client = client;
 			context.text = str_in;
+			context.destination = destination;
 			if (!crule_eval(&context, tkl->ptr.spamfilter->rule))
 				continue;
 		}
@@ -5374,6 +5375,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			memset(&context, 0, sizeof(context));
 			context.client = client;
 			context.text = str_in;
+			context.destination = destination;
 			if (!crule_eval(&context, tkl->ptr.spamfilter->rule))
 				continue;
 

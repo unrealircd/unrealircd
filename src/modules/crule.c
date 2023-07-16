@@ -126,6 +126,7 @@ static int crule_online_time(crule_context *, int, void **);
 static int crule_reputation(crule_context *, int, void **);
 static int crule_tag(crule_context *, int, void **);
 static int crule_inchannel(crule_context *, int, void **);
+static int crule_destination(crule_context *, int, void **);
 static int crule_cap_version(crule_context *, int, void **);
 static int crule_cap_set(crule_context *, int, void **);
 
@@ -167,6 +168,7 @@ struct crule_funclistent crule_funclist[] = {
 	{"reputation", 0, crule_reputation},
 	{"tag", 1, crule_tag},
 	{"inchannel", 1, crule_inchannel},
+	{"destination", 1, crule_destination},
 	{"cap_version", 0, crule_cap_version},
 	{"cap_set", 1, crule_cap_set},
 	{"directcon", 1, crule_directcon},
@@ -326,6 +328,16 @@ static int crule_inchannel(crule_context *context, int numargs, void *crulearg[]
 		}
 	}
 	return 0;
+}
+
+static int crule_destination(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+
+	if (!context || !context->destination)
+		return 0;
+
+	return match_simple(arg, context->destination);
 }
 
 static int crule_cap_version(crule_context *context, int numargs, void *crulearg[])
