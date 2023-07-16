@@ -9,6 +9,11 @@ in progress and may not be a stable version.
   file. It is generally suggested to follow this advice, but you could disable
   such advice via
   [set::best-practices](https://www.unrealircd.org/docs/Set_block#set::best-practices).
+* [security-group { } block](https://www.unrealircd.org/docs/Security-group_block)
+  and [mask item](https://www.unrealircd.org/docs/Mask_item) enhancements:
+  * Add support for `channel "#xyz";` and `channel "@#need_ops_here";`
+  * Add support for [Crule](https://www.unrealircd.org/docs/Crule) to allow
+    things like `rule "inchannel('@#main')||reputation()>1000";`
 * [spamfilter { } block](https://www.unrealircd.org/docs/Spamfilter_block) improvements:
   * Spamfilters now always run, even for users that are exempt via a
     [except ban block](https://www.unrealircd.org/docs/Except_ban_block)
@@ -84,6 +89,8 @@ in progress and may not be a stable version.
   it would not always correctly inform about the away status, that bug
   has now been fixed.
 * On 32 bit architectures you can now use more than 32 channel modes.
+* [Set block for a security group](https://www.unrealircd.org/docs/Set_block#Set_block_for_a_security_group):
+  was not working for the `unknown-users` group.
 
 ### Developers and protocol:
 * Changes in numeric 229 (RPL_STATSSPAMF): Now includes hits and hits for
