@@ -11641,10 +11641,16 @@ int test_set_security_group(ConfigFile *conf, ConfigEntry *ce)
 
 int config_set_security_group(ConfigFile *conf, ConfigEntry *ce)
 {
-	SecurityGroup *s = find_security_group(ce->value);
 	ConfigEntry *cep;
+	DynamicSetBlock *block = NULL;
+	SecurityGroup *s;
 
-	if (!s)
+	if (!strcmp(ce->value, "unknown-users"))
+		block = &unknown_users_set;
+	else if ((s = find_security_group(ce->value)))
+		block = &s->settings;
+
+	if (!block)
 	{
 		config_warn("set %s { } block encountered but security-group %s does not exist. Settings ignored",
 		            ce->value, ce->value);
@@ -11653,7 +11659,7 @@ int config_set_security_group(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		config_set_dynamic_set_block_item(conf, &s->settings, cep);
+		config_set_dynamic_set_block_item(conf, block, cep);
 	}
 	return 0;
 }
