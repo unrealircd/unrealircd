@@ -507,7 +507,7 @@ static void crule_getword(char *word, int *wordlenp, size_t maxlen, const char *
 
 	if (**ruleptr == '\'')
 	{
-		*(*ruleptr)++;
+		(*ruleptr)++;
 		quoted = 1;
 	}
 
@@ -524,7 +524,7 @@ static void crule_getword(char *word, int *wordlenp, size_t maxlen, const char *
 
 	/* Eat the remaining ' quote, if needed... */
 	if (quoted && (**ruleptr == '\''))
-		*(*ruleptr)++;;
+		(*ruleptr)++;
 }
 
 /** Parse an entire rule.

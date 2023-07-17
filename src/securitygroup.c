@@ -176,7 +176,7 @@ int unreal_mask_match_string(const char *name, ConfigItem_mask *mask)
 	return retval;
 }
 
-#define CheckNullX(x) if ((!(x)->value) || (!(*((x)->value)))) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); *errors = *errors + 1; return 0; }
+#define CheckNullX(x) if ((!(x)->value) || (!(*((x)->value)))) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); (*errors)++; return 0; }
 int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 {
 	ConfigEntry *cepp;
@@ -209,7 +209,7 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 		{
 			config_error("%s:%i: %s needs to be a value of 1-10000",
 				cep->file->filename, cep->line_number, cep->name);
-			*errors = *errors + 1;
+			(*errors)++;
 		}
 	} else
 	if (!strcmp(cep->name, "connect-time") || !strcmp(cep->name, "exclude-connect-time"))
@@ -224,7 +224,7 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 		{
 			config_error("%s:%i: %s needs to be a time value (and more than 0 seconds)",
 				cep->file->filename, cep->line_number, cep->name);
-			*errors = *errors + 1;
+			(*errors)++;
 		}
 	} else
 	if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "include-mask") || !strcmp(cep->name, "exclude-mask"))
@@ -239,7 +239,7 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 				             "Perhaps you meant to use it in security-group { %s ... } directly?",
 				             cepp->file->filename, cepp->line_number,
 				             cepp->name);
-				*errors = *errors + 1;
+				(*errors)++;
 			}
 		}
 	} else
@@ -258,7 +258,7 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 				cep->file->filename,
 				cep->line_number,
 				crule_errstring(val));
-			errors++;
+			(*errors)++;
 		}
 	} else
 	{
@@ -744,7 +744,7 @@ int test_extended_list(Extban *extban, ConfigEntry *cep, int *errors)
 		{
 			config_error("%s:%i: %s has an invalid value",
 			             cep->file->filename, cep->line_number, cep->name);
-			*errors = *errors + 1;
+			(*errors)++;
 			return 0;
 		}
 	}
@@ -759,7 +759,7 @@ int test_extended_list(Extban *extban, ConfigEntry *cep, int *errors)
 		{
 			config_error("%s:%i: %s has an invalid value",
 			             cep->file->filename, cep->line_number, cep->name);
-			*errors = *errors + 1;
+			(*errors)++;
 			return 0;
 		}
 	}
