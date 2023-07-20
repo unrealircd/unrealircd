@@ -432,7 +432,7 @@ int write_tkline(UnrealDB *db, const char *tmpfname, TKL *tkl)
 	{
 		char *match_type = unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type);
 		char *target = spamfilter_target_inttostring(tkl->ptr.spamfilter->target);
-		char action = banact_valtochar(tkl->ptr.spamfilter->action->action);
+		char action = banact_valtochar(tkl->ptr.spamfilter->action->action); // NOTE: only writes single action value
 
 		W_SAFE(unrealdb_write_str(db, match_type));
 		W_SAFE(unrealdb_write_str(db, tkl->ptr.spamfilter->match->str));
@@ -701,8 +701,8 @@ int read_tkldb(void)
 
 			/* Action */
 			R_SAFE(unrealdb_read_char(db, &c));
-			tkl->ptr.spamfilter->action = banact_value_to_struct(banact_chartoval(c));
-			if (!tkl->ptr.spamfilter->action)
+			tkl->ptr.spamfilter->action = banact_value_to_struct(banact_chartoval(c)); // NOTE: only reads single action value
+			if (!tkl->ptr.spamfilter->action || banact_config_only(tkl->ptr.spamfilter->action->action))
 			{
 				config_warn("[tkldb] Spamfilter '%s' without valid action (%c) -- spamfilter entry not added",
 					tkl->ptr.spamfilter->match->str, c);

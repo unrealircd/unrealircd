@@ -151,6 +151,12 @@ int spamfilter_select_criteria(Client *client, json_t *request, json_t *params, 
 		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid value for parameter 'ban_action'");
 		return 0;
 	}
+	/* I hope to remove this restriction at a later point: */
+	if (banact_config_only(*action))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Invalid value for parameter 'ban_action': action is config-based only");
+		return 0;
+	}
 	actionbuf[0] = banact_valtochar(*action);
 	actionbuf[1] = '\0';
 	return 1;

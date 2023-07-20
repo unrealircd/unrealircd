@@ -56,33 +56,34 @@ typedef struct {
 	int value;			/** Unique integer value of item */
 	char character;		/** Unique character assigned to item */
 	char *name;			/** Name of item */
+	char config_only;
 } BanActTable;
 
 static BanActTable banacttable[] = {
-	{ BAN_ACT_KILL,		'K',	"kill" },
-	{ BAN_ACT_SOFT_KILL,	'i',	"soft-kill" },
-	{ BAN_ACT_TEMPSHUN,	'S',	"tempshun" },
-	{ BAN_ACT_SOFT_TEMPSHUN,'T',	"soft-tempshun" },
-	{ BAN_ACT_SHUN,		's',	"shun" },
-	{ BAN_ACT_SOFT_SHUN,	'H',	"soft-shun" },
-	{ BAN_ACT_KLINE,	'k',	"kline" },
-	{ BAN_ACT_SOFT_KLINE,	'I',	"soft-kline" },
-	{ BAN_ACT_ZLINE,	'z',	"zline" },
-	{ BAN_ACT_GLINE,	'g',	"gline" },
-	{ BAN_ACT_SOFT_GLINE,	'G',	"soft-gline" },
-	{ BAN_ACT_GZLINE,	'Z',	"gzline" },
-	{ BAN_ACT_BLOCK,	'b',	"block" },
-	{ BAN_ACT_SOFT_BLOCK,	'B',	"soft-block" },
-	{ BAN_ACT_DCCBLOCK,	'd',	"dccblock" },
-	{ BAN_ACT_SOFT_DCCBLOCK,'D',	"soft-dccblock" },
-	{ BAN_ACT_VIRUSCHAN,	'v',	"viruschan" },
-	{ BAN_ACT_SOFT_VIRUSCHAN,'V',	"soft-viruschan" },
-	{ BAN_ACT_WARN,		'w',	"warn" },
-	{ BAN_ACT_SOFT_WARN,	'W',	"soft-warn" },
-	{ BAN_ACT_SET,		'1',	"set" },
-	{ BAN_ACT_REPORT,	'r',	"report" },
-	{ BAN_ACT_STOP,		'0',	"stop" },
-	{ 0, 0, 0 }
+	{ BAN_ACT_KILL,		'K',	"kill",			0 },
+	{ BAN_ACT_SOFT_KILL,	'i',	"soft-kill",		0 },
+	{ BAN_ACT_TEMPSHUN,	'S',	"tempshun",		0 },
+	{ BAN_ACT_SOFT_TEMPSHUN,'T',	"soft-tempshun",	0 },
+	{ BAN_ACT_SHUN,		's',	"shun",			0 },
+	{ BAN_ACT_SOFT_SHUN,	'H',	"soft-shun",		0 },
+	{ BAN_ACT_KLINE,	'k',	"kline",		0 },
+	{ BAN_ACT_SOFT_KLINE,	'I',	"soft-kline",		0 },
+	{ BAN_ACT_ZLINE,	'z',	"zline",		0 },
+	{ BAN_ACT_GLINE,	'g',	"gline",		0 },
+	{ BAN_ACT_SOFT_GLINE,	'G',	"soft-gline",		0 },
+	{ BAN_ACT_GZLINE,	'Z',	"gzline",		0 },
+	{ BAN_ACT_BLOCK,	'b',	"block",		0 },
+	{ BAN_ACT_SOFT_BLOCK,	'B',	"soft-block",		0 },
+	{ BAN_ACT_DCCBLOCK,	'd',	"dccblock",		0 },
+	{ BAN_ACT_SOFT_DCCBLOCK,'D',	"soft-dccblock",	0 },
+	{ BAN_ACT_VIRUSCHAN,	'v',	"viruschan",		0 },
+	{ BAN_ACT_SOFT_VIRUSCHAN,'V',	"soft-viruschan",	0 },
+	{ BAN_ACT_WARN,		'w',	"warn",			0 },
+	{ BAN_ACT_SOFT_WARN,	'W',	"soft-warn",		0 },
+	{ BAN_ACT_SET,		'1',	"set",			1 },
+	{ BAN_ACT_REPORT,	'r',	"report",		1 },
+	{ BAN_ACT_STOP,		'0',	"stop",			1 },
+	{ 0, 0, 0, 0 }
 };
 
 typedef struct {
@@ -997,6 +998,17 @@ void parse_ban_action_config(ConfigEntry *ce, BanAction **store_actions)
 		if (action)
 			append_ListItem((ListStruct *)action, (ListStruct **)store_actions);
 	}
+}
+
+/** Return 1 if this is "config only" ban action, like BAN_ACT_SET is */
+int banact_config_only(BanActionValue action)
+{
+	BanActTable *b;
+
+	for (b = &banacttable[0]; b->value; b++)
+		if (b->value == action)
+			return b->config_only;
+	return 0;
 }
 
 /** Converts a banaction string (eg: "kill") to an integer value (eg: BAN_ACT_KILL) */

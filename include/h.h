@@ -738,6 +738,7 @@ extern const char *banact_valtostring(BanActionValue val);
 extern BanActionValue banact_chartoval(char c);
 extern char banact_valtochar(BanActionValue val);
 extern BanAction *banact_value_to_struct(BanActionValue val);
+extern int banact_config_only(BanActionValue action);
 extern int only_actions_of_type(BanAction *actions, BanActionValue what);
 extern int has_actions_of_type(BanAction *actions, BanActionValue what);
 extern int only_soft_actions(BanAction *actions);

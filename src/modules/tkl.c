@@ -4449,7 +4449,7 @@ CMD_FUNC(cmd_tkl_add)
 			return;
 		}
 
-		if (!(action = banact_chartoval(*parv[4])))
+		if (!(action = banact_chartoval(*parv[4])) || banact_config_only(action))
 		{
 			unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
 				"Invalid TKL entry from $client: "
