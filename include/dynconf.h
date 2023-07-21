@@ -127,6 +127,7 @@ struct Configuration {
 	int spamfilter_utf8;
 	SpamfilterShowMessageContentOnHit spamfilter_show_message_content_on_hit;
 	char *central_spamfilter_url;
+	char *central_spamfilter_feed;
 	long central_spamfilter_refresh_time;
 	int central_spamfilter_verbose;
 	int central_spamfilter_enabled;

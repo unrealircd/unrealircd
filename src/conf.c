@@ -1677,6 +1677,7 @@ void free_iConf(Configuration *i)
 	safe_free(i->sasl_server);
 	safe_free_all_ban_actions(i->handshake_data_flood_ban_action);
 	safe_free(i->central_spamfilter_url);
+	safe_free(i->central_spamfilter_feed);
 	free_security_group(i->central_spamfilter_except);
 	// anti-flood:
 	for (f = i->floodsettings; f; f = f_next)
@@ -1809,7 +1810,8 @@ void config_setdefaultsettings(Configuration *i)
 	i->who_limit = 100;
 	i->named_extended_bans = 1;
 	i->high_connection_rate = 1000;
-	safe_strdup(i->central_spamfilter_url, "https://spamfilter.unrealircd.org/spamfilter/central_spamfilter.conf");
+	safe_strdup(i->central_spamfilter_url, "https://spamfilter.unrealircd.org/spamfilter/v6/$feed/central_spamfilter.conf");
+	safe_strdup(i->central_spamfilter_feed, "standard");
 	i->central_spamfilter_refresh_time = 3600;
 	i->central_spamfilter_enabled = 0;
 	i->central_spamfilter_except = safe_alloc(sizeof(SecurityGroup));
@@ -8110,6 +8112,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.central_spamfilter_verbose = atoi(cepp->value);
 				else if (!strcmp(cepp->name, "enabled"))
 					tempiConf.central_spamfilter_enabled = config_checkval(cepp->value, CFG_YESNO);
+				else if (!strcmp(cepp->name, "feed"))
+					safe_strdup(tempiConf.central_spamfilter_feed, cepp->value);
 				else if (!strcmp(cepp->name, "except"))
 					conf_match_block(conf, cepp, &tempiConf.central_spamfilter_except);
 				else if (!strcmp(cepp->name, "limit-ban-action"))
@@ -9279,6 +9283,16 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				} else
 				if (!strcmp(cepp->name, "enabled"))
 				{
+				} else
+				if (!strcmp(cepp->name, "feed"))
+				{
+					if (strcmp(cepp->value, "testing") && strcmp(cepp->value, "standard") && strcmp(cepp->value, "fast"))
+					{
+						config_error("%s:%i: set::central-spamfilter::feed needs to be one of: "
+						             "'fast' (for early access to new spamfilters) or 'standard' (the default).",
+						             cepp->file->filename, cepp->line_number);
+						errors++;
+					}
 				} else
 				if (!strcmp(cepp->name, "limit-ban-action"))
 				{
@@ -11729,7 +11743,7 @@ const char *get_setting_for_user_string(Client *client, SetOption opt)
 /*** Central spamfilter ***/
 int central_spamfilter_downloading = 0;
 
-#define DFILTER_CACHE_TIME 0
+#define CENTRAL_SPAMFILTER_CACHE_TIME 0
 
 int count_central_spamfilter_rules(void)
 {
@@ -11804,15 +11818,27 @@ void central_spamfilter_download_complete(const char *url, const char *file, con
 
 void central_spamfilter_start_download(void)
 {
+	char url[512];
+	NameValuePrioList *nvp = NULL;
+
 	if (central_spamfilter_downloading)
 		return;
+
 	if (iConf.central_spamfilter_verbose > 2)
 	{
 		unreal_log(ULOG_INFO, "central-spamfilter", "CENTRAL_SPAMFILTER_STATUS", NULL,
 		           "Starting download of central spamfilter rules...");
 	}
+
 	central_spamfilter_downloading = 1;
-	download_file_async(iConf.central_spamfilter_url, DFILTER_CACHE_TIME, central_spamfilter_download_complete, NULL, NULL, DOWNLOAD_MAX_REDIRECTS);
+
+	/* Build the URL */
+	add_nvplist(&nvp, 0, "feed", iConf.central_spamfilter_feed);
+	buildvarstring_nvp(iConf.central_spamfilter_url, url, sizeof(url), nvp, 0);
+	safe_free_nvplist(nvp);
+
+	/* Start HTTPS request */
+	download_file_async(url, CENTRAL_SPAMFILTER_CACHE_TIME, central_spamfilter_download_complete, NULL, NULL, DOWNLOAD_MAX_REDIRECTS);
 }
 
 EVENT(central_spamfilter_download_evt)

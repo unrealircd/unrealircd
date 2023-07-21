@@ -46,12 +46,17 @@ in progress and may not be a stable version.
   This will fetch and refresh spamfilter rules every hour from unrealircd.org.
   * This feature is not enabled default. Use `set { central-spamfilter { enabled yes; } }`
     to enable.
+  * set::central-spamfilter::feed decides which feed to use: `fast` for
+    early access to spamfilter rules that are new, and `standard` (the
+    default) for rules that have been in fast for a while.
   * set::central-spamfilter::except defines who will never be affected by
     central spamfilters. By default it is: users with a reputation score of
     more than 2016 (7 days online unregged, or 3.5 days as identified user)
     or having a host of *.irccloud.com. Spam matches for users that fall
     in this ::except group are counted as false positives and no action is
     taken or logged.
+  * See the [Central Spamfilter](https://www.unrealircd.org/docs/Central_spamfilter)
+    article for the disclaimer and all other options you can set.
 * [set::spamfilter::utf8](https://www.unrealircd.org/docs/Set_block#set::spamfilter::utf8)
   is now on by default:
   * This means you can safely use UTF8 characters in like `[]` in regex.
@@ -94,7 +99,8 @@ in progress and may not be a stable version.
 
 ### Developers and protocol:
 * Changes in numeric 229 (RPL_STATSSPAMF): Now includes hits and hits for
-  users that are exempt, two counters right inserted right before the last one.
+  users that are exempt, two counters inserted right before the last
+  argument (the regex).
 * Several API changes, like `place_host_ban` to `take_action`
 
 UnrealIRCd 6.1.1.1
