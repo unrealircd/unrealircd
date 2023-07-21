@@ -521,6 +521,13 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		config_warn("*****************");
 	}
 
+	if (central_spamfilter && !has_id)
+	{
+		config_error("%s:%i: central spamfilter encountered without 'id', rejected.",
+		             ce->file->filename, ce->line_number);
+		errors++;
+	}
+
 	if (central_spamfilter && errors)
 	{
 		ce->bad = 1;
@@ -617,6 +624,8 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 			lower_ban_action_to_maximum(action, iConf.central_spamfilter_limit_ban_action);
 		if (iConf.central_spamfilter_limit_ban_time && (bantime > iConf.central_spamfilter_limit_ban_time))
 			bantime = iConf.central_spamfilter_limit_ban_time;
+	} else {
+		id = NULL;
 	}
 
 	if (match)
@@ -2732,6 +2741,7 @@ TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAct
 	safe_strdup(tkl->ptr.spamfilter->tkl_reason, tkl_reason);
 	tkl->ptr.spamfilter->except = except;
 	tkl->ptr.spamfilter->tkl_duration = tkl_duration;
+	safe_strdup(tkl->ptr.spamfilter->id, id);
 
 	if (tkl->ptr.spamfilter->target & SPAMF_USER)
 		loop.do_bancheck_spamf_user = 1;
