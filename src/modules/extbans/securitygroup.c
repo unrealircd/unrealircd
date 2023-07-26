@@ -112,14 +112,14 @@ int extban_securitygroup_generic(char *mask, int strict)
 
 int extban_securitygroup_is_ok(BanContext *b)
 {
-	if (MyUser(b->client) && (b->what == MODE_ADD) && (b->is_ok_check == EXBCHK_PARAM))
+	if (b->client && MyUser(b->client) && (b->what == MODE_ADD) && (b->is_ok_check == EXBCHK_PARAM))
 	{
 		char banbuf[SECURITYGROUPLEN+8];
 		strlcpy(banbuf, b->banstr, sizeof(banbuf));
 		if (!extban_securitygroup_generic(banbuf, 1))
 		{
 			SecurityGroup *s;
-			sendnotice(b->client, "ERROR: Unknown security-group '%s'. Syntax: +b ~G:securitygroup or +b ~G:!securitygroup", b->banstr);
+			sendnotice(b->client, "ERROR: Unknown security-group '%s'. Syntax: +b ~security-group:securitygroup or +b ~security-group:!securitygroup", b->banstr);
 			sendnotice(b->client, "Available security groups:");
 			for (s = securitygroups; s; s = s->next)
 				sendnotice(b->client, "%s", s->name);
