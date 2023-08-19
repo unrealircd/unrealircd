@@ -264,6 +264,9 @@ with the command: `./unrealircd upgrade`
   the total of parameters being greater than 512). The new flag allows
   gradually opting in commands to allow bigger parameters, after
   such code has been checked and modified to handle it.
+* In `HOOKTYPE_PRE_CHANMSG` the `mtags` is now a `MessageTag **`,
+  so a pointer-to-a-pointer rather than a pointer, to allow stripping
+  message tags by modules.
 
 UnrealIRCd 6.1.0
 -----------------

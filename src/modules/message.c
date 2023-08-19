@@ -340,7 +340,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, const char *p
 
 			new_message(client, recv_mtags, &mtags);
 
-			RunHook(HOOKTYPE_PRE_CHANMSG, client, channel, mtags, text, sendtype);
+			RunHook(HOOKTYPE_PRE_CHANMSG, client, channel, &mtags, text, sendtype);
 
 			if (!text)
 			{

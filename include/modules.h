@@ -1474,11 +1474,11 @@ int hooktype_remote_kick(Client *client, Client *victim, Channel *channel, Messa
  * This function is only used by delayjoin. It cannot block a message. See hooktype_can_send_to_user() instead!
  * @param client		The client
  * @param channel		The channel
- * @param mtags         	Message tags associated with the event
+ * @param mtags         	Message tags associated with the event (pointer-to-pointer)
  * @param text			The text that will be sent
  * @return The return value is ignored (use return 0)
  */
-int hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, const char *text, SendType sendtype);
+int hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag **mtags, const char *text, SendType sendtype);
 
 /** Called when a user wants to send a message to another user (function prototype for HOOKTYPE_CAN_SEND_TO_USER).
  * @param client		The sender
