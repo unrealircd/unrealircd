@@ -35,6 +35,15 @@ ModuleHeader MOD_HEADER
  * Once that happens, best to re-check/audit the source.
  */
 
+/* The first "quick" recheck: */
+static long BLACKLIST_RECHECK_TIME_FIRST = 120;
+
+/* After that, check every <this>: */
+static long BLACKLIST_RECHECK_TIME = 900;
+
+#define LastBLCheck(x)	(moddata_client(x, blacklistrecheck_md).l)
+#define SetLastBLCheck(x, y)	do { moddata_client(x, blacklistrecheck_md).l = y; } while(0)
+
 /* Types */
 
 typedef enum {
@@ -91,11 +100,14 @@ struct BLUser {
 
 /* Global variables */
 ModDataInfo *blacklist_md = NULL;
+ModDataInfo *blacklistrecheck_md = NULL;
 Blacklist *conf_blacklist = NULL;
 
 /* Forward declarations */
 int blacklist_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int blacklist_config_run(ConfigFile *, ConfigEntry *, int);
+int blacklist_set_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int blacklist_set_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 void blacklist_free_conf(void);
 void delete_blacklist_block(Blacklist *e);
 void blacklist_md_free(ModData *md);
@@ -110,6 +122,7 @@ int blacklist_rehash(void);
 int blacklist_rehash_complete(void);
 void blacklist_set_handshake_delay(void);
 void blacklist_free_bluser_if_able(BLUser *bl);
+EVENT(blacklist_recheck);
 
 #define SetBLUser(x, y)	do { moddata_client(x, blacklist_md).ptr = y; } while(0)
 #define BLUSER(x)	((BLUser *)moddata_client(x, blacklist_md).ptr)
@@ -117,6 +130,7 @@ void blacklist_free_bluser_if_able(BLUser *bl);
 MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, blacklist_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, blacklist_set_config_test);
 
 	CallbackAdd(modinfo->handle, CALLBACKTYPE_BLACKLIST_CHECK, blacklist_start_check);
 	return MOD_SUCCESS;
@@ -146,13 +160,27 @@ MOD_INIT()
 		return MOD_FAILED;
 	}
 
+	memset(&mreq, 0, sizeof(mreq));
+	mreq.name = "blacklistrecheck";
+	mreq.type = MODDATATYPE_CLIENT;
+	blacklistrecheck_md = ModDataAdd(modinfo->handle, mreq);
+	if (!blacklistrecheck_md)
+	{
+		config_error("[blacklist] failed adding moddata for blacklistrecheck. "
+		             "Do you perhaps still have third/blacklistrecheck loaded? That module is no longer needed!");
+		return MOD_FAILED;
+	}
+
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, blacklist_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, blacklist_set_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, blacklist_handshake);
 	HookAdd(modinfo->handle, HOOKTYPE_IP_CHANGE, 0, blacklist_ip_change);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0, blacklist_preconnect);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH, 0, blacklist_rehash);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH_COMPLETE, 0, blacklist_rehash_complete);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, blacklist_quit);
+
+	EventAdd(modinfo->handle, "blacklist_recheck", blacklist_recheck, NULL, 2000, 0);
 
 	return MOD_SUCCESS;
 }
@@ -544,6 +572,89 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 0;
 }
 
+/** Test the set::blacklist configuration */
+int blacklist_set_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
+	int errors = 0;
+	ConfigEntry *cep, *cepp;
+
+	if (type != CONFIG_SET)
+		return 0;
+	
+	/* We are only interrested in set::blacklist.. */
+	if (!ce || !ce->name || strcmp(ce->name, "blacklist"))
+		return 0;
+	
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "recheck-time-first"))
+		{
+			int v;
+			if (!cep->value)
+			{
+				config_error("%s:%i: set::blacklist::recheck-time-first with no value",
+					cep->file->filename, cep->line_number);
+				errors++;
+			}
+			v = config_checkval(cep->value, CFG_TIME);
+			if (v < 60)
+			{
+				config_error("%s:%i: set::blacklist::recheck-time-first cannot be less than 60 seconds",
+					cep->file->filename, cep->line_number);
+				errors++;
+			}
+		} else
+		if (!strcmp(cep->name, "recheck-time"))
+		{
+			int v;
+			if (!cep->value)
+			{
+				config_error("%s:%i: set::blacklist::recheck-time with no value",
+					cep->file->filename, cep->line_number);
+				errors++;
+			}
+			v = config_checkval(cep->value, CFG_TIME);
+			if (v < 60)
+			{
+				config_error("%s:%i: set::blacklist::recheck-time cannot be less than 60 seconds",
+					cep->file->filename, cep->line_number);
+				errors++;
+			}
+		} else
+		{
+			config_error("%s:%i: unknown directive set::blacklist::%s",
+				cep->file->filename, cep->line_number, cep->name);
+			errors++;
+			continue;
+		}
+	}
+	
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+/* Configure ourselves based on the set::blacklist settings */
+int blacklist_set_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+{
+	ConfigEntry *cep, *cepp;
+
+	if (type != CONFIG_SET)
+		return 0;
+	
+	/* We are only interrested in set::blacklist.. */
+	if (!ce || !ce->name || strcmp(ce->name, "blacklist"))
+		return 0;
+	
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "recheck-time"))
+			BLACKLIST_RECHECK_TIME = config_checkval(cep->value, CFG_TIME);
+		if (!strcmp(cep->name, "recheck-time-first"))
+			BLACKLIST_RECHECK_TIME_FIRST = config_checkval(cep->value, CFG_TIME);
+	}
+	return 1;
+}
+
 void blacklist_md_free(ModData *md)
 {
 	BLUser *bl = md->ptr;
@@ -881,4 +992,39 @@ int blacklist_preconnect(Client *client)
 		return HOOK_DENY;
 	}
 	return HOOK_CONTINUE; /* exempt */
+}
+
+void blacklist_recheck_user(Client *client)
+{
+	SetLastBLCheck(client, TStime());
+	if (!RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK])
+		return; /* blacklist module not loaded */
+	RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK]->func.intfunc(client);
+}
+
+EVENT(blacklist_recheck)
+{
+	Client *client;
+	time_t last_check;
+
+	if (BLACKLIST_RECHECK_TIME == 0)
+		return;
+
+	list_for_each_entry(client, &lclient_list, lclient_node)
+	{
+		/* Only check connected users */
+		if (!IsUser(client))
+			continue;
+
+		last_check = LastBLCheck(client);
+		if ((last_check == 0) && (TStime() - client->local->creationtime >= BLACKLIST_RECHECK_TIME_FIRST))
+		{
+			/* First time: check after 60 seconds already */
+			blacklist_recheck_user(client);
+		} else /* After that, check every <...> seconds */
+		if (last_check && (TStime() - last_check) >= BLACKLIST_RECHECK_TIME)
+		{
+			blacklist_recheck_user(client);
+		}
+	}
 }
