@@ -1,7 +1,8 @@
-UnrealIRCd 6.1.2-git
-=================
-This is the git version (development version) for future 6.1.2. This is work
-in progress and may not be a stable version.
+UnrealIRCd 6.1.2-rc1
+=====================
+This is the release candidate for future 6.1.2.
+
+You can help us by testing this release and reporting any issues at https://bugs.unrealircd.org/.
 
 ### Enhancements:
 * We now give tips on (security) best practices depending on settings in your
