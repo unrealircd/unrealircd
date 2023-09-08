@@ -15,6 +15,10 @@ You can help us by testing this release and reporting any issues at https://bugs
   * Add support for `channel "#xyz";` and `channel "@#need_ops_here";`
   * Add support for [Crule](https://www.unrealircd.org/docs/Crule) to allow
     things like `rule "inchannel('@#main')||reputation()>1000";`
+* DNS Blacklists are now checked again some time after the user is connected.
+  This will kill/ban users who are already online and got blacklisted later
+  by for example DroneBL. This is controlled via
+  [set::blacklist::recheck-time](https://www.unrealircd.org/docs/Set_block#set::blacklist::recheck-time)
 * [spamfilter { } block](https://www.unrealircd.org/docs/Spamfilter_block) improvements:
   * Spamfilters now always run, even for users that are exempt via a
     [except ban block](https://www.unrealircd.org/docs/Except_ban_block)
