@@ -847,6 +847,9 @@ about UnrealIRCd 6.
 * Several log messages were missing some information.
 * Reputation syncing across servers had a small glitch. Fix is mostly
   useful for servers that were not linked to the network for days or weeks.
+* In the config file, when not using quotes, a slash at the beginning of a
+  variable name or value was silently discarded (eg `file /tmp/xyz;` resulted
+  in a file `tmp/xyz`).
 
 ### Changes:
 * Clarified that UnrealIRCd is licensed as "GPLv2 or later"

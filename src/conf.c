@@ -1173,6 +1173,11 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 						return NULL;
 					}
 				}
+				else
+				{
+					/* Something like /tmp/xyz */
+					goto processchar;
+				}
 				break;
 			case '\'':
 				if (curce)
@@ -1295,6 +1300,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 
 				break;
 			default:
+			processchar:
 				if ((*ptr == '*') && (*(ptr+1) == '/'))
 				{
 					config_status("%s:%i: Ignoring extra end comment\n",
