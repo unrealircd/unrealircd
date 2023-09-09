@@ -77,6 +77,7 @@ struct Blacklist {
 	long ban_time;
 	char *reason;
 	SecurityGroup *except;
+	int recheck;
 };
 
 /* Blacklist user struct. In the c-ares DNS reply callback we need to pass
@@ -116,7 +117,7 @@ int blacklist_ip_change(Client *client, const char *oldip);
 int blacklist_quit(Client *client, MessageTag *mtags, const char *comment);
 int blacklist_preconnect(Client *client);
 void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hostent *he);
-int blacklist_start_check(Client *client);
+int blacklist_start_check(Client *client, int recheck);
 int blacklist_dns_request(Client *client, Blacklist *bl);
 int blacklist_rehash(void);
 int blacklist_rehash_complete(void);
@@ -276,7 +277,7 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	ConfigEntry	*cep, *cepp, *ceppp;
 	int errors = 0;
 	char has_reason = 0, has_ban_time = 0, has_action = 0;
-	char has_dns_type = 0, has_dns_reply = 0, has_dns_name = 0;
+	char has_dns_type = 0, has_dns_reply = 0, has_dns_name = 0, has_recheck = 0;
 
 	if (type != CONFIG_MAIN)
 		return 0;
@@ -430,6 +431,16 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			}
 			has_reason = 1;
 		}
+		else if (!strcmp(cep->name, "recheck"))
+		{
+			if (has_recheck)
+			{
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "blacklist::recheck");
+				continue;
+			}
+			has_recheck = 1;
+		}
 		else
 		{
 			config_error_unknown(cep->file->filename, cep->line_number,
@@ -492,6 +503,7 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	safe_strdup(d->name, ce->value);
 	/* set some defaults */
 	d->ban_time = 3600;
+	d->recheck = 1;
 	
 	/* assume dns for now ;) */
 	d->backend_type = BLACKLIST_BACKEND_DNS;
@@ -564,6 +576,10 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		else if (!strcmp(cep->name, "except"))
 		{
 			conf_match_block(cf, cep, &d->except);
+		}
+		else if (!strcmp(cep->name, "recheck"))
+		{
+			d->recheck = config_checkval(cep->value, CFG_YESNO);
 		}
 	}
 
@@ -667,17 +683,17 @@ void blacklist_md_free(ModData *md)
 
 int blacklist_handshake(Client *client)
 {
-	blacklist_start_check(client);
+	blacklist_start_check(client, 0);
 	return 0;
 }
 
 int blacklist_ip_change(Client *client, const char *oldip)
 {
-	blacklist_start_check(client);
+	blacklist_start_check(client, 0);
 	return 0;
 }
 
-int blacklist_start_check(Client *client)
+int blacklist_start_check(Client *client, int recheck)
 {
 	Blacklist *bl;
 
@@ -702,6 +718,9 @@ int blacklist_start_check(Client *client)
 		/* Stop processing if client is (being) killed already */
 		if (!BLUSER(client))
 			break;
+
+		if (recheck && !bl->recheck)
+			continue; /* blacklist::recheck is no */
 
 		/* Check if user is exempt (then don't bother checking) */
 		if (user_allowed_by_security_group(client, bl->except))
@@ -997,9 +1016,7 @@ int blacklist_preconnect(Client *client)
 void blacklist_recheck_user(Client *client)
 {
 	SetLastBLCheck(client, TStime());
-	if (!RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK])
-		return; /* blacklist module not loaded */
-	RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK]->func.intfunc(client);
+	blacklist_start_check(client, 1);
 }
 
 EVENT(blacklist_recheck)
