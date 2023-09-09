@@ -1419,6 +1419,7 @@ void mm_upgrade(int argc, char *args[])
 	}
 
 	/* Without arguments means: check all installed modules */
+	no_make_install = 1;
 	for (m = managed_modules; m; m = m->next)
 	{
 		int status = mm_get_module_status(m);
@@ -1437,6 +1438,9 @@ void mm_upgrade(int argc, char *args[])
 			update_unavailable++;
 		}
 	}
+	no_make_install = 0;
+	if (upgraded)
+		mm_make_install();
 	printf("All actions were successful. %d module(s) upgraded, %d already up-to-date\n",
 		upgraded, uptodate_already);
 	if (update_unavailable)
