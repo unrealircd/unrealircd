@@ -19,6 +19,10 @@ You can help us by testing this release and reporting any issues at https://bugs
   This will kill/ban users who are already online and got blacklisted later
   by for example DroneBL. This is controlled via
   [set::blacklist::recheck-time](https://www.unrealircd.org/docs/Set_block#set::blacklist::recheck-time)
+  and can also be set to `never` if you don't want rechecking.
+  * [blacklist::recheck](https://www.unrealircd.org/docs/Blacklist_block)
+    defaults to `yes` and can be set to `no` to skip rechecking for
+    individual blacklists.
 * [spamfilter { } block](https://www.unrealircd.org/docs/Spamfilter_block) improvements:
   * Spamfilters now always run, even for users that are exempt via a
     [except ban block](https://www.unrealircd.org/docs/Except_ban_block)

@@ -612,6 +612,15 @@ int blacklist_set_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 					cep->file->filename, cep->line_number);
 				errors++;
 			}
+			if (!strcmp(cep->value, "never"))
+			{
+				config_error("%s:%i: if you want to disable blacklist rechecks, then you "
+				             "should set set::blacklist::recheck-time to 'never' and "
+				             "don't set set::blacklist::recheck-time-first.",
+				             cep->file->filename, cep->line_number);
+				errors++;
+				continue;
+			}
 			v = config_checkval(cep->value, CFG_TIME);
 			if (v < 60)
 			{
@@ -629,12 +638,15 @@ int blacklist_set_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 					cep->file->filename, cep->line_number);
 				errors++;
 			}
-			v = config_checkval(cep->value, CFG_TIME);
-			if (v < 60)
+			if (strcmp(cep->value, "never"))
 			{
-				config_error("%s:%i: set::blacklist::recheck-time cannot be less than 60 seconds",
-					cep->file->filename, cep->line_number);
-				errors++;
+				v = config_checkval(cep->value, CFG_TIME);
+				if (v < 60)
+				{
+					config_error("%s:%i: set::blacklist::recheck-time cannot be less than 60 seconds",
+						cep->file->filename, cep->line_number);
+					errors++;
+				}
 			}
 		} else
 		{
