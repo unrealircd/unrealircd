@@ -170,6 +170,7 @@ CRuleNode *(*crule_parse)(const char *rule);
 int (*crule_eval)(crule_context *context, CRuleNode *rule);
 void (*crule_free)(CRuleNode **);
 const char *(*crule_errstring)(int errcode);
+void (*ban_act_set_reputation)(Client *client, BanAction *action);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
@@ -480,9 +481,10 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_MTAG_GENERATE_ISSUED_BY_IRC, mtag_add_issued_by, mtag_add_issued_by_default_handler, 0);
 	efunc_init_function(EFUNC_CANCEL_IDENT_LOOKUP, cancel_ident_lookup, cancel_ident_lookup_default_handler, 0);
 	efunc_init_function(EFUNC_SPAMREPORT, spamreport, spamreport_default_handler, 0);
-	efunc_init_function(EFUNC_CRULE_TEST, crule_test, NULL, EFUNC_FLAG_EARLY);;
-	efunc_init_function(EFUNC_CRULE_PARSE, crule_parse, NULL, EFUNC_FLAG_EARLY);;
-	efunc_init_function(EFUNC_CRULE_EVAL, crule_eval, NULL, EFUNC_FLAG_EARLY);;
-	efunc_init_function(EFUNC_CRULE_FREE, crule_free, NULL, EFUNC_FLAG_EARLY);;
-	efunc_init_function(EFUNC_CRULE_ERRSTRING, crule_errstring, NULL, EFUNC_FLAG_EARLY);;
+	efunc_init_function(EFUNC_CRULE_TEST, crule_test, NULL, EFUNC_FLAG_EARLY);
+	efunc_init_function(EFUNC_CRULE_PARSE, crule_parse, NULL, EFUNC_FLAG_EARLY);
+	efunc_init_function(EFUNC_CRULE_EVAL, crule_eval, NULL, EFUNC_FLAG_EARLY);
+	efunc_init_function(EFUNC_CRULE_FREE, crule_free, NULL, EFUNC_FLAG_EARLY);
+	efunc_init_function(EFUNC_CRULE_ERRSTRING, crule_errstring, NULL, EFUNC_FLAG_EARLY);
+	efunc_init_function(EFUNC_BAN_ACT_SET_REPUTATION, ban_act_set_reputation, ban_act_set_reputation_default_handler, 0);
 }

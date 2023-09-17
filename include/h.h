@@ -925,6 +925,7 @@ extern int (*crule_eval)(crule_context *context, CRuleNode *rule);
 #define safe_crule_free(x) do { if (x) crule_free(&x); } while(0)
 extern void (*crule_free)(CRuleNode **);
 extern const char *(*crule_errstring)(int errcode);
+extern void (*ban_act_set_reputation)(Client *client, BanAction *action);
 /* /Efuncs */
 
 /* TLS functions */
@@ -978,6 +979,7 @@ extern int websocket_create_packet_simple_default_handler(int opcode, const char
 extern void mtag_add_issued_by_default_handler(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 extern void cancel_ident_lookup_default_handler(Client *client);
 extern int spamreport_default_handler(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
+extern void ban_act_set_reputation_default_handler(Client *client, BanAction *action);
 /* End of default handlers for efunctions */
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;

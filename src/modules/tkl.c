@@ -4790,6 +4790,12 @@ void ban_act_set(Client *client, BanAction *action)
 	if (!MyConnect(client))
 		return;
 
+	if (!strcmp(action->var, "REPUTATION"))
+	{
+		ban_act_set_reputation(client, action);
+		return;
+	}
+
 	tag = find_tag(client, action->var);
 	if (!tag)
 		tag = add_tag(client, action->var, 0);

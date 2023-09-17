@@ -155,9 +155,11 @@ EVENT(reputation_save_db_evt);
 int reputation_load_db(void);
 int reputation_save_db(void);
 int reputation_starttime_callback(void);
+void _ban_act_set_reputation(Client *client, BanAction *action);
 
 MOD_TEST()
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	memcpy(&ModInf, modinfo, modinfo->size);
 	memset(&cfg, 0, sizeof(cfg));
 	memset(&test, 0, sizeof(cfg));
@@ -165,6 +167,7 @@ MOD_TEST()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, reputation_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, reputation_config_posttest);
 	CallbackAdd(modinfo->handle, CALLBACKTYPE_REPUTATION_STARTTIME, reputation_starttime_callback);
+	EfunctionAddVoid(modinfo->handle, EFUNC_BAN_ACT_SET_REPUTATION, _ban_act_set_reputation);
 	return MOD_SUCCESS;
 }
 
@@ -928,11 +931,12 @@ void reputation_changed_update_users(ReputationEntry *e)
 	list_for_each_entry(client, &client_list, client_node)
 	{
 		if (client->ip && !strcmp(e->ip, client->ip))
-		{
-			/* With some (possibly unneeded) care to only go forward */
-			if (Reputation(client) < e->score)
-				Reputation(client) = e->score;
-		}
+			Reputation(client) = e->score;
+	}
+	list_for_each_entry(client, &unknown_list, lclient_node)
+	{
+		if (client->ip && !strcmp(e->ip, client->ip))
+			Reputation(client) = e->score;
 	}
 }
 
@@ -1234,6 +1238,14 @@ CMD_FUNC(reputation_user_cmd)
  * score is prefixed by * then the server will NEVER send back to the
  * uplink, it may only propagate. This is to prevent loops.
  *
+ * Since UnrealIRCd 6.0.2+ there is now also asterisk-score-asterisk:
+ * :server REPUTATION 1.2.3.4 *2*
+ * The leading asterisk means no reply will be sent back, ever, and the
+ * trailing asterisk will mean it is a "FORCED SET", which means that
+ * servers should set the reputation to that value, even if it is lower.
+ * This way reputation can be reduced and the reducation can be synced
+ * across servers, which was not possible before 6.0.2.
+ *
  * Note that some margin is used when deciding if the server should send
  * back score updates. This is defined by UPDATE_SCORE_MARGIN.
  * If this is for example set to 1 then a point difference of 1 will not
@@ -1247,6 +1259,7 @@ CMD_FUNC(reputation_server_cmd)
 	const char *ip;
 	int score;
 	int allow_reply;
+	int forced = 0;
 
 	/* :server REPUTATION <ip> <score> */
 	if ((parc < 3) || BadPtr(parv[2]))
@@ -1261,6 +1274,8 @@ CMD_FUNC(reputation_server_cmd)
 	{
 		allow_reply = 0;
 		score = atoi(parv[2]+1);
+		if (parv[2][1] && (parv[2][strlen(parv[2])-1] == '*'))
+			forced = 1;
 	} else {
 		allow_reply = 1;
 		score = atoi(parv[2]);
@@ -1298,6 +1313,18 @@ CMD_FUNC(reputation_server_cmd)
 #endif
 		e->score = score;
 		reputation_changed_update_users(e);
+	} else
+	if (forced)
+	{
+#ifdef DEBUGMODE
+		unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_DECREASE", client,
+			   "Reputation score for for $ip from $client is $score, force-setting to $their_score.",
+			   log_data_string("ip", ip),
+			   log_data_integer("their_score", score),
+			   log_data_integer("score", e->score));
+#endif
+		e->score = score;
+		reputation_changed_update_users(e);
 	}
 
 	/* If we don't have any entry for this IP, add it now. */
@@ -1320,11 +1347,12 @@ CMD_FUNC(reputation_server_cmd)
 
 	/* Propagate to the non-client direction (score may be updated) */
 	sendto_server(client, 0, 0, NULL,
-	              ":%s REPUTATION %s %s%d",
+	              ":%s REPUTATION %s %s%d%s",
 	              client->id,
 	              parv[1],
 	              allow_reply ? "" : "*",
-	              score);
+	              score,
+	              forced ? "*" : "");
 }
 
 CMD_FUNC(reputation_cmd)
@@ -1376,4 +1404,73 @@ int reputation_starttime_callback(void)
 {
 	/* NB: fix this by 2038 */
 	return (int)reputation_starttime;
+}
+
+void _ban_act_set_reputation(Client *client, BanAction *action)
+{
+	ReputationEntry *e;
+	int value;
+
+	if ((client->ip == NULL) || IsDead(client))
+		return; /* Wait, this is impossible, right? */
+
+	/* There's a problem with adjusting reputation scores
+	 * when a user is in "unknown state", especially when decreasing
+	 * it, which is the common case here.
+	 * This is because we might be a new server with not much
+	 * reputation scores in the database, so giving everyone a 0,
+	 * this is automatically fixed post-connect by other servers
+	 * syncing in normally.
+	 * However, if we allow setting/decreasing reputation here in
+	 * this function, before the adjustment happens, then we may be
+	 * decreasing/setting to a very low value (because we think
+	 * the user has 0 rep) while in fact the user has high rep
+	 * and should still have high rep (just a little lower than before).
+	 * Instead of breaking my head on this, let's just not deal with
+	 * unknown users for now. Can always enhance this later.
+	 */
+	if (!IsUser(client))
+		return;
+
+	e = find_reputation_entry(client->ip);
+	if (!e)
+	{
+		/* Create */
+		e = safe_alloc(sizeof(ReputationEntry)+strlen(client->ip));
+		strcpy(e->ip, client->ip); /* safe, allocated above */
+		add_reputation_entry(e);
+	}
+
+	value = e->score;
+
+	switch (action->var_action)
+	{
+		case VAR_ACT_SET:
+			value = action->value;
+			break;
+		case VAR_ACT_INCREASE:
+			value += action->value;
+			if (value > REPUTATION_SCORE_CAP)
+				value = REPUTATION_SCORE_CAP;
+			break;
+		case VAR_ACT_DECREASE:
+			value -= action->value;
+			if (value < 0)
+				value = 0;
+			break;
+		default:
+			abort();
+	}
+
+	/* Nothing changed? Then we are done. */
+	if (e->score == value)
+		return;
+
+	e->score = value;
+	reputation_changed_update_users(e);
+	sendto_server(&me, 0, 0, NULL,
+	              ":%s REPUTATION %s *%d*",
+	              me.id,
+	              e->ip,
+	              e->score);
 }
