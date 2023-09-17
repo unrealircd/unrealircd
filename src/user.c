@@ -1111,3 +1111,16 @@ int inchannel_compareflags(char symbol, const char *member_modes)
 
 	return 0;
 }
+
+/** Walk through all channels the user is in and return the highest member count of all those channels */
+int highest_channel_member_count(Client *client)
+{
+	Membership *m;
+	int highest = 0;
+
+	for (m = client->user->channel; m; m=m->next)
+		if (m->channel->users > highest)
+			highest = m->channel->users;
+
+	return highest;
+}

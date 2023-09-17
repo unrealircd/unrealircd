@@ -1463,3 +1463,4 @@ extern void download_complete_dontcare(const char *url, const char *file, const 
 extern char *urlencode(const char *s, char *wbuf, int wlen);
 extern const char *config_item_name(ConfigEntry *ce);
 extern int inchannel_compareflags(char symbol, const char *member_modes);
+extern int highest_channel_member_count(Client *client);

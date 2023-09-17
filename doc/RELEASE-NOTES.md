@@ -23,6 +23,13 @@ You can help us by testing this release and reporting any issues at https://bugs
   * [blacklist::recheck](https://www.unrealircd.org/docs/Blacklist_block)
     defaults to `yes` and can be set to `no` to skip rechecking for
     individual blacklists.
+* The [reputation score](https://www.unrealircd.org/docs/Reputation_score)
+  of connected users (actually IP's) is increased every 5 minutes. We still
+  do this, but only for users who are at least in one channel that has 3
+  or more members. This setting is tweakable via
+  [set::reputation::score-bump-timer-minimum-channel-members](https://www.unrealircd.org/docs/Set_block#set::reputation).
+  Setting this to 0 means to bump scores also for people who are in no
+  channels at all, which was the behavior in previous UnrealIRCd versions.
 * [spamfilter { } block](https://www.unrealircd.org/docs/Spamfilter_block) improvements:
   * Spamfilters now always run, even for users that are exempt via a
     [except ban block](https://www.unrealircd.org/docs/Except_ban_block)

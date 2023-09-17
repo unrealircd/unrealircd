@@ -104,6 +104,7 @@ struct cfgstruct {
 	long expire_time[MAXEXPIRES];
 	char *database;
 	char *db_secret;
+	int require_minimum_channel_members;
 };
 
 typedef struct ReputationEntry ReputationEntry;
@@ -272,6 +273,9 @@ void reputation_config_setdefaults(struct cfgstruct *cfg)
 	/* ANY result that has not been seen for 30 days */
 	cfg->expire_score[2] = -1;
 	cfg->expire_time[2]   = 86400*30;
+
+	/* The 'require' settings */
+	cfg->require_minimum_channel_members = 3;
 }
 
 void reputation_free_config(struct cfgstruct *cfg)
@@ -294,12 +298,20 @@ int reputation_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		if (!strcmp(cep->name, "score-bump-timer") || !strcmp(cep->name, "target"))
+		{
+			config_error("%s:%i: this feature is not implemented yet in this UnrealIRCd version",
+				cep->file->filename, cep->line_number);
+			errors++;
+		} else
 		if (!cep->value)
 		{
 			config_error("%s:%i: blank set::reputation::%s without value",
 				cep->file->filename, cep->line_number, cep->name);
 			errors++;
-			continue;
+		} else
+		if (!strcmp(cep->name, "score-bump-timer-minimum-channel-members"))
+		{
 		} else
 		if (!strcmp(cep->name, "database"))
 		{
@@ -342,6 +354,10 @@ int reputation_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		if (!strcmp(cep->name, "score-bump-timer-minimum-channel-members"))
+		{
+			cfg.require_minimum_channel_members = atoi(cep->value);
+		} else
 		if (!strcmp(cep->name, "database"))
 		{
 			safe_strdup(cfg.database, cep->value);
@@ -862,6 +878,15 @@ EVENT(add_scores)
 		ip = client->ip;
 		if (!ip)
 			continue;
+
+		/* Enforce set::reputation::score-bump-timer-minimum-channel-members.
+		 * Simply skip all the bumping and setting if this requirement is not met.
+		 */
+		if (cfg.require_minimum_channel_members > 0)
+		{
+			if (highest_channel_member_count(client) < cfg.require_minimum_channel_members)
+				continue;
+		}
 
 		e = find_reputation_entry(ip);
 		if (!e)
