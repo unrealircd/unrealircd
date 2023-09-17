@@ -1215,6 +1215,11 @@ CMD_FUNC(reputation_user_cmd)
 	if ((parc > 2) && !BadPtr(parv[2]))
 	{
 		/* Request to change value */
+		if (!ValidatePermissionsForPath("client:set:reputation",client,NULL,NULL,NULL))
+		{
+			sendnumeric(client, ERR_NOPRIVILEGES);
+			return;
+		}
 		int v = atoi(parv[2]);
 		if (v > REPUTATION_SCORE_CAP)
 			v = REPUTATION_SCORE_CAP;
