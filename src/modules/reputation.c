@@ -1150,10 +1150,12 @@ CMD_FUNC(reputation_user_cmd)
 		sendnotice(client, "Current number of records (IP's): %d", count_reputation_records());
 		sendnotice(client, "-");
 		sendnotice(client, "Available commands:");
-		sendnotice(client, "/REPUTATION [nick]     Show reputation info about nick name");
-		sendnotice(client, "/REPUTATION [ip]       Show reputation info about IP address");
-		sendnotice(client, "/REPUTATION [channel]  List users in channel along with their reputation score");
-		sendnotice(client, "/REPUTATION <NN        List users with reputation score below value NN");
+		sendnotice(client, "/REPUTATION <nick>          Show reputation info about nick name");
+		sendnotice(client, "/REPUTATION <nick> <value>  Adjust the reputation score of the IP address of nick to <value>");
+		sendnotice(client, "/REPUTATION <ip>            Show reputation info about IP address");
+		sendnotice(client, "/REPUTATION <ip> <value>    Adjust the reputation score of the IP address to <value>");
+		sendnotice(client, "/REPUTATION <channel>       List users in channel along with their reputation score");
+		sendnotice(client, "/REPUTATION <NN             List users with reputation score below value NN");
 		return;
 	}
 
@@ -1207,6 +1209,25 @@ CMD_FUNC(reputation_user_cmd)
 	if (!e)
 	{
 		sendnotice(client, "No reputation record found for IP %s", ip);
+		return;
+	}
+
+	if ((parc > 2) && !BadPtr(parv[2]))
+	{
+		/* Request to change value */
+		int v = atoi(parv[2]);
+		if (v > REPUTATION_SCORE_CAP)
+			v = REPUTATION_SCORE_CAP;
+		if (v < 0)
+			v = 0;
+		e->score = v;
+		reputation_changed_update_users(e);
+		sendto_server(&me, 0, 0, NULL,
+			      ":%s REPUTATION %s *%d*",
+			      me.id,
+			      e->ip,
+			      e->score);
+		sendnotice(client, "Reputation of IP %s set to %hd", e->ip, e->score);
 		return;
 	}
 
