@@ -1334,6 +1334,8 @@ CMD_FUNC(reputation_server_cmd)
 
 	if (score > REPUTATION_SCORE_CAP)
 		score = REPUTATION_SCORE_CAP;
+	if (score < 0)
+		score = 0;
 
 	e = find_reputation_entry(ip);
 	if (allow_reply && e && (e->score > score) && (e->score - score > UPDATE_SCORE_MARGIN))
@@ -1365,7 +1367,7 @@ CMD_FUNC(reputation_server_cmd)
 		e->score = score;
 		reputation_changed_update_users(e);
 	} else
-	if (forced)
+	if (e && forced)
 	{
 #ifdef DEBUGMODE
 		unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_DECREASE", client,
