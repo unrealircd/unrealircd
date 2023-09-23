@@ -1180,7 +1180,7 @@ CMD_FUNC(reputation_user_cmd)
 		sendnotice(client, "/REPUTATION <ip>            Show reputation info about IP address");
 		sendnotice(client, "/REPUTATION <ip> <value>    Adjust the reputation score of the IP address to <value>");
 		sendnotice(client, "/REPUTATION <channel>       List users in channel along with their reputation score");
-		sendnotice(client, "/REPUTATION <NN             List users with reputation score below value NN");
+		sendnotice(client, "/REPUTATION <NN>            List users with reputation score below value NN");
 		return;
 	}
 
