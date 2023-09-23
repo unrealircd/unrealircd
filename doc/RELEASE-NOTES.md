@@ -93,6 +93,13 @@ You can help us by testing this release and reporting any issues at https://bugs
   ```
   include "some-file-or-url" { restrict-config { name-of-block; name-of-block2; } }
   ```
+* A new `~flood` [extended ban](https://www.unrealircd.org/docs/Extended_bans).
+  This mode allows you to exempt users from channel mode `+f` and `+F`.
+  It was actually added in a previous version (6.1.0) but never made
+  it to the release notes. The syntax is: ~flood:types:mask, where
+  *types* are the same letters as used in
+  [channel mode +f](https://www.unrealircd.org/docs/Channel_anti-flood_settings#Channel_mode_f).
+  Example: `+e ~flood:t:*!*@*.textflood.example.org`
 
 ### Changes:
 * We now compile the argon2 library shipped with UnrealIRCd by default,
@@ -112,6 +119,9 @@ You can help us by testing this release and reporting any issues at https://bugs
 * On 32 bit architectures you can now use more than 32 channel modes.
 * [Set block for a security group](https://www.unrealircd.org/docs/Set_block#Set_block_for_a_security_group):
   was not working for the `unknown-users` group.
+* A leading slash was silently stripped in config file items, when not in quotes.
+* `./unrealircd module upgrade` only showed output for one module upgrade,
+  even when multiple modules were upgraded.
 
 ### Developers and protocol:
 * Changes in numeric 229 (RPL_STATSSPAMF): Now includes hits and hits for
