@@ -30,7 +30,11 @@ You can help us by testing this release and reporting any issues at https://bugs
   or more members. This setting is tweakable via
   [set::reputation::score-bump-timer-minimum-channel-members](https://www.unrealircd.org/docs/Set_block#set::reputation).
   Setting this to 0 means to bump scores also for people who are in no
-  channels at all, which was the behavior in previous UnrealIRCd versions.
+  channels at all, which was the behavior in previous UnrealIRCd versions.  
+  Note: this new feature won't work properly when you have any older UnrealIRCd
+  servers on the network (older than 6.1.2), as the older servers will still
+  bump scores for everyone, including users in no channels, and this higher
+  score will get synced back eventually to all other servers.
 * [spamfilter { } block](https://www.unrealircd.org/docs/Spamfilter_block) improvements:
   * Spamfilters now always run, even for users that are exempt via a
     [except ban block](https://www.unrealircd.org/docs/Except_ban_block)
