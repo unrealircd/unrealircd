@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, "SREPLY", cmd_sreply, MAXPARA, CMD_SERVER);
+	CommandAdd(modinfo->handle, "SREPLY", cmd_sreply, 4, CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
