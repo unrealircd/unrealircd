@@ -54,7 +54,7 @@
  * Can be useful if the above 3 versionids are insufficient for you (eg: you want to support CVS).
  * This is updated automatically on the CVS server every Monday. so don't touch it.
  */
-#define UNREAL_VERSION_TIME	202327
+#define UNREAL_VERSION_TIME	202338
 
 #define UNREAL_VERSION		((UNREAL_VERSION_GENERATION << 24) + (UNREAL_VERSION_MAJOR << 16) + (UNREAL_VERSION_MINOR << 8))
 #define UnrealProtocol 		6100

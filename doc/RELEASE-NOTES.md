@@ -1,6 +1,6 @@
-UnrealIRCd 6.1.2-rc1
+UnrealIRCd 6.1.2-rc2
 =====================
-This is the release candidate for future 6.1.2.
+This is the second release candidate for future version 6.1.2.
 
 You can help us by testing this release and reporting any issues at https://bugs.unrealircd.org/.
 
@@ -17,12 +17,13 @@ You can help us by testing this release and reporting any issues at https://bugs
     things like `rule "inchannel('@#main')||reputation()>1000";`
 * DNS Blacklists are now checked again some time after the user is connected.
   This will kill/ban users who are already online and got blacklisted later
-  by for example DroneBL. This is controlled via
-  [set::blacklist::recheck-time](https://www.unrealircd.org/docs/Set_block#set::blacklist::recheck-time)
-  and can also be set to `never` if you don't want rechecking.
-  * [blacklist::recheck](https://www.unrealircd.org/docs/Blacklist_block)
-    defaults to `yes` and can be set to `no` to skip rechecking for
-    individual blacklists.
+  by for example DroneBL.
+  * This is controlled via
+    [set::blacklist::recheck-time](https://www.unrealircd.org/docs/Set_block#set::blacklist::recheck-time)
+    and can also be set to `never` if you don't want rechecking.
+  * To skip checking for specific blacklists, you can set
+    [blacklist::recheck](https://www.unrealircd.org/docs/Blacklist_block)
+    to `no`.
 * The [reputation score](https://www.unrealircd.org/docs/Reputation_score)
   of connected users (actually IP's) is increased every 5 minutes. We still
   do this, but only for users who are at least in one channel that has 3
@@ -34,9 +35,9 @@ You can help us by testing this release and reporting any issues at https://bugs
   * Spamfilters now always run, even for users that are exempt via a
     [except ban block](https://www.unrealircd.org/docs/Except_ban_block)
     with `type spamfilter`. However, for exempt users no action is taken
-    or logged. This allows us to count hits and hits for except users.
+    or logged. This allows us to count normal hits and count hits for except users.
     The idea is that the hits for except users can be a useful measurement
-    to detect false positives. These hitcounts are exposed in `SPAMFILTER`
+    to detect false positives. These hit counts are exposed in `SPAMFILTER`
     and `STATS spamfilter`.
   * Optional items allowing more complex rules:
     * [spamfilter::rule](https://www.unrealircd.org/docs/Spamfilter_block#Spamfilter_rule):
@@ -53,15 +54,16 @@ You can help us by testing this release and reporting any issues at https://bugs
     * A new action `stop` to stop other spamfilters from processing.
     * A new action `set` to
       [set a TAG](https://www.unrealircd.org/docs/Spamfilter_block#Setting_tags)
-      on a user, or increasing the value of one.
+      on a user, or change the value of one. It also supports changing
+      the [reputation score](https://www.unrealircd.org/docs/Reputation_score).
     * A new action `report` to call a spamreport block, see next.
 * A new [spamreport { } block](https://www.unrealircd.org/docs/Spamreport_block):
   * This can do a HTTP(S) call to services like DroneBL to report spam hits,
     so they can blacklist the IP address and other users on IRC can benefit.
 * Optional [Central Spamfilter](https://www.unrealircd.org/docs/Central_spamfilter):
   This will fetch and refresh spamfilter rules every hour from unrealircd.org.
-  * This feature is not enabled default. Use `set { central-spamfilter { enabled yes; } }`
-    to enable.
+  * This feature is not enabled by default.
+    Use `set { central-spamfilter { enabled yes; } }` to enable.
   * set::central-spamfilter::feed decides which feed to use: `fast` for
     early access to spamfilter rules that are new, and `standard` (the
     default) for rules that have been in fast for a while.
