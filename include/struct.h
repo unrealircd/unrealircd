@@ -1478,7 +1478,6 @@ struct LocalClient {
 	u_char targets[MAXCCUSERS];	/**< Hash values of targets for target limiting */
 	ConfigItem_listen *listener;	/**< If this client IsListening() then this is the listener configuration attached to it */
 	long serial;			/**< Current serial number for send.c functions (to avoid sending duplicate messages) */
-	time_t next_nick_allowed;		/**< Time the next nick change will be allowed */
 	time_t idle_since;		/**< Last time a RESETIDLE message was received (PRIVMSG) */
 	TrafficStats traffic;		/**< Traffic statistics */
 	ModData moddata[MODDATA_MAX_LOCAL_CLIENT];	/**< LocalClient attached module data, used by the ModData system */

@@ -334,8 +334,6 @@ void fix_timers(void)
 		/* users */
 		if (MyUser(client))
 		{
-			if (client->local->next_nick_allowed > TStime())
-				client->local->next_nick_allowed = TStime();
 			if (client->local->nexttarget > TStime())
 				client->local->nexttarget = TStime();
 		}
