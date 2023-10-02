@@ -961,6 +961,10 @@ int dead_socket(Client *to, const char *notice)
 
 	SetDeadSocket(to);
 
+	/* deregister I/O notification since we don't care anymore. the actual closing of socket will happen later. */
+	if (to->local->fd >= 0)
+		fd_unnotify(to->local->fd);
+
 	/* We may get here because of the 'CPR' in check_deadsockets().
 	 * In which case, we return -1 as well.
 	 */
