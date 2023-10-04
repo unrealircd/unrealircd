@@ -34,6 +34,7 @@ tls.rnd
 
 # Ignores for platform stuff
 .DS_Store
+[D|d]esktop.ini
 
 # Ignores for build artifacts
 *.so
@@ -43,6 +44,24 @@ tls.rnd
 src/ircd
 src/version.c
 src/include
+
+# Ignores for windows stuff
+## Binaries
+*.dll
+*.exe
+*.map
+*.pdb
+*.lib
+
+## Build artifacts
+*.obj
+*.exp
+*.ilk
+*.res
+##Other
+*.tmp
+UnrealIRCd.def*
+*.nativecodeanalysis.xml
 
 # Ignores for mac stuff
 ## Various settings
