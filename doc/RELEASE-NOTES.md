@@ -1,7 +1,9 @@
-UnrealIRCd 6.1.2
-=================
+UnrealIRCd 6.1.2.1
+===================
 This release focuses on adding spamfilter features but also contains various
 other new features and some fixes.
+
+This .1 release (dot release) fixes a spamfilter::rule crash in 6.1.2.
 
 ### Enhancements:
 * We now give tips on (security) best practices depending on settings in your
