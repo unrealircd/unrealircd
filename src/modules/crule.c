@@ -615,6 +615,7 @@ static int crule_parseorexpr(CRuleNode **orrootp, crule_token *next_tokp, const 
 		{
 			orptr = safe_alloc(sizeof(CRuleNode));
 			orptr->funcptr = crule__andor;
+			orptr->flags |= CRULE_FLAG_AND_OR;
 			orptr->numargs = 3;
 			orptr->arg[2] = (void *)1;
 			if (*orrootp != NULL)
@@ -672,6 +673,7 @@ static int crule_parseandexpr(CRuleNode **androotp, crule_token *next_tokp, cons
 		{
 			andptr = safe_alloc(sizeof(CRuleNode));
 			andptr->funcptr = crule__andor;
+			andptr->flags |= CRULE_FLAG_AND_OR;
 			andptr->numargs = 3;
 			andptr->arg[2] = (void *)0;
 			if (*androotp != NULL)
@@ -746,6 +748,7 @@ static int crule_parseprimary(CRuleNode **primrootp, crule_token *next_tokp, con
 			case CR_NOT:
 				*insertionp = safe_alloc(sizeof(CRuleNode));
 				(*insertionp)->funcptr = crule__not;
+				(*insertionp)->flags |= CRULE_FLAG_NOT;
 				(*insertionp)->numargs = 1;
 				(*insertionp)->arg[0] = NULL;
 				insertionp = (CRuleNode **) & ((*insertionp)->arg[0]);
@@ -904,13 +907,13 @@ void _crule_free(CRuleNode **elem)
 {
 	int arg, numargs;
 
-	if ((*(elem))->funcptr == crule__not)
+	if ((*(elem))->flags & CRULE_FLAG_NOT)
 	{
 		/* type conversions and ()'s are fun! ;)	here have an aspirin.. */
 		if ((*(elem))->arg[0] != NULL)
 			crule_free((CRuleNode**) &((*(elem))->arg[0]));
 	}
-	else if ((*(elem))->funcptr == crule__andor)
+	else if ((*(elem))->flags & CRULE_FLAG_AND_OR)
 	{
 		crule_free((CRuleNode**) &((*(elem))->arg[0]));
 		if ((*(elem))->arg[1] != NULL)

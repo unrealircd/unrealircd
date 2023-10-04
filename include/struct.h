@@ -1093,8 +1093,12 @@ struct crule_context
 /** Evaluation function for a connection rule. */
 typedef int (*crule_funcptr) (crule_context *context, int, void **);
 
+#define CRULE_FLAG_NOT		0x1
+#define CRULE_FLAG_AND_OR	0x2
+
 /** CRULE - Node in a connection rule tree. */
 struct CRuleNode {
+  int flags;
   crule_funcptr funcptr; /**< Evaluation function for this node. */
   int numargs;           /**< Number of arguments. */
   void *arg[CR_MAXARGS]; /**< Array of arguments.  For operators, each arg
