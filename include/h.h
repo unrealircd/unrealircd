@@ -544,7 +544,7 @@ extern AuthenticationType Auth_FindType(const char *hash, const char *type);
 extern AuthConfig	*AuthBlockToAuthConfig(ConfigEntry *ce);
 extern void		Auth_FreeAuthConfig(AuthConfig *as);
 extern int		Auth_Check(Client *cptr, AuthConfig *as, const char *para);
-extern const char	*Auth_Hash(int type, const char *para);
+extern const char	*Auth_Hash(AuthenticationType type, const char *text);
 extern int   		Auth_CheckError(ConfigEntry *ce, int warn_on_plaintext);
 extern int              Auth_AutoDetectHashType(const char *hash);
 
