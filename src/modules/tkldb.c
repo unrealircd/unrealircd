@@ -713,7 +713,8 @@ int read_tkldb(void)
 			R_SAFE(unrealdb_read_int64(db, &v));
 			tkl->ptr.spamfilter->tkl_duration = v;
 
-			if (find_tkl_spamfilter(tkl->type, tkl->ptr.spamfilter->match->str,
+			if (!do_not_add &&
+			    find_tkl_spamfilter(tkl->type, tkl->ptr.spamfilter->match->str,
 			                        tkl->ptr.spamfilter->action->action,
 			                        tkl->ptr.spamfilter->target))
 			{
