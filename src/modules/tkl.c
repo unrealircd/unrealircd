@@ -646,7 +646,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	                   m,
 	                   rule,
 	                   except,
-	                   "-config-",
+	                   (flag & TKL_FLAG_CENTRAL_SPAMFILTER ? "-centralspamfilter-" : "-config-"),
 	                   0,
 	                   TStime(),
 	                   bantime,
