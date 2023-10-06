@@ -638,6 +638,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (match)
 		m = unreal_create_match(match_type, match, NULL);
 
+	banreason = unreal_encodespace(banreason);
 	tkl_add_spamfilter(TKL_SPAMF,
 	                   id,
 	                   target,
