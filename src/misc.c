@@ -1105,12 +1105,12 @@ const char *ban_actions_to_string(BanAction *actions)
 		if (!s)
 			s = "???";
 		strlcat(buf, s, sizeof(buf));
-		strlcat(buf, ", ", sizeof(buf));
+		strlcat(buf, ",", sizeof(buf));
 	}
 
-	/* Cut off trailing ", " */
+	/* Cut off trailing "," */
 	if (*buf)
-		buf[strlen(buf)-2] = '\0';
+		buf[strlen(buf)-1] = '\0';
 
 	return buf;
 }
