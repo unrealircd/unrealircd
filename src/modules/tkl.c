@@ -528,6 +528,13 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		errors++;
 	}
 
+	if (central_spamfilter && !has_reason)
+	{
+		config_error("%s:%i: central spamfilter encountered without 'reason', rejected.",
+		             ce->file->filename, ce->line_number);
+		errors++;
+	}
+
 	if (central_spamfilter && errors)
 	{
 		ce->bad = 1;
