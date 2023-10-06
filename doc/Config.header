@@ -7,7 +7,7 @@
  \___/|_| |_|_|  \___|\__,_|_|\___/\_| \_| \____/\__,_|
 
                                Configuration Program
-                                for UnrealIRCd 6.1.2.1
+                                for UnrealIRCd 6.1.2.2
                                     
 This program will help you to compile your IRC server, and ask you
 questions regarding the compile-time settings of it during the process. 
