@@ -121,6 +121,9 @@ CMD_FUNC(cmd_setname)
 		spamfilter_build_user_string(spamfilter_user, client->name, client);
 		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, "SETNAME", NULL, 0, NULL))
 		{
+			if (IsDead(client))
+			        return; /* Killed, don't bother anymore */
+
 			/* Was rejected by spamfilter, restore the realname */
 			if (HasCapabilityFast(client, CAP_SETNAME))
 			{
