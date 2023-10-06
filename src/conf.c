@@ -260,6 +260,8 @@ int invalid_snomasks_encountered = 0;
 int have_tls_listeners = 0;
 char *port_6667_ip = NULL;
 
+long long central_spamfilter_last_download = 0;
+
 int add_config_resource(const char *resource, int type, ConfigEntry *ce);
 ConfigResource *find_config_resource(const char *resource);
 void resource_download_complete(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *rs_key);
@@ -11849,12 +11851,11 @@ void central_spamfilter_start_download(void)
 
 EVENT(central_spamfilter_download_evt)
 {
-	static long long last_download = 0;
 	if (iConf.central_spamfilter_enabled == 0)
 		return;
-	if ((last_download == 0) || (TStime() - last_download > iConf.central_spamfilter_refresh_time))
+	if ((central_spamfilter_last_download == 0) || (TStime() - central_spamfilter_last_download > iConf.central_spamfilter_refresh_time))
 	{
-		last_download = TStime();
+		central_spamfilter_last_download = TStime();
 		central_spamfilter_start_download();
 	}
 }

@@ -626,6 +626,18 @@ CMD_FUNC(cmd_rehash)
 				reinit_tls();
 				return;
 			}
+			if (!strcmp("-centralspamfilter", parv[1]) || !strcmp("-cs", parv[1]))
+			{
+				if (!iConf.central_spamfilter_enabled)
+				{
+					sendnotice(client, "ERROR: Central Spamfilter is not enabled on this server.");
+				} else {
+					unreal_log(ULOG_INFO, "central-spamfilter", "CENTRAL_SPAMFILTER_RELOAD", client,
+					           "Reloading Central Spamfilter rules. [by: $client.details]");
+					central_spamfilter_last_download = 0;
+				}
+				return;
+			}
 			RunHook(HOOKTYPE_REHASHFLAG, client, parv[1]);
 			return;
 		}
