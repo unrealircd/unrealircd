@@ -2034,6 +2034,7 @@ void config_load_failed(void)
 	if (conf)
 		unreal_log(ULOG_ERROR, "config", "CONFIG_NOT_LOADED", NULL, "IRCd configuration failed to load");
 	loop.config_status = CONFIG_STATUS_ROLLBACK;
+	loop.rehashing = 0;
 	Unload_all_testing_modules();
 	free_all_config_resources();
 	config_free(conf);
