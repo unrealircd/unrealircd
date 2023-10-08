@@ -9240,6 +9240,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				} else
 				if (!strcmp(cepp->name, "utf8"))
 				{
+					tempiConf.spamfilter_utf8 = config_checkval(cepp->value, CFG_YESNO);
 				} else
 				if (!strcmp(cepp->name, "show-message-content-on-hit"))
 				{
