@@ -235,7 +235,7 @@ void url_start_async(const char *url, HttpMethod http_method, const char *body, 
 	} else {
 		/* Hostname, so start resolving... */
 		handle->dns_refcnt++;
-		ares_gethostbyname(resolver_channel, handle->hostname, AF_INET, url_resolve_cb, handle);
+		ares_gethostbyname(resolver_channel_client, handle->hostname, AF_INET, url_resolve_cb, handle);
 		// TODO: check return value?
 	}
 }

@@ -64,7 +64,8 @@ struct DNSStats {
  */
 #define DNS_MAX_ENTRIES	DNS_HASH_SIZE
 
-extern ares_channel resolver_channel;
+extern ares_channel resolver_channel_client;
+extern ares_channel resolver_channel_dnsbl;
 
 extern void init_resolver(int);
 
