@@ -294,6 +294,12 @@
 #define UNREALIRCD_DEFAULT_ECDH_CURVES "secp521r1:secp384r1:prime256v1"
 #endif
 
+/* These are just defaults, which you can override via set::dns */
+#define DNS_DEFAULT_CLIENT_TIMEOUT 1500
+#define DNS_DEFAULT_CLIENT_RETRIES 2
+#define DNS_DEFAULT_DNSBL_TIMEOUT 3000
+#define DNS_DEFAULT_DNSBL_RETRIES 2
+
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH
 #define RULES RPATH

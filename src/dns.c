@@ -157,14 +157,6 @@ void init_resolver(int firsttime)
 	}
 
 	memset(&options, 0, sizeof(options));
-	options.timeout = 1500; /* 1.5 seconds */
-	options.tries = 2;
-	/* Note that the effective DNS timeout is NOT simply 1500*2=3000.
-	 * This is because c-ares does some incremental timeout stuff itself
-	 * that may add up to twice the timeout in the second round,
-	 * so effective max is 1500ms first and then up to 3000s, so 4500ms in total
-	 * (until they change the algorithm again, that is...).
-	 */
 	options.flags |= ARES_FLAG_NOALIASES|ARES_FLAG_IGNTC;
 	options.sock_state_cb = unrealdns_sock_state_cb;
 	/* Don't search domains or you'll get lookups for like
@@ -181,8 +173,10 @@ void init_resolver(int firsttime)
 	optmask |= ARES_OPT_LOOKUPS;
 #endif
 
-	/* First the client channel */
+	/*** First the client channel ***/
 	options.sock_state_cb_data = RESOLVER_CHANNEL_CLIENT;
+	options.timeout = iConf.dns_client_timeout ? iConf.dns_client_timeout : DNS_DEFAULT_CLIENT_TIMEOUT;
+	options.tries = iConf.dns_client_retry ? iConf.dns_client_retry : DNS_DEFAULT_CLIENT_RETRIES;
 	n = ares_init_options(&resolver_channel_client, &options, optmask);
 	if (n != ARES_SUCCESS)
 	{
@@ -197,6 +191,8 @@ void init_resolver(int firsttime)
 
 	/* And then the DNSBL channel */
 	options.sock_state_cb_data = RESOLVER_CHANNEL_DNSBL;
+	options.timeout = iConf.dns_dnsbl_timeout ? iConf.dns_dnsbl_timeout : DNS_DEFAULT_DNSBL_TIMEOUT;
+	options.tries = iConf.dns_dnsbl_retry ? iConf.dns_dnsbl_retry : DNS_DEFAULT_DNSBL_RETRIES;
 	n = ares_init_options(&resolver_channel_dnsbl, &options, optmask);
 	if (n != ARES_SUCCESS)
 	{
@@ -667,6 +663,34 @@ void unrealdns_delasyncconnects(void)
 	
 }
 
+void dns_check_for_changes(void)
+{
+	struct ares_options inf;
+	int changed = 0;
+	int optmask;
+
+	memset(&inf, 0, sizeof(inf));
+	ares_save_options(resolver_channel_client, &inf, &optmask);
+	if ((inf.timeout != iConf.dns_client_timeout) || (inf.tries != iConf.dns_client_retry))
+		changed = 1;
+	ares_destroy_options(&inf);
+
+	memset(&inf, 0, sizeof(inf));
+	ares_save_options(resolver_channel_dnsbl, &inf, &optmask);
+	if ((inf.timeout != iConf.dns_dnsbl_timeout) || (inf.tries != iConf.dns_dnsbl_retry))
+		changed = 1;
+	ares_destroy_options(&inf);
+
+	if (changed)
+	{
+		if (loop.booted)
+			config_status("DNS Configuration changed, reinitializing DNS...");
+		ares_destroy(resolver_channel_client);
+		ares_destroy(resolver_channel_dnsbl);
+		init_resolver(0);
+	}
+}
+
 CMD_FUNC(cmd_dns)
 {
 	DNSCache *c;
@@ -749,6 +773,7 @@ CMD_FUNC(cmd_dns)
 			sendtxtnumeric(client, "        timeout: %d", inf.timeout);
 		if (optmask & ARES_OPT_TRIES)
 			sendtxtnumeric(client, "          tries: %d", inf.tries);
+		ares_destroy_options(&inf);
 
 		sendtxtnumeric(client, "=== DNSBL resolver channel ===");
 		i = 0;
@@ -768,10 +793,10 @@ CMD_FUNC(cmd_dns)
 			sendtxtnumeric(client, "        timeout: %d", inf.timeout);
 		if (optmask & ARES_OPT_TRIES)
 			sendtxtnumeric(client, "          tries: %d", inf.tries);
+		ares_destroy_options(&inf);
 
 		sendtxtnumeric(client, "****** End of DNS Configuration Info ******");
 
-		ares_destroy_options(&inf);
 	} else /* STATISTICS */
 	{
 		sendtxtnumeric(client, "DNS CACHE Stats:");

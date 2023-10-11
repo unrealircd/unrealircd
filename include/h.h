@@ -1126,6 +1126,7 @@ extern void set_targmax_defaults(void);
 extern void parse_chanmodes_protoctl(Client *client, const char *str);
 extern void concat_params(char *buf, int len, int parc, const char *parv[]);
 extern void charsys_check_for_changes(void);
+extern void dns_check_for_changes(void);
 extern MODVAR int maxclients;
 extern int fast_badword_match(ConfigItem_badword *badword, const char *line);
 extern int fast_badword_replace(ConfigItem_badword *badword, const char *line, char *buf, int max);

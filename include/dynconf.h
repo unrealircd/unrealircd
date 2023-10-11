@@ -179,6 +179,10 @@ struct Configuration {
 	int server_notice_show_event;
 	LimitSVSCMDS limit_svscmds;
 	int high_connection_rate;
+	int dns_client_timeout;
+	int dns_client_retry;
+	int dns_dnsbl_timeout;
+	int dns_dnsbl_retry;
 };
 
 extern MODVAR Configuration iConf;

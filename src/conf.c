@@ -1825,6 +1825,10 @@ void config_setdefaultsettings(Configuration *i)
 	i->central_spamfilter_except = safe_alloc(sizeof(SecurityGroup));
 	i->central_spamfilter_except->reputation_score = 2016; /* 7 days unregged, or 3.5 days identified */
 	unreal_add_mask_string(&i->central_spamfilter_except->mask, "*.irccloud.com");
+	i->dns_client_timeout = DNS_DEFAULT_CLIENT_TIMEOUT;
+	i->dns_client_retry = DNS_DEFAULT_CLIENT_RETRIES;
+	i->dns_dnsbl_timeout = DNS_DEFAULT_DNSBL_TIMEOUT;
+	i->dns_dnsbl_retry = DNS_DEFAULT_DNSBL_RETRIES;
 }
 
 /* Some settings have been moved to here - we (re)set some defaults */
@@ -8311,6 +8315,31 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		} else if (!strcmp(cep->name, "best-practices"))
 		{
 			/* This is handled in config test already (there is no other way) */
+		} else if (!strcmp(cep->name, "dns"))
+		{
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				if (!strcmp(cepp->name, "client"))
+				{
+					for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
+					{
+						if (!strcmp(ceppp->name, "timeout"))
+							tempiConf.dns_client_timeout = atoi(ceppp->value);
+						else if (!strcmp(ceppp->name, "retry"))
+							tempiConf.dns_client_retry = atoi(ceppp->value);
+					}
+				} else
+				if (!strcmp(cepp->name, "dnsbl"))
+				{
+					for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
+					{
+						if (!strcmp(ceppp->name, "timeout"))
+							tempiConf.dns_dnsbl_timeout = atoi(ceppp->value);
+						else if (!strcmp(ceppp->name, "retry"))
+							tempiConf.dns_dnsbl_retry = atoi(ceppp->value);
+					}
+				}
+			}
 		} else if (config_set_dynamic_set_block_item(conf, &dynamic_set, cep))
 		{
 			/* Handled by config_set_dynamic_set_block_item - nothing to do here */
@@ -9755,6 +9784,52 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 			}
+		} else if (!strcmp(cep->name, "dns"))
+		{
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				if (!strcmp(cepp->name, "client") || !strcmp(cepp->name, "dnsbl"))
+				{
+					for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
+					{
+						CheckNull(ceppp);
+						if (!strcmp(ceppp->name, "timeout"))
+						{
+							int v = atoi(ceppp->value);
+							if ((v < 1000) || (v > 10000))
+							{
+								config_error("%s:%i: the timeout needs to be in milliseconds and in the range 1000-10000.",
+								             ceppp->file->filename, ceppp->line_number);
+								errors++;
+							}
+						} else
+						if (!strcmp(ceppp->name, "retry"))
+						{
+							int v = atoi(ceppp->value);
+							if ((v < 0) || (v > 5))
+							{
+								config_error("%s:%i: retry value needs to be in range 0-5.",
+								             ceppp->file->filename, ceppp->line_number);
+								errors++;
+							}
+						} else
+						{
+							config_error_unknown(ceppp->file->filename,
+								ceppp->line_number, "set::dns::..::",
+								ceppp->name);
+							errors++;
+							continue;
+						}
+					}
+				} else
+				{
+					config_error_unknown(cepp->file->filename,
+						cepp->line_number, "set::dns",
+						cepp->name);
+					errors++;
+					continue;
+				}
+			}
 		} else if ((n = test_dynamic_set_block_item(conf, NULL, cep)) >= 0)
 		{
 			/* Handled by test_dynamic_set_block_item:
@@ -9982,6 +10057,7 @@ void config_run(void)
 	if (!loop.booted)
 		add_proc_io_server();
 	free_all_config_resources();
+	dns_check_for_changes();
 }
 
 int	_conf_offchans(ConfigFile *conf, ConfigEntry *ce)
