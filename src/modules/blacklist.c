@@ -792,7 +792,7 @@ int blacklist_dns_request(Client *client, Blacklist *d)
 
 	BLUSER(client)->refcnt++; /* one (more) blacklist result remaining */
 	
-	unreal_gethostbyname(buf, AF_INET, blacklist_resolver_callback, BLUSER(client));
+	unreal_gethostbyname_dnsbl(buf, AF_INET, blacklist_resolver_callback, BLUSER(client));
 	
 	return 0;
 }
