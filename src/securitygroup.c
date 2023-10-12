@@ -456,7 +456,7 @@ int conf_match_item(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
 	}
 	else if (!strcmp(cep->name, "exclude-security-group"))
 	{
-		unreal_add_names(&s->security_group, cep);
+		unreal_add_names(&s->exclude_security_group, cep);
 	}
 	else if (!strcmp(cep->name, "exclude-rule"))
 	{
