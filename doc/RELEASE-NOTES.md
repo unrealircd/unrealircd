@@ -7,7 +7,7 @@ The 6.1.2.1 release fixed a spamfilter::rule crash in 6.1.2.
 The 6.1.2.2 release fixed: tkldb accidentally storing central spamfilters,
 a crash while booting if you previously used spamfilters with non-UTF8
 characters in them, and fix a possible crash with SETNAME when using the
-SPAMFILTER 'u' target.
+SPAMFILTER 'u' target.  
 The 6.1.2.3 release fixed: UTF8 not working in spamfilter { } blocks
 and a possible crash on REHASH if you have typos or other errors in the
 config file. Also fixing ::exclude-security-group not working and we
