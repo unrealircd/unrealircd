@@ -86,10 +86,12 @@ static void unrealdns_io_cb(int fd, int revents, void *data)
 		ares_process_fd(resolver_channel_client, read_fd, write_fd);
 	else if (data == RESOLVER_CHANNEL_DNSBL)
 		ares_process_fd(resolver_channel_dnsbl, read_fd, write_fd);
+#ifdef DEBUGMODE
 	else
 		unreal_log(ULOG_ERROR, "dns", "DNS_IO_CALLBACK_BUG", NULL,
 		           "unrealdns_io_cb() called with invalid data ($data)",
 		           log_data_integer("data", (long long)data));
+#endif
 }
 
 static void unrealdns_sock_state_cb(void *data, ares_socket_t fd, int read, int write)
@@ -124,10 +126,12 @@ static int unrealdns_sock_create_cb(ares_socket_t fd, int type, void *data)
 		fd_open(fd, "DNS Resolver Socket for clients", FDCLOSE_NONE);
 	else if (data == RESOLVER_CHANNEL_DNSBL)
 		fd_open(fd, "DNS Resolver Socket for DNSBLs", FDCLOSE_NONE);
+#ifdef DEBUGMODE
 	else
 		unreal_log(ULOG_ERROR, "dns", "DNS_SOCK_CREATE_CB_BUG", NULL,
 		           "unrealdns_io_cb() called with invalid data ($data)",
 		           log_data_integer("data", (long long)data));
+#endif
 	return ARES_SUCCESS;
 }
 
