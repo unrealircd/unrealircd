@@ -1,4 +1,4 @@
-UnrealIRCd 6.1.2.2
+UnrealIRCd 6.1.2.3
 ===================
 UnrealIRCd 6.1.2 focuses on adding spamfilter features but also contains
 various other new features and some fixes.
@@ -8,6 +8,10 @@ The 6.1.2.2 release fixed: tkldb accidentally storing central spamfilters,
 a crash while booting if you previously used spamfilters with non-UTF8
 characters in them, and fix a possible crash with SETNAME when using the
 SPAMFILTER 'u' target.
+The 6.1.2.3 release fixed: UTF8 not working in spamfilter { } blocks
+and a possible crash on REHASH if you have typos or other errors in the
+config file. Also fixing ::exclude-security-group not working and we
+now give DNSBL lookups some more time.
 
 ### Enhancements:
 * We now give tips on (security) best practices depending on settings in your
