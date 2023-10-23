@@ -370,6 +370,41 @@ if test "$ac_cv_ip6" = "no"; then
 	AC_MSG_ERROR([Your system does not support IPv6])
 fi
 
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+	[[#include <sys/types.h>
+	  #include <stdlib.h>
+	  #include <sys/socket.h>
+	  #include <netinet/in.h>
+	  #include <netinet/tcp.h>
+	  #include <sys/socket.h>]],
+	[[
+	  socklen_t optlen = sizeof(struct tcp_info);
+	  struct tcp_info ti;
+	  ti.tcpi_rtt = 0;
+	  ti.tcpi_rttvar = 0;
+	  ti.tcpi_pmtu = 0;
+	  ti.tcpi_snd_cwnd = 0;
+	  ti.tcpi_snd_mss = 0;
+	  ti.tcpi_rcv_mss = 0;
+	  getsockopt(0, IPPROTO_TCP, TCP_INFO, &ti, &optlen);
+	]])],
+	[AC_DEFINE(HAVE_TCP_INFO, 1, [Have getsockopt TCP_INFO])
+	 AC_MSG_CHECKING(if you have getsockopt TCP_INFO)],[])
+
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+#include <sys/types.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>"
+
+int foo(void);
+
+],[foo()])],
+                  [AC_MSG_RESULT([yes])],
+                  [ax_pthread_extra_flags=
+                   AC_MSG_RESULT([no])])
+
 AC_CHECK_HEADER(sys/syslog.h,
 	AC_DEFINE([SYSSYSLOGH], [], [Define if you have the <sys/syslog.h> header file.]))
 AC_CHECK_HEADER(sys/rusage.h,

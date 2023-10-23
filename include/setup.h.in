@@ -136,6 +136,9 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
+/* Have getsockopt TCP_INFO */
+#undef HAVE_TCP_INFO
+
 /* Define to 1 if you have the `times' function. */
 #undef HAVE_TIMES
 
