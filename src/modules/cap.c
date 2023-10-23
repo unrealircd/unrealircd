@@ -209,7 +209,7 @@ static void cap_end(Client *client, const char *arg)
 
 	ClearCapabilityFast(client, CAP_IN_PROGRESS);
 
-	if (*client->name && client->user && *client->user->username && IsNotSpoof(client))
+	if (is_handshake_finished(client))
 		register_user(client);
 }
 
