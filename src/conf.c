@@ -4085,7 +4085,15 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error_noname(ce->file->filename, ce->line_number, "operclass");
 		errors++;
+	} else
+	if (!valid_operclass_name(ce->value))
+	{
+		config_error("%s:%d: operclass name may only contain alphanumerical characters and "
+		             "characters _-",
+		             ce->file->filename, ce->line_number);
+		errors++;
 	}
+
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "parent"))

@@ -191,6 +191,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define IDLEN		12
 #define SIDLEN		3
 #define SWHOISLEN	256
+#define OPERCLASSLEN	64
 #define UMODETABLESZ (sizeof(long) * 8)
 #define MAXCCUSERS		20 /* Maximum for set::anti-flood::max-concurrent-conversations */
 #define BATCHLEN	22

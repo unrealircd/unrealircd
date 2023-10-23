@@ -3107,3 +3107,25 @@ void download_complete_dontcare(const char *url, const char *file, const char *m
 	}
 #endif
 }
+
+int valid_operclass_character(char c)
+{
+	/* allow alpha, numeric, -, _ */
+	if (!strchr("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_", c))
+		return 0;
+	return 1;
+}
+
+int valid_operclass_name(const char *str)
+{
+	const char *p;
+
+	if (strlen(str) > OPERCLASSLEN)
+		return 0;
+
+	for (p = str; *p; p++)
+		if (!valid_operclass_character(*p))
+			return 0;
+
+	return 1;
+}

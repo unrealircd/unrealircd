@@ -68,8 +68,6 @@ MOD_UNLOAD()
 }
 
 
-#define OPERCLASSLEN 64
-
 const char *extban_operclass_conv_param(BanContext *b, Extban *extban)
 {
 	static char retbuf[OPERCLASSLEN + 4];
@@ -77,10 +75,15 @@ const char *extban_operclass_conv_param(BanContext *b, Extban *extban)
 
 	strlcpy(retbuf, b->banstr, sizeof(retbuf));
 
-	/* allow alpha, numeric, -, _, * and ? wildcards */
+	/* cut off at first invalid character (.. but allow wildcards) */
 	for (p = retbuf; *p; p++)
-		if (!strchr("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_?*", *p))
+	{
+		if (!valid_operclass_character(*p) && !strchr("*?", *p))
+		{
 			*p = '\0';
+			break;
+		}
+	}
 
 	if (retbuf[3] == '\0')
 		return NULL; /* just "~O:" is invalid */

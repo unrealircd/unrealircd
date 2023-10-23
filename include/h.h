@@ -1466,3 +1466,5 @@ extern const char *config_item_name(ConfigEntry *ce);
 extern int inchannel_compareflags(char symbol, const char *member_modes);
 extern int highest_channel_member_count(Client *client);
 extern MODVAR long long central_spamfilter_last_download;
+extern int valid_operclass_character(char c);
+extern int valid_operclass_name(const char *str);
