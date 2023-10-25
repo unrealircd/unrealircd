@@ -175,12 +175,17 @@
 
 /* Number of file descriptors reserved for non-incoming-clients.
  * One of which may be used by auth, the rest are really reserved.
- * They can be used for outgoing server links, listeners, logging, etc.
+ * They can be used for outgoing server links, listeners, logging,
+ * DNS lookups, HTTPS callbacks, etc.
  */
-#if MAXCONNECTIONS > 1024
- #define CLIENTS_RESERVE 8
+#if MAXCONNECTIONS >= 10000
+ #define CLIENTS_RESERVE 250
+#elif MAXCONNECTIONS >= 2048
+ #define CLIENTS_RESERVE 32
+#elif MAXCONNECTIONS >= 1024
+ #define CLIENTS_RESERVE 16
 #else
- #define CLIENTS_RESERVE 4
+ #define CLIENTS_RESERVE 8
 #endif
 
 /*
