@@ -3334,7 +3334,7 @@ ConfigItem_deny_channel *find_channel_allowed(Client *client, const char *name)
 
 	for (dchannel = conf_deny_channel; dchannel; dchannel = dchannel->next)
 	{
-		if (match_simple(dchannel->channel, name))
+		if (match_esc(dchannel->channel, name))
 		{
 			if (dchannel->class && strcmp(client->local->class->name, dchannel->class))
 				continue;
@@ -3349,7 +3349,7 @@ ConfigItem_deny_channel *find_channel_allowed(Client *client, const char *name)
 		/* Check exceptions... ('allow channel') */
 		for (achannel = conf_allow_channel; achannel; achannel = achannel->next)
 		{
-			if (match_simple(achannel->channel, name))
+			if (match_esc(achannel->channel, name))
 			{
 				if (achannel->class && strcmp(client->local->class->name, achannel->class))
 					continue;
