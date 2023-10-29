@@ -240,7 +240,35 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 	 */
 	if (client->user)
 	{
-		snprintf(buf, sizeof(buf), "%s!%s@%s", client->name, client->user->username, client->user->realhost);
+		if (IsUser(client) || !MyConnect(client))
+		{
+			/* Post-handshake, after register_user(), it is easy: */
+			snprintf(buf, sizeof(buf), "%s!%s@%s", client->name, client->user->username, client->user->realhost);
+		} else
+		{
+			/* In the handshake, more possibilities (ident could still be ongoing)
+			 * and more speculative (a later class block may want to ignore ident,
+			 * but we don't know that, so we assume that is not the case).
+			 */
+			const char *ident;
+			char temp[USERLEN+1];
+			if (IDENT_CHECK)
+			{
+				if (IsIdentSuccess(client))
+				{
+					/* ident succeeded means: use the identd and no ~ prefix */
+					ident = client->ident;
+				} else {
+					/* ident check failed means ~ prefix */
+					snprintf(temp, sizeof(temp), "~%s", client->user->username);
+					ident = temp;
+				}
+			} else {
+				/* no ident check means no ~ prefix */
+				ident = client->user->username;
+			}
+			snprintf(buf, sizeof(buf), "%s!%s@%s", client->name, ident, client->user->realhost);
+		}
 		json_object_set_new(child, "details", json_string_unreal(buf));
 	} else if (client->ip) {
 		if (*client->name)
