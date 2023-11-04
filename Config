@@ -520,36 +520,38 @@ if [ "$SSLDIR" != "" -a "$SSLDIR" != "/usr" ]; then
 	read cc
 fi
 
-TEST=""
-while [ -z "$TEST" ] ; do
-  if [ "$GENCERTIFICATE" = "1" ] ; then
-    TEST="Yes"
-  else
-    TEST="No"
-  fi
-  echo ""
-  echo "UnrealIRCd requires a TLS certificate in order to work."
-  echo "Do you want to generate a TLS certificate for the IRCd?"
-  echo "Only answer No if you already have one."
-  echo $n "[$TEST] -> $c"
-  read cc
-  if [ -z "$cc" ] ; then
-  cc=$TEST
-  fi
-  case "$cc" in
-  [Yy]*)
-    GENCERTIFICATE="1"
-    ;;
-  [Nn]*)
-    GENCERTIFICATE=""
-    ;;
-  *)
-    echo ""
-    echo "You must enter either Yes or No"
-    TEST=""
-    ;;
-  esac
-done
+if [ ! -f $BASEPATH/conf/tls/server.cert.pem -a ! -f $BASEPATH/conf/ssl/server.cert.pem ]; then
+	TEST=""
+	while [ -z "$TEST" ] ; do
+	  if [ "$GENCERTIFICATE" = "1" ] ; then
+	    TEST="Yes"
+	  else
+	    TEST="No"
+	  fi
+	  echo ""
+	  echo "UnrealIRCd requires a TLS certificate in order to work."
+	  echo "Do you want to generate a self-signed TLS certificate for the IRCd?"
+	  echo "Only answer No if you already have one."
+	  echo $n "[$TEST] -> $c"
+	  read cc
+	  if [ -z "$cc" ] ; then
+	  cc=$TEST
+	  fi
+	  case "$cc" in
+	  [Yy]*)
+	    GENCERTIFICATE="1"
+	    ;;
+	  [Nn]*)
+	    GENCERTIFICATE=""
+	    ;;
+	  *)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+	  esac
+	done
+fi
 
 TEST=""
 while [ -z "$TEST" ] ; do
