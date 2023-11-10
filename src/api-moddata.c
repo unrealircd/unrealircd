@@ -285,24 +285,41 @@ void ModDataDel(ModDataInfo *md)
 				break;
 			}
 		}
+		/* Module is unloading, so owner will be gone: */
 		md->owner = NULL;
 	}
 
 	if (loop.rehashing)
+	{
+		/* Since the module is unloaded, these are not safe anymore either: */
+		md->free = NULL;
+		md->serialize = NULL;
+		md->unserialize = NULL;
 		md->unloaded = 1;
-	else
+	} else {
+		/* We need the free function and the like,
+		 * and then completely destroy 'md'.
+		 */
 		unload_moddata_commit(md);
+	}
 }
 
 void unload_all_unused_moddata(void)
 {
-ModDataInfo *md, *md_next;
+	ModDataInfo *md, *md_next;
 
 	for (md = MDInfo; md; md = md_next)
 	{
 		md_next = md->next;
 		if (md->unloaded)
+		{
+			//config_status("UNLOADING: md %s (owner %p, type %d, slot %d)",
+			//	md->name, md->owner, md->type, md->slot);
 			unload_moddata_commit(md);
+		} else {
+			//config_status("loaded: md %s (owner %p, type %d, slot %d)",
+			//	md->name, md->owner, md->type, md->slot);
+		}
 	}
 }
 

@@ -996,22 +996,22 @@ extern ModData *moddata_client_get_raw(Client *client, const char *varname);
 extern int moddata_local_client_set(Client *acptr, const char *varname, const char *value);
 extern const char *moddata_local_client_get(Client *acptr, const char *varname);
 
-extern int LoadPersistentPointerX(ModuleInfo *modinfo, const char *varshortname, void **var, void (*free_variable)(ModData *m));
+extern void LoadPersistentPointerX(ModuleInfo *modinfo, const char *varshortname, void **var, void (*free_variable)(ModData *m));
 #define LoadPersistentPointer(modinfo, var, free_variable) LoadPersistentPointerX(modinfo, #var, (void **)&var, free_variable)
 extern void SavePersistentPointerX(ModuleInfo *modinfo, const char *varshortname, void *var);
 #define SavePersistentPointer(modinfo, var) SavePersistentPointerX(modinfo, #var, var)
 
-extern int LoadPersistentIntX(ModuleInfo *modinfo, const char *varshortname, int *var);
+extern void LoadPersistentIntX(ModuleInfo *modinfo, const char *varshortname, int *var);
 #define LoadPersistentInt(modinfo, var) LoadPersistentIntX(modinfo, #var, &var)
 extern void SavePersistentIntX(ModuleInfo *modinfo, const char *varshortname, int var);
 #define SavePersistentInt(modinfo, var) SavePersistentIntX(modinfo, #var, var)
 
-extern int LoadPersistentLongX(ModuleInfo *modinfo, const char *varshortname, long *var);
+extern void LoadPersistentLongX(ModuleInfo *modinfo, const char *varshortname, long *var);
 #define LoadPersistentLong(modinfo, var) LoadPersistentLongX(modinfo, #var, &var)
 extern void SavePersistentLongX(ModuleInfo *modinfo, const char *varshortname, long var);
 #define SavePersistentLong(modinfo, var) SavePersistentLongX(modinfo, #var, var)
 
-extern int LoadPersistentLongLongX(ModuleInfo *modinfo, const char *varshortname, long long *var);
+extern void LoadPersistentLongLongX(ModuleInfo *modinfo, const char *varshortname, long long *var);
 #define LoadPersistentLongLong(modinfo, var) LoadPersistentLongLongX(modinfo, #var, &var)
 extern void SavePersistentLongLongX(ModuleInfo *modinfo, const char *varshortname, long long var);
 #define SavePersistentLongLong(modinfo, var) SavePersistentLongLongX(modinfo, #var, var)
