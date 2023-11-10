@@ -195,12 +195,24 @@ void unload_moddata_commit(ModDataInfo *md)
 					md->free(&moddata_client(client, md));
 				memset(&moddata_client(client, md), 0, sizeof(ModData));
 			}
+			list_for_each_entry(client, &unknown_list, lclient_node)
+			{
+				if (md->free && moddata_client(client, md).ptr)
+					md->free(&moddata_client(client, md));
+				memset(&moddata_client(client, md), 0, sizeof(ModData));
+			}
 			break;
 		}
 		case MODDATATYPE_LOCAL_CLIENT:
 		{
 			Client *client;
 			list_for_each_entry(client, &lclient_list, lclient_node)
+			{
+				if (md->free && moddata_local_client(client, md).ptr)
+					md->free(&moddata_local_client(client, md));
+				memset(&moddata_local_client(client, md), 0, sizeof(ModData));
+			}
+			list_for_each_entry(client, &unknown_list, lclient_node)
 			{
 				if (md->free && moddata_local_client(client, md).ptr)
 					md->free(&moddata_local_client(client, md));
