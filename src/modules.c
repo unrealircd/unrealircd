@@ -290,7 +290,6 @@ const char *Module_Create(const char *path_)
 	int             (*Mod_Load)();
 	int             (*Mod_Unload)();
 	char    *Mod_Version;
-	unsigned int *compiler_version;
 	static char 	errorbuf[1024];
 	const char	*path, *relpath, *tmppath;
 	ModuleHeader    *mod_header = NULL;
@@ -298,7 +297,6 @@ const char *Module_Create(const char *path_)
 	const char	*reterr;
 	Module          *mod = NULL, **Mod_Handle = NULL;
 	char *expectedmodversion = our_mod_version;
-	unsigned int expectedcompilerversion = our_compiler_version;
 	long modsys_ver = 0;
 
 	path = Module_TransformPath(path_);
@@ -356,19 +354,6 @@ const char *Module_Create(const char *path_)
 			deletetmp(tmppath);
 			return errorbuf;
 		}
-		irc_dlsym(Mod, "compiler_version", compiler_version);
-		if (compiler_version && ( ((*compiler_version) & 0xffff00) != (expectedcompilerversion & 0xffff00) ) )
-		{
-			char theyhad[64], wehave[64];
-			make_compiler_string(theyhad, sizeof(theyhad), *compiler_version);
-			make_compiler_string(wehave, sizeof(wehave), expectedcompilerversion);
-			snprintf(errorbuf, sizeof(errorbuf),
-			         "Module was compiled with GCC %s, core was compiled with GCC %s. SOLUTION: Recompile your UnrealIRCd and all its modules by doing a 'make clean; ./Config -quick && make'.",
-			         theyhad, wehave);
-			irc_dlclose(Mod);
-			deletetmp(tmppath);
-			return errorbuf;
-		}
 		irc_dlsym(Mod, "Mod_Header", mod_header);
 		if (!mod_header)
 		{
@@ -405,7 +390,6 @@ const char *Module_Create(const char *path_)
 		mod = (Module *)Module_make(mod_header, Mod);
 		safe_strdup(mod->tmp_file, tmppath);
 		mod->mod_sys_version = modsys_ver;
-		mod->compiler_version = compiler_version ? *compiler_version : 0;
 		safe_strdup(mod->relpath, relpath);
 
 		irc_dlsym(Mod, "Mod_Init", Mod_Init);
