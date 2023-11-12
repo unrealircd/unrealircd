@@ -103,6 +103,12 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		config_error("%s:%i: spamreport block has no name, should be like: spamfilter <name> { }",
 			ce->file->filename, ce->line_number);
 		errors++;
+	} else
+	if (!strcasecmp(ce->value, "unrealircd"))
+	{
+		config_error("%s:%i: spamreport block cannot be named 'unrealircd', is a reserved name.",
+			ce->file->filename, ce->line_number);
+		errors++;
 	}
 
 	for (cep = ce->items; cep; cep = cep->next)
@@ -492,6 +498,32 @@ CMD_FUNC(cmd_spamreport)
 
 	ip = parv[1];
 
+	if ((target = find_user(parv[1], NULL)))
+	{
+		if (!MyUser(target))
+		{
+			/* Forward it to other server */
+			if (parc > 2)
+			{
+				sendto_one(target, NULL, ":%s SPAMREPORT %s %s",
+					   client->id, parv[1], parv[2]);
+			} else {
+				sendto_one(target, NULL, ":%s SPAMREPORT %s",
+					   client->id, parv[1]);
+			}
+			return;
+		}
+		/* It's for us */
+		if (target->ip)
+			ip = target->ip;
+	}
+
+	if (!is_valid_ip(ip))
+	{
+		sendnotice(client, "Not a valid nick/IP: %s", ip);
+		return;
+	}
+
 	if ((parc > 2) && !BadPtr(parv[2]))
 	{
 		to = find_spamreport_block(parv[2]);
@@ -500,15 +532,6 @@ CMD_FUNC(cmd_spamreport)
 			sendnotice(client, "Could not find spamreport block '%s'", parv[2]);
 			return;
 		}
-	}
-
-	if ((target = find_user(parv[1], NULL)) && target->ip)
-		ip = target->ip;
-
-	if (!is_valid_ip(ip))
-	{
-		sendnotice(client, "Not a valid IP: %s", ip);
-		return;
 	}
 
 	if (!((n = spamreport(target, ip, NULL, to ? to->name : NULL))))
