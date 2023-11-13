@@ -12,9 +12,14 @@ for x in *.c
 do
 if [ "$x" != "*.c" ]; then
 	x="`echo $x|sed 's/\.c//'`"
-	if [ ! -f $x.so -o $x.c -nt $x.so ]; then
-		echo "Building 3rd party module $x..."
-		$MAKE custommodule MODULEFILE=$x || (echo "*****"; echo "Building 3rd party module $x failed."; echo "Contact the module author of the $x module (not the UnrealIRCd team), or simply delete the $PWD/$x.c file"; echo "*****"; exit 1)
-	fi
+	# Always rebuild, because we can't detect include/*.h changes
+	# and this would cause 3rd party modules not to be built.
+	# See https://bugs.unrealircd.org/view.php?id=6365
+	# Also, this deletes the .so file explicitly, so if the
+	# make custommodule command fails, unrealircd does not use the
+	# old .so file, which would be bad.
+	rm -f $x.so
+	echo "Building 3rd party module $x..."
+	$MAKE custommodule MODULEFILE=$x || (echo "*****"; echo "Building 3rd party module $x failed."; echo "Contact the module author of the $x module (not the UnrealIRCd team), or simply delete the $PWD/$x.c file"; echo "*****")
 fi
 done
