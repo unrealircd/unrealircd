@@ -28,7 +28,7 @@ int extended_monitor_away(Client *client, MessageTag *mtags, const char *reason,
 int extended_monitor_account_login(Client *client, MessageTag *mtags);
 int extended_monitor_userhost_change(Client *client, const char *olduser, const char *oldhost);
 int extended_monitor_realname_change(Client *client, const char *oldinfo);
-int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int event);
+int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int event, void *data);
 
 ModuleHeader MOD_HEADER
   = {
@@ -78,9 +78,9 @@ MOD_UNLOAD()
 int extended_monitor_away(Client *client, MessageTag *mtags, const char *reason, int already_as_away)
 {
 	if (reason)
-		watch_check(client, WATCH_EVENT_AWAY, extended_monitor_notification);
+		watch_check(client, WATCH_EVENT_AWAY, NULL, extended_monitor_notification);
 	else
-		watch_check(client, WATCH_EVENT_NOTAWAY, extended_monitor_notification);
+		watch_check(client, WATCH_EVENT_NOTAWAY, NULL, extended_monitor_notification);
 
 	return 0;
 }
@@ -88,26 +88,26 @@ int extended_monitor_away(Client *client, MessageTag *mtags, const char *reason,
 int extended_monitor_account_login(Client *client, MessageTag *mtags)
 {
 	if (IsLoggedIn(client))
-		watch_check(client, WATCH_EVENT_LOGGEDIN, extended_monitor_notification);
+		watch_check(client, WATCH_EVENT_LOGGEDIN, NULL, extended_monitor_notification);
 	else
-		watch_check(client, WATCH_EVENT_LOGGEDOUT, extended_monitor_notification);
+		watch_check(client, WATCH_EVENT_LOGGEDOUT, NULL, extended_monitor_notification);
 
 	return 0;
 }
 
 int extended_monitor_userhost_change(Client *client, const char *olduser, const char *oldhost)
 {
-	watch_check(client, WATCH_EVENT_USERHOST, extended_monitor_notification);
+	watch_check(client, WATCH_EVENT_USERHOST, NULL, extended_monitor_notification);
 	return 0;
 }
 
 int extended_monitor_realname_change(Client *client, const char *oldinfo)
 {
-	watch_check(client, WATCH_EVENT_REALNAME, extended_monitor_notification);
+	watch_check(client, WATCH_EVENT_REALNAME, NULL, extended_monitor_notification);
 	return 0;
 }
 
-int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int event)
+int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int event, void *data)
 {
 	if (!(lp->flags & WATCH_FLAG_TYPE_MONITOR))
 		return 0;

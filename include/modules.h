@@ -1259,6 +1259,12 @@ extern void SavePersistentLongLongX(ModuleInfo *modinfo, const char *varshortnam
 #define HOOKTYPE_DNS_FINISHED	119
 /** See hooktype_reconfigure_web_listener */
 #define HOOKTYPE_CONFIG_LISTENER	120
+/** See hooktype_watch_add */
+#define HOOKTYPE_WATCH_ADD	121
+/** See hooktype_watch_del */
+#define HOOKTYPE_WATCH_DEL	122
+/** See hooktype_monitor_notification */
+#define HOOKTYPE_MONITOR_NOTIFICATION	123
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -2335,6 +2341,30 @@ int hooktype_dns_finished(Client *client);
  */
 int hooktype_config_listener(ConfigItem_listen *listener);
 
+/** Called after an entry is added to a WATCH (or MONITOR) list.
+ * @param nick	Name of the new entry (watched user's nick)
+ * @param client	Owner of the watch list
+ * @param flags	Flags for the entry (WATCH_FLAG_TYPE_*)
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_watch_add(char *nick, Client *client, int flags);
+
+/** Called after an entry is removed from a WATCH (or MONITOR) list.
+ * @param nick	Name of the entry (watched user's nick) to be deleted
+ * @param client	Owner of the watch list
+ * @param flags	Flags for the entry (WATCH_FLAG_TYPE_*) to be deleted
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_watch_del(char *nick, Client *client, int flags);
+
+/** Called when an user is notified about a MONITORed nick coming off- or online.
+ * @param watcher	The user being notified
+ * @param client	The user (dis)appearing
+ * @param online	1 if it's coming online, 0 otherwise
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_monitor_notification(Client *watcher, Client *client, int online);
+
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2457,7 +2487,10 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT) && !ValidateHook(hooktype_pre_local_handshake_timeout, func)) || \
         ((hooktype == HOOKTYPE_REHASH_LOG) && !ValidateHook(hooktype_rehash_log, func)) || \
         ((hooktype == HOOKTYPE_DNS_FINISHED) && !ValidateHook(hooktype_dns_finished, func)) || \
-        ((hooktype == HOOKTYPE_CONFIG_LISTENER) && !ValidateHook(hooktype_config_listener, func))) \
+        ((hooktype == HOOKTYPE_CONFIG_LISTENER) && !ValidateHook(hooktype_config_listener, func)) || \
+        ((hooktype == HOOKTYPE_WATCH_ADD) && !ValidateHook(hooktype_watch_add, func)) || \
+        ((hooktype == HOOKTYPE_WATCH_DEL) && !ValidateHook(hooktype_watch_del, func)) || \
+        ((hooktype == HOOKTYPE_MONITOR_NOTIFICATION) && !ValidateHook(hooktype_monitor_notification, func))) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

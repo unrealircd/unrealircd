@@ -30,7 +30,7 @@ int watch_away(Client *client, MessageTag *mtags, const char *reason, int alread
 int watch_nickchange(Client *client, MessageTag *mtags, const char *newnick);
 int watch_post_nickchange(Client *client, MessageTag *mtags, const char *oldnick);
 int watch_user_connect(Client *client);
-int watch_notification(Client *client, Watch *watch, Link *lp, int event);
+int watch_notification(Client *client, Watch *watch, Link *lp, int event, void *data);
 
 ModuleHeader MOD_HEADER
   = {
@@ -328,42 +328,42 @@ CMD_FUNC(cmd_watch)
 int watch_user_quit(Client *client, MessageTag *mtags, const char *comment)
 {
 	if (IsUser(client))
-		watch_check(client, WATCH_EVENT_OFFLINE, watch_notification);
+		watch_check(client, WATCH_EVENT_OFFLINE, NULL, watch_notification);
 	return 0;
 }
 
 int watch_away(Client *client, MessageTag *mtags, const char *reason, int already_as_away)
 {
 	if (reason)
-		watch_check(client, already_as_away ? WATCH_EVENT_REAWAY : WATCH_EVENT_AWAY, watch_notification);
+		watch_check(client, already_as_away ? WATCH_EVENT_REAWAY : WATCH_EVENT_AWAY, NULL, watch_notification);
 	else
-		watch_check(client, WATCH_EVENT_NOTAWAY, watch_notification);
+		watch_check(client, WATCH_EVENT_NOTAWAY, NULL, watch_notification);
 
 	return 0;
 }
 
 int watch_nickchange(Client *client, MessageTag *mtags, const char *newnick)
 {
-	watch_check(client, WATCH_EVENT_OFFLINE, watch_notification);
+	watch_check(client, WATCH_EVENT_OFFLINE, NULL, watch_notification);
 
 	return 0;
 }
 
 int watch_post_nickchange(Client *client, MessageTag *mtags, const char *oldnick)
 {
-	watch_check(client, WATCH_EVENT_ONLINE, watch_notification);
+	watch_check(client, WATCH_EVENT_ONLINE, NULL, watch_notification);
 
 	return 0;
 }
 
 int watch_user_connect(Client *client)
 {
-	watch_check(client, WATCH_EVENT_ONLINE, watch_notification);
+	watch_check(client, WATCH_EVENT_ONLINE, NULL, watch_notification);
 
 	return 0;
 }
 
-int watch_notification(Client *client, Watch *watch, Link *lp, int event)
+int watch_notification(Client *client, Watch *watch, Link *lp, int event, void *data)
 {
 	int awaynotify = 0;
 	

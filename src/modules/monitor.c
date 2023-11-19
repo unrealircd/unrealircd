@@ -33,7 +33,7 @@ int monitor_nickchange(Client *client, MessageTag *mtags, const char *newnick);
 int monitor_post_nickchange(Client *client, MessageTag *mtags, const char *oldnick);
 int monitor_quit(Client *client, MessageTag *mtags, const char *comment);
 int monitor_connect(Client *client);
-int monitor_notification(Client *client, Watch *watch, Link *lp, int event);
+int monitor_notification(Client *client, Watch *watch, Link *lp, int event, void *data);
 
 ModuleHeader MOD_HEADER
   = {
@@ -83,7 +83,7 @@ int monitor_nickchange(Client *client, MessageTag *mtags, const char *newnick)
 	if (!smycmp(client->name, newnick)) // new nick is same as old one, maybe the case changed
 		return 0;
 
-	watch_check(client, WATCH_EVENT_OFFLINE, monitor_notification);
+	watch_check(client, WATCH_EVENT_OFFLINE, NULL, monitor_notification);
 	return 0;
 }
 
@@ -92,23 +92,23 @@ int monitor_post_nickchange(Client *client, MessageTag *mtags, const char *oldni
 	if (!smycmp(client->name, oldnick)) // new nick is same as old one, maybe the case changed
 		return 0;
 
-	watch_check(client, WATCH_EVENT_ONLINE, monitor_notification);
+	watch_check(client, WATCH_EVENT_ONLINE, NULL, monitor_notification);
 	return 0;
 }
 
 int monitor_quit(Client *client, MessageTag *mtags, const char *comment)
 {
-	watch_check(client, WATCH_EVENT_OFFLINE, monitor_notification);
+	watch_check(client, WATCH_EVENT_OFFLINE, NULL, monitor_notification);
 	return 0;
 }
 
 int monitor_connect(Client *client)
 {
-	watch_check(client, WATCH_EVENT_ONLINE, monitor_notification);
+	watch_check(client, WATCH_EVENT_ONLINE, NULL, monitor_notification);
 	return 0;
 }
 
-int monitor_notification(Client *client, Watch *watch, Link *lp, int event)
+int monitor_notification(Client *client, Watch *watch, Link *lp, int event, void *data)
 {
 	if (!(lp->flags & WATCH_FLAG_TYPE_MONITOR))
 		return 0;
@@ -117,9 +117,11 @@ int monitor_notification(Client *client, Watch *watch, Link *lp, int event)
 	{
 		case WATCH_EVENT_ONLINE:
 			sendnumeric(lp->value.client, RPL_MONONLINE, client->name, client->user->username, GetHost(client));
+			RunHook(HOOKTYPE_MONITOR_NOTIFICATION, lp->value.client, client, 1);
 			break;
 		case WATCH_EVENT_OFFLINE:
 			sendnumeric(lp->value.client, RPL_MONOFFLINE, client->name);
+			RunHook(HOOKTYPE_MONITOR_NOTIFICATION, lp->value.client, client, 0);
 			break;
 		default:
 			break; /* may be handled by other modules */

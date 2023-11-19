@@ -141,7 +141,7 @@ int (*watch_add)(const char *nick, Client *client, int flags);
 int (*watch_del)(const char *nick, Client *client, int flags);
 int (*watch_del_list)(Client *client, int flags);
 Watch *(*watch_get)(const char *nick);
-int (*watch_check)(Client *client, int reply, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event));
+int (*watch_check)(Client *client, int reply, void *data, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event, void *data));
 void (*do_unreal_log_remote_deliver)(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
 char *(*get_chmodes_for_user)(Client *client, const char *flags);
 WhoisConfigDetails (*whois_get_policy)(Client *client, Client *target, const char *name);

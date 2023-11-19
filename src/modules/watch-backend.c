@@ -38,7 +38,7 @@ void watch_free(ModData *md);
 
 int watch_backend_user_quit(Client *client, MessageTag *mtags, const char *comment);
 int _watch_add(char *nick, Client *client, int flags);
-int _watch_check(Client *client, int event, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event));
+int _watch_check(Client *client, int event, void *data, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event, void *data));
 Watch *_watch_get(char *nick);
 int _watch_del(char *nick, Client *client, int flags);
 int _watch_del_list(Client *client, int flags);
@@ -147,9 +147,6 @@ int watch_backend_user_quit(Client *client, MessageTag *mtags, const char *comme
 	return 0;
 }
 
-/*
- * _watch_add
- */
 int _watch_add(char *nick, Client *client, int flags)
 {
 	unsigned int hashv;
@@ -195,15 +192,14 @@ int _watch_add(char *nick, Client *client, int flags)
 		lp->flags = flags;
 		WATCH(client) = lp;
 		WATCHES(client)++;
+		
+		RunHook(HOOKTYPE_WATCH_ADD, nick, client, flags);
 	}
 	
 	return 0;
 }
 
-/*
- *	_watch_check
- */
-int _watch_check(Client *client, int event, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event))
+int _watch_check(Client *client, int event, void *data, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event, void *data))
 {
 	unsigned int hashv;
 	Watch *watch;
@@ -225,15 +221,12 @@ int _watch_check(Client *client, int event, int (*watch_notify)(Client *client, 
 	/* Send notifies out to everybody on the list in header */
 	for (lp = watch->watch; lp; lp = lp->next)
 	{
-		watch_notify(client, watch, lp, event);
+		watch_notify(client, watch, lp, event, data);
 	}
 	
 	return 0;
 }
 
-/*
- * _watch_get
- */
 Watch *_watch_get(char *nick)
 {
 	unsigned int hashv;
@@ -248,9 +241,6 @@ Watch *_watch_get(char *nick)
 	return watch;
 }
 
-/*
- * _watch_del
- */
 int _watch_del(char *nick, Client *client, int flags)
 {
 	unsigned int hashv;
@@ -313,12 +303,11 @@ int _watch_del(char *nick, Client *client, int flags)
 	/* Update count of notifies on nick */
 	WATCHES(client)--;
 	
+	RunHook(HOOKTYPE_WATCH_DEL, nick, client, flags);
+	
 	return 0;
 }
 
-/*
- * _watch_del_list
- */
 int _watch_del_list(Client *client, int flags)
 {
 	unsigned int hashv;
