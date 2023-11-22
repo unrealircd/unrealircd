@@ -1466,6 +1466,46 @@ int IsWebsocket(Client *client)
 	return (MyConnect(client) && moddata_client(client, md).ptr) ? 1 : 0;
 }
 
+const char *compressed_ip(const char *ip)
+{
+	char scratch[64];
+	static char ret[64];
+
+	if (ip && strchr(ip, ':') && (inet_pton(AF_INET6, ip, scratch) == 1))
+		if (inet_ntop(AF_INET6, scratch, ret, sizeof(ret)))
+			return ret;
+
+	return ip;
+}
+
+static int should_hide_ban_reason(Client *client, const char *reason)
+{
+	if (HIDE_BAN_REASON == HIDE_BAN_REASON_AUTO)
+	{
+		/* If we detect the IP address in the ban reason or
+		 * it contains an unrealircd.org/ URL then the
+		 * ban reason is hidden since it may expose client
+		 * details.
+		 */
+		// First the simple check:
+		if (strstr(reason, "unrealircd.org/") ||
+		    strstr(reason, client->ip))
+		{
+			return 1;
+		}
+		// For IPv6, check compressed IP too:
+		if (IsIPV6(client))
+		{
+			const char *ip = compressed_ip(client->ip);
+			if (strstr(reason, ip))
+				return 1;
+		}
+		return 0;
+	} else {
+		return HIDE_BAN_REASON == HIDE_BAN_REASON_YES ? 1 : 0;
+	}
+}
+
 /** Generic function to inform the user he/she has been banned.
  * @param client   The affected client.
  * @param bantype  The ban type, such as: "K-Lined", "G-Lined" or "realname".
@@ -1516,7 +1556,7 @@ void banned_client(Client *client, const char *bantype, const char *reason, int 
 	}
 
 	/* The final message in the ERROR is shorter. */
-	if (HIDE_BAN_REASON && IsRegistered(client))
+	if (IsRegistered(client) && should_hide_ban_reason(client, reason))
 	{
 		/* Hide the ban reason, but put the real reason in unrealircd.org/real-quit-reason */
 		MessageTag *m = safe_alloc(sizeof(MessageTag));

@@ -55,6 +55,8 @@ typedef enum HideIdleTimePolicy { HIDE_IDLE_TIME_NEVER=1, HIDE_IDLE_TIME_ALWAYS=
 
 typedef enum LimitSVSCMDS { LIMIT_SVSCMDS_SERVERS=0, LIMIT_SVSCMDS_ULINES=1 } LimitSVSCMDS;
 
+typedef enum HideBanReasonOption { HIDE_BAN_REASON_NO=0, HIDE_BAN_REASON_YES=1, HIDE_BAN_REASON_AUTO=2 } HideBanReasonOption;
+
 /** The set { } block configuration */
 typedef struct Configuration Configuration;
 struct Configuration {
@@ -68,11 +70,11 @@ struct Configuration {
 	unsigned dont_resolve:1;
 	unsigned use_ban_version:1;
 	unsigned mkpasswd_for_everyone:1;
-	unsigned hide_ban_reason;
 	unsigned allow_insane_bans;
 	unsigned allow_part_if_shunned:1;
 	unsigned disable_cap:1;
 	unsigned check_target_nick_bans:1;
+	HideBanReasonOption hide_ban_reason;
 	char *link_bindip;
 	long throttle_period;
 	char throttle_count;

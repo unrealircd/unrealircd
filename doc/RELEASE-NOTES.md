@@ -8,6 +8,14 @@ in progress and may not always be a stable version.
 * Make [Deny channel](https://www.unrealircd.org/docs/Deny_channel_block)
   support escaped sequences like `channel "#xyz\*";` so you can support
   matching a literal `*` or `?` via `\*` and `\?`.
+* New option `auto` for
+  [set::hide-ban-reason](https://www.unrealircd.org/docs/Set_block#set::hide-ban-reason),
+  which is now the default. This will hide the *LINE reason to other users
+  if the *LINE contains the IP of the user. This to protect the privacy of
+  the user for cases such as a KLINE due to a blacklist with a DroneBL URL.
+  Other possible settings are `no` (never hide, the previous default) and
+  `yes` to always hide the *LINE reason. In all cases the user affected by
+  the server ban can still see the reason and IRCOps too.
 
 ### Changes:
 * Reserve more file descriptors for internal use. For example, when there

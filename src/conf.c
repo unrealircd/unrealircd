@@ -1710,6 +1710,7 @@ void config_setdefaultsettings(Configuration *i)
 	i->server_notice_show_event = 1;
 	i->ident_read_timeout = 7;
 	i->ident_connect_timeout = 3;
+	i->hide_ban_reason = HIDE_BAN_REASON_AUTO;
 	i->ban_version_tkl_time = 86400; /* 1d */
 	i->spamfilter_ban_time = 86400; /* 1d */
 	i->spamfilter_utf8 = 1;
@@ -7890,7 +7891,12 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			safe_strdup(tempiConf.cloak_prefix, cep->value);
 		}
 		else if (!strcmp(cep->name, "hide-ban-reason")) {
-			tempiConf.hide_ban_reason = config_checkval(cep->value, CFG_YESNO);
+			if (!strcmp(cep->value, "yes"))
+				tempiConf.hide_ban_reason = HIDE_BAN_REASON_YES;
+			else if (!strcmp(cep->value, "no"))
+				tempiConf.hide_ban_reason = HIDE_BAN_REASON_NO;
+			else if (!strcmp(cep->value, "auto"))
+				tempiConf.hide_ban_reason = HIDE_BAN_REASON_AUTO;
 		}
 		else if (!strcmp(cep->name, "prefix-quit")) {
 			if (!strcmp(cep->value, "0") || !strcmp(cep->value, "no"))
@@ -8691,6 +8697,15 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "hide-ban-reason")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, hide_ban_reason, "hide-ban-reason");
+			if (strcmp(cep->value, "yes") &&
+			    strcmp(cep->value, "no") &&
+			    strcmp(cep->value, "auto"))
+			{
+				config_error("%s:%i: set::hide-ban-reason must be one of: yes, no, auto",
+					cep->file->filename, cep->line_number);
+				errors++;
+				continue;
+			}
 		}
 		else if (!strcmp(cep->name, "restrict-channelmodes"))
 		{

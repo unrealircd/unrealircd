@@ -1054,6 +1054,7 @@ extern void report_crash(void);
 extern void modulemanager(int argc, char *argv[]);
 extern int inet_pton4(const char *src, unsigned char *dst);
 extern int inet_pton6(const char *src, unsigned char *dst);
+extern const char *compressed_ip(const char *ip);
 extern int unreal_bind(int fd, const char *ip, int port, SocketType socket_type);
 extern int unreal_connect(int fd, const char *ip, int port, SocketType socket_type);
 extern int is_valid_ip(const char *str);
