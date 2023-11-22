@@ -1,5 +1,52 @@
-UnrealIRCd 6.1.2.3
+UnrealIRCd 6.1.3-git
 ===================
+
+This is the git version (development version) for future 6.1.2. This is work
+in progress and may not always be a stable version.
+
+### Enhancements:
+* Make [Deny channel](https://www.unrealircd.org/docs/Deny_channel_block)
+  support escaped sequences like `channel "#xyz\*";` so you can support
+  matching a literal `*` or `?` via `\*` and `\?`.
+
+### Changes:
+* Reserve more file descriptors for internal use. For example, when there
+  are 10,000 fd's are available we now reserve 250, and when 2048 are
+  available we reserve 32. This so we have more fd's available to do handle
+  things like log files, do HTTPS callbacks to blacklists, etc.
+* Get rid of compiler check for modules vs core, this is mostly an issue
+  when you are upgrading a system (eg. Linux distro) and it would previously
+  make REHASHing impossible after such an upgrade. Though, if you are doing
+  a major distro upgrade you can still be bitten by things like library
+  removals such as major openssl upgrades.
+* Make `$client.details` in logs follow the ident rules for users in
+  the handshake too, so use the `~` prefix if ident lookups are enabled
+  and identd fails etc.
+* More validation for operclass names (a-zA-Z0-9_-)
+* Hits for central-blocklist are now broadcasted globally instead of
+  staying on the same server.
+
+### Fixes:
+* For people running git versions, who did not use 'make clean', 3rd party
+  modules were not always automatically recompiled, causing potential
+  problems such as crashes.
+* Crash issue when a module is reloaded (not unloaded) and that module
+  no longer provides a particular moddata object, e.g. because it was
+  renamed or no longer needed. This is rare, but did happen for one
+  third party module recently.
+* Fix memory leak when unloading a module for good and that module provided
+  ModData objects for "unknown users" (users still in the handshake).
+* Don't ask to generate TLS certificate if one already exists (issue
+  introduced in 6.1.2).
+
+### Developers and protocol:
+* New hooks: `HOOKTYPE_WATCH_ADD`, `HOOKTYPE_WATCH_DEL`,
+  `HOOKTYPE_MONITOR_NOTIFICATION`.
+* The hook `HOOKTYPE_IS_HANDSHAKE_FINISHED` is now properly called
+  at all places.
+
+UnrealIRCd 6.1.2
+-----------------
 UnrealIRCd 6.1.2 focuses on adding spamfilter features but also contains
 various other new features and some fixes.
 
