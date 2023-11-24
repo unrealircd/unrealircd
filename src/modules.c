@@ -275,6 +275,26 @@ int module_already_in_testing(const char *relpath)
 	return 0;
 }
 
+/** Return an error string if module with 'name' should no longer be used. */
+const char *is_module_deprecated(const char *name)
+{
+	if (!strcmp(name, "third/central-api"))
+	{
+		unreal_log(ULOG_ERROR, "config", "CONFIG_LOAD_DEPRECATED_MODULE", NULL,
+		           "The central-api module has been moved from third party modules to the core.\n"
+		           "Please replace your loadmodule \"third/central-api\"; line with: loadmodule \"central-api\";");
+		return "Don't load this third party module, see error above";
+	}
+	if (!strcmp(name, "third/centralblocklist"))
+	{
+		unreal_log(ULOG_ERROR, "config", "CONFIG_LOAD_DEPRECATED_MODULE", NULL,
+		           "The centralblocklist module has been moved from third party modules to the core with a slightly changed name.\n"
+		           "Please replace your loadmodule \"third/centralblocklist\"; line with: loadmodule \"central-blocklist\";");
+		return "Don't load this third party module, see error above";
+	}
+	return NULL;
+}
+
 /*
  * Returns an error if insucessful .. yes NULL is OK! 
 */
@@ -302,6 +322,10 @@ const char *Module_Create(const char *path_)
 	path = Module_TransformPath(path_);
 
 	relpath = Module_GetRelPath(path);
+
+	if ((reterr = is_module_deprecated(relpath)))
+		return reterr;
+
 	if (module_already_in_testing(relpath))
 		return 0;
 
