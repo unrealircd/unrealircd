@@ -101,7 +101,7 @@ int cbl_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 int cbl_packet(Client *from, Client *to, Client *intended_to, char **msg, int *len);
 //int cbl_prelocalconnect(Client *client);
 int cbl_is_handshake_finished(Client *client);
-void cbl_download_complete(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *rs_key);
+void cbl_download_complete(OutgoingWebRequest *request, OutgoingWebResponse *response);
 void cbl_mdata_free(ModData *m);
 int cbl_start_request(Client *client);
 void cbl_cancel_all_transfers(void);
@@ -873,7 +873,7 @@ void cbl_error_response(CBLTransfer *transfer, const char *error)
 	del_cbl_transfer(transfer);
 }
 
-void cbl_download_complete(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *rs_key)
+void cbl_download_complete(OutgoingWebRequest *request, OutgoingWebResponse *response)
 {
 	CBLTransfer *transfer;
 	json_t *result; // complete JSON result
@@ -883,7 +883,7 @@ void cbl_download_complete(const char *url, const char *file, const char *memory
 	const char *key;
 	json_t *value;
 
-	transfer = (CBLTransfer *)rs_key;
+	transfer = (CBLTransfer *)request->callback_data;
 
 	// !!!!! IMPORTANT !!!!!
 	//
@@ -891,11 +891,11 @@ void cbl_download_complete(const char *url, const char *file, const char *memory
 	//
 	// !!!!! IMPORTANT !!!!!
 
-	if (errorbuf || !memory)
+	if (response->errorbuf || !response->memory)
 	{
 		unreal_log(ULOG_DEBUG, "central-blocklist", "DEBUG_CENTRAL_BLOCKLIST", NULL,
 		           "CBL ERROR: $error",
-		           log_data_string("error", errorbuf ? errorbuf : "No data returned"));
+		           log_data_string("error", response->errorbuf ? response->errorbuf : "No data returned"));
 		cbl_error_response(transfer, "error contacting CBL");
 		return;
 	}
@@ -903,11 +903,11 @@ void cbl_download_complete(const char *url, const char *file, const char *memory
 #ifdef DEBUGMODE
 	unreal_log(ULOG_DEBUG, "central-blocklist", "DEBUG_CENTRAL_BLOCKLIST", NULL,
 	           "CBL Got result: $buf",
-	           log_data_string("buf", memory));
+	           log_data_string("buf", response->memory));
 #endif
 
 	// NOTE: if we didn't have that debug from above, we could avoid the strlncpy and use json_loadb here
-	result = json_loads(memory, JSON_REJECT_DUPLICATES, &jerr);
+	result = json_loads(response->memory, JSON_REJECT_DUPLICATES, &jerr);
 	if (!result)
 	{
 		unreal_log(ULOG_DEBUG, "central-blocklist", "DEBUG_CENTRAL_BLOCKLIST", NULL,

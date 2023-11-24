@@ -3140,15 +3140,15 @@ int valid_spamfilter_id(const char *s)
 	return 1;
 }
 
-void download_complete_dontcare(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *ptr)
+void download_complete_dontcare(OutgoingWebRequest *request, OutgoingWebResponse *response)
 {
 #ifdef DEBUGMODE
-	if (memory)
+	if (response->memory)
 	{
 		unreal_log(ULOG_DEBUG, "url", "DEBUG_URL_RESPONSE", NULL,
 		           "Response for '$url': $response",
-		           log_data_string("url", url),
-		           log_data_string("response", memory));
+		           log_data_string("url", request->url),
+		           log_data_string("response", response->memory));
 	}
 #endif
 }
@@ -3225,7 +3225,11 @@ OutgoingWebRequest *duplicate_outgoingwebrequest(OutgoingWebRequest *orig)
  *    than 10 seconds to happen and the config file can be rehashed
  *    multiple times during that time.
  */
-void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, int maxredirects)
+void download_file_async(const char *url,
+                         time_t cachetime,
+                         void (*callback)(OutgoingWebRequest *request, OutgoingWebResponse *response),
+                         void *callback_data,
+                         int maxredirects)
 {
 	OutgoingWebRequest *request = safe_alloc(sizeof(OutgoingWebRequest));
 	safe_strdup(request->url, url);
@@ -3240,19 +3244,18 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 
 void url_callback(OutgoingWebRequest *r, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *ptr)
 {
-	OutgoingWebResult *result;
+	OutgoingWebResponse *response;
 
 	if (!r->callback)
 		return; /* Nothing to do */
 
-	result = safe_alloc(sizeof(OutgoingWebResult));
-	result->file = file;
-	result->memory = memory;
-	result->memory_len = memory_len;
-	result->errorbuf = errorbuf;
-	result->cached = cached;
-	result->ptr = ptr;
-	//r->callback(r, result);
-	r->callback(r->url, file, memory, memory_len, errorbuf, cached, ptr);
-	safe_free(result);
+	response = safe_alloc(sizeof(OutgoingWebResponse));
+	response->file = file;
+	response->memory = memory;
+	response->memory_len = memory_len;
+	response->errorbuf = errorbuf;
+	response->cached = cached;
+	response->ptr = ptr;
+	r->callback(r, response);
+	safe_free(response);
 }

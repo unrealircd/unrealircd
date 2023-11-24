@@ -264,7 +264,8 @@ long long central_spamfilter_last_download = 0;
 
 int add_config_resource(const char *resource, int type, ConfigEntry *ce);
 ConfigResource *find_config_resource(const char *resource);
-void resource_download_complete(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *rs_key);
+void resource_download_complete(OutgoingWebRequest *request, OutgoingWebResponse *response);
+void resource_download_complete_parse(ConfigResource *rs);
 void free_all_config_resources(void);
 int rehash_internal(Client *client);
 int is_blacklisted_module(const char *name);
@@ -11039,16 +11040,16 @@ int _conf_secret(ConfigFile *conf, ConfigEntry *ce)
 	return 1;
 }
 
-void resource_download_complete(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *rs_key)
+void resource_download_complete(OutgoingWebRequest *request, OutgoingWebResponse *response)
 {
-	ConfigResource *rs = (ConfigResource *)rs_key;
+	ConfigResource *rs = (ConfigResource *)request->callback_data;
 
 	rs->type &= ~RESOURCE_DLQUEUED;
 
 	if (config_verbose)
-		config_status("resource_download_complete() for %s [%s]", url, errorbuf?errorbuf:"success");
+		config_status("resource_download_complete() for %s [%s]", request->url, response->errorbuf?response->errorbuf:"success");
 
-	if (!file && !cached)
+	if (!response->file && !response->cached)
 	{
 		/* DOWNLOAD FAILED */
 		if (rs->cache_file)
@@ -11058,16 +11059,16 @@ void resource_download_complete(const char *url, const char *file, const char *m
 				   "Using a cached copy instead.",
 				   log_data_string("file", rs->wce->ce->file->filename),
 				   log_data_integer("line_number", rs->wce->ce->line_number),
-				   log_data_string("url", displayurl(url)),
-				   log_data_string("error_message", errorbuf));
+				   log_data_string("url", displayurl(request->url)),
+				   log_data_string("error_message", response->errorbuf));
 			safe_strdup(rs->file, rs->cache_file);
 		} else {
 			unreal_log(ULOG_ERROR, "config", "DOWNLOAD_FAILED_HARD", NULL,
 				   "$file:$line_number: Failed to download '$url': $error_message",
 				   log_data_string("file", rs->wce->ce->file->filename),
 				   log_data_integer("line_number", rs->wce->ce->line_number),
-				   log_data_string("url", displayurl(url)),
-				   log_data_string("error_message", errorbuf));
+				   log_data_string("url", displayurl(request->url)),
+				   log_data_string("error_message", response->errorbuf));
 			/* Set error condition, this so config_read_file() later will stop. */
 			loop.config_load_failed = 1;
 			/* We keep the other transfers running since they may raise (more) errors.
@@ -11078,18 +11079,22 @@ void resource_download_complete(const char *url, const char *file, const char *m
 	}
 	else
 	{
-		if (cached)
+		if (response->cached)
 		{
 			/* Copy from cache */
 			safe_strdup(rs->file, rs->cache_file);
 		} else {
 			/* Copy to cache */
-			const char *cache_file = unreal_mkcache(url);
-			unreal_copyfileex(file, cache_file, 1);
+			const char *cache_file = unreal_mkcache(request->url);
+			unreal_copyfileex(response->file, cache_file, 1);
 			safe_strdup(rs->file, cache_file);
 		}
 	}
+	resource_download_complete_parse(rs);
+}
 
+void resource_download_complete_parse(ConfigResource *rs)
+{
 	if (rs->file)
 	{
 		if (rs->type & RESOURCE_INCLUDE)
@@ -11396,8 +11401,9 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 					if (TStime() - modtime < refresh_time)
 					{
 						/* Don't download, use cached copy */
-						//config_status("DEBUG: using cached copy due to url-refresh %ld", refresh_time);
-						resource_download_complete(rs->url, NULL, NULL, 0, NULL, 1, rs);
+						safe_strdup(rs->file, rs->cache_file);
+						rs->type &= ~RESOURCE_DLQUEUED;
+						resource_download_complete_parse(rs);
 						return 1;
 					} else {
 						//config_status("DEBUG: requires download attempt, out of date url-refresh %ld < %ld", refresh_time, TStime() - modtime);
@@ -11866,7 +11872,7 @@ int count_central_spamfilter_rules(void)
 	return count;
 }
 
-void central_spamfilter_download_complete(const char *url, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *rs_key)
+void central_spamfilter_download_complete(OutgoingWebRequest *request, OutgoingWebResponse *response)
 {
 	ConfigFile *cfptr;
 	int errors;
@@ -11884,13 +11890,13 @@ void central_spamfilter_download_complete(const char *url, const char *file, con
 		           "Processing central spamfilter rules...");
 	}
 
-	if (errorbuf)
+	if (response->errorbuf)
 	{
-		config_error("Central spamfilter URL fetch failed (this could be a temporary problem): %s: %s", url, errorbuf);
+		config_error("Central spamfilter URL fetch failed (this could be a temporary problem): %s: %s", request->url, response->errorbuf);
 		return;
 	}
 	
-	if (!(cfptr = config_load(file, "central_spamfilter.conf")))
+	if (!(cfptr = config_load(response->file, "central_spamfilter.conf")))
 	{
 		unreal_log(ULOG_ERROR, "central-spamfilter", "CENTRAL_SPAMFILTER_LOAD_FAILED", NULL,
 		           "[Central spamfilter] Failed to load"); // Where is the REASON ???

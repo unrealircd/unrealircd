@@ -1882,10 +1882,12 @@ struct HTTPForwardedHeader
 };
 
 typedef struct OutgoingWebRequest OutgoingWebRequest;
+typedef struct OutgoingWebResponse OutgoingWebResponse;
+
 /** An outgoing web request (eg remote includes download) */
 struct OutgoingWebRequest
 {
-	vFP callback;
+	void (*callback)(OutgoingWebRequest *request, OutgoingWebResponse *response);
 	void *callback_data;
 	char *url; /**< must be freed by url_do_transfers_async() */
 	char *actual_url; /**< if you actually want to use a different url, mostly for redirects (end-users: don't set this!) */
@@ -1900,8 +1902,8 @@ struct OutgoingWebRequest
 	// 2) and update url_free_handle_request_portion() there as well
 };
 
-typedef struct OutgoingWebResult OutgoingWebResult;
-struct OutgoingWebResult
+/** The result of an HTTP(S) call, such as the downloaded file, error, etc. */
+struct OutgoingWebResponse
 {
 	const char *file;
 	const char *memory;
