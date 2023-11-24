@@ -66,6 +66,10 @@
 #include <afunix.h>
 #endif
 
+#ifdef HAVE_TCP_INFO
+ #include <netinet/tcp.h>
+#endif
+
 #ifndef _WIN32
 #include <sys/time.h>
 #endif

@@ -32,16 +32,6 @@ module
  #define HOOKTYPE_GET_CENTRAL_API_KEY 199
 #endif
 
-/* Code for 6.1.2.x, not needed in 6.1.3+ anymore: */
-#if (UNREAL_VERSION_TIME < 202343) && (defined(__linux__) || defined(__FreeBSD__))
- #include <netinet/tcp.h>
- #if defined(TCP_INFO) && defined(SOL_TCP)
-  #define HAVE_TCP_INFO 1
- #endif
-#elif defined(HAVE_TCP_INFO)
- #include <netinet/tcp.h>
-#endif
-
 ModuleHeader MOD_HEADER
   = {
 	"central-blocklist",
@@ -659,7 +649,7 @@ void cbl_add_client_info(Client *client)
 		struct tcp_info tcp_info;
 		optlen = sizeof(tcp_info);
 		memset(&tcp_info, 0, sizeof(tcp_info));
-		if (getsockopt(client->local->fd, SOL_TCP, TCP_INFO, (void *)&tcp_info, &optlen) == 0)
+		if (getsockopt(client->local->fd, IPPROTO_TCP, TCP_INFO, (void *)&tcp_info, &optlen) == 0)
 		{
 			json_t *j = json_object();
 			json_object_set_new(child, "tcp_info", j);
