@@ -33,17 +33,11 @@ typedef struct Download Download;
 struct Download
 {
 	Download *prev, *next;
-	vFP callback;
-	void *callback_data;
-	FILE *file_fd;		/**< File open for writing (otherwise NULL) */
-	char *filename;
-	char *url; /*< must be free()d by url_do_transfers_async() */
-	HttpMethod http_method;
-	char *body;
-	NameValuePrioList *request_headers;
+	OutgoingWebRequest *request;
 	struct curl_slist *request_headers_curl;
 	char errorbuf[CURL_ERROR_SIZE];
-	time_t cachetime;
+	FILE *file_fd;		/**< File open for writing (otherwise NULL) */
+	char *filename;
 	char *memory_data; /**< Memory for writing response (otherwise NULL) */
 	int memory_data_len; /**< Size of memory_data */
 	int memory_data_allocated; /**< Total allocated memory for 'memory_data' */
@@ -60,11 +54,9 @@ void url_free_handle(Download *handle)
 		fclose(handle->file_fd);
 	safe_free(handle->memory_data);
 	safe_free(handle->filename);
-	safe_free(handle->url);
-	safe_free(handle->body);
-	safe_free_nvplist(handle->request_headers);
 	if (handle->request_headers_curl)
 		curl_slist_free_all(handle->request_headers_curl);
+	safe_free_outgoingwebrequest(handle->request);
 	safe_free(handle);
 }
 
@@ -75,10 +67,10 @@ void url_cancel_handle_by_callback_data(void *ptr)
 	for (d = downloads; d; d = d_next)
 	{
 		d_next = d->next;
-		if (d->callback_data == ptr)
+		if (d->request->callback_data == ptr)
 		{
-			d->callback = NULL;
-			d->callback_data = NULL;
+			d->request->callback = NULL;
+			d->request->callback_data = NULL;
 		}
 	}
 }
@@ -182,7 +174,7 @@ static void url_check_multi_handles(void)
 				handle->file_fd = NULL;
 			}
 
-			if (handle->callback == NULL)
+			if (handle->request->callback == NULL)
 			{
 				/* Request is already canceled, we don't care about the result, just clean up */
 				if (handle->filename)
@@ -190,9 +182,9 @@ static void url_check_multi_handles(void)
 			} else
 			if (msg->data.result == CURLE_OK)
 			{
-				if (code == 304 || (last_mod != -1 && last_mod <= handle->cachetime))
+				if (code == 304 || (last_mod != -1 && last_mod <= handle->request->cachetime))
 				{
-					handle->callback(handle->url, NULL, handle->memory_data, handle->memory_data_len, NULL, 1, handle->callback_data);
+					handle->request->callback(handle->request->url, NULL, handle->memory_data, handle->memory_data_len, NULL, 1, handle->request->callback_data);
 					if (handle->filename)
 						remove(handle->filename);
 				}
@@ -201,14 +193,14 @@ static void url_check_multi_handles(void)
 					if ((last_mod != -1) && handle->filename)
 						unreal_setfilemodtime(handle->filename, last_mod);
 
-					handle->callback(handle->url, handle->filename, handle->memory_data, handle->memory_data_len, NULL, 0, handle->callback_data);
+					handle->request->callback(handle->request->url, handle->filename, handle->memory_data, handle->memory_data_len, NULL, 0, handle->request->callback_data);
 					if (handle->filename)
 						remove(handle->filename);
 				}
 			}
 			else
 			{
-				handle->callback(handle->url, NULL, NULL, 0, handle->errorbuf, 0, handle->callback_data);
+				handle->request->callback(handle->request->url, NULL, NULL, 0, handle->errorbuf, 0, handle->request->callback_data);
 				if (handle->filename)
 					remove(handle->filename);
 			}
@@ -294,33 +286,7 @@ void url_init(void)
 	url_socket_timeout_hdl = EventAdd(NULL, "url_socket_timeout", url_socket_timeout, NULL, 500, 0);
 }
 
-/*
- * Handles asynchronous downloading of a file. This function allows
- * a download to be made transparently without the caller having any
- * knowledge of how libcurl works. The specified callback function is
- * called when the download completes, or the download fails. The 
- * callback function is defined as:
- *
- * void callback(const char *url, const char *filename, const char *memory_data, int memory_data_len, char *errorbuf, int cached, void *data);
- *  - url will contain the original URL used to download the file.
- *  - filename will contain the name of the file (if successful, NULL on error or if cached).
- *    This file will be cleaned up after the callback returns, so save a copy to support caching.
- *  - errorbuf will contain the error message (if failed, NULL otherwise).
- *  - cached 1 if the specified cachetime is >= the current file on the server,
- *    if so, errorbuf will be NULL, filename will contain the path to the file.
- *  - data will be the value of callback_data, allowing you to figure
- *    out how to use the data contained in the downloaded file ;-).
- *    Make sure that if you access the contents of this pointer, you
- *    know that this pointer will persist. A download could take more
- *    than 10 seconds to happen and the config file can be rehashed
- *    multiple times during that time.
- */
-void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
-{
-	url_start_async(url, HTTP_METHOD_GET, NULL, NULL, 1, cachetime, callback, callback_data, original_url, maxredirects);
-}
-
-void url_start_async(const char *url, HttpMethod http_method, const char *body, NameValuePrioList *request_headers, int store_in_file, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects)
+void url_start_async(OutgoingWebRequest *request)
 {
 	static char errorbuf[CURL_ERROR_SIZE];
 	char user_agent[256];
@@ -329,6 +295,10 @@ void url_start_async(const char *url, HttpMethod http_method, const char *body, 
 	const char *filename;
 	char *tmp;
 	Download *handle;
+
+	/* Check for the bare minimum */
+	if (!request->url || !request->http_method)
+		abort();
 
 	curl = curl_easy_init();
 	if (!curl)
@@ -340,17 +310,18 @@ void url_start_async(const char *url, HttpMethod http_method, const char *body, 
 	}
 
 	handle = safe_alloc(sizeof(Download));
+	handle->request = request;
 
-	if (store_in_file)
+	if (handle->request->store_in_file)
 	{
-		file = url_getfilename(url);
+		file = url_getfilename(handle->request->url);
 		filename = unreal_getfilename(file);
 		tmp = unreal_mktemp(TMPDIR, filename ? filename : "download.conf");
 		handle->file_fd = fopen(tmp, "wb");
 		if (!handle->file_fd)
 		{
 			snprintf(errorbuf, sizeof(errorbuf), "Cannot create '%s': %s", tmp, strerror(ERRNO));
-			callback(url, NULL, NULL, 0, errorbuf, 0, callback_data);
+			handle->request->callback(handle->request->url, NULL, NULL, 0, errorbuf, 0, handle->request->callback_data);
 			safe_free(file);
 			safe_free(handle);
 			return;
@@ -361,15 +332,10 @@ void url_start_async(const char *url, HttpMethod http_method, const char *body, 
 
 	AddListItem(handle, downloads);
 
-	handle->callback = callback;
-	handle->callback_data = callback_data;
-	handle->cachetime = cachetime;
-	safe_strdup(handle->url, url);
-
-	curl_easy_setopt(curl, CURLOPT_URL, url);
+	curl_easy_setopt(curl, CURLOPT_URL, handle->request->url);
 	snprintf(user_agent, sizeof(user_agent), "UnrealIRCd %s", VERSIONONLY);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, user_agent);
-	if (store_in_file)
+	if (handle->request->store_in_file)
 	{
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download_file);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->file_fd);
@@ -379,26 +345,22 @@ void url_start_async(const char *url, HttpMethod http_method, const char *body, 
 		handle->memory_data_allocated = URL_MEMORY_BACKED_CHUNK_SIZE;
 		handle->memory_data = safe_alloc(URL_MEMORY_BACKED_CHUNK_SIZE+1);
 	}
-	if (http_method == HTTP_METHOD_POST)
+	if (handle->request->http_method == HTTP_METHOD_POST)
 	{
 		curl_easy_setopt(curl, CURLOPT_POST, 1);
 #if LIBCURL_VERSION_NUM >= 0x071301
 		curl_easy_setopt(curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
 #endif
-		if (body && strlen(body))
-		{
-			safe_strdup(handle->body, body); // actually redundant?
-			curl_easy_setopt(curl, CURLOPT_COPYPOSTFIELDS, body);
-		}
+		if (handle->request->body && strlen(handle->request->body))
+			curl_easy_setopt(curl, CURLOPT_COPYPOSTFIELDS, handle->request->body);
 	}
 
-	if (request_headers)
+	if (handle->request->headers)
 	{
 		NameValuePrioList *n;
 		char buf[512];
 
-		handle->request_headers = duplicate_nvplist(request_headers);
-		for (n = request_headers; n; n = n->next)
+		for (n = handle->request->headers; n; n = n->next)
 		{
 			if (n->value)
 				snprintf(buf, sizeof(buf), "%s: %s", n->name, n->value);
@@ -425,17 +387,17 @@ void url_start_async(const char *url, HttpMethod http_method, const char *body, 
 	 * As a side-effect we also fix useless CLOSE_WAIT connections.
 	 */
 	curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1);
-	if (cachetime)
+	if (handle->request->cachetime)
 	{
 		curl_easy_setopt(curl, CURLOPT_TIMECONDITION, CURL_TIMECOND_IFMODSINCE);
-		curl_easy_setopt(curl, CURLOPT_TIMEVALUE, cachetime);
+		curl_easy_setopt(curl, CURLOPT_TIMEVALUE, handle->request->cachetime);
 	}
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, DOWNLOAD_TRANSFER_TIMEOUT);
 	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, DOWNLOAD_CONNECT_TIMEOUT);
 #if LIBCURL_VERSION_NUM >= 0x070f01
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
-	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, maxredirects);
+	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, handle->request->max_redirects);
 #endif
 
 	curl_multi_add_handle(multihandle, curl);

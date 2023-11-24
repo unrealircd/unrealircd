@@ -393,6 +393,7 @@ int spamfilter_block_rate_limited(Spamreport *spamreport)
 int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block)
 {
 	Spamreport *s;
+	OutgoingWebRequest *request;
 	char urlbuf[512];
 	char bodybuf[512];
 	char *url = NULL;
@@ -472,8 +473,15 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 	           log_data_string("url", url),
 	           log_data_string("body", (body ? body : "")));
 #endif
-	url_start_async(url, s->http_method, body, headers, 0, 0, download_complete_dontcare, NULL, url, 3);
-	safe_free_nvplist(headers);
+	/* Do the web request */
+	request = safe_alloc(sizeof(OutgoingWebRequest));
+	safe_strdup(request->url, url);
+	request->http_method = s->http_method;
+	safe_strdup(request->body, body);
+	request->headers = headers;
+	request->callback = download_complete_dontcare;
+	request->max_redirects = 3;
+	url_start_async(request);
 	return 1;
 }
 

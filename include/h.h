@@ -1397,8 +1397,8 @@ extern int has_cached_version(const char *url);
 extern int url_is_valid(const char *);
 extern const char *displayurl(const char *url);
 extern char *url_getfilename(const char *url);
-extern void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects);
-extern void url_start_async(const char *url, HttpMethod http_method, const char *body, NameValuePrioList *request_headers, int store_in_file, time_t cachetime, vFP callback, void *callback_data, char *original_url, int maxredirects);
+extern void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, int maxredirects);
+extern void url_start_async(OutgoingWebRequest *request);
 extern void url_init(void);
 extern void url_cancel_handle_by_callback_data(void *ptr);
 extern EVENT(url_socket_timeout);
@@ -1471,3 +1471,6 @@ extern int highest_channel_member_count(Client *client);
 extern MODVAR long long central_spamfilter_last_download;
 extern int valid_operclass_character(char c);
 extern int valid_operclass_name(const char *str);
+#define safe_free_outgoingwebrequest(x)	do { if (x) { free_outgoingwebrequest(x); x = NULL; } } while(0)
+extern void free_outgoingwebrequest(OutgoingWebRequest *r);
+extern OutgoingWebRequest *duplicate_outgoingwebrequest(OutgoingWebRequest *orig);

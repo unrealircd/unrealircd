@@ -3174,3 +3174,66 @@ int valid_operclass_name(const char *str)
 
 	return 1;
 }
+
+/** Free an OutgoingWebRequest struct - note: use safe_free_outgoingwebrequest() instead (which calls us). */
+void free_outgoingwebrequest(OutgoingWebRequest *r)
+{
+	safe_free(r->url);
+	safe_free(r->actual_url);
+        safe_free(r->body);
+        safe_free_nvplist(r->headers);
+        safe_free(r);
+}
+
+/** Safely duplicate an OutgoingWebRequest struct (eg for https redirects) */
+OutgoingWebRequest *duplicate_outgoingwebrequest(OutgoingWebRequest *orig)
+{
+	OutgoingWebRequest *e = safe_alloc(sizeof(OutgoingWebRequest));
+	e->callback = orig->callback;
+	e->callback_data = orig->callback_data;
+	safe_strdup(e->url, orig->url);
+	safe_strdup(e->actual_url, orig->actual_url);
+	e->http_method = orig->http_method;
+	safe_strdup(e->body, orig->body);
+	e->headers = duplicate_nvplist(orig->headers);
+	e->store_in_file = orig->store_in_file;
+	e->cachetime = orig->cachetime;
+	e->max_redirects = orig->max_redirects;
+	return e;
+}
+
+/*
+ * Handles asynchronous downloading of a file (simple non-flexible version).
+ * NOTE: url_start_async() is the more advanced one.
+ *
+ * This function allows a download to be made transparently without
+ * the caller having any knowledge of how libcurl works. The specified
+ * callback function is called when the download completes, or the
+ * download fails. The callback function is defined as:
+ *
+ * void callback(const char *url, const char *filename, const char *memory_data, int memory_data_len, char *errorbuf, int cached, void *data);
+ *  - url will contain the original URL used to download the file.
+ *  - filename will contain the name of the file (if successful, NULL on error or if cached).
+ *    This file will be cleaned up after the callback returns, so save a copy to support caching.
+ *  - errorbuf will contain the error message (if failed, NULL otherwise).
+ *  - cached 1 if the specified cachetime is >= the current file on the server,
+ *    if so, errorbuf will be NULL, filename will contain the path to the file.
+ *  - data will be the value of callback_data, allowing you to figure
+ *    out how to use the data contained in the downloaded file ;-).
+ *    Make sure that if you access the contents of this pointer, you
+ *    know that this pointer will persist. A download could take more
+ *    than 10 seconds to happen and the config file can be rehashed
+ *    multiple times during that time.
+ */
+void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data, int maxredirects)
+{
+	OutgoingWebRequest *request = safe_alloc(sizeof(OutgoingWebRequest));
+	safe_strdup(request->url, url);
+	request->http_method = HTTP_METHOD_GET;
+	request->cachetime = cachetime;
+	request->callback = callback;
+	request->callback_data = callback_data;
+	request->max_redirects = maxredirects;
+	request->store_in_file = 1;
+	url_start_async(request);
+}

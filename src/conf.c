@@ -11407,7 +11407,7 @@ int add_config_resource(const char *resource, int type, ConfigEntry *ce)
 				prev = cep;
 			}
 		}
-		download_file_async(rs->url, modtime, resource_download_complete, (void *)rs, NULL, DOWNLOAD_MAX_REDIRECTS);
+		download_file_async(rs->url, modtime, resource_download_complete, (void *)rs, DOWNLOAD_MAX_REDIRECTS);
 	}
 	return 1;
 }
@@ -11947,7 +11947,7 @@ void central_spamfilter_start_download(void)
 	safe_free_nvplist(nvp);
 
 	/* Start HTTPS request */
-	download_file_async(url, CENTRAL_SPAMFILTER_CACHE_TIME, central_spamfilter_download_complete, NULL, NULL, DOWNLOAD_MAX_REDIRECTS);
+	download_file_async(url, CENTRAL_SPAMFILTER_CACHE_TIME, central_spamfilter_download_complete, NULL, DOWNLOAD_MAX_REDIRECTS);
 }
 
 EVENT(central_spamfilter_download_evt)

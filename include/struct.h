@@ -1881,7 +1881,27 @@ struct HTTPForwardedHeader
 	char ip[IPLEN+1];
 };
 
+typedef struct OutgoingWebRequest OutgoingWebRequest;
+/** An outgoing web request (eg remote includes download) */
+struct OutgoingWebRequest
+{
+	vFP callback;
+	void *callback_data;
+	char *url; /**< must be freed by url_do_transfers_async() */
+	char *actual_url; /**< if you actually want to use a different url, mostly for redirects (end-users: don't set this!) */
+	HttpMethod http_method;
+	char *body;
+	NameValuePrioList *headers;
+	int store_in_file;
+	time_t cachetime;
+	int max_redirects;
+	// If you are adding allocated fields here:
+	// 1) update duplicate_outgoingwebrequest() in src/misc.c
+	// 2) and update url_free_handle_request_portion() there as well
+};
+
 typedef struct WebRequest WebRequest;
+/** An incoming web request */
 struct WebRequest {
 	HttpMethod method; /**< GET/PUT/POST */
 	char *uri; /**< Requested resource, eg "/api" */

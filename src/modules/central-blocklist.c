@@ -980,6 +980,7 @@ void cbl_mdata_free(ModData *m)
 void send_request_for_pending_clients(void)
 {
 	Client *client, *next;
+	OutgoingWebRequest *w;
 	json_t *j, *requests;
 	NameValuePrioList *headers = NULL;
 	int num;
@@ -1030,9 +1031,16 @@ void send_request_for_pending_clients(void)
 	add_nvplist(&headers, 0, "Content-Type", "application/json; charset=utf-8");
 	add_nvplist(&headers, 0, "X-API-Key", cfg.api_key);
 	c = add_cbl_transfer(clientlist);
-	url_start_async(cfg.url, HTTP_METHOD_POST, json_serialized, headers, 0, 0, cbl_download_complete, c, cfg.url, 1);
-	safe_free(json_serialized);
-	safe_free_nvplist(headers);
+	/* Do the web request */
+	w = safe_alloc(sizeof(OutgoingWebRequest));
+	safe_strdup(w->url, cfg.url);
+	w->http_method = HTTP_METHOD_POST;
+	w->body = json_serialized;
+	w->headers = headers;
+	w->max_redirects = 1;
+	w->callback = cbl_download_complete;
+	w->callback_data = c;
+	url_start_async(w);
 }
 
 int cbl_any_pending_clients(void)
@@ -1082,6 +1090,7 @@ CMD_OVERRIDE_FUNC(cbl_override_spamreport_gather)
 void cbl_spamreport(Client *from, Client *client)
 {
 	json_t *j, *requests, *data, *cmds, *item;
+	OutgoingWebRequest *w;
 	NameValuePrioList *headers = NULL;
 	int num;
 	char *json_serialized;
@@ -1145,9 +1154,15 @@ void cbl_spamreport(Client *from, Client *client)
 	json_decref(j);
 	add_nvplist(&headers, 0, "Content-Type", "application/json; charset=utf-8");
 	add_nvplist(&headers, 0, "X-API-Key", cfg.api_key);
-	url_start_async(cfg.spamreport_url, HTTP_METHOD_POST, json_serialized, headers, 0, 0, download_complete_dontcare, NULL, cfg.spamreport_url, 1);
-	safe_free(json_serialized);
-	safe_free_nvplist(headers);
+	/* Do the web request */
+	w = safe_alloc(sizeof(OutgoingWebRequest));
+	safe_strdup(w->url, cfg.spamreport_url);
+	w->http_method = HTTP_METHOD_POST;
+	w->body = json_serialized;
+	w->headers = headers;
+	w->max_redirects = 1;
+	w->callback = download_complete_dontcare;
+	url_start_async(w);
 }
 
 CMD_OVERRIDE_FUNC(cbl_override_spamreport_cmd)
