@@ -184,7 +184,7 @@ static void url_check_multi_handles(void)
 			{
 				if (code == 304 || (last_mod != -1 && last_mod <= handle->request->cachetime))
 				{
-					handle->request->callback(handle->request->url, NULL, handle->memory_data, handle->memory_data_len, NULL, 1, handle->request->callback_data);
+					url_callback(handle->request, NULL, handle->memory_data, handle->memory_data_len, NULL, 1, handle->request->callback_data);
 					if (handle->filename)
 						remove(handle->filename);
 				}
@@ -193,14 +193,14 @@ static void url_check_multi_handles(void)
 					if ((last_mod != -1) && handle->filename)
 						unreal_setfilemodtime(handle->filename, last_mod);
 
-					handle->request->callback(handle->request->url, handle->filename, handle->memory_data, handle->memory_data_len, NULL, 0, handle->request->callback_data);
+					url_callback(handle->request, handle->filename, handle->memory_data, handle->memory_data_len, NULL, 0, handle->request->callback_data);
 					if (handle->filename)
 						remove(handle->filename);
 				}
 			}
 			else
 			{
-				handle->request->callback(handle->request->url, NULL, NULL, 0, handle->errorbuf, 0, handle->request->callback_data);
+				url_callback(handle->request, NULL, NULL, 0, handle->errorbuf, 0, handle->request->callback_data);
 				if (handle->filename)
 					remove(handle->filename);
 			}
@@ -321,7 +321,7 @@ void url_start_async(OutgoingWebRequest *request)
 		if (!handle->file_fd)
 		{
 			snprintf(errorbuf, sizeof(errorbuf), "Cannot create '%s': %s", tmp, strerror(ERRNO));
-			handle->request->callback(handle->request->url, NULL, NULL, 0, errorbuf, 0, handle->request->callback_data);
+			url_callback(handle->request, NULL, NULL, 0, errorbuf, 0, handle->request->callback_data);
 			safe_free(file);
 			safe_free(handle);
 			return;

@@ -133,7 +133,7 @@ int https_cancel(Download *handle, FORMAT_STRING(const char *pattern), ...)
 	vsnprintf(handle->errorbuf, sizeof(handle->errorbuf), pattern, vl);
 	va_end(vl);
 	if (handle->request->callback)
-		handle->request->callback(handle->request->url, NULL, NULL, 0, handle->errorbuf, 0, handle->request->callback_data);
+		url_callback(handle->request, NULL, NULL, 0, handle->errorbuf, 0, handle->request->callback_data);
 	url_free_handle(handle);
 	return -1;
 }
@@ -929,12 +929,12 @@ void https_done(Download *handle)
 	if (!handle->request->callback)
 		; /* No special action, request was cancelled */
 	else if (!handle->got_response)
-		handle->request->callback(handle->request->url, NULL, NULL, 0, "HTTPS response not received", 0, handle->request->callback_data);
+		url_callback(handle->request, NULL, NULL, 0, "HTTPS response not received", 0, handle->request->callback_data);
 	else
 	{
 		if ((handle->last_modified > 0) && handle->filename)
 			unreal_setfilemodtime(handle->filename, handle->last_modified);
-		handle->request->callback(handle->request->url, handle->filename, handle->memory_data, handle->memory_data_len, NULL, 0, handle->request->callback_data);
+		url_callback(handle->request, handle->filename, handle->memory_data, handle->memory_data_len, NULL, 0, handle->request->callback_data);
 	}
 	url_free_handle(handle);
 	return;
@@ -948,7 +948,7 @@ void https_done_cached(Download *handle)
 		handle->file_fd = NULL;
 	}
 	if (handle->request->callback)
-		handle->request->callback(handle->request->url, NULL, NULL, 0, NULL, 1, handle->request->callback_data);
+		url_callback(handle->request, NULL, NULL, 0, NULL, 1, handle->request->callback_data);
 	url_free_handle(handle);
 }
 

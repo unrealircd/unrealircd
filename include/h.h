@@ -1474,3 +1474,4 @@ extern int valid_operclass_name(const char *str);
 #define safe_free_outgoingwebrequest(x)	do { if (x) { free_outgoingwebrequest(x); x = NULL; } } while(0)
 extern void free_outgoingwebrequest(OutgoingWebRequest *r);
 extern OutgoingWebRequest *duplicate_outgoingwebrequest(OutgoingWebRequest *orig);
+extern void url_callback(OutgoingWebRequest *r, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *ptr);

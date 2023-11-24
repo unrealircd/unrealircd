@@ -1900,6 +1900,18 @@ struct OutgoingWebRequest
 	// 2) and update url_free_handle_request_portion() there as well
 };
 
+typedef struct OutgoingWebResult OutgoingWebResult;
+struct OutgoingWebResult
+{
+	const char *file;
+	const char *memory;
+	int memory_len;
+	const char *errorbuf;
+	int cached;
+	void *ptr;
+	// If you add or modify fields, update url_callback() in src/misc.c!
+};
+
 typedef struct WebRequest WebRequest;
 /** An incoming web request */
 struct WebRequest {

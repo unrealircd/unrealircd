@@ -3237,3 +3237,22 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	request->store_in_file = 1;
 	url_start_async(request);
 }
+
+void url_callback(OutgoingWebRequest *r, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *ptr)
+{
+	OutgoingWebResult *result;
+
+	if (!r->callback)
+		return; /* Nothing to do */
+
+	result = safe_alloc(sizeof(OutgoingWebResult));
+	result->file = file;
+	result->memory = memory;
+	result->memory_len = memory_len;
+	result->errorbuf = errorbuf;
+	result->cached = cached;
+	result->ptr = ptr;
+	//r->callback(r, result);
+	r->callback(r->url, file, memory, memory_len, errorbuf, cached, ptr);
+	safe_free(result);
+}
