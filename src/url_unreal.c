@@ -93,6 +93,8 @@ void url_free_handle(Download *handle)
 	}
 	if (handle->file_fd)
 		fclose(handle->file_fd);
+	if (handle->filename && !handle->request->keep_file)
+		remove(handle->filename);
 	safe_free(handle->filename);
 	safe_free(handle->memory_data);
 	safe_free(handle->hostname);

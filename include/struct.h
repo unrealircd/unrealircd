@@ -1897,6 +1897,7 @@ struct OutgoingWebRequest
 	int store_in_file;
 	time_t cachetime;
 	int max_redirects;
+	int keep_file;
 	// If you are adding allocated fields here:
 	// 1) update duplicate_outgoingwebrequest() in src/misc.c
 	// 2) and update url_free_handle_request_portion() there as well

@@ -52,6 +52,8 @@ void url_free_handle(Download *handle)
 	DelListItem(handle, downloads);
 	if (handle->file_fd)
 		fclose(handle->file_fd);
+	if (handle->filename && !handle->request->keep_file)
+		remove(handle->filename);
 	safe_free(handle->memory_data);
 	safe_free(handle->filename);
 	if (handle->request_headers_curl)
@@ -176,17 +178,13 @@ static void url_check_multi_handles(void)
 
 			if (handle->request->callback == NULL)
 			{
-				/* Request is already canceled, we don't care about the result, just clean up */
-				if (handle->filename)
-					remove(handle->filename);
+				/* Request is already canceled, we don't care about the result */
 			} else
 			if (msg->data.result == CURLE_OK)
 			{
 				if (code == 304 || (last_mod != -1 && last_mod <= handle->request->cachetime))
 				{
 					url_callback(handle->request, NULL, handle->memory_data, handle->memory_data_len, NULL, 1, handle->request->callback_data);
-					if (handle->filename)
-						remove(handle->filename);
 				}
 				else
 				{
@@ -194,16 +192,15 @@ static void url_check_multi_handles(void)
 						unreal_setfilemodtime(handle->filename, last_mod);
 
 					url_callback(handle->request, handle->filename, handle->memory_data, handle->memory_data_len, NULL, 0, handle->request->callback_data);
-					if (handle->filename)
-						remove(handle->filename);
 				}
 			}
 			else
 			{
 				url_callback(handle->request, NULL, NULL, 0, handle->errorbuf, 0, handle->request->callback_data);
-				if (handle->filename)
-					remove(handle->filename);
 			}
+
+			if (handle->filename && !handle->request->keep_file)
+				remove(handle->filename);
 
 			url_free_handle(handle);
 			curl_multi_remove_handle(multihandle, easyhand);
