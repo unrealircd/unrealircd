@@ -1898,6 +1898,8 @@ struct OutgoingWebRequest
 	time_t cachetime;
 	int max_redirects;
 	int keep_file;
+	int connect_timeout; /**< How many seconds to wait for the (TLS) connect to succeed */
+	int transfer_timeout; /**< How many seconds the total transfer may take (connect+reading everything) */
 	// If you are adding allocated fields here:
 	// 1) update duplicate_outgoingwebrequest() in src/misc.c
 	// 2) and update url_free_handle_request_portion() there as well

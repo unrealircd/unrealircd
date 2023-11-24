@@ -158,6 +158,12 @@ void url_start_async(OutgoingWebRequest *request)
 	if (!request->url || !request->http_method)
 		abort();
 
+	/* Set request defaults */
+	if (request->connect_timeout == 0)
+		request->connect_timeout = DOWNLOAD_CONNECT_TIMEOUT;
+	if (request->transfer_timeout == 0)
+		request->transfer_timeout = DOWNLOAD_TRANSFER_TIMEOUT;
+
 	handle = safe_alloc(sizeof(Download));
 	handle->download_started = TStime();
 	handle->request = request;
@@ -1158,14 +1164,14 @@ EVENT(url_socket_timeout)
 		d_next = d->next;
 		if (d->dns_refcnt)
 			continue; /* can't touch this... */
-		if (!d->connected && (TStime() - d->download_started > DOWNLOAD_CONNECT_TIMEOUT))
+		if (!d->connected && (TStime() - d->download_started > d->request->connect_timeout))
 		{
-			https_cancel(d, "Connect or DNS timeout after %ld seconds", (long)DOWNLOAD_CONNECT_TIMEOUT);
+			https_cancel(d, "Connect or DNS timeout after %d seconds", d->request->connect_timeout);
 			continue;
 		}
-		if (d->connected && (TStime() - d->download_started > DOWNLOAD_TRANSFER_TIMEOUT))
+		if (d->connected && (TStime() - d->download_started > d->request->transfer_timeout))
 		{
-			https_cancel(d, "Download timeout after %ld seconds", (long)DOWNLOAD_TRANSFER_TIMEOUT);
+			https_cancel(d, "Download timeout after %d seconds", d->request->transfer_timeout);
 			continue;
 		}
 	}

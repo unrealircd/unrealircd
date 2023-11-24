@@ -394,8 +394,8 @@ void url_start_async(OutgoingWebRequest *request)
 		curl_easy_setopt(curl, CURLOPT_TIMEVALUE, handle->request->cachetime);
 	}
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
-	curl_easy_setopt(curl, CURLOPT_TIMEOUT, DOWNLOAD_TRANSFER_TIMEOUT);
-	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, DOWNLOAD_CONNECT_TIMEOUT);
+	curl_easy_setopt(curl, CURLOPT_TIMEOUT, request->transfer_timeout ? request->transfer_timeout : DOWNLOAD_TRANSFER_TIMEOUT);
+	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, request->connect_timeout ? request->connect_timeout : DOWNLOAD_CONNECT_TIMEOUT);
 #if LIBCURL_VERSION_NUM >= 0x070f01
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
 	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, handle->request->max_redirects);

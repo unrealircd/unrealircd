@@ -8,7 +8,7 @@
 #ifndef _WIN32
 
 #define MODULEMANAGER_CONNECT_TIMEOUT	7
-#define MODULEMANAGER_READ_TIMEOUT	20
+#define MODULEMANAGER_TRANSFER_TIMEOUT	20
 
 typedef struct ManagedModule ManagedModule;
 
@@ -618,7 +618,7 @@ int mm_refresh_repository(void)
 		}
 		printf("Checking module repository %s...\n", line);
 		numrepos++;
-		tmpfile = synchronous_http_request(line, 1, MODULEMANAGER_CONNECT_TIMEOUT, MODULEMANAGER_READ_TIMEOUT);
+		tmpfile = synchronous_http_request(line, 1, MODULEMANAGER_CONNECT_TIMEOUT, MODULEMANAGER_TRANSFER_TIMEOUT);
 		if (tmpfile)
 		{
 			if (!mm_parse_repo_db(line, tmpfile))
@@ -960,7 +960,7 @@ void mm_install_module(ManagedModule *m)
 	const char *tmpfile;
 
 	printf("Downloading %s from %s...\n", m->name, m->source);
-	tmpfile = synchronous_http_request(m->source, 1, MODULEMANAGER_CONNECT_TIMEOUT, MODULEMANAGER_READ_TIMEOUT);
+	tmpfile = synchronous_http_request(m->source, 1, MODULEMANAGER_CONNECT_TIMEOUT, MODULEMANAGER_TRANSFER_TIMEOUT);
 	if (!tmpfile)
 	{
 		fprintf(stderr, "Repository %s seems to list a module file that cannot be retrieved (%s).\n", m->repo_url, m->source);

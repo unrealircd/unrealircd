@@ -3200,6 +3200,8 @@ OutgoingWebRequest *duplicate_outgoingwebrequest(OutgoingWebRequest *orig)
 	e->cachetime = orig->cachetime;
 	e->max_redirects = orig->max_redirects;
 	e->keep_file = orig->keep_file;
+	e->connect_timeout = orig->connect_timeout;
+	e->transfer_timeout = orig->transfer_timeout;
 	return e;
 }
 
@@ -3283,7 +3285,7 @@ void synchronous_http_request_handle_response(OutgoingWebRequest *request, Outgo
 	return;
 }
 
-const char *synchronous_http_request(const char *url, int max_redirects, int connect_timeout, int read_timeout)
+const char *synchronous_http_request(const char *url, int max_redirects, int connect_timeout, int transfer_timeout)
 {
 	OutgoingWebRequest *request;
 
@@ -3297,10 +3299,10 @@ const char *synchronous_http_request(const char *url, int max_redirects, int con
 	request->max_redirects = max_redirects;
 	request->store_in_file = 1;
 	request->keep_file = 1;
+	request->connect_timeout = connect_timeout;
+	request->transfer_timeout = transfer_timeout;
 	url_start_async(request);
 	synchronous_http_request_in_progress = 1;
-
-	// FIXME: actually use 'connect_timeout' and 'read_timeout' ;)
 
 	while (synchronous_http_request_in_progress == 1)
 	{
