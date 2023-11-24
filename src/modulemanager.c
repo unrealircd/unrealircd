@@ -43,264 +43,6 @@ static int no_make_install = 0;
 int mm_valid_module_name(char *name);
 void free_managed_module(ManagedModule *m);
 
-
-SSL_CTX *mm_init_tls(void)
-{
-	SSL_CTX *ctx_client;
-	char buf1[512], buf2[512];
-	char *curl_ca_bundle = buf1;
-	
-	SSL_load_error_strings();
-	SSLeay_add_ssl_algorithms();
-
-	ctx_client = SSL_CTX_new(SSLv23_client_method());
-	if (!ctx_client)
-		return NULL;
-#ifdef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
-	SSL_CTX_set_min_proto_version(ctx_client, TLS1_2_VERSION);
-#endif
-	SSL_CTX_set_options(ctx_client, SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3|SSL_OP_NO_TLSv1|SSL_OP_NO_TLSv1_1);
-
-	/* Verify peer certificate */
-	snprintf(buf1, sizeof(buf1), "%s/tls/curl-ca-bundle.crt", CONFDIR);
-	if (!file_exists(buf1))
-	{
-		snprintf(buf2, sizeof(buf2), "%s/doc/conf/tls/curl-ca-bundle.crt", BUILDDIR);
-		if (!file_exists(buf2))
-		{
-			fprintf(stderr, "ERROR: Neither %s nor %s exist.\n"
-			                "Cannot use module manager without curl-ca-bundle.crt\n",
-			                buf1, buf2);
-			exit(-1);
-		}
-		curl_ca_bundle = buf2;
-	}
-	SSL_CTX_load_verify_locations(ctx_client, curl_ca_bundle, NULL);
-	SSL_CTX_set_verify(ctx_client, SSL_VERIFY_PEER, NULL);
-
-	/* Limit ciphers as well */
-	SSL_CTX_set_cipher_list(ctx_client, UNREALIRCD_DEFAULT_CIPHERS);
-
-	return ctx_client;
-}	
-
-int parse_url(const char *url, char **host, int *port, char **document)
-{
-	char *p;
-	static char hostbuf[256];
-	static char documentbuf[512];
-
-	if (!str_starts_with_case_sensitive(url, "https://"))
-	{
-		fprintf(stderr, "ERROR: URL Must start with https! URL: %s\n", url);
-		return 0;
-	}
-	url += 8; /* skip over https:// part */
-
-	p = strchr(url, '/');
-	if (!p)
-		return 0;
-
-	strlncpy(hostbuf, url, sizeof(hostbuf), p - url);
-
-	strlcpy(documentbuf, p, sizeof(documentbuf));
-
-	*host = hostbuf;
-	*document = documentbuf;
-	// TODO: parse port, rather than hardcode:
-	*port = 443;
-	return 1;
-}
-
-int mm_http_request(char *url, char *fname, int follow_redirects)
-{
-	char *host = NULL;
-	int port = 0;
-	char *document = NULL;
-	char hostandport[256];
-	char buf[1024];
-	int n;
-	FILE *fd;
-	SSL_CTX *ctx_client;
-	SSL *ssl = NULL;
-	BIO *socket = NULL;
-	char *errstr = NULL;
-	int got_data = 0, first_line = 1;
-	int http_redirect = 0;
-
-	if (!parse_url(url, &host, &port, &document))
-		return 0;
-
-	snprintf(hostandport, sizeof(hostandport), "%s:%d", host, port);
-
-	ctx_client = mm_init_tls();
-	if (!ctx_client)
-	{
-		fprintf(stderr, "ERROR: TLS initalization failure (I)\n");
-		return 0;
-	}
-
-	alarm(MODULEMANAGER_CONNECT_TIMEOUT);
-
-	socket = BIO_new_ssl_connect(ctx_client);
-	if (!socket)
-	{
-		fprintf(stderr, "ERROR: TLS initalization failure (II)\n");
-		goto out1;
-	}
-
-	BIO_get_ssl(socket, &ssl);
-	if (!ssl)
-	{
-		fprintf(stderr, "ERROR: Could not get TLS connection from BIO -- strange\n");
-		goto out2;
-	}
-	
-	BIO_set_conn_hostname(socket, hostandport);
-	SSL_set_tlsext_host_name(ssl, host);
-
-	if (BIO_do_connect(socket) != 1)
-	{
-		fprintf(stderr, "ERROR: Could not connect to %s\n", hostandport);
-		//config_report_ssl_error(); FIXME?
-		goto out2;
-	}
-	
-	if (BIO_do_handshake(socket) != 1)
-	{
-		fprintf(stderr, "ERROR: Could not connect to %s (TLS handshake failed)\n", hostandport);
-		//config_report_ssl_error(); FIXME?
-		goto out2;
-	}
-
-	if (!verify_certificate(ssl, host, &errstr))
-	{
-		fprintf(stderr, "Certificate problem for %s: %s\n", host, errstr);
-		goto out2;
-	}
-
-	snprintf(buf, sizeof(buf), "GET %s HTTP/1.1\r\n"
-	                    "User-Agent: UnrealIRCd %s\r\n"
-	                    "Host: %s\r\n"
-	                    "Connection: close\r\n"
-	                    "\r\n",
-	                    document,
-	                    VERSIONONLY,
-	                    hostandport);
-
-	BIO_puts(socket, buf);
-	
-	fd = fopen(fname, "wb");
-	if (!fd)
-	{
-		fprintf(stderr, "Could not write to temporary file '%s': %s\n",
-			fname, strerror(errno));
-		goto out2;
-	}
-
-	alarm(MODULEMANAGER_READ_TIMEOUT);
-	while ((n = BIO_read(socket, buf, sizeof(buf)-1)) > 0)
-	{
-		buf[n] = '\0';
-		if (got_data)
-		{
-			fwrite(buf, n, 1, fd); // TODO: check for write errors
-		} else {
-			/* Still need to parse header */
-			char *line, *p = NULL;
-
-			for (line = strtoken(&p, buf, "\n"); line; line = strtoken(&p, NULL, "\n"))
-			{
-				if (first_line)
-				{
-					if (http_redirect)
-					{
-						if (str_starts_with_case_sensitive(line, "Location: "))
-						{
-							line += 10;
-							stripcrlf(line);
-							fclose(fd);
-							BIO_free_all(socket);
-							SSL_CTX_free(ctx_client);
-							if (!str_starts_with_case_sensitive(line, "https://"))
-							{
-								fprintf(stderr, "Invalid HTTP Redirect to '%s' -- must start with https://\n", line);
-								return 0;
-							}
-							printf("Following redirect to %s\n", line);
-							return mm_http_request(line, fname, 0);
-						}
-						continue;
-					}
-					if (str_starts_with_case_sensitive(line, "HTTP/1.1 301") ||
-					    str_starts_with_case_sensitive(line, "HTTP/1.1 302") ||
-					    str_starts_with_case_sensitive(line, "HTTP/1.1 303") ||
-					    str_starts_with_case_sensitive(line, "HTTP/1.1 307") ||
-					    str_starts_with_case_sensitive(line, "HTTP/1.1 308"))
-					{
-						if (!follow_redirects)
-						{
-							fprintf(stderr, "ERROR: received HTTP(S) redirect while already following another HTTP(S) redirect.\n");
-							goto out3;
-						}
-						http_redirect = 1;
-						continue;
-					}
-					if (!str_starts_with_case_sensitive(line, "HTTP/1.1 200"))
-					{
-						stripcrlf(line);
-						if (strlen(line) > 128)
-							line[128] = '\0';
-						fprintf(stderr, "Error while fetching %s: %s\n", url, line);
-						goto out3;
-					}
-					first_line = 0;
-				}
-				if (!*line || !strcmp(line, "\r"))
-				{
-					int remaining_bytes;
-
-					got_data = 1;
-					/* Bit of a hack here to write part of the data
-					 * that is not part of the header but the data response..
-					 * We need to jump over the NUL byte and then check
-					 * to see if we can access it.. since it could be either
-					 * a NUL byte due to the strtoken() or a NUL byte simply
-					 * because that was all the data from BIO_read() at this point.
-					 */
-					if (*line == '\0')
-						line += 1; /* jump over \0 */
-					else
-						line += 2; /* jump over \r\0 */
-					remaining_bytes = n - (line - buf);
-					if (remaining_bytes > 0)
-						fwrite(line, remaining_bytes, 1, fd);
-					break; /* must break the for loop here */
-				}
-			}
-		}
-	}
-
-	if (!got_data)
-	{
-		fprintf(stderr, "Error while fetching %s: unable to retrieve data\n", url);
-		goto out3;
-	}
-
-	fclose(fd);
-	BIO_free_all(socket);
-	SSL_CTX_free(ctx_client);
-	return 1;
-out3:
-	fclose(fd);
-out2:
-	BIO_free_all(socket);
-out1:
-	SSL_CTX_free(ctx_client);
-	alarm(0);
-	return 0;
-}
-
 typedef enum ParseModuleHeaderStage {
 	PMH_STAGE_LOOKING		= 0,
 	PMH_STAGE_MODULEHEADER		= 1,
@@ -796,7 +538,7 @@ fail_mm_repo_module_config:
 
 #undef CheckNull
 
-int mm_parse_repo_db(char *url, char *filename)
+int mm_parse_repo_db(char *url, const char *filename)
 {
 	ConfigFile *cf;
 	ConfigEntry *ce;
@@ -828,7 +570,7 @@ int mm_refresh_repository(void)
 	char *sourceslist = mm_sourceslist_file();
 	FILE *fd;
 	char buf[512];
-	char *tmpfile;
+	const char *tmpfile;
 	int linenr = 0;
 	int success = 0;
 	int numrepos = 0;
@@ -876,8 +618,8 @@ int mm_refresh_repository(void)
 		}
 		printf("Checking module repository %s...\n", line);
 		numrepos++;
-		tmpfile = unreal_mktemp(TMPDIR, "mm");
-		if (mm_http_request(line, tmpfile, 1))
+		tmpfile = synchronous_http_request(line, 1, MODULEMANAGER_CONNECT_TIMEOUT, MODULEMANAGER_READ_TIMEOUT);
+		if (tmpfile)
 		{
 			if (!mm_parse_repo_db(line, tmpfile))
 			{
@@ -1139,7 +881,7 @@ void mm_list(char *searchname)
 	print_documentation();
 }
 
-int mm_compile(ManagedModule *m, char *tmpfile, int test)
+int mm_compile(ManagedModule *m, const char *tmpfile, int test)
 {
 	char newpath[512];
 	char cmd[512];
@@ -1214,16 +956,12 @@ int mm_compile(ManagedModule *m, char *tmpfile, int test)
  */
 void mm_install_module(ManagedModule *m)
 {
-	const char *basename = unreal_getfilename(m->source);
-	char *tmpfile;
 	const char *sha256;
-
-	if (!basename)
-		basename = "mod.c";
-	tmpfile = unreal_mktemp(TMPDIR, basename);
+	const char *tmpfile;
 
 	printf("Downloading %s from %s...\n", m->name, m->source);
-	if (!mm_http_request(m->source, tmpfile, 1))
+	tmpfile = synchronous_http_request(m->source, 1, MODULEMANAGER_CONNECT_TIMEOUT, MODULEMANAGER_READ_TIMEOUT);
+	if (!tmpfile)
 	{
 		fprintf(stderr, "Repository %s seems to list a module file that cannot be retrieved (%s).\n", m->repo_url, m->source);
 		fprintf(stderr, "Fatal error encountered. Contact %s: %s\n", m->author, m->troubleshooting);

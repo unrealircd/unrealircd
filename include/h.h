@@ -1475,3 +1475,4 @@ extern int valid_operclass_name(const char *str);
 extern void free_outgoingwebrequest(OutgoingWebRequest *r);
 extern OutgoingWebRequest *duplicate_outgoingwebrequest(OutgoingWebRequest *orig);
 extern void url_callback(OutgoingWebRequest *r, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *ptr);
+extern const char *synchronous_http_request(const char *url, int max_redirects, int connect_timeout, int read_timeout);

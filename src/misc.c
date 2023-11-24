@@ -3199,6 +3199,7 @@ OutgoingWebRequest *duplicate_outgoingwebrequest(OutgoingWebRequest *orig)
 	e->store_in_file = orig->store_in_file;
 	e->cachetime = orig->cachetime;
 	e->max_redirects = orig->max_redirects;
+	e->keep_file = orig->keep_file;
 	return e;
 }
 
@@ -3259,3 +3260,60 @@ void url_callback(OutgoingWebRequest *r, const char *file, const char *memory, i
 	r->callback(r, response);
 	safe_free(response);
 }
+
+static int synchronous_http_request_in_progress;
+static char synchronous_http_request_tmpfile[512];
+
+void synchronous_http_request_handle_response(OutgoingWebRequest *request, OutgoingWebResponse *response)
+{
+	if (response->errorbuf)
+	{
+		config_error("%s: %s", request->url, response->errorbuf);
+		synchronous_http_request_in_progress = -1;
+		return;
+	}
+	if (response->file)
+	{
+		strlcpy(synchronous_http_request_tmpfile, response->file, sizeof(synchronous_http_request_tmpfile));
+		synchronous_http_request_in_progress = 0;
+	} else {
+		config_error("%s: Unexpected error, no error but no file", request->url);
+		synchronous_http_request_in_progress = -1;
+	}
+	return;
+}
+
+const char *synchronous_http_request(const char *url, int max_redirects, int connect_timeout, int read_timeout)
+{
+	OutgoingWebRequest *request;
+
+	if (loop.booted)
+		abort(); /* this function is NOT for modules or the like */
+
+	request = safe_alloc(sizeof(OutgoingWebRequest));
+	safe_strdup(request->url, url);
+	request->http_method = HTTP_METHOD_GET;
+	request->callback = synchronous_http_request_handle_response;
+	request->max_redirects = max_redirects;
+	request->store_in_file = 1;
+	request->keep_file = 1;
+	url_start_async(request);
+	synchronous_http_request_in_progress = 1;
+
+	// FIXME: actually use 'connect_timeout' and 'read_timeout' ;)
+
+	while (synchronous_http_request_in_progress == 1)
+	{
+		gettimeofday(&timeofday_tv, NULL);
+		timeofday = timeofday_tv.tv_sec;
+		url_socket_timeout(NULL);
+		unrealdns_timeout(NULL);
+		fd_select(500);
+	}
+
+	if (synchronous_http_request_in_progress == 0)
+		return synchronous_http_request_tmpfile;
+	return NULL; /* failure */
+}
+
+// TODO: move all that url shit to url_generic.c ? ;)
