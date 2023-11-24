@@ -32,8 +32,8 @@ module
 #endif
 ModuleHeader MOD_HEADER
   = {
-	"third/central-api",
-	"1.0.1",
+	"central-api",
+	"1.0.2",
 	"Acquire and set API key for unrealircd.org services",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -71,6 +71,7 @@ static void free_config(void)
 MOD_TEST()
 {
 	memset(&req, 0, sizeof(req));
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, capi_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, capi_config_posttest);
 	return MOD_SUCCESS;
@@ -80,6 +81,7 @@ MOD_INIT()
 {
 	ModDataInfo mreq;
 
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, capi_config_run);
 	HookAddConstString(modinfo->handle, HOOKTYPE_GET_CENTRAL_API_KEY, 0, capi_get_central_api_key);
 	CommandAdd(modinfo->handle, "CENTRALAPISRV", cmd_centralapisrv, MAXPARA, CMD_UNREGISTERED);

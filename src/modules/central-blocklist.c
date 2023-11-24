@@ -44,8 +44,8 @@ module
 
 ModuleHeader MOD_HEADER
   = {
-	"third/centralblocklist",
-	"1.0.4",
+	"central-blocklist",
+	"1.0.5",
 	"Check users at central blocklist",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -215,6 +215,7 @@ static void free_config(void)
 MOD_TEST()
 {
 	memset(&req, 0, sizeof(req));
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, cbl_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, cbl_config_posttest);
 	return MOD_SUCCESS;
@@ -225,6 +226,8 @@ MOD_INIT()
 	ModDataInfo mreq;
 
 	cbl_module = modinfo->handle;
+
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	init_config();
 
@@ -269,7 +272,7 @@ MOD_LOAD()
 	{
 		config_warn("The centralblocklist module is inactive because the central api key is not set. "
 		            "Acquire a key via https://www.unrealircd.org/central-api/ and then "
-		            "make sure the third/central-api-key module is loaded and set::central-api::api-key set.");
+		            "make sure the central-api-key module is loaded and set::central-api::api-key set.");
 		return MOD_SUCCESS;
 	} else {
 		safe_strdup(cfg.api_key, central_api_key);
@@ -321,7 +324,7 @@ int cbl_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		{
 			config_error("%s:%i: the api-key is no longer configured at this place. "
 			             "Remove set::central-blocklist::api-key, load the "
-			             "third/central-api module and put the key in set::central-api::api-key",
+			             "central-api module and put the key in set::central-api::api-key",
 			             cep->file->filename, cep->line_number);
 			errors++;
 		} else

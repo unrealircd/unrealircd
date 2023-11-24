@@ -210,6 +210,8 @@ DLL_FILES=\
  src/modules/botmotd.dll \
  src/modules/bot-tag.dll \
  src/modules/cap.dll \
+ src/modules/central-api.dll \
+ src/modules/central-blocklist.dll \
  src/modules/certfp.dll \
  src/modules/chanmodes/chanowner.dll \
  src/modules/chanmodes/chanadmin.dll \
@@ -730,6 +732,12 @@ src/modules/bot-tag.dll: src/modules/bot-tag.c $(INCLUDES)
 
 src/modules/cap.dll: src/modules/cap.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/cap.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/cap.pdb $(MODLFLAGS)
+
+src/modules/central-api.dll: src/modules/central-api.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/central-api.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/central-api.pdb $(MODLFLAGS)
+
+src/modules/central-blocklist.dll: src/modules/central-blocklist.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/central-blocklist.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/central-blocklist.pdb $(MODLFLAGS)
 
 src/modules/certfp.dll: src/modules/certfp.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/certfp.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/certfp.pdb $(MODLFLAGS)

@@ -84,6 +84,7 @@ MODULES= \
 	standard-replies.so issued-by-tag.so \
 	real-quit-reason.so \
 	spamreport.so crule.so \
+	central-api.so central-blocklist.so \
 	$(GEOIP_CLASSIC_OBJECTS) $(GEOIP_MAXMIND_OBJECTS)
 
 MODULEFLAGS=@MODULEFLAGS@
