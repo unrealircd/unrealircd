@@ -114,7 +114,7 @@ RPC_CALL_FUNC(rpc_server_ban_list)
 }
 
 /** Shared code for selecting a server ban, for .add/.del/.get */
-int server_ban_select_criteria(Client *client, json_t *request, json_t *params,
+int server_ban_select_criteria(Client *client, json_t *request, json_t *params, int add,
                                const char **name,
                                const char **type_name,
                                char *tkl_type_char,
@@ -152,7 +152,7 @@ int server_ban_select_criteria(Client *client, json_t *request, json_t *params,
 		return 0;
 	}
 
-	if (!server_ban_parse_mask(client, 0, *tkl_type_char, *name, usermask, hostmask, soft, &error))
+	if (!server_ban_parse_mask(client, add, *tkl_type_char, *name, usermask, hostmask, soft, &error))
 	{
 		rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Error: %s", error);
 		return 0;
@@ -175,7 +175,7 @@ RPC_CALL_FUNC(rpc_server_ban_get)
 	char tkl_type_char;
 	int tkl_type_int;
 
-	if (!server_ban_select_criteria(client, request, params,
+	if (!server_ban_select_criteria(client, request, params, 0,
 	                                &name, &type_name,
 	                                &tkl_type_char, &tkl_type_int,
 	                                &usermask, &hostmask, &soft))
@@ -209,7 +209,7 @@ RPC_CALL_FUNC(rpc_server_ban_del)
 	const char *tkllayer[10];
 	char tkl_type_str[2];
 
-	if (!server_ban_select_criteria(client, request, params,
+	if (!server_ban_select_criteria(client, request, params, 0,
 	                                &name, &type_name,
 	                                &tkl_type_char, &tkl_type_int,
 	                                &usermask, &hostmask, &soft))
@@ -278,7 +278,7 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 	time_t tkl_expire_at;
 	time_t tkl_set_at = TStime();
 
-	if (!server_ban_select_criteria(client, request, params,
+	if (!server_ban_select_criteria(client, request, params, 1,
 	                                &name, &type_name,
 	                                &tkl_type_char, &tkl_type_int,
 	                                &usermask, &hostmask, &soft))
