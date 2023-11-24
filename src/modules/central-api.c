@@ -27,9 +27,6 @@ module
 
 #include "unrealircd.h"
 
-#ifndef HOOKTYPE_GET_CENTRAL_API_KEY
- #define HOOKTYPE_GET_CENTRAL_API_KEY 199
-#endif
 ModuleHeader MOD_HEADER
   = {
 	"central-api",
@@ -58,7 +55,7 @@ int capi_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int capi_config_posttest(int *errs);
 int capi_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 CMD_FUNC(cmd_centralapisrv);
-const char *capi_get_central_api_key(void);
+const char *_get_central_api_key(void);
 
 static void free_config(void)
 {
@@ -74,6 +71,7 @@ MOD_TEST()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, capi_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, capi_config_posttest);
+	EfunctionAddConstString(modinfo->handle, EFUNC_GET_CENTRAL_API_KEY, _get_central_api_key);
 	return MOD_SUCCESS;
 }
 
@@ -83,7 +81,6 @@ MOD_INIT()
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, capi_config_run);
-	HookAddConstString(modinfo->handle, HOOKTYPE_GET_CENTRAL_API_KEY, 0, capi_get_central_api_key);
 	CommandAdd(modinfo->handle, "CENTRALAPISRV", cmd_centralapisrv, MAXPARA, CMD_UNREGISTERED);
 
 	return MOD_SUCCESS;
@@ -261,7 +258,7 @@ CMD_FUNC(cmd_centralapisrv)
 	}
 }
 
-const char *capi_get_central_api_key(void)
+const char *_get_central_api_key(void)
 {
 	if (cfg.api_key)
 		return cfg.api_key;

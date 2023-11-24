@@ -926,6 +926,7 @@ extern int (*crule_eval)(crule_context *context, CRuleNode *rule);
 extern void (*crule_free)(CRuleNode **);
 extern const char *(*crule_errstring)(int errcode);
 extern void (*ban_act_set_reputation)(Client *client, BanAction *action);
+extern const char *(*get_central_api_key)(void);
 /* /Efuncs */
 
 /* TLS functions */
@@ -980,6 +981,7 @@ extern void mtag_add_issued_by_default_handler(MessageTag **mtags, Client *clien
 extern void cancel_ident_lookup_default_handler(Client *client);
 extern int spamreport_default_handler(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
 extern void ban_act_set_reputation_default_handler(Client *client, BanAction *action);
+extern const char *get_central_api_key_default_handler(void);
 /* End of default handlers for efunctions */
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;

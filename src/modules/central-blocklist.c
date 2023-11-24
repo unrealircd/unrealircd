@@ -28,10 +28,6 @@ module
 
 #include "unrealircd.h"
 
-#ifndef HOOKTYPE_GET_CENTRAL_API_KEY
- #define HOOKTYPE_GET_CENTRAL_API_KEY 199
-#endif
-
 ModuleHeader MOD_HEADER
   = {
 	"central-blocklist",
@@ -255,9 +251,7 @@ void do_command_overrides(ModuleInfo *modinfo)
 
 MOD_LOAD()
 {
-	const char *central_api_key;
-
-	central_api_key = get_api_key();
+	const char *central_api_key = get_central_api_key();
 	if (!central_api_key)
 	{
 		config_warn("The centralblocklist module is inactive because the central api key is not set. "
@@ -1058,14 +1052,6 @@ EVENT(centralblocklist_bundle_requests)
 {
 	if (cbl_any_pending_clients())
 		send_request_for_pending_clients();
-}
-
-const char *get_api_key(void)
-{
-	Hook *h;
-	for (h = Hooks[HOOKTYPE_GET_CENTRAL_API_KEY]; h; h = h->next)
-		return h->func.conststringfunc();
-	return NULL;
 }
 
 /** Remember last # commands for SPAMREPORT */
