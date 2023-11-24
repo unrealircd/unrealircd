@@ -97,6 +97,8 @@ static void set_curl_tls_options(CURL *curl)
 #endif
 
 	snprintf(buf, sizeof(buf), "%s/tls/curl-ca-bundle.crt", CONFDIR);
+	if (!file_exists(buf))
+		snprintf(buf, sizeof(buf), "%s/doc/conf/tls/curl-ca-bundle.crt", BUILDDIR);
 	curl_easy_setopt(curl, CURLOPT_CAINFO, buf);
 }
 
