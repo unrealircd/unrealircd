@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
   = {
 	"central-blocklist",
-	"1.0.5",
+	"1.0.6",
 	"Check users at central blocklist",
 	"UnrealIRCd Team",
 	"unrealircd-6",

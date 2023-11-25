@@ -3,28 +3,6 @@
  * License: GPLv2
  */
 
-/*** <<<MODULE MANAGER START>>>
-module
-{
-	documentation "https://www.unrealircd.org/docs/Central_API";
-
-	// This is displayed in './unrealircd module info ..' and also if compilation of the module fails:
-	troubleshooting "Please report at https://bugs.unrealircd.org/ if this module fails to compile";
-
-	// Minimum version necessary for this module to work:
-	min-unrealircd-version "6.1.2";
-
-	// Maximum version
-	max-unrealircd-version "6.*";
-
-	post-install-text {
-		"The module is installed. See https://www.unrealircd.org/docs/Central_API";
-		"for the configuration that you need to add.";
-	}
-}
-*** <<<MODULE MANAGER END>>>
-*/
-
 #include "unrealircd.h"
 
 ModuleHeader MOD_HEADER
