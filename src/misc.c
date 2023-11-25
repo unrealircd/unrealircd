@@ -1897,6 +1897,16 @@ const char *get_central_api_key_default_handler(void)
 	return NULL;
 }
 
+int central_spamreport_default_handler(Client *target)
+{
+	return 0;
+}
+
+int central_spamreport_enabled_default_handler(void)
+{
+	return 0;
+}
+
 /** my_timegm: mktime()-like function which will use GMT/UTC.
  * Strangely enough there is no standard function for this.
  * On some *NIX OS's timegm() may be available, sometimes only

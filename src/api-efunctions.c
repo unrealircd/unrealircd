@@ -172,6 +172,8 @@ void (*crule_free)(CRuleNode **);
 const char *(*crule_errstring)(int errcode);
 void (*ban_act_set_reputation)(Client *client, BanAction *action);
 const char *(*get_central_api_key)(void);
+int (*central_spamreport)(Client *target);
+int (*central_spamreport_enabled)(void);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
@@ -489,4 +491,6 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_CRULE_ERRSTRING, crule_errstring, NULL, EFUNC_FLAG_EARLY);
 	efunc_init_function(EFUNC_BAN_ACT_SET_REPUTATION, ban_act_set_reputation, ban_act_set_reputation_default_handler, 0);
 	efunc_init_function(EFUNC_GET_CENTRAL_API_KEY, get_central_api_key, get_central_api_key_default_handler, 0);
+	efunc_init_function(EFUNC_CENTRAL_SPAMREPORT, central_spamreport, central_spamreport_default_handler, 0);
+	efunc_init_function(EFUNC_CENTRAL_SPAMREPORT_ENABLED, central_spamreport_enabled, central_spamreport_enabled_default_handler, 0);
 }

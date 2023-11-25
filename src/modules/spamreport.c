@@ -20,14 +20,15 @@ ModuleHeader MOD_HEADER
 typedef enum SpamreportType {
 	SPAMREPORT_TYPE_SIMPLE = 1,
 	SPAMREPORT_TYPE_DRONEBL = 2,
-} SpamReportType;
+	SPAMREPORT_TYPE_CENTRAL_SPAMREPORT = 3,
+} SpamreportType;
 
 typedef struct Spamreport Spamreport;
 struct Spamreport {
 	Spamreport *prev, *next;
 	char *name; /**< Name of the block, spamreport <this> { } */
 	char *url; /**< URL to use */
-	SpamReportType type;
+	SpamreportType type;
 	HttpMethod http_method;
 	NameValuePrioList *parameters;
 	SecurityGroup *except;
@@ -51,7 +52,9 @@ int tkl_config_run_spamreport(ConfigFile *, ConfigEntry *, int);
 Spamreport *find_spamreport_block(const char *name);
 void free_spamreport_blocks(void);
 int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
+int _central_spamreport_enabled(void);
 void spamreportcounters_free_all(ModData *m);
+SpamreportType parse_spamreport_type(const char *s);
 
 /* Variables */
 Spamreport *spamreports = NULL;
@@ -61,6 +64,7 @@ MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAdd(modinfo->handle, EFUNC_SPAMREPORT, _spamreport);
+	EfunctionAdd(modinfo->handle, EFUNC_CENTRAL_SPAMREPORT_ENABLED, _central_spamreport_enabled);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_spamreport);
 	return MOD_SUCCESS;
 }
@@ -92,7 +96,7 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	ConfigEntry *cep, *cepp;
 	int errors = 0;
 	char has_url=0, has_type=0, has_type_dronebl=0, has_http_method=0;
-	char has_dronebl_type=0, has_dronebl_rpckey=0;
+	char has_dronebl_type, has_dronebl_rpckey=0;
 
 	/* We are only interested in spamreport { } blocks */
 	if ((type != CONFIG_MAIN) || strcmp(ce->name, "spamreport"))
@@ -101,12 +105,6 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	if (!ce->value)
 	{
 		config_error("%s:%i: spamreport block has no name, should be like: spamfilter <name> { }",
-			ce->file->filename, ce->line_number);
-		errors++;
-	} else
-	if (!strcasecmp(ce->value, "unrealircd"))
-	{
-		config_error("%s:%i: spamreport block cannot be named 'unrealircd', is a reserved name.",
 			ce->file->filename, ce->line_number);
 		errors++;
 	}
@@ -160,15 +158,11 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 					cep->line_number, "spamreport::type");
 				continue;
 			}
-			has_type = 1;
-			if (!strcmp(cep->value, "simple"))
-				;
-			else if (!strcmp(cep->value, "dronebl"))
-				has_type_dronebl = 1;
-			else
+			has_type = parse_spamreport_type(cep->value);
+			if (!has_type)
 			{
-				config_error("%s:%i: spamreport::type: only 'simple' is supported at the moment",
-					cep->file->filename, cep->line_number);
+				config_error("%s:%i: spamreport::type: unknown type '%s', supported types are: simple, dronebl, central-spamreport.",
+					cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			}
 		}
@@ -213,7 +207,11 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		errors++;
 	}
 
-	if (has_type_dronebl)
+	if (has_type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT)
+	{
+		/* Nothing required */
+	} else
+	if (has_type == SPAMREPORT_TYPE_DRONEBL)
 	{
 		if (!has_dronebl_rpckey || !has_dronebl_type)
 		{
@@ -269,12 +267,14 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 		else if (!strcmp(cep->name, "type"))
 		{
-			if (!strcmp(cep->value, "simple"))
-				s->type = SPAMREPORT_TYPE_SIMPLE;
-			else if (!strcmp(cep->value, "dronebl"))
-				s->type = SPAMREPORT_TYPE_DRONEBL;
-			else
-				abort();
+			s->type = parse_spamreport_type(cep->value);
+
+			if ((s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT) &&
+			    !is_module_loaded("central-blocklist"))
+			{
+				config_warn("%s:%d: blacklist block with type 'central-spamreport' but the 'central-blocklist' module is not loaded.",
+					ce->file->filename, ce->line_number);
+			}
 		}
 		else if (!strcmp(cep->name, "http-method"))
 		{
@@ -344,6 +344,17 @@ Spamreport *find_spamreport_block(const char *name)
 	return NULL;
 }
 
+SpamreportType parse_spamreport_type(const char *s)
+{
+	if (!strcmp(s, "simple"))
+		return SPAMREPORT_TYPE_SIMPLE;
+	else if (!strcmp(s, "dronebl"))
+		return SPAMREPORT_TYPE_DRONEBL;
+	else if (!strcmp(s, "central-spamreport"))
+		return SPAMREPORT_TYPE_CENTRAL_SPAMREPORT;
+	return 0;
+}
+
 /* Returns 1 if ratelimited (don't do the request), otherwise 0 */
 int spamfilter_block_rate_limited(Spamreport *spamreport)
 {
@@ -390,6 +401,16 @@ int spamfilter_block_rate_limited(Spamreport *spamreport)
 	return 0; /* All OK */
 }
 
+/** Return 1 if there is a spamreport { type central-spamreport; } block */
+int _central_spamreport_enabled(void)
+{
+	Spamreport *s;
+	for (s = spamreports; s; s = s->next)
+		if (s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT)
+			return 1;
+	return 0;
+}
+
 int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block)
 {
 	Spamreport *s;
@@ -421,7 +442,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 
 	s = find_spamreport_block(spamreport_block);
 	if (!s)
-		return -1; /* NOTFOUND */
+		return 0; /* NOTFOUND */
 
 	if (s->except && client && user_allowed_by_security_group(client, s->except))
 		return 0;
@@ -465,7 +486,13 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 		safe_free_nvplist(list); // frees all the duplicated lists
 		add_nvplist(&headers, 0, "Content-Type", "text/xml");
 	} else
+	if (s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT)
+	{
+		return central_spamreport(client);
+	} else
+	{
 		abort();
+	}
 
 #ifdef DEBUGMODE
 	unreal_log(ULOG_DEBUG, "spamreport", "SPAMREPORT_SEND_REQUEST", NULL,
