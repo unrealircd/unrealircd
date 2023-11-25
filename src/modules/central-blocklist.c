@@ -3,29 +3,6 @@
  * License: GPLv2
  */
 
-/*** <<<MODULE MANAGER START>>>
-module
-{
-	documentation "https://www.unrealircd.org/docs/Central_Blocklist";
-
-	// This is displayed in './unrealircd module info ..' and also if compilation of the module fails:
-	troubleshooting "Please report at https://bugs.unrealircd.org/ if this module fails to compile";
-
-	// Minimum version necessary for this module to work:
-	min-unrealircd-version "6.1.2";
-
-	// Maximum version
-	max-unrealircd-version "6.*";
-
-	post-install-text {
-		"The module is installed. See https://www.unrealircd.org/docs/Central_Blocklist";
-		"for the configuration that you need to add. One important aspect is getting";
-		"an API Key, which is a process that (as of October 2023) is not open to everyone.";
-	}
-}
-*** <<<MODULE MANAGER END>>>
-*/
-
 #include "unrealircd.h"
 
 ModuleHeader MOD_HEADER
@@ -230,6 +207,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, cbl_config_run);
 	//HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0, cbl_prelocalconnect);
 	HookAdd(modinfo->handle, HOOKTYPE_IS_HANDSHAKE_FINISHED, INT_MAX, cbl_is_handshake_finished);
+	RegisterApiCallback(modinfo->handle, API_CALLBACK_WEB_RESPONSE, "cbl_download_complete", cbl_download_complete);
 	return MOD_SUCCESS;
 }
 
@@ -284,7 +262,7 @@ MOD_LOAD()
 
 MOD_UNLOAD()
 {
-	cbl_cancel_all_transfers();
+	// No longer needed thanks to RegisterApiCallbackXX -- cbl_cancel_all_transfers();
 	free_config();
 	return MOD_SUCCESS;
 }
@@ -1038,7 +1016,8 @@ void send_request_for_pending_clients(void)
 	w->body = json_serialized;
 	w->headers = headers;
 	w->max_redirects = 1;
-	w->callback = cbl_download_complete;
+	//w->callback = cbl_download_complete;
+	safe_strdup(w->apicallback, "cbl_download_complete");
 	w->callback_data = c;
 	url_start_async(w);
 }

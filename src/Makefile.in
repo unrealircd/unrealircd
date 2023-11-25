@@ -30,7 +30,7 @@ OBJS=ircd_vars.o dns.o auth.o channel.o dbuf.o \
 	version.o whowas.o random.o api-usermode.o api-channelmode.o \
 	api-moddata.o api-extban.o api-isupport.o api-command.o \
 	api-clicap.o api-messagetag.o api-history-backend.o api-efunctions.o \
-	api-event.o api-rpc.o \
+	api-event.o api-rpc.o api-apicallback.o \
 	crypt_blowfish.o unrealdb.o crashreport.o modulemanager.o \
 	utf8.o json.o log.o \
 	openssl_hostname_validation.o $(URL)

@@ -134,8 +134,7 @@ int https_cancel(Download *handle, FORMAT_STRING(const char *pattern), ...)
 	va_start(vl, pattern);
 	vsnprintf(handle->errorbuf, sizeof(handle->errorbuf), pattern, vl);
 	va_end(vl);
-	if (handle->request->callback)
-		url_callback(handle->request, NULL, NULL, 0, handle->errorbuf, 0, handle->request->callback_data);
+	url_callback(handle->request, NULL, NULL, 0, handle->errorbuf, 0, handle->request->callback_data);
 	url_free_handle(handle);
 	return -1;
 }
@@ -934,8 +933,6 @@ void https_done(Download *handle)
 		handle->file_fd = NULL;
 	}
 
-	if (!handle->request->callback)
-		; /* No special action, request was cancelled */
 	else if (!handle->got_response)
 		url_callback(handle->request, NULL, NULL, 0, "HTTPS response not received", 0, handle->request->callback_data);
 	else
@@ -955,33 +952,25 @@ void https_done_cached(Download *handle)
 		fclose(handle->file_fd);
 		handle->file_fd = NULL;
 	}
-	if (handle->request->callback)
-		url_callback(handle->request, NULL, NULL, 0, NULL, 1, handle->request->callback_data);
+	url_callback(handle->request, NULL, NULL, 0, NULL, 1, handle->request->callback_data);
 	url_free_handle(handle);
 }
 
 void https_redirect(Download *handle)
 {
+	OutgoingWebRequest *r;
+
 	if (handle->request->max_redirects == 0)
 	{
 		https_cancel(handle, "Too many HTTP redirects (%d)", DOWNLOAD_MAX_REDIRECTS);
 		return;
 	}
 
-	/* If still an outstanding request (not cancelled), follow the redirect.. */
-	if (handle->request->callback)
-	{
-		OutgoingWebRequest *r = duplicate_outgoingwebrequest(handle->request);
-		safe_strdup(r->actual_url, handle->redirect_new_location); // override actual url
-		r->max_redirects--; // safe, checked to be >0 a few lines up
-		url_free_handle(handle); // free old handle
-		url_start_async(r); // create new one
-	} else {
-		/* The callback is NULL, so we can just free without
-		 * following redirects and any error reporting
-		 */
-		url_free_handle(handle); // free old handle
-	}
+	r = duplicate_outgoingwebrequest(handle->request);
+	safe_strdup(r->actual_url, handle->redirect_new_location); // override actual url
+	r->max_redirects--; // safe, checked to be >0 a few lines up
+	url_free_handle(handle); // free old handle
+	url_start_async(r); // create new one
 }
 
 /** Helper function to parse the HTTP header consisting of multiple 'Key: value' pairs */

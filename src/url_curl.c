@@ -180,10 +180,6 @@ static void url_check_multi_handles(void)
 				handle->file_fd = NULL;
 			}
 
-			if (handle->request->callback == NULL)
-			{
-				/* Request is already canceled, we don't care about the result */
-			} else
 			if (msg->data.result == CURLE_OK)
 			{
 				if (code == 304 || (last_mod != -1 && last_mod <= handle->request->cachetime))

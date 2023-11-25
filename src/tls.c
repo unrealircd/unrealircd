@@ -190,10 +190,9 @@ static int ssl_hostname_callback(SSL *ssl, int *unk, void *arg)
 	ConfigItem_sni *sni;
 
 	if (name && (sni = find_sni(name)))
-	{
 		SSL_set_SSL_CTX(ssl, sni->ssl_ctx);
-		set_client_sni_name(ssl, name);
-	}
+
+	set_client_sni_name(ssl, name);
 
 	return SSL_TLSEXT_ERR_OK;
 }

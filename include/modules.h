@@ -60,6 +60,7 @@ typedef struct Hooktype Hooktype;
 typedef struct Callback Callback;
 typedef struct Efunction Efunction;
 typedef enum EfunctionType EfunctionType;
+typedef struct APICallback APICallback;
 
 /*
  * Module header that every module must include, with the name of
@@ -108,6 +109,7 @@ typedef enum ModuleObjectType {
 	MOBJ_MTAG = 17,
 	MOBJ_HISTORY_BACKEND = 18,
 	MOBJ_RPC = 19,
+	MOBJ_API_CALLBACK = 20,
 } ModuleObjectType;
 
 typedef struct Umode Umode;
@@ -746,6 +748,7 @@ typedef struct ModuleObject {
 		MessageTagHandler *mtag;
 		HistoryBackend *history_backend;
 		RPCHandler *rpc;
+		APICallback *apicallback;
 	} object;
 } ModuleObject;
 
@@ -832,6 +835,20 @@ struct EventInfo {
 	void *data;
 };
 
+typedef enum APICallbackType {
+	API_CALLBACK_WEB_RESPONSE = 1,
+} APICallbackType;
+
+struct APICallback {
+	APICallback *prev, *next;
+	char *name; /**< Name of the api callback */
+	Module *owner; /**< To which module this object belongs */
+	char unloaded; /**< Set to 1 if this object is marked for deletion */
+	APICallbackType callback_type;
+	union {
+		void (*web_response)(OutgoingWebRequest *request, OutgoingWebResponse *response);
+	} callback; /**< The callback itself, obviously chosen by .callback_type */
+};
 
 extern MODVAR Hook		*Hooks[MAXHOOKTYPES];
 extern MODVAR Hooktype		Hooktypes[MAXCUSTOMHOOKS];
@@ -1015,6 +1032,22 @@ extern void LoadPersistentLongLongX(ModuleInfo *modinfo, const char *varshortnam
 #define LoadPersistentLongLong(modinfo, var) LoadPersistentLongLongX(modinfo, #var, &var)
 extern void SavePersistentLongLongX(ModuleInfo *modinfo, const char *varshortname, long long var);
 #define SavePersistentLongLong(modinfo, var) SavePersistentLongLongX(modinfo, #var, var)
+
+extern APICallback *APICallbackFind(const char *method, APICallbackType callback_type);
+extern void APICallbackDel(APICallback *m);
+extern APICallback *APICallbackAdd(Module *module, APICallback *mreq);
+
+#define RegisterApiCallback(modhandle, api_callback_type, api_name, api_func) \
+	do { \
+		APICallback req; \
+		memset(&req, 0, sizeof(req)); \
+		req.name = api_name; \
+		req.callback_type = api_callback_type; \
+		\
+		if (api_callback_type == API_CALLBACK_WEB_RESPONSE) \
+			req.callback.web_response = api_func; \
+		APICallbackAdd(modhandle, &req); \
+	} while(0)
 
 /** Hooks trigger on "events", such as a new user connecting or joining a channel,
  * see https://www.unrealircd.org/docs/Dev:Hook_API for background info.

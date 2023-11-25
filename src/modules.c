@@ -572,6 +572,9 @@ void FreeModObj(ModuleObject *obj, Module *m)
 	else if (obj->type == MOBJ_RPC) {
 		RPCHandlerDel(obj->object.rpc);
 	}
+	else if (obj->type == MOBJ_API_CALLBACK) {
+		APICallbackDel(obj->object.apicallback);
+	}
 	else
 	{
 		unreal_log(ULOG_FATAL, "module", "FREEMODOBJ_UNKNOWN_TYPE", NULL,

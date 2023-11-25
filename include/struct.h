@@ -143,6 +143,9 @@ typedef struct CommandOverride CommandOverride;
 typedef struct Member Member;
 typedef struct Membership Membership;
 
+typedef struct OutgoingWebRequest OutgoingWebRequest;
+typedef struct OutgoingWebResponse OutgoingWebResponse;
+
 typedef enum OperClassEntryType { OPERCLASSENTRY_ALLOW=1, OPERCLASSENTRY_DENY=2} OperClassEntryType;
 
 typedef enum OperPermission { OPER_ALLOW=1, OPER_DENY=0} OperPermission;
@@ -1881,13 +1884,12 @@ struct HTTPForwardedHeader
 	char ip[IPLEN+1];
 };
 
-typedef struct OutgoingWebRequest OutgoingWebRequest;
-typedef struct OutgoingWebResponse OutgoingWebResponse;
 
 /** An outgoing web request (eg remote includes download) */
 struct OutgoingWebRequest
 {
-	void (*callback)(OutgoingWebRequest *request, OutgoingWebResponse *response);
+	void (*callback)(OutgoingWebRequest *request, OutgoingWebResponse *response); /**< Either use this for non-modules */
+	char *apicallback; /** Or use an api callback that you registered via RegisterApiCallbackWebResponse() before */
 	void *callback_data;
 	char *url; /**< must be freed by url_do_transfers_async() */
 	char *actual_url; /**< if you actually want to use a different url, mostly for redirects (end-users: don't set this!) */
@@ -1902,7 +1904,7 @@ struct OutgoingWebRequest
 	int transfer_timeout; /**< How many seconds the total transfer may take (connect+reading everything) */
 	// If you are adding allocated fields here:
 	// 1) update duplicate_outgoingwebrequest() in src/misc.c
-	// 2) and update url_free_handle_request_portion() there as well
+	// 2) and update free_outgoingwebrequest() there as well
 };
 
 /** The result of an HTTP(S) call, such as the downloaded file, error, etc. */

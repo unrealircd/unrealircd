@@ -3178,6 +3178,7 @@ int valid_operclass_name(const char *str)
 /** Free an OutgoingWebRequest struct - note: use safe_free_outgoingwebrequest() instead (which calls us). */
 void free_outgoingwebrequest(OutgoingWebRequest *r)
 {
+	safe_free(r->apicallback);
 	safe_free(r->url);
 	safe_free(r->actual_url);
         safe_free(r->body);
@@ -3189,7 +3190,9 @@ void free_outgoingwebrequest(OutgoingWebRequest *r)
 OutgoingWebRequest *duplicate_outgoingwebrequest(OutgoingWebRequest *orig)
 {
 	OutgoingWebRequest *e = safe_alloc(sizeof(OutgoingWebRequest));
+
 	e->callback = orig->callback;
+	safe_strdup(e->apicallback, orig->apicallback);
 	e->callback_data = orig->callback_data;
 	safe_strdup(e->url, orig->url);
 	safe_strdup(e->actual_url, orig->actual_url);
@@ -3249,7 +3252,7 @@ void url_callback(OutgoingWebRequest *r, const char *file, const char *memory, i
 {
 	OutgoingWebResponse *response;
 
-	if (!r->callback)
+	if (!r->callback && !r->apicallback)
 		return; /* Nothing to do */
 
 	response = safe_alloc(sizeof(OutgoingWebResponse));
@@ -3259,7 +3262,17 @@ void url_callback(OutgoingWebRequest *r, const char *file, const char *memory, i
 	response->errorbuf = errorbuf;
 	response->cached = cached;
 	response->ptr = ptr;
-	r->callback(r, response);
+
+	if (r->callback)
+	{
+		r->callback(r, response);
+	} else if (r->apicallback)
+	{
+		APICallback *cb = APICallbackFind(r->apicallback, API_CALLBACK_WEB_RESPONSE);
+		if (cb && !cb->unloaded)
+			cb->callback.web_response(r, response);
+	}
+
 	safe_free(response);
 }
 
