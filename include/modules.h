@@ -837,6 +837,7 @@ struct EventInfo {
 
 typedef enum APICallbackType {
 	API_CALLBACK_WEB_RESPONSE = 1,
+	API_CALLBACK_RESOLVER_HOST = 11,
 } APICallbackType;
 
 struct APICallback {
@@ -847,6 +848,7 @@ struct APICallback {
 	APICallbackType callback_type;
 	union {
 		void (*web_response)(OutgoingWebRequest *request, OutgoingWebResponse *response);
+		ares_host_callback resolver_host;
 	} callback; /**< The callback itself, obviously chosen by .callback_type */
 };
 
@@ -1037,17 +1039,21 @@ extern APICallback *APICallbackFind(const char *method, APICallbackType callback
 extern void APICallbackDel(APICallback *m);
 extern APICallback *APICallbackAdd(Module *module, APICallback *mreq);
 
-#define RegisterApiCallback(modhandle, api_callback_type, api_name, api_func) \
+#define RegisterApiCallback(modhandle, api_callback_type, api_callback_function, api_name, api_func) \
 	do { \
 		APICallback req; \
 		memset(&req, 0, sizeof(req)); \
 		req.name = api_name; \
 		req.callback_type = api_callback_type; \
-		\
-		if (api_callback_type == API_CALLBACK_WEB_RESPONSE) \
-			req.callback.web_response = api_func; \
+		req.callback.api_callback_function = api_func; \
 		APICallbackAdd(modhandle, &req); \
 	} while(0)
+
+#define RegisterApiCallbackWebResponse(modhandle, api_name, api_func) \
+	RegisterApiCallback(modhandle, API_CALLBACK_WEB_RESPONSE, web_response, api_name, api_func)
+
+#define RegisterApiCallbackResolverHost(modhandle, api_name, api_func) \
+	RegisterApiCallback(modhandle, API_CALLBACK_RESOLVER_HOST, resolver_host, api_name, api_func)
 
 /** Hooks trigger on "events", such as a new user connecting or joining a channel,
  * see https://www.unrealircd.org/docs/Dev:Hook_API for background info.

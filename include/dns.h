@@ -67,5 +67,5 @@ extern void init_resolver(int);
 
 struct hostent *unrealdns_doclient(Client *cptr);
 
-extern void unreal_gethostbyname_dnsbl(const char *name, int family, ares_host_callback callback, void *arg);
+extern void unreal_gethostbyname_api(const char *name, int family, const char *callbackname, void *arg);
 

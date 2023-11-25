@@ -44,6 +44,7 @@ static const char *unrealdns_findcache_ip(const char *ip, int *found);
 struct hostent *unreal_create_hostent(const char *name, const char *ip);
 static void unrealdns_freeandremovereq(DNSReq *r);
 void unrealdns_removecacherecord(DNSCache *c);
+void dns_gethostbyname_api_wrapper(void *arg, int status, int timeouts, struct hostent *he);
 
 /* Externs */
 extern void proceed_normal_client_handshake(Client *client, struct hostent *he);
@@ -809,10 +810,42 @@ CMD_FUNC(cmd_dns)
 	return;
 }
 
+typedef struct ApiCallbackWrappedArg ApiCallbackWrappedArg;
+struct ApiCallbackWrappedArg
+{
+	char *callback_name;
+	void *callback_arg;
+};
+
 /* Little helper function for dnsbl module.
  * No we will NOT copy the entire c-ares api, just this one.
  */
-void unreal_gethostbyname_dnsbl(const char *name, int family, ares_host_callback callback, void *arg)
+void unreal_gethostbyname_api(const char *name, int family, const char *callback_name, void *arg)
 {
-	ares_gethostbyname(resolver_channel_dnsbl, name, family, callback, arg);
+	ApiCallbackWrappedArg *info;
+
+	if (!APICallbackFind(callback_name, API_CALLBACK_RESOLVER_HOST))
+		abort();
+
+	info = safe_alloc(sizeof(ApiCallbackWrappedArg));
+	safe_strdup(info->callback_name, callback_name);
+	info->callback_arg = arg;
+
+	/* Now we call ares_gethostbyname() with callback being our wrapper and
+	 * 'arg' replaced by our wrapper 'info'
+	 */
+	ares_gethostbyname(resolver_channel_dnsbl, name, family, dns_gethostbyname_api_wrapper, info);
+}
+
+/** Wrapper for inbetween ares_gethostbyname callback <--> module */
+void dns_gethostbyname_api_wrapper(void *arg, int status, int timeouts, struct hostent *he)
+{
+	ApiCallbackWrappedArg *info = (ApiCallbackWrappedArg *)arg;
+	APICallback *cb;
+
+	cb = APICallbackFind(info->callback_name, API_CALLBACK_RESOLVER_HOST);
+	if (cb && !cb->unloaded)
+		cb->callback.resolver_host(info->callback_arg, status, timeouts, he);
+	safe_free(info->callback_name);
+	safe_free(info);
 }

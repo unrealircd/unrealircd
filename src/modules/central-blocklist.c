@@ -207,7 +207,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, cbl_config_run);
 	//HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0, cbl_prelocalconnect);
 	HookAdd(modinfo->handle, HOOKTYPE_IS_HANDSHAKE_FINISHED, INT_MAX, cbl_is_handshake_finished);
-	RegisterApiCallback(modinfo->handle, API_CALLBACK_WEB_RESPONSE, "cbl_download_complete", cbl_download_complete);
+	RegisterApiCallbackWebResponse(modinfo->handle, "cbl_download_complete", cbl_download_complete);
 	return MOD_SUCCESS;
 }
 
