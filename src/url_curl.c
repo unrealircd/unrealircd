@@ -20,7 +20,6 @@
  */
 
 #include "unrealircd.h"
-#include "dns.h"
 
 extern char *TLSKeyPasswd;
 

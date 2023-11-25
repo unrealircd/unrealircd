@@ -43,6 +43,8 @@
 #include <openssl/x509v3.h>
 #endif
 #include <jansson.h>
+#include <ares.h>
+#include <ares_version.h>
 #include "common.h"
 #include "sys.h"
 #include <stdio.h>

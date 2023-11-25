@@ -18,7 +18,6 @@
  */
 
 #include "unrealircd.h"
-#include "dns.h"
 
 /* Structs */
 

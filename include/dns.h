@@ -1,7 +1,3 @@
-/* OMG... OMG! WHAT AN INCLUDE HORROR !!! */
-#include <ares.h>
-#include <ares_version.h>
-
 typedef enum {
 	DNSREQ_CLIENT = 1,
 	DNSREQ_LINKCONF = 2,

@@ -19,7 +19,6 @@
  */
 
 #include "unrealircd.h"
-#include "dns.h"
 
 #if !defined(UNREAL_VERSION_TIME)
  #error "YOU MUST RUN ./Config WHENEVER YOU ARE UPGRADING UNREAL!!!!"

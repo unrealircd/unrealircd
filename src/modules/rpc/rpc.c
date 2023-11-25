@@ -5,7 +5,6 @@
  */
    
 #include "unrealircd.h"
-#include "dns.h"
 
 ModuleHeader MOD_HEADER
   = {

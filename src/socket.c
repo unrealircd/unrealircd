@@ -26,7 +26,6 @@
  */
 
 #include "unrealircd.h"
-#include "dns.h"
 
 int OpenFiles = 0;    /* GLOBAL - number of files currently open */
 int readcalls = 0;
