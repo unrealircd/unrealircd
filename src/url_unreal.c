@@ -932,7 +932,7 @@ void https_done(Download *handle)
 		handle->file_fd = NULL;
 	}
 
-	else if (!handle->got_response)
+	if (!handle->got_response)
 		url_callback(handle->request, NULL, NULL, 0, "HTTPS response not received", 0, handle->request->callback_data);
 	else
 	{
