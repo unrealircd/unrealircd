@@ -57,7 +57,8 @@ struct cfgstruct {
 	char *spamreport_url;
 	char *api_key;
 	int max_downloads;
-	int spamreport;
+	int blocklist_enabled;
+	int spamreport_enabled;
 	SecurityGroup *except;
 	ScoreAction *actions;
 };
@@ -121,6 +122,7 @@ static void init_config(void)
 	safe_strdup(cfg.url, CBL_URL);
 	safe_strdup(cfg.spamreport_url, SPAMREPORT_URL);
 	cfg.max_downloads = 100;
+	cfg.blocklist_enabled = 1;
 	// default action
 	if (!req.custom_score_blocks)
 	{
@@ -243,7 +245,7 @@ MOD_LOAD()
 	do_command_overrides(modinfo);
 
 	/* Enable gathering of "last 10 lines" for SPAMREPORT, only if SPAMREPORT is enabled: */
-	if (cfg.spamreport)
+	if (cfg.spamreport_enabled)
 	{
 		CommandOverrideAdd(modinfo->handle, "NICK", -2, cbl_override_spamreport_gather);
 		CommandOverrideAdd(modinfo->handle, "PRIVMSG", -2, cbl_override_spamreport_gather);
@@ -336,7 +338,10 @@ int cbl_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		if (!strcmp(cep->name, "url"))
 		{
 		} else
-		if (!strcmp(cep->name, "spamreport"))
+		if (!strcmp(cep->name, "spamreport") || !strcmp(cep->name, "spamreport-enabled"))
+		{
+		} else
+		if (!strcmp(cep->name, "blocklist") || !strcmp(cep->name, "blocklist-enabled"))
 		{
 		} else
 		if (!strcmp(cep->name, "spamreport-url"))
@@ -431,9 +436,13 @@ int cbl_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		{
 			safe_strdup(cfg.url, cep->value);
 		} else
-		if (!strcmp(cep->name, "spamreport"))
+		if (!strcmp(cep->name, "spamreport") || !strcmp(cep->name, "spamreport-enabled"))
 		{
-			cfg.spamreport = config_checkval(cep->value, CFG_YESNO);
+			cfg.spamreport_enabled = config_checkval(cep->value, CFG_YESNO);
+		} else
+		if (!strcmp(cep->name, "blocklist-enabled"))
+		{
+			cfg.blocklist_enabled = config_checkval(cep->value, CFG_YESNO);
 		} else
 		if (!strcmp(cep->name, "spamreport-url"))
 		{
@@ -727,9 +736,6 @@ int cbl_start_request(Client *client)
 	if (cbl->request_sent || cbl->request_pending)
 		return 0; /* Handshake is NOT finished yet, HTTP request already in progress */
 
-	if (!json_object_get(cbl->handshake, "client"))
-		cbl_add_client_info(client);
-
 	cbl->request_pending = 1;
 
 #ifdef DEBUGMODE
@@ -752,7 +758,13 @@ int cbl_is_handshake_finished(Client *client)
 	if (user_allowed_by_security_group(client, cfg.except))
 		return 1;
 
-	return cbl_start_request(client);
+	if (!json_object_get(CBL(client)->handshake, "client"))
+		cbl_add_client_info(client);
+
+	if (cfg.blocklist_enabled)
+		return cbl_start_request(client);
+	else
+		return 1; /* CBL is not in use, we are done */
 }
 
 void cbl_allow(Client *client)
@@ -1170,7 +1182,7 @@ CMD_OVERRIDE_FUNC(cbl_override_spamreport_cmd)
 				/* My client. */
 				int n;
 
-				if (!cfg.spamreport)
+				if (!cfg.spamreport_enabled)
 				{
 					if ((parc > 2) && !strcasecmp(parv[2], "unrealircd"))
 					{
