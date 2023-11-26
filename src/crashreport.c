@@ -601,6 +601,15 @@ int crashreport_send(char *fname)
 		return 0;
 	}
 	
+	BIO_get_ssl(socket, &ssl);
+	if (!ssl)
+	{
+		printf("ERROR: Could not get TLS connection from BIO\n");
+		return 0;
+	}
+
+	SSL_set_tlsext_host_name(ssl, CRASH_REPORT_HOST); /* SNI needs to be set explicitly */
+
 	BIO_set_conn_hostname(socket, CRASH_REPORT_HOST ":443");
 
 	if (BIO_do_connect(socket) != 1)
@@ -612,13 +621,6 @@ int crashreport_send(char *fname)
 	if (BIO_do_handshake(socket) != 1)
 	{
 		printf("ERROR: Could not connect to %s (TLS handshake failed)\n", CRASH_REPORT_HOST);
-		return 0;
-	}
-
-	BIO_get_ssl(socket, &ssl);
-	if (!ssl)
-	{
-		printf("ERROR: Could not get TLS connection from BIO\n");
 		return 0;
 	}
 
