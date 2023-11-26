@@ -1380,9 +1380,6 @@ ModDataInfo *persistent_var_generic(ModuleInfo *modinfo, const char *varshortnam
 	ModDataInfo *m;
 	const char *fullname = mod_var_name(modinfo, varshortname);
 
-	if (!modinfo)
-		abort();
-
 	m = findmoddata_byname(fullname, MODDATATYPE_LOCAL_VARIABLE);
 	if (m)
 	{

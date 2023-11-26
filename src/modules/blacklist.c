@@ -606,6 +606,7 @@ int blacklist_set_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 				config_error("%s:%i: set::blacklist::recheck-time-first with no value",
 					cep->file->filename, cep->line_number);
 				errors++;
+				continue;
 			}
 			if (!strcmp(cep->value, "never"))
 			{
@@ -632,6 +633,7 @@ int blacklist_set_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 				config_error("%s:%i: set::blacklist::recheck-time with no value",
 					cep->file->filename, cep->line_number);
 				errors++;
+				continue;
 			}
 			if (strcmp(cep->value, "never"))
 			{
