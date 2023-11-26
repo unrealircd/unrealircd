@@ -1993,6 +1993,7 @@ struct ConfigItem_listen {
 	WebServer *webserver;		/**< For the webserver module */
 	void (*start_handshake)(Client *client); /**< Function to call on accept() */
 	int websocket_options;		/**< Websocket options (for the websocket module) */
+	NameList *websocket_origin;	/**< List of permitted Origin */
 	int rpc_options;		/**< For the RPC module */
 };
 

@@ -143,6 +143,8 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			             "See https://www.unrealircd.org/docs/Proxy_block",
 			             cep->file->filename, cep->line_number);
 			errors++;
+		} else if (!strcmp(cep->name, "allow-origin"))
+		{
 		} else
 		{
 			config_error("%s:%i: unknown directive listen::options::websocket::%s",
@@ -201,6 +203,10 @@ int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr
 					warned_once_channel = 1;
 				}
 			}
+		} else if (!strcmp(cep->name, "allow-origin"))
+		{
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+				add_name_list(l->websocket_origin, cepp->name);
 		}
 	}
 	return 1;
@@ -350,6 +356,32 @@ int websocket_handle_request(Client *client, WebRequest *web)
 	}
 
 	/** Finally, validate the websocket request (handshake) and proceed or reject. */
+	if (client->local->listener->websocket_origin)
+	{
+		const char *origin = get_nvplist(web->headers, "Origin");
+		char origin_host[256];
+
+		*origin_host = '\0';
+		if (origin)
+		{
+			char *start = strstr(origin, "://");
+			char *p;
+			if (start)
+			{
+				start += 3;
+				p = strchr(start, '/');
+				if (p)
+					strlncpy(origin_host, start, sizeof(origin_host), p - start);
+				else
+					strlcpy(origin_host, start, sizeof(origin_host));
+			}
+		}
+		if (!find_name_list_match(client->local->listener->websocket_origin, origin_host))
+		{
+			webserver_send_response(client, 403, "This site is not permitted to connect to us with websockets");
+			return 0;
+		}
+	}
 
 	/* Not websocket and webredir loaded? Let that module serve a redirect. */
 	if (!WSU(client)->handshake_key)

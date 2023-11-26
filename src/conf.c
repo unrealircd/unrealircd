@@ -5325,7 +5325,9 @@ void conf_listen_configure(const char *ip, int port, SocketType socket_type, int
 		free_tls_options(listen->tls_options);
 		listen->tls_options = NULL;
 	}
-	safe_free(listen->webserver);
+	safe_free_webserver(listen->webserver);
+	free_entire_name_list(listen->websocket_origin);
+	// NOTE: duplicate code overlap with listen_cleanup()
 
 	/* Now set the new settings: */
 	if (tlsconfig)
@@ -11268,6 +11270,8 @@ void listen_cleanup()
 				free_tls_options(listener->tls_options);
 				/* listener->ssl_ctx is already freed by close_listener() */
 				safe_free_webserver(listener->webserver);
+				free_entire_name_list(listener->websocket_origin);
+				// NOTE: duplicate code overlap with conf_listen_configure() - but not 100% identical
 				safe_free(listener);
 			} else {
 				/* Still has clients */
