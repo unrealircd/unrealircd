@@ -936,10 +936,7 @@ void cbl_download_complete(OutgoingWebRequest *request, OutgoingWebResponse *res
 	/* Now iterate through each */
 	json_object_foreach(responses, key, value)
 	{
-		Client *client;
-		if (!key)
-			continue; /* Is this even possible? */
-		client = hash_find_id(key, NULL);
+		Client *client = hash_find_id(key, NULL);
 		if (!client)
 			continue; /* Client disconnected already */
 		cbl_handle_response(client, value);

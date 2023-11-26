@@ -96,7 +96,7 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	ConfigEntry *cep, *cepp;
 	int errors = 0;
 	char has_url=0, has_type=0, has_type_dronebl=0, has_http_method=0;
-	char has_dronebl_type, has_dronebl_rpckey=0;
+	char has_dronebl_type=0, has_dronebl_rpckey=0;
 
 	/* We are only interested in spamreport { } blocks */
 	if ((type != CONFIG_MAIN) || strcmp(ce->name, "spamreport"))

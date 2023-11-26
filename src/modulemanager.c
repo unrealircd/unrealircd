@@ -41,6 +41,7 @@ static int no_make_install = 0;
 
 /* Forward declarations */
 int mm_valid_module_name(char *name);
+#define safe_free_managed_module(x)	do { free_managed_module(x); x = NULL; } while(0)
 void free_managed_module(ManagedModule *m);
 
 typedef enum ParseModuleHeaderStage {
@@ -325,7 +326,7 @@ ManagedModule *mm_parse_module_c_file(char *modulename, char *fname)
 		fprintf(stderr, "ERROR: Problem with module manager data block within the %s module C source file.\n"
 		                "You are suggested to contact the module author and paste the above to him/her\n",
 		                m->name);
-		free_managed_module(m);
+		safe_free_managed_module(m);
 		safe_free(moduleconfig);
 		return NULL;
 	}
@@ -532,7 +533,7 @@ ManagedModule *mm_repo_module_config(char *repo_url, ConfigEntry *ce)
 	return m;
 
 fail_mm_repo_module_config:
-	free_managed_module(m);
+	safe_free_managed_module(m);
 	return NULL;
 }
 
@@ -1352,8 +1353,7 @@ void mm_generate_repository(int argc, char *args[])
 			/* /filter */
 			if (!hide)
 				print_md_block(fdo, m);
-			free_managed_module(m);
-			m = NULL;
+			safe_free_managed_module(m);
 		}
 	}
 	closedir(fd);
@@ -1390,7 +1390,7 @@ void mm_parse_c_file(int argc, char *args[])
 	m->sha256sum = strdup(sha256sum_file(fullname));
 	m->source = strdup("...");
 	print_md_block(stdout, m);
-	free_managed_module(m);
+	safe_free_managed_module(m);
 	exit(0);
 }
 
