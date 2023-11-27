@@ -16,6 +16,11 @@ in progress and may not always be a stable version.
   Other possible settings are `no` (never hide, the previous default) and
   `yes` to always hide the *LINE reason. In all cases the user affected by
   the server ban can still see the reason and IRCOps too.
+* The [Proxy block](https://www.unrealircd.org/docs/Proxy_block) already
+  had support for reverse proxying with the `Forwarded` header. Now it
+  also properly supports `X-Forwarded-For` and Cloudflare. If you previously
+  used a proxy block with type `web` (not many people did), then you now
+  need to choose one of the new types explicitly.
 
 ### Changes:
 * Reserve more file descriptors for internal use. For example, when there

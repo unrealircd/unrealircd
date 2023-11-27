@@ -4555,8 +4555,12 @@ ProxyType proxy_type_string_to_value(const char *s)
 		return PROXY_WEBIRC;
 	else if (!strcmp(s, "old"))
 		return PROXY_WEBIRC_PASS;
-	else if (!strcmp(s, "web"))
-		return PROXY_WEB;
+	else if (!strcmp(s, "forwarded"))
+		return PROXY_FORWARDED;
+	else if (!strcmp(s, "x-forwarded"))
+		return PROXY_X_FORWARDED;
+	else if (!strcmp(s, "cloudflare"))
+		return PROXY_CLOUDFLARE;
 	return 0;
 }
 
@@ -4625,6 +4629,16 @@ int _test_proxy(ConfigFile *conf, ConfigEntry *ce)
 					cep->line_number, "proxy::type");
 			}
 			has_type = 1;
+			if (!strcmp(cep->value, "web"))
+			{
+				config_error("%s:%i: type 'web' has been replaced. You now need to specify "
+				             "the reverse proxy type explicitly. Instead of 'web', use one of: "
+				             "'forwarded', 'x-forwarded' or 'cloudflare'. "
+				             "See https://www.unrealircd.org/docs/Proxy_block",
+				             cep->file->filename, cep->line_number);
+				errors++;
+				continue;
+			}
 			proxy_type = proxy_type_string_to_value(cep->value);
 			if (proxy_type == 0)
 			{
@@ -4695,10 +4709,10 @@ int _conf_proxy(ConfigFile *conf, ConfigEntry *ce)
 
 	AddListItem(proxy, conf_proxy);
 
-	/* For proxy type web, we automatically add the host to except ban { }
+	/* For the web proxy types, we automatically add the host to except ban { }
 	 * for blacklist, connect-flood, handshake-data-flood
 	 */
-	if (proxy->type == PROXY_WEB)
+	if (IsWebProxy(proxy->type))
 	{
 		SecurityGroup *sg = duplicate_security_group(proxy->mask);
 		tkl_add_banexception(TKL_EXCEPTION, "-", "-", sg, "proxy { } block",

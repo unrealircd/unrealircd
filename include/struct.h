@@ -2154,8 +2154,14 @@ typedef struct ConfigItem_proxy ConfigItem_proxy;
 typedef enum {
 	PROXY_WEBIRC_PASS=1,
 	PROXY_WEBIRC=2,
-	PROXY_WEB=3,
+	PROXY_FORWARDED=3,
+	PROXY_X_FORWARDED=4,
+	PROXY_CLOUDFLARE=5,
 } ProxyType;
+
+#define IsWebProxy(x)	(((x) == PROXY_FORWARDED) || \
+                         ((x) == PROXY_X_FORWARDED) || \
+                         ((x) == PROXY_CLOUDFLARE))
 
 struct ConfigItem_proxy {
 	ConfigItem_proxy *prev, *next;

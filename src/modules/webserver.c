@@ -683,26 +683,55 @@ int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf,
 	return 1;
 }
 
-/** If a valid Forwarded: http header is received from a trusted source (proxy server), this function will
-  * extract remote IP address and secure (https) status from it. If more than one field with same name is received,
-  * we'll accept the last one. This should work correctly with chained proxies. */
+/** If a valid Forwarded http header is received from a trusted source (proxy server),
+ * this function will extract remote IP address and secure (https) status from it.
+ * If more than one field with same name is received, we'll accept the last one.
+ */
 void do_parse_forwarded_header(const char *input, HTTPForwardedHeader *forwarded)
 {
-	char buf[512];
-	char *name, *value, *p = NULL;
+	char *buf = NULL;
+	char *name, *value, *p = NULL, *x;
 
-	memset(forwarded, 0, sizeof(HTTPForwardedHeader));
-	strlcpy(buf, input, sizeof(buf));
+	safe_strdup(buf, input);
 
-	for (name = strtoken(&p, buf, ";"); name; name = strtoken(&p, NULL, ";"))
+	for (name = strtoken(&p, buf, ";,"); name; name = strtoken(&p, NULL, ";,"))
 	{
+		skip_whitespace(&name);
 		value = strchr(name, '=');
 		if (value)
 			*value++ = '\0';
 		if (!value)
 			continue; /* we don't use value-less items atm anyway */
-		if (!strcmp(name, "for"))
+
+		/* Remove quotes - if any */
+		if (*value == '"')
 		{
+			value++;
+			x = strchr(x, '"');
+			if (x)
+				*x = '\0';
+		}
+		if (!strcasecmp(name, "for"))
+		{
+			/* IPv6 is in brackets, so cut it off */
+			if (*value == '[')
+			{
+				value++;
+				char *x = strchr(value, ']');
+				if (x)
+					*x = '\0';
+				/* ^^ this cuts off everything after ']', which
+				 *    may also cut off the optional local port,
+				 *    but that is fine: we don't use it.
+				 */
+			} else
+			if ((x = strchr(value, ':')))
+			{
+				/* For non-IPv6 ip:port, cut off at the ':',
+				 * so we only have IP.
+				 */
+				*x = '\0';
+			}
 			strlcpy(forwarded->ip, value, sizeof(forwarded->ip));
 		} else
 		if (!strcasecmp(name, "proto"))
@@ -719,6 +748,35 @@ void do_parse_forwarded_header(const char *input, HTTPForwardedHeader *forwarded
 			}
 		}
 	}
+	safe_free(buf);
+}
+
+/** If a valid X-Forwarded-For http header is received from a trusted source (proxy server),
+ * this function will extract remote IP address and secure (https) status from it.
+ * If more than one IP is received, we'll accept the last one.
+ */
+void do_parse_x_forwarded_for_header(const char *input, HTTPForwardedHeader *forwarded)
+{
+	char *buf = NULL;
+	char *name, *value, *p = NULL;
+
+	safe_strdup(buf, input);
+
+	for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
+	{
+		skip_whitespace(&name);
+		strlcpy(forwarded->ip, name, sizeof(forwarded->ip));
+	}
+
+	safe_free(buf);
+}
+
+void do_parse_x_forwarded_proto_header(const char *value, HTTPForwardedHeader *forwarded)
+{
+	if (!strcmp(value, "https"))
+		forwarded->secure = 1;
+	else if (!strcmp(value, "http"))
+		forwarded->secure = 0;
 }
 
 void webserver_handle_proxy(Client *client, ConfigItem_proxy *proxy)
@@ -739,14 +797,39 @@ void webserver_handle_proxy(Client *client, ConfigItem_proxy *proxy)
 	/* Go through the headers and parse them */
 	for (header = WEB(client)->headers; header; header = header->next)
 	{
-		if (!strcasecmp(header->name, "Forwarded") || !strcasecmp(header->name, "X-Forwarded"))
-			do_parse_forwarded_header(header->value, forwarded);
+		if (proxy->type == PROXY_FORWARDED)
+		{
+			if (!strcasecmp(header->name, "Forwarded"))
+				do_parse_forwarded_header(header->value, forwarded);
+		} else
+		if (proxy->type == PROXY_X_FORWARDED)
+		{
+			if (!strcasecmp(header->name, "X-Forwarded-For"))
+				do_parse_x_forwarded_for_header(header->value, forwarded);
+			else if (!strcasecmp(header->name, "X-Forwarded-Proto"))
+				do_parse_x_forwarded_proto_header(header->value, forwarded);
+		} else
+		if (proxy->type == PROXY_CLOUDFLARE)
+		{
+			/* This is a mix of CF-Connecting-IP and X-Forwarded-Proto */
+			if (!strcasecmp(header->name, "CF-Connecting-IP"))
+				do_parse_x_forwarded_for_header(header->value, forwarded);
+			else if (!strcasecmp(header->name, "X-Forwarded-Proto"))
+				do_parse_x_forwarded_proto_header(header->value, forwarded);
+		}
 	}
+
+#ifdef DEBUGMODE
+	unreal_log(ULOG_DEBUG, "webserver", "FORWARDING_INFO", client,
+	           "For client $client.details forwarding IP is $ip and is $secure",
+	           log_data_string("ip", forwarded->ip),
+	           log_data_string("secure", forwarded->secure ? "secure" : "insecure"));
+#endif
 
 	/* check header values */
 	if (!is_valid_ip(forwarded->ip))
 	{
-		unreal_log(ULOG_WARNING, "websocket", "MISSING_PROXY_HEADER", client,
+		unreal_log(ULOG_WARNING, "webserver", "MISSING_PROXY_HEADER", client,
 		           "Client on proxy $client.ip has matching proxy { } block "
 		           "but the proxy did not send a valid forwarded header. "
 		           "The IP of the user is now the proxy IP $client.ip (bad!).");
@@ -774,7 +857,8 @@ void parse_proxy_header(Client *client)
 
 	for (proxy = conf_proxy; proxy; proxy = proxy->next)
 	{
-		if ((proxy->type == PROXY_WEB) && user_allowed_by_security_group(client, proxy->mask))
+		if (IsWebProxy(proxy->type) &&
+		    user_allowed_by_security_group(client, proxy->mask))
 		{
 			webserver_handle_proxy(client, proxy);
 			return;
