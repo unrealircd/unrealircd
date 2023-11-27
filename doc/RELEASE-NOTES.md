@@ -5,10 +5,23 @@ This is the git version (development version) for future 6.1.2. This is work
 in progress and may not always be a stable version.
 
 ### Enhancements:
+* Central anti-spam services:
+  * The two services from below require a central-api key, which
+    you can [request here](https://www.unrealircd.org/central-api/).
+  * [Central Blocklist](https://www.unrealircd.org/docs/Central_Blocklist)
+    is an attempt to detect and block spammers. It works similar to DNS
+    Blacklists but the central blocklist receives many more details about the
+    user that is trying to connect and therefore can make a better decision on
+    whether a user is likely a spammer or not.
+  * [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport)
+    allows you to send spam reports (user details, last sent lines) via
+    the `SPAMREPORT` command. This information may then be used to improve
+    [Central Blocklist](https://www.unrealircd.org/docs/Central_Blocklist)
+    and/or [Central Spamfilter](https://www.unrealircd.org/docs/Central_Spamfilter).
 * TODO: Mention Central API, central blocklist, central spamreport...
 * Make [Deny channel](https://www.unrealircd.org/docs/Deny_channel_block)
-  support escaped sequences like `channel "#xyz\*";` so you can support
-  matching a literal `*` or `?` via `\*` and `\?`.
+  support escaped sequences like `channel "#xyz\*";` so you can match
+  a literal `*` or `?` via `\*` and `\?`.
 * New option `auto` for
   [set::hide-ban-reason](https://www.unrealircd.org/docs/Set_block#set::hide-ban-reason),
   which is now the default. This will hide the *LINE reason to other users
@@ -49,7 +62,7 @@ in progress and may not always be a stable version.
 
 ### Fixes:
 * The crash reporter was no longer working
-* [Modulemanager](https://www.unrealircd.org/docs/Module_manager) fixes
+* [Module manager](https://www.unrealircd.org/docs/Module_manager) fixes
 * For people running git versions, who did not use 'make clean', 3rd party
   modules were not always automatically recompiled, causing potential
   problems such as crashes.
