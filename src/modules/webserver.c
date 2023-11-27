@@ -707,7 +707,7 @@ void do_parse_forwarded_header(const char *input, HTTPForwardedHeader *forwarded
 		if (*value == '"')
 		{
 			value++;
-			x = strchr(x, '"');
+			x = strchr(value, '"');
 			if (x)
 				*x = '\0';
 		}
