@@ -12,7 +12,7 @@ in progress and may not always be a stable version.
     is an attempt to detect and block spammers. It works similar to DNS
     Blacklists but the central blocklist receives many more details about the
     user that is trying to connect and therefore can make a better decision on
-    whether a user is likely a spammer or not.
+    whether a user is likely a spammer.
   * [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport)
     allows you to send spam reports (user details, last sent lines) via
     the `SPAMREPORT` command. This information may then be used to improve
@@ -22,19 +22,19 @@ in progress and may not always be a stable version.
     which provides spamfilter { } blocks that are centrally managed, is
     now fetched from a different URL if you have an Central API key set.
     This way, we can later provide spamfilter { } blocks that build on
-    central blocklist scoring functionality, and also don't have to reveal
-    the central spamfilter blocks to 100% of the world.
-* Make [Deny channel](https://www.unrealircd.org/docs/Deny_channel_block)
-  support escaped sequences like `channel "#xyz\*";` so you can match
-  a literal `*` or `?` via `\*` and `\?`.
+    central blocklist scoring functionality, and also so we don't have to
+    reveal all the central spamfilter blocks to the world.
 * New option `auto` for
   [set::hide-ban-reason](https://www.unrealircd.org/docs/Set_block#set::hide-ban-reason),
   which is now the default. This will hide the *LINE reason to other users
-  if the *LINE contains the IP of the user. This to protect the privacy of
-  the user for cases such as a KLINE due to a blacklist with a DroneBL URL.
+  if the *LINE reason contains the IP of the user, for example when it contains
+  a DroneBL URL which has `lookup?ip=XXX`. This to protect the privayc of the user.
   Other possible settings are `no` (never hide, the previous default) and
   `yes` to always hide the *LINE reason. In all cases the user affected by
   the server ban can still see the reason and IRCOps too.
+* Make [Deny channel](https://www.unrealircd.org/docs/Deny_channel_block)
+  support escaped sequences like `channel "#xyz\*";` so you can match
+  a literal `*` or `?` via `\*` and `\?`.
 * New option
   [listen::options::websocket::allow-origin](https://www.unrealircd.org/docs/Listen_block#options_block_(optional)):
   this allows to restrict websocket connections to a list of websites
@@ -45,8 +45,8 @@ in progress and may not always be a stable version.
   had support for reverse proxying with the `Forwarded` header. Now it
   also properly supports `X-Forwarded-For`. If you previously used a proxy
   block with type `web`, then you now need to choose one of the new types
-  explicitly. Note that using a reverse proxy for IRC traffic is rarely
-  useful (see the proxy block docs for details), but we offer the option.
+  explicitly. Note that using a reverse proxy for IRC traffic is rare
+  (see the proxy block docs for details), but we offer the option.
 
 ### Changes:
 * Reserve more file descriptors for internal use. For example, when there
