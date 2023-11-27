@@ -1962,8 +1962,6 @@ struct WebSocketUser {
 	int lefttoparselen; /**< Length of lefttoparse buffer */
 	WebSocketType type; /**< WEBSOCKET_TYPE_BINARY or WEBSOCKET_TYPE_TEXT */
 	char *sec_websocket_protocol; /**< Only valid during parsing of the request, after that it is NULL again */
-	char *forwarded; /**< Unparsed `Forwarded:` header, RFC 7239 */
-	int secure; /**< If there is a Forwarded header, this indicates if the remote connection is secure */
 };
 
 #define WEBSOCKET_MAGIC_KEY "258EAFA5-E914-47DA-95CA-C5AB0DC85B11" /* see RFC6455 */

@@ -481,7 +481,6 @@ void websocket_mdata_free(ModData *m)
 		safe_free(wsu->handshake_key);
 		safe_free(wsu->lefttoparse);
 		safe_free(wsu->sec_websocket_protocol);
-		safe_free(wsu->forwarded);
 		safe_free(m->ptr);
 	}
 }

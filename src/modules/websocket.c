@@ -347,11 +347,6 @@ int websocket_handle_request(Client *client, WebRequest *web)
 		{
 			/* Save it here, will be processed later */
 			safe_strdup(WSU(client)->sec_websocket_protocol, value);
-		} else
-		if (!strcasecmp(key, "Forwarded"))
-		{
-			/* will be processed later too */
-			safe_strdup(WSU(client)->forwarded, value);
 		}
 	}
 
@@ -433,10 +428,6 @@ int websocket_handle_request(Client *client, WebRequest *web)
 		}
 	}
 
-	/* If using a proxy, set the secure flag depending on what the proxy said */
-	if (WEB(client)->forwarded)
-		WSU(client)->secure = WEB(client)->forwarded->secure;
-
 	websocket_handshake_send_response(client);
 	return 1;
 }
@@ -447,8 +438,11 @@ int websocket_secure_connect(Client *client)
 	 * us that their [client]--[webirc gateway] connection is also
 	 * secure (eg: using https)
 	 */
-	if (IsSecureConnect(client) && websocket_md && WSU(client) && WSU(client)->forwarded && !WSU(client)->secure)
+	if (IsSecureConnect(client) && websocket_md && WSU(client) &&
+	    WEB(client)->forwarded && !WEB(client)->forwarded->secure)
+	{
 		client->umodes &= ~UMODE_SECURE;
+	}
 	return 0;
 }
 
