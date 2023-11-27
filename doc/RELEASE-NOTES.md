@@ -5,6 +5,7 @@ This is the git version (development version) for future 6.1.2. This is work
 in progress and may not always be a stable version.
 
 ### Enhancements:
+* TODO: Mention Central API, central blocklist, central spamreport...
 * Make [Deny channel](https://www.unrealircd.org/docs/Deny_channel_block)
   support escaped sequences like `channel "#xyz\*";` so you can support
   matching a literal `*` or `?` via `\*` and `\?`.
@@ -16,11 +17,18 @@ in progress and may not always be a stable version.
   Other possible settings are `no` (never hide, the previous default) and
   `yes` to always hide the *LINE reason. In all cases the user affected by
   the server ban can still see the reason and IRCOps too.
+* New option
+  [listen::options::websocket::allow-origin](https://www.unrealircd.org/docs/Listen_block#options_block_(optional)):
+  this allows to restrict websocket connections to a list of websites
+  (the sites hosting the HTML/JS page that makes the websocket connection).
+  It doesn't *securely* restrict it though, non-browsers will bypass this
+  restriction, but it can still be useful to restrict regular webchat users.
 * The [Proxy block](https://www.unrealircd.org/docs/Proxy_block) already
   had support for reverse proxying with the `Forwarded` header. Now it
-  also properly supports `X-Forwarded-For` and Cloudflare. If you previously
-  used a proxy block with type `web` (not many people did), then you now
-  need to choose one of the new types explicitly.
+  also properly supports `X-Forwarded-For`. If you previously used a proxy
+  block with type `web`, then you now need to choose one of the new types
+  explicitly. Note that using a reverse proxy for IRC traffic is rarely
+  useful (see the proxy block docs for details), but we offer the option.
 
 ### Changes:
 * Reserve more file descriptors for internal use. For example, when there
@@ -40,6 +48,8 @@ in progress and may not always be a stable version.
   staying on the same server.
 
 ### Fixes:
+* The crash reporter was no longer working
+* [Modulemanager](https://www.unrealircd.org/docs/Module_manager) fixes
 * For people running git versions, who did not use 'make clean', 3rd party
   modules were not always automatically recompiled, causing potential
   problems such as crashes.
@@ -57,6 +67,8 @@ in progress and may not always be a stable version.
   `HOOKTYPE_MONITOR_NOTIFICATION`.
 * The hook `HOOKTYPE_IS_HANDSHAKE_FINISHED` is now properly called
   at all places.
+* A new [URL API](https://www.unrealircd.org/docs/Dev:URL_API)
+  to easily fetch URLs from modules.
 
 UnrealIRCd 6.1.2
 -----------------
