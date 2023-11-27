@@ -17,7 +17,7 @@ MODVAR APICallback *apicallbacks = NULL;
 
 /* Forward declarations */
 static void unload_apicallback_commit(APICallback *m);
-#ifdef DEBUGMODE
+#ifdef APICALLBACKDEBUG
 static void print_apicallbacks(void);
 #endif
 
@@ -72,7 +72,7 @@ APICallback *APICallbackAdd(Module *module, APICallback *mreq)
 	AddListItem(mobj, module->objects);
 	module->errorcode = MODERR_NOERROR;
 
-#ifdef DEBUGMODE
+#ifdef APICALLBACKDEBUG
 	unreal_log(ULOG_DEBUG, "module", "API_CALLBACK_DEBUG", NULL, "APICallbackAdd()");
 	print_apicallbacks();
 #endif
@@ -89,7 +89,7 @@ APICallback *APICallbackFind(const char *name, APICallbackType callback_type)
 {
 	APICallback *m;
 
-#ifdef DEBUGMODE
+#ifdef APICALLBACKDEBUG
 	unreal_log(ULOG_DEBUG, "module", "API_CALLBACK_DEBUG", NULL, "APICallbackFind()");
 	print_apicallbacks();
 #endif
@@ -150,7 +150,7 @@ void unload_all_unused_apicallbacks(void)
 {
 	APICallback *m, *m_next;
 
-#ifdef DEBUGMODE
+#ifdef APICALLBACKDEBUG
 	unreal_log(ULOG_DEBUG, "module", "API_CALLBACK_DEBUG", NULL, "unload_all_unused_apicallbacks() BEFORE");
 	print_apicallbacks();
 #endif
@@ -160,13 +160,13 @@ void unload_all_unused_apicallbacks(void)
 		if (m->unloaded)
 			unload_apicallback_commit(m);
 	}
-#ifdef DEBUGMODE
+#ifdef APICALLBACKDEBUG
 	unreal_log(ULOG_DEBUG, "module", "API_CALLBACK_DEBUG", NULL, "unload_all_unused_apicallbacks() AFTER");
 	print_apicallbacks();
 #endif
 }
 
-#ifdef DEBUGMODE
+#ifdef APICALLBACKDEBUG
 void print_apicallbacks(void)
 {
 	APICallback *m, *m_next;
