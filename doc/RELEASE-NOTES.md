@@ -6,7 +6,7 @@ in progress and may not always be a stable version.
 
 ### Enhancements:
 * Central anti-spam services:
-  * The two services from below require a central-api key, which
+  * The services from below require a central-api key, which
     you can [request here](https://www.unrealircd.org/central-api/).
   * [Central Blocklist](https://www.unrealircd.org/docs/Central_Blocklist)
     is an attempt to detect and block spammers. It works similar to DNS
@@ -18,7 +18,12 @@ in progress and may not always be a stable version.
     the `SPAMREPORT` command. This information may then be used to improve
     [Central Blocklist](https://www.unrealircd.org/docs/Central_Blocklist)
     and/or [Central Spamfilter](https://www.unrealircd.org/docs/Central_Spamfilter).
-* TODO: Mention Central API, central blocklist, central spamreport...
+  * The [Central Spamfilter](https://www.unrealircd.org/docs/Central_Spamfilter),
+    which provides spamfilter { } blocks that are centrally managed, is
+    now fetched from a different URL if you have an Central API key set.
+    This way, we can later provide spamfilter { } blocks that build on
+    central blocklist scoring functionality, and also don't have to reveal
+    the central spamfilter blocks to 100% of the world.
 * Make [Deny channel](https://www.unrealircd.org/docs/Deny_channel_block)
   support escaped sequences like `channel "#xyz\*";` so you can match
   a literal `*` or `?` via `\*` and `\?`.

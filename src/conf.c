@@ -1821,8 +1821,8 @@ void config_setdefaultsettings(Configuration *i)
 	i->who_limit = 100;
 	i->named_extended_bans = 1;
 	i->high_connection_rate = 1000;
-	safe_strdup(i->central_spamfilter_url, "https://spamfilter.unrealircd.org/spamfilter/v6/$feed/central_spamfilter.conf");
-	safe_strdup(i->central_spamfilter_feed, "standard");
+	safe_strdup(i->central_spamfilter_url, DEFAULT_CENTRAL_SPAMFILTER_URL_OPEN_ACCESS);
+	safe_strdup(i->central_spamfilter_feed, DEFAULT_CENTRAL_SPAMFILTER_FEED);
 	i->central_spamfilter_refresh_time = 3600;
 	i->central_spamfilter_enabled = 0;
 	i->central_spamfilter_except = safe_alloc(sizeof(SecurityGroup));
@@ -11955,6 +11955,8 @@ void central_spamfilter_start_download(void)
 {
 	char url[512];
 	NameValuePrioList *nvp = NULL;
+	const char *apikey;
+	OutgoingWebRequest *request;
 
 	if (central_spamfilter_downloading)
 		return;
@@ -11967,13 +11969,32 @@ void central_spamfilter_start_download(void)
 
 	central_spamfilter_downloading = 1;
 
+	/* Prepare the request */
+	request = safe_alloc(sizeof(OutgoingWebRequest));
+	request->http_method = HTTP_METHOD_GET;
+	request->cachetime = CENTRAL_SPAMFILTER_CACHE_TIME;
+	request->callback = central_spamfilter_download_complete;
+	request->callback_data = NULL;
+	request->max_redirects = DOWNLOAD_MAX_REDIRECTS;
+	request->store_in_file = 1;
+
 	/* Build the URL */
 	add_nvplist(&nvp, 0, "feed", iConf.central_spamfilter_feed);
-	buildvarstring_nvp(iConf.central_spamfilter_url, url, sizeof(url), nvp, 0);
+	apikey = get_central_api_key();
+	if (apikey && !strcmp(iConf.central_spamfilter_url, DEFAULT_CENTRAL_SPAMFILTER_URL_OPEN_ACCESS))
+	{
+		/* Use the restricted URL */
+		buildvarstring_nvp(DEFAULT_CENTRAL_SPAMFILTER_URL_RESTRICTED_ACCESS, url, sizeof(url), nvp, 0);
+		add_nvplist(&request->headers, 0, "X-API-Key", apikey);
+	} else {
+		/* Use the open access URL */
+		buildvarstring_nvp(iConf.central_spamfilter_url, url, sizeof(url), nvp, 0);
+	}
 	safe_free_nvplist(nvp);
 
 	/* Start HTTPS request */
-	download_file_async(url, CENTRAL_SPAMFILTER_CACHE_TIME, central_spamfilter_download_complete, NULL, DOWNLOAD_MAX_REDIRECTS);
+	safe_strdup(request->url, url);
+	url_start_async(request);
 }
 
 EVENT(central_spamfilter_download_evt)
