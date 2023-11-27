@@ -51,7 +51,7 @@ in progress and may not always be a stable version.
 ### Changes:
 * Reserve more file descriptors for internal use. For example, when there
   are 10,000 fd's are available we now reserve 250, and when 2048 are
-  available we reserve 32. This so we have more fd's available to do handle
+  available we reserve 32. This so we have more fd's available to handle
   things like log files, do HTTPS callbacks to blacklists, etc.
 * Get rid of compiler check for modules vs core, this is mostly an issue
   when you are upgrading a system (eg. Linux distro) and it would previously

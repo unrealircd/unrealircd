@@ -1863,6 +1863,7 @@ struct ConfigItem_tld {
 
 #define WEB_OPT_ENABLE	0x1
 
+/** The HTTP method to use */
 typedef enum HttpMethod {
 	HTTP_METHOD_NONE = 0,	/**< No valid HTTP request (yet) */
 	HTTP_METHOD_HEAD = 1,	/**< HEAD request */
@@ -1887,21 +1888,27 @@ struct HTTPForwardedHeader
 };
 
 
-/** An outgoing web request (eg remote includes download) */
+/** An outgoing web request (eg remote includes download).
+ * For all strings: be sure to safe_strdup() them into the request,
+ * do not use static storage. So good: safe_strdup(w->url, "https://example.net");
+ * and bad: w->url = "...";
+ * All the data is freed by the URL Subsystem, you don't need to worry
+ * about this.
+ */
 struct OutgoingWebRequest
 {
-	void (*callback)(OutgoingWebRequest *request, OutgoingWebResponse *response); /**< Either use this for non-modules */
-	char *apicallback; /** Or use an api callback that you registered via RegisterApiCallbackWebResponse() before */
-	void *callback_data;
-	char *url; /**< must be freed by url_do_transfers_async() */
+	void (*callback)(OutgoingWebRequest *request, OutgoingWebResponse *response); /**< Either use this for non-modules (NOT recommended) */
+	char *apicallback; /**< Set this to the name of an api callback that you registered via RegisterApiCallbackWebResponse() in MOD_INIT */
+	void *callback_data; /**< Optionally, set this to keep track of requests. The response function will carry this in OutgoingWebResponse in 'ptr' */
+	char *url; /**< The URL to visit */
 	char *actual_url; /**< if you actually want to use a different url, mostly for redirects (end-users: don't set this!) */
-	HttpMethod http_method;
-	char *body;
-	NameValuePrioList *headers;
-	int store_in_file;
-	time_t cachetime;
-	int max_redirects;
-	int keep_file;
+	HttpMethod http_method; /**< Must be set explicitly. When in doubt, use HTTP_METHOD_GET */
+	char *body; /**< If you want to send a body in the request. This only makes sense for PUT/POST */
+	NameValuePrioList *headers; /**< Any headers you want to see in the HTTP request */
+	int store_in_file; /**< Set to 1 to store the result in a file (basically a download), used by remote includes and the like. */
+	time_t cachetime; /**< The cached time of an existing file on disk. If the version online is the same then this may avoid downloading a large file. */
+	int max_redirects; /**< Maximum number of times we are allowed to redirect from one page to another */
+	int keep_file; /**< Normally, if store_in_file is set to 1, the downloaded file is deleted after the callback function was called. If you set this to 1 then the file is not removed. */
 	int connect_timeout; /**< How many seconds to wait for the (TLS) connect to succeed */
 	int transfer_timeout; /**< How many seconds the total transfer may take (connect+reading everything) */
 	// If you are adding allocated fields here:
@@ -1912,12 +1919,12 @@ struct OutgoingWebRequest
 /** The result of an HTTP(S) call, such as the downloaded file, error, etc. */
 struct OutgoingWebResponse
 {
-	const char *file;
-	const char *memory;
-	int memory_len;
-	const char *errorbuf;
-	int cached;
-	void *ptr;
+	const char *file; /**< The temporary file of the download, or NULL. This is only set if OutgoingWebRequest had 'store_in_file' set to 1 and the download was succesful. */
+	const char *memory; /**< The memory buffer of the response, or NULL if an error occured (see errorbuf) */
+	int memory_len; /**< The length of 'memory', since the response may contain binary data. */
+	const char *errorbuf; /**< If this is non-NULL then an error occured and this is the error string. Check this member before checking any others! */
+	int cached; /**< Set to 1 if OutgoingWebRequest had 'cachetime' set and we have a cache hit on the webserver. The file and errobuf will be NULL since there was no data transfer. */
+	void *ptr; /**< The OutgoingWebRequest 'callback_data' */
 	// If you add or modify fields, update url_callback() in src/misc.c!
 };
 
