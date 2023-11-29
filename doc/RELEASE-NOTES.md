@@ -1,7 +1,7 @@
 UnrealIRCd 6.1.3-git
 ===================
 
-This is the git version (development version) for future 6.1.2. This is work
+This is the git version (development version) for future 6.1.3. This is work
 in progress and may not always be a stable version.
 
 ### Enhancements:
