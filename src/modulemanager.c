@@ -955,7 +955,7 @@ int mm_compile(ManagedModule *m, const char *tmpfile, int test)
 /** Actually download and install the module.
  * This assumes compatibility checks have already been done.
  */
-void mm_install_module(ManagedModule *m)
+int mm_install_module(ManagedModule *m)
 {
 	const char *sha256;
 	const char *tmpfile;
@@ -966,7 +966,7 @@ void mm_install_module(ManagedModule *m)
 	{
 		fprintf(stderr, "Repository %s seems to list a module file that cannot be retrieved (%s).\n", m->repo_url, m->source);
 		fprintf(stderr, "Fatal error encountered. Contact %s: %s\n", m->author, m->troubleshooting);
-		exit(-1);
+		return 0;
 	}
 
 	sha256 = sha256sum_file(tmpfile);
@@ -974,7 +974,7 @@ void mm_install_module(ManagedModule *m)
 	{
 		fprintf(stderr, "ERROR: Temporary file '%s' has disappeared -- strange\n", tmpfile);
 		fprintf(stderr, "Fatal error encountered. Check for errors above. Perhaps try running the command again?\n");
-		exit(-1);
+		return 0;
 	}
 	if (strcasecmp(sha256, m->sha256sum))
 	{
@@ -985,20 +985,21 @@ void mm_install_module(ManagedModule *m)
 		fprintf(stderr, "Fatal error encountered, see above. Try running the command again in 5-10 minutes.\n"
 		                "If the issue persists, contact the repository manager of %s\n",
 		                m->repo_url);
-		exit(-1);
+		return 0;
 	}
 	if (!mm_compile(m, tmpfile, 1))
 	{
 		fprintf(stderr, "Fatal error encountered, see above.\n");
-		exit(-1);
+		return 0;
 	}
 
 	if (!mm_compile(m, tmpfile, 0))
 	{
 		fprintf(stderr, "The test compile went OK earlier, but the final compile did not. BAD!!\n");
-		exit(-1);
+		return 0;
 	}
 	printf("Module %s compiled successfully\n", m->name);
+	return 1;
 }
 
 /** Uninstall a module.
@@ -1055,7 +1056,7 @@ void mm_make_install(void)
 	n = system(cmd);
 }
 
-void mm_install(int argc, char *args[], int upgrade)
+int mm_install(int argc, char *args[], int upgrade)
 {
 	ManagedModule *m;
 	MultiLine *l;
@@ -1065,20 +1066,20 @@ void mm_install(int argc, char *args[], int upgrade)
 	if (!name)
 	{
 		fprintf(stderr, "ERROR: Use: module install third/name-of-module\n");
-		exit(-1);
+		return 0;
 	}
 
 	if (!str_starts_with_case_sensitive(name, "third/"))
 	{
 		fprintf(stderr, "ERROR: Use: module install third/name-of-module\nYou must prefix the modulename with third/\n");
-		exit(-1);
+		return 0;
 	}
 
 	m = mm_find_module(name);
 	if (!m)
 	{
 		fprintf(stderr, "ERROR: Module '%s' not found\n", name);
-		exit(-1);
+		return 0;
 	}
 	status = mm_get_module_status(m);
 	if (status == MMMS_UNAVAILABLE)
@@ -1091,14 +1092,15 @@ void mm_install(int argc, char *args[], int upgrade)
 		                m->min_unrealircd_version);
 		if (m->max_unrealircd_version)
 			fprintf(stderr, "Maximum version          : %s\n", m->max_unrealircd_version);
-		exit(-1);
+		return 0;
 	}
 	if (upgrade && (status == MMMS_INSTALLED))
 	{
 		/* If updating, and we are already on latest version, then don't upgrade */
 		printf("Module %s is the latest version, no upgrade needed\n", m->name);
 	}
-	mm_install_module(m);
+	if (!mm_install_module(m))
+		return 0;
 	mm_make_install();
 	if (m->post_install_text)
 	{
@@ -1110,6 +1112,7 @@ void mm_install(int argc, char *args[], int upgrade)
 	} else {
 		printf("Don't forget to add a 'loadmodule' line for the module and rehash\n");
 	}
+	return 1;
 }
 
 void mm_uninstall(int argc, char *args[])
@@ -1139,6 +1142,7 @@ void mm_upgrade(int argc, char *args[])
 	ManagedModule *m;
 	char *name = args[1];
 	int upgraded = 0;
+	int failed = 0;
 	int uptodate_already = 0;
 	int update_unavailable = 0;
 	int i = 1, n;
@@ -1165,8 +1169,10 @@ void mm_upgrade(int argc, char *args[])
 		if (status == (MMMS_INSTALLED|MMMS_UPGRADE_AVAILABLE))
 		{
 			args[1] = m->name;
-			mm_install(1, args, 1);
-			upgraded++;
+			if (mm_install(1, args, 1))
+				upgraded++;
+			else
+				failed++;
 		} else
 		if (status == MMMS_INSTALLED)
 		{
@@ -1180,8 +1186,16 @@ void mm_upgrade(int argc, char *args[])
 	no_make_install = 0;
 	if (upgraded)
 		mm_make_install();
-	printf("All actions were successful. %d module(s) upgraded, %d already up-to-date\n",
-		upgraded, uptodate_already);
+
+	printf("\n\n");
+	if (failed)
+	{
+		printf("There was %d FAILED module upgrade. %d module(s) upgraded, %d already up-to-date\n",
+			failed, upgraded, uptodate_already);
+	} else {
+		printf("All actions were successful. %d module(s) upgraded, %d already up-to-date\n",
+			upgraded, uptodate_already);
+	}
 	if (update_unavailable)
 		printf("%d module(s) have updates but not for your UnrealIRCd version\n", update_unavailable);
 	if ((n = count_unknown_modules()))
@@ -1497,8 +1511,8 @@ void modulemanager(int argc, char *args[])
 		mm_info(argc, args);
 	else if (!strcasecmp(args[0], "install"))
 	{
-		mm_install(argc, args, 0);
-		fprintf(stderr, "All actions were successful.\n");
+		if (mm_install(argc, args, 0))
+			fprintf(stderr, "All actions were successful.\n");
 	}
 	else if (!strcasecmp(args[0], "upgrade"))
 		mm_upgrade(argc, args);
