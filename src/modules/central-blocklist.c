@@ -984,6 +984,7 @@ void send_request_for_pending_clients(void)
 	j = json_object();
 	json_object_set_new(j, "server", json_string_unreal(me.name));
 	json_object_set_new(j, "module_version", json_string_unreal(cbl_module->header->version));
+	json_object_set_new(j, "unrealircd_version", json_string_unreal(VERSIONONLY));
 	requests = json_object();
 	json_object_set_new(j, "requests", requests);
 
