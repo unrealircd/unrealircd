@@ -187,7 +187,7 @@ EXP_OBJ_FILES=src/ircd_vars.obj src/channel.obj src/send.obj src/socket.obj \
  src/random.obj src/api-channelmode.obj src/api-moddata.obj src/api-rpc.obj src/mempool.obj \
  src/dispatch.obj src/api-isupport.obj src/api-command.obj \
  src/api-clicap.obj src/api-messagetag.obj src/api-history-backend.obj \
- src/api-extban.obj src/api-efunctions.obj src/crypt_blowfish.obj \
+ src/api-extban.obj src/api-efunctions.obj src/api-apicallback.obj src/crypt_blowfish.obj \
  src/operclass.obj src/crashreport.obj src/unrealdb.obj \
  src/openssl_hostname_validation.obj \
  src/utf8.obj src/json.obj src/log.obj $(CURLOBJ)
@@ -638,6 +638,9 @@ src/api-messagetag.obj: src/api-messagetag.c $(INCLUDES)
 
 src/api-history-backend.obj: src/api-history-backend.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/api-history-backend.c
+
+src/api-apicallback.obj: src/api-apicallback.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/api-apicallback.c
 
 src/tls.obj: src/tls.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/tls.c
