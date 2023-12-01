@@ -1,8 +1,15 @@
-UnrealIRCd 6.1.3-git
-===================
+UnrealIRCd 6.1.3-rc1
+=====================
 
-This is the git version (development version) for future 6.1.3. This is work
-in progress and may not always be a stable version.
+This is the Release Candidate for future UnrealIRCd 6.1.3.
+
+Please help us with testing this release and report any issues at
+https://bugs.unrealircd.org/. This way we can have a stable 6.1.3
+later in December.
+
+The main focus of this release is adding countermeasures against large
+scale spam/drones. We do this by offering a central API which can be used
+for accessing Central Blocklist, Central Spamreport and Central Spamfilter.
 
 ### Enhancements:
 * Central anti-spam services:
@@ -28,7 +35,7 @@ in progress and may not always be a stable version.
   [set::hide-ban-reason](https://www.unrealircd.org/docs/Set_block#set::hide-ban-reason),
   which is now the default. This will hide the *LINE reason to other users
   if the *LINE reason contains the IP of the user, for example when it contains
-  a DroneBL URL which has `lookup?ip=XXX`. This to protect the privayc of the user.
+  a DroneBL URL which has `lookup?ip=XXX`. This to protect the privacy of the user.
   Other possible settings are `no` (never hide, the previous default) and
   `yes` to always hide the *LINE reason. In all cases the user affected by
   the server ban can still see the reason and IRCOps too.
@@ -66,15 +73,15 @@ in progress and may not always be a stable version.
   staying on the same server.
 
 ### Fixes:
-* The crash reporter was no longer working
-* [Module manager](https://www.unrealircd.org/docs/Module_manager) fixes
-* For people running git versions, who did not use 'make clean', 3rd party
-  modules were not always automatically recompiled, causing potential
-  problems such as crashes.
 * Crash issue when a module is reloaded (not unloaded) and that module
   no longer provides a particular moddata object, e.g. because it was
   renamed or no longer needed. This is rare, but did happen for one
   third party module recently.
+* The crash reporter was no longer able to submit reports.
+* [Module manager](https://www.unrealircd.org/docs/Module_manager) fixes
+* For people running git versions, who did not use 'make clean', 3rd party
+  modules were not always automatically recompiled, causing potential
+  problems such as crashes.
 * Fix memory leak when unloading a module for good and that module provided
   ModData objects for "unknown users" (users still in the handshake).
 * Don't ask to generate TLS certificate if one already exists (issue
