@@ -72,7 +72,7 @@ static struct reqstruct req;
 CBLTransfer *cbltransfers = NULL;
 
 /* Forward declarations */
-int _central_spamreport(Client *client);
+int _central_spamreport(Client *client, Client *by);
 int cbl_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int cbl_config_posttest(int *errs);
 int cbl_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
@@ -1072,7 +1072,7 @@ CMD_OVERRIDE_FUNC(cbl_override_spamreport_gather)
 	CALL_NEXT_COMMAND_OVERRIDE();
 }
 
-int _central_spamreport(Client *client)
+int _central_spamreport(Client *client, Client *by)
 {
 	json_t *j, *requests, *data, *cmds, *item;
 	OutgoingWebRequest *w;
@@ -1098,6 +1098,9 @@ int _central_spamreport(Client *client)
 	j = json_object();
 	json_object_set_new(j, "server", json_string_unreal(me.name));
 	json_object_set_new(j, "module_version", json_string_unreal(cbl_module->header->version));
+	json_object_set_new(j, "unrealircd_version", json_string_unreal(VERSIONONLY));
+	if (by)
+		json_object_set_new(j, "reporter", json_string_unreal(by->name));
 	requests = json_object();
 	json_object_set_new(j, "reports", requests);
 

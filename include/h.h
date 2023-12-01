@@ -918,7 +918,7 @@ extern MODVAR int (*websocket_create_packet_simple)(int opcode, const char **buf
 extern MODVAR const char *(*check_deny_link)(ConfigItem_link *link, int auto_connect);
 extern MODVAR void (*mtag_add_issued_by)(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 extern MODVAR void (*cancel_ident_lookup)(Client *client);
-extern MODVAR int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
+extern MODVAR int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by);
 extern MODVAR int (*crule_test)(const char *rule);
 extern MODVAR CRuleNode *(*crule_parse)(const char *rule);
 extern int (*crule_eval)(crule_context *context, CRuleNode *rule);
@@ -927,7 +927,7 @@ extern void (*crule_free)(CRuleNode **);
 extern const char *(*crule_errstring)(int errcode);
 extern void (*ban_act_set_reputation)(Client *client, BanAction *action);
 extern const char *(*get_central_api_key)(void);
-extern int (*central_spamreport)(Client *target);
+extern int (*central_spamreport)(Client *target, Client *by);
 extern int (*central_spamreport_enabled)(void);
 /* /Efuncs */
 
@@ -981,10 +981,10 @@ extern int websocket_create_packet_ex_default_handler(int opcode, char **buf, in
 extern int websocket_create_packet_simple_default_handler(int opcode, const char **buf, int *len);
 extern void mtag_add_issued_by_default_handler(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 extern void cancel_ident_lookup_default_handler(Client *client);
-extern int spamreport_default_handler(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
+extern int spamreport_default_handler(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by);
 extern void ban_act_set_reputation_default_handler(Client *client, BanAction *action);
 extern const char *get_central_api_key_default_handler(void);
-extern int central_spamreport_default_handler(Client *target);
+extern int central_spamreport_default_handler(Client *target, Client *by);
 extern int central_spamreport_enabled_default_handler(void);
 /* End of default handlers for efunctions */
 

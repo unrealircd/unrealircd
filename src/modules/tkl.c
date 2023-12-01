@@ -4971,7 +4971,7 @@ int _take_action(Client *client, BanAction *actions, char *reason, long duration
 			case BAN_ACT_REPORT:
 				if (take_action_flags & TAKE_ACTION_SIMULATE_USER_ACTION)
 					break;
-				spamreport(client, client->ip, NULL, action->var);
+				spamreport(client, client->ip, NULL, action->var, NULL);
 				break;
 			case BAN_ACT_SET:
 				if (!(take_action_flags & TAKE_ACTION_SKIP_SET))

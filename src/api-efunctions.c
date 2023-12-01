@@ -164,7 +164,7 @@ int (*websocket_create_packet_simple)(int opcode, const char **buf, int *len);
 const char *(*check_deny_link)(ConfigItem_link *link, int auto_connect);
 void (*mtag_add_issued_by)(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 void (*cancel_ident_lookup)(Client *client);
-int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block);
+int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by);
 int (*crule_test)(const char *rule);
 CRuleNode *(*crule_parse)(const char *rule);
 int (*crule_eval)(crule_context *context, CRuleNode *rule);
@@ -172,7 +172,7 @@ void (*crule_free)(CRuleNode **);
 const char *(*crule_errstring)(int errcode);
 void (*ban_act_set_reputation)(Client *client, BanAction *action);
 const char *(*get_central_api_key)(void);
-int (*central_spamreport)(Client *target);
+int (*central_spamreport)(Client *target, Client *by);
 int (*central_spamreport_enabled)(void);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
