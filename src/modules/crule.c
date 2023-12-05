@@ -351,7 +351,7 @@ static int crule_cap_set(crule_context *context, int numargs, void *crulearg[])
 {
 	const char *capname = (char *)crulearg[0];
 
-	if (!context || !context->client || !context->client->local)
+	if (!context || !context->client || !context->client->local )
 		return 0;
 
 	if (HasCapability(context->client, capname))
