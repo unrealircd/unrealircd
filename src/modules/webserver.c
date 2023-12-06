@@ -183,7 +183,7 @@ int webserver_packet_in(Client *client, const char *readbuf, int *length)
 /** Helper function to parse the HTTP header consisting of multiple 'Key: value' pairs */
 int webserver_handshake_helper(char *buffer, int len, char **key, char **value, char **lastloc, int *end_of_request)
 {
-	static char buf[4096], *nextptr;
+	static char buf[16384], *nextptr;
 	char *p;
 	char *k = NULL, *v = NULL;
 	int foundlf = 0;
@@ -351,48 +351,31 @@ char *find_end_of_request(char *header, int totalsize, int *remaining_bytes)
 }
 
 /** Handle HTTP request
- * Yes, I'm going to assume that the header fits in one packet and one packet only.
  */
 int webserver_handle_request_header(Client *client, const char *readbuf, int *length)
 {
 	char *key, *value;
 	int r, end_of_request;
-	static char netbuf[16384];
-	static char netbuf2[16384];
+	char *netbuf;
 	char *lastloc = NULL;
-	int n, maxcopy, nprefix=0;
 	int totalsize;
 
-	/* Totally paranoid: */
-	memset(netbuf, 0, sizeof(netbuf));
-	memset(netbuf2, 0, sizeof(netbuf2));
-
-	/** Frame re-assembling starts here **/
+	totalsize = WEB(client)->lefttoparselen + *length;
+	netbuf = safe_alloc(totalsize+1);
 	if (WEB(client)->lefttoparse)
 	{
-		strlcpy(netbuf, WEB(client)->lefttoparse, sizeof(netbuf));
-		nprefix = strlen(netbuf);
+		memcpy(netbuf, WEB(client)->lefttoparse, WEB(client)->lefttoparselen);
+		memcpy(netbuf + WEB(client)->lefttoparselen, readbuf, *length);
+	} else {
+		memcpy(netbuf, readbuf, *length);
 	}
-	maxcopy = sizeof(netbuf) - nprefix - 1;
-	/* (Need to do some manual checking here as strlen() can't be safely used
-	 *  on readbuf. Same is true for strlncat since it uses strlen().)
-	 */
-	n = *length;
-	if (n > maxcopy)
-		n = maxcopy;
-	if (n <= 0)
-	{
-		webserver_close_client(client); // Oversized line
-		return -1;
-	}
-	memcpy(netbuf+nprefix, readbuf, n); /* SAFE: see checking above */
-	totalsize = n + nprefix;
-	netbuf[totalsize] = '\0';
-	memcpy(netbuf2, netbuf, totalsize+1); // copy, including the "always present \0 at the end just in case we use strstr etc".
 	safe_free(WEB(client)->lefttoparse);
+	WEB(client)->lefttoparselen = 0;
+
+	// remember to always safe_free(netbuf); below BEFORE RETURNING !!!
 
 	/** Now step through the lines.. **/
-	for (r = webserver_handshake_helper(netbuf, strlen(netbuf), &key, &value, &lastloc, &end_of_request);
+	for (r = webserver_handshake_helper(netbuf, totalsize, &key, &value, &lastloc, &end_of_request);
 	     r;
 	     r = webserver_handshake_helper(NULL, 0, &key, &value, &lastloc, &end_of_request))
 	{
@@ -427,6 +410,7 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 		if (!WEB(client)->uri)
 		{
 			webserver_send_response(client, 400, "Malformed HTTP request");
+			safe_free(netbuf);
 			return -1;
 		}
 
@@ -434,14 +418,21 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 		parse_proxy_header(client);
 		n = WEBSERVER(client)->handle_request(client, WEB(client));
 		if ((n <= 0) || IsDead(client))
+		{
+			safe_free(netbuf);
 			return n; /* byebye */
+		}
 		
 		/* There could be data directly after the request header (eg for
 		 * a POST or PUT), check for it here so it isn't lost.
 		 */
-		nextframe = find_end_of_request(netbuf2, totalsize, &remaining_bytes);
+		nextframe = find_end_of_request(netbuf, totalsize, &remaining_bytes);
 		if (nextframe)
+		{
 			return WEBSERVER(client)->handle_body(client, WEB(client), nextframe, remaining_bytes);
+			safe_free(netbuf);
+		}
+		safe_free(netbuf);
 		return 0;
 	}
 
@@ -450,6 +441,7 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 		/* Last line was cut somewhere, save it for next round. */
 		safe_strdup(WEB(client)->lefttoparse, lastloc);
 	}
+	safe_free(netbuf);
 	return 0; /* don't let UnrealIRCd process this */
 }
 
