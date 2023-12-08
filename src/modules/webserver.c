@@ -429,8 +429,9 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 		nextframe = find_end_of_request(netbuf, totalsize, &remaining_bytes);
 		if (nextframe)
 		{
-			return WEBSERVER(client)->handle_body(client, WEB(client), nextframe, remaining_bytes);
+			int n = WEBSERVER(client)->handle_body(client, WEB(client), nextframe, remaining_bytes);
 			safe_free(netbuf);
+			return n;
 		}
 		safe_free(netbuf);
 		return 0;
