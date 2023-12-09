@@ -1,11 +1,5 @@
-UnrealIRCd 6.1.3-rc1
-=====================
-
-This is the Release Candidate for future UnrealIRCd 6.1.3.
-
-Please help us with testing this release and report any issues at
-https://bugs.unrealircd.org/. This way we can have a stable 6.1.3
-later in December.
+UnrealIRCd 6.1.3
+=================
 
 The main focus of this release is adding countermeasures against large
 scale spam/drones. We do this by offering a central API which can be used
@@ -73,6 +67,9 @@ for accessing Central Blocklist, Central Spamreport and Central Spamfilter.
   staying on the same server.
 
 ### Fixes:
+* When using a trusted reverse proxy with the
+  [Proxy block](https://www.unrealircd.org/docs/Proxy_block),
+  under some circumstances it was possible for end-users to spoof IP's.
 * Crash issue when a module is reloaded (not unloaded) and that module
   no longer provides a particular moddata object, e.g. because it was
   renamed or no longer needed. This is rare, but did happen for one
