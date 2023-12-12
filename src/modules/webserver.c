@@ -181,9 +181,10 @@ int webserver_packet_in(Client *client, const char *readbuf, int *length)
 }
 
 /** Helper function to parse the HTTP header consisting of multiple 'Key: value' pairs */
-int webserver_handshake_helper(char *buffer, int len, char **key, char **value, char **lastloc, int *end_of_request)
+int webserver_handshake_helper(char *buffer, int len, char **key, char **value, char **lastloc, int *lastloc_len, int *end_of_request)
 {
-	static char buf[16384], *nextptr;
+	static char buf[32768], *nextptr;
+	static int buflen;
 	char *p;
 	char *k = NULL, *v = NULL;
 	int foundlf = 0;
@@ -193,6 +194,7 @@ int webserver_handshake_helper(char *buffer, int len, char **key, char **value, 
 		/* Initialize */
 		if (len > sizeof(buf) - 1)
 			len = sizeof(buf) - 1;
+		buflen = len;
 
 		memcpy(buf, buffer, len);
 		buf[len] = '\0';
@@ -200,6 +202,7 @@ int webserver_handshake_helper(char *buffer, int len, char **key, char **value, 
 	}
 
 	*end_of_request = 0;
+	*lastloc_len = 0;
 
 	p = nextptr;
 
@@ -268,6 +271,12 @@ int webserver_handshake_helper(char *buffer, int len, char **key, char **value, 
 	{
 		*key = *value = NULL;
 		*lastloc = k;
+		*lastloc_len = buflen - (k - buf);
+		/* unreal_log(ULOG_DEBUG, "webserver", "WEBSERVER_FRAMING", NULL,
+		           "Framing: processed $bytes_processed, remaining $bytes_remaining of $bytes_total",
+		           log_data_integer("bytes_processed", (int)(k - buf)),
+		           log_data_integer("bytes_remaining", *lastloc_len),
+		           log_data_integer("bytes_total", buflen)); */
 		return 0;
 	}
 
@@ -358,6 +367,7 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 	int r, end_of_request;
 	char *netbuf;
 	char *lastloc = NULL;
+	int lastloc_len = 0;
 	int totalsize;
 
 	totalsize = WEB(client)->lefttoparselen + *length;
@@ -375,9 +385,9 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 	// remember to always safe_free(netbuf); below BEFORE RETURNING !!!
 
 	/** Now step through the lines.. **/
-	for (r = webserver_handshake_helper(netbuf, totalsize, &key, &value, &lastloc, &end_of_request);
+	for (r = webserver_handshake_helper(netbuf, totalsize, &key, &value, &lastloc, &lastloc_len, &end_of_request);
 	     r;
-	     r = webserver_handshake_helper(NULL, 0, &key, &value, &lastloc, &end_of_request))
+	     r = webserver_handshake_helper(NULL, 0, &key, &value, &lastloc, &lastloc_len, &end_of_request))
 	{
 		if (BadPtr(value))
 			continue; /* skip empty values */
@@ -437,10 +447,12 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 		return 0;
 	}
 
-	if (lastloc)
+	if (lastloc && lastloc_len)
 	{
 		/* Last line was cut somewhere, save it for next round. */
-		safe_strdup(WEB(client)->lefttoparse, lastloc);
+		WEB(client)->lefttoparselen = lastloc_len;
+		WEB(client)->lefttoparse = safe_alloc(lastloc_len);
+		memcpy(WEB(client)->lefttoparse, lastloc, lastloc_len);
 	}
 	safe_free(netbuf);
 	return 0; /* don't let UnrealIRCd process this */
