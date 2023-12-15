@@ -223,7 +223,4 @@ extern MODVAR time_t now;
 #else
 #define inline __inline
 #endif
-
-#define READBUF_SIZE 8192
-
 #endif /* __common_include__ */
