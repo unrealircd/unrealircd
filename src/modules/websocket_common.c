@@ -10,7 +10,7 @@
 ModuleHeader MOD_HEADER
   = {
 	"websocket_common",
-	"6.0.0",
+	"6.1.4",
 	"WebSocket support (RFC6455)",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -149,7 +149,7 @@ int websocket_handle_packet(Client *client, const char *readbuf, int length, int
 	const char *p;
 	int total_packet_size;
 	char *payload = NULL;
-	static char payloadbuf[READBUF_SIZE];
+	static char payloadbuf[MAXLINELENGTH];
 	int maskkeylen = 4;
 
 	if (length < 4)
