@@ -1,3 +1,27 @@
+UnrealIRCd 6.1.4
+=================
+This release fixes a crash issue with websockets in UnrealIRCd 6.1.0 - 6.1.3.
+
+The full advisory with all details is available at:
+https://forums.unrealircd.org/viewtopic.php?t=9340
+
+See that advisory also for a way to hot-patch, to fix the crash issue on *NIX
+without restarting (zero downtime). If you choose to go with the hot-patch,
+then you don't need to upgrade to 6.1.4.
+
+UnrealIRCd 6.1.4 is for those people who run Windows, or otherwise just feel
+like it is a good time to do a full upgrade (with restart). It's naturally
+also for new installations.
+
+### Fixes:
+* Crash that can be triggered by users when
+  [Websockets](https://www.unrealircd.org/docs/WebSocket_support)
+  are in use (a listen block with `listen::options::websocket`).
+  This was assigned CVE-2023-50784.
+* In 6.1.3, [Websockets](https://www.unrealircd.org/docs/WebSocket_support)
+  were not working with Chrome and possibly other browsers.
+  The fix for this is also included in the hot-patch (for 6.1.3 only).
+
 UnrealIRCd 6.1.3
 =================
 
