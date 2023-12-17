@@ -239,7 +239,11 @@ int main(int argc, char *argv[])
 	chdir(".."); /* go up one level from "bin" */
 	init_winsock();
 #else
-	alarm(20); /* 20 second timeout */
+#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
+	alarm(60); /* 60 seconds timeout - ASan can be slow... */
+#else
+	alarm(20); /* 20 seconds timeout */
+#endif
 #endif
 	dbuf_init();
 	init_random();
