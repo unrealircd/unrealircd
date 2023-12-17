@@ -85,9 +85,6 @@ const char *extban_operclass_conv_param(BanContext *b, Extban *extban)
 		}
 	}
 
-	if (retbuf[3] == '\0')
-		return NULL; /* just "~O:" is invalid */
-
 	return retbuf;
 }
 
