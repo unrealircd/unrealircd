@@ -101,7 +101,7 @@ int capi_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			char *p = strchr(cep->value, '-');
 			if (!p)
 			{
-				config_error("%s:%i: set::central-api::request-key: Invalid format for. "
+				config_error("%s:%i: set::central-api::request-key: Invalid format. "
 				             "Please check if you copy-pasted the key correctly.",
 				             cep->file->filename, cep->line_number);
 				errors++;
@@ -111,6 +111,15 @@ int capi_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		} else
 		if (!strcmp(cep->name, "api-key"))
 		{
+			if (!strchr(cep->value, ':'))
+			{
+				config_error("%s:%i: set::central-api::api-key: Invalid format. "
+					     "Please check if you copy-pasted the api-key correctly. "
+					     "You can log in at your account to view API keys at "
+					     "https://www.unrealircd.org/central-api/account/",
+					     cep->file->filename, cep->line_number);
+				errors++;
+			}
 			req.api_key = 1;
 		} else
 		{
