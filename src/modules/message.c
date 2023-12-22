@@ -115,7 +115,7 @@ int can_send_to_user(Client *client, Client *target, const char **msgtext, const
 	}
 
 	// Possible FIXME: make match_spamfilter also use errmsg, or via a wrapper? or use same numeric?
-	if (MyUser(client))
+	if (MyUser(client) && (sendtype != SEND_TYPE_TAGMSG))
 	{
 		int spamtype = (sendtype == SEND_TYPE_NOTICE ? SPAMF_USERNOTICE : SPAMF_USERMSG);
 		const char *cmd = sendtype_to_cmd(sendtype);
@@ -330,7 +330,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, const char *p
 			if ((*parv[2] == '\001') && strncmp(&parv[2][1], "ACTION ", 7))
 				sendflags |= SKIP_CTCP;
 
-			if (MyUser(client))
+			if (MyUser(client) && (sendtype != SEND_TYPE_TAGMSG))
 			{
 				int spamtype = (sendtype == SEND_TYPE_NOTICE ? SPAMF_CHANNOTICE : SPAMF_CHANMSG);
 
