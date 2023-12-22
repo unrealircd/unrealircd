@@ -1,5 +1,23 @@
-UnrealIRCd 6.1.4
+UnrealIRCd 6.1.5-git
 =================
+
+This is the git version (development version) for future 6.1.5. This is work
+in progress and may not always be a stable version.
+
+### Enhancements:
+* TODO
+
+### Changes:
+* TODO
+
+### Fixes:
+* +I ~operclass was not working properly.
+
+### Developers and protocol:
+* TODO
+
+UnrealIRCd 6.1.4
+-----------------
 This release fixes a crash issue with websockets in UnrealIRCd 6.1.0 - 6.1.3.
 
 The full advisory with all details is available at:
@@ -23,7 +41,7 @@ also for new installations.
   The fix for this is also included in the hot-patch (for 6.1.3 only).
 
 UnrealIRCd 6.1.3
-=================
+-----------------
 
 The main focus of this release is adding countermeasures against large
 scale spam/drones. We do this by offering a central API which can be used
