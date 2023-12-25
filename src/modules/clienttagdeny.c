@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/echo-message.c
+ *   IRC - Internet Relay Chat, src/modules/client-tag-deny.c
  *   (C) 2020 k4be for The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
