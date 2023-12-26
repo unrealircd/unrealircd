@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/extbans/partmsg.c
  * Hide Part/Quit message extended ban (+b ~p:nick!user@host)
  * (C) Copyright i <info@servx.org> and the UnrealIRCd team
  *
