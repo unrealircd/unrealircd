@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/extbans/operclass.c
  * Extended ban type: ban (or rather: exempt or invex) an operclass.
  * (C) Copyright 2003-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
