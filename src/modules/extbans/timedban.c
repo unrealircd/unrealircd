@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/extbans/timedban.c
  * timedban - Timed bans that are automatically unset.
  * (C) Copyright 2009-2017 Bram Matthys (Syzop) and the UnrealIRCd team.
  * License: GPLv2 or later
