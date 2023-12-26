@@ -1,4 +1,4 @@
-/*
+/* IRC - Internet Relay Chat, src/modules/operinfo.c
  * Store oper login in ModData, used by WHOIS and for auditting purposes.
  * (C) Copyright 2021-.. Syzop and The UnrealIRCd Team
  * License: GPLv2 or later
