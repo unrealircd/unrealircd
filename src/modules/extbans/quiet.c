@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/extbans/quiet.c
  * Extended ban that affects messages/notices only (+b ~q)
  * (C) Copyright 2003-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
