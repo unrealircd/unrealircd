@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/securitygroup.c
  * Mask & security-group routines.
  * (C) Copyright 2015-.. Syzop and the UnrealIRCd team
  *
