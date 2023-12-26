@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/extbans/flood.c
  * Extended ban to exempt from +f/+F checking.
  * Eg: +e ~flood:*:~account:TrustedBot
  * (C) Copyright 2023-.. Bram Matthys (Syzop) and the UnrealIRCd team
