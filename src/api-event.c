@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, api-event.c
+ *   IRC - Internet Relay Chat, src/api-event.c
  *   (C) 2001- Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
  *   and the UnrealIRCd team
  *
