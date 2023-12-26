@@ -1,4 +1,5 @@
 /*
+ * IRC - Internet Relay Chat, src/modules/whowasdb.c
  * Stores WHOWAS history in a .db file
  * (C) Copyright 2023 Syzop
  * License: GPLv2 or later
