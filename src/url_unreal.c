@@ -1,5 +1,5 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/url.c
+ *   Unreal Internet Relay Chat Daemon, src/url_unreal.c
  *   (C) 2021 Bram Matthys and the UnrealIRCd team
  *
  *   This program is free software; you can redistribute it and/or modify
