@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/topiclimit.c
  * Channel Mode +t
  * (C) Copyright 2021 Syzop and the UnrealIRCd team
  *
