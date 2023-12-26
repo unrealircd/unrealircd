@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/nonotice.c
  * Disallow notices in channel UnrealIRCd Module (Channel Mode +T)
  * (C) Copyright 2014 Travis McArthur (Heero) and the UnrealIRCd team
  *
