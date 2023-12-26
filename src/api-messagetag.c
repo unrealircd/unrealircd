@@ -1,5 +1,5 @@
 /************************************************************************
- *   UnrealIRCd - Unreal Internet Relay Chat Daemon - src/api-mtag.c
+ *   UnrealIRCd - Unreal Internet Relay Chat Daemon - src/api-messagetag.c
  *   (c) 2019- Bram Matthys and The UnrealIRCd team
  *
  *   See file AUTHORS in IRC package for additional names of
