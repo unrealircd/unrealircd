@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/extbans/country.c
  * Extended ban to ban/exempt by country/geoip info (+b ~country:UK)
  * (C) Copyright 2021 The UnrealIRCd Team
  *
