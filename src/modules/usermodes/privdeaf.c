@@ -1,7 +1,10 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/usermodes/privdeaf.c
  * usermode +D: makes it so you cannot receive private messages/notices
  * except from opers, U-lines and servers. -- Syzop
+ * GPLv2 or later
  */
+
 
 #include "unrealircd.h"
 
