@@ -1,4 +1,5 @@
 /*
+ * IRC - Internet Relay Chat, src/modules/webirc.c
  * WebIRC / CGI:IRC Support
  * (C) Copyright 2006-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
