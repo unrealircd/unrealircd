@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/extbans/certfp.c
  * Extended ban to ban/exempt by certificate fingerprint (+b ~S:certfp)
  * (C) Copyright 2015 The UnrealIRCd Team
  *
