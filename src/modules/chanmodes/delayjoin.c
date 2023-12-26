@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/delayjoin.c
  * Channel mode +D/+d: delayed join
  * except from opers, U-lines and servers.
  * Copyright 2014 Travis Mcarthur <Heero> and UnrealIRCd Team
