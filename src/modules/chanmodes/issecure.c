@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/issecure.c
  * Channel Is Secure UnrealIRCd module (Channel Mode +Z)
  * (C) Copyright 2010-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
