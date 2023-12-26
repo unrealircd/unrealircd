@@ -1,4 +1,5 @@
 /*
+ *   IRC - Internet Relay Chat, src/modules/staff.c
  *   cmd_staff: Displays a file(/URL) when the /STAFF command is used.
  *   (C) Copyright 2004-2016 Syzop <syzop@vulnscan.org>
  *   (C) Copyright 2003-2004 AngryWolf <angrywolf@flashmail.com>
