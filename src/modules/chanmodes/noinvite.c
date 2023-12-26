@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/noinvite.c
  * Disallow invites UnrealIRCd Module (Channel Mode +V)
  * (C) Copyright 2014 Travis McArthur (Heero) and the UnrealIRCd team
  *
