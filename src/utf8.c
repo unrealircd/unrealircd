@@ -2,7 +2,9 @@
 
 /**************** UTF8 HELPER FUNCTIONS START HERE *****************/
 
-/* Operations on UTF-8 strings.
+/*  
+ * IRC - Internet Relay Chat, src/utf8.c
+ * Operations on UTF-8 strings.
  * This part is taken from "glib" with the following copyright:
  * Copyright (C) 1999 Tom Tromey
  * Copyright (C) 2000 Red Hat, Inc.
