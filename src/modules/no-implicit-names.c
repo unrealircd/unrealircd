@@ -36,8 +36,11 @@ long CAP_NO_IMPLICIT_NAMES = 0L;
 
 MOD_INIT()
 {
-	/** We only add the draft version for now */
 	ClientCapabilityInfo cap;
+
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+
+	/** We only add the draft/ version for now */
 	memset(&cap, 0, sizeof(cap));
 	cap.name = NO_IMPLICIT_NAMES_CAP_DRAFT;
 	if (!ClientCapabilityAdd(modinfo->handle, &cap, &CAP_NO_IMPLICIT_NAMES_DRAFT))
