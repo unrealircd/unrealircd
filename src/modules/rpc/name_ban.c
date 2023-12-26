@@ -1,4 +1,6 @@
-/* name_ban.* RPC calls
+/*  
+ * IRC - Internet Relay Chat, src/modules/rpc/name_ban.c
+ * name_ban.* RPC calls
  * (C) Copyright 2022-.. Bram Matthys (Syzop) and the UnrealIRCd team
  * License: GPLv2 or later
  */
