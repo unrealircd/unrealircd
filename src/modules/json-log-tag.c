@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/monitor.c
+ *   IRC - Internet Relay Chat, src/modules/json-log-tag.c
  *   (C) 2021 Bram Matthys and The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
