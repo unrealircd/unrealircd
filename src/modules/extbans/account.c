@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/extbans/account.c
  * Extended ban to ban/exempt by services account (~b ~a:accountname)
  * (C) Copyright 2011-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
