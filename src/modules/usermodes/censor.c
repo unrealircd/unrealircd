@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/usermodes/censor.c
  * User Mode +G
  * (C) Copyright 2005-current Bram Matthys and The UnrealIRCd team.
  */
