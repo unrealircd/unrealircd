@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/usermodes/bot.c
  * Bot user mode (User mode +B)
  * (C) Copyright 2000-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
