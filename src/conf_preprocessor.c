@@ -1,4 +1,6 @@
-/* UnrealIRCd configuration preprocessor
+/* 
+ * IRC - Internet Relay Chat, src/conf_preprocessor.c
+ * UnrealIRCd configuration preprocessor
  * (C) Copyright 2019 Bram Matthys ("Syzop") and the UnrealIRCd team
  * License: GPLv2 or later
  *
