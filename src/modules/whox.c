@@ -1,4 +1,6 @@
-/* cmd_whox.c / WHOX.
+/*
+ * IRC - Internet Relay Chat, src/modules/whox.c
+ * cmd_whox.c / WHOX.
  * based on code from charybdis and ircu.
  * was originally made for tircd and modified to work with u4.
  * - 2018 i <ircd@servx.org>
