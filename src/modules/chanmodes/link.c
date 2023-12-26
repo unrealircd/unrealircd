@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/link.c
  * Robust channel forwarding system
  * (C) Copyright 2019 Syzop, Gottem and the UnrealIRCd team
  *
