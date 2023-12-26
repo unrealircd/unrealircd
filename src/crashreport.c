@@ -1,4 +1,6 @@
-/* UnrealIRCd crash reporter code.
+/*  
+ * IRC - Internet Relay Chat, src/crashreport.c
+ * UnrealIRCd crash reporter code.
  * (C) Copyright 2015-2019 Bram Matthys ("Syzop") and the UnrealIRCd Team.
  * License: GPLv2 or later
  */
