@@ -1,4 +1,5 @@
 /*
+ * IRC - Internet Relay Chat, src/modules/websocket_common.c
  * websocket_common - Common WebSocket functions (RFC6455)
  * (C)Copyright 2016 Bram Matthys and the UnrealIRCd team
  * License: GPLv2 or later
