@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/extbans/msgbypass.c
  * Extended ban that allows user to bypass message restrictions
  * (C) Copyright 2017-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
