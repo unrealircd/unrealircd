@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/extbans/realname.c
  * Extended ban to ban based on real name / gecos field (+b ~r)
  * (C) Copyright 2003-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
