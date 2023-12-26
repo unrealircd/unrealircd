@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/noknock.c
  * Disallow knocks UnrealIRCd Module (Channel Mode +K)
  * (C) Copyright 2014 Travis McArthur (Heero) and the UnrealIRCd team
  *
