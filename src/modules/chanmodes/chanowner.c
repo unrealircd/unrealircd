@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/chanowner.c
  * Channel Mode +q
  * (C) Copyright 2021 Syzop and the UnrealIRCd team
  *
