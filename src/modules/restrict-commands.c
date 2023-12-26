@@ -1,4 +1,4 @@
-/*
+/* IRC - Internet Relay Chat, src/modules/restrict-commands.c
  * Restrict specific commands unless certain conditions have been met
  * (C) Copyright 2019 Gottem and the UnrealIRCd team
  *
