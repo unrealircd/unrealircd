@@ -1,4 +1,5 @@
 /*
+ * IRC - Internet Relay Chat, src/modules/tkldb.c
  * Stores active *-Lines (G-Lines etc) inside a .db file for persistency
  * (C) Copyright 2019 Gottem and the UnrealIRCd team
  *
