@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/secureonly.c
  * Only allow secure users to join UnrealIRCd Module (Channel Mode +z)
  * (C) Copyright 2014 Travis McArthur (Heero) and the UnrealIRCd team
  *
