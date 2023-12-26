@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/floodprot.c
  * Channel Mode +f and +F
  * (C) Copyright 2019-.. Syzop and the UnrealIRCd team
  *
