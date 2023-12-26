@@ -1,4 +1,5 @@
 /*
+ * IRC - Internet Relay Chat, src/modules/webredir.c
  * webredir UnrealIRCd module
  * (C) Copyright 2019 i <info@servx.org> and the UnrealIRCd team
  *
