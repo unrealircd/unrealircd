@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/extbans/securitygroup.c
  * Extended ban to ban based on security groups such as "unknown-users"
  * (C) Copyright 2020 Bram Matthys (Syzop) and the UnrealIRCd team
  *
