@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/nonickchange.c
  * No nick changes in channel UnrealIRCd Module (Channel Mode +N)
  * (C) Copyright 2014 Travis McArthur (Heero) and the UnrealIRCd team
  *
