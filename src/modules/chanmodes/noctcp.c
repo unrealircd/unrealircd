@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/noctcp.c
  * Block CTCP UnrealIRCd Module (Channel Mode +C)
  * (C) Copyright 2000-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
