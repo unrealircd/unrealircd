@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_dccallow
+ *   IRC - Internet Relay Chat, src/modules/dccallow
  *   (C) 2004 The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
