@@ -1,4 +1,6 @@
-/* user.* RPC calls
+/*  
+ * IRC - Internet Relay Chat, src/modules/rpc/user.c
+ * user.* RPC calls
  * (C) Copyright 2022-.. Bram Matthys (Syzop) and the UnrealIRCd team
  * License: GPLv2 or later
  */
