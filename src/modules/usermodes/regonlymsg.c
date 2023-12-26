@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/usermodes/regonlymsg.c
  * Recieve private messages only from registered users (User mode +R)
  * (C) Copyright 2000-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
