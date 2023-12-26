@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/crypt_blowfish.c
  * The crypt_blowfish homepage is:
  *
  *	http://www.openwall.com/crypt/
