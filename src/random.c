@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, random.c
+ *   IRC - Internet Relay Chat, src/random.c
  *   (C) 2004-2019 Bram Matthys (Syzop) and the UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
