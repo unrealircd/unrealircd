@@ -1,4 +1,5 @@
 /*
+ * IRC - Internet Relay Chat, src/modules/tls_antidos.c
  * TLS Anti DoS module
  * This protects against TLS renegotiation attacks while still allowing us
  * to leave renegotiation on with all it's security benefits.
