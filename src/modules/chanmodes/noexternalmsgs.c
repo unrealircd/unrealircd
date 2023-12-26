@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/noexternalmsgs.c
  * Channel Mode +n
  * (C) Copyright 2021 Syzop and the UnrealIRCd team
  *
