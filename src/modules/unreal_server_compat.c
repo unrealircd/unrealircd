@@ -1,4 +1,5 @@
 /*
+ * IRC - Internet Relay Chat, src/modules/unreal_server_compat.c
  * unreal_server_compat - Compatibility with pre-U6 servers
  * (C) Copyright 2016-2021 Bram Matthys (Syzop)
  * License: GPLv2 or later
