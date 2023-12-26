@@ -1,4 +1,5 @@
 /*
+ * IRC - Internet Relay Chat, src/modules/webserver.c
  * Webserver
  * (C)Copyright 2016 Bram Matthys and the UnrealIRCd team
  * License: GPLv2 or later
