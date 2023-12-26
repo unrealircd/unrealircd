@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/rpc/rpc.c
  * RPC module - for remote management of UnrealIRCd
  * (C)Copyright 2022 Bram Matthys and the UnrealIRCd team
  * License: GPLv2 or later
