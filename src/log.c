@@ -1,5 +1,5 @@
 /************************************************************************
- * IRC - Internet Relay Chat, src/api-channelmode.c
+ * IRC - Internet Relay Chat, src/log.c
  * (C) 2021 Bram Matthys (Syzop) and the UnrealIRCd Team
  *
  * See file AUTHORS in IRC package for additional names of
