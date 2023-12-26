@@ -1,4 +1,6 @@
-/* log.* RPC calls
+/*  
+ * IRC - Internet Relay Chat, src/modules/rpc/log.c
+ * log.* RPC calls
  * (C) Copyright 2023-.. Bram Matthys (Syzop) and the UnrealIRCd team
  * License: GPLv2 or later
  */
