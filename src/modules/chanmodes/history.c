@@ -1,5 +1,6 @@
-/*
- * modules/chanmodes/history - Channel History
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/history.c
+ * Channel History
  * (C) Copyright 2009-2019 Bram Matthys (Syzop) and the UnrealIRCd team
  * License: GPLv2 or later
  */
