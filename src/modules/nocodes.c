@@ -1,4 +1,4 @@
-/*
+/* IRC, Internet Relay Chat - src/modules/nocodes.c
  * "No Codes", a very simple (but often requested) module written by Syzop.
  * This module will strip messages with bold/underline/reverse if chanmode
  * +S is set, and block them if +c is set.
