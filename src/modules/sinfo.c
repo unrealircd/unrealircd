@@ -1,4 +1,5 @@
 /*
+ *  IRC - Internet Relay Chat, src/modules/sinfo.c
  * cmd_sinfo - Server information
  * (C) Copyright 2019 Bram Matthys (Syzop) and the UnrealIRCd team.
  * License: GPLv2 or later
