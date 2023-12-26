@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/usermodes/secureonlymsg.c
  * Recieve private messages only from TLS users (User mode +Z)
  * (C) Copyright 2000-.. Bram Matthys (Syzop) and the UnrealIRCd team
  * Idea from "Stealth" <stealth@x-tab.org>
