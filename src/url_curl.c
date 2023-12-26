@@ -1,5 +1,5 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/url.c
+ *   Unreal Internet Relay Chat Daemon, src/url_curl.c
  *   (C) 2003 Dominick Meglio and the UnrealIRCd Team
  *   (C) 2004-2021 Bram Matthys <syzop@vulnscan.org>
  *   (C) 2012 William Pitcock <nenolod@dereferenced.org>
