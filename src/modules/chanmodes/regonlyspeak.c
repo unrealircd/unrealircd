@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/regonlyspeak.c
  * Only registered users can speak UnrealIRCd Module (Channel Mode +M)
  * (C) Copyright 2014 Travis McArthur (Heero) and the UnrealIRCd team
  *
