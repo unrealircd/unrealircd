@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, api-extban.c
+ *   IRC - Internet Relay Chat, src/api-extban.c
  *   (C) 2003 Bram Matthys (Syzop) and the UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
