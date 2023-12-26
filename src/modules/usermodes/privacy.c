@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/usermodes/privacy.c
  * Privacy - hide channels in /WHOIS (User mode +p)
  * (C) Copyright 2000-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
