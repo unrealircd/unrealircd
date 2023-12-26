@@ -1,4 +1,4 @@
-/*
+/* IRC - Internet Relay Chat, src/modules/rmtkl.c
  * Easily remove *-Lines in bulk
  * (C) Copyright 2019 Gottem and the UnrealIRCd team
  *
