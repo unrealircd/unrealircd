@@ -1,4 +1,4 @@
-/*
+/* IRC - Internet Relay Chat, src/modules/require-module.c
  * Check for modules that are required across the network, as well as modules
  * that *aren't* even allowed (deny/require module { } blocks)
  * (C) Copyright 2019 Gottem and the UnrealIRCd team
