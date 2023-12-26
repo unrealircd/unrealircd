@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/usermodes/showwhois.c
  * Show when someone does a /WHOIS on you (User mode +W)
  * (C) Copyright 2000-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
