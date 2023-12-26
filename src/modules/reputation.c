@@ -1,4 +1,4 @@
-/*
+/* IRC - Internet Relay Chat, src/modules/reputation.c
  * reputation - Provides a scoring system for "known users".
  * (C) Copyright 2015-2019 Bram Matthys (Syzop) and the UnrealIRCd team.
  * License: GPLv2 or later
