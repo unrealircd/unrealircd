@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/nokick.c
  * No kicks in channel UnrealIRCd Module (Channel Mode +Q)
  * (C) Copyright 2014 Travis McArthur (Heero) and the UnrealIRCd team
  *
