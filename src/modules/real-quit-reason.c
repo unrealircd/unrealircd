@@ -1,4 +1,4 @@
-/*
+/* IRC - Internet Relay Chat, src/modules/real-quit-reason.c
  * unrealircd.org/real-quit-reason message tag (server only)
  * This is really server-only, it does not traverse to any clients.
  * (C) Copyright 2023-.. Syzop and The UnrealIRCd Team
