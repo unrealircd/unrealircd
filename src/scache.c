@@ -1,4 +1,7 @@
-/* License: GPLv1 */
+/**  
+ * IRC - Internet Relay Chat, src/scache.c
+ * License: GPLv1
+ */
 
 /** @file
  * @brief String cache - only used for server names.
