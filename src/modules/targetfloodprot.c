@@ -1,4 +1,6 @@
-/* Target flood protection
+/*
+ * IRC - Internet Relay Chat, src/modules/targetfloodprot.c
+ * Target flood protection
  * (C)Copyright 2020 Bram Matthys and the UnrealIRCd team
  * License: GPLv2 or later
  */
