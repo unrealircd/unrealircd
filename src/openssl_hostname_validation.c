@@ -1,4 +1,6 @@
-/* This file contains both code from cURL and hostname
+/*  
+ * IRC - Internet Relay Chat, src/openssl_hostname_validation.c
+ * This file contains both code from cURL and hostname
  * validation code from the ssl conservatory (in that order).
  *
  * The goal is that all this code won't be needed anymore once
