@@ -1,5 +1,5 @@
 /************************************************************************
- *   UnrealIRCd - Unreal Internet Relay Chat Daemon - src/unrealircdctl
+ *   UnrealIRCd - Unreal Internet Relay Chat Daemon - src/unrealircdctl.c
  *   (c) 2022- Bram Matthys and The UnrealIRCd team
  *
  *   See file AUTHORS in IRC package for additional names of
