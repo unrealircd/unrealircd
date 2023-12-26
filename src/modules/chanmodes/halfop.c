@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/chanmodes/halfop.c
  * Channel Mode +h
  * (C) Copyright 2021 Syzop and the UnrealIRCd team
  *
