@@ -1,4 +1,5 @@
-/*
+/* 
+ * IRC - Internet Relay Chat, src/modules/extbans/textban.c
  * Text ban. (C) Copyright 2004-2016 Bram Matthys.
  * 
  * This program is free software; you can redistribute it and/or
