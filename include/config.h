@@ -173,21 +173,6 @@
  #endif
 #endif
 
-/* Number of file descriptors reserved for non-incoming-clients.
- * One of which may be used by auth, the rest are really reserved.
- * They can be used for outgoing server links, listeners, logging,
- * DNS lookups, HTTPS callbacks, etc.
- */
-#if MAXCONNECTIONS >= 10000
- #define CLIENTS_RESERVE 250
-#elif MAXCONNECTIONS >= 2048
- #define CLIENTS_RESERVE 32
-#elif MAXCONNECTIONS >= 1024
- #define CLIENTS_RESERVE 16
-#else
- #define CLIENTS_RESERVE 8
-#endif
-
 /*
  * this defines the length of the nickname history.  each time a user changes
  * nickname or signs off, their old nickname is added to the top of the list.

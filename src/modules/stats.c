@@ -900,7 +900,7 @@ int stats_set(Client *client, const char *para)
 	RunHook(HOOKTYPE_STATS, client, "S");
 #ifndef _WIN32
 	sendtxtnumeric(client, "This server can handle %d concurrent sockets (%d clients + %d reserve)",
-		maxclients+CLIENTS_RESERVE, maxclients, CLIENTS_RESERVE);
+		maxclients+reserved_fds, maxclients, reserved_fds);
 #endif
 	return 1;
 }

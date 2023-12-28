@@ -1135,6 +1135,7 @@ extern void concat_params(char *buf, int len, int parc, const char *parv[]);
 extern void charsys_check_for_changes(void);
 extern void dns_check_for_changes(void);
 extern MODVAR int maxclients;
+extern MODVAR int reserved_fds;
 extern int fast_badword_match(ConfigItem_badword *badword, const char *line);
 extern int fast_badword_replace(ConfigItem_badword *badword, const char *line, char *buf, int max);
 extern const char *stripbadwords(const char *str, ConfigItem_badword *start_bw, int *blocked);

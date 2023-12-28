@@ -11,6 +11,9 @@ in progress and may not always be a stable version.
 * TODO
 
 ### Fixes:
+* If your shell only allowed very few file descriptors (eg: `ulimit -n`
+  returned `150`), then UnrealIRCd would fail to boot. This, because due to
+  reserved file descriptors you would have 0 left, or even a negative number.
 * +I ~operclass was not working properly.
 
 ### Developers and protocol:

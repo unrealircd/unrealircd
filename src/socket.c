@@ -135,7 +135,7 @@ static int listener_accept_wrapper(ConfigItem_listen *listener)
 	if (listener->options & LISTENER_CONTROL)
 	{
 		/* ... but not unlimited ;) */
-		if ((++OpenFiles >= maxclients+(CLIENTS_RESERVE/2)) || (cli_fd >= maxclients+(CLIENTS_RESERVE/2)))
+		if ((++OpenFiles >= maxclients+(reserved_fds/2)) || (cli_fd >= maxclients+(reserved_fds/2)))
 		{
 			ircstats.is_ref++;
 			if (last_allinuse < TStime() - 15)
@@ -430,7 +430,15 @@ void close_all_listeners(void)
 		close_listener(aconf);
 }
 
-int maxclients = 1024 - CLIENTS_RESERVE;
+/* First, set these up for maxclients 1024 with a reserve of 16,
+ * this is adjusted at boot time, though, it is just for an
+ * initial value!
+ */
+
+/** Number of file descriptors reserved */
+int reserved_fds = 16;
+/** Maximum number of regular clients */
+int maxclients = 1024 - 16;
 
 /** Check the maximum number of sockets (users) that we can handle - called on startup.
  */
@@ -473,7 +481,7 @@ void check_user_limit(void)
 			                m);
 			exit(-1);
 		}
-		maxclients = m - CLIENTS_RESERVE;
+		maxclients = m;
 	}
 #endif // RLIMIT_FD_MAX
 
@@ -489,8 +497,20 @@ void check_user_limit(void)
 #endif
 #endif
 #ifdef _WIN32
-	maxclients = MAXCONNECTIONS - CLIENTS_RESERVE;
+	maxclients = MAXCONNECTIONS;
 #endif
+
+	/* Now adjust the 'reserve', this was previously in config.h */
+	if (maxclients >= 10000)
+		reserved_fds = 250;
+	else if (maxclients >= 2048)
+		reserved_fds = 32;
+	else if (maxclients >= 1024)
+		reserved_fds = 16;
+	else
+		reserved_fds = 8;
+
+	maxclients -= reserved_fds;
 }
 
 /** Initialize some systems - called on startup */

@@ -801,7 +801,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifndef _WIN32
 	fprintf(stderr, "\n");
 	fprintf(stderr, "This server can handle %d concurrent sockets (%d clients + %d reserve)\n\n",
-		maxclients+CLIENTS_RESERVE, maxclients, CLIENTS_RESERVE);
+		maxclients+reserved_fds, maxclients, reserved_fds);
 #endif
 	init_CommandHash();
 	initwhowas();
