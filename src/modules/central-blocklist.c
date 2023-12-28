@@ -527,7 +527,10 @@ EVENT(centralblocklist_timeout_evt)
 	{
 		CBLUser *cbl = CBL(client);
 
-		if (cbl && cbl->request_sent && (TStime() - cbl->request_sent > CBL_TRANSFER_TIMEOUT))
+		if (cbl &&
+		    cbl->request_sent &&
+		    !cbl->allowed_in &&
+		    (TStime() - cbl->request_sent > CBL_TRANSFER_TIMEOUT))
 		{
 			unreal_log(ULOG_WARNING, "central-blocklist", "CENTRAL_BLOCKLIST_TIMEOUT", client,
 				   "Central blocklist too slow to respond. "
