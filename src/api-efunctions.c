@@ -145,7 +145,7 @@ int (*watch_check)(Client *client, int reply, void *data, int (*watch_notify)(Cl
 void (*do_unreal_log_remote_deliver)(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
 char *(*get_chmodes_for_user)(Client *client, const char *flags);
 WhoisConfigDetails (*whois_get_policy)(Client *client, Client *target, const char *name);
-int (*make_oper)(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost);
+int (*make_oper)(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost, const char *autojoin_channels);
 int (*unreal_match_iplist)(Client *client, NameList *l);
 void (*webserver_send_response)(Client *client, int status, char *msg);
 void (*webserver_close_client)(Client *client);

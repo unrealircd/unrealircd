@@ -136,6 +136,6 @@ CMD_FUNC(cmd_svso)
 	if (modes)
 		modes_i = set_usermode(modes);
 
-	if (!make_oper(acptr, oper_account, operclass, clientclass_c, modes_i, snomask, vhost))
+	if (!make_oper(acptr, oper_account, operclass, clientclass_c, modes_i, snomask, vhost, NULL))
 		sendnumeric(client, ERR_CANNOTDOCOMMAND, "SVSO", "Failed to make user oper");
 }

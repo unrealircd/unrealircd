@@ -1808,7 +1808,9 @@ void do_unreal_log_remote_deliver_default_handler(LogLevel loglevel, const char 
 {
 }
 
-int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost)
+int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass,
+                              ConfigItem_class *clientclass, long modes, const char *snomask,
+                              const char *vhost, const char *autojoin_channels)
 {
 	return 0;
 }

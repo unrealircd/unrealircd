@@ -5,7 +5,11 @@ This is the git version (development version) for future 6.1.5. This is work
 in progress and may not always be a stable version.
 
 ### Enhancements:
-* TODO
+* You can now set 
+  [oper::auto-join](https://www.unrealircd.org/docs/Oper_block#auto-join)
+  in an oper blockto override the generic
+  [set::oper-auto-join](https://www.unrealircd.org/docs/Set_block#set::oper-auto-join)
+  setting.
 
 ### Changes:
 * TODO

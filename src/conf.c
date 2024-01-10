@@ -2475,6 +2475,7 @@ void config_rehash()
 		safe_free(oper_ptr->snomask);
 		safe_free(oper_ptr->operclass);
 		safe_free(oper_ptr->vhost);
+		safe_free(oper_ptr->auto_join);
 		Auth_FreeAuthConfig(oper_ptr->auth);
 		free_security_group(oper_ptr->match);
 		DelListItem(oper_ptr, conf_oper);
@@ -4213,6 +4214,10 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		{
 			oper->server_notice_show_event = config_checkval(cep->value, CFG_YESNO);
 		}
+		else if (!strcmp(cep->name, "auto-join"))
+		{
+			safe_strdup(oper->auto_join, cep->value);
+		}
 		else if (!strcmp(cep->name, "auto-login"))
 		{
 			oper->auto_login = config_checkval(cep->value, CFG_YESNO);
@@ -4356,6 +4361,9 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			{
 			}
 			else if (!strcmp(cep->name, "server-notice-show-event"))
+			{
+			}
+			else if (!strcmp(cep->name, "auto-join"))
 			{
 			}
 			else if (!strcmp(cep->name, "auto-login"))

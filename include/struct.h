@@ -1800,6 +1800,7 @@ struct ConfigItem_oper {
 	SecurityGroup *match;
 	unsigned long modes, require_modes;
 	char *vhost;
+	char *auto_join;
 	int maxlogins;
 	int server_notice_colors;
 	int server_notice_show_event;

@@ -33,7 +33,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 CMD_FUNC(cmd_oper);
-int _make_oper(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost);
+int _make_oper(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost, const char *autojoin_channels);
 int oper_connect(Client *client);
 
 MOD_TEST()
@@ -85,9 +85,12 @@ void set_oper_host(Client *client, const char *host)
 	client->umodes |= UMODE_SETHOST|UMODE_HIDE;
 }
 
-int _make_oper(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost)
+int _make_oper(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost, const char *autojoin_channels)
 {
 	long old_umodes = client->umodes & ALL_UMODES;
+
+	if (!autojoin_channels)
+		autojoin_channels = OPER_AUTO_JOIN_CHANS;
 
 	userhost_save_current(client);
 
@@ -153,9 +156,9 @@ int _make_oper(Client *client, const char *operblock_name, const char *operclass
 		do_cmd(client, NULL, "OPERMOTD", 1, args);
 	}
 
-	if (!BadPtr(OPER_AUTO_JOIN_CHANS) && strcmp(OPER_AUTO_JOIN_CHANS, "0"))
+	if (!BadPtr(autojoin_channels) && strcmp(autojoin_channels, "0"))
 	{
-		char *chans = strdup(OPER_AUTO_JOIN_CHANS);
+		char *chans = strdup(autojoin_channels);
 		const char *args[3] = {
 			client->name,
 			chans,
@@ -331,7 +334,7 @@ CMD_FUNC(cmd_oper)
 			swhois_add(client, "oper", -100, s->line, &me, NULL);
 	}
 
-	make_oper(client, operblock->name, operblock->operclass, operblock->class, operblock->modes, operblock->snomask, operblock->vhost);
+	make_oper(client, operblock->name, operblock->operclass, operblock->class, operblock->modes, operblock->snomask, operblock->vhost, operblock->auto_join);
 
 	/* set::plaintext-policy::oper 'warn' */
 	if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_oper == POLICY_WARN))

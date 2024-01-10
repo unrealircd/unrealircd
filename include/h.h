@@ -899,7 +899,7 @@ extern MODVAR char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options
 extern MODVAR void (*do_unreal_log_remote_deliver)(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
 extern MODVAR char *(*get_chmodes_for_user)(Client *client, const char *flags);
 extern MODVAR WhoisConfigDetails (*whois_get_policy)(Client *client, Client *target, const char *name);
-extern MODVAR int (*make_oper)(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost);
+extern MODVAR int (*make_oper)(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost, const char *autojoin_channels);
 extern MODVAR int (*unreal_match_iplist)(Client *client, NameList *l);
 extern MODVAR void (*webserver_send_response)(Client *client, int status, char *msg);
 extern MODVAR void (*webserver_close_client)(Client *client);
@@ -964,7 +964,7 @@ extern int add_silence_default_handler(Client *client, const char *mask, int sen
 extern int del_silence_default_handler(Client *client, const char *mask);
 extern int is_silenced_default_handler(Client *client, Client *acptr);
 extern void do_unreal_log_remote_deliver_default_handler(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
-extern int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost);
+extern int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost, const char *autojoin_channels);
 extern void webserver_send_response_default_handler(Client *client, int status, char *msg);
 extern void webserver_close_client_default_handler(Client *client);
 extern int webserver_handle_body_default_handler(Client *client, WebRequest *web, const char *readbuf, int length);
