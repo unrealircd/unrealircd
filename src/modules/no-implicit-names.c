@@ -48,7 +48,11 @@ MOD_INIT()
 		return MOD_FAILED;
 	}
 
-	/** This is for the future :D */
+	/** This is for the future :D
+	 * If you add this, then also update
+	 * _join_channel in src/modules/join.c to check for it,
+	 * as it is currently commented out there as well.
+	 */
 	/**
 	memset(&cap, 0, sizeof(cap));
 	cap.name = NO_IMPLICIT_NAMES_CAP;
