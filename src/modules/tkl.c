@@ -636,7 +636,21 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	}
 
 	if (match)
-		m = unreal_create_match(match_type, match, NULL);
+	{
+		char *err;
+		m = unreal_create_match(match_type, match, &err);
+		if (!m)
+		{
+			config_warn("%s:%i: This spamfilter block is ignored because spamfilter::match contained an invalid regex: %s",
+				ce->file->filename,
+				ce->line_number,
+				err);
+			/* This is great, now we need to undo everything.. */
+			free_security_group(except);
+			safe_free_all_ban_actions(action);
+			return 1;
+		}
+	}
 
 	banreason = unreal_encodespace(banreason);
 	tkl_add_spamfilter(TKL_SPAMF,
