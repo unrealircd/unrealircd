@@ -405,7 +405,7 @@ Match *unreal_create_match(MatchType type, const char *str, char **error)
 		int options = 0;
 		char buf2[512];
 		
-		if (((loop.config_status != CONFIG_STATUS_TEST) && (loop.config_status != CONFIG_STATUS_POSTTEST)) ? iConf.spamfilter_utf8 : tempiConf.spamfilter_utf8)
+		if ((loop.config_status < CONFIG_STATUS_LOAD) ? tempiConf.spamfilter_utf8 : iConf.spamfilter_utf8)
 			options = PCRE2_CASELESS|PCRE2_MATCH_INVALID_UTF;
 		else
 			options = PCRE2_CASELESS|PCRE2_NEVER_UTF|PCRE2_NEVER_UCP;
