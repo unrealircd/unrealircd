@@ -1165,6 +1165,10 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 						{
 							ptr++;
 							break;
+						} else if ((*ptr == '/') && (*(ptr+1) == '*'))
+						{
+							config_warn("%s:%i nested comments are not supported (comment started at line %d)\n",
+								filename, linenumber, commentstart);
 						}
 					}
 					if (!*ptr)
@@ -1286,7 +1290,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 				{
 					if (preprocessor_level == 0)
 					{
-						config_error("%s:%i: @endif unexpected. There was no preciding unclosed @if.",
+						config_error("%s:%i: @endif unexpected. There was no preceding unclosed @if.",
 							filename, linenumber);
 						errors++;
 					}
