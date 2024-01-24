@@ -130,14 +130,6 @@
 /* The default value for class::recvq */
 #define	DEFAULT_RECVQ	8000
 
-/* You can define the nickname of NickServ here (usually "NickServ").
- * This is ONLY used for the ""infamous IDENTIFY feature"", which is:
- * whenever a user connects with a server password but there isn't
- * a server password set, the password is sent to NickServ in an
- * 'IDENTIFY <pass>' message.
- */
-#define NickServ "NickServ"
-
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
 /* You shouldn't change anything below this line, unless absolutely needed. */
