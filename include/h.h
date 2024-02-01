@@ -232,12 +232,11 @@ extern int ban_exists_ignore_time(Ban *lst, const char *str);
 
 extern Client *find_client(const char *, Client *);
 extern Client *find_name(const char *, Client *);
-extern Client *find_nickserv(const char *, Client *);
 extern Client *find_user(const char *, Client *);
 extern Client *find_server(const char *, Client *);
 extern Client *find_server_by_uid(const char *uid);
-extern Client *find_service(const char *, Client *);
 #define find_server_quick(x) find_server(x, NULL)
+#define find_client_quick(x) find_client(x, NULL)
 extern char *find_or_add(char *);
 extern void inittoken();
 extern void reset_help();
