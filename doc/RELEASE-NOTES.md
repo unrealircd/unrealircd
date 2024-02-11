@@ -10,6 +10,14 @@ in progress and may not always be a stable version.
   in an oper blockto override the generic
   [set::oper-auto-join](https://www.unrealircd.org/docs/Set_block#set::oper-auto-join)
   setting.
+* The `operclass` property is now available in the
+  [security-group block](https://www.unrealircd.org/docs/Security-group_block)
+  and mask items. Eg: `security-group netadmin { operclass { netadmin; netadmin-with-override; } }`
+* Support for IRCv3
+  [`draft/no-implicit-names`](https://ircv3.net/specs/extensions/no-implicit-names)
+* Improved performance by skipping useless spamfilter check on empty data
+  in case of TAGMSG (e.g. typing notifications).
+* Improved performance if you have many (hundreds of) non-regex spamfilters.
 
 ### Changes:
 * TODO
@@ -18,7 +26,16 @@ in progress and may not always be a stable version.
 * If your shell only allowed very few file descriptors (eg: `ulimit -n`
   returned `150`), then UnrealIRCd would fail to boot. This, because due to
   reserved file descriptors you would have 0 left, or even a negative number.
+* Crash when running `SPAMFILTER` as an IRCOp when using UTF8 spamfilters.
+* [Set block for a security group](https://www.unrealircd.org/docs/Set_block#Set_block_for_a_security_group)
+  not working with custom settings for
+  [set::modes-on-connect](https://www.unrealircd.org/docs/Set_block#set::modes-on-connect)
+  for a security group that matches on account names (when using 
+  [SASL](https://www.unrealircd.org/docs/SASL)) and possibly other properties.
 * +I ~operclass was not working properly.
+* Confusing "Central blocklist too slow to respond" message when using
+  [soft bans](https://www.unrealircd.org/docs/Soft_ban) or a
+  [require authentication block](https://www.unrealircd.org/docs/Require_authentication_block).
 
 ### Developers and protocol:
 * TODO
