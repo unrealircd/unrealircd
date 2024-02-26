@@ -53,7 +53,7 @@ void unrealircdctl_rehash(void)
 {
 	if (procio_client("REHASH", 1) == 0)
 	{
-		printf("Rehashed succesfully.\n");
+		printf("Rehashed successfully.\n");
 		exit(0);
 	}
 	printf("Rehash failed.\n");
