@@ -19,6 +19,7 @@ in progress and may not always be a stable version.
 * Improved performance by skipping useless `TAGMSG` spamfilter checks
   (e.g. for typing notifications).
 * Improved performance if you have hundreds of non-regex spamfilters.
+* Add `example.pt.conf` - (Brazilian) Portuguese example configuration file.
 
 ### Changes:
 * TODO
