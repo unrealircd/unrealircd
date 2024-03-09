@@ -11,9 +11,7 @@ and lots of [other features](https://www.unrealircd.org/docs/About_UnrealIRCd).
 We are also particularly proud on our extensive online documentation.
 
 ## Versions
-* UnrealIRCd 6 is the *stable* series since December 2021. All new features go in there.
-* UnrealIRCd 5 is the *oldstable* series. It is End Of Life. Only security bugs will
-  be fixed until June 30, 2023, after which all support will stop.
+* UnrealIRCd 6 is the *stable* series since December 2021. It is the only supported version.
 * For full details of release scheduling and EOL dates, see
   [UnrealIRCd releases](https://www.unrealircd.org/docs/UnrealIRCd_releases) on the wiki
 
