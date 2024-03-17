@@ -314,6 +314,55 @@ elif [ "$1" = "upgrade" ] ; then
 	exit
 elif [ "$1" = "genlinkblock" ] ; then
 	$IRCD -L
+elif [ "$1" = "coffee" ] ; then 
+	echo "Checking for ingredients..."
+	sleep 1
+	echo "Running make && make coffee"
+	echo "make coffee[1] Adding coffee to coffee grinder..."
+	echo "make coffee[2] Grinding coffee..."
+	sleep 2
+	echo "make coffee[3] Pre-heating french press..."
+	sleep 3
+	echo "make coffee[4] Adding ground coffee to press...";
+	echo "make coffee[5] Saturating..."
+	sleep 2
+	echo "make coffee[6] Securing lid..."
+	echo ""
+	echo "Do you want sugar? (Y/N)"
+	read sugar
+	echo "Do you want milk/cream? (Y/N)"
+	read cream
+
+	sugarc="-no-sugar "
+	creamc="-no-cream "
+	if [ "$sugar" = "Y" ] || [ "$sugar" = "y" ] ; then
+	        sugarc="-with-sugar "
+	fi
+	if [ "$cream" = "Y" ] || [ "$cream" = "y" ] ; then
+	        creamc="-with-cream "
+	fi
+	echo "Please wait while your coffee is being prepared..."
+	echo "gcc $sugarc$creamc-Wno-format-overflow -fno-strict-overflow -be-careful-its-hot coffee.c"
+	sleep 4
+	echo "              {"
+	echo "           }   }   {"
+	echo "          {   {  }  }"
+	echo "           }   }{  {"
+	echo "          {  }{  }  }"
+	echo "         ( }{ }{  { )"
+	echo "       .- { { }  { }} -."
+	echo "      (  ( } { } { } }  )"
+	echo "      |\`-..________ ..-'|"
+	echo "      |                 |"
+	echo "      |                 ;--."
+	echo "      |                (__  \\ "
+	echo "      |                 | )  )"
+	echo "      |                 |/  /"
+	echo "      |                 (  /"
+	echo "      |                 y'"
+	echo "      |                 |"
+	echo "       \`-.._________..-'   Enjoy!"
+	echo ""
 else
 	if [ "$1" = "" ]; then
 		echo "This script expects a parameter. Use:"
