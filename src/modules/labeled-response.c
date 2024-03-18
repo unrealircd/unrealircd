@@ -47,6 +47,7 @@ int lr_pre_command(Client *from, MessageTag *mtags, const char *buf);
 int lr_post_command(Client *from, MessageTag *mtags, const char *buf);
 int lr_close_connection(Client *client);
 int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *len);
+void lr_new_message(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature);
 void *_labeled_response_save_context(void);
 void _labeled_response_set_context(void *ctx);
 void _labeled_response_force_end(void);
@@ -97,6 +98,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_POST_COMMAND, 1000000000, lr_post_command);
 	HookAdd(modinfo->handle, HOOKTYPE_CLOSE_CONNECTION, 1000000000, lr_close_connection);
 	HookAdd(modinfo->handle, HOOKTYPE_PACKET, 1000000000, lr_packet);
+	HookAddVoid(modinfo->handle, HOOKTYPE_NEW_MESSAGE, 0, lr_new_message);
 
 	return MOD_SUCCESS;
 }
@@ -335,6 +337,20 @@ int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *le
 	}
 
 	return 0;
+}
+
+void lr_new_message(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature)
+{
+	/* Locally processed messages already have the label! */
+	if (currentcmd.client) return;
+	MessageTag *m;
+
+	m = find_mtag(recv_mtags, "label");
+	if (m)
+	{
+		m = duplicate_mtag(m);
+		AddListItem(m, *mtag_list);
+	}
 }
 
 /** This function verifies if the client sending the
