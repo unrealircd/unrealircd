@@ -588,9 +588,12 @@ int read_whowasdb(void)
 
 		if (nick && username && hostname && realname)
 		{
+			/* This is basically duplicating the code from create_whowas_entry() in src/whowas.c.
+			 * But we have no choice, as we can't use that function since we don't have a Client *.
+			 */
 			WhoWas *e = &WHOWAS[whowas_next];
 			if (e->hashv != -1)
-				free_whowas_fields(e);
+				free_whowas_entry(e);
 			/* Set values */
 			//unreal_log(ULOG_DEBUG, "whowasdb", "WHOWASDB_READ_RECORD", NULL,
 			//           "[whowasdb] Adding '$nick'...",

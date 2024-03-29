@@ -33,6 +33,11 @@ WhoWas MODVAR *WHOWASHASH[WHOWAS_HASH_TABLE_SIZE];
 
 MODVAR int whowas_next = 0;
 
+/** Free all the fields previously created by create_whowas_entry().
+ * NOTE: normally you want to call free_whowas_entry().
+ * Calling this free_whowas_fields() function is unusual and mainly
+ * for whowasdb which temporarily adds and removes entries.
+ */
 void free_whowas_fields(WhoWas *e)
 {
 	safe_free(e->name);
@@ -47,12 +52,17 @@ void free_whowas_fields(WhoWas *e)
 	e->logon = 0;
 	e->logoff = 0;
 	e->connected_since = 0;
+	e->hashv = -1;
+}
 
-	/* Remove from lists and reset hashv */
+/** Free whowas entry. This is the function you normally want to use. */
+void free_whowas_entry(WhoWas *e)
+{
+	int hashv = e->hashv;
+	free_whowas_fields(e);
 	if (e->online)
 		del_whowas_from_clist(&(e->online->user->whowas), e);
-	del_whowas_from_list(&WHOWASHASH[e->hashv], e);
-	e->hashv = -1;
+	del_whowas_from_list(&WHOWASHASH[hashv], e);
 }
 
 void create_whowas_entry(Client *client, WhoWas *e, WhoWasEvent event)
@@ -90,7 +100,7 @@ void add_history(Client *client, int online, WhoWasEvent event)
 	new = &WHOWAS[whowas_next];
 
 	if (new->hashv != -1)
-		free_whowas_fields(new);
+		free_whowas_entry(new);
 
 	create_whowas_entry(client, new, event);
 

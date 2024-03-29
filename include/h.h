@@ -445,6 +445,7 @@ extern void del_whowas_from_list(WhoWas **, WhoWas *);
 extern uint64_t hash_whowas_name(const char *name);
 extern void create_whowas_entry(Client *client, WhoWas *e, WhoWasEvent event);
 extern void free_whowas_fields(WhoWas *e);
+extern void free_whowas_entry(WhoWas *e);
 extern int add_to_client_hash_table(const char *, Client *);
 extern int del_from_client_hash_table(const char *, Client *);
 extern int add_to_id_hash_table(const char *, Client *);

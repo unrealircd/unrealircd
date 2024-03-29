@@ -25,6 +25,7 @@ in progress and may not always be a stable version.
 * TODO
 
 ### Fixes:
+* The whowasdb module caused `WHOWAS` entries to vanish (way too soon)
 * If your shell account only allowed very few file descriptors (eg: `ulimit -n`
   returned `150`), then UnrealIRCd would fail to boot. This, because due to
   reserved file descriptors you would have 0 left, or even a negative number.
