@@ -24,7 +24,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"crule",
-	"1.0.0",
+	"1.0.1",
 	"Crule support for and deny link::rule and spamfilter::rule",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -129,6 +129,8 @@ static int crule_inchannel(crule_context *, int, void **);
 static int crule_destination(crule_context *, int, void **);
 static int crule_cap_version(crule_context *, int, void **);
 static int crule_cap_set(crule_context *, int, void **);
+static int crule_umode(crule_context *, int, void **);
+static int crule_away(crule_context *, int, void **);
 
 /* parsing function prototypes - local! */
 static int crule_gettoken(crule_token *next_tokp, const char **str);
@@ -174,9 +176,10 @@ struct crule_funclistent crule_funclist[] = {
 	{"directcon", 1, crule_directcon},
 	{"via", 2, crule_via},
 	{"directop", 0, crule_directop},
-	{"", 0, NULL}		/* this must be here to mark end of list */
+	{"has_umode", 1, crule_umode},
+	{"is_away", 0, crule_away},
+	{"", 0, NULL} /* this must be here to mark end of list */
 };
-
 
 MOD_TEST()
 {
@@ -202,6 +205,28 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
+}
+
+static int crule_away(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client || !IsUser(context->client))
+		return 0;
+
+	return (!BadPtr(context->client->user->away)) ? 1 : 0;
+}
+
+static int crule_umode(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *modes = (char *)crulearg[0];
+
+	if (!context || !context->client || !strlen(modes))
+		return 0;
+
+	for (int i = 0; modes[i] != '\0'; i++)
+		if (!has_user_mode(context->client, modes[i]))
+			return 0;
+
+	return 1;
 }
 
 static int crule_connected(crule_context *context, int numargs, void *crulearg[])
