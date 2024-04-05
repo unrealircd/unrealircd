@@ -19,10 +19,17 @@ in progress and may not always be a stable version.
 * Improved performance by skipping useless `TAGMSG` spamfilter checks
   (e.g. for typing notifications).
 * Improved performance if you have hundreds of non-regex spamfilters.
+* Add more [Crule](https://www.unrealircd.org/docs/Crule) functions:
+ * `is_away()` returns true if the client is currently away
+ * `has_user_mode('x')` returns true if all the user modes are set on the
+   client.
+ * `has_channel_mode('x')` can be used for spamfilters with a destination
+   channel, such as messages: it returns true if all specified channel modes
+   are set on the channel.
 * Add `example.pt.conf` - (Brazilian) Portuguese example configuration file.
 
 ### Changes:
-* TODO
+* The config parser now logs a warning if you have a `/*` within a `/*`
 
 ### Fixes:
 * The whowasdb module caused `WHOWAS` entries to vanish (way too soon)
