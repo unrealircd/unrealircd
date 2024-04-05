@@ -1413,6 +1413,7 @@ extern int downloads_in_progress(void);
 extern char *collapse(char *pattern);
 extern void clear_scache_hash_table(void);
 extern void sendto_one(Client *, MessageTag *mtags, FORMAT_STRING(const char *), ...) __attribute__((format(printf,3,4)));
+extern void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl);
 extern void mark_data_to_send(Client *to);
 extern EVENT(garbage_collect);
 extern EVENT(loop_event);
