@@ -4284,8 +4284,6 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 				has_password = 1;
-				if (Auth_CheckError(cep, 1) < 0)
-					errors++;
 
 				if (ce->value && cep->value &&
 					!strcmp(ce->value, "bobsmith") &&
@@ -4295,7 +4293,12 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 								 "default 'bobsmith' oper block",
 								 ce->file->filename, ce->line_number);
 					errors++;
+					continue;
 				}
+
+				if (Auth_CheckError(cep, 1) < 0)
+					errors++;
+
 				continue;
 			}
 			/* oper::operclass */
