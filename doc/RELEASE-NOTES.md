@@ -1,8 +1,7 @@
-UnrealIRCd 6.1.5-git
+UnrealIRCd 6.1.5
 =================
 
-This is the git version (development version) for future 6.1.5. This is work
-in progress and may not always be a stable version.
+This is just a regular release with various enhancements and bug fixes.
 
 ### Enhancements:
 * You can now use 
@@ -47,9 +46,6 @@ in progress and may not always be a stable version.
 * Removed confusing "Central blocklist too slow to respond" message when using
   [soft bans](https://www.unrealircd.org/docs/Soft_ban) or a
   [require authentication block](https://www.unrealircd.org/docs/Require_authentication_block).
-
-### Developers and protocol:
-* TODO
 
 UnrealIRCd 6.1.4
 -----------------
