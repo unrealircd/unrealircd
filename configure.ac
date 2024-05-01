@@ -131,7 +131,7 @@ AS_IF([test x"$hardening" != x"no"], [
   check_cc_flag([-fno-strict-overflow], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fno-strict-overflow"])
 
   # This one will likely succeed, even on platforms where it does nothing.
-  check_cc_flag([-D_FORTIFY_SOURCE=2], [HARDEN_CFLAGS="$HARDEN_CFLAGS -D_FORTIFY_SOURCE=2"])
+  check_cc_flag([-D_FORTIFY_SOURCE=3], [HARDEN_CFLAGS="$HARDEN_CFLAGS -D_FORTIFY_SOURCE=3"])
 
   check_cc_flag([-fstack-protector-all],
    [check_link_flag([-fstack-protector-all],
@@ -895,7 +895,7 @@ fi
 
 dnl Address sanitizer build
 if test "$ac_cv_asan" = "yes" ; then
-	CFLAGS="$CFLAGS -O1 -fno-inline -fsanitize=address -fno-omit-frame-pointer -DNOCLOSEFD"
+	CFLAGS="$CFLAGS -O2 -fno-inline -fsanitize=address -fno-omit-frame-pointer -DNOCLOSEFD"
 	IRCDLIBS="-fsanitize=address $IRCDLIBS"
 fi
 
