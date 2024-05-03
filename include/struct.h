@@ -2136,9 +2136,8 @@ struct ConfigResource {
 /* When doing a HTTP request and it is requested to store the
  * response to memory (rather than file), we enlarge the buffer
  * in this chunk size.
- * XXX: 128 bytes for testing chunks, should be 8k or so in production.
  */
-#define URL_MEMORY_BACKED_CHUNK_SIZE	128
+#define URL_MEMORY_BACKED_CHUNK_SIZE	8192
 
 struct ConfigItem_blacklist_module {
 	ConfigItem_blacklist_module *prev, *next;
