@@ -2130,6 +2130,7 @@ struct ConfigResource {
 	char *url; /**< URL, if it is an URL */
 	char *cache_file; /**< Set to filename of local cached copy, if it is available */
 	NameList *restrict_config; /**< If non-NULL: list of permitted config items */
+	int warn_only_on_fail; /**< Set to 1 if we should ignore failed download attempts (and only warn) */
 };
 
 /* When doing a HTTP request and it is requested to store the

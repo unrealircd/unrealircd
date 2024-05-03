@@ -717,6 +717,7 @@ extern int unreal_copyfile(const char *src, const char *dest);
 extern int unreal_copyfileex(const char *src, const char *dest, int tryhardlink);
 extern time_t unreal_getfilemodtime(const char *filename);
 extern void unreal_setfilemodtime(const char *filename, time_t mtime);
+extern int unreal_touch(const char *filename, time_t mtime);
 extern void DeleteTempModules(void);
 extern MODVAR Extban *extbaninfo;
 extern Extban *findmod_by_bantype(const char *str, const char **remainder);

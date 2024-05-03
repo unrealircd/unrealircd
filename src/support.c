@@ -1169,6 +1169,17 @@ time_t unreal_getfilemodtime(const char *filename)
 #endif
 }
 
+/** Touch a file (create if needed) and set timestamp. */
+int unreal_touch(const char *filename, time_t mtime)
+{
+	FILE *fd = fopen(filename, "a");
+	if (!fd)
+		return 0;
+	fclose(fd);
+	unreal_setfilemodtime(filename, mtime);
+	return 1;
+}
+
 #ifndef	AF_INET6
 #define	AF_INET6	AF_MAX+1	/* just to let this compile */
 #endif
