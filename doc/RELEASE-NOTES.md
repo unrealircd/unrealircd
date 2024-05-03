@@ -8,7 +8,8 @@ in progress and may not always be a stable version.
 * TODO
 
 ### Changes:
-* TODO
+* For many years `REHASH -all` is the same as `REHASH` so we now reject
+  the former.
 
 ### Fixes:
 * When booting for the first time (without any cached files) the IRCd

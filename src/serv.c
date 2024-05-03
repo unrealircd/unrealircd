@@ -556,7 +556,7 @@ CMD_FUNC(cmd_rehash)
 	if (x != HUNTED_ISME)
 		return; /* Now forwarded or server didnt exist */
 
-	if (!MyConnect(client))
+	if (!MyUser(client))
 	{
 #ifndef REMOTE_REHASH
 		sendnumeric(client, ERR_NOPRIVILEGES);
@@ -577,7 +577,18 @@ CMD_FUNC(cmd_rehash)
 		/* Ok this is in an 'else' because it should be only executed for local clients,
 		 * but it's totally unrelated to the above ;).
 		 */
-		if (parv[1] && match_simple("-glob*", parv[1]))
+		if (parv[1] && !strcasecmp(parv[1], "-all"))
+		{
+			sendnumeric(client, ERR_CANNOTDOCOMMAND, "REHASH",
+			            "The command 'REHASH -all' does not exist. "
+			            "Did you mean just 'REHASH'? "
+			            "Or did you mean 'REHASH -global' which rehashes all IRC servers on the network?");
+			/* In a future version we may make 'REHASH -all' to mean 'REHASH -global', but not yet.. */
+			return;
+		}
+		if (parv[1] &&
+		    (match_simple("-glob*", parv[1])
+		     /* || (MyUser(client) && !strcasecmp(parv[1], "-all"))*/ ))
 		{
 			/* /REHASH -global [options] */
 			Client *acptr;
@@ -599,7 +610,7 @@ CMD_FUNC(cmd_rehash)
 				sendto_one(acptr, NULL, ":%s REHASH %s %s",
 					client->name,
 					acptr->name,
-					parv[1] ? parv[1] : "-all");
+					parv[1] ? parv[1] : "");
 			}
 			/* Don't return, continue, because we need to REHASH ourselves as well. */
 		}
