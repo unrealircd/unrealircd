@@ -19,6 +19,17 @@ in progress and may not always be a stable version.
   (so after first download), see "What if your web server is down" in
   [Remote includes](https://www.unrealircd.org/docs/Remote_includes#What_if_your_web_server_is_down).
 
+### Removed:
+* The `tls-and-known-users` [security group](https://www.unrealircd.org/docs/Security-group_block)
+  was confusing, in the sense that this group consisted of tls-users
+  and of known-users (in an OR fashion, not AND).
+  Since this group is rarely used it has now been removed altogether.
+  If you used it in your configuration then you can still manually
+  (re)create the security group with:
+  ```
+  security-group known-users { identified yes; reputation-score 25; tls yes; }
+  ```
+
 ### Developers and protocol:
 * TODO
 

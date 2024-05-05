@@ -692,13 +692,6 @@ void set_security_group_defaults(void)
 	s->reputation_score = 25;
 	s->webirc = 0;
 
-	/* Default group: tls-and-known-users */
-	s = add_security_group("tls-and-known-users", 200);
-	s->identified = 1;
-	s->reputation_score = 25;
-	s->webirc = 0;
-	s->tls = 1;
-
 	/* Default group: tls-users */
 	s = add_security_group("tls-users", 300);
 	s->tls = 1;
