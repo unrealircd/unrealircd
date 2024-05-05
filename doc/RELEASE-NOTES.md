@@ -27,7 +27,7 @@ in progress and may not always be a stable version.
   If you used it in your configuration then you can still manually
   (re)create the security group with:
   ```
-  security-group known-users { identified yes; reputation-score 25; tls yes; }
+  security-group tls-and-known-users { identified yes; reputation-score 25; tls yes; }
   ```
 
 ### Developers and protocol:
