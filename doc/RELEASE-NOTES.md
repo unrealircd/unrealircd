@@ -5,11 +5,21 @@ This is the git version (development version) for future 6.1.6. This is work
 in progress and may not always be a stable version.
 
 ### Enhancements:
-* TODO
+* Add more [Crule](https://www.unrealircd.org/docs/Crule) functions:
+  * `is_tls()` returns true if the client is using SSL/TLS
+  * `in_security_group('known-users')` returns true if the user is in the
+    specified [security group](https://www.unrealircd.org/docs/Security-group_block).
+  * `match_mask('*@*.example.org')` or `match_mask('*.example.org')`
+    returns true if client matches mask.
+  * `match_ip('192.168.*')` or with CIDR like `match_ip('192.168.0.0/16')`
+    returns true if IP address of client matches.
 
 ### Changes:
 * For many years `REHASH -all` is the same as `REHASH` so we now reject
   the former.
+* The [Crule](https://www.unrealircd.org/docs/Crule) function `inchannel('#xyz')`
+  is now called `in_channel('#xyz')` to match the naming style of the other
+  functions. The old name will keep working for the entire UnrealIRCd 6 series too.
 
 ### Fixes:
 * [Conditional config](https://www.unrealircd.org/docs/Defines_and_conditional_config):

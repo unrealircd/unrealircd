@@ -125,13 +125,17 @@ static int crule__not(crule_context *, int, void **);
 static int crule_online_time(crule_context *, int, void **);
 static int crule_reputation(crule_context *, int, void **);
 static int crule_tag(crule_context *, int, void **);
-static int crule_inchannel(crule_context *, int, void **);
+static int crule_in_channel(crule_context *, int, void **);
 static int crule_destination(crule_context *, int, void **);
 static int crule_cap_version(crule_context *, int, void **);
 static int crule_cap_set(crule_context *, int, void **);
 static int crule_has_user_mode(crule_context *, int, void **);
 static int crule_has_channel_mode(crule_context *, int, void **);
 static int crule_away(crule_context *, int, void **);
+static int crule_tls(crule_context *, int, void **);
+static int crule_in_security_group(crule_context *, int, void **);
+static int crule_match_mask(crule_context *, int, void **);
+static int crule_match_ip(crule_context *, int, void **);
 
 /* parsing function prototypes - local! */
 static int crule_gettoken(crule_token *next_tokp, const char **str);
@@ -169,7 +173,8 @@ struct crule_funclistent crule_funclist[] = {
 	{"online_time", 0, crule_online_time},
 	{"reputation", 0, crule_reputation},
 	{"tag", 1, crule_tag},
-	{"inchannel", 1, crule_inchannel},
+	{"inchannel", 1, crule_in_channel}, // old name, keep it around for now..
+	{"in_channel", 1, crule_in_channel}, // new name (6.1.6+)
 	{"destination", 1, crule_destination},
 	{"cap_version", 0, crule_cap_version},
 	{"cap_set", 1, crule_cap_set},
@@ -179,6 +184,10 @@ struct crule_funclistent crule_funclist[] = {
 	{"has_user_mode", 1, crule_has_user_mode},
 	{"has_channel_mode", 1, crule_has_channel_mode},
 	{"is_away", 0, crule_away},
+	{"is_tls", 0, crule_tls},
+	{"in_security_group", 1, crule_in_security_group},
+	{"match_mask", 1, crule_match_mask},
+	{"match_ip", 1, crule_match_ip},
 	{"", 0, NULL} /* this must be here to mark end of list */
 };
 
@@ -214,6 +223,14 @@ static int crule_away(crule_context *context, int numargs, void *crulearg[])
 		return 0;
 
 	return (!BadPtr(context->client->user->away)) ? 1 : 0;
+}
+
+static int crule_tls(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client)
+		return 0;
+
+	return (IsSecure(context->client) || IsSecureConnect(context->client)) ? 1 : 0;
 }
 
 static int crule_has_user_mode(crule_context *context, int numargs, void *crulearg[])
@@ -339,7 +356,7 @@ static int crule_tag(crule_context *context, int numargs, void *crulearg[])
 	return 0;
 }
 
-static int crule_inchannel(crule_context *context, int numargs, void *crulearg[])
+static int crule_in_channel(crule_context *context, int numargs, void *crulearg[])
 {
 	Membership *lp;
 	const char *channelname = (char *)crulearg[0];
@@ -401,6 +418,45 @@ static int crule_cap_set(crule_context *context, int numargs, void *crulearg[])
 
 	if (HasCapability(context->client, capname))
 		return 1;
+	return 0;
+}
+
+static int crule_in_security_group(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+
+	if (!context || !context->client || !strlen(arg))
+		return 0;
+
+	if (user_allowed_by_security_group_name(context->client, arg))
+		return 1;
+
+	return 0;
+}
+
+static int crule_match_mask(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+
+	if (!context || !context->client || !strlen(arg))
+		return 0;
+
+	if (match_user(arg, context->client, MATCH_CHECK_REAL_HOST|MATCH_CHECK_IP|MATCH_CHECK_EXTENDED))
+		return 1;
+
+	return 0;
+}
+
+static int crule_match_ip(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+
+	if (!context || !context->client || !strlen(arg))
+		return 0;
+
+	if (match_user(arg, context->client, MATCH_CHECK_IP|MATCH_MASK_IS_HOST))
+		return 1;
+
 	return 0;
 }
 
