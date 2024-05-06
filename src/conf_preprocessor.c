@@ -365,6 +365,7 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 	if (cc->condition == IF_VALUE)
 	{
 		NameValuePrioList *d = find_config_define(cc->name);
+		config_status("Comparing @if %s shit %s vs %s", cc->name, d ? d->value : "<null>", cc->opt);
 		if (d && !strcasecmp(d->value, cc->opt))
 		{
 			result = 1;
@@ -417,8 +418,10 @@ void preprocessor_resolve_conditionals_all(PreprocessorPhase phase)
 		preprocessor_resolve_conditionals_ce(&cfptr->items, phase);
 }
 
-/** Frees the list of config_defines, so all @defines, and add the build-in ones */
-void free_config_defines(void)
+/** Frees the list of config_defines, so all @defines and then initialize the
+ * build-in ones.
+ */
+void init_config_defines(void)
 {
 	safe_free_nvplist(config_defines);
 	add_nvplist(&config_defines, 0, "UNREALIRCD_VERSION", VERSIONONLY);

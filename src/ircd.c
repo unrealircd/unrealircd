@@ -824,7 +824,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	default_class->sendq = DEFAULT_RECVQ;
 	default_class->name = "default";
 	AddListItem(default_class, conf_class);
-	free_config_defines();
 	if (config_read_start() < 0)
 		exit(-1);
 	while (!is_config_read_finished())

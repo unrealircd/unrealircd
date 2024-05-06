@@ -2071,6 +2071,8 @@ int config_read_start(void)
 		return -1;
 	}
 
+	init_config_defines();
+
 	/* We set this to 1 because otherwise we may call rehash_internal()
 	 * already from config_read_file() which is too soon (race).
 	 */
@@ -2129,7 +2131,6 @@ int config_test(void)
 	config_setdefaultsettings(&tempiConf);
 	clicap_pre_rehash();
 	log_pre_rehash();
-	free_config_defines();
 
 	if (!config_loadmodules())
 	{

@@ -12,6 +12,8 @@ in progress and may not always be a stable version.
   the former.
 
 ### Fixes:
+* [Conditional config](https://www.unrealircd.org/docs/Defines_and_conditional_config):
+  using @if with a variable like `@if $VAR == "something"` always evaluated to false.
 * When booting for the first time (without any cached files) the IRCd
   downloads GeoIP.dat. If that fails, e.g. due to lack of internet connectivity,
   we now show a warning and continue booting instead of it being a hard error.

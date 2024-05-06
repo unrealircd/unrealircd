@@ -82,7 +82,7 @@ extern void preprocessor_cc_free_level(ConditionalConfig **cc_list, int level);
 extern void preprocessor_cc_free_list(ConditionalConfig *cc);
 extern void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, PreprocessorPhase phase);
 extern void preprocessor_resolve_conditionals_all(PreprocessorPhase phase);
-extern void free_config_defines(void);
+extern void init_config_defines(void);
 extern void preprocessor_replace_defines(char **item, ConfigEntry *ce);
 
 /*
