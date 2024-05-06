@@ -365,7 +365,6 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 	if (cc->condition == IF_VALUE)
 	{
 		NameValuePrioList *d = find_config_define(cc->name);
-		config_status("Comparing @if %s shit %s vs %s", cc->name, d ? d->value : "<null>", cc->opt);
 		if (d && !strcasecmp(d->value, cc->opt))
 		{
 			result = 1;
