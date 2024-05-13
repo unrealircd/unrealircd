@@ -43,7 +43,8 @@ in progress and may not always be a stable version.
   ```
 
 ### Developers and protocol:
-* TODO
+* Modules can now provide SASL locally, see
+  [Dev:Authentication module](https://www.unrealircd.org/docs/Dev:Authentication_module).
 
 UnrealIRCd 6.1.5
 -----------------
