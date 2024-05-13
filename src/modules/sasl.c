@@ -88,6 +88,65 @@ int sasl_account_login(Client *client, MessageTag *mtags)
 	return 0;
 }
 
+void _sasl_succeeded(Client *client)
+{
+	client->local->sasl_sent_time = 0;
+	client->local->sasl_complete++;
+	RunHookReturn(HOOKTYPE_SASL_RESULT, !=0, client, 1);
+	sendnumeric(client, RPL_SASLSUCCESS);
+}
+
+void _sasl_failed(Client *client)
+{
+	client->local->sasl_sent_time = 0;
+	add_fake_lag(client, 7000); /* bump fakelag due to failed authentication attempt */
+	RunHookReturn(HOOKTYPE_SASL_RESULT, !=0, client, 0);
+	sendnumeric(client, ERR_SASLFAIL);
+}
+
+int _decode_authenticate_plain(const char *param, char **authorization_id, char **authentication_id, char **passwd)
+{
+	static char authorization_id_buffer[256];
+	static char authentication_id_buffer[256];
+	static char passwd_buffer[256];
+	char decoded[512];
+	int n;
+	char *p, *p2;
+
+	/* First decode the thing */
+	n = b64_decode(param, decoded, 512);
+	if (n < 0)
+		return 0; // base64 decoding failed
+
+	p = memchr(decoded, '\0', n);
+	if (!p)
+		return 0; // missing first NUL
+	if (p - decoded > 255)
+		return 0; // oversized authorization_id
+	strlcpy(authorization_id_buffer, decoded, sizeof(authorization_id_buffer));
+	p++;
+	n -= (p - decoded);
+	if (n <= 0)
+		return 0; // no room left
+
+	p2 = memchr(p, '\0', n);
+	if (!p2)
+		return 0; // missing second NUL
+	if (p2 - p > 255)
+		return 0; // oversized authentication_id
+	strlcpy(authentication_id_buffer, p, sizeof(authentication_id_buffer));
+	p2++;
+	n -= (p2 - p);
+	if (n <= 0)
+		return 0; // no room left
+
+	strlcpy(passwd_buffer, p2, sizeof(passwd_buffer));
+
+	*authorization_id = authorization_id_buffer;
+	*authentication_id = authentication_id_buffer;
+	*passwd = passwd_buffer;
+	return 1;
+}
 
 /*
  * SASL message
@@ -129,19 +188,9 @@ CMD_FUNC(cmd_sasl)
 		{
 			*target->local->sasl_agent = '\0';
 			if (*parv[4] == 'F')
-			{
-				target->local->sasl_sent_time = 0;
-				add_fake_lag(target, 7000); /* bump fakelag due to failed authentication attempt */
-				RunHookReturn(HOOKTYPE_SASL_RESULT, !=0, target, 0);
-				sendnumeric(target, ERR_SASLFAIL);
-			}
+				sasl_failed(target);
 			else if (*parv[4] == 'S')
-			{
-				target->local->sasl_sent_time = 0;
-				target->local->sasl_complete++;
-				RunHookReturn(HOOKTYPE_SASL_RESULT, !=0, target, 1);
-				sendnumeric(target, RPL_SASLSUCCESS);
-			}
+				sasl_succeeded(target);
 		}
 		else if (*parv[3] == 'M')
 			sendnumeric(target, RPL_SASLMECHS, parv[4]);
@@ -185,27 +234,40 @@ CMD_FUNC(cmd_authenticate)
 	if (*client->local->sasl_agent)
 		agent_p = find_client(client->local->sasl_agent, NULL);
 
+	client->local->sasl_out++;
+	client->local->sasl_sent_time = TStime();
+
 	if (agent_p == NULL)
 	{
 		char *addr = BadPtr(client->ip) ? "0" : client->ip;
 		const char *certfp = moddata_client_get(client, "certfp");
 
-		sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s H %s %s",
-		    me.name, SASL_SERVER, client->id, addr, addr);
+		if (Hooks[HOOKTYPE_SASL_AUTHENTICATE] && (find_client(SASL_SERVER, NULL) == &me))
+		{
+			/* We are the SASL server (some module handling auth) */
+			RunHook(HOOKTYPE_SASL_AUTHENTICATE, client, 1, parv[1]);
+		} else {
+			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s H %s %s",
+			    me.name, SASL_SERVER, client->id, addr, addr);
 
-		if (certfp)
-			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s S %s %s",
-			    me.name, SASL_SERVER, client->id, parv[1], certfp);
-		else
-			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s S %s",
-			    me.name, SASL_SERVER, client->id, parv[1]);
+			if (certfp)
+				sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s S %s %s",
+				    me.name, SASL_SERVER, client->id, parv[1], certfp);
+			else
+				sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s S %s",
+				    me.name, SASL_SERVER, client->id, parv[1]);
+		}
+	} else
+	{
+		if (agent_p == &me)
+		{
+			/* We are the SASL server (some module handling auth) */
+			RunHook(HOOKTYPE_SASL_AUTHENTICATE, client, 0, parv[1]);
+		} else {
+			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s C %s",
+			    me.name, AGENT_SID(agent_p), client->id, parv[1]);
+		}
 	}
-	else
-		sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s C %s",
-		    me.name, AGENT_SID(agent_p), client->id, parv[1]);
-
-	client->local->sasl_out++;
-	client->local->sasl_sent_time = TStime();
 }
 
 static int abort_sasl(Client *client)
@@ -317,6 +379,15 @@ int sasl_server_synced(Client *client)
 	return 0;
 }
 
+MOD_TEST()
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	EfunctionAddVoid(modinfo->handle, EFUNC_SASL_SUCCEEDED, _sasl_succeeded);
+	EfunctionAddVoid(modinfo->handle, EFUNC_SASL_FAILED, _sasl_failed);
+	EfunctionAdd(modinfo->handle, EFUNC_DECODE_AUTHENTICATE_PLAIN, _decode_authenticate_plain);
+	return MOD_SUCCESS;
+}
+
 MOD_INIT()
 {
 	ClientCapabilityInfo cap;
@@ -385,6 +456,9 @@ void saslmechlist_unserialize(const char *str, ModData *m)
 const char *sasl_capability_parameter(Client *client)
 {
 	Client *server;
+
+	if (Hooks[HOOKTYPE_SASL_MECHS])
+		return Hooks[HOOKTYPE_SASL_MECHS]->func.conststringfunc(client);
 
 	if (SASL_SERVER)
 	{

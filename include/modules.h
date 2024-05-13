@@ -1304,6 +1304,10 @@ extern APICallback *APICallbackAdd(Module *module, APICallback *mreq);
 #define HOOKTYPE_WATCH_DEL	122
 /** See hooktype_monitor_notification */
 #define HOOKTYPE_MONITOR_NOTIFICATION	123
+/** See hooktype_sasl_authenticate */
+#define HOOKTYPE_SASL_AUTHENTICATE	124
+/** See hooktype_sasl_mechs */
+#define HOOKTYPE_SASL_MECHS		125
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -2404,6 +2408,20 @@ int hooktype_watch_del(char *nick, Client *client, int flags);
  */
 int hooktype_monitor_notification(Client *watcher, Client *client, int online);
 
+/** Called when an AUTHENTICATE command is sent by the client, for SASL authentication.
+ * This can be used by authentication modules.
+ * @param client		The client (user)
+ * @param first			Set to 1 if this is the first AUTHENTICATE, set to 0 if it is a continuation.
+ * @param param			The AUTHENTICATE parameter (max 400 chars)
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_sasl_authenticate(Client *client, int first, const char *param);
+
+/** Called for showing SASL mechanisms eg in sasl=xxx via "CAP LS 302"
+ * @param client		The client
+ * @return The saslmechlist
+ */
+const char *hooktype_sasl_mechs(Client *client);
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2529,7 +2547,9 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_CONFIG_LISTENER) && !ValidateHook(hooktype_config_listener, func)) || \
         ((hooktype == HOOKTYPE_WATCH_ADD) && !ValidateHook(hooktype_watch_add, func)) || \
         ((hooktype == HOOKTYPE_WATCH_DEL) && !ValidateHook(hooktype_watch_del, func)) || \
-        ((hooktype == HOOKTYPE_MONITOR_NOTIFICATION) && !ValidateHook(hooktype_monitor_notification, func))) \
+        ((hooktype == HOOKTYPE_MONITOR_NOTIFICATION) && !ValidateHook(hooktype_monitor_notification, func)) || \
+        ((hooktype == HOOKTYPE_SASL_AUTHENTICATE) && !ValidateHook(hooktype_sasl_authenticate, func)) || \
+        ((hooktype == HOOKTYPE_SASL_MECHS) && !ValidateHook(hooktype_sasl_mechs, func))) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
@@ -2687,6 +2707,9 @@ enum EfunctionType {
 	EFUNC_GET_CENTRAL_API_KEY,
 	EFUNC_CENTRAL_SPAMREPORT,
 	EFUNC_CENTRAL_SPAMREPORT_ENABLED,
+	EFUNC_SASL_SUCCEEDED,
+	EFUNC_SASL_FAILED,
+	EFUNC_DECODE_AUTHENTICATE_PLAIN,
 };
 
 /* Module flags */

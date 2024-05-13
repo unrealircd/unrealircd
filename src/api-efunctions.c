@@ -174,6 +174,9 @@ void (*ban_act_set_reputation)(Client *client, BanAction *action);
 const char *(*get_central_api_key)(void);
 int (*central_spamreport)(Client *target, Client *by);
 int (*central_spamreport_enabled)(void);
+void (*sasl_succeeded)(Client *client);
+void (*sasl_failed)(Client *client);
+int (*decode_authenticate_plain)(const char *param, char **authorization_id, char **authentication_id, char **passwd);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
@@ -493,4 +496,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_GET_CENTRAL_API_KEY, get_central_api_key, get_central_api_key_default_handler, 0);
 	efunc_init_function(EFUNC_CENTRAL_SPAMREPORT, central_spamreport, central_spamreport_default_handler, 0);
 	efunc_init_function(EFUNC_CENTRAL_SPAMREPORT_ENABLED, central_spamreport_enabled, central_spamreport_enabled_default_handler, 0);
+	efunc_init_function(EFUNC_SASL_SUCCEEDED, sasl_succeeded, sasl_succeeded_default_handler, 0);
+	efunc_init_function(EFUNC_SASL_FAILED, sasl_failed, sasl_failed_default_handler, 0);
+	efunc_init_function(EFUNC_DECODE_AUTHENTICATE_PLAIN, decode_authenticate_plain, decode_authenticate_plain_default_handler, 0);
 }

@@ -1909,6 +1909,20 @@ int central_spamreport_enabled_default_handler(void)
 	return 0;
 }
 
+void sasl_succeeded_default_handler(Client *client)
+{
+}
+
+void sasl_failed_default_handler(Client *client)
+{
+}
+
+int decode_authenticate_plain_default_handler(const char *param, char **authorization_id, char **authentication_id, char **passwd)
+{
+	return 0;
+}
+
+
 /** my_timegm: mktime()-like function which will use GMT/UTC.
  * Strangely enough there is no standard function for this.
  * On some *NIX OS's timegm() may be available, sometimes only

@@ -931,6 +931,9 @@ extern void (*ban_act_set_reputation)(Client *client, BanAction *action);
 extern const char *(*get_central_api_key)(void);
 extern int (*central_spamreport)(Client *target, Client *by);
 extern int (*central_spamreport_enabled)(void);
+extern void (*sasl_succeeded)(Client *client);
+extern void (*sasl_failed)(Client *client);
+extern int (*decode_authenticate_plain)(const char *param, char **authorization_id, char **authentication_id, char **passwd);
 /* /Efuncs */
 
 /* TLS functions */
@@ -988,6 +991,9 @@ extern void ban_act_set_reputation_default_handler(Client *client, BanAction *ac
 extern const char *get_central_api_key_default_handler(void);
 extern int central_spamreport_default_handler(Client *target, Client *by);
 extern int central_spamreport_enabled_default_handler(void);
+extern void sasl_succeeded_default_handler(Client *client);
+extern void sasl_failed_default_handler(Client *client);
+extern int decode_authenticate_plain_default_handler(const char *param, char **authorization_id, char **authentication_id, char **passwd);
 /* End of default handlers for efunctions */
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;
