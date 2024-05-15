@@ -22,6 +22,10 @@ in progress and may not always be a stable version.
   functions. The old name will keep working for the entire UnrealIRCd 6 series too.
 
 ### Fixes:
+* Crash on Windows when using
+  [Crule](https://www.unrealircd.org/docs/Crule) functions,
+  [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport) or
+  [Central Spamfilter](https://www.unrealircd.org/docs/Central_Spamfilter).
 * [Conditional config](https://www.unrealircd.org/docs/Defines_and_conditional_config):
   using @if with a variable like `@if $VAR == "something"` always evaluated to false.
 * When booting for the first time (without any cached files) the IRCd
