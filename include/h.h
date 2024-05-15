@@ -923,17 +923,17 @@ extern MODVAR void (*cancel_ident_lookup)(Client *client);
 extern MODVAR int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by);
 extern MODVAR int (*crule_test)(const char *rule);
 extern MODVAR CRuleNode *(*crule_parse)(const char *rule);
-extern int (*crule_eval)(crule_context *context, CRuleNode *rule);
+extern MODVAR int (*crule_eval)(crule_context *context, CRuleNode *rule);
 #define safe_crule_free(x) do { if (x) crule_free(&x); } while(0)
-extern void (*crule_free)(CRuleNode **);
-extern const char *(*crule_errstring)(int errcode);
-extern void (*ban_act_set_reputation)(Client *client, BanAction *action);
-extern const char *(*get_central_api_key)(void);
-extern int (*central_spamreport)(Client *target, Client *by);
-extern int (*central_spamreport_enabled)(void);
-extern void (*sasl_succeeded)(Client *client);
-extern void (*sasl_failed)(Client *client);
-extern int (*decode_authenticate_plain)(const char *param, char **authorization_id, char **authentication_id, char **passwd);
+extern MODVAR void (*crule_free)(CRuleNode **);
+extern MODVAR const char *(*crule_errstring)(int errcode);
+extern MODVAR void (*ban_act_set_reputation)(Client *client, BanAction *action);
+extern MODVAR const char *(*get_central_api_key)(void);
+extern MODVAR int (*central_spamreport)(Client *target, Client *by);
+extern MODVAR int (*central_spamreport_enabled)(void);
+extern MODVAR void (*sasl_succeeded)(Client *client);
+extern MODVAR void (*sasl_failed)(Client *client);
+extern MODVAR int (*decode_authenticate_plain)(const char *param, char **authorization_id, char **authentication_id, char **passwd);
 /* /Efuncs */
 
 /* TLS functions */
