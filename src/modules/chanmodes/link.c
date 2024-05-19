@@ -421,8 +421,30 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, const char *key)
 			b->banstr = banmask;
 			if (ban_check_mask(b))
 			{
-				safe_free(b);
-				return link_doforward(client, channel, banchan, LINKTYPE_BAN);
+				/* Forward ban matched, now check for +e */
+				Ban *ex = NULL;
+				for (ex = channel->exlist; ex; ex = ex->next)
+				{
+					b->banstr = ex->banstr;
+					if (ban_check_mask(b))
+					{
+						/* except matched, break inner loop */
+						break;
+					}
+				}
+				if (ex == NULL)
+				{
+					/* A ~forward ban matched, go for it.. */
+					safe_free(b);
+					return link_doforward(client, channel, banchan, LINKTYPE_BAN);
+				} else {
+					/* Break the outer loop as well: the user is exempt,
+					 * so it makes no sense to check other bans anymore.
+					 * no "safe_free(b);" here because that is taken
+					 * care of further down.
+					 */
+					break;
+				}
 			}
 		}
 
