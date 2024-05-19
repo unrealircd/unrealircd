@@ -28,6 +28,8 @@ in progress and may not always be a stable version.
   [Central Spamfilter](https://www.unrealircd.org/docs/Central_Spamfilter).
 * [Conditional config](https://www.unrealircd.org/docs/Defines_and_conditional_config):
   using @if with a variable like `@if $VAR == "something"` always evaluated to false.
+* A [`~forward`](https://www.unrealircd.org/docs/Extended_bans#Group_2:_actions)
+  ban did not check ban exemptions (+e), always forwarding the user.
 * When booting for the first time (without any cached files) the IRCd
   downloads GeoIP.dat. If that fails, e.g. due to lack of internet connectivity,
   we now show a warning and continue booting instead of it being a hard error.
