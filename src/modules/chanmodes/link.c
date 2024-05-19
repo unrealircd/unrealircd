@@ -446,7 +446,7 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, const char *key)
 		return link_doforward(client, channel, linked, LINKTYPE_SECURE);
 
 	// Registered/identified users only
-	if (has_channel_mode(channel, 'R') && !IsRegNick(client))
+	if (has_channel_mode(channel, 'R') && !IsLoggedIn(client))
 		return link_doforward(client, channel, linked, LINKTYPE_REG);
 
 	// For a couple of conditions we can use the return value from can_join() =]
