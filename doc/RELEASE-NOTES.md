@@ -13,6 +13,9 @@ in progress and may not always be a stable version.
     returns true if client matches mask.
   * `match_ip('192.168.*')` or with CIDR like `match_ip('192.168.0.0/16')`
     returns true if IP address of client matches.
+  * `is_identified()` which returns true if the client is identified to a services account.
+  * `is_webirc()` which returns true if the client is connected using WEBIRC.
+  * `is_websocket()` which returns true if the client is connected using WebSockets.
 
 ### Changes:
 * For many years `REHASH -all` is the same as `REHASH` so we now reject
