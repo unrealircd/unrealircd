@@ -1307,6 +1307,8 @@ extern int conf_match_block(ConfigFile *conf, ConfigEntry *ce, SecurityGroup **b
 extern int test_extended_list(Extban *extban, ConfigEntry *cep, int *errors);
 extern int test_set_security_group(ConfigFile *conf, ConfigEntry *ce);
 extern int config_set_security_group(ConfigFile *conf, ConfigEntry *ce);
+extern int user_matches_extended_server_ban(Client *client, const char *name, const char *value);
+extern int user_matches_extended_list(Client *client, NameValuePrioList *e);
 /* securitygroup.c end */
 /* src/unrealdb.c start */
 extern UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_block);

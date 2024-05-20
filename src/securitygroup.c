@@ -697,28 +697,39 @@ void set_security_group_defaults(void)
 	s->tls = 1;
 }
 
+/* Next function looks similar to _match_user_extended_server_ban in tkl.c,
+ * but the one in tkl.c works on a single string, has an extra 'is extended ban?'
+ * check and splits it into name/value etc.
+ */
+
+int user_matches_extended_server_ban(Client *client, const char *name, const char *value)
+{
+	Extban *extban;
+	BanContext b;
+
+	extban = findmod_by_bantype_raw(name, strlen(name));
+	if (!extban ||
+	    !(extban->options & EXTBOPT_TKL) ||
+	    !(extban->is_banned_events & BANCHK_TKL))
+	{
+		return 0; /* extban not found or of incorrect type */
+	}
+
+	memset(&b, 0, sizeof(BanContext));
+	b.client = client;
+	b.banstr = value;
+	b.ban_check_types = BANCHK_TKL;
+	return extban->is_banned(&b);
+}
+
 int user_matches_extended_list(Client *client, NameValuePrioList *e)
 {
 	Extban *extban;
 	BanContext b;
 
 	for (; e; e = e->next)
-	{
-		extban = findmod_by_bantype_raw(e->name, strlen(e->name));
-		if (!extban ||
-		    !(extban->options & EXTBOPT_TKL) ||
-		    !(extban->is_banned_events & BANCHK_TKL))
-		{
-			continue; /* extban not found or of incorrect type */
-		}
-
-		memset(&b, 0, sizeof(BanContext));
-		b.client = client;
-		b.banstr = e->value;
-		b.ban_check_types = BANCHK_TKL;
-		if (extban->is_banned(&b))
+		if (user_matches_extended_server_ban(client, e->name, e->value))
 			return 1;
-	}
 
 	return 0;
 }
