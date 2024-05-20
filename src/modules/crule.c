@@ -132,6 +132,9 @@ static int crule_cap_set(crule_context *, int, void **);
 static int crule_has_user_mode(crule_context *, int, void **);
 static int crule_has_channel_mode(crule_context *, int, void **);
 static int crule_away(crule_context *, int, void **);
+static int crule_is_identified(crule_context *, int, void **);
+static int crule_is_webirc(crule_context *, int, void **);
+static int crule_is_websocket(crule_context *, int, void **);
 static int crule_tls(crule_context *, int, void **);
 static int crule_in_security_group(crule_context *, int, void **);
 static int crule_match_mask(crule_context *, int, void **);
@@ -184,7 +187,10 @@ struct crule_funclistent crule_funclist[] = {
 	{"has_user_mode", 1, crule_has_user_mode},
 	{"has_channel_mode", 1, crule_has_channel_mode},
 	{"is_away", 0, crule_away},
+	{"is_identified", 0, crule_is_identified},
 	{"is_tls", 0, crule_tls},
+	{"is_webirc", 0, crule_is_webirc},
+	{"is_websocket", 0, crule_is_websocket},
 	{"in_security_group", 1, crule_in_security_group},
 	{"match_mask", 1, crule_match_mask},
 	{"match_ip", 1, crule_match_ip},
@@ -223,6 +229,28 @@ static int crule_away(crule_context *context, int numargs, void *crulearg[])
 		return 0;
 
 	return (!BadPtr(context->client->user->away)) ? 1 : 0;
+}
+
+static int crule_is_identified(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client || !IsUser(context->client))
+		return 0;
+
+	return (IsLoggedIn(context->client)) ? 1 : 0;
+}
+static int crule_is_websocket(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client || !IsUser(context->client))
+		return 0;
+
+	return (moddata_client_get(context->client, "websocket")) ? 1 : 0;
+}
+static int crule_is_webirc(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client || !IsUser(context->client))
+		return 0;
+
+	return (moddata_client_get(context->client, "webirc")) ? 1 : 0;
 }
 
 static int crule_tls(crule_context *context, int numargs, void *crulearg[])
