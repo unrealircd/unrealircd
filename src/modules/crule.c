@@ -455,7 +455,7 @@ static int crule_in_security_group(crule_context *context, int numargs, void *cr
 {
 	const char *arg = (char *)crulearg[0];
 
-	if (!context || !context->client || !strlen(arg))
+	if (!context || !context->client)
 		return 0;
 
 	if (user_allowed_by_security_group_name(context->client, arg))
@@ -468,7 +468,7 @@ static int crule_match_mask(crule_context *context, int numargs, void *crulearg[
 {
 	const char *arg = (char *)crulearg[0];
 
-	if (!context || !context->client || !strlen(arg))
+	if (!context || !context->client)
 		return 0;
 
 	if (match_user(arg, context->client, MATCH_CHECK_REAL_HOST|MATCH_CHECK_IP|MATCH_CHECK_EXTENDED))
@@ -481,7 +481,7 @@ static int crule_match_ip(crule_context *context, int numargs, void *crulearg[])
 {
 	const char *arg = (char *)crulearg[0];
 
-	if (!context || !context->client || !strlen(arg))
+	if (!context || !context->client)
 		return 0;
 
 	if (match_user(arg, context->client, MATCH_CHECK_IP|MATCH_MASK_IS_HOST))
