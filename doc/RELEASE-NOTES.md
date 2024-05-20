@@ -19,6 +19,8 @@ in progress and may not always be a stable version.
   * `is_identified()` which returns true if the client is identified to a services account.
   * `is_webirc()` which returns true if the client is connected using WEBIRC.
   * `is_websocket()` which returns true if the client is connected using WebSockets.
+  * `match_realname('*xyz*')` which returns true if the real name (gecos)
+     contains xyz.
   * `match_account('xyz')` which returns true if the services account name is xyz.
   * `match_country('NL')` which returns true if 
     [GeoIP](https://www.unrealircd.org/docs/GeoIP) determined the
