@@ -37,6 +37,8 @@ in progress and may not always be a stable version.
   functions. The old name will keep working for the entire UnrealIRCd 6 series too.
 
 ### Fixes:
+* Crash if you first REHASH and have a parse error (failed rehash 1) and then
+  REHASH again but a remote include fails to load (failed rehash 2).
 * Crash on Windows when using
   [Crule](https://www.unrealircd.org/docs/Crule) functions,
   [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport) or

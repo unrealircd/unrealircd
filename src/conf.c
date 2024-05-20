@@ -1700,6 +1700,9 @@ void free_iConf(Configuration *i)
 		free_floodsettings(f);
 	}
 	i->floodsettings = NULL;
+
+	/* And zero out everything, too easy to make a mistake above. */
+	memset(i, 0, sizeof(Configuration));
 }
 
 /** Set default set { } block settings. Note that some of these settings
