@@ -5,7 +5,10 @@ This is the git version (development version) for future 6.1.6. This is work
 in progress and may not always be a stable version.
 
 ### Enhancements:
-* Add more [Crule](https://www.unrealircd.org/docs/Crule) functions:
+* [Crule](https://www.unrealircd.org/docs/Crule) functions can now do everything
+  that [security group blocks](https://www.unrealircd.org/docs/Security-group_block)
+  can do.  
+  In practice, this means the following functions were added in this release:
   * `is_tls()` returns true if the client is using SSL/TLS
   * `in_security_group('known-users')` returns true if the user is in the
     specified [security group](https://www.unrealircd.org/docs/Security-group_block).
@@ -16,6 +19,13 @@ in progress and may not always be a stable version.
   * `is_identified()` which returns true if the client is identified to a services account.
   * `is_webirc()` which returns true if the client is connected using WEBIRC.
   * `is_websocket()` which returns true if the client is connected using WebSockets.
+  * `match_account('xyz')` which returns true if the services account name is xyz.
+  * `match_country('NL')` which returns true if 
+    [GeoIP](https://www.unrealircd.org/docs/GeoIP) determined the
+    country to be NL.
+  * `match_certfp('abc')` which returns true if the 
+    [Certificate fingerprint](https://www.unrealircd.org/docs/Certificate_fingerprint)
+    is abc.
 
 ### Changes:
 * For many years `REHASH -all` is the same as `REHASH` so we now reject

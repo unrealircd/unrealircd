@@ -139,6 +139,9 @@ static int crule_tls(crule_context *, int, void **);
 static int crule_in_security_group(crule_context *, int, void **);
 static int crule_match_mask(crule_context *, int, void **);
 static int crule_match_ip(crule_context *, int, void **);
+static int crule_match_account(crule_context *, int, void **);
+static int crule_match_country(crule_context *, int, void **);
+static int crule_match_certfp(crule_context *, int, void **);
 
 /* parsing function prototypes - local! */
 static int crule_gettoken(crule_token *next_tokp, const char **str);
@@ -194,6 +197,9 @@ struct crule_funclistent crule_funclist[] = {
 	{"in_security_group", 1, crule_in_security_group},
 	{"match_mask", 1, crule_match_mask},
 	{"match_ip", 1, crule_match_ip},
+	{"match_account", 1, crule_match_account},
+	{"match_country", 1, crule_match_country},
+	{"match_certfp", 1, crule_match_certfp},
 	{"", 0, NULL} /* this must be here to mark end of list */
 };
 
@@ -488,6 +494,24 @@ static int crule_match_ip(crule_context *context, int numargs, void *crulearg[])
 		return 1;
 
 	return 0;
+}
+
+static int crule_match_account(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+	return user_matches_extended_server_ban(context->client, "account", arg);
+}
+
+static int crule_match_country(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+	return user_matches_extended_server_ban(context->client, "country", arg);
+}
+
+static int crule_match_certfp(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+	return user_matches_extended_server_ban(context->client, "certfp", arg);
 }
 
 /** Evaluate a connection rule.
