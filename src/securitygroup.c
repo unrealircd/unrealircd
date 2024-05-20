@@ -876,7 +876,22 @@ int user_allowed_by_security_group(Client *client, SecurityGroup *s)
 		if ((s->connect_time < 0) && (connect_time < 0 - s->connect_time))
 			goto user_allowed;
 	}
-	if (s->tls && (IsSecureConnect(client) || (MyConnect(client) && IsSecure(client))))
+	/* The following check for 'tls' means:
+	 * - If the user has user mode +z
+	 * - Or, if the user is local but NOT a user, e.g. the user is in
+	 *   pre-connect-stage, then check if the underlying connection
+	 *   is using SSL/TLS.
+	 * The reason for this is that:
+	 * - We want this security group / match to work in both pre-connect
+	 *   and post-connect stage.
+	 * - In post-connect stage we should only check for +z.
+	 *   This because it may be a situation of: user--proxy--us where
+	 *   the proxy--us connection is SSL/TLS so IsSecure() returns true
+	 *   but the user--proxy connection is not on SSL/TLS. We deal with
+	 *   that situation elsewhere by stripping the +z in such a case
+	 *   and we should behave the same way here, seeing it as non-TLS.
+	 */
+	if (s->tls && (IsSecureConnect(client) || (MyConnect(client) && !IsUser(client) && IsSecure(client))))
 		goto user_allowed;
 	if (s->mask && unreal_mask_match(client, s->mask))
 		goto user_allowed;
