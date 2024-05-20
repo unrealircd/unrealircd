@@ -501,25 +501,41 @@ static int crule_match_ip(crule_context *context, int numargs, void *crulearg[])
 static int crule_match_account(crule_context *context, int numargs, void *crulearg[])
 {
 	const char *arg = (char *)crulearg[0];
-	return user_matches_extended_server_ban(context->client, "account", arg);
+
+	if (context && context->client && user_matches_extended_server_ban(context->client, "account", arg))
+		return 1;
+
+	return 0;
 }
 
 static int crule_match_country(crule_context *context, int numargs, void *crulearg[])
 {
 	const char *arg = (char *)crulearg[0];
-	return user_matches_extended_server_ban(context->client, "country", arg);
+
+	if (context && context->client && user_matches_extended_server_ban(context->client, "country", arg))
+		return 1;
+
+	return 0;
 }
 
 static int crule_match_certfp(crule_context *context, int numargs, void *crulearg[])
 {
 	const char *arg = (char *)crulearg[0];
-	return user_matches_extended_server_ban(context->client, "certfp", arg);
+
+	if (context && context->client && user_matches_extended_server_ban(context->client, "certfp", arg))
+		return 1;
+
+	return 0;
 }
 
 static int crule_match_realname(crule_context *context, int numargs, void *crulearg[])
 {
 	const char *arg = (char *)crulearg[0];
-	return user_matches_extended_server_ban(context->client, "realname", arg);
+
+	if (context && context->client && match_simple(arg, context->client->info))
+		return 1;
+
+	return 0;
 }
 
 /** Evaluate a connection rule.
