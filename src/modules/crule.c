@@ -233,21 +233,23 @@ static int crule_away(crule_context *context, int numargs, void *crulearg[])
 
 static int crule_is_identified(crule_context *context, int numargs, void *crulearg[])
 {
-	if (!context || !context->client || !IsUser(context->client))
+	if (!context || !context->client)
 		return 0;
 
 	return (IsLoggedIn(context->client)) ? 1 : 0;
 }
+
 static int crule_is_websocket(crule_context *context, int numargs, void *crulearg[])
 {
-	if (!context || !context->client || !IsUser(context->client))
+	if (!context || !context->client)
 		return 0;
 
 	return (moddata_client_get(context->client, "websocket")) ? 1 : 0;
 }
+
 static int crule_is_webirc(crule_context *context, int numargs, void *crulearg[])
 {
-	if (!context || !context->client || !IsUser(context->client))
+	if (!context || !context->client)
 		return 0;
 
 	return (moddata_client_get(context->client, "webirc")) ? 1 : 0;
