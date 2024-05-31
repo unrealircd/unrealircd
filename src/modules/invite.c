@@ -264,6 +264,12 @@ void invite_process(Client *client, Client *target, Channel *channel, MessageTag
 		if (IsUser(client) && (check_channel_access(client, channel, "oaq")
 			|| IsULine(client)
 			|| ValidatePermissionsForPath("channel:override:invite:self",client,NULL,channel,NULL)
+#ifdef OPEROVERRIDE_VERIFY
+			|| (override 
+				&& ValidatePermissionsForPath("channel:override:privsecret",client,NULL,channel,NULL) 
+				&& client == target
+				&& (SecretChannel(channel) || HiddenChannel(channel)))
+#endif
 			))
 		{
 			add_invite(client, target, channel, mtags);
@@ -380,6 +386,14 @@ CMD_FUNC(cmd_invite)
 		if (ValidatePermissionsForPath("channel:override:invite:notinchannel",client,NULL,channel,NULL) && client == target)
 		{
 			override = 1;
+#ifdef OPEROVERRIDE_VERIFY
+		} 
+		else if (ValidatePermissionsForPath("channel:override:privsecret",client,NULL,channel,NULL) 
+			&& client == target
+			&& (SecretChannel(channel) || HiddenChannel(channel)))
+		{
+			override = 1;
+#endif
 		} else {
 			sendnumeric(client, ERR_NOTONCHANNEL, parv[2]);
 			return;
@@ -457,8 +471,10 @@ CMD_FUNC(cmd_invite)
 		else if (has_channel_mode(channel, 'z'))
 			invite_operoverride_msg(client, channel, "z", "secure only");
 #ifdef OPEROVERRIDE_VERIFY
-		else if (channel->mode.mode & MODE_SECRET || channel->mode.mode & MODE_PRIVATE)
-		       override = -1;
+		else if (has_channel_mode(channel, 's'))
+			invite_operoverride_msg(client, channel, "s", "secret");
+		else if (has_channel_mode(channel, 'p'))
+			invite_operoverride_msg(client, channel, "p", "private");
 #endif
 		else
 			return;

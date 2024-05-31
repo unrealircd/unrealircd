@@ -127,8 +127,8 @@ int _can_join(Client *client, Channel *channel, const char *key, char **errmsg)
 
 #ifndef NO_OPEROVERRIDE
 #ifdef OPEROVERRIDE_VERIFY
-	if (ValidatePermissionsForPath("channel:override:privsecret",client,NULL,channel,NULL) && (channel->mode.mode & MODE_SECRET ||
-	    channel->mode.mode & MODE_PRIVATE))
+	if (ValidatePermissionsForPath("channel:override:privsecret",client,NULL,channel,NULL)
+		&& (SecretChannel(channel) || HiddenChannel(channel)))
 	{
 		*errmsg = STR_ERR_OPERSPVERIFY;
 		return (ERR_OPERSPVERIFY);
