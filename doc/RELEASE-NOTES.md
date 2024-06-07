@@ -1,8 +1,8 @@
-UnrealIRCd 6.1.6-git
-=================
+UnrealIRCd 6.1.6-rc1
+=====================
 
-This is the git version (development version) for future 6.1.6. This is work
-in progress and may not always be a stable version.
+This is the Release Candidate for future UnrealIRCd 6.1.6.  
+Please report any issues at https://bugs.unrealircd.org/
 
 ### Enhancements:
 * [Crule](https://www.unrealircd.org/docs/Crule) functions can now do everything
@@ -38,7 +38,8 @@ in progress and may not always be a stable version.
 
 ### Fixes:
 * Crash if you first REHASH and have a parse error (failed rehash 1) and then
-  REHASH again but a remote include fails to load (failed rehash 2).
+  REHASH again but have a "late" rehash error, such as a remote include
+  failing to load (failed rehash 2).
 * Crash on Windows when using
   [Crule](https://www.unrealircd.org/docs/Crule) functions,
   [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport) or
