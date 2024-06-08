@@ -293,7 +293,8 @@ CMD_FUNC(cmd_kick)
 			    (check_channel_access_string(client_member_modes, "h") && check_channel_access_string(target_member_modes, "h")) ||
 			    (check_channel_access_string(client_member_modes, "h") && check_channel_access_string(target_member_modes, "o")))
 			{
-				kick_operoverride_msg(client, channel, target, comment);
+				if (IsOper(client) && client != target)
+					kick_operoverride_msg(client, channel, target, comment);
 				goto attack;
 			}	/* is_chan_op */
 
