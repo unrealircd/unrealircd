@@ -48,7 +48,9 @@ int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
 int rcmd_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype);
+int rcmd_can_join(Client *client, Channel *channel, const char *key, char **errmsg);
 int rcmd_block_message(Client *client, const char *text, SendType sendtype, const char **errmsg, const char *display, const char *conftag);
+int rcmd_block_join(Client *client, const char **errmsg, const char *conftag);
 CMD_OVERRIDE_FUNC(rcmd_override);
 
 // Globals
@@ -58,6 +60,7 @@ CmdMap conf_cmdmaps[] = {
 	// These are special cases in which we can't override the command, so they are handled through hooks instead
 	{ "channel-message", "PRIVMSG" },
 	{ "channel-notice", "NOTICE" },
+	{ "channel-create", "JOIN" },
 	{ "private-message", "PRIVMSG" },
 	{ "private-notice", "NOTICE" },
 	{ NULL, NULL, }, // REQUIRED for the loop to properly work
@@ -78,6 +81,8 @@ MOD_INIT()
 	// Due to the nature of PRIVMSG/NOTICE we're gonna need to hook into PRE_* stuff instead of using command overrides
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, -1000000, rcmd_can_send_to_channel);
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, -1000000, rcmd_can_send_to_user);
+	// JOIN too
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, rcmd_can_join);
 	return MOD_SUCCESS;
 }
 
@@ -406,4 +411,52 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 
 	// No restrictions apply, process command as normal =]
 	CALL_NEXT_COMMAND_OVERRIDE();
+}
+
+
+int rcmd_can_join(Client *client, Channel *channel, const char *key, char **errmsg)
+{
+	const char *join_err = NULL;
+
+    // If the channel already existed before, no restriction
+    if (channel->users || has_channel_mode(channel, 'P'))
+        return 0;
+
+    else if (rcmd_block_join(client, &join_err, "channel-create"))
+    {
+        sub1_from_channel(channel); // clear it up/l
+        
+        static char formatted_errmsg[512];
+        snprintf(formatted_errmsg, sizeof(formatted_errmsg), "JOIN :%s", join_err);
+        
+        *errmsg = formatted_errmsg;
+        return ERR_CANNOTDOCOMMAND;
+    }
+    return 0;
+}
+
+int rcmd_block_join(Client *client, const char **errmsg, const char *conftag)
+{
+	RestrictedCommand *rcmd;
+	static char errbuf[256];
+
+	if (!MyUser(client) || !client->local || IsOper(client) || IsULine(client))
+		return 0;
+
+	rcmd = find_restrictions_byconftag(conftag);
+	if (rcmd && !rcmd_canbypass(client, rcmd))
+	{
+		if (rcmd->except->connect_time)
+		{
+			ircsnprintf(errbuf, sizeof(errbuf),
+				    "You cannot create new channels until you have been connected for %ld seconds or more.", rcmd->except->connect_time);
+		} else {
+			ircsnprintf(errbuf, sizeof(errbuf),
+				    "Creation of new channels has been restricted by the network administrator.");
+		}
+		*errmsg = errbuf;
+		return 1;
+	}
+
+	return 0;
 }
