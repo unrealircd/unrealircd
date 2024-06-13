@@ -1,8 +1,10 @@
-UnrealIRCd 6.1.6-rc1
-=====================
+UnrealIRCd 6.1.6
+=================
 
-This is the Release Candidate for future UnrealIRCd 6.1.6.  
-Please report any issues at https://bugs.unrealircd.org/
+This is mostly a bug fix release but also comes with Crule enhancements.
+
+UnrealIRCd turned 25 a few weeks ago! 🎉 See
+[UnrealIRCd celebrates its 25th birthday](https://forums.unrealircd.org/viewtopic.php?t=9363).
 
 ### Enhancements:
 * [Crule](https://www.unrealircd.org/docs/Crule) functions can now do everything
