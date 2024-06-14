@@ -506,11 +506,11 @@ void _do_join(Client *client, int parc, const char *parv[])
 		}
 
 		channel = make_channel(name);
-		if (channel && (lp = find_membership_link(client->user->channel, channel)))
-			continue;
-
 		if (!channel)
-			continue;
+			continue; /* would be VERY rare, but e.g. for empty chan ('') */
+
+		if (find_membership_link(client->user->channel, channel))
+			continue; /* user already in channel, so JOIN ignored */
 
 		i = HOOK_CONTINUE;
 		if (!MyConnect(client))
