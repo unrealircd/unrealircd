@@ -264,7 +264,7 @@ NOINTRO=""
 QUICK=""
 ADVANCED=""
 while [ $# -ge 1 ] ; do
-	if [ $1 = "--help" ] ; then
+	if [ "$1" = "-help" -o "$1" = "--help" -o "$1" = "-h" ] ; then
 		echo "Config utility for UnrealIRCd"
 		echo "-----------------------------"
 		echo "Syntax: ./Config [options]"
@@ -272,9 +272,9 @@ while [ $# -ge 1 ] ; do
 		echo "-quick       Skip questions, go straight to configure"
 		echo "-advanced    Include additional advanced questions"
 		exit 0
-	elif [ $1 = "-nointro" ] ; then
+	elif [ "$1" = "-nointro" ] ; then
 		NOINTRO="1"
-	elif [ $1 = "-quick" -o $1 = "-q" ] ; then
+	elif [ "$1" = "-quick" -o "$1" = "-q" ] ; then
 		QUICK="1"
 		echo "running quick config"
 		if [ -f "config.settings" ] ; then
@@ -284,7 +284,7 @@ while [ $# -ge 1 ] ; do
 		RUN_CONFIGURE
 		cd "$UNREALCWD"
 		exit 0
-	elif [ $1 = "-advanced" ] ; then
+	elif [ "$1" = "-advanced" ] ; then
 		PREADVANCED="1"
 	fi
 	shift 1
