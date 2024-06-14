@@ -424,8 +424,6 @@ int rcmd_can_join(Client *client, Channel *channel, const char *key, char **errm
 
 	else if (rcmd_block_join(client, &join_err))
 	{
-		sub1_from_channel(channel); // clear it up/l
-		
 		static char formatted_errmsg[512];
 		snprintf(formatted_errmsg, sizeof(formatted_errmsg), "JOIN :%s", join_err);
 		
