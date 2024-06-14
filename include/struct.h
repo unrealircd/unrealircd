@@ -1829,6 +1829,7 @@ struct TLSOptions {
 	int sts_port;
 	long sts_duration;
 	int sts_preload;
+	int certificate_expiry_notification;
 };
 
 struct ConfigItem_mask {

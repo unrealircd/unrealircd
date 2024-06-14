@@ -1428,6 +1428,9 @@ void check_certificate_expiry_tlsoptions_and_warn(TLSOptions *tlsoptions)
 
 EVENT(tls_check_expiry)
 {
+	if (iConf.tls_options->certificate_expiry_notification == 0)
+		return;
+
 	ConfigItem_listen *listen;
 	ConfigItem_sni *sni;
 	ConfigItem_link *link;

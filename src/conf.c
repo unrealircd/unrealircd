@@ -1803,7 +1803,7 @@ void config_setdefaultsettings(Configuration *i)
 	 * Any decent client using AES will use ECDHE-xx-AES.
 	 */
 	safe_strdup(i->tls_options->outdated_ciphers, "AES*,RC4*,DES*");
-
+	i->tls_options->certificate_expiry_notification = 1;
 	i->plaintext_policy_user = POLICY_ALLOW;
 	i->plaintext_policy_oper = POLICY_DENY;
 	i->plaintext_policy_server = POLICY_DENY;
@@ -7582,6 +7582,9 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 				errors++;
 			}
 		}
+		else if (!strcmp(cepp->name, "certificate-expiry-notification"))
+		{
+		}
 		else
 		{
 			config_error("%s:%i: unknown directive %s",
@@ -7634,6 +7637,7 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 		tlsoptions->sts_port = tempiConf.tls_options->sts_port;
 		tlsoptions->sts_duration = tempiConf.tls_options->sts_duration;
 		tlsoptions->sts_preload = tempiConf.tls_options->sts_preload;
+		tlsoptions->certificate_expiry_notification = tempiConf.tls_options->certificate_expiry_notification;
 	}
 
 	/* Now process the options */
@@ -7747,6 +7751,10 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 				else if (!strcmp(ceppp->name, "preload"))
 					tlsoptions->sts_preload = config_checkval(ceppp->value, CFG_YESNO);
 			}
+		}
+		else if (!strcmp(cepp->name, "certificate-expiry-notification"))
+		{
+			tlsoptions->certificate_expiry_notification = config_checkval(cepp->value, CFG_YESNO);
 		}
 	}
 }
