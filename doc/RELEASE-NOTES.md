@@ -5,10 +5,14 @@ This is the git version (development version) for future 6.1.7. This is work
 in progress and may not always be a stable version.
 
 ### Enhancements:
-* TODO
+* New option [set::tls::certificate-expiry-notification](https://www.unrealircd.org/docs/Set_block#set::tls::certificate-expiry-notification):
+  since UnrealIRCd 5.0.8 we warn if a SSL/TLS certificate is (nearly) expired.
+  This new option allows turning it off, it is (still) on by default.
 
 ### Changes:
-* TODO
+* IRCOps with the operclass `locop` can now only `REHASH` the local server
+  and not remote servers.
+* Comment out some more in example.conf by default
 
 ### Fixes:
 * TODO
