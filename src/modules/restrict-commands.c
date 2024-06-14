@@ -162,11 +162,11 @@ int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			if (!strcmp(cep2->name, "disable"))
 			{
 				config_warn("%s:%i: set::restrict-commands::%s: the 'disable' option has been removed.",
-							cep2->file->filename, cep2->line_number, cep->name);
+				            cep2->file->filename, cep2->line_number, cep->name);
 				if (!warn_disable)
 				{
 					config_warn("Simply remove 'disable yes;' from the configuration file and "
-								   "it will have the same effect without it (will disable the command).");
+				                   "it will have the same effect without it (will disable the command).");
 					warn_disable = 1;
 				}
 				continue;
@@ -260,8 +260,8 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 			if (find_restrictions_bycmd(cmd))
 			{
 				config_warn("[restrict-commands] Multiple set::restrict-commands items for command '%s'. "
-							"Only one config block will be effective.",
-							cmd);
+				            "Only one config block will be effective.",
+				            cmd);
 				continue;
 			}
 			if (!CommandOverrideAdd(ModInf.handle, cmd, 0, rcmd_override))
@@ -368,12 +368,12 @@ int rcmd_block_message(Client *client, const char *text, SendType sendtype, cons
 		if (rcmd->except->connect_time)
 		{
 			ircsnprintf(errbuf, sizeof(errbuf),
-					"You cannot send %ss to %ss until you've been connected for %ld seconds or more",
-					(notice ? "notice" : "message"), display, rcmd->except->connect_time);
+				    "You cannot send %ss to %ss until you've been connected for %ld seconds or more",
+				    (notice ? "notice" : "message"), display, rcmd->except->connect_time);
 		} else {
 			ircsnprintf(errbuf, sizeof(errbuf),
-					"Sending of %ss to %ss been disabled by the network administrators",
-					(notice ? "notice" : "message"), display);
+				    "Sending of %ss to %ss been disabled by the network administrators",
+				    (notice ? "notice" : "message"), display);
 		}
 		*errmsg = errbuf;
 		return 1;
@@ -399,12 +399,12 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 		if (rcmd->except->connect_time)
 		{
 			sendnumericfmt(client, ERR_UNKNOWNCOMMAND,
-						   "%s :You must be connected for at least %ld seconds before you can use this command",
-						   ovr->command->cmd, rcmd->except->connect_time);
+			            "%s :You must be connected for at least %ld seconds before you can use this command",
+			            ovr->command->cmd, rcmd->except->connect_time);
 		} else {
 			sendnumericfmt(client, ERR_UNKNOWNCOMMAND,
-						   "%s :This command is disabled by the network administrator",
-						   ovr->command->cmd);
+			            "%s :This command is disabled by the network administrator",
+			            ovr->command->cmd);
 		}
 		return;
 	}
