@@ -283,22 +283,6 @@ CMD_FUNC(cmd_kick)
 		// FIXME: Most, maybe even all, of these must be moved to HOOKTYPE_CAN_KICK checks in the corresponding halfop/chanop/chanadmin/chanowner modules :)
 		// !!!! FIXME
 
-		/* we are neither +o nor +h, OR..
-		 * we are +h but target is +o, OR...
-		 * we are +h and target is +h
-		 */
-		if (op_can_override("channel:override:kick:no-ops",client,channel,NULL))
-		{
-			if ((!check_channel_access_string(client_member_modes, "o") && !check_channel_access_string(client_member_modes, "h")) ||
-			    (check_channel_access_string(client_member_modes, "h") && check_channel_access_string(target_member_modes, "h")) ||
-			    (check_channel_access_string(client_member_modes, "h") && check_channel_access_string(target_member_modes, "o")))
-			{
-				kick_operoverride_msg(client, channel, target, comment);
-				goto attack;
-			}	/* is_chan_op */
-
-		}
-
 		/* target is +a/+q, and we are not +q? */
 		if (check_channel_access_string(target_member_modes, "qa") && !check_channel_access_string(client_member_modes, "q"))
 		{
@@ -322,27 +306,45 @@ CMD_FUNC(cmd_kick)
 			}
 		}
 
-		/* target is +o, we are +h [operoverride is already taken care of 2 blocks above] */
-		if (check_channel_access_string(target_member_modes, "h") && check_channel_access_string(client_member_modes, "h")
-		    && !check_channel_access_string(client_member_modes, "o") && !IsULine(client) && MyUser(client))
+		/* target is +o, we are not +oaq */
+		if (!check_channel_access_string(client_member_modes, "oaq") &&
+		    check_channel_access_string(target_member_modes, "oaq") &&
+		    !IsULine(client))
 		{
-			char errbuf[NICKLEN+30];
-			ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel operator", target->name);
-			sendnumeric(client, ERR_CANNOTDOCOMMAND, "KICK",
-				   errbuf);
-			goto deny;
+			if (op_can_override("channel:override:kick:no-ops",client,channel,NULL))
+			{
+				kick_operoverride_msg(client, channel, target, comment);
+				goto attack;
+			}
+			if (MyUser(client))
+			{
+				char errbuf[NICKLEN+30];
+				ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel operator", target->name);
+				sendnumeric(client, ERR_CANNOTDOCOMMAND, "KICK",
+					   errbuf);
+				goto deny;
+			}
 		}
 
-		/* target is +h, we are +h [operoverride is already taken care of 3 blocks above] */
-		if (check_channel_access_string(target_member_modes, "o") && check_channel_access_string(client_member_modes, "h")
-		    && !check_channel_access_string(client_member_modes, "o") && MyUser(client))
+		/* target is +h, we are not +oaq */
+		if (!check_channel_access_string(client_member_modes, "oaq") &&
+		    check_channel_access_string(target_member_modes, "h") &&
+		    !IsULine(client))
 		{
-			char errbuf[NICKLEN+15];
-			ircsnprintf(errbuf, sizeof(errbuf), "%s is a halfop", target->name);
-			sendnumeric(client, ERR_CANNOTDOCOMMAND, "KICK",
-				   errbuf);
-			goto deny;
-		}	/* halfop */
+			if (op_can_override("channel:override:kick:no-ops",client,channel,NULL))
+			{
+				kick_operoverride_msg(client, channel, target, comment);
+				goto attack;
+			}
+			if (MyUser(client))
+			{
+				char errbuf[NICKLEN+30];
+				ircsnprintf(errbuf, sizeof(errbuf), "%s is a halfop", target->name);
+				sendnumeric(client, ERR_CANNOTDOCOMMAND, "KICK",
+					   errbuf);
+				goto deny;
+			}
+		}
 
 		/* allowed (either coz access granted or a remote kick), so attack! */
 		goto attack;
