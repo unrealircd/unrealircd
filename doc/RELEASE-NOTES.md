@@ -1,5 +1,23 @@
-UnrealIRCd 6.1.6
+UnrealIRCd 6.1.7-git
 =================
+
+This is the git version (development version) for future 6.1.7. This is work
+in progress and may not always be a stable version.
+
+### Enhancements:
+* TODO
+
+### Changes:
+* TODO
+
+### Fixes:
+* TODO
+
+### Developers and protocol:
+* TODO
+
+UnrealIRCd 6.1.6
+-----------------
 
 This is mostly a bug fix release but also comes with Crule enhancements.
 

@@ -3,7 +3,7 @@
 <assemblyIdentity
     processorArchitecture="amd64"
     name="UnrealIRCd.UnrealIRCd.6"
-    version="6.1.6.0"
+    version="6.1.7.0"
     type="win32"
 />
 <description>UnrealIRCd - Control utility</description>
