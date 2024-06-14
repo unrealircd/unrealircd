@@ -542,14 +542,28 @@ CMD_FUNC(cmd_rehash)
 		 * assumed not to be a server. -- Syzop
 		 */
 		if (parv[1] && (parv[1][0] == '-'))
+		{
 			x = HUNTED_ISME;
-		else
+		} else {
+			if (!ValidatePermissionsForPath("server:rehash:global",client,NULL,NULL,NULL) &&
+			    parv[1] && (find_client(parv[1], NULL) != &me))
+			{
+				sendnumeric(client, ERR_NOPRIVILEGES);
+				return;
+			}
 			x = hunt_server(client, recv_mtags, "REHASH", 1, parc, parv);
+		}
 	} else {
 		if (match_simple("-glob*", parv[1])) /* This is really ugly... hack to make /rehash -global -something work */
 		{
 			x = HUNTED_ISME;
 		} else {
+			if (!ValidatePermissionsForPath("server:rehash:global",client,NULL,NULL,NULL) &&
+			    parv[1] && (find_client(parv[1], NULL) != &me))
+			{
+				sendnumeric(client, ERR_NOPRIVILEGES);
+				return;
+			}
 			x = hunt_server(client, NULL, "REHASH", 1, parc, parv);
 		}
 	}
@@ -592,6 +606,12 @@ CMD_FUNC(cmd_rehash)
 		{
 			/* /REHASH -global [options] */
 			Client *acptr;
+
+			if (!ValidatePermissionsForPath("server:rehash:global",client,NULL,NULL,NULL))
+			{
+				sendnumeric(client, ERR_NOPRIVILEGES);
+				return;
+			}
 			
 			/* Shift parv's to the left */
 			parv[1] = parv[2];
