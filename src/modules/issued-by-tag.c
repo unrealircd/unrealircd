@@ -124,7 +124,14 @@ void _mtag_add_issued_by(MessageTag **mtags, Client *client, MessageTag *recv_mt
 		// TODO: test with all of: local rpc through unix socket, local rpc web, RRPC
 		if (client->rpc->issuer)
 		{
-			snprintf(buf, sizeof(buf), "RPC:%s@%s:%s", client->rpc->rpc_user, client->uplink->name, client->rpc->issuer);
+			// For several places in the source, like TOPIC
+			// we cannot explicitly trust the uplink issuer's
+			// name because it might contain spaces and that's
+			// not good. It must conform to IRC nick standards.
+			if (!do_nick_name(client->rpc->issuer)) 
+				return;
+			else
+				snprintf(buf, sizeof(buf), "RPC:%s@%s:%s", client->rpc->rpc_user, client->uplink->name, client->rpc->issuer);
 		} else {
 			snprintf(buf, sizeof(buf), "RPC:%s@%s", client->rpc->rpc_user, client->uplink->name);
 		}
