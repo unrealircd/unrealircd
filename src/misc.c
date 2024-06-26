@@ -1899,7 +1899,7 @@ const char *get_central_api_key_default_handler(void)
 	return NULL;
 }
 
-int central_spamreport_default_handler(Client *target, Client *by)
+int central_spamreport_default_handler(Client *target, Client *by, const char *url)
 {
 	return 0;
 }

@@ -172,7 +172,7 @@ void (*crule_free)(CRuleNode **);
 const char *(*crule_errstring)(int errcode);
 void (*ban_act_set_reputation)(Client *client, BanAction *action);
 const char *(*get_central_api_key)(void);
-int (*central_spamreport)(Client *target, Client *by);
+int (*central_spamreport)(Client *target, Client *by, const char *url);
 int (*central_spamreport_enabled)(void);
 void (*sasl_succeeded)(Client *client);
 void (*sasl_failed)(Client *client);

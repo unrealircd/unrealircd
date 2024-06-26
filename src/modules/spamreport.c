@@ -7,7 +7,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"spamreport",
-	"1.0.0",
+	"1.0.1",
 	"Send spam reports via SPAMREPORT and spamreport { } blocks",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -488,7 +488,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 	} else
 	if (s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT)
 	{
-		return central_spamreport(client, by);
+		return central_spamreport(client, by, s->url);
 	} else
 	{
 		abort();

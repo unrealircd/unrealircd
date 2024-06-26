@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
   = {
 	"central-blocklist",
-	"1.0.6",
+	"1.0.7",
 	"Check users at central blocklist",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -72,7 +72,7 @@ static struct reqstruct req;
 CBLTransfer *cbltransfers = NULL;
 
 /* Forward declarations */
-int _central_spamreport(Client *client, Client *by);
+int _central_spamreport(Client *client, Client *by, const char *url);
 int cbl_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int cbl_config_posttest(int *errs);
 int cbl_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
@@ -1076,7 +1076,7 @@ CMD_OVERRIDE_FUNC(cbl_override_spamreport_gather)
 	CALL_NEXT_COMMAND_OVERRIDE();
 }
 
-int _central_spamreport(Client *client, Client *by)
+int _central_spamreport(Client *client, Client *by, const char *url)
 {
 	json_t *j, *requests, *data, *cmds, *item;
 	OutgoingWebRequest *w;
@@ -1148,7 +1148,7 @@ int _central_spamreport(Client *client, Client *by)
 	add_nvplist(&headers, 0, "X-API-Key", cfg.api_key);
 	/* Do the web request */
 	w = safe_alloc(sizeof(OutgoingWebRequest));
-	safe_strdup(w->url, cfg.spamreport_url);
+	safe_strdup(w->url, url ? url : cfg.spamreport_url);
 	w->http_method = HTTP_METHOD_POST;
 	w->body = json_serialized;
 	w->headers = headers;
