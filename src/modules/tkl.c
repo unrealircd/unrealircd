@@ -3413,7 +3413,15 @@ int find_tkline_match_matcher(Client *client, int skip_soft, TKL *tkl)
 
 	/* For config file ban { } we use security groups instead of simple user/host */
 	if (tkl->ptr.serverban->match)
-		return user_allowed_by_security_group(client, tkl->ptr.serverban->match);
+	{
+		if (user_allowed_by_security_group(client, tkl->ptr.serverban->match))
+		{
+			if (find_tkl_exception(tkl->type, client))
+				return 0; /* exempted */
+			return 1; /* banned */
+		}
+		return 0;
+	}
 
 	tkl_uhost(tkl, uhost, sizeof(uhost), NO_SOFT_PREFIX);
 
