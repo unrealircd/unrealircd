@@ -4198,6 +4198,8 @@ TKL *_find_tkl_serverban(int type, char *usermask, char *hostmask, int softban)
 	{
 		if (tkl->type == type)
 		{
+			if (tkl->ptr.serverban->match)
+				continue;
 			if (!strcasecmp(tkl->ptr.serverban->hostmask, hostmask) &&
 			    !strcasecmp(tkl->ptr.serverban->usermask, usermask))
 			{
