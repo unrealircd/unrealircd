@@ -3222,6 +3222,10 @@ char *_tkl_uhost(TKL *tkl, char *buf, size_t buflen, int options)
 {
 	if (TKLIsServerBan(tkl))
 	{
+		if (tkl->ptr.serverban->match)
+		{
+			ircsnprintf(buf, buflen, "<match-item>");
+		} else
 		if (is_extended_server_ban(tkl->ptr.serverban->usermask))
 		{
 			ircsnprintf(buf, buflen, "%s%s%s",
@@ -3235,6 +3239,10 @@ char *_tkl_uhost(TKL *tkl, char *buf, size_t buflen, int options)
 	} else
 	if (TKLIsBanException(tkl))
 	{
+		if (tkl->ptr.banexception->match)
+		{
+			ircsnprintf(buf, buflen, "<match-item>");
+		} else
 		if (is_extended_server_ban(tkl->ptr.banexception->usermask))
 		{
 			ircsnprintf(buf, buflen, "%s%s%s",
