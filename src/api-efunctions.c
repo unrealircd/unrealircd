@@ -54,7 +54,8 @@ char (*tkl_configtypetochar)(const char *name);
 const char *(*tkl_type_string)(TKL *tk);
 const char *(*tkl_type_config_string)(TKL *tk);
 char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options);
-TKL *(*tkl_add_serverban)(int type, const char *usermask, const char *hostmask, const char *reason, const char *setby,
+TKL *(*tkl_add_serverban)(int type, const char *usermask, const char *hostmask, SecurityGroup *match,
+                              const char *reason, const char *setby,
                               time_t expire_at, time_t set_at, int soft, int flags);
 TKL *(*tkl_add_nameban)(int type, const char *name, int hold, const char *reason, const char *setby,
                             time_t expire_at, time_t set_at, int flags);

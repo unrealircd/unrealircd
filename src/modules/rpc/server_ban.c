@@ -323,7 +323,7 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 		return;
 	}
 
-	tkl = tkl_add_serverban(tkl_type_int, usermask, hostmask, reason,
+	tkl = tkl_add_serverban(tkl_type_int, usermask, hostmask, NULL, reason,
 	                        set_by, tkl_expire_at, tkl_set_at,
 	                        soft, 0);
 

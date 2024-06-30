@@ -7205,8 +7205,7 @@ int _conf_require(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	Hook *h;
-	char *usermask = NULL;
-	char *hostmask = NULL;
+	SecurityGroup *match = NULL;
 	char *reason = NULL;
 
 	if (strcmp(ce->value, "authentication") && strcmp(ce->value, "sasl"))
@@ -7224,33 +7223,16 @@ int _conf_require(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "mask"))
-		{
-			char buf[512], *p;
-			strlcpy(buf, cep->value, sizeof(buf));
-			p = strchr(buf, '@');
-			if (p)
-			{
-				*p++ = '\0';
-				safe_strdup(usermask, buf);
-				safe_strdup(hostmask, p);
-			} else {
-				safe_strdup(hostmask, cep->value);
-			}
-		}
+		if (!strcmp(cep->name, "match") || !strcmp(cep->name, "mask"))
+			conf_match_block(conf, cep, &match);
 		else if (!strcmp(cep->name, "reason"))
 			safe_strdup(reason, cep->value);
 	}
 
-	if (!usermask)
-		safe_strdup(usermask, "*");
-
 	if (!reason)
 		safe_strdup(reason, "-");
 
-	tkl_add_serverban(TKL_KILL, usermask, hostmask, reason, "-config-", 0, TStime(), 1, TKL_FLAG_CONFIG);
-	safe_free(usermask);
-	safe_free(hostmask);
+	tkl_add_serverban(TKL_KILL, NULL, NULL, match, reason, "-config-", 0, TStime(), 1, TKL_FLAG_CONFIG);
 	safe_free(reason);
 	return 0;
 }
@@ -7260,7 +7242,7 @@ int _test_require(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	int errors = 0;
 	Hook *h;
-	char has_mask = 0, has_reason = 0;
+	char has_mask = 0, has_match = 0, has_reason = 0;
 
 	if (!ce->value)
 	{
@@ -7315,20 +7297,26 @@ int _test_require(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		if (!strcmp(cep->name, "mask"))
+		{
+			if (cep->value || cep->items)
+			{
+				has_mask = 1;
+				test_match_block(conf, cep, &errors);
+			}
+		} else
+		if (!strcmp(cep->name, "match"))
+		{
+			if (cep->value || cep->items)
+			{
+				has_match = 1;
+				test_match_block(conf, cep, &errors);
+			}
+		} else
 		if (config_is_blankorempty(cep, "require"))
 		{
 			errors++;
 			continue;
-		}
-		if (!strcmp(cep->name, "mask"))
-		{
-			if (has_mask)
-			{
-				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "require::mask");
-				continue;
-			}
-			has_mask = 1;
 		}
 		else if (!strcmp(cep->name, "reason"))
 		{
@@ -7339,15 +7327,30 @@ int _test_require(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_reason = 1;
+		} else
+		{
+			config_error_unknown(cep->file->filename,
+				cep->line_number, "require", cep->name);
+			errors++;
+			continue;
 		}
 	}
 
-	if (!has_mask)
+	if (!has_mask && !has_match)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
 			"require::mask");
 		errors++;
 	}
+
+	if (has_mask && has_match)
+	{
+		config_error("%s:%d: You cannot have both ::mask and ::match. "
+		             "You should only use require::match.",
+		             ce->file->filename, ce->line_number);
+		errors++;
+	}
+
 	if (!has_reason)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,

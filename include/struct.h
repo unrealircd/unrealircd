@@ -1222,8 +1222,9 @@ struct BanAction {
 
 /** Server ban sub-struct of TKL entry (KLINE/GLINE/ZLINE/GZLINE/SHUN) */
 struct ServerBan {
-	char *usermask; /**< User mask */
-	char *hostmask; /**< Host mask */
+	char *usermask; /**< User mask (can be NULL if 'match' is non-NULL) */
+	char *hostmask; /**< Host mask (can be NULL if 'match' is non-NULL) */
+	SecurityGroup *match; /**< Match item (if set, usermask/hostmask is ignored) */
 	unsigned short subtype; /**< See TKL_SUBTYPE_* */
 	char *reason; /**< Reason */
 };

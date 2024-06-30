@@ -5,6 +5,12 @@ This is the git version (development version) for future 6.1.7. This is work
 in progress and may not always be a stable version.
 
 ### Enhancements:
+* In the [ban user { }](https://www.unrealircd.org/docs/Ban_user_block)
+  and [require authentication { }](https://www.unrealircd.org/docs/Require_authentication_block)
+  blocks the `mask` is now a
+  [Mask item](https://www.unrealircd.org/docs/Mask_item).
+  This means you can use all the power of mask items and security groups and
+  multiple matching criteria.
 * New option [set::tls::certificate-expiry-notification](https://www.unrealircd.org/docs/Set_block#set::tls::certificate-expiry-notification):
   since UnrealIRCd 5.0.8 we warn if a SSL/TLS certificate is (nearly) expired.
   This new option allows turning it off, it is (still) on by default.
