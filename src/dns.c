@@ -34,7 +34,7 @@
 #endif
 
 #if defined(__GNUC__)
-/* Ignore these for this entire file.
+/* Ignore these for src/dns.c & src/url_unreal.c
  * Quoting https://github.com/c-ares/c-ares/pull/732#issuecomment-2028454381:
  * "Those deprecated functions will remain available until there is an ABI
  *  break, which honestly will likely never happen. It's more to encourage

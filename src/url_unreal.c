@@ -19,6 +19,23 @@
 
 #include "unrealircd.h"
 
+#if defined(__GNUC__)
+/* Ignore these for src/dns.c & src/url_unreal.c
+ * Quoting https://github.com/c-ares/c-ares/pull/732#issuecomment-2028454381:
+ * "Those deprecated functions will remain available until there is an ABI
+ *  break, which honestly will likely never happen. It's more to encourage
+ *  integrators to move to the more modern functions."
+ * Also, keep in mind that several of these 'deprecations' happened in early 2024
+ * while the new function was introduced in March 2020, like for ares_getaddrinfo().
+ * That isn't all that long ago, only 4 years. So we would need compatibility code
+ * for both the old and new function for a while.
+ * So: we can look into that in some major new UnrealIRCd version, nothing urgent,
+ * and perhaps by then it is long enough that we don't need the fallback to older
+ * functions.
+ */
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 /* Structs */
 
 /* Stores information about the async transfer.
