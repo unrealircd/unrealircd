@@ -19,9 +19,11 @@ in progress and may not always be a stable version.
 * IRCOps with the operclass `locop` can now only `REHASH` the local server
   and not remote servers.
 * Comment out some more in example.conf by default
+* Update shipped libraries: c-ares to 1.31.0
 
 ### Fixes:
-* TODO
+* Silence some compiler warnings regarding deprecation of c-ares API in
+  src/dns.c.
 
 ### Developers and protocol:
 * TODO
