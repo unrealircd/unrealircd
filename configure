@@ -8105,7 +8105,7 @@ fi
 if test "$has_system_pcre2" = "no"
 then :
 
-pcre2_version="10.42"
+pcre2_version="10.44"
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: extracting PCRE2 regex library" >&5
 printf "%s\n" "extracting PCRE2 regex library" >&6; }
 cur_dir=`pwd`
