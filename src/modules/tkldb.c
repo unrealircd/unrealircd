@@ -330,9 +330,6 @@ int write_tkldb(void)
 				continue; /* config entry */
 			if (IsCentralSpamfilter(tkl))
 				continue;
-			/* this shouldn't happen as it is always config entry (atm), but better safe than sorry: */
-			if (tkl->ptr.serverban->match)
-				continue;
 			tklcount++;
 		}
 	}
@@ -362,9 +359,6 @@ int write_tkldb(void)
 			if (tkl->flags & TKL_FLAG_CONFIG)
 				continue; /* config entry */
 			if (IsCentralSpamfilter(tkl))
-				continue;
-			/* this shouldn't happen as it is always config entry (atm), but better safe than sorry: */
-			if (tkl->ptr.serverban->match)
 				continue;
 			if (!write_tkline(db, tmpfname, tkl))
 				return 0;
