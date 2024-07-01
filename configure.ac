@@ -707,7 +707,7 @@ AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libsodium*])],[ha
 
 AS_IF([test "$has_system_sodium" = "no"],[
 dnl REMEMBER TO CHANGE WITH A NEW SODIUM RELEASE!
-sodium_version="1.0.18"
+sodium_version="1.0.20"
 AC_MSG_RESULT(extracting sodium library)
 cur_dir=`pwd`
 cd extras

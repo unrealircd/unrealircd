@@ -8351,7 +8351,7 @@ fi
 if test "$has_system_sodium" = "no"
 then :
 
-sodium_version="1.0.18"
+sodium_version="1.0.20"
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: extracting sodium library" >&5
 printf "%s\n" "extracting sodium library" >&6; }
 cur_dir=`pwd`
