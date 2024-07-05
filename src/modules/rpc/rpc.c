@@ -280,8 +280,8 @@ void free_config(void)
 	for (c = conf_rpc_class; c; c = c_next)
 	{
 		c_next = c->next;
-		// FIXME: free the block...
-		// main code doesn't do this either ??
+		free_operclass_struct(c->classStruct);
+		safe_free(c);
 	}
 	conf_rpc_class = NULL;
 }

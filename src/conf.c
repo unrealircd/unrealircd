@@ -273,6 +273,7 @@ int is_blacklisted_module(const char *name);
 int modules_default_conf_modified(const char *filebuf);
 int config_item_allowed_for_config_file(const char *resource, const char *item);
 void remove_config_tkls(int flag);
+void free_operclass_struct(OperClass *o);
 
 /** Return the printable string of a 'cep' location, such as set::something::xyz */
 const char *config_var(ConfigEntry *cep)
@@ -2445,6 +2446,7 @@ void free_all_proxy_blocks(void)
 void config_rehash()
 {
 	ConfigItem_oper			*oper_ptr;
+	ConfigItem_operclass		*operclass_ptr;
 	ConfigItem_class 		*class_ptr;
 	ConfigItem_ulines 		*uline_ptr;
 	ConfigItem_allow 		*allow_ptr;
@@ -2486,7 +2488,6 @@ void config_rehash()
 		safe_free(oper_ptr->auto_join);
 		Auth_FreeAuthConfig(oper_ptr->auth);
 		free_security_group(oper_ptr->match);
-		DelListItem(oper_ptr, conf_oper);
 		for (s = oper_ptr->swhois; s; s = s_next)
 		{
 			s_next = s->next;
@@ -2494,7 +2495,16 @@ void config_rehash()
 			safe_free(s->setby);
 			safe_free(s);
 		}
+		DelListItem(oper_ptr, conf_oper);
 		safe_free(oper_ptr);
+	}
+
+	for (operclass_ptr = conf_operclass; operclass_ptr; operclass_ptr = (ConfigItem_operclass *)next)
+	{
+		next = (ListStruct *)operclass_ptr->next;
+		free_operclass_struct(operclass_ptr->classStruct);
+		DelListItem(operclass_ptr, conf_operclass);
+		safe_free(operclass_ptr);
 	}
 
 	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) next)
@@ -4038,6 +4048,58 @@ OperClassACL* _conf_parseACL(const char *name, ConfigEntry *ce)
 	}
 
 	return acl;
+}
+
+/** Free previously allocated _conf_parseACLEntry() */
+void free_acl_entry(OperClassACLEntry *e)
+{
+	OperClassACLEntryVar *v, *v_next;
+
+	for (v = e->variables; v; v = v_next)
+	{
+		v_next = v->next;
+		safe_free(v->name);
+		safe_free(v->value);
+		safe_free(v);
+	}
+	safe_free(e);
+}
+
+/** Free previously allocated _conf_parseACL() */
+void free_operclass_acls(OperClassACL *acl)
+{
+	OperClassACL *acl_next;
+	OperClassACLEntry *x, *x_next;
+	OperClassACL *sub, *sub_next;
+
+	for (; acl; acl = acl_next)
+	{
+		acl_next = acl->next;
+		for (x = acl->entries; x; x = x_next)
+		{
+			x_next = x->next;
+			DelListItem(x, acl->entries);
+			free_acl_entry(x);
+		}
+		acl->entries = NULL;
+		for (sub = acl->acls; sub; sub = sub_next)
+		{
+			sub_next = sub->next;
+			DelListItem(sub, acl->acls);
+			free_operclass_acls(sub);
+		}
+		acl->acls = NULL;
+		safe_free(acl->name);
+		safe_free(acl);
+	}
+}
+
+void free_operclass_struct(OperClass *o)
+{
+	free_operclass_acls(o->acls);
+	safe_free(o->ISA);
+	safe_free(o->name);
+	safe_free(o);
 }
 
 int	_conf_operclass(ConfigFile *conf, ConfigEntry *ce)
