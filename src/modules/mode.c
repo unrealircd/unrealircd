@@ -107,7 +107,7 @@ CMD_FUNC(cmd_mode)
 			channel = find_channel(parv[1]);
 			if (!channel)
 			{
-				CALL_CMD_FUNC(cmd_umode);
+				sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);
 				return;
 			}
 		} else
