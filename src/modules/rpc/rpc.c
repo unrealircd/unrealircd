@@ -371,7 +371,7 @@ static int valid_rpc_user_name(const char *str)
 int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
-	char has_match = 1, has_password = 1;
+	char has_match = 0, has_password = 0, has_rpc_class = 0;
 	ConfigEntry *cep;
 
 	/* We are only interested in rpc-user { } */
@@ -409,6 +409,7 @@ int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *err
 		} else
 		if (!strcmp(cep->name, "rpc-class"))
 		{
+			has_rpc_class = 1;
 			if (!cep->value)
 			{
 				config_error_empty(cep->file->filename,
@@ -421,6 +422,30 @@ int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *err
 				cep->line_number, "rpc-user", cep->name);
 			errors++;
 		}
+	}
+
+	if (!has_match)
+	{
+		config_error_missing(ce->file->filename, ce->line_number,
+			"rpc-user::mask");
+		errors++;
+	}
+
+	if (!has_password)
+	{
+		config_error_missing(ce->file->filename, ce->line_number,
+			"rpc-user::password");
+		errors++;
+	}
+
+	if (!has_rpc_class)
+	{
+		config_warn("%s:%d: rpc-user block should have a ::rpc-class item to indicate "
+		            "the permissions, like: rpc-user %s { rpc-class full; ....etc.... }",
+		            ce->file->filename, ce->line_number, ce->value);
+		config_warn("See https://www.unrealircd.org/docs/Rpc-user_block. For now, this "
+		            "is a warning and we assume you want rpc-class 'full', but in later "
+		            "versions this will become an error.");
 	}
 
 	*errs = errors;
@@ -604,6 +629,13 @@ OperPermission ValidatePermissionsForJSONRPC(const char *path, Client *client)
 	 * means unrestricted at the moment.
 	 */
 	if (r->rpc_class == NULL)
+		return OPER_ALLOW;
+
+	/* The 'full' is a virtual rpc-class, actually. So we can do a shortcut.
+	 * We have a clear (triple) warning about this in operclass.default.conf
+	 * that you should not fiddle with build-in classes so this should be OK.
+	 */
+	if (!strcmp(r->rpc_class, "full"))
 		return OPER_ALLOW;
 
 	ce_operClass = find_rpc_class(r->rpc_class);
