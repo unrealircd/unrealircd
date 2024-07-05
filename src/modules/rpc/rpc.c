@@ -33,6 +33,7 @@ struct RPCUser {
 	SecurityGroup *match;
 	char *name;
 	AuthConfig *auth;
+	char *rpc_class;
 };
 
 typedef struct RRPC RRPC;
@@ -69,6 +70,8 @@ int rpc_config_test_listen(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 int rpc_config_run_ex_listen(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
 int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rpc_config_run_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type);
+int rpc_config_test_rpc_class(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int rpc_config_run_rpc_class(ConfigFile *cf, ConfigEntry *ce, int type);
 int rpc_client_accept(Client *client);
 int rpc_pre_local_handshake_timeout(Client *client, const char **comment);
 void rpc_client_handshake_unix_socket(Client *client);
@@ -80,6 +83,7 @@ int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *buf,
 int rpc_handle_body_websocket(Client *client, WebRequest *web, const char *readbuf2, int length2);
 int rpc_packet_in_websocket(Client *client, char *readbuf, int length);
 int rpc_packet_in_unix_socket(Client *client, const char *readbuf, int *length);
+RPCUser *find_rpc_user(const char *username);
 void rpc_call_text(Client *client, const char *buf, int len);
 void rpc_call_json(Client *client, json_t *request);
 void _rpc_response(Client *client, json_t *request, json_t *result);
@@ -121,6 +125,7 @@ int rpc_config_listener(ConfigItem_listen *listener);
 /* Global variables */
 ModDataInfo *websocket_md = NULL; /* (imported) */
 RPCUser *rpcusers = NULL;
+ConfigItem_operclass *conf_rpc_class = NULL;
 RRPC *rrpc_list = NULL;
 OutstandingRRPC *outstanding_rrpc_list = NULL;
 RPCTimer *rpc_timer_list = NULL;
@@ -131,6 +136,7 @@ MOD_TEST()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, rpc_config_test_listen);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, rpc_config_test_rpc_user);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, rpc_config_test_rpc_class);
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_RESPONSE, _rpc_response);
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_ERROR, _rpc_error);
 	EfunctionAddVoid(modinfo->handle, EFUNC_RPC_ERROR_FMT, TO_VOIDFUNC(_rpc_error_fmt));
@@ -156,6 +162,7 @@ MOD_INIT()
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, rpc_config_run_ex_listen);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, rpc_config_run_rpc_user);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, rpc_config_run_rpc_class);
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, -5000, rpc_client_accept);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT, 0, rpc_pre_local_handshake_timeout);
 	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, INT_MIN, rpc_packet_in_unix_socket);
@@ -258,6 +265,8 @@ MOD_LOAD()
 void free_config(void)
 {
 	RPCUser *e, *e_next;
+	ConfigItem_operclass *c, *c_next;
+
 	for (e = rpcusers; e; e = e_next)
 	{
 		e_next = e->next;
@@ -267,6 +276,14 @@ void free_config(void)
 		safe_free(e);
 	}
 	rpcusers = NULL;
+
+	for (c = conf_rpc_class; c; c = c_next)
+	{
+		c_next = c->next;
+		// FIXME: free the block...
+		// main code doesn't do this either ??
+	}
+	conf_rpc_class = NULL;
 }
 
 MOD_UNLOAD()
@@ -390,6 +407,15 @@ int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *err
 			if (Auth_CheckError(cep, 0) < 0)
 				errors++;
 		} else
+		if (!strcmp(cep->name, "rpc-class"))
+		{
+			if (!cep->value)
+			{
+				config_error_empty(cep->file->filename,
+					cep->line_number, "rpc-user", cep->name);
+				errors++;
+			}
+		} else
 		{
 			config_error_unknown(cep->file->filename,
 				cep->line_number, "rpc-user", cep->name);
@@ -423,9 +449,196 @@ int rpc_config_run_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type)
 		if (!strcmp(cep->name, "password"))
 		{
 			e->auth = AuthBlockToAuthConfig(cep);
+		} else
+		if (!strcmp(cep->name, "rpc-class"))
+		{
+			safe_strdup(e->rpc_class, cep->value);
 		}
 	}
 	return 1;
+}
+
+int rpc_config_test_rpc_class(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
+	char has_permissions = 0, has_parent = 0;
+	ConfigEntry *cep;
+	int errors = 0;
+
+	/* We are only interested in rpc-class { } */
+	if ((type != CONFIG_MAIN) || !ce || !ce->name || strcmp(ce->name, "rpc-class"))
+		return 0;
+
+	if (!ce->value)
+	{
+		config_error_noname(ce->file->filename, ce->line_number, "rpc-class");
+		errors++;
+	} else
+	if (!valid_operclass_name(ce->value))
+	{
+		config_error("%s:%d: rpc-class name may only contain alphanumerical characters and "
+		             "characters _-",
+		             ce->file->filename, ce->line_number);
+		errors++;
+	}
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "parent"))
+		{
+			if (has_parent)
+			{
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "rpc-class::parent");
+				continue;
+			}
+			has_parent = 1;
+			continue;
+		} else
+		if (!strcmp(cep->name, "permissions"))
+		{
+			if (has_permissions)
+			{
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "rpc-class::permissions");
+				continue;
+			}
+			has_permissions = 1;
+			continue;
+		} else
+		{
+			config_error_unknown(cep->file->filename,
+				cep->line_number, "rpc-class", cep->name);
+			errors++;
+			continue;
+		}
+	}
+
+	if (!has_permissions)
+	{
+		config_error_missing(ce->file->filename, ce->line_number,
+			"rpc-class::permissions");
+		errors++;
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+int rpc_config_run_rpc_class(ConfigFile *cf, ConfigEntry *ce, int type)
+{
+	ConfigEntry *cep;
+	ConfigEntry *cepp;
+	ConfigItem_operclass *rpc_class = NULL;
+
+	/* We are only interested in rpc-class { } */
+	if ((type != CONFIG_MAIN) || !ce || !ce->name || strcmp(ce->name, "rpc-class"))
+		return 0;
+
+	rpc_class = safe_alloc(sizeof(ConfigItem_operclass));
+	rpc_class->classStruct = safe_alloc(sizeof(OperClass));
+	safe_strdup(rpc_class->classStruct->name, ce->value);
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "parent"))
+		{
+			safe_strdup(rpc_class->classStruct->ISA, cep->value);
+		}
+		else if (!strcmp(cep->name, "permissions"))
+		{
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				OperClassACL *acl = _conf_parseACL(cepp->name,cepp);
+				AddListItem(acl,rpc_class->classStruct->acls);
+			}
+		}
+	}
+
+	AddListItem(rpc_class, conf_rpc_class);
+	return 1;
+}
+
+
+ConfigItem_operclass *find_rpc_class(const char *name)
+{
+	ConfigItem_operclass *e;
+
+	if (!name)
+		return NULL;
+
+	for (e = conf_rpc_class; e; e = e->next)
+	{
+		if (!strcmp(name, e->classStruct->name))
+			return e;
+	}
+	return NULL;
+}
+
+OperPermission ValidatePermissionsForJSONRPC(const char *path, Client *client)
+{
+	RPCUser *r;
+	ConfigItem_operclass *ce_operClass;
+	OperClass *oc = NULL;
+	OperClassACLPath *operPath;
+
+	/* This would be strange.. */
+	if (!client || !IsRPC(client) || !client->rpc || !client->rpc->rpc_user)
+		return OPER_DENY;
+
+	/* Trust remote requests */
+	if (!MyConnect(client) || IsServer(client))
+		return OPER_ALLOW;
+
+	/* Special: local UNIX socket without authentication/restrictions */
+	if (!strcmp(client->rpc->rpc_user, "<local>") &&
+	    (client->local->listener->socket_type == SOCKET_TYPE_UNIX))
+	{
+		return OPER_ALLOW;
+	}
+
+	r = find_rpc_user(client->rpc->rpc_user);
+	if (!r)
+		return OPER_DENY;
+
+	/* rpc-user { } block without rpc-user::rpc-class
+	 * means unrestricted at the moment.
+	 */
+	if (r->rpc_class == NULL)
+		return OPER_ALLOW;
+
+	ce_operClass = find_rpc_class(r->rpc_class);
+	if (!ce_operClass)
+		return OPER_DENY;
+
+	oc = ce_operClass->classStruct;
+	operPath = OperClass_parsePath(path);
+	while (oc && operPath)
+	{
+		OperClassACL *acl = OperClass_FindACL(oc->acls,operPath->identifier);
+		if (acl)
+		{
+			OperPermission perm;
+			OperClassCheckParams *params = safe_alloc(sizeof(OperClassCheckParams));
+			params->client = client;
+			perm = ValidatePermissionsForPathEx(acl, operPath, params);
+			OperClass_freePath(operPath);
+			safe_free(params);
+			return perm;
+		}
+		if (!oc->ISA)
+		{
+			break;
+		}
+		ce_operClass = find_rpc_class(oc->ISA);
+		if (ce_operClass)
+		{
+			oc = ce_operClass->classStruct;
+		} else {
+			break; /* parent not found */
+		}
+	}
+	OperClass_freePath(operPath);
+	return OPER_DENY;
 }
 
 /** Incoming HTTP request: delegate it to websocket handler or HTTP POST */
@@ -878,6 +1091,7 @@ int parse_rpc_call(Client *client, json_t *mainrequest, json_t *request, const c
 	const char *jsonrpc;
 	json_t *id;
 	const char *str;
+	char path[512], *s;
 
 	*method = NULL;
 	*handler = NULL;
@@ -925,6 +1139,18 @@ int parse_rpc_call(Client *client, json_t *mainrequest, json_t *request, const c
 	if (!*handler)
 	{
 		rpc_error(client, mainrequest, JSON_RPC_ERROR_METHOD_NOT_FOUND, "Unsupported method");
+		return 0;
+	}
+
+	/* Convert e.g. "server_ban.list" to "server_ban:list" which is used by rpc-class/operclass */
+	strlcpy(path, *method, sizeof(path));
+	for (s=path; *s; s++)
+		if (*s == '.')
+			*s = ':';
+
+	if (!ValidatePermissionsForJSONRPC(path, client))
+	{
+		rpc_error(client, mainrequest, JSON_RPC_ERROR_API_CALL_DENIED, "Your API account is not authorized to make this API call");
 		return 0;
 	}
 

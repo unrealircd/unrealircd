@@ -4124,7 +4124,7 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 			if (has_permissions)
 			{
 				config_warn_duplicate(cep->file->filename,
-				cep->line_number, "oper::permissions");
+				cep->line_number, "operclass::permissions");
 				continue;
 			}
 			has_permissions = 1;
@@ -4147,7 +4147,7 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 	if (!has_permissions)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"oper::permissions");
+			"operclass::permissions");
 		errors++;
 	}
 

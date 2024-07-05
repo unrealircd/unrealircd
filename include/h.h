@@ -158,6 +158,11 @@ extern ConfigItem_help 	*find_Help(const char *command);
 
 extern OperPermission ValidatePermissionsForPath(const char *path, Client *client, Client *victim, Channel *channel, const void *extra);
 extern void OperClassValidatorDel(OperClassValidator *validator);
+extern OperClassACLPath *OperClass_parsePath(const char *path);
+extern OperClassACL *OperClass_FindACL(OperClassACL *acl, char *name);
+extern OperPermission ValidatePermissionsForPathEx(OperClassACL *acl, OperClassACLPath *path, OperClassCheckParams *params);
+extern void OperClass_freePath(OperClassACLPath *path);
+extern OperClassACL *_conf_parseACL(const char *name, ConfigEntry *ce);
 
 extern ConfigItem_ban  *find_ban_ip(Client *client);
 extern void add_ListItem(ListStruct *, ListStruct **);

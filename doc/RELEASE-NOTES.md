@@ -14,6 +14,13 @@ in progress and may not always be a stable version.
 * New option [set::tls::certificate-expiry-notification](https://www.unrealircd.org/docs/Set_block#set::tls::certificate-expiry-notification):
   since UnrealIRCd 5.0.8 we warn if a SSL/TLS certificate is (nearly) expired.
   This new option allows turning it off, it is (still) on by default.
+* [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
+  Similar to oper and operclass, you can now restrict an
+  [rpc-user](https://www.unrealircd.org/docs/Rpc-user_block) via
+  rpc-user::rpc-class. The rpc-class is defined in an
+  [rpc-class block](https://www.unrealircd.org/docs/Rpc-class_block)
+  and configures what JSON methods can be called.  
+  **NOTE: This is work in progress, things are not fully contained yet!**
 
 ### Changes:
 * IRCOps with the operclass `locop` can now only `REHASH` the local server
