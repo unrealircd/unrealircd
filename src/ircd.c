@@ -785,7 +785,12 @@ int InitUnrealIRCd(int argc, char *argv[])
 	fprintf(stderr, "UnrealIRCd is brought to you by Bram Matthys (Syzop),\n"
 	                "Krzysztof Beresztant (k4be), Gottem and i\n\n");
 
-	fprintf(stderr, "Using the following libraries:\n");
+	fprintf(stderr, "UnrealIRCd is free and Open Source software. "
+	                "If you can, consider making a donation at "
+	                "https://www.unrealircd.org/index/donations "
+	                "to support us.\n\n");
+
+	fprintf(stderr, "UnrealIRCd is using the following libraries:\n");
 	fprintf(stderr, "* %s\n", SSLeay_version(SSLEAY_VERSION));
 	fprintf(stderr, "* libsodium %s\n", sodium_version_string());
 #ifdef USE_LIBCURL
