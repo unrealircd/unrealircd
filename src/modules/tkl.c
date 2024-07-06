@@ -5167,21 +5167,6 @@ TKL *choose_winning_spamfilter(TKL *one, TKL *two)
 	return (one->ptr.spamfilter->target > two->ptr.spamfilter->target) ? one : two;
 }
 
-/** Checks if 'target' is on the spamfilter exception list.
- * RETURNS 1 if found in list, 0 if not.
- */
-static int target_is_spamexcept(const char *target)
-{
-	SpamExcept *e;
-
-	for (e = iConf.spamexcept; e; e = e->next)
-	{
-		if (match_simple(e->name, target))
-			return 1;
-	}
-	return 0;
-}
-
 /** Make user join the virus channel.
  * @param client  The user that was doing something bad.
  * @param tk    The TKL entry that matched this user.
@@ -5272,10 +5257,6 @@ static void match_spamfilter_hit(Client *client, const char *str_in, const char 
 	int hide_content = spamfilter_hide_content(target);
 	int stopped;
 	int highest_action;
-
-	/* Perhaps it's on the exceptions list? */
-	if (!*winner_tkl && destination && target_is_spamexcept(destination))
-		return; /* No problem! */
 
 	if (match_spamfilter_exempt(tkl, user_is_exempt_general, user_is_exempt_central))
 	{
@@ -5389,8 +5370,11 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	/* Client exempt from spamfilter checking?
 	 * Let's check that early: going through elines is likely faster than running the regex(es).
 	 */
-	if (find_tkl_exception(TKL_SPAMF, client))
+	if (find_tkl_exception(TKL_SPAMF, client) ||
+	    (iConf.spamfilter_except && user_allowed_by_security_group_context(client, iConf.spamfilter_except, &context)))
+	{
 		user_is_exempt_general = 1;
+	}
 
 	if (user_allowed_by_security_group_context(client, iConf.central_spamfilter_except, &context))
 		user_is_exempt_central = 1;

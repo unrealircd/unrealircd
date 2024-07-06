@@ -27,6 +27,13 @@ in progress and may not always be a stable version.
   We normally show the nickname of the oper who did the /KILL in the quit message.
   When set to `yes` the quit message becomes shortened to "Killed (Reason)".
   This can prevent oper harassment.
+* [set::spamfilter::except](https://www.unrealircd.org/docs/Set_block#set::spamfilter::except)
+  is now a [Mask item](https://www.unrealircd.org/docs/Mask_item) instead of
+  only a list of exempted targets. A warning is created to existing users
+  along with a suggestion of how to use the new syntax. Technically, this is
+  not really new functionality as all this was already possible via
+  the [Except ban block](https://www.unrealircd.org/docs/Except_ban_block)
+  with type spamfilter, but it is more visible/logical to have this also.
 
 ### Changes:
 * IRCOps with the operclass `locop` can now only `REHASH` the local server

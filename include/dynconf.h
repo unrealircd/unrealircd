@@ -122,7 +122,7 @@ struct Configuration {
 	char *spamfilter_ban_reason;
 	char *spamfilter_virus_help_channel;
 	char spamfilter_vchan_deny;
-	SpamExcept *spamexcept;
+	SecurityGroup *spamfilter_except;
 	char *spamexcept_line;
 	long spamfilter_detectslow_warn;
 	long spamfilter_detectslow_fatal;

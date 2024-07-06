@@ -1674,7 +1674,7 @@ void free_iConf(Configuration *i)
 	safe_free(i->level_on_join);
 	safe_free(i->spamfilter_ban_reason);
 	safe_free(i->spamfilter_virus_help_channel);
-	// spamexcept is freed elsewhere
+	safe_free_security_group(i->spamfilter_except);
 	safe_free(i->spamexcept_line);
 	safe_free(i->reject_message_too_many_connections);
 	safe_free(i->reject_message_server_full);
@@ -2465,7 +2465,6 @@ void config_rehash()
 	ConfigItem_sni			*sni;
 	OperStat 			*os_ptr;
 	ListStruct 	*next, *next2;
-	SpamExcept *spamex_ptr;
 
 	USE_BAN_VERSION = 0;
 
@@ -2690,12 +2689,6 @@ void config_rehash()
 		safe_free(os_ptr);
 	}
 	iConf.allow_user_stats_ext = NULL;
-	for (spamex_ptr = iConf.spamexcept; spamex_ptr; spamex_ptr = (SpamExcept *)next)
-	{
-		next = (ListStruct *)spamex_ptr->next;
-		safe_free(spamex_ptr);
-	}
-	iConf.spamexcept = NULL;
 	for (of_ptr = conf_offchans; of_ptr; of_ptr = (ConfigItem_offchans *)next)
 	{
 		next = (ListStruct *)of_ptr->next;
@@ -8203,19 +8196,20 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.spamfilter_vchan_deny = config_checkval(cepp->value,CFG_YESNO);
 				else if (!strcmp(cepp->name, "except"))
 				{
-					char *name, *p;
-					SpamExcept *e;
-					safe_strdup(tempiConf.spamexcept_line, cepp->value);
-					for (name = strtoken(&p, cepp->value, ","); name; name = strtoken(&p, NULL, ","))
+					if (cepp->value && !tempiConf.spamfilter_except)
 					{
-						if (*name == ' ')
-							name++;
-						if (*name)
+						/* OLD set::spamfilter::except compatibility code when it was "#chan,xyz" */
+						char buf[512], *p = NULL, *name;
+						strlcpy(buf, cepp->value, sizeof(buf));
+						tempiConf.spamfilter_except = safe_alloc(sizeof(SecurityGroup));
+						for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
 						{
-							e = safe_alloc(sizeof(SpamExcept) + strlen(name));
-							strcpy(e->name, name);
-							AddListItem(e, tempiConf.spamexcept);
+							skip_whitespace(&name);
+							add_name_list(tempiConf.spamfilter_except->destination, name);
 						}
+					} else {
+						/* New set::spamfilter::except code, where it is a mask item */
+						conf_match_block(conf, cepp, &tempiConf.spamfilter_except);
 					}
 				}
 				else if (!strcmp(cepp->name, "detect-slow-warn"))
@@ -9356,6 +9350,23 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "spamfilter")) {
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
+				if (!strcmp(cepp->name, "except"))
+				{
+					if (cepp->value)
+					{
+						/* Old compatibility code */
+						config_warn("%s: %d: set::spamfilter::except is now a mask item. "
+						            "Your setting has been read correctly but please update your item "
+						            "because future UnrealIRCd versions will make this an error. "
+						            "Update your item to use this style: "
+						            "except { destination { \"#chan1\"; \"#chan2\"; \"SomeNick\"; } }",
+						            cepp->file->filename, cepp->line_number);
+						config_warn("For more information, see https://www.unrealircd.org/docs/Set_block#set::spamfilter::except");
+					} else {
+						test_match_block(conf, cepp, &errors);
+					}
+					continue; // needed, because we are above the CheckNull and the multiple if's below.
+				}
 				CheckNull(cepp);
 				if (!strcmp(cepp->name, "ban-time"))
 				{
@@ -9391,10 +9402,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				if (!strcmp(cepp->name, "virus-help-channel-deny"))
 				{
 					CheckDuplicate(cepp, spamfilter_virus_help_channel_deny, "spamfilter::virus-help-channel-deny");
-				} else
-				if (!strcmp(cepp->name, "except"))
-				{
-					CheckDuplicate(cepp, spamfilter_except, "spamfilter::except");
 				} else
 #ifdef SPAMFILTER_DETECTSLOW
 				if (!strcmp(cepp->name, "detect-slow-warn"))
