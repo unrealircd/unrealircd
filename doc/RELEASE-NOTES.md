@@ -23,6 +23,10 @@ in progress and may not always be a stable version.
   There are two default json-rpc classes:
   * `full`: access to all JSON-RPC Methods
   * `read-only`: access to things list *server_ban.list* but not to *server_ban.add*
+* New option [set::hide-killed-by](https://www.unrealircd.org/docs/Set_block#set::hide-killed-by):
+  We normally show the nickname of the oper who did the /KILL in the quit message.
+  When set to `yes` the quit message becomes shortened to "Killed (Reason)".
+  This can prevent oper harassment.
 
 ### Changes:
 * IRCOps with the operclass `locop` can now only `REHASH` the local server

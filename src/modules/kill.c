@@ -166,14 +166,16 @@ CMD_FUNC(cmd_kill)
 
 			/* Don't send a QUIT for this */
 			SetKilled(target);
-
-			ircsnprintf(buf2, sizeof(buf2), "Killed by %s (%s)", client->name, reason);
 		}
 
 		if (MyUser(client))
 			RunHook(HOOKTYPE_LOCAL_KILL, client, target, reason);
 
-		ircsnprintf(buf2, sizeof(buf2), "Killed by %s (%s)", client->name, reason);
+		if (iConf.hide_killed_by)
+			ircsnprintf(buf2, sizeof(buf2), "Killed (%s)", reason);
+		else
+			ircsnprintf(buf2, sizeof(buf2), "Killed by %s (%s)", client->name, reason);
+
 		exit_client(target, mtags, buf2);
 
 		free_message_tags(mtags);

@@ -8008,6 +8008,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			else if (!strcmp(cep->value, "auto"))
 				tempiConf.hide_ban_reason = HIDE_BAN_REASON_AUTO;
 		}
+		else if (!strcmp(cep->name, "hide-killed-by")) {
+			tempiConf.hide_killed_by = config_checkval(cep->value, CFG_YESNO);
+		}
 		else if (!strcmp(cep->name, "prefix-quit")) {
 			if (!strcmp(cep->value, "0") || !strcmp(cep->value, "no"))
 				safe_free(tempiConf.prefix_quit);
@@ -8816,6 +8819,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 				continue;
 			}
+		}
+		else if (!strcmp(cep->name, "hide-killed-by")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, hide_killed_by, "hide-killed-by");
 		}
 		else if (!strcmp(cep->name, "restrict-channelmodes"))
 		{
