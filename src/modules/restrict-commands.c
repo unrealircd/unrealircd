@@ -49,8 +49,8 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
 int rcmd_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype);
 int rcmd_can_join(Client *client, Channel *channel, const char *key, char **errmsg);
-int rcmd_block_message(Client *client, const char *text, SendType sendtype, const char **errmsg, const char *display, const char *conftag);
-int rcmd_block_join(Client *client, const char **errmsg);
+int rcmd_block_message(Client *client, const char *destination, const char *text, SendType sendtype, const char **errmsg, const char *display, const char *conftag);
+int rcmd_block_join(Client *client, Channel *channel, const char **errmsg);
 CMD_OVERRIDE_FUNC(rcmd_override);
 
 // Globals
@@ -298,7 +298,7 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 				rcmd->except->identified = config_checkval(cep2->value, CFG_YESNO);
 				continue;
 			}
-			
+
 			if (!strcmp(cep2->name, "exempt-webirc"))
 			{
 				rcmd->except->webirc = config_checkval(cep2->value, CFG_YESNO);
@@ -323,18 +323,18 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 1;
 }
 
-int rcmd_canbypass(Client *client, RestrictedCommand *rcmd)
+int rcmd_canbypass(Client *client, RestrictedCommand *rcmd, crule_context *context)
 {
 	if (!client || !rcmd)
 		return 1;
-	if (user_allowed_by_security_group(client, rcmd->except))
+	if (user_allowed_by_security_group_context(client, rcmd->except, context))
 		return 1;
 	return 0;
 }
 
 int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
 {
-	if (rcmd_block_message(client, *msg, sendtype, errmsg, "channel", (sendtype == SEND_TYPE_NOTICE ? "channel-notice" : "channel-message")))
+	if (rcmd_block_message(client, channel->name, *msg, sendtype, errmsg, "channel", (sendtype == SEND_TYPE_NOTICE ? "channel-notice" : "channel-message")))
 		return HOOK_DENY;
 
 	return HOOK_CONTINUE;
@@ -346,14 +346,15 @@ int rcmd_can_send_to_user(Client *client, Client *target, const char **text, con
 	if ((client == target) || IsULine(target))
 		return HOOK_CONTINUE; /* bypass/exempt */
 
-	if (rcmd_block_message(client, *text, sendtype, errmsg, "user", (sendtype == SEND_TYPE_NOTICE ? "private-notice" : "private-message")))
+	if (rcmd_block_message(client, target->name, *text, sendtype, errmsg, "user", (sendtype == SEND_TYPE_NOTICE ? "private-notice" : "private-message")))
 		return HOOK_DENY;
 
 	return HOOK_CONTINUE;
 }
 
-int rcmd_block_message(Client *client, const char *text, SendType sendtype, const char **errmsg, const char *display, const char *conftag)
+int rcmd_block_message(Client *client, const char *destination, const char *text, SendType sendtype, const char **errmsg, const char *display, const char *conftag)
 {
+	crule_context context;
 	RestrictedCommand *rcmd;
 	static char errbuf[256];
 
@@ -361,8 +362,12 @@ int rcmd_block_message(Client *client, const char *text, SendType sendtype, cons
 	if (!MyUser(client) || !client->local || IsOper(client) || IsULine(client))
 		return 0;
 
+	memset(&context, 0, sizeof(context));
+	context.client = client;
+	context.destination = destination;
+
 	rcmd = find_restrictions_byconftag(conftag);
-	if (rcmd && !rcmd_canbypass(client, rcmd))
+	if (rcmd && !rcmd_canbypass(client, rcmd, &context))
 	{
 		int notice = (sendtype == SEND_TYPE_NOTICE ? 1 : 0); // temporary hack FIXME !!!
 		if (rcmd->except->connect_time)
@@ -386,6 +391,7 @@ int rcmd_block_message(Client *client, const char *text, SendType sendtype, cons
 CMD_OVERRIDE_FUNC(rcmd_override)
 {
 	RestrictedCommand *rcmd;
+	crule_context context;
 
 	if (!MyUser(client) || !client->local || IsOper(client) || IsULine(client))
 	{
@@ -393,8 +399,11 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 		return;
 	}
 
+	memset(&context, 0, sizeof(context));
+	context.client = client;
+
 	rcmd = find_restrictions_bycmd(ovr->command->cmd);
-	if (rcmd && !rcmd_canbypass(client, rcmd))
+	if (rcmd && !rcmd_canbypass(client, rcmd, &context))
 	{
 		if (rcmd->except->connect_time)
 		{
@@ -422,27 +431,32 @@ int rcmd_can_join(Client *client, Channel *channel, const char *key, char **errm
 	if (channel->users || has_channel_mode(channel, 'P'))
 		return 0;
 
-	else if (rcmd_block_join(client, &join_err))
+	else if (rcmd_block_join(client, channel, &join_err))
 	{
 		static char formatted_errmsg[512];
 		snprintf(formatted_errmsg, sizeof(formatted_errmsg), "JOIN :%s", join_err);
-		
+
 		*errmsg = formatted_errmsg;
 		return ERR_CANNOTDOCOMMAND;
 	}
 	return 0;
 }
 
-int rcmd_block_join(Client *client, const char **errmsg)
+int rcmd_block_join(Client *client, Channel *channel, const char **errmsg)
 {
 	RestrictedCommand *rcmd;
+	crule_context context;
 	static char errbuf[256];
 
 	if (!MyUser(client) || !client->local || IsOper(client) || IsULine(client))
 		return 0;
 
+	memset(&context, 0, sizeof(context));
+	context.client = client;
+	context.destination = channel->name;
+
 	rcmd = find_restrictions_byconftag("channel-create");
-	if (rcmd && !rcmd_canbypass(client, rcmd))
+	if (rcmd && !rcmd_canbypass(client, rcmd, &context))
 	{
 		if (rcmd->except->connect_time)
 		{

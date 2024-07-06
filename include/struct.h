@@ -2220,6 +2220,7 @@ struct SecurityGroup {
 	NameList *security_group;
 	char *prettyrule; /* ::rule as a string */
 	CRuleNode *rule; /**< parsed crule */
+	NameList *destination;
 	NameValuePrioList *extended;
 	/* Exclude */
 	int exclude_identified;
@@ -2233,6 +2234,7 @@ struct SecurityGroup {
 	NameList *exclude_security_group;
 	char *exclude_prettyrule; /* ::exclude-rule as a string */
 	CRuleNode *exclude_rule; /**< parsed crule */
+	NameList *exclude_destination;
 	NameValuePrioList *exclude_extended;
 	/* Settings */
 	DynamicSetBlock settings;

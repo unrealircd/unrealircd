@@ -5362,6 +5362,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	int stop_processing_general_spamfilters = 0;
 	int stop_processing_central_spamfilters = 0;
 	int content_revealed = 0;
+	crule_context context;
 
 	if (rettkl)
 		*rettkl = NULL; /* initialize to NULL */
@@ -5380,13 +5381,18 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	if (!client->user || ValidatePermissionsForPath("immune:server-ban:spamfilter",client,NULL,NULL,NULL) || IsULine(client))
 		return 0;
 
+	memset(&context, 0, sizeof(context));
+	context.client = client;
+	context.text = str_in;
+	context.destination = destination;
+
 	/* Client exempt from spamfilter checking?
 	 * Let's check that early: going through elines is likely faster than running the regex(es).
 	 */
 	if (find_tkl_exception(TKL_SPAMF, client))
 		user_is_exempt_general = 1;
 
-	if (user_allowed_by_security_group(client, iConf.central_spamfilter_except))
+	if (user_allowed_by_security_group_context(client, iConf.central_spamfilter_except, &context))
 		user_is_exempt_central = 1;
 
 	for (tkl = tklines[tkl_hash('F')]; tkl; tkl = tkl->next)
@@ -5420,22 +5426,16 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 		/* Run any pre 'rule' if there is any (false means 'no hit') */
 		if (tkl->ptr.spamfilter->rule)
 		{
-			crule_context context;
-			memset(&context, 0, sizeof(context));
-			context.client = client;
-			context.text = str_in;
-			context.destination = destination;
 			if (!crule_eval(&context, tkl->ptr.spamfilter->rule))
 				continue;
 		}
 
 		/* Check any 'except' rule if there is any (true means 'no hit') */
-		if (tkl->ptr.spamfilter->except && user_allowed_by_security_group(client, tkl->ptr.spamfilter->except))
+		if (tkl->ptr.spamfilter->except && user_allowed_by_security_group_context(client, tkl->ptr.spamfilter->except, &context))
 			continue;
 
 		if (tkl->ptr.spamfilter->match && (tkl->ptr.spamfilter->match->type != MATCH_NONE))
 		{
-			// TODO: wait, why are we running slow spamfilter detection for simple (non-regex) too ?
 #ifdef SPAMFILTER_DETECTSLOW
 			if (tkl->ptr.spamfilter->match->type == MATCH_PCRE_REGEX)
 			{

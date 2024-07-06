@@ -1306,6 +1306,7 @@ extern void free_security_group(SecurityGroup *s);
 extern SecurityGroup *duplicate_security_group(SecurityGroup *s);
 extern void set_security_group_defaults(void);
 extern int user_allowed_by_security_group(Client *client, SecurityGroup *s);
+extern int user_allowed_by_security_group_context(Client *client, SecurityGroup *s, crule_context *context);
 extern int user_allowed_by_security_group_name(Client *client, const char *secgroupname);
 extern const char *get_security_groups(Client *client);
 extern int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors);
