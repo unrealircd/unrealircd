@@ -294,6 +294,9 @@ MOD_UNLOAD()
 
 	free_channel_flood_profiles();
 
+	/* Free config */
+	safe_free(cfg.default_profile);
+
 	return MOD_SUCCESS;
 }
 

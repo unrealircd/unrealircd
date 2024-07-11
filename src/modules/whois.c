@@ -83,8 +83,20 @@ MOD_LOAD()
 	return MOD_SUCCESS;
 }
 
+void free_config(void)
+{
+	WhoisConfig *w, *w_next;
+	for (w = whoisconfig; w; w = w_next)
+	{
+		w_next = w->next;
+		safe_free(w->name);
+		safe_free(w);
+	}
+}
+
 MOD_UNLOAD()
 {
+	free_config();
 	return MOD_SUCCESS;
 }
 
