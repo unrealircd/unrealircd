@@ -34,6 +34,11 @@ in progress and may not always be a stable version.
   not really new functionality as all this was already possible via
   the [Except ban block](https://www.unrealircd.org/docs/Except_ban_block)
   with type spamfilter, but it is more visible/logical to have this also.
+* Add the ability to capture the same data as
+  [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport)
+  by providing an spamreport::url option.
+* [set::restrict-commands](https://www.unrealircd.org/docs/Restrict_commands):
+  new option `channel-create` for managing who may create new channels.
 
 ### Changes:
 * IRCOps with the operclass `locop` can now only `REHASH` the local server
@@ -43,8 +48,10 @@ in progress and may not always be a stable version.
   Sodium to 1.0.20
 
 ### Fixes:
+* Crash when removing the `websocket` option on a websocket listener.
 * Silence some compiler warnings regarding deprecation of c-ares API in
   src/dns.c.
+* Memory leaks of around 1-2KB per rehash
 
 ### Developers and protocol:
 * TODO
