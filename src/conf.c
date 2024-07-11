@@ -5415,6 +5415,7 @@ void conf_listen_configure(const char *ip, int port, SocketType socket_type, int
 	}
 	safe_free_webserver(listen->webserver);
 	free_entire_name_list(listen->websocket_origin);
+	listen->websocket_options = 0;
 	// NOTE: duplicate code overlap with listen_cleanup()
 
 	/* Now set the new settings: */
