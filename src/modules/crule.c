@@ -143,6 +143,7 @@ static int crule_match_account(crule_context *, int, void **);
 static int crule_match_country(crule_context *, int, void **);
 static int crule_match_certfp(crule_context *, int, void **);
 static int crule_match_realname(crule_context *, int, void **);
+static int crule_match_operclass(crule_context *, int, void **);
 
 /* parsing function prototypes - local! */
 static int crule_gettoken(crule_token *next_tokp, const char **str);
@@ -202,6 +203,7 @@ struct crule_funclistent crule_funclist[] = {
 	{"match_country", 1, crule_match_country},
 	{"match_certfp", 1, crule_match_certfp},
 	{"match_realname", 1, crule_match_realname},
+	{"match_operclass", 1, crule_match_operclass},
 	{"", 0, NULL} /* this must be here to mark end of list */
 };
 
@@ -535,6 +537,18 @@ static int crule_match_realname(crule_context *context, int numargs, void *crule
 	if (context && context->client && match_simple(arg, context->client->info))
 		return 1;
 
+	return 0;
+}
+
+static int crule_match_operclass(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+	
+	if (context && context->client && MyUser(context->client) && IsOper(context->client))
+	{
+		const char *operclass = get_operclass(context->client);
+		return !strcasecmp(operclass,arg) ?1:0;
+	}
 	return 0;
 }
 
