@@ -26,7 +26,8 @@ const char *geoip_base_serialize(ModData *m);
 void geoip_base_unserialize(const char *str, ModData *m);
 int geoip_base_handshake(Client *client);
 int geoip_base_ip_change(Client *client, const char *oldip);
-int geoip_base_whois(Client *client, Client *target, NameValuePrioList **list);
+int geoip_base_whois_country(Client *client, Client *target, NameValuePrioList **list);
+int geoip_base_whois_asn(Client *client, Client *target, NameValuePrioList **list);
 int geoip_connect_extinfo(Client *client, NameValuePrioList **list);
 int geoip_json_expand_client(Client *client, int detail, json_t *j);
 int geoip_base_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
@@ -125,7 +126,8 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_HANDSHAKE_OUT, 0, geoip_base_handshake);
 	HookAdd(modinfo->handle, HOOKTYPE_CONNECT_EXTINFO, 1, geoip_connect_extinfo); /* (prio: near-first) */
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0,geoip_base_handshake); /* in case the IP changed in registration phase (WEBIRC, HTTP Forwarded) */
-	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, geoip_base_whois);
+	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, geoip_base_whois_country);
+	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, geoip_base_whois_asn);
 	HookAdd(modinfo->handle, HOOKTYPE_JSON_EXPAND_CLIENT, 0, geoip_json_expand_client);
 
 	CommandAdd(modinfo->handle, "GEOIP", cmd_geoip, MAXPARA, CMD_USER);
@@ -323,7 +325,7 @@ int geoip_json_expand_client(Client *client, int detail, json_t *j)
 	return 0;
 }
 
-int geoip_base_whois(Client *client, Client *target, NameValuePrioList **list)
+int geoip_base_whois_country(Client *client, Client *target, NameValuePrioList **list)
 {
 	GeoIPResult *geo;
 	char buf[512];
@@ -339,22 +341,34 @@ int geoip_base_whois(Client *client, Client *target, NameValuePrioList **list)
 	// we only have country atm, but if we add city then city goes in 'full' and
 	// country goes in 'limited'
 	// if policy == WHOIS_CONFIG_DETAILS_LIMITED ...
-	if ((policy == WHOIS_CONFIG_DETAILS_FULL) && geo->asn)
-	{
-		add_nvplist_numeric_fmt(list, 0, "geo", client, RPL_WHOISCOUNTRY,
-					"%s %s :is connecting from %s [AS%u %s]",
-					target->name,
-					geo->country_code,
-					geo->country_name,
-					geo->asn,
-					geo->asname ? geo->asname : "UNKNOWN");
-	} else {
-		add_nvplist_numeric_fmt(list, 0, "geo", client, RPL_WHOISCOUNTRY,
-					"%s %s :is connecting from %s",
-					target->name,
-					geo->country_code,
-					geo->country_name);
-	}
+	add_nvplist_numeric_fmt(list, 0, "geo", client, RPL_WHOISCOUNTRY,
+	                        "%s %s :is connecting from %s",
+	                        target->name,
+	                        geo->country_code,
+	                        geo->country_name);
+	return 0;
+}
+
+int geoip_base_whois_asn(Client *client, Client *target, NameValuePrioList **list)
+{
+	GeoIPResult *geo;
+	char buf[512];
+	int policy = whois_get_policy(client, target, "asn");
+
+	if (policy == WHOIS_CONFIG_DETAILS_NONE)
+		return 0;
+
+	geo = GEOIPDATA(target);
+	if (!geo || !geo->asn)
+		return 0;
+
+	// WHOIS_CONFIG_DETAILS_LIMITED / WHOIS_CONFIG_DETAILS_FULL distinction makes no sense here
+	add_nvplist_numeric_fmt(list, 0, "asn", client, RPL_WHOISASN,
+				"%s %u :is connecting from AS%u [%s]",
+				target->name,
+				geo->asn,
+				geo->asn,
+				geo->asname ? geo->asname : "UNKNOWN");
 	return 0;
 }
 
@@ -406,6 +420,10 @@ CMD_FUNC(cmd_geoip)
 			sendnotice(client, "- Country code: %s", res->country_code);
 		if (res->country_name)
 			sendnotice(client, "- Country name: %s", res->country_name);
+		if (res->asn)
+			sendnotice(client, "- AS Number: %u", res->asn);
+		if (res->asname)
+			sendnotice(client, "- AS Name: %s", res->asname);
 	}
 
 	free_geoip_result(res);

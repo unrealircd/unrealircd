@@ -297,6 +297,7 @@
  * These are also in the range 600-799.
  */
 
+#define RPL_WHOISASN         569
 #define RPL_REAWAY           597
 #define RPL_GONEAWAY         598
 #define RPL_NOTAWAY          599
@@ -538,6 +539,7 @@
 #define STR_ERR_WHOLIMEXCEED		/* 523 */	":Error, /who limit of %d exceeded. Please narrow your search down and try again"
 #define STR_ERR_OPERSPVERIFY		/* 524 */	"%s :Trying to join +s or +p channel as an oper. Please invite yourself first."
 #define STR_ERR_CANTSENDTOUSER		/* 531 */	"%s :%s"
+#define STR_RPL_WHOISASN		/* 569 */	"%u :%s [%s]"
 #define STR_RPL_REAWAY			/* 597 */	"%s %s %s %lld :%s"
 #define STR_RPL_GONEAWAY		/* 598 */	"%s %s %s %lld :%s"
 #define STR_RPL_NOTAWAY			/* 599 */	"%s %s %s %lld :is no longer away"

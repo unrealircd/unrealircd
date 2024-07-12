@@ -27,7 +27,7 @@ in progress and may not always be a stable version.
    * In [Crule](https://www.unrealircd.org/docs/Crule) functions as `match_asn(64496)`
    * Also available in regular extbans/invex, but normally users don't
      know the IP or ASN of other users, unless you use no cloaking or
-     change [set::whois-details::geo](https://www.unrealircd.org/docs/Set_block#set::whois-details::geo).
+     change [set::whois-details::asn](https://www.unrealircd.org/docs/Set_block#set::whois-details).
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
   Similar to oper and operclass, in an
   [rpc-user](https://www.unrealircd.org/docs/Rpc-user_block) you now have
