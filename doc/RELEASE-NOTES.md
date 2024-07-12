@@ -12,17 +12,21 @@ in progress and may not always be a stable version.
   This means you can use all the power of mask items and security groups and
   multiple matching criteria.
 * The GeoIP module now contains info about 
-  [Autonomous system numbers](https://en.wikipedia.org/wiki/Autonomous_system_(Internet)):
-   * The asn is shown in the user connecting notice, `WHOIS` (for IRCOps) and
-     expanded in JSON data such as JSON Logging and JSON-RPC.
+  [Autonomous System Numbers](https://www.unrealircd.org/docs/ASN):
+   * The asn is shown in the user connecting notice as `[asn: ###]`,
+     in `WHOIS` (for IRCOps) and it is expanded in JSON data such as
+     [JSON Logging](https://www.unrealircd.org/docs/JSON_logging) and
+     [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) calls like
+     `user.list`.
   * Can be used in [Extended server ban](https://www.unrealircd.org/docs/Extended_server_bans):
     `GLINE ~asn:64496 0 This ISP is banned`.
-  * Can be used in security groups and mask items so you can do like:
+  * Can be used in security groups and [mask items](https://www.unrealircd.org/docs/Mask_item)
+    so you can do like:
     ```
     require authentication {
         mask { asn { 64496; 64497; 64498; } }
         reason "Too much abuse from this ISP. You are required to log in with an account using SASL.";
-       }
+    }
     ```
    * In [Crule](https://www.unrealircd.org/docs/Crule) functions as `match_asn(64496)`
    * Also available in regular extbans/invex, but normally users don't
