@@ -18,13 +18,16 @@ in progress and may not always be a stable version.
     so you can do things like `GLINE ~asn:64496 0 This ISP is banned`.
   * In security groups and Mask items so you can do like:
     ```
-    ban user {
+    require authentication {
         mask { asn { 64496; 64497; 64498; } }
         reason "Your ISP is banned.";
        }
     ```
    * It is shown in the user connecting notice, WHOIS (for IRCOps) and
      expanded in JSON data such as JSON Logging and JSON-RPC.
+   * It is also exposed in regular extbans/invex, but normally users don't
+     know the IP or ASN of other users, unless you use no cloaking or
+     change [set::whois-details::geo](https://www.unrealircd.org/docs/Set_block#set::whois-details::geo).
 * New option [set::tls::certificate-expiry-notification](https://www.unrealircd.org/docs/Set_block#set::tls::certificate-expiry-notification):
   since UnrealIRCd 5.0.8 we warn if a SSL/TLS certificate is (nearly) expired.
   This new option allows turning it off, it is (still) on by default.
