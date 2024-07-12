@@ -90,7 +90,7 @@ const char *extban_operclass_conv_param(BanContext *b, Extban *extban)
 
 int extban_operclass_is_banned(BanContext *b)
 {
-	if (MyUser(b->client) && IsOper(b->client))
+	if (IsUser(b->client) && IsOper(b->client))
 	{
 		const char *operclass = get_operclass(b->client);
 		if (operclass && match_simple(b->banstr, operclass))
