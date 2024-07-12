@@ -116,7 +116,7 @@ int extban_country_is_ok(BanContext *b)
 /* Obtain targeted country from the ban string */
 const char *extban_country_conv_param(BanContext *b, Extban *extban)
 {
-	static char retbuf[EVP_MAX_MD_SIZE * 2 + 1];
+	static char retbuf[64];
 	char *p;
 
 	strlcpy(retbuf, b->banstr, sizeof(retbuf));
