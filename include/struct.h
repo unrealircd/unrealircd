@@ -2617,6 +2617,8 @@ typedef struct GeoIPResult GeoIPResult;
 struct GeoIPResult {
 	char *country_code;
 	char *country_name;
+	unsigned int asn;
+	char *asname;
 };
 
 typedef enum WhoisConfigDetails {

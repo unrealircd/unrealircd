@@ -185,6 +185,24 @@ void geoip_base_free(ModData *m)
 	}
 }
 
+/* This should be unnecessary, but yeah.. you never know... it is data after all. */
+const char *geoip_sanitized_asname(const char *str)
+{
+	static char buf[512];
+	char *p;
+
+	/* The most likely scenario: quick search and return */
+	if (!strchr(str, '|'))
+		return str;
+
+	/* This converts '|' into '/' */
+	strlcpy(buf, str, sizeof(buf));
+	for (p = buf; *p; p++)
+		if (*p == '|')
+			*p = '/';
+	return buf;
+}
+
 const char *geoip_base_serialize(ModData *m)
 {
 	static char buf[512];
@@ -194,10 +212,20 @@ const char *geoip_base_serialize(ModData *m)
 		return NULL;
 
 	geo = m->ptr;
-	snprintf(buf, sizeof(buf), "cc=%s|cd=%s",
-	         geo->country_code,
-	         geo->country_name);
 
+	if (geo->asname)
+	{
+		snprintf(buf, sizeof(buf), "cc=%s|cd=%s|asn=%u|asname=%s",
+			 geo->country_code,
+			 geo->country_name,
+			 geo->asn,
+			 geoip_sanitized_asname(geo->asname));
+	} else {
+		snprintf(buf, sizeof(buf), "cc=%s|cd=%s|asn=%u",
+			 geo->country_code,
+			 geo->country_name,
+			 geo->asn);
+	}
 	return buf;
 }
 
@@ -206,6 +234,8 @@ void geoip_base_unserialize(const char *str, ModData *m)
 	char buf[512], *p=NULL, *varname, *value;
 	char *country_name = NULL;
 	char *country_code = NULL;
+	long asn = 0;
+	char *asname = NULL;
 	GeoIPResult *res;
 
 	if (m->ptr)
@@ -227,6 +257,10 @@ void geoip_base_unserialize(const char *str, ModData *m)
 			country_code = value;
 		else if (!strcmp(varname, "cd"))
 			country_name = value;
+		else if (!strcmp(varname, "asn"))
+			asn = strtoul(value, NULL, 10);
+		else if (!strcmp(varname, "asname"))
+			asname = value;
 	}
 
 	if (!country_code || !country_name)
@@ -235,6 +269,9 @@ void geoip_base_unserialize(const char *str, ModData *m)
 	res = safe_alloc(sizeof(GeoIPResult));
 	safe_strdup(res->country_name, country_name);
 	safe_strdup(res->country_code, country_code);
+	safe_strdup(res->asname, asname);
+	res->asn = asn;
+
 	m->ptr = res;
 }
 
@@ -252,7 +289,17 @@ int geoip_connect_extinfo(Client *client, NameValuePrioList **list)
 {
 	GeoIPResult *geo = GEOIPDATA(client);
 	if (geo)
+	{
+		if (geo->asname)
+			add_nvplist(list, 0, "asname", geo->asname);
+		if (geo->asn)
+		{
+			char buf[64];
+			snprintf(buf, sizeof(buf), "%u", geo->asn);
+			add_nvplist(list, 0, "asn", buf);
+		}
 		add_nvplist(list, 0, "country", geo->country_code);
+	}
 	return 0;
 }
 
@@ -267,6 +314,11 @@ int geoip_json_expand_client(Client *client, int detail, json_t *j)
 	geoip = json_object();
 	json_object_set_new(j, "geoip", geoip);
 	json_object_set_new(geoip, "country_code", json_string_unreal(geo->country_code));
+
+	if (geo->asn)
+		json_object_set_new(geoip, "asn", json_integer(geo->asn));
+	if (geo->asname)
+		json_object_set_new(geoip, "asname", json_string_unreal(geo->asname));
 
 	return 0;
 }
@@ -287,11 +339,22 @@ int geoip_base_whois(Client *client, Client *target, NameValuePrioList **list)
 	// we only have country atm, but if we add city then city goes in 'full' and
 	// country goes in 'limited'
 	// if policy == WHOIS_CONFIG_DETAILS_LIMITED ...
-	add_nvplist_numeric_fmt(list, 0, "geo", client, RPL_WHOISCOUNTRY,
-	                        "%s %s :is connecting from %s",
-	                        target->name,
-	                        geo->country_code,
-	                        geo->country_name);
+	if ((policy == WHOIS_CONFIG_DETAILS_FULL) && geo->asn)
+	{
+		add_nvplist_numeric_fmt(list, 0, "geo", client, RPL_WHOISCOUNTRY,
+					"%s %s :is connecting from %s [AS%u %s]",
+					target->name,
+					geo->country_code,
+					geo->country_name,
+					geo->asn,
+					geo->asname ? geo->asname : "UNKNOWN");
+	} else {
+		add_nvplist_numeric_fmt(list, 0, "geo", client, RPL_WHOISCOUNTRY,
+					"%s %s :is connecting from %s",
+					target->name,
+					geo->country_code,
+					geo->country_name);
+	}
 	return 0;
 }
 
