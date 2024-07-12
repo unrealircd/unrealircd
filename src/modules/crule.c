@@ -141,6 +141,7 @@ static int crule_match_mask(crule_context *, int, void **);
 static int crule_match_ip(crule_context *, int, void **);
 static int crule_match_account(crule_context *, int, void **);
 static int crule_match_country(crule_context *, int, void **);
+static int crule_match_asn(crule_context *, int, void **);
 static int crule_match_certfp(crule_context *, int, void **);
 static int crule_match_realname(crule_context *, int, void **);
 
@@ -200,6 +201,7 @@ struct crule_funclistent crule_funclist[] = {
 	{"match_ip", 1, crule_match_ip},
 	{"match_account", 1, crule_match_account},
 	{"match_country", 1, crule_match_country},
+	{"match_asn", 1, crule_match_asn},
 	{"match_certfp", 1, crule_match_certfp},
 	{"match_realname", 1, crule_match_realname},
 	{"", 0, NULL} /* this must be here to mark end of list */
@@ -513,6 +515,16 @@ static int crule_match_country(crule_context *context, int numargs, void *crulea
 	const char *arg = (char *)crulearg[0];
 
 	if (context && context->client && user_matches_extended_server_ban(context->client, "country", arg))
+		return 1;
+
+	return 0;
+}
+
+static int crule_match_asn(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+
+	if (context && context->client && user_matches_extended_server_ban(context->client, "asn", arg))
 		return 1;
 
 	return 0;

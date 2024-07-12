@@ -24,6 +24,7 @@ in progress and may not always be a stable version.
         reason "Too much abuse from this ISP. You are required to log in with an account using SASL.";
        }
     ```
+   * In [Crule](https://www.unrealircd.org/docs/Crule) functions as `match_asn(64496)`
    * Also available in regular extbans/invex, but normally users don't
      know the IP or ASN of other users, unless you use no cloaking or
      change [set::whois-details::geo](https://www.unrealircd.org/docs/Set_block#set::whois-details::geo).
@@ -35,7 +36,7 @@ in progress and may not always be a stable version.
   and configures what JSON methods can be called.  
   There are two default json-rpc classes:
   * `full`: access to all JSON-RPC Methods
-  * `read-only`: access to things list *server_ban.list* but not to *server_ban.add*
+  * `read-only`: access to things like *server_ban.list* but not to *server_ban.add*
 * [set::spamfilter::except](https://www.unrealircd.org/docs/Set_block#set::spamfilter::except)
   is now a [Mask item](https://www.unrealircd.org/docs/Mask_item) instead of
   only a list of exempted targets. A warning is created to existing users
