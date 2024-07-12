@@ -5737,6 +5737,13 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 
 			has_port = 1;
 
+			if (strchr(cep->value, ','))
+			{
+				config_error("%s:%i: listen::port does not support comma's",
+				             cep->file->filename, cep->line_number);
+				errors++;
+				continue;
+			}
 			port_range(cep->value, &start, &end);
 			if (start == end)
 			{
@@ -5744,7 +5751,8 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 				{
 					config_error("%s:%i: listen: illegal port (must be 1..65535)",
 						cep->file->filename, cep->line_number);
-					return 1;
+					errors++;
+					continue;
 				}
 			}
 			else
@@ -5753,7 +5761,8 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 				{
 					config_error("%s:%i: listen: illegal port range end value is less than starting value",
 						cep->file->filename, cep->line_number);
-					return 1;
+					errors++;
+					continue;
 				}
 				if (end - start >= 100)
 				{
@@ -5761,13 +5770,15 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 						"(and thus consumes %d sockets) this is probably not what you want.",
 						cep->file->filename, cep->line_number, start, end,
 						end - start + 1, end - start + 1);
-					return 1;
+					errors++;
+					continue;
 				}
 				if ((start < 1) || (start > 65535) || (end < 1) || (end > 65535))
 				{
 					config_error("%s:%i: listen: illegal port range values must be between 1 and 65535",
 						cep->file->filename, cep->line_number);
-					return 1;
+					errors++;
+					continue;
 				}
 			}
 
