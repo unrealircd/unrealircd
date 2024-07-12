@@ -12,25 +12,21 @@ in progress and may not always be a stable version.
   This means you can use all the power of mask items and security groups and
   multiple matching criteria.
 * The GeoIP module now contains info about 
-  [Autonomous system numbers](https://en.wikipedia.org/wiki/Autonomous_system_(Internet))
-  and this is exposed in:
-  * [Extended server ban](https://www.unrealircd.org/docs/Extended_server_bans)
-    so you can do things like `GLINE ~asn:64496 0 This ISP is banned`.
-  * In security groups and Mask items so you can do like:
+  [Autonomous system numbers](https://en.wikipedia.org/wiki/Autonomous_system_(Internet)):
+   * The asn is shown in the user connecting notice, `WHOIS` (for IRCOps) and
+     expanded in JSON data such as JSON Logging and JSON-RPC.
+  * Can be used in [Extended server ban](https://www.unrealircd.org/docs/Extended_server_bans):
+    `GLINE ~asn:64496 0 This ISP is banned`.
+  * Can be used in security groups and mask items so you can do like:
     ```
     require authentication {
         mask { asn { 64496; 64497; 64498; } }
-        reason "Your ISP is banned.";
+        reason "Too much abuse from this ISP. You are required to log in with an account using SASL.";
        }
     ```
-   * It is shown in the user connecting notice, WHOIS (for IRCOps) and
-     expanded in JSON data such as JSON Logging and JSON-RPC.
-   * It is also exposed in regular extbans/invex, but normally users don't
+   * Also available in regular extbans/invex, but normally users don't
      know the IP or ASN of other users, unless you use no cloaking or
      change [set::whois-details::geo](https://www.unrealircd.org/docs/Set_block#set::whois-details::geo).
-* New option [set::tls::certificate-expiry-notification](https://www.unrealircd.org/docs/Set_block#set::tls::certificate-expiry-notification):
-  since UnrealIRCd 5.0.8 we warn if a SSL/TLS certificate is (nearly) expired.
-  This new option allows turning it off, it is (still) on by default.
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
   Similar to oper and operclass, in an
   [rpc-user](https://www.unrealircd.org/docs/Rpc-user_block) you now have
@@ -40,10 +36,6 @@ in progress and may not always be a stable version.
   There are two default json-rpc classes:
   * `full`: access to all JSON-RPC Methods
   * `read-only`: access to things list *server_ban.list* but not to *server_ban.add*
-* New option [set::hide-killed-by](https://www.unrealircd.org/docs/Set_block#set::hide-killed-by):
-  We normally show the nickname of the oper who did the /KILL in the quit message.
-  When set to `yes` the quit message becomes shortened to "Killed (Reason)".
-  This can prevent oper harassment.
 * [set::spamfilter::except](https://www.unrealircd.org/docs/Set_block#set::spamfilter::except)
   is now a [Mask item](https://www.unrealircd.org/docs/Mask_item) instead of
   only a list of exempted targets. A warning is created to existing users
@@ -51,11 +43,18 @@ in progress and may not always be a stable version.
   not really new functionality as all this was already possible via
   the [Except ban block](https://www.unrealircd.org/docs/Except_ban_block)
   with type spamfilter, but it is more visible/logical to have this also.
+* New option [set::hide-killed-by](https://www.unrealircd.org/docs/Set_block#set::hide-killed-by):
+  We normally show the nickname of the oper who did the /KILL in the quit message.
+  When set to `yes` the quit message becomes shortened to "Killed (Reason)".
+  This can prevent oper harassment.
+* [set::restrict-commands](https://www.unrealircd.org/docs/Restrict_commands):
+  new option `channel-create` for managing who may create new channels.
+* New option [set::tls::certificate-expiry-notification](https://www.unrealircd.org/docs/Set_block#set::tls::certificate-expiry-notification):
+  since UnrealIRCd 5.0.8 we warn if a SSL/TLS certificate is (nearly) expired.
+  This new option allows turning it off, it is (still) on by default.
 * Add the ability to capture the same data as
   [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport)
   by providing an spamreport::url option.
-* [set::restrict-commands](https://www.unrealircd.org/docs/Restrict_commands):
-  new option `channel-create` for managing who may create new channels.
 
 ### Changes:
 * IRCOps with the operclass `locop` can now only `REHASH` the local server
