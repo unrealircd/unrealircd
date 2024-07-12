@@ -11,6 +11,20 @@ in progress and may not always be a stable version.
   [Mask item](https://www.unrealircd.org/docs/Mask_item).
   This means you can use all the power of mask items and security groups and
   multiple matching criteria.
+* The GeoIP module now contains info about 
+  [Autonomous system numbers](https://en.wikipedia.org/wiki/Autonomous_system_(Internet))
+  and this is exposed in:
+  * [Extended server ban](https://www.unrealircd.org/docs/Extended_server_bans)
+    so you can do things like `GLINE ~asn:64496 0 This ISP is banned`.
+  * In security groups and Mask items so you can do like:
+    ```
+    ban user {
+        mask { asn { 64496; 64497; 64498; } }
+        reason "Your ISP is banned.";
+       }
+    ```
+   * It is shown in the user connecting notice, WHOIS (for IRCOps) and
+     expanded in JSON data such as JSON Logging and JSON-RPC.
 * New option [set::tls::certificate-expiry-notification](https://www.unrealircd.org/docs/Set_block#set::tls::certificate-expiry-notification):
   since UnrealIRCd 5.0.8 we warn if a SSL/TLS certificate is (nearly) expired.
   This new option allows turning it off, it is (still) on by default.

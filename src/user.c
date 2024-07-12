@@ -961,6 +961,7 @@ void free_geoip_result(GeoIPResult *r)
 		return;
 	safe_free(r->country_code);
 	safe_free(r->country_name);
+	safe_free(r->asname);
 	safe_free(r);
 }
 
