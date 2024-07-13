@@ -1,8 +1,8 @@
-UnrealIRCd 6.1.7-git
+UnrealIRCd 6.1.7-rc1
 =================
 
-This is the git version (development version) for future 6.1.7. This is work
-in progress and may not always be a stable version.
+This is the Release Candidate for future UnrealIRCd 6.1.7.  
+Please report any issues at https://bugs.unrealircd.org/
 
 ### Enhancements:
 * In the [ban user { }](https://www.unrealircd.org/docs/Ban_user_block)
@@ -75,7 +75,8 @@ in progress and may not always be a stable version.
 * Memory leaks of around 1-2KB per rehash
 
 ### Developers and protocol:
-* TODO
+* We use numeric 569 (RPL_WHOISASN) for displaying ASN info to IRCOps:  
+  `:irc.example.net 569 x whoiseduser 64496 :is connecting from AS64496 [Example Corp]`
 
 UnrealIRCd 6.1.6
 -----------------
