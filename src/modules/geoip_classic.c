@@ -376,7 +376,6 @@ GeoIPResult *geoip_lookup_classic(char *ip)
 			return NULL;
 		geoid = GeoIP_id_by_addr_v6_gl(gi6, ip, &gl);
 		gi = gi6;
-		GeoIP_id_by_addr_v6_gl(asn_gi6, ip, &asn_gl);
 	} else
 	{
 		if (!gi4 || !strcmp(ip, "255.255.255.255"))
