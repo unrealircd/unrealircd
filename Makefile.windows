@@ -265,6 +265,7 @@ DLL_FILES=\
  src/modules/echo-message.dll \
  src/modules/eos.dll \
  src/modules/extbans/account.dll \
+ src/modules/extbans/asn.dll \
  src/modules/extbans/certfp.dll \
  src/modules/extbans/country.dll \
  src/modules/extbans/inchannel.dll \
@@ -901,6 +902,9 @@ src/modules/eos.dll: src/modules/eos.c $(INCLUDES)
 
 src/modules/extbans/account.dll: src/modules/extbans/account.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/extbans/account.c /Fesrc/modules/extbans/ /Fosrc/modules/extbans/ /Fdsrc/modules/extbans/account.pdb $(MODLFLAGS)
+
+src/modules/extbans/asn.dll: src/modules/extbans/asn.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/extbans/asn.c /Fesrc/modules/extbans/ /Fosrc/modules/extbans/ /Fdsrc/modules/extbans/asn.pdb $(MODLFLAGS)
 
 src/modules/extbans/certfp.dll: src/modules/extbans/certfp.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/extbans/certfp.c /Fesrc/modules/extbans/ /Fosrc/modules/extbans/ /Fdsrc/modules/extbans/certfp.pdb $(MODLFLAGS)
