@@ -10104,10 +10104,12 @@ void start_listeners(void)
 {
 	ConfigItem_listen *listener;
 	int failed = 0, ports_bound = 0;
-	char boundmsg_ipv4[512], boundmsg_ipv6[512];
+	char boundmsg_ipv4[512];
+	char boundmsg_ipv6[512];
+	char boundmsg_unix[512];
 	int last_errno = 0;
 
-	*boundmsg_ipv4 = *boundmsg_ipv6 = '\0';
+	*boundmsg_ipv4 = *boundmsg_ipv6 = *boundmsg_unix = '\0';
 
 	for (listener = conf_listen; listener; listener = listener->next)
 	{
@@ -10122,10 +10124,19 @@ void start_listeners(void)
 			} else {
 				if (loop.booted)
 				{
-					unreal_log(ULOG_INFO, "listen", "LISTEN_ADDED", NULL,
-					           "UnrealIRCd is now also listening on $listen_ip:$listen_port",
-					           log_data_string("listen_ip", listener->ip),
-					           log_data_integer("listen_port", listener->port));
+					if (listener->socket_type == SOCKET_TYPE_UNIX)
+					{
+						unreal_log(ULOG_INFO, "listen", "LISTEN_ADDED", NULL,
+							   "UnrealIRCd is now also listening on $listen_file [$protocol]",
+							   log_data_string("listen_file", listener->file),
+							   log_data_string("protocol", socket_type_valtostr(listener->socket_type)));
+					} else {
+						unreal_log(ULOG_INFO, "listen", "LISTEN_ADDED", NULL,
+							   "UnrealIRCd is now also listening on $listen_ip:$listen_port [$protocol]",
+							   log_data_string("listen_ip", listener->ip),
+							   log_data_integer("listen_port", listener->port),
+							   log_data_string("protocol", socket_type_valtostr(listener->socket_type)));
+					}
 				} else {
 					switch (listener->socket_type)
 					{
@@ -10139,7 +10150,11 @@ void start_listeners(void)
 								"%s:%d%s, ", listener->ip, listener->port,
 								listener->options & LISTENER_TLS ? "(TLS)" : "");
 							break;
-						// TODO: show unix domain sockets ;)
+						case SOCKET_TYPE_UNIX:
+							snprintf(boundmsg_unix+strlen(boundmsg_unix), sizeof(boundmsg_unix)-strlen(boundmsg_unix),
+								"%s%s, ", listener->file,
+								listener->options & LISTENER_TLS ? "(TLS)" : "");
+							break;
 						default:
 							break;
 					}
@@ -10192,18 +10207,24 @@ void start_listeners(void)
 			boundmsg_ipv4[strlen(boundmsg_ipv4)-2] = '\0';
 		if (strlen(boundmsg_ipv6) > 2)
 			boundmsg_ipv6[strlen(boundmsg_ipv6)-2] = '\0';
+		if (strlen(boundmsg_unix) > 2)
+			boundmsg_unix[strlen(boundmsg_unix)-2] = '\0';
 
 		if (!*boundmsg_ipv4)
 			strlcpy(boundmsg_ipv4, "<none>", sizeof(boundmsg_ipv4));
 		if (!*boundmsg_ipv6)
 			strlcpy(boundmsg_ipv6, "<none>", sizeof(boundmsg_ipv6));
+		if (!*boundmsg_unix)
+			strlcpy(boundmsg_unix, "<none>", sizeof(boundmsg_unix));
 
 		unreal_log(ULOG_INFO, "listen", "LISTENING", NULL,
 		           "UnrealIRCd is now listening on the following addresses/ports:\n"
 		           "IPv4: $ipv4_port_list\n"
-		           "IPv6: $ipv6_port_list\n",
+		           "IPv6: $ipv6_port_list\n"
+		           "Unix Sockets: $unix_socket_list\n",
 		           log_data_string("ipv4_port_list", boundmsg_ipv4),
-		           log_data_string("ipv6_port_list", boundmsg_ipv6));
+		           log_data_string("ipv6_port_list", boundmsg_ipv6),
+		           log_data_string("unix_socket_list", boundmsg_unix));
 	}
 }
 

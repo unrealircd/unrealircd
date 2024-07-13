@@ -1078,6 +1078,7 @@ extern int inet_pton6(const char *src, unsigned char *dst);
 extern const char *compressed_ip(const char *ip);
 extern int unreal_bind(int fd, const char *ip, int port, SocketType socket_type);
 extern int unreal_connect(int fd, const char *ip, int port, SocketType socket_type);
+extern const char *socket_type_valtostr(SocketType t);
 extern int is_valid_ip(const char *str);
 extern int ipv6_capable(void);
 extern int unix_sockets_capable(void);

@@ -400,10 +400,19 @@ void close_listener(ConfigItem_listen *listener)
 {
 	if (listener->fd >= 0)
 	{
-		unreal_log(ULOG_INFO, "listen", "LISTEN_REMOVED", NULL,
-			   "UnrealIRCd is now no longer listening on $listen_ip:$listen_port",
-			   log_data_string("listen_ip", listener->ip),
-			   log_data_integer("listen_port", listener->port));
+		if (listener->socket_type == SOCKET_TYPE_UNIX)
+		{
+			unreal_log(ULOG_INFO, "listen", "LISTEN_REMOVED", NULL,
+				   "UnrealIRCd is now no longer listening on $listen_file [$protocol]",
+				   log_data_string("listen_file", listener->file),
+				   log_data_string("protocol", socket_type_valtostr(listener->socket_type)));
+		} else {
+			unreal_log(ULOG_INFO, "listen", "LISTEN_REMOVED", NULL,
+				   "UnrealIRCd is now no longer listening on $listen_ip:$listen_port [$protocol]",
+				   log_data_string("listen_ip", listener->ip),
+				   log_data_integer("listen_port", listener->port),
+				   log_data_string("protocol", socket_type_valtostr(listener->socket_type)));
+		}
 		fd_close(listener->fd);
 		--OpenFiles;
 	}
@@ -1565,3 +1574,18 @@ void init_winsock(void)
 	}
 }
 #endif
+
+const char *socket_type_valtostr(SocketType t)
+{
+	switch(t)
+	{
+		case SOCKET_TYPE_IPV4:
+			return "IPv4";
+		case SOCKET_TYPE_IPV6:
+			return "IPv6";
+		case SOCKET_TYPE_UNIX:
+			return "UNIX Socket";
+		default:
+			return "???";
+	}
+}
