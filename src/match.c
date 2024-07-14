@@ -146,7 +146,7 @@ int match_simple(const char *mask, const char *name)
 			return (*m == 0);
 		}
 		
-		if ((lc(*m) != lc(*n)) && !((*m == '_') && (*n == ' ')) && (*m != '?'))
+		if ((lc(*m) != lc(*n)) && !((*n == ' ')) && (*m != '?'))
 		{
 			if (!ma)
 				return 0;
