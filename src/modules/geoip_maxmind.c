@@ -9,7 +9,7 @@
 ModuleHeader MOD_HEADER
   = {
 	"geoip_maxmind",
-	"5.0",
+	"5.1",
 	"GEOIP using maxmind databases", 
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -17,15 +17,17 @@ ModuleHeader MOD_HEADER
 
 struct geoip_maxmind_config_s {
 	char *db_file;
+	char *asn_db_file;
 /* for config reading only */
 	int have_config;
 	int have_database;
+	int have_asn_database;
 };
 
 /* Variables */
 
 struct geoip_maxmind_config_s geoip_maxmind_config;
-MMDB_s mmdb;
+MMDB_s mmdb, asn_mmdb;
 
 /* Forward declarations */
 int geoip_maxmind_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
@@ -69,6 +71,22 @@ int geoip_maxmind_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *err
 			geoip_maxmind_config.have_database = 1;
 			continue;
 		}
+		if (!strcmp(cep->name, "asn-database"))
+		{
+			if (geoip_maxmind_config.have_asn_database)
+			{
+				config_error("%s:%i: duplicate item set::geoip-maxmind::%s", cep->file->filename, cep->line_number, cep->name);
+				continue;
+			}
+			if (!is_file_readable(cep->value, PERMDATADIR))
+			{
+				config_error("%s:%i: set::geoip-maxmind::%s: cannot open file \"%s/%s\" for reading (%s)", cep->file->filename, cep->line_number, cep->name, PERMDATADIR, cep->value, strerror(errno));
+				errors++;
+				continue;
+			}
+			geoip_maxmind_config.have_asn_database = 1;
+			continue;
+		}
 		config_warn("%s:%i: unknown item set::geoip-maxmind::%s", cep->file->filename, cep->line_number, cep->name);
 	}
 	
@@ -83,12 +101,16 @@ int geoip_maxmind_configposttest(int *errs)
 	{
 		if (!geoip_maxmind_config.have_database)
 		{
-			config_error("geoip_maxmind: no database file specified! Remove set::geoip-maxmind to use defaults");
+			config_error("geoip_maxmind: no working database file specified! Remove set::geoip-maxmind to use defaults");
 			errors++;
 		}
+		if (!geoip_maxmind_config.have_asn_database)
+			safe_free(geoip_maxmind_config.db_file); /* at this point we aren't going to use ASN at all */
+
 	} else
 	{
 		safe_strdup(geoip_maxmind_config.db_file, "GeoLite2-Country.mmdb");
+		safe_strdup(geoip_maxmind_config.asn_db_file, "GeoLite2-ASN.mmdb");
 
 		if (is_file_readable(geoip_maxmind_config.db_file, PERMDATADIR))
 		{
@@ -99,6 +121,11 @@ int geoip_maxmind_configposttest(int *errs)
 			safe_free(geoip_maxmind_config.db_file);
 			errors++;
 		}
+
+		if (is_file_readable(geoip_maxmind_config.asn_db_file, PERMDATADIR))
+			geoip_maxmind_config.have_asn_database = 1;
+		else
+			safe_free(geoip_maxmind_config.asn_db_file);
 	}
 
 	*errs = errors;
@@ -122,6 +149,8 @@ int geoip_maxmind_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 	{
 		if (!strcmp(cep->name, "database") && geoip_maxmind_config.have_database)
 			safe_strdup(geoip_maxmind_config.db_file, cep->value);
+		if (!strcmp(cep->name, "asn-database") && geoip_maxmind_config.have_asn_database)
+			safe_strdup(geoip_maxmind_config.asn_db_file, cep->value);
 	}
 	return 1;
 }
@@ -140,6 +169,7 @@ MOD_TEST()
 
 	geoip_maxmind_config.have_config = 0;
 	geoip_maxmind_config.have_database = 0;
+	geoip_maxmind_config.have_asn_database = 0;
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, geoip_maxmind_configtest);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, geoip_maxmind_configposttest);
 	return MOD_SUCCESS;
@@ -168,32 +198,56 @@ MOD_LOAD()
 				   log_data_string("io_error", (status == MMDB_IO_ERROR)?strerror(save_err):"none"));
 		return MOD_FAILED;
 	}
+
+	if (!geoip_maxmind_config.asn_db_file) /* if ASN file is unavailable, ignore it */
+		return MOD_SUCCESS;
+
+	convert_to_absolute_path(&geoip_maxmind_config.asn_db_file, PERMDATADIR);
+
+	status = MMDB_open(geoip_maxmind_config.asn_db_file, MMDB_MODE_MMAP, &asn_mmdb);
+
+	if (status != MMDB_SUCCESS) {
+		int save_err = errno;
+		unreal_log(ULOG_WARNING, "geoip_maxmind", "GEOIP_CANNOT_OPEN_ASN_DB", NULL,
+				   "Could not open '$filename' - $maxmind_error; IO error: $io_error",
+				   log_data_string("filename", geoip_maxmind_config.db_file),
+				   log_data_string("maxmind_error", MMDB_strerror(status)),
+				   log_data_string("io_error", (status == MMDB_IO_ERROR)?strerror(save_err):"none"));
+		return MOD_FAILED;
+	}
+
 	return MOD_SUCCESS;
 }
 
 MOD_UNLOAD()
 {
 	geoip_maxmind_free();
+	safe_free(geoip_maxmind_config.db_file);
+	safe_free(geoip_maxmind_config.asn_db_file);
 	return MOD_SUCCESS;
 }
 
 void geoip_maxmind_free(void)
 {
 	MMDB_close(&mmdb);
+	MMDB_close(&asn_mmdb);
 }
 
 GeoIPResult *geoip_lookup_maxmind(char *ip)
 {
 	int gai_error, mmdb_error, status;
 	MMDB_lookup_result_s result;
-	MMDB_entry_data_s country_code;
-	MMDB_entry_data_s country_name;
-	char *country_code_str, *country_name_str;
-	GeoIPResult *r;
+	MMDB_entry_data_s country_code, country_name, asn, asn_org;
+	char *country_code_str, *country_name_str, *asn_org_str;
+	GeoIPResult *r = NULL;
 
 	if (!ip)
 		return NULL;
 
+	if (!geoip_maxmind_config.have_database)
+		return NULL;
+
+	/* Country database */
 	result = MMDB_lookup_string(&mmdb, ip, &gai_error, &mmdb_error);
 	if (gai_error)
 	{
@@ -234,6 +288,51 @@ GeoIPResult *geoip_lookup_maxmind(char *ip)
 	r = safe_alloc(sizeof(GeoIPResult));
 	r->country_code = country_code_str;
 	r->country_name = country_name_str;
+
+	/* ASN database */
+	if (!geoip_maxmind_config.have_asn_database)
+		return r;
+
+	result = MMDB_lookup_string(&asn_mmdb, ip, &gai_error, &mmdb_error);
+
+	if (gai_error)
+	{
+		unreal_log(ULOG_DEBUG, "geoip_maxmind", "GEOIP_ASN_DB_ERROR", NULL,
+				"libmaxminddb: getaddrinfo error for $ip: $error",
+				log_data_string("ip", ip),
+				log_data_string("error", gai_strerror(gai_error)));
+		return r;
+	}
+
+	if (mmdb_error != MMDB_SUCCESS)
+	{
+		unreal_log(ULOG_DEBUG, "geoip_maxmind", "GEOIP_ASN_DB_ERROR", NULL,
+				"libmaxminddb: library error for $ip: $error",
+				log_data_string("ip", ip),
+				log_data_string("error", MMDB_strerror(mmdb_error)));
+		return r;
+	}
+
+	if (!result.found_entry) /* no result */
+		return r;
+
+	status = MMDB_get_value(&result.entry, &asn, "autonomous_system_number", NULL);
+	if (status != MMDB_SUCCESS || !asn.has_data || asn.type != MMDB_DATA_TYPE_UINT32)
+		return r;
+	status = MMDB_get_value(&result.entry, &asn_org, "autonomous_system_organization", NULL);
+	if (status != MMDB_SUCCESS || !asn_org.has_data || asn_org.type != MMDB_DATA_TYPE_UTF8_STRING)
+		return r;
+
+	if (!r)
+		r = safe_alloc(sizeof(GeoIPResult));
+
+	asn_org_str = safe_alloc(asn_org.data_size + 1);
+	memcpy(asn_org_str, asn_org.utf8_string, asn_org.data_size);
+	asn_org_str[asn_org.data_size] = '\0';
+
+	r->asn = asn.uint32;
+	r->asname = asn_org_str;
+
 	return r;
 }
 
