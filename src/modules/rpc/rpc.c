@@ -273,6 +273,7 @@ void free_config(void)
 		safe_free(e->name);
 		free_security_group(e->match);
 		Auth_FreeAuthConfig(e->auth);
+		safe_free(e->rpc_class);
 		safe_free(e);
 	}
 	rpcusers = NULL;
