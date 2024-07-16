@@ -2,7 +2,7 @@ UnrealIRCd 6.1.7
 =================
 
 This is UnrealIRCd 6.1.7 stable. It comes with ASN support, more flexible
-ban user { } and ban authentication { } blocks and more.
+ban user { } and require authentication { } blocks and more.
 
 UnrealIRCd recently turned 25 years! 🎉 See
 [UnrealIRCd celebrates its 25th birthday](https://forums.unrealircd.org/viewtopic.php?t=9363).
