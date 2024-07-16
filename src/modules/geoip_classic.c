@@ -358,7 +358,8 @@ void geoip_classic_free(void)
 GeoIPResult *geoip_lookup_classic(char *ip)
 {
 	static char buf[256];
-	const char *country_code, *country_name, *isp=NULL;
+	const char *country_code, *country_name;
+	char *isp=NULL;
 	GeoIPLookup gl, asn_gl;
 	GeoIP *gi;
 	int geoid;
@@ -408,17 +409,21 @@ GeoIPResult *geoip_lookup_classic(char *ip)
 	 * r->asn becomes the ##### number
 	 * r->asname becomes "Name Of Autonomous System"
 	 */
-	if (isp && (isp[0] == 'A') && (isp[1] == 'S') && isdigit(isp[2]))
+	if (isp)
 	{
-		char *p;
-		r->asn = strtoul(isp+2, NULL, 10);
-		p = strchr(isp, ' ');
-		if (p)
+		if ((isp[0] == 'A') && (isp[1] == 'S') && isdigit(isp[2]))
 		{
-			skip_whitespace(&p);
-			if (*p)
-				safe_strdup(r->asname, p);
+			char *p;
+			r->asn = strtoul(isp+2, NULL, 10);
+			p = strchr(isp, ' ');
+			if (p)
+			{
+				skip_whitespace(&p);
+				if (*p)
+					safe_strdup(r->asname, p);
+			}
 		}
+		safe_free(isp);
 	}
 	return r;
 }
