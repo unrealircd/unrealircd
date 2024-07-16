@@ -1,8 +1,11 @@
-UnrealIRCd 6.1.7-rc1
+UnrealIRCd 6.1.7
 =================
 
-This is the Release Candidate for future UnrealIRCd 6.1.7.  
-Please report any issues at https://bugs.unrealircd.org/
+This is UnrealIRCd 6.1.7 stable. It comes with ASN support, more flexible
+ban user { } and ban authentication { } blocks and more.
+
+UnrealIRCd recently turned 25 years! 🎉 See
+[UnrealIRCd celebrates its 25th birthday](https://forums.unrealircd.org/viewtopic.php?t=9363).
 
 ### Enhancements:
 * In the [ban user { }](https://www.unrealircd.org/docs/Ban_user_block)
@@ -11,10 +14,10 @@ Please report any issues at https://bugs.unrealircd.org/
   [Mask item](https://www.unrealircd.org/docs/Mask_item).
   This means you can use all the power of mask items and security groups and
   multiple matching criteria.
-* The GeoIP module now contains info about 
+* The GeoIP module now contains information about
   [Autonomous System Numbers](https://www.unrealircd.org/docs/ASN):
    * The asn is shown in the user connecting notice as `[asn: ###]`,
-     in `WHOIS` (for IRCOps) and it is expanded in JSON data such as
+     is shown in `WHOIS` (for IRCOps) and it is expanded in JSON data such as
      [JSON Logging](https://www.unrealircd.org/docs/JSON_logging) and
      [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) calls like
      `user.list`.
