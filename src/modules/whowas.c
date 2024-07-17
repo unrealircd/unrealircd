@@ -104,10 +104,30 @@ CMD_FUNC(cmd_whowas)
 			    temp->realname);
 			if (!BadPtr(temp->ip) && ValidatePermissionsForPath("client:see:ip",client,NULL,NULL,NULL))
 			{
+				GeoIPResult *geo = geoip_lookup(temp->ip);
 				sendnumericfmt(client, RPL_WHOISHOST, "%s :was connecting from %s@%s %s",
 					temp->name,
 					temp->username, temp->hostname,
 					temp->ip ? temp->ip : "");
+				if (geo)
+				{
+					if (geo->country_code && geo->country_name)
+					{
+						sendnumericfmt(client, RPL_WHOISCOUNTRY, "%s %s :was connecting from %s",
+							       temp->name,
+							       geo->country_code,
+							       geo->country_name);
+					}
+					if (geo->asn)
+					{
+						sendnumericfmt(client, RPL_WHOISASN, "%s %u :was connecting from AS%u [%s]",
+							       temp->name,
+							       geo->asn,
+							       geo->asn,
+							       geo->asname ? geo->asname : "UNKNOWN");
+					}
+					free_geoip_result(geo);
+				}
 			}
 			if (IsOper(client) && !BadPtr(temp->account))
 			{
