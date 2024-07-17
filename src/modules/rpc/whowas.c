@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"rpc/whowas",
-	"1.0.0",
+	"1.0.1",
 	"whowas.* RPC calls",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -106,6 +106,23 @@ void json_expand_whowas(json_t *j, const char *key, WhoWas *e, int detail)
 	json_object_set_new(user, "servername", json_string_unreal(e->servername));
 	if (!BadPtr(e->account))
 		json_object_set_new(user, "account", json_string_unreal(e->account));
+
+	if (e->ip)
+	{
+		GeoIPResult *geo = geoip_lookup(e->ip);
+		if (geo)
+		{
+			json_t *geoip = json_object();
+			json_object_set_new(child, "geoip", geoip);
+			if (geo->country_code)
+				json_object_set_new(geoip, "country_code", json_string_unreal(geo->country_code));
+			if (geo->asn)
+				json_object_set_new(geoip, "asn", json_integer(geo->asn));
+			if (geo->asname)
+				json_object_set_new(geoip, "asname", json_string_unreal(geo->asname));
+			free_geoip_result(geo);
+		}
+	}
 }
 
 RPC_CALL_FUNC(rpc_whowas_get)
