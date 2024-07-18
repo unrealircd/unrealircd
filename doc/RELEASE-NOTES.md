@@ -1,5 +1,18 @@
+UnrealIRCd 6.1.7.1
+===================
+UnrealIRCd 6.1.7.1 is a quick dot release a few days after 6.1.7 to do two things:
+* Add country and ASN support in `WHOWAS`
+* Fix an annoying "[BUG] trying to modify fd -2 in fd table" message that
+  appeared to IRCOps sometimes. It was harmless and only happened if you
+  were using a recent version of the c-ares library (1.31.0 from June 18 2024
+  or later, which also is the one we ship with as fallback if the system
+  has no c-ares library installed).
+
+See the release notes for 6.1.7 below, from a couple of days ago, for a lot
+more features that were recently added.
+
 UnrealIRCd 6.1.7
-=================
+-----------------
 
 This is UnrealIRCd 6.1.7 stable. It comes with ASN support, more flexible
 ban user { } and require authentication { } blocks and more.
