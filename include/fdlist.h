@@ -34,7 +34,19 @@ extern int fd_fileopen(const char *path, unsigned int flags);
 #define FD_SELECT_READ		0x1
 #define FD_SELECT_WRITE		0x2
 
-extern void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data);
+#define fd_setselect(fd, flags, iocb, data) do { \
+		if (fd < 0) \
+		{ \
+			unreal_log(ULOG_ERROR, "io", "BUG_FD_SETSELECT_NEGATIVE_FD", NULL, \
+			           "[BUG] $file:$line: fd_setselect() call with negative fd $fd", \
+			           log_data_string("file", __FILE__), \
+			           log_data_integer("line", __LINE__), \
+			           log_data_integer("fd", fd)); \
+		} else { \
+			fd_setselect_real(fd, flags, iocb, data); \
+		} \
+	} while(0)
+extern void fd_setselect_real(int fd, int flags, IOCallbackFunc iocb, void *data);
 extern void fd_select(int delay);		/* backend-specific */
 extern void fd_refresh(int fd);			/* backend-specific */
 extern void fd_fork(); /* backend-specific */

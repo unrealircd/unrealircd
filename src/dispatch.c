@@ -47,7 +47,7 @@
 /***************************************************************************************
  * Backend-independent functions.  fd_setselect() and friends                          *
  ***************************************************************************************/
-void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data)
+void fd_setselect_real(int fd, int flags, IOCallbackFunc iocb, void *data)
 {
 	FDEntry *fde;
 	int changed = 0;
