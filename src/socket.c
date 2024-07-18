@@ -1145,9 +1145,11 @@ void start_of_normal_client_handshake(Client *client)
 
 	RunHook(HOOKTYPE_HANDSHAKE, client);
 
-	start_dns_and_ident_lookup(client);
+	if (!IsDead(client))
+		start_dns_and_ident_lookup(client);
 
-	fd_setselect(client->local->fd, FD_SELECT_READ, read_packet, client);
+	if (!IsDead(client))
+		fd_setselect(client->local->fd, FD_SELECT_READ, read_packet, client);
 }
 
 /** Called when DNS lookup has been completed and we can proceed with the client handshake.
