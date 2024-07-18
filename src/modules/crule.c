@@ -122,6 +122,7 @@ static int crule_directop(crule_context *, int, void **);
 static int crule__andor(crule_context *, int, void **);
 static int crule__not(crule_context *, int, void **);
 // newstyle
+static int crule_idle_time(crule_context *, int, void **);
 static int crule_online_time(crule_context *, int, void **);
 static int crule_reputation(crule_context *, int, void **);
 static int crule_tag(crule_context *, int, void **);
@@ -178,6 +179,7 @@ struct crule_funclistent {
 
 struct crule_funclistent crule_funclist[] = {
 	{"connected", 1, crule_connected},
+	{"idle_time", 0, crule_idle_time},
 	{"online_time", 0, crule_online_time},
 	{"reputation", 0, crule_reputation},
 	{"tag", 1, crule_tag},
@@ -368,6 +370,13 @@ static int crule_directop(crule_context *context, int numargs, void *crulearg[])
 		return 1;
 	}
 
+	return 0;
+}
+
+static int crule_idle_time(crule_context *context, int numargs, void *crulearg[])
+{
+	if (context && context->client && MyUser(context->client))
+		return (int)TStime() - context->client->local->idle_since;
 	return 0;
 }
 
