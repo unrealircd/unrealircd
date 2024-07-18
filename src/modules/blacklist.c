@@ -986,11 +986,6 @@ void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hos
 	BLUser *blu = (BLUser *)arg;
 	Client *client = blu->client;
 
-#ifdef DEBUGMODE
-	unreal_log(ULOG_DEBUG, "blacklist", "BLACKLIST_RESOLVER_CALLBACK", client,
-	           "Called for client $client.details");
-#endif
-
 	blu->refcnt--; /* one less outstanding DNS request remaining */
 
 	/* If we are the last to resolve something and the client is gone
