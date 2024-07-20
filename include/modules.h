@@ -2308,7 +2308,9 @@ int hooktype_realname_change(Client *client, const char *oldinfo);
 /** Called when changing IP (eg due to PROXY/WEBIRC/etc).
  * @param client		The client whose IP has changed
  * @param oldip			Old IP of the client
- * @return The return value is ignored (use return 0)
+ * @returns If you reject the user then use dead_link() and return HOOK_DENY
+ *          (DO NOT USE exit_client(), only dead_link()!),
+ *          otherwise use 'return 0' to proceed normally.
  */
 int hooktype_ip_change(Client *client, const char *oldip);
 

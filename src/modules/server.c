@@ -2104,9 +2104,10 @@ static int connect_server_helper(ConfigItem_link *aconf, Client *client)
 	if (aconf->outgoing.file)
 		SetUnixSocket(client);
 	else if (strchr(aconf->connect_ip, ':'))
-		SetIPV6(client);
-	
-	safe_strdup(client->ip, aconf->connect_ip ? aconf->connect_ip : "127.0.0.1");
+		client->local->socket_type = SOCKET_TYPE_IPV6;
+
+	if (!set_client_ip(client, aconf->connect_ip ? aconf->connect_ip : "127.0.0.1"))
+		return 0; /* Killed (would be odd) */
 	
 	snprintf(buf, sizeof buf, "Outgoing connection: %s", get_client_name(client, TRUE));
 	client->local->fd = fd_socket(IsUnixSocket(client) ? AF_UNIX : (IsIPV6(client) ? AF_INET6 : AF_INET), SOCK_STREAM, 0, buf);
@@ -2142,7 +2143,7 @@ static int connect_server_helper(ConfigItem_link *aconf, Client *client)
 
 	if (bindip && strcmp("*", bindip))
 	{
-		if (!unreal_bind(client->local->fd, bindip, 0, IsIPV6(client)))
+		if (!unreal_bind(client->local->fd, bindip, 0, client->local->socket_type))
 		{
 			unreal_log(ULOG_ERROR, "link", "LINK_ERROR_SOCKET_BIND", client,
 				   "Connect to $client failed: could not bind socket to $link_block.bind_ip: $socket_error -- "
@@ -2153,7 +2154,7 @@ static int connect_server_helper(ConfigItem_link *aconf, Client *client)
 		}
 	}
 
-	set_sock_opts(client->local->fd, client, IsIPV6(client));
+	set_sock_opts(client->local->fd, client, client->local->socket_type);
 
 	if (!unreal_connect(client->local->fd,
 			    aconf->outgoing.file ? aconf->outgoing.file : client->ip,

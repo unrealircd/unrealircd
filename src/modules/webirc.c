@@ -145,9 +145,6 @@ ConfigItem_proxy *find_webirc(Client *client, const char *password, ProxyType ty
 /* Does the CGI:IRC host spoofing work */
 void dowebirc(Client *client, const char *ip, const char *host, const char *options)
 {
-	char oldip[64];
-	char scratch[64];
-
 	if (IsWEBIRC(client))
 	{
 		exit_client(client, NULL, "Double CGI:IRC request (already identified)");
@@ -157,20 +154,10 @@ void dowebirc(Client *client, const char *ip, const char *host, const char *opti
 	if (host && !strcmp(ip, host))
 		host = NULL; /* host did not resolve, make it NULL */
 
-	/* STEP 1: Update client->local->ip
-	   inet_pton() returns 1 on success, 0 on bad input, -1 on bad AF */
-	if (!is_valid_ip(ip))
-	{
-		/* then we have an invalid IP */
-		exit_client(client, NULL, "Invalid IP address");
-		return;
-	}
-
-	/* STEP 2: Update GetIP() */
-	strlcpy(oldip, client->ip, sizeof(oldip));
-	safe_strdup(client->ip, ip);
+	if (!set_client_ip(client, ip))
+		return; /* Failed, client exited */
 		
-	/* STEP 3: Update client->local->hostp */
+	/* Update client->local->hostp */
 	/* (free old) */
 	if (client->local->hostp)
 	{
@@ -181,12 +168,8 @@ void dowebirc(Client *client, const char *ip, const char *host, const char *opti
 	if (host && valid_host(host, 1))
 		client->local->hostp = unreal_create_hostent(host, client->ip);
 
-	/* STEP 4: Update sockhost
-	   Make sure that if this any IPv4 address is _not_ prefixed with
-	   "::ffff:" by using Inet_ia2p().
-	 */
-	// Hmm I ignored above warning. May be bad during transition period.
-	strlcpy(client->local->sockhost, client->ip, sizeof(client->local->sockhost));
+	/* Update sockhost */
+	set_sockhost(client, client->ip);
 
 	SetWEBIRC(client);
 
@@ -207,8 +190,6 @@ void dowebirc(Client *client, const char *ip, const char *host, const char *opti
 			}
 		}
 	}
-
-	RunHook(HOOKTYPE_IP_CHANGE, client, oldip);
 }
 
 /* WEBIRC <pass> "cgiirc" <hostname> <ip> [:option1 [option2...]]*/

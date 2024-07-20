@@ -668,7 +668,22 @@ nickkill2done:
 	client->user->server = find_or_add(client->uplink->name);
 	strlcpy(client->user->realhost, hostname, sizeof(client->user->realhost));
 	if (ip)
-		safe_strdup(client->ip, ip);
+	{
+		if (!set_client_ip(client, ip))
+		{
+			/* This should not be possible as we validate the 'ip' with
+			 * the call to decode_ip() about 100 lines up.
+			 */
+			unreal_log(ULOG_ERROR, "nick", "REMOTE_CLIENT_IP_BUG", client,
+				   "[BUG] client $client has invalid ip $ip -- rejected",
+				   log_data_string("ip", ip));
+#ifdef DEBUGMODE
+			abort();
+#endif
+			/* This could leave a ghost / unsynched, but it should never happen... right? */
+			return;
+		}
+	}
 
 	if (*sstamp != '*')
 		strlcpy(client->user->account, sstamp, sizeof(client->user->account));

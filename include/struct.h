@@ -435,6 +435,7 @@ typedef enum ClientStatus {
 #define CLIENT_FLAG_IPUSERS_BUMPED	0x100000000	/**< The IpUsersBucket for this IP has been bumped (and needs to be decreased on disconnect) */
 #define CLIENT_FLAG_DEADSOCKET_IS_BANNED	0x200000000	/**< The deadsocket message should also send ERR_YOUREBANNEDCREEP and such */
 #define CLIENT_FLAG_CONNECT_FLOOD_CHECKED	0x400000000	/**< connect-flood has been checked (there are two hooks, so need this) */
+#define CLIENT_FLAG_IPV6			0x800000000	/**< client is using IPv6 */
 /** @} */
 
 #define OPER_SNOMASKS "+bBcdfkqsSoO"
@@ -529,6 +530,7 @@ typedef enum ClientStatus {
 #define IsVirus(x)			((x)->flags & CLIENT_FLAG_VIRUS)
 #define IsIdentLookupSent(x)		((x)->flags & CLIENT_FLAG_IDENTLOOKUPSENT)
 #define IsAsyncRPC(x)			((x)->flags & CLIENT_FLAG_ASYNC_RPC)
+#define IsIPV6(x)			((x)->flags & CLIENT_FLAG_IPV6)
 #define SetIdentLookup(x)		do { (x)->flags |= CLIENT_FLAG_IDENTLOOKUP; } while(0)
 #define SetClosing(x)			do { (x)->flags |= CLIENT_FLAG_CLOSING; } while(0)
 #define SetDCCBlock(x)			do { (x)->flags |= CLIENT_FLAG_DCCBLOCK; } while(0)
@@ -561,6 +563,7 @@ typedef enum ClientStatus {
 #define SetVirus(x)			do { (x)->flags |= CLIENT_FLAG_VIRUS; } while(0)
 #define SetIdentLookupSent(x)		do { (x)->flags |= CLIENT_FLAG_IDENTLOOKUPSENT; } while(0)
 #define SetAsyncRPC(x)			do { (x)->flags |= CLIENT_FLAG_ASYNC_RPC; } while(0)
+#define SetIPV6(x)			do { (x)->flags |= CLIENT_FLAG_IPV6; } while(0)
 #define ClearIdentLookup(x)		do { (x)->flags &= ~CLIENT_FLAG_IDENTLOOKUP; } while(0)
 #define ClearClosing(x)			do { (x)->flags &= ~CLIENT_FLAG_CLOSING; } while(0)
 #define ClearDCCBlock(x)		do { (x)->flags &= ~CLIENT_FLAG_DCCBLOCK; } while(0)
@@ -592,11 +595,10 @@ typedef enum ClientStatus {
 #define ClearVirus(x)			do { (x)->flags &= ~CLIENT_FLAG_VIRUS; } while(0)
 #define ClearIdentLookupSent(x)		do { (x)->flags &= ~CLIENT_FLAG_IDENTLOOKUPSENT; } while(0)
 #define ClearAsyncRPC(x)		do { (x)->flags &= ~CLIENT_FLAG_ASYNC_RPC; } while(0)
+#define ClearIPV6(x)			do { (x)->flags &= ~CLIENT_FLAG_IPV6; } while(0)
 /** @} */
 
-#define IsIPV6(x)			((x)->local ? (((x)->local->socket_type == SOCKET_TYPE_IPV6) ? 1 : 0) : (strchr((x)->ip,':') ? 1 : 0))
 #define IsUnixSocket(x)			((x)->local->socket_type == SOCKET_TYPE_UNIX)
-#define SetIPV6(x)			do { (x)->local->socket_type = SOCKET_TYPE_IPV6; } while(0)
 #define SetUnixSocket(x)			do { (x)->local->socket_type = SOCKET_TYPE_UNIX; } while(0)
 
 /* Others that access client structs: */
@@ -1466,7 +1468,8 @@ struct Client {
 	char id[IDLEN + 1];			/**< Unique ID: SID or UID */
 	struct list_head id_hash;		/**< For UID/SID hash table (idTable) */
 	Client *uplink;				/**< Server on where this client is connected to (can be &me) */
-	char *ip;				/**< IP address of user or server (never NULL) */
+	char *ip;				/**< IP address of user or server (can be NULL, eg for Services) */
+	char rawip[16];				/**< The raw IP in network byte order */
 	ModData moddata[MODDATA_MAX_CLIENT];	/**< Client attached module data, used by the ModData system */
 };
 

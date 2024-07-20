@@ -787,7 +787,6 @@ void do_parse_x_forwarded_proto_header(const char *value, HTTPForwardedHeader *f
 void webserver_handle_proxy(Client *client, ConfigItem_proxy *proxy)
 {
 	HTTPForwardedHeader *forwarded;
-	char oldip[64];
 	NameValuePrioList *header;
 
 	/* Set up 'forwarded' variable */
@@ -843,13 +842,12 @@ void webserver_handle_proxy(Client *client, ConfigItem_proxy *proxy)
 	}
 
 	/* store data / set new IP */
-	strlcpy(oldip, client->ip, sizeof(oldip));
-	safe_strdup(client->ip, forwarded->ip);
-	strlcpy(client->local->sockhost, forwarded->ip, sizeof(client->local->sockhost)); /* in case dns lookup fails or is disabled */
+	if (!set_client_ip(client, forwarded->ip))
+		return; /* Killed */
+	set_sockhost(client, forwarded->ip); /* in case dns lookup fails or is disabled */
 
 	/* restart DNS & ident lookups */
 	start_dns_and_ident_lookup(client);
-	RunHook(HOOKTYPE_IP_CHANGE, client, oldip);
 }
 
 /** Parse proxy headers (if any) and run proxy ip change routines (if needed).

@@ -93,6 +93,12 @@ static int ident_lookup_connect(Client *client)
 {
 	char buf[BUFSIZE];
 
+	if (IsUnixSocket(client))
+	{
+		ident_lookup_failed(client);
+		return 0;
+	}
+
 	snprintf(buf, sizeof buf, "identd: %s", get_client_name(client, TRUE));
 	if ((client->local->authfd = fd_socket(IsIPV6(client) ? AF_INET6 : AF_INET, SOCK_STREAM, 0, buf)) == -1)
 	{
@@ -112,13 +118,13 @@ static int ident_lookup_connect(Client *client)
 	if (should_show_connect_info(client))
 		sendto_one(client, NULL, ":%s %s", me.name, REPORT_DO_ID);
 
-	set_sock_opts(client->local->authfd, client, IsIPV6(client));
+	set_sock_opts(client->local->authfd, client, client->local->socket_type);
 
 	/* Bind to the IP the user got in */
-	unreal_bind(client->local->authfd, client->local->listener->ip, 0, IsIPV6(client));
+	unreal_bind(client->local->authfd, client->local->listener->ip, 0, client->local->socket_type);
 
 	/* And connect... */
-	if (!unreal_connect(client->local->authfd, client->ip, 113, IsIPV6(client)))
+	if (!unreal_connect(client->local->authfd, client->ip, 113, client->local->socket_type))
 	{
 		ident_lookup_failed(client);
 		return 0;

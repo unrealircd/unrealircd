@@ -808,11 +808,11 @@ int is_loopback_ip(char *ip)
  * @param port		Remote port (will be written)
  * @returns The IP address
  */
-const char *getpeerip(Client *client, int fd, int *port)
+const char *getpeerip(Client *client, int fd, SocketType socket_type, int *port)
 {
 	static char ret[HOSTLEN+1];
 
-	if (IsIPV6(client))
+	if (socket_type == SOCKET_TYPE_IPV6)
 	{
 		struct sockaddr_in6 addr;
 		int len = sizeof(addr);
@@ -859,7 +859,7 @@ Client *add_connection(ConfigItem_listen *listener, int fd)
 	if (listener->socket_type == SOCKET_TYPE_UNIX)
 		ip = listener->spoof_ip ? listener->spoof_ip : "127.0.0.1";
 	else
-		ip = getpeerip(client, fd, &port);
+		ip = getpeerip(client, fd, listener->socket_type, &port);
 
 	if (!ip)
 	{
@@ -889,7 +889,7 @@ refuse_client:
 
 	/* Fill in sockhost & ip ASAP */
 	set_sockhost(client, ip);
-	safe_strdup(client->ip, ip);
+	set_client_ip(client, ip);
 	client->local->port = port;
 	client->local->fd = fd;
 
@@ -1590,4 +1590,77 @@ const char *socket_type_valtostr(SocketType t)
 		default:
 			return "???";
 	}
+}
+
+/* Set or update the client IP address.
+ * This will validate, set and then run various hooks in modules,
+ * such as fetching reputation for the IP, checking max unknown connections,
+ * and so on. In the end the client may be rejected and KILLED
+ * if we return 0.
+ * @param client	Client
+ * @param ip		The new IP address (either IPv4 or IPv6)
+ * @returns 1 if all OK, 0 if client was killed.
+ */
+int set_client_ip(Client *client, const char *ip)
+{
+	Hook *h;
+	char oldip[128];
+	char newip[128];
+	int af = strchr(ip, ':') ? AF_INET6 : AF_INET;
+
+	/* Make a copy of the old IP, however the current
+	 * client->ip could be NULL (this could be a first set)
+	 */
+	if (client->ip)
+		strlcpy(oldip, client->ip, sizeof(oldip));
+	else
+		*oldip = '\0';
+
+	// wait: better use a scratch buffer and then memcpy?
+	// otherwise client->rawip may be different from client->ip
+	if (!inet_pton(af, ip, client->rawip))
+	{
+		dead_socket(client, "Invalid IP address");
+		return 0;
+	}
+
+	if (af == AF_INET6)
+		SetIPV6(client);
+	else
+		ClearIPV6(client);
+
+	/* Set the actual IP address.
+	 * These may never go out of synch so are together here:
+	 */
+	inetntop(af, client->rawip, newip, sizeof(newip));
+	safe_strdup(client->ip, newip);
+
+	/* For IP changes (so not first set), call this hook */
+	if (*oldip)
+	{
+		for (h = Hooks[HOOKTYPE_IP_CHANGE]; h; h = h->next)
+		{
+			int n = h->func.intfunc(client, oldip);
+			if (n == HOOK_DENY)
+			{
+				/* When using HOOK_DENY, the client must be killed
+				 * by dead_socket().
+				 * A) It should not be forgotten
+				 * B) Not by exit_client() since that is dangerous.
+				 */
+#ifdef DEBUGMODE
+				if (IsDead(client))
+					abort(); /* You should have used dead_socket() and not exit_client() */
+#endif
+				if (!IsDeadSocket(client))
+#ifdef DEBUGMODE
+					abort(); /* You should have used dead_socket() */
+#else
+					dead_socket(client, "Invalid IP change");
+#endif
+				return 0;
+			}
+		}
+	}
+	return 1;
 }

@@ -1160,7 +1160,7 @@ int tkl_ip_change(Client *client, const char *oldip)
 {
 	TKL *tkl;
 	if ((tkl = find_tkline_match_zap(client)))
-		banned_client(client, "Z-Lined", tkl->ptr.serverban->reason, (tkl->type & TKL_GLOBAL)?1:0, 0);
+		banned_client(client, "Z-Lined", tkl->ptr.serverban->reason, (tkl->type & TKL_GLOBAL)?1:0, NO_EXIT_CLIENT);
 	return 0;
 }
 
