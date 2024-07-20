@@ -25,7 +25,8 @@ For easier viewing, check out the latest online release notes at:
 https://github.com/unrealircd/unrealircd/blob/unreal60_dev/doc/RELEASE-NOTES.md
 
 UnrealIRCd 6 is compatible with the following services:
-* anope with the "unreal4" protocol module - version 2.0.7 or higher required!
+* anope 2.0.x (stable) with the "unreal4" protocol module - anope 2.0.7 or higher required
+* anope 2.1.x (dev) with the "unrealircd" protocol module
 * atheme with the "unreal4" protocol module - tested with version 7.2.9
 
 --------------------------------------------------------------------------------------
