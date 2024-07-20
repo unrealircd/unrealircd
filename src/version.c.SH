@@ -7,7 +7,7 @@ echo "Extracting src/version.c..."
 if [ -d ../.git ]; then
 	SUFFIX="-$(git rev-parse --short HEAD)"
 fi
-id="6.1.7.1$SUFFIX"
+id="6.1.8-git$SUFFIX"
 echo "$id"
 
 if test -r version.c

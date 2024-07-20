@@ -1,5 +1,23 @@
+UnrealIRCd 6.1.8-git
+===============
+
+This is the git version (development version) for future 6.1.8. This is work
+in progress and may not always be a stable version.
+
+### Enhancements:
+* TODO
+
+### Changes:
+* TODO
+
+### Fixes:
+* TODO
+
+### Developers and protocol:
+* TODO
+
 UnrealIRCd 6.1.7.1
-===================
+-------------------
 UnrealIRCd 6.1.7.1 is a quick dot release a few days after 6.1.7 to do two things:
 * Add country and ASN support in `WHOWAS`
 * Fix an annoying "[BUG] trying to modify fd -2 in fd table" message that
