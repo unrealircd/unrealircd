@@ -73,11 +73,19 @@ if [ "x$CURLDIR" = "x$UNREALCWD/extras/curl" ]; then
 else
 	# And that the path does not refer to eg an old unrealircd-1.2.3 either ;)
 	if echo "$CURLDIR"|egrep -qi extras.*curl; then
-		echo "WARNING: Potentially old cURL directory encountered ($CURLDIR)."
-		echo "I am changing the cURL directory to $UNREALCWD/extras/curl and forcing a rebuild of cURL."
 		CURLDIR="$UNREALCWD/extras/curl"
 		INSTALLCURL=1
 	fi
+fi
+if [ "$INSTALLCURL" = "1" ]; then
+	echo ""
+	echo "You previously used cURL with the auto-install-script. This is no longer"
+	echo "supported. You likely don't need it anyway, because since UnrealIRCd 6.0.0"
+	echo "we support remote includes with the 'https' protocol without cURL."
+	echo "You only need cURL for non-https such as insecure 'http', 'smb', 'ftp', etc."
+	echo "I am disabling cURL support for you..."
+	sleep 10
+	CURLDIR=""
 fi
 if [ "$REMOTEINC" = "1" ] ; then
 ARG="$ARG--enable-libcurl=$CURLDIR "
@@ -114,9 +122,6 @@ ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
 # remove possibly old instances of curl in ~/unrealircd/lib/
 rm -f $PRIVATELIBDIR/*curl* 1>/dev/null 2>&1
-if [ "x$INSTALLCURL" = "x1" ]; then
-	extras/curlinstall "$PRIVATELIBDIR" || exit 1
-fi
 # At least do SOME parallel compiling by default, IF:
 # - the MAKE environment variable is not set
 # - the MAKEFLAGS environment variable is not set
@@ -553,6 +558,19 @@ if [ ! -f $BASEPATH/conf/tls/server.cert.pem -a ! -f $BASEPATH/conf/ssl/server.c
 	done
 fi
 
+if echo "$CURLDIR"|egrep -qi extras.*curl; then
+	REMOTEINC=""
+	CURLDIR=""
+	echo ""
+	echo "You previously used cURL with the auto-install-script. This is no longer"
+	echo "supported. You likely don't need it anyway, because since UnrealIRCd 6.0.0"
+	echo "we support remote includes with the 'https' protocol without cURL."
+	echo "You only need cURL for non-https such as insecure 'http', 'smb', 'ftp', etc."
+	echo "I am disabling cURL support for you..."
+	echo "(Press enter to continue)"
+	read cc
+fi
+
 TEST=""
 while [ -z "$TEST" ] ; do
 	if [ "$REMOTEINC" = "1" ] ; then
@@ -561,12 +579,11 @@ while [ -z "$TEST" ] ; do
 		TEST="No"
 	fi
 	echo ""
-	echo "UnrealIRCd comes with support for 'remote includes', this allows things like:"
+	echo "UnrealIRCd always supports 'remote includes' for https URLs like:"
 	echo "include \"https://www.example.org/files/opers.conf\";"
-	echo "Do you want to compile with the libcurl library to enable additional protocols?"
-	echo "If you answer 'No' then only https:// links will work for remote includes."
-	echo "Answer 'Yes' if you need other protocols, such as plaintext http, ftp, tftp or smb."
-	echo "Most people answer 'No' here because they don't use remote includes or only need https."
+	echo "Do you also need support for non-https, such as ftp, tftp, smb or insecure http?"
+	echo "Answer 'Yes' if you need such protocols."
+	echo "By default (answer 'No') we only support the https protocol, which is perfectly fine for most people."
 	echo $n "[$TEST] -> $c"
 	read cc
 	if [ -z "$cc" ] ; then
@@ -594,7 +611,6 @@ if [ "$REMOTEINC" = "1" ] ; then
 		CURLDIR=""
 	fi
 
-	INSTALLCURL="0"
 	SUGGESTCURLDIR=""
 
 	if [ -d "/usr/local/include/curl" ]; then
@@ -658,61 +674,44 @@ if [ "$REMOTEINC" = "1" ] ; then
 	if [ "x$CURLDIR" != "x" ]; then
 		"$CURLDIR/bin/curl-config" --features 2>/dev/null | grep -q -e AsynchDNS
 		if [ "$?" != 0 ]; then
-			echo "Curl from $CURLDIR seems unusable ($CURLDIR/bin/curl-config does not exist)"
+			echo "Curl from $CURLDIR seems unusable ($CURLDIR/bin/curl-config does not exist) -- cURL disabled."
 			CURLDIR=""
 		fi
 	fi
 
 	if [ "x$CURLDIR" = "x" ]; then
-		# Still empty?
-		TEST=""
-		while [ -z "$TEST" ] ; do
-			TEST="Yes"
-			echo ""
-			echo "Do you want me to automatically download and install curl for you?"
-			echo $n "[$TEST] -> $c"
-			read cc
-			if [ -z "$cc" ] ; then
-				cc=$TEST
-			fi
-			case "$cc" in
-			[Yy]*)
-				INSTALLCURL="1"
-				CURLDIR="$UNREALCWD/extras/curl"
-				;;
-			[Nn]*)
-				INSTALLCURL="0"
-				;;
-			*)
-				echo ""
-				echo "You must enter either Yes or No"
-				TEST=""
-				;;
-			esac
-		done
+		echo ""
+		echo "ERROR: the cURL library could not be found and you said you needed it for remote includes."
+		echo ""
+		echo "Note that you only need cURL if you need remote includes with protocols like insecure 'http', 'smb', 'ftp', etc."
+		echo "You DO NOT need this for 'https' remote includes, as https support works without cURL since UnrealIRCd 6.0.0!"
+		echo ""
+		echo "Solution:"
+		echo "A) Re-run ./Config and answer 'No' to the question 'Do you also need support for non-https'"
+		echo "B) Or install the cURL library in the system (eg 'apt-get install libcurl4-openssl-dev' or similar)"
+		echo "   and then re-run ./Config"
+		exit 1
 	fi
 
-	if [ "$INSTALLCURL" != "1" ]; then
-		TEST=""
-		while [ -z "$TEST" ] ; do
-			TEST="$CURLDIR"
-			echo ""
-			echo "Specify the directory you installed libcurl to"
-			echo $n "[$TEST] -> $c"
-			read cc
-			if [ -z "$cc" ] ; then
-				cc=$TEST
-			else
-				TEST=$cc
-				CURLDIR=`eval echo $cc` # modified
-			fi
-		done
-		if [ "x$CURLDIR" != "x" ]; then
-			"$CURLDIR/bin/curl-config" --libs 1>/dev/null 2>&1
-			if [ "$?" != 0 ]; then
-				echo "Curl from $CURLDIR seems unusable ($CURLDIR/bin/curl-config does not exist)"
-				CURLDIR=""
-			fi
+	TEST=""
+	while [ -z "$TEST" ] ; do
+		TEST="$CURLDIR"
+		echo ""
+		echo "Specify the directory you installed libcurl to"
+		echo $n "[$TEST] -> $c"
+		read cc
+		if [ -z "$cc" ] ; then
+			cc=$TEST
+		else
+			TEST=$cc
+			CURLDIR=`eval echo $cc` # modified
+		fi
+	done
+	if [ "x$CURLDIR" != "x" ]; then
+		"$CURLDIR/bin/curl-config" --libs 1>/dev/null 2>&1
+		if [ "$?" != 0 ]; then
+			echo "Curl from $CURLDIR seems unusable ($CURLDIR/bin/curl-config does not exist)"
+			CURLDIR=""
 		fi
 	fi
 fi
