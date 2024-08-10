@@ -10,6 +10,7 @@ CONFDIR="@CONFDIR@"
 TMPDIR="@TMPDIR@"
 SCRIPTDIR="@SCRIPTDIR@"
 MODULESDIR="@MODULESDIR@"
+DOCDIR="@DOCDIR@"
 
 # When built with --with-asan, ASan does not dump core by default because
 # older gcc/clang might dump a 16TB core file. We explicitly enable it here.
@@ -274,6 +275,47 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 	if [ -f patch -a ! -s patch ]; then
 		echo "This UnrealIRCd version does not require that patch"
 	fi
+
+	wget -O patch.asc "https://www.unrealircd.org/patch?type=$1&patch=$2&version=$UNREALVER&sig=1" || exit 1
+	# GPG verification - if available
+	if gpg --version 1>/dev/null 2>&1; then
+		if [ -f "$DOCDIR/KEYS" ]; then
+			gpg --import "$DOCDIR/KEYS"
+			echo
+			if gpg --batch --exit-on-status-write-error --verify patch.asc patch; then
+				echo "GPG: Verification succeeded. Patch file is genuine."
+				export NOGPG=0
+			else
+				echo ""
+				echo "[!!!] WARNING: GPG/PGP verification of patch file failed. This could be a security issue."
+				echo "Check https://www.unrealircd.org/docs/FAQ#upgrade-verify-failed !"
+				echo "Type 'IGNORE' in uppercase to continue if you think it is safe."
+				echo "Type anything else to abort."
+				read answer
+				if [ "$answer" != "IGNORE" ]; then
+					exit 1
+				fi
+				export NOGPG=1
+			fi
+		else
+			echo ""
+			echo "WARNING: Unable to check integrity of patch file with GPG/PGP. Missing $DOCDIR/KEYS file."
+			echo "This is for your information only. It is possible to continue."
+			echo "Press ENTER to continue, or CTRL+C to abort."
+			echo "If in doubt, see https://www.unrealircd.org/docs/FAQ#upgrade-verify-failed"
+			export NOGPG=1
+		fi
+	else
+		echo "WARNING: The GnuPG (GPG/PGP) verification tool 'gpg' is not installed."
+		echo "Consider running 'sudo apt install gpg' or 'yum install gnupg2' on Linux,"
+		echo "or 'sudo pkg install gnupg' on FreeBSD."
+		echo "When 'gpg' is installed then the UnrealIRCd patch script can"
+		echo "verify the digital signature of the download file."
+		export NOGPG=1
+	fi
+
+	echo ""
+	echo ""
 
 	if patch --dry-run -p1 -R <patch 1>/dev/null 2>&1; then
 		echo "Patch already applied. Nothing to do."
