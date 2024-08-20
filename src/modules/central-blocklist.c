@@ -773,7 +773,11 @@ int cbl_is_handshake_finished(Client *client)
 void cbl_allow(Client *client)
 {
 	if (CBL(client))
+	{
+		if (CBL(client)->allowed_in)
+			return; /* Already allowed in */
 		CBL(client)->allowed_in = 1;
+	}
 
 	if (is_handshake_finished(client))
 		register_user(client);
@@ -850,6 +854,8 @@ void cbl_error_response(CBLTransfer *transfer, const char *error)
 		client = hash_find_id(n->name, NULL);
 		if (!client)
 			continue; /* Client disconnected already */
+		if (CBL(client) && CBL(client)->allowed_in)
+			continue; /* Client allowed in already (eg due to timeout) */
 		unreal_log(ULOG_DEBUG, "central-blocklist", "DEBUG_CENTRAL_BLOCKLIST_ERROR", client,
 			   "CBL: Client $client.details allowed in due to CBL error: $error",
 			   log_data_string("error", error));
