@@ -274,6 +274,7 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 	# A patch file of 0 bytes means the patch is not needed
 	if [ -f patch -a ! -s patch ]; then
 		echo "This UnrealIRCd version does not require that patch"
+		exit 1
 	fi
 
 	wget -O patch.asc "https://www.unrealircd.org/patch?type=$1&patch=$2&version=$UNREALVER&sig=1" || exit 1
