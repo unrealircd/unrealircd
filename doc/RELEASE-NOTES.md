@@ -16,9 +16,17 @@ in progress and may not always be a stable version.
 ### Developers and protocol:
 * TODO
 
-UnrealIRCd 6.1.7.1
+UnrealIRCd 6.1.7.2
 -------------------
-UnrealIRCd 6.1.7.1 is a quick dot release a few days after 6.1.7 to do two things:
+UnrealIRCd 6.1.7.2 is a dot release:
+* [Central Blocklist](https://www.unrealircd.org/docs/Central_Blocklist):
+  Fix issue if CBL server is not reachable (caused nick collisions)
+* Stop offering curlinstall script. Most people don't need it anymore as
+  without curl we support https remote includes since UnrealIRCd 6.0.0,
+  which is usually sufficient. People who need other protocols can install
+  the curl library system-wide.
+
+UnrealIRCd 6.1.7.1 is a dot release:
 * Add country and ASN support in `WHOWAS`
 * Fix an annoying "[BUG] trying to modify fd -2 in fd table" message that
   appeared to IRCOps sometimes. It was harmless and only happened if you
@@ -26,8 +34,7 @@ UnrealIRCd 6.1.7.1 is a quick dot release a few days after 6.1.7 to do two thing
   or later, which also is the one we ship with as fallback if the system
   has no c-ares library installed).
 
-See the release notes for 6.1.7 below, from a couple of days ago, for a lot
-more features that were recently added.
+See the release notes for 6.1.7 below for a lot more features/changes.
 
 UnrealIRCd 6.1.7
 -----------------
