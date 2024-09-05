@@ -61,7 +61,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, "MD", cmd_md, MAXPARA, CMD_SERVER);
+	CommandAdd(modinfo->handle, "MD", cmd_md, MAXPARA, CMD_SERVER|CMD_BIGLINES);
 	return MOD_SUCCESS;
 }
 
