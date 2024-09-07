@@ -1010,7 +1010,7 @@ extern int add_listmode_ex(Ban **list, Client *cptr, Channel *channel, const cha
 extern int del_listmode(Ban **list, Channel *channel, const char *banid);
 extern int Halfop_mode(long mode);
 extern const char *convert_regular_ban(char *mask, char *buf, size_t buflen);
-extern const char *clean_ban_mask(const char *, int, Client *, int);
+extern const char *clean_ban_mask(const char *, int, ExtbanType, Client *, Channel *, int);
 extern int find_invex(Channel *channel, Client *client);
 extern void DoMD5(char *mdout, const char *src, unsigned long n);
 extern char *md5hash(char *dst, const char *src, unsigned long n);
@@ -1211,6 +1211,7 @@ extern int is_extended_server_ban(const char *str);
 extern int empty_mode(const char *m);
 extern void free_multilinemode(MultiLineMode *m);
 #define safe_free_multilinemode(m) do { if (m) free_multilinemode(m); m = NULL; } while(0)
+extern ExtbanType mode_letter_to_extbantype(char c);
 extern int valid_sid(const char *name);
 extern int valid_uid(const char *name);
 extern void parse_client_queued(Client *client);

@@ -169,7 +169,7 @@ int usc_reparse_mode(char **msg, char *p, int *length)
 
 		if ((pm.modechar == 'b') || (pm.modechar == 'e') || (pm.modechar == 'I'))
 		{
-			const char *result = clean_ban_mask(pm.param, pm.what, &me, 1);
+			const char *result = clean_ban_mask(pm.param, pm.what, mode_letter_to_extbantype(pm.modechar), &me, NULL, 1); // some context lost
 			strlcat(obuf, result?result:"<invalid>", sizeof(obuf));
 			strlcat(obuf, " ", sizeof(obuf));
 		} else
@@ -245,7 +245,7 @@ int usc_reparse_sjoin(char **msg, char *p, int *length)
 			if (!strchr("&\"\\", next[1]))
 				goto fallback_usc_reparse_sjoin;
 			*next++ = '\0';
-			result = clean_ban_mask(next+1, MODE_ADD, &me, 1);
+			result = clean_ban_mask(next+1, MODE_ADD, EXBTYPE_BAN, &me, NULL, 1); // some context lost
 			if (!result)
 			{
 				unreal_log(ULOG_WARNING, "unreal_server_compat", "USC_REPARSE_SJOIN_FAILURE", NULL,
@@ -262,7 +262,7 @@ int usc_reparse_sjoin(char **msg, char *p, int *length)
 		if (strchr("&\"\\", *s))
 		{
 			/* +b / +e / +I */
-			const char *result = clean_ban_mask(s+1, MODE_ADD, &me, 1);
+			const char *result = clean_ban_mask(s+1, MODE_ADD, EXBTYPE_BAN, &me, NULL, 1); // some context lost
 			if (!result)
 			{
 				unreal_log(ULOG_WARNING, "unreal_server_compat", "USC_REPARSE_SJOIN_FAILURE", NULL,

@@ -373,7 +373,7 @@ int write_channel_entry(UnrealDB *db, const char *tmpfname, Channel *channel)
 		} \
 	} while(0)
 
-int read_listmode(UnrealDB *db, Ban **lst)
+int read_listmode(UnrealDB *db, Channel *channel, ExtbanType ban_type, Ban **lst)
 {
 	uint32_t total;
 	uint64_t when;
@@ -389,7 +389,7 @@ int read_listmode(UnrealDB *db, Ban **lst)
 		R_SAFE(unrealdb_read_str(db, &e->banstr));
 		R_SAFE(unrealdb_read_str(db, &e->who));
 		R_SAFE(unrealdb_read_int64(db, &when));
-		str = clean_ban_mask(e->banstr, MODE_ADD, &me, 0);
+		str = clean_ban_mask(e->banstr, MODE_ADD, ban_type, &me, channel, 0);
 		if (str == NULL)
 		{
 			/* Skip this item */
@@ -538,9 +538,9 @@ int read_channeldb(void)
 		channel->topic_time = topic_time;
 		safe_strdup(channel->mode_lock, mode_lock);
 		set_channel_mode(channel, NULL, modes1, modes2);
-		R_SAFE(read_listmode(db, &channel->banlist));
-		R_SAFE(read_listmode(db, &channel->exlist));
-		R_SAFE(read_listmode(db, &channel->invexlist));
+		R_SAFE(read_listmode(db, channel, EXBTYPE_BAN, &channel->banlist));
+		R_SAFE(read_listmode(db, channel, EXBTYPE_EXCEPT, &channel->exlist));
+		R_SAFE(read_listmode(db, channel, EXBTYPE_INVEX, &channel->invexlist));
 		R_SAFE(unrealdb_read_int32(db, &magic));
 		FreeChannelEntry();
 		added++;

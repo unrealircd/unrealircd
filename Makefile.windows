@@ -268,9 +268,10 @@ DLL_FILES=\
  src/modules/extbans/asn.dll \
  src/modules/extbans/certfp.dll \
  src/modules/extbans/country.dll \
- src/modules/extbans/inchannel.dll \
- src/modules/extbans/join.dll \
  src/modules/extbans/flood.dll \
+ src/modules/extbans/inchannel.dll \
+ src/modules/extbans/inherit.dll \
+ src/modules/extbans/join.dll \
  src/modules/extbans/msgbypass.dll \
  src/modules/extbans/nickchange.dll \
  src/modules/extbans/operclass.dll \
@@ -914,6 +915,9 @@ src/modules/extbans/country.dll: src/modules/extbans/country.c $(INCLUDES)
 
 src/modules/extbans/inchannel.dll: src/modules/extbans/inchannel.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/extbans/inchannel.c /Fesrc/modules/extbans/ /Fosrc/modules/extbans/ /Fdsrc/modules/extbans/inchannel.pdb $(MODLFLAGS)
+
+src/modules/extbans/inherit.dll: src/modules/extbans/inherit.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/extbans/inherit.c /Fesrc/modules/extbans/ /Fosrc/modules/extbans/ /Fdsrc/modules/extbans/inherit.pdb $(MODLFLAGS)
 
 src/modules/extbans/join.dll: src/modules/extbans/join.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/extbans/join.c /Fesrc/modules/extbans/ /Fosrc/modules/extbans/ /Fdsrc/modules/extbans/join.pdb $(MODLFLAGS)

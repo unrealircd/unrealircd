@@ -389,7 +389,7 @@ int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp
 	/* Now we have to manually walk the banlist and check if things match */
 	for (ban = channel->banlist; ban; ban=ban->next)
 	{
-		char *banstr = ban->banstr;
+		const char *banstr = ban->banstr;
 
 		/* Pretend time does not exist... */
 		if (!strncmp(banstr, "~t:", 3))

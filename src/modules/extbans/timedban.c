@@ -146,7 +146,10 @@ const char *generic_clean_ban_mask(BanContext *b, Extban *extban)
 			static char retbuf[512];
 			BanContext *newb = safe_alloc(sizeof(BanContext));
 			newb->banstr = nextbanstr;
+			newb->ban_type = b->ban_type;
 			newb->conv_options = b->conv_options;
+			newb->client = b->client;
+			newb->channel = b->channel;
 			ret = extban->conv_param(newb, extban);
 			ret = prefix_with_extban(ret, newb, extban, retbuf, sizeof(retbuf));
 			safe_free(newb);

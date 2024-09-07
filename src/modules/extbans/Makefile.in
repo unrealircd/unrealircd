@@ -35,7 +35,7 @@ R_MODULES= \
 	join.so quiet.so nickchange.so inchannel.so realname.so \
 	account.so operclass.so certfp.so textban.so msgbypass.so \
 	timedban.so partmsg.so securitygroup.so \
-	country.so asn.so flood.so
+	country.so asn.so flood.so inherit.so
 
 MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@

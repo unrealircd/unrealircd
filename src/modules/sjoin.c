@@ -513,6 +513,7 @@ CMD_FUNC(cmd_sjoin)
 		{
 			/* It's a list mode................ */
 			const char *str;
+			ExtbanType ban_type;
 			
 			if (removetheirs)
 				continue;
@@ -523,7 +524,8 @@ CMD_FUNC(cmd_sjoin)
 			if ((item[0] != '~') && (!strchr(item, '!') || !strchr(item, '@') || (item[0] == '!')))
 				continue;
 
-			str = clean_ban_mask(item, MODE_ADD, client, 0);
+			ban_type = mode_letter_to_extbantype(*item_modes);
+			str = clean_ban_mask(item, MODE_ADD, ban_type, client, channel, 0);
 			if (!str)
 				continue; /* invalid ban syntax */
 			strlcpy(item, str, sizeof(item));
