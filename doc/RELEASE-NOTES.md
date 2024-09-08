@@ -5,16 +5,35 @@ This is the git version (development version) for future 6.1.8. This is work
 in progress and may not always be a stable version.
 
 ### Enhancements:
-* TODO
+* New [Extended ban](https://www.unrealircd.org/docs/Extended_server_bans#Group_4:_special)
+  to inherit channel bans from another channel:
+  * If in channel `#test` you add `+b ~inherit:#main` then anyone banned in
+    `#main` will be unable to join `#test`.
+  * This only applies for on-join ban checking, not for quiet bans,
+    nick-changes, text bans, etc.
+  * If the other channel (`#main` in this example) also has `~inherit` bans
+    then we do not follow these (no nesting).
+  * The maximum number of ~inherit bans in a channel is limited to only
+    1 by default, see 
+    [set::max-inherit-extended-bans](https://www.unrealircd.org/docs/Set_block#set::max-inherit-extended-bans)
+  * This can also be used in `+e` and `+I`, which are counted separately and
+    have their own limit.
 
 ### Changes:
-* TODO
+* When retrieving cold or hot patches we now do proper GPG/PGP checks.
+  just like we do on `./unrealircd upgrade`
 
 ### Fixes:
-* TODO
+* The [require authentication { }](https://www.unrealircd.org/docs/Require_authentication_block
+  was broken in 6.1.7.*.
+* [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) call `spamfilter.get`
+  could not retrieve information about config-based spamfilters.
 
 ### Developers and protocol:
-* TODO
+* The `MD` S2S command now supports `BIGLINES`. We don't plan to use this
+  soon, this is mostly so all UnrealIRCd servers support this in year or
+  two. However, if you do plan to serialize big moddata results then be
+  sure all UnrealIRCd servers are on 6.1.8 or higher.
 
 UnrealIRCd 6.1.7.2
 -------------------
