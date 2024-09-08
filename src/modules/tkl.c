@@ -4962,6 +4962,7 @@ void ban_act_set(Client *client, BanAction *action)
 	bump_tag_serial(client);
 	unreal_log(ULOG_DEBUG, "tkl", "TAG_CLIENT", client,
 	           "Client $nick tag $tag is now set to $value",
+	           log_data_string("nick", client->name),
 	           log_data_string("tag", tag->name),
 	           log_data_integer("value", tag->value));
 }
