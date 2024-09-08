@@ -165,7 +165,6 @@ int spamfilter_select_criteria(Client *client, json_t *request, json_t *params, 
 RPC_CALL_FUNC(rpc_spamfilter_get)
 {
 	json_t *result;
-	int type = TKL_SPAMF|TKL_GLOBAL;
 	const char *name;
 	TKL *tkl;
 	BanActionValue action;
@@ -177,11 +176,16 @@ RPC_CALL_FUNC(rpc_spamfilter_get)
 	if (!spamfilter_select_criteria(client, request, params, &name, &match_type, &targets, targetbuf, sizeof(targetbuf), &action, actionbuf))
 		return; /* Error already communicated to client */
 
-	tkl = find_tkl_spamfilter(type, name, action, targets);
+	/* For spamfilter.get we first try global spamfilters, then local. */
+	tkl = find_tkl_spamfilter(TKL_SPAMF|TKL_GLOBAL, name, action, targets);
 	if (!tkl)
 	{
-		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Spamfilter not found");
-		return;
+		tkl = find_tkl_spamfilter(TKL_SPAMF, name, action, targets);
+		if (!tkl)
+		{
+			rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Spamfilter not found");
+			return;
+		}
 	}
 
 	result = json_object();
