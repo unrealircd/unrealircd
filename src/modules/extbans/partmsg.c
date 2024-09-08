@@ -67,8 +67,8 @@ MOD_UNLOAD()
 
 int extban_partmsg_is_banned(BanContext *b)
 {
-	b->msg = NULL;
-	// Uh.. there is no attempt to match.... anything.......?
-
+	if (ban_check_mask(b))
+		b->msg = NULL;
+	
 	return 0;
 }
