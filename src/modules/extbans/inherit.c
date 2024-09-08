@@ -27,13 +27,18 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
 };
 
-// TODO: move this to config and support different values for 'b', 'e', and 'I'.
-#define MAXIMUM_INHERIT_BAN_COUNT_PER_CHANNEL 1
-
 /* Forward declarations */
+static int inherit_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+static int inherit_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 int extban_inherit_is_ok(BanContext *b);
 const char *extban_inherit_conv_param(BanContext *b, Extban *extban);
 int extban_inherit_is_banned(BanContext *b);
+int inherit_stats(Client *client, const char *flag);
+
+/* Variables */
+int maximum_inherit_ban_count = 1;
+int maximum_inherit_exempt_count = 1;
+int maximum_inherit_invex_count = 1;
 
 Extban *register_channel_extban(ModuleInfo *modinfo)
 {
@@ -63,6 +68,7 @@ MOD_TEST()
 		config_error("could not register extended ban type ~inherit");
 		return MOD_FAILED;
 	}
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, inherit_config_test);
 
 	return MOD_SUCCESS;
 }
@@ -75,6 +81,8 @@ MOD_INIT()
 		config_error("could not register extended ban type ~inherit");
 		return MOD_FAILED;
 	}
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, inherit_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, inherit_stats);
 
 	return MOD_SUCCESS;
 }
@@ -89,7 +97,96 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int exceeds_inherit_ban_count(BanContext *b)
+static int inherit_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
+	int errors = 0;
+	ConfigEntry *cep, *cepp;
+
+	if (type != CONFIG_SET)
+		return 0;
+
+	/* We are only interrested in set::max-inherit-extended-bans.. */
+	if (!ce || strcmp(ce->name, "max-inherit-extended-bans"))
+		return 0;
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		CheckNull(cep);
+		if (!strcmp(cep->name, "ban") ||
+		    !strcmp(cep->name, "ban-exception") ||
+		    !strcmp(cep->name, "invite-exception"))
+		{
+			int v = atoi(cep->value);
+			if (v < 0)
+			{
+				config_error("%s:%i: set::max-inherit-extended-bans::%s item has a value, which is unexpected. Check your syntax!",
+					cep->file->filename, cep->line_number, cep->name);
+					errors++;
+				continue;
+			}
+		} else {
+			config_error_unknown(cep->file->filename, cep->line_number,
+			                     "set::max-inherit-extended-bans", cep->name);
+			errors++;
+		}
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+static int inherit_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+{
+	ConfigEntry *cep, *cepp;
+
+	if (type != CONFIG_SET)
+		return 0;
+
+	/* We are only interrested in set::max-inherit-extended-bans.. */
+	if (!ce || strcmp(ce->name, "max-inherit-extended-bans"))
+		return 0;
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "ban"))
+			maximum_inherit_ban_count = atoi(cep->value);
+		else if (!strcmp(cep->name, "ban-exception"))
+			maximum_inherit_exempt_count = atoi(cep->value);
+		else if (!strcmp(cep->name, "invite-exception"))
+			maximum_inherit_invex_count = atoi(cep->value);
+	}
+	return 1;
+}
+
+int inherit_stats(Client *client, const char *flag)
+{
+	if (*flag != 'S')
+		return 0;
+
+	sendtxtnumeric(client, "max-inherit-extended-bans::ban: %d", maximum_inherit_ban_count);
+	sendtxtnumeric(client, "max-inherit-extended-bans::ban-exception: %d", maximum_inherit_exempt_count);
+	sendtxtnumeric(client, "max-inherit-extended-bans::invite-exception: %d", maximum_inherit_invex_count);
+	return 1;
+}
+
+/** Get the limit for ~inherit entries for the ban type (+b/+e/+I) */
+static int maximum_ban_inherit_limit(ExtbanType ban_type)
+{
+	switch (ban_type)
+	{
+		case EXBTYPE_BAN:
+			return maximum_inherit_ban_count;
+		case EXBTYPE_EXCEPT:
+			return maximum_inherit_exempt_count;
+		case EXBTYPE_INVEX:
+			return maximum_inherit_invex_count;
+		default:
+			return 0;
+	}
+}
+
+/** Does this channel exceed the maximum number of ~inherit entries? */
+static int exceeds_inherit_ban_count(BanContext *b)
 {
 	Ban *ban;
 	int cnt = 0;
@@ -99,22 +196,15 @@ int exceeds_inherit_ban_count(BanContext *b)
 		return 0;
 
 	if (b->ban_type == EXBTYPE_BAN)
-	{
 		ban = b->channel->banlist;
-		limit = MAXIMUM_INHERIT_BAN_COUNT_PER_CHANNEL;
-	} else if (b->ban_type == EXBTYPE_EXCEPT)
-	{
+	else if (b->ban_type == EXBTYPE_EXCEPT)
 		ban = b->channel->exlist;
-		limit = MAXIMUM_INHERIT_BAN_COUNT_PER_CHANNEL;
-	} else if (b->ban_type == EXBTYPE_INVEX)
-	{
+	else if (b->ban_type == EXBTYPE_INVEX)
 		ban = b->channel->invexlist;
-		limit = MAXIMUM_INHERIT_BAN_COUNT_PER_CHANNEL;
-	} else
-	{
-		/* Huh? Not +beI. Then we have no idea. Reject it. */
-		return 1;
-	}
+	else
+		return 1; /* Huh? Not +beI. Then we have no idea. Reject it. */
+
+	limit = maximum_ban_inherit_limit(b->ban_type);
 
 	for (; ban; ban = ban->next)
 	{
@@ -185,15 +275,16 @@ int extban_inherit_is_ok(BanContext *b)
 	{
 		sendnotice(b->client, "Your ExtBan ~inherit:%s was not accepted because "
 		                      "this channel already contains the maximum "
-		                      "amount of ~inherit entries.",
-		                      b->banstr);
+		                      "amount of ~inherit entries (%d).",
+		                      b->banstr,
+		                      maximum_ban_inherit_limit(b->ban_type));
 		return 0;
 	}
 
 	return 1;
 }
 
-static int inherit_nested = 0;
+static int extban_inherit_nested = 0;
 
 int extban_inherit_is_banned(BanContext *b)
 {
@@ -203,7 +294,7 @@ int extban_inherit_is_banned(BanContext *b)
 	const char *errmsg = NULL;
 	int retval;
 
-	if (inherit_nested)
+	if (extban_inherit_nested)
 		return 0;
 
 	if (!b->client->user)
@@ -213,9 +304,9 @@ int extban_inherit_is_banned(BanContext *b)
 	if (!channel)
 		return 0;
 
-	inherit_nested++;
+	extban_inherit_nested++;
 	ret = is_banned(b->client, channel, BANCHK_JOIN, NULL, &errmsg);
-	inherit_nested--;
+	extban_inherit_nested--;
 
 	return ret ? 1 : 0;
 }
