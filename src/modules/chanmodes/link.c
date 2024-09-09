@@ -361,6 +361,7 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, const char *key)
 		b->client = client;
 		b->channel = channel;
 		b->ban_check_types = BANCHK_JOIN;
+		b->ban_type = EXBTYPE_BAN;
 
 		for (ban = channel->banlist; ban; ban = ban->next)
 		{
@@ -423,6 +424,7 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, const char *key)
 			{
 				/* Forward ban matched, now check for +e */
 				Ban *ex = NULL;
+				b->ban_type = EXBTYPE_EXCEPT;
 				for (ex = channel->exlist; ex; ex = ex->next)
 				{
 					b->banstr = ex->banstr;

@@ -77,7 +77,7 @@ int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageR
 	b->client = client;
 	b->channel = channel;
 	b->ban_check_types = BANCHK_MSG;
-
+	b->ban_type = EXBTYPE_EXCEPT;
 	for (ban = channel->exlist; ban; ban=ban->next)
 	{
 		char *type;

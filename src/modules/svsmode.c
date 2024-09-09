@@ -99,29 +99,33 @@ void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 			acptr->user->username, acptr->user->cloakedhost),
 			sizeof chost);
 
+	b = safe_alloc(sizeof(BanContext));
+
 	/* SELECT BANLIST */
 
 	switch (chmode)
 	{
 		case 'b':
 			banlist = &channel->banlist;
+			b->ban_type = EXBTYPE_BAN;
 			break;
 		case 'e':
 			banlist = &channel->exlist;
+			b->ban_type = EXBTYPE_EXCEPT;
 			break;
 		case 'I':
 			banlist = &channel->invexlist;
+			b->ban_type = EXBTYPE_INVEX;
 			break;
 		default:
 			abort();
 	}
 
 	/* DO THE ACTUAL WORK */
-
-	b = safe_alloc(sizeof(BanContext));
 	b->client = acptr;
 	b->channel = channel;
 	b->ban_check_types = BANCHK_JOIN;
+	b->ban_type = EXBTYPE_BAN;
 
 	for (ban = *banlist; ban; ban = bnext)
 	{

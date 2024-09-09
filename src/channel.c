@@ -434,6 +434,7 @@ Ban *is_banned_with_nick(Client *client, Channel *channel, int type, const char 
 	 * If a +e was found we return NULL, if not, we return the ban.
 	 */
 
+	b->ban_type = EXBTYPE_BAN;
 	for (ban = channel->banlist; ban; ban = ban->next)
 	{
 		b->banstr = ban->banstr;
@@ -444,6 +445,7 @@ Ban *is_banned_with_nick(Client *client, Channel *channel, int type, const char 
 	if (ban)
 	{
 		/* Ban found, now check for +e */
+		b->ban_type = EXBTYPE_EXCEPT;
 		for (ex = channel->exlist; ex; ex = ex->next)
 		{
 			b->banstr = ex->banstr;
