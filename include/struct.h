@@ -1557,7 +1557,6 @@ struct Server {
 
 /** @} */
 
-typedef struct RPCClient RPCClient;
 /** RPC Client information */
 struct RPCClient {
 	char *rpc_user; /**< Name of the rpc-user block after authentication, NULL during pre-auth */
