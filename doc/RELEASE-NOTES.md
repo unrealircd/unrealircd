@@ -22,6 +22,7 @@ in progress and may not always be a stable version.
 ### Changes:
 * When retrieving cold or hot patches we now do proper GPG/PGP checks.
   Just like we do on `./unrealircd upgrade`
+* Update shipped libraries: c-ares to 1.33.1
 
 ### Fixes:
 * The [require authentication { }](https://www.unrealircd.org/docs/Require_authentication_block)

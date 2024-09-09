@@ -8480,7 +8480,7 @@ fi
 if test "$has_system_cares" = "no"
 then :
 
-cares_version="1.31.0"
+cares_version="1.33.1"
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: extracting c-ares resolver library" >&5
 printf "%s\n" "extracting c-ares resolver library" >&6; }
 cur_dir=`pwd`
