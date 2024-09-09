@@ -16,8 +16,8 @@ in progress and may not always be a stable version.
   * The maximum number of ~inherit bans in a channel is limited to only
     1 by default, see 
     [set::max-inherit-extended-bans](https://www.unrealircd.org/docs/Set_block#set::max-inherit-extended-bans)
-  * TODO: This does not work properly yet: This can also be used in `+e` and `+I`, which are counted separately and
-    have their own limit.
+  * This can also be used in `+I`, which entries are counted separately and
+    have their own limit. (TODO: `+e` still needs to be done)
 
 ### Changes:
 * When retrieving cold or hot patches we now do proper GPG/PGP checks.

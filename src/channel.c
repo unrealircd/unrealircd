@@ -895,6 +895,7 @@ int find_invex(Channel *channel, Client *client)
 	b->client = client;
 	b->channel = channel;
 	b->ban_check_types = BANCHK_JOIN;
+	b->ban_type = EXBTYPE_INVEX;
 
 	for (inv = channel->invexlist; inv; inv = inv->next)
 	{

@@ -290,9 +290,8 @@ int extban_inherit_is_banned(BanContext *b)
 {
 	Channel *channel;
 	BanContext *newctx;
-	Ban *ret;
+	int ret = 0;
 	const char *errmsg = NULL;
-	int retval;
 
 	if (extban_inherit_nested)
 		return 0;
@@ -305,8 +304,12 @@ int extban_inherit_is_banned(BanContext *b)
 		return 0;
 
 	extban_inherit_nested++;
-	ret = is_banned(b->client, channel, BANCHK_JOIN, NULL, &errmsg);
+	if (b->ban_type == EXBTYPE_BAN)
+		ret = is_banned(b->client, channel, BANCHK_JOIN, NULL, &errmsg) ? 1 : 0;
+	else if (b->ban_type == EXBTYPE_INVEX)
+		ret = find_invex(channel, b->client);
+	/* todo: else if (b->ban_type == EXBTYPE_EXCEPT.... */
 	extban_inherit_nested--;
 
-	return ret ? 1 : 0;
+	return ret;
 }
