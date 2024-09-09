@@ -16,7 +16,7 @@ in progress and may not always be a stable version.
   * The maximum number of ~inherit bans in a channel is limited to only
     1 by default, see 
     [set::max-inherit-extended-bans](https://www.unrealircd.org/docs/Set_block#set::max-inherit-extended-bans)
-  * This can also be used in `+e` and `+I`, which are counted separately and
+  * TODO: This does not work properly yet: This can also be used in `+e` and `+I`, which are counted separately and
     have their own limit.
 
 ### Changes:
