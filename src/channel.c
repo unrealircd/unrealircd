@@ -367,7 +367,6 @@ inline Ban *is_banned(Client *client, Channel *channel, int type, const char **m
 /** ban_check_mask - Checks if the user matches the specified n!u@h mask -or- run an extended ban.
  * This is basically extracting the mask and extban check from is_banned_with_nick,
  * but with being a bit more strict in what an extban is.
- * Strange things could happen if this is called outside standard ban checking.
  * @param b	Ban context, see BanContext
  * @returns	Nonzero if the mask/extban succeeds. Zero if it doesn't.
  */
