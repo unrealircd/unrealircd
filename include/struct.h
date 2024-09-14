@@ -2469,15 +2469,6 @@ extern MODVAR SSL_CTX *ctx_client;
 
 #define TLS_PROTOCOL_ALL		0xffff
 
-typedef struct IpUsersBucket IpUsersBucket;
-struct IpUsersBucket
-{
-	IpUsersBucket *prev, *next;
-	char rawip[16];
-	int local_clients;
-	int global_clients;
-};
-
 typedef struct CoreChannelModeTable CoreChannelModeTable;
 struct CoreChannelModeTable {
 	long mode;			/**< Mode value (which bit will be set) */

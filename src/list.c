@@ -284,8 +284,6 @@ void free_user(Client *client)
 {
 	RunHook(HOOKTYPE_FREE_USER, client);
 
-	decrease_ipusers_bucket(client);
-
 	safe_free(client->user->away);
 	if (client->user->swhois)
 	{

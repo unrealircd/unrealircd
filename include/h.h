@@ -436,7 +436,6 @@ extern void del_queries(const char *);
 #define NICK_HASH_TABLE_SIZE 32768
 #define CHAN_HASH_TABLE_SIZE 32768
 #define WHOWAS_HASH_TABLE_SIZE 32768
-#define IPUSERS_HASH_TABLE_SIZE 8192
 extern uint64_t siphash(const char *in, const char *k);
 extern uint64_t siphash_raw(const char *in, size_t len, const char *k);
 extern uint64_t siphash_nocase(const char *in, const char *k);
@@ -462,12 +461,6 @@ extern Client *hash_find_id(const char *, Client *);
 extern Client *hash_find_nickatserver(const char *, Client *);
 extern Channel *find_channel(const char *name);
 extern Client *hash_find_server(const char *, Client *);
-extern IpUsersBucket *find_ipusers_bucket(Client *client);
-extern IpUsersBucket *add_ipusers_bucket(Client *client);
-extern void decrease_ipusers_bucket(Client *client);
-extern MODVAR IpUsersBucket *IpUsersHash_ipv4[IPUSERS_HASH_TABLE_SIZE];
-extern MODVAR IpUsersBucket *IpUsersHash_ipv6[IPUSERS_HASH_TABLE_SIZE];
-
 
 /* Mode externs
 */

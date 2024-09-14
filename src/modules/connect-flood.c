@@ -65,6 +65,19 @@ MOD_INIT()
 	return MOD_SUCCESS;
 }
 
+MOD_LOAD()
+{
+	add_throttling_timeout_timer(modinfo);
+	return MOD_SUCCESS;
+}
+
+MOD_UNLOAD()
+{
+	SavePersistentPointer(modinfo, siphashkey_throttling);
+	SavePersistentPointer(modinfo, ThrottlingHash);
+	return MOD_SUCCESS;
+}
+
 void siphashkey_throttling_free(ModData *m)
 {
 	safe_free(siphashkey_throttling);
@@ -77,19 +90,6 @@ void throttlinghash_free(ModData *m)
 	// and then end with this:
 	safe_free(ThrottlingHash);
 	m->ptr = NULL;
-}
-
-MOD_LOAD()
-{
-	add_throttling_timeout_timer(modinfo);
-	return MOD_SUCCESS;
-}
-
-MOD_UNLOAD()
-{
-	SavePersistentPointer(modinfo, siphashkey_throttling);
-	SavePersistentPointer(modinfo, ThrottlingHash);
-	return MOD_SUCCESS;
 }
 
 int connect_flood_throttle(Client *client, int exitflags)

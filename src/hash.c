@@ -264,7 +264,6 @@ static Channel *channelTable[CHAN_HASH_TABLE_SIZE];
 static char siphashkey_nick[SIPHASH_KEY_LENGTH];
 static char siphashkey_chan[SIPHASH_KEY_LENGTH];
 static char siphashkey_whowas[SIPHASH_KEY_LENGTH];
-static char siphashkey_ipusers[SIPHASH_KEY_LENGTH];
 
 extern char unreallogo[];
 
@@ -276,7 +275,6 @@ void init_hash(void)
 	siphash_generate_key(siphashkey_nick);
 	siphash_generate_key(siphashkey_chan);
 	siphash_generate_key(siphashkey_whowas);
-	siphash_generate_key(siphashkey_ipusers);
 
 	for (i = 0; i < NICK_HASH_TABLE_SIZE; i++)
 		INIT_LIST_HEAD(&clientTable[i]);
@@ -598,98 +596,4 @@ Client *find_server_by_uid(const char *uid)
 
 	strlcpy(sid, uid, sizeof(sid));
 	return hash_find_id(sid, NULL);
-}
-
-/**** IP users hash table *****/
-
-MODVAR IpUsersBucket *IpUsersHash_ipv4[IPUSERS_HASH_TABLE_SIZE];
-MODVAR IpUsersBucket *IpUsersHash_ipv6[IPUSERS_HASH_TABLE_SIZE];
-
-uint64_t hash_ipusers(const char *ip)
-{
-	return siphash(ip, siphashkey_ipusers) % IPUSERS_HASH_TABLE_SIZE;
-}
-
-IpUsersBucket *find_ipusers_bucket(Client *client)
-{
-	int hash = 0;
-	IpUsersBucket *p;
-
-	hash = hash_ipusers(client->ip);
-
-	if (IsIPV6(client))
-	{
-		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
-			if (memcmp(p->rawip, client->rawip, 16) == 0)
-				return p;
-	} else {
-		for (p = IpUsersHash_ipv4[hash]; p; p = p->next)
-			if (memcmp(p->rawip, client->rawip, 4) == 0)
-				return p;
-	}
-
-	return NULL;
-}
-
-IpUsersBucket *add_ipusers_bucket(Client *client)
-{
-	int hash;
-	IpUsersBucket *n;
-
-	hash = hash_ipusers(client->ip);
-
-	n = safe_alloc(sizeof(IpUsersBucket));
-	if (IsIPV6(client))
-	{
-		memcpy(n->rawip, client->rawip, 16);
-		AddListItem(n, IpUsersHash_ipv6[hash]);
-	} else {
-		memcpy(n->rawip, client->rawip, 4);
-		AddListItem(n, IpUsersHash_ipv4[hash]);
-	}
-	return n;
-}
-
-void decrease_ipusers_bucket(Client *client)
-{
-	int hash = 0;
-	IpUsersBucket *p;
-
-	if (!(client->flags & CLIENT_FLAG_IPUSERS_BUMPED))
-		return; /* nothing to do */
-
-	client->flags &= ~CLIENT_FLAG_IPUSERS_BUMPED;
-
-	hash = hash_ipusers(client->ip);
-
-	if (IsIPV6(client))
-	{
-		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
-			if (memcmp(p->rawip, client->rawip, 16) == 0)
-				break;
-	} else {
-		for (p = IpUsersHash_ipv4[hash]; p; p = p->next)
-			if (memcmp(p->rawip, client->rawip, 4) == 0)
-				break;
-	}
-
-	if (!p)
-	{
-		unreal_log(ULOG_INFO, "user", "BUG_DECREASE_IPUSERS_BUCKET", client,
-		           "[BUG] decrease_ipusers_bucket() called but bucket is gone for client $client.details");
-		return;
-	}
-
-	p->global_clients--;
-	if (MyConnect(client))
-		p->local_clients--;
-
-	if ((p->global_clients == 0) && (p->local_clients == 0))
-	{
-		if (IsIPV6(client))
-			DelListItem(p, IpUsersHash_ipv6[hash]);
-		else
-			DelListItem(p, IpUsersHash_ipv4[hash]);
-		safe_free(p);
-	}
 }

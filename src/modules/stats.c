@@ -84,7 +84,6 @@ int stats_officialchannels(Client *, const char *);
 int stats_spamfilter(Client *, const char *);
 int stats_fdtable(Client *, const char *);
 int stats_linecache(Client *client, const char *para);
-int stats_maxperip(Client *, const char *);
 
 #define SERVER_AS_PARA 0x1
 #define FLAGS_AS_PARA 0x2
@@ -136,7 +135,6 @@ struct statstab StatsTable[] = {
 	{ 'v', "denyver",	stats_denyver,		0 		},
 	{ 'x', "notlink",	stats_notlink,		0 		},
 	{ 'y', "class",		stats_class,		0 		},
-	{ '8', "maxperip",	stats_maxperip,		0		},
 	{ '9', "linecache",	stats_linecache,	0		},
 	{ 0, 	NULL, 		NULL, 			0		}
 };
@@ -1078,48 +1076,6 @@ int stats_linecache(Client *client, const char *para)
 
 	//sendtxtnumeric(client, " ");
 	//sendtxtnumeric(client, "Line statistics:");	
-
-	return 0;
-}
-
-int stats_maxperip(Client *client, const char *para)
-{
-	int i;
-	IpUsersBucket *e;
-	char ipbuf[256];
-	const char *ip;
-
-	if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
-	{
-		sendnumeric(client, ERR_NOPRIVILEGES);
-		return 0;
-	}
-
-	sendtxtnumeric(client, "MaxPerIp IPv4 hash table:");
-	for (i=0; i < IPUSERS_HASH_TABLE_SIZE; i++)
-	{
-		for (e = IpUsersHash_ipv4[i]; e; e = e->next)
-		{
-			ip = inetntop(AF_INET, e->rawip, ipbuf, sizeof(ipbuf));
-			if (!ip)
-				ip = "<invalid>";
-			sendtxtnumeric(client, "IPv4 #%d %s: %d local / %d global",
-				       i, ip, e->local_clients, e->global_clients);
-		}
-	}
-
-	sendtxtnumeric(client, "MaxPerIp IPv6 hash table:");
-	for (i=0; i < IPUSERS_HASH_TABLE_SIZE; i++)
-	{
-		for (e = IpUsersHash_ipv6[i]; e; e = e->next)
-		{
-			ip = inetntop(AF_INET6, e->rawip, ipbuf, sizeof(ipbuf));
-			if (!ip)
-				ip = "<invalid>";
-			sendtxtnumeric(client, "IPv6 #%d %s: %d local / %d global",
-				       i, ip, e->local_clients, e->global_clients);
-		}
-	}
 
 	return 0;
 }

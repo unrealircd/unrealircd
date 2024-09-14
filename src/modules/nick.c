@@ -45,8 +45,23 @@ ModuleHeader MOD_HEADER
  */
 #define ASSUME_NICK_IN_FLIGHT
 
+#define IPUSERS_HASH_TABLE_SIZE 8192
+
+/* Structs */
+typedef struct IpUsersBucket IpUsersBucket;
+struct IpUsersBucket
+{
+	IpUsersBucket *prev, *next;
+	char rawip[16];
+	int local_clients;
+	int global_clients;
+};
+
 /* Variables */
 static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
+IpUsersBucket **IpUsersHash_ipv4 = NULL;
+IpUsersBucket **IpUsersHash_ipv6 = NULL;
+char *siphashkey_ipusers = NULL;
 
 /* Forward declarations */
 CMD_FUNC(cmd_nick);
@@ -57,6 +72,13 @@ int _register_user(Client *client);
 void nick_collision(Client *cptr, const char *newnick, const char *newid, Client *new, Client *existing, int type);
 int AllowClient(Client *client);
 int exceeds_maxperip(Client *client, ConfigItem_allow *aconf);
+void siphashkey_ipusers_free(ModData *m);
+void ipusershash_free_4(ModData *m);
+void ipusershash_free_6(ModData *m);
+IpUsersBucket *add_ipusers_bucket(Client *client);
+void decrease_ipusers_bucket(Client *client);
+int decrease_ipusers_bucket_wrapper(Client *client);
+int stats_maxperip(Client *client, const char *para);
 
 MOD_TEST()
 {
@@ -67,9 +89,26 @@ MOD_TEST()
 
 MOD_INIT()
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+
+	LoadPersistentPointer(modinfo, siphashkey_ipusers, siphashkey_ipusers_free);
+	if (!siphashkey_ipusers)
+	{
+		siphashkey_ipusers = safe_alloc(SIPHASH_KEY_LENGTH);
+		siphash_generate_key(siphashkey_ipusers);
+	}
+	LoadPersistentPointer(modinfo, IpUsersHash_ipv4, ipusershash_free_4);
+	if (!IpUsersHash_ipv4)
+		IpUsersHash_ipv4 = safe_alloc(sizeof(IpUsersBucket *) * IPUSERS_HASH_TABLE_SIZE);
+	LoadPersistentPointer(modinfo, IpUsersHash_ipv6, ipusershash_free_6);
+	if (!IpUsersHash_ipv6)
+		IpUsersHash_ipv6 = safe_alloc(sizeof(IpUsersBucket *) * IPUSERS_HASH_TABLE_SIZE);
+
 	CommandAdd(modinfo->handle, "NICK", cmd_nick, MAXPARA, CMD_USER|CMD_SERVER|CMD_UNREGISTERED);
 	CommandAdd(modinfo->handle, "UID", cmd_uid, MAXPARA, CMD_SERVER);
-	MARK_AS_OFFICIAL_MODULE(modinfo);
+
+	HookAdd(modinfo->handle, HOOKTYPE_FREE_USER, 0, decrease_ipusers_bucket_wrapper);
+	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, stats_maxperip);
 	return MOD_SUCCESS;
 }
 
@@ -80,7 +119,174 @@ MOD_LOAD()
 
 MOD_UNLOAD()
 {
+	SavePersistentPointer(modinfo, siphashkey_ipusers);
+	SavePersistentPointer(modinfo, IpUsersHash_ipv4);
+	SavePersistentPointer(modinfo, IpUsersHash_ipv6);
 	return MOD_SUCCESS;
+}
+
+void siphashkey_ipusers_free(ModData *m)
+{
+	safe_free(siphashkey_ipusers);
+	m->ptr = NULL;
+}
+
+void ipusershash_free_4(ModData *m)
+{
+	// FIXME: need to free every bucket in a for loop
+	// and then end with this:
+	safe_free(IpUsersHash_ipv4);
+	m->ptr = NULL;
+}
+
+void ipusershash_free_6(ModData *m)
+{
+	// FIXME: need to free every bucket in a for loop
+	// and then end with this:
+	safe_free(IpUsersHash_ipv6);
+	m->ptr = NULL;
+}
+
+uint64_t hash_ipusers(const char *ip)
+{
+	return siphash(ip, siphashkey_ipusers) % IPUSERS_HASH_TABLE_SIZE;
+}
+
+IpUsersBucket *find_ipusers_bucket(Client *client)
+{
+	int hash = 0;
+	IpUsersBucket *p;
+
+	hash = hash_ipusers(client->ip);
+
+	if (IsIPV6(client))
+	{
+		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
+			if (memcmp(p->rawip, client->rawip, 16) == 0)
+				return p;
+	} else {
+		for (p = IpUsersHash_ipv4[hash]; p; p = p->next)
+			if (memcmp(p->rawip, client->rawip, 4) == 0)
+				return p;
+	}
+
+	return NULL;
+}
+
+/* (wrapper needed because hook has return type 'int' and function is 'void' */
+int decrease_ipusers_bucket_wrapper(Client *client)
+{
+	decrease_ipusers_bucket(client);
+	return 0;
+}
+
+IpUsersBucket *add_ipusers_bucket(Client *client)
+{
+	int hash;
+	IpUsersBucket *n;
+
+	hash = hash_ipusers(client->ip);
+
+	n = safe_alloc(sizeof(IpUsersBucket));
+	if (IsIPV6(client))
+	{
+		memcpy(n->rawip, client->rawip, 16);
+		AddListItem(n, IpUsersHash_ipv6[hash]);
+	} else {
+		memcpy(n->rawip, client->rawip, 4);
+		AddListItem(n, IpUsersHash_ipv4[hash]);
+	}
+	return n;
+}
+
+void decrease_ipusers_bucket(Client *client)
+{
+	int hash = 0;
+	IpUsersBucket *p;
+
+	if (!(client->flags & CLIENT_FLAG_IPUSERS_BUMPED))
+		return; /* nothing to do */
+
+	client->flags &= ~CLIENT_FLAG_IPUSERS_BUMPED;
+
+	hash = hash_ipusers(client->ip);
+
+	if (IsIPV6(client))
+	{
+		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
+			if (memcmp(p->rawip, client->rawip, 16) == 0)
+				break;
+	} else {
+		for (p = IpUsersHash_ipv4[hash]; p; p = p->next)
+			if (memcmp(p->rawip, client->rawip, 4) == 0)
+				break;
+	}
+
+	if (!p)
+	{
+		unreal_log(ULOG_INFO, "user", "BUG_DECREASE_IPUSERS_BUCKET", client,
+		           "[BUG] decrease_ipusers_bucket() called but bucket is gone for client $client.details");
+		return;
+	}
+
+	p->global_clients--;
+	if (MyConnect(client))
+		p->local_clients--;
+
+	if ((p->global_clients == 0) && (p->local_clients == 0))
+	{
+		if (IsIPV6(client))
+			DelListItem(p, IpUsersHash_ipv6[hash]);
+		else
+			DelListItem(p, IpUsersHash_ipv4[hash]);
+		safe_free(p);
+	}
+}
+
+int stats_maxperip(Client *client, const char *para)
+{
+	int i;
+	IpUsersBucket *e;
+	char ipbuf[256];
+	const char *ip;
+
+	/* '/STATS 8' or '/STATS maxperip' is for us... */
+	if (strcmp(para, "8") && strcasecmp(para, "maxperip"))
+		return 0;
+
+	if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
+	{
+		sendnumeric(client, ERR_NOPRIVILEGES);
+		return 0;
+	}
+
+	sendtxtnumeric(client, "MaxPerIp IPv4 hash table:");
+	for (i=0; i < IPUSERS_HASH_TABLE_SIZE; i++)
+	{
+		for (e = IpUsersHash_ipv4[i]; e; e = e->next)
+		{
+			ip = inetntop(AF_INET, e->rawip, ipbuf, sizeof(ipbuf));
+			if (!ip)
+				ip = "<invalid>";
+			sendtxtnumeric(client, "IPv4 #%d %s: %d local / %d global",
+				       i, ip, e->local_clients, e->global_clients);
+		}
+	}
+
+	sendtxtnumeric(client, "MaxPerIp IPv6 hash table:");
+	for (i=0; i < IPUSERS_HASH_TABLE_SIZE; i++)
+	{
+		for (e = IpUsersHash_ipv6[i]; e; e = e->next)
+		{
+			ip = inetntop(AF_INET6, e->rawip, ipbuf, sizeof(ipbuf));
+			if (!ip)
+				ip = "<invalid>";
+			sendtxtnumeric(client, "IPv6 #%d %s: %d local / %d global",
+				       i, ip, e->local_clients, e->global_clients);
+		}
+	}
+
+	return 0;
 }
 
 /** Hmm.. don't we already have such a function? */
