@@ -3095,7 +3095,6 @@ int config_run_blocks(void)
 	listen_cleanup();
 	loop.do_bancheck = 1;
 	config_switchover();
-	update_throttling_timer_settings();
 
 	/* initialize conf_files with defaults if the block isn't set: */
 	if (!conf_files)
@@ -10231,6 +10230,8 @@ void start_listeners(void)
 /* Actually use configuration */
 void config_run(void)
 {
+	Module *mi;
+
 	loop.config_status = CONFIG_STATUS_POSTLOAD;
 	extcmodes_check_for_changes();
 	start_listeners();
@@ -10238,6 +10239,10 @@ void config_run(void)
 		add_proc_io_server();
 	free_all_config_resources();
 	dns_check_for_changes();
+
+	for (mi = Modules; mi; mi = mi->next)
+		if (!(mi->options & MOD_OPT_OFFICIAL))
+			tainted = 99;
 }
 
 int	_conf_offchans(ConfigFile *conf, ConfigEntry *ce)

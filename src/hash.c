@@ -264,7 +264,6 @@ static Channel *channelTable[CHAN_HASH_TABLE_SIZE];
 static char siphashkey_nick[SIPHASH_KEY_LENGTH];
 static char siphashkey_chan[SIPHASH_KEY_LENGTH];
 static char siphashkey_whowas[SIPHASH_KEY_LENGTH];
-static char siphashkey_throttling[SIPHASH_KEY_LENGTH];
 static char siphashkey_ipusers[SIPHASH_KEY_LENGTH];
 
 extern char unreallogo[];
@@ -277,7 +276,6 @@ void init_hash(void)
 	siphash_generate_key(siphashkey_nick);
 	siphash_generate_key(siphashkey_chan);
 	siphash_generate_key(siphashkey_whowas);
-	siphash_generate_key(siphashkey_throttling);
 	siphash_generate_key(siphashkey_ipusers);
 
 	for (i = 0; i < NICK_HASH_TABLE_SIZE; i++)
@@ -287,12 +285,6 @@ void init_hash(void)
 		INIT_LIST_HEAD(&idTable[i]);
 
 	memset(channelTable, 0, sizeof(channelTable));
-
-	memset(ThrottlingHash, 0, sizeof(ThrottlingHash));
-	/* do not call init_throttling() here, as
-	 * config file has not been read yet.
-	 * The hash table is ready, anyway.
-	 */
 
 	if (strcmp(BASE_VERSION, &unreallogo[337]))
 		loop.tainted = 1;
@@ -606,139 +598,6 @@ Client *find_server_by_uid(const char *uid)
 
 	strlcpy(sid, uid, sizeof(sid));
 	return hash_find_id(sid, NULL);
-}
-
-/* Throttling - originally by Stskeeps */
-
-/* Note that we call this set::anti-flood::connect-flood nowadays */
-
-struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_TABLE_SIZE];
-
-void update_throttling_timer_settings(void)
-{
-	long v;
-	EventInfo eInfo;
-
-	if (!THROTTLING_PERIOD)
-	{
-		v = 120*1000;
-	} else
-	{
-		v = (THROTTLING_PERIOD*1000)/2;
-		if (v > 5000)
-			v = 5000; /* run at least every 5s */
-		if (v < 1000)
-			v = 1000; /* run at max once every 1s */
-	}
-
-	memset(&eInfo, 0, sizeof(eInfo));
-	eInfo.flags = EMOD_EVERY;
-	eInfo.every_msec = v;
-	EventMod(EventFind("throttling_check_expire"), &eInfo);
-}
-
-uint64_t hash_throttling(const char *ip)
-{
-	return siphash(ip, siphashkey_throttling) % THROTTLING_HASH_TABLE_SIZE;
-}
-
-struct ThrottlingBucket *find_throttling_bucket(Client *client)
-{
-	int hash = 0;
-	struct ThrottlingBucket *p;
-	hash = hash_throttling(client->ip);
-	
-	for (p = ThrottlingHash[hash]; p; p = p->next)
-	{
-		if (!strcmp(p->ip, client->ip))
-			return p;
-	}
-	
-	return NULL;
-}
-
-EVENT(throttling_check_expire)
-{
-	struct ThrottlingBucket *n, *n_next;
-	int	i;
-	static time_t t = 0;
-		
-	for (i = 0; i < THROTTLING_HASH_TABLE_SIZE; i++)
-	{
-		for (n = ThrottlingHash[i]; n; n = n_next)
-		{
-			n_next = n->next;
-			if ((TStime() - n->since) > (THROTTLING_PERIOD ? THROTTLING_PERIOD : 15))
-			{
-				DelListItem(n, ThrottlingHash[i]);
-				safe_free(n->ip);
-				safe_free(n);
-			}
-		}
-	}
-
-	if (!t || (TStime() - t > 30))
-	{
-		extern Module *Modules;
-		char *p = serveropts + strlen(serveropts);
-		Module *mi;
-		t = TStime();
-		if (!Hooks[HOOKTYPE_USERMSG] && strchr(serveropts, 'm'))
-		{ p = strchr(serveropts, 'm'); *p = '\0'; }
-		if (!Hooks[HOOKTYPE_CHANMSG] && strchr(serveropts, 'M'))
-		{ p = strchr(serveropts, 'M'); *p = '\0'; }
-		if (Hooks[HOOKTYPE_USERMSG] && !strchr(serveropts, 'm'))
-			*p++ = 'm';
-		if (Hooks[HOOKTYPE_CHANMSG] && !strchr(serveropts, 'M'))
-			*p++ = 'M';
-		*p = '\0';
-		for (mi = Modules; mi; mi = mi->next)
-			if (!(mi->options & MOD_OPT_OFFICIAL))
-				tainted = 99;
-	}
-
-	return;
-}
-
-void add_throttling_bucket(Client *client)
-{
-	int hash;
-	struct ThrottlingBucket *n;
-
-	n = safe_alloc(sizeof(struct ThrottlingBucket));
-	n->next = n->prev = NULL; 
-	safe_strdup(n->ip, client->ip);
-	n->since = TStime();
-	n->count = 1;
-	hash = hash_throttling(client->ip);
-	AddListItem(n, ThrottlingHash[hash]);
-	return;
-}
-
-/** Checks whether the user is connect-flooding.
- * @retval 0 Denied, throttled.
- * @retval 1 Allowed, but known in the list.
- * @retval 2 Allowed, not in list or is an exception.
- * @see add_connection()
- */
-int throttle_can_connect(Client *client)
-{
-	struct ThrottlingBucket *b;
-
-	if (!THROTTLING_PERIOD || !THROTTLING_COUNT)
-		return 2;
-
-	if (!(b = find_throttling_bucket(client)))
-		return 1;
-	else
-	{
-		if (find_tkl_exception(TKL_CONNECT_FLOOD, client))
-			return 2;
-		if (b->count+1 > (THROTTLING_COUNT ? THROTTLING_COUNT : 3))
-			return 0;
-		b->count++;
-		return 2;
-	}
 }
 
 /**** IP users hash table *****/

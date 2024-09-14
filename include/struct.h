@@ -2469,14 +2469,6 @@ extern MODVAR SSL_CTX *ctx_client;
 
 #define TLS_PROTOCOL_ALL		0xffff
 
-struct ThrottlingBucket
-{
-	struct ThrottlingBucket *prev, *next;
-	char *ip;
-	time_t since;
-	char count;
-};
-
 typedef struct IpUsersBucket IpUsersBucket;
 struct IpUsersBucket
 {
@@ -2526,11 +2518,6 @@ struct PendingNet {
 	Client *client; /**< Client to which these servers belong */
 	PendingServer *servers; /**< The list of servers connected to the client */
 };
-
-extern void init_throttling();
-extern struct ThrottlingBucket *find_throttling_bucket(Client *);
-extern void add_throttling_bucket(Client *);
-extern int throttle_can_connect(Client *);
 
 typedef struct MaxTarget MaxTarget;
 struct MaxTarget {

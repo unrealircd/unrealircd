@@ -319,7 +319,6 @@ void fix_timers(void)
 	int i, cnt;
 	Client *client;
 	Event *e;
-	struct ThrottlingBucket *thr;
 	ConfigItem_link *lnk;
 
 	list_for_each_entry(client, &lclient_list, lclient_node)
@@ -349,22 +348,6 @@ void fix_timers(void)
 		}
 	}
 
-	/* For throttling we only have to deal with time jumping backward, which
-	 * is a real problem as if the jump was, say, 900 seconds, then it would
-	 * (potentially) throttle for 900 seconds.
-	 * Time going forward is "no problem", it just means we expire our entries
-	 * sonner than we should.
-	 */
-	cnt = 0;
-	for (i = 0; i < THROTTLING_HASH_TABLE_SIZE; i++)
-	{
-		for (thr = ThrottlingHash[i]; thr; thr = thr->next)
-		{
-			if (thr->since > TStime())
-				thr->since = TStime();
-		}
-	}
-
 	/* Make sure autoconnect for servers still works (lnk->hold) */
 	for (lnk = conf_link; lnk; lnk = lnk->next)
 	{
@@ -375,6 +358,8 @@ void fix_timers(void)
 			lnk->hold = TStime() + (t / 2); /* compromise */
 		}
 	}
+
+	// FIXME: add some hook call here!!
 }
 
 
@@ -513,7 +498,6 @@ void SetupEvents(void)
 	EventAdd(NULL, "handshake_timeout", handshake_timeout, NULL, 1000, 0);
 	EventAdd(NULL, "tls_check_expiry", tls_check_expiry, NULL, (86400/2)*1000, 0);
 	EventAdd(NULL, "unrealdb_expire_secret_cache", unrealdb_expire_secret_cache, NULL, 61000, 0);
-	EventAdd(NULL, "throttling_check_expire", throttling_check_expire, NULL, 1000, 0);
 	EventAdd(NULL, "memory_log_cleaner", memory_log_cleaner, NULL, 61500, 0);
 	EventAdd(NULL, "detect_high_connection_rate", detect_high_connection_rate, NULL, 1000*DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME, 0);
 	EventAdd(NULL, "central_spamfilter_download_evt", central_spamfilter_download_evt, NULL, 5000, 0);

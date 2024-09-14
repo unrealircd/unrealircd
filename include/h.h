@@ -114,7 +114,6 @@ extern MODVAR ConfigItem_proxy		*conf_proxy;
 extern void		completed_connection(int, int, void *);
 extern void clear_unknown();
 extern EVENT(e_unload_module_delayed);
-extern EVENT(throttling_check_expire);
 
 extern void  module_loadall(void);
 extern long set_usermode(const char *umode);
@@ -437,7 +436,6 @@ extern void del_queries(const char *);
 #define NICK_HASH_TABLE_SIZE 32768
 #define CHAN_HASH_TABLE_SIZE 32768
 #define WHOWAS_HASH_TABLE_SIZE 32768
-#define THROTTLING_HASH_TABLE_SIZE 8192
 #define IPUSERS_HASH_TABLE_SIZE 8192
 extern uint64_t siphash(const char *in, const char *k);
 extern uint64_t siphash_raw(const char *in, size_t len, const char *k);
@@ -467,7 +465,6 @@ extern Client *hash_find_server(const char *, Client *);
 extern IpUsersBucket *find_ipusers_bucket(Client *client);
 extern IpUsersBucket *add_ipusers_bucket(Client *client);
 extern void decrease_ipusers_bucket(Client *client);
-extern MODVAR struct ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_TABLE_SIZE];
 extern MODVAR IpUsersBucket *IpUsersHash_ipv4[IPUSERS_HASH_TABLE_SIZE];
 extern MODVAR IpUsersBucket *IpUsersHash_ipv6[IPUSERS_HASH_TABLE_SIZE];
 
@@ -1229,7 +1226,6 @@ extern const char *unreal_add_quotes(const char *str);
 extern int unreal_add_quotes_r(const char *i, char *o, size_t len);
 extern void user_account_login(MessageTag *recv_mtags, Client *client);
 extern void link_generator(void);
-extern void update_throttling_timer_settings(void);
 extern int hide_idle_time(Client *client, Client *target);
 extern void lost_server_link(Client *serv, const char *tls_error_string);
 extern const char *sendtype_to_cmd(SendType sendtype);
