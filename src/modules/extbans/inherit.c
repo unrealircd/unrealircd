@@ -267,18 +267,31 @@ int extban_inherit_is_ok(BanContext *b)
 
 	if (!valid_channelname(retbuf))
 	{
-		sendnotice(b->client, "ExtBan ~inherit expects a channel name");
+		sendnotice(b->client, "ExtBan ~inherit with invalid channel name");
 		return 0;
 	}
 
-	if ((b->what == MODE_ADD) && b->channel && exceeds_inherit_ban_count(b))
+	/* For MODE_DEL we are not strict, since you should be able to delete
+	 * existing entries, even if they are wrong). For MODE_ADD we are stricter.
+	 */
+	if ((b->what == MODE_ADD) && b->channel)
 	{
-		sendnotice(b->client, "Your ExtBan ~inherit:%s was not accepted because "
-		                      "this channel already contains the maximum "
-		                      "amount of ~inherit entries (%d).",
-		                      b->banstr,
-		                      maximum_ban_inherit_limit(b->ban_type));
-		return 0;
+		if (find_channel(retbuf) == b->channel)
+		{
+			sendnotice(b->client, "You cannot add an ~inherit extban that "
+			                      "refers to the same channel, this makes no sense.");
+			return 0;
+		}
+
+		if (exceeds_inherit_ban_count(b))
+		{
+			sendnotice(b->client, "Your ExtBan ~inherit:%s was not accepted because "
+					      "this channel already contains the maximum "
+					      "amount of ~inherit entries (%d).",
+					      b->banstr,
+					      maximum_ban_inherit_limit(b->ban_type));
+			return 0;
+		}
 	}
 
 	return 1;
