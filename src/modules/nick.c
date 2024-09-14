@@ -147,9 +147,12 @@ void ipusershash_free_6(ModData *m)
 	m->ptr = NULL;
 }
 
-uint64_t hash_ipusers(const char *ip)
+uint64_t hash_ipusers(Client *client)
 {
-	return siphash(ip, siphashkey_ipusers) % IPUSERS_HASH_TABLE_SIZE;
+	if (IsIPV6(client))
+		return siphash_raw(client->rawip, 16, siphashkey_ipusers) % IPUSERS_HASH_TABLE_SIZE;
+	else
+		return siphash_raw(client->rawip, 4, siphashkey_ipusers) % IPUSERS_HASH_TABLE_SIZE;
 }
 
 IpUsersBucket *find_ipusers_bucket(Client *client)
@@ -157,7 +160,7 @@ IpUsersBucket *find_ipusers_bucket(Client *client)
 	int hash = 0;
 	IpUsersBucket *p;
 
-	hash = hash_ipusers(client->ip);
+	hash = hash_ipusers(client);
 
 	if (IsIPV6(client))
 	{
@@ -185,7 +188,7 @@ IpUsersBucket *add_ipusers_bucket(Client *client)
 	int hash;
 	IpUsersBucket *n;
 
-	hash = hash_ipusers(client->ip);
+	hash = hash_ipusers(client);
 
 	n = safe_alloc(sizeof(IpUsersBucket));
 	if (IsIPV6(client))
@@ -209,7 +212,7 @@ void decrease_ipusers_bucket(Client *client)
 
 	client->flags &= ~CLIENT_FLAG_IPUSERS_BUMPED;
 
-	hash = hash_ipusers(client->ip);
+	hash = hash_ipusers(client);
 
 	if (IsIPV6(client))
 	{
