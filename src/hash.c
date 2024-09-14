@@ -755,19 +755,17 @@ IpUsersBucket *find_ipusers_bucket(Client *client)
 {
 	int hash = 0;
 	IpUsersBucket *p;
-	struct sockaddr *addr;
 
-	addr = raw_client_ip(client);
 	hash = hash_ipusers(client->ip);
 
-	if (addr->sa_family == AF_INET6)
+	if (IsIPV6(client))
 	{
 		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
-			if (memcmp(p->rawip, &((struct sockaddr_in6 *)addr)->sin6_addr.s6_addr, 16) == 0)
+			if (memcmp(p->rawip, client->rawip, 16) == 0)
 				return p;
 	} else {
 		for (p = IpUsersHash_ipv4[hash]; p; p = p->next)
-			if (memcmp(p->rawip, &((struct sockaddr_in *)addr)->sin_addr.s_addr, 4) == 0)
+			if (memcmp(p->rawip, client->rawip, 4) == 0)
 				return p;
 	}
 
@@ -778,18 +776,16 @@ IpUsersBucket *add_ipusers_bucket(Client *client)
 {
 	int hash;
 	IpUsersBucket *n;
-	struct sockaddr *addr;
 
-	addr = raw_client_ip(client);
 	hash = hash_ipusers(client->ip);
 
 	n = safe_alloc(sizeof(IpUsersBucket));
-	if (addr->sa_family == AF_INET6)
+	if (IsIPV6(client))
 	{
-		memcpy(n->rawip, &((struct sockaddr_in6 *)addr)->sin6_addr.s6_addr, 16);
+		memcpy(n->rawip, client->rawip, 16);
 		AddListItem(n, IpUsersHash_ipv6[hash]);
 	} else {
-		memcpy(n->rawip, &((struct sockaddr_in *)addr)->sin_addr.s_addr, 4);
+		memcpy(n->rawip, client->rawip, 4);
 		AddListItem(n, IpUsersHash_ipv4[hash]);
 	}
 	return n;
@@ -799,27 +795,22 @@ void decrease_ipusers_bucket(Client *client)
 {
 	int hash = 0;
 	IpUsersBucket *p;
-	struct sockaddr *addr;
-	char ipv6 = 0;
 
 	if (!(client->flags & CLIENT_FLAG_IPUSERS_BUMPED))
 		return; /* nothing to do */
 
 	client->flags &= ~CLIENT_FLAG_IPUSERS_BUMPED;
 
-	addr = raw_client_ip(client);
 	hash = hash_ipusers(client->ip);
 
-	ipv6 = addr->sa_family == AF_INET6 ? 1 : 0;
-
-	if (ipv6)
+	if (IsIPV6(client))
 	{
 		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
-			if (memcmp(p->rawip, &((struct sockaddr_in6 *)addr)->sin6_addr.s6_addr, 16) == 0)
+			if (memcmp(p->rawip, client->rawip, 16) == 0)
 				break;
 	} else {
 		for (p = IpUsersHash_ipv4[hash]; p; p = p->next)
-			if (memcmp(p->rawip, &((struct sockaddr_in *)addr)->sin_addr.s_addr, 4) == 0)
+			if (memcmp(p->rawip, client->rawip, 4) == 0)
 				break;
 	}
 
@@ -836,11 +827,10 @@ void decrease_ipusers_bucket(Client *client)
 
 	if ((p->global_clients == 0) && (p->local_clients == 0))
 	{
-		if (ipv6)
+		if (IsIPV6(client))
 			DelListItem(p, IpUsersHash_ipv6[hash]);
 		else
 			DelListItem(p, IpUsersHash_ipv4[hash]);
 		safe_free(p);
 	}
-	return;
 }

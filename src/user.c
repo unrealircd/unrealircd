@@ -1008,29 +1008,6 @@ const char *get_operclass(Client *client)
 	return moddata_client_get(client, "operclass");
 }
 
-/* Yeah we should really start storing IP in raw form again... */
-struct sockaddr *raw_client_ip(Client *client)
-{
-	struct sockaddr *client_addr;
-	static struct sockaddr_in addr4;
-	static struct sockaddr_in6 addr6;
-
-	memset(&addr4, 0, sizeof(addr4));
-	memset(&addr6, 0, sizeof(addr6));
-	if (inet_pton(AF_INET, GetIP(client), &addr4.sin_addr.s_addr) == 1)
-	{
-		client_addr = (struct sockaddr *)&addr4;
-		client_addr->sa_family = AF_INET;
-		return client_addr;
-	} else if (inet_pton(AF_INET6, GetIP(client), &addr6.sin6_addr.s6_addr) == 1)
-	{
-		client_addr = (struct sockaddr *)&addr6;
-		client_addr->sa_family = AF_INET6;
-		return client_addr;
-	}
-	return NULL;
-}
-
 /** Find a tag - case insensitive comparisson. */
 Tag *find_tag(Client *client, const char *name)
 {
