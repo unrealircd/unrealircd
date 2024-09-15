@@ -35,11 +35,15 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
+int dccallow_user_quit(Client *client, MessageTag *mtags, const char *comment);
+
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_DCCALLOW, cmd_dccallow, 1, CMD_USER);
-	ISupportAdd(modinfo->handle, "USERIP", NULL);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	CommandAdd(modinfo->handle, MSG_DCCALLOW, cmd_dccallow, 1, CMD_USER);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, dccallow_user_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_QUIT, 0, dccallow_user_quit);
+	ISupportAdd(modinfo->handle, "USERIP", NULL);
 	return MOD_SUCCESS;
 }
 
@@ -51,6 +55,63 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
+}
+
+/** Delete all DCCALLOW references.
+ * Ultimately, this should be moved to modules/dccallow.c
+ */
+void remove_dcc_references(Client *client)
+{
+	Client *acptr;
+	Link *lp, *nextlp;
+	Link **lpp, *tmp;
+	int found;
+
+	lp = client->user->dccallow;
+	while(lp)
+	{
+		nextlp = lp->next;
+		acptr = lp->value.client;
+		for(found = 0, lpp = &(acptr->user->dccallow); *lpp; lpp=&((*lpp)->next))
+		{
+			if (lp->flags == (*lpp)->flags)
+				continue; /* match only opposite types for sanity */
+			if ((*lpp)->value.client == client)
+			{
+				if ((*lpp)->flags == DCC_LINK_ME)
+				{
+					sendto_one(acptr, NULL, ":%s %d %s :%s has been removed from "
+						"your DCC allow list for signing off",
+						me.name, RPL_DCCINFO, acptr->name, client->name);
+				}
+				tmp = *lpp;
+				*lpp = tmp->next;
+				free_link(tmp);
+				found++;
+				break;
+			}
+		}
+
+		if (!found)
+		{
+			unreal_log(ULOG_WARNING, "main", "BUG_REMOVE_DCC_REFERENCES", acptr,
+			           "[BUG] remove_dcc_references: $client was in dccallowme "
+			           "list of $existing_client but not in dccallowrem list!",
+			           log_data_client("existing_client", client));
+		}
+
+		free_link(lp);
+		lp = nextlp;
+	}
+}
+
+/** Clean up dccallow list and (if needed) notify other clients
+ * that have this person on DCCALLOW that the user just left/got removed.
+ */
+int dccallow_user_quit(Client *client, MessageTag *mtags, const char *comment)
+{
+	remove_dcc_references(client);
+	return 0;
 }
 
 /* cmd_dccallow:

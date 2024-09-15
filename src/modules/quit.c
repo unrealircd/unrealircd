@@ -379,54 +379,6 @@ static int should_hide_ban_reason(Client *client, const char *reason)
 	}
 }
 
-/** Delete all DCCALLOW references.
- * Ultimately, this should be moved to modules/dccallow.c
- */
-void remove_dcc_references(Client *client)
-{
-	Client *acptr;
-	Link *lp, *nextlp;
-	Link **lpp, *tmp;
-	int found;
-
-	lp = client->user->dccallow;
-	while(lp)
-	{
-		nextlp = lp->next;
-		acptr = lp->value.client;
-		for(found = 0, lpp = &(acptr->user->dccallow); *lpp; lpp=&((*lpp)->next))
-		{
-			if (lp->flags == (*lpp)->flags)
-				continue; /* match only opposite types for sanity */
-			if ((*lpp)->value.client == client)
-			{
-				if ((*lpp)->flags == DCC_LINK_ME)
-				{
-					sendto_one(acptr, NULL, ":%s %d %s :%s has been removed from "
-						"your DCC allow list for signing off",
-						me.name, RPL_DCCINFO, acptr->name, client->name);
-				}
-				tmp = *lpp;
-				*lpp = tmp->next;
-				free_link(tmp);
-				found++;
-				break;
-			}
-		}
-
-		if (!found)
-		{
-			unreal_log(ULOG_WARNING, "main", "BUG_REMOVE_DCC_REFERENCES", acptr,
-			           "[BUG] remove_dcc_references: $client was in dccallowme "
-			           "list of $existing_client but not in dccallowrem list!",
-			           log_data_client("existing_client", client));
-		}
-
-		free_link(lp);
-		lp = nextlp;
-	}
-}
-
 /*
  * Remove all clients that depend on source_p; assumes all (S)QUITs have
  * already been sent.  we make sure to exit a server's dependent clients
@@ -501,11 +453,6 @@ static void exit_one_client(Client *client, MessageTag *mtags_i, const char *com
 		while ((mp = client->user->channel))
 			remove_user_from_channel(client, mp->channel, 1);
 		/* again, this is all that is needed */
-
-		/* Clean up dccallow list and (if needed) notify other clients
-		 * that have this person on DCCALLOW that the user just left/got removed.
-		 */
-		remove_dcc_references(client);
 
 		/* For remote clients, we need to check for any outstanding async
 		 * connects attached to this 'client', and set those records to NULL.
