@@ -224,7 +224,12 @@ void rpc_log_send(Client *client, json_t *request, json_t *params)
 	new_message(&me, NULL, &mtags);
 
 	serialized = json_dumps(params, JSON_COMPACT);
-
+	if (!serialized)
+	{
+		unreal_log(ULOG_INFO, "log", "RPC_LOG_INVALID", client,
+		           "Received malformed JSON in RPC log message (log.send) from $client.name");
+		return;
+	}
 	MessageTag *json_mtag = safe_alloc(sizeof(MessageTag)); 
 	safe_strdup(json_mtag->name, "unrealircd.org/json-log");
 	safe_strdup(json_mtag->value, serialized);
@@ -244,5 +249,6 @@ void rpc_log_send(Client *client, json_t *request, json_t *params)
 	result = json_object();
 	json_object_set_new(result, "success", json_string_unreal("Log successful"));
 	rpc_response(client, request, result);
+	safe_free_message_tags(mtags);
 	json_decref(result);
 }
