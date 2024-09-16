@@ -537,6 +537,12 @@ CMD_FUNC(cmd_rehash)
 		return;
 	}
 
+	if (!MyUser(client) && (parc < 2))
+	{
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "REHASH");
+		return;
+	}
+
 	if ((parc < 3) || BadPtr(parv[2])) {
 		/* If the argument starts with a '-' (like -motd, -opermotd, etc) then it's
 		 * assumed not to be a server. -- Syzop
