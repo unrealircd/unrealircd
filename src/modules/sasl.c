@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 	"SASL", 
 	"UnrealIRCd Team",
 	"unrealircd-6",
-    };
+	};
 
 /* Forward declarations */
 void saslmechlist_free(ModData *m);
@@ -106,22 +106,33 @@ void _sasl_failed(Client *client)
 
 int _decode_authenticate_plain(const char *param, char **authorization_id, char **authentication_id, char **passwd)
 {
-	static char authorization_id_buffer[256];
-	static char authentication_id_buffer[256];
-	static char passwd_buffer[256];
+	static char authorization_id_buffer[256] = {0};
+	static char authentication_id_buffer[256] = {0};
+	static char passwd_buffer[256] = {0};
 	char decoded[512];
 	int n;
 	char *p, *p2;
 
+	// Clear the buffers before use to avoid leftover data
+	memset(authorization_id_buffer, 0, sizeof(authorization_id_buffer));
+	memset(authentication_id_buffer, 0, sizeof(authentication_id_buffer));
+	memset(passwd_buffer, 0, sizeof(passwd_buffer));
+
 	/* First decode the thing */
-	n = b64_decode(param, decoded, 512);
+	n = b64_decode(param, decoded, sizeof(decoded));
 	if (n < 0)
 		return 0; // base64 decoding failed
 
+	// Ensure the decoded buffer is null-terminated (just in case)
+	if (n >= sizeof(decoded)) 
+		return 0; // Prevent out-of-bounds read
+	decoded[n] = '\0';
+
+	// Find the first NUL (authorization ID)
 	p = memchr(decoded, '\0', n);
 	if (!p)
 		return 0; // missing first NUL
-	if (p - decoded > 255)
+	if (p - decoded > sizeof(authorization_id_buffer) - 1)
 		return 0; // oversized authorization_id
 	strlcpy(authorization_id_buffer, decoded, sizeof(authorization_id_buffer));
 	p++;
@@ -129,10 +140,11 @@ int _decode_authenticate_plain(const char *param, char **authorization_id, char 
 	if (n <= 0)
 		return 0; // no room left
 
+	// Find the second NUL (authentication ID)
 	p2 = memchr(p, '\0', n);
 	if (!p2)
 		return 0; // missing second NUL
-	if (p2 - p > 255)
+	if (p2 - p > sizeof(authentication_id_buffer) - 1)
 		return 0; // oversized authentication_id
 	strlcpy(authentication_id_buffer, p, sizeof(authentication_id_buffer));
 	p2++;
@@ -140,11 +152,18 @@ int _decode_authenticate_plain(const char *param, char **authorization_id, char 
 	if (n <= 0)
 		return 0; // no room left
 
+	// Check if the remaining password data fits in the buffer
+	if (n > sizeof(passwd_buffer) - 1)
+		return 0; // oversized password
+
+	// Copy the password
 	strlcpy(passwd_buffer, p2, sizeof(passwd_buffer));
 
+	// Assign output values
 	*authorization_id = authorization_id_buffer;
 	*authentication_id = authentication_id_buffer;
 	*passwd = passwd_buffer;
+
 	return 1;
 }
 
@@ -200,7 +219,7 @@ CMD_FUNC(cmd_sasl)
 
 	/* not for us; propagate. */
 	sendto_server(client, 0, 0, NULL, ":%s SASL %s %s %c %s %s",
-	    client->name, parv[1], parv[2], *parv[3], parv[4], parc > 5 ? parv[5] : "");
+		client->name, parv[1], parv[2], *parv[3], parv[4], parc > 5 ? parv[5] : "");
 }
 
 /*
@@ -248,14 +267,14 @@ CMD_FUNC(cmd_authenticate)
 			RunHook(HOOKTYPE_SASL_AUTHENTICATE, client, 1, parv[1]);
 		} else {
 			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s H %s %s",
-			    me.name, SASL_SERVER, client->id, addr, addr);
+				me.name, SASL_SERVER, client->id, addr, addr);
 
 			if (certfp)
 				sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s S %s %s",
-				    me.name, SASL_SERVER, client->id, parv[1], certfp);
+					me.name, SASL_SERVER, client->id, parv[1], certfp);
 			else
 				sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s S %s",
-				    me.name, SASL_SERVER, client->id, parv[1]);
+					me.name, SASL_SERVER, client->id, parv[1]);
 		}
 	} else
 	{
@@ -265,7 +284,7 @@ CMD_FUNC(cmd_authenticate)
 			RunHook(HOOKTYPE_SASL_AUTHENTICATE, client, 0, parv[1]);
 		} else {
 			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s C %s",
-			    me.name, AGENT_SID(agent_p), client->id, parv[1]);
+				me.name, AGENT_SID(agent_p), client->id, parv[1]);
 		}
 	}
 }
@@ -287,7 +306,7 @@ static int abort_sasl(Client *client)
 		if (agent_p != NULL)
 		{
 			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s D A",
-			    me.name, AGENT_SID(agent_p), client->id);
+				me.name, AGENT_SID(agent_p), client->id);
 			return 0;
 		}
 	}
@@ -354,8 +373,8 @@ void auto_discover_sasl_server(int justlinked)
 			if (justlinked)
 			{
 				unreal_log(ULOG_INFO, "config", "SASL_SERVER_AUTODETECT", client,
-				           "Services server $client provides SASL authentication, good! "
-				           "I'm setting set::sasl-server to \"$client\" internally.");
+						   "Services server $client provides SASL authentication, good! "
+						   "I'm setting set::sasl-server to \"$client\" internally.");
 			}
 			safe_strdup(SASL_SERVER, SERVICES_NAME);
 			if (justlinked)
@@ -477,7 +496,7 @@ EVENT(sasl_timeout)
 	list_for_each_entry(client, &unknown_list, lclient_node)
 	{
 		if (client->local->sasl_sent_time &&
-		    (TStime() - client->local->sasl_sent_time > iConf.sasl_timeout))
+			(TStime() - client->local->sasl_sent_time > iConf.sasl_timeout))
 		{
 			sendnotice(client, "SASL request timed out (server or client misbehaving) -- aborting SASL and continuing connection...");
 			abort_sasl(client);
