@@ -18,6 +18,7 @@ ModuleHeader MOD_HEADER
 void rpc_log_hook_subscribe(Client *client, json_t *request, json_t *params);
 void rpc_log_hook_unsubscribe(Client *client, json_t *request, json_t *params);
 void rpc_log_list(Client *client, json_t *request, json_t *params);
+void rpc_log_send(Client *client, json_t *request, json_t *params);
 int rpc_log_hook(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, json_t *json, const char *json_serialized, const char *timebuf);
 
 MOD_INIT()
@@ -53,6 +54,16 @@ MOD_INIT()
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[rpc/log] Could not register RPC handler");
+		return MOD_FAILED;
+	}
+
+	memset(&r, 0, sizeof(r));
+	r.method = "log.send";
+	r.loglevel = ULOG_DEBUG;
+	r.call = rpc_log_send;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[rpc/send] Could not register RPC handler");
 		return MOD_FAILED;
 	}
 
@@ -193,4 +204,52 @@ void rpc_log_list(Client *client, json_t *request, json_t *params)
 	json_decref(result);
 
 	free_log_sources(log_sources);
+}
+
+
+void rpc_log_send(Client *client, json_t *request, json_t *params)
+{
+	json_t *result;
+	json_error_t *jerr;
+	const char *msg, *level, *subsystem, *event_id, *log_source, *timestamp;
+	const char *serialized;
+	MessageTag *mtags = NULL;
+
+	REQUIRE_PARAM_STRING("msg", msg);
+	REQUIRE_PARAM_STRING("level", level);
+	REQUIRE_PARAM_STRING("subsystem", subsystem);
+	REQUIRE_PARAM_STRING("event_id", event_id);
+	OPTIONAL_PARAM_STRING("timestamp", timestamp);
+
+	new_message(&me, NULL, &mtags);
+
+	serialized = json_dumps(params, JSON_COMPACT);
+	if (!serialized)
+	{
+		unreal_log(ULOG_INFO, "log", "RPC_LOG_INVALID", client,
+		           "Received malformed JSON in RPC log message (log.send) from $client.name");
+		return;
+	}
+	
+	MessageTag *json_mtag = safe_alloc(sizeof(MessageTag)); 
+	safe_strdup(json_mtag->name, "unrealircd.org/json-log");
+	safe_strdup(json_mtag->value, serialized);
+	AddListItem(json_mtag, mtags);
+
+	const char *cmd_params[6] = {
+		me.name,
+		level,
+		subsystem,
+		event_id,
+		msg,
+		NULL
+	};
+
+	do_cmd(&me, mtags, "SLOG", 5, cmd_params);
+	safe_free_message_tags(mtags);
+	
+	/* Simply return success */
+	result = json_boolean(1);
+	rpc_response(client, request, result);
+	json_decref(result);
 }
