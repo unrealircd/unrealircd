@@ -113,10 +113,13 @@ int _decode_authenticate_plain(const char *param, char **authorization_id, char 
 	int n;
 	char *p, *p2;
 
+	*authorization_id = *authentication_id = *passwd = NULL;
+
 	/* First decode the thing */
-	n = b64_decode(param, decoded, 512);
+	n = b64_decode(param, decoded, 511);
 	if (n < 0)
 		return 0; // base64 decoding failed
+	decoded[n] = '\0';
 
 	p = memchr(decoded, '\0', n);
 	if (!p)
