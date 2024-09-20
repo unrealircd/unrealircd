@@ -18,6 +18,9 @@ in progress and may not always be a stable version.
     [set::max-inherit-extended-bans](https://www.unrealircd.org/docs/Set_block#set::max-inherit-extended-bans)
   * This can also be used in `+I`, which entries are counted separately and
     have their own limit.
+* JSON-RPC:
+  * New call [`log.send`](https://www.unrealircd.org/docs/JSON-RPC:Log#log.send)
+    to send a log message / server notice.
 
 ### Changes:
 * When retrieving cold or hot patches we now do proper GPG/PGP checks.
