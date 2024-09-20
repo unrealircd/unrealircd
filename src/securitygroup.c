@@ -243,7 +243,7 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 			}
 		}
 	} else
-	if (!strcmp(cep->name, "ip"))
+	if (!strcmp(cep->name, "ip") || !strcmp(cep->name, "exclude-ip"))
 	{
 	} else
 	if (!strcmp(cep->name, "security-group") || !strcmp(cep->name, "exclude-security-group"))
@@ -461,6 +461,10 @@ int conf_match_item(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
 	{
 		unreal_add_masks(&s->exclude_mask, cep);
 	}
+	else if (!strcmp(cep->name, "exclude-ip"))
+	{
+		unreal_add_names(&s->exclude_ip, cep);
+	}
 	else if (!strcmp(cep->name, "exclude-security-group"))
 	{
 		unreal_add_names(&s->exclude_security_group, cep);
@@ -672,7 +676,8 @@ SecurityGroup *duplicate_security_group(SecurityGroup *s)
 		safe_strdup(n->exclude_prettyrule, s->exclude_prettyrule);
 		n->exclude_rule = crule_parse(n->exclude_prettyrule);
 	}
-	n->ip = duplicate_name_list(s->exclude_ip);
+	n->ip = duplicate_name_list(s->ip);
+	n->exclude_ip = duplicate_name_list(s->exclude_ip);
 	n->extended = duplicate_nvplist(s->extended);
 	n->exclude_extended = duplicate_nvplist(s->exclude_extended);
 	n->printable_list = duplicate_nvplist(s->printable_list);
