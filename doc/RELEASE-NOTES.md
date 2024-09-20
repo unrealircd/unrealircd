@@ -5,6 +5,30 @@ This is the git version (development version) for future 6.1.8. This is work
 in progress and may not always be a stable version.
 
 ### Enhancements:
+* We now support vhost::auto-login, which means you can set vhosts on users
+  automatically and we support variables in vhost::vhost (this works similar
+  to Gottem's autovhost module).
+  * An example would be:  
+    ```
+    /* Give users who identify to Services using SASL a nice vhost */
+    vhost {
+        auto-login yes;
+        vhost $account.example.net;
+        mask { identified yes; }
+    }
+    ```
+  * On-connect we will go through all vhost blocks that have auto-login
+    set to yes. Blocks are processed in the same order as they are in
+    the config (top-down). The first match wins.
+  * The variables that are supported now use a generic framework called
+    [Standard variables](https://www.unrealircd.org/docs/Standard_variables)
+  * At the moment these can be used in vhost::vhost, oper::vhost,
+    blacklist::reason and set::oper-vhost
+* New option [set::oper-vhost](https://www.unrealircd.org/docs/Set_block#set::oper-vhost)
+  which sets a default oper::vhost. For example:
+  `set { oper-vhost $operclass.admin.example.net; }`
+  * If both set::oper-vhost and oper::vhost are present, the oper::vhost
+    takes precedence.
 * New [Extended ban](https://www.unrealircd.org/docs/Extended_bans#Group_4:_special)
   to inherit channel bans from another channel:
   * If in channel `#test` you add `+b ~inherit:#main` then anyone banned in
