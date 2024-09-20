@@ -930,6 +930,7 @@ extern MODVAR void (*exit_client)(Client *client, MessageTag *recv_mtags, const 
 extern MODVAR void (*exit_client_fmt)(Client *client, MessageTag *recv_mtags, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 3, 4)));
 extern MODVAR void (*exit_client_ex)(Client *client, Client *origin, MessageTag *recv_mtags, const char *comment);
 extern MODVAR void (*banned_client)(Client *client, const char *bantype, const char *reason, int global, int noexit);
+extern MODVAR char (*unreal_expand_string)(const char *str, char *buf, size_t buflen, NameValuePrioList *nvp, int buildvarstring_options, Client *client);
 /* /Efuncs */
 
 /* TLS functions */

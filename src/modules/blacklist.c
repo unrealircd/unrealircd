@@ -898,7 +898,7 @@ int blacklist_action(Client *client, char *opernotice, BanAction *ban_action, ch
 void blacklist_hit(Client *client, Blacklist *bl, int reply)
 {
 	char opernotice[512], banbuf[512], reply_num[5];
-	const char *name[6], *value[6];
+	NameValuePrioList *nvp = NULL;
 	BLUser *blu = BLUSER(client);
 
 	if (find_tkline_match(client, 1))
@@ -913,21 +913,10 @@ void blacklist_hit(Client *client, Blacklist *bl, int reply)
 
 	snprintf(reply_num, sizeof(reply_num), "%d", reply);
 
-	name[0] = "ip";
-	value[0] = GetIP(client);
-	name[1] = "server";
-	value[1] = me.name;
-	name[2] = "blacklist";
-	value[2] = bl->name;
-	name[3] = "dnsname";
-	value[3] = bl->backend->dns->name;
-	name[4] = "dnsreply";
-	value[4] = reply_num;
-	name[5] = NULL;
-	value[5] = NULL;
-	/* when adding more, be sure to update the array elements number in the definition of const char *name[] and value[] */
-
-	buildvarstring(bl->reason, banbuf, sizeof(banbuf), name, value);
+	add_nvplist(&nvp, 0, "blacklist", bl->name);
+	add_nvplist(&nvp, 0, "dnsname", bl->backend->dns->name);
+	add_nvplist(&nvp, 0, "dnsreply", reply_num);
+	unreal_expand_string(bl->reason, banbuf, sizeof(banbuf), nvp, 0, client);
 
 	if (only_soft_actions(bl->action) && blu)
 	{

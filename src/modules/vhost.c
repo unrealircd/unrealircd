@@ -460,61 +460,13 @@ CMD_FUNC(cmd_vhost)
 	do_vhost(client, vhost);
 }
 
-char *unreal_expand_standard_variables(const char *str, char *buf, size_t buflen, NameValuePrioList *nvp, Client *client)
-{
-	const char *s;
-
-	if (client)
-	{
-		add_nvplist(&nvp, 0, "nick", client->name);
-		add_nvplist(&nvp, 0, "ip", GetIP(client));
-		if (client->user)
-		{
-			add_nvplist(&nvp, 0, "username", client->user->username);
-			add_nvplist(&nvp, 0, "realname", client->info);
-			add_nvplist(&nvp, 0, "account", client->user->account);
-			s = get_operlogin(client);
-			if (s)
-				add_nvplist(&nvp, 0, "operlogin", s);
-			s = get_operclass(client);
-			if (s)
-				add_nvplist(&nvp, 0, "operclass", s);
-		}
-		if (client->ip)
-		{
-			GeoIPResult *geo = geoip_client(client);
-			if (geo)
-			{
-				char asn[32];
-				if (geo->country_code)
-					add_nvplist(&nvp, 0, "country_code", geo->country_code);
-				else
-					add_nvplist(&nvp, 0, "country_code", "XX");
-
-				/* Safe to set this unconditionally, will simply be 0
-				 * for things like localhost and such.
-				 */
-				snprintf(asn, sizeof(asn), "%d", geo->asn);
-				add_nvplist(&nvp, 0, "asn", asn);
-			} else {
-				add_nvplist(&nvp, 0, "country_code", "XX");
-				add_nvplist(&nvp, 0, "asn", "0");
-			}
-		}
-	}
-	buildvarstring_nvp(str, buf, buflen, nvp, 0);
-	strtolower(buf);
-	safe_free_nvplist(nvp);
-	return buf;
-}
-
 void do_vhost(Client *client, ConfigItem_vhost *vhost)
 {
 	char olduser[USERLEN+1];
 	char newhost[HOSTLEN+1];
 
 	*newhost = '\0';
-	unreal_expand_standard_variables(vhost->virthost, newhost, sizeof(newhost), NULL, client);
+	unreal_expand_string(vhost->virthost, newhost, sizeof(newhost), NULL, 0, client);
 	if (!valid_vhost(newhost))
 	{
 		sendnotice(client, "*** Unable to apply vhost automatically");

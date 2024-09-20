@@ -182,6 +182,7 @@ void (*exit_client)(Client *client, MessageTag *recv_mtags, const char *comment)
 void (*exit_client_fmt)(Client *client, MessageTag *recv_mtags, FORMAT_STRING(const char *pattern), ...);
 void (*exit_client_ex)(Client *client, Client *origin, MessageTag *recv_mtags, const char *comment);
 void (*banned_client)(Client *client, const char *bantype, const char *reason, int global, int noexit);
+char (*unreal_expand_string)(const char *str, char *buf, size_t buflen, NameValuePrioList *nvp, int buildvarstring_options, Client *client);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
@@ -508,4 +509,5 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_EXIT_CLIENT_FMT, exit_client_fmt, NULL, 0);
 	efunc_init_function(EFUNC_EXIT_CLIENT_EX, exit_client_ex, NULL, 0);
 	efunc_init_function(EFUNC_BANNED_CLIENT, banned_client, NULL, 0);
+	efunc_init_function(EFUNC_UNREAL_EXPAND_STRING, unreal_expand_string, NULL, 0);
 }

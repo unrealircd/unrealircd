@@ -79,11 +79,13 @@ IpUsersBucket *add_ipusers_bucket(Client *client);
 void decrease_ipusers_bucket(Client *client);
 int decrease_ipusers_bucket_wrapper(Client *client);
 int stats_maxperip(Client *client, const char *para);
+char *_unreal_expand_string(const char *str, char *buf, size_t buflen, NameValuePrioList *nvp, int buildvarstring_options, Client *client);
 
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAdd(modinfo->handle, EFUNC_REGISTER_USER, _register_user);
+	EfunctionAddString(modinfo->handle, EFUNC_UNREAL_EXPAND_STRING, _unreal_expand_string);
 	return MOD_SUCCESS;
 }
 
@@ -1572,4 +1574,74 @@ int AllowClient(Client *client)
 	/* User did not match any allow { } blocks: */
 	exit_client(client, NULL, iConf.reject_message_unauthorized);
 	return 0;
+}
+
+/** Expand 'str' which contains '$variables' into 'buf'.
+ * @param str		The string which may contain $variables
+ * @param buf		The buffer to store the result in
+ * @param buflen	The size of 'buf'
+ * @param nvp		A list with custom extra variables, or simply NULL.
+ *			Note that the list is freed at the end, including the custom settings.
+ * @param buildvarstring_options	One or more of BUILDVARSTRING_* or simply 0.
+ * @param client	The client to expand details from
+ * @returns A pointer to 'buf'
+ * @notes If you do provide a non-NULL 'nvp' then note that the entire nvp list is FREED before return
+ *        including your custom list!
+ */
+char *_unreal_expand_string(const char *str, char *buf, size_t buflen, NameValuePrioList *nvp, int buildvarstring_options, Client *client)
+{
+	const char *s;
+
+	if (client)
+	{
+		add_nvplist(&nvp, 0, "nick", client->name);
+		add_nvplist(&nvp, 0, "servername", client->uplink->name);
+		add_nvplist(&nvp, 0, "server", client->uplink->name); /* (old backwards compatible name) */
+		add_nvplist(&nvp, 0, "ip", GetIP(client));
+
+		if (client->user && *client->user->realhost)
+			add_nvplist(&nvp, 0, "hostname", client->user->realhost);
+		else if (client->local && *client->local->sockhost)
+			add_nvplist(&nvp, 0, "hostname", client->local->sockhost);
+		else
+			add_nvplist(&nvp, 0, "hostname", GetIP(client));
+
+		if (client->user)
+		{
+			add_nvplist(&nvp, 0, "username", client->user->username);
+			add_nvplist(&nvp, 0, "realname", client->info);
+			add_nvplist(&nvp, 0, "account", client->user->account);
+			s = get_operlogin(client);
+			if (s)
+				add_nvplist(&nvp, 0, "operlogin", s);
+			s = get_operclass(client);
+			if (s)
+				add_nvplist(&nvp, 0, "operclass", s);
+		}
+		if (client->ip)
+		{
+			GeoIPResult *geo = geoip_client(client);
+			if (geo)
+			{
+				char asn[32];
+				if (geo->country_code)
+					add_nvplist(&nvp, 0, "country_code", geo->country_code);
+				else
+					add_nvplist(&nvp, 0, "country_code", "XX");
+
+				/* Safe to set this unconditionally, will simply be 0
+				 * for things like localhost and such.
+				 */
+				snprintf(asn, sizeof(asn), "%d", geo->asn);
+				add_nvplist(&nvp, 0, "asn", asn);
+			} else {
+				add_nvplist(&nvp, 0, "country_code", "XX");
+				add_nvplist(&nvp, 0, "asn", "0");
+			}
+		}
+	}
+	buildvarstring_nvp(str, buf, buflen, nvp, buildvarstring_options);
+	strtolower(buf);
+	safe_free_nvplist(nvp);
+	return buf;
 }
