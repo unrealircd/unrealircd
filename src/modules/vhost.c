@@ -25,12 +25,23 @@
 /* Structs */
 ModuleHeader MOD_HEADER
   = {
-	"vhost",	/* Name of module */
-	"5.0", /* Version */
-	"command /vhost", /* Short description of module */
+	"vhost",
+	"6.0",
+	"command /VHOST and vhost { } blocks",
 	"UnrealIRCd Team",
 	"unrealircd-6",
     };
+
+typedef struct ConfigItem_vhost ConfigItem_vhost;
+struct ConfigItem_vhost {
+	ConfigItem_vhost *prev, *next;
+	SecurityGroup *match;           /**< Match criteria for user */
+	char *login;                    /**< Login name for 'VHOST login pass' */
+	AuthConfig *auth;		/**< Password for 'VHOST login pass */
+	char *virtuser;			/**< Virtual ident to set */
+	char *virthost;                 /**< Virtual host to set */
+	SWhois *swhois;			/**< SWhois items to set */
+};
 
 /* Variables */
 ConfigItem_vhost *conf_vhost = NULL;

@@ -105,7 +105,6 @@ typedef struct ConfigItem_allow ConfigItem_allow;
 typedef struct ConfigFlag_allow ConfigFlag_allow;
 typedef struct ConfigItem_allow_channel ConfigItem_allow_channel;
 typedef struct ConfigItem_allow_dcc ConfigItem_allow_dcc;
-typedef struct ConfigItem_vhost ConfigItem_vhost;
 typedef struct ConfigItem_link	ConfigItem_link;
 typedef struct ConfigItem_ban ConfigItem_ban;
 typedef struct ConfigItem_deny_dcc ConfigItem_deny_dcc;
@@ -2013,15 +2012,6 @@ struct ConfigItem_sni {
 	char *name;
 	SSL_CTX *ssl_ctx;
 	TLSOptions *tls_options;
-};
-
-struct ConfigItem_vhost {
-	ConfigItem_vhost 	*prev, *next;
-	ConfigFlag 	flag;
-	SecurityGroup	*match;
-	char		*login, *virthost, *virtuser;
-	SWhois *swhois;
-	AuthConfig	*auth;
 };
 
 struct ConfigItem_link {
