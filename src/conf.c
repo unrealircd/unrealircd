@@ -4355,7 +4355,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 						cep->line_number, "oper::vhost");
 					continue;
 				}
-				if (!valid_vhost(cep->value))
+				if (!potentially_valid_vhost(cep->value))
 				{
 					config_error("%s:%i: oper::vhost contains illegal characters or is too long: '%s'",
 					             cep->file->filename, cep->line_number, cep->value);

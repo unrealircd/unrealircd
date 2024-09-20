@@ -117,7 +117,6 @@ void free_vhost_config(void)
 int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
 {
 	ConfigEntry *cep;
-	char fakehost[HOSTLEN*2];
 	char has_vhost = 0, has_login = 0, has_password = 0, has_mask = 0, has_match = 0;
 	char has_auto_login = 0;
 	int errors = 0;
@@ -149,14 +148,7 @@ int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
 				errors++;
 				continue;
 			}
-			/* Silly trick to replace $vars to xvars so to postpone
-			 * variable matching to at runtime...
-			 */
-			strlcpy(fakehost, cep->value, sizeof(fakehost));
-			for (p = fakehost; *p; p++)
-				if (*p == '$')
-					*p = 'x';
-			if (!valid_vhost(fakehost))
+			if (!potentially_valid_vhost(cep->value))
 			{
 				/* Note that the error message needs to be on the
 				 * original cep->value and not on fakehost.
@@ -473,7 +465,7 @@ void do_vhost(Client *client, ConfigItem_vhost *vhost)
 		if (vhost->auto_login)
 		{
 			unreal_log(ULOG_WARNING, "vhost", "AUTO_VHOST_FAILED", client,
-			           "Unable to set auto-vhost on user. "
+			           "Unable to set auto-vhost on user $client.details. "
 			           "Vhost '$vhost_format' expanded to '$newhost' but is invalid.",
 			           log_data_string("vhost_format", vhost->virthost),
 			           log_data_string("newhost", newhost));

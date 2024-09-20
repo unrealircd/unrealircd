@@ -471,6 +471,22 @@ int valid_vhost(const char *userhost)
 	return 1;
 }
 
+/** Weird variant of valid_vhost() that allows $varnames through.
+ * So should only be used for checking things like vhost::vhost,
+ * oper::vhost and such in the CONFIG TEST routines.
+ * At runtime you should use valid_vhost() to check the final host
+ * again after variable expansion (by unreal_expand_string usually).
+ */
+int potentially_valid_vhost(const char *userhost)
+{
+	char uhost[512], *p;
+	strlcpy(uhost, userhost, sizeof(uhost));
+	for (p = uhost; *p; p++)
+		if (*p == '$')
+			*p = '_';
+	return valid_vhost(uhost);
+}
+
 /*|| BAN ACTION ROUTINES FOLLOW ||*/
 
 int parse_ban_action_set(const char *str, char **var, VarActionValue *op, int *value, char **error)
