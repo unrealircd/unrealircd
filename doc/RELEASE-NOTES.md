@@ -17,18 +17,29 @@ in progress and may not always be a stable version.
     1 by default, see 
     [set::max-inherit-extended-bans](https://www.unrealircd.org/docs/Set_block#set::max-inherit-extended-bans)
   * This can also be used in `+I`, which entries are counted separately and
-    have their own limit. (TODO: `+e` still needs to be done)
+    have their own limit.
 
 ### Changes:
 * When retrieving cold or hot patches we now do proper GPG/PGP checks.
   Just like we do on `./unrealircd upgrade`
 * Update shipped libraries: c-ares to 1.33.1
+* Move around 750 lines of code from core to modules (regarding
+  throttling, maxperip, exit_client).
 
 ### Fixes:
+* In some circumstances users could hang during the handshake when
+  their DNS lookup result was cached and using c-ares 1.31.0 or later
+  (which was released on June 18 2024 and shipped with UnrealIRCd 6.1.7
+  to be used as a fallback for systems which don't have the c-ares
+  library installed).
 * The [require authentication { }](https://www.unrealircd.org/docs/Require_authentication_block)
   was broken in 6.1.7.*.
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) call `spamfilter.get`
   could not retrieve information about config-based spamfilters.
+* The `decode_authenticate_plain()` was reading OOB. This function is not
+  used by UnrealIRCd itself but could affect third party modules.
+* Crash on invalid server-to-server command regarding `REHASH`
+  (This only affected trusted linked servers)
 
 ### Developers and protocol:
 * The `MD` S2S command now supports `BIGLINES`, allowing synching of 16K
