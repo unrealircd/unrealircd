@@ -84,6 +84,7 @@ struct Configuration {
 	long oper_modes;
 	char *oper_snomask;
 	char *oper_auto_join_chans;
+	char *oper_vhost;
 	char *allow_user_stats;
 	OperStat *allow_user_stats_ext;
 	int ping_warning;

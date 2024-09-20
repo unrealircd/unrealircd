@@ -127,6 +127,10 @@ int _make_oper(Client *client, const char *operblock_name, const char *operclass
 	{
 		set_oper_host(client, vhost);
 	} else
+	if (iConf.oper_vhost)
+	{
+		set_oper_host(client, iConf.oper_vhost);
+	} else
 	if (IsHidden(client) && !client->user->virthost)
 	{
 		/* +x has just been set by modes-on-oper and no vhost. cloak the oper! */

@@ -1655,6 +1655,7 @@ void free_iConf(Configuration *i)
 	safe_free(i->gline_address);
 	safe_free(i->oper_snomask);
 	safe_free(i->oper_auto_join_chans);
+	safe_free(i->oper_vhost);
 	safe_free(i->allow_user_stats);
 	// allow_user_stats_ext is freed elsewhere
 	free_tls_options(i->tls_options);
@@ -7676,6 +7677,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "oper-auto-join")) {
 			safe_strdup(tempiConf.oper_auto_join_chans, cep->value);
 		}
+		else if (!strcmp(cep->name, "oper-vhost")) {
+			safe_strdup(tempiConf.oper_vhost, cep->value);
+		}
 		else if (!strcmp(cep->name, "check-target-nick-bans")) {
 			tempiConf.check_target_nick_bans = config_checkval(cep->value, CFG_YESNO);
 		}
@@ -8415,6 +8419,15 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "oper-auto-join")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, oper_auto_join, "oper-auto-join");
+		}
+		else if (!strcmp(cep->name, "oper-vhost")) {
+			CheckNull(cep);
+			if (!potentially_valid_vhost(cep->value))
+			{
+				config_error("%s:%i: set::oper-vhost contains illegal characters or is too long: '%s'",
+					     cep->file->filename, cep->line_number, cep->value);
+				errors++;
+			}
 		}
 		else if (!strcmp(cep->name, "check-target-nick-bans")) {
 			CheckNull(cep);

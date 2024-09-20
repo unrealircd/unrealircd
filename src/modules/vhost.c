@@ -457,6 +457,13 @@ void do_vhost(Client *client, ConfigItem_vhost *vhost)
 	char olduser[USERLEN+1];
 	char newhost[HOSTLEN+1];
 
+	/* There are various IsUser() checks in the code below, that is because
+	 * this code is also called for CLIENT_STATUS_UNKNOWN users in the handshake
+	 * that have not yet been introduced to other servers. For such users we
+	 * should not send SETIDENT and SETHOST messages out... such info will
+	 * be sent in the UID message when the user is introduced.
+	 */
+
 	*newhost = '\0';
 	unreal_expand_string(vhost->virthost, newhost, sizeof(newhost), NULL, 0, client);
 	if (!valid_vhost(newhost))
@@ -480,23 +487,29 @@ void do_vhost(Client *client, ConfigItem_vhost *vhost)
 	{
 		strlcpy(olduser, client->user->username, sizeof(olduser));
 		strlcpy(client->user->username, vhost->virtuser, sizeof(client->user->username));
-		sendto_server(client, 0, 0, NULL, ":%s SETIDENT %s", client->id,
-		    client->user->username);
+		if (IsUser(client))
+			sendto_server(client, 0, 0, NULL, ":%s SETIDENT %s", client->id, client->user->username);
 	}
 	client->umodes |= UMODE_HIDE;
 	client->umodes |= UMODE_SETHOST;
-	sendto_server(client, 0, 0, NULL, ":%s SETHOST %s", client->id, client->user->virthost);
-	sendto_one(client, NULL, ":%s MODE %s :+tx", client->name, client->name);
+	if (IsUser(client))
+	{
+		sendto_server(client, 0, 0, NULL, ":%s SETHOST %s", client->id, client->user->virthost);
+		sendto_one(client, NULL, ":%s MODE %s :+tx", client->name, client->name);
+	}
 	if (vhost->swhois)
 	{
 		SWhois *s;
 		for (s = vhost->swhois; s; s = s->next)
 			swhois_add(client, "vhost", -100, s->line, &me, NULL);
 	}
-	sendnotice(client, "*** Your vhost is now %s%s%s",
-		vhost->virtuser ? vhost->virtuser : "",
-		vhost->virtuser ? "@" : "",
-		newhost);
+	if (IsUser(client))
+	{
+		sendnotice(client, "*** Your vhost is now %s%s%s",
+			vhost->virtuser ? vhost->virtuser : "",
+			vhost->virtuser ? "@" : "",
+			newhost);
+	}
 
 	/* Only notify on logins, not on auto logins (should we make that configurable?)
 	 * (if you do want it for auto logins, note that vhost->login will be NULL
