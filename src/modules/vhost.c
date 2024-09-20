@@ -35,6 +35,7 @@ ModuleHeader MOD_HEADER
 typedef struct ConfigItem_vhost ConfigItem_vhost;
 struct ConfigItem_vhost {
 	ConfigItem_vhost *prev, *next;
+	int auto_login;			/**< Auto-login users on connect? If they match 'auth' */
 	SecurityGroup *match;           /**< Match criteria for user */
 	char *login;                    /**< Login name for 'VHOST login pass' */
 	AuthConfig *auth;		/**< Password for 'VHOST login pass */
@@ -54,6 +55,7 @@ static int stats_vhost(Client *client, const char *flag);
 ConfigItem_vhost *find_vhost(const char *name);
 void do_vhost(Client *client, ConfigItem_vhost *vhost);
 CMD_FUNC(cmd_vhost);
+int vhost_auto_set(Client *client);
 
 MOD_TEST()
 {
@@ -67,6 +69,7 @@ MOD_INIT()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, vhost_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, stats_vhost);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, INT_MAX, vhost_auto_set);
 	CommandAdd(modinfo->handle, MSG_VHOST, cmd_vhost, MAXPARA, CMD_USER);
 	return MOD_SUCCESS;
 }
@@ -115,6 +118,7 @@ int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
 {
 	ConfigEntry *cep;
 	char has_vhost = 0, has_login = 0, has_password = 0, has_mask = 0, has_match = 0;
+	char has_auto_login = 0;
 	int errors = 0;
 
 	/* We are only interested in vhost { } blocks */
@@ -123,7 +127,11 @@ int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "vhost"))
+		if (!strcmp(cep->name, "auto-login"))
+		{
+			has_auto_login = config_checkval(cep->value, CFG_YESNO);
+		}
+		else if (!strcmp(cep->name, "vhost"))
 		{
 			char *at, *tmp, *host;
 			if (has_vhost)
@@ -202,25 +210,31 @@ int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
 			errors++;
 		}
 	}
+
 	if (!has_vhost)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
 			"vhost::vhost");
 		errors++;
 	}
-	if (!has_login)
-	{
-		config_error_missing(ce->file->filename, ce->line_number,
-			"vhost::login");
-		errors++;
 
-	}
-	if (!has_password)
+	if (!has_auto_login)
 	{
-		config_error_missing(ce->file->filename, ce->line_number,
-			"vhost::password");
-		errors++;
+		if (!has_login)
+		{
+			config_error_missing(ce->file->filename, ce->line_number,
+				"vhost::login");
+			errors++;
+
+		}
+		if (!has_password)
+		{
+			config_error_missing(ce->file->filename, ce->line_number,
+				"vhost::password");
+			errors++;
+		}
 	}
+
 	if (!has_mask && !has_match)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
@@ -235,6 +249,13 @@ int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
 		errors++;
 	}
 
+	if (has_auto_login && has_password)
+	{
+		config_error("%s:%d: If ::auto-login is set to 'yes' then you "
+		             "cannot have a ::password configured. "
+		             "Remove the password if you want to use auto-login.",
+		             ce->file->filename, ce->line_number);
+	}
 	*errs = errors;
 	return errors ? -1 : 1;
 }
@@ -254,7 +275,11 @@ int vhost_config_run(ConfigFile *conf, ConfigEntry *ce, int type)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "vhost"))
+		if (!strcmp(cep->name, "auto-login"))
+		{
+			vhost->auto_login = config_checkval(cep->value, CFG_YESNO);
+		}
+		else if (!strcmp(cep->name, "vhost"))
 		{
 			char *user, *host;
 			user = strtok(cep->value, "@");
@@ -396,13 +421,6 @@ CMD_FUNC(cmd_vhost)
 		return;
 	}
 
-	do_vhost(client, vhost);
-}
-
-void do_vhost(Client *client, ConfigItem_vhost *vhost)
-{
-	char olduser[USERLEN+1];
-
 	/* Authentication passed, but.. there could still be other restrictions: */
 	switch (UHOST_ALLOWED)
 	{
@@ -428,6 +446,12 @@ void do_vhost(Client *client, ConfigItem_vhost *vhost)
 	}
 
 	/* All checks passed, now let's go ahead and change the host */
+	do_vhost(client, vhost);
+}
+
+void do_vhost(Client *client, ConfigItem_vhost *vhost)
+{
+	char olduser[USERLEN+1];
 
 	userhost_save_current(client);
 
@@ -478,4 +502,25 @@ void do_vhost(Client *client, ConfigItem_vhost *vhost)
 	}
 
 	userhost_changed(client);
+}
+
+int vhost_auto_set(Client *client)
+{
+	ConfigItem_vhost *vhost;
+
+	if (IsSetHost(client))
+		return 0; /* Don't override if e.g. anope already set a vhost */
+
+	for (vhost = conf_vhost; vhost; vhost = vhost->next)
+	{
+		if (vhost->auto_login &&
+		    !vhost->auth &&
+		    vhost->match &&
+		    user_allowed_by_security_group(client, vhost->match))
+		{
+			do_vhost(client, vhost);
+			return 0;
+		}
+	}
+	return 0;
 }
