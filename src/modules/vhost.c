@@ -1,6 +1,6 @@
 /*
  *   Unreal Internet Relay Chat Daemon, src/modules/vhost.c
- *   (C) 2000-2001 Carsten V. Munk and the UnrealIRCd Team
+ *   (C) 2000-2024 Carsten V. Munk, Bram Matthys and the UnrealIRCd Team
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -19,11 +19,10 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(cmd_vhost);
-
-/* Place includes here */
+/* Defines */
 #define MSG_VHOST       "VHOST"
 
+/* Structs */
 ModuleHeader MOD_HEADER
   = {
 	"vhost",	/* Name of module */
@@ -33,25 +32,301 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
     };
 
-/* This is called on module init, before Server Ready */
-MOD_INIT()
+/* Variables */
+ConfigItem_vhost *conf_vhost = NULL;
+
+/* Forward declarations */
+void free_vhost_config(void);
+int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs);
+int vhost_config_run(ConfigFile *conf, ConfigEntry *ce, int type);
+static int stats_vhost(Client *client, const char *flag);
+ConfigItem_vhost *find_vhost(const char *name);
+void do_vhost(Client *client, ConfigItem_vhost *vhost);
+CMD_FUNC(cmd_vhost);
+
+MOD_TEST()
 {
-	CommandAdd(modinfo->handle, MSG_VHOST, cmd_vhost, MAXPARA, CMD_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, vhost_config_test);
 	return MOD_SUCCESS;
 }
 
-/* Is first run when server is 100% ready */
+MOD_INIT()
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, vhost_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, stats_vhost);
+	CommandAdd(modinfo->handle, MSG_VHOST, cmd_vhost, MAXPARA, CMD_USER);
+	return MOD_SUCCESS;
+}
+
 MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 
-/* Called when module is unloaded */
 MOD_UNLOAD()
 {
-	return MOD_SUCCESS;	
+	free_vhost_config();
+	return MOD_SUCCESS;
+}
+
+void free_vhost_config(void)
+{
+	ConfigItem_vhost *e, *e_next;
+
+	for (e = conf_vhost; e; e = e_next)
+	{
+		SWhois *s, *s_next;
+
+		e_next = e->next;
+
+		safe_free(e->login);
+		Auth_FreeAuthConfig(e->auth);
+		safe_free(e->virthost);
+		safe_free(e->virtuser);
+		free_security_group(e->match);
+		for (s = e->swhois; s; s = s_next)
+		{
+			s_next = s->next;
+			safe_free(s->line);
+			safe_free(s->setby);
+			safe_free(s);
+		}
+		DelListItem(e, conf_vhost);
+		safe_free(e);
+	}
+	conf_vhost = NULL;
+}
+/** Test a vhost { } block in the configuration file */
+int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
+{
+	ConfigEntry *cep;
+	char has_vhost = 0, has_login = 0, has_password = 0, has_mask = 0, has_match = 0;
+	int errors = 0;
+
+	/* We are only interested in vhost { } blocks */
+	if ((type != CONFIG_MAIN) || strcmp(ce->name, "vhost"))
+		return 0;
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "vhost"))
+		{
+			char *at, *tmp, *host;
+			if (has_vhost)
+			{
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "vhost::vhost");
+				continue;
+			}
+			has_vhost = 1;
+			if (!cep->value)
+			{
+				config_error_empty(cep->file->filename,
+					cep->line_number, "vhost", "vhost");
+				errors++;
+				continue;
+			}
+			if (!valid_vhost(cep->value))
+			{
+				config_error("%s:%i: oper::vhost contains illegal characters or is too long: '%s'",
+					     cep->file->filename, cep->line_number, cep->value);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->name, "login"))
+		{
+			if (has_login)
+			{
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "vhost::login");
+			}
+			has_login = 1;
+			if (!cep->value)
+			{
+				config_error_empty(cep->file->filename,
+					cep->line_number, "vhost", "login");
+				errors++;
+				continue;
+			}
+		}
+		else if (!strcmp(cep->name, "password"))
+		{
+			if (has_password)
+			{
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "vhost::password");
+			}
+			has_password = 1;
+			if (!cep->value)
+			{
+				config_error_empty(cep->file->filename,
+					cep->line_number, "vhost", "password");
+				errors++;
+				continue;
+			}
+			if (Auth_CheckError(cep, 0) < 0)
+				errors++;
+		}
+		else if (!strcmp(cep->name, "mask"))
+		{
+			has_mask = 1;
+			test_match_block(conf, cep, &errors);
+		}
+		else if (!strcmp(cep->name, "match"))
+		{
+			has_match = 1;
+			test_match_block(conf, cep, &errors);
+		}
+		else if (!strcmp(cep->name, "swhois"))
+		{
+			/* multiple is ok */
+		}
+		else
+		{
+			config_error_unknown(cep->file->filename, cep->line_number,
+				"vhost", cep->name);
+			errors++;
+		}
+	}
+	if (!has_vhost)
+	{
+		config_error_missing(ce->file->filename, ce->line_number,
+			"vhost::vhost");
+		errors++;
+	}
+	if (!has_login)
+	{
+		config_error_missing(ce->file->filename, ce->line_number,
+			"vhost::login");
+		errors++;
+
+	}
+	if (!has_password)
+	{
+		config_error_missing(ce->file->filename, ce->line_number,
+			"vhost::password");
+		errors++;
+	}
+	if (!has_mask && !has_match)
+	{
+		config_error_missing(ce->file->filename, ce->line_number,
+			"vhost::match");
+		errors++;
+	}
+	if (has_mask && has_match)
+	{
+		config_error("%s:%d: You cannot have both ::mask and ::match. "
+		             "You should only use %s::match.",
+		             ce->file->filename, ce->line_number, ce->name);
+		errors++;
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+/** Process a vhost { } block in the configuration file */
+int vhost_config_run(ConfigFile *conf, ConfigEntry *ce, int type)
+{
+	ConfigEntry *cep, *cepp;
+	ConfigItem_vhost *vhost;
+
+	/* We are only interested in vhost { } blocks */
+	if ((type != CONFIG_MAIN) || strcmp(ce->name, "vhost"))
+		return 0;
+
+	vhost = safe_alloc(sizeof(ConfigItem_vhost));
+	vhost->match = safe_alloc(sizeof(SecurityGroup));
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "vhost"))
+		{
+			char *user, *host;
+			user = strtok(cep->value, "@");
+			host = strtok(NULL, "");
+			if (!host)
+				safe_strdup(vhost->virthost, user);
+			else
+			{
+				safe_strdup(vhost->virtuser, user);
+				safe_strdup(vhost->virthost, host);
+			}
+		}
+		else if (!strcmp(cep->name, "login"))
+			safe_strdup(vhost->login, cep->value);
+		else if (!strcmp(cep->name, "password"))
+			vhost->auth = AuthBlockToAuthConfig(cep);
+		else if (!strcmp(cep->name, "match") || !strcmp(cep->name, "mask"))
+		{
+			conf_match_block(conf, cep, &vhost->match);
+		}
+		else if (!strcmp(cep->name, "swhois"))
+		{
+			SWhois *s;
+			if (cep->items)
+			{
+				for (cepp = cep->items; cepp; cepp = cepp->next)
+				{
+					s = safe_alloc(sizeof(SWhois));
+					safe_strdup(s->line, cepp->name);
+					safe_strdup(s->setby, "vhost");
+					AddListItem(s, vhost->swhois);
+				}
+			} else
+			if (cep->value)
+			{
+				s = safe_alloc(sizeof(SWhois));
+				safe_strdup(s->line, cep->value);
+				safe_strdup(s->setby, "vhost");
+				AddListItem(s, vhost->swhois);
+			}
+		}
+	}
+	AppendListItem(vhost, conf_vhost);
+	return 1;
+}
+
+static int stats_vhost(Client *client, const char *flag)
+{
+	ConfigItem_vhost *vhosts;
+	NameValuePrioList *m;
+
+	if (strcmp(flag, "S") && strcasecmp(flag, "vhost"))
+		return 0; /* Not for us */
+
+	for (vhosts = conf_vhost; vhosts; vhosts = vhosts->next)
+	{
+		for (m = vhosts->match->printable_list; m; m = m->next)
+		{
+			sendtxtnumeric(client, "vhost %s%s%s %s %s",
+			               vhosts->virtuser ? vhosts->virtuser : "",
+			               vhosts->virtuser ? "@" : "",
+			               vhosts->virthost,
+			               vhosts->login,
+			               namevalue_nospaces(m));
+		}
+	}
+
+	return 1;
+}
+
+
+
+ConfigItem_vhost *find_vhost(const char *name)
+{
+	ConfigItem_vhost *vhost;
+
+	for (vhost = conf_vhost; vhost; vhost = vhost->next)
+	{
+		if (!strcmp(name, vhost->login))
+			return vhost;
+	}
+
+	return NULL;
 }
 
 CMD_FUNC(cmd_vhost)
@@ -59,7 +334,6 @@ CMD_FUNC(cmd_vhost)
 	ConfigItem_vhost *vhost;
 	char login[HOSTLEN+1];
 	const char *password;
-	char olduser[USERLEN+1];
 
 	if (!MyUser(client))
 		return;
@@ -88,7 +362,7 @@ CMD_FUNC(cmd_vhost)
 		sendnotice(client, "*** [\2vhost\2] Login for %s failed - password incorrect", login);
 		return;
 	}
-	
+
 	if (!user_allowed_by_security_group(client, vhost->match))
 	{
 		unreal_log(ULOG_WARNING, "vhost", "VHOST_FAILED", client,
@@ -110,6 +384,13 @@ CMD_FUNC(cmd_vhost)
 		sendnotice(client, "*** [\2vhost\2] Login for %s failed - password incorrect", login);
 		return;
 	}
+
+	do_vhost(client, vhost);
+}
+
+void do_vhost(Client *client, ConfigItem_vhost *vhost)
+{
+	char olduser[USERLEN+1];
 
 	/* Authentication passed, but.. there could still be other restrictions: */
 	switch (UHOST_ALLOWED)
@@ -162,20 +443,27 @@ CMD_FUNC(cmd_vhost)
 		vhost->virtuser ? "@" : "",
 		vhost->virthost);
 
-	if (vhost->virtuser)
+	/* Only notify on logins, not on auto logins (should we make that configurable?)
+	 * (if you do want it for auto logins, note that vhost->login will be NULL
+	 *  in the unreal_log() call currently below).
+	 */
+	if (vhost->login)
 	{
-		/* virtuser@virthost */
-		unreal_log(ULOG_INFO, "vhost", "VHOST_SUCCESS", client,
-			   "$client.details is now using vhost $virtuser@$virthost [vhost-block: $vhost_block]",
-			   log_data_string("virtuser", vhost->virtuser),
-			   log_data_string("virthost", vhost->virthost),
-			   log_data_string("vhost_block", login));
-	} else {
-		/* just virthost */
-		unreal_log(ULOG_INFO, "vhost", "VHOST_SUCCESS", client,
-			   "$client.details is now using vhost $virthost [vhost-block: $vhost_block]",
-			   log_data_string("virthost", vhost->virthost),
-			   log_data_string("vhost_block", login));
+		if (vhost->virtuser)
+		{
+			/* virtuser@virthost */
+			unreal_log(ULOG_INFO, "vhost", "VHOST_SUCCESS", client,
+				   "$client.details is now using vhost $virtuser@$virthost [vhost-block: $vhost_block]",
+				   log_data_string("virtuser", vhost->virtuser),
+				   log_data_string("virthost", vhost->virthost),
+				   log_data_string("vhost_block", vhost->login));
+		} else {
+			/* just virthost */
+			unreal_log(ULOG_INFO, "vhost", "VHOST_SUCCESS", client,
+				   "$client.details is now using vhost $virthost [vhost-block: $vhost_block]",
+				   log_data_string("virthost", vhost->virthost),
+				   log_data_string("vhost_block", vhost->login));
+		}
 	}
 
 	userhost_changed(client);

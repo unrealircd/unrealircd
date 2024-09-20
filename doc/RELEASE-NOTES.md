@@ -26,8 +26,8 @@ in progress and may not always be a stable version.
 * When retrieving cold or hot patches we now do proper GPG/PGP checks.
   Just like we do on `./unrealircd upgrade`
 * Update shipped libraries: c-ares to 1.33.1
-* Move around 750 lines of code from core to modules (regarding
-  throttling, maxperip, exit_client).
+* Move +/- 1000 lines of code from core to modules (regarding
+  throttling, maxperip, vhost, exit_client).
 
 ### Fixes:
 * In some circumstances users could hang during the handshake when

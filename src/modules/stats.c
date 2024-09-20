@@ -65,7 +65,6 @@ int stats_port(Client *, const char *);
 int stats_bannick(Client *, const char *);
 int stats_traffic(Client *, const char *);
 int stats_uline(Client *, const char *);
-int stats_vhost(Client *, const char *);
 int stats_kline(Client *, const char *);
 int stats_banrealname(Client *, const char *);
 int stats_sqline(Client *, const char *);
@@ -112,7 +111,6 @@ struct statstab StatsTable[] = {
 	{ 'S', "set",		stats_set,		0		},
 	{ 'T', "traffic",	stats_traffic,		0 		},
 	{ 'U', "uline",		stats_uline,		0 		},
-	{ 'V', "vhost", 	stats_vhost,		0 		},
 	{ 'W', "fdtable",       stats_fdtable,          0               },
 	{ 'X', "notlink",	stats_notlink,		0 		},
 	{ 'Y', "class",		stats_class,		0 		},
@@ -646,25 +644,6 @@ int stats_uline(Client *client, const char *para)
 	ConfigItem_ulines *ulines;
 	for (ulines = conf_ulines; ulines; ulines = ulines->next)
 		sendnumeric(client, RPL_STATSULINE, ulines->servername);
-	return 0;
-}
-int stats_vhost(Client *client, const char *para)
-{
-	ConfigItem_vhost *vhosts;
-	NameValuePrioList *m;
-
-	for (vhosts = conf_vhost; vhosts; vhosts = vhosts->next)
-	{
-		for (m = vhosts->match->printable_list; m; m = m->next)
-		{
-			sendtxtnumeric(client, "vhost %s%s%s %s %s",
-			               vhosts->virtuser ? vhosts->virtuser : "",
-			               vhosts->virtuser ? "@" : "",
-			               vhosts->virthost,
-			               vhosts->login,
-			               namevalue_nospaces(m));
-		}
-	}
 	return 0;
 }
 
