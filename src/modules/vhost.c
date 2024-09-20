@@ -117,6 +117,7 @@ void free_vhost_config(void)
 int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
 {
 	ConfigEntry *cep;
+	char fakehost[HOSTLEN*2];
 	char has_vhost = 0, has_login = 0, has_password = 0, has_mask = 0, has_match = 0;
 	char has_auto_login = 0;
 	int errors = 0;
@@ -133,7 +134,7 @@ int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
 		}
 		else if (!strcmp(cep->name, "vhost"))
 		{
-			char *at, *tmp, *host;
+			char *at, *tmp, *host, *p;
 			if (has_vhost)
 			{
 				config_warn_duplicate(cep->file->filename,
@@ -148,9 +149,19 @@ int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
 				errors++;
 				continue;
 			}
-			if (!valid_vhost(cep->value))
+			/* Silly trick to replace $vars to xvars so to postpone
+			 * variable matching to at runtime...
+			 */
+			strlcpy(fakehost, cep->value, sizeof(fakehost));
+			for (p = fakehost; *p; p++)
+				if (*p == '$')
+					*p = 'x';
+			if (!valid_vhost(fakehost))
 			{
-				config_error("%s:%i: oper::vhost contains illegal characters or is too long: '%s'",
+				/* Note that the error message needs to be on the
+				 * original cep->value and not on fakehost.
+				 */
+				config_error("%s:%i: vhost::vhost contains illegal characters or is too long: '%s'",
 					     cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			}
@@ -449,13 +460,78 @@ CMD_FUNC(cmd_vhost)
 	do_vhost(client, vhost);
 }
 
+char *unreal_expand_standard_variables(const char *str, char *buf, size_t buflen, NameValuePrioList *nvp, Client *client)
+{
+	const char *s;
+
+	if (client)
+	{
+		add_nvplist(&nvp, 0, "nick", client->name);
+		add_nvplist(&nvp, 0, "ip", GetIP(client));
+		if (client->user)
+		{
+			add_nvplist(&nvp, 0, "username", client->user->username);
+			add_nvplist(&nvp, 0, "realname", client->info);
+			add_nvplist(&nvp, 0, "account", client->user->account);
+			s = get_operlogin(client);
+			if (s)
+				add_nvplist(&nvp, 0, "operlogin", s);
+			s = get_operclass(client);
+			if (s)
+				add_nvplist(&nvp, 0, "operclass", s);
+		}
+		if (client->ip)
+		{
+			GeoIPResult *geo = geoip_client(client);
+			if (geo)
+			{
+				char asn[32];
+				if (geo->country_code)
+					add_nvplist(&nvp, 0, "country_code", geo->country_code);
+				else
+					add_nvplist(&nvp, 0, "country_code", "XX");
+
+				/* Safe to set this unconditionally, will simply be 0
+				 * for things like localhost and such.
+				 */
+				snprintf(asn, sizeof(asn), "%d", geo->asn);
+				add_nvplist(&nvp, 0, "asn", asn);
+			} else {
+				add_nvplist(&nvp, 0, "country_code", "XX");
+				add_nvplist(&nvp, 0, "asn", "0");
+			}
+		}
+	}
+	buildvarstring_nvp(str, buf, buflen, nvp, 0);
+	strtolower(buf);
+	safe_free_nvplist(nvp);
+	return buf;
+}
+
 void do_vhost(Client *client, ConfigItem_vhost *vhost)
 {
 	char olduser[USERLEN+1];
+	char newhost[HOSTLEN+1];
+
+	*newhost = '\0';
+	unreal_expand_standard_variables(vhost->virthost, newhost, sizeof(newhost), NULL, client);
+	if (!valid_vhost(newhost))
+	{
+		sendnotice(client, "*** Unable to apply vhost automatically");
+		if (vhost->auto_login)
+		{
+			unreal_log(ULOG_WARNING, "vhost", "AUTO_VHOST_FAILED", client,
+			           "Unable to set auto-vhost on user. "
+			           "Vhost '$vhost_format' expanded to '$newhost' but is invalid.",
+			           log_data_string("vhost_format", vhost->virthost),
+			           log_data_string("newhost", newhost));
+		}
+		return;
+	}
 
 	userhost_save_current(client);
 
-	safe_strdup(client->user->virthost, vhost->virthost);
+	safe_strdup(client->user->virthost, newhost);
 	if (vhost->virtuser)
 	{
 		strlcpy(olduser, client->user->username, sizeof(olduser));
@@ -476,7 +552,7 @@ void do_vhost(Client *client, ConfigItem_vhost *vhost)
 	sendnotice(client, "*** Your vhost is now %s%s%s",
 		vhost->virtuser ? vhost->virtuser : "",
 		vhost->virtuser ? "@" : "",
-		vhost->virthost);
+		newhost);
 
 	/* Only notify on logins, not on auto logins (should we make that configurable?)
 	 * (if you do want it for auto logins, note that vhost->login will be NULL
@@ -490,13 +566,13 @@ void do_vhost(Client *client, ConfigItem_vhost *vhost)
 			unreal_log(ULOG_INFO, "vhost", "VHOST_SUCCESS", client,
 				   "$client.details is now using vhost $virtuser@$virthost [vhost-block: $vhost_block]",
 				   log_data_string("virtuser", vhost->virtuser),
-				   log_data_string("virthost", vhost->virthost),
+				   log_data_string("virthost", newhost),
 				   log_data_string("vhost_block", vhost->login));
 		} else {
 			/* just virthost */
 			unreal_log(ULOG_INFO, "vhost", "VHOST_SUCCESS", client,
 				   "$client.details is now using vhost $virthost [vhost-block: $vhost_block]",
-				   log_data_string("virthost", vhost->virthost),
+				   log_data_string("virthost", newhost),
 				   log_data_string("vhost_block", vhost->login));
 		}
 	}
