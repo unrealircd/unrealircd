@@ -42,6 +42,9 @@ in progress and may not always be a stable version.
     [set::max-inherit-extended-bans](https://www.unrealircd.org/docs/Set_block#set::max-inherit-extended-bans)
   * This can also be used in `+I`, which entries are counted separately and
     have their own limit.
+* In the [ban ip { }](https://www.unrealircd.org/docs/Ban_IP_block)
+  and the [ban nick { }](https://www.unrealircd.org/docs/Ban_nick_block)
+  you can now have multiple masks.
 * JSON-RPC:
   * New call [`log.send`](https://www.unrealircd.org/docs/JSON-RPC:Log#log.send)
     to send a log message / server notice.
