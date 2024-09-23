@@ -174,6 +174,11 @@ int geoip_base_handshake(Client *client)
 
 int geoip_base_ip_change(Client *client, const char *oldip)
 {
+	if (GEOIPDATA(client))
+	{
+		free_geoip_result(GEOIPDATA(client));
+		GEOIPDATARAW(client) = NULL;
+	}
 	geoip_base_handshake(client);
 	return 0;
 }
