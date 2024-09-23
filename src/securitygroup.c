@@ -368,6 +368,12 @@ int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		if (cep->name && !strcmp(cep->name, "public"))
+		{
+		} else
+		if (cep->name && !strcmp(cep->name, "priority"))
+		{
+		} else
 		if (!test_match_item(conf, cep, &errors))
 		{
 			config_error_unknown(cep->file->filename, cep->line_number,
@@ -555,7 +561,12 @@ int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
 			DelListItem(s, securitygroups);
 			AddListItemPrio(s, securitygroups, s->priority);
 		} else
+		if (cep->name && !strcmp(cep->name, "public"))
+		{
+			s->public = config_checkval(cep->value, CFG_YESNO);
+		} else {
 			conf_match_item(conf, cep, &s);
+		}
 	}
 	return 1;
 }
@@ -700,20 +711,24 @@ void set_security_group_defaults(void)
 
 	/* Default group: webirc */
 	s = add_security_group("webirc-users", 50);
+	s->public = 1;
 	s->webirc = 1;
 
 	/* Default group: websocket */
 	s = add_security_group("websocket-users", 51);
+	s->public = 1;
 	s->websocket = 1;
 
 	/* Default group: known-users */
 	s = add_security_group("known-users", 100);
+	s->public = 1;
 	s->identified = 1;
 	s->reputation_score = 25;
 	s->webirc = 0;
 
 	/* Default group: tls-users */
 	s = add_security_group("tls-users", 300);
+	s->public = 1;
 	s->tls = 1;
 }
 

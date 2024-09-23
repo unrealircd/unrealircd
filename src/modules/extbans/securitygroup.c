@@ -122,7 +122,8 @@ int extban_securitygroup_is_ok(BanContext *b)
 			sendnotice(b->client, "ERROR: Unknown security-group '%s'. Syntax: +b ~security-group:securitygroup or +b ~security-group:!securitygroup", b->banstr);
 			sendnotice(b->client, "Available security groups:");
 			for (s = securitygroups; s; s = s->next)
-				sendnotice(b->client, "%s", s->name);
+				if (s->public)
+					sendnotice(b->client, "%s", s->name);
 			sendnotice(b->client, "unknown-users");
 			sendnotice(b->client, "End of security group list.");
 			return 0;

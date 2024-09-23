@@ -55,6 +55,11 @@ in progress and may not always be a stable version.
 * Update shipped libraries: c-ares to 1.33.1
 * Move +/- 1000 lines of code from core to modules (regarding
   throttling, maxperip, vhost, exit_client).
+* [Security group blocks](https://www.unrealircd.org/docs/Security-group_block)
+  are now hidden in lists by default. If you want the security group to be shown
+  in things like `MODE #channel +b ~security-group:x` (which shows a list)
+  then you need to use `public yes;`. The default security groups
+  like known-users, webirc-users, etc. are public by default.
 
 ### Fixes:
 * In some circumstances users could hang during the handshake when
