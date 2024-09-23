@@ -703,7 +703,7 @@ int tkl_config_test_ban(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					test_match_block(cf, cep, &errors);
 				}
 			} else {
-				if (!cep->value)
+				if (!cep->value && !(cep->items && cep->items->name))
 				{
 					config_error("%s:%d: ban %s with invalid or no mask",
 						cep->file->filename, cep->line_number,
@@ -780,57 +780,67 @@ int tkl_config_test_ban(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	return errors ? -1 : 1;
 }
 
+/* Helper function for ban ip { } and ban nick { } code so multiple masks are possible there.
+ * These are not Mask items, hence special code.
+ */
+void tkl_config_run_ban_nickip_helper(ConfigFile *cf, ConfigEntry *cep, const char *mask, int tkltype, char *reason)
+{
+	char *usermask = NULL;
+	char *hostmask = NULL;
+
+	if (is_extended_server_ban(mask))
+	{
+		char mask1buf[512], mask2buf[512];
+		char *err = NULL;
+
+		if (!parse_extended_server_ban(mask, NULL, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
+		{
+			config_warn("%s:%d: Could not add extended server ban '%s': %s",
+				cep->file->filename, cep->line_number, mask, err);
+			return;
+		}
+		safe_strdup(usermask, mask1buf);
+		safe_strdup(hostmask, mask2buf);
+	} else
+	{
+		char buf[512];
+		char *p;
+
+		strlcpy(buf, mask, sizeof(buf));
+		p = strchr(buf, '@');
+		if (p)
+		{
+			*p++ = '\0';
+			safe_strdup(usermask, buf);
+			safe_strdup(hostmask, p);
+		} else {
+			safe_strdup(hostmask, mask);
+		}
+	}
+
+	/* Placeholder when usermask is empty */
+	if (!usermask)
+		safe_strdup(usermask, "*");
+
+	if (TKLIsNameBanType(tkltype))
+		tkl_add_nameban(tkltype, hostmask, 0, reason, "-config-", 0, TStime(), TKL_FLAG_CONFIG);
+	else if (TKLIsServerBanType(tkltype))
+		tkl_add_serverban(tkltype, usermask, hostmask, NULL, reason, "-config-", 0, TStime(), 0, TKL_FLAG_CONFIG);
+
+	safe_free(usermask);
+	safe_free(hostmask);
+}
+
 /* ban nick { } and ban ip { } */
 int tkl_config_run_ban_nickip(ConfigFile *cf, ConfigEntry *ce, int configtype)
 {
-	ConfigEntry *cep;
-	char *usermask = NULL;
-	char *hostmask = NULL;
+	ConfigEntry *cep, *cepp;
 	char *reason = NULL;
 	int tkltype;
 
 	for (cep = ce->items; cep; cep = cep->next)
-	{
-		if (!strcmp(cep->name, "mask"))
-		{
-			if (is_extended_server_ban(cep->value))
-			{
-				char mask1buf[512], mask2buf[512];
-				char *err = NULL;
-
-				if (!parse_extended_server_ban(cep->value, NULL, &err, 0, mask1buf, sizeof(mask1buf), mask2buf, sizeof(mask2buf)))
-				{
-					config_warn("%s:%d: Could not add extended server ban '%s': %s",
-						cep->file->filename, cep->line_number, cep->value, err);
-					goto tcrb_end;
-				}
-				safe_strdup(usermask, mask1buf);
-				safe_strdup(hostmask, mask2buf);
-			} else
-			{
-				char buf[512];
-				char *p;
-
-				strlcpy(buf, cep->value, sizeof(buf));
-				p = strchr(buf, '@');
-				if (p)
-				{
-					*p++ = '\0';
-					safe_strdup(usermask, buf);
-					safe_strdup(hostmask, p);
-				} else {
-					safe_strdup(hostmask, cep->value);
-				}
-			}
-		} else
 		if (!strcmp(cep->name, "reason"))
-		{
 			safe_strdup(reason, cep->value);
-		}
-	}
-
-	if (!usermask)
-		safe_strdup(usermask, "*");
 
 	if (!reason)
 		safe_strdup(reason, "-");
@@ -842,14 +852,21 @@ int tkl_config_run_ban_nickip(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	else
 		abort(); /* impossible */
 
-	if (TKLIsNameBanType(tkltype))
-		tkl_add_nameban(tkltype, hostmask, 0, reason, "-config-", 0, TStime(), TKL_FLAG_CONFIG);
-	else if (TKLIsServerBanType(tkltype))
-		tkl_add_serverban(tkltype, usermask, hostmask, NULL, reason, "-config-", 0, TStime(), 0, TKL_FLAG_CONFIG);
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "mask"))
+		{
+			if (cep->value)
+			{
+				tkl_config_run_ban_nickip_helper(cf, cep, cep->value, tkltype, reason);
+			} else if (cep->items)
+			{
+				for (cepp = cep->items; cepp; cepp = cepp->next)
+					tkl_config_run_ban_nickip_helper(cf, cepp, cepp->name, tkltype, reason);
+			}
+		}
+	}
 
-tcrb_end:
-	safe_free(usermask);
-	safe_free(hostmask);
 	safe_free(reason);
 	return 1;
 }
