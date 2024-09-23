@@ -286,6 +286,7 @@ OperPermission ValidatePermissionsForPath(const char *path, Client *client, Clie
 	ConfigItem_operclass *ce_operClass;
 	OperClass *oc = NULL;
 	OperClassACLPath *operPath;
+	int looping = 0;
 
 	if (!client)
 		return OPER_DENY;
@@ -317,6 +318,13 @@ OperPermission ValidatePermissionsForPath(const char *path, Client *client, Clie
 	while (oc && operPath)
 	{
 		OperClassACL *acl = OperClass_FindACL(oc->acls,operPath->identifier);
+		if (looping++ > 10)
+		{
+			unreal_log(ULOG_ERROR, "operclass", "OPERCLASS_LOOPING", client,
+			           "The operclass lookup for $client.details is looping. "
+			           "Please check operclass::parent of every operclass.");
+			return OPER_DENY;
+		}
 		if (acl)
 		{
 			OperPermission perm;

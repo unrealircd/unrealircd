@@ -4125,11 +4125,22 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!strcmp(cep->name, "parent"))
 		{
+			CheckNull(cep);
 			if (has_parent)
 			{
 				config_warn_duplicate(cep->file->filename,
 					cep->line_number, "operclass::parent");
 				continue;
+			}
+			/* A -direct- loop is easy to detect.
+			 * We also have code elsewhere to detect loops
+			 * like a->b->a->b->a->b.
+			 */
+			if (ce->value && !strcmp(cep->value, ce->value))
+			{
+				config_error("%s:%d: operclass %s has parent set to %s (same name).",
+				            cep->file->filename, cep->line_number, ce->name, cep->value);
+				errors++;
 			}
 			has_parent = 1;
 			continue;
