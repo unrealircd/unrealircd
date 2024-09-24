@@ -145,7 +145,10 @@ char *unrl_utf8_find_prev_char (const char *begin, const char *p)
  * @param outputbuflen	Length of the output buffer
  * @param strictlen	If set to 1 we never return more than
  *                      outputbuflen-1 characters.
- *                      If set to 0, we may do that, if the
+ *                      If set to 2 it is similar but extra special code
+ *                      to make sure not to send more than 510 chars IRC
+ *                      messages (excluding message tags).
+ *                      If set to 0, we may return oversized, if the
  *                      input string was already 100% valid UTF8.
  * @retval Returns a valid UTF8 string, either the input buffer
  *         (if it was already valid UTF8) or the output buffer.
@@ -199,6 +202,44 @@ char *unrl_utf8_make_valid(const char *str, char *outputbuf, size_t outputbuflen
 
 	if (!replaced)
 		return (char *)str; /* return original string (no changes needed) */
+
+	/* strictlen=2 means special processing to cut off at 510
+	 * characters _after_ excluding message tags length.
+	 * This is 510 so it receives the _same treatment_ as
+	 * regular IRC has with 510 chars + \r + \n, even though
+	 * \r\n does not appear in websocket messages.
+	 */
+	if (strictlen == 2)
+	{
+		char fix_line = 0;
+		if (*outputbuf == '@')
+		{
+			char *p = strchr(outputbuf, ' ');
+			if (p)
+			{
+				p++;
+				if (strlen(p) > 510)
+				{
+					outputbuf[510] = '\0';
+					fix_line = 1;
+				}
+			}
+		} else {
+			/* without message tags */
+			if (strlen(outputbuf) > 510)
+			{
+				outputbuf[510] = '\0';
+				fix_line = 1;
+			}
+		}
+		if (fix_line)
+		{
+			char *cut_at = unrl_utf8_find_prev_char(outputbuf, outputbuf+strlen(outputbuf));
+			if (cut_at)
+				*cut_at = '\0';
+			return outputbuf; /* short-circuit */
+		}
+	}
 
 	/* If we took up all the space, then backtrack one character and cut
 	 * things off from there. This to ensure that we don't end up with

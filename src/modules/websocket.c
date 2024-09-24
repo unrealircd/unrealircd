@@ -310,7 +310,7 @@ int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **m
 		else if (WEBSOCKET_TYPE(to) == WEBSOCKET_TYPE_TEXT)
 		{
 			/* Some more conversions are needed */
-			char *safe_msg = unrl_utf8_make_valid(*msg, utf8buf, sizeof(utf8buf), 1);
+			char *safe_msg = unrl_utf8_make_valid(*msg, utf8buf, sizeof(utf8buf), 2);
 			*msg = safe_msg;
 			*length = *msg ? strlen(safe_msg) : 0;
 			websocket_create_packet(WSOP_TEXT, msg, length);
