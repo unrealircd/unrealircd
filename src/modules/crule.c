@@ -1106,7 +1106,8 @@ void _crule_free(CRuleNode **elem)
 	}
 	else if ((*(elem))->flags & CRULE_FLAG_AND_OR)
 	{
-		crule_free((CRuleNode**) &((*(elem))->arg[0]));
+		if ((*(elem))->arg[0] != NULL)
+			crule_free((CRuleNode**) &((*(elem))->arg[0]));
 		if ((*(elem))->arg[1] != NULL)
 			crule_free((CRuleNode**) &((*(elem))->arg[1]));
 	}
