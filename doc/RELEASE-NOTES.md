@@ -5,6 +5,19 @@ This is the git version (development version) for future 6.1.8. This is work
 in progress and may not always be a stable version.
 
 ### Enhancements:
+* New [Extended ban](https://www.unrealircd.org/docs/Extended_bans#Group_4:_special)
+  to inherit channel bans from another channel:
+  * If in channel `#test` you add `+b ~inherit:#main` then anyone banned in
+    `#main` will be unable to join `#test`.
+  * This only applies for on-join ban checking, not for quiet bans,
+    nick-changes, text bans, etc.
+  * If the other channel (`#main` in this example) also has `~inherit` bans
+    then we do not follow these (no nesting).
+  * The maximum number of ~inherit bans in a channel is limited to only
+    1 by default, see
+    [set::max-inherit-extended-bans](https://www.unrealircd.org/docs/Set_block#set::max-inherit-extended-bans)
+  * This can also be used in `+I`, which entries are counted separately and
+    have their own limit.
 * We now support vhost::auto-login, which means you can set vhosts on users
   automatically and we support variables in vhost::vhost (this works similar
   to Gottem's autovhost module).
@@ -29,37 +42,12 @@ in progress and may not always be a stable version.
   `set { oper-vhost $operclass.admin.example.net; }`
   * If both set::oper-vhost and oper::vhost are present, the oper::vhost
     takes precedence.
-* New [Extended ban](https://www.unrealircd.org/docs/Extended_bans#Group_4:_special)
-  to inherit channel bans from another channel:
-  * If in channel `#test` you add `+b ~inherit:#main` then anyone banned in
-    `#main` will be unable to join `#test`.
-  * This only applies for on-join ban checking, not for quiet bans,
-    nick-changes, text bans, etc.
-  * If the other channel (`#main` in this example) also has `~inherit` bans
-    then we do not follow these (no nesting).
-  * The maximum number of ~inherit bans in a channel is limited to only
-    1 by default, see 
-    [set::max-inherit-extended-bans](https://www.unrealircd.org/docs/Set_block#set::max-inherit-extended-bans)
-  * This can also be used in `+I`, which entries are counted separately and
-    have their own limit.
 * In the [ban ip { }](https://www.unrealircd.org/docs/Ban_IP_block)
   and the [ban nick { }](https://www.unrealircd.org/docs/Ban_nick_block)
-  you can now have multiple masks.
-* JSON-RPC:
+  blocks you can now have multiple masks.
+* [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
   * New call [`log.send`](https://www.unrealircd.org/docs/JSON-RPC:Log#log.send)
     to send a log message / server notice.
-
-### Changes:
-* When retrieving cold or hot patches we now do proper GPG/PGP checks.
-  Just like we do on `./unrealircd upgrade`
-* Update shipped libraries: c-ares to 1.33.1
-* Move +/- 1000 lines of code from core to modules (regarding
-  throttling, maxperip, vhost, exit_client).
-* [Security group blocks](https://www.unrealircd.org/docs/Security-group_block)
-  are now hidden in lists by default. If you want the security group to be shown
-  in things like `MODE #channel +b ~security-group:x` (which shows a list)
-  then you need to use `public yes;`. The default security groups
-  like known-users, webirc-users, etc. are public by default.
 
 ### Fixes:
 * In some circumstances users could hang during the handshake when
@@ -69,7 +57,7 @@ in progress and may not always be a stable version.
   library installed).
 * Websockets of type 'text' had IRC messages from server to client cut off
   too early when message tags were in use. Type 'binary' was unaffected.
-* The [require authentication { }](https://www.unrealircd.org/docs/Require_authentication_block)
+* The [require authentication { } block](https://www.unrealircd.org/docs/Require_authentication_block)
   was broken in 6.1.7.*.
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) call `spamfilter.get`
   could not retrieve information about config-based spamfilters.
@@ -78,12 +66,25 @@ in progress and may not always be a stable version.
 * Crash on invalid server-to-server command regarding `REHASH`
   (This only affected trusted linked servers)
 
+### Changes:
+* [Security group blocks](https://www.unrealircd.org/docs/Security-group_block)
+  are now hidden in lists by default. If you want the security group to be shown
+  in things like `MODE #channel +b ~security-group:x` (which shows a list)
+  then you need to use `public yes;`. The default security groups
+  like known-users, webirc-users, etc. are public by default.
+* When retrieving cold or hot patches we now do proper GPG/PGP checks.
+  Just like we do on `./unrealircd upgrade`
+* Update shipped libraries: c-ares to 1.33.1
+* Move +/- 1000 lines of code from core to modules (regarding
+  throttling, maxperip, vhost, exit_client).
+
 ### Developers and protocol:
 * The `MD` S2S command now supports `BIGLINES`, allowing synching of 16K
   serialized moddata per entry. We don't plan to use this anytime soon,
   this is mostly so all UnrealIRCd servers support this in a year or
-  two. However, if you do plan to serialize big moddata results then be
-  sure all UnrealIRCd servers are on 6.1.8 or higher to prevent cut-off.
+  two. However, if you do plan to serialize big moddata results in your
+  third party module then be sure all UnrealIRCd servers are on 6.1.8
+  or higher to prevent cut-off.
 
 UnrealIRCd 6.1.7.2
 -------------------
