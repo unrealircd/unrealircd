@@ -309,17 +309,23 @@ void send_first_auth(Client *client)
 	/* Make them a user, needed for CHGHOST etc that we may receive */
 	if (!client->user)
 		make_user(client);
+	
+	if (Hooks[HOOKTYPE_SASL_AUTHENTICATE] && (find_client(SASL_SERVER, NULL) == &me))
+	{
+		/* We are the SASL server (some module handling auth) */
+		RunHook(HOOKTYPE_SASL_AUTHENTICATE, client, 1, "PLAIN");
+		RunHook(HOOKTYPE_SASL_AUTHENTICATE, client, 0, SEUSER(client)->authmsg);
+	} else {
+		sendto_one(sasl_server, NULL, ":%s SASL %s %s H %s %s",
+			me.id, SASL_SERVER, client->id, addr, addr);
 
-	sendto_one(sasl_server, NULL, ":%s SASL %s %s H %s %s",
-	    me.id, SASL_SERVER, client->id, addr, addr);
-
-	if (certfp)
-		sendto_one(sasl_server, NULL, ":%s SASL %s %s S %s %s",
-		    me.id, SASL_SERVER, client->id, "PLAIN", certfp);
-	else
-		sendto_one(sasl_server, NULL, ":%s SASL %s %s S %s",
-		    me.id, SASL_SERVER, client->id, "PLAIN");
-
+		if (certfp)
+			sendto_one(sasl_server, NULL, ":%s SASL %s %s S %s %s",
+				me.id, SASL_SERVER, client->id, "PLAIN", certfp);
+		else
+			sendto_one(sasl_server, NULL, ":%s SASL %s %s S %s",
+				me.id, SASL_SERVER, client->id, "PLAIN");
+	}
 	/* The rest is sent from authprompt_sasl_continuation() */
 
 	client->local->sasl_out++;
