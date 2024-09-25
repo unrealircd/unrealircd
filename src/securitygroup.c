@@ -368,11 +368,13 @@ int _test_security_group(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (cep->name && !strcmp(cep->name, "public"))
+		if (!strcmp(cep->name, "public"))
 		{
+			CheckNull(cep);
 		} else
-		if (cep->name && !strcmp(cep->name, "priority"))
+		if (!strcmp(cep->name, "priority"))
 		{
+			CheckNull(cep);
 		} else
 		if (!test_match_item(conf, cep, &errors))
 		{
@@ -561,7 +563,7 @@ int _conf_security_group(ConfigFile *conf, ConfigEntry *ce)
 			DelListItem(s, securitygroups);
 			AddListItemPrio(s, securitygroups, s->priority);
 		} else
-		if (cep->name && !strcmp(cep->name, "public"))
+		if (!strcmp(cep->name, "public"))
 		{
 			s->public = config_checkval(cep->value, CFG_YESNO);
 		} else {
