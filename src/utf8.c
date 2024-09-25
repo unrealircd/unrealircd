@@ -208,6 +208,10 @@ char *unrl_utf8_make_valid(const char *str, char *outputbuf, size_t outputbuflen
 	 * This is 510 so it receives the _same treatment_ as
 	 * regular IRC has with 510 chars + \r + \n, even though
 	 * \r\n does not appear in websocket messages.
+	 *
+	 * Confusingly the code below uses 511 chars, but this is
+	 * because unrl_utf8_find_prev_char() will cut off another
+	 * character, making it 510.
 	 */
 	if (strictlen == 2)
 	{
@@ -218,17 +222,17 @@ char *unrl_utf8_make_valid(const char *str, char *outputbuf, size_t outputbuflen
 			if (p)
 			{
 				p++;
-				if (strlen(p) > 510)
+				if (strlen(p) > 511)
 				{
-					p[510] = '\0';
+					p[511] = '\0';
 					fix_line = 1;
 				}
 			}
 		} else {
 			/* without message tags */
-			if (strlen(outputbuf) > 510)
+			if (strlen(outputbuf) > 511)
 			{
-				outputbuf[510] = '\0';
+				outputbuf[511] = '\0';
 				fix_line = 1;
 			}
 		}
