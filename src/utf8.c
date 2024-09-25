@@ -220,7 +220,7 @@ char *unrl_utf8_make_valid(const char *str, char *outputbuf, size_t outputbuflen
 				p++;
 				if (strlen(p) > 510)
 				{
-					outputbuf[510] = '\0';
+					p[510] = '\0';
 					fix_line = 1;
 				}
 			}

@@ -67,8 +67,8 @@ in progress and may not always be a stable version.
   (which was released on June 18 2024 and shipped with UnrealIRCd 6.1.7
   to be used as a fallback for systems which don't have the c-ares
   library installed).
-* Websockets of type 'text' had incoming IRC messages cut off too early
-  when message tags were in use. Type 'binary' was unaffected.
+* Websockets of type 'text' had IRC messages from server to client cut off
+  too early when message tags were in use. Type 'binary' was unaffected.
 * The [require authentication { }](https://www.unrealircd.org/docs/Require_authentication_block)
   was broken in 6.1.7.*.
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) call `spamfilter.get`
