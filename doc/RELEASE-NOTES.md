@@ -36,7 +36,7 @@ the issue at https://bugs.unrealircd.org.
   * On-connect we will go through all vhost blocks that have auto-login
     set to yes. Blocks are processed in the same order as they are in
     the config (top-down). The first match wins.
-  * Note that many people use Services for this task (HostServ etc.).
+  * Note that you could already use Services to do this task.
     This is just an extra feature so you can also do it in UnrealIRCd itself.
   * The variables that are supported now use a generic framework called
     [Standard variables](https://www.unrealircd.org/docs/Standard_variables)
