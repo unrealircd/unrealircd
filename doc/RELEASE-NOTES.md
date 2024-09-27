@@ -20,7 +20,8 @@ the issue at https://bugs.unrealircd.org.
     [set::max-inherit-extended-bans](https://www.unrealircd.org/docs/Set_block#set::max-inherit-extended-bans)
   * This can also be used in `+I`, which entries are counted separately and
     have their own limit.
-* We now support vhost::auto-login, which means you can set vhosts on users
+* [Vhosts](https://www.unrealircd.org/docs/Vhost_block):
+  We now support vhost::auto-login, which means you can set vhosts on users
   automatically and we support variables in vhost::vhost (this works similar
   to Gottem's autovhost module).
   * An example would be:  
