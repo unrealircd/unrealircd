@@ -4,6 +4,10 @@ UnrealIRCd 6.1.8
 This release fixes a number of bugs. It also adds a new extban ~inherit and
 auto-login support for vhosts.
 
+Do you like UnrealIRCd?
+Consider [making a donation](https://www.unrealircd.org/index/donations) or
+order something from the [shop](https://shop.unrealircd.org/).
+
 ### Enhancements:
 * New [Extended ban](https://www.unrealircd.org/docs/Extended_bans#Group_4:_special)
   to inherit channel bans from another channel:
