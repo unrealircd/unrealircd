@@ -1,10 +1,8 @@
-UnrealIRCd 6.1.8-rc1
-=====================
+UnrealIRCd 6.1.8
+=================
 
-This is the Release Candidate (RC) for future UnrealIRCd version 6.1.8.
-The actual 6.1.8 stable release will be around mid-October.
-Testing of this RC is appreciated. If you find anything, please report
-the issue at https://bugs.unrealircd.org.
+This release fixes a number of bugs. It also adds a new extban ~inherit and
+auto-login support for vhosts.
 
 ### Enhancements:
 * New [Extended ban](https://www.unrealircd.org/docs/Extended_bans#Group_4:_special)
