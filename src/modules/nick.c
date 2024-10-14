@@ -1641,7 +1641,6 @@ char *_unreal_expand_string(const char *str, char *buf, size_t buflen, NameValue
 		}
 	}
 	buildvarstring_nvp(str, buf, buflen, nvp, buildvarstring_options);
-	strtolower(buf);
 	safe_free_nvplist(nvp);
 	return buf;
 }
