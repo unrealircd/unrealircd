@@ -1877,15 +1877,31 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 		ircsnprintf(mo2, sizeof(mo2), "%lld", (long long)TStime());
 		tkllayer[6] = mo;
 		tkllayer[7] = mo2;
-		if (parc > 3) {
-			reason = safe_alloc(strlen(parv[2])+strlen(parv[3])+1+1); // space and nullbyte
-			sprintf(reason, "%s %s", parv[2], parv[3]);
-			tkllayer[8] = reason;
-		} else if (parc > 2 && !secs) {
-			reason = safe_alloc(strlen(parv[2])+1);
-			sprintf(reason, "%s", parv[2]);
-			tkllayer[8] = reason;
+
+		if (parc > 3 && !secs) {
+			if (parv[2][0] == '0') // reasonably assume they specified permanent ban and don't include it in the reason
+				tkllayer[8] = parv[3];
+			else {
+				reason = safe_alloc(strlen(parv[2])+strlen(parv[3])+1+1); // space and nullbyte
+				sprintf(reason, "%s %s", parv[2], parv[3]);
+				tkllayer[8] = reason;
+			}
 		}
+		
+		else if (parc > 2 && !secs) {
+			if (parv[2][0] == '0') // reasonably assume they specified permanent ban and don't include it in the reason
+			{
+				// leave as "no reason"
+			}
+			else {
+				reason = safe_alloc(strlen(parv[2])+1);
+				sprintf(reason, "%s", parv[2]);
+				tkllayer[8] = reason;
+			}
+		}
+		else if (secs && parc > 3)
+			tkllayer[8] = parv[3];
+
 		/* Blerghhh... */
 		i = atol(mo);
 		t = gmtime(&i);
