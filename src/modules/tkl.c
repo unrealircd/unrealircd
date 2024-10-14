@@ -1805,7 +1805,7 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 	const char *mask;
 	const char *error;
 	char mo[64], mo2[64];
-	char *p, *usermask, *hostmask;
+	char *p, *usermask, *hostmask, *reason = NULL;
 	const char *tkllayer[10] = {
 		me.name,		/*0  server.name */
 		NULL,			/*1  +|- */
@@ -1849,8 +1849,7 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 	}
 
 	secs = 0;
-
-	if (add && (parc > 3))
+	if (add && (parc >= 3))
 	{
 		secs = config_checkval(parv[2], CFG_TIME);
 		if (secs < 0)
@@ -1879,9 +1878,13 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 		tkllayer[6] = mo;
 		tkllayer[7] = mo2;
 		if (parc > 3) {
-			tkllayer[8] = parv[3];
-		} else if (parc > 2) {
-			tkllayer[8] = parv[2];
+			reason = safe_alloc(strlen(parv[2])+strlen(parv[3])+1+1); // space and nullbyte
+			sprintf(reason, "%s %s", parv[2], parv[3]);
+			tkllayer[8] = reason;
+		} else if (parc > 2 && !secs) {
+			reason = safe_alloc(strlen(parv[2])+1);
+			sprintf(reason, "%s", parv[2]);
+			tkllayer[8] = reason;
 		}
 		/* Blerghhh... */
 		i = atol(mo);
@@ -1908,6 +1911,7 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 		cmd_tkl(&me, NULL, 6, tkllayer);
 
 	}
+	safe_free(reason);
 }
 
 void eline_syntax(Client *client)
