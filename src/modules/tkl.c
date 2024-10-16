@@ -1804,8 +1804,8 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 	Client *acptr = NULL;
 	const char *mask;
 	const char *error;
-	char mo[64], mo2[64];
-	char *p, *usermask, *hostmask, *reason = NULL;
+	char mo[64], mo2[64], reasonbuf[512];
+	char *p, *usermask, *hostmask;
 	const char *tkllayer[10] = {
 		me.name,		/*0  server.name */
 		NULL,			/*1  +|- */
@@ -1878,19 +1878,20 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 		tkllayer[6] = mo;
 		tkllayer[7] = mo2;
 
-		if (parc > 2 && !secs) {
-			if (parv[2][0] != '0') { // Exclude permanent ban (parv[2] == '0') from reason
-				if (parc > 3) {
-					reason = safe_alloc(strlen(parv[2]) + strlen(parv[3]) + 2); // space and nullbyte
-					sprintf(reason, "%s %s", parv[2], parv[3]);
-				} else {
-					safe_strdup(reason, parv[2]);
-				}
-				tkllayer[8] = reason;
+		if (parc > 2 && !secs && (parv[2][0] != '0'))
+		{
+			if (parc > 3)
+			{
+				snprintf(reasonbuf, sizeof(reasonbuf), "%s %s", parv[2], parv[3]);
+				tkllayer[8] = reasonbuf;
+			} else {
+				tkllayer[8] = parv[2];
 			}
 		}
-		else if (secs && parc > 3)
+		else if (parc > 3)
+		{
 			tkllayer[8] = parv[3];
+		}
 
 		/* Blerghhh... */
 		i = atol(mo);
@@ -1917,7 +1918,6 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 		cmd_tkl(&me, NULL, 6, tkllayer);
 
 	}
-	safe_free(reason);
 }
 
 void eline_syntax(Client *client)
