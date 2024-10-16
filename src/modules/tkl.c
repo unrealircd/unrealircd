@@ -1884,16 +1884,13 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 					reason = safe_alloc(strlen(parv[2]) + strlen(parv[3]) + 2); // space and nullbyte
 					sprintf(reason, "%s %s", parv[2], parv[3]);
 				} else {
-					reason = safe_alloc(strlen(parv[2]) + 1);
-					sprintf(reason, "%s", parv[2]);
+					safe_strdup(reason, parv[2]);
 				}
 				tkllayer[8] = reason;
 			}
 		}
 		else if (secs && parc > 3)
 			tkllayer[8] = parv[3];
-		
-
 
 		/* Blerghhh... */
 		i = atol(mo);
