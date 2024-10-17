@@ -360,10 +360,8 @@ ConfigItem_vhost *find_vhost(const char *name)
 	ConfigItem_vhost *vhost;
 
 	for (vhost = conf_vhost; vhost; vhost = vhost->next)
-	{
-		if (!strcmp(name, vhost->login))
+		if (vhost->login && !strcmp(name, vhost->login))
 			return vhost;
-	}
 
 	return NULL;
 }
