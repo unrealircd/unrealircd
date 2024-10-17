@@ -1,7 +1,23 @@
-UnrealIRCd 6.1.8
-=================
+UnrealIRCd 6.1.8.1
+===================
+UnrealIRCd 6.1.8.1 is a dot release, it fixes:
+* If you have a vhost block without vhost::login, because you use the
+  new auto-vhost functionality, then the IRCd will crash upon
+  processing regular VHOST requests.
+* Strings were accidentally being lowercased in vhost::vhost,
+  blacklist::reason and some other places.
 
-This release fixes a number of bugs. It also adds a new extban ~inherit and
+The 6.1.8.1 release is mostly for new installs. Existing 6.1.8 users
+can fix the two bugs without needing to restart by running:  
+`./unrealircd hot-patch auto-vhost-618`
+
+For all the other fixes and new functionality, see the 6.1.8 release notes
+below.
+
+UnrealIRCd 6.1.8
+-----------------
+
+This release fixes a number of bugs. It also adds a new extban `~inherit` and
 auto-login support for vhosts.
 
 Do you like UnrealIRCd?
