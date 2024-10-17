@@ -26,7 +26,7 @@
 ModuleHeader MOD_HEADER
   = {
 	"vhost",
-	"6.0",
+	"6.1.8.1",
 	"command /VHOST and vhost { } blocks",
 	"UnrealIRCd Team",
 	"unrealircd-6",
