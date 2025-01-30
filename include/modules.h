@@ -1522,7 +1522,7 @@ int hooktype_local_kick(Client *client, Client *victim, Channel *channel, Messag
 int hooktype_remote_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, const char *comment);
 
 /** Called right before a message is sent to the channel (function prototype for HOOKTYPE_PRE_CHANMSG).
- * This function is only used by delayjoin. It cannot block a message. See hooktype_can_send_to_user() instead!
+ * This function is only used by delayjoin. It cannot block a message. See hooktype_can_send_to_channel() instead!
  * @param client		The client
  * @param channel		The channel
  * @param mtags         	Message tags associated with the event (pointer-to-pointer)
