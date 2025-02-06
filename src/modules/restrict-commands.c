@@ -357,9 +357,15 @@ int rcmd_block_message(Client *client, const char *destination, const char *text
 	crule_context context;
 	RestrictedCommand *rcmd;
 	static char errbuf[256];
+	Client *target;
 
 	// Let's allow non-local users, opers and U:Lines early =]
 	if (!MyUser(client) || !client->local || IsOper(client) || IsULine(client))
+		return 0;
+
+	// Also allow messages to opers
+	target = find_client(destination, NULL);
+	if (target && IsOper(target))
 		return 0;
 
 	memset(&context, 0, sizeof(context));
