@@ -21,7 +21,7 @@
 
 ModuleHeader MOD_HEADER = {
 	"restrict-commands",
-	"1.0.2",
+	"1.0.3",
 	"Restrict specific commands unless certain conditions have been met",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -358,14 +358,17 @@ int rcmd_block_message(Client *client, const char *destination, const char *text
 	RestrictedCommand *rcmd;
 	static char errbuf[256];
 	Client *target;
+	Channel *channel;
 
 	// Let's allow non-local users, opers and U:Lines early =]
 	if (!MyUser(client) || !client->local || IsOper(client) || IsULine(client))
 		return 0;
 
-	// Also allow messages to opers
+	// Also allow messages to opers and help channel
 	target = find_client(destination, NULL);
-	if (target && IsOper(target))
+	channel = find_channel(destination);
+
+	if ((target && IsOper(target)) || (channel && !strcasecmp(iConf.helpchan, channel->name)))
 		return 0;
 
 	memset(&context, 0, sizeof(context));
