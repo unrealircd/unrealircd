@@ -1,9 +1,5 @@
-UnrealIRCd 6.1.10-rc1
-======================
-
-This is the Release Candidate for future version 6.1.10 (scheduled
-for March, 2025). You can help us by testing this release and
-reporting any bugs you find at https://bugs.unrealircd.org/
+UnrealIRCd 6.1.10
+==================
 
 This is mostly a maintenance release with a few small new features.
 
