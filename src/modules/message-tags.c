@@ -282,13 +282,13 @@ const char *_mtags_to_string(MessageTag *m, Client *client)
 		return NULL;
 
 	/* Remote servers need to indicate support via PROTOCTL MTAGS */
-	if (client->direction && IsServer(client->direction) && !SupportMTAGS(client->direction))
+	if (client && client->direction && IsServer(client->direction) && !SupportMTAGS(client->direction))
 		return NULL;
 
 	*buf = '\0';
 	for (; m; m = m->next)
 	{
-		if (!client_accepts_tag(m->name, client))
+		if (client && !client_accepts_tag(m->name, client))
 			continue;
 		if (m->value)
 		{
