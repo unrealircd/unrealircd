@@ -1186,12 +1186,12 @@ void CommandOverrideDel(CommandOverride *cmd)
 	safe_free(cmd);
 }
 
-void CallCommandOverride(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, const char *parv[])
+void CallCommandOverride(CommandOverride *ovr, ClientContext *clictx, Client *client, MessageTag *mtags, int parc, const char *parv[])
 {
 	if (ovr->next)
-		ovr->next->func(ovr->next, client, mtags, parc, parv);
+		ovr->next->func(ovr->next, clictx, client, mtags, parc, parv);
 	else
-		ovr->command->func(client, mtags, parc, parv);
+		ovr->command->func(clictx, client, mtags, parc, parv);
 }
 
 EVENT(e_unload_module_delayed)

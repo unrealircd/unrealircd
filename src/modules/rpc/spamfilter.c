@@ -319,7 +319,7 @@ RPC_CALL_FUNC(rpc_spamfilter_del)
 	tkllayer[11] = name;
 	tkllayer[12] = NULL;
 
-	cmd_tkl(&me, NULL, 12, tkllayer);
+	cmd_tkl(NULL, &me, NULL, 12, tkllayer);
 
 	tkl = find_tkl_spamfilter(type, name, action, targets);
 	if (!tkl)

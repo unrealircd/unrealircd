@@ -194,6 +194,7 @@ void CommandDel(Command *command)
 void do_cmd(Client *client, MessageTag *mtags, const char *cmd, int parc, const char *parv[])
 {
 	RealCommand *cmptr;
+	ClientContext clictx;
 
 	cmptr = find_command_simple(cmd);
 	if (cmptr)
@@ -201,7 +202,9 @@ void do_cmd(Client *client, MessageTag *mtags, const char *cmd, int parc, const 
 		int gen_mtags = (mtags == NULL) ? 1 : 0;
 		if (gen_mtags)
 			new_message(client, NULL, &mtags);
-		(*cmptr->func) (client, mtags, parc, parv);
+		memset(&clictx, 0, sizeof(clictx));
+		clictx.cmd = cmptr;
+		(*cmptr->func) (&clictx, client, mtags, parc, parv);
 		if (gen_mtags)
 			free_message_tags(mtags);
 	}

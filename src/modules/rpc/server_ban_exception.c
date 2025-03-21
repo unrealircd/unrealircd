@@ -221,7 +221,7 @@ RPC_CALL_FUNC(rpc_server_ban_exception_del)
 	tkllayer[8] = "-";
 	tkllayer[9] = "-";
 	tkllayer[10] = NULL;
-	cmd_tkl(&me, NULL, 6, tkllayer);
+	cmd_tkl(NULL, &me, NULL, 6, tkllayer);
 
 	if (!find_tkl_banexception(TKL_EXCEPTION|TKL_GLOBAL, usermask, hostmask, soft) &&
 	    !find_tkl_banexception(TKL_EXCEPTION, usermask, hostmask, soft))

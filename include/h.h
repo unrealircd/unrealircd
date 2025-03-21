@@ -795,7 +795,7 @@ extern MODVAR MultiLineMode *(*set_mode)(Channel *channel, Client *cptr, int par
                             char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 extern MODVAR void (*set_channel_mode)(Channel *channel, MessageTag *mtags, const char *modes, const char *parameters);
 extern MODVAR void (*set_channel_topic)(Client *client, Channel *channel, MessageTag *recv_mtags, const char *topic, const char *set_by, time_t set_at);
-extern MODVAR void (*cmd_umode)(Client *, MessageTag *, int, const char **);
+extern MODVAR void (*cmd_umode)(ClientContext *, Client *, MessageTag *, int, const char **);
 extern MODVAR int (*register_user)(Client *client);
 extern MODVAR int (*tkl_hash)(unsigned int c);
 extern MODVAR char (*tkl_typetochar)(int type);
@@ -835,7 +835,7 @@ extern MODVAR TKL *(*find_qline)(Client *cptr, const char *nick, int *ishold);
 extern MODVAR TKL *(*find_tkline_match_zap)(Client *cptr);
 extern MODVAR void (*tkl_stats)(Client *cptr, int type, const char *para, int *cnt);
 extern MODVAR void (*tkl_sync)(Client *client);
-extern MODVAR void (*cmd_tkl)(Client *client, MessageTag *recv_mtags, int parc, const char *parv[]);
+extern MODVAR void (*cmd_tkl)(ClientContext *clictx, Client *client, MessageTag *recv_mtags, int parc, const char *parv[]);
 extern MODVAR int (*take_action)(Client *client, BanAction *actions, const char *reason, long duration, int take_action_flags, int *stopped);
 extern MODVAR int (*match_spamfilter)(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, TKL **rettk);
 extern MODVAR int (*match_spamfilter_mtags)(Client *client, MessageTag *mtags, const char *cmd);
@@ -1108,7 +1108,7 @@ extern CMD_FUNC(cmd_module);
 extern CMD_FUNC(cmd_rehash);
 extern CMD_FUNC(cmd_die);
 extern CMD_FUNC(cmd_restart);
-extern void cmd_alias(Client *client, MessageTag *recv_mtags, int parc, const char *parv[], const char *cmd); /* special! */
+extern void cmd_alias(ClientContext *clictx, Client *client, MessageTag *recv_mtags, int parc, const char *parv[], const char *cmd); /* special! */
 extern const char *pcre2_version(void);
 extern int get_terminal_width(void);
 extern int has_common_channels(Client *c1, Client *c2);

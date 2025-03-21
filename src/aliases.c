@@ -42,7 +42,7 @@ void strrangetok(char *in, char *out, char tok, short first, short last) {
 /* cmd_alias is a special type of command, it has an extra argument 'cmd'. */
 static int recursive_alias = 0;
 
-void cmd_alias(Client *client, MessageTag *mtags, int parc, const char *parv[], const char *cmd)
+void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int parc, const char *parv[], const char *cmd)
 {
 	ConfigItem_alias *alias;
 	Client *acptr;

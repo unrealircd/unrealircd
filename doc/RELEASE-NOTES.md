@@ -14,7 +14,13 @@ This is work in progress and may not always be a stable version.
 * TODO
 
 ### Developers and protocol:
-* TODO
+* Command handlers (and overrides) now have an extra argument
+  `ClientContext *clictx`. Right now it only has `clictx->cmd`
+  which points to the command handler, but in the future more
+  fields can easily be added to this struct. In your modules
+  you should normally use `CMD_FUNC(cmd_mycmd)` and
+  `CMD_OVERRIDE_FUNC(myoverridefunc)` and `CALL_NEXT_COMMAND_OVERRIDE()`
+  and then your module does not updating between 6.1.x and 6.2.x.
 
 UnrealIRCd 6.1.10
 ==================

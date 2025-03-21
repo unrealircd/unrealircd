@@ -83,5 +83,5 @@ CMD_FUNC(cmd_sqline)
 	ircsnprintf(mo, sizeof(mo), "%lld", (long long)TStime());
 	tkllayer[7] = mo;
 	tkllayer[8] = comment ? comment : "no reason";
-	cmd_tkl(&me, NULL, 9, tkllayer);
+	cmd_tkl(NULL, &me, NULL, 9, tkllayer);
 }

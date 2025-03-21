@@ -70,5 +70,6 @@ CMD_FUNC(cmd_umode2)
 
 	if (!parv[1])
 		return;
-	cmd_umode(client, recv_mtags, (parc > 3) ? 4 : 3, xparv);
+	/* (passing clictx here is kinda wrong, but why is this not a do_cmd anyway?) */
+	cmd_umode(clictx, client, recv_mtags, (parc > 3) ? 4 : 3, xparv);
 }

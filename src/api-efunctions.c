@@ -45,7 +45,7 @@ MultiLineMode *(*set_mode)(Channel *channel, Client *client, int parc, const cha
                            char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 void (*set_channel_mode)(Channel *channel, MessageTag *mtags, const char *modes, const char *parameters);
 void (*set_channel_topic)(Client *client, Channel *channel, MessageTag *recv_mtags, const char *topic, const char *set_by, time_t set_at);
-void (*cmd_umode)(Client *client, MessageTag *mtags, int parc, const char *parv[]);
+void (*cmd_umode)(ClientContext *clictx, Client *client, MessageTag *mtags, int parc, const char *parv[]);
 int (*register_user)(Client *client);
 int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
@@ -79,7 +79,7 @@ TKL *(*find_qline)(Client *client, const char *nick, int *ishold);
 TKL *(*find_tkline_match_zap)(Client *client);
 void (*tkl_stats)(Client *client, int type, const char *para, int *cnt);
 void (*tkl_sync)(Client *client);
-void (*cmd_tkl)(Client *client, MessageTag *mtags, int parc, const char *parv[]);
+void (*cmd_tkl)(ClientContext *clictx, Client *client, MessageTag *mtags, int parc, const char *parv[]);
 int (*take_action)(Client *client, BanAction *action, const char *reason, long duration, int take_action_flags, int *stopped);
 int (*match_spamfilter)(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, TKL **rettk);
 int (*match_spamfilter_mtags)(Client *client, MessageTag *mtags, const char *cmd);

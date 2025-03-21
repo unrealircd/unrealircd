@@ -162,7 +162,7 @@ RPC_CALL_FUNC(rpc_name_ban_del)
 	tkllayer[4] = name;
 	tkllayer[5] = set_by;
 	tkllayer[6] = NULL;
-	cmd_tkl(&me, NULL, 6, tkllayer);
+	cmd_tkl(NULL, &me, NULL, 6, tkllayer);
 
 	if (!my_find_tkl_nameban(name))
 	{

@@ -1997,12 +1997,12 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 		}
 
 		/* call the tkl layer .. */
-		cmd_tkl(&me, NULL, 9, tkllayer);
+		cmd_tkl(NULL, &me, NULL, 9, tkllayer);
 	}
 	else
 	{
 		/* call the tkl layer .. */
-		cmd_tkl(&me, NULL, 6, tkllayer);
+		cmd_tkl(NULL, &me, NULL, 6, tkllayer);
 
 	}
 }
@@ -2349,13 +2349,13 @@ CMD_FUNC(cmd_eline)
 		}
 		tkllayer[9] = reason;
 		/* call the tkl layer .. */
-		cmd_tkl(&me, NULL, 10, tkllayer);
+		cmd_tkl(NULL, &me, NULL, 10, tkllayer);
 	}
 	else
 	{
 		/* Remove ELINE */
 		/* call the tkl layer .. */
-		cmd_tkl(&me, NULL, 10, tkllayer);
+		cmd_tkl(NULL, &me, NULL, 10, tkllayer);
 
 	}
 }
@@ -2439,7 +2439,7 @@ void spamfilter_del_by_id(Client *client, const char *id)
 	ircsnprintf(mo2, sizeof(mo2), "%lld", (long long)TStime());
 	tkllayer[7] = mo2; /* deletion time */
 
-	cmd_tkl(&me, NULL, 12, tkllayer);
+	cmd_tkl(NULL, &me, NULL, 12, tkllayer);
 }
 
 /** Spamfilter to fight spam, advertising, worms and other bad things on IRC.
@@ -2632,7 +2632,7 @@ CMD_FUNC(cmd_spamfilter)
 		tkllayer[7] = mo2;
 	}
 
-	cmd_tkl(&me, NULL, 12, tkllayer);
+	cmd_tkl(NULL, &me, NULL, 12, tkllayer);
 }
 
 /** tkl hash method.
@@ -5190,7 +5190,7 @@ int _take_action(Client *client, BanAction *actions, char *reason, long duration
 				tkllayer[6] = mo;
 				tkllayer[7] = mo2;
 				tkllayer[8] = reason;
-				cmd_tkl(&me, NULL, 9, tkllayer);
+				cmd_tkl(NULL, &me, NULL, 9, tkllayer);
 				RunHookReturnInt(HOOKTYPE_TAKE_ACTION, !=99, client, action->action, reason, duration);
 				if ((action->action == BAN_ACT_SHUN) || (action->action == BAN_ACT_SOFT_SHUN))
 				{

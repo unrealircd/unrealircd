@@ -913,6 +913,11 @@ struct SWhois {
 	char *setby;
 };
 
+/** Client context (passed in commands) */
+typedef struct ClientContext {
+	RealCommand *cmd; /**< Command handler (eg. cmd->command is the command name) */
+} ClientContext;
+
 /** The command API - used by modules and the core to add commands, overrides, etc.
  * See also https://www.unrealircd.org/docs/Dev:Command_API for a higher level overview and example.
  * @defgroup CommandAPI Command API
@@ -945,7 +950,8 @@ struct SWhois {
  * This is used in the code like <pre>CMD_FUNC(cmd_yourcmd)</pre> as a function definition.
  * It allows UnrealIRCd devs to change the parameters in the function without
  * (necessarily) breaking your code.
- * @param client      The client
+ * @param clictx      The client context.
+ * @param client      The client.
  * @param recv_mtags  Received message tags for this command.
  * @param parc        Parameter count *plus* 1.
  * @param parv        Parameter values.
@@ -955,7 +961,7 @@ struct SWhois {
  *        Note that reading parv[parc] and beyond is OUT OF BOUNDS and will cause a crash.
  *        E.g. parv[3] in the above example is out of bounds.
  */
-#define CMD_FUNC(x) void (x) (Client *client, MessageTag *recv_mtags, int parc, const char *parv[])
+#define CMD_FUNC(x) void (x) (ClientContext *clictx, Client *client, MessageTag *recv_mtags, int parc, const char *parv[])
 
 /** Call a command function - can be useful if you are calling another command function in your own module.
  * For example in cmd_nick() we call cmd_nick_local() for local functions,
@@ -963,14 +969,14 @@ struct SWhois {
  * to bother with passing the right command arguments. Which is nice because
  * command arguments may change in future UnrealIRCd versions.
  */
-#define CALL_CMD_FUNC(x)	(x)(client, recv_mtags, parc, parv)
+#define CALL_CMD_FUNC(x)	(x)(clictx, client, recv_mtags, parc, parv)
 
 /** @} */
 
 /** Command override function - used by all command override handlers.
  * This is used in the code like <pre>CMD_OVERRIDE_FUNC(ovr_somecmd)</pre> as a function definition.
  * @param ovr         The command override structure.
- * @param cptr        The client direction pointer.
+ * @param clictx      The client context.
  * @param client        The source client pointer (you usually need this one).
  * @param recv_mtags  Received message tags for this command.
  * @param parc        Parameter count *plus* 1.
@@ -981,13 +987,13 @@ struct SWhois {
  *        Note that reading parv[parc] and beyond is OUT OF BOUNDS and will cause a crash.
  *        E.g. parv[3] in the above example.
  */
-#define CMD_OVERRIDE_FUNC(x) void (x)(CommandOverride *ovr, Client *client, MessageTag *recv_mtags, int parc, const char *parv[])
+#define CMD_OVERRIDE_FUNC(x) void (x)(CommandOverride *ovr, ClientContext *clictx, Client *client, MessageTag *recv_mtags, int parc, const char *parv[])
 
 
 
-typedef void (*CmdFunc)(Client *client, MessageTag *mtags, int parc, const char *parv[]);
-typedef void (*AliasCmdFunc)(Client *client, MessageTag *mtags, int parc, const char *parv[], const char *cmd);
-typedef void (*OverrideCmdFunc)(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, const char *parv[]);
+typedef void (*CmdFunc)(ClientContext *clictx, Client *client, MessageTag *mtags, int parc, const char *parv[]);
+typedef void (*AliasCmdFunc)(ClientContext *clictx, Client *client, MessageTag *mtags, int parc, const char *parv[], const char *cmd);
+typedef void (*OverrideCmdFunc)(CommandOverride *ovr, ClientContext *clictx, Client *client, MessageTag *mtags, int parc, const char *parv[]);
 
 #include <sodium.h>
 

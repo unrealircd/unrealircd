@@ -264,6 +264,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 	int retval;
 #endif
 	RealCommand *cmptr = NULL;
+	ClientContext clictx;
 	int bytes;
 
 	*fromptr = cptr; /* The default, unless a source is specified (and permitted) */
@@ -552,27 +553,31 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 	if (IsUser(cptr) && (cmptr->flags & CMD_RESETIDLE))
 		cptr->local->idle_since = TStime();
 
+	/* Client context. Right now not so useful, but can be extended later: */
+	memset(&clictx, 0, sizeof(clictx));
+	clictx.cmd = cmptr;
+
 	/* Now ready to execute the command */
 #ifndef DEBUGMODE
 	if (cmptr->flags & CMD_ALIAS)
 	{
-		(*cmptr->aliasfunc) (from, mtags, i, (const char **)para, cmptr->cmd);
+		(*cmptr->aliasfunc) (&clictx, from, mtags, i, (const char **)para, cmptr->cmd);
 	} else {
 		if (!cmptr->overriders)
-			(*cmptr->func) (from, mtags, i, (const char **)para);
+			(*cmptr->func) (&clictx, from, mtags, i, (const char **)para);
 		else
-			(*cmptr->overriders->func) (cmptr->overriders, from, mtags, i, (const char **)para);
+			(*cmptr->overriders->func) (cmptr->overriders, &clictx, from, mtags, i, (const char **)para);
 	}
 #else
 	then = clock();
 	if (cmptr->flags & CMD_ALIAS)
 	{
-		(*cmptr->aliasfunc) (from, mtags, i, (const char **)para, cmptr->cmd);
+		(*cmptr->aliasfunc) (&clictx, from, mtags, i, (const char **)para, cmptr->cmd);
 	} else {
 		if (!cmptr->overriders)
-			(*cmptr->func) (from, mtags, i, (const char **)para);
+			(*cmptr->func) (&clictx, from, mtags, i, (const char **)para);
 		else
-			(*cmptr->overriders->func) (cmptr->overriders, from, mtags, i, (const char **)para);
+			(*cmptr->overriders->func) (cmptr->overriders, &clictx, from, mtags, i, (const char **)para);
 	}
 	if (!IsDead(cptr))
 	{
