@@ -1252,6 +1252,7 @@ struct NameBan {
 
 #define INPUT_CONVERSION_STRIP_CONTROL_CODES	0x1
 #define INPUT_CONVERSION_DEFAULT		(INPUT_CONVERSION_STRIP_CONTROL_CODES)
+#define INPUT_CONVERSION_CONFUSABLES		0x2
 
 /** Spamfilter sub-struct of TKL entry (Spamfilter) */
 struct Spamfilter {

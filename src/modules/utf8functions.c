@@ -1959,7 +1959,6 @@ char *_utf8_convert_confusables(const char *i, char *obuf, int olen)
 		utfchar = utf8_to_utf32(i);
 		len = utf8_charlen(i); // can't utfchar() set this too?
 		conv = utf8_lookup_confusable(utfchar);
-		config_status("char 0x%x to 0x%x", utfchar, conv); // DEBUG
 		if (conv == 0)
 		{
 			/* use as-is */

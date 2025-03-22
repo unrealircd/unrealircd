@@ -52,6 +52,7 @@ CMD_FUNC(cmd_kline);
 CMD_FUNC(cmd_zline);
 CMD_FUNC(cmd_spamfilter);
 CMD_FUNC(cmd_eline);
+CMD_FUNC(cmd_spaminfo);
 void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type);
 int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
@@ -170,6 +171,7 @@ TKLTypeTable tkl_types[] = {
 int max_stats_matches = 1000;
 int mtag_spamfilters_present = 0; /**< Are any spamfilters with type SPAMF_MTAG present? */
 int raw_spamfilters_present = 0; /**< Are any spamfilters with type SPAMF_RAW present? */
+int confusables_spamfilters_present = 0; /**< Are any spamfilters with input-conversion confusables present? */
 long previous_spamfilter_utf8 = 0;
 static int firstboot = 0;
 
@@ -253,6 +255,7 @@ MOD_INIT()
 	CommandAdd(modinfo->handle, "SPAMFILTER", cmd_spamfilter, 7, CMD_OPER);
 	CommandAdd(modinfo->handle, "ELINE", cmd_eline, 4, CMD_OPER);
 	CommandAdd(modinfo->handle, "TKL", _cmd_tkl, MAXPARA, CMD_OPER|CMD_SERVER);
+	CommandAdd(modinfo->handle, "SPAMINFO", cmd_spaminfo, 1, CMD_OPER);
 	add_default_exempts();
 	return MOD_SUCCESS;
 }
@@ -278,6 +281,8 @@ int input_conversion_strtoval(const char *name)
 		return 0;
 	if (!strcmp(name, "strip-control-codes"))
 		return INPUT_CONVERSION_STRIP_CONTROL_CODES;
+	if (!strcmp(name, "confusables"))
+		return INPUT_CONVERSION_CONFUSABLES;
 	return -1;
 }
 
@@ -678,7 +683,12 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 			else
 			{
 				for (cepp = cep->items; cepp; cepp = cepp->next)
-					input_conversion |= input_conversion_strtoval(cepp->name);
+				{
+					if (!strcmp(cepp->name, "none"))
+						input_conversion = 0;
+					else
+						input_conversion |= input_conversion_strtoval(cepp->name);
+				}
 			}
 		}
 		else if (!strcmp(cep->name, "action"))
@@ -2968,6 +2978,8 @@ TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAct
 		mtag_spamfilters_present = 1;
 	if (target & SPAMF_RAW)
 		raw_spamfilters_present = 1;
+	if (input_conversion & INPUT_CONVERSION_CONFUSABLES)
+		confusables_spamfilters_present = 1;
 
 	return tkl;
 }
@@ -5459,6 +5471,8 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	TKL *tkl;
 	TKL *winner_tkl = NULL;
 	const char *str;
+	const char *str_deconfused = NULL;
+	char deconfused[512];
 	int ret = -1;
 	char *reason = NULL;
 #ifdef SPAMFILTER_DETECTSLOW
@@ -5483,6 +5497,9 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 		str = str_in;
 	else
 		str = StripControlCodes(str_in);
+
+	if (confusables_spamfilters_present)
+		str_deconfused = utf8_convert_confusables(str, deconfused, sizeof(deconfused));
 
 	/* (note: using client->user check here instead of IsUser()
 	 * due to SPAMF_USER where user isn't marked as client/person yet.
@@ -5559,7 +5576,9 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 #endif
 
 			if (tkl->ptr.spamfilter->input_conversion == INPUT_CONVERSION_STRIP_CONTROL_CODES)
-				ret = unreal_match(tkl->ptr.spamfilter->match, str); /* stripcontrolcodes */
+				ret = unreal_match(tkl->ptr.spamfilter->match, str); /* StripControlCodes() */
+			else if (tkl->ptr.spamfilter->input_conversion == INPUT_CONVERSION_CONFUSABLES)
+				ret = unreal_match(tkl->ptr.spamfilter->match, str_deconfused); /* utf8_convert_confusables() */
 			else
 				ret = unreal_match(tkl->ptr.spamfilter->match, str_in); /* raw */
 
@@ -5825,6 +5844,8 @@ int check_special_spamfilters_present(void)
 			mtag_spamfilters_present = 1;
 		if (tkl->ptr.spamfilter->target & SPAMF_RAW)
 			raw_spamfilters_present = 1;
+		if (tkl->ptr.spamfilter->input_conversion & INPUT_CONVERSION_CONFUSABLES)
+			confusables_spamfilters_present = 1;
 	}
 
 	return 0;
@@ -6168,4 +6189,33 @@ int spamfilter_pre_command(Client *from, MessageTag *mtags, const char *buf)
 		return HOOK_DENY;
 
 	return 0;
+}
+
+CMD_FUNC(cmd_spaminfo)
+{
+	const char *line;
+	char deconfused[512], *s;
+
+	if (!IsOper(client))
+	{
+		sendnumeric(client, ERR_NOPRIVILEGES);
+		return;
+	}
+
+	if ((parc < 2) || BadPtr(parv[1]))
+	{
+		sendnotice(client, "Use: /SPAMINFO <line with spam text>");
+		return;
+	}
+
+	sendnotice(client, "*** SPAMINFO ***");
+	sendnotice(client, "This will show the original text and the deconfused text which can be used in a spamfilter block with input-conversion deconfused;");
+
+	line = parv[1];
+
+	sendnotice(client, "Original spam text: %s", line);
+
+	s = utf8_convert_confusables(line, deconfused, sizeof(deconfused));
+	if (s)
+		sendnotice(client, "Deconfused spam text: %s", s);
 }
