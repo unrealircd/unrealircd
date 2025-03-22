@@ -1310,6 +1310,8 @@ extern APICallback *APICallbackAdd(Module *module, APICallback *mreq);
 #define HOOKTYPE_SASL_AUTHENTICATE	124
 /** See hooktype_sasl_mechs */
 #define HOOKTYPE_SASL_MECHS		125
+/* See hooktype_allow_client */
+#define HOOKTYPE_ALLOW_CLIENT	126
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -2292,7 +2294,7 @@ int hooktype_post_local_nickchange(Client *client, MessageTag *mtags, const char
  */
 int hooktype_post_remote_nickchange(Client *client, MessageTag *mtags, const char *oldnick);
 
-/** Called when user name or user host has changed.
+/** Called when user name or user host has changed (function prototype for HOOKTYPE_USERHOST_CHANGE).
  * @param client		The client whose user@host has changed
  * @param olduser		Old username of the client
  * @param oldhost		Old hostname of the client
@@ -2300,14 +2302,14 @@ int hooktype_post_remote_nickchange(Client *client, MessageTag *mtags, const cha
  */
 int hooktype_userhost_change(Client *client, const char *olduser, const char *oldhost);
 
-/** Called when user realname has changed.
+/** Called when user realname has changed.  (function prototype for HOOKTYPE_REALNAME_CHANGE).
  * @param client		The client whose realname has changed
  * @param oldinfo		Old realname of the client
  * @return The return value is ignored (use return 0)
  */
 int hooktype_realname_change(Client *client, const char *oldinfo);
 
-/** Called when changing IP (eg due to PROXY/WEBIRC/etc).
+/** Called when changing IP (eg due to PROXY/WEBIRC/etc) (function prototype for HOOKTYPE_IP_CHANGE).
  * @param client		The client whose IP has changed
  * @param oldip			Old IP of the client
  * @returns If you reject the user then use dead_link() and return HOOK_DENY
@@ -2316,7 +2318,7 @@ int hooktype_realname_change(Client *client, const char *oldinfo);
  */
 int hooktype_ip_change(Client *client, const char *oldip);
 
-/** Called when json_expand_client() is called.
+/** Called when json_expand_client() is called (function prototype for HOOKTYPE_JSON_EXPAND_CLIENT).
  * Used for expanding information about 'client' in logging routines.
  * @param client		The client that should be expanded
  * @param detail		The amount of detail to provide (always 0 at the moment)
@@ -2325,7 +2327,7 @@ int hooktype_ip_change(Client *client, const char *oldip);
  */
 int hooktype_json_expand_client(Client *client, int detail, json_t *j);
 
-/** Called when json_expand_client_user() is called.
+/** Called when json_expand_client_user() is called (function prototype for HOOKTYPE_JSON_EXPAND_CLIENT_USER).
  * Used for expanding information about 'client' in logging routines
  * when the client is a USER.
  * @param client		The client that should be expanded
@@ -2336,7 +2338,7 @@ int hooktype_json_expand_client(Client *client, int detail, json_t *j);
  */
 int hooktype_json_expand_client_user(Client *client, int detail, json_t *j, json_t *child);
 
-/** Called when json_expand_client_server() is called.
+/** Called when json_expand_client_server() is called (function prototype for HOOKTYPE_JSON_EXPAND_CLIENT_SERVER).
  * Used for expanding information about 'client' in logging routines
  * when the client is a SERVER.
  * @param client		The client that should be expanded
@@ -2347,7 +2349,7 @@ int hooktype_json_expand_client_user(Client *client, int detail, json_t *j, json
  */
 int hooktype_json_expand_client_server(Client *client, int detail, json_t *j, json_t *child);
 
-/** Called when json_expand_channel() is called.
+/** Called when json_expand_channel() is called (function prototype for HOOKTYPE_JSON_EXPAND_CHANNEL).
  * Used for expanding information about 'channel' in logging routines.
  * @param channel		The channel that should be expanded
  * @param detail		The amount of detail to provide (always 0 at the moment)
@@ -2366,29 +2368,28 @@ int hooktype_json_expand_channel(Channel *channel, int detail, json_t *j);
  */
 int hooktype_pre_local_handshake_timeout(Client *client, const char **comment);
 
-/** Called when a REHASH completed (either succesfully or with a failure).
- * This gives the full rehash log. Used by the JSON-RPC interface. (function prototype for HOOKTYPE_REHASH_LOG)
+/** Called when a REHASH completed (either succesfully or with a failure) (function prototype for HOOKTYPE_REHASH_LOG).
+ * This gives the full rehash log. Used by the JSON-RPC interface.
  * @param failure		Set to 1 if the rehash failed, otherwise 0.
  * @param t			The JSON object containing the rehash log and other information.
  * @return The return value is ignored (use return 0)
  */
 int hooktype_rehash_log(int failure, json_t *rehash_log);
 
-/** Called when DNS has been done for a client (or has not been done because it was skipped).
- * (function prototype for HOOKTYPE_DNS_FINISHED)
+/** Called when DNS has been done for a client (or has not been done because it was skipped)
+ * (function prototype for HOOKTYPE_DNS_FINISHED).
  * @param client		The client
  * @return The return value is ignored (use return 0)
  */
 int hooktype_dns_finished(Client *client);
 
-/** Called after an listener block is processed
- * (function prototype for HOOKTYPE_CONFIG_LISTENER)
+/** Called after an listener block is processed (function prototype for HOOKTYPE_CONFIG_LISTENER).
  * @param listener		The listener
  * @return The return value is ignored (use return 0)
  */
 int hooktype_config_listener(ConfigItem_listen *listener);
 
-/** Called after an entry is added to a WATCH (or MONITOR) list.
+/** Called after an entry is added to a WATCH (or MONITOR) list (function prototype for HOOKTYPE_WATCH_ADD).
  * @param nick	Name of the new entry (watched user's nick)
  * @param client	Owner of the watch list
  * @param flags	Flags for the entry (WATCH_FLAG_TYPE_*)
@@ -2396,7 +2397,7 @@ int hooktype_config_listener(ConfigItem_listen *listener);
  */
 int hooktype_watch_add(char *nick, Client *client, int flags);
 
-/** Called after an entry is removed from a WATCH (or MONITOR) list.
+/** Called after an entry is removed from a WATCH (or MONITOR) list (function prototype for HOOKTYPE_WATCH_DEL).
  * @param nick	Name of the entry (watched user's nick) to be deleted
  * @param client	Owner of the watch list
  * @param flags	Flags for the entry (WATCH_FLAG_TYPE_*) to be deleted
@@ -2404,7 +2405,8 @@ int hooktype_watch_add(char *nick, Client *client, int flags);
  */
 int hooktype_watch_del(char *nick, Client *client, int flags);
 
-/** Called when an user is notified about a MONITORed nick coming off- or online.
+/** Called when an user is notified about a MONITORed nick coming off- or online
+ * (function prototype for HOOKTYPE_MONITOR_NOTIFICATION).
  * @param watcher	The user being notified
  * @param client	The user (dis)appearing
  * @param online	1 if it's coming online, 0 otherwise
@@ -2412,7 +2414,8 @@ int hooktype_watch_del(char *nick, Client *client, int flags);
  */
 int hooktype_monitor_notification(Client *watcher, Client *client, int online);
 
-/** Called when an AUTHENTICATE command is sent by the client, for SASL authentication.
+/** Called when an AUTHENTICATE command is sent by the client, for SASL authentication
+ * (function prototype for HOOKTYPE_SASL_AUTHENTICATE).
  * This can be used by authentication modules.
  * @param client		The client (user)
  * @param first			Set to 1 if this is the first AUTHENTICATE, set to 0 if it is a continuation.
@@ -2426,6 +2429,18 @@ int hooktype_sasl_authenticate(Client *client, int first, const char *param);
  * @return The saslmechlist
  */
 const char *hooktype_sasl_mechs(Client *client);
+
+/** Called from AllowClient() to see if the client should be allowed in based
+ * on allow block restrictions (function prototype for HOOKTYPE_ALLOW_CLIENT).
+ * NOTE for 3rd party modules: usually you will want to use
+ * HOOKTYPE_PRE_LOCAL_CONNECT instead (or sometimes HOOKTYPE_IS_HANDSHAKE_FINISHED),
+ * as this HOOKTYPE_ALLOW_CLIENT is really meant for allow-block-specific stuff.
+ * @param client	The client
+ * @param aconf		The allow block being evaluated
+ * @return A string that will be used to exit_client() to reject the user,
+ * or NULL to allow the user in.
+ */
+const char *hooktype_allow_client(Client *client, ConfigItem_allow *aconf);
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2553,7 +2568,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_WATCH_DEL) && !ValidateHook(hooktype_watch_del, func)) || \
         ((hooktype == HOOKTYPE_MONITOR_NOTIFICATION) && !ValidateHook(hooktype_monitor_notification, func)) || \
         ((hooktype == HOOKTYPE_SASL_AUTHENTICATE) && !ValidateHook(hooktype_sasl_authenticate, func)) || \
-        ((hooktype == HOOKTYPE_SASL_MECHS) && !ValidateHook(hooktype_sasl_mechs, func))) \
+        ((hooktype == HOOKTYPE_SASL_MECHS) && !ValidateHook(hooktype_sasl_mechs, func)) || \
+        ((hooktype == HOOKTYPE_ALLOW_CLIENT) && !ValidateHook(hooktype_allow_client, func))) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

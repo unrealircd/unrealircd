@@ -314,6 +314,7 @@ DLL_FILES=\
  src/modules/lusers.dll \
  src/modules/map.dll \
  src/modules/max-unknown-connections-per-ip.dll \
+ src/modules/maxperip.dll \
  src/modules/md.dll \
  src/modules/message.dll \
  src/modules/message-ids.dll \
@@ -1053,6 +1054,9 @@ src/modules/map.dll: src/modules/map.c $(INCLUDES)
 
 src/modules/max-unknown-connections-per-ip.dll: src/modules/max-unknown-connections-per-ip.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/max-unknown-connections-per-ip.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/max-unknown-connections-per-ip.pdb $(MODLFLAGS)
+
+src/modules/maxperip.dll: src/modules/maxperip.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/maxperip.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/maxperip.pdb $(MODLFLAGS)
 
 src/modules/md.dll: src/modules/md.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/md.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/md.pdb $(MODLFLAGS)

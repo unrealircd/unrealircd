@@ -5877,10 +5877,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 					allow->class = default_class;
 			}
 		}
-		else if (!strcmp(cep->name, "maxperip"))
-			allow->maxperip = atoi(cep->value);
-		else if (!strcmp(cep->name, "global-maxperip"))
-			allow->global_maxperip = atoi(cep->value);
 		else if (!strcmp(cep->name, "redirect-server"))
 			safe_strdup(allow->server, cep->value);
 		else if (!strcmp(cep->name, "redirect-port"))
@@ -5916,14 +5912,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	/* Default: global-maxperip = maxperip+1 */
-	if (allow->global_maxperip == 0)
-		allow->global_maxperip = allow->maxperip+1;
-
-	/* global-maxperip < maxperip makes no sense */
-	if (allow->global_maxperip < allow->maxperip)
-		allow->global_maxperip = allow->maxperip;
-
 	AddListItem(allow, conf_allow);
 	return 1;
 }
@@ -5934,7 +5922,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	int		errors = 0;
 	Hook *h;
 	int has_ip = 0, has_hostname = 0, has_mask = 0, has_match = 0;
-	int has_maxperip = 0, has_global_maxperip = 0, has_password = 0, has_class = 0;
+	int has_password = 0, has_class = 0;
 	int has_redirectserver = 0, has_redirectport = 0, has_options = 0;
 	int hostname_possible_silliness = 0;
 
@@ -6055,40 +6043,6 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		{
 			has_match = 1;
 			test_match_block(conf, cep, &errors);
-		}
-		else if (!strcmp(cep->name, "maxperip"))
-		{
-			int v = atoi(cep->value);
-			if (has_maxperip)
-			{
-				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "allow::maxperip");
-				continue;
-			}
-			has_maxperip = 1;
-			if ((v <= 0) || (v > 1000000))
-			{
-				config_error("%s:%i: allow::maxperip with illegal value (must be 1-1000000)",
-					cep->file->filename, cep->line_number);
-				errors++;
-			}
-		}
-		else if (!strcmp(cep->name, "global-maxperip"))
-		{
-			int v = atoi(cep->value);
-			if (has_global_maxperip)
-			{
-				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "allow::global-maxperip");
-				continue;
-			}
-			has_global_maxperip = 1;
-			if ((v <= 0) || (v > 1000000))
-			{
-				config_error("%s:%i: allow::global-maxperip with illegal value (must be 1-1000000)",
-					cep->file->filename, cep->line_number);
-				errors++;
-			}
 		}
 		else if (!strcmp(cep->name, "ipv6-clone-mask"))
 		{
@@ -6249,12 +6203,6 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		errors++;
 	}
 
-	if (!has_maxperip)
-	{
-		config_error_missing(ce->file->filename, ce->line_number,
-			"allow::maxperip");
-		errors++;
-	}
 	return errors;
 }
 
