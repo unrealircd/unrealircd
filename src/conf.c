@@ -4754,6 +4754,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cep2;
 	ConfigItem_class *class;
 	unsigned char isnew = 0;
+	Hook *h;
 
 	if (!(class = find_class(ce->value)))
 	{
@@ -4789,6 +4790,12 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 				if (!strcmp(cep2->name, "nofakelag"))
 					class->options |= CLASS_OPT_NOFAKELAG;
 		}
+		for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
+		{
+			int value = (*(h->func.intfunc))(conf, cep, CONFIG_CLASS, class);
+			if (value == 1)
+				break;
+		}
 	}
 	if (isnew)
 		AddListItem(class, conf_class);
@@ -4801,6 +4808,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	int		errors = 0;
 	char has_pingfreq = 0, has_connfreq = 0, has_maxclients = 0, has_sendq = 0;
 	char has_recvq = 0;
+	Hook *h;
 
 	if (!ce->value)
 	{
@@ -4816,6 +4824,40 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		int used_by_module = 0;
+
+		/* First, check if a module knows about this class::something */
+		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
+		{
+			int value, errs = 0;
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+			    && !(h->owner->options & MOD_OPT_PERM))
+			{
+				continue;
+			}
+			value = (*(h->func.intfunc))(conf, cep, CONFIG_ALLOW_BLOCK, &errs);
+			if (value == 2)
+				used_by_module = 1;
+			if (value == 1)
+			{
+				used_by_module = 1;
+				break;
+			}
+			if (value == -1)
+			{
+				used_by_module = 1;
+				errors += errs;
+				break;
+			}
+			if (value == -2)
+			{
+				used_by_module = 1;
+				errors += errs;
+			}
+		}
+		if (used_by_module)
+			continue;
+
 		if (!strcmp(cep->name, "options"))
 		{
 			for (cep2 = cep->items; cep2; cep2 = cep2->next)
@@ -5804,7 +5846,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 			int value;
 			for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 			{
-				value = (*(h->func.intfunc))(conf,ce,CONFIG_ALLOW);
+				value = (*(h->func.intfunc))(conf, ce, CONFIG_ALLOW);
 				if (value == 1)
 					break;
 			}
@@ -5866,6 +5908,12 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 					allow->flags.reject_on_auth_failure = 1;
 			}
 		}
+		for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
+		{
+			int value = (*(h->func.intfunc))(conf, cep, CONFIG_ALLOW_BLOCK, allow);
+			if (value == 1)
+				break;
+		}
 	}
 
 	/* Default: global-maxperip = maxperip+1 */
@@ -5903,7 +5951,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
 				    && !(h->owner->options & MOD_OPT_PERM))
 					continue;
-				value = (*(h->func.intfunc))(conf,ce,CONFIG_ALLOW,&errs);
+				value = (*(h->func.intfunc))(conf, ce, CONFIG_ALLOW, &errs);
 				if (value == 2)
 					used = 1;
 				if (value == 1)
@@ -5934,6 +5982,40 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		int used_by_module = 0;
+
+		/* First, check if a module knows about this allow::something */
+		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
+		{
+			int value, errs = 0;
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+			    && !(h->owner->options & MOD_OPT_PERM))
+			{
+				continue;
+			}
+			value = (*(h->func.intfunc))(conf, cep, CONFIG_ALLOW_BLOCK, &errs);
+			if (value == 2)
+				used_by_module = 1;
+			if (value == 1)
+			{
+				used_by_module = 1;
+				break;
+			}
+			if (value == -1)
+			{
+				used_by_module = 1;
+				errors += errs;
+				break;
+			}
+			if (value == -2)
+			{
+				used_by_module = 1;
+				errors += errs;
+			}
+		}
+		if (used_by_module)
+			continue;
+
 		if (strcmp(cep->name, "options") &&
 		    strcmp(cep->name, "match") &&
 		    strcmp(cep->name, "mask") &&
