@@ -1536,6 +1536,12 @@ int decode_authenticate_plain_default_handler(const char *param, char **authoriz
 	return 0;
 }
 
+char *utf8_convert_confusables_default_handler(const char *i, char *obuf, int olen)
+{
+	strlcpy(obuf, i, olen);
+	return obuf;
+}
+
 
 /** my_timegm: mktime()-like function which will use GMT/UTC.
  * Strangely enough there is no standard function for this.

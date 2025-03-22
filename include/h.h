@@ -936,6 +936,7 @@ extern MODVAR void (*exit_client_fmt)(Client *client, MessageTag *recv_mtags, FO
 extern MODVAR void (*exit_client_ex)(Client *client, Client *origin, MessageTag *recv_mtags, const char *comment);
 extern MODVAR void (*banned_client)(Client *client, const char *bantype, const char *reason, int global, int noexit);
 extern MODVAR char (*unreal_expand_string)(const char *str, char *buf, size_t buflen, NameValuePrioList *nvp, int buildvarstring_options, Client *client);
+extern MODVAR char *(*utf8_convert_confusables)(const char *i, char *obuf, int olen);
 /* /Efuncs */
 
 /* TLS functions */
@@ -996,6 +997,7 @@ extern int central_spamreport_enabled_default_handler(void);
 extern void sasl_succeeded_default_handler(Client *client);
 extern void sasl_failed_default_handler(Client *client);
 extern int decode_authenticate_plain_default_handler(const char *param, char **authorization_id, char **authentication_id, char **passwd);
+extern char *utf8_convert_confusables_default_handler(const char *i, char *obuf, int olen);
 /* End of default handlers for efunctions */
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;

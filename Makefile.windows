@@ -430,6 +430,7 @@ DLL_FILES=\
  src/modules/usermodes/servicebot.dll \
  src/modules/usermodes/showwhois.dll \
  src/modules/usermodes/wallops.dll \
+ src/modules/utf8functions.dll \
  src/modules/vhost.dll \
  src/modules/watch-backend.dll \
  src/modules/watch.dll \
@@ -1402,6 +1403,9 @@ src/modules/usermodes/showwhois.dll: src/modules/usermodes/showwhois.c $(INCLUDE
 
 src/modules/usermodes/wallops.dll: src/modules/usermodes/wallops.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/usermodes/wallops.c /Fesrc/modules/usermodes/ /Fosrc/modules/usermodes/ /Fdsrc/modules/usermodes/wallops.pdb $(MODLFLAGS)
+
+src/modules/utf8functions.dll: src/modules/utf8functions.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/utf8functions.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/utf8functions.pdb $(MODLFLAGS)
 
 src/modules/vhost.dll: src/modules/vhost.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/vhost.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/vhost.pdb $(MODLFLAGS)
