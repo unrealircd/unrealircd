@@ -184,7 +184,7 @@ void (*exit_client)(Client *client, MessageTag *recv_mtags, const char *comment)
 void (*exit_client_fmt)(Client *client, MessageTag *recv_mtags, FORMAT_STRING(const char *pattern), ...);
 void (*exit_client_ex)(Client *client, Client *origin, MessageTag *recv_mtags, const char *comment);
 void (*banned_client)(Client *client, const char *bantype, const char *reason, int global, int noexit);
-char (*unreal_expand_string)(const char *str, char *buf, size_t buflen, NameValuePrioList *nvp, int buildvarstring_options, Client *client);
+char *(*unreal_expand_string)(const char *str, char *buf, size_t buflen, NameValuePrioList *nvp, int buildvarstring_options, Client *client);
 char *(*utf8_convert_confusables)(const char *i, char *obuf, int olen);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
