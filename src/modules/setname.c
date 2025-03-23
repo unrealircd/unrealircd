@@ -119,7 +119,7 @@ CMD_FUNC(cmd_setname)
 		/* set the new name before we check, but don't send to servers unless it is ok */
 		strlcpy(client->info, parv[1], sizeof(client->info));
 		spamfilter_build_user_string(spamfilter_user, client->name, client);
-		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, "SETNAME", NULL, 0, NULL))
+		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, "SETNAME", NULL, 0, clictx, NULL))
 		{
 			if (IsDead(client))
 			        return; /* Killed, don't bother anymore */

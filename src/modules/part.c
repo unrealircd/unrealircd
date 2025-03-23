@@ -91,7 +91,7 @@ CMD_FUNC(cmd_part)
 		}
 		if (commentx)
 		{
-			if (match_spamfilter(client, commentx, SPAMF_PART, "PART", parv[1], 0, NULL))
+			if (match_spamfilter(client, commentx, SPAMF_PART, "PART", parv[1], 0, clictx, NULL))
 				commentx = NULL;
 			if (IsDead(client))
 				return;

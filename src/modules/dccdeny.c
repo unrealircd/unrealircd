@@ -645,7 +645,7 @@ static int can_dcc(Client *client, const char *target, Client *targetcli, const 
 		return 0;
 	}
 
-	if (match_spamfilter(client, filename, SPAMF_DCC, "PRIVMSG", target, 0, NULL))
+	if (match_spamfilter(client, filename, SPAMF_DCC, "PRIVMSG", target, 0, NULL, NULL))
 	{
 		/* Dirty hack, yeah spamfilter already sent the error message :( */
 		*errmsg = "";

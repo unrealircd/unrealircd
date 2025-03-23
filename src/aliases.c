@@ -67,7 +67,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 	{
 		if (SERVICES_NAME && (acptr = find_user(alias->nick, NULL)))
 		{
-			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, NULL))
+			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, clictx, NULL))
 				return;
 			sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", client->name,
 				alias->nick, SERVICES_NAME, parv[1]);
@@ -79,7 +79,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 	{
 		if (STATS_SERVER && (acptr = find_user(alias->nick, NULL)))
 		{
-			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, NULL))
+			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, clictx, NULL))
 				return;
 			sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", client->name,
 				alias->nick, STATS_SERVER, parv[1]);
@@ -91,7 +91,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 	{
 		if ((acptr = find_user(alias->nick, NULL))) 
 		{
-			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, NULL))
+			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, clictx, NULL))
 				return;
 			if (MyUser(acptr))
 				sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", client->name, 
@@ -113,7 +113,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 			const char *errmsg = NULL;
 			if (can_send_to_channel(client, channel, &msg, &errmsg, 0, clictx))
 			{
-				if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_CHANMSG, cmd, channel->name, 0, NULL))
+				if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_CHANMSG, cmd, channel->name, 0, clictx, NULL))
 					return;
 				new_message(client, NULL, &mtags);
 				sendto_channel(channel, client, client->direction,
@@ -207,7 +207,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 				{
 					if (SERVICES_NAME && (acptr = find_user(format->nick, NULL)))
 					{
-						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, NULL))
+						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, clictx, NULL))
 							return;
 						sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", client->name,
 							format->nick, SERVICES_NAME, output);
@@ -218,7 +218,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 				{
 					if (STATS_SERVER && (acptr = find_user(format->nick, NULL)))
 					{
-						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, NULL))
+						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, clictx, NULL))
 							return;
 						sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", client->name,
 							format->nick, STATS_SERVER, output);
@@ -229,7 +229,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 				{
 					if ((acptr = find_user(format->nick, NULL))) 
 					{
-						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, NULL))
+						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, clictx, NULL))
 							return;
 						if (MyUser(acptr))
 							sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", client->name, 
@@ -251,7 +251,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 						const char *errmsg = NULL;
 						if (!can_send_to_channel(client, channel, &msg, &errmsg, 0, clictx))
 						{
-							if (alias->spamfilter && match_spamfilter(client, output, SPAMF_CHANMSG, cmd, channel->name, 0, NULL))
+							if (alias->spamfilter && match_spamfilter(client, output, SPAMF_CHANMSG, cmd, channel->name, 0, clictx, NULL))
 								return;
 							new_message(client, NULL, &mtags);
 							sendto_channel(channel, client, client->direction,

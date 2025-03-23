@@ -5784,8 +5784,6 @@ int detect_script(uint32_t utfchar)
  * @param blockmaplen	Length of the blockmap array (since blockmap is
  *			not a string it is full of zeroes and not zero
  *			terminated).
- * @notes The *CALLER* must initialize 'e' to zero, or willingly re-use
- * an existing context (in which case we will add points/blockmap counts).
  * @returns If this utf8functions module is loaded (so the code you are
  *          looking at) we return 1. The default handler, used when this
  *          module is not loaded, will always return 0.
@@ -5798,6 +5796,7 @@ int utf8_text_analysis(Client *client, const char *text, TextAnalysis *e)
 	int last_character_was_word_separator = 0;
 	int utf8len;
 	uint32_t utfchar;
+	int ublks = 0;
 
 	for (p = text; *p; p += utf8len)
 	{
@@ -5811,6 +5810,8 @@ int utf8_text_analysis(Client *client, const char *text, TextAnalysis *e)
 			 *    but this case is covered two lines up.
 			 * 2) This is of type 'char', so stop at the maximum value, 255.
 			 */
+			if (!e->unicode_blockmap[current_script])
+				e->unicode_blocks++;
 			if (e->unicode_blockmap[current_script] < 255)
 				e->unicode_blockmap[current_script]++;
 			if ((current_script != last_script) && (last_script != SCRIPT_UNDEFINED))
@@ -5836,6 +5837,14 @@ int utf8_text_analysis(Client *client, const char *text, TextAnalysis *e)
 		else
 			last_character_was_word_separator = 0;
 	}
+
+	/* For performance reasons it would be logical to implement the
+	 * conversion of confusables in the loop from above.
+	 * For consistency, or as long as we provide utf8_convert_confusables(),
+	 * however it makes more sense to keep the function separate.
+	 */
+	*e->deconfused = '\0'; // Initialize, in case next fails.
+	_utf8_convert_confusables(text, e->deconfused, sizeof(e->deconfused));
 
 	return 1;
 }

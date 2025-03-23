@@ -120,7 +120,7 @@ int can_send_to_user(Client *client, Client *target, const char **msgtext, const
 		int spamtype = (sendtype == SEND_TYPE_NOTICE ? SPAMF_USERNOTICE : SPAMF_USERMSG);
 		const char *cmd = sendtype_to_cmd(sendtype);
 
-		if (match_spamfilter(client, *msgtext, spamtype, cmd, target->name, 0, NULL))
+		if (match_spamfilter(client, *msgtext, spamtype, cmd, target->name, 0, clictx, NULL))
 			return 0;
 	}
 
@@ -342,7 +342,7 @@ void cmd_message(ClientContext *clictx, Client *client, MessageTag *recv_mtags, 
 			{
 				int spamtype = (sendtype == SEND_TYPE_NOTICE ? SPAMF_CHANNOTICE : SPAMF_CHANMSG);
 
-				if (match_spamfilter(client, text, spamtype, cmd, channel->name, 0, NULL))
+				if (match_spamfilter(client, text, spamtype, cmd, channel->name, 0, clictx, NULL))
 					return;
 			}
 

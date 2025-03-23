@@ -95,7 +95,7 @@ void _tkl_stats(Client *client, int type, const char *para, int *cnt);
 void _tkl_sync(Client *client);
 CMD_FUNC(_cmd_tkl);
 int _take_action(Client *client, BanAction *action, char *reason, long duration, int take_action_flags, int *stopped);
-int _match_spamfilter(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, TKL **rettk);
+int _match_spamfilter(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, ClientContext *clictx, TKL **rettk);
 int _match_spamfilter_mtags(Client *client, MessageTag *mtags, char *cmd);
 int check_special_spamfilters_present(void);
 int _join_viruschan(Client *client, TKL *tk, int type);
@@ -3744,7 +3744,7 @@ int _find_spamfilter_user(Client *client, int flags)
 		return 0;
 
 	spamfilter_build_user_string(spamfilter_user, client->name, client);
-	return match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, NULL, flags, NULL);
+	return match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, NULL, flags, NULL, NULL);
 }
 
 /** Check a spamfilter against all local users and print a message.
@@ -5466,7 +5466,7 @@ static void match_spamfilter_hit(Client *client, const char *str_in, const char 
  * @returns 0 if not matched, otherwise one of BAN_ACT_* (>=1) if spamfilter matched
  *          and it should be blocked or client exited. If >=1 then be sure to check IsDead(client)!!
  */
-int _match_spamfilter(Client *client, const char *str_in, int target, const char *cmd, const char *destination, int flags, TKL **rettkl)
+int _match_spamfilter(Client *client, const char *str_in, int target, const char *cmd, const char *destination, int flags, ClientContext *clictx, TKL **rettkl)
 {
 	TKL *tkl;
 	TKL *winner_tkl = NULL;
@@ -5499,7 +5499,12 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 		str = StripControlCodes(str_in);
 
 	if (confusables_spamfilters_present)
-		str_deconfused = utf8_convert_confusables(str, deconfused, sizeof(deconfused));
+	{
+		if (clictx && clictx->textanalysis && *clictx->textanalysis->deconfused)
+			str_deconfused = clictx->textanalysis->deconfused;
+		else
+			str_deconfused = utf8_convert_confusables(str, deconfused, sizeof(deconfused));
+	}
 
 	/* (note: using client->user check here instead of IsUser()
 	 * due to SPAMF_USER where user isn't marked as client/person yet.
@@ -5822,7 +5827,7 @@ int _match_spamfilter_mtags(Client *client, MessageTag *mtags, char *cmd)
 		} else {
 			str = m->name;
 		}
-		if (match_spamfilter(client, str, SPAMF_MTAG, cmd, NULL, 0, NULL))
+		if (match_spamfilter(client, str, SPAMF_MTAG, cmd, NULL, 0, NULL, NULL))
 			return 1;
 	}
 	return 0;
@@ -6184,7 +6189,7 @@ int spamfilter_pre_command(Client *from, MessageTag *mtags, const char *buf)
 		return 0;
 
 	cmd = getcmd(buf, cmdbuf, sizeof(cmdbuf));
-	ret = match_spamfilter(from, buf, SPAMF_RAW, cmd, NULL, 0, NULL);
+	ret = match_spamfilter(from, buf, SPAMF_RAW, cmd, NULL, 0, NULL, NULL);
 	if (ret > 0)
 		return HOOK_DENY;
 

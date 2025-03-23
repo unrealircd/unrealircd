@@ -919,6 +919,7 @@ typedef struct TextAnalysis {
 	int antimixedutf8_points;
 	int unicode_blocks;
 	char unicode_blockmap[UNICODE_BLOCK_COUNT];
+	char deconfused[512];
 } TextAnalysis;
 
 /** Client context (passed in commands) */
