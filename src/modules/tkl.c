@@ -5516,6 +5516,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	context.client = client;
 	context.text = str_in;
 	context.destination = destination;
+	context.clictx = clictx;
 
 	/* Client exempt from spamfilter checking?
 	 * Let's check that early: going through elines is likely faster than running the regex(es).
@@ -5678,6 +5679,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			context.client = client;
 			context.text = str_in;
 			context.destination = destination;
+			context.clictx = clictx;
 			if (!crule_eval(&context, tkl->ptr.spamfilter->rule))
 				continue;
 

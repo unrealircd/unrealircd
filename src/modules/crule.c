@@ -144,6 +144,7 @@ static int crule_match_country(crule_context *, int, void **);
 static int crule_match_asn(crule_context *, int, void **);
 static int crule_match_certfp(crule_context *, int, void **);
 static int crule_match_realname(crule_context *, int, void **);
+static int crule_unicode_count(crule_context *, int, void **);
 
 /* parsing function prototypes - local! */
 static int crule_gettoken(crule_token *next_tokp, const char **str);
@@ -204,6 +205,7 @@ struct crule_funclistent crule_funclist[] = {
 	{"match_asn", 1, crule_match_asn},
 	{"match_certfp", 1, crule_match_certfp},
 	{"match_realname", 1, crule_match_realname},
+	{"unicode_count", 1, crule_unicode_count},
 	{"", 0, NULL} /* this must be here to mark end of list */
 };
 
@@ -547,6 +549,20 @@ static int crule_match_realname(crule_context *context, int numargs, void *crule
 	if (context && context->client && match_simple(arg, context->client->info))
 		return 1;
 
+	return 0;
+}
+
+static int crule_unicode_count(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+
+	if (context && context->clictx && context->clictx->textanalysis)
+	{
+		int i = utf8_get_block_number(arg);
+		if (i < 0)
+			return -1; /* Block name not found */
+		return context->clictx->textanalysis->unicode_blockmap[i];
+	}
 	return 0;
 }
 
