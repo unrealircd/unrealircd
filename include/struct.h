@@ -916,10 +916,12 @@ struct SWhois {
 #define UNICODE_BLOCK_COUNT 327
 /** Text analysis by utf8_text_analysis() and other modules */
 typedef struct TextAnalysis {
-	int antimixedutf8_points;
-	int unicode_blocks;
-	char unicode_blockmap[UNICODE_BLOCK_COUNT];
-	char deconfused[512];
+	int antimixedutf8_points;	/**< Points given by AntiMixedUTF8 */
+	int unicode_blocks;		/**< Number of different unicode blocks used in the text (low = normal, high = suspicious) */
+	int num_bytes;			/**< Number of bytes of the text */
+	int num_unicode_characters;	/**< Number of unicode characters (which is not the same as strlen) */
+	char unicode_blockmap[UNICODE_BLOCK_COUNT]; /**< Unicode block counts, eg unicode_blockmap[0] is the number of latin characters */
+	char deconfused[512];		/**< The string with accents removed, confusables handled. Not guaranteed to be 100% correct. */
 } TextAnalysis;
 
 /** Client context (passed in commands) */

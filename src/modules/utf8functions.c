@@ -5803,6 +5803,9 @@ int utf8_text_analysis(Client *client, const char *text, TextAnalysis *e)
 		utfchar = utf8_to_utf32(p, &utf8len);
 		current_script = detect_script(utfchar);
 
+		e->num_bytes += utf8len;
+		e->num_unicode_characters++;
+
 		if (current_script != SCRIPT_UNDEFINED)
 		{
 			/* Two things to be careful about:
