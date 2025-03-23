@@ -255,7 +255,7 @@ MOD_INIT()
 	CommandAdd(modinfo->handle, "SPAMFILTER", cmd_spamfilter, 7, CMD_OPER);
 	CommandAdd(modinfo->handle, "ELINE", cmd_eline, 4, CMD_OPER);
 	CommandAdd(modinfo->handle, "TKL", _cmd_tkl, MAXPARA, CMD_OPER|CMD_SERVER);
-	CommandAdd(modinfo->handle, "SPAMINFO", cmd_spaminfo, 1, CMD_OPER);
+	CommandAdd(modinfo->handle, "SPAMINFO", cmd_spaminfo, 1, CMD_OPER|CMD_TEXTANALYSIS);
 	add_default_exempts();
 	return MOD_SUCCESS;
 }
@@ -6199,7 +6199,7 @@ int spamfilter_pre_command(Client *from, MessageTag *mtags, const char *buf)
 CMD_FUNC(cmd_spaminfo)
 {
 	const char *line;
-	char deconfused[512], *s;
+	int i, cnt;
 
 	if (!IsOper(client))
 	{
@@ -6213,14 +6213,36 @@ CMD_FUNC(cmd_spaminfo)
 		return;
 	}
 
+	if (!clictx->textanalysis)
+	{
+		sendnotice(client, "ERROR: Text analysis is not available. Maybe the utf8functions module is not loaded?");
+		return;
+	}
+
 	sendnotice(client, "*** SPAMINFO ***");
 	sendnotice(client, "This will show the original text and the deconfused text which can be used in a spamfilter block with input-conversion deconfused;");
 
 	line = parv[1];
 
 	sendnotice(client, "Original spam text: %s", line);
-
-	s = utf8_convert_confusables(line, deconfused, sizeof(deconfused));
-	if (s)
-		sendnotice(client, "Deconfused spam text: %s", s);
+	sendnotice(client, "Deconfused spam text: %s", clictx->textanalysis->deconfused);
+	sendnotice(client, "AntiMixedUTF8 points: %d", clictx->textanalysis->antimixedutf8_points);
+	sendnotice(client, "Number of Unicode characters in total: %d", clictx->textanalysis->num_unicode_characters);
+	sendnotice(client, "Number of different Unicode blocks used: %d", clictx->textanalysis->unicode_blocks);
+	sendnotice(client, "Unicode Block breakdown (name: bytes [capped at 255]):");
+	for (i = 0, cnt = 0; i < UNICODE_BLOCK_COUNT; i++)
+	{
+		if (clictx->textanalysis->unicode_blockmap[i])
+		{
+			cnt += clictx->textanalysis->unicode_blockmap[i];
+			sendnotice(client, "- %s: %d",
+			           utf8_get_block_name(i),
+			           (int)clictx->textanalysis->unicode_blockmap[i]);
+		}
+	}
+	if (clictx->textanalysis->num_unicode_characters != cnt)
+	{
+		sendnotice(client, "- Non-alpha ASCII characters (digits/spaces/etc.): %d",
+		                   clictx->textanalysis->num_unicode_characters - cnt);
+	}
 }

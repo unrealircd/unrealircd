@@ -1542,6 +1542,16 @@ char *utf8_convert_confusables_default_handler(const char *i, char *obuf, int ol
 	return obuf;
 }
 
+const char *utf8_get_block_name_default_handler(int i)
+{
+	return NULL;
+}
+
+int utf8_get_block_number_default_handler(const char *name)
+{
+	return -1;
+}
+
 /** my_timegm: mktime()-like function which will use GMT/UTC.
  * Strangely enough there is no standard function for this.
  * On some *NIX OS's timegm() may be available, sometimes only

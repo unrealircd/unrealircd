@@ -5550,11 +5550,15 @@ ConfusablesConversionTable confusables_table[] =
 /* Forward declarations */
 char *_utf8_convert_confusables(const char *i, char *obuf, int olen);
 int utf8_text_analysis(Client *client, const char *text, TextAnalysis *e);
+const char *_utf8_get_block_name(int i);
+int _utf8_get_block_number(const char *name);
 
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddString(modinfo->handle, EFUNC_UTF8_CONVERT_CONFUSABLES, _utf8_convert_confusables);
+	EfunctionAddConstString(modinfo->handle, EFUNC_UTF8_GET_BLOCK_NAME, _utf8_get_block_name);
+	EfunctionAdd(modinfo->handle, EFUNC_UTF8_GET_BLOCK_NUMBER, _utf8_get_block_number);
 	return MOD_SUCCESS;
 }
 
@@ -5936,4 +5940,22 @@ char *_utf8_convert_confusables(const char *i, char *obuf, int olen)
 
 	*o = '\0';
 	return obuf;
+}
+
+/** Get UTF8 name for a block number (eg 0 returns "Basic Latin") */
+const char *_utf8_get_block_name(int i)
+{
+	if ((i < 0) || (i > ARRAY_SIZEOF(unicode_blocks)-1))
+		return NULL;
+	return unicode_blocks[i].name;
+}
+
+/** Get UTF8 block number by name (eg "Basic Latin" returns 0) */
+int _utf8_get_block_number(const char *name)
+{
+	int i;
+	for (i = 0; i < ARRAY_SIZEOF(unicode_blocks); i++)
+		if (!strcasecmp(unicode_blocks[i].name, name))
+			return i;
+	return -1;
 }
