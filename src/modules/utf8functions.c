@@ -341,7 +341,7 @@ UnicodeBlocks unicode_blocks[UNICODE_BLOCK_COUNT] =
 	{0x1F100, 0x1F1FF, "Enclosed Alphanumeric Supplement", 1},
 	{0x1F200, 0x1F2FF, "Enclosed Ideographic Supplement", 1},
 	{0x1F300, 0x1F5FF, "Miscellaneous Symbols and Pictographs", 1},
-	{0x1F600, 0x1F64F, "Emoticons", 1},
+	{0x1F600, 0x1F64F, "Emoticons", 0},
 	{0x1F650, 0x1F67F, "Ornamental Dingbats", 1},
 	{0x1F680, 0x1F6FF, "Transport and Map Symbols", 1},
 	{0x1F700, 0x1F77F, "Alchemical Symbols", 1},
