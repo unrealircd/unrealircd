@@ -34,7 +34,7 @@ static char errMsg[2048];
 
 #define IsRegOnlySpeak(channel)    (channel->mode.mode & EXTCMODE_REGONLYSPEAK)
 
-int regonlyspeak_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
+int regonlyspeak_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
 const char *regonlyspeak_part_message (Client *client, Channel *channel, const char *comment);
 
 MOD_TEST()
@@ -81,7 +81,7 @@ const char *regonlyspeak_part_message (Client *client, Channel *channel, const c
 	return comment;
 }
 
-int regonlyspeak_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
+int regonlyspeak_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx)
 {
 	Hook *h;
 	int i;

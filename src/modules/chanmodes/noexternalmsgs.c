@@ -33,7 +33,7 @@ Cmode_t EXTCMODE_NO_EXTERNAL_MESSAGES;
 
 #define IsNoExternalMessages(channel)    (channel->mode.mode & EXTCMODE_NO_EXTERNAL_MESSAGES)
 
-int noexternalmsgs_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
+int noexternalmsgs_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
 
 MOD_INIT()
 {
@@ -62,7 +62,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int noexternalmsgs_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
+int noexternalmsgs_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx)
 {
 	if (IsNoExternalMessages(channel) && !IsMember(client,channel))
 	{

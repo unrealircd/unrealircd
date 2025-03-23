@@ -3,6 +3,9 @@
  * Reported by Mr_Smoke in https://bugs.unrealircd.org/view.php?id=5163
  * Tested by PeGaSuS (The_Myth) with some of the most used spam lines.
  * Help with testing and fixing Cyrillic from 'i' <info@servx.org>
+ * In 2025 a major overhaul, with a lot of the detection code moved
+ * to generic text analysis in src/modules/utf8functions.c (and
+ * no longer in the file you are viewing right now).
  *
  * ==[ ABOUT ]==
  * This module will detect and stop spam containing of characters of
@@ -61,160 +64,26 @@ struct {
 	SecurityGroup *except;
 } cfg;
 
+/* Forward declarations */
 static void free_config(void);
 static void init_config(void);
 int antimixedutf8_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int antimixedutf8_config_run(ConfigFile *, ConfigEntry *, int);
+int stripcolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
+int antimixedutf8_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype, ClientContext *clictx);
 
-#define SCRIPT_UNDEFINED	0
-#define SCRIPT_LATIN		1
-#define SCRIPT_CYRILLIC		2
-#define SCRIPT_CJK		3
-#define SCRIPT_HANGUL		4
-#define SCRIPT_CANADIAN		5
-#define SCRIPT_TELUGU		6
-
-/**** the detection algorithm follows first, the module/config code is at the end ****/
-
-/** Detect which script the current character is,
- * such as latin script or cyrillic script.
- * @retval See SCRIPT_*
- */
-int detect_script(const char *t)
-{
-	/* Safety: as long as *t is never \0 then at worst
-	 * the character after this will be \0 and since we
-	 * only look at 2 characters (at most) at a time
-	 * this will be safe.
-	 */
-
-	/* Currently we only detect cyrillic and call all the
-	 * rest latin (which is not true). This can always
-	 * be enhanced later.
-	 */
-
-	if ((t[0] == 0xd0) && (t[1] >= 0x80) && (t[1] <= 0xbf))
-		return SCRIPT_CYRILLIC;
-	else if ((t[0] == 0xd1) && (t[1] >= 0x80) && (t[1] <= 0xbf))
-		return SCRIPT_CYRILLIC;
-	else if ((t[0] == 0xd2) && (t[1] >= 0x80) && (t[1] <= 0xbf))
-		return SCRIPT_CYRILLIC;
-	else if ((t[0] == 0xd3) && (t[1] >= 0x80) && (t[1] <= 0xbf))
-		return SCRIPT_CYRILLIC;
-
-	if ((t[0] == 0xe4) && (t[1] >= 0xb8) && (t[1] <= 0xbf))
-		return SCRIPT_CJK;
-	else if ((t[0] >= 0xe5) && (t[0] <= 0xe9) && (t[1] >= 0x80) && (t[1] <= 0xbf))
-		return SCRIPT_CJK;
-
-	if ((t[0] == 0xea) && (t[1] >= 0xb0) && (t[1] <= 0xbf))
-		return SCRIPT_HANGUL;
-	else if ((t[0] >= 0xeb) && (t[0] <= 0xec) && (t[1] >= 0x80) && (t[1] <= 0xbf))
-		return SCRIPT_HANGUL;
-	else if ((t[0] == 0xed) && (t[1] >= 0x80) && (t[1] <= 0x9f))
-		return SCRIPT_HANGUL;
-
-	if ((t[0] == 0xe1) && (t[1] >= 0x90) && (t[1] <= 0x99))
-		return SCRIPT_CANADIAN;
-
-	if ((t[0] == 0xe0) && (t[1] >= 0xb0) && (t[1] <= 0xb1))
-		return SCRIPT_TELUGU;
-
-	if ((t[0] >= 'a') && (t[0] <= 'z'))
-		return SCRIPT_LATIN;
-	if ((t[0] >= 'A') && (t[0] <= 'Z'))
-		return SCRIPT_LATIN;
-
-	return SCRIPT_UNDEFINED;
-}
-
-/** Returns length of an (UTF8) character. May return <1 for error conditions.
- * Made by i <info@servx.org>
- */
-static int utf8_charlen(const char *str)
-{
-	struct { char mask; char val; } t[4] =
-	{ { 0x80, 0x00 }, { 0xE0, 0xC0 }, { 0xF0, 0xE0 }, { 0xF8, 0xF0 } };
-	unsigned k, j;
-
-	for (k = 0; k < 4; k++)
-	{
-		if ((*str & t[k].mask) == t[k].val)
-		{
-			for (j = 0; j < k; j++)
-			{
-				if ((*(++str) & 0xC0) != 0x80)
-					return -1;
-			}
-			return k + 1;
-		}
-	}
-	return 1;
-}
-
-int lookalikespam_score(const char *text)
-{
-	const char *p;
-	int last_script = SCRIPT_UNDEFINED;
-	int current_script;
-	int points = 0;
-	int last_character_was_word_separator = 0;
-	int skip = 0;
-
-	for (p = text; *p; p++)
-	{
-		current_script = detect_script(p);
-
-		if (current_script != SCRIPT_UNDEFINED)
-		{
-			if ((current_script != last_script) && (last_script != SCRIPT_UNDEFINED))
-			{
-				/* A script change = 1 point */
-				points++;
-
-				/* Give an additional point if the script change happened
-				 * within the same word, as that would be rather unusual
-				 * in normal cases.
-				 */
-				if (!last_character_was_word_separator)
-					points++;
-			}
-			last_script = current_script;
-		}
-
-		if (strchr("., ", *p))
-			last_character_was_word_separator = 1;
-		else
-			last_character_was_word_separator = 0;
-
-		skip = utf8_charlen(p);
-		if (skip > 1)
-			p += skip - 1;
-	}
-
-	return points;
-}
-
-CMD_OVERRIDE_FUNC(override_msg)
+int antimixedutf8_check(Client *client, TextAnalysis *txa, const char **errmsg)
 {
 	int score, retval;
 
-	if (!MyUser(client) || (parc < 3) || BadPtr(parv[2]) ||
-	    user_allowed_by_security_group(client, cfg.except))
-	{
-		/* Short circuit for: remote clients, insufficient parameters,
-		 * antimixedutf8::except.
-		 */
-		CALL_NEXT_COMMAND_OVERRIDE();
-		return;
-	}
+	if (!txa || !MyUser(client) || user_allowed_by_security_group(client, cfg.except))
+		return HOOK_CONTINUE;
 
-	score = lookalikespam_score(StripControlCodes(parv[2]));
-	if ((score >= cfg.score) && !find_tkl_exception(TKL_ANTIMIXEDUTF8, client))
+	if ((txa->antimixedutf8_points >= cfg.score) && !find_tkl_exception(TKL_ANTIMIXEDUTF8, client))
 	{
 		unreal_log(ULOG_INFO, "antimixedutf8", "ANTIMIXEDUTF8_HIT", client,
 		           "[antimixedutf8] Client $client.details hit score $score -- taking action",
-		           log_data_integer("score", score));
+		           log_data_integer("score", txa->antimixedutf8_points));
 		/* Take the action */
 		retval = take_action(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time, 0, NULL);
 		if ((retval == BAN_ACT_WARN) || (retval == BAN_ACT_SOFT_WARN))
@@ -223,16 +92,27 @@ CMD_OVERRIDE_FUNC(override_msg)
 		} else
 		if ((retval == BAN_ACT_BLOCK) || (retval == BAN_ACT_SOFT_BLOCK))
 		{
-			sendnotice(client, "%s", cfg.ban_reason);
-			return;
+			*errmsg = cfg.ban_reason;
+			//sendnotice(client, "%s", cfg.ban_reason);
+			return HOOK_DENY;
 		} else if (retval > 0)
 		{
-			return;
+			return HOOK_DENY;
 		}
 		/* fallthrough for retval <=0 */
 	}
 
-	CALL_NEXT_COMMAND_OVERRIDE();
+	return HOOK_CONTINUE;
+}
+
+int antimixedutf8_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx)
+{
+	return antimixedutf8_check(client, clictx->textanalysis, errmsg);
+}
+
+int antimixedutf8_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype, ClientContext *clictx)
+{
+	return antimixedutf8_check(client, clictx->textanalysis, errmsg);
 }
 
 /*** rest is module and config stuff ****/
@@ -248,18 +128,14 @@ MOD_INIT()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	init_config();
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, antimixedutf8_can_send_to_channel);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, 0, antimixedutf8_can_send_to_user);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, antimixedutf8_config_run);
 	return MOD_SUCCESS;
 }
 
 MOD_LOAD()
 {
-	if (!CommandOverrideAdd(modinfo->handle, "PRIVMSG", 0, override_msg))
-		return MOD_FAILED;
-
-	if (!CommandOverrideAdd(modinfo->handle, "NOTICE", 0, override_msg))
-		return MOD_FAILED;
-
 	return MOD_SUCCESS;
 }
 

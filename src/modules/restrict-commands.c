@@ -46,8 +46,8 @@ RestrictedCommand *find_restrictions_bycmd(const char *cmd);
 RestrictedCommand *find_restrictions_byconftag(const char *conftag);
 int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
-int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
-int rcmd_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype);
+int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
+int rcmd_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype, ClientContext *clictx);
 int rcmd_can_join(Client *client, Channel *channel, const char *key, char **errmsg);
 int rcmd_block_message(Client *client, const char *destination, const char *text, SendType sendtype, const char **errmsg, const char *display, const char *conftag);
 int rcmd_block_join(Client *client, Channel *channel, const char **errmsg);
@@ -332,7 +332,7 @@ int rcmd_canbypass(Client *client, RestrictedCommand *rcmd, crule_context *conte
 	return 0;
 }
 
-int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
+int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx)
 {
 	if (rcmd_block_message(client, channel->name, *msg, sendtype, errmsg, "channel", (sendtype == SEND_TYPE_NOTICE ? "channel-notice" : "channel-message")))
 		return HOOK_DENY;
@@ -340,7 +340,7 @@ int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, c
 	return HOOK_CONTINUE;
 }
 
-int rcmd_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype)
+int rcmd_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype, ClientContext *clictx)
 {
 	// Need a few extra exceptions for user messages only =]
 	if ((client == target) || IsULine(target))

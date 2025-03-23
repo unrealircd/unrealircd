@@ -913,9 +913,18 @@ struct SWhois {
 	char *setby;
 };
 
+#define UNICODE_BLOCK_COUNT 327
+/** Text analysis by utf8_text_analysis() and other modules */
+typedef struct TextAnalysis {
+	int antimixedutf8_points;
+	int unicode_blocks;
+	char unicode_blockmap[UNICODE_BLOCK_COUNT];
+} TextAnalysis;
+
 /** Client context (passed in commands) */
 typedef struct ClientContext {
 	RealCommand *cmd; /**< Command handler (eg. cmd->command is the command name) */
+	TextAnalysis *textanalysis; /**< Analysis of text (can be NULL, eg for non-PRIVMSG/NOTICE or remote clients) */
 } ClientContext;
 
 /** The command API - used by modules and the core to add commands, overrides, etc.

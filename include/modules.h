@@ -1312,6 +1312,8 @@ extern APICallback *APICallbackAdd(Module *module, APICallback *mreq);
 #define HOOKTYPE_SASL_MECHS		125
 /* See hooktype_allow_client */
 #define HOOKTYPE_ALLOW_CLIENT	126
+/** See hooktype_analyze_text */
+#define HOOKTYPE_ANALYZE_TEXT	127
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -1542,7 +1544,7 @@ int hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag **mtags, c
  * @retval HOOK_DENY		Deny the message. The 'errmsg' will be sent to the user.
  * @retval HOOK_CONTINUE	Allow the message, unless other modules block it.
  */
-int hooktype_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype);
+int hooktype_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype, ClientContext *clictx);
 
 /** Called when a user wants to send a message to a channel (function prototype for HOOKTYPE_CAN_SEND_TO_CHANNEL).
  * @param client		The sender
@@ -1554,7 +1556,7 @@ int hooktype_can_send_to_user(Client *client, Client *target, const char **text,
  * @retval HOOK_DENY		Deny the message. The 'errmsg' will be sent to the user.
  * @retval HOOK_CONTINUE	Allow the message, unless other modules block it.
  */
-int hooktype_can_send_to_channel(Client *client, Channel *channel, Membership *member, const char **text, const char **errmsg, SendType sendtype);
+int hooktype_can_send_to_channel(Client *client, Channel *channel, Membership *member, const char **text, const char **errmsg, SendType sendtype, ClientContext *clictx);
 
 /** Called when a message is sent from one user to another user (function prototype for HOOKTYPE_USERMSG).
  * @param client		The sender
@@ -2441,6 +2443,17 @@ const char *hooktype_sasl_mechs(Client *client);
  * or NULL to allow the user in.
  */
 const char *hooktype_allow_client(Client *client, ConfigItem_allow *aconf);
+
+/** Called from PRIVMSG/NOTICE to analyze properties of text-to-be-sent
+ * (function prototype for HOOKTYPE_ANALYZE_TEXT).
+ * @param client	The client
+ * @param text		The text that the user wants to send
+ * @param e		The result of the analysis
+ * @notes Since multiple modules can be called, 'e' may already contain data,
+ *        so don't blindly assume it is all zeroed (and don't zero everything either).
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_analyze_text(Client *client, const char *text, TextAnalysis *e);
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2569,7 +2582,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_MONITOR_NOTIFICATION) && !ValidateHook(hooktype_monitor_notification, func)) || \
         ((hooktype == HOOKTYPE_SASL_AUTHENTICATE) && !ValidateHook(hooktype_sasl_authenticate, func)) || \
         ((hooktype == HOOKTYPE_SASL_MECHS) && !ValidateHook(hooktype_sasl_mechs, func)) || \
-        ((hooktype == HOOKTYPE_ALLOW_CLIENT) && !ValidateHook(hooktype_allow_client, func))) \
+        ((hooktype == HOOKTYPE_ALLOW_CLIENT) && !ValidateHook(hooktype_allow_client, func)) || \
+        ((hooktype == HOOKTYPE_ANALYZE_TEXT) && !ValidateHook(hooktype_analyze_text, func))) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
@@ -2736,6 +2750,7 @@ enum EfunctionType {
 	EFUNC_BANNED_CLIENT,
 	EFUNC_UNREAL_EXPAND_STRING,
 	EFUNC_UTF8_CONVERT_CONFUSABLES,
+	EFUNC_UTF8_ANALYZE_TEXT,
 };
 
 /* Module flags */

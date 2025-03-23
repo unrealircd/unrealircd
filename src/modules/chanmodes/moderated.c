@@ -33,7 +33,7 @@ ModuleHeader MOD_HEADER
 Cmode_t EXTCMODE_MODERATED;
 
 /* Forward declarations */
-int moderated_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
+int moderated_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
 const char *moderated_pre_local_part(Client *client, Channel *channel, const char *text);
 int moderated_can_set_topic(Client *client, Channel *channel, const char *topic, const char **errmsg);
 
@@ -69,7 +69,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int moderated_can_send_to_channel(Client *client, Channel *channel, Membership *m, const char **msg, const char **errmsg, SendType sendtype)
+int moderated_can_send_to_channel(Client *client, Channel *channel, Membership *m, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx)
 {
 	if (IsModerated(channel) && (!m || !check_channel_access_membership(m, "vhoaq")) &&
 	    !op_can_override("channel:override:message:moderated",client,channel,NULL))

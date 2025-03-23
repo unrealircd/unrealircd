@@ -34,7 +34,7 @@ long UMODE_NOCTCP = 0L;
 
 #define IsNoCTCP(client)    (client->umodes & UMODE_NOCTCP)
 
-int noctcp_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype);
+int noctcp_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype, ClientContext *clictx);
 
 MOD_TEST()
 {
@@ -74,7 +74,7 @@ static int IsACTCP(const char *s)
 	return 0;
 }
 
-int noctcp_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype)
+int noctcp_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype, ClientContext *clictx)
 {
 	if (MyUser(client) && (sendtype == SEND_TYPE_PRIVMSG) &&
 	    IsNoCTCP(target) && !IsOper(client) && IsACTCP(*text))

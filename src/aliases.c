@@ -111,7 +111,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 		{
 			const char *msg = parv[1];
 			const char *errmsg = NULL;
-			if (can_send_to_channel(client, channel, &msg, &errmsg, 0))
+			if (can_send_to_channel(client, channel, &msg, &errmsg, 0, clictx))
 			{
 				if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_CHANMSG, cmd, channel->name, 0, NULL))
 					return;
@@ -249,7 +249,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 					{
 						const char *msg = output;
 						const char *errmsg = NULL;
-						if (!can_send_to_channel(client, channel, &msg, &errmsg, 0))
+						if (!can_send_to_channel(client, channel, &msg, &errmsg, 0, clictx))
 						{
 							if (alias->spamfilter && match_spamfilter(client, output, SPAMF_CHANMSG, cmd, channel->name, 0, NULL))
 								return;

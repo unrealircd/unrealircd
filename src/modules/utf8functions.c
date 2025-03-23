@@ -32,11 +32,9 @@ typedef struct ConfusablesConversionTable {
 } ConfusablesConversionTable;
 
 /* This is the list of all the unicode blocks.
- * If you want to ignore transition to/from a block, then
- * you can comment it out by putting // in front,
- * transitions to/from that code block will then not lead to a score.
+ * (TODO: Where is this list from? And when was it compiled? Up to date?)
  */
-UnicodeBlocks unicode_blocks[] =
+UnicodeBlocks unicode_blocks[UNICODE_BLOCK_COUNT] =
 {
 	{0x0000, 0x007F, "Basic Latin", 1},
 	{0x0080, 0x00FF, "Latin-1 Supplement", 1},
@@ -5551,6 +5549,7 @@ ConfusablesConversionTable confusables_table[] =
 
 /* Forward declarations */
 char *_utf8_convert_confusables(const char *i, char *obuf, int olen);
+int utf8_text_analysis(Client *client, const char *text, TextAnalysis *e);
 
 MOD_TEST()
 {
@@ -5562,6 +5561,7 @@ MOD_TEST()
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	HookAdd(modinfo->handle, HOOKTYPE_ANALYZE_TEXT, -1, utf8_text_analysis);
 
 	return MOD_SUCCESS;
 }
@@ -5581,8 +5581,9 @@ MOD_UNLOAD()
  * @param t	The UTF8 byte sequence, of which 1 byte can be used, but also 2, 3 or 4.
  * @param bytes	In this we will store the number of bytes that was used (1-4).
  * @note A) In case of invalid UTF8 sequence, 0 is returned and *bytes is set to 1.
- *          Only if the UTF8 sequence is valid, *bytes will be 2/3/4.
- * @note B) This function does not check if the unicode plane actually exists (eg is undefined, emtpy or private).
+ *          Only if the UTF8 sequence is valid, *bytes can become 2/3/4.
+ * @note B) This function does not check if the unicode code point actually exists
+ *          (eg is undefined/emtpy or private).
  * @returns The UTF32 value, or 0 if invalid.
  */
 uint32_t utf8_to_utf32(const char *t, int *bytes)
@@ -5765,6 +5766,78 @@ int detect_script(uint32_t utfchar)
 	}
 
 	return SCRIPT_UNDEFINED;
+}
+
+/** Do UTF8 text analysis.
+ * This builds on the work of antimixedutf8 from earlier.
+ * @param text		The input text.
+ * @param points	The number of points given (number of transitions
+ *			between unicode blocks, possibly score adjusted,
+ *			antimixedutf8 style).
+ * @param num_blocks	Number of different blocks in use (this is or can
+ *			be different than the number of transitions).
+ * @param blockmap	A char array (not a string!) with counts of how
+ *			many times a character was encounted in that
+ *			particular unicode block. Eg blockmap[0] would be
+ *			"Basic Latin". Since it is a char, counts are
+ *			capped at 255.
+ * @param blockmaplen	Length of the blockmap array (since blockmap is
+ *			not a string it is full of zeroes and not zero
+ *			terminated).
+ * @notes The *CALLER* must initialize 'e' to zero, or willingly re-use
+ * an existing context (in which case we will add points/blockmap counts).
+ * @returns If this utf8functions module is loaded (so the code you are
+ *          looking at) we return 1. The default handler, used when this
+ *          module is not loaded, will always return 0.
+ */
+int utf8_text_analysis(Client *client, const char *text, TextAnalysis *e)
+{
+	const char *p;
+	int last_script = 0;
+	int current_script;
+	int last_character_was_word_separator = 0;
+	int utf8len;
+	uint32_t utfchar;
+
+	for (p = text; *p; p += utf8len)
+	{
+		utfchar = utf8_to_utf32(p, &utf8len);
+		current_script = detect_script(utfchar);
+
+		if (current_script != SCRIPT_UNDEFINED)
+		{
+			/* Two things to be careful about:
+			 * 1) If current_script is SCRIPT_UNDEFINED it is -1 so we would OOB,
+			 *    but this case is covered two lines up.
+			 * 2) This is of type 'char', so stop at the maximum value, 255.
+			 */
+			if (e->unicode_blockmap[current_script] < 255)
+				e->unicode_blockmap[current_script]++;
+			if ((current_script != last_script) && (last_script != SCRIPT_UNDEFINED))
+			{
+				/* Script change: add X point(s) */
+				int add_points = unicode_blocks[current_script].score;
+				e->antimixedutf8_points += add_points;
+
+#if 0
+				/* Give an extra point if the script change happened
+				 * within the same word, as that would be rather unusual
+				 * in normal cases. (Unless .score is 0 points)
+				 */
+				if (add_points && !last_character_was_word_separator)
+					e->antimixedutf8_points++;
+#endif
+			}
+			last_script = current_script;
+		}
+
+		if (strchr("., ", *p))
+			last_character_was_word_separator = 1;
+		else
+			last_character_was_word_separator = 0;
+	}
+
+	return 1;
 }
 
 /** Returns length of an (UTF8) character. May return <1 for error conditions.

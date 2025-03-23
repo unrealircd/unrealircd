@@ -117,7 +117,7 @@ void (*connect_server)(ConfigItem_link *aconf, Client *by, struct hostent *hp);
 int (*is_services_but_not_ulined)(Client *client);
 void (*parse_message_tags)(Client *client, char **str, MessageTag **mtag_list);
 const char *(*mtags_to_string)(MessageTag *m, Client *client);
-int (*can_send_to_channel)(Client *client, Channel *channel, const char **msgtext, const char **errmsg, int notice);
+int (*can_send_to_channel)(Client *client, Channel *channel, const char **msgtext, const char **errmsg, SendType sendtype, ClientContext *clictx);
 void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 void (*broadcast_md_globalvar_cmd)(Client *except, Client *sender, const char *varname, const char *value);
 int (*tkl_ip_hash)(const char *ip);

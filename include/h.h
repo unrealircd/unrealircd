@@ -873,7 +873,7 @@ extern MODVAR void (*connect_server)(ConfigItem_link *aconf, Client *by, struct 
 extern MODVAR int (*is_services_but_not_ulined)(Client *client);
 extern MODVAR void (*parse_message_tags)(Client *cptr, char **str, MessageTag **mtag_list);
 extern MODVAR const char *(*mtags_to_string)(MessageTag *m, Client *acptr);
-extern MODVAR int (*can_send_to_channel)(Client *cptr, Channel *channel, const char **msgtext, const char **errmsg, int notice);
+extern MODVAR int (*can_send_to_channel)(Client *cptr, Channel *channel, const char **msgtext, const char **errmsg, SendType sendtyp, ClientContext *clictx);
 extern MODVAR void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 extern MODVAR void (*broadcast_md_globalvar_cmd)(Client *except, Client *sender, const char *varname, const char *value);
 extern MODVAR int (*tkl_ip_hash)(const char *ip);

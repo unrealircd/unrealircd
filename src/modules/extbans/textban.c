@@ -69,7 +69,7 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 const char *extban_modeT_conv_param(BanContext *b, Extban *extban);
 int textban_check_ban(Client *client, Channel *channel, const char *ban, const char **msg, const char **errmsg);
-int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
+int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
 int extban_modeT_is_ok(BanContext *b);
 void parse_word(const char *s, char **word, int *type);
 
@@ -374,7 +374,7 @@ const char *extban_modeT_conv_param(BanContext *b, Extban *extban)
 }
 
 /** Check for text bans (censor and block) */
-int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
+int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx)
 {
 	Ban *ban;
 

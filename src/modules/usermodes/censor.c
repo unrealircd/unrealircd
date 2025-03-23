@@ -20,7 +20,7 @@ long UMODE_CENSOR = 0L;
 
 #define IsCensored(x) (x->umodes & UMODE_CENSOR)
 
-int censor_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype);
+int censor_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype, ClientContext *clictx);
 
 int censor_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int censor_config_run(ConfigFile *, ConfigEntry *, int);
@@ -237,7 +237,7 @@ const char *stripbadwords_message(const char *str, int *blocked)
 	return stripbadwords(str, conf_badword_message, blocked);
 }
 
-int censor_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype)
+int censor_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype, ClientContext *clictx)
 {
 	int blocked = 0;
 

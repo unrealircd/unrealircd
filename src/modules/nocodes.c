@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
 };
 
-int nocodes_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
+int nocodes_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
 
 MOD_INIT()
 {
@@ -57,7 +57,7 @@ static int has_controlcodes(const char *p)
 	return 0;
 }
 
-int nocodes_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
+int nocodes_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx)
 {
 	static char retbuf[4096];
 	Hook *h;

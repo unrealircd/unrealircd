@@ -20,7 +20,7 @@ Cmode_t EXTMODE_CENSOR = 0L;
 
 #define IsCensored(x) ((x)->mode.mode & EXTMODE_CENSOR)
 
-int censor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype);
+int censor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
 const char *censor_pre_local_part(Client *client, Channel *channel, const char *text);
 const char *censor_pre_local_quit(Client *client, const char *text);
 int censor_stats_badwords_channel(Client *client, const char *para);
@@ -254,7 +254,7 @@ const char *stripbadwords_channel(const char *str, int *blocked)
 	return stripbadwords(str, conf_badword_channel, blocked);
 }
 
-int censor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype)
+int censor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx)
 {
 	int blocked;
 	Hook *h;
