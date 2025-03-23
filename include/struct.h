@@ -955,6 +955,8 @@ typedef struct ClientContext {
 #define CMD_CONTROL		0x0400
 /** Command is able to receive BIG lines */
 #define CMD_BIGLINES		0x0800
+/** The last parameter of the command should go through text analysis */
+#define CMD_TEXTANALYSIS	0x1000
 
 /** Command function - used by all command handlers.
  * This is used in the code like <pre>CMD_FUNC(cmd_yourcmd)</pre> as a function definition.

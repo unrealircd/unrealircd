@@ -265,6 +265,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 #endif
 	RealCommand *cmptr = NULL;
 	ClientContext clictx;
+	TextAnalysis text_analysis_storage;
 	int bytes;
 
 	*fromptr = cptr; /* The default, unless a source is specified (and permitted) */
@@ -553,9 +554,15 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 	if (IsUser(cptr) && (cmptr->flags & CMD_RESETIDLE))
 		cptr->local->idle_since = TStime();
 
-	/* Client context. Right now not so useful, but can be extended later: */
+	/* Create client context */
 	memset(&clictx, 0, sizeof(clictx));
 	clictx.cmd = cmptr;
+	if ((cmptr->flags & CMD_TEXTANALYSIS) && MyUser(from) && (i>1))
+	{
+		memset(&text_analysis_storage, 0, sizeof(text_analysis_storage));
+		clictx.textanalysis = &text_analysis_storage;
+		RunHook(HOOKTYPE_ANALYZE_TEXT, from, para[i-1], clictx.textanalysis); // is para[i] correct? probably not? -1 ? safety check?
+	}
 
 	/* Now ready to execute the command */
 #ifndef DEBUGMODE

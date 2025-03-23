@@ -46,7 +46,7 @@ MOD_INIT()
 	ClientCapability *c;
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	CommandAdd(modinfo->handle, MSG_SETNAME, cmd_setname, 1, CMD_USER);
+	CommandAdd(modinfo->handle, MSG_SETNAME, cmd_setname, 1, CMD_USER|CMD_TEXTANALYSIS);
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "setname";

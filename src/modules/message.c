@@ -53,8 +53,8 @@ MOD_TEST()
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, "PRIVMSG", cmd_private, 2, CMD_USER|CMD_SERVER|CMD_RESETIDLE|CMD_VIRUS);
-	CommandAdd(modinfo->handle, "NOTICE", cmd_notice, 2, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, "PRIVMSG", cmd_private, 2, CMD_USER|CMD_SERVER|CMD_RESETIDLE|CMD_VIRUS|CMD_TEXTANALYSIS);
+	CommandAdd(modinfo->handle, "NOTICE", cmd_notice, 2, CMD_USER|CMD_SERVER|CMD_TEXTANALYSIS);
 	CommandAdd(modinfo->handle, "TAGMSG", cmd_tagmsg, 1, CMD_USER|CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -213,7 +213,6 @@ void cmd_message(ClientContext *clictx, Client *client, MessageTag *recv_mtags, 
 	Hook *h;
 	MessageTag *mtags;
 	int sendflags;
-	TextAnalysis text_analysis_storage;
 
 	/* Force a labeled-response, even if we don't send anything
 	 * and the request was sent to other servers (which won't
@@ -235,13 +234,6 @@ void cmd_message(ClientContext *clictx, Client *client, MessageTag *recv_mtags, 
 
 	if (MyConnect(client))
 		parv[1] = (char *)canonize(parv[1]);
-
-	if (MyUser(client) && clictx && !BadPtr(parv[2]))
-	{
-		memset(&text_analysis_storage, 0, sizeof(text_analysis_storage));
-		clictx->textanalysis = &text_analysis_storage;
-		RunHook(HOOKTYPE_ANALYZE_TEXT, client, parv[2], clictx->textanalysis);
-	}
 
 	strlcpy(targets, parv[1], sizeof(targets));
 	for (p = NULL, targetstr = strtoken(&p, targets, ","); targetstr; targetstr = strtoken(&p, NULL, ","))
