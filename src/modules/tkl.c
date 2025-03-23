@@ -5578,7 +5578,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			if (tkl->ptr.spamfilter->input_conversion == INPUT_CONVERSION_STRIP_CONTROL_CODES)
 				ret = unreal_match(tkl->ptr.spamfilter->match, str); /* StripControlCodes() */
 			else if (tkl->ptr.spamfilter->input_conversion == INPUT_CONVERSION_CONFUSABLES)
-				ret = unreal_match(tkl->ptr.spamfilter->match, str_deconfused); /* utf8_convert_confusables() */
+				ret = unreal_match(tkl->ptr.spamfilter->match, str_deconfused ? str_deconfused : str); /* utf8_convert_confusables(), with fallback */
 			else
 				ret = unreal_match(tkl->ptr.spamfilter->match, str_in); /* raw */
 

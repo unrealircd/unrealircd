@@ -5576,13 +5576,28 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-uint32_t utf8_to_utf32(const char *t)
+/** Convert UTF8 sequence to UTF32.
+ * This function should be safe to run on untrusted user-input.
+ * @param t	The UTF8 byte sequence, of which 1 byte can be used, but also 2, 3 or 4.
+ * @param bytes	In this we will store the number of bytes that was used (1-4).
+ * @note A) In case of invalid UTF8 sequence, 0 is returned and *bytes is set to 1.
+ *          Only if the UTF8 sequence is valid, *bytes will be 2/3/4.
+ * @note B) This function does not check if the unicode plane actually exists (eg is undefined, emtpy or private).
+ * @returns The UTF32 value, or 0 if invalid.
+ */
+uint32_t utf8_to_utf32(const char *t, int *bytes)
 {
 	char c1, c2;
 	const char *ptr = t;
 	uint32_t uc = 0;
 	int i;
 	char seqlen = 0;
+
+	/* Set a sane default, as 'bytes' is usually used
+	 * for advancing/skipping to next character, so
+	 * setting it to 1 makes sense here.
+	 */
+	*bytes = 1;
 
 	c1 = ptr[0];
 	if( (c1 & 0x80) == 0 )
@@ -5612,10 +5627,7 @@ uint32_t utf8_to_utf32(const char *t)
 		c1 = ptr[i];
 
 		if( (c1 & 0xC0) != 0x80 )
-		{
-			// malformed data, do something !!!
-			return (uint32_t) -1;
-		}
+			return 0; /* Invalid UTF8 */
 	}
 
 	switch( seqlen )
@@ -5625,10 +5637,7 @@ uint32_t utf8_to_utf32(const char *t)
 			c1 = ptr[0];
 
 			if( !IS_IN_RANGE(c1, 0xC2, 0xDF) )
-			{
-				// malformed data, do something !!!
-				return (uint32_t) -1;
-			}
+				return 0; /* Invalid UTF8 */
 
 			break;
 		}
@@ -5642,26 +5651,17 @@ uint32_t utf8_to_utf32(const char *t)
 			{
 				case 0xE0:
 					if (!IS_IN_RANGE(c2, 0xA0, 0xBF))
-					{
-						// malformed data, do something !!!
-						return (uint32_t) -1;
-					}
+						return 0; /* Invalid UTF8 */
 					break;
 
 				case 0xED:
 					if (!IS_IN_RANGE(c2, 0x80, 0x9F))
-					{
-						// malformed data, do something !!!
-						return (uint32_t) -1;
-					}
+						return 0; /* Invalid UTF8 */
 					break;
 
 				default:
 					if (!IS_IN_RANGE(c1, 0xE1, 0xEC) && !IS_IN_RANGE(c1, 0xEE, 0xEF))
-					{
-						// malformed data, do something !!!
-						return (uint32_t) -1;
-					}
+						return 0; /* Invalid UTF8 */
 					break;
 			}
 
@@ -5677,26 +5677,17 @@ uint32_t utf8_to_utf32(const char *t)
 			{
 				case 0xF0:
 					if (!IS_IN_RANGE(c2, 0x90, 0xBF))
-					{
-						// malformed data, do something !!!
-						return (uint32_t) -1;
-					}
+						return 0; /* Invalid UTF8 */
 					break;
 
 				case 0xF4:
 					if (!IS_IN_RANGE(c2, 0x80, 0x8F))
-					{
-						// malformed data, do something !!!
-						return (uint32_t) -1;
-					}
+						return 0; /* Invalid UTF8 */
 					break;
 
 				default:
 					if (!IS_IN_RANGE(c1, 0xF1, 0xF3))
-					{
-						// malformed data, do something !!!
-						return (uint32_t) -1;
-					}
+						return 0; /* Invalid UTF8 */
 					break;
 			}
 
@@ -5705,9 +5696,10 @@ uint32_t utf8_to_utf32(const char *t)
 	}
 
 	for (i = 1; i < seqlen; ++i)
-	{
 		uc = ((uc << 6) | (uint32_t)(ptr[i] & 0x3F));
-	}
+
+	*bytes = seqlen;
+
 	return uc;
 }
 
@@ -5819,7 +5811,7 @@ uint32_t utf8_lookup_confusable(uint32_t c)
 
 char *_utf8_convert_confusables(const char *i, char *obuf, int olen)
 {
-	int len, x;
+	int utf8charlen, x;
 	char *o = obuf;
 	uint32_t utfchar, conv;
 
@@ -5827,18 +5819,25 @@ char *_utf8_convert_confusables(const char *i, char *obuf, int olen)
 		return NULL;
 	olen--; /* reserve room for \0 right now */
 
-	for (; *i && olen; i += len)
+	for (; *i && olen; i += utf8charlen)
 	{
-		utfchar = utf8_to_utf32(i);
-		len = utf8_charlen(i); // can't utfchar() set this too?
+		utfchar = utf8_to_utf32(i, &utf8charlen);
+		if (utfchar == 0)
+		{
+			/* Invalid UTF8. Dilemma: use as-is or skip it? */
+			*o++ = *i;
+			olen--;
+			continue;
+		}
 		conv = utf8_lookup_confusable(utfchar);
 		if (conv == 0)
 		{
 			/* use as-is */
-			if (olen < len)
+			if (olen < utf8charlen)
 				break; /* cut off */
-			for (x=0; x < len; x++)
+			for (x=0; x < utf8charlen; x++)
 				*o++ = i[x];
+			olen -= utf8charlen;
 		} else {
 			/* convert */
 			int replacelen;
@@ -5846,6 +5845,7 @@ char *_utf8_convert_confusables(const char *i, char *obuf, int olen)
 				break; /* cut off */
 			replacelen = utf32_to_utf8(o, conv);
 			o += replacelen;
+			olen -= replacelen;
 		}
 	}
 
