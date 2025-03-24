@@ -18,7 +18,6 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
 };
 
-/* https://unicode.org/Public/UNIDATA/Blocks.txt */
 typedef struct UnicodeBlocks {
 	uint32_t start;
 	uint32_t end;
@@ -32,7 +31,28 @@ typedef struct ConfusablesConversionTable {
 } ConfusablesConversionTable;
 
 /* This is the list of all the unicode blocks.
- * (TODO: Where is this list from? And when was it compiled? Up to date?)
+ * Currently based on Unicode 16.0.0 from 2024-02-02.
+ * To create this I used the following magic:
+ * wget https://unicode.org/Public/UNIDATA/Blocks.txt
+ * And then:
+ * cat Blocks.txt|\
+ * egrep -v '^\#'|\
+ * grep -F ..|\
+ * sed 's/\.\./;/g'|\
+ * sed 's/; /;/g'|\
+ * awk -F ';' '{ print "\t{0x" $1 ", 0x" $2 ", \"" $3 "\", 1}," }'|\
+ * sed 's/"Emoticons", 1/"Emoticons", 0/g'|\
+ * sed 's/"Mathematical Alphanumeric Symbols", 1/"Mathematical Alphanumeric Symbols", 3/g'
+ *
+ * If blocks are added then you will need to change UNICODE_BLOCK_COUNT
+ * which is in include/struct.h
+ *
+ * Important: don't change this list and then REHASH.
+ * Such hot-reloading will cause pages to be off (=WRONG).
+ * Only do this with restarts, eg. with a release upgrade.
+ *
+ * NOTE IF YOU TWEAK ANY OF THE SCORES BELOW:
+ * Then also update the sed command from a few lines up :)
  */
 UnicodeBlocks unicode_blocks[UNICODE_BLOCK_COUNT] =
 {
@@ -221,6 +241,7 @@ UnicodeBlocks unicode_blocks[UNICODE_BLOCK_COUNT] =
 	{0x10500, 0x1052F, "Elbasan", 1},
 	{0x10530, 0x1056F, "Caucasian Albanian", 1},
 	{0x10570, 0x105BF, "Vithkuqi", 1},
+	{0x105C0, 0x105FF, "Todhri", 1},
 	{0x10600, 0x1077F, "Linear A", 1},
 	{0x10780, 0x107BF, "Latin Extended-F", 1},
 	{0x10800, 0x1083F, "Cypriot Syllabary", 1},
@@ -243,6 +264,7 @@ UnicodeBlocks unicode_blocks[UNICODE_BLOCK_COUNT] =
 	{0x10C00, 0x10C4F, "Old Turkic", 1},
 	{0x10C80, 0x10CFF, "Old Hungarian", 1},
 	{0x10D00, 0x10D3F, "Hanifi Rohingya", 1},
+	{0x10D40, 0x10D8F, "Garay", 1},
 	{0x10E60, 0x10E7F, "Rumi Numeral Symbols", 1},
 	{0x10E80, 0x10EBF, "Yezidi", 1},
 	{0x10EC0, 0x10EFF, "Arabic Extended-C", 1},
@@ -262,12 +284,14 @@ UnicodeBlocks unicode_blocks[UNICODE_BLOCK_COUNT] =
 	{0x11280, 0x112AF, "Multani", 1},
 	{0x112B0, 0x112FF, "Khudawadi", 1},
 	{0x11300, 0x1137F, "Grantha", 1},
+	{0x11380, 0x113FF, "Tulu-Tigalari", 1},
 	{0x11400, 0x1147F, "Newa", 1},
 	{0x11480, 0x114DF, "Tirhuta", 1},
 	{0x11580, 0x115FF, "Siddham", 1},
 	{0x11600, 0x1165F, "Modi", 1},
 	{0x11660, 0x1167F, "Mongolian Supplement", 1},
 	{0x11680, 0x116CF, "Takri", 1},
+	{0x116D0, 0x116FF, "Myanmar Extended-C", 1},
 	{0x11700, 0x1174F, "Ahom", 1},
 	{0x11800, 0x1184F, "Dogra", 1},
 	{0x118A0, 0x118FF, "Warang Citi", 1},
@@ -278,6 +302,7 @@ UnicodeBlocks unicode_blocks[UNICODE_BLOCK_COUNT] =
 	{0x11AB0, 0x11ABF, "Unified Canadian Aboriginal Syllabics Extended-A", 1},
 	{0x11AC0, 0x11AFF, "Pau Cin Hau", 1},
 	{0x11B00, 0x11B5F, "Devanagari Extended-A", 1},
+	{0x11BC0, 0x11BFF, "Sunuwar", 1},
 	{0x11C00, 0x11C6F, "Bhaiksuki", 1},
 	{0x11C70, 0x11CBF, "Marchen", 1},
 	{0x11D00, 0x11D5F, "Masaram Gondi", 1},
@@ -292,12 +317,15 @@ UnicodeBlocks unicode_blocks[UNICODE_BLOCK_COUNT] =
 	{0x12F90, 0x12FFF, "Cypro-Minoan", 1},
 	{0x13000, 0x1342F, "Egyptian Hieroglyphs", 1},
 	{0x13430, 0x1345F, "Egyptian Hieroglyph Format Controls", 1},
+	{0x13460, 0x143FF, "Egyptian Hieroglyphs Extended-A", 1},
 	{0x14400, 0x1467F, "Anatolian Hieroglyphs", 1},
+	{0x16100, 0x1613F, "Gurung Khema", 1},
 	{0x16800, 0x16A3F, "Bamum Supplement", 1},
 	{0x16A40, 0x16A6F, "Mro", 1},
 	{0x16A70, 0x16ACF, "Tangsa", 1},
 	{0x16AD0, 0x16AFF, "Bassa Vah", 1},
 	{0x16B00, 0x16B8F, "Pahawh Hmong", 1},
+	{0x16D40, 0x16D7F, "Kirat Rai", 1},
 	{0x16E40, 0x16E9F, "Medefaidrin", 1},
 	{0x16F00, 0x16F9F, "Miao", 1},
 	{0x16FE0, 0x16FFF, "Ideographic Symbols and Punctuation", 1},
@@ -312,6 +340,7 @@ UnicodeBlocks unicode_blocks[UNICODE_BLOCK_COUNT] =
 	{0x1B170, 0x1B2FF, "Nushu", 1},
 	{0x1BC00, 0x1BC9F, "Duployan", 1},
 	{0x1BCA0, 0x1BCAF, "Shorthand Format Controls", 1},
+	{0x1CC00, 0x1CEBF, "Symbols for Legacy Computing Supplement", 1},
 	{0x1CF00, 0x1CFCF, "Znamenny Musical Notation", 1},
 	{0x1D000, 0x1D0FF, "Byzantine Musical Symbols", 1},
 	{0x1D100, 0x1D1FF, "Musical Symbols", 1},
@@ -329,6 +358,7 @@ UnicodeBlocks unicode_blocks[UNICODE_BLOCK_COUNT] =
 	{0x1E290, 0x1E2BF, "Toto", 1},
 	{0x1E2C0, 0x1E2FF, "Wancho", 1},
 	{0x1E4D0, 0x1E4FF, "Nag Mundari", 1},
+	{0x1E5D0, 0x1E5FF, "Ol Onal", 1},
 	{0x1E7E0, 0x1E7FF, "Ethiopic Extended-B", 1},
 	{0x1E800, 0x1E8DF, "Mende Kikakui", 1},
 	{0x1E900, 0x1E95F, "Adlam", 1},
@@ -356,13 +386,14 @@ UnicodeBlocks unicode_blocks[UNICODE_BLOCK_COUNT] =
 	{0x2B740, 0x2B81F, "CJK Unified Ideographs Extension D", 1},
 	{0x2B820, 0x2CEAF, "CJK Unified Ideographs Extension E", 1},
 	{0x2CEB0, 0x2EBEF, "CJK Unified Ideographs Extension F", 1},
+	{0x2EBF0, 0x2EE5F, "CJK Unified Ideographs Extension I", 1},
 	{0x2F800, 0x2FA1F, "CJK Compatibility Ideographs Supplement", 1},
 	{0x30000, 0x3134F, "CJK Unified Ideographs Extension G", 1},
 	{0x31350, 0x323AF, "CJK Unified Ideographs Extension H", 1},
 	{0xE0000, 0xE007F, "Tags", 1},
 	{0xE0100, 0xE01EF, "Variation Selectors Supplement", 1},
 	{0xF0000, 0xFFFFF, "Supplementary Private Use Area-A", 1},
-	{0x100000, 0x10FFFF, "Supplementary Private Use Area-B", 1}
+	{0x100000, 0x10FFFF, "Supplementary Private Use Area-B", 1},
 };
 
 /* Generated by Syzop */
