@@ -93,10 +93,11 @@ int antimixedutf8_check(Client *client, TextAnalysis *txa, const char **errmsg)
 		if ((retval == BAN_ACT_BLOCK) || (retval == BAN_ACT_SOFT_BLOCK))
 		{
 			*errmsg = cfg.ban_reason;
-			//sendnotice(client, "%s", cfg.ban_reason);
 			return HOOK_DENY;
 		} else if (retval > 0)
 		{
+			/* TODO: verify this works correctly with like kill/gline/etc */
+			*errmsg = cfg.ban_reason;
 			return HOOK_DENY;
 		}
 		/* fallthrough for retval <=0 */
