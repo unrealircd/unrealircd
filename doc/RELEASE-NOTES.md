@@ -5,7 +5,23 @@ This is the git version (development version) for future UnrealIRCd 6.2.0.
 This is work in progress and may not always be a stable version.
 
 ### Enhancements:
-* TODO
+* [AntiMixedUTF8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8):
+  This is now aware of a lot more unicode blocks. This will cause a higher
+  score for some regular messages, so be aware if you have the score set very
+  low (eg 2 or 3). On the plus-side, spam should now get an even higher
+  score. Try a score between 5 and 10 and see if that works.
+* [Spamfilter](https://www.unrealircd.org/docs/Spamfilter) and text analysis:
+  * spamfilter::rule now supports `unicode_count('utf8 block name')`, like:
+    ```
+    rule "unicode_count('Emoticons')>2";
+    ```
+  * spamfilter::input-conversion now supports `deconfused` which will
+    "deconfuse" text like "Ŧ𝕙ї𝘀 𝜄ŝ ạ 𝑡êśȶ" to "This is a test" so it can
+    easily be matched on with simple matching or a regex.
+    This will never be 100% perfect but can be helpful.
+  * A new `SPAMINFO <text>` command which gives feedback on how the line
+    scores for AntiMixedUTF8, how the text shows up "deconfused", which
+    unicode blocks are used, etc.
 
 ### Changes:
 * TODO
