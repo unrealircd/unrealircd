@@ -757,7 +757,7 @@ AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libcares*])],[has
 
 AS_IF([test "$has_system_cares" = "no"], [
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
-cares_version="1.34.3"
+cares_version="1.34.5"
 AC_MSG_RESULT(extracting c-ares resolver library)
 cur_dir=`pwd`
 cd extras
