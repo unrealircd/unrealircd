@@ -922,10 +922,12 @@ void cbl_download_complete(OutgoingWebRequest *request, OutgoingWebResponse *res
 
 	if (response->errorbuf || !response->memory)
 	{
+		char buf[512];
 		unreal_log(ULOG_DEBUG, "central-blocklist", "DEBUG_CENTRAL_BLOCKLIST", NULL,
 		           "CBL ERROR: $error",
 		           log_data_string("error", response->errorbuf ? response->errorbuf : "No data returned"));
-		cbl_error_response(transfer, "error contacting CBL");
+		snprintf(buf, sizeof(buf), "error contacting CBL: %s", response->errorbuf ? response->errorbuf : "No data returned");
+		cbl_error_response(transfer, buf);
 		return;
 	}
 
