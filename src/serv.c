@@ -188,14 +188,13 @@ char *getosname(void)
 void send_version(Client *client, int remote)
 {
 	int i;
-
-	for (i = 0; ISupportStrings[i]; i++)
-	{
-		if (remote)
+	if (remote)
+		for (i = 0; ISupportStrings[i]; i++)
 			sendnumeric(client, RPL_REMOTEISUPPORT, ISupportStrings[i]);
-		else
-			sendnumeric(client, RPL_ISUPPORT, ISupportStrings[i]);
-	}
+
+	else
+		do_cmd(client, NULL, "ISUPPORT", 2, NULL);
+
 }
 
 /** VERSION command:
