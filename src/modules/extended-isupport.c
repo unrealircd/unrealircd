@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/batch.c
+ *   IRC - Internet Relay Chat, src/modules/extended-isupport.c
  *   (C) 2025 Valware & The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
@@ -97,7 +97,7 @@ CMD_FUNC(cmd_isupport)
         sendto_one(client, NULL, ":%s BATCH +%s draft/extended-isupport", me.name, batch);
     }
 
-	for (i = 0; ISupportStrings[i]; i++)
+    for (i = 0; ISupportStrings[i]; i++)
     {
         if (cb && ci)
         {
