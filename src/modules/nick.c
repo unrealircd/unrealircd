@@ -853,9 +853,6 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 
 	if (client->umodes & UMODE_INVISIBLE)
 		irccounts.invisible++;
-
-	/* set::modes-on-connect */
-	client->umodes |= get_setting_for_user_number(client, SET_MODES_ON_CONNECT);
 	
 	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
 
