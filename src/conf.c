@@ -11515,7 +11515,7 @@ void link_generator(void)
 			if (lstn->tls_options)
 				tlsopt = lstn->tls_options;
 			port = lstn->port;
-			if (strcmp(lstn->ip, "*"))
+			if (strcmp(lstn->ip, "*") && strcmp(lstn->ip, "127.0.0.1") && strcmp(lstn->ip, "::1"))
 				ip = lstn->ip;
 			/* else NULL */
 			break;
