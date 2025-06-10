@@ -145,6 +145,11 @@ void extcmodes_check_for_changed_channel_modes(void)
 		           log_data_string("new_channel_modes", chanmodes));
 		/* Broadcast change to all (locally connected) servers */
 		sendto_server(NULL, 0, 0, NULL, "PROTOCTL CHANMODES=%s", chanmodes);
+
+		/* Tell locally connected user about the change*/
+		Client *cptr;
+		list_for_each_entry(cptr, &lclient_list, lclient_node)
+			sendto_one(cptr, NULL, ":%s 005 %s CHANMODES=%s", me.name, cptr->name, chanmodes);
 	}
 
 	strlcpy(previous_chanmodes, chanmodes, sizeof(previous_chanmodes));
@@ -221,6 +226,11 @@ void extcmodes_check_for_changed_prefixes(void)
 		           log_data_string("new_prefix", prefix));
 		/* Broadcast change to all (locally connected) servers */
 		sendto_server(NULL, 0, 0, NULL, "PROTOCTL PREFIX=%s", prefix);
+
+		/* Tell locally connected user about the change*/
+		Client *cptr;
+		list_for_each_entry(cptr, &lclient_list, lclient_node)
+			sendto_one(cptr, NULL, ":%s 005 %s PREFIX=%s STATUSMSG=%s", me.name, cptr->name, prefix, statusmsg);
 	}
 
 	strlcpy(previous_prefix, prefix, sizeof(previous_prefix));
