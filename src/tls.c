@@ -313,12 +313,45 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 #endif
 	SSL_CTX_set_options(ctx, SSL_OP_NO_TICKET);
 
+	/* Let's first check the simple case of file exist. That's because the
+	 * SSL_CTX_use_certificate_chain_file() later on works but produces like
+	 * four lines of output, which is a bit verbose for such a simple case.
+	 */
+	if (!file_exists(tlsoptions->certificate_file))
+	{
+		int saved_errno = errno;
+		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+		           "Could not open TLS certificate $filename: $system_error",
+		           log_data_string("filename", tlsoptions->certificate_file),
+		           log_data_string("system_error", strerror(saved_errno)));
+
+		if (str_ends_with_case_sensitive(tlsoptions->certificate_file, "tls/server.cert.pem"))
+		{
+			unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED_DEFAULT_CERT", NULL,
+			           "It seems the default certificate is missing. "
+			           "Run 'make pem && make install' in the UnrealIRCd source directory "
+			           "to generate a self-signed cert.");
+		}
+		goto fail;
+	}
+
 	if (SSL_CTX_use_certificate_chain_file(ctx, tlsoptions->certificate_file) <= 0)
 	{
 		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
 		           "Failed to load TLS certificate $filename\n$tls_error.all",
 		           log_data_string("filename", tlsoptions->certificate_file),
 		           log_data_tls_error());
+		goto fail;
+	}
+
+	/* Let's first check the simple case of file exist - this time for key file. */
+	if (!file_exists(tlsoptions->key_file))
+	{
+		int saved_errno = errno;
+		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+		           "Could not open TLS key $filename: $system_error",
+		           log_data_string("filename", tlsoptions->key_file),
+		           log_data_string("system_error", strerror(saved_errno)));
 		goto fail;
 	}
 
