@@ -1314,6 +1314,8 @@ extern APICallback *APICallbackAdd(Module *module, APICallback *mreq);
 #define HOOKTYPE_ALLOW_CLIENT	126
 /** See hooktype_analyze_text */
 #define HOOKTYPE_ANALYZE_TEXT	127
+/** See hooktype_can_use_nick */
+#define HOOKTYPE_CAN_USE_NICK	128
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -2454,6 +2456,15 @@ const char *hooktype_allow_client(Client *client, ConfigItem_allow *aconf);
  * @return The return value is ignored (use return 0)
  */
 int hooktype_analyze_text(Client *client, const char *text, TextAnalysis *e);
+
+/** Called when a user wants to change their nick
+ * @param client		The client
+ * @param newnick		The new nick the user wants to change to
+ * @param reject_reason	Pointer to a string that can be set to a reason why the nick change is rejected.
+ * @retval HOOK_DENY		Deny the nick change, set *reject_reason to a reason why it is denied.
+ * @retval HOOK_CONTINUE 	Allow the nick change, unless blocked by something else.
+*/
+int hooktype_can_use_nick(Client *client, const char *newnick, const char **reject_reason);
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2583,7 +2594,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_SASL_AUTHENTICATE) && !ValidateHook(hooktype_sasl_authenticate, func)) || \
         ((hooktype == HOOKTYPE_SASL_MECHS) && !ValidateHook(hooktype_sasl_mechs, func)) || \
         ((hooktype == HOOKTYPE_ALLOW_CLIENT) && !ValidateHook(hooktype_allow_client, func)) || \
-        ((hooktype == HOOKTYPE_ANALYZE_TEXT) && !ValidateHook(hooktype_analyze_text, func))) \
+        ((hooktype == HOOKTYPE_ANALYZE_TEXT) && !ValidateHook(hooktype_analyze_text, func))) || \
+	((hooktype == HOOKTYPE_CAN_USE_NICK) && !ValidateHook(hooktype_can_use_nick, func))) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
