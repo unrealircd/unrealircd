@@ -45,7 +45,23 @@ ModuleHeader MOD_HEADER
  */
 #define ASSUME_NICK_IN_FLIGHT
 
+#define IPUSERS_HASH_TABLE_SIZE 8192
+
+/* Structs */
+typedef struct IpUsersBucket IpUsersBucket;
+struct IpUsersBucket
+{
+	IpUsersBucket *prev, *next;
+	char rawip[16];
+	int local_clients;
+	int global_clients;
+};
+
+/* Variables */
 static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
+IpUsersBucket **IpUsersHash_ipv4 = NULL;
+IpUsersBucket **IpUsersHash_ipv6 = NULL;
+char *siphashkey_ipusers = NULL;
 
 /* Forward declarations */
 CMD_FUNC(cmd_nick);
@@ -55,6 +71,14 @@ CMD_FUNC(cmd_uid);
 int _register_user(Client *client);
 void nick_collision(Client *cptr, const char *newnick, const char *newid, Client *new, Client *existing, int type);
 int AllowClient(Client *client);
+int exceeds_maxperip(Client *client, ConfigItem_allow *aconf);
+void siphashkey_ipusers_free(ModData *m);
+void ipusershash_free_4(ModData *m);
+void ipusershash_free_6(ModData *m);
+IpUsersBucket *add_ipusers_bucket(Client *client);
+void decrease_ipusers_bucket(Client *client);
+int decrease_ipusers_bucket_wrapper(Client *client);
+int stats_maxperip(Client *client, const char *para);
 char *_unreal_expand_string(const char *str, char *buf, size_t buflen, NameValuePrioList *nvp, int buildvarstring_options, Client *client);
 
 MOD_TEST()
@@ -69,9 +93,24 @@ MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
+	LoadPersistentPointer(modinfo, siphashkey_ipusers, siphashkey_ipusers_free);
+	if (!siphashkey_ipusers)
+	{
+		siphashkey_ipusers = safe_alloc(SIPHASH_KEY_LENGTH);
+		siphash_generate_key(siphashkey_ipusers);
+	}
+	LoadPersistentPointer(modinfo, IpUsersHash_ipv4, ipusershash_free_4);
+	if (!IpUsersHash_ipv4)
+		IpUsersHash_ipv4 = safe_alloc(sizeof(IpUsersBucket *) * IPUSERS_HASH_TABLE_SIZE);
+	LoadPersistentPointer(modinfo, IpUsersHash_ipv6, ipusershash_free_6);
+	if (!IpUsersHash_ipv6)
+		IpUsersHash_ipv6 = safe_alloc(sizeof(IpUsersBucket *) * IPUSERS_HASH_TABLE_SIZE);
+
 	CommandAdd(modinfo->handle, "NICK", cmd_nick, MAXPARA, CMD_USER|CMD_SERVER|CMD_UNREGISTERED);
 	CommandAdd(modinfo->handle, "UID", cmd_uid, MAXPARA, CMD_SERVER);
 
+	HookAdd(modinfo->handle, HOOKTYPE_FREE_USER, 0, decrease_ipusers_bucket_wrapper);
+	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, stats_maxperip);
 	return MOD_SUCCESS;
 }
 
@@ -82,7 +121,177 @@ MOD_LOAD()
 
 MOD_UNLOAD()
 {
+	SavePersistentPointer(modinfo, siphashkey_ipusers);
+	SavePersistentPointer(modinfo, IpUsersHash_ipv4);
+	SavePersistentPointer(modinfo, IpUsersHash_ipv6);
 	return MOD_SUCCESS;
+}
+
+void siphashkey_ipusers_free(ModData *m)
+{
+	safe_free(siphashkey_ipusers);
+	m->ptr = NULL;
+}
+
+void ipusershash_free_4(ModData *m)
+{
+	// FIXME: need to free every bucket in a for loop
+	// and then end with this:
+	safe_free(IpUsersHash_ipv4);
+	m->ptr = NULL;
+}
+
+void ipusershash_free_6(ModData *m)
+{
+	// FIXME: need to free every bucket in a for loop
+	// and then end with this:
+	safe_free(IpUsersHash_ipv6);
+	m->ptr = NULL;
+}
+
+uint64_t hash_ipusers(Client *client)
+{
+	if (IsIPV6(client))
+		return siphash_raw(client->rawip, 16, siphashkey_ipusers) % IPUSERS_HASH_TABLE_SIZE;
+	else
+		return siphash_raw(client->rawip, 4, siphashkey_ipusers) % IPUSERS_HASH_TABLE_SIZE;
+}
+
+IpUsersBucket *find_ipusers_bucket(Client *client)
+{
+	int hash = 0;
+	IpUsersBucket *p;
+
+	hash = hash_ipusers(client);
+
+	if (IsIPV6(client))
+	{
+		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
+			if (memcmp(p->rawip, client->rawip, 16) == 0)
+				return p;
+	} else {
+		for (p = IpUsersHash_ipv4[hash]; p; p = p->next)
+			if (memcmp(p->rawip, client->rawip, 4) == 0)
+				return p;
+	}
+
+	return NULL;
+}
+
+/* (wrapper needed because hook has return type 'int' and function is 'void' */
+int decrease_ipusers_bucket_wrapper(Client *client)
+{
+	decrease_ipusers_bucket(client);
+	return 0;
+}
+
+IpUsersBucket *add_ipusers_bucket(Client *client)
+{
+	int hash;
+	IpUsersBucket *n;
+
+	hash = hash_ipusers(client);
+
+	n = safe_alloc(sizeof(IpUsersBucket));
+	if (IsIPV6(client))
+	{
+		memcpy(n->rawip, client->rawip, 16);
+		AddListItem(n, IpUsersHash_ipv6[hash]);
+	} else {
+		memcpy(n->rawip, client->rawip, 4);
+		AddListItem(n, IpUsersHash_ipv4[hash]);
+	}
+	return n;
+}
+
+void decrease_ipusers_bucket(Client *client)
+{
+	int hash = 0;
+	IpUsersBucket *p;
+
+	if (!(client->flags & CLIENT_FLAG_IPUSERS_BUMPED))
+		return; /* nothing to do */
+
+	client->flags &= ~CLIENT_FLAG_IPUSERS_BUMPED;
+
+	hash = hash_ipusers(client);
+
+	if (IsIPV6(client))
+	{
+		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
+			if (memcmp(p->rawip, client->rawip, 16) == 0)
+				break;
+	} else {
+		for (p = IpUsersHash_ipv4[hash]; p; p = p->next)
+			if (memcmp(p->rawip, client->rawip, 4) == 0)
+				break;
+	}
+
+	if (!p)
+	{
+		unreal_log(ULOG_INFO, "user", "BUG_DECREASE_IPUSERS_BUCKET", client,
+		           "[BUG] decrease_ipusers_bucket() called but bucket is gone for client $client.details");
+		return;
+	}
+
+	p->global_clients--;
+	if (MyConnect(client))
+		p->local_clients--;
+
+	if ((p->global_clients == 0) && (p->local_clients == 0))
+	{
+		if (IsIPV6(client))
+			DelListItem(p, IpUsersHash_ipv6[hash]);
+		else
+			DelListItem(p, IpUsersHash_ipv4[hash]);
+		safe_free(p);
+	}
+}
+
+int stats_maxperip(Client *client, const char *para)
+{
+	int i;
+	IpUsersBucket *e;
+	char ipbuf[256];
+	const char *ip;
+
+	/* '/STATS 8' or '/STATS maxperip' is for us... */
+	if (strcmp(para, "8") && strcasecmp(para, "maxperip"))
+		return 0;
+
+	if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
+	{
+		sendnumeric(client, ERR_NOPRIVILEGES);
+		return 0;
+	}
+
+	sendtxtnumeric(client, "MaxPerIp IPv4 hash table:");
+	for (i=0; i < IPUSERS_HASH_TABLE_SIZE; i++)
+	{
+		for (e = IpUsersHash_ipv4[i]; e; e = e->next)
+		{
+			ip = inetntop(AF_INET, e->rawip, ipbuf, sizeof(ipbuf));
+			if (!ip)
+				ip = "<invalid>";
+			sendtxtnumeric(client, "IPv4 #%d %s: %d local / %d global",
+				       i, ip, e->local_clients, e->global_clients);
+		}
+	}
+
+	sendtxtnumeric(client, "MaxPerIp IPv6 hash table:");
+	for (i=0; i < IPUSERS_HASH_TABLE_SIZE; i++)
+	{
+		for (e = IpUsersHash_ipv6[i]; e; e = e->next)
+		{
+			ip = inetntop(AF_INET6, e->rawip, ipbuf, sizeof(ipbuf));
+			if (!ip)
+				ip = "<invalid>";
+			sendtxtnumeric(client, "IPv6 #%d %s: %d local / %d global",
+				       i, ip, e->local_clients, e->global_clients);
+		}
+	}
+
+	return 0;
 }
 
 /** Hmm.. don't we already have such a function? */
@@ -272,7 +481,7 @@ CMD_FUNC(cmd_nick_local)
 	{
 		/* Local client changing nick: check spamfilter */
 		spamfilter_build_user_string(spamfilter_user, nick, client);
-		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, "NICK", NULL, 0, clictx, NULL))
+		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, "NICK", NULL, 0, NULL))
 			return;
 	}
 
@@ -302,6 +511,22 @@ CMD_FUNC(cmd_nick_local)
 	if (!ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL))
 		add_fake_lag(client, 3000);
 
+	char *change_nick_error_from_hook = NULL;
+	for (h = Hooks[HOOKTYPE_CAN_USE_NICK]; h; h = h->next)
+	{
+		int ret = (*(h->func.intfunc))(client, nick, &change_nick_error_from_hook);
+		if (ret == HOOK_DENY)
+		{
+			if (change_nick_error_from_hook)
+			{
+				sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, change_nick_error_from_hook);
+				safe_free(change_nick_error_from_hook);
+			} else {
+				sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, "Denied by hook");
+			}
+			return;
+		}
+	}
 	if ((acptr = find_client(nick, NULL)))
 	{
 		/* Shouldn't be possible since dot is disallowed: */
@@ -496,6 +721,7 @@ CMD_FUNC(cmd_uid)
 	int differ = 1;
 	const char *hostname, *username, *sstamp, *umodes, *virthost, *ip_raw, *realname;
 	const char *ip = NULL;
+	Hook *h;
 
 	if (parc < 13)
 	{
@@ -612,6 +838,7 @@ CMD_FUNC(cmd_uid)
 		/* Let it through */
 	}
 
+
 	/* Now check if 'nick' already exists - collision with a user (or still in handshake, unknown) */
 	if ((acptr = find_client(nick, NULL)) != NULL)
 	{
@@ -715,6 +942,9 @@ nickkill2done:
 	/* Set the vhost */
 	if (*virthost != '*')
 		safe_strdup(client->user->virthost, virthost);
+
+	/* Add to ipusers hash table (to track global maxperip) */
+	exceeds_maxperip(client, NULL);
 
 	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
 
@@ -1063,7 +1293,7 @@ int _register_user(Client *client)
 	find_shun(client);
 
 	spamfilter_build_user_string(spamfilter_user, client->name, client);
-	if (match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, NULL, 0, NULL, &savetkl))
+	if (match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, NULL, 0, &savetkl))
 	{
 		if (savetkl &&
 		    (has_actions_of_type(savetkl->ptr.spamfilter->action, BAN_ACT_VIRUSCHAN) ||
@@ -1237,6 +1467,53 @@ void nick_collision(Client *cptr, const char *newnick, const char *newid, Client
 	}
 }
 
+/** Returns 1 if allow::maxperip is exceeded by 'client' */
+int exceeds_maxperip(Client *client, ConfigItem_allow *aconf)
+{
+	Client *acptr;
+	IpUsersBucket *bucket;
+
+	if (!client->ip)
+		return 0; /* eg. services */
+
+	bucket = find_ipusers_bucket(client);
+	if (!bucket)
+	{
+		client->flags |= CLIENT_FLAG_IPUSERS_BUMPED;
+		bucket = add_ipusers_bucket(client);
+		bucket->global_clients = 1;
+		if (MyConnect(client))
+			bucket->local_clients = 1;
+		return 0;
+	}
+
+	/* Bump if we haven't done so yet
+	 * (Actually not sure if this can ever be false, but...
+	 *  who knows with some 3rd party or some future change)
+	 */
+	if (!(client->flags & CLIENT_FLAG_IPUSERS_BUMPED))
+	{
+		bucket->global_clients++;
+		if (MyConnect(client))
+			bucket->local_clients++;
+		client->flags |= CLIENT_FLAG_IPUSERS_BUMPED;
+	}
+
+	if (find_tkl_exception(TKL_MAXPERIP, client))
+		return 0; /* exempt */
+
+	if (aconf)
+	{
+		if ((bucket->local_clients > aconf->maxperip) ||
+		    (bucket->global_clients > aconf->global_maxperip))
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 /** Allow or reject the client based on allow { } blocks and all other restrictions.
  * @param client     Client to check (local)
  * @param username   Username, for some reason...
@@ -1250,7 +1527,6 @@ int AllowClient(Client *client)
 	char *hname;
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
-	Hook *h;
 
 	if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_user == POLICY_DENY))
 	{
@@ -1292,14 +1568,11 @@ int AllowClient(Client *client)
 		if (aconf->flags.useip)
 			set_sockhost(client, GetIP(client));
 
-		for (h = Hooks[HOOKTYPE_ALLOW_CLIENT]; h; h = h->next)
+		if (exceeds_maxperip(client, aconf))
 		{
-			const char *reject_reason = (*(h->func.stringfunc))(client, aconf);
-			if (reject_reason)
-			{
-				exit_client(client, NULL, reject_reason);
-				return 0;
-			}
+			/* Already got too many with that ip# */
+			exit_client(client, NULL, iConf.reject_message_too_many_connections);
+			return 0;
 		}
 
 		if (!((aconf->class->clients + 1) > aconf->class->maxclients))
