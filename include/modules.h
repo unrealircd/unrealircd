@@ -1542,7 +1542,7 @@ int hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag **mtags, c
  * @retval HOOK_DENY		Deny the message. The 'errmsg' will be sent to the user.
  * @retval HOOK_CONTINUE	Allow the message, unless other modules block it.
  */
-int hooktype_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype);
+int hooktype_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype, ClientContext *clictx);
 
 /** Called when a user wants to send a message to a channel (function prototype for HOOKTYPE_CAN_SEND_TO_CHANNEL).
  * @param client		The sender
@@ -1554,7 +1554,7 @@ int hooktype_can_send_to_user(Client *client, Client *target, const char **text,
  * @retval HOOK_DENY		Deny the message. The 'errmsg' will be sent to the user.
  * @retval HOOK_CONTINUE	Allow the message, unless other modules block it.
  */
-int hooktype_can_send_to_channel(Client *client, Channel *channel, Membership *member, const char **text, const char **errmsg, SendType sendtype);
+int hooktype_can_send_to_channel(Client *client, Channel *channel, Membership *member, const char **text, const char **errmsg, SendType sendtype, ClientContext *clictx);
 
 /** Called when a message is sent from one user to another user (function prototype for HOOKTYPE_USERMSG).
  * @param client		The sender
