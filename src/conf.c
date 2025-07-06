@@ -1835,6 +1835,7 @@ void config_setdefaultsettings(Configuration *i)
 	i->dns_client_retry = DNS_DEFAULT_CLIENT_RETRIES;
 	i->dns_dnsbl_timeout = DNS_DEFAULT_DNSBL_TIMEOUT;
 	i->dns_dnsbl_retry = DNS_DEFAULT_DNSBL_RETRIES;
+	i->send_isupport_updates = 0; /* Off for now, will be turned on by default later after more testing */
 }
 
 /* Some settings have been moved to here - we (re)set some defaults */
@@ -8216,6 +8217,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		} else if (!strcmp(cep->name, "high-connection-rate"))
 		{
 			tempiConf.high_connection_rate = atoi(cep->value);
+		} else if (!strcmp(cep->name, "send-isupport-updates"))
+		{
+			tempiConf.send_isupport_updates = config_checkval(cep->value, CFG_YESNO);
 		} else if (!strcmp(cep->name, "best-practices"))
 		{
 			/* This is handled in config test already (there is no other way) */
@@ -9698,6 +9702,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		} else if (!strcmp(cep->name, "high-connection-rate"))
+		{
+			CheckNull(cep);
+		} else if (!strcmp(cep->name, "send-isupport-updates"))
 		{
 			CheckNull(cep);
 		} else if (!strcmp(cep->name, "best-practices"))

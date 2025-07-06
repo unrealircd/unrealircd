@@ -187,6 +187,7 @@ struct Configuration {
 	int dns_client_retry;
 	int dns_dnsbl_timeout;
 	int dns_dnsbl_retry;
+	int send_isupport_updates;
 };
 
 extern MODVAR Configuration iConf;
