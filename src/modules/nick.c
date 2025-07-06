@@ -301,7 +301,24 @@ CMD_FUNC(cmd_nick_local)
 
 	if (!ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL))
 		add_fake_lag(client, 3000);
-
+	
+	char *change_nick_error_from_hook = NULL;
+	for (h = Hooks[HOOKTYPE_CAN_USE_NICK]; h; h = h->next)
+	{
+		int ret = (*(h->func.intfunc))(client, nick, &change_nick_error_from_hook);
+		if (ret == HOOK_DENY)
+		{
+			if (change_nick_error_from_hook)
+			{
+				sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, change_nick_error_from_hook);
+				safe_free(change_nick_error_from_hook);
+			} else {
+				sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, "Denied by hook");
+			}
+			return;
+		}
+	}
+	
 	if ((acptr = find_client(nick, NULL)))
 	{
 		/* Shouldn't be possible since dot is disallowed: */
