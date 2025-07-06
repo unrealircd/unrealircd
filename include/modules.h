@@ -2460,7 +2460,7 @@ int hooktype_analyze_text(Client *client, const char *text, TextAnalysis *e);
 /** Called when a user wants to change their nick
  * @param client		The client
  * @param newnick		The new nick the user wants to change to
- * @param reject_reason	Pointer to a string that can be set to a reason why the nick change is rejected.
+ * @param reject_reason		The error string, sent to the client why the nick change is rejected.
  * @retval HOOK_DENY		Deny the nick change, set *reject_reason to a reason why it is denied.
  * @retval HOOK_CONTINUE 	Allow the nick change, unless blocked by something else.
 */

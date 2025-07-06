@@ -100,6 +100,31 @@ void set_user_modes_dont_spread(Client *client, const char *umode)
 	dontspread = 0;
 }
 
+/** Can user use this nick?
+ * This is only 1 part of many checks you would need to do.
+ * You should also run the nick through do_nick_name before this,
+ * and after this also check with find_qline() and find_client().
+ */
+int can_use_nick(Client *client, const char *nick)
+{
+	Hook *h;
+
+	for (h = Hooks[HOOKTYPE_CAN_USE_NICK]; h; h = h->next)
+	{
+		char *change_nick_error_from_hook = NULL;
+		int ret = (*(h->func.intfunc))(client, nick, &change_nick_error_from_hook);
+		if (ret == HOOK_DENY)
+		{
+			if (change_nick_error_from_hook)
+				sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, change_nick_error_from_hook);
+			else
+				sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, "Denied by hook");
+			return 0;
+		}
+	}
+	return 1;
+}
+
 /** Remote client (already fully registered) changing their nick */
 CMD_FUNC(cmd_nick_remote)
 {
@@ -276,6 +301,9 @@ CMD_FUNC(cmd_nick_local)
 			return;
 	}
 
+	if (!can_use_nick(client, nick))
+		return;
+
 	/* Check Q-lines / ban nick */
 	if (!IsULine(client) && (tklban = find_qline(client, nick, &ishold)))
 	{
@@ -301,24 +329,7 @@ CMD_FUNC(cmd_nick_local)
 
 	if (!ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL))
 		add_fake_lag(client, 3000);
-	
-	char *change_nick_error_from_hook = NULL;
-	for (h = Hooks[HOOKTYPE_CAN_USE_NICK]; h; h = h->next)
-	{
-		int ret = (*(h->func.intfunc))(client, nick, &change_nick_error_from_hook);
-		if (ret == HOOK_DENY)
-		{
-			if (change_nick_error_from_hook)
-			{
-				sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, change_nick_error_from_hook);
-				safe_free(change_nick_error_from_hook);
-			} else {
-				sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, "Denied by hook");
-			}
-			return;
-		}
-	}
-	
+
 	if ((acptr = find_client(nick, NULL)))
 	{
 		/* Shouldn't be possible since dot is disallowed: */
