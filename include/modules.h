@@ -2594,7 +2594,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_SASL_AUTHENTICATE) && !ValidateHook(hooktype_sasl_authenticate, func)) || \
         ((hooktype == HOOKTYPE_SASL_MECHS) && !ValidateHook(hooktype_sasl_mechs, func)) || \
         ((hooktype == HOOKTYPE_ALLOW_CLIENT) && !ValidateHook(hooktype_allow_client, func)) || \
-        ((hooktype == HOOKTYPE_ANALYZE_TEXT) && !ValidateHook(hooktype_analyze_text, func))) || \
+        ((hooktype == HOOKTYPE_ANALYZE_TEXT) && !ValidateHook(hooktype_analyze_text, func)) || \
 	((hooktype == HOOKTYPE_CAN_USE_NICK) && !ValidateHook(hooktype_can_use_nick, func))) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
