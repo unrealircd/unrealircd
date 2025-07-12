@@ -1,5 +1,5 @@
 UnrealIRCd 6.2.0-git
-=====================
+=======================
 
 This is the git version (development version) for future UnrealIRCd 6.2.0.
 This is work in progress and may not always be a stable version.
@@ -24,10 +24,15 @@ This is work in progress and may not always be a stable version.
     unicode blocks are used, etc.
 
 ### Changes:
-* TODO
+* Make error message if SSL/TLS cert or key is missing more helpful.
+* Update offline doc/unrealircd_wiki.zim to current wiki
+* Update shipped libs: PCRE2 (10.45), c-ares (1.34.5)
+* [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport)
+  now receives the last 20 lines instead of 10 and Text Analysis is included
+  (such as which unicode blocks used in the messages).
 
 ### Fixes:
-* TODO
+* For `./unrealircd genlinkblock` skip IP-detection if it is localhost.
 
 ### Developers and protocol:
 * Command handlers (and overrides) now have an extra argument
