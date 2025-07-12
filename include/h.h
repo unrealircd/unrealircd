@@ -1288,6 +1288,7 @@ extern void json_expand_client(json_t *j, const char *key, Client *client, int d
 extern void json_expand_client_security_groups(json_t *parent, Client *client);
 extern void json_expand_channel(json_t *j, const char *key, Channel *channel, int detail);
 extern void json_expand_tkl(json_t *j, const char *key, TKL *tkl, int detail);
+extern void json_expand_textanalysis(json_t *root, const char *key, TextAnalysis *ta, int detail);
 /* end of json.c */
 /* securitygroup.c start */
 extern MODVAR SecurityGroup *securitygroups;

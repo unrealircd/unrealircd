@@ -613,3 +613,32 @@ void json_expand_tkl(json_t *root, const char *key, TKL *tkl, int detail)
 		json_object_set_new(j, "hits_except", json_integer(tkl->ptr.spamfilter->hits_except));
 	}
 }
+
+void json_expand_textanalysis(json_t *root, const char *key, TextAnalysis *ta, int detail)
+{
+	char buf[BUFSIZE];
+	json_t *j, *blk;
+	int i;
+
+	if (key)
+	{
+		j = json_object();
+		json_object_set_new(root, key, j);
+	} else {
+		j = root;
+	}
+
+	json_object_set_new(j, "antimixedutf8_points", json_integer(ta->antimixedutf8_points));
+	json_object_set_new(j, "unicode_blocks", json_integer(ta->unicode_blocks));
+	json_object_set_new(j, "num_bytes", json_integer(ta->num_bytes));
+	json_object_set_new(j, "num_unicode_characters", json_integer(ta->num_unicode_characters));
+	json_object_set_new(j, "deconfused", json_string_unreal(ta->deconfused));
+
+	blk = json_object();
+	json_object_set_new(j, "unicode_blockmap", blk);
+	for (i=0; i < UNICODE_BLOCK_COUNT; i++)
+	{
+		if (ta->unicode_blockmap[i])
+			json_object_set_new(blk, utf8_get_block_name(i), json_integer(ta->unicode_blockmap[i]));
+	}
+}

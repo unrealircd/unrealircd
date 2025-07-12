@@ -20,7 +20,7 @@ Module *cbl_module = NULL;
 #define CBL_URL	 "https://centralblocklist.unrealircd-api.org/api/v1"
 #define SPAMREPORT_URL	"https://spamreport.unrealircd-api.org/api/spamreport-v1"
 #define CBL_TRANSFER_TIMEOUT 10
-#define SPAMREPORT_NUM_REMEMBERED_CMDS 10
+#define SPAMREPORT_NUM_REMEMBERED_CMDS 20
 
 #define WEB(client)		((WebRequest *)moddata_client(client, webserver_md).ptr)
 #define WSU(client)		((WebSocketUser *)moddata_client(client, websocket_md).ptr)
@@ -34,6 +34,7 @@ struct CBLUser
 	char allowed_in;
 	int last_cmds_slot;
 	char *last_cmds[SPAMREPORT_NUM_REMEMBERED_CMDS];
+	TextAnalysis last_cmds_textanalysis[SPAMREPORT_NUM_REMEMBERED_CMDS];
 };
 
 /* For tracking current HTTPS requests */
@@ -252,7 +253,7 @@ MOD_LOAD()
 	webserver_md = findmoddata_byname("web", MODDATATYPE_CLIENT);
 	websocket_md = findmoddata_byname("websocket", MODDATATYPE_CLIENT);
 
-	/* Enable gathering of "last 10 lines" for SPAMREPORT, only if SPAMREPORT is enabled: */
+	/* Enable gathering of "last 20 lines" for SPAMREPORT, only if SPAMREPORT is enabled: */
 	if (central_spamreport_enabled())
 	{
 		CommandOverrideAdd(modinfo->handle, "NICK", -2, cbl_override_spamreport_gather);
@@ -1104,7 +1105,14 @@ CMD_OVERRIDE_FUNC(cbl_override_spamreport_gather)
 		}
 		if (record_cmd)
 		{
-			safe_strdup(CBL(client)->last_cmds[CBL(client)->last_cmds_slot], backupbuf);
+			int slot = CBL(client)->last_cmds_slot; // just for readability below
+			safe_strdup(CBL(client)->last_cmds[slot], backupbuf);
+			if (clictx && clictx->textanalysis)
+			{
+				memcpy(&CBL(client)->last_cmds_textanalysis[slot], clictx->textanalysis, sizeof(TextAnalysis));
+			} else {
+				memset(&CBL(client)->last_cmds_textanalysis[slot], 0, sizeof(TextAnalysis));
+			}
 			CBL(client)->last_cmds_slot++;
 			if (CBL(client)->last_cmds_slot >= SPAMREPORT_NUM_REMEMBERED_CMDS)
 				CBL(client)->last_cmds_slot = 0;
@@ -1158,9 +1166,12 @@ int _central_spamreport(Client *client, Client *by, const char *url)
 	{
 		if (CBL(client)->last_cmds[i])
 		{
+			// WARNING: duplicate code #1 of #2
 			snprintf(number, sizeof(number), "%d", ++cnt);
 			item = json_object();
 			json_object_set_new(item, "raw", json_string_unreal(CBL(client)->last_cmds[i]));
+			if (CBL(client)->last_cmds_textanalysis[i].num_bytes)
+				json_expand_textanalysis(item, "textanalysis", &CBL(client)->last_cmds_textanalysis[i], 2);
 			json_object_set_new(cmds, number, item);
 		}
 	}
@@ -1168,9 +1179,12 @@ int _central_spamreport(Client *client, Client *by, const char *url)
 	{
 		if (CBL(client)->last_cmds[i])
 		{
+			// WARNING: duplicate code #2 of #2
 			snprintf(number, sizeof(number), "%d", ++cnt);
 			item = json_object();
 			json_object_set_new(item, "raw", json_string_unreal(CBL(client)->last_cmds[i]));
+			if (CBL(client)->last_cmds_textanalysis[i].num_bytes)
+				json_expand_textanalysis(item, "textanalysis", &CBL(client)->last_cmds_textanalysis[i], 2);
 			json_object_set_new(cmds, number, item);
 		}
 	}
