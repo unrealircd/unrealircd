@@ -501,6 +501,8 @@ void _banned_client(Client *client, const char *bantype, const char *reason, int
 	if (!MyConnect(client))
 		abort();
 
+	RunHook(HOOKTYPE_BANNED_CLIENT, client, bantype, reason, global);
+
 	/* This was: "You are not welcome on this %s. %s: %s. %s" but is now dynamic: */
 	vars[0] = "bantype";
 	values[0] = bantype;

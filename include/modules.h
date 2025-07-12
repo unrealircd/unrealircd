@@ -1316,6 +1316,9 @@ extern APICallback *APICallbackAdd(Module *module, APICallback *mreq);
 #define HOOKTYPE_ANALYZE_TEXT	127
 /** See hooktype_can_use_nick */
 #define HOOKTYPE_CAN_USE_NICK	128
+/** See hooktype_banned_client */
+#define HOOKTYPE_BANNED_CLIENT 129
+
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -2465,6 +2468,17 @@ int hooktype_analyze_text(Client *client, const char *text, TextAnalysis *e);
  * @retval HOOK_CONTINUE 	Allow the nick change, unless blocked by something else.
 */
 int hooktype_can_use_nick(Client *client, const char *newnick, const char **reject_reason);
+
+/** Called when a local user is banned, e.g. G-Lined.
+ * @param client	The client
+ * @param bantype	The ban type, such as: "K-Lined", "G-Lined" or "realname"
+ * @param reason	The specified reason
+ * @param global	Whether the ban is global (1) or for this server only (0)
+ * @notes This function is not called on /KILL (which is not a ban).
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_banned_client(Client *client, const char *bantype, const char *reason, int global);
+
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2595,7 +2609,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_SASL_MECHS) && !ValidateHook(hooktype_sasl_mechs, func)) || \
         ((hooktype == HOOKTYPE_ALLOW_CLIENT) && !ValidateHook(hooktype_allow_client, func)) || \
         ((hooktype == HOOKTYPE_ANALYZE_TEXT) && !ValidateHook(hooktype_analyze_text, func)) || \
-	((hooktype == HOOKTYPE_CAN_USE_NICK) && !ValidateHook(hooktype_can_use_nick, func))) \
+	((hooktype == HOOKTYPE_CAN_USE_NICK) && !ValidateHook(hooktype_can_use_nick, func)) || \
+	((hooktype == HOOKTYPE_BANNED_CLIENT) && !ValidateHook(hooktype_banned_client, func))) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
