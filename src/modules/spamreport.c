@@ -34,6 +34,7 @@ struct Spamreport {
 	SecurityGroup *except;
 	int rate_limit_count;
 	int rate_limit_period;
+	int on_server_ban;
 };
 
 typedef struct SpamreportCounter SpamreportCounter;
@@ -55,6 +56,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 int _central_spamreport_enabled(void);
 void spamreportcounters_free_all(ModData *m);
 SpamreportType parse_spamreport_type(const char *s);
+int spamreport_banned_client(Client *client, const char *bantype, const char *reason, int global);
 
 /* Variables */
 Spamreport *spamreports = NULL;
@@ -74,6 +76,7 @@ MOD_INIT()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	CommandAdd(modinfo->handle, "SPAMREPORT", cmd_spamreport, MAXPARA, CMD_USER);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamreport);
+	HookAdd(modinfo->handle, HOOKTYPE_BANNED_CLIENT, 0, spamreport_banned_client);
 	LoadPersistentPointer(modinfo, spamreportcounters, spamreportcounters_free_all);
 	return MOD_SUCCESS;
 }
@@ -192,6 +195,9 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 				errors++;
 			}
 		}
+		else if (!strcmp(cep->name, "on-server-ban"))
+		{
+		}
 		else
 		{
 			config_error_unknown(cep->file->filename, cep->line_number,
@@ -302,6 +308,10 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 		else if (!strcmp(cep->name, "except"))
 		{
 			conf_match_block(cf, cep, &s->except);
+		}
+		else if (!strcmp(cep->name, "on-server-ban"))
+		{
+			s->on_server_ban = config_checkval(cep->value, CFG_YESNO);
 		}
 	}
 
@@ -584,4 +594,10 @@ void spamreportcounters_free_all(ModData *m)
 		safe_free(s->name);
 		safe_free(s);
 	}
+}
+
+int spamreport_banned_client(Client *client, const char *bantype, const char *reason, int global)
+{
+	spamreport(client, client->ip, NULL, NULL, NULL);
+	return 0;
 }
