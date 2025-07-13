@@ -1034,7 +1034,28 @@ skip_host_check:
 			           log_data_link_block(link));
 			exit_client(client, NULL, "Server Exists (server trying to link with same name as myself)");
 			return NULL;
+		} else
+		if (IsULine(acptr->uplink))
+		{
+			/* Is behind a u-lined server: likely juped so we don't want to
+			 * allow it in with the new algo further below (bug #0006498).
+			 */
+			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_SERVER_EXISTS", client,
+			           "Link with server $client.details denied: "
+			           "Server already exists (Juped)",
+			           log_data_link_block(link));
+			exit_client(client, NULL, "Server Exists (Juped)");
+			return NULL;
 		} else {
+			/* For all other cases: allow the NEW link in and kill the OLD.
+			 * Downside is if a user runs two irc servers (or two processes)
+			 * with the same server hostname (and has proper link auth etc)
+			 * then they will keep fighting each other, but that is an unusual
+			 * case. The UPSIDE is that a server does not have to wait until
+			 * the link goes "Ping timeout" on the other side and can
+			 * immediately reconnect when it feels like it.
+			 * This was added in Aug 2021 for UnrealIRCd 6.0.0.
+			 */
 			unreal_log(ULOG_ERROR, "link", "LINK_DROPPED_REINTRODUCED", client,
 				   "Link with server $client.details causes older link "
 				   "with same server via $existing_client.server.uplink to be dropped.",
