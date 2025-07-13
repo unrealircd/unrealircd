@@ -263,16 +263,19 @@ void reputation_config_setdefaults(struct cfgstruct *cfg)
 	/* <=2 points after 1 hour */
 	cfg->expire_score[0] = 2;
 #ifndef TEST
-	cfg->expire_time[0]   = 3600;
+	cfg->expire_time[0]  = 3600;
 #else
-	cfg->expire_time[0]   = 36;
+	cfg->expire_time[0]  = 36;
 #endif
 	/* <=6 points after 7 days */
 	cfg->expire_score[1] = 6;
-	cfg->expire_time[1]   = 86400*7;
-	/* ANY result that has not been seen for 30 days */
-	cfg->expire_score[2] = -1;
-	cfg->expire_time[2]   = 86400*30;
+	cfg->expire_time[1]  = 86400*7;
+	/* <=12 points after 30 days */
+	cfg->expire_score[2] = 12;
+	cfg->expire_time[2]  = 86400*30;
+	/* ANY result that has not been seen for 90 days */
+	cfg->expire_score[3] = -1;
+	cfg->expire_time[3]  = 86400*90;
 
 	/* The 'require' settings */
 	cfg->require_minimum_channel_members = 3;
@@ -940,8 +943,16 @@ static inline int is_reputation_expired(ReputationEntry *e)
 	{
 		if (cfg.expire_time[i] == 0)
 			break; /* end of all entries */
-		if ((e->score <= cfg.expire_score[i]) && (TStime() - e->last_seen > cfg.expire_time[i]))
-			return 1;
+		if (cfg.expire_score[i] == -1)
+		{
+			/* For -1 it means ANY score will expire after this time.. */
+			if (TStime() - e->last_seen > cfg.expire_time[i])
+				return 1;
+		} else {
+			/* Otherwise we only expire if the score is less than <X> */
+			if ((e->score <= cfg.expire_score[i]) && (TStime() - e->last_seen > cfg.expire_time[i]))
+				return 1;
+		}
 	}
 	return 0;
 }
