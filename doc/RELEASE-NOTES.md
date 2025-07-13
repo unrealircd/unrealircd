@@ -45,12 +45,16 @@ This is work in progress and may not always be a stable version.
 
 ### Developers and protocol:
 * Command handlers (and overrides) now have an extra argument
-  `ClientContext *clictx`. Right now it only has `clictx->cmd`
-  which points to the command handler, but in the future more
-  fields can easily be added to this struct. In your modules
-  you should normally use `CMD_FUNC(cmd_mycmd)` and
+  `ClientContext *clictx`. At the moment this has `clictx->cmd`
+  which points to the command handler and `clictx->textanalysis`
+  which may hold TextAnalysis info. In the future this struct can
+  easily be extended.  
+  In your modules you should normally use `CMD_FUNC(cmd_mycmd)` and
   `CMD_OVERRIDE_FUNC(myoverridefunc)` and `CALL_NEXT_COMMAND_OVERRIDE()`
   and then your module does not updating between 6.1.x and 6.2.x.
+* TextAnalysis can be enabled for the last parameter in a command by
+  setting `CMD_TEXTANALYSIS` in `CommandAdd()`. This is done by
+  `PRIVMSG` and `SPAMINFO` for example.
 * New hook `HOOKTYPE_BANNED_CLIENT`
 * New hook `HOOKTYPE_CAN_USE_NICK`
 
