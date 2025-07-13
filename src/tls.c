@@ -517,6 +517,70 @@ MODVAR EVP_MD *sha1_function; /**< SHA1 function for EVP_DigestInit_ex() call */
 MODVAR EVP_MD *md5_function; /**< MD5 function for EVP_DigestInit_ex() call */
 #endif
 
+/** Check if a SSL_CTX is trusted by the associated trust store
+ * This only works with OpenSSL 1.1.0 or later (it could have
+ * worked with lower versions if accessing structs directly but
+ * i didn't bother).
+ */
+int is_trusted_cert(SSL_CTX *ctx)
+{
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	int ok = 0;
+	X509 *cert = NULL;
+	STACK_OF(X509) *chain = NULL;
+	X509_STORE *store = NULL;
+	X509_STORE_CTX *vctx = NULL;
+
+	cert = SSL_CTX_get0_certificate(ctx);
+	SSL_CTX_get0_chain_certs(ctx, &chain);
+	if (!cert)
+		return 0;
+
+	store = SSL_CTX_get_cert_store(ctx);
+	if (!store)
+		return 0;
+
+	vctx = X509_STORE_CTX_new();
+	if (!vctx)
+		goto is_trusted_cert_done;
+
+	if (!X509_STORE_CTX_init(vctx, store, cert, chain))
+		goto is_trusted_cert_done;
+
+	if (X509_verify_cert(vctx) == 1)
+		ok = 1;
+
+is_trusted_cert_done:
+	X509_STORE_CTX_free(vctx);
+#endif
+	return ok;
+}
+
+/** Tests if any of the loaded certs is trusted by a CA.
+ * Note that we don't check if it is the one exposed to
+ * clients or if it is valid for the hostname or is expired.
+ */
+int has_any_trusted_cert(void)
+{
+	ConfigItem_listen *listen;
+	ConfigItem_sni *sni;
+
+	if (ctx_server && is_trusted_cert(ctx_server))
+		return 1;
+	if (ctx_client && is_trusted_cert(ctx_client))
+		return 1;
+
+	for (listen = conf_listen; listen; listen = listen->next)
+		if (listen->ssl_ctx && is_trusted_cert(listen->ssl_ctx))
+			return 1;
+
+	for (sni = conf_sni; sni; sni = sni->next)
+		if (sni->ssl_ctx && is_trusted_cert(sni->ssl_ctx))
+			return 1;
+
+	return 0; /* Zero trusted certs found */
+}
+
 /** Early initalization of TLS subsystem - called on startup */
 int early_init_tls(void)
 {

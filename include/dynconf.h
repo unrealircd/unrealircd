@@ -198,6 +198,8 @@ typedef struct BestPractices BestPractices;
 struct BestPractices {
 	int hashed_passwords;		/**< Use hashed passwords */
 	int hashed_passwords_hits;	/**< How many times advice has been given (like 'warnings' but it is advice) */
+	int trusted_cert;		/**< Uses a SSL cert issued by a CA */
+	int trusted_cert_hits;		/**< .. how many times the above */
 };
 extern MODVAR BestPractices bestpractices;
 

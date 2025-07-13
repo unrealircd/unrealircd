@@ -959,6 +959,7 @@ extern int outdated_tls_client(Client *acptr);
 extern const char *outdated_tls_client_build_string(const char *pattern, Client *acptr);
 extern int check_certificate_expiry_ctx(SSL_CTX *ctx, char **errstr);
 extern EVENT(tls_check_expiry);
+extern int has_any_trusted_cert(void);
 extern MODVAR EVP_MD *sha256_function;
 extern MODVAR EVP_MD *sha1_function;
 extern MODVAR EVP_MD *md5_function;

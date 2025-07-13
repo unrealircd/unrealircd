@@ -1645,6 +1645,7 @@ void init_best_practices(void)
 {
 	memset(&bestpractices, 0, sizeof(bestpractices));
 	bestpractices.hashed_passwords = 1;
+	bestpractices.trusted_cert = 1;
 }
 
 void free_iConf(Configuration *i)
@@ -1944,6 +1945,14 @@ void postconf(void)
 	if (loop.rehashing)
 		reinit_tls();
 #endif
+	if (bestpractices.trusted_cert && !has_any_trusted_cert())
+	{
+		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_TRUSTED_CERT", NULL,
+		           "Your SSL/TLS certificate is not issued by a trusted Certificate Authority.\n"
+		           "It is highly recommended to use a 'real certificate'. To get a free one, see: "
+		           "https://www.unrealircd.org/docs/Using_Let's_Encrypt_with_UnrealIRCd");
+		bestpractices.trusted_cert_hits++;
+	}
 }
 
 int isanyserverlinked(void)
@@ -2208,7 +2217,8 @@ int config_test(void)
 	loop.config_status = CONFIG_STATUS_POSTLOAD;
 	postconf();
 	unreal_log(ULOG_INFO, "config", "CONFIG_LOADED", NULL, "Configuration loaded");
-	if (bestpractices.hashed_passwords_hits /* || .... || .... */ )
+	if (bestpractices.hashed_passwords_hits ||
+	    bestpractices.trusted_cert_hits)
 	{
 		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES", NULL,
 		           "Your config has NO errors, but you received some best practices tips above, in summary:");
@@ -9715,6 +9725,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				if (!strcmp(cepp->name, "hashed-passwords"))
 				{
 					bestpractices.hashed_passwords = config_checkval(cepp->value, CFG_YESNO);
+				} else
+				if (!strcmp(cepp->name, "trusted-cert"))
+				{
+					bestpractices.trusted_cert = config_checkval(cepp->value, CFG_YESNO);
 				} else
 				{
 					config_error_unknown(cepp->file->filename,
