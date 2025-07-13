@@ -255,6 +255,7 @@ int need_operclass_permissions_upgrade = 0;
 int invalid_snomasks_encountered = 0;
 int have_tls_listeners = 0;
 char *port_6667_ip = NULL;
+int has_client_port = 0;
 
 long long central_spamfilter_last_download = 0;
 
@@ -1945,7 +1946,7 @@ void postconf(void)
 	if (loop.rehashing)
 		reinit_tls();
 #endif
-	if (bestpractices.trusted_cert && !has_any_trusted_cert())
+	if (bestpractices.trusted_cert && has_client_port && !has_any_trusted_cert())
 	{
 		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_TRUSTED_CERT", NULL,
 		           "Your SSL/TLS certificate is not issued by a trusted Certificate Authority.\n"
@@ -2140,6 +2141,7 @@ int config_test(void)
 	config_setdefaultsettings(&tempiConf);
 	clicap_pre_rehash();
 	log_pre_rehash();
+	has_client_port = 0;
 
 	if (!config_loadmodules())
 	{
@@ -5574,6 +5576,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cepp;
 	int errors = 0;
 	char has_file = 0, has_ip = 0, has_port = 0, has_options = 0, port_6667 = 0, has_spoof_ip = 0;
+	char clientport = 1;
 	char *file = NULL;
 	char *ip = NULL;
 	Hook *h;
@@ -5629,6 +5632,9 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			has_options = 1;
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
+				if (!strcmp(cepp->name, "serversonly") ||
+				    !strcmp(cepp->name, "rpc"))
+					clientport = 0;
 				if (!nv_find_by_name(_ListenerFlags, cepp->name))
 				{
 					/* Check if a module knows about this listen::options::something */
@@ -5692,6 +5698,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->name, "file"))
 		{
 			has_file = 1;
+			clientport = 0;
 			file = cep->value;
 		} else
 		if (!strcmp(cep->name, "spoof-ip"))
@@ -5836,6 +5843,9 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 
 	if (port_6667)
 		safe_strdup(port_6667_ip, ip);
+
+	if (clientport && (!ip || (strcmp(ip, "127.0.0.1") && strcmp(ip, "::1"))))
+		has_client_port = 1;
 
 	requiredstuff.conf_listen = 1;
 	return errors;

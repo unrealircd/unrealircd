@@ -524,8 +524,8 @@ MODVAR EVP_MD *md5_function; /**< MD5 function for EVP_DigestInit_ex() call */
  */
 int is_trusted_cert(SSL_CTX *ctx)
 {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	int ok = 0;
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	X509 *cert = NULL;
 	STACK_OF(X509) *chain = NULL;
 	X509_STORE *store = NULL;
