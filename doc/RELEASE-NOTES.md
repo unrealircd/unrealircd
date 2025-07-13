@@ -22,6 +22,12 @@ This is work in progress and may not always be a stable version.
   * A new `SPAMINFO <text>` command which gives feedback on how the line
     scores for AntiMixedUTF8, how the text shows up "deconfused", which
     unicode blocks are used, etc.
+* [Best Practices](https://www.unrealircd.org/docs/Set_block#set::best-practices):
+  If no SSL/TLS cert is present that is issued by a trusted Certificate
+  Authority, then we will give a suggestion to use Let's Encrypt.
+  This can be turned off via set::best-practices::trusted-cert.
+  For servers without any client listener blocks (or only on localhost)
+  this message is not triggered (for e.g. hubs).
 
 ### Changes:
 * Make error message if SSL/TLS cert or key is missing more helpful.
@@ -32,6 +38,9 @@ This is work in progress and may not always be a stable version.
   (such as which unicode blocks used in the messages).
 
 ### Fixes:
+* `OS JUPE` not working (still allowing the server in)
+* [Reputation scores](https://www.unrealircd.org/docs/Reputation_score)
+  now really expire after 90 days.
 * For `./unrealircd genlinkblock` skip IP-detection if it is localhost.
 
 ### Developers and protocol:
@@ -42,6 +51,8 @@ This is work in progress and may not always be a stable version.
   you should normally use `CMD_FUNC(cmd_mycmd)` and
   `CMD_OVERRIDE_FUNC(myoverridefunc)` and `CALL_NEXT_COMMAND_OVERRIDE()`
   and then your module does not updating between 6.1.x and 6.2.x.
+* New hook `HOOKTYPE_BANNED_CLIENT`
+* New hook `HOOKTYPE_CAN_USE_NICK`
 
 UnrealIRCd 6.1.10
 ==================
