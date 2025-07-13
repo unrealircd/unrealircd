@@ -1,8 +1,9 @@
-UnrealIRCd 6.2.0-git
+UnrealIRCd 6.2.0-beta1
 =======================
 
-This is the git version (development version) for future UnrealIRCd 6.2.0.
-This is work in progress and may not always be a stable version.
+This is the first beta for future UnrealIRCd 6.2.0. This is work in progress
+and not a stable version. There will likely be several more beta's.  
+Please report any issues at https://bugs.unrealircd.org/.
 
 ### Enhancements:
 * [AntiMixedUTF8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8):
