@@ -1,9 +1,7 @@
 UnrealIRCd 6.2.0-beta1
 =======================
 
-This is the first beta for future UnrealIRCd 6.2.0. This is work in progress
-and not a stable version. There will likely be several more beta's.  
-Please report any issues at https://bugs.unrealircd.org/.
+This is git. This is work in progress and not a stable version.
 
 ### Enhancements:
 * [AntiMixedUTF8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8):
@@ -20,9 +18,11 @@ Please report any issues at https://bugs.unrealircd.org/.
     "deconfuse" text like "Ŧ𝕙ї𝘀 𝜄ŝ ạ 𝑡êśȶ" to "This is a test" so it can
     easily be matched on with simple matching or a regex.
     This will never be 100% perfect but can be helpful.
-  * A new `SPAMINFO <text>` command which gives feedback on how the line
+  * A new `SPAMINFO <text>` command which shows Text Analysis:
     scores for AntiMixedUTF8, how the text shows up "deconfused", which
     unicode blocks are used, etc.
+  * The same Text Analysis is now in JSON logs for spamfilter hits and
+    antimixedutf8 hits.
 * [Best Practices](https://www.unrealircd.org/docs/Set_block#set::best-practices):
   If no SSL/TLS cert is present that is issued by a trusted Certificate
   Authority, then we will give a suggestion to use Let's Encrypt.
