@@ -5427,7 +5427,7 @@ static void match_spamfilter_hit(Client *client, const char *str_in, const char 
 					   log_data_string("_space", destination ? " " : ""),
 					   log_data_string("destination", destination ? destination : ""),
 					   log_data_string("str", str),
-					   log_data_textanalysis("textanalysis", &textanalysis));
+					   log_data_textanalysis("text_analysis", &textanalysis));
 				*content_revealed = 1;
 			}
 

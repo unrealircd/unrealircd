@@ -83,7 +83,8 @@ int antimixedutf8_check(Client *client, TextAnalysis *txa, const char **errmsg)
 	{
 		unreal_log(ULOG_INFO, "antimixedutf8", "ANTIMIXEDUTF8_HIT", client,
 		           "[antimixedutf8] Client $client.details hit score $score -- taking action",
-		           log_data_integer("score", txa->antimixedutf8_points));
+		           log_data_integer("score", txa->antimixedutf8_points),
+		           log_data_textanalysis("text_analysis",txa));
 		/* Take the action */
 		retval = take_action(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time, 0, NULL);
 		if ((retval == BAN_ACT_WARN) || (retval == BAN_ACT_SOFT_WARN))
