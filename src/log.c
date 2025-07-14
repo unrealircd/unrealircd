@@ -728,6 +728,21 @@ LogData *log_data_tkl(const char *key, TKL *tkl)
 	return d;
 }
 
+LogData *log_data_textanalysis(const char *key, TextAnalysis *ta)
+{
+	char buf[BUFSIZE];
+	LogData *d = safe_alloc(sizeof(LogData));
+	json_t *j;
+
+	d->type = LOG_FIELD_OBJECT;
+	safe_strdup(d->key, key);
+	d->value.object = j = json_object();
+
+	json_expand_textanalysis(j, NULL, ta, 1);
+
+	return d;
+}
+
 void log_data_free(LogData *d)
 {
 	if (d->type == LOG_FIELD_STRING)

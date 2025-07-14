@@ -5416,13 +5416,18 @@ static void match_spamfilter_hit(Client *client, const char *str_in, const char 
 					   log_data_string("_space", destination ? " " : ""),
 					   log_data_string("destination", destination ? destination : ""));
 			} else {
+				// Yeah we are re-running the text analysis.
+				TextAnalysis textanalysis;
+				memset(&textanalysis, 0, sizeof(textanalysis));
+				RunHook(HOOKTYPE_ANALYZE_TEXT, client, str, &textanalysis);
 				unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
 					   "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
 					   log_data_tkl("tkl", tkl),
 					   log_data_string("command", cmd),
 					   log_data_string("_space", destination ? " " : ""),
 					   log_data_string("destination", destination ? destination : ""),
-					   log_data_string("str", str));
+					   log_data_string("str", str),
+					   log_data_textanalysis("textanalysis", &textanalysis));
 				*content_revealed = 1;
 			}
 

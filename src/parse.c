@@ -561,7 +561,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 	{
 		memset(&text_analysis_storage, 0, sizeof(text_analysis_storage));
 		clictx.textanalysis = &text_analysis_storage;
-		RunHook(HOOKTYPE_ANALYZE_TEXT, from, para[i-1], clictx.textanalysis); // is para[i] correct? probably not? -1 ? safety check?
+		RunHook(HOOKTYPE_ANALYZE_TEXT, from, para[i-1], clictx.textanalysis);
 	}
 
 	/* Now ready to execute the command */

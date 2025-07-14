@@ -1393,6 +1393,7 @@ extern LogData *log_data_source(const char *file, int line, const char *function
 extern LogData *log_data_socket_error(int fd);
 extern LogData *log_data_link_block(ConfigItem_link *link);
 extern LogData *log_data_tkl(const char *key, TKL *tkl);
+extern LogData *log_data_textanalysis(const char *key, TextAnalysis *ta);
 extern LogData *log_data_tls_error(void);
 extern void log_data_free(LogData *d);
 extern void log_pre_rehash(void);
