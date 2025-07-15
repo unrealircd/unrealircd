@@ -606,11 +606,6 @@ int early_init_tls(void)
 	}
 
 	md5_function = EVP_MD_fetch(NULL, "MD5", NULL);
-	if (!md5_function)
-	{
-		fprintf(stderr, "Could not find MD5 algorithm in TLS library\n");
-		exit(6);
-	}
 #endif
 	return 1;
 }

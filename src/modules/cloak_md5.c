@@ -70,6 +70,16 @@ MOD_TEST()
 	}
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, cloak_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, cloak_config_posttest);
+
+	if (!md5_function)
+	{
+		unreal_log(ULOG_ERROR, "tls", "MD5_UNAVAILABLE", NULL,
+		           "You are trying to load the 'cloak_md5' module but the MD5 "
+		           "algorithm is not available in your OpenSSL/LibreSSL version. "
+		           "Either switch to 'cloak_sha256' or change your SSL library "
+		           "configuration (consult your distro docs).");
+		return MOD_FAILED;
+	}
 	return MOD_SUCCESS;
 }
 

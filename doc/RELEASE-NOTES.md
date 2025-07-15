@@ -29,6 +29,9 @@ This is git. This is work in progress and not a stable version.
   This can be turned off via set::best-practices::trusted-cert.
   For servers without any client listener blocks (or only on localhost)
   this message is not triggered (for e.g. hubs).
+* UnrealIRCd can now be used if your OpenSSL does not provide MD5
+  (there will be an error if you use `cloak_md5`, but everything
+  will work fine if you use `cloak_sha256`).
 
 ### Changes:
 * Make error message if SSL/TLS cert or key is missing more helpful.

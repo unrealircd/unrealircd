@@ -1863,7 +1863,17 @@ void DoMD5(char *mdout, const char *src, unsigned long n)
 {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 	unsigned int md_len;
-	EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+	EVP_MD_CTX *mdctx;
+
+	if (!md5_function)
+	{
+		unreal_log(ULOG_FATAL, "tls", "MD5_UNAVAILABLE_FATAL", NULL,
+		           "DoMD5() was called but the MD5 algorithm is not available "
+		           "in your OpenSSL/LibreSSL version. -- ABORTING");
+		abort();
+	}
+
+	mdctx = EVP_MD_CTX_new();
 	if (EVP_DigestInit_ex(mdctx, md5_function, NULL) != 1)
 		abort();
 	EVP_DigestUpdate(mdctx, src, n);
