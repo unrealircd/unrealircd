@@ -4,6 +4,18 @@ UnrealIRCd 6.2.0-beta1
 This is git. This is work in progress and not a stable version.
 
 ### Enhancements:
+* [Channel flood protection by default](https://www.unrealircd.org/docs/Channel_anti-flood_settings):
+  This is an important change that IRCOps and chanops should know about:
+  * By default we now apply the anti-flood profile "normal", which should be fine for most channels.
+  * If a chanop does not want this they can override this by setting
+    `MODE +F` with [another profile](https://www.unrealircd.org/docs/Channel_anti-flood_settings#Channel_mode_F_profiles).
+  * For example, for a channel with hundreds of users and lots of activity
+    `+F relaxed` may be more appropriate. Or, chanops can turn anti-flood
+    off entirely by setting `+F off`
+  * The reason for this change is that many admins and chanops in practice
+    don't seem to use `+f` or `+F`. With this change they are now protected "by default"
+    when no MODE `+f` or `+F` is set.
+  * Advanced users can can grab the detailed effective settings with `MODE #test F`
 * [AntiMixedUTF8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8):
   This is now aware of a lot more unicode blocks. This will cause a higher
   score for some regular messages, so be aware if you have the score set very

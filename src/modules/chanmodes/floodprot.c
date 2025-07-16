@@ -372,6 +372,7 @@ static void init_config(void)
 	cfg.modef_alternate_action_percentage_threshold = 75; /* 75% */
 	cfg.modef_alternative_ban_action_unsettime = 15; /* 15min */
 	init_default_channel_flood_profiles();
+	safe_strdup(cfg.default_profile, "normal"); // use profile "normal" by default (U6.2.0+)
 }
 
 int floodprot_config_test_set_block(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
@@ -583,6 +584,9 @@ int floodprot_config_run_antiflood_block(ConfigFile *cf, ConfigEntry *ce, int ty
 		if (!strcmp(ce->name, "default-profile"))
 		{
 			safe_strdup(cfg.default_profile, ce->value);
+			/* Let's handle 'off' in a special way -> becomes NULL */
+			if (!strcmp(cfg.default_profile, "off"))
+				safe_free(cfg.default_profile);
 		} else
 		if (!strcmp(ce->name, "boot-delay"))
 		{
