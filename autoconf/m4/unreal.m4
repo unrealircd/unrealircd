@@ -241,6 +241,26 @@ else
 fi
 ])
 
+AC_DEFUN([CHECK_SSL_CTX_SET1_GROUPS_LIST],
+[
+AC_MSG_CHECKING([for SSL_CTX_set1_groups_list in SSL library])
+AC_LANG_PUSH(C)
+SAVE_LIBS="$LIBS"
+LIBS="$LIBS $CRYPTOLIB"
+AC_TRY_LINK([#include <openssl/ssl.h>],
+	[SSL_CTX *ctx = NULL; SSL_CTX_set1_groups_list(ctx, "test");],
+	has_function=1,
+	has_function=0)
+LIBS="$SAVE_LIBS"
+AC_LANG_POP(C)
+if test $has_function = 1; then
+	AC_MSG_RESULT([yes])
+	AC_DEFINE([HAS_SSL_CTX_SET1_GROUPS_LIST], [], [Define if ssl library has SSL_CTX_set1_groups_list])
+else
+	AC_MSG_RESULT([no])
+fi
+])
+
 AC_DEFUN([CHECK_SSL_CTX_SET_MIN_PROTO_VERSION],
 [
 AC_MSG_CHECKING([for SSL_CTX_set_min_proto_version in SSL library])

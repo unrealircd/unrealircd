@@ -1853,7 +1853,7 @@ struct TLSOptions {
 	unsigned int protocols;
 	char *ciphers;
 	char *ciphersuites;
-	char *ecdh_curves;
+	char *groups;
 	char *outdated_protocols;
 	char *outdated_ciphers;
 	long options;

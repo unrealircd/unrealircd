@@ -7248,14 +7248,14 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 		{
 			CheckNull(cepp);
 		}
-		else if (!strcmp(cepp->name, "ecdh-curves"))
+		else if (!strcmp(cepp->name, "groups") || !strcmp(cepp->name, "ecdh-curves"))
 		{
 			CheckNull(cepp);
 #ifndef HAS_SSL_CTX_SET1_CURVES_LIST
-			config_error("ecdh-curves specified but your OpenSSL/LibreSSL library does not "
-			             "support setting curves manually by name. Either upgrade to a "
-			             "newer library version or remove the 'ecdh-curves' directive "
-			             "from your configuration file");
+			config_error("%s specified but your OpenSSL/LibreSSL library does not "
+			             "support setting groups or curves. Either upgrade to a "
+			             "newer library version or remove the '%s' directive "
+			             "from your configuration file", cepp->name, cepp->name);
 			errors++;
 #endif
 		}
@@ -7475,7 +7475,7 @@ void free_tls_options(TLSOptions *tlsoptions)
 	safe_free(tlsoptions->trusted_ca_file);
 	safe_free(tlsoptions->ciphers);
 	safe_free(tlsoptions->ciphersuites);
-	safe_free(tlsoptions->ecdh_curves);
+	safe_free(tlsoptions->groups);
 	safe_free(tlsoptions->outdated_protocols);
 	safe_free(tlsoptions->outdated_ciphers);
 	memset(tlsoptions, 0, sizeof(TLSOptions));
@@ -7496,7 +7496,7 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 		tlsoptions->protocols = tempiConf.tls_options->protocols;
 		safe_strdup(tlsoptions->ciphers, tempiConf.tls_options->ciphers);
 		safe_strdup(tlsoptions->ciphersuites, tempiConf.tls_options->ciphersuites);
-		safe_strdup(tlsoptions->ecdh_curves, tempiConf.tls_options->ecdh_curves);
+		safe_strdup(tlsoptions->groups, tempiConf.tls_options->groups);
 		safe_strdup(tlsoptions->outdated_protocols, tempiConf.tls_options->outdated_protocols);
 		safe_strdup(tlsoptions->outdated_ciphers, tempiConf.tls_options->outdated_ciphers);
 		tlsoptions->options = tempiConf.tls_options->options;
@@ -7519,9 +7519,9 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 		{
 			safe_strdup(tlsoptions->ciphersuites, cepp->value);
 		}
-		else if (!strcmp(cepp->name, "ecdh-curves"))
+		else if (!strcmp(cepp->name, "groups") || !strcmp(cepp->name, "ecdh-curves"))
 		{
-			safe_strdup(tlsoptions->ecdh_curves, cepp->value);
+			safe_strdup(tlsoptions->groups, cepp->value);
 		}
 		else if (!strcmp(cepp->name, "protocols"))
 		{

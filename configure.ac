@@ -574,6 +574,7 @@ AC_ARG_WITH(system-cares, [AS_HELP_STRING([--without-system-cares], [Use bundled
 AC_ARG_WITH(system-jansson, [AS_HELP_STRING([--without-system-jansson], [Use bundled version instead of system jansson. Normally autodetected via pkg-config.])], [], [with_system_jansson=yes])
 CHECK_SSL
 CHECK_SSL_CTX_SET1_CURVES_LIST
+CHECK_SSL_CTX_SET1_GROUPS_LIST
 CHECK_SSL_CTX_SET_MIN_PROTO_VERSION
 CHECK_SSL_CTX_SET_SECURITY_LEVEL
 CHECK_ASN1_TIME_diff

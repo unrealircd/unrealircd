@@ -271,6 +271,21 @@ void disable_ssl_protocols(SSL_CTX *ctx, TLSOptions *tlsoptions)
 #endif
 }
 
+/* Set TLS groups. This is an internal function that is used to
+ * prevent some ifdef mess. And yes, in OpenSSL 3.5.x and later
+ * they map to the same, but in OpenSSL 3.2.x-3.4.x they didn't.
+ */
+static int unrealircd_set_tls_groups(SSL_CTX *ctx, const char *groups)
+{
+#if defined(HAS_SSL_CTX_SET1_GROUPS_LIST)
+	return SSL_CTX_set1_groups_list(ctx, groups);
+#elif defined(HAS_SSL_CTX_SET1_CURVES_LIST)
+	return SSL_CTX_set1_curves_list(ctx, groups);
+#else
+	return 0;
+#endif
+}
+
 /** Initialize TLS context
  * @param tlsoptions	The ::tls-options configuration
  * @param server	Set to 1 if we are initializing a server, 0 for client.
@@ -445,50 +460,53 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 		 * do anything then, since auto ecdh is the default.
 		 */
 #endif
-#ifdef HAS_SSL_CTX_SET1_CURVES_LIST
-		/* Let's see if we need to (and can) set specific curves */
-		if (tlsoptions->ecdh_curves == NULL)
+#if defined(HAS_SSL_CTX_SET1_CURVES_LIST) || defined(HAS_SSL_CTX_SET1_GROUPS_LIST)
+		/* Let's see if we need to set specific TLS groups */
+		if (tlsoptions->groups == NULL)
 		{
 			/* This means try the defaults.. */
-			if (!SSL_CTX_set1_curves_list(ctx, UNREALIRCD_DEFAULT_ECDH_CURVES_PRIMARY))
+			if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY))
 			{
-				if (!SSL_CTX_set1_curves_list(ctx, UNREALIRCD_DEFAULT_ECDH_CURVES_SECONDARY))
+				if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY))
 				{
-					unreal_log(ULOG_ERROR, "config", "TLS_INVALID_ECDH_CURVES_LIST", NULL,
-						   "Failed to set ecdh-curves to either "
-						   "'$ecdh_curves_list_primary' or '$ecdh_curves_list_secondary'.\n"
-						   "$tls_error.all\n"
-						   "It's strange that neither curves list worked. "
-						   "Please report at https://bugs.unrealircd.org/ !",
-						   log_data_string("ecdh_curves_list_primary", UNREALIRCD_DEFAULT_ECDH_CURVES_PRIMARY),
-						   log_data_string("ecdh_curves_list_secondary", UNREALIRCD_DEFAULT_ECDH_CURVES_SECONDARY),
-						   log_data_tls_error());
-					goto fail;
+					if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY))
+					{
+						unreal_log(ULOG_ERROR, "config", "TLS_INVALID_TLS_GROUPS_LIST", NULL,
+							   "Failed to set groups / ecdh-curves to either "
+							   "'$tls_groups_primary', '$tls_groups_secondary' or '$tls_groups_tertiary'.\n"
+							   "$tls_error.all\n"
+							   "It's strange that none of the three worked. "
+							   "Please report at https://bugs.unrealircd.org/ !",
+							   log_data_string("tls_groups_primary", UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY),
+							   log_data_string("tls_groups_secondary", UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY),
+							   log_data_string("tls_groups_tertiary", UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY),
+							   log_data_tls_error());
+						goto fail;
+					}
 				}
 			}
 		} else
 		{
-			/* Config-specified curves */
-			if (!SSL_CTX_set1_curves_list(ctx, tlsoptions->ecdh_curves))
+			/* User-configured TLS groups */
+			if (!unrealircd_set_tls_groups(ctx, tlsoptions->groups))
 			{
-				unreal_log(ULOG_ERROR, "config", "TLS_INVALID_ECDH_CURVES_LIST", NULL,
-					   "Failed to set ecdh-curves '$ecdh_curves_list'\n$tls_error.all\n"
-					   "HINT: To get a list of supported curves with the appropriate names, "
-					   "run 'openssl ecparam -list_curves' on the server. "
+				unreal_log(ULOG_ERROR, "config", "TLS_INVALID_TLS_GROUPS_LIST", NULL,
+					   "Failed to set groups / ecdh-curves '$tls_groups'\n$tls_error.all\n"
+					   "HINT: To get a list of supported names, run 'openssl ecparam -list_curves' on the server. "
 					   "Separate multiple curves by colon, for example: "
-					   "ecdh-curves \"secp521r1:secp384r1\".",
-					   log_data_string("ecdh_curves_list", tlsoptions->ecdh_curves),
+					   "groups \"secp521r1:secp384r1\".",
+					   log_data_string("tls_groups", tlsoptions->groups),
 					   log_data_tls_error());
 				goto fail;
 			}
 		}
 #else
-		if (tlsoptions->ecdh_curves)
+		if (tlsoptions->groups)
 		{
 			/* We try to avoid this in the config code, but better have
 			 * it here too than be sorry if someone screws up:
 			 */
-			unreal_log(ULOG_ERROR, "config", "BUG_ECDH_CURVES", NULL,
+			unreal_log(ULOG_ERROR, "config", "BUG_TLS_GROUPS", NULL,
 			           "ecdh-curves specified but not supported by library -- BAD!");
 			goto fail;
 		}

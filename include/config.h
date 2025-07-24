@@ -265,14 +265,16 @@
  */
 #define UNREALIRCD_DEFAULT_CIPHERSUITES "TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256"
 
-/* Default TLS curves for ECDH(E)
- * This can be changed via set::ssl::options::ecdh-curve in the config file.
- * The UNREALIRCD_DEFAULT_ECDH_CURVES_PRIMARY is tried first, and then the
- * UNREALIRCD_DEFAULT_ECDH_CURVES_SECONDARY, since tha latter requires
- * openssl 1.1.0 or newer.
+/* Default TLS groups (previously only curves)
+ * This can be changed via set::ssl::options::groups (previously ::ecdh-curves)
+ * in the config file. By default we try these (in this order):
+ * UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY requires OpenSSL 3.5.0
+ * UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY requires OpenSSL 1.1.0
+ * UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY is the last fallback option
  */
-#define UNREALIRCD_DEFAULT_ECDH_CURVES_PRIMARY "X25519:secp521r1:secp384r1:prime256v1"
-#define UNREALIRCD_DEFAULT_ECDH_CURVES_SECONDARY "secp521r1:secp384r1:prime256v1"
+#define UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY "X25519MLKEM768:X25519:secp521r1:secp384r1:prime256v1"
+#define UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY "X25519:secp521r1:secp384r1:prime256v1"
+#define UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY "secp521r1:secp384r1:prime256v1"
 
 /* These can be changed via set::central-spamfilter::url and ::feed */
 #define DEFAULT_CENTRAL_SPAMFILTER_URL_OPEN_ACCESS "https://spamfilter.unrealircd.org/spamfilter/v6/$feed/central_spamfilter.conf"
