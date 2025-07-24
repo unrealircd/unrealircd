@@ -41,6 +41,29 @@ This is git. This is work in progress and not a stable version.
   This can be turned off via set::best-practices::trusted-cert.
   For servers without any client listener blocks (or only on localhost)
   this message is not triggered (for e.g. hubs).
+* Post-quantum cryptography (PQC) enhancements:
+  * [set::tls](https://www.unrealircd.org/docs/TLS_Ciphers_and_protocols):
+    Rename `ecdh-curves` to `groups` (the old name will continue to work)
+  * Add (and prefer) the `X25519MLKEM768` hybrid group, which is a mix
+    of `X25519` that is commonly used today and quantum-safe `ML-KEM-768`.
+    This to protect against
+    ["harvest now, decrypt later"](https://en.wikipedia.org/wiki/Harvest_now,_decrypt_later).
+  * To benefit from this, OpenSSL 3.5.0 or later (released April 2025)
+    is required on the server, and similarly a client that supports this.
+    At the time of writing, almost all Linux distros don't have such an
+    OpenSSL version yet (which is not a problem, this new feature will simply
+    not be available). Notably Debian 13 (when released in August
+    2025) will have it. LibreSSL does not support it either yet, so our
+    Windows build does not have this feature.
+  * Also, change the TLS information on-connect and in WHOIS etc. from
+    something like `TLSv1.3-TLS_CHACHA20_POLY1305_SHA256` to
+    `TLSv1.3/X25519/TLS_CHACHA20_POLY1305_SHA256`. In other words: using
+    slashes as separators and showing the group / key exchange in the middle.
+    The group is only shown on newer OpenSSL versions. If someone would
+    use the new PQC hybrid group mentioned above then their TLS info would
+    start with `TLSv1.3/X25519MLKEM768/`.
+  * TL;DR: better secrecy against future quantum attacks, even though
+    not many clients or servers support it at the moment.
 * UnrealIRCd can now be used if your OpenSSL does not provide MD5
   (there will be an error if you use `cloak_md5`, but everything
   will work fine if you use `cloak_sha256`).
