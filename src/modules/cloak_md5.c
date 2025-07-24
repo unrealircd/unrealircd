@@ -71,6 +71,7 @@ MOD_TEST()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, cloak_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, cloak_config_posttest);
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
 	if (!md5_function)
 	{
 		unreal_log(ULOG_ERROR, "tls", "MD5_UNAVAILABLE", NULL,
@@ -80,6 +81,7 @@ MOD_TEST()
 		           "configuration (consult your distro docs).");
 		return MOD_FAILED;
 	}
+#endif
 	return MOD_SUCCESS;
 }
 
