@@ -742,7 +742,8 @@ void SSL_set_nonblocking(SSL *s)
 const char *tls_get_cipher(Client *client)
 {
 	static char buf[256];
-	const char *cached;
+	const char *cached, *s;
+	int group;
 
 	cached = moddata_client_get(client, "tls_cipher");
 	if (cached)
@@ -753,7 +754,20 @@ const char *tls_get_cipher(Client *client)
 
 	buf[0] = '\0';
 	strlcpy(buf, SSL_get_version(client->local->ssl), sizeof(buf));
-	strlcat(buf, "-", sizeof(buf));
+#ifdef HAS_SSL_GET_NEGOTIATED_GROUP
+	group = SSL_get_negotiated_group(client->local->ssl);
+	s = SSL_group_to_name(client->local->ssl, group);
+	if (s)
+	{
+		/* "x25519" -> "X25519" */
+		char gbuf[64];
+		strlcat(buf, "/", sizeof(buf));
+		*gbuf = '\0';
+		strtoupper_safe(gbuf, s, sizeof(gbuf));
+		strlcat(buf, gbuf, sizeof(buf));
+	}
+#endif
+	strlcat(buf, "/", sizeof(buf));
 	strlcat(buf, SSL_get_cipher(client->local->ssl), sizeof(buf));
 
 	return buf;

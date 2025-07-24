@@ -261,6 +261,26 @@ else
 fi
 ])
 
+AC_DEFUN([CHECK_SSL_GET_NEGOTIATED_GROUP],
+[
+AC_MSG_CHECKING([for SSL_get_negotiated_group in SSL library])
+AC_LANG_PUSH(C)
+SAVE_LIBS="$LIBS"
+LIBS="$LIBS $CRYPTOLIB"
+AC_TRY_LINK([#include <openssl/ssl.h>],
+	[SSL *ssl = NULL; SSL_get_negotiated_group(ssl);],
+	has_function=1,
+	has_function=0)
+LIBS="$SAVE_LIBS"
+AC_LANG_POP(C)
+if test $has_function = 1; then
+	AC_MSG_RESULT([yes])
+	AC_DEFINE([HAS_SSL_GET_NEGOTIATED_GROUP], [], [Define if ssl library has SSL_get_negotiated_group])
+else
+	AC_MSG_RESULT([no])
+fi
+])
+
 AC_DEFUN([CHECK_SSL_CTX_SET_MIN_PROTO_VERSION],
 [
 AC_MSG_CHECKING([for SSL_CTX_set_min_proto_version in SSL library])
