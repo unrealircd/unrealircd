@@ -117,6 +117,15 @@ static void set_curl_tls_options(CURL *curl)
 	/* Set cipher list for TLSv1.3 (cURL 7.61.0+) */
 	curl_easy_setopt(curl, CURLOPT_TLS13_CIPHERS, UNREALIRCD_DEFAULT_CIPHERSUITES);
 #endif
+	/* TODO: ideally we would set UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY,
+	 * fallback to _SECONDARY, and fallback to _TERTIARY here,
+	 * but i don't think curl_easy_setopt() checks if they are valid,
+	 * so we would only discover at runtime. Bad idea.
+	 * Also can't assume that if it is working in unreal (which uses openssl)
+	 * it will work with curl (which may use gnutls).
+	 * So yeah, opted not to set it.
+	 * In url_unreal we control everything and we do.
+	 */
 }
 
 /*

@@ -354,6 +354,13 @@ SSL_CTX *https_new_ctx(void)
 	/* Limit ciphers as well */
 	SSL_CTX_set_cipher_list(ctx_client, UNREALIRCD_DEFAULT_CIPHERS);
 
+	/* And TLS groups */
+#if defined(HAS_SSL_CTX_SET1_CURVES_LIST) || defined(HAS_SSL_CTX_SET1_GROUPS_LIST)
+	if (!unrealircd_set_tls_groups(ctx_client, UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY))
+		if (!unrealircd_set_tls_groups(ctx_client, UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY))
+			if (!unrealircd_set_tls_groups(ctx_client, UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY))
+				;
+#endif
 	return ctx_client;
 }
 

@@ -963,6 +963,7 @@ extern int has_any_trusted_cert(void);
 extern MODVAR EVP_MD *sha256_function;
 extern MODVAR EVP_MD *sha1_function;
 extern MODVAR EVP_MD *md5_function;
+extern int unrealircd_set_tls_groups(SSL_CTX *ctx, const char *groups);
 /* End of TLS functions */
 
 /* Default handlers for efunctions */

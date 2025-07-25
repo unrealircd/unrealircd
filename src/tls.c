@@ -275,7 +275,7 @@ void disable_ssl_protocols(SSL_CTX *ctx, TLSOptions *tlsoptions)
  * prevent some ifdef mess. And yes, in OpenSSL 3.5.x and later
  * they map to the same, but in OpenSSL 3.2.x-3.4.x they didn't.
  */
-static int unrealircd_set_tls_groups(SSL_CTX *ctx, const char *groups)
+int unrealircd_set_tls_groups(SSL_CTX *ctx, const char *groups)
 {
 #if defined(HAS_SSL_CTX_SET1_GROUPS_LIST)
 	return SSL_CTX_set1_groups_list(ctx, groups);
