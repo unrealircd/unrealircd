@@ -1,7 +1,13 @@
-UnrealIRCd 6.2.0-beta1
+UnrealIRCd 6.2.0-beta2
 =======================
 
-This is git. This is work in progress and not a stable version.
+This is the second beta for future UnrealIRCd 6.2.0. This is work in progress
+and not a stable version. There will likely be several more beta's.  
+Please report any issues at https://bugs.unrealircd.org/.
+
+Changes between beta1 and beta2 are: channel flood protection on by default,
+text analysis in the JSON, support PQC with openssl 3.5, and fixes for
+running with an openssl without md5 (eg in FIPS mode).
 
 ### Enhancements:
 * [Channel flood protection by default](https://www.unrealircd.org/docs/Channel_anti-flood_settings):
@@ -16,6 +22,14 @@ This is git. This is work in progress and not a stable version.
     don't seem to use `+f` or `+F`. With this change they are now protected "by default"
     when no MODE `+f` or `+F` is set.
   * Advanced users can can grab the detailed effective settings with `MODE #test F`
+  * The default protection can be lowered in the config file with:
+    ```
+    set { anti-flood { channel { default-profile relaxed; } } }
+    ```
+    Note that doing so would lower protection for everyone. You can also use `off` instead of
+    `relaxed` to disable it entirely (which is not recommended but makes it how things were
+    before 6.2.x). We recommend using `normal` (which is the default already) and doing
+    per-channel exceptions via `+F` where needed.
 * [AntiMixedUTF8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8):
   This is now aware of a lot more unicode blocks. This will cause a higher
   score for some regular messages, so be aware if you have the score set very
