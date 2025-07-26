@@ -1747,8 +1747,9 @@ void tls_link_notification_verify(Client *client, ConfigItem_link *aconf)
 	verify_ok = verify_certificate(client->local->ssl, aconf->servername, &errstr);
 	if (errstr && strstr(errstr, "not valid for hostname"))
 	{
-		unreal_log(ULOG_INFO, "link", "HINT_VERIFY_LINK", client,
-		          "You may want to consider verifying this server link.\n"
+		unreal_log(ULOG_INFO, "link", "WARN_UNVERIFIED_LINK", client,
+		          "This server link is not verified (and hence is suspectible to an active MITM attack). "
+		          "In future UnrealIRCd versions this will become a fatal error!\n"
 		          "More information about this can be found on https://www.unrealircd.org/Link_verification\n"
 		          "Unfortunately the certificate of server '$client' has a name mismatch:\n"
 		          "$tls_verify_error\n"
@@ -1758,8 +1759,9 @@ void tls_link_notification_verify(Client *client, ConfigItem_link *aconf)
 	} else
 	if (!verify_ok)
 	{
-		unreal_log(ULOG_INFO, "link", "HINT_VERIFY_LINK", client,
-		          "You may want to consider verifying this server link.\n"
+		unreal_log(ULOG_INFO, "link", "WARN_UNVERIFIED_LINK", client,
+		          "This server link is not verified (and hence is suspectible to an active MITM attack). "
+		          "In future UnrealIRCd versions this will become a fatal error!\n"
 		          "More information about this can be found on https://www.unrealircd.org/Link_verification\n"
 		          "In short: in the configuration file, change the 'link $client {' block to use this as a password:\n"
 		          "password \"$spki_fingerprint\" { spkifp; };\n"
@@ -1768,8 +1770,9 @@ void tls_link_notification_verify(Client *client, ConfigItem_link *aconf)
 		          log_data_string("spki_fingerprint", spki_fp));
 	} else
 	{
-		unreal_log(ULOG_INFO, "link", "HINT_VERIFY_LINK", client,
-		          "You may want to consider verifying this server link.\n"
+		unreal_log(ULOG_INFO, "link", "WARN_UNVERIFIED_LINK", client,
+		          "This server link is not verified (and hence is suspectible to an active MITM attack). "
+		          "In future UnrealIRCd versions this will become a fatal error!\n"
 		          "More information about this can be found on https://www.unrealircd.org/Link_verification\n"
 		          "In short: in the configuration file, add the following to your 'link $client {' block:\n"
 		          "verify-certificate yes;\n"
