@@ -720,7 +720,7 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 		/* STARTTLS: unknown command */
 		if ((numeric == 451) && (parc > 2) && strstr(parv[1], "STARTTLS"))
 		{
-			if (client->server->conf && (client->server->conf->outgoing.options & CONNECT_INSECURE))
+			if (client->server->conf && (client->server->conf->outgoing.options & CONNECT_OUTGOING_INSECURE))
 				start_server_handshake(client);
 			else
 				reject_insecure_server(client);

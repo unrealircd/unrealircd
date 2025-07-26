@@ -446,7 +446,7 @@ int server_needs_linking(ConfigItem_link *aconf)
 	 * a valid link::outgoing configuration. We also ignore
 	 * temporary link blocks (not that they should exist...).
 	 */
-	if (!(aconf->outgoing.options & CONNECT_AUTO) ||
+	if (!(aconf->outgoing.options & CONNECT_OUTGOING_AUTO) ||
 	    (!aconf->outgoing.hostname && !aconf->outgoing.file) ||
 	    (aconf->flag.temporary == 1))
 		return 0;
@@ -1715,7 +1715,10 @@ void tls_link_notification_verify(Client *client, ConfigItem_link *aconf)
 	char *errstr = NULL;
 	int verify_ok;
 
-	if (!MyConnect(client) || !client->local->ssl || !aconf)
+	if (!MyConnect(client) || !client->local->ssl || !aconf || IsLocalhost(client))
+		return;
+
+	if (aconf->options & CONNECT_NO_CERTIFICATE_VERIFICATION)
 		return;
 
 	if ((aconf->auth->type == AUTHTYPE_TLS_CLIENTCERT) ||
@@ -2091,7 +2094,7 @@ void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	set_sockhost(client, aconf->outgoing.hostname ? aconf->outgoing.hostname : "127.0.0.1");
 	add_client_to_list(client);
 
-	if (aconf->outgoing.options & CONNECT_TLS)
+	if (aconf->outgoing.options & CONNECT_OUTGOING_TLS)
 	{
 		SetTLSConnectHandshake(client);
 		fd_setselect(client->local->fd, FD_SELECT_WRITE, unreal_tls_client_handshake, client);

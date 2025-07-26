@@ -622,7 +622,7 @@ void completed_connection(int fd, int revents, void *data)
 		return;
 	}
 
-	if (!client->local->ssl && !(aconf->outgoing.options & CONNECT_INSECURE))
+	if (!client->local->ssl && !(aconf->outgoing.options & CONNECT_OUTGOING_INSECURE))
 	{
 		sendto_one(client, NULL, "STARTTLS");
 	} else

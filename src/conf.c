@@ -141,12 +141,18 @@ static NameValue _ListenerFlags[] = {
 };
 
 /* This MUST be alphabetized */
-static NameValue _LinkFlags[] = {
-	{ CONNECT_AUTO,	"autoconnect" },
-	{ CONNECT_INSECURE,	"insecure" },
+static NameValue _LinkOutgoingFlags[] = {
+	{ CONNECT_OUTGOING_AUTO,	"autoconnect" },
+	{ CONNECT_OUTGOING_INSECURE,	"insecure" },
 	{ CONNECT_QUARANTINE, "quarantine"},
-	{ CONNECT_TLS, "ssl" },
-	{ CONNECT_TLS, "tls" },
+	{ CONNECT_OUTGOING_TLS, "ssl" },
+	{ CONNECT_OUTGOING_TLS, "tls" },
+};
+
+/* This MUST be alphabetized */
+static NameValue _LinkFlags[] = {
+	{ CONNECT_NO_CERTIFICATE_VERIFICATION, "no-certificate-verification"},
+	{ CONNECT_QUARANTINE, "quarantine"},
 };
 
 /* This MUST be alphabetized */
@@ -6546,7 +6552,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 					for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
 					{
 						long v;
-						if ((v = nv_find_by_name(_LinkFlags, ceppp->name)))
+						if ((v = nv_find_by_name(_LinkOutgoingFlags, ceppp->name)))
 							link->outgoing.options |= v;
 					}
 				}
@@ -6716,13 +6722,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 					config_detect_duplicate(&has_outgoing_options, cepp, &errors);
 					for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
 					{
-						if (!strcmp(ceppp->name, "autoconnect"))
-							;
-						else if (!strcmp(ceppp->name, "ssl") || !strcmp(ceppp->name, "tls"))
-							;
-						else if (!strcmp(ceppp->name, "insecure"))
-							;
-						else
+						if (!nv_find_by_name(_LinkOutgoingFlags, ceppp->name))
 						{
 							config_error_unknownopt(ceppp->file->filename,
 								ceppp->line_number, "link::outgoing", ceppp->name);
@@ -6820,11 +6820,10 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			config_detect_duplicate(&has_options, cep, &errors);
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				if (!strcmp(cepp->name, "quarantine"))
-					;
-				else
+				if (!nv_find_by_name(_LinkFlags, cepp->name))
 				{
-					config_error("%s:%d: link::options only has one possible option ('quarantine', rarely used). "
+					config_error("%s:%d: link::options has only two possible options "
+					             "('quarantine' and 'no-certificate-verification', rarely used). "
 					             "Option '%s' is unrecognized. "
 					             "Perhaps you meant to set an outgoing option in link::outgoing::options instead?",
 					             cepp->file->filename, cepp->line_number, cepp->name);

@@ -408,8 +408,8 @@ int stats_links(Client *client, const char *para)
 			link_p->servername,
 			link_p->outgoing.port,
 			link_p->class->name,
-			(link_p->outgoing.options & CONNECT_AUTO) ? "a" : "",
-			(link_p->outgoing.options & CONNECT_TLS) ? "S" : "",
+			(link_p->outgoing.options & CONNECT_OUTGOING_AUTO) ? "a" : "",
+			(link_p->outgoing.options & CONNECT_OUTGOING_TLS) ? "S" : "",
 			(link_p->flag.temporary == 1) ? "T" : "");
 #ifdef DEBUGMODE
 		sendnotice(client, "%s (%p) has refcount %d",
