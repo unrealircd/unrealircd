@@ -1653,6 +1653,7 @@ void init_best_practices(void)
 	memset(&bestpractices, 0, sizeof(bestpractices));
 	bestpractices.hashed_passwords = 1;
 	bestpractices.trusted_cert = 1;
+	bestpractices.listen_tls_only = 1;
 }
 
 void free_iConf(Configuration *i)
@@ -1959,6 +1960,14 @@ void postconf(void)
 		           "It is highly recommended to use a 'real certificate'. To get a free one, see: "
 		           "https://www.unrealircd.org/docs/Using_Let's_Encrypt_with_UnrealIRCd");
 		bestpractices.trusted_cert_hits++;
+	}
+	if (bestpractices.listen_tls_only && bestpractices.listen_nontls_port)
+	{
+		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_PLAINTEXT_PORT", NULL,
+		           "You have at least one IRC plaintext port open (such as $port). "
+		           "Nowadays, everyone should be using SSL/TLS (on port 6697). "
+		           "See https://www.unrealircd.org/docs/Use_TLS.",
+		           log_data_integer("port", bestpractices.listen_nontls_port));
 	}
 }
 
@@ -5585,6 +5594,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	char clientport = 1;
 	char *file = NULL;
 	char *ip = NULL;
+	int port_start = 0, port_end = 0, tls_port;
 	Hook *h;
 
 	if (ce->value)
@@ -5682,7 +5692,10 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 					}
 				}
 				if (!strcmp(cepp->name, "ssl") || !strcmp(cepp->name, "tls"))
+				{
 					have_tls_listeners = 1; /* for ssl config test */
+					tls_port = 1;
+				}
 			}
 		}
 		else
@@ -5749,7 +5762,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 		} else
 		if (!strcmp(cep->name, "port"))
 		{
-			int start = 0, end = 0;
+			port_start = port_end = 0;
 
 			has_port = 1;
 
@@ -5760,10 +5773,10 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 				continue;
 			}
-			port_range(cep->value, &start, &end);
-			if (start == end)
+			port_range(cep->value, &port_start, &port_end);
+			if (port_start == port_end)
 			{
-				if ((start < 1) || (start > 65535))
+				if ((port_start < 1) || (port_start > 65535))
 				{
 					config_error("%s:%i: listen: illegal port (must be 1..65535)",
 						cep->file->filename, cep->line_number);
@@ -5773,23 +5786,23 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			}
 			else
 			{
-				if (end < start)
+				if (port_end < port_start)
 				{
 					config_error("%s:%i: listen: illegal port range end value is less than starting value",
 						cep->file->filename, cep->line_number);
 					errors++;
 					continue;
 				}
-				if (end - start >= 100)
+				if (port_end - port_start >= 100)
 				{
 					config_error("%s:%i: listen: you requested port %d-%d, that's %d ports "
 						"(and thus consumes %d sockets) this is probably not what you want.",
-						cep->file->filename, cep->line_number, start, end,
-						end - start + 1, end - start + 1);
+						cep->file->filename, cep->line_number, port_start, port_end,
+						port_end - port_start + 1, port_end - port_start + 1);
 					errors++;
 					continue;
 				}
-				if ((start < 1) || (start > 65535) || (end < 1) || (end > 65535))
+				if ((port_start < 1) || (port_start > 65535) || (port_end < 1) || (port_end > 65535))
 				{
 					config_error("%s:%i: listen: illegal port range values must be between 1 and 65535",
 						cep->file->filename, cep->line_number);
@@ -5798,7 +5811,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 
-			if ((6667 >= start) && (6667 <= end))
+			if ((6667 >= port_start) && (6667 <= port_end))
 				port_6667 = 1;
 		} else
 		{
@@ -5851,7 +5864,12 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 		safe_strdup(port_6667_ip, ip);
 
 	if (clientport && (!ip || (strcmp(ip, "127.0.0.1") && strcmp(ip, "::1"))))
+	{
 		has_client_port = 1;
+
+		if (!bestpractices.listen_nontls_port && !tls_port && (port_start>0))
+			bestpractices.listen_nontls_port = port_start;
+	}
 
 	requiredstuff.conf_listen = 1;
 	return errors;
@@ -9738,6 +9756,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				if (!strcmp(cepp->name, "trusted-cert"))
 				{
 					bestpractices.trusted_cert = config_checkval(cepp->value, CFG_YESNO);
+				} else
+				if (!strcmp(cepp->name, "listen-nontls-port"))
+				{
+					bestpractices.listen_nontls_port = config_checkval(cepp->value, CFG_YESNO);
 				} else
 				{
 					config_error_unknown(cepp->file->filename,
