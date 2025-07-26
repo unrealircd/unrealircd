@@ -1132,6 +1132,7 @@ extern char policy_valtochar(Policy policy);
 extern int verify_certificate(SSL *ssl, const char *hostname, char **errstr);
 extern const char *certificate_name(SSL *ssl);
 extern void start_of_normal_client_handshake(Client *acptr);
+extern int is_loopback_ip(char *ip);
 extern void clicap_pre_rehash(void);
 extern void clicap_check_for_changes(void);
 extern void unload_all_unused_mtag_handlers(void);

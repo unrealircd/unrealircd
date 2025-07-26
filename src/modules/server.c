@@ -2125,6 +2125,10 @@ static int connect_server_helper(ConfigItem_link *aconf, Client *client)
 		return 0; /* handled upstream or shouldn't happen */
 	}
 
+	/* Tag outgoing localhost connections as localhost as well */
+	if (aconf->connect_ip && is_loopback_ip(aconf->connect_ip))
+                SetLocalhost(client);
+
 	if (aconf->outgoing.file)
 		SetUnixSocket(client);
 	else if (strchr(aconf->connect_ip, ':'))
