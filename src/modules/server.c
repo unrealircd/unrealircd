@@ -1750,7 +1750,7 @@ void tls_link_notification_verify(Client *client, ConfigItem_link *aconf)
 	verify_ok = verify_certificate(client->local->ssl, aconf->servername, &errstr);
 	if (errstr && strstr(errstr, "not valid for hostname"))
 	{
-		unreal_log(ULOG_INFO, "link", "WARN_UNVERIFIED_LINK", client,
+		unreal_log(ULOG_WARNING, "link", "WARN_UNVERIFIED_LINK_CERTIFICATE", client,
 		          "This server link is not verified (and hence is suspectible to an active MITM attack). "
 		          "In future UnrealIRCd versions this will become a fatal error!\n"
 		          "More information about this can be found on https://www.unrealircd.org/Link_verification\n"
@@ -1762,7 +1762,7 @@ void tls_link_notification_verify(Client *client, ConfigItem_link *aconf)
 	} else
 	if (!verify_ok)
 	{
-		unreal_log(ULOG_INFO, "link", "WARN_UNVERIFIED_LINK", client,
+		unreal_log(ULOG_WARNING, "link", "WARN_UNVERIFIED_LINK_CERTIFICATE", client,
 		          "This server link is not verified (and hence is suspectible to an active MITM attack). "
 		          "In future UnrealIRCd versions this will become a fatal error!\n"
 		          "More information about this can be found on https://www.unrealircd.org/Link_verification\n"
@@ -1773,7 +1773,7 @@ void tls_link_notification_verify(Client *client, ConfigItem_link *aconf)
 		          log_data_string("spki_fingerprint", spki_fp));
 	} else
 	{
-		unreal_log(ULOG_INFO, "link", "WARN_UNVERIFIED_LINK", client,
+		unreal_log(ULOG_WARNING, "link", "WARN_UNVERIFIED_LINK_CERTIFICATE", client,
 		          "This server link is not verified (and hence is suspectible to an active MITM attack). "
 		          "In future UnrealIRCd versions this will become a fatal error!\n"
 		          "More information about this can be found on https://www.unrealircd.org/Link_verification\n"
