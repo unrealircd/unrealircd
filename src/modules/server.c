@@ -1740,13 +1740,6 @@ void tls_link_notification_verify(Client *client, ConfigItem_link *aconf)
 	if (!tls_fp || !spki_fp)
 		return; /* wtf ? */
 
-	/* Only bother the user if we are linking to UnrealIRCd 4.0.16+,
-	 * since only for these versions we can give precise instructions.
-	 */
-	if (!client->server || client->server->features.protocol < 4016)
-		return;
-
-
 	verify_ok = verify_certificate(client->local->ssl, aconf->servername, &errstr);
 	if (errstr && strstr(errstr, "not valid for hostname"))
 	{
