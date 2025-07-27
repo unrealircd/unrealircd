@@ -5,9 +5,8 @@ This is the second beta for future UnrealIRCd 6.2.0. This is work in progress
 and not a stable version. There will likely be several more beta's.  
 Please report any issues at https://bugs.unrealircd.org/.
 
-Changes between beta1 and beta2 are: channel flood protection on by default,
-text analysis in the JSON, support PQC with openssl 3.5, and fixes for
-running with an openssl without md5 (eg in FIPS mode).
+Changes between beta2 and current git are: a message if you have any plaintext ports
+open to users, ..
 
 ### Enhancements:
 * [Channel flood protection by default](https://www.unrealircd.org/docs/Channel_anti-flood_settings):
@@ -30,6 +29,24 @@ running with an openssl without md5 (eg in FIPS mode).
     `relaxed` to disable it entirely (which is not recommended but makes it how things were
     before 6.2.x). We recommend using `normal` (which is the default already) and doing
     per-channel exceptions via `+F` where needed.
+* [Best Practices](https://www.unrealircd.org/docs/Set_block#set::best-practices):
+  If any plaintext ports are found open, we will give an advice to move users to TLS.
+  * The [Use TLS](https://www.unrealircd.org/docs/Use_TLS) article explains why and
+    shows how to do a gradual rollout, with warnings and automatic upgrades from
+    plaintext to TLS for IRC clients that support it.
+  * This message can be turned off by setting
+    [set::best-practices::listen-nontls-port](https://www.unrealircd.org/docs/Set_block#set::best-practices)
+    to `no`. But please, read the
+    [Use TLS](https://www.unrealircd.org/docs/Use_TLS) article first.
+  * You won't get this warning if set::plaintext-policy::user is `deny`
+    or when the listen::ip is `127.0.0.1` or `::1`.
+* [Best Practices](https://www.unrealircd.org/docs/Set_block#set::best-practices):
+  If no SSL/TLS cert is present that is issued by a trusted Certificate
+  Authority, then we will give a suggestion to use Let's Encrypt.
+  This can be turned off via
+  [set::best-practices::trusted-cert](https://www.unrealircd.org/docs/Set_block#set::best-practices).
+  For servers without any client listener blocks (or only on localhost)
+  this message is not triggered (for e.g. hubs).
 * [AntiMixedUTF8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8):
   This is now aware of a lot more unicode blocks. This will cause a higher
   score for some regular messages, so be aware if you have the score set very
@@ -49,12 +66,6 @@ running with an openssl without md5 (eg in FIPS mode).
     unicode blocks are used, etc.
   * The same Text Analysis is now in JSON logs for spamfilter hits and
     antimixedutf8 hits.
-* [Best Practices](https://www.unrealircd.org/docs/Set_block#set::best-practices):
-  If no SSL/TLS cert is present that is issued by a trusted Certificate
-  Authority, then we will give a suggestion to use Let's Encrypt.
-  This can be turned off via set::best-practices::trusted-cert.
-  For servers without any client listener blocks (or only on localhost)
-  this message is not triggered (for e.g. hubs).
 * Post-quantum cryptography (PQC) enhancements:
   * [set::tls](https://www.unrealircd.org/docs/TLS_Ciphers_and_protocols):
     Rename `ecdh-curves` to `groups` (the old name will continue to work)
@@ -83,12 +94,27 @@ running with an openssl without md5 (eg in FIPS mode).
   will work fine if you use `cloak_sha256`).
 
 ### Changes:
+* Currently it is still possible to link servers without certificate
+  verification. This would be rare, since our
+  [server linking guide](https://www.unrealircd.org/docs/Tutorial:_Linking_servers)
+  and `./unrealircd genlinkblock` use certificate verification. Since 2017
+  you'll get a message on-link when this happens with concrete
+  advice to fix it. The wording has now been changed to be a clear
+  warning about [MITM](https://en.wikipedia.org/wiki/Man-in-the-middle_attack)
+  attacks. In 2026Q2 we will turn this into a hard error.
 * Make error message if SSL/TLS cert or key is missing more helpful.
 * Update offline doc/unrealircd_wiki.zim to current wiki
 * Update shipped libs: PCRE2 (10.45), c-ares (1.34.5)
 * [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport)
   now receives the last 20 lines instead of 10 and Text Analysis is included
   (such as which unicode blocks used in the messages).
+* Currently it is still possible to link servers without certificate
+  verification. This would be rare, since our linking guides and
+  `./unrealircd genlinkblock` use certificat verification. Since 2017
+  you'll get a "suggestion" on-link when this happens with concrete
+  advice to fix this. The wording has now been changed to be a clear
+  warning about [MITM](https://en.wikipedia.org/wiki/Man-in-the-middle_attack)
+  attacks. In 2026Q2 we will turn this into a hard error.
 
 ### Fixes:
 * `OS JUPE` not working (still allowing the server in)
