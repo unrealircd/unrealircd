@@ -1961,10 +1961,12 @@ void postconf(void)
 		           "https://www.unrealircd.org/docs/Using_Let's_Encrypt_with_UnrealIRCd");
 		bestpractices.trusted_cert_hits++;
 	}
-	if (bestpractices.listen_tls_only && bestpractices.listen_nontls_port)
+	if (bestpractices.listen_tls_only &&
+	    bestpractices.listen_nontls_port &&
+	    (iConf.plaintext_policy_user != POLICY_DENY))
 	{
 		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_PLAINTEXT_PORT", NULL,
-		           "You have at least one IRC plaintext port open (such as $port). "
+		           "You have at least one IRC plaintext port open to users (such as $port). "
 		           "Nowadays, everyone should be using SSL/TLS (on port 6697). "
 		           "See https://www.unrealircd.org/docs/Use_TLS.",
 		           log_data_integer("port", bestpractices.listen_nontls_port));
