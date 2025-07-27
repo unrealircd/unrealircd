@@ -5594,7 +5594,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	char clientport = 1;
 	char *file = NULL;
 	char *ip = NULL;
-	int port_start = 0, port_end = 0, tls_port;
+	int port_start = 0, port_end = 0, tls_port = 0;
 	Hook *h;
 
 	if (ce->value)
