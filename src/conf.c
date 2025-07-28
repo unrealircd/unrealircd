@@ -1653,6 +1653,7 @@ void init_best_practices(void)
 	memset(&bestpractices, 0, sizeof(bestpractices));
 	bestpractices.hashed_passwords = 1;
 	bestpractices.trusted_cert = 1;
+	bestpractices.trusted_cert_valid_hostname = 1;
 	bestpractices.listen_tls_only = 1;
 }
 
@@ -1953,13 +1954,26 @@ void postconf(void)
 	if (loop.rehashing)
 		reinit_tls();
 #endif
-	if (bestpractices.trusted_cert && has_client_port && !has_any_trusted_cert())
+	if (bestpractices.trusted_cert && has_client_port)
 	{
-		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_TRUSTED_CERT", NULL,
-		           "You don't have any valid SSL/TLS certificate that is issued by a trusted Certificate Authority.\n"
-		           "It is highly recommended to use a 'real certificate'. To get a free one, see: "
-		           "https://www.unrealircd.org/docs/Using_Let's_Encrypt_with_UnrealIRCd");
-		bestpractices.trusted_cert_hits++;
+		if (!has_any_trusted_cert())
+		{
+			unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_TRUSTED_CERT", NULL,
+				   "You don't have any valid SSL/TLS certificate that is issued by a trusted Certificate Authority.\n"
+				   "It is highly recommended to use a 'real certificate'. To get a free one, see: "
+				   "https://www.unrealircd.org/docs/Using_Let's_Encrypt_with_UnrealIRCd");
+			bestpractices.trusted_cert_hits++;
+		} else
+		if (bestpractices.trusted_cert_valid_hostname && !has_any_trusted_cert_with_correct_hostname())
+		{
+			unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_TRUSTED_CERT_VALID_HOSTNAME", NULL,
+			           "You have an SSL/TLS certificate that is issued by a trusted Certificate Authority "
+			           "(which is good). However, it is not valid for hostname '$servername'. "
+			           "It is recommended for the certificate (or at least one of them) to be "
+			           "valid for your server name, for clients that connect to that name. ",
+			           log_data_string("servername", me.name));
+			bestpractices.trusted_cert_valid_hostname_hits++;
+		}
 	}
 	if (bestpractices.listen_tls_only &&
 	    bestpractices.listen_nontls_port &&
@@ -2237,7 +2251,9 @@ int config_test(void)
 	postconf();
 	unreal_log(ULOG_INFO, "config", "CONFIG_LOADED", NULL, "Configuration loaded");
 	if (bestpractices.hashed_passwords_hits ||
-	    bestpractices.trusted_cert_hits)
+	    bestpractices.trusted_cert_hits ||
+	    bestpractices.trusted_cert_valid_hostname_hits ||
+	    bestpractices.listen_nontls_port)
 	{
 		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES", NULL,
 		           "Your config has NO errors, but you received some best practices tips above, in summary:");

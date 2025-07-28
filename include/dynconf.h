@@ -196,12 +196,14 @@ extern MODVAR int ipv6_disabled;
 
 typedef struct BestPractices BestPractices;
 struct BestPractices {
-	int hashed_passwords;		/**< Use hashed passwords */
-	int hashed_passwords_hits;	/**< How many times advice has been given (like 'warnings' but it is advice) */
-	int trusted_cert;		/**< Uses a SSL cert issued by a CA */
-	int trusted_cert_hits;		/**< .. how many times the above */
-	int listen_tls_only;		/**< listen { } blocks only with tls */
-	int listen_nontls_port;		/**< .. first non-tls port found */
+	int hashed_passwords;			/**< Use hashed passwords */
+	int hashed_passwords_hits;		/**< How many times advice has been given (like 'warnings' but it is advice) */
+	int trusted_cert;			/**< Uses a SSL cert issued by a CA */
+	int trusted_cert_hits;			/**< .. how many times the above */
+	int trusted_cert_valid_hostname;	/**< Uses a SSL cert issued by a CA that is valid for me::name */
+	int trusted_cert_valid_hostname_hits;	/**< .. how many times the above */
+	int listen_tls_only;			/**< listen { } blocks only with tls */
+	int listen_nontls_port;			/**< .. first non-tls port found */
 };
 extern MODVAR BestPractices bestpractices;
 

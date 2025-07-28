@@ -599,6 +599,43 @@ int has_any_trusted_cert(void)
 	return 0; /* Zero trusted certs found */
 }
 
+/** Checks if a ctx is valid for specified hostname.
+ * In case of doubt this function will return 1 (!),
+ * so use it in diagnostics only! Eg config tests.
+ */
+int check_ctx_valid_for_hostname(SSL_CTX *ctx, const char *hostname)
+{
+#ifdef HAS_X509_check_host
+	X509 *cert = SSL_CTX_get0_certificate(ctx);
+	if (!cert)
+		return 0;
+	if (X509_check_host(cert, hostname, 0, 0, NULL) == 0)
+		return 0;
+#endif
+	return 1;
+}
+
+int has_any_trusted_cert_with_correct_hostname(void)
+{
+	ConfigItem_listen *listen;
+	ConfigItem_sni *sni;
+
+	if (ctx_server && is_trusted_cert(ctx_server) && check_ctx_valid_for_hostname(ctx_server, me.name))
+		return 1;
+	if (ctx_client && is_trusted_cert(ctx_client) && check_ctx_valid_for_hostname(ctx_client, me.name))
+		return 1;
+
+	for (listen = conf_listen; listen; listen = listen->next)
+		if (listen->ssl_ctx && is_trusted_cert(listen->ssl_ctx) && check_ctx_valid_for_hostname(listen->ssl_ctx, me.name))
+			return 1;
+
+	for (sni = conf_sni; sni; sni = sni->next)
+		if (sni->ssl_ctx && is_trusted_cert(sni->ssl_ctx) && check_ctx_valid_for_hostname(sni->ssl_ctx, me.name))
+			return 1;
+
+	return 0; /* Zero trusted certs found */
+}
+
 /** Early initalization of TLS subsystem - called on startup */
 int early_init_tls(void)
 {
