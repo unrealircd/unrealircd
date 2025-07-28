@@ -1192,19 +1192,23 @@ int verify_certificate(SSL *ssl, const char *hostname, char **errstr)
 	if (!ssl)
 	{
 		strlcpy(buf, "Not using TLS", sizeof(buf));
-		if (errstr)
-			*errstr = buf;
-		return 0; /* Cannot verify a non-TLS connection */
+		goto verify_certificate_failed; /* Cannot verify a non-TLS connection */
 	}
 
-	if (SSL_get_verify_result(ssl) != X509_V_OK)
+	n = SSL_get_verify_result(ssl);
+
+	if (n == X509_V_ERR_CERT_HAS_EXPIRED)
 	{
-		// FIXME: there are actually about 25+ different possible errors,
-		// this is only the most common one:
+		strlcpy(buf, "Certificate is expired", sizeof(buf));
+		goto verify_certificate_failed;
+	}
+
+	if (n != X509_V_OK)
+	{
+		// There are actually about 25+ different possible errors,
+		// let's pretend it is the most common one:
 		strlcpy(buf, "Certificate is not issued by a trusted Certificate Authority", sizeof(buf));
-		if (errstr)
-			*errstr = buf;
-		return 0; /* Certificate verify failed */
+		goto verify_certificate_failed;
 	}
 
 	/* Now verify if the name of the certificate matches hostname */
@@ -1242,6 +1246,7 @@ int verify_certificate(SSL *ssl, const char *hostname, char **errstr)
 	/* Certificate is verified but is issued for a different hostname */
 	snprintf(buf, sizeof(buf), "Certificate '%s' is not valid for hostname '%s'",
 		certificate_name(ssl), hostname);
+verify_certificate_failed:
 	if (errstr)
 		*errstr = buf;
 	return 0;
@@ -1567,7 +1572,7 @@ void check_certificate_expiry_tlsoptions_and_warn(TLSOptions *tlsoptions)
 
 	if (check_certificate_expiry_ctx(ctx, &errstr))
 	{
-		unreal_log(ULOG_ERROR, "tls", "TLS_CERT_EXPIRING", NULL,
+		unreal_log(ULOG_WARNING, "tls", "TLS_CERT_EXPIRING", NULL,
 		           "Warning: TLS certificate '$filename': $error_string",
 		           log_data_string("filename", tlsoptions->certificate_file),
 		           log_data_string("error_string", errstr));

@@ -1956,7 +1956,7 @@ void postconf(void)
 	if (bestpractices.trusted_cert && has_client_port && !has_any_trusted_cert())
 	{
 		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_TRUSTED_CERT", NULL,
-		           "Your SSL/TLS certificate is not issued by a trusted Certificate Authority.\n"
+		           "You don't have any valid SSL/TLS certificate that is issued by a trusted Certificate Authority.\n"
 		           "It is highly recommended to use a 'real certificate'. To get a free one, see: "
 		           "https://www.unrealircd.org/docs/Using_Let's_Encrypt_with_UnrealIRCd");
 		bestpractices.trusted_cert_hits++;
