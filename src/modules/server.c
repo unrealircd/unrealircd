@@ -72,6 +72,7 @@ int _is_services_but_not_ulined(Client *client);
 const char *_check_deny_link(ConfigItem_link *link, int auto_connect);
 int server_stats_denylink_all(Client *client, const char *para);
 int server_stats_denylink_auto(Client *client, const char *para);
+int server_quit_reset_autoconnect_time(Client *client, MessageTag *mtags);
 
 /* Global variables */
 static cfgstruct cfg;
@@ -112,6 +113,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_POST_SERVER_CONNECT, 0, server_post_connect);
 	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, server_stats_denylink_all);
 	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, server_stats_denylink_auto);
+	HookAdd(modinfo->handle, HOOKTYPE_SERVER_QUIT, 0, server_quit_reset_autoconnect_time);
 	CommandAdd(modinfo->handle, "SERVER", cmd_server, MAXPARA, CMD_UNREGISTERED|CMD_SERVER);
 	CommandAdd(modinfo->handle, "SID", cmd_sid, MAXPARA, CMD_SERVER);
 
@@ -449,7 +451,9 @@ int server_needs_linking(ConfigItem_link *aconf)
 	if (!(aconf->outgoing.options & CONNECT_OUTGOING_AUTO) ||
 	    (!aconf->outgoing.hostname && !aconf->outgoing.file) ||
 	    (aconf->flag.temporary == 1))
+	{
 		return 0;
+	}
 
 	class = aconf->class;
 
@@ -457,7 +461,14 @@ int server_needs_linking(ConfigItem_link *aconf)
 	if ((aconf->hold > TStime()))
 		return 0;
 
-	aconf->hold = TStime() + class->connfreq;
+	/* For parallel we maintain the old algorithm where the first
+	 * reconnect is somewhere between 0 and class::connfreq
+	 * For other strategies we don't, see comment in
+	 * server_quit_reset_autoconnect_time() for more info,
+	 * or the whole commit actually.
+	 */
+	if (cfg.autoconnect_strategy == AUTOCONNECT_PARALLEL)
+		aconf->hold = TStime() + class->connfreq;
 
 	client = find_client(aconf->servername, NULL);
 	if (client)
@@ -471,6 +482,9 @@ int server_needs_linking(ConfigItem_link *aconf)
 		return 0;
 
 	/* Yes, this server is a linking candidate */
+
+	/* Set the hold time. */
+	aconf->hold = TStime() + class->connfreq;
 	return 1;
 }
 
@@ -497,7 +511,7 @@ ConfigItem_link *find_first_autoconnect_server(void)
 
 	for (aconf = conf_link; aconf; aconf = aconf->next)
 	{
-		if (!server_needs_linking(aconf))
+		if (aconf->flag.temporary || !server_needs_linking(aconf))
 			continue;
 		return aconf; /* found! */
 	}
@@ -526,6 +540,8 @@ ConfigItem_link *find_next_autoconnect_server(char *current)
 	/* Otherwise, walk the list up to 'current' */
 	for (aconf = conf_link; aconf; aconf = aconf->next)
 	{
+		if (aconf->flag.temporary)
+			continue;
 		if (!strcmp(aconf->servername, current))
 			break;
 	}
@@ -536,6 +552,7 @@ ConfigItem_link *find_next_autoconnect_server(char *current)
 	 * removed of a server that we just happened to
 	 * try to link to before, so we can afford to do
 	 * it this way.
+	 * Oh and this could return NULL (no linking needed).
 	 */
 	if (!aconf)
 		return find_first_autoconnect_server();
@@ -546,6 +563,8 @@ ConfigItem_link *find_next_autoconnect_server(char *current)
 	 */
 	for (aconf = aconf->next; aconf; aconf = aconf->next)
 	{
+		if (aconf->flag.temporary)
+			continue;
 		if (!server_needs_linking(aconf))
 			continue;
 		return aconf; /* found! */
@@ -559,12 +578,10 @@ ConfigItem_link *find_next_autoconnect_server(char *current)
 	 */
 	for (aconf = conf_link; aconf; aconf = aconf->next)
 	{
-		if (!server_needs_linking(aconf))
-		{
-			if (!strcmp(aconf->servername, current))
-				break; /* need to stop here */
+		if (aconf->flag.temporary)
 			continue;
-		}
+		if (!server_needs_linking(aconf))
+			continue;
 		return aconf; /* found! */
 	}
 
@@ -1995,6 +2012,32 @@ int server_post_connect(Client *client) {
 	{
 		last_autoconnect_server = NULL;
 	}
+	return 0;
+}
+
+int server_quit_reset_autoconnect_time(Client *client, MessageTag *mtags)
+{
+	if ((cfg.autoconnect_strategy == AUTOCONNECT_SEQUENTIAL) ||
+	    (cfg.autoconnect_strategy == AUTOCONNECT_SEQUENTIAL_FALLBACK))
+	{
+		/* If the connect strategy is sequential or sequential-fallback,
+		 * because we don't reset aconf->hold in the loop in
+		 * server_needs_linking(), we reset the hold time of all servers
+		 * here. If we wouldn't do that then servers would (re)connect
+		 * immediately within like <2 seconds after a split.
+		 * Which can be nice, but also be hard for IRCOps to fight a bad
+		 * server link. Also, it feels like violating the connfreq
+		 * if we don't do this.
+		 * More importantly, this is overall change was needed because
+		 * otherwise the "try next server" or "try first server" aspect
+		 * with autoconnect strategy "sequential" and "sequential-fallback"
+		 * was not working properly (was rather inconsistent).
+		 */
+		ConfigItem_link *aconf;
+		for (aconf = conf_link; aconf; aconf = aconf->next)
+			aconf->hold = TStime() + aconf->class->connfreq;
+	}
+
 	return 0;
 }
 

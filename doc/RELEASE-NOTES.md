@@ -94,6 +94,20 @@ open to users, ..
   will work fine if you use `cloak_sha256`).
 
 ### Changes:
+* When a netsplit happens and
+  [set::server-linking::autoconnect-strategy](https://www.unrealircd.org/docs/Set_block#set::server-linking)
+  is `sequential` (which is the default) or `sequential-fallback`
+  (which is a good value for leafs) then we now consistently wait for
+  [class::connfreq](https://www.unrealircd.org/docs/Class_block)
+  seconds before trying to connect to the (same or next) server.
+  By default this is 15 seconds in the example configuration file
+  server class. The reason for this is to provide a consistent behavior.
+  Previously we waited semi-randomly for 0 to class::connfreq seconds.
+  The previous behavior caused the picking of 'next server to try' to
+  be inconsistent, which especially caused issues for `sequential-fallback`.
+  If you want quicker recovery times in case of a netsplit, simply lower
+  the value of [class::connfreq](https://www.unrealircd.org/docs/Class_block)
+  in your configuration file, e.g. to 5 instead of 15 seconds.
 * Currently it is still possible to link servers without certificate
   verification. This would be rare, since our
   [server linking guide](https://www.unrealircd.org/docs/Tutorial:_Linking_servers)
