@@ -281,7 +281,7 @@ int input_conversion_strtoval(const char *name)
 		return 0;
 	if (!strcmp(name, "strip-control-codes"))
 		return INPUT_CONVERSION_STRIP_CONTROL_CODES;
-	if (!strcmp(name, "confusables"))
+	if (!strcmp(name, "confusables") || !strcmp(name, "deconfuse"))
 		return INPUT_CONVERSION_CONFUSABLES;
 	return -1;
 }
