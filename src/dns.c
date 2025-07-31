@@ -263,6 +263,7 @@ void init_resolver(int firsttime)
 void reinit_resolver(Client *client)
 {
 	EventDel(unrealdns_timeout_hdl);
+	unrealdns_timeout_hdl = NULL;
 
 	unreal_log(ULOG_INFO, "dns", "REINIT_RESOLVER", client,
 	           "$client requested reinitalization of the DNS resolver");

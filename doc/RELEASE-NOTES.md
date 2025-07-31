@@ -135,6 +135,7 @@ open to users, ..
 * [Reputation scores](https://www.unrealircd.org/docs/Reputation_score)
   now really expire after 90 days.
 * For `./unrealircd genlinkblock` skip IP-detection if it is localhost.
+* Crash on `REHASH -dns` (IRCOp-only)
 
 ### Developers and protocol:
 * Command handlers (and overrides) now have an extra argument
