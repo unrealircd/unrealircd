@@ -634,6 +634,7 @@ int crashreport_send(char *fname)
 	snprintf(buf, sizeof(buf), "POST /crash.php HTTP/1.1\r\n"
 	                    "User-Agent: UnrealIRCd %s\r\n"
 	                    "Host: %s\r\n"
+	                    "Connection: close\r\n"
 	                    "Accept: */*\r\n"
 	                    "Content-Length: %d\r\n"
 	                    "Expect: 100-continue\r\n"
@@ -686,6 +687,10 @@ int crashreport_send(char *fname)
 	BIO_puts(socket, footer);
 
 	do { } while(BIO_should_retry(socket)); /* make sure we are really finished (you never know with TLS) */
+
+	/* Attempt to shut down gracefully (which is a two step process) */
+	if (SSL_shutdown(ssl) == 0)
+		SSL_shutdown(ssl);
 
 #ifndef _WIN32
 	printf("\n");
