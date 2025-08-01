@@ -32,24 +32,6 @@ and spamfilter:input-conversion now properly accepting `deconfused`.
     `relaxed` to disable it entirely (which is not recommended but makes it how things were
     before 6.2.x). We recommend using `normal` (which is the default already) and doing
     per-channel exceptions via `+F` where needed.
-* [Best Practices](https://www.unrealircd.org/docs/Set_block#set::best-practices):
-  If any plaintext ports are found open, we will give an advice to move users to TLS.
-  * The [Use TLS](https://www.unrealircd.org/docs/Use_TLS) article explains why and
-    shows how to do a gradual rollout, with warnings and automatic upgrades from
-    plaintext to TLS for IRC clients that support it.
-  * This message can be turned off by setting
-    [set::best-practices::listen-nontls-port](https://www.unrealircd.org/docs/Set_block#set::best-practices)
-    to `no`. But please, read the
-    [Use TLS](https://www.unrealircd.org/docs/Use_TLS) article first.
-  * You won't get this warning if set::plaintext-policy::user is `deny`
-    or when the listen::ip is `127.0.0.1` or `::1`.
-* [Best Practices](https://www.unrealircd.org/docs/Set_block#set::best-practices):
-  If no SSL/TLS cert is present that is issued by a trusted Certificate
-  Authority, then we will give a suggestion to use Let's Encrypt.
-  This can be turned off via
-  [set::best-practices::trusted-cert](https://www.unrealircd.org/docs/Set_block#set::best-practices).
-  For servers without any client listener blocks (or only on localhost)
-  this message is not triggered (for e.g. hubs).
 * [AntiMixedUTF8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8):
   This is now aware of a lot more unicode blocks. This will cause a higher
   score for some regular messages, so be aware if you have the score set very
@@ -69,6 +51,24 @@ and spamfilter:input-conversion now properly accepting `deconfused`.
     unicode blocks are used, etc.
   * The same Text Analysis is now in JSON logs for spamfilter hits and
     antimixedutf8 hits.
+* [Best Practices](https://www.unrealircd.org/docs/Set_block#set::best-practices):
+  If any plaintext ports are found open, we will give an advice to move users to TLS.
+  * The [Use TLS](https://www.unrealircd.org/docs/Use_TLS) article explains why and
+    shows how to do a gradual rollout, with warnings and automatic upgrades from
+    plaintext to TLS for IRC clients that support it.
+  * This message can be turned off by setting
+    [set::best-practices::listen-nontls-port](https://www.unrealircd.org/docs/Set_block#set::best-practices)
+    to `no`. But please, read the
+    [Use TLS](https://www.unrealircd.org/docs/Use_TLS) article first.
+  * You won't get this warning if set::plaintext-policy::user is `deny`
+    or when the listen::ip is `127.0.0.1` or `::1`.
+* [Best Practices](https://www.unrealircd.org/docs/Set_block#set::best-practices):
+  If no SSL/TLS cert is present that is issued by a trusted Certificate
+  Authority, then we will give a suggestion to use Let's Encrypt.
+  This can be turned off via
+  [set::best-practices::trusted-cert](https://www.unrealircd.org/docs/Set_block#set::best-practices).
+  For servers without any client listener blocks (or only on localhost)
+  this message is not triggered (for e.g. hubs).
 * Post-quantum cryptography (PQC) enhancements:
   * [set::tls](https://www.unrealircd.org/docs/TLS_Ciphers_and_protocols):
     Rename `ecdh-curves` to `groups` (the old name will continue to work)
