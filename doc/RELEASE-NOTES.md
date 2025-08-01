@@ -1,12 +1,15 @@
-UnrealIRCd 6.2.0-beta2
+UnrealIRCd 6.2.0-beta3
 =======================
 
-This is the second beta for future UnrealIRCd 6.2.0. This is work in progress
-and not a stable version. There will likely be several more beta's.  
+This is the third beta for future UnrealIRCd 6.2.0. This is work in progress
+and not a stable version. There will likely be more betas or release candidates.
 Please report any issues at https://bugs.unrealircd.org/.
 
-Changes between beta2 and current git are: a message if you have any plaintext ports
-open to users, ..
+Changes between beta2 and beta3 are: a message if you have any plaintext ports
+open to users, more prominent certificate verification warning, a check if
+your server certificate is not only issued by a CA but actually valid for
+me::name, class::connfreq being used also for the 1st server reconnect,
+and spamfilter:input-conversion now properly accepting `deconfused`.
 
 ### Enhancements:
 * [Channel flood protection by default](https://www.unrealircd.org/docs/Channel_anti-flood_settings):
