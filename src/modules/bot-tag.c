@@ -51,12 +51,6 @@ MOD_INIT()
 	mtag.flags = MTAG_HANDLER_FLAGS_NO_CAP_NEEDED;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
 
-	memset(&mtag, 0, sizeof(mtag));
-	mtag.name = "draft/bot";
-	mtag.is_ok = bottag_mtag_is_ok;
-	mtag.flags = MTAG_HANDLER_FLAGS_NO_CAP_NEEDED;
-	MessageTagHandlerAdd(modinfo->handle, &mtag);
-
 	HookAddVoid(modinfo->handle, HOOKTYPE_NEW_MESSAGE, 0, mtag_add_bottag);
 
 	return MOD_SUCCESS;
@@ -92,11 +86,6 @@ void mtag_add_bottag(Client *client, MessageTag *recv_mtags, MessageTag **mtag_l
 
 		m = safe_alloc(sizeof(MessageTag));
 		safe_strdup(m->name, "bot");
-		m->value = NULL;
-		AddListItem(m, *mtag_list);
-
-		m = safe_alloc(sizeof(MessageTag));
-		safe_strdup(m->name, "draft/bot");
 		m->value = NULL;
 		AddListItem(m, *mtag_list);
 	}
