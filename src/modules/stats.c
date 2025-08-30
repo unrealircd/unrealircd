@@ -892,7 +892,7 @@ int stats_tld(Client *client, const char *para)
 		for (m = tld->match->printable_list; m; m = m->next)
 		{
 			sendnumeric(client, RPL_STATSTLINE, namevalue_nospaces(m),
-			            tld->motd_file,
+			            tld->motd_file ? tld->motd_file : "none",
 			            tld->rules_file ? tld->rules_file : "none");
 		}
 	}
