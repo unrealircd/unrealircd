@@ -128,7 +128,7 @@ UnicodeBlocks unicode_blocks[UNICODE_BLOCK_COUNT] =
 	{0x1DC0, 0x1DFF, "Combining Diacritical Marks Supplement", 1},
 	{0x1E00, 0x1EFF, "Latin Extended Additional", 1},
 	{0x1F00, 0x1FFF, "Greek Extended", 1},
-	{0x2000, 0x206F, "General Punctuation", 1},
+	{0x2000, 0x206F, "General Punctuation", 0},
 	{0x2070, 0x209F, "Superscripts and Subscripts", 1},
 	{0x20A0, 0x20CF, "Currency Symbols", 1},
 	{0x20D0, 0x20FF, "Combining Diacritical Marks for Symbols", 1},
