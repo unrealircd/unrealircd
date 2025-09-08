@@ -1,6 +1,8 @@
 #
-# UnrealIRCd Makefile - codemastr
+# UnrealIRCd Makefile for Windows
+# Originally written by codemastr
 #
+
 CC=cl
 LINK=link
 RC=rc
@@ -9,10 +11,19 @@ MT=mt
 ############################ USER CONFIGURATION ############################
 
 # You are encouraged NOT to set these values here, but instead make a batch file
-# which passes all these arguments to nmake, like:
-# nmake -f makefile.windows LIBRESSL_INC_DIR="c:\dev\libressl" etc etc...
-# Both ways will work, but if you use a batch file it's easier with
-# upgrading UnrealIRCd as you won't have to edit this makefile again.
+# file called "build.bat" which passes all these arguments to nmake, like:
+# nmake -f makefile.windows SSL_INC_DIR="c:\dev\unrealircd-6-libs\openssl" etc etc...
+# as explained in https://www.unrealircd.org/docs/Compiling_UnrealIRCd_on_Windows
+
+# And most likely you want the UnrealIRCd libraries pack, so you don't have
+# to compile all these libraries by yourself, see:
+# https://www.unrealircd.org/docs/Windows_external_libraries_for_UnrealIRCd
+
+### SSL/TLS ###
+#Use OpenSSL or LibreSSL. Define paths and libraries:
+#SSL_LIB_DIR="c:\dev\unrealircd-6-libs\openssl\lib"
+#SSL_INC_DIR="c:\dev\unrealircd-6-libs\openssl\include"
+#SSLLIB="libcrypto.lib libssl.lib"
 
 ### PCRE2 ###
 #PCRE2_LIB_DIR="C:\dev\pcre2\build\release"
@@ -44,47 +55,24 @@ MT=mt
 #GEOIPCLASSIC_INC_DIR="c:\dev\unrealircd-6-libs\GeoIP\libGeoIP" ^
 #GEOIPCLASSICLIB="GeoIP.lib"
 
-##### REMOTE INCLUDES ####
-#To enable remote include support you must have libcurl installed on your
-#system and it must have ares support enabled.
-#
-#
-#To enable remote includes uncomment the next line:
+### REMOTE INCLUDES ###
 #USE_REMOTEINC=1
-#
-#If your libcurl library and include files are not in your compiler's
-#default locations, specify the locations here:
-#LIBCURL_INC_DIR="c:\dev\curl\include"
-#LIBCURL_LIB_DIR="c:\dev\curl\lib"
-#
-#
-### END REMOTE INCLUDES ##
-
-####### SSL/TLS SUPPORT (MANDATORY) ######
-#Use LibreSSL or OpenSSL. Define paths and libraries:
-#LIBRESSL_INC_DIR="c:\dev\libressl\include"
-#LIBRESSL_LIB_DIR="c:\dev\libressl\lib"
-#SSLLIB=libcrypto-38.lib libssl-39.lib libtls-11.lib
-#The version numbers of the 3 libraries in the last line change
-#every libressl release. So be sure to update after any libressl upgrade.
-######### END SSL/TLS ########
+#LIBCURL_LIB_DIR="c:\dev\unrealircd-6-libs\curl\lib"
+#LIBCURL_INC_DIR="c:\dev\unrealircd-6-libs\curl\include"
 
 ###### _EXTRA_ DEBUGGING #####
 # We always build releases with debugging information, since otherwise
 # we cannot trace the source of a crash. Plus we do not mind the extra
 # performance hit caused by not enabling super-optimization, tracing
 # crashes properly is more important.
-# You can choose (at your own risk) to enable EVEN MORE debugging,
+# You can choose to (at your own risk) enable EVEN MORE debugging,
 # note that this causes /MDd to be used instead of /MD which can make
 # libraries incompatible, plus all the other side-effects such as
-# requiring a different dll we do not ship (and maybe you are not even
-# allowed to ship due to license agreements), etc...
-# In any case, this probably should not be used, unless debugging a
+# requiring a different runtime dll we do not ship (and maybe you are
+# not even allowed to ship due to license agreements), etc...
+# In any case, this probably SHOULD NOT BE USED, unless debugging a
 # problem locally, in which case it can be useful.
 #DEBUGEXTRA=1
-#
-#
-#### END RELEASE BUILD ###
 
 ############################# END CONFIGURATION ############################
 
@@ -135,11 +123,11 @@ LIBCURL_LIB=/LIBPATH:"$(LIBCURL_LIB_DIR)"
 !ENDIF
 !ENDIF
 
-!IFDEF LIBRESSL_INC_DIR
-LIBRESSL_INC=/I "$(LIBRESSL_INC_DIR)"
+!IFDEF SSL_INC_DIR
+SSL_INC=/I "$(SSL_INC_DIR)"
 !ENDIF
-!IFDEF LIBRESSL_LIB_DIR
-LIBRESSL_LIB=/LIBPATH:"$(LIBRESSL_LIB_DIR)"
+!IFDEF SSL_LIB_DIR
+SSL_LIB=/LIBPATH:"$(SSL_LIB_DIR)"
 !ENDIF
 
 !IFDEF DEBUGEXTRA
@@ -154,13 +142,13 @@ DBGLFLAG=/debug
 MODDBGCFLAG=/LDd /MD /Zi
 !ENDIF 
 
-STDOPTIONS=$(PCRE2_INC) $(ARGON2_INC) $(SODIUM_INC) $(JANSSON_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) \
+STDOPTIONS=$(PCRE2_INC) $(ARGON2_INC) $(SODIUM_INC) $(JANSSON_INC) $(CARES_INC) $(LIBCURL_INC) $(SSL_INC) \
  /J /I ./INCLUDE /nologo \
  $(CURLCFLAGS) /D FD_SETSIZE=16384 $(SSLCFLAGS) /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE \
  /D FAKELAG_CONFIGURABLE=1 \
  /W3 /wd4267 /wd4101 /wd4018 /wd4244 /wd4996 /WX /analyze:ruleset extras\VStudioAnalyze.ruleset
 STDLIBS=$(CARES_LIB) $(CARESLIB) $(PCRE2_LIB) $(PCRE2LIB) $(ARGON2_LIB) $(ARGON2LIB) \
- $(SODIUM_LIB) $(SODIUMLIB) $(JANSSON_LIB) $(JANSSONLIB) $(LIBRESSL_LIB) $(SSLLIB) $(LIBCURL_LIB) $(CURLLIB)
+ $(SODIUM_LIB) $(SODIUMLIB) $(JANSSON_LIB) $(JANSSONLIB) $(SSL_LIB) $(SSLLIB) $(LIBCURL_LIB) $(CURLLIB)
 CFLAGS=$(DBGCFLAG) $(STDOPTIONS) /FS /MP1 /c /Fosrc/
 CFLAGSST=$(DBGCFLAGST) $(STDOPTIONS) /FS /MP1 /c /Fosrc/
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \

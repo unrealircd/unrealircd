@@ -78,11 +78,9 @@ and spamfilter:input-conversion now properly accepting `deconfused`.
     ["harvest now, decrypt later"](https://en.wikipedia.org/wiki/Harvest_now,_decrypt_later).
   * To benefit from this, OpenSSL 3.5.0 or later (released April 2025)
     is required on the server, and similarly a client that supports this.
-    At the time of writing, almost all Linux distros don't have such an
+    At the time of writing, almost no Linux distros have such an
     OpenSSL version yet (which is not a problem, this new feature will simply
-    not be available). Notably Debian 13 (when released in August
-    2025) will have it. LibreSSL does not support it either yet, so our
-    Windows build does not have this feature.
+    not be available). Notably Debian 13 has it, and our Windows build.
   * Also, change the TLS information on-connect and in WHOIS etc. from
     something like `TLSv1.3-TLS_CHACHA20_POLY1305_SHA256` to
     `TLSv1.3/X25519/TLS_CHACHA20_POLY1305_SHA256`. In other words: using
@@ -97,6 +95,9 @@ and spamfilter:input-conversion now properly accepting `deconfused`.
   will work fine if you use `cloak_sha256`).
 
 ### Changes:
+* Windows: we now use OpenSSL instead of LibreSSL. This also means PQC
+  is available on Windows now (see Post-quantum cryptography above).
+
 * When a netsplit happens and
   [set::server-linking::autoconnect-strategy](https://www.unrealircd.org/docs/Set_block#set::server-linking)
   is `sequential` (which is the default) or `sequential-fallback`
@@ -154,6 +155,9 @@ and spamfilter:input-conversion now properly accepting `deconfused`.
   `PRIVMSG` and `SPAMINFO` for example.
 * New hook `HOOKTYPE_BANNED_CLIENT`
 * New hook `HOOKTYPE_CAN_USE_NICK`
+* On Windows the variables `LIBRESSL_INC_DIR` and `LIBRESSL_LIB_DIR`
+  are now `SSL_INC_DIR` and `SSL_LIB_DIR` because we no longer use
+  nor assume LibreSSL.
 
 UnrealIRCd 6.1.10
 ==================

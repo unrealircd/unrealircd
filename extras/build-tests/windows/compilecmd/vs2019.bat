@@ -14,9 +14,9 @@ echo BUILDCOMMAND IS: %BUILDCOMMAND%
 echo BUILDARGS IS: %BUILDARGS%
 
 %BUILDCOMMAND% %BUILDARGS% -f makefile.windows ^
-LIBRESSL_INC_DIR="c:\projects\unrealircd-6-libs\libressl\include" ^
-LIBRESSL_LIB_DIR="c:\projects\unrealircd-6-libs\libressl\lib" ^
-SSLLIB="crypto.lib ssl.lib" ^
+SSL_INC_DIR="c:\projects\unrealircd-6-libs\openssl\include" ^
+SSL_LIB_DIR="c:\projects\unrealircd-6-libs\openssl\lib" ^
+SSLLIB="libcrypto.lib libssl.lib" ^
 USE_REMOTEINC=1 ^
 LIBCURL_INC_DIR="c:\projects\unrealircd-6-libs\curl\include" ^
 LIBCURL_LIB_DIR="c:\projects\unrealircd-6-libs\curl\builds\libcurl-vc-x64-release-dll-ssl-dll-cares-dll-ipv6-obj-lib" ^
