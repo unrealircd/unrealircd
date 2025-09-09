@@ -1,15 +1,18 @@
-UnrealIRCd 6.2.0-beta3
-=======================
+UnrealIRCd 6.2.0
+=================
 
-This is the third beta for future UnrealIRCd 6.2.0. This is work in progress
-and not a stable version. There will likely be more betas or release candidates.
-Please report any issues at https://bugs.unrealircd.org/.
+This release has channel flood protection turned on by default, UTF8 Text
+Analysis and Spamfilter enhancements, new best practices regarding plaintext
+port 6667 and TLS certificates, PQC enhancements, etc.
 
-Changes between beta2 and beta3 are: a config load message if you have any
-plaintext ports open to users, more prominent certificate verification warning,
-a check if your server certificate is not only issued by a CA but actually
-valid for me::name, class::connfreq being used also for the 1st server reconnect,
-and spamfilter:input-conversion now properly accepting `deconfused`.
+It is highly recommended to read the release notes. Or, at least read the
+first item under "Enhancements".
+
+The beta's for 6.2.0 didn't receive as much testing as I would have liked.
+If you want to hold off for a while because you are cautious or if you
+depend on 3rd party modules then feel free to wait for version 6.2.1.
+(At the time of this 6.2.0 release quite some 3rd party modules have
+not been updated to work with 6.2.x)
 
 ### Enhancements:
 * [Channel flood protection by default](https://www.unrealircd.org/docs/Channel_anti-flood_settings):
@@ -97,7 +100,6 @@ and spamfilter:input-conversion now properly accepting `deconfused`.
 ### Changes:
 * Windows: we now use OpenSSL instead of LibreSSL. This also means PQC
   is available on Windows now (see Post-quantum cryptography above).
-
 * When a netsplit happens and
   [set::server-linking::autoconnect-strategy](https://www.unrealircd.org/docs/Set_block#set::server-linking)
   is `sequential` (which is the default) or `sequential-fallback`
