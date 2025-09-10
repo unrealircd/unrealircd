@@ -9787,6 +9787,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					bestpractices.trusted_cert = config_checkval(cepp->value, CFG_YESNO);
 				} else
+				if (!strcmp(cepp->name, "trusted-cert-valid-hostname"))
+				{
+					bestpractices.trusted_cert_valid_hostname = config_checkval(cepp->value, CFG_YESNO);
+				} else
 				if (!strcmp(cepp->name, "listen-nontls-port"))
 				{
 					bestpractices.listen_nontls_port = config_checkval(cepp->value, CFG_YESNO);
