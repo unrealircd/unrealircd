@@ -2246,6 +2246,18 @@ int config_test(void)
 		/* loop.config_status = CONFIG_STATUS_LOAD is done by module_loadall() */
 		module_loadall();
 		RunHook(HOOKTYPE_REHASH_COMPLETE);
+	} else
+	if (!loop.booted)
+	{
+		/* This was moved from src/ircd.c to here, since we need TLS initialized
+		 * before we run the best practices tests in postconf().
+		 */
+		if (!init_tls())
+		{
+			config_error("Failed to load TLS (see errors above). UnrealIRCd can not start.");
+			config_load_failed();
+			return -1;
+		}
 	}
 	loop.config_status = CONFIG_STATUS_POSTLOAD;
 	postconf();

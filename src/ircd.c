@@ -839,14 +839,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 		exit(-4);
 	}
 
-	if (!init_tls())
-	{
-		config_error("Failed to load TLS (see errors above). UnrealIRCd can not start.");
-#ifdef _WIN32
-		win_error(); /* display error dialog box */
-#endif
-		exit(9);
-	}
 	if (loop.config_test)
 	{
 		unreal_log(ULOG_INFO, "config", "CONFIG_PASSED", NULL, "Configuration test passed OK");
