@@ -60,7 +60,7 @@ not been updated to work with 6.2.x)
     shows how to do a gradual rollout, with warnings and automatic upgrades from
     plaintext to TLS for IRC clients that support it.
   * This message can be turned off by setting
-    [set::best-practices::listen-nontls-port](https://www.unrealircd.org/docs/Set_block#set::best-practices)
+    [set::best-practices::listen-tls-only](https://www.unrealircd.org/docs/Set_block#set::best-practices)
     to `no`. But please, read the
     [Use TLS](https://www.unrealircd.org/docs/Use_TLS) article first.
   * You won't get this warning if set::plaintext-policy::user is `deny`

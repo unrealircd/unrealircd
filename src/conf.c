@@ -1984,6 +1984,7 @@ void postconf(void)
 		           "Nowadays, everyone should be using SSL/TLS (on port 6697). "
 		           "See https://www.unrealircd.org/docs/Use_TLS.",
 		           log_data_integer("port", bestpractices.listen_nontls_port));
+		bestpractices.listen_nontls_port_hits++;
 	}
 }
 
@@ -2265,7 +2266,7 @@ int config_test(void)
 	if (bestpractices.hashed_passwords_hits ||
 	    bestpractices.trusted_cert_hits ||
 	    bestpractices.trusted_cert_valid_hostname_hits ||
-	    bestpractices.listen_nontls_port)
+	    bestpractices.listen_nontls_port_hits)
 	{
 		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES", NULL,
 		           "Your config has NO errors, but you received some best practices tips above, in summary:");
@@ -9791,9 +9792,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					bestpractices.trusted_cert_valid_hostname = config_checkval(cepp->value, CFG_YESNO);
 				} else
-				if (!strcmp(cepp->name, "listen-nontls-port"))
+				if (!strcmp(cepp->name, "listen-nontls-port") || !strcmp(cepp->name, "listen-tls-only"))
 				{
-					bestpractices.listen_nontls_port = config_checkval(cepp->value, CFG_YESNO);
+					bestpractices.listen_tls_only = config_checkval(cepp->value, CFG_YESNO);
 				} else
 				{
 					config_error_unknown(cepp->file->filename,

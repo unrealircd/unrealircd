@@ -194,16 +194,21 @@ extern MODVAR Configuration iConf;
 extern MODVAR Configuration tempiConf;
 extern MODVAR int ipv6_disabled;
 
+/** The best practices block.
+ * Note that the *_hits stuff is dynamically set and used for 'checks'.
+ * The rest is config... oh except for listen_nontls_port.. sigh.
+ */
 typedef struct BestPractices BestPractices;
 struct BestPractices {
 	int hashed_passwords;			/**< Use hashed passwords */
-	int hashed_passwords_hits;		/**< How many times advice has been given (like 'warnings' but it is advice) */
+	int hashed_passwords_hits;		/**< - How many times advice has been given (like 'warnings' but it is advice) */
 	int trusted_cert;			/**< Uses a SSL cert issued by a CA */
-	int trusted_cert_hits;			/**< .. how many times the above */
+	int trusted_cert_hits;			/**< - How many times advice has been given (like 'warnings' but it is advice) */
 	int trusted_cert_valid_hostname;	/**< Uses a SSL cert issued by a CA that is valid for me::name */
-	int trusted_cert_valid_hostname_hits;	/**< .. how many times the above */
+	int trusted_cert_valid_hostname_hits;	/**< - How many times advice has been given (like 'warnings' but it is advice) */
 	int listen_tls_only;			/**< listen { } blocks only with tls */
-	int listen_nontls_port;			/**< .. first non-tls port found */
+	int listen_nontls_port;			/**< first non-tls port found */
+	int listen_nontls_port_hits;		/**< - How many times advice has been given (like 'warnings' but it is advice) */
 };
 extern MODVAR BestPractices bestpractices;
 
