@@ -204,7 +204,6 @@ RPC_CALL_FUNC(rpc_server_ban_exception_del)
 		return;
 	}
 
-
 	OPTIONAL_PARAM_STRING("set_by", set_by);
 	if (!set_by)
 		set_by = client->rpc->issuer ? client->rpc->issuer : client->name;
