@@ -317,6 +317,21 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		json_object_set_new(user, "reputation", json_integer(GetReputation(client)));
 		json_expand_client_security_groups(user, client);
 
+		/* away information */
+		json_t *away = json_object();
+		json_object_set_new(user, "away", away);
+		
+		if (client->user->away)
+		{
+			json_object_set_new(away, "is_away", json_boolean(1));
+			json_object_set_new(away, "away_reason", json_string_unreal(client->user->away));
+			json_object_set_new(away, "away_since", json_timestamp(client->user->away_since));
+		} else {
+			json_object_set_new(away, "is_away", json_boolean(0));
+			json_object_set_new(away, "away_reason", json_null());
+			json_object_set_new(away, "away_since", json_null());
+		}
+
 		/* user modes and snomasks */
 		get_usermode_string_r(client, buf, sizeof(buf));
 		json_object_set_new(user, "modes", json_string_unreal(buf+1));
