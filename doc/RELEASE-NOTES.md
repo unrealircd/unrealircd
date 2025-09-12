@@ -1,7 +1,7 @@
-UnrealIRCd 6.2.0
-=================
+UnrealIRCd 6.2.0.1
+===================
 
-This release has channel flood protection turned on by default, UTF8 Text
+UnrealIRCd 6.2.0 has channel flood protection turned on by default, UTF8 Text
 Analysis and Spamfilter enhancements, new best practices regarding plaintext
 port 6667 and TLS certificates, PQC enhancements, etc.
 
@@ -13,6 +13,8 @@ If you want to hold off for a while because you are cautious or if you
 depend on 3rd party modules then feel free to wait for version 6.2.1.
 (At the time of this 6.2.0 release quite some 3rd party modules have
 not been updated to work with 6.2.x)
+
+6.2.0.1: This version (only) fixes some incorrect "best practices" warnings
 
 ### Enhancements:
 * [Channel flood protection by default](https://www.unrealircd.org/docs/Channel_anti-flood_settings):
