@@ -747,7 +747,7 @@ void log_data_free(LogData *d)
 {
 	if (d->type == LOG_FIELD_STRING)
 		safe_free(d->value.string);
-	else if ((d->type == LOG_FIELD_OBJECT) && d->value.object)
+	else if (((d->type == LOG_FIELD_OBJECT) || (d->type == LOG_FIELD_OBJECT_NOFREE)) && d->value.object)
 		json_decref(d->value.object);
 
 	safe_free(d->key);
@@ -1600,9 +1600,7 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 #endif
 				break;
 		}
-		if (d->type == LOG_FIELD_OBJECT_NOFREE)
-			json_decref(d->value.object);
-		else
+		if (d->type != LOG_FIELD_OBJECT_NOFREE)
 			log_data_free(d);
 	}
 
