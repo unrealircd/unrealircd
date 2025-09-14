@@ -316,6 +316,11 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 			json_object_set_new(user, "account", json_string_unreal(client->user->account));
 		json_object_set_new(user, "reputation", json_integer(GetReputation(client)));
 		json_expand_client_security_groups(user, client);
+		if (client->user->away)
+		{
+			json_object_set_new(user, "away_reason", json_string_unreal(client->user->away));
+			json_object_set_new(user, "away_since", json_timestamp(client->user->away_since));
+		}
 
 		/* user modes and snomasks */
 		get_usermode_string_r(client, buf, sizeof(buf));
