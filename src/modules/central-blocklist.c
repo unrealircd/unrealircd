@@ -570,6 +570,7 @@ void cbl_add_client_info(Client *client)
 	json_t *cbl = CBL(client)->handshake;
 	json_t *child = json_object();
 	const char *str;
+	int i;
 
 	json_object_set_new(cbl, "client", child);
 
@@ -607,10 +608,10 @@ void cbl_add_client_info(Client *client)
 		json_object_set_new(child, "details", json_string_unreal(client->name));
 	}
 
-	if (client->local && client->local->listener)
-		json_object_set_new(child, "server_port", json_integer(client->local->listener->port));
-	if (client->local && client->local->port)
-		json_object_set_new(child, "client_port", json_integer(client->local->port));
+	if ((i = get_server_port(client)))
+		json_object_set_new(child, "server_port", json_integer(i));
+	if ((i = get_client_port(client)))
+		json_object_set_new(child, "client_port", json_integer(i));
 
 	if (client->user)
 	{

@@ -891,7 +891,8 @@ refuse_client:
 	set_sockhost(client, ip);
 	if (!set_client_ip(client, ip))
 		abort(); // would mean getpeerip() or spoof_ip is bad, which is impossible.
-	client->local->port = port;
+	set_client_port(client, port);
+	set_server_port(client, client->local->listener->port);
 	client->local->fd = fd;
 
 	/* Tag loopback connections */

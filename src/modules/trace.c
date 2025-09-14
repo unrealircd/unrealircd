@@ -201,7 +201,7 @@ CMD_FUNC(cmd_trace)
 				break;
 
 			case CLIENT_STATUS_LOG:
-				sendnumeric(client, RPL_TRACELOG, LOGFILE, acptr->local->port);
+				sendnumeric(client, RPL_TRACELOG, LOGFILE, 0);
 				cnt++;
 				break;
 

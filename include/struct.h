@@ -1540,7 +1540,6 @@ struct LocalClient {
 	int identbufcnt;		/**< Counter for 'ident' reading code */
 	struct hostent *hostp;		/**< Host record for this client (used by DNS code) */
 	char sockhost[HOSTLEN + 1];	/**< Hostname from the socket */
-	u_short port;			/**< Remote TCP port of client */
 	FloodCounter flood[MAXFLOODOPTIONS];
 	RPCClient *rpc;			/**< RPC Client, or NULL */
 	Tag *tags;			/**< Tags from spamfilter */

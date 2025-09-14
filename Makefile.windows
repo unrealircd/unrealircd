@@ -326,6 +326,7 @@ DLL_FILES=\
  src/modules/pass.dll \
  src/modules/pingpong.dll \
  src/modules/plaintext-policy.dll \
+ src/modules/portinfo.dll \
  src/modules/protoctl.dll \
  src/modules/quit.dll \
  src/modules/real-quit-reason.dll \
@@ -1115,6 +1116,9 @@ src/modules/pingpong.dll: src/modules/pingpong.c $(INCLUDES)
 
 src/modules/plaintext-policy.dll: src/modules/plaintext-policy.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/plaintext-policy.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/plaintext-policy.pdb $(MODLFLAGS)
+
+src/modules/portinfo.dll: src/modules/portinfo.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/portinfo.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/portinfo.pdb $(MODLFLAGS)
 
 src/modules/protoctl.dll: src/modules/protoctl.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/protoctl.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/protoctl.pdb $(MODLFLAGS)

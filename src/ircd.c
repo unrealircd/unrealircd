@@ -848,7 +848,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	if (loop.boot_function)
 		loop.boot_function();
 	open_debugfile();
-	me.local->port = 6667; /* pointless? */
 	applymeblock();
 #ifdef HAVE_SYSLOG
 	openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON);
@@ -1003,7 +1002,6 @@ static void open_debugfile(void)
 		client = make_client(NULL, NULL);
 		client->local->fd = 2;
 		SetLog(client);
-		client->local->port = debuglevel;
 		client->flags = 0;
 
 		strlcpy(client->local->sockhost, me.local->sockhost, sizeof client->local->sockhost);
