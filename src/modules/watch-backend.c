@@ -37,10 +37,10 @@ void dummy_free(ModData *md);
 void watch_free(ModData *md);
 
 int watch_backend_user_quit(Client *client, MessageTag *mtags, const char *comment);
-int _watch_add(char *nick, Client *client, int flags);
+int _watch_add(const char *nick, Client *client, int flags);
 int _watch_check(Client *client, int event, void *data, int (*watch_notify)(Client *client, Watch *watch, Link *lp, int event, void *data));
-Watch *_watch_get(char *nick);
-int _watch_del(char *nick, Client *client, int flags);
+Watch *_watch_get(const char *nick);
+int _watch_del(const char *nick, Client *client, int flags);
 int _watch_del_list(Client *client, int flags);
 uint64_t hash_watch_nick_name(const char *name);
 
@@ -147,7 +147,7 @@ int watch_backend_user_quit(Client *client, MessageTag *mtags, const char *comme
 	return 0;
 }
 
-int _watch_add(char *nick, Client *client, int flags)
+int _watch_add(const char *nick, Client *client, int flags)
 {
 	unsigned int hashv;
 	Watch *watch;
@@ -227,7 +227,7 @@ int _watch_check(Client *client, int event, void *data, int (*watch_notify)(Clie
 	return 0;
 }
 
-Watch *_watch_get(char *nick)
+Watch *_watch_get(const char *nick)
 {
 	unsigned int hashv;
 	Watch *watch;
@@ -241,7 +241,7 @@ Watch *_watch_get(char *nick)
 	return watch;
 }
 
-int _watch_del(char *nick, Client *client, int flags)
+int _watch_del(const char *nick, Client *client, int flags)
 {
 	unsigned int hashv;
 	Watch **watch, *wprev;

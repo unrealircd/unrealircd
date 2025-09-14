@@ -70,7 +70,7 @@ TKL *(*tkl_add_spamfilter)(int type, const char *id, unsigned short target, BanA
 TKL *(*tkl_add_banexception)(int type, const char *usermask, const char *hostmask, SecurityGroup *match,
                              const char *reason, const char *set_by,
                              time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags);
-TKL *(*tkl_del_line)(TKL *tkl);
+void (*tkl_del_line)(TKL *tkl);
 void (*tkl_check_local_remove_shun)(TKL *tmp);
 int (*find_tkline_match)(Client *client, int skip_soft);
 int (*find_shun)(Client *client);
@@ -128,7 +128,7 @@ void (*free_tkl)(TKL *tkl);
 TKL *(*find_tkl_serverban)(int type, const char *usermask, const char *hostmask, int softban);
 TKL *(*find_tkl_banexception)(int type, const char *usermask, const char *hostmask, int softban);
 TKL *(*find_tkl_nameban)(int type, const char *name, int hold);
-TKL *(*find_tkl_spamfilter)(int type, const char *match_string, unsigned short action, unsigned short target);
+TKL *(*find_tkl_spamfilter)(int type, const char *match_string, BanActionValue action, unsigned short target);
 int (*find_tkl_exception)(int ban_type, Client *client);
 int (*server_ban_parse_mask)(Client *client, int add, char type, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
 int (*server_ban_exception_parse_mask)(Client *client, int add, const char *bantypes, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);

@@ -184,14 +184,14 @@ static void charsys_doadd_language(char *name);
 int charsys_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int charsys_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 int charsys_config_posttest(int *errs);
-char *_charsys_get_current_languages(void);
+const char *_charsys_get_current_languages(void);
 
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAdd(modinfo->handle, EFUNC_DO_NICK_NAME, _do_nick_name);
 	EfunctionAdd(modinfo->handle, EFUNC_DO_REMOTE_NICK_NAME, _do_remote_nick_name);
-	EfunctionAddString(modinfo->handle, EFUNC_CHARSYS_GET_CURRENT_LANGUAGES, _charsys_get_current_languages);
+	EfunctionAddConstString(modinfo->handle, EFUNC_CHARSYS_GET_CURRENT_LANGUAGES, _charsys_get_current_languages);
 	charsys_reset();
 	charsys_reset_pretest();
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, charsys_config_test);
@@ -1297,7 +1297,7 @@ void charsys_dump_table(char *filter)
 }
 
 /** Get current languages (the 'langsinuse' variable) */
-char *_charsys_get_current_languages(void)
+const char *_charsys_get_current_languages(void)
 {
 	return langsinuse;
 }

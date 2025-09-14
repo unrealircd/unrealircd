@@ -822,11 +822,11 @@ extern MODVAR TKL *(*tkl_add_spamfilter)(int type, const char *id, unsigned shor
 extern MODVAR TKL *(*find_tkl_serverban)(int type, const char *usermask, const char *hostmask, int softban);
 extern MODVAR TKL *(*find_tkl_banexception)(int type, const char *usermask, const char *hostmask, int softban);
 extern MODVAR TKL *(*find_tkl_nameban)(int type, const char *name, int hold);
-extern MODVAR TKL *(*find_tkl_spamfilter)(int type, const char *match_string, unsigned short action, unsigned short target);
+extern MODVAR TKL *(*find_tkl_spamfilter)(int type, const char *match_string, BanActionValue action, unsigned short target);
 extern MODVAR void (*sendnotice_tkl_del)(const char *removed_by, TKL *tkl);
 extern MODVAR void (*sendnotice_tkl_add)(TKL *tkl);
 extern MODVAR void (*free_tkl)(TKL *tkl);
-extern MODVAR TKL *(*tkl_del_line)(TKL *tkl);
+extern MODVAR void (*tkl_del_line)(TKL *tkl);
 extern MODVAR void (*tkl_check_local_remove_shun)(TKL *tmp);
 extern MODVAR int (*find_tkline_match)(Client *cptr, int skip_soft);
 extern MODVAR int (*find_shun)(Client *cptr);

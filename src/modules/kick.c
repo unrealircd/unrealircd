@@ -33,7 +33,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 CMD_FUNC(cmd_kick);
-void _kick_user(MessageTag *mtags, Channel *channel, Client *client, Client *victim, char *comment);
+void _kick_user(MessageTag *mtags, Channel *channel, Client *client, Client *victim, const char *comment);
 
 MOD_TEST()
 {
@@ -82,7 +82,7 @@ void kick_operoverride_msg(Client *client, Channel *channel, Client *target, cha
  *        The suffix is necessary to handle multi-target-kicks.
  *        If initial_mtags is NULL then we will autogenerate one.
  */
-void _kick_user(MessageTag *initial_mtags, Channel *channel, Client *client, Client *victim, char *comment)
+void _kick_user(MessageTag *initial_mtags, Channel *channel, Client *client, Client *victim, const char *comment)
 {
 	MessageTag *mtags = NULL;
 	int initial_mtags_generated = 0;
