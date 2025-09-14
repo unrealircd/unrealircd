@@ -618,6 +618,16 @@ NameList *find_name_list_match(NameList *list, const char *name)
 	return NULL;
 }
 
+/** Find an entry in a NameList - argument is an integer.
+ * @ingroup ListFunctions
+ */
+NameList *find_name_list_integer(NameList *list, int v)
+{
+	char buf[32];
+	snprintf(buf, sizeof(buf), "%d", v);
+	return find_name_list(list, buf);
+}
+
 NameValuePrioList *add_nvplist(NameValuePrioList **lst, int priority, const char *name, const char *value)
 {
 	va_list vl;

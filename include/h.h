@@ -1207,6 +1207,7 @@ extern void _del_name_list(NameList **list, const char *name);
 extern NameList *duplicate_name_list(NameList *e);
 extern NameList *find_name_list(NameList *list, const char *name);
 extern NameList *find_name_list_match(NameList *list, const char *name);
+extern NameList *find_name_list_integer(NameList *list, int v);
 extern int minimum_msec_since_last_run(struct timeval *tv_old, long minimum);
 extern int unrl_utf8_validate(const char *str, const char **end);
 extern char *unrl_utf8_make_valid(const char *str, char *outputbuf, size_t outputbuflen, int strict_length_check);

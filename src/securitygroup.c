@@ -246,6 +246,9 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 	if (!strcmp(cep->name, "ip") || !strcmp(cep->name, "exclude-ip"))
 	{
 	} else
+	if (!strcmp(cep->name, "server-port") || !strcmp(cep->name, "exclude-server-port"))
+	{
+	} else
 	if (!strcmp(cep->name, "security-group") || !strcmp(cep->name, "exclude-security-group"))
 	{
 	} else
@@ -437,6 +440,10 @@ int conf_match_item(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
 	{
 		unreal_add_names(&s->ip, cep);
 	}
+	else if (!strcmp(cep->name, "server-port"))
+	{
+		unreal_add_names(&s->server_port, cep);
+	}
 	else if (!strcmp(cep->name, "security-group"))
 	{
 		unreal_add_names(&s->security_group, cep);
@@ -472,6 +479,10 @@ int conf_match_item(ConfigFile *conf, ConfigEntry *cep, SecurityGroup **block)
 	else if (!strcmp(cep->name, "exclude-ip"))
 	{
 		unreal_add_names(&s->exclude_ip, cep);
+	}
+	else if (!strcmp(cep->name, "exclude-server-port"))
+	{
+		unreal_add_names(&s->exclude_server_port, cep);
 	}
 	else if (!strcmp(cep->name, "exclude-security-group"))
 	{
@@ -657,6 +668,8 @@ void free_security_group(SecurityGroup *s)
 	safe_free(s->exclude_prettyrule);
 	free_entire_name_list(s->ip);
 	free_entire_name_list(s->exclude_ip);
+	free_entire_name_list(s->server_port);
+	free_entire_name_list(s->exclude_server_port);
 	free_nvplist(s->extended);
 	free_nvplist(s->exclude_extended);
 	free_nvplist(s->printable_list);
@@ -691,6 +704,8 @@ SecurityGroup *duplicate_security_group(SecurityGroup *s)
 	}
 	n->ip = duplicate_name_list(s->ip);
 	n->exclude_ip = duplicate_name_list(s->exclude_ip);
+	n->server_port = duplicate_name_list(s->server_port);
+	n->exclude_server_port = duplicate_name_list(s->exclude_server_port);
 	n->extended = duplicate_nvplist(s->extended);
 	n->exclude_extended = duplicate_nvplist(s->exclude_extended);
 	n->printable_list = duplicate_nvplist(s->printable_list);
@@ -876,6 +891,8 @@ int user_allowed_by_security_group_context(Client *client, SecurityGroup *s, cru
 		goto user_not_allowed;
 	if (s->exclude_ip && unreal_match_iplist(client, s->exclude_ip))
 		goto user_not_allowed;
+	if (s->exclude_server_port && find_name_list_integer(s->exclude_server_port, get_server_port(client)))
+		goto user_not_allowed;
 	if (s->exclude_rule && crule_eval(context, s->exclude_rule))
 		goto user_not_allowed;
 	if (s->exclude_extended && user_matches_extended_list(client, s->exclude_extended))
@@ -924,6 +941,8 @@ int user_allowed_by_security_group_context(Client *client, SecurityGroup *s, cru
 	if (s->mask && unreal_mask_match(client, s->mask))
 		goto user_allowed;
 	if (s->ip && unreal_match_iplist(client, s->ip))
+		goto user_allowed;
+	if (s->server_port && find_name_list_integer(s->server_port, get_server_port(client)))
 		goto user_allowed;
 	if (s->rule && crule_eval(context, s->rule))
 		goto user_allowed;

@@ -2242,6 +2242,7 @@ struct SecurityGroup {
 	int tls;
 	NameList *ip;
 	ConfigItem_mask *mask;
+	NameList *server_port;
 	NameList *security_group;
 	char *prettyrule; /* ::rule as a string */
 	CRuleNode *rule; /**< parsed crule */
@@ -2256,6 +2257,7 @@ struct SecurityGroup {
 	int exclude_tls;
 	NameList *exclude_ip;
 	ConfigItem_mask *exclude_mask;
+	NameList *exclude_server_port;
 	NameList *exclude_security_group;
 	char *exclude_prettyrule; /* ::exclude-rule as a string */
 	CRuleNode *exclude_rule; /**< parsed crule */
