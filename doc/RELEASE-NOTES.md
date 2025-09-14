@@ -1,4 +1,4 @@
-UnrealIRCd 6.2.0.1
+UnrealIRCd 6.2.0.2
 ===================
 
 UnrealIRCd 6.2.0 has channel flood protection turned on by default, UTF8 Text
@@ -14,7 +14,8 @@ depend on 3rd party modules then feel free to wait for version 6.2.1.
 (At the time of this 6.2.0 release quite some 3rd party modules have
 not been updated to work with 6.2.x)
 
-6.2.0.1: This version (only) fixes some incorrect "best practices" warnings
+6.2.0.1: This version fixes some unnecessary "best practices" warnings.  
+6.2.0.2: This version fixes scoring in the optional antimixedutf8 module.
 
 ### Enhancements:
 * [Channel flood protection by default](https://www.unrealircd.org/docs/Channel_anti-flood_settings):
