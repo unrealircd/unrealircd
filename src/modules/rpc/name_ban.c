@@ -144,7 +144,7 @@ RPC_CALL_FUNC(rpc_name_ban_del)
 
 	OPTIONAL_PARAM_STRING("set_by", set_by);
 	if (!set_by)
-		set_by = client->name;
+		set_by = client->rpc->issuer ? client->rpc->issuer : client->name;
 
 	if (!(tkl = my_find_tkl_nameban(name)))
 	{
@@ -208,7 +208,7 @@ RPC_CALL_FUNC(rpc_name_ban_add)
 
 	OPTIONAL_PARAM_STRING("set_by", set_by);
 	if (!set_by)
-		set_by = client->name;
+		set_by = client->rpc->issuer ? client->rpc->issuer : client->name;
 
 	if ((tkl_expire_at != 0) && (tkl_expire_at < TStime()))
 	{

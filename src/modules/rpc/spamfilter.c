@@ -236,7 +236,7 @@ RPC_CALL_FUNC(rpc_spamfilter_add)
 
 	OPTIONAL_PARAM_STRING("set_by", set_by);
 	if (!set_by)
-		set_by = client->name;
+		set_by = client->rpc->issuer ? client->rpc->issuer : client->name;
 
 	if (find_tkl_spamfilter(type, name, action, targets))
 	{
@@ -293,7 +293,7 @@ RPC_CALL_FUNC(rpc_spamfilter_del)
 
 	OPTIONAL_PARAM_STRING("set_by", set_by);
 	if (!set_by)
-		set_by = client->name;
+		set_by = client->rpc->issuer ? client->rpc->issuer : client->name;
 
 	tkl = find_tkl_spamfilter(type, name, action, targets);
 	if (!tkl)
