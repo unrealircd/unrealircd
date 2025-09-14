@@ -1,5 +1,23 @@
+UnrealIRCd 6.2.1-git
+=================
+
+This is the git version (development version) for future UnrealIRCd 6.2.1.
+This is work in progress and may not always be a stable version.
+
+### Enhancements:
+* TODO
+
+### Changes:
+* TODO
+
+### Fixes:
+* TODO
+
+### Developers and protocol:
+* TODO
+
 UnrealIRCd 6.2.0.2
-===================
+-------------------
 
 UnrealIRCd 6.2.0 has channel flood protection turned on by default, UTF8 Text
 Analysis and Spamfilter enhancements, new best practices regarding plaintext
