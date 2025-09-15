@@ -77,8 +77,8 @@ const char *log_type_valtostring(LogType v)
 int valid_loglevel(int v)
 {
 	if ((v == ULOG_DEBUG) || (v == ULOG_INFO) ||
-	    (v == ULOG_WARNING) || (v == ULOG_ERROR) ||
-	    (v == ULOG_FATAL))
+	    (v == ULOG_ADVICE) || (v == ULOG_WARNING) ||
+	    (v == ULOG_ERROR) || (v == ULOG_FATAL))
 	{
 		return 1;
 	}
@@ -762,6 +762,8 @@ const char *log_level_valtostring(LogLevel loglevel)
 			return "debug";
 		case ULOG_INFO:
 			return "info";
+		case ULOG_ADVICE:
+			return "advice";
 		case ULOG_WARNING:
 			return "warn";
 		case ULOG_ERROR:
@@ -777,6 +779,7 @@ static NameValue log_colors_irc[] = {
 	{ ULOG_INVALID,	"\0030,01" },
 	{ ULOG_DEBUG,	"\0030,01" },
 	{ ULOG_INFO,	"\00303" },
+	{ ULOG_ADVICE,	"\00312" },
 	{ ULOG_WARNING,	"\00307" },
 	{ ULOG_ERROR,	"\00304" },
 	{ ULOG_FATAL,	"\00313" },
@@ -786,6 +789,7 @@ static NameValue log_colors_terminal[] = {
 	{ ULOG_INVALID,	"\033[90m" },
 	{ ULOG_DEBUG,	"\033[37m" },
 	{ ULOG_INFO,	"\033[92m" },
+	{ ULOG_ADVICE,	"\033[94m" },
 	{ ULOG_WARNING,	"\033[93m" },
 	{ ULOG_ERROR,	"\033[91m" },
 	{ ULOG_FATAL,	"\033[95m" },
@@ -805,6 +809,8 @@ LogLevel log_level_stringtoval(const char *str)
 {
 	if (!strcmp(str, "info"))
 		return ULOG_INFO;
+	if (!strcmp(str, "advice"))
+		return ULOG_ADVICE;
 	if (!strcmp(str, "warn"))
 		return ULOG_WARNING;
 	if (!strcmp(str, "error"))

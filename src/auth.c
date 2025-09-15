@@ -194,7 +194,7 @@ int Auth_CheckError(ConfigEntry *ce, int warn_on_plaintext)
 			if (warn_on_plaintext && bestpractices.hashed_passwords)
 			{
 				const char *hashedpass = mkpass_argon2(ce->value);
-				unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_HASHED_PASSWORDS", NULL,
+				unreal_log(ULOG_ADVICE, "config", "BEST_PRACTICES_HASHED_PASSWORDS", NULL,
 					   "$file:$line_number: $config_item: Advice: it is not recommended to use plaintext passwords in the config file. "
 					    "You can replace this password with the following password hash:\n"
 					    "password \"$hashed_password\";",

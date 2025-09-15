@@ -1958,7 +1958,7 @@ void postconf(void)
 	{
 		if (!has_any_trusted_cert())
 		{
-			unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_TRUSTED_CERT", NULL,
+			unreal_log(ULOG_ADVICE, "config", "BEST_PRACTICES_TRUSTED_CERT", NULL,
 				   "You don't have any valid SSL/TLS certificate that is issued by a trusted Certificate Authority.\n"
 				   "It is highly recommended to use a 'real certificate'. To get a free one, see: "
 				   "https://www.unrealircd.org/docs/Using_Let's_Encrypt_with_UnrealIRCd");
@@ -1966,7 +1966,7 @@ void postconf(void)
 		} else
 		if (bestpractices.trusted_cert_valid_hostname && !has_any_trusted_cert_with_correct_hostname())
 		{
-			unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_TRUSTED_CERT_VALID_HOSTNAME", NULL,
+			unreal_log(ULOG_ADVICE, "config", "BEST_PRACTICES_TRUSTED_CERT_VALID_HOSTNAME", NULL,
 			           "You have an SSL/TLS certificate that is issued by a trusted Certificate Authority "
 			           "(which is good). However, it is not valid for hostname '$servername'. "
 			           "It is recommended for the certificate (or at least one of them) to be "
@@ -1979,7 +1979,7 @@ void postconf(void)
 	    bestpractices.listen_nontls_port &&
 	    (iConf.plaintext_policy_user != POLICY_DENY))
 	{
-		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_PLAINTEXT_PORT", NULL,
+		unreal_log(ULOG_ADVICE, "config", "BEST_PRACTICES_PLAINTEXT_PORT", NULL,
 		           "You have at least one IRC plaintext port open to users (such as $port). "
 		           "Nowadays, everyone should be using SSL/TLS (on port 6697). "
 		           "See https://www.unrealircd.org/docs/Use_TLS.",
@@ -2268,16 +2268,16 @@ int config_test(void)
 	    bestpractices.trusted_cert_valid_hostname_hits ||
 	    bestpractices.listen_nontls_port_hits)
 	{
-		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES", NULL,
-		           "Your config has NO errors, but you received some best practices tips above, in summary:");
+		unreal_log(ULOG_ADVICE, "config", "BEST_PRACTICES", NULL,
+		           "Your config has NO errors, but you received some best practices tips above.");
 		if (bestpractices.hashed_passwords_hits)
 		{
-			unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_HASHED_PASSWORDS_INFO", NULL,
+			unreal_log(ULOG_ADVICE, "config", "BEST_PRACTICES_HASHED_PASSWORDS_INFO", NULL,
 			           "* Use hashed passwords, see https://www.unrealircd.org/docs/Authentication_types "
 			           "to learn more about this.");
 		}
-		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_POST_INFO", NULL,
-		           "It is recommended you follow best practices, but if you want to hide "
+		unreal_log(ULOG_ADVICE, "config", "BEST_PRACTICES_POST_INFO", NULL,
+		           "It is recommended for you to follow best practices, but if you want to hide "
 		           "such suggestions see "
 		           "https://www.unrealircd.org/docs/Set_block#set::best-practices");
 	}
