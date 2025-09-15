@@ -260,6 +260,9 @@ check_cc_flag([-Wempty-body], [CFLAGS="$CFLAGS -Wno-empty-body"])
 dnl This warns about all our hook calls - RunHook() and others
 check_cc_flag([-Wdeprecated-non-prototype], [CFLAGS="$CFLAGS -Wno-deprecated-non-prototype"])
 
+dnl This warns about const char hexchars[16] = "0123456789abcdef";
+check_cc_flag([-Wunterminated-string-initialization], [CFLAGS="$CFLAGS -Wno-unterminated-string-initialization"])
+
 dnl Yeah this old clang version is a bit problematic
 dnl (ships in Ubuntu 16.04 for example)
 dnl -Wtautological-compare has false positives
