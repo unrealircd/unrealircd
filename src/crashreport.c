@@ -531,33 +531,6 @@ char *generate_crash_report(char *coredump, int *thirdpartymods)
 
 #define CRASH_REPORT_HOST "crash.unrealircd.org"
 
-SSL_CTX *crashreport_init_tls(void)
-{
-	SSL_CTX *ctx_client;
-	char buf[512];
-	
-	SSL_load_error_strings();
-	SSLeay_add_ssl_algorithms();
-
-	ctx_client = SSL_CTX_new(SSLv23_client_method());
-	if (!ctx_client)
-		return NULL;
-#ifdef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
-	SSL_CTX_set_min_proto_version(ctx_client, TLS1_2_VERSION);
-#endif
-	SSL_CTX_set_options(ctx_client, SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3|SSL_OP_NO_TLSv1|SSL_OP_NO_TLSv1_1);
-
-	/* Verify peer certificate */
-	snprintf(buf, sizeof(buf), "%s/tls/curl-ca-bundle.crt", CONFDIR);
-	SSL_CTX_load_verify_locations(ctx_client, buf, NULL);
-	SSL_CTX_set_verify(ctx_client, SSL_VERIFY_PEER, NULL);
-
-	/* Limit ciphers as well */
-	SSL_CTX_set_cipher_list(ctx_client, UNREALIRCD_DEFAULT_CIPHERS);
-
-	return ctx_client;
-}	
-
 int crashreport_send(char *fname)
 {
 	char buf[1024];
@@ -587,7 +560,7 @@ int crashreport_send(char *fname)
 	                           delimiter);
 	snprintf(footer, sizeof(footer), "\r\n--%s--\r\n", delimiter);
 
-	ctx_client = crashreport_init_tls();
+	ctx_client = https_new_ctx();
 	if (!ctx_client)
 	{
 		printf("ERROR: TLS initalization failure (I)\n");

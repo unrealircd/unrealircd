@@ -85,7 +85,6 @@ SSL_CTX *https_ctx = NULL;
 void url_resolve_cb(void *arg, int status, int timeouts, struct hostent *he);
 void unreal_https_initiate_connect(Download *handle);
 int url_parse(const char *url, char **host, int *port, char **username, char **password, char **document);
-SSL_CTX *https_new_ctx(void);
 void unreal_https_connect_handshake(int fd, int revents, void *data);
 int https_connect(Download *handle);
 int https_fatal_tls_error(int ssl_error, int my_errno, Download *handle);
@@ -376,55 +375,6 @@ void unreal_https_connect_handshake(int fd, int revents, void *data)
 		return; /* fatal error, handle is freed */
 
 	/* Is now connecting... */
-}
-
-SSL_CTX *https_new_ctx(void)
-{
-	SSL_CTX *ctx_client;
-	char buf1[512], buf2[512];
-	char *curl_ca_bundle = buf1;
-
-	SSL_load_error_strings();
-	SSLeay_add_ssl_algorithms();
-
-	ctx_client = SSL_CTX_new(SSLv23_client_method());
-	if (!ctx_client)
-		return NULL;
-#ifdef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
-	SSL_CTX_set_min_proto_version(ctx_client, TLS1_2_VERSION);
-#endif
-	SSL_CTX_set_options(ctx_client, SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3|SSL_OP_NO_TLSv1|SSL_OP_NO_TLSv1_1);
-
-	/* Verify peer certificate */
-	snprintf(buf1, sizeof(buf1), "%s/tls/curl-ca-bundle.crt", CONFDIR);
-	if (!file_exists(buf1))
-	{
-		snprintf(buf2, sizeof(buf2), "%s/doc/conf/tls/curl-ca-bundle.crt", BUILDDIR);
-		if (!file_exists(buf2))
-		{
-			unreal_log(ULOG_ERROR, "url", "CA_BUNDLE_NOT_FOUND", NULL,
-			           "Neither $filename1 nor $filename2 exist.\n"
-			           "Cannot use built-in https client without curl-ca-bundle.crt\n",
-			           log_data_string("filename1", buf1),
-			           log_data_string("filename2", buf2));
-			exit(-1);
-		}
-		curl_ca_bundle = buf2;
-	}
-	SSL_CTX_load_verify_locations(ctx_client, curl_ca_bundle, NULL);
-	SSL_CTX_set_verify(ctx_client, SSL_VERIFY_PEER, NULL);
-
-	/* Limit ciphers as well */
-	SSL_CTX_set_cipher_list(ctx_client, UNREALIRCD_DEFAULT_CIPHERS);
-
-	/* And TLS groups */
-#if defined(HAS_SSL_CTX_SET1_CURVES_LIST) || defined(HAS_SSL_CTX_SET1_GROUPS_LIST)
-	if (!unrealircd_set_tls_groups(ctx_client, UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY))
-		if (!unrealircd_set_tls_groups(ctx_client, UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY))
-			if (!unrealircd_set_tls_groups(ctx_client, UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY))
-				;
-#endif
-	return ctx_client;
 }
 
 // Based on unreal_tls_connect_retry

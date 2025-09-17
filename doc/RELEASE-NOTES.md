@@ -15,8 +15,8 @@ This is work in progress and may not always be a stable version.
 ### Changes:
 * Previous (expired) UnrealIRCd PGP key was removed from `doc/KEYS`
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
-  For the `server_ban.*` calls use the "issuer" if the `set_by`
-  field is not set.
+  For the `server_ban.*` and similar TKL calls use the "issuer" if the
+  `set_by` field is not set.
 
 ### Fixes:
 * Make [Remote includes](https://www.unrealircd.org/docs/Remote_includes)
