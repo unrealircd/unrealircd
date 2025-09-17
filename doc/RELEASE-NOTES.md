@@ -5,13 +5,23 @@ This is the git version (development version) for future UnrealIRCd 6.2.1.
 This is work in progress and may not always be a stable version.
 
 ### Enhancements:
-* TODO
+* Add `server-port` to the [security-group block](https://www.unrealircd.org/docs/Security-group_block)
+  and [mask items](https://www.unrealircd.org/docs/Mask_item). And
+  the `server_port()` function in [Crule](https://www.unrealircd.org/docs/Crule).
+* [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
+  add `away_reason` and `away_since` to the
+  [user object](https://www.unrealircd.org/docs/JSON-RPC:Client_Object#client.user_object).
 
 ### Changes:
-* TODO
+* Previous (expired) UnrealIRCd PGP key was removed from `doc/KEYS`
+* [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
+  For the `server_ban.*` calls use the "issuer" if the `set_by`
+  field is not set.
 
 ### Fixes:
-* TODO
+* Make [Remote includes](https://www.unrealircd.org/docs/Remote_includes)
+  work on IPv6-only machines.
+* Memory leak in DEBUGMODE (only used by developers)
 
 ### Developers and protocol:
 * TODO
