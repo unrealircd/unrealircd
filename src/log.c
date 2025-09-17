@@ -621,13 +621,11 @@ LogData *log_data_socket_error(int fd)
 	LogData *d;
 	json_t *j;
 
-#ifdef SO_ERROR
 	/* Try to get the "real" error from the underlying socket.
 	 * If we succeed then we will override "sockerr" with it.
 	 */
 	if ((fd >= 0) && !getsockopt(fd, SOL_SOCKET, SO_ERROR, (void *)&v, &len) && v)
 		sockerr = v;
-#endif
 
 	d = safe_alloc(sizeof(LogData));
 	d->type = LOG_FIELD_OBJECT;
