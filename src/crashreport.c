@@ -390,7 +390,7 @@ int attach_file(FILE *fdi, FILE *fdo)
 
 		total += strlen(printbuf);
 
-		if (total > 15000000)
+		if (total > 30000000)
 			return 0; /* Safety limit */
 	}
 
@@ -566,7 +566,12 @@ int crashreport_send(char *fname)
 		printf("ERROR: TLS initalization failure (I)\n");
 		return 0;
 	}
-	
+
+	/* We can safely require TLSv1.3+ on unrealircd.org infra */
+#if defined(HAS_SSL_CTX_SET_MIN_PROTO_VERSION) && defined(TLS1_3_VERSION)
+        SSL_CTX_set_min_proto_version(ctx_client, TLS1_3_VERSION);
+#endif
+
 	socket = BIO_new_ssl_connect(ctx_client);
 	if (!socket)
 	{
@@ -648,7 +653,7 @@ int crashreport_send(char *fname)
 	{
 		BIO_puts(socket, buf);
 #ifndef _WIN32
-		if ((++xfr % 1000) == 0)
+		if ((++xfr % 10000) == 0)
 		{
 			printf(".");
 			fflush(stdout);
