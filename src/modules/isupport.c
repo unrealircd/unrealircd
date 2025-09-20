@@ -75,47 +75,35 @@ MOD_UNLOAD()
 void _send_isupport(Client *client)
 {
 	char batch[BATCHLEN+1];
-	int cb, ci, i; // Client supports batch, client support isupport, and an iterator
+	int i;
+	MessageTag *mtags = NULL, *m;
 
-	ci = HasCapability(client, "draft/extended-isupport");
-	cb = HasCapability(client, "batch");
+	*batch = '\0';
 
-	if (!MyUser(client) && !ci)
+	if (HasCapability(client, "draft/extended-isupport") && HasCapability(client, "batch"))
 	{
-		sendnumeric(client, ERR_NOTREGISTERED);
-		return;
+		generate_batch_id(batch);
+		new_message(client, NULL, &mtags);
+		m = safe_alloc(sizeof(MessageTag));
+		safe_strdup(m->name, "batch");
+		safe_strdup(m->value, batch);
+		AddListItem(m, mtags);
 	}
 
-	generate_batch_id(batch);
-
-	if (cb && ci)
-	{   
-		sendto_one(client, NULL, ":%s BATCH +%s draft/extended-isupport", me.name, batch);
-	}
+	if (*batch)
+		sendto_one(client, NULL, ":%s BATCH +%s draft/isupport", me.name, batch);
 
 	for (i = 0; ISupportStrings[i]; i++)
 	{
-		if (cb && ci)
-		{
-			MessageTag *mtags = NULL;
-			new_message(client, NULL, &mtags);
-
-			MessageTag *m = safe_alloc(sizeof(MessageTag));
-			safe_strdup(m->name, "batch");
-			safe_strdup(m->value, batch);
-
-			AddListItem(m, mtags);
-
+		if (*batch)
 			sendtaggednumericfmt(client, mtags, RPL_ISUPPORT, "%s :are supported by this server", ISupportStrings[i]);
-			free_message_tags(mtags);
-		}
 		else
-		{
 			sendnumeric(client, RPL_ISUPPORT, ISupportStrings[i]);
-		}
 	}
-	if (cb && ci)
+
+	if (*batch)
 	{
 		sendto_one(client, NULL, ":%s BATCH -%s", me.name, batch);
+		safe_free_message_tags(mtags);
 	}
 }
