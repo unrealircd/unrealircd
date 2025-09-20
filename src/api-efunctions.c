@@ -189,6 +189,7 @@ char *(*utf8_convert_confusables)(const char *i, char *obuf, int olen);
 const char *(*utf8_get_block_name)(int i);
 int (*utf8_get_block_number)(const char *name);
 void (*send_isupport)(Client *client);
+void (*isupport_check_for_changes)(void);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
@@ -520,4 +521,5 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_UTF8_GET_BLOCK_NAME, utf8_get_block_name, utf8_get_block_name_default_handler, 0);
 	efunc_init_function(EFUNC_UTF8_GET_BLOCK_NUMBER, utf8_get_block_number, utf8_get_block_number_default_handler, 0);
 	efunc_init_function(EFUNC_SEND_ISUPPORT, send_isupport, NULL, 0);
+	efunc_init_function(EFUNC_ISUPPORT_CHECK_FOR_CHANGES, isupport_check_for_changes, NULL, 0);
 }

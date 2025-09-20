@@ -209,6 +209,8 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 
 #define	USERHOST_REPLYLEN	(NICKLEN+HOSTLEN+USERLEN+5)
 
+#define ISUPPORTLEN BUFSIZE-HOSTLEN-NICKLEN-39
+
 /* NOTE: this must be down here so the stuff from struct.h IT uses works */
 #include "whowas.h"
 

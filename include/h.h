@@ -944,6 +944,7 @@ extern MODVAR char *(*utf8_convert_confusables)(const char *i, char *obuf, int o
 extern MODVAR const char *(*utf8_get_block_name)(int i);
 extern MODVAR int (*utf8_get_block_number)(const char *name);
 extern MODVAR void (*send_isupport)(Client *client);
+extern MODVAR void (*isupport_check_for_changes)(void);
 /* /Efuncs */
 
 /* TLS functions */
@@ -1061,8 +1062,9 @@ extern PendingNet *find_pending_net_by_sid_butone(const char *sid, Client *exemp
 extern Client *find_pending_net_duplicates(Client *cptr, Client **srv, char **sid);
 extern MODVAR char serveropts[];
 extern MODVAR char *ISupportStrings[];
+extern MODVAR ISupport *ISupports;
+extern MODVAR ISupport *ISupports_old;
 extern void isupport_snapshot(void);
-extern void isupport_check_for_changes(void);
 extern void read_packet(int fd, int revents, void *data);
 extern int process_packet(Client *cptr, char *readbuf, int length, int killsafely);
 extern int parse_chanmode(ParseMode *pm, const char *modebuf_in, const char *parabuf_in);

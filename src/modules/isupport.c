@@ -27,6 +27,7 @@
 
 /* Forward declarations */
 void _send_isupport(Client *client);
+void _isupport_check_for_changes(void);
 
 ModuleHeader MOD_HEADER
 ={
@@ -42,6 +43,7 @@ MOD_TEST()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_ISUPPORT, _send_isupport);
+	EfunctionAddVoid(modinfo->handle, EFUNC_ISUPPORT_CHECK_FOR_CHANGES, _isupport_check_for_changes);
 
 	return MOD_SUCCESS;
 }
@@ -106,4 +108,123 @@ void _send_isupport(Client *client)
 		sendto_one(client, NULL, ":%s BATCH -%s", me.name, batch);
 		safe_free_message_tags(mtags);
 	}
+}
+
+ISupport *isupport_find_ex(ISupport *list, const char *name)
+{
+	for (; list; list = list->next)
+		if (!strcmp(list->token, name))
+			return list;
+	return NULL;
+}
+
+void isupport_check_for_changes_send(const char *addstr, char *buf, size_t buflen, char *batch, MessageTag *mtags, int *changes, int *buffered_changes)
+{
+	Client *acptr;
+
+	if (!*buf)
+		return;
+
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	{
+		if (HasCapability(acptr, "draft/extended-isupport") && HasCapability(acptr, "batch"))
+		{
+			sendtaggednumericfmt(acptr, mtags, RPL_ISUPPORT, "%s :are supported by this server", buf);
+		} else {
+			sendnumeric(acptr, RPL_ISUPPORT, buf);
+		}
+	}
+	*buf = '\0';
+	*buffered_changes = 0;
+}
+
+void isupport_check_for_changes_one(const char *addstr, char *buf, size_t buflen, char *batch, MessageTag *mtags, int *changes, int *buffered_changes)
+{
+	Client *acptr;
+
+	if (*changes == 0)
+	{
+		/* First change, need to start the batch */
+		list_for_each_entry(acptr, &lclient_list, lclient_node)
+			if (HasCapability(acptr, "draft/extended-isupport") && HasCapability(acptr, "batch"))
+				sendto_one(acptr, NULL, ":%s BATCH +%s draft/isupport", me.name, batch);
+	}
+
+	*changes = *changes + 1;
+	*buffered_changes = *buffered_changes + 1;
+
+	if ((strlen(buf) + strlen(addstr) >= ISUPPORTLEN) || (*buffered_changes == 13))
+		isupport_check_for_changes_send(addstr, buf, buflen, batch, mtags, changes, buffered_changes);
+
+	/* Append */
+	if (*buf)
+		strlcat(buf, " ", buflen);
+	strlcat(buf, addstr, buflen);
+}
+
+void _isupport_check_for_changes(void)
+{
+	Client *acptr;
+	MessageTag *mtags = NULL;
+	char batch[BATCHLEN+1];
+	ISupport *n; // iterator for "new isupports"
+	ISupport *o; // iterator for "old isupports"
+	char buf[512], addstr[512];
+	int changes = 0, bc = 0;
+
+	if (!iConf.send_isupport_updates)
+		return;
+
+	buf[0] = '\0';
+
+	generate_batch_id(batch);
+	mtags = safe_alloc(sizeof(MessageTag));
+	safe_strdup(mtags->name, "batch");
+	safe_strdup(mtags->value, batch);
+
+	/* New tokens and changed values */
+	for (n = ISupports; n; n = n->next)
+	{
+		o = isupport_find_ex(ISupports_old, n->token);
+		if (!o ||
+		    (!o->value && n->value) ||
+		    (n->value && !o->value) ||
+		    (n->value && o->value && strcmp(n->value, o->value)))
+		{
+			/* New or changed */
+			if (n->value)
+			{
+				snprintf(addstr, sizeof(addstr), "%s=%s",
+				         n->token, n->value);
+			} else {
+				strlcpy(addstr, n->token, sizeof(addstr));
+			}
+			isupport_check_for_changes_one(addstr, buf, sizeof(buf), batch, mtags, &changes, &bc);
+		}
+	}
+
+	/* Removed tokens */
+	for (o = ISupports_old; o; o = o->next)
+	{
+		n = isupport_find_ex(ISupports, o->token);
+		if (!n)
+		{
+			/* Removed */
+			strlcpy(addstr, "-", sizeof(addstr));
+			strlcpy(addstr, o->token, sizeof(addstr));
+			isupport_check_for_changes_one(addstr, buf, sizeof(buf), batch, mtags, &changes, &bc);
+		}
+	}
+
+	isupport_check_for_changes_send(NULL, buf, sizeof(buf), batch, mtags, &changes, &bc);
+
+	if (changes)
+	{
+		/* End the batch (for those clients who received a batch, that is) */
+		list_for_each_entry(acptr, &lclient_list, lclient_node)
+			if (HasCapability(acptr, "draft/extended-isupport") && HasCapability(acptr, "batch"))
+				sendto_one(acptr, NULL, ":%s BATCH -%s", me.name, batch);
+	}
+
+	safe_free_message_tags(mtags);
 }

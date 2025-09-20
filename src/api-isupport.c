@@ -256,7 +256,6 @@ void ISupportDel(ISupport *isupport)
 void make_isupportstrings(void)
 {
 	int i;
-#define ISUPPORTLEN BUFSIZE-HOSTLEN-NICKLEN-39
 	int bufsize = ISUPPORTLEN;
 	int tokcnt = 0;
 	ISupport *isupport;
@@ -350,84 +349,5 @@ void isupport_snapshot(void)
 		safe_strdup(f->token, e->token);
 		safe_strdup(f->value, e->value);
 		AppendListItem(f, ISupports_old);
-	}
-}
-
-ISupport *isupport_find(ISupport *list, const char *name)
-{
-	for (; list; list = list->next)
-		if (!strcmp(list->token, name))
-			return list;
-	return NULL;
-}
-
-void isupport_check_for_changes(void)
-{
-	Client *acptr;
-	ISupport *n; // iterator for "new isupports"
-	ISupport *o; // iterator for "old isupports"
-	char buf[512], addstr[512];
-
-	if (!iConf.send_isupport_updates)
-		return;
-
-	buf[0] = '\0';
-
-	/* New tokens and changed values */
-	for (n = ISupports; n; n = n->next)
-	{
-		o = isupport_find(ISupports_old, n->token);
-		if (!o ||
-		    (!o->value && n->value) ||
-		    (n->value && !o->value) ||
-		    (n->value && o->value && strcmp(n->value, o->value)))
-		{
-			/* New or changed */
-			if (n->value)
-			{
-				snprintf(addstr, sizeof(addstr), "%s=%s",
-				         n->token, n->value);
-			} else {
-				strlcpy(addstr, n->token, sizeof(addstr));
-			}
-			if (strlen(buf) + strlen(addstr) < 400)
-			{
-				if (*buf)
-					strlcat(buf, " ", sizeof(buf));
-				strlcat(buf, addstr, sizeof(buf));
-			} else {
-				abort();
-			}
-		}
-	}
-
-	/* Removed tokens */
-	for (o = ISupports_old; o; o = o->next)
-	{
-		n = isupport_find(ISupports, o->token);
-		if (!n)
-		{
-			/* Removed */
-			strlcpy(addstr, "-", sizeof(addstr));
-			strlcpy(addstr, o->token, sizeof(addstr));
-			if (strlen(buf) + strlen(addstr) < 400)
-			{
-				if (*buf)
-					strlcat(buf, " ", sizeof(buf));
-				strlcat(buf, addstr, sizeof(buf));
-			} else {
-				abort();
-			}
-		}
-	}
-
-	if (*buf)
-	{
-		// batch! well, for some :D
-		list_for_each_entry(acptr, &lclient_list, lclient_node)
-		{
-			sendto_one(acptr, NULL, ":%s 005 %s %s",
-				   me.name, acptr->name, buf);
-		}
 	}
 }
