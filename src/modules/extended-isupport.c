@@ -23,39 +23,49 @@
 /* One include for all */
 #include "unrealircd.h"
 
+/* Forward declarations */
+CMD_FUNC(cmd_isupport);
+
 /* Variables */
 long CAP_EXTISUPPORT = 0L;
 
 ModuleHeader MOD_HEADER
 ={
-        "extended-isupport", /* Name of module */
-        "5.0", /* Version */
-        "Implements IRCv3 draft/extended-isupport", /* Short description of module */
-        "UnrealIRCd Team", /* Author */
-        "unrealircd-6", /* Version of UnrealIRCd */
+	"extended-isupport", /* Name of module */
+	"5.0", /* Version */
+	"Implements IRCv3 draft/extended-isupport", /* Short description of module */
+	"UnrealIRCd Team", /* Author */
+	"unrealircd-6", /* Version of UnrealIRCd */
 };
 
 // Module initialization
 MOD_INIT()
 {
-    ClientCapabilityInfo cap;
-    MARK_AS_OFFICIAL_MODULE(modinfo);
+	ClientCapabilityInfo cap;
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-    memset(&cap, 0, sizeof(cap));
-    cap.name = "draft/extended-isupport";
-    ClientCapabilityAdd(modinfo->handle, &cap, &CAP_EXTISUPPORT);
+	memset(&cap, 0, sizeof(cap));
+	cap.name = "draft/extended-isupport";
+	ClientCapabilityAdd(modinfo->handle, &cap, &CAP_EXTISUPPORT);
 
-    return MOD_SUCCESS;
+	CommandAdd(modinfo->handle, "ISUPPORT", cmd_isupport, 0, CMD_USER|CMD_UNREGISTERED);
+
+	return MOD_SUCCESS;
 }
 
 // Module load
 MOD_LOAD()
 {
-    return MOD_SUCCESS;
+	return MOD_SUCCESS;
 }
 
 // Module unload
 MOD_UNLOAD()
 {
-    return MOD_SUCCESS;
+	return MOD_SUCCESS;
+}
+
+CMD_FUNC(cmd_isupport)
+{
+    send_isupport(client);
 }

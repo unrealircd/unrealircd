@@ -184,18 +184,12 @@ char *getosname(void)
 }
 #endif
 
-/** Helper function to send version strings */
-void send_version(Client *client, int remote)
+void send_remote_isupport(Client *client)
 {
 	int i;
 
 	for (i = 0; ISupportStrings[i]; i++)
-	{
-		if (remote)
-			sendnumeric(client, RPL_REMOTEISUPPORT, ISupportStrings[i]);
-		else
-			sendnumeric(client, RPL_ISUPPORT, ISupportStrings[i]);
-	}
+		sendnumeric(client, RPL_REMOTEISUPPORT, ISupportStrings[i]);
 }
 
 /** VERSION command:
@@ -206,7 +200,7 @@ CMD_FUNC(cmd_version)
 	/* Only allow remote VERSIONs if registered -- Syzop */
 	if (!IsUser(client) && !IsServer(client))
 	{
-		send_version(client, 0);
+		send_isupport(client);
 		return;
 	}
 
@@ -232,9 +226,9 @@ CMD_FUNC(cmd_version)
 #endif
 		}
 		if (MyUser(client))
-			send_version(client,0);
+			send_isupport(client);
 		else
-			send_version(client,1);
+			send_remote_isupport(client);
 	}
 }
 
