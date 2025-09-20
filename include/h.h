@@ -943,6 +943,7 @@ extern MODVAR char *(*unreal_expand_string)(const char *str, char *buf, size_t b
 extern MODVAR char *(*utf8_convert_confusables)(const char *i, char *obuf, int olen);
 extern MODVAR const char *(*utf8_get_block_name)(int i);
 extern MODVAR int (*utf8_get_block_number)(const char *name);
+extern MODVAR void (*send_isupport)(Client *client);
 /* /Efuncs */
 
 /* TLS functions */

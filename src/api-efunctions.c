@@ -188,6 +188,7 @@ char *(*unreal_expand_string)(const char *str, char *buf, size_t buflen, NameVal
 char *(*utf8_convert_confusables)(const char *i, char *obuf, int olen);
 const char *(*utf8_get_block_name)(int i);
 int (*utf8_get_block_number)(const char *name);
+void (*send_isupport)(Client *client);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
@@ -516,6 +517,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_BANNED_CLIENT, banned_client, NULL, 0);
 	efunc_init_function(EFUNC_UNREAL_EXPAND_STRING, unreal_expand_string, NULL, 0);
 	efunc_init_function(EFUNC_UTF8_CONVERT_CONFUSABLES, utf8_convert_confusables, utf8_convert_confusables_default_handler, 0);
-	efunc_init_function(EFUNC_UTF8_GET_BLOCK_NAME, utf8_get_block_name, utf8_get_block_name, 0);
-	efunc_init_function(EFUNC_UTF8_GET_BLOCK_NUMBER, utf8_get_block_number, utf8_get_block_number, 0);
+	efunc_init_function(EFUNC_UTF8_GET_BLOCK_NAME, utf8_get_block_name, utf8_get_block_name_default_handler, 0);
+	efunc_init_function(EFUNC_UTF8_GET_BLOCK_NUMBER, utf8_get_block_number, utf8_get_block_number_default_handler, 0);
+	efunc_init_function(EFUNC_SEND_ISUPPORT, send_isupport, NULL, 0);
 }
