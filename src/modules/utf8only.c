@@ -114,7 +114,7 @@ const char *parse_get_command(const char *msg)
 	/* Skip message tags (if any) */
 	if (*p == '@')
 	{
-		for (p = p + 1; *p != ' '; p++);
+		for (p++; *p && (*p != ' '); p++);
 		for (; *p == ' '; p++);
 	}
 
