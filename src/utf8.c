@@ -266,6 +266,27 @@ char *unrl_utf8_make_valid(const char *str, char *outputbuf, size_t outputbuflen
 	return outputbuf;
 }
 
+/* Cut off string 'msg' at 'len' because it is >len size, while
+ * making sure that it still ends with proper UTF8 (eg not some
+ * cut in the middle of a multibyte UTF8 sequence).
+ * @param msg	The message to be edited
+ * @param len	Pointer to length of message. The caller hereby indicates that
+ *		'len+1' still contains valid data and it wants to cut off at 'len'.
+ * This function will modify 'msg' to be cut off after 'len' characters or
+ * slightly earlier if it was in the middle of an UTF8 sequence. In case of
+ * the latter, the 'len' will be adjusted to be slightly lower.
+ */
+void utf8_valid_cutoff(char *msg, int *len)
+{
+	/* This deliberately starts reading at len+1 and then backtracks */
+	char *cut_at = unrl_utf8_find_prev_char(msg, msg + *len + 1);
+	if (cut_at)
+	{
+		*cut_at = '\0';
+		*len = cut_at - msg; /* bit silly we have to recalculate that, but okay */
+	}
+}
+
 /**************** END OF UTF8 HELPER FUNCTIONS *****************/
 
 /** This is just for internal testing */

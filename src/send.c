@@ -57,12 +57,10 @@ static void linecache_free(LineCache *cache);
 static void linecache_add(LineCache *cache, int line_opts, Client *to, const char *line, int linelen);
 static LineCacheLine *linecache_get(LineCache *cache, int line_opts, Client *to);
 
-#define ADD_CRLF(buf, len) { if (len > 510) len = 510; \
-                             buf[len++] = '\r'; buf[len++] = '\n'; buf[len] = '\0'; } while(0)
-
 /* These are two local (static) buffers used by the various send functions */
 static char sendbuf[MAXLINELENGTH];
 static char sendbuf2[MAXLINELENGTH];
+static char sendbuf3[MAXLINELENGTH];
 
 /** This is used to ensure no duplicate messages are sent
  * to the same server uplink/direction. In send functions
@@ -219,11 +217,40 @@ void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl)
 	}
 }
 
-/** Prepare a line for sendbufto_one() */
-static int sendbufto_one_prepare_line(Client *to, char *msg)
+/** Prepare a line for sendbufto_one().
+ * @param to	Client to send to
+ * @param input	Pointer to line to be sent.
+ * @notes The string '*input' can be changed or cut off (this is quite frequent).
+ * Or it may be replaced entirely, in which case 'input' will be set to a new string.
+ */
+static int sendbufto_one_prepare_line(Client *to, char **input)
 {
-	char *p = msg;
+	char *msg = *input;
+	char *p;
 	int len;
+
+	/* If we are in UTF8ONLY mode, we first convert the line to be sent
+	 * to valid UTF8. Of course, normally the line would not contain
+	 * invalid UTF8 to begin with (since we already reject it at the
+	 * input side from clients), but some external data may 'poison'
+	 * things like a MOTD or who knows what. Also, since we will be
+	 * cutting off strings, we need to take extra care in this function
+	 * as well when UTF8ONLY is enabled, since we may cut in the middle
+	 * of an UTF8 sequence.
+	 */
+	if (UTF8ONLY)
+	{
+		/* Note that last parameter strictlen must be 0, otherwise we might
+		 * end up cutting BIGLINES servers and also.. we already do all that
+		 * cutting of 512 etc below anyway, so no need to do double work.
+		 */
+		char *ret = unrl_utf8_make_valid(*input, sendbuf3, sizeof(sendbuf3), 0);
+		if (ret != *input)
+		{
+			/* Message had invalid UTF8 or was cut (eg 512 length restriction) */
+			*input = msg = ret;
+		}
+	}
 
 	if (*msg == '@')
 	{
@@ -249,7 +276,10 @@ static int sendbufto_one_prepare_line(Client *to, char *msg)
 			return 0;
 		}
 		p++; /* skip space character */
+	} else {
+		p = msg;
 	}
+
 	len = strlen(p);
 	if (!len || (p[len - 1] != '\n'))
 	{
@@ -258,6 +288,8 @@ static int sendbufto_one_prepare_line(Client *to, char *msg)
 			/* Normal case */
 			if (len > 510)
 				len = 510;
+			if (UTF8ONLY)
+				utf8_valid_cutoff(msg, &len);
 			p[len++] = '\r';
 			p[len++] = '\n';
 			p[len] = '\0';
@@ -271,6 +303,8 @@ static int sendbufto_one_prepare_line(Client *to, char *msg)
 			if ((p - msg) + len > MAXLINELENGTH-3)
 			{
 				len = MAXLINELENGTH-3;
+				if (UTF8ONLY)
+					utf8_valid_cutoff(msg, &len);
 				msg[len++] = '\r';
 				msg[len++] = '\n';
 				msg[len] = '\0';
@@ -281,6 +315,17 @@ static int sendbufto_one_prepare_line(Client *to, char *msg)
 			}
 		}
 	}
+
+#ifdef DEBUGMODE
+	if (UTF8ONLY)
+	{
+		/* if validation fails it means conversion above resulted
+		 * in an invalid UTF8 string.
+		 */
+		if (!unrl_utf8_validate(msg, NULL))
+			abort();
+	}
+#endif
 
 	/* Return length, that is:
 	 * p-msg = message tag len (can be 0)
@@ -333,7 +378,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 	 */
 	if (!quick)
 	{
-		len = sendbufto_one_prepare_line(to, msg);
+		len = sendbufto_one_prepare_line(to, &msg);
 		if (len == 0)
 			return;
 	} else {
@@ -956,7 +1001,16 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, con
 	}
 
 	len = strlen(buf);
-	ADD_CRLF(buf, len);
+	if (len > 510)
+	{
+		len = 510;
+		if (UTF8ONLY)
+			utf8_valid_cutoff(buf, &len);
+	}
+	buf[len++] = '\r';
+	buf[len++] = '\n';
+	buf[len] = '\0';
+
 	return len;
 }
 
@@ -1103,15 +1157,17 @@ static void vsendto_prefix_one_cached(LineCache *cache, int line_opts, Client *t
 	if (BadPtr(mtags_str))
 	{
 		/* Simple message without message tags */
-		len = sendbufto_one_prepare_line(to, sendbuf);
-		linecache_add(cache, line_opts, to, sendbuf, len);
-		sendbufto_one(to, sendbuf, len);
+		char *out = sendbuf;
+		len = sendbufto_one_prepare_line(to, &out);
+		linecache_add(cache, line_opts, to, out, len);
+		sendbufto_one(to, out, len);
 	} else {
 		/* Message tags need to be prepended */
+		char *out = sendbuf2;
 		snprintf(sendbuf2, sizeof(sendbuf2)-3, "@%s %s", mtags_str, sendbuf);
-		len = sendbufto_one_prepare_line(to, sendbuf2);
-		linecache_add(cache, line_opts, to, sendbuf2, len);
-		sendbufto_one(to, sendbuf2, 0);
+		len = sendbufto_one_prepare_line(to, &out);
+		linecache_add(cache, line_opts, to, out, len);
+		sendbufto_one(to, out, 0);
 	}
 }
 

@@ -5,6 +5,10 @@ This is the git version (development version) for future UnrealIRCd 6.2.1.
 This is work in progress and may not always be a stable version.
 
 ### Enhancements:
+* Add [set::utf8-only](https://www.unrealircd.org/docs/Set_block#set::utf8-only):
+  setting this to `yes` means all IRC traffic is UTF8 only. See the setting
+  and the [`UTF8ONLY`](https://ircv3.net/specs/extensions/utf8-only)
+  specification for more details.
 * Add `server-port` to the [security-group block](https://www.unrealircd.org/docs/Security-group_block)
   and [mask items](https://www.unrealircd.org/docs/Mask_item). And
   the `server_port()` function in [Crule](https://www.unrealircd.org/docs/Crule).

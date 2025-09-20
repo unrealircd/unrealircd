@@ -188,6 +188,7 @@ struct Configuration {
 	int dns_dnsbl_timeout;
 	int dns_dnsbl_retry;
 	int send_isupport_updates;
+	int utf8_only;
 };
 
 extern MODVAR Configuration iConf;
@@ -288,6 +289,8 @@ extern MODVAR BestPractices bestpractices;
 #define WATCH_AWAY_NOTIFICATION	iConf.watch_away_notification
 
 #define UHNAMES_ENABLED	iConf.uhnames
+
+#define UTF8ONLY	iConf.utf8_only
 
 /** Used for testing the set { } block configuration.
  * It tests if a setting is present and is also used for duplicate checking.
