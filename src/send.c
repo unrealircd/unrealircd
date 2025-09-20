@@ -289,7 +289,7 @@ static int sendbufto_one_prepare_line(Client *to, char **input)
 			if (len > 510)
 				len = 510;
 			if (UTF8ONLY)
-				utf8_valid_cutoff(msg, &len);
+				utf8_valid_cutoff(p, &len);
 			p[len++] = '\r';
 			p[len++] = '\n';
 			p[len] = '\0';
@@ -309,6 +309,8 @@ static int sendbufto_one_prepare_line(Client *to, char **input)
 				msg[len++] = '\n';
 				msg[len] = '\0';
 			} else {
+				if (UTF8ONLY)
+					utf8_valid_cutoff(p, &len);
 				p[len++] = '\r';
 				p[len++] = '\n';
 				p[len] = '\0';
