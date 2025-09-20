@@ -1060,6 +1060,8 @@ extern PendingNet *find_pending_net_by_sid_butone(const char *sid, Client *exemp
 extern Client *find_pending_net_duplicates(Client *cptr, Client **srv, char **sid);
 extern MODVAR char serveropts[];
 extern MODVAR char *ISupportStrings[];
+extern void isupport_snapshot(void);
+extern void isupport_check_for_changes(void);
 extern void read_packet(int fd, int revents, void *data);
 extern int process_packet(Client *cptr, char *readbuf, int length, int killsafely);
 extern int parse_chanmode(ParseMode *pm, const char *modebuf_in, const char *parabuf_in);

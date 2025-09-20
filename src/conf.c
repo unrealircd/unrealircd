@@ -11199,6 +11199,7 @@ int rehash_internal(Client *client)
 
 	loop.rehashing = 2; /* now doing the actual rehash */
 
+	isupport_snapshot();
 	failure = config_test();
 	if (failure == 0)
 		config_run();
@@ -11215,6 +11216,7 @@ int rehash_internal(Client *client)
 	clicap_check_for_changes();
 	umodes_check_for_changes();
 	charsys_check_for_changes();
+	isupport_check_for_changes();
 
 	/* Remove central spamfilter rules upon set::central-spamfilter::enabled no; */
 	if (iConf.central_spamfilter_enabled == 0)

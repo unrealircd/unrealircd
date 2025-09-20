@@ -1198,6 +1198,7 @@ EVENT(e_unload_module_delayed)
 {
 	char *name = (char *)data;
 	int i; 
+	isupport_snapshot();
 	i = Module_Unload(name);
 	if (i == 1)
 	{
@@ -1208,6 +1209,7 @@ EVENT(e_unload_module_delayed)
 	safe_free(name);
 	extcmodes_check_for_changes();
 	umodes_check_for_changes();
+	isupport_check_for_changes();
 	return;
 }
 

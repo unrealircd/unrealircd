@@ -22,7 +22,8 @@
 
 #include "unrealircd.h"
 
-ISupport *ISupports; /* List of ISUPPORT (005) tokens */
+ISupport *ISupports = NULL; /* List of ISUPPORT (005) tokens */
+ISupport *ISupports_old = NULL; /* see isupport_snapshot() and isupport_check_for_changes() */
 #define MAXISUPPORTLINES 10
 
 MODVAR char *ISupportStrings[MAXISUPPORTLINES+1];
@@ -322,6 +323,111 @@ void isupport_add_sorted(ISupport *n)
 			e->next = n;
 			n->prev = e;
 			return;
+		}
+	}
+}
+
+void isupport_snapshot(void)
+{
+	ISupport *e, *f;
+
+	if (ISupports_old)
+	{
+		for (e = ISupports_old; e; e = f)
+		{
+			f = e->next;
+			safe_free(e->token);
+			safe_free(e->value);
+			safe_free(e);
+		}
+		ISupports_old = NULL;
+	}
+
+	/* Duplicate all ISupports into ISupports_old... */
+	for (e = ISupports; e; e = e->next)
+	{
+		f = safe_alloc(sizeof(ISupport));
+		safe_strdup(f->token, e->token);
+		safe_strdup(f->value, e->value);
+		AppendListItem(f, ISupports_old);
+	}
+}
+
+ISupport *isupport_find(ISupport *list, const char *name)
+{
+	for (; list; list = list->next)
+		if (!strcmp(list->token, name))
+			return list;
+	return NULL;
+}
+
+void isupport_check_for_changes(void)
+{
+	Client *acptr;
+	ISupport *n; // iterator for "new isupports"
+	ISupport *o; // iterator for "old isupports"
+	char buf[512], addstr[512];
+
+	if (!iConf.send_isupport_updates)
+		return;
+
+	buf[0] = '\0';
+
+	/* New tokens and changed values */
+	for (n = ISupports; n; n = n->next)
+	{
+		o = isupport_find(ISupports_old, n->token);
+		if (!o ||
+		    (!o->value && n->value) ||
+		    (n->value && !o->value) ||
+		    (n->value && o->value && strcmp(n->value, o->value)))
+		{
+			/* New or changed */
+			if (n->value)
+			{
+				snprintf(addstr, sizeof(addstr), "%s=%s",
+				         n->token, n->value);
+			} else {
+				strlcpy(addstr, n->token, sizeof(addstr));
+			}
+			if (strlen(buf) + strlen(addstr) < 400)
+			{
+				if (*buf)
+					strlcat(buf, " ", sizeof(buf));
+				strlcat(buf, addstr, sizeof(buf));
+			} else {
+				abort();
+			}
+		}
+	}
+
+	/* Removed tokens */
+	for (o = ISupports_old; o; o = o->next)
+	{
+		n = isupport_find(ISupports, o->token);
+		if (!n)
+		{
+			/* Removed */
+			strlcpy(addstr, "-", sizeof(addstr));
+			strlcpy(addstr, o->token, sizeof(addstr));
+			if (strlen(buf) + strlen(addstr) < 400)
+			{
+				if (*buf)
+					strlcat(buf, " ", sizeof(buf));
+				strlcat(buf, addstr, sizeof(buf));
+			} else {
+				abort();
+			}
+		}
+	}
+
+	if (*buf)
+	{
+		// batch! well, for some :D
+		list_for_each_entry(acptr, &lclient_list, lclient_node)
+		{
+			sendto_one(acptr, NULL, ":%s 005 %s %s",
+				   me.name, acptr->name, buf);
 		}
 	}
 }
