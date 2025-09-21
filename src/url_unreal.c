@@ -366,6 +366,10 @@ void unreal_https_connect_handshake(int fd, int revents, void *data)
 		https_cancel(handle, "Failed to setup SSL");
 		return;
 	}
+#ifdef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
+	if (handle->request->minimum_tls_version)
+		SSL_set_min_proto_version(handle->ssl, handle->request->minimum_tls_version);
+#endif
 	SSL_set_fd(handle->ssl, handle->fd);
 	SSL_set_connect_state(handle->ssl);
 	SSL_set_nonblocking(handle->ssl);

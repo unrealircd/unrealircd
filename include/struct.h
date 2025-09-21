@@ -1954,9 +1954,10 @@ struct OutgoingWebRequest
 	int keep_file; /**< Normally, if store_in_file is set to 1, the downloaded file is deleted after the callback function was called. If you set this to 1 then the file is not removed. */
 	int connect_timeout; /**< How many seconds to wait for the (TLS) connect to succeed */
 	int transfer_timeout; /**< How many seconds the total transfer may take (connect+reading everything) */
-	// If you are adding allocated fields here:
+	int minimum_tls_version;
+	// If you are adding fields here:
 	// 1) update duplicate_outgoingwebrequest() in src/misc.c
-	// 2) and update free_outgoingwebrequest() there as well
+	// 2) and update free_outgoingwebrequest() there as well (if something needs to be freed)
 };
 
 /** The result of an HTTP(S) call, such as the downloaded file, error, etc. */

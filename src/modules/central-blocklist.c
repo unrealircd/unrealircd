@@ -1069,6 +1069,9 @@ void send_request_for_pending_clients(void)
 	//w->callback = cbl_download_complete;
 	safe_strdup(w->apicallback, "cbl_download_complete");
 	w->callback_data = c;
+#ifdef TLS1_3_VERSION
+	w->minimum_tls_version = TLS1_3_VERSION;
+#endif
 	url_start_async(w);
 }
 
@@ -1210,6 +1213,9 @@ int _central_spamreport(Client *client, Client *by, const char *url)
 	w->headers = headers;
 	w->max_redirects = 1;
 	w->callback = download_complete_dontcare;
+#ifdef TLS1_3_VERSION
+	w->minimum_tls_version = TLS1_3_VERSION;
+#endif
 	url_start_async(w);
 	return 1;
 }
