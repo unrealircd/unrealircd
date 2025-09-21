@@ -542,10 +542,29 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 		goto fail;
 	}
 #endif
-	if (server)
+
+	if (tlsoptions->signature_algorithms)
 	{
-		SSL_CTX_set_tlsext_servername_callback(ctx, ssl_hostname_callback);
+#ifdef HAS_SSL_CTX_SET1_SIGALGS_LIST
+		if (!SSL_CTX_set1_sigalgs_list(ctx, tlsoptions->signature_algorithms))
+		{
+			unreal_log(ULOG_ERROR, "config", "TLS_INVALID_TLS_SIGNATURE_ALGORITHMS", NULL,
+				   "Failed to set signature-algorithms to '$signature_algorithms'.\n$tls_error.all",
+				   log_data_string("signature_algorithms", tlsoptions->signature_algorithms),
+				   log_data_tls_error());
+			goto fail;
+		}
+#else
+		/* Would be odd, this is in OpenSSL 1.0.2+ */
+		unreal_log(ULOG_ERROR, "config", "TLS_INVALID_TLS_SIGNATURE_ALGORITHMS", NULL,
+		           "You have a signature-algorithms configuration in your config file. "
+		           "However, your OpenSSL version does not provide SSL_CTX_set1_sigalgs_list() !?");
+		goto fail;
+#endif
 	}
+
+	if (server)
+		SSL_CTX_set_tlsext_servername_callback(ctx, ssl_hostname_callback);
 
 	return ctx;
 fail:

@@ -40,6 +40,9 @@
 /* Define if ssl library has SSL_CTX_set1_groups_list */
 #undef HAS_SSL_CTX_SET1_GROUPS_LIST
 
+/* Define if ssl library has SSL_CTX_set1_sigalgs_list */
+#undef HAS_SSL_CTX_SET1_SIGALGS_LIST
+
 /* Define if ssl library has SSL_CTX_set_min_proto_version */
 #undef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
 

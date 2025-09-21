@@ -1861,6 +1861,7 @@ struct TLSOptions {
 	char *ciphers;
 	char *ciphersuites;
 	char *groups;
+	char *signature_algorithms;
 	char *outdated_protocols;
 	char *outdated_ciphers;
 	long options;

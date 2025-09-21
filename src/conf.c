@@ -7286,6 +7286,10 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 			errors++;
 #endif
 		}
+		else if (!strcmp(cepp->name, "signature-algorithms"))
+		{
+			CheckNull(cepp);
+		}
 		else if (!strcmp(cepp->name, "protocols"))
 		{
 			char copy[512], *p, *name;
@@ -7516,6 +7520,7 @@ void free_tls_options(TLSOptions *tlsoptions)
 	safe_free(tlsoptions->ciphers);
 	safe_free(tlsoptions->ciphersuites);
 	safe_free(tlsoptions->groups);
+	safe_free(tlsoptions->signature_algorithms);
 	safe_free(tlsoptions->outdated_protocols);
 	safe_free(tlsoptions->outdated_ciphers);
 	memset(tlsoptions, 0, sizeof(TLSOptions));
@@ -7537,6 +7542,7 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 		safe_strdup(tlsoptions->ciphers, tempiConf.tls_options->ciphers);
 		safe_strdup(tlsoptions->ciphersuites, tempiConf.tls_options->ciphersuites);
 		safe_strdup(tlsoptions->groups, tempiConf.tls_options->groups);
+		safe_strdup(tlsoptions->signature_algorithms, tempiConf.tls_options->signature_algorithms);
 		safe_strdup(tlsoptions->outdated_protocols, tempiConf.tls_options->outdated_protocols);
 		safe_strdup(tlsoptions->outdated_ciphers, tempiConf.tls_options->outdated_ciphers);
 		tlsoptions->options = tempiConf.tls_options->options;
@@ -7562,6 +7568,10 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 		else if (!strcmp(cepp->name, "groups") || !strcmp(cepp->name, "ecdh-curves"))
 		{
 			safe_strdup(tlsoptions->groups, cepp->value);
+		}
+		else if (!strcmp(cepp->name, "signature-algorithms"))
+		{
+			safe_strdup(tlsoptions->signature_algorithms, cepp->value);
 		}
 		else if (!strcmp(cepp->name, "protocols"))
 		{
