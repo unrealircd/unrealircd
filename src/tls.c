@@ -484,57 +484,6 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 		 * do anything then, since auto ecdh is the default.
 		 */
 #endif
-#if defined(HAS_SSL_CTX_SET1_CURVES_LIST) || defined(HAS_SSL_CTX_SET1_GROUPS_LIST)
-		/* Let's see if we need to set specific TLS groups */
-		if (tlsoptions->groups == NULL)
-		{
-			/* This means try the defaults.. */
-			if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY))
-			{
-				if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY))
-				{
-					if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY))
-					{
-						unreal_log(ULOG_ERROR, "config", "TLS_INVALID_TLS_GROUPS_LIST", NULL,
-							   "Failed to set groups / ecdh-curves to either "
-							   "'$tls_groups_primary', '$tls_groups_secondary' or '$tls_groups_tertiary'.\n"
-							   "$tls_error.all\n"
-							   "It's strange that none of the three worked. "
-							   "Please report at https://bugs.unrealircd.org/ !",
-							   log_data_string("tls_groups_primary", UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY),
-							   log_data_string("tls_groups_secondary", UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY),
-							   log_data_string("tls_groups_tertiary", UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY),
-							   log_data_tls_error());
-						goto fail;
-					}
-				}
-			}
-		} else
-		{
-			/* User-configured TLS groups */
-			if (!unrealircd_set_tls_groups(ctx, tlsoptions->groups))
-			{
-				unreal_log(ULOG_ERROR, "config", "TLS_INVALID_TLS_GROUPS_LIST", NULL,
-					   "Failed to set groups / ecdh-curves '$tls_groups'\n$tls_error.all\n"
-					   "HINT: To get a list of supported names, run 'openssl ecparam -list_curves' on the server. "
-					   "Separate multiple curves by colon, for example: "
-					   "groups \"secp521r1:secp384r1\".",
-					   log_data_string("tls_groups", tlsoptions->groups),
-					   log_data_tls_error());
-				goto fail;
-			}
-		}
-#else
-		if (tlsoptions->groups)
-		{
-			/* We try to avoid this in the config code, but better have
-			 * it here too than be sorry if someone screws up:
-			 */
-			unreal_log(ULOG_ERROR, "config", "BUG_TLS_GROUPS", NULL,
-			           "ecdh-curves specified but not supported by library -- BAD!");
-			goto fail;
-		}
-#endif
 		/* We really want the ECDHE/ECDHE to be generated per-session.
 		 * Added in 2015 for safety. Seems OpenSSL was smart enough
 		 * to make this the default in 2016 after a security advisory.
@@ -542,6 +491,57 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 		SSL_CTX_set_options(ctx, SSL_OP_SINGLE_ECDH_USE|SSL_OP_SINGLE_DH_USE);
 	}
 
+#if defined(HAS_SSL_CTX_SET1_CURVES_LIST) || defined(HAS_SSL_CTX_SET1_GROUPS_LIST)
+	/* Let's see if we need to set specific TLS groups */
+	if (tlsoptions->groups == NULL)
+	{
+		/* This means try the defaults.. */
+		if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY))
+		{
+			if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY))
+			{
+				if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY))
+				{
+					unreal_log(ULOG_ERROR, "config", "TLS_INVALID_TLS_GROUPS_LIST", NULL,
+						   "Failed to set groups / ecdh-curves to either "
+						   "'$tls_groups_primary', '$tls_groups_secondary' or '$tls_groups_tertiary'.\n"
+						   "$tls_error.all\n"
+						   "It's strange that none of the three worked. "
+						   "Please report at https://bugs.unrealircd.org/ !",
+						   log_data_string("tls_groups_primary", UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY),
+						   log_data_string("tls_groups_secondary", UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY),
+						   log_data_string("tls_groups_tertiary", UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY),
+						   log_data_tls_error());
+					goto fail;
+				}
+			}
+		}
+	} else
+	{
+		/* User-configured TLS groups */
+		if (!unrealircd_set_tls_groups(ctx, tlsoptions->groups))
+		{
+			unreal_log(ULOG_ERROR, "config", "TLS_INVALID_TLS_GROUPS_LIST", NULL,
+				   "Failed to set groups / ecdh-curves '$tls_groups'\n$tls_error.all\n"
+				   "HINT: To get a list of supported names, run 'openssl ecparam -list_curves' on the server. "
+				   "Separate multiple curves by colon, for example: "
+				   "groups \"secp521r1:secp384r1\".",
+				   log_data_string("tls_groups", tlsoptions->groups),
+				   log_data_tls_error());
+			goto fail;
+		}
+	}
+#else
+	if (tlsoptions->groups)
+	{
+		/* We try to avoid this in the config code, but better have
+		 * it here too than be sorry if someone screws up:
+		 */
+		unreal_log(ULOG_ERROR, "config", "BUG_TLS_GROUPS", NULL,
+			   "tls groups / ecdh-curves specified but not supported by library -- BAD!");
+		goto fail;
+	}
+#endif
 	if (server)
 	{
 		SSL_CTX_set_tlsext_servername_callback(ctx, ssl_hostname_callback);
