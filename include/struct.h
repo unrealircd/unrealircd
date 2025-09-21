@@ -802,6 +802,8 @@ struct NameList {
 
 /** Free an entire NameList */
 #define free_entire_name_list(list) do { _free_entire_name_list(list); list = NULL; } while(0)
+#define safe_free_name_list free_entire_name_list
+
 /** Add an entry to a NameList */
 #define add_name_list(list, str)  _add_name_list(&list, str)
 /** Delete an entry from a NameList - AND free it */
@@ -1851,8 +1853,8 @@ struct ConfigItem_oper {
  */
 typedef struct TLSOptions TLSOptions;
 struct TLSOptions {
-	char *certificate_file;
-	char *key_file;
+	NameList *certificate_files;
+	NameList *key_files;
 	char *trusted_ca_file;
 	unsigned int protocols;
 	char *ciphers;

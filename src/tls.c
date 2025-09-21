@@ -294,6 +294,7 @@ int unrealircd_set_tls_groups(SSL_CTX *ctx, const char *groups)
 SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 {
 	SSL_CTX *ctx;
+	NameList *n, *n2;
 	char *errstr = NULL;
 
 	if (server)
@@ -332,60 +333,84 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 	 * SSL_CTX_use_certificate_chain_file() later on works but produces like
 	 * four lines of output, which is a bit verbose for such a simple case.
 	 */
-	if (!file_exists(tlsoptions->certificate_file))
+	for (n = tlsoptions->certificate_files; n; n = n->next)
 	{
-		int saved_errno = errno;
-		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
-		           "Could not open TLS certificate $filename: $system_error",
-		           log_data_string("filename", tlsoptions->certificate_file),
-		           log_data_string("system_error", strerror(saved_errno)));
-
-		if (str_ends_with_case_sensitive(tlsoptions->certificate_file, "tls/server.cert.pem"))
+		if (!file_exists(n->name))
 		{
-			unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED_DEFAULT_CERT", NULL,
-			           "It seems the default certificate is missing. "
-			           "Run 'make pem && make install' in the UnrealIRCd source directory "
-			           "to generate a self-signed cert.");
+			int saved_errno = errno;
+			unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+				   "Could not open TLS certificate $filename: $system_error",
+				   log_data_string("filename", n->name),
+				   log_data_string("system_error", strerror(saved_errno)));
+
+			if (str_ends_with_case_sensitive(n->name, "tls/server.cert.pem"))
+			{
+				unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED_DEFAULT_CERT", NULL,
+					   "It seems the default certificate is missing. "
+					   "Run 'make pem && make install' in the UnrealIRCd source directory "
+					   "to generate a self-signed cert.");
+			}
+			goto fail;
 		}
-		goto fail;
 	}
 
-	if (SSL_CTX_use_certificate_chain_file(ctx, tlsoptions->certificate_file) <= 0)
+	/* And the same 'first check' for key the key file(s) */
+	for (n = tlsoptions->key_files; n; n = n->next)
 	{
-		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
-		           "Failed to load TLS certificate $filename\n$tls_error.all",
-		           log_data_string("filename", tlsoptions->certificate_file),
-		           log_data_tls_error());
-		goto fail;
+		if (!file_exists(n->name))
+		{
+			int saved_errno = errno;
+			unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+				   "Could not open TLS key $filename: $system_error",
+				   log_data_string("filename", n->name),
+				   log_data_string("system_error", strerror(saved_errno)));
+			goto fail;
+		}
 	}
 
-	/* Let's first check the simple case of file exist - this time for key file. */
-	if (!file_exists(tlsoptions->key_file))
-	{
-		int saved_errno = errno;
-		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
-		           "Could not open TLS key $filename: $system_error",
-		           log_data_string("filename", tlsoptions->key_file),
-		           log_data_string("system_error", strerror(saved_errno)));
-		goto fail;
-	}
+	// TODO: verify same amount of certificate_files vs key_files :D
 
-	if (SSL_CTX_use_PrivateKey_file(ctx, tlsoptions->key_file, SSL_FILETYPE_PEM) <= 0)
+	for (n = tlsoptions->certificate_files, n2 = tlsoptions->key_files; n && n2; n = n->next, n2 = n2->next)
 	{
-		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
-		           "Failed to load TLS private key $filename\n$tls_error.all",
-		           log_data_string("filename", tlsoptions->key_file),
-		           log_data_tls_error());
-		goto fail;
-	}
-
-	if (!SSL_CTX_check_private_key(ctx))
-	{
-		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
-		           "Check for TLS private key failed $filename\n$tls_error.all",
-		           log_data_string("filename", tlsoptions->key_file),
-		           log_data_tls_error());
-		goto fail;
+		if (SSL_CTX_use_certificate_chain_file(ctx, n->name) <= 0)
+		{
+			unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+				   "Failed to load TLS certificate $filename\n$tls_error.all",
+				   log_data_string("filename", n->name),
+				   log_data_tls_error());
+			goto fail;
+		}
+		if (SSL_CTX_use_PrivateKey_file(ctx, n2->name, SSL_FILETYPE_PEM) <= 0)
+		{
+			unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+				   "Failed to load TLS private key $filename\n$tls_error.all",
+				   log_data_string("filename", n2->name),
+				   log_data_tls_error());
+			goto fail;
+		}
+		if (!SSL_CTX_check_private_key(ctx))
+		{
+			unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+				   "Check for TLS private key(s) failed: "
+				   "certificate $certificate_filename vs key $key_filename\n"
+				   "$tls_error.all",
+				   log_data_string("certificate_filename", n->name),
+				   log_data_string("key_filename", n2->name),
+				   log_data_tls_error());
+			/* An extra hint for dual cert as this mistake will likely happen
+			 * to some users and the OpenSSL error may be a bit too cryptic.
+			 */
+			if (tlsoptions->certificate_files->next)
+			{
+				unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+					   "HINT: You are using multiple 'certificate' and 'key' items. "
+					   "Make sure each certificate/key pair belongs to each other, "
+					   "they should be in the correct order! "
+					   "E.g. certificate \"cert1\"; key \"key1\"; certificate \"cert2\"; key \"key2\";"
+					   );
+			}
+			goto fail;
+		}
 	}
 
 	if (SSL_CTX_set_cipher_list(ctx, tlsoptions->ciphers) == 0)
@@ -420,10 +445,9 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 	if (!certificate_quality_check(ctx, &errstr))
 	{
 		unreal_log(ULOG_ERROR, "config", "TLS_CERTIFICATE_CHECK_FAILED", NULL,
-		           "There is a problem with your TLS certificate '$filename': $quality_check_error\n"
+		           "There is a problem with your TLS certificate: $quality_check_error\n"
 		           "If you use the standard UnrealIRCd certificates then you can simply run 'make pem' and 'make install' "
 		           "from your UnrealIRCd source directory (eg: ~/unrealircd-6.X.Y/) to create and install new certificates",
-		           log_data_string("filename", tlsoptions->certificate_file),
 		           log_data_string("quality_check_error", errstr));
 		goto fail;
 	}
@@ -1607,11 +1631,14 @@ void check_certificate_expiry_tlsoptions_and_warn(TLSOptions *tlsoptions)
 	if (!ctx)
 		return;
 
+	// FIXME: for dual cert the code in check_certificate_expiry_ctx()
+	//        checks only one of them, and this error message only
+	//        prints the first filename (which may not be the correct one)
 	if (check_certificate_expiry_ctx(ctx, &errstr))
 	{
 		unreal_log(ULOG_WARNING, "tls", "TLS_CERT_EXPIRING", NULL,
 		           "Warning: TLS certificate '$filename': $error_string",
-		           log_data_string("filename", tlsoptions->certificate_file),
+		           log_data_string("filename", tlsoptions->certificate_files->name),
 		           log_data_string("error_string", errstr));
 	}
 	SSL_CTX_free(ctx);
