@@ -4247,7 +4247,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->name, "operclass"))
 			safe_strdup(oper->operclass, cep->value);
 		if (!strcmp(cep->name, "password"))
-			oper->auth = AuthBlockToAuthConfig(cep);
+			AuthBlockToAuthConfig(cep, &oper->auth);
 		else if (!strcmp(cep->name, "class"))
 		{
 			oper->class = find_class(cep->value);
@@ -4351,12 +4351,6 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			/* oper::password */
 			if (!strcmp(cep->name, "password"))
 			{
-				if (has_password)
-				{
-					config_warn_duplicate(cep->file->filename,
-						cep->line_number, "oper::password");
-					continue;
-				}
 				has_password = 1;
 
 				if (ce->value && cep->value &&
@@ -4567,12 +4561,6 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			}
 			else if (!strcmp(cep->name, "password"))
 			{
-				if (has_password)
-				{
-					config_warn_duplicate(cep->file->filename,
-						cep->line_number, "oper::password");
-					continue;
-				}
 				has_password = 1;
 				if (Auth_CheckError(cep, 1) < 0)
 					errors++;
@@ -4700,7 +4688,7 @@ int _test_proxy(ConfigFile *conf, ConfigEntry *ce)
 		} else
 		if (!strcmp(cep->name, "password"))
 		{
-			config_detect_duplicate(&has_password, cep, &errors);
+			has_password = 1;
 			if (Auth_CheckError(cep, 0) < 0)
 				errors++;
 		}
@@ -4785,7 +4773,7 @@ int _conf_proxy(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "match"))
 			conf_match_block(conf, cep, &proxy->mask);
 		else if (!strcmp(cep->name, "password"))
-			proxy->auth = AuthBlockToAuthConfig(cep);
+			AuthBlockToAuthConfig(cep, &proxy->auth);
 		else if (!strcmp(cep->name, "type"))
 			proxy->type = proxy_type_string_to_value(cep->value);
 	}
@@ -5076,19 +5064,9 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "restart"))
-		{
-			if (conf_drpass->restartauth)
-				Auth_FreeAuthConfig(conf_drpass->restartauth);
-
-			conf_drpass->restartauth = AuthBlockToAuthConfig(cep);
-		}
+			AuthBlockToAuthConfig(cep, &conf_drpass->restartauth);
 		else if (!strcmp(cep->name, "die"))
-		{
-			if (conf_drpass->dieauth)
-				Auth_FreeAuthConfig(conf_drpass->dieauth);
-
-			conf_drpass->dieauth = AuthBlockToAuthConfig(cep);
-		}
+			AuthBlockToAuthConfig(cep, &conf_drpass->dieauth);
 	}
 	return 1;
 }
@@ -5940,7 +5918,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 			conf_match_block(conf, cep, &allow->match);
 		}
 		else if (!strcmp(cep->name, "password"))
-			allow->auth = AuthBlockToAuthConfig(cep);
+			AuthBlockToAuthConfig(cep, &allow->auth);
 		else if (!strcmp(cep->name, "class"))
 		{
 			allow->class = find_class(cep->value);
@@ -6146,8 +6124,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->name, "password"))
 		{
-			config_detect_duplicate(&has_password, cep, &errors);
-			/* some auth check stuff? */
+			has_password = 1;
 			if (Auth_CheckError(cep, 0) < 0)
 				errors++;
 		}
@@ -6614,7 +6591,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->name, "password"))
-			link->auth = AuthBlockToAuthConfig(cep);
+			AuthBlockToAuthConfig(cep, &link->auth);
 		else if (!strcmp(cep->name, "hub"))
 			safe_strdup(link->hub, cep->value);
 		else if (!strcmp(cep->name, "leaf"))
@@ -6795,12 +6772,13 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->name, "password"))
 		{
-			config_detect_duplicate(&has_password, cep, &errors);
+			has_password = 1;
 			if (Auth_CheckError(cep, 0) < 0)
 			{
 				errors++;
 			} else {
-				AuthConfig *auth = AuthBlockToAuthConfig(cep);
+				AuthConfig *auth;
+				AuthBlockToAuthConfig(cep, &auth);
 				/* hm. would be nicer if handled @auth-system I think. ah well.. */
 				if ((auth->type != AUTHTYPE_PLAINTEXT) && (auth->type != AUTHTYPE_TLS_CLIENTCERT) &&
 				    (auth->type != AUTHTYPE_TLS_CLIENTCERTFP) && (auth->type != AUTHTYPE_SPKIFP))
@@ -10915,6 +10893,13 @@ int _test_secret(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->name, "password"))
 		{
 			int n;
+			if (has_password)
+			{
+				config_error("%s:%d: you can only have one password here",
+				             cep->file->filename, cep->line_number);
+				errors++;
+				continue;
+			}
 			has_password = 1;
 			CheckNull(cep);
 			if (cep->items ||

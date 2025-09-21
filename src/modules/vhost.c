@@ -282,7 +282,7 @@ int vhost_config_run(ConfigFile *conf, ConfigEntry *ce, int type)
 		else if (!strcmp(cep->name, "login"))
 			safe_strdup(vhost->login, cep->value);
 		else if (!strcmp(cep->name, "password"))
-			vhost->auth = AuthBlockToAuthConfig(cep);
+			AuthBlockToAuthConfig(cep, &vhost->auth);
 		else if (!strcmp(cep->name, "match") || !strcmp(cep->name, "mask"))
 		{
 			conf_match_block(conf, cep, &vhost->match);

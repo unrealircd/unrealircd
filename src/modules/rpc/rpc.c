@@ -474,7 +474,7 @@ int rpc_config_run_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type)
 		} else
 		if (!strcmp(cep->name, "password"))
 		{
-			e->auth = AuthBlockToAuthConfig(cep);
+			AuthBlockToAuthConfig(cep, &e->auth);
 		} else
 		if (!strcmp(cep->name, "rpc-class"))
 		{

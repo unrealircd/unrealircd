@@ -538,7 +538,7 @@ extern int b64_encode(unsigned char const *src, size_t srclength, char *target, 
 extern int b64_decode(char const *src, unsigned char *target, size_t targsize);
 
 extern AuthenticationType Auth_FindType(const char *hash, const char *type);
-extern AuthConfig	*AuthBlockToAuthConfig(ConfigEntry *ce);
+extern void AuthBlockToAuthConfig(ConfigEntry *ce, AuthConfig **list);
 extern void		Auth_FreeAuthConfig(AuthConfig *as);
 extern int		Auth_Check(Client *cptr, AuthConfig *as, const char *para);
 extern const char	*Auth_Hash(AuthenticationType type, const char *text);

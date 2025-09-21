@@ -265,7 +265,7 @@ int Auth_CheckError(ConfigEntry *ce, int warn_on_plaintext)
 /** Convert an authentication block from the configuration file
  * into an AuthConfig structure so it can be used at runtime.
  */
-AuthConfig *AuthBlockToAuthConfig(ConfigEntry *ce)
+void AuthBlockToAuthConfig(ConfigEntry *ce, AuthConfig **list)
 {
 	AuthenticationType type = AUTHTYPE_PLAINTEXT;
 	AuthConfig *as = NULL;
@@ -277,14 +277,17 @@ AuthConfig *AuthBlockToAuthConfig(ConfigEntry *ce)
 	as = safe_alloc(sizeof(AuthConfig));
 	safe_strdup(as->data, ce->value);
 	as->type = type;
-	return as;
+
+	AddListItem(as, *list);
 }
 
 /** Free an AuthConfig struct */
 void Auth_FreeAuthConfig(AuthConfig *as)
 {
-	if (as)
+	AuthConfig *as_next;
+	for (; as; as = as_next)
 	{
+		as_next = as->next;
 		safe_free(as->data);
 		safe_free(as);
 	}
@@ -448,48 +451,64 @@ int Auth_Check(Client *client, AuthConfig *as, const char *para)
 	if (!as || !as->data)
 		return 0; /* Should not happen, but better be safe.. */
 
-	switch (as->type)
+	for (; as; as = as->next)
 	{
-		case AUTHTYPE_PLAINTEXT:
-			if (!para)
-				return 0;
-			if (!strcmp(as->data, "changemeplease") && !strcmp(para, as->data))
-			{
-				unreal_log(ULOG_INFO, "auth", "AUTH_REJECT_DEFAULT_PASSWORD", client,
-				           "Rejecting default password 'changemeplease'. "
-				           "Please change the password in the configuration file.");
-				return 0;
-			}
-			/* plain text compare */
-			if (!strcmp(para, as->data))
-				return 1;
-			return 0;
+		switch (as->type)
+		{
+			case AUTHTYPE_PLAINTEXT:
+				if (!para)
+					return 0;
+				if (!strcmp(as->data, "changemeplease") && !strcmp(para, as->data))
+				{
+					unreal_log(ULOG_INFO, "auth", "AUTH_REJECT_DEFAULT_PASSWORD", client,
+						   "Rejecting default password 'changemeplease'. "
+						   "Please change the password in the configuration file.");
+					return 0;
+				}
+				/* plain text compare */
+				if (!strcmp(para, as->data))
+					return 1;
+				break;
 
-		case AUTHTYPE_ARGON2:
-			return authcheck_argon2(client, as, para);
+			case AUTHTYPE_ARGON2:
+				if (authcheck_argon2(client, as, para))
+					return 1;
+				break;
 
-		case AUTHTYPE_BCRYPT:
-			return authcheck_bcrypt(client, as, para);
+			case AUTHTYPE_BCRYPT:
+				if (authcheck_bcrypt(client, as, para))
+					return 1;
+				break;
 
-		case AUTHTYPE_UNIXCRYPT:
-			if (!para)
-				return 0;
-			res = crypt(para, as->data);
-			if (res && !strcmp(res, as->data))
-				return 1;
-			return 0;
+			case AUTHTYPE_UNIXCRYPT:
+				if (!para)
+					return 0;
+				res = crypt(para, as->data);
+				if (res && !strcmp(res, as->data))
+					return 1;
+				break;
 
-		case AUTHTYPE_TLS_CLIENTCERT:
-			return authcheck_tls_clientcert(client, as, para);
+			case AUTHTYPE_TLS_CLIENTCERT:
+				if (authcheck_tls_clientcert(client, as, para))
+					return 1;
+				break;
 
-		case AUTHTYPE_TLS_CLIENTCERTFP:
-			return authcheck_tls_clientcert_fingerprint(client, as, para);
+			case AUTHTYPE_TLS_CLIENTCERTFP:
+				if (authcheck_tls_clientcert_fingerprint(client, as, para))
+					return 1;
+				break;
 
-		case AUTHTYPE_SPKIFP:
-			return authcheck_spkifp(client, as, para);
+			case AUTHTYPE_SPKIFP:
+				if (authcheck_spkifp(client, as, para))
+					return 1;
+				break;
 
-		case AUTHTYPE_INVALID:
-			return 0; /* Should never happen */
+			case AUTHTYPE_INVALID:
+#ifdef DEBUGMODE
+				abort();
+#endif
+				break; /* Should never happen */
+		}
 	}
 	return 0;
 }

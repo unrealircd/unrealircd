@@ -1638,6 +1638,7 @@ typedef struct AuthConfig AuthConfig;
  * configuration file.
  */
 struct AuthConfig {
+	AuthConfig		*prev, *next;
 	AuthenticationType	type;  /**< Type of data, one of AUTHTYPE_* */
 	char			*data; /**< Data associated with this record */
 };
