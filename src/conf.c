@@ -6777,7 +6777,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			{
 				errors++;
 			} else {
-				AuthConfig *auth;
+				AuthConfig *auth = NULL;
 				AuthBlockToAuthConfig(cep, &auth);
 				/* hm. would be nicer if handled @auth-system I think. ah well.. */
 				if ((auth->type != AUTHTYPE_PLAINTEXT) && (auth->type != AUTHTYPE_TLS_CLIENTCERT) &&
