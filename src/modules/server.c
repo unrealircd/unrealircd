@@ -1553,7 +1553,13 @@ void _introduce_user(Client *to, Client *acptr)
 	send_moddata_client(to, acptr);
 
 	if (acptr->user->away)
-		sendto_one(to, NULL, ":%s AWAY :%s", acptr->id, acptr->user->away);
+	{
+		MessageTag *mtag = safe_alloc(sizeof(MessageTag));
+		safe_strdup(mtag->name, "time");
+		safe_strdup(mtag->value, timestamp_iso8601(acptr->user->away_since));
+		sendto_one(to, mtag, ":%s AWAY :%s", acptr->id, acptr->user->away);
+		safe_free_message_tags(mtag);
+	}
 
 	if (acptr->user->swhois)
 	{

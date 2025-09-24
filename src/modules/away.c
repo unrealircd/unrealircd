@@ -96,7 +96,8 @@ CMD_FUNC(cmd_away)
 {
 	char reason[512];
 	int n, already_as_away = 0;
-	MessageTag *mtags = NULL;
+	MessageTag *mtags = NULL, *m;
+	time_t t;
 
 	if (IsServer(client))
 		return;
@@ -142,8 +143,10 @@ CMD_FUNC(cmd_away)
 		return;
 
 	/* All tests passed. Now marking as away (or still away but changing the away reason) */
-
-	client->user->away_since = TStime();
+	if ((m = find_mtag(recv_mtags, "time")) && (t = server_time_to_unix_time(m->value)))
+		client->user->away_since = t;
+	else
+		client->user->away_since = TStime();
 	
 	new_message(client, recv_mtags, &mtags);
 
