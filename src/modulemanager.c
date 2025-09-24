@@ -23,6 +23,7 @@ struct ManagedModule
 	char *version;
 	char *source;
 	char *sha256sum;
+	time_t mtime;
 	char *min_unrealircd_version;
 	char *max_unrealircd_version;
 	char *description;
@@ -1276,6 +1277,7 @@ void print_md_block(FILE *fdo, ManagedModule *m)
 	fprintf(fdo, "\ttroubleshooting \"%s\";\n", unreal_add_quotes(m->troubleshooting));
 	fprintf(fdo, "\tsource \"%s\";\n", unreal_add_quotes(m->source));
 	fprintf(fdo, "\tsha256sum \"%s\";\n", unreal_add_quotes(m->sha256sum));
+	fprintf(fdo, "\tlast-updated \"%s\";\n", unreal_add_quotes(timestamp_iso8601(m->mtime)));
 	fprintf(fdo, "\tmin-unrealircd-version \"%s\";\n", unreal_add_quotes(m->min_unrealircd_version));
 	if (m->max_unrealircd_version)
 		fprintf(fdo, "\tmax-unrealircd-version \"%s\";\n", unreal_add_quotes(m->max_unrealircd_version));
@@ -1360,6 +1362,7 @@ void mm_generate_repository(int argc, char *args[])
 			}
 			m->sha256sum = strdup(sha256sum_file(fullname));
 			m->source = safe_alloc(512);
+			m->mtime = unreal_getfilemodtime(fullname);
 			snprintf(m->source, 512, "%s%s.c", urlbasepath, modname + 6);
 			/* filter */
 			if (minversion && m->min_unrealircd_version && strncmp(minversion, m->min_unrealircd_version, strlen(minversion)))
