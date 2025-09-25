@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER
   = {
 	"extbans/textban",
 	"2.2",
-	"ExtBan ~T (textban) by Syzop",
+	"ExtBan ~textban",
 	"UnrealIRCd Team",
 	"unrealircd-6",
     };
@@ -82,13 +82,13 @@ MOD_INIT()
 	memset(&req, 0, sizeof(ExtbanInfo));
 	req.letter = 'T';
 	req.name = "text";
-	req.options = EXTBOPT_NOSTACKCHILD; /* disallow things like ~n:~T, as we only affect text. */
+	req.options = EXTBOPT_NOSTACKCHILD; /* disallow things like ~nick:~text, as we only affect text. */
 	req.conv_param = extban_modeT_conv_param;
 	req.is_ok = extban_modeT_is_ok;
 
 	if (!ExtbanAdd(modinfo->handle, req))
 	{
-		config_error("textban module: adding extban ~T failed! module NOT loaded");
+		config_error("textban module: adding extban ~text failed! module NOT loaded");
 		return MOD_FAILED;
 	}
 
@@ -295,8 +295,8 @@ const char *extban_modeT_conv_param(BanContext *b, Extban *extban)
 
 	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
 
-	/* ~T:<action>:<text>
-	 * ~T:user@host:<action>:<text> if UHOSTFEATURE is enabled
+	/* ~text:<action>:<text>
+	 * ~text:user@host:<action>:<text> if UHOSTFEATURE is enabled
 	 */
 
 #ifdef UHOSTFEATURE
@@ -332,7 +332,7 @@ const char *extban_modeT_conv_param(BanContext *b, Extban *extban)
 	action = para;
 #endif
 
-	/* ~T:<action>:<text> */
+	/* ~text:<action>:<text> */
 	if (!strcasecmp(action, "block"))
 	{
 		action = "block"; /* ok */

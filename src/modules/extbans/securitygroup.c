@@ -52,7 +52,7 @@ MOD_TEST()
 {
 	if (!register_securitygroup_extban(modinfo))
 	{
-		config_error("could not register extended ban type ~G");
+		config_error("could not register extended ban type ~security-group");
 		return MOD_FAILED;
 	}
 
@@ -64,7 +64,7 @@ MOD_INIT()
 {
 	if (!register_securitygroup_extban(modinfo))
 	{
-		config_error("could not register extended ban type ~G");
+		config_error("could not register extended ban type ~security-group");
 		return MOD_FAILED;
 	}
 
@@ -105,7 +105,7 @@ int extban_securitygroup_generic(char *mask, int strict)
 	}
 
 	if (!*mask)
-		return 0; /* don't allow "~G:" nor "~G:!" */
+		return 0; /* don't allow "~security-group:" nor "~security-group:!" */
 
 	return 1;
 }
@@ -144,7 +144,7 @@ const char *extban_securitygroup_conv_param(BanContext *b, Extban *extban)
 	return retbuf;
 }
 
-/** Is the user banned by ~G:something ? */
+/** Is the user banned by ~security-group:something ? */
 int extban_securitygroup_is_banned(BanContext *b)
 {
 	if (*b->banstr == '!')

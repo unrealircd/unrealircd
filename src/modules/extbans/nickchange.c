@@ -1,5 +1,5 @@
 /*
- * Extended ban that affects nick-changes only (+b ~n)
+ * Extended ban that affects nick-changes only (+b ~nickchange)
  * (C) Copyright 2003-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,7 +22,7 @@ ModuleHeader MOD_HEADER
 = {
 	"extbans/nickchange",
 	"4.2",
-	"ExtBan ~n - prevent nick-changes only",
+	"ExtBan ~nickchange - prevent nick-changes only",
 	"UnrealIRCd Team",
 	"unrealircd-6",
 };

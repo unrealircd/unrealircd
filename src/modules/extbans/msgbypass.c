@@ -22,7 +22,7 @@ ModuleHeader MOD_HEADER
 = {
 	"extbans/msgbypass",
 	"4.2",
-	"ExtBan ~m - bypass +m/+n/+c/+S/+T (msgbypass)",
+	"ExtBan ~msgbypass - bypass +m/+n/+c/+S/+T (msgbypass)",
 	"UnrealIRCd Team",
 	"unrealircd-6",
 };
@@ -45,7 +45,7 @@ MOD_INIT()
 	req.options = EXTBOPT_ACTMODIFIER;
 	if (!ExtbanAdd(modinfo->handle, req))
 	{
-		config_error("could not register extended ban type ~m");
+		config_error("could not register extended ban type ~msgbypass");
 		return MOD_FAILED;
 	}
 
@@ -168,8 +168,8 @@ int msgbypass_extban_syntax(Client *client, int checkt, char *reason)
 	if (MyUser(client) && (checkt == EXBCHK_PARAM))
 	{
 		sendnotice(client, "Error when setting ban exception: %s", reason);
-		sendnotice(client, " Syntax: +e ~m:type:mask");
-		sendnotice(client, "Example: +e ~m:moderated:~a:TrustedUser");
+		sendnotice(client, " Syntax: +e ~msgbypass:type:mask");
+		sendnotice(client, "Example: +e ~msgbypass:moderated:~account:TrustedUser");
 		sendnotice(client, "Valid types are: external, moderated, color, notice");
 		sendnotice(client, "Valid masks are: nick!user@host or another extban type such as ~a, ~c, ~S, ..");
 	}
@@ -190,7 +190,7 @@ int msgbypass_extban_is_ok(BanContext *b)
 	if (b->ban_type != EXBTYPE_EXCEPT)
 	{
 		if (b->is_ok_check == EXBCHK_PARAM)
-			sendnotice(b->client, "Ban type ~m only works with exceptions (+e) and not with bans or invex (+b/+I)");
+			sendnotice(b->client, "Ban type ~msgbypass only works with exceptions (+e) and not with bans or invex (+b/+I)");
 		return 0; /* reject */
 	}
 

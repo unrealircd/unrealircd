@@ -1,5 +1,5 @@
 /*
- * Extended ban that affects JOIN only (+b ~j)
+ * Extended ban that affects JOIN only (+b ~join)
  * (C) Copyright 2003-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,7 +22,7 @@ ModuleHeader MOD_HEADER
 = {
 	"extbans/join",
 	"4.2",
-	"Extban ~j - prevent join only",
+	"Extban ~join - prevent join only",
 	"UnrealIRCd Team",
 	"unrealircd-6",
 };

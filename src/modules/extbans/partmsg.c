@@ -1,5 +1,5 @@
 /*
- * Hide Part/Quit message extended ban (+b ~p:nick!user@host)
+ * Hide Part/Quit message extended ban (+b ~partmsg:nick!user@host)
  * (C) Copyright i <info@servx.org> and the UnrealIRCd team
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@ ModuleHeader MOD_HEADER
 = {
 	"extbans/partmsg",
 	"4.2",
-	"ExtBan ~p - Ban/exempt Part/Quit message",
+	"ExtBan ~partmsg - Ban/exempt Part/Quit message",
 	"UnrealIRCd Team",
 	"unrealircd-6",
 };
