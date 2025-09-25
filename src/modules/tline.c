@@ -61,6 +61,10 @@ CMD_FUNC(cmd_tline)
 	Client *acptr;
 	int matching_lclients = 0;
 	int matching_clients = 0;
+	int soft = 0;
+	const char *error = NULL;
+	char *usermask = NULL, *hostmask = NULL;
+	char serverban[512];
 
 	if ((parc < 1) || BadPtr(parv[1]))
 	{
@@ -68,9 +72,21 @@ CMD_FUNC(cmd_tline)
 		return;
 	}
 
+	if (!server_ban_parse_mask(client, 1, 'G', parv[1], &usermask, &hostmask, &soft, &error) || !usermask || !hostmask)
+	{
+		if (error)
+			sendnotice(client, "Error: %s", error);
+		return;
+	}
+
+	if (is_extended_server_ban(usermask))
+		snprintf(serverban, sizeof(serverban), "%s%s", usermask, hostmask);
+	else
+		snprintf(serverban, sizeof(serverban), "%s@%s", usermask, hostmask);
+
 	list_for_each_entry(acptr, &client_list, client_node)
 	{
-		if (match_user(parv[1], acptr, MATCH_CHECK_REAL))
+		if (match_user(serverban, acptr, MATCH_CHECK_REAL))
 		{
 			if (MyUser(acptr))
 				matching_lclients++;
@@ -80,7 +96,7 @@ CMD_FUNC(cmd_tline)
 
 	sendnotice(client,
 	    "*** TLINE: Users matching mask '%s': global: %d/%d (%.2f%%), local: %d/%d (%.2f%%).",
-	    parv[1], matching_clients, irccounts.clients,
+	    serverban, matching_clients, irccounts.clients,
 	    (double)matching_clients / irccounts.clients * 100,
 	    matching_lclients, irccounts.me_clients,
 	    (double)matching_lclients / irccounts.me_clients * 100);
