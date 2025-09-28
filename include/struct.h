@@ -1524,7 +1524,7 @@ struct LocalClient {
 	dbuf recvQ;			/**< Incoming receive queue (incoming data yet to be parsed) */
 	ConfigItem_class *class;	/**< The class { } block associated to this client */
 	int proto;			/**< PROTOCTL options */
-	long caps;			/**< User: enabled capabilities (via CAP command) */
+	uint64_t caps;			/**< User: enabled capabilities (via CAP command) */
 	time_t nexttarget;		/**< Next time that a new target will be allowed (msg/notice/invite) */
 	u_char targets[MAXCCUSERS];	/**< Hash values of targets for target limiting */
 	ConfigItem_listen *listener;	/**< If this client IsListening() then this is the listener configuration attached to it */
