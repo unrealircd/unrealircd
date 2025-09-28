@@ -56,12 +56,15 @@ long SNO_OPER = 0L;
 long AllUmodes;		/* All umodes */
 long SendUmodes;	/* All umodes which are sent to other servers (global umodes) */
 
+Umode *umode_letter_to_handler[256];
+
 /* Forward declarations */
 int umode_hidle_allow(Client *client, int what);
 static void unload_usermode_commit(Umode *m);
 
 void umode_init(void)
 {
+	memset(umode_letter_to_handler, 0, sizeof(umode_letter_to_handler));
 	/* Some built-in modes */
 	UmodeAdd(NULL, 'i', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_INVISIBLE);
 	UmodeAdd(NULL, 'o', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_OPER);
@@ -81,8 +84,14 @@ void make_umodestr(void)
 	char *p = umodestring;
 
 	for (um=usermodes; um; um = um->next)
+	{
 		if (um->letter)
+		{
 			*p++ = um->letter;
+			if (!um->unloaded)
+				umode_letter_to_handler[um->letter] = um;
+		}
+	}
 	*p = '\0';
 }
 
@@ -115,6 +124,8 @@ void umodes_check_for_changes(void)
 void usermode_add_sorted(Umode *n)
 {
 	Umode *m;
+
+	umode_letter_to_handler[n->letter] = n;
 
 	if (usermodes == NULL)
 	{
@@ -207,6 +218,8 @@ Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*
 		um->letter = ch;
 		um->mode = l;
 		usermode_add_sorted(um);
+	} else {
+		umode_letter_to_handler[um->letter] = um;
 	}
 
 	um->letter = ch;
@@ -318,9 +331,10 @@ static void unload_usermode_commit(Umode *um)
 	}
 
 	/* Then unload the mode */
+	umode_letter_to_handler[um->letter] = NULL;
 	DelListItem(um, usermodes);
 	safe_free(um);
-	make_umodestr();
+	make_umodestr(); // this sets umode_letter_to_handler[] properly if a newly loaded module took our handle over
 }
 
 void unload_all_unused_umodes(void)
@@ -382,9 +396,18 @@ long find_user_mode(char letter)
 {
 	Umode *um;
 
+#ifndef DEBUGMODE
+	return umode_letter_to_handler[letter];
+#else
+	/* In debug mode we check for umode_letter_to_handler[] mismatch with list */
 	for (um = usermodes; um; um = um->next)
 		if ((um->letter == letter) && !um->unloaded)
+		{
+			if (umode_letter_to_handler[letter] != um)
+				abort();
 			return um->mode;
+		}
+#endif
 
 	return 0;
 }

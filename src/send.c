@@ -522,6 +522,10 @@ void sendto_channel(Channel *channel, Client *from, Client *skip,
 	char member_modes_ext[64];
 	LineCache *cache;
 	char check_invisible = 0;
+	long UMODE_CTCP;
+
+	if (sendflags & SKIP_CTCP)
+		UMODE_CTCP = find_user_mode('T');
 
 	if (member_modes)
 	{
@@ -544,8 +548,8 @@ void sendto_channel(Channel *channel, Client *from, Client *skip,
 		/* Don't send to deaf clients (unless 'senddeaf' is set) */
 		if (IsDeaf(acptr) && (sendflags & SKIP_DEAF))
 			continue;
-		/* Don't send to NOCTCP clients */
-		if (has_user_mode(acptr, 'T') && (sendflags & SKIP_CTCP))
+		/* Don't send to NOCTCP clients (umode +T) */
+		if ((sendflags & SKIP_CTCP) && (acptr->umodes & UMODE_CTCP))
 			continue;
 		/* Sender ('from') is invisible for 'acptr' and we were asked to CHECK_INVISIBLE */
 		if (check_invisible && !check_channel_access_member(lp, "hoaq") && (from != acptr))
