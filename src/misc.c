@@ -1955,12 +1955,13 @@ void sha256hash_binary(char *dst, const char *src, unsigned long n)
 {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 	unsigned int md_len;
-	EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+	static EVP_MD_CTX *mdctx = NULL;
+	if (!mdctx)
+		mdctx = EVP_MD_CTX_new();
 	if (EVP_DigestInit_ex(mdctx, sha256_function, NULL) != 1)
 		abort();
 	EVP_DigestUpdate(mdctx, src, n);
 	EVP_DigestFinal_ex(mdctx, dst, &md_len);
-	EVP_MD_CTX_free(mdctx);
 #else
 	SHA256_CTX hash;
 
