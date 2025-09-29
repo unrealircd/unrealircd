@@ -1711,6 +1711,13 @@ SSL_CTX *https_new_ctx(void)
 	snprintf(buf1, sizeof(buf1), "%s/tls/curl-ca-bundle.crt", CONFDIR);
 	if (!file_exists(buf1))
 	{
+#ifdef _WIN32
+		unreal_log(ULOG_ERROR, "url", "CA_BUNDLE_NOT_FOUND", NULL,
+			   "File $filename1 does not exist.\n"
+			   "Cannot use built-in https client without curl-ca-bundle.crt\n",
+			   log_data_string("filename1", buf1));
+		exit(-1);
+#else
 		snprintf(buf2, sizeof(buf2), "%s/doc/conf/tls/curl-ca-bundle.crt", BUILDDIR);
 		if (!file_exists(buf2))
 		{
@@ -1722,6 +1729,7 @@ SSL_CTX *https_new_ctx(void)
 			exit(-1);
 		}
 		curl_ca_bundle = buf2;
+#endif
 	}
 	SSL_CTX_load_verify_locations(ctx_client, curl_ca_bundle, NULL);
 	SSL_CTX_set_verify(ctx_client, SSL_VERIFY_PEER, NULL);
