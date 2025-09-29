@@ -37,6 +37,9 @@ Cmode_t EXTMODE_HISTORY = 0L;
 static cfgstruct cfg;
 static cfgstruct test;
 
+/* Externally looked up */
+long CAP_CHATHISTORY_DRAFT = 0;
+
 #define HistoryEnabled(channel)    (channel->mode.mode & EXTMODE_HISTORY)
 
 /* Forward declarations */
@@ -99,6 +102,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	long CAP_CHATHISTORY_DRAFT = ClientCapabilityBit("draft/chathistory");
 	CommandOverrideAdd(modinfo->handle, "MODE", 0, override_mode);
 	CommandOverrideAdd(modinfo->handle, "SVSMODE", 0, override_mode);
 	CommandOverrideAdd(modinfo->handle, "SVS2MODE", 0, override_mode);
@@ -688,7 +692,7 @@ int history_join(Client *client, Channel *channel, MessageTag *mtags)
 	/* No history-on-join for clients that implement CHATHISTORY,
 	 * they will pull history themselves if they need it.
 	 */
-	if (HasCapability(client, "draft/chathistory") /*|| HasCapability(client, "chathistory")*/)
+	if (HasCapabilityFast(client, CAP_CHATHISTORY_DRAFT) /*|| HasCapabilityFast(client, CAP_CHATHISTORY)*/)
 		return 0;
 
 	if (MyUser(client) && can_receive_history(client))
