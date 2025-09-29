@@ -102,7 +102,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	long CAP_CHATHISTORY_DRAFT = ClientCapabilityBit("draft/chathistory");
+	CAP_CHATHISTORY_DRAFT = ClientCapabilityBit("draft/chathistory");
 	CommandOverrideAdd(modinfo->handle, "MODE", 0, override_mode);
 	CommandOverrideAdd(modinfo->handle, "SVSMODE", 0, override_mode);
 	CommandOverrideAdd(modinfo->handle, "SVS2MODE", 0, override_mode);
