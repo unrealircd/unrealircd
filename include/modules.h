@@ -123,6 +123,7 @@ struct Umode {
 	Module *owner; /**< Module that owns this user mode */
 };
 
+#define HIGHESTMODDATATYPE 7
 typedef enum ModDataType {
 	MODDATATYPE_LOCAL_VARIABLE	= 1,
 	MODDATATYPE_GLOBAL_VARIABLE	= 2,
@@ -131,6 +132,7 @@ typedef enum ModDataType {
 	MODDATATYPE_CHANNEL		= 5,
 	MODDATATYPE_MEMBER		= 6,
 	MODDATATYPE_MEMBERSHIP		= 7,
+	// (If you add more then increase MODDATATYPES)
 } ModDataType;
 
 typedef enum ModDataSync {

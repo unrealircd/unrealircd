@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-MODVAR ModDataInfo *MDInfo = NULL;
+MODVAR ModDataInfo *MDInfo[HIGHESTMODDATATYPE+1] = { NULL };
 
 MODVAR ModData local_variable_moddata[MODDATA_MAX_LOCAL_VARIABLE];
 MODVAR ModData global_variable_moddata[MODDATA_MAX_GLOBAL_VARIABLE];
@@ -32,9 +32,14 @@ ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 	int slotav = 0; /* highest available slot */
 	ModDataInfo *m;
 	int new_struct = 0;
-	
+
+	/* This would be a rather weird error on the module coder part */
+	if ((req.type < 1) || (req.type > HIGHESTMODDATATYPE))
+		abort();
+
 	/* Hunt for highest available slot */
-	for (m = MDInfo; m ; m = m->next)
+	for (m = MDInfo[req.type]; m ; m = m->next)
+	{
 		if (m->type == req.type)
 		{
 			/* Does an entry already exist with this name? */
@@ -55,6 +60,7 @@ ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 			/* Update next available slot */
 			slotav = MAX(slotav, m->slot+1);
 		}
+	}
 
 	/* Now check if we are within bounds (if we really have a free slot available) */
 	if (((req.type == MODDATATYPE_LOCAL_VARIABLE) && (slotav >= MODDATA_MAX_LOCAL_VARIABLE)) ||
@@ -87,7 +93,7 @@ moddataadd_isok:
 	m->owner = module;
 	
 	if (new_struct)
-		AddListItem(m, MDInfo);
+		AddListItem(m, MDInfo[req.type]);
 
 	if (module)
 	{
@@ -105,12 +111,9 @@ void moddata_free_client(Client *client)
 {
 	ModDataInfo *md;
 
-	for (md = MDInfo; md; md = md->next)
-		if (md->type == MODDATATYPE_CLIENT)
-		{
-			if (md->free && moddata_client(client, md).ptr)
-				md->free(&moddata_client(client, md));
-		}
+	for (md = MDInfo[MODDATATYPE_CLIENT]; md; md = md->next)
+		if (md->free && moddata_client(client, md).ptr)
+			md->free(&moddata_client(client, md));
 
 	memset(client->moddata, 0, sizeof(client->moddata));
 }
@@ -119,12 +122,9 @@ void moddata_free_local_client(Client *client)
 {
 	ModDataInfo *md;
 
-	for (md = MDInfo; md; md = md->next)
-		if (md->type == MODDATATYPE_LOCAL_CLIENT)
-		{
-			if (md->free && moddata_local_client(client, md).ptr)
-				md->free(&moddata_local_client(client, md));
-		}
+	for (md = MDInfo[MODDATATYPE_LOCAL_CLIENT]; md; md = md->next)
+		if (md->free && moddata_local_client(client, md).ptr)
+			md->free(&moddata_local_client(client, md));
 
 	memset(client->moddata, 0, sizeof(client->moddata));
 }
@@ -133,12 +133,9 @@ void moddata_free_channel(Channel *channel)
 {
 	ModDataInfo *md;
 
-	for (md = MDInfo; md; md = md->next)
-		if (md->type == MODDATATYPE_CHANNEL)
-		{
-			if (md->free && moddata_channel(channel, md).ptr)
-				md->free(&moddata_channel(channel, md));
-		}
+	for (md = MDInfo[MODDATATYPE_CHANNEL]; md; md = md->next)
+		if (md->free && moddata_channel(channel, md).ptr)
+			md->free(&moddata_channel(channel, md));
 
 	memset(channel->moddata, 0, sizeof(channel->moddata));
 }
@@ -147,26 +144,20 @@ void moddata_free_member(Member *m)
 {
 	ModDataInfo *md;
 
-	for (md = MDInfo; md; md = md->next)
-		if (md->type == MODDATATYPE_MEMBER)
-		{
-			if (md->free && moddata_member(m, md).ptr)
-				md->free(&moddata_member(m, md));
-		}
+	for (md = MDInfo[MODDATATYPE_MEMBER]; md; md = md->next)
+		if (md->free && moddata_member(m, md).ptr)
+			md->free(&moddata_member(m, md));
 
 	memset(m->moddata, 0, sizeof(m->moddata));
 }
 
 void moddata_free_membership(Membership *m)
 {
-ModDataInfo *md;
+	ModDataInfo *md;
 
-	for (md = MDInfo; md; md = md->next)
-		if (md->type == MODDATATYPE_MEMBERSHIP)
-		{
-			if (md->free && moddata_membership(m, md).ptr)
-				md->free(&moddata_membership(m, md));
-		}
+	for (md = MDInfo[MODDATATYPE_MEMBERSHIP]; md; md = md->next)
+		if (md->free && moddata_membership(m, md).ptr)
+			md->free(&moddata_membership(m, md));
 
 	memset(m->moddata, 0, sizeof(m->moddata));
 }
@@ -265,7 +256,7 @@ void unload_moddata_commit(ModDataInfo *md)
 		}
 	}
 	
-	DelListItem(md, MDInfo);
+	DelListItem(md, MDInfo[md->type]);
 	safe_free(md->name);
 	safe_free(md);
 }
@@ -307,28 +298,32 @@ void ModDataDel(ModDataInfo *md)
 void unload_all_unused_moddata(void)
 {
 	ModDataInfo *md, *md_next;
+	int i;
 
-	for (md = MDInfo; md; md = md_next)
+	for (i = 1; i <= HIGHESTMODDATATYPE; i++)
 	{
-		md_next = md->next;
-		if (md->unloaded)
+		for (md = MDInfo[i]; md; md = md_next)
 		{
-			//config_status("UNLOADING: md %s (owner %p, type %d, slot %d)",
-			//	md->name, md->owner, md->type, md->slot);
-			unload_moddata_commit(md);
-		} else {
-			//config_status("loaded: md %s (owner %p, type %d, slot %d)",
-			//	md->name, md->owner, md->type, md->slot);
+			md_next = md->next;
+			if (md->unloaded)
+			{
+				//config_status("UNLOADING: md %s (owner %p, type %d, slot %d)",
+				//	md->name, md->owner, md->type, md->slot);
+				unload_moddata_commit(md);
+			} else {
+				//config_status("loaded: md %s (owner %p, type %d, slot %d)",
+				//	md->name, md->owner, md->type, md->slot);
+			}
 		}
 	}
 }
 
 ModDataInfo *findmoddata_byname(const char *name, ModDataType type)
 {
-ModDataInfo *md;
+	ModDataInfo *md;
 
-	for (md = MDInfo; md; md = md->next)
-		if ((md->type == type) && !strcmp(name, md->name))
+	for (md = MDInfo[type]; md; md = md->next)
+		if (!strcmp(name, md->name))
 			return md;
 
 	return NULL;
@@ -337,10 +332,12 @@ ModDataInfo *md;
 int module_has_moddata(Module *mod)
 {
 	ModDataInfo *md;
+	int i;
 
-	for (md = MDInfo; md; md = md->next)
-		if (md->owner == mod)
-			return 1;
+	for (i = 1; i <= HIGHESTMODDATATYPE; i++)
+		for (md = MDInfo[i]; md; md = md->next)
+			if (md->owner == mod)
+				return 1;
 
 	return 0;
 }
