@@ -44,6 +44,7 @@ MOD_INIT()
 	mreq.unserialize = certfp_unserialize;
 	mreq.sync = MODDATA_SYNC_EARLY;
 	mreq.type = MODDATATYPE_CLIENT;
+	mreq.priority = -999998;
 	certfp_md = ModDataAdd(modinfo->handle, mreq);
 	if (!certfp_md)
 		abort();

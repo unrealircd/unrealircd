@@ -47,6 +47,7 @@ MOD_INIT()
 	mreq.unserialize = portinfo_unserialize;
 	mreq.sync = MODDATA_SYNC_EARLY;
 	mreq.type = MODDATATYPE_CLIENT;
+	mreq.priority = -999994;
 	local_port_md = ModDataAdd(modinfo->handle, mreq);
 	if (!local_port_md)
 		abort();

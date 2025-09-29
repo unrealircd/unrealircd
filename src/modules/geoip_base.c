@@ -116,6 +116,7 @@ MOD_INIT()
 	mreq.unserialize = geoip_base_unserialize;
 	mreq.sync = MODDATA_SYNC_EARLY;
 	mreq.type = MODDATATYPE_CLIENT;
+	mreq.priority = -999999;
 	geoip_md = ModDataAdd(modinfo->handle, mreq);
 	if (!geoip_md)
 		abort();

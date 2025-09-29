@@ -39,6 +39,7 @@ ModDataInfo mreq;
 	mreq.unserialize = tls_cipher_unserialize;
 	mreq.sync = MODDATA_SYNC_EARLY;
 	mreq.type = MODDATATYPE_CLIENT;
+	mreq.priority = -999995;
 	tls_cipher_md = ModDataAdd(modinfo->handle, mreq);
 	if (!tls_cipher_md)
 		abort();

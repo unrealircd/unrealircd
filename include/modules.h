@@ -144,6 +144,7 @@ typedef struct ModDataInfo ModDataInfo;
 
 struct ModDataInfo {
 	ModDataInfo *prev, *next;
+	int priority; /**< For sorting purposes (ones with most key lookups should go first) */
 	char *name; /**< Name for this moddata */
 	Module *owner; /**< Owner of this moddata */
 	ModDataType type; /**< Type of module data (eg: for client, channel, etc..) */

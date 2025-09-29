@@ -71,6 +71,7 @@ MOD_INIT()
 	mreq.free = websocket_mdata_free;
 	mreq.sync = MODDATA_SYNC_EARLY;
 	mreq.type = MODDATATYPE_CLIENT;
+	mreq.priority = -999996;
 	websocket_md = ModDataAdd(modinfo->handle, mreq);
 
 	/* Unload last, since we manage sockets */

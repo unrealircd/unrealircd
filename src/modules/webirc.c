@@ -57,6 +57,7 @@ MOD_INIT()
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "webirc";
 	mreq.type = MODDATATYPE_CLIENT;
+	mreq.priority = -999997;
 	mreq.serialize = webirc_md_serialize;
 	mreq.unserialize = webirc_md_unserialize;
 	mreq.free = webirc_md_free;

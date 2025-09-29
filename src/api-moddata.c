@@ -91,9 +91,10 @@ moddataadd_isok:
 	m->remote_write = req.remote_write;
 	m->self_write = req.self_write;
 	m->owner = module;
+	m->priority = req.priority;
 	
 	if (new_struct)
-		AddListItem(m, MDInfo[req.type]);
+		AddListItemPrio(m, MDInfo[req.type], m->priority);
 
 	if (module)
 	{

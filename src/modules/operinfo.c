@@ -37,6 +37,7 @@ MOD_INIT()
 	mreq.unserialize = operinfo_unserialize;
 	mreq.sync = MODDATA_SYNC_EARLY;
 	mreq.type = MODDATATYPE_CLIENT;
+	mreq.priority = -999993;
 	operlogin_md = ModDataAdd(modinfo->handle, mreq);
 	if (!operlogin_md)
 		abort();
@@ -48,6 +49,7 @@ MOD_INIT()
 	mreq.unserialize = operinfo_unserialize;
 	mreq.sync = MODDATA_SYNC_EARLY;
 	mreq.type = MODDATATYPE_CLIENT;
+	mreq.priority = -999992;
 	operclass_md = ModDataAdd(modinfo->handle, mreq);
 	if (!operclass_md)
 		abort();
