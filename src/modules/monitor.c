@@ -35,6 +35,10 @@ int monitor_quit(Client *client, MessageTag *mtags, const char *comment);
 int monitor_connect(Client *client);
 int monitor_notification(Client *client, Watch *watch, Link *lp, int event, void *data);
 
+/* These are external lookups.. */
+ModDataInfo *watchCounterMD = NULL;
+ModDataInfo *watchListMD = NULL;
+
 ModuleHeader MOD_HEADER
   = {
 	"monitor",
@@ -63,6 +67,8 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	watchCounterMD = findmoddata_byname("watchCount", MODDATATYPE_LOCAL_CLIENT);
+	watchListMD = findmoddata_byname("watchList", MODDATATYPE_LOCAL_CLIENT);
 	ISupportAdd(modinfo->handle, "MONITOR", monitor_isupport_param());
 	return MOD_SUCCESS;
 }
@@ -164,9 +170,6 @@ CMD_FUNC(cmd_monitor)
 	else
 		cmd = tolower(*parv[1]);
 
-	ModDataInfo *watchCounterMD = findmoddata_byname("watchCount", MODDATATYPE_LOCAL_CLIENT);
-	ModDataInfo *watchListMD = findmoddata_byname("watchList", MODDATATYPE_LOCAL_CLIENT);
-	
 	if (!watchCounterMD || !watchListMD)
 	{
 		unreal_log(ULOG_ERROR, "monitor", "WATCH_BACKEND_MISSING", NULL,

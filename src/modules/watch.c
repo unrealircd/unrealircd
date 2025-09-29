@@ -32,6 +32,10 @@ int watch_post_nickchange(Client *client, MessageTag *mtags, const char *oldnick
 int watch_user_connect(Client *client);
 int watch_notification(Client *client, Watch *watch, Link *lp, int event, void *data);
 
+/* These are external lookups.. */
+ModDataInfo *watchCounterMD = NULL;
+ModDataInfo *watchListMD = NULL;
+
 ModuleHeader MOD_HEADER
   = {
 	"watch",
@@ -61,6 +65,8 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	watchCounterMD = findmoddata_byname("watchCount", MODDATATYPE_LOCAL_CLIENT);
+	watchListMD = findmoddata_byname("watchList", MODDATATYPE_LOCAL_CLIENT);
 	return MOD_SUCCESS;
 }
 
@@ -148,9 +154,6 @@ CMD_FUNC(cmd_watch)
 	}
 
 
-	ModDataInfo *watchCounterMD = findmoddata_byname("watchCount", MODDATATYPE_LOCAL_CLIENT);
-	ModDataInfo *watchListMD = findmoddata_byname("watchList", MODDATATYPE_LOCAL_CLIENT);
-	
 	if (!watchCounterMD || !watchListMD)
 	{
 		unreal_log(ULOG_ERROR, "watch", "WATCH_BACKEND_MISSING", NULL,
