@@ -107,6 +107,7 @@ void rpc_stats_user(json_t *main, int detail)
 	json_object_set_new(child, "record", json_integer(irccounts.global_max));
 	if (detail >= 1)
 		json_expand_countries(child, "countries", countries);
+	safe_free_nvplist(countries);
 }
 
 void rpc_stats_channel(json_t *main)
