@@ -124,7 +124,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	long CAP_MULTI_PREFIX = ClientCapabilityBit("multi-prefix");
+	CAP_MULTI_PREFIX = ClientCapabilityBit("multi-prefix");
 	return MOD_SUCCESS;
 }
 
