@@ -27,17 +27,20 @@
 
 /** Size of a dbuf block.
  * This used to be 512 bytes, since that was max line per RFC1459.
- * Bumped to 4k because lines tend to be bigger nowadays, now
- * that we have message tags and all. And some other IRCd code
+ * 2023-05-06: Bumped to 4k because lines tend to be bigger nowadays,
+ * now that we have message tags and all. And some other IRCd code
  * uses dbuf for non-IRC data also, which also prefers larger buffers.
+ * 2025-10-03: Bumped to 8k to have less write syscalls, this improves
+ * performance by roughly 5% during simple testing with 1000 clients.
  * Alignment details:
- * We don't set it to 4096 bytes exactly because we want the
- * struct 'dbufdbuf' (see further down) to be exactly 4096 bytes.
- * Since it includes some other struct members, 4072 seems to do it
- * on 64 bit archs. Note that there is no need to provide room
- * for malloc overhead as we use mempools.
+ * We don't set it to 8192 bytes exactly because we want the
+ * struct 'dbufdbuf' (see further down) to be exactly 8192 bytes.
+ * Since it includes some other struct members, 4072 seems to align
+ * to 1 page on 64 bit archs, and then we add another 4096 for the
+ * 2nd page. Note that there is no need to provide room for malloc
+ * overhead as we use mempools.
  */
-#define DBUF_BLOCK_SIZE		(4072)
+#define DBUF_BLOCK_SIZE		(4072+4096)
 
 /*
 ** dbuf is a collection of functions which can be used to
