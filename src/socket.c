@@ -1195,8 +1195,13 @@ void read_packet(int fd, int revents, void *data)
 	 * it may be overwritten in an earlier call to read_packet(),
 	 * to handle (TLS) writes by read_packet(), see below under
 	 * SSL_ERROR_WANT_WRITE.
+	 * Update 2025-10-03: actually only restore it to send_queued_cb
+	 * if we actually have anything to send, otherwise set to NULL.
 	 */
-	fd_setselect(fd, FD_SELECT_WRITE, send_queued_cb, client);
+	if (DBufLength(&client->local->sendQ) > 0)
+		fd_setselect(fd, FD_SELECT_WRITE, send_queued_cb, client);
+	else
+		fd_setselect(fd, FD_SELECT_WRITE, NULL, client);
 
 	while (1)
 	{
