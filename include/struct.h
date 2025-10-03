@@ -143,6 +143,7 @@ typedef struct RealCommand RealCommand;
 typedef struct CommandOverride CommandOverride;
 typedef struct Member Member;
 typedef struct Membership Membership;
+typedef struct LocalMember LocalMember;
 
 typedef struct OutgoingWebRequest OutgoingWebRequest;
 typedef struct OutgoingWebResponse OutgoingWebResponse;
@@ -2390,6 +2391,7 @@ struct Channel {
 	time_t topic_time;			/**< Time at which the topic was last set */
 	int users;				/**< Number of users in the channel */
 	Member *members;			/**< List of channel members (users in the channel) */
+	LocalMember *local_members;		/**< List of channel members (users in the channel) */
 	Ban *banlist;				/**< List of bans (+b) */
 	Ban *exlist;				/**< List of ban exceptions (+e) */
 	Ban *invexlist;				/**< List of invite exceptions (+I) */
@@ -2422,6 +2424,16 @@ struct Membership
 	struct Channel		*channel;			/**< The channel */
 	char member_modes[MEMBERMODESLEN];		/**< The (new) access of the user on this channel (eg "vhoqa") */
 	ModData moddata[MODDATA_MAX_MEMBERSHIP];	/**< Membership attached module data, used by the ModData system */
+};
+
+/** This is used for channel->local_members.
+ * We use these local members for fast local sending,
+ * and channel->members everywhere else.
+ */
+struct LocalMember
+{
+	struct LocalMember *next;
+	Member *ptr;
 };
 
 /** @} */

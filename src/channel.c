@@ -522,18 +522,30 @@ int ban_exists_ignore_time(Ban *lst, const char *str)
 void add_user_to_channel(Channel *channel, Client *client, const char *modes)
 {
 	Member *m;
+	LocalMember *lm;
 	Membership *mb;
 	const char *p;
 
 	if (!client->user)
 		return;
 
+	/* Add to channel->members */
 	m = make_member();
 	m->client = client;
 	m->next = channel->members;
 	channel->members = m;
 	channel->users++;
 
+	if (MyConnect(client))
+	{
+		/* Add to channel->local_members */
+		lm = safe_alloc(sizeof(LocalMember));
+		lm->ptr = m;
+		lm->next = channel->local_members;
+		channel->local_members = lm;
+	}
+
+	/* Add to client->user->channel */
 	mb = make_membership();
 	mb->channel = channel;
 	mb->next = client->user->channel;
@@ -559,6 +571,9 @@ int remove_user_from_channel(Client *client, Channel *channel, int dont_log)
 {
 	Member **m;
 	Member *m2;
+	Member *found = NULL;
+	LocalMember **lm;
+	LocalMember *lm2;
 	Membership **mb;
 	Membership *mb2;
 
@@ -568,8 +583,23 @@ int remove_user_from_channel(Client *client, Channel *channel, int dont_log)
 		if (m2->client == client)
 		{
 			*m = m2->next;
+			found = m2;
 			free_member(m2);
 			break;
+		}
+	}
+
+	if (MyConnect(client))
+	{
+		/* Update channel->local_members list */
+		for (lm = &channel->local_members; (lm2 = *lm); lm = &lm2->next)
+		{
+			if (lm2->ptr == found)
+			{
+				*lm = lm2->next;
+				safe_free(lm2);
+				break;
+			}
 		}
 	}
 

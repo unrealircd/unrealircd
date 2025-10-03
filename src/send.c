@@ -518,6 +518,7 @@ void sendto_channel(Channel *channel, Client *from, Client *skip,
 {
 	va_list vl;
 	Member *lp;
+	LocalMember *lm;
 	Client *acptr;
 	char member_modes_ext[64];
 	LineCache *cache;
@@ -538,59 +539,79 @@ void sendto_channel(Channel *channel, Client *from, Client *skip,
 
 	++current_serial;
 	cache = linecache_init();
-	for (lp = channel->members; lp; lp = lp->next)
+	if (sendflags & SEND_LOCAL)
 	{
-		acptr = lp->client;
-
-		/* Skip sending to 'skip' */
-		if ((acptr == skip) || (acptr->direction == skip))
-			continue;
-		/* Don't send to deaf clients (unless 'senddeaf' is set) */
-		if (IsDeaf(acptr) && (sendflags & SKIP_DEAF))
-			continue;
-		/* Don't send to NOCTCP clients (umode +T) */
-		if ((sendflags & SKIP_CTCP) && (acptr->umodes & UMODE_CTCP))
-			continue;
-		/* Sender ('from') is invisible for 'acptr' and we were asked to CHECK_INVISIBLE */
-		if (check_invisible && !check_channel_access_member(lp, "hoaq") && (from != acptr))
-			continue;
-		/* Now deal with 'member_modes' (if not NULL) */
-		if (member_modes && !check_channel_access_member(lp, member_modes))
-			continue;
-		/* Now deal with 'clicap' (if non-zero) */
-		if (clicap && MyUser(acptr) && ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
-			continue;
-
-		if (MyUser(acptr))
+		for (lm = channel->local_members; lm; lm = lm->next)
 		{
-			/* Local client */
-			if (sendflags & SEND_LOCAL)
-			{
-				va_start(vl, pattern);
-				vsendto_prefix_one_cached(cache, 0, acptr, from, mtags, pattern, vl);
-				va_end(vl);
-			}
-		}
-		else
-		{
-			/* Remote client */
-			if (sendflags & SEND_REMOTE)
-			{
-				/* Message already sent to remote link? */
-				if (acptr->direction->local->serial != current_serial)
-				{
-					va_start(vl, pattern);
-					vsendto_prefix_one_cached(cache, 0, acptr, from, mtags, pattern, vl);
-					va_end(vl);
+			lp = lm->ptr;
 
-					acptr->direction->local->serial = current_serial;
-				}
-			}
+			acptr = lp->client;
+
+			/* Skip sending to 'skip' */
+			if ((acptr == skip) || (acptr->direction == skip))
+				continue;
+			/* Don't send to deaf clients (unless 'senddeaf' is set) */
+			if (IsDeaf(acptr) && (sendflags & SKIP_DEAF))
+				continue;
+			/* Don't send to NOCTCP clients (umode +T) */
+			if ((sendflags & SKIP_CTCP) && (acptr->umodes & UMODE_CTCP))
+				continue;
+			/* Sender ('from') is invisible for 'acptr' and we were asked to CHECK_INVISIBLE */
+			if (check_invisible && !check_channel_access_member(lp, "hoaq") && (from != acptr))
+				continue;
+			/* Now deal with 'member_modes' (if not NULL) */
+			if (member_modes && !check_channel_access_member(lp, member_modes))
+				continue;
+			/* Now deal with 'clicap' (if non-zero) */
+			if (clicap && /*MyUser(acptr) &&*/ ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
+				continue;
+
+			va_start(vl, pattern);
+			vsendto_prefix_one_cached(cache, 0, acptr, from, mtags, pattern, vl);
+			va_end(vl);
 		}
 	}
 
 	if (sendflags & SEND_REMOTE)
 	{
+		for (lp = channel->members; lp; lp = lp->next)
+		{
+			acptr = lp->client;
+
+			if (MyUser(acptr))
+				continue; /* Already handled xx lines up */
+
+			/* Skip sending to 'skip' */
+			if ((acptr == skip) || (acptr->direction == skip))
+				continue;
+			/* Don't send to deaf clients (unless 'senddeaf' is set) */
+			if (IsDeaf(acptr) && (sendflags & SKIP_DEAF))
+				continue;
+			/* Don't send to NOCTCP clients (umode +T) */
+			if ((sendflags & SKIP_CTCP) && (acptr->umodes & UMODE_CTCP))
+				continue;
+			/* Sender ('from') is invisible for 'acptr' and we were asked to CHECK_INVISIBLE */
+			if (check_invisible && !check_channel_access_member(lp, "hoaq") && (from != acptr))
+				continue;
+			/* Now deal with 'member_modes' (if not NULL) */
+			if (member_modes && !check_channel_access_member(lp, member_modes))
+				continue;
+			/* Now deal with 'clicap' (if non-zero) */
+			//if (clicap && MyUser(acptr) && ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
+			//	continue;
+
+			/* Message already sent to remote link? */
+			// FIXME: Move this way more up ?
+			if (acptr->direction->local->serial != current_serial)
+			{
+				va_start(vl, pattern);
+				vsendto_prefix_one_cached(cache, 0, acptr, from, mtags, pattern, vl);
+				va_end(vl);
+
+				acptr->direction->local->serial = current_serial;
+			}
+		}
+
 		/* For the remaining uplinks that we have not sent a message to yet...
 		 * broadcast-channel-messages=never: don't send it to them
 		 * broadcast-channel-messages=always: always send it to them
