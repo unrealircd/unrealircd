@@ -691,46 +691,45 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
 {
 	va_list vl;
 	Membership *channels;
-	Member *users;
+	LocalMember *lm;
 	Client *acptr;
 	LineCache *cache;
 	char check_invisible;
 
+	if (!user->user)
+		return;
+
 	cache = linecache_init();
 	++current_serial;
-	if (user->user)
+
+	for (channels = user->user->channel; channels; channels = channels->next)
 	{
-		for (channels = user->user->channel; channels; channels = channels->next)
+		check_invisible = invisible_user_in_channel(user, channels->channel); // FIXME: we only have a slow version of this function
+
+		for (lm = channels->channel->local_members; lm; lm = lm->next)
 		{
-			check_invisible = invisible_user_in_channel(user, channels->channel); // FIXME: we only have a slow version of this function
+			acptr = lm->ptr->client;
 
-			for (users = channels->channel->members; users; users = users->next)
-			{
-				acptr = users->client;
+			if (acptr->local->serial == current_serial)
+				continue; /* message already sent to this client */
 
-				if (!MyConnect(acptr))
-					continue; /* only process local clients */
+			if (clicap && ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
+				continue; /* client does not have the specified capability */
 
-				if (acptr->local->serial == current_serial)
-					continue; /* message already sent to this client */
+			if (acptr == skip)
+				continue; /* the one to skip */
 
-				if (clicap && ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
-					continue; /* client does not have the specified capability */
+			// FIXME: use user_can_see_member_fast()
+			if (check_invisible && user_can_see_member(acptr, user, channels->channel))
+				continue; /* the sending user (quit'ing or nick changing) is 'invisible' -- skip */
 
-				if (acptr == skip)
-					continue; /* the one to skip */
-
-				// FIXME: use user_can_see_member_fast()
-				if (check_invisible && user_can_see_member(acptr, user, channels->channel))
-					continue; /* the sending user (quit'ing or nick changing) is 'invisible' -- skip */
-
-				acptr->local->serial = current_serial;
-				va_start(vl, pattern);
-				vsendto_prefix_one_cached(cache, 0, acptr, user, mtags, pattern, vl);
-				va_end(vl);
-			}
+			acptr->local->serial = current_serial;
+			va_start(vl, pattern);
+			vsendto_prefix_one_cached(cache, 0, acptr, user, mtags, pattern, vl);
+			va_end(vl);
 		}
 	}
+
 	linecache_free(cache);
 }
 
