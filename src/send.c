@@ -523,7 +523,7 @@ void sendto_channel(Channel *channel, Client *from, Client *skip,
 	char member_modes_ext[64];
 	LineCache *cache;
 	char check_invisible = 0;
-	long UMODE_CTCP;
+	long UMODE_CTCP = 0;
 
 	if (sendflags & SKIP_CTCP)
 		UMODE_CTCP = find_user_mode('T');
