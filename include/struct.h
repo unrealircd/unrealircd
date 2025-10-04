@@ -2400,6 +2400,8 @@ struct Channel {
 	char name[CHANNELLEN+1];		/**< Channel name */
 };
 
+#define MEMB_FLAG_INVISIBLE	0x1
+
 /** user/channel member struct (channel->members).
  * This is Member which is used in the linked list channel->members for each channel.
  * There is also Membership which is used in client->user->channels (see Membership for that).
@@ -2410,7 +2412,8 @@ struct Member
 	struct Member *next;				/**< Next entry in list */
 	Client	      *client;				/**< The client */
 	char member_modes[MEMBERMODESLEN];		/**< The access of the user on this channel (eg "vhoqa") */
-	ModData moddata[MODDATA_MAX_MEMBER];		/** Member attached module data, used by the ModData system */
+	ModData moddata[MODDATA_MAX_MEMBER];		/**< Member attached module data, used by the ModData system */
+	int memb_flags;					/**< Special member flags (currently only MEMB_FLAG_INVISIBLE) */
 };
 
 /** user/channel membership struct (client->user->channels).
@@ -2421,9 +2424,10 @@ struct Member
 struct Membership
 {
 	struct Membership 	*next;			/**< Next entry in list */
-	struct Channel		*channel;			/**< The channel */
+	struct Channel		*channel;		/**< The channel */
 	char member_modes[MEMBERMODESLEN];		/**< The (new) access of the user on this channel (eg "vhoqa") */
 	ModData moddata[MODDATA_MAX_MEMBERSHIP];	/**< Membership attached module data, used by the ModData system */
+	int memb_flags;					/**< Special member flags (currently only MEMB_FLAG_INVISIBLE) */
 };
 
 /** This is used for channel->local_members.

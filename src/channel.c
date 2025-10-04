@@ -1325,15 +1325,8 @@ int user_can_see_member_fast(Client *user, Client *target, Channel *channel, Mem
 	if (user == target)
 		return 1;
 
-	for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-	{
-		j = (*(h->func.intfunc))(target, channel, target_member);
-		if (j != 0)
-			break;
-	}
-
 	/* Requested to hide the person, but make sure neither one is +hoaq... */
-	if ((j != 0) &&
+	if ((target_member->memb_flags & MEMB_FLAG_INVISIBLE) &&
 	    !check_channel_access_member(target_member, "vhoaq") &&
 	    !(user_member_modes && check_channel_access_string(user_member_modes, "hoaq")))
 	{
@@ -1359,7 +1352,7 @@ int user_can_see_member(Client *user, Client *target, Channel *channel)
 		user_member = find_membership_link(user->user->channel, channel);
 
 	if (IsUser(target))
-		target_member = find_member_link(channel->members, target); // SLOW!
+		target_member = find_member_link(channel->members, target); // SLOW! FIXME: user target->user->channels or something?
 
 	/* User is not in channel, yeah what shall we return? :D */
 	if (!target_member)
@@ -1368,32 +1361,60 @@ int user_can_see_member(Client *user, Client *target, Channel *channel)
 	return user_can_see_member_fast(user, target, channel, target_member, user_member ? user_member->member_modes : NULL);
 }
 
-/** Returns 1 if user 'target' is invisible in channel 'channel'.
- * This may return 0 if the user is 'invisible' due to mode +D rules.
- */
+/** Returns 1 if user 'target' is invisible in channel 'channel' */
 int invisible_user_in_channel(Client *target, Channel *channel)
 {
 	Hook *h;
 	Member *target_member;
 	int j = 0;
 
-	target_member = find_member_link(channel->members, target); // SLOW!
+	target_member = find_member_link(channel->members, target); // SLOW! FIXME: user target->user->channels or something?
 	if (!target_member)
 		return 0; /* not in channel */
 
-	for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-	{
-		j = (*(h->func.intfunc))(target,channel,target_member);
-		if (j != 0)
-			break;
-	}
-
-	/* We must ensure that user is allowed to "see" target */
-	// SLOW !!!
-	if (j != 0 && !(check_channel_access(target, channel, "hoaq") || check_channel_access(target,channel, "v")))
+	if (target_member->memb_flags & MEMB_FLAG_INVISIBLE)
 		return 1;
 
 	return 0;
+}
+
+int channel_has_invisible_users(Channel *channel)
+{
+	Member *mb;
+
+	for (mb = channel->members; mb; mb = mb->next)
+		if (mb->memb_flags & MEMB_FLAG_INVISIBLE)
+			return 1;
+
+	return 0;
+}
+
+void set_user_invisible(Client *client, Channel *channel, int invisible)
+{
+	Membership *user_member;
+	Member *mb;
+
+	if (!IsUser(client))
+		return;
+
+	user_member = find_membership_link(client->user->channel, channel);
+	if (user_member)
+	{
+		if (invisible)
+			user_member->memb_flags |= MEMB_FLAG_INVISIBLE;
+		else
+			user_member->memb_flags &= ~MEMB_FLAG_INVISIBLE;
+	}
+
+	// TODO: possible optimization via local_members
+	mb = find_member_link(channel->members, client);
+	if (mb)
+	{
+		if (invisible)
+			mb->memb_flags |= MEMB_FLAG_INVISIBLE;
+		else
+			mb->memb_flags &= ~MEMB_FLAG_INVISIBLE;
+	}
 }
 
 /** Send a message to the user that (s)he is using an invalid channel name.

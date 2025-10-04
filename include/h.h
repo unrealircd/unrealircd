@@ -1134,6 +1134,8 @@ extern int has_common_channels(Client *c1, Client *c2);
 extern int user_can_see_member(Client *user, Client *target, Channel *channel);
 extern int user_can_see_member_fast(Client *user, Client *target, Channel *channel, Member *target_member, const char *user_member_modes);
 extern int invisible_user_in_channel(Client *target, Channel *channel);
+extern void set_user_invisible(Client *client, Channel *channel, int invisible);
+extern int channel_has_invisible_users(Channel *channel);
 extern MODVAR int tls_client_index;
 extern TLSOptions *FindTLSOptionsForUser(Client *acptr);
 extern int IsWebsocket(Client *acptr);

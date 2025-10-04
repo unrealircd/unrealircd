@@ -1217,8 +1217,6 @@ extern APICallback *APICallbackAdd(Module *module, APICallback *mreq);
 #define HOOKTYPE_FREE_USER	74
 /** See hooktype_can_join_limitexceeded() */
 #define HOOKTYPE_CAN_JOIN_LIMITEXCEEDED	75
-/** See hooktype_visible_in_channel() */
-#define HOOKTYPE_VISIBLE_IN_CHANNEL	76
 /** See hooktype_see_channel_in_whois() */
 #define HOOKTYPE_SEE_CHANNEL_IN_WHOIS	77
 /** See hooktype_join_data() */
@@ -2008,16 +2006,6 @@ int hooktype_free_user(Client *client);
  */
 int hooktype_can_join_limitexceeded(Client *client, Channel *channel, const char *key, char **errmsg);
 
-/** Called to check if the user is visible in the channel (function prototype for HOOKTYPE_VISIBLE_IN_CHANNEL).
- * For example, the delayjoin module (+d/+D) will 'return 0' here if the user is hidden due to delayed join.
- * @param client		The client
- * @param channel		The channel
- * @param client_member		The client Member * struct in the channel
- * @retval 0 The user is NOT visible
- * @retval 1 The user is visible
- */
-int hooktype_visible_in_channel(Client *client, Channel *channel, Member *client_member);
-
 /** Called to check if the channel of a user should be shown in WHOIS/WHO (function prototype for HOOKTYPE_SEE_CHANNEL_IN_WHOIS).
  * @param client		The client ASKING, eg doing the /WHOIS.
  * @param target		The client who is being interrogated
@@ -2554,7 +2542,6 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_MODECHAR_ADD) && !ValidateHook(hooktype_modechar_add, func)) || \
         ((hooktype == HOOKTYPE_MODECHAR_DEL) && !ValidateHook(hooktype_modechar_del, func)) || \
         ((hooktype == HOOKTYPE_CAN_JOIN_LIMITEXCEEDED) && !ValidateHook(hooktype_can_join_limitexceeded, func)) || \
-        ((hooktype == HOOKTYPE_VISIBLE_IN_CHANNEL) && !ValidateHook(hooktype_visible_in_channel, func)) || \
         ((hooktype == HOOKTYPE_PRE_LOCAL_CHANMODE) && !ValidateHook(hooktype_pre_local_chanmode, func)) || \
         ((hooktype == HOOKTYPE_PRE_REMOTE_CHANMODE) && !ValidateHook(hooktype_pre_remote_chanmode, func)) || \
         ((hooktype == HOOKTYPE_JOIN_DATA) && !ValidateHook(hooktype_join_data, func)) || \
