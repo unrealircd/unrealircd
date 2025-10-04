@@ -523,10 +523,33 @@ void sendto_channel(Channel *channel, Client *from, Client *skip,
 	char member_modes_ext[64];
 	LineCache *cache;
 	char check_invisible = 0;
+	char send_to_all_remote_servers = 0;
 	long UMODE_CTCP = 0;
 
 	if (sendflags & SKIP_CTCP)
 		UMODE_CTCP = find_user_mode('T');
+
+	/* If we need to send to remote servers, then in the past we only sent
+	 * to servers who have at least 1 channel member in their path.
+	 * However, nowadays it is more complex since we have +H history and such:
+	 * broadcast-channel-messages=never: don't send to remote servers that have no users
+	 * broadcast-channel-messages=always: always send to all remote servers
+	 * broadcast-channel-messages=auto: send to all remote servers if channel is +H (history)
+	 * The latter is the default setting.
+	 */
+	if ((sendflags & SEND_REMOTE) &&
+	    ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_ALWAYS) ||
+	     ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_AUTO) && has_channel_mode(channel, 'H'))))
+	{
+		/* We need to send to all remote servers. We can simplify this
+		 * case by not interating channel->members since we will send
+		 * to all connected servers at the end of this function anyway.
+		 * And in case SEND_LOCAL is also set, we will go through
+		 * channel->local_members instead which is faster.
+		 */
+		sendflags &= ~SEND_REMOTE;
+		send_to_all_remote_servers = 1;
+	}
 
 	if (member_modes)
 	{
@@ -539,6 +562,7 @@ void sendto_channel(Channel *channel, Client *from, Client *skip,
 
 	++current_serial;
 	cache = linecache_init();
+
 	if (sendflags & SEND_LOCAL)
 	{
 		for (lm = channel->local_members; lm; lm = lm->next)
@@ -611,31 +635,25 @@ void sendto_channel(Channel *channel, Client *from, Client *skip,
 				acptr->direction->local->serial = current_serial;
 			}
 		}
+	}
 
-		/* For the remaining uplinks that we have not sent a message to yet...
-		 * broadcast-channel-messages=never: don't send it to them
-		 * broadcast-channel-messages=always: always send it to them
-		 * broadcast-channel-messages=auto: send it to them if the channel is set +H (history)
-		 */
-
-		if ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_ALWAYS) ||
-		    ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_AUTO) && has_channel_mode(channel, 'H')))
+	if (send_to_all_remote_servers)
+	{
+		list_for_each_entry(acptr, &server_list, special_node)
 		{
-			list_for_each_entry(acptr, &server_list, special_node)
+			if ((acptr == skip) || (acptr->direction == skip))
+				continue; /* still obey this rule.. */
+			if (acptr->direction->local->serial != current_serial)
 			{
-				if ((acptr == skip) || (acptr->direction == skip))
-					continue; /* still obey this rule.. */
-				if (acptr->direction->local->serial != current_serial)
-				{
-					va_start(vl, pattern);
-					vsendto_prefix_one_cached(cache, 0, acptr, from, mtags, pattern, vl);
-					va_end(vl);
+				va_start(vl, pattern);
+				vsendto_prefix_one_cached(cache, 0, acptr, from, mtags, pattern, vl);
+				va_end(vl);
 
-					acptr->direction->local->serial = current_serial;
-				}
+				acptr->direction->local->serial = current_serial;
 			}
 		}
 	}
+
 	linecache_free(cache);
 }
 
