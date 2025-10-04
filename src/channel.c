@@ -1336,6 +1336,33 @@ int user_can_see_member_fast(Client *user, Client *target, Channel *channel, Mem
 	return 1;
 }
 
+/** Returns 1 if user 'user' can see channel member 'target' - fast version.
+ * This may return 0 if the user is 'invisible' due to mode +D rules.
+ * @param user			The user who is looking around
+ * @param target		The target user who is being investigated
+ * @param channel		The channel
+ * @param target_member		The Member * struct of 'target'
+ * @param user_member_modes	The member modes that 'user' has, eg "o". Can be NULL if not in channel.
+ */
+int user_can_see_membership_fast(Client *user, Client *target, Channel *channel, Membership *target_member, const char *user_member_modes)
+{
+	Hook *h;
+	int j = 0;
+
+	if (user == target)
+		return 1;
+
+	/* Requested to hide the person, but make sure neither one is +hoaq... */
+	if ((target_member->memb_flags & MEMB_FLAG_INVISIBLE) &&
+	    !check_channel_access_membership(target_member, "vhoaq") &&
+	    !(user_member_modes && check_channel_access_string(user_member_modes, "hoaq")))
+	{
+		return 0;
+	}
+
+	return 1;
+}
+
 /** Returns 1 if user 'user' can see channel member 'target'.
  * This may return 0 if the user is 'invisible' due to mode +D rules.
  * NOTE: Membership is unchecked, assumed membership of both.
@@ -1343,7 +1370,7 @@ int user_can_see_member_fast(Client *user, Client *target, Channel *channel, Mem
 int user_can_see_member(Client *user, Client *target, Channel *channel)
 {
 	Membership *user_member = NULL;
-	Member *target_member = NULL;
+	Membership *target_member = NULL;
 
 	if (user == target)
 		return 1;
@@ -1352,23 +1379,23 @@ int user_can_see_member(Client *user, Client *target, Channel *channel)
 		user_member = find_membership_link(user->user->channel, channel);
 
 	if (IsUser(target))
-		target_member = find_member_link(channel->members, target); // SLOW! FIXME: user target->user->channels or something?
+		target_member = find_membership_link(target->user->channel, channel);
 
 	/* User is not in channel, yeah what shall we return? :D */
 	if (!target_member)
 		return 0;
 
-	return user_can_see_member_fast(user, target, channel, target_member, user_member ? user_member->member_modes : NULL);
+	return user_can_see_membership_fast(user, target, channel, target_member, user_member ? user_member->member_modes : NULL);
 }
 
 /** Returns 1 if user 'target' is invisible in channel 'channel' */
 int invisible_user_in_channel(Client *target, Channel *channel)
 {
 	Hook *h;
-	Member *target_member;
+	Membership *target_member;
 	int j = 0;
 
-	target_member = find_member_link(channel->members, target); // SLOW! FIXME: user target->user->channels or something?
+	target_member = find_membership_link(target->user->channel, channel);
 	if (!target_member)
 		return 0; /* not in channel */
 
