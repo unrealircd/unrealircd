@@ -230,11 +230,25 @@ User *make_user(Client *client)
 	{
 		user = mp_pool_get(user_pool);
 		memset(user, 0, sizeof(User));
+		client->user = user;
 
 #ifdef	DEBUGMODE
 		users.inuse++;
 #endif
+
 		strlcpy(user->account, "0", sizeof(user->account));
+
+		/* For remote clients, we don't initialize all these fields,
+		 * as we only have to deal with this in cmd_uid() and there
+		 * we set all kinds of fields after the make_user(), so doing
+		 * it twice is a waste (and in particular the make_cloakedhost
+		 * call is kinda heavy). Also e.g. client->ip would not be set
+		 * yet so a lot is pointless anyway.
+		 */
+		if (!MyConnect(client))
+			return user;
+
+		/* For local clients we initialize a bit more: */
 		if (client->ip)
 		{
 			/* initially set client->user->realhost to IP */
@@ -242,7 +256,6 @@ User *make_user(Client *client)
 		} else {
 			*user->realhost = '\0';
 		}
-		client->user = user;
 		/* These may change later (eg when using hostname instead of IP),
 		 * but we now set it early.
 		 */
