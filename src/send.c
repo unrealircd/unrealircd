@@ -768,7 +768,7 @@ void quit_sendto_local_common_channels(Client *user, MessageTag *mtags, const ch
 {
 	va_list vl;
 	Membership *channels;
-	Member *users;
+	LocalMember *lm;
 	Client *acptr;
 	char sender[512];
 	MessageTag *m;
@@ -792,9 +792,9 @@ void quit_sendto_local_common_channels(Client *user, MessageTag *mtags, const ch
 	{
 		for (channels = user->user->channel; channels; channels = channels->next)
 		{
-			for (users = channels->channel->members; users; users = users->next)
+			for (lm = channels->channel->local_members; lm; lm = lm->next)
 			{
-				acptr = users->client;
+				acptr = lm->ptr->client;
 
 				if (!MyConnect(acptr))
 					continue; /* only process local clients */
@@ -802,7 +802,7 @@ void quit_sendto_local_common_channels(Client *user, MessageTag *mtags, const ch
 				if (acptr->local->serial == current_serial)
 					continue; /* message already sent to this client */
 
-				if (!user_can_see_member(acptr, user, channels->channel))
+				if (!user_can_see_member_fast(acptr, user, channels->channel, lm->ptr, channels->member_modes))
 					continue; /* the sending user (QUITing) is 'invisible' -- skip */
 
 				acptr->local->serial = current_serial;
