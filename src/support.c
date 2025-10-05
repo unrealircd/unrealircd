@@ -1041,7 +1041,7 @@ void cancel_copy(int srcfd, int destfd, const char *dest)
  */
 int unreal_copyfile(const char *src, const char *dest)
 {
-	char buf[2048];
+	char buf[16384];
 	time_t mtime;
 	int srcfd, destfd, len;
 
@@ -1075,7 +1075,7 @@ int unreal_copyfile(const char *src, const char *dest)
 		return 0;
 	}
 
-	while ((len = read(srcfd, buf, 1023)) > 0)
+	while ((len = read(srcfd, buf, sizeof(buf))) > 0)
 		if (write(destfd, buf, len) != len)
 		{
 			config_error("Write error to file '%s': %s [not enough free hd space / quota? need several mb's!]",
