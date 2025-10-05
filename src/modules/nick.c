@@ -90,8 +90,8 @@ void set_user_modes_dont_spread(Client *client, const char *umode)
 {
 	const char *args[4];
 
-	args[0] = client->name;
-	args[1] = client->name;
+	args[0] = NULL;
+	args[1] = client->id;
 	args[2] = umode;
 	args[3] = NULL;
 
