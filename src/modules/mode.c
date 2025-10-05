@@ -1094,6 +1094,12 @@ CMD_FUNC(_cmd_umode)
 	what = MODE_ADD;
 	*oldsnomask = '\0';
 
+	/* If you plan to use 'recv_mtags' here, then you will need to change
+	 * set_user_modes_dont_spread() to not pass NULL, and revert to do_cmd()
+	 * there again. (Which has performance effects)
+	 */
+	recv_mtags = NULL;
+
 	if (parc < 2)
 	{
 		sendnumeric(client, ERR_NEEDMOREPARAMS, "MODE");

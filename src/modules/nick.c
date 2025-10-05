@@ -96,7 +96,7 @@ void set_user_modes_dont_spread(Client *client, const char *umode)
 	args[3] = NULL;
 
 	dontspread = 1;
-	do_cmd(client, NULL, "MODE", 3, args);
+	cmd_umode(NULL, client, NULL, 3, args);
 	dontspread = 0;
 }
 
