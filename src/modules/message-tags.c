@@ -249,7 +249,7 @@ int client_accepts_tag(const char *token, Client *client)
 	/* If the client has indicated 'message-tags' support then we can
 	 * send any message tag, regardless of other CAP's.
 	 */
-	if (HasCapability(client, "message-tags"))
+	if (HasCapabilityFast(client, CAP_MESSAGE_TAGS))
 		return 1;
 
 	/* We continue here if the client did not indicate 'message-tags' support... */
