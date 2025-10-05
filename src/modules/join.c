@@ -280,7 +280,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, con
 
 		RunHook(HOOKTYPE_LOCAL_JOIN, client, channel, mtags);
 	} else {
-		if (!(client->uplink && !IsSynched(client->uplink)))
+		if (IsSynched(client->uplink))
 		{
 			unreal_log(ULOG_INFO, "join", "REMOTE_CLIENT_JOIN", client,
 				   "User $client joined $channel",

@@ -452,7 +452,7 @@ CMD_FUNC(cmd_sjoin)
 				MessageTag *mtags = NULL;
 
 				add_user_to_channel(channel, acptr, item_modes);
-				if (!(acptr->uplink && !IsSynched(acptr->uplink)))
+				if (IsSynched(acptr->uplink))
 				{
 					unreal_log(ULOG_INFO, "join", "REMOTE_CLIENT_JOIN", acptr,
 						   "User $client joined $channel",

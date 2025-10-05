@@ -610,7 +610,7 @@ typedef enum ClientStatus {
 #define GetHost(x)	(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
 #define GetIP(x)	(x->ip ? x->ip : "255.255.255.255")
 #define IsLoggedIn(x)	(x->user && (*x->user->account != '*') && !isdigit(*x->user->account)) /**< Logged into services */
-#define IsSynched(x)	(x->server->flags.synced)
+#define IsSynched(x)	((x->server->flags.synced) && (x->direction->server->flags.synced))
 #define IsServerSent(x) (x->server && x->server->flags.server_sent)
 
 /* And more that access client stuff - but actually modularized */

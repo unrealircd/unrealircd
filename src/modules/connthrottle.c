@@ -488,7 +488,7 @@ int ct_rconnect(Client *client)
 {
 	int score;
 
-	if (client->uplink && !IsSynched(client->uplink))
+	if (!IsSynched(client->uplink))
 		return 0; /* Netmerge: skip */
 
 	if (IsULine(client))
