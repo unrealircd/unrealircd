@@ -1409,29 +1409,22 @@ int channel_has_invisible_users(Channel *channel)
 
 void set_user_invisible(Client *client, Channel *channel, int invisible)
 {
-	Membership *user_member;
-	Member *mb;
+	Membership *m;
 
 	if (!IsUser(client))
 		return;
 
-	user_member = find_membership_link(client->user->channel, channel);
-	if (user_member)
-	{
-		if (invisible)
-			user_member->memb_flags |= MEMB_FLAG_INVISIBLE;
-		else
-			user_member->memb_flags &= ~MEMB_FLAG_INVISIBLE;
-	}
+	m = find_membership_link(client->user->channel, channel);
+	if (!m)
+		return;
 
-	// TODO: possible optimization via local_members
-	mb = find_member_link(channel->members, client);
-	if (mb)
+	if (invisible)
 	{
-		if (invisible)
-			mb->memb_flags |= MEMB_FLAG_INVISIBLE;
-		else
-			mb->memb_flags &= ~MEMB_FLAG_INVISIBLE;
+		m->memb_flags |= MEMB_FLAG_INVISIBLE;
+		m->related->memb_flags |= MEMB_FLAG_INVISIBLE;
+	} else {
+		m->memb_flags &= ~MEMB_FLAG_INVISIBLE;
+		m->related->memb_flags &= ~MEMB_FLAG_INVISIBLE;
 	}
 }
 

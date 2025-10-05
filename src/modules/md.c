@@ -164,6 +164,7 @@ CMD_FUNC(cmd_md)
 	{
 		Client *target;
 		Channel *channel;
+		Membership *ms;
 		Member *m;
 		char *p;
 
@@ -181,9 +182,13 @@ CMD_FUNC(cmd_md)
 		if (!target)
 			return;
 
-		m = find_member_link(channel->members, target);
-		if (!m)
+		//m = find_member_link(channel->members, target);
+		// the following is typically faster, since there can be hundreds of channel
+		// and the user is typically only in like 10 channels max
+		ms = find_membership_link(target->user->channel, channel);
+		if (!ms)
 			return;
+		m = ms->related;
 
 		md = findmoddata_byname(varname, MODDATATYPE_MEMBER);
 		if (!md || !md->unserialize)

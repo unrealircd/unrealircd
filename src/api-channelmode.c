@@ -931,13 +931,13 @@ void del_member_mode_fast(Member *mb, Membership *mbs, char letter)
 int find_mbs(Client *client, Channel *channel, Member **mb, Membership **mbs)
 {
 	*mbs = NULL;
-
-	if (!(*mb = find_member_link(channel->members, client)))
-		return 0;
+	*mb = NULL;
 
 	if (!(*mbs = find_membership_link(client->user->channel, channel)))
 		return 0;
-	
+
+	*mb = (*mbs)->related;
+
 	return 1;
 }
 
