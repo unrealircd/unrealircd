@@ -2409,9 +2409,11 @@ struct Channel {
  */
 struct Member
 {
-	struct Member *next;				/**< Next entry in list */
+	struct Member *prev, *next;			/**< Previous and next entry in list */
 	Client	      *client;				/**< The client */
 	char member_modes[MEMBERMODESLEN];		/**< The access of the user on this channel (eg "vhoqa") */
+	Membership *related;				/**< The related Membership item */
+	LocalMember *local_member;
 	ModData moddata[MODDATA_MAX_MEMBER];		/**< Member attached module data, used by the ModData system */
 	int memb_flags;					/**< Special member flags (currently only MEMB_FLAG_INVISIBLE) */
 };
@@ -2423,9 +2425,10 @@ struct Member
  */
 struct Membership
 {
-	struct Membership 	*next;			/**< Next entry in list */
+	struct Membership 	*prev, *next;		/**< Previous and next entry in list */
 	struct Channel		*channel;		/**< The channel */
 	char member_modes[MEMBERMODESLEN];		/**< The (new) access of the user on this channel (eg "vhoqa") */
+	Member *related;				/**< The related Member item */
 	ModData moddata[MODDATA_MAX_MEMBERSHIP];	/**< Membership attached module data, used by the ModData system */
 	int memb_flags;					/**< Special member flags (currently only MEMB_FLAG_INVISIBLE) */
 };
@@ -2436,7 +2439,7 @@ struct Membership
  */
 struct LocalMember
 {
-	struct LocalMember *next;
+	struct LocalMember *prev, *next;
 	Member *ptr;
 };
 

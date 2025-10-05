@@ -120,13 +120,13 @@ static Member *make_member(void)
 		for (i = 1; i <= (4072/sizeof(Member)); ++i)
 		{
 			lp = safe_alloc(sizeof(Member));
-			lp->next = freemember;
-			freemember = lp;
+			AddListItem(lp, freemember);
 		}
 	}
+	/* Now take the first entry */
 	lp = freemember;
-	freemember = freemember->next;
-	lp->next = NULL;
+	DelListItem(lp, freemember);
+	memset(lp, 0, sizeof(Member));
 	return lp;
 }
 
@@ -137,8 +137,7 @@ static void free_member(Member *lp)
 		return;
 	moddata_free_member(lp);
 	memset(lp, 0, sizeof(Member));
-	lp->next = freemember;
-	freemember = lp;
+	AddListItem(lp, freemember);
 }
 
 /** Allocate and return an empty Membership struct */
@@ -152,17 +151,12 @@ static Membership *make_membership(void)
 		for (i = 1; i <= (4072/sizeof(Membership)); i++)
 		{
 			m = safe_alloc(sizeof(Membership));
-			m->next = freemembership;
-			freemembership = m;
+			AddListItem(m, freemembership);
 		}
-		m = freemembership;
-		freemembership = m->next;
 	}
-	else
-	{
-		m = freemembership;
-		freemembership = freemembership->next;
-	}
+	/* Now take the first entry */
+	m = freemembership;
+	DelListItem(m, freemembership);
 	memset(m, 0, sizeof(Membership));
 	return m;
 }
@@ -174,8 +168,7 @@ static void free_membership(Membership *m)
 	{
 		moddata_free_membership(m);
 		memset(m, 0, sizeof(Membership));
-		m->next = freemembership;
-		freemembership = m;
+		AddListItem(m, freemembership);
 	}
 }
 
@@ -522,7 +515,7 @@ int ban_exists_ignore_time(Ban *lst, const char *str)
 void add_user_to_channel(Channel *channel, Client *client, const char *modes)
 {
 	Member *m;
-	LocalMember *lm;
+	LocalMember *lm = NULL;
 	Membership *mb;
 	const char *p;
 
@@ -532,8 +525,7 @@ void add_user_to_channel(Channel *channel, Client *client, const char *modes)
 	/* Add to channel->members */
 	m = make_member();
 	m->client = client;
-	m->next = channel->members;
-	channel->members = m;
+	AddListItem(m, channel->members);
 	channel->users++;
 
 	if (MyConnect(client))
@@ -541,16 +533,19 @@ void add_user_to_channel(Channel *channel, Client *client, const char *modes)
 		/* Add to channel->local_members */
 		lm = safe_alloc(sizeof(LocalMember));
 		lm->ptr = m;
-		lm->next = channel->local_members;
-		channel->local_members = lm;
+		AddListItem(lm, channel->local_members);
 	}
 
 	/* Add to client->user->channel */
 	mb = make_membership();
 	mb->channel = channel;
-	mb->next = client->user->channel;
-	client->user->channel = mb;
+	AddListItem(mb, client->user->channel);
 	client->user->joined++;
+
+	/* Set friend relationships */
+	m->related = mb;
+	m->local_member = lm;
+	mb->related = m;
 
 	for (p = modes; *p; p++)
 		add_member_mode_fast(m, mb, *p);
@@ -569,49 +564,37 @@ void add_user_to_channel(Channel *channel, Client *client, const char *modes)
  */
 int remove_user_from_channel(Client *client, Channel *channel, int dont_log)
 {
-	Member **m;
-	Member *m2;
-	Member *found = NULL;
-	LocalMember **lm;
-	LocalMember *lm2;
-	Membership **mb;
-	Membership *mb2;
+	Membership *mb;
+	int found = 0;
 
-	/* Update channel->members list */
-	for (m = &channel->members; (m2 = *m); m = &m2->next)
+	for (mb = client->user->channel; mb; mb = mb->next)
 	{
-		if (m2->client == client)
+		if (mb->channel == channel)
 		{
-			*m = m2->next;
-			found = m2;
-			free_member(m2);
-			break;
-		}
-	}
-
-	if (MyConnect(client))
-	{
-		/* Update channel->local_members list */
-		for (lm = &channel->local_members; (lm2 = *lm); lm = &lm2->next)
-		{
-			if (lm2->ptr == found)
+			/* Found the Membership */
+			/* Find & free related LocalMember */
+			if (mb->related->local_member)
 			{
-				*lm = lm2->next;
-				safe_free(lm2);
-				break;
+				DelListItem(mb->related->local_member, channel->local_members);
+				safe_free(mb->related->local_member);
 			}
+			/* Now find & free related Member */
+			DelListItem(mb->related, channel->members);
+			free_member(mb->related);
+			/* And finally, free the Membership */
+			DelListItem(mb, client->user->channel);
+			free_membership(mb);
+			found = 1;
+			break;
 		}
 	}
 
-	/* Update client->user->channel list */
-	for (mb = &client->user->channel; (mb2 = *mb); mb = &mb2->next)
+	if (!found)
 	{
-		if (mb2->channel == channel)
-		{
-			*mb = mb2->next;
-			free_membership(mb2);
-			break;
-		}
+#ifdef DEBUGMODE
+		abort(); /* This should never happen, right? */
+#endif
+		return 0;
 	}
 
 	/* Update user record to reflect 1 less joined */
