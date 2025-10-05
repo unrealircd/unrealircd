@@ -754,7 +754,7 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
 /** Send a QUIT message to all local users on all channels where
  * the user 'user' is on.
  * This is used for events such as a nick change and quit.
- * @param user        The user and source of the message.
+ * @param leaving     The user who is leaving and the source of the message.
  * @param skip        The client to skip (can be NULL)
  * @param clicap      Client capability the recipient should have
  *                    (this only works for local clients, we will
@@ -764,10 +764,10 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
  * @param pattern     The pattern (eg: ":%s NICK %s").
  * @param ...         The parameters for the pattern.
  */
-void quit_sendto_local_common_channels(Client *user, MessageTag *mtags, const char *reason)
+void quit_sendto_local_common_channels(Client *leaving, MessageTag *mtags, const char *reason)
 {
 	va_list vl;
-	Membership *channels;
+	Membership *mb;
 	LocalMember *lm;
 	Client *acptr;
 	char sender[512];
@@ -778,21 +778,21 @@ void quit_sendto_local_common_channels(Client *user, MessageTag *mtags, const ch
 	if (m && m->value)
 		real_quit_reason = m->value;
 
-	if (IsUser(user))
+	if (IsUser(leaving))
 	{
 		snprintf(sender, sizeof(sender), "%s!%s@%s",
-		         user->name, user->user->username, GetHost(user));
+		         leaving->name, leaving->user->username, GetHost(leaving));
 	} else {
-		strlcpy(sender, user->name, sizeof(sender));
+		strlcpy(sender, leaving->name, sizeof(sender));
 	}
 
 	++current_serial;
 
-	if (user->user)
+	if (leaving->user)
 	{
-		for (channels = user->user->channel; channels; channels = channels->next)
+		for (mb = leaving->user->channel; mb; mb = mb->next)
 		{
-			for (lm = channels->channel->local_members; lm; lm = lm->next)
+			for (lm = mb->channel->local_members; lm; lm = lm->next)
 			{
 				acptr = lm->ptr->client;
 
@@ -802,7 +802,7 @@ void quit_sendto_local_common_channels(Client *user, MessageTag *mtags, const ch
 				if (acptr->local->serial == current_serial)
 					continue; /* message already sent to this client */
 
-				if (!user_can_see_member_fast(acptr, user, channels->channel, lm->ptr, channels->member_modes))
+				if (!user_can_see_member_fast(acptr, leaving, mb->channel, lm->ptr, mb->member_modes))
 					continue; /* the sending user (QUITing) is 'invisible' -- skip */
 
 				acptr->local->serial = current_serial;
