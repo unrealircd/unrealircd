@@ -212,6 +212,6 @@ CMD_FUNC(cmd_part)
 
 		free_message_tags(mtags);
 
-		remove_user_from_channel(client, channel, 0);
+		remove_user_from_channel_withmb(client, channel, lp, 0);
 	}
 }

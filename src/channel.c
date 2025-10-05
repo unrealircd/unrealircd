@@ -553,49 +553,32 @@ void add_user_to_channel(Channel *channel, Client *client, const char *modes)
 	RunHook(HOOKTYPE_JOIN_DATA, client, channel);
 }
 
-/** Remove the user from the channel.
+/** Remove the user from the channel - with membership entry.
  * This frees the memberships, decreases the user counts,
  * destroys the channel if needed, etc.
  * This does not send any PART/KICK/..!
  * @param client	The client that is removed from the channel
  * @param channel	The channel
+ * @param mb		The membership entry
  * @param dont_log	Set to 1 if it should not be logged as a part,
  *                      for example if you are already logging it as a kick.
  */
-int remove_user_from_channel(Client *client, Channel *channel, int dont_log)
+int remove_user_from_channel_withmb(Client *client, Channel *channel, Membership *mb, int dont_log)
 {
-	Membership *mb;
-	int found = 0;
-
-	for (mb = client->user->channel; mb; mb = mb->next)
+	/* Find & free related LocalMember */
+	if (mb->related->local_member)
 	{
-		if (mb->channel == channel)
-		{
-			/* Found the Membership */
-			/* Find & free related LocalMember */
-			if (mb->related->local_member)
-			{
-				DelListItem(mb->related->local_member, channel->local_members);
-				safe_free(mb->related->local_member);
-			}
-			/* Now find & free related Member */
-			DelListItem(mb->related, channel->members);
-			free_member(mb->related);
-			/* And finally, free the Membership */
-			DelListItem(mb, client->user->channel);
-			free_membership(mb);
-			found = 1;
-			break;
-		}
+		DelListItem(mb->related->local_member, channel->local_members);
+		safe_free(mb->related->local_member);
 	}
 
-	if (!found)
-	{
-#ifdef DEBUGMODE
-		abort(); /* This should never happen, right? */
-#endif
-		return 0;
-	}
+	/* Now find & free related Member */
+	DelListItem(mb->related, channel->members);
+	free_member(mb->related);
+
+	/* And finally, free the Membership */
+	DelListItem(mb, client->user->channel);
+	free_membership(mb);
 
 	/* Update user record to reflect 1 less joined */
 	client->user->joined--;
@@ -618,6 +601,31 @@ int remove_user_from_channel(Client *client, Channel *channel, int dont_log)
 	 * and destroy the channel if needed.
 	 */
 	return sub1_from_channel(channel);
+}
+
+/** Remove the user from the channel.
+ * This frees the memberships, decreases the user counts,
+ * destroys the channel if needed, etc.
+ * This does not send any PART/KICK/..!
+ * @param client	The client that is removed from the channel
+ * @param channel	The channel
+ * @param dont_log	Set to 1 if it should not be logged as a part,
+ *                      for example if you are already logging it as a kick.
+ */
+int remove_user_from_channel(Client *client, Channel *channel, int dont_log)
+{
+	Membership *mb;
+	int found = 0;
+
+	for (mb = client->user->channel; mb; mb = mb->next)
+		if (mb->channel == channel)
+			return remove_user_from_channel_withmb(client, channel, mb, dont_log);
+
+	/* If we get here, the entry was not found */
+#ifdef DEBUGMODE
+	abort(); /* This should never happen, right? */
+#endif
+	return 0;
 }
 
 /** Returns 1 if channel has this channel mode set and 0 if not */
