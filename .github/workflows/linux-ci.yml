@@ -34,3 +34,4 @@ jobs:
     - name: build
       run: extras/build-tests/nix/build
     - name: run-tests
+      run: extras/build-tests/nix/run-tests
