@@ -8,6 +8,7 @@ on:
 
 env:
   NOSERVICES: 1
+  RUNTESTFLAGS: "-slightlyfast"
 
 jobs:
   build:
