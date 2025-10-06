@@ -25,9 +25,8 @@ cd unrealircd-tests
 
 # FreeBSD has various issues with the tests from us and others,
 # better set a flag to keep it simple:
-FREEBSD=0
 if uname -a|grep -q FreeBSD; then
-	FREEBSD=1
+	NOSERVICES=1
 fi
 
 # Run the test framework, testing both services:
