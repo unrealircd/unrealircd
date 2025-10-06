@@ -12,6 +12,8 @@ git clone -q https://github.com/testssl/testssl.sh
 TESTSSL="$PWD/testssl.sh/testssl.sh"
 OPENSSL="openssl"
 
+cd "$(dirname "$0")"
+
 $TESTSSL --help >/dev/null || exit 1
 
 
