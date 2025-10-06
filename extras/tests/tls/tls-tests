@@ -7,13 +7,10 @@ function fail()
 	exit 1
 }
 
-TESTSSL="testssl.sh"
+rm -rf testssl.sh
+git clone -q https://github.com/testssl/testssl.sh
+TESTSSL="$PWD/testssl.sh/testssl.sh"
 OPENSSL="openssl"
-if [ -x ~/testssl.sh/testssl.sh ]; then
-	TESTSSL="$HOME/testssl.sh/testssl.sh"
-elif [ -x ../../../testssl.sh/ ]; then
-	TESTSSL="`readlink -f ../../../testssl.sh/testssl.sh`"
-fi
 
 $TESTSSL --help >/dev/null || exit 1
 

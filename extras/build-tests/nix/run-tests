@@ -11,15 +11,9 @@ set -x
 
 # Kill old instances
 killall -9 unrealircd || true
-# Remove old junk
-rm -rf testssl.sh/ cipherscan/ unrealircd-tests/
-
-if [ ! -d ~/testssl.sh ]; then
-	# Install 'testssl.sh'
-	git clone -q https://github.com/testssl/testssl.sh
-fi
 
 # Install 'unrealircd-tests'
+rm -rf unrealircd-tests/
 git clone -q --branch unreal60 https://github.com/unrealircd/unrealircd-tests.git unrealircd-tests
 cd unrealircd-tests
 
