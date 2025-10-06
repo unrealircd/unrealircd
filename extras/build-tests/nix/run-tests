@@ -25,11 +25,11 @@ fi
 
 # Run the test framework, testing both services:
 if [ "$NOSERVICES" = 1 ]; then
-	./run -services none || exit 1
+	./run -services none $RUNTESTFLAGS || exit 1
 else
 	# Linux tests both with anope and atheme services:
-	./run -services anope || exit 1
-	./run -services atheme || exit 1
+	./run -services anope $RUNTESTFLAGS || exit 1
+	./run -services atheme $RUNTESTFLAGS || exit 1
 fi
 
 # Database writing/reading tests
