@@ -347,9 +347,10 @@ if ! $MAKE --version 2>&1|grep -q "GNU Make"; then
 		MAKE="gmake"
 	else
 		# Both $MAKE and gmake are not GNU make, do we have a working $MAKE at all?
-		if $MAKE --version 1>/dev/null 2>&1; then
+		if type "$MAKE" 1>/dev/null 2>&1; then
 			echo "Your system has 'make' but UnrealIRCd requires GNU Make ('gmake')"
-			echo "Please install 'gmake' (eg 'pkg install gmake' on BSD)."
+			echo "Please install 'gmake' "
+			echo "eg 'pkg install gmake' on FreeBSD and 'pkg_add gmake' on OpenBSD."
 			exit 1
 		else
 			echo "Your system does not have the required tools installed to build UnrealIRCd."
