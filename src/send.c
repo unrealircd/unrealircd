@@ -557,7 +557,7 @@ void sendto_channel(Channel *channel, Client *from, Client *skip,
 		member_modes = member_modes_ext;
 	}
 
-	if ((sendflags & CHECK_INVISIBLE) && invisible_user_in_channel(from, channel))
+	if ((sendflags & CHECK_INVISIBLE) && IsUser(from) && invisible_user_in_channel(from, channel))
 		check_invisible = 1;
 
 	++current_serial;
