@@ -292,7 +292,7 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, con
 
 int moded_prechanmsg(Client *client, Channel *channel, MessageTag **mtags, const char *text, SendType sendtype)
 {
-	if ((channel_is_delayed(channel) || channel_is_post_delayed(channel)) && (invisible_user_in_channel(client, channel)))
+	if (IsUser(client) && (channel_is_delayed(channel) || channel_is_post_delayed(channel)) && (invisible_user_in_channel(client, channel)))
 		clear_user_invisible_announce(channel, client, *mtags);
 
 	return 0;
