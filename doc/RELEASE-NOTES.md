@@ -5,6 +5,14 @@ This is the git version (development version) for future UnrealIRCd 6.2.1.
 This is work in progress and may not always be a stable version.
 
 ### Enhancements:
+* A lot of optimizations were done:
+  * Writes to SSL/TLS clients use 15-20% less CPU.
+  * For hub servers various improvement add up to roughly 30%, depending on traffic.
+  * Especially 100+ member channels (and even more so 1000+) are handled faster now
+    due to various improvements regarding channel membership.
+  * A concrete peak-load case would be a server losing a link (SQUIT) with 10,000 clones
+    all in 10 channels. Previously this took 40 seconds at 100% CPU to process,
+    now it takes only 2 seconds.
 * Add [set::utf8-only](https://www.unrealircd.org/docs/Set_block#set::utf8-only):
   setting this to `yes` means all IRC traffic is UTF8 only. See the setting
   and the [`UTF8ONLY`](https://ircv3.net/specs/extensions/utf8-only)
@@ -12,11 +20,31 @@ This is work in progress and may not always be a stable version.
 * Add `server-port` to the [security-group block](https://www.unrealircd.org/docs/Security-group_block)
   and [mask items](https://www.unrealircd.org/docs/Mask_item). And
   the `server_port()` function in [Crule](https://www.unrealircd.org/docs/Crule).
+* When [set::send-isupport-updates](https://www.unrealircd.org/docs/Set_block#set::send-isupport-updates)
+  is enabled, we now send ISUPPORT updates for all values and not only
+  for `CHANMODES`/`PREFIX`/`STATUSMSG`. (For example, changing
+  set::min-nick-length would broadcast a `MINNICKLEN` change)
+* Add support for IRCv3 [`draft/extended-isupport`](https://github.com/ircv3/ircv3-specifications/blob/master/extensions/extended-isupport.md)
+* We now support multiple TLS certificates/keys, such as ECDSE +
+  ML-DSA (Post Quantum Crypto). Such a dual key approach may make sense
+  in the future [(see commit)](https://github.com/unrealircd/unrealircd/commit/877d151da41f3a20fa277f0a919c69576a4611ac)
+* You can now use `password` multiple times in the config file. This can
+  come in handy in the future if we have link blocks with multiple passwords
+  but also works with allow::password or vhost::password. Simply specify
+  multiple password items and they are treated as a "if any of these succeed
+  then the authentication is a PASS" (so it is an OR match, not an AND).
+* Add tls-options::signature-algorithms. We don't set it at the moment.
+  It's just an additional knob in case something needs to be adjusted
+  (e.g. if you need to disable something due to a vulnerability).
+* If TLSv1.3 is available (which is the case on any modern Linux) then
+  calls to Central Blocklist and Spam Report will only use TLSv1.3.
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
-  add `away_reason` and `away_since` to the
-  [user object](https://www.unrealircd.org/docs/JSON-RPC:Client_Object#client.user_object).
+  * Add `away_reason` and `away_since` to the
+    [user object](https://www.unrealircd.org/docs/JSON-RPC:Client_Object#client.user_object).
+  * Add `server_port` and `local_port` to client objects (also in JSON Logging)
 
 ### Changes:
+* Best practices now have their own logging category 'advice', which is blue.
 * Previous (expired) UnrealIRCd PGP key was removed from `doc/KEYS`
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
   For the `server_ban.*` and similar TKL calls use the "issuer" if the
@@ -25,10 +53,16 @@ This is work in progress and may not always be a stable version.
 ### Fixes:
 * Make [Remote includes](https://www.unrealircd.org/docs/Remote_includes)
   work on IPv6-only machines.
+* The `TLINE` command did not behave the same as e.g. `GLINE` for
+  [Extended Server Bans](https://www.unrealircd.org/docs/Extended_server_bans)
+  which was confusing.
+* Possible crash in `STATS maxperip` (IRCOp-only)
 * Memory leak in DEBUGMODE (only used by developers)
 
 ### Developers and protocol:
-* TODO
+* `client->local->caps` changes to a 64 bit unsigned int on all archs
+* We now run quick CI jobs at GitHub as well, e.g. for PRs and commits.
+  (This in addition to the self-hosted BuildBot that is not public)
 
 UnrealIRCd 6.2.0.2
 -------------------
