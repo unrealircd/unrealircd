@@ -142,7 +142,7 @@ const char *inetntop(int af, const void *in, char *out, size_t size)
 {
 	char tmp[MYDUMMY_SIZE];
 
-	inet_ntop(af, in, tmp, size);
+	inet_ntop(af, in, tmp, sizeof(tmp));
 	if (!strstr(tmp, "::"))
 	{
 		/* IPv4 or IPv6 that is already uncompressed */
