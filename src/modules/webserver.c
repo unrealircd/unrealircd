@@ -426,6 +426,11 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 
 		WEB(client)->request_header_parsed = 1;
 		parse_proxy_header(client);
+		if (IsDead(client))
+		{
+			safe_free(netbuf);
+			return -1;
+		}
 		n = WEBSERVER(client)->handle_request(client, WEB(client));
 		if ((n <= 0) || IsDead(client))
 		{
