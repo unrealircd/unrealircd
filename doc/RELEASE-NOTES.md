@@ -4,8 +4,8 @@ UnrealIRCd 6.2.1-rc1
 This is the Release Candidate for future version 6.2.1. You can help us by
 testing this release and reporting bugs to https://bugs.unrealircd.org/
 
-This version focussed on performance improvements but also a lot of small
-new features were added.
+This version focussed on performance improvements but also various small new
+features were added.
 
 ### Enhancements:
 * A lot of optimizations were done:
@@ -36,11 +36,13 @@ new features were added.
   but also works with allow::password or vhost::password. Simply specify
   multiple password items and they are treated as a "if any of these succeed
   then the authentication is a PASS" (so it is an OR match, not an AND).
-* Add tls-options::signature-algorithms. We don't set it at the moment.
-  It's just an additional knob in case something needs to be adjusted
-  (e.g. if you need to disable something due to a vulnerability).
-* If TLSv1.3 is available (which is the case on any modern Linux) then
-  calls to Central Blocklist and Spam Report will only use TLSv1.3.
+* Add [set::tls::signature-algorithms](https://www.unrealircd.org/docs/Set_block#set::tls::signature-algorithms).
+  We don't set it at the moment. It's just an additional knob in case something needs
+  to be adjusted (e.g. if you need to disable something due to a vulnerability).
+* If TLSv1.3 is available on the system then calls to
+  [Central Blocklist](https://www.unrealircd.org/docs/Central_Spamfilter)
+  and [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport)
+  will only use TLSv1.3.
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
   * Add `away_reason` and `away_since` to the
     [user object](https://www.unrealircd.org/docs/JSON-RPC:Client_Object#client.user_object).
@@ -60,12 +62,12 @@ new features were added.
   [Extended Server Bans](https://www.unrealircd.org/docs/Extended_server_bans)
   which was confusing.
 * Possible crash in `STATS maxperip` (IRCOp-only)
-* Memory leak in DEBUGMODE (only used by developers)
+* Memory leak in `DEBUGMODE` (only used by developers)
 
 ### Developers and protocol:
 * `client->local->caps` changes to a 64 bit unsigned int on all archs
 * We now run quick CI jobs at GitHub as well, e.g. for PRs and commits.
-  (This in addition to the self-hosted BuildBot that is not public)
+  This is in addition to the self-hosted BuildBot that is not public.
 
 UnrealIRCd 6.2.0.2
 -------------------
