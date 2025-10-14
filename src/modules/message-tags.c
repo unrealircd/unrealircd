@@ -169,12 +169,15 @@ void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list)
 	char *element, *p, *x;
 	static char name[8192], value[8192];
 	MessageTag *m;
+	int lenstr;
 
 	remainder = strchr(*str, ' ');
 	if (remainder)
 		*remainder = '\0';
 
-	if (!IsServer(client) && (strlen(*str) > 4094))
+	lenstr = strlen(*str);
+	if ((IsServer(client) && (lenstr > 4094)) ||
+	    (!IsServer(client) && (lenstr > sizeof(name)-1)))
 	{
 		sendnumeric(client, ERR_INPUTTOOLONG);
 		remainder = NULL; /* stop parsing */
