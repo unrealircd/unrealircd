@@ -67,5 +67,7 @@ MOD_UNLOAD()
 
 CMD_FUNC(cmd_isupport)
 {
-    send_isupport(client);
+	if (!MyConnect(client))
+		return;
+	send_isupport(client);
 }
