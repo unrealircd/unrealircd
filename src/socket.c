@@ -1011,6 +1011,9 @@ int dead_socket(Client *to, const char *notice)
 		           log_data_string("reason", notice));
 	}
 	safe_strdup(to->local->error_str, notice);
+
+	/* Let's terminate DNS requests as well, as these are now useless */
+	unrealdns_delreq_bycptr(to);
 	return -1;
 }
 
