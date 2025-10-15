@@ -91,26 +91,23 @@ ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 	/* Hunt for highest available slot */
 	for (m = MDInfo[req.type]; m ; m = m->next)
 	{
-		if (m->type == req.type)
+		/* Does an entry already exist with this name? */
+		if (!strcmp(m->name, req.name))
 		{
-			/* Does an entry already exist with this name? */
-			if (!strcmp(m->name, req.name))
+			/* If old module is unloading (so reloading), then OK to take this slot */
+			if (m->unloaded)
 			{
-				/* If old module is unloading (so reloading), then OK to take this slot */
-				if (m->unloaded)
-				{
-					slotav = m->slot;
-					m->unloaded = 0;
-					goto moddataadd_isok;
-				}
-				/* Otherwise, name collision */
-				if (module)
-					module->errorcode = MODERR_EXISTS;
-				return NULL;
+				slotav = m->slot;
+				m->unloaded = 0;
+				goto moddataadd_isok;
 			}
-			/* Update next available slot */
-			slotav = MAX(slotav, m->slot+1);
+			/* Otherwise, name collision */
+			if (module)
+				module->errorcode = MODERR_EXISTS;
+			return NULL;
 		}
+		/* Update next available slot */
+		slotav = MAX(slotav, m->slot+1);
 	}
 
 	if (exceeds_moddatatype_limit(req.type, slotav))
