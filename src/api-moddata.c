@@ -27,6 +27,57 @@ MODVAR ModDataInfo *MDInfo[HIGHESTMODDATATYPE+1] = { NULL };
 MODVAR ModData local_variable_moddata[MODDATA_MAX_LOCAL_VARIABLE];
 MODVAR ModData global_variable_moddata[MODDATA_MAX_GLOBAL_VARIABLE];
 
+struct moddatatypelimit {
+	ModDataType type;
+	int limit;
+	char *name;
+};
+
+struct moddatatypelimit moddatatypelimits[] =
+{
+	{ MODDATATYPE_LOCAL_VARIABLE, MODDATA_MAX_LOCAL_VARIABLE, "MODDATA_MAX_LOCAL_VARIABLE" },
+	{ MODDATATYPE_GLOBAL_VARIABLE, MODDATA_MAX_GLOBAL_VARIABLE, "MODDATA_MAX_GLOBAL_VARIABLE" },
+	{ MODDATATYPE_CLIENT, MODDATA_MAX_CLIENT, "MODDATA_MAX_CLIENT" },
+	{ MODDATATYPE_LOCAL_CLIENT, MODDATA_MAX_LOCAL_CLIENT, "MODDATA_MAX_LOCAL_CLIENT" },
+	{ MODDATATYPE_CHANNEL, MODDATA_MAX_CHANNEL, "MODDATA_MAX_CHANNEL" },
+	{ MODDATATYPE_MEMBER, MODDATA_MAX_MEMBER, "MODDATA_MAX_MEMBER" },
+	{ MODDATATYPE_MEMBERSHIP, MODDATATYPE_MEMBERSHIP, "MODDATATYPE_MEMBERSHIP" },
+	{ 0, 0, NULL },
+};
+
+int exceeds_moddatatype_limit(int type, int slot)
+{
+	int i;
+
+	for (i = 0; moddatatypelimits[i].type; i++)
+	{
+		if (moddatatypelimits[i].type == type)
+		{
+			if (slot >= moddatatypelimits[i].limit)
+			{
+				unreal_log(ULOG_ERROR, "module", "MOD_DATA_OUT_OF_SPACE", NULL,
+					   "ModDataAdd: out of space! Your $mod_data_type limit of $limit is reached. "
+					   "Perhaps you have many third party modules loaded?\n"
+					   "If you need more space then you could open include/config.h and "
+					   "raise $mod_data_type. You may also want to raise the other limits "
+					   "there just to be sure. After changing that file, you will have to "
+					   "recompile (make clean; make install) and restart the IRCd.",
+					   log_data_string("mod_data_type", moddatatypelimits[i].name),
+					   log_data_integer("limit", moddatatypelimits[i].limit));
+				return 1;
+			}
+			return 0;
+		}
+	}
+
+	/* If we reach here then we were called with an unknown moddatatype, which
+	 * should be impossible. This could happen when f.e. ModDataType had a new
+	 * type added but it was not added in the moddatatypelimits[] table above.
+	 */
+	abort();
+	return 0;
+}
+
 ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 {
 	int slotav = 0; /* highest available slot */
@@ -62,17 +113,8 @@ ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 		}
 	}
 
-	/* Now check if we are within bounds (if we really have a free slot available) */
-	if (((req.type == MODDATATYPE_LOCAL_VARIABLE) && (slotav >= MODDATA_MAX_LOCAL_VARIABLE)) ||
-	    ((req.type == MODDATATYPE_GLOBAL_VARIABLE) && (slotav >= MODDATA_MAX_GLOBAL_VARIABLE)) ||
-	    ((req.type == MODDATATYPE_CLIENT) && (slotav >= MODDATA_MAX_CLIENT)) ||
-	    ((req.type == MODDATATYPE_LOCAL_CLIENT) && (slotav >= MODDATA_MAX_LOCAL_CLIENT)) ||
-	    ((req.type == MODDATATYPE_CHANNEL) && (slotav >= MODDATA_MAX_CHANNEL)) ||
-	    ((req.type == MODDATATYPE_MEMBER) && (slotav >= MODDATA_MAX_MEMBER)) ||
-	    ((req.type == MODDATATYPE_MEMBERSHIP) && (slotav >= MODDATA_MAX_MEMBERSHIP)))
+	if (exceeds_moddatatype_limit(req.type, slotav))
 	{
-		unreal_log(ULOG_ERROR, "module", "MOD_DATA_OUT_OF_SPACE", NULL,
-		           "ModDataAdd: out of space!!!");
 		if (module)
 			module->errorcode = MODERR_NOSPACE;
 		return NULL;

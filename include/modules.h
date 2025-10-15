@@ -132,7 +132,10 @@ typedef enum ModDataType {
 	MODDATATYPE_CHANNEL		= 5,
 	MODDATATYPE_MEMBER		= 6,
 	MODDATATYPE_MEMBERSHIP		= 7,
-	// (If you add more then increase MODDATATYPES)
+	/* If you add more here, then 1) increase MODDATATYPES,
+	 * 2) in src/api-moddata.c update moddatatypelimits[],
+	 * 3) add a lot of code at other places in src/api-moddata.c.
+	 */
 } ModDataType;
 
 typedef enum ModDataSync {
