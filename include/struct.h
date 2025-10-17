@@ -1419,6 +1419,7 @@ extern void moddata_init(void);
 extern ModDataInfo *ModDataAdd(Module *module, ModDataInfo req);
 extern void ModDataDel(ModDataInfo *md);
 extern void unload_all_unused_moddata(void);
+extern void moddatatype_dump(Client *client);
 
 #define LISTENER_NORMAL			0x000001
 #define LISTENER_CLIENTSONLY		0x000002

@@ -29,20 +29,21 @@ MODVAR ModData global_variable_moddata[MODDATA_MAX_GLOBAL_VARIABLE];
 
 struct moddatatypelimit {
 	ModDataType type;
+	char *type_name;
 	int limit;
-	char *name;
+	char *limit_name;
 };
 
 struct moddatatypelimit moddatatypelimits[] =
 {
-	{ MODDATATYPE_LOCAL_VARIABLE, MODDATA_MAX_LOCAL_VARIABLE, "MODDATA_MAX_LOCAL_VARIABLE" },
-	{ MODDATATYPE_GLOBAL_VARIABLE, MODDATA_MAX_GLOBAL_VARIABLE, "MODDATA_MAX_GLOBAL_VARIABLE" },
-	{ MODDATATYPE_CLIENT, MODDATA_MAX_CLIENT, "MODDATA_MAX_CLIENT" },
-	{ MODDATATYPE_LOCAL_CLIENT, MODDATA_MAX_LOCAL_CLIENT, "MODDATA_MAX_LOCAL_CLIENT" },
-	{ MODDATATYPE_CHANNEL, MODDATA_MAX_CHANNEL, "MODDATA_MAX_CHANNEL" },
-	{ MODDATATYPE_MEMBER, MODDATA_MAX_MEMBER, "MODDATA_MAX_MEMBER" },
-	{ MODDATATYPE_MEMBERSHIP, MODDATATYPE_MEMBERSHIP, "MODDATATYPE_MEMBERSHIP" },
-	{ 0, 0, NULL },
+	{ MODDATATYPE_LOCAL_VARIABLE, "MODDATATYPE_LOCAL_VARIABLE", MODDATA_MAX_LOCAL_VARIABLE, "MODDATA_MAX_LOCAL_VARIABLE" },
+	{ MODDATATYPE_GLOBAL_VARIABLE, "MODDATATYPE_GLOBAL_VARIABLE", MODDATA_MAX_GLOBAL_VARIABLE, "MODDATA_MAX_GLOBAL_VARIABLE" },
+	{ MODDATATYPE_CLIENT, "MODDATATYPE_CLIENT", MODDATA_MAX_CLIENT, "MODDATA_MAX_CLIENT" },
+	{ MODDATATYPE_LOCAL_CLIENT, "MODDATATYPE_LOCAL_CLIENT", MODDATA_MAX_LOCAL_CLIENT, "MODDATA_MAX_LOCAL_CLIENT" },
+	{ MODDATATYPE_CHANNEL, "MODDATATYPE_CHANNEL", MODDATA_MAX_CHANNEL, "MODDATA_MAX_CHANNEL" },
+	{ MODDATATYPE_MEMBER, "MODDATATYPE_MEMBER", MODDATA_MAX_MEMBER, "MODDATA_MAX_MEMBER" },
+	{ MODDATATYPE_MEMBERSHIP, "MODDATATYPE_MEMBERSHIP", MODDATATYPE_MEMBERSHIP, "MODDATATYPE_MAX_MEMBERSHIP" },
+	{ 0, NULL, 0, NULL },
 };
 
 int exceeds_moddatatype_limit(int type, int slot)
@@ -59,10 +60,11 @@ int exceeds_moddatatype_limit(int type, int slot)
 					   "ModDataAdd: out of space! Your $mod_data_type limit of $limit is reached. "
 					   "Perhaps you have many third party modules loaded?\n"
 					   "If you need more space then you could open include/config.h and "
-					   "raise $mod_data_type. You may also want to raise the other limits "
-					   "there just to be sure. After changing that file, you will have to "
+					   "raise $mod_data_type_limit_name. You may also want to raise the other limits "
+					   "there, just to be sure. After changing that file, you will have to "
 					   "recompile (make clean; make install) and restart the IRCd.",
-					   log_data_string("mod_data_type", moddatatypelimits[i].name),
+					   log_data_string("mod_data_type", moddatatypelimits[i].type_name),
+					   log_data_string("mod_data_type_limit_name", moddatatypelimits[i].limit_name),
 					   log_data_integer("limit", moddatatypelimits[i].limit));
 				return 1;
 			}
@@ -76,6 +78,29 @@ int exceeds_moddatatype_limit(int type, int slot)
 	 */
 	abort();
 	return 0;
+}
+
+void moddatatype_dump(Client *client)
+{
+	int i;
+	ModDataInfo *m;
+	int position;
+
+	for (i = 0; moddatatypelimits[i].type; i++)
+	{
+#ifdef DEBUGMODE
+		sendtxtnumeric(client, "=== %s ===", moddatatypelimits[i].type_name);
+#endif
+		for (position = 0, m = MDInfo[moddatatypelimits[i].type]; m ; m = m->next, position++)
+		{
+#ifdef DEBUGMODE
+			sendtxtnumeric(client, "Position %d: %s",
+			               position, m->name);
+#endif
+		}
+		sendtxtnumeric(client, "%s has %d of %d slot(s) in use",
+		               moddatatypelimits[i].type_name, position, moddatatypelimits[i].limit);
+	}
 }
 
 ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)

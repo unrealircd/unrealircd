@@ -856,6 +856,8 @@ CMD_FUNC(cmd_module)
 	if (!ValidatePermissionsForPath("server:module",client,NULL,NULL,NULL))
 		return;
 
+	/* The rest are extra details (oper-only)... */
+
 	tmp[0] = '\0';
 	p = tmp;
 	for (i=0; i < MAXHOOKTYPES; i++)
@@ -891,6 +893,8 @@ CMD_FUNC(cmd_module)
 			}
 	}
 	sendtxtnumeric(client, "Override: %s", tmp);
+
+	moddatatype_dump(client);
 }
 
 Hooktype *HooktypeFind(const char *string) {
