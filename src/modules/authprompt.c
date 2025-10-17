@@ -62,8 +62,8 @@ CMD_FUNC(cmd_auth);
 void authprompt_md_free(ModData *md);
 
 /* Some macros */
-#define SetAPUser(x, y) do { moddata_client(x, authprompt_md).ptr = y; } while(0)
-#define SEUSER(x)       ((APUser *)moddata_client(x, authprompt_md).ptr)
+#define SetAPUser(x, y) do { moddata_local_client(x, authprompt_md).ptr = y; } while(0)
+#define SEUSER(x)       ((APUser *)moddata_local_client(x, authprompt_md).ptr)
 #define AGENT_SID(agent_p)      (agent_p->user != NULL ? agent_p->user->server : agent_p->name)
 
 MOD_TEST()
@@ -80,7 +80,7 @@ MOD_INIT()
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "authprompt";
-	mreq.type = MODDATATYPE_CLIENT;
+	mreq.type = MODDATATYPE_LOCAL_CLIENT;
 	mreq.free = authprompt_md_free;
 	authprompt_md = ModDataAdd(modinfo->handle, mreq);
 	if (!authprompt_md)
