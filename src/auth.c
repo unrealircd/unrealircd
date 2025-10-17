@@ -109,8 +109,21 @@ int Auth_AutoDetectHashType(const char *hash)
 		}
 	}
 
+/* gcc UBSan bug in at least gcc 12.2.0, 14.2.0 and 15.2.0.
+ * The second part of the if is only evaluated if *hash == '$'
+ * and thus hash+1 is at least \0, but gcc thinks otherwise.
+ * auth.c:112:32: error: ‘strchr’ reading 1 or more bytes from a region of size 0 [-Werror=stringop-overread]
+    112 |         if ((*hash != '$') || !strchr(hash+1, '$'))
+ */
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overread"
+#endif
 	if ((*hash != '$') || !strchr(hash+1, '$'))
 		return AUTHTYPE_PLAINTEXT;
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 	if (!strncmp(hash, "$2a$", 4) || !strncmp(hash, "$2b$", 4) || !strncmp(hash, "$2y$", 4))
 		return AUTHTYPE_BCRYPT;
