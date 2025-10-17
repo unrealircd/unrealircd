@@ -22,7 +22,7 @@ Module *cbl_module = NULL;
 #define CBL_TRANSFER_TIMEOUT 10
 #define SPAMREPORT_NUM_REMEMBERED_CMDS 20
 
-#define WEB(client)		((WebRequest *)moddata_client(client, webserver_md).ptr)
+#define WEB(client)		((WebRequest *)moddata_local_client(client, webserver_md).ptr)
 #define WSU(client)		((WebSocketUser *)moddata_client(client, websocket_md).ptr)
 
 typedef struct CBLUser CBLUser;
@@ -250,7 +250,7 @@ MOD_LOAD()
 
 	do_command_overrides(modinfo);
 
-	webserver_md = findmoddata_byname("web", MODDATATYPE_CLIENT);
+	webserver_md = findmoddata_byname("web", MODDATATYPE_LOCAL_CLIENT);
 	websocket_md = findmoddata_byname("websocket", MODDATATYPE_CLIENT);
 
 	/* Enable gathering of "last 20 lines" for SPAMREPORT, only if SPAMREPORT is enabled: */
