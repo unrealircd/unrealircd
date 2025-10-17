@@ -847,13 +847,13 @@ while [ -z "$TEST" ] ; do
 	fi
 	echo ""
 	echo "Are you running UnrealIRCd as a test, debugging a problem or developing a module?"
-	echo "Then it is possible to run with AddressSanitizer enabled. This will make it"
-	echo "catch bugs such as out-of-bounds and other memory corruption issues, which can"
-	echo "be really helpful in some cases. The downside is that it will consume a lot"
-	echo "more memory and run slower too. So, only answer 'Yes' if you are OK with this."
-	echo "Also, on some systems (notably FreeBSD), when you enable AddressSanitizer,"
-	echo "UnrealIRCd may fail to start. So when in doubt, answer 'No'."
-	echo "Do you want to enable AddressSanitizer?"
+	echo "Then it is possible to run with AddressSanitizer and UndefinedBehaviorSanitizer"
+	echo "enabled. This will catch bugs, such as out-of-bounds and other memory corruption"
+	echo "issues, which can be really helpful in some cases. The downside is that it will"
+	echo "consume a lot more memory and run slower too. So, only answer 'Yes' if you are"
+	echo "OK with this. Also, on some systems (notably FreeBSD <14.2), when you enable"
+	echo "this UnrealIRCd may fail to start. So when in doubt, answer 'No'."
+	echo "Do you want to enable AddressSanitizer & UndefinedBehaviorSanitizer?"
 	echo $n "[$TEST] -> $c"
 	read cc
 	if [ -z "$cc" ] ; then
