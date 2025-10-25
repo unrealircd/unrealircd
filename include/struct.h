@@ -294,11 +294,13 @@ struct Log {
 	int color;
 	int json_message_tag;
 	int oper_only;
+	/* for destination::webhook */
+	char *url;
 };
 
 /** This is used for deciding the <index> in logs[<index>] and temp_logs[<index>] */
-typedef enum LogDestination { LOG_DEST_SNOMASK=0, LOG_DEST_OPER=1, LOG_DEST_REMOTE=2, LOG_DEST_CHANNEL=3, LOG_DEST_DISK=4, LOG_DEST_MEMORY=5 } LogDestination;
-#define NUM_LOG_DESTINATIONS 6
+typedef enum LogDestination { LOG_DEST_SNOMASK=0, LOG_DEST_OPER=1, LOG_DEST_REMOTE=2, LOG_DEST_CHANNEL=3, LOG_DEST_DISK=4, LOG_DEST_MEMORY=5, LOG_DEST_WEBHOOK=6 } LogDestination;
+#define NUM_LOG_DESTINATIONS 7
 
 typedef struct LogEntry LogEntry;
 struct LogEntry {
