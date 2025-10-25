@@ -70,7 +70,7 @@ TKL *(*tkl_add_spamfilter)(int type, const char *id, unsigned short target, BanA
 TKL *(*tkl_add_banexception)(int type, const char *usermask, const char *hostmask, SecurityGroup *match,
                              const char *reason, const char *set_by,
                              time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags);
-TKL *(*tkl_del_line)(TKL *tkl);
+void (*tkl_del_line)(TKL *tkl);
 void (*tkl_check_local_remove_shun)(TKL *tmp);
 int (*find_tkline_match)(Client *client, int skip_soft);
 int (*find_shun)(Client *client);
@@ -128,7 +128,7 @@ void (*free_tkl)(TKL *tkl);
 TKL *(*find_tkl_serverban)(int type, const char *usermask, const char *hostmask, int softban);
 TKL *(*find_tkl_banexception)(int type, const char *usermask, const char *hostmask, int softban);
 TKL *(*find_tkl_nameban)(int type, const char *name, int hold);
-TKL *(*find_tkl_spamfilter)(int type, const char *match_string, unsigned short action, unsigned short target);
+TKL *(*find_tkl_spamfilter)(int type, const char *match_string, BanActionValue action, unsigned short target);
 int (*find_tkl_exception)(int ban_type, Client *client);
 int (*server_ban_parse_mask)(Client *client, int add, char type, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
 int (*server_ban_exception_parse_mask)(Client *client, int add, const char *bantypes, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
@@ -188,6 +188,8 @@ char *(*unreal_expand_string)(const char *str, char *buf, size_t buflen, NameVal
 char *(*utf8_convert_confusables)(const char *i, char *obuf, int olen);
 const char *(*utf8_get_block_name)(int i);
 int (*utf8_get_block_number)(const char *name);
+void (*send_isupport)(Client *client);
+void (*isupport_check_for_changes)(void);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
@@ -516,6 +518,8 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_BANNED_CLIENT, banned_client, NULL, 0);
 	efunc_init_function(EFUNC_UNREAL_EXPAND_STRING, unreal_expand_string, NULL, 0);
 	efunc_init_function(EFUNC_UTF8_CONVERT_CONFUSABLES, utf8_convert_confusables, utf8_convert_confusables_default_handler, 0);
-	efunc_init_function(EFUNC_UTF8_GET_BLOCK_NAME, utf8_get_block_name, utf8_get_block_name, 0);
-	efunc_init_function(EFUNC_UTF8_GET_BLOCK_NUMBER, utf8_get_block_number, utf8_get_block_number, 0);
+	efunc_init_function(EFUNC_UTF8_GET_BLOCK_NAME, utf8_get_block_name, utf8_get_block_name_default_handler, 0);
+	efunc_init_function(EFUNC_UTF8_GET_BLOCK_NUMBER, utf8_get_block_number, utf8_get_block_number_default_handler, 0);
+	efunc_init_function(EFUNC_SEND_ISUPPORT, send_isupport, NULL, 0);
+	efunc_init_function(EFUNC_ISUPPORT_CHECK_FOR_CHANGES, isupport_check_for_changes, NULL, 0);
 }

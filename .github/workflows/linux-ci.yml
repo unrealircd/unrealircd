@@ -1,0 +1,38 @@
+name: Linux CI
+
+on:
+  push:
+    branches: [ "unreal60_dev" ]
+  pull_request:
+    branches: [ "unreal60_dev" ]
+
+env:
+  NOSERVICES: 1
+  RUNTESTFLAGS: "-slightlyfast"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        compiler: [ {c: gcc, cpp: g++}, {c: clang, cpp: clang++} ]
+
+    env:
+      CC: ${{ matrix.compiler.c }}
+      CXX: ${{ matrix.compiler.cpp }}
+
+    steps:
+    - name: installdependencies
+      run: |
+        sudo rm /var/lib/man-db/auto-update
+        sudo apt-get install build-essential pkg-config libssl-dev libpcre2-dev libargon2-dev libsodium-dev libc-ares-dev libcurl4-openssl-dev libjansson-dev
+    - name: installpythondependencies
+      run: |
+        python -m pip install --break-system-packages pyasyncore
+        python -m pip install --break-system-packages pyasynchat
+    - uses: actions/checkout@v4
+    - name: build
+      run: extras/build-tests/nix/build
+    - name: run-tests
+      run: extras/build-tests/nix/run-tests

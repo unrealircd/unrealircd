@@ -1,5 +1,5 @@
 /*
- * Extended ban to ban based on real name / gecos field (+b ~r)
+ * Extended ban to ban based on real name / gecos field (+b ~realname)
  * (C) Copyright 2003-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,7 +22,7 @@ ModuleHeader MOD_HEADER
 = {
 	"extbans/realname",
 	"4.2",
-	"ExtBan ~r - Ban based on realname/gecos field",
+	"ExtBan ~realname - Ban based on realname/gecos field",
 	"UnrealIRCd Team",
 	"unrealircd-6",
 };

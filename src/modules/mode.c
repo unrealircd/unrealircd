@@ -799,21 +799,12 @@ void do_mode_char_member_mode_new(Channel *channel, Cmode *handler, const char *
 		sendnumeric(client, ERR_USERNOTINCHANNEL, target->name, channel->name);
 		return;
 	}
-	member = find_member_link(channel->members, target);
-	if (!member)
-	{
-		/* should never happen */
-		unreal_log(ULOG_ERROR, "mode", "BUG_FIND_MEMBER_LINK_FAILED", target,
-			   "[BUG] Client $target.details on channel $channel: "
-			   "found via find_membership_link() but NOT found via find_member_link(). "
-			   "This should never happen! Please report on https://bugs.unrealircd.org/",
-			   log_data_client("target", target),
-			   log_data_channel("channel", channel));
-		return;
-	}
+
+	member = membership->related;
 
 	if ((what == MODE_ADD) && strchr(member->member_modes, modechar))
 		return; /* already set */
+
 	if ((what == MODE_DEL) && !strchr(member->member_modes, modechar))
 		return; /* already unset */
 
@@ -1093,6 +1084,12 @@ CMD_FUNC(_cmd_umode)
 
 	what = MODE_ADD;
 	*oldsnomask = '\0';
+
+	/* If you plan to use 'recv_mtags' here, then you will need to change
+	 * set_user_modes_dont_spread() to not pass NULL, and revert to do_cmd()
+	 * there again. (Which has performance effects)
+	 */
+	recv_mtags = NULL;
 
 	if (parc < 2)
 	{

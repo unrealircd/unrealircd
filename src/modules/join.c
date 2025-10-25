@@ -280,7 +280,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, con
 
 		RunHook(HOOKTYPE_LOCAL_JOIN, client, channel, mtags);
 	} else {
-		if (!(client->uplink && !IsSynched(client->uplink)))
+		if (IsSynched(client->uplink))
 		{
 			unreal_log(ULOG_INFO, "join", "REMOTE_CLIENT_JOIN", client,
 				   "User $client joined $channel",
@@ -436,7 +436,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 				if (MyConnect(client))
 					RunHook(HOOKTYPE_LOCAL_PART, client, channel, mtags, "Left all channels");
 
-				remove_user_from_channel(client, channel, 0);
+				remove_user_from_channel_withmb(client, channel, lp, 0);
 				free_message_tags(mtags);
 			}
 			continue;

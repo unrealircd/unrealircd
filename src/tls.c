@@ -294,6 +294,7 @@ int unrealircd_set_tls_groups(SSL_CTX *ctx, const char *groups)
 SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 {
 	SSL_CTX *ctx;
+	NameList *n, *n2;
 	char *errstr = NULL;
 
 	if (server)
@@ -332,60 +333,84 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 	 * SSL_CTX_use_certificate_chain_file() later on works but produces like
 	 * four lines of output, which is a bit verbose for such a simple case.
 	 */
-	if (!file_exists(tlsoptions->certificate_file))
+	for (n = tlsoptions->certificate_files; n; n = n->next)
 	{
-		int saved_errno = errno;
-		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
-		           "Could not open TLS certificate $filename: $system_error",
-		           log_data_string("filename", tlsoptions->certificate_file),
-		           log_data_string("system_error", strerror(saved_errno)));
-
-		if (str_ends_with_case_sensitive(tlsoptions->certificate_file, "tls/server.cert.pem"))
+		if (!file_exists(n->name))
 		{
-			unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED_DEFAULT_CERT", NULL,
-			           "It seems the default certificate is missing. "
-			           "Run 'make pem && make install' in the UnrealIRCd source directory "
-			           "to generate a self-signed cert.");
+			int saved_errno = errno;
+			unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+				   "Could not open TLS certificate $filename: $system_error",
+				   log_data_string("filename", n->name),
+				   log_data_string("system_error", strerror(saved_errno)));
+
+			if (str_ends_with_case_sensitive(n->name, "tls/server.cert.pem"))
+			{
+				unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED_DEFAULT_CERT", NULL,
+					   "It seems the default certificate is missing. "
+					   "Run 'make pem && make install' in the UnrealIRCd source directory "
+					   "to generate a self-signed cert.");
+			}
+			goto fail;
 		}
-		goto fail;
 	}
 
-	if (SSL_CTX_use_certificate_chain_file(ctx, tlsoptions->certificate_file) <= 0)
+	/* And the same 'first check' for key the key file(s) */
+	for (n = tlsoptions->key_files; n; n = n->next)
 	{
-		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
-		           "Failed to load TLS certificate $filename\n$tls_error.all",
-		           log_data_string("filename", tlsoptions->certificate_file),
-		           log_data_tls_error());
-		goto fail;
+		if (!file_exists(n->name))
+		{
+			int saved_errno = errno;
+			unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+				   "Could not open TLS key $filename: $system_error",
+				   log_data_string("filename", n->name),
+				   log_data_string("system_error", strerror(saved_errno)));
+			goto fail;
+		}
 	}
 
-	/* Let's first check the simple case of file exist - this time for key file. */
-	if (!file_exists(tlsoptions->key_file))
-	{
-		int saved_errno = errno;
-		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
-		           "Could not open TLS key $filename: $system_error",
-		           log_data_string("filename", tlsoptions->key_file),
-		           log_data_string("system_error", strerror(saved_errno)));
-		goto fail;
-	}
+	// TODO: verify same amount of certificate_files vs key_files :D
 
-	if (SSL_CTX_use_PrivateKey_file(ctx, tlsoptions->key_file, SSL_FILETYPE_PEM) <= 0)
+	for (n = tlsoptions->certificate_files, n2 = tlsoptions->key_files; n && n2; n = n->next, n2 = n2->next)
 	{
-		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
-		           "Failed to load TLS private key $filename\n$tls_error.all",
-		           log_data_string("filename", tlsoptions->key_file),
-		           log_data_tls_error());
-		goto fail;
-	}
-
-	if (!SSL_CTX_check_private_key(ctx))
-	{
-		unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
-		           "Check for TLS private key failed $filename\n$tls_error.all",
-		           log_data_string("filename", tlsoptions->key_file),
-		           log_data_tls_error());
-		goto fail;
+		if (SSL_CTX_use_certificate_chain_file(ctx, n->name) <= 0)
+		{
+			unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+				   "Failed to load TLS certificate $filename\n$tls_error.all",
+				   log_data_string("filename", n->name),
+				   log_data_tls_error());
+			goto fail;
+		}
+		if (SSL_CTX_use_PrivateKey_file(ctx, n2->name, SSL_FILETYPE_PEM) <= 0)
+		{
+			unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+				   "Failed to load TLS private key $filename\n$tls_error.all",
+				   log_data_string("filename", n2->name),
+				   log_data_tls_error());
+			goto fail;
+		}
+		if (!SSL_CTX_check_private_key(ctx))
+		{
+			unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+				   "Check for TLS private key(s) failed: "
+				   "certificate $certificate_filename vs key $key_filename\n"
+				   "$tls_error.all",
+				   log_data_string("certificate_filename", n->name),
+				   log_data_string("key_filename", n2->name),
+				   log_data_tls_error());
+			/* An extra hint for dual cert as this mistake will likely happen
+			 * to some users and the OpenSSL error may be a bit too cryptic.
+			 */
+			if (tlsoptions->certificate_files->next)
+			{
+				unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED", NULL,
+					   "HINT: You are using multiple 'certificate' and 'key' items. "
+					   "Make sure each certificate/key pair belongs to each other, "
+					   "they should be in the correct order! "
+					   "E.g. certificate \"cert1\"; key \"key1\"; certificate \"cert2\"; key \"key2\";"
+					   );
+			}
+			goto fail;
+		}
 	}
 
 	if (SSL_CTX_set_cipher_list(ctx, tlsoptions->ciphers) == 0)
@@ -420,10 +445,9 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 	if (!certificate_quality_check(ctx, &errstr))
 	{
 		unreal_log(ULOG_ERROR, "config", "TLS_CERTIFICATE_CHECK_FAILED", NULL,
-		           "There is a problem with your TLS certificate '$filename': $quality_check_error\n"
+		           "There is a problem with your TLS certificate: $quality_check_error\n"
 		           "If you use the standard UnrealIRCd certificates then you can simply run 'make pem' and 'make install' "
 		           "from your UnrealIRCd source directory (eg: ~/unrealircd-6.X.Y/) to create and install new certificates",
-		           log_data_string("filename", tlsoptions->certificate_file),
 		           log_data_string("quality_check_error", errstr));
 		goto fail;
 	}
@@ -460,57 +484,6 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 		 * do anything then, since auto ecdh is the default.
 		 */
 #endif
-#if defined(HAS_SSL_CTX_SET1_CURVES_LIST) || defined(HAS_SSL_CTX_SET1_GROUPS_LIST)
-		/* Let's see if we need to set specific TLS groups */
-		if (tlsoptions->groups == NULL)
-		{
-			/* This means try the defaults.. */
-			if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY))
-			{
-				if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY))
-				{
-					if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY))
-					{
-						unreal_log(ULOG_ERROR, "config", "TLS_INVALID_TLS_GROUPS_LIST", NULL,
-							   "Failed to set groups / ecdh-curves to either "
-							   "'$tls_groups_primary', '$tls_groups_secondary' or '$tls_groups_tertiary'.\n"
-							   "$tls_error.all\n"
-							   "It's strange that none of the three worked. "
-							   "Please report at https://bugs.unrealircd.org/ !",
-							   log_data_string("tls_groups_primary", UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY),
-							   log_data_string("tls_groups_secondary", UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY),
-							   log_data_string("tls_groups_tertiary", UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY),
-							   log_data_tls_error());
-						goto fail;
-					}
-				}
-			}
-		} else
-		{
-			/* User-configured TLS groups */
-			if (!unrealircd_set_tls_groups(ctx, tlsoptions->groups))
-			{
-				unreal_log(ULOG_ERROR, "config", "TLS_INVALID_TLS_GROUPS_LIST", NULL,
-					   "Failed to set groups / ecdh-curves '$tls_groups'\n$tls_error.all\n"
-					   "HINT: To get a list of supported names, run 'openssl ecparam -list_curves' on the server. "
-					   "Separate multiple curves by colon, for example: "
-					   "groups \"secp521r1:secp384r1\".",
-					   log_data_string("tls_groups", tlsoptions->groups),
-					   log_data_tls_error());
-				goto fail;
-			}
-		}
-#else
-		if (tlsoptions->groups)
-		{
-			/* We try to avoid this in the config code, but better have
-			 * it here too than be sorry if someone screws up:
-			 */
-			unreal_log(ULOG_ERROR, "config", "BUG_TLS_GROUPS", NULL,
-			           "ecdh-curves specified but not supported by library -- BAD!");
-			goto fail;
-		}
-#endif
 		/* We really want the ECDHE/ECDHE to be generated per-session.
 		 * Added in 2015 for safety. Seems OpenSSL was smart enough
 		 * to make this the default in 2016 after a security advisory.
@@ -518,10 +491,80 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 		SSL_CTX_set_options(ctx, SSL_OP_SINGLE_ECDH_USE|SSL_OP_SINGLE_DH_USE);
 	}
 
-	if (server)
+#if defined(HAS_SSL_CTX_SET1_CURVES_LIST) || defined(HAS_SSL_CTX_SET1_GROUPS_LIST)
+	/* Let's see if we need to set specific TLS groups */
+	if (tlsoptions->groups == NULL)
 	{
-		SSL_CTX_set_tlsext_servername_callback(ctx, ssl_hostname_callback);
+		/* This means try the defaults.. */
+		if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY))
+		{
+			if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY))
+			{
+				if (!unrealircd_set_tls_groups(ctx, UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY))
+				{
+					unreal_log(ULOG_ERROR, "config", "TLS_INVALID_TLS_GROUPS_LIST", NULL,
+						   "Failed to set groups / ecdh-curves to either "
+						   "'$tls_groups_primary', '$tls_groups_secondary' or '$tls_groups_tertiary'.\n"
+						   "$tls_error.all\n"
+						   "It's strange that none of the three worked. "
+						   "Please report at https://bugs.unrealircd.org/ !",
+						   log_data_string("tls_groups_primary", UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY),
+						   log_data_string("tls_groups_secondary", UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY),
+						   log_data_string("tls_groups_tertiary", UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY),
+						   log_data_tls_error());
+					goto fail;
+				}
+			}
+		}
+	} else
+	{
+		/* User-configured TLS groups */
+		if (!unrealircd_set_tls_groups(ctx, tlsoptions->groups))
+		{
+			unreal_log(ULOG_ERROR, "config", "TLS_INVALID_TLS_GROUPS_LIST", NULL,
+				   "Failed to set groups / ecdh-curves '$tls_groups'\n$tls_error.all\n"
+				   "HINT: To get a list of supported names, run 'openssl ecparam -list_curves' on the server. "
+				   "Separate multiple curves by colon, for example: "
+				   "groups \"secp521r1:secp384r1\".",
+				   log_data_string("tls_groups", tlsoptions->groups),
+				   log_data_tls_error());
+			goto fail;
+		}
 	}
+#else
+	if (tlsoptions->groups)
+	{
+		/* We try to avoid this in the config code, but better have
+		 * it here too than be sorry if someone screws up:
+		 */
+		unreal_log(ULOG_ERROR, "config", "BUG_TLS_GROUPS", NULL,
+			   "tls groups / ecdh-curves specified but not supported by library -- BAD!");
+		goto fail;
+	}
+#endif
+
+	if (tlsoptions->signature_algorithms)
+	{
+#ifdef HAS_SSL_CTX_SET1_SIGALGS_LIST
+		if (!SSL_CTX_set1_sigalgs_list(ctx, tlsoptions->signature_algorithms))
+		{
+			unreal_log(ULOG_ERROR, "config", "TLS_INVALID_TLS_SIGNATURE_ALGORITHMS", NULL,
+				   "Failed to set signature-algorithms to '$signature_algorithms'.\n$tls_error.all",
+				   log_data_string("signature_algorithms", tlsoptions->signature_algorithms),
+				   log_data_tls_error());
+			goto fail;
+		}
+#else
+		/* Would be odd, this is in OpenSSL 1.0.2+ */
+		unreal_log(ULOG_ERROR, "config", "TLS_INVALID_TLS_SIGNATURE_ALGORITHMS", NULL,
+		           "You have a signature-algorithms configuration in your config file. "
+		           "However, your OpenSSL version does not provide SSL_CTX_set1_sigalgs_list() !?");
+		goto fail;
+#endif
+	}
+
+	if (server)
+		SSL_CTX_set_tlsext_servername_callback(ctx, ssl_hostname_callback);
 
 	return ctx;
 fail:
@@ -1607,11 +1650,14 @@ void check_certificate_expiry_tlsoptions_and_warn(TLSOptions *tlsoptions)
 	if (!ctx)
 		return;
 
+	// FIXME: for dual cert the code in check_certificate_expiry_ctx()
+	//        checks only one of them, and this error message only
+	//        prints the first filename (which may not be the correct one)
 	if (check_certificate_expiry_ctx(ctx, &errstr))
 	{
 		unreal_log(ULOG_WARNING, "tls", "TLS_CERT_EXPIRING", NULL,
 		           "Warning: TLS certificate '$filename': $error_string",
-		           log_data_string("filename", tlsoptions->certificate_file),
+		           log_data_string("filename", tlsoptions->certificate_files->name),
 		           log_data_string("error_string", errstr));
 	}
 	SSL_CTX_free(ctx);
@@ -1642,4 +1688,61 @@ EVENT(tls_check_expiry)
 	for (link = conf_link; link; link = link->next)
 		if (link->tls_options)
 			check_certificate_expiry_tlsoptions_and_warn(link->tls_options);
+}
+
+SSL_CTX *https_new_ctx(void)
+{
+	SSL_CTX *ctx_client;
+	char buf1[512], buf2[512];
+	char *curl_ca_bundle = buf1;
+
+	SSL_load_error_strings();
+	SSLeay_add_ssl_algorithms();
+
+	ctx_client = SSL_CTX_new(SSLv23_client_method());
+	if (!ctx_client)
+		return NULL;
+#ifdef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
+	SSL_CTX_set_min_proto_version(ctx_client, TLS1_2_VERSION);
+#endif
+	SSL_CTX_set_options(ctx_client, SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3|SSL_OP_NO_TLSv1|SSL_OP_NO_TLSv1_1);
+
+	/* Verify peer certificate */
+	snprintf(buf1, sizeof(buf1), "%s/tls/curl-ca-bundle.crt", CONFDIR);
+	if (!file_exists(buf1))
+	{
+#ifdef _WIN32
+		unreal_log(ULOG_ERROR, "url", "CA_BUNDLE_NOT_FOUND", NULL,
+			   "File $filename1 does not exist.\n"
+			   "Cannot use built-in https client without curl-ca-bundle.crt\n",
+			   log_data_string("filename1", buf1));
+		exit(-1);
+#else
+		snprintf(buf2, sizeof(buf2), "%s/doc/conf/tls/curl-ca-bundle.crt", BUILDDIR);
+		if (!file_exists(buf2))
+		{
+			unreal_log(ULOG_ERROR, "url", "CA_BUNDLE_NOT_FOUND", NULL,
+			           "Neither $filename1 nor $filename2 exist.\n"
+			           "Cannot use built-in https client without curl-ca-bundle.crt\n",
+			           log_data_string("filename1", buf1),
+			           log_data_string("filename2", buf2));
+			exit(-1);
+		}
+		curl_ca_bundle = buf2;
+#endif
+	}
+	SSL_CTX_load_verify_locations(ctx_client, curl_ca_bundle, NULL);
+	SSL_CTX_set_verify(ctx_client, SSL_VERIFY_PEER, NULL);
+
+	/* Limit ciphers as well */
+	SSL_CTX_set_cipher_list(ctx_client, UNREALIRCD_DEFAULT_CIPHERS);
+
+	/* And TLS groups */
+#if defined(HAS_SSL_CTX_SET1_CURVES_LIST) || defined(HAS_SSL_CTX_SET1_GROUPS_LIST)
+	if (!unrealircd_set_tls_groups(ctx_client, UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY))
+		if (!unrealircd_set_tls_groups(ctx_client, UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY))
+			if (!unrealircd_set_tls_groups(ctx_client, UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY))
+				;
+#endif
+	return ctx_client;
 }

@@ -6,7 +6,7 @@
 
 [Setup]
 AppName=UnrealIRCd 6
-AppVerName=UnrealIRCd 6.2.0
+AppVerName=UnrealIRCd 6.2.1-rc2
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=https://www.unrealircd.org
 AppSupportURL=https://www.unrealircd.org

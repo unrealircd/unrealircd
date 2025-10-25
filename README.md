@@ -1,4 +1,5 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/Unreal_IRCd.svg?style=social&label=Follow)](https://twitter.com/Unreal_IRCd)
+[![Linux CI](https://github.com/unrealircd/unrealircd/actions/workflows/linux-ci.yml/badge.svg)](https://github.com/unrealircd/unrealircd/actions/workflows/linux-ci.yml)
 
 ## About UnrealIRCd
 UnrealIRCd is an Open Source IRC Server, serving thousands of networks since 1999.

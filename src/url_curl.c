@@ -76,11 +76,32 @@ void url_cancel_handle_by_callback_data(void *ptr)
 	}
 }
 
+/** Transform a TLSxxxxx_VERSION from OpenSSL to a CURL_SSLVERSION_TLSxxxx
+ * suitable for use in curl_easy_setopt(.., CURLOPT_SSLVERSION, xxx);
+ */
+long openssl_tls_version_to_curl_tls_version(int v)
+{
+	switch (v)
+	{
+#if defined(TLS1_2_VERSION) && defined(CURL_SSLVERSION_TLSv1_3)
+		case TLS1_2_VERSION:
+			return CURL_SSLVERSION_TLSv1_3;
+#endif
+#if defined(TLS1_3_VERSION) && defined(CURL_SSLVERSION_TLSv1_3)
+		case TLS1_3_VERSION:
+			return CURL_SSLVERSION_TLSv1_3;
+#endif
+		default:
+			break;
+	}
+	return 0;
+}
+
 /*
  * Sets up all of the SSL options necessary to support HTTPS/FTPS
  * transfers.
  */
-static void set_curl_tls_options(CURL *curl)
+static void set_curl_tls_options(CURL *curl, int minimum_tls_version)
 {
 	char buf[512];
 
@@ -107,7 +128,14 @@ static void set_curl_tls_options(CURL *curl)
 	 * Just for reference, 7.54.0 was released in April 2017, so you having an
 	 * older library version on your system that would be... odd.
 	 */
+	// these are two calls, just in case the 2nd failed, then we are at least TLSv1.2+
 	curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+	if (minimum_tls_version)
+	{
+		long v = openssl_tls_version_to_curl_tls_version(minimum_tls_version);
+		if (v)
+			curl_easy_setopt(curl, CURLOPT_SSLVERSION, v);
+	}
 #endif
 #if LIBCURL_VERSION_NUM >= 0x070900
 	/* Set cipher list for TLSv1.2 (cURL 7.9.0+) */
@@ -393,7 +421,7 @@ void url_start_async(OutgoingWebRequest *request)
 	}
 
 	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
-	set_curl_tls_options(curl);
+	set_curl_tls_options(curl, handle->request->minimum_tls_version);
 	memset(handle->errorbuf, 0, CURL_ERROR_SIZE);
 	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, handle->errorbuf);
 	curl_easy_setopt(curl, CURLOPT_PRIVATE, (char *)handle);

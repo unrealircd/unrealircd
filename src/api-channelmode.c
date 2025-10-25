@@ -145,14 +145,6 @@ void extcmodes_check_for_changed_channel_modes(void)
 		           log_data_string("new_channel_modes", chanmodes));
 		/* Broadcast change to all (locally connected) servers */
 		sendto_server(NULL, 0, 0, NULL, "PROTOCTL CHANMODES=%s", chanmodes);
-
-		if (iConf.send_isupport_updates)
-		{
-			/* Tell locally connected user about the change */
-			Client *cptr;
-			list_for_each_entry(cptr, &lclient_list, lclient_node)
-				sendto_one(cptr, NULL, ":%s 005 %s CHANMODES=%s", me.name, cptr->name, chanmodes);
-		}
 	}
 
 	strlcpy(previous_chanmodes, chanmodes, sizeof(previous_chanmodes));
@@ -229,14 +221,6 @@ void extcmodes_check_for_changed_prefixes(void)
 		           log_data_string("new_prefix", prefix));
 		/* Broadcast change to all (locally connected) servers */
 		sendto_server(NULL, 0, 0, NULL, "PROTOCTL PREFIX=%s", prefix);
-
-		if (iConf.send_isupport_updates)
-		{
-			/* Tell locally connected user about the change */
-			Client *cptr;
-			list_for_each_entry(cptr, &lclient_list, lclient_node)
-				sendto_one(cptr, NULL, ":%s 005 %s PREFIX=%s STATUSMSG=%s", me.name, cptr->name, prefix, statusmsg);
-		}
 	}
 
 	strlcpy(previous_prefix, prefix, sizeof(previous_prefix));
@@ -947,13 +931,13 @@ void del_member_mode_fast(Member *mb, Membership *mbs, char letter)
 int find_mbs(Client *client, Channel *channel, Member **mb, Membership **mbs)
 {
 	*mbs = NULL;
-
-	if (!(*mb = find_member_link(channel->members, client)))
-		return 0;
+	*mb = NULL;
 
 	if (!(*mbs = find_membership_link(client->user->channel, channel)))
 		return 0;
-	
+
+	*mb = (*mbs)->related;
+
 	return 1;
 }
 

@@ -77,6 +77,9 @@ struct who_format
 /* Global variables */
 ModDataInfo *whox_md = NULL;
 
+/* Externally looked up */
+long CAP_MULTI_PREFIX = 0;
+
 /* Forward declarations */
 CMD_FUNC(cmd_whox);
 static void who_global(Client *client, char *mask, int operspy, struct who_format *fmt);
@@ -121,6 +124,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	CAP_MULTI_PREFIX = ClientCapabilityBit("multi-prefix");
 	return MOD_SUCCESS;
 }
 
@@ -741,7 +745,7 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 
 		if ((lp = find_membership_link(acptr->user->channel, channel)))
 		{
-			if (!(fmt->fields || HasCapability(client, "multi-prefix")))
+			if (!(fmt->fields || HasCapabilityFast(client, CAP_MULTI_PREFIX)))
 			{
 				/* Standard NAMES reply (single character) */
 				char c = mode_to_prefix(*lp->member_modes);

@@ -27,7 +27,7 @@ ModuleHeader MOD_HEADER
 #endif
 
 #define WSU(client)	((WebSocketUser *)moddata_client(client, websocket_md).ptr)
-#define WEB(client)		((WebRequest *)moddata_client(client, webserver_md).ptr)
+#define WEB(client)		((WebRequest *)moddata_local_client(client, webserver_md).ptr)
 
 #define WEBSOCKET_PORT(client)	((client->local && client->local->listener) ? client->local->listener->websocket_options : 0)
 #define WEBSOCKET_TYPE(client)	(WSU(client)->type)
@@ -81,7 +81,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	webserver_md = findmoddata_byname("web", MODDATATYPE_CLIENT);
+	webserver_md = findmoddata_byname("web", MODDATATYPE_LOCAL_CLIENT);
 
 	if (non_utf8_nick_chars_in_use || (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY))
 		ws_text_mode_available = 0;

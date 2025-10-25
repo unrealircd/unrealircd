@@ -1,7 +1,83 @@
-UnrealIRCd 6.2.0
-=================
+UnrealIRCd 6.2.1-rc2
+=====================
 
-This release has channel flood protection turned on by default, UTF8 Text
+This is the second Release Candidate for future version 6.2.1. You can help us by
+testing this release and reporting bugs to https://bugs.unrealircd.org/
+
+This version focussed on performance improvements but also various small new
+features were added.
+
+### Enhancements:
+* A lot of optimizations were done:
+  * Writes to SSL/TLS clients use 15-20% less CPU.
+  * For hub servers various improvement add up to roughly 30%, depending on traffic.
+  * Especially 100+ member channels (and even more so 1000+) are handled faster now
+    due to various improvements regarding channel membership.
+  * A concrete peak-load case would be a server losing a link (SQUIT) with 10,000 clones
+    all in 10 channels. Previously this took 40 seconds at 100% CPU to process,
+    now it takes only 2 seconds.
+* Add [set::utf8-only](https://www.unrealircd.org/docs/Set_block#set::utf8-only):
+  setting this to `yes` means all IRC traffic is UTF8 only. See the setting
+  and the [`UTF8ONLY`](https://ircv3.net/specs/extensions/utf8-only)
+  specification for more details.
+* Add `server-port` to the [security-group block](https://www.unrealircd.org/docs/Security-group_block)
+  and [mask items](https://www.unrealircd.org/docs/Mask_item). And
+  the `server_port()` function in [Crule](https://www.unrealircd.org/docs/Crule).
+* When [set::send-isupport-updates](https://www.unrealircd.org/docs/Set_block#set::send-isupport-updates)
+  is enabled, we now send ISUPPORT updates for all values and not only
+  for `CHANMODES`/`PREFIX`/`STATUSMSG`. (For example, changing
+  set::min-nick-length would broadcast a `MINNICKLEN` change)
+* Add support for IRCv3 [`draft/extended-isupport`](https://github.com/ircv3/ircv3-specifications/blob/master/extensions/extended-isupport.md)
+* We now support multiple TLS certificates/keys, such as ECDSE +
+  ML-DSA (Post Quantum Crypto). Such a dual key approach may make sense
+  in the future [(see commit)](https://github.com/unrealircd/unrealircd/commit/877d151da41f3a20fa277f0a919c69576a4611ac)
+* You can now use `password` multiple times in the config file. This can
+  come in handy in the future if we have link blocks with multiple passwords
+  but also works with allow::password or vhost::password. Simply specify
+  multiple password items and they are treated as a "if any of these succeed
+  then the authentication is a PASS" (so it is an OR match, not an AND).
+* Add [set::tls::signature-algorithms](https://www.unrealircd.org/docs/Set_block#set::tls::signature-algorithms).
+  We don't set it at the moment. It's just an additional knob in case something needs
+  to be adjusted (e.g. if you need to disable something due to a vulnerability).
+* If TLSv1.3 is available on the system then calls to
+  [Central Blocklist](https://www.unrealircd.org/docs/Central_Spamfilter)
+  and [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport)
+  will only use TLSv1.3.
+* [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
+  * Add `away_reason` and `away_since` to the
+    [user object](https://www.unrealircd.org/docs/JSON-RPC:Client_Object#client.user_object).
+  * Add `server_port` and `local_port` to client objects (also in JSON Logging)
+
+### Changes:
+* Best practices now have their own logging category 'advice', which is blue.
+* Previous (expired) UnrealIRCd PGP key was removed from `doc/KEYS`
+* [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
+  For the `server_ban.*` and similar TKL calls use the "issuer" if the
+  `set_by` field is not set.
+* Update offline `doc/unrealircd_wiki.zim` to current wiki
+
+### Fixes:
+* Crash with [proxy { } block](https://www.unrealircd.org/docs/Proxy_block)
+* Possible crash in `STATS maxperip` (IRCOp-only)
+* Make [Remote includes](https://www.unrealircd.org/docs/Remote_includes)
+  work on IPv6-only machines.
+* The `TLINE` command did not behave the same as e.g. `GLINE` for
+  [Extended Server Bans](https://www.unrealircd.org/docs/Extended_server_bans)
+  which was confusing.
+* Memory leak in `DEBUGMODE` (only used by developers)
+
+### Developers and protocol:
+* `client->local->caps` changes to a 64 bit unsigned int on all archs
+* We now run quick CI jobs at GitHub as well, e.g. for PRs and commits.
+  This is in addition to the self-hosted BuildBot that is not public.
+* The (near last) sanitizer question in `./Config` will now not only
+  enable AddressSanitizer, but also UndefinedBehaviorSanitizer. As always,
+  we recommend developers to turn this on since it will often catch bugs.
+
+UnrealIRCd 6.2.0.2
+-------------------
+
+UnrealIRCd 6.2.0 has channel flood protection turned on by default, UTF8 Text
 Analysis and Spamfilter enhancements, new best practices regarding plaintext
 port 6667 and TLS certificates, PQC enhancements, etc.
 
@@ -13,6 +89,9 @@ If you want to hold off for a while because you are cautious or if you
 depend on 3rd party modules then feel free to wait for version 6.2.1.
 (At the time of this 6.2.0 release quite some 3rd party modules have
 not been updated to work with 6.2.x)
+
+6.2.0.1: This version fixes some unnecessary "best practices" warnings.  
+6.2.0.2: This version fixes scoring in the optional antimixedutf8 module.
 
 ### Enhancements:
 * [Channel flood protection by default](https://www.unrealircd.org/docs/Channel_anti-flood_settings):

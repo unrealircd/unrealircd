@@ -22,51 +22,121 @@
 
 #include "unrealircd.h"
 
-MODVAR ModDataInfo *MDInfo = NULL;
+MODVAR ModDataInfo *MDInfo[HIGHESTMODDATATYPE+1] = { NULL };
 
 MODVAR ModData local_variable_moddata[MODDATA_MAX_LOCAL_VARIABLE];
 MODVAR ModData global_variable_moddata[MODDATA_MAX_GLOBAL_VARIABLE];
+
+struct moddatatypelimit {
+	ModDataType type;
+	char *type_name;
+	int limit;
+	char *limit_name;
+};
+
+struct moddatatypelimit moddatatypelimits[] =
+{
+	{ MODDATATYPE_LOCAL_VARIABLE, "MODDATATYPE_LOCAL_VARIABLE", MODDATA_MAX_LOCAL_VARIABLE, "MODDATA_MAX_LOCAL_VARIABLE" },
+	{ MODDATATYPE_GLOBAL_VARIABLE, "MODDATATYPE_GLOBAL_VARIABLE", MODDATA_MAX_GLOBAL_VARIABLE, "MODDATA_MAX_GLOBAL_VARIABLE" },
+	{ MODDATATYPE_CLIENT, "MODDATATYPE_CLIENT", MODDATA_MAX_CLIENT, "MODDATA_MAX_CLIENT" },
+	{ MODDATATYPE_LOCAL_CLIENT, "MODDATATYPE_LOCAL_CLIENT", MODDATA_MAX_LOCAL_CLIENT, "MODDATA_MAX_LOCAL_CLIENT" },
+	{ MODDATATYPE_CHANNEL, "MODDATATYPE_CHANNEL", MODDATA_MAX_CHANNEL, "MODDATA_MAX_CHANNEL" },
+	{ MODDATATYPE_MEMBER, "MODDATATYPE_MEMBER", MODDATA_MAX_MEMBER, "MODDATA_MAX_MEMBER" },
+	{ MODDATATYPE_MEMBERSHIP, "MODDATATYPE_MEMBERSHIP", MODDATATYPE_MEMBERSHIP, "MODDATATYPE_MAX_MEMBERSHIP" },
+	{ 0, NULL, 0, NULL },
+};
+
+int exceeds_moddatatype_limit(int type, int slot)
+{
+	int i;
+
+	for (i = 0; moddatatypelimits[i].type; i++)
+	{
+		if (moddatatypelimits[i].type == type)
+		{
+			if (slot >= moddatatypelimits[i].limit)
+			{
+				unreal_log(ULOG_ERROR, "module", "MOD_DATA_OUT_OF_SPACE", NULL,
+					   "ModDataAdd: out of space! Your $mod_data_type limit of $limit is reached. "
+					   "Perhaps you have many third party modules loaded?\n"
+					   "If you need more space then you could open include/config.h and "
+					   "raise $mod_data_type_limit_name. You may also want to raise the other limits "
+					   "there, just to be sure. After changing that file, you will have to "
+					   "recompile (make clean; make install) and restart the IRCd.",
+					   log_data_string("mod_data_type", moddatatypelimits[i].type_name),
+					   log_data_string("mod_data_type_limit_name", moddatatypelimits[i].limit_name),
+					   log_data_integer("limit", moddatatypelimits[i].limit));
+				return 1;
+			}
+			return 0;
+		}
+	}
+
+	/* If we reach here then we were called with an unknown moddatatype, which
+	 * should be impossible. This could happen when f.e. ModDataType had a new
+	 * type added but it was not added in the moddatatypelimits[] table above.
+	 */
+	abort();
+	return 0;
+}
+
+void moddatatype_dump(Client *client)
+{
+	int i;
+	ModDataInfo *m;
+	int position;
+
+	for (i = 0; moddatatypelimits[i].type; i++)
+	{
+#ifdef DEBUGMODE
+		sendtxtnumeric(client, "=== %s ===", moddatatypelimits[i].type_name);
+#endif
+		for (position = 0, m = MDInfo[moddatatypelimits[i].type]; m ; m = m->next, position++)
+		{
+#ifdef DEBUGMODE
+			sendtxtnumeric(client, "Position %d: %s",
+			               position, m->name);
+#endif
+		}
+		sendtxtnumeric(client, "%s has %d of %d slot(s) in use",
+		               moddatatypelimits[i].type_name, position, moddatatypelimits[i].limit);
+	}
+}
 
 ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 {
 	int slotav = 0; /* highest available slot */
 	ModDataInfo *m;
 	int new_struct = 0;
-	
-	/* Hunt for highest available slot */
-	for (m = MDInfo; m ; m = m->next)
-		if (m->type == req.type)
-		{
-			/* Does an entry already exist with this name? */
-			if (!strcmp(m->name, req.name))
-			{
-				/* If old module is unloading (so reloading), then OK to take this slot */
-				if (m->unloaded)
-				{
-					slotav = m->slot;
-					m->unloaded = 0;
-					goto moddataadd_isok;
-				}
-				/* Otherwise, name collision */
-				if (module)
-					module->errorcode = MODERR_EXISTS;
-				return NULL;
-			}
-			/* Update next available slot */
-			slotav = MAX(slotav, m->slot+1);
-		}
 
-	/* Now check if we are within bounds (if we really have a free slot available) */
-	if (((req.type == MODDATATYPE_LOCAL_VARIABLE) && (slotav >= MODDATA_MAX_LOCAL_VARIABLE)) ||
-	    ((req.type == MODDATATYPE_GLOBAL_VARIABLE) && (slotav >= MODDATA_MAX_GLOBAL_VARIABLE)) ||
-	    ((req.type == MODDATATYPE_CLIENT) && (slotav >= MODDATA_MAX_CLIENT)) ||
-	    ((req.type == MODDATATYPE_LOCAL_CLIENT) && (slotav >= MODDATA_MAX_LOCAL_CLIENT)) ||
-	    ((req.type == MODDATATYPE_CHANNEL) && (slotav >= MODDATA_MAX_CHANNEL)) ||
-	    ((req.type == MODDATATYPE_MEMBER) && (slotav >= MODDATA_MAX_MEMBER)) ||
-	    ((req.type == MODDATATYPE_MEMBERSHIP) && (slotav >= MODDATA_MAX_MEMBERSHIP)))
+	/* This would be a rather weird error on the module coder part */
+	if ((req.type < 1) || (req.type > HIGHESTMODDATATYPE))
+		abort();
+
+	/* Hunt for highest available slot */
+	for (m = MDInfo[req.type]; m ; m = m->next)
 	{
-		unreal_log(ULOG_ERROR, "module", "MOD_DATA_OUT_OF_SPACE", NULL,
-		           "ModDataAdd: out of space!!!");
+		/* Does an entry already exist with this name? */
+		if (!strcmp(m->name, req.name))
+		{
+			/* If old module is unloading (so reloading), then OK to take this slot */
+			if (m->unloaded)
+			{
+				slotav = m->slot;
+				m->unloaded = 0;
+				goto moddataadd_isok;
+			}
+			/* Otherwise, name collision */
+			if (module)
+				module->errorcode = MODERR_EXISTS;
+			return NULL;
+		}
+		/* Update next available slot */
+		slotav = MAX(slotav, m->slot+1);
+	}
+
+	if (exceeds_moddatatype_limit(req.type, slotav))
+	{
 		if (module)
 			module->errorcode = MODERR_NOSPACE;
 		return NULL;
@@ -85,9 +155,10 @@ moddataadd_isok:
 	m->remote_write = req.remote_write;
 	m->self_write = req.self_write;
 	m->owner = module;
+	m->priority = req.priority;
 	
 	if (new_struct)
-		AddListItem(m, MDInfo);
+		AddListItemPrio(m, MDInfo[req.type], m->priority);
 
 	if (module)
 	{
@@ -105,12 +176,9 @@ void moddata_free_client(Client *client)
 {
 	ModDataInfo *md;
 
-	for (md = MDInfo; md; md = md->next)
-		if (md->type == MODDATATYPE_CLIENT)
-		{
-			if (md->free && moddata_client(client, md).ptr)
-				md->free(&moddata_client(client, md));
-		}
+	for (md = MDInfo[MODDATATYPE_CLIENT]; md; md = md->next)
+		if (md->free && moddata_client(client, md).ptr)
+			md->free(&moddata_client(client, md));
 
 	memset(client->moddata, 0, sizeof(client->moddata));
 }
@@ -119,12 +187,9 @@ void moddata_free_local_client(Client *client)
 {
 	ModDataInfo *md;
 
-	for (md = MDInfo; md; md = md->next)
-		if (md->type == MODDATATYPE_LOCAL_CLIENT)
-		{
-			if (md->free && moddata_local_client(client, md).ptr)
-				md->free(&moddata_local_client(client, md));
-		}
+	for (md = MDInfo[MODDATATYPE_LOCAL_CLIENT]; md; md = md->next)
+		if (md->free && moddata_local_client(client, md).ptr)
+			md->free(&moddata_local_client(client, md));
 
 	memset(client->moddata, 0, sizeof(client->moddata));
 }
@@ -133,12 +198,9 @@ void moddata_free_channel(Channel *channel)
 {
 	ModDataInfo *md;
 
-	for (md = MDInfo; md; md = md->next)
-		if (md->type == MODDATATYPE_CHANNEL)
-		{
-			if (md->free && moddata_channel(channel, md).ptr)
-				md->free(&moddata_channel(channel, md));
-		}
+	for (md = MDInfo[MODDATATYPE_CHANNEL]; md; md = md->next)
+		if (md->free && moddata_channel(channel, md).ptr)
+			md->free(&moddata_channel(channel, md));
 
 	memset(channel->moddata, 0, sizeof(channel->moddata));
 }
@@ -147,26 +209,20 @@ void moddata_free_member(Member *m)
 {
 	ModDataInfo *md;
 
-	for (md = MDInfo; md; md = md->next)
-		if (md->type == MODDATATYPE_MEMBER)
-		{
-			if (md->free && moddata_member(m, md).ptr)
-				md->free(&moddata_member(m, md));
-		}
+	for (md = MDInfo[MODDATATYPE_MEMBER]; md; md = md->next)
+		if (md->free && moddata_member(m, md).ptr)
+			md->free(&moddata_member(m, md));
 
 	memset(m->moddata, 0, sizeof(m->moddata));
 }
 
 void moddata_free_membership(Membership *m)
 {
-ModDataInfo *md;
+	ModDataInfo *md;
 
-	for (md = MDInfo; md; md = md->next)
-		if (md->type == MODDATATYPE_MEMBERSHIP)
-		{
-			if (md->free && moddata_membership(m, md).ptr)
-				md->free(&moddata_membership(m, md));
-		}
+	for (md = MDInfo[MODDATATYPE_MEMBERSHIP]; md; md = md->next)
+		if (md->free && moddata_membership(m, md).ptr)
+			md->free(&moddata_membership(m, md));
 
 	memset(m->moddata, 0, sizeof(m->moddata));
 }
@@ -265,7 +321,7 @@ void unload_moddata_commit(ModDataInfo *md)
 		}
 	}
 	
-	DelListItem(md, MDInfo);
+	DelListItem(md, MDInfo[md->type]);
 	safe_free(md->name);
 	safe_free(md);
 }
@@ -307,28 +363,32 @@ void ModDataDel(ModDataInfo *md)
 void unload_all_unused_moddata(void)
 {
 	ModDataInfo *md, *md_next;
+	int i;
 
-	for (md = MDInfo; md; md = md_next)
+	for (i = 1; i <= HIGHESTMODDATATYPE; i++)
 	{
-		md_next = md->next;
-		if (md->unloaded)
+		for (md = MDInfo[i]; md; md = md_next)
 		{
-			//config_status("UNLOADING: md %s (owner %p, type %d, slot %d)",
-			//	md->name, md->owner, md->type, md->slot);
-			unload_moddata_commit(md);
-		} else {
-			//config_status("loaded: md %s (owner %p, type %d, slot %d)",
-			//	md->name, md->owner, md->type, md->slot);
+			md_next = md->next;
+			if (md->unloaded)
+			{
+				//config_status("UNLOADING: md %s (owner %p, type %d, slot %d)",
+				//	md->name, md->owner, md->type, md->slot);
+				unload_moddata_commit(md);
+			} else {
+				//config_status("loaded: md %s (owner %p, type %d, slot %d)",
+				//	md->name, md->owner, md->type, md->slot);
+			}
 		}
 	}
 }
 
 ModDataInfo *findmoddata_byname(const char *name, ModDataType type)
 {
-ModDataInfo *md;
+	ModDataInfo *md;
 
-	for (md = MDInfo; md; md = md->next)
-		if ((md->type == type) && !strcmp(name, md->name))
+	for (md = MDInfo[type]; md; md = md->next)
+		if (!strcmp(name, md->name))
 			return md;
 
 	return NULL;
@@ -337,10 +397,12 @@ ModDataInfo *md;
 int module_has_moddata(Module *mod)
 {
 	ModDataInfo *md;
+	int i;
 
-	for (md = MDInfo; md; md = md->next)
-		if (md->owner == mod)
-			return 1;
+	for (i = 1; i <= HIGHESTMODDATATYPE; i++)
+		for (md = MDInfo[i]; md; md = md->next)
+			if (md->owner == mod)
+				return 1;
 
 	return 0;
 }

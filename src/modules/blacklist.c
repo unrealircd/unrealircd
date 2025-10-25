@@ -40,8 +40,8 @@ static long BLACKLIST_RECHECK_TIME_FIRST = 120;
 /* After that, check every <this>: */
 static long BLACKLIST_RECHECK_TIME = 900;
 
-#define LastBLCheck(x)	(moddata_client(x, blacklistrecheck_md).l)
-#define SetLastBLCheck(x, y)	do { moddata_client(x, blacklistrecheck_md).l = y; } while(0)
+#define LastBLCheck(x)	(moddata_local_client(x, blacklistrecheck_md).l)
+#define SetLastBLCheck(x, y)	do { moddata_local_client(x, blacklistrecheck_md).l = y; } while(0)
 
 /* Types */
 
@@ -124,8 +124,8 @@ void blacklist_set_handshake_delay(void);
 void blacklist_free_bluser_if_able(BLUser *bl);
 EVENT(blacklist_recheck);
 
-#define SetBLUser(x, y)	do { moddata_client(x, blacklist_md).ptr = y; } while(0)
-#define BLUSER(x)	((BLUser *)moddata_client(x, blacklist_md).ptr)
+#define SetBLUser(x, y)	do { moddata_local_client(x, blacklist_md).ptr = y; } while(0)
+#define BLUSER(x)	((BLUser *)moddata_local_client(x, blacklist_md).ptr)
 
 MOD_TEST()
 {
@@ -145,7 +145,7 @@ MOD_INIT()
 	
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "blacklist";
-	mreq.type = MODDATATYPE_CLIENT;
+	mreq.type = MODDATATYPE_LOCAL_CLIENT;
 	mreq.free = blacklist_md_free;
 	blacklist_md = ModDataAdd(modinfo->handle, mreq);
 	if (!blacklist_md)
@@ -156,7 +156,7 @@ MOD_INIT()
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "blacklistrecheck";
-	mreq.type = MODDATATYPE_CLIENT;
+	mreq.type = MODDATATYPE_LOCAL_CLIENT;
 	blacklistrecheck_md = ModDataAdd(modinfo->handle, mreq);
 	if (!blacklistrecheck_md)
 	{

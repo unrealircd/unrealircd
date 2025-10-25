@@ -189,6 +189,7 @@ MOD_INIT()
 	mreq.unserialize = reputation_md_unserialize;
 	mreq.sync = 0; /* local! */
 	mreq.type = MODDATATYPE_CLIENT;
+	mreq.priority = -1000000;
 	reputation_md = ModDataAdd(modinfo->handle, mreq);
 	if (!reputation_md)
 		abort();

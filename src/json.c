@@ -209,6 +209,7 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 	json_t *child;
 	json_t *user = NULL;
 	time_t ts;
+	int i;
 
 	if (key)
 	{
@@ -286,10 +287,10 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		return;
 	}
 
-	if (client->local && client->local->listener)
-		json_object_set_new(child, "server_port", json_integer(client->local->listener->port));
-	if (client->local && client->local->port)
-		json_object_set_new(child, "client_port", json_integer(client->local->port));
+	if ((i = get_server_port(client)))
+		json_object_set_new(child, "server_port", json_integer(i));
+	if ((i = get_client_port(client)))
+		json_object_set_new(child, "client_port", json_integer(i));
 	if ((ts = get_creationtime(client)))
 		json_object_set_new(child, "connected_since", json_timestamp(ts));
 	if (client->local && client->local->idle_since)
@@ -316,6 +317,11 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 			json_object_set_new(user, "account", json_string_unreal(client->user->account));
 		json_object_set_new(user, "reputation", json_integer(GetReputation(client)));
 		json_expand_client_security_groups(user, client);
+		if (client->user->away)
+		{
+			json_object_set_new(user, "away_reason", json_string_unreal(client->user->away));
+			json_object_set_new(user, "away_since", json_timestamp(client->user->away_since));
+		}
 
 		/* user modes and snomasks */
 		get_usermode_string_r(client, buf, sizeof(buf));

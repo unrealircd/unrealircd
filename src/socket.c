@@ -891,7 +891,8 @@ refuse_client:
 	set_sockhost(client, ip);
 	if (!set_client_ip(client, ip))
 		abort(); // would mean getpeerip() or spoof_ip is bad, which is impossible.
-	client->local->port = port;
+	set_client_port(client, port);
+	set_server_port(client, client->local->listener->port);
 	client->local->fd = fd;
 
 	/* Tag loopback connections */
@@ -1010,6 +1011,9 @@ int dead_socket(Client *to, const char *notice)
 		           log_data_string("reason", notice));
 	}
 	safe_strdup(to->local->error_str, notice);
+
+	/* Let's terminate DNS requests as well, as these are now useless */
+	unrealdns_delreq_bycptr(to);
 	return -1;
 }
 
@@ -1194,8 +1198,13 @@ void read_packet(int fd, int revents, void *data)
 	 * it may be overwritten in an earlier call to read_packet(),
 	 * to handle (TLS) writes by read_packet(), see below under
 	 * SSL_ERROR_WANT_WRITE.
+	 * Update 2025-10-03: actually only restore it to send_queued_cb
+	 * if we actually have anything to send, otherwise set to NULL.
 	 */
-	fd_setselect(fd, FD_SELECT_WRITE, send_queued_cb, client);
+	if (DBufLength(&client->local->sendQ) > 0)
+		fd_setselect(fd, FD_SELECT_WRITE, send_queued_cb, client);
+	else
+		fd_setselect(fd, FD_SELECT_WRITE, NULL, client);
 
 	while (1)
 	{

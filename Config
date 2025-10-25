@@ -347,9 +347,10 @@ if ! $MAKE --version 2>&1|grep -q "GNU Make"; then
 		MAKE="gmake"
 	else
 		# Both $MAKE and gmake are not GNU make, do we have a working $MAKE at all?
-		if $MAKE --version 1>/dev/null 2>&1; then
+		if command -v "$MAKE" 1>/dev/null 2>&1; then
 			echo "Your system has 'make' but UnrealIRCd requires GNU Make ('gmake')"
-			echo "Please install 'gmake' (eg 'pkg install gmake' on BSD)."
+			echo "Please install 'gmake' "
+			echo "eg 'pkg install gmake' on FreeBSD and 'pkg_add gmake' on OpenBSD."
 			exit 1
 		else
 			echo "Your system does not have the required tools installed to build UnrealIRCd."
@@ -376,7 +377,7 @@ echo "We will now ask you a number of questions. You can just press ENTER to acc
 echo ""
 
 # This needs to be updated each release so auto-upgrading works for settings, modules, etc!!:
-UNREALRELEASES="unrealircd-6.2.0-beta3 unrealircd-6.2.0-beta2 unrealircd-6.2.0-beta1 unrealircd-6.1.10 unrealircd-6.1.10-rc1 unrealircd-6.1.9 unrealircd-6.1.8 unrealircd-6.1.8.1 unrealircd-6.1.8 unrealircd-6.1.8-rc1 unrealircd-6.1.7 unrealircd-6.1.7-rc1 unrealircd-6.1.6 unrealircd-6.1.6-rc1 unrealircd-6.1.5 unrealircd-6.1.4 unrealircd-6.1.3 unrealircd-6.1.3-rc1 unrealircd-6.1.2.3 unrealircd-6.1.2.2 unrealircd-6.1.2.1 unrealircd-6.1.2 unrealircd-6.1.2-rc2 unrealircd-6.1.2-rc1 unrealircd-6.1.1.1 unrealircd-6.1.1 unrealircd-6.1.0 unrealircd-6.1.0-rc2 unrealircd-6.1.0-rc1 unrealircd-6.0.7 unrealircd-6.0.6 unrealircd-6.0.5 unrealircd-6.0.5-rc2 unrealircd-6.0.5-rc1 unrealircd-6.0.4.2 unrealircd-6.0.4.1 unrealircd-6.0.4 unrealircd-6.0.4-rc2 unrealircd-6.0.4-rc1 unrealircd-6.0.3 unrealircd-6.0.2 unrealircd-6.0.1.1 unrealircd-6.0.1 unrealircd-6.0.0"
+UNREALRELEASES="unrealircd-6.2.1-rc1 unrealircd-6.2.0.2 unrealircd-6.2.0.1 unrealircd-6.2.0 unrealircd-6.2.0-beta3 unrealircd-6.2.0-beta2 unrealircd-6.2.0-beta1 unrealircd-6.1.10 unrealircd-6.1.10-rc1 unrealircd-6.1.9 unrealircd-6.1.8 unrealircd-6.1.8.1 unrealircd-6.1.8 unrealircd-6.1.8-rc1 unrealircd-6.1.7 unrealircd-6.1.7-rc1 unrealircd-6.1.6 unrealircd-6.1.6-rc1 unrealircd-6.1.5 unrealircd-6.1.4 unrealircd-6.1.3 unrealircd-6.1.3-rc1 unrealircd-6.1.2.3 unrealircd-6.1.2.2 unrealircd-6.1.2.1 unrealircd-6.1.2 unrealircd-6.1.2-rc2 unrealircd-6.1.2-rc1 unrealircd-6.1.1.1 unrealircd-6.1.1 unrealircd-6.1.0 unrealircd-6.1.0-rc2 unrealircd-6.1.0-rc1 unrealircd-6.0.7 unrealircd-6.0.6 unrealircd-6.0.5 unrealircd-6.0.5-rc2 unrealircd-6.0.5-rc1 unrealircd-6.0.4.2 unrealircd-6.0.4.1 unrealircd-6.0.4 unrealircd-6.0.4-rc2 unrealircd-6.0.4-rc1 unrealircd-6.0.3 unrealircd-6.0.2 unrealircd-6.0.1.1 unrealircd-6.0.1 unrealircd-6.0.0"
 if [ -f "config.settings" ]; then
 	. ./config.settings
 else
@@ -846,13 +847,13 @@ while [ -z "$TEST" ] ; do
 	fi
 	echo ""
 	echo "Are you running UnrealIRCd as a test, debugging a problem or developing a module?"
-	echo "Then it is possible to run with AddressSanitizer enabled. This will make it"
-	echo "catch bugs such as out-of-bounds and other memory corruption issues, which can"
-	echo "be really helpful in some cases. The downside is that it will consume a lot"
-	echo "more memory and run slower too. So, only answer 'Yes' if you are OK with this."
-	echo "Also, on some systems (notably FreeBSD), when you enable AddressSanitizer,"
-	echo "UnrealIRCd may fail to start. So when in doubt, answer 'No'."
-	echo "Do you want to enable AddressSanitizer?"
+	echo "Then it is possible to run with AddressSanitizer and UndefinedBehaviorSanitizer"
+	echo "enabled. This will catch bugs, such as out-of-bounds and other memory corruption"
+	echo "issues, which can be really helpful in some cases. The downside is that it will"
+	echo "consume a lot more memory and run slower too. So, only answer 'Yes' if you are"
+	echo "OK with this. Also, on some systems (notably FreeBSD <14.2), when you enable"
+	echo "this UnrealIRCd may fail to start. So when in doubt, answer 'No'."
+	echo "Do you want to enable AddressSanitizer & UndefinedBehaviorSanitizer?"
 	echo $n "[$TEST] -> $c"
 	read cc
 	if [ -z "$cc" ] ; then

@@ -40,6 +40,9 @@
 /* Define if ssl library has SSL_CTX_set1_groups_list */
 #undef HAS_SSL_CTX_SET1_GROUPS_LIST
 
+/* Define if ssl library has SSL_CTX_set1_sigalgs_list */
+#undef HAS_SSL_CTX_SET1_SIGALGS_LIST
+
 /* Define if ssl library has SSL_CTX_set_min_proto_version */
 #undef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
 
@@ -61,31 +64,31 @@
 /* Define if you have epoll */
 #undef HAVE_EPOLL
 
-/* Define to 1 if you have the `epoll_create' function. */
+/* Define to 1 if you have the 'epoll_create' function. */
 #undef HAVE_EPOLL_CREATE
 
-/* Define to 1 if you have the `epoll_ctl' function. */
+/* Define to 1 if you have the 'epoll_ctl' function. */
 #undef HAVE_EPOLL_CTL
 
-/* Define to 1 if you have the `epoll_wait' function. */
+/* Define to 1 if you have the 'epoll_wait' function. */
 #undef HAVE_EPOLL_WAIT
 
-/* Define to 1 if you have the `explicit_bzero' function. */
+/* Define to 1 if you have the 'explicit_bzero' function. */
 #undef HAVE_EXPLICIT_BZERO
 
-/* Define to 1 if you have the `getrusage' function. */
+/* Define to 1 if you have the 'getrusage' function. */
 #undef HAVE_GETRUSAGE
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the `kevent' function. */
+/* Define to 1 if you have the 'kevent' function. */
 #undef HAVE_KEVENT
 
-/* Define to 1 if you have the `kqueue' function. */
+/* Define to 1 if you have the 'kqueue' function. */
 #undef HAVE_KQUEUE
 
-/* Define to 1 if you have the `poll' function. */
+/* Define to 1 if you have the 'poll' function. */
 #undef HAVE_POLL
 
 /* Define if you have PS_STRINGS */
@@ -118,22 +121,22 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
-/* Define to 1 if you have the `strlcat' function. */
+/* Define to 1 if you have the 'strlcat' function. */
 #undef HAVE_STRLCAT
 
-/* Define to 1 if you have the `strlcpy' function. */
+/* Define to 1 if you have the 'strlcpy' function. */
 #undef HAVE_STRLCPY
 
-/* Define to 1 if you have the `strlncat' function. */
+/* Define to 1 if you have the 'strlncat' function. */
 #undef HAVE_STRLNCAT
 
-/* Define to 1 if you have the `strlncpy' function. */
+/* Define to 1 if you have the 'strlncpy' function. */
 #undef HAVE_STRLNCPY
 
-/* Define to 1 if you have the `strnlen' function. */
+/* Define to 1 if you have the 'strnlen' function. */
 #undef HAVE_STRNLEN
 
-/* Define to 1 if you have the `syslog' function. */
+/* Define to 1 if you have the 'syslog' function. */
 #undef HAVE_SYSLOG
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
@@ -145,7 +148,7 @@
 /* Have getsockopt TCP_INFO */
 #undef HAVE_TCP_INFO
 
-/* Define to 1 if you have the `times' function. */
+/* Define to 1 if you have the 'times' function. */
 #undef HAVE_TIMES
 
 /* Define to 1 if you have the <unistd.h> header file. */
@@ -216,7 +219,7 @@
    tofail) */
 #undef STATIC_LINKING
 
-/* Define to 1 if all of the C90 standard headers exist (not just the ones
+/* Define to 1 if all of the C89 standard headers exist (not just the ones
    required in a freestanding environment). This macro is provided for
    backward compatibility; new code need not use it. */
 #undef STDC_HEADERS

@@ -11,33 +11,25 @@ set -x
 
 # Kill old instances
 killall -9 unrealircd || true
-# Remove old junk
-rm -rf testssl.sh/ cipherscan/ unrealircd-tests/
-
-if [ ! -d ~/testssl.sh ]; then
-	# Install 'testssl.sh'
-	git clone -q https://github.com/testssl/testssl.sh
-fi
 
 # Install 'unrealircd-tests'
+rm -rf unrealircd-tests/
 git clone -q --branch unreal60 https://github.com/unrealircd/unrealircd-tests.git unrealircd-tests
 cd unrealircd-tests
 
 # FreeBSD has various issues with the tests from us and others,
 # better set a flag to keep it simple:
-FREEBSD=0
 if uname -a|grep -q FreeBSD; then
-	FREEBSD=1
+	NOSERVICES=1
 fi
 
 # Run the test framework, testing both services:
-if [ "$FREEBSD" = 1 ]; then
-	# FreeBSD runs without services since they fail mysteriously:
-	./run -services none || exit 1
+if [ "$NOSERVICES" = 1 ]; then
+	./run -services none $RUNTESTFLAGS || exit 1
 else
 	# Linux tests both with anope and atheme services:
-	./run -services anope || exit 1
-	./run -services atheme || exit 1
+	./run -services anope $RUNTESTFLAGS || exit 1
+	./run -services atheme $RUNTESTFLAGS || exit 1
 fi
 
 # Database writing/reading tests
@@ -48,13 +40,4 @@ fi
 ./run -services none -include db_crypted.conf -boot tests/db/writing/* || exit 1
 ./run -services none -include db_crypted.conf -keepdbs -boot tests/db/reading/* || exit 1
 
-# Do SSL/TLS tests at the end
-# Has problems on non-Linux-64-bit, so we skip there:
-if [ "$FREEBSD" = 0 -a "$HOSTNAME" != "ub18-ia32" ]; then
-	sleep 2
-	cd ../extras/tests/tls
-	./tls-tests
-	cd -
-fi
-
-killall -15 unrealircd atheme-services services anope || true
+echo "If you also want to run the SSL/TLS tests, see extras/tests/tls/tls-tests"

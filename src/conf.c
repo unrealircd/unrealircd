@@ -1795,9 +1795,9 @@ void config_setdefaultsettings(Configuration *i)
 	/* TLS options */
 	i->tls_options = safe_alloc(sizeof(TLSOptions));
 	snprintf(tmp, sizeof(tmp), "%s/tls/server.cert.pem", CONFDIR);
-	safe_strdup(i->tls_options->certificate_file, tmp);
+	add_name_list(i->tls_options->certificate_files, tmp);
 	snprintf(tmp, sizeof(tmp), "%s/tls/server.key.pem", CONFDIR);
-	safe_strdup(i->tls_options->key_file, tmp);
+	add_name_list(i->tls_options->key_files, tmp);
 	snprintf(tmp, sizeof(tmp), "%s/tls/curl-ca-bundle.crt", CONFDIR);
 	safe_strdup(i->tls_options->trusted_ca_file, tmp);
 	safe_strdup(i->tls_options->ciphers, UNREALIRCD_DEFAULT_CIPHERS);
@@ -1958,7 +1958,7 @@ void postconf(void)
 	{
 		if (!has_any_trusted_cert())
 		{
-			unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_TRUSTED_CERT", NULL,
+			unreal_log(ULOG_ADVICE, "config", "BEST_PRACTICES_TRUSTED_CERT", NULL,
 				   "You don't have any valid SSL/TLS certificate that is issued by a trusted Certificate Authority.\n"
 				   "It is highly recommended to use a 'real certificate'. To get a free one, see: "
 				   "https://www.unrealircd.org/docs/Using_Let's_Encrypt_with_UnrealIRCd");
@@ -1966,7 +1966,7 @@ void postconf(void)
 		} else
 		if (bestpractices.trusted_cert_valid_hostname && !has_any_trusted_cert_with_correct_hostname())
 		{
-			unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_TRUSTED_CERT_VALID_HOSTNAME", NULL,
+			unreal_log(ULOG_ADVICE, "config", "BEST_PRACTICES_TRUSTED_CERT_VALID_HOSTNAME", NULL,
 			           "You have an SSL/TLS certificate that is issued by a trusted Certificate Authority "
 			           "(which is good). However, it is not valid for hostname '$servername'. "
 			           "It is recommended for the certificate (or at least one of them) to be "
@@ -1979,7 +1979,7 @@ void postconf(void)
 	    bestpractices.listen_nontls_port &&
 	    (iConf.plaintext_policy_user != POLICY_DENY))
 	{
-		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_PLAINTEXT_PORT", NULL,
+		unreal_log(ULOG_ADVICE, "config", "BEST_PRACTICES_PLAINTEXT_PORT", NULL,
 		           "You have at least one IRC plaintext port open to users (such as $port). "
 		           "Nowadays, everyone should be using SSL/TLS (on port 6697). "
 		           "See https://www.unrealircd.org/docs/Use_TLS.",
@@ -2268,16 +2268,16 @@ int config_test(void)
 	    bestpractices.trusted_cert_valid_hostname_hits ||
 	    bestpractices.listen_nontls_port_hits)
 	{
-		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES", NULL,
-		           "Your config has NO errors, but you received some best practices tips above, in summary:");
+		unreal_log(ULOG_ADVICE, "config", "BEST_PRACTICES", NULL,
+		           "Your config has NO errors, but you received some best practices tips above.");
 		if (bestpractices.hashed_passwords_hits)
 		{
-			unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_HASHED_PASSWORDS_INFO", NULL,
+			unreal_log(ULOG_ADVICE, "config", "BEST_PRACTICES_HASHED_PASSWORDS_INFO", NULL,
 			           "* Use hashed passwords, see https://www.unrealircd.org/docs/Authentication_types "
 			           "to learn more about this.");
 		}
-		unreal_log(ULOG_INFO, "config", "BEST_PRACTICES_POST_INFO", NULL,
-		           "It is recommended you follow best practices, but if you want to hide "
+		unreal_log(ULOG_ADVICE, "config", "BEST_PRACTICES_POST_INFO", NULL,
+		           "It is recommended for you to follow best practices, but if you want to hide "
 		           "such suggestions see "
 		           "https://www.unrealircd.org/docs/Set_block#set::best-practices");
 	}
@@ -4247,7 +4247,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->name, "operclass"))
 			safe_strdup(oper->operclass, cep->value);
 		if (!strcmp(cep->name, "password"))
-			oper->auth = AuthBlockToAuthConfig(cep);
+			AuthBlockToAuthConfig(cep, &oper->auth);
 		else if (!strcmp(cep->name, "class"))
 		{
 			oper->class = find_class(cep->value);
@@ -4351,12 +4351,6 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			/* oper::password */
 			if (!strcmp(cep->name, "password"))
 			{
-				if (has_password)
-				{
-					config_warn_duplicate(cep->file->filename,
-						cep->line_number, "oper::password");
-					continue;
-				}
 				has_password = 1;
 
 				if (ce->value && cep->value &&
@@ -4567,12 +4561,6 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			}
 			else if (!strcmp(cep->name, "password"))
 			{
-				if (has_password)
-				{
-					config_warn_duplicate(cep->file->filename,
-						cep->line_number, "oper::password");
-					continue;
-				}
 				has_password = 1;
 				if (Auth_CheckError(cep, 1) < 0)
 					errors++;
@@ -4700,7 +4688,7 @@ int _test_proxy(ConfigFile *conf, ConfigEntry *ce)
 		} else
 		if (!strcmp(cep->name, "password"))
 		{
-			config_detect_duplicate(&has_password, cep, &errors);
+			has_password = 1;
 			if (Auth_CheckError(cep, 0) < 0)
 				errors++;
 		}
@@ -4785,7 +4773,7 @@ int _conf_proxy(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->name, "mask") || !strcmp(cep->name, "match"))
 			conf_match_block(conf, cep, &proxy->mask);
 		else if (!strcmp(cep->name, "password"))
-			proxy->auth = AuthBlockToAuthConfig(cep);
+			AuthBlockToAuthConfig(cep, &proxy->auth);
 		else if (!strcmp(cep->name, "type"))
 			proxy->type = proxy_type_string_to_value(cep->value);
 	}
@@ -5076,19 +5064,9 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "restart"))
-		{
-			if (conf_drpass->restartauth)
-				Auth_FreeAuthConfig(conf_drpass->restartauth);
-
-			conf_drpass->restartauth = AuthBlockToAuthConfig(cep);
-		}
+			AuthBlockToAuthConfig(cep, &conf_drpass->restartauth);
 		else if (!strcmp(cep->name, "die"))
-		{
-			if (conf_drpass->dieauth)
-				Auth_FreeAuthConfig(conf_drpass->dieauth);
-
-			conf_drpass->dieauth = AuthBlockToAuthConfig(cep);
-		}
+			AuthBlockToAuthConfig(cep, &conf_drpass->dieauth);
 	}
 	return 1;
 }
@@ -5940,7 +5918,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 			conf_match_block(conf, cep, &allow->match);
 		}
 		else if (!strcmp(cep->name, "password"))
-			allow->auth = AuthBlockToAuthConfig(cep);
+			AuthBlockToAuthConfig(cep, &allow->auth);
 		else if (!strcmp(cep->name, "class"))
 		{
 			allow->class = find_class(cep->value);
@@ -6146,8 +6124,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->name, "password"))
 		{
-			config_detect_duplicate(&has_password, cep, &errors);
-			/* some auth check stuff? */
+			has_password = 1;
 			if (Auth_CheckError(cep, 0) < 0)
 				errors++;
 		}
@@ -6614,7 +6591,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->name, "password"))
-			link->auth = AuthBlockToAuthConfig(cep);
+			AuthBlockToAuthConfig(cep, &link->auth);
 		else if (!strcmp(cep->name, "hub"))
 			safe_strdup(link->hub, cep->value);
 		else if (!strcmp(cep->name, "leaf"))
@@ -6795,12 +6772,13 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->name, "password"))
 		{
-			config_detect_duplicate(&has_password, cep, &errors);
+			has_password = 1;
 			if (Auth_CheckError(cep, 0) < 0)
 			{
 				errors++;
 			} else {
-				AuthConfig *auth = AuthBlockToAuthConfig(cep);
+				AuthConfig *auth = NULL;
+				AuthBlockToAuthConfig(cep, &auth);
 				/* hm. would be nicer if handled @auth-system I think. ah well.. */
 				if ((auth->type != AUTHTYPE_PLAINTEXT) && (auth->type != AUTHTYPE_TLS_CLIENTCERT) &&
 				    (auth->type != AUTHTYPE_TLS_CLIENTCERTFP) && (auth->type != AUTHTYPE_SPKIFP))
@@ -7279,6 +7257,7 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 {
 	ConfigEntry *cepp, *ceppp;
 	int errors = 0;
+	int tls_keys = 0, tls_certificates = 0;
 
 	for (cepp = cep->items; cepp; cepp = cepp->next)
 	{
@@ -7306,6 +7285,10 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 			             "from your configuration file", cepp->name, cepp->name);
 			errors++;
 #endif
+		}
+		else if (!strcmp(cepp->name, "signature-algorithms"))
+		{
+			CheckNull(cepp);
 		}
 		else if (!strcmp(cepp->name, "protocols"))
 		{
@@ -7373,6 +7356,10 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 		{
 			char *path;
 			CheckNull(cepp);
+			if (!strcmp(cepp->name, "key"))
+				tls_keys++;
+			if (!strcmp(cepp->name, "certificate"))
+				tls_certificates++;
 			path = convert_to_absolute_path_duplicate(cepp->value, CONFDIR);
 			if (!file_exists(path))
 			{
@@ -7510,6 +7497,15 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 		}
 	}
 
+	if (tls_keys != tls_certificates)
+	{
+		config_error("%s:%d: certificate count != key count. "
+		             "Each certificate should have a matching key. You cannot have more "
+		             "certificates than keys or the other way around.",
+		             cep->file->filename, cep->line_number);
+		errors++;
+	}
+
 	*totalerrors += errors;
 }
 
@@ -7518,12 +7514,13 @@ void free_tls_options(TLSOptions *tlsoptions)
 	if (!tlsoptions)
 		return;
 
-	safe_free(tlsoptions->certificate_file);
-	safe_free(tlsoptions->key_file);
+	safe_free_name_list(tlsoptions->certificate_files);
+	safe_free_name_list(tlsoptions->key_files);
 	safe_free(tlsoptions->trusted_ca_file);
 	safe_free(tlsoptions->ciphers);
 	safe_free(tlsoptions->ciphersuites);
 	safe_free(tlsoptions->groups);
+	safe_free(tlsoptions->signature_algorithms);
 	safe_free(tlsoptions->outdated_protocols);
 	safe_free(tlsoptions->outdated_ciphers);
 	memset(tlsoptions, 0, sizeof(TLSOptions));
@@ -7538,13 +7535,14 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 	/* First, inherit settings from set::options::tls */
 	if (tlsoptions != tempiConf.tls_options)
 	{
-		safe_strdup(tlsoptions->certificate_file, tempiConf.tls_options->certificate_file);
-		safe_strdup(tlsoptions->key_file, tempiConf.tls_options->key_file);
+		// certificate_files: done at end of function
+		// key_files: done at end of function
 		safe_strdup(tlsoptions->trusted_ca_file, tempiConf.tls_options->trusted_ca_file);
 		tlsoptions->protocols = tempiConf.tls_options->protocols;
 		safe_strdup(tlsoptions->ciphers, tempiConf.tls_options->ciphers);
 		safe_strdup(tlsoptions->ciphersuites, tempiConf.tls_options->ciphersuites);
 		safe_strdup(tlsoptions->groups, tempiConf.tls_options->groups);
+		safe_strdup(tlsoptions->signature_algorithms, tempiConf.tls_options->signature_algorithms);
 		safe_strdup(tlsoptions->outdated_protocols, tempiConf.tls_options->outdated_protocols);
 		safe_strdup(tlsoptions->outdated_ciphers, tempiConf.tls_options->outdated_ciphers);
 		tlsoptions->options = tempiConf.tls_options->options;
@@ -7570,6 +7568,10 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 		else if (!strcmp(cepp->name, "groups") || !strcmp(cepp->name, "ecdh-curves"))
 		{
 			safe_strdup(tlsoptions->groups, cepp->value);
+		}
+		else if (!strcmp(cepp->name, "signature-algorithms"))
+		{
+			safe_strdup(tlsoptions->signature_algorithms, cepp->value);
 		}
 		else if (!strcmp(cepp->name, "protocols"))
 		{
@@ -7615,12 +7617,12 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 		else if (!strcmp(cepp->name, "certificate"))
 		{
 			convert_to_absolute_path(&cepp->value, CONFDIR);
-			safe_strdup(tlsoptions->certificate_file, cepp->value);
+			add_name_list(tlsoptions->certificate_files, cepp->value);
 		}
 		else if (!strcmp(cepp->name, "key"))
 		{
 			convert_to_absolute_path(&cepp->value, CONFDIR);
-			safe_strdup(tlsoptions->key_file, cepp->value);
+			add_name_list(tlsoptions->key_files, cepp->value);
 		}
 		else if (!strcmp(cepp->name, "trusted-ca-file"))
 		{
@@ -7672,6 +7674,21 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 		{
 			tlsoptions->certificate_expiry_notification = config_checkval(cepp->value, CFG_YESNO);
 		}
+	}
+
+	/* Inheritance of these items is at the end of this function and
+	 * only if they were not set in the block. The reason for that is
+	 * that if there is a 'certificate' and 'key' in a tls options
+	 * config blob, it should override, while otherwise it would 'add'
+	 * additional certs/keys due to the nature of it being a name list.
+	 * So we simply only add these here at the end if they were not set.
+	 */
+	if (tlsoptions != tempiConf.tls_options)
+	{
+		if (!tlsoptions->certificate_files)
+			tlsoptions->certificate_files = duplicate_name_list(tempiConf.tls_options->certificate_files);
+		if (!tlsoptions->key_files)
+			tlsoptions->key_files = duplicate_name_list(tempiConf.tls_options->key_files);
 	}
 }
 
@@ -10886,6 +10903,13 @@ int _test_secret(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->name, "password"))
 		{
 			int n;
+			if (has_password)
+			{
+				config_error("%s:%d: you can only have one password here",
+				             cep->file->filename, cep->line_number);
+				errors++;
+				continue;
+			}
 			has_password = 1;
 			CheckNull(cep);
 			if (cep->items ||
@@ -11199,6 +11223,7 @@ int rehash_internal(Client *client)
 
 	loop.rehashing = 2; /* now doing the actual rehash */
 
+	isupport_snapshot();
 	failure = config_test();
 	if (failure == 0)
 		config_run();
@@ -11215,6 +11240,7 @@ int rehash_internal(Client *client)
 	clicap_check_for_changes();
 	umodes_check_for_changes();
 	charsys_check_for_changes();
+	isupport_check_for_changes();
 
 	/* Remove central spamfilter rules upon set::central-spamfilter::enabled no; */
 	if (iConf.central_spamfilter_enabled == 0)

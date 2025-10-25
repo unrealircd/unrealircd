@@ -22,8 +22,16 @@
 
 #include "unrealircd.h"
 
+/* Global variables */
 long CAP_EXTENDED_MONITOR = 0L;
 
+/* externally looked up: */
+long CAP_AWAY_NOTIFY = 0;
+long CAP_ACCOUNT_NOTIFY = 0;
+long CAP_CHGHOST = 0;
+long CAP_SETNAME = 0;
+
+/* Forward declarations */
 int extended_monitor_away(Client *client, MessageTag *mtags, const char *reason, int already_as_away);
 int extended_monitor_account_login(Client *client, MessageTag *mtags);
 int extended_monitor_userhost_change(Client *client, const char *olduser, const char *oldhost);
@@ -67,6 +75,10 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	CAP_AWAY_NOTIFY = ClientCapabilityBit("away-notify");
+	CAP_ACCOUNT_NOTIFY = ClientCapabilityBit("account-notify");
+	CAP_CHGHOST = ClientCapabilityBit("chghost");
+	CAP_SETNAME = ClientCapabilityBit("setname");
 	return MOD_SUCCESS;
 }
 
@@ -121,27 +133,27 @@ int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int ev
 	switch (event)
 	{
 		case WATCH_EVENT_AWAY:
-			if (HasCapability(lp->value.client, "away-notify"))
+			if (HasCapabilityFast(lp->value.client, CAP_AWAY_NOTIFY))
 				sendto_prefix_one(lp->value.client, client, NULL, ":%s AWAY :%s", client->name, client->user->away);
 			break;
 		case WATCH_EVENT_NOTAWAY:
-			if (HasCapability(lp->value.client, "away-notify"))
+			if (HasCapabilityFast(lp->value.client, CAP_AWAY_NOTIFY))
 				sendto_prefix_one(lp->value.client, client, NULL, ":%s AWAY", client->name);
 			break;
 		case WATCH_EVENT_LOGGEDIN:
-			if (HasCapability(lp->value.client, "account-notify"))
+			if (HasCapabilityFast(lp->value.client, CAP_ACCOUNT_NOTIFY))
 				sendto_prefix_one(lp->value.client, client, NULL, ":%s ACCOUNT :%s", client->name, client->user->account);
 			break;
 		case WATCH_EVENT_LOGGEDOUT:
-			if (HasCapability(lp->value.client, "account-notify"))
+			if (HasCapabilityFast(lp->value.client, CAP_ACCOUNT_NOTIFY))
 				sendto_prefix_one(lp->value.client, client, NULL, ":%s ACCOUNT :*", client->name);
 			break;
 		case WATCH_EVENT_USERHOST:
-			if (HasCapability(lp->value.client, "chghost"))
+			if (HasCapabilityFast(lp->value.client, CAP_CHGHOST))
 				sendto_prefix_one(lp->value.client, client, NULL, ":%s CHGHOST %s %s", client->name, client->user->username, GetHost(client));
 			break;
 		case WATCH_EVENT_REALNAME:
-			if (HasCapability(lp->value.client, "setname"))
+			if (HasCapabilityFast(lp->value.client, CAP_SETNAME))
 				sendto_prefix_one(lp->value.client, client, NULL, ":%s SETNAME :%s", client->name, client->info);
 			break;
 		default:

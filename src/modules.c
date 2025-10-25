@@ -856,6 +856,8 @@ CMD_FUNC(cmd_module)
 	if (!ValidatePermissionsForPath("server:module",client,NULL,NULL,NULL))
 		return;
 
+	/* The rest are extra details (oper-only)... */
+
 	tmp[0] = '\0';
 	p = tmp;
 	for (i=0; i < MAXHOOKTYPES; i++)
@@ -891,6 +893,8 @@ CMD_FUNC(cmd_module)
 			}
 	}
 	sendtxtnumeric(client, "Override: %s", tmp);
+
+	moddatatype_dump(client);
 }
 
 Hooktype *HooktypeFind(const char *string) {
@@ -1198,6 +1202,7 @@ EVENT(e_unload_module_delayed)
 {
 	char *name = (char *)data;
 	int i; 
+	isupport_snapshot();
 	i = Module_Unload(name);
 	if (i == 1)
 	{
@@ -1208,6 +1213,7 @@ EVENT(e_unload_module_delayed)
 	safe_free(name);
 	extcmodes_check_for_changes();
 	umodes_check_for_changes();
+	isupport_check_for_changes();
 	return;
 }
 

@@ -3,15 +3,15 @@
  * (C) Copyright 2009-2017 Bram Matthys (Syzop) and the UnrealIRCd team.
  * License: GPLv2 or later
  *
- * This module adds an extended ban ~t:time:mask
+ * This module adds an extended ban ~time:time:mask
  * Where 'time' is the time in minutes after which the ban will be removed.
  * Where 'mask' is any banmask that is normally valid.
  *
  * Note that this extended ban is rather special in the sense that
  * it permits (crazy) triple-extbans to be set, such as:
- * +b ~t:1:~q:~a:Account
+ * +b ~time:1:~q:~a:Account
  * (=a temporary 1min ban to mute a user with services account Account)
- * +e ~t:1440:~m:moderated:*!*@host
+ * +e ~time:1440:~m:moderated:*!*@host
  * (=user with *!*@host may speak through +m for the next 1440m / 24h)
  *
  * The triple-extbans / double-stacking requires special routines that
@@ -49,7 +49,7 @@ ModuleHeader MOD_HEADER
   = {
 	"extbans/timedban",
 	"1.0",
-	"ExtBan ~t: automatically removed timed bans",
+	"ExtBan ~time: automatically removed timed bans",
 	"UnrealIRCd Team",
 	"unrealircd-6",
     };
@@ -183,8 +183,8 @@ const char *timedban_extban_conv_param(BanContext *b, Extban *extban)
 
 	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
 	
-	/* ~t:duration:n!u@h   for direct matching
-	 * ~t:duration:~x:.... when calling another bantype
+	/* ~time:duration:n!u@h   for direct matching
+	 * ~time:duration:~x:.... when calling another bantype
 	 */
 
 	durationstr = para;
@@ -207,7 +207,7 @@ const char *timedban_extban_conv_param(BanContext *b, Extban *extban)
 	if (!newmask || (strlen(newmask) <= 1))
 		return NULL;
 
-	//snprintf(retbuf, sizeof(retbuf), "~t:%d:%s", duration, newmask);
+	//snprintf(retbuf, sizeof(retbuf), "~time:%d:%s", duration, newmask);
 	snprintf(retbuf, sizeof(retbuf), "%d:%s", duration, newmask);
 	return retbuf;
 }
@@ -217,8 +217,8 @@ int timedban_extban_syntax(Client *client, int checkt, char *reason)
 	if (MyUser(client) && (checkt == EXBCHK_PARAM))
 	{
 		sendnotice(client, "Error when setting timed ban: %s", reason);
-		sendnotice(client, " Syntax: +b ~t:duration:mask");
-		sendnotice(client, "Example: +b ~t:5:nick!user@host");
+		sendnotice(client, " Syntax: +b ~time:duration:mask");
+		sendnotice(client, "Example: +b ~time:5:nick!user@host");
 		sendnotice(client, "Duration is the time in minutes after which the ban is removed (1-9999)");
 		sendnotice(client, "Valid masks are: nick!user@host or another extban type such as ~a, ~c, ~S, ..");
 	}
@@ -300,12 +300,12 @@ int timedban_extban_is_ok(BanContext *b)
 		return 1;
 
 	if (timedban_extban_is_ok_recursion)
-		return 0; /* Recursion detected (~t:1:~t:....) */
+		return 0; /* Recursion detected (~time:1:~time:....) */
 
 	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
 	
-	/* ~t:duration:n!u@h   for direct matching
-	 * ~t:duration:~x:.... when calling another bantype
+	/* ~time:duration:n!u@h   for direct matching
+	 * ~time:duration:~x:.... when calling another bantype
 	 */
 
 	durationstr = para;
@@ -358,7 +358,7 @@ int timedban_has_ban_expired(Ban *ban)
 	time_t expire_on;
 
 	/* The caller has only performed a very light check (string starting
-	 * with ~t, in the interest of performance), so we don't know yet if
+	 * with ~time, in the interest of performance), so we don't know yet if
 	 * it REALLY is a timed ban. We check that first here...
 	 */
 	if (!strncmp(banstr, "~t:", 3))

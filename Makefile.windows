@@ -269,6 +269,7 @@ DLL_FILES=\
  src/modules/extbans/securitygroup.dll \
  src/modules/extbans/textban.dll \
  src/modules/extbans/timedban.dll \
+ src/modules/extended-isupport.dll \
  src/modules/extended-monitor.dll \
  src/modules/extjwt.dll \
  src/modules/geoip_base.dll \
@@ -286,6 +287,7 @@ DLL_FILES=\
  src/modules/ircops.dll \
  src/modules/ison.dll \
  src/modules/issued-by-tag.dll \
+ src/modules/isupport.dll \
  src/modules/join.dll \
  src/modules/jointhrottle.dll \
  src/modules/json-log-tag.dll \
@@ -326,6 +328,7 @@ DLL_FILES=\
  src/modules/pass.dll \
  src/modules/pingpong.dll \
  src/modules/plaintext-policy.dll \
+ src/modules/portinfo.dll \
  src/modules/protoctl.dll \
  src/modules/quit.dll \
  src/modules/real-quit-reason.dll \
@@ -419,6 +422,7 @@ DLL_FILES=\
  src/modules/usermodes/showwhois.dll \
  src/modules/usermodes/wallops.dll \
  src/modules/utf8functions.dll \
+ src/modules/utf8only.dll \
  src/modules/vhost.dll \
  src/modules/watch-backend.dll \
  src/modules/watch.dll \
@@ -945,6 +949,9 @@ src/modules/extbans/timedban.dll: src/modules/extbans/timedban.c $(INCLUDES)
 src/modules/extended-monitor.dll: src/modules/extended-monitor.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/extended-monitor.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/extended-monitor.pdb $(MODLFLAGS)
 
+src/modules/extended-isupport.dll: src/modules/extended-isupport.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/extended-isupport.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/extended-isupport.pdb $(MODLFLAGS)
+
 src/modules/geoip_base.dll: src/modules/geoip_base.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/geoip_base.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/geoip_base.pdb $(MODLFLAGS)
 
@@ -995,6 +1002,9 @@ src/modules/ison.dll: src/modules/ison.c $(INCLUDES)
 
 src/modules/issued-by-tag.dll: src/modules/issued-by-tag.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/issued-by-tag.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/issued-by-tag.pdb $(MODLFLAGS)
+
+src/modules/isupport.dll: src/modules/isupport.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/isupport.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/isupport.pdb $(MODLFLAGS)
 
 src/modules/join.dll: src/modules/join.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/join.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/join.pdb $(MODLFLAGS)
@@ -1115,6 +1125,9 @@ src/modules/pingpong.dll: src/modules/pingpong.c $(INCLUDES)
 
 src/modules/plaintext-policy.dll: src/modules/plaintext-policy.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/plaintext-policy.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/plaintext-policy.pdb $(MODLFLAGS)
+
+src/modules/portinfo.dll: src/modules/portinfo.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/portinfo.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/portinfo.pdb $(MODLFLAGS)
 
 src/modules/protoctl.dll: src/modules/protoctl.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/protoctl.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/protoctl.pdb $(MODLFLAGS)
@@ -1394,6 +1407,9 @@ src/modules/usermodes/wallops.dll: src/modules/usermodes/wallops.c $(INCLUDES)
 
 src/modules/utf8functions.dll: src/modules/utf8functions.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/utf8functions.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/utf8functions.pdb $(MODLFLAGS)
+
+src/modules/utf8only.dll: src/modules/utf8only.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/utf8only.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/utf8only.pdb $(MODLFLAGS)
 
 src/modules/vhost.dll: src/modules/vhost.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/vhost.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/vhost.pdb $(MODLFLAGS)

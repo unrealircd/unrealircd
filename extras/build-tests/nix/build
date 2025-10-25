@@ -16,7 +16,7 @@ else
 	export MAKE="make -j4"
 fi
 
-export CPPFLAGS="-DFAKELAG_CONFIGURABLE -DNOREMOVETMP -DRAWCMDLOGGING"
+export CPPFLAGS="$CPPFLAGS -DFAKELAG_CONFIGURABLE -DNOREMOVETMP -DRAWCMDLOGGING"
 
 # !! skipped for now: extras/build-tests/nix/select-config $BUILDCONFIG !!
 # !! temporary use this:
@@ -63,22 +63,5 @@ else
 	ldd ~/unrealircd/bin/unrealircd
 fi
 
-if [ "$BUILDCONFIG" = "local-curl" ]; then
-	# We broke the system significantly earlier that build tests
-	# won't work (eg: 'git' is uninstallable). Don't bother
-	# running the tests. I don't expect a 'local-curl' specific
-	# bug anyway.
-	exit 0
-fi
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
-	# 'rake' doesn't work. have to figure that one out..
-	echo "Not running test on OS X for now"
-	exit 0
-fi
-
-echo ""
-echo ""
-#echo "Now running UnrealIRCd test framework..."
-#set -x
-#extras/build-tests/nix/run-tests
+# This was only the 'building' part, so give a hint...
+echo "You can now run extras/build-tests/nix/run-tests"

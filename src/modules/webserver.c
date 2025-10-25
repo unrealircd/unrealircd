@@ -26,7 +26,7 @@ ModuleHeader MOD_HEADER
 #define WEB_SOFTWARE "UnrealIRCd"
 
 /* Macros */
-#define WEB(client)		((WebRequest *)moddata_client(client, webserver_md).ptr)
+#define WEB(client)		((WebRequest *)moddata_local_client(client, webserver_md).ptr)
 #define WEBSERVER(client)	((client->local && client->local->listener) ? client->local->listener->webserver : NULL)
 #define reset_handshake_timeout(client, delta)  do { client->local->creationtime = TStime() - iConf.handshake_timeout + delta; } while(0)
 #define WSU(client)     ((WebSocketUser *)moddata_client(client, websocket_md).ptr)
@@ -71,7 +71,7 @@ MOD_INIT()
 	mreq.unserialize = NULL;
 	mreq.free = webserver_webrequest_mdata_free;
 	mreq.sync = 0;
-	mreq.type = MODDATATYPE_CLIENT;
+	mreq.type = MODDATATYPE_LOCAL_CLIENT;
 	webserver_md = ModDataAdd(modinfo->handle, mreq);
 
 	return MOD_SUCCESS;
@@ -148,7 +148,7 @@ void webserver_possible_request(Client *client, const char *buf, int len)
 	if (method == HTTP_METHOD_NONE)
 		return; /* invalid */
 
-	moddata_client(client, webserver_md).ptr = safe_alloc(sizeof(WebRequest));
+	moddata_local_client(client, webserver_md).ptr = safe_alloc(sizeof(WebRequest));
 	WEB(client)->method = method;
 
 	/* Set some default values: */
@@ -426,6 +426,11 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 
 		WEB(client)->request_header_parsed = 1;
 		parse_proxy_header(client);
+		if (IsDead(client) || IsDeadSocket(client))
+		{
+			safe_free(netbuf);
+			return -1;
+		}
 		n = WEBSERVER(client)->handle_request(client, WEB(client));
 		if ((n <= 0) || IsDead(client))
 		{

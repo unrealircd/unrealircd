@@ -142,7 +142,7 @@ const char *inetntop(int af, const void *in, char *out, size_t size)
 {
 	char tmp[MYDUMMY_SIZE];
 
-	inet_ntop(af, in, tmp, size);
+	inet_ntop(af, in, tmp, sizeof(tmp));
 	if (!strstr(tmp, "::"))
 	{
 		/* IPv4 or IPv6 that is already uncompressed */
@@ -1041,7 +1041,7 @@ void cancel_copy(int srcfd, int destfd, const char *dest)
  */
 int unreal_copyfile(const char *src, const char *dest)
 {
-	char buf[2048];
+	char buf[16384];
 	time_t mtime;
 	int srcfd, destfd, len;
 
@@ -1075,7 +1075,7 @@ int unreal_copyfile(const char *src, const char *dest)
 		return 0;
 	}
 
-	while ((len = read(srcfd, buf, 1023)) > 0)
+	while ((len = read(srcfd, buf, sizeof(buf))) > 0)
 		if (write(destfd, buf, len) != len)
 		{
 			config_error("Write error to file '%s': %s [not enough free hd space / quota? need several mb's!]",

@@ -1,5 +1,5 @@
 /*
- * Extended ban that affects messages/notices only (+b ~q)
+ * Extended ban that affects messages/notices only (+b ~quiet)
  * (C) Copyright 2003-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,7 +22,7 @@ ModuleHeader MOD_HEADER
 = {
 	"extbans/quiet",
 	"4.2",
-	"ExtBan ~q - prevent messages only (quiet)",
+	"ExtBan ~quiet - prevent messages only (quiet)",
 	"UnrealIRCd Team",
 	"unrealircd-6",
 };

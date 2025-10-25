@@ -24,7 +24,6 @@ static Cmode_t EXTMODE_DELAYED;
 static Cmode_t EXTMODE_POST_DELAYED;
 
 int visible_in_channel(Client *client, Channel *channel, Member *client_member);
-int moded_check_part(Client *client, Channel *channel);
 int moded_join(Client *client, Channel *channel);
 int moded_part(Client *client, Channel *channel, MessageTag *mtags, const char *comment);
 int moded_quit(Client *client, MessageTag *mtags, const char *comment);
@@ -32,13 +31,10 @@ int delayjoin_is_ok(Client *client, Channel *channel, char mode, const char *par
 int moded_chanmode(Client *client, Channel *channel,
                    MessageTag *mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode);
 int moded_prechanmsg(Client *client, Channel *channel, MessageTag **mtags, const char *text, SendType sendtype);
-const char *moded_serialize(ModData *m);
-void moded_unserialize(const char *str, ModData *m);
 
 MOD_INIT()
 {
 	CmodeInfo req;
-	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM_RELOADABLE, 1);
@@ -56,15 +52,6 @@ MOD_INIT()
 	req.local = 1;
 	CmodePostDelayed = CmodeAdd(modinfo->handle, req, &EXTMODE_POST_DELAYED);
 
-	memset(&mreq, 0, sizeof(mreq));
-	mreq.name = MOD_DATA_STR;
-	mreq.serialize = moded_serialize;
-	mreq.unserialize = moded_unserialize;
-	mreq.sync = 0;
-	mreq.type = MODDATATYPE_MEMBER;
-	if (!ModDataAdd(modinfo->handle, mreq))
-		abort();
-
 	if (!CmodeDelayed || !CmodePostDelayed)
 	{
 		/* I use config_error() here because it's printed to stderr in case of a load
@@ -74,7 +61,6 @@ MOD_INIT()
 		return MOD_FAILED;
 	}
 
-	HookAdd(modinfo->handle, HOOKTYPE_VISIBLE_IN_CHANNEL, 0, visible_in_channel);
 	HookAdd(modinfo->handle, HOOKTYPE_JOIN_DATA, 0, moded_join);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PART, 0, moded_part);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_PART, 0, moded_part);
@@ -119,42 +105,6 @@ void clear_post_delayed(Channel *channel)
 	free_message_tags(mtags);
 }
 
-bool moded_member_invisible(Member* m, Channel *channel)
-{
-	ModDataInfo *md;
-
-	if (!m)
-		return false;
-
-	md = findmoddata_byname(MOD_DATA_STR, MODDATATYPE_MEMBER);
-	if (!md)
-		return false;
-
-	if (!moddata_member(m, md).str)
-		return false;
-
-	return true;
-
-}
-
-bool moded_user_invisible(Client *client, Channel *channel)
-{
-	return moded_member_invisible(find_member_link(channel->members, client), channel);
-}
-
-bool channel_has_invisible_users(Channel *channel)
-{
-	Member* i;
-	for (i = channel->members; i; i = i->next)
-	{
-		if (moded_member_invisible(i, channel))
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
 bool channel_is_post_delayed(Channel *channel)
 {
 	if (channel->mode.mode & EXTMODE_POST_DELAYED)
@@ -169,43 +119,6 @@ bool channel_is_delayed(Channel *channel)
 	return false;
 }
 
-void clear_user_invisible(Channel *channel, Client *client)
-{
-	Member *i;
-	ModDataInfo *md;
-	bool should_clear = true, found_member = false;
-
-	md = findmoddata_byname(MOD_DATA_STR, MODDATATYPE_MEMBER);
-	if (!md)
-		return;
-	for (i = channel->members; i; i = i->next)
-	{
-		if (i->client == client)
-		{
-
-			if (md)
-				memset(&moddata_member(i, md), 0, sizeof(ModData));
-
-			found_member = true;
-
-			if (!should_clear)
-				break;
-		}
-
-		else if (moddata_member(i, md).str)
-		{
-			should_clear = false;
-			if (found_member)
-				break;
-		}
-	}
-
-	if (should_clear && (channel->mode.mode & EXTMODE_POST_DELAYED))
-	{
-		clear_post_delayed(channel);
-	}
-}
-
 void clear_user_invisible_announce(Channel *channel, Client *client, MessageTag *recv_mtags)
 {
 	Member *i;
@@ -214,7 +127,7 @@ void clear_user_invisible_announce(Channel *channel, Client *client, MessageTag 
 	char exjoinbuf[512];
 	long CAP_EXTENDED_JOIN = ClientCapabilityBit("extended-join");
 
-	clear_user_invisible(channel, client);
+	set_user_invisible(client, channel, 0);
 
 	ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN %s",
 				client->name, client->user->username, GetHost(client), channel->name);
@@ -237,49 +150,34 @@ void clear_user_invisible_announce(Channel *channel, Client *client, MessageTag 
 		}
 	}
 	free_message_tags(mtags);
+
+	/* If this was the last invisible user to become visible, then set -d */
+	if ((channel->mode.mode & EXTMODE_POST_DELAYED) && !channel_has_invisible_users(channel))
+	        clear_post_delayed(channel);
 }
-
-void set_user_invisible(Channel *channel, Client *client)
-{
-	Member *m = find_member_link(channel->members, client);
-	ModDataInfo *md;
-
-	if (!m)
-		return;
-
-	md = findmoddata_byname(MOD_DATA_STR, MODDATATYPE_MEMBER);
-
-	if (!md || !md->unserialize)
-		return;
-
-	md->unserialize(MOD_DATA_INVISIBLE, &moddata_member(m, md));
-}
-
 
 int delayjoin_is_ok(Client *client, Channel *channel, char mode, const char *para, int checkt, int what)
 {
 	return EX_ALWAYS_DENY;
 }
 
-
-int visible_in_channel(Client *client, Channel *channel, Member *client_member)
-{
-	return (channel_is_delayed(channel) || channel_is_post_delayed(channel)) && moded_member_invisible(client_member, channel);
-}
-
 int moded_join(Client *client, Channel *channel)
 {
 	if (channel_is_delayed(channel))
-		set_user_invisible(channel, client);
+		set_user_invisible(client, channel, 1);
 
 	return 0;
 }
 
 int moded_part(Client *client, Channel *channel, MessageTag *mtags, const char *comment)
 {
-	if (channel_is_delayed(channel) || channel_is_post_delayed(channel))
-		clear_user_invisible(channel, client);
-
+	/* If this was the last invisible user to become visible, then set -d */
+	if (channel->mode.mode & EXTMODE_POST_DELAYED)
+	{
+		set_user_invisible(client, channel, 0);
+		if (!channel_has_invisible_users(channel))
+		        clear_post_delayed(channel);
+	}
 	return 0;
 }
 
@@ -292,12 +190,17 @@ int moded_quit(Client *client, MessageTag *mtags, const char *comment)
 	{
 		channel = membership->channel;
 		/* Identical to moded_part() */
-		if (channel_is_delayed(channel) || channel_is_post_delayed(channel))
-			clear_user_invisible(channel, client);
+		if (channel->mode.mode & EXTMODE_POST_DELAYED)
+		{
+			set_user_invisible(client, channel, 0);
+			if (!channel_has_invisible_users(channel))
+				clear_post_delayed(channel);
+		}
 	}
-
 	return 0;
 }
+
+// moded_kick ??
 
 int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode)
 {
@@ -306,6 +209,7 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, con
 	// Handle case where we just unset +D but have invisible users
 	if (!channel_is_delayed(channel) && !channel_is_post_delayed(channel) && channel_has_invisible_users(channel))
 		set_post_delayed(channel);
+	// And even going from +d (back) to +D again by user request
 	else if (channel_is_delayed(channel) && channel_is_post_delayed(channel))
 		clear_post_delayed(channel);
 
@@ -322,7 +226,7 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, con
 				if (!user)
 					continue;
 
-				if (moded_user_invisible(user, channel))
+				if (invisible_user_in_channel(user, channel))
 					clear_user_invisible_announce(channel, user, recv_mtags);
 
 				if (pm.modechar == 'v' || !MyConnect(user))
@@ -333,7 +237,7 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, con
 				{
 					if (i->client == user)
 						continue;
-					if (moded_user_invisible(i->client, channel))
+					if (invisible_user_in_channel(i->client, channel))
 					{
 						MessageTag *mtags = NULL;
 						new_message_special(i->client, recv_mtags, &mtags, ":%s JOIN %s", i->client->name, channel->name);
@@ -359,7 +263,7 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, con
 				if (!user)
 					continue;
 
-				if (moded_user_invisible(user, channel))
+				if (invisible_user_in_channel(user, channel))
 					clear_user_invisible_announce(channel, user, recv_mtags);
 
 				if (pm.modechar == 'v' || !MyConnect(user))
@@ -370,7 +274,7 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, con
 				{
 					if (i->client == user)
 						continue;
-					if (moded_user_invisible(i->client, channel))
+					if (invisible_user_in_channel(i->client, channel))
 					{
 						MessageTag *mtags = NULL;
 						new_message_special(i->client, recv_mtags, &mtags, ":%s PART %s", i->client->name, channel->name);
@@ -388,18 +292,8 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, con
 
 int moded_prechanmsg(Client *client, Channel *channel, MessageTag **mtags, const char *text, SendType sendtype)
 {
-	if ((channel_is_delayed(channel) || channel_is_post_delayed(channel)) && (moded_user_invisible(client, channel)))
+	if (IsUser(client) && (channel_is_delayed(channel) || channel_is_post_delayed(channel)) && (invisible_user_in_channel(client, channel)))
 		clear_user_invisible_announce(channel, client, *mtags);
 
 	return 0;
-}
-
-const char *moded_serialize(ModData *m)
-{
-	return m->i ? "1" : "0";
-}
-
-void moded_unserialize(const char *str, ModData *m)
-{
-	m->i = atoi(str);
 }

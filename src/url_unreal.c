@@ -59,8 +59,9 @@ struct Download
 	char *username;
 	char *password;
 	char *document;		/**< Parsed document (from 'url') */
-	char *ip;		/**< Resolved IP */
-	int ipv6;
+	char *ip4;		/**< Resolved IP (IPv4) */
+	char *ip6;		/**< Resolved IP (IPv6) */
+	SocketType socket_type;	/**< Socket type that we are trying (SOCKET_TYPE_IPV4 or SOCKET_TYPE_IPV6) */
 	SSL *ssl;
 	int fd;			/**< Socket */
 	int connected;
@@ -84,7 +85,6 @@ SSL_CTX *https_ctx = NULL;
 void url_resolve_cb(void *arg, int status, int timeouts, struct hostent *he);
 void unreal_https_initiate_connect(Download *handle);
 int url_parse(const char *url, char **host, int *port, char **username, char **password, char **document);
-SSL_CTX *https_new_ctx(void);
 void unreal_https_connect_handshake(int fd, int revents, void *data);
 int https_connect(Download *handle);
 int https_fatal_tls_error(int ssl_error, int my_errno, Download *handle);
@@ -117,7 +117,8 @@ void url_free_handle(Download *handle)
 	safe_free(handle->username);
 	safe_free(handle->password);
 	safe_free(handle->document);
-	safe_free(handle->ip);
+	safe_free(handle->ip4);
+	safe_free(handle->ip6);
 	if (handle->ssl)
 		SSL_free(handle->ssl);
 	safe_free(handle->lefttoparse);
@@ -225,13 +226,16 @@ void url_start_async(OutgoingWebRequest *request)
 	if (is_valid_ip(handle->hostname))
 	{
 		/* Nothing to resolve, eg https://127.0.0.1/ */
-		safe_strdup(handle->ip, handle->hostname);
+		if (strchr(handle->hostname, ':'))
+			safe_strdup(handle->ip6, handle->hostname);
+		else
+			safe_strdup(handle->ip4, handle->hostname);
 		unreal_https_initiate_connect(handle);
 	} else {
 		/* Hostname, so start resolving... */
-		handle->dns_refcnt++;
+		handle->dns_refcnt += 2;
 		ares_gethostbyname(resolver_channel_client, handle->hostname, AF_INET, url_resolve_cb, handle);
-		// TODO: check return value?
+		ares_gethostbyname(resolver_channel_client, handle->hostname, AF_INET6, url_resolve_cb, handle);
 	}
 }
 
@@ -247,46 +251,83 @@ void url_resolve_cb(void *arg, int status, int timeouts, struct hostent *he)
 
 	if ((status != 0) || !he->h_addr_list || !he->h_addr_list[0])
 	{
-		https_cancel(handle, "Unable to resolve hostname '%s'", handle->hostname);
-		return;
-	}
-
-	if (!he->h_addr_list[0] || (he->h_length != (handle->ipv6 ? 16 : 4)) ||
-	    !(ip = inetntop(handle->ipv6 ? AF_INET6 : AF_INET, he->h_addr_list[0], ipbuf, sizeof(ipbuf))))
+		if ((handle->dns_refcnt == 0) && !handle->ip4 && !handle->ip6)
+		{
+			https_cancel(handle, "Unable to resolve hostname '%s'", handle->hostname);
+			return;
+		}
+	} else
 	{
-		/* Illegal response -- fatal */
+		if (he->h_addr_list[0])
+		{
+			if (he->h_length == 16)
+				ip = inetntop(AF_INET6, he->h_addr_list[0], ipbuf, sizeof(ipbuf));
+			else if (he->h_length == 4)
+				ip = inetntop(AF_INET, he->h_addr_list[0], ipbuf, sizeof(ipbuf));
+			// else fallthrough, ip stays NULL
+		}
+
+		if (ip)
+		{
+			if (he->h_length == 16)
+				safe_strdup(handle->ip6, ip);
+			else
+				safe_strdup(handle->ip4, ip);
+		} else
+		if ((handle->dns_refcnt == 0) && !handle->ip4 && !handle->ip6)
+		{
+			https_cancel(handle, "Unable to resolve hostname '%s'", handle->hostname);
+			return;
+		}
+	}
+
+	/* Still an outstanding request? Then we will handle things later. */
+	if (handle->dns_refcnt > 0)
+		return;
+
+	/* Ok we are done resolving IPv4 and IPv6. Handle the easy "all failed" case. */
+	if (!handle->ip4 && !handle->ip6)
+	{
 		https_cancel(handle, "Unable to resolve hostname '%s'", handle->hostname);
 		return;
 	}
 
-	/* Ok, since we got here, it seems things were actually succesfull */
-
-	safe_strdup(handle->ip, ip);
-
+	if (handle->ip4)
+		handle->socket_type = SOCKET_TYPE_IPV4;
+	else
+		handle->socket_type = SOCKET_TYPE_IPV6;
 	unreal_https_initiate_connect(handle);
 }
 
 void unreal_https_initiate_connect(Download *handle)
 {
-	// todo: allocate handle, select en weetikt allemaal
-	// add to some global struct linkedlist, for timeouts
-	// register in i/o
-
-	if (!handle->ip)
-	{
-		https_cancel(handle, "No IP address found to connect to");
-		return;
-	}
-
-	handle->fd = fd_socket(handle->ipv6 ? AF_INET6 : AF_INET, SOCK_STREAM, 0, "HTTPS");
+	handle->fd = fd_socket(handle->socket_type == SOCKET_TYPE_IPV6 ? AF_INET6 : AF_INET, SOCK_STREAM, 0, "HTTPS");
 	if (handle->fd < 0)
 	{
+		/* IPv4 gave an early error (eg no IPv4 supported). Can we retry over IPv6? */
+		if ((handle->socket_type == SOCKET_TYPE_IPV4) && handle->ip6 && !DISABLE_IPV6)
+		{
+			handle->socket_type = SOCKET_TYPE_IPV6;
+			unreal_https_initiate_connect(handle);
+			return;
+		}
 		https_cancel(handle, "Could not create socket: %s", strerror(ERRNO));
 		return;
 	}
-	set_sock_opts(handle->fd, NULL, handle->ipv6);
-	if (!unreal_connect(handle->fd, handle->ip, handle->port, handle->ipv6))
+	set_sock_opts(handle->fd, NULL, handle->socket_type);
+	if (!unreal_connect(handle->fd,
+	                    (handle->socket_type == SOCKET_TYPE_IPV4) ? handle->ip4 : handle->ip6,
+	                    handle->port,
+	                    handle->socket_type))
 	{
+		/* IPv4 gave an early error (eg no IPv4 connectivity). Can we retry over IPv6? */
+		if ((handle->socket_type == SOCKET_TYPE_IPV4) && handle->ip6 && !DISABLE_IPV6)
+		{
+			fd_close(handle->fd);
+			handle->socket_type = SOCKET_TYPE_IPV6;
+			unreal_https_initiate_connect(handle);
+			return;
+		}
 		https_cancel(handle, "Could not connect: %s", strerror(ERRNO));
 		return;
 	}
@@ -298,12 +339,37 @@ void unreal_https_initiate_connect(Download *handle)
 void unreal_https_connect_handshake(int fd, int revents, void *data)
 {
 	Download *handle = data;
+	int sockerr;
+	int len = sizeof(sockerr);
+
+	/* Let's first see if the TCP/IP connect succeeded... */
+	if (!getsockopt(fd, SOL_SOCKET, SO_ERROR, (void *)&sockerr, &len) && sockerr)
+	{
+		/* We tried IPv4, can we retry over IPv6? Then we don't report an error and try IPv6. */
+		if ((handle->socket_type == SOCKET_TYPE_IPV4) && handle->ip6 && !DISABLE_IPV6)
+		{
+			fd_close(handle->fd);
+			fd_unnotify(handle->fd);
+			handle->socket_type = SOCKET_TYPE_IPV6;
+			unreal_https_initiate_connect(handle);
+			return;
+		} else {
+			/* Fatal error */
+			https_cancel(handle, "Connect failed: %s", STRERROR(sockerr));
+			return;
+		}
+	}
+
 	handle->ssl = SSL_new(https_ctx);
 	if (!handle->ssl)
 	{
 		https_cancel(handle, "Failed to setup SSL");
 		return;
 	}
+#ifdef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
+	if (handle->request->minimum_tls_version)
+		SSL_set_min_proto_version(handle->ssl, handle->request->minimum_tls_version);
+#endif
 	SSL_set_fd(handle->ssl, handle->fd);
 	SSL_set_connect_state(handle->ssl);
 	SSL_set_nonblocking(handle->ssl);
@@ -313,55 +379,6 @@ void unreal_https_connect_handshake(int fd, int revents, void *data)
 		return; /* fatal error, handle is freed */
 
 	/* Is now connecting... */
-}
-
-SSL_CTX *https_new_ctx(void)
-{
-	SSL_CTX *ctx_client;
-	char buf1[512], buf2[512];
-	char *curl_ca_bundle = buf1;
-
-	SSL_load_error_strings();
-	SSLeay_add_ssl_algorithms();
-
-	ctx_client = SSL_CTX_new(SSLv23_client_method());
-	if (!ctx_client)
-		return NULL;
-#ifdef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
-	SSL_CTX_set_min_proto_version(ctx_client, TLS1_2_VERSION);
-#endif
-	SSL_CTX_set_options(ctx_client, SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3|SSL_OP_NO_TLSv1|SSL_OP_NO_TLSv1_1);
-
-	/* Verify peer certificate */
-	snprintf(buf1, sizeof(buf1), "%s/tls/curl-ca-bundle.crt", CONFDIR);
-	if (!file_exists(buf1))
-	{
-		snprintf(buf2, sizeof(buf2), "%s/doc/conf/tls/curl-ca-bundle.crt", BUILDDIR);
-		if (!file_exists(buf2))
-		{
-			unreal_log(ULOG_ERROR, "url", "CA_BUNDLE_NOT_FOUND", NULL,
-			           "Neither $filename1 nor $filename2 exist.\n"
-			           "Cannot use built-in https client without curl-ca-bundle.crt\n",
-			           log_data_string("filename1", buf1),
-			           log_data_string("filename2", buf2));
-			exit(-1);
-		}
-		curl_ca_bundle = buf2;
-	}
-	SSL_CTX_load_verify_locations(ctx_client, curl_ca_bundle, NULL);
-	SSL_CTX_set_verify(ctx_client, SSL_VERIFY_PEER, NULL);
-
-	/* Limit ciphers as well */
-	SSL_CTX_set_cipher_list(ctx_client, UNREALIRCD_DEFAULT_CIPHERS);
-
-	/* And TLS groups */
-#if defined(HAS_SSL_CTX_SET1_CURVES_LIST) || defined(HAS_SSL_CTX_SET1_GROUPS_LIST)
-	if (!unrealircd_set_tls_groups(ctx_client, UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY))
-		if (!unrealircd_set_tls_groups(ctx_client, UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY))
-			if (!unrealircd_set_tls_groups(ctx_client, UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY))
-				;
-#endif
-	return ctx_client;
 }
 
 // Based on unreal_tls_connect_retry

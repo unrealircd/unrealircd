@@ -12,7 +12,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"utf8functions",
-	"1.0.0",
+	"1.0.1",
 	"UTF8 helper functions",
 	"UnrealIRCd Team",
 	"unrealircd-6",
@@ -5852,6 +5852,16 @@ int utf8_text_analysis(Client *client, const char *text, TextAnalysis *e)
 				e->unicode_blocks++;
 			if (e->unicode_blockmap[current_script] < 255)
 				e->unicode_blockmap[current_script]++;
+
+			/* For antimixedutf8 scores (script changes) we do some
+			 * remapping. This so several blocks are treated as the same.
+			 * At the moment this is only:
+			 * * Latin-1 Supplement, Latin Extended-A, Latin Extended-B
+			 *   => Basic Latin
+			 */
+			if (current_script <= 3)
+				current_script = 0;
+
 			if ((current_script != last_script) && (last_script != SCRIPT_UNDEFINED))
 			{
 				/* Script change: add X point(s) */

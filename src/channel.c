@@ -120,13 +120,13 @@ static Member *make_member(void)
 		for (i = 1; i <= (4072/sizeof(Member)); ++i)
 		{
 			lp = safe_alloc(sizeof(Member));
-			lp->next = freemember;
-			freemember = lp;
+			AddListItem(lp, freemember);
 		}
 	}
+	/* Now take the first entry */
 	lp = freemember;
-	freemember = freemember->next;
-	lp->next = NULL;
+	DelListItem(lp, freemember);
+	memset(lp, 0, sizeof(Member));
 	return lp;
 }
 
@@ -137,8 +137,7 @@ static void free_member(Member *lp)
 		return;
 	moddata_free_member(lp);
 	memset(lp, 0, sizeof(Member));
-	lp->next = freemember;
-	freemember = lp;
+	AddListItem(lp, freemember);
 }
 
 /** Allocate and return an empty Membership struct */
@@ -152,17 +151,12 @@ static Membership *make_membership(void)
 		for (i = 1; i <= (4072/sizeof(Membership)); i++)
 		{
 			m = safe_alloc(sizeof(Membership));
-			m->next = freemembership;
-			freemembership = m;
+			AddListItem(m, freemembership);
 		}
-		m = freemembership;
-		freemembership = m->next;
 	}
-	else
-	{
-		m = freemembership;
-		freemembership = freemembership->next;
-	}
+	/* Now take the first entry */
+	m = freemembership;
+	DelListItem(m, freemembership);
 	memset(m, 0, sizeof(Membership));
 	return m;
 }
@@ -174,8 +168,7 @@ static void free_membership(Membership *m)
 	{
 		moddata_free_membership(m);
 		memset(m, 0, sizeof(Membership));
-		m->next = freemembership;
-		freemembership = m;
+		AddListItem(m, freemembership);
 	}
 }
 
@@ -522,23 +515,37 @@ int ban_exists_ignore_time(Ban *lst, const char *str)
 void add_user_to_channel(Channel *channel, Client *client, const char *modes)
 {
 	Member *m;
+	LocalMember *lm = NULL;
 	Membership *mb;
 	const char *p;
 
 	if (!client->user)
 		return;
 
+	/* Add to channel->members */
 	m = make_member();
 	m->client = client;
-	m->next = channel->members;
-	channel->members = m;
+	AddListItem(m, channel->members);
 	channel->users++;
 
+	if (MyConnect(client))
+	{
+		/* Add to channel->local_members */
+		lm = safe_alloc(sizeof(LocalMember));
+		lm->ptr = m;
+		AddListItem(lm, channel->local_members);
+	}
+
+	/* Add to client->user->channel */
 	mb = make_membership();
 	mb->channel = channel;
-	mb->next = client->user->channel;
-	client->user->channel = mb;
+	AddListItem(mb, client->user->channel);
 	client->user->joined++;
+
+	/* Set friend relationships */
+	m->related = mb;
+	m->local_member = lm;
+	mb->related = m;
 
 	for (p = modes; *p; p++)
 		add_member_mode_fast(m, mb, *p);
@@ -546,43 +553,32 @@ void add_user_to_channel(Channel *channel, Client *client, const char *modes)
 	RunHook(HOOKTYPE_JOIN_DATA, client, channel);
 }
 
-/** Remove the user from the channel.
+/** Remove the user from the channel - with membership entry.
  * This frees the memberships, decreases the user counts,
  * destroys the channel if needed, etc.
  * This does not send any PART/KICK/..!
  * @param client	The client that is removed from the channel
  * @param channel	The channel
+ * @param mb		The membership entry
  * @param dont_log	Set to 1 if it should not be logged as a part,
  *                      for example if you are already logging it as a kick.
  */
-int remove_user_from_channel(Client *client, Channel *channel, int dont_log)
+int remove_user_from_channel_withmb(Client *client, Channel *channel, Membership *mb, int dont_log)
 {
-	Member **m;
-	Member *m2;
-	Membership **mb;
-	Membership *mb2;
-
-	/* Update channel->members list */
-	for (m = &channel->members; (m2 = *m); m = &m2->next)
+	/* Find & free related LocalMember */
+	if (mb->related->local_member)
 	{
-		if (m2->client == client)
-		{
-			*m = m2->next;
-			free_member(m2);
-			break;
-		}
+		DelListItem(mb->related->local_member, channel->local_members);
+		safe_free(mb->related->local_member);
 	}
 
-	/* Update client->user->channel list */
-	for (mb = &client->user->channel; (mb2 = *mb); mb = &mb2->next)
-	{
-		if (mb2->channel == channel)
-		{
-			*mb = mb2->next;
-			free_membership(mb2);
-			break;
-		}
-	}
+	/* Now find & free related Member */
+	DelListItem(mb->related, channel->members);
+	free_member(mb->related);
+
+	/* And finally, free the Membership */
+	DelListItem(mb, client->user->channel);
+	free_membership(mb);
 
 	/* Update user record to reflect 1 less joined */
 	client->user->joined--;
@@ -605,6 +601,31 @@ int remove_user_from_channel(Client *client, Channel *channel, int dont_log)
 	 * and destroy the channel if needed.
 	 */
 	return sub1_from_channel(channel);
+}
+
+/** Remove the user from the channel.
+ * This frees the memberships, decreases the user counts,
+ * destroys the channel if needed, etc.
+ * This does not send any PART/KICK/..!
+ * @param client	The client that is removed from the channel
+ * @param channel	The channel
+ * @param dont_log	Set to 1 if it should not be logged as a part,
+ *                      for example if you are already logging it as a kick.
+ */
+int remove_user_from_channel(Client *client, Channel *channel, int dont_log)
+{
+	Membership *mb;
+	int found = 0;
+
+	for (mb = client->user->channel; mb; mb = mb->next)
+		if (mb->channel == channel)
+			return remove_user_from_channel_withmb(client, channel, mb, dont_log);
+
+	/* If we get here, the entry was not found */
+#ifdef DEBUGMODE
+	abort(); /* This should never happen, right? */
+#endif
+	return 0;
 }
 
 /** Returns 1 if channel has this channel mode set and 0 if not */
@@ -1295,16 +1316,36 @@ int user_can_see_member_fast(Client *user, Client *target, Channel *channel, Mem
 	if (user == target)
 		return 1;
 
-	for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+	/* Requested to hide the person, but make sure neither one is +hoaq... */
+	if ((target_member->memb_flags & MEMB_FLAG_INVISIBLE) &&
+	    !check_channel_access_member(target_member, "vhoaq") &&
+	    !(user_member_modes && check_channel_access_string(user_member_modes, "hoaq")))
 	{
-		j = (*(h->func.intfunc))(target, channel, target_member);
-		if (j != 0)
-			break;
+		return 0;
 	}
 
+	return 1;
+}
+
+/** Returns 1 if user 'user' can see channel member 'target' - fast version.
+ * This may return 0 if the user is 'invisible' due to mode +D rules.
+ * @param user			The user who is looking around
+ * @param target		The target user who is being investigated
+ * @param channel		The channel
+ * @param target_member		The Member * struct of 'target'
+ * @param user_member_modes	The member modes that 'user' has, eg "o". Can be NULL if not in channel.
+ */
+int user_can_see_membership_fast(Client *user, Client *target, Channel *channel, Membership *target_member, const char *user_member_modes)
+{
+	Hook *h;
+	int j = 0;
+
+	if (user == target)
+		return 1;
+
 	/* Requested to hide the person, but make sure neither one is +hoaq... */
-	if ((j != 0) &&
-	    !check_channel_access_member(target_member, "vhoaq") &&
+	if ((target_member->memb_flags & MEMB_FLAG_INVISIBLE) &&
+	    !check_channel_access_membership(target_member, "vhoaq") &&
 	    !(user_member_modes && check_channel_access_string(user_member_modes, "hoaq")))
 	{
 		return 0;
@@ -1320,7 +1361,7 @@ int user_can_see_member_fast(Client *user, Client *target, Channel *channel, Mem
 int user_can_see_member(Client *user, Client *target, Channel *channel)
 {
 	Membership *user_member = NULL;
-	Member *target_member = NULL;
+	Membership *target_member = NULL;
 
 	if (user == target)
 		return 1;
@@ -1329,41 +1370,62 @@ int user_can_see_member(Client *user, Client *target, Channel *channel)
 		user_member = find_membership_link(user->user->channel, channel);
 
 	if (IsUser(target))
-		target_member = find_member_link(channel->members, target); // SLOW!
+		target_member = find_membership_link(target->user->channel, channel);
 
 	/* User is not in channel, yeah what shall we return? :D */
 	if (!target_member)
 		return 0;
 
-	return user_can_see_member_fast(user, target, channel, target_member, user_member ? user_member->member_modes : NULL);
+	return user_can_see_membership_fast(user, target, channel, target_member, user_member ? user_member->member_modes : NULL);
 }
 
-/** Returns 1 if user 'target' is invisible in channel 'channel'.
- * This may return 0 if the user is 'invisible' due to mode +D rules.
- */
+/** Returns 1 if user 'target' is invisible in channel 'channel' */
 int invisible_user_in_channel(Client *target, Channel *channel)
 {
 	Hook *h;
-	Member *target_member;
+	Membership *target_member;
 	int j = 0;
 
-	target_member = find_member_link(channel->members, target); // SLOW!
+	target_member = find_membership_link(target->user->channel, channel);
 	if (!target_member)
 		return 0; /* not in channel */
 
-	for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-	{
-		j = (*(h->func.intfunc))(target,channel,target_member);
-		if (j != 0)
-			break;
-	}
-
-	/* We must ensure that user is allowed to "see" target */
-	// SLOW !!!
-	if (j != 0 && !(check_channel_access(target, channel, "hoaq") || check_channel_access(target,channel, "v")))
+	if (target_member->memb_flags & MEMB_FLAG_INVISIBLE)
 		return 1;
 
 	return 0;
+}
+
+int channel_has_invisible_users(Channel *channel)
+{
+	Member *mb;
+
+	for (mb = channel->members; mb; mb = mb->next)
+		if (mb->memb_flags & MEMB_FLAG_INVISIBLE)
+			return 1;
+
+	return 0;
+}
+
+void set_user_invisible(Client *client, Channel *channel, int invisible)
+{
+	Membership *m;
+
+	if (!IsUser(client))
+		return;
+
+	m = find_membership_link(client->user->channel, channel);
+	if (!m)
+		return;
+
+	if (invisible)
+	{
+		m->memb_flags |= MEMB_FLAG_INVISIBLE;
+		m->related->memb_flags |= MEMB_FLAG_INVISIBLE;
+	} else {
+		m->memb_flags &= ~MEMB_FLAG_INVISIBLE;
+		m->related->memb_flags &= ~MEMB_FLAG_INVISIBLE;
+	}
 }
 
 /** Send a message to the user that (s)he is using an invalid channel name.

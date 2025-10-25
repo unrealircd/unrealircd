@@ -68,7 +68,13 @@ int away_join(Client *client, Channel *channel, MessageTag *mtags)
 {
 	Member *lp;
 	Client *acptr;
-	int invisible = invisible_user_in_channel(client, channel);
+	int invisible;
+
+	if (!client->user->away)
+		return 0; /* Nothing to do */
+
+	invisible = invisible_user_in_channel(client, channel);
+
 	for (lp = channel->members; lp; lp = lp->next)
 	{
 		acptr = lp->client;
@@ -79,7 +85,7 @@ int away_join(Client *client, Channel *channel, MessageTag *mtags)
 		if (invisible && !check_channel_access_member(lp, "hoaq") && (client != acptr))
 			continue; /* skip non-ops if requested to (used for mode +D), but always send to 'client' */
 
-		if (client->user->away && HasCapabilityFast(acptr, CAP_AWAY_NOTIFY))
+		if (HasCapabilityFast(acptr, CAP_AWAY_NOTIFY))
 		{
 			MessageTag *mtags_away = NULL;
 			new_message(client, NULL, &mtags_away);
@@ -96,7 +102,8 @@ CMD_FUNC(cmd_away)
 {
 	char reason[512];
 	int n, already_as_away = 0;
-	MessageTag *mtags = NULL;
+	MessageTag *mtags = NULL, *m;
+	time_t t;
 
 	if (IsServer(client))
 		return;
@@ -142,8 +149,10 @@ CMD_FUNC(cmd_away)
 		return;
 
 	/* All tests passed. Now marking as away (or still away but changing the away reason) */
-
-	client->user->away_since = TStime();
+	if ((m = find_mtag(recv_mtags, "time")) && (t = server_time_to_unix_time(m->value)))
+		client->user->away_since = t;
+	else
+		client->user->away_since = TStime();
 	
 	new_message(client, recv_mtags, &mtags);
 

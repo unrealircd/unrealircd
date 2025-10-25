@@ -40,6 +40,7 @@ struct LabeledResponseContext {
 	int responses; /**< Number of lines sent back to client */
 	int sent_remote; /**< Command has been sent to remote server */
 	char firstbuf[MAXLINELENGTH]; /**< First buffered response */
+	// NOTE: if you add members to the above, be sure to add some code in lr_clear()
 };
 
 /* Forward declarations */
@@ -111,10 +112,28 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
+void lr_clear(void)
+{
+	labeled_response_inhibit = labeled_response_inhibit_end = labeled_response_force = 0;
+
+	/* We also used to do...
+	 * memset(&currentcmd, 0, sizeof(currentcmd));
+	 * ..but the struct is now 16k+ and zeroing 16k memory is a bit of
+	 * a wasteful operation. We now explicitly zero members (well, only
+	 * the 1st byte in case of a string).
+	 */
+	currentcmd.client = NULL;
+	*currentcmd.label = '\0';
+	*currentcmd.batch = '\0';
+	currentcmd.responses = 0;
+	currentcmd.sent_remote = 0;
+	*currentcmd.firstbuf = '\0';
+	// If you ever add members to LabeledResponseContext then add zeroing above.
+}
+
 int lr_pre_command(Client *from, MessageTag *mtags, const char *buf)
 {
-	memset(&currentcmd, 0, sizeof(currentcmd));
-	labeled_response_inhibit = labeled_response_inhibit_end = labeled_response_force = 0;
+	lr_clear();
 
 	if (IsServer(from))
 		return 0;
@@ -159,8 +178,7 @@ char *gen_start_batch(void)
 int lr_post_command(Client *from, MessageTag *mtags, const char *buf)
 {
 	/* ** IMPORTANT **
-	 * Take care NOT to return here, use 'goto done' instead
-	 * as some variables need to be cleared.
+	 * Always call lr_clear() before you return!!
 	 */
 
 	/* We may have to send a response or end a BATCH here, if all of
@@ -187,7 +205,8 @@ int lr_post_command(Client *from, MessageTag *mtags, const char *buf)
 			memset(&currentcmd, 0, sizeof(currentcmd));
 			sendto_one(from, m, ":%s ACK", me.name);
 			free_message_tags(m);
-			goto done;
+			lr_clear();
+			return 0;
 		} else
 		if (currentcmd.responses == 1)
 		{
@@ -206,7 +225,8 @@ int lr_post_command(Client *from, MessageTag *mtags, const char *buf)
 			 */
 			strlcat(packet, "\r\n", sizeof(packet));
 			sendbufto_one(from, packet, strlen(packet));
-			goto done;
+			lr_clear();
+			return 0;
 		}
 
 		/* End the batch */
@@ -220,9 +240,8 @@ int lr_post_command(Client *from, MessageTag *mtags, const char *buf)
 				sendto_one(from, NULL, ":%s BATCH %s -%s", me.name, savedptr->name, currentcmd.batch);
 		}
 	}
-done:
-	memset(&currentcmd, 0, sizeof(currentcmd));
-	labeled_response_inhibit = labeled_response_inhibit_end = labeled_response_force = 0;
+
+	lr_clear();
 	return 0;
 }
 

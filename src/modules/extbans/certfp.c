@@ -1,5 +1,5 @@
 /*
- * Extended ban to ban/exempt by certificate fingerprint (+b ~S:certfp)
+ * Extended ban to ban/exempt by certificate fingerprint (+b ~certfp:certfp)
  * (C) Copyright 2015 The UnrealIRCd Team
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,7 +22,7 @@ ModuleHeader MOD_HEADER
 = {
 	"extbans/certfp",
 	"4.2",
-	"ExtBan ~S - Ban/exempt by SHA256 TLS certificate fingerprint",
+	"ExtBan ~certfp - Ban/exempt by SHA256 TLS certificate fingerprint",
 	"UnrealIRCd Team",
 	"unrealircd-6",
 };
@@ -89,8 +89,8 @@ MOD_UNLOAD()
 
 int extban_certfp_usage(Client *client)
 {
-	sendnotice(client, "ERROR: ExtBan ~S expects an SHA256 fingerprint in hexadecimal format (no colons). "
-					 "For example: +e ~S:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef)");
+	sendnotice(client, "ERROR: ExtBan ~certfp expects an SHA256 fingerprint in hexadecimal format (no colons). "
+					 "For example: +e ~certfp:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef)");
 	return EX_DENY;
 }
 

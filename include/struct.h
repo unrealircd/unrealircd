@@ -143,6 +143,7 @@ typedef struct RealCommand RealCommand;
 typedef struct CommandOverride CommandOverride;
 typedef struct Member Member;
 typedef struct Membership Membership;
+typedef struct LocalMember LocalMember;
 
 typedef struct OutgoingWebRequest OutgoingWebRequest;
 typedef struct OutgoingWebResponse OutgoingWebResponse;
@@ -209,6 +210,8 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 
 #define	USERHOST_REPLYLEN	(NICKLEN+HOSTLEN+USERLEN+5)
 
+#define ISUPPORTLEN BUFSIZE-HOSTLEN-NICKLEN-39
+
 /* NOTE: this must be down here so the stuff from struct.h IT uses works */
 #include "whowas.h"
 
@@ -249,6 +252,7 @@ typedef enum LogLevel {
 	ULOG_INVALID = 0,
 	ULOG_DEBUG = 1000,
 	ULOG_INFO = 2000,
+	ULOG_ADVICE = 2500,
 	ULOG_WARNING = 3000,
 	ULOG_ERROR = 4000,
 	ULOG_FATAL = 5000
@@ -606,7 +610,7 @@ typedef enum ClientStatus {
 #define GetHost(x)	(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
 #define GetIP(x)	(x->ip ? x->ip : "255.255.255.255")
 #define IsLoggedIn(x)	(x->user && (*x->user->account != '*') && !isdigit(*x->user->account)) /**< Logged into services */
-#define IsSynched(x)	(x->server->flags.synced)
+#define IsSynched(x)	((x->server->flags.synced) && (x->direction->server->flags.synced))
 #define IsServerSent(x) (x->server && x->server->flags.server_sent)
 
 /* And more that access client stuff - but actually modularized */
@@ -799,6 +803,8 @@ struct NameList {
 
 /** Free an entire NameList */
 #define free_entire_name_list(list) do { _free_entire_name_list(list); list = NULL; } while(0)
+#define safe_free_name_list free_entire_name_list
+
 /** Add an entry to a NameList */
 #define add_name_list(list, str)  _add_name_list(&list, str)
 /** Delete an entry from a NameList - AND free it */
@@ -1413,6 +1419,7 @@ extern void moddata_init(void);
 extern ModDataInfo *ModDataAdd(Module *module, ModDataInfo req);
 extern void ModDataDel(ModDataInfo *md);
 extern void unload_all_unused_moddata(void);
+extern void moddatatype_dump(Client *client);
 
 #define LISTENER_NORMAL			0x000001
 #define LISTENER_CLIENTSONLY		0x000002
@@ -1519,7 +1526,7 @@ struct LocalClient {
 	dbuf recvQ;			/**< Incoming receive queue (incoming data yet to be parsed) */
 	ConfigItem_class *class;	/**< The class { } block associated to this client */
 	int proto;			/**< PROTOCTL options */
-	long caps;			/**< User: enabled capabilities (via CAP command) */
+	uint64_t caps;			/**< User: enabled capabilities (via CAP command) */
 	time_t nexttarget;		/**< Next time that a new target will be allowed (msg/notice/invite) */
 	u_char targets[MAXCCUSERS];	/**< Hash values of targets for target limiting */
 	ConfigItem_listen *listener;	/**< If this client IsListening() then this is the listener configuration attached to it */
@@ -1540,7 +1547,6 @@ struct LocalClient {
 	int identbufcnt;		/**< Counter for 'ident' reading code */
 	struct hostent *hostp;		/**< Host record for this client (used by DNS code) */
 	char sockhost[HOSTLEN + 1];	/**< Hostname from the socket */
-	u_short port;			/**< Remote TCP port of client */
 	FloodCounter flood[MAXFLOODOPTIONS];
 	RPCClient *rpc;			/**< RPC Client, or NULL */
 	Tag *tags;			/**< Tags from spamfilter */
@@ -1634,6 +1640,7 @@ typedef struct AuthConfig AuthConfig;
  * configuration file.
  */
 struct AuthConfig {
+	AuthConfig		*prev, *next;
 	AuthenticationType	type;  /**< Type of data, one of AUTHTYPE_* */
 	char			*data; /**< Data associated with this record */
 };
@@ -1849,13 +1856,14 @@ struct ConfigItem_oper {
  */
 typedef struct TLSOptions TLSOptions;
 struct TLSOptions {
-	char *certificate_file;
-	char *key_file;
+	NameList *certificate_files;
+	NameList *key_files;
 	char *trusted_ca_file;
 	unsigned int protocols;
 	char *ciphers;
 	char *ciphersuites;
 	char *groups;
+	char *signature_algorithms;
 	char *outdated_protocols;
 	char *outdated_ciphers;
 	long options;
@@ -1948,9 +1956,10 @@ struct OutgoingWebRequest
 	int keep_file; /**< Normally, if store_in_file is set to 1, the downloaded file is deleted after the callback function was called. If you set this to 1 then the file is not removed. */
 	int connect_timeout; /**< How many seconds to wait for the (TLS) connect to succeed */
 	int transfer_timeout; /**< How many seconds the total transfer may take (connect+reading everything) */
-	// If you are adding allocated fields here:
+	int minimum_tls_version;
+	// If you are adding fields here:
 	// 1) update duplicate_outgoingwebrequest() in src/misc.c
-	// 2) and update free_outgoingwebrequest() there as well
+	// 2) and update free_outgoingwebrequest() there as well (if something needs to be freed)
 };
 
 /** The result of an HTTP(S) call, such as the downloaded file, error, etc. */
@@ -2243,6 +2252,7 @@ struct SecurityGroup {
 	int tls;
 	NameList *ip;
 	ConfigItem_mask *mask;
+	NameList *server_port;
 	NameList *security_group;
 	char *prettyrule; /* ::rule as a string */
 	CRuleNode *rule; /**< parsed crule */
@@ -2257,6 +2267,7 @@ struct SecurityGroup {
 	int exclude_tls;
 	NameList *exclude_ip;
 	ConfigItem_mask *exclude_mask;
+	NameList *exclude_server_port;
 	NameList *exclude_security_group;
 	char *exclude_prettyrule; /* ::exclude-rule as a string */
 	CRuleNode *exclude_rule; /**< parsed crule */
@@ -2381,6 +2392,7 @@ struct Channel {
 	time_t topic_time;			/**< Time at which the topic was last set */
 	int users;				/**< Number of users in the channel */
 	Member *members;			/**< List of channel members (users in the channel) */
+	LocalMember *local_members;		/**< List of channel members (users in the channel) */
 	Ban *banlist;				/**< List of bans (+b) */
 	Ban *exlist;				/**< List of ban exceptions (+e) */
 	Ban *invexlist;				/**< List of invite exceptions (+I) */
@@ -2389,6 +2401,8 @@ struct Channel {
 	char name[CHANNELLEN+1];		/**< Channel name */
 };
 
+#define MEMB_FLAG_INVISIBLE	0x1
+
 /** user/channel member struct (channel->members).
  * This is Member which is used in the linked list channel->members for each channel.
  * There is also Membership which is used in client->user->channels (see Membership for that).
@@ -2396,10 +2410,13 @@ struct Channel {
  */
 struct Member
 {
-	struct Member *next;				/**< Next entry in list */
+	struct Member *prev, *next;			/**< Previous and next entry in list */
 	Client	      *client;				/**< The client */
 	char member_modes[MEMBERMODESLEN];		/**< The access of the user on this channel (eg "vhoqa") */
-	ModData moddata[MODDATA_MAX_MEMBER];		/** Member attached module data, used by the ModData system */
+	Membership *related;				/**< The related Membership item */
+	LocalMember *local_member;
+	ModData moddata[MODDATA_MAX_MEMBER];		/**< Member attached module data, used by the ModData system */
+	int memb_flags;					/**< Special member flags (currently only MEMB_FLAG_INVISIBLE) */
 };
 
 /** user/channel membership struct (client->user->channels).
@@ -2409,10 +2426,22 @@ struct Member
  */
 struct Membership
 {
-	struct Membership 	*next;			/**< Next entry in list */
-	struct Channel		*channel;			/**< The channel */
+	struct Membership 	*prev, *next;		/**< Previous and next entry in list */
+	struct Channel		*channel;		/**< The channel */
 	char member_modes[MEMBERMODESLEN];		/**< The (new) access of the user on this channel (eg "vhoqa") */
+	Member *related;				/**< The related Member item */
 	ModData moddata[MODDATA_MAX_MEMBERSHIP];	/**< Membership attached module data, used by the ModData system */
+	int memb_flags;					/**< Special member flags (currently only MEMB_FLAG_INVISIBLE) */
+};
+
+/** This is used for channel->local_members.
+ * We use these local members for fast local sending,
+ * and channel->members everywhere else.
+ */
+struct LocalMember
+{
+	struct LocalMember *prev, *next;
+	Member *ptr;
 };
 
 /** @} */

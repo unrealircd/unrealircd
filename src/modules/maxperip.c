@@ -340,7 +340,7 @@ int stats_maxperip(Client *client, const char *para)
 		}
 	}
 
-	return 0;
+	return 1;
 }
 
 /** Returns 1 if allow::maxperip is exceeded by 'client' */

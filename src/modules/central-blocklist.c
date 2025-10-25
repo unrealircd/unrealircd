@@ -22,7 +22,7 @@ Module *cbl_module = NULL;
 #define CBL_TRANSFER_TIMEOUT 10
 #define SPAMREPORT_NUM_REMEMBERED_CMDS 20
 
-#define WEB(client)		((WebRequest *)moddata_client(client, webserver_md).ptr)
+#define WEB(client)		((WebRequest *)moddata_local_client(client, webserver_md).ptr)
 #define WSU(client)		((WebSocketUser *)moddata_client(client, websocket_md).ptr)
 
 typedef struct CBLUser CBLUser;
@@ -250,7 +250,7 @@ MOD_LOAD()
 
 	do_command_overrides(modinfo);
 
-	webserver_md = findmoddata_byname("web", MODDATATYPE_CLIENT);
+	webserver_md = findmoddata_byname("web", MODDATATYPE_LOCAL_CLIENT);
 	websocket_md = findmoddata_byname("websocket", MODDATATYPE_CLIENT);
 
 	/* Enable gathering of "last 20 lines" for SPAMREPORT, only if SPAMREPORT is enabled: */
@@ -570,6 +570,7 @@ void cbl_add_client_info(Client *client)
 	json_t *cbl = CBL(client)->handshake;
 	json_t *child = json_object();
 	const char *str;
+	int i;
 
 	json_object_set_new(cbl, "client", child);
 
@@ -607,10 +608,10 @@ void cbl_add_client_info(Client *client)
 		json_object_set_new(child, "details", json_string_unreal(client->name));
 	}
 
-	if (client->local && client->local->listener)
-		json_object_set_new(child, "server_port", json_integer(client->local->listener->port));
-	if (client->local && client->local->port)
-		json_object_set_new(child, "client_port", json_integer(client->local->port));
+	if ((i = get_server_port(client)))
+		json_object_set_new(child, "server_port", json_integer(i));
+	if ((i = get_client_port(client)))
+		json_object_set_new(child, "client_port", json_integer(i));
 
 	if (client->user)
 	{
@@ -1068,6 +1069,9 @@ void send_request_for_pending_clients(void)
 	//w->callback = cbl_download_complete;
 	safe_strdup(w->apicallback, "cbl_download_complete");
 	w->callback_data = c;
+#ifdef TLS1_3_VERSION
+	w->minimum_tls_version = TLS1_3_VERSION;
+#endif
 	url_start_async(w);
 }
 
@@ -1209,6 +1213,9 @@ int _central_spamreport(Client *client, Client *by, const char *url)
 	w->headers = headers;
 	w->max_redirects = 1;
 	w->callback = download_complete_dontcare;
+#ifdef TLS1_3_VERSION
+	w->minimum_tls_version = TLS1_3_VERSION;
+#endif
 	url_start_async(w);
 	return 1;
 }

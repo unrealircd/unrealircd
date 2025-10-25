@@ -273,6 +273,45 @@ const char *myctime(time_t value)
 	return buf;
 }
 
+/** Return the server port the client connected to (e.g. 6697) */
+int get_server_port(Client *client)
+{
+	ModData *m;
+
+	if (MyConnect(client) && client->local->listener)
+		return client->local->listener->port;
+
+	m = moddata_client_get_raw(client, "server_port");
+	if (!m)
+		return 0;
+	return m->i;
+}
+
+/** Return the client-side port (e.g. 60123) for the 'client' connection.
+ * Note: don't confuse this with the server-side port (e.g. 6697).
+ */
+int get_client_port(Client *client)
+{
+	ModData *m = moddata_client_get_raw(client, "local_port");
+	if (!m)
+		return 0;
+	return m->i;
+}
+
+void set_client_port(Client *client, int port)
+{
+	char buf[32];
+	snprintf(buf, sizeof(buf), "%d", port);
+	moddata_client_set(client, "local_port", buf);
+}
+
+void set_server_port(Client *client, int port)
+{
+	char buf[32];
+	snprintf(buf, sizeof(buf), "%d", port);
+	moddata_client_set(client, "server_port", buf);
+}
+
 /*
 ** get_client_name
 **      Return the name of the client for various tracking and
@@ -304,13 +343,13 @@ const char *get_client_name(Client *client, int showip)
 	if (MyConnect(client))
 	{
 		if (showip)
-			ircsnprintf(nbuf, sizeof(nbuf), "%s[%s@%s.%u]",
+		{
+			ircsnprintf(nbuf, sizeof(nbuf), "%s[%s@%s.%d]",
 			    client->name,
 			    IsIdentSuccess(client) ? client->ident : "",
 			    client->ip ? client->ip : "???",
-			    (unsigned int)client->local->port);
-		else
-		{
+			    get_client_port(client));
+		} else {
 			if (mycmp(client->name, client->local->sockhost))
 				ircsnprintf(nbuf, sizeof(nbuf), "%s[%s]",
 				    client->name, client->local->sockhost);
@@ -1916,12 +1955,13 @@ void sha256hash_binary(char *dst, const char *src, unsigned long n)
 {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 	unsigned int md_len;
-	EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+	static EVP_MD_CTX *mdctx = NULL;
+	if (!mdctx)
+		mdctx = EVP_MD_CTX_new();
 	if (EVP_DigestInit_ex(mdctx, sha256_function, NULL) != 1)
 		abort();
 	EVP_DigestUpdate(mdctx, src, n);
 	EVP_DigestFinal_ex(mdctx, dst, &md_len);
-	EVP_MD_CTX_free(mdctx);
 #else
 	SHA256_CTX hash;
 
@@ -2870,6 +2910,7 @@ OutgoingWebRequest *duplicate_outgoingwebrequest(OutgoingWebRequest *orig)
 	e->keep_file = orig->keep_file;
 	e->connect_timeout = orig->connect_timeout;
 	e->transfer_timeout = orig->transfer_timeout;
+	e->minimum_tls_version = orig->minimum_tls_version;
 	return e;
 }
 

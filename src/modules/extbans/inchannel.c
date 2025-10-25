@@ -1,5 +1,5 @@
 /*
- * Extended ban: "in channel?" (+b ~c:#chan)
+ * Extended ban: "in channel?" (+b ~channel:#chan)
  * (C) Copyright 2003-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,7 +22,7 @@ ModuleHeader MOD_HEADER
 = {
 	"extbans/inchannel",
 	"4.2",
-	"ExtBan ~c - banned when in specified channel",
+	"ExtBan ~channel - banned when in specified channel",
 	"UnrealIRCd Team",
 	"unrealircd-6",
 };
@@ -120,7 +120,7 @@ int extban_inchannel_is_ok(BanContext *b)
 
 		if (*p != '#')
 		{
-			sendnotice(b->client, "Please use a # in the channelname (eg: ~c:#*blah*)");
+			sendnotice(b->client, "Please use a # in the channelname (eg: ~channel:#*blah*)");
 			return 0;
 		}
 	}

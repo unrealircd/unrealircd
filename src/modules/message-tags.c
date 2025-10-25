@@ -169,12 +169,15 @@ void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list)
 	char *element, *p, *x;
 	static char name[8192], value[8192];
 	MessageTag *m;
+	int lenstr;
 
 	remainder = strchr(*str, ' ');
 	if (remainder)
 		*remainder = '\0';
 
-	if (!IsServer(client) && (strlen(*str) > 4094))
+	lenstr = strlen(*str);
+	if ((IsServer(client) && (lenstr > 4094)) ||
+	    (!IsServer(client) && (lenstr > sizeof(name)-1)))
 	{
 		sendnumeric(client, ERR_INPUTTOOLONG);
 		remainder = NULL; /* stop parsing */
@@ -249,7 +252,7 @@ int client_accepts_tag(const char *token, Client *client)
 	/* If the client has indicated 'message-tags' support then we can
 	 * send any message tag, regardless of other CAP's.
 	 */
-	if (HasCapability(client, "message-tags"))
+	if (HasCapabilityFast(client, CAP_MESSAGE_TAGS))
 		return 1;
 
 	/* We continue here if the client did not indicate 'message-tags' support... */

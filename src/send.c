@@ -57,12 +57,10 @@ static void linecache_free(LineCache *cache);
 static void linecache_add(LineCache *cache, int line_opts, Client *to, const char *line, int linelen);
 static LineCacheLine *linecache_get(LineCache *cache, int line_opts, Client *to);
 
-#define ADD_CRLF(buf, len) { if (len > 510) len = 510; \
-                             buf[len++] = '\r'; buf[len++] = '\n'; buf[len] = '\0'; } while(0)
-
 /* These are two local (static) buffers used by the various send functions */
 static char sendbuf[MAXLINELENGTH];
 static char sendbuf2[MAXLINELENGTH];
+static char sendbuf3[MAXLINELENGTH];
 
 /** This is used to ensure no duplicate messages are sent
  * to the same server uplink/direction. In send functions
@@ -219,11 +217,40 @@ void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl)
 	}
 }
 
-/** Prepare a line for sendbufto_one() */
-static int sendbufto_one_prepare_line(Client *to, char *msg)
+/** Prepare a line for sendbufto_one().
+ * @param to	Client to send to
+ * @param input	Pointer to line to be sent.
+ * @notes The string '*input' can be changed or cut off (this is quite frequent).
+ * Or it may be replaced entirely, in which case 'input' will be set to a new string.
+ */
+static int sendbufto_one_prepare_line(Client *to, char **input)
 {
-	char *p = msg;
+	char *msg = *input;
+	char *p;
 	int len;
+
+	/* If we are in UTF8ONLY mode, we first convert the line to be sent
+	 * to valid UTF8. Of course, normally the line would not contain
+	 * invalid UTF8 to begin with (since we already reject it at the
+	 * input side from clients), but some external data may 'poison'
+	 * things like a MOTD or who knows what. Also, since we will be
+	 * cutting off strings, we need to take extra care in this function
+	 * as well when UTF8ONLY is enabled, since we may cut in the middle
+	 * of an UTF8 sequence.
+	 */
+	if (UTF8ONLY)
+	{
+		/* Note that last parameter strictlen must be 0, otherwise we might
+		 * end up cutting BIGLINES servers and also.. we already do all that
+		 * cutting of 512 etc below anyway, so no need to do double work.
+		 */
+		char *ret = unrl_utf8_make_valid(*input, sendbuf3, sizeof(sendbuf3), 0);
+		if (ret != *input)
+		{
+			/* Message had invalid UTF8 or was cut (eg 512 length restriction) */
+			*input = msg = ret;
+		}
+	}
 
 	if (*msg == '@')
 	{
@@ -249,7 +276,10 @@ static int sendbufto_one_prepare_line(Client *to, char *msg)
 			return 0;
 		}
 		p++; /* skip space character */
+	} else {
+		p = msg;
 	}
+
 	len = strlen(p);
 	if (!len || (p[len - 1] != '\n'))
 	{
@@ -258,6 +288,8 @@ static int sendbufto_one_prepare_line(Client *to, char *msg)
 			/* Normal case */
 			if (len > 510)
 				len = 510;
+			if (UTF8ONLY)
+				utf8_valid_cutoff(p, &len);
 			p[len++] = '\r';
 			p[len++] = '\n';
 			p[len] = '\0';
@@ -271,16 +303,31 @@ static int sendbufto_one_prepare_line(Client *to, char *msg)
 			if ((p - msg) + len > MAXLINELENGTH-3)
 			{
 				len = MAXLINELENGTH-3;
+				if (UTF8ONLY)
+					utf8_valid_cutoff(msg, &len);
 				msg[len++] = '\r';
 				msg[len++] = '\n';
 				msg[len] = '\0';
 			} else {
+				if (UTF8ONLY)
+					utf8_valid_cutoff(p, &len);
 				p[len++] = '\r';
 				p[len++] = '\n';
 				p[len] = '\0';
 			}
 		}
 	}
+
+#ifdef DEBUGMODE
+	if (UTF8ONLY)
+	{
+		/* if validation fails it means conversion above resulted
+		 * in an invalid UTF8 string.
+		 */
+		if (!unrl_utf8_validate(msg, NULL))
+			abort();
+	}
+#endif
 
 	/* Return length, that is:
 	 * p-msg = message tag len (can be 0)
@@ -333,7 +380,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 	 */
 	if (!quick)
 	{
-		len = sendbufto_one_prepare_line(to, msg);
+		len = sendbufto_one_prepare_line(to, &msg);
 		if (len == 0)
 			return;
 	} else {
@@ -471,10 +518,38 @@ void sendto_channel(Channel *channel, Client *from, Client *skip,
 {
 	va_list vl;
 	Member *lp;
+	LocalMember *lm;
 	Client *acptr;
 	char member_modes_ext[64];
 	LineCache *cache;
 	char check_invisible = 0;
+	char send_to_all_remote_servers = 0;
+	long UMODE_CTCP = 0;
+
+	if (sendflags & SKIP_CTCP)
+		UMODE_CTCP = find_user_mode('T');
+
+	/* If we need to send to remote servers, then in the past we only sent
+	 * to servers who have at least 1 channel member in their path.
+	 * However, nowadays it is more complex since we have +H history and such:
+	 * broadcast-channel-messages=never: don't send to remote servers that have no users
+	 * broadcast-channel-messages=always: always send to all remote servers
+	 * broadcast-channel-messages=auto: send to all remote servers if channel is +H (history)
+	 * The latter is the default setting.
+	 */
+	if ((sendflags & SEND_REMOTE) &&
+	    ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_ALWAYS) ||
+	     ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_AUTO) && has_channel_mode(channel, 'H'))))
+	{
+		/* We need to send to all remote servers. We can simplify this
+		 * case by not interating channel->members since we will send
+		 * to all connected servers at the end of this function anyway.
+		 * And in case SEND_LOCAL is also set, we will go through
+		 * channel->local_members instead which is faster.
+		 */
+		sendflags &= ~SEND_REMOTE;
+		send_to_all_remote_servers = 1;
+	}
 
 	if (member_modes)
 	{
@@ -482,88 +557,103 @@ void sendto_channel(Channel *channel, Client *from, Client *skip,
 		member_modes = member_modes_ext;
 	}
 
-	if ((sendflags & CHECK_INVISIBLE) && invisible_user_in_channel(from, channel))
+	if ((sendflags & CHECK_INVISIBLE) && IsUser(from) && invisible_user_in_channel(from, channel))
 		check_invisible = 1;
 
 	++current_serial;
 	cache = linecache_init();
-	for (lp = channel->members; lp; lp = lp->next)
+
+	if (sendflags & SEND_LOCAL)
 	{
-		acptr = lp->client;
-
-		/* Skip sending to 'skip' */
-		if ((acptr == skip) || (acptr->direction == skip))
-			continue;
-		/* Don't send to deaf clients (unless 'senddeaf' is set) */
-		if (IsDeaf(acptr) && (sendflags & SKIP_DEAF))
-			continue;
-		/* Don't send to NOCTCP clients */
-		if (has_user_mode(acptr, 'T') && (sendflags & SKIP_CTCP))
-			continue;
-		/* Sender ('from') is invisible for 'acptr' and we were asked to CHECK_INVISIBLE */
-		if (check_invisible && !check_channel_access_member(lp, "hoaq") && (from != acptr))
-			continue;
-		/* Now deal with 'member_modes' (if not NULL) */
-		if (member_modes && !check_channel_access_member(lp, member_modes))
-			continue;
-		/* Now deal with 'clicap' (if non-zero) */
-		if (clicap && MyUser(acptr) && ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
-			continue;
-
-		if (MyUser(acptr))
+		for (lm = channel->local_members; lm; lm = lm->next)
 		{
-			/* Local client */
-			if (sendflags & SEND_LOCAL)
-			{
-				va_start(vl, pattern);
-				vsendto_prefix_one_cached(cache, 0, acptr, from, mtags, pattern, vl);
-				va_end(vl);
-			}
-		}
-		else
-		{
-			/* Remote client */
-			if (sendflags & SEND_REMOTE)
-			{
-				/* Message already sent to remote link? */
-				if (acptr->direction->local->serial != current_serial)
-				{
-					va_start(vl, pattern);
-					vsendto_prefix_one_cached(cache, 0, acptr, from, mtags, pattern, vl);
-					va_end(vl);
+			lp = lm->ptr;
 
-					acptr->direction->local->serial = current_serial;
-				}
-			}
+			acptr = lp->client;
+
+			/* Skip sending to 'skip' */
+			if ((acptr == skip) || (acptr->direction == skip))
+				continue;
+			/* Don't send to deaf clients (unless 'senddeaf' is set) */
+			if (IsDeaf(acptr) && (sendflags & SKIP_DEAF))
+				continue;
+			/* Don't send to NOCTCP clients (umode +T) */
+			if ((sendflags & SKIP_CTCP) && (acptr->umodes & UMODE_CTCP))
+				continue;
+			/* Sender ('from') is invisible for 'acptr' and we were asked to CHECK_INVISIBLE */
+			if (check_invisible && !check_channel_access_member(lp, "hoaq") && (from != acptr))
+				continue;
+			/* Now deal with 'member_modes' (if not NULL) */
+			if (member_modes && !check_channel_access_member(lp, member_modes))
+				continue;
+			/* Now deal with 'clicap' (if non-zero) */
+			if (clicap && /*MyUser(acptr) &&*/ ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
+				continue;
+
+			va_start(vl, pattern);
+			vsendto_prefix_one_cached(cache, 0, acptr, from, mtags, pattern, vl);
+			va_end(vl);
 		}
 	}
 
 	if (sendflags & SEND_REMOTE)
 	{
-		/* For the remaining uplinks that we have not sent a message to yet...
-		 * broadcast-channel-messages=never: don't send it to them
-		 * broadcast-channel-messages=always: always send it to them
-		 * broadcast-channel-messages=auto: send it to them if the channel is set +H (history)
-		 */
-
-		if ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_ALWAYS) ||
-		    ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_AUTO) && has_channel_mode(channel, 'H')))
+		for (lp = channel->members; lp; lp = lp->next)
 		{
-			list_for_each_entry(acptr, &server_list, special_node)
-			{
-				if ((acptr == skip) || (acptr->direction == skip))
-					continue; /* still obey this rule.. */
-				if (acptr->direction->local->serial != current_serial)
-				{
-					va_start(vl, pattern);
-					vsendto_prefix_one_cached(cache, 0, acptr, from, mtags, pattern, vl);
-					va_end(vl);
+			acptr = lp->client;
 
-					acptr->direction->local->serial = current_serial;
-				}
+			if (MyUser(acptr))
+				continue; /* Already handled xx lines up */
+
+			/* Skip sending to 'skip' */
+			if ((acptr == skip) || (acptr->direction == skip))
+				continue;
+			/* Don't send to deaf clients (unless 'senddeaf' is set) */
+			if (IsDeaf(acptr) && (sendflags & SKIP_DEAF))
+				continue;
+			/* Don't send to NOCTCP clients (umode +T) */
+			if ((sendflags & SKIP_CTCP) && (acptr->umodes & UMODE_CTCP))
+				continue;
+			/* Sender ('from') is invisible for 'acptr' and we were asked to CHECK_INVISIBLE */
+			if (check_invisible && !check_channel_access_member(lp, "hoaq") && (from != acptr))
+				continue;
+			/* Now deal with 'member_modes' (if not NULL) */
+			if (member_modes && !check_channel_access_member(lp, member_modes))
+				continue;
+			/* Now deal with 'clicap' (if non-zero) */
+			//if (clicap && MyUser(acptr) && ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
+			//	continue;
+
+			/* Message already sent to remote link? */
+			// FIXME: Move this way more up ?
+			if (acptr->direction->local->serial != current_serial)
+			{
+				va_start(vl, pattern);
+				vsendto_prefix_one_cached(cache, 0, acptr, from, mtags, pattern, vl);
+				va_end(vl);
+
+				acptr->direction->local->serial = current_serial;
 			}
 		}
 	}
+
+	if (send_to_all_remote_servers)
+	{
+		list_for_each_entry(acptr, &server_list, special_node)
+		{
+			if ((acptr == skip) || (acptr->direction == skip))
+				continue; /* still obey this rule.. */
+			if (acptr->direction->local->serial != current_serial)
+			{
+				va_start(vl, pattern);
+				vsendto_prefix_one_cached(cache, 0, acptr, from, mtags, pattern, vl);
+				va_end(vl);
+
+				acptr->direction->local->serial = current_serial;
+			}
+		}
+	}
+
 	linecache_free(cache);
 }
 
@@ -619,53 +709,52 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
 {
 	va_list vl;
 	Membership *channels;
-	Member *users;
+	LocalMember *lm;
 	Client *acptr;
 	LineCache *cache;
 	char check_invisible;
 
+	if (!user->user)
+		return;
+
 	cache = linecache_init();
 	++current_serial;
-	if (user->user)
+
+	for (channels = user->user->channel; channels; channels = channels->next)
 	{
-		for (channels = user->user->channel; channels; channels = channels->next)
+		check_invisible = invisible_user_in_channel(user, channels->channel); // FIXME: we only have a slow version of this function
+
+		for (lm = channels->channel->local_members; lm; lm = lm->next)
 		{
-			check_invisible = invisible_user_in_channel(user, channels->channel); // FIXME: we only have a slow version of this function
+			acptr = lm->ptr->client;
 
-			for (users = channels->channel->members; users; users = users->next)
-			{
-				acptr = users->client;
+			if (acptr->local->serial == current_serial)
+				continue; /* message already sent to this client */
 
-				if (!MyConnect(acptr))
-					continue; /* only process local clients */
+			if (clicap && ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
+				continue; /* client does not have the specified capability */
 
-				if (acptr->local->serial == current_serial)
-					continue; /* message already sent to this client */
+			if (acptr == skip)
+				continue; /* the one to skip */
 
-				if (clicap && ((clicap & CAP_INVERT) ? HasCapabilityFast(acptr, clicap) : !HasCapabilityFast(acptr, clicap)))
-					continue; /* client does not have the specified capability */
+			// FIXME: use user_can_see_member_fast()
+			if (check_invisible && user_can_see_member(acptr, user, channels->channel))
+				continue; /* the sending user (quit'ing or nick changing) is 'invisible' -- skip */
 
-				if (acptr == skip)
-					continue; /* the one to skip */
-
-				// FIXME: use user_can_see_member_fast()
-				if (check_invisible && user_can_see_member(acptr, user, channels->channel))
-					continue; /* the sending user (quit'ing or nick changing) is 'invisible' -- skip */
-
-				acptr->local->serial = current_serial;
-				va_start(vl, pattern);
-				vsendto_prefix_one_cached(cache, 0, acptr, user, mtags, pattern, vl);
-				va_end(vl);
-			}
+			acptr->local->serial = current_serial;
+			va_start(vl, pattern);
+			vsendto_prefix_one_cached(cache, 0, acptr, user, mtags, pattern, vl);
+			va_end(vl);
 		}
 	}
+
 	linecache_free(cache);
 }
 
 /** Send a QUIT message to all local users on all channels where
  * the user 'user' is on.
  * This is used for events such as a nick change and quit.
- * @param user        The user and source of the message.
+ * @param leaving     The user who is leaving and the source of the message.
  * @param skip        The client to skip (can be NULL)
  * @param clicap      Client capability the recipient should have
  *                    (this only works for local clients, we will
@@ -675,11 +764,11 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
  * @param pattern     The pattern (eg: ":%s NICK %s").
  * @param ...         The parameters for the pattern.
  */
-void quit_sendto_local_common_channels(Client *user, MessageTag *mtags, const char *reason)
+void quit_sendto_local_common_channels(Client *leaving, MessageTag *mtags, const char *reason)
 {
 	va_list vl;
-	Membership *channels;
-	Member *users;
+	Membership *mb;
+	LocalMember *lm;
 	Client *acptr;
 	char sender[512];
 	MessageTag *m;
@@ -689,23 +778,23 @@ void quit_sendto_local_common_channels(Client *user, MessageTag *mtags, const ch
 	if (m && m->value)
 		real_quit_reason = m->value;
 
-	if (IsUser(user))
+	if (IsUser(leaving))
 	{
 		snprintf(sender, sizeof(sender), "%s!%s@%s",
-		         user->name, user->user->username, GetHost(user));
+		         leaving->name, leaving->user->username, GetHost(leaving));
 	} else {
-		strlcpy(sender, user->name, sizeof(sender));
+		strlcpy(sender, leaving->name, sizeof(sender));
 	}
 
 	++current_serial;
 
-	if (user->user)
+	if (leaving->user)
 	{
-		for (channels = user->user->channel; channels; channels = channels->next)
+		for (mb = leaving->user->channel; mb; mb = mb->next)
 		{
-			for (users = channels->channel->members; users; users = users->next)
+			for (lm = mb->channel->local_members; lm; lm = lm->next)
 			{
-				acptr = users->client;
+				acptr = lm->ptr->client;
 
 				if (!MyConnect(acptr))
 					continue; /* only process local clients */
@@ -713,7 +802,7 @@ void quit_sendto_local_common_channels(Client *user, MessageTag *mtags, const ch
 				if (acptr->local->serial == current_serial)
 					continue; /* message already sent to this client */
 
-				if (!user_can_see_member(acptr, user, channels->channel))
+				if (!user_can_see_member_fast(acptr, leaving, mb->channel, lm->ptr, mb->member_modes))
 					continue; /* the sending user (QUITing) is 'invisible' -- skip */
 
 				acptr->local->serial = current_serial;
@@ -956,7 +1045,16 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, con
 	}
 
 	len = strlen(buf);
-	ADD_CRLF(buf, len);
+	if (len > 510)
+	{
+		len = 510;
+		if (UTF8ONLY)
+			utf8_valid_cutoff(buf, &len);
+	}
+	buf[len++] = '\r';
+	buf[len++] = '\n';
+	buf[len] = '\0';
+
 	return len;
 }
 
@@ -1103,15 +1201,17 @@ static void vsendto_prefix_one_cached(LineCache *cache, int line_opts, Client *t
 	if (BadPtr(mtags_str))
 	{
 		/* Simple message without message tags */
-		len = sendbufto_one_prepare_line(to, sendbuf);
-		linecache_add(cache, line_opts, to, sendbuf, len);
-		sendbufto_one(to, sendbuf, len);
+		char *out = sendbuf;
+		len = sendbufto_one_prepare_line(to, &out);
+		linecache_add(cache, line_opts, to, out, len);
+		sendbufto_one(to, out, len);
 	} else {
 		/* Message tags need to be prepended */
+		char *out = sendbuf2;
 		snprintf(sendbuf2, sizeof(sendbuf2)-3, "@%s %s", mtags_str, sendbuf);
-		len = sendbufto_one_prepare_line(to, sendbuf2);
-		linecache_add(cache, line_opts, to, sendbuf2, len);
-		sendbufto_one(to, sendbuf2, 0);
+		len = sendbufto_one_prepare_line(to, &out);
+		linecache_add(cache, line_opts, to, out, len);
+		sendbufto_one(to, out, 0);
 	}
 }
 

@@ -59,16 +59,16 @@ char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);
 char _tkl_configtypetochar(const char *name);
 int tkl_banexception_chartotype(char c);
-char *_tkl_type_string(TKL *tk);
-char *_tkl_type_config_string(TKL *tk);
+const char *_tkl_type_string(TKL *tk);
+const char *_tkl_type_config_string(TKL *tk);
 char *tkl_banexception_configname_to_chars(char *name);
-TKL *_tkl_add_serverban(int type, char *usermask, char *hostmask, SecurityGroup *match,
-                            char *reason, char *set_by,
+TKL *_tkl_add_serverban(int type, const char *usermask, const char *hostmask, SecurityGroup *match,
+                            const char *reason, const char *set_by,
                             time_t expire_at, time_t set_at, int soft, int flags);
-TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, SecurityGroup *match,
-                           char *reason, char *set_by,
-                           time_t expire_at, time_t set_at, int soft, char *bantypes, int flags);
-TKL *_tkl_add_nameban(int type, char *name, int hold, char *reason, char *set_by,
+TKL *_tkl_add_banexception(int type, const char *usermask, const char *hostmask, SecurityGroup *match,
+                           const char *reason, const char *set_by,
+                           time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags);
+TKL *_tkl_add_nameban(int type, const char *name, int hold, const char *reason, const char *set_by,
                           time_t expire_at, time_t set_at, int flags);
 TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAction *action,
                          Match *match, const char *rule, SecurityGroup *except,
@@ -78,7 +78,7 @@ TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAct
                          int input_conversion,
                          SpamfilterShowMessageContentOnHit show_message_content_on_hit,
                          int flags);
-void _sendnotice_tkl_del(char *removed_by, TKL *tkl);
+void _sendnotice_tkl_del(const char *removed_by, TKL *tkl);
 void _sendnotice_tkl_add(TKL *tkl);
 void _free_tkl(TKL *tkl);
 void _tkl_del_line(TKL *tkl);
@@ -89,27 +89,27 @@ EVENT(tkl_check_expire);
 int _find_tkline_match(Client *client, int skip_soft);
 int _find_shun(Client *client);
 int _find_spamfilter_user(Client *client, int flags);
-TKL *_find_qline(Client *client, char *nick, int *ishold);
+TKL *_find_qline(Client *client, const char *nick, int *ishold);
 TKL *_find_tkline_match_zap(Client *client);
 void _tkl_stats(Client *client, int type, const char *para, int *cnt);
 void _tkl_sync(Client *client);
 CMD_FUNC(_cmd_tkl);
-int _take_action(Client *client, BanAction *action, char *reason, long duration, int take_action_flags, int *stopped);
+int _take_action(Client *client, BanAction *action, const char *reason, long duration, int take_action_flags, int *stopped);
 int _match_spamfilter(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, ClientContext *clictx, TKL **rettk);
-int _match_spamfilter_mtags(Client *client, MessageTag *mtags, char *cmd);
+int _match_spamfilter_mtags(Client *client, MessageTag *mtags, const char *cmd);
 int check_special_spamfilters_present(void);
 int _join_viruschan(Client *client, TKL *tk, int type);
-void _spamfilter_build_user_string(char *buf, char *nick, Client *client);
+void _spamfilter_build_user_string(char *buf, const char *nick, Client *client);
 int _match_user(const char *rmask, Client *client, int options);
 int _unreal_match_iplist(Client *client, NameList *l);
 int _match_user_extended_server_ban(const char *banstr, Client *client);
 void ban_target_to_tkl_layer(BanTarget ban_target, BanActionValue action, Client *client, const char **tkl_username, const char **tkl_hostname);
-int _tkl_ip_hash(char *ip);
+int _tkl_ip_hash(const char *ip);
 int _tkl_ip_hash_type(int type);
-TKL *_find_tkl_serverban(int type, char *usermask, char *hostmask, int softban);
-TKL *_find_tkl_banexception(int type, char *usermask, char *hostmask, int softban);
-TKL *_find_tkl_nameban(int type, char *name, int hold);
-TKL *_find_tkl_spamfilter(int type, char *match_string, BanActionValue action, unsigned short target);
+TKL *_find_tkl_serverban(int type, const char *usermask, const char *hostmask, int softban);
+TKL *_find_tkl_banexception(int type, const char *usermask, const char *hostmask, int softban);
+TKL *_find_tkl_nameban(int type, const char *name, int hold);
+TKL *_find_tkl_spamfilter(int type, const char *match_string, BanActionValue action, unsigned short target);
 int _find_tkl_exception(int ban_type, Client *client);
 int _server_ban_parse_mask(Client *client, int add, char type, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
 int _server_ban_exception_parse_mask(Client *client, int add, const char *bantypes, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
@@ -193,8 +193,8 @@ MOD_TEST()
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
-	EfunctionAddString(modinfo->handle, EFUNC_TKL_TYPE_STRING, _tkl_type_string);
-	EfunctionAddString(modinfo->handle, EFUNC_TKL_TYPE_CONFIG_STRING, _tkl_type_config_string);
+	EfunctionAddConstString(modinfo->handle, EFUNC_TKL_TYPE_STRING, _tkl_type_string);
+	EfunctionAddConstString(modinfo->handle, EFUNC_TKL_TYPE_CONFIG_STRING, _tkl_type_config_string);
 	EfunctionAddPVoid(modinfo->handle, EFUNC_TKL_ADD_SERVERBAN, TO_PVOIDFUNC(_tkl_add_serverban));
 	EfunctionAddPVoid(modinfo->handle, EFUNC_TKL_ADD_BANEXCEPTION, TO_PVOIDFUNC(_tkl_add_banexception));
 	EfunctionAddPVoid(modinfo->handle, EFUNC_TKL_ADD_NAMEBAN, TO_PVOIDFUNC(_tkl_add_nameban));
@@ -2745,7 +2745,7 @@ char *tkl_banexception_configname_to_chars(char *name)
 }
 
 /** Show TKL type as a string (used when adding/removing) */
-char *_tkl_type_string(TKL *tkl)
+const char *_tkl_type_string(TKL *tkl)
 {
 	static char txt[256];
 	int i;
@@ -2769,7 +2769,7 @@ char *_tkl_type_string(TKL *tkl)
 }
 
 /** Short config string, lowercase alnum with possibly hyphens (eg: 'kline') */
-char *_tkl_type_config_string(TKL *tkl)
+const char *_tkl_type_config_string(TKL *tkl)
 {
 	int i;
 
@@ -2811,9 +2811,10 @@ int tkl_banexception_matches_type(TKL *except, int bantype)
 }
 
 /** Used for finding out which element of the tkl_ip hash table is used (primary element) */
-int _tkl_ip_hash(char *ip)
+int _tkl_ip_hash(const char *ip)
 {
-	char ipbuf[64], *p;
+	const char *p;
+	char ipbuf[64];
 
 	if (!ip)
 		return -1; /* possible if eg tkl->...match instead of tkl->...host */
@@ -2882,7 +2883,7 @@ int _tkl_ip_hash_type(int type)
  * This is simply a helper that is used at 3 places and I hate duplicate code.
  * NOTE: this function may return NULL.
  */
-TKL *tkl_find_head(char type, char *hostmask, TKL *def)
+TKL *tkl_find_head(char type, const char *hostmask, TKL *def)
 {
 	int index, index2;
 
@@ -3003,8 +3004,8 @@ TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAct
  * Be sure not to call this function for spamfilters,
  * qlines or exempts, which have their own function!
  */
-TKL *_tkl_add_serverban(int type, char *usermask, char *hostmask, SecurityGroup *match,
-                        char *reason, char *set_by,
+TKL *_tkl_add_serverban(int type, const char *usermask, const char *hostmask, SecurityGroup *match,
+                        const char *reason, const char *set_by,
                         time_t expire_at, time_t set_at, int soft, int flags)
 {
 	TKL *tkl;
@@ -3072,9 +3073,9 @@ TKL *_tkl_add_serverban(int type, char *usermask, char *hostmask, SecurityGroup 
  * Be sure not to call this function for spamfilters,
  * qlines or exempts, which have their own function!
  */
-TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, SecurityGroup *match,
-                           char *reason, char *set_by,
-                           time_t expire_at, time_t set_at, int soft, char *bantypes, int flags)
+TKL *_tkl_add_banexception(int type, const char *usermask, const char *hostmask, SecurityGroup *match,
+                           const char *reason, const char *set_by,
+                           time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags)
 {
 	TKL *tkl;
 	int index, index2;
@@ -3133,7 +3134,7 @@ TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, SecurityGro
  * Be sure not to call this function for spamfilters,
  * qlines or exempts, which have their own function!
  */
-TKL *_tkl_add_nameban(int type, char *name, int hold, char *reason, char *set_by,
+TKL *_tkl_add_nameban(int type, const char *name, int hold, const char *reason, const char *set_by,
                           time_t expire_at, time_t set_at, int flags)
 {
 	TKL *tkl;
@@ -3723,7 +3724,7 @@ char *SpamfilterMagicHost(char *i)
  * @param nick    The nickname (because client can be nick-changing).
  * @param client  The affected client.
  */
-void _spamfilter_build_user_string(char *buf, char *nick, Client *client)
+void _spamfilter_build_user_string(char *buf, const char *nick, Client *client)
 {
 	snprintf(buf, NICKLEN+USERLEN+HOSTLEN+1, "%s!%s@%s:%s",
 		nick, client->user->username, SpamfilterMagicHost(client->user->realhost), client->info);
@@ -3789,7 +3790,7 @@ int spamfilter_check_users(TKL *tkl)
  * #*ble* will match with #bbleh
  * *ble* will NOT match with #bbleh, will with bbleh
  */
-TKL *_find_qline(Client *client, char *name, int *ishold)
+TKL *_find_qline(Client *client, const char *name, int *ishold)
 {
 	TKL *tkl;
 	int	points = 0;
@@ -4329,7 +4330,7 @@ void _tkl_sync(Client *client)
 }
 
 /** Find a server ban TKL - only used to prevent duplicates and for deletion */
-TKL *_find_tkl_serverban(int type, char *usermask, char *hostmask, int softban)
+TKL *_find_tkl_serverban(int type, const char *usermask, const char *hostmask, int softban)
 {
 	char tpe = tkl_typetochar(type);
 	TKL *head, *tkl;
@@ -4357,7 +4358,7 @@ TKL *_find_tkl_serverban(int type, char *usermask, char *hostmask, int softban)
 }
 
 /** Find a ban exception TKL - only used to prevent duplicates and for deletion */
-TKL *_find_tkl_banexception(int type, char *usermask, char *hostmask, int softban)
+TKL *_find_tkl_banexception(int type, const char *usermask, const char *hostmask, int softban)
 {
 	char tpe = tkl_typetochar(type);
 	TKL *head, *tkl;
@@ -4383,7 +4384,7 @@ TKL *_find_tkl_banexception(int type, char *usermask, char *hostmask, int softba
 }
 
 /** Find a name ban TKL (qline) - only used to prevent duplicates and for deletion */
-TKL *_find_tkl_nameban(int type, char *name, int hold)
+TKL *_find_tkl_nameban(int type, const char *name, int hold)
 {
 	char tpe = tkl_typetochar(type);
 	TKL *tkl;
@@ -4400,7 +4401,7 @@ TKL *_find_tkl_nameban(int type, char *name, int hold)
 }
 
 /** Find a spamfilter TKL - only used to prevent duplicates and for deletion */
-TKL *_find_tkl_spamfilter(int type, char *match_string, BanActionValue action, unsigned short target)
+TKL *_find_tkl_spamfilter(int type, const char *match_string, BanActionValue action, unsigned short target)
 {
 	char tpe = tkl_typetochar(type);
 	TKL *tkl;
@@ -4460,7 +4461,7 @@ void _sendnotice_tkl_add(TKL *tkl)
 }
 
 /** Send a notice to opers about the TKL that is being deleted */
-void _sendnotice_tkl_del(char *removed_by, TKL *tkl)
+void _sendnotice_tkl_del(const char *removed_by, TKL *tkl)
 {
 	/* Don't show notices for temporary nick holds (issued by services) */
 	if (TKLIsNameBan(tkl) && tkl->ptr.nameban->hold)
@@ -5127,7 +5128,7 @@ void ban_action_run_all_sets_and_stops(Client *client, BanAction *action, int *s
  * @note Be sure to check IsDead(client) if return value is 1 and you are
  *       considering to continue processing.
  */
-int _take_action(Client *client, BanAction *actions, char *reason, long duration, int take_action_flags, int *stopped)
+int _take_action(Client *client, BanAction *actions, const char *reason, long duration, int take_action_flags, int *stopped)
 {
 	BanAction *action;
 	int previous_highest = 0;
@@ -5812,7 +5813,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
  * @param cmd		Command to be executed (can be NULL)
  * @retval Return 1 to stop processing the command (ignore it) or 0 to allow/continue as normal
  */
-int _match_spamfilter_mtags(Client *client, MessageTag *mtags, char *cmd)
+int _match_spamfilter_mtags(Client *client, MessageTag *mtags, const char *cmd)
 {
 	MessageTag *m;
 	char buf[4096];

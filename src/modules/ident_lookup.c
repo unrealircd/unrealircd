@@ -144,8 +144,8 @@ static void ident_lookup_send(int fd, int revents, void *data)
 	Client *client = data;
 
 	ircsnprintf(authbuf, sizeof(authbuf), "%d , %d\r\n",
-		client->local->port,
-		client->local->listener->port);
+		get_client_port(client),
+		get_server_port(client));
 
 	if (WRITE_SOCK(client->local->authfd, authbuf, strlen(authbuf)) != strlen(authbuf))
 	{
