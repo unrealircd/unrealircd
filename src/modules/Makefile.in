@@ -86,6 +86,7 @@ MODULES= \
 	spamreport.so crule.so \
 	central-api.so central-blocklist.so \
 	no-implicit-names.so maxperip.so utf8functions.so \
+	webhook.so \
 	$(GEOIP_CLASSIC_OBJECTS) $(GEOIP_MAXMIND_OBJECTS)
 
 MODULEFLAGS=@MODULEFLAGS@
