@@ -1743,8 +1743,10 @@ void do_floodprot_action_standard(Channel *channel, int what, FloodType *floodty
 	/* First the notice to the chanops */
 	mtags = NULL;
 	new_message(&me, NULL, &mtags);
-	ircsnprintf(comment, sizeof(comment), "*** Channel %s detected (limit is %d per %d seconds), setting mode +%c",
-		text, fld->limit[what], fld->per, m);
+	ircsnprintf(comment, sizeof(comment),
+	            "*** Channel %s detected (limit is %d per %d seconds), setting mode +%c. "
+	            "Type \"/MODE %s +F\" to get more information on channel flood protection.",
+	            text, fld->limit[what], fld->per, m, channel->name);
 	ircsnprintf(target, sizeof(target), "%%%s", channel->name);
 	sendto_channel(channel, &me, NULL, "ho",
 		       0, SEND_ALL, mtags,
@@ -2027,6 +2029,15 @@ CMD_OVERRIDE_FUNC(floodprot_override_mode)
 			sendnotice(client, "Plus flood setting via +f: '%s'", buf);
 		}
 		sendnotice(client, "-");
+		if (profile)
+		{
+			if (!(channel->mode.mode & EXTMODE_FLOOD_PROFILE))
+				sendnotice(client, "You are currently using the default anti-flood profile \002%s\002.", profile->profile);
+			else
+				sendnotice(client, "You are currently using the anti-flood profile \002%s\002.", profile->profile);
+			sendnotice(client, "If you want to change to a different anti-flood profile, for example because flood protection is kicking in too quickly");
+			sendnotice(client, "or too late, then you can use \002MODE %s +F <profile>\002. See the list of profiles below (ordered from lax to strict).", channel->name);
+		}
 		floodprot_show_profiles(client);
 		return;
 	}
