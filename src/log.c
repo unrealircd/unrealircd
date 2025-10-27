@@ -48,6 +48,8 @@ int memory_log_entries = 0; /**< Number of memory_log entries */
 int log_sources_match(LogSource *logsource, LogLevel loglevel, const char *subsystem, const char *event_id, int matched_already);
 void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, int expand_msg, const char *msg, va_list vl);
 void log_blocks_switchover(void);
+void do_unreal_log_webhook(LogLevel loglevel, const char *subsystem, const char *event_id, const char *json_serialized);
+void webhook_send_async(const char *url, const char *json_data);
 void memory_log_add_message(time_t t, LogLevel loglevel, const char *subsystem, const char *event_id, json_t *json);
 EVENT(memory_log_cleaner);
 
@@ -336,6 +338,20 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 							errors++;
 						}
 					}
+				} else if (!strcmp(cep->name, "webhook"))
+				{
+					destinations++;
+					if (!cep->value)
+					{
+						config_error("%s:%i: webhook needs a url",
+							cep->file->filename, cep->line_number);
+						errors++;
+					} else if (strncmp(cep->value, "http://", 7) != 0 && strncmp(cep->value, "https://", 8) != 0)
+					{
+						config_error("%s:%i: webhook url must be a HTTP/HTTPS URL (%s)",
+							cep->file->filename, cep->line_number, cep->value);
+						errors++;
+					}
 				} else
 				{
 					config_error_unknownopt(cep->file->filename, cep->line_number, "log::destination", cep->name);
@@ -530,6 +546,13 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 						}
 					}
 					AddListItem(log, temp_logs[LOG_DEST_MEMORY]);
+				} else
+				if (!strcmp(cep->name, "webhook"))
+				{
+					Log *log = safe_alloc(sizeof(Log));
+					safe_strdup(log->url, cep->value);
+					log->sources = sources;
+					AddListItem(log, temp_logs[LOG_DEST_WEBHOOK]);
 				}
 			}
 		}
@@ -1414,6 +1437,52 @@ void do_unreal_log_remote(LogLevel loglevel, const char *subsystem, const char *
 	do_unreal_log_remote_deliver(loglevel, subsystem, event_id, msg, json_serialized);
 }
 
+/** Send log events to webhook destinations */
+void do_unreal_log_webhook(LogLevel loglevel, const char *subsystem, const char *event_id, const char *json_serialized)
+{
+	Log *l;
+
+	/* Skip debug and rawtraffic like the RPC module does */
+	if (!strcmp(subsystem, "rawtraffic") || (loglevel == ULOG_DEBUG))
+		return;
+
+	for (l = logs[LOG_DEST_WEBHOOK]; l; l = l->next)
+	{
+		if (log_sources_match(l->sources, loglevel, subsystem, event_id, 0))
+		{
+			if (json_serialized && *json_serialized)
+			{
+				webhook_send_async(l->url, json_serialized);
+			}
+		}
+	}
+}
+
+void webhook_send_async(const char *url, const char *json_data)
+{
+	OutgoingWebRequest *request;
+	NameValuePrioList *headers = NULL;
+	
+	request = safe_alloc(sizeof(OutgoingWebRequest));
+	safe_strdup(request->url, url);
+	request->http_method = HTTP_METHOD_POST;
+
+	add_nvplist(&headers, 0, "Content-Type", "application/json");
+	add_nvplist(&headers, 0, "User-Agent", "UnrealIRCd-Webhook/1.0");
+	request->headers = headers;
+	
+	if (json_data && *json_data)
+	{
+		safe_strdup(request->body, json_data);
+	}
+	
+	/* Use default callback that doesn't care about response */
+	request->callback = download_complete_dontcare;
+	request->max_redirects = 3;
+	
+	url_start_async(request);
+}
+
 /** Send server notices to control channel */
 void do_unreal_log_control(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, json_t *j, const char *json_serialized, Client *from_server)
 {
@@ -1643,6 +1712,8 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 
 	do_unreal_log_remote(loglevel, subsystem, event_id, mmsg, json_serialized);
 
+	do_unreal_log_webhook(loglevel, subsystem, event_id, json_serialized);
+
 	// NOTE: code duplication further down!
 
 	/* This one should only be in do_unreal_log_internal()
@@ -1710,6 +1781,7 @@ void free_log_block(Log *l)
 		free_log_sources(l->sources);
 		safe_free(l->file);
 		safe_free(l->filefmt);
+		safe_free(l->url);
 		safe_free(l);
 	}
 }
