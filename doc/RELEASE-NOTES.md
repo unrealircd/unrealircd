@@ -16,6 +16,10 @@ features were added.
   * A concrete peak-load case would be a server losing a link (SQUIT) with 10,000 clones
     all in 10 channels. Previously this took 40 seconds at 100% CPU to process,
     now it takes only 2 seconds.
+* The log block now supports
+  [calling a webhook](https://www.unrealircd.org/docs/Log_block#Calling_a_webhook)
+  on selected events. It's not suggested for high-rate events (xx per second)
+  but for other events it can be quite useful to do a HTTPS call.
 * Add [set::utf8-only](https://www.unrealircd.org/docs/Set_block#set::utf8-only):
   setting this to `yes` means all IRC traffic is UTF8 only. See the setting
   and the [`UTF8ONLY`](https://ircv3.net/specs/extensions/utf8-only)
@@ -47,8 +51,18 @@ features were added.
   * Add `away_reason` and `away_since` to the
     [user object](https://www.unrealircd.org/docs/JSON-RPC:Client_Object#client.user_object).
   * Add `server_port` and `local_port` to client objects (also in JSON Logging)
+* Since nearly everyone wants UnrealIRCd to start at system startup,
+  we (already) tell about adding a [Cron job](https://www.unrealircd.org/docs/Cron_job).
+  We now also ship with a
+  [Systemd unit](https://www.unrealircd.org/docs/Using_systemd_with_UnrealIRCd)
+  for those who prefer using that.
 
 ### Changes:
+* In previous version 6.2.0 we turned
+  [channel flood protection on by default](https://www.unrealircd.org/docs/Channel_anti-flood_settings).
+  Now, when channel flood protection kicks in we tell chanops to run
+  `MODE #channel +F` to get more information about the flood settings.
+  The output of that command has been improved as well.
 * Best practices now have their own logging category 'advice', which is blue.
 * Previous (expired) UnrealIRCd PGP key was removed from `doc/KEYS`
 * [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
