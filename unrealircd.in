@@ -27,18 +27,34 @@ if [ ! -d "$TMPDIR" ]; then
 	mkdir "$TMPDIR"
 fi
 
+# First a check if running through systemd or similar:
+if [ "$1" = "start" -o "$1" = "stop" -o "$1" = "restart" ]; then
+	if [ ! -r "$PID_FILE" ] ; then
+		if $UNREALIRCDCTL status 1>/dev/null 2>&1; then
+			echo "UnrealIRCd is running but does not have a PID File."
+			echo "Is UnrealIRCd running through systemd? Then you should not use the ./unrealircd [start|stop|restart] commands!"
+			if systemctl --user status unrealircd.service 1>/dev/null 2>&1; then
+				echo "Instead, run: systemctl --user [start|stop|restart] unrealircd"
+			else
+				echo "Instead, run (as root or via sudo): systemctl [start|stop|restart] unrealircd"
+			fi
+			exit 1
+		fi
+	fi
+fi
+
 if [ "$1" = "start" ] ; then
-	if [ -r $PID_FILE ] ; then
-		if kill -CHLD `cat $PID_FILE` 1>/dev/null 2>&1; then
+	if [ -r "$PID_FILE" ] ; then
+		if kill -CHLD `cat "$PID_FILE"` 1>/dev/null 2>&1; then
 			if $UNREALIRCDCTL status 1>/dev/null 2>&1; then
-				echo "UnrealIRCd is already running (PID `cat $PID_FILE`)."
+				echo "UnrealIRCd is already running (PID `cat "$PID_FILE"`)."
 				echo "To restart UnrealIRCd, use: $0 restart"
 				exit 1
 			fi
 		fi
 	fi
-	if [ -r $PID_FILE ] ; then
-		mv -f $PID_FILE $PID_BACKUP
+	if [ -r "$PID_FILE" ] ; then
+		mv -f "$PID_FILE" "$PID_BACKUP"
 	fi
 
 	# Check if ~/Unrealxxx/unrealircd.conf exists but the file
@@ -65,8 +81,8 @@ if [ "$1" = "start" ] ; then
 
 	$IRCD
 	if [ $? -ne 0 ] ; then
-		if [ -r $PID_BACKUP ] ; then
-			mv -f $PID_BACKUP $PID_FILE
+		if [ -r "$PID_BACKUP" ] ; then
+			mv -f "$PID_BACKUP" "$PID_FILE"
 		fi
 		# Try to be helpful...
 		if ldd $IRCD 2>&1|grep -qF '=> not found'; then
@@ -89,15 +105,16 @@ if [ "$1" = "start" ] ; then
 	$IRCD -R
 elif [ "$1" = "stop" ] ; then
 	echo -n "Stopping UnrealIRCd"
-	if [ ! -r $PID_FILE ] ; then
+	if [ ! -r "$PID_FILE" ] ; then
 		echo
 		echo "ERROR: UnrealIRCd is not running"
 		exit 1
 	fi
-	kill -15 `cat $PID_FILE`
+	kill -15 `cat "$PID_FILE"`
 	if [ "$?" != 0 ]; then
 		echo
 		echo "ERROR: UnrealIRCd is not running"
+		rm -f "$PID_FILE"
 		exit 1
 	fi
 	# Wait for UnrealIRCd to terminate, but wait 10 seconds max
@@ -105,10 +122,10 @@ elif [ "$1" = "stop" ] ; then
 	while [ "$n" -lt 10 ]
 	do
 		echo -n "."
-		if [ ! -r $PID_FILE ] ; then
+		if [ ! -r "$PID_FILE" ] ; then
 			break
 		fi
-		if ! kill -0 `cat $PID_FILE`; then
+		if ! kill -0 `cat "$PID_FILE"`; then
 			break
 		fi
 		n=`expr $n + 1`
@@ -116,8 +133,8 @@ elif [ "$1" = "stop" ] ; then
 	done
 	echo
 	# In case it is still running, kill it for good.
-	if [ -r $PID_FILE ] ; then
-		kill -9 `cat $PID_FILE` 1>/dev/null 2>&1
+	if [ -r "$PID_FILE" ] ; then
+		kill -9 `cat "$PID_FILE"` 1>/dev/null 2>&1
 	fi
 elif [ "$1" = "rehash" ] ; then
 	$UNREALIRCDCTL $*
@@ -141,8 +158,8 @@ elif [ "$1" = "restart" ] ; then
 	$0 stop
 	$0 start
 elif [ "$1" = "croncheck" ] ; then
-	if [ -r $PID_FILE ] ; then
-		kill -CHLD `cat $PID_FILE` 1>/dev/null 2>&1
+	if [ -r "$PID_FILE" ] ; then
+		kill -CHLD `cat "$PID_FILE"` 1>/dev/null 2>&1
 		if [ "$?" = 0 ]; then
 			# IRCd is running, bail out silently.
 			exit 0

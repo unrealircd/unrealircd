@@ -905,7 +905,8 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 
 	fix_timers();
-	write_pidfile();
+	if (!(bootopt & BOOT_NOFORK))
+		write_pidfile();
 	loop.booted = 1;
 #if defined(HAVE_SETPROCTITLE)
 	setproctitle("%s", me.name);
