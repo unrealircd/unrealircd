@@ -1,0 +1,37 @@
+# Systemd service for UnrealIRCd (user service)
+#
+# This is the USER service. You can use this if you don't have root
+# on the machine (otherwise, people usually use the other
+# unrealircd.service system unit instead).
+#
+# To install:
+# 1) Adjust the ExecStart= line below, if your unrealircd isn't
+#    installed in ~/unrealircd/
+# 2) Then run the following commands (as a regular user):
+#    loginctl enable-linger
+#    mkdir -p ~/.config/systemd/user
+#    cp unrealircd_user.service ~/.config/systemd/user/unrealircd.service
+#    systemctl --user daemon-reload
+#    systemctl --user enable unrealircd.service
+#    systemctl --user start unrealircd.service
+
+[Unit]
+Description=UnrealIRCd
+Documentation=https://www.unrealircd.org/
+Description=UnrealIRCd IRC Server (user service)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Adjust this if unrealircd is installed somewhere else:
+ExecStart=%h/unrealircd/bin/unrealircd -F
+
+Type=simple
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65536
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/kill -TERM $MAINPID
+
+[Install]
+WantedBy=default.target

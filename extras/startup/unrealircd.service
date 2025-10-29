@@ -1,0 +1,41 @@
+# Systemd service for UnrealIRCd
+# To use this:
+# 1) Adjust user/group/paths under [Service] if needed.
+# 2) Then run the following commands as root:
+#    cp -av unrealircd.service /etc/systemd/system/
+#    systemctl daemon-reload
+#    systemctl enable unrealircd.service
+#    systemctl start unrealircd.service
+
+[Unit]
+Description=UnrealIRCd
+Documentation=https://www.unrealircd.org/
+Description=UnrealIRCd IRC Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# If needed, change 'ircd' to your unrealircd user and adjust paths:
+User=ircd
+Group=ircd
+ExecStart=/home/ircd/unrealircd/bin/unrealircd -F
+
+# These settings should be fine for everyone
+Type=simple
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65536
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/kill -TERM $MAINPID
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictRealtime=true
+ProtectSystem=strict
+
+[Install]
+WantedBy=default.target
