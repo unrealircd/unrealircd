@@ -288,8 +288,8 @@ static int bad_command(const char *argv0)
 	if (!argv0)
 		argv0 = "unrealircd";
 
-	printf("ERROR: Incorrect command line argument encountered.\n"
-	       "This is the unrealircd BINARY. End-users should NOT call this binary directly.\n"
+	printf("ERROR: Incorrect command line argument encountered (if you are looking for foreground mode, it is -F).\n"
+	       "IMPORTANT: This is the unrealircd BINARY. End-users should NOT call this binary directly.\n"
 	       "Please run the SCRIPT instead: %s/unrealircd\n", SCRIPTDIR);
 	printf("Server not started\n\n");
 #else
