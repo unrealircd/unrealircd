@@ -265,8 +265,10 @@ install: all
 	@echo '* Consult the documentation online at:'
 	@echo '  * https://www.unrealircd.org/docs/'
 	@echo '  * https://www.unrealircd.org/docs/FAQ'
-	@echo '* You may also wish to install a cron job to ensure UnrealIRCd is always running:'
-	@echo '  * https://www.unrealircd.org/docs/Cron_job'
+	@echo ''
+	@echo '* To ensure UnrealIRCd automatically starts on system startup:'
+	@echo '  * Install a cron job: https://www.unrealircd.org/docs/Cron_job'
+	@echo '  * Or, use systemd: https://www.unrealircd.org/docs/Using_systemd_with_UnrealIRCd'
 	@echo ''
 	-@if [ "@SCRIPTDIR@/bin" = "@BINDIR@" ] ; then \
 		echo 'Again, be sure to change to the @SCRIPTDIR@ directory!' ; \
