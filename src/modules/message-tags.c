@@ -165,9 +165,13 @@ int message_tag_ok(Client *client, char *name, char *value)
 
 void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list)
 {
+    // https://ircv3.net/specs/extensions/message-tags#size-limit
+    static unsigned int server_size_limit = 8191;
+    static unsigned int client_size_limit = 4094;
+
 	char *remainder;
 	char *element, *p, *x;
-	static char name[8192], value[8192];
+	static char name[server_size_limit+1], value[server_size_limit+1];
 	MessageTag *m;
 	int lenstr;
 
@@ -176,8 +180,8 @@ void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list)
 		*remainder = '\0';
 
 	lenstr = strlen(*str);
-	if ((IsServer(client) && (lenstr > 4094)) ||
-	    (!IsServer(client) && (lenstr > sizeof(name)-1)))
+	if ((IsServer(client) && (lenstr > server_size_limit)) ||
+	    (!IsServer(client) && (lenstr > client_size_limit)))
 	{
 		sendnumeric(client, ERR_INPUTTOOLONG);
 		remainder = NULL; /* stop parsing */
