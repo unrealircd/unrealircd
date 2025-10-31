@@ -1007,7 +1007,19 @@ void https_redirect(Download *handle)
 	}
 
 	r = duplicate_outgoingwebrequest(handle->request);
-	safe_strdup(r->actual_url, handle->redirect_new_location); // override actual url
+
+	/* Override actual url */
+	if (handle->redirect_new_location && (*handle->redirect_new_location == '/'))
+	{
+		/* Convert relative URL to absolute URL */
+		size_t sz = 20 + strlen(handle->hostname) + strlen(handle->redirect_new_location);
+		safe_free(r->actual_url);
+		r->actual_url = safe_alloc(sz);
+		snprintf(r->actual_url, sz, "https://%s:%d%s", handle->hostname, handle->port, handle->redirect_new_location);
+	} else {
+		safe_strdup(r->actual_url, handle->redirect_new_location);
+	}
+
 	r->max_redirects--; // safe, checked to be >0 a few lines up
 	url_free_handle(handle); // free old handle
 	url_start_async(r); // create new one
