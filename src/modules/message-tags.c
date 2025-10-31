@@ -23,8 +23,8 @@
 #include "unrealircd.h"
 
 // https://ircv3.net/specs/extensions/message-tags#size-limit
-#define SERVER_SIZE_LIMIT 8191
-#define CLIENT_SIZE_LIMIT 4094
+#define SERVER_TAG_SIZE_LIMIT 8191
+#define CLIENT_TAG_SIZE_LIMIT 4094
 
 ModuleHeader MOD_HEADER
   = {
@@ -172,7 +172,7 @@ void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list)
 
 	char *remainder;
 	char *element, *p, *x;
-	static char name[SERVER_SIZE_LIMIT+1], value[SERVER_SIZE_LIMIT+1];
+	static char name[SERVER_TAG_SIZE_LIMIT+1], value[SERVER_TAG_SIZE_LIMIT+1];
 	MessageTag *m;
 	int lenstr;
 
@@ -181,8 +181,8 @@ void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list)
 		*remainder = '\0';
 
 	lenstr = strlen(*str);
-	if ((IsServer(client) && (lenstr > SERVER_SIZE_LIMIT)) ||
-	    (!IsServer(client) && (lenstr > CLIENT_SIZE_LIMIT)))
+	if ((IsServer(client) && (lenstr > SERVER_TAG_SIZE_LIMIT)) ||
+	    (!IsServer(client) && (lenstr > CLIENT_TAG_SIZE_LIMIT)))
 	{
 		sendnumeric(client, ERR_INPUTTOOLONG);
 		remainder = NULL; /* stop parsing */
