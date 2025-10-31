@@ -60,7 +60,7 @@ ConfigItem_link *_verify_link(Client *client);
 void _send_protoctl_servers(Client *client, int response);
 void _send_server_message(Client *client);
 void _introduce_user(Client *to, Client *acptr);
-int _check_deny_version(Client *cptr, char *software, int protocol, char *flags);
+int _check_deny_version(Client *cptr, const char *software, int protocol, const char *flags);
 void _broadcast_sinfo(Client *acptr, Client *to, Client *except);
 int server_sync(Client *cptr, ConfigItem_link *conf, int incoming);
 void tls_link_notification_verify(Client *acptr, ConfigItem_link *aconf);
@@ -702,7 +702,7 @@ EVENT(server_handshake_timeout)
  * @param flags		Server flags (hardly ever used, can be NULL)
  * @returns 1 if link is denied (client is already killed), 0 if not.
  */
-int _check_deny_version(Client *cptr, char *software, int protocol, char *flags)
+int _check_deny_version(Client *cptr, const char *software, int protocol, const char *flags)
 {
 	ConfigItem_deny_version *vlines;
 	
