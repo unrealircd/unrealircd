@@ -1322,6 +1322,8 @@ extern APICallback *APICallbackAdd(Module *module, APICallback *mreq);
 #define HOOKTYPE_CAN_USE_NICK	128
 /** See hooktype_banned_client */
 #define HOOKTYPE_BANNED_CLIENT 129
+/** See hooktype_motd */
+#define HOOKTYPE_MOTD 130
 
 
 /* Adding a new hook here?
@@ -2473,6 +2475,11 @@ int hooktype_can_use_nick(Client *client, const char *newnick, const char **reje
  */
 int hooktype_banned_client(Client *client, const char *bantype, const char *reason, int global);
 
+/** Called when a local user calls /MOTD, including on connect
+  * @param client	The client
+ */
+int hooktype_motd(Client *client);
+
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2602,8 +2609,9 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_SASL_MECHS) && !ValidateHook(hooktype_sasl_mechs, func)) || \
         ((hooktype == HOOKTYPE_ALLOW_CLIENT) && !ValidateHook(hooktype_allow_client, func)) || \
         ((hooktype == HOOKTYPE_ANALYZE_TEXT) && !ValidateHook(hooktype_analyze_text, func)) || \
-	((hooktype == HOOKTYPE_CAN_USE_NICK) && !ValidateHook(hooktype_can_use_nick, func)) || \
-	((hooktype == HOOKTYPE_BANNED_CLIENT) && !ValidateHook(hooktype_banned_client, func))) \
+        ((hooktype == HOOKTYPE_CAN_USE_NICK) && !ValidateHook(hooktype_can_use_nick, func)) || \
+        ((hooktype == HOOKTYPE_BANNED_CLIENT) && !ValidateHook(hooktype_banned_client, func)) || \
+        ((hooktype == HOOKTYPE_MOTD) && !ValidateHook(hooktype_motd, func))) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
