@@ -118,6 +118,10 @@ CMD_FUNC(cmd_motd)
 			motdline->line);
 		motdline = motdline->next;
 	}
+
+	/* Allow modules to inject some MOTD here */
+	RunHook(HOOKTYPE_MOTD, client);
+
 	if (svsnofile == 0)
 		sendnumeric(client, RPL_ENDOFMOTD);
 }
