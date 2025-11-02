@@ -1124,7 +1124,7 @@ static void linecache_free(LineCache *cache)
 
 static LineCacheUserType linecache_usertype(Client *to)
 {
-	if (!MyConnect(to))
+	if (!MyConnect(to) || IsServer(to))
 		return LCUT_REMOTE;
 	if (IsOper(to))
 		return LCUT_OPER;
