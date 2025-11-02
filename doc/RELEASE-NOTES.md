@@ -1,11 +1,8 @@
-UnrealIRCd 6.2.1-rc2
-=====================
+UnrealIRCd 6.2.1
+=================
 
-This is the second Release Candidate for future version 6.2.1. You can help us by
-testing this release and reporting bugs to https://bugs.unrealircd.org/
-
-This version focussed on performance improvements but also various small new
-features were added.
+This version focusses on performance improvements but also quite some new
+features are added and issues were fixed.
 
 ### Enhancements:
 * A lot of optimizations were done:
