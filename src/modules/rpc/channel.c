@@ -216,6 +216,12 @@ void rpc_channel_kick(Client *client, json_t *request, json_t *params)
 		return;
 	}
 
+	if (!acptr->user || !find_membership_link(acptr->user->channel, channel))
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_USERNOTINCHANNEL, "User is not in channel");
+		return;
+	}
+
 	mtag_add_issued_by(&mtags, client, NULL);
 	kick_user(mtags, channel, &me, acptr, reason);
 	safe_free_message_tags(mtags);
