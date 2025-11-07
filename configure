@@ -8576,7 +8576,11 @@ fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: configuring PCRE2 regex library" >&5
 printf "%s\n" "configuring PCRE2 regex library" >&6; }
 cd pcre2-$pcre2_version
+save_cflags="$CFLAGS"
+CFLAGS="$orig_cflags"
+export CFLAGS
 ./configure --enable-jit --enable-shared --prefix=$cur_dir/extras/pcre2 --libdir=$PRIVATELIBDIR || exit 1
+CFLAGS="$save_cflags"
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: compiling PCRE2 regex library" >&5
 printf "%s\n" "compiling PCRE2 regex library" >&6; }
 $ac_cv_prog_MAKER || exit 1
