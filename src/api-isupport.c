@@ -178,10 +178,16 @@ ISupport *ISupportAdd(Module *module, const char *token, const char *value)
 	/* draft-brocklesby-irc-isupport:
 	 * token = a-zA-Z0-9 and 20 or less characters
 	 * value = ASCII 0x21 - 0x7E
+	 *
+	 * Nov 2025:
+	 * Allow also including '/' as per "modern irc"
+	 * https://modern.ircdocs.horse/#rplisupport-005
+	 * https://github.com/ircdocs/modern-irc/issues/250
+	 * - Valware
 	 */
 	for (c = token; c && *c; c++)
 	{
-		if (!isalnum(*c))
+		if (!isalnum(*c) && *c != '/')
 		{
 			if (module)
 				module->errorcode = MODERR_INVALID;
