@@ -108,6 +108,13 @@ int md_access_check(Client *client, ModDataInfo *md, Client *target)
  * https://www.unrealircd.org/docs/Server_protocol:MD_command
  * Module API documentation (if writing an UnrealIRCd module):
  * https://www.unrealircd.org/docs/Dev:Module_Storage
+ *
+ * Note that this MD command has the CMD_BIGLINES flag set,
+ * which means the IRC S2S protocol line can be up to 16k of data.
+ * In particular, the value (parv[4]) can be near 16k.
+ * This is supported since UnrealIRCd 6.1.1. No effort is made to
+ * deal with non-BIGLINES servers. As of 2025 (6.2.1) we don't ship
+ * with modules that have serializers that return so many bytes, anyway.
  */
 CMD_FUNC(cmd_md)
 {

@@ -1,5 +1,23 @@
-UnrealIRCd 6.2.1
+UnrealIRCd 6.2.2-git
 =================
+
+This is the git version (development version) for future UnrealIRCd 6.2.2.
+This is work in progress and may not always be a stable version.
+
+### Enhancements:
+* TODO
+
+### Changes:
+* TODO
+
+### Fixes:
+* TODO
+
+### Developers and protocol:
+* TODO
+
+UnrealIRCd 6.2.1
+-----------------
 
 This version focusses on performance improvements but also quite some new
 features are added and issues were fixed.
@@ -88,6 +106,16 @@ features are added and issues were fixed.
 UnrealIRCd 6.2.0.2
 -------------------
 
+This version fixes scoring in the optional antimixedutf8 module.
+
+UnrealIRCd 6.2.0.1
+-------------------
+
+This version fixes some unnecessary "best practices" warnings.
+
+UnrealIRCd 6.2.0
+-----------------
+
 UnrealIRCd 6.2.0 has channel flood protection turned on by default, UTF8 Text
 Analysis and Spamfilter enhancements, new best practices regarding plaintext
 port 6667 and TLS certificates, PQC enhancements, etc.
@@ -100,9 +128,6 @@ If you want to hold off for a while because you are cautious or if you
 depend on 3rd party modules then feel free to wait for version 6.2.1.
 (At the time of this 6.2.0 release quite some 3rd party modules have
 not been updated to work with 6.2.x)
-
-6.2.0.1: This version fixes some unnecessary "best practices" warnings.  
-6.2.0.2: This version fixes scoring in the optional antimixedutf8 module.
 
 ### Enhancements:
 * [Channel flood protection by default](https://www.unrealircd.org/docs/Channel_anti-flood_settings):
