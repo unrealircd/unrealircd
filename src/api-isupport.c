@@ -121,8 +121,8 @@ void isupport_init(void)
 	else
 		ISupportDelByName("UHNAMES");
 	ISupportSet(NULL, "DEAF", "d");
-	if (settings.has_network_icon_url)
-		ISupportSet(NULL, "draft/ICON", iConf.network_icon_url);
+	if (settings.has_network_icon)
+		ISupportSet(NULL, "draft/ICON", iConf.network_icon);
 	else
 		ISupportDelByName("draft/ICON");
 	

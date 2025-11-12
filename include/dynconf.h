@@ -189,7 +189,7 @@ struct Configuration {
 	int dns_dnsbl_retry;
 	int send_isupport_updates;
 	int utf8_only;
-	char *network_icon_url;
+	char *network_icon;
 };
 
 extern MODVAR Configuration iConf;
@@ -293,7 +293,7 @@ extern MODVAR BestPractices bestpractices;
 
 #define UTF8ONLY	iConf.utf8_only
 
-#define NETWORK_ICON iConf.network_icon_url
+#define NETWORK_ICON iConf.network_icon
 
 /** Used for testing the set { } block configuration.
  * It tests if a setting is present and is also used for duplicate checking.
@@ -347,7 +347,7 @@ struct SetCheck {
 	unsigned has_spamfilter_virus_help_channel_deny:1;
 	unsigned has_spamfilter_except:1;
 	unsigned has_network_name:1;
-	unsigned has_network_icon_url:1;
+	unsigned has_network_icon:1;
 	unsigned has_default_server:1;
 	unsigned has_services_server:1;
 	unsigned has_sasl_server:1;

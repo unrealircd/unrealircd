@@ -1691,7 +1691,7 @@ void free_iConf(Configuration *i)
 	safe_free(i->reject_message_gline);
 	safe_free(i->network_name);
 	safe_free(i->network_name_005);
-	safe_free(i->network_icon_url);
+	safe_free(i->network_icon);
 	safe_free(i->default_server);
 	safe_free(i->services_name);
 	safe_free(i->cloak_prefix);
@@ -1702,7 +1702,6 @@ void free_iConf(Configuration *i)
 	safe_free_all_ban_actions(i->handshake_data_flood_ban_action);
 	safe_free(i->central_spamfilter_url);
 	safe_free(i->central_spamfilter_feed);
-	safe_free(i->network_icon_url);
 	free_security_group(i->central_spamfilter_except);
 	// anti-flood:
 	for (f = i->floodsettings; f; f = f_next)
@@ -8336,7 +8335,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		} else if (!strcmp(cep->name, "network-icon")) {
-			safe_strdup(tempiConf.network_icon_url, cep->value);
+			safe_strdup(tempiConf.network_icon, cep->value);
 		} else if (config_set_dynamic_set_block_item(conf, &dynamic_set, cep))
 		{
 			/* Handled by config_set_dynamic_set_block_item - nothing to do here */
@@ -8652,16 +8651,18 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->name, "network-icon")) {
 			CheckNull(cep);
-			CheckDuplicate(cep, network_icon_url, "network-icon");
+			CheckDuplicate(cep, network_icon, "network-icon");
 			if (strncmp(cep->value, "https://", 8) != 0) {
 				config_error("%s:%i: set::network-icon URL must be single-quoted and start with 'https://' like 'https://example.com/image.jpg'",
 					cep->file->filename, cep->line_number);
 				errors++;
 			}
-
-			// length of IRC line minus server name length and other 005 lengths
-			int max_url_len = (512 - strlen(me.name) - 8);
-			if (strlen(cep->value) > max_url_len) {
+			/* Maximum URL length is (with a few characters margin):
+			 * 510 (IRC protocol line) - 55 for the static text (whitespace, ":", "375", "draft/ICON=", ":are supported by this server", etc)
+			 * - HOSTLEN (lazy me.name max) - NICKLEN (max nick length)
+			 * Which comes down to 360 which should be plenty.
+			 */
+			if (strlen(cep->value) > 510 - 55 - HOSTLEN - NICKLEN) {
 				config_error("%s:%i: set::network-icon URL is too long (max %d characters)",
 					cep->file->filename, cep->line_number, max_url_len);
 				errors++;
