@@ -22,6 +22,8 @@
 
 #include "unrealircd.h"
 
+extern struct SetCheck settings;
+
 ISupport *ISupports = NULL; /* List of ISUPPORT (005) tokens */
 ISupport *ISupports_old = NULL; /* see isupport_snapshot() and isupport_check_for_changes() */
 #define MAXISUPPORTLINES 10
@@ -119,6 +121,11 @@ void isupport_init(void)
 	else
 		ISupportDelByName("UHNAMES");
 	ISupportSet(NULL, "DEAF", "d");
+	if (settings.has_network_icon_url)
+		ISupportSet(NULL, "draft/ICON", iConf.network_icon_url);
+	else
+		ISupportDelByName("draft/ICON");
+	
 	set_isupport_extban(); /* EXTBAN=xyz */
 	set_isupport_targmax(); /* TARGMAX=... */
 }
