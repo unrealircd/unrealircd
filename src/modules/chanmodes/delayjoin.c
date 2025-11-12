@@ -202,12 +202,35 @@ int moded_quit(Client *client, MessageTag *mtags, const char *comment)
 
 // moded_kick ??
 
+int moded_parsemode(const char *m)
+{
+	int what = MODE_ADD;
+	int removed = 0;
+
+	for (; *m; m++)
+	{
+		if (*m == '+')
+			what = MODE_ADD;
+		else if (*m == '-')
+			what = MODE_DEL;
+		else if (*m == 'D')
+		{
+			if (what == MODE_DEL)
+				removed = 1;
+			else
+				removed = 0;
+		}
+	}
+	return removed;
+}
+
 int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, const char *modebuf, const char *parabuf, time_t sendts, int samode)
 {
 	long CAP_EXTENDED_JOIN = ClientCapabilityBit("extended-join");
+	int removed_delayed_mode = moded_parsemode(modebuf);
 
-	// Handle case where we just unset +D but have invisible users
-	if (!channel_is_delayed(channel) && !channel_is_post_delayed(channel) && channel_has_invisible_users(channel))
+	// Handle case where channel went -D but has invisible users
+	if (removed_delayed_mode && !channel_is_delayed(channel) && !channel_is_post_delayed(channel) && channel_has_invisible_users(channel))
 		set_post_delayed(channel);
 	// And even going from +d (back) to +D again by user request
 	else if (channel_is_delayed(channel) && channel_is_post_delayed(channel))
