@@ -1490,6 +1490,8 @@ extern long get_connected_time(Client *client);
 extern time_t get_creationtime(Client *client);
 extern const char *StripControlCodes(const char *text);
 extern const char *StripControlCodesEx(const char *text, char *output, size_t outputlen, int strip_flags);
+extern int valid_text(const char *str);
+extern int valid_text_nospaces(const char *str);
 extern MODVAR Module *Modules;
 extern const char *command_issued_by_rpc(MessageTag *mtags);
 extern MODVAR int quick_close;

@@ -2829,6 +2829,36 @@ const char *StripControlCodes(const char *text)
 	return StripControlCodesEx(text, new_str, sizeof(new_str), 0);
 }
 
+/** Check if string is valid UTF8 and contains no low ASCII (0-31) */
+int valid_text(const char *str)
+{
+	const char *p;
+
+	if (!unrl_utf8_validate(str, NULL))
+		return 0;
+
+	for (p = str; *p; p++)
+		if (*p < 32)
+			return 0;
+
+	return 1;
+}
+
+/** Check if string is valid UTF8 and contains no space (ASCII 32) or low ASCII (<32) */
+int valid_text_nospaces(const char *str)
+{
+	const char *p;
+
+	if (!unrl_utf8_validate(str, NULL))
+		return 0;
+
+	for (p = str; *p; p++)
+		if (*p < 33)
+			return 0;
+
+	return 1;
+}
+
 const char *command_issued_by_rpc(MessageTag *mtags)
 {
 	MessageTag *m = find_mtag(mtags, "unrealircd.org/issued-by");

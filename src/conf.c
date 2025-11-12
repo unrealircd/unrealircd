@@ -8650,19 +8650,21 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 		}
 		else if (!strcmp(cep->name, "network-icon")) {
-			CheckNull(cep);
-			CheckDuplicate(cep, network_icon, "network-icon");
-			if (strncmp(cep->value, "https://", 8) != 0) {
-				config_error("%s:%i: set::network-icon URL must be single-quoted and start with 'https://' like 'https://example.com/image.jpg'",
-					cep->file->filename, cep->line_number);
-				errors++;
-			}
 			/* Maximum URL length is (with a few characters margin):
 			 * 510 (IRC protocol line) - 55 for the static text (whitespace, ":", "375", "draft/ICON=", ":are supported by this server", etc)
 			 * - HOSTLEN (lazy me.name max) - NICKLEN (max nick length)
 			 * Which comes down to 360 which should be plenty.
 			 */
-			if (strlen(cep->value) > 510 - 55 - HOSTLEN - NICKLEN) {
+			int max_url_len = 510 - 55 - HOSTLEN - NICKLEN;
+
+			CheckNull(cep);
+			CheckDuplicate(cep, network_icon, "network-icon");
+			if ((strncmp(cep->value, "https://", 8) != 0) || !valid_text_nospaces(cep->value)) {
+				config_error("%s:%i: set::network-icon URL must be single-quoted and start with 'https://' like 'https://example.com/image.jpg'",
+					cep->file->filename, cep->line_number);
+				errors++;
+			}
+			if (strlen(cep->value) > max_url_len) {
 				config_error("%s:%i: set::network-icon URL is too long (max %d characters)",
 					cep->file->filename, cep->line_number, max_url_len);
 				errors++;
