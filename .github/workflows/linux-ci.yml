@@ -25,7 +25,7 @@ jobs:
     steps:
     - name: installdependencies
       run: |
-        sudo rm /var/lib/man-db/auto-update
+        sudo rm -f /var/lib/man-db/auto-update
         sudo apt-get install build-essential pkg-config libssl-dev libpcre2-dev libargon2-dev libsodium-dev libc-ares-dev libcurl4-openssl-dev libjansson-dev
     - name: installpythondependencies
       run: |
