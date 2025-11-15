@@ -161,7 +161,7 @@ CMD_FUNC(cmd_sjoin)
 	unsigned short merge;	/**< same timestamp: merge their & our modes */
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	char cbuf[MAXLINELENGTH];
-	char scratch_buf[1024]; /**< scratch buffer */
+	char scratch_buf[MAXLINELENGTH]; /**< scratch buffer */
 	char item[1024]; /**< nick or ban/invex/exempt being processed */
 	char item_modes[MEMBERMODESLEN]; /**< item modes, eg "b" or "vhoaq" */
 	char prefix[16]; /**< SJOIN prefix of item for server to server traffic (eg: @) */
