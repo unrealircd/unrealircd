@@ -5,16 +5,25 @@ This is the git version (development version) for future UnrealIRCd 6.2.2.
 This is work in progress and may not always be a stable version.
 
 ### Enhancements:
-* TODO
+* IRCv3 [`network icon`](https://ircv3.net/specs/extensions/network-icon)
+  Use `set { network-icon 'https://.....'; }` (be sure to use single quotes)
 
 ### Changes:
-* TODO
+* When we run configure for PCRE2 we now pass the original `CFLAGS` instead
+  of the ones we add for ourselves (`-Wall -Wextra etc..`).
 
 ### Fixes:
-* TODO
+* Crash if the module `usermodes/bot` or `usermodes/noctcp` is not loaded.
+* Make delayjoin work properly with third party modules that deal with
+  invisible users (such as Gottem's third/auditorium module).
 
 ### Developers and protocol:
-* TODO
+* We now allow `/` in ISUPPORT tokens.
+* JSON-RPC `channel.kick` now checks if the victim is actually in the channel
+  and if not, responds with `JSON_RPC_ERROR_USERNOTINCHANNEL`.
+* Add new hook `HOOKTYPE_MOTD` so modules can add text at the end of the MOTD.
+* The `SJOIN` command now has `CMD_BIGLINES` support (incoming only).
+  Please don't send such long lines yet, this is for future-proofing.
 
 UnrealIRCd 6.2.1
 -----------------
