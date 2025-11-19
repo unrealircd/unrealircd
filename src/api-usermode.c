@@ -397,7 +397,9 @@ long find_user_mode(char letter)
 	Umode *um;
 
 #ifndef DEBUGMODE
-	return umode_letter_to_handler[letter]->mode;
+	if (umode_letter_to_handler[letter])
+		return umode_letter_to_handler[letter]->mode;
+	return 0;
 #else
 	/* In debug mode we check for umode_letter_to_handler[] mismatch with list */
 	for (um = usermodes; um; um = um->next)
