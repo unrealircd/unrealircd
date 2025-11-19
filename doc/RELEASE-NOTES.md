@@ -5,8 +5,9 @@ This is the git version (development version) for future UnrealIRCd 6.2.2.
 This is work in progress and may not always be a stable version.
 
 ### Enhancements:
-* IRCv3 [`network icon`](https://ircv3.net/specs/extensions/network-icon)
-  Use `set { network-icon 'https://.....'; }` (be sure to use single quotes)
+* Support for IRCv3 [network icon](https://ircv3.net/specs/extensions/network-icon).
+  At the moment IRCCloud and ObsidianIRC display this.  
+  Simply provide an image URL (be sure to use single quotes): `set { network-icon 'https://.....'; }`
 
 ### Changes:
 * When we run configure for PCRE2 we now pass the original `CFLAGS` instead
