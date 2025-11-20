@@ -279,10 +279,8 @@ int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *le
 			/* Add the label */
 			if (currentcmd.responses == 0)
 			{
-				int n = *len;
-				if (n > sizeof(currentcmd.firstbuf))
-					n = sizeof(currentcmd.firstbuf);
-				strlcpy(currentcmd.firstbuf, *msg, n);
+				strlncpy(currentcmd.firstbuf, *msg, sizeof(currentcmd.firstbuf), *len);
+				stripcrlf(currentcmd.firstbuf);
 				/* Don't send anything -- yet */
 				*msg = NULL;
 				*len = 0;
