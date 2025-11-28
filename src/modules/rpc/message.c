@@ -1,5 +1,5 @@
 /* message.* RPC calls
- * (C) Copyright 2025 Valware and the UnrealIRCd Team
+ * (C) Copyright 2025 Valware and the UnrealIRCd team
  * License: GPLv2 or later
  */
 
@@ -48,7 +48,7 @@ MOD_INIT()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	memset(&r, 0, sizeof(r));
-	r.method = "message.privmsg";
+	r.method = "message.send_privmsg";
 	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_message_privmsg;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
@@ -58,7 +58,7 @@ MOD_INIT()
 	}
 
 	memset(&r, 0, sizeof(r));
-	r.method = "message.notice";
+	r.method = "message.send_notice";
 	r.loglevel = ULOG_DEBUG;
 	r.call = rpc_message_notice;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
@@ -68,7 +68,7 @@ MOD_INIT()
 	}
 
 	memset(&r, 0, sizeof(r));
-	r.method = "message.numeric";
+	r.method = "message.send_numeric";
 	r.call = rpc_message_numeric;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
@@ -77,7 +77,7 @@ MOD_INIT()
 	}
 
 	memset(&r, 0, sizeof(r));
-	r.method = "message.standardreply";
+	r.method = "message.send_standard_reply";
 	r.call = rpc_message_standardreply;
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
