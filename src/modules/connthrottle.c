@@ -73,6 +73,10 @@ int ct_rconnect(Client *);
 CMD_FUNC(ct_throttle);
 EVENT(connthrottle_evt);
 void ucounter_free(ModData *m);
+void *connthrottle_status_callback(void);
+
+/* Static status structure for callback - filled on demand */
+static ConnthrottleStatus ct_status;
 
 MOD_TEST()
 {
@@ -90,6 +94,10 @@ MOD_TEST()
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, ct_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, ct_config_posttest);
+	
+	/* Register callback so other modules (like rpc/connthrottle) can query our status */
+	CallbackAddPVoid(modinfo->handle, CALLBACKTYPE_CONNTHROTTLE_STATUS, TO_PVOIDFUNC(connthrottle_status_callback));
+	
 	return MOD_SUCCESS;
 }
 
@@ -597,4 +605,54 @@ CMD_FUNC(ct_throttle)
 void ucounter_free(ModData *m)
 {
 	safe_free(ucounter);
+}
+
+/** Callback function that allows other modules (like rpc/connthrottle) to get our status.
+ * Returns a pointer to a ConnthrottleStatus structure with current state.
+ */
+void *connthrottle_status_callback(void)
+{
+	time_t start_delay_end;
+
+	if (!ucounter)
+		return NULL;
+
+	memset(&ct_status, 0, sizeof(ct_status));
+
+	/* Current state */
+	ct_status.enabled = !ucounter->disabled;
+	ct_status.throttling_this_minute = ucounter->throttling_this_minute;
+	ct_status.throttling_previous_minute = ucounter->throttling_previous_minute;
+
+	/* Counters */
+	ct_status.local_count = ucounter->local.count;
+	ct_status.global_count = ucounter->global.count;
+	ct_status.local_period_start = ucounter->local.t;
+	ct_status.global_period_start = ucounter->global.t;
+
+	/* Statistics */
+	ct_status.rejected_clients = ucounter->rejected_clients;
+	ct_status.allowed_except = ucounter->allowed_except;
+	ct_status.allowed_unknown_users = ucounter->allowed_unknown_users;
+
+	/* Configuration */
+	ct_status.cfg_local_count = cfg.local.count;
+	ct_status.cfg_local_period = cfg.local.period;
+	ct_status.cfg_global_count = cfg.global.count;
+	ct_status.cfg_global_period = cfg.global.period;
+	ct_status.cfg_start_delay = cfg.start_delay;
+	ct_status.cfg_except_reputation = cfg.except ? cfg.except->reputation_score : 0;
+	ct_status.cfg_except_identified = cfg.except ? cfg.except->identified : 0;
+	ct_status.cfg_except_webirc = cfg.except ? cfg.except->webirc : 0;
+
+	/* State info */
+	start_delay_end = me.local->creationtime + cfg.start_delay;
+	if (start_delay_end > TStime())
+		ct_status.start_delay_remaining = (int)(start_delay_end - TStime());
+	else
+		ct_status.start_delay_remaining = 0;
+
+	ct_status.reputation_gathering = still_reputation_gathering();
+
+	return &ct_status;
 }
