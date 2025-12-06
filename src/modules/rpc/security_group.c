@@ -89,6 +89,22 @@ static void json_expand_name_list_sg(json_t *parent, const char *key, NameList *
 		json_array_append_new(arr, json_string_unreal(n->name));
 }
 
+/** Helper: Expand a name-value list to JSON object */
+static void json_expand_nvplist(json_t *parent, const char *key, NameValuePrioList *list)
+{
+	json_t *obj;
+	NameValuePrioList *n;
+
+	if (!list)
+		return;
+
+	obj = json_object();
+	json_object_set_new(parent, key, obj);
+
+	for (n = list; n; n = n->next)
+		json_object_set_new(obj, n->name, json_string_unreal(n->value));
+}
+
 /** Helper: Expand security group details to JSON */
 static void json_expand_security_group(json_t *j, const char *key, SecurityGroup *s, int detail)
 {
@@ -135,6 +151,10 @@ static void json_expand_security_group(json_t *j, const char *key, SecurityGroup
 	json_expand_name_list_sg(child, "exclude_security_group", s->exclude_security_group);
 	json_expand_name_list_sg(child, "server_port", s->server_port);
 	json_expand_name_list_sg(child, "exclude_server_port", s->exclude_server_port);
+
+	/* Extended criteria (account, realname, etc) */
+	json_expand_nvplist(child, "extended", s->extended);
+	json_expand_nvplist(child, "exclude_extended", s->exclude_extended);
 
 	/* Rules (as strings) */
 	if (s->prettyrule)
