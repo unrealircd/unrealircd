@@ -648,3 +648,63 @@ void json_expand_textanalysis(json_t *root, const char *key, TextAnalysis *ta, i
 			json_object_set_new(blk, utf8_get_block_name(i), json_integer(ta->unicode_blockmap[i]));
 	}
 }
+
+/** Expand a ConfigItem_mask list to a JSON array.
+ * @param parent	The parent JSON object
+ * @param key		The key name for the array
+ * @param mask		The mask list to expand
+ */
+void json_expand_mask_list(json_t *parent, const char *key, ConfigItem_mask *mask)
+{
+	json_t *arr;
+	ConfigItem_mask *m;
+
+	if (!mask)
+		return;
+
+	arr = json_array();
+	json_object_set_new(parent, key, arr);
+
+	for (m = mask; m; m = m->next)
+		json_array_append_new(arr, json_string_unreal(m->mask));
+}
+
+/** Expand a NameList to a JSON array.
+ * @param parent	The parent JSON object
+ * @param key		The key name for the array
+ * @param list		The name list to expand
+ */
+void json_expand_name_list(json_t *parent, const char *key, NameList *list)
+{
+	json_t *arr;
+	NameList *n;
+
+	if (!list)
+		return;
+
+	arr = json_array();
+	json_object_set_new(parent, key, arr);
+
+	for (n = list; n; n = n->next)
+		json_array_append_new(arr, json_string_unreal(n->name));
+}
+
+/** Expand a NameValuePrioList to a JSON object.
+ * @param parent	The parent JSON object
+ * @param key		The key name for the object
+ * @param list		The name-value list to expand
+ */
+void json_expand_nvplist(json_t *parent, const char *key, NameValuePrioList *list)
+{
+	json_t *obj;
+	NameValuePrioList *n;
+
+	if (!list)
+		return;
+
+	obj = json_object();
+	json_object_set_new(parent, key, obj);
+
+	for (n = list; n; n = n->next)
+		json_object_set_new(obj, n->name, json_string_unreal(n->value));
+}
