@@ -2710,7 +2710,7 @@ typedef enum JsonRpcError {
                                                      } while(0)
 
 #define REQUIRE_PARAM_BOOLEAN(name, varname)         do { \
-                                                         json_t *vvv = json_object_get(params, name); \
+                                                         json_t *v = json_object_get(params, name); \
                                                          if (!v || !json_is_boolean(v)) \
                                                          { \
                                                              rpc_error_fmt(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: '%s'", name); \

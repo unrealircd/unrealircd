@@ -75,6 +75,7 @@ EVENT(connthrottle_evt);
 void ucounter_free(ModData *m);
 RPC_CALL_FUNC(rpc_connthrottle_status);
 RPC_CALL_FUNC(rpc_connthrottle_set);
+RPC_CALL_FUNC(rpc_connthrottle_reset);
 
 MOD_TEST()
 {
@@ -127,6 +128,15 @@ MOD_INIT()
 	if (!RPCHandlerAdd(modinfo->handle, &r))
 	{
 		config_error("[connthrottle] Could not register RPC handler 'connthrottle.set'");
+		return MOD_FAILED;
+	}
+
+	memset(&r, 0, sizeof(r));
+	r.method = "connthrottle.reset";
+	r.call = rpc_connthrottle_reset;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[connthrottle] Could not register RPC handler 'connthrottle.reset'");
 		return MOD_FAILED;
 	}
 
@@ -700,35 +710,38 @@ RPC_CALL_FUNC(rpc_connthrottle_status)
 RPC_CALL_FUNC(rpc_connthrottle_set)
 {
 	json_t *result;
-	const char *action;
+	int enabled;
 	const char *parv[3];
 
-	REQUIRE_PARAM_STRING("action", action);
-
-	/* Validate action */
-	if (strcasecmp(action, "on") && strcasecmp(action, "off") && strcasecmp(action, "reset"))
-	{
-		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS,
-		          "Invalid action. Must be 'on', 'off', or 'reset'");
-		return;
-	}
+	REQUIRE_PARAM_BOOLEAN("enabled", enabled);
 
 	/* Execute the THROTTLE command as the server */
 	parv[0] = NULL;
-	parv[1] = action;
+	parv[1] = enabled ? "on" : "off";
 	parv[2] = NULL;
 	do_cmd(&me, NULL, "THROTTLE", 2, parv);
 
 	result = json_object();
 	json_object_set_new(result, "success", json_boolean(1));
-	json_object_set_new(result, "action", json_string_unreal(action));
+	json_object_set_new(result, "enabled", json_boolean(enabled));
 
-	if (!strcasecmp(action, "on"))
-		json_object_set_new(result, "message", json_string_unreal("Connection throttling enabled"));
-	else if (!strcasecmp(action, "off"))
-		json_object_set_new(result, "message", json_string_unreal("Connection throttling disabled"));
-	else if (!strcasecmp(action, "reset"))
-		json_object_set_new(result, "message", json_string_unreal("Connection throttle counters reset"));
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+RPC_CALL_FUNC(rpc_connthrottle_reset)
+{
+	json_t *result;
+	const char *parv[3];
+
+	/* Execute the THROTTLE reset command as the server */
+	parv[0] = NULL;
+	parv[1] = "reset";
+	parv[2] = NULL;
+	do_cmd(&me, NULL, "THROTTLE", 2, parv);
+
+	result = json_object();
+	json_object_set_new(result, "success", json_boolean(1));
 
 	rpc_response(client, request, result);
 	json_decref(result);
