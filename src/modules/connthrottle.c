@@ -73,6 +73,9 @@ int ct_rconnect(Client *);
 CMD_FUNC(ct_throttle);
 EVENT(connthrottle_evt);
 void ucounter_free(ModData *m);
+RPC_CALL_FUNC(rpc_connthrottle_status);
+RPC_CALL_FUNC(rpc_connthrottle_set);
+RPC_CALL_FUNC(rpc_connthrottle_reset);
 
 MOD_TEST()
 {
@@ -90,11 +93,14 @@ MOD_TEST()
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, ct_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, ct_config_posttest);
+	
 	return MOD_SUCCESS;
 }
 
 MOD_INIT()
 {
+	RPCHandlerInfo r;
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	LoadPersistentPointer(modinfo, ucounter, ucounter_free);
 	if (!ucounter)
@@ -104,6 +110,36 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, ct_lconnect);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, 0, ct_rconnect);
 	CommandAdd(modinfo->handle, MSG_THROTTLE, ct_throttle, MAXPARA, CMD_USER|CMD_SERVER);
+
+	/* RPC handlers */
+	memset(&r, 0, sizeof(r));
+	r.method = "connthrottle.status";
+	r.loglevel = ULOG_DEBUG;
+	r.call = rpc_connthrottle_status;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[connthrottle] Could not register RPC handler 'connthrottle.status'");
+		return MOD_FAILED;
+	}
+
+	memset(&r, 0, sizeof(r));
+	r.method = "connthrottle.set";
+	r.call = rpc_connthrottle_set;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[connthrottle] Could not register RPC handler 'connthrottle.set'");
+		return MOD_FAILED;
+	}
+
+	memset(&r, 0, sizeof(r));
+	r.method = "connthrottle.reset";
+	r.call = rpc_connthrottle_reset;
+	if (!RPCHandlerAdd(modinfo->handle, &r))
+	{
+		config_error("[connthrottle] Could not register RPC handler 'connthrottle.reset'");
+		return MOD_FAILED;
+	}
+
 	return MOD_SUCCESS;
 }
 
@@ -597,4 +633,116 @@ CMD_FUNC(ct_throttle)
 void ucounter_free(ModData *m)
 {
 	safe_free(ucounter);
+}
+
+/* ==================== RPC HANDLERS ==================== */
+
+RPC_CALL_FUNC(rpc_connthrottle_status)
+{
+	json_t *result, *counters, *config, *stats;
+	time_t start_delay_end;
+	int start_delay_remaining;
+	int reputation_gathering;
+
+	result = json_object();
+
+	/* Basic state */
+	json_object_set_new(result, "enabled", json_boolean(!ucounter->disabled));
+	json_object_set_new(result, "throttling_this_minute", json_boolean(ucounter->throttling_this_minute));
+	json_object_set_new(result, "throttling_previous_minute", json_boolean(ucounter->throttling_previous_minute));
+
+	/* Calculate state info */
+	start_delay_end = me.local->creationtime + cfg.start_delay;
+	if (start_delay_end > TStime())
+		start_delay_remaining = (int)(start_delay_end - TStime());
+	else
+		start_delay_remaining = 0;
+	reputation_gathering = still_reputation_gathering();
+
+	/* Determine overall state */
+	if (ucounter->disabled)
+		json_object_set_new(result, "state", json_string_unreal("disabled_by_oper"));
+	else if (start_delay_remaining > 0)
+		json_object_set_new(result, "state", json_string_unreal("start_delay"));
+	else if (reputation_gathering)
+		json_object_set_new(result, "state", json_string_unreal("reputation_gathering"));
+	else if (ucounter->throttling_this_minute)
+		json_object_set_new(result, "state", json_string_unreal("throttling"));
+	else
+		json_object_set_new(result, "state", json_string_unreal("active"));
+
+	json_object_set_new(result, "start_delay_remaining", json_integer(start_delay_remaining));
+	json_object_set_new(result, "reputation_gathering", json_boolean(reputation_gathering));
+
+	/* Current counters */
+	counters = json_object();
+	json_object_set_new(counters, "local_count", json_integer(ucounter->local.count));
+	json_object_set_new(counters, "global_count", json_integer(ucounter->global.count));
+	if (ucounter->local.t > 0)
+		json_object_set_new(counters, "local_period_start", json_timestamp(ucounter->local.t));
+	if (ucounter->global.t > 0)
+		json_object_set_new(counters, "global_period_start", json_timestamp(ucounter->global.t));
+	json_object_set_new(result, "counters", counters);
+
+	/* Statistics for last minute */
+	stats = json_object();
+	json_object_set_new(stats, "rejected_clients", json_integer(ucounter->rejected_clients));
+	json_object_set_new(stats, "allowed_except", json_integer(ucounter->allowed_except));
+	json_object_set_new(stats, "allowed_unknown_users", json_integer(ucounter->allowed_unknown_users));
+	json_object_set_new(result, "stats_last_minute", stats);
+
+	/* Configuration */
+	config = json_object();
+	json_object_set_new(config, "local_throttle_count", json_integer(cfg.local.count));
+	json_object_set_new(config, "local_throttle_period", json_integer(cfg.local.period));
+	json_object_set_new(config, "global_throttle_count", json_integer(cfg.global.count));
+	json_object_set_new(config, "global_throttle_period", json_integer(cfg.global.period));
+	json_object_set_new(config, "start_delay", json_integer(cfg.start_delay));
+	json_object_set_new(config, "except_reputation_score", json_integer(cfg.except ? cfg.except->reputation_score : 0));
+	json_object_set_new(config, "except_sasl_bypass", json_boolean(cfg.except ? cfg.except->identified : 0));
+	json_object_set_new(config, "except_webirc_bypass", json_boolean(cfg.except ? cfg.except->webirc : 0));
+	json_object_set_new(result, "config", config);
+
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+RPC_CALL_FUNC(rpc_connthrottle_set)
+{
+	json_t *result;
+	int enabled;
+	const char *parv[3];
+
+	REQUIRE_PARAM_BOOLEAN("enabled", enabled);
+
+	/* Execute the THROTTLE command as the server */
+	parv[0] = NULL;
+	parv[1] = enabled ? "on" : "off";
+	parv[2] = NULL;
+	do_cmd(&me, NULL, "THROTTLE", 2, parv);
+
+	result = json_object();
+	json_object_set_new(result, "success", json_boolean(1));
+	json_object_set_new(result, "enabled", json_boolean(enabled));
+
+	rpc_response(client, request, result);
+	json_decref(result);
+}
+
+RPC_CALL_FUNC(rpc_connthrottle_reset)
+{
+	json_t *result;
+	const char *parv[3];
+
+	/* Execute the THROTTLE reset command as the server */
+	parv[0] = NULL;
+	parv[1] = "reset";
+	parv[2] = NULL;
+	do_cmd(&me, NULL, "THROTTLE", 2, parv);
+
+	result = json_object();
+	json_object_set_new(result, "success", json_boolean(1));
+
+	rpc_response(client, request, result);
+	json_decref(result);
 }

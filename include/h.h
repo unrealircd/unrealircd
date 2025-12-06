@@ -1308,6 +1308,9 @@ extern void json_expand_client_security_groups(json_t *parent, Client *client);
 extern void json_expand_channel(json_t *j, const char *key, Channel *channel, int detail);
 extern void json_expand_tkl(json_t *j, const char *key, TKL *tkl, int detail);
 extern void json_expand_textanalysis(json_t *root, const char *key, TextAnalysis *ta, int detail);
+extern void json_expand_mask_list(json_t *parent, const char *key, ConfigItem_mask *mask);
+extern void json_expand_name_list(json_t *parent, const char *key, NameList *list);
+extern void json_expand_nvplist(json_t *parent, const char *key, NameValuePrioList *list);
 /* end of json.c */
 /* securitygroup.c start */
 extern MODVAR SecurityGroup *securitygroups;
