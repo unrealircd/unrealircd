@@ -2730,37 +2730,6 @@ typedef enum JsonRpcError {
 #define BUILDVARSTRING_XML			0x2
 #define BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY	0x4
 
-/** Connthrottle status structure - used by connthrottle module and rpc/connthrottle.
- * Allows querying the connection throttle state via RPC.
- */
-typedef struct ConnthrottleStatus {
-	/* Current state */
-	int enabled;                    /**< 1=enabled, 0=disabled by oper */
-	int throttling_this_minute;     /**< Currently throttling? */
-	int throttling_previous_minute; /**< Was throttling last minute? */
-	/* Counters (current period) */
-	int local_count;                /**< Local connections this period */
-	int global_count;               /**< Global connections this period */
-	time_t local_period_start;      /**< When local period started */
-	time_t global_period_start;     /**< When global period started */
-	/* Statistics (last 60 seconds) */
-	int rejected_clients;           /**< Rejected this minute */
-	int allowed_except;             /**< Allowed (except list) this minute */
-	int allowed_unknown_users;      /**< Allowed (new users) this minute */
-	/* Configuration */
-	int cfg_local_count;            /**< Configured local limit */
-	int cfg_local_period;           /**< Configured local period (seconds) */
-	int cfg_global_count;           /**< Configured global limit */
-	int cfg_global_period;          /**< Configured global period (seconds) */
-	int cfg_start_delay;            /**< Start delay (seconds) */
-	int cfg_except_reputation;      /**< Minimum reputation for except */
-	int cfg_except_identified;      /**< SASL bypass enabled? */
-	int cfg_except_webirc;          /**< WEBIRC bypass enabled? */
-	/* State info */
-	int start_delay_remaining;      /**< Seconds remaining in start delay (0 if expired) */
-	int reputation_gathering;       /**< 1 if still gathering reputation data */
-} ConnthrottleStatus;
-
 #endif /* __struct_include__ */
 
 #include "dynconf.h"
