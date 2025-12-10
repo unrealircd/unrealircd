@@ -1795,10 +1795,6 @@ void config_setdefaultsettings(Configuration *i)
 
 	/* TLS options */
 	i->tls_options = safe_alloc(sizeof(TLSOptions));
-	snprintf(tmp, sizeof(tmp), "%s/tls/server.cert.pem", CONFDIR);
-	add_name_list(i->tls_options->certificate_files, tmp);
-	snprintf(tmp, sizeof(tmp), "%s/tls/server.key.pem", CONFDIR);
-	add_name_list(i->tls_options->key_files, tmp);
 	snprintf(tmp, sizeof(tmp), "%s/tls/curl-ca-bundle.crt", CONFDIR);
 	safe_strdup(i->tls_options->trusted_ca_file, tmp);
 	safe_strdup(i->tls_options->ciphers, UNREALIRCD_DEFAULT_CIPHERS);
@@ -3113,6 +3109,30 @@ int config_run_blocks(void)
 					if (cc->conffunc(cfptr, ce) < 0)
 						errors++;
 				}
+			}
+		}
+		if (!strcmp(config_block, "set"))
+		{
+			/* Yeah, this is stupid to have here, it's basically a
+			 * just-in-time placement of set::tls::certificate / key.
+			 * We can't initialize it in config_setdefaultsettings()
+			 * because when a config item is encountered in the config file
+			 * we _add to a list_ of certificates/keys, so then we
+			 * could never override the default one.
+			 * So, instead, it needs to be NULL / empty, and we only
+			 * fill it here if it is still NULL.
+			 * And we need to do it HERE, directly after processing
+			 * of all set blocks, because listen/link/sni/etc (can)
+			 * inherit set::tls options, and they should not inherit NULL.
+			 * *sigh*... -- Syzop / 2025-12-10
+			 */
+			if (!tempiConf.tls_options->certificate_files)
+			{
+				char tmp[512];
+				snprintf(tmp, sizeof(tmp), "%s/tls/server.cert.pem", CONFDIR);
+				add_name_list(tempiConf.tls_options->certificate_files, tmp);
+				snprintf(tmp, sizeof(tmp), "%s/tls/server.key.pem", CONFDIR);
+				add_name_list(tempiConf.tls_options->key_files, tmp);
 			}
 		}
 	}

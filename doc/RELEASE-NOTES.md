@@ -17,6 +17,14 @@ This is work in progress and may not always be a stable version.
 * Crash if the module `usermodes/bot` or `usermodes/noctcp` is not loaded.
 * Make delayjoin work properly with third party modules that deal with
   invisible users (such as Gottem's third/auditorium module).
+* If you specified a set::tls::certificate and set::tls::key then these
+  were seen as "in addition to" the default `conf/tls/server.cert.pem`
+  and `conf/tls/server.key.pem`, while it should be "instead of".
+  This is now fixed.
+  * Just as a reminder, we normally recommend keeping the self-signed
+    certificate for server linking and using a certificate issued by a
+    trusted CA for client traffic (such as on port 6697), see
+    [Using Let's Encrypt with UnrealIRCd](https://www.unrealircd.org/docs/Using_Let's_Encrypt_with_UnrealIRCd).
 
 ### Developers and protocol:
 * We now allow `/` in ISUPPORT tokens.
