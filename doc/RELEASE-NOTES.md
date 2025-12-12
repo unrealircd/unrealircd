@@ -8,10 +8,19 @@ This is work in progress and may not always be a stable version.
 * Support for IRCv3 [network icon](https://ircv3.net/specs/extensions/network-icon).
   At the moment IRCCloud and ObsidianIRC display this.  
   Simply provide an image URL (be sure to use single quotes): `set { network-icon 'https://.....'; }`
+* New [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC) functions:
+  * [`message`](https://www.unrealircd.org/docs/JSON-RPC:Message):
+    send messages/notices/numerics/standard-replies to users.
+  * [`security_group`](https://www.unrealircd.org/docs/JSON-RPC:Security_group):
+    List and get details of [security groups](https://www.unrealircd.org/docs/Security-group_block).
+  * [`connthrottle`](https://www.unrealircd.org/docs/JSON-RPC:Connthrottle):
+    Get status of [Connthrottle](https://www.unrealircd.org/docs/Connthrottle),
+    enable/disable and reset counters.
 
 ### Changes:
 * When we run configure for PCRE2 we now pass the original `CFLAGS` instead
   of the ones we add for ourselves (`-Wall -Wextra etc..`).
+* Update shipped libs: c-ares (1.34.6)
 
 ### Fixes:
 * Crash if the module `usermodes/bot` or `usermodes/noctcp` is not loaded.
@@ -28,6 +37,8 @@ This is work in progress and may not always be a stable version.
 
 ### Developers and protocol:
 * We now allow `/` in ISUPPORT tokens.
+* When using [labeled-response](https://ircv3.net/specs/extensions/labeled-response),
+  some line endings were `\r\r\n` instead or `\r\n`.
 * JSON-RPC `channel.kick` now checks if the victim is actually in the channel
   and if not, responds with `JSON_RPC_ERROR_USERNOTINCHANNEL`.
 * Add new hook `HOOKTYPE_MOTD` so modules can add text at the end of the MOTD.
