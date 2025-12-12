@@ -1,8 +1,28 @@
-UnrealIRCd 6.2.2-git
+UnrealIRCd 6.2.2
 =================
 
-This is the git version (development version) for future UnrealIRCd 6.2.2.
-This is work in progress and may not always be a stable version.
+This is a small maintenance release to fix some minor issues.
+
+If you are still running 6.0.x or 6.1.x then we highly recommend to upgrade
+to 6.2.x in December 2025. The 6.2.x series have proven to be stable and are a nice leap
+forward in terms of security with
+[channel flood protection enabled by default](https://www.unrealircd.org/docs/Channel_anti-flood_settings),
+our effort and guide to [move users to TLS](https://www.unrealircd.org/docs/Use_TLS) and
+[Post-quantum cryptography (PQC) enhancements](https://www.unrealircd.org/docs/PQC_measures).
+
+I would like to take this opportunity to thank:
+* Our current monthly sponsors - IRCCloud, Réseau IRC Zeolia, Jellis,
+  Rafael Grether, Dex, NerdyEnough - and everyone else who donated this year.
+* People who filed bugs, made feature suggestions, updated the documentation,
+  all helping to make UnrealIRCd a better product.
+* Coders and contributors, Valware in particular.
+* Supporters and everyone else who helped people in #unreal-support and on
+  the forums.
+* Finally, everyone who runs UnrealIRCd as part of their community along
+  with all their users.
+
+Next release, 6.2.3, is scheduled for Q1 2026. We wish everyone a merry
+Christmas and a happy new year!
 
 ### Enhancements:
 * Support for IRCv3 [network icon](https://ircv3.net/specs/extensions/network-icon).
