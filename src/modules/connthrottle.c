@@ -669,7 +669,7 @@ RPC_CALL_FUNC(rpc_connthrottle_status)
 	else if (ucounter->throttling_this_minute)
 		json_object_set_new(result, "state", json_string_unreal("throttling"));
 	else
-		json_object_set_new(result, "state", json_string_unreal("active"));
+		json_object_set_new(result, "state", json_string_unreal("monitoring"));
 
 	json_object_set_new(result, "start_delay_remaining", json_integer(start_delay_remaining));
 	json_object_set_new(result, "reputation_gathering", json_boolean(reputation_gathering));
@@ -698,9 +698,7 @@ RPC_CALL_FUNC(rpc_connthrottle_status)
 	json_object_set_new(config, "global_throttle_count", json_integer(cfg.global.count));
 	json_object_set_new(config, "global_throttle_period", json_integer(cfg.global.period));
 	json_object_set_new(config, "start_delay", json_integer(cfg.start_delay));
-	json_object_set_new(config, "except_reputation_score", json_integer(cfg.except ? cfg.except->reputation_score : 0));
-	json_object_set_new(config, "except_sasl_bypass", json_boolean(cfg.except ? cfg.except->identified : 0));
-	json_object_set_new(config, "except_webirc_bypass", json_boolean(cfg.except ? cfg.except->webirc : 0));
+	json_expand_security_group(config, "except", cfg.except, 1);
 	json_object_set_new(result, "config", config);
 
 	rpc_response(client, request, result);
