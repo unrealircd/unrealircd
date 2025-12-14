@@ -2238,6 +2238,11 @@ typedef struct DynamicSetBlock {
 } DynamicSetBlock;
 
 #define SECURITYGROUPLEN 48
+/** Security groups can match users based on various criteria.
+ * See https://www.unrealircd.org/docs/Security-group_block
+ * We also use a SecurityGroup struct for Mask/Match items
+ * https://www.unrealircd.org/docs/Mask_item
+ */
 struct SecurityGroup {
 	SecurityGroup *prev, *next;
 	int priority;
@@ -2260,6 +2265,14 @@ struct SecurityGroup {
 	CRuleNode *rule; /**< parsed crule */
 	NameList *destination;
 	NameValuePrioList *extended;
+	// IMPORTANT: If you are adding anything:
+	// 1) Add the item here
+	// 2) Add an exclude_ item (further below)
+	// 3) Update test_match_item() in src/securitygroup.c
+	// 4) Update conf_match_item() in src/securitygroup.c
+	// 5) Update duplicate_security_group() in src/securitygroup.c
+	// 6) Update free_security_group() in src/securitygroup.c
+	// 7) Update json_expand_security_group() in src/json.c
 	/* Exclude */
 	int exclude_identified;
 	int exclude_reputation_score;
