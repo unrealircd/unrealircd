@@ -587,7 +587,10 @@ void json_expand_tkl(json_t *root, const char *key, TKL *tkl, int detail)
 		json_object_set_new(j, "set_in_config", json_boolean(1));
 	if (TKLIsServerBan(tkl))
 	{
-		json_object_set_new(j, "name", json_string_unreal(tkl_uhost(tkl, buf, sizeof(buf), 0)));
+		if (tkl->ptr.serverban->match)
+			json_expand_security_group(j, "match", tkl->ptr.serverban->match, 1);
+		else
+			json_object_set_new(j, "name", json_string_unreal(tkl_uhost(tkl, buf, sizeof(buf), 0)));
 		json_object_set_new(j, "reason", json_string_unreal(tkl->ptr.serverban->reason));
 	} else
 	if (TKLIsNameBan(tkl))
@@ -597,7 +600,10 @@ void json_expand_tkl(json_t *root, const char *key, TKL *tkl, int detail)
 	} else
 	if (TKLIsBanException(tkl))
 	{
-		json_object_set_new(j, "name", json_string_unreal(tkl_uhost(tkl, buf, sizeof(buf), 0)));
+		if (tkl->ptr.banexception->match)
+			json_expand_security_group(j, "match", tkl->ptr.banexception->match, 1);
+		else
+			json_object_set_new(j, "name", json_string_unreal(tkl_uhost(tkl, buf, sizeof(buf), 0)));
 		json_object_set_new(j, "reason", json_string_unreal(tkl->ptr.banexception->reason));
 		json_object_set_new(j, "exception_types", json_string_unreal(tkl->ptr.banexception->bantypes));
 	} else
@@ -610,6 +616,8 @@ void json_expand_tkl(json_t *root, const char *key, TKL *tkl, int detail)
 		}
 		if (tkl->ptr.spamfilter->prettyrule)
 			json_object_set_new(j, "rule", json_string_unreal(tkl->ptr.spamfilter->prettyrule));
+		if (tkl->ptr.spamfilter->except)
+			json_expand_security_group(j, "match", tkl->ptr.spamfilter->except, 1);
 		json_object_set_new(j, "ban_action", json_string_unreal(ban_actions_to_string(tkl->ptr.spamfilter->action)));
 		json_object_set_new(j, "ban_duration", json_integer(tkl->ptr.spamfilter->tkl_duration));
 		json_object_set_new(j, "ban_duration_string", json_string_unreal(pretty_time_val_r(buf, sizeof(buf), tkl->ptr.spamfilter->tkl_duration)));
