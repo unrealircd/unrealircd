@@ -708,3 +708,65 @@ void json_expand_nvplist(json_t *parent, const char *key, NameValuePrioList *lis
 	for (n = list; n; n = n->next)
 		json_object_set_new(obj, n->name, json_string_unreal(n->value));
 }
+
+/** Helper: Expand security group details to JSON */
+void json_expand_security_group(json_t *j, const char *key, SecurityGroup *s, int detail)
+{
+	json_t *child;
+
+	if (key)
+	{
+		child = json_object();
+		json_object_set_new(j, key, child);
+	}
+	else
+	{
+		child = j;
+	}
+
+	/* If it has a name, it is a security group. Otherwise it is a match item. */
+	if (*s->name)
+	{
+		json_object_set_new(child, "name", json_string_unreal(s->name));
+		json_object_set_new(child, "priority", json_integer(s->priority));
+	}
+
+	if (detail == 0)
+		return;
+
+	/* Inclusion criteria */
+	if (s->identified)
+		json_object_set_new(child, "identified", json_boolean(1));
+	if (s->webirc)
+		json_object_set_new(child, "webirc", json_boolean(1));
+	if (s->websocket)
+		json_object_set_new(child, "websocket", json_boolean(1));
+	if (s->tls)
+		json_object_set_new(child, "tls", json_boolean(1));
+	if (s->reputation_score != 0)
+		json_object_set_new(child, "reputation_score", json_integer(s->reputation_score));
+	if (s->connect_time != 0)
+		json_object_set_new(child, "connect_time", json_integer(s->connect_time));
+
+	/* Mask lists */
+	json_expand_mask_list(child, "mask", s->mask);
+	json_expand_mask_list(child, "exclude_mask", s->exclude_mask);
+
+	/* Name lists */
+	json_expand_name_list(child, "ip", s->ip);
+	json_expand_name_list(child, "exclude_ip", s->exclude_ip);
+	json_expand_name_list(child, "security_group", s->security_group);
+	json_expand_name_list(child, "exclude_security_group", s->exclude_security_group);
+	json_expand_name_list(child, "server_port", s->server_port);
+	json_expand_name_list(child, "exclude_server_port", s->exclude_server_port);
+
+	/* Extended criteria (account, realname, etc) */
+	json_expand_nvplist(child, "extended", s->extended);
+	json_expand_nvplist(child, "exclude_extended", s->exclude_extended);
+
+	/* Rules (as strings) */
+	if (s->prettyrule)
+		json_object_set_new(child, "rule", json_string_unreal(s->prettyrule));
+	if (s->exclude_prettyrule)
+		json_object_set_new(child, "exclude_rule", json_string_unreal(s->exclude_prettyrule));
+}

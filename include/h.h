@@ -1311,6 +1311,7 @@ extern void json_expand_textanalysis(json_t *root, const char *key, TextAnalysis
 extern void json_expand_mask_list(json_t *parent, const char *key, ConfigItem_mask *mask);
 extern void json_expand_name_list(json_t *parent, const char *key, NameList *list);
 extern void json_expand_nvplist(json_t *parent, const char *key, NameValuePrioList *list);
+extern void json_expand_security_group(json_t *j, const char *key, SecurityGroup *s, int detail);
 /* end of json.c */
 /* securitygroup.c start */
 extern MODVAR SecurityGroup *securitygroups;
