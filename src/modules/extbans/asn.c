@@ -87,8 +87,11 @@ MOD_UNLOAD()
 
 int extban_asn_usage(Client *client)
 {
-	sendnotice(client, "ERROR: ExtBan ~asn expects the AS number (all digits). "
-	                   "For example: +b ~asn:64496");
+	if (client)
+	{
+		sendnotice(client, "ERROR: ExtBan ~asn expects the AS number (all digits). "
+				   "For example: +b ~asn:64496");
+	}
 	return EX_DENY;
 }
 

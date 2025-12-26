@@ -87,8 +87,11 @@ MOD_UNLOAD()
 
 int extban_country_usage(Client *client)
 {
-	sendnotice(client, "ERROR: ExtBan ~country expects a two letter country code, or * to ban unknown countries. "
-					 "For example: +b ~country:UK");
+	if (client)
+	{
+		sendnotice(client, "ERROR: ExtBan ~country expects a two letter country code, or * to ban unknown countries. "
+						 "For example: +b ~country:UK");
+	}
 	return EX_DENY;
 }
 

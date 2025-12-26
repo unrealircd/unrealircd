@@ -89,8 +89,11 @@ MOD_UNLOAD()
 
 int extban_certfp_usage(Client *client)
 {
-	sendnotice(client, "ERROR: ExtBan ~certfp expects an SHA256 fingerprint in hexadecimal format (no colons). "
-					 "For example: +e ~certfp:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef)");
+	if (client)
+	{
+		sendnotice(client, "ERROR: ExtBan ~certfp expects an SHA256 fingerprint in hexadecimal format (no colons). "
+						 "For example: +e ~certfp:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef)");
+	}
 	return EX_DENY;
 }
 

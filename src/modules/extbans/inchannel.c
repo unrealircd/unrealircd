@@ -120,7 +120,8 @@ int extban_inchannel_is_ok(BanContext *b)
 
 		if (*p != '#')
 		{
-			sendnotice(b->client, "Please use a # in the channelname (eg: ~channel:#*blah*)");
+			if (b->client)
+				sendnotice(b->client, "Please use a # in the channelname (eg: ~channel:#*blah*)");
 			return 0;
 		}
 	}
