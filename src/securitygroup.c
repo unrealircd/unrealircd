@@ -807,6 +807,15 @@ int test_extended_list(Extban *extban, ConfigEntry *cep, int *errors)
 
 	for (cep = cep->items; cep; cep = cep->next)
 	{
+		if (cep->value)
+		{
+			config_error("%s:%i: You cannot use a name-value pair here. Your config has %s %s;. You probably meant to write: %s; %s;",
+			             cep->file->filename, cep->line_number,
+			             cep->name, cep->value,
+			             cep->name, cep->value);
+			(*errors)++;
+			return 0;
+		}
 		memset(&b, 0, sizeof(BanContext));
 		b.banstr = cep->name;
 		b.ban_check_types = BANCHK_TKL;
