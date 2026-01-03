@@ -826,10 +826,16 @@ int tkl_config_test_ban(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				has_match = 1;
 			}
 		} else
-		if (config_is_blankorempty(cep, "ban"))
+		if (!strcmp(cep->name, "soft"))
 		{
-			errors++;
-			continue;
+			if (config_is_blankorempty(cep, "ban::soft"))
+				errors++;
+			if (strcmp(ce->value, "user"))
+			{
+				config_error("%s:%d: ban %s::soft can only be used in a ban user { } block",
+					cep->file->filename, cep->line_number, ce->value);
+				errors++;
+			}
 		} else
 		if (!strcmp(cep->name, "reason"))
 		{
@@ -974,6 +980,7 @@ int tkl_config_run_ban_user(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	SecurityGroup *match = NULL;
 	char *reason = NULL;
 	int tkltype;
+	int soft = 0;
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
@@ -984,11 +991,15 @@ int tkl_config_run_ban_user(ConfigFile *cf, ConfigEntry *ce, int configtype)
 		if (!strcmp(cep->name, "reason"))
 		{
 			safe_strdup(reason, cep->value);
+		} else
+		if (!strcmp(cep->name, "soft"))
+		{
+			soft = config_checkval(cep->value, CFG_YESNO);
 		}
 	}
 
 	tkltype = TKL_KILL;
-	tkl_add_serverban(tkltype, NULL, NULL, match, reason, "-config-", 0, TStime(), 0, TKL_FLAG_CONFIG);
+	tkl_add_serverban(tkltype, NULL, NULL, match, reason, "-config-", 0, TStime(), soft, TKL_FLAG_CONFIG);
 	safe_free(reason);
 
 	return 1;
