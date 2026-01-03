@@ -19,7 +19,7 @@ We are also particularly proud on our extensive online documentation.
 ## How to get started
 Follow the installation guide on the wiki. See:
 * [Installing from source for *NIX](https://www.unrealircd.org/docs/Installing_from_source)
-* [Installating instructions for Windows](https://www.unrealircd.org/docs/Installing_(Windows))
+* [Installation instructions for Windows](https://www.unrealircd.org/docs/Installing_(Windows))
 
 ## Documentation & FAQ
 You can find all **documentation** online at: https://www.unrealircd.org/docs/
