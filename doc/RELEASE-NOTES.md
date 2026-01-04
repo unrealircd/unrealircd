@@ -1,5 +1,42 @@
-UnrealIRCd 6.2.2
+UnrealIRCd 6.2.3-git
 =================
+
+This is the git version (development version) for future UnrealIRCd 6.2.3.
+This is work in progress and may not always be a stable version.
+
+### Enhancements:
+* In [ban user { }](https://www.unrealircd.org/docs/Ban_user_block)
+  you can now use `soft yes;` to make it a
+  [Soft ban](https://www.unrealircd.org/docs/Soft_ban).
+
+### Changes:
+* Small updates to `HELPOP`.
+
+### Fixes:
+* Crash when using [Extended Server Bans](https://www.unrealircd.org/docs/Extended_server_bans)
+  with an invalid syntax in the configuration file.
+
+### Developers and protocol:
+* Changes in [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
+  * Mask/match items and security groups now get expanded in the same way.
+    All properties are expanded properly. Extended fields like `account`
+    and `country` are expanded directly under, just like any other items.
+  * [`security_group`](https://www.unrealircd.org/docs/JSON-RPC:Security_group):
+    Uses the new style output (see previous).
+  * [`server_ban`](https://www.unrealircd.org/docs/JSON-RPC:Server_ban) and
+    [`server_ban_exception`](https://www.unrealircd.org/docs/JSON-RPC:Server_ban_exception)
+    now show the expanded mask items in `match` rather than `"name":"<match item>"`.
+    This does mean that `name` will be missing if it is a `match` item.
+  * [`spamfilter`](https://www.unrealircd.org/docs/JSON-RPC:Spamfilter):
+    here too, mask item is expanded if it is used in spamfilter.except.
+  * [`connthrottle`](https://www.unrealircd.org/docs/JSON-RPC:Connthrottle):
+    In `connthrottle.status` the `state` value `active` was changed to
+    `monitoring` (module is enabled but not actively intervening).
+    Also, the items under config.except are now an expanded mask item
+    (consistent with the rest).
+
+UnrealIRCd 6.2.2
+-----------------
 
 This is a small maintenance release to fix some minor issues.
 
