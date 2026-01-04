@@ -112,7 +112,7 @@ int extban_inchannel_is_ok(BanContext *b)
 {
 	const char *p = b->banstr;
 
-	if ((b->is_ok_check == EXBCHK_PARAM) && MyUser(b->client) && (b->what == MODE_ADD) && (strlen(b->banstr) > 3))
+	if ((b->is_ok_check == EXBCHK_PARAM) && (!b->client || MyUser(b->client)) && (b->what == MODE_ADD) && (strlen(b->banstr) > 3))
 	{
 		if ((*p == '+') || (*p == '%') || (*p == '%') ||
 		    (*p == '@') || (*p == '&') || (*p == '~'))
