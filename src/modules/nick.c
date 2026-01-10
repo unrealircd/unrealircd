@@ -1319,6 +1319,8 @@ int AllowClient(Client *client)
 		if (aconf->flags.useip)
 			set_sockhost(client, GetIP(client));
 
+		update_known_user_cache(client);
+
 		for (h = Hooks[HOOKTYPE_ALLOW_CLIENT]; h; h = h->next)
 		{
 			const char *reject_reason = (*(h->func.stringfunc))(client, aconf);
