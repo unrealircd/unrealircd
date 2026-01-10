@@ -17,6 +17,7 @@
 
 /* Global variables */
 SecurityGroup *securitygroups = NULL;
+SecurityGroup *known_users = NULL;
 
 /** Free all masks in the mask list */
 void unreal_delete_masks(ConfigItem_mask *m)
@@ -738,6 +739,7 @@ void set_security_group_defaults(void)
 
 	/* Default group: known-users */
 	s = add_security_group("known-users", 100);
+	known_users = s;
 	s->public = 1;
 	s->identified = 1;
 	s->reputation_score = 25;
@@ -994,13 +996,16 @@ int user_allowed_by_security_group_name(Client *client, const char *secgroupname
 	if (!strcmp(secgroupname, "unknown-users"))
 	{
 		/* This is simply the inverse of 'known-users' */
-		s = find_security_group("known-users");
-		if (!s)
+		if (!known_users)
 			return 0; /* that's weird!? pretty impossible. */
-		return !user_allowed_by_security_group(client, s);
+		return !user_allowed_by_security_group(client, known_users);
 	}
 
-	/* Find the group and evaluate it */
+	/* Shortcut for "known-users" */
+	if (!strcmp(secgroupname, "known-users"))
+		return user_allowed_by_security_group(client, known_users);
+
+	/* Find the security group and evaluate it */
 	s = find_security_group(secgroupname);
 	if (!s)
 		return 0; /* security group not found: no match */
@@ -1023,7 +1028,7 @@ const char *get_security_groups(Client *client)
 	 * in the linked list, hence the special code here,
 	 * and again later in the for loop to skip it.
 	 */
-	if (user_allowed_by_security_group_name(client, "known-users"))
+	if (known_users && user_allowed_by_security_group(client, known_users))
 		strlcat(buf, "known-users,", sizeof(buf));
 	else
 		strlcat(buf, "unknown-users,", sizeof(buf));
