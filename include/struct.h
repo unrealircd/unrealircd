@@ -1504,6 +1504,7 @@ struct Client {
 	                                             This always points to a directly connected server or &me.
 	                                             It is never NULL */
 	unsigned char hopcount;			/**< Number of servers to this, 0 means local client */
+	unsigned char known_user_cached;	/**< Cached as a "known user" */
 	char ident[USERLEN + 1];		/**< Ident of the user, if available. Otherwise set to "unknown". */
 	char info[REALLEN + 1];			/**< Additional client information text. For users this is gecos/realname */
 	char id[IDLEN + 1];			/**< Unique ID: SID or UID */

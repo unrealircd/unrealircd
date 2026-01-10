@@ -598,3 +598,27 @@ Client *find_server_by_uid(const char *uid)
 	strlcpy(sid, uid, sizeof(sid));
 	return hash_find_id(sid, NULL);
 }
+
+/* Update client->known_user_cached. This timer runs every 5 seconds,
+ * see src/ircd.c, SetupEvents(). And next work-per-iteration thing
+ * tells to do 1/24th, so every 24*5=120s=2min all clients are recalculated.
+ * Note that the most obvious transitions, based on IP and SASL, are
+ * already handled real-time. This is just to catch the other cases
+ * (we don't know what type of complex known-users rules people have).
+ */
+#define UPDATE_KNOWN_USER_CACHE_TIMER_WORKPERITERATION (NICK_HASH_TABLE_SIZE/24)
+
+EVENT(update_known_user_cache_timer)
+{
+	static int slot = 0; /* track where we were left */
+	int work_done = 0;
+	Client *client;
+
+	do {
+		list_for_each_entry(client, &idTable[slot], id_hash)
+			update_known_user_cache(client);
+
+		if (++slot >= NICK_HASH_TABLE_SIZE)
+			slot = 0;
+	} while (++work_done < UPDATE_KNOWN_USER_CACHE_TIMER_WORKPERITERATION);
+}

@@ -1324,6 +1324,8 @@ extern APICallback *APICallbackAdd(Module *module, APICallback *mreq);
 #define HOOKTYPE_BANNED_CLIENT 129
 /** See hooktype_motd */
 #define HOOKTYPE_MOTD 130
+/** See hooktype_known_user_cache_change() */
+#define HOOKTYPE_KNOWN_USER_CACHE_CHANGE	131
 
 
 /* Adding a new hook here?
@@ -2315,9 +2317,11 @@ int hooktype_realname_change(Client *client, const char *oldinfo);
 /** Called when changing IP (eg due to PROXY/WEBIRC/etc) (function prototype for HOOKTYPE_IP_CHANGE).
  * @param client		The client whose IP has changed
  * @param oldip			Old IP of the client
- * @returns If you reject the user then use dead_link() and return HOOK_DENY
- *          (DO NOT USE exit_client(), only dead_link()!),
- *          otherwise use 'return 0' to proceed normally.
+ * @retval HOOK_DENY            If you want to reject a local user
+ *                              then use dead_link() and return this value.
+ *                              You may not use exit_client(). You
+ *                              also may not act on remote users.
+ * @retval HOOK_CONTINUE        This is the normal case (return 0)
  */
 int hooktype_ip_change(Client *client, const char *oldip);
 
@@ -2480,6 +2484,17 @@ int hooktype_banned_client(Client *client, const char *bantype, const char *reas
  */
 int hooktype_motd(Client *client);
 
+/** Called when the client->known_user_cached value changes
+ * (function prototype for HOOKTYPE_KNOWN_USER_CACHE_CHANGE).
+ * @param client		The client
+ * @retval HOOK_DENY            If you want to reject a local user
+ *                              then use dead_link() and return this value.
+ *                              You may not use exit_client(). You
+ *                              also may not act on remote users.
+ * @retval HOOK_CONTINUE        This is the normal case (return 0)
+ */
+int hooktype_known_user_cache_change(Client *client);
+
 /** @} */
 
 #ifdef GCC_TYPECHECKING
@@ -2611,7 +2626,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_ANALYZE_TEXT) && !ValidateHook(hooktype_analyze_text, func)) || \
         ((hooktype == HOOKTYPE_CAN_USE_NICK) && !ValidateHook(hooktype_can_use_nick, func)) || \
         ((hooktype == HOOKTYPE_BANNED_CLIENT) && !ValidateHook(hooktype_banned_client, func)) || \
-        ((hooktype == HOOKTYPE_MOTD) && !ValidateHook(hooktype_motd, func))) \
+        ((hooktype == HOOKTYPE_MOTD) && !ValidateHook(hooktype_motd, func)) || \
+        ((hooktype == HOOKTYPE_KNOWN_USER_CACHE_CHANGE) && !ValidateHook(hooktype_known_user_cache_change, func))) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

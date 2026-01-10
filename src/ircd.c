@@ -501,6 +501,7 @@ void SetupEvents(void)
 	EventAdd(NULL, "memory_log_cleaner", memory_log_cleaner, NULL, 61500, 0);
 	EventAdd(NULL, "detect_high_connection_rate", detect_high_connection_rate, NULL, 1000*DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME, 0);
 	EventAdd(NULL, "central_spamfilter_download_evt", central_spamfilter_download_evt, NULL, 5000, 0);
+	EventAdd(NULL, "update_known_user_cache_timer", update_known_user_cache_timer, NULL, 5000, 0);
 }
 
 /** The main function. This will call SocketLoop() once the server is ready. */

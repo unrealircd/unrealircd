@@ -708,6 +708,7 @@ void user_account_login(MessageTag *recv_mtags, Client *client)
 		if (find_tkline_match(client, 0) && IsDead(client))
 			return;
 	}
+	update_known_user_cache(client);
 	RunHook(HOOKTYPE_ACCOUNT_LOGIN, client, recv_mtags);
 }
 
@@ -1101,4 +1102,54 @@ int highest_channel_member_count(Client *client)
 			highest = m->channel->users;
 
 	return highest;
+}
+
+/** Update the client->known_user_cached value and call
+ * HOOKTYPE_KNOWN_USER_CACHE_CHANGE hooks if it changed.
+ * @param client	Client
+ * @returns 1 if all OK, 0 if client was killed via dead_socket().
+ */
+int update_known_user_cache(Client *client)
+{
+	char oldvalue = client->known_user_cached;
+	Hook *h;
+
+	client->known_user_cached = user_allowed_by_security_group_name(client, "known-users") ? 1 : 0;
+
+	if (client->known_user_cached != oldvalue)
+	{
+		for (h = Hooks[HOOKTYPE_KNOWN_USER_CACHE_CHANGE]; h; h = h->next)
+		{
+			int n = h->func.intfunc(client);
+			if (n == HOOK_DENY)
+			{
+				/* When using HOOK_DENY, the client must be killed
+				 * by dead_socket().
+				 * A) It should not be forgotten
+				 * B) Not by exit_client() since that is dangerous.
+				 */
+				if (!IsDeadSocket(client) || IsDead(client))
+				{
+					unreal_log(ULOG_WARNING, "user", "BUG_HOOKTYPE_KNOWN_USER_CACHE_CHANGE", client,
+					           "Module $module returned HOOK_DENY but did not use dead_socket(). Dangerous!",
+					           log_data_string("module", h->owner->header->name));
+				}
+#ifdef DEBUGMODE
+				if (IsDead(client))
+					abort(); /* You should have used dead_socket() and not exit_client() */
+#endif
+				if (!IsDeadSocket(client))
+				{
+#ifdef DEBUGMODE
+					abort(); /* You should have used dead_socket() */
+#else
+					dead_socket(client, "Invalid user cache callback");
+#endif
+				}
+				return 0;
+			}
+		}
+	}
+
+	return 1;
 }
