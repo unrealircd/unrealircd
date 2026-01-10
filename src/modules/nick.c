@@ -758,6 +758,8 @@ nickkill2done:
 		 */
 	}
 
+	update_known_user_cache(client);
+
 	RunHook(HOOKTYPE_REMOTE_CONNECT, client);
 
 	if (!IsULine(serv) && IsSynched(serv))

@@ -726,6 +726,7 @@ void set_security_group_defaults(void)
 		free_security_group(s);
 	}
 	securitygroups = NULL;
+	known_users = NULL;
 
 	/* Default group: webirc */
 	s = add_security_group("webirc-users", 50);
