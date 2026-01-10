@@ -933,6 +933,19 @@ EVENT(add_scores)
 
 		e->last_seen = TStime();
 		Reputation(client) = e->score; /* update moddata */
+
+		/* Possible transition to known-users:
+		 * - logged in is already handled by HOOKTYPE_ACCOUNT_LOGIN so we don't care about those
+		 * - score reached (or just over) the minimum reputation score
+		 * Caveat: if having multiple connections from the same IP then
+		 * the first one may theoretically not have crossed in some cases.
+		 * Ah well, it is a cache, not some precise thingy.
+		 */
+		if (!IsLoggedIn(client) && known_users &&
+		    ((e->score == known_users->reputation_score) || (e->score == known_users->reputation_score+1)))
+		{
+			update_known_user_cache(client);
+		}
 	}
 }
 
