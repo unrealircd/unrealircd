@@ -1123,7 +1123,7 @@ void unreal_setfilemodtime(const char *filename, time_t mtime)
 				  FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return;
-	llValue = Int32x32To64(mtime, 10000000) + 116444736000000000;
+	llValue = (mtime * 10000000LL) + 116444736000000000LL;
 	mTime.dwLowDateTime = (long)llValue;
 	mTime.dwHighDateTime = llValue >> 32;
 	
