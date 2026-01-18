@@ -486,7 +486,7 @@ int sasl_is_handshake_finished(Client *client)
 	if (client->local->sasl_sent_time && !client->local->sasl_complete)
 		return 0; /* We are in the middle of SASL */
 
-        return 1;
+    return 1;
 }
 
 EVENT(sasl_timeout)
