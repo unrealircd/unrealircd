@@ -38,6 +38,7 @@ void saslmechlist_unserialize(const char *str, ModData *m);
 const char *sasl_capability_parameter(Client *client);
 int sasl_server_synced(Client *client);
 int sasl_account_login(Client *client, MessageTag *mtags);
+int sasl_is_handshake_finished(Client *client);
 EVENT(sasl_timeout);
 
 /* Macros */
@@ -194,6 +195,12 @@ CMD_FUNC(cmd_sasl)
 				sasl_failed(target);
 			else if (*parv[4] == 'S')
 				sasl_succeeded(target);
+			/* Now that SASL response came in, check if handshake is finished */
+			if (is_handshake_finished(target))
+			{
+				register_user(target);
+				/* User MAY be killed now, that's okay, we don't deal with 'target' below */
+			}
 		}
 		else if (*parv[3] == 'M')
 			sendnumeric(target, RPL_SASLMECHS, parv[4]);
@@ -406,6 +413,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_QUIT, 0, sasl_server_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_SYNCED, 0, sasl_server_synced);
 	HookAdd(modinfo->handle, HOOKTYPE_ACCOUNT_LOGIN, 0, sasl_account_login);
+	HookAdd(modinfo->handle, HOOKTYPE_IS_HANDSHAKE_FINISHED, 0, sasl_is_handshake_finished);
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "sasl";
@@ -471,6 +479,14 @@ const char *sasl_capability_parameter(Client *client)
 	}
 
 	return NULL;
+}
+
+int sasl_is_handshake_finished(Client *client)
+{
+	if (client->local->sasl_sent_time && !client->local->sasl_complete)
+		return 0; /* We are in the middle of SASL */
+
+        return 1;
 }
 
 EVENT(sasl_timeout)
