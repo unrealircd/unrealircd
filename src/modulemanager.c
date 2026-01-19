@@ -28,6 +28,7 @@ struct ManagedModule
 	char *max_unrealircd_version;
 	char *description;
 	MultiLine *post_install_text;
+	int unmanaged;
 };
 
 static ManagedModule *managed_modules = NULL;
@@ -883,7 +884,7 @@ void mm_list(char *searchname)
 	print_documentation();
 }
 
-int mm_compile(ManagedModule *m, const char *tmpfile, int test)
+int mm_compile(ManagedModule *m, const char *tmpfile, int test, int upgrade)
 {
 	char newpath[512];
 	char cmd[512];
@@ -894,16 +895,15 @@ int mm_compile(ManagedModule *m, const char *tmpfile, int test)
 	int n;
 
 	if (test)
-		printf("Test compiling %s...\n", m->name);
+		printf("\nTest compiling %s...\n", m->name);
 	else
-		printf("Compiling %s...\n", m->name);
+		printf("\nCompiling %s...\n", m->name);
 
 	basename = unreal_getfilename(test ? tmpfile : m->name);
 	snprintf(newpath, sizeof(newpath), "%s/src/modules/third/%s%s", BUILDDIR, basename, test ? "" : ".c");
-	if (!test)
+	if (!test && upgrade)
 	{
-		/* If the file already exists then we are upgrading.
-		 * It's a good idea to backup the file rather than
+		/* It's a good idea to backup the file rather than
 		 * just delete it. Perhaps the user had local changes
 		 * he/she wished to preserve and accidently went
 		 * through the upgrade procedure.
@@ -913,7 +913,8 @@ int mm_compile(ManagedModule *m, const char *tmpfile, int test)
 		unlink(backupfile);
 		(void)rename(newpath, backupfile);
 	}
-	if (!unreal_copyfileex(tmpfile, newpath, 0))
+
+	if (tmpfile && !unreal_copyfileex(tmpfile, newpath, 0))
 		return 0;
 
 	snprintf(cmd, sizeof(cmd),
@@ -947,10 +948,67 @@ int mm_compile(ManagedModule *m, const char *tmpfile, int test)
 	if (WIFEXITED(n) && (WEXITSTATUS(n) == 0))
 		return 1;
 
-	fprintf(stderr, "ERROR: Compile errors encountered while compiling module '%s'\n"
-	                "You are suggested to contact the author (%s) of this module:\n%s\n",
-	                m->name, m->author, m->troubleshooting);
+	fprintf(stderr, "ERROR: Compile errors encountered while compiling module '%s'\n", m->name);
+	if (!m->unmanaged)
+	{
+		fprintf(stderr, "You are suggested to contact the author (%s) of this module %s:\n%s\n",
+	                m->author, m->name, m->troubleshooting);
+	} else {
+		/* Uh yeah, not much we can say? */
+	}
+
 	return 0;
+}
+
+/** Compile all modules (including unknown), this is used by generic 'make' */
+int mm_compile_all(int argc, char *args[])
+{
+	DIR *fd;
+	struct dirent *dir;
+	char dirname[512];
+	ManagedModule *m;
+	int n;
+
+	snprintf(dirname, sizeof(dirname), "%s/src/modules/third", BUILDDIR);
+	fd = opendir(dirname);
+	if (fd)
+	{
+		while ((dir = readdir(fd)))
+		{
+			char *fname = dir->d_name;
+			if (filename_has_suffix(fname, ".c"))
+			{
+				char modname[512];
+				//char sofile[512];
+				char *p;
+				char simplename[512];
+
+				strlcpy(simplename, filename_strip_suffix(fname, ".c"), sizeof(simplename));
+				snprintf(modname, sizeof(modname), "third/%s", simplename);
+
+				if (!(m = mm_find_module(modname)))
+				{
+					/* Untracked module: create a simple struct */
+					m = safe_alloc(sizeof(ManagedModule));
+					m->unmanaged = 1;
+					safe_strdup(m->name, modname);
+					n = mm_compile(m, NULL, 0, 0);
+					safe_free_managed_module(m);
+				} else {
+					n = mm_compile(m, NULL, 0, 0);
+				}
+
+				if (n == 0)
+				{
+					/* Something if it fails? Error was already printed.
+					 * We silently continue for now.
+					 */
+				}
+			}
+		}
+		closedir(fd);
+	}
+	return 1; // always 1 atm
 }
 
 /** Actually download and install the module.
@@ -988,13 +1046,13 @@ int mm_install_module(ManagedModule *m)
 		                m->repo_url);
 		return 0;
 	}
-	if (!mm_compile(m, tmpfile, 1))
+	if (!mm_compile(m, tmpfile, 1, 1))
 	{
 		fprintf(stderr, "Fatal error encountered, see above.\n");
 		return 0;
 	}
 
-	if (!mm_compile(m, tmpfile, 0))
+	if (!mm_compile(m, tmpfile, 0, 1))
 	{
 		fprintf(stderr, "The test compile went OK earlier, but the final compile did not. BAD!!\n");
 		return 0;
@@ -1498,6 +1556,11 @@ void modulemanager(int argc, char *args[])
 	else if (!strcasecmp(args[0], "parse-c-file"))
 	{
 		mm_parse_c_file(argc, args);
+		exit(0);
+	}
+	else if (!strcasecmp(args[0], "compile-all"))
+	{
+		mm_compile_all(argc, args);
 		exit(0);
 	}
 

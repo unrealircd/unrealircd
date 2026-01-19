@@ -40,7 +40,8 @@ RM=@RM@
 all: build
 
 build:
-	../../buildmod $(MAKE)
+	../../../src/ircd -m upgrade --no-install
+	../../../src/ircd -m compile-all
 
 custommodule: $(MODULEFILE).c
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
