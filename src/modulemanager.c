@@ -27,6 +27,7 @@ struct ManagedModule
 	char *min_unrealircd_version;
 	char *max_unrealircd_version;
 	char *description;
+	char *compile_flags;
 	MultiLine *post_install_text;
 	int unmanaged;
 };
@@ -131,6 +132,11 @@ int mm_module_file_config(ManagedModule *m, ConfigEntry *ce)
 			CheckNull(cep);
 			safe_strdup(m->max_unrealircd_version, cep->value);
 		}
+		else if (!strcmp(cep->name, "compile-flags"))
+		{
+			CheckNull(cep);
+			safe_strdup(m->compile_flags, cep->value);
+		}
 		else if (!strcmp(cep->name, "post-install-text"))
 		{
 			if (cep->items)
@@ -199,7 +205,7 @@ int mm_parse_module_file(ManagedModule *m, char *buf, unsigned int line_offset)
 }
 
 #define MODULECONFIGBUFFER 16384
-ManagedModule *mm_parse_module_c_file(char *modulename, char *fname)
+ManagedModule *mm_parse_module_c_file(char *modulename, char *fname, int silent)
 {
 	char buf[1024];
 	FILE *fd;
@@ -310,8 +316,11 @@ ManagedModule *mm_parse_module_c_file(char *modulename, char *fname)
 
 	if (!*moduleconfig)
 	{
-		fprintf(stderr, "ERROR: Module does not contain module config data (<<<MODULE MANAGER START>>>)\n"
-		                "This means it is not meant to be managed by the module manager\n");
+		if (!silent)
+		{
+			fprintf(stderr, "ERROR: Module does not contain module config data (<<<MODULE MANAGER START>>>)\n"
+					"This means it is not meant to be managed by the module manager\n");
+		}
 		safe_free(moduleconfig);
 		return NULL;
 	}
@@ -377,6 +386,7 @@ void free_managed_module(ManagedModule *m)
 	safe_free(m->min_unrealircd_version);
 	safe_free(m->max_unrealircd_version);
 	safe_free(m->description);
+	safe_free(m->compile_flags);
 	freemultiline(m->post_install_text);
 	safe_free(m);
 }
@@ -468,6 +478,11 @@ ManagedModule *mm_repo_module_config(char *repo_url, ConfigEntry *ce)
 		{
 			CheckNull(cep);
 			safe_strdup(m->max_unrealircd_version, cep->value);
+		}
+		else if (!strcmp(cep->name, "compile-flags"))
+		{
+			CheckNull(cep);
+			safe_strdup(m->compile_flags, cep->value);
 		}
 		else if (!strcmp(cep->name, "description"))
 		{
@@ -884,6 +899,24 @@ void mm_list(char *searchname)
 	print_documentation();
 }
 
+
+
+/* Helper to get compile flags. Do not return NULL but "" here if none */
+const char *mm_get_compile_flags(ManagedModule *m)
+{
+	static char retbuf[512];
+	char *flags;
+
+	if (!m->compile_flags)
+		return "";
+
+	/* Simple as-is for now */
+	flags = m->compile_flags;
+
+	unreal_add_quotes_r(flags, retbuf, sizeof(retbuf)-1);
+	return retbuf;
+}
+
 int mm_compile(ManagedModule *m, const char *tmpfile, int test, int upgrade)
 {
 	char newpath[512];
@@ -918,9 +951,10 @@ int mm_compile(ManagedModule *m, const char *tmpfile, int test, int upgrade)
 		return 0;
 
 	snprintf(cmd, sizeof(cmd),
-	         "cd \"%s\"; $MAKE custommodule MODULEFILE=\"%s\"",
+	         "cd \"%s\"; $MAKE custommodule MODULEFILE=\"%s\" EXLIBS=\"%s\"",
 	         BUILDDIR,
-	         filename_strip_suffix(basename, ".c")
+	         filename_strip_suffix(basename, ".c"),
+	         mm_get_compile_flags(m)
 	         );
 	fd = popen(cmd, "r");
 	if (!fd)
@@ -949,12 +983,10 @@ int mm_compile(ManagedModule *m, const char *tmpfile, int test, int upgrade)
 		return 1;
 
 	fprintf(stderr, "ERROR: Compile errors encountered while compiling module '%s'\n", m->name);
-	if (!m->unmanaged)
+	if (m->author && m->troubleshooting)
 	{
 		fprintf(stderr, "You are suggested to contact the author (%s) of this module %s:\n%s\n",
 	                m->author, m->name, m->troubleshooting);
-	} else {
-		/* Uh yeah, not much we can say? */
 	}
 
 	return 0;
@@ -978,20 +1010,25 @@ int mm_compile_all(int argc, char *args[])
 			char *fname = dir->d_name;
 			if (filename_has_suffix(fname, ".c"))
 			{
+				char fullpath[512];
 				char modname[512];
-				//char sofile[512];
 				char *p;
 				char simplename[512];
 
+				snprintf(fullpath, sizeof(fullpath), "%s/%s", dirname, fname);
 				strlcpy(simplename, filename_strip_suffix(fname, ".c"), sizeof(simplename));
 				snprintf(modname, sizeof(modname), "third/%s", simplename);
 
 				if (!(m = mm_find_module(modname)))
 				{
-					/* Untracked module: create a simple struct */
-					m = safe_alloc(sizeof(ManagedModule));
+					m = mm_parse_module_c_file(modname, fullpath, 1);
+					if (!m)
+					{
+						/* No module manager block, create a fake one: */
+						m = safe_alloc(sizeof(ManagedModule));
+						safe_strdup(m->name, modname);
+					}
 					m->unmanaged = 1;
-					safe_strdup(m->name, modname);
 					n = mm_compile(m, NULL, 0, 0);
 					safe_free_managed_module(m);
 				} else {
@@ -1339,6 +1376,8 @@ void print_md_block(FILE *fdo, ManagedModule *m)
 	fprintf(fdo, "\tmin-unrealircd-version \"%s\";\n", unreal_add_quotes(m->min_unrealircd_version));
 	if (m->max_unrealircd_version)
 		fprintf(fdo, "\tmax-unrealircd-version \"%s\";\n", unreal_add_quotes(m->max_unrealircd_version));
+	if (m->compile_flags)
+		fprintf(fdo, "\tcompile-flags \"%s\";\n", unreal_add_quotes(m->compile_flags));
 	if (m->post_install_text)
 	{
 		MultiLine *l;
@@ -1412,7 +1451,7 @@ void mm_generate_repository(int argc, char *args[])
 			snprintf(fullname, sizeof(fullname), "%s/%s", dirname, fname);
 			snprintf(modname, sizeof(modname), "third/%s", filename_strip_suffix(fname, ".c"));
 			printf("Processing: %s\n", modname);
-			m = mm_parse_module_c_file(modname, fullname);
+			m = mm_parse_module_c_file(modname, fullname, 0);
 			if (!m)
 			{
 				fprintf(stderr, "WARNING: Skipping module '%s' due to errors\n", modname);
@@ -1456,7 +1495,7 @@ void mm_parse_c_file(int argc, char *args[])
 
 	snprintf(modname, sizeof(modname), "third/%s", filename_strip_suffix(basename, ".c"));
 	printf("Processing: %s\n", modname);
-	m = mm_parse_module_c_file(modname, fullname);
+	m = mm_parse_module_c_file(modname, fullname, 0);
 	if (!m)
 	{
 		fprintf(stderr, "Errors encountered. See above\n");
