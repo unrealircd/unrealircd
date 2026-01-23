@@ -713,12 +713,14 @@ int mm_check_module_compatibility(ManagedModule *m)
 #define MMMS_INSTALLED		0x0001
 #define MMMS_UPGRADE_AVAILABLE	0x0002
 #define MMMS_UNAVAILABLE	0x0004
+#define MMMS_LOCAL_VERSION_IS_NEWER	0x0008
 
 int mm_get_module_status(ManagedModule *m)
 {
 	FILE *fd;
 	char fname[512];
 	const char *our_sha256sum;
+	ManagedModule *our_module;
 
 	snprintf(fname, sizeof(fname), "%s/src/modules/%s.c", BUILDDIR, m->name);
 	if (!file_exists(fname))
@@ -728,17 +730,24 @@ int mm_get_module_status(ManagedModule *m)
 		return 0;
 	}
 
+	our_module = mm_parse_module_c_file(m->name, fname, 1);
 	our_sha256sum = sha256sum_file(fname);
-	if (!strcasecmp(our_sha256sum, m->sha256sum))
+
+	if (our_module && our_module->version && (strnatcasecmp(m->version, our_module->version) < 0))
 	{
-		return MMMS_INSTALLED;
-	} else {
-		if (!mm_check_module_compatibility(m))
-			return MMMS_INSTALLED|MMMS_UNAVAILABLE;
-		return MMMS_INSTALLED|MMMS_UPGRADE_AVAILABLE;
+		safe_free_managed_module(our_module);
+		return MMMS_INSTALLED|MMMS_LOCAL_VERSION_IS_NEWER;
 	}
 
-	return 0;
+	safe_free_managed_module(our_module);
+
+	if (!strcasecmp(our_sha256sum, m->sha256sum))
+		return MMMS_INSTALLED;
+
+	if (!mm_check_module_compatibility(m))
+		return MMMS_INSTALLED|MMMS_UNAVAILABLE;
+
+	return MMMS_INSTALLED|MMMS_UPGRADE_AVAILABLE;
 }
 
 char *mm_get_module_status_string(ManagedModule *m)
@@ -754,6 +763,8 @@ char *mm_get_module_status_string(ManagedModule *m)
 		return "inst/UNAV";
 	else if (status == (MMMS_INSTALLED|MMMS_UPGRADE_AVAILABLE))
 		return "inst/UPD";
+	else if (status == (MMMS_INSTALLED|MMMS_LOCAL_VERSION_IS_NEWER))
+		return "inst/LOCAL";
 	return "UNKNOWN?";
 }
 
@@ -770,6 +781,8 @@ char *mm_get_module_status_string_long(ManagedModule *m)
 		return "Installed, an upgrade is available but not for your UnrealIRCd version";
 	else if (status == (MMMS_INSTALLED|MMMS_UPGRADE_AVAILABLE))
 		return "Installed, upgrade available";
+	else if (status == (MMMS_INSTALLED|MMMS_LOCAL_VERSION_IS_NEWER))
+		return "Installed, local version is newer than online version";
 	return "UNKNOWN?";
 }
 
@@ -829,7 +842,7 @@ void mm_list(char *searchname)
 		printf("Searching for '%s' in names of all available modules...\n", searchname);
 
 	memset(&largest_column, 0, sizeof(largest_column));
-	largest_column[COLUMN_STATUS] = strlen("inst/UNAV");
+	largest_column[COLUMN_STATUS] = strlen("inst/LOCAL");
 	largest_column[COLUMN_NAME] = strlen("Name:");
 	largest_column[COLUMN_VERSION] = strlen("Version:");
 
@@ -888,12 +901,13 @@ void mm_list(char *searchname)
 	printf("|=======================================================================================\n");
 
 	printf("\nStatus column legend:\n"
-	       "          : not installed\n"
-	       "inst      : module installed\n"
-	       "inst/UPD  : module installed, upgrade available (latest version differs from yours)\n"
-	       "unav      : module not available for your UnrealIRCd version\n"
-	       "inst/UNAV : module installed, upgrade exists but is not available for your UnrealIRCd version (too old UnrealIRCd version?)\n"
-	       "UNKNOWN   : module does not exist in any repository (perhaps you installed it manually?), module will be left untouched\n");
+	       "           : not installed\n"
+	       "inst       : module installed\n"
+	       "inst/UPD   : module installed, upgrade available (latest version differs from yours)\n"
+	       "inst/LOCAL : module installed, local version is newer than available online (unusual!)\n"
+	       "inst/UNAV  : module installed, upgrade exists but is not available for your UnrealIRCd version (too old UnrealIRCd version?)\n"
+	       "unav       : module not available for your UnrealIRCd version\n"
+	       "UNKNOWN    : module does not exist in any repository (perhaps you installed it manually?), module will be left untouched\n");
 
 	printf("\nFor more information about a particular module, use './unrealircd module info name-of-module'\n\n");
 	print_documentation();
@@ -1194,6 +1208,13 @@ int mm_install(int argc, char *args[], int upgrade)
 	{
 		/* If updating, and we are already on latest version, then don't upgrade */
 		printf("Module %s is the latest version, no upgrade needed\n", m->name);
+		return 1;
+	}
+	if (upgrade && (status == (MMMS_INSTALLED|MMMS_LOCAL_VERSION_IS_NEWER)))
+	{
+		/* If updating, and we are already on latest version, then don't upgrade */
+		printf("Module %s: local version is newer than the online version, not upgrading.\n", m->name);
+		return 1;
 	}
 	if (!mm_install_module(m))
 		return 0;
@@ -1270,7 +1291,7 @@ void mm_upgrade(int argc, char *args[])
 			else
 				failed++;
 		} else
-		if (status == MMMS_INSTALLED)
+		if ((status == MMMS_INSTALLED) || (status == (MMMS_INSTALLED|MMMS_LOCAL_VERSION_IS_NEWER)))
 		{
 			uptodate_already++;
 		} else
