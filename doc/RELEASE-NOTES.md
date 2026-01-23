@@ -11,12 +11,24 @@ This is work in progress and may not always be a stable version.
 
 ### Changes:
 * Small updates to `HELPOP`.
+* If SASL authentication is ongoing and a client sends `CAP END`, we now wait for
+  SASL to succeed/fail/timeout before actually ending the handshake. This solves
+  a race condition for IRC clients that don't follow the recommendation in the
+  [sasl specification](https://ircv3.net/specs/extensions/sasl-3.1#the-authenticate-command).
 
 ### Fixes:
 * Crash when using [Extended Server Bans](https://www.unrealircd.org/docs/Extended_server_bans)
   with an invalid syntax in the configuration file.
 
 ### Developers and protocol:
+* Third party modules can now set module::compile-flags in the
+  [module manager block](https://www.unrealircd.org/docs/Special_module_manager_block_in_source_file).
+  This allows linking with libraries for that specific module, or
+  any other custom compile flags.
+* All 3rd party modules are now compiled via the modulemanager,
+  including unmanaged ones. This also means that modules that do not
+  exist in any repository, can still use a module manager block to
+  specify compile flags.
 * Changes in [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
   * Mask/match items and security groups now get expanded in the same way.
     All properties are expanded properly. Extended fields like `account`
