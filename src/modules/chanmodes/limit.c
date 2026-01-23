@@ -123,7 +123,7 @@ int cmode_limit_is_ok(Client *client, Channel *channel, char mode, const char *p
 		if (atoi(param) <= 0)
 		{
 			sendnumeric(client, ERR_INVALIDMODEPARAM,
-				channel->name, 'l', param, "Channel limit (+l) needs to be a positive number");
+				channel->name, 'l', "*", "Channel limit (+l) needs to be a positive number");
 			return EX_DENY;
 		}
 		/* Any other value is valid, we just morph it */
