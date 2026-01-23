@@ -1639,6 +1639,8 @@ void modulemanager(int argc, char *args[])
 	{
 		if (mm_install(argc, args, 0))
 			fprintf(stderr, "All actions were successful.\n");
+		else
+			exit(1);
 	}
 	else if (!strcasecmp(args[0], "upgrade"))
 		mm_upgrade(argc, args);
