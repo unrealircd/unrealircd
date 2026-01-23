@@ -195,8 +195,8 @@ CMD_FUNC(cmd_sasl)
 				sasl_failed(target);
 			else if (*parv[4] == 'S')
 				sasl_succeeded(target);
-			/* Now that SASL response came in, check if handshake is finished */
-			if (is_handshake_finished(target))
+			/* Now that SASL response came in, check if user is unregistered and handshake finished now */
+			if (!IsUser(target) && is_handshake_finished(target))
 			{
 				register_user(target);
 				/* User MAY be killed now, that's okay, we don't deal with 'target' below */
