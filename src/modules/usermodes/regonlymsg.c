@@ -64,7 +64,8 @@ int regonlymsg_can_send_to_user(Client *client, Client *target, const char **tex
 		if (ValidatePermissionsForPath("client:override:message:regonlymsg",client,target,NULL,text?*text:NULL))
 			return HOOK_CONTINUE; /* bypass this restriction */
 
-		*errmsg = "You must identify to a registered nick to private message this user";
+		if (sendtype != SEND_TYPE_TAGMSG)
+			*errmsg = "You must identify to a registered nick to private message this user";
 		return HOOK_DENY;
 	}
 

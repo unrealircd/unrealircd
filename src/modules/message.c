@@ -130,13 +130,6 @@ int can_send_to_user(Client *client, Client *target, const char **msgtext, const
 		n = (*(h->func.intfunc))(client, target, msgtext, errmsg, sendtype, clictx);
 		if (n == HOOK_DENY)
 		{
-			if (!*errmsg)
-			{
-				unreal_log(ULOG_ERROR, "main", "BUG_CAN_SEND_TO_USER_NO_ERRMSG", client,
-					   "[BUG] Module $module did not set errmsg!!!",
-					   log_data_string("module", h->owner->header->name));
-				abort();
-			}
 			return 0;
 		}
 		if (!*msgtext || !**msgtext)

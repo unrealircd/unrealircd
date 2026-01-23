@@ -1564,9 +1564,9 @@ int hooktype_can_send_to_user(Client *client, Client *target, const char **text,
  * @param channel		The channel to send to
  * @param member		The membership struct, so you can see for example op status.
  * @param text			The text to be sent (double pointer!)
- * @param errmsg		The error message. If you block the message (HOOK_DENY) then you MUST set this!
+ * @param errmsg		The error message. If you block the message (HOOK_DENY) then you should set this.
  * @param sendtype		The message type, for example SEND_TYPE_PRIVMSG.
- * @retval HOOK_DENY		Deny the message. The 'errmsg' will be sent to the user.
+ * @retval HOOK_DENY		Deny the message. The 'errmsg' will be sent to the user (if non-NULL).
  * @retval HOOK_CONTINUE	Allow the message, unless other modules block it.
  */
 int hooktype_can_send_to_channel(Client *client, Channel *channel, Membership *member, const char **text, const char **errmsg, SendType sendtype, ClientContext *clictx);

@@ -52,7 +52,8 @@ int privdeaf_can_send_to_user(Client *client, Client *target, const char **text,
 	if ((target->umodes & UMODE_PRIVDEAF) && !IsOper(client) &&
 	    !IsULine(client) && !IsServer(client) && (client != target))
 	{
-		*errmsg = "User does not accept private messages";
+		if (sendtype != SEND_TYPE_TAGMSG)
+			*errmsg = "User does not accept private messages";
 		return HOOK_DENY;
 	}
 	return HOOK_CONTINUE;
