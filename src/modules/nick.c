@@ -1007,6 +1007,22 @@ int _register_user(Client *client)
 	if (!MyConnect(client))
 		abort();
 
+	if (IsUser(client))
+	{
+		/* register_user() was called but we are already
+		 * a registered user. This is not good. If we are
+		 * running in DEBUGMODE we will abort/crash.
+		 * Otherwise, we return 0.
+		 */
+		unreal_log(ULOG_ERROR, "user", "BUG_REGISTER_USER_CALLED_TWICE", client,
+		           "[BUG] register_user() was called more than once on user $client.details");
+#ifdef DEBUGMODE
+		abort();
+#else
+		return 0;
+#endif
+	}
+
 	/* Set client->local->sockhost:
 	 * First deal with the special 'localhost' case and
 	 * then with generic setting based on DNS.
