@@ -119,7 +119,14 @@ int cmode_limit_is_ok(Client *client, Channel *channel, char mode, const char *p
 	} else
 	if (type == EXCHK_PARAM)
 	{
-		/* Actually any value is valid, we just morph it */
+		/* When coming from an IRC client, we reject limit <=0 explicitly, as it makes no sense */
+		if (atoi(param) <= 0)
+		{
+			sendnumeric(client, ERR_INVALIDMODEPARAM,
+				channel->name, 'l', param, "Channel limit (+l) needs to be a positive number");
+			return EX_DENY;
+		}
+		/* Any other value is valid, we just morph it */
 		return EX_ALLOW;
 	}
 
