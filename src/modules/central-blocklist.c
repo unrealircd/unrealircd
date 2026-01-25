@@ -539,6 +539,7 @@ EVENT(centralblocklist_timeout_evt)
 		if (cbl &&
 		    cbl->request_sent &&
 		    !cbl->allowed_in &&
+		    !IsShunned(client) &&
 		    (TStime() - cbl->request_sent > CBL_TRANSFER_TIMEOUT))
 		{
 			unreal_log(ULOG_WARNING, "central-blocklist", "CENTRAL_BLOCKLIST_TIMEOUT", client,
