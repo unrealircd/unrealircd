@@ -1023,6 +1023,10 @@ int _register_user(Client *client)
 #endif
 	}
 
+	/* Don't allow shunned users in */
+	if (IsShunned(client))
+		return 0;
+
 	/* Set client->local->sockhost:
 	 * First deal with the special 'localhost' case and
 	 * then with generic setting based on DNS.
