@@ -69,10 +69,12 @@ extern void proceed_normal_client_handshake(Client *client, struct hostent *he);
 /* Global variables */
 
 ares_channel resolver_channel_client; /**< The resolver channel for clients */
+ares_channel resolver_channel_https; /**< The resolver channel for HTTPS requests. */
 ares_channel resolver_channel_dnsbl; /**< The resolver channel for DNSBLs. */
 
 #define RESOLVER_CHANNEL_CLIENT (void *)0x1
-#define RESOLVER_CHANNEL_DNSBL (void *)0x2
+#define RESOLVER_CHANNEL_HTTPS (void *)0x2
+#define RESOLVER_CHANNEL_DNSBL (void *)0x3
 
 DNSStats dnsstats;
 
@@ -101,6 +103,8 @@ static void unrealdns_io_cb(int fd, int revents, void *data)
 
 	if (data == RESOLVER_CHANNEL_CLIENT)
 		ares_process_fd(resolver_channel_client, read_fd, write_fd);
+	else if (data == RESOLVER_CHANNEL_HTTPS)
+		ares_process_fd(resolver_channel_https, read_fd, write_fd);
 	else if (data == RESOLVER_CHANNEL_DNSBL)
 		ares_process_fd(resolver_channel_dnsbl, read_fd, write_fd);
 #ifdef DEBUGMODE
@@ -141,6 +145,8 @@ static int unrealdns_sock_create_cb(ares_socket_t fd, int type, void *data)
 	 */
 	if (data == RESOLVER_CHANNEL_CLIENT)
 		fd_open(fd, "DNS Resolver Socket for clients", FDCLOSE_NONE);
+	if (data == RESOLVER_CHANNEL_HTTPS)
+		fd_open(fd, "DNS Resolver Socket for HTTPS", FDCLOSE_NONE);
 	else if (data == RESOLVER_CHANNEL_DNSBL)
 		fd_open(fd, "DNS Resolver Socket for DNSBLs", FDCLOSE_NONE);
 #ifdef DEBUGMODE
@@ -155,6 +161,7 @@ static int unrealdns_sock_create_cb(ares_socket_t fd, int type, void *data)
 EVENT(unrealdns_timeout)
 {
 	ares_process_fd(resolver_channel_client, ARES_SOCKET_BAD, ARES_SOCKET_BAD);
+	ares_process_fd(resolver_channel_https, ARES_SOCKET_BAD, ARES_SOCKET_BAD);
 	ares_process_fd(resolver_channel_dnsbl, ARES_SOCKET_BAD, ARES_SOCKET_BAD);
 }
 
@@ -224,6 +231,30 @@ void init_resolver(int firsttime)
 	}
 	ares_set_socket_callback(resolver_channel_client, unrealdns_sock_create_cb, RESOLVER_CHANNEL_CLIENT);
 
+	/*** The https client channel ***/
+	options.sock_state_cb_data = RESOLVER_CHANNEL_HTTPS;
+	options.timeout = iConf.dns_client_timeout ? iConf.dns_client_timeout : DNS_DEFAULT_CLIENT_TIMEOUT;
+	options.tries = iConf.dns_client_retry ? iConf.dns_client_retry : DNS_DEFAULT_CLIENT_RETRIES;
+#if defined(ARES_OPT_MAXTIMEOUTMS)
+	/* (yeah, apparently the normal timeout is only a suggestion
+	 *  in c-ares 1.32.0+, so we have to set a 'max' timeout now)
+	 */
+	optmask |= ARES_OPT_MAXTIMEOUTMS;
+	options.maxtimeout = options.timeout;
+#endif
+	/* Keep query cache ON (c-ares 1.31.0+) -- this is the main change compared to client_channel */
+	n = ares_init_options(&resolver_channel_https, &options, optmask);
+	if (n != ARES_SUCCESS)
+	{
+		/* FATAL */
+		config_error("resolver: ares_init_options() failed with error code %d [%s]", n, ares_strerror(n));
+#ifdef _WIN32
+		win_error();
+#endif
+		exit(-7);
+	}
+	ares_set_socket_callback(resolver_channel_https, unrealdns_sock_create_cb, RESOLVER_CHANNEL_HTTPS);
+
 	/* And then the DNSBL channel */
 	options.sock_state_cb_data = RESOLVER_CHANNEL_DNSBL;
 	options.timeout = iConf.dns_dnsbl_timeout ? iConf.dns_dnsbl_timeout : DNS_DEFAULT_DNSBL_TIMEOUT;
@@ -268,6 +299,7 @@ void reinit_resolver(Client *client)
 	unreal_log(ULOG_INFO, "dns", "REINIT_RESOLVER", client,
 	           "$client requested reinitalization of the DNS resolver");
 	ares_destroy(resolver_channel_client);
+	ares_destroy(resolver_channel_https);
 	ares_destroy(resolver_channel_dnsbl);
 	init_resolver(0);
 }
@@ -728,6 +760,12 @@ void dns_check_for_changes(void)
 	ares_destroy_options(&inf);
 
 	memset(&inf, 0, sizeof(inf));
+	ares_save_options(resolver_channel_https, &inf, &optmask);
+	if ((inf.timeout != iConf.dns_client_timeout) || (inf.tries != iConf.dns_client_retry))
+		changed = 1;
+	ares_destroy_options(&inf);
+
+	memset(&inf, 0, sizeof(inf));
 	ares_save_options(resolver_channel_dnsbl, &inf, &optmask);
 	if ((inf.timeout != iConf.dns_dnsbl_timeout) || (inf.tries != iConf.dns_dnsbl_retry))
 		changed = 1;
@@ -738,6 +776,7 @@ void dns_check_for_changes(void)
 		if (loop.booted)
 			config_status("DNS Configuration changed, reinitializing DNS...");
 		ares_destroy(resolver_channel_client);
+		ares_destroy(resolver_channel_https);
 		ares_destroy(resolver_channel_dnsbl);
 		init_resolver(0);
 	}
@@ -821,6 +860,26 @@ CMD_FUNC(cmd_dns)
 		}
 		ares_free_data(serverlist);
 		ares_save_options(resolver_channel_client, &inf, &optmask);
+		if (optmask & ARES_OPT_TIMEOUTMS)
+			sendtxtnumeric(client, "        timeout: %d", inf.timeout);
+		if (optmask & ARES_OPT_TRIES)
+			sendtxtnumeric(client, "          tries: %d", inf.tries);
+		ares_destroy_options(&inf);
+
+		sendtxtnumeric(client, "=== HTTPS resolver channel ===");
+		i = 0;
+		ares_get_servers(resolver_channel_https, &serverlist);
+		for (ns = serverlist; ns; ns = ns->next)
+		{
+			char ipbuf[128];
+			const char *ip;
+			i++;
+
+			ip = inetntop(ns->family, &ns->addr, ipbuf, sizeof(ipbuf));
+			sendtxtnumeric(client, "      server #%d: %s", i, ip ? ip : "<error>");
+		}
+		ares_free_data(serverlist);
+		ares_save_options(resolver_channel_https, &inf, &optmask);
 		if (optmask & ARES_OPT_TIMEOUTMS)
 			sendtxtnumeric(client, "        timeout: %d", inf.timeout);
 		if (optmask & ARES_OPT_TRIES)

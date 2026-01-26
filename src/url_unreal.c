@@ -234,8 +234,8 @@ void url_start_async(OutgoingWebRequest *request)
 	} else {
 		/* Hostname, so start resolving... */
 		handle->dns_refcnt += 2;
-		ares_gethostbyname(resolver_channel_client, handle->hostname, AF_INET, url_resolve_cb, handle);
-		ares_gethostbyname(resolver_channel_client, handle->hostname, AF_INET6, url_resolve_cb, handle);
+		ares_gethostbyname(resolver_channel_https, handle->hostname, AF_INET, url_resolve_cb, handle);
+		ares_gethostbyname(resolver_channel_https, handle->hostname, AF_INET6, url_resolve_cb, handle);
 	}
 }
 
