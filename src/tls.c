@@ -329,6 +329,11 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 #endif
 	SSL_CTX_set_options(ctx, SSL_OP_NO_TICKET);
 
+#ifdef SSL_OP_NO_RX_CERTIFICATE_COMPRESSION
+	/* Compression is always asking for trouble, they should know this by now */
+	SSL_CTX_set_options(ctx, SSL_OP_NO_RX_CERTIFICATE_COMPRESSION);
+#endif
+
 	/* Let's first check the simple case of file exist. That's because the
 	 * SSL_CTX_use_certificate_chain_file() later on works but produces like
 	 * four lines of output, which is a bit verbose for such a simple case.
