@@ -1761,7 +1761,7 @@ void config_setdefaultsettings(Configuration *i)
 		DISABLE_IPV6 = 1;
 	safe_strdup(i->prefix_quit, "Quit");
 	i->max_unknown_connections_per_ip = 3;
-	i->handshake_timeout = 30;
+	i->handshake_timeout = 40;
 	i->sasl_timeout = 15;
 	i->handshake_delay = -1;
 	i->broadcast_channel_messages = BROADCAST_CHANNEL_MESSAGES_AUTO;

@@ -22,6 +22,9 @@ This is work in progress and may not always be a stable version.
   This prevents silent discovery of who blocks you and also makes it
   so in various clients you don't get errors about unable to send typing
   indicator before you even hit send.
+* Slightly raise default
+  [set::handshake-timeout](https://www.unrealircd.org/docs/Set_block#set::handshake-timeout)
+  from 30 to 40 seconds.
 
 ### Fixes:
 * Crash when using [Extended Server Bans](https://www.unrealircd.org/docs/Extended_server_bans)
@@ -46,6 +49,15 @@ This is work in progress and may not always be a stable version.
 * Calling `register_user()` more than once for the same user should
   never be done (causes a desync). We now guard against this in the
   function. Similarly, we guard against allowing shunned users in.
+* As mentioned under "Changes": if SASL authentication is ongoing
+  and a client sends `CAP END`, we now wait for SASL to succeed/fail/timeout
+  before actually ending the handshake. This solves a race condition
+  for IRC clients that don't follow the recommendation in the
+  [sasl specification](https://ircv3.net/specs/extensions/sasl-3.1#the-authenticate-command).
+  Our approach would be problematic for clients who deliberately wanted
+  to abort SASL due to a timeout but UnrealIRCd already handles SASL
+  timeout via [set::sasl-timeout](https://www.unrealircd.org/docs/Set_block#set::sasl-timeout)
+  which is 15 seconds by default, so that's fine.
 * Changes in [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
   * Mask/match items and security groups now get expanded in the same way.
     All properties are expanded properly. Extended fields like `account`
