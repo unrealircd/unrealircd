@@ -15,10 +15,18 @@ This is work in progress and may not always be a stable version.
   SASL to succeed/fail/timeout before actually ending the handshake. This solves
   a race condition for IRC clients that don't follow the recommendation in the
   [sasl specification](https://ircv3.net/specs/extensions/sasl-3.1#the-authenticate-command).
+* DNS caching when using build-in HTTPS.
+* `./unrealircd module install` now gives a non-zero exit code on failure
+* If a recipient has user mode `+D` or `+R` and the sender is not allowed
+  to send a `PRIVMSG` or `NOTICE` then we will silently drop `TAGMSG`.
+  This prevents silent discovery of who blocks you and also makes it
+  so in various clients you don't get errors about unable to send typing
+  indicator before you even hit send.
 
 ### Fixes:
 * Crash when using [Extended Server Bans](https://www.unrealircd.org/docs/Extended_server_bans)
   with an invalid syntax in the configuration file.
+* Don't show confusing CENTRAL_BLOCKLIST_TIMEOUT message when user is shunned.
 
 ### Developers and protocol:
 * Third party modules can now set module::compile-flags in the
@@ -29,6 +37,15 @@ This is work in progress and may not always be a stable version.
   including unmanaged ones. This also means that modules that do not
   exist in any repository, can still use a module manager block to
   specify compile flags.
+* Setting ChanMode `+l` with a value of zero or less will cause an
+  `ERR_INVALIDMODEPARAM` message, instead of silently transforming
+  it to `1`.
+* In `HOOKTYPE_CAN_SEND_TO_USER` you can now choose not to set `*errmsg`
+  to silently drop a message. Generally you should set the message, though.
+  This is used now by +D/+R if user is blocked and it is a TAGMSG.
+* Calling `register_user()` more than once for the same user should
+  never be done (causes a desync). We now guard against this in the
+  function. Similarly, we guard against allowing shunned users in.
 * Changes in [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC):
   * Mask/match items and security groups now get expanded in the same way.
     All properties are expanded properly. Extended fields like `account`
