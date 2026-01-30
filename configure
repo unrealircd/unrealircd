@@ -8559,7 +8559,7 @@ fi
 if test "$has_system_pcre2" = "no"
 then :
 
-pcre2_version="10.45"
+pcre2_version="10.47"
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: extracting PCRE2 regex library" >&5
 printf "%s\n" "extracting PCRE2 regex library" >&6; }
 cur_dir=`pwd`
@@ -8809,7 +8809,7 @@ fi
 if test "$has_system_sodium" = "no"
 then :
 
-sodium_version="1.0.20"
+sodium_version="1.0.21"
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: extracting sodium library" >&5
 printf "%s\n" "extracting sodium library" >&6; }
 cur_dir=`pwd`
@@ -9084,7 +9084,7 @@ fi
 if test "$has_system_jansson" = "no"
 then :
 
-jansson_version="2.14.1"
+jansson_version="2.15.0"
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: extracting jansson library" >&5
 printf "%s\n" "extracting jansson library" >&6; }
 cur_dir=`pwd`

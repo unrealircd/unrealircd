@@ -623,7 +623,7 @@ AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libpcre2*])],[has
 
 AS_IF([test "$has_system_pcre2" = "no"], [
 dnl REMEMBER TO CHANGE WITH A NEW PCRE2 RELEASE!
-pcre2_version="10.45"
+pcre2_version="10.47"
 AC_MSG_RESULT(extracting PCRE2 regex library)
 cur_dir=`pwd`
 cd extras
@@ -717,7 +717,7 @@ AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libsodium*])],[ha
 
 AS_IF([test "$has_system_sodium" = "no"],[
 dnl REMEMBER TO CHANGE WITH A NEW SODIUM RELEASE!
-sodium_version="1.0.20"
+sodium_version="1.0.21"
 AC_MSG_RESULT(extracting sodium library)
 cur_dir=`pwd`
 cd extras
@@ -842,7 +842,7 @@ AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libjansson*])],[h
 
 AS_IF([test "$has_system_jansson" = "no"],[
 dnl REMEMBER TO CHANGE WITH A NEW JANSSON RELEASE!
-jansson_version="2.14.1"
+jansson_version="2.15.0"
 AC_MSG_RESULT(extracting jansson library)
 cur_dir=`pwd`
 cd extras
