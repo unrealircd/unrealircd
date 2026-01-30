@@ -561,6 +561,33 @@ static void ct_throttle_usage(Client *client)
 	sendnotice(client, "NOTE: All commands only affect this server. Remote servers are not affected.");
 }
 
+void ct_off(Client *client)
+{
+	if (ucounter->disabled)
+		return; /* Already off */
+
+	ucounter->disabled = 1;
+	unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTLE_MODULE_DISABLED", client,
+		   "[ConnThrottle] $client.details DISABLED the connthrottle module.");
+}
+
+void ct_on(Client *client)
+{
+	if (!ucounter->disabled)
+		return; /* Already on */
+
+	unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTLE_MODULE_ENABLED", client,
+		   "[ConnThrottle] $client.details ENABLED the connthrottle module.");
+	ucounter->disabled = 0;
+}
+
+void ct_reset(Client *client)
+{
+	memset(ucounter, 0, sizeof(UCounter));
+	unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTLE_RESET", client,
+		   "[ConnThrottle] $client.details did a RESET on the statistics/counters.");
+}
+
 CMD_FUNC(ct_throttle)
 {
 	if (!IsOper(client))
@@ -603,9 +630,7 @@ CMD_FUNC(ct_throttle)
 			sendnotice(client, "Already OFF");
 			return;
 		}
-		ucounter->disabled = 1;
-		unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTLE_MODULE_DISABLED", client,
-			   "[ConnThrottle] $client.details DISABLED the connthrottle module.");
+		ct_off(client);
 	} else
 	if (!strcasecmp(parv[1], "ON"))
 	{
@@ -614,15 +639,11 @@ CMD_FUNC(ct_throttle)
 			sendnotice(client, "Already ON");
 			return;
 		}
-		unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTLE_MODULE_ENABLED", client,
-			   "[ConnThrottle] $client.details ENABLED the connthrottle module.");
-		ucounter->disabled = 0;
+		ct_on(client);
 	} else
 	if (!strcasecmp(parv[1], "RESET"))
 	{
-		memset(ucounter, 0, sizeof(UCounter));
-		unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTLE_RESET", client,
-			   "[ConnThrottle] $client.details did a RESET on the statistics/counters.");
+		ct_reset(client);
 	} else
 	{
 		sendnotice(client, "Unknown option '%s'", parv[1]);
@@ -713,15 +734,14 @@ RPC_CALL_FUNC(rpc_connthrottle_set)
 
 	REQUIRE_PARAM_BOOLEAN("enabled", enabled);
 
-	/* Execute the THROTTLE command as the server */
-	parv[0] = NULL;
-	parv[1] = enabled ? "on" : "off";
-	parv[2] = NULL;
-	do_cmd(&me, NULL, "THROTTLE", 2, parv);
+	if (enabled)
+		ct_on(client);
+	else
+		ct_off(client);
 
 	result = json_object();
 	json_object_set_new(result, "success", json_boolean(1));
-	json_object_set_new(result, "enabled", json_boolean(enabled));
+	json_object_set_new(result, "enabled", json_boolean(!ucounter->disabled));
 
 	rpc_response(client, request, result);
 	json_decref(result);
@@ -732,11 +752,7 @@ RPC_CALL_FUNC(rpc_connthrottle_reset)
 	json_t *result;
 	const char *parv[3];
 
-	/* Execute the THROTTLE reset command as the server */
-	parv[0] = NULL;
-	parv[1] = "reset";
-	parv[2] = NULL;
-	do_cmd(&me, NULL, "THROTTLE", 2, parv);
+	ct_reset(client);
 
 	result = json_object();
 	json_object_set_new(result, "success", json_boolean(1));
