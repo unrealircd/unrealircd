@@ -2,7 +2,7 @@ UnrealIRCd 6.2.3-rc1
 =====================
 
 This is the Release Candidate for future version 6.2.3. You can help us by
-testing this release and reporting bugs to https://bugs.unrealircd.org/
+testing this release and reporting bugs to https://bugs.unrealircd.org/.
 
 This version comes with a few enhancements and has quite a number of bugfixes.
 
