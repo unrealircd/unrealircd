@@ -71,7 +71,7 @@ Source: "c:\dev\unrealircd-6-libs\openssl\bin\*.dll"; DestDir: "{app}\bin"; Flag
 Source: "c:\dev\unrealircd-6-libs\GeoIP\libGeoIP\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "c:\dev\unrealircd-6-libs\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion signonce
 #ifdef USE_CURL
-Source: "c:\dev\unrealircd-6-libs\curl\builds\libcurl-vc-x64-release-dll-ssl-dll-cares-dll-ipv6-obj-lib\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "c:\dev\unrealircd-6-libs\curl\bin\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 #endif
 Source: "doc\conf\tls\curl-ca-bundle.crt"; DestDir: "{app}\conf\tls"; Flags: ignoreversion
 
