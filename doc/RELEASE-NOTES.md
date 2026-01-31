@@ -1,27 +1,31 @@
-UnrealIRCd 6.2.3-git
-=================
+UnrealIRCd 6.2.3-rc1
+=====================
 
-This is the git version (development version) for future UnrealIRCd 6.2.3.
-This is work in progress and may not always be a stable version.
+This is the Release Candidate for future version 6.2.3. You can help us by
+testing this release and reporting bugs to https://bugs.unrealircd.org/
+
+This version comes with a few enhancements and has quite a number of bugfixes.
 
 ### Enhancements:
 * In [ban user { }](https://www.unrealircd.org/docs/Ban_user_block)
   you can now use `soft yes;` to make it a
   [Soft ban](https://www.unrealircd.org/docs/Soft_ban).
+* DNS caching when using build-in HTTPS.
+* If a recipient has user mode `+D` or `+R` and the sender is not allowed
+  to send a `PRIVMSG` or `NOTICE` then we will silently drop `TAGMSG`.
+  This prevents silent discovery of who blocks you. Plus, you no longer
+  get confusing "cannot send" errors, due to typing indicator, when you
+  have not even send a message yet.
+* The [module manager](https://www.unrealircd.org/docs/Module_manager)
+  now allows 3rd party modules to specify external libraries and build flags.
 
 ### Changes:
 * Small updates to `HELPOP`.
+* `./unrealircd module install` now gives a non-zero exit code on failure
 * If SASL authentication is ongoing and a client sends `CAP END`, we now wait for
   SASL to succeed/fail/timeout before actually ending the handshake. This solves
   a race condition for IRC clients that don't follow the recommendation in the
   [sasl specification](https://ircv3.net/specs/extensions/sasl-3.1#the-authenticate-command).
-* DNS caching when using build-in HTTPS.
-* `./unrealircd module install` now gives a non-zero exit code on failure
-* If a recipient has user mode `+D` or `+R` and the sender is not allowed
-  to send a `PRIVMSG` or `NOTICE` then we will silently drop `TAGMSG`.
-  This prevents silent discovery of who blocks you and also makes it
-  so in various clients you don't get errors about unable to send typing
-  indicator before you even hit send.
 * Slightly raise default
   [set::handshake-timeout](https://www.unrealircd.org/docs/Set_block#set::handshake-timeout)
   from 30 to 40 seconds.
@@ -42,8 +46,7 @@ This is work in progress and may not always be a stable version.
   exist in any repository, can still use a module manager block to
   specify compile flags.
 * Setting ChanMode `+l` with a value of zero or less will cause an
-  `ERR_INVALIDMODEPARAM` message, instead of silently transforming
-  it to `1`.
+  `ERR_INVALIDMODEPARAM` message, instead of transforming it to `1`.
 * In `HOOKTYPE_CAN_SEND_TO_USER` you can now choose not to set `*errmsg`
   to silently drop a message. Generally you should set the message, though.
   This is used now by +D/+R if user is blocked and it is a TAGMSG.
@@ -71,11 +74,7 @@ This is work in progress and may not always be a stable version.
     This does mean that `name` will be missing if it is a `match` item.
   * [`spamfilter`](https://www.unrealircd.org/docs/JSON-RPC:Spamfilter):
     here too, mask item is expanded if it is used in spamfilter.except.
-  * [`connthrottle`](https://www.unrealircd.org/docs/JSON-RPC:Connthrottle):
-    In `connthrottle.status` the `state` value `active` was changed to
-    `monitoring` (module is enabled but not actively intervening).
-    Also, the items under config.except are now an expanded mask item
-    (consistent with the rest).
+    so it actually works now.
 
 UnrealIRCd 6.2.2
 -----------------
