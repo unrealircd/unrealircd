@@ -5643,7 +5643,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			match_spamfilter_hit(client, str_in, str, target, cmd, destination,
 			                     tkl, &winner_tkl,
 			                     user_is_exempt_general, user_is_exempt_central,
-			                     &stop_processing_general_spamfilters, &stop_processing_general_spamfilters,
+			                     &stop_processing_general_spamfilters, &stop_processing_central_spamfilters,
 			                     &content_revealed,
 			                     0);
 		}
@@ -5703,7 +5703,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			match_spamfilter_hit(client, str_in, str, target, cmd, destination,
 			                       tkl, &winner_tkl,
 			                       user_is_exempt_general, user_is_exempt_central,
-			                       &stop_processing_general_spamfilters, &stop_processing_general_spamfilters,
+			                       &stop_processing_general_spamfilters, &stop_processing_central_spamfilters,
 			                       &content_revealed,
 			                       1);
 			/* and continue (yes, always, no stopping on first match) */
