@@ -181,6 +181,7 @@ int unreal_mask_match_string(const char *name, ConfigItem_mask *mask)
 int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 {
 	ConfigEntry *cepp;
+	int has_rule=0, has_exclude_rule=0;
 
 	if (!strcmp(cep->name, "webirc") || !strcmp(cep->name, "exclude-webirc"))
 	{
@@ -258,12 +259,20 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 	} else
 	if (!strcmp(cep->name, "rule") || !strcmp(cep->name, "exclude-rule"))
 	{
-		int val = crule_test(cep->value);
+		int val;
+
+		if (!strcmp(cep->name, "rule"))
+			config_detect_duplicate(&has_rule, cep, errors);
+		else if (!strcmp(cep->name, "exclude-rule"))
+			config_detect_duplicate(&has_exclude_rule, cep, errors);
+
+		val = crule_test(cep->value);
 		if (val)
 		{
-			config_error("%s:%i: rule contains an invalid expression: %s",
+			config_error("%s:%i: %s contains an invalid expression: %s",
 				cep->file->filename,
 				cep->line_number,
+			        cep->name,
 				crule_errstring(val));
 			(*errors)++;
 		}
