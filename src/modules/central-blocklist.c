@@ -954,6 +954,7 @@ void cbl_download_complete(OutgoingWebRequest *request, OutgoingWebResponse *res
 	if ((str = json_object_get_string(result, "error")))
 	{
 		cbl_error_response(transfer, str);
+		json_decref(result);
 		return;
 	}
 
@@ -972,8 +973,8 @@ void cbl_download_complete(OutgoingWebRequest *request, OutgoingWebResponse *res
 	responses = json_object_get(result, "responses");
 	if (!responses)
 	{
-		json_decref(result);
 		cbl_error_response(transfer, "no spam scores calculated for users");
+		json_decref(result);
 		return; /* Nothing to do */
 	}
 
