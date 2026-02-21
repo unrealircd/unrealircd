@@ -617,7 +617,7 @@ void free_conf_channelmodes(struct ChMode *store)
 {
 	int i;
 
-	for (i=0; i < 255; i++)
+	for (i=0; i <= 255; i++)
 		safe_free(store->extparams[i]);
 
 	memset(store, 0, sizeof(struct ChMode));
