@@ -3731,13 +3731,13 @@ char *SpamfilterMagicHost(char *i)
 
 /** Build the nick:user@host:realname string
  * @param buf     The buffer used for storage, the size of
- *                which should be at least NICKLEN+USERLEN+HOSTLEN+1.
+ *                which should be at least NICKLEN+USERLEN+HOSTLEN+REALLEN+1.
  * @param nick    The nickname (because client can be nick-changing).
  * @param client  The affected client.
  */
 void _spamfilter_build_user_string(char *buf, const char *nick, Client *client)
 {
-	snprintf(buf, NICKLEN+USERLEN+HOSTLEN+1, "%s!%s@%s:%s",
+	snprintf(buf, NICKLEN+USERLEN+HOSTLEN+REALLEN+1, "%s!%s@%s:%s",
 		nick, client->user->username, SpamfilterMagicHost(client->user->realhost), client->info);
 }
 
