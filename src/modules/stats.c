@@ -643,9 +643,15 @@ int stats_fdtable(Client *client, const char *para)
 		if (!fde->is_open)
 			continue;
 
+#ifndef DEBUGMODE
+		sendnumericfmt(client, RPL_STATSDEBUG,
+			"fd %3d, desc '%s', read-hdl %d, write-hdl %d, cbdata %d",
+			fde->fd, fde->desc, fde->read_callback ? 1 : 0, fde->write_callback ? 1 : 0, fde->data ? 1 : 0);
+#else
 		sendnumericfmt(client, RPL_STATSDEBUG,
 			"fd %3d, desc '%s', read-hdl %p, write-hdl %p, cbdata %p",
 			fde->fd, fde->desc, fde->read_callback, fde->write_callback, fde->data);
+#endif
 	}
 
 	return 0;
