@@ -212,7 +212,7 @@ void rpc_log_send(Client *client, json_t *request, json_t *params)
 	json_t *result;
 	json_error_t *jerr;
 	const char *msg, *level, *subsystem, *event_id, *log_source, *timestamp;
-	const char *serialized;
+	char *serialized;
 	MessageTag *mtags = NULL;
 
 	REQUIRE_PARAM_STRING("msg", msg);

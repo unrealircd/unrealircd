@@ -683,7 +683,7 @@ RPC_CALL_FUNC(rpc_user_part)
 	args[3] = reason;
 	args[4] = NULL;
 	mtag_add_issued_by(&mtags, client, NULL);
-	do_cmd(&me, NULL, force ? "SAPART" : "SVSPART", reason ? 4 : 3, args);
+	do_cmd(&me, mtags, force ? "SAPART" : "SVSPART", reason ? 4 : 3, args);
 	safe_free_message_tags(mtags);
 
 	/* Return result. Always 'true' at the moment.
