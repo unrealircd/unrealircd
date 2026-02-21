@@ -1430,7 +1430,7 @@ int rpc_parse_auth_uri(Client *client, WebRequest *web, char **username, char **
 		{
 			p += 9;
 			*password = p;
-			p = strchr(str, '&');
+			p = strchr(p, '&');
 			if (p)
 				*p = '\0';
 		}
