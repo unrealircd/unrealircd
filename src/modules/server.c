@@ -278,7 +278,7 @@ int server_config_test_deny_link(ConfigFile *cf, ConfigEntry *ce, int type, int 
 {
         int errors = 0;
         ConfigEntry *cep;
-	char has_mask = 0, has_rule = 0, has_type = 0;
+	int has_mask = 0, has_rule = 0, has_type = 0;
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
@@ -295,13 +295,7 @@ int server_config_test_deny_link(ConfigFile *cf, ConfigEntry *ce, int type, int 
 			} else if (!strcmp(cep->name, "rule"))
 			{
 				int val = 0;
-				if (has_rule)
-				{
-					config_warn_duplicate(cep->file->filename,
-						cep->line_number, "deny link::rule");
-					continue;
-				}
-				has_rule = 1;
+				config_detect_duplicate(&has_rule, cep, &errors);
 				if ((val = crule_test(cep->value)))
 				{
 					config_error("%s:%i: deny link::rule contains an invalid expression: %s",
