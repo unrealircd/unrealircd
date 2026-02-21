@@ -2593,6 +2593,7 @@ void config_rehash()
 		next = (ListStruct *)allow_ptr->next;
 		free_security_group(allow_ptr->match);
 		Auth_FreeAuthConfig(allow_ptr->auth);
+		safe_free(allow_ptr->server);
 		DelListItem(allow_ptr, conf_allow);
 		safe_free(allow_ptr);
 	}
@@ -2630,6 +2631,7 @@ void config_rehash()
 		free_motd(&tld_ptr->botmotd);
 
 		free_security_group(tld_ptr->match);
+		safe_free(tld_ptr->channel);
 
 		DelListItem(tld_ptr, conf_tld);
 		safe_free(tld_ptr);
@@ -11311,6 +11313,7 @@ void link_cleanup(ConfigItem_link *link_ptr)
 	safe_free(link_ptr->outgoing.hostname);
 	safe_free(link_ptr->hub);
 	safe_free(link_ptr->leaf);
+	safe_free(link_ptr->connect_ip);
 	if (link_ptr->ssl_ctx)
 	{
 		SSL_CTX_free(link_ptr->ssl_ctx);
