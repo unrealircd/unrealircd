@@ -922,14 +922,18 @@ void blacklist_hit(Client *client, Blacklist *bl, int reply)
 
 	if (only_soft_actions(bl->action) && blu)
 	{
-		/* For soft bans, delay the action until later (so user can do SASL auth) */
-		blu->save_action = duplicate_ban_actions(bl->action);
-		blu->save_tkltime = bl->ban_time;
-		safe_strdup(blu->save_opernotice, opernotice);
-		safe_strdup(blu->save_reason, banbuf);
-		safe_strdup(blu->save_blacklist, bl->name);
-		safe_strdup(blu->save_blacklist_dns_name, bl->backend->dns->name);
-		blu->save_blacklist_dns_reply = reply;
+		/* This extra 'if' ensures we don't overwrite an existing hit (first hit wins) */
+		if (!blu->save_action)
+		{
+			/* For soft bans, delay the action until later (so user can do SASL auth) */
+			blu->save_action = duplicate_ban_actions(bl->action);
+			blu->save_tkltime = bl->ban_time;
+			safe_strdup(blu->save_opernotice, opernotice);
+			safe_strdup(blu->save_reason, banbuf);
+			safe_strdup(blu->save_blacklist, bl->name);
+			safe_strdup(blu->save_blacklist_dns_name, bl->backend->dns->name);
+			blu->save_blacklist_dns_reply = reply;
+		}
 	} else {
 		/* Otherwise, execute the action immediately */
 		blacklist_action(client, opernotice, bl->action, banbuf, bl->ban_time, bl->name, bl->backend->dns->name, reply);
