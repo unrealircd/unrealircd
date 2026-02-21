@@ -3209,8 +3209,8 @@ void _free_tkl(TKL *tkl)
 		safe_free_all_ban_actions(tkl->ptr.spamfilter->action);
 		safe_free(tkl->ptr.spamfilter->prettyrule);
 		safe_free(tkl->ptr.spamfilter->id);
-		safe_free(tkl->ptr.spamfilter);
 		safe_free_security_group(tkl->ptr.spamfilter->except);
+		safe_free(tkl->ptr.spamfilter);
 	} else
 	if (TKLIsBanException(tkl) && tkl->ptr.banexception)
 	{
