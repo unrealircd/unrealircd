@@ -825,6 +825,8 @@ void blacklist_free_bluser_if_able(BLUser *bl)
 
 	safe_free(bl->save_opernotice);
 	safe_free(bl->save_reason);
+	safe_free(bl->save_blacklist);
+	safe_free(bl->save_blacklist_dns_name);
 	free_all_ban_actions(bl->save_action);
 	safe_free(bl);
 }
