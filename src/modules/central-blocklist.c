@@ -897,7 +897,7 @@ void cbl_error_response(CBLTransfer *transfer, const char *error)
 	}
 	if (num > 0)
 	{
-		unreal_log(ULOG_INFO, "central-blocklist", "CENTRAL_BLOCKLIST_ERROR", client,
+		unreal_log(ULOG_INFO, "central-blocklist", "CENTRAL_BLOCKLIST_ERROR", NULL,
 			   "CBL: Allowed $num_clients client(s) in due to CBL error: $error",
 			   log_data_integer("num_clients", num),
 			   log_data_string("error", error));
