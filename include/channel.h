@@ -25,6 +25,7 @@
 				   created or just tested for existance */
 
 #define	MODEBUFLEN	200
+#define MAXBANLEN	200 /* Maximum length of a complete ban */
 
 #define ChannelExists(n)	(find_channel(n))
 

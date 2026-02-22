@@ -877,7 +877,11 @@ const char *clean_ban_mask(const char *mask_in, int what, ExtbanType ban_type, C
 			 *   allow it too (so you don't get "unremovable" extbans).
 			 */
 			if (!MyUser(client) || (what == MODE_DEL))
+			{
+				if ((what == MODE_ADD) && (strlen(mask) > MAXBANLEN))
+					mask[MAXBANLEN] = '\0';
 				return mask; /* allow it */
+			}
 			return NULL; /* reject */
 		}
 
@@ -895,6 +899,8 @@ const char *clean_ban_mask(const char *mask_in, int what, ExtbanType ban_type, C
 			ret = extban->conv_param(b, extban);
 			ret = prefix_with_extban(ret, b, extban, retbuf, sizeof(retbuf));
 			safe_free(b);
+			if (ret && strlen(ret) > MAXBANLEN)
+				retbuf[MAXBANLEN] = '\0';
 			return ret;
 		}
 		/* else, do some basic sanity checks and cut it off at 80 bytes */
