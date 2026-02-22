@@ -5030,6 +5030,61 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
+  # Since we have moved from name[1] to name[], setting this should help bounds checking:
+  ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -fstrict-flex-arrays=3" >&5
+printf %s "checking whether C compiler accepts -fstrict-flex-arrays=3... " >&6; }
+if test ${ax_cv_check_cflags__Werror___fstrict_flex_arrays_3+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e)
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS -Werror  -fstrict-flex-arrays=3"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  ax_cv_check_cflags__Werror___fstrict_flex_arrays_3=yes
+else case e in #(
+  e) ax_cv_check_cflags__Werror___fstrict_flex_arrays_3=no ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags ;;
+esac
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags__Werror___fstrict_flex_arrays_3" >&5
+printf "%s\n" "$ax_cv_check_cflags__Werror___fstrict_flex_arrays_3" >&6; }
+if test x"$ax_cv_check_cflags__Werror___fstrict_flex_arrays_3" = xyes
+then :
+  HARDEN_CFLAGS="$HARDEN_CFLAGS -fstrict-flex-arrays=3"
+else case e in #(
+  e) : ;;
+esac
+fi
+
+  ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
   # At the link step, we might want -pie (GCC) or -Wl,-pie (Clang on OS X)
   #
   # The linker checks also compile code, so we need to include -fPIE as well.

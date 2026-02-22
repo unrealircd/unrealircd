@@ -147,6 +147,9 @@ AS_IF([test x"$hardening" != x"no"], [
   # Control Flow Enforcement (ROP hardening) - requires CPU hardware support
   check_cc_flag([-fcf-protection], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fcf-protection"])
 
+  # Since we have moved from name[1] to name[], setting this should help bounds checking:
+  check_cc_flag([-fstrict-flex-arrays=3], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fstrict-flex-arrays=3"])
+
   # At the link step, we might want -pie (GCC) or -Wl,-pie (Clang on OS X)
   #
   # The linker checks also compile code, so we need to include -fPIE as well.
