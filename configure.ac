@@ -18,8 +18,6 @@ if test "x$enable_dynamic_linking" = "x"; then
 	exit 1
 fi
 
-dnl Save CFLAGS, use this when building the libraries like c-ares
-orig_cflags="$CFLAGS"
 
 dnl Save build directory early on (used in our m4 macros too)
 BUILDDIR_NOW="`pwd`"
@@ -67,6 +65,9 @@ dnl Check for compiler
 AC_PROG_CC_C99
 AS_IF([test "$ac_cv_prog_cc_c99" = "no"],
 	[AC_MSG_ERROR([No C99 compiler was found. Please install gcc or clang and other build tools. Eg, on Debian/Ubuntu you probably want to run the following as root: apt-get install build-essential ])])
+
+dnl Save CFLAGS, use this when building the libraries like c-ares
+orig_cflags="$CFLAGS"
 
 dnl Check for make moved down, so the above compiler check takes precedence.
 AC_CHECK_PROG(MAKER, gmake, gmake, make)

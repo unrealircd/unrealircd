@@ -2698,7 +2698,6 @@ if test "x$enable_dynamic_linking" = "x"; then
 	exit 1
 fi
 
-orig_cflags="$CFLAGS"
 
 BUILDDIR_NOW="`pwd`"
 
@@ -4095,6 +4094,8 @@ if test "$ac_cv_prog_cc_c99" = "no"
 then :
   as_fn_error $? "No C99 compiler was found. Please install gcc or clang and other build tools. Eg, on Debian/Ubuntu you probably want to run the following as root: apt-get install build-essential " "$LINENO" 5
 fi
+
+orig_cflags="$CFLAGS"
 
 # Extract the first word of "gmake", so it can be a program name with args.
 set dummy gmake; ac_word=$2
