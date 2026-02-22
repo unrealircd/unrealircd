@@ -1057,15 +1057,17 @@ skip_host_check:
 			           log_data_link_block(link));
 			exit_client(client, NULL, "Server Exists (Juped)");
 			return NULL;
-		} else {
-			/* For all other cases: allow the NEW link in and kill the OLD.
+		} else if (acptr->direction == acptr) {
+			/* If both the old and the new server are locally connected then
+			 * we opt to allow the NEW link in and kill the OLD.
 			 * Downside is if a user runs two irc servers (or two processes)
 			 * with the same server hostname (and has proper link auth etc)
 			 * then they will keep fighting each other, but that is an unusual
 			 * case. The UPSIDE is that a server does not have to wait until
 			 * the link goes "Ping timeout" on the other side and can
 			 * immediately reconnect when it feels like it.
-			 * This was added in Aug 2021 for UnrealIRCd 6.0.0.
+			 * This was added in Aug 2021 for UnrealIRCd 6.0.0
+			 * and fine-tuned for localonly+localonly in UnrealIRCd 6.2.3.
 			 */
 			unreal_log(ULOG_ERROR, "link", "LINK_DROPPED_REINTRODUCED", client,
 				   "Link with server $client.details causes older link "
@@ -1073,6 +1075,19 @@ skip_host_check:
 				   log_data_client("existing_client", acptr),
 			           log_data_link_block(link));
 			exit_client_ex(acptr, client->direction, NULL, "Old link dropped, resyncing");
+		} else {
+			/* Server already exists on the network via a remote path.
+			 * We cannot do the same "allow NEW, drop OLD" stuff as above,
+			 * because that is never guaranteed to be correct in such a case.
+			 * So we drop the NEW link, keep the OLD. Classic style.
+			 */
+			unreal_log(ULOG_ERROR, "link", "LINK_DENIED_SERVER_EXISTS", client,
+				   "Link with server $client.details denied: "
+				   "Server already exists via $existing_client.server.uplink.",
+				   log_data_client("existing_client", acptr),
+				   log_data_link_block(link));
+			exit_client(client, NULL, "Server Exists");
+			return NULL;
 		}
 	}
 
@@ -1317,7 +1332,7 @@ CMD_FUNC(cmd_server)
  */
 CMD_FUNC(cmd_sid)
 {
-	Client *acptr, *ocptr;
+	Client *acptr;
 	ConfigItem_link	*aconf;
 	ConfigItem_ban *bconf;
 	int hop;
@@ -1381,13 +1396,7 @@ CMD_FUNC(cmd_sid)
 			   "Already linked via $existing_client.server.uplink.",
 			   log_data_string("servername", servername),
 			   log_data_client("existing_client", acptr));
-		// FIXME: oldest should die.
-		// FIXME: code below looks wrong, it checks direction TS instead of anything else
-		acptr = acptr->direction;
-		ocptr = (direction->local->creationtime > acptr->local->creationtime) ? acptr : direction;
-		acptr = (direction->local->creationtime > acptr->local->creationtime) ? direction : acptr;
-		// FIXME: Wait, this kills entire acptr? Without sending SQUIT even :D
-		exit_client(acptr, NULL, "Server Exists");
+		sendto_one(client, NULL, "SQUIT %s :Server already exists", parv[3]);
 		return;
 	}
 
