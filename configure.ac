@@ -153,6 +153,12 @@ AS_IF([test x"$hardening" != x"no"], [
   # Clear registers on return (performance penalty, but acceptable, makes ROP harder)
   check_cc_flag([-fzero-call-used-regs=used-gpr], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fzero-call-used-regs=used-gpr"])
 
+  # This zeroes out variables that COULD be accessed before being set.
+  # We are generally very careful about this in our code, but 3rd party
+  # modules are not always so careful. And still useful in case we ourselves
+  # screw up.
+  check_cc_flag([-ftrivial-auto-var-init=zero], [HARDEN_CFLAGS="$HARDEN_CFLAGS -ftrivial-auto-var-init=zero"])
+
   # At the link step, we might want -pie (GCC) or -Wl,-pie (Clang on OS X)
   #
   # The linker checks also compile code, so we need to include -fPIE as well.
