@@ -8266,7 +8266,7 @@ printf "%s\n" "#define UNDERSCORE /**/" >>confdefs.h
 
 fi
 
-MODULEFLAGS="$ac_cv_pic $DYNAMIC_LDFLAGS"
+MODULEFLAGS="$ac_cv_pic $DYNAMIC_LDFLAGS $HARDEN_LDFLAGS"
 
 else case e in #(
   e)

@@ -349,7 +349,7 @@ if test "$ac_cv_underscore" = "yes"; then
 	AC_DEFINE([UNDERSCORE], [], [Define if your system prepends an underscore to symbols])
 fi
 
-MODULEFLAGS="$ac_cv_pic $DYNAMIC_LDFLAGS"
+MODULEFLAGS="$ac_cv_pic $DYNAMIC_LDFLAGS $HARDEN_LDFLAGS"
 dnl DYNAMIC_LINKING is not meant to be defined in include/setup.h, it's 
 dnl defined in the Makefiles using -D. Having it defined globally will
 dnl only cause braindamage and symbol collisions :-D.

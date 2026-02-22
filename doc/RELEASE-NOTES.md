@@ -30,6 +30,8 @@ This version comes with a few enhancements and has quite a number of bugfixes.
   [set::handshake-timeout](https://www.unrealircd.org/docs/Set_block#set::handshake-timeout)
   from 30 to 40 seconds.
 * Update shipped libs: PCRE2 (10.47), Jansson (2.15.0), Sodium (1.0.21)
+* Minor hardening tweak for modules, reducing the impact of some security bugs
+  (full RELRO instead of partial RELRO)
 
 ### Fixes:
 * Crash when using [Extended Server Bans](https://www.unrealircd.org/docs/Extended_server_bans)
