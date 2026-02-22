@@ -144,8 +144,11 @@ AS_IF([test x"$hardening" != x"no"], [
   # Added in UnrealIRCd 5.0.5 (default on Ubuntu 19.10)
   check_cc_flag([-fstack-clash-protection], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fstack-clash-protection"])
 
-  # Control Flow Enforcement (ROP hardening) - requires CPU hardware support
+  # Control Flow Enforcement (ROP hardening) - requires CPU hardware support (x64)
   check_cc_flag([-fcf-protection], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fcf-protection"])
+
+  # Similar to above but for arm64
+  check_cc_flag([-mbranch-protection=standard], [HARDEN_CFLAGS="$HARDEN_CFLAGS -mbranch-protection=standard"])
 
   # Since we have moved from name[1] to name[], setting this should help bounds checking:
   check_cc_flag([-fstrict-flex-arrays=3], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fstrict-flex-arrays=3"])
