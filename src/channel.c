@@ -770,7 +770,7 @@ char *trim_str(char *str, int len)
  */
 const char *convert_regular_ban(char *mask, char *buf, size_t buflen)
 {
-	static char namebuf[USERLEN + HOSTLEN + 6];
+	static char namebuf[NICKLEN + USERLEN + HOSTLEN + 3];
 	char *user, *host;
 
 	if (!*mask)

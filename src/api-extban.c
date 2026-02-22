@@ -372,8 +372,8 @@ int extban_is_ok_nuh_extban(BanContext *b)
  */
 const char *extban_conv_param_nuh(BanContext *b, Extban *extban)
 {
-	char tmpbuf[USERLEN + NICKLEN + HOSTLEN + 32];
-	static char retbuf[USERLEN + NICKLEN + HOSTLEN + 32];
+	char tmpbuf[USERLEN + NICKLEN + HOSTLEN + 3];
+	static char retbuf[USERLEN + NICKLEN + HOSTLEN + 3];
 
 	/* Work on a copy */
 	strlcpy(tmpbuf, b->banstr, sizeof(retbuf));
