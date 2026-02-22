@@ -39,7 +39,7 @@ typedef struct Silence Silence;
 struct Silence
 {
 	Silence *prev, *next;
-	char mask[1]; /**< user!nick@host mask of silence entry */
+	char mask[]; /**< user!nick@host mask of silence entry */
 };
 
 /* Global variables */
@@ -196,7 +196,7 @@ int _add_silence(Client *client, const char *mask, int senderr)
 	}
 
 	/* Add the new entry */
-	s = safe_alloc(sizeof(Silence)+strlen(mask));
+	s = safe_alloc(sizeof(Silence)+strlen(mask)+1);
 	strcpy(s->mask, mask); /* safe, allocated above */
 	AddListItemUnchecked(s, moddata_local_client(client, silence_md).ptr);
 	return 1;

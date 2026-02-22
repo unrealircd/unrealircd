@@ -114,7 +114,7 @@ struct ReputationEntry {
 	unsigned short score; /**< score for the user */
 	long last_seen; /**< user last seen (unix timestamp) */
 	int marker; /**< internal marker, not written to db */
-	char ip[1]; /*< ip address */
+	char ip[]; /*< ip address */
 };
 
 /* Global variables */
@@ -480,7 +480,7 @@ void reputation_load_db_old(void)
 		if (!last_seen)
 			continue;
 
-		e = safe_alloc(sizeof(ReputationEntry)+strlen(ip));
+		e = safe_alloc(sizeof(ReputationEntry)+strlen(ip)+1);
 		strcpy(e->ip, ip); /* safe, see alloc above */
 		e->score = atoi(score);
 		e->last_seen = atol(last_seen);
@@ -546,7 +546,7 @@ int reputation_load_db_new(UnrealDB *db)
 		R_SAFE(unrealdb_read_int16(db, &score));
 		R_SAFE(unrealdb_read_int64(db, &last_seen));
 
-		e = safe_alloc(sizeof(ReputationEntry)+strlen(ip));
+		e = safe_alloc(sizeof(ReputationEntry)+strlen(ip)+1);
 		strcpy(e->ip, ip); /* safe, see alloc above */
 		e->score = score;
 		e->last_seen = last_seen;
@@ -896,7 +896,7 @@ EVENT(add_scores)
 		if (!e)
 		{
 			/* Create */
-			e = safe_alloc(sizeof(ReputationEntry)+strlen(ip));
+			e = safe_alloc(sizeof(ReputationEntry)+strlen(ip)+1);
 			strcpy(e->ip, ip); /* safe, allocated above */
 			add_reputation_entry(e);
 		}
@@ -1415,7 +1415,7 @@ CMD_FUNC(reputation_server_cmd)
 			   log_data_integer("their_score", score),
 			   log_data_integer("score", 0));
 #endif
-		e = safe_alloc(sizeof(ReputationEntry)+strlen(ip));
+		e = safe_alloc(sizeof(ReputationEntry)+strlen(ip)+1);
 		strcpy(e->ip, ip); /* safe, see alloc above */
 		e->score = score;
 		e->last_seen = TStime();
@@ -1514,7 +1514,7 @@ void _ban_act_set_reputation(Client *client, BanAction *action)
 	if (!e)
 	{
 		/* Create */
-		e = safe_alloc(sizeof(ReputationEntry)+strlen(client->ip));
+		e = safe_alloc(sizeof(ReputationEntry)+strlen(client->ip)+1);
 		strcpy(e->ip, client->ip); /* safe, allocated above */
 		add_reputation_entry(e);
 	}
