@@ -178,6 +178,12 @@ AC_SUBST([HARDEN_LDFLAGS])
 AC_SUBST([HARDEN_BINCFLAGS])
 AC_SUBST([HARDEN_BINLDFLAGS])
 
+# Hardening flags to be used for libraries
+# These are the same of what we have, except we leave out -fstrict-flex-arrays=3
+# since that would break in some cases of code, and we don't control the libs..
+HARDEN_LIB_CFLAGS=$(echo "$HARDEN_CFLAGS" | sed 's/-fstrict-flex-arrays=3//')
+HARDEN_LIB_LDFLAGS="$HARDEN_LDFLAGS"
+
 # End of flag tests.
 CC="$saved_CC"
 CXX="$saved_CXX"
@@ -653,8 +659,9 @@ fi
 AC_MSG_RESULT(configuring PCRE2 regex library)
 cd pcre2-$pcre2_version
 save_cflags="$CFLAGS"
-CFLAGS="$orig_cflags"
-export CFLAGS
+CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS"
+LDFLAGS="$HARDEN_LIB_LDFLAGS"
+export CFLAGS LDFLAGS
 ./configure --enable-jit --enable-shared --prefix=$cur_dir/extras/pcre2 --libdir=$PRIVATELIBDIR || exit 1
 CFLAGS="$save_cflags"
 AC_MSG_RESULT(compiling PCRE2 regex library)
@@ -747,8 +754,9 @@ fi
 AC_MSG_RESULT(compiling sodium library)
 cd libsodium-$sodium_version
 save_cflags="$CFLAGS"
-CFLAGS="$orig_cflags"
-export CFLAGS
+CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS"
+LDFLAGS="$HARDEN_LIB_LDFLAGS"
+export CFLAGS LDFLAGS
 ./configure --prefix=$cur_dir/extras/sodium --libdir=$PRIVATELIBDIR --enable-shared --disable-static --enable-opt || exit 1
 CFLAGS="$save_cflags"
 AC_MSG_RESULT(compiling sodium resolver library)
@@ -796,8 +804,9 @@ fi
 AC_MSG_RESULT(configuring c-ares library)
 cd c-ares-$cares_version
 save_cflags="$CFLAGS"
-CFLAGS="$orig_cflags"
-export CFLAGS
+CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS"
+LDFLAGS="$HARDEN_LIB_LDFLAGS"
+export CFLAGS LDFLAGS
 ./configure --prefix=$cur_dir/extras/c-ares --libdir=$PRIVATELIBDIR --enable-shared --disable-tests || exit 1
 CFLAGS="$save_cflags"
 AC_MSG_RESULT(compiling c-ares resolver library)
@@ -872,8 +881,9 @@ fi
 AC_MSG_RESULT(compiling jansson library)
 cd jansson-$jansson_version
 save_cflags="$CFLAGS"
-CFLAGS="$orig_cflags"
-export CFLAGS
+CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS"
+LDFLAGS="$HARDEN_LIB_LDFLAGS"
+export CFLAGS LDFLAGS
 ./configure --prefix=$cur_dir/extras/jansson --libdir=$PRIVATELIBDIR --enable-shared --disable-static || exit 1
 CFLAGS="$save_cflags"
 AC_MSG_RESULT(compiling jansson resolver library)
