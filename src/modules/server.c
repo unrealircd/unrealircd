@@ -1253,6 +1253,7 @@ CMD_FUNC(cmd_server)
 			           "causes security issues. Ulines should only be added for services! "
 			           "See https://www.unrealircd.org/docs/FAQ#bad-ulines.");
 			exit_client(client, NULL, "Bad ulines. See https://www.unrealircd.org/docs/FAQ#bad-ulines");
+			return;
 		}
 		SetULine(client);
 	}
