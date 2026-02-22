@@ -164,7 +164,7 @@ int _watch_add(const char *nick, Client *client, int flags)
 	
 	/* If found NULL (no header for this nick), make one... */
 	if (!watch) {
-		watch = safe_alloc(sizeof(Watch)+strlen(nick));
+		watch = safe_alloc(sizeof(Watch)+strlen(nick)+1);
 		watch->lasttime = timeofday;
 		strcpy(watch->nick, nick);
 		

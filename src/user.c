@@ -1036,7 +1036,7 @@ void bump_tag_serial(Client *client)
 
 Tag *add_tag(Client *client, const char *name, int value)
 {
-	Tag *e = safe_alloc(sizeof(Tag)+strlen(name));
+	Tag *e = safe_alloc(sizeof(Tag)+strlen(name)+1);
 	strcpy(e->name, name); /* safe, allocated above */
 	e->value = value;
 	AddListItem(e, client->local->tags);

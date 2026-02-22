@@ -592,7 +592,7 @@ struct HistoryLogLine {
 	char *msgid;		/**< Pointer to 'msgid' mtag. Do NOT free this, it is freed by freeing 'mtags'. */
 	char *time;		/**< Pointer to 'time' mtag. Do NOT free this, it is freed by freeing 'mtags'. */
 	MessageTag *mtags;	/**< Message tags associated with this message */
-	char line[1];		/**< The full (old-skool) IRC protocol line */
+	char line[];		/**< The full (old-skool) IRC protocol line */
 };
 
 typedef struct HistoryResult HistoryResult;

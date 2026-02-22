@@ -558,7 +558,7 @@ void add_ListItemPrio(ListStructPrio *new, ListStructPrio **list, int priority)
 
 void _add_name_list(NameList **list, const char *name)
 {
-	NameList *e = safe_alloc(sizeof(NameList)+strlen(name));
+	NameList *e = safe_alloc(sizeof(NameList)+strlen(name)+1);
 	strcpy(e->name, name); /* safe, allocated above */
 	AddListItem(e, *list);
 }

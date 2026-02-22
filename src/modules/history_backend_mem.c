@@ -644,7 +644,7 @@ int hbm_history_add_line_in_time(HistoryLogObject *h, HistoryLogLine *l)
 /** Add a line to a history object */
 void hbm_history_add_line(HistoryLogObject *h, MessageTag *mtags, const char *line)
 {
-	HistoryLogLine *l = safe_alloc(sizeof(HistoryLogLine) + strlen(line));
+	HistoryLogLine *l = safe_alloc(sizeof(HistoryLogLine) + strlen(line) + 1);
 	strcpy(l->line, line); /* safe, see memory allocation above ^ */
 	hbm_duplicate_mtags(l, mtags);
 	if (h->tail)
@@ -731,7 +731,7 @@ int hbm_history_add(const char *object, MessageTag *mtags, const char *line)
 
 HistoryLogLine *duplicate_log_line(HistoryLogLine *l)
 {
-	HistoryLogLine *n = safe_alloc(sizeof(HistoryLogLine) + strlen(l->line));
+	HistoryLogLine *n = safe_alloc(sizeof(HistoryLogLine) + strlen(l->line) + 1);
 	strcpy(n->line, l->line); /* safe, see memory allocation above ^ */
 	hbm_duplicate_mtags(n, l->mtags);
 	return n;

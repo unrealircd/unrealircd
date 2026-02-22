@@ -80,7 +80,6 @@ typedef struct Spamfilter Spamfilter;
 typedef struct ServerBan ServerBan;
 typedef struct BanException BanException;
 typedef struct NameBan NameBan;
-typedef struct SpamExcept SpamExcept;
 typedef struct ConditionalConfig ConditionalConfig;
 typedef struct ConfigEntry ConfigEntry;
 typedef struct ConfigFile ConfigFile;
@@ -800,7 +799,7 @@ typedef struct NameList NameList;
  */
 struct NameList {
 	NameList *prev, *next;
-	char name[1];
+	char name[];
 };
 
 /** Free an entire NameList */
@@ -819,7 +818,7 @@ typedef struct Tag Tag;
 struct Tag {
 	Tag *prev, *next;
 	int value;
-	char name[1];
+	char name[];
 };
 /** @} */
 
@@ -1328,12 +1327,6 @@ struct TKL {
 		NameBan *nameban;
 		BanException *banexception;
 	} ptr;
-};
-
-/** A spamfilter except entry */
-struct SpamExcept {
-	SpamExcept *prev, *next;
-	char name[1];
 };
 
 /** IRC Counts, used for /LUSERS */
@@ -2368,7 +2361,7 @@ struct Watch {
 	Watch *hnext;
 	time_t lasttime;
 	Link *watch;
-	char nick[1];
+	char nick[];
 };
 
 /** General link structure used for certain chains (watch list, invite list, dccallow).
