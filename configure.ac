@@ -150,6 +150,9 @@ AS_IF([test x"$hardening" != x"no"], [
   # Since we have moved from name[1] to name[], setting this should help bounds checking:
   check_cc_flag([-fstrict-flex-arrays=3], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fstrict-flex-arrays=3"])
 
+  # Clear registers on return (performance penalty, but acceptable, makes ROP harder)
+  check_cc_flag([-fzero-call-used-regs=used-gpr], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fzero-call-used-regs=used-gpr"])
+
   # At the link step, we might want -pie (GCC) or -Wl,-pie (Clang on OS X)
   #
   # The linker checks also compile code, so we need to include -fPIE as well.
