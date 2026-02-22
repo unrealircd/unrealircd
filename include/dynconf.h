@@ -103,7 +103,6 @@ struct Configuration {
 	Policy outdated_tls_policy_server;
 	enum UHAllowed userhost_allowed;
 	char *restrict_channelmodes;
-	char *restrict_extendedbans;
 	int named_extended_bans;
 	char *channel_command_prefix;
 	long handshake_data_flood_amount;
@@ -247,7 +246,6 @@ extern MODVAR BestPractices bestpractices;
 
 #define UHOST_ALLOWED			iConf.userhost_allowed
 #define RESTRICT_CHANNELMODES		iConf.restrict_channelmodes
-#define RESTRICT_EXTENDEDBANS		iConf.restrict_extendedbans
 #define THROTTLING_PERIOD		iConf.throttle_period
 #define THROTTLING_COUNT		iConf.throttle_count
 #define USE_BAN_VERSION			iConf.use_ban_version
@@ -330,7 +328,6 @@ struct SetCheck {
 	unsigned has_anti_spam_quit_message_time:1;
 	unsigned has_allow_userhost_change:1;
 	unsigned has_restrict_channelmodes:1;
-	unsigned has_restrict_extendedbans:1;
 	unsigned has_channel_command_prefix:1;
 	unsigned has_modes_on_join:1;
 	unsigned has_level_on_join:1;

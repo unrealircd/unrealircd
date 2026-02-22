@@ -851,21 +851,6 @@ const char *clean_ban_mask(const char *mask_in, int what, ExtbanType ban_type, C
 		const char *nextbanstr;
 		Extban *extban;
 
-		if (RESTRICT_EXTENDEDBANS && MyUser(client) && !ValidatePermissionsForPath("immune:restrict-extendedbans",client,NULL,NULL,NULL))
-		{
-			if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))
-			{
-				sendnotice(client, "Setting/removing of extended bans has been disabled");
-				return NULL;
-			}
-			if (strchr(RESTRICT_EXTENDEDBANS, mask[1]))
-			{
-				sendnotice(client, "Setting/removing of extended bantypes '%s' has been disabled",
-					RESTRICT_EXTENDEDBANS);
-				return NULL;
-			}
-		}
-
 		extban = findmod_by_bantype(mask, &nextbanstr);
 		if (!extban)
 		{

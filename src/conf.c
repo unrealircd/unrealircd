@@ -1677,7 +1677,6 @@ void free_iConf(Configuration *i)
 	safe_free(i->outdated_tls_policy_user_message);
 	safe_free(i->outdated_tls_policy_oper_message);
 	safe_free(i->restrict_channelmodes);
-	safe_free(i->restrict_extendedbans);
 	safe_free(i->channel_command_prefix);
 	safe_free(i->level_on_join);
 	safe_free(i->spamfilter_ban_reason);
@@ -7815,9 +7814,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->name, "restrict-channelmodes")) {
 			safe_strdup(tempiConf.restrict_channelmodes, cep->value);
 		}
-		else if (!strcmp(cep->name, "restrict-extendedbans")) {
-			safe_strdup(tempiConf.restrict_extendedbans, cep->value);
-		}
 		else if (!strcmp(cep->name, "named-extended-bans")) {
 			tempiConf.named_extended_bans = config_checkval(cep->value, CFG_YESNO);
 		}
@@ -8757,8 +8753,11 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->name, "restrict-extendedbans"))
 		{
-			CheckDuplicate(cep, restrict_extendedbans, "restrict-extendedbans");
-			CheckNull(cep);
+			config_error("%s:%d: set::restrict-extendedbans has no effect since UnrealIRCd 6.0.0. "
+			             "If you don't want a particular extended ban then don't load the module. "
+			             "Use something like this: blacklist-module \"extbans/quiet\";",
+			             cep->file->filename, cep->line_number);
+			errors++;
 		}
 		else if (!strcmp(cep->name, "named-extended-bans"))
 		{

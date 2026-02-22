@@ -814,8 +814,6 @@ int stats_set(Client *client, const char *para)
 //		sendtxtnumeric(client, "restrict-usermodes: %s", RESTRICT_USERMODES);
 	if (RESTRICT_CHANNELMODES)
 		sendtxtnumeric(client, "restrict-channelmodes: %s", RESTRICT_CHANNELMODES);
-	if (RESTRICT_EXTENDEDBANS)
-		sendtxtnumeric(client, "restrict-extendedbans: %s", RESTRICT_EXTENDEDBANS);
 	switch (UHOST_ALLOWED)
 	{
 		case UHALLOW_NEVER:
