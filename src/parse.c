@@ -443,7 +443,6 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 			ircstats.is_unco++;
 			return;
 		}
-		if (cmptr->flags != 0) { /* temporary until all commands are updated */
 
 		/* Logic in comparisons below is a bit complicated, see notes */
 
@@ -460,7 +459,6 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 		/* If you're a server, but command doesn't want servers, deny */
 		if ((flags & CMD_SERVER) && !(cmptr->flags & CMD_SERVER))
 			return;
-		}
 
 		/* If you're a user, but not an operator, and this requires operators, deny */
 		if ((cmptr->flags & CMD_OPER) && (flags & CMD_USER) && !(flags & CMD_OPER))
