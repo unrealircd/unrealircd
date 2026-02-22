@@ -384,13 +384,12 @@ const char *extban_conv_param_nuh(BanContext *b, Extban *extban)
  */
 const char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 {
-#if (USERLEN + NICKLEN + HOSTLEN + 32) > 256
- #error "wtf?"
+#if (NICKLEN + USERLEN + HOSTLEN + 32) > MAXBANLEN
+ #error "MAXBANLEN is not sufficient to hold n!u@h plus some extra for extban prefixes. wtf?"
 #endif
-	static char retbuf[256];
-	static char printbuf[256];
+	static char retbuf[MAXBANLEN+1];
 	char *mask;
-	char tmpbuf[USERLEN + NICKLEN + HOSTLEN + 32];
+	char tmpbuf[MAXBANLEN+1];
 	const char *ret = NULL;
 	const char *nextbanstr;
 	Extban *extban = NULL;
