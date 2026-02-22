@@ -5140,61 +5140,6 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-  # Clear registers on return (performance penalty, but acceptable, makes ROP harder)
-  ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -fzero-call-used-regs=used-gpr" >&5
-printf %s "checking whether C compiler accepts -fzero-call-used-regs=used-gpr... " >&6; }
-if test ${ax_cv_check_cflags__Werror___fzero_call_used_regs_used_gpr+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e)
-  ax_check_save_flags=$CFLAGS
-  CFLAGS="$CFLAGS -Werror  -fzero-call-used-regs=used-gpr"
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main (void)
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  ax_cv_check_cflags__Werror___fzero_call_used_regs_used_gpr=yes
-else case e in #(
-  e) ax_cv_check_cflags__Werror___fzero_call_used_regs_used_gpr=no ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-  CFLAGS=$ax_check_save_flags ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags__Werror___fzero_call_used_regs_used_gpr" >&5
-printf "%s\n" "$ax_cv_check_cflags__Werror___fzero_call_used_regs_used_gpr" >&6; }
-if test x"$ax_cv_check_cflags__Werror___fzero_call_used_regs_used_gpr" = xyes
-then :
-  HARDEN_CFLAGS="$HARDEN_CFLAGS -fzero-call-used-regs=used-gpr"
-else case e in #(
-  e) : ;;
-esac
-fi
-
-  ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-
   # This zeroes out variables that COULD be accessed before being set.
   # We are generally very careful about this in our code, but 3rd party
   # modules are not always so careful. And still useful in case we ourselves
