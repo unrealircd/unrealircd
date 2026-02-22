@@ -1054,6 +1054,9 @@ int _register_user(Client *client)
 	 */
 	strlcpy(client->user->realhost, client->local->sockhost, sizeof(client->local->sockhost));
 
+	/* Now that it is going to be a user, clear any PROTOCTL flags, as those are meant for servers */
+	client->local->proto = 0;
+
 	/* Check allow { } blocks... */
 	if (!AllowClient(client))
 	{
