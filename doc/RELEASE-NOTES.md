@@ -34,7 +34,23 @@ This version comes with a few enhancements and has quite a number of bugfixes.
 ### Fixes:
 * Crash when using [Extended Server Bans](https://www.unrealircd.org/docs/Extended_server_bans)
   with an invalid syntax in the configuration file.
+* Linking could cause splitting the wrong server when a duplicate link was detected.
 * Don't show confusing CENTRAL_BLOCKLIST_TIMEOUT message when user is shunned.
+* Various memory leaks were fixed. Mostly a couple of bytes on `REHASH` in
+  some specific configurations such as tld::channel (harmless),
+  but a bigger one was with blacklists using soft bans, where it could leak if
+  an IP had hits from multiple blacklist blocks.
+* In JSON-RPC `user.part` the oper-only-viewable message tag
+  [unrealircd.org/issued-by](https://www.unrealircd.org/issued-by) was missing.
+
+### Removed:
+* set::restrict-extendedbans has been removed because it didn't work since
+  UnrealIRCd 6.0.0. If you don't want a particular extended ban to be used
+  then simply don't load the module or use
+  [blacklist-module](https://www.unrealircd.org/docs/Blacklist-module_directive).
+  For example, assuming you include `modules.default.conf` and you don't
+  want the `~quiet` extban then add `blacklist-module "extbans/quiet";`
+  to your `unrealircd.conf`.
 
 ### Developers and protocol:
 * Third party modules can now set module::compile-flags in the
@@ -75,6 +91,15 @@ This version comes with a few enhancements and has quite a number of bugfixes.
   * [`spamfilter`](https://www.unrealircd.org/docs/JSON-RPC:Spamfilter):
     here too, mask item is expanded if it is used in spamfilter.except.
     so it actually works now.
+* We now consistently enforce `MAXBANLEN`, which is the same as `MODEBUFLEN` (200)
+  throughout the code. Only for unsetting we allow to exceed this.
+  Third party extended bans should obey this limit and use something
+  quite a bit lower (due to potential stacking). In our own code, the
+  highest final-element-without-stacking extban is `~text` with 150 bytes.
+* Regular bans on `nick!user@host` can now be 106 bytes
+  (`NICKLEN+USERLEN+HOSTLEN+3`) rather than 79 (`USERLEN+HOSTLEN+6`).
+  It should be noted that in extbans, such as `~quiet` you could
+  already use 106+.
 
 UnrealIRCd 6.2.2
 -----------------
