@@ -63,6 +63,12 @@ CMD_FUNC(cmd_setident)
 {
 	const char *vident, *s;
 
+	if (MyUser(client) && !iConf.allow_setident && !IsOper(client))
+	{
+		sendnumeric(client, ERR_NOPRIVILEGES);
+		return;
+	}
+
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		if (MyConnect(client))

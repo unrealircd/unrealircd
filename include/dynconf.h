@@ -102,6 +102,8 @@ struct Configuration {
 	char *outdated_tls_policy_oper_message;
 	Policy outdated_tls_policy_server;
 	enum UHAllowed userhost_allowed;
+	int allow_setident;
+	int allow_setname;
 	char *restrict_channelmodes;
 	int named_extended_bans;
 	char *channel_command_prefix;
@@ -327,6 +329,8 @@ struct SetCheck {
 	unsigned has_maxdccallow:1;
 	unsigned has_anti_spam_quit_message_time:1;
 	unsigned has_allow_userhost_change:1;
+	unsigned has_allow_setident:1;
+	unsigned has_allow_setname:1;
 	unsigned has_restrict_channelmodes:1;
 	unsigned has_channel_command_prefix:1;
 	unsigned has_modes_on_join:1;

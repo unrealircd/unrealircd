@@ -18,14 +18,25 @@ This version comes with a few enhancements and has quite a number of bugfixes.
   have not even send a message yet.
 * The [module manager](https://www.unrealircd.org/docs/Module_manager)
   now allows 3rd party modules to specify external libraries and build flags.
+* Two new settings that control the use of `SETIDENT` and `SETNAME`:
+  * [set::allow-setident](https://www.unrealircd.org/docs/Set_block#set::allow-setident)
+    now defaults to 'no'. Previously all users were allowed to change their
+    ident (taking into account
+    [set::allow-userhost-change](https://www.unrealircd.org/docs/Set_block#set::allow-userhost-change)
+    restrictions).
+  * [set::allow-setname])(https://www.unrealircd.org/docs/Set_block#set::allow-setname)
+    has a default of 'yes' which matches older UnrealIRCd versions (no change).
+    Perhaps some admins who use controlled (web)chats may want to set this
+    to 'no' if users are not supposed to change their realname/gecos.
+    This is probably rare, but they have the option now.
 
 ### Changes:
-* Small updates to `HELPOP`.
 * `./unrealircd module install` now gives a non-zero exit code on failure
 * If SASL authentication is ongoing and a client sends `CAP END`, we now wait for
   SASL to succeed/fail/timeout before actually ending the handshake. This solves
   a race condition for IRC clients that don't follow the recommendation in the
   [sasl specification](https://ircv3.net/specs/extensions/sasl-3.1#the-authenticate-command).
+* Small updates to `HELPOP`.
 * Slightly raise default
   [set::handshake-timeout](https://www.unrealircd.org/docs/Set_block#set::handshake-timeout)
   from 30 to 40 seconds.

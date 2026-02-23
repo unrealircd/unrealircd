@@ -1842,6 +1842,8 @@ void config_setdefaultsettings(Configuration *i)
 	i->dns_dnsbl_timeout = DNS_DEFAULT_DNSBL_TIMEOUT;
 	i->dns_dnsbl_retry = DNS_DEFAULT_DNSBL_RETRIES;
 	i->send_isupport_updates = 0; /* Off for now, will be turned on by default later after more testing */
+	i->allow_setident = 0;
+	i->allow_setname = 1;
 }
 
 /* Some settings have been moved to here - we (re)set some defaults */
@@ -7808,6 +7810,12 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			else
 				tempiConf.userhost_allowed = UHALLOW_REJOIN;
 		}
+		else if (!strcmp(cep->name, "allow-setident")) {
+			tempiConf.allow_setident = config_checkval(cep->value, CFG_YESNO);
+		}
+		else if (!strcmp(cep->name, "allow-setname")) {
+			tempiConf.allow_setname = config_checkval(cep->value, CFG_YESNO);
+		}
 		else if (!strcmp(cep->name, "channel-command-prefix")) {
 			safe_strdup(tempiConf.channel_command_prefix, cep->value);
 		}
@@ -8566,6 +8574,14 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 				continue;
 			}
+		}
+		else if (!strcmp(cep->name, "allow-setident")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, allow_setident, "allow-setident");
+		}
+		else if (!strcmp(cep->name, "allow-setname")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, allow_setname, "allow-setname");
 		}
 		else if (!strcmp(cep->name, "anti-spam-quit-message-time")) {
 			CheckNull(cep);
