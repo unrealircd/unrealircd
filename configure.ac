@@ -709,11 +709,15 @@ else
 	cp argon2.tar.gz.bak argon2.tar.gz
 	tar xf argon2.tar
 fi
+save_cflags="$CFLAGS"
+CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS"
+LDFLAGS="$HARDEN_LIB_LDFLAGS"
+export CFLAGS LDFLAGS
 AC_MSG_RESULT(compiling Argon2 library)
 cd argon2-$argon2_version
-$ac_cv_prog_MAKER CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS" LDFLAGS="$HARDEN_LIB_LDFLAGS" || exit 1
+$ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing Argon2 library)
-$ac_cv_prog_MAKER install PREFIX=$cur_dir/extras/argon2 CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS" LDFLAGS="$HARDEN_LIB_LDFLAGS" || exit 1
+$ac_cv_prog_MAKER install PREFIX=$cur_dir/extras/argon2 || exit 1
 # We need to manually copy the libs to PRIVATELIBDIR because
 # there is no way to tell make install in libargon2 to do so.
 # BUT FIRST, delete the old library so it becomes an unlink+create
@@ -722,6 +726,7 @@ $ac_cv_prog_MAKER install PREFIX=$cur_dir/extras/argon2 CFLAGS="$orig_cflags $HA
 rm -f "$PRIVATELIBDIR/"libargon2*
 # Now copy the new library files:
 cp -av $cur_dir/extras/argon2/lib/* $PRIVATELIBDIR/
+CFLAGS="$save_cflags"
 ARGON2_CFLAGS="-I$cur_dir/extras/argon2/include"
 AC_SUBST(ARGON2_CFLAGS)
 ARGON2_LIBS="-L$PRIVATELIBDIR -largon2"
