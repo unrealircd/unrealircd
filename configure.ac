@@ -711,9 +711,9 @@ else
 fi
 AC_MSG_RESULT(compiling Argon2 library)
 cd argon2-$argon2_version
-$ac_cv_prog_MAKER || exit 1
+$ac_cv_prog_MAKER CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS" LDFLAGS="$HARDEN_LIB_LDFLAGS" || exit 1
 AC_MSG_RESULT(installing Argon2 library)
-$ac_cv_prog_MAKER install PREFIX=$cur_dir/extras/argon2 || exit 1
+$ac_cv_prog_MAKER install PREFIX=$cur_dir/extras/argon2 CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS" LDFLAGS="$HARDEN_LIB_LDFLAGS" || exit 1
 # We need to manually copy the libs to PRIVATELIBDIR because
 # there is no way to tell make install in libargon2 to do so.
 # BUT FIRST, delete the old library so it becomes an unlink+create

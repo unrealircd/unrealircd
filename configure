@@ -8881,10 +8881,10 @@ fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: compiling Argon2 library" >&5
 printf "%s\n" "compiling Argon2 library" >&6; }
 cd argon2-$argon2_version
-$ac_cv_prog_MAKER || exit 1
+$ac_cv_prog_MAKER CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS" LDFLAGS="$HARDEN_LIB_LDFLAGS" || exit 1
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: installing Argon2 library" >&5
 printf "%s\n" "installing Argon2 library" >&6; }
-$ac_cv_prog_MAKER install PREFIX=$cur_dir/extras/argon2 || exit 1
+$ac_cv_prog_MAKER install PREFIX=$cur_dir/extras/argon2 CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS" LDFLAGS="$HARDEN_LIB_LDFLAGS" || exit 1
 # We need to manually copy the libs to PRIVATELIBDIR because
 # there is no way to tell make install in libargon2 to do so.
 # BUT FIRST, delete the old library so it becomes an unlink+create
@@ -10096,8 +10096,9 @@ printf "%s\n" "extracting GeoIP Classic library" >&6; }
 printf "%s\n" "configuring GeoIP Classic library" >&6; }
 			cd GeoIP-$geoip_classic_version
 			save_cflags="$CFLAGS"
-			CFLAGS="$orig_cflags"
-			export CFLAGS
+			CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS"
+			LDFLAGS="$HARDEN_LIB_LDFLAGS"
+			export CFLAGS LDFLAGS
 			./configure --prefix=$cur_dir/extras/geoip-classic --libdir=$PRIVATELIBDIR --enable-shared --disable-static || exit 1
 			CFLAGS="$save_cflags"
 			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: compiling GeoIP Classic library" >&5
