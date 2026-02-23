@@ -24,11 +24,16 @@ This version comes with a few enhancements and has quite a number of bugfixes.
     ident (taking into account
     [set::allow-userhost-change](https://www.unrealircd.org/docs/Set_block#set::allow-userhost-change)
     restrictions).
-  * [set::allow-setname])(https://www.unrealircd.org/docs/Set_block#set::allow-setname)
+  * [set::allow-setname](https://www.unrealircd.org/docs/Set_block#set::allow-setname)
     has a default of 'yes' which matches older UnrealIRCd versions (no change).
     Perhaps some admins who use controlled (web)chats may want to set this
     to 'no' if users are not supposed to change their realname/gecos.
     This is probably rare, but they have the option now.
+* Security hardening: we now build with stronger mitigations (full RELRO,
+  CFI, zero-initialized stack variables, stricter bounds checking).
+  These are now also verified in BuildBot (CI). Several of these protections
+  also require support in the OS/distro, CFI even in the processor,
+  but when supported we will use it.
 
 ### Changes:
 * `./unrealircd module install` now gives a non-zero exit code on failure
@@ -66,6 +71,14 @@ This version comes with a few enhancements and has quite a number of bugfixes.
   to your `unrealircd.conf`.
 
 ### Developers and protocol:
+* We now compile with `-fstrict-flex-arrays=3` which means strict bounds
+  checking on structs is possible. This also means you should no longer
+  use tricks like `struct { char name[1]; }` and then alloc with size
+  `sizeof(struct)+strlen(name)`, instead you should use `char name[]`
+  and alloc `sizeof(struct)+strlen(name)+1`.
+* We now compile with `-ftrivial-auto-var-init=zero` which helps against
+  use of uninitialized variables on the stack. This is a safety net only,
+  you should still initialize variables.
 * Third party modules can now set module::compile-flags in the
   [module manager block](https://www.unrealircd.org/docs/Special_module_manager_block_in_source_file).
   This allows linking with libraries for that specific module, or
