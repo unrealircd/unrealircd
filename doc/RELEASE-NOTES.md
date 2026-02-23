@@ -10,25 +10,24 @@ This version comes with a few enhancements and has quite a number of bugfixes.
 * In [ban user { }](https://www.unrealircd.org/docs/Ban_user_block)
   you can now use `soft yes;` to make it a
   [Soft ban](https://www.unrealircd.org/docs/Soft_ban).
-* DNS caching when using build-in HTTPS.
+* The [module manager](https://www.unrealircd.org/docs/Module_manager)
+  now allows 3rd party modules to specify external libraries and build flags.
 * If a recipient has user mode `+D` or `+R` and the sender is not allowed
   to send a `PRIVMSG` or `NOTICE` then we will silently drop `TAGMSG`.
   This prevents silent discovery of who blocks you. Plus, you no longer
   get confusing "cannot send" errors, due to typing indicator, when you
   have not even send a message yet.
-* The [module manager](https://www.unrealircd.org/docs/Module_manager)
-  now allows 3rd party modules to specify external libraries and build flags.
 * Two new settings that control the use of `SETIDENT` and `SETNAME`:
   * [set::allow-setident](https://www.unrealircd.org/docs/Set_block#set::allow-setident)
-    now defaults to 'no'. Previously all users were allowed to change their
-    ident (taking into account
-    [set::allow-userhost-change](https://www.unrealircd.org/docs/Set_block#set::allow-userhost-change)
+    now defaults to 'no'. Previously, users were allowed to change their
+    ident (with
+    [allow-userhost-change](https://www.unrealircd.org/docs/Set_block#set::allow-userhost-change)
     restrictions).
   * [set::allow-setname](https://www.unrealircd.org/docs/Set_block#set::allow-setname)
     has a default of 'yes' which matches older UnrealIRCd versions (no change).
-    Perhaps some admins who use controlled (web)chats may want to set this
-    to 'no' if users are not supposed to change their realname/gecos.
-    This is probably rare, but they have the option now.
+    Perhaps some admins who use controlled (web)chats may want to set this to 'no'
+    if users are not supposed to change their realname/gecos. This is likely rare.
+* DNS caching when using build-in HTTPS.
 * Security hardening: we now build with stronger mitigations (full RELRO,
   CFI, zero-initialized stack variables, stricter bounds checking).
   These are now also verified in BuildBot (CI). Several of these protections
@@ -36,24 +35,22 @@ This version comes with a few enhancements and has quite a number of bugfixes.
   but when supported we will use it.
 
 ### Changes:
-* `./unrealircd module install` now gives a non-zero exit code on failure
 * If SASL authentication is ongoing and a client sends `CAP END`, we now wait for
   SASL to succeed/fail/timeout before actually ending the handshake. This solves
   a race condition for IRC clients that don't follow the recommendation in the
   [sasl specification](https://ircv3.net/specs/extensions/sasl-3.1#the-authenticate-command).
-* Small updates to `HELPOP`.
 * Slightly raise default
   [set::handshake-timeout](https://www.unrealircd.org/docs/Set_block#set::handshake-timeout)
   from 30 to 40 seconds.
+* `./unrealircd module install` now gives a non-zero exit code on failure
 * Update shipped libs: PCRE2 (10.47), Jansson (2.15.0), Sodium (1.0.21)
-* Minor hardening tweak for modules, reducing the impact of some security bugs
-  (full RELRO instead of partial RELRO)
+* Small updates to `HELPOP`.
 
 ### Fixes:
 * Crash when using [Extended Server Bans](https://www.unrealircd.org/docs/Extended_server_bans)
   with an invalid syntax in the configuration file.
 * Linking could cause splitting the wrong server when a duplicate link was detected.
-* Don't show confusing CENTRAL_BLOCKLIST_TIMEOUT message when user is shunned.
+* Don't show confusing `CENTRAL_BLOCKLIST_TIMEOUT` message when user is shunned by CBL.
 * Various memory leaks were fixed. Mostly a couple of bytes on `REHASH` in
   some specific configurations such as tld::channel (harmless),
   but a bigger one was with blacklists using soft bans, where it could leak if
@@ -75,7 +72,8 @@ This version comes with a few enhancements and has quite a number of bugfixes.
   checking on structs is possible. This also means you should no longer
   use tricks like `struct { char name[1]; }` and then alloc with size
   `sizeof(struct)+strlen(name)`, instead you should use `char name[]`
-  and alloc `sizeof(struct)+strlen(name)+1`.
+  and alloc `sizeof(struct)+strlen(name)+1`. Or just use a fixed value
+  like `char name[32]`, of course.
 * We now compile with `-ftrivial-auto-var-init=zero` which helps against
   use of uninitialized variables on the stack. This is a safety net only,
   you should still initialize variables.
