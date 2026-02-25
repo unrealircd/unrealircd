@@ -826,6 +826,32 @@ int count_unknown_modules(void)
 	return count;
 }
 
+/** Returns 1 if any 3rd party modules are installed */
+int any_third_party_modules_installed(void)
+{
+	DIR *fd;
+	struct dirent *dir;
+	char dirname[512];
+
+	snprintf(dirname, sizeof(dirname), "%s/src/modules/third", BUILDDIR);
+
+	fd = opendir(dirname);
+	if (fd)
+	{
+		while ((dir = readdir(fd)))
+		{
+			char *fname = dir->d_name;
+			if (filename_has_suffix(fname, ".c"))
+			{
+				closedir(fd);
+				return 1;
+			}
+		}
+		closedir(fd);
+	}
+	return 0;
+}
+
 void mm_list(char *searchname)
 {
 	ManagedModule *m;
@@ -1621,6 +1647,17 @@ void modulemanager(int argc, char *args[])
 	else if (!strcasecmp(args[0], "compile-all"))
 	{
 		mm_compile_all(argc, args);
+		exit(0);
+	}
+
+	/* Check if there are any 3rd party mods at all in src/modules/third/.
+	 * If there are none, and we are asked to run 'upgrade' then
+	 * we bail out prematurely. This saves a repo check if you have no
+	 * third party modules installed.
+	 */
+	if (!strcasecmp(args[0], "upgrade") && !any_third_party_modules_installed())
+	{
+		fprintf(stderr, "No third party modules installed. Module manager has nothing to do.\n");
 		exit(0);
 	}
 
