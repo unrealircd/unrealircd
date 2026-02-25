@@ -1,22 +1,16 @@
-UnrealIRCd 6.2.3-rc1
+UnrealIRCd 6.2.3-rc2
 =====================
 
-This is the Release Candidate for future version 6.2.3. You can help us by
+This is the second Release Candidate for future version 6.2.3. You can help us by
 testing this release and reporting bugs to https://bugs.unrealircd.org/.
 
-This version comes with a few enhancements and has quite a number of bugfixes.
+This version comes with a couple of new features, improved security
+hardening and has quite a number of bug fixes.
 
 ### Enhancements:
 * In [ban user { }](https://www.unrealircd.org/docs/Ban_user_block)
   you can now use `soft yes;` to make it a
   [Soft ban](https://www.unrealircd.org/docs/Soft_ban).
-* The [module manager](https://www.unrealircd.org/docs/Module_manager)
-  now allows 3rd party modules to specify external libraries and build flags.
-* If a recipient has user mode `+D` or `+R` and the sender is not allowed
-  to send a `PRIVMSG` or `NOTICE` then we will silently drop `TAGMSG`.
-  This prevents silent discovery of who blocks you. Plus, you no longer
-  get confusing "cannot send" errors, due to typing indicator, when you
-  have not even send a message yet.
 * Two new settings that control the use of `SETIDENT` and `SETNAME`:
   * [set::allow-setident](https://www.unrealircd.org/docs/Set_block#set::allow-setident)
     now defaults to 'no'. Previously, users were allowed to change their
@@ -27,6 +21,13 @@ This version comes with a few enhancements and has quite a number of bugfixes.
     has a default of 'yes' which matches older UnrealIRCd versions (no change).
     Perhaps some admins who use controlled (web)chats may want to set this to 'no'
     if users are not supposed to change their realname/gecos. This is likely rare.
+* The [module manager](https://www.unrealircd.org/docs/Module_manager)
+  now allows 3rd party modules to specify external libraries and build flags.
+* If a recipient has user mode `+D` or `+R` and the sender is not allowed
+  to send a `PRIVMSG` or `NOTICE` then we will silently drop `TAGMSG`.
+  This prevents silent discovery of who blocks you. Plus, you no longer
+  get confusing "cannot send" errors, due to typing indicator, when you
+  have not even sent a message yet.
 * DNS caching when using build-in HTTPS.
 * Security hardening: we now build with stronger mitigations (full RELRO,
   CFI, zero-initialized stack variables, stricter bounds checking).
@@ -38,7 +39,7 @@ This version comes with a few enhancements and has quite a number of bugfixes.
 * If SASL authentication is ongoing and a client sends `CAP END`, we now wait for
   SASL to succeed/fail/timeout before actually ending the handshake. This solves
   a race condition for IRC clients that don't follow the recommendation in the
-  [sasl specification](https://ircv3.net/specs/extensions/sasl-3.1#the-authenticate-command).
+  [SASL specification](https://ircv3.net/specs/extensions/sasl-3.1#the-authenticate-command).
 * Slightly raise default
   [set::handshake-timeout](https://www.unrealircd.org/docs/Set_block#set::handshake-timeout)
   from 30 to 40 seconds.
@@ -48,7 +49,7 @@ This version comes with a few enhancements and has quite a number of bugfixes.
 
 ### Fixes:
 * Crash when using [Extended Server Bans](https://www.unrealircd.org/docs/Extended_server_bans)
-  with an invalid syntax in the configuration file.
+  with invalid syntax in the configuration file.
 * Linking could cause splitting the wrong server when a duplicate link was detected.
 * Don't show confusing `CENTRAL_BLOCKLIST_TIMEOUT` message when user is shunned by CBL.
 * Various memory leaks were fixed. Mostly a couple of bytes on `REHASH` in
@@ -97,7 +98,7 @@ This version comes with a few enhancements and has quite a number of bugfixes.
   and a client sends `CAP END`, we now wait for SASL to succeed/fail/timeout
   before actually ending the handshake. This solves a race condition
   for IRC clients that don't follow the recommendation in the
-  [sasl specification](https://ircv3.net/specs/extensions/sasl-3.1#the-authenticate-command).
+  [SASL specification](https://ircv3.net/specs/extensions/sasl-3.1#the-authenticate-command).
   Our approach would be problematic for clients who deliberately wanted
   to abort SASL due to a timeout but UnrealIRCd already handles SASL
   timeout via [set::sasl-timeout](https://www.unrealircd.org/docs/Set_block#set::sasl-timeout)
@@ -116,7 +117,7 @@ This version comes with a few enhancements and has quite a number of bugfixes.
     here too, mask item is expanded if it is used in spamfilter.except.
     so it actually works now.
 * We now consistently enforce `MAXBANLEN`, which is the same as `MODEBUFLEN` (200)
-  throughout the code. Only for unsetting we allow to exceed this.
+  throughout the code. Only when unsetting we allow to exceed this.
   Third party extended bans should obey this limit and use something
   quite a bit lower (due to potential stacking). In our own code, the
   highest final-element-without-stacking extban is `~text` with 150 bytes.
