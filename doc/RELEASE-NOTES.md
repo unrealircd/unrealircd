@@ -58,6 +58,10 @@ hardening and has quite a number of bug fixes.
   an IP had hits from multiple blacklist blocks.
 * In JSON-RPC `user.part` the oper-only-viewable message tag
   [unrealircd.org/issued-by](https://www.unrealircd.org/issued-by) was missing.
+* Building UnrealIRCd failed if DNS was not working. Obviously building
+  should never fail if internet or our infra is unreachable. Additionally,
+  we now skip over the module upgrade step (and fetching the module repository)
+  if there are no 3rd party modules installed.
 
 ### Removed:
 * set::restrict-extendedbans has been removed because it didn't work since
