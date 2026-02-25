@@ -40,7 +40,7 @@ RM=@RM@
 all: build
 
 build:
-	../../../src/ircd -m upgrade --no-install
+	-../../../src/ircd -m upgrade --no-install
 	../../../src/ircd -m compile-all
 
 custommodule: $(MODULEFILE).c

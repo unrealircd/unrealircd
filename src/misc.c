@@ -3050,8 +3050,8 @@ const char *synchronous_http_request(const char *url, int max_redirects, int con
 	request->keep_file = 1;
 	request->connect_timeout = connect_timeout;
 	request->transfer_timeout = transfer_timeout;
-	url_start_async(request);
 	synchronous_http_request_in_progress = 1;
+	url_start_async(request);
 
 	while (synchronous_http_request_in_progress == 1)
 	{
