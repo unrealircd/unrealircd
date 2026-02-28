@@ -1205,6 +1205,12 @@ int cmodef_channel_create(Channel *channel)
 	ChannelFloodProtection *base;
 	ChannelFloodProtection *fld;
 
+#ifdef TESTSUITE
+	/* Sync channels for the test suite are exempt */
+	if (!strncasecmp(channel->name, "#__SYNC__", 9))
+		return 0;
+#endif
+
 	if (!cfg.default_profile)
 		return 0;
 

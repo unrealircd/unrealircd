@@ -17,7 +17,7 @@ else
 fi
 
 # -DRAWCMDLOGGING was dropped, but can be useful for debugging
-export CPPFLAGS="$CPPFLAGS -DFAKELAG_CONFIGURABLE -DNOREMOVETMP"
+export CPPFLAGS="$CPPFLAGS -DFAKELAG_CONFIGURABLE -DNOREMOVETMP -DTESTSUITE"
 
 # !! skipped for now: extras/build-tests/nix/select-config $BUILDCONFIG !!
 # !! temporary use this:
