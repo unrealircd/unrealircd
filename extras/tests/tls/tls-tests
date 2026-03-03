@@ -7,8 +7,18 @@ function fail()
 	exit 1
 }
 
+TESTSSL_HASH="87ecc1c9f2dac83a6be29f4461a47c2ac6afb906"
 rm -rf testssl.sh
-git clone -q https://github.com/testssl/testssl.sh
+git clone -q https://github.com/testssl/testssl.sh || exit 1
+cd testssl.sh
+git checkout --detach $TESTSSL_HASH
+if [ "$(git rev-parse HEAD)" != "$TESTSSL_HASH" ]; then
+	echo "testssl cloning failed with pinned hash, that's suspicious!"
+	echo "Pinned hash = $TESTSSL_HASH"
+	exit 1
+fi
+cd ..
+
 TESTSSL="$PWD/testssl.sh/testssl.sh"
 OPENSSL="openssl"
 
