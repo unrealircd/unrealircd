@@ -2,9 +2,13 @@ name: Linux CI
 
 on:
   push:
-    branches: [ "unreal60_dev" ]
+    branches: ["unreal60_dev"]
   pull_request:
-    branches: [ "unreal60_dev" ]
+    branches: ["unreal60_dev"]
+
+permissions:
+  contents: read
+  packages: read
 
 env:
   NOSERVICES: 1
@@ -13,26 +17,43 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     strategy:
+      fail-fast: false
       matrix:
-        compiler: [ {c: gcc, cpp: g++}, {c: clang, cpp: clang++} ]
+        compiler:
+          - { c: gcc,   cpp: g++ }
+          - { c: clang, cpp: clang++ }
 
     env:
-      CC: ${{ matrix.compiler.c }}
+      CC:  ${{ matrix.compiler.c }}
       CXX: ${{ matrix.compiler.cpp }}
 
     steps:
-    - name: installdependencies
-      run: |
-        sudo rm -f /var/lib/man-db/auto-update
-        sudo apt-get install build-essential pkg-config libssl-dev libpcre2-dev libargon2-dev libsodium-dev libc-ares-dev libcurl4-openssl-dev libjansson-dev
-    - name: installpythondependencies
-      run: |
-        python -m pip install --break-system-packages pyasyncore
-        python -m pip install --break-system-packages pyasynchat
-    - uses: actions/checkout@v4
-    - name: build
-      run: extras/build-tests/nix/build
-    - name: run-tests
-      run: extras/build-tests/nix/run-tests
+      - name: Checkout
+        #uses: actions/checkout@v4
+        #no, pin to v4.2.2 for security reasons:
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        #and we don't need the credentials later..
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Install dependencies
+        run: |
+          sudo rm -f /var/lib/man-db/auto-update
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config libssl-dev libpcre2-dev libargon2-dev \
+            libsodium-dev libc-ares-dev libcurl4-openssl-dev libjansson-dev
+
+      - name: Install python dependencies
+        run: |
+          python -m pip install --break-system-packages pyasyncore pyasynchat
+
+      - name: Build
+        run: extras/build-tests/nix/build
+
+      - name: Run tests
+        run: extras/build-tests/nix/run-tests
