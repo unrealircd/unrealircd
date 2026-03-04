@@ -22,11 +22,6 @@
 
 #include "unrealircd.h"
 
-#if defined(__GNUC__)
-/* Temporarily ignore these for this entire file. FIXME later when updating the code for OpenSSL 3: */
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-
 /* internal definitions */
 
 #define MSG_EXTJWT	"EXTJWT"
@@ -63,6 +58,8 @@ void ECDSA_SIG_get0(const ECDSA_SIG *sig, const BIGNUM **pr, const BIGNUM **ps)
 	if (ps != NULL)
 		*ps = sig->s;
 }
+#define EVP_MD_CTX_new   EVP_MD_CTX_create
+#define EVP_MD_CTX_free  EVP_MD_CTX_destroy
 #endif
 
 /* struct definitions */
@@ -111,8 +108,8 @@ const char extjwt_message_pattern[] = ":%s EXTJWT %s %s %s%s";
 
 ModuleHeader MOD_HEADER = {
 	"extjwt",
-	"6.0",
-	"Command /EXTJWT (web service authorization)", 
+	"6.1",
+	"Command /EXTJWT (web service authorization)",
 	"UnrealIRCd Team",
 	"unrealircd-6"
 };
@@ -139,6 +136,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	CommandAdd(modinfo->handle, MSG_EXTJWT, cmd_extjwt, 2, CMD_USER);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, extjwt_configrun);
 	return MOD_SUCCESS;
@@ -920,11 +918,9 @@ unsigned char* extjwt_sha_pem_extjwt_hash(int method, const void *key, int keyle
 	EVP_PKEY *pkey = NULL;
 	int pkey_type;
 	unsigned char *sig = NULL;
-	int ret = 0;
 	size_t slen;
 	char *retval = NULL;
 	char *output = NULL;
-	char *sig_ptr;
 
 	do
 	{
@@ -970,7 +966,7 @@ unsigned char* extjwt_sha_pem_extjwt_hash(int method, const void *key, int keyle
 		pkey_type = EVP_PKEY_id(pkey);
 		if (type != pkey_type)
 			break; /* invalid key type */
-		if (!(mdctx = EVP_MD_CTX_create()))
+		if (!(mdctx = EVP_MD_CTX_new()))
 			break; /* out of memory */
 		if (EVP_DigestSignInit(mdctx, NULL, alg, NULL, pkey) != 1)
 			break; /* initialize error */
@@ -991,19 +987,28 @@ unsigned char* extjwt_sha_pem_extjwt_hash(int method, const void *key, int keyle
 		{
 			unsigned int degree, bn_len, r_len, s_len, buf_len;
 			unsigned char *raw_buf = NULL;
-			EC_KEY *ec_key;
-			if (!(ec_key = EVP_PKEY_get1_EC_KEY(pkey)))
-				break; /* out of memory */
-			degree = EC_GROUP_get_degree(EC_KEY_get0_group(ec_key));
-			EC_KEY_free(ec_key);
-			sig_ptr = sig;
-			if (!(ec_sig = d2i_ECDSA_SIG(NULL, (const unsigned char **)&sig_ptr, slen)))
-				break; /* out of memory */
+			const unsigned char *sig_ptr = sig; /* `const` is required by d2i_ECDSA_SIG call */
+#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
+			degree = EVP_PKEY_get_bits(pkey);
+			if (degree == 0)
+				break;
+#else
+			{
+				EC_KEY *ec_key;
+				if (!(ec_key = EVP_PKEY_get1_EC_KEY(pkey)))
+					break;
+				degree = EC_GROUP_get_degree(EC_KEY_get0_group(ec_key));
+				EC_KEY_free(ec_key);
+			}
+#endif
+			ec_sig = d2i_ECDSA_SIG(NULL, &sig_ptr, slen);
+			if (!ec_sig)
+				break;
 			ECDSA_SIG_get0(ec_sig, &ec_sig_r, &ec_sig_s);
 			r_len = BN_num_bytes(ec_sig_r);
 			s_len = BN_num_bytes(ec_sig_s);
 			bn_len = (degree+7)/8;
-			if (r_len>bn_len || s_len > bn_len)
+			if (r_len > bn_len || s_len > bn_len)
 				break;
 			buf_len = bn_len*2;
 			raw_buf = safe_alloc(buf_len);
@@ -1022,7 +1027,7 @@ unsigned char* extjwt_sha_pem_extjwt_hash(int method, const void *key, int keyle
 	if (pkey)
 		EVP_PKEY_free(pkey);
 	if (mdctx)
-		EVP_MD_CTX_destroy(mdctx);
+		EVP_MD_CTX_free(mdctx);
 	if (ec_sig)
 		ECDSA_SIG_free(ec_sig);
 	safe_free(sig);
