@@ -838,7 +838,6 @@ char *extjwt_make_payload(Client *client, Channel *channel, struct extjwt_config
 		return NULL;
 
 	payload = json_object();
-	modes = json_array();
 	umodes = json_array();
 	
 	json_object_set_new(payload, "exp", json_integer(TStime()+config->exp_delay));
@@ -856,6 +855,7 @@ char *extjwt_make_payload(Client *client, Channel *channel, struct extjwt_config
 	if (channel)
 	{ /* fill in channel information and user flags */
 		lp = find_membership_link(client->user->channel, channel);
+		modes = json_array();
 		if (lp)
 		{
 			modestring = lp->member_modes;
@@ -871,8 +871,6 @@ char *extjwt_make_payload(Client *client, Channel *channel, struct extjwt_config
 		json_object_set_new(payload, "cmodes", modes);
 	}
 	result = json_dumps(payload, JSON_COMPACT);
-	json_decref(modes);
-	json_decref(umodes);
 	json_decref(payload);
 	return result;
 }
