@@ -660,11 +660,13 @@ fi
 AC_MSG_RESULT(configuring PCRE2 regex library)
 cd pcre2-$pcre2_version
 save_cflags="$CFLAGS"
+save_ldflags="$LDFLAGS"
 CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS"
 LDFLAGS="$HARDEN_LIB_LDFLAGS"
 export CFLAGS LDFLAGS
 ./configure --enable-jit --enable-shared --prefix=$cur_dir/extras/pcre2 --libdir=$PRIVATELIBDIR || exit 1
 CFLAGS="$save_cflags"
+LDFLAGS="$save_ldflags"
 AC_MSG_RESULT(compiling PCRE2 regex library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing PCRE2 regex library)
@@ -710,6 +712,7 @@ else
 	tar xf argon2.tar
 fi
 save_cflags="$CFLAGS"
+save_ldflags="$LDFLAGS"
 CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS"
 LDFLAGS="$HARDEN_LIB_LDFLAGS"
 export CFLAGS LDFLAGS
@@ -727,6 +730,7 @@ rm -f "$PRIVATELIBDIR/"libargon2*
 # Now copy the new library files:
 cp -av $cur_dir/extras/argon2/lib/* $PRIVATELIBDIR/
 CFLAGS="$save_cflags"
+LDFLAGS="$save_ldflags"
 ARGON2_CFLAGS="-I$cur_dir/extras/argon2/include"
 AC_SUBST(ARGON2_CFLAGS)
 ARGON2_LIBS="-L$PRIVATELIBDIR -largon2"
@@ -760,11 +764,13 @@ fi
 AC_MSG_RESULT(compiling sodium library)
 cd libsodium-$sodium_version
 save_cflags="$CFLAGS"
+save_ldflags="$LDFLAGS"
 CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS"
 LDFLAGS="$HARDEN_LIB_LDFLAGS"
 export CFLAGS LDFLAGS
 ./configure --prefix=$cur_dir/extras/sodium --libdir=$PRIVATELIBDIR --enable-shared --disable-static --enable-opt || exit 1
 CFLAGS="$save_cflags"
+LDFLAGS="$save_ldflags"
 AC_MSG_RESULT(compiling sodium resolver library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing sodium resolver library)
@@ -810,11 +816,13 @@ fi
 AC_MSG_RESULT(configuring c-ares library)
 cd c-ares-$cares_version
 save_cflags="$CFLAGS"
+save_ldflags="$LDFLAGS"
 CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS"
 LDFLAGS="$HARDEN_LIB_LDFLAGS"
 export CFLAGS LDFLAGS
 ./configure --prefix=$cur_dir/extras/c-ares --libdir=$PRIVATELIBDIR --enable-shared --disable-tests || exit 1
 CFLAGS="$save_cflags"
+LDFLAGS="$save_ldflags"
 AC_MSG_RESULT(compiling c-ares resolver library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing c-ares resolver library)
@@ -887,11 +895,13 @@ fi
 AC_MSG_RESULT(compiling jansson library)
 cd jansson-$jansson_version
 save_cflags="$CFLAGS"
+save_ldflags="$LDFLAGS"
 CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS"
 LDFLAGS="$HARDEN_LIB_LDFLAGS"
 export CFLAGS LDFLAGS
 ./configure --prefix=$cur_dir/extras/jansson --libdir=$PRIVATELIBDIR --enable-shared --disable-static || exit 1
 CFLAGS="$save_cflags"
+LDFLAGS="$save_ldflags"
 AC_MSG_RESULT(compiling jansson resolver library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing jansson resolver library)
