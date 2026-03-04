@@ -10111,11 +10111,13 @@ printf "%s\n" "extracting GeoIP Classic library" >&6; }
 printf "%s\n" "configuring GeoIP Classic library" >&6; }
 			cd GeoIP-$geoip_classic_version
 			save_cflags="$CFLAGS"
+			save_ldflags="$LDFLAGS"
 			CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS"
 			LDFLAGS="$HARDEN_LIB_LDFLAGS"
 			export CFLAGS LDFLAGS
 			./configure --prefix=$cur_dir/extras/geoip-classic --libdir=$PRIVATELIBDIR --enable-shared --disable-static || exit 1
 			CFLAGS="$save_cflags"
+			LDFLAGS="$save_ldflags"
 			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: compiling GeoIP Classic library" >&5
 printf "%s\n" "compiling GeoIP Classic library" >&6; }
 			$ac_cv_prog_MAKER || exit 1

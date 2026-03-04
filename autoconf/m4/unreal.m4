@@ -439,11 +439,13 @@ AC_DEFUN([CHECK_GEOIP_CLASSIC],
 			AC_MSG_RESULT(configuring GeoIP Classic library)
 			cd GeoIP-$geoip_classic_version
 			save_cflags="$CFLAGS"
+			save_ldflags="$LDFLAGS"
 			CFLAGS="$orig_cflags $HARDEN_LIB_CFLAGS"
 			LDFLAGS="$HARDEN_LIB_LDFLAGS"
 			export CFLAGS LDFLAGS
 			./configure --prefix=$cur_dir/extras/geoip-classic --libdir=$PRIVATELIBDIR --enable-shared --disable-static || exit 1
 			CFLAGS="$save_cflags"
+			LDFLAGS="$save_ldflags"
 			AC_MSG_RESULT(compiling GeoIP Classic library)
 			$ac_cv_prog_MAKER || exit 1
 			AC_MSG_RESULT(installing GeoIP Classic library)
