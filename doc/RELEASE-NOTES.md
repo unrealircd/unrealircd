@@ -50,6 +50,7 @@ hardening and has quite a number of bug fixes.
 ### Fixes:
 * Crash when using [Extended Server Bans](https://www.unrealircd.org/docs/Extended_server_bans)
   with invalid syntax in the configuration file.
+* Crash on malicious server-to-server traffic (OOB write), bug introduced in 6.2.2.
 * Linking could cause splitting the wrong server when a duplicate link was detected.
 * Don't show confusing `CENTRAL_BLOCKLIST_TIMEOUT` message when user is shunned by CBL.
 * Various memory leaks were fixed. Mostly a couple of bytes on `REHASH` in

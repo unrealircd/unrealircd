@@ -377,6 +377,9 @@ CMD_FUNC(cmd_sjoin)
 			setby = p;
 			sjsby_info = 1;
 
+			if (strlen(setby) > NICKLEN + USERLEN + HOSTLEN + 3)
+				setby[NICKLEN + USERLEN + HOSTLEN + 3] = '\0';
+
 			tp = end; /* the remainder is used for the actual ban/exempt/invex */
 		}
 

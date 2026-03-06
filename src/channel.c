@@ -298,8 +298,8 @@ int add_listmode_ex(Ban **list, Client *client, Channel *channel, const char *ba
 	}
 
 	/* Update/set if this ban is new or older than existing one */
-	safe_strdup(ban->banstr, banid); /* cAsE may differ, use oldest version of it */
-	safe_strdup(ban->who, setby);
+	safe_strldup(ban->banstr, banid, MAXBANLEN+1); /* cAsE may differ, use oldest version of it */
+	safe_strldup(ban->who, setby, NICKLEN+USERLEN+HOSTLEN+4);
 	ban->when = seton;
 	return isnew ? 1 : 0;
 }
