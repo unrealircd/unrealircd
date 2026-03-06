@@ -1,11 +1,8 @@
-UnrealIRCd 6.2.3-rc2
-=====================
+UnrealIRCd 6.2.3
+=================
 
-This is the second Release Candidate for future version 6.2.3. You can help us by
-testing this release and reporting bugs to https://bugs.unrealircd.org/.
-
-This version comes with a couple of new features, improved security
-hardening and has quite a number of bug fixes.
+This version comes with several new features, improved security,
+and a number of bug fixes.
 
 ### Enhancements:
 * In [ban user { }](https://www.unrealircd.org/docs/Ban_user_block)
