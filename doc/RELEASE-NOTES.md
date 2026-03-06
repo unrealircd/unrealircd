@@ -26,14 +26,19 @@ hardening and has quite a number of bug fixes.
 * If a recipient has user mode `+D` or `+R` and the sender is not allowed
   to send a `PRIVMSG` or `NOTICE` then we will silently drop `TAGMSG`.
   This prevents silent discovery of who blocks you. Plus, you no longer
-  get confusing "cannot send" errors, due to typing indicator, when you
+  get confusing "cannot send" errors due to typing indicator, when you
   have not even sent a message yet.
-* DNS caching when using build-in HTTPS.
+* DNS caching when using built-in HTTPS, like for
+  [Central Blocklist](https://www.unrealircd.org/docs/Central_Blocklist).
+  This is especially important if the server is under a heavy attack.
 * Security hardening: we now build with stronger mitigations (full RELRO,
   CFI, zero-initialized stack variables, stricter bounds checking).
   These are now also verified in BuildBot (CI). Several of these protections
   also require support in the OS/distro, CFI even in the processor,
   but when supported we will use it.
+* The [extjwt { } block](https://www.unrealircd.org/docs/Extjwt_block)
+  is now documented, the code has been updated to use the latest
+  OpenSSL APIs and is now tested in the test framework.
 
 ### Changes:
 * If SASL authentication is ongoing and a client sends `CAP END`, we now wait for
@@ -55,8 +60,8 @@ hardening and has quite a number of bug fixes.
 * Don't show confusing `CENTRAL_BLOCKLIST_TIMEOUT` message when user is shunned by CBL.
 * Various memory leaks were fixed. Mostly a couple of bytes on `REHASH` in
   some specific configurations such as tld::channel (harmless),
-  but a bigger one was with blacklists using soft bans, where it could leak if
-  an IP had hits from multiple blacklist blocks.
+  but a bigger one was with blacklists using soft bans, where it could leak
+  memory if an IP had hits from multiple blacklist blocks.
 * In JSON-RPC `user.part` the oper-only-viewable message tag
   [unrealircd.org/issued-by](https://www.unrealircd.org/issued-by) was missing.
 * Building UnrealIRCd failed if DNS was not working. Obviously building
