@@ -242,7 +242,7 @@ int usc_reparse_sjoin(char **msg, char *p, int *length)
 				           log_data_string("ban", s));
 				continue;
 			}
-			if (!strchr("&\"\\", next[1]))
+			if (!strchr("&\"'", next[1]))
 				goto fallback_usc_reparse_sjoin;
 			*next++ = '\0';
 			result = clean_ban_mask(next+1, MODE_ADD, EXBTYPE_BAN, &me, NULL, 1); // some context lost
@@ -259,7 +259,7 @@ int usc_reparse_sjoin(char **msg, char *p, int *length)
 			strlcat(obuf, result, sizeof(obuf)); /* the converted result */
 			strlcat(obuf, " ", sizeof(obuf));
 		} else
-		if (strchr("&\"\\", *s))
+		if (strchr("&\"'", *s))
 		{
 			/* +b / +e / +I */
 			const char *result = clean_ban_mask(s+1, MODE_ADD, EXBTYPE_BAN, &me, NULL, 1); // some context lost
