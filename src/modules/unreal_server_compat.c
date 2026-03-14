@@ -245,7 +245,7 @@ int usc_reparse_sjoin(char **msg, char *p, int *length)
 			if (!strchr("&\"'", next[1]))
 				goto fallback_usc_reparse_sjoin;
 			*next++ = '\0';
-			result = clean_ban_mask(next+1, MODE_ADD, EXBTYPE_BAN, &me, NULL, 1); // some context lost
+			result = clean_ban_mask(next+1, MODE_ADD, listmode_sjoin_prefix_to_extbantype(*next), &me, NULL, 1); // some context lost
 			if (!result)
 			{
 				unreal_log(ULOG_WARNING, "unreal_server_compat", "USC_REPARSE_SJOIN_FAILURE", NULL,
@@ -262,7 +262,7 @@ int usc_reparse_sjoin(char **msg, char *p, int *length)
 		if (strchr("&\"'", *s))
 		{
 			/* +b / +e / +I */
-			const char *result = clean_ban_mask(s+1, MODE_ADD, EXBTYPE_BAN, &me, NULL, 1); // some context lost
+			const char *result = clean_ban_mask(s+1, MODE_ADD, listmode_sjoin_prefix_to_extbantype(*s), &me, NULL, 1); // some context lost
 			if (!result)
 			{
 				unreal_log(ULOG_WARNING, "unreal_server_compat", "USC_REPARSE_SJOIN_FAILURE", NULL,

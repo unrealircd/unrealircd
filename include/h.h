@@ -1232,6 +1232,7 @@ extern int empty_mode(const char *m);
 extern void free_multilinemode(MultiLineMode *m);
 #define safe_free_multilinemode(m) do { if (m) free_multilinemode(m); m = NULL; } while(0)
 extern ExtbanType mode_letter_to_extbantype(char c);
+extern ExtbanType listmode_sjoin_prefix_to_extbantype(char c);
 extern int valid_sid(const char *name);
 extern int valid_uid(const char *name);
 extern void parse_client_queued(Client *client);

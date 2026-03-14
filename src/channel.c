@@ -1522,3 +1522,12 @@ ExtbanType mode_letter_to_extbantype(char c)
 	/* Else default to 'b' */
 	return EXBTYPE_BAN;
 }
+
+ExtbanType listmode_sjoin_prefix_to_extbantype(char c)
+{
+	if (c == '"')
+		return EXBTYPE_EXCEPT;
+	if (c == '\'')
+		return EXBTYPE_INVEX;
+	return EXBTYPE_BAN;
+}
