@@ -1422,14 +1422,14 @@ int cipher_check(SSL_CTX *ctx, char **errstr)
 /** Check if a certificate (or actually: key) is weak */
 int certificate_quality_check(SSL_CTX *ctx, char **errstr)
 {
-#if OPENSSL_VERSION_NUMBER < 0x30000000L
-	// FIXME: this only works on OpenSSL <3.0.0
 	SSL *ssl;
 	X509 *cert;
 	EVP_PKEY *public_key;
-	RSA *rsa_key;
 	int key_length;
 	static char errbuf[256];
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+	RSA *rsa_key;
+#endif
 
 	*errbuf = '\0'; // safety
 
@@ -1460,6 +1460,20 @@ int certificate_quality_check(SSL_CTX *ctx, char **errstr)
 		SSL_free(ssl);
 		return 1;
 	}
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	/* OpenSSL 3.0+: use EVP_PKEY_get_base_id() and EVP_PKEY_get_bits() */
+	if (EVP_PKEY_get_base_id(public_key) != EVP_PKEY_RSA)
+	{
+		/* Not an RSA key, then we are done. */
+		EVP_PKEY_free(public_key);
+		SSL_free(ssl);
+		return 1;
+	}
+	key_length = EVP_PKEY_get_bits(public_key);
+	EVP_PKEY_free(public_key);
+	SSL_free(ssl);
+#else
 	rsa_key = EVP_PKEY_get1_RSA(public_key);
 	if (!rsa_key)
 	{
@@ -1469,10 +1483,10 @@ int certificate_quality_check(SSL_CTX *ctx, char **errstr)
 		return 1;
 	}
 	key_length = RSA_size(rsa_key) * 8;
-
 	EVP_PKEY_free(public_key);
 	RSA_free(rsa_key);
 	SSL_free(ssl);
+#endif
 
 	if (key_length < 2048)
 	{
@@ -1480,7 +1494,6 @@ int certificate_quality_check(SSL_CTX *ctx, char **errstr)
 		return 0;
 	}
 
-#endif
 	return 1;
 }
 
