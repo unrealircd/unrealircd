@@ -7530,6 +7530,25 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 		errors++;
 	}
 
+	/* If both certificate and key are explicitly set in this block
+	 * (not inherited from set::tls), try to actually load them
+	 * to see if there are any errors.
+	 */
+	if (tls_certificates && tls_keys && (tls_certificates == tls_keys))
+	{
+		TLSOptions *tlsoptions = safe_alloc(sizeof(TLSOptions));
+		SSL_CTX *ctx;
+
+		conf_tlsblock(conf, cep, tlsoptions);
+		ctx = init_ctx(tlsoptions, 1);
+		free_tls_options(tlsoptions);
+
+		if (!ctx)
+			errors++;
+		else
+			SSL_CTX_free(ctx);
+	}
+
 	*totalerrors += errors;
 }
 
