@@ -576,7 +576,7 @@ Channel *find_channel(const char *name)
 
 Channel *hash_get_chan_bucket(uint64_t hashv)
 {
-	if (hashv > CHAN_HASH_TABLE_SIZE)
+	if (hashv >= CHAN_HASH_TABLE_SIZE)
 		return NULL;
 	return channelTable[hashv];
 }
