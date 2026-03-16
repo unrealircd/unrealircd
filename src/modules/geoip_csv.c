@@ -633,7 +633,7 @@ static int geoip_csv_read_countries(char *file)
 				case STATE_CONTINENT_NAME:
 					if (*ptr == ',')
 						goto next_line; /* no continent? */
-					if (length >= MEMBER_SIZE(struct geoip_csv_country, continent))
+					if (length >= MEMBER_SIZE(struct geoip_csv_country, continent) - 1)
 					{
 						*contptr = '\0';
 						config_warn("[geoip_csv] Too long continent name found: `%s`. If you are sure your countries file is correct, please file a bug report.", continent);
@@ -646,7 +646,7 @@ static int geoip_csv_read_countries(char *file)
 				case STATE_COUNTRY_ISO_CODE:
 					if (*ptr == ',')		/* country code is empty */
 						goto next_line;	/* -- that means only the continent is specified - we ignore it completely */
-					if (length >= MEMBER_SIZE(struct geoip_csv_country, code))
+					if (length >= MEMBER_SIZE(struct geoip_csv_country, code) - 1)
 					{
 						*codeptr = '\0';
 						config_warn("[geoip_csv] Too long country code found: `%s`. If you are sure your countries file is correct, please file a bug report.", code);
@@ -687,7 +687,8 @@ static int geoip_csv_read_countries(char *file)
 				/* fall through */
 				default:
 					*nptr++ = *ptr++;
-					if (length >= MEMBER_SIZE(struct geoip_csv_country, name))
+					length++;
+					if (length >= MEMBER_SIZE(struct geoip_csv_country, name) - 1)
 					{
 						*nptr = '\0';
 						config_warn("[geoip_csv] Too long country name found: `%s`. If you are sure your countries file is correct, please file a bug report.", name);
