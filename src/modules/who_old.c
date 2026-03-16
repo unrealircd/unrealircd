@@ -262,15 +262,15 @@ static int parse_who_options(Client *client, int argc, const char **argv)
 #define REQUIRE_PARAM() { if (i >= argc) { \
                            who_sendhelp(client); \
                            return -1; \
-                      } } while(0);
+                      } } while(0)
 /** set option 'x' depending on 'what' (add/want or del/dontwant) */
 #define SET_OPTION(x) { if (what == WHO_ADD) \
                            x = WHO_WANT; \
                       else \
                            x = WHO_DONTWANT; \
-                      } while(0);
+                      } while(0)
 /** Eat a param, set the param in memory and set the option to want or dontwant */
-#define DOIT(x,y) { REQUIRE_PARAM(); x = argv[i]; SET_OPTION(y); i++; } while(0);
+#define DOIT(x,y) { REQUIRE_PARAM(); x = argv[i]; SET_OPTION(y); i++; } while(0)
 
 	if (*s != '-' && *s != '+')
 		return 0;
