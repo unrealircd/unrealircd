@@ -1,5 +1,21 @@
+UnrealIRCd 6.2.4-git
+=====================
+
+This is the git version (development version) for future UnrealIRCd 6.2.4.
+This is work in progress and may not always be a stable version.
+
+### Enhancements:
+
+### Changes:
+* [GeoIP](https://www.unrealircd.org/docs/GeoIP): Move from `geoip_classic`
+  to `geoip_mmdb` as the default backend, at least for new installations.
+
+### Fixes:
+
+### Developers and protocol:
+
 UnrealIRCd 6.2.3
-=================
+-----------------
 
 This version comes with several new features, improved security,
 and a number of bug fixes.
