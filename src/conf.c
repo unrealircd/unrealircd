@@ -2047,10 +2047,9 @@ int config_loadmodules(void)
 		{
 			if (!strcmp(ce->name, "loadmodule"))
 			{
-				if (ce->conditional_config)
+				if (ce->conditional_config && ce->conditional_config->condition == IF_MODULE)
 				{
-					config_error("%s:%d: Currently you cannot have a 'loadmodule' statement "
-						     "within an @if block, sorry.",
+					config_error("%s:%d: You cannot use @if module-loaded() around a 'loadmodule' statement.",
 						     ce->file->filename, ce->line_number);
 					return 0;
 				}
