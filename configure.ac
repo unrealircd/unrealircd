@@ -930,8 +930,6 @@ CHECK_LIBCURL
 
 CHECK_GEOIP_CLASSIC
 
-CHECK_LIBMAXMINDDB
-
 UNRLINCDIR="`pwd`/include"
 
 dnl This is at the end so the (potential) -std=gnu17 is not used

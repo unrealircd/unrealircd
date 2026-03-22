@@ -469,29 +469,3 @@ AC_DEFUN([CHECK_GEOIP_CLASSIC],
 		AC_SUBST(GEOIP_CLASSIC_OBJECTS)
 	]) dnl AS_IF(enable_geoip_classic) 
 ])
-
-AC_DEFUN([CHECK_LIBMAXMINDDB],
-[
-	AC_ARG_ENABLE(libmaxminddb,
-	[AC_HELP_STRING([--enable-libmaxminddb=no/yes],[enable GeoIP libmaxminddb support])],
-	[enable_libmaxminddb=$enableval],
-	[enable_libmaxminddb=no])
-
-	AS_IF([test "x$enable_libmaxminddb" = "xyes"],
-	[
-		dnl see if the system provides it
-		has_system_libmaxminddb="no"
-		PKG_CHECK_MODULES([LIBMAXMINDDB], [libmaxminddb >= 1.4.3],
-		                  [has_system_libmaxminddb=yes])
-		AS_IF([test "x$has_system_libmaxminddb" = "xyes"],
-		[
-
-			AC_SUBST(LIBMAXMINDDB_LIBS)
-			AC_SUBST(LIBMAXMINDDB_CFLAGS)
-
-			GEOIP_MAXMIND_OBJECTS="geoip_maxmind.so"
-			AC_SUBST(GEOIP_MAXMIND_OBJECTS)
-		])
-	])
-])
-

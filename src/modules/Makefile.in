@@ -87,7 +87,8 @@ MODULES= \
 	central-api.so central-blocklist.so \
 	no-implicit-names.so maxperip.so utf8functions.so utf8only.so \
 	isupport.so extended-isupport.so \
-	$(GEOIP_CLASSIC_OBJECTS) $(GEOIP_MAXMIND_OBJECTS)
+	$(GEOIP_CLASSIC_OBJECTS) \
+	geoip_maxmind.so
 
 MODULEFLAGS=@MODULEFLAGS@
 RM=@RM@
@@ -122,7 +123,7 @@ geoip_classic.so: geoip_classic.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) $(GEOIP_CLASSIC_CFLAGS) -DDYNAMIC_LINKING \
 		-o geoip_classic.so geoip_classic.c @LDFLAGS_PRIVATELIBS@ $(GEOIP_CLASSIC_LIBS)
 
-# geoip_maxmind requires another extra library
+# geoip_maxmind uses shipped mmdb.c
 geoip_maxmind.so: geoip_maxmind.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) $(LIBMAXMINDDB_CFLAGS) -DDYNAMIC_LINKING \
-		-o geoip_maxmind.so geoip_maxmind.c @LDFLAGS_PRIVATELIBS@ $(LIBMAXMINDDB_LIBS)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o geoip_maxmind.so geoip_maxmind.c mmdb.c
