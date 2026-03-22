@@ -330,54 +330,59 @@ void preprocessor_cc_free_list(ConditionalConfig *cc)
 /** Resolve a preprocessor condition to true (=default) or false */
 int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 {
-	int result = 0;
+	int result;
 
-	if (!cc)
-		return 1;
+	for (; cc; cc = cc->next)
+	{
+		result = 0;
 
-	if (cc->condition == IF_MODULE)
-	{
-		if (phase == PREPROCESSOR_PHASE_INITIAL)
+		if (cc->condition == IF_MODULE)
 		{
-			/* We cannot handle @if module-loaded() yet.. */
-			return 1;
-		}
-		if (phase == PREPROCESSOR_PHASE_SECONDARY)
+			if (phase == PREPROCESSOR_PHASE_INITIAL)
+			{
+				/* We cannot handle @if module-loaded() yet.. */
+				result = 1;
+			} else
+			if (phase == PREPROCESSOR_PHASE_SECONDARY)
+			{
+				/* We can only handle blacklisted modules at this point, so: */
+				if (!is_blacklisted_module(cc->name))
+					result = 1;
+			} else
+			if (is_module_loaded(cc->name))
+			{
+				result = 1;
+			}
+		} else
+		if (cc->condition == IF_DEFINED)
 		{
-			/* We can only handle blacklisted modules at this point, so: */
-			if (is_blacklisted_module(cc->name))
-				return 0;
-			return 1;
-		}
-		if (is_module_loaded(cc->name))
+			NameValuePrioList *d = find_config_define(cc->name);
+			if (d)
+			{
+				result = 1;
+			}
+		} else
+		if (cc->condition == IF_VALUE)
 		{
-			result = 1;
-		}
-	} else
-	if (cc->condition == IF_DEFINED)
-	{
-		NameValuePrioList *d = find_config_define(cc->name);
-		if (d)
+			NameValuePrioList *d = find_config_define(cc->name);
+			if (d && !strcasecmp(d->value, cc->opt))
+			{
+				result = 1;
+			}
+		} else
 		{
-			result = 1;
+			config_status("[BUG] unhandled @if type!!");
 		}
-	} else
-	if (cc->condition == IF_VALUE)
-	{
-		NameValuePrioList *d = find_config_define(cc->name);
-		if (d && !strcasecmp(d->value, cc->opt))
-		{
-			result = 1;
-		}
-	} else
-	{
-		config_status("[BUG] unhandled @if type!!");
+
+		if (cc->negative)
+			result = result ? 0 : 1;
+
+		/* All conditions must be true (logical AND for nested @if) */
+		if (!result)
+			return 0;
 	}
 
-	if (cc->negative)
-		result = result ? 0 : 1;
-
-	return result;
+	return 1;
 }
 
 void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, PreprocessorPhase phase)

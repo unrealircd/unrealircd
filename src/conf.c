@@ -2047,11 +2047,15 @@ int config_loadmodules(void)
 		{
 			if (!strcmp(ce->name, "loadmodule"))
 			{
-				if (ce->conditional_config && ce->conditional_config->condition == IF_MODULE)
+				ConditionalConfig *cc;
+				for (cc = ce->conditional_config; cc; cc = cc->next)
 				{
-					config_error("%s:%d: You cannot use @if module-loaded() around a 'loadmodule' statement.",
-						     ce->file->filename, ce->line_number);
-					return 0;
+					if (cc->condition == IF_MODULE)
+					{
+						config_error("%s:%d: You cannot use @if module-loaded() around a 'loadmodule' statement.",
+							     ce->file->filename, ce->line_number);
+						return 0;
+					}
 				}
 				ret = _conf_loadmodule(cfptr, ce);
 				if (ret < fatal_ret)
