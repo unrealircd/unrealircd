@@ -17,6 +17,9 @@ This is work in progress and may not always be a stable version.
   * New `@if file-exists("filename")` to check if a file exists.
     Paths are relative to the conf directory, or absolute if starting
     with `/`.
+  * Variable comparisons now support `>`, `>=`, `<`, `<=` in addition
+    to `==` and `!=`. Uses natural ordering, so version strings and
+    numbers compare correctly. Example: `@if $MAXCONNECTIONS >= 1024`.
 
 ### Changes:
 * [GeoIP](https://www.unrealircd.org/docs/GeoIP):

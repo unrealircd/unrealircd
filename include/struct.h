@@ -1650,6 +1650,7 @@ struct AuthConfig {
 */
 
 typedef enum ConfigIfCondition { IF_DEFINED=1, IF_VALUE=2, IF_MODULE_LOADED=3, IF_MODULE_EXISTS=4, IF_MINIMUM_VERSION=5, IF_FILE_EXISTS=6} ConfigIfCondition;
+typedef enum CompareOp { COMPARE_EQ=0, COMPARE_NE=1, COMPARE_GT=2, COMPARE_GE=3, COMPARE_LT=4, COMPARE_LE=5 } CompareOp;
 
 struct ConditionalConfig
 {
@@ -1657,6 +1658,7 @@ struct ConditionalConfig
 	int priority; /**< Preprocessor level. Starts with 1, then 2, 3, .. */
 	ConfigIfCondition condition; /**< See ConfigIfCondition, one of: IF_* */
 	int negative; /**< For ! conditions */
+	CompareOp compare_op; /**< Only for IF_VALUE */
 	char *name; /**< Name of the variable or module */
 	char *opt; /**< Only for IF_VALUE */
 };

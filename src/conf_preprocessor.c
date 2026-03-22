@@ -94,6 +94,10 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 	/* Currently we support:
 	 * $XYZ == "something"
 	 * $XYZ != "something"
+	 * $XYZ > "something"
+	 * $XYZ >= "something"
+	 * $XYZ < "something"
+	 * $XYZ <= "something"
 	 * module-loaded("something")
 	 * !module-loaded("something")
 	 * module-exists("something")
@@ -127,9 +131,15 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 	/* Otherwise it should be a $VARIABLE comparison */
 	{
 		char *name, *name_terminate, *name2;
+		CompareOp compare_op;
+		int op_len;
 		// Should be one of:
 		// $XYZ == "something"
 		// $XYZ != "something"
+		// $XYZ >= "something"
+		// $XYZ <= "something"
+		// $XYZ > "something"
+		// $XYZ < "something"
 		// Anything else is an error.
 		if (*p != '$')
 		{
@@ -137,10 +147,16 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 				filename, linenumber, statement);
 			return PREPROCESSOR_ERROR;
 		}
+		if (negative)
+		{
+			config_error("%s:%i: @if: the '!' prefix cannot be used with variable comparisons, use != instead: %s",
+				filename, linenumber, statement);
+			return PREPROCESSOR_ERROR;
+		}
 		p++;
 		/* variable name starts now */
 		name = p;
-		read_until(&p, " \t=!");
+		read_until(&p, " \t=!<>");
 		if (!*p)
 		{
 			config_error("%s:%i: invalid if statement (termination error): %s",
@@ -151,40 +167,65 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 		skip_whitespace(&p);
 		if (!strncmp(p, "==", 2))
 		{
-			negative = 0;
+			compare_op = COMPARE_EQ;
+			op_len = 2;
 		} else
 		if (!strncmp(p, "!=", 2))
 		{
-			negative = 1;
+			compare_op = COMPARE_NE;
+			op_len = 2;
+		} else
+		if (!strncmp(p, ">=", 2))
+		{
+			compare_op = COMPARE_GE;
+			op_len = 2;
+		} else
+		if (!strncmp(p, "<=", 2))
+		{
+			compare_op = COMPARE_LE;
+			op_len = 2;
+		} else
+		if (*p == '>')
+		{
+			compare_op = COMPARE_GT;
+			op_len = 1;
+		} else
+		if (*p == '<')
+		{
+			compare_op = COMPARE_LT;
+			op_len = 1;
 		} else
 		{
 			*name_terminate = '\0';
-			config_error("%s:%i: @if: expected == or != after '%s'",
+			config_error("%s:%i: @if: expected comparison operator (==, !=, >, >=, <, <=) after '%s'",
 				filename, linenumber, name);
 			return PREPROCESSOR_ERROR;
 		}
-		p += 2;
+		p += op_len;
 		*name_terminate = '\0';
 		skip_whitespace(&p);
-		if (*p != '"')
+		if (*p == '"')
 		{
-			config_error("%s:%i: @if: expected double quotes, missing \" perhaps?",
-				filename, linenumber);
-			return PREPROCESSOR_ERROR;
-		}
-		p++;
-		name2 = p;
-		read_until(&p, "\"");
-		if (!*p)
+			p++;
+			name2 = p;
+			read_until(&p, "\"");
+			if (!*p)
+			{
+				config_error("%s:%i: invalid @if statement, missing \" at end perhaps?",
+					filename, linenumber);
+				return PREPROCESSOR_ERROR;
+			}
+			*p = '\0';
+		} else
 		{
-			config_error("%s:%i: invalid @if statement, missing \" at end perhaps?",
-				filename, linenumber);
-			return PREPROCESSOR_ERROR;
+			name2 = p;
+			read_until(&p, " \t");
+			if (*p)
+				*p = '\0';
 		}
-		*p = '\0';
 		cc = safe_alloc(sizeof(ConditionalConfig));
 		cc->condition = IF_VALUE;
-		cc->negative = negative;
+		cc->compare_op = compare_op;
 		safe_strdup(cc->name, name);
 		safe_strdup(cc->opt, name2);
 		*cc_out = cc;
@@ -327,6 +368,7 @@ void preprocessor_cc_duplicate_list(ConditionalConfig *r, ConditionalConfig **ou
 		cc->priority = r->priority;
 		cc->condition = r->condition;
 		cc->negative = r->negative;
+		cc->compare_op = r->compare_op;
 		AddListItem(cc, *out);
 	}
 }
@@ -400,9 +442,18 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 		if (cc->condition == IF_VALUE)
 		{
 			NameValuePrioList *d = find_config_define(cc->name);
-			if (d && !strcasecmp(d->value, cc->opt))
+			if (d)
 			{
-				result = 1;
+				int cmp = strnatcasecmp(d->value, cc->opt);
+				switch (cc->compare_op)
+				{
+					case COMPARE_EQ: result = (cmp == 0); break;
+					case COMPARE_NE: result = (cmp != 0); break;
+					case COMPARE_GT: result = (cmp > 0);  break;
+					case COMPARE_GE: result = (cmp >= 0); break;
+					case COMPARE_LT: result = (cmp < 0);  break;
+					case COMPARE_LE: result = (cmp <= 0); break;
+				}
 			}
 		} else
 		{
