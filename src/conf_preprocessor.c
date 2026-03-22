@@ -108,6 +108,7 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 	 * !file-exists("something")
 	 * defined($XYZ)
 	 * !defined($XYZ)
+	 * @else is also supported (handled in conf.c, not here).
 	 * We do not support && or || or anything else at this time.
 	 */
 	skip_whitespace(&p);
@@ -320,6 +321,8 @@ PreprocessorItem  parse_preprocessor_item(char *start, char *end, const char *fi
 		return evaluate_preprocessor_define(buf+7, filename, linenumber);
 	else if (!strncmp(buf, "@if ", 4))
 		return evaluate_preprocessor_if(buf+4, filename, linenumber, cc);
+	else if (!strncmp(buf, "@else", 5))
+		return PREPROCESSOR_ELSE;
 	else if (!strncmp(buf, "@endif", 6))
 		return PREPROCESSOR_ENDIF;
 
@@ -369,6 +372,7 @@ void preprocessor_cc_duplicate_list(ConditionalConfig *r, ConditionalConfig **ou
 		cc->condition = r->condition;
 		cc->negative = r->negative;
 		cc->compare_op = r->compare_op;
+		cc->had_else = r->had_else;
 		AddListItem(cc, *out);
 	}
 }

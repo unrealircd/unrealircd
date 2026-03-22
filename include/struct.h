@@ -1610,7 +1610,8 @@ typedef enum PreprocessorItem {
 	PREPROCESSOR_ERROR		= 0,
 	PREPROCESSOR_DEFINE		= 1,
 	PREPROCESSOR_IF			= 2,
-	PREPROCESSOR_ENDIF		= 3
+	PREPROCESSOR_ENDIF		= 3,
+	PREPROCESSOR_ELSE		= 4
 } PreprocessorItem;
 
 typedef enum PreprocessorPhase {
@@ -1659,6 +1660,7 @@ struct ConditionalConfig
 	ConfigIfCondition condition; /**< See ConfigIfCondition, one of: IF_* */
 	int negative; /**< For ! conditions */
 	CompareOp compare_op; /**< Only for IF_VALUE */
+	int had_else; /**< Set to 1 after @else, to prevent duplicate @else */
 	char *name; /**< Name of the variable or module */
 	char *opt; /**< Only for IF_VALUE */
 };

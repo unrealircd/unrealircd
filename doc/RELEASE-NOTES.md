@@ -20,6 +20,7 @@ This is work in progress and may not always be a stable version.
   * Variable comparisons now support `>`, `>=`, `<`, `<=` in addition
     to `==` and `!=`. Uses natural ordering, so version strings and
     numbers compare correctly. Example: `@if $MAXCONNECTIONS >= 1024`.
+  * Support `@else`: `@if ... @else ... @endif`.
 
 ### Changes:
 * [GeoIP](https://www.unrealircd.org/docs/GeoIP):

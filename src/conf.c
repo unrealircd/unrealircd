@@ -1294,6 +1294,35 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 					cc->priority = preprocessor_level;
 					AddListItem(cc, cc_list);
 				} else
+				if (n == PREPROCESSOR_ELSE)
+				{
+					ConditionalConfig *cc_item;
+					if (preprocessor_level == 0)
+					{
+						config_error("%s:%i: @else unexpected. There was no preceding unclosed @if.",
+							filename, linenumber);
+						errors++;
+					} else
+					{
+						/* Find the condition at the current nesting level and flip it */
+						for (cc_item = cc_list; cc_item; cc_item = cc_item->next)
+						{
+							if (cc_item->priority == preprocessor_level)
+							{
+								if (cc_item->had_else)
+								{
+									config_error("%s:%i: duplicate @else for the same @if block.",
+										filename, linenumber);
+									errors++;
+									goto breakout;
+								}
+								cc_item->negative = cc_item->negative ? 0 : 1;
+								cc_item->had_else = 1;
+								break;
+							}
+						}
+					}
+				} else
 				if (n == PREPROCESSOR_ENDIF)
 				{
 					if (preprocessor_level == 0)
