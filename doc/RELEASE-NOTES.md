@@ -7,8 +7,14 @@ This is work in progress and may not always be a stable version.
 ### Enhancements:
 
 ### Changes:
-* [GeoIP](https://www.unrealircd.org/docs/GeoIP): Move from `geoip_classic`
-  to `geoip_mmdb` as the default backend, at least for new installations.
+* [GeoIP](https://www.unrealircd.org/docs/GeoIP):
+  * We now ship with our own mmdb engine and `geoip_mmdb` (replacement for
+    `geoip_maxmind`).
+  * The `./Config` question on GeoIP now defaults to `mmdb`. Existing users
+    who upgrade will keep their current setting (usually `classic`) for now.
+  * Both `geoip_classic` and `geoip_mmdb` now receive automatic updates
+  * You can `@define $NO_GEOIP_CONFIG "1"` to disable auto configuration
+    and updates.
 
 ### Fixes:
 

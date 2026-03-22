@@ -930,6 +930,15 @@ CHECK_LIBCURL
 
 CHECK_GEOIP_CLASSIC
 
+dnl This does not do much anymore but..
+AC_ARG_ENABLE(mmdb,
+[AC_HELP_STRING([--enable-mmdb=no/yes],[enable GeoIP mmdb support])],
+[enable_mmdb=$enableval],
+[enable_mmdb=no])
+AS_IF([test "x$enable_mmdb" = "xyes"],
+[AC_DEFINE([GEOIP_ENGINE], ["geoip_mmdb"], [MMDB GeoIP engine])])
+
+dnl Set to include dir
 UNRLINCDIR="`pwd`/include"
 
 dnl This is at the end so the (potential) -std=gnu17 is not used

@@ -113,8 +113,8 @@ ARG="$ARG--enable-dynamic-linking "
 if [ "$GEOIP" = "classic" ]; then
 	ARG="$ARG--enable-geoip-classic "
 fi
-if [ "$GEOIP" = "libmaxminddb" ]; then
-	ARG="$ARG--enable-libmaxminddb "
+if [ "$GEOIP" = "mmdb" -o "$GEOIP" = "libmaxminddb" ]; then
+	ARG="$ARG--enable-mmdb "
 fi
 if [ "$SANITIZER" = "asan" ]; then
 	ARG="$ARG--enable-asan "
@@ -281,7 +281,7 @@ OPEROVERRIDEVERIFY=""
 GENCERTIFICATE="1"
 EXTRAPARA=""
 SANITIZER=""
-GEOIP="classic"
+GEOIP="mmdb"
 if [ "`eval echo -n 'a'`" = "-n a" ] ; then
 	c="\c"
 else
@@ -773,12 +773,12 @@ while [ -z "$TEST" ] ; do
 	echo ""
 	echo "GeoIP is a feature that allows converting an IP address to a location (country)"
 	echo "Possible build options:"
-	echo "     classic: This is the DEFAULT geoip engine. It should work on all systems"
-	echo "              and receives automatic updates."
-	echo "libmaxminddb: This uses the libmaxminddb library. If you want to use this, then"
-	echo "              you need to install the libmaxminddb library on your system first"
-	echo "        none: Don't build with any geoip library (geoip-csv is still built)"
-	echo "Choose one of: classic, libmaxminddb, none"
+	echo "classic: This is the classic (OLD) geoip engine. Slowly being phased out."
+	echo "         It receives automatic updates."
+	echo "   mmdb: This uses the build-in mmdb library. It is the NEW geoip engine."
+	echo "         It receives automatic updates as well."
+	echo "   none: Don't build classic, and load neither classic nor mmdb by default."
+	echo "Choose one of: classic, mmdb, none"
 	echo $n "[$TEST] -> $c"
 	read cc
 	if [ -z "$cc" ] ; then
@@ -789,7 +789,7 @@ while [ -z "$TEST" ] ; do
 	classic)
 		GEOIP="$cc"
 		;;
-	libmaxminddb)
+	mmdb)
 		GEOIP="$cc"
 		;;
 	none)

@@ -784,6 +784,7 @@ enable_werror
 enable_asan
 enable_libcurl
 enable_geoip_classic
+enable_mmdb
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1446,6 +1447,7 @@ Optional Features:
   --enable-libcurl=DIR    enable libcurl (remote include) support
   --enable-geoip-classic=no/yes
                           enable GeoIP Classic support
+  --enable-mmdb=no/yes    enable GeoIP mmdb support
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -10132,6 +10134,25 @@ fi
 
 		GEOIP_CLASSIC_OBJECTS="geoip_classic.so"
 
+
+printf "%s\n" "#define GEOIP_ENGINE \"geoip_classic\"" >>confdefs.h
+
+
+fi
+
+# Check whether --enable-mmdb was given.
+if test ${enable_mmdb+y}
+then :
+  enableval=$enable_mmdb; enable_mmdb=$enableval
+else case e in #(
+  e) enable_mmdb=no ;;
+esac
+fi
+
+if test "x$enable_mmdb" = "xyes"
+then :
+
+printf "%s\n" "#define GEOIP_ENGINE \"geoip_mmdb\"" >>confdefs.h
 
 fi
 

@@ -433,6 +433,11 @@ void init_config_defines(void)
 	add_nvplist(&config_defines, 0, "UNREALIRCD_VERSION_MAJOR", PATCH2);
 	add_nvplist(&config_defines, 0, "UNREALIRCD_VERSION_MINOR", PATCH3);
 	add_nvplist(&config_defines, 0, "UNREALIRCD_VERSION_SUFFIX", PATCH4);
+#ifdef GEOIP_ENGINE
+	add_nvplist(&config_defines, 0, "GEOIP_ENGINE", GEOIP_ENGINE);
+#else
+	add_nvplist(&config_defines, 0, "GEOIP_ENGINE", "none");
+#endif
 }
 
 /** Return the complete struct for a defined value */

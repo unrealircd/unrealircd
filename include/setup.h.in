@@ -25,6 +25,9 @@
 /* Define the location of the documentation */
 #undef DOCDIR
 
+/* MMDB GeoIP engine */
+#undef GEOIP_ENGINE
+
 /* Define if you have getrusage */
 #undef GETRUSAGE_2
 

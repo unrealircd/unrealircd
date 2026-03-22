@@ -467,5 +467,6 @@ AC_DEFUN([CHECK_GEOIP_CLASSIC],
 
 		GEOIP_CLASSIC_OBJECTS="geoip_classic.so"
 		AC_SUBST(GEOIP_CLASSIC_OBJECTS)
+		AC_DEFINE([GEOIP_ENGINE], ["geoip_classic"], [Classic GeoIP engine])
 	]) dnl AS_IF(enable_geoip_classic) 
 ])
