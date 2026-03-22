@@ -438,6 +438,15 @@ void init_config_defines(void)
 #else
 	add_nvplist(&config_defines, 0, "GEOIP_ENGINE", "none");
 #endif
+	/* Directory paths */
+	add_nvplist(&config_defines, 0, "CONFDIR", CONFDIR);
+	add_nvplist(&config_defines, 0, "DATADIR", PERMDATADIR);
+	add_nvplist(&config_defines, 0, "LOGDIR", LOGDIR);
+	add_nvplist(&config_defines, 0, "TMPDIR", TMPDIR);
+	add_nvplist(&config_defines, 0, "DOCDIR", DOCDIR);
+	add_nvplist(&config_defines, 0, "MODULESDIR", MODULESDIR);
+	/* Max connections */
+	add_nvplist(&config_defines, 0, "MAXCONNECTIONS", macro_to_str(MAXCONNECTIONS));
 }
 
 /** Return the complete struct for a defined value */

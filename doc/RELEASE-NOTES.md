@@ -5,6 +5,10 @@ This is the git version (development version) for future UnrealIRCd 6.2.4.
 This is work in progress and may not always be a stable version.
 
 ### Enhancements:
+* [Conditional config](https://www.unrealircd.org/docs/Conditional_config):
+  new built-in variables `$CONFDIR`, `$DATADIR`, `$LOGDIR`, `$TMPDIR`,
+  `$DOCDIR`, `$MODULESDIR` and `$MAXCONNECTIONS` are now
+  available for use in the configuration file.
 
 ### Changes:
 * [GeoIP](https://www.unrealircd.org/docs/GeoIP):
