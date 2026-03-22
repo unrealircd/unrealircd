@@ -2050,7 +2050,7 @@ int config_loadmodules(void)
 				ConditionalConfig *cc;
 				for (cc = ce->conditional_config; cc; cc = cc->next)
 				{
-					if (cc->condition == IF_MODULE)
+					if (cc->condition == IF_MODULE_LOADED)
 					{
 						config_error("%s:%d: You cannot use @if module-loaded() around a 'loadmodule' statement.",
 							     ce->file->filename, ce->line_number);

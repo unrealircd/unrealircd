@@ -6,9 +6,12 @@ This is work in progress and may not always be a stable version.
 
 ### Enhancements:
 * [Conditional config](https://www.unrealircd.org/docs/Conditional_config):
-  new built-in variables `$CONFDIR`, `$DATADIR`, `$LOGDIR`, `$TMPDIR`,
-  `$DOCDIR`, `$MODULESDIR` and `$MAXCONNECTIONS` are now
-  available for use in the configuration file.
+  * New built-in variables `$CONFDIR`, `$DATADIR`, `$LOGDIR`, `$TMPDIR`,
+    `$DOCDIR`, `$MODULESDIR` and `$MAXCONNECTIONS` are now
+    available for use in the configuration file.
+  * New `@if module-exists("modulename")` to check if a module exists on
+    disk. You can use this with a subsequent `loadmodule` and config items,
+    this can be handy with 3rd party modules.
 
 ### Changes:
 * [GeoIP](https://www.unrealircd.org/docs/GeoIP):

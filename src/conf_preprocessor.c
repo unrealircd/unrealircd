@@ -28,11 +28,13 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 	int negative = 0;
 	ConditionalConfig *cc;
 
-	/* Currently we support only 4 things:
+	/* Currently we support:
 	 * $XYZ == "something"
 	 * $XYZ != "something"
 	 * module-loaded("something")
 	 * !module-loaded("something")
+	 * module-exists("something")
+	 * !module-exists("something")
 	 * defined($XYZ)
 	 * !defined($XYZ)
 	 * We do not support && or || or anything else at this time.
@@ -72,7 +74,37 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 		}
 		*p = '\0';
 		cc = safe_alloc(sizeof(ConditionalConfig));
-		cc->condition = IF_MODULE;
+		cc->condition = IF_MODULE_LOADED;
+		cc->negative = negative;
+		safe_strdup(cc->name, name);
+		*cc_out = cc;
+		return PREPROCESSOR_IF;
+	} else
+	if (!strncmp(p, "module-exists", 13))
+	{
+		p += 13;
+		skip_whitespace(&p);
+		if (*p != '(')
+		{
+			config_error("%s:%i: expected '(' for module-exists(...",
+				filename, linenumber);
+			return PREPROCESSOR_ERROR;
+		}
+		p++;
+		skip_whitespace(&p);
+		if (*p == '"')
+			p++;
+		name = p;
+		read_until(&p, ")\"");
+		if (!*p)
+		{
+			config_error("%s:%i: invalid if statement (termination error): %s",
+				filename, linenumber, statement);
+			return PREPROCESSOR_ERROR;
+		}
+		*p = '\0';
+		cc = safe_alloc(sizeof(ConditionalConfig));
+		cc->condition = IF_MODULE_EXISTS;
 		cc->negative = negative;
 		safe_strdup(cc->name, name);
 		*cc_out = cc;
@@ -336,7 +368,7 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 	{
 		result = 0;
 
-		if (cc->condition == IF_MODULE)
+		if (cc->condition == IF_MODULE_LOADED)
 		{
 			if (phase == PREPROCESSOR_PHASE_INITIAL)
 			{
@@ -353,6 +385,12 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 			{
 				result = 1;
 			}
+		} else
+		if (cc->condition == IF_MODULE_EXISTS)
+		{
+			const char *fullpath = Module_TransformPath(cc->name);
+			if (file_exists(fullpath))
+				result = 1;
 		} else
 		if (cc->condition == IF_DEFINED)
 		{
