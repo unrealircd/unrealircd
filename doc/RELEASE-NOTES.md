@@ -13,7 +13,7 @@ This is work in progress and may not always be a stable version.
   * The `./Config` question on GeoIP now defaults to `mmdb`. Existing users
     who upgrade will keep their current setting (usually `classic`) for now.
   * Both `geoip_classic` and `geoip_mmdb` now receive automatic updates
-  * You can `@define $NO_GEOIP_CONFIG "1"` to disable auto configuration
+  * You can `@define $NO_DEFAULT_GEOIP "1"` to disable auto configuration
     and updates.
 
 ### Fixes:
