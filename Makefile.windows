@@ -275,7 +275,7 @@ DLL_FILES=\
  src/modules/geoip_base.dll \
  src/modules/geoip_classic.dll \
  src/modules/geoip_csv.dll \
- src/modules/geoip_maxmind.dll \
+ src/modules/geoip_mmdb.dll \
  src/modules/geoip-tag.dll \
  src/modules/globops.dll \
  src/modules/help.dll \
@@ -967,8 +967,8 @@ src/modules/geoip_classic.dll: src/modules/geoip_classic.c $(INCLUDES)
 src/modules/geoip_csv.dll: src/modules/geoip_csv.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/geoip_csv.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/geoip_csv.pdb $(MODLFLAGS)
 
-src/modules/geoip_maxmind.dll: src/modules/geoip_maxmind.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/geoip_maxmind.c src/modules/mmdb.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/geoip_maxmind.pdb $(MODLFLAGS)
+src/modules/geoip_mmdb.dll: src/modules/geoip_mmdb.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/geoip_mmdb.c src/modules/mmdb.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/geoip_mmdb.pdb $(MODLFLAGS)
 
 src/modules/geoip-tag.dll: src/modules/geoip-tag.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/geoip-tag.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/geoip-tag.pdb $(MODLFLAGS)

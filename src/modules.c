@@ -275,6 +275,14 @@ int module_already_in_testing(const char *relpath)
 	return 0;
 }
 
+/** If a module has been renamed, return the new name, otherwise NULL */
+const char *module_renamed(const char *name)
+{
+	if (!strcmp(name, "geoip_maxmind"))
+		return "geoip_mmdb";
+	return NULL;
+}
+
 /** Return an error string if module with 'name' should no longer be used. */
 const char *is_module_deprecated(const char *name)
 {
@@ -322,6 +330,18 @@ const char *Module_Create(const char *path_)
 	path = Module_TransformPath(path_);
 
 	relpath = Module_GetRelPath(path);
+
+	{
+		const char *newname;
+		if ((newname = module_renamed(relpath)))
+		{
+			config_warn("Module '%s' has been renamed to '%s'. "
+			            "Please update your loadmodule line.",
+			            relpath, newname);
+			path = Module_TransformPath(newname);
+			relpath = Module_GetRelPath(path);
+		}
+	}
 
 	if ((reterr = is_module_deprecated(relpath)))
 		return reterr;

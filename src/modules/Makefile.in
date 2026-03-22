@@ -88,7 +88,7 @@ MODULES= \
 	no-implicit-names.so maxperip.so utf8functions.so utf8only.so \
 	isupport.so extended-isupport.so \
 	$(GEOIP_CLASSIC_OBJECTS) \
-	geoip_maxmind.so
+	geoip_mmdb.so
 
 MODULEFLAGS=@MODULEFLAGS@
 RM=@RM@
@@ -123,7 +123,7 @@ geoip_classic.so: geoip_classic.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) $(GEOIP_CLASSIC_CFLAGS) -DDYNAMIC_LINKING \
 		-o geoip_classic.so geoip_classic.c @LDFLAGS_PRIVATELIBS@ $(GEOIP_CLASSIC_LIBS)
 
-# geoip_maxmind uses shipped mmdb.c
-geoip_maxmind.so: geoip_maxmind.c $(INCLUDES)
+# geoip_mmdb uses shipped mmdb.c
+geoip_mmdb.so: geoip_mmdb.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o geoip_maxmind.so geoip_maxmind.c mmdb.c
+		-o geoip_mmdb.so geoip_mmdb.c mmdb.c
