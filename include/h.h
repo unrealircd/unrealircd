@@ -1106,6 +1106,7 @@ extern MODVAR Client *remote_rehash_client;
 extern MODVAR json_t *json_rehash_log;
 extern MODVAR int debugfd;
 extern void convert_to_absolute_path(char **path, const char *reldir);
+extern char *convert_to_absolute_path_duplicate(char *path, char *reldir);
 extern int has_user_mode(Client *acptr, char mode);
 extern int has_channel_mode(Channel *channel, char mode);
 extern int has_channel_mode_raw(Cmode_t m, char mode);

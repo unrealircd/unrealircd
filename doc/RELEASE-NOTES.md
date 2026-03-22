@@ -12,6 +12,11 @@ This is work in progress and may not always be a stable version.
   * New `@if module-exists("modulename")` to check if a module exists on
     disk. You can use this with a subsequent `loadmodule` and config items,
     this can be handy with 3rd party modules.
+  * New `@if minimum-version("6.2.4")` to check if the UnrealIRCd version
+    is at least the specified version.
+  * New `@if file-exists("filename")` to check if a file exists.
+    Paths are relative to the conf directory, or absolute if starting
+    with `/`.
 
 ### Changes:
 * [GeoIP](https://www.unrealircd.org/docs/GeoIP):

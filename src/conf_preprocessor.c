@@ -35,6 +35,10 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 	 * !module-loaded("something")
 	 * module-exists("something")
 	 * !module-exists("something")
+	 * minimum-version("6.2.0")
+	 * !minimum-version("6.2.0")
+	 * file-exists("something")
+	 * !file-exists("something")
 	 * defined($XYZ)
 	 * !defined($XYZ)
 	 * We do not support && or || or anything else at this time.
@@ -105,6 +109,66 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 		*p = '\0';
 		cc = safe_alloc(sizeof(ConditionalConfig));
 		cc->condition = IF_MODULE_EXISTS;
+		cc->negative = negative;
+		safe_strdup(cc->name, name);
+		*cc_out = cc;
+		return PREPROCESSOR_IF;
+	} else
+	if (!strncmp(p, "minimum-version", 15))
+	{
+		p += 15;
+		skip_whitespace(&p);
+		if (*p != '(')
+		{
+			config_error("%s:%i: expected '(' for minimum-version(...",
+				filename, linenumber);
+			return PREPROCESSOR_ERROR;
+		}
+		p++;
+		skip_whitespace(&p);
+		if (*p == '"')
+			p++;
+		name = p;
+		read_until(&p, ")\"");
+		if (!*p)
+		{
+			config_error("%s:%i: invalid if statement (termination error): %s",
+				filename, linenumber, statement);
+			return PREPROCESSOR_ERROR;
+		}
+		*p = '\0';
+		cc = safe_alloc(sizeof(ConditionalConfig));
+		cc->condition = IF_MINIMUM_VERSION;
+		cc->negative = negative;
+		safe_strdup(cc->name, name);
+		*cc_out = cc;
+		return PREPROCESSOR_IF;
+	} else
+	if (!strncmp(p, "file-exists", 11))
+	{
+		p += 11;
+		skip_whitespace(&p);
+		if (*p != '(')
+		{
+			config_error("%s:%i: expected '(' for file-exists(...",
+				filename, linenumber);
+			return PREPROCESSOR_ERROR;
+		}
+		p++;
+		skip_whitespace(&p);
+		if (*p == '"')
+			p++;
+		name = p;
+		read_until(&p, ")\"");
+		if (!*p)
+		{
+			config_error("%s:%i: invalid if statement (termination error): %s",
+				filename, linenumber, statement);
+			return PREPROCESSOR_ERROR;
+		}
+		*p = '\0';
+		cc = safe_alloc(sizeof(ConditionalConfig));
+		cc->condition = IF_FILE_EXISTS;
 		cc->negative = negative;
 		safe_strdup(cc->name, name);
 		*cc_out = cc;
@@ -391,6 +455,18 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 			const char *fullpath = Module_TransformPath(cc->name);
 			if (file_exists(fullpath))
 				result = 1;
+		} else
+		if (cc->condition == IF_MINIMUM_VERSION)
+		{
+			if (strnatcasecmp(VERSIONONLY, cc->name) >= 0)
+				result = 1;
+		} else
+		if (cc->condition == IF_FILE_EXISTS)
+		{
+			char *fullpath = convert_to_absolute_path_duplicate(cc->name, CONFDIR);
+			if (file_exists(fullpath))
+				result = 1;
+			safe_free(fullpath);
 		} else
 		if (cc->condition == IF_DEFINED)
 		{

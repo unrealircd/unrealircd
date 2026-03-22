@@ -1649,7 +1649,7 @@ struct AuthConfig {
  * conf2 stuff -stskeeps
 */
 
-typedef enum ConfigIfCondition { IF_DEFINED=1, IF_VALUE=2, IF_MODULE_LOADED=3, IF_MODULE_EXISTS=4} ConfigIfCondition;
+typedef enum ConfigIfCondition { IF_DEFINED=1, IF_VALUE=2, IF_MODULE_LOADED=3, IF_MODULE_EXISTS=4, IF_MINIMUM_VERSION=5, IF_FILE_EXISTS=6} ConfigIfCondition;
 
 struct ConditionalConfig
 {
