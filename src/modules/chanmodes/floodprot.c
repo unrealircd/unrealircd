@@ -1187,6 +1187,9 @@ int floodprot_join(Client *client, Channel *channel, MessageTag *mtags)
 	    (MyUser(client) || client->uplink->server->flags.synced) &&
 	    (client->uplink->server->boottime && (TStime() - client->uplink->server->boottime >= cfg.boot_delay)) &&
 	    (TStime() - floodprot_splittime >= cfg.split_delay) &&
+#ifdef TESTSUITE
+	    strncasecmp(channel->name, "#__SYNC__", 9) &&
+#endif
 	    !IsULine(client))
 	{
 	    do_floodprot(channel, client, CHFLD_JOIN);
