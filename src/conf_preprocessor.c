@@ -15,6 +15,23 @@ NameValuePrioList *config_defines = NULL; /**< List of @defines, only valid duri
 /* Forward declarations */
 NameValuePrioList *find_config_define(const char *name);
 
+typedef struct {
+	const char *keyword;
+	ConfigIfCondition condition;
+} IfFunction;
+
+/** Table of function-style @if conditions.
+ * NOTE: If two keywords share a prefix, put the longer one first,
+ * since we use strncmp for matching.
+ */
+static IfFunction if_functions[] = {
+	{ "module-loaded",    IF_MODULE_LOADED },
+	{ "module-exists",    IF_MODULE_EXISTS },
+	{ "minimum-version",  IF_MINIMUM_VERSION },
+	{ "file-exists",      IF_FILE_EXISTS },
+	{ "defined",          IF_DEFINED },
+};
+
 static inline int ValidVarCharacter(char x)
 {
 	if (isupper(x) || isdigit(x) || strchr("_", x))
@@ -22,10 +39,56 @@ static inline int ValidVarCharacter(char x)
 	return 0;
 }
 
+/** Parse a function-style @if condition: funcname("argument")
+ * @param p          Position right after the keyword
+ * @param funcname   Function name (for error messages only)
+ * @param condition  The ConfigIfCondition enum value to set
+ * @param negative   Whether the condition was negated with !
+ * @param statement  Full statement string (for error messages)
+ * @param filename   Config filename (for error messages)
+ * @param linenumber Line number (for error messages)
+ * @param cc_out     Result stored here on success
+ * @returns PREPROCESSOR_IF on success, PREPROCESSOR_ERROR on failure
+ */
+static PreprocessorItem parse_if_function(char *p, const char *funcname, ConfigIfCondition condition,
+                                          int negative, char *statement, const char *filename,
+                                          int linenumber, ConditionalConfig **cc_out)
+{
+	char *name;
+	ConditionalConfig *cc;
+
+	skip_whitespace(&p);
+	if (*p != '(')
+	{
+		config_error("%s:%i: expected '(' for %s(...",
+			filename, linenumber, funcname);
+		return PREPROCESSOR_ERROR;
+	}
+	p++;
+	skip_whitespace(&p);
+	if (*p == '"')
+		p++;
+	name = p;
+	read_until(&p, ")\"");
+	if (!*p)
+	{
+		config_error("%s:%i: invalid if statement (termination error): %s",
+			filename, linenumber, statement);
+		return PREPROCESSOR_ERROR;
+	}
+	*p = '\0';
+	cc = safe_alloc(sizeof(ConditionalConfig));
+	cc->condition = condition;
+	cc->negative = negative;
+	safe_strdup(cc->name, name);
+	*cc_out = cc;
+	return PREPROCESSOR_IF;
+}
+
 PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename, int linenumber, ConditionalConfig **cc_out)
 {
-	char *p=statement, *name;
-	int negative = 0;
+	char *p=statement;
+	int i, negative = 0;
 	ConditionalConfig *cc;
 
 	/* Currently we support:
@@ -53,159 +116,17 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 		skip_whitespace(&p);
 	}
 
-	/* Now comes the keyword or a variable name */
-	if (!strncmp(p, "module-loaded", 13))
+	/* Check function-style conditions from the table */
+	for (i = 0; i < ARRAY_SIZEOF(if_functions); i++)
 	{
-		p += 13;
-		skip_whitespace(&p);
-		if (*p != '(')
-		{
-			config_error("%s:%i: expected '(' for module-loaded(...",
-				filename, linenumber);
-			return PREPROCESSOR_ERROR;
-		}
-		p++;
-		skip_whitespace(&p);
-		if (*p == '"')
-			p++;
-		name = p;
-		read_until(&p, ")\"");
-		if (!*p)
-		{
-			config_error("%s:%i: invalid if statement (termination error): %s",
-				filename, linenumber, statement);
-			return PREPROCESSOR_ERROR;
-		}
-		*p = '\0';
-		cc = safe_alloc(sizeof(ConditionalConfig));
-		cc->condition = IF_MODULE_LOADED;
-		cc->negative = negative;
-		safe_strdup(cc->name, name);
-		*cc_out = cc;
-		return PREPROCESSOR_IF;
-	} else
-	if (!strncmp(p, "module-exists", 13))
+		int len = strlen(if_functions[i].keyword);
+		if (!strncmp(p, if_functions[i].keyword, len))
+			return parse_if_function(p + len, if_functions[i].keyword, if_functions[i].condition, negative, statement, filename, linenumber, cc_out);
+	}
+
+	/* Otherwise it should be a $VARIABLE comparison */
 	{
-		p += 13;
-		skip_whitespace(&p);
-		if (*p != '(')
-		{
-			config_error("%s:%i: expected '(' for module-exists(...",
-				filename, linenumber);
-			return PREPROCESSOR_ERROR;
-		}
-		p++;
-		skip_whitespace(&p);
-		if (*p == '"')
-			p++;
-		name = p;
-		read_until(&p, ")\"");
-		if (!*p)
-		{
-			config_error("%s:%i: invalid if statement (termination error): %s",
-				filename, linenumber, statement);
-			return PREPROCESSOR_ERROR;
-		}
-		*p = '\0';
-		cc = safe_alloc(sizeof(ConditionalConfig));
-		cc->condition = IF_MODULE_EXISTS;
-		cc->negative = negative;
-		safe_strdup(cc->name, name);
-		*cc_out = cc;
-		return PREPROCESSOR_IF;
-	} else
-	if (!strncmp(p, "minimum-version", 15))
-	{
-		p += 15;
-		skip_whitespace(&p);
-		if (*p != '(')
-		{
-			config_error("%s:%i: expected '(' for minimum-version(...",
-				filename, linenumber);
-			return PREPROCESSOR_ERROR;
-		}
-		p++;
-		skip_whitespace(&p);
-		if (*p == '"')
-			p++;
-		name = p;
-		read_until(&p, ")\"");
-		if (!*p)
-		{
-			config_error("%s:%i: invalid if statement (termination error): %s",
-				filename, linenumber, statement);
-			return PREPROCESSOR_ERROR;
-		}
-		*p = '\0';
-		cc = safe_alloc(sizeof(ConditionalConfig));
-		cc->condition = IF_MINIMUM_VERSION;
-		cc->negative = negative;
-		safe_strdup(cc->name, name);
-		*cc_out = cc;
-		return PREPROCESSOR_IF;
-	} else
-	if (!strncmp(p, "file-exists", 11))
-	{
-		p += 11;
-		skip_whitespace(&p);
-		if (*p != '(')
-		{
-			config_error("%s:%i: expected '(' for file-exists(...",
-				filename, linenumber);
-			return PREPROCESSOR_ERROR;
-		}
-		p++;
-		skip_whitespace(&p);
-		if (*p == '"')
-			p++;
-		name = p;
-		read_until(&p, ")\"");
-		if (!*p)
-		{
-			config_error("%s:%i: invalid if statement (termination error): %s",
-				filename, linenumber, statement);
-			return PREPROCESSOR_ERROR;
-		}
-		*p = '\0';
-		cc = safe_alloc(sizeof(ConditionalConfig));
-		cc->condition = IF_FILE_EXISTS;
-		cc->negative = negative;
-		safe_strdup(cc->name, name);
-		*cc_out = cc;
-		return PREPROCESSOR_IF;
-	} else
-	if (!strncmp(p, "defined", 7))
-	{
-		p += 7;
-		skip_whitespace(&p);
-		if (*p != '(')
-		{
-			config_error("%s:%i: expected '(' for defined(...",
-				filename, linenumber);
-			return PREPROCESSOR_ERROR;
-		}
-		p++;
-		skip_whitespace(&p);
-		if (*p == '"')
-			p++;
-		name = p;
-		read_until(&p, ")\"");
-		if (!*p)
-		{
-			config_error("%s:%i: invalid if statement (termination error): %s",
-				filename, linenumber, statement);
-			return PREPROCESSOR_ERROR;
-		}
-		*p = '\0';
-		cc = safe_alloc(sizeof(ConditionalConfig));
-		cc->condition = IF_DEFINED;
-		cc->negative = negative;
-		safe_strdup(cc->name, name);
-		*cc_out = cc;
-		return PREPROCESSOR_IF;
-	} else
-	{
-		char *name_terminate, *name2;
+		char *name, *name_terminate, *name2;
 		// Should be one of:
 		// $XYZ == "something"
 		// $XYZ != "something"
