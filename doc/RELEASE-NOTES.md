@@ -9,21 +9,28 @@ This is work in progress and may not always be a stable version.
   * New built-in variables `$CONFDIR`, `$DATADIR`, `$LOGDIR`, `$TMPDIR`,
     `$DOCDIR`, `$MODULESDIR` and `$MAXCONNECTIONS` are now
     available for use in the configuration file.
-  * New `@if module-exists("modulename")` to check if a module exists on
-    disk. You can use this with a subsequent `loadmodule` and config items,
-    this can be handy with 3rd party modules.
-  * New `@if minimum-version("6.2.4")` to check if the UnrealIRCd version
-    is at least the specified version.
-  * New `@if file-exists("filename")` to check if a file exists.
-    Paths are relative to the conf directory, or absolute if starting
-    with `/`.
   * Variable comparisons now support `>`, `>=`, `<`, `<=` in addition
     to `==` and `!=`. Uses natural ordering, so version strings and
     numbers compare correctly. Example: `@if $MAXCONNECTIONS >= 1024`.
+  * New `@if minimum-version("6.2.4")` to check if the UnrealIRCd version
+    is at least the specified version.
+  * New `@if module-exists("modulename")` to check if a module exists on
+    disk. You can use this with a subsequent `loadmodule` and config items,
+    this can be handy with 3rd party modules.
+  * New `@if module-version("modulename")` to check or compare the
+    version of a loaded module.
+    Example: `@if module-version("third/something") >= "2.0"`.
+    This obviously only works if the module is loaded.
+  * New `@if file-exists("filename")` to check if a file exists.
+    Paths are relative to the conf directory, or absolute if starting
+    with `/`.
   * New `@else` support: `@if ... @else ... @endif`.
-  * New `@if environment("VARNAME")` to check if an OS environment
-    variable is set. Can also be used with comparison operators, e.g.,
-    `@if environment("HOME") == "/root"`.
+  * New `@if environment("VARNAME")` to check if an environment variable
+    is set. Can also be used with comparison operators, e.g.,
+    `@if environment("SOMETHING") == "myserver"`.
+  * `@define` can now use value-returning functions, e.g.,
+    `@define $ADMIN_EMAIL environment("ADMIN_EMAIL")` to set a
+    variable from an OS environment variable.
 
 ### Changes:
 * [GeoIP](https://www.unrealircd.org/docs/GeoIP):

@@ -31,6 +31,7 @@ static IfFunction if_functions[] = {
 	{ "module-exists",    IF_MODULE_EXISTS,    0 },
 	{ "minimum-version",  IF_MINIMUM_VERSION,  0 },
 	{ "file-exists",      IF_FILE_EXISTS,      0 },
+	{ "module-version",   IF_MODULE_VERSION,    1 },
 	{ "environment",      IF_ENVIRONMENT,      1 },
 	{ "defined",          IF_DEFINED,          0 },
 };
@@ -166,6 +167,8 @@ static PreprocessorItem parse_if_function(char *p, const char *funcname, ConfigI
 	if (returns_value)
 	{
 		p++;
+		if (*p == ')')
+			p++;
 		skip_whitespace(&p);
 		if (*p)
 		{
@@ -216,6 +219,7 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 	 * !file-exists("something")
 	 * environment("VARNAME")
 	 * environment("VARNAME") == "value"
+	 * module-version("name") >= "2.0"
 	 * defined($XYZ)
 	 * !defined($XYZ)
 	 * @else is also supported (handled in conf.c, not here).
@@ -284,11 +288,117 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 	return PREPROCESSOR_ERROR;
 }
 
+/** Resolve a value-returning function for use in @define.
+ * Matches against if_functions[] entries that have returns_value=1.
+ * @param p          Position at the function name
+ * @param statement  Full statement (for error messages)
+ * @param filename   Config filename (for error messages)
+ * @param linenumber Line number (for error messages)
+ * @returns The resolved string value, or NULL on error.
+ */
+static const char *resolve_define_function(char *p, char *statement,
+                                           const char *filename, int linenumber)
+{
+	int i;
+	char *arg;
+
+	for (i = 0; i < ARRAY_SIZEOF(if_functions); i++)
+	{
+		int len = strlen(if_functions[i].keyword);
+		if (strncmp(p, if_functions[i].keyword, len))
+			continue;
+
+		if (!if_functions[i].returns_value)
+		{
+			config_error("%s:%i: @define: function '%s' does not return a value",
+				filename, linenumber, if_functions[i].keyword);
+			return NULL;
+		}
+
+		/* Parse ("argument") */
+		p += len;
+		skip_whitespace(&p);
+		if (*p != '(')
+		{
+			config_error("%s:%i: @define: expected '(' for %s(...",
+				filename, linenumber, if_functions[i].keyword);
+			return NULL;
+		}
+		p++;
+		skip_whitespace(&p);
+		if (*p == '"')
+			p++;
+		arg = p;
+		read_until(&p, ")\"");
+		if (!*p)
+		{
+			config_error("%s:%i: @define: invalid function call (termination error): %s",
+				filename, linenumber, statement);
+			return NULL;
+		}
+		*p = '\0';
+
+		/* Resolve based on condition type */
+		if (if_functions[i].condition == IF_ENVIRONMENT)
+		{
+			const char *env = getenv(arg);
+			if (!env)
+			{
+				config_error("%s:%i: @define: environment variable '%s' is not set",
+					filename, linenumber, arg);
+				return NULL;
+			}
+			return env;
+		}
+
+		if (if_functions[i].condition == IF_MODULE_VERSION)
+		{
+			/* Find module using same logic as is_module_loaded() */
+			Module *mod;
+			for (mod = Modules; mod; mod = mod->next)
+			{
+				if (mod->flags & MODFLAG_DELAYED)
+					continue;
+				if ((loop.config_status < CONFIG_STATUS_LOAD) &&
+				    (loop.config_status >= CONFIG_STATUS_POSTTEST) &&
+				    (mod->flags == MODFLAG_LOADED))
+				{
+					continue;
+				}
+				if (!strcasecmp(mod->relpath, arg))
+					break;
+			}
+			if (!mod)
+			{
+				config_error("%s:%i: @define: module '%s' is not loaded",
+					filename, linenumber, arg);
+				return NULL;
+			}
+			if (!mod->header->version)
+			{
+				config_error("%s:%i: @define: module '%s' has no version information",
+					filename, linenumber, arg);
+				return NULL;
+			}
+			return mod->header->version;
+		}
+
+		/* Future value-returning functions go here */
+		config_error("%s:%i: @define: [BUG] unhandled value-returning function '%s'",
+			filename, linenumber, if_functions[i].keyword);
+		return NULL;
+	}
+
+	config_error("%s:%i: @define: expected a quoted string or a value-returning function like environment(): %s",
+		filename, linenumber, statement);
+	return NULL;
+}
+
 PreprocessorItem  evaluate_preprocessor_define(char *statement, const char *filename, int linenumber)
 {
 	char *p = statement;
 	char *name, *name_terminator;
-	char *value;
+	const char *value;
 
 	skip_whitespace(&p);
 	name = p;
@@ -301,24 +411,27 @@ PreprocessorItem  evaluate_preprocessor_define(char *statement, const char *file
 	}
 	name_terminator = p;
 	skip_whitespace(&p);
-	if (*p != '"')
-	{
-		config_error("%s:%i: @define: expected double quotes, missing \" perhaps?",
-			filename, linenumber);
-		return PREPROCESSOR_ERROR;
-	}
-	p++;
-	value = p;
-	read_until(&p, "\"");
-	if (!*p)
-	{
-		config_error("%s:%i: invalid @define statement, missing \" at end perhaps?",
-			filename, linenumber);
-		return PREPROCESSOR_ERROR;
-	}
-
-	*p = '\0';
 	*name_terminator = '\0';
+	if (*p == '"')
+	{
+		/* Literal string: @define $VAR "value" */
+		p++;
+		value = p;
+		read_until(&p, "\"");
+		if (!*p)
+		{
+			config_error("%s:%i: invalid @define statement, missing \" at end perhaps?",
+				filename, linenumber);
+			return PREPROCESSOR_ERROR;
+		}
+		*p = '\0';
+	} else
+	{
+		/* Value-returning function: @define $VAR environment("VARNAME") */
+		value = resolve_define_function(p, statement, filename, linenumber);
+		if (!value)
+			return PREPROCESSOR_ERROR;
+	}
 
 	if (*name != '$')
 	{
@@ -461,6 +574,53 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 			if (is_module_loaded(cc->name))
 			{
 				result = 1;
+			}
+		} else
+		if (cc->condition == IF_MODULE_VERSION)
+		{
+			if (phase == PREPROCESSOR_PHASE_INITIAL || phase == PREPROCESSOR_PHASE_SECONDARY)
+			{
+				/* Modules are not loaded yet, default to true */
+				result = 1;
+			} else
+			{
+				/* Find the module using the same logic as is_module_loaded(),
+				 * so during REHASH we find the new module, not the old one.
+				 */
+				Module *mod;
+				for (mod = Modules; mod; mod = mod->next)
+				{
+					if (mod->flags & MODFLAG_DELAYED)
+						continue; /* unloading (delayed) */
+					if ((loop.config_status < CONFIG_STATUS_LOAD) &&
+					    (loop.config_status >= CONFIG_STATUS_POSTTEST) &&
+					    (mod->flags == MODFLAG_LOADED))
+					{
+						continue;
+					}
+					if (!strcasecmp(mod->relpath, cc->name))
+						break;
+				}
+				if (mod && mod->header->version)
+				{
+					if (cc->opt)
+					{
+						int cmp = strnatcasecmp(mod->header->version, cc->opt);
+						switch (cc->compare_op)
+						{
+							case COMPARE_EQ: result = (cmp == 0); break;
+							case COMPARE_NE: result = (cmp != 0); break;
+							case COMPARE_GT: result = (cmp > 0);  break;
+							case COMPARE_GE: result = (cmp >= 0); break;
+							case COMPARE_LT: result = (cmp < 0);  break;
+							case COMPARE_LE: result = (cmp <= 0); break;
+						}
+					} else
+					{
+						/* Boolean: module is loaded (has a version) */
+						result = 1;
+					}
+				}
 			}
 		} else
 		if (cc->condition == IF_MODULE_EXISTS)
