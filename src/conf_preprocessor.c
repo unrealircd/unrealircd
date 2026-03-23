@@ -14,10 +14,12 @@ NameValuePrioList *config_defines = NULL; /**< List of @defines, only valid duri
 
 /* Forward declarations */
 NameValuePrioList *find_config_define(const char *name);
+void preprocessor_cc_free_entry(ConditionalConfig *cc);
 
 typedef struct {
 	const char *keyword;
 	ConfigIfCondition condition;
+	int returns_value; /**< 1 if function returns a string for comparison, 0 if boolean */
 } IfFunction;
 
 /** Table of function-style @if conditions.
@@ -25,11 +27,12 @@ typedef struct {
  * since we use strncmp for matching.
  */
 static IfFunction if_functions[] = {
-	{ "module-loaded",    IF_MODULE_LOADED },
-	{ "module-exists",    IF_MODULE_EXISTS },
-	{ "minimum-version",  IF_MINIMUM_VERSION },
-	{ "file-exists",      IF_FILE_EXISTS },
-	{ "defined",          IF_DEFINED },
+	{ "module-loaded",    IF_MODULE_LOADED,    0 },
+	{ "module-exists",    IF_MODULE_EXISTS,    0 },
+	{ "minimum-version",  IF_MINIMUM_VERSION,  0 },
+	{ "file-exists",      IF_FILE_EXISTS,      0 },
+	{ "environment",      IF_ENVIRONMENT,      1 },
+	{ "defined",          IF_DEFINED,          0 },
 };
 
 static inline int ValidVarCharacter(char x)
@@ -39,20 +42,98 @@ static inline int ValidVarCharacter(char x)
 	return 0;
 }
 
+/** Parse a comparison operator and value: op "value"
+ * @param p              Current position (should point at or before operator)
+ * @param statement      Full statement (for error messages)
+ * @param filename       Config filename (for error messages)
+ * @param linenumber     Line number (for error messages)
+ * @param compare_op_out Parsed operator stored here
+ * @param value_out      Parsed value string stored here
+ * @returns 1 on success, 0 on error
+ */
+static int parse_compare_op_and_value(char **p, char *statement,
+                                      const char *filename, int linenumber,
+                                      CompareOp *compare_op_out, char **value_out)
+{
+	int op_len;
+
+	skip_whitespace(p);
+	if (!strncmp(*p, "==", 2))
+	{
+		*compare_op_out = COMPARE_EQ;
+		op_len = 2;
+	} else
+	if (!strncmp(*p, "!=", 2))
+	{
+		*compare_op_out = COMPARE_NE;
+		op_len = 2;
+	} else
+	if (!strncmp(*p, ">=", 2))
+	{
+		*compare_op_out = COMPARE_GE;
+		op_len = 2;
+	} else
+	if (!strncmp(*p, "<=", 2))
+	{
+		*compare_op_out = COMPARE_LE;
+		op_len = 2;
+	} else
+	if (**p == '>')
+	{
+		*compare_op_out = COMPARE_GT;
+		op_len = 1;
+	} else
+	if (**p == '<')
+	{
+		*compare_op_out = COMPARE_LT;
+		op_len = 1;
+	} else
+	{
+		config_error("%s:%i: @if: expected comparison operator (==, !=, >, >=, <, <=): %s",
+			filename, linenumber, statement);
+		return 0;
+	}
+	*p += op_len;
+	skip_whitespace(p);
+	if (**p == '"')
+	{
+		(*p)++;
+		*value_out = *p;
+		read_until(p, "\"");
+		if (!**p)
+		{
+			config_error("%s:%i: invalid @if statement, missing \" at end perhaps?",
+				filename, linenumber);
+			return 0;
+		}
+		**p = '\0';
+	} else
+	{
+		*value_out = *p;
+		read_until(p, " \t");
+		if (**p)
+			**p = '\0';
+	}
+	return 1;
+}
+
 /** Parse a function-style @if condition: funcname("argument")
- * @param p          Position right after the keyword
- * @param funcname   Function name (for error messages only)
- * @param condition  The ConfigIfCondition enum value to set
- * @param negative   Whether the condition was negated with !
- * @param statement  Full statement string (for error messages)
- * @param filename   Config filename (for error messages)
- * @param linenumber Line number (for error messages)
- * @param cc_out     Result stored here on success
+ * For value-returning functions, also parses: funcname("argument") op "value"
+ * @param p              Position right after the keyword
+ * @param funcname       Function name (for error messages only)
+ * @param condition      The ConfigIfCondition enum value to set
+ * @param negative       Whether the condition was negated with !
+ * @param returns_value  Whether this function returns a value for comparison
+ * @param statement      Full statement string (for error messages)
+ * @param filename       Config filename (for error messages)
+ * @param linenumber     Line number (for error messages)
+ * @param cc_out         Result stored here on success
  * @returns PREPROCESSOR_IF on success, PREPROCESSOR_ERROR on failure
  */
 static PreprocessorItem parse_if_function(char *p, const char *funcname, ConfigIfCondition condition,
-                                          int negative, char *statement, const char *filename,
-                                          int linenumber, ConditionalConfig **cc_out)
+                                          int negative, int returns_value, char *statement,
+                                          const char *filename, int linenumber,
+                                          ConditionalConfig **cc_out)
 {
 	char *name;
 	ConditionalConfig *cc;
@@ -81,6 +162,33 @@ static PreprocessorItem parse_if_function(char *p, const char *funcname, ConfigI
 	cc->condition = condition;
 	cc->negative = negative;
 	safe_strdup(cc->name, name);
+
+	if (returns_value)
+	{
+		p++;
+		skip_whitespace(&p);
+		if (*p)
+		{
+			/* Value-returning function with comparison: func("arg") op "value" */
+			char *value = NULL;
+
+			if (negative)
+			{
+				config_error("%s:%i: @if: the '!' prefix cannot be used with %s() comparisons, use != instead: %s",
+					filename, linenumber, funcname, statement);
+				preprocessor_cc_free_entry(cc);
+				return PREPROCESSOR_ERROR;
+			}
+			if (!parse_compare_op_and_value(&p, statement, filename, linenumber, &cc->compare_op, &value))
+			{
+				preprocessor_cc_free_entry(cc);
+				return PREPROCESSOR_ERROR;
+			}
+			safe_strdup(cc->opt, value);
+		}
+		/* else: no operator after ), treat as boolean (is it set?) */
+	}
+
 	*cc_out = cc;
 	return PREPROCESSOR_IF;
 }
@@ -106,6 +214,8 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 	 * !minimum-version("6.2.0")
 	 * file-exists("something")
 	 * !file-exists("something")
+	 * environment("VARNAME")
+	 * environment("VARNAME") == "value"
 	 * defined($XYZ)
 	 * !defined($XYZ)
 	 * @else is also supported (handled in conf.c, not here).
@@ -126,22 +236,14 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 	{
 		int len = strlen(if_functions[i].keyword);
 		if (!strncmp(p, if_functions[i].keyword, len))
-			return parse_if_function(p + len, if_functions[i].keyword, if_functions[i].condition, negative, statement, filename, linenumber, cc_out);
+			return parse_if_function(p + len, if_functions[i].keyword, if_functions[i].condition, negative, if_functions[i].returns_value, statement, filename, linenumber, cc_out);
 	}
 
 	/* Otherwise it should be a $VARIABLE comparison */
 	{
-		char *name, *name_terminate, *name2;
+		char *name, *name_terminate, *value = NULL;
 		CompareOp compare_op;
-		int op_len;
-		// Should be one of:
-		// $XYZ == "something"
-		// $XYZ != "something"
-		// $XYZ >= "something"
-		// $XYZ <= "something"
-		// $XYZ > "something"
-		// $XYZ < "something"
-		// Anything else is an error.
+
 		if (*p != '$')
 		{
 			config_error("%s:%i: invalid @if statement. Either an unknown function, or did you mean $VARNAME?: %s",
@@ -165,70 +267,14 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 			return PREPROCESSOR_ERROR;
 		}
 		name_terminate = p;
-		skip_whitespace(&p);
-		if (!strncmp(p, "==", 2))
-		{
-			compare_op = COMPARE_EQ;
-			op_len = 2;
-		} else
-		if (!strncmp(p, "!=", 2))
-		{
-			compare_op = COMPARE_NE;
-			op_len = 2;
-		} else
-		if (!strncmp(p, ">=", 2))
-		{
-			compare_op = COMPARE_GE;
-			op_len = 2;
-		} else
-		if (!strncmp(p, "<=", 2))
-		{
-			compare_op = COMPARE_LE;
-			op_len = 2;
-		} else
-		if (*p == '>')
-		{
-			compare_op = COMPARE_GT;
-			op_len = 1;
-		} else
-		if (*p == '<')
-		{
-			compare_op = COMPARE_LT;
-			op_len = 1;
-		} else
-		{
-			*name_terminate = '\0';
-			config_error("%s:%i: @if: expected comparison operator (==, !=, >, >=, <, <=) after '%s'",
-				filename, linenumber, name);
+		if (!parse_compare_op_and_value(&p, statement, filename, linenumber, &compare_op, &value))
 			return PREPROCESSOR_ERROR;
-		}
-		p += op_len;
 		*name_terminate = '\0';
-		skip_whitespace(&p);
-		if (*p == '"')
-		{
-			p++;
-			name2 = p;
-			read_until(&p, "\"");
-			if (!*p)
-			{
-				config_error("%s:%i: invalid @if statement, missing \" at end perhaps?",
-					filename, linenumber);
-				return PREPROCESSOR_ERROR;
-			}
-			*p = '\0';
-		} else
-		{
-			name2 = p;
-			read_until(&p, " \t");
-			if (*p)
-				*p = '\0';
-		}
 		cc = safe_alloc(sizeof(ConditionalConfig));
 		cc->condition = IF_VALUE;
 		cc->compare_op = compare_op;
 		safe_strdup(cc->name, name);
-		safe_strdup(cc->opt, name2);
+		safe_strdup(cc->opt, value);
 		*cc_out = cc;
 		return PREPROCESSOR_IF;
 	}
@@ -441,6 +487,30 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 			if (d)
 			{
 				result = 1;
+			}
+		} else
+		if (cc->condition == IF_ENVIRONMENT)
+		{
+			const char *env = getenv(cc->name);
+			if (env)
+			{
+				if (cc->opt)
+				{
+					int cmp = strnatcasecmp(env, cc->opt);
+					switch (cc->compare_op)
+					{
+						case COMPARE_EQ: result = (cmp == 0); break;
+						case COMPARE_NE: result = (cmp != 0); break;
+						case COMPARE_GT: result = (cmp > 0);  break;
+						case COMPARE_GE: result = (cmp >= 0); break;
+						case COMPARE_LT: result = (cmp < 0);  break;
+						case COMPARE_LE: result = (cmp <= 0); break;
+					}
+				} else
+				{
+					/* Boolean: environment variable is set */
+					result = 1;
+				}
 			}
 		} else
 		if (cc->condition == IF_VALUE)

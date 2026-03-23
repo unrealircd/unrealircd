@@ -20,7 +20,10 @@ This is work in progress and may not always be a stable version.
   * Variable comparisons now support `>`, `>=`, `<`, `<=` in addition
     to `==` and `!=`. Uses natural ordering, so version strings and
     numbers compare correctly. Example: `@if $MAXCONNECTIONS >= 1024`.
-  * Support `@else`: `@if ... @else ... @endif`.
+  * New `@else` support: `@if ... @else ... @endif`.
+  * New `@if environment("VARNAME")` to check if an OS environment
+    variable is set. Can also be used with comparison operators, e.g.,
+    `@if environment("HOME") == "/root"`.
 
 ### Changes:
 * [GeoIP](https://www.unrealircd.org/docs/GeoIP):
