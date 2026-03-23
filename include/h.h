@@ -80,6 +80,7 @@ extern PreprocessorItem parse_preprocessor_item(char *start, char *end, const ch
 extern void preprocessor_cc_duplicate_list(ConditionalConfig *r, ConditionalConfig **out);
 extern void preprocessor_cc_free_level(ConditionalConfig **cc_list, int level);
 extern void preprocessor_cc_free_list(ConditionalConfig *cc);
+extern int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase);
 extern void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, PreprocessorPhase phase);
 extern void preprocessor_resolve_conditionals_all(PreprocessorPhase phase);
 extern void init_config_defines(void);

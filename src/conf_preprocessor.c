@@ -476,6 +476,38 @@ PreprocessorItem  evaluate_preprocessor_define(char *statement, const char *file
 	return PREPROCESSOR_DEFINE;
 }
 
+/** Evaluate an @error or @warning directive.
+ * @param statement  Text after "@error " or "@warning "
+ * @param is_error   1 for @error, 0 for @warning
+ * @param filename   Config filename (for error messages)
+ * @param linenumber Line number (for error messages)
+ * @returns PREPROCESSOR_USER_ERROR or PREPROCESSOR_USER_WARNING
+ */
+static PreprocessorItem evaluate_preprocessor_error_or_warning(char *statement,
+	int is_error, const char *filename, int linenumber)
+{
+	char *p = statement;
+
+	skip_whitespace(&p);
+	if (*p == '"')
+	{
+		p++;
+		char *msg = p;
+		read_until(&p, "\"");
+		if (*p)
+			*p = '\0';
+		p = msg;
+	}
+
+	if (is_error)
+	{
+		config_error("%s:%i: %s", filename, linenumber, p);
+		return PREPROCESSOR_USER_ERROR;
+	}
+	config_warn("%s:%i: %s", filename, linenumber, p);
+	return PREPROCESSOR_USER_WARNING;
+}
+
 PreprocessorItem  parse_preprocessor_item(char *start, char *end, const char *filename, int linenumber, ConditionalConfig **cc)
 {
 	char buf[512];
@@ -496,6 +528,10 @@ PreprocessorItem  parse_preprocessor_item(char *start, char *end, const char *fi
 		return PREPROCESSOR_ELSE;
 	else if (!strncmp(buf, "@endif", 6))
 		return PREPROCESSOR_ENDIF;
+	else if (!strncmp(buf, "@error ", 7))
+		return evaluate_preprocessor_error_or_warning(buf+7, 1, filename, linenumber);
+	else if (!strncmp(buf, "@warning ", 9))
+		return evaluate_preprocessor_error_or_warning(buf+9, 0, filename, linenumber);
 
 	config_error("%s:%i: Unknown preprocessor directive: %s", filename, linenumber, buf);
 	return PREPROCESSOR_ERROR; /* ??? */

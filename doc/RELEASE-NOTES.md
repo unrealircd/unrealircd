@@ -31,6 +31,8 @@ This is work in progress and may not always be a stable version.
   * `@define` can now use value-returning functions, e.g.,
     `@define $ADMIN_EMAIL environment("ADMIN_EMAIL")` to set a
     variable from an OS environment variable.
+  * New `@error "message"` and `@warning "message"` directives.
+    Eg for `if !environment("ADMIN")` `@error "ADMIN env var not defined"`.
 
 ### Changes:
 * [GeoIP](https://www.unrealircd.org/docs/GeoIP):

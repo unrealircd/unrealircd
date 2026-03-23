@@ -1286,6 +1286,19 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 						break;
 				}
 				cc = NULL;
+				/* If we are inside a false @if block, skip directives
+				 * that have side effects (@define, @error, @warning).
+				 * We must still process @if/@else/@endif for nesting.
+				 */
+				if (cc_list &&
+				    !preprocessor_resolve_if(cc_list, PREPROCESSOR_PHASE_INITIAL) &&
+				    strncmp(start, "@if ", 4) &&
+				    strncmp(start, "@else", 5) &&
+				    strncmp(start, "@endif", 6))
+				{
+					linenumber++;
+					break;
+				}
 				n = parse_preprocessor_item(start, ptr, filename, linenumber, &cc);
 				linenumber++;
 				if (n == PREPROCESSOR_IF)
@@ -1338,7 +1351,12 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 				{
 					errors++;
 					goto breakout;
+				} else
+				if (n == PREPROCESSOR_USER_ERROR)
+				{
+					errors++;
 				}
+				/* PREPROCESSOR_USER_WARNING: nothing to do, message already printed */
 
 				if (!*ptr)
 					goto breakout; /* special case, since we don't want the for loop to ptr++ */

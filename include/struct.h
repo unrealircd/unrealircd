@@ -1611,7 +1611,9 @@ typedef enum PreprocessorItem {
 	PREPROCESSOR_DEFINE		= 1,
 	PREPROCESSOR_IF			= 2,
 	PREPROCESSOR_ENDIF		= 3,
-	PREPROCESSOR_ELSE		= 4
+	PREPROCESSOR_ELSE		= 4,
+	PREPROCESSOR_USER_ERROR		= 5,
+	PREPROCESSOR_USER_WARNING	= 6
 } PreprocessorItem;
 
 typedef enum PreprocessorPhase {
