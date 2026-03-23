@@ -16,6 +16,32 @@ NameValuePrioList *config_defines = NULL; /**< List of @defines, only valid duri
 NameValuePrioList *find_config_define(const char *name);
 void preprocessor_cc_free_entry(ConditionalConfig *cc);
 
+/** Find a module by its relative path, using the same filtering
+ * logic as is_module_loaded(): skip modules being unloaded (MODFLAG_DELAYED),
+ * and during config_posttest skip old modules (MODFLAG_LOADED) so we
+ * find the new version during a REHASH.
+ * @param name  Module relative path (e.g., "map", "third/something")
+ * @returns Module pointer, or NULL if not found.
+ */
+static Module *find_testing_module(const char *name)
+{
+	Module *mod;
+	for (mod = Modules; mod; mod = mod->next)
+	{
+		if (mod->flags & MODFLAG_DELAYED)
+			continue;
+		if ((loop.config_status < CONFIG_STATUS_LOAD) &&
+		    (loop.config_status >= CONFIG_STATUS_POSTTEST) &&
+		    (mod->flags == MODFLAG_LOADED))
+		{
+			continue;
+		}
+		if (!strcasecmp(mod->relpath, name))
+			return mod;
+	}
+	return NULL;
+}
+
 typedef struct {
 	const char *keyword;
 	ConfigIfCondition condition;
@@ -353,21 +379,7 @@ static const char *resolve_define_function(char *p, char *statement,
 
 		if (if_functions[i].condition == IF_MODULE_VERSION)
 		{
-			/* Find module using same logic as is_module_loaded() */
-			Module *mod;
-			for (mod = Modules; mod; mod = mod->next)
-			{
-				if (mod->flags & MODFLAG_DELAYED)
-					continue;
-				if ((loop.config_status < CONFIG_STATUS_LOAD) &&
-				    (loop.config_status >= CONFIG_STATUS_POSTTEST) &&
-				    (mod->flags == MODFLAG_LOADED))
-				{
-					continue;
-				}
-				if (!strcasecmp(mod->relpath, arg))
-					break;
-			}
+			Module *mod = find_testing_module(arg);
 			if (!mod)
 			{
 				config_error("%s:%i: @define: module '%s' is not loaded",
@@ -584,23 +596,7 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 				result = 1;
 			} else
 			{
-				/* Find the module using the same logic as is_module_loaded(),
-				 * so during REHASH we find the new module, not the old one.
-				 */
-				Module *mod;
-				for (mod = Modules; mod; mod = mod->next)
-				{
-					if (mod->flags & MODFLAG_DELAYED)
-						continue; /* unloading (delayed) */
-					if ((loop.config_status < CONFIG_STATUS_LOAD) &&
-					    (loop.config_status >= CONFIG_STATUS_POSTTEST) &&
-					    (mod->flags == MODFLAG_LOADED))
-					{
-						continue;
-					}
-					if (!strcasecmp(mod->relpath, cc->name))
-						break;
-				}
+				Module *mod = find_testing_module(cc->name);
 				if (mod && mod->header->version)
 				{
 					if (cc->opt)
