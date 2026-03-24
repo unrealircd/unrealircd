@@ -208,67 +208,67 @@ struct crule_funclistent {
 	crule_funcptr funcptr;
 };
 
+/* This table MUST remain sorted alphabetically (due to binary search) */
 struct crule_funclistent crule_funclist[] = {
-	{"connected", 1, crule_connected},
-	{"online_time", 0, crule_online_time},
-	{"reputation", 0, crule_reputation},
-	{"tag", 1, crule_tag},
-	{"inchannel", 1, crule_in_channel}, // old name, keep it around for now..
-	{"in_channel", 1, crule_in_channel}, // new name (6.1.6+)
-	{"destination", 1, crule_destination},
-	{"cap_version", 0, crule_cap_version},
+	{"bytes_received", 0, crule_bytes_received},
+	{"bytes_sent", 0, crule_bytes_sent},
 	{"cap_set", 1, crule_cap_set},
+	{"cap_version", 0, crule_cap_version},
+	{"channel_count", 0, crule_channel_count},
+	{"channel_member_count", 0, crule_channel_member_count},
+	{"connected", 1, crule_connected},
+	{"connections_from_ip", 0, crule_connections_from_ip},
+	{"destination", 1, crule_destination},
+	{"digit_percentage", 0, crule_digit_percentage},
 	{"directcon", 1, crule_directcon},
-	{"via", 2, crule_via},
 	{"directop", 0, crule_directop},
-	{"has_user_mode", 1, crule_has_user_mode},
 	{"has_channel_mode", 1, crule_has_channel_mode},
+	{"has_swhois", 0, crule_has_swhois},
+	{"has_user_mode", 1, crule_has_user_mode},
+	{"idle_time", 0, crule_idle_time},
+	{"in_channel", 1, crule_in_channel},
+	{"in_security_group", 1, crule_in_security_group},
+	{"inchannel", 1, crule_in_channel}, // old name, keep it around for now..
 	{"is_away", 0, crule_away},
 	{"is_identified", 0, crule_is_identified},
+	{"is_local", 0, crule_is_local},
+	{"is_oper", 0, crule_is_oper},
 	{"is_tls", 0, crule_tls},
 	{"is_webirc", 0, crule_is_webirc},
 	{"is_websocket", 0, crule_is_websocket},
-	{"in_security_group", 1, crule_in_security_group},
-	{"match_mask", 1, crule_match_mask},
-	{"match_ip", 1, crule_match_ip},
 	{"match_account", 1, crule_match_account},
-	{"match_country", 1, crule_match_country},
 	{"match_asn", 1, crule_match_asn},
-	{"match_certfp", 1, crule_match_certfp},
-	{"match_realname", 1, crule_match_realname},
-	{"unicode_count", 1, crule_unicode_count},
-	{"server_port", 0, crule_server_port},
-	{"match_class", 1, crule_match_class},
 	{"match_asname", 1, crule_match_asname},
-	{"connections_from_ip", 0, crule_connections_from_ip},
-	{"channel_count", 0, crule_channel_count},
-	{"text_byte_count", 0, crule_text_byte_count},
-	{"is_local", 0, crule_is_local},
+	{"match_away", 1, crule_match_away},
+	{"match_certfp", 1, crule_match_certfp},
+	{"match_class", 1, crule_match_class},
+	{"match_country", 1, crule_match_country},
+	{"match_ip", 1, crule_match_ip},
+	{"match_mask", 1, crule_match_mask},
+	{"match_operclass", 1, crule_match_operclass},
+	{"match_operlogin", 1, crule_match_operlogin},
+	{"match_realhost", 1, crule_match_realhost},
+	{"match_realname", 1, crule_match_realname},
+	{"match_server", 1, crule_match_server},
 	{"match_sni", 1, crule_match_sni},
 	{"match_tls_cipher", 1, crule_match_tls_cipher},
-	{"idle_time", 0, crule_idle_time},
-	{"match_server", 1, crule_match_server},
 	{"match_vhost", 1, crule_match_vhost},
-	{"is_oper", 0, crule_is_oper},
-	{"match_operlogin", 1, crule_match_operlogin},
-	{"uppercase_percentage", 0, crule_uppercase_percentage},
-	{"messages_sent", 0, crule_messages_sent},
-	{"match_away", 1, crule_match_away},
-	{"channel_member_count", 0, crule_channel_member_count},
-	{"match_realhost", 1, crule_match_realhost},
-	{"word_count", 0, crule_word_count},
-	{"has_swhois", 0, crule_has_swhois},
-	{"match_operclass", 1, crule_match_operclass},
-	{"messages_received", 0, crule_messages_received},
-	{"bytes_sent", 0, crule_bytes_sent},
-	{"bytes_received", 0, crule_bytes_received},
-	{"mixed_utf8_score", 0, crule_mixed_utf8_score},
-	{"unicode_block_count", 0, crule_unicode_block_count},
-	{"text_character_count", 0, crule_text_character_count},
-	{"non_ascii_percentage", 0, crule_non_ascii_percentage},
-	{"digit_percentage", 0, crule_digit_percentage},
 	{"max_repeat_count", 0, crule_max_repeat_count},
-	{"", 0, NULL} /* this must be here to mark end of list */
+	{"messages_received", 0, crule_messages_received},
+	{"messages_sent", 0, crule_messages_sent},
+	{"mixed_utf8_score", 0, crule_mixed_utf8_score},
+	{"non_ascii_percentage", 0, crule_non_ascii_percentage},
+	{"online_time", 0, crule_online_time},
+	{"reputation", 0, crule_reputation},
+	{"server_port", 0, crule_server_port},
+	{"tag", 1, crule_tag},
+	{"text_byte_count", 0, crule_text_byte_count},
+	{"text_character_count", 0, crule_text_character_count},
+	{"unicode_block_count", 0, crule_unicode_block_count},
+	{"unicode_count", 1, crule_unicode_count},
+	{"uppercase_percentage", 0, crule_uppercase_percentage},
+	{"via", 2, crule_via},
+	{"word_count", 0, crule_word_count},
 };
 
 MOD_TEST()
@@ -1392,6 +1392,11 @@ static int crule_parseprimary(CRuleNode **primrootp, crule_token *next_tokp, con
 	return errcode;
 }
 
+static int crule_funclist_compare(const void *key, const void *entry)
+{
+	return strcasecmp((const char *)key, ((const struct crule_funclistent *)entry)->name);
+}
+
 /** Parse a function call.
  * @param[out] funcrootp Receives parsed node.
  * @param[in,out] next_tokp Next input token type.
@@ -1403,7 +1408,6 @@ static int crule_parsefunction(CRuleNode **funcrootp, crule_token *next_tokp, co
 	int errcode = CR_NOERR;
 	char funcname[CR_MAXARGLEN];
 	int namelen;
-	int i;
 	struct crule_funclistent *func;
 
 	*funcrootp = NULL;
@@ -1412,14 +1416,12 @@ static int crule_parsefunction(CRuleNode **funcrootp, crule_token *next_tokp, co
 		return errcode;
 	if (*next_tokp == CR_OPENPAREN)
 	{
-		for (i = 0;; i++)
-		{
-			func = &crule_funclist[i];
-			if (!strcasecmp(func->name, funcname))
-				break;
-			if (func->name[0] == '\0')
-				return CR_UNKNWFUNC;
-		}
+		func = bsearch(funcname, crule_funclist,
+		               ARRAY_SIZEOF(crule_funclist),
+		               sizeof(struct crule_funclistent),
+		               crule_funclist_compare);
+		if (!func)
+			return CR_UNKNWFUNC;
 		if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
 			return errcode;
 		*funcrootp = safe_alloc(sizeof(CRuleNode));
