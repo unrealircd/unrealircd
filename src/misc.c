@@ -1461,6 +1461,14 @@ void do_unreal_log_remote_deliver_default_handler(LogLevel loglevel, const char 
 {
 }
 
+/** Default handler for get_connections_from_ip().
+ * Returns 0 if the maxperip module is not loaded.
+ */
+int get_connections_from_ip_default_handler(Client *client)
+{
+	return 0;
+}
+
 int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass,
                               ConfigItem_class *clientclass, long modes, const char *snomask,
                               const char *vhost, const char *autojoin_channels)

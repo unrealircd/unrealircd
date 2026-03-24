@@ -60,11 +60,13 @@ int decrease_ipusers_bucket_wrapper(Client *client);
 int stats_maxperip(Client *client, const char *para);
 int maxperip_remote_connect(Client *client);
 const char *maxperip_allow_client(Client *client, ConfigItem_allow *aconf);
+int _get_connections_from_ip(Client *client);
 
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, maxperip_config_test_allow);
+	EfunctionAdd(modinfo->handle, EFUNC_GET_CONNECTIONS_FROM_IP, _get_connections_from_ip);
 	return MOD_SUCCESS;
 }
 
@@ -403,4 +405,19 @@ const char *maxperip_allow_client(Client *client, ConfigItem_allow *aconf)
 	if (exceeds_maxperip(client, aconf))
 		return iConf.reject_message_too_many_connections;
 	return NULL;
+}
+
+/** Return the number of connections from the same IP as 'client' */
+int _get_connections_from_ip(Client *client)
+{
+	IpUsersBucket *bucket;
+
+	if (!client->ip)
+		return 0;
+
+	bucket = find_ipusers_bucket(client);
+	if (!bucket)
+		return 0;
+
+	return bucket->global_clients;
 }

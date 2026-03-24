@@ -33,6 +33,19 @@ This is work in progress and may not always be a stable version.
     variable from an OS environment variable.
   * New `@error "message"` and `@warning "message"` directives.
     Eg for `if !environment("ADMIN")` `@error "ADMIN env var not defined"`.
+* New [crule functions](https://www.unrealircd.org/docs/Security_groups#Rules)
+  for use in security groups, match items, spamfilter::rule:
+  * Boolean checks: `is_oper`, `is_local`, `has_swhois`
+  * Match functions: `match_class`, `match_server`, `match_vhost`,
+    `match_realhost`, `match_away`, `match_asname`, `match_operlogin`,
+    `match_operclass`, `match_sni`, `match_tls_cipher`
+  * Numeric counters: `connections_from_ip`, `channel_count`,
+    `channel_member_count`, `idle_time`
+  * Traffic stats: `messages_sent`, `messages_received`, `bytes_sent`,
+    `bytes_received`
+  * Text analysis: `text_byte_count`, `text_character_count`, `word_count`,
+    `uppercase_percentage`, `digit_percentage`, `non_ascii_percentage`,
+    `max_repeat_count`, `mixed_utf8_score`, `unicode_block_count`
 
 ### Changes:
 * [GeoIP](https://www.unrealircd.org/docs/GeoIP):

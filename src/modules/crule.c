@@ -146,6 +146,36 @@ static int crule_match_certfp(crule_context *, int, void **);
 static int crule_match_realname(crule_context *, int, void **);
 static int crule_unicode_count(crule_context *, int, void **);
 static int crule_server_port(crule_context *, int, void **);
+static int crule_match_class(crule_context *, int, void **);
+static int crule_match_asname(crule_context *, int, void **);
+static int crule_connections_from_ip(crule_context *, int, void **);
+static int crule_channel_count(crule_context *, int, void **);
+static int crule_text_byte_count(crule_context *, int, void **);
+static int crule_is_local(crule_context *, int, void **);
+static int crule_match_sni(crule_context *, int, void **);
+static int crule_match_tls_cipher(crule_context *, int, void **);
+static int crule_idle_time(crule_context *, int, void **);
+static int crule_match_server(crule_context *, int, void **);
+static int crule_match_vhost(crule_context *, int, void **);
+static int crule_is_oper(crule_context *, int, void **);
+static int crule_match_operlogin(crule_context *, int, void **);
+static int crule_uppercase_percentage(crule_context *, int, void **);
+static int crule_messages_sent(crule_context *, int, void **);
+static int crule_match_away(crule_context *, int, void **);
+static int crule_channel_member_count(crule_context *, int, void **);
+static int crule_match_realhost(crule_context *, int, void **);
+static int crule_word_count(crule_context *, int, void **);
+static int crule_has_swhois(crule_context *, int, void **);
+static int crule_match_operclass(crule_context *, int, void **);
+static int crule_messages_received(crule_context *, int, void **);
+static int crule_bytes_sent(crule_context *, int, void **);
+static int crule_bytes_received(crule_context *, int, void **);
+static int crule_mixed_utf8_score(crule_context *, int, void **);
+static int crule_unicode_block_count(crule_context *, int, void **);
+static int crule_text_character_count(crule_context *, int, void **);
+static int crule_non_ascii_percentage(crule_context *, int, void **);
+static int crule_digit_percentage(crule_context *, int, void **);
+static int crule_max_repeat_count(crule_context *, int, void **);
 
 /* parsing function prototypes - local! */
 static int crule_gettoken(crule_token *next_tokp, const char **str);
@@ -208,6 +238,36 @@ struct crule_funclistent crule_funclist[] = {
 	{"match_realname", 1, crule_match_realname},
 	{"unicode_count", 1, crule_unicode_count},
 	{"server_port", 0, crule_server_port},
+	{"match_class", 1, crule_match_class},
+	{"match_asname", 1, crule_match_asname},
+	{"connections_from_ip", 0, crule_connections_from_ip},
+	{"channel_count", 0, crule_channel_count},
+	{"text_byte_count", 0, crule_text_byte_count},
+	{"is_local", 0, crule_is_local},
+	{"match_sni", 1, crule_match_sni},
+	{"match_tls_cipher", 1, crule_match_tls_cipher},
+	{"idle_time", 0, crule_idle_time},
+	{"match_server", 1, crule_match_server},
+	{"match_vhost", 1, crule_match_vhost},
+	{"is_oper", 0, crule_is_oper},
+	{"match_operlogin", 1, crule_match_operlogin},
+	{"uppercase_percentage", 0, crule_uppercase_percentage},
+	{"messages_sent", 0, crule_messages_sent},
+	{"match_away", 1, crule_match_away},
+	{"channel_member_count", 0, crule_channel_member_count},
+	{"match_realhost", 1, crule_match_realhost},
+	{"word_count", 0, crule_word_count},
+	{"has_swhois", 0, crule_has_swhois},
+	{"match_operclass", 1, crule_match_operclass},
+	{"messages_received", 0, crule_messages_received},
+	{"bytes_sent", 0, crule_bytes_sent},
+	{"bytes_received", 0, crule_bytes_received},
+	{"mixed_utf8_score", 0, crule_mixed_utf8_score},
+	{"unicode_block_count", 0, crule_unicode_block_count},
+	{"text_character_count", 0, crule_text_character_count},
+	{"non_ascii_percentage", 0, crule_non_ascii_percentage},
+	{"digit_percentage", 0, crule_digit_percentage},
+	{"max_repeat_count", 0, crule_max_repeat_count},
 	{"", 0, NULL} /* this must be here to mark end of list */
 };
 
@@ -574,6 +634,351 @@ static int crule_server_port(crule_context *context, int numargs, void *crulearg
 		return get_server_port(context->client);
 
 	return 0;
+}
+
+static int crule_match_class(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+
+	if (!context || !context->client || !MyUser(context->client) ||
+	    !context->client->local->class)
+		return 0;
+
+	return match_simple(arg, context->client->local->class->name) ? 1 : 0;
+}
+
+static int crule_match_asname(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+	GeoIPResult *geo;
+	int ret = 0;
+
+	if (!context || !context->client)
+		return 0;
+
+	geo = geoip_client(context->client);
+	if (geo && geo->asname && match_simple(arg, geo->asname))
+		ret = 1;
+	free_geoip_result(geo);
+	return ret;
+}
+
+static int crule_connections_from_ip(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client)
+		return 0;
+
+	return get_connections_from_ip(context->client);
+}
+
+static int crule_channel_count(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client || !context->client->user)
+		return 0;
+
+	return context->client->user->joined;
+}
+
+static int crule_text_byte_count(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->text)
+		return 0;
+
+	return (int)strlen(context->text);
+}
+
+static int crule_is_local(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client)
+		return 0;
+
+	return MyUser(context->client) ? 1 : 0;
+}
+
+static int crule_match_sni(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+
+	if (!context || !context->client || !MyUser(context->client) ||
+	    !context->client->local->sni_servername)
+		return 0;
+
+	return match_simple(arg, context->client->local->sni_servername) ? 1 : 0;
+}
+
+static int crule_match_tls_cipher(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+	const char *cipher;
+
+	if (!context || !context->client)
+		return 0;
+
+	cipher = moddata_client_get(context->client, "tls_cipher");
+	if (cipher && match_simple(arg, cipher))
+		return 1;
+
+	return 0;
+}
+
+static int crule_idle_time(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client || !MyUser(context->client))
+		return 0;
+
+	return (int)(TStime() - context->client->local->idle_since);
+}
+
+static int crule_match_server(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+
+	if (!context || !context->client || !context->client->user ||
+	    !context->client->user->server)
+		return 0;
+
+	return match_simple(arg, context->client->user->server) ? 1 : 0;
+}
+
+static int crule_match_vhost(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+
+	if (!context || !context->client || !IsUser(context->client))
+		return 0;
+
+	return match_simple(arg, GetHost(context->client)) ? 1 : 0;
+}
+
+static int crule_is_oper(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client)
+		return 0;
+
+	return IsOper(context->client) ? 1 : 0;
+}
+
+static int crule_match_operlogin(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+
+	if (!context || !context->client || !context->client->user ||
+	    !context->client->user->operlogin)
+		return 0;
+
+	return match_simple(arg, context->client->user->operlogin) ? 1 : 0;
+}
+
+static int crule_uppercase_percentage(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *p;
+	int total = 0, upper = 0;
+
+	if (!context || !context->text)
+		return 0;
+
+	for (p = context->text; *p; p++)
+	{
+		if (isalpha(*p))
+		{
+			total++;
+			if (isupper(*p))
+				upper++;
+		}
+	}
+
+	return (total > 0) ? (upper * 100 / total) : 0;
+}
+
+static int crule_messages_sent(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client || !MyUser(context->client))
+		return 0;
+
+	return (int)context->client->local->traffic.messages_received;
+}
+
+static int crule_match_away(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+
+	if (!context || !context->client || !context->client->user ||
+	    !context->client->user->away)
+		return 0;
+
+	return match_simple(arg, context->client->user->away) ? 1 : 0;
+}
+
+static int crule_channel_member_count(crule_context *context, int numargs, void *crulearg[])
+{
+	Channel *channel;
+
+	if (!context || !context->destination)
+		return 0;
+
+	channel = find_channel(context->destination);
+	if (!channel)
+		return 0;
+
+	return channel->users;
+}
+
+static int crule_match_realhost(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+
+	if (!context || !context->client || !context->client->user)
+		return 0;
+
+	return match_simple(arg, context->client->user->realhost) ? 1 : 0;
+}
+
+static int crule_word_count(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *p;
+	int count = 0, in_word = 0;
+
+	if (!context || !context->text)
+		return 0;
+
+	for (p = context->text; *p; p++)
+	{
+		if (*p == ' ' || *p == '\t')
+			in_word = 0;
+		else if (!in_word)
+		{
+			in_word = 1;
+			count++;
+		}
+	}
+
+	return count;
+}
+
+static int crule_has_swhois(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client || !context->client->user)
+		return 0;
+
+	return (context->client->user->swhois != NULL) ? 1 : 0;
+}
+
+static int crule_match_operclass(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *arg = (char *)crulearg[0];
+	const char *operclass;
+
+	if (!context || !context->client || !IsOper(context->client))
+		return 0;
+
+	operclass = get_operclass(context->client);
+	if (operclass && match_simple(arg, operclass))
+		return 1;
+
+	return 0;
+}
+
+static int crule_messages_received(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client || !MyUser(context->client))
+		return 0;
+
+	return (int)context->client->local->traffic.messages_sent;
+}
+
+static int crule_bytes_sent(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client || !MyUser(context->client))
+		return 0;
+
+	return (int)context->client->local->traffic.bytes_received;
+}
+
+static int crule_bytes_received(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->client || !MyUser(context->client))
+		return 0;
+
+	return (int)context->client->local->traffic.bytes_sent;
+}
+
+static int crule_mixed_utf8_score(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->clictx || !context->clictx->textanalysis)
+		return 0;
+	return context->clictx->textanalysis->antimixedutf8_points;
+}
+
+static int crule_unicode_block_count(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->clictx || !context->clictx->textanalysis)
+		return 0;
+	return context->clictx->textanalysis->unicode_blocks;
+}
+
+static int crule_text_character_count(crule_context *context, int numargs, void *crulearg[])
+{
+	if (!context || !context->clictx || !context->clictx->textanalysis)
+		return 0;
+	return context->clictx->textanalysis->num_unicode_characters;
+}
+
+static int crule_non_ascii_percentage(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *p;
+	int total = 0, non_ascii = 0;
+
+	if (!context || !context->text)
+		return 0;
+
+	for (p = context->text; *p; p++)
+	{
+		total++;
+		if (*p & 0x80)
+			non_ascii++;
+	}
+	return (total > 0) ? (non_ascii * 100 / total) : 0;
+}
+
+static int crule_digit_percentage(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *p;
+	int total = 0, digits = 0;
+
+	if (!context || !context->text)
+		return 0;
+
+	for (p = context->text; *p; p++)
+	{
+		total++;
+		if (isdigit(*p))
+			digits++;
+	}
+	return (total > 0) ? (digits * 100 / total) : 0;
+}
+
+static int crule_max_repeat_count(crule_context *context, int numargs, void *crulearg[])
+{
+	const char *p;
+	int cur = 1, max = 0;
+
+	if (!context || !context->text || !*context->text)
+		return 0;
+
+	for (p = context->text + 1; *p; p++)
+	{
+		if (*p == *(p - 1))
+		{
+			cur++;
+		} else {
+			if (cur > max)
+				max = cur;
+			cur = 1;
+		}
+	}
+	if (cur > max)
+		max = cur;
+	return max;
 }
 
 /** Evaluate a connection rule.

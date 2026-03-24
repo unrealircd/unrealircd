@@ -947,6 +947,7 @@ extern MODVAR const char *(*utf8_get_block_name)(int i);
 extern MODVAR int (*utf8_get_block_number)(const char *name);
 extern MODVAR void (*send_isupport)(Client *client);
 extern MODVAR void (*isupport_check_for_changes)(void);
+extern MODVAR int (*get_connections_from_ip)(Client *client);
 /* /Efuncs */
 
 /* TLS functions */
@@ -985,6 +986,7 @@ extern void labeled_response_force_end_default_handler(void);
 extern int add_silence_default_handler(Client *client, const char *mask, int senderr);
 extern int del_silence_default_handler(Client *client, const char *mask);
 extern int is_silenced_default_handler(Client *client, Client *acptr);
+extern int get_connections_from_ip_default_handler(Client *client);
 extern void do_unreal_log_remote_deliver_default_handler(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
 extern int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost, const char *autojoin_channels);
 extern void webserver_send_response_default_handler(Client *client, int status, char *msg);
