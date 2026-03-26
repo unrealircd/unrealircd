@@ -131,7 +131,7 @@ ChannelFloodProfile *channel_flood_profiles = NULL;
 char *floodprot_msghash_key = NULL;
 long long floodprot_splittime = 0;
 
-#define IsFloodLimit(x)	(((x)->mode.mode & EXTMODE_FLOODLIMIT) || ((x)->mode.mode & EXTMODE_FLOOD_PROFILE) || (cfg.default_profile && GETPARASTRUCT(channel, 'F')))
+#define IsFloodLimit(x)	(((x)->mode.mode & EXTMODE_FLOODLIMIT) || ((x)->mode.mode & EXTMODE_FLOOD_PROFILE) || (cfg.default_profile && GETPARASTRUCT((x), 'F')))
 
 /* Forward declarations */
 static void init_config(void);
