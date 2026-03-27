@@ -935,6 +935,7 @@ typedef struct TextAnalysis {
 typedef struct ClientContext {
 	RealCommand *cmd; /**< Command handler (eg. cmd->command is the command name) */
 	TextAnalysis *textanalysis; /**< Analysis of text (can be NULL, eg for non-PRIVMSG/NOTICE or remote clients) */
+	long fake_lag_added_msec; /**< Fake lag (in msec) added by parse_addlag() for this command */
 } ClientContext;
 
 /** The command API - used by modules and the core to add commands, overrides, etc.

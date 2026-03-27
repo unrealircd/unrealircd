@@ -1450,6 +1450,7 @@ extern void memory_log_add_message(time_t t, LogLevel loglevel, const char *subs
 extern EVENT(memory_log_cleaner);
 /* end of logging */
 extern void add_fake_lag(Client *client, long msec);
+extern void subtract_fake_lag(Client *client, long msec);
 extern char *prefix_with_extban(const char *remainder, BanContext *b, Extban *extban, char *buf, size_t buflen);
 extern GeoIPResult *geoip_client(Client *client);
 extern GeoIPResult *geoip_lookup(const char *ip);

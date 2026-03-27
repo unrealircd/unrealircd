@@ -33,7 +33,7 @@ static int do_numeric(int, Client *, MessageTag *, int, const char **);
 static void cancel_clients(Client *, Client *, char *);
 static void remove_unknown(Client *, char *);
 static void parse2(Client *client, Client **fromptr, MessageTag *mtags, int mtags_bytes, char *ch);
-static void parse_addlag(Client *client, int command_bytes, int mtags_bytes);
+static long parse_addlag(Client *client, int command_bytes, int mtags_bytes);
 static int client_lagged_up(Client *client);
 static void ban_handshake_data_flooder(Client *client);
 
@@ -267,6 +267,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 	ClientContext clictx;
 	TextAnalysis text_analysis_storage;
 	int bytes;
+	long lag_added = 0;
 
 	*fromptr = cptr; /* The default, unless a source is specified (and permitted) */
 
@@ -407,7 +408,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 		if (!cmptr || !(cmptr->flags & CMD_NOLAG))
 		{
 			/* Add fake lag (doing this early in the code, so we don't forget) */
-			parse_addlag(cptr, bytes, mtags_bytes);
+			lag_added = parse_addlag(cptr, bytes, mtags_bytes);
 		}
 		if (!cmptr)
 		{
@@ -555,6 +556,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 	/* Create client context */
 	memset(&clictx, 0, sizeof(clictx));
 	clictx.cmd = cmptr;
+	clictx.fake_lag_added_msec = lag_added;
 	if ((cmptr->flags & CMD_TEXTANALYSIS) && MyUser(from) && (i>1))
 	{
 		memset(&text_analysis_storage, 0, sizeof(text_analysis_storage));
@@ -634,7 +636,7 @@ static void ban_handshake_data_flooder(Client *client)
  * @param command_bytes	Command length in bytes (excluding message tagss)
  * @param mtags_bytes	Length of message tags in bytes
  */
-void parse_addlag(Client *client, int command_bytes, int mtags_bytes)
+long parse_addlag(Client *client, int command_bytes, int mtags_bytes)
 {
 	if (!IsServer(client) && !IsNoFakeLag(client) &&
 #ifdef FAKELAG_CONFIGURABLE
@@ -645,15 +647,19 @@ void parse_addlag(Client *client, int command_bytes, int mtags_bytes)
 		FloodSettings *settings = get_floodsettings_for_user(client, FLD_LAG_PENALTY);
 		int lag_penalty = settings->period[FLD_LAG_PENALTY];
 		int lag_penalty_bytes = settings->limit[FLD_LAG_PENALTY];
+		long msec = (1 + (command_bytes/lag_penalty_bytes) + (mtags_bytes/lag_penalty_bytes)) * lag_penalty;
 
-		client->local->fake_lag_msec += (1 + (command_bytes/lag_penalty_bytes) + (mtags_bytes/lag_penalty_bytes)) * lag_penalty;
+		client->local->fake_lag_msec += msec;
 
 		/* This code takes into account not only the msecs we just calculated
 		 * but also any leftover msec from previous lagging up.
 		 */
 		client->local->fake_lag += (client->local->fake_lag_msec / 1000);
 		client->local->fake_lag_msec = client->local->fake_lag_msec % 1000;
+
+		return msec;
 	}
+	return 0;
 }
 
 /* Add extra fake lag to client, such as after a failed oper attempt.
@@ -666,6 +672,32 @@ void add_fake_lag(Client *client, long msec)
 	client->local->fake_lag_msec += msec;
 	client->local->fake_lag += (client->local->fake_lag_msec / 1000);
 	client->local->fake_lag_msec = client->local->fake_lag_msec % 1000;
+}
+
+/** Subtract fake lag from client.
+ * This is the counterpart to add_fake_lag() and is used by modules
+ * that need to undo fake lag that was added by parse_addlag(),
+ * for example when buffering lines in a multiline batch.
+ */
+void subtract_fake_lag(Client *client, long msec)
+{
+	long total;
+
+	if (!MyConnect(client))
+		return;
+
+	total = client->local->fake_lag_msec - msec;
+	if (total >= 0)
+	{
+		client->local->fake_lag_msec = (int)total;
+	}
+	else
+	{
+		/* Readjust to whole seconds */
+		long secs = (-total + 999) / 1000;
+		client->local->fake_lag -= secs;
+		client->local->fake_lag_msec = (int)(total + secs * 1000);
+	}
 }
 
 /** Returns 1 if the client is lagged up and data should NOT be parsed.
