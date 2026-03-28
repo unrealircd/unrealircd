@@ -202,6 +202,15 @@ Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(),
 			module->errorcode = MODERR_INVALID;
 		return NULL;
 	}
+
+	if (loop.config_status != CONFIG_STATUS_TEST)
+	{
+		unreal_log(ULOG_ERROR, "module", "BUG_EFUNCTIONADD_NOT_MOD_TEST", NULL,
+		           "[BUG] EfunctionAdd() called by module '$module_name' outside of MOD_TEST().",
+		           log_data_string("module_name", module->header->name));
+		module->errorcode = MODERR_INVALID;
+		return NULL;
+	}
 	
 	p = safe_alloc(sizeof(Efunction));
 	if (func)
