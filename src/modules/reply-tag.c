@@ -53,7 +53,7 @@ MOD_INIT()
 	memset(&mtag, 0, sizeof(mtag));
 	mtag.name = "+draft/reply";
 	mtag.is_ok = replytag_mtag_is_ok;
-	mtag.flags = MTAG_HANDLER_FLAGS_NO_CAP_NEEDED;
+	mtag.flags = MTAG_HANDLER_FLAGS_NO_CAP_NEEDED | MTAG_HANDLER_FLAGS_FIRST_ONLY;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
 
 	HookAddVoid(modinfo->handle, HOOKTYPE_NEW_MESSAGE, 0, mtag_add_replytag);

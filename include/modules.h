@@ -534,6 +534,11 @@ typedef struct {
 #define MTAG_HANDLER_FLAGS_NONE			0x0
 /** This message-tag does not have a CAP REQ xx (eg: for "msgid") */
 #define MTAG_HANDLER_FLAGS_NO_CAP_NEEDED	0x1
+/** This tag should only appear on the first message of the
+ * multiline fallback (for clients that don't support multiline).
+ * Used by "msgid" and "+draft/reply".
+ */
+#define MTAG_HANDLER_FLAGS_FIRST_ONLY		0x2
 
 /** Message Tag Handler */
 struct MessageTagHandler {
@@ -2800,6 +2805,7 @@ enum EfunctionType {
 	EFUNC_SEND_ISUPPORT,
 	EFUNC_ISUPPORT_CHECK_FOR_CHANGES,
 	EFUNC_GET_CONNECTIONS_FROM_IP,
+	EFUNC_GET_FLOODPROT_CHANNEL_MAX_LINES,
 };
 
 /* Module flags */

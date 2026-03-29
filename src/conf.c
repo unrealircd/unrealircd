@@ -430,6 +430,7 @@ int flood_option_is_old(const char *name)
 		"knock-flood",
 		"connect-flood",
 		"target-flood",
+		"multiline",
 		NULL
 	};
 
@@ -1829,6 +1830,7 @@ void config_setdefaultsettings(Configuration *i)
 	config_parse_flood_generic("4:120", i, "known-users", FLD_KNOCK); /* KNOCK protection: max 4 per 120s */
 	config_parse_flood_generic("10:15", i, "known-users", FLD_CONVERSATIONS); /* 10 users, new user every 15s */
 	config_parse_flood_generic("180:750", i, "known-users", FLD_LAG_PENALTY); /* 180 bytes / 750 msec */
+	config_parse_flood_generic("15:5250", i, "known-users", FLD_MULTILINE); /* max-lines=15, max-bytes=5250 */
 	/* - unknown-users */
 	config_parse_flood_generic("2:60", i, "unknown-users", FLD_NICK); /* NICK flood protection: max 2 per 60s */
 	config_parse_flood_generic("2:90", i, "unknown-users", FLD_JOIN); /* JOIN flood protection: max 2 per 90s */
@@ -1838,6 +1840,7 @@ void config_setdefaultsettings(Configuration *i)
 	config_parse_flood_generic("2:120", i, "unknown-users", FLD_KNOCK); /* KNOCK protection: max 2 per 120s */
 	config_parse_flood_generic("4:15", i, "unknown-users", FLD_CONVERSATIONS); /* 4 users, new user every 15s */
 	config_parse_flood_generic("90:1000", i, "unknown-users", FLD_LAG_PENALTY); /* 90 bytes / 1000 msec */
+	config_parse_flood_generic("7:1500", i, "unknown-users", FLD_MULTILINE); /* max-lines=7, max-bytes=1500 */
 
 	/* TLS options */
 	i->tls_options = safe_alloc(sizeof(TLSOptions));
@@ -8074,6 +8077,22 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 						snprintf(buf, sizeof(buf), "%d:%ld", users, every);
 						config_parse_flood_generic(buf, &tempiConf, cepp->name, FLD_CONVERSATIONS);
 					}
+					else if (!strcmp(ceppp->name, "multiline"))
+					{
+						/* Same hack: store max-lines in limit, max-bytes in period */
+						char buf[64];
+						int max_lines = 0;
+						int max_bytes = 0;
+						for (cep4 = ceppp->items; cep4; cep4 = cep4->next)
+						{
+							if (!strcmp(cep4->name, "max-lines"))
+								max_lines = atoi(cep4->value);
+							else if (!strcmp(cep4->name, "max-bytes"))
+								max_bytes = config_checkval(cep4->value, CFG_SIZE);
+						}
+						snprintf(buf, sizeof(buf), "%d:%d", max_lines, max_bytes);
+						config_parse_flood_generic(buf, &tempiConf, cepp->name, FLD_MULTILINE);
+					}
 				}
 				if ((lag_penalty != -1) && (lag_penalty_bytes != -1))
 				{
@@ -9005,6 +9024,44 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 							}
 						}
 						continue; /* required here, due to checknull directly below */
+					}
+					else if (!strcmp(ceppp->name, "multiline"))
+					{
+						for (cep4 = ceppp->items; cep4; cep4 = cep4->next)
+						{
+							CheckNull(cep4);
+							if (!strcmp(cep4->name, "max-lines"))
+							{
+								int v = atoi(cep4->value);
+								if ((v < 2) || (v > MULTILINE_MAX_CONFIGURABLE_LINES))
+								{
+									config_error("%s:%i: set::anti-flood::multiline::max-lines: "
+										     "value should be between 2 and %d",
+										     cep4->file->filename, cep4->line_number,
+										     MULTILINE_MAX_CONFIGURABLE_LINES);
+									errors++;
+								}
+							} else
+							if (!strcmp(cep4->name, "max-bytes"))
+							{
+								int v = config_checkval(cep4->value, CFG_SIZE);
+								if ((v < 256) || (v > MULTILINE_MAX_CONFIGURABLE_BYTES))
+								{
+									config_error("%s:%i: set::anti-flood::multiline::max-bytes: "
+										     "value should be between 256 and %d",
+										     cep4->file->filename, cep4->line_number,
+										     MULTILINE_MAX_CONFIGURABLE_BYTES);
+									errors++;
+								}
+							} else
+							{
+								config_error_unknownopt(cep4->file->filename,
+									cep4->line_number, "set::anti-flood::multiline",
+									cep4->name);
+								errors++;
+							}
+						}
+						continue;
 					}
 					else if (!strcmp(ceppp->name, "maxchannelsperuser"))
 					{
@@ -10336,6 +10393,26 @@ int	_test_offchans(ConfigFile *conf, ConfigEntry *ce)
 	return errors;
 }
 
+/** Convert alias type string to ALIAS_xxx constant.
+ * @returns ALIAS_SERVICES, ALIAS_STATS, etc., or 0 for unknown.
+ */
+static int alias_type_strtoval(const char *s)
+{
+	if (!strcmp(s, "services"))
+		return ALIAS_SERVICES;
+	if (!strcmp(s, "stats"))
+		return ALIAS_STATS;
+	if (!strcmp(s, "normal"))
+		return ALIAS_NORMAL;
+	if (!strcmp(s, "command"))
+		return ALIAS_COMMAND;
+	if (!strcmp(s, "channel"))
+		return ALIAS_CHANNEL;
+	if (!strcmp(s, "real"))
+		return ALIAS_REAL;
+	return 0;
+}
+
 int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigItem_alias *alias = NULL;
@@ -10374,16 +10451,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 					safe_strdup(format->parameters, cepp->value);
 				}
 				else if (!strcmp(cepp->name, "type")) {
-					if (!strcmp(cepp->value, "services"))
-						format->type = ALIAS_SERVICES;
-					else if (!strcmp(cepp->value, "stats"))
-						format->type = ALIAS_STATS;
-					else if (!strcmp(cepp->value, "normal"))
-						format->type = ALIAS_NORMAL;
-					else if (!strcmp(cepp->value, "channel"))
-						format->type = ALIAS_CHANNEL;
-					else if (!strcmp(cepp->value, "real"))
-						format->type = ALIAS_REAL;
+					format->type = alias_type_strtoval(cepp->value);
 				}
 			}
 			AddListItem(format, alias->format);
@@ -10394,16 +10462,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 			safe_strdup(alias->nick, cep->value);
 		}
 		else if (!strcmp(cep->name, "type")) {
-			if (!strcmp(cep->value, "services"))
-				alias->type = ALIAS_SERVICES;
-			else if (!strcmp(cep->value, "stats"))
-				alias->type = ALIAS_STATS;
-			else if (!strcmp(cep->value, "normal"))
-				alias->type = ALIAS_NORMAL;
-			else if (!strcmp(cep->value, "channel"))
-				alias->type = ALIAS_CHANNEL;
-			else if (!strcmp(cep->value, "command"))
-				alias->type = ALIAS_COMMAND;
+			alias->type = alias_type_strtoval(cep->value);
 		}
 		else if (!strcmp(cep->name, "spamfilter"))
 			alias->spamfilter = config_checkval(cep->value, CFG_YESNO);
@@ -10421,8 +10480,8 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 	int errors = 0;
 	ConfigEntry *cep, *cepp;
-	char has_type = 0, has_target = 0, has_format = 0;
-	char type = 0;
+	char has_type = 0, has_target = 0, has_format = 0, has_spamfilter = 0;
+	int type = 0;
 
 	if (!ce->items)
 	{
@@ -10492,17 +10551,7 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 						continue;
 					}
 					has_type = 1;
-					if (!strcmp(cepp->value, "services"))
-						;
-					else if (!strcmp(cepp->value, "stats"))
-						;
-					else if (!strcmp(cepp->value, "normal"))
-						;
-					else if (!strcmp(cepp->value, "channel"))
-						;
-					else if (!strcmp(cepp->value, "real"))
-						;
-					else
+					if (!alias_type_strtoval(cepp->value))
 					{
 						config_error("%s:%i: unknown alias type",
 						cepp->file->filename, cepp->line_number);
@@ -10565,24 +10614,16 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 				continue;
 			}
 			has_type = 1;
-			if (!strcmp(cep->value, "services"))
-				;
-			else if (!strcmp(cep->value, "stats"))
-				;
-			else if (!strcmp(cep->value, "normal"))
-				;
-			else if (!strcmp(cep->value, "channel"))
-				;
-			else if (!strcmp(cep->value, "command"))
-				type = 'c';
-			else {
+			type = alias_type_strtoval(cep->value);
+			if (!type)
+			{
 				config_error("%s:%i: unknown alias type",
 					cep->file->filename, cep->line_number);
 				errors++;
 			}
 		}
 		else if (!strcmp(cep->name, "spamfilter"))
-			;
+			has_spamfilter = 1;
 		else {
 			config_error_unknown(cep->file->filename, cep->line_number,
 				"alias", cep->name);
@@ -10595,17 +10636,23 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 			"alias::type");
 		errors++;
 	}
-	if (!has_format && type == 'c')
+	if (!has_format && (type == ALIAS_COMMAND))
 	{
 		config_error("%s:%d: alias::type is 'command' but no alias::format was specified",
 			ce->file->filename, ce->line_number);
 		errors++;
 	}
-	else if (has_format && type != 'c')
+	else if (has_format && (type != ALIAS_COMMAND))
 	{
 		config_error("%s:%d: alias::format specified when type is not 'command'",
 			ce->file->filename, ce->line_number);
 		errors++;
+	}
+	if (has_spamfilter && (type == ALIAS_CHANNEL))
+	{
+		config_warn("%s:%d: alias::spamfilter has no effect for channel aliases, "
+			"spamfilter is always checked for channel messages",
+			ce->file->filename, ce->line_number);
 	}
 	return errors;
 }

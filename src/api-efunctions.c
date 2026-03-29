@@ -118,6 +118,7 @@ int (*is_services_but_not_ulined)(Client *client);
 void (*parse_message_tags)(Client *client, char **str, MessageTag **mtag_list);
 const char *(*mtags_to_string)(MessageTag *m, Client *client);
 int (*can_send_to_channel)(Client *client, Channel *channel, const char **msgtext, const char **errmsg, SendType sendtype, ClientContext *clictx);
+int (*can_send_to_user)(Client *client, Client *target, const char **msgtext, const char **errmsg, SendType sendtype, ClientContext *clictx, int flags);
 void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 void (*broadcast_md_globalvar_cmd)(Client *except, Client *sender, const char *varname, const char *value);
 int (*tkl_ip_hash)(const char *ip);
@@ -191,6 +192,7 @@ int (*utf8_get_block_number)(const char *name);
 void (*send_isupport)(Client *client);
 void (*isupport_check_for_changes)(void);
 int (*get_connections_from_ip)(Client *client);
+int (*get_floodprot_channel_max_lines)(Channel *channel);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
@@ -457,6 +459,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_TKL_TYPE_STRING, tkl_type_string, NULL, 0);
 	efunc_init_function(EFUNC_TKL_TYPE_CONFIG_STRING, tkl_type_config_string, NULL, 0);
 	efunc_init_function(EFUNC_CAN_SEND_TO_CHANNEL, can_send_to_channel, NULL, 0);
+	efunc_init_function(EFUNC_CAN_SEND_TO_USER, can_send_to_user, NULL, 0);
 	efunc_init_function(EFUNC_BROADCAST_MD_GLOBALVAR, broadcast_md_globalvar, NULL, 0);
 	efunc_init_function(EFUNC_BROADCAST_MD_GLOBALVAR_CMD, broadcast_md_globalvar_cmd, NULL, 0);
 	efunc_init_function(EFUNC_TKL_IP_HASH, tkl_ip_hash, NULL, 0);
@@ -533,4 +536,5 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_SEND_ISUPPORT, send_isupport, NULL, 0);
 	efunc_init_function(EFUNC_ISUPPORT_CHECK_FOR_CHANGES, isupport_check_for_changes, NULL, 0);
 	efunc_init_function(EFUNC_GET_CONNECTIONS_FROM_IP, get_connections_from_ip, get_connections_from_ip_default_handler, 0);
+	efunc_init_function(EFUNC_GET_FLOODPROT_CHANNEL_MAX_LINES, get_floodprot_channel_max_lines, get_floodprot_channel_max_lines_default_handler, 0);
 }

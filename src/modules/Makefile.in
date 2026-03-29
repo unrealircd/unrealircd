@@ -69,7 +69,7 @@ MODULES= \
 	history_backend_null.so tkldb.so channeldb.so whowasdb.so \
 	restrict-commands.so rmtkl.so require-module.so \
 	account-notify.so \
-	message-tags.so batch.so \
+	message-tags.so batch.so multiline.so \
 	account-tag.so labeled-response.so link-security.so \
 	message-ids.so plaintext-policy.so server-time.so sts.so \
 	echo-message.so userip-tag.so userhost-tag.so geoip-tag.so \

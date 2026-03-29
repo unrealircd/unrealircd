@@ -111,10 +111,11 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 		{
 			const char *msg = parv[1];
 			const char *errmsg = NULL;
+			/* FIXME: when can_send_to_channel() gets 'int flags', pass
+			 * alias->spamfilter ? 0 : CAN_SEND_SKIP_SPAMFILTER
+			 */
 			if (can_send_to_channel(client, channel, &msg, &errmsg, 0, clictx))
 			{
-				if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_CHANMSG, cmd, channel->name, 0, clictx, NULL))
-					return;
 				new_message(client, NULL, &mtags);
 				sendto_channel(channel, client, client->direction,
 				               NULL, 0, SEND_ALL|SKIP_DEAF, mtags,
@@ -124,6 +125,8 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 				return;
 			}
 		}
+		if (IsDead(client))
+			return;
 		sendnumeric(client, ERR_CANNOTDOCOMMAND,
 				cmd, "You may not use this command at this time");
 	}
@@ -249,10 +252,11 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 					{
 						const char *msg = output;
 						const char *errmsg = NULL;
-						if (!can_send_to_channel(client, channel, &msg, &errmsg, 0, clictx))
+						/* FIXME: when can_send_to_channel() gets 'int flags', pass
+					 * alias->spamfilter ? 0 : CAN_SEND_SKIP_SPAMFILTER
+					 */
+					if (can_send_to_channel(client, channel, &msg, &errmsg, 0, clictx))
 						{
-							if (alias->spamfilter && match_spamfilter(client, output, SPAMF_CHANMSG, cmd, channel->name, 0, clictx, NULL))
-								return;
 							new_message(client, NULL, &mtags);
 							sendto_channel(channel, client, client->direction,
 							               NULL, 0, SEND_ALL|SKIP_DEAF, mtags,
@@ -262,7 +266,9 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 							return;
 						}
 					}
-					sendnumeric(client, ERR_CANNOTDOCOMMAND, cmd, 
+					if (IsDead(client))
+						return;
+					sendnumeric(client, ERR_CANNOTDOCOMMAND, cmd,
 						"You may not use this command at this time");
 				}
 				else if (format->type == ALIAS_REAL)

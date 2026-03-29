@@ -28,7 +28,7 @@ CMD_FUNC(cmd_notice);
 CMD_FUNC(cmd_tagmsg);
 void cmd_message(ClientContext *clictx, Client *client, MessageTag *recv_mtags, int parc, const char *parv[], SendType sendtype);
 int _can_send_to_channel(Client *client, Channel *channel, const char **msgtext, const char **errmsg, SendType sendtype, ClientContext *clictx);
-int can_send_to_user(Client *client, Client *target, const char **msgtext, const char **errmsg, SendType sendtype, ClientContext *clictx);
+int _can_send_to_user(Client *client, Client *target, const char **msgtext, const char **errmsg, SendType sendtype, ClientContext *clictx, int flags);
 
 /* Variables */
 long CAP_MESSAGE_TAGS = 0; /**< Looked up at MOD_LOAD, may stay 0 if message-tags support is absent */
@@ -47,6 +47,7 @@ MOD_TEST()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddConstString(modinfo->handle, EFUNC_STRIPCOLORS, _StripColors);
 	EfunctionAdd(modinfo->handle, EFUNC_CAN_SEND_TO_CHANNEL, _can_send_to_channel);
+	EfunctionAdd(modinfo->handle, EFUNC_CAN_SEND_TO_USER, _can_send_to_user);
 	return MOD_SUCCESS;
 }
 
@@ -83,7 +84,7 @@ MOD_UNLOAD()
  * text:	Pointer to a pointer to a text [in, out]
  * cmd:		Pointer to a pointer which contains the command to use [in, out]
  */
-int can_send_to_user(Client *client, Client *target, const char **msgtext, const char **errmsg, SendType sendtype, ClientContext *clictx)
+int _can_send_to_user(Client *client, Client *target, const char **msgtext, const char **errmsg, SendType sendtype, ClientContext *clictx, int flags)
 {
 	int ret;
 	Hook *h;
@@ -114,12 +115,14 @@ int can_send_to_user(Client *client, Client *target, const char **msgtext, const
 		return 0;
 	}
 
-	// Possible FIXME: make match_spamfilter also use errmsg, or via a wrapper? or use same numeric?
-	if (MyUser(client) && (sendtype != SEND_TYPE_TAGMSG))
+	/* Spamfilter: run on original text, before hooks may transform it
+	 * (e.g. +G censor). This ensures spamfilter catches the actual
+	 * input even if a user mode would sanitize it for delivery.
+	 */
+	if (!(flags & CAN_SEND_SKIP_SPAMFILTER) && MyUser(client) && (sendtype != SEND_TYPE_TAGMSG))
 	{
 		int spamtype = (sendtype == SEND_TYPE_NOTICE ? SPAMF_USERNOTICE : SPAMF_USERMSG);
 		const char *cmd = sendtype_to_cmd(sendtype);
-
 		if (match_spamfilter(client, *msgtext, spamtype, cmd, target->name, 0, clictx, NULL))
 			return 0;
 	}
@@ -291,12 +294,6 @@ void cmd_message(ClientContext *clictx, Client *client, MessageTag *recv_mtags, 
 				targetstr = pfixchan;
 			}
 
-			if (IsVirus(client) && strcasecmp(channel->name, SPAMFILTER_VIRUSCHAN))
-			{
-				sendnotice(client, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
-				continue;
-			}
-
 			text = parv[2];
 			errmsg = NULL;
 			if (MyUser(client) && !IsULine(client))
@@ -322,14 +319,6 @@ void cmd_message(ClientContext *clictx, Client *client, MessageTag *recv_mtags, 
 
 			if ((*parv[2] == '\001') && strncmp(&parv[2][1], "ACTION ", 7))
 				sendflags |= SKIP_CTCP;
-
-			if (MyUser(client) && (sendtype != SEND_TYPE_TAGMSG))
-			{
-				int spamtype = (sendtype == SEND_TYPE_NOTICE ? SPAMF_CHANNOTICE : SPAMF_CHANMSG);
-
-				if (match_spamfilter(client, text, spamtype, cmd, channel->name, 0, clictx, NULL))
-					return;
-			}
 
 			new_message(client, recv_mtags, &mtags);
 
@@ -409,7 +398,7 @@ void cmd_message(ClientContext *clictx, Client *client, MessageTag *recv_mtags, 
 		{
 			const char *errmsg = NULL;
 			text = parv[2];
-			if (!can_send_to_user(client, target, &text, &errmsg, sendtype, clictx))
+			if (!can_send_to_user(client, target, &text, &errmsg, sendtype, clictx, 0))
 			{
 				/* Message is discarded */
 				if (IsDead(client))
@@ -627,8 +616,14 @@ int ban_version(Client *client, const char *text)
  * @returns Returns 1 if the user is allowed to send, otherwise 0.
  * (note that this behavior was reversed in UnrealIRCd versions <5.x.
  */
+/* FIXME: in a future major release, add 'int flags' parameter
+ * (matching can_send_to_user) so callers like aliases.c can pass
+ * CAN_SEND_SKIP_SPAMFILTER to opt out of the built-in spamfilter
+ * check. Can't add the parameter now without breaking the module API.
+ */
 int _can_send_to_channel(Client *client, Channel *channel, const char **msgtext, const char **errmsg, SendType sendtype, ClientContext *clictx)
 {
+	static char errbuf[256];
 	Membership *lp;
 	int  member, i = 0;
 	Hook *h;
@@ -637,6 +632,25 @@ int _can_send_to_channel(Client *client, Channel *channel, const char **msgtext,
 		return 1;
 
 	*errmsg = NULL;
+
+	if (IsVirus(client) && strcasecmp(channel->name, SPAMFILTER_VIRUSCHAN))
+	{
+		ircsnprintf(errbuf, sizeof(errbuf), "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
+		*errmsg = errbuf;
+		return 0;
+	}
+
+	/* Spamfilter: run on original text, before hooks may transform it
+	 * (e.g. +G censor). This ensures spamfilter catches the actual
+	 * input even if a channel mode would sanitize it for delivery.
+	 */
+	if (sendtype != SEND_TYPE_TAGMSG)
+	{
+		int spamtype = (sendtype == SEND_TYPE_NOTICE ? SPAMF_CHANNOTICE : SPAMF_CHANMSG);
+		const char *cmd = sendtype_to_cmd(sendtype);
+		if (match_spamfilter(client, *msgtext, spamtype, cmd, channel->name, 0, clictx, NULL))
+			return 0;
+	}
 
 	member = IsMember(client, channel);
 

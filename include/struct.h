@@ -1457,7 +1457,10 @@ typedef enum FloodOption {
 	FLD_CONVERSATIONS	= 5,	/**< max-concurrent-conversations */
 	FLD_LAG_PENALTY		= 6,	/**< lag-penalty / lag-penalty-bytes */
 	FLD_VHOST		= 7,	/**< vhost-flood */
+	FLD_MULTILINE		= 8,	/**< multiline max-lines / max-bytes */
 } FloodOption;
+#define MULTILINE_MAX_CONFIGURABLE_LINES	200	/**< Maximum configurable max-lines for multiline */
+#define MULTILINE_MAX_CONFIGURABLE_BYTES	131072	/**< Maximum configurable max-bytes for multiline (128KB) */
 #define MAXFLOODOPTIONS 10
 
 typedef struct TrafficStats TrafficStats;
@@ -2661,6 +2664,9 @@ struct ConfigItem_badword {
 #define SKIP_DEAF	0x4
 #define SKIP_CTCP	0x8
 #define CHECK_INVISIBLE	0x10
+
+/* Flags for 'flags' in 'can_send_to_user' (and future: can_send_to_channel) */
+#define CAN_SEND_SKIP_SPAMFILTER	0x1
 
 typedef struct GeoIPResult GeoIPResult;
 struct GeoIPResult {

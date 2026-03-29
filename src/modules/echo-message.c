@@ -66,6 +66,8 @@ MOD_UNLOAD()
 
 int em_chanmsg(Client *client, Channel *channel, int sendflags, const char *prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype)
 {
+	if (echo_message_inhibit)
+		return 0;
 	if (MyUser(client) && HasCapabilityFast(client, CAP_ECHO_MESSAGE))
 	{
 		if (sendtype != SEND_TYPE_TAGMSG)
@@ -87,6 +89,8 @@ int em_chanmsg(Client *client, Channel *channel, int sendflags, const char *pref
 
 int em_usermsg(Client *client, Client *to, MessageTag *mtags, const char *text, SendType sendtype)
 {
+	if (echo_message_inhibit)
+		return 0;
 	if (MyUser(client) && HasCapabilityFast(client, CAP_ECHO_MESSAGE))
 	{
 		if (sendtype != SEND_TYPE_TAGMSG)

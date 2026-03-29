@@ -753,6 +753,13 @@ static void stats_set_anti_flood(Client *client, FloodSettings *f)
 				f->name,
 				f->limit[i] == INT_MAX ? 0 : (int)f->limit[i]);
 		} else
+		if (i == FLD_MULTILINE)
+		{
+			sendtxtnumeric(client, "anti-flood::%s::multiline::max-lines: %d",
+				f->name, (int)f->limit[i]);
+			sendtxtnumeric(client, "anti-flood::%s::multiline::max-bytes: %d",
+				f->name, (int)f->period[i]);
+		} else
 		{
 			sendtxtnumeric(client, "anti-flood::%s::%s: %d per %s",
 				f->name, floodoption_names[i],

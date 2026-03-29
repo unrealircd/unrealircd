@@ -181,11 +181,13 @@ int parse_channel_mode_flood_failed(const char **error_out, ChannelFloodProtecti
 int floodprot_server_quit(Client *client, MessageTag *mtags);
 void inherit_settings(ChannelFloodProtection *from, ChannelFloodProtection *to);
 void reapply_profiles(void);
+int _get_floodprot_channel_max_lines(Channel *channel);
 
 MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, floodprot_config_test_set_block);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, floodprot_config_test_antiflood_block);
+	EfunctionAdd(modinfo->handle, EFUNC_GET_FLOODPROT_CHANNEL_MAX_LINES, _get_floodprot_channel_max_lines);
 	return MOD_SUCCESS;
 }
 
@@ -1299,6 +1301,25 @@ ChannelFloodProtection *get_channel_flood_settings(Channel *channel, int what)
 		return fld;
 
 	return NULL;
+}
+
+/** Return the maximum number of lines permitted by +f/+F 'm' and 't' limits.
+ * Returns INT_MAX if no relevant flood protection is set.
+ */
+int _get_floodprot_channel_max_lines(Channel *channel)
+{
+	ChannelFloodProtection *fld;
+	int result = INT_MAX;
+
+	fld = get_channel_flood_settings(channel, CHFLD_MSG);
+	if (fld && fld->limit[CHFLD_MSG])
+		result = MIN(result, fld->limit[CHFLD_MSG]);
+
+	fld = get_channel_flood_settings(channel, CHFLD_TEXT);
+	if (fld && fld->limit[CHFLD_TEXT])
+		result = MIN(result, fld->limit[CHFLD_TEXT]);
+
+	return result;
 }
 
 int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx)

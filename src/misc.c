@@ -1469,6 +1469,11 @@ int get_connections_from_ip_default_handler(Client *client)
 	return 0;
 }
 
+int get_floodprot_channel_max_lines_default_handler(Channel *channel)
+{
+	return INT_MAX;
+}
+
 int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass,
                               ConfigItem_class *clientclass, long modes, const char *snomask,
                               const char *vhost, const char *autojoin_channels)
@@ -2832,7 +2837,7 @@ const char *StripControlCodesEx(const char *text, char *output, size_t outputlen
 /* strip color, bold, underline, and reverse codes from a string */
 const char *StripControlCodes(const char *text)
 {
-	static unsigned char new_str[4096];
+	static unsigned char new_str[8192];
 
 	return StripControlCodesEx(text, new_str, sizeof(new_str), 0);
 }
@@ -2880,6 +2885,23 @@ int valid_spamfilter_id(const char *s)
 {
 	if (strlen(s) > MAXSPAMFILTERIDLEN)
 		return 0;
+	return 1;
+}
+
+/** Check if a batch reference tag contains only valid characters.
+ * Per the batch spec: only ASCII letters, numbers, and hyphens.
+ */
+int valid_batch_reference_tag(const char *ref)
+{
+	const char *p;
+
+	if (BadPtr(ref) || strlen(ref) > 48)
+		return 0;
+	for (p = ref; *p; p++)
+	{
+		if (!isalnum(*p) && *p != '-')
+			return 0;
+	}
 	return 1;
 }
 

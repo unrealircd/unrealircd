@@ -791,6 +791,7 @@ extern MODVAR int dontspread;
 extern MODVAR int labeled_response_inhibit;
 extern MODVAR int labeled_response_inhibit_end;
 extern MODVAR int labeled_response_force;
+extern MODVAR int echo_message_inhibit;
 
 /* Efuncs */
 extern MODVAR void (*do_join)(Client *, int, const char **);
@@ -880,6 +881,7 @@ extern MODVAR int (*is_services_but_not_ulined)(Client *client);
 extern MODVAR void (*parse_message_tags)(Client *cptr, char **str, MessageTag **mtag_list);
 extern MODVAR const char *(*mtags_to_string)(MessageTag *m, Client *acptr);
 extern MODVAR int (*can_send_to_channel)(Client *cptr, Channel *channel, const char **msgtext, const char **errmsg, SendType sendtyp, ClientContext *clictx);
+extern MODVAR int (*can_send_to_user)(Client *client, Client *target, const char **msgtext, const char **errmsg, SendType sendtype, ClientContext *clictx, int flags);
 extern MODVAR void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 extern MODVAR void (*broadcast_md_globalvar_cmd)(Client *except, Client *sender, const char *varname, const char *value);
 extern MODVAR int (*tkl_ip_hash)(const char *ip);
@@ -948,6 +950,7 @@ extern MODVAR int (*utf8_get_block_number)(const char *name);
 extern MODVAR void (*send_isupport)(Client *client);
 extern MODVAR void (*isupport_check_for_changes)(void);
 extern MODVAR int (*get_connections_from_ip)(Client *client);
+extern MODVAR int (*get_floodprot_channel_max_lines)(Channel *channel);
 /* /Efuncs */
 
 /* TLS functions */
@@ -987,6 +990,7 @@ extern int add_silence_default_handler(Client *client, const char *mask, int sen
 extern int del_silence_default_handler(Client *client, const char *mask);
 extern int is_silenced_default_handler(Client *client, Client *acptr);
 extern int get_connections_from_ip_default_handler(Client *client);
+extern int get_floodprot_channel_max_lines_default_handler(Channel *channel);
 extern void do_unreal_log_remote_deliver_default_handler(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
 extern int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost, const char *autojoin_channels);
 extern void webserver_send_response_default_handler(Client *client, int status, char *msg);
@@ -1532,6 +1536,7 @@ extern Tag *add_tag(Client *client, const char *name, int value);
 extern void free_all_tags(Client *client);
 extern void del_tag(Client *client, const char *name);
 extern void bump_tag_serial(Client *client);
+extern int valid_batch_reference_tag(const char *ref);
 extern int valid_spamfilter_id(const char *s);
 extern void download_complete_dontcare(OutgoingWebRequest *request, OutgoingWebResponse *response);
 extern char *urlencode(const char *s, char *wbuf, int wlen);

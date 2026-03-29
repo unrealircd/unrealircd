@@ -5490,7 +5490,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	TKL *winner_tkl = NULL;
 	const char *str;
 	const char *str_deconfused = NULL;
-	char deconfused[512];
+	char deconfused[8192];
 	int ret = -1;
 	char *reason = NULL;
 #ifdef SPAMFILTER_DETECTSLOW
