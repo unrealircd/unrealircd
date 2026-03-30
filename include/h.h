@@ -792,6 +792,7 @@ extern MODVAR int labeled_response_inhibit;
 extern MODVAR int labeled_response_inhibit_end;
 extern MODVAR int labeled_response_force;
 extern MODVAR int echo_message_inhibit;
+extern MODVAR int history_inhibit;
 
 /* Efuncs */
 extern MODVAR void (*do_join)(Client *, int, const char **);
@@ -1200,10 +1201,13 @@ extern void new_message_special(Client *sender, MessageTag *recv_mtags, MessageT
 extern void generate_batch_id(char *str);
 extern MessageTag *find_mtag(MessageTag *mtags, const char *token);
 extern MessageTag *duplicate_mtag(MessageTag *mtag);
+extern MessageTag *duplicate_mtags(MessageTag *mtags);
+extern MessageTag *duplicate_mtags_for_subsequent_lines(MessageTag *mtags);
 #define safe_free_message_tags(x) do { if (x) free_message_tags(x); x = NULL; } while(0)
 extern void free_message_tags(MessageTag *m);
 extern int history_set_limit(const char *object, int max_lines, long max_t);
 extern int history_add(const char *object, MessageTag *mtags, const char *line);
+extern int history_add_multiline(const char *object, MessageTag *mtags, const char *source, const char *cmd, const char *target, MLine *lines);
 extern HistoryResult *history_request(const char *object, HistoryFilter *filter);
 extern int history_delete(const char *object, HistoryFilter *filter, int *rejected_deletes);
 extern int history_destroy(const char *object);

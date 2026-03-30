@@ -95,6 +95,7 @@ HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 	m->history_delete = mreq->history_delete;
 	m->history_destroy = mreq->history_destroy;
 	m->history_set_limit = mreq->history_set_limit;
+	m->history_add_multiline = mreq->history_add_multiline; /* optional, may be NULL */
 
 	if (!exists)
 		AddListItem(m, historybackends);
@@ -161,6 +162,19 @@ int history_add(const char *object, MessageTag *mtags, const char *line)
 
 	for (hb = historybackends; hb; hb=hb->next)
 		hb->history_add(object, mtags, line);
+
+	return 1;
+}
+
+int history_add_multiline(const char *object, MessageTag *mtags, const char *source, const char *cmd, const char *target, MLine *lines)
+{
+	HistoryBackend *hb;
+
+	for (hb = historybackends; hb; hb = hb->next)
+	{
+		if (hb->history_add_multiline)
+			hb->history_add_multiline(object, mtags, source, cmd, target, lines);
+	}
 
 	return 1;
 }
@@ -234,7 +248,15 @@ void free_history_result(HistoryResult *r)
 	HistoryLogLine *l, *l_next;
 	for (l = r->log; l; l = l_next)
 	{
+		HistoryLogLine *b, *b_next;
 		l_next = l->next;
+		/* Free multiline continuation lines (not in main list) */
+		for (b = l->next_in_batch; b; b = b_next)
+		{
+			b_next = b->next_in_batch;
+			free_message_tags(b->mtags);
+			safe_free(b);
+		}
 		free_message_tags(l->mtags);
 		safe_free(l);
 	}
@@ -272,6 +294,76 @@ static void history_send_result_line(Client *client, HistoryLogLine *l, const ch
 	}
 }
 
+/** Send a multiline batch from history as a nested draft/multiline batch.
+ * Used for clients that support both draft/multiline and batch.
+ */
+static void history_send_result_multiline(Client *client, HistoryLogLine *head,
+                                          const char *outer_batch, const char *object)
+{
+	char inner_batch[BATCHLEN+1];
+	HistoryLogLine *l;
+	MessageTag outer_tag;
+
+	generate_batch_id(inner_batch);
+
+	/* BATCH open: head's mtags (time, msgid, ...) + @batch=outer */
+	memset(&outer_tag, 0, sizeof(outer_tag));
+	outer_tag.name = "batch";
+	outer_tag.value = (char *)outer_batch;
+	AddListItem(&outer_tag, head->mtags);
+	sendto_one(client, head->mtags, ":%s BATCH +%s draft/multiline %s",
+	           me.name, inner_batch, object);
+	DelListItem(&outer_tag, head->mtags);
+
+	/* Send all lines (head + continuations) with @batch=inner */
+	for (l = head; l; l = l->next_in_batch)
+	{
+		MessageTag batch_tag, concat_tag;
+		memset(&batch_tag, 0, sizeof(batch_tag));
+		batch_tag.name = "batch";
+		batch_tag.value = inner_batch;
+		if (l->concat)
+		{
+			memset(&concat_tag, 0, sizeof(concat_tag));
+			concat_tag.name = "draft/multiline-concat";
+			batch_tag.next = &concat_tag;
+		}
+		sendto_one(client, &batch_tag, "%s", l->line);
+	}
+
+	/* BATCH close: @batch=outer */
+	memset(&outer_tag, 0, sizeof(outer_tag));
+	outer_tag.name = "batch";
+	outer_tag.value = (char *)outer_batch;
+	sendto_one(client, &outer_tag, ":%s BATCH -%s", me.name, inner_batch);
+}
+
+/** Send a multiline batch from history as individual fallback lines.
+ * Used for clients that don't support draft/multiline.
+ */
+static void history_send_result_multiline_fallback(Client *client, HistoryLogLine *head,
+                                                   const char *outer_batch)
+{
+	HistoryLogLine *l;
+	MessageTag *rest_mtags;
+
+	/* Send head line with its full mtags */
+	history_send_result_line(client, head, outer_batch);
+
+	/* Build mtags for continuation lines (head's mtags minus FIRST_ONLY) */
+	rest_mtags = duplicate_mtags_for_subsequent_lines(head->mtags);
+
+	/* Send continuation lines */
+	for (l = head->next_in_batch; l; l = l->next_in_batch)
+	{
+		l->mtags = rest_mtags;
+		history_send_result_line(client, l, outer_batch);
+		l->mtags = NULL;
+	}
+
+	free_message_tags(rest_mtags);
+}
+
 /** Send the result of a history_request() to the client.
  * @param client	The client to send to.
  * @param r		The history result retrieved via history_request().
@@ -280,6 +372,7 @@ void history_send_result(Client *client, HistoryResult *r)
 {
 	char batch[BATCHLEN+1];
 	HistoryLogLine *l;
+	int has_multiline;
 
 	if (!can_receive_history(client))
 		return;
@@ -292,8 +385,20 @@ void history_send_result(Client *client, HistoryResult *r)
 		sendto_one(client, NULL, ":%s BATCH +%s chathistory %s", me.name, batch, r->object);
 	}
 
+	has_multiline = HasCapability(client, "draft/multiline") && HasCapability(client, "batch");
+
 	for (l = r->log; l; l = l->next)
-		history_send_result_line(client, l, batch);
+	{
+		if (l->next_in_batch)
+		{
+			if (has_multiline)
+				history_send_result_multiline(client, l, batch, r->object);
+			else
+				history_send_result_multiline_fallback(client, l, batch);
+		} else {
+			history_send_result_line(client, l, batch);
+		}
+	}
 
 	/* End of batch */
 	if (*batch)

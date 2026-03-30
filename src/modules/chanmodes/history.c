@@ -58,6 +58,7 @@ void *history_chanmode_dup_struct(void *r_in);
 int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int history_channel_destroy(Channel *channel, int *should_destroy);
 int history_chanmsg(Client *client, Channel *channel, int sendflags, const char *prefix, const char *target, MessageTag *mtags, const char *text, SendType sendtype);
+int history_chanmsg_multiline(Client *client, Channel *channel, int sendflags, const char *member_modes, const char *target, MessageTag *mtags, MLine *lines, SendType sendtype);
 int history_join(Client *client, Channel *channel, MessageTag *mtags);
 CMD_OVERRIDE_FUNC(override_mode);
 
@@ -96,6 +97,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CHANMODE, 0, history_chanmode_change);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, history_join);
 	HookAdd(modinfo->handle, HOOKTYPE_CHANMSG, 0, history_chanmsg);
+	HookAdd(modinfo->handle, HOOKTYPE_CHANMSG_MULTILINE, 0, history_chanmsg_multiline);
 	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 1000000, history_channel_destroy);
 	return MOD_SUCCESS;
 }
@@ -650,6 +652,9 @@ int history_chanmsg(Client *client, Channel *channel, int sendflags, const char 
 	char source[64];
 	HistoryChanMode *settings;
 
+	if (history_inhibit)
+		return 0;
+
 	if (!HistoryEnabled(channel))
 		return 0;
 
@@ -679,6 +684,35 @@ int history_chanmsg(Client *client, Channel *channel, int sendflags, const char 
 		text);
 
 	history_add(channel->name, mtags, buf);
+
+	return 0;
+}
+
+int history_chanmsg_multiline(Client *client, Channel *channel, int sendflags, const char *member_modes, const char *target, MessageTag *mtags, MLine *lines, SendType sendtype)
+{
+	char source[64];
+
+	if (!HistoryEnabled(channel))
+		return 0;
+
+	/* Filter out TAGMSG */
+	if (sendtype == SEND_TYPE_TAGMSG)
+		return 0;
+
+	/* If any prefix is addressed (eg: @#channel) then don't record it */
+	if (member_modes)
+		return 0;
+
+	/* Filter out CTCP (except ACTION) based on first line */
+	if (lines && lines->text && (*lines->text == '\001') && strncmp(lines->text+1, "ACTION", 6))
+		return 0;
+
+	if (IsUser(client))
+		snprintf(source, sizeof(source), "%s!%s@%s", client->name, client->user->username, GetHost(client));
+	else
+		strlcpy(source, client->name, sizeof(source));
+
+	history_add_multiline(channel->name, mtags, source, sendtype_to_cmd(sendtype), channel->name, lines);
 
 	return 0;
 }

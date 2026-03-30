@@ -98,6 +98,7 @@ static void hbm_init_hashes(ModuleInfo *m);
 static void init_history_storage(ModuleInfo *modinfo);
 int hbm_modechar_del(Channel *channel, int modechar);
 int hbm_history_add(const char *object, MessageTag *mtags, const char *line);
+int hbm_history_add_multiline(const char *object, MessageTag *mtags, const char *source, const char *cmd, const char *target, MLine *lines);
 int hbm_history_cleanup(HistoryLogObject *h);
 HistoryResult *hbm_history_request(const char *object, HistoryFilter *filter);
 int hbm_history_destroy(const char *object);
@@ -162,6 +163,7 @@ MOD_INIT()
 	hbi.history_destroy = hbm_history_destroy;
 	hbi.history_delete = hbm_history_delete;
 	hbi.history_set_limit = hbm_history_set_limit;
+	hbi.history_add_multiline = hbm_history_add_multiline;
 	if (!HistoryBackendAdd(modinfo->handle, &hbi))
 		return MOD_FAILED;
 
@@ -641,8 +643,10 @@ int hbm_history_add_line_in_time(HistoryLogObject *h, HistoryLogLine *l)
 	return 1;
 }
 
-/** Add a line to a history object */
-void hbm_history_add_line(HistoryLogObject *h, MessageTag *mtags, const char *line)
+/** Add a line to a history object.
+ * @returns The newly added line, or NULL if rejected as duplicate.
+ */
+HistoryLogLine *hbm_history_add_line(HistoryLogObject *h, MessageTag *mtags, const char *line)
 {
 	HistoryLogLine *l = safe_alloc(sizeof(HistoryLogLine) + strlen(line) + 1);
 	strcpy(l->line, line); /* safe, see memory allocation above ^ */
@@ -662,7 +666,7 @@ void hbm_history_add_line(HistoryLogObject *h, MessageTag *mtags, const char *li
 				/* Already exists (uncommon) */
 				free_message_tags(l->mtags);
 				safe_free(l);
-				return;
+				return NULL;
 			}
 		}
 	} else {
@@ -673,11 +677,17 @@ void hbm_history_add_line(HistoryLogObject *h, MessageTag *mtags, const char *li
 	h->num_lines++;
 	if ((l->t < h->oldest_t) || (h->oldest_t == 0))
 		h->oldest_t = l->t;
+	return l;
 }
 
-/** Delete a line from a history object */
+/** Delete a line from a history object.
+ * NOTE: if you add new fields to free here, also update
+ * hbm_history_destroy() which has its own free loop for speed.
+ */
 void hbm_history_del_line(HistoryLogObject *h, HistoryLogLine *l)
 {
+	HistoryLogLine *b, *b_next;
+
 	if (l->prev)
 		l->prev->next = l->next;
 	if (l->next)
@@ -691,6 +701,14 @@ void hbm_history_del_line(HistoryLogObject *h, HistoryLogLine *l)
 	{
 		/* New tail */
 		h->tail = l->prev; /* could be NULL now */
+	}
+
+	/* Free multiline continuation lines (not in main list) */
+	for (b = l->next_in_batch; b; b = b_next)
+	{
+		b_next = b->next_in_batch;
+		free_message_tags(b->mtags);
+		safe_free(b);
 	}
 
 	free_message_tags(l->mtags);
@@ -729,11 +747,87 @@ int hbm_history_add(const char *object, MessageTag *mtags, const char *line)
 	return 0;
 }
 
+/** Add a multiline batch as a single history entry */
+int hbm_history_add_multiline(const char *object, MessageTag *mtags, const char *source,
+                              const char *cmd, const char *target, MLine *lines)
+{
+	HistoryLogObject *h = hbm_find_or_add_object(object);
+	char buf[512];
+	MLine *ml;
+	HistoryLogLine *head_line, **dest;
+
+	if (!h->max_lines)
+	{
+		unreal_log(ULOG_WARNING, "history", "BUG_HISTORY_ADD_NO_LIMIT", NULL,
+		           "[BUG] hbm_history_add_multiline() called for $object, which has no limit set",
+		           log_data_string("object", h->name));
+#ifdef DEBUGMODE
+		abort();
+#else
+		h->max_lines = 50;
+		h->max_time = 86400;
+#endif
+	}
+
+	if (!lines)
+		return 0;
+
+	if (h->num_lines >= h->max_lines)
+	{
+		/* Delete oldest entry (may itself be a multiline batch) */
+		hbm_history_del_line(h, h->head);
+	}
+
+	/* Build the batch head from the first line */
+	snprintf(buf, sizeof(buf), ":%s %s %s :%s", source, cmd, target, lines->text ? lines->text : "");
+	head_line = hbm_history_add_line(h, mtags, buf);
+	if (!head_line)
+		return 0; /* Rejected as duplicate */
+
+	/* Build continuation lines and link via next_in_batch */
+	dest = &head_line->next_in_batch;
+	for (ml = lines->next; ml; ml = ml->next)
+	{
+		HistoryLogLine *cl;
+		snprintf(buf, sizeof(buf), ":%s %s %s :%s", source, cmd, target, ml->text ? ml->text : "");
+		cl = safe_alloc(sizeof(HistoryLogLine) + strlen(buf) + 1);
+		strcpy(cl->line, buf);
+		cl->concat = ml->concat;
+		/* Continuation lines have no mtags and are NOT in the main list */
+		*dest = cl;
+		dest = &cl->next_in_batch;
+	}
+
+	h->dirty = 1;
+	return 0;
+}
+
 HistoryLogLine *duplicate_log_line(HistoryLogLine *l)
 {
 	HistoryLogLine *n = safe_alloc(sizeof(HistoryLogLine) + strlen(l->line) + 1);
+	HistoryLogLine **dest;
+	HistoryLogLine *b;
+
 	strcpy(n->line, l->line); /* safe, see memory allocation above ^ */
+	n->concat = l->concat;
 	hbm_duplicate_mtags(n, l->mtags);
+
+	/* Duplicate multiline continuation chain */
+	dest = &n->next_in_batch;
+	for (b = l->next_in_batch; b; b = b->next_in_batch)
+	{
+		HistoryLogLine *nb = safe_alloc(sizeof(HistoryLogLine) + strlen(b->line) + 1);
+		strcpy(nb->line, b->line);
+		nb->concat = b->concat;
+		/* Duplicate raw mtags. Don't use hbm_duplicate_mtags() here
+		 * because that one would generate time/msgid, something which
+		 * continuation lines don't have.
+		 */
+		nb->mtags = duplicate_mtags(b->mtags);
+		*dest = nb;
+		dest = &nb->next_in_batch;
+	}
+
 	return n;
 }
 
@@ -1215,7 +1309,7 @@ HistoryResult *hbm_history_request(const char *object, HistoryFilter *filter)
  */
 int hbm_history_delete(const char *object, HistoryFilter *filter, int *rejected_deletes)
 {
-	HistoryLogLine *l;
+	HistoryLogLine *l, *l_next;
 	HistoryLogObject *h = hbm_find_object(object);
 	int deleted = 0;
 	int started = 0;
@@ -1227,8 +1321,9 @@ int hbm_history_delete(const char *object, HistoryFilter *filter, int *rejected_
 	if (!h)
 		return 0;
 
-	for (l = h->head; l; l = l->next)
+	for (l = h->head; l; l = l_next)
 	{
+		l_next = l->next;
 		/* Not started yet? Check if this is the starting point... */
 		if (!started)
 		{
@@ -1337,12 +1432,19 @@ int hbm_history_destroy(const char *object)
 
 	for (l = h->head; l; l = l_next)
 	{
+		HistoryLogLine *b, *b_next;
 		l_next = l->next;
 		/* We could use hbm_history_del_line() here but
 		 * it does unnecessary work, this is quicker.
 		 * The only danger is that we may forget to free some
 		 * fields that are added later there but not here.
 		 */
+		for (b = l->next_in_batch; b; b = b_next)
+		{
+			b_next = b->next_in_batch;
+			free_message_tags(b->mtags);
+			safe_free(b);
+		}
 		free_message_tags(l->mtags);
 		safe_free(l);
 	}
@@ -1604,10 +1706,10 @@ static int hbm_read_db(const char *fname)
 		unrealdb_close(db);
 		return 0;
 	}
-	if (version > 5000)
+	if (version > 5001)
 	{
 		config_warn("[history] Database '%s' has version %lu while we only support %lu. Did you just downgrade UnrealIRCd? Sorry this is not suported",
-			fname, (unsigned long)version, (unsigned long)5000);
+			fname, (unsigned long)version, (unsigned long)5001);
 		unrealdb_close(db);
 		return 0;
 	}
@@ -1664,6 +1766,41 @@ static int hbm_read_db(const char *fname)
 			safe_free(mtag_value);
 		}
 		R_SAFE(unrealdb_read_str(db, &line));
+		if (h->num_lines >= h->max_lines)
+			hbm_history_del_line(h, h->head);
+		if (version >= 5001)
+		{
+			uint32_t concat_flag, continuation_count;
+			HistoryLogLine *l;
+			R_SAFE(unrealdb_read_int32(db, &concat_flag));
+			R_SAFE(unrealdb_read_int32(db, &continuation_count));
+			/* Add the batch head */
+			l = hbm_history_add_line(h, mtags, line);
+			if (l)
+				l->concat = concat_flag;
+			/* Read and attach continuation lines */
+			if (continuation_count > 0 && l)
+			{
+				HistoryLogLine **dest = &l->next_in_batch;
+				uint32_t i;
+				for (i = 0; i < continuation_count; i++)
+				{
+					uint32_t cl_concat;
+					char *cl_line = NULL;
+					HistoryLogLine *cl;
+					R_SAFE(unrealdb_read_int32(db, &cl_concat));
+					R_SAFE(unrealdb_read_str(db, &cl_line));
+					cl = safe_alloc(sizeof(HistoryLogLine) + strlen(cl_line) + 1);
+					strcpy(cl->line, cl_line);
+					cl->concat = cl_concat;
+					*dest = cl;
+					dest = &cl->next_in_batch;
+					safe_free(cl_line);
+				}
+			}
+		} else {
+			hbm_history_add_line(h, mtags, line);
+		}
 		R_SAFE(unrealdb_read_int32(db, &magic));
 		if (magic != HISTORYDB_MAGIC_ENTRY_END)
 		{
@@ -1672,7 +1809,6 @@ static int hbm_read_db(const char *fname)
 			R_SAFE_CLEANUP();
 			return 0;
 		}
-		hbm_history_add(object, mtags, line);
 	}
 
 	/* Prevent directly rewriting the channel, now that we have just read it.
@@ -1825,7 +1961,7 @@ static int hbm_write_db(HistoryLogObject *h)
 	}
 
 	W_SAFE(unrealdb_write_int32(db, HISTORYDB_MAGIC_FILE_START));
-	W_SAFE(unrealdb_write_int32(db, 5000)); /* VERSION */
+	W_SAFE(unrealdb_write_int32(db, 5001)); /* VERSION */
 	W_SAFE(unrealdb_write_str(db, hbm_prehash));
 	W_SAFE(unrealdb_write_str(db, hbm_posthash));
 	W_SAFE(unrealdb_write_str(db, h->name));
@@ -1845,6 +1981,20 @@ static int hbm_write_db(HistoryLogObject *h)
 		W_SAFE(unrealdb_write_str(db, NULL));
 		W_SAFE(unrealdb_write_str(db, NULL));
 		W_SAFE(unrealdb_write_str(db, l->line));
+		/* v5001: multiline batch data */
+		W_SAFE(unrealdb_write_int32(db, l->concat));
+		{
+			HistoryLogLine *b;
+			int32_t continuation_count = 0;
+			for (b = l->next_in_batch; b; b = b->next_in_batch)
+				continuation_count++;
+			W_SAFE(unrealdb_write_int32(db, continuation_count));
+			for (b = l->next_in_batch; b; b = b->next_in_batch)
+			{
+				W_SAFE(unrealdb_write_int32(db, b->concat));
+				W_SAFE(unrealdb_write_str(db, b->line));
+			}
+		}
 		W_SAFE(unrealdb_write_int32(db, HISTORYDB_MAGIC_ENTRY_END));
 	}
 	W_SAFE(unrealdb_write_int32(db, HISTORYDB_MAGIC_FILE_END));

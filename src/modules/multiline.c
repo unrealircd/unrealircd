@@ -31,10 +31,6 @@ ModuleHeader MOD_HEADER
 	"unrealircd-6",
 	};
 
-// TODO: history does not work currently with multiline, we should communicate
-// the batch stuff via a different hook, and be atomic to include it in history
-// This will be done later...
-
 /* ===================== CONFIGURATION ===================== */
 
 struct {
@@ -42,14 +38,6 @@ struct {
 } cfg;
 
 /* ===================== DATA STRUCTURES ===================== */
-
-/** A single line within a multiline batch */
-typedef struct MultilineLine MultilineLine;
-struct MultilineLine {
-	MultilineLine *next;
-	char *text;		/**< Message text for this line (may be empty string for blank lines) */
-	int concat;		/**< 1 if draft/multiline-concat tag was present */
-};
 
 /** State for a locally-initiated multiline batch (one per local client) */
 typedef struct MultilineBatch MultilineBatch;
@@ -67,9 +55,9 @@ struct MultilineBatch {
 	char *fail_message;		/**< FAIL response to send at BATCH close (if failed) */
 	char label[256];		/**< Saved label for echo-message + labeled-response interaction */
 	/* Buffered lines */
-	MultilineLine *lines;
-	MultilineLine *lines_tail;
-	MultilineLine *fallback_lines;	/**< Cached fallback lines (built once, reused for all non-multiline clients) */
+	MLine *lines;
+	MLine *lines_tail;
+	MLine *fallback_lines;	/**< Cached fallback lines (built once, reused for all non-multiline clients) */
 };
 
 /** State for an S2S multiline batch being received from a remote server */
@@ -88,8 +76,8 @@ struct S2SMultilineBatch {
 	int line_count;
 	int received_bytes;
 	time_t start_time;
-	MultilineLine *lines;
-	MultilineLine *lines_tail;
+	MLine *lines;
+	MLine *lines_tail;
 };
 
 /* ===================== FORWARD DECLARATIONS ===================== */
@@ -130,12 +118,12 @@ static void multiline_send_s2s_to_direction(Client *direction, Client *from, Mul
 static void multiline_send_s2s_channel(Client *from, MultilineBatch *batch, Channel *channel, MessageTag *base_mtags, const char *cmd, Client *skip_direction, const char *targetstr);
 static void multiline_send_s2s_user(Client *from, MultilineBatch *batch, Client *target, MessageTag *base_mtags, const char *cmd);
 static void multiline_deliver_to_local_members(Channel *channel, Client *from, MultilineBatch *batch, MessageTag *mtags, const char *targetstr, const char *cmd, const char *filter_modes, Client *skip, int sendflags);
-static void multiline_run_chanmsg_hooks(Client *sender, Channel *channel, int sendflags, const char *member_modes, const char *targetstr, MessageTag *mtags, MultilineLine *lines, SendType sendtype);
-static void multiline_run_usermsg_hooks(Client *sender, Client *target, MessageTag *mtags, MultilineLine *lines, SendType sendtype);
+static void multiline_run_chanmsg_hooks(Client *sender, Channel *channel, int sendflags, const char *member_modes, const char *targetstr, MessageTag *mtags, MLine *lines, SendType sendtype);
+static void multiline_run_usermsg_hooks(Client *sender, Client *target, MessageTag *mtags, MLine *lines, SendType sendtype);
 static void multiline_fail_batch(Client *client, MultilineBatch *batch, const char *fail_msg);
 static void multiline_abort_batch(Client *client, MultilineBatch *batch);
-static void multiline_append_line(MultilineLine **lines, MultilineLine **lines_tail, int *line_count, const char *text, int is_concat);
-static void multiline_free_lines(MultilineLine *lines);
+static void multiline_append_line(MLine **lines, MLine **lines_tail, int *line_count, const char *text, int is_concat);
+static void multiline_free_lines(MLine *lines);
 static void multiline_free_batch(MultilineBatch *batch);
 static char *multiline_concat_text(MultilineBatch *batch);
 
@@ -369,35 +357,17 @@ static MessageTag *duplicate_mtags_excluding(MessageTag *mtags, const char *excl
 	return out;
 }
 
-/** Duplicate a message tag list, excluding tags with MTAG_HANDLER_FLAGS_FIRST_ONLY.
- * Used to build the tag set for subsequent fallback lines (lines 2..N),
- * where tags like msgid and +draft/reply should not be repeated.
- */
-static MessageTag *duplicate_mtags_for_subsequent_lines(MessageTag *mtags)
-{
-	MessageTag *out = NULL, *m, *dup;
-
-	for (m = mtags; m; m = m->next)
-	{
-		MessageTagHandler *handler = MessageTagHandlerFind(m->name);
-		if (handler && (handler->flags & MTAG_HANDLER_FLAGS_FIRST_ONLY))
-			continue;
-		dup = duplicate_mtag(m);
-		AddListItem(dup, out);
-	}
-	return out;
-}
-
 /** Run HOOKTYPE_CHANMSG per-line for a multiline batch.
  * First line carries mtags (incl msgid), subsequent lines don't.
  */
 static void multiline_run_chanmsg_hooks(Client *sender, Channel *channel,
                                         int sendflags, const char *member_modes, const char *targetstr,
-                                        MessageTag *mtags, MultilineLine *lines, SendType sendtype)
+                                        MessageTag *mtags, MLine *lines, SendType sendtype)
 {
-	MultilineLine *line;
+	MLine *line;
 
 	echo_message_inhibit = 1;
+	history_inhibit = 1;
 	for (line = lines; line; line = line->next)
 	{
 		RunHook(HOOKTYPE_CHANMSG, sender, channel, sendflags,
@@ -405,31 +375,38 @@ static void multiline_run_chanmsg_hooks(Client *sender, Channel *channel,
 			(line == lines) ? mtags : NULL,
 			line->text, sendtype);
 	}
+	history_inhibit = 0;
 	echo_message_inhibit = 0;
+
+	/* Fire multiline hook for atomic history storage etc. */
+	RunHook(HOOKTYPE_CHANMSG_MULTILINE, sender, channel, sendflags,
+		member_modes, targetstr, mtags, lines, sendtype);
 }
 
 /** Run HOOKTYPE_USERMSG per-line for a multiline batch.
  * First line carries mtags (incl msgid), subsequent lines don't.
  */
 static void multiline_run_usermsg_hooks(Client *sender, Client *target,
-                                        MessageTag *mtags, MultilineLine *lines, SendType sendtype)
+                                        MessageTag *mtags, MLine *lines, SendType sendtype)
 {
-	MultilineLine *line;
+	MLine *line;
 
 	echo_message_inhibit = 1;
+	history_inhibit = 1;
 	for (line = lines; line; line = line->next)
 	{
 		RunHook(HOOKTYPE_USERMSG, sender, target,
 			(line == lines) ? mtags : NULL,
 			line->text, sendtype);
 	}
+	history_inhibit = 0;
 	echo_message_inhibit = 0;
 }
 
 /** Free a linked list of multiline lines */
-static void multiline_free_lines(MultilineLine *lines)
+static void multiline_free_lines(MLine *lines)
 {
-	MultilineLine *l, *l_next;
+	MLine *l, *l_next;
 	for (l = lines; l; l = l_next)
 	{
 		l_next = l->next;
@@ -452,10 +429,10 @@ static void multiline_free_batch(MultilineBatch *batch)
 }
 
 /** Append a line to a multiline line list */
-static void multiline_append_line(MultilineLine **lines, MultilineLine **lines_tail,
+static void multiline_append_line(MLine **lines, MLine **lines_tail,
                                   int *line_count, const char *text, int is_concat)
 {
-	MultilineLine *line = safe_alloc(sizeof(MultilineLine));
+	MLine *line = safe_alloc(sizeof(MLine));
 	safe_strdup(line->text, text ? text : "");
 	line->concat = is_concat;
 	line->next = NULL;
@@ -478,7 +455,7 @@ static long calculate_multiline_fakelag(Client *client, MultilineBatch *batch)
 	FloodSettings *settings;
 	int lag_penalty, lag_penalty_bytes;
 	long lag_msec;
-	MultilineLine *l;
+	MLine *l;
 
 	if (!batch->lines)
 		return 0;
@@ -546,7 +523,7 @@ static inline int multiline_calc_add_bytes(int text_len, int line_count, int is_
  */
 static char *multiline_concat_text(MultilineBatch *batch)
 {
-	MultilineLine *l;
+	MLine *l;
 	int bufsize = 1; /* 1 for \0 */
 	char *buf;
 	int pos = 0;
@@ -590,10 +567,10 @@ static char *multiline_concat_text(MultilineBatch *batch)
  * Returns a list of "logical lines" for fallback delivery.
  * Caller must free the returned list with multiline_free_lines().
  */
-static MultilineLine *multiline_build_fallback_lines(MultilineBatch *batch)
+static MLine *multiline_build_fallback_lines(MultilineBatch *batch)
 {
-	MultilineLine *out = NULL, *out_tail = NULL;
-	MultilineLine *l;
+	MLine *out = NULL, *out_tail = NULL;
+	MLine *l;
 
 	for (l = batch->lines; l; l = l->next)
 	{
@@ -609,7 +586,7 @@ static MultilineLine *multiline_build_fallback_lines(MultilineBatch *batch)
 			out_tail->text = newtext;
 		} else {
 			/* Start a new logical line */
-			MultilineLine *newline = safe_alloc(sizeof(MultilineLine));
+			MLine *newline = safe_alloc(sizeof(MLine));
 			safe_strdup(newline->text, l->text ? l->text : "");
 			newline->concat = 0;
 			newline->next = NULL;
@@ -624,7 +601,7 @@ static MultilineLine *multiline_build_fallback_lines(MultilineBatch *batch)
 }
 
 /** Get cached fallback lines, building them on first call */
-static MultilineLine *multiline_get_fallback_lines(MultilineBatch *batch)
+static MLine *multiline_get_fallback_lines(MultilineBatch *batch)
 {
 	if (!batch->fallback_lines)
 		batch->fallback_lines = multiline_build_fallback_lines(batch);
@@ -634,7 +611,7 @@ static MultilineLine *multiline_get_fallback_lines(MultilineBatch *batch)
 /** Check if a batch has at least one non-blank line */
 static int multiline_batch_has_content(MultilineBatch *batch)
 {
-	MultilineLine *l;
+	MLine *l;
 
 	for (l = batch->lines; l; l = l->next)
 		if (l->text && l->text[0])
@@ -1129,7 +1106,7 @@ static void multiline_deliver_channel(Client *client, MultilineBatch *batch, Cha
 	const char *cmd = sendtype_to_cmd(batch->sendtype);
 	MessageTag *mtags = NULL;
 	int sendflags = SEND_ALL;
-	MultilineLine *line;
+	MLine *line;
 	char expanded_modes[64];
 	const char *filter_modes = NULL;
 
@@ -1232,10 +1209,6 @@ static void multiline_deliver_channel(Client *client, MultilineBatch *batch, Cha
 	/* S2S relay */
 	multiline_send_s2s_channel(client, batch, channel, mtags, cmd, client->direction, batch->target);
 
-	/* FIXME: history module needs a dedicated hook (or new approach)
-	 * to store and replay multiline batches properly, as per-line
-	 * hooks lose the multiline structure.
-	 */
 	multiline_run_chanmsg_hooks(client, channel, sendflags,
 	                           batch->member_modes[0] ? batch->member_modes : NULL,
 	                           batch->target, mtags, batch->lines, batch->sendtype);
@@ -1256,7 +1229,7 @@ static void multiline_deliver_user(Client *client, MultilineBatch *batch, Client
 	 */
 	if (MyUser(client) && !IsULine(client))
 	{
-		MultilineLine *line;
+		MLine *line;
 		for (line = batch->lines; line; line = line->next)
 		{
 			TextAnalysis ta;
@@ -1370,7 +1343,7 @@ static void multiline_send_batch_to_client(Client *to, Client *from, MultilineBa
                                            MessageTag *base_mtags, const char *targetstr, const char *cmd)
 {
 	char server_batch_id[BATCHLEN+1];
-	MultilineLine *l;
+	MLine *l;
 	MessageTag *m;
 
 	generate_batch_id(server_batch_id);
@@ -1415,7 +1388,7 @@ static void multiline_send_batch_to_client(Client *to, Client *from, MultilineBa
 static void multiline_send_fallback_to_client(Client *to, Client *from, MultilineBatch *batch,
                                               MessageTag *base_mtags, const char *targetstr, const char *cmd)
 {
-	MultilineLine *fallback_lines, *l;
+	MLine *fallback_lines, *l;
 	MessageTag *rest_mtags;
 	int first = 1;
 
@@ -1490,7 +1463,7 @@ static void multiline_send_s2s_to_direction(Client *direction, Client *from,
                                             MultilineBatch *batch, MessageTag *base_mtags, const char *cmd,
                                             const char *targetstr, const char *ref)
 {
-	MultilineLine *l;
+	MLine *l;
 	int first;
 
 	sendto_one(direction, NULL,

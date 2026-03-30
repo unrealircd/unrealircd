@@ -58,6 +58,12 @@ MODVAR int labeled_response_inhibit_end = 0;
  */
 MODVAR int echo_message_inhibit = 0;
 
+/* FIXME: in a future major release that allows module API changes,
+ * add SKIP_ECHO and SKIP_HISTORY sendflags flags instead of these
+ * globals. See HOOKTYPE_CHANMSG which already has sendflags.
+ */
+MODVAR int history_inhibit = 0;
+
 /** Set to 1 if an UTF8 incompatible nick character set is in use */
 MODVAR int non_utf8_nick_chars_in_use = 0;
 

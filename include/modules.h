@@ -589,10 +589,22 @@ struct HistoryFilter {
         int limit;			/**< Maximum number of lines to return */
 };
 
+/** A single line within a multiline batch.
+ * Used by the multiline module and the history API.
+ */
+typedef struct MLine MLine;
+struct MLine {
+	MLine *next;
+	char *text;		/**< Message text for this line (may be empty string for blank lines) */
+	int concat;		/**< 1 if draft/multiline-concat tag was present */
+};
+
 /** History log lines, used by HistoryResult among others */
 typedef struct HistoryLogLine HistoryLogLine;
 struct HistoryLogLine {
 	HistoryLogLine *prev, *next;
+	HistoryLogLine *next_in_batch;	/**< Next line in multiline batch, or NULL for standalone/last-in-batch */
+	int concat;		/**< 1 if draft/multiline-concat tag was present */
 	time_t t;		/**< Rounded time on seconds, for quick access. */
 	char *msgid;		/**< Pointer to 'msgid' mtag. Do NOT free this, it is freed by freeing 'mtags'. */
 	char *time;		/**< Pointer to 'time' mtag. Do NOT free this, it is freed by freeing 'mtags'. */
@@ -617,6 +629,7 @@ struct HistoryBackend {
 	HistoryResult *(*history_request)(const char *object, HistoryFilter *filter);  /**< Request history */
 	int (*history_delete)(const char *object, HistoryFilter *filter, int *rejected_deletes);  /**< Delete lines from the history. Returns the number of matching lines and sets rejected_deletes if not NULL */
 	int (*history_destroy)(const char *object);  /**< Destroy history of this object completely */
+	int (*history_add_multiline)(const char *object, MessageTag *mtags, const char *source, const char *cmd, const char *target, MLine *lines); /**< Add multiline batch to history (optional, may be NULL) */
 	Module *owner;                                /**< Module introducing this */
 	char unloaded;                                /**< Internal flag to indicate module is being unloaded */
 };
@@ -631,6 +644,7 @@ typedef struct {
 	HistoryResult *(*history_request)(const char *object, HistoryFilter *filter);
 	int (*history_delete)(const char *object, HistoryFilter *filter, int *rejected_deletes);
 	int (*history_destroy)(const char *object);
+	int (*history_add_multiline)(const char *object, MessageTag *mtags, const char *source, const char *cmd, const char *target, MLine *lines);
 } HistoryBackendInfo;
 
 /** @defgroup RPCAPI RPC API
@@ -1331,6 +1345,8 @@ extern APICallback *APICallbackAdd(Module *module, APICallback *mreq);
 #define HOOKTYPE_MOTD 130
 /** See hooktype_known_user_cache_change() */
 #define HOOKTYPE_KNOWN_USER_CACHE_CHANGE	131
+/** See hooktype_chanmsg_multiline() */
+#define HOOKTYPE_CHANMSG_MULTILINE	132
 
 
 /* Adding a new hook here?
@@ -1598,6 +1614,20 @@ int hooktype_usermsg(Client *client, Client *to, MessageTag *mtags, const char *
  * @return The return value is ignored (use return 0)
  */
 int hooktype_chanmsg(Client *client, Channel *channel, int sendflags, const char *member_modes, const char *target, MessageTag *mtags, const char *text, SendType sendtype);
+
+/** Called when a multiline batch is sent to a channel (function prototype for HOOKTYPE_CHANMSG_MULTILINE).
+ * This is called once for the entire batch, unlike HOOKTYPE_CHANMSG which fires per-line.
+ * @param client		The sender
+ * @param channel		The channel
+ * @param sendflags		One of SEND_TYPE_*
+ * @param member_modes		For sending to specific member modes, eg "o"
+ * @param target		The target string
+ * @param mtags			Message tags associated with the batch
+ * @param lines			The multiline batch lines
+ * @param sendtype		The message type, for example SEND_TYPE_PRIVMSG.
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_chanmsg_multiline(Client *client, Channel *channel, int sendflags, const char *member_modes, const char *target, MessageTag *mtags, MLine *lines, SendType sendtype);
 
 /** Called when a user wants to set the topic (function prototype for HOOKTYPE_CAN_SET_TOPIC).
  * @param client		The client issuing the command
@@ -2526,6 +2556,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_CONFIGRUN) && !ValidateHook(hooktype_configrun, func)) || \
         ((hooktype == HOOKTYPE_USERMSG) && !ValidateHook(hooktype_usermsg, func)) || \
         ((hooktype == HOOKTYPE_CHANMSG) && !ValidateHook(hooktype_chanmsg, func)) || \
+        ((hooktype == HOOKTYPE_CHANMSG_MULTILINE) && !ValidateHook(hooktype_chanmsg_multiline, func)) || \
         ((hooktype == HOOKTYPE_LOCAL_PART) && !ValidateHook(hooktype_local_part, func)) || \
         ((hooktype == HOOKTYPE_LOCAL_KICK) && !ValidateHook(hooktype_local_kick, func)) || \
         ((hooktype == HOOKTYPE_LOCAL_CHANMODE) && !ValidateHook(hooktype_local_chanmode, func)) || \

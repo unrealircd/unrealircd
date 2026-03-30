@@ -1344,6 +1344,37 @@ MessageTag *duplicate_mtag(MessageTag *mtag)
 	return m;
 }
 
+/** Duplicate a message tag list.
+ */
+MessageTag *duplicate_mtags(MessageTag *mtags)
+{
+	MessageTag *new_list = NULL;
+	MessageTag *m;
+
+	for (m = mtags; m; m = m->next)
+		AppendListItem(duplicate_mtag(m), new_list);
+	return new_list;
+}
+
+/** Duplicate a message tag list, excluding tags with MTAG_HANDLER_FLAGS_FIRST_ONLY.
+ * Used to build the tag set for subsequent lines (lines 2..N),
+ * where tags like msgid and +draft/reply should not be repeated.
+ */
+MessageTag *duplicate_mtags_for_subsequent_lines(MessageTag *mtags)
+{
+	MessageTag *new_list = NULL;
+	MessageTag *m;
+
+	for (m = mtags; m; m = m->next)
+	{
+		MessageTagHandler *handler = MessageTagHandlerFind(m->name);
+		if (handler && (handler->flags & MTAG_HANDLER_FLAGS_FIRST_ONLY))
+			continue;
+		AppendListItem(duplicate_mtag(m), new_list);
+	}
+	return new_list;
+}
+
 /** New message. Either really brand new, or inherited from other servers.
  * This function calls modules so they can add tags, such as:
  * msgid, time and account.
