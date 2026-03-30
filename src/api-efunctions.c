@@ -202,7 +202,12 @@ Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(),
 	if (!module || !(module->options & MOD_OPT_OFFICIAL))
 	{
 		if (module)
+		{
+			unreal_log(ULOG_ERROR, "module", "BUG_EFUNCTIONADD_NOT_OFFICIAL", NULL,
+			           "[BUG] EfunctionAdd() called by unofficial module '$module_name'.",
+			           log_data_string("module_name", module->header->name));
 			module->errorcode = MODERR_INVALID;
+		}
 		return NULL;
 	}
 
