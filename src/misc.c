@@ -1474,6 +1474,11 @@ int get_floodprot_channel_max_lines_default_handler(Channel *channel)
 	return INT_MAX;
 }
 
+int floodprot_check_multiline_batch_default_handler(Channel *channel, Client *client, int line_count)
+{
+	return 0;
+}
+
 int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass,
                               ConfigItem_class *clientclass, long modes, const char *snomask,
                               const char *vhost, const char *autojoin_channels)

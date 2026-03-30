@@ -36,8 +36,9 @@ typedef enum Flood {
 	CHFLD_NICK	= 4,
 	CHFLD_TEXT	= 5,
 	CHFLD_REPEAT	= 6,
+	CHFLD_PASTE	= 7,
 } Flood;
-#define NUMFLD	7 /* 7 flood types */
+#define NUMFLD	8 /* 8 flood types */
 
 /** Configuration settings */
 struct {
@@ -69,6 +70,7 @@ FloodType floodtypes[] = {
 	{ 'k', CHFLD_KNOCK,	"knockflood",		'K',	"",	NULL,						0, },
 	{ 'm', CHFLD_MSG,	"msg/noticeflood",	'm',	"M",	"~quiet:~security-group:unknown-users",		0, },
 	{ 'n', CHFLD_NICK,	"nickflood",		'N',	"",	"~nickchange:~security-group:unknown-users",	0, },
+	{ 'p', CHFLD_PASTE,	"pasteflood",		'\0',	"mM",	"~quiet:~security-group:unknown-users",		0, },
 	{ 't', CHFLD_TEXT,	"msg/noticeflood",	'\0',	"bd",	NULL,						1, },
 	{ 'r', CHFLD_REPEAT,	"repeating",		'\0',	"bd",	NULL,						1, },
 };
@@ -182,12 +184,15 @@ int floodprot_server_quit(Client *client, MessageTag *mtags);
 void inherit_settings(ChannelFloodProtection *from, ChannelFloodProtection *to);
 void reapply_profiles(void);
 int _get_floodprot_channel_max_lines(Channel *channel);
+int _floodprot_check_multiline_batch(Channel *channel, Client *client, int line_count);
 
 MOD_TEST()
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, floodprot_config_test_set_block);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, floodprot_config_test_antiflood_block);
 	EfunctionAdd(modinfo->handle, EFUNC_GET_FLOODPROT_CHANNEL_MAX_LINES, _get_floodprot_channel_max_lines);
+	EfunctionAdd(modinfo->handle, EFUNC_FLOODPROT_CHECK_MULTILINE_BATCH, _floodprot_check_multiline_batch);
 	return MOD_SUCCESS;
 }
 
@@ -334,27 +339,27 @@ static void init_default_channel_flood_profiles(void)
 	ChannelFloodProfile *f;
 
 	f = safe_alloc(sizeof(ChannelFloodProfile));
-	cmodef_put_param(&f->settings, "[10j#R10,30m#M10,7c#C15,5n#N15,10k#K15]:15");
+	cmodef_put_param(&f->settings, "[10j#R10,30m#M10,7c#C15,5n#N15,10k#K15,1p]:15");
 	safe_strdup(f->settings.profile, "very-strict");
 	AddListItem(f, channel_flood_profiles);
 
 	f = safe_alloc(sizeof(ChannelFloodProfile));
-	cmodef_put_param(&f->settings, "[15j#R10,40m#M10,7c#C15,8n#N15,10k#K15]:15");
+	cmodef_put_param(&f->settings, "[15j#R10,40m#M10,7c#C15,8n#N15,10k#K15,1p]:15");
 	safe_strdup(f->settings.profile, "strict");
 	AddListItem(f, channel_flood_profiles);
 
 	f = safe_alloc(sizeof(ChannelFloodProfile));
-	cmodef_put_param(&f->settings, "[30j#R10,40m#M10,7c#C15,8n#N15,10k#K15]:15");
+	cmodef_put_param(&f->settings, "[30j#R10,40m#M10,7c#C15,8n#N15,10k#K15,2p]:15");
 	safe_strdup(f->settings.profile, "normal");
 	AddListItem(f, channel_flood_profiles);
 
 	f = safe_alloc(sizeof(ChannelFloodProfile));
-	cmodef_put_param(&f->settings, "[45j#R10,60m#M10,7c#C15,10n#N15,10k#K15]:15");
+	cmodef_put_param(&f->settings, "[45j#R10,60m#M10,7c#C15,10n#N15,10k#K15,2p]:15");
 	safe_strdup(f->settings.profile, "relaxed");
 	AddListItem(f, channel_flood_profiles);
 
 	f = safe_alloc(sizeof(ChannelFloodProfile));
-	cmodef_put_param(&f->settings, "[60j#R10,90m#M10,7c#C15,10n#N15,10k#K15]:15");
+	cmodef_put_param(&f->settings, "[60j#R10,90m#M10,7c#C15,10n#N15,10k#K15,3p]:15");
 	safe_strdup(f->settings.profile, "very-relaxed");
 	AddListItem(f, channel_flood_profiles);
 
@@ -1292,12 +1297,12 @@ ChannelFloodProtection *get_channel_flood_settings(Channel *channel, int what)
 	if (channel->mode.mode & EXTMODE_FLOODLIMIT)
 	{
 		fld = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
-		if (fld->action[what])
+		if (fld->limit[what])
 			return fld;
 	}
 
 	fld = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'F');
-	if (fld && fld->action[what])
+	if (fld && fld->limit[what])
 		return fld;
 
 	return NULL;
@@ -1320,6 +1325,31 @@ int _get_floodprot_channel_max_lines(Channel *channel)
 		result = MIN(result, fld->limit[CHFLD_TEXT]);
 
 	return result;
+}
+
+/** Check if a multiline batch is allowed by the channel's +f 'p' (paste) limit.
+ * Called from multiline.c before delivering a batch to the channel.
+ * @param channel  The target channel
+ * @param client   The user sending the batch
+ * @param line_count Number of lines in the batch
+ * @returns 0 if allowed, 1 if denied (paste limit exceeded)
+ */
+int _floodprot_check_multiline_batch(Channel *channel, Client *client, int line_count)
+{
+	/* Exempt short batches (2 lines or less) — that's just normal conversation */
+	if (line_count < 3)
+		return 0;
+
+	if (!IsFloodLimit(channel))
+		return 0;
+
+	if (check_channel_access(client, channel, "hoaq") || IsULine(client))
+		return 0;
+
+	if (do_floodprot(channel, client, CHFLD_PASTE))
+		return 1; /* paste flood detected, reject batch */
+
+	return 0;
 }
 
 int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx)
@@ -1735,28 +1765,25 @@ int do_floodprot(Channel *channel, Client *client, int what)
 
 	unknown_user = user_allowed_by_security_group_name(client, "known-users") ? 0 : 1;
 
-	if (fld->limit[what])
+	if (TStime() - fld->timer[what] >= fld->per)
 	{
-		if (TStime() - fld->timer[what] >= fld->per)
-		{
-			/* reset */
-			fld->timer[what] = TStime();
-			fld->counter[what] = 1;
-			fld->counter_unknown_users[what] = unknown_user;
-		} else
-		{
-			fld->counter[what]++;
+		/* reset */
+		fld->timer[what] = TStime();
+		fld->counter[what] = 1;
+		fld->counter_unknown_users[what] = unknown_user;
+	} else
+	{
+		fld->counter[what]++;
 
-			if (unknown_user)
-				fld->counter_unknown_users[what]++;
+		if (unknown_user)
+			fld->counter_unknown_users[what]++;
 
-			if ((fld->counter[what] > fld->limit[what]) &&
-			    (TStime() - fld->timer[what] < fld->per))
-			{
-				if (MyUser(client))
-					do_floodprot_action(channel, what);
-				return 1; /* flood detected! */
-			}
+		if ((fld->counter[what] > fld->limit[what]) &&
+		    (TStime() - fld->timer[what] < fld->per))
+		{
+			if (MyUser(client))
+				do_floodprot_action(channel, what);
+			return 1; /* flood detected! */
 		}
 	}
 	return 0;

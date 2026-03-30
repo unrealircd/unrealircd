@@ -193,6 +193,7 @@ void (*send_isupport)(Client *client);
 void (*isupport_check_for_changes)(void);
 int (*get_connections_from_ip)(Client *client);
 int (*get_floodprot_channel_max_lines)(Channel *channel);
+int (*floodprot_check_multiline_batch)(Channel *channel, Client *client, int line_count);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
@@ -537,4 +538,5 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_ISUPPORT_CHECK_FOR_CHANGES, isupport_check_for_changes, NULL, 0);
 	efunc_init_function(EFUNC_GET_CONNECTIONS_FROM_IP, get_connections_from_ip, get_connections_from_ip_default_handler, 0);
 	efunc_init_function(EFUNC_GET_FLOODPROT_CHANNEL_MAX_LINES, get_floodprot_channel_max_lines, get_floodprot_channel_max_lines_default_handler, 0);
+	efunc_init_function(EFUNC_FLOODPROT_CHECK_MULTILINE_BATCH, floodprot_check_multiline_batch, floodprot_check_multiline_batch_default_handler, 0);
 }

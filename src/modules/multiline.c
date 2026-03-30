@@ -1204,6 +1204,13 @@ static void multiline_deliver_channel(Client *client, MultilineBatch *batch, Cha
 		safe_free(concat_text);
 	}
 
+	/* Check channel +f 'p' (paste flood) limit */
+	if (MyUser(client) && floodprot_check_multiline_batch(channel, client, batch->line_count))
+	{
+		sendto_one(client, NULL, ":%s FAIL BATCH MULTILINE_PASTE_LIMIT :Too many paste events in channel (+f)", me.name);
+		return;
+	}
+
 	/* Generate outgoing message tags */
 	new_message(client, batch->client_mtags, &mtags);
 

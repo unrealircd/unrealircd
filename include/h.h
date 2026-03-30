@@ -951,6 +951,7 @@ extern MODVAR void (*send_isupport)(Client *client);
 extern MODVAR void (*isupport_check_for_changes)(void);
 extern MODVAR int (*get_connections_from_ip)(Client *client);
 extern MODVAR int (*get_floodprot_channel_max_lines)(Channel *channel);
+extern MODVAR int (*floodprot_check_multiline_batch)(Channel *channel, Client *client, int line_count);
 /* /Efuncs */
 
 /* TLS functions */
@@ -991,6 +992,7 @@ extern int del_silence_default_handler(Client *client, const char *mask);
 extern int is_silenced_default_handler(Client *client, Client *acptr);
 extern int get_connections_from_ip_default_handler(Client *client);
 extern int get_floodprot_channel_max_lines_default_handler(Channel *channel);
+extern int floodprot_check_multiline_batch_default_handler(Channel *channel, Client *client, int line_count);
 extern void do_unreal_log_remote_deliver_default_handler(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, const char *json_serialized);
 extern int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost, const char *autojoin_channels);
 extern void webserver_send_response_default_handler(Client *client, int status, char *msg);
