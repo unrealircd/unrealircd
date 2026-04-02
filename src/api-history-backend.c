@@ -284,13 +284,12 @@ static void history_send_result_line(Client *client, HistoryLogLine *l, const ch
 		sendto_one(client, l->mtags, "%s", l->line);
 	} else {
 		MessageTag *m = safe_alloc(sizeof(MessageTag));
-		m->name = "batch";
-		m->value = strdup(batchid);
+		safe_strdup(m->name, "batch");
+		safe_strdup(m->value, batchid);
 		AddListItem(m, l->mtags);
 		sendto_one(client, l->mtags, "%s", l->line);
-		safe_free(m->value);
 		DelListItem(m, l->mtags);
-		safe_free(m);
+		free_message_tags(m);
 	}
 }
 
@@ -302,40 +301,47 @@ static void history_send_result_multiline(Client *client, HistoryLogLine *head,
 {
 	char inner_batch[BATCHLEN+1];
 	HistoryLogLine *l;
-	MessageTag outer_tag;
+	MessageTag *m;
 
 	generate_batch_id(inner_batch);
 
 	/* BATCH open: head's mtags (time, msgid, ...) + @batch=outer */
-	memset(&outer_tag, 0, sizeof(outer_tag));
-	outer_tag.name = "batch";
-	outer_tag.value = (char *)outer_batch;
-	AddListItem(&outer_tag, head->mtags);
+	m = safe_alloc(sizeof(MessageTag));
+	safe_strdup(m->name, "batch");
+	safe_strdup(m->value, outer_batch);
+	AddListItem(m, head->mtags);
 	sendto_one(client, head->mtags, ":%s BATCH +%s draft/multiline %s",
 	           me.name, inner_batch, object);
-	DelListItem(&outer_tag, head->mtags);
+	DelListItem(m, head->mtags);
+	free_message_tags(m);
 
 	/* Send all lines (head + continuations) with @batch=inner */
 	for (l = head; l; l = l->next_in_batch)
 	{
-		MessageTag batch_tag, concat_tag;
-		memset(&batch_tag, 0, sizeof(batch_tag));
-		batch_tag.name = "batch";
-		batch_tag.value = inner_batch;
+		MessageTag *line_mtags = duplicate_mtags_for_subsequent_lines(head->mtags);
+
+		m = safe_alloc(sizeof(MessageTag));
+		safe_strdup(m->name, "batch");
+		safe_strdup(m->value, inner_batch);
+		AddListItem(m, line_mtags);
+
 		if (l->concat)
 		{
-			memset(&concat_tag, 0, sizeof(concat_tag));
-			concat_tag.name = "draft/multiline-concat";
-			batch_tag.next = &concat_tag;
+			m = safe_alloc(sizeof(MessageTag));
+			safe_strdup(m->name, "draft/multiline-concat");
+			AddListItem(m, line_mtags);
 		}
-		sendto_one(client, &batch_tag, "%s", l->line);
+
+		sendto_one(client, line_mtags, "%s", l->line);
+		free_message_tags(line_mtags);
 	}
 
 	/* BATCH close: @batch=outer */
-	memset(&outer_tag, 0, sizeof(outer_tag));
-	outer_tag.name = "batch";
-	outer_tag.value = (char *)outer_batch;
-	sendto_one(client, &outer_tag, ":%s BATCH -%s", me.name, inner_batch);
+	m = safe_alloc(sizeof(MessageTag));
+	safe_strdup(m->name, "batch");
+	safe_strdup(m->value, outer_batch);
+	sendto_one(client, m, ":%s BATCH -%s", me.name, inner_batch);
+	free_message_tags(m);
 }
 
 /** Send a multiline batch from history as individual fallback lines.

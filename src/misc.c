@@ -1352,7 +1352,10 @@ MessageTag *duplicate_mtags(MessageTag *mtags)
 	MessageTag *m;
 
 	for (m = mtags; m; m = m->next)
-		AppendListItem(duplicate_mtag(m), new_list);
+	{
+		MessageTag *dup = duplicate_mtag(m);
+		AppendListItem(dup, new_list);
+	}
 	return new_list;
 }
 
@@ -1370,7 +1373,8 @@ MessageTag *duplicate_mtags_for_subsequent_lines(MessageTag *mtags)
 		MessageTagHandler *handler = MessageTagHandlerFind(m->name);
 		if (handler && (handler->flags & MTAG_HANDLER_FLAGS_FIRST_ONLY))
 			continue;
-		AppendListItem(duplicate_mtag(m), new_list);
+		MessageTag *dup = duplicate_mtag(m);
+		AppendListItem(dup, new_list);
 	}
 	return new_list;
 }

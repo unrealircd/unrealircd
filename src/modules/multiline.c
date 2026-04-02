@@ -1315,17 +1315,17 @@ static void multiline_echo_to_sender(Client *client, MultilineBatch *batch,
 	if (!MyUser(client) || !HasCapability(client, "echo-message"))
 		return;
 
-	MessageTag label_mtag;
 	MessageTag *echo_mtags = mtags;
+	MessageTag *label_mtag = NULL;
 
 	/* labeled-response: include label on the echo's BATCH open */
 	if (batch->label[0])
 	{
-		memset(&label_mtag, 0, sizeof(label_mtag));
-		label_mtag.name = "label";
-		label_mtag.value = batch->label;
-		label_mtag.next = mtags;
-		echo_mtags = &label_mtag;
+		label_mtag = safe_alloc(sizeof(MessageTag));
+		safe_strdup(label_mtag->name, "label");
+		safe_strdup(label_mtag->value, batch->label);
+		AddListItem(label_mtag, mtags);
+		echo_mtags = mtags;
 	}
 
 	if (HasMultiline(client))
@@ -1334,6 +1334,10 @@ static void multiline_echo_to_sender(Client *client, MultilineBatch *batch,
 	} else {
 		multiline_send_fallback_to_client(client, client, batch, echo_mtags, targetstr, cmd);
 	}
+
+	if (label_mtag)
+		DelListItem(label_mtag, mtags);
+	safe_free_message_tags(label_mtag);
 }
 
 /* ===================== SENDING HELPERS ===================== */
@@ -1356,28 +1360,28 @@ static void multiline_send_batch_to_client(Client *to, Client *from, MultilineBa
 	/* Send each line */
 	for (l = batch->lines; l; l = l->next)
 	{
-		/* Build mtags with @batch= and optionally ;draft/multiline-concat */
-		MessageTag batch_tag;
-		MessageTag concat_tag;
-		MessageTag *line_mtags = NULL;
+		/* Build line_mtags: base_mtags minus msgid, plus @batch=
+		 * and optionally ;draft/multiline-concat
+		 */
+		MessageTag *line_mtags = duplicate_mtags_for_subsequent_lines(base_mtags);
 
-		memset(&batch_tag, 0, sizeof(batch_tag));
-		batch_tag.name = "batch";
-		batch_tag.value = server_batch_id;
+		m = safe_alloc(sizeof(MessageTag));
+		safe_strdup(m->name, "batch");
+		safe_strdup(m->value, server_batch_id);
+		AddListItem(m, line_mtags);
 
 		if (l->concat)
 		{
-			memset(&concat_tag, 0, sizeof(concat_tag));
-			concat_tag.name = "draft/multiline-concat";
-			concat_tag.value = NULL;
-			concat_tag.next = NULL;
-			batch_tag.next = &concat_tag;
+			m = safe_alloc(sizeof(MessageTag));
+			safe_strdup(m->name, "draft/multiline-concat");
+			AddListItem(m, line_mtags);
 		}
-		line_mtags = &batch_tag;
 
 		sendto_prefix_one(to, from, line_mtags,
 		                  ":%s %s %s :%s",
 		                  from->name, cmd, targetstr, l->text ? l->text : "");
+
+		free_message_tags(line_mtags);
 	}
 
 	/* Send BATCH close */
@@ -1473,53 +1477,35 @@ static void multiline_send_s2s_to_direction(Client *direction, Client *from,
 	first = 1;
 	for (l = batch->lines; l; l = l->next)
 	{
-		MessageTag batch_tag;
-		MessageTag concat_tag;
-
-		memset(&batch_tag, 0, sizeof(batch_tag));
-		batch_tag.name = "batch";
-		batch_tag.value = (char *)ref;
-
-		if (l->concat)
-		{
-			memset(&concat_tag, 0, sizeof(concat_tag));
-			concat_tag.name = "draft/multiline-concat";
-			concat_tag.value = NULL;
-			concat_tag.next = NULL;
-			batch_tag.next = &concat_tag;
-		}
+		MessageTag *line_mtags = NULL;
+		MessageTag *m;
 
 		if (first)
 		{
-			/* First line carries base_mtags plus batch tag */
-			MessageTag *combined = NULL;
-			MessageTag *dup;
-			MessageTag *mtag_iter;
-
-			for (mtag_iter = base_mtags; mtag_iter; mtag_iter = mtag_iter->next)
-			{
-				dup = duplicate_mtag(mtag_iter);
-				AddListItem(dup, combined);
-			}
-			dup = duplicate_mtag(&batch_tag);
-			if (l->concat)
-			{
-				MessageTag *dup_concat = safe_alloc(sizeof(MessageTag));
-				safe_strdup(dup_concat->name, "draft/multiline-concat");
-				AddListItem(dup_concat, combined);
-			}
-			AddListItem(dup, combined);
-
-			sendto_prefix_one(direction, from, combined,
-			                  ":%s %s %s :%s",
-			                  from->id, cmd, targetstr, l->text ? l->text : "");
-			free_message_tags(combined);
+			/* First line carries all base_mtags (msgid, time, etc.) */
+			line_mtags = duplicate_mtags(base_mtags);
 			first = 0;
 		} else {
-			sendto_prefix_one(direction, from, &batch_tag,
-			                  ":%s %s %s :%s",
-			                  from->id, cmd, targetstr, l->text ? l->text : "");
+			/* Subsequent lines carry base_mtags minus msgid */
+			line_mtags = duplicate_mtags_for_subsequent_lines(base_mtags);
 		}
+
+		m = safe_alloc(sizeof(MessageTag));
+		safe_strdup(m->name, "batch");
+		safe_strdup(m->value, ref);
+		AddListItem(m, line_mtags);
+
+		if (l->concat)
+		{
+			m = safe_alloc(sizeof(MessageTag));
+			safe_strdup(m->name, "draft/multiline-concat");
+			AddListItem(m, line_mtags);
+		}
+
+		sendto_prefix_one(direction, from, line_mtags,
+		                  ":%s %s %s :%s",
+		                  from->id, cmd, targetstr, l->text ? l->text : "");
+		free_message_tags(line_mtags);
 	}
 
 	sendto_one(direction, NULL,
