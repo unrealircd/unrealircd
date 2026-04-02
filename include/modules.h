@@ -604,6 +604,7 @@ typedef struct HistoryLogLine HistoryLogLine;
 struct HistoryLogLine {
 	HistoryLogLine *prev, *next;
 	HistoryLogLine *next_in_batch;	/**< Next line in multiline batch, or NULL for standalone/last-in-batch */
+	int batch_linecount;	/**< Number of physical lines: 1 for regular msgs, N for multiline batch heads (head + continuations) */
 	int concat;		/**< 1 if draft/multiline-concat tag was present */
 	time_t t;		/**< Rounded time on seconds, for quick access. */
 	char *msgid;		/**< Pointer to 'msgid' mtag. Do NOT free this, it is freed by freeing 'mtags'. */

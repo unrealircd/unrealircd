@@ -675,6 +675,7 @@ HistoryLogLine *hbm_history_add_line(HistoryLogObject *h, MessageTag *mtags, con
 	}
 	h->dirty = 1;
 	h->num_lines++;
+	l->batch_linecount = 1;
 	if ((l->t < h->oldest_t) || (h->oldest_t == 0))
 		h->oldest_t = l->t;
 	return l;
@@ -687,6 +688,7 @@ HistoryLogLine *hbm_history_add_line(HistoryLogObject *h, MessageTag *mtags, con
 void hbm_history_del_line(HistoryLogObject *h, HistoryLogLine *l)
 {
 	HistoryLogLine *b, *b_next;
+	int batch_linecount = l->batch_linecount;
 
 	if (l->prev)
 		l->prev->next = l->next;
@@ -715,7 +717,7 @@ void hbm_history_del_line(HistoryLogObject *h, HistoryLogLine *l)
 	safe_free(l);
 
 	h->dirty = 1;
-	h->num_lines--;
+	h->num_lines -= batch_linecount;
 
 	/* IMPORTANT: updating h->oldest_t takes place at the caller
 	 * because it is in a better position to optimize the process
@@ -738,16 +740,18 @@ int hbm_history_add(const char *object, MessageTag *mtags, const char *line)
 		h->max_time = 86400;
 #endif
 	}
-	if (h->num_lines >= h->max_lines)
-	{
-		/* Delete previous line */
+	while (h->num_lines >= h->max_lines && h->head)
 		hbm_history_del_line(h, h->head);
-	}
 	hbm_history_add_line(h, mtags, line);
 	return 0;
 }
 
-/** Add a multiline batch as a single history entry */
+/** Add a multiline batch to history.
+ * Each physical line in the batch counts toward the +H line limit.
+ * If the batch exceeds max_lines on its own, it is still stored
+ * (the alternative would be an empty buffer). The oversized entry
+ * will be evicted when the next message arrives.
+ */
 int hbm_history_add_multiline(const char *object, MessageTag *mtags, const char *source,
                               const char *cmd, const char *target, MLine *lines)
 {
@@ -755,6 +759,7 @@ int hbm_history_add_multiline(const char *object, MessageTag *mtags, const char 
 	char buf[512];
 	MLine *ml;
 	HistoryLogLine *head_line, **dest;
+	int incoming_count;
 
 	if (!h->max_lines)
 	{
@@ -772,17 +777,26 @@ int hbm_history_add_multiline(const char *object, MessageTag *mtags, const char 
 	if (!lines)
 		return 0;
 
-	if (h->num_lines >= h->max_lines)
-	{
-		/* Delete oldest entry (may itself be a multiline batch) */
+	/* Count incoming physical lines */
+	incoming_count = 0;
+	for (ml = lines; ml; ml = ml->next)
+		incoming_count++;
+
+	/* Evict enough old entries to make room for the batch.
+	 * Always evict whole entries (atomic). If the batch exceeds
+	 * max_lines on its own, the loop empties the buffer and the
+	 * batch becomes the sole (oversized) entry.
+	 */
+	while (h->num_lines + incoming_count > h->max_lines && h->head)
 		hbm_history_del_line(h, h->head);
-	}
 
 	/* Build the batch head from the first line */
 	snprintf(buf, sizeof(buf), ":%s %s %s :%s", source, cmd, target, lines->text ? lines->text : "");
 	head_line = hbm_history_add_line(h, mtags, buf);
 	if (!head_line)
 		return 0; /* Rejected as duplicate */
+
+	head_line->batch_linecount = incoming_count;
 
 	/* Build continuation lines and link via next_in_batch */
 	dest = &head_line->next_in_batch;
@@ -796,6 +810,7 @@ int hbm_history_add_multiline(const char *object, MessageTag *mtags, const char 
 		/* Continuation lines have no mtags and are NOT in the main list */
 		*dest = cl;
 		dest = &cl->next_in_batch;
+		h->num_lines++;
 	}
 
 	h->dirty = 1;
@@ -1411,6 +1426,8 @@ int hbm_history_cleanup(HistoryLogObject *h)
 			l_next = l->next;
 			if (h->num_lines > h->max_lines)
 			{
+				if (l_next == NULL)
+					break; /* Keep the most recent entry even if it exceeds the line limit on its own (multiline batch) */
 				hbm_history_del_line(h, l);
 				continue;
 			}
@@ -1766,7 +1783,7 @@ static int hbm_read_db(const char *fname)
 			safe_free(mtag_value);
 		}
 		R_SAFE(unrealdb_read_str(db, &line));
-		if (h->num_lines >= h->max_lines)
+		while (h->num_lines >= h->max_lines && h->head)
 			hbm_history_del_line(h, h->head);
 		if (version >= 5001)
 		{
@@ -1777,24 +1794,38 @@ static int hbm_read_db(const char *fname)
 			/* Add the batch head */
 			l = hbm_history_add_line(h, mtags, line);
 			if (l)
-				l->concat = concat_flag;
-			/* Read and attach continuation lines */
-			if (continuation_count > 0 && l)
 			{
-				HistoryLogLine **dest = &l->next_in_batch;
+				l->concat = concat_flag;
+				l->batch_linecount = 1 + continuation_count;
+			}
+			/* Read continuation lines from db.
+			 * If head was accepted (l != NULL): attach them.
+			 * If head was rejected as duplicate (l == NULL, uncommon):
+			 * still consume the data to keep the reader in sync.
+			 */
+			if (continuation_count > 0)
+			{
+				HistoryLogLine *last_cl = NULL;
 				uint32_t i;
 				for (i = 0; i < continuation_count; i++)
 				{
 					uint32_t cl_concat;
 					char *cl_line = NULL;
-					HistoryLogLine *cl;
 					R_SAFE(unrealdb_read_int32(db, &cl_concat));
 					R_SAFE(unrealdb_read_str(db, &cl_line));
-					cl = safe_alloc(sizeof(HistoryLogLine) + strlen(cl_line) + 1);
-					strcpy(cl->line, cl_line);
-					cl->concat = cl_concat;
-					*dest = cl;
-					dest = &cl->next_in_batch;
+					if (l)
+					{
+						HistoryLogLine *cl;
+						cl = safe_alloc(sizeof(HistoryLogLine) + strlen(cl_line) + 1);
+						strcpy(cl->line, cl_line);
+						cl->concat = cl_concat;
+						if (last_cl == NULL)
+							l->next_in_batch = cl;
+						else
+							last_cl->next_in_batch = cl;
+						last_cl = cl;
+						h->num_lines++;
+					}
 					safe_free(cl_line);
 				}
 			}

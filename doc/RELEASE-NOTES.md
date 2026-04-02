@@ -5,6 +5,44 @@ This is the git version (development version) for future UnrealIRCd 6.2.4.
 This is work in progress and may not always be a stable version.
 
 ### Enhancements:
+* Add [IRCv3 draft/multiline](https://ircv3.net/specs/extensions/multiline)
+  support with a default max-lines of `15` for `known-users` and `7` for
+  `unknown-users` (with max-bytes `5250` and `1500` respectively). This
+  allows pasting a short snippet of code, config file, text from a site, etc.
+  Multiline guarantees:
+  * You will see the entire text with no delay between lines
+  * You won't see another persons chat half-way through such a paste
+  * For multiline supporting clients it is clear that all the text
+    belongs to each other, which can make selecting/copying easier.
+
+  This basically means short snippets/pastes like that can be completely on
+  IRC again. No need for a pastebin. Though, you may still need such a service
+  if you are pasting more lines.
+
+  Only a couple clients support sending multiline at the moment:
+  Halloy, WeeChat, IRCCloud, ObsidianIRC, and the bots BitBot & Limnoria.
+  Incoming lines with multilines are displayed normally in unsupporting clients,
+  using a fallback algorithm.
+
+  IMPORTANT: This module is **not loaded by default** at the moment. You need
+  a `loadmodule "multiline";` to use it.
+
+  Regarding limits and anti-flood:
+  * This obeys the limit of `+f` subtype `t`: so `+f [5t]:15` (max 5 lines
+    per 15 secs) means multiline max lines is also 5 for that channel.
+  * A new `+f` subtype `p` ("pastes") is introduced. Any multiline of
+    3 or more lines is considered a paste and something like `+f [2p]:15`
+    then only allows 2 pastes per 15 seconds in the channel. If any user
+    tries to do a 3rd paste within that period it is rejected.
+  * The [anti-flood profile](https://www.unrealircd.org/docs/Channel_anti-flood_settings)
+    `normal` has a limit of `[2p]:15`. Only profile `very-relaxed` allows
+    more: `[3p]:15`. Profiles `strict` and `very-strict` use `[1p]:15`.
+
+  Finally, it is good to know that multiline events are atomic, in chat
+  history too. This means you will either get them in full or not at all.
+  If your channel has `+H 5:60m` and the last message was a multiline event
+  of 15 lines, then we allow to temporarily overshoot and you will see 15 lines
+  (the alternative would be 0 lines, which would be worse).
 * [Conditional config](https://www.unrealircd.org/docs/Conditional_config):
   * New built-in variables `$CONFDIR`, `$DATADIR`, `$LOGDIR`, `$TMPDIR`,
     `$DOCDIR`, `$MODULESDIR` and `$MAXCONNECTIONS` are now
@@ -60,6 +98,51 @@ This is work in progress and may not always be a stable version.
 ### Fixes:
 
 ### Developers and protocol:
+* If the "multiline" module is loaded then we support
+  [`draft/multiline`](https://ircv3.net/specs/extensions/multiline):
+  *  If the client does not support draft/multiline then messages are shown using
+     the fallback implementation, as outlined in that draft (basically just regular
+     PRIVMSGs, nothing weird).
+  * Clients that do support the spec send a BATCH start + PRIVMSGs + BATCH end and
+    are allowed to send that in one go with no delay (no ratelimiting). As long
+    as they obey the advertised limits. They will get fake lag applied *after* the
+    multiline batch, with an algorithm similar to current fakelag but with a hard
+    cap of maximum 15s fakelag, which means 5s max effective fakelag.
+  * We use different limits for the `unknown-users` and `known-users` security group.
+    Clients will receive their `multiline=max-bytes=xx,maxlines=yy` message that
+    are a hard limit. If a client transitions between security groups, for example
+    because you authenticated to services, you will receive a `CAP NEW` event.
+  * Channels that have +f with subtype 't' set, such as +f `[5t]:15` which means
+    a maximum of 5 lines per 15 seconds, will also enforce that limit for multiline,
+    so max 5 lines in a multiline. If a client hits that limit, and this is possibly
+    since clients usually don't understand +f and only look at the CAP max-lines,
+    then we simply reject the multiline event at BATCH end.
+  * Similarly, we have a new +f subtype 'p' which limits the number of pastes in
+    a channel (which is 3+ line multiline events). For example, `+f [2p]:15` allows
+    two pastes in a channel per 15 seconds. A third one in the same timeframe
+    will result in a rejection after the BATCH end.
+  * In UnrealIRCd we buffer and will only do (nearly) all access checks and such
+    at the BATCH end, and not at the PRIVMSG/NOTICE stage, so only at the BATCH end
+    the client will receive an error message such as cannot send due to `+m`.
+    Since clients will send all events at full speed in one go, this makes sense
+    to do at BATCH end as well.
+  * In UnrealIRCd we do not allow CTCPs in multiline events. These make no sense and
+    also would result in different behavior in multiline vs non-multiline clients.
+  * Multiline events are checked per-line as usual, through spamfilter too, and
+    they are as-a-whole put again through spamfilter to avoid bypassing spamfilters.
+  * Multiline has a slightly odd interaction with `draft/history`:
+    * One multiline event is counted as 1 line. So if you use `CHATHISTORY` to
+      request 5 lines, you could get like 19 lines if one of those "5 lines" is
+      actually a multiline of 15 lines, or even 5*15 lines.
+    * As mentioned, for `+H` we allow to overshoot the max history lines if
+      the latest message was a multiline message. So for `+H 5:1h` and a
+      15 line multiline batch, we will store 15 lines. Multiline batches are
+      atomic so the alternative would be to store 0 lines, which is worse in
+      terms of functionality than temporarily overshooting the line limit.
+    * The spec requires only the 1st line to have a `msgid` and lines 2-N of a
+      multiline event are forbidden to have a `msgid`. They can have other tags, though.
+    * As expected, we show multiline nested batches in history if `draft/multiline`
+      is supported.
 
 UnrealIRCd 6.2.3
 -----------------
