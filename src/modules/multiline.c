@@ -103,6 +103,7 @@ void multiline_mdata_free(ModData *m);
 int multiline_close_connection(Client *client);
 int multiline_remote_quit(Client *client, MessageTag *mtags, const char *comment);
 int multiline_server_quit(Client *client, MessageTag *mtags);
+int multiline_known_user_cache_change(Client *client);
 
 /* Timer */
 EVENT(multiline_timeout_check);
@@ -140,6 +141,7 @@ static void multiline_free_s2s_batches_all(ModData *m);
 
 static long CAP_MULTILINE = 0L;
 static long CAP_BATCH = 0L;
+static long CAP_NOTIFY = 0L;
 #define HasMultiline(c) (HasCapabilityFast(c, CAP_MULTILINE) && HasCapabilityFast(c, CAP_BATCH))
 static ModDataInfo *multiline_md = NULL;
 static S2SMultilineBatch *s2s_batches = NULL;
@@ -197,6 +199,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CLOSE_CONNECTION, 0, multiline_close_connection);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_QUIT, 0, multiline_remote_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_QUIT, 0, multiline_server_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_KNOWN_USER_CACHE_CHANGE, 1000000, multiline_known_user_cache_change); /* (prio: near-last) */
 
 	/* Timer for batch timeout */
 	EventAdd(modinfo->handle, "multiline_timeout", multiline_timeout_check, NULL, 5000, 0);
@@ -210,6 +213,7 @@ MOD_INIT()
 MOD_LOAD()
 {
 	CAP_BATCH = ClientCapabilityBit("batch");
+	CAP_NOTIFY = ClientCapabilityBit("cap-notify");
 	return MOD_SUCCESS;
 }
 
@@ -230,6 +234,31 @@ const char *multiline_capability_parameter(Client *client)
 		(int)f->period[FLD_MULTILINE],
 		(int)f->limit[FLD_MULTILINE]);
 	return buf;
+}
+
+/** Called when a user's known-user status changes.
+ * Sends an updated CAP NEW with the new multiline parameters
+ * so the client knows its updated max-lines/max-bytes limits.
+ */
+int multiline_known_user_cache_change(Client *client)
+{
+	if (!MyConnect(client))
+		return HOOK_CONTINUE;
+
+	if (!HasCapabilityFast(client, CAP_NOTIFY))
+		return HOOK_CONTINUE;
+
+	if (client->local->cap_protocol >= 302)
+	{
+		const char *args = multiline_capability_parameter(client);
+		sendto_one(client, NULL, ":%s CAP %s NEW :draft/multiline=%s",
+			me.name, (*client->name ? client->name : "*"), args);
+	} else {
+		sendto_one(client, NULL, ":%s CAP %s NEW :draft/multiline",
+			me.name, (*client->name ? client->name : "*"));
+	}
+
+	return HOOK_CONTINUE;
 }
 
 /* ===================== MESSAGE TAG ===================== */
