@@ -42,7 +42,7 @@ struct {
 /** State for a locally-initiated multiline batch (one per local client) */
 typedef struct MultilineBatch MultilineBatch;
 struct MultilineBatch {
-	char batch_id[BATCHLEN+1];	/**< Client-chosen batch reference tag */
+	char batch_id[MAXBATCHREFLEN+1];	/**< Client-chosen batch reference tag */
 	char *target;			/**< Target channel or nick */
 	SendType sendtype;		/**< SEND_TYPE_PRIVMSG or SEND_TYPE_NOTICE */
 	int sendtype_set;		/**< Has sendtype been determined (from first line)? */
@@ -745,13 +745,6 @@ CMD_OVERRIDE_FUNC(multiline_override_batch)
 		if (moddata_local_client(client, multiline_md).ptr)
 		{
 			sendto_one(client, NULL, ":%s FAIL BATCH MULTILINE_INVALID :You already have an open multiline batch", me.name);
-			return;
-		}
-
-		/* Validate batch reference length */
-		if (strlen(ref) > BATCHLEN || strlen(ref) < 1)
-		{
-			sendto_one(client, NULL, ":%s FAIL BATCH MULTILINE_INVALID :Invalid batch reference tag", me.name);
 			return;
 		}
 

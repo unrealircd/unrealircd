@@ -203,6 +203,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define UMODETABLESZ (sizeof(long) * 8)
 #define MAXCCUSERS		20 /* Maximum for set::anti-flood::max-concurrent-conversations */
 #define BATCHLEN	22
+#define MAXBATCHREFLEN	48	/* Max length of client-sent batch reference tags */
 #define MAXSPAMFILTERIDLEN	24
 
 /*

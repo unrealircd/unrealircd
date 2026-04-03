@@ -2935,7 +2935,7 @@ int valid_batch_reference_tag(const char *ref)
 {
 	const char *p;
 
-	if (BadPtr(ref) || strlen(ref) > 48)
+	if (BadPtr(ref) || (strlen(ref) > MAXBATCHREFLEN))
 		return 0;
 	for (p = ref; *p; p++)
 	{
