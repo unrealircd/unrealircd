@@ -43,7 +43,7 @@ This is work in progress and may not always be a stable version.
   If your channel has `+H 5:60m` and the last message was a multiline event
   of 15 lines, then we allow to temporarily overshoot and you will see 15 lines
   (the alternative would be 0 lines, which would be worse).
-* [Conditional config](https://www.unrealircd.org/docs/Conditional_config):
+* [Conditional config](https://www.unrealircd.org/docs/Defines_and_conditional_config):
   * New built-in variables `$CONFDIR`, `$DATADIR`, `$LOGDIR`, `$TMPDIR`,
     `$DOCDIR`, `$MODULESDIR` and `$MAXCONNECTIONS` are now
     available for use in the configuration file.
@@ -84,6 +84,8 @@ This is work in progress and may not always be a stable version.
   * Text analysis: `text_byte_count`, `text_character_count`, `word_count`,
     `uppercase_percentage`, `digit_percentage`, `non_ascii_percentage`,
     `max_repeat_count`, `mixed_utf8_score`, `unicode_block_count`
+  * The [documentation](https://www.unrealircd.org/docs/Security_groups#Rules)
+    also has been rewritten to group the functions for a better overall view.
 
 ### Changes:
 * [GeoIP](https://www.unrealircd.org/docs/GeoIP):
