@@ -285,6 +285,11 @@ extern int send_queued(Client *);
 extern void send_queued_cb(int fd, int revents, void *data);
 extern void sendto_serv_butone_nickcmd(Client *one, MessageTag *mtags, Client *client, const char *umodes);
 extern void    sendto_message_one(Client *to, Client *from, const char *sender, const char *cmd, const char *nick, const char *msg);
+extern LineCache *linecache_init(void);
+extern void linecache_free(LineCache *cache);
+extern void sendto_prefix_one_cached(LineCache *cache, int line_opts, Client *to, Client *from,
+                                     MessageTag *mtags,
+                                     FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,6,7)));
 extern void sendto_channel(Channel *channel, Client *from, Client *skip,
                            char *member_modes, long clicap, int sendflags,
                            MessageTag *mtags,

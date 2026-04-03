@@ -26,34 +26,12 @@
 
 #include "unrealircd.h"
 
-/* Local structs */
-typedef enum LineCacheUserType { LCUT_NORMAL=0, LCUT_OPER=1, LCUT_REMOTE=2 } LineCacheUserType;
-
-typedef struct LineCacheLine LineCacheLine;
-struct LineCacheLine
-{
-	LineCacheLine *prev, *next;
-	LineCacheUserType user_type;
-	unsigned long caps;
-	int line_opts;			/**< Cached line message options (rare) */
-	char *line;			/**< Entire cached line, including message tags (if appropriate) and \r\n */
-	int linelen;			/**< strlen(line) */
-};
-
-typedef struct LineCache LineCache;
-struct LineCache
-{
-	// later: possible options?
-	LineCacheLine *items;
-};
 
 /* Some forward declarions are needed */
 void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl);
 void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl) __attribute__((format(printf,4,0)));
 static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, const char *pattern, va_list vl) __attribute__((format(printf,4,0)));
 static void vsendto_prefix_one_cached(LineCache *cache, int line_opts, Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl) __attribute__((format(printf,6,0)));
-static LineCache *linecache_init(void);
-static void linecache_free(LineCache *cache);
 static void linecache_add(LineCache *cache, int line_opts, Client *to, const char *line, int linelen);
 static LineCacheLine *linecache_get(LineCache *cache, int line_opts, Client *to);
 
@@ -1104,13 +1082,13 @@ void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char 
 	}
 }
 
-static LineCache *linecache_init(void)
+LineCache *linecache_init(void)
 {
 	LineCache *e = safe_alloc(sizeof(LineCache));
 	return e;
 }
 
-static void linecache_free(LineCache *cache)
+void linecache_free(LineCache *cache)
 {
 	LineCacheLine *e, *e_next;
 	for (e = cache->items; e; e = e_next)
@@ -1213,6 +1191,24 @@ static void vsendto_prefix_one_cached(LineCache *cache, int line_opts, Client *t
 		linecache_add(cache, line_opts, to, out, len);
 		sendbufto_one(to, out, 0);
 	}
+}
+
+/** Cached version of sendto_prefix_one() - varargs wrapper.
+ * @param cache		The LineCache to use
+ * @param line_opts	LineCache options for this particular message/line (usually 0)
+ * @param to		The client to send to
+ * @param from		The sender
+ * @param mtags		Any message tags associated with this message (can be NULL)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
+ */
+void sendto_prefix_one_cached(LineCache *cache, int line_opts, Client *to, Client *from,
+                              MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
+{
+	va_list vl;
+	va_start(vl, pattern);
+	vsendto_prefix_one_cached(cache, line_opts, to, from, mtags, pattern, vl);
+	va_end(vl);
 }
 
 /** Introduce user to all other servers, except the one to skip.

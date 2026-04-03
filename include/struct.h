@@ -147,6 +147,10 @@ typedef struct LocalMember LocalMember;
 typedef struct OutgoingWebRequest OutgoingWebRequest;
 typedef struct OutgoingWebResponse OutgoingWebResponse;
 
+typedef enum LineCacheUserType { LCUT_NORMAL=0, LCUT_OPER=1, LCUT_REMOTE=2 } LineCacheUserType;
+typedef struct LineCacheLine LineCacheLine;
+typedef struct LineCache LineCache;
+
 typedef enum OperClassEntryType { OPERCLASSENTRY_ALLOW=1, OPERCLASSENTRY_DENY=2} OperClassEntryType;
 
 typedef enum OperPermission { OPER_ALLOW=1, OPER_DENY=0} OperPermission;
@@ -1607,6 +1611,21 @@ struct MessageTag {
 	MessageTag *prev, *next;
 	char *name;
 	char *value;
+};
+
+struct LineCacheLine
+{
+	LineCacheLine *prev, *next;
+	LineCacheUserType user_type;
+	unsigned long caps;
+	int line_opts;
+	char *line;
+	int linelen;
+};
+
+struct LineCache
+{
+	LineCacheLine *items;
 };
 
 /* conf preprocessor */

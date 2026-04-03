@@ -1371,7 +1371,10 @@ static void multiline_echo_to_sender(Client *client, MultilineBatch *batch,
 
 /* ===================== SENDING HELPERS ===================== */
 
-/** Send a multiline batch to a local client that supports draft/multiline */
+/** Send a multiline batch to a single local client that supports draft/multiline.
+ * Used for user-to-user delivery, echo-message, and S2S incoming.
+ * For channel broadcast, use multiline_deliver_to_local_members() instead.
+ */
 static void multiline_send_batch_to_client(Client *to, Client *from, MultilineBatch *batch,
                                            MessageTag *base_mtags, const char *targetstr, const char *cmd)
 {
@@ -1417,7 +1420,10 @@ static void multiline_send_batch_to_client(Client *to, Client *from, MultilineBa
 	sendto_prefix_one(to, from, NULL, ":%s BATCH -%s", from->name, server_batch_id);
 }
 
-/** Send multiline as individual fallback lines to a local client */
+/** Send multiline as individual fallback lines to a single local client.
+ * Used for user-to-user delivery, echo-message, and S2S incoming.
+ * For channel broadcast, use multiline_deliver_to_local_members() instead.
+ */
 static void multiline_send_fallback_to_client(Client *to, Client *from, MultilineBatch *batch,
                                               MessageTag *base_mtags, const char *targetstr, const char *cmd)
 {
@@ -1460,35 +1466,156 @@ static void multiline_send_fallback_to_client(Client *to, Client *from, Multilin
 }
 
 /** Deliver multiline batch to local channel members.
- * Iterates local_members, applies STATUSMSG filtering, skips sender and deaf
- * as requested, and dispatches via batch or fallback depending on capability.
+ * Uses two passes (multiline-capable, then fallback) with pre-built
+ * message tags. This uses LineCache, which makes this function
+ * a bit complex but saves A LOT of CPU so is necessary.
  * @param skip         Client to skip (sender for local delivery, NULL for S2S)
  * @param sendflags    Send flags (SKIP_DEAF etc.), 0 if not applicable
  */
 static void multiline_deliver_to_local_members(Channel *channel, Client *from,
-                                               MultilineBatch *batch, MessageTag *mtags, const char *targetstr,
+                                               MultilineBatch *batch, MessageTag *base_mtags, const char *targetstr,
                                                const char *cmd, const char *filter_modes, Client *skip, int sendflags)
 {
 	LocalMember *lm;
+	MLine *l;
+	MLine *fallback_lines; // merged lines for non-multiline clients
+	MessageTag *m; // temporary for building tag lists
+	MessageTag *rest_mtags; // base_mtags minus first-only tags (msgid, +draft/reply)
+	MessageTag *mtags_line; // rest_mtags + batch=<id>, for multiline content lines
+	MessageTag *mtags_line_concat; // mtags_line + draft/multiline-concat
+	LineCache *cache_batch_open; // cache for "BATCH +id draft/multiline target"
+	LineCache *cache_batch_close; // cache for "BATCH -id"
+	LineCache **cache_lines = NULL; // one cache per multiline content line
+	LineCache **cache_fb = NULL; // one cache per non-blank fallback line
+	char server_batch_id[BATCHLEN+1]; // shared across all multiline recipients
+	int i;
+	int fallback_count = 0; // number of non-blank fallback lines
+	int first; // tracks first non-blank line in fallback pass
 
+	/* === Phase 1: Pre-build shared resources (once, not per-client) === */
+
+	/* Single batch ID shared across all multiline-capable recipients.
+	 * Safe: each client connection tracks batches independently.
+	 */
+	generate_batch_id(server_batch_id);
+
+	/* rest_mtags: base_mtags minus first-only tags (msgid, +draft/reply).
+	 * Used for subsequent lines in both multiline and fallback paths.
+	 */
+	rest_mtags = duplicate_mtags_for_subsequent_lines(base_mtags);
+
+	/* mtags_line: rest_mtags + batch=<id>, for non-concat multiline lines */
+	mtags_line = duplicate_mtags(rest_mtags);
+	m = safe_alloc(sizeof(MessageTag));
+	safe_strdup(m->name, "batch");
+	safe_strdup(m->value, server_batch_id);
+	AddListItem(m, mtags_line);
+
+	/* mtags_line_concat: mtags_line + draft/multiline-concat */
+	mtags_line_concat = duplicate_mtags(mtags_line);
+	m = safe_alloc(sizeof(MessageTag));
+	safe_strdup(m->name, "draft/multiline-concat");
+	AddListItem(m, mtags_line_concat);
+
+	/* === Phase 2: Allocate LineCaches === */
+
+	/* Multiline path: BATCH open + N content lines + BATCH close */
+	cache_batch_open = linecache_init();
+	cache_batch_close = linecache_init();
+	if (batch->line_count > 0)
+		cache_lines = safe_alloc(sizeof(LineCache *) * batch->line_count);
+	for (i = 0; i < batch->line_count; i++)
+		cache_lines[i] = linecache_init();
+
+	/* Fallback path: one cache per non-blank fallback line */
+	fallback_lines = multiline_get_fallback_lines(batch);
+	for (l = fallback_lines; l; l = l->next)
+		if (l->text && l->text[0])
+			fallback_count++;
+	if (fallback_count > 0)
+		cache_fb = safe_alloc(sizeof(LineCache *) * fallback_count);
+	for (i = 0; i < fallback_count; i++)
+		cache_fb[i] = linecache_init();
+
+	/* === Phase 3: Multiline pass === */
 	for (lm = channel->local_members; lm; lm = lm->next)
 	{
 		Client *acptr = lm->ptr->client;
 
 		if (acptr == skip)
 			continue;
-
 		if (IsDeaf(acptr) && (sendflags & SKIP_DEAF))
 			continue;
-
 		if (filter_modes && !check_channel_access_member(lm->ptr, filter_modes))
 			continue;
+		if (!HasMultiline(acptr))
+			continue;
 
-		if (HasMultiline(acptr))
-			multiline_send_batch_to_client(acptr, from, batch, mtags, targetstr, cmd);
-		else
-			multiline_send_fallback_to_client(acptr, from, batch, mtags, targetstr, cmd);
+		/* BATCH open */
+		sendto_prefix_one_cached(cache_batch_open, 0, acptr, from, base_mtags,
+		                         ":%s BATCH +%s draft/multiline %s",
+		                         from->name, server_batch_id, targetstr);
+
+		/* Content lines */
+		i = 0;
+		for (l = batch->lines; l; l = l->next, i++)
+		{
+			sendto_prefix_one_cached(cache_lines[i], 0, acptr, from,
+			                         l->concat ? mtags_line_concat : mtags_line,
+			                         ":%s %s %s :%s",
+			                         from->name, cmd, targetstr, l->text ? l->text : "");
+		}
+
+		/* BATCH close */
+		sendto_prefix_one_cached(cache_batch_close, 0, acptr, from, NULL,
+		                         ":%s BATCH -%s", from->name, server_batch_id);
 	}
+
+	/* === Phase 4: Fallback pass === */
+	for (lm = channel->local_members; lm; lm = lm->next)
+	{
+		Client *acptr = lm->ptr->client;
+
+		if (acptr == skip)
+			continue;
+		if (IsDeaf(acptr) && (sendflags & SKIP_DEAF))
+			continue;
+		if (filter_modes && !check_channel_access_member(lm->ptr, filter_modes))
+			continue;
+		if (HasMultiline(acptr))
+			continue;
+
+		first = 1;
+		i = 0;
+		for (l = fallback_lines; l; l = l->next)
+		{
+			/* Spec: "Servers MUST NOT send blank lines to clients
+			 * that have not negotiated the multiline capability."
+			 */
+			if (!l->text || !l->text[0])
+				continue;
+
+			sendto_prefix_one_cached(cache_fb[i], 0, acptr, from,
+			                         first ? base_mtags : rest_mtags,
+			                         ":%s %s %s :%s",
+			                         from->name, cmd, targetstr, l->text);
+			first = 0;
+			i++;
+		}
+	}
+
+	/* === Phase 5: Cleanup === */
+	linecache_free(cache_batch_open);
+	linecache_free(cache_batch_close);
+	for (i = 0; i < batch->line_count; i++)
+		linecache_free(cache_lines[i]);
+	safe_free(cache_lines);
+	for (i = 0; i < fallback_count; i++)
+		linecache_free(cache_fb[i]);
+	safe_free(cache_fb);
+	free_message_tags(rest_mtags);
+	free_message_tags(mtags_line);
+	free_message_tags(mtags_line_concat);
 }
 
 /** Send a multiline batch (BATCH open + lines + BATCH close) to a single server direction */
