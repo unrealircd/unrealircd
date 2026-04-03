@@ -394,7 +394,33 @@ CMD_FUNC(cmd_chathistory)
 		filter->limit = CHATHISTORY_LIMIT;
 
 	if ((r = history_request(channel->name, filter)))
-		history_send_result(client, r);
+	{
+		if ((r->num_bytes*1.5) > get_sendq(client))
+		{
+			/* This would get rather close to max sendq. We reject
+			 * the request as to not cause "Max SendQ exceeded".
+			 */
+			sendto_one(client, NULL, ":%s FAIL CHATHISTORY MESSAGE_ERROR %s %s :History too large to deliver",
+				me.name, parv[1], channel->name);
+		} else {
+			/* All ok, bump fake lag and add the result.
+			 * The fakelag bump under normal circumstances is tiny
+			 * at like 400ms worst-case without multiline. However, it
+			 * becomes a different story if nearly all lines are multilines
+			 * and we get into a "worst case scenario" with amplifications
+			 * where the max 50 becomes 50*15=750 lines in practice.
+			 * In such a case we may bump up to 5000ms max. This should
+			 * not happen under normal circumstances and only when someone
+			 * with lots of time on their hands is doing something evil
+			 * in that channel (with apparent consent of the ops).
+			 */
+			long fakelag_ms = r->num_bytes / 64;
+			if (fakelag_ms > 5000)
+				fakelag_ms = 5000;
+			add_fake_lag(client, fakelag_ms);
+			history_send_result(client, r);
+		}
+	}
 
 end:
 	if (filter)

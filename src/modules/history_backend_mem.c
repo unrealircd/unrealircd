@@ -675,7 +675,8 @@ HistoryLogLine *hbm_history_add_line(HistoryLogObject *h, MessageTag *mtags, con
 	}
 	h->dirty = 1;
 	h->num_lines++;
-	l->batch_linecount = 1;
+	l->num_lines = 1;
+	l->num_bytes = strlen(l->line);
 	if ((l->t < h->oldest_t) || (h->oldest_t == 0))
 		h->oldest_t = l->t;
 	return l;
@@ -688,7 +689,7 @@ HistoryLogLine *hbm_history_add_line(HistoryLogObject *h, MessageTag *mtags, con
 void hbm_history_del_line(HistoryLogObject *h, HistoryLogLine *l)
 {
 	HistoryLogLine *b, *b_next;
-	int batch_linecount = l->batch_linecount;
+	int num_lines = l->num_lines;
 
 	if (l->prev)
 		l->prev->next = l->next;
@@ -717,7 +718,7 @@ void hbm_history_del_line(HistoryLogObject *h, HistoryLogLine *l)
 	safe_free(l);
 
 	h->dirty = 1;
-	h->num_lines -= batch_linecount;
+	h->num_lines -= num_lines;
 
 	/* IMPORTANT: updating h->oldest_t takes place at the caller
 	 * because it is in a better position to optimize the process
@@ -758,7 +759,7 @@ int hbm_history_add_multiline(const char *object, MessageTag *mtags, const char 
 	HistoryLogObject *h = hbm_find_or_add_object(object);
 	char buf[512];
 	MLine *ml;
-	HistoryLogLine *head_line, **dest;
+	HistoryLogLine *head_line, *last;
 	int incoming_count;
 
 	if (!h->max_lines)
@@ -796,10 +797,10 @@ int hbm_history_add_multiline(const char *object, MessageTag *mtags, const char 
 	if (!head_line)
 		return 0; /* Rejected as duplicate */
 
-	head_line->batch_linecount = incoming_count;
+	head_line->num_lines = incoming_count;
 
 	/* Build continuation lines and link via next_in_batch */
-	dest = &head_line->next_in_batch;
+	last = head_line;
 	for (ml = lines->next; ml; ml = ml->next)
 	{
 		HistoryLogLine *cl;
@@ -808,9 +809,10 @@ int hbm_history_add_multiline(const char *object, MessageTag *mtags, const char 
 		strcpy(cl->line, buf);
 		cl->concat = ml->concat;
 		/* Continuation lines have no mtags and are NOT in the main list */
-		*dest = cl;
-		dest = &cl->next_in_batch;
+		last->next_in_batch = cl;
+		last = cl;
 		h->num_lines++;
+		head_line->num_bytes += strlen(cl->line);
 	}
 
 	h->dirty = 1;
@@ -820,15 +822,17 @@ int hbm_history_add_multiline(const char *object, MessageTag *mtags, const char 
 HistoryLogLine *duplicate_log_line(HistoryLogLine *l)
 {
 	HistoryLogLine *n = safe_alloc(sizeof(HistoryLogLine) + strlen(l->line) + 1);
-	HistoryLogLine **dest;
+	HistoryLogLine *last;
 	HistoryLogLine *b;
 
 	strcpy(n->line, l->line); /* safe, see memory allocation above ^ */
 	n->concat = l->concat;
+	n->num_lines = l->num_lines;
+	n->num_bytes = l->num_bytes;
 	hbm_duplicate_mtags(n, l->mtags);
 
 	/* Duplicate multiline continuation chain */
-	dest = &n->next_in_batch;
+	last = n;
 	for (b = l->next_in_batch; b; b = b->next_in_batch)
 	{
 		HistoryLogLine *nb = safe_alloc(sizeof(HistoryLogLine) + strlen(b->line) + 1);
@@ -839,8 +843,8 @@ HistoryLogLine *duplicate_log_line(HistoryLogLine *l)
 		 * continuation lines don't have.
 		 */
 		nb->mtags = duplicate_mtags(b->mtags);
-		*dest = nb;
-		dest = &nb->next_in_batch;
+		last->next_in_batch = nb;
+		last = nb;
 	}
 
 	return n;
@@ -860,6 +864,8 @@ static void hbm_result_append_line(HistoryResult *r, HistoryLogLine *n)
 		n->prev = r->log_tail;
 		r->log_tail = n; /* we are the new tail */
 	}
+	r->num_lines += n->num_lines;
+	r->num_bytes += n->num_bytes;
 }
 
 /** Quickly prepend a new line 'n' to result 'r' */
@@ -868,6 +874,8 @@ static void hbm_result_prepend_line(HistoryResult *r, HistoryLogLine *n)
 	if (!r->log)
 		r->log_tail = n;
 	AddListItem(n, r->log);
+	r->num_lines += n->num_lines;
+	r->num_bytes += n->num_bytes;
 }
 
 /** Put lines in HistoryResult that are after a certain msgid or
@@ -1796,7 +1804,7 @@ static int hbm_read_db(const char *fname)
 			if (l)
 			{
 				l->concat = concat_flag;
-				l->batch_linecount = 1 + continuation_count;
+				l->num_lines = 1 + continuation_count;
 			}
 			/* Read continuation lines from db.
 			 * If head was accepted (l != NULL): attach them.
@@ -1825,6 +1833,7 @@ static int hbm_read_db(const char *fname)
 							last_cl->next_in_batch = cl;
 						last_cl = cl;
 						h->num_lines++;
+						l->num_bytes += strlen(cl->line);
 					}
 					safe_free(cl_line);
 				}
