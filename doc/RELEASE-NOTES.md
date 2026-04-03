@@ -96,8 +96,19 @@ This is work in progress and may not always be a stable version.
   * Both `geoip_classic` and `geoip_mmdb` now receive automatic updates
   * You can `@define $NO_DEFAULT_GEOIP "1"` to disable auto configuration
     and updates.
+* Errors in TLS certificate/keys are now fatal errors.
 
 ### Fixes:
+* The Windows version could crash after a few minutes due to missing MODVAR.
+* Named extbans in `+e` and `+I` were supposed to be sent with letters instead
+  of names to servers not supporting them (UnrealIRCd older than 6 and Services),
+  but this was not the case. Is now fixed. This bug caused for example Anope 2.0.x
+  to get confused if `KEEPMODES` was on a channel and you had like `+I ~account:xyz`.
+  Then next time anope relinked it would add `+I *!*@~account:xyz`. This bug is
+  present since 6.0.0 already. It does not affect `+b`.
+* In some uncommon cases, `X25519MLKEM768` was not negotiated when it could
+  have. So we now try harder. In technical terms we now use tuple syntax
+  for the TLS group to signal that we can afford a Hello Retry Request.
 
 ### Developers and protocol:
 * If the "multiline" module is loaded then we support
@@ -145,6 +156,8 @@ This is work in progress and may not always be a stable version.
       multiline event are forbidden to have a `msgid`. They can have other tags, though.
     * As expected, we show multiline nested batches in history if `draft/multiline`
       is supported.
+* ClientContext now has a new field `fake_lag_added_msec` and there is
+  a new function `subtract_fake_lag()`. This is used by multiline, for example.
 
 UnrealIRCd 6.2.3
 -----------------
