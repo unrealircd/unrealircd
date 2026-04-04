@@ -1148,7 +1148,17 @@ CommandOverride *CommandOverrideAdd(Module *module, const char *name, int priori
 {
 	RealCommand *p;
 	CommandOverride *ovr;
-	
+
+	if (module && (loop.config_status <= CONFIG_STATUS_INIT))
+	{
+		unreal_log(ULOG_ERROR, "module", "BUG_COMMANDOVERRIDEADD_NOT_MOD_LOAD", NULL,
+		           "[BUG] CommandOverrideAdd() called by module '$module_name' before MOD_LOAD(). "
+		           "This must be in MOD_LOAD(), otherwise the command to be overridden may not exist yet.",
+		           log_data_string("module_name", module->header->name));
+		module->errorcode = MODERR_INVALID;
+		return NULL;
+	}
+
 	if (!(p = find_command_simple(name)))
 	{
 		if (module)
