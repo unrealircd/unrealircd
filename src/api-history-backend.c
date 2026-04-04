@@ -117,10 +117,10 @@ void unload_history_backend_commit(HistoryBackend *m)
 	safe_free(m);
 }
 
-/**
- * Removes the specified history backend.
- *
+/** Remove a history backend.
  * @param m The history backend to remove.
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
  */
 void HistoryBackendDel(HistoryBackend *m)
 {

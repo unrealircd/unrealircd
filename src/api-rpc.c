@@ -96,9 +96,10 @@ RPCHandler *RPCHandlerFind(const char *method)
 	return NULL;
 }
 
-/** Remove the specified RPC handler - modules should not call this.
- * This is done automatically for modules on unload, so is only called internally.
- * @param m The PRC handler to remove.
+/** Remove an RPC handler.
+ * @param m The RPC handler to remove.
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
  */
 void RPCHandlerDel(RPCHandler *m)
 {

@@ -235,10 +235,10 @@ ISupport *ISupportAdd(Module *module, const char *token, const char *value)
 	return isupport;
 }
 
-/**
- * Removes the specified isupport token.
- *
- * @param isupport The token to remove.
+/** Remove an ISUPPORT (005) token.
+ * @param isupport The ISUPPORT token to remove.
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
  */
 void ISupportDel(ISupport *isupport)
 {

@@ -104,9 +104,10 @@ APICallback *APICallbackFind(const char *name, APICallbackType callback_type)
 	return NULL;
 }
 
-/** Remove the specified API callback - modules should not call this.
- * This is done automatically for modules on unload, so is only called internally.
- * @param m The API Callback to remove.
+/** Remove an API callback.
+ * @param m The API callback to remove.
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
  */
 void APICallbackDel(APICallback *m)
 {

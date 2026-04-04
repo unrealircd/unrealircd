@@ -937,6 +937,11 @@ Versionflag *VersionflagFind(char flag)
 	return NULL;
 }
 
+/** Add a version flag character.
+ * @param module	The module adding the version flag
+ * @param flag		The version flag character
+ * @returns The Versionflag pointer, or NULL on failure.
+ */
 Versionflag *VersionflagAdd(Module *module, char flag)
 {
 	Versionflag *vflag;
@@ -983,6 +988,12 @@ Versionflag *VersionflagAdd(Module *module, char flag)
 	return vflag;
 }
 	
+/** Delete a version flag.
+ * @param vflag		The version flag to delete
+ * @param module	The module that owns this version flag
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
+ */
 void VersionflagDel(Versionflag *vflag, Module *module)
 {
 	ModuleChild *owner;
@@ -1047,6 +1058,12 @@ Hook *HookAddMain(Module *module, int hooktype, int priority, int (*func)(), voi
 	return p;
 }
 
+/** Delete a hook.
+ * @param hook		The hook to delete
+ * @returns The next Hook in the list, or NULL.
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
+ */
 Hook *HookDel(Hook *hook)
 {
 	Hook *p, *q;
@@ -1083,6 +1100,19 @@ int cnt = 0;
 	return cnt;
 }
 
+/** Add a callback - internal function.
+ * Use the CallbackAdd(), CallbackAddVoid(), CallbackAddPVoid(),
+ * CallbackAddString() or CallbackAddConstString() macros instead.
+ * @param module		The module adding the callback
+ * @param cbtype		The callback type (CALLBACKTYPE_*)
+ * @param func			Function returning int (or NULL)
+ * @param vfunc			Function returning void (or NULL)
+ * @param pvfunc		Function returning void* (or NULL)
+ * @param stringfunc		Function returning char* (or NULL)
+ * @param conststringfunc	Function returning const char* (or NULL)
+ * @returns The Callback pointer, or NULL on failure.
+ * @note Only one callback per type can be registered.
+ */
 Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)())
 {
 	Callback *p;
@@ -1118,6 +1148,12 @@ Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfun
 	return p;
 }
 
+/** Delete a callback.
+ * @param cb	The callback to delete
+ * @returns The next Callback in the list, or NULL.
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
+ */
 Callback *CallbackDel(Callback *cb)
 {
 	Callback *p, *q;
@@ -1144,6 +1180,16 @@ Callback *CallbackDel(Callback *cb)
 	return NULL;
 }
 
+/** Add a command override handler.
+ * @param module	The module adding the override
+ * @param name		The command name to override (eg: "PRIVMSG")
+ * @param priority	Priority for this override. Lower value = called first. Use 0 for normal.
+ * @param function	The override function to call
+ * @returns The CommandOverride pointer, or NULL on failure.
+ * @note Call this from MOD_LOAD() or later, not from MOD_INIT().
+ *       The command to override may not exist yet during MOD_INIT()
+ *       due to module load order.
+ */
 CommandOverride *CommandOverrideAdd(Module *module, const char *name, int priority, OverrideCmdFunc function)
 {
 	RealCommand *p;
@@ -1195,6 +1241,11 @@ CommandOverride *CommandOverrideAdd(Module *module, const char *name, int priori
 	return ovr;
 }
 
+/** Delete a command override.
+ * @param cmd	The command override to delete
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
+ */
 void CommandOverrideDel(CommandOverride *cmd)
 {
 	DelListItem(cmd, cmd->command->overriders);
@@ -1220,6 +1271,18 @@ void CommandOverrideDel(CommandOverride *cmd)
 	safe_free(cmd);
 }
 
+/** Call the next command override handler in the chain.
+ * Call this from your override function to pass control to the
+ * next override or the original command handler.
+ * @param ovr		The current command override
+ * @param clictx	The client context
+ * @param client	The client issuing the command
+ * @param mtags		Message tags associated with the command
+ * @param parc		Parameter count
+ * @param parv		Parameter array
+ * @note It is recommended to use the CALL_NEXT_COMMAND_OVERRIDE() macro instead,
+ *       which passes all arguments automatically and is future-proof.
+ */
 void CallCommandOverride(CommandOverride *ovr, ClientContext *clictx, Client *client, MessageTag *mtags, int parc, const char *parv[])
 {
 	if (ovr->next)

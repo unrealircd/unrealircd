@@ -144,6 +144,10 @@ static void CleanupEvents(void)
 	}
 }
 
+/** Find an event by name.
+ * @param name		The event name to search for
+ * @returns The Event pointer, or NULL if not found
+ */
 Event *EventFind(const char *name)
 {
 	Event *eventptr;

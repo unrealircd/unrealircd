@@ -129,6 +129,8 @@ static Command *CommandAddInternal(Module *module, const char *cmd, CmdFunc func
 /** Delete a command - only used internally.
  * @param command	The command (can be NULL)
  * @param cmd		The "real" command
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
  */
 void CommandDelX(Command *command, RealCommand *cmd)
 {
@@ -159,8 +161,10 @@ void CommandDelX(Command *command, RealCommand *cmd)
 		safe_free(command);
 }
 
-/** De-register a command - not called by modules, only internally.
- * For modules this is done automatically.
+/** Delete a command.
+ * @param command	The command to delete
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
  */
 void CommandDel(Command *command)
 {

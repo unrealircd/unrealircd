@@ -125,6 +125,12 @@ static void extban_add_sorted(Extban *n)
 	}
 }
 
+/** Register an extended ban.
+ * @param module	The module registering the extended ban
+ * @param req		The ExtbanInfo request struct (name, callbacks, etc.)
+ * @returns The Extban pointer, or NULL on failure.
+ * @note Call this from MOD_INIT().
+ */
 Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 {
 	Extban *e;
@@ -279,6 +285,11 @@ void unload_all_unused_extbans(void)
 
 }
 
+/** Delete an extended ban.
+ * @param e	The extended ban to delete
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
+ */
 void ExtbanDel(Extban *e)
 {
 	/* Always free the module object */
@@ -303,7 +314,15 @@ void ExtbanDel(Extban *e)
 		unload_extban_commit(e);
 }
 
-/** General is_ok for n!u@h stuff that also deals with recursive extbans.
+/** is_ok handler that accepts nick!user@host patterns and stacked extbans.
+ * Use this as your extban's is_ok callback when your extban matches
+ * against nick!user@host masks and you want to allow stacking with
+ * other extbans (e.g. ~yourextban:~account:someone).
+ *
+ * Example usage:
+ * @code
+ * req.is_ok = extban_is_ok_nuh_extban;
+ * @endcode
  */
 int extban_is_ok_nuh_extban(BanContext *b)
 {
@@ -355,9 +374,15 @@ int extban_is_ok_nuh_extban(BanContext *b)
 	return 1; /* Either not an extban, or extban has NULL is_ok. Good to go. */
 }
 
-/** Some kind of general conv_param routine,
- * to ensure the parameter is nick!user@host.
- * most of the code is just copied from clean_ban_mask.
+/** conv_param handler that normalizes the parameter as nick!user@host.
+ * For example, "foo" becomes "foo!*@*". Does NOT allow stacking with
+ * other extbans. If you want to support stacking, use
+ * extban_conv_param_nuh_or_extban() instead.
+ *
+ * Example usage:
+ * @code
+ * req.conv_param = extban_conv_param_nuh;
+ * @endcode
  */
 const char *extban_conv_param_nuh(BanContext *b, Extban *extban)
 {
@@ -369,7 +394,17 @@ const char *extban_conv_param_nuh(BanContext *b, Extban *extban)
 	return convert_regular_ban(tmpbuf, retbuf, sizeof(retbuf));
 }
 
-/** conv_param to deal with stacked extbans.
+/** conv_param handler that normalizes nick!user@host and allows stacked extbans.
+ * If the parameter is a plain mask like "foo", it is normalized to "foo!*@*".
+ * If the parameter is another extban like "~account:someone", the inner
+ * extban's conv_param is called and the result is reassembled.
+ * This is the most commonly used conv_param handler.
+ *
+ * Example usage:
+ * @code
+ * req.is_ok = extban_is_ok_nuh_extban;
+ * req.conv_param = extban_conv_param_nuh_or_extban;
+ * @endcode
  */
 const char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 {
@@ -426,6 +461,26 @@ const char *extban_conv_param_nuh_or_extban(BanContext *b, Extban *self_extban)
 	return ret;
 }
 
+/** Reassemble an extban string by prepending the extban prefix to a parameter.
+ * This is used in custom conv_param handlers for extbans that support stacking.
+ * After calling the inner extban's conv_param to get the cleaned parameter,
+ * call this to reconstruct the full ban string (e.g. "~quiet:someone!*@*").
+ * Automatically uses named or letter form based on server configuration.
+ * @param remainder	The cleaned parameter from the inner conv_param (may be NULL)
+ * @param b		The ban context
+ * @param extban	The inner extban
+ * @param buf		Buffer to store the result
+ * @param buflen	Size of the buffer
+ * @returns The assembled ban string in buf, or NULL if remainder was NULL
+ *
+ * Example usage in a custom conv_param handler (from timedban):
+ * @code
+ * Extban *extban = findmod_by_bantype(mask, &nextbanstr);
+ * newb->banstr = nextbanstr;
+ * ret = extban->conv_param(newb, extban);
+ * ret = prefix_with_extban(ret, newb, extban, retbuf, sizeof(retbuf));
+ * @endcode
+ */
 char *prefix_with_extban(const char *remainder, BanContext *b, Extban *extban, char *buf, size_t buflen)
 {
 	/* Yes, we support this because it makes code at the caller cleaner */

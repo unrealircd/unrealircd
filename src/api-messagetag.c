@@ -127,9 +127,10 @@ MessageTagHandler *MessageTagHandlerFind(const char *name)
 	return NULL;
 }
 
-/** Remove the specified message tag handler - modules should not call this.
- * This is done automatically for modules on unload, so is only called internally.
+/** Remove a message tag handler.
  * @param m The message tag handler to remove.
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
  */
 void MessageTagHandlerDel(MessageTagHandler *m)
 {

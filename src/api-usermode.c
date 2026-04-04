@@ -161,9 +161,16 @@ void usermode_add_sorted(Umode *n)
 }
 
 
-/* UmodeAdd:
- * Add a usermode with character 'ch', if global is set to 1 the usermode is global
- * (sent to other servers) otherwise it's a local usermode
+/** Register a new user mode.
+ * @param module		The module (usually modinfo->handle)
+ * @param ch			The mode character (eg 'x')
+ * @param global		UMODE_GLOBAL if the mode is sent to other servers, UMODE_LOCAL for local only
+ * @param unset_on_deoper	1 to automatically unset this mode when the user de-opers
+ * @param allowed		Function to check if a user is allowed to set/unset this mode
+ *				(eg umode_allow_all, umode_allow_opers, umode_allow_none)
+ * @param mode			Pointer to a long that will receive the mode bit
+ * @returns The Umode pointer, or NULL on failure
+ * @note Call this from MOD_INIT().
  */
 Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*allowed)(Client *client, int what), long *mode)
 {
@@ -243,6 +250,11 @@ Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*
 }
 
 
+/** Delete a user mode.
+ * @param umode		The user mode to delete
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
+ */
 void UmodeDel(Umode *umode)
 {
 	/* Always free the module object */

@@ -245,6 +245,12 @@ Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(),
 	return p;
 }
 
+/** Delete an efunction.
+ * @param cb	The efunction to delete
+ * @returns The next Efunction in the list, or NULL.
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
+ */
 Efunction *EfunctionDel(Efunction *cb)
 {
 	Efunction *p, *q;

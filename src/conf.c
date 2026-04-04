@@ -309,7 +309,27 @@ const char *config_var(ConfigEntry *cep)
 	return buf;
 }
 
-/** Helper function for erroring on duplicate items.
+/** Detect and report duplicate configuration directives.
+ * On first call (when *var is 0), sets *var to 1 and returns 0.
+ * On subsequent calls (when *var is already 1), reports a
+ * configuration error, increments the error counter, and returns 1.
+ * @param var		Pointer to a tracking variable (initialize to 0)
+ * @param ce		The configuration entry being checked
+ * @param errors	Pointer to the error counter
+ * @returns 1 if this is a duplicate, 0 otherwise
+ *
+ * Example usage:
+ * @code
+ * int has_vhost = 0, has_password = 0;
+ * int errors = 0;
+ * for (cep = ce->items; cep; cep = cep->next)
+ * {
+ *     if (!strcmp(cep->name, "vhost"))
+ *         config_detect_duplicate(&has_vhost, cep, &errors);
+ *     else if (!strcmp(cep->name, "password"))
+ *         config_detect_duplicate(&has_password, cep, &errors);
+ * }
+ * @endcode
  */
 int config_detect_duplicate(int *var, ConfigEntry *ce, int *errors)
 {
@@ -501,6 +521,11 @@ int config_parse_flood_generic(const char *str, Configuration *conf, char *block
 	return 1;
 }
 
+/** Convert a configuration value string to a long, based on the type.
+ * @param orig		The original string value
+ * @param flags		The type of value: CFG_TIME, CFG_SIZE, or CFG_YESNO
+ * @returns The converted numeric value
+ */
 long config_checkval(const char *orig, unsigned short flags)
 {
 	char *value;
@@ -1502,6 +1527,11 @@ ConfigEntry *config_find_entry(ConfigEntry *ce, const char *name)
 	return cep;
 }
 
+/** Report a configuration error.
+ * Used in HOOKTYPE_CONFIGTEST handlers to report issues.
+ * @param format	printf-style format string
+ * @param ...		Format arguments
+ */
 void config_error(FORMAT_STRING(const char *format), ...)
 {
 	va_list		ap;
@@ -1516,11 +1546,22 @@ void config_error(FORMAT_STRING(const char *format), ...)
 	unreal_log_raw(ULOG_ERROR, "config", "CONFIG_ERROR_GENERIC", NULL, buffer);
 }
 
+/** Report a missing required configuration entry.
+ * @param filename	The configuration file name
+ * @param line		The line number
+ * @param entry		The missing entry (eg "set::something" or "deny link::reason")
+ */
 void config_error_missing(const char *filename, int line, const char *entry)
 {
 	config_error("%s:%d: %s is missing", filename, line, entry);
 }
 
+/** Report an unknown configuration directive.
+ * @param filename	The configuration file name
+ * @param line		The line number
+ * @param block		The configuration block name
+ * @param entry		The unknown directive name
+ */
 void config_error_unknown(const char *filename, int line, const char *block,
 	const char *entry)
 {
@@ -1570,6 +1611,10 @@ void config_status(FORMAT_STRING(const char *format), ...)
 	unreal_log_raw(ULOG_INFO, "config", "CONFIG_INFO_GENERIC", NULL, buffer);
 }
 
+/** Report a non-fatal configuration warning.
+ * @param format	printf-style format string
+ * @param ...		Format arguments
+ */
 void config_warn(FORMAT_STRING(const char *format), ...)
 {
 	va_list		ap;
@@ -1660,6 +1705,12 @@ int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *e
 	return 0;
 }
 
+/** Check if a configuration entry has a blank or empty value.
+ * If so, report the error via config_error_empty().
+ * @param cep		The configuration entry to check
+ * @param block		The configuration block name (for the error message)
+ * @returns 1 if the value is blank or empty, 0 otherwise
+ */
 int config_is_blankorempty(ConfigEntry *cep, const char *block)
 {
 	if (!cep->value)

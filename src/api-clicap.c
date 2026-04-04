@@ -257,10 +257,10 @@ void unload_clicap_commit(ClientCapability *clicap)
 	clicap_update_affecting();
 
 }
-/**
- * Removes the specified clicap token.
- *
- * @param clicap The token to remove.
+/** Remove a client capability.
+ * @param clicap The client capability to remove.
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
  */
 void ClientCapabilityDel(ClientCapability *clicap)
 {

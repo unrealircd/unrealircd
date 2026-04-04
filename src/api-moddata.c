@@ -103,6 +103,14 @@ void moddatatype_dump(Client *client)
 	}
 }
 
+/** Register module data storage.
+ * This allows a module to attach custom data to clients, channels,
+ * memberships, members, or other objects.
+ * @param module	The module registering the moddata
+ * @param req		The ModDataInfo request struct (name, type, callbacks, etc.)
+ * @returns The ModDataInfo pointer, or NULL on failure.
+ * @note Call this from MOD_INIT().
+ */
 ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 {
 	int slotav = 0; /* highest available slot */
@@ -326,6 +334,11 @@ void unload_moddata_commit(ModDataInfo *md)
 	safe_free(md);
 }
 
+/** Delete module data storage.
+ * @param md	The ModDataInfo to delete
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
+ */
 void ModDataDel(ModDataInfo *md)
 {
 	/* Delete the reference to us first */

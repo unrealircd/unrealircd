@@ -945,9 +945,45 @@ extern RPCHandler *RPCHandlerAdd(Module *module, RPCHandlerInfo *mreq);
 extern void RPCHandlerDel(RPCHandler *m);
 
 #ifndef GCC_TYPECHECKING
+/** Add a hook that returns an int.
+ * @param module	The module adding the hook
+ * @param hooktype	The hook type (HOOKTYPE_*)
+ * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
+ * @param func		The hook function to add
+ * @returns The Hook pointer, or NULL on failure.
+ * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
+ *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
+ */
 #define HookAdd(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, func, NULL, NULL, NULL)
+/** Add a hook that returns void.
+ * @param module	The module adding the hook
+ * @param hooktype	The hook type (HOOKTYPE_*)
+ * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
+ * @param func		The hook function to add
+ * @returns The Hook pointer, or NULL on failure.
+ * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
+ *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
+ */
 #define HookAddVoid(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, func, NULL, NULL)
+/** Add a hook that returns a string (char *).
+ * @param module	The module adding the hook
+ * @param hooktype	The hook type (HOOKTYPE_*)
+ * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
+ * @param func		The hook function to add
+ * @returns The Hook pointer, or NULL on failure.
+ * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
+ *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
+ */
 #define HookAddString(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, func, NULL)
+/** Add a hook that returns a const string (const char *).
+ * @param module	The module adding the hook
+ * @param hooktype	The hook type (HOOKTYPE_*)
+ * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
+ * @param func		The hook function to add
+ * @returns The Hook pointer, or NULL on failure.
+ * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
+ *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
+ */
 #define HookAddConstString(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, NULL, func)
 #else
 #define HookAdd(module, hooktype, priority, func) \
@@ -974,13 +1010,39 @@ __extension__ ({ \
 })
 #endif /* GCC_TYPCHECKING */
 
+/** Add a hook - internal function.
+ * Use the HookAdd(), HookAddVoid(), HookAddString()
+ * or HookAddConstString() macros instead.
+ * @param module		The module adding the hook
+ * @param hooktype		The hook type (HOOKTYPE_*)
+ * @param priority		Priority for hook execution order. Lower value = called first. Use 0 for normal.
+ * @param intfunc		Function returning int (or NULL)
+ * @param voidfunc		Function returning void (or NULL)
+ * @param stringfunc		Function returning char* (or NULL)
+ * @param conststringfunc	Function returning const char* (or NULL)
+ * @returns The Hook pointer, or NULL on failure.
+ * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
+ *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
+ */
 extern Hook	*HookAddMain(Module *module, int hooktype, int priority, int (*intfunc)(), void (*voidfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)());
 extern Hook	*HookDel(Hook *hook);
 
 extern Hooktype *HooktypeAdd(Module *module, const char *string, int *type);
 extern void HooktypeDel(Hooktype *hooktype, Module *module);
 
+/** Run all hooks for a given hook type (used by the IRCd core to call modules).
+ * All hook functions registered for the hooktype are called with the provided arguments.
+ * Return values from the hook functions are ignored.
+ * @param hooktype	The hook type (HOOKTYPE_*)
+ * @param ...		Arguments to pass to the hook functions
+ */
 #define RunHook(hooktype,...) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(__VA_ARGS__); } while(0)
+/** Run all hooks for a given hook type, returning early from the calling function
+ * if a hook signals to stop processing (used by the IRCd core to call modules).
+ * @param hooktype	The hook type (HOOKTYPE_*)
+ * @param retchk	Condition on return value to stop processing, eg != 0
+ * @param ...		Arguments to pass to the hook functions
+ */
 #define RunHookReturn(hooktype,retchk,...) \
 { \
  int retval; \
@@ -991,6 +1053,14 @@ extern void HooktypeDel(Hooktype *hooktype, Module *module);
   if (retval retchk) return; \
  } \
 }
+/** Run all hooks for a given hook type, returning the hook's return value from
+ * the calling function if a hook signals to stop processing
+ * (used by the IRCd core to call modules).
+ * @param hooktype	The hook type (HOOKTYPE_*)
+ * @param retchk	Condition on return value to stop processing, eg != 0
+ * @param ...		Arguments to pass to the hook functions
+ * @returns The return value of the hook function that triggered the early return
+ */
 #define RunHookReturnInt(hooktype,retchk,...) \
 { \
  int retval; \
@@ -1002,21 +1072,115 @@ extern void HooktypeDel(Hooktype *hooktype, Module *module);
  } \
 }
 
+/** Add a callback that returns an int.
+ * @param module	The module adding the callback
+ * @param cbtype	The callback type (CALLBACKTYPE_*)
+ * @param func		The callback function to add
+ * @returns The Callback pointer, or NULL on failure.
+ * @note Call this from MOD_TEST().
+ * @note Only one callback per type can be registered.
+ */
 #define CallbackAdd(module, cbtype, func) CallbackAddMain(module, cbtype, func, NULL, NULL, NULL, NULL)
+/** Add a callback that returns void.
+ * @param module	The module adding the callback
+ * @param cbtype	The callback type (CALLBACKTYPE_*)
+ * @param func		The callback function to add
+ * @returns The Callback pointer, or NULL on failure.
+ * @note Call this from MOD_TEST().
+ * @note Only one callback per type can be registered.
+ */
 #define CallbackAddVoid(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, func, NULL, NULL, NULL)
+/** Add a callback that returns a pointer (void *).
+ * @param module	The module adding the callback
+ * @param cbtype	The callback type (CALLBACKTYPE_*)
+ * @param func		The callback function to add
+ * @returns The Callback pointer, or NULL on failure.
+ * @note Call this from MOD_TEST().
+ * @note Only one callback per type can be registered.
+ */
 #define CallbackAddPVoid(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, func, NULL, NULL)
+/** Add a callback that returns a string (char *).
+ * @param module	The module adding the callback
+ * @param cbtype	The callback type (CALLBACKTYPE_*)
+ * @param func		The callback function to add
+ * @returns The Callback pointer, or NULL on failure.
+ * @note Call this from MOD_TEST().
+ * @note Only one callback per type can be registered.
+ */
 #define CallbackAddString(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, NULL, func, NULL)
+/** Add a callback that returns a const string (const char *).
+ * @param module	The module adding the callback
+ * @param cbtype	The callback type (CALLBACKTYPE_*)
+ * @param func		The callback function to add
+ * @returns The Callback pointer, or NULL on failure.
+ * @note Call this from MOD_TEST().
+ * @note Only one callback per type can be registered.
+ */
 #define CallbackAddConstString(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, NULL, NULL, func)
 
 extern Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)());
 extern Callback	*CallbackDel(Callback *cb);
 
+/** Add an efunction that returns an int.
+ * @param module	The module adding the efunction
+ * @param cbtype	The efunction type (EFUNC_*)
+ * @param func		The function to add
+ * @returns The Efunction pointer, or NULL on failure.
+ * @note Call this from MOD_TEST().
+ * @note Only official (core) modules may add efunctions.
+ */
 #define EfunctionAdd(module, cbtype, func) EfunctionAddMain(module, cbtype, func, NULL, NULL, NULL, NULL)
+/** Add an efunction that returns void.
+ * @param module	The module adding the efunction
+ * @param cbtype	The efunction type (EFUNC_*)
+ * @param func		The function to add
+ * @returns The Efunction pointer, or NULL on failure.
+ * @note Call this from MOD_TEST().
+ * @note Only official (core) modules may add efunctions.
+ */
 #define EfunctionAddVoid(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, func, NULL, NULL, NULL)
+/** Add an efunction that returns a pointer (void *).
+ * @param module	The module adding the efunction
+ * @param cbtype	The efunction type (EFUNC_*)
+ * @param func		The function to add
+ * @returns The Efunction pointer, or NULL on failure.
+ * @note Call this from MOD_TEST().
+ * @note Only official (core) modules may add efunctions.
+ */
 #define EfunctionAddPVoid(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, NULL, func, NULL, NULL)
+/** Add an efunction that returns a string (char *).
+ * @param module	The module adding the efunction
+ * @param cbtype	The efunction type (EFUNC_*)
+ * @param func		The function to add
+ * @returns The Efunction pointer, or NULL on failure.
+ * @note Call this from MOD_TEST().
+ * @note Only official (core) modules may add efunctions.
+ */
 #define EfunctionAddString(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, NULL, NULL, func, NULL)
+/** Add an efunction that returns a const string (const char *).
+ * @param module	The module adding the efunction
+ * @param cbtype	The efunction type (EFUNC_*)
+ * @param func		The function to add
+ * @returns The Efunction pointer, or NULL on failure.
+ * @note Call this from MOD_TEST().
+ * @note Only official (core) modules may add efunctions.
+ */
 #define EfunctionAddConstString(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, NULL, NULL, NULL, func)
 
+/** Add an efunction (enhanced function) - internal function.
+ * Use the EfunctionAdd(), EfunctionAddVoid(), EfunctionAddPVoid(),
+ * EfunctionAddString() or EfunctionAddConstString() macros instead.
+ * @param module		The module adding the efunction
+ * @param eftype		The efunction type (EFUNC_*)
+ * @param intfunc		Function returning int (or NULL)
+ * @param voidfunc		Function returning void (or NULL)
+ * @param pvoidfunc		Function returning void* (or NULL)
+ * @param stringfunc		Function returning char* (or NULL)
+ * @param conststringfunc	Function returning const char* (or NULL)
+ * @returns The Efunction pointer, or NULL on failure.
+ * @note Call this from MOD_TEST().
+ * @note Only official (core) modules may add efunctions.
+ */
 extern Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*intfunc)(), void (*voidfunc)(), void *(*pvoidfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)());
 extern Efunction *EfunctionDel(Efunction *cb);
 
@@ -1028,9 +1192,12 @@ extern int CommandExists(const char *name);
 extern CommandOverride *CommandOverrideAdd(Module *module, const char *name, int priority, OverrideCmdFunc func);
 extern void CommandOverrideDel(CommandOverride *ovr);
 extern void CallCommandOverride(CommandOverride *ovr, ClientContext *clictx, Client *client, MessageTag *mtags, int parc, const char *parv[]);
-/** Call next command override function - easy way to do it.
- * This way you don't have to call CallCommandOverride() with the right arguments.
- * Which is nice because command (override) arguments may change in future UnrealIRCd versions.
+/** Call the next command override handler in the chain.
+ * Use this macro instead of calling CallCommandOverride() directly.
+ * This way you don't have to pass all the arguments yourself,
+ * and your module will keep working if command parameters change
+ * in future UnrealIRCd versions.
+ * @note Can only be used inside a CMD_OVERRIDE_FUNC() function.
  */
 #define CALL_NEXT_COMMAND_OVERRIDE()	CallCommandOverride(ovr, clictx, client, recv_mtags, parc, parv)
 
@@ -1047,23 +1214,69 @@ extern int moddata_local_client_set(Client *acptr, const char *varname, const ch
 extern const char *moddata_local_client_get(Client *acptr, const char *varname);
 
 extern void LoadPersistentPointerX(ModuleInfo *modinfo, const char *varshortname, void **var, void (*free_variable)(ModData *m));
+/** Load a persistent pointer variable across module rehashes.
+ * This restores the value of a pointer variable that was previously saved
+ * with SavePersistentPointer(). Call this in MOD_INIT().
+ * @param modinfo		The module info (modinfo, as received in MOD_INIT)
+ * @param var			The pointer variable to restore
+ * @param free_variable		Callback function to free the data on module unload (or NULL)
+ */
 #define LoadPersistentPointer(modinfo, var, free_variable) LoadPersistentPointerX(modinfo, #var, (void **)&var, free_variable)
 extern void SavePersistentPointerX(ModuleInfo *modinfo, const char *varshortname, void *var);
+/** Save a persistent pointer variable across module rehashes.
+ * This saves the value of a pointer variable so it can be restored
+ * after a rehash with LoadPersistentPointer(). Call this in MOD_UNLOAD().
+ * @param modinfo	The module info (modinfo, as received in MOD_UNLOAD)
+ * @param var		The pointer variable to save
+ */
 #define SavePersistentPointer(modinfo, var) SavePersistentPointerX(modinfo, #var, var)
 
 extern void LoadPersistentIntX(ModuleInfo *modinfo, const char *varshortname, int *var);
+/** Load a persistent int variable across module rehashes.
+ * This restores the value of an int variable that was previously saved
+ * with SavePersistentInt(). Call this in MOD_INIT().
+ * @param modinfo	The module info (modinfo, as received in MOD_INIT)
+ * @param var		The int variable to restore
+ */
 #define LoadPersistentInt(modinfo, var) LoadPersistentIntX(modinfo, #var, &var)
 extern void SavePersistentIntX(ModuleInfo *modinfo, const char *varshortname, int var);
+/** Save a persistent int variable across module rehashes.
+ * Call this in MOD_UNLOAD().
+ * @param modinfo	The module info (modinfo, as received in MOD_UNLOAD)
+ * @param var		The int variable to save
+ */
 #define SavePersistentInt(modinfo, var) SavePersistentIntX(modinfo, #var, var)
 
 extern void LoadPersistentLongX(ModuleInfo *modinfo, const char *varshortname, long *var);
+/** Load a persistent long variable across module rehashes.
+ * This restores the value of a long variable that was previously saved
+ * with SavePersistentLong(). Call this in MOD_INIT().
+ * @param modinfo	The module info (modinfo, as received in MOD_INIT)
+ * @param var		The long variable to restore
+ */
 #define LoadPersistentLong(modinfo, var) LoadPersistentLongX(modinfo, #var, &var)
 extern void SavePersistentLongX(ModuleInfo *modinfo, const char *varshortname, long var);
+/** Save a persistent long variable across module rehashes.
+ * Call this in MOD_UNLOAD().
+ * @param modinfo	The module info (modinfo, as received in MOD_UNLOAD)
+ * @param var		The long variable to save
+ */
 #define SavePersistentLong(modinfo, var) SavePersistentLongX(modinfo, #var, var)
 
 extern void LoadPersistentLongLongX(ModuleInfo *modinfo, const char *varshortname, long long *var);
+/** Load a persistent long long variable across module rehashes.
+ * This restores the value of a long long variable that was previously saved
+ * with SavePersistentLongLong(). Call this in MOD_INIT().
+ * @param modinfo	The module info (modinfo, as received in MOD_INIT)
+ * @param var		The long long variable to restore
+ */
 #define LoadPersistentLongLong(modinfo, var) LoadPersistentLongLongX(modinfo, #var, &var)
 extern void SavePersistentLongLongX(ModuleInfo *modinfo, const char *varshortname, long long var);
+/** Save a persistent long long variable across module rehashes.
+ * Call this in MOD_UNLOAD().
+ * @param modinfo	The module info (modinfo, as received in MOD_UNLOAD)
+ * @param var		The long long variable to save
+ */
 #define SavePersistentLongLong(modinfo, var) SavePersistentLongLongX(modinfo, #var, var)
 
 extern APICallback *APICallbackFind(const char *method, APICallbackType callback_type);

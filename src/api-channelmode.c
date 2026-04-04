@@ -446,8 +446,9 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 	return cm;
 }
 
-/** Delete a previously registered channel mode - not called by modules.
- * For modules this is done automatically on unload, no need to call this explicitly.
+/** Delete a previously registered channel mode.
+ * @note Modules do not need to call this function,
+ *       it is done automatically on module unload.
  */
 void CmodeDel(Cmode *cmode)
 {
