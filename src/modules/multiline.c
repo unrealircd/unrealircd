@@ -189,11 +189,6 @@ MOD_INIT()
 	mreq.sync = 0;
 	multiline_md = ModDataAdd(modinfo->handle, mreq);
 
-	/* Command overrides */
-	CommandOverrideAdd(modinfo->handle, "BATCH", 0, multiline_override_batch);
-	CommandOverrideAdd(modinfo->handle, "PRIVMSG", 0, multiline_override_msg);
-	CommandOverrideAdd(modinfo->handle, "NOTICE", 0, multiline_override_msg);
-
 	/* Hooks */
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, multiline_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_CLOSE_CONNECTION, 0, multiline_close_connection);
@@ -214,6 +209,11 @@ MOD_LOAD()
 {
 	CAP_BATCH = ClientCapabilityBit("batch");
 	CAP_NOTIFY = ClientCapabilityBit("cap-notify");
+
+	/* Command overrides */
+	CommandOverrideAdd(modinfo->handle, "BATCH", 0, multiline_override_batch);
+	CommandOverrideAdd(modinfo->handle, "PRIVMSG", 0, multiline_override_msg);
+	CommandOverrideAdd(modinfo->handle, "NOTICE", 0, multiline_override_msg);
 	return MOD_SUCCESS;
 }
 
