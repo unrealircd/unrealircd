@@ -1,7 +1,7 @@
 UnrealIRCd 6.2.4-rc1
 =====================
 
-This is the Release Candidate for future version 6.2.3. You can help us by
+This is the Release Candidate for future version 6.2.4. You can help us by
 testing this release and reporting bugs to https://bugs.unrealircd.org/
 
 This version comes with optional multiline support and a lot of new
