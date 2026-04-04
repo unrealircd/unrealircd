@@ -99,6 +99,8 @@ This is work in progress and may not always be a stable version.
 * Errors in TLS certificate/keys are now fatal errors.
 
 ### Fixes:
+* Downgrade shipped sodium library to 1.0.20 to fix arm64 compile issue
+  with 1.0.21.
 * The Windows version could crash after a few minutes due to missing MODVAR.
 * Named extbans in `+e` and `+I` were supposed to be sent with letters instead
   of names to servers not supporting them (UnrealIRCd older than 6 and Services),
