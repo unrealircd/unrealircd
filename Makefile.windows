@@ -311,6 +311,7 @@ DLL_FILES=\
  src/modules/message-ids.dll \
  src/modules/message-tags.dll \
  src/modules/mkpasswd.dll \
+ src/modules/multiline.dll \
  src/modules/mode.dll \
  src/modules/monitor.dll \
  src/modules/motd.dll \
@@ -1074,6 +1075,9 @@ src/modules/message-tags.dll: src/modules/message-tags.c $(INCLUDES)
 
 src/modules/mkpasswd.dll: src/modules/mkpasswd.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/mkpasswd.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/mkpasswd.pdb $(MODLFLAGS)
+
+src/modules/multiline.dll: src/modules/multiline.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/multiline.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/multiline.pdb $(MODLFLAGS)
 
 src/modules/mode.dll: src/modules/mode.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/mode.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/mode.pdb $(MODLFLAGS)

@@ -795,7 +795,9 @@ void init_config_defines(void)
 	add_nvplist(&config_defines, 0, "DATADIR", PERMDATADIR);
 	add_nvplist(&config_defines, 0, "LOGDIR", LOGDIR);
 	add_nvplist(&config_defines, 0, "TMPDIR", TMPDIR);
+#ifndef _WIN32
 	add_nvplist(&config_defines, 0, "DOCDIR", DOCDIR);
+#endif
 	add_nvplist(&config_defines, 0, "MODULESDIR", MODULESDIR);
 	/* Max connections */
 	add_nvplist(&config_defines, 0, "MAXCONNECTIONS", macro_to_str(MAXCONNECTIONS));
