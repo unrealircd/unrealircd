@@ -1,8 +1,13 @@
-UnrealIRCd 6.2.4-git
+UnrealIRCd 6.2.4-rc1
 =====================
 
-This is the git version (development version) for future UnrealIRCd 6.2.4.
-This is work in progress and may not always be a stable version.
+This is the Release Candidate for future version 6.2.3. You can help us by
+testing this release and reporting bugs to https://bugs.unrealircd.org/
+
+This version comes with optional multiline support and a lot of new
+conditional config and crule functions, plus a new GeoIP engine.
+A bug has been fixed that would confuse services with +e/+I extbans
+and a Windows crash bug has been resolved.
 
 ### Enhancements:
 * Add [IRCv3 draft/multiline](https://ircv3.net/specs/extensions/multiline)
@@ -20,7 +25,7 @@ This is work in progress and may not always be a stable version.
   if you are pasting more lines.
 
   Only a couple clients support sending multiline at the moment:
-  Halloy, WeeChat, IRCCloud, ObsidianIRC, and the bots BitBot & Limnoria.
+  IRCCloud, WeeChat, ObsidianIRC, Halloy, and the bots BitBot & Limnoria.
   Incoming lines with multilines are displayed normally in unsupporting clients,
   using a fallback algorithm.
 
