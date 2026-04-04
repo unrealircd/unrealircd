@@ -62,6 +62,9 @@
 #define NTDDI_VERSION 0x06010000
 #define _WIN32_WINNT 0x0601
 
+/* What geoip engine to use */
+#define GEOIP_ENGINE "classic"
+
 /* Generation version number (e.g.: 3 for Unreal3*) */
 #define UNREAL_VERSION_GENERATION 6
 
