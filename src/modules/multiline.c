@@ -1155,11 +1155,7 @@ static void multiline_deliver_channel(Client *client, MultilineBatch *batch, Cha
 
 			check_text = line->text;
 			if (!can_send_to_channel(client, channel, &check_text, &check_errmsg, batch->sendtype, &delivery_clictx))
-			{
-				if (IsDead(client))
-					return;
 				return; /* Batch rejected */
-			}
 			/* Apply transformed text (e.g. +S stripped colors, +G censored) */
 			if (check_text != line->text)
 			{
@@ -1269,11 +1265,7 @@ static void multiline_deliver_user(Client *client, MultilineBatch *batch, Client
 
 			check_text = line->text;
 			if (!can_send_to_user(client, target, &check_text, &check_errmsg, batch->sendtype, &delivery_clictx, 0))
-			{
-				if (IsDead(client))
-					return;
 				return; /* Batch rejected */
-			}
 			if (check_text != line->text)
 			{
 				safe_free(line->text);
