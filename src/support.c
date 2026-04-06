@@ -1376,6 +1376,7 @@ char *xmlescape(const char *i, char *buf, int bufsize)
 				break;
 			strcpy(o, "&quot;");
 			o += 6;
+			bufsize -= 6;
 		} else
 		if (*i == '\'')
 		{
@@ -1383,6 +1384,7 @@ char *xmlescape(const char *i, char *buf, int bufsize)
 				break;
 			strcpy(o, "&apos;");
 			o += 6;
+			bufsize -= 6;
 		} else
 		if (*i == '<')
 		{
@@ -1390,6 +1392,7 @@ char *xmlescape(const char *i, char *buf, int bufsize)
 				break;
 			strcpy(o, "&lt;");
 			o += 4;
+			bufsize -= 4;
 		} else
 		if (*i == '>')
 		{
@@ -1397,6 +1400,7 @@ char *xmlescape(const char *i, char *buf, int bufsize)
 				break;
 			strcpy(o, "&gt;");
 			o += 4;
+			bufsize -= 4;
 		} else
 		if (*i == '&')
 		{
@@ -1404,11 +1408,13 @@ char *xmlescape(const char *i, char *buf, int bufsize)
 				break;
 			strcpy(o, "&amp;");
 			o += 5;
+			bufsize -= 5;
 		} else
 		{
 			if (bufsize <= 1)
 				break;
 			*o++ = *i;
+			bufsize--;
 		}
 	}
 
