@@ -1880,6 +1880,7 @@ void rpc_call_remote(RRPC *r)
 	server = find_server_quick(sid);
 	if (!server)
 	{
+		json_decref(request);
 		return;
 	}
 	client = make_client(server->direction, server);
