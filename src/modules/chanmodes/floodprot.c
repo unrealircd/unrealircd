@@ -1215,12 +1215,6 @@ int cmodef_channel_create(Channel *channel)
 	ChannelFloodProtection *base;
 	ChannelFloodProtection *fld;
 
-#ifdef TESTSUITE
-	/* Sync channels for the test suite are exempt */
-	if (!strncasecmp(channel->name, "#__SYNC__", 9))
-		return 0;
-#endif
-
 	if (!cfg.default_profile)
 		return 0;
 
@@ -1371,6 +1365,11 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 	if (ValidatePermissionsForPath("channel:override:flood",client,NULL,channel,NULL) || !IsFloodLimit(channel) || check_channel_access(client, channel, "hoaq"))
 		return HOOK_CONTINUE;
 
+#ifdef TESTSUITE
+	if (!strncasecmp(channel->name, "#__SYNC__", 9))
+		return HOOK_CONTINUE;
+#endif
+
 	if (!(mb = find_membership_link(client->user->channel, channel)))
 		return HOOK_CONTINUE; /* not in channel */
 
@@ -1497,6 +1496,11 @@ int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, cons
 {
 	if (!IsFloodLimit(channel) || check_channel_access(client, channel, "hoaq") || IsULine(client))
 		return 0;
+
+#ifdef TESTSUITE
+	if (!strncasecmp(channel->name, "#__SYNC__", 9))
+		return 0;
+#endif
 
 	if (sendtype == SEND_TYPE_TAGMSG)
 		return 0; // TODO: some TAGMSG specific limit? (2 of 2)
