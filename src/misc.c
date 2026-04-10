@@ -2189,6 +2189,50 @@ long get_file_size(const char *fname)
 	return (long)st.st_size;
 }
 
+/** Read an entire file into memory.
+ * @param fname    File path to read
+ * @param filesize Optional pointer to store the file size (may be NULL)
+ * @returns A safe_alloc()'d buffer with the file contents,
+ *          null-terminated but also binary safe.
+ *          Returns NULL on failure (file not found, empty, etc.)
+ *          Caller must free with safe_free().
+ */
+char *file_get_contents(const char *fname, long *filesize)
+{
+	FILE *fd;
+	struct stat st;
+	long size;
+	char *buf;
+
+	if (filesize)
+		*filesize = 0;
+
+	fd = fopen(fname, "rb");
+	if (!fd)
+		return NULL;
+
+	if (fstat(fileno(fd), &st) != 0 || st.st_size <= 0)
+	{
+		fclose(fd);
+		return NULL;
+	}
+	size = (long)st.st_size;
+
+	buf = safe_alloc(size + 1);
+	if (fread(buf, 1, size, fd) != size)
+	{
+		safe_free(buf);
+		fclose(fd);
+		return NULL;
+	}
+	fclose(fd);
+
+	if (filesize)
+		*filesize = size;
+
+	return buf;
+}
+
 /** Add a line to a MultiLine list */
 void addmultiline(MultiLine **l, const char *line)
 {

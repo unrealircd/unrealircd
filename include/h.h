@@ -1067,6 +1067,7 @@ extern void cm_freeparameter_ex(void **p, char mode, char *str);
 extern int file_exists(const char *file);
 extern time_t get_file_time(const char *fname);
 extern long get_file_size(const char *fname);
+extern char *file_get_contents(const char *fname, long *filesize);
 extern void free_motd(MOTDFile *motd); /* s_serv.c */
 extern void fix_timers(void);
 extern const char *chfl_to_sjoin_symbol(int s);
