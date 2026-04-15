@@ -25,6 +25,12 @@
 #include "unrealircd.h"
 #include "openssl_hostname_validation.h"
 
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && !defined(LIBRESSL_VERSION_NUMBER)
+#define OSSL_CONST const
+#else
+#define OSSL_CONST
+#endif
+
 #ifdef _WIN32
 #define IDC_PASS                        1166
 extern HINSTANCE hInst;
@@ -1342,7 +1348,7 @@ const char *certificate_name(SSL *ssl)
 {
 	static char buf[384];
 	X509 *cert;
-	X509_NAME *n;
+	OSSL_CONST X509_NAME *n;
 
 	if (!ssl)
 		return NULL;

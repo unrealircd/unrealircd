@@ -33,7 +33,7 @@ OBJS=ircd_vars.o dns.o auth.o channel.o dbuf.o \
 	api-event.o api-rpc.o api-apicallback.o \
 	crypt_blowfish.o unrealdb.o crashreport.o modulemanager.o \
 	utf8.o json.o log.o \
-	openssl_hostname_validation.o $(URL)
+	@OPENSSL_HOSTNAME_VALIDATION_OBJ@ $(URL)
 
 SRC=$(OBJS:%.o=%.c)
 

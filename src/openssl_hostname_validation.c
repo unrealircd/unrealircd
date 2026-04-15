@@ -287,8 +287,8 @@ SOFTWARE.
 */
 static HostnameValidationResult matches_common_name(const char *hostname, const X509 *server_cert) {
         int common_name_loc = -1;
-        X509_NAME_ENTRY *common_name_entry = NULL;
-        ASN1_STRING *common_name_asn1 = NULL;
+        const X509_NAME_ENTRY *common_name_entry = NULL;
+        const ASN1_STRING *common_name_asn1 = NULL;
         const char *common_name_str = NULL;
 
         // Find the position of the CN field in the Subject field of the certificate

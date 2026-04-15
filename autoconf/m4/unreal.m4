@@ -396,9 +396,12 @@ AC_LANG_POP(C)
 if test $has_function = 1; then
 	AC_MSG_RESULT([yes])
 	AC_DEFINE([HAS_X509_check_host], [], [Define if ssl library has X509_check_host])
+	OPENSSL_HOSTNAME_VALIDATION_OBJ=""
 else
 	AC_MSG_RESULT([no])
+	OPENSSL_HOSTNAME_VALIDATION_OBJ="openssl_hostname_validation.o"
 fi
+AC_SUBST(OPENSSL_HOSTNAME_VALIDATION_OBJ)
 ])
 
 dnl For geoip-api-c

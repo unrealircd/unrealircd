@@ -675,6 +675,7 @@ PCRE2_CFLAGS
 PKG_CONFIG_LIBDIR
 PKG_CONFIG_PATH
 PKG_CONFIG
+OPENSSL_HOSTNAME_VALIDATION_OBJ
 LDFLAGS_PRIVATELIBS
 CONTROLFILE
 PIDFILE
@@ -8251,10 +8252,13 @@ printf "%s\n" "yes" >&6; }
 
 printf "%s\n" "#define HAS_X509_check_host /**/" >>confdefs.h
 
+	OPENSSL_HOSTNAME_VALIDATION_OBJ=""
 else
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
+	OPENSSL_HOSTNAME_VALIDATION_OBJ="openssl_hostname_validation.o"
 fi
+
 
 # Check whether --enable-dynamic-linking was given.
 if test ${enable_dynamic_linking+y}
