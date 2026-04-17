@@ -1,13 +1,10 @@
-UnrealIRCd 6.2.4-rc1
-=====================
+UnrealIRCd 6.2.4
+=================
 
-This is the Release Candidate for future version 6.2.4. You can help us by
-testing this release and reporting bugs to https://bugs.unrealircd.org/
-
-This version comes with optional multiline support and a lot of new
-conditional config and crule functions, plus a new GeoIP engine.
-A bug has been fixed that would confuse services with +e/+I extbans
-and a Windows crash bug has been resolved.
+This version comes with optional multiline support (not loaded by default
+yet), a lot of new conditional config and crule functions, and a new
+GeoIP engine. A bug has been fixed that could confuse services with +e/+I
+extbans and a Windows crash bug has been resolved.
 
 ### Enhancements:
 * Add [IRCv3 draft/multiline](https://ircv3.net/specs/extensions/multiline)
@@ -30,7 +27,8 @@ and a Windows crash bug has been resolved.
   using a fallback algorithm.
 
   IMPORTANT: This module is **not loaded by default** at the moment. You need
-  a `loadmodule "multiline";` to use it.
+  a `loadmodule "multiline";` to use it. In a future version of UnrealIRCd we
+  will likely load this module by default, after receiving more feedback.
 
   Regarding limits and anti-flood:
   * This obeys the limit of `+f` subtype `t`: so `+f [5t]:15` (max 5 lines
@@ -76,7 +74,7 @@ and a Windows crash bug has been resolved.
     variable from an OS environment variable.
   * New `@error "message"` and `@warning "message"` directives.
     Eg for `if !environment("ADMIN")` `@error "ADMIN env var not defined"`.
-* New [crule functions](https://www.unrealircd.org/docs/Security_groups#Rules)
+* New [crule functions](https://www.unrealircd.org/docs/Crule)
   for use in security groups, match items, spamfilter::rule:
   * Boolean checks: `is_oper`, `is_local`, `has_swhois`
   * Match functions: `match_class`, `match_server`, `match_vhost`,
@@ -89,7 +87,7 @@ and a Windows crash bug has been resolved.
   * Text analysis: `text_byte_count`, `text_character_count`, `word_count`,
     `uppercase_percentage`, `digit_percentage`, `non_ascii_percentage`,
     `max_repeat_count`, `mixed_utf8_score`, `unicode_block_count`
-  * The [documentation](https://www.unrealircd.org/docs/Security_groups#Rules)
+  * The [documentation](https://www.unrealircd.org/docs/Crule)
     also has been rewritten to group the functions for a better overall view.
 
 ### Changes:
@@ -104,9 +102,10 @@ and a Windows crash bug has been resolved.
 * Errors in TLS certificate/keys are now fatal errors.
 
 ### Fixes:
+* The Windows version could crash after a few minutes due to missing MODVAR.
 * Downgrade shipped sodium library to 1.0.20 to fix arm64 compile issue
   with 1.0.21.
-* The Windows version could crash after a few minutes due to missing MODVAR.
+* Compile fixes when using OpenSSL 4.0.0
 * Named extbans in `+e` and `+I` were supposed to be sent with letters instead
   of names to servers not supporting them (UnrealIRCd older than 6 and Services),
   but this was not the case. Is now fixed. This bug caused for example Anope 2.0.x
@@ -165,6 +164,10 @@ and a Windows crash bug has been resolved.
       is supported.
 * ClientContext now has a new field `fake_lag_added_msec` and there is
   a new function `subtract_fake_lag()`. This is used by multiline, for example.
+* We now guard that `CommandOverrideAdd()` is only used in `MOD_LOAD` and
+  not in `MOD_INIT` (otherwise it is too early, commands may not exist yet).
+  Similarly, we ensure `EfunctionAdd()` is used from `MOD_TEST`. Clear
+  errors are logged in both cases if you try to do otherwise.
 
 UnrealIRCd 6.2.3
 -----------------
