@@ -210,6 +210,13 @@
  */
 #define DOWNLOAD_MAX_REDIRECTS 2
 
+/* Default maximum size (in bytes) for memory-backed HTTP responses
+ * (i.e. when OutgoingWebRequest.store_in_file == 0). Responses exceeding
+ * this are rejected and the transfer is aborted. Callers can override
+ * by setting OutgoingWebRequest.max_size before url_start_async().
+ */
+#define DOWNLOAD_MAX_SIZE 1048576
+
 /*
  * Max time from the nickname change that still causes KILL
  * automaticly to switch for the current nick of that user. (seconds)

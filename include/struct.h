@@ -1983,6 +1983,8 @@ struct OutgoingWebRequest
 	int connect_timeout; /**< How many seconds to wait for the (TLS) connect to succeed */
 	int transfer_timeout; /**< How many seconds the total transfer may take (connect+reading everything) */
 	int minimum_tls_version;
+	long long max_size; /**< Max response size for memory-backed downloads, in bytes.
+	                     *   0 = use DOWNLOAD_MAX_SIZE. Ignored for file-backed. */
 	// If you are adding fields here:
 	// 1) update duplicate_outgoingwebrequest() in src/misc.c
 	// 2) and update free_outgoingwebrequest() there as well (if something needs to be freed)
@@ -1993,7 +1995,7 @@ struct OutgoingWebResponse
 {
 	const char *file; /**< The temporary file of the download, or NULL. This is only set if OutgoingWebRequest had 'store_in_file' set to 1 and the download was succesful. */
 	const char *memory; /**< The memory buffer of the response, or NULL if an error occured (see errorbuf) */
-	int memory_len; /**< The length of 'memory', since the response may contain binary data. */
+	long long memory_len; /**< The length of 'memory', since the response may contain binary data. */
 	const char *errorbuf; /**< If this is non-NULL then an error occured and this is the error string. Check this member before checking any others! */
 	int cached; /**< Set to 1 if OutgoingWebRequest had 'cachetime' set and we have a cache hit on the webserver. The file and errobuf will be NULL since there was no data transfer. */
 	void *ptr; /**< The OutgoingWebRequest 'callback_data' */

@@ -3055,6 +3055,7 @@ OutgoingWebRequest *duplicate_outgoingwebrequest(OutgoingWebRequest *orig)
 	e->connect_timeout = orig->connect_timeout;
 	e->transfer_timeout = orig->transfer_timeout;
 	e->minimum_tls_version = orig->minimum_tls_version;
+	e->max_size = orig->max_size;
 	return e;
 }
 
@@ -3098,7 +3099,7 @@ void download_file_async(const char *url,
 	url_start_async(request);
 }
 
-void url_callback(OutgoingWebRequest *r, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *ptr)
+void url_callback(OutgoingWebRequest *r, const char *file, const char *memory, long long memory_len, const char *errorbuf, int cached, void *ptr)
 {
 	OutgoingWebResponse *response;
 

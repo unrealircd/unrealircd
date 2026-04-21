@@ -1561,7 +1561,7 @@ extern int valid_operclass_name(const char *str);
 #define safe_free_outgoingwebrequest(x)	do { if (x) { free_outgoingwebrequest(x); x = NULL; } } while(0)
 extern void free_outgoingwebrequest(OutgoingWebRequest *r);
 extern OutgoingWebRequest *duplicate_outgoingwebrequest(OutgoingWebRequest *orig);
-extern void url_callback(OutgoingWebRequest *r, const char *file, const char *memory, int memory_len, const char *errorbuf, int cached, void *ptr);
+extern void url_callback(OutgoingWebRequest *r, const char *file, const char *memory, long long memory_len, const char *errorbuf, int cached, void *ptr);
 extern const char *synchronous_http_request(const char *url, int max_redirects, int connect_timeout, int transfer_timeout);
 extern int update_known_user_cache(Client *client);
 extern MODVAR SecurityGroup *known_users;

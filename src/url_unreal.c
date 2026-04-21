@@ -51,8 +51,8 @@ struct Download
 	FILE *file_fd;		/**< File open for writing (otherwise NULL) */
 	char *filename;
 	char *memory_data; /**< Memory for writing response (otherwise NULL) */
-	int memory_data_len; /**< Size of memory_data */
-	int memory_data_allocated; /**< Total allocated memory for 'memory_data' */
+	long long memory_data_len; /**< Size of memory_data */
+	long long memory_data_allocated; /**< Total allocated memory for 'memory_data' */
 	char errorbuf[512];
 	char *hostname;		/**< Parsed hostname (from 'url') */
 	int port;		/**< Parsed port (from 'url') */
@@ -73,7 +73,7 @@ struct Download
 	time_t download_started;
 	int dns_refcnt;
 	TransferEncoding transfer_encoding;
-	long chunk_remaining;
+	long long chunk_remaining;
 	char *redirect_new_location;
 };
 
@@ -179,6 +179,8 @@ void url_start_async(OutgoingWebRequest *request)
 		request->connect_timeout = DOWNLOAD_CONNECT_TIMEOUT;
 	if (request->transfer_timeout == 0)
 		request->transfer_timeout = DOWNLOAD_TRANSFER_TIMEOUT;
+	if (request->max_size <= 0)
+		request->max_size = DOWNLOAD_MAX_SIZE;
 
 	handle = safe_alloc(sizeof(Download));
 	handle->download_started = TStime();
@@ -813,17 +815,17 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 	return 1;
 }
 
-int https_handle_response_body_memory(Download *handle, const char *ptr, int write_sz)
+long long https_handle_response_body_memory(Download *handle, const char *ptr, long long write_sz)
 {
 	// DUPLICATE CODE: same as src/url_curl.c, well... sortof
-	int size_required = handle->memory_data_len + write_sz;
+	long long size_required = handle->memory_data_len + write_sz;
 
 	if (handle->memory_data == NULL)
 		return 0; /* Normally does not happen as it is preallocated, but could happen upon unwinding cancels.. */
 
 	if (size_required >= handle->memory_data_allocated - 1) // the -1 is for zero termination, even though it is binary..
 	{
-		int newsize = ((size_required / URL_MEMORY_BACKED_CHUNK_SIZE)+1)*URL_MEMORY_BACKED_CHUNK_SIZE;
+		long long newsize = ((size_required / URL_MEMORY_BACKED_CHUNK_SIZE)+1)*URL_MEMORY_BACKED_CHUNK_SIZE;
 		char *newptr = realloc(handle->memory_data, newsize);
 		if (!newptr)
 		{
@@ -858,7 +860,14 @@ int https_handle_response_body(Download *handle, char *readbuf, int pktsize)
 	{
 		/* Ohh.. so easy! */
 		if (handle->request->store_in_file == 0)
+		{
+			if (handle->memory_data_len + pktsize > handle->request->max_size)
+			{
+				https_cancel(handle, "Response too large (maximum: %lld bytes)", handle->request->max_size);
+				return 0; /* handle freed */
+			}
 			https_handle_response_body_memory(handle, readbuf, pktsize);
+		}
 		else if (handle->file_fd)
 			fwrite(readbuf, 1, pktsize, handle->file_fd);
 		return 1;
@@ -886,9 +895,17 @@ int https_handle_response_body(Download *handle, char *readbuf, int pktsize)
 		if (handle->chunk_remaining > 0)
 		{
 			/* Eat it */
-			int eat = MIN(handle->chunk_remaining, n);
+			long long eat = MIN(handle->chunk_remaining, n);
 			if (handle->request->store_in_file == 0)
+			{
+				if (handle->memory_data_len + eat > handle->request->max_size)
+				{
+					https_cancel(handle, "Response too large (maximum: %lld bytes)", handle->request->max_size);
+					safe_free(free_this_buffer);
+					return 0; /* handle freed */
+				}
 				https_handle_response_body_memory(handle, buf, eat);
+			}
 			else if (handle->file_fd)
 				fwrite(buf, 1, eat, handle->file_fd);
 			n -= eat;
@@ -943,10 +960,10 @@ int https_handle_response_body(Download *handle, char *readbuf, int pktsize)
 			}
 			buf[i] = '\0'; /* cut at LF */
 			i++; /* point to next data */
-			handle->chunk_remaining = strtol(buf, NULL, 16);
+			handle->chunk_remaining = strtoll(buf, NULL, 16);
 			if (handle->chunk_remaining < 0)
 			{
-				https_cancel(handle, "Negative chunk encountered (%ld)", handle->chunk_remaining);
+				https_cancel(handle, "Negative chunk encountered (%lld)", handle->chunk_remaining);
 				safe_free(free_this_buffer);
 				return 0;
 			}
