@@ -1361,7 +1361,7 @@ MessageTag *duplicate_mtags(MessageTag *mtags)
 
 /** Duplicate a message tag list, excluding tags with MTAG_HANDLER_FLAGS_FIRST_ONLY.
  * Used to build the tag set for subsequent lines (lines 2..N),
- * where tags like msgid and +draft/reply should not be repeated.
+ * where tags like msgid, +reply and +draft/reply should not be repeated.
  */
 MessageTag *duplicate_mtags_for_subsequent_lines(MessageTag *mtags)
 {
