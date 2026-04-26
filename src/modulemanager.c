@@ -1142,7 +1142,7 @@ int mm_install_module(ManagedModule *m)
  * This function takes a string rather than a ManagedModule
  * because it also allows uninstalling of unmanaged (local) modules.
  */
-void mm_uninstall_module(char *modulename)
+int mm_uninstall_module(char *modulename)
 {
 	struct dirent *dir;
 	DIR *fd;
@@ -1164,7 +1164,6 @@ void mm_uninstall_module(char *modulename)
 				{
 					found = 1;
 					snprintf(fullname, sizeof(fullname), "%s/%s", dirname, fname);
-					//printf("Deleting '%s'\n", fullname);
 					unlink(fullname);
 				}
 			}
@@ -1175,10 +1174,11 @@ void mm_uninstall_module(char *modulename)
 	if (!found)
 	{
 		fprintf(stderr, "ERROR: Module '%s' is not installed, so can't uninstall.\n", modulename);
-		exit(-1);
+		return 0;
 	}
 
 	printf("Module '%s' uninstalled successfully\n", modulename);
+	return 1;
 }
 
 void mm_make_install(void)
@@ -1196,94 +1196,227 @@ int mm_install(int argc, char *args[], int upgrade)
 {
 	ManagedModule *m;
 	MultiLine *l;
-	char *name = args[1];
-	int status;
+	int i;
 
-	if (!name)
+	if (!args[1])
 	{
-		fprintf(stderr, "ERROR: Use: module install third/name-of-module\n");
-		return 0;
-	}
-
-	if (!str_starts_with_case_sensitive(name, "third/"))
-	{
-		fprintf(stderr, "ERROR: Use: module install third/name-of-module\nYou must prefix the modulename with third/\n");
+		fprintf(stderr, "ERROR: Use: module install third/name-of-module [third/another-module ...]\n");
 		return 0;
 	}
 
-	m = mm_find_module(name);
-	if (!m)
+	if (upgrade)
 	{
-		fprintf(stderr, "ERROR: Module '%s' not found\n", name);
-		return 0;
-	}
-	status = mm_get_module_status(m);
-	if (status == MMMS_UNAVAILABLE)
-	{
-		fprintf(stderr, "ERROR: Module '%s' exists, but is not compatible with your UnrealIRCd version:\n"
-		                "Your UnrealIRCd version  : %s\n"
-		                "Minimum version required : %s\n",
-		                name,
-		                VERSIONONLY,
-		                m->min_unrealircd_version);
-		if (m->max_unrealircd_version)
-			fprintf(stderr, "Maximum version          : %s\n", m->max_unrealircd_version);
-		return 0;
-	}
-	if (upgrade && (status == MMMS_INSTALLED))
-	{
-		/* If updating, and we are already on latest version, then don't upgrade */
-		printf("Module %s is the latest version, no upgrade needed\n", m->name);
+		/* Single-module path called from mm_upgrade — args[1] is the module name. */
+		char *name = args[1];
+		int status;
+
+		if (!str_starts_with_case_sensitive(name, "third/"))
+		{
+			fprintf(stderr, "ERROR: Use: module install third/name-of-module\nYou must prefix the modulename with third/\n");
+			return 0;
+		}
+		m = mm_find_module(name);
+		if (!m)
+		{
+			fprintf(stderr, "ERROR: Module '%s' not found\n", name);
+			return 0;
+		}
+		status = mm_get_module_status(m);
+		if (status == MMMS_UNAVAILABLE)
+		{
+			fprintf(stderr, "ERROR: Module '%s' exists, but is not compatible with your UnrealIRCd version:\n"
+			                "Your UnrealIRCd version  : %s\n"
+			                "Minimum version required : %s\n",
+			                name,
+			                VERSIONONLY,
+			                m->min_unrealircd_version);
+			if (m->max_unrealircd_version)
+				fprintf(stderr, "Maximum version          : %s\n", m->max_unrealircd_version);
+			return 0;
+		}
+		if (status == MMMS_INSTALLED)
+		{
+			printf("Module %s is the latest version, no upgrade needed\n", m->name);
+			return 1;
+		}
+		if (status == (MMMS_INSTALLED|MMMS_LOCAL_VERSION_IS_NEWER))
+		{
+			printf("Module %s: local version is newer than the online version, not upgrading.\n", m->name);
+			return 1;
+		}
+		if (!mm_install_module(m))
+			return 0;
+		mm_make_install();
+		if (m->post_install_text)
+		{
+			printf("Post-installation information for %s from the author:\n", m->name);
+			printf("---\n");
+			for (l = m->post_install_text; l; l = l->next)
+				printf(" %s\n", l->line);
+			printf("---\n");
+		} else {
+			printf("Don't forget to add a 'loadmodule' line for the module and rehash\n");
+		}
 		return 1;
 	}
-	if (upgrade && (status == (MMMS_INSTALLED|MMMS_LOCAL_VERSION_IS_NEWER)))
+
+	/* Multi-module install path (upgrade=0).
+	 * First pass: validate every requested module before downloading anything.
+	 * If any module fails validation, report all errors and abort without installing any.
+	 * The resolved ManagedModule pointers are stored for reuse in subsequent passes,
+	 * avoiding repeated linked-list walks.
+	 */
+	int n_modules = 0;
+	for (i = 1; i < argc && args[i]; i++)
+		n_modules++;
+
+	ManagedModule **modules = safe_alloc(n_modules * sizeof(ManagedModule *));
+	/* safe_alloc uses calloc, so all pointers are NULL-initialized. */
+
+	int all_ok = 1;
+	for (i = 0; i < n_modules; i++)
 	{
-		/* If updating, and we are already on latest version, then don't upgrade */
-		printf("Module %s: local version is newer than the online version, not upgrading.\n", m->name);
-		return 1;
+		char *name = args[i + 1];
+		int status;
+
+		if (!str_starts_with_case_sensitive(name, "third/"))
+		{
+			fprintf(stderr, "ERROR: Module '%s': must be prefixed with 'third/'\n", name);
+			all_ok = 0;
+			continue;
+		}
+		m = mm_find_module(name);
+		if (!m)
+		{
+			fprintf(stderr, "ERROR: Module '%s' not found\n", name);
+			all_ok = 0;
+			continue;
+		}
+		status = mm_get_module_status(m);
+		if (status == MMMS_UNAVAILABLE)
+		{
+			fprintf(stderr, "ERROR: Module '%s' exists, but is not compatible with your UnrealIRCd version:\n"
+			                "Your UnrealIRCd version  : %s\n"
+			                "Minimum version required : %s\n",
+			                name,
+			                VERSIONONLY,
+			                m->min_unrealircd_version);
+			if (m->max_unrealircd_version)
+				fprintf(stderr, "Maximum version          : %s\n", m->max_unrealircd_version);
+			all_ok = 0;
+			continue;
+		}
+		modules[i] = m;
 	}
-	if (!mm_install_module(m))
+
+	if (!all_ok)
+	{
+		fprintf(stderr, "ERROR: One or more modules failed validation. No modules were installed.\n");
+		safe_free(modules);
 		return 0;
-	mm_make_install();
-	if (m->post_install_text)
-	{
-		printf("Post-installation information for %s from the author:\n", m->name);
-		printf("---\n");
-		for (l = m->post_install_text; l; l = l->next)
-			printf(" %s\n", l->line);
-		printf("---\n");
-	} else {
-		printf("Don't forget to add a 'loadmodule' line for the module and rehash\n");
 	}
-	return 1;
+
+	/* Second pass: attempt to download and compile every module.
+	 * Failures are recorded but do not stop remaining installs.
+	 * 'make install' is deferred until all have been attempted.
+	 * A NULL entry after this pass means the install failed for that slot.
+	 */
+	int n_installed = 0;
+	int n_failed = 0;
+
+	for (i = 0; i < n_modules; i++)
+	{
+		if (!mm_install_module(modules[i]))
+		{
+			modules[i] = NULL;
+			n_failed++;
+		} else {
+			n_installed++;
+		}
+	}
+
+	if (n_installed > 0)
+		mm_make_install();
+
+	printf("\nInstallation summary:\n");
+	for (i = 0; i < n_modules; i++)
+		printf("  %-40s %s\n", args[i + 1], modules[i] ? "OK" : "FAILED");
+	printf("\n%d module(s) installed successfully, %d failed.\n", n_installed, n_failed);
+
+	for (i = 0; i < n_modules; i++)
+	{
+		if (!modules[i])
+			continue;
+		if (modules[i]->post_install_text)
+		{
+			printf("\nPost-installation information for %s from the author:\n", modules[i]->name);
+			printf("---\n");
+			for (l = modules[i]->post_install_text; l; l = l->next)
+				printf(" %s\n", l->line);
+			printf("---\n");
+		} else {
+			printf("Don't forget to add a 'loadmodule' line for %s and rehash\n", modules[i]->name);
+		}
+	}
+
+	safe_free(modules);
+	return (n_failed == 0) ? 1 : 0;
 }
 
 void mm_uninstall(int argc, char *args[])
 {
-	ManagedModule *m;
-	char *name = args[1];
+	int i, n_modules, n_uninstalled, n_failed, all_ok;
 
-	if (!name)
+	if (!args[1])
 	{
-		fprintf(stderr, "ERROR: Use: module uninstall third/name-of-module\n");
+		fprintf(stderr, "ERROR: Use: module uninstall third/name-of-module [third/another-module ...]\n");
 		exit(-1);
 	}
 
-	if (!str_starts_with_case_sensitive(name, "third/"))
+	n_modules = 0;
+	for (i = 1; i < argc && args[i]; i++)
+		n_modules++;
+
+	all_ok = 1;
+	for (i = 0; i < n_modules; i++)
 	{
-		fprintf(stderr, "ERROR: Use: module uninstall third/name-of-module\nYou must prefix the modulename with third/\n");
+		if (!str_starts_with_case_sensitive(args[i + 1], "third/"))
+		{
+			fprintf(stderr, "ERROR: Module '%s': must be prefixed with 'third/'\n", args[i + 1]);
+			all_ok = 0;
+		}
+	}
+	if (!all_ok)
+	{
+		fprintf(stderr, "ERROR: One or more module names are invalid. Nothing was uninstalled.\n");
 		exit(-1);
 	}
 
-	mm_uninstall_module(name);
-	mm_make_install();
-	exit(0);
+	n_uninstalled = 0;
+	n_failed = 0;
+	for (i = 0; i < n_modules; i++)
+	{
+		if (mm_uninstall_module(args[i + 1]))
+			n_uninstalled++;
+		else
+			n_failed++;
+	}
+
+	if (n_uninstalled > 0)
+		mm_make_install();
+
+	if (n_modules > 1)
+	{
+		printf("\nUninstall summary:\n");
+		printf("%d module(s) uninstalled successfully, %d failed.\n", n_uninstalled, n_failed);
+	}
+
+	exit(n_failed ? 1 : 0);
 }
 
 void mm_upgrade(int argc, char *args[])
 {
 	ManagedModule *m;
-	char *name = args[1];
 	int upgraded = 0;
 	int failed = 0;
 	int uptodate_already = 0;
@@ -1296,12 +1429,102 @@ void mm_upgrade(int argc, char *args[])
 		i++;
 	}
 
-	name = args[i];
-	if (name)
+	if (args[i])
 	{
-		// TODO: First check if it needs an upgrade? ;)
-		mm_install(argc, args, 1);
-		exit(0);
+		/* One or more specific module names provided — validate all first,
+		 * then process as a batch with a single 'make install' at the end.
+		 * results[i]: 0 = failed, 1 = upgraded, 2 = skipped (already up to date)
+		 */
+		int first_name_idx = i;
+		int n_modules = 0;
+		for (i = first_name_idx; i < argc && args[i]; i++)
+			n_modules++;
+
+		ManagedModule **modules = safe_alloc(n_modules * sizeof(ManagedModule *));
+		int *results = safe_alloc(n_modules * sizeof(int));
+		int all_ok = 1;
+
+		for (i = 0; i < n_modules; i++)
+		{
+			char *name = args[first_name_idx + i];
+			int status;
+
+			if (!str_starts_with_case_sensitive(name, "third/"))
+			{
+				fprintf(stderr, "ERROR: Module '%s': must be prefixed with 'third/'\n", name);
+				all_ok = 0;
+				continue;
+			}
+			m = mm_find_module(name);
+			if (!m)
+			{
+				fprintf(stderr, "ERROR: Module '%s' not found\n", name);
+				all_ok = 0;
+				continue;
+			}
+			status = mm_get_module_status(m);
+			if (status == MMMS_UNAVAILABLE)
+			{
+				fprintf(stderr, "ERROR: Module '%s' exists, but is not compatible with your UnrealIRCd version:\n"
+				                "Your UnrealIRCd version  : %s\n"
+				                "Minimum version required : %s\n",
+				                name, VERSIONONLY, m->min_unrealircd_version);
+				if (m->max_unrealircd_version)
+					fprintf(stderr, "Maximum version          : %s\n", m->max_unrealircd_version);
+				all_ok = 0;
+				continue;
+			}
+			modules[i] = m;
+		}
+
+		if (!all_ok)
+		{
+			fprintf(stderr, "ERROR: One or more modules failed validation. No upgrades were performed.\n");
+			safe_free(modules);
+			safe_free(results);
+			exit(1);
+		}
+
+		no_make_install = 1;
+		for (i = 0; i < n_modules; i++)
+		{
+			int status = mm_get_module_status(modules[i]);
+			if (status == MMMS_INSTALLED)
+			{
+				printf("Module %s is the latest version, no upgrade needed\n", modules[i]->name);
+				results[i] = 2;
+				uptodate_already++;
+			} else if (status == (MMMS_INSTALLED|MMMS_LOCAL_VERSION_IS_NEWER))
+			{
+				printf("Module %s: local version is newer than the online version, not upgrading.\n", modules[i]->name);
+				results[i] = 2;
+				uptodate_already++;
+			} else if (!mm_install_module(modules[i]))
+			{
+				results[i] = 0;
+				failed++;
+			} else {
+				results[i] = 1;
+				upgraded++;
+			}
+		}
+		no_make_install = 0;
+
+		if (upgraded)
+			mm_make_install();
+
+		if (n_modules > 1)
+		{
+			static const char *result_str[] = { "FAILED", "upgraded", "up to date" };
+			printf("\nUpgrade summary:\n");
+			for (i = 0; i < n_modules; i++)
+				printf("  %-40s %s\n", args[first_name_idx + i], result_str[results[i]]);
+			printf("\n%d upgraded, %d already up-to-date, %d failed.\n", upgraded, uptodate_already, failed);
+		}
+
+		safe_free(modules);
+		safe_free(results);
+		exit(failed ? 1 : 0);
 	}
 
 	/* Without arguments means: check all installed modules */
@@ -1399,10 +1622,10 @@ void mm_usage(void)
 	fprintf(stderr, "Use any of the following actions:\n"
 	                "unrealircd module list                     List all the available and installed modules\n"
 	                "unrealircd module info name-of-module      Show more information about the module\n"
-	                "unrealircd module install name-of-module   Install the specified module\n"
-	                "unrealircd module uninstall name-of-module Uninstall the specified module\n"
-	                "unrealircd module upgrade name-of-module   Upgrade the specified module (if needed)\n"
-	                "unrealircd module upgrade                  Upgrade all modules (if needed)\n"
+	                "unrealircd module install name-of-module [name2 ...]   Install one or more modules\n"
+	                "unrealircd module uninstall name-of-module [name2 ...] Uninstall one or more modules\n"
+	                "unrealircd module upgrade name-of-module [name2 ...]   Upgrade one or more modules (if needed)\n"
+	                "unrealircd module upgrade                              Upgrade all modules (if needed)\n"
 	                "unrealircd module generate-repository      Generate a repository index (you are\n"
 	                "                                           unlikely to need this, only for repo admins)\n");
 	print_documentation();
