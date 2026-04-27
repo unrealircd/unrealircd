@@ -374,11 +374,12 @@ static void history_send_result_multiline_fallback(Client *client, HistoryLogLin
  * @param client	The client to send to.
  * @param r		The history result retrieved via history_request().
  */
-void history_send_result(Client *client, HistoryResult *r)
+void history_send_result(Client *client, HistoryResult *r, int end_of_pagination)
 {
 	char batch[BATCHLEN+1];
 	HistoryLogLine *l;
 	int has_multiline;
+	MessageTag *batch_open_mtags = NULL;
 
 	if (!can_receive_history(client))
 		return;
@@ -388,7 +389,14 @@ void history_send_result(Client *client, HistoryResult *r)
 	{
 		/* Start a new batch */
 		generate_batch_id(batch);
-		sendto_one(client, NULL, ":%s BATCH +%s chathistory %s", me.name, batch, r->object);
+		if (end_of_pagination)
+		{
+			batch_open_mtags = safe_alloc(sizeof(MessageTag));
+			safe_strdup(batch_open_mtags->name, "draft/chathistory-end");
+		}
+		sendto_one(client, batch_open_mtags, ":%s BATCH +%s chathistory %s", me.name, batch, r->object);
+		if (batch_open_mtags)
+			free_message_tags(batch_open_mtags);
 	}
 
 	has_multiline = HasCapability(client, "draft/multiline") && HasCapability(client, "batch");
