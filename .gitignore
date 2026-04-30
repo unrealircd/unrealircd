@@ -36,6 +36,16 @@ tls.rnd
 .DS_Store
 [D|d]esktop.ini
 
+# Ignores for ObbyIRCd
+/obbyircd
+extras/argon2/
+extras/argon2-*/
+extras/argon2*.tar
+extras/argon2*.tar.gz*
+extras/unrealircd-upgrade-script
+src/modules/rpc/Makefile
+src/unrealircdctl
+
 # Ignores for build artifacts
 *.so
 *.o
