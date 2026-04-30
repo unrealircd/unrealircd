@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Config script for UnrealIRCd
+# Config script for ObbyIRCd (fork of UnrealIRCd)
 # (C) 2001-2021 The UnrealIRCd Team
 #
 # This configure script is free software; the UnrealIRCd Team gives 
@@ -97,8 +97,8 @@ fi
 
 ARG="$ARG--with-bindir=$BINDIR "
 ARG="$ARG--with-datadir=$DATADIR "
-ARG="$ARG--with-pidfile=$DATADIR/unrealircd.pid "
-ARG="$ARG--with-controlfile=$DATADIR/unrealircd.ctl "
+ARG="$ARG--with-pidfile=$DATADIR/obbyircd.pid "
+ARG="$ARG--with-controlfile=$DATADIR/obbyircd.ctl "
 ARG="$ARG--with-confdir=$CONFDIR "
 ARG="$ARG--with-modulesdir=$MODULESDIR "
 ARG="$ARG--with-logdir=$LOGDIR "
@@ -121,7 +121,7 @@ if [ "$SANITIZER" = "asan" ]; then
 fi
 ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
-# remove possibly old instances of curl in ~/unrealircd/lib/
+# remove possibly old instances of curl in ~/obbyircd/lib/
 rm -f $PRIVATELIBDIR/*curl* 1>/dev/null 2>&1
 # At least do SOME parallel compiling by default, IF:
 # - the MAKE environment variable is not set
@@ -152,9 +152,9 @@ $CONF || exit 1
 cd "$UNREALCWD"
 
 if [ "$QUICK" != "1" ] ; then
-	if [ ! -f "$CONFDIR/unrealircd.conf" ]; then
+	if [ ! -f "$CONFDIR/obbyircd.conf" ]; then
 		echo ""
-		echo "You don't have an 'unrealircd.conf' yet in $CONFDIR"
+		echo "You don't have an 'obbyircd.conf' yet in $CONFDIR"
 		echo "Shall I put the example configuration file there?"
 		echo "If so, enter the two letter language code that you want, or just press ENTER for English. Answer 'none' to skip."
 		AVLANGS="en"
@@ -171,9 +171,9 @@ if [ "$QUICK" != "1" ] ; then
 		if [ "$cc" = "none" ]; then
 			echo "Example config not copied."
 		elif [ "$cc" = "en" -o "$cc" = "" ]; then
-			cp doc/conf/examples/example.conf $CONFDIR/unrealircd.conf
+			cp doc/conf/examples/example.conf $CONFDIR/obbyircd.conf
 		else
-			cp doc/conf/examples/example.$cc.conf $CONFDIR/unrealircd.conf
+			cp doc/conf/examples/example.$cc.conf $CONFDIR/obbyircd.conf
 		fi
 	fi
 
@@ -269,7 +269,7 @@ done
 c=""
 n=""
 UNREALCWD="`pwd`"
-BASEPATH="$HOME/unrealircd"
+BASEPATH="$HOME/obbyircd"
 DEFPERM="0600"
 SSLDIR=""
 NICKNAMEHISTORYLENGTH="2000"
@@ -296,7 +296,7 @@ QUICK=""
 ADVANCED=""
 while [ $# -ge 1 ] ; do
 	if [ "$1" = "-help" -o "$1" = "--help" -o "$1" = "-h" ] ; then
-		echo "Config utility for UnrealIRCd"
+		echo "Config utility for ObbyIRCd"
 		echo "-----------------------------"
 		echo "Syntax: ./Config [options]"
 		echo "-nointro     Skip intro (release notes, etc)"
@@ -328,9 +328,9 @@ elif [ "$ADVANCED" = "1" ]; then
 fi
 
 if [ "`id -u`" = "0" ]; then
-	echo "ERROR: You cannot build or run UnrealIRCd as root"
+	echo "ERROR: You cannot build or run ObbyIRCd as root"
 	echo ""
-	echo "Please create a separate account for building and running UnrealIRCd."
+	echo "Please create a separate account for building and running ObbyIRCd."
 	echo "See https://www.unrealircd.org/docs/Do_not_run_as_root"
 	exit
 fi
@@ -348,12 +348,12 @@ if ! $MAKE --version 2>&1|grep -q "GNU Make"; then
 	else
 		# Both $MAKE and gmake are not GNU make, do we have a working $MAKE at all?
 		if command -v "$MAKE" 1>/dev/null 2>&1; then
-			echo "Your system has 'make' but UnrealIRCd requires GNU Make ('gmake')"
+			echo "Your system has 'make' but ObbyIRCd requires GNU Make ('gmake')"
 			echo "Please install 'gmake' "
 			echo "eg 'pkg install gmake' on FreeBSD and 'pkg_add gmake' on OpenBSD."
 			exit 1
 		else
-			echo "Your system does not have the required tools installed to build UnrealIRCd."
+			echo "Your system does not have the required tools installed to build ObbyIRCd."
 			echo "Please check https://www.unrealircd.org/docs/Installing_from_source"
 			echo "and install the required tools listed under 'Prerequisites'."
 			echo "After that, you can run ./Config again"
@@ -389,7 +389,7 @@ else
 			break
 		fi
 	done
-	echo "If you have previously installed UnrealIRCd on this shell then you can specify a"
+	echo "If you have previously installed ObbyIRCd on this shell then you can specify a"
 	echo "directory here so I can import the build settings and third party modules"
 	echo "to make your life a little easier."
 	if [ ! -z "$IMPORTEDSETTINGS" ]; then
@@ -397,7 +397,7 @@ else
 		echo "You can enter a different path or type 'none' if you don't want to use it."
 		echo "Just press Enter to accept the default settings."
 	else
-		echo "If you install UnrealIRCd for the first time on this shell, then just hit Enter";
+		echo "If you install ObbyIRCd for the first time on this shell, then just hit Enter";
 	fi
 
 	TEST="$IMPORTEDSETTINGS"
@@ -450,8 +450,8 @@ fi
 
 TEST="$BASEPATH"
 echo ""
-echo "In what directory do you want to install UnrealIRCd?"
-echo "(Note: UnrealIRCd 6 will need to be installed somewhere."
+echo "In what directory do you want to install ObbyIRCd?"
+echo "(Note: ObbyIRCd 6 will need to be installed somewhere."
 echo " If this directory does not exist it will be created.)"
 echo $n "[$TEST] -> $c"
 read cc
@@ -532,7 +532,7 @@ fi
 if [ "$SSLDIR" != "" -a "$SSLDIR" != "/usr" ]; then
 	echo ""
 	echo "You answered previous question manually. Just note that if the library is not"
-	echo "in your default library path then UnrealIRCd may fail to start with an error"
+	echo "in your default library path then ObbyIRCd may fail to start with an error"
 	echo "that it cannot find certain .so files (libraries). In that case you would have"
 	echo "to either set the LD_LIBARY_PATH environment variable, or you could update the"
 	echo "Makefile to link with -Wl,-rpath,$SSLDIR or similar."
@@ -544,7 +544,7 @@ if [ "$SSLDIR" != "" -a "$SSLDIR" != "/usr" ]; then
 		echo "that you are diverting OTHER libraries to that path as well."
 		echo "It's not only loading OpenSSL from /usr/local but also potentially other"
 		echo "libraries like PCRE2, Jansson, or any of the other libraries that"
-		echo "UnrealIRCd uses (including dependencies about 40 libs in total!)"
+		echo "ObbyIRCd uses (including dependencies about 40 libs in total!)"
 		echo "All that can result in weird issues and crashes!"
 		echo ""
 	fi
@@ -561,7 +561,7 @@ if [ ! -f $BASEPATH/conf/tls/server.cert.pem -a ! -f $BASEPATH/conf/ssl/server.c
 	    TEST="No"
 	  fi
 	  echo ""
-	  echo "UnrealIRCd requires a TLS certificate in order to work."
+	  echo "ObbyIRCd requires a TLS certificate in order to work."
 	  echo "Do you want to generate a self-signed TLS certificate for the IRCd?"
 	  echo "Only answer No if you already have one."
 	  echo $n "[$TEST] -> $c"
@@ -606,7 +606,7 @@ while [ -z "$TEST" ] ; do
 		TEST="No"
 	fi
 	echo ""
-	echo "UnrealIRCd always supports 'remote includes' for https URLs like:"
+	echo "ObbyIRCd always supports 'remote includes' for https URLs like:"
 	echo "include \"https://www.example.org/files/opers.conf\";"
 	echo "Do you also need support for non-https, such as ftp, tftp, smb or insecure http?"
 	echo "Answer 'Yes' if you need such protocols and want to use the cURL library."
@@ -808,10 +808,10 @@ while [ -z "$TEST" ] ; do
 	TEST="$MAXCONNECTIONS_REQUEST"
 	echo ""
 	echo "What is the maximum number of sockets (and file descriptors) that"
-	echo "UnrealIRCd may use?"
+	echo "ObbyIRCd may use?"
 	echo "It is recommended to leave this at the default setting 'auto',"
 	echo "which at present results in a limit of up to 16384, depending on"
-	echo "the system. When you boot UnrealIRCd later you will always see"
+	echo "the system. When you boot ObbyIRCd later you will always see"
 	echo "the effective limit."
 	echo $n "[$TEST] -> $c"
 	read cc
@@ -846,13 +846,13 @@ while [ -z "$TEST" ] ; do
 		TEST="No"
 	fi
 	echo ""
-	echo "Are you running UnrealIRCd as a test, debugging a problem or developing a module?"
+	echo "Are you running ObbyIRCd as a test, debugging a problem or developing a module?"
 	echo "Then it is possible to run with AddressSanitizer and UndefinedBehaviorSanitizer"
 	echo "enabled. This will catch bugs, such as out-of-bounds and other memory corruption"
 	echo "issues, which can be really helpful in some cases. The downside is that it will"
 	echo "consume a lot more memory and run slower too. So, only answer 'Yes' if you are"
 	echo "OK with this. Also, on some systems (notably FreeBSD <14.2), when you enable"
-	echo "this UnrealIRCd may fail to start. So when in doubt, answer 'No'."
+	echo "this ObbyIRCd may fail to start. So when in doubt, answer 'No'."
 	echo "Do you want to enable AddressSanitizer & UndefinedBehaviorSanitizer?"
 	echo $n "[$TEST] -> $c"
 	read cc
@@ -927,7 +927,7 @@ cat << __EOF__
 
  _______________________________________________________________________
 |                                                                       |
-|                    UnrealIRCd Compile-Time Config                     |
+|                    ObbyIRCd Compile-Time Config                     |
 |_______________________________________________________________________|
 |_______________________________________________________________________|
 |                                                                       |

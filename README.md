@@ -2,19 +2,18 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/Unreal_IRCd.svg?style=social&label=Follow)](https://twitter.com/Unreal_IRCd)
 [![Linux CI](https://github.com/unrealircd/unrealircd/actions/workflows/linux-ci.yml/badge.svg)](https://github.com/unrealircd/unrealircd/actions/workflows/linux-ci.yml)
 
-## About UnrealIRCd
-UnrealIRCd is an Open Source IRC Server, serving thousands of networks since 1999.
-It runs on Linux, OS X and Windows and is currently the most widely deployed IRCd
-with a [market share of 37%](https://www.ircstats.org/servers). UnrealIRCd is a
-highly advanced IRCd with a strong focus on modularity and security. It uses an
-advanced and highly configurable configuration file. Other key features include:
-full IRCv3 support, SSL/TLS, cloaking, JSON-RPC, advanced anti-flood and anti-spam
-systems, GeoIP, remote includes, and lots of [other features](https://www.unrealircd.org/docs/About_UnrealIRCd).
-We are also particularly proud on our extensive online documentation.
+## About ObbyIRCd
+ObbyIRCd is a fork of [UnrealIRCd](https://www.unrealircd.org/) — an Open Source IRC Server,
+serving thousands of networks since 1999. It runs on Linux and OS X.
+ObbyIRCd is built on UnrealIRCd's highly advanced, modular, and secure foundation with a strong
+focus on modularity and security. It uses an advanced and highly configurable configuration file.
+Key features include: full IRCv3 support, SSL/TLS, cloaking, JSON-RPC, advanced anti-flood and
+anti-spam systems, GeoIP, remote includes, and lots of
+[other features](https://www.unrealircd.org/docs/About_UnrealIRCd).
 
 ## Versions
-* UnrealIRCd 6 is the *stable* series since December 2021. It is the only supported version.
-* For full details of release scheduling and EOL dates, see
+* ObbyIRCd is based on UnrealIRCd 6, the *stable* series since December 2021.
+* Upstream UnrealIRCd release information:
   [UnrealIRCd releases](https://www.unrealircd.org/docs/UnrealIRCd_releases) on the wiki
 
 ## How to get started

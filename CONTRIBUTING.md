@@ -1,5 +1,7 @@
-Help out and make UnrealIRCd a better product!
+Help out and make ObbyIRCd a better product!
 
-You can do so by reporting issues, testing, programming, documenting,
-translating, helping others, and more.
-See https://www.unrealircd.org/docs/Contributing
+ObbyIRCd is a fork of UnrealIRCd. You can contribute to the upstream project at:
+https://www.unrealircd.org/docs/Contributing
+
+For ObbyIRCd-specific contributions, please open issues or pull requests
+in this repository.

@@ -7,7 +7,7 @@ dnl src/windows/unrealinst.iss
 dnl doc/Config.header
 dnl src/version.c.SH
 
-AC_INIT([unrealircd], [6.2.4], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
+AC_INIT([obbyircd], [6.2.4], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
 AC_CONFIG_SRCDIR([src/ircd.c])
 AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])
@@ -475,20 +475,20 @@ configuration files])],
 AC_ARG_WITH(bindir, [AS_HELP_STRING([--with-bindir=path],[Specify the directory for the unrealircd binary])],
 	[AC_DEFINE_UNQUOTED([BINDIR], ["$withval"], [Define the directory where the unrealircd binary is located])
 		BINDIR="$withval"],
-	[AC_DEFINE_UNQUOTED([BINDIR], ["$HOME/unrealircd/bin"], [Define the directory where the unrealircd binary is located])
-		BINDIR="$HOME/unrealircd/bin"])
+	[AC_DEFINE_UNQUOTED([BINDIR], ["$HOME/obbyircd/bin"], [Define the directory where the unrealircd binary is located])
+		BINDIR="$HOME/obbyircd/bin"])
 
 AC_ARG_WITH(scriptdir, [AS_HELP_STRING([--with-scriptdir=path],[Specify the directory for the unrealircd start-stop script])],
 	[AC_DEFINE_UNQUOTED([SCRIPTDIR], ["$withval"], [Define the directory where the unrealircd start stop scripts is located])
 		SCRIPTDIR="$withval"],
-	[AC_DEFINE_UNQUOTED([SCRIPTDIR], ["$HOME/unrealircd"], [Define the directory where the unrealircd start stop scripts is located])
-		SCRIPTDIR="$HOME/unrealircd"])
+	[AC_DEFINE_UNQUOTED([SCRIPTDIR], ["$HOME/obbyircd"], [Define the directory where the unrealircd start stop scripts is located])
+		SCRIPTDIR="$HOME/obbyircd"])
 
 AC_ARG_WITH(confdir, [AS_HELP_STRING([--with-confdir=path],[Specify the directory where configuration files are stored])],
 	[AC_DEFINE_UNQUOTED([CONFDIR], ["$withval"], [Define the location of the configuration files])
 		CONFDIR="$withval"],
-	[AC_DEFINE_UNQUOTED([CONFDIR], ["$HOME/unrealircd/conf"], [Define the location of the configuration files])
-		CONFDIR="$HOME/unrealircd/conf"])
+	[AC_DEFINE_UNQUOTED([CONFDIR], ["$HOME/obbyircd/conf"], [Define the location of the configuration files])
+		CONFDIR="$HOME/obbyircd/conf"])
 
 dnl We have to pass the builddir as well, for the module manager
 AC_ARG_WITH(builddir, [AS_HELP_STRING([--with-builddir=path],[Specify the build directory])],
@@ -500,50 +500,50 @@ AC_ARG_WITH(builddir, [AS_HELP_STRING([--with-builddir=path],[Specify the build 
 AC_ARG_WITH(modulesdir, [AS_HELP_STRING([--with-modulesdir=path],[Specify the directory for loadable modules])],
 	[AC_DEFINE_UNQUOTED([MODULESDIR], ["$withval"], [Define the location of the modules])
 		MODULESDIR="$withval"],
-	[AC_DEFINE_UNQUOTED([MODULESDIR], ["$HOME/unrealircd/modules"], [Define the location of the modules])
-		MODULESDIR="$HOME/unrealircd/modules"])
+	[AC_DEFINE_UNQUOTED([MODULESDIR], ["$HOME/obbyircd/modules"], [Define the location of the modules])
+		MODULESDIR="$HOME/obbyircd/modules"])
 
 AC_ARG_WITH(logdir, [AS_HELP_STRING([--with-logdir=path],[Specify the directory where log files are stored])],
 	[AC_DEFINE_UNQUOTED([LOGDIR], ["$withval"], [Define the location of the log files])
 		LOGDIR="$withval"],
-	[AC_DEFINE_UNQUOTED([LOGDIR], ["$HOME/unrealircd/logs"], [Define the location of the log files])
-		LOGDIR="$HOME/unrealircd/logs"])
+	[AC_DEFINE_UNQUOTED([LOGDIR], ["$HOME/obbyircd/logs"], [Define the location of the log files])
+		LOGDIR="$HOME/obbyircd/logs"])
 
 AC_ARG_WITH(cachedir, [AS_HELP_STRING([--with-cachedir=path],[Specify the directory where cached files are stored])],
 	[AC_DEFINE_UNQUOTED([CACHEDIR], ["$withval"], [Define the location of the cached remote include files])
 		CACHEDIR="$withval"],
-	[AC_DEFINE_UNQUOTED([CACHEDIR], ["$HOME/unrealircd/cache"], [Define the location of the cached remote include files])
-		CACHEDIR="$HOME/unrealircd/cache"])
+	[AC_DEFINE_UNQUOTED([CACHEDIR], ["$HOME/obbyircd/cache"], [Define the location of the cached remote include files])
+		CACHEDIR="$HOME/obbyircd/cache"])
 
 AC_ARG_WITH(tmpdir, [AS_HELP_STRING([--with-tmpdir=path],[Specify the directory where private temporary files are stored. Should not be readable or writable by others, so not /tmp!!])],
 	[AC_DEFINE_UNQUOTED([TMPDIR], ["$withval"], [Define the location of private temporary files])
 		TMPDIR="$withval"],
-	[AC_DEFINE_UNQUOTED([TMPDIR], ["$HOME/unrealircd/tmp"], [Define the location of private temporary files])
-		TMPDIR="$HOME/unrealircd/tmp"])
+	[AC_DEFINE_UNQUOTED([TMPDIR], ["$HOME/obbyircd/tmp"], [Define the location of private temporary files])
+		TMPDIR="$HOME/obbyircd/tmp"])
 
 AC_ARG_WITH(datadir, [AS_HELP_STRING([--with-datadir=path],[Specify the directory where permanent data is stored])],
 	[AC_DEFINE_UNQUOTED([PERMDATADIR], ["$withval"], [Define the location of permanent data files])
 		PERMDATADIR="$withval"],
-	[AC_DEFINE_UNQUOTED([DATADIR], ["$HOME/unrealircd/data"], [Define the location of permanent data files])
-		PERMDATADIR="$HOME/unrealircd/data"])
+	[AC_DEFINE_UNQUOTED([DATADIR], ["$HOME/obbyircd/data"], [Define the location of permanent data files])
+		PERMDATADIR="$HOME/obbyircd/data"])
 
 AC_ARG_WITH(docdir, [AS_HELP_STRING([--with-docdir=path],[Specify the directory where documentation is stored])],
 	[AC_DEFINE_UNQUOTED([DOCDIR], ["$withval"], [Define the location of the documentation])
 		DOCDIR="$withval"],
-	[AC_DEFINE_UNQUOTED([DOCDIR], ["$HOME/unrealircd/doc"], [Define the location of the documentation])
-		DOCDIR="$HOME/unrealircd/doc"])
+	[AC_DEFINE_UNQUOTED([DOCDIR], ["$HOME/obbyircd/doc"], [Define the location of the documentation])
+		DOCDIR="$HOME/obbyircd/doc"])
 
 AC_ARG_WITH(pidfile, [AS_HELP_STRING([--with-pidfile=path],[Specify the path of the pid file])],
 	[AC_DEFINE_UNQUOTED([PIDFILE], ["$withval"], [Define the path of the pid file])
 		PIDFILE="$withval"],
-	[AC_DEFINE_UNQUOTED([PIDFILE], ["$HOME/unrealircd/data/unrealircd.pid"], [Define the path of the pid file])
-		PIDFILE="$HOME/unrealircd/data/unrealircd.pid"])
+	[AC_DEFINE_UNQUOTED([PIDFILE], ["$HOME/obbyircd/data/obbyircd.pid"], [Define the path of the pid file])
+		PIDFILE="$HOME/obbyircd/data/obbyircd.pid"])
 
 AC_ARG_WITH(controlfile, [AS_HELP_STRING([--with-controlfile=path],[Specify the path of the control socket])],
 	[AC_DEFINE_UNQUOTED([CONTROLFILE], ["$withval"], [Define the path of the control socket])
 		CONTROLFILE="$withval"],
-	[AC_DEFINE_UNQUOTED([CONTROLFILE], ["$HOME/unrealircd/data/unrealircd.ctl"], [Define the path of the control socket])
-		CONTROLFILE="$HOME/unrealircd/data/unrealircd.ctl"])
+	[AC_DEFINE_UNQUOTED([CONTROLFILE], ["$HOME/obbyircd/data/obbyircd.ctl"], [Define the path of the control socket])
+		CONTROLFILE="$HOME/obbyircd/data/obbyircd.ctl"])
 
 dnl Ensure that this “feature” can be disabled as it makes it harder to package unrealircd.
 dnl Users have always been able to specify “./configure LDFLAGS=-Wl,-rpath,/path/to/blah”—binki
@@ -553,7 +553,7 @@ AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify 
 AS_IF([test "x$with_privatelibdir" = "xno"],
 	[PRIVATELIBDIR=],
 	[test "x$with_privatelibdir" = "xyes"],
-	[PRIVATELIBDIR="$HOME/unrealircd/lib"],
+	[PRIVATELIBDIR="$HOME/obbyircd/lib"],
 	[PRIVATELIBDIR="$with_privatelibdir"])
 AS_IF([test "x$PRIVATELIBDIR" = "x"],
 	[LDFLAGS_PRIVATELIBS=""],
@@ -984,6 +984,6 @@ AC_CONFIG_FILES([Makefile
 	src/modules/rpc/Makefile
 	src/modules/third/Makefile
 	extras/unrealircd-upgrade-script
-	unrealircd])
+	obbyircd])
 AC_OUTPUT
-chmod 0700 unrealircd
+chmod 0700 obbyircd

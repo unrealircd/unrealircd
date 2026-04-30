@@ -4,7 +4,7 @@ PID_FILE="@PIDFILE@"
 PID_BACKUP="@PIDFILE@.bak"
 BINDIR="@BINDIR@"
 UNREALIRCDCTL="$BINDIR/unrealircdctl"
-IRCD="$BINDIR/unrealircd"
+IRCD="$BINDIR/obbyircd"
 BUILDDIR="@BUILDDIR@"
 CONFDIR="@CONFDIR@"
 TMPDIR="@TMPDIR@"
@@ -31,12 +31,12 @@ fi
 if [ "$1" = "start" -o "$1" = "stop" -o "$1" = "restart" ]; then
 	if [ ! -r "$PID_FILE" ] ; then
 		if $UNREALIRCDCTL status 1>/dev/null 2>&1; then
-			echo "UnrealIRCd is running but does not have a PID File."
-			echo "Is UnrealIRCd running through systemd? Then you should not use the ./unrealircd [start|stop|restart] commands!"
-			if systemctl --user status unrealircd.service 1>/dev/null 2>&1; then
-				echo "Instead, run: systemctl --user [start|stop|restart] unrealircd"
+			echo "ObbyIRCd is running but does not have a PID File."
+			echo "Is ObbyIRCd running through systemd? Then you should not use the ./obbyircd [start|stop|restart] commands!"
+			if systemctl --user status obbyircd.service 1>/dev/null 2>&1; then
+				echo "Instead, run: systemctl --user [start|stop|restart] obbyircd"
 			else
-				echo "Instead, run (as root or via sudo): systemctl [start|stop|restart] unrealircd"
+				echo "Instead, run (as root or via sudo): systemctl [start|stop|restart] obbyircd"
 			fi
 			exit 1
 		fi
@@ -47,8 +47,8 @@ if [ "$1" = "start" ] ; then
 	if [ -r "$PID_FILE" ] ; then
 		if kill -CHLD `cat "$PID_FILE"` 1>/dev/null 2>&1; then
 			if $UNREALIRCDCTL status 1>/dev/null 2>&1; then
-				echo "UnrealIRCd is already running (PID `cat "$PID_FILE"`)."
-				echo "To restart UnrealIRCd, use: $0 restart"
+				echo "ObbyIRCd is already running (PID `cat "$PID_FILE"`)."
+				echo "To restart ObbyIRCd, use: $0 restart"
 				exit 1
 			fi
 		fi
@@ -57,27 +57,27 @@ if [ "$1" = "start" ] ; then
 		mv -f "$PID_FILE" "$PID_BACKUP"
 	fi
 
-	# Check if ~/Unrealxxx/unrealircd.conf exists but the file
-	# ~/unrealircd/conf/unrealircd.conf does not.
+	# Check if ~/Unrealxxx/obbyircd.conf exists but the file
+	# ~/obbyircd/conf/obbyircd.conf does not.
 	# If so, then assume a user-build and give the user a nice hint...
-	if [ ! -f $CONFDIR/unrealircd.conf -a -f $BUILDDIR/unrealircd.conf ]; then
+	if [ ! -f $CONFDIR/obbyircd.conf -a -f $BUILDDIR/obbyircd.conf ]; then
 		echo ""
-		echo "There is no unrealircd.conf in $CONFDIR"
-		echo "However I did find an unrealircd.conf in $BUILDDIR"
-		echo "With UnrealIRCd 4 you should no longer run the IRCd from $BUILDDIR."
+		echo "There is no obbyircd.conf in $CONFDIR"
+		echo "However I did find an obbyircd.conf in $BUILDDIR"
+		echo "With ObbyIRCd 4 you should no longer run the IRCd from $BUILDDIR."
 		echo "You should 'cd $SCRIPTDIR' and work from there."
 		echo "See https://www.unrealircd.org/docs/UnrealIRCd_files_and_directories"
 		exit 1
 	fi
-	if [ ! -f $CONFDIR/unrealircd.conf ]; then
+	if [ ! -f $CONFDIR/obbyircd.conf ]; then
 		echo ""
-		echo "The configuration file does not exist ($CONFDIR/unrealircd.conf)."
+		echo "The configuration file does not exist ($CONFDIR/obbyircd.conf)."
 		echo "Create one using the example configuration file, see the documentation:"
 		echo "https://www.unrealircd.org/docs/Installing_from_source#Creating_a_configuration_file"
 		exit 1
 	fi
 
-	echo "Starting UnrealIRCd"
+	echo "Starting ObbyIRCd"
 
 	$IRCD
 	if [ $? -ne 0 ] ; then
@@ -87,13 +87,13 @@ if [ "$1" = "start" ] ; then
 		# Try to be helpful...
 		if ldd $IRCD 2>&1|grep -qF '=> not found'; then
 			echo "========================================================"
-			echo "UnrealIRCd failed to start due to missing libraries."
-			echo "Maybe you need to recompile UnrealIRCd? See"
+			echo "ObbyIRCd failed to start due to missing libraries."
+			echo "Maybe you need to recompile ObbyIRCd? See"
 			echo "https://www.unrealircd.org/docs/FAQ#shared-library-error"
 			echo "========================================================"
 		else
 			echo "====================================================="
-			echo "UnrealIRCd failed to start. Check above for possible errors."
+			echo "ObbyIRCd failed to start. Check above for possible errors."
 			echo "If you don't understand the problem, then have a look at our:"
 			echo "* FAQ (Frequently Asked Questions): https://www.unrealircd.org/docs/FAQ"
 			echo "* Documentation: https://www.unrealircd.org/docs/"
@@ -104,20 +104,20 @@ if [ "$1" = "start" ] ; then
 	# Now check if we need to create a crash report.
 	$IRCD -R
 elif [ "$1" = "stop" ] ; then
-	echo -n "Stopping UnrealIRCd"
+	echo -n "Stopping ObbyIRCd"
 	if [ ! -r "$PID_FILE" ] ; then
 		echo
-		echo "ERROR: UnrealIRCd is not running"
+		echo "ERROR: ObbyIRCd is not running"
 		exit 1
 	fi
 	kill -15 `cat "$PID_FILE"`
 	if [ "$?" != 0 ]; then
 		echo
-		echo "ERROR: UnrealIRCd is not running"
+		echo "ERROR: ObbyIRCd is not running"
 		rm -f "$PID_FILE"
 		exit 1
 	fi
-	# Wait for UnrealIRCd to terminate, but wait 10 seconds max
+	# Wait for ObbyIRCd to terminate, but wait 10 seconds max
 	n="0"
 	while [ "$n" -lt 10 ]
 	do
@@ -166,7 +166,7 @@ elif [ "$1" = "croncheck" ] ; then
 		fi
 	fi
 	# PID file not found or found but stale
-	echo "UnrealIRCd is not running. Starting now..."
+	echo "ObbyIRCd is not running. Starting now..."
 	$0 start
 elif [ "$1" = "configtest" ] ; then
 	$IRCD -c
@@ -197,11 +197,11 @@ elif [ "$1" = "backtrace" ] ; then
 	elif [ "$i" = "*core*" -o "$n" -eq 0 ]; then
 		echo 'No core files found... Nothing to do'
 		echo ''
-		echo 'If you are sure UnrealIRCd crashed, then verify that unreal'
+		echo 'If you are sure ObbyIRCd crashed, then verify that unreal'
 		echo 'has permission to dump core (type "ulimit -c unlimited" and see'
 		echo 'if you get permission denied errors). Also verify that you did'
 		echo 'not run out of quota.'
-		echo 'If all that is ok, then it might be that UnrealIRCd did not crash but'
+		echo 'If all that is ok, then it might be that ObbyIRCd did not crash but'
 		echo 'got killed by the OS (eg: cpu/mem resource limits), the syadmin,'
 		echo 'or an automated process.'
 		exit 1
@@ -262,7 +262,7 @@ __EOF__
 	echo '2. If you are using 3rd party modules we might request you'
 	echo '   to run without them and verify you still crash. This is'
 	echo '   to eleminate any loss of time due to bugs made by others'
-	echo '3. Use a reasonably recent UnrealIRCd version. We fix (crash)bugs'
+	echo '3. Use a reasonably recent ObbyIRCd version. We fix (crash)bugs'
 	echo '   all the time so your bug might as well be fixed already.'
 	echo ""
 	echo "Thanks!"
@@ -270,11 +270,11 @@ elif [ "$1" = "spki" -o "$1" = "spkifp" ] ; then
 	$UNREALIRCDCTL $*
 elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 	if [ ! -d "$BUILDDIR" ]; then
-		echo "UnrealIRCd source not found. Sorry, it is not possible to patch."
+		echo "ObbyIRCd source not found. Sorry, it is not possible to patch."
 		exit 1
 	fi
 	if [ "$2" = "" ]; then
-		echo "Argument required: ./unrealircd <hot-patch|cold-patch> <name-of-patch>"
+		echo "Argument required: ./obbyircd <hot-patch|cold-patch> <name-of-patch>"
 		exit 1
 	fi
 	if ! wget --help 1>/dev/null 2>&1; then
@@ -290,7 +290,7 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 
 	# A patch file of 0 bytes means the patch is not needed
 	if [ -f patch -a ! -s patch ]; then
-		echo "This UnrealIRCd version does not require that patch"
+		echo "This ObbyIRCd version does not require that patch"
 		exit 1
 	fi
 
@@ -327,7 +327,7 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 		echo "WARNING: The GnuPG (GPG/PGP) verification tool 'gpg' is not installed."
 		echo "Consider running 'sudo apt install gpg' or 'yum install gnupg2' on Linux,"
 		echo "or 'sudo pkg install gnupg' on FreeBSD."
-		echo "When 'gpg' is installed then the UnrealIRCd patch script can"
+		echo "When 'gpg' is installed then the ObbyIRCd patch script can"
 		echo "verify the digital signature of the download file."
 		export NOGPG=1
 	fi
@@ -357,11 +357,11 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 	cd $SCRIPTDIR
 	if [ "$1" = "hot-patch" ]; then
 		echo "Patch applied successfully and installed. Rehashing your IRCd..."
-		if ./unrealircd rehash; then
+		if ./obbyircd rehash; then
 			echo "Patch installed and server rehashed correctly. All should be good now!"
 		else
 			echo "Patching the source code and recompiling succeeded,"
-			echo "however rehashing the current UnrealIRCd process FAILED"
+			echo "however rehashing the current ObbyIRCd process FAILED"
 			echo "so it is NOT running the patched code yet."
 			echo "IMPORTANT: Check error output above!"
 			exit 1
@@ -429,22 +429,22 @@ else
 	else
 		echo "Unrecognized parameter '$1'. Use:"
 	fi
-	echo "unrealircd configtest    Test the configuration file"
-	echo "unrealircd start         Start the IRC Server"
-	echo "unrealircd stop          Stop (kill) the IRC Server"
-	echo "unrealircd rehash        Reload the configuration file"
-	echo "unrealircd reloadtls     Reload the SSL/TLS certificates"
-	echo "unrealircd restart       Restart the IRC Server (stop+start)"
-	echo "unrealircd status        Show current status of the IRC Server"
-	echo "unrealircd module-status Show all currently loaded modules"
-	echo "unrealircd upgrade       Upgrade UnrealIRCd to the latest version (or the next available"
+	echo "obbyircd configtest    Test the configuration file"
+	echo "obbyircd start         Start the IRC Server"
+	echo "obbyircd stop          Stop (kill) the IRC Server"
+	echo "obbyircd rehash        Reload the configuration file"
+	echo "obbyircd reloadtls     Reload the SSL/TLS certificates"
+	echo "obbyircd restart       Restart the IRC Server (stop+start)"
+	echo "obbyircd status        Show current status of the IRC Server"
+	echo "obbyircd module-status Show all currently loaded modules"
+	echo "obbyircd upgrade       Upgrade ObbyIRCd to the latest version (or the next available"
  	echo "                         release candidate if the --rc argument is used)"
-	echo "unrealircd mkpasswd      Hash a password"
-	echo "unrealircd version       Display the UnrealIRCd version"
-	echo "unrealircd module        Install and uninstall 3rd party modules"
-	echo "unrealircd croncheck     For use in crontab: this checks if the server"
+	echo "obbyircd mkpasswd      Hash a password"
+	echo "obbyircd version       Display the ObbyIRCd version"
+	echo "obbyircd module        Install and uninstall 3rd party modules"
+	echo "obbyircd croncheck     For use in crontab: this checks if the server"
 	echo "                         is running. If not, the server is started."
-	echo "unrealircd genlinkblock  Generate link { } block for the other side."
-	echo "unrealircd gencloak      Display 3 random cloak keys"
-	echo "unrealircd spkifp        Display SPKI Fingerprint"
+	echo "obbyircd genlinkblock  Generate link { } block for the other side."
+	echo "obbyircd gencloak      Display 3 random cloak keys"
+	echo "obbyircd spkifp        Display SPKI Fingerprint"
 fi

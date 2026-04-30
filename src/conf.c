@@ -2528,13 +2528,13 @@ int config_read_file(const char *filename, const char *display_name)
 		           log_data_string("resource", display_name),
 		           log_data_string("filename", filename));
 #ifdef _WIN32
-		if (!strcmp(filename, "conf/unrealircd.conf"))
+		if (!strcmp(filename, "conf/obbyircd.conf"))
 		{
-			if (file_exists("unrealircd.conf"))
+			if (file_exists("obbyircd.conf"))
 			{
-				config_error("Note that 'unrealircd.conf' now belongs in the 'conf' subdirectory! (So move it to there)");
+				config_error("Note that 'obbyircd.conf' now belongs in the 'conf' subdirectory! (So move it to there)");
 			} else {
-				config_error("New to UnrealIRCd? Be sure to read https://www.unrealircd.org/docs/Installing_%%28Windows%%29");
+				config_error("New to ObbyIRCd? Be sure to read https://www.unrealircd.org/docs/Installing_%%28Windows%%29");
 			}
 		}
 #endif
@@ -11783,7 +11783,7 @@ int tls_tests(void)
 	if (have_tls_listeners == 0)
 	{
 		config_error("Your server is not listening on any TLS ports.");
-		config_status("Add this to your unrealircd.conf: listen { ip %s; port 6697; options { tls; }; };",
+		config_status("Add this to your obbyircd.conf: listen { ip %s; port 6697; options { tls; }; };",
 		            port_6667_ip ? port_6667_ip : "*");
 		config_status("See https://www.unrealircd.org/docs/FAQ#no-tls-ports");
 		return 0;
@@ -11880,8 +11880,8 @@ void link_generator(void)
 	}
 
 	printf("\n");
-	printf("Add the following link block to the unrealircd.conf on the OTHER side of the link\n");
-	printf("(so NOT in the unrealircd.conf on THIS machine). Here it is, just copy-paste:\n");
+	printf("Add the following link block to the obbyircd.conf on the OTHER side of the link\n");
+	printf("(so NOT in the obbyircd.conf on THIS machine). Here it is, just copy-paste:\n");
 	printf("################################################################################\n");
 	printf("link %s {\n"
 	       "    incoming {\n"

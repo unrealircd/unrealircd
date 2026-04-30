@@ -101,7 +101,7 @@
 /*
  * Full pathnames and defaults of irc system's support files.
  */
-#define	CPATH		CONFDIR"/unrealircd.conf"	/* server configuration file */
+#define	CPATH		CONFDIR"/obbyircd.conf"	/* server configuration file */
 #define	MPATH		CONFDIR"/ircd.motd"	/* server MOTD file */
 #define SMPATH		CONFDIR"/ircd.smotd"    /* short MOTD file */
 #define RPATH   	CONFDIR"/ircd.rules"	/* server rules file */

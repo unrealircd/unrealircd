@@ -311,7 +311,7 @@ static int abort_sasl(Client *client)
  */
 int sasl_capability_visible(Client *client)
 {
-	if (!SASL_SERVER || !find_server(SASL_SERVER, NULL))
+	if (!SASL_SERVER)
 		return 0;
 
 	/* Don't advertise 'sasl' capability if we are going to reject the

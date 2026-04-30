@@ -63,7 +63,7 @@ typedef int bool;
 #define DEADBEEF_ADDR 0xDEADBEEF
 #endif
 
-#define BASE_VERSION "UnrealIRCd"
+#define BASE_VERSION "ObbyIRCd"
 #ifndef _WIN32
 #define FDwrite(x,y,z) write(x, y, z)
 #else

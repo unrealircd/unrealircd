@@ -1792,7 +1792,7 @@ int log_tests(void)
 	{
 		unreal_log(ULOG_ERROR, "config", "LOG_SNOMASK_BLOCK_MISSING", NULL,
 		           "Missing snomask logging configuration:\n"
-		           "Please add the following line to your unrealircd.conf: "
+		           "Please add the following line to your obbyircd.conf: "
 		           "include \"snomasks.default.conf\";");
 		return 0;
 	}

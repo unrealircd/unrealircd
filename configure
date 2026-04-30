@@ -10209,7 +10209,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/extbans/Makefile src/modules/rpc/Makefile src/modules/third/Makefile extras/unrealircd-upgrade-script unrealircd"
+ac_config_files="$ac_config_files Makefile src/Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/extbans/Makefile src/modules/rpc/Makefile src/modules/third/Makefile extras/unrealircd-upgrade-script obbyircd"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -10909,7 +10909,7 @@ do
     "src/modules/rpc/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/rpc/Makefile" ;;
     "src/modules/third/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/third/Makefile" ;;
     "extras/unrealircd-upgrade-script") CONFIG_FILES="$CONFIG_FILES extras/unrealircd-upgrade-script" ;;
-    "unrealircd") CONFIG_FILES="$CONFIG_FILES unrealircd" ;;
+    "obbyircd") CONFIG_FILES="$CONFIG_FILES obbyircd" ;;
 
   *) as_fn_error $? "invalid argument: '$ac_config_target'" "$LINENO" 5;;
   esac
@@ -11491,5 +11491,5 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
 printf "%s\n" "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
 
-chmod 0700 unrealircd
+chmod 0700 obbyircd
 

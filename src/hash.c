@@ -285,8 +285,6 @@ void init_hash(void)
 
 	memset(channelTable, 0, sizeof(channelTable));
 
-	if (strcmp(BASE_VERSION, &unreallogo[337]))
-		loop.tainted = 1;
 }
 
 uint64_t hash_client_name(const char *name)

@@ -88,7 +88,10 @@ MODULES= \
 	no-implicit-names.so maxperip.so utf8functions.so utf8only.so \
 	isupport.so extended-isupport.so \
 	$(GEOIP_CLASSIC_OBJECTS) \
-	geoip_mmdb.so
+	geoip_mmdb.so \
+	persistence.so \
+	account-registration.so \
+	guest-nicks.so
 
 MODULEFLAGS=@MODULEFLAGS@
 RM=@RM@
@@ -127,3 +130,8 @@ geoip_classic.so: geoip_classic.c $(INCLUDES)
 geoip_mmdb.so: geoip_mmdb.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o geoip_mmdb.so geoip_mmdb.c mmdb.c
+
+# account-registration needs sqlite3
+account-registration.so: account-registration.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o account-registration.so account-registration.c -lsqlite3

@@ -141,8 +141,8 @@ build: Makefile
 		( cd $$i; ${MAKE} ${MAKEARGS} build; ) \
 	done
 	@echo ''
-	@echo '* UnrealIRCd compiled successfully'
-	@echo '* YOU ARE NOT DONE YET! Run "${MAKE} install" to install UnrealIRCd !'
+	@echo '* ObbyIRCd compiled successfully'
+	@echo '* YOU ARE NOT DONE YET! Run "${MAKE} install" to install ObbyIRCd !'
 	@echo ''
 
 clean:
@@ -161,7 +161,7 @@ cleandir: clean
 distclean: cleandir
 	rm -rf extras/*.bak extras/*.tar extras/c-ares
 	rm -rf extras/c-ares-* extras/tre-*
-	rm -rf config.log config.settings *.pem ircd.* unrealircd
+	rm -rf config.log config.settings *.pem ircd.* obbyircd
 	rm -rf Makefile config.status
 	
 depend:
@@ -172,7 +172,7 @@ depend:
 
 install: all
 	$(INSTALL) -m 0700 -d $(DESTDIR)@BINDIR@
-	$(INSTALL) -m 0700 src/ircd $(DESTDIR)@BINDIR@/unrealircd
+	$(INSTALL) -m 0700 src/ircd $(DESTDIR)@BINDIR@/obbyircd
 	$(INSTALL) -m 0700 src/unrealircdctl $(DESTDIR)@BINDIR@/unrealircdctl
 	$(INSTALL) -m 0700 extras/unrealircd-upgrade-script $(DESTDIR)@BINDIR@/unrealircd-upgrade-script
 	$(INSTALL) -m 0700 -d $(DESTDIR)@DOCDIR@
@@ -199,7 +199,7 @@ install: all
 	$(INSTALL) -m 0600 doc/conf/help/*.conf $(DESTDIR)@CONFDIR@/help
 	$(INSTALL) -m 0700 -d $(DESTDIR)@CONFDIR@/examples
 	$(INSTALL) -m 0600 doc/conf/examples/*.conf $(DESTDIR)@CONFDIR@/examples
-	$(INSTALL) -m 0700 unrealircd $(DESTDIR)@SCRIPTDIR@
+	$(INSTALL) -m 0700 obbyircd $(DESTDIR)@SCRIPTDIR@
 	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@
 	@rm -f $(DESTDIR)@MODULESDIR@/*.so 1>/dev/null 2>&1
 	$(INSTALL) -m 0700 src/modules/*.so $(DESTDIR)@MODULESDIR@
@@ -242,7 +242,7 @@ install: all
 	@rm -f $(DESTDIR)@SCRIPTDIR@/source
 	ln -s @BUILDDIR@ $(DESTDIR)@SCRIPTDIR@/source
 	@echo ''
-	@echo '* UnrealIRCd is now installed.'
+	@echo '* ObbyIRCd is now installed.'
 	
 	-@if [ "@SCRIPTDIR@/bin" = "@BINDIR@" ] ; then \
 		echo '* Leave this directory and run "cd @SCRIPTDIR@" now' ; \
@@ -254,13 +254,13 @@ install: all
 	@echo '  * Configuration files: @CONFDIR@'
 	@echo '  * Log files: @LOGDIR@'
 	@echo '  * Modules: @MODULESDIR@'
-	@echo '* To start/stop UnrealIRCd run: @SCRIPTDIR@/unrealircd"'
+	@echo '* To start/stop ObbyIRCd run: @SCRIPTDIR@/obbyircd"'
 	@echo ''
 	@echo '* Consult the documentation online at:'
 	@echo '  * https://www.unrealircd.org/docs/'
 	@echo '  * https://www.unrealircd.org/docs/FAQ'
 	@echo ''
-	@echo '* To ensure UnrealIRCd automatically starts on system startup:'
+	@echo '* To ensure ObbyIRCd automatically starts on system startup:'
 	@echo '  * Install a cron job: https://www.unrealircd.org/docs/Cron_job'
 	@echo '  * Or, use systemd: https://www.unrealircd.org/docs/Using_systemd_with_UnrealIRCd'
 	@echo ''
