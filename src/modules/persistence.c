@@ -159,6 +159,11 @@ static int persist_remote_kick(Client *client, Client *victim, Channel *channel,
 static int persist_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 static int persist_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 static int persist_configposttest(int *errs);
+static int persist_rehash(void);
+
+/* Set to 1 while HOOKTYPE_REHASH is running so Mod_Unload knows ghosts
+ * were already cleaned up and must not call exit_client again. */
+static int persist_ghosts_exited = 0;
 CMD_FUNC(cmd_persistence);
 CMD_OVERRIDE_FUNC(session_msg_override);
 CMD_OVERRIDE_FUNC(session_join_override);
@@ -243,6 +248,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_AWAY, 0, persist_away);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_KICK, 0, persist_local_kick);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_KICK, 0, persist_remote_kick);
+	HookAdd(modinfo->handle, HOOKTYPE_REHASH, 0, persist_rehash);
 
 	EventAdd(modinfo->handle, "persist_cleanup", ghost_cleanup_event, NULL,
 	         PERSIST_CLEANUP_INTERVAL_MS, 0);
@@ -291,17 +297,42 @@ MOD_UNLOAD()
 	for (e = persist_list; e; e = enext)
 	{
 		enext = e->next;
+		if (e->ghost && !persist_ghosts_exited)
+		{
+			Client *ghost = e->ghost;
+			e->ghost = NULL;
+			exit_client(ghost, NULL, "Server restarting (persistence)");
+		}
+		else
+		{
+			e->ghost = NULL;
+		}
+		free_entry(e);
+	}
+	persist_list = NULL;
+	persist_ghosts_exited = 0;
+
+	return MOD_SUCCESS;
+}
+
+/* Called at the start of a rehash, while all modules are still loaded.
+ * Exit ghost clients here so the watch/hash infrastructure is intact.
+ */
+static int persist_rehash(void)
+{
+	PersistEntry *e;
+
+	for (e = persist_list; e; e = e->next)
+	{
 		if (e->ghost)
 		{
 			Client *ghost = e->ghost;
 			e->ghost = NULL;
 			exit_client(ghost, NULL, "Server restarting (persistence)");
 		}
-		free_entry(e);
 	}
-	persist_list = NULL;
-
-	return MOD_SUCCESS;
+	persist_ghosts_exited = 1;
+	return 0;
 }
 
 /* ===================================================================
