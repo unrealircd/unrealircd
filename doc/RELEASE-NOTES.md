@@ -1,3 +1,17 @@
+UnrealIRCd 6.2.5-git
+=====================
+
+This is the git version (development version) for future UnrealIRCd 6.2.5.
+This is work in progress and may not always be a stable version.
+
+### Enhancements:
+
+### Changes:
+
+### Fixes:
+
+### Developers and protocol:
+
 UnrealIRCd 6.2.4
 =================
 
