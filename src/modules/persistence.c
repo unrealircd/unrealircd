@@ -38,7 +38,6 @@ ModuleHeader MOD_HEADER = {
     "draft/persistence - IRCv3 ghost client persistence + multi-session",
     "ObbyIRCd Team",
     "unrealircd-6",
-    MOD_OPT_PERM,
 };
 
 /* ===================================================================
@@ -179,6 +178,7 @@ EVENT(ghost_cleanup_event);
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, persist_configrun);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, persist_configtest);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, persist_configposttest);
