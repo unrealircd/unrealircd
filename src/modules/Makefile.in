@@ -138,6 +138,6 @@ account-registration.so: account-registration.c $(INCLUDES)
 		-o account-registration.so account-registration.c -lsqlite3
 
 # obbyscript embeds Duktape and needs -lm
-obbyscript.so: obbyscript.c duktape.c duktape.h duk_config.h $(INCLUDES)
+obbyscript.so: obbyscript.c duktape.c ../include/duktape.h ../include/duk_config.h $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o obbyscript.so obbyscript.c -lm
