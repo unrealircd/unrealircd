@@ -91,7 +91,8 @@ MODULES= \
 	geoip_mmdb.so \
 	persistence.so \
 	account-registration.so \
-	guest-nicks.so
+	guest-nicks.so \
+	obbyscript.so
 
 MODULEFLAGS=@MODULEFLAGS@
 RM=@RM@
@@ -135,3 +136,8 @@ geoip_mmdb.so: geoip_mmdb.c $(INCLUDES)
 account-registration.so: account-registration.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o account-registration.so account-registration.c -lsqlite3
+
+# obbyscript embeds Duktape and needs -lm
+obbyscript.so: obbyscript.c duktape.c duktape.h duk_config.h $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o obbyscript.so obbyscript.c -lm
