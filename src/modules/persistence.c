@@ -38,6 +38,7 @@ ModuleHeader MOD_HEADER = {
     "draft/persistence - IRCv3 ghost client persistence + multi-session",
     "ObbyIRCd Team",
     "unrealircd-6",
+    MOD_OPT_PERM_RELOADABLE,
 };
 
 /* ===================================================================
