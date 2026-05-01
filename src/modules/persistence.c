@@ -244,14 +244,6 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_KICK, 0, persist_local_kick);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_KICK, 0, persist_remote_kick);
 
-	/* Command overrides: proxy session client commands through canonical */
-	ovr_privmsg = CommandOverrideAdd(modinfo->handle, "PRIVMSG", 0, session_msg_override);
-	ovr_notice = CommandOverrideAdd(modinfo->handle, "NOTICE", 0, session_msg_override);
-	ovr_join = CommandOverrideAdd(modinfo->handle, "JOIN", 0, session_join_override);
-	ovr_part = CommandOverrideAdd(modinfo->handle, "PART", 0, session_part_override);
-	ovr_away = CommandOverrideAdd(modinfo->handle, "AWAY", 0, session_away_override);
-	ovr_nick = CommandOverrideAdd(modinfo->handle, "NICK", 0, session_nick_override);
-
 	EventAdd(modinfo->handle, "persist_cleanup", ghost_cleanup_event, NULL,
 	         PERSIST_CLEANUP_INTERVAL_MS, 0);
 
@@ -260,6 +252,13 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	/* Command overrides: proxy session client commands through canonical */
+	ovr_privmsg = CommandOverrideAdd(modinfo->handle, "PRIVMSG", 0, session_msg_override);
+	ovr_notice = CommandOverrideAdd(modinfo->handle, "NOTICE", 0, session_msg_override);
+	ovr_join = CommandOverrideAdd(modinfo->handle, "JOIN", 0, session_join_override);
+	ovr_part = CommandOverrideAdd(modinfo->handle, "PART", 0, session_part_override);
+	ovr_away = CommandOverrideAdd(modinfo->handle, "AWAY", 0, session_away_override);
+	ovr_nick = CommandOverrideAdd(modinfo->handle, "NICK", 0, session_nick_override);
 	away_notify_cap = ClientCapabilityBit("away-notify");
 	persist_load_db();
 	return MOD_SUCCESS;
@@ -788,10 +787,18 @@ static void setup_session(Client *client, PersistEntry *e)
 		 * JOIN broadcasts visible to session1. */
 		{
 			Member *nm;
-			char namebuf[512];
-			int namelen = 0;
+			char nambuf[BUFSIZE];
+			char nickbuf[512];
+			int nicklen = 0;
+			int hdrlen;
 
-			namebuf[0] = '\0';
+			/* Build '= #channel :' header once */
+			snprintf(nambuf, sizeof(nambuf), "%c %s :",
+			         PubChannel(channel) ? '=' : (SecretChannel(channel) ? '@' : '*'),
+			         channel->name);
+			hdrlen = strlen(nambuf);
+			nickbuf[0] = '\0';
+
 			for (nm = channel->members; nm; nm = nm->next)
 			{
 				const char *prefix = "";
@@ -804,23 +811,27 @@ static void setup_session(Client *client, PersistEntry *e)
 				else if (strchr(nm->member_modes, 'v'))
 					prefix = "+";
 				int needed = strlen(prefix) + strlen(nm->client->name) + 2;
-				if (namelen > 0 && namelen + needed > 400)
+				if (nicklen > 0 && nicklen + needed > 400)
 				{
-					sendnumeric(client, RPL_NAMREPLY, "=", channel->name, namebuf);
-					namebuf[0] = '\0';
-					namelen = 0;
+					strlcpy(nambuf + hdrlen, nickbuf, sizeof(nambuf) - hdrlen);
+					sendnumeric(client, RPL_NAMREPLY, nambuf);
+					nickbuf[0] = '\0';
+					nicklen = 0;
 				}
-				if (namelen)
+				if (nicklen)
 				{
-					namebuf[namelen++] = ' ';
-					namebuf[namelen] = '\0';
+					nickbuf[nicklen++] = ' ';
+					nickbuf[nicklen] = '\0';
 				}
-				strlcat(namebuf, prefix, sizeof(namebuf));
-				strlcat(namebuf, nm->client->name, sizeof(namebuf));
-				namelen = strlen(namebuf);
+				strlcat(nickbuf, prefix, sizeof(nickbuf));
+				strlcat(nickbuf, nm->client->name, sizeof(nickbuf));
+				nicklen = strlen(nickbuf);
 			}
-			if (namelen)
-				sendnumeric(client, RPL_NAMREPLY, "=", channel->name, namebuf);
+			if (nicklen)
+			{
+				strlcpy(nambuf + hdrlen, nickbuf, sizeof(nambuf) - hdrlen);
+				sendnumeric(client, RPL_NAMREPLY, nambuf);
+			}
 			sendnumeric(client, RPL_ENDOFNAMES, channel->name);
 		}
 	}
