@@ -6969,6 +6969,21 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 				continue;
 			}
+			if (config_checkval(cep->value, CFG_YESNO))
+			{
+				unreal_log(ULOG_WARNING, "config", "CONFIG_VERIFY_CERTIFICATE_DEPRECATED", NULL,
+				           "$file:$line_number: link::verify-certificate should no longer be used because public "
+				           "certificate authorities are dropping the 'Client Authentication EKU' from TLS certs, "
+				           "see e.g. https://letsencrypt.org/2025/05/14/ending-tls-client-authentication.\n"
+				           "We recommend using a 'dual certificate setup' as outlined in "
+				           "https://www.unrealircd.org/docs/Using_Let's_Encrypt_with_UnrealIRCd which will give you: "
+				           "1) A short-lived certificate from Let's Encrypt on port 6697 and "
+				           "2) A long-lived self-signed certificate used for linking on serversonly port 6900.\n"
+				           "And then simply use 'spkifp' for linking on port 6900 as outlined in "
+				           "https://www.unrealircd.org/docs/Tutorial:_Linking_servers",
+				           log_data_string("file", cep->file->filename),
+				           log_data_integer("line_number", cep->line_number));
+			}
 		}
 		else if (!strcmp(cep->name, "options"))
 		{
