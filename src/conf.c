@@ -10243,12 +10243,12 @@ void start_listeners(void)
 					if (listener->socket_type == SOCKET_TYPE_UNIX)
 					{
 						unreal_log(ULOG_INFO, "listen", "LISTEN_ADDED", NULL,
-							   "UnrealIRCd is now also listening on $listen_file [$protocol]",
+							   "ObbyIRCd is now also listening on $listen_file [$protocol]",
 							   log_data_string("listen_file", listener->file),
 							   log_data_string("protocol", socket_type_valtostr(listener->socket_type)));
 					} else {
 						unreal_log(ULOG_INFO, "listen", "LISTEN_ADDED", NULL,
-							   "UnrealIRCd is now also listening on $listen_ip:$listen_port [$protocol]",
+							   "ObbyIRCd is now also listening on $listen_ip:$listen_port [$protocol]",
 							   log_data_string("listen_ip", listener->ip),
 							   log_data_integer("listen_port", listener->port),
 							   log_data_string("protocol", socket_type_valtostr(listener->socket_type)));
@@ -10334,7 +10334,7 @@ void start_listeners(void)
 			strlcpy(boundmsg_unix, "<none>", sizeof(boundmsg_unix));
 
 		unreal_log(ULOG_INFO, "listen", "LISTENING", NULL,
-		           "UnrealIRCd is now listening on the following addresses/ports:\n"
+		           "ObbyIRCd is now listening on the following addresses/ports:\n"
 		           "IPv4: $ipv4_port_list\n"
 		           "IPv6: $ipv6_port_list\n"
 		           "Unix Sockets: $unix_socket_list\n",

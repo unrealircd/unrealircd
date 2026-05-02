@@ -562,10 +562,10 @@ int InitUnrealIRCd(int argc, char *argv[])
 	{
 		fprintf(stderr,
 			"** ERROR **\n"
-			"You attempted to run UnrealIRCd as root. This is VERY DANGEROUS\n"
-			"as any compromise of your UnrealIRCd will result in full\n"
+			"You attempted to run ObbyIRCd as root. This is VERY DANGEROUS\n"
+			"as any compromise of your ObbyIRCd will result in full\n"
 			"privileges to the attacker on the entire machine.\n"
-			"You MUST start UnrealIRCd as a different user!\n"
+			"You MUST start ObbyIRCd as a different user!\n"
 			"\n"
 			"For more information, see:\n"
 			"https://www.unrealircd.org/docs/Do_not_run_as_root\n"
@@ -854,7 +854,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON);
 #endif
 	config_run();
-	unreal_log(ULOG_INFO, "main", "UNREALIRCD_START", NULL, "UnrealIRCd started.");
+	unreal_log(ULOG_INFO, "main", "UNREALIRCD_START", NULL, "ObbyIRCd started.");
 
 	read_motd(conf_files->botmotd_file, &botmotd);
 	read_motd(conf_files->rules_file, &rules);

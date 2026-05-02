@@ -403,12 +403,12 @@ void close_listener(ConfigItem_listen *listener)
 		if (listener->socket_type == SOCKET_TYPE_UNIX)
 		{
 			unreal_log(ULOG_INFO, "listen", "LISTEN_REMOVED", NULL,
-				   "UnrealIRCd is now no longer listening on $listen_file [$protocol]",
+				   "ObbyIRCd is now no longer listening on $listen_file [$protocol]",
 				   log_data_string("listen_file", listener->file),
 				   log_data_string("protocol", socket_type_valtostr(listener->socket_type)));
 		} else {
 			unreal_log(ULOG_INFO, "listen", "LISTEN_REMOVED", NULL,
-				   "UnrealIRCd is now no longer listening on $listen_ip:$listen_port [$protocol]",
+				   "ObbyIRCd is now no longer listening on $listen_ip:$listen_port [$protocol]",
 				   log_data_string("listen_ip", listener->ip),
 				   log_data_integer("listen_port", listener->port),
 				   log_data_string("protocol", socket_type_valtostr(listener->socket_type)));

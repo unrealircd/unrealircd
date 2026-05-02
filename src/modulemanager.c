@@ -357,7 +357,7 @@ char *mm_sourceslist_file(void)
 	snprintf(buf1, sizeof(buf1), "%s/modules.sources.list", CONFDIR);
 	if (!file_exists(buf1))
 	{
-		/* Possibly UnrealIRCd is not installed yet, so use this one */
+		/* Possibly ObbyIRCd is not installed yet, so use this one */
 		snprintf(buf2, sizeof(buf2), "%s/doc/conf/modules.sources.list", BUILDDIR);
 		if (!file_exists(buf2))
 		{
@@ -1609,7 +1609,7 @@ void mm_self_test(void)
 		snprintf(name, sizeof(name), "%s/src/modules/third/Makefile", BUILDDIR);
 		if (!file_exists(name))
 		{
-			fprintf(stderr, "ERROR: Directory %s exists, but your UnrealIRCd is not compiled yet.\n"
+			fprintf(stderr, "ERROR: Directory %s exists, but your ObbyIRCd is not compiled yet.\n"
 					"You must compile your UnrealIRCd first (run './Config', then 'make install')\n",
 					BUILDDIR);
 			exit(-1);
