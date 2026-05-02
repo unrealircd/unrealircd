@@ -101,3 +101,9 @@ src/macosx/pods/
 
 # Doxygen generated files
 doc/doxygen/
+
+# Working copies of the ObsidianIRC client used for cross-repo development.
+ObsidianIRC/
+
+# Per-source backup files from in-place edits.
+*.bak
