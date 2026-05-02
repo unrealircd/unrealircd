@@ -1,0 +1,38 @@
+services:
+  obbyircd:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: obbyircd:local
+    container_name: obbyircd
+    restart: unless-stopped
+    ports:
+      - "${SSL_HOST_PORT:-6697}:${SSL_PORT:-6697}"
+      - "${WS_HOST_PORT:-8080}:${WS_PORT:-8080}"
+    volumes:
+      - ${CONF_BIND:-obbyircd_conf}:/home/obbyircd/obby/conf
+      - ${DATA_BIND:-obbyircd_data}:/home/obbyircd/obby/data
+      - ${LOGS_BIND:-obbyircd_logs}:/home/obbyircd/obby/logs
+      - ${TLS_BIND:-obbyircd_tls}:/home/obbyircd/obby/tls
+      - ${CUSTOM_MODULES_BIND:-obbyircd_custom_modules}:/home/obbyircd/obby/custom-modules
+    env_file:
+      - path: .env
+        required: false
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost ${SSL_PORT:-6697}"]
+      interval: 5s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+volumes:
+  obbyircd_conf:
+    driver: local
+  obbyircd_data:
+    driver: local
+  obbyircd_logs:
+    driver: local
+  obbyircd_tls:
+    driver: local
+  obbyircd_custom_modules:
+    driver: local

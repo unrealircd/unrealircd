@@ -1,0 +1,120 @@
+/* ObbyIRCd configuration template
+ * Rendered at first container start by docker-entrypoint.sh: every
+ * ${...} placeholder is substituted via envsubst.  Do not edit this
+ * file inside a running container -- edit conf/obbyircd.conf directly
+ * or bake your changes into a fork of this template.
+ */
+
+me {
+    name "${SERVER_NAME}";
+    info "ObbyIRCd";
+    sid "001";
+};
+
+admin {
+    "${ADMIN_EMAIL}";
+    "ObbyIRCd Administrator";
+    "${NETWORK_NAME} Network";
+};
+
+class clients {
+    pingfreq 90;
+    maxclients 1000;
+    sendq 200k;
+    recvq 8000;
+};
+
+class servers {
+    pingfreq 60;
+    maxclients 10;
+    sendq 20M;
+    connfreq 100;
+};
+
+allow {
+    mask *;
+    class clients;
+    maxperip 5;
+};
+
+listen {
+    ip *;
+    port ${SSL_PORT};
+    options { tls; };
+};
+
+oper ${OPER_NAME} {
+    class clients;
+    mask ${OPER_MASK};
+    password "${OPER_PASSWORD}";
+    operclass netadmin;
+    swhois "is a Network Administrator";
+    vhost netadmin.${SERVER_NAME};
+};
+
+include "modules.default.conf";
+include "operclass.default.conf";
+include "snomasks.default.conf";
+include "help/help.conf";
+include "badwords.conf";
+include "spamfilter.conf";
+
+loadmodule "cloak_sha256";
+
+/* WebSocket listener (always emitted -- terminate TLS at the
+ * reverse proxy in production). */
+${WS_CONFIG}
+
+/* Optional filehost {} block (set FILEHOST_URL). */
+${FILEHOST_CONFIG}
+
+/* Optional JSON-RPC (set RPC_PASSWORD). */
+${RPC_CONFIG}
+
+set {
+    kline-address "${ADMIN_EMAIL}";
+    modes-on-connect "+iwx";
+    modes-on-oper "+xwgs";
+    oper-auto-join "#opers";
+    options {
+        hide-ulines;
+        show-connect-info;
+    };
+    maxchannelsperuser 20;
+    default-server "${SERVER_NAME}";
+    network-name "${NETWORK_NAME}";
+    help-channel "#help";
+    hiddenhost-prefix "hidden";
+    prefix-quit "Quit";
+
+    tls {
+        certificate "${TLS_DIR}/server.cert.pem";
+        key "${TLS_DIR}/server.key.pem";
+    };
+
+    cloak-keys {
+        "${CLOAK_KEY1}";
+        "${CLOAK_KEY2}";
+        "${CLOAK_KEY3}";
+    };
+
+    default-bantime 30d;
+    modef-default-unsettime 60;
+};
+
+except ban {
+    mask { ip { 127.0.0.1; ::1; } }
+    type { connect-flood; maxperip; }
+};
+
+account-registration {
+    min-name-length 3;
+    max-name-length 20;
+    min-password-length 8;
+    max-password-length 200;
+    require-email yes;
+    require-terms-acceptance no;
+    allow-username-changes yes;
+    allow-password-changes yes;
+    allow-email-changes yes;
+};
