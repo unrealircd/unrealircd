@@ -1,0 +1,48 @@
+# Build artifacts
+*.o
+*.so
+*.a
+*.lo
+*.dylib
+src/ircd
+src/unrealircdctl
+src/modules/*.so
+src/modules/**/*.o
+
+# Generated config
+config.log
+config.status
+config.cache
+autom4te.cache
+config.h.in~
+src/Makefile
+src/modules/Makefile
+src/modules/*/Makefile
+src/aclocal.m4
+
+# Local working state
+config.settings
+*.bak
+*.swp
+
+# Cloned client checkout used during cross-repo development
+ObsidianIRC/
+
+# Bundled .deb produced by Tauri builds
+*.deb
+*.rpm
+*.AppImage
+
+# CI / IDE noise
+.git
+.github/workflows
+.vscode
+.idea
+.claude
+
+# Doc artifacts
+doc/doxygen/
+
+# Existing Docker output
+/docker-compose.override.yml
+.env
