@@ -140,10 +140,16 @@ else
     echo "Reusing existing config (delete $FIRST_RUN_MARKER to regenerate)"
 fi
 
+# obbyscript autoloads every *.js it finds in $CONFDIR/scripts/.
+# Make sure the directory exists so the module doesn't log a warning
+# on every restart even when the operator hasn't placed any scripts.
+mkdir -p "$CONF_DIR/scripts"
+
 # Always make sure the unprivileged user owns the runtime dirs --
 # fixes the case where someone bind-mounts a host directory the first
 # time and root-owned conf files get created during a previous run.
 chown obbyircd:obbyircd "$DATA_DIR" "$LOGS_DIR" "$TLS_DIR" 2>/dev/null || true
+chown obbyircd:obbyircd "$CONF_DIR/scripts" 2>/dev/null || true
 chown obbyircd:obbyircd "$OPER_PASSWORD_FILE" 2>/dev/null || true
 
 # Compile any user-dropped custom modules.  Failures are logged and

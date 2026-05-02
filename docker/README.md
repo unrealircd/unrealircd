@@ -71,6 +71,25 @@ path to use a bind mount instead of a named volume.
 | `RPC_PORT`        | `8600`                 | Internal only. |
 | `CLOAK_KEY1/2/3`  | *(generated)*          | Set explicitly for stable cloaks across restarts / linked nodes. |
 
+## obbyscript scripts
+
+The `obbyscript` module (built in, loaded by `modules.default.conf`)
+auto-loads every `.js` file in `conf/scripts/`.  The image ships
+`scripts/example.js` -- a reference script that registers a `/JSINFO`
+command and demonstrates command/event hooks -- as a starting point.
+
+To add or replace scripts at runtime:
+
+```bash
+docker compose cp my-script.js obbyircd:/home/obbyircd/obby/conf/scripts/
+docker compose exec obbyircd ./bin/obbyircd rehash
+# or restart the container if rehash isn't enough for your script's hooks
+```
+
+If you don't want any scripts loading, delete the contents of
+`conf/scripts/` (or remove `loadmodule "obbyscript";` from
+`obbyircd.conf`).
+
 ## Custom modules at runtime
 
 `/home/obbyircd/obby/custom-modules/*.c` is scanned at every container
