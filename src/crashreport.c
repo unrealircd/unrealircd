@@ -773,6 +773,7 @@ void report_crash(void)
 	if (report_pref == REPORT_NEVER)
 	{
 		report_crash_not_sent(fname);
+		mark_coredump_as_read(coredump);
 		return;
 	} else
 	if (report_pref == REPORT_ASK)
@@ -784,23 +785,24 @@ void report_crash(void)
 		else
 			printf("NOTE: If the crash is caused by a 3rd party module then UnrealIRCd devs can't fix that.\n");
 		printf("\n");
-		
+
 		do
 		{
 			printf("Answer (Y/N): ");
 			*answerbuf = '\0';
 			answer = fgets(answerbuf, sizeof(answerbuf), stdin);
-			
+
 			if (answer && (toupper(*answer) == 'N'))
 			{
 				report_crash_not_sent(fname);
+				mark_coredump_as_read(coredump);
 				return;
 			}
 			if (answer && (toupper(*answer) == 'Y'))
 			{
 				break;
 			}
-			
+
 			printf("Invalid response. Please enter either Y or N\n\n");
 		} while(1);
 	} else if (report_pref != REPORT_AUTO)
