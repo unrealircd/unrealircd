@@ -96,7 +96,8 @@ MODULES= \
 	metadata.so \
 	filehost.so \
 	authtoken.so \
-	smtp.so
+	smtp.so \
+	emoji.so
 
 MODULEFLAGS=@MODULEFLAGS@
 RM=@RM@
