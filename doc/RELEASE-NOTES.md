@@ -7,6 +7,7 @@ This is work in progress and may not always be a stable version.
 ### Enhancements:
 
 ### Changes:
+* Update shipped libs: Sodium (1.0.22)
 
 ### Fixes:
 
