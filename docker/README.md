@@ -59,6 +59,9 @@ path to use a bind mount instead of a named volume.
 | `NETWORK_NAME`    | `ObbyNetwork`          | Shown in MOTD / `005`. |
 | `ADMIN_EMAIL`     | `admin@example.com`    | Used in the `admin {}` block and `kline-address`. |
 | `MOTD_TEXT`       | `Welcome to ObbyIRCd!` | Currently informational; the real MOTD lives in `conf/motd.txt`. |
+| `OPER_NAME`       | `admin`                | Network admin oper login. |
+| `OPER_PASSWORD`   | *(generated)*          | If unset, a random secret is generated on first run and persisted to `data/.oper_password` (printed once to the container log). |
+| `OPER_MASK`       | `*`                    | Hostmask the oper can /OPER from. Tighten this in production. |
 | `SSL_PORT`        | `6697`                 | Internal TLS port. |
 | `SSL_HOST_PORT`   | `6697`                 | Host-side port mapping. |
 | `WS_PORT`         | `8080`                 | Internal plain WebSocket port. |
@@ -75,12 +78,24 @@ start; each `.c` file is compiled with the source tree headers from
 `/tmp/obbyircd-source/` and installed as `modules/third/<name>.so`.
 Failing modules emit a warning and don't block the server starting.
 
+Copy a module into the running container's volume in a portable way:
+
 ```bash
-# host:
-cp my-extra-module.c /var/lib/docker/volumes/obbyircd_custom_modules/_data/
+docker compose cp my-extra-module.c obbyircd:/home/obbyircd/obby/custom-modules/
 docker compose restart obbyircd
 # then add `loadmodule "third/my-extra-module";` to obbyircd.conf and:
 docker compose exec obbyircd ./bin/obbyircd rehash
+```
+
+If you'd rather edit modules directly from the host, set
+`CUSTOM_MODULES_BIND` in `.env` to a host directory and bind-mount the
+volume there:
+
+```bash
+CUSTOM_MODULES_BIND=/srv/obbyircd/custom-modules
+# then on the host:
+cp my-extra-module.c /srv/obbyircd/custom-modules/
+docker compose restart obbyircd
 ```
 
 ## Replacing the TLS cert

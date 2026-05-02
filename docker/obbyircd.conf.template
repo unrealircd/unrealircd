@@ -43,10 +43,10 @@ listen {
     options { tls; };
 };
 
-oper admin {
+oper ${OPER_NAME} {
     class clients;
-    mask *;
-    password "admin123";
+    mask ${OPER_MASK};
+    password "${OPER_PASSWORD}";
     operclass netadmin;
     swhois "is a Network Administrator";
     vhost netadmin.${SERVER_NAME};
