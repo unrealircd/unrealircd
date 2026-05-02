@@ -92,7 +92,11 @@ MODULES= \
 	persistence.so \
 	account-registration.so \
 	guest-nicks.so \
-	obbyscript.so
+	obbyscript.so \
+	metadata.so \
+	filehost.so \
+	authtoken.so \
+	smtp.so
 
 MODULEFLAGS=@MODULEFLAGS@
 RM=@RM@
