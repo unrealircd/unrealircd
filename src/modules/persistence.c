@@ -44,13 +44,16 @@ ModuleHeader MOD_HEADER = {
  * Constants
  * =================================================================== */
 #define PERSIST_MAX_CHANNELS 100
+#define PERSIST_MAX_SESSIONS 8
 #define PERSIST_DEFAULT_TIMEOUT (7L * 86400L)
 #define PERSIST_DB_VERSION 1
 #define PERSIST_CLEANUP_INTERVAL_MS 60000
+#define PERSIST_SAVE_INTERVAL_MS 30000
 
 #define PREF_DEFAULT (-1)
 #define PREF_OFF 0
 #define PREF_ON 1
+#define PREF_INVALID (-99)
 
 /* ===================================================================
  * Data structures
@@ -104,6 +107,7 @@ static long CAP_PERSISTENCE = 0L;
 static long away_notify_cap = 0L;
 static long persist_timeout = PERSIST_DEFAULT_TIMEOUT;
 static int persist_default_on = 1;
+static int persist_db_dirty = 0;
 
 /* Command overrides for session clients */
 static CommandOverride *ovr_privmsg = NULL;
@@ -136,6 +140,7 @@ static void send_status(Client *client, PersistEntry *e);
 static const char *pref_to_str(int pref);
 static int str_to_pref(const char *s);
 static void persist_save_db(void);
+static void persist_db_mark_dirty(void);
 static void persist_load_db(void);
 
 static int persist_local_quit(Client *client, MessageTag *mtags, const char *comment);
@@ -158,7 +163,6 @@ static int persist_local_kick(Client *client, Client *victim, Channel *channel, 
 static int persist_remote_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, const char *comment);
 static int persist_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 static int persist_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
-static int persist_configposttest(int *errs);
 CMD_FUNC(cmd_persistence);
 CMD_OVERRIDE_FUNC(session_msg_override);
 CMD_OVERRIDE_FUNC(session_join_override);
@@ -166,6 +170,7 @@ CMD_OVERRIDE_FUNC(session_part_override);
 CMD_OVERRIDE_FUNC(session_away_override);
 CMD_OVERRIDE_FUNC(session_nick_override);
 EVENT(ghost_cleanup_event);
+EVENT(persist_save_event);
 
 /* ===================================================================
  * Module lifecycle
@@ -176,7 +181,6 @@ MOD_TEST()
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, persist_configrun);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, persist_configtest);
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, persist_configposttest);
 	return MOD_SUCCESS;
 }
 
@@ -247,6 +251,8 @@ MOD_INIT()
 
 	EventAdd(modinfo->handle, "persist_cleanup", ghost_cleanup_event, NULL,
 	         PERSIST_CLEANUP_INTERVAL_MS, 0);
+	EventAdd(modinfo->handle, "persist_save", persist_save_event, NULL,
+	         PERSIST_SAVE_INTERVAL_MS, 0);
 
 	return MOD_SUCCESS;
 }
@@ -345,11 +351,6 @@ static int persist_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 		}
 	}
 	return 1;
-}
-
-static int persist_configposttest(int *errs)
-{
-	return 0;
 }
 
 static int persist_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
@@ -546,6 +547,12 @@ static void destroy_ghost(PersistEntry *e, const char *reason)
 	ghost = e->ghost;
 	e->ghost = NULL;
 
+	if (reason)
+		unreal_log(ULOG_INFO, "persistence", "PERSIST_GHOST_DESTROYED", ghost,
+		           "Persistent ghost for account $account removed: $reason",
+		           log_data_string("account", e->account),
+		           log_data_string("reason", reason));
+
 	while ((mp = ghost->user->channel))
 		remove_user_from_channel_withmb(ghost, mp->channel, mp, 1);
 
@@ -604,6 +611,8 @@ static void restore_channels(Client *client, PersistEntry *e)
 				            channel->topic_nick, (long long)channel->topic_time);
 			}
 
+			if (!HasCapability(client, "draft/no-implicit-names") &&
+			    !HasCapability(client, "no-implicit-names"))
 			{
 				const char *parv[3];
 				parv[0] = NULL;
@@ -783,17 +792,19 @@ static void setup_session(Client *client, PersistEntry *e)
 			            channel->topic_nick, (long long)channel->topic_time);
 		}
 
-		/* Send NAMES directly: do NOT use do_cmd() here — it runs the full
-		 * command pipeline including hooks and overrides, which can cause
-		 * JOIN broadcasts visible to session1. */
+		/* Send NAMES directly (don't go through do_cmd: avoid running
+		 * unrelated hooks/overrides on a synthetic command). Honor
+		 * no-implicit-names and multi-prefix CAPs. */
+		if (!HasCapability(client, "draft/no-implicit-names") &&
+		    !HasCapability(client, "no-implicit-names"))
 		{
+			int multiprefix = HasCapability(client, "multi-prefix");
 			Member *nm;
 			char nambuf[BUFSIZE];
-			char nickbuf[512];
+			char nickbuf[BUFSIZE];
 			int nicklen = 0;
 			int hdrlen;
 
-			/* Build '= #channel :' header once */
 			snprintf(nambuf, sizeof(nambuf), "%c %s :",
 			         PubChannel(channel) ? '=' : (SecretChannel(channel) ? '@' : '*'),
 			         channel->name);
@@ -802,16 +813,21 @@ static void setup_session(Client *client, PersistEntry *e)
 
 			for (nm = channel->members; nm; nm = nm->next)
 			{
-				const char *prefix = "";
-				if (strchr(nm->member_modes, 'q') || strchr(nm->member_modes, 'a'))
-					prefix = "&";
-				else if (strchr(nm->member_modes, 'o'))
-					prefix = "@";
-				else if (strchr(nm->member_modes, 'h'))
-					prefix = "%";
-				else if (strchr(nm->member_modes, 'v'))
-					prefix = "+";
-				int needed = strlen(prefix) + strlen(nm->client->name) + 2;
+				char one_prefix[2] = { 0, 0 };
+				const char *prefix;
+				int needed;
+
+				if (multiprefix)
+				{
+					prefix = modes_to_prefix(nm->member_modes);
+				}
+				else
+				{
+					one_prefix[0] = mode_to_prefix(*nm->member_modes);
+					prefix = one_prefix;
+				}
+
+				needed = strlen(prefix) + strlen(nm->client->name) + 2;
 				if (nicklen > 0 && nicklen + needed > 400)
 				{
 					strlcpy(nambuf + hdrlen, nickbuf, sizeof(nambuf) - hdrlen);
@@ -908,7 +924,7 @@ static int str_to_pref(const char *s)
 		return PREF_OFF;
 	if (!strcasecmp(s, "DEFAULT"))
 		return PREF_DEFAULT;
-	return -99;
+	return PREF_INVALID;
 }
 
 static void send_status(Client *client, PersistEntry *e)
@@ -1028,7 +1044,7 @@ static int persist_local_quit(Client *client, MessageTag *mtags, const char *com
 	/* Blank nick so exit_one_client skips the hash removal */
 	*client->name = '\0';
 
-	persist_save_db();
+	persist_db_mark_dirty();
 
 	return 0;
 }
@@ -1121,6 +1137,15 @@ static int persist_account_login(Client *client, MessageTag *mtags)
 	if (e->canonical && !IsDead(e->canonical) &&
 	    IsUser(e->canonical) && !is_ghost_client(e->canonical))
 	{
+		if (e->num_sessions >= PERSIST_MAX_SESSIONS)
+		{
+			unreal_log(ULOG_INFO, "persistence", "PERSIST_SESSION_LIMIT", client,
+			           "Session limit reached for account $account; rejecting extra session",
+			           log_data_string("account", e->account));
+			exit_client(client, NULL, "Too many concurrent sessions for this account");
+			return 0;
+		}
+
 		/* Remove old nick slot, rename to account nick */
 		del_from_client_hash_table(client->name, client);
 		strlcpy(client->name, e->account, sizeof(client->name));
@@ -1149,7 +1174,7 @@ static int persist_account_login(Client *client, MessageTag *mtags)
 		e->canonical = client;
 	}
 
-	persist_save_db();
+	persist_db_mark_dirty();
 
 	return 0;
 }
@@ -1623,7 +1648,7 @@ CMD_FUNC(cmd_persistence)
 		}
 
 		new_pref = str_to_pref(parv[2]);
-		if (new_pref == -99)
+		if (new_pref == PREF_INVALID)
 		{
 			sendto_one(client, NULL,
 			           "FAIL PERSISTENCE INVALID_PARAMETERS :Invalid parameters");
@@ -1644,7 +1669,7 @@ CMD_FUNC(cmd_persistence)
 			destroy_ghost(e, "Persistence disabled by user");
 
 		send_status(client, e);
-		persist_save_db();
+		persist_db_mark_dirty();
 	}
 }
 
@@ -1678,8 +1703,15 @@ EVENT(ghost_cleanup_event)
 			           log_data_string("account", e->account));
 			destroy_ghost(e, "Ghost expired (inactivity timeout)");
 			free_entry(e);
+			persist_db_mark_dirty();
 		}
 	}
+}
+
+EVENT(persist_save_event)
+{
+	if (persist_db_dirty)
+		persist_save_db();
 }
 
 /* ===================================================================
@@ -1692,6 +1724,11 @@ static const char *persist_db_path(void)
 	return path;
 }
 
+static void persist_db_mark_dirty(void)
+{
+	persist_db_dirty = 1;
+}
+
 static void persist_save_db(void)
 {
 	UnrealDB *db;
@@ -1699,6 +1736,8 @@ static void persist_save_db(void)
 	Membership *mb;
 	int i, chan_count;
 	const char *path = persist_db_path();
+
+	persist_db_dirty = 0;
 
 	db = unrealdb_open(path, UNREALDB_MODE_WRITE, NULL);
 	if (!db)
