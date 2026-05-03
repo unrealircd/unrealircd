@@ -6036,7 +6036,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	allow = safe_alloc(sizeof(ConfigItem_allow));
-	allow->ipv6_clone_mask = tempiConf.default_ipv6_clone_mask;
 	allow->match = safe_alloc(sizeof(SecurityGroup));
 
 	for (cep = ce->items; cep; cep = cep->next)
@@ -6063,15 +6062,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 			safe_strdup(allow->server, cep->value);
 		else if (!strcmp(cep->name, "redirect-port"))
 			allow->port = atoi(cep->value);
-		else if (!strcmp(cep->name, "ipv6-clone-mask"))
-		{
-			/*
-			 * If this item isn't set explicitly by the
-			 * user, the value will temporarily be
-			 * zero. Defaults are applied in config_run_blocks().
-			 */
-			allow->ipv6_clone_mask = atoi(cep->value);
-		}
 		else if (!strcmp(cep->name, "options"))
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
@@ -6228,27 +6218,10 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->name, "ipv6-clone-mask"))
 		{
-			/* keep this in sync with _test_set() */
-			int ipv6mask;
-			ipv6mask = atoi(cep->value);
-			if (ipv6mask == 0)
-			{
-				config_error("%s:%d: allow::ipv6-clone-mask given a value of zero. This cannnot be correct, as it would treat all IPv6 hosts as one host.",
-					     cep->file->filename, cep->line_number);
-				errors++;
-			}
-			if (ipv6mask > 128)
-			{
-				config_error("%s:%d: set::default-ipv6-clone-mask was set to %d. The maximum value is 128.",
-					     cep->file->filename, cep->line_number,
-					     ipv6mask);
-				errors++;
-			}
-			if (ipv6mask <= 32)
-			{
-				config_warn("%s:%d: allow::ipv6-clone-mask was given a very small value.",
-					    cep->file->filename, cep->line_number);
-			}
+			config_error("%s:%d: allow::ipv6-clone-mask has no effect. "
+			             "Use the global set::default-ipv6-clone-mask setting instead.",
+			             cep->file->filename, cep->line_number);
+			errors++;
 		}
 		else if (!strcmp(cep->name, "password"))
 		{

@@ -1806,7 +1806,6 @@ struct ConfigItem_allow {
 	int port;
 	ConfigItem_class *class;
 	ConfigFlag_allow flags;
-	int ipv6_clone_mask;
 };
 
 struct OperClassACLPath
