@@ -879,3 +879,63 @@ void badword_config_free(ConfigItem_badword *e)
 		pcre2_code_free(e->pcre2_expr);
 	safe_free(e);
 }
+
+/** Mask the lower bits of an IPv6 raw address.
+ *
+ * Bits past 'prefix' are zeroed, leaving only the upper 'prefix' bits set
+ * to whatever they were in 'src'.
+ *
+ * @param src    16-byte source raw IPv6 address.
+ * @param prefix Prefix length in bits (0-128).
+ * @param dst    16-byte destination buffer (may alias src).
+ */
+void mask_ipv6_rawip(const char *src, int prefix, char *dst)
+{
+	int full_bytes = prefix / 8;
+	int leftover_bits = prefix % 8;
+
+	if (src != dst)
+		memcpy(dst, src, 16);
+
+	if (leftover_bits > 0 && full_bytes < 16)
+	{
+		unsigned char mask = (unsigned char)(0xFF << (8 - leftover_bits));
+		dst[full_bytes] = (char)((unsigned char)src[full_bytes] & mask);
+		full_bytes++;
+	}
+
+	if (full_bytes < 16)
+		memset(dst + full_bytes, 0, 16 - full_bytes);
+}
+
+/** Get the IP address string of a client, masked according to
+ * set::default-ipv6-clone-mask.
+ *
+ * For IPv4 clients: returns client->ip unchanged (no masking applies).
+ * For IPv6 clients: returns the canonical form with bits past
+ *   iConf.default_ipv6_clone_mask zeroed (e.g., "2001:db8:1:2::" for /64).
+ *
+ * Useful for any per-host bookkeeping that should treat all addresses
+ * within a /N as a single "host" — maxperip, connect-flood, reputation, etc.
+ *
+ * @param client The client.
+ * @param buf    Output buffer.
+ * @param buflen Length of buf (recommended: HOSTLEN+1 or larger).
+ * @return       Pointer to buf on success, or NULL on failure.
+ */
+const char *get_clone_mask_ipstr(Client *client, char *buf, size_t buflen)
+{
+	char masked[16];
+
+	if (!client || !client->ip || !buf || buflen == 0)
+		return NULL;
+
+	if (!IsIPV6(client))
+	{
+		strlcpy(buf, client->ip, buflen);
+		return buf;
+	}
+
+	mask_ipv6_rawip(client->rawip, iConf.default_ipv6_clone_mask, masked);
+	return inetntop(AF_INET6, masked, buf, buflen);
+}

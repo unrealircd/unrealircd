@@ -527,6 +527,9 @@ extern int checkprotoflags(Client *, int, const char *, int);
 
 extern const char *inetntop(int af, const void *in, char *local_dummy, size_t the_size);
 
+extern void mask_ipv6_rawip(const char *src, int prefix, char *dst);
+extern const char *get_clone_mask_ipstr(Client *client, char *buf, size_t buflen);
+
 extern void delletterfromstring(char *s, char letter);
 extern void addlettertodynamicstringsorted(char **str, char letter);
 extern int sort_character_lowercase_before_uppercase(char x, char y);

@@ -51,12 +51,12 @@ int maxperip_config_test_allow(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 int maxperip_config_run_allow(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
 void maxperip_postconf(void);
 int exceeds_maxperip(Client *client, ConfigItem_allow *aconf);
-void siphashkey_ipusers_free(ModData *m);
-void ipusershash_free_4(ModData *m);
-void ipusershash_free_6(ModData *m);
+IpUsersBucket *find_ipusers_bucket(Client *client);
 IpUsersBucket *add_ipusers_bucket(Client *client);
 void decrease_ipusers_bucket(Client *client);
 int decrease_ipusers_bucket_wrapper(Client *client);
+static void rebuild_ipusers_buckets(void);
+static void free_ipusers_buckets(void);
 int stats_maxperip(Client *client, const char *para);
 int maxperip_remote_connect(Client *client);
 const char *maxperip_allow_client(Client *client, ConfigItem_allow *aconf);
@@ -73,18 +73,11 @@ MOD_TEST()
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	LoadPersistentPointer(modinfo, siphashkey_ipusers, siphashkey_ipusers_free);
-	if (!siphashkey_ipusers)
-	{
-		siphashkey_ipusers = safe_alloc(SIPHASH_KEY_LENGTH);
-		siphash_generate_key(siphashkey_ipusers);
-	}
-	LoadPersistentPointer(modinfo, IpUsersHash_ipv4, ipusershash_free_4);
-	if (!IpUsersHash_ipv4)
-		IpUsersHash_ipv4 = safe_alloc(sizeof(IpUsersBucket *) * IPUSERS_HASH_TABLE_SIZE);
-	LoadPersistentPointer(modinfo, IpUsersHash_ipv6, ipusershash_free_6);
-	if (!IpUsersHash_ipv6)
-		IpUsersHash_ipv6 = safe_alloc(sizeof(IpUsersBucket *) * IPUSERS_HASH_TABLE_SIZE);
+
+	siphashkey_ipusers = safe_alloc(SIPHASH_KEY_LENGTH);
+	siphash_generate_key(siphashkey_ipusers);
+	IpUsersHash_ipv4 = safe_alloc(sizeof(IpUsersBucket *) * IPUSERS_HASH_TABLE_SIZE);
+	IpUsersHash_ipv6 = safe_alloc(sizeof(IpUsersBucket *) * IPUSERS_HASH_TABLE_SIZE);
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, maxperip_config_run_allow);
 	HookAdd(modinfo->handle, HOOKTYPE_FREE_USER, 0, decrease_ipusers_bucket_wrapper);
@@ -98,14 +91,14 @@ MOD_INIT()
 MOD_LOAD()
 {
 	maxperip_postconf();
+	rebuild_ipusers_buckets();
 	return MOD_SUCCESS;
 }
 
 MOD_UNLOAD()
 {
-	SavePersistentPointer(modinfo, siphashkey_ipusers);
-	SavePersistentPointer(modinfo, IpUsersHash_ipv4);
-	SavePersistentPointer(modinfo, IpUsersHash_ipv6);
+	free_ipusers_buckets();
+	safe_free(siphashkey_ipusers);
 	return MOD_SUCCESS;
 }
 
@@ -178,51 +171,48 @@ void maxperip_postconf(void)
 	}
 }
 
-void siphashkey_ipusers_free(ModData *m)
-{
-	safe_free(siphashkey_ipusers);
-	m->ptr = NULL;
-}
-
-void ipusershash_free_4(ModData *m)
-{
-	// FIXME: need to free every bucket in a for loop
-	// and then end with this:
-	safe_free(IpUsersHash_ipv4);
-	m->ptr = NULL;
-}
-
-void ipusershash_free_6(ModData *m)
-{
-	// FIXME: need to free every bucket in a for loop
-	// and then end with this:
-	safe_free(IpUsersHash_ipv6);
-	m->ptr = NULL;
-}
-
-uint64_t hash_ipusers(Client *client)
+/** Build the rawip used to identify this client's ipusers bucket.
+ *
+ * For IPv4: copies the 4 raw bytes of client->rawip.
+ * For IPv6: copies and masks client->rawip according to
+ *   iConf.default_ipv6_clone_mask, so all addresses within the
+ *   same /N share one bucket.
+ *
+ * The 'rawip' buffer must be at least 16 bytes (only first 4 used for IPv4).
+ */
+static void make_ipusers_rawip(Client *client, char *rawip)
 {
 	if (IsIPV6(client))
-		return siphash_raw(client->rawip, 16, siphashkey_ipusers) % IPUSERS_HASH_TABLE_SIZE;
+		mask_ipv6_rawip(client->rawip, iConf.default_ipv6_clone_mask, rawip);
 	else
-		return siphash_raw(client->rawip, 4, siphashkey_ipusers) % IPUSERS_HASH_TABLE_SIZE;
+		memcpy(rawip, client->rawip, 4);
+}
+
+uint64_t hash_ipusers(Client *client, const char *rawip)
+{
+	if (IsIPV6(client))
+		return siphash_raw(rawip, 16, siphashkey_ipusers) % IPUSERS_HASH_TABLE_SIZE;
+	else
+		return siphash_raw(rawip, 4, siphashkey_ipusers) % IPUSERS_HASH_TABLE_SIZE;
 }
 
 IpUsersBucket *find_ipusers_bucket(Client *client)
 {
-	int hash = 0;
+	int hash;
 	IpUsersBucket *p;
+	char rawip[16];
 
-	hash = hash_ipusers(client);
+	make_ipusers_rawip(client, rawip);
+	hash = hash_ipusers(client, rawip);
 
 	if (IsIPV6(client))
 	{
 		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
-			if (memcmp(p->rawip, client->rawip, 16) == 0)
+			if (memcmp(p->rawip, rawip, 16) == 0)
 				return p;
 	} else {
 		for (p = IpUsersHash_ipv4[hash]; p; p = p->next)
-			if (memcmp(p->rawip, client->rawip, 4) == 0)
+			if (memcmp(p->rawip, rawip, 4) == 0)
 				return p;
 	}
 
@@ -240,16 +230,18 @@ IpUsersBucket *add_ipusers_bucket(Client *client)
 {
 	int hash;
 	IpUsersBucket *n;
+	char rawip[16];
 
-	hash = hash_ipusers(client);
+	make_ipusers_rawip(client, rawip);
+	hash = hash_ipusers(client, rawip);
 
 	n = safe_alloc(sizeof(IpUsersBucket));
 	if (IsIPV6(client))
 	{
-		memcpy(n->rawip, client->rawip, 16);
+		memcpy(n->rawip, rawip, 16);
 		AddListItem(n, IpUsersHash_ipv6[hash]);
 	} else {
-		memcpy(n->rawip, client->rawip, 4);
+		memcpy(n->rawip, rawip, 4);
 		AddListItem(n, IpUsersHash_ipv4[hash]);
 	}
 	return n;
@@ -257,24 +249,26 @@ IpUsersBucket *add_ipusers_bucket(Client *client)
 
 void decrease_ipusers_bucket(Client *client)
 {
-	int hash = 0;
+	int hash;
 	IpUsersBucket *p;
+	char rawip[16];
 
 	if (!(client->flags & CLIENT_FLAG_IPUSERS_BUMPED))
 		return; /* nothing to do */
 
 	client->flags &= ~CLIENT_FLAG_IPUSERS_BUMPED;
 
-	hash = hash_ipusers(client);
+	make_ipusers_rawip(client, rawip);
+	hash = hash_ipusers(client, rawip);
 
 	if (IsIPV6(client))
 	{
 		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
-			if (memcmp(p->rawip, client->rawip, 16) == 0)
+			if (memcmp(p->rawip, rawip, 16) == 0)
 				break;
 	} else {
 		for (p = IpUsersHash_ipv4[hash]; p; p = p->next)
-			if (memcmp(p->rawip, client->rawip, 4) == 0)
+			if (memcmp(p->rawip, rawip, 4) == 0)
 				break;
 	}
 
@@ -297,6 +291,67 @@ void decrease_ipusers_bucket(Client *client)
 			DelListItem(p, IpUsersHash_ipv4[hash]);
 		safe_free(p);
 	}
+}
+
+/* Restore the buckets by walking current clients with the bumped flag.
+ * Cost is negligible (a few tens of milliseconds even for ~10k clients).
+ */
+static void rebuild_ipusers_buckets(void)
+{
+	Client *client;
+	IpUsersBucket *bucket;
+
+	list_for_each_entry(client, &client_list, client_node)
+	{
+		if (!(client->flags & CLIENT_FLAG_IPUSERS_BUMPED))
+			continue;
+		if (!client->ip)
+			continue; /* defensive */
+		bucket = find_ipusers_bucket(client);
+		if (!bucket)
+			bucket = add_ipusers_bucket(client);
+		bucket->global_clients++;
+		if (MyConnect(client))
+			bucket->local_clients++;
+	}
+	list_for_each_entry(client, &unknown_list, lclient_node)
+	{
+		if (!(client->flags & CLIENT_FLAG_IPUSERS_BUMPED))
+			continue;
+		if (!client->ip)
+			continue;
+		bucket = find_ipusers_bucket(client);
+		if (!bucket)
+			bucket = add_ipusers_bucket(client);
+		bucket->global_clients++;
+		if (MyConnect(client))
+			bucket->local_clients++;
+	}
+}
+
+/* Free every bucket in both hash tables, then free the tables themselves. */
+static void free_ipusers_buckets(void)
+{
+	int i;
+	IpUsersBucket *p, *next;
+
+	for (i = 0; i < IPUSERS_HASH_TABLE_SIZE; i++)
+	{
+		for (p = IpUsersHash_ipv4[i]; p; p = next)
+		{
+			next = p->next;
+			safe_free(p);
+		}
+		IpUsersHash_ipv4[i] = NULL;
+		for (p = IpUsersHash_ipv6[i]; p; p = next)
+		{
+			next = p->next;
+			safe_free(p);
+		}
+		IpUsersHash_ipv6[i] = NULL;
+	}
+	safe_free(IpUsersHash_ipv4);
+	safe_free(IpUsersHash_ipv6);
 }
 
 int stats_maxperip(Client *client, const char *para)

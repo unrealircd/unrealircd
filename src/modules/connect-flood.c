@@ -173,13 +173,21 @@ uint64_t hash_throttling(const char *ip)
 
 ThrottlingBucket *find_throttling_bucket(Client *client)
 {
-	int hash = 0;
+	int hash;
 	ThrottlingBucket *p;
-	hash = hash_throttling(client->ip);
+	char ip[HOSTLEN+1];
+
+	/* Apply set::default-ipv6-clone-mask: bucket is keyed by the network
+	 * portion of the IP, so all addresses in the same /64 share one bucket.
+	 */
+	if (!get_clone_mask_ipstr(client, ip, sizeof(ip)))
+		return NULL;
+
+	hash = hash_throttling(ip);
 
 	for (p = ThrottlingHash[hash]; p; p = p->next)
 	{
-		if (!strcmp(p->ip, client->ip))
+		if (!strcmp(p->ip, ip))
 			return p;
 	}
 
@@ -210,13 +218,20 @@ void add_throttling_bucket(Client *client)
 {
 	int hash;
 	ThrottlingBucket *n;
+	char ip[HOSTLEN+1];
+
+	/* Apply set::default-ipv6-clone-mask: bucket is keyed by the network
+	 * portion of the IP, so all addresses in the same /64 share one bucket.
+	 */
+	if (!get_clone_mask_ipstr(client, ip, sizeof(ip)))
+		return;
 
 	n = safe_alloc(sizeof(ThrottlingBucket));
 	n->next = n->prev = NULL;
-	safe_strdup(n->ip, client->ip);
+	safe_strdup(n->ip, ip);
 	n->since = TStime();
 	n->count = 1;
-	hash = hash_throttling(client->ip);
+	hash = hash_throttling(ip);
 	AddListItem(n, ThrottlingHash[hash]);
 	return;
 }
