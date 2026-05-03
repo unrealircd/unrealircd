@@ -98,7 +98,8 @@ MODULES= \
 	authtoken.so \
 	smtp.so \
 	emoji.so \
-	account-recovery.so
+	account-recovery.so \
+	read-marker.so
 
 MODULEFLAGS=@MODULEFLAGS@
 RM=@RM@
@@ -147,6 +148,11 @@ account-registration.so: account-registration.c $(INCLUDES)
 account-recovery.so: account-recovery.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o account-recovery.so account-recovery.c -lsqlite3
+
+# read-marker also lives in obsidian.db
+read-marker.so: read-marker.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o read-marker.so read-marker.c -lsqlite3
 
 # obbyscript embeds Duktape and needs -lm
 obbyscript.so: obbyscript.c duktape.c ../include/duktape.h ../include/duk_config.h $(INCLUDES)
