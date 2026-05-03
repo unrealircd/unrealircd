@@ -97,7 +97,8 @@ MODULES= \
 	filehost.so \
 	authtoken.so \
 	smtp.so \
-	emoji.so
+	emoji.so \
+	account-recovery.so
 
 MODULEFLAGS=@MODULEFLAGS@
 RM=@RM@
@@ -141,6 +142,11 @@ geoip_mmdb.so: geoip_mmdb.c $(INCLUDES)
 account-registration.so: account-registration.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o account-registration.so account-registration.c -lsqlite3
+
+# account-recovery talks to the same sqlite db as account-registration
+account-recovery.so: account-recovery.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o account-recovery.so account-recovery.c -lsqlite3
 
 # obbyscript embeds Duktape and needs -lm
 obbyscript.so: obbyscript.c duktape.c ../include/duktape.h ../include/duk_config.h $(INCLUDES)

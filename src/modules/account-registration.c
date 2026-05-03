@@ -1661,7 +1661,12 @@ static int authenticate_attempt(Client *client, int first, const char *param)
     }
     else if (!strcmp(param, "EXTERNAL"))
     {
+        /* SASL EXTERNAL: client identity is taken from the TLS cert
+         * fingerprint, matched against any account that has registered
+         * an `external` credential whose secret == fingerprint. */
         SetSaslType(client, SASL_TYPE_EXTERNAL);
+        sendto_one(client, NULL, ":%s AUTHENTICATE +", me.name);
+        return 0;
     }
     else if (!strcasecmp(param, "DRAFT-WEBAUTHN-BIO") ||
              !strcasecmp(param, "WEBAUTHN-BIO"))
@@ -1691,6 +1696,94 @@ static int authenticate_attempt(Client *client, int first, const char *param)
 
     if (!GetSaslType(client) || GetSaslType(client) == SASL_TYPE_NONE)
         return 0;
+
+    if (GetSaslType(client) == SASL_TYPE_EXTERNAL)
+    {
+        /* SASL EXTERNAL: client sends `+` (or a base64 authzid which
+         * we tolerate but don't use; the TLS handshake is the source
+         * of truth).  Map the connection's cert fingerprint to a
+         * registered account.
+         */
+        const char *fp = moddata_client_get(client, "certfp");
+        if (!fp || !*fp)
+        {
+            client->local->sasl_sent_time = 0;
+            add_fake_lag(client, 3000);
+            sendnumeric(client, ERR_SASLFAIL);
+            DelSaslType(client);
+            return 0;
+        }
+
+        /* Normalise to lowercase to match the hex form used by the
+         * spec and by 2FA `external` enrolments. */
+        size_t fplen = strlen(fp);
+        char *fp_lower = safe_alloc(fplen + 1);
+        for (size_t i = 0; i < fplen; i++)
+        {
+            char c = fp[i];
+            fp_lower[i] = (c >= 'A' && c <= 'Z') ? (char)(c - 'A' + 'a') : c;
+        }
+        fp_lower[fplen] = '\0';
+
+        /* Look up the account whose 2FA `external` credential matches
+         * this fingerprint.  We compare case-insensitively in SQL. */
+        Account *account = NULL;
+        if (obsidian_db ||
+            obsidian_open_database(OBSIDIAN_DB) == SQLITE_OK)
+        {
+            const char *sql =
+                "SELECT a.name FROM accounts a"
+                "  JOIN account_2fa_credentials c ON c.account_id = a.id"
+                " WHERE c.type = 'external'"
+                "   AND lower(c.secret) = ?"
+                " LIMIT 1";
+            sqlite3_stmt *stmt;
+            if (sqlite3_prepare_v2(obsidian_db, sql, -1, &stmt, NULL) == SQLITE_OK)
+            {
+                sqlite3_bind_text(stmt, 1, fp_lower, -1, SQLITE_STATIC);
+                if (sqlite3_step(stmt) == SQLITE_ROW)
+                {
+                    const unsigned char *name = sqlite3_column_text(stmt, 0);
+                    if (name)
+                        account = find_account((const char *)name);
+                }
+                sqlite3_finalize(stmt);
+            }
+        }
+        safe_free(fp_lower);
+
+        if (!account)
+        {
+            client->local->sasl_sent_time = 0;
+            add_fake_lag(client, 3000);
+            sendnumeric(client, ERR_SASLFAIL);
+            DelSaslType(client);
+            return 0;
+        }
+
+        /* If 2FA is enforced, withhold success and start the step-up.
+         * EXTERNAL alone is one factor; the cert match doesn't double
+         * as the second factor when twofa_enabled is on. */
+        if (twofa_maybe_start_stepup(client, account))
+        {
+            free_account(account);
+            return 0;
+        }
+
+        strlcpy(client->user->account, account->name,
+                sizeof(client->user->account));
+        unreal_log(ULOG_INFO, "account", "SASL_LOGIN_EXTERNAL", client,
+                   "SASL EXTERNAL login for $client.details "
+                   "[account: $account] [certfp: $certfp]",
+                   log_data_string("account", account->name),
+                   log_data_string("certfp",  fp));
+        user_account_login(NULL, client);
+        client->local->sasl_complete = 1;
+        sendnumeric(client, RPL_SASLSUCCESS);
+        DelSaslType(client);
+        free_account(account);
+        return 0;
+    }
 
     if (GetSaslType(client) == SASL_TYPE_WEBAUTHN_BIO)
     {
@@ -2375,6 +2468,48 @@ static void twofa_cmd_add(Client *client, Account *acc, int parc, const char *pa
         }
         return;
     }
+    if (!strcasecmp(type, "external"))
+    {
+        /* SHA-256 hex fingerprint = 64 hex chars.  Lowercase per spec. */
+        size_t dlen = strlen(data);
+        if (dlen != 64)
+        {
+            twofa_fail(client, "INVALID_CREDENTIAL_DATA", NULL,
+                       "Fingerprint must be 64 hex characters (SHA-256).");
+            return;
+        }
+        char normalised[65];
+        for (size_t i = 0; i < dlen; i++)
+        {
+            char c = data[i];
+            if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))
+                normalised[i] = c;
+            else if (c >= 'A' && c <= 'F')
+                normalised[i] = (char)(c - 'A' + 'a');
+            else
+            {
+                twofa_fail(client, "INVALID_CREDENTIAL_DATA", NULL,
+                           "Fingerprint must be lowercase hex SHA-256.");
+                return;
+            }
+        }
+        normalised[64] = '\0';
+
+        long int new_id = 0;
+        if (!twofa_insert_credential(acc->id, "external", name,
+                                     normalised, &new_id))
+        {
+            twofa_fail(client, "TEMPORARILY_UNAVAILABLE", NULL,
+                       "Could not persist credential.");
+            return;
+        }
+        char id_buf[TWOFA_ID_MAX + 1];
+        format_cred_id(id_buf, sizeof(id_buf), new_id);
+        sendto_one(client, NULL,
+                   ":%s 2FA ADD SUCCESS external %s :Credential '%s' registered.",
+                   me.name, id_buf, name);
+        return;
+    }
     if (strcasecmp(type, TWOFA_TYPE_TOTP))
     {
         twofa_fail(client, "INVALID_TYPE", type,
@@ -2509,6 +2644,31 @@ static int twofa_verify_proof(Account *acc, const char *type,
             if (totp_verify(c->secret, data))
                 matched = 1;
         }
+        twofa_free_credential_list(creds);
+        return matched;
+    }
+    if (!strcasecmp(type, "external"))
+    {
+        /* Compare submitted fingerprint (lowercased) against any
+         * registered `external` credential for the account. */
+        TwoFACredential *creds = twofa_list_credentials(acc->id);
+        size_t dlen = strlen(data);
+        char *low = safe_alloc(dlen + 1);
+        for (size_t i = 0; i < dlen; i++)
+        {
+            char c = data[i];
+            low[i] = (c >= 'A' && c <= 'Z') ? (char)(c - 'A' + 'a') : c;
+        }
+        low[dlen] = '\0';
+        int matched = 0;
+        for (TwoFACredential *c = creds; c; c = c->next)
+        {
+            if (strcasecmp(c->type, "external"))
+                continue;
+            if (c->secret && !strcmp(c->secret, low))
+                matched = 1;
+        }
+        safe_free(low);
         twofa_free_credential_list(creds);
         return matched;
     }
@@ -3954,7 +4114,10 @@ static void webauthn_2fa_handle_challenge(Client *client, Account *acc)
 
 static const char *saslmechs(Client *client)
 {
-    return "PLAIN,SCRAM-SHA-256,TOTP,DRAFT-WEBAUTHN-BIO,ANONYMOUS";
+    /* EXTERNAL is only useful when the client presented a TLS cert.
+     * We still advertise it unconditionally because some clients want
+     * to know up-front that the server supports cert-based auth. */
+    return "PLAIN,SCRAM-SHA-256,TOTP,EXTERNAL,DRAFT-WEBAUTHN-BIO,ANONYMOUS";
 }
 
 /* ===================================================================
