@@ -1783,6 +1783,7 @@ void free_iConf(Configuration *i)
 	safe_free_security_group(i->spamfilter_except);
 	safe_free(i->spamexcept_line);
 	safe_free(i->reject_message_too_many_connections);
+	safe_free(i->reject_message_too_many_connections_ipv6_range);
 	safe_free(i->reject_message_server_full);
 	safe_free(i->reject_message_unauthorized);
 	safe_free(i->reject_message_kline);
@@ -1916,6 +1917,7 @@ void config_setdefaultsettings(Configuration *i)
 	i->outdated_tls_policy_server = POLICY_DENY;
 
 	safe_strdup(i->reject_message_too_many_connections, "Too many connections from your IP");
+	safe_strdup(i->reject_message_too_many_connections_ipv6_range, "Too many new connections from this IPv6 range ($prefix_addr/$prefix_len)");
 	safe_strdup(i->reject_message_server_full, "This server is full");
 	safe_strdup(i->reject_message_unauthorized, "You are not authorized to connect to this server");
 	safe_strdup(i->reject_message_kline, "You are not welcome on this server. $bantype: $banreason. Email $klineaddr for more information.");
@@ -8395,6 +8397,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			{
 				if (!strcmp(cepp->name, "too-many-connections"))
 					safe_strdup(tempiConf.reject_message_too_many_connections, cepp->value);
+				else if (!strcmp(cepp->name, "too-many-connections-ipv6-range"))
+					safe_strdup(tempiConf.reject_message_too_many_connections_ipv6_range, cepp->value);
 				else if (!strcmp(cepp->name, "server-full"))
 					safe_strdup(tempiConf.reject_message_server_full, cepp->value);
 				else if (!strcmp(cepp->name, "unauthorized"))

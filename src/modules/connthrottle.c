@@ -38,6 +38,8 @@ struct cfgstruct {
 	int start_delay;
 	/* set::connthrottle (generic): */
 	char *reason;
+	/* set::connthrottle::ipv6-unknown-users-limit (one entry per tier) */
+	int ipv6_unknown_users_limit[3];
 };
 static struct cfgstruct cfg;
 
@@ -77,6 +79,60 @@ RPC_CALL_FUNC(rpc_connthrottle_status);
 RPC_CALL_FUNC(rpc_connthrottle_set);
 RPC_CALL_FUNC(rpc_connthrottle_reset);
 
+/* IPv6 wider-prefix bucket tracking (/56, /48, /32) */
+
+#define CT_NUM_TIERS 3
+#define CT_BUCKET_HASH_SIZE 2048
+
+/* Per-client classification stored in our ModData slot.
+ * CT_CATEGORY_NONE (value 0) is the moddata default and means
+ * "this client has not been added to our buckets yet".
+ */
+typedef enum {
+	CT_CATEGORY_NONE              = 0,
+	CT_CATEGORY_KNOWN_USERS       = 1,
+	CT_CATEGORY_EXCEPTED_UNKNOWNS = 2,
+	CT_CATEGORY_UNKNOWN_USERS     = 3,
+} ConnThrottleCategory;
+
+typedef struct ConnThrottleBucket ConnThrottleBucket;
+struct ConnThrottleBucket {
+	ConnThrottleBucket *prev, *next;
+	char rawip[16];
+	int known_users;
+	int excepted_unknowns;
+	int unknown_users;
+};
+
+static const int ct_tier_prefix[CT_NUM_TIERS] = { 56, 48, 32 };
+static ConnThrottleBucket **ct_bucket_hash[CT_NUM_TIERS];
+static char *siphashkey_ct_buckets = NULL;
+static ModDataInfo *connthrottle_md = NULL;
+
+/* Per-client classification cached in ModData. CT_CATEGORY_NONE means
+ * "this client has not been added to our buckets yet" (or has been removed).
+ */
+#define CT_CATEGORY(client)	moddata_client((client), connthrottle_md).l
+
+static void ct_make_rawip(Client *client, int tier, char *out);
+static uint64_t ct_hash_bucket(const char *masked);
+static ConnThrottleBucket *ct_find_bucket(int tier, const char *masked);
+static ConnThrottleBucket *ct_add_bucket(int tier, const char *masked);
+static void ct_bucket_increment(ConnThrottleBucket *b, ConnThrottleCategory category);
+static void ct_bucket_decrement(ConnThrottleBucket *b, ConnThrottleCategory category);
+static ConnThrottleCategory ct_classify(Client *client);
+static void ct_bucket_bump_client(Client *client, ConnThrottleCategory category);
+static void ct_bucket_unbump_client(Client *client, ConnThrottleCategory category);
+static void ct_buckets_rebuild(void);
+static void ct_buckets_free(void);
+static const char *ct_format_reject_reason(const char *masked, int prefix);
+static const char *ct_module_status_text(void);
+const char *ct_allow_client(Client *client, ConfigItem_allow *aconf);
+int ct_remote_connect_buckets(Client *client);
+int ct_free_user(Client *client);
+int ct_known_user_cache_change(Client *client);
+int stats_connthrottle(Client *client, const char *para);
+
 MOD_TEST()
 {
 	memset(&cfg, 0, sizeof(cfg));
@@ -90,6 +146,9 @@ MOD_TEST()
 	cfg.except->reputation_score = 24;
 	cfg.except->identified = 1;
 	cfg.except->webirc = 0;
+	cfg.ipv6_unknown_users_limit[0] = 8;	/* /56 */
+	cfg.ipv6_unknown_users_limit[1] = 32;	/* /48 */
+	cfg.ipv6_unknown_users_limit[2] = 256;	/* /32 */
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, ct_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, ct_config_posttest);
@@ -100,6 +159,7 @@ MOD_TEST()
 MOD_INIT()
 {
 	RPCHandlerInfo r;
+	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	LoadPersistentPointer(modinfo, ucounter, ucounter_free);
@@ -109,6 +169,29 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0, ct_pre_lconnect);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, ct_lconnect);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, 0, ct_rconnect);
+
+	/* IPv6 wider-prefix bucket tracking */
+	memset(&mreq, 0, sizeof(mreq));
+	mreq.name = "connthrottle_category";
+	mreq.type = MODDATATYPE_CLIENT;
+	mreq.sync = 0;	/* local only, no S2S sync */
+	connthrottle_md = ModDataAdd(modinfo->handle, mreq);
+	if (!connthrottle_md)
+	{
+		config_error("[connthrottle] Could not register ModData 'connthrottle_category'");
+		return MOD_FAILED;
+	}
+	siphashkey_ct_buckets = safe_alloc(SIPHASH_KEY_LENGTH);
+	siphash_generate_key(siphashkey_ct_buckets);
+	ct_bucket_hash[0] = safe_alloc(sizeof(ConnThrottleBucket *) * CT_BUCKET_HASH_SIZE);
+	ct_bucket_hash[1] = safe_alloc(sizeof(ConnThrottleBucket *) * CT_BUCKET_HASH_SIZE);
+	ct_bucket_hash[2] = safe_alloc(sizeof(ConnThrottleBucket *) * CT_BUCKET_HASH_SIZE);
+	HookAddConstString(modinfo->handle, HOOKTYPE_ALLOW_CLIENT, 0, ct_allow_client);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, 0, ct_remote_connect_buckets);
+	HookAdd(modinfo->handle, HOOKTYPE_FREE_USER, 0, ct_free_user);
+	HookAdd(modinfo->handle, HOOKTYPE_KNOWN_USER_CACHE_CHANGE, 0, ct_known_user_cache_change);
+	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, stats_connthrottle);
+
 	CommandAdd(modinfo->handle, MSG_THROTTLE, ct_throttle, MAXPARA, CMD_USER|CMD_SERVER);
 
 	/* RPC handlers */
@@ -146,6 +229,7 @@ MOD_INIT()
 MOD_LOAD()
 {
 	EventAdd(modinfo->handle, "connthrottle_evt", connthrottle_evt, NULL, 1000, 0);
+	ct_buckets_rebuild();
 	return MOD_SUCCESS;
 }
 
@@ -154,6 +238,11 @@ MOD_UNLOAD()
 	SavePersistentPointer(modinfo, ucounter);
 	safe_free(cfg.reason);
 	free_security_group(cfg.except);
+
+	/* IPv6 wider-prefix bucket tracking */
+	ct_buckets_free();
+	safe_free(siphashkey_ct_buckets);
+
 	return MOD_SUCCESS;
 }
 
@@ -184,7 +273,7 @@ int ct_config_posttest(int *errs)
 int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
-	ConfigEntry *cep, *cepp;
+	ConfigEntry *cep, *cepp, *ceppp;
 
 	if (type != CONFIG_SET)
 		return 0;
@@ -298,6 +387,40 @@ int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		{
 			CheckNull(cep);
 		} else
+		if (!strcmp(cep->name, "ipv6-unknown-users-limit"))
+		{
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				if (strcmp(cepp->name, "cidr-56") &&
+				    strcmp(cepp->name, "cidr-48") &&
+				    strcmp(cepp->name, "cidr-32"))
+				{
+					config_error_unknown(cepp->file->filename, cepp->line_number,
+					                     "set::connthrottle::ipv6-unknown-users-limit", cepp->name);
+					errors++;
+					continue;
+				}
+				for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
+				{
+					CheckNull(ceppp);
+					if (!strcmp(ceppp->name, "max"))
+					{
+						int v = atoi(ceppp->value);
+						if ((v < 0) || (v > 1000000))
+						{
+							config_error("%s:%i: set::connthrottle::ipv6-unknown-users-limit::%s::max should be in range 0-1000000",
+							             ceppp->file->filename, ceppp->line_number, cepp->name);
+							errors++;
+						}
+					} else
+					{
+						config_error_unknown(ceppp->file->filename, ceppp->line_number,
+						                     "set::connthrottle::ipv6-unknown-users-limit::cidr-N", ceppp->name);
+						errors++;
+					}
+				}
+			}
+		} else
 		{
 			config_error("%s:%i: unknown directive set::connthrottle::%s",
 				cep->file->filename, cep->line_number, cep->name);
@@ -313,7 +436,7 @@ int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 /* Configure ourselves based on the set::connthrottle settings */
 int ct_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
-	ConfigEntry *cep, *cepp;
+	ConfigEntry *cep, *cepp, *ceppp;
 
 	if (type != CONFIG_SET)
 		return 0;
@@ -365,6 +488,26 @@ int ct_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 			safe_free(cfg.reason);
 			cfg.reason = safe_alloc(strlen(cep->value)+16);
 			sprintf(cfg.reason, "Throttled: %s", cep->value);
+		} else
+		if (!strcmp(cep->name, "ipv6-unknown-users-limit"))
+		{
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				int tier;
+				if (!strcmp(cepp->name, "cidr-56"))
+					tier = 0;
+				else if (!strcmp(cepp->name, "cidr-48"))
+					tier = 1;
+				else if (!strcmp(cepp->name, "cidr-32"))
+					tier = 2;
+				else
+					continue;
+				for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
+				{
+					if (!strcmp(ceppp->name, "max"))
+						cfg.ipv6_unknown_users_limit[tier] = atoi(ceppp->value);
+				}
+			}
 		}
 	}
 	return 1;
@@ -551,6 +694,24 @@ int ct_rconnect(Client *client)
 	return 0;
 }
 
+static const char *ct_module_status_text(void)
+{
+	static char buf[256];
+
+	if (ucounter->disabled)
+		return "Module DISABLED on oper request. To re-enable, type: /THROTTLE ON";
+	if (still_reputation_gathering())
+		return "Module DISABLED because the 'reputation' module has not gathered enough data yet (set::connthrottle::disabled-when::reputation-gathering).";
+	if (me.local->creationtime + cfg.start_delay > TStime())
+	{
+		snprintf(buf, sizeof(buf),
+		         "Module DISABLED due to start-delay (set::connthrottle::disabled-when::start-delay), will be enabled in %lld second(s).",
+		         (long long)((me.local->creationtime + cfg.start_delay) - TStime()));
+		return buf;
+	}
+	return "Module ENABLED";
+}
+
 static void ct_throttle_usage(Client *client)
 {
 	sendnotice(client, "Usage: /THROTTLE [ON|OFF|STATUS|RESET]");
@@ -605,24 +766,8 @@ CMD_FUNC(ct_throttle)
 	if (!strcasecmp(parv[1], "STATS") || !strcasecmp(parv[1], "STATUS"))
 	{
 		sendnotice(client, "STATUS:");
-		if (ucounter->disabled)
-		{
-			sendnotice(client, "Module DISABLED on oper request. To re-enable, type: /THROTTLE ON");
-		} else {
-			if (still_reputation_gathering())
-			{
-				sendnotice(client, "Module DISABLED because the 'reputation' module has not gathered enough data yet (set::connthrottle::disabled-when::reputation-gathering).");
-			} else
-			if (me.local->creationtime + cfg.start_delay > TStime())
-			{
-				sendnotice(client, "Module DISABLED due to start-delay (set::connthrottle::disabled-when::start-delay), will be enabled in %lld second(s).",
-					(long long)((me.local->creationtime + cfg.start_delay) - TStime()));
-			} else
-			{
-				sendnotice(client, "Module ENABLED");
-			}
-		}
-	} else 
+		sendnotice(client, "%s", ct_module_status_text());
+	} else
 	if (!strcasecmp(parv[1], "OFF"))
 	{
 		if (ucounter->disabled == 1)
@@ -654,6 +799,51 @@ CMD_FUNC(ct_throttle)
 void ucounter_free(ModData *m)
 {
 	safe_free(ucounter);
+}
+
+/* /STATS 9 (or /STATS connthrottle) — dumps module status, configured per-tier
+ * limits, and the IPv6 prefix bucket contents. Empty buckets are filtered.
+ */
+int stats_connthrottle(Client *client, const char *para)
+{
+	int tier, i;
+	ConnThrottleBucket *b;
+	char ipbuf[64];
+
+	if (strcmp(para, "9") && strcasecmp(para, "connthrottle"))
+		return 0;
+
+	if (!ValidatePermissionsForPath("server:info:stats", client, NULL, NULL, NULL))
+	{
+		sendnumeric(client, ERR_NOPRIVILEGES);
+		return 0;
+	}
+
+	sendtxtnumeric(client, "%s", ct_module_status_text());
+
+	for (tier = 0; tier < CT_NUM_TIERS; tier++)
+		sendtxtnumeric(client, "Limit /%d = %d",
+		               ct_tier_prefix[tier],
+		               cfg.ipv6_unknown_users_limit[tier]);
+
+	sendtxtnumeric(client, "IPv6 prefix buckets:");
+	for (tier = 0; tier < CT_NUM_TIERS; tier++)
+	{
+		for (i = 0; i < CT_BUCKET_HASH_SIZE; i++)
+		{
+			for (b = ct_bucket_hash[tier][i]; b; b = b->next)
+			{
+				if (b->known_users == 0 && b->excepted_unknowns == 0 && b->unknown_users == 0)
+					continue;
+				if (!inet_ntop(AF_INET6, b->rawip, ipbuf, sizeof(ipbuf)))
+					strlcpy(ipbuf, "<invalid>", sizeof(ipbuf));
+				sendtxtnumeric(client, "%s/%d known=%d excepted=%d unknown=%d",
+				               ipbuf, ct_tier_prefix[tier],
+				               b->known_users, b->excepted_unknowns, b->unknown_users);
+			}
+		}
+	}
+	return 0;
 }
 
 /* ==================== RPC HANDLERS ==================== */
@@ -759,4 +949,352 @@ RPC_CALL_FUNC(rpc_connthrottle_reset)
 
 	rpc_response(client, request, result);
 	json_decref(result);
+}
+
+/* ===== IPv6 wider-prefix bucket tracking ===== */
+
+/** Build the masked rawip used as the bucket key for this tier. */
+static void ct_make_rawip(Client *client, int tier, char *out)
+{
+	mask_ipv6_rawip(client->rawip, ct_tier_prefix[tier], out);
+}
+
+static uint64_t ct_hash_bucket(const char *masked)
+{
+	return siphash_raw(masked, 16, siphashkey_ct_buckets) % CT_BUCKET_HASH_SIZE;
+}
+
+static ConnThrottleBucket *ct_find_bucket(int tier, const char *masked)
+{
+	int hash = ct_hash_bucket(masked);
+	ConnThrottleBucket *p;
+
+	for (p = ct_bucket_hash[tier][hash]; p; p = p->next)
+		if (memcmp(p->rawip, masked, 16) == 0)
+			return p;
+	return NULL;
+}
+
+static ConnThrottleBucket *ct_add_bucket(int tier, const char *masked)
+{
+	int hash = ct_hash_bucket(masked);
+	ConnThrottleBucket *n = safe_alloc(sizeof(ConnThrottleBucket));
+	memcpy(n->rawip, masked, 16);
+	AddListItem(n, ct_bucket_hash[tier][hash]);
+	return n;
+}
+
+static void ct_bucket_increment(ConnThrottleBucket *b, ConnThrottleCategory category)
+{
+	switch (category)
+	{
+		case CT_CATEGORY_NONE:              break;	/* not classified: no-op */
+		case CT_CATEGORY_KNOWN_USERS:       b->known_users++;       break;
+		case CT_CATEGORY_EXCEPTED_UNKNOWNS: b->excepted_unknowns++; break;
+		case CT_CATEGORY_UNKNOWN_USERS:     b->unknown_users++;     break;
+	}
+}
+
+static void ct_bucket_decrement(ConnThrottleBucket *b, ConnThrottleCategory category)
+{
+	switch (category)
+	{
+		case CT_CATEGORY_NONE:              break;	/* not classified: no-op */
+		case CT_CATEGORY_KNOWN_USERS:       b->known_users--;       break;
+		case CT_CATEGORY_EXCEPTED_UNKNOWNS: b->excepted_unknowns--; break;
+		case CT_CATEGORY_UNKNOWN_USERS:     b->unknown_users--;     break;
+	}
+#ifdef DEBUGMODE
+	if ((b->known_users < 0) || (b->excepted_unknowns < 0) || (b->unknown_users < 0))
+	{
+		unreal_log(ULOG_ERROR, "connthrottle", "BUG_CT_NEGATIVE_COUNTER", NULL,
+		           "[BUG] connthrottle bucket counter went negative: known=$known excepted=$excepted unknown=$unknown",
+		           log_data_integer("known", b->known_users),
+		           log_data_integer("excepted", b->excepted_unknowns),
+		           log_data_integer("unknown", b->unknown_users));
+		abort();
+	}
+#endif
+}
+
+/** Classify a client into one of CT_CATEGORY_*.
+ * Reads client->known_user_cached (the existing global "known-users"
+ * cache) and the existing cfg.except SecurityGroup that the rate-throttle
+ * uses. Does not modify any state.
+ */
+static ConnThrottleCategory ct_classify(Client *client)
+{
+	if (client->known_user_cached)
+		return CT_CATEGORY_KNOWN_USERS;
+	if (user_allowed_by_security_group(client, cfg.except))
+		return CT_CATEGORY_EXCEPTED_UNKNOWNS;
+	return CT_CATEGORY_UNKNOWN_USERS;
+}
+
+/** Bump the bucket counter for this client's category at all 3 tiers. */
+static void ct_bucket_bump_client(Client *client, ConnThrottleCategory category)
+{
+	int tier;
+	char masked[16];
+	ConnThrottleBucket *b;
+
+	if (!IsIPV6(client) || !client->ip)
+		return;
+
+	for (tier = 0; tier < CT_NUM_TIERS; tier++)
+	{
+		ct_make_rawip(client, tier, masked);
+		b = ct_find_bucket(tier, masked);
+		if (!b)
+			b = ct_add_bucket(tier, masked);
+		ct_bucket_increment(b, category);
+	}
+}
+
+/** Decrement the bucket counter for this client's category at all 3 tiers,
+ * freeing any bucket whose total reaches 0.
+ */
+static void ct_bucket_unbump_client(Client *client, ConnThrottleCategory category)
+{
+	int tier;
+	char masked[16];
+	ConnThrottleBucket *b;
+
+	if (!IsIPV6(client) || !client->ip)
+		return;
+
+	for (tier = 0; tier < CT_NUM_TIERS; tier++)
+	{
+		ct_make_rawip(client, tier, masked);
+		b = ct_find_bucket(tier, masked);
+		if (!b)
+		{
+			unreal_log(ULOG_ERROR, "connthrottle", "BUG_CT_BUCKET_MISSING", client,
+			           "[BUG] connthrottle bucket missing on disconnect for client $client.details");
+#ifdef DEBUGMODE
+			abort();
+#endif
+			continue;
+		}
+		ct_bucket_decrement(b, category);
+		if ((b->known_users == 0) && (b->excepted_unknowns == 0) && (b->unknown_users == 0))
+		{
+			DelListItem(b, ct_bucket_hash[tier][ct_hash_bucket(masked)]);
+			safe_free(b);
+		}
+	}
+}
+
+/* Build the user-facing rejection message. With $prefix_addr (compressed
+ * form, not the usual uncompressed form we use) and with $tier.
+ */
+static const char *ct_format_reject_reason(const char *masked, int prefix)
+{
+	static char buf[512];
+	char prefix_len_str[8];
+	char addr_str[INET6_ADDRSTRLEN];
+	const char *vars[3], *values[3];
+
+	if (!inet_ntop(AF_INET6, masked, addr_str, sizeof(addr_str)))
+		strlcpy(addr_str, "?", sizeof(addr_str));
+	ircsnprintf(prefix_len_str, sizeof(prefix_len_str), "%d", prefix);
+	vars[0] = "prefix_addr";
+	values[0] = addr_str;
+	vars[1] = "prefix_len";
+	values[1] = prefix_len_str;
+	vars[2] = NULL;
+	values[2] = NULL;
+	buildvarstring(iConf.reject_message_too_many_connections_ipv6_range,
+	               buf, sizeof(buf), vars, values);
+	return buf;
+}
+
+/** HOOKTYPE_ALLOW_CLIENT: classify the client, add to buckets, and
+ * reject if the unknown_users count for this client's category exceeds
+ * the limit at any tier. Multiple matched allow blocks may invoke this
+ * hook for the same client; the cached CT_CATEGORY (non-NONE means
+ * "already bucketed") prevents double-counting.
+ */
+const char *ct_allow_client(Client *client, ConfigItem_allow *aconf)
+{
+	ConnThrottleCategory category;
+	int tier;
+	char masked[16];
+	ConnThrottleBucket *b;
+	int global_limit, effective_limit;
+
+	if (!IsIPV6(client) || !client->ip)
+		return NULL;
+	if (CT_CATEGORY(client) != CT_CATEGORY_NONE)
+		return NULL;
+
+	category = ct_classify(client);
+	CT_CATEGORY(client) = category;
+	ct_bucket_bump_client(client, category);
+
+	/* Limits fire only on unknown users; known + excepted bypass. */
+	if (category != CT_CATEGORY_UNKNOWN_USERS)
+		return NULL;
+
+	/* Same dormancy gates as the existing rate-throttle. */
+	if (me.local->creationtime + cfg.start_delay > TStime())
+		return NULL;
+	if (ucounter->disabled)
+		return NULL;
+	if (still_reputation_gathering())
+		return NULL;
+
+	/* effective_limit = max(global tier limit, allow::global-maxperip).
+	 * A tier with limit 0 is disabled.
+	 * We compare against allow::global-maxperip (not allow::maxperip) because
+	 * our buckets count globally (local + remote), so the matched-scope cap
+	 * is global-maxperip — same scope-pairing maxperip itself uses.
+	 */
+	for (tier = 0; tier < CT_NUM_TIERS; tier++)
+	{
+		global_limit = cfg.ipv6_unknown_users_limit[tier];
+		if (global_limit == 0)
+			continue;
+		effective_limit = global_limit;
+		if (aconf && aconf->global_maxperip > effective_limit)
+			effective_limit = aconf->global_maxperip;
+		ct_make_rawip(client, tier, masked);
+		b = ct_find_bucket(tier, masked);
+		if (b && (b->unknown_users > effective_limit))
+			return ct_format_reject_reason(masked, ct_tier_prefix[tier]);
+	}
+
+	return NULL;
+}
+
+/** HOOKTYPE_REMOTE_CONNECT: track remote IPv6 clients in the global buckets.
+ * No netmerge skip (unlike ct_rconnect): netmerge'd users are real concurrent
+ * presence, and our limits are state-based, not rate-based.
+ */
+int ct_remote_connect_buckets(Client *client)
+{
+	ConnThrottleCategory category;
+
+	if (IsULine(client))
+		return 0;	/* U-lined service: skip */
+	if (!IsIPV6(client) || !client->ip)
+		return 0;
+	if (CT_CATEGORY(client) != CT_CATEGORY_NONE)
+		return 0;
+
+	category = ct_classify(client);
+	CT_CATEGORY(client) = category;
+	ct_bucket_bump_client(client, category);
+
+	return 0;
+}
+
+/** HOOKTYPE_FREE_USER: decrement bucket counters on disconnect. */
+int ct_free_user(Client *client)
+{
+	ConnThrottleCategory category = CT_CATEGORY(client);
+
+	if (category == CT_CATEGORY_NONE)
+		return 0;
+
+	ct_bucket_unbump_client(client, category);
+	CT_CATEGORY(client) = CT_CATEGORY_NONE;
+	return 0;
+}
+
+/** HOOKTYPE_KNOWN_USER_CACHE_CHANGE: when client->known_user_cached
+ * flips, our classification may change. Recompute and update the
+ * three bucket counters in place if the category actually changed.
+ */
+int ct_known_user_cache_change(Client *client)
+{
+	ConnThrottleCategory old_category, new_category;
+	int tier;
+	char masked[16];
+	ConnThrottleBucket *b;
+
+	if (!IsIPV6(client) || !client->ip)
+		return 0;
+	old_category = CT_CATEGORY(client);
+	if (old_category == CT_CATEGORY_NONE)
+		return 0;
+
+	new_category = ct_classify(client);
+	if (new_category == old_category)
+		return 0;
+
+	for (tier = 0; tier < CT_NUM_TIERS; tier++)
+	{
+		ct_make_rawip(client, tier, masked);
+		b = ct_find_bucket(tier, masked);
+		if (!b)
+		{
+			unreal_log(ULOG_ERROR, "connthrottle", "BUG_CT_BUCKET_MISSING", client,
+			           "[BUG] connthrottle bucket missing on transition for client $client.details");
+#ifdef DEBUGMODE
+			abort();
+#endif
+			continue;
+		}
+		ct_bucket_decrement(b, old_category);
+		ct_bucket_increment(b, new_category);
+	}
+
+	CT_CATEGORY(client) = new_category;
+	return 0;
+}
+
+/** Walk live clients and rebuild the three bucket hash tables.
+ * Called from MOD_LOAD; mirrors maxperip's rebuild pattern.
+ * Cost is negligible (a few tens of milliseconds even for ~10k clients).
+ */
+static void ct_buckets_rebuild(void)
+{
+	Client *client;
+	ConnThrottleCategory category;
+
+	list_for_each_entry(client, &client_list, client_node)
+	{
+		if (!IsUser(client) || IsULine(client))
+			continue;	/* only regular IRC users; skip servers, services, pre-registration */
+		if (!IsIPV6(client) || !client->ip)
+			continue;
+		category = ct_classify(client);
+		CT_CATEGORY(client) = category;
+		ct_bucket_bump_client(client, category);
+	}
+	list_for_each_entry(client, &unknown_list, lclient_node)
+	{
+		if (!IsUser(client) || IsULine(client))
+			continue;	/* only regular IRC users; skip servers, services, pre-registration */
+		if (!IsIPV6(client) || !client->ip)
+			continue;
+		category = ct_classify(client);
+		CT_CATEGORY(client) = category;
+		ct_bucket_bump_client(client, category);
+	}
+}
+
+/** Free every bucket in every tier hash table, then free the tables themselves. */
+static void ct_buckets_free(void)
+{
+	int tier, i;
+	ConnThrottleBucket *p, *next;
+
+	for (tier = 0; tier < CT_NUM_TIERS; tier++)
+	{
+		if (!ct_bucket_hash[tier])
+			continue;
+		for (i = 0; i < CT_BUCKET_HASH_SIZE; i++)
+		{
+			for (p = ct_bucket_hash[tier][i]; p; p = next)
+			{
+				next = p->next;
+				safe_free(p);
+			}
+			ct_bucket_hash[tier][i] = NULL;
+		}
+		safe_free(ct_bucket_hash[tier]);
+		ct_bucket_hash[tier] = NULL;
+	}
 }
