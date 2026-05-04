@@ -84,6 +84,11 @@ RPC_CALL_FUNC(rpc_connthrottle_reset);
 #define CT_NUM_TIERS 3
 #define CT_BUCKET_HASH_SIZE 2048
 
+#ifdef DEBUGMODE
+/** Self-check of IPv6 CIDR limits every <this> msec */
+#define 1 1000
+#endif
+
 /* Per-client classification stored in our ModData slot.
  * CT_CATEGORY_NONE (value 0) is the moddata default and means
  * "this client has not been added to our buckets yet".
@@ -102,6 +107,11 @@ struct ConnThrottleBucket {
 	int known_users;
 	int excepted_unknowns;
 	int unknown_users;
+#if defined(CONNTHROTTLE_CHECK)
+	int check_known;
+	int check_excepted;
+	int check_unknown;
+#endif
 };
 
 static const int ct_tier_prefix[CT_NUM_TIERS] = { 56, 48, 32 };
@@ -129,9 +139,12 @@ static const char *ct_format_reject_reason(const char *masked, int prefix);
 static const char *ct_module_status_text(void);
 const char *ct_allow_client(Client *client, ConfigItem_allow *aconf);
 int ct_remote_connect_buckets(Client *client);
-int ct_free_user(Client *client);
+int ct_quit(Client *client, MessageTag *mtags, const char *comment);
 int ct_known_user_cache_change(Client *client);
 int stats_connthrottle(Client *client, const char *para);
+#if defined(CONNTHROTTLE_CHECK)
+EVENT(ct_check);
+#endif
 
 MOD_TEST()
 {
@@ -188,7 +201,9 @@ MOD_INIT()
 	ct_bucket_hash[2] = safe_alloc(sizeof(ConnThrottleBucket *) * CT_BUCKET_HASH_SIZE);
 	HookAddConstString(modinfo->handle, HOOKTYPE_ALLOW_CLIENT, 0, ct_allow_client);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, 0, ct_remote_connect_buckets);
-	HookAdd(modinfo->handle, HOOKTYPE_FREE_USER, 0, ct_free_user);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, ct_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_UNKUSER_QUIT, 0, ct_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_QUIT, 0, ct_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_KNOWN_USER_CACHE_CHANGE, 0, ct_known_user_cache_change);
 	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, stats_connthrottle);
 
@@ -229,6 +244,9 @@ MOD_INIT()
 MOD_LOAD()
 {
 	EventAdd(modinfo->handle, "connthrottle_evt", connthrottle_evt, NULL, 1000, 0);
+#if defined(CONNTHROTTLE_CHECK)
+	EventAdd(modinfo->handle, "ct_check", ct_check, NULL, CONNTHROTTLE_CHECK, 0);
+#endif
 	ct_buckets_rebuild();
 	return MOD_SUCCESS;
 }
@@ -843,8 +861,99 @@ int stats_connthrottle(Client *client, const char *para)
 			}
 		}
 	}
-	return 0;
+	return 1;
 }
+
+#if defined(CONNTHROTTLE_CHECK)
+static void ct_check_walk_one(Client *client)
+{
+	ConnThrottleBucket *b;
+	ConnThrottleCategory category;
+	int tier;
+	char masked[16];
+
+	category = CT_CATEGORY(client);
+	if (category == CT_CATEGORY_NONE)
+		return;	/* not in our buckets */
+	if (!IsIPV6(client) || !client->ip)
+	{
+		unreal_log(ULOG_ERROR, "connthrottle", "BUG_CT_CHECK_NO_IP", client,
+		           "[BUG] connthrottle counter check: client has category but no IPv6 IP");
+#ifdef DEBUGMODE
+		abort();
+#endif
+		return;
+	}
+	for (tier = 0; tier < CT_NUM_TIERS; tier++)
+	{
+		ct_make_rawip(client, tier, masked);
+		b = ct_find_bucket(tier, masked);
+		if (!b)
+		{
+			unreal_log(ULOG_ERROR, "connthrottle", "BUG_CT_CHECK_NO_BUCKET", client,
+			           "[BUG] connthrottle counter check: client has category but no bucket at /$prefix",
+			           log_data_integer("prefix", ct_tier_prefix[tier]));
+#ifdef DEBUGMODE
+			abort();
+#endif
+			continue;
+		}
+		switch (category)
+		{
+			case CT_CATEGORY_KNOWN_USERS:       b->check_known++;    break;
+			case CT_CATEGORY_EXCEPTED_UNKNOWNS: b->check_excepted++; break;
+			case CT_CATEGORY_UNKNOWN_USERS:     b->check_unknown++;  break;
+			case CT_CATEGORY_NONE:              break;	/* unreachable per filter */
+		}
+	}
+}
+
+EVENT(ct_check)
+{
+	ConnThrottleBucket *b;
+	Client *client;
+	int tier, i;
+
+	for (tier = 0; tier < CT_NUM_TIERS; tier++)
+		for (i = 0; i < CT_BUCKET_HASH_SIZE; i++)
+			for (b = ct_bucket_hash[tier][i]; b; b = b->next)
+				b->check_known = b->check_excepted = b->check_unknown = 0;
+
+	list_for_each_entry(client, &client_list, client_node)
+		ct_check_walk_one(client);
+	list_for_each_entry(client, &unknown_list, lclient_node)
+		ct_check_walk_one(client);
+
+	for (tier = 0; tier < CT_NUM_TIERS; tier++)
+	{
+		for (i = 0; i < CT_BUCKET_HASH_SIZE; i++)
+		{
+			for (b = ct_bucket_hash[tier][i]; b; b = b->next)
+			{
+				if (b->check_known    != b->known_users ||
+				    b->check_excepted != b->excepted_unknowns ||
+				    b->check_unknown  != b->unknown_users)
+				{
+					unreal_log(ULOG_ERROR, "connthrottle", "BUG_CT_CHECK_DRIFT", NULL,
+					           "[BUG] connthrottle bucket counter drift at /$prefix: "
+					           "live=(known=$live_k excepted=$live_e unknown=$live_u) "
+					           "computed=(known=$exp_k excepted=$exp_e unknown=$exp_u)",
+					           log_data_integer("prefix", ct_tier_prefix[tier]),
+					           log_data_integer("live_k", b->known_users),
+					           log_data_integer("live_e", b->excepted_unknowns),
+					           log_data_integer("live_u", b->unknown_users),
+					           log_data_integer("exp_k", b->check_known),
+					           log_data_integer("exp_e", b->check_excepted),
+					           log_data_integer("exp_u", b->check_unknown));
+#ifdef DEBUGMODE
+					abort();
+#endif
+				}
+			}
+		}
+	}
+}
+#endif
 
 /* ==================== RPC HANDLERS ==================== */
 
@@ -1189,8 +1298,7 @@ int ct_remote_connect_buckets(Client *client)
 	return 0;
 }
 
-/** HOOKTYPE_FREE_USER: decrement bucket counters on disconnect. */
-int ct_free_user(Client *client)
+int ct_quit(Client *client, MessageTag *mtags, const char *comment)
 {
 	ConnThrottleCategory category = CT_CATEGORY(client);
 
