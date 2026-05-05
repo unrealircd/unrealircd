@@ -530,6 +530,7 @@ extern const char *inetntop(int af, const void *in, char *local_dummy, size_t th
 extern void mask_ipv6_rawip(const char *src, int prefix, char *dst);
 extern const char *get_clone_mask_ipstr(Client *client, char *buf, size_t buflen);
 extern const char *format_ipv6_prefix_reject_message(const char *template, const char *masked_rawip, int prefix);
+extern const char *format_ipv6_addr(const char *rawip);
 
 extern void delletterfromstring(char *s, char letter);
 extern void addlettertodynamicstringsorted(char **str, char letter);

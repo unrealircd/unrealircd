@@ -976,3 +976,19 @@ const char *format_ipv6_prefix_reject_message(const char *template,
 	buildvarstring(template, buf, sizeof(buf), vars, values);
 	return buf;
 }
+
+/** Format an IPv6 raw address as a compressed string (e.g. "2001:db8::").
+ *
+ * Returns a pointer to internal static storage, overwritten on each call.
+ *
+ * @param rawip 16-byte raw IPv6 address.
+ * @return      inet_ntop result, or "?" on failure.
+ */
+const char *format_ipv6_addr(const char *rawip)
+{
+	static char buf[128]; /* generously oversized; longest IPv6 string form is ~46 chars */
+
+	if (!inet_ntop(AF_INET6, rawip, buf, sizeof(buf)))
+		strlcpy(buf, "?", sizeof(buf));
+	return buf;
+}

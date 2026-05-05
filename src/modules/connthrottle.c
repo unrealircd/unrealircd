@@ -559,7 +559,7 @@ EVENT(connthrottle_evt)
 
 	if (ucounter->rejected_clients)
 	{
-		unreal_log(ULOG_INFO, "connthrottle", "CONNTHROTLE_REPORT", NULL,
+		unreal_log(ULOG_INFO, "connthrottle", "CONNTHROTTLE_REPORT", NULL,
 		           "ConnThrottle] Stats for this server past 60 secs: "
 		           "Connections rejected: $num_rejected. "
 		           "Accepted: $num_accepted_except except user(s) and "
@@ -615,7 +615,7 @@ int ct_pre_lconnect(Client *client)
 		/* We send the LARGE banner if throttling was activated */
 		if (!ucounter->throttling_previous_minute && !ucounter->throttling_banner_displayed)
 		{
-			unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTLE_ACTIVATED", NULL,
+			unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTTLE_ACTIVATED", NULL,
 			           "[ConnThrottle] Connection throttling has been ACTIVATED due to a HIGH CONNECTION RATE.\n"
 			           "Users with IP addresses that have not been seen before will be rejected above the set connection rate. Known users can still get in.\n"
 			           "or more information see https://www.unrealircd.org/docs/ConnThrottle");
@@ -745,7 +745,7 @@ void ct_off(Client *client)
 		return; /* Already off */
 
 	ucounter->disabled = 1;
-	unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTLE_MODULE_DISABLED", client,
+	unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTTLE_MODULE_DISABLED", client,
 		   "[ConnThrottle] $client.details DISABLED the connthrottle module.");
 }
 
@@ -754,7 +754,7 @@ void ct_on(Client *client)
 	if (!ucounter->disabled)
 		return; /* Already on */
 
-	unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTLE_MODULE_ENABLED", client,
+	unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTTLE_MODULE_ENABLED", client,
 		   "[ConnThrottle] $client.details ENABLED the connthrottle module.");
 	ucounter->disabled = 0;
 }
@@ -762,7 +762,7 @@ void ct_on(Client *client)
 void ct_reset(Client *client)
 {
 	memset(ucounter, 0, sizeof(UCounter));
-	unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTLE_RESET", client,
+	unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTTLE_RESET", client,
 		   "[ConnThrottle] $client.details did a RESET on the statistics/counters.");
 }
 
@@ -1245,9 +1245,19 @@ const char *ct_allow_client(Client *client, ConfigItem_allow *aconf)
 		ct_make_rawip(client, tier, masked);
 		b = ct_find_bucket(tier, masked);
 		if (b && (b->unknown_users > effective_limit))
+		{
+			unreal_log(ULOG_INFO, "connthrottle", "CONNTHROTTLE_IPV6_LIMIT", client,
+			    "Client $client.name with IP $client.ip rejected: connthrottle ipv6-unknown-users-limit (cidr-$prefix_len, max $max) exceeded for $prefix_addr/$prefix_len ($unknown_users unknown / $excepted_users excepted / $known_users known)",
+			    log_data_string("prefix_addr", format_ipv6_addr(masked)),
+			    log_data_integer("prefix_len", ct_tier_prefix[tier]),
+			    log_data_integer("max", effective_limit),
+			    log_data_integer("unknown_users", b->unknown_users),
+			    log_data_integer("excepted_users", b->excepted_unknowns),
+			    log_data_integer("known_users", b->known_users));
 			return format_ipv6_prefix_reject_message(
 			    iConf.reject_message_too_many_new_connections_ipv6_range,
 			    masked, ct_tier_prefix[tier]);
+		}
 	}
 
 	return NULL;

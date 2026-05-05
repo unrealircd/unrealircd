@@ -448,7 +448,7 @@ typedef enum ClientStatus {
 #define CLIENT_FLAG_IPV6			0x800000000	/**< client is using IPv6 */
 /** @} */
 
-#define OPER_SNOMASKS "+bBcdfkqsSoO"
+#define OPER_SNOMASKS "+bBcdfxkqsSoO"
 
 #define SEND_UMODES (SendUmodes)
 #define ALL_UMODES (AllUmodes)
