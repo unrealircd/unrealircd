@@ -458,7 +458,17 @@ int maxperip_remote_connect(Client *client)
 const char *maxperip_allow_client(Client *client, ConfigItem_allow *aconf)
 {
 	if (exceeds_maxperip(client, aconf))
+	{
+		if (IsIPV6(client) && iConf.default_ipv6_clone_mask < 128)
+		{
+			char masked[16];
+			mask_ipv6_rawip(client->rawip, iConf.default_ipv6_clone_mask, masked);
+			return format_ipv6_prefix_reject_message(
+			    iConf.reject_message_too_many_connections_ipv6_range,
+			    masked, iConf.default_ipv6_clone_mask);
+		}
 		return iConf.reject_message_too_many_connections;
+	}
 	return NULL;
 }
 

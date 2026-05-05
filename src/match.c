@@ -939,3 +939,40 @@ const char *get_clone_mask_ipstr(Client *client, char *buf, size_t buflen)
 	mask_ipv6_rawip(client->rawip, iConf.default_ipv6_clone_mask, masked);
 	return inetntop(AF_INET6, masked, buf, buflen);
 }
+
+/** Format a user-facing reject message for an IPv6 prefix-aware rejection.
+ *
+ * Substitutes $prefix_addr (compressed IPv6 form, e.g. "2001:db8::") and
+ * $prefix_len (decimal) into the supplied template via buildvarstring.
+ *
+ * Used by both maxperip (for /N clone-cap rejections) and connthrottle
+ * (for /56/48/32 wider-prefix rejections).
+ *
+ * Returns a pointer to internal static storage, overwritten on each call.
+ *
+ * @param template     The message template (typically iConf.reject_message_*).
+ * @param masked_rawip 16-byte masked raw IPv6 address.
+ * @param prefix       Prefix length in bits.
+ * @return             Formatted message in static buffer.
+ */
+const char *format_ipv6_prefix_reject_message(const char *template,
+                                              const char *masked_rawip,
+                                              int prefix)
+{
+	static char buf[512];
+	char prefix_len_str[8];
+	char addr_str[128]; /* generously oversized; longest IPv6 string form is ~46 chars */
+	const char *vars[3], *values[3];
+
+	if (!inet_ntop(AF_INET6, masked_rawip, addr_str, sizeof(addr_str)))
+		strlcpy(addr_str, "?", sizeof(addr_str));
+	ircsnprintf(prefix_len_str, sizeof(prefix_len_str), "%d", prefix);
+	vars[0] = "prefix_addr";
+	values[0] = addr_str;
+	vars[1] = "prefix_len";
+	values[1] = prefix_len_str;
+	vars[2] = NULL;
+	values[2] = NULL;
+	buildvarstring(template, buf, sizeof(buf), vars, values);
+	return buf;
+}

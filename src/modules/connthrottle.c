@@ -135,7 +135,6 @@ static void ct_bucket_bump_client(Client *client, ConnThrottleCategory category)
 static void ct_bucket_unbump_client(Client *client, ConnThrottleCategory category);
 static void ct_buckets_rebuild(void);
 static void ct_buckets_free(void);
-static const char *ct_format_reject_reason(const char *masked, int prefix);
 static const char *ct_module_status_text(void);
 const char *ct_allow_client(Client *client, ConfigItem_allow *aconf);
 int ct_remote_connect_buckets(Client *client);
@@ -1194,30 +1193,6 @@ static void ct_bucket_unbump_client(Client *client, ConnThrottleCategory categor
 	}
 }
 
-/* Build the user-facing rejection message. With $prefix_addr (compressed
- * form, not the usual uncompressed form we use) and with $tier.
- */
-static const char *ct_format_reject_reason(const char *masked, int prefix)
-{
-	static char buf[512];
-	char prefix_len_str[8];
-	char addr_str[INET6_ADDRSTRLEN];
-	const char *vars[3], *values[3];
-
-	if (!inet_ntop(AF_INET6, masked, addr_str, sizeof(addr_str)))
-		strlcpy(addr_str, "?", sizeof(addr_str));
-	ircsnprintf(prefix_len_str, sizeof(prefix_len_str), "%d", prefix);
-	vars[0] = "prefix_addr";
-	values[0] = addr_str;
-	vars[1] = "prefix_len";
-	values[1] = prefix_len_str;
-	vars[2] = NULL;
-	values[2] = NULL;
-	buildvarstring(iConf.reject_message_too_many_connections_ipv6_range,
-	               buf, sizeof(buf), vars, values);
-	return buf;
-}
-
 /** HOOKTYPE_ALLOW_CLIENT: classify the client, add to buckets, and
  * reject if the unknown_users count for this client's category exceeds
  * the limit at any tier. Multiple matched allow blocks may invoke this
@@ -1270,7 +1245,9 @@ const char *ct_allow_client(Client *client, ConfigItem_allow *aconf)
 		ct_make_rawip(client, tier, masked);
 		b = ct_find_bucket(tier, masked);
 		if (b && (b->unknown_users > effective_limit))
-			return ct_format_reject_reason(masked, ct_tier_prefix[tier]);
+			return format_ipv6_prefix_reject_message(
+			    iConf.reject_message_too_many_new_connections_ipv6_range,
+			    masked, ct_tier_prefix[tier]);
 	}
 
 	return NULL;

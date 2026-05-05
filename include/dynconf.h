@@ -160,6 +160,7 @@ struct Configuration {
 	BanTarget manual_ban_target;
 	char *reject_message_too_many_connections;
 	char *reject_message_too_many_connections_ipv6_range;
+	char *reject_message_too_many_new_connections_ipv6_range;
 	char *reject_message_server_full;
 	char *reject_message_unauthorized;
 	char *reject_message_kline;
