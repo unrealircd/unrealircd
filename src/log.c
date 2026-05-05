@@ -31,6 +31,20 @@
 #define show_event_console 0
 
 #define MAXLOGLENGTH 16384	/**< Maximum length of a log entry (which may be multiple lines) */
+#define LOG_THROTTLE_TABLE_SIZE 256
+
+typedef struct LogThrottleEntry LogThrottleEntry;
+struct LogThrottleEntry {
+	LogThrottleEntry *next;  /**< next entry in the same hash bucket */
+	char *event_id;          /**< the event_id this entry tracks */
+	char *subsystem_last;    /**< most recent subsystem seen, for the summary line */
+	time_t window_start;     /**< when the current window opened */
+	int hits;                /**< total events in the current window */
+	int suppressed;          /**< events beyond threshold in the current window */
+	int threshold;           /**< limit: number of events (per window cap) */
+	int period;              /**< limit: in what period (window length in seconds) */
+	int unlimited;           /**< if set, never throttle */
+};
 
 /* Variables */
 Log *logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL, NULL };
@@ -43,6 +57,9 @@ static char snomasks_in_use_testing[257] = { '\0' };
 LogEntry *memory_log = NULL; /**< Log entries in memory (OLDEST entry) */
 LogEntry *memory_log_tail = NULL; /**< Tail of log entries in memory (NEWEST entry) */
 int memory_log_entries = 0; /**< Number of memory_log entries */
+
+static LogThrottleEntry *log_throttle_table[LOG_THROTTLE_TABLE_SIZE];
+static char log_throttle_siphashkey[SIPHASH_KEY_LENGTH];
 
 /* Forward declarations */
 int log_sources_match(LogSource *logsource, LogLevel loglevel, const char *subsystem, const char *event_id, int matched_already);
@@ -1521,6 +1538,208 @@ void do_unreal_log_free_args(va_list vl)
 }
 
 static int unreal_log_recursion_trap = 0;
+
+static const char *log_throttle_subsystem_or(const LogThrottleEntry *e)
+{
+	return e->subsystem_last ? e->subsystem_last : "unknown";
+}
+
+LogThrottleConfig *find_log_throttle_config(LogThrottleConfig *list, const char *event_id)
+{
+	LogThrottleConfig *p;
+	for (p = list; p; p = p->next)
+		if (!strcmp(p->event_id, event_id))
+			return p;
+	return NULL;
+}
+
+/* Lookups walk head-first and the parser prepends after defaults are seeded,
+ * so admin overrides naturally win over defaults.
+ */
+void add_log_throttle_config(LogThrottleConfig **list, const char *event_id,
+                             int threshold, int period, int unlimited)
+{
+	LogThrottleConfig *t = safe_alloc(sizeof(LogThrottleConfig));
+	safe_strdup(t->event_id, event_id);
+	t->threshold = threshold;
+	t->period = period;
+	t->unlimited = unlimited;
+	AddListItem(t, *list);
+}
+
+static int resolve_log_throttle_policy(const char *event_id,
+                                       int *threshold, int *period, int *unlimited)
+{
+	LogThrottleConfig *c = find_log_throttle_config(iConf.log_throttle, event_id);
+	if (!c)
+		return 0;
+	*unlimited = c->unlimited;
+	*threshold = c->threshold;
+	*period = c->period;
+	return 1;
+}
+
+void log_throttle_init(void)
+{
+	siphash_generate_key(log_throttle_siphashkey);
+	memset(log_throttle_table, 0, sizeof(log_throttle_table));
+}
+
+static unsigned int hash_log_throttle_entry(const char *event_id)
+{
+	return (unsigned int)(siphash_nocase(event_id, log_throttle_siphashkey)
+	                      % LOG_THROTTLE_TABLE_SIZE);
+}
+
+static LogThrottleEntry *find_log_throttle_entry(const char *event_id, unsigned int idx)
+{
+	LogThrottleEntry *e;
+	for (e = log_throttle_table[idx]; e; e = e->next)
+		if (!strcmp(e->event_id, event_id))
+			return e;
+	return NULL;
+}
+
+static LogThrottleEntry *add_log_throttle_entry(const char *event_id, const char *subsystem,
+                                            int threshold, int period, int unlimited,
+                                            unsigned int idx)
+{
+	LogThrottleEntry *e = safe_alloc(sizeof(LogThrottleEntry));
+	safe_strdup(e->event_id, event_id);
+	if (subsystem)
+		safe_strdup(e->subsystem_last, subsystem);
+	e->threshold = threshold;
+	e->period = period;
+	e->unlimited = unlimited;
+	e->window_start = TStime();
+	e->next = log_throttle_table[idx];
+	log_throttle_table[idx] = e;
+	return e;
+}
+
+static void emit_log_throttle_summary(LogThrottleEntry *e)
+{
+	int suppressed = e->suppressed;
+	int period = e->period;
+
+	/* Reset BEFORE emitting so any re-entry sees a clean state. */
+	e->hits = 0;
+	e->suppressed = 0;
+	e->window_start = TStime();
+
+	if (suppressed <= 0)
+		return;
+
+	unreal_log(ULOG_INFO, "log", "LOG_RATE_LIMIT_SUMMARY", NULL,
+		"Suppressed $count log entries with event_id $throttled_event_id "
+		"(subsystem $throttled_subsystem) over the last $period seconds",
+		log_data_integer("count", suppressed),
+		log_data_string("throttled_event_id", e->event_id),
+		log_data_string("throttled_subsystem", log_throttle_subsystem_or(e)),
+		log_data_integer("period", period));
+}
+
+/* Returns 1 if this log line should be suppressed.
+ * On the suppressed branch the caller never evaluates its log_data_*() varargs.
+ */
+int log_throttled(const char *subsystem, const char *event_id)
+{
+	LogThrottleEntry *e;
+	unsigned int idx;
+	int threshold, period, unlimited;
+
+	if (!event_id)
+		return 0;
+	/* The summary itself, and BUG_LOG_* meta-errors, must never be throttled. */
+	if (!strcmp(event_id, "LOG_RATE_LIMIT_SUMMARY"))
+		return 0;
+	if (subsystem && !strcmp(subsystem, "log"))
+		return 0;
+
+	idx = hash_log_throttle_entry(event_id);
+	e = find_log_throttle_entry(event_id, idx);
+
+	if (!e)
+	{
+		if (!resolve_log_throttle_policy(event_id, &threshold, &period, &unlimited))
+			return 0;
+		e = add_log_throttle_entry(event_id, subsystem, threshold, period, unlimited, idx);
+		e->hits = 1;
+		return 0;
+	}
+
+	if (subsystem && (!e->subsystem_last || strcmp(e->subsystem_last, subsystem)))
+		safe_strdup(e->subsystem_last, subsystem);
+
+	if (e->unlimited)
+		return 0;
+
+	if (TStime() - e->window_start >= e->period)
+		emit_log_throttle_summary(e); /* no-op when suppressed==0 */
+
+	e->hits++;
+	if (e->hits <= e->threshold)
+		return 0;
+
+	e->suppressed++;
+	return 1;
+}
+
+/* Catches windows that closed silently (no further events to trigger lazy expiry). */
+EVENT(log_throttle_flush)
+{
+	int i;
+	time_t now = TStime();
+	LogThrottleEntry *e;
+
+	for (i = 0; i < LOG_THROTTLE_TABLE_SIZE; i++)
+	{
+		for (e = log_throttle_table[i]; e; e = e->next)
+		{
+			if (e->unlimited)
+				continue;
+			if (e->suppressed > 0 && now - e->window_start >= e->period)
+				emit_log_throttle_summary(e);
+		}
+	}
+}
+
+/* Counters survive across rehash so suppression progress is not reset
+ * mid-attack; only threshold/period/unlimited are refreshed.
+ */
+void log_throttle_rehash(void)
+{
+	int i, threshold, period, unlimited;
+	LogThrottleEntry *e;
+
+	for (i = 0; i < LOG_THROTTLE_TABLE_SIZE; i++)
+	{
+		for (e = log_throttle_table[i]; e; e = e->next)
+		{
+			if (resolve_log_throttle_policy(e->event_id, &threshold, &period, &unlimited))
+			{
+				e->threshold = threshold;
+				e->period = period;
+				e->unlimited = unlimited;
+			}
+			else
+			{
+				e->unlimited = 1;
+			}
+		}
+	}
+}
+
+void free_log_throttle_config(LogThrottleConfig *c)
+{
+	LogThrottleConfig *next;
+	for (; c; c = next)
+	{
+		next = c->next;
+		safe_free(c->event_id);
+		safe_free(c);
+	}
+}
 
 /* Logging function, called by the unreal_log() macro. */
 void do_unreal_log(LogLevel loglevel, const char *subsystem, const char *event_id,

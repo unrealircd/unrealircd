@@ -32,6 +32,15 @@ struct FloodSettings {
 	long period[MAXFLOODOPTIONS];
 };
 
+typedef struct LogThrottleConfig LogThrottleConfig;
+struct LogThrottleConfig {
+	LogThrottleConfig *prev, *next;
+	char *event_id;          /**< the event_id this policy applies to */
+	int threshold;           /**< per-window cap */
+	int period;              /**< window length in seconds */
+	int unlimited;           /**< if set, never throttle */
+};
+
 enum UHAllowed { UHALLOW_ALWAYS, UHALLOW_NOCHANS, UHALLOW_REJOIN, UHALLOW_NEVER };
 
 struct ChMode {
@@ -114,6 +123,7 @@ struct Configuration {
 	int modes_on_join_set;
 	char *level_on_join;
 	FloodSettings *floodsettings;
+	LogThrottleConfig *log_throttle;
 	int ident_connect_timeout;
 	int ident_read_timeout;
 	long default_bantime;

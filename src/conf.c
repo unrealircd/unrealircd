@@ -1811,6 +1811,9 @@ void free_iConf(Configuration *i)
 	}
 	i->floodsettings = NULL;
 
+	free_log_throttle_config(i->log_throttle);
+	i->log_throttle = NULL;
+
 	/* And zero out everything, too easy to make a mistake above. */
 	memset(i, 0, sizeof(Configuration));
 }
@@ -1894,6 +1897,9 @@ void config_setdefaultsettings(Configuration *i)
 	config_parse_flood_generic("4:15", i, "unknown-users", FLD_CONVERSATIONS); /* 4 users, new user every 15s */
 	config_parse_flood_generic("90:1000", i, "unknown-users", FLD_LAG_PENALTY); /* 90 bytes / 1000 msec */
 	config_parse_flood_generic("7:1500", i, "unknown-users", FLD_MULTILINE); /* max-lines=7, max-bytes=1500 */
+
+	add_log_throttle_config(&i->log_throttle, "CONNTHROTTLE_IPV6_LIMIT", 100, 60, 0);
+	add_log_throttle_config(&i->log_throttle, "MAXPERIP_LIMIT", 100, 60, 0);
 
 	/* TLS options */
 	i->tls_options = safe_alloc(sizeof(TLSOptions));
@@ -2921,6 +2927,7 @@ void config_switchover(void)
 	memcpy(&iConf, &tempiConf, sizeof(iConf));
 	memset(&tempiConf, 0, sizeof(tempiConf));
 	log_blocks_switchover();
+	log_throttle_rehash();
 }
 
 /** Priority of config blocks during CONFIG_TEST stage */
@@ -8146,6 +8153,23 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
+		else if (!strcmp(cep->name, "log-throttle"))
+		{
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				if (!cepp->name || !cepp->value)
+					continue;
+				if (!strcmp(cepp->value, "unlimited") || !strcmp(cepp->value, "max"))
+				{
+					add_log_throttle_config(&tempiConf.log_throttle, cepp->name, 0, 0, 1);
+				} else
+				{
+					int cnt = 0, period = 0;
+					config_parse_flood(cepp->value, &cnt, &period);
+					add_log_throttle_config(&tempiConf.log_throttle, cepp->name, cnt, period, 0);
+				}
+			}
+		}
 		else if (!strcmp(cep->name, "options")) {
 			for (cepp = cep->items; cepp; cepp = cepp->next) {
 				if (!strcmp(cepp->name, "hide-ulines")) {
@@ -9333,6 +9357,40 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				            cep->file->filename, cep->line_number);
 				config_warn("If you want to learn more about the new functionality you can visit "
 				            "https://www.unrealircd.org/docs/Anti-flood_settings");
+			}
+		}
+		else if (!strcmp(cep->name, "log-throttle"))
+		{
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				int cnt = 0, period = 0;
+				if (!cepp->name)
+					continue;
+				if (!cepp->value)
+				{
+					config_error("%s:%i: set::log-throttle::%s: missing value "
+					             "(need 'count:period' or 'unlimited')",
+						cepp->file->filename, cepp->line_number, cepp->name);
+					errors++;
+					continue;
+				}
+				if (!valid_event_id(cepp->name))
+				{
+					config_error("%s:%i: set::log-throttle::%s: invalid event_id name "
+					             "(must contain only uppercase A-Z, 0-9 and underscores)",
+						cepp->file->filename, cepp->line_number, cepp->name);
+					errors++;
+					continue;
+				}
+				if (!strcmp(cepp->value, "unlimited") || !strcmp(cepp->value, "max"))
+					continue;
+				if (!config_parse_flood(cepp->value, &cnt, &period) || (cnt < 1) || (period < 1))
+				{
+					config_error("%s:%i: set::log-throttle::%s: invalid value '%s'. "
+					             "Syntax is '<count>:<period>' (eg 100:60), or 'unlimited'",
+						cepp->file->filename, cepp->line_number, cepp->name, cepp->value);
+					errors++;
+				}
 			}
 		}
 		else if (!strcmp(cep->name, "options")) {

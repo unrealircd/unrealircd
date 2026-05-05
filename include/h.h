@@ -1422,11 +1422,29 @@ extern const char *log_type_valtostring(LogType v);
  * parameters explicitly, put log_data_source() at the beginning of the argument list
  * and then use non-portable ## __VA_ARGS__ for the remainder.
  */
-#define unreal_log(...) do { LogData *lds = log_data_source(__FILE__, __LINE__, __FUNCTION__); do_unreal_log(__VA_ARGS__, lds, NULL); log_data_free(lds); } while(0)
-#define unreal_log_raw(...) do { LogData *lds = log_data_source(__FILE__, __LINE__, __FUNCTION__); do_unreal_log_raw(__VA_ARGS__, lds, NULL); log_data_free(lds); } while(0)
+#define unreal_log(level, sys, id, ...) do { \
+		if (!log_throttled((sys), (id))) { \
+			LogData *lds = log_data_source(__FILE__, __LINE__, __FUNCTION__); \
+			do_unreal_log((level), (sys), (id), __VA_ARGS__, lds, NULL); \
+			log_data_free(lds); \
+		} \
+	} while(0)
+#define unreal_log_raw(level, sys, id, ...) do { \
+		if (!log_throttled((sys), (id))) { \
+			LogData *lds = log_data_source(__FILE__, __LINE__, __FUNCTION__); \
+			do_unreal_log_raw((level), (sys), (id), __VA_ARGS__, lds, NULL); \
+			log_data_free(lds); \
+		} \
+	} while(0)
 #else
-#define unreal_log(...) do_unreal_log(__VA_ARGS__, NULL)
-#define unreal_log_raw(...) do_unreal_log_raw(__VA_ARGS__, NULL)
+#define unreal_log(level, sys, id, ...) do { \
+		if (!log_throttled((sys), (id))) \
+			do_unreal_log((level), (sys), (id), __VA_ARGS__, NULL); \
+	} while(0)
+#define unreal_log_raw(level, sys, id, ...) do { \
+		if (!log_throttled((sys), (id))) \
+			do_unreal_log_raw((level), (sys), (id), __VA_ARGS__, NULL); \
+	} while(0)
 #endif
 extern void do_unreal_log(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, const char *msg, ...) __attribute__((format(printf,5,0)));
 extern void do_unreal_log_raw(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, const char *msg, ...);
@@ -1448,6 +1466,13 @@ extern void log_pre_rehash(void);
 extern int log_tests(void);
 extern void config_pre_run_log(void);
 extern void log_blocks_switchover(void);
+extern void log_throttle_init(void);
+extern int log_throttled(const char *subsystem, const char *event_id);
+extern void log_throttle_rehash(void);
+extern void free_log_throttle_config(LogThrottleConfig *c);
+extern LogThrottleConfig *find_log_throttle_config(LogThrottleConfig *list, const char *event_id);
+extern void add_log_throttle_config(LogThrottleConfig **list, const char *event_id, int threshold, int period, int unlimited);
+extern EVENT(log_throttle_flush);
 extern void postconf_defaults_log_block(void);
 extern int valid_loglevel(int v);
 extern LogLevel log_level_stringtoval(const char *str);
