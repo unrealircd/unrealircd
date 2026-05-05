@@ -1645,6 +1645,17 @@ int set_client_ip(Client *client, const char *ip)
 	inetntop(af, client->rawip, newip, sizeof(newip));
 	safe_strdup(client->ip, newip);
 
+	/* We also keep sockhost in sync with the new IP. Otherwise some
+	 * instances of match_user() in pre-reg may match against the old IP.
+	 * Note that this also means we overwrite sockhost if it contained
+	 * a hostname, that is good for e.g. WEBIRC case, since the IP is
+	 * changed and the old hostname is from the WebIRC gateway.
+	 * Fortunately all callers that set hostnames do so after calling
+	 * set_client_ip(), so that is correct.
+	 */
+	if (client->local)
+		set_sockhost(client, client->ip);
+
 	/* For IP changes (so not first set), call this hook */
 	if (*oldip)
 	{
