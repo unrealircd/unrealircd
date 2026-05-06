@@ -153,6 +153,7 @@ MOD_TEST()
 	cfg.local.count = 20; cfg.local.period = 60;
 	cfg.global.count = 30; cfg.global.period = 60;
 	cfg.start_delay = 180;		/* 3 minutes */
+	cfg.reputation_gathering = 7*86400;	/* 1 week */
 	safe_strdup(cfg.reason, "Throttled: Too many users trying to connect, please wait a while and try again");
 	cfg.except = safe_alloc(sizeof(SecurityGroup));
 	cfg.except->reputation_score = 24;
