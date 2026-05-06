@@ -596,8 +596,9 @@ int ct_pre_lconnect(Client *client)
 	if (still_reputation_gathering())
 		return HOOK_CONTINUE; /* still gathering reputation data */
 
-	if (user_allowed_by_security_group(client, cfg.except))
-		return HOOK_CONTINUE; /* allowed: user is exempt (known user or otherwise) */
+	if (user_allowed_by_security_group(client, cfg.except) ||
+	    find_tkl_exception(TKL_CONNECT_FLOOD, client))
+		return HOOK_CONTINUE; /* allowed: user is exempt */
 
 	/* If we reach this then the user is NEW */
 
@@ -667,10 +668,11 @@ int ct_lconnect(Client *client)
 	if (still_reputation_gathering())
 		return 0; /* still gathering reputation data */
 
-	if (user_allowed_by_security_group(client, cfg.except))
+	if (user_allowed_by_security_group(client, cfg.except) ||
+	    find_tkl_exception(TKL_CONNECT_FLOOD, client))
 	{
 		ucounter->allowed_except++;
-		return HOOK_CONTINUE; /* allowed: user is exempt (known user or otherwise) */
+		return HOOK_CONTINUE; /* allowed: user is exempt */
 	}
 
 	/* Allowed NEW user */
@@ -704,8 +706,9 @@ int ct_rconnect(Client *client)
 	}
 #endif
 
-	if (user_allowed_by_security_group(client, cfg.except))
-		return 0; /* user is on except list (known user or otherwise) */
+	if (user_allowed_by_security_group(client, cfg.except) ||
+	    find_tkl_exception(TKL_CONNECT_FLOOD, client))
+		return 0; /* user is exempt */
 
 	bump_connect_counter(0);
 
@@ -1127,15 +1130,15 @@ static void ct_bucket_decrement(ConnThrottleBucket *b, ConnThrottleCategory cate
 }
 
 /** Classify a client into one of CT_CATEGORY_*.
- * Reads client->known_user_cached (the existing global "known-users"
- * cache) and the existing cfg.except SecurityGroup that the rate-throttle
- * uses. Does not modify any state.
+ * Reads client->known_user_cached, the cfg.except SecurityGroup, and TKL
+ * exceptions of type maxperip. Does not modify state.
  */
 static ConnThrottleCategory ct_classify(Client *client)
 {
 	if (client->known_user_cached)
 		return CT_CATEGORY_KNOWN_USERS;
-	if (user_allowed_by_security_group(client, cfg.except))
+	if (user_allowed_by_security_group(client, cfg.except) ||
+	    find_tkl_exception(TKL_MAXPERIP, client))
 		return CT_CATEGORY_EXCEPTED_UNKNOWNS;
 	return CT_CATEGORY_UNKNOWN_USERS;
 }
