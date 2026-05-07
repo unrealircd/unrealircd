@@ -46,9 +46,26 @@ IpUsersBucket **IpUsersHash_ipv4 = NULL;
 IpUsersBucket **IpUsersHash_ipv6 = NULL;
 char *siphashkey_ipusers = NULL;
 
+/** set::known-cloud-services (enabled by default) */
+static int known_cloud_services = 1; /* default: enabled */
+
+/** IRCCloud gateway CIDRs.
+ * See https://www.irccloud.com/networks and https://www.irccloud.com/static/hosts.json
+ */
+static const char *irccloud_cidrs[] = {
+	"5.254.36.56/29",
+	"5.254.36.104/29",
+	"2a03:5180:f::/62",
+	"2a03:5180:f:4::/63",
+	"2a03:5180:f:6::/64",
+	NULL
+};
+
 /* Forward declarations */
 int maxperip_config_test_allow(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int maxperip_config_run_allow(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
+int maxperip_config_test_set(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int maxperip_config_run_set(ConfigFile *cf, ConfigEntry *ce, int type);
 void maxperip_postconf(void);
 int exceeds_maxperip(Client *client, ConfigItem_allow *aconf);
 IpUsersBucket *find_ipusers_bucket(Client *client);
@@ -57,6 +74,7 @@ void decrease_ipusers_bucket(Client *client);
 int decrease_ipusers_bucket_wrapper(Client *client);
 static void rebuild_ipusers_buckets(void);
 static void free_ipusers_buckets(void);
+static void add_known_cloud_services_exempts(void);
 int stats_maxperip(Client *client, const char *para);
 int maxperip_remote_connect(Client *client);
 const char *maxperip_allow_client(Client *client, ConfigItem_allow *aconf);
@@ -66,6 +84,7 @@ MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, maxperip_config_test_allow);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, maxperip_config_test_set);
 	EfunctionAdd(modinfo->handle, EFUNC_GET_CONNECTIONS_FROM_IP, _get_connections_from_ip);
 	return MOD_SUCCESS;
 }
@@ -79,7 +98,10 @@ MOD_INIT()
 	IpUsersHash_ipv4 = safe_alloc(sizeof(IpUsersBucket *) * IPUSERS_HASH_TABLE_SIZE);
 	IpUsersHash_ipv6 = safe_alloc(sizeof(IpUsersBucket *) * IPUSERS_HASH_TABLE_SIZE);
 
+	known_cloud_services = 1; /* reset to default before CONFIGRUN may change it */
+
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, maxperip_config_run_allow);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, maxperip_config_run_set);
 	HookAdd(modinfo->handle, HOOKTYPE_FREE_USER, 0, decrease_ipusers_bucket_wrapper);
 	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, stats_maxperip);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, 0, maxperip_remote_connect);
@@ -92,6 +114,7 @@ MOD_LOAD()
 {
 	maxperip_postconf();
 	rebuild_ipusers_buckets();
+	add_known_cloud_services_exempts();
 	return MOD_SUCCESS;
 }
 
@@ -352,6 +375,69 @@ static void free_ipusers_buckets(void)
 	}
 	safe_free(IpUsersHash_ipv4);
 	safe_free(IpUsersHash_ipv6);
+}
+
+int maxperip_config_test_set(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
+	int errors = 0;
+
+	if (type != CONFIG_SET)
+		return 0;
+
+	if (!strcmp(ce->name, "known-cloud-services"))
+	{
+		if (!ce->value)
+		{
+			config_error("%s:%i: set::known-cloud-services: no value specified",
+				ce->file->filename, ce->line_number);
+			errors++;
+		}
+		*errs = errors;
+		return errors ? -1 : 1;
+	}
+	return 0;
+}
+
+int maxperip_config_run_set(ConfigFile *cf, ConfigEntry *ce, int type)
+{
+	if (type != CONFIG_SET)
+		return 0;
+
+	if (!strcmp(ce->name, "known-cloud-services"))
+	{
+		known_cloud_services = config_checkval(ce->value, CFG_YESNO);
+		return 1;
+	}
+	return 0;
+}
+
+/* Install default maxperip/connect-flood exception for IRC platforms
+ * that are so big that they are known to trip default maxperip restrictions
+ * (per IPv4 IP or per IPv6 /64: 3 local users, 4 network-wide users)
+ * on dozens of networks and that publish a stable list of IP ranges.
+ * Currently only IRCCloud qualifies for this.
+ * IRCCloud is in example conf since May 2023 (commit 82dbc4a29716) as:
+ * except ban { mask *.irccloud.com; type { maxperip; connect-flood; } }.
+ * Unfortunately DNS sometimes fails to resolve. We have seen this happen
+ * during an outage or server restart. People then mass-connect, but DNS is
+ * not fully working (yet), leading to unresolved hostnames.
+ * In May 2026 we added stricter maxperip treatment for /64 IPv6, and in
+ * connthrottle we added /56, /48 and /32 restrictions. Without these IP
+ * exceptions this would cause unwanted rejections.
+ */
+static void add_known_cloud_services_exempts(void)
+{
+	int i;
+
+	if (!known_cloud_services)
+		return;
+
+	for (i = 0; irccloud_cidrs[i]; i++)
+	{
+		tkl_add_banexception(TKL_EXCEPTION, "*", irccloud_cidrs[i], NULL,
+		                     "IRCCloud default maxperip/connect-flood exemption", "-default-",
+		                     0, TStime(), 0, "mc", TKL_FLAG_CONFIG);
+	}
 }
 
 int stats_maxperip(Client *client, const char *para)
