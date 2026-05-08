@@ -4,12 +4,63 @@ UnrealIRCd 6.2.5-git
 This is the git version (development version) for future UnrealIRCd 6.2.5.
 This is work in progress and may not always be a stable version.
 
+This version changes the way we deal with IPv6 clone detection. If you
+run an IRC network with IPv6 connectivity, be sure to read the first 3
+points of the **Enhancements** section below carefully.
+
 ### Enhancements:
+* [allow::maxperip](https://www.unrealircd.org/docs/Allow_block#maxperip)
+  and [connect-flood](https://www.unrealircd.org/docs/Anti-flood_settings#connect-flood)
+  now treat an IPv6 /64 as a single host
+  ([set::default-ipv6-clone-mask](https://www.unrealircd.org/docs/Set_block#set::default-ipv6-clone-mask)).
+  Since end users are typically allocated a whole /64, per-/128 counting
+  offered no real clone protection. We previously claimed to be doing this
+  already in the documentation, but in practice the setting was ignored.
+  A related unused option allow::ipv6-clone-mask has been removed and will
+  now raise an error.
+* [ConnThrottle](https://www.unrealircd.org/docs/Connthrottle) now has a
+  set::connthrottle::ipv6-unknown-users-limit (enabled by default).
+  This limits the number of *unknown IPv6 users* per /56, /48 and /32.
+  This reduces the effect of an attacker launching many IPv6 clones at
+  a server. Users in the "known-users" security-group are exempt (by
+  default: identified to services, or
+  [reputation](https://www.unrealircd.org/docs/Reputation_score) of 25 or more).
+  Also exempt are users matching set::connthrottle::except or an
+  except ban with type maxperip.
+* New set::known-cloud-services (enabled by default) automatically
+  exempts large IRC platforms with stable published IP ranges from
+  [allow::maxperip](https://www.unrealircd.org/docs/Allow_block#maxperip)
+  and [connect-flood](https://www.unrealircd.org/docs/Anti-flood_settings#connect-flood).
+  Currently only IRCCloud qualifies. This is more reliable than the DNS-based
+  `except ban { mask *.irccloud.com; ... }` block that `example.conf`
+  has shipped since 2023, which can fail during outages or restarts
+  when DNS isn't fully resolving. The new maxperip and connthrottle limits
+  make this even more important. To disable, use:
+  `set { known-cloud-services no; }`.
+* New [snomask](https://www.unrealircd.org/docs/Snomasks) `+x` for rejections
+  from [allow::maxperip](https://www.unrealircd.org/docs/Allow_block#maxperip)
+  and [ConnThrottle](https://www.unrealircd.org/docs/Connthrottle).
+  Included in the default oper snomask (unless overridden in
+  [set::snomask-on-oper](https://www.unrealircd.org/docs/Set_block#set::snomask-on-oper)
+  or [oper::snomask](https://www.unrealircd.org/docs/Oper_block#snomask)).
+* New [set::log-throttle](https://www.unrealircd.org/docs/Set_block#set::log-throttle):
+  suppresses high-rate events. This is on by default for the new `+x` rejections.
+* [ConnThrottle](https://www.unrealircd.org/docs/Connthrottle) now
+  also exempts users with an except ban of type `connect-flood` from
+  the new-users rate limit.
 
 ### Changes:
+* The maxperip and connthrottle rejection messages were changed to give
+  more information about the IPv6 range limitation and now include the
+  text `[maxperip]` or `[connthrottle]` so you can see which limit is hit.
 * Update shipped libs: Sodium (1.0.22)
+* The event names `CONNTHROTLE_*` were renamed to `CONNTHROTTLE_*` as the
+  former was a typo.
 
 ### Fixes:
+* [set::connthrottle::disabled-when::reputation-gathering](https://www.unrealircd.org/docs/Connthrottle)
+  has been set to 1 week in example.conf since 2019, but if you did
+  not have that item it defaulted to 0 (no delay). Now 1 week.
 
 ### Developers and protocol:
 
