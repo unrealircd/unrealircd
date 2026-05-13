@@ -22,7 +22,7 @@
 ModuleHeader MOD_HEADER
   = {
 	"maxperip",
-	"1.0.0",
+	"2.0.0",
 	"Limit user connections based on ip address",
 	"UnrealIRCd Team",
 	"unrealircd-6",
