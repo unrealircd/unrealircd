@@ -86,7 +86,7 @@ RPC_CALL_FUNC(rpc_connthrottle_reset);
 
 #ifdef DEBUGMODE
 /** Self-check of IPv6 CIDR limits every <this> msec */
-#define 1 1000
+#define CONNTHROTTLE_CHECK 1000
 #endif
 
 /* Per-client classification stored in our ModData slot.

@@ -475,11 +475,12 @@ int stats_maxperip(Client *client, const char *para)
 	{
 		for (e = IpUsersHash_ipv6[i]; e; e = e->next)
 		{
-			ip = inetntop(AF_INET6, e->rawip, ipbuf, sizeof(ipbuf));
+			ip = inet_ntop(AF_INET6, e->rawip, ipbuf, sizeof(ipbuf));
 			if (!ip)
 				ip = "<invalid>";
-			sendtxtnumeric(client, "IPv6 #%d %s: %d local / %d global",
-				       i, ip, e->local_clients, e->global_clients);
+			sendtxtnumeric(client, "IPv6 #%d %s/%d: %d local / %d global",
+				       i, ip, iConf.default_ipv6_clone_mask,
+				       e->local_clients, e->global_clients);
 		}
 	}
 
