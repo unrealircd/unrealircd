@@ -1224,9 +1224,9 @@ const char *ct_allow_client(Client *client, ConfigItem_allow *aconf)
 	if (category != CT_CATEGORY_UNKNOWN_USERS)
 		return NULL;
 
-	/* Same dormancy gates as the existing rate-throttle. */
-	if (me.local->creationtime + cfg.start_delay > TStime())
-		return NULL;
+	/* start-delay only applies to the rate-throttle, not here.
+	 * The other two restrictions still apply.
+	 */
 	if (ucounter->disabled)
 		return NULL;
 	if (still_reputation_gathering())
