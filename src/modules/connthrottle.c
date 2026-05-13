@@ -1116,7 +1116,6 @@ static void ct_bucket_decrement(ConnThrottleBucket *b, ConnThrottleCategory cate
 		case CT_CATEGORY_EXCEPTED_UNKNOWNS: b->excepted_unknowns--; break;
 		case CT_CATEGORY_UNKNOWN_USERS:     b->unknown_users--;     break;
 	}
-#ifdef DEBUGMODE
 	if ((b->known_users < 0) || (b->excepted_unknowns < 0) || (b->unknown_users < 0))
 	{
 		unreal_log(ULOG_ERROR, "connthrottle", "BUG_CT_NEGATIVE_COUNTER", NULL,
@@ -1124,9 +1123,10 @@ static void ct_bucket_decrement(ConnThrottleBucket *b, ConnThrottleCategory cate
 		           log_data_integer("known", b->known_users),
 		           log_data_integer("excepted", b->excepted_unknowns),
 		           log_data_integer("unknown", b->unknown_users));
+#ifdef DEBUGMODE
 		abort();
-	}
 #endif
+	}
 }
 
 /** Classify a client into one of CT_CATEGORY_*.

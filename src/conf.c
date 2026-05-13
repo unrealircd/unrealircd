@@ -1900,6 +1900,12 @@ void config_setdefaultsettings(Configuration *i)
 
 	add_log_throttle_config(&i->log_throttle, "CONNTHROTTLE_IPV6_LIMIT", 100, 60, 0);
 	add_log_throttle_config(&i->log_throttle, "MAXPERIP_LIMIT", 100, 60, 0);
+	add_log_throttle_config(&i->log_throttle, "BUG_CT_CHECK_DRIFT", 5, 60, 0);
+	add_log_throttle_config(&i->log_throttle, "BUG_CT_CHECK_NO_BUCKET", 5, 60, 0);
+	add_log_throttle_config(&i->log_throttle, "BUG_CT_CHECK_NO_IP", 5, 60, 0);
+	add_log_throttle_config(&i->log_throttle, "BUG_CT_BUCKET_MISSING", 5, 60, 0);
+	add_log_throttle_config(&i->log_throttle, "BUG_CT_NEGATIVE_COUNTER", 5, 60, 0);
+	add_log_throttle_config(&i->log_throttle, "BUG_DECREASE_IPUSERS_BUCKET", 5, 60, 0);
 
 	/* TLS options */
 	i->tls_options = safe_alloc(sizeof(TLSOptions));
