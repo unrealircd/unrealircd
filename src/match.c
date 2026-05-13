@@ -891,8 +891,15 @@ void badword_config_free(ConfigItem_badword *e)
  */
 void mask_ipv6_rawip(const char *src, int prefix, char *dst)
 {
-	int full_bytes = prefix / 8;
-	int leftover_bits = prefix % 8;
+	int full_bytes, leftover_bits;
+
+	if (prefix < 0)
+		prefix = 0;
+	else if (prefix > 128)
+		prefix = 128;
+
+	full_bytes = prefix / 8;
+	leftover_bits = prefix % 8;
 
 	if (src != dst)
 		memcpy(dst, src, 16);
@@ -960,7 +967,7 @@ const char *format_ipv6_prefix_reject_message(const char *template,
                                               int prefix)
 {
 	static char buf[512];
-	char prefix_len_str[8];
+	char prefix_len_str[16];
 	char addr_str[128]; /* generously oversized; longest IPv6 string form is ~46 chars */
 	const char *vars[3], *values[3];
 
