@@ -1766,7 +1766,7 @@ void tls_link_notification_verify(Client *client, ConfigItem_link *aconf)
 		return; /* wtf ? */
 
 	unreal_log(ULOG_WARNING, "link", "WARN_UNVERIFIED_LINK_CERTIFICATE", client,
-	          "This server link is not verified (and hence is suspectible to an active MITM attack). "
+	          "This server link is not verified (and hence is susceptible to an active MITM attack). "
 	          "In future UnrealIRCd versions this will become a fatal error!\n"
 	          "More information about this can be found on https://www.unrealircd.org/Link_verification\n"
 	          "In short: in the configuration file, change the 'link $client {' block to use this as a password:\n"
