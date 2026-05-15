@@ -179,6 +179,10 @@ int antimixedutf8_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		if (!strcmp(cep->name, "except"))
+		{
+			test_match_block(cf, cep, &errors);
+		} else
 		if (!cep->value)
 		{
 			config_error("%s:%i: set::antimixedutf8::%s with no value",
@@ -204,10 +208,6 @@ int antimixedutf8_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 		} else
 		if (!strcmp(cep->name, "ban-time"))
 		{
-		} else
-		if (!strcmp(cep->name, "except"))
-		{
-			test_match_block(cf, cep, &errors);
 		} else
 		{
 			config_error("%s:%i: unknown directive set::antimixedutf8::%s",
