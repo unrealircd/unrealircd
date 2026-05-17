@@ -40,7 +40,8 @@ struct Download
 	char *memory_data; /**< Memory for writing response (otherwise NULL) */
 	long long memory_data_len; /**< Size of memory_data */
 	long long memory_data_allocated; /**< Total allocated memory for 'memory_data' */
-	int cap_exceeded; /**< Set to 1 by do_download_memory when max_size was hit */
+	long long bytes_written_to_file; /**< Bytes written to file_fd so far (for max_size cap) */
+	int cap_exceeded; /**< Set to 1 by do_download_memory/file when max_size was hit */
 };
 
 CURLM *multihandle = NULL;
@@ -163,7 +164,21 @@ static void set_curl_tls_options(CURL *curl, int minimum_tls_version)
  */
 static size_t do_download_file(void *ptr, size_t size, size_t nmemb, void *stream)
 {
-	return fwrite(ptr, size, nmemb, (FILE *)stream);
+	Download *handle = (Download *)stream;
+	size_t write_sz = size * nmemb;
+	long long size_required = handle->bytes_written_to_file + (long long)write_sz;
+
+	if (size_required > handle->request->max_size)
+	{
+		handle->cap_exceeded = 1;
+		return 0; /* aborts the curl transfer; real error surfaced in url_check_multi_handles */
+	}
+
+	if (fwrite(ptr, size, nmemb, handle->file_fd) != nmemb)
+		return 0; /* short write -> abort */
+
+	handle->bytes_written_to_file += (long long)write_sz;
+	return nmemb;
 }
 
 /*
@@ -370,7 +385,7 @@ void url_start_async(OutgoingWebRequest *request)
 
 	/* Set request defaults */
 	if (request->max_size <= 0)
-		request->max_size = DOWNLOAD_MAX_SIZE;
+		request->max_size = request->store_in_file ? DOWNLOAD_MAX_SIZE_FILE_BACKED : DOWNLOAD_MAX_SIZE_MEMORY_BACKED;
 
 	curl = curl_easy_init();
 	if (!curl)
@@ -410,7 +425,7 @@ void url_start_async(OutgoingWebRequest *request)
 	if (handle->request->store_in_file)
 	{
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download_file);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->file_fd);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle);
 	} else {
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download_memory);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle);
@@ -467,6 +482,8 @@ void url_start_async(OutgoingWebRequest *request)
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, request->transfer_timeout ? request->transfer_timeout : DOWNLOAD_TRANSFER_TIMEOUT);
 	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, request->connect_timeout ? request->connect_timeout : DOWNLOAD_CONNECT_TIMEOUT);
+	/* Reject early if Content-Length exceeds the cap. */
+	curl_easy_setopt(curl, CURLOPT_MAXFILESIZE_LARGE, (curl_off_t)request->max_size);
 #if LIBCURL_VERSION_NUM >= 0x070f01
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
 	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, handle->request->max_redirects);

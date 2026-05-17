@@ -1982,8 +1982,11 @@ struct OutgoingWebRequest
 	int connect_timeout; /**< How many seconds to wait for the (TLS) connect to succeed */
 	int transfer_timeout; /**< How many seconds the total transfer may take (connect+reading everything) */
 	int minimum_tls_version;
-	long long max_size; /**< Max response size for memory-backed downloads, in bytes.
-	                     *   0 = use DOWNLOAD_MAX_SIZE. Ignored for file-backed. */
+	long long max_size; /**< Max response size, in bytes. 0 selects a default
+	                     *   based on the download mode:
+	                     *   DOWNLOAD_MAX_SIZE_MEMORY_BACKED (small, since it
+	                     *   sits in RAM) or DOWNLOAD_MAX_SIZE_FILE_BACKED
+	                     *   (larger). */
 	// If you are adding fields here:
 	// 1) update duplicate_outgoingwebrequest() in src/misc.c
 	// 2) and update free_outgoingwebrequest() there as well (if something needs to be freed)

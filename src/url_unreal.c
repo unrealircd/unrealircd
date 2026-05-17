@@ -63,6 +63,7 @@ struct Download
 	char *memory_data; /**< Memory for writing response (otherwise NULL) */
 	long long memory_data_len; /**< Size of memory_data */
 	long long memory_data_allocated; /**< Total allocated memory for 'memory_data' */
+	long long bytes_written_to_file; /**< Bytes written to file_fd so far (for max_size cap) */
 	char errorbuf[512];
 	char *hostname;		/**< Parsed hostname (from 'url') */
 	int port;		/**< Parsed port (from 'url') */
@@ -190,7 +191,7 @@ void url_start_async(OutgoingWebRequest *request)
 	if (request->transfer_timeout == 0)
 		request->transfer_timeout = DOWNLOAD_TRANSFER_TIMEOUT;
 	if (request->max_size <= 0)
-		request->max_size = DOWNLOAD_MAX_SIZE;
+		request->max_size = request->store_in_file ? DOWNLOAD_MAX_SIZE_FILE_BACKED : DOWNLOAD_MAX_SIZE_MEMORY_BACKED;
 
 	handle = safe_alloc(sizeof(Download));
 	handle->download_started = TStime();
@@ -879,7 +880,15 @@ int https_handle_response_body(Download *handle, char *readbuf, int pktsize)
 			https_handle_response_body_memory(handle, readbuf, pktsize);
 		}
 		else if (handle->file_fd)
+		{
+			if (handle->bytes_written_to_file + pktsize > handle->request->max_size)
+			{
+				https_cancel(handle, "Response too large (maximum: %lld bytes)", handle->request->max_size);
+				return 0; /* handle freed */
+			}
 			fwrite(readbuf, 1, pktsize, handle->file_fd);
+			handle->bytes_written_to_file += pktsize;
+		}
 		return 1;
 	}
 
@@ -917,7 +926,16 @@ int https_handle_response_body(Download *handle, char *readbuf, int pktsize)
 				https_handle_response_body_memory(handle, buf, eat);
 			}
 			else if (handle->file_fd)
+			{
+				if (handle->bytes_written_to_file + eat > handle->request->max_size)
+				{
+					https_cancel(handle, "Response too large (maximum: %lld bytes)", handle->request->max_size);
+					safe_free(free_this_buffer);
+					return 0; /* handle freed */
+				}
 				fwrite(buf, 1, eat, handle->file_fd);
+				handle->bytes_written_to_file += eat;
+			}
 			n -= eat;
 			buf += eat;
 			handle->chunk_remaining -= eat;
