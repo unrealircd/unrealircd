@@ -36,6 +36,16 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
+/* Maximum length of a single chunked-transfer chunk header
+ * (the line announcing a chunk, eg. "7f\r\n", optionally with
+ * chunk extensions like "7f;name=value\r\n"). This is NOT the
+ * size of the chunk data itself.
+ * Caps how much we will buffer while waiting for the terminating
+ * LF so a server that streams a chunk header with no LF cannot
+ * grow handle->lefttoparse without bound.
+ */
+#define HTTPS_MAX_CHUNK_HEADER_LEN	256
+
 /* Structs */
 
 /* Stores information about the async transfer.
@@ -914,7 +924,7 @@ int https_handle_response_body(Download *handle, char *readbuf, int pktsize)
 		} else
 		{
 			int gotlf = 0;
-			int i;
+			long long i;
 
 			/* First check if it is a (trailing) empty line,
 			 * eg from a previous chunk. Skip over.
@@ -948,6 +958,16 @@ int https_handle_response_body(Download *handle, char *readbuf, int pktsize)
 				 * as it does not contain an \n. Wait for more data
 				 * from the network socket.
 				 */
+				if (n > HTTPS_MAX_CHUNK_HEADER_LEN)
+				{
+					/* A chunk-size line should never be this long;
+					 * refuse to keep buffering otherwise a malicious
+					 * server can grow lefttoparse without bound.
+					 */
+					https_cancel(handle, "Chunk size line too long (%lld bytes, no LF)", n);
+					safe_free(free_this_buffer);
+					return 0;
+				}
 				if (n > 0)
 				{
 					/* Store what we have first.. */
@@ -960,7 +980,14 @@ int https_handle_response_body(Download *handle, char *readbuf, int pktsize)
 			}
 			buf[i] = '\0'; /* cut at LF */
 			i++; /* point to next data */
+			errno = 0;
 			handle->chunk_remaining = strtoll(buf, NULL, 16);
+			if (errno == ERANGE)
+			{
+				https_cancel(handle, "Chunk size out of range: '%s'", buf);
+				safe_free(free_this_buffer);
+				return 0;
+			}
 			if (handle->chunk_remaining < 0)
 			{
 				https_cancel(handle, "Negative chunk encountered (%lld)", handle->chunk_remaining);
