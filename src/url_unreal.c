@@ -497,6 +497,7 @@ int https_fatal_tls_error(int ssl_error, int my_errno, Download *handle)
 int url_parse(const char *url, char **hostname, int *port, char **username, char **password, char **document)
 {
 	char *p, *p2;
+	const char *q;
 	static char hostbuf[256];
 	static char documentbuf[512];
 
@@ -505,6 +506,12 @@ int url_parse(const char *url, char **hostname, int *port, char **username, char
 
 	if (strncmp(url, "https://", 8))
 		return 0;
+
+	/* Refuse control chars and space (would allow request-line injection). */
+	for (q = url; *q; q++)
+		if (*q <= ' ')
+			return 0;
+
 	url += 8; /* skip over https:// part */
 
 	p = strchr(url, '/');
