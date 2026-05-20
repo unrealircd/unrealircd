@@ -9,8 +9,18 @@ This is work in progress and may not always be a stable version.
 ### Changes:
 
 ### Fixes:
+* Harden the built-in HTTPS client
 
 ### Developers and protocol:
+* URL API: The OutgoingWebRequest `max_size` (introduced last release) now
+  also caps file-backed downloads. Default for file-backed when left at 0
+  is 50MB (`DOWNLOAD_MAX_SIZE_FILE_BACKED`). For memory-backed, it stays
+  at 1MB like in 6.2.5 (`DOWNLOAD_MAX_SIZE_MEMORY_BACKED`).
+* If you do something to a user that would (potentially) move the user from
+  `unknown-users` to `known-users` (or vice versa) then you should call
+  `update_known_user_cache(client);` to update the known users cache.
+  For example, if you have some authentication module that marks a user
+  as IsLoggedIn.
 
 UnrealIRCd 6.2.5
 -----------------

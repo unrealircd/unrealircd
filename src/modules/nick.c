@@ -1185,6 +1185,8 @@ int _register_user(Client *client)
 
 	safe_free(client->local->passwd);
 
+	update_known_user_cache(client);
+
 	unreal_log(ULOG_INFO, "connect", "LOCAL_CLIENT_CONNECT", client,
 		   "Client connecting: $client ($client.user.username@$client.hostname) [$client.ip] $extended_client_info",
 		   log_data_string("extended_client_info", get_connect_extinfo(client)));
