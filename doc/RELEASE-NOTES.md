@@ -15,6 +15,8 @@ This is work in progress and may not always be a stable version.
   0700 permissions, just like most subdirectories were.
 
 ### Fixes:
+* The following config items previously raised a config error:
+  allow channel::except, deny channel::except and spamfilter::except.
 * Hardening of the built-in HTTPS client
 
 ### Developers and protocol:
