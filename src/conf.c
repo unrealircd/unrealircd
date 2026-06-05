@@ -10874,12 +10874,22 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 		char has_mask = 0, has_match = 0;
 		for (cep = ce->items; cep; cep = cep->next)
 		{
-			if (config_is_blankorempty(cep, "deny channel"))
+			if (!strcmp(cep->name, "match"))
+			{
+				has_match = 1;
+				test_match_block(conf, cep, &errors);
+			}
+			else if (!strcmp(cep->name, "mask"))
+			{
+				has_mask = 1;
+				test_match_block(conf, cep, &errors);
+			}
+			else if (config_is_blankorempty(cep, "deny channel"))
 			{
 				errors++;
 				continue;
 			}
-			if (!strcmp(cep->name, "channel"))
+			else if (!strcmp(cep->name, "channel"))
 			{
 				if (has_channel)
 				{
@@ -10928,16 +10938,6 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 				has_class = 1;
-			}
-			else if (!strcmp(cep->name, "match"))
-			{
-				has_match = 1;
-				test_match_block(conf, cep, &errors);
-			}
-			else if (!strcmp(cep->name, "mask"))
-			{
-				has_mask = 1;
-				test_match_block(conf, cep, &errors);
 			}
 			else
 			{
