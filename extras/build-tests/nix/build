@@ -41,7 +41,7 @@ if [ "$SSLDIR" != "" ]; then
 fi
 ./Config -quick || (tail -n 5000 config.log; exit 1)
 $MAKE
-yes ''|$MAKE pem
+(echo 'Y'; yes '')|./unrealircd mkcert
 $MAKE || exit 1
 $MAKE install || exit 1
 ./unrealircd module install third/dumpcmds || exit 1

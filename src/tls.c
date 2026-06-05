@@ -358,7 +358,7 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 			{
 				unreal_log(ULOG_ERROR, "config", "TLS_LOAD_FAILED_DEFAULT_CERT", NULL,
 					   "It seems the default certificate is missing. "
-					   "Run './unrealircd makecert' "
+					   "Run './unrealircd mkcert' "
 					   "to generate a self-signed cert.");
 			}
 			goto fail;
@@ -457,7 +457,7 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 	{
 		unreal_log(ULOG_ERROR, "config", "TLS_CERTIFICATE_CHECK_FAILED", NULL,
 		           "There is a problem with your TLS certificate: $quality_check_error\n"
-		           "If you use the standard UnrealIRCd certificates then you can simply run './unrealircd makecert' "
+		           "If you use the standard UnrealIRCd certificates then you can simply run './unrealircd mkcert' "
 		           "to create and install new certificates",
 		           log_data_string("quality_check_error", errstr));
 		goto fail;

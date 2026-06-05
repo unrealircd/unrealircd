@@ -266,7 +266,7 @@ install: all
 
 pem:
 	@echo "The command 'make pem' is no longer used to generate the TLS certificate."
-	@echo "Please run './unrealircd makecert' instead."
+	@echo "Please run './unrealircd mkcert' instead."
 
 Makefile: config.status Makefile.in
 	./config.status

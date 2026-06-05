@@ -17,7 +17,7 @@ OPENSSLPATH="@OPENSSLPATH@"
 # older gcc/clang might dump a 16TB core file. We explicitly enable it here.
 export ASAN_OPTIONS="abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1:log_path=$TMPDIR/unrealircd_asan:detect_leaks=0"
 
-if [ "$1" != "makecert" ] && [ ! -f $IRCD ]; then
+if [ "$1" != "mkcert" ] && [ ! -f $IRCD ]; then
 	echo "ERROR: Could not find the IRCd binary ($IRCD)"
 	echo "This could mean two things:"
 	echo "1) You forgot to run 'make install' after running 'make'"
@@ -269,7 +269,7 @@ __EOF__
 	echo "Thanks!"
 elif [ "$1" = "spki" -o "$1" = "spkifp" ] ; then
 	$UNREALIRCDCTL $*
-elif [ "$1" = "makecert" ] ; then
+elif [ "$1" = "mkcert" ] ; then
 	TLSDIR="$CONFDIR/tls"
 	KEY="$TLSDIR/server.key.pem"
 	CERT="$TLSDIR/server.cert.pem"
@@ -507,13 +507,13 @@ else
 	echo "unrealircd stop          Stop (kill) the IRC Server"
 	echo "unrealircd rehash        Reload the configuration file"
 	echo "unrealircd reloadtls     Reload the SSL/TLS certificates"
-	echo "unrealircd makecert      Create or replace the self-signed TLS certificate"
 	echo "unrealircd restart       Restart the IRC Server (stop+start)"
 	echo "unrealircd status        Show current status of the IRC Server"
 	echo "unrealircd module-status Show all currently loaded modules"
 	echo "unrealircd upgrade       Upgrade UnrealIRCd to the latest version (or the next available"
  	echo "                         release candidate if the --rc argument is used)"
 	echo "unrealircd mkpasswd      Hash a password"
+	echo "unrealircd mkcert        Create or replace the self-signed TLS certificate"
 	echo "unrealircd version       Display the UnrealIRCd version"
 	echo "unrealircd module        Install and uninstall 3rd party modules"
 	echo "unrealircd croncheck     For use in crontab: this checks if the server"
