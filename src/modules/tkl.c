@@ -413,6 +413,10 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			has_action = 1;
 			errors += test_ban_action_config(cep);
 		}
+		else if (!strcmp(cep->name, "except"))
+		{
+			test_match_block(cf, cep, &errors);
+		}
 		else if (!cep->value)
 		{
 			config_error_empty(cep->file->filename, cep->line_number,
@@ -516,10 +520,6 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 				             cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			}
-		}
-		else if (!strcmp(cep->name, "except"))
-		{
-			test_match_block(cf, cep, &errors);
 		}
 		else
 		{
