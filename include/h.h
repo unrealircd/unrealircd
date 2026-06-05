@@ -1091,9 +1091,11 @@ extern void read_packet(int fd, int revents, void *data);
 extern int process_packet(Client *cptr, char *readbuf, int length, int killsafely);
 extern int parse_chanmode(ParseMode *pm, const char *modebuf_in, const char *parabuf_in);
 extern int dead_socket(Client *to, const char *notice);
+extern MODVAR pcre2_match_context *unreal_pcre2_match_ctx;
+extern void init_match(void);
 extern Match *unreal_create_match(MatchType type, const char *str, char **error);
 extern void unreal_delete_match(Match *m);
-extern int unreal_match(Match *m, const char *str);
+extern int unreal_match(Match *m, const char *str, const char **error);
 extern int unreal_match_method_strtoval(const char *str);
 extern char *unreal_match_method_valtostr(int val);
 #ifdef _WIN32

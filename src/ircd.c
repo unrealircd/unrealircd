@@ -547,6 +547,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 
 	init_hash();
 	log_throttle_init();
+	init_match();
 
 	SetupEvents();
 

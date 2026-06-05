@@ -1281,6 +1281,29 @@ char *spamfilter_id(TKL *tk)
 	return buf;
 }
 
+/* Warn opers when a spamfilter regex could not finish (eg. it hit the
+ * PCRE2 match or depth limit). The match is treated as no-match, so we
+ * only warn and do not remove the spamfilter.
+ */
+static void spamfilter_regex_error(TKL *tkl, const char *regex_error)
+{
+	if (tkl->type & TKL_GLOBAL)
+	{
+		unreal_log(ULOG_WARNING, "tkl", "SPAMFILTER_REGEX_ERROR", NULL,
+		           "[Spamfilter] Regex aborted ($regex_error) for '$tkl'. Possibly too complex regex? "
+		           "To delete, use: /SPAMFILTER del $spamfilter_id",
+		           log_data_string("regex_error", regex_error),
+		           log_data_string("spamfilter_id", spamfilter_id(tkl)),
+		           log_data_tkl("tkl", tkl));
+	} else {
+		unreal_log(ULOG_WARNING, "tkl", "SPAMFILTER_REGEX_ERROR", NULL,
+		           "[Spamfilter] Regex aborted ($regex_error) for '$tkl'. Possibly too complex regex? "
+		           "To remove it, edit your config file",
+		           log_data_string("regex_error", regex_error),
+		           log_data_tkl("tkl", tkl));
+	}
+}
+
 int tkl_ip_change(Client *client, const char *oldip)
 {
 	TKL *tkl;
@@ -3774,9 +3797,15 @@ int spamfilter_check_users(TKL *tkl)
 	{
 		if (MyUser(client))
 		{
+			const char *regex_error = NULL;
+
 			spamfilter_build_user_string(spamfilter_user, client->name, client);
-			if (!unreal_match(tkl->ptr.spamfilter->match, spamfilter_user))
+			if (!unreal_match(tkl->ptr.spamfilter->match, spamfilter_user, &regex_error))
+			{
+				if (regex_error)
+					spamfilter_regex_error(tkl, regex_error);
 				continue; /* No match */
+			}
 
 			/* matched! */
 			unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
@@ -5589,6 +5618,8 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 
 		if (tkl->ptr.spamfilter->match && (tkl->ptr.spamfilter->match->type != MATCH_NONE))
 		{
+			const char *regex_error = NULL;
+
 #ifdef SPAMFILTER_DETECTSLOW
 			if (tkl->ptr.spamfilter->match->type == MATCH_PCRE_REGEX)
 			{
@@ -5600,11 +5631,11 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 #endif
 
 			if (tkl->ptr.spamfilter->input_conversion == INPUT_CONVERSION_STRIP_CONTROL_CODES)
-				ret = unreal_match(tkl->ptr.spamfilter->match, str); /* StripControlCodes() */
+				ret = unreal_match(tkl->ptr.spamfilter->match, str, &regex_error); /* StripControlCodes() */
 			else if (tkl->ptr.spamfilter->input_conversion == INPUT_CONVERSION_CONFUSABLES)
-				ret = unreal_match(tkl->ptr.spamfilter->match, str_deconfused ? str_deconfused : str); /* utf8_convert_confusables(), with fallback */
+				ret = unreal_match(tkl->ptr.spamfilter->match, str_deconfused ? str_deconfused : str, &regex_error); /* utf8_convert_confusables(), with fallback */
 			else
-				ret = unreal_match(tkl->ptr.spamfilter->match, str_in); /* raw */
+				ret = unreal_match(tkl->ptr.spamfilter->match, str_in, &regex_error); /* raw */
 
 #ifdef SPAMFILTER_DETECTSLOW
 			if (tkl->ptr.spamfilter->match->type == MATCH_PCRE_REGEX)
@@ -5633,6 +5664,9 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 				}
 			}
 #endif
+
+			if (regex_error)
+				spamfilter_regex_error(tkl, regex_error);
 		} else {
 			/* There is no ::match but there was a ::rule, and that is enough for a match.. */
 			if (tkl->ptr.spamfilter->rule)

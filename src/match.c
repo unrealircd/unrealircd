@@ -35,6 +35,8 @@ u_char touppertab[], tolowertab[];
 #define tolowertab2 tolowertab
 #define lc(x) tolowertab2[x]
 
+pcre2_match_context *unreal_pcre2_match_ctx = NULL;
+
 /* Match routine for special cases where escaping is needed in a normal fashion.
  * Checks a string ('name') against a globbing(+more) pattern ('mask').
  * Original by Douglas A Lewis (dalewis@acsu.buffalo.edu).
@@ -369,6 +371,17 @@ u_char char_atribs[] = {
 /* f0-ff */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
+/* Set up global match state. Called once at startup. */
+void init_match(void)
+{
+	unreal_pcre2_match_ctx = pcre2_match_context_create(NULL);
+	if (unreal_pcre2_match_ctx)
+	{
+		pcre2_set_match_limit(unreal_pcre2_match_ctx, UNREAL_PCRE2_MATCH_LIMIT);
+		pcre2_set_depth_limit(unreal_pcre2_match_ctx, UNREAL_PCRE2_DEPTH_LIMIT);
+	}
+}
+
 /** Free up all resources of an Match entry (including the struct itself).
  * NOTE: this function may (also) be called for Match structs that have only been
  *       setup half-way, so use special care when accessing members (NULL checks!)
@@ -441,28 +454,46 @@ Match *unreal_create_match(MatchType type, const char *str, char **error)
 }
 
 /** Try to match an Match entry ('m') against a string ('str').
+ * @param error  If non-NULL, set to an error string when the regex could not
+ *               complete (eg. a resource limit was hit), or to NULL otherwise.
+ *               Points to a static buffer, valid until the next unreal_match().
  * @returns 1 if matched, 0 if not.
  * @note These (more logical) return values are opposite to the match_simple() function.
  */
-int unreal_match(Match *m, const char *str)
+int unreal_match(Match *m, const char *str, const char **error)
 {
+	static char errbuf[256];
+
+	if (error)
+		*error = NULL;
+
 	if (m->type == MATCH_SIMPLE)
 	{
 		if (match_simple(m->str, str))
 			return 1;
 		return 0;
 	}
-	
+
 	if (m->type == MATCH_PCRE_REGEX)
 	{
 		pcre2_match_data *md = pcre2_match_data_create(9, NULL);
 		int ret;
-		
-		ret = pcre2_match(m->ext.pcre2_expr, str, PCRE2_ZERO_TERMINATED, 0, 0, md, NULL); /* run the regex */
+
+		ret = pcre2_match(m->ext.pcre2_expr, str, PCRE2_ZERO_TERMINATED, 0, 0, md, unreal_pcre2_match_ctx); /* run the regex */
 		pcre2_match_data_free(md); /* yeah, we never use it. unfortunately argument must be non-NULL for pcre2_match() */
-		
+
 		if (ret > 0)
-			return 1; /* MATCH */		
+			return 1; /* MATCH */
+
+		if (error && (ret < 0) && (ret != PCRE2_ERROR_NOMATCH) && (ret != PCRE2_ERROR_PARTIAL))
+		{
+			/* Regex did not finish (eg. hit the match, depth or JIT stack limit).
+			 * Report it so the caller can warn. We still return no-match.
+			 */
+			*errbuf = '\0';
+			pcre2_get_error_message(ret, errbuf, sizeof(errbuf));
+			*error = errbuf;
+		}
 		return 0; /* NO MATCH */
 	}
 
@@ -681,7 +712,7 @@ const char *stripbadwords(const char *str, ConfigItem_badword *start_bw, int *bl
 				pcre2_match_data *md = pcre2_match_data_create(9, NULL);
 				int ret;
 
-				ret = pcre2_match(this_word->pcre2_expr, cleanstr, PCRE2_ZERO_TERMINATED, 0, 0, md, NULL); /* run the regex */
+				ret = pcre2_match(this_word->pcre2_expr, cleanstr, PCRE2_ZERO_TERMINATED, 0, 0, md, unreal_pcre2_match_ctx); /* run the regex */
 				pcre2_match_data_free(md); /* yeah, we never use it. unfortunately argument must be non-NULL for pcre2_match() */
 				if (ret > 0)
 				{
@@ -702,7 +733,7 @@ const char *stripbadwords(const char *str, ConfigItem_badword *start_bw, int *bl
 					/* ^^ we need to free 'md' in ALL circumstances.
 					 * remember this if you break or continue in this loop!
 					 */
-					ret = pcre2_match(this_word->pcre2_expr, ptr, PCRE2_ZERO_TERMINATED, 0, 0, md, NULL); /* run the regex */
+					ret = pcre2_match(this_word->pcre2_expr, ptr, PCRE2_ZERO_TERMINATED, 0, 0, md, unreal_pcre2_match_ctx); /* run the regex */
 					if (ret > 0)
 					{
 						dd = pcre2_get_ovector_pointer(md);

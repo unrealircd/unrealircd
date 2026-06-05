@@ -7,15 +7,21 @@ This is work in progress and may not always be a stable version.
 ### Enhancements:
 
 ### Changes:
+* Spamfilter regexes now use more sensible defaults in terms of "max effort",
+  similar to what PHP has been using for years. This means very slow regexes
+  will now raise a `SPAMFILTER_REGEX_ERROR` warning during execution if
+  this happens (should be extremely rare).
 
 ### Fixes:
-* Harden the built-in HTTPS client
+* Hardening of the built-in HTTPS client
 
 ### Developers and protocol:
 * URL API: The OutgoingWebRequest `max_size` (introduced last release) now
   also caps file-backed downloads. Default for file-backed when left at 0
   is 50MB (`DOWNLOAD_MAX_SIZE_FILE_BACKED`). For memory-backed, it stays
   at 1MB like in 6.2.5 (`DOWNLOAD_MAX_SIZE_MEMORY_BACKED`).
+* The `unreal_match()` function now has a 3rd argument `const char **error`
+  for communicating regex errors back. Just set to `NULL` if you don't care.
 * If you do something to a user that would (potentially) move the user from
   `unknown-users` to `known-users` (or vice versa) then you should call
   `update_known_user_cache(client);` to update the known users cache.

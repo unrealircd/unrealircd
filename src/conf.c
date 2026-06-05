@@ -1906,6 +1906,7 @@ void config_setdefaultsettings(Configuration *i)
 	add_log_throttle_config(&i->log_throttle, "BUG_CT_BUCKET_MISSING", 5, 60, 0);
 	add_log_throttle_config(&i->log_throttle, "BUG_CT_NEGATIVE_COUNTER", 5, 60, 0);
 	add_log_throttle_config(&i->log_throttle, "BUG_DECREASE_IPUSERS_BUCKET", 5, 60, 0);
+	add_log_throttle_config(&i->log_throttle, "SPAMFILTER_REGEX_ERROR", 5, 60, 0);
 
 	/* TLS options */
 	i->tls_options = safe_alloc(sizeof(TLSOptions));

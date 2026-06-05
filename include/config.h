@@ -238,6 +238,16 @@
 #define SPAMFILTER_DETECTSLOW
 #endif
 
+/* Limits for PCRE2 regex matching (eg. spamfilter, badwords). A regex that
+ * exceeds these is aborted and treated as no match, instead of running
+ * unbounded. The match limit is honoured by JIT. The depth limit only applies
+ * to the non-JIT interpreter, since PCRE2 ignores it under JIT.
+ * We use the same defaults that PHP has been using for a long time (which is
+ * actually 10 times lower than PCRE2 defaults, as of 2026).
+ */
+#define UNREAL_PCRE2_MATCH_LIMIT	1000000
+#define UNREAL_PCRE2_DEPTH_LIMIT	100000
+
 /* Maximum number of ModData objects that may be attached to an object */
 /* UnrealIRCd 4.0.0:   8,     8, 4, 4
  * UnrealIRCd 4.0.14: 12,     8, 4, 4

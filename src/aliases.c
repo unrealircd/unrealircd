@@ -143,7 +143,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 
 		for (format = alias->format; format; format = format->next)
 		{
-			if (unreal_match(format->expr, ptr))
+			if (unreal_match(format->expr, ptr, NULL))
 			{
 				/* Parse the parameters */
 				int i = 0, j = 0, k = 1;
