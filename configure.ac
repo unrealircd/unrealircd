@@ -558,6 +558,11 @@ AS_IF([test "x$with_privatelibdir" = "xno"],
 AS_IF([test "x$PRIVATELIBDIR" = "x"],
 	[LDFLAGS_PRIVATELIBS=""],
 	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$PRIVATELIBDIR"], [Define the location of private libraries])
+		# Create the private library directory now with restrictive permissions.
+		# This must happen here rather than in the Makefile because the bundled
+		# libraries are installed into it during configure. It must also work when
+		# configure is run directly without ./Config having created it first.
+		mkdir -p "$PRIVATELIBDIR" && chmod 0700 "$PRIVATELIBDIR"
 		LDFLAGS_PRIVATELIBS="-Wl,-rpath,$PRIVATELIBDIR"
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS])
@@ -728,7 +733,7 @@ $ac_cv_prog_MAKER install PREFIX=$cur_dir/extras/argon2 || exit 1
 # lead to a crash of the currently running IRCd.
 rm -f "$PRIVATELIBDIR/"libargon2*
 # Now copy the new library files:
-cp -av $cur_dir/extras/argon2/lib/* $PRIVATELIBDIR/
+cp -av $cur_dir/extras/argon2/lib/* $PRIVATELIBDIR/ || exit 1
 CFLAGS="$save_cflags"
 LDFLAGS="$save_ldflags"
 ARGON2_CFLAGS="-I$cur_dir/extras/argon2/include"

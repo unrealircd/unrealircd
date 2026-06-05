@@ -11,6 +11,8 @@ This is work in progress and may not always be a stable version.
   similar to what PHP has been using for years. This means very slow regexes
   will now raise a `SPAMFILTER_REGEX_ERROR` warning during execution if
   this happens (should be extremely rare).
+* The UnrealIRCd base directory (eg `~/unrealircd/`) is now created with
+  0700 permissions, just like most subdirectories were.
 
 ### Fixes:
 * Hardening of the built-in HTTPS client

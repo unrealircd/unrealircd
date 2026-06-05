@@ -50,9 +50,12 @@ if [ -z "$BINDIR" -o -z "$DATADIR" -o -z "$CONFDIR" -o -z "$MODULESDIR" -o -z "$
 fi
 
 
+mkdir -p $BASEPATH
 mkdir -p $TMPDIR
-mkdir -p $PRIVATELIBDIR
 mkdir -p $CONFDIR
+chmod 0700 $BASEPATH
+chmod 0700 $TMPDIR
+chmod 0700 $CONFDIR
 
 # Do this even if we're not in advanced mode
 if [ "$ADVANCED" = "1" ] ; then
