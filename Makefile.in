@@ -224,6 +224,7 @@ install: all
 	fi
 	$(INSTALL) -m 0700 -d $(DESTDIR)@CONFDIR@/tls
 	$(INSTALL) -m 0600 doc/conf/tls/curl-ca-bundle.crt $(DESTDIR)@CONFDIR@/tls
+	$(INSTALL) -m 0600 doc/conf/tls/tls.cnf $(DESTDIR)@CONFDIR@/tls
 	@# delete modules/cap directory, to avoid confusing with U4 to U5 upgrades:
 	rm -rf $(DESTDIR)@MODULESDIR@/cap
 	$(INSTALL) -m 0700 -d $(DESTDIR)@MODULESDIR@/third
@@ -234,11 +235,6 @@ install: all
 	$(INSTALL) -m 0700 -d $(DESTDIR)@CACHEDIR@
 	$(INSTALL) -m 0700 -d $(DESTDIR)@PERMDATADIR@
 	$(INSTALL) -m 0700 -d $(DESTDIR)@LOGDIR@
-	-@if [ ! -f "$(DESTDIR)@CONFDIR@/tls/server.cert.pem" ] ; then \
-		$(INSTALL) -m 0600 server.req.pem $(DESTDIR)@CONFDIR@/tls ; \
-		$(INSTALL) -m 0600 server.key.pem $(DESTDIR)@CONFDIR@/tls ; \
-		$(INSTALL) -m 0600 server.cert.pem $(DESTDIR)@CONFDIR@/tls ; \
-	fi
 	@rm -f $(DESTDIR)@SCRIPTDIR@/source
 	ln -s @BUILDDIR@ $(DESTDIR)@SCRIPTDIR@/source
 	@echo ''
@@ -268,19 +264,9 @@ install: all
 		echo 'Again, be sure to change to the @SCRIPTDIR@ directory!' ; \
 	fi
 
-pem:	extras/tls.cnf
-	@echo "Generating server key..."
-	$(OPENSSLPATH) ecparam -out server.key.pem -name secp384r1 -genkey
-	@echo "Generating certificate request..."
-	$(OPENSSLPATH) req -new \
-              -config extras/tls.cnf -sha256 -out server.req.pem \
-              -key server.key.pem -nodes
-	@echo "Generating self-signed certificate..."
-	$(OPENSSLPATH) req -x509 -days 3650 -sha256 -nodes -in server.req.pem \
-               -key server.key.pem -out server.cert.pem
-	@echo "Setting permissions on server.*.pem files..."
-	chmod o-rwx server.req.pem server.key.pem server.cert.pem
-	chmod g-rwx server.req.pem server.key.pem server.cert.pem
+pem:
+	@echo "The command 'make pem' is no longer used to generate the TLS certificate."
+	@echo "Please run './unrealircd makecert' instead."
 
 Makefile: config.status Makefile.in
 	./config.status

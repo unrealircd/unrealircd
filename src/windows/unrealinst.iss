@@ -50,7 +50,7 @@ Source: "unrealsvc.exe";  DestDir: "{app}\bin"; Flags: ignoreversion signonce
 
 ; TLS certificate generation helpers
 Source: "src\windows\makecert.bat"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "extras\tls.cnf"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "doc\conf\tls\tls.cnf"; DestDir: "{app}\bin"; Flags: ignoreversion
 
 ; UnrealIRCd modules
 Source: "src\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion signonce

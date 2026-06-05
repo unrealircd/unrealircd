@@ -11,12 +11,13 @@ TMPDIR="@TMPDIR@"
 SCRIPTDIR="@SCRIPTDIR@"
 MODULESDIR="@MODULESDIR@"
 DOCDIR="@DOCDIR@"
+OPENSSLPATH="@OPENSSLPATH@"
 
 # When built with --with-asan, ASan does not dump core by default because
 # older gcc/clang might dump a 16TB core file. We explicitly enable it here.
 export ASAN_OPTIONS="abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1:log_path=$TMPDIR/unrealircd_asan:detect_leaks=0"
 
-if [ ! -f $IRCD ]; then
+if [ "$1" != "makecert" ] && [ ! -f $IRCD ]; then
 	echo "ERROR: Could not find the IRCd binary ($IRCD)"
 	echo "This could mean two things:"
 	echo "1) You forgot to run 'make install' after running 'make'"
@@ -268,6 +269,78 @@ __EOF__
 	echo "Thanks!"
 elif [ "$1" = "spki" -o "$1" = "spkifp" ] ; then
 	$UNREALIRCDCTL $*
+elif [ "$1" = "makecert" ] ; then
+	TLSDIR="$CONFDIR/tls"
+	KEY="$TLSDIR/server.key.pem"
+	CERT="$TLSDIR/server.cert.pem"
+
+	# Locate the OpenSSL configuration template. After 'make install' it
+	# lives in the TLS directory. During initial setup (./Config), before
+	# 'make install' has run, we use the copy in the source directory.
+	if [ -f "$TLSDIR/tls.cnf" ]; then
+		CNF="$TLSDIR/tls.cnf"
+	elif [ -f "$BUILDDIR/doc/conf/tls/tls.cnf" ]; then
+		CNF="$BUILDDIR/doc/conf/tls/tls.cnf"
+	else
+		echo "ERROR: Could not find the OpenSSL template tls.cnf"
+		echo "(Neither $TLSDIR/tls.cnf nor $BUILDDIR/doc/conf/tls/tls.cnf exists)"
+		exit 1
+	fi
+
+	if [ ! -d "$TLSDIR" ]; then
+		mkdir -p "$TLSDIR" || exit 1
+		chmod 0700 "$TLSDIR"
+	fi
+
+	REPLACED=0
+	if [ -f "$CERT" ] || [ -f "$KEY" ]; then
+		echo "This command will replace your existing server certificate and key."
+		echo "(in $TLSDIR)"
+		echo -n "Do you wish to proceed? [Y|N] "
+		read answer
+		case "$answer" in
+			[Yy]*)
+				;;
+			*)
+				echo "Aborted."
+				exit 1
+				;;
+		esac
+		REPLACED=1
+	fi
+
+	# Keep a backup of the previous certificate and key, so it can be
+	# restored if the newly generated one turns out to be unsuitable.
+	if [ "$REPLACED" = 1 ]; then
+		for f in "$KEY" "$CERT"; do
+			if [ -f "$f" ]; then
+				cp -p "$f" "$f.old"
+			fi
+		done
+	fi
+
+	# Make sure the private key is not briefly world/group readable while
+	# it is being generated.
+	umask 077
+
+	echo "Generating server key..."
+	"$OPENSSLPATH" ecparam -out "$KEY" -name secp384r1 -genkey || exit 1
+	echo "Generating self-signed certificate..."
+	"$OPENSSLPATH" req -new -x509 -key "$KEY" -config "$CNF" -days 3650 -sha256 -out "$CERT" || exit 1
+
+	echo "Setting permissions on server.*.pem files..."
+	chmod o-rwx "$KEY" "$CERT"
+	chmod g-rwx "$KEY" "$CERT"
+
+	echo ""
+	echo "A new self-signed certificate and key have been generated in $TLSDIR"
+	if [ "$REPLACED" = 1 ]; then
+		echo "Your previous certificate and key were backed up with a .old suffix."
+	fi
+	echo "Note: the SPKI fingerprint has changed. If other servers link to you and"
+	echo "      verify a fingerprint, you need to update the link { } block on their side."
+	echo "If UnrealIRCd is currently running, load the new certificate with:"
+	echo "  $0 reloadtls"
 elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 	if [ ! -d "$BUILDDIR" ]; then
 		echo "UnrealIRCd source not found. Sorry, it is not possible to patch."
@@ -434,6 +507,7 @@ else
 	echo "unrealircd stop          Stop (kill) the IRC Server"
 	echo "unrealircd rehash        Reload the configuration file"
 	echo "unrealircd reloadtls     Reload the SSL/TLS certificates"
+	echo "unrealircd makecert      Create or replace the self-signed TLS certificate"
 	echo "unrealircd restart       Restart the IRC Server (stop+start)"
 	echo "unrealircd status        Show current status of the IRC Server"
 	echo "unrealircd module-status Show all currently loaded modules"

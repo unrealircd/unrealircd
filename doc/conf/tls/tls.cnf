@@ -4,7 +4,6 @@
 # Note: RSA bits is ignored, as we use ECC now
 default_bits = 2048
 distinguished_name = req_dn
-x509_extensions = cert_type
 
 [ req_dn ]
 countryName = Country Name
@@ -25,7 +24,4 @@ organizationalUnitName_default  = IRCd
 
 0.commonName                    = Common Name (Full domain of your server)
 1.commonName_value              = localhost
-
-[ cert_type ]
-nsCertType = server
 

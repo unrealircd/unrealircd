@@ -188,7 +188,7 @@ if [ "$QUICK" != "1" ] ; then
 			echo "*******************************************************************************"
 			echo "Press ENTER to continue"
 			read cc
-			$MAKE pem
+			./unrealircd makecert
 			echo "Certificate created successfully."
 			sleep 1
 		else
