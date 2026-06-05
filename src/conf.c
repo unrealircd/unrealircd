@@ -10624,7 +10624,7 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 			continue;
 		}
 		if (!strcmp(cep->name, "format")) {
-			char *err = NULL;
+			const char *err = NULL;
 			Match *expr;
 			char has_type = 0, has_target = 0, has_parameters = 0;
 

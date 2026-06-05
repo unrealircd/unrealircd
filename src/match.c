@@ -397,7 +397,7 @@ void unreal_delete_match(Match *m)
 	safe_free(m);
 }
 
-Match *unreal_create_match(MatchType type, const char *str, char **error)
+Match *unreal_create_match(MatchType type, const char *str, const char **error)
 {
 	Match *m = safe_alloc(sizeof(Match));
 	static char errorbuf[512];

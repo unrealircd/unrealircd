@@ -22,6 +22,9 @@ This is work in progress and may not always be a stable version.
   at 1MB like in 6.2.5 (`DOWNLOAD_MAX_SIZE_MEMORY_BACKED`).
 * The `unreal_match()` function now has a 3rd argument `const char **error`
   for communicating regex errors back. Just set to `NULL` if you don't care.
+* Similarly, `unreal_create_match()` last argument is now `const char **error`
+  (const was added). So when callers use that, their variable `char *err`
+  needs to become `const char *err`.
 * If you do something to a user that would (potentially) move the user from
   `unknown-users` to `known-users` (or vice versa) then you should call
   `update_known_user_cache(client);` to update the known users cache.

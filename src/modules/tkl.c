@@ -533,7 +533,7 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	if (match && match_type)
 	{
 		Match *m;
-		char *err;
+		const char *err;
 
 		m = unreal_create_match(match_type, match, &err);
 		if (!m)
@@ -733,7 +733,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	if (match)
 	{
-		char *err;
+		const char *err;
 		m = unreal_create_match(match_type, match, &err);
 		if (!m)
 		{
@@ -1227,7 +1227,7 @@ void recompile_spamfilters(void)
 {
 	TKL *tkl;
 	Match *m;
-	char *err;
+	const char *err;
 	int converted = 0;
 	int index;
 
@@ -2517,7 +2517,7 @@ CMD_FUNC(cmd_spamfilter)
 	int n;
 	Match *m;
 	int match_type = 0;
-	char *err = NULL;
+	const char *err = NULL;
 
 	if (IsServer(client))
 		return;
@@ -4741,7 +4741,7 @@ CMD_FUNC(cmd_tkl_add)
 		BanActionValue action;
 		unsigned short target;
 		/* helper variables */
-		char *err;
+		const char *err;
 
 		if (parc < 12)
 		{

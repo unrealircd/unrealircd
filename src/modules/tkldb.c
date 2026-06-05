@@ -678,7 +678,7 @@ int read_tkldb(void)
 		if (TKLIsSpamfilter(tkl))
 		{
 			int match_method;
-			char *err = NULL;
+			const char *err = NULL;
 
 			tkl->ptr.spamfilter = safe_alloc(sizeof(Spamfilter));
 

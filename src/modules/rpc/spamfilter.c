@@ -210,7 +210,7 @@ RPC_CALL_FUNC(rpc_spamfilter_add)
 	char targetbuf[64];
 	char actionbuf[2];
 	char reasonbuf[512];
-	char *err = NULL;
+	const char *err = NULL;
 
 	if (!spamfilter_select_criteria(client, request, params, &name, &match_type, &targets, targetbuf, sizeof(targetbuf), &action, actionbuf))
 		return; /* Error already communicated to client */
