@@ -1935,8 +1935,8 @@ void config_setdefaultsettings(Configuration *i)
 	safe_strdup(i->reject_message_too_many_new_connections_ipv6_range, "Too many new connections from this IPv6 range ($prefix_addr/$prefix_len) [connthrottle]");
 	safe_strdup(i->reject_message_server_full, "This server is full");
 	safe_strdup(i->reject_message_unauthorized, "You are not authorized to connect to this server");
-	safe_strdup(i->reject_message_kline, "You are not welcome on this server. $bantype: $banreason. Email $klineaddr for more information.");
-	safe_strdup(i->reject_message_gline, "You are not welcome on this network. $bantype: $banreason. Email $glineaddr for more information.");
+	safe_strdup(i->reject_message_kline, "You are not welcome on this server. $bantype: $banreason. Email $klineaddr for more information.$banid");
+	safe_strdup(i->reject_message_gline, "You are not welcome on this network. $bantype: $banreason. Email $glineaddr for more information.$banid");
 
 	i->topic_setter = SETTER_NICK_USER_HOST;
 	i->ban_setter = SETTER_NICK_USER_HOST;

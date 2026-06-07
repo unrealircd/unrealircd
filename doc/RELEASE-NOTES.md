@@ -5,6 +5,28 @@ This is the git version (development version) for future UnrealIRCd 6.2.6.
 This is work in progress and may not always be a stable version.
 
 ### Enhancements:
+* Server bans and Spamfilters now have a unique ID, like `G7K2MP9WQX3`:
+  * The first letter denotes the type: `G` for gline, `K` for kline,
+    `Z` for (g)zline.
+  * The ID is shown to the affected user, so they can paste the ID back to
+    network staff. It is `$banid` in
+    [set::reject-message](https://www.unrealircd.org/docs/Set_block#set::reject-message)
+    and included by default. If you have a custom set::reject-message in
+    your config file then you will have to add it in manually.
+  * IRCOps see the ID in `STATS gline` and similar and can search for it
+    with e.g. `STATS gline +i G7K2MP9WQX3`.
+  * Spamfilters also have an ID, and we already had something similar that
+    could be used for `SPAMFILTER del <id>` that was only local-server.
+    For new spamfilters this is now a network wide ID as well.
+  * When a server ban was placed by a spamfilter, `STATS gline` shows the
+    originating spamfilter's ID, so it can be traced back.
+  * The `STATS gline` and other TKL stats changed format, see
+    *Developers and protocol* if you use scripts or your client depends
+    on the exact numeric format.
+  * For TKL IDs to reach all servers, all servers need to be on 6.2.6
+    or later, especially the hubs. If there is one server in-between
+    that is older, then TKL IDs don't propagate properly and the ID
+    will be empty.
 
 ### Changes:
 * Spamfilter regexes now use more sensible defaults in terms of "max effort",
@@ -34,6 +56,31 @@ This is work in progress and may not always be a stable version.
   `update_known_user_cache(client);` to update the known users cache.
   For example, if you have some authentication module that marks a user
   as IsLoggedIn.
+* TKL entries can now use message tags to carry extra data, similar to how
+  `s2s-md` worked for early moddata, we have `s2s-tkl`. We have two at
+  the moment:
+  * `s2s-tkl/id`: network-wide unique ID for the TKL entry
+  * `s2s-tkl/spamfilter_id`: for server bans, if they were set by spamfilter,
+    the spamfilter TKL ID.
+  * Example: `@s2s-tkl/id=xxxx;s2s-tkl/spamfilter_id=yyyy :server TKL .....`
+  * Older servers will not pass these along, so for this functionality to
+    work all servers need to be on latest version, especially your hub.
+* The TKL `STATS` numerics has more fields now, they are added right before
+  last (so before the `:reason` or `:regex`):
+  * `RPL_STATSGLINE` (223) ends with `hits lasthit spamfilter_id id :reason`
+  * `RPL_STATSQLINE` (217) ends with `hits lasthit id :reason`
+  * `RPL_STATSSPAMF` (229) ends with `lasthit lasthit_except id :regex`
+    (which comes right after `hits hits_except`, which was already there)
+  * `RPL_STATSEXCEPTTKL` (230) ends with `id :reason`
+  * An absent id or spamfilter_id is sent as `-`. The hits/lasthit/lasthit_except
+    fields are reserved and currently always `0`; FIXME in later commit.
+* `banned_client()` has an extra parameter `const char *tklid` for the
+   TKL ID (or NULL if none).
+* The tkldb database version is now 6260 and stores the id and spamfilter_id.
+  FIXME: also prepared for hit stats, so update this release note line in later commit.
+  Older databases still load. Downside: you cannot downgrade UnrealIRCd.
+* JSON for TKL entries (server logs and JSON-RPC) now includes `id`, and
+  `spamfilter_id` for spamfilter-created server bans.
 
 UnrealIRCd 6.2.5
 -----------------

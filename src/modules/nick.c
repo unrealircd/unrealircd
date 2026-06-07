@@ -1097,7 +1097,7 @@ int _register_user(Client *client)
 	if ((bconf = find_ban(NULL, client->info, CONF_BAN_REALNAME)))
 	{
 		ircstats.is_ref++;
-		banned_client(client, "realname", bconf->reason?bconf->reason:"", 0, 0);
+		banned_client(client, "realname", bconf->reason?bconf->reason:"", NULL, 0, 0);
 		return 0;
 	}
 	/* Check G/Z lines before shuns -- kill before quite -- codemastr */

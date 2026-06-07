@@ -124,7 +124,7 @@ CMD_FUNC(cmd_chgname)
 		if (!ValidatePermissionsForPath("immune:server-ban:ban-realname",target,NULL,NULL,NULL) &&
 		    ((bconf = find_ban(NULL, target->info, CONF_BAN_REALNAME))))
 		{
-			banned_client(target, "realname", bconf->reason?bconf->reason:"", 0, 0);
+			banned_client(target, "realname", bconf->reason?bconf->reason:"", NULL, 0, 0);
 			return;
 		}
 	}

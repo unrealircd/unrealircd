@@ -565,6 +565,8 @@ void json_expand_tkl(json_t *root, const char *key, TKL *tkl, int detail)
 	json_object_set_new(j, "type", json_string_unreal(tkl_type_config_string(tkl))); // Eg 'kline'
 	json_object_set_new(j, "type_string", json_string_unreal(tkl_type_string(tkl))); // Eg 'Soft K-Line'
 	json_object_set_new(j, "set_by", json_string_unreal(tkl->set_by));
+	if (tkl->id[0])
+		json_object_set_new(j, "id", json_string_unreal(tkl->id));
 	json_object_set_new(j, "set_at", json_timestamp(tkl->set_at));
 	json_object_set_new(j, "expire_at", json_timestamp(tkl->expire_at));
 	*buf = '\0';
@@ -592,6 +594,8 @@ void json_expand_tkl(json_t *root, const char *key, TKL *tkl, int detail)
 		else
 			json_object_set_new(j, "name", json_string_unreal(tkl_uhost(tkl, buf, sizeof(buf), 0)));
 		json_object_set_new(j, "reason", json_string_unreal(tkl->ptr.serverban->reason));
+		if (tkl->spamfilter_id[0])
+			json_object_set_new(j, "spamfilter_id", json_string_unreal(tkl->spamfilter_id));
 	} else
 	if (TKLIsNameBan(tkl))
 	{

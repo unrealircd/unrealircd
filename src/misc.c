@@ -2967,7 +2967,7 @@ const char *command_issued_by_rpc(MessageTag *mtags)
 /** Is 's' a valid spamfilter id? A-Z, 0-9 and _ and with a max length. */
 int valid_spamfilter_id(const char *s)
 {
-	if (strlen(s) > MAXSPAMFILTERIDLEN)
+	if (strlen(s) >= TKLIDLEN)
 		return 0;
 	return 1;
 }

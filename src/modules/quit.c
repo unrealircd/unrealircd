@@ -38,7 +38,7 @@ CMD_FUNC(cmd_quit);
 void _exit_client(Client *client, MessageTag *recv_mtags, const char *comment);
 void _exit_client_fmt(Client *client, MessageTag *recv_mtags, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 3, 4)));
 void _exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, const char *comment);
-void _banned_client(Client *client, const char *bantype, const char *reason, int global, int noexit);
+void _banned_client(Client *client, const char *bantype, const char *reason, const char *tklid, int global, int noexit);
 static void remove_dependents(Client *client, Client *from, MessageTag *mtags, const char *comment, const char *splitstr);
 static void exit_one_client(Client *, MessageTag *mtags_i, const char *);
 static int should_hide_ban_reason(Client *client, const char *reason);
@@ -491,17 +491,26 @@ static void exit_one_client(Client *client, MessageTag *mtags_i, const char *com
  *
  * @note This function will call exit_client() appropriately.
  */
-void _banned_client(Client *client, const char *bantype, const char *reason, int global, int noexit)
+void _banned_client(Client *client, const char *bantype, const char *reason, const char *tklid, int global, int noexit)
 {
 	char buf[512];
+	char idbuf[64];
 	char *fmt = global ? iConf.reject_message_gline : iConf.reject_message_kline;
-	const char *vars[6], *values[6];
+	const char *vars[7], *values[7];
 	MessageTag *mtags = NULL;
 
 	if (!MyConnect(client))
 		abort();
 
 	RunHook(HOOKTYPE_BANNED_CLIENT, client, bantype, reason, global);
+
+	/* The " [ID: xxx]" fragment, empty when there is no id. Used both as the $banid
+	 * reject-message variable and appended to the quit reason / real-quit-reason mtag.
+	 */
+	if (!BadPtr(tklid))
+		snprintf(idbuf, sizeof(idbuf), " [ID: %s]", tklid);
+	else
+		idbuf[0] = '\0';
 
 	/* This was: "You are not welcome on this %s. %s: %s. %s" but is now dynamic: */
 	vars[0] = "bantype";
@@ -514,8 +523,10 @@ void _banned_client(Client *client, const char *bantype, const char *reason, int
 	values[3] = GLINE_ADDRESS ? GLINE_ADDRESS : KLINE_ADDRESS; /* fallback to klineaddr */
 	vars[4] = "ip";
 	values[4] = GetIP(client);
-	vars[5] = NULL;
-	values[5] = NULL;
+	vars[5] = "banid";
+	values[5] = idbuf;
+	vars[6] = NULL;
+	values[6] = NULL;
 	buildvarstring(fmt, buf, sizeof(buf), vars, values);
 
 	/* This is a bit extensive but we will send both a YOUAREBANNEDCREEP
@@ -537,13 +548,13 @@ void _banned_client(Client *client, const char *bantype, const char *reason, int
 		/* Hide the ban reason, but put the real reason in unrealircd.org/real-quit-reason */
 		MessageTag *m = safe_alloc(sizeof(MessageTag));
 		safe_strdup(m->name, "unrealircd.org/real-quit-reason");
-		snprintf(buf, sizeof(buf), "Banned (%s): %s", bantype, reason);
+		snprintf(buf, sizeof(buf), "Banned (%s): %s%s", bantype, reason, idbuf);
 		safe_strdup(m->value, buf);
 		AddListItem(m, mtags);
 		/* And the quit reason for anyone else, goes here.. */
-		snprintf(buf, sizeof(buf), "Banned (%s)", bantype);
+		snprintf(buf, sizeof(buf), "Banned (%s)%s", bantype, idbuf);
 	} else {
-		snprintf(buf, sizeof(buf), "Banned (%s): %s", bantype, reason);
+		snprintf(buf, sizeof(buf), "Banned (%s): %s%s", bantype, reason, idbuf);
 	}
 
 	if (noexit != NO_EXIT_CLIENT)
