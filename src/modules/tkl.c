@@ -55,6 +55,7 @@ CMD_FUNC(cmd_eline);
 CMD_FUNC(cmd_spaminfo);
 void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type);
 int _tkl_hash(unsigned int c);
+void _tkl_hit(Client *client, TKL *tkl);
 char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);
 char _tkl_configtypetochar(const char *name);
@@ -222,6 +223,7 @@ MOD_TEST()
 	EfunctionAddVoid(modinfo->handle, EFUNC_FREE_TKL, _free_tkl);
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_CHECK_LOCAL_REMOVE_SHUN, _tkl_check_local_remove_shun);
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_TKLINE_MATCH, _find_tkline_match);
+	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_HIT, _tkl_hit);
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_SHUN, _find_shun);
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_SPAMFILTER_USER, _find_spamfilter_user);
 	EfunctionAddPVoid(modinfo->handle, EFUNC_FIND_QLINE, TO_PVOIDFUNC(_find_qline));
@@ -1497,6 +1499,16 @@ static const char *spamfilter_fallback_id(TKL *tkl)
 	return buf;
 }
 
+/** Called when a TKL is enforced against a client: bump its hit counter and
+ * remember when. Call this while 'client' is still valid (before the client is
+ * exited), so it stays safe if we later add a hook here.
+ */
+void _tkl_hit(Client *client, TKL *tkl)
+{
+	tkl->hits++;
+	tkl->lasthit = TStime();
+}
+
 /* Warn opers when a spamfilter regex could not finish (eg. it hit the
  * PCRE2 match or depth limit). The match is treated as no-match, so we
  * only warn and do not remove the spamfilter.
@@ -1523,7 +1535,10 @@ int tkl_ip_change(Client *client, const char *oldip)
 {
 	TKL *tkl;
 	if ((tkl = find_tkline_match_zap(client)))
+	{
+		tkl_hit(client, tkl);
 		banned_client(client, "Z-Lined", tkl->ptr.serverban->reason, tkl->id, (tkl->type & TKL_GLOBAL)?1:0, NO_EXIT_CLIENT);
+	}
 	return 0;
 }
 
@@ -1532,6 +1547,7 @@ int tkl_accept(Client *client)
 	TKL *tkl;
 	if ((tkl = find_tkline_match_zap(client)))
 	{
+		tkl_hit(client, tkl);
 		banned_client(client, "Z-Lined", tkl->ptr.serverban->reason, tkl->id, (tkl->type & TKL_GLOBAL)?1:0, NO_EXIT_CLIENT);
 		return 2; // TODO: HOOK_DENY_ALWAYS;
 	}
@@ -3916,6 +3932,7 @@ int _find_tkline_match(Client *client, int skip_soft)
 	if (tkl->type & TKL_KILL)
 	{
 		ircstats.is_ref++;
+		tkl_hit(client, tkl);
 		if (tkl->type & TKL_GLOBAL)
 			banned_client(client, "G-Lined", tkl->ptr.serverban->reason, tkl->id, 1, 0);
 		else
@@ -3925,6 +3942,7 @@ int _find_tkline_match(Client *client, int skip_soft)
 	if (tkl->type & TKL_ZAP)
 	{
 		ircstats.is_ref++;
+		tkl_hit(client, tkl);
 		banned_client(client, "Z-Lined", tkl->ptr.serverban->reason, tkl->id, (tkl->type & TKL_GLOBAL)?1:0, 0);
 		return 1; /* killed */
 	}
@@ -3967,6 +3985,7 @@ int _find_shun(Client *client)
 				/* Found match. Now check for exception... */
 				if (find_tkl_exception(TKL_SHUN, client))
 					return 0;
+				tkl_hit(client, tkl);
 				SetShunned(client);
 				return 1;
 			}
@@ -4337,7 +4356,7 @@ int tkl_stats_matcher(Client *client, int type, const char *para, TKLFlag *tklfl
 			{
 				sendnumeric(client, RPL_STATSGLINE, 'K', namevalue_nospaces(m),
 					   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
-					   (long long)(TStime() - tkl->set_at), tkl->set_by, (long long)0, (long long)0, spamfilter_id_str, id_str, tkl->ptr.serverban->reason);
+					   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->hits, (long long)tkl->lasthit, spamfilter_id_str, id_str, tkl->ptr.serverban->reason);
 
 			}
 		} else {
@@ -4347,31 +4366,31 @@ int tkl_stats_matcher(Client *client, int type, const char *para, TKLFlag *tklfl
 			{
 				sendnumeric(client, RPL_STATSGLINE, 'G', uhost,
 					   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
-					   (long long)(TStime() - tkl->set_at), tkl->set_by, (long long)0, (long long)0, spamfilter_id_str, id_str, tkl->ptr.serverban->reason);
+					   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->hits, (long long)tkl->lasthit, spamfilter_id_str, id_str, tkl->ptr.serverban->reason);
 			} else
 			if (tkl->type == (TKL_ZAP | TKL_GLOBAL))
 			{
 				sendnumeric(client, RPL_STATSGLINE, 'Z', uhost,
 					   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
-					   (long long)(TStime() - tkl->set_at), tkl->set_by, (long long)0, (long long)0, spamfilter_id_str, id_str, tkl->ptr.serverban->reason);
+					   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->hits, (long long)tkl->lasthit, spamfilter_id_str, id_str, tkl->ptr.serverban->reason);
 			} else
 			if (tkl->type == (TKL_SHUN | TKL_GLOBAL))
 			{
 				sendnumeric(client, RPL_STATSGLINE, 's', uhost,
 					   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
-					   (long long)(TStime() - tkl->set_at), tkl->set_by, (long long)0, (long long)0, spamfilter_id_str, id_str, tkl->ptr.serverban->reason);
+					   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->hits, (long long)tkl->lasthit, spamfilter_id_str, id_str, tkl->ptr.serverban->reason);
 			} else
 			if (tkl->type == (TKL_KILL))
 			{
 				sendnumeric(client, RPL_STATSGLINE, 'K', uhost,
 					   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
-					   (long long)(TStime() - tkl->set_at), tkl->set_by, (long long)0, (long long)0, spamfilter_id_str, id_str, tkl->ptr.serverban->reason);
+					   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->hits, (long long)tkl->lasthit, spamfilter_id_str, id_str, tkl->ptr.serverban->reason);
 			} else
 			if (tkl->type == (TKL_ZAP))
 			{
 				sendnumeric(client, RPL_STATSGLINE, 'z', uhost,
 					   (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
-					   (long long)(TStime() - tkl->set_at), tkl->set_by, (long long)0, (long long)0, spamfilter_id_str, id_str, tkl->ptr.serverban->reason);
+					   (long long)(TStime() - tkl->set_at), tkl->set_by, tkl->hits, (long long)tkl->lasthit, spamfilter_id_str, id_str, tkl->ptr.serverban->reason);
 			}
 		}
 	} else
@@ -4387,10 +4406,10 @@ int tkl_stats_matcher(Client *client, int type, const char *para, TKLFlag *tklfl
 			(long long)tkl->ptr.spamfilter->tkl_duration,
 			tkl->ptr.spamfilter->tkl_reason,
 			tkl->set_by,
-			tkl->ptr.spamfilter->hits,
+			tkl->hits,
 			tkl->ptr.spamfilter->hits_except,
-			(long long)0,
-			(long long)0,
+			(long long)tkl->lasthit,
+			(long long)tkl->ptr.spamfilter->lasthit_except,
 			id_str,
 			tkl->ptr.spamfilter->match->str);
 		if (para && !strcasecmp(para, "del"))
@@ -4410,8 +4429,8 @@ int tkl_stats_matcher(Client *client, int type, const char *para, TKLFlag *tklfl
 		            (tkl->expire_at != 0) ? (long long)(tkl->expire_at - TStime()) : 0,
 		            (long long)(TStime() - tkl->set_at),
 		            tkl->set_by,
-		            (long long)0,
-		            (long long)0,
+		            tkl->hits,
+		            (long long)tkl->lasthit,
 		            id_str,
 		            tkl->ptr.nameban->reason);
 	} else
@@ -5760,9 +5779,10 @@ static void match_spamfilter_hit(Client *client, const char *str_in, const char 
 	if (match_spamfilter_exempt(tkl, user_is_exempt_general, user_is_exempt_central))
 	{
 		tkl->ptr.spamfilter->hits_except++;
+		tkl->ptr.spamfilter->lasthit_except = TStime();
 	} else
 	{
-		tkl->ptr.spamfilter->hits++;
+		tkl_hit(client, tkl);
 		highest_action = highest_ban_action(tkl->ptr.spamfilter->action);
 		if (highest_action > BAN_ACT_SET)
 		{

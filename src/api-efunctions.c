@@ -73,6 +73,7 @@ TKL *(*tkl_add_banexception)(int type, const char *usermask, const char *hostmas
 void (*tkl_del_line)(TKL *tkl);
 void (*tkl_check_local_remove_shun)(TKL *tmp);
 int (*find_tkline_match)(Client *client, int skip_soft);
+void (*tkl_hit)(Client *client, TKL *tkl);
 int (*find_shun)(Client *client);
 int(*find_spamfilter_user)(Client *client, int flags);
 TKL *(*find_qline)(Client *client, const char *nick, int *ishold);
@@ -422,6 +423,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_TKL_DEL_LINE, tkl_del_line, NULL, 0);
 	efunc_init_function(EFUNC_TKL_CHECK_LOCAL_REMOVE_SHUN, tkl_check_local_remove_shun, NULL, 0);
 	efunc_init_function(EFUNC_FIND_TKLINE_MATCH, find_tkline_match, NULL, 0);
+	efunc_init_function(EFUNC_TKL_HIT, tkl_hit, NULL, 0);
 	efunc_init_function(EFUNC_FIND_SHUN, find_shun, NULL, 0);
 	efunc_init_function(EFUNC_FIND_SPAMFILTER_USER, find_spamfilter_user, NULL, 0);
 	efunc_init_function(EFUNC_FIND_QLINE, find_qline, NULL, 0);

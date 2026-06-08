@@ -596,11 +596,15 @@ void json_expand_tkl(json_t *root, const char *key, TKL *tkl, int detail)
 		json_object_set_new(j, "reason", json_string_unreal(tkl->ptr.serverban->reason));
 		if (tkl->spamfilter_id[0])
 			json_object_set_new(j, "spamfilter_id", json_string_unreal(tkl->spamfilter_id));
+		json_object_set_new(j, "hits", json_integer(tkl->hits));
+		json_object_set_new(j, "last_hit_at", json_timestamp(tkl->lasthit));
 	} else
 	if (TKLIsNameBan(tkl))
 	{
 		json_object_set_new(j, "name", json_string_unreal(tkl->ptr.nameban->name));
 		json_object_set_new(j, "reason", json_string_unreal(tkl->ptr.nameban->reason));
+		json_object_set_new(j, "hits", json_integer(tkl->hits));
+		json_object_set_new(j, "last_hit_at", json_timestamp(tkl->lasthit));
 	} else
 	if (TKLIsBanException(tkl))
 	{
@@ -627,8 +631,10 @@ void json_expand_tkl(json_t *root, const char *key, TKL *tkl, int detail)
 		json_object_set_new(j, "ban_duration_string", json_string_unreal(pretty_time_val_r(buf, sizeof(buf), tkl->ptr.spamfilter->tkl_duration)));
 		json_object_set_new(j, "spamfilter_targets", json_string_unreal(spamfilter_target_inttostring(tkl->ptr.spamfilter->target)));
 		json_object_set_new(j, "reason", json_string_unreal(unreal_decodespace(tkl->ptr.spamfilter->tkl_reason)));
-		json_object_set_new(j, "hits", json_integer(tkl->ptr.spamfilter->hits));
+		json_object_set_new(j, "hits", json_integer(tkl->hits));
+		json_object_set_new(j, "last_hit_at", json_timestamp(tkl->lasthit));
 		json_object_set_new(j, "hits_except", json_integer(tkl->ptr.spamfilter->hits_except));
+		json_object_set_new(j, "last_hit_except_at", json_timestamp(tkl->ptr.spamfilter->lasthit_except));
 	}
 }
 

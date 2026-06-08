@@ -486,6 +486,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 			}
 			if (!ValidatePermissionsForPath("immune:server-ban:deny-channel",client,NULL,NULL,NULL) && (tklban = find_qline(client, name, &ishold)))
 			{
+				tkl_hit(client, tklban);
 				sendnumeric(client, ERR_FORBIDDENCHANNEL, name, tklban->ptr.nameban->reason);
 				continue;
 			}

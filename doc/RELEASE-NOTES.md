@@ -27,6 +27,15 @@ This is work in progress and may not always be a stable version.
     or later, especially the hubs. If there is one server in-between
     that is older, then TKL IDs don't propagate properly and the ID
     will be empty.
+* Server bans and Spamfilters now track how often they are hit and the time
+  of the last hit, eg in `STATS gline` for GLINEs. These counts happen on
+  each individual server and are not network-wide. This allows IRCOps to see
+  which entries never get any hits and can potentially be removed.
+  * Important exception: config-based spamfilters/bans lose their counters
+    on `REHASH` and restart.
+  * For non-config TKLs, the hit count and last hit timestamp are preserved
+    across reboots (via tkldb).
+  * Again, see *Developers and protocol* for the exact STATS field.
 
 ### Changes:
 * Spamfilter regexes now use more sensible defaults in terms of "max effort",
@@ -72,12 +81,14 @@ This is work in progress and may not always be a stable version.
   * `RPL_STATSSPAMF` (229) ends with `lasthit lasthit_except id :regex`
     (which comes right after `hits hits_except`, which was already there)
   * `RPL_STATSEXCEPTTKL` (230) ends with `id :reason`
-  * An absent id or spamfilter_id is sent as `-`. The hits/lasthit/lasthit_except
-    fields are reserved and currently always `0`; FIXME in later commit.
+  * An absent id or spamfilter_id is sent as `-`
+  * The hits/lasthit/lasthit_except show how often the TKL was hit and
+    the timestamp of the last hit (the usual, unix time), or 0 for never.
+    These counts are local to each server.
 * `banned_client()` has an extra parameter `const char *tklid` for the
    TKL ID (or NULL if none).
-* The tkldb database version is now 6260 and stores the id and spamfilter_id.
-  FIXME: also prepared for hit stats, so update this release note line in later commit.
+* The tkldb database version is now 6260 and stores the id, spamfilter_id and
+  the hit statistics (hit count and last-hit time per ban).
   Older databases still load. Downside: you cannot downgrade UnrealIRCd.
 * JSON for TKL entries (server logs and JSON-RPC) now includes `id`, and
   `spamfilter_id` for spamfilter-created server bans.

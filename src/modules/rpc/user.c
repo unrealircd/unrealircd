@@ -254,6 +254,7 @@ RPC_CALL_FUNC(rpc_user_set_nick)
 		/* Check other restrictions */
 		Client *check = find_user(newnick, NULL);
 		int ishold = 0;
+		TKL *tklban;
 
 		/* Check if in use by someone else (do allow case-changing) */
 		if (check && (acptr != check))
@@ -265,8 +266,9 @@ RPC_CALL_FUNC(rpc_user_set_nick)
 		// Can't really check for spamfilter here, since it assumes user is local
 
 		// But we can check q-lines...
-		if (find_qline(acptr, newnick, &ishold))
+		if ((tklban = find_qline(acptr, newnick, &ishold)))
 		{
+			tkl_hit(acptr, tklban);
 			rpc_error(client, request, JSON_RPC_ERROR_INVALID_NAME, "New nickname is forbidden by q-line");
 			return;
 		}
