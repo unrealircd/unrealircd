@@ -32,7 +32,7 @@ This is work in progress and may not always be a stable version.
   each individual server and are not network-wide. This allows IRCOps to see
   which entries never get any hits and can potentially be removed.
   * Important exception: config-based spamfilters/bans lose their counters
-    on `REHASH` and restart.
+    on restart.
   * For non-config TKLs, the hit count and last hit timestamp are preserved
     across reboots (via tkldb).
   * Again, see *Developers and protocol* for the exact STATS field.

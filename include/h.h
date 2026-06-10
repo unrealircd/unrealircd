@@ -848,6 +848,8 @@ extern MODVAR void (*tkl_del_line)(TKL *tkl);
 extern MODVAR void (*tkl_check_local_remove_shun)(TKL *tmp);
 extern MODVAR int (*find_tkline_match)(Client *cptr, int skip_soft);
 extern MODVAR void (*tkl_hit)(Client *client, TKL *tkl);
+extern MODVAR void (*remove_config_tkls)(int flag);
+extern MODVAR void (*config_tkl_hits_restore)(void);
 extern MODVAR int (*find_shun)(Client *cptr);
 extern MODVAR int (*find_spamfilter_user)(Client *client, int flags);
 extern MODVAR TKL *(*find_qline)(Client *cptr, const char *nick, int *ishold);

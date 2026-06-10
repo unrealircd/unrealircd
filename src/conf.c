@@ -274,7 +274,6 @@ int rehash_internal(Client *client);
 int is_blacklisted_module(const char *name);
 int modules_default_conf_modified(const char *filebuf);
 int config_item_allowed_for_config_file(const char *resource, const char *item);
-void remove_config_tkls(int flag);
 void free_operclass_struct(OperClass *o);
 
 /** Return the printable string of a 'cep' location, such as set::something::xyz */
@@ -2559,41 +2558,6 @@ int config_read_file(const char *filename, const char *display_name)
 	}
 }
 
-/** Remove all TKL's that were added by the config file(s).
- * This is done after config passed testing and right before
- * adding the (new) entries.
- */
-void remove_config_tkls(int flag)
-{
-	TKL *tk, *tk_next;
-	int index, index2;
-
-	/* IP hashed TKL list */
-	for (index = 0; index < TKLIPHASHLEN1; index++)
-	{
-		for (index2 = 0; index2 < TKLIPHASHLEN2; index2++)
-		{
-			for (tk = tklines_ip_hash[index][index2]; tk; tk = tk_next)
-			{
-				tk_next = tk->next;
-				if (tk->flags & flag)
-					tkl_del_line(tk);
-			}
-		}
-	}
-
-	/* Generic TKL list */
-	for (index = 0; index < TKLISTLEN; index++)
-	{
-		for (tk = tklines[index]; tk; tk = tk_next)
-		{
-			tk_next = tk->next;
-			if (tk->flags & flag)
-				tkl_del_line(tk);
-		}
-	}
-}
-
 void free_proxy_block(ConfigItem_proxy *e)
 {
 	free_security_group(e->mask);
@@ -2758,8 +2722,6 @@ void config_rehash()
 		DelListItem(tld_ptr, conf_tld);
 		safe_free(tld_ptr);
 	}
-
-	remove_config_tkls(TKL_FLAG_CONFIG);
 
 	for (deny_version_ptr = conf_deny_version; deny_version_ptr; deny_version_ptr = (ConfigItem_deny_version *) next) {
 		next = (ListStruct *)deny_version_ptr->next;
@@ -12306,6 +12268,10 @@ void central_spamfilter_download_complete(OutgoingWebRequest *request, OutgoingW
 
 	/* And load the new ones... */
 	num_rules = config_run_blocks_generic(cfptr, 0);
+	/* Restore hit counters onto the freshly re-added central spamfilters (matched
+	 * by key), from the snapshot taken in remove_config_tkls() just above.
+	 */
+	config_tkl_hits_restore();
 	active_rules = count_central_spamfilter_rules();
 
 	if (iConf.central_spamfilter_verbose > 2)

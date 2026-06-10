@@ -74,6 +74,8 @@ void (*tkl_del_line)(TKL *tkl);
 void (*tkl_check_local_remove_shun)(TKL *tmp);
 int (*find_tkline_match)(Client *client, int skip_soft);
 void (*tkl_hit)(Client *client, TKL *tkl);
+void (*remove_config_tkls)(int flag);
+void (*config_tkl_hits_restore)(void);
 int (*find_shun)(Client *client);
 int(*find_spamfilter_user)(Client *client, int flags);
 TKL *(*find_qline)(Client *client, const char *nick, int *ishold);
@@ -424,6 +426,8 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_TKL_CHECK_LOCAL_REMOVE_SHUN, tkl_check_local_remove_shun, NULL, 0);
 	efunc_init_function(EFUNC_FIND_TKLINE_MATCH, find_tkline_match, NULL, 0);
 	efunc_init_function(EFUNC_TKL_HIT, tkl_hit, NULL, 0);
+	efunc_init_function(EFUNC_REMOVE_CONFIG_TKLS, remove_config_tkls, NULL, 0);
+	efunc_init_function(EFUNC_CONFIG_TKL_HITS_RESTORE, config_tkl_hits_restore, NULL, 0);
 	efunc_init_function(EFUNC_FIND_SHUN, find_shun, NULL, 0);
 	efunc_init_function(EFUNC_FIND_SPAMFILTER_USER, find_spamfilter_user, NULL, 0);
 	efunc_init_function(EFUNC_FIND_QLINE, find_qline, NULL, 0);

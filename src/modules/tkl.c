@@ -99,6 +99,11 @@ int _take_action(Client *client, BanAction *action, const char *reason, long dur
 int _match_spamfilter(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, ClientContext *clictx, TKL **rettk);
 int _match_spamfilter_mtags(Client *client, MessageTag *mtags, const char *cmd);
 int check_special_spamfilters_present(void);
+char *tkl_hits_key(TKL *tkl, char *buf, size_t len);
+void config_tkl_hits_free(ModData *m);
+void config_tkl_hits_snapshot(TKL *tkl);
+void _config_tkl_hits_restore(void);
+void _remove_config_tkls(int flag);
 int _join_viruschan(Client *client, TKL *tk, int type);
 void _spamfilter_build_user_string(char *buf, const char *nick, Client *client);
 int _match_user(const char *rmask, Client *client, int options);
@@ -176,6 +181,27 @@ int confusables_spamfilters_present = 0; /**< Are any spamfilters with input-con
 long previous_spamfilter_utf8 = 0;
 static int firstboot = 0;
 
+/* Config-file (and central) TKLs are freed and re-created on every /REHASH (and
+ * central spamfilters on every feed refresh) since they live in the config, not
+ * in the tkldb, which would otherwise reset their hit counters. To keep the
+ * counters we stash them here right before the old entry is freed, keyed by a
+ * stable per-TKL identity (see tkl_hits_key), and copy them back onto the freshly
+ * re-added entry with the same key. The list is carried across the rehash
+ * module-unload by Save/LoadPersistentPointer (same trick connthrottle uses).
+ * This is rehash/refresh-only; on a full restart the counters still reset.
+ * Covers config server bans, name bans (qlines) and spamfilters; not exceptions.
+ */
+typedef struct ConfigTKLHits ConfigTKLHits;
+struct ConfigTKLHits {
+	ConfigTKLHits *prev, *next;
+	char key[256];
+	long long hits;
+	time_t lasthit;
+	long long hits_except;    /* spamfilter only */
+	time_t lasthit_except;    /* spamfilter only */
+};
+ConfigTKLHits *config_tkl_hits = NULL;
+
 /* s2s-tkl/<field>: per-TKL fields carried over S2S as @s2s-tkl/<field>=<value> on the
  * TKL command (modeled on s2s-md/). Old servers ignore unknown tags. To add a field,
  * add a row here plus its serialize/unserialize pair (defined further down).
@@ -224,6 +250,8 @@ MOD_TEST()
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_CHECK_LOCAL_REMOVE_SHUN, _tkl_check_local_remove_shun);
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_TKLINE_MATCH, _find_tkline_match);
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_HIT, _tkl_hit);
+	EfunctionAddVoid(modinfo->handle, EFUNC_REMOVE_CONFIG_TKLS, _remove_config_tkls);
+	EfunctionAddVoid(modinfo->handle, EFUNC_CONFIG_TKL_HITS_RESTORE, _config_tkl_hits_restore);
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_SHUN, _find_shun);
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_SPAMFILTER_USER, _find_spamfilter_user);
 	EfunctionAddPVoid(modinfo->handle, EFUNC_FIND_QLINE, TO_PVOIDFUNC(_find_qline));
@@ -260,6 +288,7 @@ MOD_INIT()
 	if (loop.booted == 0)
 		firstboot = 1;
 	LoadPersistentLong(modinfo, previous_spamfilter_utf8);
+	LoadPersistentPointer(modinfo, config_tkl_hits, config_tkl_hits_free);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamfilter);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_ban);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_except);
@@ -285,13 +314,21 @@ MOD_LOAD()
 {
 	check_special_spamfilters_present();
 	check_set_spamfilter_utf8_setting_changed();
+	_config_tkl_hits_restore();
 	EventAdd(modinfo->handle, "tklexpire", tkl_check_expire, NULL, 5000, 0);
 	return MOD_SUCCESS;
 }
 
 MOD_UNLOAD()
 {
+	/* Free our config TKLs here (rather than from config_rehash) so the same pass
+	 * can snapshot the spamfilter hit counters. Call the local impl: the snapshot
+	 * store is a per-instance global, and we must write to ours (saved just below),
+	 * not the new instance the efunc pointer now points to.
+	 */
+	_remove_config_tkls(TKL_FLAG_CONFIG);
 	SavePersistentLong(modinfo, previous_spamfilter_utf8);
+	SavePersistentPointer(modinfo, config_tkl_hits);
 	return MOD_SUCCESS;
 }
 
@@ -3500,6 +3537,176 @@ void _free_tkl(TKL *tkl)
 		safe_free(tkl->ptr.banexception);
 	}
 	safe_free(tkl);
+}
+
+/** Build a stable match key for a hit-bearing config/central TKL (server ban,
+ * name ban or spamfilter), used to pair an old entry with its rebuilt self across
+ * a rehash / feed refresh. Returns buf, or NULL for types we don't preserve
+ * (exceptions) or with no usable key. Format: "<typechar> <id|mask|name>", joined
+ * by a single space (these fields never contain spaces).
+ */
+char *tkl_hits_key(TKL *tkl, char *buf, size_t len)
+{
+	char tmp[BUFSIZE];
+	char t = tkl_typetochar(tkl->type);
+
+	if (TKLIsSpamfilter(tkl) && tkl->id[0])
+		snprintf(buf, len, "%c %s", t, tkl->id);
+	else if (TKLIsServerBan(tkl))
+		snprintf(buf, len, "%c %s", t, tkl_uhost(tkl, tmp, sizeof(tmp), 0));
+	else if (TKLIsNameBan(tkl))
+		snprintf(buf, len, "%c %s", t, tkl->ptr.nameban->name);
+	else
+		return NULL;
+	return buf;
+}
+
+/** Stash a config/central TKL's hit counters before it is freed (from the removal
+ * loop in _remove_config_tkls), so they can be copied back onto the same entry
+ * after a rehash / feed refresh re-adds it. Covers server bans, name bans and
+ * spamfilters (whatever tkl_hits_key recognises); skips entries that never hit.
+ */
+void config_tkl_hits_snapshot(TKL *tkl)
+{
+	ConfigTKLHits *e;
+	char key[256];
+
+	if (!(tkl->flags & (TKL_FLAG_CONFIG | TKL_FLAG_CENTRAL_SPAMFILTER)))
+		return;
+	if (!tkl_hits_key(tkl, key, sizeof(key)))
+		return; /* not a hit-bearing config type */
+	if (!tkl->hits && !tkl->lasthit &&
+	    (!TKLIsSpamfilter(tkl) ||
+	     (!tkl->ptr.spamfilter->hits_except && !tkl->ptr.spamfilter->lasthit_except)))
+		return; /* never hit, nothing to keep */
+
+	e = safe_alloc(sizeof(ConfigTKLHits));
+	strlcpy(e->key, key, sizeof(e->key));
+	e->hits = tkl->hits;
+	e->lasthit = tkl->lasthit;
+	if (TKLIsSpamfilter(tkl))
+	{
+		e->hits_except = tkl->ptr.spamfilter->hits_except;
+		e->lasthit_except = tkl->ptr.spamfilter->lasthit_except;
+	}
+	AddListItem(e, config_tkl_hits);
+}
+
+/** Free the whole snapshot list and forget it. */
+void config_tkl_hits_free_all(void)
+{
+	ConfigTKLHits *e, *e_next;
+
+	for (e = config_tkl_hits; e; e = e_next)
+	{
+		e_next = e->next;
+		safe_free(e);
+	}
+	config_tkl_hits = NULL;
+}
+
+/** PersistentPointer free callback: used only if the snapshot is never reloaded
+ * (e.g. final module unload), otherwise MOD_LOAD consumes and frees it.
+ */
+void config_tkl_hits_free(ModData *m)
+{
+	config_tkl_hits_free_all();
+}
+
+/** Copy stashed counters back onto one re-added TKL, matched by key. */
+static void config_tkl_hits_restore_one(TKL *tkl)
+{
+	ConfigTKLHits *e;
+	char key[256];
+
+	if (!(tkl->flags & (TKL_FLAG_CONFIG | TKL_FLAG_CENTRAL_SPAMFILTER)))
+		return;
+	if (!tkl_hits_key(tkl, key, sizeof(key)))
+		return;
+	for (e = config_tkl_hits; e; e = e->next)
+	{
+		if (!strcmp(e->key, key))
+		{
+			tkl->hits = e->hits;
+			tkl->lasthit = e->lasthit;
+			if (TKLIsSpamfilter(tkl))
+			{
+				tkl->ptr.spamfilter->hits_except = e->hits_except;
+				tkl->ptr.spamfilter->lasthit_except = e->lasthit_except;
+			}
+			return;
+		}
+	}
+}
+
+/** After config/central TKLs have been re-added, copy the stashed hit counters
+ * back onto the ones with a matching key, then drop the whole stash. Called from
+ * MOD_LOAD (config rehash) and from the central feed refresh; a no-op on a normal
+ * boot (the stash is empty).
+ */
+void _config_tkl_hits_restore(void)
+{
+	TKL *tkl;
+	int index, index2;
+
+	if (!config_tkl_hits)
+		return;
+
+	/* IP-hashed list (zlines, klines, glines) */
+	for (index = 0; index < TKLIPHASHLEN1; index++)
+		for (index2 = 0; index2 < TKLIPHASHLEN2; index2++)
+			for (tkl = tklines_ip_hash[index][index2]; tkl; tkl = tkl->next)
+				config_tkl_hits_restore_one(tkl);
+
+	/* Generic list (name bans, spamfilters, non-ip-hashed server bans) */
+	for (index = 0; index < TKLISTLEN; index++)
+		for (tkl = tklines[index]; tkl; tkl = tkl->next)
+			config_tkl_hits_restore_one(tkl);
+
+	/* Matched entries are applied; entries no longer in the config are discarded. */
+	config_tkl_hits_free_all();
+}
+
+/** Remove all TKLs with the given flag (TKL_FLAG_CONFIG or
+ * TKL_FLAG_CENTRAL_SPAMFILTER). For config/central spamfilters the hit counters
+ * are snapshotted first, so a later re-add can restore them. Lives here (rather
+ * than in conf.c) so the snapshot sits right next to the removal it rides on.
+ */
+void _remove_config_tkls(int flag)
+{
+	TKL *tk, *tk_next;
+	int index, index2;
+
+	/* IP hashed TKL list */
+	for (index = 0; index < TKLIPHASHLEN1; index++)
+	{
+		for (index2 = 0; index2 < TKLIPHASHLEN2; index2++)
+		{
+			for (tk = tklines_ip_hash[index][index2]; tk; tk = tk_next)
+			{
+				tk_next = tk->next;
+				if (tk->flags & flag)
+				{
+					config_tkl_hits_snapshot(tk);
+					tkl_del_line(tk);
+				}
+			}
+		}
+	}
+
+	/* Generic TKL list */
+	for (index = 0; index < TKLISTLEN; index++)
+	{
+		for (tk = tklines[index]; tk; tk = tk_next)
+		{
+			tk_next = tk->next;
+			if (tk->flags & flag)
+			{
+				config_tkl_hits_snapshot(tk);
+				tkl_del_line(tk);
+			}
+		}
+	}
 }
 
 /** Delete a TKL entry from the list and free it.
