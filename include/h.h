@@ -1455,6 +1455,8 @@ extern void do_unreal_log(LogLevel loglevel, const char *subsystem, const char *
 extern void do_unreal_log_raw(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, const char *msg, ...);
 extern void do_unreal_log_internal_from_remote(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, json_t *json, const char *json_serialized, Client *from_server);
 extern LogData *log_data_string(const char *key, const char *str);
+extern LogData *log_data_optional_name_value(const char *key, const char *label, const char *value);
+extern LogData *log_data_optional_string(const char *key, const char *value);
 extern LogData *log_data_char(const char *key, const char c);
 extern LogData *log_data_integer(const char *key, int64_t integer);
 extern LogData *log_data_timestamp(const char *key, time_t ts);

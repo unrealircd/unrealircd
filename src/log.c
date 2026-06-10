@@ -587,6 +587,39 @@ LogData *log_data_string(const char *key, const char *str)
 	return d;
 }
 
+/** Like log_data_string(), the JSON is identical, but in buildlogstring()
+ * if the value is empty the string will be empty plus one preceding space
+ * character is "eaten". This way you can write things like
+ * "blablabla. $optionalstring" and both the space and the $optionalstring
+ * will not appear in the output.
+ */
+LogData *log_data_optional_string(const char *key, const char *value)
+{
+	LogData *d = safe_alloc(sizeof(LogData));
+
+	d->type = LOG_FIELD_OPTIONAL_STRING;
+	safe_strdup(d->key, key);
+	safe_strdup(d->value.string, value);
+	return d;
+}
+
+/** Optional "[label: value]" field. In the JSON the value is stored raw, exactly
+ * like log_data_string() (so consumers get a clean value, not display text); in
+ * the text buildlogstring() shows it as "[label: value]". If the value is empty
+ * the whole thing is left out of the text and one preceding space is consumed, so
+ * "blablabla. $field" collapses cleanly when $field is empty.
+ */
+LogData *log_data_optional_name_value(const char *key, const char *label, const char *value)
+{
+	LogData *d = safe_alloc(sizeof(LogData));
+
+	d->type = LOG_FIELD_OPTIONAL_NAME_VALUE;
+	safe_strdup(d->key, key);
+	safe_strdup(d->label, label);
+	safe_strdup(d->value.string, value);
+	return d;
+}
+
 LogData *log_data_char(const char *key, const char c)
 {
 	LogData *d = safe_alloc(sizeof(LogData));
@@ -783,11 +816,13 @@ LogData *log_data_textanalysis(const char *key, TextAnalysis *ta)
 
 void log_data_free(LogData *d)
 {
-	if (d->type == LOG_FIELD_STRING)
+	if ((d->type == LOG_FIELD_STRING) || (d->type == LOG_FIELD_OPTIONAL_NAME_VALUE) ||
+	    (d->type == LOG_FIELD_OPTIONAL_STRING))
 		safe_free(d->value.string);
 	else if (((d->type == LOG_FIELD_OBJECT) || (d->type == LOG_FIELD_OBJECT_NOFREE)) && d->value.object)
 		json_decref(d->value.object);
 
+	safe_free(d->label);
 	safe_free(d->key);
 	safe_free(d);
 }
@@ -899,14 +934,26 @@ int valid_subsystem(const char *s)
  * @param name		Array of variables names
  * @param value		Array of variable values
  */
-void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details)
+/* Eat one space immediately before the current output position, if any.
+ * Used when an optional log field outputs nothing. */
+static void buildlogstring_eat_space(char **o, char *outbuf, int *left)
+{
+	if ((*o > outbuf) && ((*o)[-1] == ' '))
+	{
+		(*o)--;
+		(*left)++;
+	}
+}
+
+void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details, json_t *optional_keys)
 {
 	const char *i, *p;
 	char *o;
 	int left = len - 1;
 	int cnt, found;
 	char varname[256], *varp, *varpp;
-	json_t *t;
+	char buf[BUFSIZE];
+	json_t *t, *opt;
 
 #ifdef DEBUGMODE
 	if (len <= 0)
@@ -973,13 +1020,30 @@ void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details
 				{
 					output = json_get_value(t);
 				}
-				if (output)
+				/* optional_keys maps each optional field's key to its label (a
+				 * json string) for log_data_optional_name_value, or to json null
+				 * for log_data_optional_string. A non-NULL lookup means "optional".
+				 */
+				opt = json_object_get(optional_keys, varname);
+				if (output && *output)
 				{
+					if (opt && json_is_string(opt))
+					{
+						/* name:value field: show it as "[label: value]" (the JSON keeps the raw value) */
+						ircsnprintf(buf, sizeof(buf), "[%s: %s]", json_string_value(opt), output);
+						output = buf;
+					}
 					strlcpy(o, output, left);
 					left -= strlen(output); /* may become <0 */
 					if (left <= 0)
 						return; /* return - don't write \0 to 'o'. ensured by strlcpy already */
 					o += strlen(output); /* value entirely written */
+				} else
+				if (opt)
+				{
+					/* Optional field that is empty: show nothing and eat a
+					 * preceding space. */
+					buildlogstring_eat_space(&o, outbuf, &left);
 				}
 			} else
 			{
@@ -1801,6 +1865,7 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 	const char *str;
 	json_t *j = NULL;
 	json_t *j_details = NULL;
+	json_t *optional_keys = NULL;
 	json_t *t;
 	char msgbuf[MAXLOGLENGTH];
 	const char *loglevel_string = log_level_valtostring(loglevel);
@@ -1842,6 +1907,7 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 
 	j = json_object();
 	j_details = json_object();
+	optional_keys = json_object();
 
 	json_object_set_new(j, "timestamp", json_string_unreal(timestamp_iso8601_now()));
 	json_object_set_new(j, "level", json_string_unreal(loglevel_string));
@@ -1864,6 +1930,27 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 				json_object_set_new(j_details, d->key, json_integer(d->value.integer));
 				break;
 			case LOG_FIELD_STRING:
+				if (d->value.string)
+					json_object_set_new(j_details, d->key, json_string_unreal(d->value.string));
+				else
+					json_object_set_new(j_details, d->key, json_null());
+				break;
+			case LOG_FIELD_OPTIONAL_NAME_VALUE:
+				/* Optional: raw value in the JSON (or null), exactly like
+				 * LOG_FIELD_STRING; buildlogstring() shows it as "[label: value]"
+				 * in the text and eats a preceding space when empty. The label is
+				 * stored as this key's value in optional_keys. */
+				json_object_set_new(optional_keys, d->key, json_string_unreal(d->label));
+				if (d->value.string)
+					json_object_set_new(j_details, d->key, json_string_unreal(d->value.string));
+				else
+					json_object_set_new(j_details, d->key, json_null());
+				break;
+			case LOG_FIELD_OPTIONAL_STRING:
+				/* Same JSON as LOG_FIELD_STRING (value as-is, null only when
+				 * NULL); the optional_keys entry (value null = no label) is what
+				 * makes buildlogstring() eat a preceding space when empty. */
+				json_object_set_new(optional_keys, d->key, json_null());
 				if (d->value.string)
 					json_object_set_new(j_details, d->key, json_string_unreal(d->value.string));
 				else
@@ -1897,9 +1984,10 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 	}
 
 	if (expand_msg)
-		buildlogstring(msg, msgbuf, sizeof(msgbuf), j_details);
+		buildlogstring(msg, msgbuf, sizeof(msgbuf), j_details, optional_keys);
 	else
 		strlcpy(msgbuf, msg, sizeof(msgbuf));
+	json_decref(optional_keys);
 
 	json_object_set_new(j, "msg", json_string_unreal(msgbuf));
 

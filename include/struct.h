@@ -228,6 +228,8 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 typedef enum LogFieldType {
 	LOG_FIELD_INTEGER, // and unsigned?
 	LOG_FIELD_STRING,
+	LOG_FIELD_OPTIONAL_NAME_VALUE,
+	LOG_FIELD_OPTIONAL_STRING,
 	LOG_FIELD_CLIENT,
 	LOG_FIELD_CHANNEL,
 	LOG_FIELD_OBJECT,
@@ -237,6 +239,7 @@ typedef enum LogFieldType {
 typedef struct LogData {
 	LogFieldType type;
 	char *key;
+	char *label;       /**< Display label for LOG_FIELD_OPTIONAL_NAME_VALUE, NULL otherwise */
 	union {
 		int64_t integer;
 		char *string;

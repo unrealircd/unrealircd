@@ -3916,23 +3916,27 @@ void tkl_expire_entry(TKL *tkl)
 	if (TKLIsServerBan(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_EXPIRE", NULL,
-		           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
-		           log_data_tkl("tkl", tkl));
+		           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string] $id $spamfilter_id",
+		           log_data_tkl("tkl", tkl),
+		           log_data_optional_name_value("id", "id", tkl->id),
+		           log_data_optional_name_value("spamfilter_id", "spamfilter-id", tkl->spamfilter_id));
 	}
 	else if (TKLIsNameBan(tkl))
 	{
 		if (!tkl->ptr.nameban->hold)
 		{
 			unreal_log(ULOG_INFO, "tkl", "TKL_EXPIRE", NULL,
-			           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
-				   log_data_tkl("tkl", tkl));
+			           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string] $id",
+				   log_data_tkl("tkl", tkl),
+				   log_data_optional_name_value("id", "id", tkl->id));
 		}
 	}
 	else if (TKLIsBanException(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_EXPIRE", NULL,
-			   "Expiring $tkl.type_string '$tkl' [type: $tkl.exception_types] [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
-			   log_data_tkl("tkl", tkl));
+			   "Expiring $tkl.type_string '$tkl' [type: $tkl.exception_types] [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string] $id",
+			   log_data_tkl("tkl", tkl),
+			   log_data_optional_name_value("id", "id", tkl->id));
 	}
 
 	// FIXME: so.. this isn't logged? or what?
@@ -4294,10 +4298,11 @@ int spamfilter_check_users(TKL *tkl)
 
 			/* matched! */
 			unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
-			           "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
+			           "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action] $spamfilter_id",
 				   log_data_tkl("tkl", tkl),
 				   log_data_string("command", "USER"),
-				   log_data_string("str", spamfilter_user));
+				   log_data_string("str", spamfilter_user),
+				   log_data_optional_name_value("spamfilter_id", "spamfilter-id", tkl->id));
 
 			RunHook(HOOKTYPE_LOCAL_SPAMFILTER, client, spamfilter_user, spamfilter_user, SPAMF_USER, NULL, tkl);
 			matches++;
@@ -4988,27 +4993,32 @@ void _sendnotice_tkl_add(TKL *tkl)
 	if (TKLIsServerBan(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
-			   "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
-			   log_data_tkl("tkl", tkl));
+			   "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string] $id $spamfilter_id",
+			   log_data_tkl("tkl", tkl),
+			   log_data_optional_name_value("id", "id", tkl->id),
+			   log_data_optional_name_value("spamfilter_id", "spamfilter-id", tkl->spamfilter_id));
 	} else
 	if (TKLIsNameBan(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
-			   "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string]",
-			   log_data_tkl("tkl", tkl));
+			   "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string] $id",
+			   log_data_tkl("tkl", tkl),
+			   log_data_optional_name_value("id", "id", tkl->id));
 	} else
 	if (TKLIsSpamfilter(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
 			   "Spamfilter added: '$tkl' [type: $tkl.match_type] [targets: $tkl.spamfilter_targets] "
-			   "[action: $tkl.ban_action] [reason: $tkl.reason] [by: $tkl.set_by]",
-			   log_data_tkl("tkl", tkl));
+			   "[action: $tkl.ban_action] [reason: $tkl.reason] [by: $tkl.set_by] $id",
+			   log_data_tkl("tkl", tkl),
+			   log_data_optional_name_value("id", "id", tkl->id));
 	} else
 	if (TKLIsBanException(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
-			   "$tkl.type_string added: '$tkl' [types: $tkl.exception_types] [by: $tkl.set_by] [duration: $tkl.duration_string]",
-			   log_data_tkl("tkl", tkl));
+			   "$tkl.type_string added: '$tkl' [types: $tkl.exception_types] [by: $tkl.set_by] [duration: $tkl.duration_string] $id",
+			   log_data_tkl("tkl", tkl),
+			   log_data_optional_name_value("id", "id", tkl->id));
 	} else
 	{
 		unreal_log(ULOG_ERROR, "tkl", "BUG_UNKNOWN_TKL", NULL,
@@ -5026,31 +5036,36 @@ void _sendnotice_tkl_del(const char *removed_by, TKL *tkl)
 	if (TKLIsServerBan(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_DEL", NULL,
-			   "$tkl.type_string removed: '$tkl' [reason: $tkl.reason] [by: $removed_by] [set at: $tkl.set_at_string]",
+			   "$tkl.type_string removed: '$tkl' [reason: $tkl.reason] [by: $removed_by] [set at: $tkl.set_at_string] $id $spamfilter_id",
 			   log_data_tkl("tkl", tkl),
-			   log_data_string("removed_by", removed_by));
+			   log_data_string("removed_by", removed_by),
+			   log_data_optional_name_value("id", "id", tkl->id),
+			   log_data_optional_name_value("spamfilter_id", "spamfilter-id", tkl->spamfilter_id));
 	} else
 	if (TKLIsNameBan(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_DEL", NULL,
-			   "$tkl.type_string removed: '$tkl' [reason: $tkl.reason] [by: $removed_by] [set at: $tkl.set_at_string]",
+			   "$tkl.type_string removed: '$tkl' [reason: $tkl.reason] [by: $removed_by] [set at: $tkl.set_at_string] $id",
 			   log_data_tkl("tkl", tkl),
-			   log_data_string("removed_by", removed_by));
+			   log_data_string("removed_by", removed_by),
+			   log_data_optional_name_value("id", "id", tkl->id));
 	} else
 	if (TKLIsSpamfilter(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_DEL", NULL,
 			   "Spamfilter removed: '$tkl' [type: $tkl.match_type] [targets: $tkl.spamfilter_targets] "
-			   "[action: $tkl.ban_action] [reason: $tkl.reason] [by: $removed_by] [set at: $tkl.set_at_string]",
+			   "[action: $tkl.ban_action] [reason: $tkl.reason] [by: $removed_by] [set at: $tkl.set_at_string] $id",
 			   log_data_tkl("tkl", tkl),
-			   log_data_string("removed_by", removed_by));
+			   log_data_string("removed_by", removed_by),
+			   log_data_optional_name_value("id", "id", tkl->id));
 	} else
 	if (TKLIsBanException(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_DEL", NULL,
-			   "$tkl.type_string removed: '$tkl' [types: $tkl.exception_types] [by: $removed_by] [set at: $tkl.set_at_string]",
+			   "$tkl.type_string removed: '$tkl' [types: $tkl.exception_types] [by: $removed_by] [set at: $tkl.set_at_string] $id",
 			   log_data_tkl("tkl", tkl),
-			   log_data_string("removed_by", removed_by));
+			   log_data_string("removed_by", removed_by),
+			   log_data_optional_name_value("id", "id", tkl->id));
 	} else
 	{
 		unreal_log(ULOG_ERROR, "tkl", "BUG_UNKNOWN_TKL", NULL,
@@ -6017,24 +6032,26 @@ static void match_spamfilter_hit(Client *client, const char *str_in, const char 
 			if (hide_content || (target == SPAMF_RAW))
 			{
 				unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
-					   "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination] [reason: $tkl.reason] [action: $tkl.ban_action]",
+					   "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination] [reason: $tkl.reason] [action: $tkl.ban_action] $spamfilter_id",
 					   log_data_tkl("tkl", tkl),
 					   log_data_string("command", cmd),
 					   log_data_string("_space", destination ? " " : ""),
-					   log_data_string("destination", destination ? destination : ""));
+					   log_data_string("destination", destination ? destination : ""),
+					   log_data_optional_name_value("spamfilter_id", "spamfilter-id", tkl->id));
 			} else {
 				// Yeah we are re-running the text analysis.
 				TextAnalysis textanalysis;
 				memset(&textanalysis, 0, sizeof(textanalysis));
 				RunHook(HOOKTYPE_ANALYZE_TEXT, client, str, &textanalysis);
 				unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
-					   "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action]",
+					   "[Spamfilter] $client.details matches filter '$tkl': [cmd: $command$_space$destination: '$str'] [reason: $tkl.reason] [action: $tkl.ban_action] $spamfilter_id",
 					   log_data_tkl("tkl", tkl),
 					   log_data_string("command", cmd),
 					   log_data_string("_space", destination ? " " : ""),
 					   log_data_string("destination", destination ? destination : ""),
 					   log_data_string("str", str),
-					   log_data_textanalysis("text_analysis", &textanalysis));
+					   log_data_textanalysis("text_analysis", &textanalysis),
+					   log_data_optional_name_value("spamfilter_id", "spamfilter-id", tkl->id));
 				*content_revealed = 1;
 			}
 

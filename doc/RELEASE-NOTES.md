@@ -17,9 +17,11 @@ This is work in progress and may not always be a stable version.
     with e.g. `STATS gline +i G7K2MP9WQX3`.
   * Spamfilters also have an ID, and we already had something similar that
     could be used for `SPAMFILTER del <id>` that was only local-server.
-    For new spamfilters this is now a network wide ID as well.
+    For new spamfilters this is now a network wide ID.
   * When a server ban was placed by a spamfilter, `STATS gline` shows the
     originating spamfilter's ID, so it can be traced back.
+  * The TKL ID and related Spamfilter ID (if any), also appear in log
+    messages `TKL_ADD`, `TKL_DEL`, `TKL_EXPIRE` and `SPAMFILTER_MATCH`.
   * The `STATS gline` and other TKL stats changed format, see
     *Developers and protocol* if you use scripts or your client depends
     on the exact numeric format.
