@@ -7,7 +7,7 @@ This is work in progress and may not always be a stable version.
 ### Enhancements:
 * Server bans and Spamfilters now have a unique ID, like `G7K2MP9WQX3`:
   * The first letter denotes the type: `G` for gline, `K` for kline,
-    `Z` for (g)zline.
+    `Z` for (g)zline, `H` for shun. Spamfilter IDs start with `SPAM`.
   * The ID is shown to the affected user, so they can paste the ID back to
     network staff. It is `$banid` in
     [set::reject-message](https://www.unrealircd.org/docs/Set_block#set::reject-message)

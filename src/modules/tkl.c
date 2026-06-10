@@ -137,6 +137,7 @@ struct TKLTypeTable
 	unsigned tkltype:1;       /**< Is a type available in cmd_tkl() and friends */
 	unsigned exceptiontype:1; /**< Is a type available for exceptions */
 	unsigned needip:1;        /**< When using this exempt option, only IP addresses are permitted (processed before DNS/ident lookups etc) */
+	char *id_prefix;          /**< Prefix for generated TKL ids, eg "G", "K", "SPAM". NULL for exempt-only options. Note that shun has "H" here while its type.letter is 's'. */
 };
 
 /** This table which defines all TKL types and TKL exception types.
@@ -149,26 +150,26 @@ struct TKLTypeTable
  * - more?
  */
 TKLTypeTable tkl_types[] = {
-	/* <config name> <letter> <TKL_xxx type>               <logging name> <tkl option?> <exempt option?> <ip address only?> */
-	{ "gline",                'G', TKL_KILL       | TKL_GLOBAL, "G-Line",               1, 1, 0 },
-	{ "kline",                'k', TKL_KILL,                    "K-Line",               1, 1, 0 },
-	{ "gzline",               'Z', TKL_ZAP        | TKL_GLOBAL, "Global Z-Line",        1, 1, 1 },
-	{ "zline",                'z', TKL_ZAP,                     "Z-Line",               1, 1, 1 },
-	{ "spamfilter",           'F', TKL_SPAMF      | TKL_GLOBAL, "Spamfilter",           1, 1, 0 },
-	{ "qline",                'Q', TKL_NAME       | TKL_GLOBAL, "Q-Line",               1, 1, 0 },
-	{ "except",               'E', TKL_EXCEPTION  | TKL_GLOBAL, "Exception",            1, 0, 0 },
-	{ "shun",                 's', TKL_SHUN       | TKL_GLOBAL, "Shun",                 1, 1, 0 },
-	{ "local-qline",          'q', TKL_NAME,                    "Local Q-Line",         1, 0, 0 },
-	{ "local-exception",      'e', TKL_EXCEPTION,               "Local Exception",      1, 0, 0 },
-	{ "local-spamfilter",     'f', TKL_SPAMF,                   "Local Spamfilter",     1, 0, 0 },
-	{ "blacklist",            'b', TKL_BLACKLIST,               "Blacklist",            0, 1, 1 },
-	{ "connect-flood",        'c', TKL_CONNECT_FLOOD,           "Connect flood",        0, 1, 0 },
-	{ "maxperip",             'm', TKL_MAXPERIP,                "Max-per-IP",           0, 1, 0 },
-	{ "handshake-data-flood", 'd', TKL_HANDSHAKE_DATA_FLOOD,    "Handshake data flood", 0, 1, 1 },
-	{ "antirandom",           'r', TKL_ANTIRANDOM,              "Antirandom",           0, 1, 0 },
-	{ "antimixedutf8",        '8', TKL_ANTIMIXEDUTF8,           "Antimixedutf8",        0, 1, 0 },
-	{ "ban-version",          'v', TKL_BAN_VERSION,             "Ban Version",          0, 1, 0 },
-	{ NULL,                   '\0', 0,                          NULL,                   0, 0, 0 },
+	/* <config name> <letter> <TKL_xxx type>               <logging name> <tkl option?> <exempt option?> <ip address only?> <TKLID Prefix> */
+	{ "gline",                'G', TKL_KILL       | TKL_GLOBAL, "G-Line",               1, 1, 0, "G" },
+	{ "kline",                'k', TKL_KILL,                    "K-Line",               1, 1, 0, "K" },
+	{ "gzline",               'Z', TKL_ZAP        | TKL_GLOBAL, "Global Z-Line",        1, 1, 1, "Z" },
+	{ "zline",                'z', TKL_ZAP,                     "Z-Line",               1, 1, 1, "Z" },
+	{ "spamfilter",           'F', TKL_SPAMF      | TKL_GLOBAL, "Spamfilter",           1, 1, 0, "SPAM" },
+	{ "qline",                'Q', TKL_NAME       | TKL_GLOBAL, "Q-Line",               1, 1, 0, "Q" },
+	{ "except",               'E', TKL_EXCEPTION  | TKL_GLOBAL, "Exception",            1, 0, 0, "E" },
+	{ "shun",                 's', TKL_SHUN       | TKL_GLOBAL, "Shun",                 1, 1, 0, "H" },
+	{ "local-qline",          'q', TKL_NAME,                    "Local Q-Line",         1, 0, 0, "Q" },
+	{ "local-exception",      'e', TKL_EXCEPTION,               "Local Exception",      1, 0, 0, "E" },
+	{ "local-spamfilter",     'f', TKL_SPAMF,                   "Local Spamfilter",     1, 0, 0, "SPAM" },
+	{ "blacklist",            'b', TKL_BLACKLIST,               "Blacklist",            0, 1, 1, NULL },
+	{ "connect-flood",        'c', TKL_CONNECT_FLOOD,           "Connect flood",        0, 1, 0, NULL },
+	{ "maxperip",             'm', TKL_MAXPERIP,                "Max-per-IP",           0, 1, 0, NULL },
+	{ "handshake-data-flood", 'd', TKL_HANDSHAKE_DATA_FLOOD,    "Handshake data flood", 0, 1, 1, NULL },
+	{ "antirandom",           'r', TKL_ANTIRANDOM,              "Antirandom",           0, 1, 0, NULL },
+	{ "antimixedutf8",        '8', TKL_ANTIMIXEDUTF8,           "Antimixedutf8",        0, 1, 0, NULL },
+	{ "ban-version",          'v', TKL_BAN_VERSION,             "Ban Version",          0, 1, 0, NULL },
+	{ NULL,                   '\0', 0,                          NULL,                   0, 0, 0, NULL },
 };
 #define ALL_VALID_EXCEPTION_TYPES "kline, gline, zline, gzline, spamfilter, shun, qline, blacklist, connect-flood, handshake-data-flood, antirandom, antimixedutf8, ban-version"
 
@@ -1331,20 +1332,34 @@ void check_set_spamfilter_utf8_setting_changed(void)
 }
 
 /* === TKL unique IDs ===
- * Every TKL has a unique id (struct TKL.id): either assigned (a random id generated
- * by the server that originates the entry, or an id supplied by an external setter
- * such as services), or an empty string if none is known. A native (assigned-here)
- * id is <prefix><10 x base32>, eg "G7K2MP9WQX3". It is carried over S2S in the
- * s2s-tkl/id message tag and persisted by tkldb; there is no derivation.
+ * Every TKL typically has a unique id (tkl->id), such as "G7K2MP9WQX3" for a gline.
+ * See the comment below about TKL_GENERATED_ID_LEN for more info.
+ * These TKLIDs are communicated in S2S via @s2s-tkl/id mtag, and they
+ * also persist via tkldb.
  */
 
-/** Single-letter prefix for a native TKL id, derived from the TKL type.
- * Uppercase, with global/local collapsed (eg gzline and zline both 'Z', spamfilter
- * and local-spamfilter both 'F'). gline stays 'G' and kline 'K' as their letters differ.
+/* The generated TKLID (not to be confused with the maximum allowed length of TKLID):
+ * This consists of the prefix + the random/hashed base32 chars. Obviously, the idea
+ * is that this will never clash, so we have to look at birthday attack collision rates:
+ * - Spamfilter: "SPAM" prefix + 7 chars = 35 bits = ~0.0015% for 1000 spamfilters.
+ * - All the rest: 1 letter prefix + 10 chars = 50 bits = ~0.0018% for 200k entries
+ * And obviously both the 1000 spamfilters and 200k GLINE/whatever are a rather
+ * absurd number of entries, but possible in odd/attack scenarios.
  */
-static char tkl_id_prefix(int type)
+#define TKL_GENERATED_ID_LEN 11
+
+/** The TKL ID prefix string. Eg. "G" for a gline or "SPAM" for a spamfilter. */
+static const char *tkl_id_prefix(int type)
 {
-	return toupper(_tkl_typetochar(type));
+	int i;
+
+	for (i = 0; tkl_types[i].config_name; i++)
+		if ((tkl_types[i].type == type) && tkl_types[i].id_prefix)
+			return tkl_types[i].id_prefix;
+#ifdef DEBUGMODE
+	abort(); /* this should never happen */
+#endif
+	return "?";
 }
 
 /** Find a TKL by its exact id (case-insensitive). Returns NULL on no match or empty id. */
@@ -1377,16 +1392,18 @@ static void tkl_generate_id(TKL *tkl)
 {
 	/* Crockford base32 (no I/L/O/U) so the id survives being read aloud */
 	static const char b32[] = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-	char prefix = tkl_id_prefix(tkl->type);
+	const char *prefix = tkl_id_prefix(tkl->type);
+	int prefixlen = strlen(prefix);
+	int nrandom = TKL_GENERATED_ID_LEN - prefixlen;
 	TKL *other;
 	int attempt, i;
 
 	for (attempt = 0; attempt < 16; attempt++)
 	{
-		tkl->id[0] = prefix;
-		for (i = 1; i <= 10; i++)
-			tkl->id[i] = b32[getrandom8() % 32];
-		tkl->id[i] = '\0';
+		strlcpy(tkl->id, prefix, sizeof(tkl->id));
+		for (i = 0; i < nrandom; i++)
+			tkl->id[prefixlen + i] = b32[getrandom8() % 32];
+		tkl->id[prefixlen + nrandom] = '\0';
 		other = find_tkl_by_id(tkl->id);
 		if (!other || (other == tkl))
 			return; /* unique (or only matches ourselves, if already linked) */
@@ -1511,6 +1528,8 @@ static const char *spamfilter_fallback_id(TKL *tkl)
 	 * key just makes the hash deterministic and identical across servers. */
 	static const char key[16] = "UnrealIRCd rocks";
 	static char buf[16];
+	const char *prefix;
+	int prefixlen;
 	char content[8192];
 	char actbuf[2];
 	uint64_t h;
@@ -1526,13 +1545,15 @@ static const char *spamfilter_fallback_id(TKL *tkl)
 
 	h = siphash(content, key);
 
-	buf[0] = tkl_id_prefix(tkl->type);
-	for (i = 1; i <= 10; i++)
+	prefix = tkl_id_prefix(tkl->type);
+	prefixlen = strlen(prefix);
+	strlcpy(buf, prefix, sizeof(buf));
+	for (i = 0; i < TKL_GENERATED_ID_LEN - prefixlen; i++)
 	{
-		buf[i] = b32[h & 31];
+		buf[prefixlen + i] = b32[h & 31];
 		h >>= 5;
 	}
-	buf[i] = '\0';
+	buf[prefixlen + i] = '\0';
 	return buf;
 }
 
