@@ -1477,11 +1477,25 @@ void buildvarstring_nvp(const char *inbuf, char *outbuf, size_t len, NameValuePr
 						output = urlencode(output, outputbuf, sizeof(outputbuf));
 					if (flags & BUILDVARSTRING_XML)
 						output = xmlescape(output, outputbuf, sizeof(outputbuf));
-					strlcpy(o, output, left);
-					left -= strlen(output); /* may become <0 */
-					if (left <= 0)
-						return; /* return - don't write \0 to 'o'. ensured by strlcpy already */
-					o += strlen(output); /* value entirely written */
+					if (!*output && !(flags & BUILDVARSTRING_KEEP_SPACE_FOR_EMPTY_VAR))
+					{
+						/* Empty value: eat one preceding space so "Something. $var"
+						 * becomes "Something." Opt out with KEEP_SPACE_FOR_EMPTY_VAR
+						 * (eg URL/XML). Only present-but-empty values are affected;
+						 * NULL values and unknown vars are left alone.
+						 */
+						if ((o > outbuf) && (o[-1] == ' '))
+						{
+							o--;
+							left++;
+						}
+					} else {
+						strlcpy(o, output, left);
+						left -= strlen(output); /* may become <0 */
+						if (left <= 0)
+							return; /* return - don't write \0 to 'o'. ensured by strlcpy already */
+						o += strlen(output); /* value entirely written */
+					}
 				}
 			} else
 			{

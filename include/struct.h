@@ -2781,6 +2781,7 @@ typedef enum JsonRpcError {
 #define BUILDVARSTRING_URLENCODE		0x1
 #define BUILDVARSTRING_XML			0x2
 #define BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY	0x4
+#define BUILDVARSTRING_KEEP_SPACE_FOR_EMPTY_VAR	0x8
 
 #endif /* __struct_include__ */
 

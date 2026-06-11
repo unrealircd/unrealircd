@@ -495,6 +495,7 @@ void _banned_client(Client *client, const char *bantype, const char *reason, con
 {
 	char buf[512];
 	char idbuf[64];
+	const char *banid;
 	char *fmt = global ? iConf.reject_message_gline : iConf.reject_message_kline;
 	const char *vars[7], *values[7];
 	MessageTag *mtags = NULL;
@@ -504,13 +505,18 @@ void _banned_client(Client *client, const char *bantype, const char *reason, con
 
 	RunHook(HOOKTYPE_BANNED_CLIENT, client, bantype, reason, global);
 
-	/* The " [ID: xxx]" fragment, empty when there is no id. Used both as the $banid
-	 * reject-message variable and appended to the quit reason / real-quit-reason mtag.
+	/* Create the tklid. We actually need two buffers:
+	 * 1) 'idbuf' is used in snprintf() in the quit reason and is " [ID: %s]" (or "")
+	 * 2) 'banid' is used by buildvarstring() and is just "[ID: %s]" (or "")
 	 */
 	if (!BadPtr(tklid))
+	{
 		snprintf(idbuf, sizeof(idbuf), " [ID: %s]", tklid);
-	else
+		banid = idbuf + 1;
+	} else {
 		idbuf[0] = '\0';
+		banid = idbuf;
+	}
 
 	/* This was: "You are not welcome on this %s. %s: %s. %s" but is now dynamic: */
 	vars[0] = "bantype";
@@ -524,7 +530,7 @@ void _banned_client(Client *client, const char *bantype, const char *reason, con
 	vars[4] = "ip";
 	values[4] = GetIP(client);
 	vars[5] = "banid";
-	values[5] = idbuf;
+	values[5] = banid;
 	vars[6] = NULL;
 	values[6] = NULL;
 	buildvarstring(fmt, buf, sizeof(buf), vars, values);

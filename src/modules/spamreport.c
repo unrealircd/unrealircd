@@ -466,7 +466,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 		NameValuePrioList *list = NULL;
 		list = duplicate_nvplist(details);
 		add_nvplist(&list, -1, "ip", ip);
-		buildvarstring_nvp(s->url, urlbuf, sizeof(urlbuf), list, BUILDVARSTRING_URLENCODE|BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY);
+		buildvarstring_nvp(s->url, urlbuf, sizeof(urlbuf), list, BUILDVARSTRING_URLENCODE|BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY|BUILDVARSTRING_KEEP_SPACE_FOR_EMPTY_VAR);
 		url = urlbuf;
 		safe_free_nvplist(list);
 		if (s->http_method == HTTP_METHOD_POST)
@@ -491,7 +491,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 		         " <add ip='$ip' type='$type' comment='$comment'>\n"
 		         "</request>\n",
 		         find_nvplist(s->parameters, "staging") ? " staging='1'" : "");
-		buildvarstring_nvp(fmtstring, bodybuf, sizeof(bodybuf), list, BUILDVARSTRING_XML|BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY);
+		buildvarstring_nvp(fmtstring, bodybuf, sizeof(bodybuf), list, BUILDVARSTRING_XML|BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY|BUILDVARSTRING_KEEP_SPACE_FOR_EMPTY_VAR);
 		body = bodybuf;
 		safe_free_nvplist(list); // frees all the duplicated lists
 		add_nvplist(&headers, 0, "Content-Type", "text/xml");
