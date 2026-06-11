@@ -4,7 +4,13 @@ UnrealIRCd 6.2.6-git
 This is the git version (development version) for future UnrealIRCd 6.2.6.
 This is work in progress and may not always be a stable version.
 
+This version enables multiline by default and adds TKL IDs.
+
 ### Enhancements:
+* [IRCv3 draft/multiline](https://ircv3.net/specs/extensions/multiline)
+  is now enabled by default. See the [UnrealIRCd 6.2.4 release](#unrealircd-624)
+  for all information on what this feature does, the default limits, etc.
+  To turn it off completely you can use: `blacklist-module multiline;`
 * Server bans and Spamfilters now have a unique ID, like `G7K2MP9WQX3`:
   * The first letter denotes the type: `G` for gline, `K` for kline,
     `Z` for (g)zline, `H` for shun. Spamfilter IDs start with `SPAM`.
