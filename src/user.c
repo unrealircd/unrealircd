@@ -190,6 +190,7 @@ int target_limit_exceeded(Client *client, void *target, const char *name)
 		add_fake_lag(client, 2000); /* lag them up as well */
 
 		flood_limit_exceeded_log(client, "max-concurrent-conversations");
+		flood_blocked_increment(client, FLD_CONVERSATIONS);
 		sendnumeric(client, ERR_TARGETTOOFAST, name, (long long)(client->local->nexttarget - TStime()));
 
 		return 1;
@@ -899,6 +900,7 @@ int flood_limit_exceeded(Client *client, FloodOption opt)
 	if (client->local->flood[opt].count > f->limit[opt])
 	{
 		flood_limit_exceeded_log(client, floodoption_names[opt]);
+		flood_blocked_increment(client, opt);
 		return 1; /* Flood limit hit! */
 	}
 
@@ -957,6 +959,49 @@ MODVAR const char *floodoption_names[] = {
 	"multiline",
 	NULL
 };
+
+/* Per-session flood-block counter names, parallel to floodoption_names[].
+ * These are the type names accepted by the server_flood_count() crule function, eg server_flood_count('away'),
+ * for use in security-group::rule and spamfilter::rule to react to users who keep
+ * tripping flood limits. NULL means this flood type is not counted: lag-penalty is a
+ * soft penalty rather than a block, and multiline is not counted.
+ */
+MODVAR const char *floodoption_shortnames[] = {
+	"nick",			/* FLD_NICK */
+	"join",			/* FLD_JOIN */
+	"away",			/* FLD_AWAY */
+	"invite",		/* FLD_INVITE */
+	"knock",		/* FLD_KNOCK */
+	"conversations",	/* FLD_CONVERSATIONS */
+	NULL,			/* FLD_LAG_PENALTY: not counted (soft penalty, not a block) */
+	"vhost",		/* FLD_VHOST */
+	NULL,			/* FLD_MULTILINE: not counted */
+	NULL
+};
+
+/** Count a flood-block for this client.
+ * Used for:
+ *  - increments the per-type session counter, which is read via server_flood_count('away') etc in a crule
+ *  - the bump_tag_serial() call is what lets rule-only spamfilters re-check (eg
+ *    server_flood_count('away') > 5) at the next safe boundary, see parse_client_queued(); flood
+ *    counts share that "something changed, re-check" signal with the tag system.
+ * @param client	The local client that got flood-blocked
+ * @param opt		The flood type (eg FLD_AWAY)
+ */
+void flood_blocked_increment(Client *client, FloodOption opt)
+{
+	if (!MyConnect(client))
+		return;
+
+	/* Some flood types are not counted, eg lag-penalty (a soft penalty, not a block) */
+	if (!floodoption_shortnames[opt])
+		return;
+
+	if (client->local->flood[opt].blocked < 65535)
+		client->local->flood[opt].blocked++;
+
+	bump_tag_serial(client);
+}
 
 /** Lookup GEO information for an IP address.
  * @param ip	The IP to lookup
@@ -1042,8 +1087,11 @@ Tag *find_tag(Client *client, const char *name)
 
 void bump_tag_serial(Client *client)
 {
+	/* This is only ever compared with != (a change counter), so we just need a
+	 * wrap point high enough that it never realistically aliases within a session.
+	 */
 	client->local->tags_serial++;
-	if (client->local->tags_serial > 10000)
+	if (client->local->tags_serial >= INT_MAX)
 		client->local->tags_serial = 0;
 }
 

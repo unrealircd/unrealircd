@@ -860,6 +860,7 @@ extern MODVAR void (*cmd_tkl)(ClientContext *clictx, Client *client, MessageTag 
 extern MODVAR int (*take_action)(Client *client, BanAction *actions, const char *reason, long duration, int take_action_flags, int *stopped);
 extern MODVAR int (*match_spamfilter)(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, ClientContext *clictx, TKL **rettk);
 extern MODVAR int (*match_spamfilter_mtags)(Client *client, MessageTag *mtags, const char *cmd);
+extern MODVAR void (*run_deferred_rule_only_spamfilters)(Client *client);
 extern MODVAR int (*join_viruschan)(Client *client, TKL *tk, int type);
 extern MODVAR const char *(*StripColors)(const char *text);
 extern MODVAR void (*spamfilter_build_user_string)(char *buf, const char *nick, Client *acptr);
@@ -1410,7 +1411,9 @@ extern int flood_limit_exceeded(Client *client, FloodOption opt);
 extern FloodSettings *find_floodsettings_block(const char *name);
 extern FloodSettings *get_floodsettings_for_user(Client *client, FloodOption opt);
 extern MODVAR const char *floodoption_names[];
+extern MODVAR const char *floodoption_shortnames[];
 extern void flood_limit_exceeded_log(Client *client, const char *floodname);
+extern void flood_blocked_increment(Client *client, FloodOption opt);
 /* logging */
 extern int config_test_log(ConfigFile *conf, ConfigEntry *ce);
 extern int config_run_log(ConfigFile *conf, ConfigEntry *ce);

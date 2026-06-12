@@ -1455,8 +1455,9 @@ extern void moddatatype_dump(Client *client);
 
 /** Flood counters for local clients */
 typedef struct FloodCounter {
-	int count;
-	long t;
+	int count;	/**< Maximum allowed number per... */
+	long t;		/**< ..time period */
+	int blocked;	/**< How many times this flood limit was hit */
 } FloodCounter;
 
 /** This is the list of different flood counters that we keep for local clients. */
@@ -1564,6 +1565,7 @@ struct LocalClient {
 	RPCClient *rpc;			/**< RPC Client, or NULL */
 	Tag *tags;			/**< Tags from spamfilter */
 	int tags_serial;		/**< To keep track of 'tags' changes */
+	int spamfilter_run_tags_serial;	/**< The last time (well, tags_serial) that rule-only-spamfilters ran. */
 };
 
 /** User information (persons, not servers), you use client->user to access these (see also @link Client @endlink).

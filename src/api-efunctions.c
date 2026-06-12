@@ -86,6 +86,7 @@ void (*cmd_tkl)(ClientContext *clictx, Client *client, MessageTag *mtags, int pa
 int (*take_action)(Client *client, BanAction *action, const char *reason, long duration, int take_action_flags, int *stopped);
 int (*match_spamfilter)(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, ClientContext *clictx, TKL **rettk);
 int (*match_spamfilter_mtags)(Client *client, MessageTag *mtags, const char *cmd);
+void (*run_deferred_rule_only_spamfilters)(Client *client);
 int (*join_viruschan)(Client *client, TKL *tk, int type);
 const char *(*StripColors)(const char *text);
 void (*spamfilter_build_user_string)(char *buf, const char *nick, Client *client);
@@ -438,6 +439,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_TAKE_ACTION, take_action, NULL, 0);
 	efunc_init_function(EFUNC_MATCH_SPAMFILTER, match_spamfilter, NULL, 0);
 	efunc_init_function(EFUNC_MATCH_SPAMFILTER_MTAGS, match_spamfilter_mtags, NULL, 0);
+	efunc_init_function(EFUNC_RUN_DEFERRED_RULE_ONLY_SPAMFILTERS, run_deferred_rule_only_spamfilters, NULL, 0);
 	efunc_init_function(EFUNC_JOIN_VIRUSCHAN, join_viruschan, NULL, 0);
 	efunc_init_function(EFUNC_STRIPCOLORS, StripColors, NULL, 0);
 	efunc_init_function(EFUNC_SPAMFILTER_BUILD_USER_STRING, spamfilter_build_user_string, NULL, 0);

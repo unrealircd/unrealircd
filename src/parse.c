@@ -133,6 +133,16 @@ void parse_client_queued(Client *client)
 			return;
 
 		dopacket(client, buf, dolen);
+
+		/* Tags and similar may change outside of match_spamfilter(), such as a flood
+		 * counter or a central spamfilter tag. We run rule-only spamfilters here.
+		 * This is outside the command handler so we can safely kill the client here.
+		 */
+		if (!IsDead(client) && client->local &&
+		    (client->local->tags_serial != client->local->spamfilter_run_tags_serial))
+		{
+			run_deferred_rule_only_spamfilters(client);
+		}
 		
 		if (IsDead(client))
 			return;

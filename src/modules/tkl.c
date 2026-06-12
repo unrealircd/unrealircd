@@ -98,6 +98,7 @@ CMD_FUNC(_cmd_tkl);
 int _take_action(Client *client, BanAction *action, const char *reason, long duration, int take_action_flags, int *stopped);
 int _match_spamfilter(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, ClientContext *clictx, TKL **rettk);
 int _match_spamfilter_mtags(Client *client, MessageTag *mtags, const char *cmd);
+void _run_deferred_rule_only_spamfilters(Client *client);
 int check_special_spamfilters_present(void);
 char *tkl_hits_key(TKL *tkl, char *buf, size_t len);
 void config_tkl_hits_free(ModData *m);
@@ -267,6 +268,7 @@ MOD_TEST()
 	EfunctionAdd(modinfo->handle, EFUNC_TAKE_ACTION, _take_action);
 	EfunctionAdd(modinfo->handle, EFUNC_MATCH_SPAMFILTER, _match_spamfilter);
 	EfunctionAdd(modinfo->handle, EFUNC_MATCH_SPAMFILTER_MTAGS, _match_spamfilter_mtags);
+	EfunctionAddVoid(modinfo->handle, EFUNC_RUN_DEFERRED_RULE_ONLY_SPAMFILTERS, _run_deferred_rule_only_spamfilters);
 	EfunctionAdd(modinfo->handle, EFUNC_JOIN_VIRUSCHAN, _join_viruschan);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SPAMFILTER_BUILD_USER_STRING, _spamfilter_build_user_string);
 	EfunctionAdd(modinfo->handle, EFUNC_MATCH_USER, _match_user);
@@ -6029,6 +6031,14 @@ static void match_spamfilter_hit(Client *client, const char *str_in, const char 
 		highest_action = highest_ban_action(tkl->ptr.spamfilter->action);
 		if (highest_action > BAN_ACT_SET)
 		{
+			if (!cmd)
+			{
+				/* On-tag-change has no context, so log without the [cmd: ...] part */
+				unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
+					   "[Spamfilter] $client.details matches filter '$tkl': [reason: $tkl.reason] [action: $tkl.ban_action] $spamfilter_id",
+					   log_data_tkl("tkl", tkl),
+					   log_data_optional_name_value("spamfilter_id", "spamfilter-id", tkl->id));
+			} else
 			if (hide_content || (target == SPAMF_RAW))
 			{
 				unreal_log(ULOG_INFO, "tkl", "SPAMFILTER_MATCH", client,
@@ -6085,6 +6095,128 @@ static void match_spamfilter_hit(Client *client, const char *str_in, const char 
 
 }
 
+/** Run rule-only spamfilters: ones with no ::match/::target, only a ::rule.
+ * These run when a tag changes. The most severe hit (highest action) wins and is set in *winner_tkl.
+ * The caller then takes that action. This function is used both by:
+ * 1) match_spamfilter(): when a tag changed during a message
+ * 2) parse_client_queued(): after a command ran and there was a tag change
+ *    or similar, like server_flood_count('..') changed value.
+ */
+static void run_rule_only_spamfilter_loop(Client *client, const char *str_in, const char *str,
+                                          int target, const char *cmd, const char *destination,
+                                          int flags, ClientContext *clictx, TKL **winner_tkl,
+                                          char user_is_exempt_general, char user_is_exempt_central,
+                                          int *stop_processing_general_spamfilters,
+                                          int *stop_processing_central_spamfilters,
+                                          int *content_revealed)
+{
+	TKL *tkl;
+	crule_context context;
+
+	*stop_processing_general_spamfilters = *stop_processing_central_spamfilters = 0; /* reset */
+	for (tkl = tklines[tkl_hash('F')]; tkl; tkl = tkl->next)
+	{
+		if (tkl->ptr.spamfilter->target ||
+		    (tkl->ptr.spamfilter->match->type != MATCH_NONE) ||
+		    !tkl->ptr.spamfilter->rule)
+		{
+			continue;
+		}
+
+		/* Skip spamfilters due to a 'stop' action from an earlier spamfilter
+		 * or set::spamfilter::stop-on-first-match.
+		 * We treat such stops as separate for central & general spamfilters
+		 * so they don't affect each other.
+		 */
+		if (IsCentralSpamfilter(tkl))
+		{
+			if (*stop_processing_central_spamfilters)
+				continue;
+		} else {
+			if (*stop_processing_general_spamfilters)
+				continue;
+		}
+
+		if ((flags & SPAMFLAG_NOWARN) && only_actions_of_type(tkl->ptr.spamfilter->action, BAN_ACT_WARN))
+			continue;
+
+		/* If the action is 'soft' (for non-logged in users only) then
+		 * don't bother running the spamfilter if the user is logged in.
+		 */
+		if (IsLoggedIn(client) && only_soft_actions(tkl->ptr.spamfilter->action))
+			continue;
+
+		memset(&context, 0, sizeof(context));
+		context.client = client;
+		context.text = str_in;
+		context.destination = destination;
+		context.clictx = clictx;
+		if (!crule_eval(&context, tkl->ptr.spamfilter->rule))
+			continue;
+
+		match_spamfilter_hit(client, str_in, str, target, cmd, destination,
+		                     tkl, winner_tkl,
+		                     user_is_exempt_general, user_is_exempt_central,
+		                     stop_processing_general_spamfilters, stop_processing_central_spamfilters,
+		                     content_revealed,
+		                     1);
+		/* and continue (yes, always, no stopping on first match) */
+	}
+}
+
+/** Run rule-only spamfilters, after a tag change happened. This gets called from
+ * parse_client_queued(), so it is safe to kill a client without having to deal
+ * with complex conditions. Since there is no "message" here, context is empty.
+ */
+void _run_deferred_rule_only_spamfilters(Client *client)
+{
+	TKL *winner_tkl = NULL;
+	char user_is_exempt_general = 0;
+	char user_is_exempt_central = 0;
+	int stop_processing_general_spamfilters = 0;
+	int stop_processing_central_spamfilters = 0;
+	int content_revealed = 0;
+	crule_context context;
+
+	if (!client->local)
+		return;
+
+	/* Mark all tag changes up to now as handled. Done up-front so the early-returns below
+	 * (exempt users etc) don't make us re-run on every following command.
+	 */
+	client->local->spamfilter_run_tags_serial = client->local->tags_serial;
+
+	if (!client->user || ValidatePermissionsForPath("immune:server-ban:spamfilter",client,NULL,NULL,NULL) || IsULine(client))
+		return;
+
+	memset(&context, 0, sizeof(context));
+	context.client = client;
+	context.text = "";
+	context.destination = NULL;
+	context.clictx = NULL;
+
+	/* Client exempt from spamfilter checking? */
+	if (find_tkl_exception(TKL_SPAMF, client) ||
+	    (iConf.spamfilter_except && user_allowed_by_security_group_context(client, iConf.spamfilter_except, &context)))
+	{
+		user_is_exempt_general = 1;
+	}
+	if (user_allowed_by_security_group_context(client, iConf.central_spamfilter_except, &context))
+		user_is_exempt_central = 1;
+
+	run_rule_only_spamfilter_loop(client, "", "", 0, NULL, NULL, 0, NULL,
+	                              &winner_tkl, user_is_exempt_general, user_is_exempt_central,
+	                              &stop_processing_general_spamfilters, &stop_processing_central_spamfilters,
+	                              &content_revealed);
+
+	if (winner_tkl && !match_spamfilter_exempt(winner_tkl, user_is_exempt_general, user_is_exempt_central))
+	{
+		char *reason = unreal_decodespace(winner_tkl->ptr.spamfilter->tkl_reason);
+		take_action_ex(client, winner_tkl->ptr.spamfilter->action, reason,
+		               winner_tkl->ptr.spamfilter->tkl_duration, TAKE_ACTION_SKIP_SET, NULL, winner_tkl->id);
+	}
+}
+
 /** match_spamfilter: executes the spamfilter on the input string.
  * @param str		The text (eg msg text, notice text, part text, quit text, etc
  * @param target	The spamfilter target (SPAMF_*)
@@ -6108,7 +6240,6 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	struct rusage rnow, rprev;
 	long ms_past;
 #endif
-	int tags_serial = client->local ? client->local->tags_serial : 0;
 	char user_is_exempt_general = 0;
 	char user_is_exempt_central = 0;
 	int stop_processing_general_spamfilters = 0;
@@ -6266,65 +6397,16 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 		}
 	}
 
-	if (client->local && (client->local->tags_serial != tags_serial))
+	if (client->local && (client->local->tags_serial != client->local->spamfilter_run_tags_serial))
 	{
-		/* A tag has been changed:
-		 * Run spamfilters that have no 'match' and no 'targets',
-		 * these are special in the sense that they only run
-		 * whenever a tag is changed.
+		/* A tag changed (eg a spamfilter 'set' action during this message): run the
+		 * rule-only spamfilters, which only run when a tag has changed.
 		 */
-		stop_processing_general_spamfilters = stop_processing_central_spamfilters = 0; /* reset this */
-		for (tkl = tklines[tkl_hash('F')]; tkl; tkl = tkl->next)
-		{
-			crule_context context;
-
-			if (tkl->ptr.spamfilter->target ||
-			    (tkl->ptr.spamfilter->match->type != MATCH_NONE) ||
-			    !tkl->ptr.spamfilter->rule)
-			{
-				continue;
-			}
-
-			/* Skip spamfilters due to a 'stop' action from an earlier spamfilter
-			 * or set::spamfilter::stop-on-first-match.
-			 * We treat such stops as separate for central & general spamfilters
-			 * so they don't affect each other.
-			 */
-			if (IsCentralSpamfilter(tkl))
-			{
-				if (stop_processing_central_spamfilters)
-					continue;
-			} else {
-				if (stop_processing_general_spamfilters)
-					continue;
-			}
-
-
-			if ((flags & SPAMFLAG_NOWARN) && only_actions_of_type(tkl->ptr.spamfilter->action, BAN_ACT_WARN))
-				continue;
-
-			/* If the action is 'soft' (for non-logged in users only) then
-			 * don't bother running the spamfilter if the user is logged in.
-			 */
-			if (IsLoggedIn(client) && only_soft_actions(tkl->ptr.spamfilter->action))
-				continue;
-
-			memset(&context, 0, sizeof(context));
-			context.client = client;
-			context.text = str_in;
-			context.destination = destination;
-			context.clictx = clictx;
-			if (!crule_eval(&context, tkl->ptr.spamfilter->rule))
-				continue;
-
-			match_spamfilter_hit(client, str_in, str, target, cmd, destination,
-			                       tkl, &winner_tkl,
-			                       user_is_exempt_general, user_is_exempt_central,
-			                       &stop_processing_general_spamfilters, &stop_processing_central_spamfilters,
-			                       &content_revealed,
-			                       1);
-			/* and continue (yes, always, no stopping on first match) */
-		}
+		run_rule_only_spamfilter_loop(client, str_in, str, target, cmd, destination, flags, clictx,
+		                              &winner_tkl, user_is_exempt_general, user_is_exempt_central,
+		                              &stop_processing_general_spamfilters, &stop_processing_central_spamfilters,
+		                              &content_revealed);
+		client->local->spamfilter_run_tags_serial = client->local->tags_serial;
 	}
 
 	tkl = winner_tkl;

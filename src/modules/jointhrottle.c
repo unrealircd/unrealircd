@@ -153,6 +153,7 @@ int jointhrottle_can_join(Client *client, Channel *channel, const char *key, cha
 {
 	if (!ValidatePermissionsForPath("immune:join-flood",client,NULL,channel,NULL) && isjthrottled(client, channel))
 	{
+		flood_blocked_increment(client, FLD_JOIN);
 		*errmsg = STR_ERR_TOOMANYJOINS;
 		return ERR_TOOMANYJOINS;
 	}
