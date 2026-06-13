@@ -71,6 +71,12 @@ This version enables multiline by default and adds TKL IDs.
 * The following config items previously raised a config error:
   allow channel::except, deny channel::except and spamfilter::except.
 * Hardening of the built-in HTTPS client
+* JSON-RPC: Remote RPC was broken and causing "not authorized" error messages.
+  This was used by `server.rehash` and `server.module_list`. Plus,
+  this release `user.get` under some circumstances. This is now
+  fixed but requires the target server to be on UnrealIRCd 6.2.6.
+  If the target server does not meet this condition then we error
+  telling the server "does not support remote JSON-RPC".
 
 ### Developers and protocol:
 * URL API: The OutgoingWebRequest `max_size` (introduced last release) now
