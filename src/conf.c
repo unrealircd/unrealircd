@@ -3661,9 +3661,10 @@ int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	}
 	if (cPath) {
-		path = safe_alloc(strlen(cPath) + strlen(FindData.cFileName)+1);
-		strcpy(path, cPath);
-		strcat(path, FindData.cFileName);
+		size_t path_len = strlen(cPath) + strlen(FindData.cFileName) + 1;
+		path = safe_alloc(path_len);
+		strlcpy(path, cPath, path_len);
+		strlcat(path, FindData.cFileName, path_len);
 
 		if (add_config_resource(path, RESOURCE_INCLUDE, ce))
 		{
@@ -3685,9 +3686,12 @@ int _conf_include(ConfigFile *conf, ConfigEntry *ce)
 	ret = 0;
 	while (FindNextFile(hFind, &FindData) != 0) {
 		if (cPath) {
-			path = safe_alloc(strlen(cPath) + strlen(FindData.cFileName)+1);
-			strcpy(path,cPath);
-			strcat(path,FindData.cFileName);
+			{
+			size_t path_len = strlen(cPath) + strlen(FindData.cFileName) + 1;
+			path = safe_alloc(path_len);
+			strlcpy(path, cPath, path_len);
+			strlcat(path, FindData.cFileName, path_len);
+		}
 
 			if (add_config_resource(path, RESOURCE_INCLUDE, ce))
 			{
