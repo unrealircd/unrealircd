@@ -57,6 +57,7 @@ This version enables multiline by default and adds TKL IDs.
   * All these are counted for the duration of the session (user connection).
   * These can be used in a security-group::rule or spamfilter::rule. Eg:  
     `spamfilter { rule "server_flood_count('nick')>4"; reason "Nick flood"; action gline; ban-time 1h; }`
+* Central Spamreport now also receives those flood counters.
 
 ### Changes:
 * Spamfilter regexes now use more sensible defaults in terms of "max effort",
@@ -113,6 +114,7 @@ This version enables multiline by default and adds TKL IDs.
   Older databases still load. Downside: you cannot downgrade UnrealIRCd.
 * JSON for TKL entries (server logs and JSON-RPC) now includes `id`, and
   `spamfilter_id` for spamfilter-created server bans.
+* JSON-RPC `user.get` now also exposes the flood counters.
 
 UnrealIRCd 6.2.5
 -----------------

@@ -206,6 +206,7 @@ int _floodprot_check_multiline_batch(Channel *channel, Client *client, int line_
 void channelfloodblocks_free(ModData *m);
 static void channel_flood_blocked_increment(Client *client, int what);
 int _channel_flood_blocked_count(Client *client, const char *type);
+void _channel_flood_expand_json(json_t *root, Client *client);
 
 MOD_TEST()
 {
@@ -215,6 +216,7 @@ MOD_TEST()
 	EfunctionAdd(modinfo->handle, EFUNC_GET_FLOODPROT_CHANNEL_MAX_LINES, _get_floodprot_channel_max_lines);
 	EfunctionAdd(modinfo->handle, EFUNC_FLOODPROT_CHECK_MULTILINE_BATCH, _floodprot_check_multiline_batch);
 	EfunctionAdd(modinfo->handle, EFUNC_CHANNEL_FLOOD_BLOCKED_COUNT, _channel_flood_blocked_count);
+	EfunctionAddVoid(modinfo->handle, EFUNC_CHANNEL_FLOOD_EXPAND_JSON, _channel_flood_expand_json);
 	return MOD_SUCCESS;
 }
 
@@ -2084,6 +2086,33 @@ int _channel_flood_blocked_count(Client *client, const char *type)
 			return b->blocked[i];
 
 	return 0;
+}
+
+/* efunc: add a "channel" object (type -> count) to 'root' for this local user, listing only
+ * the channel-flood-block (+f/+F) types with a nonzero count this session. Adds nothing when
+ * there is no data. Used for: spamreport and JSON-RPC (via json_expand_flood_counts()).
+ */
+void _channel_flood_expand_json(json_t *root, Client *client)
+{
+	ChannelFloodBlocks *b;
+	json_t *channel;
+	int i;
+
+	if (!client || !MyConnect(client))
+		return;
+	if (moddata_local_client(client, md_channelflood_blocked).ptr == NULL)
+		return;
+	b = (ChannelFloodBlocks *)moddata_local_client(client, md_channelflood_blocked).ptr;
+
+	channel = json_object();
+	for (i = 0; i < NUMFLD; i++)
+		if (b->blocked[i] > 0)
+			json_object_set_new(channel, channelfloodtype_names[i], json_integer(b->blocked[i]));
+
+	if (json_object_size(channel) > 0)
+		json_object_set_new(root, "channel", channel);
+	else
+		json_decref(channel);
 }
 
 int floodprot_stats(Client *client, const char *flag)

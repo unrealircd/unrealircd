@@ -1519,6 +1519,10 @@ int channel_flood_blocked_count_default_handler(Client *client, const char *type
 	return 0;
 }
 
+void channel_flood_expand_json_default_handler(json_t *root, Client *client)
+{
+}
+
 int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass,
                               ConfigItem_class *clientclass, long modes, const char *snomask,
                               const char *vhost, const char *autojoin_channels)

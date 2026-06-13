@@ -202,6 +202,7 @@ void json_expand_client_security_groups(json_t *parent, Client *client)
  * detail=2:	everything, except 'channels'
  * detail=3:	everything, with 'channels' being a max 384 character string (meant for JSON logging only)
  * detail=4:	everything, with 'channels' object (full).
+ * detail=5:	this also adds "flood" counters
  */
 void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 {
@@ -295,6 +296,12 @@ void json_expand_client(json_t *j, const char *key, Client *client, int detail)
 		json_object_set_new(child, "connected_since", json_timestamp(ts));
 	if (client->local && client->local->idle_since)
 		json_object_set_new(child, "idle_since", json_timestamp(client->local->idle_since));
+
+	/* Flood counters: only at level 5+, so not in JSON-RPC default user.get (level 4)
+	 * or in JSON logs (level 3).
+	 */
+	if (detail >= 5)
+		json_expand_flood_counts(child, "flood", client);
 
 	if (client->user)
 	{
@@ -664,6 +671,50 @@ void json_expand_textanalysis(json_t *root, const char *key, TextAnalysis *ta, i
 	{
 		if (ta->unicode_blockmap[i])
 			json_object_set_new(blk, utf8_get_block_name(i), json_integer(ta->unicode_blockmap[i]));
+	}
+}
+
+/** Add a "flood" object to JSON: how often this client hit flood limits this session.
+ * Under it are two parts:
+ * "server"    server flood limits (set::anti-flood): nick, away, join, etc.
+ * "channel"   channel flood protection (+f/+F), totals over the channels the user is in.
+ * If the client hit no flood limits, no flood object is added.
+ *
+ * @param root		The parent JSON object
+ * @param key		Key to put the flood object in, or NULL to write under root directly.
+ * @param client	The client (we only produce output for local clients)
+ */
+void json_expand_flood_counts(json_t *root, const char *key, Client *client)
+{
+	json_t *flood, *server;
+	int i;
+
+	if (!client->local)
+		return; /* counters are per-connection, local clients only */
+
+	flood = key ? json_object() : root;
+
+	/* server-level flood limits (set::anti-flood) */
+	server = json_object();
+	for (i = 0; i < MAXFLOODOPTIONS; i++)
+	{
+		if (floodoption_shortnames[i] && (client->local->flood[i].blocked > 0))
+			json_object_set_new(server, floodoption_shortnames[i], json_integer(client->local->flood[i].blocked));
+	}
+	if (json_object_size(server) > 0)
+		json_object_set_new(flood, "server", server);
+	else
+		json_decref(server);
+
+	/* channel-level flood protection (+f/+F), via floodprot; adds a "channel" object if nonzero */
+	channel_flood_expand_json(flood, client);
+
+	if (key)
+	{
+		if (json_object_size(flood) > 0)
+			json_object_set_new(root, key, flood);
+		else
+			json_decref(flood);
 	}
 }
 

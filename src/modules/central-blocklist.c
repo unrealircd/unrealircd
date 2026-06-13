@@ -1130,7 +1130,7 @@ CMD_OVERRIDE_FUNC(cbl_override_spamreport_gather)
 
 int _central_spamreport(Client *client, Client *by, const char *url)
 {
-	json_t *j, *requests, *data, *cmds, *item;
+	json_t *j, *requests, *data, *cmds, *item, *clientobj;
 	OutgoingWebRequest *w;
 	NameValuePrioList *headers = NULL;
 	int num;
@@ -1165,6 +1165,13 @@ int _central_spamreport(Client *client, Client *by, const char *url)
 
 	data = json_deep_copy(CBL(client)->handshake); /* .. deep copy. */
 	json_object_set_new(requests, client->id, data); /* ..and steal reference */
+
+	/* We add the flood counters here explicitly, because when "client" was created
+	 * earlier there were no or limited flood counts yet (during registration phase).
+	 */
+	clientobj = json_object_get(data, "client");
+	json_expand_flood_counts(clientobj ? clientobj : data, "flood", client);
+
 	cmds = json_object();
 	json_object_set_new(data, "commands", cmds);
 	start = CBL(client)->last_cmds_slot;
