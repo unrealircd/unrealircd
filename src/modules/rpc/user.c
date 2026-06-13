@@ -188,10 +188,11 @@ RPC_CALL_FUNC(rpc_user_list)
 
 RPC_CALL_FUNC(rpc_user_get)
 {
-	json_t *result, *list, *item;
+	json_t *result;
 	const char *nick;
 	Client *acptr;
 	int details;
+	int remote_fetch;
 
 	REQUIRE_PARAM_STRING("nick", nick);
 
@@ -201,10 +202,33 @@ RPC_CALL_FUNC(rpc_user_get)
 		rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Using an 'object_detail_level' of 3 is not allowed in user.* calls, use 0, 1, 2 or 4.");
 		return;
 	}
+	/* Some fields (flood counters, idle time, snomasks, ..) only exist
+	 * on the server where the user is on. If 'object_remote_fetch' is
+	 * set to true, then we forward the request to the corresponding
+	 * server. This defaults to false, except when details >= 5, then
+	 * the default is true. Yeah a bit complicated, but that way with
+	 * level 5+ we actually include the fields you want :D.
+	 * Note that default user.get without object_detail_level defaults
+	 * to detail level 4, so default is off. Which is intended, because
+	 * all of this does come at a cost of network latency (server may
+	 * even be multiple hops away) versus locally responding which is
+	 * much faster.
+	 */
+	OPTIONAL_PARAM_BOOLEAN("object_remote_fetch", remote_fetch, details >= 5);
 
 	if (!(acptr = find_user(nick, NULL)))
 	{
 		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Nickname not found");
+		return;
+	}
+
+	/* Forward to the user's own server if requested and RRPC is supported
+	 * along the entire routing path. Otherwise, just fall back.
+	 */
+	if (remote_fetch && !MyConnect(acptr) && acptr->uplink &&
+	    rrpc_supported_simple(acptr->uplink, NULL))
+	{
+		rpc_send_request_to_remote(client, acptr->uplink, request);
 		return;
 	}
 

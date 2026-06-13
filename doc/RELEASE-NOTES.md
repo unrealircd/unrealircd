@@ -114,7 +114,16 @@ This version enables multiline by default and adds TKL IDs.
   Older databases still load. Downside: you cannot downgrade UnrealIRCd.
 * JSON for TKL entries (server logs and JSON-RPC) now includes `id`, and
   `spamfilter_id` for spamfilter-created server bans.
-* JSON-RPC `user.get` now also exposes the flood counters.
+* JSON-RPC `user.get` can now expose flood counters (see next).
+* JSON-RPC: We can now route `user.get` requests to the server that user is
+  on. This so we can fetch all fields for that user (including flood
+  counters, idle time, snomask) that are normally not available remotely.
+  * We do this automatically in `user.get` when `object_detail_level` is 5+.
+  * You can force this explicitly with `object_remote_fetch` set to `true`.
+    So you can also use it with detail level 2 if you want, e.g. if you
+    don't need the flood counters but do want the idle time.
+  * When RRPC is not available we answer ourselves (so safe fallback, but
+    you won't have the local-only fields).
 
 UnrealIRCd 6.2.5
 -----------------
