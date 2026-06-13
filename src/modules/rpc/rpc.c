@@ -925,8 +925,9 @@ void _rpc_error(Client *client, json_t *request, JsonRpcError error_code, const 
 	json_object_set_new(error, "message", json_string_unreal(error_message));
 
 	unreal_log(ULOG_INFO, "rpc", "RPC_CALL_ERROR", client,
-	           "[rpc] Client $client: RPC call $method",
-	           log_data_string("method", method ? method : "<invalid>"));
+	           "[rpc] Client $client: RPC call $method: $error_message",
+	           log_data_string("method", method ? method : "<invalid>"),
+	           log_data_string("error_message", error_message));
 
 
 	json_serialized = json_dumps(j, 0);
