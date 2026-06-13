@@ -57,7 +57,6 @@ struct MultilineBatch {
 	/* Buffered lines */
 	MLine *lines;
 	MLine *lines_tail;
-	MLine *fallback_lines;	/**< Cached fallback lines (built once, reused for all non-multiline clients) */
 };
 
 /** State for an S2S multiline batch being received from a remote server */
@@ -453,7 +452,6 @@ static void multiline_free_batch(MultilineBatch *batch)
 	safe_free(batch->fail_message);
 	free_message_tags(batch->client_mtags);
 	multiline_free_lines(batch->lines);
-	multiline_free_lines(batch->fallback_lines);
 	safe_free(batch);
 }
 
@@ -590,51 +588,6 @@ static char *multiline_concat_text(MultilineBatch *batch)
 	buf[pos] = '\0';
 
 	return buf;
-}
-
-/** Build fallback text: merge concat lines into their predecessors.
- * Returns a list of "logical lines" for fallback delivery.
- * Caller must free the returned list with multiline_free_lines().
- */
-static MLine *multiline_build_fallback_lines(MultilineBatch *batch)
-{
-	MLine *out = NULL, *out_tail = NULL;
-	MLine *l;
-
-	for (l = batch->lines; l; l = l->next)
-	{
-		if (l->concat && out_tail)
-		{
-			/* Append to current logical line without separator */
-			const char *append = l->text ? l->text : "";
-			int newlen = strlen(out_tail->text) + strlen(append) + 1;
-			char *newtext = safe_alloc(newlen);
-			strlcpy(newtext, out_tail->text, newlen);
-			strlcat(newtext, append, newlen);
-			safe_free(out_tail->text);
-			out_tail->text = newtext;
-		} else {
-			/* Start a new logical line */
-			MLine *newline = safe_alloc(sizeof(MLine));
-			safe_strdup(newline->text, l->text ? l->text : "");
-			newline->concat = 0;
-			newline->next = NULL;
-			if (out_tail)
-				out_tail->next = newline;
-			else
-				out = newline;
-			out_tail = newline;
-		}
-	}
-	return out;
-}
-
-/** Get cached fallback lines, building them on first call */
-static MLine *multiline_get_fallback_lines(MultilineBatch *batch)
-{
-	if (!batch->fallback_lines)
-		batch->fallback_lines = multiline_build_fallback_lines(batch);
-	return batch->fallback_lines;
 }
 
 /** Check if a batch has at least one non-blank line */
@@ -1412,11 +1365,9 @@ static void multiline_send_batch_to_client(Client *to, Client *from, MultilineBa
 static void multiline_send_fallback_to_client(Client *to, Client *from, MultilineBatch *batch,
                                               MessageTag *base_mtags, const char *targetstr, const char *cmd)
 {
-	MLine *fallback_lines, *l;
+	MLine *l;
 	MessageTag *rest_mtags;
 	int first = 1;
-
-	fallback_lines = multiline_get_fallback_lines(batch);
 
 	/* Build rest_mtags: base_mtags minus msgid.
 	 * Spec: msgid MUST only be on the first line, but other tags
@@ -1424,7 +1375,10 @@ static void multiline_send_fallback_to_client(Client *to, Client *from, Multilin
 	 */
 	rest_mtags = duplicate_mtags_for_subsequent_lines(base_mtags);
 
-	for (l = fallback_lines; l; l = l->next)
+	/* This client has no multiline support, so just send each line as a
+	 * normal separate message.
+	 */
+	for (l = batch->lines; l; l = l->next)
 	{
 		/* Spec: "Servers MUST NOT send blank lines to clients
 		 * that have not negotiated the multiline capability."
@@ -1463,7 +1417,6 @@ static void multiline_deliver_to_local_members(Channel *channel, Client *from,
 {
 	LocalMember *lm;
 	MLine *l;
-	MLine *fallback_lines; // merged lines for non-multiline clients
 	MessageTag *m; // temporary for building tag lists
 	MessageTag *rest_mtags; // base_mtags minus first-only tags (msgid, +draft/reply)
 	MessageTag *mtags_line; // rest_mtags + batch=<id>, for multiline content lines
@@ -1512,9 +1465,8 @@ static void multiline_deliver_to_local_members(Channel *channel, Client *from,
 	for (i = 0; i < batch->line_count; i++)
 		cache_lines[i] = linecache_init();
 
-	/* Fallback path: one cache per non-blank fallback line */
-	fallback_lines = multiline_get_fallback_lines(batch);
-	for (l = fallback_lines; l; l = l->next)
+	/* Fallback path: one cache per non-blank line */
+	for (l = batch->lines; l; l = l->next)
 		if (l->text && l->text[0])
 			fallback_count++;
 	if (fallback_count > 0)
@@ -1572,7 +1524,7 @@ static void multiline_deliver_to_local_members(Channel *channel, Client *from,
 
 		first = 1;
 		i = 0;
-		for (l = fallback_lines; l; l = l->next)
+		for (l = batch->lines; l; l = l->next)
 		{
 			/* Spec: "Servers MUST NOT send blank lines to clients
 			 * that have not negotiated the multiline capability."
