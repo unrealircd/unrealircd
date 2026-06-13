@@ -125,6 +125,24 @@ struct ChannelFloodProfile {
 
 /* Global variables */
 ModDataInfo *mdflood = NULL;
+
+/* Per-local-client tally of how many times the user was blocked by channel flood
+ * protection (+f/+F), per flood type. Read via the channel_flood_blocked_count efunc
+ * (eg the total_channel_flood_count() crule). Local-only, freed on disconnect.
+ */
+typedef struct ChannelFloodBlocks { int blocked[NUMFLD]; } ChannelFloodBlocks;
+ModDataInfo *md_channelflood_blocked = NULL;
+/* Friendly type names for the efunc/crule, indexed by enum Flood. KEEP IN SYNC. */
+static const char *channelfloodtype_names[NUMFLD] = {
+	"ctcp",		/* CHFLD_CTCP   */
+	"join",		/* CHFLD_JOIN   */
+	"knock",	/* CHFLD_KNOCK  */
+	"msg",		/* CHFLD_MSG    */
+	"nick",		/* CHFLD_NICK   */
+	"text",		/* CHFLD_TEXT   */
+	"repeat",	/* CHFLD_REPEAT */
+	"paste"		/* CHFLD_PASTE  */
+};
 Cmode_t EXTMODE_FLOODLIMIT = 0L;
 Cmode_t EXTMODE_FLOOD_PROFILE = 0L;
 static int timedban_available = 1; /**< Set to 1 if extbans/timedban module is loaded. Assumed 1 during config load due to set::modes-on-join race. */
@@ -185,6 +203,9 @@ void inherit_settings(ChannelFloodProtection *from, ChannelFloodProtection *to);
 void reapply_profiles(void);
 int _get_floodprot_channel_max_lines(Channel *channel);
 int _floodprot_check_multiline_batch(Channel *channel, Client *client, int line_count);
+void channelfloodblocks_free(ModData *m);
+static void channel_flood_blocked_increment(Client *client, int what);
+int _channel_flood_blocked_count(Client *client, const char *type);
 
 MOD_TEST()
 {
@@ -193,6 +214,7 @@ MOD_TEST()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, floodprot_config_test_antiflood_block);
 	EfunctionAdd(modinfo->handle, EFUNC_GET_FLOODPROT_CHANNEL_MAX_LINES, _get_floodprot_channel_max_lines);
 	EfunctionAdd(modinfo->handle, EFUNC_FLOODPROT_CHECK_MULTILINE_BATCH, _floodprot_check_multiline_batch);
+	EfunctionAdd(modinfo->handle, EFUNC_CHANNEL_FLOOD_BLOCKED_COUNT, _channel_flood_blocked_count);
 	return MOD_SUCCESS;
 }
 
@@ -242,6 +264,15 @@ MOD_INIT()
 	mdflood = ModDataAdd(modinfo->handle, mreq);
 	if (!mdflood)
 	        abort();
+
+	memset(&mreq, 0, sizeof(mreq));
+	mreq.name = "channelfloodblocks";
+	mreq.type = MODDATATYPE_LOCAL_CLIENT;
+	mreq.free = channelfloodblocks_free;
+	md_channelflood_blocked = ModDataAdd(modinfo->handle, mreq);
+	if (!md_channelflood_blocked)
+		abort();
+
 	if (!floodprot_msghash_key)
 	{
 		floodprot_msghash_key = safe_alloc(16);
@@ -1455,6 +1486,8 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 			flood_type = CHFLD_TEXT;
 		}
 
+		channel_flood_blocked_increment(client, flood_type);
+
 		if (fld->action[flood_type] == 'd')
 		{
 			/* Drop the message */
@@ -1786,7 +1819,10 @@ int do_floodprot(Channel *channel, Client *client, int what)
 		    (TStime() - fld->timer[what] < fld->per))
 		{
 			if (MyUser(client))
+			{
 				do_floodprot_action(channel, what);
+				channel_flood_blocked_increment(client, what);
+			}
 			return 1; /* flood detected! */
 		}
 	}
@@ -1994,6 +2030,60 @@ void memberflood_free(ModData *md)
 {
 	/* We don't have any struct members (anymore) that need freeing */
 	safe_free(md->ptr);
+}
+
+void channelfloodblocks_free(ModData *m)
+{
+	safe_free(m->ptr);
+}
+
+/* Count a channel-flood-block (+f/+F) for this local user, by flood type (enum Flood).
+ * bump_tag_serial() lets rule-only spamfilters re-check at the next safe boundary
+ * (eg total_channel_flood_count('nick') > 5), see parse_client_queued().
+ */
+static void channel_flood_blocked_increment(Client *client, int what)
+{
+	ChannelFloodBlocks *b;
+
+	if (!MyConnect(client) || (what < 0) || (what >= NUMFLD))
+		return;
+
+	if (moddata_local_client(client, md_channelflood_blocked).ptr == NULL)
+		moddata_local_client(client, md_channelflood_blocked).ptr = safe_alloc(sizeof(ChannelFloodBlocks));
+
+	b = (ChannelFloodBlocks *)moddata_local_client(client, md_channelflood_blocked).ptr;
+	if (b->blocked[what] < 65535)
+		b->blocked[what]++;
+
+	bump_tag_serial(client);
+}
+
+/* efunc: how many times this local user was channel-flood-blocked of type 'type'
+ * (a name from channelfloodtype_names[], or "all" for the grand total). Unknown -> 0.
+ */
+int _channel_flood_blocked_count(Client *client, const char *type)
+{
+	ChannelFloodBlocks *b;
+	int i, total = 0;
+
+	if (!client || !MyConnect(client))
+		return 0;
+	if (moddata_local_client(client, md_channelflood_blocked).ptr == NULL)
+		return 0;
+	b = (ChannelFloodBlocks *)moddata_local_client(client, md_channelflood_blocked).ptr;
+
+	if (!strcasecmp(type, "all"))
+	{
+		for (i = 0; i < NUMFLD; i++)
+			total += b->blocked[i];
+		return total;
+	}
+
+	for (i = 0; i < NUMFLD; i++)
+		if (!strcasecmp(channelfloodtype_names[i], type))
+			return b->blocked[i];
+
+	return 0;
 }
 
 int floodprot_stats(Client *client, const char *flag)

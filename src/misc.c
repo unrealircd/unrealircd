@@ -1514,6 +1514,11 @@ int floodprot_check_multiline_batch_default_handler(Channel *channel, Client *cl
 	return 0;
 }
 
+int channel_flood_blocked_count_default_handler(Client *client, const char *type)
+{
+	return 0;
+}
+
 int make_oper_default_handler(Client *client, const char *operblock_name, const char *operclass,
                               ConfigItem_class *clientclass, long modes, const char *snomask,
                               const char *vhost, const char *autojoin_channels)

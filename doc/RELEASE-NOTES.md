@@ -44,12 +44,18 @@ This version enables multiline by default and adds TKL IDs.
   * For non-config TKLs, the hit count and last hit timestamp are preserved
     across reboots (via tkldb).
   * Again, see *Developers and protocol* for the exact STATS field.
-* New [crule function](https://www.unrealircd.org/docs/Crule) that returns
-  the number of times a flood was blocked for that user. For example,
-  `server_flood_count('away')` returns the number of times away-flood
-  was exceeded. Also available are: `nick`, `join`, `invite`, `knock`,
-  `vhost` and `conversations`. Plus, there is `all` for the sum of all items.
-  * This can be used in a security-group::rule or spamfilter::rule. Eg:  
+* New [crule functions](https://www.unrealircd.org/docs/Crule) that return
+  the number of times a flood was blocked for a user.
+  * `server_flood_count('..setting..')` returns the number of times
+    set::anti-flood settings were exceeded by that user. Available are:
+    `away`, `nick`, `join`, `invite`, `knock`, `vhost` and `conversations`.
+    Plus, there is `all` for the sum of all items.
+  * `total_channel_flood_count('..setting..')` returns the number of
+    times `+f`/`+F` limits were exceeded by that user in all channels
+    the user is or was in. Available are: `nick`, `join`, `knock`, `msg`,
+    `ctcp`, `text`, `repeat` and `paste` (and `all` for the sum).
+  * All these are counted for the duration of the session (user connection).
+  * These can be used in a security-group::rule or spamfilter::rule. Eg:  
     `spamfilter { rule "server_flood_count('nick')>4"; reason "Nick flood"; action gline; ban-time 1h; }`
 
 ### Changes:
