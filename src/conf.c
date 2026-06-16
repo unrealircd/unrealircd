@@ -201,8 +201,8 @@ int reloadable_perm_module_unloaded(void);
 int tls_tests(void);
 
 /* Conf sub-sub-functions */
-void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors);
-void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions);
+void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions, TLSOptions *inherit_from);
+TLSOptions *duplicate_tls_options(TLSOptions *src);
 void free_tls_options(TLSOptions *tlsoptions);
 
 /*
@@ -248,6 +248,7 @@ Configuration		iConf;
 Configuration		tempiConf;
 BestPractices		bestpractices;
 MODVAR ConfigFile		*conf = NULL;
+static ConfigEntry	*server_linking_tlsoptions_ce = NULL; /* Hack to get set::server-linking::tls-options */
 extern NameValueList *config_defines;
 MODVAR int ipv6_disabled = 0;
 MODVAR Client *remote_rehash_client = NULL;
@@ -1770,6 +1771,8 @@ void free_iConf(Configuration *i)
 	free_tls_options(i->tls_options);
 	i->tls_options = NULL;
 	safe_free(i->tls_options);
+	free_tls_options(i->server_linking_tls_options);
+	i->server_linking_tls_options = NULL;
 	safe_free_multiline(i->plaintext_policy_user_message);
 	safe_free_multiline(i->plaintext_policy_oper_message);
 	safe_free(i->outdated_tls_policy_user_message);
@@ -1921,6 +1924,9 @@ void config_setdefaultsettings(Configuration *i)
 	 */
 	safe_strdup(i->tls_options->outdated_ciphers, "AES*,RC4*,DES*");
 	i->tls_options->certificate_expiry_notification = 1;
+	i->server_linking_tls_options = NULL; /* set::server-linking::tls-options, not configured by default */
+	i->server_linking_mixed_certificates = 0;
+	i->server_linking_allow_ca_certificate = 0;
 	i->plaintext_policy_user = POLICY_ALLOW;
 	i->plaintext_policy_oper = POLICY_DENY;
 	i->plaintext_policy_server = POLICY_DENY;
@@ -2101,6 +2107,8 @@ void postconf(void)
 		           log_data_integer("port", bestpractices.listen_nontls_port));
 		bestpractices.listen_nontls_port_hits++;
 	}
+
+	RunHook(HOOKTYPE_POSTCONF);
 }
 
 int isanyserverlinked(void)
@@ -3162,6 +3170,15 @@ int config_run_blocks_generic(ConfigFile *cfptr, int skip_priority_blocks)
 	return processed;
 }
 
+/** Remember the set::server-linking::tls-options block so core can work on it
+ * after all the other set blocks have been processed (ordering issue).
+ * This is a bit of a hack, but... yeah...
+ */
+void set_server_linking_tlsoptions_ce(ConfigEntry *ce)
+{
+	server_linking_tlsoptions_ce = ce;
+}
+
 int config_run_blocks(void)
 {
 	ConfigEntry 	*ce;
@@ -3171,6 +3188,8 @@ int config_run_blocks(void)
 	int i;
 	Hook *h;
 	ConfigItem_allow *allow;
+
+	server_linking_tlsoptions_ce = NULL; /* processed late, see the set:: handling below */
 
 	/* Stage 1: first the priority blocks, in the order as specified
 	 *          in config_run_priority_blocks[]
@@ -3220,6 +3239,19 @@ int config_run_blocks(void)
 				add_name_list(tempiConf.tls_options->certificate_files, tmp);
 				snprintf(tmp, sizeof(tmp), "%s/tls/server.key.pem", CONFDIR);
 				add_name_list(tempiConf.tls_options->key_files, tmp);
+			}
+
+			/* And NOW that set::tls is fully done (including the default
+			 * certificate above), process set::server-linking::tls-options.
+			 * We do this here and not at parse time in _conf_set(), because
+			 * this could inherit from set::tls, so we have to do it in this
+			 * particular order.
+			 */
+			if (server_linking_tlsoptions_ce)
+			{
+				tempiConf.server_linking_tls_options = safe_alloc(sizeof(TLSOptions));
+				conf_tlsblock(conf, server_linking_tlsoptions_ce, tempiConf.server_linking_tls_options, tempiConf.tls_options);
+				server_linking_tlsoptions_ce = NULL;
 			}
 		}
 	}
@@ -3565,6 +3597,24 @@ void convert_to_absolute_path(char **path, const char *reldir)
 	sprintf(s, "%s/%s", reldir, *path); /* safe, see line above */
 	safe_free(*path);
 	*path = s;
+}
+
+/** Return 'path' relative to 'reldir' if it lives below it, otherwise return
+ * 'path' unchanged (absolute path, URL, etc).
+ * This can be used to turn a path into relative again if convert_to_absolute_path()
+ * previously worked on it.
+ * @returns a pointer into 'path' (read-only).
+ */
+const char *display_path(const char *path, const char *reldir)
+{
+	size_t len;
+
+	if (!path || !reldir)
+		return path;
+	len = strlen(reldir);
+	if (!strncmp(path, reldir, len) && (path[len] == '/' || path[len] == '\\'))
+		return path + len + 1;
+	return path;
 }
 
 /* Similar to convert_to_absolute_path() but returns a duplicated string.
@@ -5559,7 +5609,17 @@ void conf_listen_configure(const char *ip, int port, SocketType socket_type, int
 	if (tlsconfig)
 	{
 		listen->tls_options = safe_alloc(sizeof(TLSOptions));
-		conf_tlsblock(conf, tlsconfig, listen->tls_options);
+		conf_tlsblock(conf, tlsconfig, listen->tls_options,
+		              ((options & LISTENER_SERVERSONLY) && tempiConf.server_linking_tls_options) ?
+		              tempiConf.server_linking_tls_options : tempiConf.tls_options);
+		listen->ssl_ctx = init_ctx(listen->tls_options, 1);
+	}
+	else if ((options & LISTENER_SERVERSONLY) && tempiConf.server_linking_tls_options)
+	{
+		/* No explicit tls-options on this serversonly listener, but
+		 * set::server-linking::tls-options exists/is configured. Use that one.
+		 */
+		listen->tls_options = duplicate_tls_options(tempiConf.server_linking_tls_options);
 		listen->ssl_ctx = init_ctx(listen->tls_options, 1);
 	}
 
@@ -6563,7 +6623,7 @@ int	_conf_sni(ConfigFile *conf, ConfigEntry *ce)
 	sni = safe_alloc(sizeof(ConfigItem_listen));
 	safe_strdup(sni->name, name);
 	sni->tls_options = safe_alloc(sizeof(TLSOptions));
-	conf_tlsblock(conf, tlsconfig, sni->tls_options);
+	conf_tlsblock(conf, tlsconfig, sni->tls_options, tempiConf.tls_options);
 	sni->ssl_ctx = init_ctx(sni->tls_options, 1);
 	AddListItem(sni, conf_sni);
 
@@ -6665,7 +6725,9 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->name, "ssl-options") || !strcmp(cepp->name, "tls-options"))
 				{
 					link->tls_options = safe_alloc(sizeof(TLSOptions));
-					conf_tlsblock(conf, cepp, link->tls_options);
+					conf_tlsblock(conf, cepp, link->tls_options,
+					              tempiConf.server_linking_tls_options ?
+					              tempiConf.server_linking_tls_options : tempiConf.tls_options);
 					link->ssl_ctx = init_ctx(link->tls_options, 0);
 				}
 			}
@@ -6710,6 +6772,20 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 	/* The default is 'hub *', unless you specify leaf or hub manually. */
 	if (!link->hub && !link->leaf)
 		safe_strdup(link->hub, "*");
+
+	/* TLS Configuration for this link block: if this link connects out
+	 * (any non-'insecure' link, including plaintext links that upgrade to
+	 * TLS via STARTTLS), and there is no explicit link::outgoing::tls-options
+	 * set, then we use set::server-linking::tls-options.
+	 */
+	if ((link->outgoing.hostname || link->outgoing.file) &&
+	    !(link->outgoing.options & CONNECT_OUTGOING_INSECURE) &&
+	    !link->tls_options &&
+	    tempiConf.server_linking_tls_options)
+	{
+		link->tls_options = duplicate_tls_options(tempiConf.server_linking_tls_options);
+		link->ssl_ctx = init_ctx(link->tls_options, 0);
+	}
 
 	AppendListItem(link, conf_link);
 	return 0;
@@ -7610,7 +7686,7 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 		TLSOptions *tlsoptions = safe_alloc(sizeof(TLSOptions));
 		SSL_CTX *ctx;
 
-		conf_tlsblock(conf, cep, tlsoptions);
+		conf_tlsblock(conf, cep, tlsoptions, tempiConf.tls_options);
 		ctx = init_ctx(tlsoptions, 1);
 		free_tls_options(tlsoptions);
 
@@ -7641,31 +7717,71 @@ void free_tls_options(TLSOptions *tlsoptions)
 	safe_free(tlsoptions);
 }
 
-void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
+/** Make a complete (deep) copy of TLSOptions.
+ * Unlike conf_tlsblock()'s inheritance, this is a 100% clone with no
+ * base+block merge, so certificate_files and key_files are copied as-is
+ * (a multi-cert RSA+ECC or ECC+postquantum set stays intact, so be
+ *  careful if you have to deal with overriding this that you don't
+ *  accidentally "add" but "replace" instead).
+ * If you are in config-based code, you almost definately will want to
+ * use conf_tlsblock() instead.
+ */
+TLSOptions *duplicate_tls_options(TLSOptions *src)
+{
+	TLSOptions *n;
+
+	if (!src)
+		return NULL;
+
+	n = safe_alloc(sizeof(TLSOptions));
+	n->certificate_files = duplicate_name_list(src->certificate_files);
+	n->key_files = duplicate_name_list(src->key_files);
+	safe_strdup(n->trusted_ca_file, src->trusted_ca_file);
+	n->protocols = src->protocols;
+	safe_strdup(n->ciphers, src->ciphers);
+	safe_strdup(n->ciphersuites, src->ciphersuites);
+	safe_strdup(n->groups, src->groups);
+	safe_strdup(n->signature_algorithms, src->signature_algorithms);
+	safe_strdup(n->outdated_protocols, src->outdated_protocols);
+	safe_strdup(n->outdated_ciphers, src->outdated_ciphers);
+	n->options = src->options;
+	n->renegotiate_bytes = src->renegotiate_bytes;
+	n->renegotiate_timeout = src->renegotiate_timeout;
+	n->sts_port = src->sts_port;
+	n->sts_duration = src->sts_duration;
+	n->sts_preload = src->sts_preload;
+	n->certificate_expiry_notification = src->certificate_expiry_notification;
+	return n;
+}
+
+void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions, TLSOptions *inherit_from)
 {
 	ConfigEntry *cepp, *ceppp;
 	NameValue *ofl;
 
-	/* First, inherit settings from set::options::tls */
-	if (tlsoptions != tempiConf.tls_options)
+	/* First, inherit settings from the base TLS options (inherit_from).
+	 * This is either set::tls (the usual case), or for link blocks and
+	 * serversonly listeners it's set::server-linking::tls-options.
+	 */
+	if (tlsoptions != inherit_from)
 	{
 		// certificate_files: done at end of function
 		// key_files: done at end of function
-		safe_strdup(tlsoptions->trusted_ca_file, tempiConf.tls_options->trusted_ca_file);
-		tlsoptions->protocols = tempiConf.tls_options->protocols;
-		safe_strdup(tlsoptions->ciphers, tempiConf.tls_options->ciphers);
-		safe_strdup(tlsoptions->ciphersuites, tempiConf.tls_options->ciphersuites);
-		safe_strdup(tlsoptions->groups, tempiConf.tls_options->groups);
-		safe_strdup(tlsoptions->signature_algorithms, tempiConf.tls_options->signature_algorithms);
-		safe_strdup(tlsoptions->outdated_protocols, tempiConf.tls_options->outdated_protocols);
-		safe_strdup(tlsoptions->outdated_ciphers, tempiConf.tls_options->outdated_ciphers);
-		tlsoptions->options = tempiConf.tls_options->options;
-		tlsoptions->renegotiate_bytes = tempiConf.tls_options->renegotiate_bytes;
-		tlsoptions->renegotiate_timeout = tempiConf.tls_options->renegotiate_timeout;
-		tlsoptions->sts_port = tempiConf.tls_options->sts_port;
-		tlsoptions->sts_duration = tempiConf.tls_options->sts_duration;
-		tlsoptions->sts_preload = tempiConf.tls_options->sts_preload;
-		tlsoptions->certificate_expiry_notification = tempiConf.tls_options->certificate_expiry_notification;
+		safe_strdup(tlsoptions->trusted_ca_file, inherit_from->trusted_ca_file);
+		tlsoptions->protocols = inherit_from->protocols;
+		safe_strdup(tlsoptions->ciphers, inherit_from->ciphers);
+		safe_strdup(tlsoptions->ciphersuites, inherit_from->ciphersuites);
+		safe_strdup(tlsoptions->groups, inherit_from->groups);
+		safe_strdup(tlsoptions->signature_algorithms, inherit_from->signature_algorithms);
+		safe_strdup(tlsoptions->outdated_protocols, inherit_from->outdated_protocols);
+		safe_strdup(tlsoptions->outdated_ciphers, inherit_from->outdated_ciphers);
+		tlsoptions->options = inherit_from->options;
+		tlsoptions->renegotiate_bytes = inherit_from->renegotiate_bytes;
+		tlsoptions->renegotiate_timeout = inherit_from->renegotiate_timeout;
+		tlsoptions->sts_port = inherit_from->sts_port;
+		tlsoptions->sts_duration = inherit_from->sts_duration;
+		tlsoptions->sts_preload = inherit_from->sts_preload;
+		tlsoptions->certificate_expiry_notification = inherit_from->certificate_expiry_notification;
 	}
 
 	/* Now process the options */
@@ -7797,12 +7913,12 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 	 * additional certs/keys due to the nature of it being a name list.
 	 * So we simply only add these here at the end if they were not set.
 	 */
-	if (tlsoptions != tempiConf.tls_options)
+	if (tlsoptions != inherit_from)
 	{
 		if (!tlsoptions->certificate_files)
-			tlsoptions->certificate_files = duplicate_name_list(tempiConf.tls_options->certificate_files);
+			tlsoptions->certificate_files = duplicate_name_list(inherit_from->certificate_files);
 		if (!tlsoptions->key_files)
-			tlsoptions->key_files = duplicate_name_list(tempiConf.tls_options->key_files);
+			tlsoptions->key_files = duplicate_name_list(inherit_from->key_files);
 	}
 }
 
@@ -8309,7 +8425,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->name, "ssl") || !strcmp(cep->name, "tls")) {
 			/* no need to alloc tempiConf.tls_options since config_defaults() already ensures it exists */
-			conf_tlsblock(conf, cep, tempiConf.tls_options);
+			conf_tlsblock(conf, cep, tempiConf.tls_options, tempiConf.tls_options);
 		}
 		else if (!strcmp(cep->name, "plaintext-policy"))
 		{
@@ -11870,7 +11986,7 @@ const char *link_generator_spkifp(TLSOptions *tlsoptions)
 void link_generator(void)
 {
 	ConfigItem_listen *lstn;
-	TLSOptions *tlsopt = iConf.tls_options; /* never null */
+	TLSOptions *tlsopt = iConf.server_linking_tls_options ? iConf.server_linking_tls_options : iConf.tls_options; /* set::server-linking::tls-options and otherwise set::tls */
 	int port = 0;
 	char *ip = NULL;
 	const char *spkifp;

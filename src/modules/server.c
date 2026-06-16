@@ -73,6 +73,7 @@ const char *_check_deny_link(ConfigItem_link *link, int auto_connect);
 int server_stats_denylink_all(Client *client, const char *para);
 int server_stats_denylink_auto(Client *client, const char *para);
 int server_quit_reset_autoconnect_time(Client *client, MessageTag *mtags);
+int check_server_linking_cert_consistency(void);
 
 /* Global variables */
 static cfgstruct cfg;
@@ -114,6 +115,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, server_stats_denylink_all);
 	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, server_stats_denylink_auto);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_QUIT, 0, server_quit_reset_autoconnect_time);
+	HookAdd(modinfo->handle, HOOKTYPE_POSTCONF, 0, check_server_linking_cert_consistency);
 	CommandAdd(modinfo->handle, "SERVER", cmd_server, MAXPARA, CMD_UNREGISTERED|CMD_SERVER);
 	CommandAdd(modinfo->handle, "SID", cmd_sid, MAXPARA, CMD_SERVER);
 
@@ -199,6 +201,11 @@ int server_config_test_set_server_linking(ConfigFile *cf, ConfigEntry *ce, int t
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		if (!strcmp(cep->name, "ssl-options") || !strcmp(cep->name, "tls-options"))
+		{
+			test_tlsblock(cf, cep, &errors);
+			continue;
+		}
 		if (!cep->value)
 		{
 			config_error("%s:%i: blank set::server-linking::%s without value",
@@ -239,6 +246,14 @@ int server_config_test_set_server_linking(ConfigFile *cf, ConfigEntry *ce, int t
 				continue;
 			}
 		} else
+		if (!strcmp(cep->name, "mixed-certificates"))
+		{
+			/* yes/no, applied at config run */
+		} else
+		if (!strcmp(cep->name, "allow-ca-certificate"))
+		{
+			/* yes/no, applied at config run */
+		} else
 		{
 			config_error("%s:%i: unknown directive set::server-linking::%s",
 				cep->file->filename, cep->line_number, cep->name);
@@ -257,6 +272,13 @@ int server_config_run_set_server_linking(ConfigFile *cf, ConfigEntry *ce, int ty
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
+		if (!strcmp(cep->name, "ssl-options") || !strcmp(cep->name, "tls-options"))
+		{
+			/* Processed late in core config_run_blocks(), after set::tls is
+			 * finalized, so it inherits the same way listen/link do.
+			 */
+			set_server_linking_tlsoptions_ce(cep);
+		} else
 		if (!strcmp(cep->name, "autoconnect-strategy"))
 		{
 			cfg.autoconnect_strategy = autoconnect_strategy_strtoval(cep->value);
@@ -268,10 +290,314 @@ int server_config_run_set_server_linking(ConfigFile *cf, ConfigEntry *ce, int ty
 		if (!strcmp(cep->name, "handshake-timeout"))
 		{
 			cfg.handshake_timeout = config_checkval(cep->value, CFG_TIME);
+		} else
+		if (!strcmp(cep->name, "mixed-certificates"))
+		{
+			tempiConf.server_linking_mixed_certificates = config_checkval(cep->value, CFG_YESNO);
+		} else
+		if (!strcmp(cep->name, "allow-ca-certificate"))
+		{
+			tempiConf.server_linking_allow_ca_certificate = config_checkval(cep->value, CFG_YESNO);
 		}
 	}
 
 	return 1;
+}
+
+/* Helper for heck_server_linking_cert_consistency(). We build the suggested
+ * config file block here.
+ * When 'opts' has a certificate, use those cert/key paths (which are
+ * for a self-signed cert already in use somewhere).
+ * When 'opts' is NULL, there is no self signed certificate in use for linking
+ * (which usually means the user has overriden the default certs with CA certs),
+ * so we simply recommend to run ./unrealircd mkcert to create a new one.
+ */
+static void check_server_linking_cert_consistency_suggest_fix(TLSOptions *opts, char *buf, size_t buflen)
+{
+	char inner[512];
+	NameList *c, *k;
+
+	inner[0] = '\0';
+	if (opts && opts->certificate_files && opts->key_files)
+	{
+		for (c = opts->certificate_files, k = opts->key_files; c && k; c = c->next, k = k->next)
+		{
+			char line[384];
+			snprintf(line, sizeof(line),
+			         "            certificate \"%s\";\n"
+			         "            key \"%s\";\n",
+			         display_path(c->name, CONFDIR), display_path(k->name, CONFDIR));
+			strlcat(inner, line, sizeof(inner));
+		}
+	}
+	if (inner[0])
+	{
+		snprintf(buf, buflen,
+		         "set {\n"
+		         "    server-linking {\n"
+		         "        tls-options {\n"
+		         "%s"
+		         "        }\n"
+		         "    }\n"
+		         "}", inner);
+	}
+	else
+	{
+		/* Nothing self-signed is in use, so do not name an existing file (it
+		 * may be the CA certificate). Recommend generating a dedicated one.
+		 * The mkcert command uses an absolute path (mkcert follows normal path
+		 * rules, no config-dir magic) so the files land in the config dir no
+		 * matter the working directory; the config block stays config-relative.
+		 */
+		snprintf(buf, buflen,
+		         "Generate one with:  ./unrealircd mkcert %s/tls/server-linking\n"
+		         "Then set:\n"
+		         "set {\n"
+		         "    server-linking {\n"
+		         "        tls-options {\n"
+		         "            certificate \"tls/server-linking.cert.pem\";\n"
+		         "            key \"tls/server-linking.key.pem\";\n"
+		         "        }\n"
+		         "    }\n"
+		         "}", CONFDIR);
+	}
+}
+
+/** HOOKTYPE_POSTCONF: advise on the certificate(s) used for server linking.
+ * A server pins a single SPKI fingerprint per server, so all our server-to-server
+ * paths (serversonly listeners and outgoing TLS links) must present the same
+ * certificate. We also require it to be a long-lived self-signed ceritifcate as
+ * a publicly-trusted CA cert is short(er)-lived and typically rekeys on renewal,
+ * which changes the spkifp and breaks linking). Because this runs in postconf,
+ * all the TLS context are fully available (this runs on both boot & rehash).
+ */
+int check_server_linking_cert_consistency(void)
+{
+	struct {
+		char desc[128];
+		char spki[64];
+		int trusted;
+		int has_own_tls_options;	/* explicit per-block tls-options, vs the global default */
+		TLSOptions *opts;
+	} s2s[128];
+	int n = 0, i, capped = 0, mismatch = 0, diff = -1, rec = -1, ca = -1;
+	int n_inbound = 0, n_outbound = 0;
+	ConfigItem_listen *listen;
+	ConfigItem_link *link;
+	SSL_CTX *ctx;
+	const char *fp;
+	char fix[768];
+
+	/* Gather every server-to-server path that presents a certificate. */
+	for (listen = conf_listen; listen; listen = listen->next)
+	{
+		if (listen->flag.temporary)
+			continue; /* block pending removal on rehash, holds stale tls_options */
+		/* Only serversonly listeners. A port presents one certificate to
+		 * everyone on it, so a listener that also serves clients can't carry the
+		 * linking cert without handing that cert to clients too. The dual-cert
+		 * setup therefore needs serversonly linking ports; this scoping is
+		 * deliberate, not an oversight (widening to all server-capable listeners
+		 * would false-warn on the common client port that isn't marked
+		 * clientsonly).
+		 */
+		if (!(listen->options & LISTENER_SERVERSONLY))
+			continue;
+		if (n >= (int)(sizeof(s2s)/sizeof(s2s[0]))) { capped = 1; break; }
+		/* A serversonly listener may also be reached plaintext and upgraded via
+		 * STARTTLS, which still presents listener->ssl_ctx, so no LISTENER_TLS
+		 * check. Prefer the already-built context (no disk I/O); only build a
+		 * fresh one when there is none yet (a plain path at boot, before init_tls()).
+		 */
+		ctx = listen->ssl_ctx ? listen->ssl_ctx : ctx_server;
+		fp = ctx ? spkifp_from_ctx(ctx)
+		         : server_linking_spkifp(listen->tls_options ? listen->tls_options : iConf.tls_options);
+		if (!fp)
+			continue;
+		strlcpy(s2s[n].spki, fp, sizeof(s2s[n].spki));
+		snprintf(s2s[n].desc, sizeof(s2s[n].desc), "listen %s:%d",
+		         listen->ip ? listen->ip : "*", listen->port);
+		s2s[n].trusted = ctx ? is_trusted_cert(ctx) : 0;
+		s2s[n].opts = listen->tls_options ? listen->tls_options : iConf.tls_options;
+		s2s[n].has_own_tls_options = (listen->tls_options != NULL);
+		n++;
+		n_inbound++;
+	}
+	for (link = conf_link; link && !capped; link = link->next)
+	{
+		if (link->flag.temporary)
+			continue;
+		/* Only outgoing links that present a certificate and may be spkifp/cert-
+		 * verified by the peer. Skip incoming-only, 'insecure' (plaintext) and
+		 * password-authenticated links (our cert is not pinned by either side).
+		 */
+		if (!link->outgoing.hostname && !link->outgoing.file)
+			continue;
+		if (link->outgoing.options & CONNECT_OUTGOING_INSECURE)
+			continue;
+		if (link->auth && link->auth->type == AUTHTYPE_PLAINTEXT)
+			continue;
+		if (n >= (int)(sizeof(s2s)/sizeof(s2s[0]))) { capped = 1; break; }
+		ctx = link->ssl_ctx ? link->ssl_ctx : ctx_client;
+		fp = ctx ? spkifp_from_ctx(ctx)
+		         : server_linking_spkifp(link->tls_options ? link->tls_options : iConf.tls_options);
+		if (!fp)
+			continue;
+		strlcpy(s2s[n].spki, fp, sizeof(s2s[n].spki));
+		snprintf(s2s[n].desc, sizeof(s2s[n].desc), "link %s", link->servername);
+		s2s[n].trusted = ctx ? is_trusted_cert(ctx) : 0;
+		s2s[n].opts = link->tls_options ? link->tls_options : iConf.tls_options;
+		s2s[n].has_own_tls_options = (link->tls_options != NULL);
+		n++;
+		n_outbound++;
+	}
+
+	if (capped)
+		unreal_log(ULOG_WARNING, "config", "SERVER_LINKING_CERT_CHECK_CAPPED", NULL,
+		           "Too many server-to-server TLS paths; only the first $num were checked "
+		           "for certificate consistency.",
+		           log_data_integer("num", n));
+
+	if (n == 0)
+		return 0;
+
+	/* Mismatch = not all SPKIs equal. Recommended cert = first non-trusted one. */
+	for (i = 1; i < n; i++)
+	{
+		if (strcasecmp(s2s[0].spki, s2s[i].spki))
+		{
+			mismatch = 1;
+			if (diff < 0)
+				diff = i;
+		}
+	}
+	for (i = 0; i < n; i++)
+	{
+		if (!s2s[i].trusted)
+		{
+			rec = i;
+			break;
+		}
+	}
+	check_server_linking_cert_consistency_suggest_fix(rec >= 0 ? s2s[rec].opts : NULL, fix, sizeof(fix));
+
+	/* A mismatch only breaks linking when the same peer could be served two
+	 * different certificates, which needs both an inbound path (a serversonly
+	 * listener) and an outbound path (an outgoing link). If every path is the
+	 * same direction (for example outgoing links only), each peer pins exactly
+	 * the one certificate it sees, so differing certificates are harmless and
+	 * we stay silent.
+	 */
+	if (mismatch && n_inbound && n_outbound)
+	{
+		if (iConf.server_linking_mixed_certificates)
+			return 0; /* admin acknowledged intentionally-different s2s certs */
+
+		if (iConf.server_linking_tls_options)
+		{
+			/* set::server-linking is configured, so the mismatch is caused by
+			 * blocks that override it with their own tls-options. Name those
+			 * (SPKI differs from the server-linking cert) so the admin knows
+			 * exactly what to remove.
+			 */
+			char offenders[512];
+			char slfp[64];
+			const char *raw;
+
+			offenders[0] = '\0';
+			slfp[0] = '\0';
+			raw = server_linking_spkifp(iConf.server_linking_tls_options);
+			if (raw)
+				strlcpy(slfp, raw, sizeof(slfp));
+			for (i = 0; i < n; i++)
+			{
+				if (slfp[0] && strcasecmp(s2s[i].spki, slfp))
+				{
+					if (offenders[0])
+						strlcat(offenders, ", ", sizeof(offenders));
+					strlcat(offenders, s2s[i].desc, sizeof(offenders));
+					strlcat(offenders, " { }", sizeof(offenders));
+				}
+			}
+			unreal_log(ULOG_WARNING, "config", "SERVER_LINKING_CERT_MISMATCH", NULL,
+			           "This server uses a different TLS certificate for incoming server "
+			           "connections than for outgoing links ($desc1 vs $desc2). This can break "
+			           "server linking.\nRemove tls-options from the following blocks, which "
+			           "override set::server-linking::tls-options: $offenders",
+			           log_data_string("desc1", s2s[0].desc),
+			           log_data_string("desc2", s2s[diff >= 0 ? diff : 0].desc),
+			           log_data_string("offenders", offenders[0] ? offenders : "the relevant link/listen blocks"));
+		}
+		else
+		{
+			/* set::server-linking is not configured. Adding it fixes blocks that
+			 * use the global/default certificate, but any block with its OWN
+			 * tls-options whose certificate differs would still override it, so
+			 * name those so the admin removes them too.
+			 */
+			char overrides[512];
+			const char *rec_spki = (rec >= 0) ? s2s[rec].spki : "";
+
+			overrides[0] = '\0';
+			for (i = 0; i < n; i++)
+			{
+				if (s2s[i].has_own_tls_options && (rec < 0 || strcasecmp(s2s[i].spki, rec_spki)))
+				{
+					if (overrides[0])
+						strlcat(overrides, ", ", sizeof(overrides));
+					strlcat(overrides, s2s[i].desc, sizeof(overrides));
+					strlcat(overrides, " { }", sizeof(overrides));
+				}
+			}
+			if (overrides[0])
+				unreal_log(ULOG_WARNING, "config", "SERVER_LINKING_CERT_MISMATCH", NULL,
+				           "This server uses a different TLS certificate for incoming server "
+				           "connections than for outgoing links ($desc1 vs $desc2). This can break "
+				           "server linking.\nFirst, remove tls-options from the following blocks: $overrides\n"
+				           "After that, set one certificate for all server linking:\n$fix",
+				           log_data_string("desc1", s2s[0].desc),
+				           log_data_string("desc2", s2s[diff >= 0 ? diff : 0].desc),
+				           log_data_string("fix", fix),
+				           log_data_string("overrides", overrides));
+			else
+				unreal_log(ULOG_WARNING, "config", "SERVER_LINKING_CERT_MISMATCH", NULL,
+				           "This server uses a different TLS certificate for incoming server "
+				           "connections than for outgoing links ($desc1 vs $desc2). This can break "
+				           "server linking. Set one certificate for all server linking:\n$fix",
+				           log_data_string("desc1", s2s[0].desc),
+				           log_data_string("desc2", s2s[diff >= 0 ? diff : 0].desc),
+				           log_data_string("fix", fix));
+		}
+		return 0;
+	}
+
+	/* Reached when all paths use the same certificate, or when a difference was
+	 * found but cannot break linking (all paths the same direction, see above).
+	 * Either way, advise if any path uses a public CA cert, since those rotate
+	 * on renewal and change the spkifp. Scan all paths, not just s2s[0]: after a
+	 * suppressed single-direction mismatch the CA cert may be on a later path.
+	 */
+	for (i = 0; i < n; i++)
+	{
+		if (s2s[i].trusted)
+		{
+			ca = i;
+			break;
+		}
+	}
+	if (ca >= 0 && !iConf.server_linking_allow_ca_certificate)
+	{
+		unreal_log(ULOG_ADVICE, "config", "SERVER_LINKING_CA_CERTIFICATE", NULL,
+		           "Server linking is using a publicly-trusted (CA) certificate ($desc). "
+		           "When such a certificate is renewed it usually gets a new key, which changes "
+		           "the spkifp and breaks linking. For server linking, use a long-lived "
+		           "self-signed certificate instead:\n$fix\n"
+		           "(If you reuse the same key for certificate renewals, then set "
+		           "set::server-linking::allow-ca-certificate yes; to silence this advice.)",
+		           log_data_string("desc", s2s[ca].desc),
+		           log_data_string("fix", fix));
+	}
+	return 0;
 }
 
 int server_config_test_deny_link(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)

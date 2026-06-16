@@ -193,9 +193,10 @@ void unrealircdctl_spkifp(int argc, char *argv[])
 
 	if (!file)
 	{
-		printf("NOTE: This script uses the default certificate location (any set::tls settings\n"
-		       "are ignored). If this is not what you want then specify a certificate\n"
-		       "explicitly like this: %s spkifp conf/tls/example.pem\n\n", UNREALCMD);
+		printf("NOTE: This script uses the default certificate location. Any\n"
+		       "set::server-linking::tls-options and set::tls settings are ignored.\n"
+		       "If this is not what you want, then specify a certificate explicitly\n"
+		       "like this: %s spkifp conf/tls/example.pem\n\n", UNREALCMD);
 		safe_strdup(file, "tls/server.cert.pem");
 		convert_to_absolute_path(&file, CONFDIR);
 	}

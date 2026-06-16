@@ -1202,7 +1202,13 @@ static int fatal_tls_error(int ssl_error, int where, int my_errno, Client *clien
 /** Do a TLS handshake after a STARTTLS, as a client */
 int client_starttls(Client *client)
 {
-	if ((client->local->ssl = SSL_new(ctx_client)) == NULL)
+	/* If this is an outgoing server link, then use link::outgoing::tls-options,
+	 * falling back to set::server-linking::tls-options.
+	 * Otherwise, use the client context.
+	 */
+	SSL_CTX *ctx = (client->server && client->server->conf && client->server->conf->ssl_ctx) ? client->server->conf->ssl_ctx : ctx_client;
+
+	if ((client->local->ssl = SSL_new(ctx)) == NULL)
 		goto fail_starttls;
 
 	SetTLS(client);
@@ -1558,6 +1564,45 @@ const char *spki_fingerprint_ex(X509 *x509_cert)
 		safe_free(der_cert);
 	}
 	return NULL;
+}
+
+/** Return the spkifp of the certificate specified as an SSL_CTX.
+ */
+const char *spkifp_from_ctx(SSL_CTX *ctx)
+{
+	SSL *ssl;
+	X509 *cert;
+	const char *fp = NULL;
+
+	if (!ctx)
+		return NULL;
+	ssl = SSL_new(ctx);
+	if (ssl)
+	{
+		cert = SSL_get_certificate(ssl);
+		if (cert)
+			fp = spki_fingerprint_ex(cert);
+		SSL_free(ssl);
+	}
+	return fp;
+}
+
+/** Return the spkifp of the certificate as specified in 'tlsoptions'.
+ * NOTE: if you already have an SSL_CTX then spkifp_from_ctx() is much faster.
+ */
+const char *server_linking_spkifp(TLSOptions *tlsoptions)
+{
+	SSL_CTX *ctx;
+	const char *fp;
+
+	if (!tlsoptions)
+		return NULL;
+	ctx = init_ctx(tlsoptions, 1);
+	if (!ctx)
+		return NULL;
+	fp = spkifp_from_ctx(ctx);
+	SSL_CTX_free(ctx);
+	return fp;
 }
 
 /** Returns 1 if the client is using an outdated protocol or cipher, 0 otherwise */

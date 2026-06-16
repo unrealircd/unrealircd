@@ -60,6 +60,30 @@ This version enables multiline by default and adds TKL IDs.
 * Central Spamreport now also receives those flood counters.
 
 ### Changes:
+* Server linking and certificates: we now treat listener blocks that are
+  `serversonly` (such as port 6900 in the example.conf) and link { } blocks
+  in a different way than regular listen { } blocks:
+  * If there are different certificates used in the serversonly listen block
+    vs link blocks, then this is almost always means server linking is broken,
+    so we now print a warning on boot and rehash.
+  * We also print an 'advice' if any of these are not using (long-lived)
+    self-signed certificate. This is because CA issued certificates are
+    typically not suitable because they typically rotate keys and thus change
+    the `spkifp`. Changing spkifp breaks server linking. We will now print
+    an advice along with command and config block instructions to fix it.
+  * We now use `set::server-linking::tls-options` for link { } blocks
+    and listen { } blocks that are `serversonly`. All the rest uses the
+    `set::tls` settings by default (eg the regular listen { } block on 6697).
+    * This means our guide on
+      [Using Let's Encrypt with UnrealIRCd](https://www.unrealircd.org/docs/Using_Let's_Encrypt_with_UnrealIRCd)
+      and generic usage is more intuitive. You just set both set settings
+      and then no longer need to use any tls-options in listen blocks or link
+      blocks. The example conf has also been updated with this.
+    * If `set::server-linking::tls-options` is not configured, it defaults
+      to `set::tls`, so there is no unexpected behavior change for anyone.
+  * In a future release we will make server linking with `spkifp` mandatory,
+    so all of this helps with getting people ready for that, making such
+    a future transition smooth.
 * Spamfilter regexes now use more sensible defaults in terms of "max effort",
   similar to what PHP has been using for years. This means very slow regexes
   will now raise a `SPAMFILTER_REGEX_ERROR` warning during execution if

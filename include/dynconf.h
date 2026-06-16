@@ -100,6 +100,9 @@ struct Configuration {
 	int maxdccallow;
 	int anti_spam_quit_message_time;
 	TLSOptions *tls_options;
+	TLSOptions *server_linking_tls_options;	/**< set::server-linking::tls-options, NULL if not configured */
+	int server_linking_mixed_certificates;	/**< set::server-linking::mixed-certificates: suppress the s2s cert mismatch warning */
+	int server_linking_allow_ca_certificate;	/**< set::server-linking::allow-ca-certificate: suppress the "CA cert used for linking" advice */
 	Policy plaintext_policy_user;
 	MultiLine *plaintext_policy_user_message;
 	Policy plaintext_policy_oper;

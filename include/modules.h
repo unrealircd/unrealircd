@@ -1564,6 +1564,8 @@ extern APICallback *APICallbackAdd(Module *module, APICallback *mreq);
 #define HOOKTYPE_KNOWN_USER_CACHE_CHANGE	131
 /** See hooktype_chanmsg_multiline() */
 #define HOOKTYPE_CHANMSG_MULTILINE	132
+/** See hooktype_postconf() */
+#define HOOKTYPE_POSTCONF	133
 
 
 /* Adding a new hook here?
@@ -2049,6 +2051,13 @@ int hooktype_rehash(void);
  * @return The return value is ignored (use return 0)
  */
 int hooktype_rehash_complete(void);
+
+/** Called at the end of postconf(), after the configuration is fully applied and
+ * TLS contexts are (re)built, on both boot and rehash (function prototype for
+ * HOOKTYPE_POSTCONF).
+ * @return The return value is ignored (use return 0)
+ */
+int hooktype_postconf(void);
 
 /** Called when searching for a test function for a specific configuration item (function prototype for HOOKTYPE_CONFIGTEST).
  * This is part of the configuration API, which is better documented at the
@@ -2794,6 +2803,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_UMODE_CHANGE) && !ValidateHook(hooktype_umode_change, func)) || \
         ((hooktype == HOOKTYPE_TOPIC) && !ValidateHook(hooktype_topic, func)) || \
         ((hooktype == HOOKTYPE_REHASH_COMPLETE) && !ValidateHook(hooktype_rehash_complete, func)) || \
+        ((hooktype == HOOKTYPE_POSTCONF) && !ValidateHook(hooktype_postconf, func)) || \
         ((hooktype == HOOKTYPE_TKL_ADD) && !ValidateHook(hooktype_tkl_add, func)) || \
         ((hooktype == HOOKTYPE_TKL_DEL) && !ValidateHook(hooktype_tkl_del, func)) || \
         ((hooktype == HOOKTYPE_LOCAL_KILL) && !ValidateHook(hooktype_local_kill, func)) || \

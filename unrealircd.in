@@ -271,8 +271,14 @@ elif [ "$1" = "spki" -o "$1" = "spkifp" ] ; then
 	$UNREALIRCDCTL $*
 elif [ "$1" = "mkcert" ] ; then
 	TLSDIR="$CONFDIR/tls"
-	KEY="$TLSDIR/server.key.pem"
-	CERT="$TLSDIR/server.cert.pem"
+	BASE="$CONFDIR/tls/server"
+	if [ "$2" != "" ]; then
+		# Optional second argument: path prefix for the certificate/key
+		BASE="$2"
+	fi
+	KEY="$BASE.key.pem"
+	CERT="$BASE.cert.pem"
+	OUTDIR=`dirname "$CERT"`
 
 	# Locate the OpenSSL configuration template. After 'make install' it
 	# lives in the TLS directory. During initial setup (./Config), before
@@ -287,15 +293,15 @@ elif [ "$1" = "mkcert" ] ; then
 		exit 1
 	fi
 
-	if [ ! -d "$TLSDIR" ]; then
-		mkdir -p "$TLSDIR" || exit 1
-		chmod 0700 "$TLSDIR"
+	if [ ! -d "$OUTDIR" ]; then
+		mkdir -p "$OUTDIR" || exit 1
+		chmod 0700 "$OUTDIR"
 	fi
 
 	REPLACED=0
 	if [ -f "$CERT" ] || [ -f "$KEY" ]; then
-		echo "This command will replace your existing server certificate and key."
-		echo "(in $TLSDIR)"
+		echo "This command will replace your existing certificate and key."
+		echo "(in $OUTDIR)"
 		echo -n "Do you wish to proceed? [Y|N] "
 		read answer
 		case "$answer" in
@@ -328,12 +334,12 @@ elif [ "$1" = "mkcert" ] ; then
 	echo "Generating self-signed certificate..."
 	"$OPENSSLPATH" req -new -x509 -key "$KEY" -config "$CNF" -days 3650 -sha256 -out "$CERT" || exit 1
 
-	echo "Setting permissions on server.*.pem files..."
+	echo "Setting permissions on the certificate and key..."
 	chmod o-rwx "$KEY" "$CERT"
 	chmod g-rwx "$KEY" "$CERT"
 
 	echo ""
-	echo "A new self-signed certificate and key have been generated in $TLSDIR"
+	echo "A new self-signed certificate and key have been generated in $OUTDIR"
 	if [ "$REPLACED" = 1 ]; then
 		echo "Your previous certificate and key were backed up with a .old suffix."
 	fi
@@ -514,6 +520,7 @@ else
  	echo "                         release candidate if the --rc argument is used)"
 	echo "unrealircd mkpasswd      Hash a password"
 	echo "unrealircd mkcert        Create or replace the self-signed TLS certificate"
+	echo "                         (optionally pass a path prefix; normal path rules apply)"
 	echo "unrealircd version       Display the UnrealIRCd version"
 	echo "unrealircd module        Install and uninstall 3rd party modules"
 	echo "unrealircd croncheck     For use in crontab: this checks if the server"
